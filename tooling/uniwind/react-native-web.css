@@ -151,3 +151,8 @@
     opacity: 1;
   }
 }
+
+/* Radix positions a wrapper around native-web Content; tips opened from sheets share their layer. */
+[data-radix-popper-content-wrapper]:has(.popover-content) {
+  z-index: 50 !important;
+}

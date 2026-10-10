@@ -19,7 +19,7 @@ export const emptySessionInput = {
 };
 export const startAcpEngine = async (
   peerInput: Parameters<typeof createResourcePeer>[0] &
-    Pick<AcpResourceInput, 'closeTimeoutMs'> = {},
+    Pick<AcpResourceInput, 'closeTimeoutMs' | 'releaseTimeoutMs'> = {},
   createId: () => string = randomUUID,
   agentId = 'mock',
 ): Promise<
@@ -35,7 +35,11 @@ export const startAcpEngine = async (
     database: storage.database,
     createId,
     adapters: [{ ...createMockAdapter(), agent: agentId }],
-    acp: { ...peer, closeTimeoutMs: peerInput.closeTimeoutMs },
+    acp: {
+      ...peer,
+      closeTimeoutMs: peerInput.closeTimeoutMs,
+      releaseTimeoutMs: peerInput.releaseTimeoutMs,
+    },
     resolveAgentLaunch: async (input) => ({
       ...resourceLaunch,
       agentId: input.agent,

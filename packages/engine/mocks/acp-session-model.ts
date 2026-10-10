@@ -7,6 +7,7 @@ import {
   type AdjacencyMap,
 } from 'xstate/graph';
 import type { AcpSessionLease } from '../src/services/agents';
+import { RecoveryBlockedError } from '../src/services/agents';
 import { sessionMachine } from '../src/services/sessions';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
@@ -32,6 +33,11 @@ const canApplyLifecycleEvent = (
     'xstate.done.actor.closeAcp': 'closing',
     'xstate.error.actor.closeAcp': 'closing',
     'xstate.done.actor.awaitAcpRelease': 'retainingCleanup',
+    'xstate.done.actor.publishInterruptedTurn': 'interrupting',
+    'xstate.error.actor.publishInterruptedTurn': 'interrupting',
+    'xstate.after.agentRestartDelay.session.open.acp.recovering': 'recovering',
+    'xstate.done.actor.reopenAcp': 'reopening',
+    'xstate.error.actor.reopenAcp': 'reopening',
     'xstate.after.feedFlushLimit.session.open.acp.flushing': 'flushing',
   } as const;
   if (event.type in invoking) {
@@ -51,10 +57,22 @@ const canApplyLifecycleEvent = (
 };
 type AcpModelEvent = GraphEventFromLogic<typeof sessionMachine>;
 export function acpModelEventKey(event: AcpModelEvent): string {
+  if ('error' in event && event.error instanceof RecoveryBlockedError)
+    return `${event.type} blocked`;
   return event.type === updateEvent
     ? `${event.type}:${event.notification.update.sessionUpdate}`
     : event.type;
 }
+
+// After a crash the model walks only the recovery loop, which keeps the crash count from multiplying every state.
+const walksAfterCrash = (
+  snapshot: AcpModelSnapshot,
+  event: AcpModelEvent,
+): boolean =>
+  snapshot.context.agentCrashes.length === 0 ||
+  event.type === 'acp.failed' ||
+  event.type === closeEvent ||
+  event.type.startsWith('xstate.');
 export const createAcpSessionModel = (
   initial: AcpModelSnapshot,
 ): {
@@ -196,6 +214,32 @@ export const createAcpSessionModel = (
       output: { lease, configOptions: initial.context.configOptions },
     },
     {
+      type: 'xstate.done.actor.publishInterruptedTurn',
+      actorId: 'publishInterruptedTurn',
+      output: undefined,
+    },
+    {
+      type: 'xstate.error.actor.publishInterruptedTurn',
+      actorId: 'publishInterruptedTurn',
+      error: new Error('publication failed'),
+    },
+    { type: 'xstate.after.agentRestartDelay.session.open.acp.recovering' },
+    {
+      type: 'xstate.done.actor.reopenAcp',
+      actorId: 'reopenAcp',
+      output: { lease, configOptions: initial.context.configOptions },
+    },
+    {
+      type: 'xstate.error.actor.reopenAcp',
+      actorId: 'reopenAcp',
+      error: new Error('recovery failed'),
+    },
+    {
+      type: 'xstate.error.actor.reopenAcp',
+      actorId: 'reopenAcp',
+      error: new RecoveryBlockedError(new Error('No exit')),
+    },
+    {
       type: 'xstate.error.actor.openAcp',
       actorId: 'openAcp',
       error: new Error('open failed'),
@@ -229,7 +273,9 @@ export const createAcpSessionModel = (
     limit: 10_000,
     serializeEvent: acpModelEventKey,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
-      snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),
+      snapshot.status === 'active' &&
+      walksAfterCrash(snapshot, event) &&
+      canApplyLifecycleEvent(snapshot, event),
     serializeState: (
       snapshot: AcpModelSnapshot,
       event: AcpModelEvent | undefined,

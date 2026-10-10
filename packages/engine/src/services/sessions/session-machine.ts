@@ -41,7 +41,7 @@ import {
 } from 'xstate';
 import { countRejection } from '../../lib/count-rejections';
 import { createRejectionCounter } from '../../lib/count-rejections';
-import { findAgentProbe } from '../agents';
+import { findAgentProbe, RecoveryBlockedError } from '../agents';
 import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';
 import { blobsFolderIn } from '../blob';
@@ -81,6 +81,7 @@ import {
   type NewSessionInput,
   type SessionData,
   type SessionInput,
+  interruptionDisclosureId,
   toSessionInsert,
 } from './session-data';
 
@@ -99,11 +100,14 @@ const answerPermissionCommand = 'agent.answerPermission';
 const answerElicitationCommand = 'agent.answerElicitation';
 const writeFeedEvent = 'writer.write';
 const feedChangeEvent = 'feed.change';
+const configuringState = 'configuring';
+const acpUpdateEvent = 'acp.update';
 const pendingConfigurationLimit = 32;
 
 type FeedChangeEvent = Extract<FeedEvent, { type: 'feed.change' }>;
 type SessionDataParameters = { data: SessionData };
 type FailureParameters = { error: unknown };
+type CrashNoticeParameters = { description?: string } | undefined;
 type LoadSessionInput = {
   session: SessionInput;
   writer: ActorRefFrom<typeof writerMachine> | undefined;
@@ -213,6 +217,37 @@ const agentStartLimit = 10_000;
 // The Session gives up on its Agent after this many crashes within the window.
 const crashWindowMs = 600_000;
 const maxCrashesInWindow = 3;
+const crashBudgetFailure = 'The Agent stopped three times in ten minutes';
+const interruptedTurn = (message: string): EndTurnParameters => ({
+  stopReason: 'error',
+  error: { code: 'interrupted', message },
+});
+const connectionLostDuringTurn = interruptedTurn(
+  'The Agent connection failed during the Turn',
+);
+const connectionLostBeforePrompt =
+  'The Agent connection failed before the prompt was sent';
+// Resumed Agent context is not new Feed content.
+const replayedHistoryKinds = new Set([
+  'user_message_chunk',
+  'agent_message_chunk',
+  'agent_thought_chunk',
+  'tool_call',
+  'tool_call_update',
+  'plan',
+]);
+const interruptionDisclosure = (turnId: string): FeedChange => ({
+  type: 'upsert',
+  update: {
+    id: interruptionDisclosureId(turnId),
+    sessionUpdate: 'notice',
+    state: 'settled',
+    severity: 'warning',
+    title: 'Output may be missing',
+    description:
+      'The Turn was interrupted, so its output may be missing. Argo did not resend the prompt.',
+  },
+});
 
 const writer = ({
   system,
@@ -248,7 +283,7 @@ const readConfigurationUpdate = (
   context: SessionContext,
   event: SessionEvent,
 ): SessionConfigOption[] | undefined => {
-  assertEvent(event, 'acp.update');
+  assertEvent(event, acpUpdateEvent);
   const update = event.notification.update;
   if (update.sessionUpdate !== 'config_option_update') return undefined;
   try {
@@ -377,6 +412,18 @@ const sessionSetup = setup({
     openAcp: fromPromise<OpenedAcpSession, SessionContext>(
       async ({ input }) => {
         const lease = await input.acpLifetime.open(input);
+        return {
+          lease,
+          configOptions: readAcpConfiguration(
+            lease.response.configOptions,
+            input.acpConfigurationRejections,
+          ),
+        };
+      },
+    ),
+    reopenAcp: fromPromise<OpenedAcpSession, SessionContext>(
+      async ({ input }) => {
+        const lease = await input.acpLifetime.reopen(input);
         return {
           lease,
           configOptions: readAcpConfiguration(
@@ -576,7 +623,7 @@ const sessionSetup = setup({
     forwardAcpUpdate: sendTo(
       'feed',
       ({ context, event }): Extract<FeedEvent, { type: 'feed.acpUpdate' }> => {
-        assertEvent(event, 'acp.update');
+        assertEvent(event, acpUpdateEvent);
         return {
           type: 'feed.acpUpdate',
           acpSessionId: event.notification.sessionId,
@@ -1004,42 +1051,58 @@ const sessionSetup = setup({
     cancelAgent: sendTo('vendorSession', {
       type: 'agent.cancel',
     } satisfies AgentCommand),
-    recordCrash: enqueueActions(({ context, enqueue }): void => {
-      const now = context.input.now();
-      const agentCrashes = [
-        ...context.agentCrashes.filter(
-          (at): boolean => at > now - crashWindowMs,
-        ),
-        now,
-      ];
-      enqueue.assign({ agentCrashes });
+    recordCrash: enqueueActions(
+      ({ context, enqueue }, params: CrashNoticeParameters): void => {
+        const now = context.input.now();
+        const agentCrashes = [
+          ...context.agentCrashes.filter(
+            (at): boolean => at > now - crashWindowMs,
+          ),
+          now,
+        ];
+        enqueue.assign({ agentCrashes });
+        enqueue.sendTo('feed', {
+          type: feedChangeEvent,
+          turnId: context.activeTurnId,
+          change: {
+            type: 'upsert',
+            update: {
+              id: `${context.sessionId}:crash:${now}:${agentCrashes.length}`,
+              sessionUpdate: 'notice',
+              state: 'settled',
+              severity: 'warning',
+              title: 'The Agent stopped unexpectedly',
+              ...params,
+            },
+          },
+        });
+      },
+    ),
+    discloseInterruption: enqueueActions(({ context, enqueue }): void => {
+      const turnId =
+        context.activeTurnId ?? context.undisclosedInterruptedTurnId;
+      if (!turnId) return;
       enqueue.sendTo('feed', {
         type: feedChangeEvent,
-        turnId: context.activeTurnId,
-        change: {
-          type: 'upsert',
-          update: {
-            id: `${context.sessionId}:crash:${now}:${agentCrashes.length}`,
-            sessionUpdate: 'notice',
-            state: 'settled',
-            severity: 'warning',
-            title: 'The Agent stopped unexpectedly',
+        turnId,
+        change: interruptionDisclosure(turnId),
+      });
+      enqueue.assign({ undisclosedInterruptedTurnId: null });
+    }),
+    storeFailure: enqueueActions(
+      ({ context, enqueue }, params: FailureParameters): void => {
+        const failure = String(params.error);
+        enqueue.assign({ failure });
+        enqueue.sendTo(writer, {
+          type: writeFeedEvent,
+          job: {
+            type: 'sessionRowUpdate',
+            id: context.sessionId,
+            set: { failure },
           },
-        },
-      });
-    }),
-    giveUp: enqueueActions(({ context, enqueue }): void => {
-      const failure = 'The Agent stopped three times in ten minutes';
-      enqueue.assign({ failure });
-      enqueue.sendTo(writer, {
-        type: writeFeedEvent,
-        job: {
-          type: 'sessionRowUpdate',
-          id: context.sessionId,
-          set: { failure },
-        },
-      });
-    }),
+        });
+      },
+    ),
     countRejectedMessage: assign({
       rejectedMessages: ({ context }): number =>
         countRejection(context.rejectedMessages),
@@ -1088,6 +1151,12 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    isRecoveryBlocked: ({ event }): boolean =>
+      'error' in event && event.error instanceof RecoveryBlockedError,
+    isReplayedHistory: ({ context, event }): boolean =>
+      event.type === acpUpdateEvent &&
+      context.vendorSessionId !== null &&
+      replayedHistoryKinds.has(event.notification.update.sessionUpdate),
     hasAcpConfig: ({ context }) => context.configQueue.length > 0,
     hasConfigurationCapacity: ({ context }): boolean =>
       context.configQueue.length < pendingConfigurationLimit,
@@ -1095,7 +1164,7 @@ const sessionSetup = setup({
       'hasConfigurationCapacity',
       or([
         stateIn({ open: { acp: 'idle' } }),
-        stateIn({ open: { acp: 'configuring' } }),
+        stateIn({ open: { acp: configuringState } }),
         stateIn({ open: { acp: 'activeTurn' } }),
         stateIn({ open: { acp: 'publishing' } }),
       ]),
@@ -1124,6 +1193,9 @@ const sessionSetup = setup({
       stateIn({ open: 'flushing' }),
       stateIn({ open: { acp: 'flushing' } }),
     ]),
+    lostConnectionWhilePublishing: stateIn({
+      open: { acp: { publishing: 'disconnected' } },
+    }),
     tooManyCrashes: ({ context }): boolean =>
       context.agentCrashes.length >= maxCrashesInWindow,
   },
@@ -1176,6 +1248,12 @@ const firstTurn = ({
     throw new Error('Only a new Session has a first Turn');
   return { turnId: context.input.turnId, content: context.input.prompt };
 };
+
+const acpTurnOutcome = ({
+  context,
+}: {
+  context: SessionContext;
+}): EndTurnParameters => context.acpTurnOutcome ?? { stopReason: 'error' };
 
 const toPromptTurn = ({
   event,
@@ -1252,6 +1330,7 @@ export const sessionMachine = sessionSetup.createMachine({
     maxRevision: 0,
     activityAt: 0,
     nextPosition: 0,
+    undisclosedInterruptedTurnId: null,
     capabilities: null,
     activeTurnId: null,
     activeTurnStartedAt: null,
@@ -1447,6 +1526,7 @@ export const sessionMachine = sessionSetup.createMachine({
                       params: ({ event }): OpenedAcpSession => event.output,
                     },
                     'storeSession',
+                    'discloseInterruption',
                   ],
                 },
                 onError: {
@@ -1459,11 +1539,15 @@ export const sessionMachine = sessionSetup.createMachine({
                   },
                 },
               },
-              on: { 'session.close': { target: 'closing' } },
+              on: {
+                'session.close': { target: 'closing' },
+                'acp.update': { guard: 'isReplayedHistory' },
+              },
             },
             idle: {
-              always: { guard: 'hasAcpConfig', target: 'configuring' },
+              always: { guard: 'hasAcpConfig', target: configuringState },
               on: {
+                'acp.failed': { target: 'recovering', actions: 'recordCrash' },
                 'session.close': { target: 'closing' },
                 'session.prompt': {
                   target: 'committing',
@@ -1529,6 +1613,21 @@ export const sessionMachine = sessionSetup.createMachine({
                 },
               },
               on: {
+                'acp.failed': {
+                  target: 'recovering',
+                  actions: [
+                    'recordCrash',
+                    {
+                      type: 'rejectSubmission',
+                      params: ({ event }): FailureParameters => ({
+                        error: new Error(connectionLostBeforePrompt, {
+                          cause: event.error,
+                        }),
+                      }),
+                    },
+                    { type: 'endTurn', params: { stopReason: 'error' } },
+                  ],
+                },
                 'session.close': {
                   target: 'closing',
                   actions: {
@@ -1572,6 +1671,10 @@ export const sessionMachine = sessionSetup.createMachine({
               },
               exit: 'cancelAcpRequests',
               on: {
+                'acp.failed': {
+                  target: 'interrupting',
+                  actions: ['recordCrash', 'discloseInterruption'],
+                },
                 'session.cancel': {
                   target: '.cancelling',
                   actions: 'cancelAcpRequests',
@@ -1635,6 +1738,18 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             publishing: {
+              initial: 'connected',
+              states: {
+                connected: {
+                  on: {
+                    'acp.failed': {
+                      target: 'disconnected',
+                      actions: 'recordCrash',
+                    },
+                  },
+                },
+                disconnected: { on: { 'acp.failed': {} } },
+              },
               invoke: {
                 id: 'publishTurn',
                 src: 'publishTurn',
@@ -1642,14 +1757,17 @@ export const sessionMachine = sessionSetup.createMachine({
                   context,
                   findFeed: () => self.getSnapshot().children.feed,
                 }),
-                onDone: {
-                  target: 'idle',
-                  actions: {
-                    type: 'endTurn',
-                    params: ({ context }) =>
-                      context.acpTurnOutcome ?? { stopReason: 'error' },
+                onDone: [
+                  {
+                    guard: 'lostConnectionWhilePublishing',
+                    target: 'recovering',
+                    actions: { type: 'endTurn', params: acpTurnOutcome },
                   },
-                },
+                  {
+                    target: 'idle',
+                    actions: { type: 'endTurn', params: acpTurnOutcome },
+                  },
+                ],
                 onError: {
                   target: 'closing',
                   actions: {
@@ -1657,6 +1775,87 @@ export const sessionMachine = sessionSetup.createMachine({
                     params: ({ event }) => ({ error: event.error }),
                   },
                 },
+              },
+            },
+            interrupting: {
+              on: {
+                'acp.failed': {},
+                'session.close': {
+                  target: 'retainingCleanup',
+                  actions: {
+                    type: 'endTurn',
+                    params: connectionLostDuringTurn,
+                  },
+                },
+              },
+              invoke: {
+                id: 'publishInterruptedTurn',
+                src: 'publishTurn',
+                input: ({ context, self }): AcpOperationInput => ({
+                  context,
+                  findFeed: () => self.getSnapshot().children.feed,
+                }),
+                onDone: {
+                  target: 'recovering',
+                  actions: {
+                    type: 'endTurn',
+                    params: connectionLostDuringTurn,
+                  },
+                },
+                onError: {
+                  target: 'recovering',
+                  actions: {
+                    type: 'endTurn',
+                    params: connectionLostDuringTurn,
+                  },
+                },
+              },
+            },
+            // The failed generation is released by its owner; the retry delay is a minimum, not a release proof.
+            recovering: {
+              always: {
+                guard: 'tooManyCrashes',
+                target: 'retainingCleanup',
+                actions: {
+                  type: 'storeFailure',
+                  params: { error: crashBudgetFailure },
+                },
+              },
+              after: { agentRestartDelay: 'reopening' },
+              on: {
+                'acp.failed': {},
+                'session.close': { target: 'retainingCleanup' },
+              },
+            },
+            reopening: {
+              invoke: {
+                id: 'reopenAcp',
+                src: 'reopenAcp',
+                input: ({ context }): SessionContext => context,
+                onDone: {
+                  target: 'idle',
+                  actions: {
+                    type: 'rememberAcpLease',
+                    params: ({ event }): OpenedAcpSession => event.output,
+                  },
+                },
+                onError: [
+                  {
+                    guard: 'isRecoveryBlocked',
+                    target: 'retainingCleanup',
+                    actions: {
+                      type: 'storeFailure',
+                      params: ({ event }): FailureParameters => ({
+                        error: event.error,
+                      }),
+                    },
+                  },
+                  { target: 'recovering', actions: 'recordCrash' },
+                ],
+              },
+              on: {
+                'acp.failed': {},
+                'acp.update': { guard: 'isReplayedHistory' },
               },
             },
             closing: {
@@ -1880,7 +2079,10 @@ export const sessionMachine = sessionSetup.createMachine({
           always: {
             guard: 'tooManyCrashes',
             target: 'draining',
-            actions: 'giveUp',
+            actions: {
+              type: 'storeFailure',
+              params: { error: crashBudgetFailure },
+            },
           },
           after: { agentRestartDelay: 'live' },
           on: { 'session.close': 'draining' },

@@ -9,6 +9,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { useState } from 'react';
 import {
   configurationChoices,
   configurationEffortChoices,
@@ -116,6 +117,9 @@ export function useNewSessionConfiguration(
 ): NewSessionConfiguration {
   const client = useQueryClient();
   const id = agent?.agent ?? '';
+  const [switchValues, setSwitchValues] = useState<
+    Record<string, Record<string, boolean>>
+  >({});
   const saved = useQuery({
     queryKey: queryKey(id),
     queryFn: () =>
@@ -129,14 +133,34 @@ export function useNewSessionConfiguration(
     enabled: !!agent,
     staleTime: Infinity,
   });
-  const configOptions = draftConfiguration(agent, saved.data ?? {});
+  const remembered = draftConfiguration(agent, saved.data ?? {});
+  const configOptions = (agent?.configOptions ?? []).flatMap((option) => {
+    if (isRememberedConfiguration(option))
+      return (
+        remembered.find((entry) => entry.configId === option.configId) ?? []
+      );
+    if (option.type === 'boolean')
+      return {
+        ...option,
+        currentValue:
+          switchValues[id]?.[option.configId] ?? option.currentValue,
+      };
+    return [];
+  });
   return {
     configOptions: saved.isSuccess ? configOptions : [],
     ready: saved.isSuccess,
     change: (configId: string, value: string | boolean): void => {
-      if (!saved.isSuccess || typeof value !== 'string') return;
+      if (!saved.isSuccess) return;
+      if (typeof value === 'boolean') {
+        setSwitchValues((previous) => ({
+          ...previous,
+          [id]: { ...previous[id], [configId]: value },
+        }));
+        return;
+      }
       const changed = configOptions.map((option) =>
-        option.configId === configId
+        option.type === 'select' && option.configId === configId
           ? { ...option, currentValue: value }
           : option,
       );

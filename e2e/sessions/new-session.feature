@@ -22,7 +22,10 @@ Feature: New Session
   Scenario Outline: Configure the actual Session before its first prompt with Agent <agent>
     Given a phone Frame
     And a New Session with Agent <agent>
-    When I open the Session before prompting
+    When I enable Fast mode
+    And I open the Session before prompting
+    Then Fast mode remains enabled
+    When I disable Fast mode
     And I enable Fast mode
     And I send the prompt "Use my configured Session"
     Then the Agent replies "The shared fixture completed this Turn."

@@ -15,7 +15,9 @@
     },
     "apps/universal-app": {
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
-      "ignoreDependencies": ["expo-font", "react-native-svg", "expo-updates"]
+      "ignoreDependencies": ["expo-font", "react-native-svg", "expo-updates"],
+      // Config plugins that app.json names by path.
+      "entry": ["plugins/*.mjs"]
     },
     "apps/storybook": {
       // Peers of @repo/client's primitives, listed here so the Storybook Vite build resolves them.

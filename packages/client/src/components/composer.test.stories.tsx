@@ -10,6 +10,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
+import { chooseEffort } from '../../mocks/choose-effort';
 import {
   composerProps,
   composerImages,
@@ -54,6 +55,8 @@ type PickerCatalog = {
   models: SessionConfigSelectOption[];
   currentEffort: string;
   highEffortModel: SessionConfigSelectOption;
+  highEffortLevels: string[];
+  highEffort: string;
   planning: SessionConfigSelectOption;
   dangerous: SessionConfigSelectOption;
 };
@@ -96,6 +99,12 @@ const pickerCatalogs = newSessionCatalogs.bothAvailable.map(
       throw new Error(
         `Recorded catalog needs a model with high effort for ${agent.label}.`,
       );
+    const highEffort = effort.choices.find((entry) => entry.value === 'high');
+    const supported = highEffortModel._meta?.argo?.supportedEffortLevels;
+    if (!highEffort)
+      throw new Error(
+        `Recorded catalog needs a high effort for ${agent.label}.`,
+      );
     const planning = modes.choices.find(
       (entry) => entry._meta?.argo?.tone === 'planning',
     );
@@ -111,6 +120,10 @@ const pickerCatalogs = newSessionCatalogs.bothAvailable.map(
       models: models.choices,
       currentEffort: currentEffort.name,
       highEffortModel,
+      highEffortLevels: effort.choices
+        .filter((entry) => !supported || supported.includes(entry.value))
+        .map((entry) => entry.name),
+      highEffort: highEffort.name,
       planning,
       dangerous,
     };
@@ -618,13 +631,10 @@ async function expectEffortControlsVisible(): Promise<void> {
   await waitFor(() =>
     expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible(),
   );
-  for (const label of overlay.getAllByRole('button', {
-    name: /^Set effort to /,
-  })) {
+  for (const end of ['Fastest', 'Smartest']) {
+    const label = overlay.getByText(end, { exact: true });
     await expect(label).toBeVisible();
-    const text = label.querySelector('[dir]');
-    if (!text) throw new Error('Effort label is missing.');
-    await expect(text.scrollWidth).toBeLessThanOrEqual(text.clientWidth + 1);
+    await expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
   }
 }
 
@@ -637,14 +647,9 @@ async function expectHighEffort({
   const overlay = within(document.body);
   const model = catalog.highEffortModel;
   await chooseModel({ userEvent, width, name: model.name });
-  await userEvent.click(
-    await overlay.findByRole('button', { name: /^Set effort to high$/i }),
-  );
-  await expect(
-    await overlay.findByRole('slider', { name: 'Effort' }),
-  ).toHaveAttribute(valueTextAttribute, expect.stringMatching(/^high$/i));
-  const slider = overlay.getByRole('slider', { name: 'Effort' });
-  slider.focus();
+  const slider = await overlay.findByRole('slider', { name: 'Effort' });
+  await chooseEffort(slider, catalog.highEffortLevels, catalog.highEffort);
+  await expect(slider).toHaveAttribute(valueTextAttribute, catalog.highEffort);
   await browserUserEvent.keyboard('{ArrowRight}');
   await expect(
     canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
@@ -655,7 +660,7 @@ async function expectHighEffort({
   );
   await expect(slider).not.toHaveAttribute(
     valueTextAttribute,
-    expect.stringMatching(/^high$/i),
+    catalog.highEffort,
   );
 }
 
@@ -1200,11 +1205,17 @@ function responsiveLayout(width: number, agentIndex: number): Story {
       }
       await userEvent.click(trigger);
       if (width < 720) {
-        await expect(
+        const chooseAgent = await within(document.body).findByRole('button', {
+          name: chooseAgentLabel,
+        });
+        await expect(chooseAgent).toBeEnabled();
+        await userEvent.click(chooseAgent);
+        await expectHeldAgentList();
+        await userEvent.click(
           await within(document.body).findByRole('button', {
-            name: chooseAgentLabel,
+            name: 'Back to Agent and model',
           }),
-        ).toBeDisabled();
+        );
         await userEvent.click(
           await within(document.body).findByRole('button', {
             name: chooseModelLabel,
@@ -1317,12 +1328,18 @@ async function expectWideFooter({
 }
 
 async function expectWideAgentMenu(): Promise<void> {
-  const overlay = within(document.body);
-  await waitFor(() =>
-    expect(
-      overlay.getByText('Start a new Session to switch Agent'),
-    ).toBeVisible(),
-  );
+  await waitFor(expectHeldAgentList);
+}
+
+// A running Session lists every Agent, disabled, with its own Agent chosen.
+async function expectHeldAgentList(): Promise<void> {
+  const agents = await within(document.body).findAllByRole('button', {
+    name: /^Select /,
+  });
+  for (const agent of agents) await expect(agent).toBeDisabled();
+  await expect(
+    agents.filter((agent) => agent.getAttribute(pressedAttribute) === 'true'),
+  ).toHaveLength(1);
 }
 
 function editorScrollsAfterFourLines(width: number): Story {

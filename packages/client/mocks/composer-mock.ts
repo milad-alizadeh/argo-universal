@@ -74,19 +74,20 @@ export const composerPlanDone: PlanEntry[] = composerPlan.map((entry) => ({
   status: 'completed',
 }));
 
-export const composerNoEffortSelections = newSessionCatalogs.bothAvailable.map(
-  (agent): NonNullable<ComposerProps['configuration']> => ({
-    agents: newSessionCatalogs.bothAvailable,
-    agent: agent.agent,
-    configOptions: agent.configOptions.map((option) =>
-      option.category === 'thought_level' && option.type === 'select'
-        ? { ...option, currentValue: 'unsupported' }
-        : option,
-    ),
-    onConfigChange: () => {},
-    checkout: { branch: 'main', newWorktree: false },
-  }),
-);
+export const composerUnlistedEffortConfigurations =
+  newSessionCatalogs.bothAvailable.map(
+    (agent): NonNullable<ComposerProps['configuration']> => ({
+      agents: newSessionCatalogs.bothAvailable,
+      agent: agent.agent,
+      configOptions: agent.configOptions.map((option) =>
+        option.category === 'thought_level' && option.type === 'select'
+          ? { ...option, currentValue: 'unsupported' }
+          : option,
+      ),
+      onConfigChange: () => {},
+      checkout: { branch: 'main', newWorktree: false },
+    }),
+  );
 
 export const composerUnavailableConfigurations =
   newSessionCatalogs.bothUnavailable.map(
@@ -196,3 +197,31 @@ export const composerLongListConfiguration: NonNullable<
   onConfigChange: () => {},
   checkout: { branch: 'main', newWorktree: false },
 };
+
+function firstAvailableAgent(): AgentInfo {
+  const agent = newSessionCatalogs.bothAvailable[0];
+  if (!agent) throw new Error('Recorded catalog needs an available Agent.');
+  return agent;
+}
+const fastModeAgent = firstAvailableAgent();
+// No adapter offers Fast mode yet, so this on/off option stands in until one is recorded.
+export function composerFastModeConfiguration(
+  on: boolean,
+): NonNullable<ComposerProps['configuration']> {
+  return {
+    agents: newSessionCatalogs.bothAvailable,
+    agent: fastModeAgent.agent,
+    configOptions: [
+      ...fastModeAgent.configOptions,
+      {
+        type: 'boolean',
+        configId: 'fast',
+        name: 'Fast mode',
+        description: 'Quicker replies, at a higher cost',
+        currentValue: on,
+      },
+    ],
+    onConfigChange: () => {},
+    checkout: { branch: 'main', newWorktree: false },
+  };
+}

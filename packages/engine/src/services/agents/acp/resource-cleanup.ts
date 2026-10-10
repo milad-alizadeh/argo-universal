@@ -31,13 +31,14 @@ export class AcpResourceCleanup {
       reservation.input.destination.failed(failure),
     );
   }
-  public fail(error: unknown): void {
-    if (this.hasFailedOrStartedTermination()) return;
+  public fail(error: unknown): boolean {
+    if (this.hasFailedOrStartedTermination()) return false;
     this.broken = true;
     this.retired = true;
     this.input.routing.fence();
     for (const reservation of this.input.reservations)
       reservation.input.destination.failed(error);
+    return true;
   }
   private hasFailedOrStartedTermination(): boolean {
     return this.termination !== undefined || this.broken;
@@ -79,6 +80,14 @@ export class AcpResourceCleanup {
     return this.termination;
   }
   private async terminate(): Promise<void> {
+    try {
+      await this.terminateConnection();
+    } catch (error) {
+      this.released.reject(error);
+      throw error;
+    }
+  }
+  private async terminateConnection(): Promise<void> {
     this.retired = true;
     await this.input.connection.shutdown();
     await Promise.all(

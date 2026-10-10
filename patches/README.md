@@ -1,5 +1,11 @@
 # Dependency declarations
 
+## expo-symbols@57.0.3
+
+`expo-symbols@57.0.3.patch` lets `SymbolView` on iOS fall back to `UIImage(named:)` when the name is not a system symbol, so it draws Argo's custom symbols from the app's asset catalog (ADR-0019). System symbols load exactly as before.
+
+Remove this patch when `expo-symbols` loads asset-catalog symbols itself. When upgrading `expo-symbols`, carry the one-line fallback into `ios/SymbolView.swift`.
+
 ## react-native@0.86.3
 
 `react-native@0.86.3.patch` adds `blockquote` and `code` to the two published `Role` declarations. React Native Web already maps these roles to their semantic HTML elements. Argo selects them only on web; native roles and all dependency runtime files stay unchanged.

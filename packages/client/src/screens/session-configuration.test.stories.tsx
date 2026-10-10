@@ -102,6 +102,7 @@ function actualConfiguration(width: number, agentIndex: number): Story {
   };
   const updates = createSubscriptionPublisher<FeedSnapshot>();
   const requests: SessionSetConfigOptionInput[] = [];
+  let accepted = Promise.withResolvers<void>();
   const mocks: Fixtures = {
     ...emptySessionMocks,
     ...createFeedMocks(recording),
@@ -109,24 +110,28 @@ function actualConfiguration(width: number, agentIndex: number): Story {
       yield { type: 'snapshot', snapshot: recording.snapshot };
       yield* updates.subscribe(signal);
     },
-    'session.setConfigOption': (input: SessionSetConfigOptionInput) => {
+    'session.setConfigOption': async (input: SessionSetConfigOptionInput) => {
       requests.push(input);
-      updates.publish({ type: 'snapshot', snapshot: enabled });
-      return { configOptions: enabled.configOptions };
+      await accepted.promise;
+      const snapshot = input.value ? enabled : recording.snapshot;
+      updates.publish({ type: 'snapshot', snapshot });
+      return { configOptions: snapshot.configOptions };
     },
   };
   return {
     parameters: { trpc: mocks },
     beforeEach: () => {
       requests.length = 0;
+      accepted = Promise.withResolvers<void>();
       updates.reset();
       return () => updates.reset();
     },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      await userEvent.click(
-        await canvas.findByRole('button', { name: agentModelLabel }),
-      );
+      const trigger = await canvas.findByRole('button', {
+        name: agentModelLabel,
+      });
+      await userEvent.click(trigger);
       const overlay = within(document.body);
       if (width === layoutWidths.phone)
         await userEvent.click(
@@ -135,17 +140,22 @@ function actualConfiguration(width: number, agentIndex: number): Story {
       await expect(
         await overlay.findByRole('button', { name: checkoutModelName }),
       ).toHaveAttribute(pressedAttribute, 'true');
-      await userEvent.keyboard('{Escape}');
+      if (width === layoutWidths.phone)
+        await userEvent.click(
+          overlay.getByRole('button', { name: 'Back to Agent and model' }),
+        );
       await userEvent.click(
-        await canvas.findByRole('button', { name: 'Session settings' }),
+        await overlay.findByRole('switch', { name: fastModeLabel }),
       );
-      await userEvent.click(
-        await overlay.findByRole('button', { name: fastModeLabel }),
-      );
+      await waitFor(() => expect(requests).toHaveLength(1));
+      await waitFor(() => expect(trigger).toBeDisabled());
+      accepted.resolve();
+      await waitFor(() => expect(trigger).toBeEnabled());
+      await userEvent.click(trigger);
       await waitFor(() =>
         expect(
-          overlay.getByRole('button', { name: fastModeLabel }),
-        ).toHaveAttribute(pressedAttribute, 'true'),
+          overlay.getByRole('switch', { name: fastModeLabel }),
+        ).toHaveAttribute('aria-checked', 'true'),
       );
       await expect(requests).toEqual([
         {
@@ -155,6 +165,20 @@ function actualConfiguration(width: number, agentIndex: number): Story {
           value: true,
         },
       ]);
+      await userEvent.click(
+        overlay.getByRole('switch', { name: fastModeLabel }),
+      );
+      await waitFor(() =>
+        expect(
+          overlay.getByRole('switch', { name: fastModeLabel }),
+        ).not.toBeChecked(),
+      );
+      await expect(requests[1]).toEqual({
+        sessionId: actualSessionId,
+        configId: actualFastId,
+        type: 'boolean',
+        value: false,
+      });
     },
   };
 }
@@ -351,3 +375,75 @@ export const RemembersAcceptedChoiceDuringLoadFirstAgent =
   remembersAcceptedChoiceDuringLoad(0);
 export const RemembersAcceptedChoiceDuringLoadSecondAgent =
   remembersAcceptedChoiceDuringLoad(1);
+
+function fastBeforeOpening(width: number, agentIndex: number): Story {
+  const agent = newSessionCatalogs.bothAvailable[agentIndex];
+  if (!agent) throw new Error('Recorded catalog needs two Agents.');
+  const fast = configuredEmptySession(agentIndex).snapshot.configOptions.find(
+    (option) => option.configId === actualFastId,
+  );
+  if (!fast) throw new Error('Recorded Session needs Fast mode.');
+  const requests: Parameters<NonNullable<Fixtures['session.new']>>[0][] = [];
+  return {
+    render: () => <NewSessionScreen />,
+    parameters: {
+      trpc: {
+        ...newSessionMocks,
+        'agents.list': () => [
+          { ...agent, configOptions: [...agent.configOptions, fast] },
+        ],
+        'session.new': (
+          input: Parameters<NonNullable<Fixtures['session.new']>>[0],
+        ) => {
+          requests.push(input);
+          return { sessionId: actualSessionId };
+        },
+      },
+    },
+    beforeEach: async () => {
+      await AsyncStorage.clear();
+      requests.length = 0;
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await userEvent.click(
+        await canvas.findByRole('button', { name: agentModelLabel }),
+      );
+      const overlay = within(document.body);
+      const toggle = await overlay.findByRole('switch', {
+        name: fastModeLabel,
+      });
+      await expect(toggle).not.toBeChecked();
+      await userEvent.click(toggle);
+      await waitFor(() => expect(toggle).toBeChecked());
+      await userEvent.keyboard('{Escape}');
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Open Session' }),
+      );
+      await waitFor(() => expect(requests).toHaveLength(1));
+      await expect(requests[0]).toMatchObject({
+        agent: agent.agent,
+        prompt: [],
+        configOptions: expect.arrayContaining([
+          { configId: actualFastId, value: true },
+        ]),
+      });
+    },
+  };
+}
+export const FastBeforeOpeningPhoneFirstAgent = fastBeforeOpening(
+  layoutWidths.phone,
+  0,
+);
+export const FastBeforeOpeningPhoneSecondAgent = fastBeforeOpening(
+  layoutWidths.phone,
+  1,
+);
+export const FastBeforeOpeningWideFirstAgent = fastBeforeOpening(
+  layoutWidths.wide,
+  0,
+);
+export const FastBeforeOpeningWideSecondAgent = fastBeforeOpening(
+  layoutWidths.wide,
+  1,
+);

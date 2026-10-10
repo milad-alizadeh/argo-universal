@@ -1,16 +1,15 @@
 import type {
   CreateElicitationResponse,
   SessionNotification,
-  NewSessionRequest,
 } from '@agentclientprotocol/sdk';
 import type {
   AcpResources,
   AcpSessionDestination,
   AcpSessionLease,
-  AcpSessionOpening,
   ResolveAgentLaunch,
 } from '../../agents';
 import type { SessionData } from '../session-data';
+import { selectSessionOpening } from './acp-session-opening';
 import {
   AcpSessionRequests,
   type AcpRequestEvent,
@@ -25,24 +24,25 @@ export type AcpLifetimeEvent =
   | { type: 'acp.update'; notification: SessionNotification }
   | { type: 'acp.failed'; error: unknown }
   | AcpRequestEvent;
-const createNewSessionRequest = (session: SessionData): NewSessionRequest => ({
-  cwd: session.checkout.path,
-  mcpServers: [],
-});
 const isWithdrawn = (error: unknown): boolean =>
   error instanceof Error && error.name === 'AbortError';
-const selectSessionOpening = (session: SessionData): AcpSessionOpening => {
-  const params = createNewSessionRequest(session);
-  if (session.vendorSessionId === null)
-    return { method: 'session/new', params };
-  return {
-    method: 'session/resume',
-    params: { ...params, sessionId: session.vendorSessionId },
-  };
-};
+type SendLifetimeEvent = (event: AcpLifetimeEvent) => void;
+const createDestination = (
+  requests: AcpSessionRequests,
+  send: SendLifetimeEvent,
+): AcpSessionDestination => ({
+  update: (notification): undefined => {
+    send({ type: 'acp.update', notification });
+  },
+  failed: (error) => send({ type: 'acp.failed', error }),
+  requestPermission: requests.requestPermission(send),
+  createElicitation: requests.createElicitation(send),
+});
+// Each opening gets its own destination; a replaced generation's late callbacks are dropped.
 export class AcpSessionLifetime {
-  private readonly bound = Promise.withResolvers<AcpSessionDestination>();
+  private readonly bound = Promise.withResolvers<SendLifetimeEvent>();
   private readonly controller = new AbortController();
+  private generation = 0;
   private opening: Promise<AcpSessionLease> | undefined;
   private closing: Promise<void> | undefined;
   private lease: AcpSessionLease | undefined;
@@ -54,36 +54,36 @@ export class AcpSessionLifetime {
   ) {
     this.requests = new AcpSessionRequests(createId);
   }
-  public bind(sendBack: (event: AcpLifetimeEvent) => void): () => void {
+  public bind(sendBack: SendLifetimeEvent): () => void {
     this.attached = true;
-    this.bound.resolve(this.createSessionDestination(sendBack));
+    this.bound.resolve(sendBack);
     return () => {
       this.attached = false;
       void this.close().catch(() => {});
     };
   }
   private createSessionDestination(
-    sendBack: (event: AcpLifetimeEvent) => void,
+    sendBack: SendLifetimeEvent,
   ): AcpSessionDestination {
-    const send = (event: AcpLifetimeEvent): void => {
-      if (this.attached) sendBack(event);
-    };
-    return {
-      update: (notification): undefined => {
-        send({ type: 'acp.update', notification });
-      },
-      failed: (error) => send({ type: 'acp.failed', error }),
-      requestPermission: this.requests.requestPermission(send),
-      createElicitation: this.requests.createElicitation(send),
-    };
+    const generation = this.generation;
+    return createDestination(this.requests, (event) => {
+      if (this.attached && generation === this.generation) sendBack(event);
+    });
   }
   public open(session: SessionData): Promise<AcpSessionLease> {
     this.opening ??= this.openOwned(session);
     return this.opening;
   }
+  // Recovery resumes the Session on a replacement connection; the failed lease is released by its owner.
+  public reopen(session: SessionData): Promise<AcpSessionLease> {
+    this.requests.cancelAll();
+    this.generation += 1;
+    this.opening = this.openOwned(session);
+    return this.opening;
+  }
   private async openOwned(session: SessionData): Promise<AcpSessionLease> {
     const dependencies = this.requireDependencies();
-    const destination = await this.bound.promise;
+    const destination = this.createSessionDestination(await this.bound.promise);
     const launch = await this.resolveSessionAgentLaunch(session, dependencies);
     this.lease = await dependencies.resources.open({
       launch,

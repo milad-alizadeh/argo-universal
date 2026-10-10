@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
+import { chooseEffort } from '../../mocks/choose-effort';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
   agentProbeRequests,
@@ -50,6 +51,72 @@ const [exampleProject, landingProject] = newSessionProjects;
 const firstAgent = newSessionCatalogs.bothAvailable[0];
 if (!exampleProject || !landingProject || !firstAgent)
   throw new Error('New Session needs two Projects and an Agent.');
+
+const effortModelCases = newSessionCatalogs.bothAvailable.map((agent) => {
+  const model = agent.configOptions.find(
+    (option) => option.category === 'model' && option.type === 'select',
+  );
+  const effort = agent.configOptions.find(
+    (option) => option.category === 'thought_level' && option.type === 'select',
+  );
+  const models =
+    model?.type === 'select'
+      ? model.options.flatMap((entry) =>
+          'groupId' in entry ? entry.options : [entry],
+        )
+      : [];
+  const efforts =
+    effort?.type === 'select'
+      ? effort.options.flatMap((entry) =>
+          'groupId' in entry ? entry.options : [entry],
+        )
+      : [];
+  const currentModel = models.find(
+    (choice) => choice.value === model?.currentValue,
+  );
+  const levels = currentModel?._meta?.argo?.supportedEffortLevels ?? [];
+  const nextModel = models.find((choice) => {
+    const supported = choice._meta?.argo?.supportedEffortLevels;
+    return (
+      supported?.length && levels.some((level) => !supported.includes(level))
+    );
+  });
+  const unsupported = efforts.find(
+    (choice) =>
+      levels.includes(choice.value) &&
+      !nextModel?._meta?.argo?.supportedEffortLevels?.includes(choice.value),
+  );
+  const defaultEffort = efforts.find(
+    (choice) => choice.value === effort?.currentValue,
+  );
+  if (
+    model?.type !== 'select' ||
+    effort?.type !== 'select' ||
+    !nextModel ||
+    !unsupported ||
+    !defaultEffort ||
+    !nextModel._meta?.argo?.supportedEffortLevels?.includes(defaultEffort.value)
+  )
+    throw new Error(
+      `Recorded catalog needs a default effort and models with differing effort levels for ${agent.label}.`,
+    );
+  const visible = (supported: string[] | undefined): string[] =>
+    efforts
+      .filter((choice) => !supported || supported.includes(choice.value))
+      .map((choice) => choice.name);
+  const offered = visible(levels);
+  const nextOffered = visible(nextModel._meta?.argo?.supportedEffortLevels);
+  return {
+    agent,
+    model,
+    effort,
+    nextModel,
+    unsupported,
+    defaultEffort,
+    offered,
+    nextOffered,
+  };
+});
 
 const meta = {
   title: 'Tests/NewSessionScreen',
@@ -183,7 +250,8 @@ export const NarrowMainColumn: Story = {
     await page.viewport(1440, 844);
     const checkout = await canvas.findByRole('button', { name: 'Checkout' });
     await expect(checkout).toBeVisible();
-    await expect(checkout).toHaveTextContent(/New worktree from\s*main/);
+    await expect(checkout).toHaveTextContent('New worktree');
+    await expect(checkout).not.toHaveTextContent('main');
     await expect(
       canvas.getAllByRole('button', { name: 'Checkout' }),
     ).toHaveLength(1);
@@ -213,10 +281,11 @@ export const Ready: Story = {
       await expect(
         canvas.getAllByRole('button', { name: 'Checkout' }),
       ).toHaveLength(1);
-      if (!wide)
-        await expect(
-          canvas.getByRole('button', { name: 'Checkout' }),
-        ).toHaveTextContent(/New worktree from\s*main/);
+      if (!wide) {
+        const checkout = canvas.getByRole('button', { name: 'Checkout' });
+        await expect(checkout).toHaveTextContent('New worktree');
+        await expect(checkout).not.toHaveTextContent('main');
+      }
       await expect(
         canvas.queryByRole('textbox', { name: 'Message' }),
       ).toBeNull();
@@ -293,10 +362,13 @@ function openSessionBeforePrompt(width: number, agentIndex: number): Story {
       await userEvent.click(
         await overlay.findByRole('button', { name: `Select ${agent.label}` }),
       );
-      if (width === layoutWidths.wide)
-        await userEvent.click(
-          canvas.getByRole('button', { name: agentModelLabel }),
-        );
+      if (width === layoutWidths.wide && agentIndex !== 0) {
+        const trigger = await canvas.findByRole('button', {
+          name: agentModelLabel,
+        });
+        await waitFor(() => expect(trigger).toBeEnabled());
+        await userEvent.click(trigger);
+      }
       await expect(
         await overlay.findByRole('slider', { name: effortLabel }),
       ).toHaveAttribute(effortValueAttribute, defaultEffortLabel);
@@ -391,8 +463,10 @@ function rememberedSelection(agentIndex: number): Story {
       await userEvent.click(
         await overlay.findByRole('button', { name: model.name }),
       );
-      await userEvent.click(
-        overlay.getByRole('button', { name: 'Set effort to High' }),
+      await chooseEffort(
+        overlay.getByRole('slider', { name: effortLabel }),
+        ['Low', 'Medium', 'High', 'Ultra'],
+        'High',
       );
       await expect(
         overlay.getByRole('slider', { name: effortLabel }),
@@ -458,16 +532,18 @@ export const FallsBackToDefaultEffortForModel: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );
-    await userEvent.click(
-      await overlay.findByRole('button', { name: 'Set effort to Ultra' }),
+    await chooseEffort(
+      await overlay.findByRole('slider', { name: effortLabel }),
+      ['Low', 'Medium', 'High', 'Extra high', 'Max', 'Ultra'],
+      'Ultra',
     );
     await userEvent.click(overlay.getByRole('button', { name: 'GPT-5.5' }));
     await expect(
       overlay.getByRole('slider', { name: effortLabel }),
     ).toHaveAttribute(effortValueAttribute, defaultEffortLabel);
     await expect(
-      overlay.queryByRole('button', { name: 'Set effort to Ultra' }),
-    ).toBeNull();
+      overlay.getByRole('slider', { name: effortLabel }),
+    ).toHaveAttribute('max', '3');
     await userEvent.keyboard('{Escape}');
     await userEvent.click(
       canvas.getByRole('button', { name: openSessionLabel }),
@@ -752,3 +828,102 @@ export const LoadFailure: Story = {
     await expect(canvas.getByRole('button', { name: 'Retry' })).toBeVisible();
   },
 };
+
+function effortFollowsModel(width: number, agentIndex: number): Story {
+  const recorded = effortModelCases[agentIndex];
+  if (!recorded)
+    throw new Error(
+      'Recorded catalog needs two Agents with model effort levels.',
+    );
+  const {
+    agent,
+    model,
+    effort,
+    nextModel,
+    unsupported,
+    defaultEffort,
+    offered,
+    nextOffered,
+  } = recorded;
+  return {
+    parameters: {
+      trpc: { 'agents.list': (): FixtureOutput<'agents.list'> => [agent] },
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      const trigger = await canvas.findByRole('button', {
+        name: agentModelLabel,
+      });
+      await userEvent.click(trigger);
+      const slider = await overlay.findByRole('slider', { name: 'Effort' });
+      await chooseEffort(slider, offered, unsupported.name);
+      await expect(slider).toHaveAttribute(
+        effortValueAttribute,
+        unsupported.name,
+      );
+      if (width === layoutWidths.phone)
+        await userEvent.click(
+          overlay.getByRole('button', { name: 'Choose model' }),
+        );
+      await userEvent.click(
+        await overlay.findByRole('button', { name: nextModel.name }),
+      );
+      if (width === layoutWidths.wide) {
+        await expect(trigger).toHaveTextContent(defaultEffort.name);
+        await expect(trigger).not.toHaveTextContent(unsupported.name);
+      }
+      const nextSlider = await overlay.findByRole('slider', { name: 'Effort' });
+      await waitFor(() =>
+        expect(nextSlider).toHaveAttribute(
+          effortValueAttribute,
+          defaultEffort.name,
+        ),
+      );
+      // The slider offers only the new model's levels, so the unsupported one is out of reach.
+      await expect(nextSlider).toHaveAttribute(
+        'max',
+        String(nextOffered.length - 1),
+      );
+      await expect(
+        overlay.queryByText(unsupported.name, { exact: true }),
+      ).not.toBeInTheDocument();
+      await expect(
+        overlay.queryByRole('switch', { name: 'Fast mode' }),
+      ).not.toBeInTheDocument();
+      await userEvent.keyboard('{Escape}');
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Open Session' }),
+      );
+      await waitFor(() => expect(started).toHaveLength(1));
+      await expect(started[0]?.agent).toBe(agent.agent);
+      await expect(started[0]?.configOptions).toContainEqual({
+        configId: model.configId,
+        value: nextModel.value,
+      });
+      await expect(started[0]?.configOptions).toContainEqual({
+        configId: effort.configId,
+        value: defaultEffort.value,
+      });
+      await expect(started[0]?.configOptions).not.toContainEqual({
+        configId: effort.configId,
+        value: unsupported.value,
+      });
+    },
+  };
+}
+export const EffortFollowsModelPhoneFirstAgent = effortFollowsModel(
+  layoutWidths.phone,
+  0,
+);
+export const EffortFollowsModelPhoneSecondAgent = effortFollowsModel(
+  layoutWidths.phone,
+  1,
+);
+export const EffortFollowsModelWideFirstAgent = effortFollowsModel(
+  layoutWidths.wide,
+  0,
+);
+export const EffortFollowsModelWideSecondAgent = effortFollowsModel(
+  layoutWidths.wide,
+  1,
+);

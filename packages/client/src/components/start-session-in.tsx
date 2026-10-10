@@ -141,16 +141,8 @@ export function StartSessionIn({
               selectable={false}
               className="select-none type-body text-muted-foreground"
             >
-              {checkout.newWorktree ? 'New worktree from' : 'Local'}
+              {checkout.newWorktree ? 'New worktree' : 'Local'}
             </Text>
-            {checkout.newWorktree && (
-              <Text
-                selectable={false}
-                className="select-none -ml-0.5 type-code text-foreground"
-              >
-                {checkout.branch.toLowerCase()}
-              </Text>
-            )}
             <Icon
               size="sm"
               name="chevron-down"

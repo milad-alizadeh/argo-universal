@@ -163,5 +163,6 @@ hoistPattern:
   - "*"
 
 patchedDependencies:
+  expo-symbols@57.0.3: patches/expo-symbols@57.0.3.patch
   react-native@0.86.3: patches/react-native@0.86.3.patch
   xstate@5.33.2: patches/xstate@5.33.2.patch

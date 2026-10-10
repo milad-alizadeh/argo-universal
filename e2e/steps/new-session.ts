@@ -3,9 +3,9 @@ import { expect } from '../fixtures';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 
-const sessionSettingsLabel = 'Session settings';
 export const agentModelLabel = 'Agent and model';
 const openSessionLabel = 'Open Session';
+const checkedAttribute = 'aria-checked';
 
 export async function openNewSession(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
@@ -111,20 +111,21 @@ When('I open the Session before prompting', async ({ page }): Promise<void> => {
   await openSessionBeforePrompt(page);
 });
 When('I enable Fast mode', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: sessionSettingsLabel }).click();
-  await page.getByRole('button', { name: 'Fast mode', exact: true }).click();
+  await page.getByRole('button', { name: agentModelLabel }).click();
+  await page.getByRole('switch', { name: 'Fast mode', exact: true }).click();
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: sessionSettingsLabel }).click();
+  await page.getByRole('button', { name: agentModelLabel }).click();
   await expect(
-    page.getByRole('button', { name: 'Fast mode', exact: true }),
-  ).toHaveAttribute('aria-pressed', 'true');
+    page.getByRole('switch', { name: 'Fast mode', exact: true }),
+  ).toHaveAttribute(checkedAttribute, 'true');
   await page.keyboard.press('Escape');
 });
 Then('Fast mode remains enabled', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: sessionSettingsLabel }).click();
+  await page.getByRole('button', { name: agentModelLabel }).click();
   await expect(
-    page.getByRole('button', { name: 'Fast mode', exact: true }),
-  ).toHaveAttribute('aria-pressed', 'true');
+    page.getByRole('switch', { name: 'Fast mode', exact: true }),
+  ).toHaveAttribute(checkedAttribute, 'true');
+  await page.keyboard.press('Escape');
 });
 When('I cancel Session creation', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: 'Cancel creation' }).click();
@@ -134,4 +135,13 @@ Then('the Sessions list is shown', async ({ page }): Promise<void> => {
   await expect(
     page.getByRole('heading', { name: 'Sessions', level: 1, exact: true }),
   ).toBeVisible();
+});
+
+When('I disable Fast mode', async ({ page }): Promise<void> => {
+  await page.getByRole('button', { name: agentModelLabel }).click();
+  await page.getByRole('switch', { name: 'Fast mode', exact: true }).click();
+  await expect(
+    page.getByRole('switch', { name: 'Fast mode', exact: true }),
+  ).toHaveAttribute(checkedAttribute, 'false');
+  await page.keyboard.press('Escape');
 });

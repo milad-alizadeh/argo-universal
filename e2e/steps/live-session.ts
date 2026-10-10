@@ -76,6 +76,14 @@ Then(
 );
 
 const chooseModelLabel = 'Choose model';
+const effortValueAttribute = 'aria-valuetext';
+async function chooseEffort(page: Page, effort: string): Promise<void> {
+  const slider = page.getByRole('slider', { name: 'Effort' });
+  await slider.focus();
+  await slider.press('Home');
+  if ((await slider.getAttribute(effortValueAttribute)) !== effort)
+    await slider.press('End');
+}
 
 async function reopenConfiguration(page: Page): Promise<void> {
   await page.keyboard.press('Escape');
@@ -90,7 +98,7 @@ When(
     await page.getByRole('button', { name: model, exact: true }).click();
     await reopenConfiguration(page);
     await expectModel(page, model);
-    await page.getByRole('button', { name: `Set effort to ${effort}` }).click();
+    await chooseEffort(page, effort);
     await reopenConfiguration(page);
     await expectEffort(page, effort);
     await page.keyboard.press('Escape');
@@ -113,7 +121,7 @@ async function expectModel(page: Page, model: string): Promise<void> {
 }
 async function expectEffort(page: Page, effort: string): Promise<void> {
   await expect(page.getByRole('slider', { name: 'Effort' })).toHaveAttribute(
-    'aria-valuetext',
+    effortValueAttribute,
     effort,
   );
 }
