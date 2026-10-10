@@ -1,5 +1,5 @@
 import type { SFSymbol } from 'expo-symbols';
-import symbols from './custom-symbols.json';
+import symbols from './custom-symbol-paths.json';
 
 /*
  * Argo's own symbols for icons SF Symbols lacks (ADR-0019). Each path is the Regular-M glyph of an SF Symbols template,

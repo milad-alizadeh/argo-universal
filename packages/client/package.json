@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./custom-symbols.json": "./src/lib/custom-symbols.json",
+    "./custom-symbol-paths.json": "./src/lib/custom-symbol-paths.json",
     "./mocks": "./mocks/index.ts"
   },
   "imports": {

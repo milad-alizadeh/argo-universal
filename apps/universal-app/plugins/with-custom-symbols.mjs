@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import symbols from '@repo/client/custom-symbols.json' with { type: 'json' };
+import symbols from '@repo/client/custom-symbol-paths.json' with { type: 'json' };
 import configPlugins from 'expo/config-plugins.js';
 
 /*

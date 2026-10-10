@@ -16,9 +16,9 @@ Apple's licence allows SF Symbols only in apps for Apple platforms, so no SF Sym
 
 ## Custom symbols
 
-Where SF Symbols has no symbol for an Argo icon, Argo draws its own as a custom SF Symbol (owner, 2026-10-10). The first is `custom.robot`, the Agent icon; SF Symbols, even version 8, has no robot. Each custom symbol is one Regular-M template path in `packages/client/src/lib/custom-symbols.json`, named `custom.<name>` so it cannot clash with Apple's names:
+Where SF Symbols has no symbol for an Argo icon, Argo draws its own as a custom SF Symbol (owner, 2026-10-10). The first is `custom.robot`, the Agent icon; SF Symbols, even version 8, has no robot. Each custom symbol is one Regular-M template path in `packages/client/src/lib/custom-symbol-paths.json`, named `custom.<name>` so it cannot clash with Apple's names:
 
-- iOS: the Expo plugin `apps/universal-app/plugins/with-custom-symbols.js` writes it into the app's asset catalog as a symbol set, and `SymbolView`, patched to fall back to `UIImage(named:)`, draws it natively, so it follows weight and size like the system symbols.
+- iOS: the Expo plugin `apps/universal-app/plugins/with-custom-symbols.mjs` writes it into the app's asset catalog as a symbol set, and `SymbolView`, patched to fall back to `UIImage(named:)`, draws it natively, so it follows weight and size like the system symbols.
 - Electron on macOS: the page masks the path itself; no IPC is needed, since the art is Argo's own and its licence allows shipping it.
 - Android, web, Windows and Linux: the Material name, as for every icon.
 
