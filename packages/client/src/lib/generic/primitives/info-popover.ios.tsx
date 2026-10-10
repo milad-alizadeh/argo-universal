@@ -1,7 +1,15 @@
-import { Host, Popover, RNHostView, Text } from '@expo/ui/swift-ui';
-import { fixedSize, frame, padding } from '@expo/ui/swift-ui/modifiers';
+import { Popover, RNHostView, Text } from '@expo/ui/swift-ui';
+import {
+  fixedSize,
+  foregroundStyle,
+  frame,
+  padding,
+  presentationBackground,
+} from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
+import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
+import { Host } from './host';
 import type { InfoPopoverProps } from './info-popover-props';
 import { InfoPopoverTrigger } from './info-popover-trigger';
 
@@ -38,12 +46,25 @@ function PopoverText({
     fixedSize({ horizontal: false, vertical: true }),
     frame({ width: 240, alignment: 'leading' }),
     padding({ all: 12 }),
+    ...popoverColors(useNativeTheme().colors),
   ];
   return (
     <Popover.Content>
       <Text modifiers={modifiers}>{text}</Text>
     </Popover.Content>
   );
+}
+
+function popoverColors(
+  colors: NativeColors,
+): ReturnType<typeof foregroundStyle>[] {
+  const { popover, popoverForeground } = colors;
+  return [
+    ...(popoverForeground === undefined
+      ? []
+      : [foregroundStyle(popoverForeground)]),
+    ...(popover === undefined ? [] : [presentationBackground(popover)]),
+  ];
 }
 
 type InfoPresentation = {

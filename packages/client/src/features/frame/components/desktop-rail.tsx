@@ -6,7 +6,7 @@ import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { maximumAttentionBadgeCount } from '../state/attention-badge';
+import { attentionBadge } from '../state/attention-badge';
 import { type Section, shellSections } from './shell-sections';
 
 interface DesktopRailProps {
@@ -25,6 +25,7 @@ const SectionButton = memo(function SectionButton({
   selected: boolean;
 }) {
   const { title, icon } = shellSections[section];
+  const badge = attentionBadge(attentionCount);
   return (
     <Button
       key={section}
@@ -44,15 +45,13 @@ const SectionButton = memo(function SectionButton({
         filled={selected}
         className={cn(!selected && 'text-muted-foreground')}
       />
-      {section === 'sessions' && attentionCount > 0 && (
+      {section === 'sessions' && badge && (
         <Badge
           className="absolute -right-1 -top-1 min-w-4 border-0 bg-warning px-1 py-0"
-          accessibilityLabel={`${attentionCount} ${attentionCount === 1 ? 'Session needs' : 'Sessions need'} attention`}
+          accessibilityLabel={badge.label}
         >
           <Text className="type-badge text-warning-foreground">
-            {attentionCount > maximumAttentionBadgeCount
-              ? `${maximumAttentionBadgeCount}+`
-              : attentionCount}
+            {badge.text}
           </Text>
         </Badge>
       )}

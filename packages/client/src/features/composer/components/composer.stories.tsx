@@ -20,7 +20,7 @@ const [firstAgent] = newSessionCatalogs.bothAvailable;
 if (!firstAgent) throw new Error('Recorded catalog needs an available Agent.');
 
 const meta = {
-  title: 'Sessions/Composer',
+  title: 'Composer/Composer',
   component: Composer,
   render: (args): React.JSX.Element => <Composer {...composerProps(args)} />,
   parameters: {

@@ -1,7 +1,6 @@
 import {
   BottomSheet as ExpoBottomSheet,
   Group,
-  Host,
   RNHostView,
 } from '@expo/ui/swift-ui';
 import {
@@ -13,6 +12,7 @@ import { BottomSheetContent } from './bottom-sheet-content';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
 import type { BottomSheetProps } from './bottom-sheet.types';
+import { Host } from './host';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   return (

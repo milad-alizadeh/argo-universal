@@ -21,7 +21,7 @@ const cancelCreationLabel = 'Cancel creation';
 const agentFailure = 'The Agent stopped three times in ten minutes';
 
 const meta = {
-  title: 'Tests/SessionScreen',
+  title: 'Tests/SessionView',
   parameters: { screenPreview: true },
   args: { view: { state: 'open', ...runningSession } },
   render: ({ view }): React.JSX.Element => (

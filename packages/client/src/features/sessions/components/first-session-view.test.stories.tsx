@@ -7,7 +7,7 @@ import {
 } from './first-session-view';
 
 const meta = {
-  title: 'Tests/FirstSessionScreen',
+  title: 'Tests/FirstSessionView',
   args: { view: { state: 'loading' } },
   render: ({ view }): React.JSX.Element => <FirstSessionView {...view} />,
 } satisfies Meta<{ view: FirstSessionViewProps }>;

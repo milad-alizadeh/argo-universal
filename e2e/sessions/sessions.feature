@@ -34,3 +34,9 @@ Feature: Live Sessions list
     Given an unread Session in a phone Frame
     When I view the phone navigation
     Then navigation shows one Session needing attention
+
+  Scenario: A long list loads more Sessions as it scrolls
+    Given a wide Frame
+    And 60 long-list Sessions
+    When I scroll the Sessions list to the end
+    Then the Sessions list shows the oldest Session

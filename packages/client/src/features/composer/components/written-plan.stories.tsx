@@ -13,7 +13,7 @@ const fileRow = recording.rows.find(
 if (fileRow?.sessionUpdate !== 'plan_update' || fileRow.plan.type !== 'file')
   throw new Error('ACP recording needs a file Plan');
 const meta = {
-  title: 'Sessions/WrittenPlan',
+  title: 'Composer/WrittenPlan',
   component: Composer,
   render: function EditableComposer(args): ReactElement {
     const [draft, setDraft] = useState(args.draft);

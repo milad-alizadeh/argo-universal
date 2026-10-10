@@ -18,7 +18,7 @@ const failedStartMessage = 'The Agent exited before it was ready.';
 const projectLabel = `Project: ${exampleProject.name}`;
 
 const meta = {
-  title: 'Tests/NewSessionScreen',
+  title: 'Tests/NewSessionView',
   parameters: { screenPreview: true },
   args: { view: { state: 'ready', ...readyNewSession } },
   render: ({ view }): React.JSX.Element => <NewSessionView {...view} />,
