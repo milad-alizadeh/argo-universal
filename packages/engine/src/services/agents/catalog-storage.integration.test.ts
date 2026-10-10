@@ -1,6 +1,7 @@
 import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
+import { readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 
 const [exampleAgent, pythonAgent] = publishedRegistry.agents;
@@ -26,7 +27,7 @@ it('rolls back every changed/removed row and timestamp when a later insert fails
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus)
     .toBe('idle');
-  const before = database.select().from(agents).all();
+  const before = readAddedAgentRows(database);
   const controller = new AbortController();
   const observer = createCaller({
     signal: controller.signal,
@@ -46,7 +47,7 @@ it('rolls back every changed/removed row and timestamp when a later insert fails
   await expect
     .poll(() => database.$client.prepare('SELECT status FROM sync_jobs').get())
     .toEqual({ status: 'running' });
-  expect(database.select().from(agents).all()).toEqual(before);
+  expect(readAddedAgentRows(database)).toEqual(before);
   expect(await caller.agents.catalog()).toMatchObject({
     fetchedAt: before[0]?.catalogSyncedAt,
     syncStatus: 'running',

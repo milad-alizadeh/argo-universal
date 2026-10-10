@@ -16,7 +16,7 @@ import type { RegistryReader } from './registry-reader';
 function createCatalogAgentRecord(
   agent: ACPAgent,
   syncedAt: number,
-): AgentRecord {
+): AgentCatalogWriteRow {
   return {
     id: randomUUID(),
     ...createCatalogOwnedFields(agent, syncedAt),
@@ -99,7 +99,7 @@ function resolveRegistryServerArchitecture(): string {
 function createCatalogOwnedFields(
   agent: ACPAgent,
   syncedAt: number,
-): Omit<AgentRecord, 'id'> {
+): Omit<AgentCatalogWriteRow, 'id'> {
   return {
     registryId: agent.id,
     registryMetadata: JSON.stringify(agent),

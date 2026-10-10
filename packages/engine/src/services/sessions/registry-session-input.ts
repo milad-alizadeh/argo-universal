@@ -1,4 +1,5 @@
 import { agentAdapters, findAgentAdapter } from '@repo/agents';
+import { resolveCustomAgentLaunch } from '../agents';
 import { readProjectPath } from '../projects';
 import type { AcpSessionDependencies } from './conversation/acp-lifetime';
 import type { RegistryCommand, RegistryInput } from './registry-machine';
@@ -10,13 +11,28 @@ type OpenSession = Extract<
   { type: 'sessions.create' | 'sessions.open' }
 >;
 type SessionSource = { context: RegistryInput; event: OpenSession };
+// A custom Agent has no native adapter, so it always launches from its saved definition.
+const selectLaunchResolver = (
+  context: RegistryInput,
+  agent: string,
+): AcpSessionDependencies['resolveLaunch'] | undefined => {
+  const native = (context.adapters ?? agentAdapters).some(
+    (adapter): boolean => adapter.agent === agent,
+  );
+  // An injected resolver stands in for native Agents only; custom Agents always launch from SQLite.
+  return native
+    ? context.resolveAgentLaunch
+    : resolveCustomAgentLaunch(context.database);
+};
 const createAcpSessionDependencies = (
   context: RegistryInput,
+  agent: string,
 ): AcpSessionDependencies | undefined => {
-  if (!context.acpResources || !context.resolveAgentLaunch) return undefined;
+  const resolveLaunch = selectLaunchResolver(context, agent);
+  if (!context.acpResources || !resolveLaunch) return undefined;
   return {
     resources: context.acpResources,
-    resolveLaunch: context.resolveAgentLaunch,
+    resolveLaunch,
     projectPath: (id) => readProjectPath(context.database, id),
   };
 };
@@ -43,7 +59,7 @@ export const createRegistrySessionInput = ({
   now: context.now,
   createId: context.createId,
   adapter: findAgentAdapter(event.agent, context.adapters ?? agentAdapters),
-  acp: createAcpSessionDependencies(context),
+  acp: createAcpSessionDependencies(context, event.agent),
   sessionId: event.sessionId,
   ...(event.type === 'sessions.create'
     ? createSessionCreationInput(event)

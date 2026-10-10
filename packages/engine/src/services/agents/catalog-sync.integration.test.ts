@@ -1,6 +1,7 @@
 import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
+import { readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 
 const savedLocalId = 'saved-local-id';
@@ -30,7 +31,7 @@ it('preserves saved local identity and custom rows across changed, removed and r
       { id: 'custom-local-id' },
     ])
     .run();
-  const custom = database.select().from(agents).all()[1];
+  const custom = readAddedAgentRows(database)[1];
   await caller.agents.syncCatalog();
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus)
@@ -43,7 +44,7 @@ it('preserves saved local identity and custom rows across changed, removed and r
     .poll(async () => (await caller.agents.catalog()).syncStatus)
     .toBe('idle');
   expect((await caller.agents.catalog()).agents).toEqual([]);
-  expect(database.select().from(agents).all()[0]).toMatchObject({
+  expect(readAddedAgentRows(database)[0]).toMatchObject({
     id: savedLocalId,
     catalogPresent: false,
     registryMetadata: JSON.stringify(changed),
@@ -55,7 +56,7 @@ it('preserves saved local identity and custom rows across changed, removed and r
   expect((await caller.agents.catalog()).agents).toMatchObject([
     { id: savedLocalId, entry: agent },
   ]);
-  expect(database.select().from(agents).all()[1]).toEqual(custom);
+  expect(readAddedAgentRows(database)[1]).toEqual(custom);
 });
 
 it('gives new upstream entries distinct independent local identities', async (): Promise<void> => {

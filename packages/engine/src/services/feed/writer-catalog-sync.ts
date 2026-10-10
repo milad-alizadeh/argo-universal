@@ -5,6 +5,10 @@ import {
   replaceAgentCatalogRows,
   type AgentCatalogReplaceJob,
 } from './writer-agent-catalog';
+import {
+  saveAgentConfiguration,
+  type AgentConfigurationJob,
+} from './writer-agent-configuration';
 
 export type SyncJobWrite = {
   type: 'syncJobUpdate';
@@ -13,9 +17,17 @@ export type SyncJobWrite = {
   set: Pick<typeof syncJobs.$inferInsert, 'status'> &
     Partial<Omit<typeof syncJobs.$inferInsert, 'source' | 'scope'>>;
 };
-export type CatalogSqlJob = SyncJobWrite | AgentCatalogReplaceJob;
+export type CatalogSqlJob =
+  | SyncJobWrite
+  | AgentCatalogReplaceJob
+  | AgentConfigurationJob;
+const catalogSqlJobTypes = new Set<string>([
+  'syncJobUpdate',
+  'agentCatalogReplace',
+  'agentConfigurationSave',
+]);
 export function isCatalogSqlJob(job: { type: string }): job is CatalogSqlJob {
-  return job.type === 'syncJobUpdate' || job.type === 'agentCatalogReplace';
+  return catalogSqlJobTypes.has(job.type);
 }
 export function updateSyncJob(
   database: Pick<Database, 'insert' | 'update'>,
@@ -57,6 +69,8 @@ export function applyCatalogSqlJob(
   job: CatalogSqlJob,
 ): void {
   if (job.type === 'syncJobUpdate') return updateSyncJob(transaction, job);
+  if (job.type === 'agentConfigurationSave')
+    return saveAgentConfiguration(transaction, job);
   replaceAgentCatalogRows(transaction, job);
   completeSyncJob(transaction, job);
 }

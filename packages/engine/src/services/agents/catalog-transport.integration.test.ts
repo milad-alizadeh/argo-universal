@@ -1,9 +1,9 @@
 import { once } from 'node:events';
-import { agents, session } from '@repo/db/schema';
+import { session } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { WebSocket } from 'ws';
-import { openTestDatabase } from '#mocks/database';
+import { openTestDatabase, readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 
 it('serves its SQLite last-good catalog over HTTP after the actual Engine restarts offline', async (): Promise<void> => {
@@ -52,7 +52,7 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
     },
     metadata: publishedRegistry.agents,
   });
-  const row = first.database.select().from(agents).all();
+  const row = readAddedAgentRows(first.database);
   await first.stop();
   expect(fetchAgents).toHaveBeenCalledTimes(1);
   fetchAgents.mockRejectedValue(new Error('Registry is offline'));
@@ -93,15 +93,13 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
   expect({
     history: (await restarted.caller.session.list({ archived: false }))
       .sessions,
-    rows: restarted.database.select().from(agents).all(),
+    rows: readAddedAgentRows(restarted.database),
     sessions: restarted.database.select().from(session).all(),
   }).toEqual({ history, rows: row, sessions: savedSessions });
   expect(
-    restarted.database
-      .select()
-      .from(agents)
-      .all()
-      .map((record) => JSON.parse(record.registryMetadata ?? 'null')),
+    readAddedAgentRows(restarted.database).map((record) =>
+      JSON.parse(record.registryMetadata ?? 'null'),
+    ),
   ).toEqual(publishedRegistry.agents);
 }, 15_000);
 

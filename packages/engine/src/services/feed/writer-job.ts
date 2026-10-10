@@ -181,6 +181,8 @@ export function describeJob(job: WriterJob): string {
       return `upsert Blob metadata ${job.blob.id}`;
     case 'agentCatalogReplace':
       return `replace catalog with ${job.rows.length} accepted Agent rows`;
+    case 'agentConfigurationSave':
+      return `save Agent configuration ${job.agent.id}`;
     case 'syncJobUpdate':
       return `update sync job ${job.source}/${job.scope}`;
     case 'feedRows':
@@ -226,6 +228,7 @@ export function stampWriterJob(job: WriterJob, now: number): WriterJob {
     case 'turnUpdate':
     case 'blobMetadataUpsert':
     case 'agentCatalogReplace':
+    case 'agentConfigurationSave':
     case 'syncJobUpdate':
       return job;
     default: {

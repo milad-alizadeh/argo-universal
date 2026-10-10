@@ -1,10 +1,10 @@
-import { agents } from '@repo/db/schema';
 import { malformedRegistry } from '@repo/mocks/registry/catalog';
 import {
   publishedRegistryResponse,
   rejectedRegistryValues,
 } from '@repo/mocks/registry/published';
 import { expect, it, vi } from 'vitest';
+import { readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 
 it.each(
@@ -26,7 +26,7 @@ it.each(
       .poll(async () => (await caller.agents.catalog()).syncStatus)
       .not.toMatch(/pending|running/);
     const before = await caller.agents.catalog();
-    const stored = database.select().from(agents).all();
+    const stored = readAddedAgentRows(database);
     await caller.agents.syncCatalog();
     await expect
       .poll(async () => (await caller.agents.catalog()).syncStatus)
@@ -40,7 +40,7 @@ it.each(
       error: 'Registry metadata is malformed',
     });
     expect(fetchAgents).toHaveBeenCalledTimes(2);
-    expect(database.select().from(agents).all()).toEqual(stored);
+    expect(readAddedAgentRows(database)).toEqual(stored);
     expect(
       stored.map((row) => JSON.parse(row.registryMetadata ?? 'null')),
     ).toEqual(publishedRegistryResponse.agents);
