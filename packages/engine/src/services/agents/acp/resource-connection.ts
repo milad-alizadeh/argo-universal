@@ -110,7 +110,7 @@ export class AcpResourceConnection {
     void this.startup
       .then(({ connection }) =>
         connection.closed.then(() =>
-          onResourceFailure(new Error('ACP connection closed')),
+          onResourceFailure(readCloseReason(connection.signal)),
         ),
       )
       .catch(() => {});
@@ -146,4 +146,11 @@ export class AcpResourceConnection {
     await process.exited;
     this.writes.settlePendingWritesAfterProcessClose();
   }
+}
+
+// The SDK aborts its signal with the error that closed the connection, such as an oversized frame.
+function readCloseReason(signal: AbortSignal): unknown {
+  return signal.reason instanceof Error
+    ? signal.reason
+    : new Error('ACP connection closed');
 }

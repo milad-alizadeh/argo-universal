@@ -18,7 +18,7 @@ import {
   type WriterCommit,
 } from './writer-commit';
 import {
-  describeJob,
+  describeLostJobs,
   stampWriterJob,
   type WriterJob,
   writeJobs,
@@ -255,7 +255,7 @@ export const writerMachine = setup({
             {
               type: 'log',
               params: ({ context, event }): WriterLogParameters => ({
-                line: `could not write while draining, lost ${context.queue.length} jobs: ${String(event.error)}\n${context.queue.map(describeJob).join('\n')}`,
+                line: `could not write while draining, lost ${context.queue.length} jobs: ${String(event.error)}\n${describeLostJobs(context.queue)}`,
               }),
             },
             'releaseBatch',

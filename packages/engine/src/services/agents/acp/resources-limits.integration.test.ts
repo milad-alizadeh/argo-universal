@@ -4,6 +4,7 @@ import {
   createResourcePeer,
   createResourceOpening,
   createResourceDestination,
+  createResourceUpdate,
   requireResourceProcessAt,
 } from '#mocks/acp-resource';
 import { createAcpResources } from '../index';
@@ -46,4 +47,53 @@ it('owned callback overflow reports resource failure and cannot release without 
   process.exited.resolve();
   await release;
   expect(await Promise.all(answers)).toHaveLength(17);
+});
+
+it('more than 64 early updates fail the opening resource instead of growing the buffer', async () => {
+  const failures: unknown[] = [];
+  const peer = createResourcePeer({
+    newSession: async ({ client }) => {
+      for (let index = 0; index < 65; index += 1)
+        await client.notify('session/update', createResourceUpdate('early'));
+      return { sessionId: 'early' };
+    },
+  });
+  const resources = createAcpResources(peer);
+  const opening = resources.open(
+    createResourceOpening({
+      ...createResourceDestination(),
+      failed: (error) => {
+        failures.push(error);
+      },
+    }),
+  );
+  await expect(opening).rejects.toBeDefined();
+  expect(failures).toContainEqual(
+    new Error('ACP early update buffer limit reached'),
+  );
+  await resources.shutdown();
+});
+
+it('a resource refuses a 65th concurrent opening', async () => {
+  const gate = Promise.withResolvers<void>();
+  let opened = 0;
+  const peer = createResourcePeer({
+    newSession: async () => {
+      await gate.promise;
+      opened += 1;
+      return { sessionId: `owned-${opened}` };
+    },
+  });
+  const resources = createAcpResources(peer);
+  const openings = Array.from({ length: 64 }, () =>
+    resources.open(createResourceOpening()),
+  );
+  await vi.waitFor(() => expect(peer.processes).toHaveLength(1));
+  await expect(resources.open(createResourceOpening())).rejects.toThrow(
+    'ACP resource is unavailable',
+  );
+  gate.resolve();
+  const leases = await Promise.all(openings);
+  await Promise.all(leases.map((lease) => lease.close()));
+  await resources.shutdown();
 });

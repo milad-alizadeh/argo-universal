@@ -172,6 +172,15 @@ export function writeJobs(
   });
 }
 
+const describedJobLimit = 20;
+
+// Names the first lost jobs and counts the rest, so the log stays bounded however long the queue grew.
+export function describeLostJobs(jobs: readonly WriterJob[]): string {
+  const named = jobs.slice(0, describedJobLimit).map(describeJob);
+  const rest = jobs.length - named.length;
+  return [...named, ...(rest > 0 ? [`and ${rest} more`] : [])].join('\n');
+}
+
 // One line naming what a job would have written, for the log of lost jobs.
 export function describeJob(job: WriterJob): string {
   switch (job.type) {

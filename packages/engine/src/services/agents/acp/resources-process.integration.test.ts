@@ -129,3 +129,38 @@ it.each([1, 4, 8])(
     expect(() => process.kill(agentProcess, 0)).toThrow('ESRCH');
   },
 );
+
+it('an Agent frame over the 32 MiB limit fails its connection with the SDK limit error', async () => {
+  const failures: unknown[] = [];
+  const base = createResourceOpening({
+    ...createResourceDestination(),
+    failed: (error) => {
+      failures.push(error);
+    },
+  });
+  const resources = createAcpResources();
+  onTestFinished(() => resources.shutdown());
+  const lease = await resources.open({
+    ...base,
+    launch: {
+      ...base.launch,
+      executable: process.execPath,
+      cwd: process.cwd(),
+      args: [agentScript],
+    },
+  });
+  await expect(
+    lease.agent.request('session/prompt', {
+      sessionId: lease.sessionId,
+      prompt: [{ type: 'text', text: 'Oversized' }],
+    }),
+  ).rejects.toBeDefined();
+  await vi.waitFor(() =>
+    expect(failures).toContainEqual(
+      expect.objectContaining({
+        name: 'MessageTooLargeError',
+        maxMessageBytes: 32 * 1024 * 1024,
+      }),
+    ),
+  );
+});

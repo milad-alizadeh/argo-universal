@@ -18,11 +18,16 @@ agent()
   })
   .onRequest('session/close', () => ({}))
   .onRequest('session/prompt', async ({ params, client }) => {
+    const [block] = params.prompt;
+    const oversized = block?.type === 'text' && block.text === 'Oversized';
     await client.notify('session/update', {
       sessionId: params.sessionId,
       update: {
         sessionUpdate: 'agent_message_chunk',
-        content: { type: 'text', text: params.sessionId },
+        content: {
+          type: 'text',
+          text: oversized ? 'x'.repeat(32 * 1024 * 1024) : params.sessionId,
+        },
       },
     });
     return { stopReason: 'end_turn' };

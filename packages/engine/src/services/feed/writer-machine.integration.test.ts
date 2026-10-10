@@ -364,4 +364,17 @@ describe('database writer', (): void => {
       'could not write while draining, lost 1 jobs: Error: database is locked\nupdate Turn turn-2: endedAt',
     ]);
   });
+
+  it('names at most 20 lost jobs when the drain fails', async (): Promise<void> => {
+    sendWrite();
+    writer.send({ type: drainWriterEvent });
+    for (let index = 0; index < 30; index += 1) sendWrite();
+    await settle((call): void => call.resolve());
+    await settle((call): void => call.reject(writeError));
+
+    const lines = logLines.join('\n').split('\n');
+    expect(lines[0]).toMatch(/^could not write while draining, lost 30 jobs/);
+    expect(lines.slice(1)).toHaveLength(21);
+    expect(lines.at(-1)).toBe('and 10 more');
+  });
 });
