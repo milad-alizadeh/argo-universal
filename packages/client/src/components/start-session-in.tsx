@@ -192,9 +192,9 @@ export function ProjectPicker({
       project.path.toLowerCase().includes(search),
   );
   return (
-    <View className="p-1">
+    <View className="px-gutter-list py-1 wide:p-1">
       <View className="py-1">
-        <View className="h-8 flex-row items-center gap-1.5 rounded-md px-2">
+        <View className="h-8 flex-row items-center gap-1.5 rounded-md px-2.5 wide:px-2">
           <Icon name="search" className="text-muted-foreground" />
           <Input
             accessibilityLabel="Find a Project"
@@ -219,7 +219,7 @@ export function ProjectPicker({
               aria-pressed={selected}
               onPress={() => onSelect(project.id)}
               className={cn(
-                'h-auto sm:h-auto items-start justify-start gap-1.5 p-2 has-[>[data-icon]]:p-2 rounded-md web:focus-visible:ring-0 web:focus-visible:bg-accent',
+                'h-auto sm:h-auto items-start justify-start gap-1.5 px-2.5 py-2 has-[>[data-icon]]:px-2.5 has-[>[data-icon]]:py-2 wide:p-2 wide:has-[>[data-icon]]:p-2 rounded-md web:focus-visible:ring-0 web:focus-visible:bg-accent',
                 selected && 'bg-accent',
               )}
             >

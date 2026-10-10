@@ -1,6 +1,8 @@
 import {
   AppProviders,
   type Navigate,
+  type NativeSheets,
+  NativeSheetsProvider,
   NavigationProvider,
   type RenderSymbolImage,
   SymbolImagesProvider,
@@ -57,6 +59,25 @@ const serverUrl =
 
 const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 
+// Phones present Composer menus as native sheets; the Agent and model one has its own stack.
+const nativeSheets: NativeSheets | undefined =
+  Platform.OS === 'web'
+    ? undefined
+    : {
+        agentModel: () => router.push('/agent-model'),
+        content: () => router.push('/composer-sheet'),
+        close: () => router.dismiss(),
+      };
+
+// A sheet opens this tall until its first page has measured itself.
+const sheetStartHeight = 0.4;
+
+const sheetOptions = {
+  presentation: 'formSheet' as const,
+  sheetAllowedDetents: [sheetStartHeight, 1],
+  sheetGrabberVisible: true,
+};
+
 // Screens in @repo/client navigate through this.
 const navigate: Navigate = (destination, options) =>
   options?.replace
@@ -78,11 +99,18 @@ export default function RootLayout(): React.JSX.Element {
             <ThemeProvider value={navigationTheme}>
               <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
               <NavigationProvider navigate={navigate}>
-                {/* Storybook stays outside the shell. */}
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="(shell)" />
-                  <Stack.Screen name="(dev)/storybook" />
-                </Stack>
+                <NativeSheetsProvider value={nativeSheets}>
+                  {/* Storybook stays outside the shell. */}
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(shell)" />
+                    <Stack.Screen name="agent-model" options={sheetOptions} />
+                    <Stack.Screen
+                      name="composer-sheet"
+                      options={sheetOptions}
+                    />
+                    <Stack.Screen name="(dev)/storybook" />
+                  </Stack>
+                </NativeSheetsProvider>
               </NavigationProvider>
               <PortalHost />
             </ThemeProvider>
