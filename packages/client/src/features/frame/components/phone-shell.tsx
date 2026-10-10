@@ -88,7 +88,7 @@ export function PhoneShell({
         onPress={() => selectSection(section)}
       >
         <Icon
-          size="lg"
+          size="md"
           name={icon}
           filled={selectedSection === section}
           className={cn(selectedSection !== section && 'text-muted-foreground')}

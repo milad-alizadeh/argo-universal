@@ -18,7 +18,7 @@ import { Button } from '#lib/generic/primitives/button';
 import { Input } from '#lib/generic/primitives/input';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
-import { Icon, useIconPixels } from '../../../lib/generic/symbols/icon';
+import { Icon, iconPixels } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 
 const wideButtonSize = 32;
@@ -44,8 +44,8 @@ export function ListSearch({
 }: ListSearchProps): React.JSX.Element {
   const wide = useWide();
   const buttonSize = wide ? wideButtonSize : narrowButtonSize;
-  const iconSize = useIconPixels(wide ? 'md' : 'lg');
-  const fieldIconSize = useIconPixels('md');
+  const iconSize = iconPixels(wide ? 'sm' : 'md');
+  const fieldIconSize = iconPixels('sm');
   const placeholderStyle = useResolveClassNames('text-muted-foreground');
   const [searching, setSearching] = useState(false);
   const [width, setWidth] = useState(buttonSize);
@@ -180,14 +180,14 @@ export function ListSearch({
         >
           <Icon
             name="search"
-            size={wide ? 'md' : 'lg'}
+            size={wide ? 'sm' : 'md'}
             className="text-foreground wide:text-muted-foreground"
           />
         </Animated.View>
         <Animated.View style={closeStyle}>
           <Icon
             name="close"
-            size={wide ? 'md' : 'lg'}
+            size={wide ? 'sm' : 'md'}
             className="text-foreground wide:text-muted-foreground"
           />
         </Animated.View>

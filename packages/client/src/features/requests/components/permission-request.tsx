@@ -71,7 +71,7 @@ export function PermissionRequest(
         <View className="flex-row items-center gap-1.5">
           <Icon
             name="terminal"
-            size="md"
+            size="sm"
             className="shrink-0 text-muted-foreground"
           />
           <Text role={'heading'} className="min-w-0 flex-1">

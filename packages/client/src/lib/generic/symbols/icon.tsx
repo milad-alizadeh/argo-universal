@@ -4,9 +4,10 @@ import {
   ActivityIndicator,
   type ActivityIndicatorProps,
   Platform,
+  type ViewStyle,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { useCSSVariable, useResolveClassNames, withUniwind } from 'uniwind';
+import { useResolveClassNames, withUniwind } from 'uniwind';
 import { TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { type IconName, iconSymbols } from './icon-names';
@@ -15,28 +16,24 @@ import { sfFilledPaths, type SymbolPath } from './sf-filled-paths';
 import { SymbolGlyph } from './symbol-glyph';
 import { useSymbolImageRenderer } from './symbol-images';
 
-// sm for chevrons and checks; md by default; lg for shell controls; row for native phone list icons.
-export const iconSizeClasses = {
-  sm: 'size-icon-sm',
-  mark: 'size-icon-mark',
-  md: 'size-icon-md',
-  lg: 'size-icon-lg',
-  row: 'size-icon-row',
+const iconSizes = {
+  xs: 12,
+  sm: 16,
+  md: 20,
+  lg: 24,
 } as const;
 
-export type IconSize = keyof typeof iconSizeClasses;
+export type IconSize = keyof typeof iconSizes;
 
-// Symbols and ActivityIndicator take a number, so this is the one place a variant becomes pixels.
-export function useIconPixels(size: IconSize): number {
-  const pixels = useCSSVariable(`--spacing-icon-${size}`);
-  return typeof pixels === 'number'
-    ? pixels
-    : Number.parseFloat(String(pixels));
+export function iconPixels(size: IconSize): number {
+  return iconSizes[size];
 }
 
-// Material Symbols draw chevrons and checks much smaller in their box than SF Symbols do, so they draw a size up.
-function glyphSize(size: IconSize, material: boolean): IconSize {
-  return material && size === 'sm' ? 'md' : size;
+export function iconSizeStyle(
+  size: IconSize,
+): Pick<ViewStyle, 'width' | 'height'> {
+  const pixels = iconPixels(size);
+  return { width: pixels, height: pixels };
 }
 
 // Android and the browser draw Material Symbols; iOS and the desktop app on macOS draw SF Symbols.
@@ -63,7 +60,7 @@ const TintedSymbol = withUniwind(SymbolGlyph, {
 
 export function Icon({
   name,
-  size = 'md',
+  size = 'sm',
   filled = false,
   className,
   testID = `icon-${name}`,
@@ -72,7 +69,7 @@ export function Icon({
   const symbol: NativeSymbol = iconSymbols[name];
   const colorClassName = cn('text-foreground', textClass, className);
   const material = useDrawsMaterial();
-  const pixels = useIconPixels(glyphSize(size, material));
+  const pixels = iconPixels(size);
   const color = useResolveClassNames(colorClassName).color;
   const filledPath =
     filled && material && symbol.sfFilled
@@ -124,11 +121,11 @@ function FilledPath({
 }
 
 export function IconSpinner({
-  size = 'md',
+  size = 'sm',
   ...props
 }: Omit<ActivityIndicatorProps, 'size'> & {
   size?: IconSize;
 }): React.JSX.Element {
-  const pixels = useIconPixels(size);
+  const pixels = iconPixels(size);
   return <ActivityIndicator {...props} size={pixels} />;
 }

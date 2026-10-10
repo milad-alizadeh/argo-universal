@@ -17,7 +17,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { type NativeColors, useNativeTheme } from '../native-theme';
-import { useIconPixels } from '../symbols/icon';
+import { iconPixels } from '../symbols/icon';
 import { useWide } from '../use-wide';
 import { type ListItemProps, listItemName } from './field-props';
 import { ListItem as WebListItem } from './list-item-view.tsx';
@@ -25,7 +25,7 @@ import { NativeRowIcon, NativeRowStatus } from './native-row';
 
 const rowHeight = 52;
 const inset = 16;
-const chevronSize = 12;
+
 const rowSpacing = 12;
 const disabledOpacity = 0.5;
 
@@ -63,7 +63,7 @@ function rowModifiers(
 
 function RowContent(props: ListItemProps): React.JSX.Element {
   const color = useRowColor('primary');
-  const iconSize = useIconPixels('row');
+  const iconSize = iconPixels('lg');
   return (
     <HStack
       spacing={rowSpacing}
@@ -100,7 +100,7 @@ function RowTrailing(props: ListItemProps): React.JSX.Element {
       {props.onPress && (
         <Image
           systemName="chevron.right"
-          size={chevronSize}
+          size={iconPixels('xs')}
           modifiers={[
             foregroundStyle({ type: 'hierarchical', style: 'tertiary' }),
           ]}

@@ -108,7 +108,7 @@ function Disclosure({
   return visible ? (
     <Icon
       name="chevron-right"
-      size="sm"
+      size="xs"
       className="text-muted-foreground/50 shrink-0"
     />
   ) : null;

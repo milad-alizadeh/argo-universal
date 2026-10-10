@@ -20,7 +20,7 @@ import { FieldGroup } from '../../../lib/generic/primitives/hosted-field-group';
 import { InfoPopover } from '../../../lib/generic/primitives/info-popover';
 import { Slider } from '../../../lib/generic/primitives/slider';
 import { Switch } from '../../../lib/generic/primitives/switch';
-import { Icon } from '../../../lib/generic/symbols/icon';
+import { Icon, iconSizeStyle } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 import {
   configurationChoices,
@@ -159,8 +159,11 @@ const ThemedLogo = withUniwind(SvgXml, {
 
 function Logo({ agent }: { agent?: AgentInfo }): React.JSX.Element | null {
   return agent ? (
-    <View className="size-icon-md shrink-0 items-center justify-center">
-      <View testID="composer-agent-icon" className="size-icon-mark">
+    <View
+      style={iconSizeStyle('sm')}
+      className="shrink-0 items-center justify-center"
+    >
+      <View testID="composer-agent-icon" style={iconSizeStyle('sm')}>
         <ThemedLogo
           xml={agent.logo}
           className="text-foreground"
@@ -226,10 +229,11 @@ function Choice({
         )}
       </View>
       <View
-        className={cn(
-          'size-icon-md items-center justify-center',
-          leading && 'h-5',
-        )}
+        className="items-center justify-center"
+        style={[
+          iconSizeStyle('sm'),
+          !!leading && { height: iconSizeStyle('md').height },
+        ]}
       >
         {selected && <Icon name="check" />}
       </View>
@@ -679,7 +683,7 @@ export function AgentModelMenu({
             className="size-11 sm:size-11"
             onPress={() => setPage('settings')}
           >
-            <Icon size="lg" name="chevron-left" className="text-foreground" />
+            <Icon size="md" name="chevron-left" className="text-foreground" />
           </Button>
           <Text
             selectable={false}
@@ -746,7 +750,7 @@ export function AgentModelMenu({
                   {agent?.label}
                 </Text>
                 <Icon
-                  size="sm"
+                  size="xs"
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
@@ -772,7 +776,7 @@ export function AgentModelMenu({
                   {modelName(current)}
                 </Text>
                 <Icon
-                  size="sm"
+                  size="xs"
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
@@ -893,7 +897,7 @@ export function ComposerAgentModelControl({
           )}
           {wide && (
             <Icon
-              size="sm"
+              size="xs"
               name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
@@ -956,7 +960,7 @@ export function ComposerModeControl({
           </Text>
           <View className={cn('-ml-0.5', !wide && 'hidden')}>
             <Icon
-              size="sm"
+              size="xs"
               name="chevron-down"
               className="text-muted-foreground"
             />
@@ -1078,7 +1082,7 @@ export function ComposerCheckoutControl({
             {checkout.newWorktree ? 'New worktree' : 'Local'}
           </Text>
           <Icon
-            size="sm"
+            size="xs"
             name="chevron-down"
             className="text-muted-foreground"
           />

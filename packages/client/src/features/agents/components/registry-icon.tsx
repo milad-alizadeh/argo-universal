@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { SvgUri, SvgXml, type XmlProps } from 'react-native-svg';
-import { Icon, useIconPixels } from '../../../lib/generic/symbols/icon';
+import { Icon, iconPixels } from '../../../lib/generic/symbols/icon';
 
 interface RegistryIconProps {
   uri: string | undefined;
@@ -38,11 +38,11 @@ function RegistryImage({
     (): IconSource => decodeRegistryIconSource(uri),
     [uri],
   );
-  return renderIcon(source, useImageProps(agentName));
+  return renderIcon(source, imageProps(agentName));
 }
 
-function useImageProps(agentName: string): ImageProps {
-  const pixels = useIconPixels('mark');
+function imageProps(agentName: string): ImageProps {
+  const pixels = iconPixels('sm');
   return {
     width: pixels,
     height: pixels,
@@ -92,7 +92,7 @@ function UnavailableIcon({
       accessibilityRole="image"
       accessibilityLabel={`${agentName} icon unavailable`}
     >
-      <Icon name="agent" size="mark" />
+      <Icon name="agent" size="sm" />
     </View>
   );
 }

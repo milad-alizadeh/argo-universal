@@ -4,7 +4,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import {
   type IconSize,
-  iconSizeClasses,
+  iconSizeStyle,
 } from '../../../lib/generic/symbols/icon';
 
 const ThemedSvg = withUniwind(Svg, {
@@ -44,7 +44,7 @@ const warningStrokeWidth = 1.7;
 
 export function ComposerGlyph({
   name,
-  size = 'md',
+  size = 'sm',
   className = 'text-foreground',
 }: {
   name: keyof typeof drawings;
@@ -55,7 +55,7 @@ export function ComposerGlyph({
   if (name === 'remove') strokeWidth = removeStrokeWidth;
   else if (name === 'warning') strokeWidth = warningStrokeWidth;
   return (
-    <View className={`${iconSizeClasses[size]} shrink-0`}>
+    <View style={iconSizeStyle(size)} className="shrink-0">
       <ThemedSvg
         accessible={false}
         width="100%"

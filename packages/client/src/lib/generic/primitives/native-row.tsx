@@ -1,12 +1,11 @@
 import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon, useIconPixels } from '../symbols/icon';
+import { Icon, iconSizeStyle } from '../symbols/icon';
 import type { IconName } from '../symbols/icon-names';
 import type { ListItemProps } from './field-props';
 
 export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
-  const size = useIconPixels('row');
   return (
     <RNHostView matchContents>
       <View
@@ -14,9 +13,9 @@ export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
         accessible={false}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
-        style={{ width: size, height: size }}
+        style={iconSizeStyle('lg')}
       >
-        <Icon name={icon} size="row" />
+        <Icon name={icon} size="lg" />
       </View>
     </RNHostView>
   );

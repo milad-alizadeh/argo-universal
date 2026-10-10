@@ -43,7 +43,7 @@ Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same
 ## Tokens
 
 - Paper tokens use the Tailwind names in `tooling/uniwind/theme.css`. Fractional steps take an underscore: `--spacing-0_5`, `--leading-4_5`.
-- Icon width and height take a size token, never px: `--spacing-icon-sm` (12) for chevrons and carets, `--spacing-icon-mark` (14) for full-box shapes such as the Agent logo, Context ring, Linear and Checks ring, `--spacing-icon-md` (16) for default icons, `--spacing-icon-lg` (20) for phone shell controls and the desktop rail, and `--spacing-icon-row` for native phone list leading icons. A box that holds an icon takes the same token.
+- Icon dimensions come from the named sizes encapsulated in `packages/client/src/lib/generic/symbols/icon.tsx`. Paper records their resolved dimensions as literals. An icon slot uses the same size as its glyph.
 - Text takes one of four roles from the "Components / Typography" master on the Global Components page: Title, Heading, Body, Secondary. Each role is a set of tokens, `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`; desktop text uses the `-wide` size and leading (`--text-body-wide`), phone text the plain ones. Text nodes reference these role tokens, never a scale step such as `--text-sm`. In code they are the `type-title`, `type-heading`, `type-body` and `type-secondary` classes in `theme.css`. Buttons, inputs, chips, the native phone header and mono code keep their own styles.
 - Token values live in `theme.css` only. Paper's tokens are a copy of them: change a value in `theme.css`, then write the same value into Paper. Never keep a second copy of the tokens in the repository.
 - Paper stores oklch with one decimal. When that rounding changes the colour, store the exact hex instead.
@@ -56,7 +56,7 @@ Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same
 - Where SF Symbols has no symbol, Argo draws its own (`custom.<name>` in `packages/client/src/lib/generic/symbols/custom-symbol-paths.json`, ADR-0019). Its Paper SVG uses the JSON's viewBox and path, so design and app share one outline.
 - An icon layer is named `Icon / <name>`, where `<name>` is a key of `iconSymbols` in `packages/client/src/lib/generic/symbols/icon-names.ts`. That map is the only list of icons. An icon a design needs that the app lacks is added there first, with its SF and Material names.
 - The library is "Components / Icons" on the Global Components page, one tile per app icon. Copy icons from it.
-- `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box. Use it with that viewBox, the fill on a `--color-*` token, and the size on an icon token.
+- `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box. Use it with that viewBox, the fill on a `--color-*` token, and the dimensions from the named Icon size.
 
 ## Building from Paper
 

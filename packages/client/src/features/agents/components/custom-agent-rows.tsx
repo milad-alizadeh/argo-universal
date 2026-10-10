@@ -42,7 +42,7 @@ function PhoneChevron(): React.JSX.Element {
   return (
     <Icon
       name="chevron-right"
-      size="sm"
+      size="xs"
       className="text-muted-foreground wide:hidden"
     />
   );

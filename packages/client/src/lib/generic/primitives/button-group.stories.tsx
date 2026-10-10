@@ -55,7 +55,7 @@ function SecondaryButtonsExample(): React.JSX.Element {
 function AllowOptions(): React.JSX.Element {
   return (
     <Button size="icon" accessibilityLabel="Allow options">
-      <Icon name="chevron-down" size="sm" />
+      <Icon name="chevron-down" size="xs" />
     </Button>
   );
 }

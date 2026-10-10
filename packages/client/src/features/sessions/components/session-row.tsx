@@ -17,7 +17,7 @@ import { Button } from '#lib/generic/primitives/button';
 import { Text, TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { StatusIndicator, statusLabels } from '#lib/product/status-indicator';
-import { Icon } from '../../../lib/generic/symbols/icon';
+import { Icon, iconSizeStyle } from '../../../lib/generic/symbols/icon';
 import { IssueIndicator, type IssueIndicatorProps } from './issue-indicator';
 import {
   PullRequestIndicator,
@@ -91,7 +91,7 @@ export const SessionRow = memo(function SessionRow({
     >
       <TextClassContext.Provider value={undefined}>
         <View className="relative h-6 shrink-0 items-center justify-center wide:h-5">
-          <Animated.View className="size-icon-md" style={logoStyle}>
+          <Animated.View style={[iconSizeStyle('sm'), logoStyle]}>
             <SvgXml
               testID="session-logo"
               xml={logo}
