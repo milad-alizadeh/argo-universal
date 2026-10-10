@@ -143,6 +143,8 @@
       --color-popover-foreground: var(--color-neutral-950);
       --color-primary: var(--color-neutral-900);
       --color-primary-foreground: var(--color-neutral-50);
+      /* Native controls: switch track, slider, checkmark and picker value. */
+      --color-tint: var(--color-neutral-900);
       --color-secondary: var(--color-neutral-100);
       --color-secondary-foreground: var(--color-neutral-900);
       --color-muted: var(--color-neutral-100);
@@ -180,6 +182,7 @@
       --color-popover-foreground: hsl(0 0% 98%);
       --color-primary: hsl(0 0% 98%);
       --color-primary-foreground: hsl(0 0% 9%);
+      --color-tint: var(--color-neutral-400);
       --color-secondary: hsl(0 0% 14.9%);
       --color-secondary-foreground: hsl(0 0% 98%);
       --color-muted: hsl(0 0% 14.9%);

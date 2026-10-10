@@ -1,6 +1,7 @@
-import { Host, Slider as NativeSlider } from '@expo/ui/jetpack-compose';
+import { Slider as NativeSlider } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { usePrimitiveColor } from './primitive-color';
+import { useNativeTheme } from '#lib/generic/native-theme';
+import { Host } from './host';
 import type { SliderProps } from './slider';
 import { sliderStopCount } from './slider-steps';
 
@@ -16,14 +17,13 @@ export function Slider(props: SliderProps): React.JSX.Element {
 function useSliderColors(): React.ComponentProps<
   typeof NativeSlider
 >['colors'] {
-  const primary = usePrimitiveColor('text-primary');
-  const muted = usePrimitiveColor('text-muted');
+  const { tint, muted } = useNativeTheme().colors;
   return {
-    thumbColor: primary,
-    activeTrackColor: primary,
+    thumbColor: tint,
+    activeTrackColor: tint,
     inactiveTrackColor: muted,
     activeTickColor: muted,
-    inactiveTickColor: primary,
+    inactiveTickColor: tint,
   };
 }
 

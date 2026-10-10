@@ -1,4 +1,4 @@
-import { FieldGroup as NativeFieldGroup, Host } from '@expo/ui';
+import { FieldGroup as NativeFieldGroup } from '@expo/ui';
 import {
   listRowBackground,
   padding,
@@ -8,8 +8,8 @@ import type * as React from 'react';
 import { Children, isValidElement } from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { PlatformFieldColors } from './field-group-colors';
 import { HostedRow } from './field-group-row';
+import { Host } from './host';
 
 const groupedFormTopInset = 35;
 type ChildrenProps = { children: React.ReactNode };
@@ -24,9 +24,7 @@ function Group({
   const { height } = useWindowDimensions();
   return (
     <Host {...fieldHostProps(height)}>
-      <PlatformFieldColors>
-        <FieldSections>{children}</FieldSections>
-      </PlatformFieldColors>
+      <FieldSections>{children}</FieldSections>
     </Host>
   );
 }
