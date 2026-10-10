@@ -31,6 +31,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 const projectGuideTitle = 'Project guide';
+const embeddedName = 'result.txt';
+const embeddedText = 'Embedded result';
 
 type ContentCase = 'references' | 'notices' | 'compaction' | 'tool';
 
@@ -50,9 +52,20 @@ function supportedContent(
         case 'references':
           for (const text of [
             projectGuideTitle,
-            'Embedded result',
+            embeddedName,
             'Unsupported image content',
           ])
+            await expect(canvas.getByText(text)).toBeVisible();
+          await expect(
+            canvas.queryByText(embeddedText),
+          ).not.toBeInTheDocument();
+          await userEvent.click(
+            canvas.getByRole('button', { name: projectGuideTitle }),
+          );
+          await userEvent.click(
+            canvas.getByRole('button', { name: embeddedName }),
+          );
+          for (const text of ['The current guide', embeddedText])
             await expect(canvas.getByText(text)).toBeVisible();
           await expect(
             canvas
@@ -89,7 +102,7 @@ function supportedContent(
               canvas.getByRole('button', { name: 'Copy resource text' }),
             );
             await waitFor(() =>
-              expect(clipboard).toHaveBeenCalledWith('Embedded result'),
+              expect(clipboard).toHaveBeenCalledWith(embeddedText),
             );
           } finally {
             clipboard.mockRestore();
@@ -107,26 +120,16 @@ function supportedContent(
           break;
         case 'compaction':
           await expect(
-            canvas.getByRole('status', { name: compactingLabel }),
+            canvas.getByRole('status', { name: `info: ${compactingLabel}` }),
           ).toBeVisible();
-          for (const text of ['Unknown compaction status: constructor'])
+          for (const text of [
+            'Unknown compaction status: constructor',
+            'Compaction could not finish',
+          ])
             await expect(canvas.getByText(text)).toBeVisible();
-          await expect(
-            canvas.getByRole('button', { name: compactingLabel }),
-          ).toBeVisible();
           await expect(
             canvas.queryByText('Live context summary'),
           ).not.toBeInTheDocument();
-          await userEvent.click(
-            canvas.getByRole('button', { name: compactingLabel }),
-          );
-          await expect(canvas.getByText('Live context summary')).toBeVisible();
-          await userEvent.click(
-            canvas.getByRole('button', { name: "Couldn't compact context" }),
-          );
-          await expect(
-            canvas.getByText('Compaction could not finish'),
-          ).toBeVisible();
           break;
         case 'tool':
           await userEvent.click(canvas.getByRole('button', { name: /Lookup/ }));

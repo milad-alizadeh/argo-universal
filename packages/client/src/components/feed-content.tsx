@@ -2,8 +2,9 @@ import type { ContentBlock } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/occurrence-keys';
-import { resourceName } from '../lib/resource-name';
+import { resourceIcon, resourceName } from '../lib/resource-name';
 import { FeedCodeBlock } from './feed-code-block';
+import { FeedDisclosure } from './feed-disclosure';
 import { FeedImage } from './feed-image';
 import { FeedMarkdown, type FeedMarkdownProps } from './feed-markdown';
 import { UnsupportedFeedContent } from './feed-notice';
@@ -27,12 +28,10 @@ function FeedContentBlock({
     );
   if (block.type === 'resource_link')
     return (
-      <FeedCodeBlock
-        resource={{
-          name: block.title ?? block.name,
-          uri: block.uri,
-          description: block.description,
-        }}
+      <ResourceReference
+        name={block.title ?? block.name}
+        uri={block.uri}
+        description={block.description}
       />
     );
   return <FeedNonTextContent block={block} />;
@@ -44,17 +43,33 @@ function FeedNonTextContent({
 }): React.JSX.Element {
   if (block.type === 'resource')
     return (
-      <FeedCodeBlock
-        resource={{
-          name: resourceName(block.resource.uri),
-          uri: block.resource.uri,
-        }}
-        code={block.resource.text}
+      <ResourceReference
+        name={resourceName(block.resource.uri)}
+        uri={block.resource.uri}
+        text={block.resource.text}
       />
     );
   if (block.type === 'unsupported')
     return <UnsupportedFeedContent block={block} />;
   return <FeedImage image={block} />;
+}
+// A supplied resource: its name heads the disclosure; open, a code block shows its URI and its text or description.
+function ResourceReference({
+  name,
+  uri,
+  description,
+  text,
+}: {
+  name: string;
+  uri: string;
+  description?: string;
+  text?: string;
+}): React.JSX.Element {
+  return (
+    <FeedDisclosure label={name} icon={resourceIcon(uri)}>
+      <FeedCodeBlock uri={uri} code={text} description={description} />
+    </FeedDisclosure>
+  );
 }
 export function FeedContent({
   content,
