@@ -42,7 +42,7 @@ async function expectWindowsRecipe(page: Page): Promise<void> {
   ).toBeVisible();
 }
 
-When('I browse available Agents', async ({ page }): Promise<void> => {
+export async function browseAgents(page: Page): Promise<void> {
   const viewport = page.viewportSize();
   if (viewport && viewport.width < 600)
     await page.getByRole('button', { name: 'Open navigation' }).click();
@@ -51,6 +51,10 @@ When('I browse available Agents', async ({ page }): Promise<void> => {
   await expect(
     page.getByRole('heading', { name: exampleAgentName, exact: true }),
   ).toBeVisible();
+}
+
+When('I browse available Agents', async ({ page }): Promise<void> => {
+  await browseAgents(page);
 });
 
 Then(

@@ -7,23 +7,21 @@ import { Text } from '#lib/generic/primitives/text';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { CatalogRow } from './catalog-row';
 
-type CatalogProps = {
+export type CatalogRefreshProps = {
+  refreshing: boolean;
+  onRefresh: () => void;
+};
+type CatalogProps = CatalogRefreshProps & {
   catalog: AgentsCatalogOutput;
   search: string;
-  retry: { refresh: () => void; refreshing: boolean };
 };
-type CatalogRetryProps = Pick<CatalogProps, 'retry'>;
 type CatalogStatusProps = Pick<CatalogProps, 'catalog'>;
 
-export function AgentCatalog({
-  catalog,
-  search,
-  retry,
-}: CatalogProps): React.JSX.Element {
+export function AgentCatalog(props: CatalogProps): React.JSX.Element {
   return (
     <View className="flex-1 min-h-0">
-      <CatalogStatus catalog={catalog} />
-      <CatalogEntries catalog={catalog} search={search} retry={retry} />
+      <CatalogStatus catalog={props.catalog} />
+      <CatalogEntries {...props} />
     </View>
   );
 }
@@ -43,14 +41,10 @@ function CatalogEntries(props: CatalogProps): React.JSX.Element {
   );
 }
 
-function CatalogEmpty({
-  catalog,
-  search,
-  retry,
-}: CatalogProps): React.JSX.Element {
-  if (catalog.status === 'unavailable')
-    return <CatalogUnavailable catalog={catalog} retry={retry} />;
-  return <CatalogNoMatches search={search} />;
+function CatalogEmpty(props: CatalogProps): React.JSX.Element {
+  if (props.catalog.status === 'unavailable')
+    return <CatalogUnavailable {...props} />;
+  return <CatalogNoMatches search={props.search} />;
 }
 
 function CatalogNoMatches({
@@ -69,12 +63,12 @@ function CatalogNoMatches({
 
 function CatalogUnavailable({
   catalog,
-  retry,
-}: CatalogStatusProps & CatalogRetryProps): React.JSX.Element {
+  ...refresh
+}: CatalogStatusProps & CatalogRefreshProps): React.JSX.Element {
   return (
     <View role="alert" className="items-center gap-3 px-4 py-10">
       <CatalogUnavailableMessage catalog={catalog} />
-      <CatalogRetry retry={retry} />
+      <CatalogRetry {...refresh} />
     </View>
   );
 }
@@ -95,14 +89,14 @@ function CatalogUnavailableMessage({
   );
 }
 
-function CatalogRetry({ retry }: CatalogRetryProps): React.JSX.Element {
+function CatalogRetry(props: CatalogRefreshProps): React.JSX.Element {
   return (
     <Button
       variant="outline"
       size="sm"
       className="h-8 shadow-none"
-      onPress={retry.refresh}
-      disabled={retry.refreshing}
+      onPress={props.onRefresh}
+      disabled={props.refreshing}
     >
       <Text className="font-sans leading-5">Retry</Text>
     </Button>

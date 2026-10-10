@@ -257,8 +257,11 @@
       }
     },
     {
-      // The Connection's components and stories take props only: no tRPC, TanStack Query, tRPC client or data hook (ADR-0021).
-      "files": ["packages/client/src/features/connection/components/**"],
+      // Split features' components and stories take props only: no tRPC, TanStack Query, tRPC client or data hook (ADR-0021).
+      "files": [
+        "packages/client/src/features/agents/components/**",
+        "packages/client/src/features/connection/components/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -291,6 +294,27 @@
                   "useConnectionState",
                   "useResubscribeOnReconnect"
                 ],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/connection",
+                "importNames": [
+                  "useTRPC",
+                  "useConnection",
+                  "useConnectionState"
+                ],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-agent-catalog",
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-agents",
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-custom-agents",
                 "message": "Components take props only: the screen calls data hooks (ADR-0021)."
               }
             ],
