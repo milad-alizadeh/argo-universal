@@ -22,7 +22,7 @@ type GalleryArgs = ComponentProps<typeof ElicitationForm> & {
 };
 
 const meta = {
-  title: 'Sessions/ElicitationForm',
+  title: 'Requests/ElicitationForm',
   component: ElicitationForm,
   parameters: { previewPadding: false },
   args: {

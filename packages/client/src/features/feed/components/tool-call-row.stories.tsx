@@ -4,7 +4,7 @@ import { ToolCallRow } from './tool-call-row';
 import { completedRead, runningRead } from './tool-call.mocks';
 
 const meta = {
-  title: 'Sessions/Feed/ToolCallRow',
+  title: 'Feed/ToolCallRow',
   component: ToolCallRow,
   args: { row: completedRead },
 } satisfies Meta<typeof ToolCallRow>;

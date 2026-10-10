@@ -5,7 +5,7 @@ import { Variation, Variations } from '../../../lib/generic/variations';
 import { ComposerWorkChips } from './composer-status';
 
 const meta = {
-  title: 'Sessions/Composer status',
+  title: 'Composer/ComposerStatus',
   component: ComposerWorkChips,
   args: {
     disabled: false,

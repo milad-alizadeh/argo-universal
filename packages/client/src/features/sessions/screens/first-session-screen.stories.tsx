@@ -8,7 +8,7 @@ import { pending } from '../../../../mocks/trpc-mock-link';
 import { FirstSessionScreen } from './first-session-screen';
 
 const meta = {
-  title: 'screens/FirstSessionScreen',
+  title: 'Screens/FirstSessionScreen',
   component: FirstSessionScreen,
   parameters: { trpc: sessionListMocks },
 } satisfies Meta<typeof FirstSessionScreen>;
