@@ -3,6 +3,7 @@ import { type ReactElement, type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
+import { ButtonGroup } from '#primitives/button-group';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
 import { ChoiceMenu } from './choice-menu';
@@ -15,7 +16,7 @@ export interface SplitButtonChoice<Value extends string> {
 }
 
 export interface SplitButtonProps<Value extends string> {
-  // The button that acts on the chosen value; round its right corners to rounded-sm.
+  // The button that acts on the chosen value; it passes className on to its Button.
   children: ReactElement;
   choices: readonly SplitButtonChoice<Value>[];
   value: Value;
@@ -32,20 +33,10 @@ export function SplitButton<Value extends string>(
 ): React.JSX.Element {
   const wide = useContentWide();
   return (
-    <View className={cn('flex-row gap-0.5', props.className)}>
+    <ButtonGroup className={props.className}>
       {props.children}
-      {wide ? (
-        <ChoiceMenu
-          accessibilityLabel={props.menuLabel}
-          value={props.value}
-          choices={props.choices}
-          onValueChange={props.onValueChange}
-          trigger={chevron(props, true)}
-        />
-      ) : (
-        <ChoiceSheet {...props} />
-      )}
-    </View>
+      {wide ? <ChoiceDropdown {...props} /> : <ChoiceSheet {...props} />}
+    </ButtonGroup>
   );
 }
 
@@ -57,17 +48,17 @@ function chevron(
     disabled,
   }: Pick<SplitButtonProps<string>, 'menuLabel' | 'primary' | 'disabled'>,
   wide: boolean,
+  className: string | undefined,
 ): React.JSX.Element {
   return (
     <Button
       variant={primary ? 'default' : 'ghost'}
       accessibilityLabel={menuLabel}
       disabled={disabled}
-      className={
-        wide
-          ? 'h-8 w-7 rounded-md rounded-l-sm px-0 sm:h-8'
-          : 'h-11 w-11 rounded-lg rounded-l-md px-0 sm:h-11'
-      }
+      className={cn(
+        wide ? 'h-8 w-7 px-0 sm:h-8' : 'h-11 w-11 rounded-lg px-0 sm:h-11',
+        className,
+      )}
     >
       <Icon
         name="chevron-down"
@@ -80,10 +71,30 @@ function chevron(
   );
 }
 
+// ButtonGroup sets className on this child; the chevron takes it.
+type ChoiceProps<Value extends string> = Omit<
+  SplitButtonProps<Value>,
+  'className'
+> & { className?: string };
+
+function ChoiceDropdown<Value extends string>(
+  props: ChoiceProps<Value>,
+): ReactNode {
+  return (
+    <ChoiceMenu
+      accessibilityLabel={props.menuLabel}
+      value={props.value}
+      choices={props.choices}
+      onValueChange={props.onValueChange}
+      trigger={chevron(props, true, props.className)}
+    />
+  );
+}
+
 const ignoreClosed = (): void => undefined;
 
 function ChoiceSheet<Value extends string>(
-  props: SplitButtonProps<Value>,
+  props: ChoiceProps<Value>,
 ): ReactNode {
   const { choices, value, onValueChange, disabled, menuLabel } = props;
   const [open, setOpen] = useState(false);
@@ -94,7 +105,7 @@ function ChoiceSheet<Value extends string>(
       onOpenChange={setOpen}
       onClosed={ignoreClosed}
       label={menuLabel}
-      trigger={chevron(props, false)}
+      trigger={chevron(props, false, props.className)}
     >
       <View className="gap-0.5 p-1">
         {choices.map((choice) => (

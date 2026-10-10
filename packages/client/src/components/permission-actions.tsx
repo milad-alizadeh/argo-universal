@@ -121,7 +121,7 @@ function OptionGroup({ options, lead, ...props }: GroupProps): ReactNode {
       <OptionAction
         {...props}
         option={lead}
-        className={wide ? 'rounded-r-sm' : 'flex-1 rounded-r-md'}
+        className={wide ? undefined : 'flex-1'}
       />
     </SplitButton>
   );
