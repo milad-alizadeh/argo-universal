@@ -10,8 +10,8 @@ import { permissionOptions } from '@repo/contracts';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { listBranches } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
-import { createAppFixtureProcessLauncher } from '@repo/mocks/agent/acp-fixtures';
 import { createAppFixtureAdapter } from '@repo/mocks/agent/app-fixtures';
+import { scenarios } from '@repo/mocks/agent/scenarios';
 import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
@@ -24,6 +24,7 @@ import {
 import { startEngineTestHost } from '#mocks/engine';
 import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
+import { createScriptedAgentLauncher } from '#mocks/scripted-agent';
 import { writerMachine, findDatabaseWriter } from '../services/feed';
 
 const missingWriterMessage = 'Writer actor is missing';
@@ -1303,7 +1304,9 @@ async function startNewSessionEngine(identity: AgentAdapter): Promise<
     ...(await startEngineTestHost({
       database,
       adapters: [createAppFixtureAdapter(identity)],
-      acp: { launchProcess: createAppFixtureProcessLauncher({}) },
+      acp: {
+        launchProcess: createScriptedAgentLauncher(() => scenarios.reply),
+      },
       resolveAgentLaunch: async (input) => ({
         agentId: input.agent,
         projectId: input.projectId,

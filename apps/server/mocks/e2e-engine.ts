@@ -6,11 +6,12 @@ import { ServerAddress } from '@repo/contracts';
 import type { EngineMessage } from '@repo/engine/ipc';
 import { engineMachine } from '@repo/engine/machine';
 import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
-import { createAppFixtureProcessLauncher } from '@repo/mocks/agent/acp-fixtures';
 import {
   AppFixtureAgents,
+  AppFixtureOptions,
   createAppFixtureAdapters,
 } from '@repo/mocks/agent/app-fixtures';
+import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { createFileAgentsFetcher } from '@repo/mocks/registry/port';
 import { createActor } from 'xstate';
 import { z } from 'zod';
@@ -57,13 +58,14 @@ const engine = createActor(
       now: Date.now,
       createId: randomUUID,
       adapters: createAppFixtureAdapters(agentAdapters, options),
-      acp: { launchProcess: createAppFixtureProcessLauncher(options) },
+      // The production launcher runs each Agent's scripted scenario as a real stdio process.
       resolveAgentLaunch: async (input) => ({
         agentId: input.agent,
         projectId: input.projectId,
-        executable: '/mock-agent',
+        ...scriptedAgentCommand(
+          AppFixtureOptions.parse(options[input.agent] ?? {}).scenario,
+        ),
         version: '1',
-        args: [],
         cwd: input.projectPath,
         env: {},
         authContext: 'shared-fixture',

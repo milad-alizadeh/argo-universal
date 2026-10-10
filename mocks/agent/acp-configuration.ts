@@ -1,5 +1,4 @@
 import type { SessionConfigOption } from '@agentclientprotocol/sdk';
-import { SessionConfigOption as ArgoConfigOption } from '@repo/contracts';
 
 export const acpConfiguration: SessionConfigOption[] = [
   {
@@ -43,7 +42,3 @@ export const acpConfiguration: SessionConfigOption[] = [
     currentValue: false,
   },
 ];
-
-export const appConfiguration = acpConfiguration.map(({ id, ...option }) =>
-  ArgoConfigOption.parse({ ...option, configId: id }),
-);
