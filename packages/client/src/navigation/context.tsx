@@ -16,6 +16,7 @@ export type NavigationDestination =
   | { to: 'settings-accounts' }
   | { to: 'settings-project'; name: string }
   | { to: 'settings-connection' }
+  | { to: 'settings-agent-new' }
   | { to: 'settings-agent'; agent: string };
 
 export interface NavigateOptions {

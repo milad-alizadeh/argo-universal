@@ -2,16 +2,17 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { AgentCatalog } from '#components/agents/catalog';
+import { CustomAgentRows } from '#components/agents/custom-agent-rows';
 import { LoadError } from '#components/load-error';
 import { Button } from '#primitives/button';
-import { Input } from '#primitives/input';
 import { Text } from '#primitives/text';
-import { Icon } from '../../lib/icon';
+import { useNavigate } from '../../navigation/context';
+import { CatalogSearch, type CatalogSearchProps } from './catalog-search';
 import { useAgentCatalog } from './use-agent-catalog';
+import { useCustomAgents } from './use-custom-agents';
 
 type CatalogState = ReturnType<typeof useAgentCatalog>;
 type CatalogViewProps = { catalog: CatalogState };
-type CatalogSearchProps = Pick<CatalogControlsProps, 'search' | 'onSearch'>;
 type CatalogResultProps = CatalogViewProps & Pick<CatalogSearchProps, 'search'>;
 interface CatalogControlsProps {
   search: string;
@@ -25,6 +26,7 @@ export function AgentsSettingsScreen(): React.JSX.Element {
   return (
     <View className="flex-1 min-h-0 bg-background p-4">
       <CatalogControls search={search} onSearch={setSearch} catalog={catalog} />
+      <CustomAgents />
       <CatalogResult catalog={catalog} search={search} />
     </View>
   );
@@ -52,8 +54,37 @@ function CatalogHeading({ catalog }: CatalogViewProps): React.JSX.Element {
       <Text className="type-secondary flex-1">
         {catalog.catalog?.agents.length}
       </Text>
+      <AddCustomAgent />
       <RefreshCatalog catalog={catalog} />
     </View>
+  );
+}
+
+function CustomAgents(): React.JSX.Element {
+  const navigate = useNavigate();
+  const agents = useCustomAgents().data ?? [];
+  return (
+    <CustomAgentRows
+      agents={agents.map(({ id, definition }) => ({
+        id,
+        name: definition.name,
+      }))}
+      onOpen={(agent) => navigate({ to: 'settings-agent', agent })}
+    />
+  );
+}
+
+function AddCustomAgent(): React.JSX.Element {
+  const navigate = useNavigate();
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-8 shadow-none"
+      onPress={() => navigate({ to: 'settings-agent-new' })}
+    >
+      <Text className="font-sans leading-5">Add custom</Text>
+    </Button>
   );
 }
 
@@ -103,31 +134,6 @@ function CatalogError({
       title="Could not load the catalog"
       description={catalog.error?.message ?? 'The Server did not answer'}
       onRetry={catalog.refresh}
-    />
-  );
-}
-
-function CatalogSearch(props: CatalogSearchProps): React.JSX.Element {
-  return (
-    <View className="h-10 flex-row items-center gap-2 rounded-lg bg-muted px-3">
-      <Icon name="search" className="text-muted-foreground" />
-      <CatalogSearchInput {...props} />
-    </View>
-  );
-}
-
-function CatalogSearchInput({
-  search,
-  onSearch,
-}: CatalogSearchProps): React.JSX.Element {
-  return (
-    <Input
-      className="type-body h-10 sm:h-10 flex-1 border-0 rounded-none bg-transparent dark:bg-transparent px-0 py-0 shadow-none focus-visible:ring-0"
-      accessibilityLabel="Search Agents"
-      placeholder="Search Agents"
-      value={search}
-      onChangeText={onSearch}
-      autoCapitalize="none"
     />
   );
 }

@@ -16,6 +16,7 @@ const cases: [NavigationDestination, string, string][] = [
     'settings',
     'example-project',
   ],
+  [{ to: 'settings-agent-new' }, 'settings', 'Add custom Agent'],
   [{ to: 'settings-agent', agent: 'first-agent' }, 'settings', 'first-agent'],
 ];
 

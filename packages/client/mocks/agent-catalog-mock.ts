@@ -1,5 +1,6 @@
 import type { AgentsCatalogOutput } from '@repo/contracts';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { customAgentMocks } from './custom-agent-mock';
 import type { Fixtures } from './trpc-mock-link';
 import { pending } from './trpc-mock-link';
 
@@ -66,6 +67,7 @@ if (!exampleCatalog || !pythonCatalog || !binaryCatalog || !windowsCatalog)
   throw new Error('Catalog fixture is incomplete');
 
 export const agentCatalogMocks: Fixtures = {
+  ...customAgentMocks,
   'agents.syncCatalog': () => ({ accepted: true }),
   'agents.catalogChanges': pending(),
   'agents.catalog': (input) => {

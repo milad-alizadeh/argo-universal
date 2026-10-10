@@ -1,7 +1,6 @@
-import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
-import { openTestDatabase } from '#mocks/database';
+import { openTestDatabase, readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { writeDatabaseJobAndWaitForCommit } from '../feed';
 import type { FetchAgents } from './index';
@@ -22,7 +21,7 @@ it.each(['commit', 'rollback'])(
     await expect
       .poll(async () => (await host.caller.agents.catalog()).syncStatus)
       .toBe('idle');
-    const before = stored.database.select().from(agents).all();
+    const before = readAddedAgentRows(stored.database);
     let stopped: Promise<void> | undefined;
     host.database.$client.function('request_catalog_shutdown', () => {
       stopped ??= host.stop();
@@ -39,7 +38,7 @@ it.each(['commit', 'rollback'])(
       ...row,
       catalogSyncedAt: expect.any(Number),
     }));
-    expect(stored.database.select().from(agents).all()).toEqual(
+    expect(readAddedAgentRows(stored.database)).toEqual(
       outcome === 'rollback' ? before : after,
     );
     expect(stored.database.$client.prepare(statusSql).get()).toEqual({
@@ -118,7 +117,7 @@ it.each(['timeout', 'shutdown'] as const)(
     await host.stop();
     response.resolve(publishedRegistry);
     await vi.advanceTimersByTimeAsync(0);
-    expect(stored.database.select().from(agents).all()).toEqual([]);
+    expect(readAddedAgentRows(stored.database)).toEqual([]);
   },
 );
 

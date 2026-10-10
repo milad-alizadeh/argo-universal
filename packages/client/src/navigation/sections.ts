@@ -20,6 +20,7 @@ export function sectionOf(destination: NavigationDestination): Section {
     case 'settings-accounts':
     case 'settings-project':
     case 'settings-connection':
+    case 'settings-agent-new':
     case 'settings-agent':
       return 'settings';
   }
@@ -60,6 +61,8 @@ export function destinationTitle(destination: NavigationDestination): string {
       return 'Connection';
     case 'settings-project':
       return destination.name;
+    case 'settings-agent-new':
+      return 'Add custom Agent';
     case 'settings-agent':
       return destination.agent;
   }

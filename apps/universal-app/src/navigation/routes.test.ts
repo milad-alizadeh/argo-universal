@@ -40,6 +40,7 @@ const destinations: [NavigationDestination, string[], object][] = [
     ['(shell)', 'settings', 'projects', '[name]'],
     {},
   ],
+  [{ to: 'settings-agent-new' }, ['(shell)', 'settings', 'agents', 'new'], {}],
   [
     { to: 'settings-agent', agent: firstAgentId },
     ['(shell)', 'settings', 'agents', '[agent]'],

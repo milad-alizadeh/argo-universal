@@ -13,11 +13,14 @@ export const migrationsFolder = fileURLToPath(
 export type Database = NodeSQLiteDatabase & { $client: DatabaseSync };
 
 // Opens the SQLite file at `filePath` (the Server passes `~/.argo/argo.db`), turns on WAL, and migrates it.
-export function openDatabase(filePath: string): Database {
+export function openDatabase(
+  filePath: string,
+  migrations = migrationsFolder,
+): Database {
   mkdirSync(dirname(filePath), { recursive: true });
   const client = new DatabaseSync(filePath);
   client.exec('PRAGMA journal_mode = WAL');
   const database = drizzle({ client });
-  migrate(database, { migrationsFolder });
+  migrate(database, { migrationsFolder: migrations });
   return database;
 }

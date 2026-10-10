@@ -40,6 +40,10 @@ const routes = {
       name: String(params.name),
     }),
   },
+  'settings-agent-new': {
+    pathname: '/settings/agents/new',
+    destination: () => ({ to: 'settings-agent-new' }),
+  },
   'settings-agent': {
     pathname: '/settings/agents/[agent]',
     destination: (params) => ({

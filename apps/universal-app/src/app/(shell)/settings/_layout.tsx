@@ -20,6 +20,7 @@ export default function SettingsLayout(): React.JSX.Element {
         name="projects/[name]"
         options={{ title: 'Project settings' }}
       />
+      <Stack.Screen name="agents/new" options={{ title: 'Add custom Agent' }} />
       <Stack.Screen name="agents/[agent]" options={{ title: 'Agent' }} />
       <Stack.Screen name="devices" options={{ title: 'Devices' }} />
       <Stack.Screen name="appearance" options={{ title: 'Appearance' }} />
