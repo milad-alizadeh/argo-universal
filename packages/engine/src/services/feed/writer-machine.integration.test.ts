@@ -37,6 +37,7 @@ interface WriteBatchCall {
 let writeBatchCalls: WriteBatchCall[];
 let logLines: string[];
 let sentJobs: WriterJob[];
+let refusedJobs: WriterJob[];
 let committedJobs: WriterJob[];
 let writer: Actor<typeof machine>;
 
@@ -74,9 +75,11 @@ const machine = writerMachine.provide({
 });
 type WriterSnapshot = SnapshotFrom<typeof machine>;
 
+// One queued Feed row job spends the budget, so the model reaches a refusal.
 const input = {
   now: (): number => 1000,
   database: mockDatabase,
+  feedRowJobLimit: 1,
 };
 const writeError = new Error('database is locked');
 const job = (index: number): WriterJob => ({
@@ -84,11 +87,26 @@ const job = (index: number): WriterJob => ({
   id: `turn-${index}`,
   set: { endedAt: index },
 });
-// Sends the next numbered job and records it as sent.
-const sendWrite = (): void => {
-  const sent = job(sentJobs.length + 1);
+const feedRowsJob = (index: number): WriterJob => ({
+  type: 'feedRows',
+  sessionId: 'session-1',
+  rows: [],
+  maxRevision: index,
+});
+const isFeedRows = (queued: WriterJob): boolean => queued.type === 'feedRows';
+// Sends the next numbered job of the same kind and records it as sent or refused.
+const sendWrite = (type: WriterJob['type'] = 'turnUpdate'): void => {
+  const index = sentJobs.length + refusedJobs.length + 1;
+  const sent = type === 'feedRows' ? feedRowsJob(index) : job(index);
   sentJobs.push(sent);
-  writer.send({ type: writeFeedEvent, job: sent });
+  writer.send({
+    type: writeFeedEvent,
+    job: sent,
+    refused: (): void => {
+      sentJobs.pop();
+      refusedJobs.push(sent);
+    },
+  });
 };
 
 // Done and error events of invoked actors are not in the machine's event type, but the model drives them.
@@ -160,7 +178,9 @@ const executors: Record<string, EventExecutor<WriterSnapshot, WriterEvent>> = {
   'xstate.init': (): void => {
     writer = createActor(machine, { input }).start();
   },
-  'writer.write': sendWrite,
+  'writer.write': ({ event }): void => {
+    if (event.type === writeFeedEvent) sendWrite(event.job.type);
+  },
   'writer.drain': (): void => writer.send({ type: drainWriterEvent }),
   'xstate.done.actor.writeBatch': (): Promise<void> =>
     settle((call): void => call.resolve()),
@@ -181,7 +201,8 @@ const expectModelState = (expected: WriterSnapshot): void => {
   expect(actual.value).toEqual(expected.value);
   expect(actual.status).toBe(expected.status);
   expect(actual.context.batchSize > 0).toBe(expected.context.batchSize > 0);
-  expect([...committedJobs, ...actual.context.queue]).toEqual(sentJobs);
+  // Queued Feed row jobs carry the clock value they were enqueued at.
+  expect([...committedJobs, ...actual.context.queue]).toMatchObject(sentJobs);
 };
 // A running batch holds the oldest queued jobs, and no other batch runs.
 const expectBatchRunning = (snapshot: WriterSnapshot): void => {
@@ -202,6 +223,17 @@ const expectNoBatchRunning = (): void => {
   expect(writer.getSnapshot().context.batchSize).toBe(0);
   expect(writeBatchCalls.every((call): boolean => call.settled)).toBe(true);
 };
+const isWriteFailure = (line: string): boolean => line.startsWith('could not');
+const refusalLine =
+  'Storage is failing: refusing Feed rows while 1 Feed row jobs wait';
+// A Writer refuses Feed rows only while its budget is spent, and logs at most once per refused job.
+const expectRefusals = (): void => {
+  const { queue, refusing } = writer.getSnapshot().context;
+  const refusals = logLines.filter((line): boolean => line === refusalLine);
+  expect(refusals.length).toBeLessThanOrEqual(refusedJobs.length);
+  if (refusing) expect(queue.some(isFeedRows)).toBe(true);
+  if (refusing) expect(refusals.length).toBeGreaterThan(0);
+};
 const states: Record<string, (snapshot: WriterSnapshot) => void> = {
   idle: (snapshot): void => {
     expectModelState(snapshot);
@@ -213,7 +245,7 @@ const states: Record<string, (snapshot: WriterSnapshot) => void> = {
     expectModelState(snapshot);
     expectNoBatchRunning();
     expect(writer.getSnapshot().context.queue.length).toBeGreaterThan(0);
-    expect(logLines.at(-1)).toMatch(
+    expect(logLines.findLast(isWriteFailure)).toMatch(
       /^could not write, keeping \d+ jobs to retry: Error: database is locked$/,
     );
   },
@@ -223,19 +255,37 @@ const states: Record<string, (snapshot: WriterSnapshot) => void> = {
     expectNoBatchRunning();
     const lost = writer.getSnapshot().context.queue;
     if (lost.length > 0)
-      expect(logLines.at(-1)).toMatch(
+      expect(logLines.findLast(isWriteFailure)).toMatch(
         new RegExp(`^could not write while draining, lost ${lost.length} jobs`),
       );
   },
 };
 
-const shortestPaths = terminalPaths(getShortestPaths(machine, options));
+// Feed row writes and the budget they spend, walked by shortest paths only so simple paths stay few.
+const budgetOptions = {
+  ...options,
+  events: [
+    ...events,
+    { type: writeFeedEvent, job: feedRowsJob(0) },
+  ] satisfies WriterEvent[],
+  serializeState: (
+    snapshot: WriterSnapshot,
+    event: WriterEvent | undefined,
+    previous?: WriterSnapshot,
+  ): string =>
+    JSON.stringify({
+      state: options.serializeState(snapshot, event, previous),
+      feedRowsQueued: snapshot.context.queue.some(isFeedRows),
+      refusing: snapshot.context.refusing,
+    }),
+};
+const shortestPaths = terminalPaths(getShortestPaths(machine, budgetOptions));
 const simplePaths = terminalPaths(getSimplePaths(machine, options));
 mockDatabase.$client.close();
 const title = (path: StatePath<WriterSnapshot, WriterEvent>): string =>
   path.steps
     .map(({ event }): string =>
-      event.type
+      `${event.type}${event.job?.type === 'feedRows' ? ' feedRows' : ''}`
         .replace(/^xstate\.after\.(\w+)\..*$/, 'after $1')
         .replace(/^xstate\.(done|error)\.actor\.(\w+)$/, '$2 $1'),
     )
@@ -247,6 +297,7 @@ beforeEach((): void => {
   writeBatchCalls = [];
   logLines = [];
   sentJobs = [];
+  refusedJobs = [];
   committedJobs = [];
 });
 
@@ -272,6 +323,7 @@ describe('database writer model', (): void => {
         if (!execute)
           throw new Error(`No Writer executor for ${step.event.type}`);
         await execute(step);
+        expectRefusals();
         for (const [key, assertState] of Object.entries(states)) {
           if (matchesState(key, step.state.value)) assertState(step.state);
         }
@@ -285,7 +337,7 @@ describe('database writer model', (): void => {
         models: [
           {
             getAdjacencyMap: (): AdjacencyMap<WriterSnapshot, WriterEvent> =>
-              getAdjacencyMap(machine, options),
+              getAdjacencyMap(machine, budgetOptions),
           },
         ],
         paths: [...shortestPaths, ...simplePaths],
@@ -299,6 +351,34 @@ describe('database writer model', (): void => {
 describe('database writer', (): void => {
   beforeEach((): void => {
     writer = createActor(machine, { input }).start();
+  });
+
+  it('refuses Feed rows past its budget, still queues lifecycle jobs, and accepts Feed rows again after a commit', async (): Promise<void> => {
+    sendWrite('feedRows');
+    const committed = {
+      resolve: vi.fn<() => void>(),
+      reject: vi.fn<(error: unknown) => void>(),
+    };
+    const refused = vi.fn<() => void>();
+    writer.send({
+      type: writeFeedEvent,
+      job: feedRowsJob(9),
+      committed,
+      refused,
+    });
+    sendWrite();
+
+    expect(committed.reject).toHaveBeenCalledWith(
+      new Error('Storage is failing'),
+    );
+    expect(committed.resolve).not.toHaveBeenCalled();
+    expect(refused).toHaveBeenCalledOnce();
+    expect(logLines).toEqual([refusalLine]);
+    await settle((call): void => call.resolve());
+    sendWrite('feedRows');
+    expect(
+      writer.getSnapshot().context.queue.map((queued) => queued.type),
+    ).toEqual(['turnUpdate', 'feedRows']);
   });
 
   it('retries a failed batch with the jobs that arrived meanwhile', async (): Promise<void> => {

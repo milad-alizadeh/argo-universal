@@ -45,6 +45,8 @@ export interface FeedInput extends Pick<
   // A row that has left memory, as last handed to the database writer.
   findWrittenRow: (id: string) => SessionUpdate | undefined;
   findUnaddressedPlan?: (acpSessionId: string) => PlanUpdate | undefined;
+  // Called when the database writer refuses this Feed's rows because storage is failing.
+  storageFailing?: () => void;
 }
 
 export interface FeedContext
@@ -52,7 +54,11 @@ export interface FeedContext
     Feed,
     Pick<
       FeedInput,
-      'epoch' | 'findWrittenRow' | 'findUnaddressedPlan' | 'now'
+      | 'epoch'
+      | 'findWrittenRow'
+      | 'findUnaddressedPlan'
+      | 'now'
+      | 'storageFailing'
     > {
   activityAt: number;
   // Rows changed since the last write, in the order they first changed.
@@ -98,7 +104,7 @@ export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
 
 type WriterJobParameters = Pick<
   Extract<WriterEvent, { type: 'writer.write' }>,
-  'job' | 'committed'
+  'job' | 'committed' | 'refused'
 >;
 
 // Every changed row with the newest revision, as one job for the database writer.
@@ -115,6 +121,7 @@ const createRowsWriteRequest = ({
   });
   return {
     committed: 'committed' in event ? event.committed : undefined,
+    refused: context.storageFailing,
     job: {
       type: 'feedRows',
       sessionId: context.sessionId,

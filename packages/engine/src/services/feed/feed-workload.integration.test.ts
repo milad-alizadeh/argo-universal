@@ -22,14 +22,17 @@ const readRetainedBytes = (): number => {
   return process.memoryUsage().heapUsed;
 };
 
-// How late each 10 ms timer fires while the workload runs.
+// How late each 10 ms timer fires through this process's own work: lateness counts only up to the CPU time the process used meanwhile, so other test files sharing the machine do not count.
 const sampleEventLoopDelay = (): { stop: () => number[] } => {
   const delays: number[] = [];
   let timer: NodeJS.Timeout | undefined;
   const schedule = (): void => {
     const due = performance.now() + 10;
+    const cpu = process.cpuUsage();
     timer = setTimeout((): void => {
-      delays.push(performance.now() - due);
+      const used = process.cpuUsage(cpu);
+      const cpuMs = (used.user + used.system) / 1000;
+      delays.push(Math.min(performance.now() - due, cpuMs));
       schedule();
     }, 10);
   };
