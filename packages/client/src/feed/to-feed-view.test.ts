@@ -68,6 +68,7 @@ describe('toFeedView', () => {
       const pending = {
         ...snapshot,
         pendingPermission: {
+          requestId: 'request-1',
           toolCallId: first.toolCallId,
           title: 'Allow command?',
           options: permissionOptions,
@@ -298,6 +299,7 @@ describe('toFeedView', () => {
       const pending = {
         ...snapshot,
         pendingPermission: {
+          requestId: 'request-1',
           toolCallId: row.toolCallId,
           title: 'Allow read?',
           options: permissionOptions,

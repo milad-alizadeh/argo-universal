@@ -279,33 +279,36 @@ it('answers only the head Permission request and keeps other requests visible', 
     pendingPermission: request,
     pendingElicitation: { message: fileQuestion },
   });
+  const first = (await readPublicSessionSnapshot(caller)).pendingPermission;
+  if (!first) throw new Error('No Permission request');
   expect((): void =>
     sendSessionCommand(session, {
       type: answerPermissionEvent,
-      toolCallId: 'tool-2',
-      optionId: 'allow_once' as const,
+      requestId: 'not-the-head',
+      optionId: 'allow_once',
     }),
   ).toThrow(expect.objectContaining({ code: 'CONFLICT' }));
   sendSessionCommand(session, {
     type: answerPermissionEvent,
-    toolCallId: 'tool-1',
-    optionId: 'allow_once' as const,
+    requestId: first.requestId,
+    optionId: 'allow_once',
   });
-  expect(await readPublicSessionSnapshot(caller)).toMatchObject({
-    state: 'requires_action',
-    pendingPermission: { toolCallId: 'tool-2' },
-  });
+  const second = (await readPublicSessionSnapshot(caller)).pendingPermission;
+  expect(second).toMatchObject({ toolCallId: 'tool-2' });
   sendSessionCommand(session, {
     type: answerPermissionEvent,
-    toolCallId: 'tool-2',
-    optionId: 'allow_once' as const,
+    requestId: second?.requestId ?? 'missing',
+    optionId: 'allow_once',
   });
   expect(await readPublicSessionSnapshot(caller)).toMatchObject({
     state: 'requires_action',
     pendingPermission: null,
   });
+  const question = (await readPublicSessionSnapshot(caller)).pendingElicitation;
+  if (!question) throw new Error('No Elicitation request');
   sendSessionCommand(session, {
     type: answerElicitationEvent,
+    requestId: question.requestId,
     action: 'accept',
     content: { file: 'README.md' },
   });
@@ -323,6 +326,7 @@ it('answers only the head Permission request and keeps other requests visible', 
   expect((): void =>
     sendSessionCommand(session, {
       type: answerElicitationEvent,
+      requestId: question.requestId,
       action: 'decline',
     }),
   ).toThrow(expect.objectContaining({ code: 'CONFLICT' }));
@@ -721,7 +725,7 @@ const events = [
       options: permissionOptions,
     },
   },
-  { type: answerPermissionEvent, toolCallId: 'tool-1', optionId: null },
+  { type: answerPermissionEvent, requestId: requestModel, optionId: null },
   {
     type: elicitationRequestedEvent,
     request: {
@@ -730,7 +734,7 @@ const events = [
       requestedSchema: { properties: {} },
     },
   },
-  { type: answerElicitationEvent, action: 'cancel' },
+  { type: answerElicitationEvent, requestId: requestModel, action: 'cancel' },
   { type: agentTurnEndedEvent, stopReason: 'end_turn' },
   { type: sessionCancelEvent },
   { type: sessionCloseEvent },
@@ -773,7 +777,7 @@ const key = (snapshot: SessionSnapshot | undefined): string | undefined =>
   JSON.stringify({
     value: snapshot.value,
     permissions: snapshot.context.permissionQueue.length,
-    elicitation: snapshot.context.pendingElicitation !== null,
+    elicitation: snapshot.context.elicitationQueue.length > 0,
     crashes: snapshot.context.agentCrashes.length,
     stored: snapshot.context.stored,
     activeTurnId: snapshot.context.activeTurnId,

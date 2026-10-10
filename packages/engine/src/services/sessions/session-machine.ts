@@ -78,6 +78,11 @@ const rejectedMessageEvent = 'agent.messageRejected';
 const closedSessionTarget = '#session.closed';
 const discardingSessionTarget = '#session.discarding';
 const drainingNativeTarget = '#session.open.draining';
+const acpPermissionEvent = 'acp.permissionRequested';
+const acpElicitationEvent = 'acp.elicitationRequested';
+const answerPermissionEvent = 'session.answerPermission';
+const acpRequestWithdrawnEvent = 'acp.requestWithdrawn';
+const answerElicitationEvent = 'session.answerElicitation';
 const answerPermissionCommand = 'agent.answerPermission';
 const answerElicitationCommand = 'agent.answerElicitation';
 const writeFeedEvent = 'writer.write';
@@ -123,12 +128,13 @@ export type SessionCommand =
   | ({ type: 'session.prompt' } & LocalSubmission)
   | {
       type: 'session.answerPermission';
-      toolCallId: string;
+      requestId: PendingPermission['requestId'];
       optionId: PendingPermission['options'][number]['optionId'] | null;
       message?: string;
     }
   | {
       type: 'session.answerElicitation';
+      requestId: PendingElicitation['requestId'];
       action: 'accept' | 'decline' | 'cancel';
       content?: Record<string, unknown>;
     }
@@ -158,7 +164,7 @@ export interface SessionContext extends SessionData {
   activeTurnStartedAt: number | null;
   usage: ContextUsage | null;
   permissionQueue: PendingPermission[];
-  pendingElicitation: PendingElicitation | null;
+  elicitationQueue: PendingElicitation[];
   configOptions: SessionConfigOption[];
   heldConfigValues: AgentConfigValue[];
   agentCrashes: number[];
@@ -225,6 +231,23 @@ const permissionOutcomeChange = (
     },
   },
 });
+
+const headPermission = (context: SessionContext): PendingPermission => {
+  const request = context.permissionQueue[0];
+  if (!request) throw new Error('No Permission request to answer');
+  return request;
+};
+
+// Each cancelled Permission request shows its outcome on its Tool call.
+const cancelledPermissions = (
+  context: SessionContext,
+  requests: readonly PendingPermission[],
+): FeedChangeEvent[] =>
+  requests.map((request): FeedChangeEvent => ({
+    type: feedChangeEvent,
+    turnId: context.activeTurnId,
+    change: permissionOutcomeChange(request.toolCallId, null),
+  }));
 
 const sessionSetup = setup({
   types: {
@@ -626,7 +649,7 @@ const sessionSetup = setup({
           activeTurnId: null,
           activeTurnStartedAt: null,
           permissionQueue: [],
-          pendingElicitation: null,
+          elicitationQueue: [],
         });
       },
     ),
@@ -702,34 +725,90 @@ const sessionSetup = setup({
     ),
     queuePermission: assign(
       ({ context, event }): Pick<SessionContext, 'permissionQueue'> => {
-        assertEvent(event, 'agent.permissionRequested');
-        return { permissionQueue: [...context.permissionQueue, event.request] };
-      },
-    ),
-    rememberElicitation: assign(
-      ({ context, event }): Pick<SessionContext, 'pendingElicitation'> => {
-        assertEvent(event, 'agent.elicitationRequested');
+        assertEvent(event, ['agent.permissionRequested', acpPermissionEvent]);
         return {
-          pendingElicitation: {
-            ...event.request,
-            requestId: context.input.createId(),
-          },
+          permissionQueue: [
+            ...context.permissionQueue,
+            'requestId' in event.request
+              ? event.request
+              : { ...event.request, requestId: context.input.createId() },
+          ],
         };
       },
     ),
-    answerPermission: enqueueActions(({ context, event, enqueue }): void => {
-      assertEvent(event, 'session.answerPermission');
-      const change = permissionOutcomeChange(event.toolCallId, event.optionId);
-      enqueue.sendTo('feed', {
-        type: feedChangeEvent,
-        turnId: context.activeTurnId,
-        change,
+    queueElicitation: assign(
+      ({ context, event }): Pick<SessionContext, 'elicitationQueue'> => {
+        assertEvent(event, ['agent.elicitationRequested', acpElicitationEvent]);
+        return {
+          elicitationQueue: [
+            ...context.elicitationQueue,
+            'requestId' in event.request
+              ? event.request
+              : { ...event.request, requestId: context.input.createId() },
+          ],
+        };
+      },
+    ),
+    refuseAcpRequest: ({ context, event }): void => {
+      assertEvent(event, [acpPermissionEvent, acpElicitationEvent]);
+      context.acpLifetime.cancelRequest(event.request.requestId);
+    },
+    // The Agent withdrew a request: its Tool call shows the cancellation.
+    forgetAcpRequest: enqueueActions(({ context, event, enqueue }): void => {
+      assertEvent(event, acpRequestWithdrawnEvent);
+      const isOther = (request: { requestId: string }): boolean =>
+        request.requestId !== event.requestId;
+      for (const change of cancelledPermissions(
+        context,
+        context.permissionQueue.filter((request): boolean => !isOther(request)),
+      ))
+        enqueue.sendTo('feed', change);
+      enqueue.assign({
+        permissionQueue: context.permissionQueue.filter(isOther),
+        elicitationQueue: context.elicitationQueue.filter(isOther),
       });
-      enqueue.sendTo('vendorSession', {
-        ...event,
-        type: answerPermissionCommand,
-      } satisfies AgentCommand);
     }),
+    publishPermissionOutcome: sendTo(
+      'feed',
+      ({ context, event }): FeedChangeEvent => {
+        assertEvent(event, answerPermissionEvent);
+        const request = headPermission(context);
+        return {
+          type: feedChangeEvent,
+          turnId: context.activeTurnId,
+          change: permissionOutcomeChange(request.toolCallId, event.optionId),
+        };
+      },
+    ),
+    answerPermission: sendTo(
+      'vendorSession',
+      ({
+        context,
+        event,
+      }): Extract<AgentCommand, { type: typeof answerPermissionCommand }> => {
+        assertEvent(event, answerPermissionEvent);
+        const request = headPermission(context);
+        return {
+          type: answerPermissionCommand,
+          toolCallId: request.toolCallId,
+          optionId: event.optionId,
+          ...(event.message === undefined ? {} : { message: event.message }),
+        };
+      },
+    ),
+    answerAcpPermission: ({ context, event }): void => {
+      assertEvent(event, answerPermissionEvent);
+      context.acpLifetime.answerPermission(event.requestId, event.optionId);
+    },
+    answerAcpElicitation: ({ context, event }): void => {
+      assertEvent(event, answerElicitationEvent);
+      context.acpLifetime.answerElicitation(
+        event.requestId,
+        event.action === 'accept'
+          ? { action: 'accept', content: event.content ?? {} }
+          : { action: event.action },
+      );
+    },
     removePermission: assign({
       permissionQueue: ({ context }): SessionContext['permissionQueue'] =>
         context.permissionQueue.slice(1),
@@ -739,34 +818,48 @@ const sessionSetup = setup({
       ({
         event,
       }): Extract<AgentCommand, { type: typeof answerElicitationCommand }> => {
-        assertEvent(event, 'session.answerElicitation');
+        assertEvent(event, answerElicitationEvent);
         return {
-          ...event,
           type: answerElicitationCommand,
+          action: event.action,
+          ...(event.content === undefined ? {} : { content: event.content }),
         } satisfies AgentCommand;
       },
     ),
-    removeElicitation: assign({ pendingElicitation: null }),
+    removeElicitation: assign({
+      elicitationQueue: ({ context }): SessionContext['elicitationQueue'] =>
+        context.elicitationQueue.slice(1),
+    }),
+    cancelAcpRequests: enqueueActions(({ context, enqueue }): void => {
+      context.acpLifetime.cancelRequests();
+      for (const change of cancelledPermissions(
+        context,
+        context.permissionQueue,
+      ))
+        enqueue.sendTo('feed', change);
+      enqueue.assign({ permissionQueue: [], elicitationQueue: [] });
+    }),
     cancelRequests: enqueueActions(({ context, enqueue }): void => {
-      for (const request of context.permissionQueue) {
-        const change = permissionOutcomeChange(request.toolCallId, null);
-        enqueue.sendTo('feed', {
-          type: feedChangeEvent,
-          turnId: context.activeTurnId,
-          change,
-        });
+      for (const change of cancelledPermissions(
+        context,
+        context.permissionQueue,
+      ))
+        enqueue.sendTo('feed', change);
+      for (const request of context.permissionQueue)
         enqueue.sendTo('vendorSession', {
           type: answerPermissionCommand,
           toolCallId: request.toolCallId,
           optionId: null,
         } satisfies AgentCommand);
-      }
-      if (context.pendingElicitation)
-        enqueue.sendTo('vendorSession', {
+      const elicitationCancels = context.elicitationQueue.map(
+        (): AgentCommand => ({
           type: answerElicitationCommand,
           action: 'cancel',
-        } satisfies AgentCommand);
-      enqueue.assign({ permissionQueue: [], pendingElicitation: null });
+        }),
+      );
+      for (const command of elicitationCancels)
+        enqueue.sendTo('vendorSession', command);
+      enqueue.assign({ permissionQueue: [], elicitationQueue: [] });
     }),
     cancelAgent: sendTo('vendorSession', {
       type: 'agent.cancel',
@@ -862,11 +955,14 @@ const sessionSetup = setup({
     isUnstored: ({ context }): boolean => !context.stored,
     hasEndedFeed: ({ context }): boolean => context.feedEnded,
     isPermissionHead: ({ context, event }): boolean =>
-      event.type === 'session.answerPermission' &&
-      context.permissionQueue[0]?.toolCallId === event.toolCallId,
+      event.type === answerPermissionEvent &&
+      context.permissionQueue[0]?.requestId === event.requestId,
     hasPermission: ({ context }): boolean => context.permissionQueue.length > 0,
     hasElicitation: ({ context }): boolean =>
-      context.pendingElicitation !== null,
+      context.elicitationQueue.length > 0,
+    isPendingElicitation: ({ context, event }): boolean =>
+      event.type === answerElicitationEvent &&
+      context.elicitationQueue[0]?.requestId === event.requestId,
     nativeAlreadyDrained: or([
       stateIn({ open: 'flushing' }),
       stateIn({ open: { acp: 'flushing' } }),
@@ -1004,7 +1100,7 @@ export const sessionMachine = sessionSetup.createMachine({
     activeTurnStartedAt: null,
     usage: null,
     permissionQueue: [],
-    pendingElicitation: null,
+    elicitationQueue: [],
     configOptions: [],
     heldConfigValues: [],
     agentCrashes: [],
@@ -1012,7 +1108,7 @@ export const sessionMachine = sessionSetup.createMachine({
     failure: null,
     pendingNativeStops: new Set(),
     stored: input.kind === 'existing',
-    acpLifetime: new AcpSessionLifetime(input.acp),
+    acpLifetime: new AcpSessionLifetime(input.acp, input.createId),
     acpLease: null,
     pendingSubmission: null,
     feedEnded: false,
@@ -1149,6 +1245,16 @@ export const sessionMachine = sessionSetup.createMachine({
             'session.close': { target: '.closing' },
             'acp.failed': { actions: 'rememberAcpFailure' },
             'acp.update': { actions: 'forwardAcpUpdate' },
+            [acpPermissionEvent]: { actions: 'refuseAcpRequest' },
+            [acpElicitationEvent]: { actions: 'refuseAcpRequest' },
+            [acpRequestWithdrawnEvent]: { actions: 'forgetAcpRequest' },
+            [rejectedMessageEvent]: {
+              actions: [
+                'countRejectedMessage',
+                'messageRejectedNotice',
+                'logMessageRejected',
+              ],
+            },
           },
           states: {
             opening: {
@@ -1260,8 +1366,46 @@ export const sessionMachine = sessionSetup.createMachine({
                   ],
                 },
               },
+              exit: 'cancelAcpRequests',
+              on: {
+                [acpPermissionEvent]: {
+                  target: '.awaitingPermission',
+                  actions: 'queuePermission',
+                },
+                [acpElicitationEvent]: {
+                  target: '.awaitingElicitation',
+                  actions: 'queueElicitation',
+                },
+                [acpRequestWithdrawnEvent]: {
+                  target: '.working',
+                  actions: 'forgetAcpRequest',
+                },
+                [answerPermissionEvent]: {
+                  guard: 'isPermissionHead',
+                  target: '.working',
+                  actions: [
+                    'publishPermissionOutcome',
+                    'answerAcpPermission',
+                    'removePermission',
+                  ],
+                },
+                [answerElicitationEvent]: {
+                  guard: 'isPendingElicitation',
+                  target: '.working',
+                  actions: ['answerAcpElicitation', 'removeElicitation'],
+                },
+              },
               initial: 'working',
-              states: { working: {} },
+              states: {
+                working: {
+                  always: [
+                    { guard: 'hasPermission', target: 'awaitingPermission' },
+                    { guard: 'hasElicitation', target: 'awaitingElicitation' },
+                  ],
+                },
+                awaitingPermission: {},
+                awaitingElicitation: {},
+              },
             },
             publishing: {
               invoke: {
@@ -1437,15 +1581,19 @@ export const sessionMachine = sessionSetup.createMachine({
                 },
                 'agent.elicitationRequested': {
                   target: '.awaitingElicitation',
-                  actions: 'rememberElicitation',
+                  actions: 'queueElicitation',
                 },
-                'session.answerPermission': {
+                [answerPermissionEvent]: {
                   guard: 'isPermissionHead',
                   target: '.working',
-                  actions: ['answerPermission', 'removePermission'],
+                  actions: [
+                    'publishPermissionOutcome',
+                    'answerPermission',
+                    'removePermission',
+                  ],
                 },
-                'session.answerElicitation': {
-                  guard: 'hasElicitation',
+                [answerElicitationEvent]: {
+                  guard: 'isPendingElicitation',
                   target: '.working',
                   actions: ['answerElicitation', 'removeElicitation'],
                 },

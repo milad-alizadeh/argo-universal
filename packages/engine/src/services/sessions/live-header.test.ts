@@ -10,7 +10,7 @@ const running: LiveHeaderInput = {
   activeTurnId: 'turn-1',
   activeTurnStartedAt: 1_000,
   permissionQueue: [],
-  pendingElicitation: null,
+  elicitationQueue: [],
   pendingPlanProposal: null,
 };
 
@@ -59,6 +59,7 @@ describe.each(liveHeaderMocks)(
             ...running,
             permissionQueue: [
               {
+                requestId: 'request-1',
                 toolCallId: command.toolCallId,
                 title: 'Allow command?',
                 options: permissionOptions,
@@ -74,12 +75,14 @@ describe.each(liveHeaderMocks)(
         step: 'Elicitation',
         session: {
           ...running,
-          pendingElicitation: {
-            requestId: 'request-1',
-            mode: 'form' as const,
-            message: 'Which file?',
-            requestedSchema: { properties: {} },
-          },
+          elicitationQueue: [
+            {
+              requestId: 'request-1',
+              mode: 'form' as const,
+              message: 'Which file?',
+              requestedSchema: { properties: {} },
+            },
+          ],
         },
         expected: 'Waiting for your answer',
       },

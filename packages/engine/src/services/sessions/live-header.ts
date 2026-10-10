@@ -15,7 +15,7 @@ export interface LiveHeaderInput {
   activeTurnId: string | null;
   activeTurnStartedAt: number | null;
   permissionQueue: readonly PendingPermission[];
-  pendingElicitation: PendingElicitation | null;
+  elicitationQueue: readonly PendingElicitation[];
   pendingPlanProposal?: { planId: string; content: string } | null;
 }
 
@@ -78,7 +78,7 @@ export function toLiveHeader(
   const request = { type: 'request' } as const;
   if (session.permissionQueue.length)
     return header('Awaiting approval', request);
-  if (session.pendingElicitation)
+  if (session.elicitationQueue.length)
     return header('Waiting for your answer', request);
   if (session.pendingPlanProposal) return header('Plan ready', request);
   if (session.activeTurnId === null) return null;

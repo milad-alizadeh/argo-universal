@@ -20,19 +20,21 @@ export const ContextUsage = z.strictObject({
 });
 export type ContextUsage = z.infer<typeof ContextUsage>;
 
-export const PermissionOptionKind = z.enum(['allow_once', 'reject_once']);
+// ACP `PermissionOptionKind`.
+export const PermissionOptionKind = z.enum([
+  'allow_once',
+  'allow_always',
+  'reject_once',
+  'reject_always',
+]);
 export type PermissionOptionKind = z.infer<typeof PermissionOptionKind>;
 
-export const PermissionOption = z
-  .strictObject({
-    optionId: PermissionOptionKind,
-    name: z.string(),
-    kind: PermissionOptionKind,
-  })
-  .refine(
-    (option): boolean => option.optionId === option.kind,
-    'The option id must match its kind',
-  );
+// ACP `PermissionOption`: the Agent names its own option ids.
+export const PermissionOption = z.strictObject({
+  optionId: z.string(),
+  name: z.string(),
+  kind: PermissionOptionKind,
+});
 export type PermissionOption = z.infer<typeof PermissionOption>;
 
 export const permissionOptions: PermissionOption[] = [
@@ -40,21 +42,19 @@ export const permissionOptions: PermissionOption[] = [
   { optionId: 'reject_once', name: 'Deny', kind: 'reject_once' },
 ];
 
-// A Permission request, after ACP `session/request_permission`.
+// A Permission request, after ACP `session/request_permission`; `requestId` is Argo's id for this one request.
 export const PendingPermission = z.strictObject({
+  requestId: z.string(),
   toolCallId: z.string(),
   title: z.string(),
   options: z
     .array(PermissionOption)
-    .length(2)
+    .min(1)
     .refine(
       (options): boolean =>
-        new Set(
-          options.map(
-            (option): 'allow_once' | 'reject_once' => option.optionId,
-          ),
-        ).size === 2,
-      'Offer allow_once and reject_once exactly once',
+        new Set(options.map((option): string => option.optionId)).size ===
+        options.length,
+      'Offer each option id once',
     ),
 });
 export type PendingPermission = z.infer<typeof PendingPermission>;

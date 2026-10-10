@@ -97,6 +97,7 @@
         "activeTurnId": "turn-1",
         "usage": null,
         "pendingPermission": {
+          "requestId": "request-1",
           "toolCallId": "toolu_01LSiwg6TrLU21EM7iVh2aS1",
           "title": "Write",
           "options": [
@@ -128,7 +129,7 @@
       "procedure": "answerPermission",
       "input": {
         "sessionId": "agent-1-permission",
-        "toolCallId": "toolu_01LSiwg6TrLU21EM7iVh2aS1",
+        "requestId": "request-1",
         "optionId": "allow_once"
       }
     },
@@ -1301,6 +1302,7 @@
         "activeTurnId": "turn-1",
         "usage": null,
         "pendingPermission": {
+          "requestId": "request-1",
           "toolCallId": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
           "title": "May I write recording-ready to /tmp/argo54-permission-output.txt outside the workspace?",
           "options": [
@@ -1332,7 +1334,7 @@
       "procedure": "answerPermission",
       "input": {
         "sessionId": "agent-2-permission",
-        "toolCallId": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+        "requestId": "request-1",
         "optionId": "allow_once"
       }
     },

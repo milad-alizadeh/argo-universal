@@ -1,11 +1,10 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
-import { PermissionOptionKind } from './snapshot';
 
 export const SessionAnswerPermissionInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
-  toolCallId: z.string(),
-  optionId: PermissionOptionKind,
+  requestId: z.string(),
+  optionId: z.string(),
   message: z.string().optional(),
 });
 export type SessionAnswerPermissionInput = z.infer<
