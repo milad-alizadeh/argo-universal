@@ -2,11 +2,11 @@ import type * as React from 'react';
 import { type ReactElement, type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
-import { BottomSheet } from '#primitives/bottom-sheet';
 import { Button } from '#primitives/button';
 import { ButtonGroup } from '#primitives/button-group';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
+import { BottomSheet } from '../primitives/bottom-sheet';
 import { ChoiceMenu } from './choice-menu';
 import { useContentWide } from './content-layout';
 
