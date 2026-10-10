@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
-import { PhoneShellFrame } from '../../../../mocks/phone-shell-frame';
+import { PhoneShellFrame } from './phone-shell-frame.mocks';
 
 const meta = {
   title: 'Shell/PhoneShell',

@@ -246,7 +246,7 @@ const clock = useSubscription(trpc.system.clock.subscriptionOptions());
 
 `useSubscription` status machine [S22]: starts `connecting` (or `idle` when disabled); `started` envelope or any data sets `pending`; a `state: 'connecting'` envelope sets `connecting` with its `error`; `state: 'idle'` sets `idle` and clears `data`; `state: 'pending'` is ignored (it waits for `started`); an error sets `error`. Completion does not change status.
 
-### Custom `TRPCLink` for Storybook (`packages/client/mocks/trpc-mock-link.ts`)
+### Custom `TRPCLink` for Storybook (`packages/client/src/mocks/trpc-mock-link.ts`)
 
 Link shape [S6, S15]: `TRPCLink<TRouter> = (runtime) => ({ op, next }) => Observable<OperationResultEnvelope, TRPCClientError>`. A mock link is terminating: it never calls `next` [S6]. `observable` comes from `@trpc/server/observable` (a public export path of `@trpc/server`) [S1, S6].
 

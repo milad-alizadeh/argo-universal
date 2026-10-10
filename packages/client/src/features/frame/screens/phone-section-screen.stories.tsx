@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { sessionListMocks } from '../../../../mocks/session-list-mock';
 import { sectionDestination } from '../../../lib/product/navigation/sections';
+import { sessionListMocks } from '../../../mocks/session-list-mock';
 import { PhoneLayout } from './phone-layout';
 import { PhoneSectionScreen } from './phone-section-screen';
 

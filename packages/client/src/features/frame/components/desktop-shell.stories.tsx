@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
-import { DesktopShellFrame } from '../../../../mocks/desktop-shell-frame';
-import { InspectorFilesMock } from '../../../../mocks/inspector-files-mock';
 import { DesktopShell, type DesktopShellProps } from './desktop-shell';
+import { DesktopShellFrame } from './desktop-shell-frame.mocks';
+import { InspectorFilesMock } from './inspector-files.mocks';
 
 const meta = {
   title: 'Shell/DesktopShell',

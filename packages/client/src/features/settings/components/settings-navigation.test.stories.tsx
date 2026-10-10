@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
-import { settleViewport } from '../../../../mocks/settle-viewport';
-import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
+import { settleViewport } from '../../../storybook/settle-viewport';
+import { createNavigationRecorder } from '../../../storybook/with-navigation-mocks';
 import { SettingsNavigationList } from './settings-navigation-list';
 
 const recorder = createNavigationRecorder();

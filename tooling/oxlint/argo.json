@@ -437,6 +437,7 @@
       "excludeFiles": [
         "**/*.test.*",
         "**/*.stories.*",
+        "**/*.mocks.*",
         "**/mocks/**",
         "packages/contracts/tools/**"
       ],
@@ -445,7 +446,12 @@
     {
       // D4: only AppRouter from the real Engine router may cross into client/src, with import type (ADR-0016).
       "files": ["packages/client/src/**"],
-      "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/mocks/**"],
+      "excludeFiles": [
+        "**/*.test.*",
+        "**/*.stories.*",
+        "**/*.mocks.*",
+        "**/mocks/**"
+      ],
       "rules": { "argo/api-type-only": "error" }
     },
     // D2, D3 and D5 to D11 repeat the workspace dependency allowlists that pnpm already enforces, so a package.json edit cannot quietly open them.

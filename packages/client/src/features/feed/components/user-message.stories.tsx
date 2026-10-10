@@ -2,11 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import {
   recordedImageUrl,
   recordedUserMessage,
-} from '../../../../mocks/feed-message-mock';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
+} from '../../../mocks/feed-message-mock';
+import { Variation, Variations } from '../../../storybook/variations';
 import { UserMessage } from './user-message';
 
 const meta = {

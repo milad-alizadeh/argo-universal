@@ -5,20 +5,20 @@ import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor } from 'storybook/test';
+import { createSessionListUpdatesMock } from '../../../mocks/session-list-updates-mock';
+import {
+  sessionsListProps,
+  largeSessions,
+} from '../../../mocks/sessions-list-mock';
+import { settleViewport } from '../../../storybook/settle-viewport';
+import { SessionsScreen } from '../screens/sessions-screen';
 import {
   delayFooterLayout,
   getDelayedFooterLayouts,
   installFooterLayoutDelay,
-} from '../../../../mocks/delayed-footer-layout';
-import { createSessionListUpdatesMock } from '../../../../mocks/session-list-updates-mock';
-import {
-  sessionsListProps,
-  largeSessions,
-} from '../../../../mocks/sessions-list-mock';
-import { renderingSessions } from '../../../../mocks/sessions-rendering-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
-import { SessionsScreen } from '../screens/sessions-screen';
+} from './delayed-footer-layout.mocks';
 import { SessionsList } from './sessions-list';
+import { renderingSessions } from './sessions-rendering.mocks';
 
 const exampleProjectName = 'Example Project';
 const expandedAttribute = 'aria-expanded';

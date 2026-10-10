@@ -6,16 +6,13 @@ import { toFeedView } from '#features/feed';
 import { FeedItem } from '#features/feed';
 import { PermissionOutcome } from '#features/feed';
 import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
-import {
   agentOptionsProps,
   agentOptionsWithAlwaysReject,
   permissionProps,
   permissionMock,
   permissionMocks,
-} from '../../../../mocks/request-mock';
+} from '../../../mocks/request-mock';
+import { Variation, Variations } from '../../../storybook/variations';
 import { PermissionRequest } from './permission-request';
 
 type GalleryArgs = ComponentProps<typeof PermissionRequest> & {

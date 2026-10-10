@@ -69,6 +69,8 @@ Spec 0011 #437 moves the client source, with behaviour unchanged, into `features
 | `features/sessions/components/*` | `components/*` |
 | `features/sessions/screens/*` | `screens/*` |
 | `features/settings/components/*` | `components/*` |
+| `mocks/*` | `packages/client/mocks/*` |
+| `storybook/*` | `packages/client/mocks/*` |
 | `lib/generic/*` | `lib/*`, `navigation/*` |
 | `lib/generic/primitives/*` | `components/*`, `primitives/*` |
 | `lib/generic/symbols/*` | `lib/*` |

@@ -7,11 +7,8 @@ import {
   planProposalMocks,
   PlanProposalPreview,
   shortPlanProposal,
-} from '../../../../mocks/plan-proposal-mock';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
+} from '../../../mocks/plan-proposal-mock';
+import { Variation, Variations } from '../../../storybook/variations';
 import { PlanProposalCard } from './plan-proposal-card';
 
 type GalleryArgs = ComponentProps<typeof PlanProposalCard> & {

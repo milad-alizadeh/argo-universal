@@ -5,12 +5,12 @@ import {
   agentCatalogMocks,
   catalog,
   unavailableCatalog,
-} from '../../../../mocks/agent-catalog-mock';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { settleViewport } from '../../../../mocks/settle-viewport';
-import { createSubscriptionPublisher } from '../../../../mocks/subscription-publisher';
-import type { Fixtures } from '../../../../mocks/trpc-mock-link';
-import { fails } from '../../../../mocks/trpc-mock-link';
+} from '../../../mocks/agents-mock';
+import { createSubscriptionPublisher } from '../../../mocks/subscription-publisher';
+import type { Fixtures } from '../../../mocks/trpc-mock-link';
+import { fails } from '../../../mocks/trpc-mock-link';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import { AgentsSettingsScreen } from './agents-settings-screen';
 
 const meta = {

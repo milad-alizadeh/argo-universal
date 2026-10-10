@@ -4,9 +4,9 @@ import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { Text } from '#lib/generic/primitives/text';
-import { createSessionCountsMock } from '../../../../mocks/session-counts-mock';
-import { sessionListMocks } from '../../../../mocks/session-list-mock';
-import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
+import { createSessionCountsMock } from '../../../mocks/session-counts-mock';
+import { sessionListMocks } from '../../../mocks/session-list-mock';
+import { createNavigationRecorder } from '../../../storybook/with-navigation-mocks';
 import { DesktopLayout } from './desktop-layout';
 
 const recorder = createNavigationRecorder();

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { sessionListMocks } from '../../../../mocks/session-list-mock';
-import { SessionsScreenPreview } from '../../../../mocks/sessions-screen-preview';
-import { fails } from '../../../../mocks/trpc-mock-link';
+import { sessionListMocks } from '../../../mocks/session-list-mock';
+import { fails } from '../../../mocks/trpc-mock-link';
 import { SessionsScreen } from './sessions-screen';
+import { SessionsScreenPreview } from './sessions-screen-preview.mocks';
 
 const meta = {
   title: 'Screens/SessionsScreen',

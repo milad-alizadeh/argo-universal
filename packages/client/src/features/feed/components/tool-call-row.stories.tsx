@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
-import { completedRead, runningRead } from '../../../../mocks/tool-call-mock';
+import { completedRead, runningRead } from '../../../mocks/tool-call-mock';
+import { Variation, Variations } from '../../../storybook/variations';
 import { ToolCallRow } from './tool-call-row';
 
 const meta = {

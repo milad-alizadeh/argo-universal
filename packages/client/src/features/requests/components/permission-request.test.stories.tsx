@@ -10,9 +10,9 @@ import {
   agentOptionsWithAlwaysReject,
   permissionProps,
   permissionMocks,
-} from '../../../../mocks/request-mock';
-import { RequestFrame } from '../../../../mocks/request-preview';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+} from '../../../mocks/request-mock';
+import { RequestFrame } from '../../../storybook/request-frame';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import { PermissionRequest } from './permission-request';
 import galleryMeta, { Overview as Gallery } from './permission-request.stories';
 

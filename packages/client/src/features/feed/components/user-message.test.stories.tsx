@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '../../../../mocks/each-layout';
 import {
   type MockAgent,
   recordedImageUrl,
   recordedUserMessage,
-} from '../../../../mocks/feed-message-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+} from '../../../mocks/feed-message-mock';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import { UserMessage } from './user-message';
 
 const meta = {

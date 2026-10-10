@@ -11,9 +11,9 @@ import {
   fieldsRequest,
   fieldsValues,
   invalidSchemaRequest,
-} from '../../../../mocks/request-mock';
-import { RequestFrame } from '../../../../mocks/request-preview';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+} from '../../../mocks/request-mock';
+import { RequestFrame } from '../../../storybook/request-frame';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import { ElicitationForm } from './elicitation-form';
 import type { ElicitationValues } from './elicitation-form';
 import galleryMeta, { Overview as Gallery } from './elicitation-form.stories';

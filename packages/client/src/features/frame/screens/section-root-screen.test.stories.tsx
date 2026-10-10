@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { emptySessionListMocks } from '../../../../mocks/session-list-mock';
+import { emptySessionListMocks } from '../../../mocks/session-list-mock';
 import { SectionRootScreen } from './section-root-screen';
 
 const meta = {

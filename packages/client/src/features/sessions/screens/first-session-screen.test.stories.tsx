@@ -19,17 +19,17 @@ import {
   type NavigationDestination,
   NavigationProvider,
 } from '#lib/product/navigation/context';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { createFeedMocks } from '../../../../mocks/feed-mock';
-import { newSessionMocks } from '../../../../mocks/new-session-mock';
+import { createFeedMocks } from '../../../mocks/feed-mock';
+import { newSessionMocks } from '../../../mocks/new-session-mock';
 import {
   emptySessionListMocks,
   sessionListMocks,
-} from '../../../../mocks/session-list-mock';
-import { createSessionListUpdatesMock } from '../../../../mocks/session-list-updates-mock';
-import { idleSessionMocks } from '../../../../mocks/session-screen-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
-import { fails, pending } from '../../../../mocks/trpc-mock-link';
+} from '../../../mocks/session-list-mock';
+import { createSessionListUpdatesMock } from '../../../mocks/session-list-updates-mock';
+import { idleSessionMocks } from '../../../mocks/session-screen-mock';
+import { fails, pending } from '../../../mocks/trpc-mock-link';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import { detailHeaderHost } from '../components/session-header';
 import { FirstSessionScreen } from './first-session-screen';
 import { SessionScreen } from './session-screen';

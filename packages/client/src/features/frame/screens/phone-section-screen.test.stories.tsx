@@ -8,14 +8,14 @@ import {
   type NavigationDestination,
   NavigationProvider,
 } from '#lib/product/navigation/context';
-import { createSessionCountsMock } from '../../../../mocks/session-counts-mock';
-import { sessionListMocks } from '../../../../mocks/session-list-mock';
-import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
 import type { Section } from '../../../lib/product/navigation/sections';
 import {
   sectionDestination,
   sectionOf,
 } from '../../../lib/product/navigation/sections';
+import { createSessionCountsMock } from '../../../mocks/session-counts-mock';
+import { sessionListMocks } from '../../../mocks/session-list-mock';
+import { createNavigationRecorder } from '../../../storybook/with-navigation-mocks';
 import { PhoneLayout } from './phone-layout';
 import { PhoneSectionScreen } from './phone-section-screen';
 

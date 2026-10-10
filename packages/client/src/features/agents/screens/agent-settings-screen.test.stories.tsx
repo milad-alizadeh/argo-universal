@@ -11,10 +11,10 @@ import {
   customAgentFailure,
   customAgentId,
   customAgentMocks,
-} from '../../../../mocks/custom-agent-mock';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { settleViewport } from '../../../../mocks/settle-viewport';
-import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
+} from '../../../mocks/agents-mock';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
+import { createNavigationRecorder } from '../../../storybook/with-navigation-mocks';
 import { AgentSettingsScreen } from './agent-settings-screen';
 
 const recorder = createNavigationRecorder();

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import {
   AccountsScreen,
   AtlasScreen,

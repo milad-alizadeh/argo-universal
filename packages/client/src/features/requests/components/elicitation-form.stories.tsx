@@ -3,17 +3,14 @@ import type * as React from 'react';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
-import {
   elicitationProps,
   elicitationMock,
   elicitationMocks,
   elicitationRequest,
   fieldsRequest,
   fieldsValues,
-} from '../../../../mocks/request-mock';
+} from '../../../mocks/request-mock';
+import { Variation, Variations } from '../../../storybook/variations';
 import { ElicitationForm } from './elicitation-form';
 import { ElicitationOutcome } from './elicitation-outcome';
 

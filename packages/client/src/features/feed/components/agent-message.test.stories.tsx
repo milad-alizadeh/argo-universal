@@ -3,12 +3,12 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { layoutWidths } from '../../../../mocks/each-layout';
 import {
   recordedAgentMessage,
   streamingAgentMessage,
-} from '../../../../mocks/feed-message-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+} from '../../../mocks/feed-message-mock';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import { AgentMessage } from './agent-message';
 
 const markdownAnswerId = 'markdown-answer';

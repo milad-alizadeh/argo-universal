@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { NavigationMock } from '../../../../mocks/navigation-mock';
-import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
+import { createNavigationRecorder } from '../../../storybook/with-navigation-mocks';
+import { NavigationMock } from './navigation.mocks';
 
 const recorder = createNavigationRecorder();
 

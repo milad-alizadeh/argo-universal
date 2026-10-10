@@ -2,11 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import {
   recordedAgentMessage,
   streamingAgentMessage,
-} from '../../../../mocks/feed-message-mock';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
+} from '../../../mocks/feed-message-mock';
+import { Variation, Variations } from '../../../storybook/variations';
 import { AgentMessage } from './agent-message';
 
 const markdownAnswerId = 'markdown-answer';

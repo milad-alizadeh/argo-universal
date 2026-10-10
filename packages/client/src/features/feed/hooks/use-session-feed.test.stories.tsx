@@ -5,8 +5,8 @@ import type * as React from 'react';
 import { useEffect } from 'react';
 import { Text } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
-import { createFeedMocks } from '../../../../mocks/feed-mock';
-import { createSubscriptionPublisher } from '../../../../mocks/subscription-publisher';
+import { createFeedMocks } from '../../../mocks/feed-mock';
+import { createSubscriptionPublisher } from '../../../mocks/subscription-publisher';
 import { useSessionFeed } from './use-session-feed';
 
 type Result = ReturnType<typeof useSessionFeed>;

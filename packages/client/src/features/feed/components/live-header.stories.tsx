@@ -1,14 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { Variation, Variations } from '../../../storybook/variations';
+import { LiveHeader } from './live-header';
 import {
   liveHeaderNow,
   liveHeaderSteps,
   requestHeader,
-} from '../../../../mocks/live-header-mock';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
-import { LiveHeader } from './live-header';
+} from './live-header.mocks';
 
 const meta = {
   title: 'Sessions/Feed/LiveHeader',

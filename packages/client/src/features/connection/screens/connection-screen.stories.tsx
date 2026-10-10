@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { fails, pending } from '../../../../mocks/trpc-mock-link';
+import { fails, pending } from '../../../mocks/trpc-mock-link';
 import { ConnectionScreen } from './connection-screen';
 import { connectionScreenMocks } from './connection-screen.mocks';
 

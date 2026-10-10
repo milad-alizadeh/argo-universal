@@ -1,14 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
-import {
   commandNow,
   failedCommand,
   longOutputCommand,
   runningCommand,
-} from '../../../../mocks/tool-call-mock';
+} from '../../../mocks/tool-call-mock';
+import { Variation, Variations } from '../../../storybook/variations';
 import { CommandRow } from './command-row';
 
 const meta = {

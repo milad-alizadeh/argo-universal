@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { Text } from '#lib/generic/primitives/text';
-import { settingsListMocks } from '../../../../mocks/settings-list-mock';
 import { SettingsList } from './settings-list';
+import { settingsListMocks } from './settings-list.mocks';
 
 const meta = {
   title: 'Settings/SettingsList',

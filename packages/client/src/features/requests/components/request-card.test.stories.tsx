@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactNode } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { shortPlanProposal } from '../../../../mocks/plan-proposal-mock';
-import { permissionProps } from '../../../../mocks/request-mock';
-import { RequestFrame } from '../../../../mocks/request-preview';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { shortPlanProposal } from '../../../mocks/plan-proposal-mock';
+import { permissionProps } from '../../../mocks/request-mock';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { RequestFrame } from '../../../storybook/request-frame';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import { PermissionRequest } from './permission-request';
 import type { PermissionRequestProps } from './permission-request';
 import {

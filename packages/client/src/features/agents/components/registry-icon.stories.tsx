@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { iconAgent } from '../../../../mocks/registry-icons';
+import { iconAgent } from '../../../mocks/registry-icons';
 import { RegistryIcon } from './registry-icon';
 
 const meta = {

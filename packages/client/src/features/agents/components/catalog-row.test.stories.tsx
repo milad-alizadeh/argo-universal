@@ -6,7 +6,7 @@ import {
   iconAgent,
   iconXml,
   malformedIconXml,
-} from '../../../../mocks/registry-icons';
+} from '../../../mocks/registry-icons';
 import { CatalogRow } from './catalog-row';
 
 const meta = {

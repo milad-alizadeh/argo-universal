@@ -13,26 +13,26 @@ import { Pressable, Text, View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import type { ConnectionState } from '#features/connection';
 import { DesktopLayout } from '#features/frame';
-import { ConnectionStatePreview } from '../../../../mocks/connection-state-preview';
-import { eachLayout, layoutWidths } from '../../../../mocks/each-layout';
+import { ConnectionStatePreview } from '../../../mocks/connection-state-preview';
 import {
   emptySessionListMocks,
   sessionListMocks,
-} from '../../../../mocks/session-list-mock';
-import { createSessionListUpdatesMock } from '../../../../mocks/session-list-updates-mock';
+} from '../../../mocks/session-list-mock';
+import { createSessionListUpdatesMock } from '../../../mocks/session-list-updates-mock';
 import {
   largeSessionListMocks,
   multipleProjectsMocks,
   nextPageFailureMocks,
   nextPageLoadingMocks,
   streamingSessionCatalogs,
-} from '../../../../mocks/sessions-list-mock';
-import { SessionsScreenPreview } from '../../../../mocks/sessions-screen-preview';
-import { settleViewport } from '../../../../mocks/settle-viewport';
-import type { FixtureOutput } from '../../../../mocks/trpc-mock-link';
-import { fails, pending } from '../../../../mocks/trpc-mock-link';
-import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
+} from '../../../mocks/sessions-list-mock';
+import type { FixtureOutput } from '../../../mocks/trpc-mock-link';
+import { fails, pending } from '../../../mocks/trpc-mock-link';
+import { eachLayout, layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
+import { createNavigationRecorder } from '../../../storybook/with-navigation-mocks';
 import { SessionsScreen } from './sessions-screen';
+import { SessionsScreenPreview } from './sessions-screen-preview.mocks';
 
 const settingsPrompt = 'Build the settings screen';
 const exampleProjectName = 'Example Project';

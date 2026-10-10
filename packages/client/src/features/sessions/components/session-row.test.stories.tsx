@@ -2,10 +2,10 @@ import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { sessionRowMocks } from '../../../../mocks/session-row-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import { SessionRow } from './session-row';
+import { sessionRowMocks } from './session-row.mocks';
 
 const meta = {
   title: 'Tests/SessionRow',

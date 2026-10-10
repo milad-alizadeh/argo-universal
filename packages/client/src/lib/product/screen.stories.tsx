@@ -1,12 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { Text } from '#lib/generic/primitives/text';
-import {
-  Variation,
-  Variations,
-} from '../../../mocks/primitive-story-variations';
-import { ScreenPreview } from '../../../mocks/screen-preview';
+import { Variation, Variations } from '../../storybook/variations';
 import { Screen, type ScreenProps } from './screen';
+import { ScreenPreview } from './screen-preview.mocks';
 
 const meta = { title: 'Shared/Screen', component: Screen } satisfies Meta<
   typeof Screen

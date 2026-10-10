@@ -7,8 +7,8 @@ import {
   CollapsibleTrigger,
 } from '#lib/generic/primitives/collapsible';
 import { Text } from '#lib/generic/primitives/text';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
 
 const animatedDetailId = 'animated-detail';
 

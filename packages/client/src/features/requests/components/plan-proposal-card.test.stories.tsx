@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '../../../../mocks/each-layout';
 import {
   longPlanProposal,
   PlanProposalPreview,
   planProposalFeedback,
   planProposalMocks,
   shortPlanProposal,
-} from '../../../../mocks/plan-proposal-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+} from '../../../mocks/plan-proposal-mock';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import {
   PlanProposalCard,
   type PlanProposalCardProps,

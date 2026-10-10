@@ -1,6 +1,6 @@
 import type { PlanUpdate } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { recordedFeedMock } from '../../../../mocks/feed-message-mock';
+import { recordedFeedMock } from '../../../mocks/feed-message-mock';
 import { toFeedView } from './to-feed-view';
 
 const snapshot = recordedFeedMock('agent-1', 'markdown-answer').snapshot;

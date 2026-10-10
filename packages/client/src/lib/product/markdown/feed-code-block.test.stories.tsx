@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { longCodeBlockTitle } from '../../../../mocks/code-block-title-mock';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { recordedFile } from '../../../../mocks/feed-edit-mock';
-import { embeddedResource } from '../../../../mocks/feed-paper';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { recordedFile } from '../../../mocks/feed-edit-mock';
+import { embeddedResource } from '../../../mocks/feed-paper';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
+import { longCodeBlockTitle } from './code-block-title.mocks';
 import { FeedCodeBlock } from './feed-code-block';
 
 const codeScrollId = 'code-scroll';

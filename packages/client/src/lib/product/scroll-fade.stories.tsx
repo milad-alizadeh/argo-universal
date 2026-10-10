@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { ScrollFadePreview } from '../../../mocks/scroll-fade-preview';
 import { ScrollFadeView } from './scroll-fade';
+import { ScrollFadePreview } from './scroll-fade-preview.mocks';
 
 const meta = {
   title: 'Design System/Components/ScrollFade',

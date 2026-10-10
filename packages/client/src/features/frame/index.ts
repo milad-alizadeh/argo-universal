@@ -9,3 +9,4 @@ export {
   ProjectsSettingsScreen,
 } from './screens/placeholder-screens';
 export { SectionRootScreen } from './screens/section-root-screen';
+export { DesktopShell } from './components/desktop-shell';

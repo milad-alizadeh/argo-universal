@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { WideMock } from '../../../mocks/wide-mock';
+import { WideMock } from './use-wide.mocks';
 
 const wideBreakpointLabel = 'Wide breakpoint';
 

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { newSessionMocks } from '../../../../mocks/new-session-mock';
+import { newSessionMocks } from '../../../mocks/new-session-mock';
 import {
   emptySessionListMocks,
   sessionListMocks,
-} from '../../../../mocks/session-list-mock';
-import { pending } from '../../../../mocks/trpc-mock-link';
+} from '../../../mocks/session-list-mock';
+import { pending } from '../../../mocks/trpc-mock-link';
 import { FirstSessionScreen } from './first-session-screen';
 
 const meta = {

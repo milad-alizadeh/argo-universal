@@ -3,7 +3,7 @@ import {
   previewGlobals,
   previewGlobalTypes,
   previewParameters,
-} from '@repo/client/mocks';
+} from '@repo/client/storybook';
 import type { Preview } from '@storybook/react-native-web-vite';
 import '../global.css';
 

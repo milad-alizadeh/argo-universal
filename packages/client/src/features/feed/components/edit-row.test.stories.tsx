@@ -2,11 +2,11 @@ import type { ToolCallUpdate } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { EditRowPreview } from '../../../../mocks/edit-row-preview';
-import { recordedEdit } from '../../../../mocks/feed-edit-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { recordedEdit } from '../../../mocks/feed-edit-mock';
+import { layoutWidths } from '../../../storybook/each-layout';
+import { settleViewport } from '../../../storybook/settle-viewport';
 import { EditRow } from './edit-row';
+import { EditRowPreview } from './edit-row-preview.mocks';
 
 const meta = {
   title: 'Tests/EditRow',

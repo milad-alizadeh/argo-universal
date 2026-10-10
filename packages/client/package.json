@@ -6,7 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./custom-symbol-paths.json": "./src/lib/generic/symbols/custom-symbol-paths.json",
-    "./mocks": "./mocks/index.ts"
+    "./storybook": "./src/storybook/index.ts"
   },
   "imports": {
     "#features/*": "./src/features/*/index.ts",

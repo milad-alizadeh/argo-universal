@@ -1,11 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
-import { renderRecordedActivity } from '../../../../mocks/tool-call-group-preview';
-import { toolCallGroupMock } from '../../../../mocks/tool-call-mock';
+import { toolCallGroupMock } from '../../../mocks/tool-call-mock';
+import { Variation, Variations } from '../../../storybook/variations';
 import { ToolCallGroup } from './tool-call-group';
+import { renderRecordedActivity } from './tool-call-group-preview.mocks';
 
 const meta = {
   title: 'Sessions/Feed/ToolCallGroup',
