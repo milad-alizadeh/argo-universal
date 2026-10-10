@@ -68,7 +68,13 @@ function Group({
     </NativeFieldGroup>
   );
   return (
-    <Host style={{ height: height / 2 }}>
+    <Host
+      matchContents={Platform.OS === 'android' ? { vertical: true } : false}
+      useViewportSizeMeasurement={Platform.OS === 'android'}
+      style={
+        Platform.OS === 'android' ? { width: '100%' } : { height: height / 2 }
+      }
+    >
       {Platform.OS === 'android' ? (
         <AndroidFieldColors>{fieldGroup}</AndroidFieldColors>
       ) : (
