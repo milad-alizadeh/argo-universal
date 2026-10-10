@@ -88,8 +88,8 @@
     { "files": ["packages/client/src/features/settings/components/*"], "rules": { "complexity": "off", "jsx-a11y/role-supports-aria-props": "off", "max-lines": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function
     { "files": ["packages/client/src/lib/generic/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, max-params, max-statements, no-inline-comments, no-unused-vars, sonarjs/no-nested-conditional, stylistic/line-comment-position, typescript/explicit-function-return-type, unicorn/consistent-function-scoping, unicorn/no-useless-undefined
-    { "files": ["packages/client/src/lib/generic/primitives/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-params": "off", "max-statements": "off", "no-inline-comments": "off", "no-unused-vars": "off", "sonarjs/no-nested-conditional": "off", "stylistic/line-comment-position": "off", "typescript/explicit-function-return-type": "off", "unicorn/consistent-function-scoping": "off", "unicorn/no-useless-undefined": "off" } },
+    // max-lines-per-function
+    { "files": ["packages/client/src/lib/generic/primitives/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function
     { "files": ["packages/client/src/lib/generic/symbols/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-nested-conditional, unicorn/prefer-string-replace-all
