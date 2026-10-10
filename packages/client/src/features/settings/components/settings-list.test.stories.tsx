@@ -51,7 +51,14 @@ function allGroupsNavigate(width: number): Story {
         'Connection',
         'Appearance',
       ]) {
-        await userEvent.click(canvas.getByRole('button', { name }));
+        const row = canvas.getByRole('link', {
+          name: new RegExp(`^${name}(?:,|$)`),
+        });
+        await expect(row).toHaveAttribute(
+          'href',
+          `/settings/${name.toLowerCase()}`,
+        );
+        await userEvent.click(row);
       }
       await expect(recorder.destinations).toEqual([
         { to: 'settings-projects' },
@@ -62,15 +69,17 @@ function allGroupsNavigate(width: number): Story {
       ]);
       if (width === layoutWidths.phone) {
         await expect(
-          canvas.queryByRole('button', { name: 'Devices' }),
+          canvas.queryByRole('link', { name: /^Devices(?:,|$)/ }),
         ).toBeNull();
         await expect(
-          canvas.queryByRole('button', { name: 'Notifications' }),
+          canvas.queryByRole('link', { name: /^Notifications(?:,|$)/ }),
         ).toBeNull();
       } else {
-        await userEvent.click(canvas.getByRole('button', { name: 'Devices' }));
         await userEvent.click(
-          canvas.getByRole('button', { name: 'Notifications' }),
+          canvas.getByRole('link', { name: /^Devices(?:,|$)/ }),
+        );
+        await userEvent.click(
+          canvas.getByRole('link', { name: /^Notifications(?:,|$)/ }),
         );
         await expect(recorder.destinations.slice(-2)).toEqual([
           { to: 'settings-devices' },
@@ -89,10 +98,10 @@ export const WaitingForData: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(
-        canvas.getByRole('button', { name: 'Projects' }),
+        canvas.getByRole('link', { name: /^Projects(?:,|$)/ }),
       ).toBeVisible();
       await expect(
-        canvas.getByRole('button', { name: 'Agents' }),
+        canvas.getByRole('link', { name: /^Agents(?:,|$)/ }),
       ).toBeVisible();
       await expect(canvas.getAllByText('0', { exact: true })).toHaveLength(2);
       await expect(canvas.queryByText('Projects will appear here.')).toBeNull();
@@ -100,7 +109,7 @@ export const WaitingForData: Story = {
         canvas.queryByText('Registered Agents will appear here.'),
       ).toBeNull();
       await expect(
-        canvas.getByRole('button', { name: 'Accounts' }),
+        canvas.getByRole('link', { name: /^Accounts(?:,|$)/ }),
       ).toBeVisible();
     }
   },
@@ -131,14 +140,17 @@ export const ChildSelectionAndAttention: Story = {
       await page.viewport(width, 844);
       await waitFor(() =>
         expect(
-          canvas.getByRole('button', { name: 'Projects' }),
-        ).toHaveAttribute('aria-selected', width === 390 ? 'false' : 'true'),
+          canvas
+            .getByRole('link', { name: /^Projects(?:,|$)/ })
+            .getAttribute('aria-current'),
+        ).toBe(width === 390 ? null : 'page'),
       );
-      for (const kind of ['projects', 'agents']) {
-        const dot = canvas.getByTestId(`settings-${kind}-attention`);
-        await expect(dot).toBeVisible();
-      }
-      await expect(canvas.queryByText('1', { exact: true })).toBeNull();
+      await expect(
+        canvas.getByRole('link', { name: 'Projects, 1, needs attention' }),
+      ).toBeVisible();
+      await expect(
+        canvas.getByRole('link', { name: 'Agents, 1, needs attention' }),
+      ).toBeVisible();
     }
   },
 };

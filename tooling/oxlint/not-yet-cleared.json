@@ -84,8 +84,8 @@
     { "files": ["packages/client/src/features/sessions/components/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-params": "off", "max-statements": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, typescript/no-misused-promises, unicorn/consistent-function-scoping, unicorn/prefer-ternary
     { "files": ["packages/client/src/features/sessions/screens/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off" } },
-    // complexity, jsx-a11y/role-supports-aria-props, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/settings/components/*"], "rules": { "complexity": "off", "jsx-a11y/role-supports-aria-props": "off", "max-lines": "off", "max-lines-per-function": "off" } },
+    // complexity, max-lines, max-lines-per-function
+    { "files": ["packages/client/src/features/settings/components/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function
     { "files": ["packages/client/src/lib/generic/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // max-lines-per-function

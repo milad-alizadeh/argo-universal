@@ -16,7 +16,7 @@ import { Text } from '#lib/generic/primitives/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { FieldGroup } from '../../../lib/generic/primitives/field-group';
+import { FieldGroup } from '../../../lib/generic/primitives/hosted-field-group';
 import { InfoPopover } from '../../../lib/generic/primitives/info-popover';
 import { Slider } from '../../../lib/generic/primitives/slider';
 import { Switch } from '../../../lib/generic/primitives/switch';

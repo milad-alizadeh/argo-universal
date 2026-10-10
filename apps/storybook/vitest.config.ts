@@ -23,7 +23,7 @@ export default defineProject({
     retry: 0,
     sequence: { groupOrder: 1 },
     exclude: [
-      '../../packages/client/src/lib/generic/primitives/!(text.test).stories.tsx',
+      '../../packages/client/src/lib/generic/primitives/!(*.test).stories.tsx',
     ],
     setupFiles: ['./vitest.setup.ts'],
     browser: {

@@ -4,7 +4,9 @@
 
 `expo-symbols@57.0.3.patch` lets `SymbolView` on iOS fall back to `UIImage(named:)` when the name is not a system symbol, so it draws Argo's custom symbols from the app's asset catalog (ADR-0019). System symbols load exactly as before.
 
-Remove this patch when `expo-symbols` loads asset-catalog symbols itself. When upgrading `expo-symbols`, carry the one-line fallback into `ios/SymbolView.swift`.
+It also disables font scaling on the internal Material font glyph. The icon's fixed-size box otherwise clips its enlarged glyph at Android's large text settings. Labels and values keep their normal font scaling.
+
+Remove the corresponding changes when `expo-symbols` supports asset-catalog symbols and keeps font glyphs within their fixed-size boxes. When upgrading, check `ios/SymbolView.swift`, `src/SymbolView.tsx` and its published JavaScript.
 
 ## react-native@0.86.3
 
