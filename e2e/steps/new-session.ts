@@ -20,6 +20,11 @@ export async function chooseAgent(page: Page, label: string): Promise<void> {
   await page.getByRole('button', { name: agentModelLabel }).click();
   await page.getByRole('button', { name: 'Choose Agent' }).click();
   await page.getByRole('button', { name: `Select ${label}` }).click();
+  await page.keyboard.press('Escape');
+  await expect(
+    page.getByRole('button', { name: agentModelLabel }),
+  ).toHaveAttribute('aria-expanded', 'false');
+  await page.getByRole('button', { name: agentModelLabel }).click();
   await expect(
     page.getByRole('button', { name: 'Choose Agent' }),
   ).toContainText(label);
