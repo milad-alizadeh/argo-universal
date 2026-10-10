@@ -11,7 +11,7 @@ import {
   oversizedComposerImage,
 } from '../../../../mocks/composer-mock';
 import { Variation, Variations } from '../../../lib/generic/variations';
-import { imageSelectionFailureMessage } from '../hooks/use-image-draft';
+import { imageSelectionFailureMessage } from '../state/image-draft';
 import { Composer } from './composer';
 
 const spacingAndColoursPrompt = 'Match the spacing and colours.';

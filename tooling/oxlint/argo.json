@@ -313,6 +313,70 @@
       }
     },
     {
+      // The Sessions components and stories take props only: no tRPC, TanStack Query or data hook (ADR-0021).
+      "files": ["packages/client/src/features/sessions/components/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@trpc/client",
+                "message": "Components take props only (ADR-0021)."
+              },
+              {
+                "name": "@trpc/tanstack-react-query",
+                "message": "Components take props only (ADR-0021)."
+              },
+              {
+                "name": "@tanstack/react-query",
+                "message": "Components take props only (ADR-0021)."
+              },
+              {
+                "name": "#features/connection",
+                "importNames": [
+                  "useTRPC",
+                  "useConnection",
+                  "useConnectionState",
+                  "useBlobUrl"
+                ],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/agents",
+                "importNames": ["useAgents"],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/feed",
+                "importNames": ["useSessionFeed"],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/composer",
+                "importNames": ["useImageDraft", "useNewSessionConfiguration"],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              }
+            ],
+            "patterns": [
+              {
+                "regex": "^#features/[^/]+/",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./[^.]",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "group": ["@repo/client", "@repo/client/**"],
+                "message": "Client modules never import the client barrel (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // The Connection, its tRPC client and the Feed view sit below components and screens (A2).
       "files": [
         "packages/client/src/features/connection/state/**",
