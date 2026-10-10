@@ -162,7 +162,7 @@ export function DiffView({
         'min-w-0',
         Platform.select({ web: 'code-block' }),
         inline &&
-          'overflow-hidden rounded-xl web:rounded-surface web:shadow-card border border-border',
+          'overflow-hidden rounded-xl web:rounded-surface border border-border',
       )}
       testID="diff-view"
     >

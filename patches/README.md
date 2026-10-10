@@ -1,5 +1,11 @@
 # Dependency declarations
 
+## @expo/ui@57.0.22
+
+`@expo__ui@57.0.22.patch` exposes DropdownMenu's `cornerRadius` through its published types and Compose props, then passes it to Material's native menu shape. Argo's Android Menu uses the approved 16dp radius. Menus without the prop retain Material's default shape.
+
+Remove this patch when the pinned Expo UI release ships the documented `cornerRadius` prop. It requires rebuilding the Android development client.
+
 ## expo-symbols@57.0.3
 
 `expo-symbols@57.0.3.patch` lets `SymbolView` on iOS fall back to `UIImage(named:)` when the name is not a system symbol, so it draws Argo's custom symbols from the app's asset catalog (ADR-0019). System symbols load exactly as before.

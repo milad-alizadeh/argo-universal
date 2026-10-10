@@ -12,6 +12,7 @@ export default defineProject({
     // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
     storybookTest({
       configDir: `${import.meta.dirname}/.storybook`,
+      storybookUrl: process.env.STORYBOOK_URL ?? 'http://localhost:6006',
       tags: { exclude: ['third-party'] },
     }),
   ],
@@ -23,7 +24,7 @@ export default defineProject({
     retry: 0,
     sequence: { groupOrder: 1 },
     exclude: [
-      '../../packages/client/src/lib/generic/primitives/!(text.test).stories.tsx',
+      '../../packages/client/src/lib/generic/primitives/!(text.test|menu.test).stories.tsx',
     ],
     setupFiles: ['./vitest.setup.ts'],
     browser: {

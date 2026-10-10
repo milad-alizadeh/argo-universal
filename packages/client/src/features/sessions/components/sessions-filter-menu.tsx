@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { Button } from '#lib/generic/primitives/button';
+import { Menu } from '#lib/generic/primitives/menu';
 import { HeaderButton } from '#lib/product/header-button';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
-import { ChoiceMenu } from '../../../lib/product/choice-menu';
 
 const sessionsFilterChoices = [
   { value: 'active', label: 'Active' },
@@ -22,7 +22,7 @@ export function SessionsFilterMenu({
 }: SessionsFilterMenuProps): React.JSX.Element {
   const wide = useWide();
   return (
-    <ChoiceMenu
+    <Menu
       accessibilityLabel="Filter Sessions"
       value={archived ? 'archived' : 'active'}
       choices={sessionsFilterChoices}

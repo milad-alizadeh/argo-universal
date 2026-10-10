@@ -3,12 +3,12 @@ import { type ReactElement, type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { Button } from '#lib/generic/primitives/button';
 import { ButtonGroup } from '#lib/generic/primitives/button-group';
+import { Menu } from '#lib/generic/primitives/menu';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { BottomSheet } from '../../../lib/generic/primitives/bottom-sheet';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { ChoiceMenu } from '../../../lib/product/choice-menu';
 
 interface SplitButtonChoice<Value extends string> {
   value: Value;
@@ -80,7 +80,8 @@ function ChoiceDropdown<Value extends string>(
   props: ChoiceProps<Value>,
 ): ReactNode {
   return (
-    <ChoiceMenu
+    <Menu
+      disabled={props.disabled}
       accessibilityLabel={props.menuLabel}
       value={props.value}
       choices={props.choices}

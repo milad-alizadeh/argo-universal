@@ -49,7 +49,7 @@ export function FeedCodeBlock({
     <View
       className={cn(
         Platform.select({ web: 'code-block' }),
-        'cursor-auto overflow-hidden rounded-xl web:rounded-surface web:shadow-card border border-border bg-sidebar',
+        'cursor-auto overflow-hidden rounded-xl web:rounded-surface border border-border bg-sidebar',
       )}
     >
       <CodeBlockHeader

@@ -170,7 +170,7 @@ function List({
 
 function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
   return (
-    <View className="overflow-hidden rounded-xl web:rounded-surface web:shadow-card border border-border">
+    <View className="overflow-hidden rounded-xl web:rounded-surface border border-border">
       <ScrollView
         horizontal
         contentContainerClassName="min-w-full"
