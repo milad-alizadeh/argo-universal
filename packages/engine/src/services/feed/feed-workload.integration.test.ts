@@ -25,15 +25,15 @@ const readRetainedBytes = (): number => {
   return process.memoryUsage().heapUsed;
 };
 
-// How late each 10 ms timer fires through this process's own work: lateness counts only up to the CPU time the process used meanwhile, so other test files sharing the machine do not count.
+// How late each 10 ms timer fires through the event loop's own work: lateness counts only up to the CPU time the main thread used meanwhile, so neither other test files sharing the machine nor V8's helper threads count.
 const sampleEventLoopDelay = (): { stop: () => number[] } => {
   const delays: number[] = [];
   let timer: NodeJS.Timeout | undefined;
   const schedule = (): void => {
     const due = performance.now() + 10;
-    const cpu = process.cpuUsage();
+    const cpu = process.threadCpuUsage();
     timer = setTimeout((): void => {
-      const used = process.cpuUsage(cpu);
+      const used = process.threadCpuUsage(cpu);
       const cpuMs = (used.user + used.system) / 1000;
       delays.push(Math.min(performance.now() - due, cpuMs));
       schedule();
@@ -108,14 +108,18 @@ it('long Agent messages in several Sessions stay within the retained-byte and ev
   const appended = await reading;
   const delays = delay.stop();
   const retained = readRetainedBytes() - before;
-  expect({
-    appended,
-    withinRetainedBudget: retained <= retainedByteBudget,
-    withinDelayBudget:
-      (delays[Math.floor(delays.length * p95)] ?? 0) <=
-        eventLoopDelayP95BudgetMs &&
-      (delays.at(-1) ?? 0) <= eventLoopDelayWorstBudgetMs,
-  }).toEqual({
+  const delayP95 = delays[Math.floor(delays.length * p95)] ?? 0;
+  const delayWorst = delays.at(-1) ?? 0;
+  expect(
+    {
+      appended,
+      withinRetainedBudget: retained <= retainedByteBudget,
+      withinDelayBudget:
+        delayP95 <= eventLoopDelayP95BudgetMs &&
+        delayWorst <= eventLoopDelayWorstBudgetMs,
+    },
+    `retained ${retained} B, delay p95 ${delayP95} ms, worst ${delayWorst} ms`,
+  ).toEqual({
     appended: sessions.map(() => chunkCount * (chunk.length + 1)),
     withinRetainedBudget: true,
     withinDelayBudget: true,
