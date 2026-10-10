@@ -1,10 +1,11 @@
-import { type AndroidSymbol, type SFSymbol, SymbolView } from 'expo-symbols';
+import { type AndroidSymbol, SymbolView } from 'expo-symbols';
 import type * as React from 'react';
 import type { ColorValue } from 'react-native';
+import type { AppleSymbol } from './custom-symbols';
 import { symbolWeight } from './symbol-weight';
 
 export interface SymbolGlyphProps {
-  sf: SFSymbol;
+  sf: AppleSymbol;
   material: AndroidSymbol;
   pixels: number;
   tintColor?: ColorValue;
@@ -13,7 +14,10 @@ export interface SymbolGlyphProps {
   testID: string;
 }
 
-// iOS draws the SF Symbol and Android the Material Symbol, both natively.
+/*
+ * iOS draws the SF Symbol and Android the Material Symbol, both natively. iOS finds a custom symbol in the app's
+ * asset catalog, through the patched SymbolView (patches/README.md).
+ */
 export function SymbolGlyph({
   sf,
   material,

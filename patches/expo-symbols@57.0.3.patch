@@ -1,0 +1,40 @@
+diff --git a/build/SymbolModule.types.d.ts b/build/SymbolModule.types.d.ts
+index 5a0433e22333e29720265e6c9d7a3f09e4feaf2a..3d6e54d16367d9cc872f8805ccdc149611b36374 100644
+--- a/build/SymbolModule.types.d.ts
++++ b/build/SymbolModule.types.d.ts
+@@ -6,7 +6,7 @@ export type SymbolViewProps = {
+      * The name of the symbol. iOS Symbols can be viewed in the [Apple SF Symbols app](https://developer.apple.com/sf-symbols/).
+      */
+     name: SFSymbol | {
+-        ios?: SFSymbol;
++        ios?: SFSymbol | `custom.${string}`;
+         android?: AndroidSymbol;
+         web?: AndroidSymbol;
+     };
+diff --git a/ios/SymbolView.swift b/ios/SymbolView.swift
+index d3209d17a4a0f91a2b6a18688a93e574a7da7d71..83c611794688e94b6c7f5172c46371a1f2585879 100644
+--- a/ios/SymbolView.swift
++++ b/ios/SymbolView.swift
+@@ -48,7 +48,8 @@ class SymbolView: ExpoView {
+ 
+ #if !os(macOS)
+   private func reloadSymbolIOS() {
+-    guard let image = UIImage(systemName: name) else {
++    // Falls back to the app's asset catalog, where custom symbols fill gaps in SF Symbols.
++    guard let image = UIImage(systemName: name) ?? UIImage(named: name) else {
+       return
+     }
+     imageView.image = image
+diff --git a/src/SymbolModule.types.ts b/src/SymbolModule.types.ts
+index acb6e0abb85dd9dbf3a3c48897b87380e792caae..7831f13f3b826baacfc22badcd033c0cdcb6fe19 100644
+--- a/src/SymbolModule.types.ts
++++ b/src/SymbolModule.types.ts
+@@ -7,7 +7,7 @@ export type SymbolViewProps = {
+   /**
+    * The name of the symbol. iOS Symbols can be viewed in the [Apple SF Symbols app](https://developer.apple.com/sf-symbols/).
+    */
+-  name: SFSymbol | { ios?: SFSymbol; android?: AndroidSymbol; web?: AndroidSymbol };
++  name: SFSymbol | { ios?: SFSymbol | `custom.${string}`; android?: AndroidSymbol; web?: AndroidSymbol };
+   /**
+    * Fallback to render when a symbol for the given platform is not defined.
+    */
