@@ -40,13 +40,7 @@ export function AgentModelSheetAgents({
 }: {
   onDone: () => void;
 }): React.JSX.Element | null {
-  const configuration = useAgentModelConfiguration();
-  if (!configuration) return null;
-  return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic">
-      <AgentChoices configuration={configuration} onSelect={onDone} />
-    </ScrollView>
-  );
+  return <AgentModelSheetChoices onDone={onDone} Choices={AgentChoices} />;
 }
 
 export function AgentModelSheetModels({
@@ -54,11 +48,21 @@ export function AgentModelSheetModels({
 }: {
   onDone: () => void;
 }): React.JSX.Element | null {
+  return <AgentModelSheetChoices onDone={onDone} Choices={ModelChoices} />;
+}
+
+function AgentModelSheetChoices({
+  onDone,
+  Choices,
+}: {
+  onDone: () => void;
+  Choices: typeof AgentChoices | typeof ModelChoices;
+}): React.JSX.Element | null {
   const configuration = useAgentModelConfiguration();
   if (!configuration) return null;
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic">
-      <ModelChoices configuration={configuration} onSelect={onDone} />
+      <Choices configuration={configuration} onSelect={onDone} />
     </ScrollView>
   );
 }

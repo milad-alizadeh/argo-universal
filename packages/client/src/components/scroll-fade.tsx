@@ -136,6 +136,21 @@ export function useScrollFadeEdges(): {
   return { edges, onScroll, onContentSizeChange, onLayout, onViewportChange };
 }
 
+export function ScrollFadeEdges({
+  edges,
+  className,
+}: {
+  edges: { top: boolean; bottom: boolean };
+  className?: string;
+}): React.JSX.Element {
+  return (
+    <>
+      {edges.top && <ScrollFade edge="top" className={className} />}
+      {edges.bottom && <ScrollFade edge="bottom" className={className} />}
+    </>
+  );
+}
+
 export interface ScrollFadeViewProps extends ScrollViewProps {
   // The surface colour the content fades into, as for ScrollFade.
   surfaceClassName?: string;
@@ -170,10 +185,7 @@ export function ScrollFadeView({
           onLayout?.(event);
         }}
       />
-      {fade.edges.top && <ScrollFade edge="top" className={surfaceClassName} />}
-      {fade.edges.bottom && (
-        <ScrollFade edge="bottom" className={surfaceClassName} />
-      )}
+      <ScrollFadeEdges edges={fade.edges} className={surfaceClassName} />
     </View>
   );
 }
