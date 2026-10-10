@@ -1,11 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AgentInfo, SessionConfigOption } from '@repo/contracts';
+import type {
+  AgentInfo,
+  SessionConfigOption,
+  SessionConfigSelectOption,
+} from '@repo/contracts';
 import {
   type QueryClient,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { configurationChoices } from '../components/composer-configuration';
+import {
+  configurationChoices,
+  configurationEffortChoices,
+} from '../components/composer-configuration';
 
 const categories = ['model', 'thought_level'] as const;
 type Category = (typeof categories)[number];
@@ -51,14 +58,8 @@ async function load(agent: string): Promise<SavedChoices> {
 function withSavedChoice(
   option: RememberedOption,
   saved: SavedChoices,
-  levels?: string[],
+  offered: SessionConfigSelectOption[] = configurationChoices(option),
 ): RememberedOption | undefined {
-  const offered = configurationChoices(option).filter(
-    (choice) =>
-      option.category !== 'thought_level' ||
-      !levels ||
-      levels.includes(choice.value),
-  );
   const value = [
     saved[option.category],
     option.currentValue,
@@ -73,16 +74,16 @@ function draftConfiguration(
   const defaults = orderedOptions(agent?.configOptions ?? []);
   const defaultModel = defaults.find((option) => option.category === 'model');
   const model = defaultModel && withSavedChoice(defaultModel, saved);
-  const capability = configurationChoices(model).find(
-    (choice) => choice.value === model?.currentValue,
-  )?._meta?.argo;
-  const options = defaults.flatMap(
+  return defaults.flatMap(
     (option) =>
-      withSavedChoice(option, saved, capability?.supportedEffortLevels) ?? [],
+      withSavedChoice(
+        option,
+        saved,
+        option.category === 'thought_level'
+          ? configurationEffortChoices(model, option)
+          : configurationChoices(option),
+      ) ?? [],
   );
-  return capability?.supportsEffort === false
-    ? options.filter((option) => option.category !== 'thought_level')
-    : options;
 }
 
 // App-local preferences; the Session's authoritative configuration stays on the Server.

@@ -64,6 +64,20 @@ function selection(
       option.type === 'select' && option.category === category,
   );
 }
+export function configurationEffortChoices(
+  model: SelectConfiguration | undefined,
+  option: SelectConfiguration | undefined,
+): SessionConfigSelectOption[] {
+  const currentModel = configurationChoices(model).find(
+    (choice) => choice.value === model?.currentValue,
+  );
+  const levels = currentModel?._meta?.argo?.supportedEffortLevels;
+  return currentModel?._meta?.argo?.supportsEffort === false
+    ? []
+    : configurationChoices(option).filter(
+        (choice) => !levels || levels.includes(choice.value),
+      );
+}
 function currentEffort(configuration: ComposerConfigurationProps): {
   option: ReturnType<typeof selection>;
   choices: SessionConfigSelectOption[];
@@ -71,16 +85,7 @@ function currentEffort(configuration: ComposerConfigurationProps): {
 } {
   const model = selection(configuration, 'model');
   const option = selection(configuration, 'thought_level');
-  const currentModel = configurationChoices(model).find(
-    (choice) => choice.value === model?.currentValue,
-  );
-  const levels = currentModel?._meta?.argo?.supportedEffortLevels;
-  const effortChoices =
-    currentModel?._meta?.argo?.supportsEffort === false
-      ? []
-      : configurationChoices(option).filter(
-          (choice) => !levels || levels.includes(choice.value),
-        );
+  const effortChoices = configurationEffortChoices(model, option);
   return {
     option,
     choices: effortChoices,
