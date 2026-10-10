@@ -7,14 +7,14 @@ Screens import every control from `#primitives` and nothing else (owner, 2026-10
 - **One API, up to three drawings.** A primitive has one TypeScript type shared by all its platform files. Screens never import `@expo/ui`, `@rn-primitives`, SwiftUI or Compose types.
 - **iOS** draws the SwiftUI control from `@expo/ui` inside a `Host` (`.ios.tsx`).
 - **Android** draws the Jetpack Compose control from `@expo/ui` in Material 3, or Argo's own Compose composition where Expo UI's control is the wrong pattern (`.android.tsx`).
-- **Web and desktop** draw Argo's own React Native Web views, styled with Uniwind (the plain `.tsx` file). Expo UI's web fallback is never used.
+- **Web and desktop** use Expo UI's universal drawing when it meets the approved Paper master's look, states and behaviour; otherwise they use Argo's own React Native Web views, styled with Uniwind (the plain `.tsx` file). This replaces the blanket exclusion of Expo UI's web drawing (owner, 2026-10-10, #419). Screens still use Argo's shared primitive API.
 - **Data props, not children.** SwiftUI and Compose buttons cannot take Argo `Text` children, so native-drawn primitives take `label`, `value`, `options` and similar props, and no `className`.
 - **Argo draws its own content.** The Feed, Session rows, the Composer surface, request cards, code, badges, chips and icon buttons stay React Native views styled with Uniwind on every platform. Native drawing is for system controls inside system containers: grouped settings lists, the controls in them, menus, sheets, alerts and dialogs.
 - **`@rn-primitives` stays only underneath web primitives** that need Radix keyboard, focus and collision handling (dialog, popover, dropdown-menu, portal, and select while it is needed). Only web primitive files and the portal host import it.
 
-## Why Expo UI's web components are not used
+## When Expo UI's web drawing does not fit
 
-Their radii, heights, padding, font stack and destructive red are fixed in a `StyleSheet`. Their `style` prop is limited to padding, background, radius, border, opacity, width and height. They have no `className`. Button has three variants. Colours are CSS variables, which is not enough to match the approved web designs.
+In SDK 57, radii, heights, padding, font stack and destructive red are fixed in a `StyleSheet`. The shared `style` prop is limited to padding, background, radius, border, opacity, width and height. The controls have no `className`. Button has three variants. Colours are CSS variables. Compare each control with its approved Paper master, including interaction states, before choosing its drawing. FieldSection's white bordered card and dividers do not match Argo's grouped muted cards; ListItem lacks the required hover, focus and selected drawings. Those controls keep Argo's own web drawings.
 
 ## Why Android does not use Expo UI's FieldGroup
 
@@ -33,5 +33,5 @@ This amends ADR-0019. SwiftUI `Image` draws only system symbols, so `custom.<nam
 ## Considered options
 
 - Keep Reusables and restyle it: two kits stay side by side, and the phone still looks like the web.
-- Use Expo UI's universal components everywhere, web included: the web drawing cannot take Argo's designs (above), and Android's field group is the wrong pattern.
+- Use Expo UI's universal components everywhere, web included: controls that cannot match the approved Paper masters keep Argo's drawings, and Android's field group is the wrong pattern.
 - Draw everything natively, Feed included: dense Argo content needs Argo's own design and layout control.
