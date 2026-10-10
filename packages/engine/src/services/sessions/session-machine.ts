@@ -46,6 +46,7 @@ import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';
 import { blobsFolderIn } from '../blob';
 import {
+  acpToolCallRowId,
   findDatabaseWriter,
   readWriterProjection,
   publishTurnContent,
@@ -221,19 +222,23 @@ const writer = ({
   self: AnyActorRef;
 }): AnyActorRef => findDatabaseWriter(system) ?? self;
 
+// A native Tool call's row is named by its id; an ACP one's is scoped to its ACP session.
 const permissionOutcomeChange = (
+  context: SessionContext,
   toolCallId: string,
-  optionId: string | null,
+  option: PendingPermission['options'][number] | null,
 ): FeedChange => ({
   type: 'patch',
-  id: toolCallId,
+  id: context.acpLease
+    ? acpToolCallRowId(context.acpLease.sessionId, toolCallId)
+    : toolCallId,
   set: {
     _meta: {
       argo: {
         permissionOutcome:
-          optionId === null
+          option === null
             ? { outcome: 'cancelled' }
-            : { outcome: 'selected', optionId },
+            : { outcome: 'selected', ...option },
       },
     },
   },
@@ -262,6 +267,17 @@ const headPermission = (context: SessionContext): PendingPermission => {
   return request;
 };
 
+// The offered option an answer chose: null when it cancels, undefined when the Agent did not offer it.
+const chosenOption = (
+  request: PendingPermission,
+  optionId: string | null,
+): PendingPermission['options'][number] | null | undefined =>
+  optionId === null
+    ? null
+    : request.options.find(
+        (candidate): boolean => candidate.optionId === optionId,
+      );
+
 // Each cancelled Permission request shows its outcome on its Tool call.
 const cancelledPermissions = (
   context: SessionContext,
@@ -270,7 +286,7 @@ const cancelledPermissions = (
   requests.map((request): FeedChangeEvent => ({
     type: feedChangeEvent,
     turnId: context.activeTurnId,
-    change: permissionOutcomeChange(request.toolCallId, null),
+    change: permissionOutcomeChange(context, request.toolCallId, null),
   }));
 
 const sessionSetup = setup({
@@ -894,10 +910,13 @@ const sessionSetup = setup({
       ({ context, event }): FeedChangeEvent => {
         assertEvent(event, answerPermissionEvent);
         const request = headPermission(context);
+        const option = chosenOption(request, event.optionId);
+        if (option === undefined)
+          throw new Error('The Agent did not offer that option');
         return {
           type: feedChangeEvent,
           turnId: context.activeTurnId,
-          change: permissionOutcomeChange(request.toolCallId, event.optionId),
+          change: permissionOutcomeChange(context, request.toolCallId, option),
         };
       },
     ),
@@ -1087,9 +1106,14 @@ const sessionSetup = setup({
     isNew: ({ context }): boolean => context.input.kind === 'new',
     isUnstored: ({ context }): boolean => !context.stored,
     hasEndedFeed: ({ context }): boolean => context.feedEnded,
-    isPermissionHead: ({ context, event }): boolean =>
-      event.type === answerPermissionEvent &&
-      context.permissionQueue[0]?.requestId === event.requestId,
+    isPermissionHead: ({ context, event }): boolean => {
+      const request = context.permissionQueue[0];
+      return (
+        event.type === answerPermissionEvent &&
+        request?.requestId === event.requestId &&
+        chosenOption(request, event.optionId) !== undefined
+      );
+    },
     hasPermission: ({ context }): boolean => context.permissionQueue.length > 0,
     hasElicitation: ({ context }): boolean =>
       context.elicitationQueue.length > 0,
