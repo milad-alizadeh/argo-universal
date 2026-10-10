@@ -88,6 +88,7 @@ export function useScrollFadeEdges(): {
   onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   onContentSizeChange: (width: number, height: number) => void;
   onLayout: (event: LayoutChangeEvent) => void;
+  onViewportChange: (height: number) => void;
 } {
   const [edges, setEdges] = useState({ top: false, bottom: false });
   const metrics = useRef({ offset: 0, inset: 0, content: 0, viewport: 0 });
@@ -120,14 +121,19 @@ export function useScrollFadeEdges(): {
     },
     [update],
   );
-  const onLayout = useCallback(
-    ({ nativeEvent }: LayoutChangeEvent) => {
-      metrics.current.viewport = nativeEvent.layout.height;
+  const onViewportChange = useCallback(
+    (height: number) => {
+      metrics.current.viewport = height;
       update();
     },
     [update],
   );
-  return { edges, onScroll, onContentSizeChange, onLayout };
+  const onLayout = useCallback(
+    ({ nativeEvent }: LayoutChangeEvent) =>
+      onViewportChange(nativeEvent.layout.height),
+    [onViewportChange],
+  );
+  return { edges, onScroll, onContentSizeChange, onLayout, onViewportChange };
 }
 
 export interface ScrollFadeViewProps extends ScrollViewProps {
