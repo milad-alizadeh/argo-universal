@@ -1,15 +1,14 @@
 import { expect, it } from 'vitest';
+import { createResourceOpening } from '#mocks/acp-resource';
 import {
-  createResourcePeer,
-  createResourceOpening,
-  requireResourceProcessAt,
-} from '#mocks/acp-resource';
+  createScriptedAgentProcess,
+  requireScriptedProcessAt,
+} from '#mocks/scripted-agent';
 import { createAcpResources } from '../index';
 
 it('equivalent reordered launches reuse one startup and ignore extra caller fields', async () => {
-  let identity = 0;
-  const peer = createResourcePeer({
-    newSession: () => ({ sessionId: String(++identity) }),
+  const peer = createScriptedAgentProcess({
+    steps: [],
   });
   const resources = createAcpResources(peer);
   const base = createResourceOpening();
@@ -34,7 +33,7 @@ it('equivalent reordered launches reuse one startup and ignore extra caller fiel
 });
 
 it('launch arguments and environment are captured before startup awaits', async () => {
-  const peer = createResourcePeer();
+  const peer = createScriptedAgentProcess({ steps: [] });
   const resources = createAcpResources(peer);
   const base = createResourceOpening();
   const args = ['initial'];
@@ -46,7 +45,7 @@ it('launch arguments and environment are captured before startup awaits', async 
   args.push('later');
   env.AUTH = 'later';
   await opening;
-  const process = requireResourceProcessAt(peer.processes);
+  const process = requireScriptedProcessAt(peer.processes);
   expect(process.launch.args).toEqual(['initial']);
   expect(process.launch.env).toEqual({ AUTH: 'initial' });
   await resources.shutdown();

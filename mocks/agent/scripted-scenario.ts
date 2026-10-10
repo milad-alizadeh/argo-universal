@@ -7,24 +7,47 @@ import {
   type RequestPermissionRequest,
   type SessionConfigOption,
   type SessionUpdate,
+  type RequestPermissionResponse,
+  type CreateElicitationResponse,
 } from '@agentclientprotocol/sdk';
+import type {
+  ScriptedResponses,
+  ScriptedNotifications,
+} from './scripted-responses.ts';
 
 // Node runs the stdio entry without a build, so this file imports only the SDK.
 
-type FormElicitation = Omit<
-  Extract<CreateElicitationRequest, { mode: 'form'; sessionId: string }>,
-  'sessionId'
->;
+type SessionElicitation =
+  | Omit<
+      Extract<CreateElicitationRequest, { mode: 'form'; sessionId: string }>,
+      'sessionId'
+    >
+  | Omit<
+      Extract<CreateElicitationRequest, { mode: 'url'; sessionId: string }>,
+      'sessionId'
+    >;
 
 // One step of a prompt; the Agent fills in the Session's own id.
 export type ScriptedStep =
-  | { type: 'update'; update: SessionUpdate }
+  | { type: 'update'; update: SessionUpdate; sessionId?: string }
   | {
       type: 'permission';
       request: Omit<RequestPermissionRequest, 'sessionId'>;
+      responses?: RequestPermissionResponse[];
+      detached?: boolean;
+      signal?: AbortSignal;
     }
-  | { type: 'elicitation'; request: FormElicitation }
-  | { type: 'wait-for-cancel' }
+  | {
+      type: 'elicitation';
+      request: SessionElicitation;
+      responses?: CreateElicitationResponse[];
+      detached?: boolean;
+      signal?: AbortSignal;
+    }
+  | { type: 'wait-for-cancel'; until?: Promise<void> }
+  | { type: 'gate'; waitFor: Promise<void>; entered?: { resolve: () => void } }
+  | { type: 'yield' }
+  | { type: 'parallel'; steps: readonly ScriptedStep[] }
   // Ignores cancellation until the connection closes.
   | { type: 'hold' }
   | { type: 'fail'; message: string }
@@ -35,6 +58,9 @@ export type ScriptedScenario = {
   initialize?: InitializeResponse;
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];
+  responses?: ScriptedResponses;
+  notifications?: ScriptedNotifications;
+  sessionIds?: readonly string[];
 };
 
 export const scriptedInitialization: InitializeResponse = {
@@ -63,29 +89,51 @@ const runStep = async (
   switch (step.type) {
     case 'update':
       return client.notify('session/update', {
-        sessionId,
+        sessionId: step.sessionId ?? sessionId,
         update: step.update,
       });
     case 'permission':
-      await client.request('session/request_permission', {
-        ...step.request,
-        sessionId,
-      });
-      return;
+      return observeQuestion(
+        client.request(
+          'session/request_permission',
+          {
+            ...step.request,
+            sessionId,
+          },
+          step.signal ? { cancellationSignal: step.signal } : undefined,
+        ),
+        step,
+      );
     case 'elicitation':
-      await client.request('elicitation/create', {
-        ...step.request,
-        sessionId,
-      });
-      return;
+      return observeQuestion(
+        client.request(
+          'elicitation/create',
+          {
+            ...step.request,
+            sessionId,
+          },
+          step.signal ? { cancellationSignal: step.signal } : undefined,
+        ),
+        step,
+      );
     case 'wait-for-cancel':
-      return turn.cancelled;
+      return step.until
+        ? Promise.race([turn.cancelled, step.until])
+        : turn.cancelled;
+    case 'gate':
+      step.entered?.resolve();
+      return step.waitFor;
+    case 'parallel':
+      await Promise.all(step.steps.map((parallel) => runStep(parallel, turn)));
+      return;
+    case 'yield':
+      return new Promise((resolve) => setTimeout(resolve, 0));
     case 'hold':
       return turn.closed;
     case 'fail':
       throw RequestError.internalError(undefined, step.message);
     case 'raw':
-      return turn.writeRaw(step.frame);
+      return turn.writeRaw(step.frame.replaceAll('$sessionId', sessionId));
   }
 };
 
@@ -95,7 +143,20 @@ export const runTurn = async (
 ): Promise<PromptResponse> => {
   for (const step of steps) {
     await runStep(step, turn);
-    if (turn.isCancelled()) return { stopReason: 'cancelled' };
   }
-  return { stopReason: 'end_turn' };
+  return { stopReason: turn.isCancelled() ? 'cancelled' : 'end_turn' };
+};
+
+const observeQuestion = async <Response>(
+  pending: Promise<Response>,
+  step: { responses?: Response[]; detached?: boolean },
+): Promise<void> => {
+  const observed = pending.then((response) => {
+    step.responses?.push(response);
+  });
+  if (step.detached) {
+    void observed.catch(() => {});
+    return;
+  }
+  await observed;
 };

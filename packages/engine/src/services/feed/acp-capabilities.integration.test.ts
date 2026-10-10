@@ -5,13 +5,12 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 it('the real Client advertises only implemented Plan, Notice and Compaction extensions', async () => {
   const received = Promise.withResolvers<InitializeRequest>();
   const host = await startAcpEngine({
-    initialize: ({ params }) => {
-      received.resolve(params);
-      return {
-        protocolVersion: 1,
-        agentCapabilities: { sessionCapabilities: { close: {} } },
-      };
+    steps: [],
+    initialize: {
+      protocolVersion: 1,
+      agentCapabilities: { sessionCapabilities: { close: {} } },
     },
+    responses: { initialize: [{ received }] },
   });
   await host.caller.session.new(emptySessionInput);
   expect(await received.promise).toMatchObject({

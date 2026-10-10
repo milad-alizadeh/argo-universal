@@ -1,10 +1,7 @@
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import {
-  sendAcpFeedUpdates,
-  waitForAcpSessionIdle,
-  type AcpFeedUpdates,
-} from '#mocks/acp-feed';
+import { waitForAcpSessionIdle, type AcpFeedUpdates } from '#mocks/acp-feed';
 
 const updates: AcpFeedUpdates = [
   {
@@ -31,16 +28,7 @@ const updates: AcpFeedUpdates = [
 it.each(['agent-1', 'agent-2'])(
   '%s scopes equal upstream identities by actual ACP Session and entity kind',
   async (agent) => {
-    const host = await startAcpEngine(
-      {
-        prompt: async (request) => {
-          await sendAcpFeedUpdates(request, updates);
-          return { stopReason: 'end_turn' };
-        },
-      },
-      undefined,
-      agent,
-    );
+    const host = await startAcpEngine(feedScenario(updates), undefined, agent);
     const first = await host.caller.session.new({
       ...emptySessionInput,
       agent,
@@ -58,7 +46,7 @@ it.each(['agent-1', 'agent-2'])(
         host.caller.feed.page({ ...session, direction: 'tail' }),
       ),
     );
-    expect(host.peer.processes).toHaveLength(1);
+    expect(host.agent.processes).toHaveLength(1);
     expect(
       pages.map((page) => page.rows.map((row) => row.sessionUpdate)),
     ).toEqual(

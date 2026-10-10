@@ -1,3 +1,4 @@
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import {
   openAcpFeedSession,
@@ -13,13 +14,16 @@ it('an explicit message identity patches its original Turn after settled persist
       content: { type: 'text', text: 'First 😀' },
     },
   ];
-  const { host, sessionId } = await openAcpFeedSession(updates);
+  const scenario = feedScenario(updates);
+  const { host, sessionId } = await openAcpFeedSession(scenario);
   const first = await host.caller.feed.page({ sessionId, direction: 'tail' });
-  updates.splice(0, 1, {
-    sessionUpdate: 'agent_message_chunk',
-    messageId: 'shared',
-    content: { type: 'text', text: ' continued' },
-  });
+  scenario.steps = feedScenario([
+    {
+      sessionUpdate: 'agent_message_chunk',
+      messageId: 'shared',
+      content: { type: 'text', text: ' continued' },
+    },
+  ]).steps;
   await host.caller.session.prompt({
     sessionId,
     prompt: [{ type: 'text', text: 'Continue the entity' }],

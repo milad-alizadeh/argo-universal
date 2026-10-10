@@ -5,7 +5,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 it.each(agentAdapters.map(({ agent }) => agent))(
   'the public empty %s Session becomes readable without a Turn and awaits closure',
   async (agent) => {
-    const host = await startAcpEngine({}, undefined, agent);
+    const host = await startAcpEngine({ steps: [] }, undefined, agent);
     const created = await host.caller.session.new({
       ...emptySessionInput,
       agent,
@@ -34,10 +34,10 @@ it.each(agentAdapters.map(({ agent }) => agent))(
       },
     });
     await feed.return?.();
-    expect(host.peer.processes[0]?.terminations).toBe(0);
+    expect(host.agent.processes[0]?.terminations).toBe(0);
     expect(
       await host.caller.session.close({ sessionId: created.sessionId }),
     ).toEqual({});
-    expect(host.peer.processes[0]?.terminations).toBe(1);
+    expect(host.agent.processes[0]?.terminations).toBe(1);
   },
 );

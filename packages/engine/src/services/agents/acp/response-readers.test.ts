@@ -1,6 +1,6 @@
 import { createRejectionCounter } from '@repo/machine-log';
+import { acpResponses } from '@repo/mocks/agent/response-scenarios';
 import { expect, it } from 'vitest';
-import { acpResponses } from '#mocks/acp-responses';
 import { createAcpResponseReaders } from './response-readers';
 
 it.each(Object.values(acpResponses))(

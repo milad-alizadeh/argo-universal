@@ -1,20 +1,17 @@
 import type {
   PromptRequest,
-  PromptResponse,
   ResumeSessionRequest,
 } from '@agentclientprotocol/sdk';
+import { acpPermission } from '@repo/mocks/agent/permission-scenario';
 import { expect, it, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
-import { acpPermission } from '#mocks/acp-requests';
-import { requireResourceProcessAt } from '#mocks/acp-resource';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { findSessionActor } from './index';
 
 type AcpHost = Awaited<ReturnType<typeof startAcpEngine>>;
 const recoveryTimeout = { timeout: 10_000 };
-const unansweredPrompt = (): Promise<PromptResponse> =>
-  Promise.withResolvers<PromptResponse>().promise;
 const requireSession = (
   host: AcpHost,
   sessionId: string,
@@ -31,7 +28,7 @@ const waitForGeneration = async (
   await waitFor(
     requireSession(host, sessionId),
     (snapshot) =>
-      host.peer.processes.length === generation &&
+      host.agent.processes.length === generation &&
       snapshot.matches({ open: { acp: 'idle' } }),
     recoveryTimeout,
   );
@@ -58,13 +55,12 @@ const interruptTurn = async (): Promise<
 > => {
   const recorded: Recorded = { prompts: [], resumes: [] };
   const host = await startAcpEngine({
-    prompt: ({ params }) => {
-      recorded.prompts.push(params);
-      return unansweredPrompt();
-    },
-    resumeSession: ({ params }) => {
-      recorded.resumes.push(params);
-      return {};
+    steps: [{ type: 'hold' }],
+    responses: {
+      'session/prompt': [
+        { requests: recorded.prompts, steps: [{ type: 'hold' }] },
+      ],
+      'session/resume': [{ requests: recorded.resumes }],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -72,10 +68,8 @@ const interruptTurn = async (): Promise<
     ...created,
     prompt: [{ type: 'text', text: 'Work' }],
   });
-  await waitFor(requireSession(host, created.sessionId), () =>
-    Boolean(recorded.prompts.length),
-  );
-  requireResourceProcessAt(host.peer.processes).disconnect();
+  await expect.poll(() => recorded.prompts).toHaveLength(1);
+  requireScriptedProcessAt(host.agent.processes).disconnect();
   await waitForGeneration(host, created.sessionId, 2);
   return { ...recorded, host, sessionId: created.sessionId };
 };
@@ -125,10 +119,10 @@ it(
     const host = await startAcpEngine();
     const first = await host.caller.session.new(emptySessionInput);
     const second = await host.caller.session.new(emptySessionInput);
-    requireResourceProcessAt(host.peer.processes).disconnect();
+    requireScriptedProcessAt(host.agent.processes).disconnect();
     await waitForGeneration(host, first.sessionId, 2);
     await waitForGeneration(host, second.sessionId, 2);
-    expect(host.peer.processes).toHaveLength(2);
+    expect(host.agent.processes).toHaveLength(2);
   },
 );
 
@@ -136,20 +130,22 @@ it(
   'a failed resume on the replacement retries within the crash budget',
   recoveryTimeout,
   async () => {
-    let resumes = 0;
+    const resumes: ResumeSessionRequest[] = [];
     const host = await startAcpEngine({
-      resumeSession: () => {
-        resumes += 1;
-        if (resumes === 1) throw new Error('Resume failed');
-        return {};
+      steps: [],
+      responses: {
+        'session/resume': [
+          { requests: resumes, error: 'Resume failed' },
+          { requests: resumes },
+        ],
       },
     });
     const created = await host.caller.session.new(emptySessionInput);
-    requireResourceProcessAt(host.peer.processes).disconnect();
+    requireScriptedProcessAt(host.agent.processes).disconnect();
     await waitFor(
       requireSession(host, created.sessionId),
       (snapshot) =>
-        resumes === 2 && snapshot.matches({ open: { acp: 'idle' } }),
+        resumes.length === 2 && snapshot.matches({ open: { acp: 'idle' } }),
       recoveryTimeout,
     );
     expect(
@@ -164,7 +160,7 @@ it(
   async () => {
     const host = await startAcpEngine();
     const created = await host.caller.session.new(emptySessionInput);
-    requireResourceProcessAt(host.peer.processes).disconnect();
+    requireScriptedProcessAt(host.agent.processes).disconnect();
     await waitForGeneration(host, created.sessionId, 2);
     await host.caller.session.prompt({
       ...created,
@@ -182,14 +178,15 @@ it(
   recoveryTimeout,
   async () => {
     const host = await startAcpEngine({
+      steps: [],
       autoExit: false,
       releaseTimeoutMs: 50,
     });
     const created = await host.caller.session.new(emptySessionInput);
     const session = requireSession(host, created.sessionId);
-    requireResourceProcessAt(host.peer.processes).disconnect();
+    requireScriptedProcessAt(host.agent.processes).disconnect();
     const replacement = await vi.waitFor(
-      () => requireResourceProcessAt(host.peer.processes, 1),
+      () => requireScriptedProcessAt(host.agent.processes, 1),
       recoveryTimeout,
     );
     await vi.waitFor(() => expect(replacement.terminations).toBe(1));
@@ -211,13 +208,13 @@ it(
     const created = await host.caller.session.new(emptySessionInput);
     const session = requireSession(host, created.sessionId);
     for (const generation of [1, 2]) {
-      requireResourceProcessAt(
-        host.peer.processes,
+      requireScriptedProcessAt(
+        host.agent.processes,
         generation - 1,
       ).disconnect();
       await waitForGeneration(host, created.sessionId, generation + 1);
     }
-    requireResourceProcessAt(host.peer.processes, 2).disconnect();
+    requireScriptedProcessAt(host.agent.processes, 2).disconnect();
     const stopped = await waitFor(
       session,
       (snapshot) => snapshot.context.failure !== null,
@@ -225,7 +222,7 @@ it(
     );
     expect({
       failure: stopped.context.failure,
-      processes: host.peer.processes.length,
+      processes: host.agent.processes.length,
     }).toEqual({
       failure: 'The Agent stopped three times in ten minutes',
       processes: 3,
@@ -235,15 +232,21 @@ it(
 
 it('a reopened Session resumes its Agent context without appending replayed history', async () => {
   const host = await startAcpEngine({
-    resumeSession: async ({ params, client }) => {
-      await client.notify('session/update', {
-        sessionId: params.sessionId,
-        update: {
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'text', text: 'Replayed history' },
+    steps: [],
+    responses: {
+      'session/resume': [
+        {
+          steps: [
+            {
+              type: 'update',
+              update: {
+                sessionUpdate: 'agent_message_chunk',
+                content: { type: 'text', text: 'Replayed history' },
+              },
+            },
+          ],
         },
-      });
-      return {};
+      ],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -263,13 +266,16 @@ it(
   recoveryTimeout,
   async (): Promise<void> => {
     const host = await startAcpEngine({
-      prompt: async ({ params, client }) => {
-        await client.request('session/request_permission', {
-          ...acpPermission,
-          sessionId: params.sessionId,
-        });
-        return unansweredPrompt();
-      },
+      steps: [
+        {
+          type: 'permission',
+          request: {
+            toolCall: acpPermission.toolCall,
+            options: acpPermission.options,
+          },
+        },
+        { type: 'hold' },
+      ],
     });
     const created = await host.caller.session.new(emptySessionInput);
     await host.caller.session.prompt({
@@ -283,7 +289,7 @@ it(
     );
     const requestId = pending.pendingPermission?.requestId;
     if (requestId === undefined) throw new Error('No pending permission');
-    requireResourceProcessAt(host.peer.processes).disconnect();
+    requireScriptedProcessAt(host.agent.processes).disconnect();
     await waitForGeneration(host, created.sessionId, 2);
     await expect(
       host.caller.session.answerPermission({

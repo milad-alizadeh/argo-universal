@@ -3,22 +3,24 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 
-const updateMethod = 'session/update';
-
 it('one lifetime receives successive Turns and idle text without inventing human provenance', async () => {
   const requests: PromptRequest[] = [];
   const host = await startAcpEngine({
-    prompt: async ({ params, client }) => {
-      requests.push(params);
-      await client.notify(updateMethod, {
-        sessionId: params.sessionId,
-        update: {
-          sessionUpdate: 'agent_message_chunk',
-          messageId: `reply-${requests.length}`,
-          content: { type: 'text', text: `Reply ${requests.length}` },
-        },
-      });
-      return { stopReason: 'end_turn' };
+    steps: [],
+    responses: {
+      'session/prompt': ['1', '2'].map((number) => ({
+        requests,
+        steps: [
+          {
+            type: 'update' as const,
+            update: {
+              sessionUpdate: 'agent_message_chunk' as const,
+              messageId: `reply-${number}`,
+              content: { type: 'text' as const, text: `Reply ${number}` },
+            },
+          },
+        ],
+      })),
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -29,19 +31,24 @@ it('one lifetime receives successive Turns and idle text without inventing human
     });
     await waitForAcpSessionIdle(host, created.sessionId);
   }
-  const process = host.peer.processes[0];
+  const process = host.agent.processes[0];
   if (!process) throw new Error('ACP peer is missing');
   const events = (
     await host.caller.feed.subscribe({ ...created, after: null })
   )[Symbol.asyncIterator]();
   await events.next();
-  await process.connection.client.notify(updateMethod, {
-    sessionId: 'owned-1',
-    update: {
-      sessionUpdate: 'agent_message_chunk',
-      content: { type: 'text', text: 'Idle output' },
-    },
-  });
+  await process.play(
+    [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          content: { type: 'text', text: 'Idle output' },
+        },
+      },
+    ],
+    'owned-1',
+  );
   let idleRowId: string | undefined;
   for await (const event of {
     [Symbol.asyncIterator]: (): typeof events => events,
@@ -94,25 +101,29 @@ it('one lifetime receives successive Turns and idle text without inventing human
     'owned-1',
     'owned-1',
   ]);
-  expect(host.peer.processes).toHaveLength(1);
+  expect(host.agent.processes).toHaveLength(1);
 });
 
 it('closing a running Turn retains its association until final accepted text is published', async () => {
-  const received = Promise.withResolvers<void>();
+  const received = Promise.withResolvers<PromptRequest>();
   const host = await startAcpEngine({
-    prompt: () => {
-      received.resolve();
-      return new Promise(() => {});
-    },
-    closeSession: async ({ params, client }) => {
-      await client.notify(updateMethod, {
-        sessionId: params.sessionId,
-        update: {
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'text', text: 'Final accepted text' },
+    steps: [{ type: 'hold' }],
+    responses: {
+      'session/prompt': [{ received, steps: [{ type: 'hold' }] }],
+      'session/close': [
+        {
+          steps: [
+            {
+              type: 'update',
+              update: {
+                sessionUpdate: 'agent_message_chunk',
+                content: { type: 'text', text: 'Final accepted text' },
+              },
+            },
+          ],
+          result: {},
         },
-      });
-      return {};
+      ],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -139,22 +150,26 @@ it('closing a running Turn retains its association until final accepted text is 
 });
 
 it('failed close keeps the Turn until observed process release, then publishes its accepted text', async () => {
-  const received = Promise.withResolvers<void>();
+  const received = Promise.withResolvers<PromptRequest>();
   const host = await startAcpEngine({
     autoExit: false,
-    prompt: () => {
-      received.resolve();
-      return new Promise(() => {});
-    },
-    closeSession: async ({ params, client }) => {
-      await client.notify(updateMethod, {
-        sessionId: params.sessionId,
-        update: {
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'text', text: 'Accepted before failed close' },
+    steps: [{ type: 'hold' }],
+    responses: {
+      'session/prompt': [{ received, steps: [{ type: 'hold' }] }],
+      'session/close': [
+        {
+          steps: [
+            {
+              type: 'update',
+              update: {
+                sessionUpdate: 'agent_message_chunk',
+                content: { type: 'text', text: 'Accepted before failed close' },
+              },
+            },
+          ],
+          error: 'Close refused',
         },
-      });
-      throw new Error('Close refused');
+      ],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -166,7 +181,7 @@ it('failed close keeps the Turn until observed process release, then publishes i
   await expect(host.caller.session.close(created)).rejects.toThrow(
     'Internal error',
   );
-  const process = host.peer.processes[0];
+  const process = host.agent.processes[0];
   if (!process) throw new Error('Owned lifetime is missing');
   expect(
     host.database.$client.prepare('SELECT status FROM turn').get(),

@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { SessionUpdate } from '@agentclientprotocol/sdk';
 import type { ToolCallUpdate } from '@repo/contracts';
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
@@ -14,25 +16,21 @@ const input = largeText('input');
 const prompt = largeText('prompt');
 
 const startToolHost = (
-  update: Record<string, unknown>,
+  update: Partial<Extract<SessionUpdate, { sessionUpdate: 'tool_call' }>>,
 ): ReturnType<typeof startAcpEngine> =>
-  startAcpEngine({
-    prompt: async ({ params, client }) => {
-      await client.notify('session/update', {
-        sessionId: params.sessionId,
-        update: {
-          sessionUpdate: 'tool_call',
-          toolCallId: 'run-1',
-          title: 'Run',
-          kind: 'execute',
-          status: 'completed',
-          rawInput: { command: input },
-          ...update,
-        },
-      });
-      return { stopReason: 'end_turn' };
-    },
-  });
+  startAcpEngine(
+    feedScenario([
+      {
+        sessionUpdate: 'tool_call',
+        toolCallId: 'run-1',
+        title: 'Run',
+        kind: 'execute',
+        status: 'completed',
+        rawInput: { command: input },
+        ...update,
+      },
+    ]),
+  );
 
 const readToolRow = async (
   host: Awaited<ReturnType<typeof startAcpEngine>>,
@@ -110,41 +108,34 @@ it('tool output within 64 KB is stored whole without a truncation mark', async (
 });
 
 it('a later update replaces only the output fields it supplies', async () => {
-  const host = await startAcpEngine({
-    prompt: async ({ params, client }) => {
-      for (const update of [
-        {
-          sessionUpdate: 'tool_call' as const,
-          toolCallId: 'run-1',
-          title: 'Run',
-          status: 'in_progress' as const,
-          content: [
-            {
-              type: 'content' as const,
-              content: { type: 'text' as const, text: output },
-            },
-          ],
-          rawOutput: { stdout },
-        },
-        {
-          sessionUpdate: 'tool_call_update' as const,
-          toolCallId: 'run-1',
-          status: 'completed' as const,
-          content: [
-            {
-              type: 'content' as const,
-              content: { type: 'text' as const, text: 'Done' },
-            },
-          ],
-        },
-      ])
-        await client.notify('session/update', {
-          sessionId: params.sessionId,
-          update,
-        });
-      return { stopReason: 'end_turn' };
-    },
-  });
+  const host = await startAcpEngine(
+    feedScenario([
+      {
+        sessionUpdate: 'tool_call' as const,
+        toolCallId: 'run-1',
+        title: 'Run',
+        status: 'in_progress' as const,
+        content: [
+          {
+            type: 'content' as const,
+            content: { type: 'text' as const, text: output },
+          },
+        ],
+        rawOutput: { stdout },
+      },
+      {
+        sessionUpdate: 'tool_call_update' as const,
+        toolCallId: 'run-1',
+        status: 'completed' as const,
+        content: [
+          {
+            type: 'content' as const,
+            content: { type: 'text' as const, text: 'Done' },
+          },
+        ],
+      },
+    ]),
+  );
   const row = await readToolRow(host);
   expect(row.content).toEqual([
     { type: 'content', content: { type: 'text', text: 'Done' } },

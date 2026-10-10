@@ -1,3 +1,4 @@
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import {
   openAcpFeedSession,
@@ -38,7 +39,8 @@ it('Plans replace whole content and retain removed history without resurrecting 
     },
     { sessionUpdate: 'plan_removed', planId: 'older' },
   ];
-  const { host, sessionId } = await openAcpFeedSession(updates);
+  const scenario = feedScenario(updates);
+  const { host, sessionId } = await openAcpFeedSession(scenario);
   expect(
     (await host.caller.session.list({ archived: false })).sessions[0]?.plan,
   ).toEqual({ done: 1, total: 1 });
@@ -52,10 +54,12 @@ it('Plans replace whole content and retain removed history without resurrecting 
     position: 2,
     plan: { type: 'items', entries: [{ content: 'Replacement' }] },
   });
-  updates.splice(0, updates.length, {
-    sessionUpdate: 'plan_removed',
-    planId: 'current',
-  });
+  scenario.steps = feedScenario([
+    {
+      sessionUpdate: 'plan_removed',
+      planId: 'current',
+    },
+  ]).steps;
   await host.caller.session.prompt({
     sessionId,
     prompt: [{ type: 'text', text: 'Remove the current Plan' }],

@@ -2,13 +2,16 @@ import { randomUUID } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createMockAdapter } from '@repo/mocks/agent';
+import { createAgentMetadata } from '@repo/mocks/agent';
+import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { onTestFinished } from 'vitest';
+import type { EngineInput } from '../src/engine/machine';
 import type { AcpResourceInput } from '../src/services/agents';
-import { createResourcePeer, resourceLaunch } from './acp-resource';
+import { resourceLaunch } from './acp-resource';
 import { openTestDatabase } from './database';
 import { startEngineTestHost } from './engine';
 import { initTestRepository } from './git';
+import { createScriptedAgentProcess } from './scripted-agent';
 
 export const emptySessionInput = {
   projectId: 'project-1',
@@ -18,27 +21,32 @@ export const emptySessionInput = {
   prompt: [],
 };
 export const startAcpEngine = async (
-  peerInput: Parameters<typeof createResourcePeer>[0] &
-    Pick<AcpResourceInput, 'closeTimeoutMs' | 'releaseTimeoutMs'> = {},
+  scenario: ScriptedScenario & { autoExit?: boolean } & Partial<
+      Pick<EngineInput, 'fetchAgents'>
+    > &
+    Pick<AcpResourceInput, 'closeTimeoutMs' | 'releaseTimeoutMs'> = {
+    steps: [],
+  },
   createId: () => string = randomUUID,
   agentId = 'mock',
 ): Promise<
   Awaited<ReturnType<typeof startEngineTestHost>> & {
-    peer: ReturnType<typeof createResourcePeer>;
+    agent: ReturnType<typeof createScriptedAgentProcess>;
   }
 > => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-acp-engine-'));
   initTestRepository(directory);
   const storage = openTestDatabase({}, directory);
-  const peer = createResourcePeer(peerInput);
+  const agent = createScriptedAgentProcess(scenario);
   const host = await startEngineTestHost({
     database: storage.database,
     createId,
-    adapters: [{ ...createMockAdapter(), agent: agentId }],
+    ...(scenario.fetchAgents ? { fetchAgents: scenario.fetchAgents } : {}),
+    adapters: [{ ...createAgentMetadata(), agent: agentId }],
     acp: {
-      ...peer,
-      closeTimeoutMs: peerInput.closeTimeoutMs,
-      releaseTimeoutMs: peerInput.releaseTimeoutMs,
+      ...agent,
+      closeTimeoutMs: scenario.closeTimeoutMs,
+      releaseTimeoutMs: scenario.releaseTimeoutMs,
     },
     resolveAgentLaunch: async (input) => ({
       ...resourceLaunch,
@@ -48,10 +56,10 @@ export const startAcpEngine = async (
     }),
   });
   onTestFinished(async () => {
-    for (const process of peer.processes) process.exited.resolve();
+    for (const process of agent.processes) process.exited.resolve();
     await host.stop();
     storage.remove();
     rmSync(directory, { recursive: true, force: true });
   });
-  return { ...host, peer };
+  return { ...host, agent };
 };

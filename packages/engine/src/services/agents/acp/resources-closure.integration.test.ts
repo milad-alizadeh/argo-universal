@@ -1,16 +1,22 @@
+import type { RequestPermissionResponse } from '@agentclientprotocol/sdk';
+import { acpPermission } from '@repo/mocks/agent/permission-scenario';
 import { expect, it, vi } from 'vitest';
-import { acpPermission } from '#mocks/acp-requests';
 import {
-  createResourcePeer,
   createResourceDestination,
   createResourceOpening,
   createResourceUpdate,
-  requireResourceProcessAt,
 } from '#mocks/acp-resource';
+import {
+  createScriptedAgentProcess,
+  requireScriptedProcessAt,
+} from '#mocks/scripted-agent';
 import { createAcpResources } from '../index';
 
 it('final release stays pending after SDK closure until process exit is observed', async () => {
-  const peer = createResourcePeer({ autoExit: false });
+  const peer = createScriptedAgentProcess({
+    steps: [],
+    autoExit: false,
+  });
   const resources = createAcpResources(peer);
   const lease = await resources.open(createResourceOpening());
   let released = false;
@@ -25,12 +31,14 @@ it('final release stays pending after SDK closure until process exit is observed
 });
 
 it('a rejected close retains ownership without interrupting a live sibling', async () => {
-  let nextIdentity = 0;
-  const peer = createResourcePeer({
-    newSession: () => ({ sessionId: String(++nextIdentity) }),
-    closeSession: ({ params }) => {
-      if (params.sessionId === '1') throw new Error('close refused');
-      return {};
+  const peer = createScriptedAgentProcess({
+    steps: [],
+    sessionIds: ['1', '2'],
+    responses: {
+      'session/close': [
+        { sessionId: '1', error: 'close refused' },
+        { result: {} },
+      ],
     },
   });
   const resources = createAcpResources(peer);
@@ -47,10 +55,10 @@ it('a rejected close retains ownership without interrupting a live sibling', asy
   await expect(resources.open(createResourceOpening())).rejects.toThrow(
     'unavailable',
   );
-  const process = requireResourceProcessAt(peer.processes);
-  await process.connection.client.notify(
-    'session/update',
-    createResourceUpdate('2'),
+  const process = requireScriptedProcessAt(peer.processes);
+  await process.play(
+    [{ type: 'update', update: createResourceUpdate('2').update }],
+    '2',
   );
   await vi.waitFor(() => expect(updates).toEqual([createResourceUpdate('2')]));
   expect(released).toBe(false);
@@ -61,7 +69,7 @@ it('a rejected close retains ownership without interrupting a live sibling', asy
 });
 
 it('closure settles pending inbound requests before releasing their destination', async () => {
-  const peer = createResourcePeer();
+  const peer = createScriptedAgentProcess({ steps: [] });
   const resources = createAcpResources(peer);
   const answer = Promise.withResolvers<never>();
   let requested = false;
@@ -74,26 +82,28 @@ it('closure settles pending inbound requests before releasing their destination'
       },
     }),
   );
-  const permission = peer.processes[0]?.connection.client.request(
-    'session/request_permission',
-    { ...acpPermission, sessionId: lease.sessionId },
-  );
+  const answers: RequestPermissionResponse[] = [];
+  const permission = requireScriptedProcessAt(peer.processes)
+    .play(
+      [{ type: 'permission', request: acpPermission, responses: answers }],
+      lease.sessionId,
+    )
+    .then(() => answers[0]);
   await vi.waitFor(() => expect(requested).toBe(true));
   await lease.close();
   expect(await permission).toEqual({ outcome: { outcome: 'cancelled' } });
 });
 
 it('a failed final close attempts termination and retains release until observed exit', async () => {
-  const peer = createResourcePeer({
+  const peer = createScriptedAgentProcess({
+    steps: [],
     autoExit: false,
-    closeSession: () => {
-      throw new Error('close refused');
-    },
+    responses: { 'session/close': [{ error: 'close refused' }] },
   });
   const resources = createAcpResources(peer);
   const lease = await resources.open(createResourceOpening());
   await expect(lease.close()).rejects.toThrow('Internal error');
-  const process = requireResourceProcessAt(peer.processes);
+  const process = requireScriptedProcessAt(peer.processes);
   await vi.waitFor(() => expect(process.terminations).toBe(1));
   let released = false;
   const release = lease.released.then(() => {
