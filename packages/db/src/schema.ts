@@ -27,13 +27,10 @@ export const sessionUpdateKinds = [
   'notice',
   'task_update',
 ] as const;
-export type SessionUpdateKind = (typeof sessionUpdateKinds)[number];
 
 export const sessionUpdateStates = ['open', 'settled'] as const;
-export type SessionUpdateState = (typeof sessionUpdateStates)[number];
 
 export const turnStatuses = ['running', 'ended'] as const;
-export type TurnStatus = (typeof turnStatuses)[number];
 
 export const stopReasons = [
   'end_turn',
@@ -43,7 +40,6 @@ export const stopReasons = [
   'cancelled',
   'error',
 ] as const;
-export type StopReason = (typeof stopReasons)[number];
 
 // Times are Unix milliseconds. JSON columns are text; the Server validates them on write and read.
 // The database stamps `createdAt` and `startedAt` on insert, and a trigger stamps `updatedAt` on update (migration `updated_at_triggers`).

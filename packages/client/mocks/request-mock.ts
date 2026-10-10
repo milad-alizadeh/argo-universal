@@ -20,8 +20,7 @@ function firstRecording(mocks: RequestMock[]): RequestMock {
 export const permissionMock = firstRecording(permissionMocks);
 export const elicitationMock = firstRecording(elicitationMocks);
 
-export const recordedElicitation =
-  elicitationMock.pending.snapshot.pendingElicitation;
+const recordedElicitation = elicitationMock.pending.snapshot.pendingElicitation;
 if (!recordedElicitation) throw new Error('Recording needs an Elicitation.');
 export const elicitationRequest: PendingElicitation = recordedElicitation;
 

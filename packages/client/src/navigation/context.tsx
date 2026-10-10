@@ -19,7 +19,7 @@ export type NavigationDestination =
   | { to: 'settings-agent-new' }
   | { to: 'settings-agent'; agent: string };
 
-export interface NavigateOptions {
+interface NavigateOptions {
   // Swaps out the current page, so Back skips it.
   replace?: boolean;
 }

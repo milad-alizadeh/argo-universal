@@ -9,7 +9,7 @@ import { toLiveHeader } from './live-header';
 import type { sessionMachine } from './session-machine';
 
 // The Checkout's changes are computed in #74.
-export const noChanges: ChangesSummary = {
+const noChanges: ChangesSummary = {
   files: 0,
   additions: 0,
   deletions: 0,

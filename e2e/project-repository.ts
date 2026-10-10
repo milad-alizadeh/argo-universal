@@ -28,10 +28,3 @@ export async function createProjectRepository(
   );
   return directory;
 }
-
-// Run before the web project's Server: `node --import tsx project-repository.ts <directory>`.
-if (process.argv[1] === import.meta.filename) {
-  const directory = process.argv[2];
-  if (!directory) throw new Error('Name the directory for the Project');
-  await createProjectRepository(directory);
-}

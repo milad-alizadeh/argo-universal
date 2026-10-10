@@ -163,7 +163,7 @@ export function StartSessionIn({
   );
 }
 
-export interface ProjectPickerProps {
+interface ProjectPickerProps {
   projects: ProjectInfo[];
   projectId: string;
   onSelect: (projectId: string) => void;

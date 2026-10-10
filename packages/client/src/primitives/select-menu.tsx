@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from './select';
 
-export interface SelectMenuOption<Value extends string> {
+interface SelectMenuOption<Value extends string> {
   value: Value;
   label: string;
 }

@@ -69,30 +69,6 @@ export const newSessionCatalogs = {
   ),
 };
 
-export const dangerousModeOptions = newSessionOptions.map(
-  ({
-    agent,
-    configOptions,
-  }): Pick<(typeof newSessionOptions)[number], 'agent' | 'configOptions'> => ({
-    agent,
-    configOptions: configOptions.map((option): SessionConfigOption => {
-      if (option.category !== 'mode' || option.type !== 'select') return option;
-      const dangerous = option.options
-        .flatMap(
-          (
-            choice,
-          ): Exclude<
-            Extract<SessionConfigOption, { type: 'select' }>['options'][number],
-            { groupId: string }
-          >[] => ('groupId' in choice ? choice.options : [choice]),
-        )
-        .find((choice): boolean => choice._meta?.argo?.tone === 'dangerous');
-      if (!dangerous) throw new Error('Missing dangerous mode mock');
-      return { ...option, currentValue: dangerous.value };
-    }),
-  }),
-);
-
 export const newSessionBranches: ProjectsBranchesOutput = {
   branches: ['main', 'feature/new-session', 'release'],
   currentBranch: 'main',

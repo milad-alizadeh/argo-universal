@@ -40,6 +40,4 @@ export function createTRPCClient(
   return { client, webSocketClient, close: () => webSocketClient.close() };
 }
 
-export type TRPCClient = ReturnType<typeof createTRPCClient>['client'];
-
 export type ClientError = trpc.TRPCClientErrorLike<AppRouter>;

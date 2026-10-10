@@ -31,8 +31,7 @@
     "turbo": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:",
-    "zod": "catalog:"
+    "vitest": "catalog:"
   },
   "packageManager": "pnpm@12.8.1",
   "engines": {

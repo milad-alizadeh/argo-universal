@@ -80,12 +80,11 @@ export const TerminalExitStatus = z.strictObject({
 });
 export type TerminalExitStatus = z.infer<typeof TerminalExitStatus>;
 
-export const ToolCallContentBlock = z.strictObject({
+const ToolCallContentBlock = z.strictObject({
   type: z.literal('content'),
   content: ContentBlock,
   _meta: createFeedMetadataSchema(z.strictObject({})),
 });
-export type ToolCallContentBlock = z.infer<typeof ToolCallContentBlock>;
 
 export const ToolCallDiff = z.strictObject({
   type: z.literal('diff'),

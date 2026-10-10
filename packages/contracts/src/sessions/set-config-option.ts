@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
 
-export const configOptionIcons = [
+const configOptionIcons = [
   'ShieldWarning',
   'Pencil',
   'MapTrifold',

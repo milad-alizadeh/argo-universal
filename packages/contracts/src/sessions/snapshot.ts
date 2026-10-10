@@ -5,8 +5,7 @@ import { ChangesSummary } from './changes';
 import { SessionInfo } from './list';
 import { SessionConfigOption } from './set-config-option';
 
-export const SessionState = z.enum(['running', 'idle', 'requires_action']);
-export type SessionState = z.infer<typeof SessionState>;
+const SessionState = z.enum(['running', 'idle', 'requires_action']);
 
 // ACP `usage_update`: how full the context window is.
 export const ContextUsage = z.strictObject({

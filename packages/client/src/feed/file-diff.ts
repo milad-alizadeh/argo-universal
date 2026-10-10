@@ -7,7 +7,7 @@ export interface DiffLine {
   text: string;
 }
 
-export interface DiffHunk {
+interface DiffHunk {
   header: string;
   lines: DiffLine[];
 }

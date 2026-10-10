@@ -1,12 +1,9 @@
-import { stopReasons, turnStatuses } from '@repo/db/schema';
+import { stopReasons } from '@repo/db/schema';
 import { z } from 'zod';
 import { turnColumns } from '../columns';
 
 export const StopReason = z.enum(stopReasons);
 export type StopReason = z.infer<typeof StopReason>;
-
-export const TurnStatus = z.enum(turnStatuses);
-export type TurnStatus = z.infer<typeof TurnStatus>;
 
 // ACP `Error`, the error a Turn ended with.
 export const TurnError = z.strictObject({

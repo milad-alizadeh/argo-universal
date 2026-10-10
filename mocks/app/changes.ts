@@ -11,7 +11,6 @@ const ChangesMock = z.strictObject({
   files: SessionChangesOutput,
   diffs: z.record(z.string(), SessionDiffOutput),
 });
-export type ChangesMock = z.infer<typeof ChangesMock>;
 
 // Saved Git diffs and explicit procedure responses for the existing Checkout scenarios.
 export const changesMocks = {
