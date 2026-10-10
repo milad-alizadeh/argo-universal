@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import {
+  composerLongListConfiguration,
   composerNoEffortSelections,
   composerUnavailableConfigurations,
 } from '../../mocks/composer-mock';
@@ -50,4 +51,10 @@ export const UnavailableAgent: StoryObj<typeof meta> = {
       />
     </View>
   ),
+};
+
+export const LongLists: StoryObj<typeof meta> = {
+  name: 'Long Agent and model lists',
+  args: { configuration: composerLongListConfiguration },
+  render: NoEffortSelection.render,
 };

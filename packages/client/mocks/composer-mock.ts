@@ -155,3 +155,44 @@ export function composerProps(props: ComposerMockProps): ComposerProps {
     },
   };
 }
+
+const longModelAgent = newSessionCatalogs.bothAvailable[0];
+const longModelOption = longModelAgent?.configOptions.find(
+  (option) => option.category === 'model' && option.type === 'select',
+);
+const longModelTemplate =
+  longModelOption?.type === 'select'
+    ? longModelOption.options.flatMap((entry) =>
+        'groupId' in entry ? entry.options : [entry],
+      )[0]
+    : undefined;
+if (!longModelAgent || longModelOption?.type !== 'select' || !longModelTemplate)
+  throw new Error('Recorded catalog needs an Agent with a model choice.');
+
+export const composerLongModelList = Array.from({ length: 24 }, (_, index) => ({
+  ...longModelTemplate,
+  value: `development-model-${index + 1}`,
+  name: `Model ${String(index + 1).padStart(2, '0')}`,
+  description: 'Best for everyday, complex tasks',
+  _meta: undefined,
+}));
+
+// More Agents and models than the desktop menu shows at once, so both lists scroll.
+export const composerLongListConfiguration: NonNullable<
+  ComposerProps['configuration']
+> = {
+  agents: [longModelAgent, ...composerLongAgentCatalog],
+  agent: longModelAgent.agent,
+  configOptions: longModelAgent.configOptions.map((option) =>
+    option.configId === longModelOption.configId && option.type === 'select'
+      ? {
+          ...option,
+          currentValue: 'development-model-1',
+          options: composerLongModelList,
+        }
+      : option,
+  ),
+  onAgentChange: () => {},
+  onConfigChange: () => {},
+  checkout: { branch: 'main', newWorktree: false },
+};
