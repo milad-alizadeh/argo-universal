@@ -15,7 +15,7 @@ const configuration = composerUnlistedEffortConfigurations[0];
 if (!configuration)
   throw new Error('Recorded catalog needs an Agent with effort.');
 const meta = {
-  title: 'Sessions/ComposerConfiguration',
+  title: 'Composer/ComposerConfiguration',
   component: ComposerAgentModelControl,
   args: { configuration, disabled: false },
 } satisfies Meta<typeof ComposerAgentModelControl>;

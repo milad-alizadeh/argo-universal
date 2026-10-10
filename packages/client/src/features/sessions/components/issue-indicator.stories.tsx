@@ -3,7 +3,7 @@ import { Variation, Variations } from '../../../lib/generic/variations';
 import { IssueIndicator } from './issue-indicator';
 
 const meta = {
-  title: 'Shared/IssueIndicator',
+  title: 'Sessions/IssueIndicator',
   component: IssueIndicator,
   args: { number: 96 },
 } satisfies Meta<typeof IssueIndicator>;

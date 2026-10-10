@@ -9,7 +9,7 @@ import {
 } from './tool-call.mocks';
 
 const meta = {
-  title: 'Sessions/Feed/CommandRow',
+  title: 'Feed/CommandRow',
   component: CommandRow,
   args: { row: longOutputCommand },
 } satisfies Meta<typeof CommandRow>;

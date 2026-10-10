@@ -41,7 +41,7 @@ function SettingsPreview({
   );
 }
 const meta = {
-  title: 'Sessions/ComposerOptions',
+  title: 'Composer/ComposerOptions',
   component: ComposerOptions,
   parameters: { screenPreview: true },
   render: (args): React.JSX.Element => <SettingsPreview {...args} />,

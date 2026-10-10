@@ -13,13 +13,11 @@ import {
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
 import { ScreenHeaderMock } from '../../../../mocks/screen-header-mock';
-import { createSessionCountsMock } from '../../../../mocks/session-counts-mock';
-import { TrpcMocks } from '../../../../mocks/with-trpc-mocks';
 import { layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { sectionDestination } from '../../../lib/product/navigation/sections';
 import type { Section } from '../../../lib/product/navigation/sections';
-import { PhoneLayout } from '../screens/phone-layout';
+import { PhoneLayoutView } from './phone-layout-view';
 import { PhoneMenuButton } from './phone-menu-button';
 import { PhoneShell } from './phone-shell';
 import { PhoneShellFrame } from './phone-shell-frame.mocks';
@@ -52,30 +50,30 @@ function mountPhoneLayout(
   onNavigate: ReturnType<typeof fn>;
 } {
   const root = createRoot(element);
-  const counts = createSessionCountsMock({ attention, running: 0 });
   const onNavigate = fn();
   const render = async (section: Section): Promise<void> => {
     root.render(
       <SafeAreaProvider>
         <KeyboardProvider>
-          <TrpcMocks fixtures={counts.fixtures} connectionState="open">
-            <NavigationProvider navigate={onNavigate}>
-              <ScreenHeaderProvider header={ScreenHeaderMock}>
-                <View style={{ height: 600 }} className="w-full">
-                  <PhoneLayout destination={sectionDestination(section)}>
-                    <View testID="phone-shell-content" className="flex-1">
-                      <ScreenHeader
-                        title={shellSections[section].title}
-                        left={<PhoneMenuButton />}
-                      />
-                      <Text>{shellSections[section].title} content</Text>
-                    </View>
-                  </PhoneLayout>
-                </View>
-                <PortalHost />
-              </ScreenHeaderProvider>
-            </NavigationProvider>
-          </TrpcMocks>
+          <NavigationProvider navigate={onNavigate}>
+            <ScreenHeaderProvider header={ScreenHeaderMock}>
+              <View style={{ height: 600 }} className="w-full">
+                <PhoneLayoutView
+                  destination={sectionDestination(section)}
+                  attentionCount={attention}
+                >
+                  <View testID="phone-shell-content" className="flex-1">
+                    <ScreenHeader
+                      title={shellSections[section].title}
+                      left={<PhoneMenuButton />}
+                    />
+                    <Text>{shellSections[section].title} content</Text>
+                  </View>
+                </PhoneLayoutView>
+              </View>
+              <PortalHost />
+            </ScreenHeaderProvider>
+          </NavigationProvider>
         </KeyboardProvider>
       </SafeAreaProvider>,
     );

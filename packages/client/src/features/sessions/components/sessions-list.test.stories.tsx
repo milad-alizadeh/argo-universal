@@ -1,26 +1,23 @@
 import { sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor } from 'storybook/test';
-import { createSessionListUpdatesMock } from '../../../../mocks/session-list-updates-mock';
-import {
-  sessionsListProps,
-  largeSessions,
-} from '../../../../mocks/sessions-list-mock';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
-import { SessionsScreen } from '../screens/sessions-screen';
 import {
   delayFooterLayout,
   getDelayedFooterLayouts,
   installFooterLayoutDelay,
 } from './delayed-footer-layout.mocks';
 import { SessionsList } from './sessions-list';
+import { sessionsListProps, largeSessions } from './sessions-list.mocks';
 import { renderingSessions } from './sessions-rendering.mocks';
 
 const exampleProjectName = 'Example Project';
+const sessionsScrollId = 'sessions-scroll';
 const expandedAttribute = 'aria-expanded';
 
 const onNewSession = fn();
@@ -52,17 +49,6 @@ const meta = {
 } satisfies Meta<typeof SessionsList>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-const insertion = createSessionListUpdatesMock({
-  first: { sessions: largeSessions.slice(0, 12), nextCursor: null },
-});
-const pagination = createSessionListUpdatesMock({
-  first: { sessions: largeSessions.slice(0, 20), nextCursor: '20' },
-  '20': { sessions: largeSessions.slice(20, 40), nextCursor: '40' },
-  '40': { sessions: largeSessions.slice(40, 60), nextCursor: '60' },
-  '60': { sessions: largeSessions.slice(60, 80), nextCursor: '80' },
-  '80': { sessions: largeSessions.slice(80, 100), nextCursor: null },
-});
 
 export const MemoizedRows: Story = {
   name: 'Controlled selection and activity',
@@ -149,10 +135,37 @@ export const ProjectActionsDark: Story = {
   globals: { mode: 'dark' },
 };
 
+const insertedSession = {
+  ...sessionRows.idle,
+  sessionId: 'new-session-1',
+  title: 'New Session 1',
+  activity: 'Session created',
+  activityAt: 3000,
+};
+
+// A list whose rows change when the story adds a Session, as a live update does.
+function InsertingList({
+  args,
+}: {
+  args: React.ComponentProps<typeof SessionsList>;
+}): React.JSX.Element {
+  const [sessions, setSessions] = useState(largeSessions.slice(0, 12));
+  return (
+    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+      <Pressable
+        role="button"
+        onPress={() => setSessions([insertedSession, ...sessions.slice(0, 12)])}
+      >
+        <Text>Insert Session fixture</Text>
+      </Pressable>
+      <SessionsList {...args} sessions={sessions} />
+    </View>
+  );
+}
+
 export const InsertSessionWithoutOverlap: Story = {
-  parameters: { screenPreview: true, trpc: insertion.fixtures },
-  beforeEach: () => insertion.reset(),
-  render: () => <SessionsScreen query="" archived={false} />,
+  parameters: { screenPreview: true },
+  render: (args) => <InsertingList args={args} />,
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,
@@ -179,20 +192,9 @@ export const InsertSessionWithoutOverlap: Story = {
       }
       requestAnimationFrame(sample);
     });
-    const newSession = {
-      ...sessionRows.idle,
-      sessionId: 'new-session-1',
-      title: 'New Session 1',
-      activity: 'Session created',
-      activityAt: 3000,
-    };
-    insertion.respondWith({
-      first: {
-        sessions: [newSession, ...largeSessions.slice(0, 12)],
-        nextCursor: null,
-      },
-    });
-    insertion.publish({ type: 'changed', session: newSession });
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Insert Session fixture' }),
+    );
     const inserted = await canvas.findByRole('button', {
       name: 'New Session 1, Idle',
     });
@@ -228,7 +230,7 @@ export const FirstAndLastRowsReachable: Story = {
   play: async ({ canvas }) => {
     // At a phone's size twelve Sessions overflow the list, so it can scroll.
     if ('__vitest_browser__' in globalThis) await settleViewport(390);
-    const scroll = canvas.getByTestId('sessions-scroll');
+    const scroll = canvas.getByTestId(sessionsScrollId);
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,
     });
@@ -264,25 +266,68 @@ export const FirstAndLastRowsReachableDark: Story = {
   globals: { mode: 'dark' },
 };
 
+const pageLength = 20;
+
+// A list that fetches the next page of Sessions when the end is reached, held until released.
+function PagedList({
+  args,
+  hold,
+}: {
+  args: React.ComponentProps<typeof SessionsList>;
+  hold: { current: Promise<void> | undefined };
+}): React.JSX.Element {
+  const [count, setCount] = useState(pageLength);
+  const [fetching, setFetching] = useState(false);
+  const fetchingRef = useRef(false);
+  const loadMore = useCallback(() => {
+    if (fetchingRef.current || count >= largeSessions.length) return;
+    fetchingRef.current = true;
+    setFetching(true);
+    void (hold.current ?? Promise.resolve()).then(() => {
+      setCount((current) => current + pageLength);
+      fetchingRef.current = false;
+      setFetching(false);
+    });
+  }, [count, hold]);
+  return (
+    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+      <SessionsList
+        {...args}
+        sessions={largeSessions.slice(0, count)}
+        isFetchingNextPage={fetching}
+        onEndReached={loadMore}
+      />
+    </View>
+  );
+}
+
+const heldPage: { current: Promise<void> | undefined } = {
+  current: undefined,
+};
+let releasePage: (() => void) | undefined;
+
 export const PaginationSpinnerVisible: Story = {
   beforeEach: async () => {
-    pagination.reset();
+    heldPage.current = undefined;
     const restore = delayFooterLayout();
     await settleViewport(390);
     return () => {
-      pagination.release();
+      releasePage?.();
+      heldPage.current = undefined;
       restore();
     };
   },
-  parameters: { screenPreview: true, trpc: pagination.fixtures },
-  render: () => <SessionsScreen query="" archived={false} />,
+  parameters: { screenPreview: true },
+  render: (args) => <PagedList args={args} hold={heldPage} />,
   play: async ({ canvas }) => {
-    const scroll = await canvas.findByTestId('sessions-scroll');
+    const scroll = await canvas.findByTestId(sessionsScrollId);
     await waitFor(() =>
       expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight),
     );
     const initialHeight = scroll.scrollHeight;
-    pagination.hold();
+    heldPage.current = new Promise<void>((resolve) => {
+      releasePage = resolve;
+    });
     scroll.scrollTop = initialHeight;
     const spinner = await canvas.findByRole('progressbar', {
       name: 'Loading more Sessions',
@@ -297,7 +342,7 @@ export const PaginationSpinnerVisible: Story = {
       },
       { timeout: 1000 },
     );
-    pagination.release();
+    releasePage?.();
     await waitFor(
       () => expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument(),
       { timeout: 3000 },
@@ -310,4 +355,49 @@ export const PaginationSpinnerVisible: Story = {
 export const PaginationSpinnerVisibleDark: Story = {
   ...PaginationSpinnerVisible,
   globals: { mode: 'dark' },
+};
+
+export const LargeListRendersWindow: Story = {
+  parameters: { screenPreview: true },
+  render: (args) => (
+    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+      <SessionsList {...args} sessions={largeSessions} />
+    </View>
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Large Session 0')).toBeVisible();
+    await expect(canvas.queryByText('Large Session 1999')).toBeNull();
+    await expect(
+      canvas.getAllByRole('button', { name: /^Large Session \d+, Idle$/ })
+        .length,
+    ).toBeLessThan(100);
+  },
+};
+
+export const ScrollFade: Story = {
+  parameters: { screenPreview: true },
+  render: (args) => (
+    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+      <SessionsList {...args} sessions={largeSessions.slice(0, 40)} />
+    </View>
+  ),
+  play: async ({ canvas }) => {
+    if ('__vitest_browser__' in globalThis) await settleViewport(390);
+    const scroll = await canvas.findByTestId(sessionsScrollId);
+    scroll.scrollTop = 0;
+    await waitFor(() =>
+      expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
+    );
+    await waitFor(() =>
+      expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
+    );
+    scroll.scrollTop = 200;
+    await waitFor(() =>
+      expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
+    );
+    scroll.scrollTop = scroll.scrollHeight;
+    await waitFor(() =>
+      expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
+    );
+  },
 };
