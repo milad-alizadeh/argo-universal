@@ -28,6 +28,11 @@ const canApplyLifecycleEvent = (
     'xstate.done.actor.closeAcp': 'closing',
     'xstate.error.actor.closeAcp': 'closing',
     'xstate.done.actor.awaitAcpRelease': 'retainingCleanup',
+    'xstate.done.actor.publishInterruptedTurn': 'interrupting',
+    'xstate.error.actor.publishInterruptedTurn': 'interrupting',
+    'xstate.after.agentRestartDelay.session.open.acp.recovering': 'recovering',
+    'xstate.done.actor.reopenAcp': 'reopening',
+    'xstate.error.actor.reopenAcp': 'reopening',
     'xstate.after.feedFlushLimit.session.open.acp.flushing': 'flushing',
   } as const;
   if (event.type in invoking) {
@@ -154,6 +159,27 @@ export const createAcpSessionModel = (
     { type: 'acp.failed', error: new Error('connection failed') },
     { type: 'xstate.done.actor.openAcp', actorId: 'openAcp', output: lease },
     {
+      type: 'xstate.done.actor.publishInterruptedTurn',
+      actorId: 'publishInterruptedTurn',
+      output: undefined,
+    },
+    {
+      type: 'xstate.error.actor.publishInterruptedTurn',
+      actorId: 'publishInterruptedTurn',
+      error: new Error('publication failed'),
+    },
+    { type: 'xstate.after.agentRestartDelay.session.open.acp.recovering' },
+    {
+      type: 'xstate.done.actor.reopenAcp',
+      actorId: 'reopenAcp',
+      output: lease,
+    },
+    {
+      type: 'xstate.error.actor.reopenAcp',
+      actorId: 'reopenAcp',
+      error: new Error('recovery failed'),
+    },
+    {
       type: 'xstate.error.actor.openAcp',
       actorId: 'openAcp',
       error: new Error('open failed'),
@@ -198,6 +224,7 @@ export const createAcpSessionModel = (
         failure: snapshot.context.failure !== null,
         stored: snapshot.context.stored,
         feedEnded: snapshot.context.feedEnded,
+        crashes: snapshot.context.agentCrashes.length,
         via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
       }),
   };

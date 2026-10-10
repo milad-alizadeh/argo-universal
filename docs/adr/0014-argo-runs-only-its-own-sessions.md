@@ -4,7 +4,9 @@ Argo shows and drives only Sessions that it started. A Session started in a term
 
 Taking over a running external Session is not possible: Claude Code's terminal owns its process, and Codex holds a writer lock per thread. Watching external Sessions is where old Argo grew out of control: liveness probes, status that decayed to `unknown`, polling, transcript parsing, and stray Guardian and Subagent threads. That work broke each time a vendor changed its files.
 
-Importing a stopped external Session, so that it becomes an Argo Session from then on, comes later with its own spec. Paseo, T3 Code and Nimbalyst stop at the same point. If an Argo Session continued in a terminal, Argo shows a Notice and imports nothing.
+Importing a stopped external Session, so that it becomes an Argo Session from then on, comes later with its own spec. Paseo, T3 Code and Nimbalyst stop at the same point.
+
+Argo owns its workflow and its Feed history. It resumes an Argo-created Session through ACP resume without replay and never imports the Agent's transcript again. Work continued in another app is not synchronized into the Feed: Argo does not read native transcript files and does not promise to detect outside continuation, so the earlier Notice for a Session continued in a terminal is withdrawn. After an interrupted Turn, the Feed says output may be missing and Argo never resends the prompt (owner, 2026-10-09, #345).
 
 ## Considered Options
 

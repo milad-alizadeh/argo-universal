@@ -2,11 +2,12 @@ import {
   InitialConfigOption,
   type SessionNewInput,
   SessionRecord,
+  TurnError,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { feedRow, session } from '@repo/db/schema';
+import { feedRow, session, turn } from '@repo/db/schema';
 import { type Checkout, createCheckout, discardCheckout } from '@repo/git';
-import { eq, max } from 'drizzle-orm';
+import { and, desc, eq, max } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
 import { readWriterProjection, type WriterJob } from '../feed';
@@ -37,7 +38,12 @@ export interface SessionData {
   maxRevision: number;
   activityAt: number;
   nextPosition: number;
+  // The latest Turn, when it was interrupted and its Feed does not yet say output may be missing.
+  undisclosedInterruptedTurnId: string | null;
 }
+
+export const interruptionDisclosureId = (turnId: string): string =>
+  `${turnId}:interrupted`;
 
 // The Session row waits until its Agent is ready.
 export async function createSessionCheckout(
@@ -65,6 +71,7 @@ export async function createSessionCheckout(
     maxRevision: 0,
     activityAt: Date.now(),
     nextPosition: 0,
+    undisclosedInterruptedTurnId: null,
   };
 }
 
@@ -116,6 +123,40 @@ export async function discardSessionCheckout(
 
 const storedConfigValues = z.array(InitialConfigOption);
 
+const readLatestTurn = (
+  database: Database,
+  sessionId: string,
+): { id: string; error: unknown } | undefined =>
+  database
+    .select({ id: turn.id, error: turn.error })
+    .from(turn)
+    .where(eq(turn.sessionId, sessionId))
+    .orderBy(desc(turn.startedAt))
+    .limit(1)
+    .get();
+const hasFeedRow = (
+  database: Database,
+  sessionId: string,
+  id: string,
+): boolean =>
+  database
+    .select({ id: feedRow.id })
+    .from(feedRow)
+    .where(and(eq(feedRow.sessionId, sessionId), eq(feedRow.id, id)))
+    .get() !== undefined;
+const readUndisclosedInterruption = (
+  database: Database,
+  sessionId: string,
+): string | null => {
+  const latest = readLatestTurn(database, sessionId);
+  if (TurnError.safeParse(latest?.error).data?.code !== 'interrupted')
+    return null;
+  return latest &&
+    !hasFeedRow(database, sessionId, interruptionDisclosureId(latest.id))
+    ? latest.id
+    : null;
+};
+
 export async function loadSession(
   input: SessionInput,
   writer?: ActorRefFrom<typeof writerMachine>,
@@ -149,5 +190,9 @@ export async function loadSession(
     maxRevision: row.maxRevision,
     activityAt: row.activityAt,
     nextPosition: Math.max(position ?? -1, pendingFeed.highestPosition) + 1,
+    undisclosedInterruptedTurnId: readUndisclosedInterruption(
+      input.database,
+      input.sessionId,
+    ),
   };
 }

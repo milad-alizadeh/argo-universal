@@ -1,3 +1,4 @@
+import { CheckoutReleases } from './checkout-releases';
 import { AcpResourceEntry } from './resource-entry';
 import type {
   AcpOpenInput,
@@ -30,25 +31,40 @@ const createLaunchReuseKey = (launch: AgentLaunch): string =>
   JSON.stringify(launch);
 class EngineAcpResources implements AcpResources {
   private readonly entries = new Map<string, AcpResourceEntry>();
+  private readonly checkoutReleases: CheckoutReleases;
   private stopped = false;
-  public constructor(private readonly input: AcpResourceInput) {}
+  public constructor(private readonly input: AcpResourceInput) {
+    this.checkoutReleases = new CheckoutReleases(input.releaseTimeoutMs);
+  }
   public open = (opening: AcpOpenInput): Promise<AcpSessionLease> => {
     if (this.stopped)
       return Promise.reject(new Error('ACP resources are stopped'));
     const launch = captureLaunch(opening.launch);
-    return this.getOrStartResource(launch).open({ ...opening, launch });
+    return this.getOrStartResource(launch).open({ ...opening, launch }, () =>
+      this.checkoutReleases.confirm(opening.opening.params.cwd),
+    );
   };
   private getOrStartResource(launch: AgentLaunch): AcpResourceEntry {
     const key = createLaunchReuseKey(launch);
     const existing = this.entries.get(key);
     if (existing) return existing;
-    const entry = new AcpResourceEntry(this.input, launch);
+    const entry = new AcpResourceEntry(this.input, launch, (checkouts) =>
+      this.retireFailedGeneration(key, entry, checkouts),
+    );
     this.entries.set(key, entry);
     void entry
       .closed()
       .then(() => this.entries.delete(key))
       .catch(() => {});
     return entry;
+  }
+  private retireFailedGeneration(
+    key: string,
+    entry: AcpResourceEntry,
+    checkouts: readonly string[],
+  ): void {
+    if (this.entries.get(key) === entry) this.entries.delete(key);
+    this.checkoutReleases.retain(checkouts, entry.closed());
   }
   public async shutdown(): Promise<void> {
     this.stopped = true;

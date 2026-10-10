@@ -36,10 +36,7 @@ it('owned callback overflow reports resource failure and cannot release without 
       new Error('ACP pending request limit reached'),
     ),
   );
-  await expect(resources.open(createResourceOpening())).rejects.toThrow(
-    'unavailable',
-  );
-  await expect(lease.close()).rejects.toThrow('requires observed process exit');
+  await expect(lease.close()).rejects.toThrow('ACP connection closed');
   let released = false;
   const release = lease.released.then(() => {
     released = true;
