@@ -3,7 +3,6 @@ import type {
   AgentsCatalogSyncOutput,
 } from '@repo/contracts';
 import {
-  type UseQueryResult,
   type UseMutationResult,
   useMutation,
   useQuery,
@@ -16,25 +15,26 @@ import type { ClientError } from '../../trpc/context';
 import { useTRPC } from '../../trpc/context';
 
 export interface AgentCatalogState {
-  query: UseQueryResult<AgentsCatalogOutput, ClientError>;
+  catalog: AgentsCatalogOutput | undefined;
+  loading: boolean;
+  error: ClientError | null;
   refresh: () => void;
   refreshing: boolean;
-  syncError: ClientError | null;
 }
 
 export function useAgentCatalog(search: string): AgentCatalogState {
-  const query = useQuery(
-    useTRPC().agents.catalog.queryOptions(
-      { search },
-      { placeholderData: keepPreviousData },
-    ),
+  const catalogQuery = useTRPC().agents.catalog.queryOptions(
+    { search },
+    { placeholderData: keepPreviousData },
   );
+  const query = useQuery(catalogQuery);
   const refresh = useCatalogSync();
   return {
-    query,
+    catalog: query.data && catalogResult(query.data, refresh.error),
+    loading: query.isPending,
+    error: query.error,
     refresh: (): void => refresh.mutate(),
     refreshing: refresh.isPending || isCatalogSyncing(query.data),
-    syncError: refresh.error,
   };
 }
 
@@ -84,4 +84,16 @@ function useCatalogChanges(sync: CatalogSyncReset): void {
       onData: update,
     }),
   );
+}
+
+function catalogResult(
+  saved: AgentsCatalogOutput,
+  error: ClientError | null,
+): AgentsCatalogOutput {
+  if (!error) return saved;
+  return {
+    ...saved,
+    status: saved.fetchedAt === null ? 'unavailable' : 'stale',
+    error: error.message,
+  };
 }

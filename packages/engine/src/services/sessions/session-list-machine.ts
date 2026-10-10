@@ -9,7 +9,7 @@ import {
   setup,
 } from 'xstate';
 import type { FeedActorRef } from '../feed';
-import type { WriterJob } from '../feed';
+import type { WriterChange } from '../feed';
 import type { writerMachine } from '../feed';
 import type { RegistryActorRef } from './registry-machine';
 import type { SessionActorRef } from './session-machine';
@@ -28,7 +28,7 @@ export interface SessionListMachineInput {
   writer: ActorRefFrom<typeof writerMachine> | undefined;
   readRows: (sessionIds?: readonly string[]) => SessionListState;
   relatedSessionIds: (sessionIds: readonly string[]) => string[];
-  sessionIdsForJobs: (jobs: readonly WriterJob[]) => string[];
+  sessionIdsForChanges: (change: WriterChange) => string[];
 }
 type SessionListEvent =
   | { type: 'list.refresh'; sessionIds?: readonly string[] }
@@ -101,26 +101,15 @@ export const sessionListMachine = setup({
           error: (error): void => sendBack({ type: listFailedEvent, error }),
           complete: (): void => sendBack({ type: 'list.stop' }),
         });
-        let previous = new Set<WriterJob>();
-        const changedJobs = (jobs: readonly WriterJob[]): void => {
+        const writer = input.writer?.on('writer.changed', (change): void => {
           try {
-            const current = new Set(jobs);
-            const changed = [
-              ...jobs.filter((job): boolean => !previous.has(job)),
-              ...[...previous].filter((job): boolean => !current.has(job)),
-            ];
-            previous = current;
-            if (changed.length) refresh(input.sessionIdsForJobs(changed));
+            const ids = input.sessionIdsForChanges(change);
+            if (ids.length) refresh(ids);
           } catch (error) {
             sendBack({ type: listFailedEvent, error });
           }
-        };
-        const writer = input.writer?.subscribe({
-          next: (snapshot): void => changedJobs(snapshot.context.queue),
-          error: (): void => changedJobs([]),
         });
         connect();
-        changedJobs(input.writer?.getSnapshot().context.queue ?? []);
         return (): void => {
           registry.unsubscribe();
           writer?.unsubscribe();

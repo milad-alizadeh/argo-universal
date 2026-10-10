@@ -103,7 +103,7 @@ export const CopyControlFollowsHoverAndFocusWide =
 
 function copiesResource(width: number, code: string | undefined): Story {
   return {
-    args: { resource: embeddedResource, code },
+    args: { uri: embeddedResource.uri, code },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await expect(canvas.getByLabelText(embeddedResource.uri)).toBeVisible();

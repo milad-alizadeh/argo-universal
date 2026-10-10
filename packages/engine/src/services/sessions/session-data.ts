@@ -9,7 +9,7 @@ import { type Checkout, createCheckout, discardCheckout } from '@repo/git';
 import { eq, max } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
-import { applyQueuedSession, queuedFeedRows, type WriterJob } from '../feed';
+import { readWriterProjection, type WriterJob } from '../feed';
 import type { writerMachine } from '../feed';
 import { decodeStoredSession, storedSessionColumns } from './session-record';
 
@@ -125,15 +125,14 @@ export async function loadSession(
     .from(session)
     .where(eq(session.id, input.sessionId))
     .get();
-  const jobs = writer?.getSnapshot().context.queue ?? [];
-  const pending = applyQueuedSession({
-    row: stored && decodeStoredSession(stored),
-    sessionId: input.sessionId,
-    jobs,
-  });
+  const projection = readWriterProjection(writer);
+  const pending = projection.session(
+    stored && SessionRecord.parse(decodeStoredSession(stored)),
+    input.sessionId,
+  );
   if (!pending) throw new Error(`No Session ${input.sessionId}`);
-  const row = SessionRecord.parse(pending);
-  const queued = queuedFeedRows(jobs, input.sessionId);
+  const row = pending;
+  const pendingFeed = projection.feed(input.sessionId);
   const position = input.database
     .select({ highest: max(feedRow.position) })
     .from(feedRow)
@@ -149,12 +148,6 @@ export async function loadSession(
     epoch: row.epoch,
     maxRevision: row.maxRevision,
     activityAt: row.activityAt,
-    nextPosition:
-      Math.max(
-        position ?? -1,
-        ...queued.flatMap((job): number[] =>
-          job.rows.map((row): number => row.position),
-        ),
-      ) + 1,
+    nextPosition: Math.max(position ?? -1, pendingFeed.highestPosition) + 1,
   };
 }

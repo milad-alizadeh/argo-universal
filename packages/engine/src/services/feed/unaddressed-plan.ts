@@ -8,8 +8,8 @@ import {
   newestRows,
   storedFeedColumns,
 } from './feed-row';
-import type { WriterJob } from './writer-job';
 import type { writerMachine } from './writer-machine';
+import { readWriterProjection } from './writer-projection';
 
 type UnaddressedPlanRead = {
   database: Database;
@@ -31,13 +31,6 @@ export const selectUnaddressedPlanRow = (
   [...newestRows(rows).values()]
     .filter((row): row is PlanUpdate => isUnaddressedPlan(row, acpSessionId))
     .toSorted((first, second) => second.revision - first.revision)[0];
-const readQueuedSessionFeedRows = (
-  jobs: readonly WriterJob[],
-  sessionId: string,
-): SessionUpdate[] =>
-  jobs.flatMap((job) =>
-    job.type === 'feedRows' && job.sessionId === sessionId ? job.rows : [],
-  );
 const createUnaddressedPlanFilter = (
   input: UnaddressedPlanRead,
 ): SQL | undefined =>
@@ -70,10 +63,7 @@ export const readUnaddressedPlan = (
   input: UnaddressedPlanRead,
 ): PlanUpdate | undefined => {
   const stored = readStoredUnaddressedPlan(input);
-  const queued = readQueuedSessionFeedRows(
-    input.writer?.getSnapshot().context.queue ?? [],
-    input.sessionId,
-  );
+  const queued = readWriterProjection(input.writer).feed(input.sessionId).rows;
   return selectUnaddressedPlanRow(
     [...(stored ? [stored] : []), ...queued],
     input.acpSessionId,

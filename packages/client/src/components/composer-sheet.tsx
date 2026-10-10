@@ -1,20 +1,10 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import type { ReactElement, ReactNode } from 'react';
 import { useEffect } from 'react';
-import { ScrollView, type StyleProp, View, type ViewStyle } from 'react-native';
-import type { ButtonProps } from '#primitives/button';
+import { ScrollView, View } from 'react-native';
+import type { ComposerSheetProps } from './composer-sheet-layout';
 
-export interface ComposerSheetProps {
-  style?: StyleProp<ViewStyle>;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  // Called once the sheet has left the screen after closing.
-  onClosed: () => void;
-  trigger: ReactElement<ButtonProps>;
-  label: string;
-  children: ReactNode;
-}
+export type { ComposerSheetProps } from './composer-sheet-layout';
 
 export function ComposerSheet({
   style,

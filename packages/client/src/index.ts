@@ -1,5 +1,15 @@
 import type {} from './lib/reusables-compatibility';
 
+export {
+  AgentModelSheetChoices,
+  AgentModelSheetSettings,
+  ComposerSheetContent,
+  useSheetLabel,
+} from './components/agent-model-sheet';
+export {
+  type NativeSheets,
+  NativeSheetsProvider,
+} from './components/agent-model-sheet-context';
 export { DesktopLayout } from './screens/desktop-layout';
 export { PhoneLayout } from './screens/phone-layout';
 export { useConnection } from './connection/context';

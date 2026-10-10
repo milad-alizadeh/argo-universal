@@ -47,6 +47,7 @@ import { blobsFolderIn } from '../blob';
 import {
   acpToolCallRowId,
   findDatabaseWriter,
+  readWriterProjection,
   publishTurnContent,
   type FeedEvent,
   type FeedActorRef,
@@ -60,6 +61,12 @@ import {
   type AcpLifetimeEvent,
   type AcpSessionDependencies,
 } from './conversation/acp-lifetime';
+import {
+  chooseConfigValue,
+  currentModel,
+  keepHeldConfigChoices,
+  toConfigValues,
+} from './conversation/configuration';
 import {
   commitLocalPrompt,
   type LocalSubmission,
@@ -174,6 +181,7 @@ export interface SessionContext extends SessionData {
   pendingNativeStops: Set<Promise<void>>;
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
+  sessionInsertCommitted: Promise<'committed' | 'retrying' | 'failed'> | null;
   acpLifetime: AcpSessionLifetime;
   acpLease: AcpSessionLease | null;
   pendingSubmission: LocalSubmission | null;
@@ -197,23 +205,6 @@ const writer = ({
   system: AnyActorRef['system'];
   self: AnyActorRef;
 }): AnyActorRef => findDatabaseWriter(system) ?? self;
-
-// The values an Agent reconnects with, read from the options it last reported.
-const toConfigValues = (
-  configOptions: SessionConfigOption[],
-): AgentConfigValue[] =>
-  configOptions.map((option): AgentConfigValue => ({
-    configId: option.configId,
-    value: option.currentValue,
-  }));
-
-// The model the Agent runs with, which a Turn records.
-const currentModel = (configOptions: SessionConfigOption[]): string | null => {
-  const model = configOptions.find(
-    (option): boolean => option.category === 'model',
-  );
-  return model?.type === 'select' ? model.currentValue : null;
-};
 
 // A native Tool call's row is named by its id; an ACP one's is scoped to its ACP session.
 const permissionOutcomeChange = (
@@ -593,10 +584,21 @@ const sessionSetup = setup({
     // The Agent must be ready before the Session row is written.
     storeSession: enqueueActions(({ context, enqueue }): void => {
       if (context.input.kind !== 'new') return;
-      enqueue.assign({ stored: true });
+      const committed = Promise.withResolvers<
+        'committed' | 'retrying' | 'failed'
+      >();
+      enqueue.assign({
+        stored: true,
+        sessionInsertCommitted: committed.promise,
+      });
       enqueue.sendTo(writer, {
         type: writeFeedEvent,
         job: toSessionInsert(context.input, context),
+        committed: {
+          resolve: () => committed.resolve('committed'),
+          reject: (_error: unknown, retrying?: boolean) =>
+            committed.resolve(retrying ? 'retrying' : 'failed'),
+        },
       });
     }),
     persistTurn: enqueueActions(
@@ -1132,6 +1134,7 @@ export const sessionMachine = sessionSetup.createMachine({
     failure: null,
     pendingNativeStops: new Set(),
     stored: input.kind === 'existing',
+    sessionInsertCommitted: null,
     acpLifetime: new AcpSessionLifetime(input.acp, input.createId),
     acpLease: null,
     pendingSubmission: null,
@@ -1195,7 +1198,9 @@ export const sessionMachine = sessionSetup.createMachine({
           findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
             readWrittenRow({
               database: context.input.database,
-              writer: findDatabaseWriter(self.system),
+              pending: readWriterProjection(
+                findDatabaseWriter(self.system),
+              ).feedRow(context.sessionId, id),
               sessionId: context.sessionId,
               id,
             }),
@@ -1728,35 +1733,3 @@ export const sessionMachine = sessionSetup.createMachine({
   },
 });
 export type SessionActorRef = ActorRefFrom<typeof sessionMachine>;
-
-function chooseConfigValue(
-  options: SessionConfigOption[],
-  choice: AgentConfigValue,
-  held: boolean,
-): SessionConfigOption[] {
-  return options.map((option): SessionConfigOption => {
-    if (option.configId !== choice.configId) return option;
-    const _meta = {
-      ...option._meta,
-      argo: { ...option._meta?.argo, heldUntilNextTurn: held },
-    };
-    if (option.type === 'boolean')
-      return typeof choice.value === 'boolean'
-        ? { ...option, currentValue: choice.value, _meta }
-        : option;
-    return typeof choice.value === 'string'
-      ? { ...option, currentValue: choice.value, _meta }
-      : option;
-  });
-}
-
-function keepHeldConfigChoices(
-  options: SessionConfigOption[],
-  held: AgentConfigValue[],
-): SessionConfigOption[] {
-  return held.reduce(
-    (current, choice): SessionConfigOption[] =>
-      chooseConfigValue(current, choice, true),
-    options,
-  );
-}

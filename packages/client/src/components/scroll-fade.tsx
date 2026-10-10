@@ -83,11 +83,19 @@ export function ScrollFade({
 }
 
 // Which edges have content hidden past them, fed by a scroll view's events.
-export function useScrollFadeEdges(): {
+export function useScrollFadeEdges({
+  surfaceClassName,
+  onScroll,
+}: {
+  surfaceClassName?: string;
+  onScroll?: ScrollViewProps['onScroll'];
+} = {}): {
   edges: { top: boolean; bottom: boolean };
+  overlays: React.JSX.Element;
   onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   onContentSizeChange: (width: number, height: number) => void;
   onLayout: (event: LayoutChangeEvent) => void;
+  onViewportChange: (height: number) => void;
 } {
   const [edges, setEdges] = useState({ top: false, bottom: false });
   const metrics = useRef({ offset: 0, inset: 0, content: 0, viewport: 0 });
@@ -101,8 +109,9 @@ export function useScrollFadeEdges(): {
         : { top, bottom },
     );
   }, []);
-  const onScroll = useCallback(
-    ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { nativeEvent } = event;
       metrics.current = {
         offset: nativeEvent.contentOffset.y,
         inset: nativeEvent.contentInset?.top ?? 0,
@@ -110,8 +119,9 @@ export function useScrollFadeEdges(): {
         viewport: nativeEvent.layoutMeasurement.height,
       };
       update();
+      onScroll?.(event);
     },
-    [update],
+    [update, onScroll],
   );
   const onContentSizeChange = useCallback(
     (_width: number, height: number) => {
@@ -120,14 +130,33 @@ export function useScrollFadeEdges(): {
     },
     [update],
   );
-  const onLayout = useCallback(
-    ({ nativeEvent }: LayoutChangeEvent) => {
-      metrics.current.viewport = nativeEvent.layout.height;
+  const onViewportChange = useCallback(
+    (height: number) => {
+      metrics.current.viewport = height;
       update();
     },
     [update],
   );
-  return { edges, onScroll, onContentSizeChange, onLayout };
+  const onLayout = useCallback(
+    ({ nativeEvent }: LayoutChangeEvent) =>
+      onViewportChange(nativeEvent.layout.height),
+    [onViewportChange],
+  );
+  return {
+    edges,
+    overlays: (
+      <>
+        {edges.top && <ScrollFade edge="top" className={surfaceClassName} />}
+        {edges.bottom && (
+          <ScrollFade edge="bottom" className={surfaceClassName} />
+        )}
+      </>
+    ),
+    onScroll: handleScroll,
+    onContentSizeChange,
+    onLayout,
+    onViewportChange,
+  };
 }
 
 export interface ScrollFadeViewProps extends ScrollViewProps {
@@ -144,17 +173,14 @@ export function ScrollFadeView({
   onLayout,
   ...props
 }: ScrollFadeViewProps): React.JSX.Element {
-  const fade = useScrollFadeEdges();
+  const fade = useScrollFadeEdges({ surfaceClassName, onScroll });
   return (
     <View className={cn('relative min-h-0 flex-1', className)}>
       <ScrollView
         scrollEventThrottle={16}
         {...props}
         className="flex-1"
-        onScroll={(event) => {
-          fade.onScroll(event);
-          onScroll?.(event);
-        }}
+        onScroll={fade.onScroll}
         onContentSizeChange={(width, height) => {
           fade.onContentSizeChange(width, height);
           onContentSizeChange?.(width, height);
@@ -164,10 +190,7 @@ export function ScrollFadeView({
           onLayout?.(event);
         }}
       />
-      {fade.edges.top && <ScrollFade edge="top" className={surfaceClassName} />}
-      {fade.edges.bottom && (
-        <ScrollFade edge="bottom" className={surfaceClassName} />
-      )}
+      {fade.overlays}
     </View>
   );
 }

@@ -1,26 +1,7 @@
-import type {
-  CompactionUpdate,
-  Notice,
-  PlanMarkdown,
-  ResourceLink,
-} from '@repo/contracts';
+import type { CompactionUpdate, Notice, PlanMarkdown } from '@repo/contracts';
 import { recordedAcpContent } from './acp-feed-content';
 import { longPlanProposal } from './plan-proposal-mock';
 
-export const resourceReferences = [
-  {
-    type: 'resource_link',
-    name: 'Feed paging notes',
-    uri: 'file:///Users/milad/Developer/argo-universal/docs/research/feed-paging.md',
-    description:
-      'Why sequence cursors beat page offsets once rows arrive out of order.',
-  },
-  {
-    type: 'resource_link',
-    name: 'session-trace.json',
-    uri: 'mcp://observability/sessions/7f3c9a2e-41b8-4d0c/traces/session-trace.json',
-  },
-] satisfies ResourceLink[];
 export const embeddedResource = {
   name: 'paging.sql',
   uri: 'file:///Users/milad/Developer/argo-universal/packages/db/queries/paging.sql',
@@ -39,12 +20,7 @@ export const compactionStates = [
   {
     ...compaction,
     status: 'completed',
-    summary: [
-      {
-        type: 'text',
-        text: '## Session layout\n\nBuilt the Session layout. The Feed reader now uses sequence cursors.',
-      },
-    ],
+    summary: undefined,
   },
   {
     ...compaction,
