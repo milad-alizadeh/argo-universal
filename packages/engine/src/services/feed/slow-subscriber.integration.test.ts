@@ -12,7 +12,10 @@ const readMessageText = (
   let text = '';
   let gaps = 0;
   for (const event of events) {
-    if (event.type === 'row.upsert' && event.row.sessionUpdate === 'agent_message') {
+    if (
+      event.type === 'row.upsert' &&
+      event.row.sessionUpdate === 'agent_message'
+    ) {
       const block = event.row.content[0];
       text = block?.type === 'text' ? block.text : '';
     }
@@ -38,9 +41,9 @@ it('a subscriber that stops reading during a long message catches up whole witho
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
-  const slow = (
-    await host.caller.feed.subscribe({ ...created, after: null })
-  )[Symbol.asyncIterator]();
+  const slow = (await host.caller.feed.subscribe({ ...created, after: null }))[
+    Symbol.asyncIterator
+  ]();
   await slow.next();
   await host.caller.session.prompt({
     ...created,
@@ -48,11 +51,7 @@ it('a subscriber that stops reading during a long message catches up whole witho
   });
   await waitForAcpSessionIdle(host, created.sessionId);
   const received: FeedSubscribeOutput[] = [];
-  for (
-    let next = await slow.next();
-    !next.done;
-    next = await slow.next()
-  ) {
+  for (let next = await slow.next(); !next.done; next = await slow.next()) {
     received.push(next.value);
     if (next.value.type === 'snapshot' && next.value.snapshot.state === 'idle')
       break;

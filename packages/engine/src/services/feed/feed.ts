@@ -20,12 +20,12 @@ import {
   MovedRowDelivery,
 } from './feed-catch-up';
 import type { FeedActorRef } from './feed-machine';
-import { LiveFeedQueue } from './live-feed-queue';
 import {
   hydrateStoredFeedRow,
   readWrittenRow,
   storedFeedColumns,
 } from './feed-row';
+import { LiveFeedQueue } from './live-feed-queue';
 import { readWriterProjection } from './writer-projection';
 
 export interface FeedDeps extends FeedRowSources {

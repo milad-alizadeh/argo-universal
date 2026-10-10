@@ -35,8 +35,8 @@ const observeChildSpawn = (
     child.once('spawn', resolve);
     child.once('error', reject);
   });
-// One Agent frame may hold at most this many bytes; a larger one fails the connection with the SDK's MessageTooLargeError.
-const agentFrameLimit = 32 * 1024 * 1024;
+// One Agent frame may hold at most 32 MiB; a larger one fails the connection with the SDK's MessageTooLargeError.
+const agentFrameLimit = 33_554_432;
 const createAcpProtocolStream = (
   child: ChildProcessWithoutNullStreams,
 ): Stream =>

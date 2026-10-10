@@ -21,10 +21,15 @@ import {
   describeLostJobs,
   stampWriterJob,
   type WriterJob,
+  writeJobBlobFiles,
   writeJobs,
 } from './writer-job';
 
-type WriterBatchInput = { database: Database; jobs: WriterJob[] };
+type WriterBatchInput = {
+  database: Database;
+  blobsFolder?: string;
+  jobs: WriterJob[];
+};
 type WriterLogParameters = { line: string };
 const writeEvent = 'writer.write';
 
@@ -32,6 +37,8 @@ export interface WriterInput {
   database: Database;
   now: () => number;
   log?: (line: string) => void;
+  // Where content-addressed Blob files live (ADR-0005).
+  blobsFolder?: string;
 }
 
 interface WriterContext extends WriterInput {
@@ -53,6 +60,7 @@ const batchInput = ({
   context: WriterContext;
 }): WriterBatchInput => ({
   database: context.database,
+  blobsFolder: context.blobsFolder,
   jobs: context.queue.slice(0, context.batchSize),
 });
 
@@ -65,7 +73,10 @@ export const writerMachine = setup({
   },
   actors: {
     writeBatch: fromPromise<void, WriterBatchInput>(
-      async ({ input }): Promise<void> => writeJobs(input.database, input.jobs),
+      async ({ input }): Promise<void> => {
+        await writeJobBlobFiles(input.blobsFolder, input.jobs);
+        writeJobs(input.database, input.jobs);
+      },
     ),
   },
   actions: {

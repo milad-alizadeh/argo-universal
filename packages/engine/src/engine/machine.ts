@@ -244,6 +244,7 @@ export const engineMachine = setup({
             database: openDatabaseOf(context),
             now: context.now,
             log: (line: string): void => writeEngineLog(context.home, line),
+            blobsFolder: blobsFolderIn(context.home),
           }),
         },
         {

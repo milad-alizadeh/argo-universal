@@ -9,7 +9,9 @@ import {
   turn,
 } from '@repo/db/schema';
 import { and, eq, gt, inArray, sql } from 'drizzle-orm';
+import { writeBlobFile } from './blob-files';
 import { toFeedRowWrite } from './feed-row';
+import type { OutputBlob } from './updates/tool-output';
 import {
   applyCatalogSqlJob,
   isCatalogSqlJob,
@@ -31,6 +33,8 @@ export type WriterJob =
       activityAt?: number;
       // The blobs the job's prompt rows show.
       blobIds?: string[];
+      // Whole tool output the rows show as previews, stored before the rows.
+      blobs?: OutputBlob[];
     }
   | {
       type: 'sessionInsert';
@@ -87,6 +91,7 @@ export function writeJobs(
             .run();
           break;
         case 'feedRows': {
+          insertOutputBlobs(transaction, job);
           if (job.rows.length > 0)
             transaction
               .insert(feedRow)
@@ -102,7 +107,11 @@ export function writeJobs(
               })
               .run();
           // A ref keeps a blob from cleanup; a prompt naming no stored blob adds none.
-          if (job.blobIds?.length)
+          const blobIds = [
+            ...(job.blobIds ?? []),
+            ...(job.blobs ?? []).map((stored): string => stored.blob.blobId),
+          ];
+          if (blobIds.length > 0)
             transaction
               .insert(blobRef)
               .select(
@@ -112,7 +121,7 @@ export function writeJobs(
                     sessionId: sql<string>`${job.sessionId}`.as('session_id'),
                   })
                   .from(blob)
-                  .where(inArray(blob.id, job.blobIds)),
+                  .where(inArray(blob.id, blobIds)),
               )
               .onConflictDoNothing()
               .run();
@@ -170,6 +179,33 @@ export function writeJobs(
       }
     }
   });
+}
+
+type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
+
+function insertOutputBlobs(
+  transaction: Transaction,
+  job: Extract<WriterJob, { type: 'feedRows' }>,
+): void {
+  for (const { blob: stored } of job.blobs ?? [])
+    transaction
+      .insert(blob)
+      .values({ id: stored.blobId, mime: stored.mime, bytes: stored.bytes })
+      .onConflictDoNothing()
+      .run();
+}
+
+// Writes the files of the jobs' output Blobs, so their rows never name a missing file.
+export async function writeJobBlobFiles(
+  blobsFolder: string | undefined,
+  jobs: readonly WriterJob[],
+): Promise<void> {
+  for (const job of jobs)
+    if (job.type === 'feedRows')
+      for (const stored of job.blobs ?? []) {
+        if (!blobsFolder) throw new Error('Writer has no Blob folder');
+        await writeBlobFile(blobsFolder, stored.blob.blobId, stored.data);
+      }
 }
 
 const describedJobLimit = 20;

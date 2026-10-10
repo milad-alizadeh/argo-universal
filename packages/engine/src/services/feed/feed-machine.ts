@@ -16,11 +16,12 @@ import {
   type Feed,
   type FeedStreamEvent,
 } from './feed-change';
-import { promptBlobIds } from './feed-row';
+import { outputBlobsOf, promptBlobIds } from './feed-row';
 import type { FeedPublication } from './publication';
 import { prepareAcpFeedApplication } from './updates/application';
 import type { MessageStreams } from './updates/message-identity';
 import { settleFeedTurn } from './updates/settlement';
+import type { OutputBlob } from './updates/tool-output';
 import type { WriterCommit } from './writer-commit';
 import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
@@ -60,6 +61,8 @@ export interface FeedContext
   streamEvents: FeedStreamEvent[];
   rejectedChanges: number;
   messageStreams: MessageStreams;
+  // Whole tool output cut to a preview since the last write.
+  outputBlobs: OutputBlob[];
   unaddressedPlan?: { acpSessionId: string; rowId: string };
 }
 
@@ -119,6 +122,7 @@ const createRowsWriteRequest = ({
       maxRevision: context.maxRevision,
       activityAt: context.activityAt,
       blobIds: promptBlobIds(rows),
+      blobs: outputBlobsOf(rows, context.outputBlobs),
     } satisfies WriterJob,
   };
 };
@@ -264,6 +268,7 @@ export const feedMachine = setup({
           ),
         ),
       changedRowIds: [],
+      outputBlobs: [],
     }),
     log: ({ context }, params: FeedLogParameters): void => {
       console.error(`feed ${context.sessionId}: ${params.line}`);
@@ -286,6 +291,7 @@ export const feedMachine = setup({
     streamEvents: [],
     rejectedChanges: 0,
     messageStreams: {},
+    outputBlobs: [],
   }),
   initial: 'active',
   states: {

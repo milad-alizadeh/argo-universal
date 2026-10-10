@@ -47,6 +47,7 @@ const applyContentChange = (
     ...applyFeedChange(input.feed, assembled.change, input.turnId),
     streams: assembled.streams,
     diagnostics: assembled.diagnostics,
+    blobs: assembled.blobs,
     unaddressedPlan: assembled.unaddressedPlan,
   };
 };
@@ -77,6 +78,13 @@ const createAcpContentInput = (
   findUnaddressedPlan: context.findUnaddressedPlan,
   unaddressedPlan: context.unaddressedPlan,
 });
+const appendOutputBlobs = (
+  context: FeedContext,
+  result: Pick<ContentResult, 'blobs'>,
+): FeedContext['outputBlobs'] => [
+  ...context.outputBlobs,
+  ...(result.blobs ?? []),
+];
 const createAcceptedFeedState = (
   context: FeedContext,
   result: Extract<ContentResult, { feed: Feed }>,
@@ -88,6 +96,7 @@ const createAcceptedFeedState = (
   activityAt: context.now(),
   changedRowIds: [...new Set([...context.changedRowIds, id])],
   streamEvents: [...context.streamEvents, result.streamEvent],
+  outputBlobs: appendOutputBlobs(context, result),
 });
 const createAcceptedFeedEvents = (
   result: Extract<ContentResult, { feed: Feed }>,
