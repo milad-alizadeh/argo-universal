@@ -3,7 +3,7 @@ import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { SessionConfigOption as ArgoConfigOption } from '@repo/contracts';
 import { z } from 'zod';
 import { acpConfiguration } from './acp-configuration';
-import { createMockAdapter, type MockAgentScript } from './adapter';
+import { createAgentMetadata } from './metadata';
 import { isScenarioName, type ScenarioName } from './scenarios';
 
 export const AppFixtureOptions = z.object({
@@ -33,24 +33,15 @@ function fixtureProbe(options: z.output<typeof AppFixtureOptions>): AgentProbe {
   };
 }
 
-function createAppFixtureScript(
-  options: z.output<typeof AppFixtureOptions>,
-): MockAgentScript {
-  return {
-    probe: async (): Promise<AgentProbe> => fixtureProbe(options),
-    connect: (): never => {
-      throw new Error('App fixtures require the ACP process port');
-    },
-  };
-}
-
 export function createAppFixtureAdapter(
   identity: AgentIdentity,
   options: AppFixtureOptions = {},
-): ReturnType<typeof createMockAdapter> {
+): ReturnType<typeof createAgentMetadata> {
   return {
-    ...createMockAdapter(
-      createAppFixtureScript(AppFixtureOptions.parse(options)),
+    ...createAgentMetadata(
+      {
+        discovery: [{ result: fixtureProbe(AppFixtureOptions.parse(options)) }],
+      },
       identity.agent,
     ),
     agent: identity.agent,
@@ -62,8 +53,8 @@ export function createAppFixtureAdapter(
 export function createAppFixtureAdapters(
   identities: readonly AgentIdentity[],
   options: AppFixtureAgents = {},
-): ReturnType<typeof createMockAdapter>[] {
-  return identities.map((identity): ReturnType<typeof createMockAdapter> =>
+): ReturnType<typeof createAgentMetadata>[] {
+  return identities.map((identity): ReturnType<typeof createAgentMetadata> =>
     createAppFixtureAdapter(identity, options[identity.agent]),
   );
 }

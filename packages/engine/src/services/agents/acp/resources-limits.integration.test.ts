@@ -1,21 +1,21 @@
-import { fileURLToPath } from 'node:url';
+import { acpPermission } from '@repo/mocks/agent/permission-scenario';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { acpPermission } from '#mocks/acp-requests';
 import {
-  createResourcePeer,
   createResourceOpening,
   createResourceDestination,
   createResourceUpdate,
-  requireResourceProcessAt,
 } from '#mocks/acp-resource';
+import {
+  createScriptedAgentProcess,
+  requireScriptedProcessAt,
+} from '#mocks/scripted-agent';
 import { createAcpResources } from '../index';
 
-const agentScript = fileURLToPath(
-  new URL('../../../../mocks/acp-process.mts', import.meta.url),
-);
-
 it('owned callback overflow reports resource failure and cannot release without process exit', async () => {
-  const peer = createResourcePeer({ autoExit: false });
+  const peer = createScriptedAgentProcess({
+    steps: [],
+    autoExit: false,
+  });
   const resources = createAcpResources(peer);
   const failures: unknown[] = [];
   const pending = Promise.withResolvers<never>();
@@ -28,13 +28,10 @@ it('owned callback overflow reports resource failure and cannot release without 
       requestPermission: () => pending.promise,
     }),
   );
-  const process = requireResourceProcessAt(peer.processes);
+  const process = requireScriptedProcessAt(peer.processes);
   const answers = Array.from({ length: 17 }, () =>
-    process.connection.client
-      .request('session/request_permission', {
-        ...acpPermission,
-        sessionId: lease.sessionId,
-      })
+    process
+      .play([{ type: 'permission', request: acpPermission }], lease.sessionId)
       .catch((error: unknown): unknown => error),
   );
   await vi.waitFor(() =>
@@ -56,11 +53,19 @@ it('owned callback overflow reports resource failure and cannot release without 
 
 it('more than 64 early updates fail the opening resource instead of growing the buffer', async () => {
   const failures: unknown[] = [];
-  const peer = createResourcePeer({
-    newSession: async ({ client }) => {
-      for (let index = 0; index < 65; index += 1)
-        await client.notify('session/update', createResourceUpdate('early'));
-      return { sessionId: 'early' };
+  const peer = createScriptedAgentProcess({
+    steps: [],
+    responses: {
+      'session/new': [
+        {
+          result: { sessionId: 'early' },
+          steps: Array.from({ length: 65 }, () => ({
+            type: 'update' as const,
+            sessionId: 'early',
+            update: createResourceUpdate('early').update,
+          })),
+        },
+      ],
     },
   });
   const resources = createAcpResources(peer);
@@ -81,13 +86,9 @@ it('more than 64 early updates fail the opening resource instead of growing the 
 
 it('a resource refuses a 65th concurrent opening', async () => {
   const gate = Promise.withResolvers<void>();
-  let opened = 0;
-  const peer = createResourcePeer({
-    newSession: async () => {
-      await gate.promise;
-      opened += 1;
-      return { sessionId: `owned-${opened}` };
-    },
+  const peer = createScriptedAgentProcess({
+    steps: [],
+    responses: { 'session/new': [{ waitFor: gate.promise }] },
   });
   const resources = createAcpResources(peer);
   const openings = Array.from({ length: 64 }, () =>
@@ -111,17 +112,12 @@ it('an Agent frame over the 32 MiB limit fails its connection with the SDK limit
       failures.push(error);
     },
   });
-  const resources = createAcpResources();
-  onTestFinished(() => resources.shutdown());
-  const lease = await resources.open({
-    ...base,
-    launch: {
-      ...base.launch,
-      executable: process.execPath,
-      cwd: process.cwd(),
-      args: [agentScript],
-    },
+  const agent = createScriptedAgentProcess({
+    steps: [{ type: 'raw', frame: 'x'.repeat(32 * 1024 * 1024 + 1) }],
   });
+  const resources = createAcpResources(agent);
+  onTestFinished(() => resources.shutdown());
+  const lease = await resources.open(base);
   await expect(
     lease.agent.request('session/prompt', {
       sessionId: lease.sessionId,

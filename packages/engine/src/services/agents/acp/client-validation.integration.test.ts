@@ -1,6 +1,6 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import { expect, it, vi } from 'vitest';
-import { createAcpPeer, readAcpRequest } from '#mocks/acp-peer';
+import { createScriptedAgentWire } from '#mocks/scripted-agent';
 import { createAgentClient } from './client';
 
 it.each([
@@ -23,7 +23,12 @@ it.each([
   'keeps $label outside the typed Session ingress with one SDK diagnostic at most',
   async ({ method, params, diagnostics }) => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const peer = createAcpPeer();
+    const peer = createScriptedAgentWire({
+      steps: [],
+      responses: {
+        'session/new': [{ steps: [{ type: 'hold' }] }],
+      },
+    });
     const accepted: SessionNotification[] = [];
     const connection = createAgentClient({
       stream: peer.stream,
@@ -37,7 +42,7 @@ it.each([
       cwd: '/checkout',
       mcpServers: [],
     });
-    const request = await readAcpRequest(peer);
+    const request = await peer.readRequest();
     await peer.send([
       { jsonrpc: '2.0', method, params },
       {
@@ -82,7 +87,7 @@ it.each([
 ])(
   'returns a correlated SDK rejection for $label',
   async ({ method, params, code }) => {
-    const peer = createAcpPeer();
+    const peer = createScriptedAgentWire({ steps: [] });
     let permissionCalls = 0;
     const connection = createAgentClient({
       stream: peer.stream,
@@ -108,7 +113,12 @@ it.each([
 );
 
 it('rejects a malformed response envelope for its pending prompt', async () => {
-  const peer = createAcpPeer();
+  const peer = createScriptedAgentWire({
+    steps: [],
+    responses: {
+      'session/prompt': [{ steps: [{ type: 'hold' }] }],
+    },
+  });
   const connection = createAgentClient({
     stream: peer.stream,
     acceptSessionUpdate: () => {},
@@ -120,7 +130,7 @@ it('rejects a malformed response envelope for its pending prompt', async () => {
     prompt: [{ type: 'text', text: 'Start' }],
   });
   const rejection = prompt.catch((error: unknown) => error);
-  const request = await readAcpRequest(peer);
+  const request = await peer.readRequest();
   await peer.sendRaw(
     JSON.stringify({
       jsonrpc: '2.0',

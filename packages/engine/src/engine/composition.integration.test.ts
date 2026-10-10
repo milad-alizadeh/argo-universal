@@ -9,13 +9,14 @@ import type { SessionListUpdate, SessionUpdate } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { listBranches } from '@repo/git';
-import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
+import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { createAppFixtureAdapter } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
 import { waitFor } from 'xstate';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import {
   countDatabaseReads,
   insertSession,
@@ -24,18 +25,21 @@ import {
 import { startEngineTestHost } from '#mocks/engine';
 import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { createScriptedAgentLauncher } from '#mocks/scripted-agent';
+import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { writerMachine, findDatabaseWriter } from '../services/feed';
 
 const missingWriterMessage = 'Writer actor is missing';
 const engineStopEvent = 'engine.stop';
-const agentFeedEvent = 'agent.feed';
 const checkingTestsStatus = 'Checking the tests';
 const retryingStatus = 'Retrying (2 of 5)';
 const rejectedSessionListLog = 'sessions: rejected list shape #1';
 const writerWriteEvent = 'writer.write';
 const changedAloneTitle = 'Changed alone';
 const unwatchedTitle = 'Changed without watchers';
+const waitForCancelStep = 'wait-for-cancel';
+const allowTestsTitle = 'Allow tests?';
 
 type StoredColumnCase<Table, Column> = {
   agent: string;
@@ -66,20 +70,22 @@ type MalformedFeedCase = {
 };
 
 it.each(liveHeaderMocks)(
-  'shares live header and list activity for $agent after Feed writes',
+  'reads stored live-header rules through list and Feed snapshots for $agent',
   async ({ command, thought, retry, progress }): Promise<void> => {
     const { database, remove } = openTestDatabase();
     onTestFinished(remove);
-    let stream: MockAgentStream | undefined;
-    const adapter = createMockAdapter({
-      stream: (current): undefined => {
-        stream = current;
+    const completed = Promise.withResolvers<void>();
+    const input = scriptedEngineInput({
+      steps: [],
+      responses: {
+        'session/prompt': [
+          { waitFor: completed.promise },
+          { steps: [{ type: waitForCancelStep }] },
+        ],
       },
     });
-    const { createCaller } = await startEngineTestHost({
-      database,
-      adapters: [adapter],
-    });
+    const host = await startEngineTestHost({ database, ...input });
+    const { createCaller, engine } = host;
     const controller = new AbortController();
     onTestFinished((): void => controller.abort());
     const caller = createCaller({ signal: controller.signal });
@@ -108,21 +114,61 @@ it.each(liveHeaderMocks)(
           break;
       }
     };
-    const sendRow = (row: SessionUpdate): void => {
-      const {
-        sessionId: _sessionId,
-        turnId: _turnId,
-        position: _position,
-        revision: _revision,
-        ...update
-      } = row;
-      stream?.send({
-        type: agentFeedEvent,
-        change: { type: 'upsert', update },
+    let revision = 1;
+    const sendRow = async (row: SessionUpdate): Promise<void> => {
+      const activeTurn = database.$client
+        .prepare('SELECT id FROM turn WHERE session_id = ? AND status = ?')
+        .get('session-1', 'running');
+      if (typeof activeTurn?.id !== 'string')
+        throw new Error('Session has no running Turn');
+      revision += 1;
+      const writer = findDatabaseWriter(engine.system);
+      if (!writer) throw new Error(missingWriterMessage);
+      writer.send({
+        type: writerWriteEvent,
+        job: {
+          type: 'feedRows',
+          sessionId: 'session-1',
+          rows: [
+            { ...row, sessionId: 'session-1', turnId: activeTurn.id, revision },
+          ],
+          maxRevision: revision,
+          activityAt: Date.now(),
+        },
       });
+      await expect
+        .poll(
+          async () =>
+            (
+              await caller.feed.page({
+                sessionId: 'session-1',
+                direction: 'tail',
+              })
+            ).rows.find((stored) => stored.id === row.id)?.revision,
+        )
+        .toBe(revision);
+      await requireScriptedProcessAt(input.agent.processes).play(
+        [
+          {
+            type: 'update',
+            update: {
+              sessionUpdate: 'config_option_update',
+              configOptions: acpConfiguration.map((option) =>
+                option.type === 'select' && option.id === 'model'
+                  ? {
+                      ...option,
+                      currentValue: revision % 2 === 0 ? 'small' : 'large',
+                    }
+                  : option,
+              ),
+            },
+          },
+        ],
+        'owned-1',
+      );
     };
     await expectActivity('Working');
-    sendRow({
+    await sendRow({
       ...command,
       title: '',
       kind: 'execute',
@@ -130,9 +176,9 @@ it.each(liveHeaderMocks)(
       _meta: undefined,
     });
     await expectActivity('Running pnpm test');
-    sendRow(thought);
+    await sendRow(thought);
     await expectActivity(checkingTestsStatus);
-    sendRow(retry);
+    await sendRow(retry);
     await expectActivity(retryingStatus);
     // Settled rows have left the Feed actor by now; a fresh subscription must retain the retry.
     const reconnect = (
@@ -149,9 +195,9 @@ it.each(liveHeaderMocks)(
       },
     });
     for (const row of progress) {
-      sendRow(retry);
+      await sendRow(retry);
       await expectActivity(retryingStatus);
-      sendRow(row);
+      await sendRow(row);
       await expect
         .poll(async (): Promise<boolean> =>
           (
@@ -164,20 +210,36 @@ it.each(liveHeaderMocks)(
         .toBe(true);
       await expectActivity(checkingTestsStatus);
     }
-    sendRow({ ...command, status: 'completed', state: 'settled' });
+    await sendRow({ ...command, status: 'completed', state: 'settled' });
     await expectActivity(checkingTestsStatus);
-    stream?.send({
-      type: 'agent.permissionRequested',
-      request: {
-        toolCallId: command.toolCallId,
-        title: 'Allow tests?',
-        options: permissionOptions,
-      },
-    });
+    await requireScriptedProcessAt(input.agent.processes).play(
+      [
+        {
+          type: 'permission',
+          detached: true,
+          request: {
+            toolCall: {
+              toolCallId: command.toolCallId,
+              title: allowTestsTitle,
+            },
+            options: permissionOptions,
+          },
+        },
+      ],
+      'owned-1',
+    );
+    await expect
+      .poll(
+        async () =>
+          (await caller.session.list({ archived: false })).sessions[0]
+            ?.activity,
+      )
+      .toBe(allowTestsTitle);
     expect(
       (await caller.session.list({ archived: false })).sessions[0]?.activity,
-    ).toBe('Allow tests?');
-    stream?.send({ type: 'agent.turnEnded', stopReason: 'end_turn' });
+    ).toBe(allowTestsTitle);
+    completed.resolve();
+    await waitForAcpSessionIdle(host, 'session-1');
     await caller.session.prompt({
       sessionId: 'session-1',
       prompt: [{ type: 'text', text: 'Next Turn' }],
@@ -192,16 +254,9 @@ it.each(liveHeaderMocks)(
 it('keeps the Feed subscription open after malformed stored activity', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
-  let stream: MockAgentStream | undefined;
-  const adapter = createMockAdapter({
-    stream: (current): undefined => {
-      stream = current;
-    },
-  });
-  const { createCaller } = await startEngineTestHost({
-    database,
-    adapters: [adapter],
-  });
+  const input = scriptedEngineInput({ steps: [{ type: waitForCancelStep }] });
+  const host = await startEngineTestHost({ database, ...input });
+  const { createCaller } = host;
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
   const caller = createCaller({ signal: controller.signal });
@@ -238,13 +293,26 @@ it('keeps the Feed subscription open after malformed stored activity', async ():
     .mockImplementation((): void => {});
   onTestFinished((): void => reported.mockRestore());
   const next = subscription.next();
-  stream?.send({ type: 'agent.usage', usage: { used: 10, size: 100 } });
+  await requireScriptedProcessAt(input.agent.processes).play(
+    [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'config_option_update',
+          configOptions: acpConfiguration,
+        },
+      },
+    ],
+    'owned-1',
+  );
   await expect(next).resolves.toMatchObject({
     done: false,
     value: {
       type: 'snapshot',
       snapshot: {
-        usage: { used: 10, size: 100 },
+        configOptions: expect.arrayContaining([
+          expect.objectContaining({ configId: 'model', currentValue: 'large' }),
+        ]),
         liveHeader: { text: 'Working', source: { type: 'working' } },
       },
     },
@@ -254,10 +322,32 @@ it('keeps the Feed subscription open after malformed stored activity', async ():
     expect.anything(),
   );
   const following = subscription.next();
-  stream?.send({ type: 'agent.usage', usage: { used: 11, size: 100 } });
+  await requireScriptedProcessAt(input.agent.processes).play(
+    [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'config_option_update',
+          configOptions: acpConfiguration.map((option) =>
+            option.type === 'select' && option.id === 'model'
+              ? { ...option, currentValue: 'small' }
+              : option,
+          ),
+        },
+      },
+    ],
+    'owned-1',
+  );
   await expect(following).resolves.toMatchObject({
     done: false,
-    value: { type: 'snapshot', snapshot: { usage: { used: 11, size: 100 } } },
+    value: {
+      type: 'snapshot',
+      snapshot: {
+        configOptions: expect.arrayContaining([
+          expect.objectContaining({ configId: 'model', currentValue: 'small' }),
+        ]),
+      },
+    },
   });
   await expect(
     caller.feed.page({
@@ -292,7 +382,7 @@ it.each(
     onTestFinished((): void => reported.mockRestore());
     const { createCaller } = await startEngineTestHost({
       database,
-      adapters: [createMockAdapter({}, agent)],
+      ...scriptedEngineInput({ steps: [] }, agent),
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
@@ -356,7 +446,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
     onTestFinished((): void => reported.mockRestore());
     const { createCaller } = await startEngineTestHost({
       database,
-      adapters: [createMockAdapter({}, agent)],
+      ...scriptedEngineInput({ steps: [] }, agent),
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
@@ -387,7 +477,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
     onTestFinished((): void => reported.mockRestore());
     const { createCaller } = await startEngineTestHost({
       database,
-      adapters: [createMockAdapter({}, agent)],
+      ...scriptedEngineInput({ steps: [] }, agent),
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
@@ -414,31 +504,24 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
 it('serves live Session procedures and drains their Feed before closing the database', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
-  const adapter = createMockAdapter({
-    stream: (stream): undefined => {
-      stream.receive((command): void => {
-        if (command.type === 'agent.prompt')
-          stream.send({
-            type: agentFeedEvent,
-            change: {
-              type: 'upsert',
-              update: {
-                id: 'reply',
-                sessionUpdate: 'agent_message',
-                state: 'open',
-                messageId: 'reply',
-                content: [{ type: 'text', text: 'Hello from the Agent' }],
-              },
-            },
-          });
-      });
-    },
+  const input = scriptedEngineInput({
+    steps: [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          messageId: 'reply',
+          content: { type: 'text', text: 'Hello from the Agent' },
+        },
+      },
+      { type: waitForCancelStep },
+    ],
   });
   const {
     engine,
     createCaller,
     database: engineDatabase,
-  } = await startEngineTestHost({ database, adapters: [adapter] });
+  } = await startEngineTestHost({ database, ...input });
   const caller = createCaller();
   const { messageId } = await caller.session.prompt({
     sessionId: 'session-1',
@@ -448,7 +531,10 @@ it('serves live Session procedures and drains their Feed before closing the data
     await caller.feed.row({ sessionId: 'session-1', id: messageId }),
   ).toMatchObject({ sessionUpdate: 'user_message' });
   expect(
-    await caller.feed.row({ sessionId: 'session-1', id: 'reply' }),
+    await caller.feed.row({
+      sessionId: 'session-1',
+      id: '["agent_message","owned-1",["upstream","reply"]]',
+    }),
   ).toMatchObject({
     content: [{ type: 'text', text: 'Hello from the Agent' }],
   });
@@ -462,7 +548,7 @@ it('serves live Session procedures and drains their Feed before closing the data
   expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
   expect(database.select({ id: feedRow.id }).from(feedRow).all()).toEqual([
     { id: messageId },
-    { id: 'reply' },
+    { id: '["agent_message","owned-1",["upstream","reply"]]' },
   ]);
 });
 
@@ -492,7 +578,7 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
   });
   const { createCaller } = await startEngineTestHost({
     database,
-    adapters: [createMockAdapter()],
+    ...scriptedEngineInput(),
   });
   const caller = createCaller();
   const first = await caller.session.list({ archived: false, query: '%_' });
@@ -531,15 +617,14 @@ it('sends live list changes and attention/running counts through request and Tur
     parentSessionId: 'session-1',
     maxRevision: 1,
   });
-  let stream: MockAgentStream | undefined;
-  const adapter = createMockAdapter({
-    stream: (current): undefined => {
-      stream = current;
-    },
+  const completed = Promise.withResolvers<void>();
+  const input = scriptedEngineInput({
+    steps: [],
+    responses: { 'session/prompt': [{ waitFor: completed.promise }] },
   });
   const { engine, createCaller } = await startEngineTestHost({
     database,
-    adapters: [adapter],
+    ...input,
   });
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
@@ -567,35 +652,39 @@ it('sends live list changes and attention/running counts through request and Tur
     prompt: [{ type: 'text', text: 'Hello' }],
   });
   expect((await counts.next()).value).toEqual({ attention: 0, running: 1 });
-  expect(stream).toBeDefined();
-  stream?.send({
-    type: 'agent.permissionRequested',
-    request: {
-      toolCallId: 'permission',
-      title: 'Run a command',
-      options: permissionOptions,
-    },
-  });
+  await requireScriptedProcessAt(input.agent.processes).play(
+    [
+      {
+        type: 'permission',
+        detached: true,
+        request: {
+          toolCall: { toolCallId: 'permission', title: 'Run a command' },
+          options: permissionOptions,
+        },
+      },
+    ],
+    'owned-1',
+  );
   expect((await counts.next()).value).toEqual({ attention: 1, running: 1 });
   const pending = await caller.session.list({ archived: false });
   expect(pending.sessions[0]).toMatchObject({
     status: 'needs_input',
     activity: 'Run a command',
   });
-  stream?.send({
-    type: agentFeedEvent,
-    change: {
-      type: 'upsert',
-      update: {
-        id: 'answer',
-        sessionUpdate: 'agent_message',
-        state: 'settled',
-        messageId: 'answer',
-        content: [{ type: 'text', text: 'All done\nDetails' }],
+  await requireScriptedProcessAt(input.agent.processes).play(
+    [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          messageId: 'answer',
+          content: { type: 'text', text: 'All done\nDetails' },
+        },
       },
-    },
-  });
-  stream?.send({ type: 'agent.turnEnded', stopReason: 'end_turn' });
+    ],
+    'owned-1',
+  );
+  completed.resolve();
   expect((await counts.next()).value).toEqual({ attention: 1, running: 0 });
   await expect
     .poll(
@@ -632,7 +721,7 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promi
   );
   vi.stubEnv('ARGO_PROJECT_PATH', process.cwd());
   const { engine, createCaller } = await startEngineTestHost({
-    adapters: [createMockAdapter()],
+    ...scriptedEngineInput(),
     home: directory,
   });
   const caller = createCaller();
@@ -703,7 +792,7 @@ it('uses the newest Turn for failures and excludes interrupted Turns from Failed
     .run();
   const { createCaller } = await startEngineTestHost({
     database,
-    adapters: [createMockAdapter()],
+    ...scriptedEngineInput(),
   });
   const caller = createCaller();
   const rows = (await caller.session.list({ archived: false })).sessions;
@@ -734,7 +823,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
   onTestFinished(remove);
   const { engine, createCaller } = await startEngineTestHost({
     database,
-    adapters: [createMockAdapter()],
+    ...scriptedEngineInput(),
   });
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
@@ -790,7 +879,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     database: engineDatabase,
   } = await startEngineTestHost({
     database,
-    adapters: [createMockAdapter()],
+    ...scriptedEngineInput(),
   });
   const counted = countDatabaseReads(engineDatabase);
   const controllers = [
@@ -918,7 +1007,7 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
     database: engineDatabase,
   } = await startEngineTestHost({
     database,
-    adapters: [createMockAdapter()],
+    ...scriptedEngineInput(),
   });
   const counted = countDatabaseReads(engineDatabase);
   const controller = new AbortController();
@@ -978,7 +1067,7 @@ it('initializes a fresh list after all watchers leave and unwatched data changes
   onTestFinished(remove);
   const { engine, createCaller } = await startEngineTestHost({
     database,
-    adapters: [createMockAdapter()],
+    ...scriptedEngineInput(),
   });
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
@@ -1031,7 +1120,7 @@ it('pages current queued activity before the list publication delay', async (): 
     database: engineDatabase,
   } = await startEngineTestHost({
     database,
-    adapters: [createMockAdapter()],
+    ...scriptedEngineInput(),
   });
   engineDatabase.$client.exec(
     "CREATE TEMP TRIGGER pause_activity BEFORE UPDATE ON session BEGIN SELECT RAISE(FAIL, 'test write failure'); END",
@@ -1096,7 +1185,7 @@ it('updates a cached parent when its stored Subagent Turn changes', async (): Pr
   insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
   const { engine, createCaller } = await startEngineTestHost({
     database,
-    adapters: [createMockAdapter()],
+    ...scriptedEngineInput(),
   });
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
@@ -1189,7 +1278,7 @@ it.each(
     onTestFinished((): void => reported.mockRestore());
     const { createCaller } = await startEngineTestHost({
       database,
-      adapters: [createMockAdapter({}, agent)],
+      ...scriptedEngineInput({ steps: [] }, agent),
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
@@ -1231,7 +1320,7 @@ it.each(
     onTestFinished((): void => reported.mockRestore());
     const { createCaller } = await startEngineTestHost({
       database,
-      adapters: [createMockAdapter({}, agent)],
+      ...scriptedEngineInput({ steps: [] }, agent),
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });

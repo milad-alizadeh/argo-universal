@@ -1,21 +1,23 @@
+import type { RequestPermissionResponse } from '@agentclientprotocol/sdk';
+import { acpPermission } from '@repo/mocks/agent/permission-scenario';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { acpPermission } from '#mocks/acp-requests';
 import {
   createResourceOpening,
-  createResourcePeer,
   createResourceDestination,
-  requireResourceProcessAt,
   createResourceUpdate,
   observeAcpRelease,
 } from '#mocks/acp-resource';
-import { pauseAcpResponses } from '#mocks/acp-write-pressure';
+import {
+  createScriptedAgentProcess,
+  requireScriptedProcessAt,
+} from '#mocks/scripted-agent';
+import { pauseAcpResponses } from '#mocks/scripted-write-pressure';
 import { createAcpResources } from '../index';
 
 it('the close deadline bounds a blocked accepted write and retains ownership while preserving siblings', async () => {
-  let identity = 0;
-  const peer = createResourcePeer({
+  const peer = createScriptedAgentProcess({
+    steps: [],
     autoExit: false,
-    newSession: () => ({ sessionId: String(++identity) }),
   });
   let paused: ReturnType<typeof pauseAcpResponses> | undefined;
   const resources = createAcpResources({
@@ -47,14 +49,14 @@ it('the close deadline bounds a blocked accepted write and retains ownership whi
   );
   if (!paused) throw new Error('Missing pressured stream');
   onTestFinished(paused.resume);
-  const process = requireResourceProcessAt(peer.processes);
-  const permission = process.connection.client.request(
-    'session/request_permission',
-    {
-      ...acpPermission,
-      sessionId: lease.sessionId,
-    },
-  );
+  const process = requireScriptedProcessAt(peer.processes);
+  const answers: RequestPermissionResponse[] = [];
+  const permission = process
+    .play(
+      [{ type: 'permission', request: acpPermission, responses: answers }],
+      lease.sessionId,
+    )
+    .then(() => answers[0]);
   await vi.waitFor(() => expect(requested).toBe(true));
   const closing = lease.close().catch((error: unknown): unknown => error);
   await paused.entered;
@@ -70,9 +72,14 @@ it('the close deadline bounds a blocked accepted write and retains ownership whi
   await expect(resources.open(createResourceOpening())).rejects.toThrow(
     'unavailable',
   );
-  await process.connection.client.notify(
-    'session/update',
-    createResourceUpdate(sibling.sessionId),
+  await process.play(
+    [
+      {
+        type: 'update',
+        update: createResourceUpdate(sibling.sessionId).update,
+      },
+    ],
+    sibling.sessionId,
   );
   await vi.waitFor(() =>
     expect(updates).toEqual([createResourceUpdate(sibling.sessionId)]),

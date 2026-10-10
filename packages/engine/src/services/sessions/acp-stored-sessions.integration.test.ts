@@ -1,4 +1,7 @@
-import { RequestError } from '@agentclientprotocol/sdk';
+import type {
+  LoadSessionRequest,
+  PromptRequest,
+} from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { storedMessage } from '#mocks/feed';
@@ -30,20 +33,24 @@ const readStoredFeed = (
 ): ReturnType<typeof host.caller.feed.page> =>
   host.caller.feed.page({ sessionId: 'session-1', direction: 'tail' });
 
-const startEngineRefusingResume = (
-  agentSessionCalls: string[],
-): ReturnType<typeof startEngineWithStoredSession> =>
+const startEngineRefusingResume = (agentSessionCalls: {
+  loads: LoadSessionRequest[];
+  prompts: PromptRequest[];
+}): ReturnType<typeof startEngineWithStoredSession> =>
   startEngineWithStoredSession({
-    resumeSession: () => {
-      throw RequestError.resourceNotFound(nativeSessionId);
-    },
-    loadSession: ({ params }) => {
-      agentSessionCalls.push(`load ${params.sessionId}`);
-      return {};
-    },
-    prompt: ({ params }) => {
-      agentSessionCalls.push(`prompt ${params.sessionId}`);
-      return { stopReason: 'end_turn' };
+    steps: [],
+    responses: {
+      'session/resume': [
+        {
+          error: {
+            code: -32002,
+            message: 'Resource not found',
+            data: { uri: nativeSessionId },
+          },
+        },
+      ],
+      'session/load': [{ requests: agentSessionCalls.loads }],
+      'session/prompt': [{ requests: agentSessionCalls.prompts }],
     },
   });
 const promptStoredSession = (
@@ -55,29 +62,32 @@ const promptStoredSession = (
   });
 
 it('refuses a prompt to an old Session the Agent cannot resume with the Agent reason', async () => {
-  const host = await startEngineRefusingResume([]);
+  const host = await startEngineRefusingResume({ loads: [], prompts: [] });
 
   await expect(promptStoredSession(host)).rejects.toThrow('Resource not found');
 });
 
 it('keeps an unresumable old Session history as stored without loading or prompting an Agent session', async () => {
-  const agentSessionCalls: string[] = [];
+  const agentSessionCalls: {
+    loads: LoadSessionRequest[];
+    prompts: PromptRequest[];
+  } = { loads: [], prompts: [] };
   const host = await startEngineRefusingResume(agentSessionCalls);
 
   await promptStoredSession(host).catch(() => {});
 
   expect({ agentSessionCalls, feed: await readStoredFeed(host) }).toEqual({
-    agentSessionCalls: [],
+    agentSessionCalls: { loads: [], prompts: [] },
     feed: expect.objectContaining({ rows: storedHistory, maxRevision: 2 }),
   });
 });
 
 it('reading an old Session Feed starts no Agent process', async () => {
-  const host = await startEngineWithStoredSession({});
+  const host = await startEngineWithStoredSession({ steps: [] });
 
   expect({
     feed: await readStoredFeed(host),
-    processes: host.peer.processes.length,
+    processes: host.agent.processes.length,
   }).toEqual({
     feed: expect.objectContaining({ rows: storedHistory }),
     processes: 0,

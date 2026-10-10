@@ -1,16 +1,22 @@
-import type { PromptResponse, PromptRequest } from '@agentclientprotocol/sdk';
+import type { PromptRequest } from '@agentclientprotocol/sdk';
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { uploadBlob, blobsFolderIn } from '../blob';
 
 it('prompted creation uses the owned ACP Session and returns local acknowledgement before completion', async () => {
-  const completion = Promise.withResolvers<PromptResponse>();
+  const completion = Promise.withResolvers<void>();
   const received = Promise.withResolvers<PromptRequest>();
   const host = await startAcpEngine({
-    prompt: ({ params }) => {
-      received.resolve(params);
-      return completion.promise;
+    steps: [],
+    responses: {
+      'session/prompt': [
+        {
+          received,
+          waitFor: completion.promise,
+          result: { stopReason: 'end_turn' },
+        },
+      ],
     },
   });
   const created = await host.caller.session.new({
@@ -18,7 +24,7 @@ it('prompted creation uses the owned ACP Session and returns local acknowledgeme
     prompt: [{ type: 'text', text: 'Create and prompt' }],
   });
   const request = await received.promise;
-  completion.resolve({ stopReason: 'end_turn' });
+  completion.resolve();
   expect(request).toEqual({
     sessionId: 'owned-1',
     prompt: [{ type: 'text', text: 'Create and prompt' }],
@@ -33,17 +39,15 @@ it('prompted creation uses the owned ACP Session and returns local acknowledgeme
 it('a negotiated image prompt delivers every byte from the stored Blob', async () => {
   const received = Promise.withResolvers<PromptRequest>();
   const host = await startAcpEngine({
-    initialize: () => ({
+    initialize: {
       protocolVersion: 1,
       agentCapabilities: {
         promptCapabilities: { image: true },
         sessionCapabilities: { close: {} },
       },
-    }),
-    prompt: ({ params }) => {
-      received.resolve(params);
-      return { stopReason: 'end_turn' };
     },
+    steps: [],
+    responses: { 'session/prompt': [{ received }] },
   });
   const bytes = new Uint8Array([137, 80, 78, 71, 1, 2, 3, 255]);
   const image = await uploadBlob(
@@ -70,28 +74,12 @@ it('a negotiated image prompt delivers every byte from the stored Blob', async (
 });
 
 it('local acknowledgement follows durable Session, Turn and prompt before the Agent finishes', async () => {
-  const completion = Promise.withResolvers<PromptResponse>();
-  const received = Promise.withResolvers<{
-    request: PromptRequest;
-    durable: unknown[];
-  }>();
+  const completion = Promise.withResolvers<void>();
+  const received = Promise.withResolvers<PromptRequest>();
   const host = await startAcpEngine({
-    prompt: ({ params: request }) => {
-      received.resolve({
-        request,
-        durable: [
-          host.database.$client
-            .prepare('SELECT vendor_session_id FROM session WHERE id = ?')
-            .get(created.sessionId),
-          host.database.$client
-            .prepare('SELECT status FROM turn WHERE session_id = ?')
-            .get(created.sessionId),
-          host.database.$client
-            .prepare('SELECT session_update FROM feed_row WHERE session_id = ?')
-            .get(created.sessionId),
-        ],
-      });
-      return completion.promise;
+    steps: [],
+    responses: {
+      'session/prompt': [{ received, waitFor: completion.promise }],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -99,8 +87,21 @@ it('local acknowledgement follows durable Session, Turn and prompt before the Ag
     ...created,
     prompt: [{ type: 'text', text: 'Save this prompt' }],
   });
-  const observed = await received.promise;
-  completion.resolve({ stopReason: 'end_turn' });
+  const observed = {
+    request: await received.promise,
+    durable: [
+      host.database.$client
+        .prepare('SELECT vendor_session_id FROM session WHERE id = ?')
+        .get(created.sessionId),
+      host.database.$client
+        .prepare('SELECT status FROM turn WHERE session_id = ?')
+        .get(created.sessionId),
+      host.database.$client
+        .prepare('SELECT session_update FROM feed_row WHERE session_id = ?')
+        .get(created.sessionId),
+    ],
+  };
+  completion.resolve();
   expect(acknowledged.messageId).toMatch(/:user$/);
   expect(observed).toEqual({
     request: {
@@ -117,23 +118,22 @@ it('local acknowledgement follows durable Session, Turn and prompt before the Ag
 
 it('wire-earlier chunks are visible before completion publishes idle', async () => {
   const host = await startAcpEngine({
-    prompt: async ({ params: request, client }) => {
-      await client.notify('session/update', {
-        sessionId: request.sessionId,
+    steps: [
+      {
+        type: 'update',
         update: {
           sessionUpdate: 'agent_message_chunk',
           content: { type: 'text', text: 'First ' },
         },
-      });
-      await client.notify('session/update', {
-        sessionId: request.sessionId,
+      },
+      {
+        type: 'update',
         update: {
           sessionUpdate: 'agent_message_chunk',
           content: { type: 'text', text: 'reply.' },
         },
-      });
-      return { stopReason: 'end_turn' };
-    },
+      },
+    ],
   });
   const created = await host.caller.session.new(emptySessionInput);
   const feed = (await host.caller.feed.subscribe({ ...created, after: null }))[
@@ -171,40 +171,4 @@ it('wire-earlier chunks are visible before completion publishes idle', async () 
       ),
   ).toBe(true);
   await feed.return?.();
-});
-
-it('a rejected prompt commit never dispatches after the Writer retries', async () => {
-  const prompts: PromptRequest[] = [];
-  const host = await startAcpEngine({
-    prompt: ({ params: request }) => {
-      prompts.push(request);
-      return { stopReason: 'end_turn' };
-    },
-  });
-  const created = await host.caller.session.new(emptySessionInput);
-  host.database.$client.exec(
-    "CREATE TRIGGER reject_feed BEFORE INSERT ON feed_row BEGIN SELECT RAISE(FAIL, 'prompt storage unavailable'); END",
-  );
-  await expect(
-    host.caller.session.prompt({
-      ...created,
-      prompt: [{ type: 'text', text: 'Never dispatch' }],
-    }),
-  ).rejects.toThrow('could not be saved');
-  host.database.$client.exec('DROP TRIGGER reject_feed');
-  await expect
-    .poll(
-      () =>
-        host.database.$client
-          .prepare('SELECT status, stop_reason FROM turn WHERE session_id = ?')
-          .get(created.sessionId),
-      { timeout: 10000 },
-    )
-    .toEqual({ status: 'ended', stop_reason: 'error' });
-  expect(prompts).toEqual([]);
-  expect(
-    host.database.$client
-      .prepare('SELECT status, stop_reason FROM turn WHERE session_id = ?')
-      .get(created.sessionId),
-  ).toEqual({ status: 'ended', stop_reason: 'error' });
 });

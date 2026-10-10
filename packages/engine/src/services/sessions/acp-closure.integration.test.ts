@@ -1,23 +1,28 @@
 import { existsSync } from 'node:fs';
+import type {
+  NewSessionRequest,
+  PromptRequest,
+} from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { requireResourceProcessAt } from '#mocks/acp-resource';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const prompt = [{ type: 'text' as const, text: 'Start' }];
 
 it('a Session whose close timed out keeps its Checkout and refuses work until its shared process exit is observed', async () => {
-  const checkouts = new Map<string, string>();
+  const openings: NewSessionRequest[] = [];
   const host = await startAcpEngine({
+    steps: [],
     autoExit: false,
     closeTimeoutMs: 50,
-    newSession: ({ params }) => {
-      const sessionId = `owned-${checkouts.size + 1}`;
-      checkouts.set(sessionId, params.cwd);
-      return { sessionId };
+    responses: {
+      'session/new': [{ requests: openings }],
+      'session/close': [
+        { sessionId: 'owned-1', steps: [{ type: 'hold' }] },
+        { sessionId: 'owned-2', result: {} },
+      ],
     },
-    closeSession: ({ params }) =>
-      params.sessionId === 'owned-1' ? new Promise(() => {}) : {},
   });
   const stuck = await host.caller.session.new({
     ...emptySessionInput,
@@ -29,9 +34,9 @@ it('a Session whose close timed out keeps its Checkout and refuses work until it
   );
   await host.caller.session.prompt({ ...sibling, prompt });
   await waitForAcpSessionIdle(host, sibling.sessionId);
-  const process = requireResourceProcessAt(host.peer.processes);
+  const process = requireScriptedProcessAt(host.agent.processes);
   const retained = {
-    checkout: existsSync(checkouts.get('owned-1') ?? ''),
+    checkout: existsSync(openings[0]?.cwd ?? ''),
     terminations: process.terminations,
   };
   const siblingClosing = host.caller.session.close(sibling);
@@ -53,18 +58,16 @@ it('a Session whose close timed out keeps its Checkout and refuses work until it
 });
 
 it('Engine shutdown during a running Turn terminates its ACP process once and waits for its observed exit', async () => {
-  const received = Promise.withResolvers<void>();
+  const received = Promise.withResolvers<PromptRequest>();
   const host = await startAcpEngine({
     autoExit: false,
-    prompt: () => {
-      received.resolve();
-      return new Promise(() => {});
-    },
+    steps: [{ type: 'hold' }],
+    responses: { 'session/prompt': [{ received, steps: [{ type: 'hold' }] }] },
   });
   const { sessionId } = await host.caller.session.new(emptySessionInput);
   await host.caller.session.prompt({ sessionId, prompt });
   await received.promise;
-  const process = requireResourceProcessAt(host.peer.processes);
+  const process = requireScriptedProcessAt(host.agent.processes);
   let stopped = false;
   const stopping = host.stop().then(() => {
     stopped = true;

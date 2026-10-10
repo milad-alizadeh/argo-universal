@@ -1,10 +1,10 @@
 import type {
   CancelNotification,
-  PromptResponse,
+  PromptRequest,
 } from '@agentclientprotocol/sdk';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { sendAcpFeedUpdates, waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 // More settled tool rows than the Writer keeps queued for the Feed.
 const toolCount = 300;
@@ -14,27 +14,32 @@ const holdToolRows =
 it('a Turn that outgrows the Writer while storage fails is cancelled, and prompts wait for a commit', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
   const cancels: CancelNotification[] = [];
-  const cancelled = Promise.withResolvers<PromptResponse>();
-  let prompts = 0;
+  const cancelled = Promise.withResolvers<CancelNotification>();
+  const prompts: PromptRequest[] = [];
   const host = await startAcpEngine({
-    cancel: ({ params }) => {
-      cancels.push(params);
-      cancelled.resolve({ stopReason: 'cancelled' });
+    steps: [],
+    notifications: {
+      'session/cancel': { received: cancelled, requests: cancels },
     },
-    prompt: async (request) => {
-      prompts += 1;
-      if (prompts > 1) return { stopReason: 'end_turn' };
-      host.database.$client.exec(holdToolRows);
-      await sendAcpFeedUpdates(
-        request,
-        Array.from({ length: toolCount }, (_, index) => ({
-          sessionUpdate: 'tool_call' as const,
-          toolCallId: `tool-${index}`,
-          title: `Read ${index}`,
-          status: 'completed' as const,
-        })),
-      );
-      return cancelled.promise;
+    responses: {
+      'session/prompt': [
+        {
+          requests: prompts,
+          steps: [
+            ...Array.from({ length: toolCount }, (_, index) => ({
+              type: 'update' as const,
+              update: {
+                sessionUpdate: 'tool_call' as const,
+                toolCallId: `tool-${index}`,
+                title: `Read ${index}`,
+                status: 'completed' as const,
+              },
+            })),
+            { type: 'wait-for-cancel' },
+          ],
+        },
+        { requests: prompts },
+      ],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -43,13 +48,14 @@ it('a Turn that outgrows the Writer while storage fails is cancelled, and prompt
       ...created,
       prompt: [{ type: 'text', text }],
     });
+  host.database.$client.exec(holdToolRows);
   try {
     await prompt('Read everything');
     await cancelled.promise;
     await waitForAcpSessionIdle(host, created.sessionId);
     expect(cancels).toHaveLength(1);
     await expect(prompt('Again')).rejects.toThrow(/could not be saved/);
-    expect(prompts).toBe(1);
+    expect(prompts).toHaveLength(1);
   } finally {
     host.database.$client.exec('DROP TRIGGER IF EXISTS hold_tool_rows');
   }
@@ -69,5 +75,5 @@ it('a Turn that outgrows the Writer while storage fails is cancelled, and prompt
     });
   await prompt('Once storage recovers');
   await waitForAcpSessionIdle(host, created.sessionId);
-  expect(prompts).toBe(2);
+  expect(prompts).toHaveLength(2);
 }, 30_000);

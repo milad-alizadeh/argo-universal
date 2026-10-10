@@ -1,5 +1,5 @@
-import type { AgentAdapter, AgentProbe } from '@repo/agents';
-import { createMockAdapter } from '@repo/mocks/agent';
+import type { AgentProbe } from '@repo/agents';
+import { createAgentMetadata } from '@repo/mocks/agent';
 import { afterEach, expect, it, vi, type VitestUtils } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { agentProbeMachine } from './agent-probe-machine';
@@ -10,11 +10,12 @@ afterEach((): VitestUtils => vi.useRealTimers());
 
 it('shares a running probe with a refresh, and probes again once settled', async (): Promise<void> => {
   const settle = Promise.withResolvers<AgentProbe>();
-  const probe = vi.fn<AgentAdapter['probe']>(
-    (): Promise<AgentProbe> => settle.promise,
-  );
+  const adapter = createAgentMetadata({
+    discovery: [{ result: settle.promise }],
+  });
+  const probe = vi.spyOn(adapter, 'probe');
   const actor = createActor(agentProbeMachine, {
-    input: { adapter: createMockAdapter({ probe }) },
+    input: { adapter },
   }).start();
   actor.send({ type: refreshProbeEvent });
   expect(probe).toHaveBeenCalledTimes(1);
@@ -30,9 +31,8 @@ it('shares a running probe with a refresh, and probes again once settled', async
 it('reports an Agent whose probe fails as unavailable, with the reason', async (): Promise<void> => {
   const actor = createActor(agentProbeMachine, {
     input: {
-      adapter: createMockAdapter({
-        probe: (): Promise<AgentProbe> =>
-          Promise.reject(new Error('Spawn failed')),
+      adapter: createAgentMetadata({
+        discovery: [{ error: 'Spawn failed' }],
       }),
     },
   }).start();
@@ -47,19 +47,16 @@ it('reports an Agent whose probe fails as unavailable, with the reason', async (
 
 it('aborts a probe with no answer after the timeout and reports the Agent as unavailable', async (): Promise<void> => {
   vi.useFakeTimers();
-  let signal: AbortSignal | undefined;
+  const signals: AbortSignal[] = [];
   const actor = createActor(agentProbeMachine, {
     input: {
-      adapter: createMockAdapter({
-        probe: (probeSignal): Promise<AgentProbe> => {
-          signal = probeSignal;
-          return new Promise((): void => {});
-        },
+      adapter: createAgentMetadata({
+        discovery: [{ signals, waitFor: new Promise(() => {}) }],
       }),
     },
   }).start();
   await vi.advanceTimersByTimeAsync(20_000);
-  expect(signal?.aborted).toBe(true);
+  expect(signals[0]?.aborted).toBe(true);
   expect(actor.getSnapshot()).toMatchObject({
     value: 'probed',
     context: {

@@ -1,16 +1,19 @@
+import type { RequestPermissionResponse } from '@agentclientprotocol/sdk';
+import { acpPermission } from '@repo/mocks/agent/permission-scenario';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { acpPermission } from '#mocks/acp-requests';
 import {
-  createResourcePeer,
   createResourceOpening,
   createResourceDestination,
-  requireResourceProcessAt,
 } from '#mocks/acp-resource';
-import { pauseAcpResponses } from '#mocks/acp-write-pressure';
+import {
+  createScriptedAgentProcess,
+  requireScriptedProcessAt,
+} from '#mocks/scripted-agent';
+import { pauseAcpResponses } from '#mocks/scripted-write-pressure';
 import { createAcpResources } from '../index';
 
 it('closure waits for an accepted responder to finish writing under stream pressure', async () => {
-  const peer = createResourcePeer();
+  const peer = createScriptedAgentProcess({ steps: [] });
   let paused: ReturnType<typeof pauseAcpResponses> | undefined;
   const resources = createAcpResources({
     launchProcess: async (launch) => {
@@ -32,12 +35,14 @@ it('closure waits for an accepted responder to finish writing under stream press
   );
   if (!paused) throw new Error('Missing pressured stream');
   onTestFinished(paused.resume);
-  const process = requireResourceProcessAt(peer.processes);
-  const permission = process.connection.client
-    .request('session/request_permission', {
-      ...acpPermission,
-      sessionId: lease.sessionId,
-    })
+  const process = requireScriptedProcessAt(peer.processes);
+  const answers: RequestPermissionResponse[] = [];
+  const permission = process
+    .play(
+      [{ type: 'permission', request: acpPermission, responses: answers }],
+      lease.sessionId,
+    )
+    .then(() => answers[0])
     .catch((error: unknown): unknown => error);
   await vi.waitFor(() => expect(requested).toBe(true));
   const closing = lease.close();
@@ -50,7 +55,10 @@ it('closure waits for an accepted responder to finish writing under stream press
 });
 
 it('a rejected accepted response write is surfaced and release still requires process exit', async () => {
-  const peer = createResourcePeer({ autoExit: false });
+  const peer = createScriptedAgentProcess({
+    steps: [],
+    autoExit: false,
+  });
   let paused: ReturnType<typeof pauseAcpResponses> | undefined;
   const resources = createAcpResources({
     launchProcess: async (launch) => {
@@ -76,12 +84,14 @@ it('a rejected accepted response write is surfaced and release still requires pr
   );
   if (!paused) throw new Error('Missing pressured stream');
   onTestFinished(paused.resume);
-  const process = requireResourceProcessAt(peer.processes);
-  const permission = process.connection.client
-    .request('session/request_permission', {
-      ...acpPermission,
-      sessionId: lease.sessionId,
-    })
+  const process = requireScriptedProcessAt(peer.processes);
+  const answers: RequestPermissionResponse[] = [];
+  const permission = process
+    .play(
+      [{ type: 'permission', request: acpPermission, responses: answers }],
+      lease.sessionId,
+    )
+    .then(() => answers[0])
     .catch((error: unknown): unknown => error);
   await vi.waitFor(() => expect(requested).toBe(true));
   const closing = lease.close().catch((error: unknown): unknown => error);

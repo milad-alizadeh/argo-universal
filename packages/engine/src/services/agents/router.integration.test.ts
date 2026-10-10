@@ -1,15 +1,17 @@
-import type { AgentAdapter, AgentProbe } from '@repo/agents';
-import { createMockAdapter } from '@repo/mocks/agent';
+import type { AgentProbe } from '@repo/agents';
+import { createAgentMetadata } from '@repo/mocks/agent';
 import { expect, it, vi } from 'vitest';
 import { agentCatalog, availableAgentProbe } from '#mocks/agent-catalog';
 import { startEngineTestHost } from '#mocks/engine';
 
 it('answers concurrent availability queries from one discovery result', async (): Promise<void> => {
-  const discoverAgent = vi.fn<AgentAdapter['probe']>(
-    async () => availableAgentProbe,
+  const adapter = createAgentMetadata(
+    { discovery: [{ result: availableAgentProbe }] },
+    'agent-one',
   );
+  const discoverAgent = vi.spyOn(adapter, 'probe');
   const { caller } = await startEngineTestHost({
-    adapters: [createMockAdapter({ probe: discoverAgent }, 'agent-one')],
+    adapters: [adapter],
   });
   const results = await Promise.all([
     caller.agents.list(),
@@ -27,12 +29,13 @@ it('answers concurrent availability queries from one discovery result', async ()
   expect(discoverAgent).toHaveBeenCalledTimes(1);
 });
 
-it('answers a later availability query without another native probe', async (): Promise<void> => {
-  const discoverAgent = vi.fn<AgentAdapter['probe']>(
-    async () => availableAgentProbe,
-  );
+it('answers a later availability query without another discovery handshake', async (): Promise<void> => {
+  const adapter = createAgentMetadata({
+    discovery: [{ result: availableAgentProbe }],
+  });
+  const discoverAgent = vi.spyOn(adapter, 'probe');
   const { caller } = await startEngineTestHost({
-    adapters: [createMockAdapter({ probe: discoverAgent })],
+    adapters: [adapter],
   });
   await caller.agents.list();
   const catalog = await caller.agents.list();
@@ -41,23 +44,28 @@ it('answers a later availability query without another native probe', async (): 
 });
 
 it('refreshes every Agent before returning its current availability', async (): Promise<void> => {
-  const discoverFirstAgent = vi
-    .fn<AgentAdapter['probe']>()
-    .mockResolvedValueOnce({
-      availability: 'not_signed_in',
-      installStep: 'Sign in',
-      configOptions: [],
-    })
-    .mockResolvedValue(availableAgentProbe);
-  const discoverSecondAgent = vi.fn<AgentAdapter['probe']>(
-    async () => availableAgentProbe,
+  const first = createAgentMetadata(
+    {
+      discovery: [
+        {
+          result: {
+            availability: 'not_signed_in',
+            installStep: 'Sign in',
+            configOptions: [],
+          },
+        },
+        { result: availableAgentProbe },
+      ],
+    },
+    'agent-one',
   );
-  const { caller } = await startEngineTestHost({
-    adapters: [
-      createMockAdapter({ probe: discoverFirstAgent }, 'agent-one'),
-      createMockAdapter({ probe: discoverSecondAgent }, 'agent-two'),
-    ],
-  });
+  const second = createAgentMetadata(
+    { discovery: [{ result: availableAgentProbe }] },
+    'agent-two',
+  );
+  const discoverFirstAgent = vi.spyOn(first, 'probe');
+  const discoverSecondAgent = vi.spyOn(second, 'probe');
+  const { caller } = await startEngineTestHost({ adapters: [first, second] });
   await caller.agents.list();
   const catalog = await caller.agents.list({ refresh: true });
   expect(catalog.map(({ availability }) => availability)).toEqual([
@@ -68,18 +76,22 @@ it('refreshes every Agent before returning its current availability', async (): 
   expect(discoverSecondAgent).toHaveBeenCalledTimes(2);
 });
 
-it('preserves native extension metadata in the public Agent catalog', async (): Promise<void> => {
+it('preserves Agent extension metadata in the public Agent catalog', async (): Promise<void> => {
   const firstAgent = agentCatalog[0];
   if (!firstAgent) throw new Error('Agent catalog is missing');
   const { caller } = await startEngineTestHost({
     adapters: [
       {
-        ...createMockAdapter(
+        ...createAgentMetadata(
           {
-            probe: async (): Promise<AgentProbe> => ({
-              availability: 'available',
-              configOptions: firstAgent.configOptions,
-            }),
+            discovery: [
+              {
+                result: {
+                  availability: 'available',
+                  configOptions: firstAgent.configOptions,
+                },
+              },
+            ],
           },
           'agent-one',
         ),
@@ -96,12 +108,16 @@ it.each(['not_installed', 'not_signed_in'] as const)(
   async (availability): Promise<void> => {
     const { caller } = await startEngineTestHost({
       adapters: [
-        createMockAdapter({
-          probe: async (): Promise<AgentProbe> => ({
-            availability,
-            installStep: 'Install or sign in',
-            configOptions: [],
-          }),
+        createAgentMetadata({
+          discovery: [
+            {
+              result: {
+                availability,
+                installStep: 'Install or sign in',
+                configOptions: [],
+              },
+            },
+          ],
         }),
       ],
     });
@@ -115,11 +131,11 @@ it('returns Agents in registry order when later discovery finishes first', async
   const firstDiscovery = Promise.withResolvers<AgentProbe>();
   const { caller } = await startEngineTestHost({
     adapters: [
-      createMockAdapter(
-        { probe: (): Promise<AgentProbe> => firstDiscovery.promise },
+      createAgentMetadata(
+        { discovery: [{ result: firstDiscovery.promise }] },
         'first',
       ),
-      createMockAdapter({}, 'second'),
+      createAgentMetadata({}, 'second'),
     ],
   });
   const catalog = caller.agents.list();

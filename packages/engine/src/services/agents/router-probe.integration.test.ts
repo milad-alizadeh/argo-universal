@@ -1,5 +1,5 @@
-import type { AgentAdapter, AgentProbe } from '@repo/agents';
-import { createMockAdapter } from '@repo/mocks/agent';
+import type { AgentProbe } from '@repo/agents';
+import { createAgentMetadata } from '@repo/mocks/agent';
 import { afterEach, expect, it, vi } from 'vitest';
 import { availableAgentProbe } from '#mocks/agent-catalog';
 import { startEngineTestHost } from '#mocks/engine';
@@ -8,20 +8,18 @@ afterEach((): void => {
   vi.useRealTimers();
 });
 
-it('shares one pending native discovery between concurrent refresh queries', async (): Promise<void> => {
+it('shares one pending Agent discovery between concurrent refresh queries', async (): Promise<void> => {
   const signInAgain = 'Sign in again';
   const refreshed = Promise.withResolvers<AgentProbe>();
   const refreshStarted = Promise.withResolvers<void>();
-  const discoverAgent = vi
-    .fn<AgentAdapter['probe']>()
-    .mockResolvedValueOnce(availableAgentProbe)
-    .mockImplementation((): Promise<AgentProbe> => {
-      refreshStarted.resolve();
-      return refreshed.promise;
-    });
-  const { caller } = await startEngineTestHost({
-    adapters: [createMockAdapter({ probe: discoverAgent })],
+  const adapter = createAgentMetadata({
+    discovery: [
+      { result: availableAgentProbe },
+      { result: refreshed.promise, started: refreshStarted },
+    ],
   });
+  const discoverAgent = vi.spyOn(adapter, 'probe');
+  const { caller } = await startEngineTestHost({ adapters: [adapter] });
   await caller.agents.list();
   const catalogs = Promise.all([
     caller.agents.list({ refresh: true }),
@@ -40,13 +38,12 @@ it('shares one pending native discovery between concurrent refresh queries', asy
   expect(discoverAgent).toHaveBeenCalledTimes(2);
 });
 
-it('reports failed native discovery through the public unavailable result', async (): Promise<void> => {
+it('reports failed Agent discovery through the public unavailable result', async (): Promise<void> => {
   const { caller } = await startEngineTestHost({
     adapters: [
-      createMockAdapter(
+      createAgentMetadata(
         {
-          probe: (): Promise<AgentProbe> =>
-            Promise.reject(new Error('Spawn failed')),
+          discovery: [{ error: 'Spawn failed' }],
         },
         'broken',
       ),
@@ -64,17 +61,14 @@ it('reports failed native discovery through the public unavailable result', asyn
   ]);
 });
 
-it('aborts timed-out native discovery before returning an unavailable result', async (): Promise<void> => {
+it('aborts timed-out Agent discovery before returning an unavailable result', async (): Promise<void> => {
   vi.useFakeTimers();
-  const discoverySignal = Promise.withResolvers<AbortSignal>();
+  const signals: AbortSignal[] = [];
   const { caller } = await startEngineTestHost({
     adapters: [
-      createMockAdapter(
+      createAgentMetadata(
         {
-          probe: (signal): Promise<AgentProbe> => {
-            discoverySignal.resolve(signal);
-            return new Promise((): void => {});
-          },
+          discovery: [{ signals, waitFor: new Promise(() => {}) }],
         },
         'slow',
       ),
@@ -92,25 +86,18 @@ it('aborts timed-out native discovery before returning an unavailable result', a
       configOptions: [],
     },
   ]);
-  expect((await discoverySignal.promise).aborted).toBe(true);
+  expect(signals[0]?.aborted).toBe(true);
 });
 
-it('cancels pending native discovery when the owning registry shuts down', async (): Promise<void> => {
-  const abortedDiscovery = Promise.withResolvers<void>();
+it('cancels pending Agent discovery when the owning registry shuts down', async (): Promise<void> => {
+  const signals: AbortSignal[] = [];
   const { stop } = await startEngineTestHost({
     adapters: [
-      createMockAdapter({
-        probe: (signal): Promise<AgentProbe> => {
-          signal.addEventListener(
-            'abort',
-            (): void => abortedDiscovery.resolve(),
-            { once: true },
-          );
-          return new Promise((): void => {});
-        },
+      createAgentMetadata({
+        discovery: [{ signals, waitFor: new Promise(() => {}) }],
       }),
     ],
   });
   await stop();
-  await expect(abortedDiscovery.promise).resolves.toBeUndefined();
+  expect(signals[0]?.aborted).toBe(true);
 });

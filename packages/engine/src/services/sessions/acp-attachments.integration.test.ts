@@ -29,17 +29,15 @@ it.each(agentAdapters.map(({ agent }) => agent))(
     const received = Promise.withResolvers<PromptRequest>();
     const host = await startAcpEngine(
       {
-        initialize: () => ({
+        steps: [],
+        initialize: {
           protocolVersion: 1,
           agentCapabilities: {
             promptCapabilities: { embeddedContext: true },
             sessionCapabilities: { close: {} },
           },
-        }),
-        prompt: ({ params }) => {
-          received.resolve(params);
-          return { stopReason: 'end_turn' };
         },
+        responses: { 'session/prompt': [{ received }] },
       },
       undefined,
       agent,
@@ -99,10 +97,8 @@ it.each([
   async ({ prompt, reason }) => {
     const requests: PromptRequest[] = [];
     const host = await startAcpEngine({
-      prompt: ({ params }) => {
-        requests.push(params);
-        return { stopReason: 'end_turn' };
-      },
+      steps: [],
+      responses: { 'session/prompt': [{ requests }] },
     });
     const created = await host.caller.session.new(emptySessionInput);
     await expect(

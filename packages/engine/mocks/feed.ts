@@ -1,8 +1,4 @@
-import type {
-  AgentMessage,
-  FeedChange,
-  SessionUpdateState,
-} from '@repo/contracts';
+import type { AgentMessage } from '@repo/contracts';
 
 // A stored message row of `session-1` at `position`, last changed at `revision`.
 export const storedMessage = (
@@ -18,15 +14,4 @@ export const storedMessage = (
   sessionUpdate: 'agent_message',
   messageId: `message-${position}`,
   content: [{ type: 'text', text: `Message ${position}` }],
-});
-
-export const messageChange = (state: SessionUpdateState): FeedChange => ({
-  type: 'upsert',
-  update: {
-    id: 'reply',
-    messageId: 'reply',
-    sessionUpdate: 'agent_message',
-    state,
-    content: [{ type: 'text', text: 'Hello' }],
-  },
 });

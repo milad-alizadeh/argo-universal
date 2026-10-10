@@ -2,16 +2,20 @@ import { randomUUID } from 'node:crypto';
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { request } from 'node:http';
 import { join } from 'node:path';
-import { agentAdapters, type VendorCommand } from '@repo/agents';
+import type {
+  PromptRequest,
+  NewSessionRequest,
+} from '@agentclientprotocol/sdk';
+import { agentAdapters } from '@repo/agents';
 import { BlobUploadOutput, maxBlobUploadBytes } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
-import { createMockAdapter, mockReady } from '@repo/mocks/agent';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { z } from 'zod';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
+import { scriptedEngineInput } from '#mocks/scripted-engine';
 import type { RegistryActorRef } from '../services/sessions';
 import { startHttpServer, type HttpServerOptions } from './http-server';
 
@@ -219,26 +223,22 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
   'does not send the waiting %s prompt after HTTP closure begins',
   async (agent): Promise<void> => {
     await closeServer();
-    const startup = Promise.withResolvers<typeof mockReady>();
-    const began = Promise.withResolvers<void>();
-    const commands: VendorCommand[] = [];
+    const startup = Promise.withResolvers<void>();
+    const began = Promise.withResolvers<NewSessionRequest>();
+    const commands: PromptRequest[] = [];
     const host = await startEngineTestHost({
       database,
       runtimeDirectory: home,
-      adapters: [
-        createMockAdapter(
-          {
-            connect: (): Promise<typeof mockReady> => {
-              began.resolve();
-              return startup.promise;
-            },
-            stream: (stream): undefined => {
-              stream.receive((command): number => commands.push(command));
-            },
+      ...scriptedEngineInput(
+        {
+          steps: [],
+          responses: {
+            'session/new': [{ received: began, waitFor: startup.promise }],
+            'session/prompt': [{ requests: commands }],
           },
-          agent,
-        ),
-      ],
+        },
+        agent,
+      ),
     });
     database.update(session).set({ agent }).run();
     closeServer = host.stop;
@@ -253,7 +253,7 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
     }).catch((): null => null);
     await began.promise;
     const closing = closeServer();
-    startup.resolve(mockReady);
+    startup.resolve();
     await closing;
     await new Promise<void>((resolve): NodeJS.Immediate =>
       setImmediate(resolve),

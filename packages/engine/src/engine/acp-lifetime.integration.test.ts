@@ -1,13 +1,12 @@
 import { expect, it, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { requireResourceProcessAt } from '#mocks/acp-resource';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 it('Engine owns shared empty Sessions across App disconnection and waits for observed process exit', async () => {
-  let identity = 0;
   const host = await startAcpEngine({
     autoExit: false,
-    newSession: () => ({ sessionId: String(++identity) }),
+    steps: [],
   });
   const first = await host.caller.session.new(emptySessionInput);
   const second = await host.caller.session.new(emptySessionInput);
@@ -22,8 +21,8 @@ it('Engine owns shared empty Sessions across App disconnection and waits for obs
     snapshot: { state: 'idle', activeTurnId: null },
   });
   await feed.return?.();
-  const process = requireResourceProcessAt(host.peer.processes);
-  expect(host.peer.processes).toHaveLength(1);
+  const process = requireScriptedProcessAt(host.agent.processes);
+  expect(host.agent.processes).toHaveLength(1);
   expect(process.terminations).toBe(0);
   await host.caller.session.close({ sessionId: first.sessionId });
   expect(process.terminations).toBe(0);
@@ -41,12 +40,12 @@ it('Engine owns shared empty Sessions across App disconnection and waits for obs
 });
 
 it('a failed Session close reports failure and Engine shutdown waits for its process exit', async () => {
-  let closes = 0;
+  const closes: object[] = [];
   const host = await startAcpEngine({
     autoExit: false,
-    closeSession: () => {
-      closes += 1;
-      throw new Error('close refused');
+    steps: [],
+    responses: {
+      'session/close': [{ error: 'close refused', requests: closes }],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -56,8 +55,8 @@ it('a failed Session close reports failure and Engine shutdown waits for its pro
   await expect(host.caller.session.close(created)).rejects.toThrow(
     'Internal error',
   );
-  expect(closes).toBe(1);
-  const process = requireResourceProcessAt(host.peer.processes);
+  expect(closes).toHaveLength(1);
+  const process = requireScriptedProcessAt(host.agent.processes);
   expect(process.terminations).toBe(1);
   host.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
   expect(host.engine.getSnapshot().status).toBe('active');

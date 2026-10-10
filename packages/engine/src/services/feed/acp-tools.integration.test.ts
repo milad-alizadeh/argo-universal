@@ -1,3 +1,4 @@
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
@@ -7,37 +8,28 @@ const sourcePath = 'src/index.ts';
 const toolTitle = 'Read source';
 
 it('official tool updates retain creation fields when a partial update completes the call', async () => {
-  const host = await startAcpEngine({
-    prompt: async ({ params, client }) => {
-      await client.notify('session/update', {
-        sessionId: params.sessionId,
-        update: {
-          sessionUpdate: 'tool_call',
-          toolCallId: toolCallId,
-          title: toolTitle,
-          kind: 'read',
-          status: 'in_progress',
-          rawInput: { path: sourcePath },
-          locations: [{ path: sourcePath, line: 3 }],
-          content: [
-            { type: 'content', content: { type: 'text', text: 'Start' } },
-          ],
-        },
-      });
-      await client.notify('session/update', {
-        sessionId: params.sessionId,
-        update: {
-          sessionUpdate: 'tool_call_update',
-          toolCallId: toolCallId,
-          status: 'completed',
-          content: [
-            { type: 'content', content: { type: 'text', text: 'Done' } },
-          ],
-        },
-      });
-      return { stopReason: 'end_turn' };
-    },
-  });
+  const host = await startAcpEngine(
+    feedScenario([
+      {
+        sessionUpdate: 'tool_call',
+        toolCallId,
+        title: toolTitle,
+        kind: 'read',
+        status: 'in_progress',
+        rawInput: { path: sourcePath },
+        locations: [{ path: sourcePath, line: 3 }],
+        content: [
+          { type: 'content', content: { type: 'text', text: 'Start' } },
+        ],
+      },
+      {
+        sessionUpdate: 'tool_call_update',
+        toolCallId,
+        status: 'completed',
+        content: [{ type: 'content', content: { type: 'text', text: 'Done' } }],
+      },
+    ]),
+  );
   const created = await host.caller.session.new({
     ...emptySessionInput,
     prompt: [{ type: 'text', text: toolTitle }],

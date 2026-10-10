@@ -1,54 +1,51 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { sendAcpFeedUpdates } from '#mocks/acp-feed';
 
 const upsertEvent = 'row.upsert';
 
 it('all wire-earlier content precedes idle and text appends keep the actual block index and UTF-16 offset', async () => {
-  const host = await startAcpEngine({
-    prompt: async (request) => {
-      await sendAcpFeedUpdates(request, [
-        {
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'text', text: '🙂' },
-        },
-        {
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'text', text: ' first' },
-        },
-        {
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'resource_link', name: 'File', uri: 'file:///file' },
-        },
-        {
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'text', text: '🙂' },
-        },
-        {
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'text', text: ' last' },
-        },
-        {
-          sessionUpdate: 'tool_call_update',
-          toolCallId: 'tool',
-          title: 'Finished tool',
-          status: 'completed',
-        },
-        {
-          sessionUpdate: 'plan_update',
-          plan: { type: 'file', planId: 'plan', uri: 'file:///plan.md' },
-        },
-        { sessionUpdate: 'notice', severity: 'info', title: 'Notice' },
-        {
-          sessionUpdate: 'compaction_update',
-          compactionId: 'compact',
-          status: 'completed',
-        },
-      ]);
-      return { stopReason: 'end_turn' };
-    },
-  });
+  const host = await startAcpEngine(
+    feedScenario([
+      {
+        sessionUpdate: 'agent_message_chunk',
+        content: { type: 'text', text: '🙂' },
+      },
+      {
+        sessionUpdate: 'agent_message_chunk',
+        content: { type: 'text', text: ' first' },
+      },
+      {
+        sessionUpdate: 'agent_message_chunk',
+        content: { type: 'resource_link', name: 'File', uri: 'file:///file' },
+      },
+      {
+        sessionUpdate: 'agent_message_chunk',
+        content: { type: 'text', text: '🙂' },
+      },
+      {
+        sessionUpdate: 'agent_message_chunk',
+        content: { type: 'text', text: ' last' },
+      },
+      {
+        sessionUpdate: 'tool_call_update',
+        toolCallId: 'tool',
+        title: 'Finished tool',
+        status: 'completed',
+      },
+      {
+        sessionUpdate: 'plan_update',
+        plan: { type: 'file', planId: 'plan', uri: 'file:///plan.md' },
+      },
+      { sessionUpdate: 'notice', severity: 'info', title: 'Notice' },
+      {
+        sessionUpdate: 'compaction_update',
+        compactionId: 'compact',
+        status: 'completed',
+      },
+    ]),
+  );
   const created = await host.caller.session.new(emptySessionInput);
   const stream = (
     await host.caller.feed.subscribe({ ...created, after: null })
@@ -99,16 +96,18 @@ it('owned unsolicited updates remain visible with a null Turn while idle', async
     await host.caller.feed.subscribe({ ...created, after: null })
   )[Symbol.asyncIterator]();
   await stream.next();
-  const process = host.peer.processes[0];
+  const process = host.agent.processes[0];
   if (!process) throw new Error('Process is missing');
-  await process.connection.client.notify('session/update', {
-    sessionId: 'owned-1',
-    update: {
-      sessionUpdate: 'notice',
-      severity: 'info',
-      title: 'Idle advisory',
-    },
-  });
+  await process.play(
+    feedScenario([
+      {
+        sessionUpdate: 'notice',
+        severity: 'info',
+        title: 'Idle advisory',
+      },
+    ]).steps,
+    'owned-1',
+  );
   let output = await stream.next();
   while (!output.done && output.value.type !== upsertEvent)
     output = await stream.next();

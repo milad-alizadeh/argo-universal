@@ -1,26 +1,12 @@
-import type {
-  AgentRequestHandlersByMethod,
-  SessionNotification,
-} from '@agentclientprotocol/sdk';
+import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { SessionSnapshot } from '@repo/contracts';
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
+import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 
 export type AcpFeedUpdates = SessionNotification['update'][];
-type PromptContext = Parameters<
-  AgentRequestHandlersByMethod['session/prompt']
->[0];
-export const sendAcpFeedUpdates = async (
-  request: PromptContext,
-  updates: AcpFeedUpdates,
-): Promise<void> => {
-  for (const update of updates)
-    await request.client.notify('session/update', {
-      sessionId: request.params.sessionId,
-      update,
-    });
-};
 export const waitForAcpSnapshot = async (
-  host: Awaited<ReturnType<typeof startAcpEngine>>,
+  host: Pick<Awaited<ReturnType<typeof startAcpEngine>>, 'caller'>,
   sessionId: string,
   matches: (snapshot: SessionSnapshot) => boolean,
 ): Promise<SessionSnapshot> => {
@@ -31,7 +17,7 @@ export const waitForAcpSnapshot = async (
   throw new Error('The Feed closed before the expected Session snapshot');
 };
 export const waitForAcpSessionIdle = async (
-  host: Awaited<ReturnType<typeof startAcpEngine>>,
+  host: Pick<Awaited<ReturnType<typeof startAcpEngine>>, 'caller'>,
   sessionId: string,
 ): Promise<void> => {
   await waitForAcpSnapshot(
@@ -41,19 +27,14 @@ export const waitForAcpSessionIdle = async (
   );
 };
 export const openAcpFeedSession = async (
-  updates: AcpFeedUpdates,
+  updates: AcpFeedUpdates | ScriptedScenario,
   agentId = 'mock',
 ): Promise<{
   host: Awaited<ReturnType<typeof startAcpEngine>>;
   sessionId: string;
 }> => {
   const host = await startAcpEngine(
-    {
-      prompt: async (request) => {
-        await sendAcpFeedUpdates(request, updates);
-        return { stopReason: 'end_turn' };
-      },
-    },
+    'steps' in updates ? updates : feedScenario(updates),
     undefined,
     agentId,
   );

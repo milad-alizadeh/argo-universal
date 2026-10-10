@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./agent": "./agent/adapter.ts",
+    "./agent": "./agent/metadata.ts",
     "./agent/*": "./agent/*.ts",
     "./app": "./app/index.ts",
     "./registry/*": "./registry/*.ts"

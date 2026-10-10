@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:net';
 import { dirname, join } from 'node:path';
 import type { Database } from '@repo/db';
-import { createMockAdapter } from '@repo/mocks/agent';
 import { onTestFinished } from 'vitest';
 import { createActor, waitFor, type Actor } from 'xstate';
 import type { HttpServer } from '../src/engine/http-server';
@@ -10,6 +9,7 @@ import { engineMachine, type EngineInput } from '../src/engine/machine';
 import { findDatabaseWriter } from '../src/services/feed';
 import { findSessionRegistry } from '../src/services/sessions';
 import { openTestDatabase } from './database';
+import { scriptedEngineInput } from './scripted-engine';
 
 type EngineTestOptions = Partial<EngineInput> & {
   database?: Database;
@@ -52,7 +52,7 @@ export async function startEngineTestHost(
       startedAt: '2026-10-03T00:00:00.000Z',
       now: Date.now,
       createId: randomUUID,
-      adapters: [createMockAdapter()],
+      ...scriptedEngineInput(),
       fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
       ...options,
       home,

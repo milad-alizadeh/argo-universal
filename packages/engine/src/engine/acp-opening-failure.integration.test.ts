@@ -1,18 +1,21 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import type { NewSessionRequest } from '@agentclientprotocol/sdk';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { requireResourceProcessAt } from '#mocks/acp-resource';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 const failedSessionId = 'opening-failed';
 
 it('failed ACP startup retains its unstored Checkout until process cleanup is observed', async () => {
-  const newSessionRequested = Promise.withResolvers<void>();
+  const newSessionRequested = Promise.withResolvers<NewSessionRequest>();
   const host = await startAcpEngine(
     {
       autoExit: false,
-      newSession: () => {
-        newSessionRequested.resolve();
-        throw new Error('open refused');
+      steps: [],
+      responses: {
+        'session/new': [
+          { received: newSessionRequested, error: 'open refused' },
+        ],
       },
     },
     () => failedSessionId,
@@ -24,7 +27,7 @@ it('failed ACP startup retains its unstored Checkout until process cleanup is ob
     })
     .catch((error: unknown): unknown => error);
   await newSessionRequested.promise;
-  const process = requireResourceProcessAt(host.peer.processes);
+  const process = requireScriptedProcessAt(host.agent.processes);
   try {
     await vi.waitFor(() => expect(process.terminations).toBe(1));
     const worktrees = execFileSync('git', ['worktree', 'list', '--porcelain'], {

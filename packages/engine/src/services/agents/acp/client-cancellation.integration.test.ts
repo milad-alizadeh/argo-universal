@@ -1,10 +1,16 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
-import { createAcpPeer, readAcpRequest } from '#mocks/acp-peer';
+import { createScriptedAgentWire } from '#mocks/scripted-agent';
 import { createAgentClient } from './client';
 
 it('keeps a cancelled prompt observed until its final content and completion arrive', async () => {
-  const peer = createAcpPeer();
+  const peer = createScriptedAgentWire({
+    steps: [],
+    responses: {
+      'session/prompt': [{ steps: [{ type: 'hold' }] }],
+      'session/new': [{ steps: [{ type: 'hold' }] }],
+    },
+  });
   const accepted: SessionNotification[] = [];
   const connection = createAgentClient({
     stream: peer.stream,
@@ -20,7 +26,7 @@ it('keeps a cancelled prompt observed until its final content and completion arr
       prompt: [{ type: 'text', text: 'Start' }],
     })
     .then((result) => ({ result, accepted: [...accepted] }));
-  const request = await readAcpRequest(peer);
+  const request = await peer.readRequest();
   const cancelled = connection.agent.notify('session/cancel', {
     sessionId: 'one',
   });
@@ -64,7 +70,13 @@ it('keeps a cancelled prompt observed until its final content and completion arr
 });
 
 it('rejects pending outgoing work when its ACP connection closes', async () => {
-  const peer = createAcpPeer();
+  const peer = createScriptedAgentWire({
+    steps: [],
+    responses: {
+      'session/prompt': [{ steps: [{ type: 'hold' }] }],
+      'session/new': [{ steps: [{ type: 'hold' }] }],
+    },
+  });
   const connection = createAgentClient({
     stream: peer.stream,
     acceptSessionUpdate: () => {},
@@ -74,7 +86,7 @@ it('rejects pending outgoing work when its ACP connection closes', async () => {
   const opening = connection.agent
     .request('session/new', { cwd: '/checkout', mcpServers: [] })
     .catch((error: unknown) => error);
-  await readAcpRequest(peer);
+  await peer.readRequest();
   connection.close(new Error('ACP resource closed'));
   await connection.closed;
   expect(await opening).toMatchObject({ message: 'ACP resource closed' });

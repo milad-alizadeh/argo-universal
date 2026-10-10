@@ -1,10 +1,10 @@
-import { createMockAdapter } from '@repo/mocks/agent';
+import { createAgentMetadata } from '@repo/mocks/agent';
 import { describe, expect, it } from 'vitest';
 import { createActor, createMachine, fromTransition } from 'xstate';
 import { agentProbeMachine } from './agent-probe-machine';
 import { agentProbeId, findAgentProbe } from './agent-probe-system';
 
-const adapter = createMockAdapter();
+const adapter = createAgentMetadata();
 
 describe('Agent probe ownership', (): void => {
   it('finds a probe with supplied implementations', (): void => {

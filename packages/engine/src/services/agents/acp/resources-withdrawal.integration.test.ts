@@ -1,32 +1,38 @@
 import type {
   NewSessionResponse,
+  NewSessionRequest,
   ResumeSessionResponse,
 } from '@agentclientprotocol/sdk';
 import { expect, it, vi } from 'vitest';
 import {
-  createResourcePeer,
   createResourceOpening,
   createResourceDestination,
   createResourceUpdate,
-  requireResourceProcessAt,
   resourceInitialization,
 } from '#mocks/acp-resource';
+import {
+  createScriptedAgentProcess,
+  requireScriptedProcessAt,
+} from '#mocks/scripted-agent';
 import { createAcpResources } from '../index';
 
 it('a withdrawn opening closes its late identity exactly once while its sibling remains live', async () => {
   const pending: ReturnType<
     typeof Promise.withResolvers<NewSessionResponse>
-  >[] = [];
-  const closed: string[] = [];
-  const peer = createResourcePeer({
-    newSession: () => {
-      const opening = Promise.withResolvers<NewSessionResponse>();
-      pending.push(opening);
-      return opening.promise;
-    },
-    closeSession: ({ params }) => {
-      closed.push(params.sessionId);
-      return {};
+  >[] = [
+    Promise.withResolvers<NewSessionResponse>(),
+    Promise.withResolvers<NewSessionResponse>(),
+  ];
+  const closed: { sessionId: string }[] = [];
+  const requested: NewSessionRequest[] = [];
+  const peer = createScriptedAgentProcess({
+    steps: [],
+    responses: {
+      'session/new': pending.map((opening) => ({
+        result: opening.promise,
+        requests: requested,
+      })),
+      'session/close': [{ result: {}, requests: closed }],
     },
   });
   const resources = createAcpResources(peer);
@@ -40,28 +46,31 @@ it('a withdrawn opening closes its late identity exactly once while its sibling 
   const second = resources.open(
     createResourceOpening(createResourceDestination(updates)),
   );
-  await vi.waitFor(() => expect(pending).toHaveLength(2));
+  await vi.waitFor(() => expect(requested).toHaveLength(2));
   abort.abort();
   for (const [index, result] of pending.entries())
     result.resolve({ sessionId: index === 0 ? 'withdrawn' : 'survivor' });
   const survivor = await second;
   expect(await firstOutcome).toMatchObject({ name: 'AbortError' });
-  const process = requireResourceProcessAt(peer.processes);
-  await process.connection.client.notify(
-    'session/update',
-    createResourceUpdate('survivor'),
+  const process = requireScriptedProcessAt(peer.processes);
+  await process.play(
+    [{ type: 'update', update: createResourceUpdate('survivor').update }],
+    'survivor',
   );
   await vi.waitFor(() =>
     expect(updates).toEqual([createResourceUpdate('survivor')]),
   );
-  expect(closed).toEqual(['withdrawn']);
+  expect(closed.map(({ sessionId }) => sessionId)).toEqual(['withdrawn']);
   expect(process.terminations).toBe(0);
   await survivor.close();
-  expect(closed).toEqual(['withdrawn', 'survivor']);
+  expect(closed.map(({ sessionId }) => sessionId)).toEqual([
+    'withdrawn',
+    'survivor',
+  ]);
 });
 
 it('different Projects and effective launch values never share initialization', async () => {
-  const peer = createResourcePeer();
+  const peer = createScriptedAgentProcess({ steps: [] });
   const resources = createAcpResources(peer);
   const base = createResourceOpening();
   await Promise.all([
@@ -80,9 +89,9 @@ it.each(['session/load', 'session/resume'] as const)(
   'known %s identity routes notifications before opening completes',
   async (method) => {
     const result = Promise.withResolvers<ResumeSessionResponse>();
-    const peer = createResourcePeer({
-      loadSession: () => result.promise,
-      resumeSession: () => result.promise,
+    const peer = createScriptedAgentProcess({
+      steps: [],
+      responses: { [method]: [{ result: result.promise }] },
     });
     const resources = createAcpResources(peer);
     const updates: ReturnType<typeof createResourceUpdate>[] = [];
@@ -94,9 +103,9 @@ it.each(['session/load', 'session/resume'] as const)(
       },
     });
     await vi.waitFor(() => expect(peer.processes).toHaveLength(1));
-    await peer.processes[0]?.connection.client.notify(
-      'session/update',
-      createResourceUpdate('known'),
+    await peer.processes[0]?.play(
+      [{ type: 'update', update: createResourceUpdate('known').update }],
+      'known',
     );
     result.resolve({});
     const lease = await opening;
@@ -108,10 +117,13 @@ it.each(['session/load', 'session/resume'] as const)(
 
 it('withdrawal during shared initialize never dispatches the withdrawn session request', async () => {
   const initialization = Promise.withResolvers<typeof resourceInitialization>();
-  let created = 0;
-  const peer = createResourcePeer({
-    initialize: () => initialization.promise,
-    newSession: () => ({ sessionId: String(++created) }),
+  const created: NewSessionRequest[] = [];
+  const peer = createScriptedAgentProcess({
+    steps: [],
+    responses: {
+      initialize: [{ result: initialization.promise }],
+      'session/new': [{ requests: created }],
+    },
   });
   const resources = createAcpResources(peer);
   const abort = new AbortController();
@@ -124,7 +136,7 @@ it('withdrawal during shared initialize never dispatches the withdrawn session r
   abort.abort();
   initialization.resolve(resourceInitialization);
   const sibling = await opening;
-  expect(created).toBe(1);
+  expect(created).toHaveLength(1);
   await sibling.close();
   expect(await outcome).toMatchObject({ name: 'AbortError' });
 });
