@@ -21,7 +21,7 @@ export function FieldSection(props: FieldSectionProps): React.JSX.Element {
   if (useWide()) return <WebFieldSection {...props} />;
   return (
     <Column verticalArrangement={{ spacedBy: 8 }} modifiers={[fillMaxWidth()]}>
-      <SectionCaption text={props.title} />
+      <SectionCaption text={props.title} heading />
       <Column
         verticalArrangement={{ spacedBy: 1 }}
         modifiers={[
@@ -37,13 +37,19 @@ export function FieldSection(props: FieldSectionProps): React.JSX.Element {
   );
 }
 
-function SectionCaption({ text }: { text?: string }): React.JSX.Element | null {
+function SectionCaption({
+  text,
+  heading,
+}: {
+  text?: string;
+  heading?: boolean;
+}): React.JSX.Element | null {
   const { mutedForeground } = useNativeTheme().colors;
   if (!text) return null;
   return (
     <Text
       color={mutedForeground}
-      style={{ typography: 'bodyMedium' }}
+      style={{ typography: heading ? 'titleMedium' : 'bodyMedium' }}
       modifiers={[padding(gutter, captionPadding, gutter, captionPadding)]}
     >
       {text}
