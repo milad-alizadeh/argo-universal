@@ -11,7 +11,7 @@ The Prickles pack uses ESLint rules. oxlint runs them, mostly natively and the r
 Where the pack could not run as written:
 
 - `prettier/prettier` is dropped: oxfmt formats, and `oxfmt --check` gates.
-- `import-x/no-restricted-paths` is dropped: oxlint has no such rule, and its zones name `src/lib/generic` and `src/lib/product`, which Argo does not have. D1 to D11 hold Argo's import directions.
+- `import-x/no-restricted-paths` is dropped: oxlint has no such rule, and its zones name `src/lib/generic` and `src/lib/product`. D1 to D11 hold Argo's import directions, and `no-restricted-imports` in `argo.json` guards the client's `lib/generic` and `lib/product` folders.
 - `unicorn/no-for-each`, `unicorn/no-for-loop` and `unicorn/prefer-switch` run from eslint-plugin-unicorn, and `line-comment-position` and `multiline-comment-style` from @stylistic/eslint-plugin, as JS plugins. The sonarjs rules run the same way, without the type information a few of them read under ESLint.
 - `import/namespace` and `jsx-a11y/prefer-tag-over-role` are off: oxlint cannot follow the re-exports of `@rn-primitives`, and React Native has no semantic tags.
 
@@ -76,7 +76,7 @@ Spec 0011 #437 moves the client source, with behaviour unchanged, into `features
 | `lib/product/markdown/*` | `components/*` |
 | `lib/product/navigation/*` | `navigation/*` |
 
-This move changes the rules above in one way. One old folder may now split into several listed new folders, and those new folders may share its historical identity. That identity is no longer "duplicate" between them. Each new folder's rule set must stay a subset of the rules that its listed sources waived at the merge base. Once a new folder is in the baseline, it is compared with its own entry as well. The guard still rejects an old folder entry beside any of its new folders, added rules, and unlisted or broadened globs. Existing stale-rule check and prune still apply. Moved debt is not clearance; the burn-down tickets still own it.
+This move changes the rules above in one way. One old folder may now split into several listed new folders, and those new folders may share its historical identity. That identity is no longer "duplicate" between them. Each new folder's rule set must stay a subset of the rules that its listed sources waived at the merge base. The src root keeps its own identity and also takes `trpc/*`'s, because the App providers move there; it gains `max-lines-per-function` from `trpc/*`. Once a new folder is in the baseline, it is compared with its own entry as well. The guard still rejects an old folder entry beside any of its new folders, added rules, and unlisted or broadened globs. Existing stale-rule check and prune still apply. Moved debt is not clearance; the burn-down tickets still own it.
 
 ## Considered Options
 

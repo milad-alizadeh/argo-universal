@@ -224,7 +224,7 @@
       }
     },
     {
-      // Screens and components get tRPC from useTRPC() only (ADR-0009).
+      // Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021).
       "files": [
         "packages/client/src/features/*/screens/**",
         "packages/client/src/features/*/components/**"
@@ -236,16 +236,16 @@
             "paths": [
               {
                 "name": "@trpc/client",
-                "message": "Screens and components get tRPC from useTRPC() only (ADR-0009)."
+                "message": "Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021)."
               },
               {
                 "name": "../trpc/create-trpc-client",
-                "message": "Screens and components get tRPC from useTRPC() only (ADR-0009)."
+                "message": "Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021)."
               },
               {
                 "name": "../trpc/context",
                 "importNames": ["useTRPCClient"],
-                "message": "Screens and components get tRPC from useTRPC() only (ADR-0009)."
+                "message": "Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021)."
               }
             ],
             "patterns": [

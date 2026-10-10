@@ -10,27 +10,27 @@ type Claims = Map<string, boolean>;
 function clashes(
   claims: Claims,
   identities: string[],
-  original: boolean,
+  unmoved: boolean,
 ): boolean {
   return identities.some(
     (identity): boolean =>
-      claims.has(identity) && (original || claims.get(identity) === true),
+      claims.has(identity) && (unmoved || claims.get(identity) === true),
   );
 }
 
-function claim(claims: Claims, identities: string[], original: boolean): void {
+function claim(claims: Claims, identities: string[], unmoved: boolean): void {
   for (const identity of identities)
-    claims.set(identity, original || claims.get(identity) === true);
+    claims.set(identity, unmoved || claims.get(identity) === true);
 }
 
 function duplicateIdentities(entries: Entry[]): string[] {
   const claims: Claims = new Map();
   return entries.flatMap((entry): string[] => {
     const glob = entry.files[0];
-    const original = !relocatedFolders.has(glob);
+    const unmoved = !relocatedFolders.has(glob);
     const identities = historicalFolders(glob);
-    const clash = clashes(claims, identities, original);
-    claim(claims, identities, original);
+    const clash = clashes(claims, identities, unmoved);
+    claim(claims, identities, unmoved);
     return clash ? [`${glob}: duplicate historical waiver identity`] : [];
   });
 }

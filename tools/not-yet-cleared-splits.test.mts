@@ -99,3 +99,33 @@ it.each([
     ).toEqual([`${second}: duplicate historical waiver identity`]);
   },
 );
+
+it('rejects a feature folder that is not listed for the old folder', (): void => {
+  const agentsComponents = 'packages/client/src/features/agents/components/*';
+  expect(
+    evaluateWaivers({
+      current: waivers([[agentsComponents, { complexity: 'off' }]]),
+      baseline: waivers([[components, { complexity: 'off' }]]),
+      report: findings([[agentsComponents, complexityCode]]),
+    }).problems,
+  ).toEqual([`${agentsComponents}: added entry or changed glob`]);
+});
+
+it('lets the src root take the rules of the tRPC folder it absorbs', (): void => {
+  const root = 'packages/client/src/*';
+  expect(
+    evaluateWaivers({
+      current: waivers([
+        [root, { complexity: 'off', 'max-lines-per-function': 'off' }],
+      ]),
+      baseline: waivers([
+        [root, { complexity: 'off' }],
+        ['packages/client/src/trpc/*', { 'max-lines-per-function': 'off' }],
+      ]),
+      report: findings([
+        [root, complexityCode],
+        [root, 'eslint(max-lines-per-function)'],
+      ]),
+    }).problems,
+  ).toEqual([]);
+});
