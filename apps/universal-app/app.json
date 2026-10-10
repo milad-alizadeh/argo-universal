@@ -28,6 +28,7 @@
     "plugins": [
       "expo-router",
       "expo-dev-client",
+      "./plugins/with-custom-symbols.mjs",
       [
         "expo-splash-screen",
         {
