@@ -4,13 +4,7 @@ import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Checkbox } from '#primitives/checkbox';
 import { Input } from '#primitives/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#primitives/select';
+import { SelectMenu } from '#primitives/select-menu';
 import { Text } from '#primitives/text';
 import {
   type ElicitationValue,
@@ -123,40 +117,17 @@ function FieldControl({
     );
   if (options && property.type === 'string')
     return (
-      <Select
-        value={
-          typeof value === 'string' && present
-            ? {
-                value,
-                label:
-                  options.find((option) => option.const === value)?.title ??
-                  value,
-              }
-            : undefined
-        }
-        onValueChange={(option) => change(option?.value ?? '')}
+      <SelectMenu
+        accessibilityLabel={label}
+        value={typeof value === 'string' && present ? value : undefined}
+        options={options.map((option) => ({
+          value: option.const,
+          label: option.title,
+        }))}
+        onValueChange={change}
         disabled={inactive}
-      >
-        <SelectTrigger
-          accessibilityLabel={label}
-          disabled={inactive}
-          className={cn(
-            'h-9 sm:h-9 w-full! bg-background dark:bg-background',
-            invalid && 'border-destructive',
-          )}
-        >
-          <SelectValue className="type-control" placeholder="Choose…" />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem
-              key={option.const}
-              value={option.const}
-              label={option.title}
-            />
-          ))}
-        </SelectContent>
-      </Select>
+        invalid={invalid}
+      />
     );
   if (options && property.type === 'array')
     return (
