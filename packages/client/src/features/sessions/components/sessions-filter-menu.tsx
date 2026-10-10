@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { Button } from '#lib/generic/primitives/button';
-import { Menu } from '#lib/generic/primitives/menu';
+import { Menu } from '../../../lib/generic/primitives/menu';
 import { HeaderButton } from '#lib/product/header-button';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
