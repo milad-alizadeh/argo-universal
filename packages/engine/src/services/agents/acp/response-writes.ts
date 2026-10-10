@@ -1,5 +1,5 @@
 import type { AnyMessage, JsonRpcId, Stream } from '@agentclientprotocol/sdk';
-import { createRejectionCounter } from '../../../lib/count-rejections';
+import { createRejectionCounter } from '@repo/machine-log';
 import { trackReservationWork, type AcpReservation } from './reservations';
 
 type PendingWrite = ReturnType<typeof Promise.withResolvers<void>>;

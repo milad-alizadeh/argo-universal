@@ -5,8 +5,8 @@ import {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
+import { createRejectionCounter } from '@repo/machine-log';
 import { eq, isNotNull, type SQL } from 'drizzle-orm';
-import { createRejectionCounter } from '../../../lib/count-rejections';
 
 const rejections = createRejectionCounter('Agent configurations');
 type AgentRow = Pick<

@@ -1,8 +1,8 @@
 import { runningToolCallStatuses } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
+import { createRejectionCounter } from '@repo/machine-log';
 import { and, eq, or, sql, type SQL } from 'drizzle-orm';
-import { createRejectionCounter } from '../lib/count-rejections';
 import {
   hydrateStoredFeedRow,
   payloadVersion,

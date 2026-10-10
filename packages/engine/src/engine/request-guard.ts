@@ -1,6 +1,6 @@
 import type { IncomingHttpHeaders } from 'node:http';
+import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
-import { createRejectionCounter } from '../lib/count-rejections';
 
 // No Origin (the native Apps), the desktop app, or a web App on this machine on any port.
 const AllowedOrigin = z.union([

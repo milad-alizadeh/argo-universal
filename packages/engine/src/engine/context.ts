@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Database } from '@repo/db';
-import { createRejectionCounter } from '../lib/count-rejections';
+import { createRejectionCounter } from '@repo/machine-log';
 import type { uploadBlob } from '../services/blob';
 import { type FeedDeps, findDatabaseWriter } from '../services/feed';
 import {

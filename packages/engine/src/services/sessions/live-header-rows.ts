@@ -1,10 +1,10 @@
 import { runningToolCallStatuses, type SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
+import { createRejectionCounter } from '@repo/machine-log';
 import { and, desc, eq, gt, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
-import { createRejectionCounter } from '../../lib/count-rejections';
 import { hydrateStoredFeedRow, newestRows, storedFeedColumns } from '../feed';
 import { type FeedRowWrite, readWriterProjection } from '../feed';
 import type { writerMachine } from '../feed';
