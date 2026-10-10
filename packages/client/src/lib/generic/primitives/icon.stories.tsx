@@ -48,17 +48,17 @@ export const Overview: Story = {
           ))}
         </View>
       </Variation>
-      <Variation label="Sizes: sm 12 for carets, md 16 by default, lg 20 for phone shell controls">
+      <Variation label="Sizes: 16px icons, 12px chevrons">
         <View className="flex-row items-center gap-3">
-          <Icon name="chevron-right" size="sm" />
-          <Icon name="add" size="md" />
-          <Icon name="add" size="lg" />
+          <Icon name="chevron-right" />
+          <Icon name="add" />
+          <Icon name="check" />
         </View>
       </Variation>
       <Variation label="Filled: selected shell sections draw the SF fill; Material stays outlined">
         <View className="flex-row items-center gap-3">
           {(['sessions', 'issue', 'atlas', 'settings'] as const).map((name) => (
-            <Icon key={name} name={name} size="lg" filled />
+            <Icon key={name} name={name} filled />
           ))}
         </View>
       </Variation>
@@ -95,11 +95,11 @@ export const SfAndMaterial: Story = {
           <Text className="w-36 text-sm">{name}</Text>
           <View className="w-10">
             <SymbolImagesProvider render={renderStorybookSymbol}>
-              <Icon name={name} size="lg" testID={`sf-${name}`} />
+              <Icon name={name} testID={`sf-${name}`} />
             </SymbolImagesProvider>
           </View>
           <View className="w-10">
-            <Icon name={name} size="lg" testID={`material-${name}`} />
+            <Icon name={name} testID={`material-${name}`} />
           </View>
           <Text className="w-64 font-mono text-xs text-muted-foreground">
             {iconSymbols[name].sf}

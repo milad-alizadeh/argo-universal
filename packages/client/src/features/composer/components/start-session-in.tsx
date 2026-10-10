@@ -63,11 +63,7 @@ export function StartSessionIn({
           >
             {project?.name ?? 'Choose a Project'}
           </Text>
-          <Icon
-            size="sm"
-            name="chevron-down"
-            className="-ml-0.5 text-muted-foreground"
-          />
+          <Icon name="chevron-down" className="-ml-0.5 text-muted-foreground" />
         </Button>
       }
     >
@@ -150,7 +146,6 @@ export function StartSessionIn({
               {checkout.newWorktree ? 'New worktree' : 'Local'}
             </Text>
             <Icon
-              size="sm"
               name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />

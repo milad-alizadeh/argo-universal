@@ -40,7 +40,6 @@ const SectionButton = memo(function SectionButton({
       onPress={() => onSectionChange(section)}
     >
       <Icon
-        size="lg"
         name={icon}
         filled={selected}
         className={cn(!selected && 'text-muted-foreground')}

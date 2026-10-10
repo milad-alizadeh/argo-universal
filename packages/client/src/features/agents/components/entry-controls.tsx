@@ -82,7 +82,7 @@ function EntryRow(props: EntryRowProps): React.JSX.Element {
       className="min-h-11 flex-row items-center gap-2 px-3 py-2"
     >
       <EntryRowText label={props.label} detail={props.detail} />
-      <Icon name="chevron-right" size="sm" className="text-muted-foreground" />
+      <Icon name="chevron-right" className="text-muted-foreground" />
     </Pressable>
   );
 }

@@ -72,7 +72,7 @@ function ReturnKey({ wide }: { wide: boolean }): ReactNode {
         !wide && 'hidden',
       )}
     >
-      <Icon name="return" size="md" className="text-primary-foreground" />
+      <Icon name="return" className="text-primary-foreground" />
     </View>
   );
 }

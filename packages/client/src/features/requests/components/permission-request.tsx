@@ -69,11 +69,7 @@ export function PermissionRequest(
     >
       <View className="gap-2 px-4 pt-4 pb-1">
         <View className="flex-row items-center gap-1.5">
-          <Icon
-            name="terminal"
-            size="md"
-            className="shrink-0 text-muted-foreground"
-          />
+          <Icon name="terminal" className="shrink-0 text-muted-foreground" />
           <Text role={'heading'} className="min-w-0 flex-1">
             {request.title}
           </Text>

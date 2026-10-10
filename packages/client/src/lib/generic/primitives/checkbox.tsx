@@ -59,7 +59,6 @@ function CheckboxIndicator(props: CheckboxProps): ReactElement {
   return (
     <CheckboxPrimitive.Indicator className={indicatorClass}>
       <Icon
-        size="sm"
         name="check"
         className={cn('text-primary-foreground', props.iconClassName)}
       />

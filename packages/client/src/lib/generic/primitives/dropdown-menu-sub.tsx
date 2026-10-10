@@ -32,7 +32,6 @@ function SubTriggerChevron({
 }: Pick<TriggerProps, 'iconClassName'> & { open: boolean }): React.JSX.Element {
   return (
     <Icon
-      size="sm"
       name={subTriggerIcon(open)}
       className={cn('text-foreground shrink-0', iconClassName)}
     />

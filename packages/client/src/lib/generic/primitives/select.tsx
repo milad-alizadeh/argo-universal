@@ -36,7 +36,6 @@ function SelectValue({ className, ...props }: ValueProps): React.JSX.Element {
 
 const triggerChevron = (
   <Icon
-    size="sm"
     name="chevron-down"
     aria-hidden={true}
     className="text-muted-foreground"

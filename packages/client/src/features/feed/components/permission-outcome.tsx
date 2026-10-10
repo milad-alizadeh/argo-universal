@@ -42,12 +42,9 @@ export function PermissionOutcome({
   const allowed = kind === 'allow_once' || kind === 'allow_always';
   return (
     <View className="flex-row items-start gap-1.5">
-      <View
-        className={`${allowed ? 'w-icon-sm' : 'w-icon-md'} h-6 shrink-0 justify-center wide:h-5`}
-      >
+      <View className="w-icon-md h-6 shrink-0 justify-center wide:h-5">
         <Icon
           name={allowed ? 'check' : 'close'}
-          size={allowed ? 'sm' : 'md'}
           className="text-muted-foreground"
         />
       </View>

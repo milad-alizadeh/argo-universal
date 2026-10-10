@@ -160,7 +160,7 @@ const ThemedLogo = withUniwind(SvgXml, {
 function Logo({ agent }: { agent?: AgentInfo }): React.JSX.Element | null {
   return agent ? (
     <View className="size-icon-md shrink-0 items-center justify-center">
-      <View testID="composer-agent-icon" className="size-icon-mark">
+      <View testID="composer-agent-icon" className="size-icon-md">
         <ThemedLogo
           xml={agent.logo}
           className="text-foreground"
@@ -679,7 +679,7 @@ export function AgentModelMenu({
             className="size-11 sm:size-11"
             onPress={() => setPage('settings')}
           >
-            <Icon size="lg" name="chevron-left" className="text-foreground" />
+            <Icon name="chevron-left" className="text-foreground" />
           </Button>
           <Text
             selectable={false}
@@ -746,7 +746,6 @@ export function AgentModelMenu({
                   {agent?.label}
                 </Text>
                 <Icon
-                  size="sm"
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
@@ -772,7 +771,6 @@ export function AgentModelMenu({
                   {modelName(current)}
                 </Text>
                 <Icon
-                  size="sm"
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
@@ -893,7 +891,6 @@ export function ComposerAgentModelControl({
           )}
           {wide && (
             <Icon
-              size="sm"
               name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
@@ -955,11 +952,7 @@ export function ComposerModeControl({
             {current?.name.replace(/\s*\(recommended\)\s*$/i, '')}
           </Text>
           <View className={cn('-ml-0.5', !wide && 'hidden')}>
-            <Icon
-              size="sm"
-              name="chevron-down"
-              className="text-muted-foreground"
-            />
+            <Icon name="chevron-down" className="text-muted-foreground" />
           </View>
         </Button>
       }
@@ -1077,11 +1070,7 @@ export function ComposerCheckoutControl({
           <Text selectable={false} role="secondary" className="select-none">
             {checkout.newWorktree ? 'New worktree' : 'Local'}
           </Text>
-          <Icon
-            size="sm"
-            name="chevron-down"
-            className="text-muted-foreground"
-          />
+          <Icon name="chevron-down" className="text-muted-foreground" />
         </Button>
       }
     >

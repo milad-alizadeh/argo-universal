@@ -54,7 +54,7 @@ export function HeaderButton({
       accessibilityLabel={accessibilityLabel}
       {...props}
     >
-      <Icon size="lg" name={icon} className="text-foreground" />
+      <Icon name={icon} className="text-foreground" />
       {dot && (
         <View
           testID="header-button-dot"

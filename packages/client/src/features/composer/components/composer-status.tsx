@@ -94,7 +94,7 @@ function ContextRing({ percent }: { percent: number }): React.JSX.Element {
   const circumference = 2 * Math.PI * contextRingRadius;
   return (
     <View className="size-icon-md shrink-0 items-center justify-center">
-      <View className="size-icon-mark">
+      <View className="size-icon-md">
         <Svg width="100%" height="100%" viewBox="0 0 14 14">
           <ThemedCircle
             cx={7}
@@ -205,7 +205,6 @@ export function ComposerPlan({
             {entries.find((entry) => entry.status === 'in_progress')?.content}
           </Text>
           <Icon
-            size="sm"
             name="chevron-up"
             className={cn(
               'text-muted-foreground web:transition-transform web:duration-200',

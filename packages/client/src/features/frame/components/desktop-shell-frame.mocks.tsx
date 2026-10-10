@@ -76,7 +76,7 @@ export function DesktopShellFrame({
                 className="size-8 p-0 sm:size-8"
                 accessibilityLabel="More actions"
               >
-                <Icon name="more" size="md" className="text-muted-foreground" />
+                <Icon name="more" className="text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>

@@ -62,7 +62,6 @@ function chevron(
     >
       <Icon
         name="chevron-down"
-        size="sm"
         className={
           primary ? 'text-primary-foreground' : 'text-muted-foreground'
         }
@@ -120,7 +119,7 @@ function ChoiceSheet<Value extends string>(
             <Text role="body">{choice.label}</Text>
             <View className="size-4 items-center justify-center">
               {choice.value === value && (
-                <Icon name="check" size="sm" className="text-foreground" />
+                <Icon name="check" className="text-foreground" />
               )}
             </View>
           </Button>

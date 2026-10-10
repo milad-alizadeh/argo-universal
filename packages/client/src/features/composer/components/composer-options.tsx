@@ -98,9 +98,7 @@ function SettingRow({
           {selected ? 'On' : 'Off'}
         </Text>
       ) : (
-        <View className="w-4 h-4">
-          {selected && <Icon name="check" size="sm" />}
-        </View>
+        <View className="w-4 h-4">{selected && <Icon name="check" />}</View>
       )}
     </Button>
   );

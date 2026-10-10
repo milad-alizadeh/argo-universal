@@ -65,7 +65,7 @@ export function WrittenPlan({
           >
             {title}
           </Text>
-          <Icon size="sm" name="chevron-up" className="text-muted-foreground" />
+          <Icon name="chevron-up" className="text-muted-foreground" />
         </>
       )}
     </Button>

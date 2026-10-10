@@ -51,7 +51,7 @@ function RadioIndicator(): React.JSX.Element {
   return (
     <View className="size-icon-md items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
-        <Icon name="check" size="sm" className={indicatorClassName} />
+        <Icon name="check" className={indicatorClassName} />
       </DropdownMenuPrimitive.ItemIndicator>
     </View>
   );

@@ -21,7 +21,7 @@ export function FloatingActionButton({
       onPress={onPress}
       className="size-14 sm:size-14 rounded-full"
     >
-      <Icon size="lg" name={icon} className="text-primary-foreground" />
+      <Icon name={icon} className="text-primary-foreground" />
     </Button>
   );
 }
