@@ -37,7 +37,7 @@ Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same
 - Token values live in `theme.css` only. Paper's tokens are a copy of them: change a value in `theme.css`, then write the same value into Paper. Never keep a second copy of the tokens in the repository.
 - Paper stores oklch with one decimal. When that rounding changes the colour, store the exact hex instead.
 - Colours come from the Tailwind palette only. Every semantic token (`--color-success`, `--color-sidebar`) aliases a palette token.
-- Native drawings, the system controls inside system containers that `@expo/ui` draws (ADR-0020), use the platform's type scale and system text colours as named literals, the way mono uses literal "SF Mono": SF Pro text styles and Apple's label greys in iOS frames, literal Roboto and Material's type scale in Android frames. Everything else in a native frame, such as tint, backgrounds and destructive, keeps Argo's tokens.
+- Native drawings, the system controls inside system containers that `@expo/ui` draws (ADR-0020), use the platform's type scale and system text colours as named literals, the way mono uses literal "SF Mono": SF Pro text styles in iOS frames, literal Roboto in Android frames, each with the platform's system text colours. Everything else in a native frame, such as tint, backgrounds and destructive, keeps Argo's tokens.
 - Paper leads how things look; `theme.css` leads token values. When a Paper token is missing from `theme.css` or holds a different value, report it as drift and fix Paper.
 
 ## Icons

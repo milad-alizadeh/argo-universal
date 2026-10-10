@@ -1,10 +1,10 @@
 # Argo owns its primitives
 
-Argo's controls are its own primitives, in `packages/client/src/lib/generic/primitives` (Spec 0010, owner, 2026-10-10). They replace React Native Reusables, the shadcn copies that drew web-style controls on the phone and competed with the native controls Argo already shipped. This amends [ADR-0001](0001-one-expo-app-for-every-platform.md), whose stack named React Native Reusables, and [ADR-0019](0019-icons-are-native-symbols.md) for icons inside native rows.
+Argo's controls are its own primitives, in `packages/client/src/lib/generic/primitives` (Spec 0010, owner, 2026-10-10). They replace React Native Reusables, the shadcn copies that drew web-style controls on the phone and competed with the native controls Argo already shipped. The migration goes screen by screen; until it ends, primitives not yet rewritten keep their Reusables code. This amends [ADR-0001](0001-one-expo-app-for-every-platform.md), whose stack named React Native Reusables, and [ADR-0019](0019-icons-are-native-symbols.md) for icons inside native rows.
 
 ## Decision
 
-Screens import controls from the primitives folder only. A primitive has one API and up to three drawings:
+Screens import controls from the primitives folder only, through `#lib/generic/primitives/*`. A primitive has one API and up to three drawings:
 
 - **iOS:** the SwiftUI control from `@expo/ui`, inside a `Host`, in the `.ios.tsx` file.
 - **Android:** the Jetpack Compose control from `@expo/ui` in Material 3, in the `.android.tsx` file. Where Expo UI's Android control is the wrong pattern, Argo composes its own: the field group, the Picker as a two-line row with a radio dialog, and menus.
@@ -37,7 +37,8 @@ Native drawing is for system controls inside system containers: grouped settings
 | Checkbox | Form row with a trailing checkmark | Material 3 Checkbox | Argo, `role="checkbox"` |
 | Button (system action) | SwiftUI Button | Material Button | Argo Button |
 | TextInput (form fields) | SwiftUI TextField | Material OutlinedTextField | Argo Input |
-| Menu | SwiftUI Menu | Compose DropdownMenu | `@rn-primitives/dropdown-menu` |
+| Menu | SwiftUI Menu, leading check accepted | Compose DropdownMenu, trailing check, `popover` container | `@rn-primitives/dropdown-menu` |
+| SearchField | native header search where it exists, else Argo field | Argo field under the header | Argo field |
 | Sheet | formSheet route, or SwiftUI BottomSheet for single-page content | formSheet route, or ModalBottomSheet | Popover when wide, bottom sheet on `@rn-primitives/dialog` when narrow |
 | Dialog, confirm | SwiftUI ConfirmationDialog or alert | Material AlertDialog | `@rn-primitives/dialog` |
 | InfoPopover | SwiftUI popover | Material RichTooltip | `@rn-primitives/popover` |
