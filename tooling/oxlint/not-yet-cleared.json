@@ -61,7 +61,7 @@
     // complexity, max-lines-per-function
     { "files": ["packages/client/src/features/connection/components/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function, sonarjs/misplaced-loop-counter
-    { "files": ["packages/client/src/features/connection/screens/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "sonarjs/misplaced-loop-counter": "off" } },
+    { "files": ["packages/client/src/features/connection/screens/*"], "rules": { "complexity": "off" } },
     // complexity, max-lines, max-lines-per-function, prefer-const, unicorn/consistent-function-scoping, vitest/expect-expect
     { "files": ["packages/client/src/features/connection/state/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "prefer-const": "off", "unicorn/consistent-function-scoping": "off", "vitest/expect-expect": "off" } },
     // max-lines-per-function, typescript/no-misused-promises, unicorn/consistent-function-scoping

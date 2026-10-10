@@ -1,78 +1,65 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { fails, pending } from '../../../../mocks/trpc-mock-link';
-import { ConnectionScreen } from './connection-screen';
-import { connectionScreenMocks } from './connection-screen.mocks';
+import { ConnectionView } from './connection-view';
+import { loadedServer } from './connection-view.fixtures';
 
 const meta = {
   title: 'Tests/ConnectionScreen',
-  component: ConnectionScreen,
-  parameters: { trpc: connectionScreenMocks },
-} satisfies Meta<typeof ConnectionScreen>;
+  component: ConnectionView,
+  args: { connection: 'open', server: loadedServer },
+} satisfies Meta<typeof ConnectionView>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const ShowsServerInfoAndClock: Story = {
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText('1.2.3')).toBeVisible();
+    await expect(canvas.getByText('1.2.3')).toBeVisible();
     await expect(canvas.getByText('2026-10-03T09:00:00.000Z')).toBeVisible();
     await expect(canvas.getByText('4242')).toBeVisible();
-    await expect(
-      await canvas.findByText('2026-10-03T10:00:00.000Z'),
-    ).toBeVisible();
+    await expect(canvas.getByText('2026-10-03T10:00:00.000Z')).toBeVisible();
     // An open Connection shows no banner.
     await expect(canvas.queryByRole('status')).toBeNull();
   },
 };
 
-export const ShowsNewestClockTick: Story = {
-  parameters: {
-    trpc: {
-      'system.clock': async function* () {
-        yield { now: '2026-10-03T10:00:00.000Z' };
-        yield { now: '2026-10-03T10:00:01.000Z' };
-      },
-    },
-  },
-  play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText('2026-10-03T10:00:01.000Z'),
-    ).toBeVisible();
-  },
-};
-
 export const ShowsLoadingUntilServerAnswers: Story = {
-  parameters: {
-    trpc: { 'system.info': pending(), 'system.clock': pending() },
-  },
+  args: { server: { status: 'loading' } },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Connecting to the Server…')).toBeVisible();
+    await expect(canvas.queryByText('Version')).toBeNull();
   },
 };
 
 export const ShowsSystemInfoError: Story = {
-  parameters: {
-    trpc: { 'system.info': fails('Server is down'), 'system.clock': pending() },
-  },
+  args: { server: { status: 'error', message: 'Server is down' } },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText('Server is down')).toBeVisible();
+    await expect(canvas.getByText('Server is down')).toBeVisible();
+    await expect(canvas.queryByText('Version')).toBeNull();
+  },
+};
+
+export const ShowsPlaceholderBeforeFirstClockTick: Story = {
+  args: { server: { ...loadedServer, clock: undefined } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Clock')).toBeVisible();
+    await expect(canvas.getByText('…')).toBeVisible();
   },
 };
 
 export const ShowsReconnectingBanner: Story = {
-  parameters: { connection: 'reconnecting' },
+  args: { connection: 'reconnecting' },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('status')).toHaveTextContent(
       'Reconnecting to the Server…',
     );
     // The last data stays on screen while the Connection is down.
-    await expect(await canvas.findByText('4242')).toBeVisible();
+    await expect(canvas.getByText('4242')).toBeVisible();
   },
 };
 
 export const ShowsOfflineBanner: Story = {
-  parameters: { connection: 'offline' },
+  args: { connection: 'offline' },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('status')).toHaveTextContent(
       'The Server is offline. Argo keeps trying to reconnect.',

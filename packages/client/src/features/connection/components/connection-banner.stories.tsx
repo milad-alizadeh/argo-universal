@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { ConnectionStatePreview } from '../../../../mocks/connection-state-preview';
 import { Variation, Variations } from '../../../lib/generic/variations';
 import { ConnectionBanner } from './connection-banner';
 
@@ -14,6 +13,7 @@ type Story = StoryObj<typeof meta>;
 // An open Connection shows no banner, so only the two down states appear.
 export const Overview: Story = {
   name: 'ConnectionBanner',
+  args: { state: 'reconnecting' },
   render: () => (
     <Variations className="max-w-none">
       {(
@@ -24,9 +24,7 @@ export const Overview: Story = {
       ).map(([label, state]) => (
         <Variation key={state} label={label}>
           <View className="w-full bg-background wide:bg-sidebar">
-            <ConnectionStatePreview state={state}>
-              <ConnectionBanner />
-            </ConnectionStatePreview>
+            <ConnectionBanner state={state} />
           </View>
         </Variation>
       ))}

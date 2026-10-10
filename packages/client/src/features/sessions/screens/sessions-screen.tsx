@@ -195,7 +195,7 @@ export function SessionsScreen({
 
   const listTop = (
     <>
-      <ConnectionBanner />
+      <ConnectionBanner state={connection} />
       {listUpdates.status === 'error' && connection === 'open' && (
         <LoadError
           title="Live updates stopped"

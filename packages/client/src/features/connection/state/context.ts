@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useRef } from 'react';
 import type { SnapshotFrom } from 'xstate';
 import type { connectionMachine } from './machine';
 import type { ConnectionActor } from './open-connection';
+import { shouldResubscribe } from './should-resubscribe';
 
 export type ConnectionState = SnapshotFrom<
   typeof connectionMachine
@@ -30,8 +31,7 @@ export function useResubscribeOnReconnect(subscription: {
   const previous = useRef(state);
   const { status, reset } = subscription;
   useEffect(() => {
-    if (previous.current !== 'open' && state === 'open' && status === 'error')
-      reset();
+    if (shouldResubscribe(previous.current, state, status)) reset();
     previous.current = state;
   }, [state, status, reset]);
 }
