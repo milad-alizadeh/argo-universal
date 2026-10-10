@@ -215,11 +215,8 @@
       }
     },
     {
-      // Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021).
-      "files": [
-        "packages/client/src/features/*/screens/**",
-        "packages/client/src/features/*/components/**"
-      ],
+      // Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021); components and stories are held further down.
+      "files": ["packages/client/src/features/*/screens/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -227,16 +224,16 @@
             "paths": [
               {
                 "name": "@trpc/client",
-                "message": "Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021)."
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
               },
               {
                 "name": "../trpc/create-trpc-client",
-                "message": "Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021)."
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
               },
               {
                 "name": "../trpc/context",
                 "importNames": ["useTRPCClient"],
-                "message": "Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021)."
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
               }
             ],
             "patterns": [
@@ -258,10 +255,11 @@
       }
     },
     {
-      // Split features' components and stories take props only: no tRPC, TanStack Query, tRPC client or data hook (ADR-0021).
+      // Every feature's components and stories take props only: no tRPC, TanStack Query, the Connection's tRPC client or a data hook (ADR-0021). Data hooks are named `use-*-query` or listed here.
       "files": [
-        "packages/client/src/features/agents/components/**",
-        "packages/client/src/features/connection/components/**"
+        "packages/client/src/features/*/components/**",
+        "packages/client/src/features/**/*.stories.*",
+        "packages/client/src/*.stories.*"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -270,23 +268,23 @@
             "paths": [
               {
                 "name": "@trpc/client",
-                "message": "Components take props only (ADR-0021)."
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
                 "name": "@trpc/tanstack-react-query",
-                "message": "Components take props only (ADR-0021)."
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
                 "name": "@tanstack/react-query",
-                "message": "Components take props only (ADR-0021)."
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
                 "name": "../trpc/context",
-                "message": "Components take props only (ADR-0021)."
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
                 "name": "../trpc/create-trpc-client",
-                "message": "Components take props only (ADR-0021)."
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
                 "name": "../state/context",
@@ -295,67 +293,7 @@
                   "useConnectionState",
                   "useResubscribeOnReconnect"
                 ],
-                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
-              },
-              {
-                "name": "#features/connection",
-                "importNames": [
-                  "useTRPC",
-                  "useConnection",
-                  "useConnectionState"
-                ],
-                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
-              },
-              {
-                "name": "../hooks/use-agent-catalog",
-                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
-              },
-              {
-                "name": "../hooks/use-agents",
-                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
-              },
-              {
-                "name": "../hooks/use-custom-agents",
-                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
-              }
-            ],
-            "patterns": [
-              {
-                "regex": "^#features/[^/]+/",
-                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
-              },
-              {
-                "regex": "^\\.\\./\\.\\./[^.]",
-                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
-              },
-              {
-                "group": ["@repo/client", "@repo/client/**"],
-                "message": "Client modules never import the client barrel (A2)."
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      // The Sessions components and stories take props only: no tRPC, TanStack Query or data hook (ADR-0021).
-      "files": ["packages/client/src/features/sessions/components/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "paths": [
-              {
-                "name": "@trpc/client",
-                "message": "Components take props only (ADR-0021)."
-              },
-              {
-                "name": "@trpc/tanstack-react-query",
-                "message": "Components take props only (ADR-0021)."
-              },
-              {
-                "name": "@tanstack/react-query",
-                "message": "Components take props only (ADR-0021)."
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
                 "name": "#features/connection",
@@ -365,25 +303,58 @@
                   "useConnectionState",
                   "useBlobUrl"
                 ],
-                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
                 "name": "#features/agents",
-                "importNames": ["useAgents"],
-                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+                "importNames": [
+                  "useAgents",
+                  "useAgentCatalog",
+                  "useCustomAgents"
+                ],
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
                 "name": "#features/feed",
                 "importNames": ["useSessionFeed"],
-                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
                 "name": "#features/composer",
                 "importNames": ["useImageDraft", "useNewSessionConfiguration"],
-                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/frame",
+                "importNames": ["useAttentionCount"],
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-agent-catalog",
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-agents",
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-custom-agents",
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-session-feed",
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-attention-count",
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               }
             ],
             "patterns": [
+              {
+                "regex": "(^|/)use-[^/]*-query$",
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
               {
                 "regex": "^#features/[^/]+/",
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
