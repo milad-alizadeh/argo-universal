@@ -7,9 +7,9 @@ import { createActor, waitFor, type Actor, type ActorRefFrom } from 'xstate';
 import type { HttpServer } from '../src/engine/http-server';
 import { engineMachine, type EngineInput } from '../src/engine/machine';
 import { findMachineActor } from '../src/lib/machine-actor';
-import { databaseWriterId, writerMachine } from '../src/services/feed';
 import type { RegistryActorRef } from '../src/services/sessions';
 import { sessionRegistryId, registryMachine } from '../src/services/sessions';
+import { databaseWriterId, writerMachine } from '../src/storage';
 import { openTestDatabase } from './database';
 import { scriptedEngineInput } from './scripted-engine';
 

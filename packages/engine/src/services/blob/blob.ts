@@ -10,13 +10,13 @@ import type { Database } from '@repo/db';
 import { blob, blobRef } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, eq, lt, notExists } from 'drizzle-orm';
-import type { ActorRefFrom } from 'xstate';
 import type { z } from 'zod';
 import {
-  writeBlobFile,
+  type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
-  type writerMachine,
-} from '../feed';
+} from '../../storage';
+import { writeBlobFile } from '../feed';
+import { BlobMetadataUpsertJob } from './blob-storage';
 
 const unusedBlobAge = 86_400_000;
 
@@ -59,7 +59,7 @@ const mimeOf = (bytes: Buffer, declared: string): string =>
 
 export async function uploadBlob(
   resources: {
-    databaseWriter: ActorRefFrom<typeof writerMachine>;
+    databaseWriter: WriterActorRef;
     blobsFolder: string;
   },
   file: z.output<typeof BlobUploadInput>,
@@ -75,10 +75,9 @@ export async function uploadBlob(
   const mime = mimeOf(bytes, file.type);
   await writeDatabaseJobAndWaitForCommit(
     resources.databaseWriter,
-    {
-      type: 'blobMetadataUpsert',
+    new BlobMetadataUpsertJob({
       blob: { id: blobId, mime, bytes: bytes.length },
-    },
+    }),
     true,
   );
   return { blobId, mime, bytes: bytes.length };

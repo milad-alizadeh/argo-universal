@@ -31,8 +31,9 @@ import {
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { appRouter } from '../../engine/router';
+import { writeJobs } from '../../storage';
+import { FeedRowsJob } from './feed-storage';
 import type { FeedActorRef } from './index';
-import { writeJobs } from './writer-job';
 
 const afterRejectionRowId = 'after-rejection';
 const storedBeforeStreamText = 'Stored first';
@@ -139,14 +140,13 @@ const longHistoryPositions = Array.from(
 // Stored rows after the five every test starts with, so one catch-up spans three pages.
 const storeLongHistory = (): void =>
   writeJobs(database, [
-    {
-      type: 'feedRows',
+    new FeedRowsJob({
       sessionId: 'session-1',
       rows: longHistoryPositions
         .slice(5)
         .map((position): ReturnType<typeof message> => message(position)),
       maxRevision: longHistoryRows,
-    },
+    }),
   ]);
 
 beforeEach((): void => {
@@ -159,14 +159,13 @@ beforeEach((): void => {
     remove: removeDatabase,
   } = openTestDatabase({ epoch: 3 }));
   writeJobs(database, [
-    {
-      type: 'feedRows',
+    new FeedRowsJob({
       sessionId: 'session-1',
       rows: [0, 1, 2, 3, 4].map((position): ReturnType<typeof message> =>
         message(position),
       ),
       maxRevision: 5,
-    },
+    }),
   ]);
   onTestFinished(removeDatabase);
 });

@@ -29,11 +29,12 @@ import {
 } from 'vitest';
 import { type ActorRefFrom, createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
-import { storedFeedColumns } from '../services/feed';
-import { type FeedRowWrite, type WriterJob, writeJobs } from '../services/feed';
-import type { EngineMessage } from './ipc';
-import { engineMachine } from './machine';
+import type { EngineMessage } from '../../engine/ipc';
+import { engineMachine } from '../../engine/machine';
+import { writeJobs } from '../../storage';
+import { type FeedRowWrite, storedFeedColumns } from '../feed';
 import { recoverAfterRestart } from './recovery';
+import { TurnInsertJob } from './session-storage';
 
 const runningTurnId = 'running-turn';
 const partialReply = 'Partial reply';
@@ -134,12 +135,15 @@ const messageRow = (
   sourceRef: { line: 7 },
 });
 
+const fail = (message: string): never => {
+  throw new Error(message);
+};
+const engineDatabase = (): Database =>
+  engine.getSnapshot().context.database ?? fail('The Engine has no database');
+
 const seedStoredFeedRows = (
   database: Database,
-  input: Pick<
-    Extract<WriterJob, { type: 'feedRows' }>,
-    'sessionId' | 'maxRevision'
-  > & { rows: FeedRowWrite[] },
+  input: { sessionId: string; maxRevision: number; rows: FeedRowWrite[] },
 ): void => {
   database
     .insert(feedRow)
@@ -188,8 +192,7 @@ beforeEach(async (): Promise<void> => {
   messages = [];
   rowsAtReady = [];
   await startEngine();
-  const database =
-    engine.getSnapshot().context.database ?? expect.unreachable();
+  const database = engineDatabase();
   database
     .insert(project)
     .values({ id: 'project', path: '/project', name: 'Project' })
@@ -228,15 +231,12 @@ afterEach(async (): Promise<void> => {
 
 describe('Engine restart recovery', (): void => {
   it('repairs an interrupted Turn and its Feed before reporting ready', async (): Promise<void> => {
-    const database =
-      engine.getSnapshot().context.database ?? expect.unreachable();
+    const database = engineDatabase();
     writeJobs(database, [
-      {
-        type: 'turnInsert',
+      new TurnInsertJob({
         turn: { id: runningTurnId, sessionId: 'session-1', status: 'running' },
-      },
-      {
-        type: 'turnInsert',
+      }),
+      new TurnInsertJob({
         turn: {
           id: 'ended-turn',
           sessionId: 'session-1',
@@ -244,7 +244,7 @@ describe('Engine restart recovery', (): void => {
           stopReason: 'end_turn',
           endedAt: 10,
         },
-      },
+      }),
     ]);
     seedStoredFeedRows(database, {
       sessionId: 'session-1',
@@ -310,8 +310,7 @@ describe('Engine restart recovery', (): void => {
     rowsAtReady = [];
     await startEngine();
 
-    const repaired =
-      rowsAtReady[0] ?? expect.unreachable('The Engine did not report ready');
+    const repaired = rowsAtReady[0] ?? fail('The Engine did not report ready');
     expect(repaired.turns[0]).toEqual(unchangedTurn);
     expect(repaired.turns[1]).toMatchObject({
       status: 'ended',
@@ -400,8 +399,7 @@ describe('Engine restart recovery', (): void => {
   });
 
   it('deletes blobs no prompt refers to once they are over a day old', async (): Promise<void> => {
-    const database =
-      engine.getSnapshot().context.database ?? expect.unreachable();
+    const database = engineDatabase();
     const blobsFolder = join(home, 'blobs');
     mkdirSync(blobsFolder);
     const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -427,13 +425,11 @@ describe('Engine restart recovery', (): void => {
   });
 
   it('rolls back every repair and fails without serving when a Session write fails', async (): Promise<void> => {
-    const database =
-      engine.getSnapshot().context.database ?? expect.unreachable();
+    const database = engineDatabase();
     writeJobs(database, [
-      {
-        type: 'turnInsert',
+      new TurnInsertJob({
         turn: { id: runningTurnId, sessionId: 'session-1', status: 'running' },
-      },
+      }),
     ]);
     seedStoredFeedRows(database, {
       sessionId: 'session-1',
@@ -466,13 +462,11 @@ describe('Engine restart recovery', (): void => {
   });
 
   it('settles and counts unrecognised Feed payloads before serving', async (): Promise<void> => {
-    const database =
-      engine.getSnapshot().context.database ?? expect.unreachable();
+    const database = engineDatabase();
     writeJobs(database, [
-      {
-        type: 'turnInsert',
+      new TurnInsertJob({
         turn: { id: runningTurnId, sessionId: 'session-1', status: 'running' },
-      },
+      }),
     ]);
     seedStoredFeedRows(database, {
       sessionId: 'session-1',
@@ -515,7 +509,7 @@ describe('Engine restart recovery', (): void => {
         expect.objectContaining({ type: 'ready' }),
       );
       const repaired =
-        rowsAtReady[0] ?? expect.unreachable('The Engine did not report ready');
+        rowsAtReady[0] ?? fail('The Engine did not report ready');
       expect(
         repaired.rows.map(
           ({

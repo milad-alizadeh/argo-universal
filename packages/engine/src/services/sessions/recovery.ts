@@ -7,7 +7,7 @@ import {
   hydrateStoredFeedRow,
   payloadVersion,
   storedFeedColumns,
-} from '../services/feed';
+} from '../feed';
 
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
 export function recoverAfterRestart(database: Database): void {
@@ -15,7 +15,7 @@ export function recoverAfterRestart(database: Database): void {
     runningToolCallStatuses.map((status): SQL<unknown> => sql`${status}`),
     sql`, `,
   )}) else 0 end`;
-  void database.transaction((transaction): void => {
+  database.transaction((transaction): void => {
     transaction
       .update(turn)
       .set({

@@ -10,7 +10,11 @@ import { TRPCError } from '@trpc/server';
 import { type Actor, type ActorRefFrom, createActor } from 'xstate';
 import { z } from 'zod';
 import { findMachineActor } from '../../lib/machine-actor';
-import { databaseWriterId, writerMachine } from '../feed';
+import {
+  databaseWriterId,
+  type WriterActorRef,
+  writerMachine,
+} from '../../storage';
 import type { RegistryActorRef } from './registry-machine';
 import {
   type SessionListMachineInput,
@@ -36,7 +40,7 @@ export function createSessionList(options: {
   counts: (signal: AbortSignal | undefined) => AsyncIterable<SessionCounts>;
 } {
   const { sessions } = options;
-  const findWriterActor = (): ActorRefFrom<typeof writerMachine> | undefined =>
+  const findWriterActor = (): WriterActorRef | undefined =>
     findMachineActor(sessions.system, databaseWriterId, writerMachine);
   const {
     readRows: readAllSessionRows,

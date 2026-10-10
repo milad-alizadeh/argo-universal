@@ -8,11 +8,11 @@ import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { type Checkout, createCheckout, discardCheckout } from '@repo/git';
 import { and, desc, eq, max } from 'drizzle-orm';
-import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
-import { readWriterProjection, titleFromPrompt, type WriterJob } from '../feed';
-import type { writerMachine } from '../feed';
+import type { WriterActorRef } from '../../storage';
+import { readQueuedFeed, titleFromPrompt } from '../feed';
 import { decodeStoredSession, storedSessionColumns } from './session-record';
+import { readQueuedSessionRows, SessionInsertJob } from './session-storage';
 
 // Prompted creation carries the first Turn's id.
 export type SessionCreationInput = SessionNewInput & {
@@ -81,9 +81,8 @@ export { titleFromPrompt } from '../feed';
 export function toSessionInsert(
   input: NewSessionInput,
   data: SessionData,
-): Extract<WriterJob, { type: 'sessionInsert' }> {
-  return {
-    type: 'sessionInsert',
+): SessionInsertJob {
+  return new SessionInsertJob({
     session: {
       id: data.sessionId,
       projectId: data.projectId,
@@ -98,7 +97,7 @@ export function toSessionInsert(
       activityAt: data.activityAt,
     },
     checkoutChoice: input.checkout,
-  };
+  });
 }
 
 // Removes the worktree of a Session that never started; the main checkout stays.
@@ -149,21 +148,20 @@ const readUndisclosedInterruption = (
 
 export async function loadSession(
   input: SessionInput,
-  writer?: ActorRefFrom<typeof writerMachine>,
+  writer?: WriterActorRef,
 ): Promise<SessionData> {
   const stored = input.database
     .select(storedSessionColumns)
     .from(session)
     .where(eq(session.id, input.sessionId))
     .get();
-  const projection = readWriterProjection(writer);
-  const pending = projection.session(
+  const pending = readQueuedSessionRows(writer).session(
     stored && SessionRecord.parse(decodeStoredSession(stored)),
     input.sessionId,
   );
   if (!pending) throw new Error(`No Session ${input.sessionId}`);
   const row = pending;
-  const pendingFeed = projection.feed(input.sessionId);
+  const pendingFeed = readQueuedFeed(writer, input.sessionId);
   const position = input.database
     .select({ highest: max(feedRow.position) })
     .from(feedRow)

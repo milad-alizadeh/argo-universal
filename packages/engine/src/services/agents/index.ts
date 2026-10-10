@@ -22,6 +22,7 @@ export type {
   ResolveAgentLaunch,
 } from './acp/resource-types';
 export { type FetchAgents } from './catalog/fetch-agents';
+export { AgentCatalogReplaceJob } from './agent-storage';
 
 export {
   syncSupervisorMachine,

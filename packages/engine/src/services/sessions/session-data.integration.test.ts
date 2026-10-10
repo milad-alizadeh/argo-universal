@@ -10,8 +10,8 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedMessage } from '#mocks/feed';
-import { writeJobs } from '../feed';
-import { writerMachine } from '../feed';
+import { writeJobs, writerMachine } from '../../storage';
+import { FeedRowsJob } from '../feed';
 import {
   createSessionCheckout,
   discardSessionCheckout,
@@ -19,6 +19,7 @@ import {
   titleFromPrompt,
   toSessionInsert,
 } from './session-data';
+import { SessionRowUpdateJob } from './session-storage';
 
 const newSessionId = 'new-session';
 
@@ -190,20 +191,18 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
   cleanups.push((): typeof writer => writer.stop());
   writer.send({
     type: 'writer.write',
-    job: {
-      type: 'sessionRowUpdate',
+    job: new SessionRowUpdateJob({
       id: 'session-1',
       set: { vendorSessionId: 'vendor-resume' },
-    },
+    }),
   });
   writer.send({
     type: 'writer.write',
-    job: {
-      type: 'feedRows',
+    job: new FeedRowsJob({
       sessionId: 'session-1',
       maxRevision: 12,
       rows: [storedMessage(4, 12)],
-    },
+    }),
   });
   await waitFor(writer, (snapshot): boolean =>
     snapshot.matches('waitingToRetry'),

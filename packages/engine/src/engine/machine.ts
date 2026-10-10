@@ -21,14 +21,19 @@ import {
   type SyncSupervisorInput,
 } from '../services/agents';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
-import { writerMachine, databaseWriterId } from '../services/feed';
 import { seedProject } from '../services/projects';
 import {
   type RegistryInput,
+  recoverAfterRestart,
   registryMachine,
   sessionRegistryId,
   type RegistryActorRef,
 } from '../services/sessions';
+import {
+  databaseWriterId,
+  type WriterActorRef,
+  writerMachine,
+} from '../storage';
 import {
   type HttpServer,
   type HttpServerOptions,
@@ -36,7 +41,6 @@ import {
 } from './http-server';
 import type { EngineMessage } from './ipc';
 import { type EngineStop, processSignals } from './process-signals';
-import { recoverAfterRestart } from './recovery';
 
 const finishingEngineTarget = '#engine.finishing';
 
@@ -493,9 +497,7 @@ function requireSessionRegistry(
   return actor;
 }
 
-function requireDatabaseWriter(
-  system: AnyActorRef['system'],
-): ActorRefFrom<typeof writerMachine> {
+function requireDatabaseWriter(system: AnyActorRef['system']): WriterActorRef {
   const actor = system.get(databaseWriterId);
   if (!actor) throw new Error('Database Writer is not running');
   return actor;

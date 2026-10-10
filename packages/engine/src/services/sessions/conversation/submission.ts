@@ -1,13 +1,10 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
 import type { ContentBlock } from '@repo/contracts';
 import type { Subscription } from 'xstate';
+import type { WriterCommit } from '../../../storage';
 import type { AcpSessionLease } from '../../agents';
 import type { BlobStorage } from '../../blob';
-import {
-  userMessageChange,
-  type FeedActorRef,
-  type WriterCommit,
-} from '../../feed';
+import { userMessageChange, type FeedActorRef } from '../../feed';
 import { readAcpPromptContent } from './prompt-content';
 
 export type LocalSubmission = {

@@ -18,6 +18,7 @@ import {
   getShortestPaths,
   getSimplePaths,
 } from 'xstate/graph';
+import { SqlJob } from '#mocks/storage-job';
 import type { WriterJob, writeJobs } from './writer-job';
 import { writerMachine } from './writer-machine';
 
@@ -75,29 +76,25 @@ const machine = writerMachine.provide({
 });
 type WriterSnapshot = SnapshotFrom<typeof machine>;
 
-// One queued Feed row job spends the budget, so the model reaches a refusal.
+// One queued refusable job spends the budget, so the model reaches a refusal.
 const input = {
   now: (): number => 1000,
   database: mockDatabase,
-  feedRowJobLimit: 1,
+  refusableJobLimit: 1,
 };
 const writeError = new Error('database is locked');
-const job = (index: number): WriterJob => ({
-  type: 'turnUpdate',
-  id: `turn-${index}`,
-  set: { endedAt: index },
-});
-const feedRowsJob = (index: number): WriterJob => ({
-  type: 'feedRows',
-  sessionId: 'session-1',
-  rows: [],
-  maxRevision: index,
-});
-const isFeedRows = (queued: WriterJob): boolean => queued.type === 'feedRows';
+const job = (index: number): WriterJob =>
+  new SqlJob({ statement: `UPDATE turn SET ended_at = ${index}` });
+const refusableJob = (index: number): WriterJob =>
+  new SqlJob({
+    statement: `UPDATE session SET max_revision = ${index}`,
+    refusable: true,
+  });
+const isRefusable = (queued: WriterJob): boolean => queued.refusable === true;
 // Sends the next numbered job of the same kind and records it as sent or refused.
-const sendWrite = (type: WriterJob['type'] = 'turnUpdate'): void => {
+const sendWrite = (refusable = false): void => {
   const index = sentJobs.length + refusedJobs.length + 1;
-  const sent = type === 'feedRows' ? feedRowsJob(index) : job(index);
+  const sent = refusable ? refusableJob(index) : job(index);
   sentJobs.push(sent);
   writer.send({
     type: writeFeedEvent,
@@ -179,7 +176,7 @@ const executors: Record<string, EventExecutor<WriterSnapshot, WriterEvent>> = {
     writer = createActor(machine, { input }).start();
   },
   'writer.write': ({ event }): void => {
-    if (event.type === writeFeedEvent) sendWrite(event.job.type);
+    if (event.type === writeFeedEvent) sendWrite(isRefusable(event.job));
   },
   'writer.drain': (): void => writer.send({ type: drainWriterEvent }),
   'xstate.done.actor.writeBatch': (): Promise<void> =>
@@ -201,7 +198,7 @@ const expectModelState = (expected: WriterSnapshot): void => {
   expect(actual.value).toEqual(expected.value);
   expect(actual.status).toBe(expected.status);
   expect(actual.context.batchSize > 0).toBe(expected.context.batchSize > 0);
-  // Queued Feed row jobs carry the clock value they were enqueued at.
+  // Queued jobs carry the clock value they were enqueued at.
   expect([...committedJobs, ...actual.context.queue]).toMatchObject(sentJobs);
 };
 // A running batch holds the oldest queued jobs, and no other batch runs.
@@ -225,13 +222,13 @@ const expectNoBatchRunning = (): void => {
 };
 const isWriteFailure = (line: string): boolean => line.startsWith('could not');
 const refusalLine =
-  'Storage is failing: refusing Feed rows while 1 Feed row jobs wait';
-// A Writer refuses Feed rows only while its budget is spent, and logs at most once per refused job.
+  'Storage is failing: refusing jobs while 1 refusable jobs wait';
+// A Writer refuses refusable jobs only while its budget is spent, and logs at most once per refused job.
 const expectRefusals = (): void => {
   const { queue, refusing } = writer.getSnapshot().context;
   const refusals = logLines.filter((line): boolean => line === refusalLine);
   expect(refusals.length).toBeLessThanOrEqual(refusedJobs.length);
-  if (refusing) expect(queue.some(isFeedRows)).toBe(true);
+  if (refusing) expect(queue.some(isRefusable)).toBe(true);
   if (refusing) expect(refusals.length).toBeGreaterThan(0);
 };
 const states: Record<string, (snapshot: WriterSnapshot) => void> = {
@@ -261,12 +258,12 @@ const states: Record<string, (snapshot: WriterSnapshot) => void> = {
   },
 };
 
-// Feed row writes and the budget they spend, walked by shortest paths only so simple paths stay few.
+// Refusable writes and the budget they spend, walked by shortest paths only so simple paths stay few.
 const budgetOptions = {
   ...options,
   events: [
     ...events,
-    { type: writeFeedEvent, job: feedRowsJob(0) },
+    { type: writeFeedEvent, job: refusableJob(0) },
   ] satisfies WriterEvent[],
   serializeState: (
     snapshot: WriterSnapshot,
@@ -275,7 +272,7 @@ const budgetOptions = {
   ): string =>
     JSON.stringify({
       state: options.serializeState(snapshot, event, previous),
-      feedRowsQueued: snapshot.context.queue.some(isFeedRows),
+      refusableQueued: snapshot.context.queue.some(isRefusable),
       refusing: snapshot.context.refusing,
     }),
 };
@@ -285,7 +282,7 @@ mockDatabase.$client.close();
 const title = (path: StatePath<WriterSnapshot, WriterEvent>): string =>
   path.steps
     .map(({ event }): string =>
-      `${event.type}${event.job?.type === 'feedRows' ? ' feedRows' : ''}`
+      `${event.type}${event.job?.refusable ? ' refusable' : ''}`
         .replace(/^xstate\.after\.(\w+)\..*$/, 'after $1')
         .replace(/^xstate\.(done|error)\.actor\.(\w+)$/, '$2 $1'),
     )
@@ -353,8 +350,8 @@ describe('database writer', (): void => {
     writer = createActor(machine, { input }).start();
   });
 
-  it('refuses Feed rows past its budget, still queues lifecycle jobs, and accepts Feed rows again after a commit', async (): Promise<void> => {
-    sendWrite('feedRows');
+  it('refuses refusable jobs past its budget, still queues other jobs, and accepts refusable jobs again after a commit', async (): Promise<void> => {
+    sendWrite(true);
     const committed = {
       resolve: vi.fn<() => void>(),
       reject: vi.fn<(error: unknown) => void>(),
@@ -362,7 +359,7 @@ describe('database writer', (): void => {
     const refused = vi.fn<() => void>();
     writer.send({
       type: writeFeedEvent,
-      job: feedRowsJob(9),
+      job: refusableJob(9),
       committed,
       refused,
     });
@@ -375,10 +372,11 @@ describe('database writer', (): void => {
     expect(refused).toHaveBeenCalledOnce();
     expect(logLines).toEqual([refusalLine]);
     await settle((call): void => call.resolve());
-    sendWrite('feedRows');
-    expect(
-      writer.getSnapshot().context.queue.map((queued) => queued.type),
-    ).toEqual(['turnUpdate', 'feedRows']);
+    sendWrite(true);
+    expect(writer.getSnapshot().context.queue.map(isRefusable)).toEqual([
+      false,
+      true,
+    ]);
   });
 
   it('retries a failed batch with the jobs that arrived meanwhile', async (): Promise<void> => {
@@ -391,44 +389,24 @@ describe('database writer', (): void => {
       'could not write, keeping 3 jobs to retry: Error: database is locked',
     ]);
     vi.advanceTimersByTime(writeRetryDelayMs);
-    expect(writeBatchCalls.map((call): WriterJob[] => call.jobs)).toEqual([
-      [job(1)],
-      [job(1), job(2), job(3)],
-    ]);
+    // The batches hold the jobs as sent, stamped with their enqueue time.
+    expect(writeBatchCalls.map((call): WriterJob[] => call.jobs)).toMatchObject(
+      [[job(1)], [job(1), job(2), job(3)]],
+    );
   });
 
-  it('keeps the enqueue clock value when a Feed write is retried', async (): Promise<void> => {
-    writer.send({
-      type: writeFeedEvent,
-      job: {
-        type: 'feedRows',
-        sessionId: 'session-1',
-        rows: [],
-        maxRevision: 1,
-      },
-    });
+  it('keeps the enqueue clock value when a write is retried', async (): Promise<void> => {
+    writer.send({ type: writeFeedEvent, job: job(1) });
     await settle((call): void => call.reject(writeError));
     vi.advanceTimersByTime(writeRetryDelayMs);
 
+    const stamped = new SqlJob({
+      statement: 'UPDATE turn SET ended_at = 1',
+      queuedAt: 1000,
+    });
     expect(writeBatchCalls.map((call): WriterJob[] => call.jobs)).toEqual([
-      [
-        {
-          type: 'feedRows',
-          sessionId: 'session-1',
-          rows: [],
-          maxRevision: 1,
-          activityAt: 1000,
-        },
-      ],
-      [
-        {
-          type: 'feedRows',
-          sessionId: 'session-1',
-          rows: [],
-          maxRevision: 1,
-          activityAt: 1000,
-        },
-      ],
+      [stamped],
+      [stamped],
     ]);
   });
 
@@ -441,7 +419,7 @@ describe('database writer', (): void => {
 
     expect(writer.getSnapshot().status).toBe('done');
     expect(logLines).toEqual([
-      'could not write while draining, lost 1 jobs: Error: database is locked\nupdate Turn turn-2: endedAt',
+      'could not write while draining, lost 1 jobs: Error: database is locked\nUPDATE turn SET ended_at = 2',
     ]);
   });
 

@@ -1,10 +1,16 @@
 import { expect, it, onTestFinished } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
+import { SqlJob } from '#mocks/storage-job';
 import { writerMachine } from './writer-machine';
 
 const writeEvent = 'writer.write';
-const storedSessionId = 'session-1';
+const setTitle = (title: string): SqlJob =>
+  new SqlJob({ statement: `UPDATE session SET title = '${title}'` });
+const insertTurn = new SqlJob({
+  statement:
+    "INSERT INTO turn (id, session_id, status) VALUES ('turn-1', 'session-1', 'running')",
+});
 const startWriter = (): ReturnType<typeof openTestDatabase> & {
   writer: ReturnType<typeof createActor<typeof writerMachine>>;
 } => {
@@ -24,18 +30,11 @@ it('a Writer acknowledgement follows the durable ordered prefix', async () => {
   const committed = Promise.withResolvers<void>();
   writer.send({
     type: writeEvent,
-    job: {
-      type: 'sessionRowUpdate',
-      id: storedSessionId,
-      set: { title: 'saved' },
-    },
+    job: setTitle('saved'),
   });
   writer.send({
     type: writeEvent,
-    job: {
-      type: 'turnInsert',
-      turn: { id: 'turn-1', sessionId: storedSessionId, status: 'running' },
-    },
+    job: insertTurn,
     committed,
   });
   await committed.promise;
@@ -59,18 +58,11 @@ it('a failed prefix permanently rejects a receipt behind it while durable jobs s
   );
   writer.send({
     type: writeEvent,
-    job: {
-      type: 'sessionRowUpdate',
-      id: storedSessionId,
-      set: { title: 'saved later' },
-    },
+    job: setTitle('saved later'),
   });
   writer.send({
     type: writeEvent,
-    job: {
-      type: 'turnInsert',
-      turn: { id: 'turn-1', sessionId: storedSessionId, status: 'running' },
-    },
+    job: insertTurn,
     committed,
   });
   expect(await outcome).toBe('rejected');
@@ -90,17 +82,13 @@ it('a receipt arriving while the Writer retries rejects without waiting for anot
   );
   writer.send({
     type: writeEvent,
-    job: {
-      type: 'sessionRowUpdate',
-      id: storedSessionId,
-      set: { title: 'blocked' },
-    },
+    job: setTitle('blocked'),
   });
   await waitFor(writer, (snapshot) => snapshot.matches('waitingToRetry'));
   const outcomes: string[] = [];
   writer.send({
     type: writeEvent,
-    job: { type: 'turnUpdate', id: 'absent', set: { status: 'ended' } },
+    job: new SqlJob({ statement: "UPDATE turn SET status = 'ended'" }),
     committed: {
       resolve: () => {
         outcomes.push('committed');

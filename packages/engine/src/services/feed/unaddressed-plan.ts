@@ -2,18 +2,17 @@ import type { PlanUpdate, SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, sql, type SQL } from 'drizzle-orm';
-import type { ActorRefFrom } from 'xstate';
+import type { WriterActorRef } from '../../storage';
 import {
   hydrateStoredFeedRow,
   newestRows,
   storedFeedColumns,
 } from './feed-row';
-import type { writerMachine } from './writer-machine';
-import { readWriterProjection } from './writer-projection';
+import { readQueuedFeed } from './feed-storage';
 
 type UnaddressedPlanRead = {
   database: Database;
-  writer: ActorRefFrom<typeof writerMachine> | undefined;
+  writer: WriterActorRef | undefined;
   sessionId: string;
   acpSessionId: string;
 };
@@ -63,7 +62,7 @@ export const readUnaddressedPlan = (
   input: UnaddressedPlanRead,
 ): PlanUpdate | undefined => {
   const stored = readStoredUnaddressedPlan(input);
-  const queued = readWriterProjection(input.writer).feed(input.sessionId).rows;
+  const queued = readQueuedFeed(input.writer, input.sessionId).rows;
   return selectUnaddressedPlanRow(
     [...(stored ? [stored] : []), ...queued],
     input.acpSessionId,
