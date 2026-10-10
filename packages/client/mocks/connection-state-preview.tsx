@@ -3,7 +3,7 @@ import { type ReactNode, useEffect, useMemo } from 'react';
 import {
   ConnectionContext,
   type ConnectionState,
-} from '../src/connection/context';
+} from '../src/features/connection/state/context';
 import { createConnectionStateMock } from './connection-state-mock';
 
 // Holds a Connection in `state` for its children and stops it on unmount.

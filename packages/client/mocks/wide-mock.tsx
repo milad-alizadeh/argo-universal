@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { Text, View } from 'react-native';
-import { useWide } from '../src/navigation/use-wide';
+import { useWide } from '../src/lib/generic/use-wide';
 
 export function WideMock(): React.JSX.Element {
   const wide = useWide();

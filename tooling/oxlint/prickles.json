@@ -411,7 +411,7 @@
     ],
 
     // A2 Three-Tier Hoisting — https://prickles.org/tenet/three-tier-hoisting/A2 (also covers: A3)
-    // Not carried over: oxlint has no import/no-restricted-paths, and Argo has no src/lib/generic or src/lib/product folders.
+    // Not carried over: oxlint has no import/no-restricted-paths; no-restricted-imports in argo.json guards the client lib/generic and lib/product folders instead.
     // Argo's own import boundaries, D1 to D11 in argo.json, take this rule's place (ADR-0017).
     // A3 Stable Dependencies — https://prickles.org/tenet/stable-dependencies-principle/A3 (also covers: A11)
     "import/no-cycle": "error"

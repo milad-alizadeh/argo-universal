@@ -3,16 +3,16 @@ import { View } from 'react-native';
 import {
   DesktopShell,
   type DesktopShellProps,
-} from '../src/components/desktop-shell';
-import { Icon } from '../src/lib/icon';
-import { Button } from '../src/primitives/button';
+} from '../src/features/frame/components/desktop-shell';
+import { Button } from '../src/lib/generic/primitives/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../src/primitives/dropdown-menu';
-import { Text } from '../src/primitives/text';
+} from '../src/lib/generic/primitives/dropdown-menu';
+import { Text } from '../src/lib/generic/primitives/text';
+import { Icon } from '../src/lib/generic/symbols/icon';
 
 export function DesktopShellFrame({
   selectedSection = 'sessions',

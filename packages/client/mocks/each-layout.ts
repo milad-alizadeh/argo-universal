@@ -1,4 +1,4 @@
-import { applyTheme } from '../src/lib/theme';
+import { applyTheme } from '../src/lib/generic/theme';
 import { settleViewport } from './settle-viewport';
 
 export const layoutWidths = { phone: 390, wide: 1440 } as const;

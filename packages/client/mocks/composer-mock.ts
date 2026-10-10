@@ -8,7 +8,7 @@ import {
 import {
   type ComposerImage,
   type ComposerProps,
-} from '../src/components/composer';
+} from '../src/features/composer/components/composer';
 
 const imageUri =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC';

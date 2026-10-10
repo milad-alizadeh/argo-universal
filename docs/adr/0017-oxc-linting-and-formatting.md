@@ -45,6 +45,39 @@ Spec 0009 #347 moves the unchanged App mocks from `packages/api/mocks` to the ex
 
 Only the existing `complexity`, `max-lines` and `max-lines-per-function` rules remain waived. The original one-folder scope stays identical. The guard rejects duplicate aliases, added rules and broader or unlisted globs. Its existing stale-rule check and prune still apply.
 
+## Client feature folders
+
+Spec 0011 #437 moves the client source, with behaviour unchanged, into `features/` and `lib/{product,generic}` (ADR-0016 item 9). The folders below are under `packages/client/src/` unless a full path is shown. Owner approval of these rows is pending in the pull request. Each new folder keeps the historical waiver identity of the old folders listed for it:
+
+| New folder entry | Original folder entries |
+|---|---|
+| `packages/client/src/*` | `trpc/*` |
+| `features/composer/components/*` | `components/*` |
+| `features/composer/hooks/*` | `components/*`, `screens/*` |
+| `features/composer/state/*` | `screens/*` |
+| `features/connection/components/*` | `components/*` |
+| `features/connection/screens/*` | `screens/*` |
+| `features/connection/state/*` | `connection/*` |
+| `features/connection/trpc/*` | `trpc/*` |
+| `features/feed/components/*` | `components/*` |
+| `features/feed/hooks/*` | `feed/*` |
+| `features/feed/view/*` | `feed/*` |
+| `features/frame/components/*` | `components/*` |
+| `features/frame/hooks/*` | `components/*` |
+| `features/frame/screens/*` | `screens/*` |
+| `features/requests/components/*` | `components/*` |
+| `features/sessions/components/*` | `components/*` |
+| `features/sessions/screens/*` | `screens/*` |
+| `features/settings/components/*` | `components/*` |
+| `lib/generic/*` | `lib/*`, `navigation/*` |
+| `lib/generic/primitives/*` | `components/*`, `primitives/*` |
+| `lib/generic/symbols/*` | `lib/*` |
+| `lib/product/*` | `components/*`, `screens/*` |
+| `lib/product/markdown/*` | `components/*` |
+| `lib/product/navigation/*` | `navigation/*` |
+
+This move changes the rules above in one way. One old folder may now split into several listed new folders, and those new folders may share its historical identity. That identity is no longer "duplicate" between them. Each new folder's rule set must stay a subset of the rules that its listed sources waived at the merge base. Once a new folder is in the baseline, it is compared with its own entry as well. The guard still rejects an old folder entry beside any of its new folders, added rules, and unlisted or broadened globs. Existing stale-rule check and prune still apply. Moved debt is not clearance; the burn-down tickets still own it.
+
 ## Considered Options
 
 - ESLint with the pack as published. Rejected by the owner for the OXC toolchain, which runs the same rules natively where it can (2026-10-07).

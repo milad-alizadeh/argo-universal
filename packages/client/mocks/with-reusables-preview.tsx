@@ -7,9 +7,9 @@ import { Platform, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { applyTheme } from '../src/lib/theme';
-import { cn } from '../src/lib/utils';
-import { BlobUrlContext } from '../src/trpc/blob-url';
+import { BlobUrlContext } from '../src/features/connection/trpc/blob-url';
+import { applyTheme } from '../src/lib/generic/theme';
+import { cn } from '../src/lib/generic/utils';
 import { recordedImageUrl } from './feed-message-mock';
 
 interface PreviewContext {

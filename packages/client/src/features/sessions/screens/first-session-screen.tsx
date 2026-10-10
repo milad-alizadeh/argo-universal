@@ -1,0 +1,38 @@
+import { useQuery } from '@tanstack/react-query';
+import type * as React from 'react';
+import { useState } from 'react';
+import { View } from 'react-native';
+import { useTRPC } from '#features/connection';
+import { LoadError } from '#lib/product/load-error';
+import { NewSessionScreen } from './new-session-screen';
+import { SessionScreen } from './session-screen';
+
+// The wide window's `/`: the first active Session, or New Session when there is none.
+export function FirstSessionScreen(): React.JSX.Element {
+  const trpc = useTRPC();
+  const list = useQuery(trpc.session.list.queryOptions({ archived: false }));
+  const [chosenId, setChosenId] = useState<string | null | undefined>();
+  if (list.isPending) return <View className="flex-1 bg-background" />;
+  if (list.isError)
+    return (
+      <LoadError
+        title="Couldn't load Sessions"
+        description="The Server didn't respond. Check that it's running, then retry."
+        onRetry={() => void list.refetch()}
+      />
+    );
+  const sessions = list.data?.sessions ?? [];
+  if (
+    chosenId === undefined ||
+    (chosenId !== null &&
+      !sessions.some((session) => session.sessionId === chosenId))
+  ) {
+    setChosenId(sessions[0]?.sessionId ?? null);
+    return <View className="flex-1 bg-background" />;
+  }
+  return chosenId === null ? (
+    <NewSessionScreen />
+  ) : (
+    <SessionScreen id={chosenId} />
+  );
+}

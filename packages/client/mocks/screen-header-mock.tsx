@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { HeaderButton } from '../src/components/header-button';
-import type { ScreenHeaderProps } from '../src/navigation/screen-header';
-import { Input } from '../src/primitives/input';
-import { Text } from '../src/primitives/text';
+import { Input } from '../src/lib/generic/primitives/input';
+import { Text } from '../src/lib/generic/primitives/text';
+import { HeaderButton } from '../src/lib/product/header-button';
+import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';
 
 // Stands in for the native stack's header in stories: one line of left item, title and right items.
 export function ScreenHeaderMock({

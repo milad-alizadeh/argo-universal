@@ -1,4 +1,4 @@
-import type { RenderSymbolImage } from '../src/lib/symbol-images';
+import type { RenderSymbolImage } from '../src/lib/generic/symbols/symbol-images';
 
 // Storybook's dev server draws SF Symbols on macOS; elsewhere it answers empty and the cell stays blank.
 export const renderStorybookSymbol: RenderSymbolImage = async ({

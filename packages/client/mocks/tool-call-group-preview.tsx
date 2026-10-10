@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { CommandRow } from '../src/components/command-row';
-import { ToolCallRow } from '../src/components/tool-call-row';
-import type { FeedActivity } from '../src/feed/feed-view';
+import { CommandRow } from '../src/features/feed/components/command-row';
+import { ToolCallRow } from '../src/features/feed/components/tool-call-row';
+import type { FeedActivity } from '../src/features/feed/view/feed-view';
 
 export function renderRecordedActivity(
   activity: FeedActivity,

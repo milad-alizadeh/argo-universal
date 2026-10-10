@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { ScrollFadeView } from '../src/components/scroll-fade';
-import { Text } from '../src/primitives/text';
+import { Text } from '../src/lib/generic/primitives/text';
+import { ScrollFadeView } from '../src/lib/product/scroll-fade';
 
 const outputLines = Array.from(
   { length: 40 },

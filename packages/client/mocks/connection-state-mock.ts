@@ -1,6 +1,6 @@
 import { createActor, fromCallback } from 'xstate';
-import type { ConnectionState } from '../src/connection/context';
-import { connectionMachine } from '../src/connection/machine';
+import type { ConnectionState } from '../src/features/connection/state/context';
+import { connectionMachine } from '../src/features/connection/state/machine';
 import { createConnectionInput } from './connection-input';
 
 // A Connection machine held in `state`, for stories; it watches no WebSocket and refetches nothing.

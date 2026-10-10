@@ -5,13 +5,14 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./custom-symbol-paths.json": "./src/lib/custom-symbol-paths.json",
+    "./custom-symbol-paths.json": "./src/lib/generic/symbols/custom-symbol-paths.json",
     "./mocks": "./mocks/index.ts"
   },
   "imports": {
-    "#components/*": "./src/components/*.tsx",
-    "#lib/*": "./src/lib/*.ts",
-    "#primitives/*": "./src/primitives/*.tsx"
+    "#features/*": "./src/features/*/index.ts",
+    "#lib/generic/*": "./src/lib/generic/*.ts",
+    "#lib/generic/primitives/*": "./src/lib/generic/primitives/*.tsx",
+    "#lib/product/*": "./src/lib/product/*.tsx"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

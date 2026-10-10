@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { StrictMode, useEffect, useState, useSyncExternalStore } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { AppProviders } from '../src/trpc/app-providers';
-import { useTRPCClient } from '../src/trpc/context';
+import { AppProviders } from '../src/app-providers';
+import { useTRPCClient } from '../src/features/connection/trpc/context';
 
 interface ConnectionReport {
   serverUrl: string;
