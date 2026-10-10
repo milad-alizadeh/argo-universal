@@ -1,4 +1,5 @@
 import { agents } from '@repo/db/schema';
+import { malformedRegistry } from '@repo/mocks/registry/catalog';
 import {
   publishedRegistryResponse,
   rejectedRegistryValues,
@@ -6,7 +7,11 @@ import {
 import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 
-it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
+it.each(
+  [...rejectedRegistryValues, malformedRegistry].map(
+    (value, index) => [index, value] as const,
+  ),
+)(
   'keeps exact published metadata and the last-good row after rejected refresh %i',
   async (_, value): Promise<void> => {
     const fetchAgents = vi
@@ -34,9 +39,28 @@ it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
       fetchedAt: before.fetchedAt,
       error: 'Registry metadata is malformed',
     });
+    expect(fetchAgents).toHaveBeenCalledTimes(2);
     expect(database.select().from(agents).all()).toEqual(stored);
     expect(
       stored.map((row) => JSON.parse(row.registryMetadata ?? 'null')),
     ).toEqual(publishedRegistryResponse.agents);
   },
 );
+
+it('reports malformed registry JSON once without a success-shaped empty catalog', async (): Promise<void> => {
+  const { caller } = await startEngineTestHost({
+    fetchAgents: async (): Promise<unknown> => '{broken',
+  });
+  await caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await caller.agents.catalog()).syncStatus, {
+      timeout: 4500,
+    })
+    .not.toMatch(/pending|running/);
+  expect(await caller.agents.catalog()).toMatchObject({
+    status: 'unavailable',
+    rejectedValues: 1,
+    error: 'Registry JSON is malformed',
+    agents: [],
+  });
+});

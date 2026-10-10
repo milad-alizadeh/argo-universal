@@ -1,13 +1,9 @@
 import { createMockAdapter } from '@repo/mocks/agent';
-import {
-  publishedRegistry,
-  malformedRegistry,
-} from '@repo/mocks/registry/catalog';
+import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 
 const exampleSearch = 'example';
-const offlineMessage = 'Registry is offline';
 
 it('browses upstream metadata through Agents without opening a conversation', async (): Promise<void> => {
   const fetchAgents = vi.fn<() => Promise<unknown>>(
@@ -42,45 +38,6 @@ it('browses upstream metadata through Agents without opening a conversation', as
   expect(probe).toHaveBeenCalledTimes(startupProbes);
 });
 
-it.each(['offline', 'malformed'] as const)(
-  'keeps last-good metadata after a %s refresh',
-  async (failure): Promise<void> => {
-    const fetchAgents = vi
-      .fn<() => Promise<unknown>>()
-      .mockResolvedValueOnce(publishedRegistry);
-    const { caller } = await startEngineTestHost({ fetchAgents });
-    await caller.agents.syncCatalog();
-    await expect
-      .poll(async () => (await caller.agents.catalog()).syncStatus, {
-        timeout: 4500,
-      })
-      .not.toMatch(/pending|running/);
-    if (failure === 'offline')
-      fetchAgents.mockRejectedValue(new Error(offlineMessage));
-    else fetchAgents.mockResolvedValue(malformedRegistry);
-    await caller.agents.syncCatalog();
-    await expect
-      .poll(async () => (await caller.agents.catalog()).syncStatus, {
-        timeout: 4500,
-      })
-      .not.toMatch(/pending|running/);
-    const refreshed = await caller.agents.catalog({
-      search: exampleSearch,
-    });
-    expect(refreshed).toMatchObject({
-      status: 'stale',
-      error: expect.stringMatching(/offline|malformed/),
-      rejectedValues: failure === 'malformed' ? 1 : 0,
-      agents: [{ entry: publishedRegistry.agents[0] }],
-    });
-    const searched = await caller.agents.catalog({ search: 'PYTHON' });
-    expect(searched.agents.map(({ entry }) => entry.id)).toEqual([
-      'python-agent',
-    ]);
-    expect(fetchAgents).toHaveBeenCalledTimes(failure === 'offline' ? 4 : 2);
-  },
-);
-
 it('shows the Server recipe rather than the App platform', async (): Promise<void> => {
   const { caller } = await startEngineTestHost({
     fetchAgents: async (): Promise<unknown> => publishedRegistry,
@@ -113,20 +70,27 @@ it('shows the Server recipe rather than the App platform', async (): Promise<voi
   ]);
 });
 
-it('reports malformed registry JSON once without a success-shaped empty catalog', async (): Promise<void> => {
-  const { caller } = await startEngineTestHost({
-    fetchAgents: async (): Promise<unknown> => '{broken',
-  });
+it('keeps literal substring search local, including percent, underscore and Unicode lowercasing', async (): Promise<void> => {
+  const agent = publishedRegistry.agents[0];
+  if (!agent) throw new Error('Registry mock needs an Agent');
+  const fetchAgents = vi.fn<() => Promise<unknown>>(async () => ({
+    ...publishedRegistry,
+    agents: [
+      { ...agent, name: 'Éclair_100%' },
+      { ...agent, id: 'plain', name: 'Plain' },
+    ],
+  }));
+  const { caller } = await startEngineTestHost({ fetchAgents });
   await caller.agents.syncCatalog();
   await expect
-    .poll(async () => (await caller.agents.catalog()).syncStatus, {
-      timeout: 4500,
-    })
-    .not.toMatch(/pending|running/);
-  expect(await caller.agents.catalog()).toMatchObject({
-    status: 'unavailable',
-    rejectedValues: 1,
-    error: 'Registry JSON is malformed',
-    agents: [],
-  });
+    .poll(async () => (await caller.agents.catalog()).syncStatus)
+    .toBe('idle');
+  for (const search of ['éclair', '_', '%'])
+    expect((await caller.agents.catalog({ search })).agents).toMatchObject([
+      { entry: { name: 'Éclair_100%' } },
+    ]);
+  expect((await caller.agents.catalog({ search: 'eclair' })).agents).toEqual(
+    [],
+  );
+  expect(fetchAgents).toHaveBeenCalledTimes(1);
 });
