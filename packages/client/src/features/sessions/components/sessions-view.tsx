@@ -6,11 +6,10 @@ import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ConnectionBanner, type ConnectionState } from '#features/connection';
 import { hasLiquidGlass } from '#lib/generic/native-header';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { LoadError } from '#lib/product/load-error';
 import { Screen } from '#lib/product/screen';
-import { Icon } from '../../../lib/generic/symbols/icon';
+import { Button } from '../../../lib/generic/primitives/button';
 import { useWide } from '../../../lib/generic/use-wide';
 import type { SessionsLoadState } from '../state/sessions-load-state';
 import { FloatingActionButton } from './floating-action-button';
@@ -132,12 +131,11 @@ export function SessionsView({
           accessibilityLabel="New Session"
           onPress={onNewSession}
           className="h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3"
-        >
-          <Icon name="new-session" className="text-primary-foreground" />
-          <Text role="control" className="text-primary-foreground">
-            New Session
-          </Text>
-        </Button>
+          label={'New Session'}
+          icon={'new-session'}
+          appearance="content"
+          labelClassName={'text-primary-foreground'}
+        />
       </View>
     );
   } else if (newSessionInHeader) {

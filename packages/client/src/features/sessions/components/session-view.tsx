@@ -3,11 +3,10 @@ import { View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Composer, type ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
-import { Button } from '#lib/generic/primitives/button';
-import { Text } from '#lib/generic/primitives/text';
 import { LoadError, type LoadErrorProps } from '#lib/product/load-error';
 import { keyboardAvoidingStyle, Screen } from '#lib/product/screen';
 import { ScrollFade } from '#lib/product/scroll-fade';
+import { Button } from '../../../lib/generic/primitives/button';
 import { useWide } from '../../../lib/generic/use-wide';
 import { SessionHeader, type SessionHeaderProps } from './session-header';
 
@@ -102,9 +101,8 @@ function OpenSessionView({
               accessibilityLabel="Cancel creation"
               disabled={cancelCreation.disabled}
               onPress={cancelCreation.onCancel}
-            >
-              <Text>Cancel creation</Text>
-            </Button>
+              label={'Cancel creation'}
+            />
           )}
           <View
             pointerEvents="none"

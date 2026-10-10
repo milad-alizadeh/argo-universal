@@ -1,12 +1,16 @@
 import type * as React from 'react';
 import { type ReactElement, type ReactNode, useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { ButtonGroup } from '#lib/generic/primitives/button-group';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { BottomSheet } from '../../../lib/generic/primitives/bottom-sheet';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { ChoiceMenu } from '../../../lib/product/choice-menu';
 
@@ -51,23 +55,21 @@ function chevron(
   className: string | undefined,
 ): React.JSX.Element {
   return (
-    <Button
-      variant={primary ? 'default' : 'ghost'}
+    <IconButton
+      variant={primary ? 'filled' : 'ghost'}
       accessibilityLabel={menuLabel}
       disabled={disabled}
       className={cn(
         wide ? 'h-8 w-7 px-0 sm:h-8' : 'h-11 w-11 rounded-lg px-0 sm:h-11',
         className,
       )}
-    >
-      <Icon
-        name="chevron-down"
-        size="sm"
-        className={
-          primary ? 'text-primary-foreground' : 'text-muted-foreground'
-        }
-      />
-    </Button>
+      icon={'chevron-down'}
+      iconSize={'sm'}
+      iconClassName={
+        primary ? 'text-primary-foreground' : 'text-muted-foreground'
+      }
+      size="md"
+    />
   );
 }
 
@@ -106,16 +108,20 @@ function ChoiceSheet<Value extends string>(
     >
       <View className="gap-0.5 p-1">
         {choices.map((choice) => (
-          <Button
+          <Pressable
             key={choice.value}
-            variant="ghost"
             accessibilityState={{ selected: choice.value === value }}
-            aria-selected={choice.value === value}
-            className="h-auto min-h-11 justify-between rounded-sm px-2 py-1.5 sm:h-auto"
+            aria-pressed={choice.value === value}
             onPress={() => {
               setOpen(false);
               onValueChange(choice.value);
             }}
+            role="button"
+            className={contentActionClass({
+              variant: 'ghost',
+              className:
+                'h-auto min-h-11 justify-between rounded-sm px-2 py-1.5 sm:h-auto',
+            })}
           >
             <Text role="body">{choice.label}</Text>
             <View className="size-4 items-center justify-center">
@@ -123,7 +129,7 @@ function ChoiceSheet<Value extends string>(
                 <Icon name="check" size="sm" className="text-foreground" />
               )}
             </View>
-          </Button>
+          </Pressable>
         ))}
       </View>
     </BottomSheet>

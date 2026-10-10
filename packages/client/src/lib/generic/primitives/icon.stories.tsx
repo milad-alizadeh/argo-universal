@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { Icon } from '../symbols/icon';
 import { iconNames, iconSymbols } from '../symbols/icon-names';
 import { SymbolImagesProvider } from '../symbols/symbol-images';
 import { Variation, Variations } from '../variations';
+import { IconButton } from './icon-button';
 import { renderStorybookSymbol } from './sf-symbol-images.mocks';
 
 const meta = {
@@ -42,9 +42,14 @@ export const Overview: Story = {
               { label: 'Search', icon: 'search' },
             ] as const
           ).map(({ label, icon }) => (
-            <Button key={label} size="icon" aria-label={label}>
-              <Icon name={icon} />
-            </Button>
+            <IconButton
+              key={label}
+              aria-label={label}
+              icon={icon}
+              accessibilityLabel={label}
+              size="md"
+              variant="filled"
+            />
           ))}
         </View>
       </Variation>

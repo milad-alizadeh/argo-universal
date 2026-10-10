@@ -1,14 +1,13 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '../../../lib/generic/primitives/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../../../lib/generic/primitives/dropdown-menu';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { Text } from '../../../lib/generic/primitives/text';
-import { Icon } from '../../../lib/generic/symbols/icon';
 import { DesktopShell, type DesktopShellProps } from './desktop-shell';
 
 export function DesktopShellFrame({
@@ -71,13 +70,15 @@ export function DesktopShellFrame({
         detailActions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
+              <IconButton
                 variant="ghost"
                 className="size-8 p-0 sm:size-8"
                 accessibilityLabel="More actions"
-              >
-                <Icon name="more" size="md" className="text-muted-foreground" />
-              </Button>
+                icon={'more'}
+                iconSize={'md'}
+                iconClassName={'text-muted-foreground'}
+                size="md"
+              />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem>

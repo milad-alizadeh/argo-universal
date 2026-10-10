@@ -11,7 +11,6 @@ import {
 } from 'react';
 import { View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import type { ButtonProps } from '#lib/generic/primitives/button';
 import { BottomSheet } from '../../../lib/generic/primitives/bottom-sheet';
 import {
   Popover,
@@ -52,7 +51,7 @@ export function ComposerPopover({
   onPresent,
   children,
 }: {
-  trigger: ReactElement<ButtonProps>;
+  trigger: ReactElement<{ disabled?: boolean | null; onPress?: () => void }>;
   label: string;
   width?: number;
   className?: string;

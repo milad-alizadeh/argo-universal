@@ -60,7 +60,7 @@ export const SettingsRootSelectsAccounts: Story = {
     ).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: 'Settings' }),
-    ).toHaveAttribute('aria-selected', 'true');
+    ).toHaveAttribute('aria-pressed', 'true');
   },
 };
 

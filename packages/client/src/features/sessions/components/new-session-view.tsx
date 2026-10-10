@@ -1,6 +1,6 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import {
   ComposerAgentModelControl,
@@ -8,11 +8,11 @@ import {
   type ComposerConfigurationProps,
   StartSessionIn,
 } from '#features/composer';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { useContentWide } from '#lib/product/content-layout';
 import { LoadError } from '#lib/product/load-error';
 import { keyboardAvoidingStyle, Screen } from '#lib/product/screen';
+import { Button } from '../../../lib/generic/primitives/button';
 
 export interface ReadyNewSessionViewProps {
   serverName: string;
@@ -114,15 +114,12 @@ function ReadyNewSessionView(
                 />
               )}
               <Button
+                label="Open Session"
                 accessibilityLabel="Open Session"
                 disabled={!props.canOpen}
+                loading={opening}
                 onPress={props.onOpen}
-              >
-                {opening && (
-                  <ActivityIndicator accessibilityLabel="Opening Session" />
-                )}
-                <Text>Open Session</Text>
-              </Button>
+              />
             </View>
             {props.setupStep !== undefined && (
               <Text semanticRole="alert" className="text-destructive">

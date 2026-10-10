@@ -132,9 +132,13 @@ export const Opening: Story = {
   args: readyArgs({ opening: true, canOpen: false }),
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(
-        await canvas.findByRole('progressbar', { name: 'Opening Session' }),
-      ).toBeVisible();
+      const button = await canvas.findByRole('button', {
+        name: openSessionLabel,
+      });
+      await expect(button).toBeVisible();
+      await expect(button).toHaveTextContent(openSessionLabel);
+      await expect(button).toBeDisabled();
+      await expect(button).toHaveAttribute('aria-busy', 'true');
       await expect(
         canvas.getByRole('button', { name: projectLabel }),
       ).toBeDisabled();
