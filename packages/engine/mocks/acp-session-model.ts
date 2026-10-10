@@ -37,6 +37,7 @@ const canApplyLifecycleEvent = (
   if (event.type === closeEvent) return snapshot.can({ type: closeEvent });
   if (
     event.type === 'session.prompt' ||
+    event.type === 'session.cancel' ||
     event.type === 'session.answerPermission' ||
     event.type === 'session.answerElicitation'
   )
@@ -150,6 +151,7 @@ export const createAcpSessionModel = (
     },
     { type: 'acp.requestWithdrawn', requestId: modelRequest },
     { type: 'agent.messageRejected', reason: 'Malformed model question' },
+    { type: 'session.cancel' },
     { type: closeEvent },
     { type: 'acp.failed', error: new Error('connection failed') },
     { type: 'xstate.done.actor.openAcp', actorId: 'openAcp', output: lease },
