@@ -26,12 +26,7 @@ import {
 import type { ActorRefFrom } from 'xstate';
 import { createRejectionCounter } from '../../lib/count-rejections';
 import { hydrateStoredFeedRow, newestRows, storedFeedColumns } from '../feed';
-import {
-  applyQueuedSession,
-  applyQueuedTurns,
-  queuedFeedRows,
-  type WriterJob,
-} from '../feed';
+import { readWriterProjection, type WriterChange } from '../feed';
 import type { writerMachine } from '../feed';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 import type { RegistryActorRef } from './registry-machine';
@@ -71,7 +66,7 @@ export function createSessionListReader(options: {
   writer: () => ActorRefFrom<typeof writerMachine> | undefined;
 }): {
   readRows: (sessionIds?: readonly string[]) => SessionListState;
-  sessionIdsForJobs: (jobs: readonly WriterJob[]) => string[];
+  sessionIdsForChanges: (change: WriterChange) => string[];
   relatedSessionIds: (sessionIds: readonly string[]) => string[];
 } {
   const { database, sessions, writer } = options;
@@ -149,45 +144,19 @@ export function createSessionListReader(options: {
         return result ? [result] : [];
       });
   };
-  const sessionIdsForJobs = (jobs: readonly WriterJob[]): string[] => [
-    ...new Set(
-      jobs.flatMap((job): string[] => {
-        switch (job.type) {
-          case 'feedRows':
-            return [job.sessionId];
-          case 'sessionInsert':
-            return [
-              job.session.id,
-              ...(job.session.parentSessionId
-                ? [job.session.parentSessionId]
-                : []),
-            ];
-          case 'sessionRowUpdate':
-            return [
-              job.id,
-              ...(job.set.parentSessionId ? [job.set.parentSessionId] : []),
-            ];
-          case 'turnInsert':
-            return [job.turn.sessionId];
-          case 'turnUpdate':
-            return readTurnSessionIds({
-              database,
-              sessions,
-              jobs: [...jobs, ...(writer()?.getSnapshot().context.queue ?? [])],
-              turnId: job.id,
-              validate,
-            });
-          case 'blobMetadataUpsert':
-          case 'agentCatalogReplace':
-          case 'syncJobUpdate':
-            return [];
-          default: {
-            const unhandled: never = job;
-            throw new Error(`Unhandled writer job ${unhandled}`);
-          }
-        }
-      }),
-    ),
+  const sessionIdsForChanges = (change: WriterChange): string[] => [
+    ...new Set([
+      ...change.sessionIds,
+      ...change.turnIds.flatMap((turnId) =>
+        readTurnSessionIds({
+          database,
+          sessions,
+          projection: readWriterProjection(writer()),
+          turnId,
+          validate,
+        }),
+      ),
+    ]),
   ];
   const relatedSessionIds = (sessionIds: readonly string[]): string[] => {
     const ids = new Set(sessionIds);
@@ -197,20 +166,18 @@ export function createSessionListReader(options: {
     }
     return [...ids];
   };
-  return { readRows, sessionIdsForJobs, relatedSessionIds };
+  return { readRows, sessionIdsForChanges, relatedSessionIds };
 }
 
 function readTurnSessionIds(input: {
   database: Database;
   sessions: RegistryActorRef;
-  jobs: readonly WriterJob[];
+  projection: ReturnType<typeof readWriterProjection>;
   turnId: string;
   validate: ListReadInput['validate'];
 }): string[] {
-  const queued = input.jobs.find(
-    (job): boolean => job.type === 'turnInsert' && job.turn.id === input.turnId,
-  );
-  if (queued?.type === 'turnInsert') return [queued.turn.sessionId];
+  const pendingSessionId = input.projection.turnSessionId(input.turnId);
+  if (pendingSessionId) return [pendingSessionId];
   const live = Object.values(
     input.sessions.getSnapshot().context.sessions,
   ).find(
@@ -235,7 +202,7 @@ function readListSessions(
   input: ListReadInput,
   sessionIds?: readonly string[],
 ): SessionRecord[] {
-  const jobs = input.writer?.getSnapshot().context.queue ?? [];
+  const projection = readWriterProjection(input.writer);
   const stored = input.database
     .select(storedSessionColumns)
     .from(session)
@@ -251,26 +218,14 @@ function readListSessions(
   const rows = new Map(
     stored.map((row): [string, typeof row] => [row.id, row]),
   );
-  const ids = new Set([
-    ...rows.keys(),
-    ...jobs.flatMap((job): string[] =>
-      job.type === 'sessionInsert' &&
-      (!sessionIds ||
-        sessionIds.includes(job.session.id) ||
-        (job.session.parentSessionId &&
-          sessionIds.includes(job.session.parentSessionId)))
-        ? [job.session.id]
-        : [],
-    ),
-  ]);
+  const ids = new Set([...rows.keys(), ...projection.sessionIds(sessionIds)]);
   return [...ids].flatMap((id): SessionRecord[] => {
-    const row = input.validate((): ReturnType<typeof applyQueuedSession> => {
+    const row = input.validate((): ReturnType<typeof projection.session> => {
       const stored = rows.get(id);
-      return applyQueuedSession({
-        row: stored && decodeStoredSession(stored),
-        sessionId: id,
-        jobs,
-      });
+      return projection.session(
+        stored && SessionRecord.parse(decodeStoredSession(stored)),
+        id,
+      );
     });
     return row ? [row] : [];
   });
@@ -281,10 +236,8 @@ function readListTurns(
   sessionId: string,
   children: string[],
 ): Turn[] {
-  const jobs = input.writer?.getSnapshot().context.queue ?? [];
-  const updates = jobs.flatMap((job): string[] =>
-    job.type === 'turnUpdate' ? [job.id] : [],
-  );
+  const projection = readWriterProjection(input.writer);
+  const updates = projection.changedTurnIds();
   const unchanged = updates.length ? notInArray(turn.id, updates) : undefined;
   const runningIds = readChildTurnIds({
     database: input.database,
@@ -345,10 +298,8 @@ function readListTurns(
     if (!parsed) input.rejectedSessions.add(row.sessionId);
     return parsed ? [parsed] : [];
   };
-  return applyQueuedTurns(
-    rows.flatMap((row): Turn[] => parseTurn(row, true)),
-    jobs,
-  )
+  return projection
+    .turns(rows.flatMap((row): Turn[] => parseTurn(row, true)))
     .filter((row): boolean => ids.has(row.sessionId))
     .flatMap((row): Turn[] => parseTurn(row));
 }
@@ -424,10 +375,7 @@ function readSessionInformation(
             validate((): SessionUpdate => hydrateStoredFeedRow(row.id, stored)),
           ),
     ),
-    ...queuedFeedRows(
-      writer?.getSnapshot().context.queue ?? [],
-      row.id,
-    ).flatMap((job): SessionUpdate[] => job.rows),
+    ...readWriterProjection(writer).feed(row.id).rows,
     ...Object.values(feedContext?.rows ?? {}),
   ];
   const rejected = changes.includes(undefined);

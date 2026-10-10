@@ -46,6 +46,7 @@ import { createAcpResponseReaders } from '../agents';
 import { blobsFolderIn } from '../blob';
 import {
   findDatabaseWriter,
+  readWriterProjection,
   publishTurnContent,
   type FeedEvent,
   type FeedActorRef,
@@ -173,6 +174,7 @@ export interface SessionContext extends SessionData {
   pendingNativeStops: Set<Promise<void>>;
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
+  sessionInsertCommitted: Promise<'committed' | 'retrying' | 'failed'> | null;
   acpLifetime: AcpSessionLifetime;
   acpLease: AcpSessionLease | null;
   pendingSubmission: LocalSubmission | null;
@@ -543,10 +545,21 @@ const sessionSetup = setup({
     // The Agent must be ready before the Session row is written.
     storeSession: enqueueActions(({ context, enqueue }): void => {
       if (context.input.kind !== 'new') return;
-      enqueue.assign({ stored: true });
+      const committed = Promise.withResolvers<
+        'committed' | 'retrying' | 'failed'
+      >();
+      enqueue.assign({
+        stored: true,
+        sessionInsertCommitted: committed.promise,
+      });
       enqueue.sendTo(writer, {
         type: writeFeedEvent,
         job: toSessionInsert(context.input, context),
+        committed: {
+          resolve: () => committed.resolve('committed'),
+          reject: (_error: unknown, retrying?: boolean) =>
+            committed.resolve(retrying ? 'retrying' : 'failed'),
+        },
       });
     }),
     persistTurn: enqueueActions(
@@ -1001,6 +1014,7 @@ export const sessionMachine = sessionSetup.createMachine({
     failure: null,
     pendingNativeStops: new Set(),
     stored: input.kind === 'existing',
+    sessionInsertCommitted: null,
     acpLifetime: new AcpSessionLifetime(input.acp),
     acpLease: null,
     pendingSubmission: null,
@@ -1064,7 +1078,9 @@ export const sessionMachine = sessionSetup.createMachine({
           findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
             readWrittenRow({
               database: context.input.database,
-              writer: findDatabaseWriter(self.system),
+              pending: readWriterProjection(
+                findDatabaseWriter(self.system),
+              ).feedRow(context.sessionId, id),
               sessionId: context.sessionId,
               id,
             }),
