@@ -58,6 +58,9 @@ export const SettingsRootSelectsAccounts: Story = {
     await expect(
       await canvas.findByRole('heading', { name: 'Accounts' }),
     ).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: 'Settings' }),
+    ).toHaveAttribute('aria-selected', 'true');
   },
 };
 

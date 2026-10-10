@@ -9,7 +9,7 @@ import {
 import { LayoutListMock } from './layout-list.mocks';
 
 const meta = {
-  title: 'Shell/DesktopLayoutView',
+  title: 'Shell/DesktopLayout',
   component: DesktopLayoutView,
   parameters: { screenPreview: true },
   args: {

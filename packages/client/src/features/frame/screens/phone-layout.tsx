@@ -14,11 +14,9 @@ export function PhoneLayout({
   destination,
   children,
 }: PhoneLayoutProps): React.JSX.Element {
+  const attentionCount = useAttentionCount();
   return (
-    <PhoneLayoutView
-      destination={destination}
-      attentionCount={useAttentionCount()}
-    >
+    <PhoneLayoutView destination={destination} attentionCount={attentionCount}>
       {children}
     </PhoneLayoutView>
   );

@@ -21,10 +21,11 @@ export function DesktopLayout({
     sectionOf(destination),
     detailDestination(destination),
   );
+  const attentionCount = useAttentionCount();
   return (
     <DesktopLayoutView
       destination={destination}
-      attentionCount={useAttentionCount()}
+      attentionCount={attentionCount}
       list={list}
       listHeader={header}
     >

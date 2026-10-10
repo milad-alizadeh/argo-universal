@@ -10,7 +10,7 @@ import {
 } from './phone-section-view';
 
 const meta = {
-  title: 'Shell/PhoneSectionView',
+  title: 'Shell/PhoneSectionScreen',
   component: PhoneSectionView,
   parameters: { screenPreview: true },
   argTypes: {
@@ -34,4 +34,4 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = { name: 'PhoneSectionView' };
+export const Overview: Story = { name: 'PhoneSectionScreen' };
