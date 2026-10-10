@@ -213,7 +213,7 @@ export function NewSessionScreen({
           <View className="w-full max-w-composer gap-3">
             <View className="flex-row items-center justify-between gap-3">
               <ComposerAgentModelControl
-                disabled={newSession.isPending}
+                disabled={newSession.isPending || !choices.configReady}
                 configuration={{
                   agents: agents.data,
                   agent: agent?.agent ?? '',

@@ -18,6 +18,7 @@ import {
   newSessionMocks,
   notInstalledNewSessionMocks,
   notSignedInNewSessionMocks,
+  restrictedEffortNewSessionMocks,
   sendingNewSessionMocks,
   unavailableNewSessionMocks,
 } from '../../mocks/new-session-mock';
@@ -475,6 +476,36 @@ export const FallsBackToDefaultEffortForModel: Story = {
     await expect(started[0]?.configOptions).toEqual([
       { configId: 'model', value: 'gpt-5.5' },
       { configId: 'effort', value: 'medium' },
+    ]);
+  },
+};
+
+export const FallsBackToSupportedEffort: Story = {
+  parameters: {
+    trpc: {
+      ...meta.parameters.trpc,
+      'agents.list': restrictedEffortNewSessionMocks['agents.list'],
+    },
+  },
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: agentModelLabel }),
+    );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: 'Opus 4.6' }),
+    );
+    await expect(
+      overlay.getByRole('slider', { name: effortLabel }),
+    ).toHaveAttribute(effortValueAttribute, 'High');
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(
+      canvas.getByRole('button', { name: openSessionLabel }),
+    );
+    await waitFor(() => expect(started).toHaveLength(1));
+    await expect(started[0]?.configOptions).toEqual([
+      { configId: 'model', value: 'agent-one-opus-4-6' },
+      { configId: 'effort', value: 'high' },
     ]);
   },
 };

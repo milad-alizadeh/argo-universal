@@ -1,14 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type {
-  AgentInfo,
-  SessionConfigOption,
-  SessionConfigSelectOption,
-} from '@repo/contracts';
+import type { AgentInfo, SessionConfigOption } from '@repo/contracts';
 import {
   type QueryClient,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { configurationChoices } from '../components/composer-configuration';
 
 const categories = ['model', 'thought_level'] as const;
 type Category = (typeof categories)[number];
@@ -28,21 +25,16 @@ function queryKey(agent: string): readonly string[] {
 function storageKey(agent: string, category: Category): string {
   return `session-configuration:${agent}:${category}`;
 }
-function choices(option?: SelectOption): SessionConfigSelectOption[] {
-  return (
-    option?.options.flatMap((entry) =>
-      'groupId' in entry ? entry.options : [entry],
-    ) ?? []
-  );
-}
-function remembered(option: SessionConfigOption): option is RememberedOption {
+export function isRememberedConfiguration(
+  option: SessionConfigOption,
+): option is RememberedOption {
   return (
     option.type === 'select' &&
     (option.category === 'model' || option.category === 'thought_level')
   );
 }
 function orderedOptions(options: SessionConfigOption[]): RememberedOption[] {
-  const eligible = options.filter(remembered);
+  const eligible = options.filter(isRememberedConfiguration);
   return categories.flatMap((category) =>
     eligible.filter((option) => option.category === category),
   );
@@ -60,17 +52,19 @@ function withSavedChoice(
   option: RememberedOption,
   saved: SavedChoices,
   levels?: string[],
-): RememberedOption {
-  const value = saved[option.category];
-  if (
-    option.category === 'thought_level' &&
-    levels &&
-    !levels.includes(value ?? '')
-  )
-    return option;
-  return choices(option).some((choice) => choice.value === value)
-    ? { ...option, currentValue: value ?? option.currentValue }
-    : option;
+): RememberedOption | undefined {
+  const offered = configurationChoices(option).filter(
+    (choice) =>
+      option.category !== 'thought_level' ||
+      !levels ||
+      levels.includes(choice.value),
+  );
+  const value = [
+    saved[option.category],
+    option.currentValue,
+    offered[0]?.value,
+  ].find((candidate) => offered.some((choice) => choice.value === candidate));
+  return value === undefined ? undefined : { ...option, currentValue: value };
 }
 function draftConfiguration(
   agent: AgentInfo | undefined,
@@ -79,11 +73,12 @@ function draftConfiguration(
   const defaults = orderedOptions(agent?.configOptions ?? []);
   const defaultModel = defaults.find((option) => option.category === 'model');
   const model = defaultModel && withSavedChoice(defaultModel, saved);
-  const capability = choices(model).find(
+  const capability = configurationChoices(model).find(
     (choice) => choice.value === model?.currentValue,
   )?._meta?.argo;
-  const options = defaults.map((option) =>
-    withSavedChoice(option, saved, capability?.supportedEffortLevels),
+  const options = defaults.flatMap(
+    (option) =>
+      withSavedChoice(option, saved, capability?.supportedEffortLevels) ?? [],
   );
   return capability?.supportsEffort === false
     ? options.filter((option) => option.category !== 'thought_level')
@@ -134,7 +129,7 @@ export function useNewSessionConfiguration(
   });
   const configOptions = draftConfiguration(agent, saved.data ?? {});
   return {
-    configOptions,
+    configOptions: saved.isSuccess ? configOptions : [],
     ready: saved.isSuccess,
     change: (configId: string, value: string | boolean): void => {
       if (!saved.isSuccess || typeof value !== 'string') return;

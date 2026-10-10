@@ -46,7 +46,9 @@ export interface ComposerConfigurationProps {
   };
 }
 
-function choices(option?: SelectConfiguration): SessionConfigSelectOption[] {
+export function configurationChoices(
+  option?: SelectConfiguration,
+): SessionConfigSelectOption[] {
   return (
     option?.options.flatMap((entry) =>
       'groupId' in entry ? entry.options : [entry],
@@ -69,14 +71,14 @@ function currentEffort(configuration: ComposerConfigurationProps): {
 } {
   const model = selection(configuration, 'model');
   const option = selection(configuration, 'thought_level');
-  const currentModel = choices(model).find(
+  const currentModel = configurationChoices(model).find(
     (choice) => choice.value === model?.currentValue,
   );
   const levels = currentModel?._meta?.argo?.supportedEffortLevels;
   const effortChoices =
     currentModel?._meta?.argo?.supportsEffort === false
       ? []
-      : choices(option).filter(
+      : configurationChoices(option).filter(
           (choice) => !levels || levels.includes(choice.value),
         );
   return {
@@ -373,7 +375,7 @@ export function ModelChoices({
   if (!model) return null;
   return (
     <View className="px-gutter-list py-1 wide:p-1 wide:pt-0.5 gap-0.5">
-      {choices(model).map((choice) => (
+      {configurationChoices(model).map((choice) => (
         <Choice
           key={choice.value}
           selected={choice.value === model.currentValue}
@@ -408,7 +410,7 @@ function ModelList({
         paddingTop: 2,
         paddingBottom: 4,
       }}
-      data={choices(model)}
+      data={configurationChoices(model)}
       keyExtractor={(choice) => choice.value}
       renderItem={({ item: choice }) => (
         <Choice
@@ -552,7 +554,7 @@ export function AgentModelMenu({
     (entry) => entry.agent === configuration.agent,
   );
   const model = selection(configuration, 'model');
-  const current = choices(model).find(
+  const current = configurationChoices(model).find(
     (choice) => choice.value === model?.currentValue,
   );
   if (wide && !model)
@@ -702,7 +704,7 @@ export function ComposerAgentModelControl({
   const wide = useContentWide();
   const windowWide = useWide();
   const model = selection(configuration, 'model');
-  const current = choices(model).find(
+  const current = configurationChoices(model).find(
     (choice) => choice.value === model?.currentValue,
   );
   const effortLabel = currentEffort(configuration).selected?.name;
@@ -771,7 +773,7 @@ export function ComposerModeControl({
 }): React.JSX.Element | null {
   const wide = useContentWide();
   const mode = selection(configuration, 'mode');
-  const current = choices(mode).find(
+  const current = configurationChoices(mode).find(
     (choice) => choice.value === mode?.currentValue,
   );
   if (!mode) return null;
@@ -827,7 +829,7 @@ export function ComposerModeControl({
           >
             Mode
           </Text>
-          {choices(mode).map((choice) => (
+          {configurationChoices(mode).map((choice) => (
             <Choice
               key={choice.value}
               selected={choice.value === mode.currentValue}

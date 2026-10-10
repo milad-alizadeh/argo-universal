@@ -24,7 +24,10 @@ import { useBlobUrl } from '../trpc/blob-url';
 import type { ClientError } from '../trpc/context';
 import { useTRPC } from '../trpc/context';
 import { useAgents } from '../trpc/use-agents';
-import { rememberSessionConfiguration } from './session-configuration-preferences';
+import {
+  isRememberedConfiguration,
+  rememberSessionConfiguration,
+} from './session-configuration-preferences';
 import { useImageDraft } from './use-image-draft';
 
 type SessionMutation<Name extends 'prompt' | 'cancel' | 'setConfigOption'> =
@@ -279,10 +282,7 @@ function useSessionCommands(
         const changed = configOptions.find(
           (option) => option.configId === configId,
         );
-        if (
-          changed?.category === 'model' ||
-          changed?.category === 'thought_level'
-        )
+        if (changed && isRememberedConfiguration(changed))
           rememberSessionConfiguration(queryClient, agent, configOptions);
       },
     }),
