@@ -3,11 +3,11 @@ import { type ReactElement, type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { Button } from '#lib/generic/primitives/button';
 import { ButtonGroup } from '#lib/generic/primitives/button-group';
-import { Menu } from '../../../lib/generic/primitives/menu';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { BottomSheet } from '../../../lib/generic/primitives/bottom-sheet';
+import { Menu } from '../../../lib/generic/primitives/menu';
 import { Icon } from '../../../lib/generic/symbols/icon';
 
 interface SplitButtonChoice<Value extends string> {
