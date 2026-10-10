@@ -3,15 +3,9 @@ import { type ReactElement, type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '#primitives/dropdown-menu';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
+import { ChoiceMenu } from './choice-menu';
 import { ComposerSheet } from './composer-sheet';
 import { useContentWide } from './content-layout';
 
@@ -40,7 +34,17 @@ export function SplitButton<Value extends string>(
   return (
     <View className={cn('flex-row gap-0.5', props.className)}>
       {props.children}
-      {wide ? <ChoiceDropdown {...props} /> : <ChoiceSheet {...props} />}
+      {wide ? (
+        <ChoiceMenu
+          accessibilityLabel={props.menuLabel}
+          value={props.value}
+          choices={props.choices}
+          onValueChange={props.onValueChange}
+          trigger={chevron(props, true)}
+        />
+      ) : (
+        <ChoiceSheet {...props} />
+      )}
     </View>
   );
 }
@@ -73,34 +77,6 @@ function chevron(
         }
       />
     </Button>
-  );
-}
-
-function ChoiceDropdown<Value extends string>(
-  props: SplitButtonProps<Value>,
-): ReactNode {
-  const { choices, value, onValueChange, disabled } = props;
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild disabled={disabled}>
-        {chevron(props, true)}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent side="top" align="end" className="w-50">
-        <DropdownMenuRadioGroup
-          value={value}
-          onValueChange={(next) => {
-            const picked = choices.find((choice) => choice.value === next);
-            if (picked) onValueChange(picked.value);
-          }}
-        >
-          {choices.map((choice) => (
-            <DropdownMenuRadioItem key={choice.value} value={choice.value}>
-              <Text className="type-body">{choice.label}</Text>
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
 

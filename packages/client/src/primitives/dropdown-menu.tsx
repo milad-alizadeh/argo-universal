@@ -17,6 +17,9 @@ import { NativeOnlyAnimatedView } from '#primitives/native-only-animated-view';
 import { TextClassContext } from '#primitives/text';
 import { disabledMenuItemClassName, menuItemClassName } from './menu-styles';
 
+const itemClassName =
+  'active:bg-accent group relative flex flex-row items-center gap-2 rounded-sm px-2 py-2 sm:py-1.5';
+
 const DropdownMenu = DropdownMenuPrimitive.Root;
 
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
@@ -168,7 +171,7 @@ function DropdownMenuItem({
     >
       <DropdownMenuPrimitive.Item
         className={cn(
-          'active:bg-accent group relative flex flex-row items-center gap-2 rounded-sm px-2 py-2 sm:py-1.5',
+          itemClassName,
           Platform.select({
             web: cn(
               menuItemClassName,
@@ -199,7 +202,7 @@ function DropdownMenuCheckboxItem({
     <TextClassContext.Provider value="text-sm text-popover-foreground select-none group-active:text-accent-foreground">
       <DropdownMenuPrimitive.CheckboxItem
         className={cn(
-          'active:bg-accent group relative flex flex-row items-center gap-2 rounded-sm py-2 pl-8 pr-2 sm:py-1.5',
+          itemClassName,
           Platform.select({
             web: menuItemClassName,
           }),
@@ -208,10 +211,12 @@ function DropdownMenuCheckboxItem({
         )}
         {...props}
       >
-        <View className="absolute left-2 flex size-icon-md items-center justify-center">
+        <View className="min-w-0 flex-1">{children}</View>
+        <View className="size-icon-md items-center justify-center">
           <DropdownMenuPrimitive.ItemIndicator>
             <Icon
               name="check"
+              size="sm"
               className={cn(
                 'text-foreground',
                 Platform.select({ web: 'pointer-events-none' }),
@@ -219,7 +224,6 @@ function DropdownMenuCheckboxItem({
             />
           </DropdownMenuPrimitive.ItemIndicator>
         </View>
-        <>{children}</>
       </DropdownMenuPrimitive.CheckboxItem>
     </TextClassContext.Provider>
   );
@@ -236,7 +240,7 @@ function DropdownMenuRadioItem({
     <TextClassContext.Provider value="text-sm text-popover-foreground select-none group-active:text-accent-foreground">
       <DropdownMenuPrimitive.RadioItem
         className={cn(
-          'active:bg-accent group relative flex flex-row items-center gap-2 rounded-sm py-2 pl-8 pr-2 sm:py-1.5',
+          itemClassName,
           Platform.select({
             web: menuItemClassName,
           }),
@@ -245,12 +249,19 @@ function DropdownMenuRadioItem({
         )}
         {...props}
       >
-        <View className="absolute left-2 flex size-icon-md items-center justify-center">
+        <View className="min-w-0 flex-1">{children}</View>
+        <View className="size-icon-md items-center justify-center">
           <DropdownMenuPrimitive.ItemIndicator>
-            <View className="bg-foreground h-2 w-2 rounded-full" />
+            <Icon
+              name="check"
+              size="sm"
+              className={cn(
+                'text-foreground',
+                Platform.select({ web: 'pointer-events-none' }),
+              )}
+            />
           </DropdownMenuPrimitive.ItemIndicator>
         </View>
-        <>{children}</>
       </DropdownMenuPrimitive.RadioItem>
     </TextClassContext.Provider>
   );
