@@ -1,12 +1,23 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
-import { assign, fromPromise, sendTo, setup, waitFor } from 'xstate';
+import {
+  assign,
+  fromPromise,
+  sendTo,
+  setup,
+  waitFor,
+  type ActorRefFrom,
+  type InputFrom,
+  type AnyActorRef,
+} from 'xstate';
 import {
   createAcpResources,
   type AcpResources,
   type AcpResourceInput,
   type FetchAgents,
+  syncSupervisorMachine,
+  type SyncSupervisorInput,
 } from '../services/agents';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
 import { writerMachine, databaseWriterId } from '../services/feed';
@@ -16,6 +27,7 @@ import {
   registryMachine,
   sessionRegistryId,
   findSessionRegistry,
+  type RegistryActorRef,
 } from '../services/sessions';
 import {
   type HttpServer,
@@ -33,9 +45,10 @@ type EngineOutput = { exitCode: number };
 type OpenDatabaseInput = { home: string };
 type RecoveryInput = { database: Database; blobsFolder: string };
 type CloseHttpServerInput = { server: HttpServer | null };
+type SyncSupervisorActor = ActorRefFrom<typeof syncSupervisorMachine>;
 type CloseAcpResourcesInput = {
   resources: AcpResources;
-  sessions: import('../services/sessions').RegistryActorRef | undefined;
+  sessions: RegistryActorRef | undefined;
 };
 const closingAgentsTarget = 'closingAgents';
 
@@ -69,6 +82,7 @@ interface EngineContext extends EngineInput {
   server: HttpServer | null;
   failure: string | null;
   acpResources: AcpResources;
+  commandAdmission: AbortController;
 }
 
 type EngineEvent =
@@ -119,6 +133,7 @@ export const engineMachine = setup({
         await removeUnusedBlobs(input);
       },
     ),
+    syncSupervisor: syncSupervisorMachine,
     databaseWriter: writerMachine,
     sessions: registryMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
@@ -136,6 +151,9 @@ export const engineMachine = setup({
   actions: {
     stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
+    stopSync: sendTo('syncSupervisor', { type: 'sync.stop' }),
+    closeCommandAdmission: ({ context }): void =>
+      context.commandAdmission.abort(),
     sendToSupervisor: (_, message: EngineMessage): void => {
       process.send?.(message);
     },
@@ -161,6 +179,7 @@ export const engineMachine = setup({
     server: null,
     failure: null,
     acpResources: createAcpResources(input.acp),
+    commandAdmission: new AbortController(),
   }),
   invoke: { id: 'processSignals', src: 'processSignals' },
   initial: 'openingDatabase',
@@ -221,12 +240,21 @@ export const engineMachine = setup({
           id: 'databaseWriter',
           systemId: databaseWriterId,
           src: 'databaseWriter',
-          input: ({
-            context,
-          }): import('xstate').InputFrom<typeof writerMachine> => ({
+          input: ({ context }): InputFrom<typeof writerMachine> => ({
             database: openDatabaseOf(context),
             now: context.now,
             log: (line: string): void => writeEngineLog(context.home, line),
+          }),
+        },
+        {
+          id: 'syncSupervisor',
+          systemId: 'syncSupervisor',
+          src: 'syncSupervisor',
+          input: ({ context, self }): SyncSupervisorInput => ({
+            database: openDatabaseOf(context),
+            writer: requireDatabaseWriter(self.system),
+            fetchAgents: context.fetchAgents,
+            now: context.now,
           }),
         },
         {
@@ -264,7 +292,9 @@ export const engineMachine = setup({
             input: ({ context, self }): HttpServerOptions => ({
               createId: context.createId,
               sessions: requireSessionRegistry(self.system),
-              fetchAgents: context.fetchAgents,
+              databaseWriter: requireDatabaseWriter(self.system),
+              syncSupervisor: requireSyncSupervisor(self.system),
+              commandAdmission: context.commandAdmission,
               home: context.home,
               port: context.port,
               version: context.version,
@@ -315,6 +345,7 @@ export const engineMachine = setup({
           },
         },
         stopping: {
+          entry: ['closeCommandAdmission', 'stopSync'],
           initial: 'closingHttp',
           on: { 'engine.stop': {} },
           states: {
@@ -456,9 +487,24 @@ export const engineMachine = setup({
 });
 
 function requireSessionRegistry(
-  system: import('xstate').AnyActorRef['system'],
-): import('../services/sessions').RegistryActorRef {
+  system: AnyActorRef['system'],
+): RegistryActorRef {
   const actor = findSessionRegistry(system);
   if (!actor) throw new Error('The Session registry is not running');
+  return actor;
+}
+
+function requireDatabaseWriter(
+  system: AnyActorRef['system'],
+): ActorRefFrom<typeof writerMachine> {
+  const actor = system.get(databaseWriterId);
+  if (!actor) throw new Error('Database Writer is not running');
+  return actor;
+}
+function requireSyncSupervisor(
+  system: AnyActorRef['system'],
+): SyncSupervisorActor {
+  const actor = system.get('syncSupervisor');
+  if (!actor) throw new Error('Sync supervisor is not running');
   return actor;
 }

@@ -9,10 +9,8 @@ import { When, Then } from './fixtures';
 
 const exampleAgentName = 'Example Agent';
 const exampleMetadata = [
-  'example-agent',
   'A compatible coding Agent',
-  'Version 1.2.3',
-  'npm package · requires Node.js and npm',
+  'v1.2.3 · npm · needs Node.js',
 ];
 
 async function expectExampleMetadata(row: Locator): Promise<void> {
@@ -24,22 +22,24 @@ async function expectExampleMetadata(row: Locator): Promise<void> {
 }
 
 async function readDisplayedServerPlatform(page: Page): Promise<string> {
-  const text = await page.getByText(/^Server platform: /).textContent();
+  const text = await page.getByText(/^For this Server · /).textContent();
   if (!text) throw new Error('The catalog must show the Server platform');
-  return text.replace('Server platform: ', '');
+  return text.replace('For this Server · ', '');
 }
 
 async function expectWindowsRecipe(page: Page): Promise<void> {
   const platform = await readDisplayedServerPlatform(page);
   const recipe =
     platform === 'windows-x86_64'
-      ? 'Binary for this Server'
+      ? 'Binary'
       : `No distribution for ${platform}`;
   const windows = page.getByRole('listitem', {
     name: 'Windows Agent',
     exact: true,
   });
-  await expect(windows.getByText(recipe, { exact: true })).toBeVisible();
+  await expect(
+    windows.getByText(`v1.2.3 · ${recipe}`, { exact: true }),
+  ).toBeVisible();
 }
 
 When('I browse available Agents', async ({ page }): Promise<void> => {
@@ -104,7 +104,7 @@ Then(
   'the catalog keeps the last-good Agents with an explicit error',
   async ({ page }): Promise<void> => {
     await expect(page.getByRole('alert')).toContainText(
-      'Showing the last good catalog',
+      'showing saved catalog',
     );
     await expect(page.getByRole('alert')).toContainText(/offline|malformed/);
     await expect(

@@ -1,7 +1,14 @@
 import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ServerAddress } from '@repo/contracts';
-import { assign, sendTo, setup, spawnChild, stopChild } from 'xstate';
+import {
+  assign,
+  sendTo,
+  setup,
+  spawnChild,
+  stopChild,
+  type InputFrom,
+} from 'xstate';
 import type { EngineEvent } from './engine-message';
 import { engineProcess } from './engine-process';
 
@@ -119,9 +126,7 @@ export const supervisorMachine = setup({
     starting: {
       entry: spawnChild('engine', {
         id: 'engine',
-        input: ({
-          context,
-        }): import('xstate').InputFrom<typeof engineProcess> => ({
+        input: ({ context }): InputFrom<typeof engineProcess> => ({
           watch: context.watch,
         }),
       }),

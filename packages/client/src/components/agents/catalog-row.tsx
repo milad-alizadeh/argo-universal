@@ -7,9 +7,9 @@ import { RegistryIcon } from './registry-icon';
 type CatalogEntry = AgentsCatalogOutput['agents'][number];
 type RowProps = { agent: CatalogEntry };
 const distributionLabels = {
-  binary: 'Binary for this Server',
-  npx: 'npm package · requires Node.js and npm',
-  uvx: 'Python package · requires uv',
+  binary: 'Binary',
+  npx: 'npm · needs Node.js',
+  uvx: 'Python · needs uv',
 };
 
 export function CatalogRow({ agent }: RowProps): React.JSX.Element {
@@ -17,9 +17,11 @@ export function CatalogRow({ agent }: RowProps): React.JSX.Element {
     <View
       role="listitem"
       accessibilityLabel={agent.entry.name}
-      className="flex-row gap-3 border-b border-border px-gutter py-4"
+      className="flex-row items-start gap-3 pb-6 wide:gap-4"
     >
-      <RegistryIcon agentName={agent.entry.name} uri={agent.entry.icon} />
+      <View className="size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+        <RegistryIcon agentName={agent.entry.name} uri={agent.entry.icon} />
+      </View>
       <CatalogDescription agent={agent} />
     </View>
   );
@@ -29,14 +31,14 @@ function CatalogDescription({
   agent: { entry, support },
 }: RowProps): React.JSX.Element {
   return (
-    <View className="min-w-0 flex-1 gap-1">
-      <Text role="heading" aria-level={2} className="font-semibold">
+    <View className="min-w-0 flex-1 gap-0.5">
+      <Text role="heading" aria-level={2} className="type-body min-h-6">
         {entry.name}
       </Text>
-      <Text variant="muted">{entry.id}</Text>
-      <Text>{entry.description}</Text>
-      <Text variant="small">Version {entry.version}</Text>
-      <Text variant="muted">{supportDescription(support)}</Text>
+      <Text className="type-secondary">{entry.description}</Text>
+      <Text className="type-secondary pt-1">
+        v{entry.version} · {supportDescription(support)}
+      </Text>
     </View>
   );
 }

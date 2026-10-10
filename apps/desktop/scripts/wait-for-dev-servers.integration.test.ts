@@ -1,3 +1,4 @@
+import type { IncomingMessage, ServerResponse } from 'http';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -33,12 +34,8 @@ async function startMockServer(body: unknown): Promise<number> {
   });
   const server = mockServer;
   await new Promise<void>(
-    (
-      resolve,
-    ): Server<
-      typeof import('http').IncomingMessage,
-      typeof import('http').ServerResponse
-    > => server.listen(0, '127.0.0.1', (): void => resolve()),
+    (resolve): Server<typeof IncomingMessage, typeof ServerResponse> =>
+      server.listen(0, '127.0.0.1', (): void => resolve()),
   );
   const address = server.address();
   if (!address || typeof address === 'string')

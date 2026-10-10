@@ -1,6 +1,7 @@
 import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { layoutWidths } from '../../mocks/each-layout';
 import { sessionRowMocks } from '../../mocks/session-row-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
@@ -38,7 +39,6 @@ export const RunningWide = running(layoutWidths.wide);
 export const Archived: Story = {
   args: { session: sessionRows.archived },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(canvas.getByText('Archived', { exact: true })).toBeVisible();
@@ -87,7 +87,6 @@ export const PullRequestWithoutOtherMetadata: Story = {
     pullRequest: { number: 45, status: 'open' },
   },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       const pullRequest = canvas.getByLabelText('open PR #45');
@@ -136,7 +135,6 @@ export const StatusParity: Story = {
     </>
   ),
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       for (const agent of agentsList) {
@@ -158,7 +156,6 @@ export const PlanAndSubagents: Story = {
     session: sessionRowMocks.planAndSubagents,
   },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(
@@ -176,7 +173,6 @@ export const PlanAndSubagents: Story = {
 export const NoPlanOrSubagents: Story = {
   args: { session: sessionRows.idle },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
@@ -198,7 +194,6 @@ export const FinishedSubagents: Story = {
     session: sessionRowMocks.finishedSubagents,
   },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(canvas.getByText('5/5')).toBeVisible();

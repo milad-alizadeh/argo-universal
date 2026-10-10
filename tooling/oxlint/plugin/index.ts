@@ -8,6 +8,7 @@ import { iconSize } from './icon-size.ts';
 import { jsonParseCast } from './json-parse-cast.ts';
 import { machineClock } from './machine-clock.ts';
 import { noInternalMock } from './no-internal-mock.ts';
+import { staticImports } from './static-imports.ts';
 import { unitTestIo } from './unit-test-io.ts';
 import { vendorName } from './vendor-name.ts';
 
@@ -26,5 +27,6 @@ export default definePlugin({
     'no-internal-mock': noInternalMock,
     'vendor-name': vendorName,
     'unit-test-io': unitTestIo,
+    'static-imports': staticImports,
   },
 });

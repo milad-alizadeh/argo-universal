@@ -43,7 +43,7 @@ function RegistryImage({
 }
 
 function useImageProps(agentName: string): ImageProps {
-  const pixels = useIconPixels('lg');
+  const pixels = useIconPixels('mark');
   return {
     width: pixels,
     height: pixels,
@@ -93,7 +93,7 @@ function UnavailableIcon({
       accessibilityRole="image"
       accessibilityLabel={`${agentName} icon unavailable`}
     >
-      <Icon as={RobotIcon} size="lg" />
+      <Icon as={RobotIcon} size="mark" />
     </View>
   );
 }

@@ -13,12 +13,13 @@ import { z } from 'zod';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import type { RegistryActorRef } from '../services/sessions';
-import { startHttpServer } from './http-server';
+import { startHttpServer, type HttpServerOptions } from './http-server';
 
 let home: string;
 let port: number;
 let database: Database;
 let sessions: RegistryActorRef;
+let databaseWriter: HttpServerOptions['databaseWriter'];
 let removeDatabase: () => void;
 let closeServer: () => Promise<void>;
 
@@ -61,17 +62,9 @@ const systemInfoStatus = (
 const readdirSafe = (folder: string): string[] =>
   existsSync(folder) ? readdirSync(folder) : [];
 
-const options = (): {
-  createId: (
-    options?: import('crypto').RandomUUIDOptions,
-  ) => import('crypto').UUID;
-  home: string;
-  port: number;
-  version: string;
-  startedAt: string;
-  database: Database;
-  sessions: RegistryActorRef;
-} => ({
+let syncSupervisor: HttpServerOptions['syncSupervisor'];
+
+const options = (): HttpServerOptions => ({
   createId: randomUUID,
   home,
   port,
@@ -79,6 +72,8 @@ const options = (): {
   startedAt: '2026-10-03T00:00:00.000Z',
   database,
   sessions,
+  databaseWriter,
+  syncSupervisor,
 });
 
 beforeEach(async (): Promise<void> => {
@@ -86,9 +81,11 @@ beforeEach(async (): Promise<void> => {
   database = stored.database;
   removeDatabase = stored.remove;
   const started = await startEngineTestHost({ database });
+  syncSupervisor = started.engine.system.get('syncSupervisor');
   home = started.home;
   port = Number(new URL(started.url).port);
   sessions = started.sessionRegistry;
+  databaseWriter = started.databaseWriter;
   closeServer = started.stop;
 });
 

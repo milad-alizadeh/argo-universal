@@ -1,5 +1,5 @@
 import { homedir } from 'node:os';
-import { query } from '@anthropic-ai/claude-agent-sdk';
+import { query, type Options } from '@anthropic-ai/claude-agent-sdk';
 import type { AgentProbe } from '../src/agent-adapter';
 import { findExecutable } from '../src/find-executable';
 import { usesSubscription } from './account';
@@ -50,7 +50,7 @@ function startProbe(signal: AbortSignal, installed: Installed): Probing {
 function probeOptions(
   controller: AbortController,
   { environment, executable }: Installed,
-): import('@anthropic-ai/claude-agent-sdk').Options {
+): Options {
   return {
     abortController: controller,
     cwd: homedir(),

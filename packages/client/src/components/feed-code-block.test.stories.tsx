@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { longCodeBlockTitle } from '../../mocks/code-block-title-mock';
 import { layoutWidths } from '../../mocks/each-layout';
 import { recordedFile } from '../../mocks/feed-edit-mock';
@@ -26,7 +27,6 @@ type Story = StoryObj<typeof FeedCodeBlock>;
 export const CodeBlockScrollsInsideTheBox: Story = {
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await settleViewport(width);
       const box = canvas.getByTestId(codeScrollId);
@@ -79,7 +79,6 @@ function copyControlFollowsHoverAndFocus(width: number): Story {
     ),
     play: async ({ canvas, userEvent }) => {
       if (process.env.NODE_ENV !== 'test') return;
-      const { page } = await import('vitest/browser');
       await settleViewport(width);
       const copy = canvas.getByRole('button', { name: 'Copy code' });
       const box = canvas.getByTestId(codeScrollId).parentElement;

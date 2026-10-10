@@ -1,20 +1,22 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { PromptRequest } from '@agentclientprotocol/sdk';
+import type {
+  PromptRequest,
+  InitializeResponse,
+} from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { uploadBlob, blobsFolderIn } from '../blob';
 
 const updateMethod = 'session/update';
-const createImageCapableInitializeResponse =
-  (): import('@agentclientprotocol/sdk').InitializeResponse => ({
-    protocolVersion: 1,
-    agentCapabilities: {
-      promptCapabilities: { image: true },
-      sessionCapabilities: { close: {} },
-    },
-  });
+const createImageCapableInitializeResponse = (): InitializeResponse => ({
+  protocolVersion: 1,
+  agentCapabilities: {
+    promptCapabilities: { image: true },
+    sessionCapabilities: { close: {} },
+  },
+});
 it.each(['unavailable', 'corrupt'])(
   'an %s image rejects instead of dropping a block or returning success',
   async (failure) => {
@@ -28,7 +30,7 @@ it.each(['unavailable', 'corrupt'])(
     });
     const blobsFolder = blobsFolderIn(host.home);
     const blob = await uploadBlob(
-      { database: host.database, blobsFolder },
+      { databaseWriter: host.databaseWriter, blobsFolder },
       new Blob(['complete original bytes'], { type: 'image/png' }),
     );
     if (failure === 'corrupt')

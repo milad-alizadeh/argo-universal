@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { Query } from '@anthropic-ai/claude-agent-sdk';
 import type {
   AgentConnectInput,
   VendorSessionListener,
@@ -29,5 +30,5 @@ interface SessionResources {
   listener: VendorSessionListener<VendorMessage>;
 }
 export type QueryContext = SessionResources & {
-  vendor: import('@anthropic-ai/claude-agent-sdk').Query;
+  vendor: Query;
 };

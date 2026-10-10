@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { page } from 'vitest/browser';
 import {
   liveHeaderElapsed,
   liveHeaderNow,
@@ -62,7 +63,6 @@ export const LongTextStaysWithinHeader: Story = {
     },
   },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(390, 844);
     const row = canvas.getByRole('status');
     const container = row.parentElement;

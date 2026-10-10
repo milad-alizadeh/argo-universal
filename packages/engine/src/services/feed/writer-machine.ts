@@ -1,5 +1,15 @@
 import type { Database } from '@repo/db';
-import { and, assertEvent, assign, fromPromise, setup, stateIn } from 'xstate';
+import {
+  and,
+  assertEvent,
+  assign,
+  emit,
+  enqueueActions,
+  fromPromise,
+  setup,
+  stateIn,
+} from 'xstate';
+import { isCatalogSqlJob } from './writer-catalog-sync';
 import {
   acknowledgeWrittenPrefix,
   rejectPendingCommits,
@@ -49,6 +59,7 @@ export const writerMachine = setup({
     input: {} as WriterInput,
     context: {} as WriterContext,
     events: {} as WriterEvent,
+    emitted: {} as { type: 'catalog.sqlCommitted' },
   },
   actors: {
     writeBatch: fromPromise<void, WriterBatchInput>(
@@ -56,6 +67,11 @@ export const writerMachine = setup({
     ),
   },
   actions: {
+    announceCatalogCommit: enqueueActions(({ context, enqueue }) => {
+      if (context.queue.slice(0, context.batchSize).some(isCatalogSqlJob))
+        enqueue(emit({ type: 'catalog.sqlCommitted' }));
+    }),
+
     enqueue: assign({
       pendingCommits: ({ context, event }): PendingWriterCommit[] => {
         assertEvent(event, 'writer.write');
@@ -82,8 +98,16 @@ export const writerMachine = setup({
       batchSize: 0,
     }),
     releaseBatch: assign({ batchSize: 0 }),
-    rejectCommits: assign({
+    retryCommits: assign({
       pendingCommits: ({ context, event }): PendingWriterCommit[] =>
+        rejectPendingCommits(
+          context.pendingCommits,
+          'error' in event ? event.error : new Error('Writer cannot commit'),
+          true,
+        ),
+    }),
+    rejectCommits: assign({
+      pendingCommits: ({ context, event }) =>
         rejectPendingCommits(
           context.pendingCommits,
           'error' in event ? event.error : new Error('Writer cannot commit'),
@@ -129,16 +153,20 @@ export const writerMachine = setup({
           {
             guard: and(['drainRequested', 'hasJobsAfterBatch']),
             target: 'draining',
-            actions: 'dropBatch',
+            actions: ['announceCatalogCommit', 'dropBatch'],
           },
-          { guard: 'drainRequested', target: 'drained', actions: 'dropBatch' },
+          {
+            guard: 'drainRequested',
+            target: 'drained',
+            actions: ['announceCatalogCommit', 'dropBatch'],
+          },
           {
             guard: 'hasJobsAfterBatch',
             target: 'writing',
             reenter: true,
-            actions: 'dropBatch',
+            actions: ['announceCatalogCommit', 'dropBatch'],
           },
-          { target: 'idle', actions: 'dropBatch' },
+          { target: 'idle', actions: ['announceCatalogCommit', 'dropBatch'] },
         ],
         // While draining, a failed batch is tried once more at once, not after `writeRetryDelay`.
         onError: [
@@ -146,7 +174,7 @@ export const writerMachine = setup({
             guard: 'drainRequested',
             target: 'draining',
             actions: [
-              'rejectCommits',
+              'retryCommits',
               {
                 type: 'log',
                 params: ({ event }): WriterLogParameters => ({
@@ -159,7 +187,7 @@ export const writerMachine = setup({
           {
             target: 'waitingToRetry',
             actions: [
-              'rejectCommits',
+              'retryCommits',
               {
                 type: 'log',
                 params: ({ context, event }): WriterLogParameters => ({
@@ -181,7 +209,7 @@ export const writerMachine = setup({
       after: { writeRetryDelay: 'writing' },
       on: {
         'writer.drain': 'draining',
-        'writer.write': { actions: ['enqueue', 'rejectCommits'] },
+        'writer.write': { actions: ['enqueue', 'retryCommits'] },
       },
     },
     draining: {
@@ -195,9 +223,12 @@ export const writerMachine = setup({
             guard: 'hasJobsAfterBatch',
             target: 'draining',
             reenter: true,
-            actions: 'dropBatch',
+            actions: ['announceCatalogCommit', 'dropBatch'],
           },
-          { target: 'drained', actions: 'dropBatch' },
+          {
+            target: 'drained',
+            actions: ['announceCatalogCommit', 'dropBatch'],
+          },
         ],
         // The jobs stay in `queue`, so the drained snapshot holds what was lost.
         onError: {

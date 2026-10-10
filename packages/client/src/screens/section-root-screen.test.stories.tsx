@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { emptySessionListMocks } from '../../mocks/session-list-mock';
 import { SectionRootScreen } from './section-root-screen';
 
@@ -21,7 +22,6 @@ type Story = StoryObj<typeof meta>;
 
 export const WideOpensTheFirstPage: Story = {
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     await expect(
       await canvas.findByText('Accounts will appear here.'),
@@ -34,7 +34,6 @@ export const WideOpensTheFirstPage: Story = {
 
 export const PhoneShowsTheList: Story = {
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(390, 844);
     await expect(
       await canvas.findByRole('button', { name: 'Open navigation' }),

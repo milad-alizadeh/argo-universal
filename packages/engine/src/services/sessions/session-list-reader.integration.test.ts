@@ -177,7 +177,11 @@ it('resolves a changed queued Turn through its earlier unwritten insertion', ():
   const batch = Promise.withResolvers<void>();
   const writer = createActor(
     writerMachine.provide({
-      actors: { writeBatch: fromPromise((): Promise<void> => batch.promise) },
+      actors: {
+        writeBatch: fromPromise(async (): Promise<void> => {
+          await batch.promise;
+        }),
+      },
     }),
     {
       input: {

@@ -18,6 +18,8 @@ import {
   matchesState,
   fromCallback,
   type SnapshotFrom,
+  type CallbackActorLogic,
+  type EventObject,
 } from 'xstate';
 import {
   type DirectedGraphNode,
@@ -64,11 +66,7 @@ let supervisor: Actor<typeof supervisorMachine>;
 // An Engine that exits when asked, unless the test drives `engine.exited` itself.
 const createMockEngine = (options: {
   exitsWhenAsked: boolean;
-}): import('xstate').CallbackActorLogic<
-  EngineCommand,
-  { watch: boolean },
-  import('xstate').EventObject
-> =>
+}): CallbackActorLogic<EngineCommand, { watch: boolean }, EventObject> =>
   fromCallback<EngineCommand, { watch: boolean }>(
     ({ sendBack, receive }): (() => void) => {
       const engine: MockEngine = {

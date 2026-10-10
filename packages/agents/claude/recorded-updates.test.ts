@@ -76,11 +76,8 @@ it('uses the transport receipt time when an interrupted Tool call has no final r
   );
 });
 function requireToolCall(
-  row: import('../src/agent-events').FeedUpdate | undefined,
-): Extract<
-  import('../src/agent-events').FeedUpdate,
-  { sessionUpdate: 'tool_call_update' }
-> {
+  row: FeedUpdate | undefined,
+): Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }> {
   if (!row) throw new Error('Missing recorded command');
   if (row.sessionUpdate !== 'tool_call_update')
     throw new Error('Missing recorded command');

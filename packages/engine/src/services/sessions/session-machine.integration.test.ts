@@ -1,5 +1,9 @@
 import { type AgentCommand, type AgentReady } from '@repo/agents';
-import type { Notice, SessionUpdate } from '@repo/contracts';
+import type {
+  Notice,
+  SessionUpdate,
+  SessionSnapshot as PublicSessionSnapshot,
+} from '@repo/contracts';
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { permissionOptions, type SessionConfigOption } from '@repo/contracts';
 import type { Database } from '@repo/db';
@@ -82,7 +86,7 @@ async function subscribeToSession(host: SessionTestHost): Promise<{
 
 async function readPublicSessionSnapshot(
   caller: ReturnType<typeof appRouter.createCaller>,
-): Promise<import('@repo/contracts').SessionSnapshot> {
+): Promise<PublicSessionSnapshot> {
   for await (const event of await caller.feed.subscribe({
     sessionId: 'session-1',
     after: null,

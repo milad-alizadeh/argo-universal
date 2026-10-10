@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { WideMock } from '../../mocks/wide-mock';
 
 const wideBreakpointLabel = 'Wide breakpoint';
@@ -19,8 +20,6 @@ const layoutUpdate = { timeout: 3000 };
 
 export const UpdatesAt720Pixels: Story = {
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
-
     await page.viewport(719, 900);
     await expect(
       await canvas.findByText('Phone layout', {}, layoutUpdate),

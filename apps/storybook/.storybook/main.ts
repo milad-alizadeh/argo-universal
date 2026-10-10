@@ -1,6 +1,9 @@
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { StorybookConfig } from '@storybook/react-native-web-vite';
+import tailwindcss from '@tailwindcss/vite';
+import { uniwind } from 'uniwind/vite';
+import { mergeConfig } from 'vite';
 
 function getAbsolutePath(value: string): string {
   return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
@@ -8,7 +11,9 @@ function getAbsolutePath(value: string): string {
 const config: StorybookConfig = {
   staticDirs: [{ from: '../../universal-app/public/fonts', to: '/fonts' }],
   // Screens live in @repo/client (ADR 0009); globs resolve from this .storybook folder.
-  stories: ['../../../packages/client/src/**/*.stories.tsx'],
+  stories: process.env.VITEST
+    ? ['../../../packages/client/src/**/*.stories.tsx']
+    : ['../../../packages/client/src/**/!(*.test).stories.tsx'],
   addons: [
     getAbsolutePath('@chromatic-com/storybook'),
     getAbsolutePath('@storybook/addon-vitest'),
@@ -17,10 +22,7 @@ const config: StorybookConfig = {
   typescript: { reactDocgen: false },
   framework: getAbsolutePath('@storybook/react-native-web-vite'),
   // Uniwind styles the screens; the Vitest addon reuses this hook.
-  async viteFinal(config) {
-    const { mergeConfig } = await import('vite');
-    const { default: tailwindcss } = await import('@tailwindcss/vite');
-    const { uniwind } = await import('uniwind/vite');
+  viteFinal(config) {
     const expoDeclarationImports = {
       name: 'expo-declaration-imports',
       enforce: 'pre' as const,

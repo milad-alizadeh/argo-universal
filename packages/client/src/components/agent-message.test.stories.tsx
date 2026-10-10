@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { expect, waitFor } from 'storybook/test';
+import { expect, spyOn, waitFor } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { layoutWidths } from '../../mocks/each-layout';
 import {
   recordedAgentMessage,
@@ -82,7 +83,6 @@ export const SecondAgentStreaming: Story = {
 
 export const CopyCodeRevealsOnHover: Story = {
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     await settleViewport(layoutWidths.wide);
     const copy = canvas.getByRole('button', { name: 'Copy code' });
     await page.elementLocator(copy).unhover();
@@ -95,11 +95,11 @@ export const CopyCodeRevealsOnHover: Story = {
 function copyCode(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
-      const { vi } = await import('vitest');
       const copied: string[] = [];
-      const clipboard = vi
-        .spyOn(navigator.clipboard, 'writeText')
-        .mockImplementation(async (text: string) => void copied.push(text));
+      const clipboard = spyOn(
+        navigator.clipboard,
+        'writeText',
+      ).mockImplementation(async (text: string) => void copied.push(text));
       try {
         await settleViewport(width);
         const copy = canvas.getByRole('button', { name: 'Copy code' });

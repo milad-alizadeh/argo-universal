@@ -1,7 +1,7 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "e9d3b8d9-dc75-4f50-b764-a5768d29534f",
+  "id": "39c468be-a617-4777-974b-7dc8f59e619d",
   "prevIds": [
     "a7957949-2be6-43ba-9803-6fa7f5a95110"
   ],
@@ -32,6 +32,10 @@
     },
     {
       "name": "turn",
+      "entityType": "tables"
+    },
+    {
+      "name": "sync_jobs",
       "entityType": "tables"
     },
     {
@@ -81,6 +85,16 @@
       "default": null,
       "generated": null,
       "name": "catalog_synced_at",
+      "entityType": "columns",
+      "table": "agents"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "catalog_search_text",
       "entityType": "columns",
       "table": "agents"
     },
@@ -635,6 +649,86 @@
       "table": "turn"
     },
     {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "source",
+      "entityType": "columns",
+      "table": "sync_jobs"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "scope",
+      "entityType": "columns",
+      "table": "sync_jobs"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "sync_jobs"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "requested_at",
+      "entityType": "columns",
+      "table": "sync_jobs"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "completed_at",
+      "entityType": "columns",
+      "table": "sync_jobs"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "fetched_at",
+      "entityType": "columns",
+      "table": "sync_jobs"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "error",
+      "entityType": "columns",
+      "table": "sync_jobs"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "rejected_values",
+      "entityType": "columns",
+      "table": "sync_jobs"
+    },
+    {
       "columns": [
         "blob_id"
       ],
@@ -743,6 +837,16 @@
       "name": "feed_row_pk",
       "entityType": "pks",
       "table": "feed_row"
+    },
+    {
+      "columns": [
+        "source",
+        "scope"
+      ],
+      "nameExplicit": false,
+      "name": "sync_jobs_pk",
+      "entityType": "pks",
+      "table": "sync_jobs"
     },
     {
       "columns": [

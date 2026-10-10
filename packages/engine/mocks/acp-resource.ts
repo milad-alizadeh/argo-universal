@@ -9,12 +9,14 @@ import {
   type CloseSessionResponse,
   type LoadSessionResponse,
   type ResumeSessionResponse,
+  type PromptResponse,
 } from '@agentclientprotocol/sdk';
 import type {
   AcpOpenInput,
   AcpSessionDestination,
   AgentLaunch,
   AcpProcess,
+  AcpSessionLease,
 } from '../src/services/agents';
 
 export const resourceLaunch: AgentLaunch = {
@@ -128,7 +130,7 @@ export const createResourcePeer = (
         .onRequest(
           'session/prompt',
           input.prompt ??
-            ((): import('@agentclientprotocol/sdk').PromptResponse => ({
+            ((): PromptResponse => ({
               stopReason: 'end_turn',
             })),
         )
@@ -154,7 +156,7 @@ export const createResourcePeer = (
 };
 
 export const observeAcpRelease = (
-  lease: import('../src/services/agents').AcpSessionLease,
+  lease: AcpSessionLease,
 ): {
   state: { settled: boolean };
   promise: Promise<void>;

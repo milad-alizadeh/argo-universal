@@ -15,18 +15,15 @@ export type {
   AgentLaunch,
   ResolveAgentLaunch,
 } from './acp/resource-types';
-export type { FetchAgents } from './catalog/fetch-agents';
+export { fetchAgents, type FetchAgents } from './catalog/fetch-agents';
 
+export { requestAgentCatalogSync } from './catalog/sync-supervisor-machine';
 export {
-  startCatalogSyncSupervisor,
-  readAgentCatalogFromSupervisor,
-  syncAgentCatalog,
-  shutdownCatalogSyncSupervisor,
-  type StartCatalogSyncSupervisorInput,
-  type CatalogSyncSupervisor,
-} from './catalog/catalog';
+  syncSupervisorMachine,
+  type SyncSupervisorInput,
+} from './catalog/sync-supervisor-machine';
 export { watchCommittedCatalogChanges } from './catalog/catalog-changes';
-export { catalogSyncMachine } from './catalog/catalog-sync-machine';
+export { catalogSyncActor } from './catalog/catalog-sync-machine';
 export { createRegistryReader } from './catalog/registry-reader';
 
-export { catalogSyncSupervisorMachine } from './catalog/catalog-sync-supervisor-machine';
+export type { RegistryReader } from './catalog/registry-reader';

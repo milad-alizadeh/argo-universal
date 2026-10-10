@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { findExecutable } from '../src/find-executable';
 import { readProtocolDeclarations } from './protocol-declarations';
 const roots = [
@@ -58,4 +59,8 @@ try {
 } finally {
   rmSync(directory, { recursive: true, force: true });
 }
-await import('./generate-runtime-schemas.ts');
+execFileSync(
+  process.execPath,
+  [fileURLToPath(new URL('./generate-runtime-schemas.ts', import.meta.url))],
+  { stdio: 'inherit' },
+);

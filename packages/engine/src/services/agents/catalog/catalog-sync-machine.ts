@@ -1,115 +1,63 @@
-import type { ACPAgentRegistry } from '@repo/contracts';
-import type { Database } from '@repo/db';
-import { assign, fromPromise, setup, type ErrorActorEvent } from 'xstate';
-import type { FetchAgents } from './fetch-agents';
-import { commitCatalogAgents } from './records';
-import type { createRegistryReader } from './registry-reader';
+import { fromPromise } from 'xstate';
+import type { AgentCatalogReplaceJob } from '../../feed';
+import { RegistryHttpError, type FetchAgents } from './fetch-agents';
+import { prepareAgentCatalogRows } from './records';
+import type { RegistryReader } from './registry-reader';
 
 export interface CatalogSyncInput {
-  database: Database;
   fetchAgents: FetchAgents;
-  reader: ReturnType<typeof createRegistryReader>;
+  reader: RegistryReader;
+  now(): number;
+  source: string;
+  scope: string;
+  rejectedValues: number;
 }
-interface CatalogSyncContext extends CatalogSyncInput {
-  metadata: ACPAgentRegistry | null;
-  changedIds: string[];
-  error: string | null;
+export type CatalogSyncResult =
+  | { job: AgentCatalogReplaceJob }
+  | { error: string; rejectedValues: number; retryable: boolean };
+
+function catalogReplacement(
+  input: CatalogSyncInput,
+  response: unknown,
+): AgentCatalogReplaceJob {
+  const registry = input.reader.parse(response);
+  const syncedAt = input.now();
+  return {
+    type: 'agentCatalogReplace',
+    source: input.source,
+    scope: input.scope,
+    rows: prepareAgentCatalogRows(registry, syncedAt),
+    syncedAt,
+    rejectedValues: input.rejectedValues,
+  };
 }
-
-const recordInvokedFailure = {
-  type: 'recordFailure',
-  params: ({ event }: { event: ErrorActorEvent }) => ({ error: event.error }),
-} as const;
-
-export const catalogSyncMachine = setup({
-  types: {
-    input: {} as CatalogSyncInput,
-    context: {} as CatalogSyncContext,
-    events: {} as { type: 'catalog.cancel' },
-    output: {} as { changedIds: string[]; error: string | null },
-  },
-  actors: {
-    fetchCatalog: fromPromise<ACPAgentRegistry, CatalogSyncInput>(
-      async ({ input, signal }) =>
-        input.reader.parse(await input.fetchAgents(signal)),
-    ),
-    saveCatalog: fromPromise<string[], CatalogSyncContext>(
-      async ({ input }) => {
-        if (!input.metadata) throw new Error('Validated catalog is missing');
-        return commitCatalogAgents(input.database, input.metadata);
-      },
-    ),
-  },
-  actions: {
-    recordFailure: assign({
-      error: (_, { error }: { error: unknown }) =>
-        error instanceof Error ? error.message : String(error),
-    }),
-  },
-  delays: { fetchLimit: 20_000 },
-}).createMachine({
-  id: 'catalogSync',
-  context: ({ input }) => ({
-    ...input,
-    metadata: null,
-    changedIds: [],
-    error: null,
-  }),
-  initial: 'fetching',
-  states: {
-    fetching: {
-      on: {
-        'catalog.cancel': {
-          target: 'failed',
-          actions: {
-            type: 'recordFailure',
-            params: { error: 'Registry sync was cancelled' },
-          },
-        },
-      },
-      invoke: {
-        id: 'fetchCatalog',
-        src: 'fetchCatalog',
-        input: ({ context }) => context,
-        onDone: {
-          target: 'saving',
-          actions: assign({ metadata: ({ event }) => event.output }),
-        },
-        onError: {
-          target: 'failed',
-          actions: recordInvokedFailure,
-        },
-      },
-      after: {
-        fetchLimit: {
-          target: 'failed',
-          actions: {
-            type: 'recordFailure',
-            params: { error: 'Registry did not answer within 20 seconds' },
-          },
-        },
-      },
-    },
-    saving: {
-      invoke: {
-        id: 'saveCatalog',
-        src: 'saveCatalog',
-        input: ({ context }) => context,
-        onDone: {
-          target: 'succeeded',
-          actions: assign({ changedIds: ({ event }) => event.output }),
-        },
-        onError: {
-          target: 'failed',
-          actions: recordInvokedFailure,
-        },
-      },
-    },
-    succeeded: { type: 'final' },
-    failed: { type: 'final' },
-  },
-  output: ({ context }) => ({
-    changedIds: context.changedIds,
-    error: context.error,
-  }),
+function isTransient(error: unknown): boolean {
+  if (!(error instanceof RegistryHttpError)) return true;
+  return error.retryable;
+}
+function catalogFailure(
+  input: CatalogSyncInput,
+  before: number,
+  error: unknown,
+): CatalogSyncResult {
+  const rejectedValues = input.reader.count() - before;
+  return {
+    error: error instanceof Error ? error.message : String(error),
+    rejectedValues: input.rejectedValues + rejectedValues,
+    retryable: rejectedValues === 0 && isTransient(error),
+  };
+}
+export const catalogSyncActor = fromPromise<
+  CatalogSyncResult,
+  CatalogSyncInput
+>(async ({ input, signal }) => {
+  const before = input.reader.count();
+  try {
+    const response = await input.fetchAgents(signal);
+    signal.throwIfAborted();
+    return { job: catalogReplacement(input, response) };
+  } catch (error) {
+    signal.throwIfAborted();
+    return catalogFailure(input, before, error);
+  }
 });

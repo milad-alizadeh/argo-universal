@@ -1,6 +1,11 @@
 import { claudeAdapter } from '../claude';
 import { codexAdapter } from '../codex';
-import type { AgentAdapter, AgentMapping, AgentProbe } from './agent-adapter';
+import type {
+  AgentAdapter,
+  AgentMapping,
+  AgentProbe,
+  VendorSession,
+} from './agent-adapter';
 
 // Every Agent adapter the Server can start, the one place outside an adapter that names its vendor.
 export const agentAdapters: readonly AgentAdapter[] = [
@@ -17,7 +22,7 @@ const missingAdapter = (agent: string): AgentAdapter => ({
     availability: 'unavailable',
     configOptions: [],
   }),
-  connect: (): Promise<import('./agent-adapter').VendorSession> =>
+  connect: (): Promise<VendorSession> =>
     Promise.reject(new Error(`No Agent adapter for ${agent}.`)),
   initialMappingState: (): null => null,
   toAgentEvents: (

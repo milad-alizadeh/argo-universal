@@ -62,6 +62,7 @@
     // Vendor names stay in the adapter and mock CLI folders (ADR-0004).
     "argo/vendor-name": "error",
     "argo/json-parse-cast": "error",
+    "argo/static-imports": "error",
     "argo/database-client": "error",
     "argo/drizzle-schema-boundary": "error",
     // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports (A2).

@@ -16,6 +16,7 @@ import { TextClassContext } from '#primitives/text';
 // sm for chevrons, carets and check marks; md for every other icon; lg for phone shell controls and the desktop rail.
 export const iconSizeClasses = {
   sm: 'size-icon-sm',
+  mark: 'size-icon-mark',
   md: 'size-icon-md',
   lg: 'size-icon-lg',
 } as const;

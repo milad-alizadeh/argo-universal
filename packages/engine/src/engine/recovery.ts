@@ -1,7 +1,7 @@
 import { runningToolCallStatuses } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
-import { and, eq, or, sql } from 'drizzle-orm';
+import { and, eq, or, sql, type SQL } from 'drizzle-orm';
 import { createRejectionCounter } from '../lib/count-rejections';
 import {
   hydrateStoredFeedRow,
@@ -12,9 +12,7 @@ import {
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
 export function recoverAfterRestart(database: Database): void {
   const runningStatus = sql`case when json_valid(${feedRow.payload}) then json_extract(${feedRow.payload}, '$.status') in (${sql.join(
-    runningToolCallStatuses.map(
-      (status): import('drizzle-orm').SQL<unknown> => sql`${status}`,
-    ),
+    runningToolCallStatuses.map((status): SQL<unknown> => sql`${status}`),
     sql`, `,
   )}) else 0 end`;
   void database.transaction((transaction): void => {

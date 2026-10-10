@@ -3,11 +3,15 @@ import {
   AgentRecord,
   type ACPAgent,
   type ACPAgentRegistry,
+  type AgentsCatalogOutput,
+  type AgentsCatalogInput,
+  type RegistrySupport,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
-import { createRegistryReader } from './registry-reader';
+import { and, eq, sql } from 'drizzle-orm';
+import type { AgentCatalogWriteRow } from '../../feed';
+import type { RegistryReader } from './registry-reader';
 
 function createCatalogAgentRecord(
   agent: ACPAgent,
@@ -19,85 +23,39 @@ function createCatalogAgentRecord(
   };
 }
 
-type CatalogTransaction = Pick<Database, 'select' | 'update' | 'insert'>;
-
-export function commitCatalogAgents(
-  database: Database,
+export function prepareAgentCatalogRows(
   registry: ACPAgentRegistry,
-): string[] {
-  return database.transaction((transaction) =>
-    replaceCatalogOwnedFields(transaction, registry, Date.now()),
+  syncedAt: number,
+): AgentCatalogWriteRow[] {
+  return registry.agents.map((agent) =>
+    createCatalogAgentRecord(agent, syncedAt),
   );
 }
 
-function replaceCatalogOwnedFields(
-  database: CatalogTransaction,
-  registry: ACPAgentRegistry,
-  syncedAt: number,
-): string[] {
-  const previousIds = readPresentCatalogAgentIds(database);
-  markCatalogAgentsRemoved(database, syncedAt);
-  for (const agent of registry.agents)
-    upsertCatalogAgent(database, agent, syncedAt);
-  return [
-    ...new Set([...previousIds, ...readPresentCatalogAgentIds(database)]),
-  ];
-}
-
-function readPresentCatalogAgentIds(
-  database: Pick<Database, 'select'>,
-): string[] {
-  return database
-    .select({ id: agents.id })
-    .from(agents)
-    .where(eq(agents.catalogPresent, true))
-    .all()
-    .map(({ id }) => id);
-}
-
-function markCatalogAgentsRemoved(
-  database: Pick<Database, 'update'>,
-  syncedAt: number,
-): void {
-  database
-    .update(agents)
-    .set({ catalogPresent: false, catalogSyncedAt: syncedAt })
-    .where(eq(agents.catalogPresent, true))
-    .run();
-}
-
-function upsertCatalogAgent(
-  database: Pick<Database, 'insert'>,
-  agent: ACPAgent,
-  syncedAt: number,
-): void {
-  const record = createCatalogAgentRecord(agent, syncedAt);
-  database
-    .insert(agents)
-    .values(record)
-    .onConflictDoUpdate({
-      target: agents.registryId,
-      set: createCatalogOwnedFields(agent, syncedAt),
-    })
-    .run();
+interface CatalogAgentReadInput {
+  reader: RegistryReader;
+  platform: string;
 }
 
 export function readCatalogAgentRecords(
   database: Database,
-  reader: ReturnType<typeof createRegistryReader>,
-): { record: AgentRecord; agent: ACPAgent }[] {
-  return database
-    .select()
-    .from(agents)
-    .all()
-    .filter(isCatalogAgentRecord)
-    .map((row) => hydrateCatalogAgentRecord(row, reader));
+  reader: RegistryReader,
+  request: AgentsCatalogInput,
+): AgentsCatalogOutput['agents'] {
+  const search = (request?.search ?? '').trim().toLowerCase();
+  const predicate = and(
+    eq(agents.catalogPresent, true),
+    sql`instr(${agents.catalogSearchText}, ${search}) > 0`,
+  );
+  const rows = database.select().from(agents).where(predicate).all();
+  const input = { reader, platform: resolveRegistryServerPlatform() };
+  return rows.map((row) => hydrateCatalogAgentRecord(row, input));
 }
 
 function hydrateCatalogAgentRecord(
   row: AgentRecord,
-  reader: ReturnType<typeof createRegistryReader>,
-): { record: AgentRecord; agent: ACPAgent } {
+  { reader, platform }: CatalogAgentReadInput,
+): AgentsCatalogOutput['agents'][number] {
   const parsed = AgentRecord.safeParse(row);
   if (!parsed.success)
     return reader.reject('Stored Agent row is malformed', parsed.error);
@@ -105,7 +63,37 @@ function hydrateCatalogAgentRecord(
   const agent = reader.parseAgent(record.registryMetadata);
   if (agent.id !== record.registryId)
     reader.reject('Stored Agent registry identity does not match metadata');
-  return { record, agent };
+  const support = selectAgentDistribution(agent, platform);
+  return { id: record.id, entry: agent, support };
+}
+
+function selectAgentDistribution(
+  agent: ACPAgent,
+  platform: string,
+): RegistrySupport {
+  const binary = agent.distribution.binary?.[platform];
+  if (binary) return { kind: 'binary', recipe: binary };
+  return selectPackageDistribution(agent, platform);
+}
+
+function selectPackageDistribution(
+  agent: ACPAgent,
+  platform: string,
+): RegistrySupport {
+  const packageKind = agent.distribution.npx ? 'npx' : 'uvx';
+  const recipe = agent.distribution[packageKind];
+  if (recipe) return { kind: packageKind, recipe };
+  return { kind: 'unsupported', reason: `No distribution for ${platform}` };
+}
+
+export function resolveRegistryServerPlatform(): string {
+  const os = process.platform === 'win32' ? 'windows' : process.platform;
+  return `${os}-${resolveRegistryServerArchitecture()}`;
+}
+
+function resolveRegistryServerArchitecture(): string {
+  if (process.arch === 'arm64') return 'aarch64';
+  return process.arch === 'x64' ? 'x86_64' : process.arch;
 }
 
 function createCatalogOwnedFields(
@@ -117,13 +105,10 @@ function createCatalogOwnedFields(
     registryMetadata: JSON.stringify(agent),
     catalogPresent: true,
     catalogSyncedAt: syncedAt,
+    catalogSearchText: normalizeAgentSearchText(agent),
   };
 }
 
-function isCatalogAgentRecord(row: AgentRecord): boolean {
-  return (
-    row.registryId !== null ||
-    row.registryMetadata !== null ||
-    row.catalogPresent
-  );
+function normalizeAgentSearchText(agent: ACPAgent): string {
+  return `${agent.id} ${agent.name} ${agent.description}`.toLowerCase();
 }

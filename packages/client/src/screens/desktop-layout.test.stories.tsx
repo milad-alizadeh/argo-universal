@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { createSessionCountsMock } from '../../mocks/session-counts-mock';
 import { sessionListMocks } from '../../mocks/session-list-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
@@ -25,7 +26,6 @@ const meta = {
   parameters: { navigation: recorder, trpc: sessionListMocks },
   beforeEach: async (): Promise<void> => {
     recorder.reset();
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
   },
 } satisfies Meta<typeof DesktopLayout>;

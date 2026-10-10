@@ -177,6 +177,10 @@ export function createSessionListReader(options: {
               turnId: job.id,
               validate,
             });
+          case 'blobMetadataUpsert':
+          case 'agentCatalogReplace':
+          case 'syncJobUpdate':
+            return [];
           default: {
             const unhandled: never = job;
             throw new Error(`Unhandled writer job ${unhandled}`);
@@ -448,10 +452,8 @@ function readSessionInformation(
     message: updates.findLast(
       (
         update,
-      ): update is Extract<
-        import('@repo/contracts').SessionUpdate,
-        { sessionUpdate: 'agent_message' }
-      > => update.sessionUpdate === 'agent_message',
+      ): update is Extract<SessionUpdate, { sessionUpdate: 'agent_message' }> =>
+        update.sessionUpdate === 'agent_message',
     ),
     plan: selectPlanRowWithLatestContent(updates),
     live: live?.context ?? null,

@@ -1,3 +1,4 @@
+import type { SessionUpdate } from '@repo/contracts';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { sendAcpFeedUpdates, waitForAcpSessionIdle } from '#mocks/acp-feed';
@@ -43,7 +44,7 @@ it('partial ACP tools remain readable during storage failure and retry commits t
   });
   try {
     await sent.promise;
-    let tool: import('@repo/contracts').SessionUpdate | undefined;
+    let tool: SessionUpdate | undefined;
     for await (const event of {
       [Symbol.asyncIterator]: (): typeof events => events,
     })

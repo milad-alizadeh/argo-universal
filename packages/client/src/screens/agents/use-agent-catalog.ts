@@ -19,12 +19,12 @@ export interface AgentCatalogState {
   query: UseQueryResult<AgentsCatalogOutput, ClientError>;
   refresh: () => void;
   refreshing: boolean;
+  syncError: ClientError | null;
 }
 
 export function useAgentCatalog(search: string): AgentCatalogState {
-  const trpc = useTRPC();
   const query = useQuery(
-    trpc.agents.catalog.queryOptions(
+    useTRPC().agents.catalog.queryOptions(
       { search },
       { placeholderData: keepPreviousData },
     ),
@@ -33,8 +33,13 @@ export function useAgentCatalog(search: string): AgentCatalogState {
   return {
     query,
     refresh: (): void => refresh.mutate(),
-    refreshing: refresh.isPending,
+    refreshing: refresh.isPending || isCatalogSyncing(query.data),
+    syncError: refresh.error,
   };
+}
+
+function isCatalogSyncing(catalog: AgentsCatalogOutput | undefined): boolean {
+  return catalog ? ['pending', 'running'].includes(catalog.syncStatus) : false;
 }
 
 function useCatalogSync(): UseMutationResult<
@@ -47,6 +52,7 @@ function useCatalogSync(): UseMutationResult<
   const sync = useMutation(
     trpc.agents.syncCatalog.mutationOptions({ onSettled: invalidate }),
   );
+  useCatalogChanges(sync);
   const { mutate } = sync;
   useEffect(() => mutate(), [mutate]);
   return sync;
@@ -55,14 +61,27 @@ function useCatalogSync(): UseMutationResult<
 function useCatalogInvalidation(): () => void {
   const trpc = useTRPC();
   const cache = useQueryClient();
-  const invalidate = (): void => {
+  return (): void => {
     void cache.invalidateQueries(trpc.agents.catalog.queryFilter());
+  };
+}
+
+interface CatalogSyncReset {
+  error: ClientError | null;
+  reset: () => void;
+}
+
+function useCatalogChanges(sync: CatalogSyncReset): void {
+  const trpc = useTRPC();
+  const invalidate = useCatalogInvalidation();
+  const update = (): void => {
+    if (sync.error) sync.reset();
+    invalidate();
   };
   useSubscription(
     trpc.agents.catalogChanges.subscriptionOptions(undefined, {
-      onStarted: invalidate,
-      onData: invalidate,
+      onStarted: update,
+      onData: update,
     }),
   );
-  return invalidate;
 }

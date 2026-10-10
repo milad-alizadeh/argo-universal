@@ -1,3 +1,4 @@
+import type { PromiseWithChild } from 'child_process';
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir, realpath } from 'node:fs/promises';
@@ -9,7 +10,7 @@ const execute = promisify(execFile);
 const run = (
   arguments_: string[],
   signal?: AbortSignal,
-): import('child_process').PromiseWithChild<{
+): PromiseWithChild<{
   stdout: string;
   stderr: string;
 }> => execute('git', arguments_, { signal });
