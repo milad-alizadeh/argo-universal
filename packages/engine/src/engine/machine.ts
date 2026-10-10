@@ -1,6 +1,6 @@
-import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
+import { writeLog } from '@repo/machine-log';
 import {
   assign,
   fromPromise,
@@ -51,13 +51,6 @@ type CloseAcpResourcesInput = {
   sessions: RegistryActorRef | undefined;
 };
 const closingAgentsTarget = 'closingAgents';
-
-function writeEngineLog(home: string, line: string): void {
-  const stamped = `${new Date().toISOString()} engine ${process.pid}: ${line}`;
-  console.log(stamped);
-  mkdirSync(join(home, 'logs'), { recursive: true });
-  appendFileSync(join(home, 'logs', 'engine.log'), `${stamped}\n`);
-}
 
 // `openingDatabase` sets the database before `recovering` and `live` run.
 function openDatabaseOf(context: { database: Database | null }): Database {
@@ -158,7 +151,7 @@ export const engineMachine = setup({
       process.send?.(message);
     },
     log: ({ context }, params: EngineLogParameters): void => {
-      writeEngineLog(context.home, params.line);
+      writeLog({ home: context.home, label: 'engine', line: params.line });
     },
     closeDatabase: ({ context }): void => {
       context.database?.$client.close();
@@ -243,7 +236,8 @@ export const engineMachine = setup({
           input: ({ context }): InputFrom<typeof writerMachine> => ({
             database: openDatabaseOf(context),
             now: context.now,
-            log: (line: string): void => writeEngineLog(context.home, line),
+            log: (line: string): void =>
+              writeLog({ home: context.home, label: 'engine', line }),
             blobsFolder: blobsFolderIn(context.home),
           }),
         },

@@ -1,6 +1,7 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { FeedChange, PlanUpdate, SessionUpdate } from '@repo/contracts';
 import type { session } from '@repo/db/schema';
+import { countRejection } from '@repo/machine-log';
 import {
   type ActorRefFrom,
   assertEvent,
@@ -9,7 +10,6 @@ import {
   enqueueActions,
   setup,
 } from 'xstate';
-import { countRejection } from '../../lib/count-rejections';
 import {
   applyFeedChange,
   changedRowId,

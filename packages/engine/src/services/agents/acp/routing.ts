@@ -1,5 +1,5 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
-import type { createRejectionCounter } from '../../../lib/count-rejections';
+import type { createRejectionCounter } from '@repo/machine-log';
 import type { AcpReservation } from './reservations';
 
 const earlyUpdateLimit = 64;

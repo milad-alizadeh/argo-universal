@@ -26,6 +26,14 @@
       // A shell builtin in the dev and start scripts, not an npm binary.
       "ignoreBinaries": ["unset"]
     },
+    "apps/server": {
+      // The Supervisor and E2E launch these Engine entries by path in a separate process.
+      "entry": ["src/engine/main.ts", "mocks/e2e-engine.ts"]
+    },
+    "packages/engine": {
+      // macOS supplies the computer-name command.
+      "ignoreBinaries": ["scutil"]
+    },
     "apps/universal-app": {
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
       "ignoreDependencies": [
@@ -36,18 +44,11 @@
         "expo-haptics",
         "expo-image-picker",
         "react-native-svg",
+        // Knip assumes OTA updates are installed unless Expo config explicitly disables them.
         "expo-updates"
       ],
       // Config plugins that app.json names by path.
       "entry": ["plugins/*.mjs"]
-    },
-    "apps/server": {
-      // Spawned by the E2E runner through a literal process argument.
-      "entry": ["mocks/e2e-engine.ts"]
-    },
-    "packages/engine": {
-      // macOS ships this binary; there is no npm package.
-      "ignoreBinaries": ["scutil"]
     },
     "apps/storybook": {
       // Peers of @repo/client's primitives, listed here so the Storybook Vite build resolves them.

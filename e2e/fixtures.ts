@@ -72,7 +72,7 @@ export const test = base.extend<
 >({
   appTarget: ['web', { option: true }],
   mockAgents: [{}, { option: true }],
-  // Each App uses isolated real storage and shared Agent adapter fixtures.
+  // Each App uses isolated real storage and shared external Agent fixtures.
   app: async (
     { appTarget, context, mockAgents },
     use,

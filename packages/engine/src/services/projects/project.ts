@@ -9,9 +9,9 @@ import {
 import type { Database } from '@repo/db';
 import { project } from '@repo/db/schema';
 import { listBranches, readRepository } from '@repo/git';
+import type { createRejectionCounter } from '@repo/machine-log';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
-import type { createRejectionCounter } from '../../lib/count-rejections';
 
 function readProjectIdentity(
   database: Database,

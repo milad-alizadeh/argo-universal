@@ -24,6 +24,8 @@ import type {
   TurnError,
   TurnUsage,
 } from '@repo/contracts';
+import { countRejection } from '@repo/machine-log';
+import { createRejectionCounter } from '@repo/machine-log';
 import {
   type ActorRefFrom,
   assertEvent,
@@ -39,8 +41,6 @@ import {
   type AnyActorRef,
   type InputFrom,
 } from 'xstate';
-import { countRejection } from '../../lib/count-rejections';
-import { createRejectionCounter } from '../../lib/count-rejections';
 import { findAgentProbe, RecoveryBlockedError } from '../agents';
 import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';

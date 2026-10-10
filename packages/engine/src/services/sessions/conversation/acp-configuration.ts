@@ -10,7 +10,7 @@ import {
   type SessionConfigSelectOption,
   type SessionConfigSelectGroup,
 } from '@repo/contracts';
-import type { createRejectionCounter } from '../../../lib/count-rejections';
+import type { createRejectionCounter } from '@repo/machine-log';
 
 const readChoice = (choice: AcpSelectOption): SessionConfigSelectOption => ({
   value: choice.value,

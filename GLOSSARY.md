@@ -67,12 +67,16 @@ A stretch of Agent work started by a prompt or by the Agent, ending with a stop 
 _Avoid_: Run, request, exchange
 
 **Agent adapter**:
-The plain functions that connect Argo to one Agent: start or resume its vendor session, and map its messages into Agent events.
+The plain functions that connect Argo to one Agent: start or resume its Agent session, and map its messages into Agent events.
 _Avoid_: Driver, provider, integration
 
-**Vendor session**:
-The Agent's own live session that an Agent adapter starts or resumes, identified by the Agent's session id.
-_Avoid_: Agent connection, connection, process
+**Agent session**:
+The Agent's own live session behind a Session, identified by the Agent's session id.
+_Avoid_: Vendor session, upstream session, Agent connection, process
+
+**Registry**:
+The public ACP Registry that lists the Agents that Argo can run; Argo's Agent catalog is synced from it.
+_Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), catalog (for the upstream list)
 
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, or `error`.

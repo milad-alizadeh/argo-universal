@@ -6,12 +6,8 @@
   "absolute": true,
   "ignore": [
     "**/node_modules/**",
-    "**/dist/**",
-    "**/.vite/**",
-    "**/.expo/**",
     "**/*.stories.tsx",
     "**/*.test.*",
-    "**/*.spec.*",
     "**/mocks/**",
     "**/*.mocks.*",
     "e2e/**",
@@ -21,17 +17,13 @@
     "**/uniwind-types.d.ts",
     "packages/db/drizzle/**"
   ],
-  "ignorePattern": [
-    "Session\\w+(Input|Output),\\s+Session\\w+(Input|Output),\\s+SessionAnswer\\w+,"
-  ],
   "reasons": {
     "ignore": {
-      "node_modules, dist, .vite, .expo": "Installed or build output, not our source.",
+      "node_modules": "Installed dependencies, not our source.",
       "*.stories.tsx": "Stories repeat the same render shape by design.",
       "tests, mocks, e2e, tools": "Not production logic; a new-clones-only gate for tests comes later.",
       "generated files": "Fix the generator, not the output: *.gen.*, storybook.requires.ts, uniwind-types.d.ts, packages/db/drizzle."
     },
-    "ignorePattern": "The api router and service name the same contracts in their import lists: a false positive.",
     "baseline": "The one entry in .jscpd-baseline.json is the Claude and Codex converter row helpers; each adapter keeps its own, and a shared helper would be shallow."
   }
 }

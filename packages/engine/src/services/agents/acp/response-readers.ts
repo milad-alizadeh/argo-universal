@@ -1,12 +1,12 @@
 import type { AgentRequestResponsesByMethod } from '@agentclientprotocol/sdk';
 import schema from '@agentclientprotocol/sdk/schema/schema.json' with { type: 'json' };
+import type { createRejectionCounter } from '@repo/machine-log';
 import addFormats from 'ajv-formats';
 import {
   Ajv2020,
   type FormatDefinition,
   type ValidateFunction,
 } from 'ajv/dist/2020.js';
-import type { createRejectionCounter } from '../../../lib/count-rejections';
 
 type RejectionReporter = Pick<
   ReturnType<typeof createRejectionCounter>,

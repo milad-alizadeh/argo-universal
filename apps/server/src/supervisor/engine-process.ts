@@ -1,7 +1,7 @@
 import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { EngineMessage } from '@repo/engine/ipc';
-import { createRejectionCounter } from '@repo/engine/rejections';
+import { createRejectionCounter } from '@repo/machine-log';
 import { fromCallback } from 'xstate';
 import {
   type EngineCommand,

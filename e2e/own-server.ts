@@ -80,7 +80,7 @@ const withStderr = (tail: string): string =>
     ? ''
     : `\nServer stderr (last ${STDERR_TAIL_LENGTH} characters):\n${tail}`;
 
-// Starts a real Engine with shared fixture adapters in an isolated home.
+// Starts a real Engine with shared external Agent fixtures in an isolated home.
 export async function startOwnServer(
   directory: string,
   agents: MockAgents,
