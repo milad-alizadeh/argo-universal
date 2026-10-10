@@ -6,7 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./custom-symbol-paths.json": "./src/lib/generic/symbols/custom-symbol-paths.json",
-    "./storybook": "./src/storybook/index.ts"
+    "./storybook": "./src/preview-config.ts"
   },
   "imports": {
     "#features/*": "./src/features/*/index.ts",

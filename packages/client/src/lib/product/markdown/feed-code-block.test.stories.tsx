@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { recordedFile } from '../../../mocks/feed-edit-mock';
-import { embeddedResource } from '../../../mocks/feed-paper';
-import { layoutWidths } from '../../../storybook/each-layout';
-import { settleViewport } from '../../../storybook/settle-viewport';
+import { recordedFile } from '../../../../mocks/feed-edit-mock';
+import { embeddedResource } from '../../../../mocks/feed-paper';
+import { layoutWidths } from '../../generic/each-layout';
+import { settleViewport } from '../../generic/settle-viewport';
 import { longCodeBlockTitle } from './code-block-title.mocks';
 import { FeedCodeBlock } from './feed-code-block';
 

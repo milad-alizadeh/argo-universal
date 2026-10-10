@@ -9,8 +9,8 @@ import {
   composerImages,
   composerPlanDone,
   oversizedComposerImage,
-} from '../../../mocks/composer-mock';
-import { Variation, Variations } from '../../../storybook/variations';
+} from '../../../../mocks/composer-mock';
+import { Variation, Variations } from '../../../lib/generic/variations';
 import { imageSelectionFailureMessage } from '../hooks/use-image-draft';
 import { Composer } from './composer';
 

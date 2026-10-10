@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { Text } from '#lib/generic/primitives/text';
-import { Variation, Variations } from '../../storybook/variations';
+import { Variation, Variations } from '../generic/variations';
 import { Screen, type ScreenProps } from './screen';
 import { ScreenPreview } from './screen-preview.mocks';
 

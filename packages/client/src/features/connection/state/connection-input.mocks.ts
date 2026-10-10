@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { createWSClient } from '@trpc/client';
-import type { ConnectionInput } from '../features/connection/state/machine';
+import type { ConnectionInput } from './machine';
 
 // Lazy clients never open a socket while the test replaces the Connection watcher.
 export const createConnectionInput = (): ConnectionInput => ({

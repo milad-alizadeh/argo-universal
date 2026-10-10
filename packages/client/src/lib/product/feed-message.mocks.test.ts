@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { recordedUserMessage, redSquareDataUrl } from './feed-message-mock';
+import { recordedUserMessage, redSquareDataUrl } from './feed-message.mocks';
 
 describe('Feed message mocks', () => {
   it('serves the bytes the recorded image block names', () => {

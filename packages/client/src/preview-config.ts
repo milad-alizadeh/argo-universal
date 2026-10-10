@@ -1,7 +1,7 @@
 import { themes } from '@repo/uniwind/themes';
-import { withNavigationMocks } from './with-navigation-mocks';
+import { withNavigationMocks } from '../mocks/with-navigation-mocks';
+import { withTrpcMocks } from '../mocks/with-trpc-mocks';
 import { withReusablesPreview } from './with-theme';
-import { withTrpcMocks } from './with-trpc-mocks';
 
 // Stories get tRPC fixtures from parameters.trpc through the mock link (ADR 0010).
 export const previewDecorators = [

@@ -5,5 +5,5 @@
     // className props on React Native components come from Uniwind's type augmentation.
     "types": ["uniwind/types"]
   },
-  "include": ["src", "vitest.config.ts"]
+  "include": ["src", "mocks", "vitest.config.ts"]
 }

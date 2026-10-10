@@ -3,9 +3,9 @@ import { expect, fn } from 'storybook/test';
 import {
   planProposalMocks,
   shortPlanProposal,
-} from '../../../mocks/plan-proposal-mock';
-import { layoutWidths } from '../../../storybook/each-layout';
-import { settleViewport } from '../../../storybook/settle-viewport';
+} from '../../../../mocks/plan-proposal-mock';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { PlanProposalCard } from './plan-proposal-card';
 
 const meta = {

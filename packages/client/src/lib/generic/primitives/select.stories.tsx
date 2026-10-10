@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { Variation, Variations } from '../../../storybook/variations';
+import { Variation, Variations } from '../variations';
 import {
   Select,
   SelectContent,

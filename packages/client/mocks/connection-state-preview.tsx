@@ -1,12 +1,12 @@
 import type * as React from 'react';
 import { type ReactNode, useEffect, useMemo } from 'react';
 import { createActor, fromCallback } from 'xstate';
+import { createConnectionInput } from '../src/features/connection/state/connection-input.mocks';
 import {
   ConnectionContext,
   type ConnectionState,
-} from '../features/connection/state/context';
-import { connectionMachine } from '../features/connection/state/machine';
-import { createConnectionInput } from './connection-input';
+} from '../src/features/connection/state/context';
+import { connectionMachine } from '../src/features/connection/state/machine';
 
 // A Connection machine held in `state`, for stories; it watches no WebSocket and refetches nothing.
 function createConnectionStateMock(

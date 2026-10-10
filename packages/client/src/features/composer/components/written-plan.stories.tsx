@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type ReactElement, useState } from 'react';
 import { action } from 'storybook/actions';
-import { recordedAcpContent } from '../../../mocks/acp-feed-content';
-import { composerProps } from '../../../mocks/composer-mock';
-import { longWrittenPlan } from '../../../mocks/feed-paper';
+import { composerProps } from '../../../../mocks/composer-mock';
+import { longWrittenPlan } from '../../../../mocks/feed-paper';
+import { recordedAcpContent } from '../../../lib/product/acp-feed-content.mocks';
 import { Composer } from './composer';
 
 const recording = recordedAcpContent('agent-1');

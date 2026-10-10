@@ -11,3 +11,5 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
+
+@source "../../packages/client/mocks";

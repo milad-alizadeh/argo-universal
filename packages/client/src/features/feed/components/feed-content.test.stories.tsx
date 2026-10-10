@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
-import { recordedAcpContent } from '../../../mocks/acp-feed-content';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
+import { recordedAcpContent } from '../../../lib/product/acp-feed-content.mocks';
 import {
   type MockAgent,
   recordedUserMessage,
@@ -8,9 +10,7 @@ import {
   recordedFeedMock,
   recordedImageUrl,
   redSquareDataUrl,
-} from '../../../mocks/feed-message-mock';
-import { layoutWidths } from '../../../storybook/each-layout';
-import { settleViewport } from '../../../storybook/settle-viewport';
+} from '../../../lib/product/feed-message.mocks';
 import { toFeedView } from '../view/to-feed-view';
 import { Feed } from './feed';
 

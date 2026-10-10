@@ -38,7 +38,7 @@ it('imports each platform file by relative path, so Metro can pick the platform 
   expect(forbiddenSpecifiers.size).toBeGreaterThan(0);
 
   const hits: string[] = [];
-  for (const file of listFiles('src')) {
+  for (const file of [...listFiles('src'), ...listFiles('mocks')]) {
     const lines = readFileSync(join(packageRoot, file), 'utf8').split('\n');
     for (const [index, line] of lines.entries()) {
       for (const match of line.matchAll(/(['"])(#[^'"]+)\1/g)) {

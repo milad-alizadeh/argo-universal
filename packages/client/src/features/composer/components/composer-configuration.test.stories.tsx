@@ -13,9 +13,9 @@ import {
   composerLongListConfiguration,
   composerLongModelList,
   composerUnlistedEffortConfigurations,
-} from '../../../mocks/composer-mock';
-import { layoutWidths } from '../../../storybook/each-layout';
-import { settleViewport } from '../../../storybook/settle-viewport';
+} from '../../../../mocks/composer-mock';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { ComposerAgentModelControl } from './composer-configuration';
 import { DefaultEffort } from './composer-configuration.stories';
 

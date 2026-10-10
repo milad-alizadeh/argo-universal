@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { composerProps } from '../../../mocks/composer-mock';
+import { composerProps } from '../../../../mocks/composer-mock';
 import {
   composerSettingsOptions,
   updateComposerSettings,
-} from '../../../mocks/composer-mock';
+} from '../../../../mocks/composer-mock';
 import { ComposerOptions } from './composer-options';
 
 const configuration = composerProps({

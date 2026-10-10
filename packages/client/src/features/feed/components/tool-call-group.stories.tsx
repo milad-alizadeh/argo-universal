@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { toolCallGroupMock } from '../../../mocks/tool-call-mock';
-import { Variation, Variations } from '../../../storybook/variations';
+import { Variation, Variations } from '../../../lib/generic/variations';
 import { ToolCallGroup } from './tool-call-group';
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';
+import { toolCallGroupMock } from './tool-call.mocks';
 
 const meta = {
   title: 'Sessions/Feed/ToolCallGroup',

@@ -3,7 +3,7 @@ import {
   customAgentFailure,
   customAgentId,
   customAgentMocks,
-} from '../../../mocks/agents-mock';
+} from '../../../../mocks/agents-mock';
 import { AgentSettingsScreen } from './agent-settings-screen';
 
 const meta = {

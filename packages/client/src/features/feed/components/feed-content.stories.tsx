@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { recordedAcpContent } from '../../../mocks/acp-feed-content';
+import { recordedAcpContent } from '../../../lib/product/acp-feed-content.mocks';
 import { toFeedView } from '../view/to-feed-view';
 import { Feed } from './feed';
 

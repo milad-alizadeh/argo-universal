@@ -13,7 +13,7 @@ import { userEvent as browserUserEvent } from 'vitest/browser';
 import { NewSessionScreen } from '#features/sessions';
 import { SessionScreen } from '#features/sessions';
 import { ContentLayout } from '#lib/product/content-layout';
-import { chooseEffort } from '../../../mocks/choose-effort';
+import { chooseEffort } from '../../../../mocks/choose-effort';
 import {
   composerProps,
   composerImages,
@@ -21,12 +21,12 @@ import {
   composerPlan,
   composerPlanDone,
   oversizedComposerImage,
-} from '../../../mocks/composer-mock';
-import { updateComposerSettings } from '../../../mocks/composer-mock';
-import { newSessionMocks } from '../../../mocks/new-session-mock';
-import { idleSessionMocks } from '../../../mocks/session-screen-mock';
-import { layoutWidths } from '../../../storybook/each-layout';
-import { settleViewport } from '../../../storybook/settle-viewport';
+} from '../../../../mocks/composer-mock';
+import { updateComposerSettings } from '../../../../mocks/composer-mock';
+import { newSessionMocks } from '../../../../mocks/new-session-mock';
+import { idleSessionMocks } from '../../../../mocks/session-screen-mock';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { Composer } from './composer';
 
 const missingAvailableAgentFailure =

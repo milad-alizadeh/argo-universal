@@ -7,9 +7,9 @@ import {
   longSessionMocks,
   runningSessionMocks,
   runningTurnNow,
-} from '../../../mocks/session-screen-mock';
-import { SessionScreenPreview } from '../../../mocks/session-screen-preview';
+} from '../../../../mocks/session-screen-mock';
 import { SessionScreen } from './session-screen';
+import { SessionScreenPreview } from './session-screen-preview.mocks';
 
 const meta = {
   title: 'Screens/SessionScreen',

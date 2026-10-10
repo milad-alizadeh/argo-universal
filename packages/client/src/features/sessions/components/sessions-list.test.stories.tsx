@@ -5,12 +5,12 @@ import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor } from 'storybook/test';
-import { createSessionListUpdatesMock } from '../../../mocks/session-list-updates-mock';
+import { createSessionListUpdatesMock } from '../../../../mocks/session-list-updates-mock';
 import {
   sessionsListProps,
   largeSessions,
-} from '../../../mocks/sessions-list-mock';
-import { settleViewport } from '../../../storybook/settle-viewport';
+} from '../../../../mocks/sessions-list-mock';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { SessionsScreen } from '../screens/sessions-screen';
 import {
   delayFooterLayout,

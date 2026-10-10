@@ -21,7 +21,7 @@ import {
   getSimplePaths,
   toDirectedGraph,
 } from 'xstate/graph';
-import { createConnectionInput } from '../../../mocks/connection-input';
+import { createConnectionInput } from './connection-input.mocks';
 import { connectionMachine } from './machine';
 
 const connectionLostEvent = 'connection.lost';

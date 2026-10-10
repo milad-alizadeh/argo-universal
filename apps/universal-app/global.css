@@ -6,3 +6,5 @@
 
 /* Screens and primitives live in @repo/client (ADR 0009). */
 @source "../../packages/client/src";
+
+@source "../../packages/client/mocks";

@@ -2,17 +2,17 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactNode } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
-import { shortPlanProposal } from '../../../mocks/plan-proposal-mock';
-import { permissionProps } from '../../../mocks/request-mock';
-import { layoutWidths } from '../../../storybook/each-layout';
-import { RequestFrame } from '../../../storybook/request-frame';
-import { settleViewport } from '../../../storybook/settle-viewport';
+import { shortPlanProposal } from '../../../../mocks/plan-proposal-mock';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
+import { RequestFrame } from '../../../lib/product/request-frame';
 import { PermissionRequest } from './permission-request';
 import type { PermissionRequestProps } from './permission-request';
 import {
   PlanProposalCard,
   type PlanProposalCardProps,
 } from './plan-proposal-card';
+import { permissionProps } from './request.mocks';
 
 interface ShortcutPreviewProps {
   width: number;

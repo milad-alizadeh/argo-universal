@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, spyOn, waitFor } from 'storybook/test';
+import { CatalogRow } from './catalog-row';
 import {
   base64Icon,
   encodedIcon,
   iconAgent,
   iconXml,
   malformedIconXml,
-} from '../../../mocks/registry-icons';
-import { CatalogRow } from './catalog-row';
+} from './registry-icons.mocks';
 
 const meta = {
   title: 'Tests/CatalogRow',

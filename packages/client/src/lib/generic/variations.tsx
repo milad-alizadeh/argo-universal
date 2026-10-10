@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Text } from '../lib/generic/primitives/text';
-import { cn } from '../lib/generic/utils';
+import { Text } from './primitives/text';
+import { cn } from './utils';
 
 export function Variation({
   label,

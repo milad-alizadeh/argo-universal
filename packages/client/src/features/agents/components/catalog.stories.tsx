@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { catalog, unavailableCatalog } from '../../../mocks/agents-mock';
+import { catalog, unavailableCatalog } from '../../../../mocks/agents-mock';
 import { AgentCatalog } from './catalog';
 
 const meta = {

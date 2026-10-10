@@ -48,8 +48,6 @@ const clientRelocations: [string, string[]][] = [
   [client('features/sessions/components'), [components]],
   [client('features/sessions/screens'), [screens]],
   [client('features/settings/components'), [components]],
-  ['packages/client/src/mocks/*', ['packages/client/mocks/*']],
-  ['packages/client/src/storybook/*', ['packages/client/mocks/*']],
   [client('lib/generic'), [client('lib'), client('navigation')]],
   [client('lib/generic/primitives'), [components, client('primitives')]],
   [client('lib/generic/symbols'), [client('lib')]],

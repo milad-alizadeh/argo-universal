@@ -4,10 +4,10 @@ import {
   type Navigate,
   type NavigationDestination,
   NavigationProvider,
-} from '../lib/product/navigation/context';
-import { ScreenHeaderProvider } from '../lib/product/navigation/screen-header';
-import { ScreenHeaderMock } from '../mocks/screen-header-mock';
-import type { Fixtures } from '../mocks/trpc-mock-link';
+} from '../src/lib/product/navigation/context';
+import { ScreenHeaderProvider } from '../src/lib/product/navigation/screen-header';
+import { ScreenHeaderMock } from './screen-header-mock';
+import type { Fixtures } from './trpc-mock-link';
 
 export interface NavigationRecorder {
   readonly destinations: readonly NavigationDestination[];

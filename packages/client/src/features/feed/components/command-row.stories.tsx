@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { Variation, Variations } from '../../../lib/generic/variations';
+import { CommandRow } from './command-row';
 import {
   commandNow,
   failedCommand,
   longOutputCommand,
   runningCommand,
-} from '../../../mocks/tool-call-mock';
-import { Variation, Variations } from '../../../storybook/variations';
-import { CommandRow } from './command-row';
+} from './tool-call.mocks';
 
 const meta = {
   title: 'Sessions/Feed/CommandRow',

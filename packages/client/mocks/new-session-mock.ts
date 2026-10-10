@@ -6,7 +6,7 @@ import {
   newSessionProjects,
   serverInfo,
 } from '@repo/mocks/app';
-import { configurationChoices } from '../features/composer/components/composer-configuration';
+import { configurationChoices } from '../src/features/composer/components/composer-configuration';
 import type { FixtureOutput } from './trpc-mock-link';
 import { type Fixtures, fails, pending } from './trpc-mock-link';
 

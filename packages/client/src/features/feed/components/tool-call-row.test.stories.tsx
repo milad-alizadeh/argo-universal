@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { completedRead, readMocks } from '../../../mocks/tool-call-mock';
-import { layoutWidths } from '../../../storybook/each-layout';
-import { settleViewport } from '../../../storybook/settle-viewport';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { ToolCallRow } from './tool-call-row';
+import { completedRead, readMocks } from './tool-call.mocks';
 
 const meta = {
   title: 'Tests/ToolCallRow',

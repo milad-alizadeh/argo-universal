@@ -2,10 +2,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createTRPCClient } from '@trpc/client';
 import type * as React from 'react';
 import { type ComponentType, type ReactNode, useState } from 'react';
-import type { ConnectionState } from '../features/connection/state/context';
-import { TRPCProvider } from '../features/connection/trpc/context';
-import { ConnectionStatePreview } from '../mocks/connection-state-preview';
-import { type Fixtures, trpcMockLink } from '../mocks/trpc-mock-link';
+import type { ConnectionState } from '../src/features/connection/state/context';
+import { TRPCProvider } from '../src/features/connection/trpc/context';
+import { ConnectionStatePreview } from './connection-state-preview';
+import { type Fixtures, trpcMockLink } from './trpc-mock-link';
 
 // Typed by shape, so web and on-device Storybook can both use it as a decorator.
 interface StoryContext {

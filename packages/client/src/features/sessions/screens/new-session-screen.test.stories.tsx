@@ -13,7 +13,7 @@ import { page } from 'vitest/browser';
 import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { ContentLayout } from '#lib/product/content-layout';
-import { chooseEffort } from '../../../mocks/choose-effort';
+import { chooseEffort } from '../../../../mocks/choose-effort';
 import {
   agentProbeRequests,
   failedStartMessage,
@@ -24,16 +24,16 @@ import {
   restrictedEffortNewSessionMocks,
   sendingNewSessionMocks,
   unavailableNewSessionMocks,
-} from '../../../mocks/new-session-mock';
+} from '../../../../mocks/new-session-mock';
 import type {
   FixtureArguments,
   FixtureOutput,
-} from '../../../mocks/trpc-mock-link';
-import { pending } from '../../../mocks/trpc-mock-link';
-import { eachLayout, layoutWidths } from '../../../storybook/each-layout';
-import { settleViewport } from '../../../storybook/settle-viewport';
-import { createNavigationRecorder } from '../../../storybook/with-navigation-mocks';
-import { TrpcMocks } from '../../../storybook/with-trpc-mocks';
+} from '../../../../mocks/trpc-mock-link';
+import { pending } from '../../../../mocks/trpc-mock-link';
+import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
+import { TrpcMocks } from '../../../../mocks/with-trpc-mocks';
+import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { NewSessionScreen } from './new-session-screen';
 
 const openSessionLabel = 'Open Session';

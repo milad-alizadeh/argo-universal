@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { agentCatalogMocks } from '../../../mocks/agents-mock';
+import { agentCatalogMocks } from '../../../../mocks/agents-mock';
 import {
   customAgentDefinition,
   customAgentId,
-} from '../../../mocks/agents-mock';
-import { createNavigationRecorder } from '../../../storybook/with-navigation-mocks';
+} from '../../../../mocks/agents-mock';
+import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
 import { AgentsSettingsScreen } from '../screens/agents-settings-screen';
 
 const meta = {

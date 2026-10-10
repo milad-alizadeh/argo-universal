@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { completedRead, runningRead } from '../../../mocks/tool-call-mock';
-import { Variation, Variations } from '../../../storybook/variations';
+import { Variation, Variations } from '../../../lib/generic/variations';
 import { ToolCallRow } from './tool-call-row';
+import { completedRead, runningRead } from './tool-call.mocks';
 
 const meta = {
   title: 'Sessions/Feed/ToolCallRow',

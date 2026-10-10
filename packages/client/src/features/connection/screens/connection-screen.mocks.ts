@@ -1,5 +1,8 @@
-import type { FixtureOutput, FixtureTick } from '../../../mocks/trpc-mock-link';
-import type { Fixtures } from '../../../mocks/trpc-mock-link';
+import type {
+  FixtureOutput,
+  FixtureTick,
+} from '../../../../mocks/trpc-mock-link';
+import type { Fixtures } from '../../../../mocks/trpc-mock-link';
 
 const firstTick = Date.parse('2026-10-03T10:00:00.000Z');
 

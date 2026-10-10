@@ -6,8 +6,8 @@ import {
   multipleProjects,
   sessionsListProps,
   largeSessions,
-} from '../../../mocks/sessions-list-mock';
-import { Variation, Variations } from '../../../storybook/variations';
+} from '../../../../mocks/sessions-list-mock';
+import { Variation, Variations } from '../../../lib/generic/variations';
 import { SessionsList, type SessionsListProps } from './sessions-list';
 
 const meta = {

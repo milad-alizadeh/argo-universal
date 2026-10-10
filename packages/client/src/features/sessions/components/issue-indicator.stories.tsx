@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Variation, Variations } from '../../../storybook/variations';
+import { Variation, Variations } from '../../../lib/generic/variations';
 import { IssueIndicator } from './issue-indicator';
 
 const meta = {

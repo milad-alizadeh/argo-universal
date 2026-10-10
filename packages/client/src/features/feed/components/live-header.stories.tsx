@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Variation, Variations } from '../../../storybook/variations';
+import { Variation, Variations } from '../../../lib/generic/variations';
 import { LiveHeader } from './live-header';
 import {
   liveHeaderNow,

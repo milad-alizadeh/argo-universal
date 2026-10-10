@@ -4,15 +4,15 @@ import {
   newSessionCatalogs,
   recordedFeedMocks,
 } from '@repo/mocks/app';
+import { completedCommand } from '../src/features/feed/components/tool-call.mocks';
 import {
   recordedAgentMessage,
   recordedFeedMock,
   recordedUserMessage,
-} from './feed-message-mock';
+} from '../src/lib/product/feed-message.mocks';
 import { createFeedMocks } from './feed-mock';
 import { unavailableNewSessionMocks } from './new-session-mock';
 import { createSubscriptionPublisher } from './subscription-publisher';
-import { completedCommand } from './tool-call-mock';
 import { type Fixtures, type FixtureOutput, pending } from './trpc-mock-link';
 
 const catalogAgent = ((): (typeof newSessionCatalogs.bothAvailable)[number] => {

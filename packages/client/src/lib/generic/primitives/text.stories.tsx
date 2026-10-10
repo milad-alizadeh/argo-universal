@@ -14,7 +14,7 @@ const variants = [
 ] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Variation, Variations } from '../../../storybook/variations';
+import { Variation, Variations } from '../variations';
 import { Text } from './text';
 
 function VariantExamples(): React.JSX.Element {

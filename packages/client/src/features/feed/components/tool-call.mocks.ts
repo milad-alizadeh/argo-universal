@@ -1,7 +1,7 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import { recordedFeedMocks } from '@repo/mocks/app';
-import type { FeedGroup } from '../features/feed/view/feed-view';
-import { toFeedView } from '../features/feed/view/to-feed-view';
+import type { FeedGroup } from '../view/feed-view';
+import { toFeedView } from '../view/to-feed-view';
 
 export const commandMocks = recordedFeedMocks
   .filter((mock) => mock.recording === 'edit-and-command')

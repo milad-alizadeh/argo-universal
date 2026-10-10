@@ -1,5 +1,5 @@
 import { recordedAcpContents } from '@repo/mocks/app';
-import type { MockAgent } from './feed-message-mock';
+import type { MockAgent } from './feed-message.mocks';
 
 export function recordedAcpContent(
   agent: MockAgent,

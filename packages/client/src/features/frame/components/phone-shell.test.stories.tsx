@@ -12,13 +12,13 @@ import {
   ScreenHeader,
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
+import { ScreenHeaderMock } from '../../../../mocks/screen-header-mock';
+import { createSessionCountsMock } from '../../../../mocks/session-counts-mock';
+import { TrpcMocks } from '../../../../mocks/with-trpc-mocks';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { sectionDestination } from '../../../lib/product/navigation/sections';
 import type { Section } from '../../../lib/product/navigation/sections';
-import { ScreenHeaderMock } from '../../../mocks/screen-header-mock';
-import { createSessionCountsMock } from '../../../mocks/session-counts-mock';
-import { layoutWidths } from '../../../storybook/each-layout';
-import { settleViewport } from '../../../storybook/settle-viewport';
-import { TrpcMocks } from '../../../storybook/with-trpc-mocks';
 import { PhoneLayout } from '../screens/phone-layout';
 import { PhoneMenuButton } from './phone-menu-button';
 import { PhoneShell } from './phone-shell';
