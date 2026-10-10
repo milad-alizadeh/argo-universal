@@ -7,7 +7,7 @@ import type {
 } from '@repo/contracts';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import type { IconName } from '#lib/icon-names';
@@ -310,7 +310,9 @@ export function AgentChoices({
           aria-pressed={agent.agent === configuration.agent}
           className={cn(
             'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2.5 has-[>[data-icon]]:px-2.5 wide:px-2 wide:has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
-            agent.agent === configuration.agent && 'bg-accent',
+            // The desktop pane sits on the sidebar colour, so its chosen row needs a deeper fill; a running Session dims only the Agents it cannot switch to.
+            agent.agent === configuration.agent &&
+              'bg-accent wide:bg-foreground/7 opacity-100 disabled:opacity-100',
           )}
           onPress={() => {
             if (agent.agent !== configuration.agent)
@@ -575,20 +577,32 @@ function SwitchOptions({
             {option.name}
           </Text>
         );
+        // The row is the control, so the switch only shows its state.
         const toggle = (
-          <Switch
-            size={wide ? 'small' : 'default'}
-            accessibilityLabel={option.name}
-            checked={option.currentValue}
-            onCheckedChange={(checked) =>
-              configuration.onConfigChange(option.configId, checked)
-            }
-          />
+          <View
+            pointerEvents="none"
+            aria-hidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            <Switch
+              size={wide ? 'small' : 'default'}
+              checked={option.currentValue}
+              onCheckedChange={() => {}}
+            />
+          </View>
         );
+        const rowProps = {
+          accessibilityRole: 'switch',
+          accessibilityLabel: option.name,
+          accessibilityState: { checked: option.currentValue },
+          onPress: () =>
+            configuration.onConfigChange(option.configId, !option.currentValue),
+        } as const;
         if (!wide)
           return (
-            <View
+            <Pressable
               key={option.configId}
+              {...rowProps}
               className="h-11 px-2.5 web:px-3 flex-row items-center gap-2"
             >
               {label}
@@ -603,12 +617,13 @@ function SwitchOptions({
               ) : null}
               <View className="flex-1" />
               {toggle}
-            </View>
+            </Pressable>
           );
         return (
-          <View
+          <Pressable
             key={option.configId}
-            className="px-2 py-2 flex-row items-center gap-3"
+            {...rowProps}
+            className="px-2 py-2 flex-row items-center gap-3 rounded-sm web:outline-none web:hover:bg-accent web:focus-visible:bg-accent"
           >
             <View className="flex-1 min-w-0 gap-0.5">
               {label}
@@ -619,7 +634,7 @@ function SwitchOptions({
               ) : null}
             </View>
             {toggle}
-          </View>
+          </Pressable>
         );
       })}
     </View>

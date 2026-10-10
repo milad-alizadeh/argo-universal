@@ -356,7 +356,10 @@ function fastMode(width: number): Story {
       }
       const tip = await overlay.findByText(description, { exact: true });
       await waitFor(() => expect(tip).toBeVisible());
-      await userEvent.click(fast);
+      await expect(args.configuration?.onConfigChange).not.toHaveBeenCalled();
+      // The whole row turns the option on, not just the switch.
+      await userEvent.click(within(fast).getByText('Fast mode'));
+      await expect(args.configuration?.onConfigChange).toHaveBeenCalledOnce();
       await expect(args.configuration?.onConfigChange).toHaveBeenCalledWith(
         'fast',
         true,
