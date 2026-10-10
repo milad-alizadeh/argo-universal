@@ -55,6 +55,7 @@ export type AcpProcess = {
 export type AcpResourceInput = {
   launchProcess?: (launch: AgentLaunch) => Promise<AcpProcess>;
   closeTimeoutMs?: number;
+  releaseTimeoutMs?: number;
 };
 export type AcpResources = {
   open: (input: AcpOpenInput) => Promise<AcpSessionLease>;
