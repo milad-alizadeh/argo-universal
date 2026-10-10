@@ -67,8 +67,9 @@ function MessageText(props: {
 }): React.JSX.Element {
   return (
     <Text
-      className={cn('type-secondary', props.isError && 'text-destructive')}
-      role={props.isError ? 'alert' : undefined}
+      role="secondary"
+      className={cn(props.isError && 'text-destructive')}
+      semanticRole={props.isError ? 'alert' : undefined}
     >
       {props.message}
     </Text>
@@ -80,7 +81,7 @@ export function FormLabel({
 }: {
   children: ReactNode;
 }): React.JSX.Element {
-  return <Text className="type-body">{children}</Text>;
+  return <Text role="body">{children}</Text>;
 }
 
 export function LabelledInput(

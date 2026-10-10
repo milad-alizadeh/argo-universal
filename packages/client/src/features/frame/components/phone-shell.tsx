@@ -93,13 +93,15 @@ export function PhoneShell({
           filled={selectedSection === section}
           className={cn(selectedSection !== section && 'text-muted-foreground')}
         />
-        <Text className="flex-1 type-body">{title}</Text>
+        <Text role="body" className="flex-1">
+          {title}
+        </Text>
         {section === 'sessions' && badge && (
           <Badge
             className="h-phone-shell-badge min-w-phone-shell-badge border-0 bg-warning px-1.5"
             accessibilityLabel={badge.label}
           >
-            <Text className="type-badge text-warning-foreground">
+            <Text role="badge" className="text-warning-foreground">
               {badge.text}
             </Text>
           </Badge>
@@ -131,7 +133,7 @@ export function PhoneShell({
           >
             <View style={{ height: top }} />
             <View className="h-14 justify-center px-6">
-              <Text role="heading" aria-level={2} className="type-title">
+              <Text role="title" semanticRole="heading" aria-level={2}>
                 Argo
               </Text>
             </View>

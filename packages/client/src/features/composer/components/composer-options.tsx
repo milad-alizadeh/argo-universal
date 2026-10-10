@@ -68,7 +68,11 @@ function SettingRow({
   onConfigChange: ComposerConfigurationProps['onConfigChange'];
 }): React.JSX.Element {
   if (row.type === 'header')
-    return <Text className="px-2 pt-1.5 pb-1 type-secondary">{row.name}</Text>;
+    return (
+      <Text role="secondary" className="px-2 pt-1.5 pb-1">
+        {row.name}
+      </Text>
+    );
   const { option } = row;
   const boolean = row.type === 'boolean';
   const selected = boolean

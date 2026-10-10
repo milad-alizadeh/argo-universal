@@ -79,11 +79,8 @@
   --leading-badge: var(--leading-4);
   --font-weight-badge: var(--font-weight-medium);
   --text-code: var(--text-xs);
-  --leading-code: var(--leading-4);
+  --leading-code: var(--leading-5);
   --font-weight-code: var(--font-weight-normal);
-  --text-code-block: var(--text-xs);
-  --leading-code-block: var(--leading-5);
-  --font-weight-code-block: var(--font-weight-normal);
   /* The gap between paragraphs, wherever text runs to more than one. */
   --spacing-paragraph: var(--spacing-3);
   --spacing-paragraph-wide: var(--spacing-2_5);
@@ -272,13 +269,6 @@
   font-size: var(--text-code);
   line-height: var(--leading-code);
   font-weight: var(--font-weight-code);
-}
-
-@utility type-code-block {
-  font-family: var(--font-mono);
-  font-size: var(--text-code-block);
-  line-height: var(--leading-code-block);
-  font-weight: var(--font-weight-code-block);
 }
 
 @utility type-nav-title {

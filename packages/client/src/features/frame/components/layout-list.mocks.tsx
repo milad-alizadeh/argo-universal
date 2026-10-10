@@ -6,7 +6,7 @@ import { Text } from '#lib/generic/primitives/text';
 export function LayoutListMock({ name }: { name: string }): React.JSX.Element {
   return (
     <ScrollView contentContainerClassName="px-gutter py-6">
-      <Text variant="muted">{name} list</Text>
+      <Text role="secondary">{name} list</Text>
     </ScrollView>
   );
 }

@@ -53,10 +53,10 @@ function CatalogControls(
 function CatalogHeading(props: HeadingProps): React.JSX.Element {
   return (
     <View className="h-8 flex-row items-center gap-2">
-      <Text role="heading" aria-level={1} className="type-heading">
+      <Text role={'heading'} semanticRole="heading" aria-level={1}>
         Agents
       </Text>
-      <Text className="type-secondary flex-1">
+      <Text role="secondary" className="flex-1">
         {props.catalog.status === 'loaded' &&
           props.catalog.catalog.agents.length}
       </Text>
@@ -125,7 +125,7 @@ function CatalogFailed(props: {
 
 function CatalogLoading(): React.JSX.Element {
   return (
-    <Text role="status" className="type-secondary py-4">
+    <Text role="secondary" semanticRole="status" className="py-4">
       Loading the Agent catalog…
     </Text>
   );

@@ -107,22 +107,22 @@ function InlineTokens({
 function Prose({
   tokens,
   caret,
-  className,
+  role = 'body',
   headingLevel,
 }: {
   tokens: Token[] | undefined;
   caret: boolean;
-  className?: string;
+  role?: React.ComponentProps<typeof Text>['role'];
   headingLevel?: number;
 }): React.JSX.Element {
   const variant = useContext(MarkdownVariant);
   return (
     <Text
-      role={headingLevel === undefined ? undefined : 'heading'}
-      aria-level={headingLevel === undefined ? undefined : String(headingLevel)}
+      semanticRole={headingLevel === undefined ? undefined : 'heading'}
+      aria-level={headingLevel}
+      role={role}
       className={cn(
-        'font-sans type-body',
-        className,
+        'font-sans',
         variant === 'summary' && 'text-muted-foreground',
       )}
     >
@@ -147,8 +147,9 @@ function List({
         ({ item, key }, index) => (
           <View key={key} className="flex-row gap-2">
             <Text
+              role="body"
               className={cn(
-                'w-4 shrink-0 font-sans type-body',
+                'w-4 shrink-0 font-sans',
                 variant !== 'proposal' && 'text-muted-foreground',
               )}
             >
@@ -180,7 +181,7 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
             {withOccurrenceKeys(token.header, (cell) => cell.text).map(
               ({ item: cell, key }, column) => (
                 <View key={key} className={cellClassName(column)}>
-                  <Text className="font-sans type-heading">
+                  <Text role={'heading'} className="font-sans">
                     <InlineTokens
                       tokens={cell.tokens}
                       codeClassName={inlineCodeClassName}
@@ -203,7 +204,7 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
               {withOccurrenceKeys(row, (cell) => cell.text).map(
                 ({ item: cell, key }, column) => (
                   <View key={key} className={cellClassName(column)}>
-                    <Text className="font-sans type-body">
+                    <Text role="body" className="font-sans">
                       <InlineTokens
                         tokens={cell.tokens}
                         codeClassName="type-code text-foreground"
@@ -241,7 +242,7 @@ function Block({
           tokens={token.tokens}
           caret={caret}
           headingLevel={token.depth}
-          className={token.depth === 1 ? 'type-title' : 'type-heading'}
+          role={token.depth === 1 ? 'title' : 'heading'}
         />
       );
     case 'paragraph':

@@ -64,7 +64,7 @@ export function useSectionList(
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="px-gutter py-6"
       >
-        <Text variant="muted">
+        <Text role="secondary">
           {shellSections[section].title} list will appear here.
         </Text>
       </ScrollView>

@@ -31,7 +31,7 @@ export const Settings: Story = {
       >
         <View className="hidden h-14 flex-row items-center px-4 wide:flex">
           <Text
-            role="heading"
+            semanticRole="heading"
             aria-level={1}
             className="text-base font-semibold"
           >

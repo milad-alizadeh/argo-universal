@@ -43,7 +43,7 @@ function PageHeader(props: {
       <AgentTile />
       <View className="items-center gap-1 wide:flex-1 wide:items-start">
         <PageTitle {...props} />
-        <Text className="type-secondary">Custom ACP program</Text>
+        <Text role="secondary">Custom ACP program</Text>
       </View>
     </View>
   );
@@ -63,7 +63,7 @@ function PageTitle(props: {
 }): React.JSX.Element {
   return (
     <View className="items-center gap-1 wide:flex-row wide:gap-2">
-      <Text role="heading" aria-level={1} className="type-heading">
+      <Text semanticRole="heading" aria-level={1} role={'heading'}>
         {props.name}
       </Text>
       <ReadinessChip check={props.check} />
@@ -92,7 +92,7 @@ function SectionHeader({
 }: Pick<SectionProps, 'title' | 'action'>): React.JSX.Element {
   return (
     <View className="h-8 flex-row items-center justify-between">
-      <Text role="heading" aria-level={2} className="type-heading">
+      <Text semanticRole="heading" aria-level={2} role={'heading'}>
         {title}
       </Text>
       {action}
@@ -124,7 +124,7 @@ function LaunchValue({
 }): React.JSX.Element {
   return (
     <View className="gap-1">
-      <Text className="type-body">{label}</Text>
+      <Text role="body">{label}</Text>
       <ValueLines values={values} />
     </View>
   );
@@ -132,7 +132,7 @@ function LaunchValue({
 
 function ValueLines({ values }: { values: string[] }): React.JSX.Element {
   const rows = keyedRows(values);
-  if (rows.length === 0) return <Text className="type-secondary">None</Text>;
+  if (rows.length === 0) return <Text role="secondary">None</Text>;
   return (
     <>
       {rows.map((row) => (
@@ -144,7 +144,7 @@ function ValueLines({ values }: { values: string[] }): React.JSX.Element {
 
 function ValueLine({ value }: { value: string }): React.JSX.Element {
   return (
-    <Text className="type-code text-muted-foreground" selectable>
+    <Text role="code" className="text-muted-foreground" selectable>
       {value}
     </Text>
   );

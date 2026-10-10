@@ -40,7 +40,7 @@ function withMonoPaths(title: string, paths: readonly string[]): ReactNode[] {
     const key = `${offset}`;
     offset += part.length;
     return paths.includes(part) ? (
-      <Text key={key} className="type-code">
+      <Text key={key} role="code">
         {part}
       </Text>
     ) : (
@@ -92,8 +92,9 @@ export function FeedDisclosure({
               <Text
                 numberOfLines={1}
                 selectable={false}
+                role="body"
                 className={cn(
-                  'min-w-0 shrink type-body text-muted-foreground',
+                  'min-w-0 shrink text-muted-foreground',
                   hovered && foregroundTextClassName,
                   awaitingApproval && 'text-warning',
                   denied && 'line-through',
@@ -104,7 +105,7 @@ export function FeedDisclosure({
             )}
             {awaitingApproval && (
               <View className="rounded-sm border border-warning/20 bg-warning/10 px-1.5">
-                <Text className="type-badge text-warning">
+                <Text role="badge" className="text-warning">
                   Awaiting approval
                 </Text>
               </View>

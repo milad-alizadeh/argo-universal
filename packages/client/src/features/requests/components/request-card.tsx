@@ -80,7 +80,11 @@ function RequestBody({
 function RequestError({ error }: Pick<RequestCardProps, 'error'>): ReactNode {
   return (
     error && (
-      <Text role="alert" className="px-4 pt-3 type-secondary text-destructive">
+      <Text
+        semanticRole="alert"
+        role="secondary"
+        className="px-4 pt-3 text-destructive"
+      >
         {error}
       </Text>
     )
@@ -147,10 +151,8 @@ function AlreadyAnswered(props: AnsweredStatusProps): ReactNode {
 function AnsweredText({ reason, muted }: AnsweredStatusProps): ReactNode {
   return (
     <Text
-      className={cn(
-        'min-w-0 flex-1 type-body',
-        muted && 'text-muted-foreground',
-      )}
+      role="body"
+      className={cn('min-w-0 flex-1', muted && 'text-muted-foreground')}
     >
       {reason}
     </Text>
