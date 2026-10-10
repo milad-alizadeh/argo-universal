@@ -16,11 +16,12 @@ import {
   type Feed,
   type FeedStreamEvent,
 } from './feed-change';
-import { promptBlobIds } from './feed-row';
+import { outputBlobsOf, promptBlobIds } from './feed-row';
 import type { FeedPublication } from './publication';
 import { prepareAcpFeedApplication } from './updates/application';
 import type { MessageStreams } from './updates/message-identity';
 import { settleFeedTurn } from './updates/settlement';
+import type { OutputBlob } from './updates/tool-output';
 import type { WriterCommit } from './writer-commit';
 import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
@@ -44,6 +45,8 @@ export interface FeedInput extends Pick<
   // A row that has left memory, as last handed to the database writer.
   findWrittenRow: (id: string) => SessionUpdate | undefined;
   findUnaddressedPlan?: (acpSessionId: string) => PlanUpdate | undefined;
+  // Called when the database writer refuses this Feed's rows because storage is failing.
+  storageFailing?: () => void;
 }
 
 export interface FeedContext
@@ -51,7 +54,11 @@ export interface FeedContext
     Feed,
     Pick<
       FeedInput,
-      'epoch' | 'findWrittenRow' | 'findUnaddressedPlan' | 'now'
+      | 'epoch'
+      | 'findWrittenRow'
+      | 'findUnaddressedPlan'
+      | 'now'
+      | 'storageFailing'
     > {
   activityAt: number;
   // Rows changed since the last write, in the order they first changed.
@@ -60,6 +67,8 @@ export interface FeedContext
   streamEvents: FeedStreamEvent[];
   rejectedChanges: number;
   messageStreams: MessageStreams;
+  // Whole tool output cut to a preview since the last write.
+  outputBlobs: OutputBlob[];
   unaddressedPlan?: { acpSessionId: string; rowId: string };
 }
 
@@ -95,7 +104,7 @@ export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
 
 type WriterJobParameters = Pick<
   Extract<WriterEvent, { type: 'writer.write' }>,
-  'job' | 'committed'
+  'job' | 'committed' | 'refused'
 >;
 
 // Every changed row with the newest revision, as one job for the database writer.
@@ -112,6 +121,7 @@ const createRowsWriteRequest = ({
   });
   return {
     committed: 'committed' in event ? event.committed : undefined,
+    refused: context.storageFailing,
     job: {
       type: 'feedRows',
       sessionId: context.sessionId,
@@ -119,6 +129,7 @@ const createRowsWriteRequest = ({
       maxRevision: context.maxRevision,
       activityAt: context.activityAt,
       blobIds: promptBlobIds(rows),
+      blobs: outputBlobsOf(rows, context.outputBlobs),
     } satisfies WriterJob,
   };
 };
@@ -264,6 +275,7 @@ export const feedMachine = setup({
           ),
         ),
       changedRowIds: [],
+      outputBlobs: [],
     }),
     log: ({ context }, params: FeedLogParameters): void => {
       console.error(`feed ${context.sessionId}: ${params.line}`);
@@ -286,6 +298,7 @@ export const feedMachine = setup({
     streamEvents: [],
     rejectedChanges: 0,
     messageStreams: {},
+    outputBlobs: [],
   }),
   initial: 'active',
   states: {

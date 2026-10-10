@@ -35,14 +35,15 @@ export function createLiveHeaderRowsReader({
       .feed(sessionId)
       .rows.filter((row): boolean => row.turnId === turnId);
     let rejected = false;
+    // A row still in Feed memory is newer than its stored copy, so the stored payload is not parsed again.
     const parsed = [
       ...new Map(
-        [...stored, ...queued].map(
-          (row): [string, FeedRowWrite | SessionUpdate] => [
+        [...stored, ...queued]
+          .filter((row): boolean => !Object.hasOwn(rows, row.id))
+          .map((row): [string, FeedRowWrite | SessionUpdate] => [
             `${row.id}/${row.revision}`,
             row,
-          ],
-        ),
+          ]),
       ).values(),
     ].flatMap((row): SessionUpdate[] => {
       if (!('payloadVersion' in row)) return [row];

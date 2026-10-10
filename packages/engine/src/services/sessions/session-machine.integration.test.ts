@@ -738,6 +738,7 @@ const events = [
   { type: answerElicitationEvent, requestId: requestModel, action: 'cancel' },
   { type: agentTurnEndedEvent, stopReason: 'end_turn' },
   { type: sessionCancelEvent },
+  { type: 'session.storageFailing' },
   { type: sessionCloseEvent },
   { type: agentUsageEvent, usage: { used: 10, size: 100 } },
   { type: 'agent.messageRejected', reason: 'Unknown vendor message' },
@@ -881,6 +882,17 @@ it('structurally ends timed-out Checkout creation with a retryable failure', ():
     failure:
       'Checkout creation exceeded checkoutLimit (10000 ms). Retry the Session.',
   });
+});
+
+it('structurally cancels a running Turn whose Feed rows storage refuses', (): void => {
+  const refused = paths
+    .flatMap((path) => path.steps)
+    .filter((step) => step.event.type === 'session.storageFailing');
+  expect(refused.length).toBeGreaterThan(0);
+  for (const { state } of refused) {
+    expect(state.matches({ open: { live: 'cancelling' } })).toBe(true);
+    expect(state.context.storageFailedTurn).toBe(true);
+  }
 });
 
 it('structurally retains failed Feed cleanup until the native drain completes', (): void => {

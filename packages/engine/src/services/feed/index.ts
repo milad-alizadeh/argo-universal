@@ -24,6 +24,7 @@ export type { WriterChange } from './writer-changes';
 export { type WriterEvent, writerMachine } from './writer-machine';
 export type { WriterCommit } from './writer-commit';
 export { writeDatabaseJobAndWaitForCommit } from './database-write';
+export { writeBlobFile } from './blob-files';
 export type {
   AgentCatalogReplaceJob,
   AgentCatalogWriteRow,

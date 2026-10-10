@@ -42,6 +42,12 @@ it('the ACP structural graph walks every opening, recovery, closing and retained
   for (const path of paths)
     for (const step of path.steps) {
       expectAcpState(step.state, lease);
+      if (step.event.type === 'session.storageFailing') {
+        expect(
+          step.state.matches({ open: { acp: { activeTurn: 'cancelling' } } }),
+        ).toBe(true);
+        expect(step.state.context.storageFailedTurn).toBe(true);
+      }
       if (step.event.type === feedFlushDelayEvent)
         expect(step.state.context.failure).not.toBeNull();
     }

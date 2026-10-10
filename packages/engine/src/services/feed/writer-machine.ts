@@ -18,32 +18,52 @@ import {
   type WriterCommit,
 } from './writer-commit';
 import {
-  describeJob,
+  describeLostJobs,
   stampWriterJob,
   type WriterJob,
+  writeJobBlobFiles,
   writeJobs,
 } from './writer-job';
 
-type WriterBatchInput = { database: Database; jobs: WriterJob[] };
+type WriterBatchInput = {
+  database: Database;
+  blobsFolder?: string;
+  jobs: WriterJob[];
+};
 type WriterLogParameters = { line: string };
 const writeEvent = 'writer.write';
+// Feed row jobs the Writer keeps queued by default; past the limit it refuses more, while lifecycle jobs still queue.
+const defaultFeedRowJobLimit = 256;
+export const storageFailingMessage = 'Storage is failing';
 
 export interface WriterInput {
   database: Database;
   now: () => number;
   log?: (line: string) => void;
+  // Where content-addressed Blob files live (ADR-0005).
+  blobsFolder?: string;
+  feedRowJobLimit?: number;
 }
 
 interface WriterContext extends WriterInput {
+  feedRowJobLimit: number;
   // Jobs not yet committed, oldest first.
   queue: WriterJob[];
   // How many jobs at the front of `queue` the running `writeBatch` holds.
   batchSize: number;
   pendingCommits: PendingWriterCommit[];
+  // True from the first refused Feed row job until a batch commits.
+  refusing: boolean;
 }
 
 export type WriterEvent =
-  | { type: typeof writeEvent; job: WriterJob; committed?: WriterCommit }
+  | {
+      type: typeof writeEvent;
+      job: WriterJob;
+      committed?: WriterCommit;
+      // Called when the Writer refuses the job because its Feed row budget is spent.
+      refused?: () => void;
+    }
   | { type: 'writer.drain' };
 
 // The jobs `takeBatch` counted, oldest first.
@@ -53,8 +73,34 @@ const batchInput = ({
   context: WriterContext;
 }): WriterBatchInput => ({
   database: context.database,
+  blobsFolder: context.blobsFolder,
   jobs: context.queue.slice(0, context.batchSize),
 });
+
+// The first refusal is logged; later ones wait for a batch to commit.
+const refuseOverBudget = [
+  {
+    guard: and(['isOverFeedRowBudget', 'isRefusing']),
+    actions: 'refuseJob',
+  },
+  {
+    guard: 'isOverFeedRowBudget',
+    actions: [
+      'refuseJob',
+      'startRefusing',
+      {
+        type: 'log',
+        params: ({
+          context,
+        }: {
+          context: WriterContext;
+        }): WriterLogParameters => ({
+          line: `${storageFailingMessage}: refusing Feed rows while ${context.feedRowJobLimit} Feed row jobs wait`,
+        }),
+      },
+    ],
+  },
+] as const;
 
 export const writerMachine = setup({
   types: {
@@ -65,7 +111,10 @@ export const writerMachine = setup({
   },
   actors: {
     writeBatch: fromPromise<void, WriterBatchInput>(
-      async ({ input }): Promise<void> => writeJobs(input.database, input.jobs),
+      async ({ input }): Promise<void> => {
+        await writeJobBlobFiles(input.blobsFolder, input.jobs);
+        writeJobs(input.database, input.jobs);
+      },
     ),
   },
   actions: {
@@ -96,6 +145,12 @@ export const writerMachine = setup({
         return [...context.queue, stampWriterJob(event.job, context.now())];
       },
     }),
+    refuseJob: ({ event }): void => {
+      assertEvent(event, writeEvent);
+      event.committed?.reject(new Error(storageFailingMessage));
+      event.refused?.();
+    },
+    startRefusing: assign({ refusing: true }),
     takeBatch: assign({
       batchSize: ({ context }): number => context.queue.length,
     }),
@@ -105,6 +160,7 @@ export const writerMachine = setup({
       queue: ({ context }): WriterContext['queue'] =>
         context.queue.slice(context.batchSize),
       batchSize: 0,
+      refusing: false,
     }),
     releaseBatch: assign({ batchSize: 0 }),
     retryCommits: assign({
@@ -129,6 +185,15 @@ export const writerMachine = setup({
     },
   },
   guards: {
+    isOverFeedRowBudget: ({ context, event }): boolean => {
+      assertEvent(event, writeEvent);
+      return (
+        event.job.type === 'feedRows' &&
+        context.queue.filter((job): boolean => job.type === 'feedRows')
+          .length >= context.feedRowJobLimit
+      );
+    },
+    isRefusing: ({ context }): boolean => context.refusing,
     hasJobsAfterBatch: ({ context }): boolean =>
       context.queue.length > context.batchSize,
     drainRequested: stateIn({ writing: 'drainRequested' }),
@@ -138,12 +203,19 @@ export const writerMachine = setup({
   id: 'databaseWriter',
   context: ({ input }): WriterContext => ({
     ...input,
+    feedRowJobLimit: input.feedRowJobLimit ?? defaultFeedRowJobLimit,
     queue: [],
     batchSize: 0,
     pendingCommits: [],
+    refusing: false,
   }),
   initial: 'idle',
-  on: { [writeEvent]: { actions: ['enqueue', 'announceAccepted'] } },
+  on: {
+    [writeEvent]: [
+      ...refuseOverBudget,
+      { actions: ['enqueue', 'announceAccepted'] },
+    ],
+  },
   states: {
     idle: {
       on: {
@@ -224,9 +296,10 @@ export const writerMachine = setup({
       after: { writeRetryDelay: 'writing' },
       on: {
         'writer.drain': 'draining',
-        [writeEvent]: {
-          actions: ['enqueue', 'announceAccepted', 'retryCommits'],
-        },
+        [writeEvent]: [
+          ...refuseOverBudget,
+          { actions: ['enqueue', 'announceAccepted', 'retryCommits'] },
+        ],
       },
     },
     draining: {
@@ -255,7 +328,7 @@ export const writerMachine = setup({
             {
               type: 'log',
               params: ({ context, event }): WriterLogParameters => ({
-                line: `could not write while draining, lost ${context.queue.length} jobs: ${String(event.error)}\n${context.queue.map(describeJob).join('\n')}`,
+                line: `could not write while draining, lost ${context.queue.length} jobs: ${String(event.error)}\n${describeLostJobs(context.queue)}`,
               }),
             },
             'releaseBatch',

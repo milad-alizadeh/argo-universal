@@ -1,7 +1,7 @@
 import { sessionUpdateKinds, sessionUpdateStates } from '@repo/db/schema';
 import { z } from 'zod';
 import { feedRowColumns } from '../columns';
-import { ContentBlock } from './content-block';
+import { BlobRef, ContentBlock } from './content-block';
 import { createFeedMetadataSchema } from './metadata';
 import { Plan } from './plan';
 import {
@@ -80,6 +80,13 @@ export const ToolCallUpdate = z.strictObject({
   _meta: createFeedMetadataSchema(
     z.strictObject({
       truncated: z.boolean().optional(),
+      // The whole value of each output field cut to its head and tail (ADR-0005).
+      fullOutput: z
+        .strictObject({
+          content: BlobRef.optional(),
+          rawOutput: BlobRef.optional(),
+        })
+        .optional(),
       permissionOutcome: PermissionOutcome.optional(),
       commandActions: z.array(CommandAction).optional(),
       startedAt: z.int().optional(),
