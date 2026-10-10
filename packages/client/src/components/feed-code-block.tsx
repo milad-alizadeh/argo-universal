@@ -11,14 +11,22 @@ interface CodeBlockResource {
   description?: string;
 }
 
+type CodeBlockSource =
+  | { code: string; resource?: never; uri?: never; description?: never }
+  | {
+      code?: string;
+      resource: CodeBlockResource;
+      uri?: never;
+      description?: never;
+    }
+  // A resource with its URI as the header and its text, or else its description, as the body.
+  | { code?: string; uri: string; description?: string; resource?: never };
+
 export type FeedCodeBlockProps = {
   language?: string;
   footer?: ReactNode;
   textClassName?: string;
-} & (
-  | { code: string; resource?: never }
-  | { code?: string; resource: CodeBlockResource }
-);
+} & CodeBlockSource;
 
 // Code and supplied resources share one header, Copy control and scrolling body.
 export function FeedCodeBlock({
@@ -26,12 +34,17 @@ export function FeedCodeBlock({
   language,
   footer,
   resource,
+  uri,
+  description,
   textClassName,
 }: FeedCodeBlockProps): React.JSX.Element {
-  const copyValue = resource ? (code ?? resource.uri) : code;
-  let copyLabel = 'Copy code';
-  if (resource)
-    copyLabel = code === undefined ? 'Copy URI' : 'Copy resource text';
+  const resourceUri = resource?.uri ?? uri;
+  let copy = { value: code ?? '', label: 'Copy code' };
+  if (resourceUri !== undefined)
+    copy =
+      code === undefined
+        ? { value: resourceUri, label: 'Copy URI' }
+        : { value: code, label: 'Copy resource text' };
   return (
     <View
       className={cn(
@@ -40,12 +53,17 @@ export function FeedCodeBlock({
       )}
     >
       <CodeBlockHeader
-        title={resource?.name ?? language ?? ''}
-        copyValue={copyValue}
-        copyLabel={copyLabel}
+        title={resource?.name ?? uri ?? language ?? ''}
+        copyValue={copy.value}
+        copyLabel={copy.label}
         resource={resource}
-        hasBody={code !== undefined}
+        hasBody={code !== undefined || !!description}
       />
+      {code === undefined && !!description && (
+        <Text className="px-3 py-2 type-body text-foreground">
+          {description}
+        </Text>
+      )}
       {code !== undefined && (
         <ScrollView testID="code-scroll" className="max-h-75 wide:max-h-100">
           <ScrollView

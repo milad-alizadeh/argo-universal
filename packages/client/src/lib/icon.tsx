@@ -1,6 +1,10 @@
 import type * as React from 'react';
 import { useContext } from 'react';
-import { ActivityIndicator, type ActivityIndicatorProps } from 'react-native';
+import {
+  ActivityIndicator,
+  type ActivityIndicatorProps,
+  Platform,
+} from 'react-native';
 import { useCSSVariable, withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { TextClassContext } from '#primitives/text';
@@ -24,6 +28,11 @@ export function useIconPixels(size: IconSize): number {
   return typeof pixels === 'number'
     ? pixels
     : Number.parseFloat(String(pixels));
+}
+
+// Material Symbols draw chevrons and checks much smaller in their box than SF Symbols do, so Android draws them a size up.
+function glyphSize(size: IconSize): IconSize {
+  return Platform.OS === 'android' && size === 'sm' ? 'md' : size;
 }
 
 export interface IconProps {
@@ -58,7 +67,7 @@ export function Icon({
       colorClassName={colorClassName}
       sf={(filled && symbol.sfFilled) || symbol.sf}
       material={symbol.material}
-      pixels={useIconPixels(size)}
+      pixels={useIconPixels(glyphSize(size))}
       testID={testID}
     />
   );

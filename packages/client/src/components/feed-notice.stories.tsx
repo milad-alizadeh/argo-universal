@@ -1,19 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { compactionStates, noticeStates } from '../../mocks/feed-paper';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
-import { FeedCompaction } from './feed-advisory';
 import { FeedNotice } from './feed-notice';
 
-const [compaction] = compactionStates;
-if (!compaction) throw new Error('Advisory gallery needs a Compaction');
+const [notice] = noticeStates;
+if (!notice) throw new Error('Notice gallery needs a Notice');
 const meta = {
-  title: 'Feed/Advisories',
-  component: FeedCompaction,
-  args: { row: compaction },
-} satisfies Meta<typeof FeedCompaction>;
+  title: 'Feed/Notices',
+  component: FeedNotice,
+  args: { row: notice },
+} satisfies Meta<typeof FeedNotice>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Advisories: Story = {
+export const Notices: Story = {
   render: () => (
     <Variations>
       {noticeStates.map((row) => (
@@ -22,8 +21,8 @@ export const Advisories: Story = {
         </Variation>
       ))}
       {compactionStates.map((row) => (
-        <Variation key={row.status} label={row.status}>
-          <FeedCompaction row={row} />
+        <Variation key={row.status} label={`Compaction ${row.status}`}>
+          <FeedNotice row={row} />
         </Variation>
       ))}
     </Variations>

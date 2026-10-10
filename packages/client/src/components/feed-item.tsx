@@ -5,7 +5,6 @@ import type { FeedActivity, FeedViewItem } from '../feed/feed-view';
 import { AgentMessage } from './agent-message';
 import { CommandRow } from './command-row';
 import { EditRow } from './edit-row';
-import { FeedCompaction } from './feed-advisory';
 import { FeedImageUrlContext } from './feed-image';
 import { FeedNotice } from './feed-notice';
 import { ToolCallGroup } from './tool-call-group';
@@ -101,8 +100,10 @@ function renderFeedItem(
   if (row.sessionUpdate === 'user_message')
     return <UserMessage row={row} imageUrl={imageUrl} />;
   if (row.sessionUpdate === 'agent_message') return <AgentMessage row={row} />;
-  if (row.sessionUpdate === 'notice') return <FeedNotice row={row} />;
-  if (row.sessionUpdate === 'compaction_update')
-    return <FeedCompaction row={row} />;
+  if (
+    row.sessionUpdate === 'notice' ||
+    row.sessionUpdate === 'compaction_update'
+  )
+    return <FeedNotice row={row} />;
   return null;
 }
