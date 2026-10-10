@@ -4,7 +4,10 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable } from 'react-native';
 import { Icon } from '../lib/icon';
-import { type InfoPopoverProps, infoPopoverTriggerClass } from './info-popover-props';
+import {
+  type InfoPopoverProps,
+  infoPopoverTriggerClass,
+} from './info-popover-props';
 
 // The system popover, so it shows above a native sheet with the platform's glass; the "i" is the app's icon so it matches the chevrons.
 export function InfoPopover({

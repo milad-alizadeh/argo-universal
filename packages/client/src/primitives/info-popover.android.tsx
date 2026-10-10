@@ -9,7 +9,10 @@ import type * as React from 'react';
 import { useRef } from 'react';
 import { Pressable } from 'react-native';
 import { Icon } from '../lib/icon';
-import { type InfoPopoverProps, infoPopoverTriggerClass } from './info-popover-props';
+import {
+  type InfoPopoverProps,
+  infoPopoverTriggerClass,
+} from './info-popover-props';
 
 // The Material rich tooltip, so it shows above a native sheet; it stays until dismissed.
 export function InfoPopover({
