@@ -3,12 +3,12 @@ import {
   accessibilityLabel as accessibilityLabelModifier,
   pickerStyle,
   tag,
-  tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#lib/generic/primitives/host';
+import { optionalTint } from '#lib/generic/primitives/swift-tint';
 import type { ChoiceMenuProps } from './choice-menu';
 
 // The system menu, with a check on the chosen item.
@@ -51,9 +51,9 @@ export function ChoiceMenu<Value extends string>({
 function useMenuModifiers(
   accessibilityLabel: string,
 ): React.ComponentProps<typeof Menu>['modifiers'] {
-  const { tint: tintColor } = useNativeTheme().colors;
+  const { tint } = useNativeTheme().colors;
   return [
     accessibilityLabelModifier(accessibilityLabel),
-    ...(tintColor === undefined ? [] : [tint(tintColor)]),
+    ...optionalTint(tint),
   ];
 }

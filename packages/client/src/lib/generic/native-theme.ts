@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useCSSVariable, useResolveClassNames, useUniwind } from 'uniwind';
+import { useCSSVariable, useUniwind } from 'uniwind';
+import { usePrimitiveColor } from './primitives/primitive-color';
 
 const colorTokens = [
   ['tint', '--color-tint'],
@@ -31,8 +32,8 @@ export interface NativeTheme {
 export function useNativeTheme(): NativeTheme {
   const { theme } = useUniwind();
   const tokens = useCSSVariable(tokenNames);
-  const disabledContent = useClassColor('text-foreground/38');
-  const disabledContainer = useClassColor('text-foreground/12');
+  const disabledContent = usePrimitiveColor('text-foreground/38');
+  const disabledContainer = usePrimitiveColor('text-foreground/12');
   const colors = useMemo(
     () => ({ ...tokenColors(tokens), disabledContent, disabledContainer }),
     [tokens, disabledContent, disabledContainer],
@@ -49,9 +50,4 @@ function tokenColors(
     if (typeof value === 'string') colors[role] = value;
   }
   return colors;
-}
-
-function useClassColor(className: string): string | undefined {
-  const color = useResolveClassNames(className).color;
-  return typeof color === 'string' ? color : undefined;
 }

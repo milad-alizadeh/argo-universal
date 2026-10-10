@@ -4,12 +4,12 @@ import {
   disabled,
   pickerStyle,
   tag,
-  tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from './host';
 import type { SelectMenuProps } from './select-menu';
+import { optionalTint } from './swift-tint';
 
 const unchosen = '';
 
@@ -47,7 +47,7 @@ function usePickerModifiers(
     pickerStyle('menu'),
     accessibilityLabel(props.accessibilityLabel),
     disabled(props.disabled),
-    ...(valueColor === undefined ? [] : [tint(valueColor)]),
+    ...optionalTint(valueColor),
   ];
 }
 

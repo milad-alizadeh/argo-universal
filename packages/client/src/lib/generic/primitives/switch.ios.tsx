@@ -3,12 +3,12 @@ import {
   accessibilityLabel,
   disabled,
   labelsHidden,
-  tint,
   toggleStyle,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from './host';
+import { optionalTint } from './swift-tint';
 import type { SwitchProps } from './switch-props';
 
 function Switch(props: SwitchProps): React.JSX.Element {
@@ -28,13 +28,13 @@ function Switch(props: SwitchProps): React.JSX.Element {
 function useSwitchModifiers(
   props: SwitchProps,
 ): React.ComponentProps<typeof Toggle>['modifiers'] {
-  const { tint: tintColor } = useNativeTheme().colors;
+  const { tint } = useNativeTheme().colors;
   return [
     toggleStyle('switch'),
     labelsHidden(),
     disabled(!!props.disabled),
     ...switchLabel(props.accessibilityLabel),
-    ...(tintColor === undefined ? [] : [tint(tintColor)]),
+    ...optionalTint(tint),
   ];
 }
 

@@ -2,12 +2,12 @@ import { Slider as NativeSlider } from '@expo/ui/swift-ui';
 import {
   accessibilityLabel,
   accessibilityValue,
-  tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from './host';
 import type { SliderProps } from './slider';
+import { optionalTint } from './swift-tint';
 
 export function Slider(props: SliderProps): React.JSX.Element {
   const modifiers = useSliderModifiers(props);
@@ -28,10 +28,10 @@ export function Slider(props: SliderProps): React.JSX.Element {
 function useSliderModifiers(
   props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
 ): React.ComponentProps<typeof NativeSlider>['modifiers'] {
-  const { tint: tintColor } = useNativeTheme().colors;
+  const { tint } = useNativeTheme().colors;
   return [
     accessibilityLabel(props.accessibilityLabel),
     accessibilityValue(props.valueLabel),
-    ...(tintColor === undefined ? [] : [tint(tintColor)]),
+    ...optionalTint(tint),
   ];
 }
