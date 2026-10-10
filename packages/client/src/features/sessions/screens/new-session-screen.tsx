@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import type { inferRouterOutputs } from '@trpc/server';
 import type * as React from 'react';
 import { useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useAgents } from '#features/agents';
 import {
@@ -16,12 +16,12 @@ import { useNewSessionConfiguration } from '#features/composer';
 import { useConnectionState } from '#features/connection';
 import type { ClientError } from '#features/connection';
 import { useTRPC } from '#features/connection';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { useContentWide } from '#lib/product/content-layout';
 import { LoadError } from '#lib/product/load-error';
 import { useNavigate } from '#lib/product/navigation/context';
 import { keyboardAvoidingStyle, Screen } from '#lib/product/screen';
+import { Button } from '../../../lib/generic/primitives/button';
 
 type ProjectsQuery = ReturnType<
   typeof useQuery<
@@ -249,12 +249,10 @@ export function NewSessionScreen({
                   if (choices.settings)
                     newSession.mutate({ ...choices.settings, prompt: [] });
                 }}
-              >
-                {newSession.isPending && (
-                  <ActivityIndicator accessibilityLabel="Opening Session" />
-                )}
-                <Text>Open Session</Text>
-              </Button>
+                label="Open Session"
+                loading={newSession.isPending}
+                appearance="content"
+              />
             </View>
             {agent && !agentAvailable && (
               <Text role="alert" className="text-destructive">

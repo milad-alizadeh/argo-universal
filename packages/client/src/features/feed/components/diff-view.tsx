@@ -2,7 +2,6 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Button } from '#lib/generic/primitives/button';
 import {
   Collapsible,
   CollapsibleContent,
@@ -11,6 +10,10 @@ import { Text, TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { CodeBlockHeader } from '#lib/product/markdown/code-block-header';
 import { CopyButton } from '#lib/product/markdown/copy-button';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import type { DiffLine, FileDiff } from '../view/file-diff';
 import { DisclosureCaret } from './disclosure-caret';
 
@@ -84,12 +87,16 @@ function FileHeader({
   const name = file.path.slice(slash + 1);
   return (
     <View className="h-9 flex-row items-center gap-2 bg-muted pr-3 pl-2">
-      <Button
-        variant="link"
-        className="h-5 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-5 has-[>[data-icon]]:px-0"
+      <Pressable
         aria-label={`Diff for ${file.path}`}
         aria-expanded={open}
         onPress={() => onOpenChange(!open)}
+        role="button"
+        className={contentActionClass({
+          variant: 'link',
+          className:
+            'h-5 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-5 has-[>[data-icon]]:px-0',
+        })}
       >
         <TextClassContext.Provider value="select-none no-underline">
           <DisclosureCaret open={open} />
@@ -111,7 +118,7 @@ function FileHeader({
             </Text>
           </View>
         </TextClassContext.Provider>
-      </Button>
+      </Pressable>
       <CopyButton value={file.path} label="Copy path" />
       {file.added > 0 && (
         <Text
@@ -195,10 +202,14 @@ export function DiffView({
           </ScrollView>
         </ScrollView>
         {limited && (
-          <Button
-            variant="link"
+          <Pressable
             onPress={() => setShowAll(true)}
-            className="h-6 sm:h-6 justify-start rounded-none border-t border-border bg-sidebar px-3 py-0"
+            role="button"
+            className={contentActionClass({
+              variant: 'link',
+              className:
+                'h-6 sm:h-6 justify-start rounded-none border-t border-border bg-sidebar px-3 py-0',
+            })}
           >
             <Text
               selectable={false}
@@ -206,7 +217,7 @@ export function DiffView({
             >
               Show all {lineCount} lines
             </Text>
-          </Button>
+          </Pressable>
         )}
       </CollapsibleContent>
     </Collapsible>

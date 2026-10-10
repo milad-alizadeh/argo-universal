@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { LoadError } from '#lib/product/load-error';
 import { useNavigate } from '#lib/product/navigation/context';
+import { Button } from '../../../lib/generic/primitives/button';
 import { AgentCatalog } from '../components/catalog';
 import {
   CatalogSearch,
@@ -83,11 +83,9 @@ function AddCustomAgent(): React.JSX.Element {
     <Button
       variant="outline"
       size="sm"
-      className="h-8 shadow-none"
       onPress={() => navigate({ to: 'settings-agent-new' })}
-    >
-      <Text className="font-sans leading-5">Add custom</Text>
-    </Button>
+      label={'Add custom'}
+    />
   );
 }
 
@@ -97,13 +95,11 @@ function RefreshCatalog({ catalog }: CatalogViewProps): React.JSX.Element {
     <Button
       variant="outline"
       size="sm"
-      className="h-8 shadow-none"
       accessibilityLabel="Refresh catalog"
       disabled={catalog.refreshing}
       onPress={catalog.refresh}
-    >
-      <Text className="font-sans leading-5">{label}</Text>
-    </Button>
+      label={label}
+    />
   );
 }
 

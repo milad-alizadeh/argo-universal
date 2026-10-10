@@ -19,13 +19,13 @@ import {
 import { useTRPC } from '#features/connection';
 import type { ClientError } from '#features/connection';
 import { hasLiquidGlass } from '#lib/generic/native-header';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { HeaderButton } from '#lib/product/header-button';
 import { LoadError } from '#lib/product/load-error';
 import { useNavigate } from '#lib/product/navigation/context';
 import { Screen } from '#lib/product/screen';
-import { Icon } from '../../../lib/generic/symbols/icon';
+import { Button } from '../../../lib/generic/primitives/button';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { useWide } from '../../../lib/generic/use-wide';
 import { ChoiceMenu } from '../../../lib/product/choice-menu';
 import { FloatingActionButton } from '../components/floating-action-button';
@@ -89,9 +89,14 @@ function SessionsFilterMenu({
       onValueChange={(value) => onArchivedChange(value === 'archived')}
       trigger={
         wide ? (
-          <Button variant="ghost" size="icon" className="size-8 sm:size-8">
-            <Icon name="filters" className="text-muted-foreground" />
-          </Button>
+          <IconButton
+            variant="ghost"
+            className="size-8 sm:size-8"
+            icon={'filters'}
+            iconClassName={'text-muted-foreground'}
+            accessibilityLabel="Filter Sessions"
+            size="md"
+          />
         ) : (
           <HeaderButton
             icon="filters"
@@ -258,12 +263,11 @@ export function SessionsScreen({
           accessibilityLabel="New Session"
           onPress={() => navigate({ to: newSessionRoute })}
           className="h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3"
-        >
-          <Icon name="new-session" className="text-primary-foreground" />
-          <Text className="type-control text-primary-foreground">
-            New Session
-          </Text>
-        </Button>
+          label={'New Session'}
+          icon={'new-session'}
+          appearance="content"
+          labelClassName={'type-control text-primary-foreground'}
+        />
       </View>
     );
   } else if (newSessionInHeader) {

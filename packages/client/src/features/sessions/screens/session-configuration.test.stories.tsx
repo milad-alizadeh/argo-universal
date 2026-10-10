@@ -9,8 +9,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
-import { Button } from '#lib/generic/primitives/button';
-import { Text } from '#lib/generic/primitives/text';
 import { createFeedMocks } from '../../../../mocks/feed-mock';
 import { newSessionMocks } from '../../../../mocks/new-session-mock';
 import { emptySessionMocks } from '../../../../mocks/session-screen-mock';
@@ -18,11 +16,13 @@ import { createSubscriptionPublisher } from '../../../../mocks/subscription-publ
 import type { Fixtures, FixtureOutput } from '../../../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
 import { layoutWidths } from '../../../lib/generic/each-layout';
+import { Button } from '../../../lib/generic/primitives/button';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { NewSessionScreen } from './new-session-screen';
 import { SessionScreen } from './session-screen';
 import { SessionScreenPreview } from './session-screen-preview.mocks';
 
+const newSessionLabel = 'New Session';
 const actualFastId = 'actual-fast';
 const actualSessionId = 'actual-session';
 const checkoutModelId = 'checkout-model';
@@ -51,7 +51,7 @@ function configuredEmptySession(
   const snapshot: SessionSnapshot = {
     ...recording.snapshot,
     agent: agent.agent,
-    title: 'New Session',
+    title: newSessionLabel,
     state: 'idle',
     activeTurnId: null,
     liveHeader: null,
@@ -298,9 +298,7 @@ function remembersAcceptedChoiceDuringLoad(agentIndex: number): Story {
       const [creating, setCreating] = useState(false);
       return (
         <View className="flex-1">
-          <Button onPress={() => setCreating(true)}>
-            <Text>New Session</Text>
-          </Button>
+          <Button onPress={() => setCreating(true)} label={newSessionLabel} />
           {creating ? (
             <NewSessionScreen />
           ) : (
@@ -335,7 +333,7 @@ function remembersAcceptedChoiceDuringLoad(agentIndex: number): Story {
         );
         await userEvent.keyboard('{Escape}');
         await userEvent.click(
-          canvas.getByRole('button', { name: 'New Session' }),
+          canvas.getByRole('button', { name: newSessionLabel }),
         );
         await waitFor(() => expect(storage).toHaveBeenCalledTimes(2));
         response.resolve({ configOptions: accepted });

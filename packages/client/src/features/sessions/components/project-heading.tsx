@@ -1,9 +1,10 @@
 import type * as React from 'react';
 import { memo, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text, TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
+import { contentActionClass } from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 
 export interface ProjectHeadingProps {
@@ -41,14 +42,18 @@ export const ProjectHeading = memo(function ProjectHeading({
         (hovered || focused) && 'bg-sidebar-accent',
       )}
     >
-      <Button
-        variant="ghost"
+      <Pressable
         accessibilityLabel={name}
         accessibilityState={{ expanded: !collapsed }}
         aria-expanded={!collapsed}
-        className="h-full sm:h-full min-w-0 flex-1 justify-start gap-2 pl-2.5 pr-2 py-1 hover:bg-transparent dark:hover:bg-transparent web:has-[>[data-icon]]:pl-2.5 web:has-[>[data-icon]]:pr-2"
         onPress={onToggle}
         {...interactionEvents}
+        role="button"
+        className={contentActionClass({
+          variant: 'ghost',
+          className:
+            'h-full sm:h-full min-w-0 flex-1 justify-start gap-2 pl-2.5 pr-2 py-1 hover:bg-transparent dark:hover:bg-transparent web:has-[>[data-icon]]:pl-2.5 web:has-[>[data-icon]]:pr-2',
+        })}
       >
         <TextClassContext.Provider value={undefined}>
           <Icon
@@ -63,33 +68,35 @@ export const ProjectHeading = memo(function ProjectHeading({
             {name}
           </Text>
         </TextClassContext.Provider>
-      </Button>
+      </Pressable>
       <View
         className={cn(
           'flex-row items-center gap-0.5',
           !actionsVisible && 'opacity-0',
         )}
       >
-        <Button
+        <IconButton
           variant="ghost"
           accessibilityLabel={`Project settings for ${name}`}
           className="size-6 sm:size-6 rounded-sm p-0 web:has-[>[data-icon]]:px-0"
           onPress={onProjectSettings}
           disabled={!onProjectSettings}
           {...interactionEvents}
-        >
-          <Icon name="more" className="text-foreground" />
-        </Button>
-        <Button
+          icon={'more'}
+          iconClassName={'text-foreground'}
+          size="md"
+        />
+        <IconButton
           variant="ghost"
           accessibilityLabel={addLabel}
           className="size-6 sm:size-6 rounded-sm p-0 web:has-[>[data-icon]]:px-0"
           onPress={onAdd}
           disabled={!onAdd}
           {...interactionEvents}
-        >
-          <Icon name="add" className="text-foreground" />
-        </Button>
+          icon={'add'}
+          iconClassName={'text-foreground'}
+          size="md"
+        />
       </View>
     </Pressable>
   );

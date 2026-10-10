@@ -1,17 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Input } from '#lib/generic/primitives/input';
 import { Text } from '#lib/generic/primitives/text';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
+import { Pressable, contentActionClass } from './pressable';
 
 function PopoverPreview(): React.JSX.Element {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline">
-          <Text>Open popover</Text>
-        </Button>
+        <Pressable
+          role="button"
+          className={contentActionClass({ variant: 'outline' })}
+        >
+          <Text>{'Open popover'}</Text>
+        </Pressable>
       </PopoverTrigger>
       <DimensionContent />
     </Popover>

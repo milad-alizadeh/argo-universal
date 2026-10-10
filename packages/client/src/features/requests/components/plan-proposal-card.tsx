@@ -5,12 +5,17 @@ import type {
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { Textarea } from '#lib/generic/primitives/textarea';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { PlanDocument } from '#lib/product/plan-document';
+import { Button } from '../../../lib/generic/primitives/button';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 import { PlanProposalExpansion } from './plan-proposal-expansion';
@@ -101,27 +106,34 @@ function PlanProposalInteraction({
             onPress={() => setPlanning(!planning)}
             variant={wide ? 'ghost' : 'secondary'}
             className={cn(
-              'px-3',
+              'web:sm:min-h-0 px-3',
               wide
                 ? 'h-8 sm:h-8 flex-none rounded-md'
                 : 'h-11 sm:h-11 flex-1 rounded-lg',
             )}
-          >
-            <Text className={planning ? 'text-muted-foreground' : undefined}>
-              {planning ? 'Back' : 'Keep planning'}
-            </Text>
-          </Button>
-          <Button
+            label={planning ? 'Back' : 'Keep planning'}
+            appearance="content"
+            labelClassName={planning ? 'text-muted-foreground' : undefined}
+          />
+          <Pressable
             onPress={submit}
             disabled={inactive || (planning && !feedback.trim())}
-            className={cn(
-              'pl-3',
-              wide
-                ? 'h-8 sm:h-8 flex-none rounded-md pr-1.5'
-                : 'h-11 sm:h-11 flex-1 rounded-lg pr-3',
-            )}
+            role="button"
+            className={contentActionClass({
+              variant: 'default',
+              className: cn(
+                'pl-3',
+                wide
+                  ? 'h-8 sm:h-8 flex-none rounded-md pr-1.5'
+                  : 'h-11 sm:h-11 flex-1 rounded-lg pr-3',
+              ),
+              disabled: inactive || (planning && !feedback.trim()),
+            })}
           >
-            <Text role={submitting ? 'status' : undefined}>
+            <Text
+              className="text-primary-foreground"
+              role={submitting ? 'status' : undefined}
+            >
               {submitting ? 'Sending…' : answerLabel}
             </Text>
             {wide && (
@@ -129,7 +141,7 @@ function PlanProposalInteraction({
                 <Icon name="return" className="text-primary-foreground" />
               </View>
             )}
-          </Button>
+          </Pressable>
         </>
       }
       heading={
@@ -157,18 +169,15 @@ function PlanProposalInteraction({
             <Text className="min-w-0 flex-1 type-heading">
               Approve this plan?
             </Text>
-            <Button
+            <IconButton
               variant="ghost"
-              size="icon"
               accessibilityLabel={expanded ? 'Collapse plan' : 'Expand plan'}
               onPress={() => setExpanded(!expanded)}
               className="size-7 sm:size-7 -my-0.75 -mr-1.5"
-            >
-              <Icon
-                name={expanded ? 'collapse' : 'expand'}
-                className="text-muted-foreground"
-              />
-            </Button>
+              icon={expanded ? 'collapse' : 'expand'}
+              iconClassName={'text-muted-foreground'}
+              size="md"
+            />
           </View>
         </View>
         <PlanDocument

@@ -10,8 +10,6 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { Button } from '#lib/generic/primitives/button';
-import { Text } from '#lib/generic/primitives/text';
 import { ContentLayout } from '#lib/product/content-layout';
 import { chooseEffort } from '../../../../mocks/choose-effort';
 import {
@@ -33,6 +31,7 @@ import { pending } from '../../../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
 import { TrpcMocks } from '../../../../mocks/with-trpc-mocks';
 import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
+import { Button } from '../../../lib/generic/primitives/button';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { NewSessionScreen } from './new-session-screen';
 
@@ -433,9 +432,10 @@ function rememberedSelection(agentIndex: number): Story {
       const [restart, setRestart] = useState(0);
       return (
         <View className="flex-1">
-          <Button onPress={() => setRestart((value) => value + 1)}>
-            <Text>Restart App</Text>
-          </Button>
+          <Button
+            onPress={() => setRestart((value) => value + 1)}
+            label={'Restart App'}
+          />
           <TrpcMocks
             key={restart}
             fixtures={meta.parameters.trpc}
@@ -754,9 +754,11 @@ export const Opening: Story = {
       await canvas.findByRole('button', { name: openSessionLabel }),
     );
     await eachLayout(async () => {
-      const sending = await canvas.findByRole('progressbar', {
-        name: 'Opening Session',
+      const sending = await canvas.findByRole('button', {
+        name: openSessionLabel,
       });
+      await waitFor(() => expect(sending).toHaveAttribute('aria-busy', 'true'));
+      await expect(sending).toBeDisabled();
       const bounds = sending.getBoundingClientRect();
       await expect(bounds.bottom).toBeLessThanOrEqual(window.innerHeight);
       await expect(

@@ -215,7 +215,7 @@ function longTitleSelected(width: number): Story {
       const row = canvas.getByRole('button', {
         name: `${sessionRows.longTitle.title}, Idle`,
       });
-      await expect(row).toHaveAttribute('aria-selected', 'true');
+      await expect(row).toHaveAttribute('aria-pressed', 'true');
       const title = canvas.getByText(sessionRows.longTitle.title);
       await expect(title).toBeVisible();
       await expect(args.onSelect).not.toHaveBeenCalled();

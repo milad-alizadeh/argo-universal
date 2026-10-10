@@ -18,12 +18,11 @@ import type { ClientError } from '#features/connection';
 import { useTRPC } from '#features/connection';
 import { Feed } from '#features/feed';
 import { useSessionFeed } from '#features/feed';
-import { Button } from '#lib/generic/primitives/button';
-import { Text } from '#lib/generic/primitives/text';
 import { LoadError } from '#lib/product/load-error';
 import { useNavigate } from '#lib/product/navigation/context';
 import { keyboardAvoidingStyle, Screen } from '#lib/product/screen';
 import { ScrollFade } from '#lib/product/scroll-fade';
+import { Button } from '../../../lib/generic/primitives/button';
 import { useWide } from '../../../lib/generic/use-wide';
 import {
   SessionHeader,
@@ -190,9 +189,8 @@ function SessionView({
                 !connected || closeSession.isPending || promptSession.isPending
               }
               onPress={() => closeSession.mutate({ sessionId })}
-            >
-              <Text>Cancel creation</Text>
-            </Button>
+              label={'Cancel creation'}
+            />
           )}
           <View
             pointerEvents="none"

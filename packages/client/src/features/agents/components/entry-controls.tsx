@@ -1,7 +1,8 @@
 import type * as React from 'react';
 import { Pressable, View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
+import { Button } from '../../../lib/generic/primitives/button';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { Icon } from '../../../lib/generic/symbols/icon';
 
 type PressProps = { label: string; onPress: () => void; disabled?: boolean };
@@ -22,24 +23,25 @@ export function AddEntry(props: PressProps): React.JSX.Element {
       className="-ml-3 self-start"
       disabled={props.disabled}
       onPress={props.onPress}
-    >
-      <Icon name="add" />
-      <Text className="type-body">{props.label}</Text>
-    </Button>
+      label={props.label}
+      icon={'add'}
+      appearance="content"
+      labelClassName={'type-body'}
+    />
   );
 }
 
 export function RemoveEntryButton(props: PressProps): React.JSX.Element {
   return (
-    <Button
+    <IconButton
       variant="ghost"
-      size="icon"
       accessibilityLabel={props.label}
       disabled={props.disabled}
       onPress={props.onPress}
-    >
-      <Icon name="close" className="text-muted-foreground" />
-    </Button>
+      icon={'close'}
+      iconClassName={'text-muted-foreground'}
+      size="md"
+    />
   );
 }
 

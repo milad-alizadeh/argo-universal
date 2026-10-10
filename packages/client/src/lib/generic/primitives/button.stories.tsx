@@ -1,27 +1,35 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ComponentProps } from 'react';
 import { View } from 'react-native';
-import { Icon } from '../symbols/icon';
 import { Variation, Variations } from '../variations';
 import { Button } from './button';
-import { Text } from './text';
+import type { ButtonProps } from './button-props';
 
-const buttons: { label: string; props: ComponentProps<typeof Button> }[] = [
-  { label: 'Default', props: {} },
-  { label: 'Destructive', props: { variant: 'destructive' } },
-  { label: 'Outline', props: { variant: 'outline' } },
-  { label: 'Secondary', props: { variant: 'secondary' } },
-  { label: 'Ghost', props: { variant: 'ghost' } },
-  { label: 'Link', props: { variant: 'link' } },
-  { label: 'Small', props: { size: 'sm' } },
-  { label: 'Large', props: { size: 'lg' } },
-  { label: 'Disabled', props: { disabled: true } },
+const saveLabel = 'Save changes';
+const buttons: { state: string; props: ButtonProps }[] = [
+  { state: 'Default', props: { label: saveLabel } },
+  {
+    state: 'Secondary',
+    props: { label: saveLabel, variant: 'secondary' },
+  },
+  { state: 'Outlined', props: { label: saveLabel, variant: 'outline' } },
+  { state: 'Text', props: { label: saveLabel, variant: 'ghost' } },
+  { state: 'Link', props: { label: 'Learn more', variant: 'link' } },
+  {
+    state: 'Destructive',
+    props: { label: 'Remove Agent', role: 'destructive', fullWidth: true },
+  },
+  { state: 'Small', props: { label: saveLabel, size: 'sm' } },
+  { state: 'Large', props: { label: saveLabel, size: 'lg' } },
+  { state: 'Disabled', props: { label: saveLabel, disabled: true } },
+  { state: 'Loading', props: { label: saveLabel, loading: true } },
+  { state: 'Leading icon', props: { label: 'Add Agent', icon: 'agent' } },
+  {
+    state: 'Argo content',
+    props: { label: 'Continue', appearance: 'content', icon: 'arrow-right' },
+  },
 ];
 
-const meta = {
-  title: 'Design System/Primitives/Button',
-  tags: ['third-party'],
-} satisfies Meta;
+const meta = { title: 'Design System/Primitives/Button' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -29,28 +37,13 @@ export const Overview: Story = {
   name: 'Button',
   render: () => (
     <Variations>
-      {buttons.map(({ label, props }) => (
-        <Variation key={label} label={label}>
+      {buttons.map(({ state, props }) => (
+        <Variation key={state} label={state}>
           <View className="flex-row">
-            <Button {...props}>
-              <Text>Button</Text>
-            </Button>
+            <Button {...props} />
           </View>
         </Variation>
       ))}
-      <IconExample />
     </Variations>
   ),
 };
-
-function IconExample(): React.JSX.Element {
-  return (
-    <Variation label="Icon">
-      <View className="flex-row">
-        <Button size="icon" accessibilityLabel="Add">
-          <Icon name="add" />
-        </Button>
-      </View>
-    </Variation>
-  );
-}

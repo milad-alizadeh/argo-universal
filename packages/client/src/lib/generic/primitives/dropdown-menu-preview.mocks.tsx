@@ -1,5 +1,4 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button } from './button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,15 +12,18 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from './dropdown-menu';
+import { Pressable, contentActionClass } from './pressable';
 import { Text } from './text';
+
+const triggerClass = contentActionClass({ variant: 'outline' });
 
 export function DropdownMenuPreview(): React.JSX.Element {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
-          <Text>Open</Text>
-        </Button>
+        <Pressable role="button" className={triggerClass}>
+          <Text>{'Open'}</Text>
+        </Pressable>
       </DropdownMenuTrigger>
       <AccountMenu />
     </DropdownMenu>
@@ -144,7 +146,6 @@ function LogoutItem(): React.JSX.Element {
 function ExternalLinks(): React.JSX.Element {
   return (
     <>
-      {' '}
       {['GitHub', 'Support'].map((label) => (
         <DropdownMenuItem key={label}>
           <Text>{label}</Text>

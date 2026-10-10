@@ -3,14 +3,13 @@ import { Portal } from '@rn-primitives/portal';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { formatElapsed } from '#lib/generic/format-elapsed';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { useClock } from '#lib/generic/use-clock';
 import { cn } from '#lib/generic/utils';
 import { HeaderButton } from '#lib/product/header-button';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { StatusIndicator, statusLabels } from '#lib/product/status-indicator';
-import { Icon } from '../../../lib/generic/symbols/icon';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { useWide } from '../../../lib/generic/use-wide';
 
 // The wide shell's detail header slots, filled by the open Session's header.
@@ -108,14 +107,14 @@ export function SessionHeader({
         </View>
       </Portal>
       <Portal name="session-actions" hostName={detailActionsHost}>
-        <Button
+        <IconButton
           variant="ghost"
-          size="icon"
           className="size-8 sm:size-8"
           accessibilityLabel="More"
-        >
-          <Icon name="more" className="text-foreground" />
-        </Button>
+          icon={'more'}
+          iconClassName={'text-foreground'}
+          size="md"
+        />
       </Portal>
     </>
   );

@@ -13,10 +13,13 @@ import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { fullTurnDegrees } from '#lib/generic/motion';
 import { Badge } from '#lib/generic/primitives/badge';
-import { Button } from '#lib/generic/primitives/button';
 import { Text, TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { StatusIndicator, statusLabels } from '#lib/product/status-indicator';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { IssueIndicator, type IssueIndicatorProps } from './issue-indicator';
 import {
@@ -78,16 +81,19 @@ export const SessionRow = memo(function SessionRow({
     : 'border-background bg-background wide:border-sidebar wide:bg-sidebar';
 
   return (
-    <Button
-      variant="ghost"
+    <Pressable
       accessibilityLabel={`${session.title}, ${statusLabels[session.status]}`}
       accessibilityState={{ selected }}
-      aria-selected={selected}
+      aria-pressed={selected}
       onPress={() => onSelect(session.sessionId)}
-      className={cn(
-        'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:py-2 bg-background wide:bg-sidebar dark:active:bg-accent web:dark:hover:bg-accent',
-        selected && 'bg-sidebar-accent wide:bg-sidebar-accent',
-      )}
+      role="button"
+      className={contentActionClass({
+        variant: 'ghost',
+        className: cn(
+          'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:py-2 bg-background wide:bg-sidebar dark:active:bg-accent web:dark:hover:bg-accent',
+          selected && 'bg-sidebar-accent wide:bg-sidebar-accent',
+        ),
+      })}
     >
       <TextClassContext.Provider value={undefined}>
         <View className="relative h-6 shrink-0 items-center justify-center wide:h-5">
@@ -191,6 +197,6 @@ export const SessionRow = memo(function SessionRow({
           )}
         </View>
       </TextClassContext.Provider>
-    </Button>
+    </Pressable>
   );
 });

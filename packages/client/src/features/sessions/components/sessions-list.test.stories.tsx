@@ -90,7 +90,7 @@ export const MemoizedRows: Story = {
       await expect(args.onSelect).toHaveBeenCalledWith(selectableSessionId);
       render({ ...props, selectedSessionId: selectableSessionId });
       await waitFor(() =>
-        expect(selectable).toHaveAttribute('aria-selected', 'true'),
+        expect(selectable).toHaveAttribute('aria-pressed', 'true'),
       );
       await expect(
         canvas.getByRole('button', { name: unchangedSessionLabel }),

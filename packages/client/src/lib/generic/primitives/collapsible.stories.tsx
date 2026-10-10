@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Icon } from '../symbols/icon';
 import { Variation, Variations } from '../variations';
-import { Button } from './button';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from './collapsible';
+import { IconButton } from './icon-button';
 import { Text } from './text';
 
 type CollapsibleExampleProps = {
@@ -88,13 +87,12 @@ function RepositoriesContent(): React.JSX.Element {
 function RepositoriesTrigger(): React.JSX.Element {
   return (
     <CollapsibleTrigger asChild>
-      <Button
+      <IconButton
         variant="ghost"
-        size="icon"
         accessibilityLabel="Toggle repositories"
-      >
-        <Icon name="chevron-up-down" />
-      </Button>
+        icon={'chevron-up-down'}
+        size="md"
+      />
     </CollapsibleTrigger>
   );
 }

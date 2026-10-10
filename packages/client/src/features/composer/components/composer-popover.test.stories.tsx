@@ -2,9 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { Button } from '#lib/generic/primitives/button';
-import { Text } from '#lib/generic/primitives/text';
 import { layoutWidths } from '../../../lib/generic/each-layout';
+import { Button } from '../../../lib/generic/primitives/button';
+import { Pressable } from '../../../lib/generic/primitives/pressable';
+import { Text } from '../../../lib/generic/primitives/text';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { ComposerPopover } from './composer-popover';
 
@@ -31,14 +32,16 @@ function transitions(width: number): StoryObj<typeof meta> {
     args: {
       label: 'Session settings',
       trigger: (
-        <Button>
+        <Pressable role="button">
           <Text>Settings</Text>
-        </Button>
+        </Pressable>
       ),
       children: (close) => (
-        <Button onPress={() => close(afterClose)}>
-          <Text>Choose setting</Text>
-        </Button>
+        <Button
+          onPress={() => close(afterClose)}
+          label={'Choose setting'}
+          appearance="content"
+        />
       ),
     },
     beforeEach: () => {

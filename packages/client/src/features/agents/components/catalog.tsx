@@ -2,8 +2,8 @@ import { LegendList } from '@legendapp/list/react-native';
 import type { AgentsCatalogOutput } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
+import { Button } from '../../../lib/generic/primitives/button';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { CatalogRow } from './catalog-row';
 
@@ -100,12 +100,10 @@ function CatalogRetry({ retry }: CatalogRetryProps): React.JSX.Element {
     <Button
       variant="outline"
       size="sm"
-      className="h-8 shadow-none"
       onPress={retry.refresh}
       disabled={retry.refreshing}
-    >
-      <Text className="font-sans leading-5">Retry</Text>
-    </Button>
+      label={'Retry'}
+    />
   );
 }
 

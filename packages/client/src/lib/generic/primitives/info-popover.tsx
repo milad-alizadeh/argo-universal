@@ -1,6 +1,5 @@
 import type * as React from 'react';
-import { Icon } from '../symbols/icon';
-import { Button } from './button';
+import { IconButton } from './icon-button';
 import type { InfoPopoverProps } from './info-popover-props';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { Text } from './text';
@@ -23,15 +22,22 @@ function InfoButton({
 }: Pick<InfoPopoverProps, 'accessibilityLabel'>): React.JSX.Element {
   return (
     <PopoverTrigger asChild>
-      <Button {...infoButtonProps} accessibilityLabel={accessibilityLabel}>
-        <Icon name="info" className="text-muted-foreground" />
-      </Button>
+      <IconButton
+        {...infoButtonProps}
+        accessibilityLabel={accessibilityLabel}
+        icon={'info'}
+        iconClassName={'text-muted-foreground'}
+        size="sm"
+      />
     </PopoverTrigger>
   );
 }
 
 const infoButtonProps = {
   variant: 'ghost',
-  size: 'icon',
+  size: 'sm',
   className: 'size-7 sm:size-7',
-} satisfies React.ComponentProps<typeof Button>;
+} satisfies Pick<
+  React.ComponentProps<typeof IconButton>,
+  'variant' | 'size' | 'className'
+>;
