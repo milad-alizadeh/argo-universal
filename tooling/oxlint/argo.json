@@ -164,10 +164,60 @@
       "rules": { "vitest/no-conditional-expect": "off" }
     },
     {
-      // Screens and components get tRPC from useTRPC() only (ADR-0009).
+      // Features import each other only through index.ts (ADR-0016 item 9). Only the last matching override's options apply, so later client blocks repeat these patterns.
+      "files": ["packages/client/src/features/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^#features/[^/]+/",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./[^.]",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "group": ["@repo/client", "@repo/client/**"],
+                "message": "Client modules never import the client barrel (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // A feature's index.ts re-exports only its own files.
+      "files": ["packages/client/src/features/*/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^#features/[^/]+/",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "^\\.\\./[^.]",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "group": ["@repo/client", "@repo/client/**"],
+                "message": "Client modules never import the client barrel (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021).
       "files": [
-        "packages/client/src/screens/**",
-        "packages/client/src/components/**"
+        "packages/client/src/features/*/screens/**",
+        "packages/client/src/features/*/components/**"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -176,16 +226,30 @@
             "paths": [
               {
                 "name": "@trpc/client",
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+                "message": "Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021)."
               },
               {
                 "name": "../trpc/create-trpc-client",
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+                "message": "Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021)."
               },
               {
                 "name": "../trpc/context",
                 "importNames": ["useTRPCClient"],
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+                "message": "Screens get tRPC from useTRPC() only, and components not at all (ADR-0009, ADR-0021)."
+              }
+            ],
+            "patterns": [
+              {
+                "regex": "^#features/[^/]+/",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./[^.]",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "group": ["@repo/client", "@repo/client/**"],
+                "message": "Client modules never import the client barrel (A2)."
               }
             ]
           }
@@ -193,11 +257,12 @@
       }
     },
     {
-      // Feed, connection and tRPC sit below components and screens (A2).
+      // The Connection, its tRPC client and the Feed view sit below components and screens (A2).
       "files": [
-        "packages/client/src/feed/**",
-        "packages/client/src/connection/**",
-        "packages/client/src/trpc/**"
+        "packages/client/src/features/connection/state/**",
+        "packages/client/src/features/connection/trpc/**",
+        "packages/client/src/features/feed/hooks/**",
+        "packages/client/src/features/feed/view/**"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -205,16 +270,20 @@
           {
             "patterns": [
               {
-                "group": [
-                  "#components/**",
-                  "../**/components",
-                  "../**/components/**",
-                  "../**/screens",
-                  "../**/screens/**",
-                  "@repo/client",
-                  "@repo/client/**"
-                ],
-                "message": "Client modules never import components, screens or the client barrel (A2)."
+                "regex": "^\\.\\./(components|screens)(/|$)",
+                "message": "The Connection, its tRPC client and the Feed view never import components or screens (A2)."
+              },
+              {
+                "regex": "^#features/[^/]+/",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./[^.]",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "group": ["@repo/client", "@repo/client/**"],
+                "message": "Client modules never import the client barrel (A2)."
               }
             ]
           }
@@ -223,10 +292,7 @@
     },
     {
       // Generic code imports neither product nor local code (A2, ADR-0016 item 9).
-      "files": [
-        "packages/client/src/lib/**",
-        "packages/client/src/primitives/**"
-      ],
+      "files": ["packages/client/src/lib/generic/**"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
       "rules": {
         "no-restricted-imports": [
@@ -234,25 +300,42 @@
           {
             "patterns": [
               {
-                "group": [
-                  "#components/**",
-                  "../**/components",
-                  "../**/components/**",
-                  "../**/screens",
-                  "../**/screens/**",
-                  "../**/feed",
-                  "../**/feed/**",
-                  "../**/connection",
-                  "../**/connection/**",
-                  "../**/navigation",
-                  "../**/navigation/**",
-                  "../**/trpc",
-                  "../**/trpc/**",
-                  "@repo/**",
-                  "!@repo/uniwind",
-                  "!@repo/uniwind/**"
-                ],
+                "regex": "^#(features|lib/product)/",
                 "message": "Generic code imports neither product nor local code (A2)."
+              },
+              {
+                "regex": "^(\\.\\./)+(features|product)(/|$)",
+                "message": "Generic code imports neither product nor local code (A2)."
+              },
+              {
+                "group": ["@repo/**", "!@repo/uniwind", "!@repo/uniwind/**"],
+                "message": "Generic code imports neither product nor local code (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Product code shared by features imports lib/generic, never a feature (A2, ADR-0016 item 9).
+      "files": ["packages/client/src/lib/product/**"],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^#features/",
+                "message": "lib/product imports lib/generic, never a feature (A2)."
+              },
+              {
+                "regex": "^(\\.\\./)+features(/|$)",
+                "message": "lib/product imports lib/generic, never a feature (A2)."
+              },
+              {
+                "group": ["@repo/client", "@repo/client/**"],
+                "message": "Client modules never import the client barrel (A2)."
               }
             ]
           }
@@ -297,32 +380,6 @@
                   "!@repo/vitest/**"
                 ],
                 "message": "Generic code imports neither product nor local code (A2)."
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      // Screens repeat the useTRPC bans because only the last matching override's options apply.
-      "files": ["packages/client/src/screens/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "paths": [
-              {
-                "name": "@trpc/client",
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
-              },
-              {
-                "name": "../trpc/create-trpc-client",
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
-              },
-              {
-                "name": "../trpc/context",
-                "importNames": ["useTRPCClient"],
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
               }
             ]
           }

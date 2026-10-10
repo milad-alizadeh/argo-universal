@@ -2,8 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createTRPCClient } from '@trpc/client';
 import type * as React from 'react';
 import { type ComponentType, type ReactNode, useState } from 'react';
-import type { ConnectionState } from '../src/connection/context';
-import { TRPCProvider } from '../src/trpc/context';
+import type { ConnectionState } from '../src/features/connection/state/context';
+import { TRPCProvider } from '../src/features/connection/trpc/context';
 import { ConnectionStatePreview } from './connection-state-preview';
 import { type Fixtures, trpcMockLink } from './trpc-mock-link';
 

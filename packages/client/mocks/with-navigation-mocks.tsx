@@ -4,8 +4,8 @@ import {
   type Navigate,
   type NavigationDestination,
   NavigationProvider,
-} from '../src/navigation/context';
-import { ScreenHeaderProvider } from '../src/navigation/screen-header';
+} from '../src/lib/product/navigation/context';
+import { ScreenHeaderProvider } from '../src/lib/product/navigation/screen-header';
 import { ScreenHeaderMock } from './screen-header-mock';
 import type { Fixtures } from './trpc-mock-link';
 

@@ -1,5 +1,5 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button } from '#primitives/button';
+import { Button } from '../src/lib/generic/primitives/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,8 +12,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '#primitives/dropdown-menu';
-import { Text } from '#primitives/text';
+} from '../src/lib/generic/primitives/dropdown-menu';
+import { Text } from '../src/lib/generic/primitives/text';
 
 export function DropdownMenuPreview(): React.JSX.Element {
   return (

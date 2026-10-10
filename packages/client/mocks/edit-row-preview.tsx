@@ -1,10 +1,10 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
 import { ScrollView, View } from 'react-native';
-import { DesktopShell } from '../src/components/desktop-shell';
-import { EditRow } from '../src/components/edit-row';
-import { useWide } from '../src/navigation/use-wide';
-import { Text } from '../src/primitives/text';
+import { EditRow } from '../src/features/feed/components/edit-row';
+import { DesktopShell } from '../src/features/frame/components/desktop-shell';
+import { Text } from '../src/lib/generic/primitives/text';
+import { useWide } from '../src/lib/generic/use-wide';
 
 export function EditRowPreview({
   row,

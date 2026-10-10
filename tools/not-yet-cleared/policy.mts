@@ -1,63 +1,62 @@
 import type { Entry } from './document.mts';
+import { relocatedFolders } from './relocations.mts';
 
-const relocatedFolders = new Map([
-  ['mocks/app/*', 'packages/api/mocks/*'],
-  ['packages/engine/mocks/*', 'apps/server/mocks/*'],
-  ['packages/engine/src/engine/*', 'apps/server/src/engine/*'],
-  ['packages/engine/src/services/*', 'apps/server/src/services/*'],
-  [
-    'packages/engine/src/services/agents/*',
-    'apps/server/src/services/agents/*',
-  ],
-  ['packages/engine/src/services/blob/*', 'apps/server/src/services/blob/*'],
-  ['packages/engine/src/services/feed/*', 'apps/server/src/services/feed/*'],
-  [
-    'packages/engine/src/services/projects/*',
-    'apps/server/src/services/projects/*',
-  ],
-  [
-    'packages/engine/src/services/sessions/*',
-    'apps/server/src/services/sessions/*',
-  ],
-  [
-    'packages/engine/src/services/system/*',
-    'apps/server/src/services/system/*',
-  ],
-]);
+const historicalFolders = (glob: string): string[] =>
+  relocatedFolders.get(glob) ?? [glob];
 
-const historicalFolder = (glob: string): string =>
-  relocatedFolders.get(glob) ?? glob;
+// Identity -> whether an unmoved folder claims it. Folders split from one historical folder may share it; an unmoved folder may not sit beside its own move.
+type Claims = Map<string, boolean>;
+
+function clashes(
+  claims: Claims,
+  identities: string[],
+  unmoved: boolean,
+): boolean {
+  return identities.some(
+    (identity): boolean =>
+      claims.has(identity) && (unmoved || claims.get(identity) === true),
+  );
+}
+
+function claim(claims: Claims, identities: string[], unmoved: boolean): void {
+  for (const identity of identities)
+    claims.set(identity, unmoved || claims.get(identity) === true);
+}
 
 function duplicateIdentities(entries: Entry[]): string[] {
-  const seen = new Set<string>();
+  const claims: Claims = new Map();
   return entries.flatMap((entry): string[] => {
-    const identity = historicalFolder(entry.files[0]);
-    if (seen.has(identity))
-      return [`${entry.files[0]}: duplicate historical waiver identity`];
-    seen.add(identity);
-    return [];
+    const glob = entry.files[0];
+    const unmoved = !relocatedFolders.has(glob);
+    const identities = historicalFolders(glob);
+    const clash = clashes(claims, identities, unmoved);
+    claim(claims, identities, unmoved);
+    return clash ? [`${glob}: duplicate historical waiver identity`] : [];
   });
 }
 
+// A folder's baseline is its own entry plus the entries of the folders it was moved from.
+function baselineSources(glob: string, baseline: Entry[]): Entry[] {
+  const folders = new Set([glob, ...historicalFolders(glob)]);
+  return baseline.filter((entry): boolean => folders.has(entry.files[0]));
+}
+
 export function growthProblems(current: Entry[], baseline: Entry[]): string[] {
-  const previous = new Map(
-    baseline.map((entry): [string, Entry] => [
-      historicalFolder(entry.files[0]),
-      entry,
-    ]),
-  );
   return [
     ...duplicateIdentities(current),
     ...current.flatMap((entry): string[] =>
-      entryProblems(entry, previous.get(historicalFolder(entry.files[0]))),
+      entryProblems(entry, baselineSources(entry.files[0], baseline)),
     ),
   ];
 }
 
-function entryProblems(entry: Entry, previous: Entry | undefined): string[] {
+function entryProblems(entry: Entry, sources: Entry[]): string[] {
   const glob = entry.files[0];
-  if (!previous) return [`${glob}: added entry or changed glob`];
+  if (sources.length === 0) return [`${glob}: added entry or changed glob`];
   return Object.keys(entry.rules)
-    .filter((rule): boolean => !Object.hasOwn(previous.rules, rule))
+    .filter(
+      (rule): boolean =>
+        !sources.some((source): boolean => Object.hasOwn(source.rules, rule)),
+    )
     .map((rule): string => `${glob}: added rule ${rule}`);
 }

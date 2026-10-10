@@ -5,8 +5,8 @@ import { View } from 'react-native';
 import {
   SessionRow,
   type SessionRowProps,
-} from '../src/components/session-row';
-import { useWide } from '../src/navigation/use-wide';
+} from '../src/features/sessions/components/session-row';
+import { useWide } from '../src/lib/generic/use-wide';
 
 export function SessionRowListMock({
   sessions,

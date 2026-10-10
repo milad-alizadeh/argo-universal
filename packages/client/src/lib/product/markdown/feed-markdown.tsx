@@ -1,0 +1,330 @@
+import { lexer, type Token, type Tokens } from 'marked';
+import type * as React from 'react';
+import {
+  createContext,
+  Fragment,
+  memo,
+  type ReactNode,
+  useContext,
+  useMemo,
+} from 'react';
+import { Linking, ScrollView, Text as Span, View } from 'react-native';
+import { useResolveClassNames } from 'uniwind';
+import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
+import { Text } from '#lib/generic/primitives/text';
+import { cn } from '#lib/generic/utils';
+import { FeedCodeBlock } from './feed-code-block';
+
+export interface FeedMarkdownProps {
+  text: string;
+  // An open row ends its text with a caret.
+  streaming?: boolean;
+  variant?: 'feed' | 'proposal' | 'summary';
+}
+
+const MarkdownVariant = createContext<FeedMarkdownProps['variant']>('feed');
+
+export const inlineCodeClassName =
+  'rounded-sm bg-foreground/5 px-1.5 py-px type-code text-foreground';
+
+function Caret(): React.JSX.Element {
+  return (
+    <View
+      testID="streaming-caret"
+      className="ml-0.5 h-4 w-0.5 rounded-[1px] bg-foreground"
+    />
+  );
+}
+
+// Inline spans are plain native Text so they inherit the size of the block around them.
+function InlineTokens({
+  tokens,
+  codeClassName = inlineCodeClassName,
+}: {
+  tokens: Token[] | undefined;
+  codeClassName?: string;
+}): (React.JSX.Element | '\n' | null)[] | undefined {
+  const { color: linkUnderline } = useResolveClassNames('text-ring');
+  return tokens?.map((token, index) => {
+    const key = `${token.type}-${index}`;
+    switch (token.type) {
+      case 'codespan':
+        return (
+          <Span key={key} className={codeClassName}>
+            {token.text}
+          </Span>
+        );
+      case 'strong':
+        return (
+          <Span key={key} className="font-semibold">
+            <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
+          </Span>
+        );
+      case 'em':
+        return (
+          <Span key={key} className="italic">
+            <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
+          </Span>
+        );
+      case 'del':
+        return (
+          <Span key={key} className="line-through">
+            <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
+          </Span>
+        );
+      case 'link':
+        return (
+          <Span
+            key={key}
+            role="link"
+            className="underline underline-offset-2"
+            style={{ textDecorationColor: linkUnderline }}
+            onPress={() => Linking.openURL(token.href)}
+          >
+            <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
+          </Span>
+        );
+      case 'br':
+        return '\n';
+      case 'text':
+        return token.tokens ? (
+          <InlineTokens
+            key={key}
+            tokens={token.tokens}
+            codeClassName={codeClassName}
+          />
+        ) : (
+          <Fragment key={key}>{token.text}</Fragment>
+        );
+      default:
+        return 'text' in token ? (
+          <Fragment key={key}>{String(token.text)}</Fragment>
+        ) : null;
+    }
+  });
+}
+
+function Prose({
+  tokens,
+  caret,
+  className,
+  headingLevel,
+}: {
+  tokens: Token[] | undefined;
+  caret: boolean;
+  className?: string;
+  headingLevel?: number;
+}): React.JSX.Element {
+  const variant = useContext(MarkdownVariant);
+  return (
+    <Text
+      role={headingLevel === undefined ? undefined : 'heading'}
+      aria-level={headingLevel === undefined ? undefined : String(headingLevel)}
+      className={cn(
+        'font-sans type-body',
+        className,
+        variant === 'summary' && 'text-muted-foreground',
+      )}
+    >
+      <InlineTokens tokens={tokens} codeClassName={inlineCodeClassName} />
+      {caret && <Caret />}
+    </Text>
+  );
+}
+
+function List({
+  token,
+  caret,
+}: {
+  token: Tokens.List;
+  caret: boolean;
+}): React.JSX.Element {
+  const variant = useContext(MarkdownVariant);
+  const start = typeof token.start === 'number' ? token.start : 1;
+  return (
+    <View className={variant === 'proposal' ? 'gap-2' : 'gap-1'}>
+      {withOccurrenceKeys(token.items, (item) => item.raw).map(
+        ({ item, key }, index) => (
+          <View key={key} className="flex-row gap-2">
+            <Text
+              className={cn(
+                'w-4 shrink-0 font-sans type-body',
+                variant !== 'proposal' && 'text-muted-foreground',
+              )}
+            >
+              {token.ordered ? `${start + index}.` : '•'}
+            </Text>
+            <View className="min-w-0 flex-1 gap-1">
+              <Blocks
+                tokens={item.tokens}
+                caret={caret && index === token.items.length - 1}
+              />
+            </View>
+          </View>
+        ),
+      )}
+    </View>
+  );
+}
+
+function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
+  return (
+    <View className="overflow-hidden rounded-xl border border-border">
+      <ScrollView
+        horizontal
+        contentContainerClassName="min-w-full"
+        showsHorizontalScrollIndicator={false}
+      >
+        <View className="flex-1">
+          <View className="flex-row border-b border-border bg-sidebar">
+            {withOccurrenceKeys(token.header, (cell) => cell.text).map(
+              ({ item: cell, key }, column) => (
+                <View key={key} className={cellClassName(column)}>
+                  <Text className="font-sans type-heading">
+                    <InlineTokens
+                      tokens={cell.tokens}
+                      codeClassName={inlineCodeClassName}
+                    />
+                  </Text>
+                </View>
+              ),
+            )}
+          </View>
+          {withOccurrenceKeys(token.rows, (row) =>
+            row.map((cell) => cell.text).join('|'),
+          ).map(({ item: row, key: rowKey }, rowIndex) => (
+            <View
+              key={rowKey}
+              className={cn(
+                'flex-row',
+                rowIndex < token.rows.length - 1 && 'border-b border-border',
+              )}
+            >
+              {withOccurrenceKeys(row, (cell) => cell.text).map(
+                ({ item: cell, key }, column) => (
+                  <View key={key} className={cellClassName(column)}>
+                    <Text className="font-sans type-body">
+                      <InlineTokens
+                        tokens={cell.tokens}
+                        codeClassName="type-code text-foreground"
+                      />
+                    </Text>
+                  </View>
+                ),
+              )}
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+function cellClassName(column: number): string {
+  return cn(
+    'px-3 py-1.5',
+    column === 0 ? 'w-[180px] shrink-0' : 'min-w-[180px] flex-1',
+  );
+}
+
+function Block({
+  token,
+  caret,
+}: {
+  token: Token;
+  caret: boolean;
+}): React.JSX.Element | null {
+  switch (token.type) {
+    case 'heading':
+      return (
+        <Prose
+          tokens={token.tokens}
+          caret={caret}
+          headingLevel={token.depth}
+          className={token.depth === 1 ? 'type-title' : 'type-heading'}
+        />
+      );
+    case 'paragraph':
+      return <Prose tokens={token.tokens} caret={caret} />;
+    case 'text':
+      return <Prose tokens={token.tokens ?? [token]} caret={caret} />;
+    case 'list':
+      return isList(token) ? <List token={token} caret={caret} /> : null;
+    case 'code':
+      return (
+        <View className="gap-2.5">
+          <FeedCodeBlock code={token.text} language={token.lang || undefined} />
+          {caret && <Caret />}
+        </View>
+      );
+    case 'table':
+      return (
+        <View className="gap-2.5">
+          {isTable(token) && <Table token={token} />}
+          {caret && <Caret />}
+        </View>
+      );
+    case 'blockquote':
+      return (
+        <View className="gap-2.5 border-l-2 border-border pl-3">
+          <Blocks tokens={token.tokens} caret={caret} />
+        </View>
+      );
+    default:
+      return caret ? <Caret /> : null;
+  }
+}
+
+function Blocks({
+  tokens,
+  caret,
+}: {
+  tokens: Token[] | undefined;
+  caret: boolean;
+}): ReactNode[] {
+  const blocks = (tokens ?? []).filter(
+    (token) => token.type !== 'space' && token.type !== 'hr',
+  );
+  const nodes: ReactNode[] = withOccurrenceKeys(
+    blocks,
+    (token) => token.raw,
+  ).map(({ item: token, key }, index) => (
+    <Block
+      key={key}
+      token={token}
+      caret={caret && index === blocks.length - 1}
+    />
+  ));
+  if (caret && blocks.length === 0) nodes.push(<Caret key="caret" />);
+  return nodes;
+}
+
+// Agent markdown drawn with the Feed's own prose, code and table styles.
+export const FeedMarkdown = memo(function FeedMarkdown({
+  text,
+  streaming = false,
+  variant = 'feed',
+}: FeedMarkdownProps) {
+  const tokens = useMemo(() => lexer(text), [text]);
+  return (
+    <MarkdownVariant.Provider value={variant}>
+      <View
+        className={
+          variant === 'proposal'
+            ? 'gap-2'
+            : 'gap-paragraph wide:gap-paragraph-wide'
+        }
+      >
+        <Blocks tokens={tokens} caret={streaming} />
+      </View>
+    </MarkdownVariant.Provider>
+  );
+});
+
+function isList(token: Token): token is Tokens.List {
+  return token.type === 'list';
+}
+
+function isTable(token: Token): token is Tokens.Table {
+  return token.type === 'table';
+}

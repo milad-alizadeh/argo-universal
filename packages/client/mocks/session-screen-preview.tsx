@@ -4,12 +4,12 @@ import { View } from 'react-native';
 import {
   detailActionsHost,
   detailHeaderHost,
-} from '../src/components/session-header';
-import { useWide } from '../src/navigation/use-wide';
+} from '../src/features/sessions/components/session-header';
 import {
   SessionScreen,
   type SessionScreenProps,
-} from '../src/screens/session-screen';
+} from '../src/features/sessions/screens/session-screen';
+import { useWide } from '../src/lib/generic/use-wide';
 
 // The Session screen under the wide shell's detail header slots, or the phone's header mock.
 export function SessionScreenPreview(

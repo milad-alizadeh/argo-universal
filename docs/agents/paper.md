@@ -40,8 +40,8 @@ Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same
 ## Icons
 
 - Icons are SF Symbols, drawn as SVG paths so the design matches iOS and macOS (ADR-0019). The SVGs are mockups in Paper only; the app draws the real symbol through expo-symbols.
-- Where SF Symbols has no symbol, Argo draws its own (`custom.<name>` in `packages/client/src/lib/custom-symbol-paths.json`, ADR-0019). Its Paper SVG uses the JSON's viewBox and path, so design and app share one outline.
-- An icon layer is named `Icon / <name>`, where `<name>` is a key of `iconSymbols` in `packages/client/src/lib/icon-names.ts`. That map is the only list of icons. An icon a design needs that the app lacks is added there first, with its SF and Material names.
+- Where SF Symbols has no symbol, Argo draws its own (`custom.<name>` in `packages/client/src/lib/generic/symbols/custom-symbol-paths.json`, ADR-0019). Its Paper SVG uses the JSON's viewBox and path, so design and app share one outline.
+- An icon layer is named `Icon / <name>`, where `<name>` is a key of `iconSymbols` in `packages/client/src/lib/generic/symbols/icon-names.ts`. That map is the only list of icons. An icon a design needs that the app lacks is added there first, with its SF and Material names.
 - The library is "Components / Icons" on the Global Components page, one tile per app icon. Copy icons from it.
 - `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box. Use it with that viewBox, the fill on a `--color-*` token, and the size on an icon token.
 

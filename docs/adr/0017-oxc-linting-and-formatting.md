@@ -11,7 +11,7 @@ The Prickles pack uses ESLint rules. oxlint runs them, mostly natively and the r
 Where the pack could not run as written:
 
 - `prettier/prettier` is dropped: oxfmt formats, and `oxfmt --check` gates.
-- `import-x/no-restricted-paths` is dropped: oxlint has no such rule, and its zones name `src/lib/generic` and `src/lib/product`, which Argo does not have. D1 to D11 hold Argo's import directions.
+- `import-x/no-restricted-paths` is dropped: oxlint has no such rule, and its zones name `src/lib/generic` and `src/lib/product`. D1 to D11 hold Argo's import directions, and `no-restricted-imports` in `argo.json` guards the client's `lib/generic` and `lib/product` folders.
 - `unicorn/no-for-each`, `unicorn/no-for-loop` and `unicorn/prefer-switch` run from eslint-plugin-unicorn, and `line-comment-position` and `multiline-comment-style` from @stylistic/eslint-plugin, as JS plugins. The sonarjs rules run the same way, without the type information a few of them read under ESLint.
 - `import/namespace` and `jsx-a11y/prefer-tag-over-role` are off: oxlint cannot follow the re-exports of `@rn-primitives`, and React Native has no semantic tags.
 
@@ -44,6 +44,39 @@ Spec 0009 #347 moves the unchanged App mocks from `packages/api/mocks` to the ex
 | `packages/api/mocks/*` | `mocks/app/*` |
 
 Only the existing `complexity`, `max-lines` and `max-lines-per-function` rules remain waived. The original one-folder scope stays identical. The guard rejects duplicate aliases, added rules and broader or unlisted globs. Its existing stale-rule check and prune still apply.
+
+## Client feature folders
+
+Spec 0011 #437 moves the client source, with behaviour unchanged, into `features/` and `lib/{product,generic}` (ADR-0016 item 9). The folders below are under `packages/client/src/` unless a full path is shown. Owner approval of these rows is pending in the pull request. Each new folder keeps the historical waiver identity of the old folders listed for it:
+
+| New folder entry | Original folder entries |
+|---|---|
+| `packages/client/src/*` | `trpc/*` |
+| `features/composer/components/*` | `components/*` |
+| `features/composer/hooks/*` | `components/*`, `screens/*` |
+| `features/composer/state/*` | `screens/*` |
+| `features/connection/components/*` | `components/*` |
+| `features/connection/screens/*` | `screens/*` |
+| `features/connection/state/*` | `connection/*` |
+| `features/connection/trpc/*` | `trpc/*` |
+| `features/feed/components/*` | `components/*` |
+| `features/feed/hooks/*` | `feed/*` |
+| `features/feed/view/*` | `feed/*` |
+| `features/frame/components/*` | `components/*` |
+| `features/frame/hooks/*` | `components/*` |
+| `features/frame/screens/*` | `screens/*` |
+| `features/requests/components/*` | `components/*` |
+| `features/sessions/components/*` | `components/*` |
+| `features/sessions/screens/*` | `screens/*` |
+| `features/settings/components/*` | `components/*` |
+| `lib/generic/*` | `lib/*`, `navigation/*` |
+| `lib/generic/primitives/*` | `components/*`, `primitives/*` |
+| `lib/generic/symbols/*` | `lib/*` |
+| `lib/product/*` | `components/*`, `screens/*` |
+| `lib/product/markdown/*` | `components/*` |
+| `lib/product/navigation/*` | `navigation/*` |
+
+This move changes the rules above in one way. One old folder may now split into several listed new folders, and those new folders may share its historical identity. That identity is no longer "duplicate" between them. Each new folder's rule set must stay a subset of the rules that its listed sources waived at the merge base. The src root keeps its own identity and also takes `trpc/*`'s, because the App providers move there; it gains `max-lines-per-function` from `trpc/*`. Once a new folder is in the baseline, it is compared with its own entry as well. The guard still rejects an old folder entry beside any of its new folders, added rules, and unlisted or broadened globs. Existing stale-rule check and prune still apply. Moved debt is not clearance; the burn-down tickets still own it.
 
 ## Considered Options
 
