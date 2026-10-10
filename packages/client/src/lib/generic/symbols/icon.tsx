@@ -33,9 +33,12 @@ export function useIconPixels(size: IconSize): number {
     : Number.parseFloat(String(pixels));
 }
 
-// Material Symbols draw chevrons and checks much smaller in their box than SF Symbols do, so they draw a size up.
+/*
+ * Material Symbols draw chevrons and checks much smaller in their box than SF Symbols do, so the browser draws them a
+ * size up; Android scales every glyph in SymbolGlyph instead.
+ */
 function glyphSize(size: IconSize, material: boolean): IconSize {
-  return material && size === 'sm' ? 'md' : size;
+  return material && Platform.OS === 'web' && size === 'sm' ? 'md' : size;
 }
 
 // Android and the browser draw Material Symbols; iOS and the desktop app on macOS draw SF Symbols.
