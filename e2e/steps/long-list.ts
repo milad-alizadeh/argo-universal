@@ -18,33 +18,62 @@ function row(page: Page, index: number): ReturnType<Page['getByRole']> {
   return page.getByRole('button', { name: new RegExp(`^${title(index)}, `) });
 }
 
+async function firstProjectId(page: Page, httpUrl: string): Promise<string> {
+  const [project] = await query({
+    page,
+    httpUrl,
+    procedure: 'projects.list',
+    input: {},
+    output: Projects,
+  });
+  if (!project) throw new Error('The Server has no Project');
+  return project.id;
+}
+
+function newSessionInput(session: {
+  projectId: string;
+  agent: string;
+  title: string;
+}): object {
+  return {
+    projectId: session.projectId,
+    agent: session.agent,
+    checkout: { type: 'main' },
+    configOptions: [],
+    prompt: [{ type: 'text', text: session.title }],
+  };
+}
+
+async function startSession(
+  page: Page,
+  httpUrl: string,
+  session: { projectId: string; agent: string; title: string },
+): Promise<void> {
+  const response = await page.request.post(`${httpUrl}/trpc/session.new`, {
+    data: newSessionInput(session),
+  });
+  expect(response.ok()).toBe(true);
+}
+
+async function seedSessions(
+  page: Page,
+  httpUrl: string,
+  count: number,
+): Promise<void> {
+  const projectId = await firstProjectId(page, httpUrl);
+  const { agent } = await readAgent(page, httpUrl, 1);
+  for (let index = 1; index <= count; index += 1)
+    await startSession(page, httpUrl, {
+      projectId,
+      agent,
+      title: title(index),
+    });
+}
+
 Given(
   '{int} long-list Sessions',
   async ({ page, server }, count: number): Promise<void> => {
-    const [project] = await query({
-      page,
-      httpUrl: server.httpUrl,
-      procedure: 'projects.list',
-      input: {},
-      output: Projects,
-    });
-    if (!project) throw new Error('The Server has no Project');
-    const { agent } = await readAgent(page, server.httpUrl, 1);
-    for (let index = 1; index <= count; index += 1) {
-      const response = await page.request.post(
-        `${server.httpUrl}/trpc/session.new`,
-        {
-          data: {
-            projectId: project.id,
-            agent,
-            checkout: { type: 'main' },
-            configOptions: [],
-            prompt: [{ type: 'text', text: title(index) }],
-          },
-        },
-      );
-      expect(response.ok()).toBe(true);
-    }
+    await seedSessions(page, server.httpUrl, count);
     await page.reload();
   },
 );

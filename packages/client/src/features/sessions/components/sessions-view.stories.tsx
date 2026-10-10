@@ -5,7 +5,7 @@ import { action } from 'storybook/actions';
 import { useSessionsFilter } from '../state/sessions-filter';
 import { SessionsHeader } from './sessions-header';
 import { SessionsView } from './sessions-view';
-import { loadedSessionsView } from './sessions-view.fixtures';
+import { loadedSessionsView } from './sessions-view.mocks';
 
 const meta = {
   title: 'Screens/SessionsScreen',

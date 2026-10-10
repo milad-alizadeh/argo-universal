@@ -8,7 +8,7 @@ import {
   multipleProjects,
   sessionsListProps,
   largeSessions,
-} from './sessions-list.fixtures';
+} from './sessions-list.mocks';
 
 const meta = {
   title: 'Sessions/SessionsList',

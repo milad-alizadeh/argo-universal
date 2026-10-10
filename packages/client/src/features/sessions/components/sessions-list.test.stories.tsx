@@ -13,10 +13,11 @@ import {
   installFooterLayoutDelay,
 } from './delayed-footer-layout.mocks';
 import { SessionsList } from './sessions-list';
-import { sessionsListProps, largeSessions } from './sessions-list.fixtures';
+import { sessionsListProps, largeSessions } from './sessions-list.mocks';
 import { renderingSessions } from './sessions-rendering.mocks';
 
 const exampleProjectName = 'Example Project';
+const sessionsScrollId = 'sessions-scroll';
 const expandedAttribute = 'aria-expanded';
 
 const onNewSession = fn();
@@ -229,7 +230,7 @@ export const FirstAndLastRowsReachable: Story = {
   play: async ({ canvas }) => {
     // At a phone's size twelve Sessions overflow the list, so it can scroll.
     if ('__vitest_browser__' in globalThis) await settleViewport(390);
-    const scroll = canvas.getByTestId('sessions-scroll');
+    const scroll = canvas.getByTestId(sessionsScrollId);
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,
     });
@@ -319,7 +320,7 @@ export const PaginationSpinnerVisible: Story = {
   parameters: { screenPreview: true },
   render: (args) => <PagedList args={args} hold={heldPage} />,
   play: async ({ canvas }) => {
-    const scroll = await canvas.findByTestId('sessions-scroll');
+    const scroll = await canvas.findByTestId(sessionsScrollId);
     await waitFor(() =>
       expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight),
     );
@@ -382,7 +383,7 @@ export const ScrollFade: Story = {
   ),
   play: async ({ canvas }) => {
     if ('__vitest_browser__' in globalThis) await settleViewport(390);
-    const scroll = await canvas.findByTestId('sessions-scroll');
+    const scroll = await canvas.findByTestId(sessionsScrollId);
     scroll.scrollTop = 0;
     await waitFor(() =>
       expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),

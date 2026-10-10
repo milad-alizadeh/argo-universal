@@ -3,10 +3,12 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { eachLayout } from '../../../lib/generic/each-layout';
 import { SessionsView } from './sessions-view';
-import { loadedSessionsView } from './sessions-view.fixtures';
+import { loadedSessionsView } from './sessions-view.mocks';
 
 const exampleProjectName = 'Example Project';
 const retry = { name: 'Retry' };
+const loadFailure = "Couldn't load Sessions";
+const noMatches = 'No matching Sessions';
 
 const spies = {
   onSelect: fn(),
@@ -49,9 +51,7 @@ export const RetryAfterLoadError: Story = {
   play: async ({ canvas, userEvent, args }) =>
     eachLayout(async () => {
       args.onRetry.mockClear();
-      await expect(
-        await canvas.findByText("Couldn't load Sessions"),
-      ).toBeVisible();
+      await expect(await canvas.findByText(loadFailure)).toBeVisible();
       await userEvent.click(canvas.getByRole('button', retry));
       await expect(args.onRetry).toHaveBeenCalledTimes(1);
     }),
@@ -64,7 +64,7 @@ export const RetryLiveUpdates: Story = {
       args.onRetryLiveUpdates.mockClear();
       const alert = await canvas.findByRole('alert');
       await expect(alert).toHaveTextContent('Live updates stopped');
-      await expect(canvas.queryByText("Couldn't load Sessions")).toBeNull();
+      await expect(canvas.queryByText(loadFailure)).toBeNull();
       await userEvent.click(canvas.getByRole('button', retry));
       await expect(args.onRetryLiveUpdates).toHaveBeenCalledTimes(1);
     }),
@@ -96,9 +96,7 @@ export const SearchWithoutMatches: Story = {
   args: { query: 'xyz', sessions: [] },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(
-        await canvas.findByText('No matching Sessions'),
-      ).toBeVisible();
+      await expect(await canvas.findByText(noMatches)).toBeVisible();
       await expect(
         canvas.queryByRole('button', { name: exampleProjectName }),
       ).toBeNull();
@@ -114,7 +112,7 @@ export const NextPageFailureKeepsRows: Story = {
       await canvas.findByText("Couldn't load more Sessions"),
     ).toBeVisible();
     await expect((await canvas.findAllByText(first.title))[0]).toBeVisible();
-    await expect(canvas.queryByText("Couldn't load Sessions")).toBeNull();
+    await expect(canvas.queryByText(loadFailure)).toBeNull();
     await userEvent.click(canvas.getByRole('button', retry));
     await expect(args.onRetryLoadMore).toHaveBeenCalledTimes(1);
   },
