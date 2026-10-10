@@ -19,7 +19,7 @@ export const startCustomAgentEngine = async (): Promise<
   Awaited<ReturnType<typeof startEngineTestHost>>
 > => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-custom-agent-'));
-  initTestRepository(directory);
+  await initTestRepository(directory);
   const storage = openTestDatabase({}, directory);
   onTestFinished(() => {
     storage.remove();

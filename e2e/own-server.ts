@@ -94,7 +94,7 @@ export async function startOwnServer(
   const registryPath = path.join(directory, 'registry.json');
   await mkdir(directory, { recursive: true });
   await writeFile(registryPath, JSON.stringify(publishedRegistry));
-  initTestRepository(projectPath, false);
+  await initTestRepository(projectPath, false);
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
     const server = spawn(process.execPath, fixtureEngineArguments, {

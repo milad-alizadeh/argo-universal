@@ -15,11 +15,11 @@ const firstShapeRejection = 'projects: rejected shape #1';
 async function startProjectTestHost(): Promise<
   Awaited<ReturnType<typeof startEngineTestHost>> & {
     projectPath: string;
-    git: ReturnType<typeof initTestRepository>;
+    git: Awaited<ReturnType<typeof initTestRepository>>;
   }
 > {
   const projectPath = realpathSync(mkdtempSync(join(tmpdir(), 'project-')));
-  const git = initTestRepository(projectPath);
+  const git = await initTestRepository(projectPath);
   const { database, remove } = openTestDatabase({}, projectPath);
   onTestFinished((): void => {
     vi.unstubAllEnvs();
@@ -68,7 +68,7 @@ it('registers linked Checkouts as one Project identified by the Git common direc
     expect.objectContaining({ id: expect.stringMatching(/^[a-f0-9]{64}$/) }),
   ]);
   const linkedPath = join(projectPath, 'linked');
-  git('worktree', 'add', '-q', '-b', 'linked', linkedPath);
+  await git('worktree', 'add', '-q', '-b', 'linked', linkedPath);
   await seedProject(database, linkedPath);
   expect(await caller.projects.list()).toEqual([
     {

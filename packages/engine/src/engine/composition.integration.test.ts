@@ -1399,7 +1399,7 @@ async function startNewSessionEngine(identity: AgentAdapter): Promise<
   onTestFinished((): void => rmSync(root, { recursive: true, force: true }));
   const project = path.join(root, 'project');
   mkdirSync(project);
-  initTestRepository(project);
+  await initTestRepository(project);
   const { database, remove } = openTestDatabase({}, project);
   onTestFinished(remove);
   return {

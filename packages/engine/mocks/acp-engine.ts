@@ -35,7 +35,7 @@ export const startAcpEngine = async (
   }
 > => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-acp-engine-'));
-  initTestRepository(directory);
+  await initTestRepository(directory);
   const storage = openTestDatabase({}, directory);
   const agent = createScriptedAgentProcess(scenario);
   const host = await startEngineTestHost({

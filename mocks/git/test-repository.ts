@@ -1,24 +1,18 @@
-import { spawnSync } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { execFile } from 'node:child_process';
+import { mkdir } from 'node:fs/promises';
+import { promisify } from 'node:util';
 
-const gitCommand = 'git';
+const execute = promisify(execFile);
 
-type Git = (...arguments_: string[]) => string;
+type Git = (...arguments_: string[]) => Promise<string>;
 
 function gitIn(directory: string): Git {
-  return (...arguments_: string[]): string => {
-    const result = spawnSync(gitCommand, arguments_, {
-      cwd: directory,
-      encoding: 'utf8',
-    });
-    if (result.status !== 0)
-      throw new Error(`git ${arguments_.join(' ')}: ${result.stderr}`);
-    return result.stdout.trim();
-  };
+  return async (...arguments_: string[]): Promise<string> =>
+    (await execute('git', arguments_, { cwd: directory })).stdout.trim();
 }
 
-function commitWith(git: Git, message: string): void {
-  git(
+async function commitWith(git: Git, message: string): Promise<void> {
+  await git(
     '-c',
     'user.name=Test',
     '-c',
@@ -31,21 +25,21 @@ function commitWith(git: Git, message: string): void {
   );
 }
 
-function addFeatureBranch(git: Git): void {
-  git('switch', '-q', '-c', 'feature');
-  commitWith(git, 'Feature');
-  git('switch', '-q', 'main');
+async function addFeatureBranch(git: Git): Promise<void> {
+  await git('switch', '-q', '-c', 'feature');
+  await commitWith(git, 'Feature');
+  await git('switch', '-q', 'main');
 }
 
 // Makes `directory` a repository on `main` ("Initial"); with `featureBranch`, `feature` is one commit ("Feature") ahead. Returns a git runner there.
-export function initTestRepository(
+export async function initTestRepository(
   directory: string,
   featureBranch = true,
-): Git {
-  mkdirSync(directory, { recursive: true });
+): Promise<Git> {
+  await mkdir(directory, { recursive: true });
   const git = gitIn(directory);
-  git('init', '-q', '--initial-branch=main');
-  commitWith(git, 'Initial');
-  if (featureBranch) addFeatureBranch(git);
+  await git('init', '-q', '--initial-branch=main');
+  await commitWith(git, 'Initial');
+  if (featureBranch) await addFeatureBranch(git);
   return git;
 }
