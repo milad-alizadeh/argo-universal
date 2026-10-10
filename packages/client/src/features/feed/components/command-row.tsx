@@ -68,7 +68,7 @@ export function CommandRow({
               />
             )}
             <Text
-              role="code-block"
+              role="code"
               className={cn(
                 'text-muted-foreground',
                 failed && 'text-destructive',

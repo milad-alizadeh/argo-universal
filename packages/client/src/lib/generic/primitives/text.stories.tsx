@@ -6,7 +6,6 @@ const roles = [
   'control',
   'badge',
   'code',
-  'code-block',
   'nav-title',
   'nav-action',
 ] as const;

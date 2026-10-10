@@ -73,7 +73,7 @@ export function FeedCodeBlock({
           >
             <Text
               selectable
-              role="code-block"
+              role="code"
               className={cn('text-foreground', textClassName)}
             >
               {code}

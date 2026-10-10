@@ -43,7 +43,7 @@ function CodeLine({
       )}
     >
       <Text
-        role="code-block"
+        role="code"
         className={cn(
           'shrink-0 text-right',
           lineStyles[line.kind].color,
@@ -53,16 +53,12 @@ function CodeLine({
         {line.number ?? ''}
       </Text>
       <Text
-        role="code-block"
+        role="code"
         className={cn('w-5 shrink-0 text-center', lineStyles[line.kind].color)}
       >
         {line.kind === 'removed' ? '\u2212' : lineStyles[line.kind].sign}
       </Text>
-      <Text
-        role="code-block"
-        className="shrink-0 pr-3 text-foreground"
-        selectable
-      >
+      <Text role="code" className="shrink-0 pr-3 text-foreground" selectable>
         {line.text}
       </Text>
     </View>

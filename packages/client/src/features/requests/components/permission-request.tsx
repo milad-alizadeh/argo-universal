@@ -80,7 +80,7 @@ export function PermissionRequest(
         </View>
         {input && (
           <View className="rounded-md bg-secondary px-3 py-2">
-            <Text role="code-block">{input}</Text>
+            <Text role="code">{input}</Text>
           </View>
         )}
         {denying && !alreadyAnswered ? (

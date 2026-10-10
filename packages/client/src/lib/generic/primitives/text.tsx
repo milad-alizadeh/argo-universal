@@ -12,7 +12,6 @@ const textRoles = {
   control: 'type-control',
   badge: 'type-badge',
   code: 'type-code',
-  'code-block': 'type-code-block',
   'nav-title': 'type-nav-title',
   'nav-action': 'type-nav-action',
 } as const;
