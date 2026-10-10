@@ -1,11 +1,14 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#lib/generic/primitives/text';
-import { useConnectionState } from '../state/context';
+import type { ConnectionState } from '../state/context';
 
 // Says so while the Connection is down; Server data on screen may be stale until it reopens.
-export function ConnectionBanner(): React.JSX.Element | null {
-  const state = useConnectionState();
+export function ConnectionBanner({
+  state,
+}: {
+  state: ConnectionState;
+}): React.JSX.Element | null {
   if (state !== 'reconnecting' && state !== 'offline') return null;
   return (
     <View role="status" className="w-full bg-muted px-4 py-2">
