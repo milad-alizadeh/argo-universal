@@ -2,10 +2,10 @@ import type { SessionNewInput, SessionNewOutput } from '@repo/contracts';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
-import type { Context } from '../../engine/context';
 import { findMachineActor } from '../../lib/machine-actor';
 import { databaseWriterId, writerMachine } from '../../storage';
 import { readProjectPath } from '../projects';
+import type { SessionRouterDeps } from './router-deps';
 import {
   submitSessionPrompt,
   validateSessionCommandAdmission,
@@ -18,7 +18,7 @@ import {
 } from './session-opening';
 
 async function requireCheckoutProjectPath(
-  database: Context['database'],
+  database: SessionRouterDeps['database'],
   newSession: Pick<SessionNewInput, 'projectId' | 'checkout'>,
 ): Promise<string> {
   const projectPath = readProjectPath(database, newSession.projectId);
@@ -78,7 +78,7 @@ async function waitForSessionInsertCommitted(
 
 export async function createSession(
   context: Pick<
-    Context,
+    SessionRouterDeps,
     'database' | 'sessions' | 'createId' | 'sessionCommandSignal'
   >,
   newSession: SessionNewInput,

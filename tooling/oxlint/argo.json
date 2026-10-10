@@ -794,6 +794,10 @@
                   "!**/services/projects/index.ts"
                 ],
                 "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
               }
             ]
           }
@@ -850,6 +854,10 @@
                   "!**/services/projects/index.ts"
                 ],
                 "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
               }
             ]
           }
@@ -906,6 +914,10 @@
                   "!**/services/projects/index.ts"
                 ],
                 "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
               }
             ]
           }
@@ -962,6 +974,10 @@
                   "!**/services/projects/index.ts"
                 ],
                 "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
               }
             ]
           }
@@ -1018,6 +1034,72 @@
                   "!**/services/blob/index.ts"
                 ],
                 "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/services/system/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/rpc/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": ["**/services/**", "**/engine/**", "../**"],
+                "message": "rpc/ sits below every module, so it imports none."
               }
             ]
           }
@@ -1058,7 +1140,9 @@
     {
       "files": ["apps/server/**", "packages/engine/**"],
       "excludeFiles": [
+        "packages/engine/src/rpc/**",
         "packages/engine/src/storage/**",
+        "packages/engine/src/services/system/**",
         "packages/engine/src/services/feed/**",
         "packages/engine/src/services/sessions/**",
         "packages/engine/src/services/agents/**",

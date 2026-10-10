@@ -8,16 +8,15 @@ import type {
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { maxBlobUploadBytes } from '@repo/contracts';
-import type { AnyTRPCRouter, inferRouterContext } from '@trpc/server';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { z } from 'zod';
 import type { RequestGuard } from './request-guard';
+import type { AppRouter } from './router';
 
-export interface RequestListenerOptions<Router extends AnyTRPCRouter> {
+export interface RequestListenerOptions {
   guard: RequestGuard;
   blobsFolder: string;
-  router: Router;
-  createContext: () => inferRouterContext<Router>;
+  router: AppRouter;
 }
 
 // A blob id is the sha256 of its content, so it cannot name a path outside the blobs folder.
@@ -90,13 +89,12 @@ async function streamBlob(
 }
 
 // Plain HTTP serves only GET /blobs/:id; every other request is a tRPC call at /trpc/ (ADR 0002).
-export function createRequestListener<Router extends AnyTRPCRouter>(
-  options: RequestListenerOptions<Router>,
+export function createRequestListener(
+  options: RequestListenerOptions,
 ): RequestListener {
   const { guard } = options;
   const handleTRPC = createHTTPHandler({
     router: options.router,
-    createContext: options.createContext,
     basePath: '/trpc/',
     maxBodySize,
   });

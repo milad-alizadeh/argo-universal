@@ -1,11 +1,22 @@
 import { initTRPC } from '@trpc/server';
 import { z } from 'zod';
-import type { Context } from './context';
 
-const t = initTRPC.context<Context>().create();
+// Routers close over their own dependencies, so a call carries no context.
+const t = initTRPC.create();
 
-export const router = t.router;
+const router = t.router;
+export const mergeRouters = t.mergeRouters;
 export const publicProcedure = t.procedure;
+
+type Procedures = Parameters<typeof router>[0];
+
+// A module's router, built from the dependencies it names.
+export const routerFactory =
+  <Deps, Built extends Procedures>(
+    buildProcedures: (deps: Deps) => Built,
+  ): ((deps: Deps) => ReturnType<typeof router<Built>>) =>
+  (deps) =>
+    router(buildProcedures(deps));
 
 const isAsyncIterable = (value: unknown): value is AsyncIterable<unknown> =>
   value != null && typeof value === 'object' && Symbol.asyncIterator in value;

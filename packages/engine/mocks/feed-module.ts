@@ -1,8 +1,8 @@
 import type { Database } from '@repo/db';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { createActor } from 'xstate';
-import { createEngineContext } from '../src/engine/context';
-import { appRouter } from '../src/engine/router';
+import { type AppRouter, createAppRouter } from '../src/engine/router';
+import { createAppRouterDeps } from '../src/engine/router-deps';
 import { findMachineActor } from '../src/lib/machine-actor';
 import {
   feedMachine,
@@ -87,8 +87,8 @@ export const createFeedModuleCaller = (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
   feed: FeedActorRef | undefined,
   signal: AbortSignal,
-): ReturnType<typeof appRouter.createCaller> => {
-  const context = createEngineContext({
+): ReturnType<AppRouter['createCaller']> => {
+  const deps = createAppRouterDeps({
     database: host.database,
     sessions: host.sessionRegistry,
     databaseWriter: host.databaseWriter,
@@ -99,15 +99,14 @@ export const createFeedModuleCaller = (
     syncSupervisor: host.engine.system.get('syncSupervisor'),
   });
   const findFeed = (sessionId: string): FeedActorRef | undefined =>
-    sessionId === 'session-1' && feed ? feed : context.findFeed(sessionId);
-  return appRouter.createCaller(
-    {
-      ...context,
-      findFeed,
+    sessionId === 'session-1' && feed ? feed : deps.feed.findFeed(sessionId);
+  const feedDeps = { ...deps.feed, findFeed };
+  return createAppRouter({
+    ...deps,
+    feed: {
+      ...feedDeps,
       watchSessionSnapshot: createSessionSnapshotWatcher({
-        database: context.database,
-        findFeed,
-        findWriter: context.findWriter,
+        ...feedDeps,
         findSession: (sessionId) =>
           findMachineActor(
             host.engine.system,
@@ -117,6 +116,5 @@ export const createFeedModuleCaller = (
         sessions: host.sessionRegistry,
       }),
     },
-    { signal },
-  );
+  }).createCaller({}, { signal });
 };

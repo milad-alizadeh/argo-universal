@@ -2,7 +2,7 @@ import type {
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
 } from '@repo/contracts';
-import type { Context } from '../../engine/context';
+import type { SessionRouterDeps } from './router-deps';
 import { validateConfigChoice } from './session-admission';
 import {
   sendSessionCommand,
@@ -31,7 +31,10 @@ export const applySessionConfig = (
   );
 };
 export const configureSession = async (
-  context: Pick<Context, 'sessions' | 'readSession' | 'sessionCommandSignal'>,
+  context: Pick<
+    SessionRouterDeps,
+    'sessions' | 'readSession' | 'sessionCommandSignal'
+  >,
   input: SessionSetConfigOptionInput,
 ): Promise<SessionSetConfigOptionOutput> => {
   const session = await openReadySession(

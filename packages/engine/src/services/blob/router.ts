@@ -1,12 +1,12 @@
 import { BlobUploadInput, BlobUploadOutput } from '@repo/contracts';
-import { publicProcedure, router } from '../../engine/trpc';
-import { uploadBlob } from './blob';
+import { publicProcedure, routerFactory } from '../../rpc';
+import { type BlobUploadDeps, uploadBlob } from './blob';
 
-export const blobRouter = router({
+export const createBlobRouter = routerFactory((blobUpload: BlobUploadDeps) => ({
   upload: publicProcedure
     .input(BlobUploadInput)
     .output(BlobUploadOutput)
-    .mutation(({ ctx, input }): Promise<BlobUploadOutput> =>
-      uploadBlob(ctx, input),
+    .mutation(({ input }): Promise<BlobUploadOutput> =>
+      uploadBlob(blobUpload, input),
     ),
-});
+}));

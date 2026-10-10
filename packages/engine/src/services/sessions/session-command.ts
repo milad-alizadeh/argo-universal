@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server';
-import type { Context } from '../../engine/context';
 import type { LocalSubmission } from './conversation/submission';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
+import type { SessionRouterDeps } from './router-deps';
 import type { SessionActorRef, SessionCommand } from './session-machine';
 
 export const submitSessionPrompt = (
@@ -44,7 +44,7 @@ export function rejectSessionCommand(
 }
 
 export function validateSessionCommandAdmission(
-  context: Pick<Context, 'sessions' | 'sessionCommandSignal'>,
+  context: Pick<SessionRouterDeps, 'sessions' | 'sessionCommandSignal'>,
 ): void {
   validateEngineCommandAdmission(context.sessionCommandSignal);
   const registrySnapshot = context.sessions.getSnapshot();

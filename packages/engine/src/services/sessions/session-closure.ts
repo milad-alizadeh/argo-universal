@@ -1,7 +1,7 @@
 import type { SessionCloseOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
-import type { Context } from '../../engine/context';
+import type { SessionRouterDeps } from './router-deps';
 import {
   sendSessionCommand,
   validateSessionCommandAdmission,
@@ -19,7 +19,7 @@ const isClosing = (actor: SessionActorRef): boolean => {
 };
 
 export const closeSession = async (
-  context: Context,
+  context: Pick<SessionRouterDeps, 'sessions' | 'sessionCommandSignal'>,
   sessionId: string,
 ): Promise<SessionCloseOutput> => {
   validateSessionCommandAdmission(context);

@@ -1,8 +1,8 @@
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
-import type { Context } from '../../engine/context';
 import { findMachineActor } from '../../lib/machine-actor';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
+import type { SessionRouterDeps } from './router-deps';
 import {
   rejectSessionCommand,
   rejectRegistryCommand,
@@ -94,7 +94,10 @@ function rejectClosedSession(
 }
 
 export async function openReadySession(
-  context: Pick<Context, 'sessions' | 'readSession' | 'sessionCommandSignal'>,
+  context: Pick<
+    SessionRouterDeps,
+    'sessions' | 'readSession' | 'sessionCommandSignal'
+  >,
   sessionId: string,
   commandType: SessionCommand['type'] = 'session.prompt',
 ): Promise<SessionActorRef> {
@@ -112,7 +115,7 @@ export async function openReadySession(
 }
 
 function openStoredSession(
-  context: Pick<Context, 'sessions' | 'readSession'>,
+  context: Pick<SessionRouterDeps, 'sessions' | 'readSession'>,
   sessionId: string,
 ): SessionActorRef {
   const sessionRecord = readWritableSession(context.readSession, sessionId);
@@ -125,9 +128,9 @@ function openStoredSession(
 }
 
 function readWritableSession(
-  readSession: Context['readSession'],
+  readSession: SessionRouterDeps['readSession'],
   sessionId: string,
-): ReturnType<Context['readSession']> {
+): ReturnType<SessionRouterDeps['readSession']> {
   const sessionRecord = readSession(sessionId);
   if (sessionRecord.parentSessionId !== null)
     throw new TRPCError({
