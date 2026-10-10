@@ -47,17 +47,15 @@ export const FeedSnapshot = z.strictObject({
 export type FeedSnapshot = z.infer<typeof FeedSnapshot>;
 
 // The Server rebuilt the Session's rows; the App drops its cache for the Session.
-export const FeedReset = z.strictObject({
+const FeedReset = z.strictObject({
   type: z.literal('reset'),
   epoch: sessionColumns.shape.epoch,
 });
-export type FeedReset = z.infer<typeof FeedReset>;
 
-export const FeedClosed = z.strictObject({
+const FeedClosed = z.strictObject({
   type: z.literal('closed'),
   failure: z.string().nullable(),
 });
-export type FeedClosed = z.infer<typeof FeedClosed>;
 
 // One value that the `feed.subscribe` subscription sends.
 export const FeedSubscribeOutput = z.discriminatedUnion('type', [

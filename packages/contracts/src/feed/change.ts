@@ -76,7 +76,7 @@ export function readFeedField(
 }
 
 // A copy of `value` with `text` at a path that `readFeedField` resolved.
-export function writeFeedField(
+function writeFeedField(
   value: unknown,
   [key, ...rest]: readonly string[],
   text: string,

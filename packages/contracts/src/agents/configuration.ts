@@ -22,7 +22,7 @@ const credentialMessage =
 const singleCommandMessage =
   'One path or command, without spaces. Put arguments below.';
 
-export const AgentExecutable = z
+const AgentExecutable = z
   .string()
   .trim()
   .min(1, 'Enter a path or command.')
@@ -56,12 +56,12 @@ export type EnvironmentVariable = z.infer<typeof EnvironmentVariable>;
 const hasUniqueNames = (variables: readonly EnvironmentVariable[]): boolean =>
   new Set(variables.map(({ name }) => name)).size === variables.length;
 
-export const EnvironmentVariables = z
+const EnvironmentVariables = z
   .array(EnvironmentVariable)
   .max(maxEntries)
   .refine(hasUniqueNames, 'Each environment variable can be set once.');
 
-export const AgentOverrides = z.strictObject({
+const AgentOverrides = z.strictObject({
   args: z.array(AgentArgument).max(maxEntries),
   env: EnvironmentVariables,
 });

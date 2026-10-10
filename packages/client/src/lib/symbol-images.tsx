@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 
-export interface SymbolImageRequest {
+interface SymbolImageRequest {
   name: SFSymbol;
   pointSize: number;
 }

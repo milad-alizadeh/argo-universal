@@ -5,7 +5,6 @@ export * from './cancel';
 export * from './changes';
 export * from './close';
 export * from './counts';
-export * from './delete';
 export * from './list';
 export * from './list-updates';
 export * from './new';

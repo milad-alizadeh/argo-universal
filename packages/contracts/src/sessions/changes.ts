@@ -11,14 +11,13 @@ export const ChangesSummary = z.strictObject({
 export type ChangesSummary = z.infer<typeof ChangesSummary>;
 
 // One uncommitted file, from `git status` and `git diff --numstat`; the counts are null for a binary file, as numstat gives `-`.
-export const ChangedFile = z.strictObject({
+const ChangedFile = z.strictObject({
   operation: DiffChange.shape.operation,
   path: z.string(),
   oldPath: z.string().optional(),
   additions: z.int().nullable(),
   deletions: z.int().nullable(),
 });
-export type ChangedFile = z.infer<typeof ChangedFile>;
 
 export const SessionChangesInput = z.strictObject({
   sessionId: sessionColumns.shape.id,

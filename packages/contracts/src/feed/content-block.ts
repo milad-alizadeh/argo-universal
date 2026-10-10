@@ -12,8 +12,7 @@ export const BlobRef = z.strictObject({
 });
 export type BlobRef = z.infer<typeof BlobRef>;
 
-export const AttachmentSource = z.enum(['upload', 'pasted']);
-export type AttachmentSource = z.infer<typeof AttachmentSource>;
+const AttachmentSource = z.enum(['upload', 'pasted']);
 
 const AttachmentMeta = createFeedMetadataSchema(
   z.strictObject({ source: AttachmentSource.optional() }),

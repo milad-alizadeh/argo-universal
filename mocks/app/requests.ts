@@ -8,7 +8,7 @@ import {
 import { z } from 'zod';
 import recordings from './request-recordings.json';
 
-export const RequestAnswer = z.discriminatedUnion('procedure', [
+const RequestAnswer = z.discriminatedUnion('procedure', [
   z.strictObject({
     procedure: z.literal('answerPermission'),
     input: SessionAnswerPermissionInput,
@@ -22,7 +22,6 @@ export const RequestAnswer = z.discriminatedUnion('procedure', [
     input: SessionAnswerPlanProposalInput,
   }),
 ]);
-export type RequestAnswer = z.infer<typeof RequestAnswer>;
 
 const RequestState = z.strictObject({
   rows: z.array(SessionUpdate),

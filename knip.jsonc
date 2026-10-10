@@ -2,10 +2,6 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": ["**/*.gen.*"],
   "workspaces": {
-    ".": {
-      // Hook integration Checkouts run copied scripts against the root node_modules.
-      "ignoreDependencies": ["zod"]
-    },
     "packages/client": {
       // Metro selects platform modules by filename rather than by a literal import.
       "entry": ["src/**/*.@(android|ios|native|web).{ts,tsx}"]
