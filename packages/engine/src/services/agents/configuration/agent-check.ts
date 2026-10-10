@@ -1,3 +1,4 @@
+import { setTimeout as sleep } from 'node:timers/promises';
 import type { AgentCheck, CustomAgentDefinition } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { createAgentClient } from '../acp/client';
@@ -12,10 +13,9 @@ const exitGraceMs = 1000;
 const millisecondsPerSecond = 1000;
 type CheckSubject = { name: string; launch: AgentLaunch };
 
+// An unreferenced timer, so a pending check never keeps the process alive.
 const after = (milliseconds: number): Promise<'timeout'> =>
-  new Promise((resolve) => {
-    setTimeout(() => resolve('timeout'), milliseconds).unref();
-  });
+  sleep(milliseconds, 'timeout' as const, { ref: false });
 const initialize = async (process: AcpProcess): Promise<'answered'> => {
   const connection = createAgentClient({
     stream: process.stream,
