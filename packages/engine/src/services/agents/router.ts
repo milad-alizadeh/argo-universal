@@ -6,8 +6,8 @@ import {
 } from '@repo/contracts';
 import { publicProcedure, router } from '../../engine/trpc';
 import { listAgents } from './agent-list';
-import { readAgentCatalog } from './catalog/browse';
 import { watchCommittedCatalogChanges } from './catalog/catalog-changes';
+import { readAgentCatalog } from './catalog/catalog-sql';
 import { requestAgentCatalogSync } from './catalog/sync-supervisor-machine';
 
 export const agentsRouter = router({
