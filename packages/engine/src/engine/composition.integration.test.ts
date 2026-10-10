@@ -228,6 +228,9 @@ it('keeps the Feed subscription open after malformed stored activity', async ():
       payload: { messageId: 'malformed', content: 'invalid' },
     })
     .run();
+  database.$client
+    .prepare('UPDATE session SET max_revision = 500 WHERE id = ?')
+    .run('session-1');
   const reported = vi
     .spyOn(console, 'error')
     .mockImplementation((): void => {});

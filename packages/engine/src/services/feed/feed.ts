@@ -1,53 +1,38 @@
 import type { SessionUpdate } from '@repo/contracts';
 import type {
   FeedPageInput,
+  FeedSnapshot,
   FeedPageOutput,
   FeedRowInput,
   FeedSubscribeInput,
   FeedSubscribeOutput,
 } from '@repo/contracts';
-import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, gt, lt } from 'drizzle-orm';
-import type { ActorRefFrom, Subscription } from 'xstate';
+import { and, desc, eq, lt } from 'drizzle-orm';
+import type { Subscription } from 'xstate';
 import type {
   createSessionReader,
   createSessionSnapshotWatcher,
 } from '../sessions';
+import {
+  FeedCatchUp,
+  type FeedRowSources,
+  MovedRowDelivery,
+} from './feed-catch-up';
+import type { FeedStreamEvent } from './feed-change';
 import type { FeedActorRef } from './feed-machine';
 import {
   hydrateStoredFeedRow,
-  newestRows,
   readWrittenRow,
   storedFeedColumns,
 } from './feed-row';
-import type { writerMachine } from './writer-machine';
 import { readWriterProjection } from './writer-projection';
 
-export interface FeedDeps {
-  database: Database;
-  // The feed actor of an open Session; a closed Session has none.
-  findFeed: (sessionId: string) => FeedActorRef | undefined;
+export interface FeedDeps extends FeedRowSources {
   readSession: ReturnType<typeof createSessionReader>;
   watchSessionSnapshot: ReturnType<typeof createSessionSnapshotWatcher>;
-  findWriter: () => ActorRefFrom<typeof writerMachine> | undefined;
 }
-
-// Rows the database does not hold yet: queued in the writer, then held by the feed actor.
-const readUnsavedRows = (
-  feedResources: Pick<FeedDeps, 'findWriter' | 'findFeed'>,
-  sessionId: string,
-): Pick<FeedPageOutput, 'rows' | 'maxRevision'> => {
-  const pending = readWriterProjection(feedResources.findWriter()).feed(
-    sessionId,
-  );
-  const feed = feedResources.findFeed(sessionId)?.getSnapshot().context;
-  return {
-    rows: [...pending.rows, ...Object.values(feed?.rows ?? {})],
-    maxRevision: Math.max(0, pending.maxRevision, feed?.maxRevision ?? 0),
-  };
-};
 
 // Stored rows only: the subscription's catch-up adds what the writer has not committed.
 export function readFeedPage(
@@ -117,36 +102,6 @@ export function readFeedRow(
   return newest;
 }
 
-// Every row changed after `from`, stored or not, once each in revision order, and the revision they reach.
-const readChangedRows = (
-  feedResources: Pick<FeedDeps, 'database' | 'findWriter' | 'findFeed'>,
-  sessionId: string,
-  afterRevision: number,
-): Pick<FeedPageOutput, 'rows' | 'maxRevision'> => {
-  const unsaved = readUnsavedRows(feedResources, sessionId);
-  const stored = feedResources.database
-    .select(storedFeedColumns)
-    .from(feedRow)
-    .where(
-      and(
-        eq(feedRow.sessionId, sessionId),
-        gt(feedRow.revision, afterRevision),
-      ),
-    )
-    .orderBy(asc(feedRow.revision))
-    .all()
-    .map((stored): SessionUpdate => hydrateStoredFeedRow(sessionId, stored));
-  return {
-    rows: [
-      ...newestRows([
-        ...stored,
-        ...unsaved.rows.filter((row): boolean => row.revision > afterRevision),
-      ]).values(),
-    ].sort((a, b): number => a.revision - b.revision),
-    maxRevision: unsaved.maxRevision,
-  };
-};
-
 // Sends every row changed after `after`, then the feed actor's batches. With no sync point, or after `reset` for a new epoch, it skips stored rows, which the App pages.
 export async function* streamFeed(
   feedResources: FeedDeps,
@@ -155,7 +110,7 @@ export async function* streamFeed(
 ): AsyncGenerator<FeedSubscribeOutput> {
   const { epoch, maxRevision } = feedResources.readSession(sessionId);
 
-  const live: FeedSubscribeOutput[] = [];
+  const live: (FeedStreamEvent | FeedSnapshot)[] = [];
   let wake: (() => void) | undefined;
   let feed: FeedActorRef | undefined;
   let listener: Subscription | undefined;
@@ -197,31 +152,32 @@ export async function* streamFeed(
   try {
     throwSnapshotFailure();
     const reset = after !== null && after.epoch !== epoch;
-    const from = after === null || reset ? maxRevision : after.revision;
-    // A waiting batch can carry changes the catch-up already holds; their revision drops them.
-    const { rows, maxRevision: unsavedRevision } = readChangedRows(
-      feedResources,
-      sessionId,
-      from,
-    );
-    const caughtUpTo = Math.max(maxRevision, unsavedRevision);
+    const catchUp = new FeedCatchUp(feedResources, sessionId, {
+      after: after === null || reset ? maxRevision : after.revision,
+      storedRevision: maxRevision,
+    });
 
     if (reset) yield { type: 'reset', epoch };
-    for (const row of rows)
-      yield { type: 'row.upsert', rev: row.revision, row };
+    for (
+      let page = catchUp.firstPage;
+      page.length > 0;
+      page = catchUp.readNextPage()
+    )
+      for (const row of page)
+        yield { type: 'row.upsert', rev: row.revision, row };
+    const movedRows = new MovedRowDelivery(catchUp.readMovedRows());
 
     while (!signal?.aborted) {
       throwSnapshotFailure();
       const event = live.shift();
       if (event) {
-        if (
-          event.type === 'snapshot' ||
-          ('rev' in event && event.rev > caughtUpTo)
-        )
-          yield event;
+        if (event.type === 'snapshot') yield event;
+        else if (event.rev > catchUp.highWaterMark)
+          yield* movedRows.deliver(event);
         continue;
       }
       if (closed) {
+        yield* movedRows.releaseThrough();
         yield { type: 'closed', failure };
         return;
       }
