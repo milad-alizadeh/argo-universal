@@ -156,7 +156,7 @@ export default config;
 
 ```tsx
 import type { Preview } from '@storybook/react-native-web-vite';
-import { withTrpcMocks } from '@repo/client/mocks';
+import { withTrpcMocks } from '@repo/client/storybook';
 import '../global.css';
 
 const preview: Preview = {

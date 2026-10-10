@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type ReactElement, useState } from 'react';
 import { expect, fn, spyOn, waitFor, within } from 'storybook/test';
-import { recordedAcpContent } from '../../../../mocks/acp-feed-content';
 import { composerProps } from '../../../../mocks/composer-mock';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import type { MockAgent } from '../../../../mocks/feed-message-mock';
 import { longWrittenPlan } from '../../../../mocks/feed-paper';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
+import { recordedAcpContent } from '../../../lib/product/acp-feed-content.mocks';
+import type { MockAgent } from '../../../lib/product/feed-message.mocks';
 import { Composer } from './composer';
 
 const writtenPlanRegionName = 'Written plan content';

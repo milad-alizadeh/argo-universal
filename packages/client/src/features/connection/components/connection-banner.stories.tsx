@@ -1,10 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { ConnectionStatePreview } from '../../../../mocks/connection-state-preview';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../../lib/generic/variations';
 import { ConnectionBanner } from './connection-banner';
 
 const meta = {

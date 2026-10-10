@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useNavigate } from '../src/lib/product/navigation/context';
+import { useNavigate } from './context';
 
 export function NavigationMock(): React.JSX.Element {
   const navigate = useNavigate();

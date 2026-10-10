@@ -12,17 +12,17 @@ import {
   ScreenHeader,
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { PhoneShellFrame } from '../../../../mocks/phone-shell-frame';
 import { ScreenHeaderMock } from '../../../../mocks/screen-header-mock';
 import { createSessionCountsMock } from '../../../../mocks/session-counts-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
 import { TrpcMocks } from '../../../../mocks/with-trpc-mocks';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { sectionDestination } from '../../../lib/product/navigation/sections';
 import type { Section } from '../../../lib/product/navigation/sections';
 import { PhoneLayout } from '../screens/phone-layout';
 import { PhoneMenuButton } from './phone-menu-button';
 import { PhoneShell } from './phone-shell';
+import { PhoneShellFrame } from './phone-shell-frame.mocks';
 import { shellSections } from './shell-sections';
 
 const openNavigationLabel = 'Open navigation';

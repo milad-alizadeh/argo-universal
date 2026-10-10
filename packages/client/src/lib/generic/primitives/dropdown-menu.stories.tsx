@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { DropdownMenuPreview } from '../../../../mocks/dropdown-menu-preview';
+import { DropdownMenuPreview } from './dropdown-menu-preview.mocks';
 
 const meta = {
   title: 'Design System/Primitives/Dropdown Menu',

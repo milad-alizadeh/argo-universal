@@ -2,10 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../../lib/generic/variations';
+import { ElicitationForm } from './elicitation-form';
+import { ElicitationOutcome } from './elicitation-outcome';
 import {
   elicitationProps,
   elicitationMock,
@@ -13,9 +12,7 @@ import {
   elicitationRequest,
   fieldsRequest,
   fieldsValues,
-} from '../../../../mocks/request-mock';
-import { ElicitationForm } from './elicitation-form';
-import { ElicitationOutcome } from './elicitation-outcome';
+} from './request.mocks';
 
 type GalleryArgs = ComponentProps<typeof ElicitationForm> & {
   agent: (typeof elicitationMock)['agent'];

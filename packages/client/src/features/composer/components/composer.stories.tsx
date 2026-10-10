@@ -10,10 +10,7 @@ import {
   composerPlanDone,
   oversizedComposerImage,
 } from '../../../../mocks/composer-mock';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../../lib/generic/variations';
 import { imageSelectionFailureMessage } from '../hooks/use-image-draft';
 import { Composer } from './composer';
 

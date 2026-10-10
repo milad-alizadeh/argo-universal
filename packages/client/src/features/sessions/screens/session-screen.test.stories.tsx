@@ -17,8 +17,6 @@ import { NavigationProvider } from '#lib/product/navigation/context';
 import { ScreenHeaderProvider } from '#lib/product/navigation/screen-header';
 import { chooseEffort } from '../../../../mocks/choose-effort';
 import { composerImages } from '../../../../mocks/composer-mock';
-import { eachLayout, layoutWidths } from '../../../../mocks/each-layout';
-import { recordedImageUrl } from '../../../../mocks/feed-message-mock';
 import { createFeedMocks } from '../../../../mocks/feed-mock';
 import { agentProbeRequests } from '../../../../mocks/new-session-mock';
 import { ScreenHeaderMock } from '../../../../mocks/screen-header-mock';
@@ -42,12 +40,14 @@ import {
   twoSessionMocks,
   unavailableSessionCases,
 } from '../../../../mocks/session-screen-mock';
-import { SessionScreenPreview } from '../../../../mocks/session-screen-preview';
-import { settleViewport } from '../../../../mocks/settle-viewport';
 import { createSubscriptionPublisher } from '../../../../mocks/subscription-publisher';
 import { type Fixtures, fails } from '../../../../mocks/trpc-mock-link';
 import { TrpcMocks } from '../../../../mocks/with-trpc-mocks';
+import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
+import { recordedImageUrl } from '../../../lib/product/feed-message.mocks';
 import { SessionScreen } from './session-screen';
+import { SessionScreenPreview } from './session-screen-preview.mocks';
 
 const feedScrollId = 'feed-scroll';
 const earlierFeedLoadingLabel = 'Loading earlier';

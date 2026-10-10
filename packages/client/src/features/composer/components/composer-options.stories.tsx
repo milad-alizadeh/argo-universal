@@ -6,7 +6,7 @@ import { composerProps } from '../../../../mocks/composer-mock';
 import {
   composerSettingsOptions,
   updateComposerSettings,
-} from '../../../../mocks/composer-settings-mock';
+} from '../../../../mocks/composer-mock';
 import { ComposerOptions } from './composer-options';
 
 const configuration = composerProps({

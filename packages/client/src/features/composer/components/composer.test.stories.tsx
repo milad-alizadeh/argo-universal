@@ -22,11 +22,11 @@ import {
   composerPlanDone,
   oversizedComposerImage,
 } from '../../../../mocks/composer-mock';
-import { updateComposerSettings } from '../../../../mocks/composer-settings-mock';
-import { layoutWidths } from '../../../../mocks/each-layout';
+import { updateComposerSettings } from '../../../../mocks/composer-mock';
 import { newSessionMocks } from '../../../../mocks/new-session-mock';
 import { idleSessionMocks } from '../../../../mocks/session-screen-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { Composer } from './composer';
 
 const missingAvailableAgentFailure =

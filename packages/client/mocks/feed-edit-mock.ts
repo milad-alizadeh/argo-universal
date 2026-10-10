@@ -2,7 +2,7 @@ import type { DiffChange, ToolCallUpdate } from '@repo/contracts';
 import { recordedFeedMocks } from '@repo/mocks/app';
 import type { FileDiff } from '../src/features/feed/view/file-diff';
 import { toFileDiffs } from '../src/features/feed/view/file-diff';
-import type { MockAgent } from './feed-message-mock';
+import type { MockAgent } from '../src/lib/product/feed-message.mocks';
 
 export function recordedEdit(
   agent: MockAgent,

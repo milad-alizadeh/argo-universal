@@ -1,16 +1,10 @@
 import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
-import { SessionRowListMock } from '../../../../mocks/session-row-list-mock';
-import {
-  paperSessionMetadata,
-  paperSessionRows,
-} from '../../../../mocks/session-row-mock';
+import { Variation, Variations } from '../../../lib/generic/variations';
 import { SessionRow } from './session-row';
+import { SessionRowListMock } from './session-row-list.mocks';
+import { paperSessionMetadata, paperSessionRows } from './session-row.mocks';
 
 const meta = {
   title: 'Sessions/SessionRow',

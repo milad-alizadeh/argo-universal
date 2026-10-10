@@ -1,10 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { recordedEdit } from '../../../../mocks/feed-edit-mock';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../../lib/generic/variations';
 import { EditRow } from './edit-row';
 
 const meta = {

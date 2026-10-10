@@ -8,7 +8,7 @@ import {
   composerUnlistedEffortConfigurations,
   composerUnavailableConfigurations,
 } from '../../../../mocks/composer-mock';
-import { updateComposerSettings } from '../../../../mocks/composer-settings-mock';
+import { updateComposerSettings } from '../../../../mocks/composer-mock';
 import { ComposerAgentModelControl } from './composer-configuration';
 
 const configuration = composerUnlistedEffortConfigurations[0];

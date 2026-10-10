@@ -11,12 +11,12 @@ import { page } from 'vitest/browser';
 import { Composer } from '#features/composer';
 import { PlanProposalRegion } from '#features/requests';
 import { composerProps } from '../../../../mocks/composer-mock';
-import { DesktopShellFrame } from '../../../../mocks/desktop-shell-frame';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { InspectorFilesMock } from '../../../../mocks/inspector-files-mock';
 import { shortPlanProposal } from '../../../../mocks/plan-proposal-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { DesktopShell } from './desktop-shell';
+import { DesktopShellFrame } from './desktop-shell-frame.mocks';
+import { InspectorFilesMock } from './inspector-files.mocks';
 
 const preservedDraft = 'Keep my draft';
 const hideSidebarLabel = 'Hide sidebar';

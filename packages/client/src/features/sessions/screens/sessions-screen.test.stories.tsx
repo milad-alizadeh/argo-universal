@@ -14,7 +14,6 @@ import { expect, waitFor, within } from 'storybook/test';
 import type { ConnectionState } from '#features/connection';
 import { DesktopLayout } from '#features/frame';
 import { ConnectionStatePreview } from '../../../../mocks/connection-state-preview';
-import { eachLayout, layoutWidths } from '../../../../mocks/each-layout';
 import {
   emptySessionListMocks,
   sessionListMocks,
@@ -27,12 +26,13 @@ import {
   nextPageLoadingMocks,
   streamingSessionCatalogs,
 } from '../../../../mocks/sessions-list-mock';
-import { SessionsScreenPreview } from '../../../../mocks/sessions-screen-preview';
-import { settleViewport } from '../../../../mocks/settle-viewport';
 import type { FixtureOutput } from '../../../../mocks/trpc-mock-link';
 import { fails, pending } from '../../../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
+import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { SessionsScreen } from './sessions-screen';
+import { SessionsScreenPreview } from './sessions-screen-preview.mocks';
 
 const settingsPrompt = 'Build the settings screen';
 const exampleProjectName = 'Example Project';

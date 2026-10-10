@@ -1,8 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../variations';
 import { Textarea } from './textarea';
 
 const examples: {

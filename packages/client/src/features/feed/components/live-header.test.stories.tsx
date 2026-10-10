@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
+import { LiveHeader } from './live-header';
 import {
   liveHeaderElapsed,
   liveHeaderNow,
   liveHeaderSteps,
   requestHeader,
   workingHeader,
-} from '../../../../mocks/live-header-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
-import { LiveHeader } from './live-header';
+} from './live-header.mocks';
 
 const meta = {
   title: 'Tests/LiveHeader',

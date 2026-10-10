@@ -14,7 +14,6 @@ import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { ContentLayout } from '#lib/product/content-layout';
 import { chooseEffort } from '../../../../mocks/choose-effort';
-import { eachLayout, layoutWidths } from '../../../../mocks/each-layout';
 import {
   agentProbeRequests,
   failedStartMessage,
@@ -26,7 +25,6 @@ import {
   sendingNewSessionMocks,
   unavailableNewSessionMocks,
 } from '../../../../mocks/new-session-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
 import type {
   FixtureArguments,
   FixtureOutput,
@@ -34,6 +32,8 @@ import type {
 import { pending } from '../../../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
 import { TrpcMocks } from '../../../../mocks/with-trpc-mocks';
+import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { NewSessionScreen } from './new-session-screen';
 
 const openSessionLabel = 'Open Session';

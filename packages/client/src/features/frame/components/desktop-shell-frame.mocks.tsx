@@ -1,18 +1,15 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import {
-  DesktopShell,
-  type DesktopShellProps,
-} from '../src/features/frame/components/desktop-shell';
-import { Button } from '../src/lib/generic/primitives/button';
+import { Button } from '../../../lib/generic/primitives/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../src/lib/generic/primitives/dropdown-menu';
-import { Text } from '../src/lib/generic/primitives/text';
-import { Icon } from '../src/lib/generic/symbols/icon';
+} from '../../../lib/generic/primitives/dropdown-menu';
+import { Text } from '../../../lib/generic/primitives/text';
+import { Icon } from '../../../lib/generic/symbols/icon';
+import { DesktopShell, type DesktopShellProps } from './desktop-shell';
 
 export function DesktopShellFrame({
   selectedSection = 'sessions',
@@ -79,7 +76,7 @@ export function DesktopShellFrame({
                 className="size-8 p-0 sm:size-8"
                 accessibilityLabel="More actions"
               >
-                <Icon name="more" className="size-4 text-muted-foreground" />
+                <Icon name="more" size="md" className="text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>

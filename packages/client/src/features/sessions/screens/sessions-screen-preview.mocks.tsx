@@ -4,7 +4,7 @@ import {
   SessionsHeader,
   SessionsScreen,
   useSessionsFilter,
-} from '../src/features/sessions/screens/sessions-screen';
+} from './sessions-screen';
 
 // The Sessions list under a plain header row, as a shell draws it.
 export function SessionsScreenPreview(): React.JSX.Element {

@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { layoutWidths } from '../../../../mocks/each-layout';
 import { recordedFile } from '../../../../mocks/feed-edit-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { DiffView } from './diff-view';
 
 const lastAddedLine = 'new value 60';

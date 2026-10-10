@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { layoutWidths } from '../../../../mocks/each-layout';
 import {
   planProposalMocks,
   shortPlanProposal,
 } from '../../../../mocks/plan-proposal-mock';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { PlanProposalCard } from './plan-proposal-card';
 
 const meta = {

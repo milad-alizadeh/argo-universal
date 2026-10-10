@@ -4,8 +4,8 @@ import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { ComposerPopover } from './composer-popover';
 
 const meta = {

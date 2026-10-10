@@ -1,14 +1,11 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { PhoneMenuButton } from '../src/features/frame/components/phone-menu-button';
-import {
-  PhoneShell,
-  type PhoneShellProps,
-} from '../src/features/frame/components/phone-shell';
-import { shellSections } from '../src/features/frame/components/shell-sections';
-import { Text } from '../src/lib/generic/primitives/text';
-import { HeaderButton } from '../src/lib/product/header-button';
-import { ScreenHeader } from '../src/lib/product/navigation/screen-header';
+import { Text } from '../../../lib/generic/primitives/text';
+import { HeaderButton } from '../../../lib/product/header-button';
+import { ScreenHeader } from '../../../lib/product/navigation/screen-header';
+import { PhoneMenuButton } from './phone-menu-button';
+import { PhoneShell, type PhoneShellProps } from './phone-shell';
+import { shellSections } from './shell-sections';
 
 export interface PhoneShellFrameProps extends Partial<
   Omit<PhoneShellProps, 'children'>

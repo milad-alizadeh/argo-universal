@@ -1,10 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
 import { Icon } from '../symbols/icon';
+import { Variation, Variations } from '../variations';
 import { Button } from './button';
 import { ButtonGroup } from './button-group';
 import { Text } from './text';

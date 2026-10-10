@@ -1,5 +1,5 @@
 import type { CompactionUpdate, Notice, PlanMarkdown } from '@repo/contracts';
-import { recordedAcpContent } from './acp-feed-content';
+import { recordedAcpContent } from '../src/lib/product/acp-feed-content.mocks';
 import { longPlanProposal } from './plan-proposal-mock';
 
 export const embeddedResource = {

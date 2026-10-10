@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { settleViewport } from '../../../../mocks/settle-viewport';
 import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { SettingsList } from './settings-list';
 
 const recorder = createNavigationRecorder();

@@ -5,18 +5,15 @@ import { View } from 'react-native';
 import { toFeedView } from '#features/feed';
 import { FeedItem } from '#features/feed';
 import { PermissionOutcome } from '#features/feed';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../../lib/generic/variations';
+import { PermissionRequest } from './permission-request';
 import {
   agentOptionsProps,
   agentOptionsWithAlwaysReject,
   permissionProps,
   permissionMock,
   permissionMocks,
-} from '../../../../mocks/request-mock';
-import { PermissionRequest } from './permission-request';
+} from './request.mocks';
 
 type GalleryArgs = ComponentProps<typeof PermissionRequest> & {
   agent: (typeof permissionMock)['agent'];

@@ -3,9 +3,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { composerLongSettingsOptions } from '../../../../mocks/composer-settings-mock';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { composerLongSettingsOptions } from '../../../../mocks/composer-mock';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { ComposerOptions } from './composer-options';
 
 const meta = {

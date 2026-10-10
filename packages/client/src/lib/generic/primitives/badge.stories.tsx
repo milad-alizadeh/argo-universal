@@ -2,10 +2,7 @@ const variants = ['default', 'secondary', 'destructive', 'outline'] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import {
-  Variation,
-  Variations,
-} from '../../../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../variations';
 import { Badge } from './badge';
 import { Text } from './text';
 

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { ConnectionMock, mockWebSocket } from '../mocks/connection-mock';
+import { ConnectionMock } from './app-providers.mocks';
+import { mockWebSocket } from './websocket-report.mocks';
 
 const oneOpenConnection = 'Open Connections: 1';
 

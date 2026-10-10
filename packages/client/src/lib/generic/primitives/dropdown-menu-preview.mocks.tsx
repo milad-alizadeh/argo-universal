@@ -1,5 +1,5 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button } from '../src/lib/generic/primitives/button';
+import { Button } from './button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,8 +12,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '../src/lib/generic/primitives/dropdown-menu';
-import { Text } from '../src/lib/generic/primitives/text';
+} from './dropdown-menu';
+import { Text } from './text';
 
 export function DropdownMenuPreview(): React.JSX.Element {
   return (
@@ -28,15 +28,14 @@ export function DropdownMenuPreview(): React.JSX.Element {
   );
 }
 function AccountMenu(): React.JSX.Element {
-  const contentInsets = useContentInsets();
-  const props = {
-    insets: contentInsets,
-    sideOffset: 2,
-    className: 'w-56',
-    align: 'start' as const,
-  };
+  const { top, bottom } = useSafeAreaInsets();
   return (
-    <DropdownMenuContent {...props}>
+    <DropdownMenuContent
+      insets={{ top, bottom, left: 4, right: 4 }}
+      sideOffset={2}
+      className="w-56"
+      align="start"
+    >
       <AccountItems />
       <TeamItems />
       <ExternalItems />
@@ -140,16 +139,6 @@ function LogoutItem(): React.JSX.Element {
       <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
     </DropdownMenuItem>
   );
-}
-
-function useContentInsets(): {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-} {
-  const { top, bottom } = useSafeAreaInsets();
-  return { top, bottom, left: 4, right: 4 };
 }
 
 function ExternalLinks(): React.JSX.Element {

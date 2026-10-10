@@ -5,12 +5,12 @@ import {
   agentCatalogMocks,
   catalog,
   unavailableCatalog,
-} from '../../../../mocks/agent-catalog-mock';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+} from '../../../../mocks/agents-mock';
 import { createSubscriptionPublisher } from '../../../../mocks/subscription-publisher';
 import type { Fixtures } from '../../../../mocks/trpc-mock-link';
 import { fails } from '../../../../mocks/trpc-mock-link';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { AgentsSettingsScreen } from './agents-settings-screen';
 
 const meta = {

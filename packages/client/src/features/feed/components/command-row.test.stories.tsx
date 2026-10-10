@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { settleViewport } from '../../../../mocks/settle-viewport';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
+import { CommandRow } from './command-row';
 import {
   commandMocks,
   commandNow,
@@ -10,8 +11,7 @@ import {
   longOutputCommand,
   runningCommand,
   stoppedCommand,
-} from '../../../../mocks/tool-call-mock';
-import { CommandRow } from './command-row';
+} from './tool-call.mocks';
 
 const commandTitle = 'Show hello.txt and short git status';
 const shellCommand = '$ cat hello.txt && git status --short';

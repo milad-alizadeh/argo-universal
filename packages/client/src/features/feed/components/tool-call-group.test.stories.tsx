@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '../../../../mocks/each-layout';
-import { settleViewport } from '../../../../mocks/settle-viewport';
-import { renderRecordedActivity } from '../../../../mocks/tool-call-group-preview';
+import { layoutWidths } from '../../../lib/generic/each-layout';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
+import { ToolCallGroup } from './tool-call-group';
+import { renderRecordedActivity } from './tool-call-group-preview.mocks';
 import {
   runningRead,
   toolCallGroupMock,
   toolCallGroupMocks,
-} from '../../../../mocks/tool-call-mock';
-import { ToolCallGroup } from './tool-call-group';
+} from './tool-call.mocks';
 
 const commandAndFileSummary = 'Ran 1 command, Read 1 file';
 const readFileTitle = 'Read /project/hello.txt';

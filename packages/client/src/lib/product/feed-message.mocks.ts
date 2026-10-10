@@ -1,12 +1,14 @@
-import { AgentMessage as AgentMessageSchema } from '@repo/contracts';
 import type {
   AgentMessage,
   BlobRef,
   SessionUpdate,
   UserMessage,
 } from '@repo/contracts';
-import { type FeedMock, recordedFeedMocks } from '@repo/mocks/app';
-import intermediateMessages from './streaming-messages.json';
+import {
+  type FeedMock,
+  recordedFeedMocks,
+  recordedStreamingMessages,
+} from '@repo/mocks/app';
 
 // The bytes of `mocks/agent/red-square.png`, the shared image attachment mock.
 export const redSquareDataUrl =
@@ -56,16 +58,11 @@ export const recordedAgentMessage = (
   recording: string,
 ): AgentMessage => recordedRow(agent, recording, 'agent_message');
 
-// Saved from recorded events through the real Feed reducer during fixture preparation.
-const streamingMessages = intermediateMessages.map((entry) => ({
-  ...entry,
-  row: AgentMessageSchema.parse(entry.row),
-}));
 export function streamingAgentMessage(
   agent: MockAgent,
   recording: string,
 ): AgentMessage {
-  const entry = streamingMessages.find(
+  const entry = recordedStreamingMessages.find(
     (message) => message.agent === agent && message.recording === recording,
   );
   if (!entry)

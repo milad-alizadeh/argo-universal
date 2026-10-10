@@ -2,11 +2,8 @@ import type { SessionInfo } from '@repo/contracts';
 import { agentsList } from '@repo/mocks/app';
 import type * as React from 'react';
 import { View } from 'react-native';
-import {
-  SessionRow,
-  type SessionRowProps,
-} from '../src/features/sessions/components/session-row';
-import { useWide } from '../src/lib/generic/use-wide';
+import { useWide } from '../../../lib/generic/use-wide';
+import { SessionRow, type SessionRowProps } from './session-row';
 
 export function SessionRowListMock({
   sessions,

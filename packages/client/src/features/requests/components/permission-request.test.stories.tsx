@@ -4,17 +4,17 @@ import { expect, fn, waitFor, within } from 'storybook/test';
 import { toFeedView } from '#features/feed';
 import { FeedItem } from '#features/feed';
 import { PermissionOutcome } from '#features/feed';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
+import { RequestFrame } from '../../../lib/product/request-frame';
+import { PermissionRequest } from './permission-request';
+import galleryMeta, { Overview as Gallery } from './permission-request.stories';
 import {
   agentOptions,
   agentOptionsProps,
   agentOptionsWithAlwaysReject,
   permissionProps,
   permissionMocks,
-} from '../../../../mocks/request-mock';
-import { RequestFrame } from '../../../../mocks/request-preview';
-import { settleViewport } from '../../../../mocks/settle-viewport';
-import { PermissionRequest } from './permission-request';
-import galleryMeta, { Overview as Gallery } from './permission-request.stories';
+} from './request.mocks';
 
 const allowOnceLabel = 'Allow once';
 const allowedOnceAnswer = 'You allowed this once';

@@ -1,15 +1,12 @@
 import { PortalHost } from '@rn-primitives/portal';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { useWide } from '../../../lib/generic/use-wide';
 import {
   detailActionsHost,
   detailHeaderHost,
-} from '../src/features/sessions/components/session-header';
-import {
-  SessionScreen,
-  type SessionScreenProps,
-} from '../src/features/sessions/screens/session-screen';
-import { useWide } from '../src/lib/generic/use-wide';
+} from '../components/session-header';
+import { SessionScreen, type SessionScreenProps } from './session-screen';
 
 // The Session screen under the wide shell's detail header slots, or the phone's header mock.
 export function SessionScreenPreview(

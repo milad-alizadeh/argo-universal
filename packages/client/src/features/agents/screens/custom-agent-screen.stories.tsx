@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { customAgentMocks } from '../../../../mocks/custom-agent-mock';
+import { customAgentMocks } from '../../../../mocks/agents-mock';
 import { CustomAgentScreen } from './custom-agent-screen';
 
 const meta = {

@@ -1,6 +1,12 @@
 import type { RequestMock } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
+import { settleViewport } from '../../../lib/generic/settle-viewport';
+import { RequestFrame } from '../../../lib/product/request-frame';
+import { ElicitationForm } from './elicitation-form';
+import type { ElicitationValues } from './elicitation-form';
+import galleryMeta, { Overview as Gallery } from './elicitation-form.stories';
+import { ElicitationOutcome } from './elicitation-outcome';
 import {
   dateFormatsRequest,
   dateFormatsValues,
@@ -11,13 +17,7 @@ import {
   fieldsRequest,
   fieldsValues,
   invalidSchemaRequest,
-} from '../../../../mocks/request-mock';
-import { RequestFrame } from '../../../../mocks/request-preview';
-import { settleViewport } from '../../../../mocks/settle-viewport';
-import { ElicitationForm } from './elicitation-form';
-import type { ElicitationValues } from './elicitation-form';
-import galleryMeta, { Overview as Gallery } from './elicitation-form.stories';
-import { ElicitationOutcome } from './elicitation-outcome';
+} from './request.mocks';
 
 const answeredLabel = 'You answered';
 
