@@ -16,13 +16,14 @@ import { Children, isValidElement, useState } from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 
+// SwiftUI's grouped Form adds this inset above its first section.
+const groupedFormTopInset = 35;
+
 function Group({
   children,
 }: React.ComponentProps<typeof View>): React.JSX.Element {
   const { height } = useWindowDimensions();
   const background = useResolveClassNames('bg-card/50').backgroundColor;
-  // The sheet header already reserves top space; trim the Form's extra inset.
-  const topSpacing = useResolveClassNames('pt-6').paddingTop;
   const sections = Children.toArray(children).filter(
     isValidElement<React.ComponentProps<typeof View>>,
   );
@@ -34,9 +35,7 @@ function Group({
           Platform.OS === 'ios'
             ? [
                 scrollContentBackground('hidden'),
-                padding({
-                  top: typeof topSpacing === 'number' ? -topSpacing : 0,
-                }),
+                padding({ top: -groupedFormTopInset }),
               ]
             : []
         }

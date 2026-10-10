@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import {
@@ -7,6 +8,7 @@ import {
   composerUnlistedEffortConfigurations,
   composerUnavailableConfigurations,
 } from '../../mocks/composer-mock';
+import { updateComposerSettings } from '../../mocks/composer-settings-mock';
 import { ComposerAgentModelControl } from './composer-configuration';
 
 const configuration = composerUnlistedEffortConfigurations[0];
@@ -21,17 +23,28 @@ export default meta;
 
 export const DefaultEffort: StoryObj<typeof meta> = {
   name: 'Default effort',
-  render: (args) => (
-    <View className="p-4">
-      <ComposerAgentModelControl
-        {...args}
-        configuration={{
-          ...args.configuration,
-          onConfigChange: action('configuration changed'),
-        }}
-      />
-    </View>
-  ),
+  render: function ConfigurationRender(args) {
+    const [configOptions, setConfigOptions] = useState(
+      args.configuration.configOptions,
+    );
+    return (
+      <View className="p-4">
+        <ComposerAgentModelControl
+          {...args}
+          configuration={{
+            ...args.configuration,
+            configOptions,
+            onConfigChange: (configId, value) => {
+              action('configuration changed')(configId, value);
+              setConfigOptions((options) =>
+                updateComposerSettings(options, configId, value),
+              );
+            },
+          }}
+        />
+      </View>
+    );
+  },
 };
 
 const unavailableConfiguration = composerUnavailableConfigurations[0];
