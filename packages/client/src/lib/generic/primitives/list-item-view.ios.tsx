@@ -16,7 +16,7 @@ import {
   padding,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { useNativeTheme } from '../native-theme';
+import { type NativeColors, useNativeTheme } from '../native-theme';
 import { useWide } from '../use-wide';
 import { type ListItemProps, listItemName } from './field-props';
 import { ListItem as WebListItem } from './list-item-view.tsx';
@@ -30,19 +30,24 @@ const disabledOpacity = 0.5;
 
 export function ListItem(props: ListItemProps): React.JSX.Element {
   const wide = useWide();
-  const modifiers = useRowModifiers(props);
+  const { colors } = useNativeTheme();
   if (wide) return <WebListItem {...props} />;
+  // SwiftUI caches separator tint on the row; replace it when Appearance changes.
   return (
-    <Button onPress={props.onPress} modifiers={modifiers}>
+    <Button
+      key={colors.separator}
+      onPress={props.onPress}
+      modifiers={rowModifiers(props, colors)}
+    >
       <RowContent {...props} />
     </Button>
   );
 }
 
-function useRowModifiers(
+function rowModifiers(
   props: ListItemProps,
+  { muted, separator }: Pick<NativeColors, 'muted' | 'separator'>,
 ): React.ComponentProps<typeof Button>['modifiers'] {
-  const { muted, separator } = useNativeTheme().colors;
   return [
     buttonStyle('automatic'),
     listRowBackground(muted ?? 'transparent'),
