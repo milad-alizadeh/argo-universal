@@ -57,6 +57,8 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 
 ### 4. Spawn both sub-agents in parallel
 
+For changes to tests, fixtures, mocks or test wrappers, give the Standards reviewer `docs/agents/testing-seams.md` and pointers to existing suites covering the affected public behaviours, including relevant tests outside the diff. Require its coverage and boundary review, with compact evidence even when there are no findings.
+
 For adapter or CLI mock changes, give the Standards reviewer ADR-0015 and require an SDK type audit: inspect installed package exports and declarations (including tool input subpaths) or generated protocol types, name the types used for each changed vendor payload, and flag schemas or handwritten payload shapes that duplicate available vendor types. Check that both converters return the same shared result type; lifecycle differences use registered capabilities or shared Agent events. Include the audit evidence even when there are no findings.
 
 **Standards sub-agent prompt** should include:
