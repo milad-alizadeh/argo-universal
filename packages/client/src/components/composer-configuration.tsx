@@ -1,4 +1,3 @@
-import { LegendList } from '@legendapp/list/react-native';
 import type {
   AgentAvailability,
   AgentInfo,
@@ -7,8 +6,8 @@ import type {
   SessionConfigSelectOption,
 } from '@repo/contracts';
 import type * as React from 'react';
-import { useState } from 'react';
-import { View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Platform, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import type { IconName } from '#lib/icon-names';
@@ -19,8 +18,13 @@ import { Icon } from '../lib/icon';
 import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
 import { Slider } from '../primitives/slider';
+import {
+  publishAgentModelConfiguration,
+  useNativeSheets,
+} from './agent-model-sheet-context';
 import { ComposerPopover } from './composer-popover';
 import { useContentWide } from './content-layout';
+import { ScrollFadeList } from './scroll-fade-list';
 
 const destructiveTextClassName = 'text-destructive';
 
@@ -93,6 +97,7 @@ const configurationIcons: Record<string, IconName> = {
 } satisfies Record<ConfigOptionIcon, IconName>;
 const agentModelMenuWidth = 580;
 const agentMenuWidth = 280;
+const modelListMaxHeight = 320;
 function configurationIcon(name?: string): IconName {
   return (
     (name && Object.hasOwn(configurationIcons, name)
@@ -166,7 +171,7 @@ function Choice({
       aria-pressed={selected}
       onPress={onPress}
       className={cn(
-        'min-h-11 wide:min-h-8 h-auto sm:h-auto justify-start gap-2.5 px-2 py-1.5 rounded-sm',
+        'min-h-11 wide:min-h-8 h-auto sm:h-auto justify-start gap-2.5 px-2.5 wide:px-2 py-1.5 rounded-sm',
         'web:focus-visible:ring-0 web:focus-visible:bg-accent',
         selected && 'bg-accent',
         description && 'min-h-13 wide:min-h-0',
@@ -225,7 +230,7 @@ function MenuHeading({ children }: { children: string }): React.JSX.Element {
   );
 }
 
-function AgentChoices({
+export function AgentChoices({
   configuration,
   onSelect,
 }: {
@@ -261,7 +266,7 @@ function AgentChoices({
           }}
           aria-pressed={agent.agent === configuration.agent}
           className={cn(
-            'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
+            'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2.5 has-[>[data-icon]]:px-2.5 wide:px-2 wide:has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
             configuration.onAgentChange &&
               agent.agent === configuration.agent &&
               'bg-accent',
@@ -328,40 +333,36 @@ function AgentChoices({
   );
   if (wide)
     return (
-      <View className="relative flex-1 min-h-0">
-        <LegendList
-          {...listTestIdProps('composer-agents-scroll')}
-          style={{ position: 'absolute', inset: 0 }}
-          contentContainerStyle={{
-            paddingHorizontal: 4,
-            paddingTop: 2,
-            paddingBottom: 4,
-          }}
-          data={agents}
-          keyExtractor={(agent) => agent.agent}
-          renderItem={({ item }) => renderAgent(item)}
-          estimatedItemSize={34}
-          ItemSeparatorComponent={AgentSeparator}
-          ListFooterComponent={footer}
-          extraData={configuration}
-          recycleItems={false}
-          keyboardShouldPersistTaps="handled"
-        />
-      </View>
+      <ScrollFadeList
+        {...listTestIdProps('composer-agents-scroll')}
+        surfaceClassName="bg-sidebar"
+        contentContainerStyle={{
+          paddingHorizontal: 4,
+          paddingTop: 2,
+          paddingBottom: 4,
+        }}
+        data={agents}
+        keyExtractor={(agent) => agent.agent}
+        renderItem={({ item }) => renderAgent(item)}
+        estimatedItemSize={34}
+        ItemSeparatorComponent={ChoiceSeparator}
+        ListFooterComponent={footer}
+        extraData={configuration}
+      />
     );
   return (
-    <View className="p-1 gap-0.5">
+    <View className="px-gutter-list py-1 wide:p-1 gap-0.5">
       {agents.map(renderAgent)}
       {footer}
     </View>
   );
 }
 
-function AgentSeparator(): React.JSX.Element {
+function ChoiceSeparator(): React.JSX.Element {
   return <View className="h-0.5" />;
 }
 
-function ModelChoices({
+export function ModelChoices({
   configuration,
   onSelect,
 }: {
@@ -371,7 +372,7 @@ function ModelChoices({
   const model = selection(configuration, 'model');
   if (!model) return null;
   return (
-    <View className="p-1 wide:pt-0.5 gap-0.5">
+    <View className="px-gutter-list py-1 wide:p-1 wide:pt-0.5 gap-0.5">
       {choices(model).map((choice) => (
         <Choice
           key={choice.value}
@@ -389,6 +390,44 @@ function ModelChoices({
   );
 }
 
+// The desktop model list grows with its models up to a cap, then scrolls.
+function ModelList({
+  configuration,
+}: {
+  configuration: ComposerConfigurationProps;
+}): React.JSX.Element | null {
+  const model = selection(configuration, 'model');
+  if (!model) return null;
+  return (
+    <ScrollFadeList
+      {...listTestIdProps('composer-models-scroll')}
+      surfaceClassName="bg-popover"
+      maxHeight={modelListMaxHeight}
+      contentContainerStyle={{
+        paddingHorizontal: 4,
+        paddingTop: 2,
+        paddingBottom: 4,
+      }}
+      data={choices(model)}
+      keyExtractor={(choice) => choice.value}
+      renderItem={({ item: choice }) => (
+        <Choice
+          selected={choice.value === model.currentValue}
+          label={modelName(choice)}
+          accessibilityLabel={choice.name}
+          description={choice.description}
+          onPress={() =>
+            configuration.onConfigChange(model.configId, choice.value)
+          }
+        />
+      )}
+      estimatedItemSize={40}
+      ItemSeparatorComponent={ChoiceSeparator}
+      extraData={configuration}
+    />
+  );
+}
+
 function EffortControl({
   configuration,
 }: {
@@ -401,33 +440,55 @@ function EffortControl({
   } = currentEffort(configuration);
   if (!effort || !effortChoices.length) return null;
   const selectedIndex = selected ? effortChoices.indexOf(selected) : undefined;
+  const levelLabel = selected?.name ?? 'No selection';
+  const onSliderChange = (index: number): void => {
+    const choice = effortChoices[Math.round(index)];
+    if (choice) configuration.onConfigChange(effort.configId, choice.value);
+  };
+  const slider = (
+    <Slider
+      accessibilityLabel="Effort"
+      valueLabel={levelLabel}
+      minimumValue={0}
+      maximumValue={Math.max(1, effortChoices.length - 1)}
+      step={1}
+      value={selectedIndex}
+      onValueChange={onSliderChange}
+    />
+  );
+  // Phones draw the system slider under a row like Agent and Model, with the level on the right.
+  if (Platform.OS !== 'web')
+    return (
+      <View className="px-gutter pb-3">
+        <View className="h-11 flex-row items-center gap-2">
+          <Text selectable={false} className="select-none flex-1 type-body">
+            Effort
+          </Text>
+          <Text
+            selectable={false}
+            className="select-none type-body text-muted-foreground"
+          >
+            {levelLabel}
+          </Text>
+        </View>
+        {slider}
+      </View>
+    );
   return (
-    <View className="px-3 pt-2.5 pb-3 gap-2.5">
+    <View className="px-gutter wide:px-3 pt-2.5 pb-3 gap-2.5">
       <View className="gap-0.5">
         <Text
           selectable={false}
           className="select-none type-badge text-muted-foreground"
         >
-          {selected ? 'Effort' : 'No selection'}
+          {selected ? 'Effort' : levelLabel}
         </Text>
         <Text selectable={false} className="select-none type-secondary">
           More effort trades speed for deeper reasoning.
         </Text>
       </View>
       <View className="gap-1.5">
-        <Slider
-          accessibilityLabel="Effort"
-          valueLabel={selected?.name ?? 'No selection'}
-          minimumValue={0}
-          maximumValue={Math.max(1, effortChoices.length - 1)}
-          step={1}
-          value={selectedIndex}
-          onValueChange={(index) => {
-            const choice = effortChoices[Math.round(index)];
-            if (choice)
-              configuration.onConfigChange(effort.configId, choice.value);
-          }}
-        />
+        {slider}
         <View className="flex-row justify-between px-1.5">
           {effortChoices.map((choice, index) => {
             let effortAlignment: string;
@@ -476,13 +537,17 @@ function EffortControl({
   );
 }
 
-function AgentModelMenu({
+export function AgentModelMenu({
   configuration,
+  onOpenPage,
 }: {
   configuration: ComposerConfigurationProps;
+  // A native sheet pushes its own pages; otherwise the menu swaps them in place.
+  onOpenPage?: (page: 'agent' | 'model') => void;
 }): React.JSX.Element {
   const wide = useWide();
   const [page, setPage] = useState<'settings' | 'agent' | 'model'>('settings');
+  const openPage = onOpenPage ?? setPage;
   const agent = configuration.agents.find(
     (entry) => entry.agent === configuration.agent,
   );
@@ -547,10 +612,10 @@ function AgentModelMenu({
             <View className="px-1 pt-1">
               <MenuHeading>Model</MenuHeading>
             </View>
-            <ModelChoices configuration={configuration} onSelect={() => {}} />
+            <ModelList configuration={configuration} />
           </>
         ) : (
-          <View className="p-1 gap-0.5">
+          <View className="px-gutter-list py-1 wide:p-1 gap-0.5">
             <Button
               variant="ghost"
               accessibilityLabel="Choose Agent"
@@ -558,8 +623,8 @@ function AgentModelMenu({
                 !configuration.onAgentChange &&
                 agent?.availability === 'available'
               }
-              onPress={() => setPage('agent')}
-              className="h-11 sm:h-11 px-2 gap-2 justify-start"
+              onPress={() => openPage('agent')}
+              className="h-11 sm:h-11 px-2.5 gap-2 justify-start"
             >
               <Text selectable={false} className="select-none flex-1 type-body">
                 Agent
@@ -590,8 +655,8 @@ function AgentModelMenu({
             <Button
               variant="ghost"
               accessibilityLabel="Choose model"
-              onPress={() => setPage('model')}
-              className="h-11 sm:h-11 px-2 gap-2 justify-start"
+              onPress={() => openPage('model')}
+              className="h-11 sm:h-11 px-2.5 gap-2 justify-start"
             >
               <Text selectable={false} className="select-none flex-1 type-body">
                 Model
@@ -612,7 +677,7 @@ function AgentModelMenu({
         )}
         <EffortControl configuration={configuration} />
         {configuration.turnRunning && (
-          <View className="flex-row gap-2 px-3 py-2.5 bg-muted">
+          <View className="flex-row gap-2 px-gutter wide:px-3 py-2.5 bg-muted">
             <Icon name="waiting" className="text-muted-foreground" />
             <Text
               selectable={false}
@@ -635,6 +700,7 @@ export function ComposerAgentModelControl({
   disabled: boolean;
 }): React.JSX.Element | null {
   const wide = useContentWide();
+  const windowWide = useWide();
   const model = selection(configuration, 'model');
   const current = choices(model).find(
     (choice) => choice.value === model?.currentValue,
@@ -643,12 +709,18 @@ export function ComposerAgentModelControl({
   const agent = configuration.agents.find(
     (entry) => entry.agent === configuration.agent,
   );
+  const presentSheet = useNativeSheets()?.agentModel;
+  const nativeSheet = presentSheet && !windowWide;
+  useEffect(() => {
+    if (nativeSheet) publishAgentModelConfiguration(configuration);
+  }, [nativeSheet, configuration]);
   if (!model && !agent) return null;
   return (
     <ComposerPopover
       label="Agent and model"
       width={model ? agentModelMenuWidth : agentMenuWidth}
       className="shrink min-w-0"
+      onPresent={nativeSheet ? presentSheet : undefined}
       trigger={
         <Button
           variant="ghost"
@@ -748,7 +820,7 @@ export function ComposerModeControl({
       }
     >
       {(close) => (
-        <View className="p-1 gap-0.5">
+        <View className="px-gutter-list py-1 wide:p-1 gap-0.5">
           <Text
             selectable={false}
             className="select-none px-2 pt-1.5 pb-1 type-badge text-muted-foreground"
@@ -794,7 +866,7 @@ export function CheckoutContents({
   close: () => void;
 }): React.JSX.Element {
   return (
-    <View className="p-1 gap-0.5">
+    <View className="px-gutter-list py-1 wide:p-1 gap-0.5">
       {[false, true].map((newWorktree) => (
         <Choice
           key={String(newWorktree)}

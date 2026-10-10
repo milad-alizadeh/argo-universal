@@ -15,13 +15,12 @@ export {
   toFeedRowWrite,
 } from './feed-row';
 export type { FeedDeps } from './feed';
+export { type WriterJob, writeJobs } from './writer-job';
 export {
-  type WriterJob,
-  applyQueuedSession,
-  applyQueuedTurns,
-  queuedFeedRows,
-  writeJobs,
-} from './writer-job';
+  readWriterProjection,
+  type WriterProjection,
+} from './writer-projection';
+export type { WriterChange } from './writer-changes';
 export { type WriterEvent, writerMachine } from './writer-machine';
 export type { WriterCommit } from './writer-commit';
 export { writeDatabaseJobAndWaitForCommit } from './database-write';

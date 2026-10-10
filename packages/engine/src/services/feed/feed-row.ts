@@ -2,17 +2,12 @@ import { SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, eq, getTableColumns, sql } from 'drizzle-orm';
-import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
-import type { WriterJob } from './writer-job';
-import type { writerMachine } from './writer-machine';
 
 export type FeedRowWrite = Omit<
   typeof feedRow.$inferInsert,
   'sessionId' | 'createdAt' | 'updatedAt'
 >;
-
-type WriterRef = ActorRefFrom<typeof writerMachine>;
 
 export const storedFeedColumns = {
   ...getTableColumns(feedRow),
@@ -89,37 +84,19 @@ export function hydrateStoredFeedRow(
   return SessionUpdate.parse({ ...payload, ...envelope });
 }
 
-// The newest version of a row in jobs that have not committed.
-export function findQueuedRow(
-  jobs: readonly WriterJob[],
-  sessionId: string,
-  id: string,
-): SessionUpdate | undefined {
-  return newestRows(
-    jobs.flatMap((job): SessionUpdate[] =>
-      job.type === 'feedRows' && job.sessionId === sessionId ? job.rows : [],
-    ),
-  ).get(id);
-}
-
 // The newest version of a row the feed actor handed to the database writer, queued or stored.
 export function readWrittenRow({
   database,
-  writer,
+  pending,
   sessionId,
   id,
 }: {
   database: Database;
-  writer: WriterRef | undefined;
+  pending: SessionUpdate | undefined;
   sessionId: string;
   id: string;
 }): SessionUpdate | undefined {
-  const queued = findQueuedRow(
-    writer?.getSnapshot().context.queue ?? [],
-    sessionId,
-    id,
-  );
-  if (queued) return queued;
+  if (pending) return pending;
   const stored = database
     .select(storedFeedColumns)
     .from(feedRow)

@@ -37,7 +37,7 @@ const input = {
   sessions,
   writer: undefined,
   readRows: (): never[] => [],
-  sessionIdsForJobs: (): never[] => [],
+  sessionIdsForChanges: (): never[] => [],
   relatedSessionIds: (ids: readonly string[]): string[] => [...ids],
 };
 const machine = sessionListMachine.provide({

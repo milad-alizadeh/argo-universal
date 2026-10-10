@@ -39,7 +39,7 @@ export function createSessionList(options: {
     findDatabaseWriter(sessions.system);
   const {
     readRows: readAllSessionRows,
-    sessionIdsForJobs,
+    sessionIdsForChanges,
     relatedSessionIds,
   } = createSessionListReader({
     database: options.database,
@@ -50,7 +50,7 @@ export function createSessionList(options: {
     sessions,
     writer: findWriterActor,
     readRows: readAllSessionRows,
-    sessionIdsForJobs,
+    sessionIdsForChanges,
     relatedSessionIds,
   });
   const listSessions = async (
@@ -178,7 +178,7 @@ function createSessionListObserver({
   sessions,
   writer,
   readRows,
-  sessionIdsForJobs,
+  sessionIdsForChanges,
   relatedSessionIds,
 }: Omit<SessionListMachineInput, 'writer'> & {
   writer: () => SessionListMachineInput['writer'];
@@ -197,7 +197,7 @@ function createSessionListObserver({
         sessions,
         writer: writer(),
         readRows,
-        sessionIdsForJobs,
+        sessionIdsForChanges,
         relatedSessionIds,
       },
     });
