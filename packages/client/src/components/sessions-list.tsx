@@ -129,6 +129,15 @@ function useRevealLoadingFooter(isFetchingNextPage: boolean): {
   };
 }
 
+// Legend List's web build hands unknown props to its DOM element, and never calls onContentSizeChange.
+function nativeOnlyListProps(onContentSizeChange: () => void): {
+  contentInsetAdjustmentBehavior?: 'automatic';
+  onContentSizeChange?: () => void;
+} {
+  if (Platform.OS === 'web') return {};
+  return { contentInsetAdjustmentBehavior: 'automatic', onContentSizeChange };
+}
+
 // On native, rows that move, appear or leave animate into place.
 function useAnimateReorder(entries: SessionsListEntry[]): void {
   const entryOrder = entries.map((entry) => entry.id).join('|');
@@ -230,13 +239,12 @@ export function SessionsList({
           extraData={extraData}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
-          contentInsetAdjustmentBehavior="automatic"
           ListHeaderComponent={header}
           onScroll={(event) => {
             scrollFade.onScroll(event);
             loadingFooter.trackAtEnd(event);
           }}
-          onContentSizeChange={loadingFooter.revealIfPending}
+          {...nativeOnlyListProps(loadingFooter.revealIfPending)}
           ListFooterComponent={
             isFetchingNextPage ? <LoadingMoreSessions /> : null
           }
