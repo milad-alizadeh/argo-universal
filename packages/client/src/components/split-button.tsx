@@ -6,8 +6,8 @@ import { Button } from '#primitives/button';
 import { ButtonGroup } from '#primitives/button-group';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
+import { BottomSheet } from '../primitives/bottom-sheet';
 import { ChoiceMenu } from './choice-menu';
-import { ComposerSheet } from './composer-sheet';
 import { useContentWide } from './content-layout';
 
 export interface SplitButtonChoice<Value extends string> {
@@ -91,8 +91,6 @@ function ChoiceDropdown<Value extends string>(
   );
 }
 
-const ignoreClosed = (): void => undefined;
-
 function ChoiceSheet<Value extends string>(
   props: ChoiceProps<Value>,
 ): ReactNode {
@@ -100,10 +98,9 @@ function ChoiceSheet<Value extends string>(
   const [open, setOpen] = useState(false);
   if (disabled && open) setOpen(false);
   return (
-    <ComposerSheet
+    <BottomSheet
       open={open}
       onOpenChange={setOpen}
-      onClosed={ignoreClosed}
       label={menuLabel}
       trigger={chevron(props, false, props.className)}
     >
@@ -129,6 +126,6 @@ function ChoiceSheet<Value extends string>(
           </Button>
         ))}
       </View>
-    </ComposerSheet>
+    </BottomSheet>
   );
 }

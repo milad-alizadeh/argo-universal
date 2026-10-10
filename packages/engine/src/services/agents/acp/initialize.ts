@@ -10,7 +10,7 @@ const initializeRequest: InitializeRequest = {
   protocolVersion: 1,
   clientCapabilities: {
     plan: {},
-    session: { notices: {}, compaction: {} },
+    session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
     elicitation: { form: {} },
   },
 };

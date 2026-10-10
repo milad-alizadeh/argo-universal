@@ -26,6 +26,121 @@
   }
 }
 
+/* Content Presence observes Radix's outer node; Portal Presence observes the
+   inner RN view. Both must finish closing before focus and picker handoff. */
+[role="dialog"]:has(> .bottom-sheet),
+[role="dialog"]:has(> .popover-content),
+[data-state]:has(> .bottom-sheet-overlay) {
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+[role="dialog"]:has(> .bottom-sheet) {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 50;
+  animation-name: bottom-sheet-in;
+}
+[data-state]:has(> .bottom-sheet-overlay) {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  animation-name: overlay-in;
+}
+[role="dialog"]:has(> .popover-content) {
+  transform-origin: var(--radix-popover-content-transform-origin);
+  animation-name: popover-in;
+}
+[data-state="closed"]:has(> .bottom-sheet-overlay),
+[role="dialog"][data-state="closed"]:has(> .bottom-sheet),
+[role="dialog"][data-state="closed"]:has(> .popover-content) {
+  animation-duration: 150ms;
+  animation-timing-function: ease-in;
+}
+[role="dialog"][data-state="closed"]:has(> .bottom-sheet) {
+  animation-name: bottom-sheet-out;
+}
+[data-state="closed"]:has(> .bottom-sheet-overlay) {
+  animation-name: overlay-out;
+}
+[role="dialog"][data-state="closed"]:has(> .popover-content) {
+  animation-name: popover-out;
+}
+.bottom-sheet[data-state="closed"],
+.bottom-sheet-overlay[data-state="closed"],
+.popover-content[data-state="closed"] {
+  animation: overlay-presence-out 150ms ease-in;
+}
+@keyframes overlay-presence-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes bottom-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes bottom-sheet-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes popover-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [role="dialog"]:has(> .bottom-sheet),
+  [role="dialog"]:has(> .popover-content),
+  [data-state]:has(> .bottom-sheet-overlay),
+  .bottom-sheet[data-state="closed"],
+  .bottom-sheet-overlay[data-state="closed"],
+  .popover-content[data-state="closed"] {
+    animation-duration: 0.01ms;
+  }
+}
+
 @media (hover: hover) {
   .code-block-copy {
     opacity: 0;
@@ -35,4 +150,9 @@
   .code-block-copy.is-copied {
     opacity: 1;
   }
+}
+
+/* Radix positions a wrapper around native-web Content; tips opened from sheets share their layer. */
+[data-radix-popper-content-wrapper]:has(.popover-content) {
+  z-index: 50 !important;
 }

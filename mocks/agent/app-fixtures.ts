@@ -1,6 +1,7 @@
 import { agentAdapters } from '@repo/agents';
 import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { z } from 'zod';
+import { appConfiguration } from './acp-configuration';
 import { createMockAdapter, type MockAgentScript } from './adapter';
 
 export const AppFixtureOptions = z.object({
@@ -22,7 +23,7 @@ function fixtureProbe(options: z.output<typeof AppFixtureOptions>): AgentProbe {
       options.availability === 'available'
         ? undefined
         : 'Set up this Agent to start a Session.',
-    configOptions: [],
+    configOptions: options.availability === 'available' ? appConfiguration : [],
   };
 }
 

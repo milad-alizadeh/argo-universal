@@ -1,12 +1,10 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import type { ComposerSheetProps } from './composer-sheet-layout';
+import type { BottomSheetProps } from './bottom-sheet.types';
 
-export type { ComposerSheetProps } from './composer-sheet-layout';
-
-export function ComposerSheet({
+export function BottomSheet({
   style,
   open,
   onOpenChange,
@@ -14,20 +12,22 @@ export function ComposerSheet({
   trigger,
   label,
   children,
-}: ComposerSheetProps): React.JSX.Element {
-  useEffect(() => {
-    if (!open) onClosed();
-  }, [open, onClosed]);
+}: BottomSheetProps): React.JSX.Element {
   return (
     <DialogPrimitive.Root style={style} open={open} onOpenChange={onOpenChange}>
-      <DialogPrimitive.Trigger asChild disabled={trigger.props.disabled}>
+      <DialogPrimitive.Trigger asChild disabled={!!trigger.props.disabled}>
         {trigger}
       </DialogPrimitive.Trigger>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="web:fixed absolute inset-0 z-50 bg-black/20" />
+        <DialogPrimitive.Overlay
+          data-state={open ? 'open' : 'closed'}
+          className="bottom-sheet-overlay absolute inset-0 bg-black/20"
+        />
         <DialogPrimitive.Content
+          data-state={open ? 'open' : 'closed'}
           aria-describedby={undefined}
-          className="web:fixed absolute bottom-0 left-0 right-0 z-50 max-h-[85vh] rounded-t-xl bg-popover pb-8.5 shadow-sheet outline-none"
+          onCloseAutoFocus={onClosed}
+          className="bottom-sheet max-h-[85vh] rounded-t-xl bg-popover pb-8.5 shadow-sheet outline-none"
         >
           <DialogPrimitive.Title className="sr-only">
             {label}

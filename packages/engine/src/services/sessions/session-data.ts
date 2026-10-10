@@ -10,7 +10,7 @@ import { type Checkout, createCheckout, discardCheckout } from '@repo/git';
 import { and, desc, eq, max } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
-import { readWriterProjection, type WriterJob } from '../feed';
+import { readWriterProjection, titleFromPrompt, type WriterJob } from '../feed';
 import type { writerMachine } from '../feed';
 import { decodeStoredSession, storedSessionColumns } from './session-record';
 
@@ -75,17 +75,7 @@ export async function createSessionCheckout(
   };
 }
 
-// The first line of the prompt's text, which titles the Session until the Agent names it.
-export function titleFromPrompt(prompt: SessionNewInput['prompt']): string {
-  return (
-    prompt
-      .flatMap((block): string[] =>
-        block.type === 'text' ? block.text.split('\n') : [],
-      )
-      .map((line): string => line.trim())
-      .find(Boolean) ?? ''
-  );
-}
+export { titleFromPrompt } from '../feed';
 
 // The writer job that stores the Session and remembers its checkout choice on the Project.
 export function toSessionInsert(

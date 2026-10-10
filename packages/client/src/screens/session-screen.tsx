@@ -1,6 +1,6 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -14,6 +14,8 @@ import {
   SessionHeader,
   type SessionHeaderStatus,
 } from '#components/session-header';
+import { Button } from '#primitives/button';
+import { Text } from '#primitives/text';
 import { useConnectionState } from '../connection/context';
 import { useSessionFeed } from '../feed/use-session-feed';
 import { useNavigate } from '../navigation/context';
@@ -22,6 +24,10 @@ import { useBlobUrl } from '../trpc/blob-url';
 import type { ClientError } from '../trpc/context';
 import { useTRPC } from '../trpc/context';
 import { useAgents } from '../trpc/use-agents';
+import {
+  isRememberedConfiguration,
+  rememberSessionConfiguration,
+} from './session-configuration-preferences';
 import { useImageDraft } from './use-image-draft';
 
 type SessionMutation<Name extends 'prompt' | 'cancel' | 'setConfigOption'> =
@@ -91,6 +97,12 @@ function SessionView({
     loadOlder,
   } = useSessionFeed(sessionId);
   const agents = useAgents();
+  const trpc = useTRPC();
+  const closeSession = useMutation(
+    trpc.session.close.mutationOptions({
+      onSuccess: () => navigate({ to: 'sessions' }),
+    }),
+  );
   const {
     draft,
     changeDraft,
@@ -101,7 +113,7 @@ function SessionView({
     cancelTurn,
     setConfigOption,
     sendDraft,
-  } = useSessionCommands(sessionId, resumeAfterCommand);
+  } = useSessionCommands(sessionId, resumeAfterCommand, snapshot?.agent);
 
   if (error)
     return (
@@ -138,6 +150,10 @@ function SessionView({
   else if (promptSession.error)
     sendError = `Couldn't send. ${promptSession.error.message}`;
   else if (attachmentError) sendError = attachmentError.message;
+  else if (setConfigOption.error)
+    sendError = `Couldn't change settings. ${setConfigOption.error.message}`;
+  else if (closeSession.error)
+    sendError = `Couldn't close the Session. ${closeSession.error.message}`;
 
   return (
     <Screen edges={['bottom']}>
@@ -166,6 +182,18 @@ function SessionView({
         />
         {/* The bottom slot: the Composer until request cards and banners land. */}
         <View className="relative z-10 -mt-12 items-center px-4 wide:px-6 wide:pb-4">
+          {!turnRunning && view.items.length === 0 && (
+            <Button
+              variant="ghost"
+              accessibilityLabel="Cancel creation"
+              disabled={
+                !connected || closeSession.isPending || promptSession.isPending
+              }
+              onPress={() => closeSession.mutate({ sessionId })}
+            >
+              <Text>Cancel creation</Text>
+            </Button>
+          )}
           <View
             pointerEvents="none"
             className="absolute inset-x-0 top-16 bottom-0 bg-card"
@@ -183,7 +211,11 @@ function SessionView({
             onAttachImages={() => void attachImages()}
             onSend={(sent) => void sendDraft(sent)}
             onStop={() => cancelTurn.mutate({ sessionId })}
-            sending={uploading || promptSession.isPending}
+            sending={
+              uploading ||
+              promptSession.isPending ||
+              (!turnRunning && setConfigOption.isPending)
+            }
             sendable={connected}
             error={sendError}
             writtenPlan={
@@ -226,8 +258,10 @@ function SessionView({
 function useSessionCommands(
   sessionId: string,
   resumeAfterCommand: () => void,
+  agent: string | undefined,
 ): SessionCommands {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { clearDraft, uploadDraftAsPrompt, ...draft } = useImageDraft();
   const promptSession = useMutation(
     trpc.session.prompt.mutationOptions({
@@ -242,7 +276,15 @@ function useSessionCommands(
   );
   const setConfigOption = useMutation(
     trpc.session.setConfigOption.mutationOptions({
-      onSuccess: resumeAfterCommand,
+      onSuccess: ({ configOptions }, { configId }) => {
+        resumeAfterCommand();
+        if (!agent) return;
+        const changed = configOptions.find(
+          (option) => option.configId === configId,
+        );
+        if (changed && isRememberedConfiguration(changed))
+          rememberSessionConfiguration(queryClient, agent, configOptions);
+      },
     }),
   );
   async function sendDraft(sent: ComposerDraft): Promise<void> {

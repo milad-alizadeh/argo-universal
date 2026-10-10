@@ -3,8 +3,8 @@ import { View } from 'react-native';
 import { Button } from '#primitives/button';
 import { Input } from '#primitives/input';
 import { Label } from '#primitives/label';
-import { Popover, PopoverContent, PopoverTrigger } from '#primitives/popover';
 import { Text } from '#primitives/text';
+import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 function PopoverPreview() {
   return (

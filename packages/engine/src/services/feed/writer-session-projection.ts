@@ -1,4 +1,5 @@
 import { SessionRecord } from '@repo/contracts';
+import { titleFromRows } from './prompt-title';
 import type { WriterJob } from './writer-job';
 
 type SessionJob = Extract<
@@ -71,6 +72,10 @@ const advancedSession = (
         ...current,
         maxRevision: job.maxRevision,
         activityAt: job.activityAt ?? current.activityAt,
+        title:
+          current.titleSource === 'prompt' && current.title === ''
+            ? titleFromRows(job.rows)
+            : current.title,
       }
     : current;
 

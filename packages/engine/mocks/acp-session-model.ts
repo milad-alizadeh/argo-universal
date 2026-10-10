@@ -12,6 +12,7 @@ import { sessionMachine } from '../src/services/sessions';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
 const closeEvent = 'session.close';
+const updateEvent = 'acp.update';
 const modelRequest = 'model-request';
 const canApplyLifecycleEvent = (
   snapshot: AcpModelSnapshot,
@@ -20,8 +21,11 @@ const canApplyLifecycleEvent = (
   const invoking = {
     'xstate.done.actor.openAcp': 'opening',
     'xstate.error.actor.openAcp': 'opening',
+    'xstate.done.actor.configureAcp': 'configuring',
+    'xstate.error.actor.configureAcp': 'configuring',
     'xstate.done.actor.commitPrompt': 'committing',
     'xstate.error.actor.commitPrompt': 'committing',
+    'xstate.error.actor.cancelAcp': { activeTurn: 'cancelling' },
     'xstate.done.actor.promptAcp': 'activeTurn',
     'xstate.error.actor.promptAcp': 'activeTurn',
     'xstate.done.actor.publishTurn': 'publishing',
@@ -44,6 +48,7 @@ const canApplyLifecycleEvent = (
   if (
     event.type === 'session.prompt' ||
     event.type === 'session.cancel' ||
+    event.type === 'session.setConfigOption' ||
     event.type === 'session.storageFailing' ||
     event.type === 'session.answerPermission' ||
     event.type === 'session.answerElicitation'
@@ -52,6 +57,14 @@ const canApplyLifecycleEvent = (
   return snapshot.matches({ open: 'acp' });
 };
 type AcpModelEvent = GraphEventFromLogic<typeof sessionMachine>;
+export function acpModelEventKey(event: AcpModelEvent): string {
+  if ('error' in event && event.error instanceof RecoveryBlockedError)
+    return `${event.type} blocked`;
+  return event.type === updateEvent
+    ? `${event.type}:${event.notification.update.sessionUpdate}`
+    : event.type;
+}
+
 // After a crash the model walks only the recovery loop, which keeps the crash count from multiplying every state.
 const walksAfterCrash = (
   snapshot: AcpModelSnapshot,
@@ -87,6 +100,23 @@ export const createAcpSessionModel = (
    */
   Object.assign(fromState.children, initial.children);
   const events = [
+    { type: 'session.cancel' },
+    {
+      type: 'xstate.error.actor.cancelAcp',
+      actorId: 'cancelAcp',
+      error: new Error('cancel failed'),
+    },
+    { type: 'session.setConfigOption', configId: 'fast', value: true },
+    {
+      type: 'xstate.done.actor.configureAcp',
+      actorId: 'configureAcp',
+      output: [],
+    },
+    {
+      type: 'xstate.error.actor.configureAcp',
+      actorId: 'configureAcp',
+      error: new Error('configuration failed'),
+    },
     {
       type: 'session.prompt',
       turnId: 'model-turn',
@@ -126,7 +156,17 @@ export const createAcpSessionModel = (
       error: new Error('publication failed'),
     },
     {
-      type: 'acp.update',
+      type: updateEvent,
+      notification: {
+        sessionId: lease.sessionId,
+        update: {
+          sessionUpdate: 'config_option_update',
+          configOptions: [],
+        },
+      },
+    },
+    {
+      type: updateEvent,
       notification: {
         sessionId: lease.sessionId,
         update: {
@@ -167,11 +207,14 @@ export const createAcpSessionModel = (
     },
     { type: 'acp.requestWithdrawn', requestId: modelRequest },
     { type: 'agent.messageRejected', reason: 'Malformed model question' },
-    { type: 'session.cancel' },
     { type: 'session.storageFailing' },
     { type: closeEvent },
     { type: 'acp.failed', error: new Error('connection failed') },
-    { type: 'xstate.done.actor.openAcp', actorId: 'openAcp', output: lease },
+    {
+      type: 'xstate.done.actor.openAcp',
+      actorId: 'openAcp',
+      output: { lease, configOptions: initial.context.configOptions },
+    },
     {
       type: 'xstate.done.actor.publishInterruptedTurn',
       actorId: 'publishInterruptedTurn',
@@ -186,7 +229,7 @@ export const createAcpSessionModel = (
     {
       type: 'xstate.done.actor.reopenAcp',
       actorId: 'reopenAcp',
-      output: lease,
+      output: { lease, configOptions: initial.context.configOptions },
     },
     {
       type: 'xstate.error.actor.reopenAcp',
@@ -230,10 +273,7 @@ export const createAcpSessionModel = (
     fromState,
     events,
     limit: 10_000,
-    serializeEvent: (event: AcpModelEvent): string =>
-      'error' in event && event.error instanceof RecoveryBlockedError
-        ? `${event.type} blocked`
-        : event.type,
+    serializeEvent: acpModelEventKey,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
       snapshot.status === 'active' &&
       walksAfterCrash(snapshot, event) &&
@@ -248,8 +288,9 @@ export const createAcpSessionModel = (
         failure: snapshot.context.failure !== null,
         stored: snapshot.context.stored,
         feedEnded: snapshot.context.feedEnded,
-        crashes: snapshot.context.agentCrashes.length,
-        via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
+        via:
+          event &&
+          `${JSON.stringify(previous?.value)} ${acpModelEventKey(event)}`,
       }),
   };
   return {

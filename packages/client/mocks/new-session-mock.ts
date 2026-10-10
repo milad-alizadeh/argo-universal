@@ -6,6 +6,7 @@ import {
   newSessionProjects,
   serverInfo,
 } from '@repo/mocks/app';
+import { configurationChoices } from '../src/components/composer-configuration';
 import type { FixtureOutput } from './trpc-mock-link';
 import { type Fixtures, fails, pending } from './trpc-mock-link';
 
@@ -25,6 +26,25 @@ export const newSessionMocks = {
   'session.new': (): FixtureOutput<'session.new'> => ({
     sessionId: 'new-session',
   }),
+} satisfies Fixtures;
+
+const restrictedEffortCatalog = structuredClone(
+  newSessionCatalogs.bothAvailable,
+);
+const restrictedModels = restrictedEffortCatalog.flatMap((agent) =>
+  agent.configOptions.flatMap((option) =>
+    option.type === 'select' && option.category === 'model'
+      ? configurationChoices(option)
+      : [],
+  ),
+);
+for (const choice of restrictedModels)
+  if (choice._meta?.argo?.supportsEffort)
+    choice._meta.argo.supportedEffortLevels = ['high'];
+
+export const restrictedEffortNewSessionMocks = {
+  ...newSessionMocks,
+  'agents.list': (): typeof restrictedEffortCatalog => restrictedEffortCatalog,
 } satisfies Fixtures;
 
 export const notInstalledNewSessionMocks = {

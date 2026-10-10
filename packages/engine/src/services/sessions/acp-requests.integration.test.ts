@@ -189,6 +189,67 @@ const requestWithdrawablePermission =
     return new Promise(() => {});
   };
 
+it.each(
+  appFixtureAgentIds.flatMap((agent) =>
+    (['Permission', 'Elicitation'] as const).map((kind) => ({ agent, kind })),
+  ),
+)(
+  '$agent Stop cancels a pending $kind, refuses late answers and ends its Turn',
+  async ({ agent, kind }) => {
+    const response = Promise.withResolvers<
+      RequestPermissionResponse | CreateElicitationResponse
+    >();
+    const cancelReceived = Promise.withResolvers<void>();
+    const host = await startAcpEngine(
+      {
+        cancel: () => cancelReceived.resolve(),
+        prompt: async ({ params, client }) => {
+          response.resolve(
+            await (kind === 'Permission'
+              ? client.request(
+                  requestPermission,
+                  permissionRequest(params.sessionId, 'tool-a'),
+                )
+              : client.request(createElicitation, issueForm(params.sessionId))),
+          );
+          await cancelReceived.promise;
+          return { stopReason: 'cancelled' };
+        },
+      },
+      undefined,
+      agent,
+    );
+    const { sessionId } = await host.caller.session.new({
+      ...emptySessionInput,
+      agent,
+    });
+    await promptSession(host, sessionId);
+    const pending = await (kind === 'Permission'
+      ? waitForPermission(host, sessionId)
+      : waitForElicitation(host, sessionId));
+    await host.caller.session.cancel({ sessionId });
+    expect(await response.promise).toEqual(
+      kind === 'Permission' ? cancelled : { action: 'cancel' },
+    );
+    await expect(
+      kind === 'Permission'
+        ? host.caller.session.answerPermission({
+            sessionId,
+            requestId: pending.requestId,
+            optionId: allowOnce,
+          })
+        : host.caller.session.answerElicitation({
+            sessionId,
+            requestId: pending.requestId,
+            action: 'decline',
+          }),
+    ).rejects.toThrow(alreadyAnswered);
+    const snapshot = await waitForTurnEnd(host, sessionId);
+    expect(snapshot.pendingPermission).toBeNull();
+    expect(snapshot.pendingElicitation).toBeNull();
+  },
+);
+
 describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
   it('presents the exact options the Agent offered', async () => {
     const { host, sessionId } = await startSession(
@@ -406,43 +467,6 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     await waitForPermission(host, sessionId);
     await host.caller.session.close({ sessionId });
     expect(await response.promise).toEqual(cancelled);
-  });
-
-  it('cancelling the Turn cancels its pending request and refuses a late answer', async () => {
-    const response = Promise.withResolvers<RequestPermissionResponse>();
-    const cancelReceived = Promise.withResolvers<void>();
-    const host = await startAcpEngine(
-      {
-        cancel: () => cancelReceived.resolve(),
-        prompt: async ({ params, client }) => {
-          response.resolve(
-            await client.request(
-              requestPermission,
-              permissionRequest(params.sessionId, 'tool-a'),
-            ),
-          );
-          await cancelReceived.promise;
-          return { stopReason: 'cancelled' };
-        },
-      },
-      undefined,
-      agent,
-    );
-    const { sessionId } = await host.caller.session.new({
-      ...emptySessionInput,
-      agent,
-    });
-    await promptSession(host, sessionId);
-    const pending = await waitForPermission(host, sessionId);
-    await host.caller.session.cancel({ sessionId });
-    expect(await response.promise).toEqual(cancelled);
-    await expect(
-      host.caller.session.answerPermission({
-        sessionId,
-        requestId: pending.requestId,
-        optionId: allowOnce,
-      }),
-    ).rejects.toThrow(alreadyAnswered);
   });
 
   it('a request the Agent withdraws is no longer answerable', async () => {

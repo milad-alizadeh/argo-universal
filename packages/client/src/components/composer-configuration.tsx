@@ -17,6 +17,7 @@ import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
 import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
+import { FieldGroup } from '../primitives/field-group';
 import { InfoPopover } from '../primitives/info-popover';
 import { Slider } from '../primitives/slider';
 import { Switch } from '../primitives/switch';
@@ -52,7 +53,9 @@ export interface ComposerConfigurationProps {
   };
 }
 
-function choices(option?: SelectConfiguration): SessionConfigSelectOption[] {
+export function configurationChoices(
+  option?: SelectConfiguration,
+): SessionConfigSelectOption[] {
   return (
     option?.options.flatMap((entry) =>
       'groupId' in entry ? entry.options : [entry],
@@ -75,6 +78,20 @@ function selection(
       option.type === 'select' && option.category === category,
   );
 }
+export function configurationEffortChoices(
+  model: SelectConfiguration | undefined,
+  option: SelectConfiguration | undefined,
+): SessionConfigSelectOption[] {
+  const currentModel = configurationChoices(model).find(
+    (choice) => choice.value === model?.currentValue,
+  );
+  const levels = currentModel?._meta?.argo?.supportedEffortLevels;
+  return currentModel?._meta?.argo?.supportsEffort === false
+    ? []
+    : configurationChoices(option).filter(
+        (choice) => !levels || levels.includes(choice.value),
+      );
+}
 function currentEffort(configuration: ComposerConfigurationProps): {
   option: ReturnType<typeof selection>;
   choices: SessionConfigSelectOption[];
@@ -84,23 +101,16 @@ function currentEffort(configuration: ComposerConfigurationProps): {
 } {
   const model = selection(configuration, 'model');
   const option = selection(configuration, 'thought_level');
-  const currentModel = choices(model).find(
-    (choice) => choice.value === model?.currentValue,
-  );
-  const levels = currentModel?._meta?.argo?.supportedEffortLevels;
-  const effortChoices =
-    currentModel?._meta?.argo?.supportsEffort === false
-      ? []
-      : choices(option).filter(
-          (choice) => !levels || levels.includes(choice.value),
-        );
+  const effortChoices = configurationEffortChoices(model, option);
   const current = effortChoices.find(
     (choice) => choice.value === option?.currentValue,
   );
   return {
     option,
     choices: effortChoices,
-    selected: current ?? fallbackEffort(choices(option), effortChoices, option),
+    selected:
+      current ??
+      fallbackEffort(configurationChoices(option), effortChoices, option),
     fallback: !current && effortChoices.length > 0,
   };
 }
@@ -206,7 +216,7 @@ function Choice({
       className={cn(
         'min-h-11 wide:min-h-8 h-auto sm:h-auto justify-start gap-2.5 px-2.5 wide:px-2 py-1.5 rounded-sm',
         'web:focus-visible:ring-0 web:focus-visible:bg-accent',
-        selected && 'bg-accent',
+        selected && 'bg-accent ios:bg-accent/50',
         description && 'min-h-13 wide:min-h-0',
         leading && 'items-start py-2',
       )}
@@ -312,7 +322,7 @@ export function AgentChoices({
             'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2.5 has-[>[data-icon]]:px-2.5 wide:px-2 wide:has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
             // The desktop pane sits on the sidebar colour, so its chosen row needs a deeper fill; a running Session dims only the Agents it cannot switch to.
             agent.agent === configuration.agent &&
-              'bg-accent wide:bg-foreground/7 opacity-100 disabled:opacity-100',
+              'bg-accent ios:bg-accent/50 wide:bg-foreground/7 opacity-100 disabled:opacity-100',
           )}
           onPress={() => {
             if (agent.agent !== configuration.agent)
@@ -410,7 +420,7 @@ export function ModelChoices({
   if (!model) return null;
   return (
     <View className="px-gutter-list py-1 wide:p-1 wide:pt-0.5 gap-0.5">
-      {choices(model).map((choice) => (
+      {configurationChoices(model).map((choice) => (
         <Choice
           key={choice.value}
           selected={choice.value === model.currentValue}
@@ -445,7 +455,7 @@ function ModelList({
         paddingTop: 2,
         paddingBottom: 4,
       }}
-      data={choices(model)}
+      data={configurationChoices(model)}
       keyExtractor={(choice) => choice.value}
       renderItem={({ item: choice }) => (
         <Choice
@@ -508,8 +518,8 @@ function EffortControl({
   if (!wide)
     return (
       // The same insets as the Agent and Model rows, so the labels line up.
-      <View className="px-gutter-list pb-3">
-        <View className="px-2.5 web:px-3 gap-1.5">
+      <View className="px-gutter-list native:px-0 pb-3">
+        <View className="px-2.5 web:px-3 native:px-0 gap-1.5">
           <View className="h-11 flex-row items-center gap-2">
             <Text selectable={false} className="select-none type-body">
               Effort
@@ -570,7 +580,7 @@ function SwitchOptions({
   if (!options.length) return null;
   return (
     // The same insets as the rows above, so the labels line up.
-    <View className="px-gutter-list wide:px-0">
+    <View className="px-gutter-list native:px-0 wide:px-0">
       {options.map((option) => {
         const label = (
           <Text selectable={false} className="select-none type-body">
@@ -595,6 +605,7 @@ function SwitchOptions({
           accessibilityRole: 'switch',
           accessibilityLabel: option.name,
           accessibilityState: { checked: option.currentValue },
+          'aria-checked': option.currentValue,
           onPress: () =>
             configuration.onConfigChange(option.configId, !option.currentValue),
         } as const;
@@ -603,7 +614,7 @@ function SwitchOptions({
             <Pressable
               key={option.configId}
               {...rowProps}
-              className="h-11 px-2.5 web:px-3 flex-row items-center gap-2"
+              className="h-11 px-2.5 web:px-3 native:px-0 flex-row items-center gap-2"
             >
               {label}
               {option.description ? (
@@ -656,7 +667,7 @@ export function AgentModelMenu({
     (entry) => entry.agent === configuration.agent,
   );
   const model = selection(configuration, 'model');
-  const current = choices(model).find(
+  const current = configurationChoices(model).find(
     (choice) => choice.value === model?.currentValue,
   );
   if (wide && !model)
@@ -719,54 +730,73 @@ export function AgentModelMenu({
             <ModelList configuration={configuration} />
           </>
         ) : (
-          <View className="px-gutter-list py-1 wide:p-1 gap-0.5">
-            <Button
-              variant="ghost"
-              accessibilityLabel="Choose Agent"
-              onPress={() => openPage('agent')}
-              className="h-11 sm:h-11 px-2.5 gap-2 justify-start"
-            >
-              <Text selectable={false} className="select-none flex-1 type-body">
-                Agent
-              </Text>
-              <Logo agent={agent} />
-              <Text
-                selectable={false}
-                className="select-none type-body text-muted-foreground"
+          <FieldGroup>
+            <FieldGroup.Section className="px-gutter-list py-1 gap-0.5">
+              <Button
+                variant="ghost"
+                accessibilityLabel="Choose Agent"
+                onPress={() => openPage('agent')}
+                className="h-11 sm:h-11 px-2.5 native:px-0 gap-2 justify-start"
               >
-                {agent?.label}
-              </Text>
-              <Icon
-                size="sm"
-                name="chevron-right"
-                className="-ml-0.5 text-muted-foreground"
-              />
-            </Button>
-            <Button
-              variant="ghost"
-              accessibilityLabel="Choose model"
-              onPress={() => openPage('model')}
-              className="h-11 sm:h-11 px-2.5 gap-2 justify-start"
-            >
-              <Text selectable={false} className="select-none flex-1 type-body">
-                Model
-              </Text>
-              <Text
-                selectable={false}
-                className="select-none type-body text-muted-foreground"
+                <Text
+                  selectable={false}
+                  className="select-none flex-1 type-body"
+                >
+                  Agent
+                </Text>
+                <Logo agent={agent} />
+                <Text
+                  selectable={false}
+                  className="select-none type-body text-muted-foreground"
+                >
+                  {agent?.label}
+                </Text>
+                <Icon
+                  size="sm"
+                  name="chevron-right"
+                  className="-ml-0.5 text-muted-foreground"
+                />
+              </Button>
+              <Button
+                variant="ghost"
+                accessibilityLabel="Choose model"
+                onPress={() => openPage('model')}
+                className="h-11 sm:h-11 px-2.5 native:px-0 gap-2 justify-start"
               >
-                {modelName(current)}
-              </Text>
-              <Icon
-                size="sm"
-                name="chevron-right"
-                className="-ml-0.5 text-muted-foreground"
-              />
-            </Button>
-          </View>
+                <Text
+                  selectable={false}
+                  className="select-none flex-1 type-body"
+                >
+                  Model
+                </Text>
+                <Text
+                  selectable={false}
+                  className="select-none type-body text-muted-foreground"
+                >
+                  {modelName(current)}
+                </Text>
+                <Icon
+                  size="sm"
+                  name="chevron-right"
+                  className="-ml-0.5 text-muted-foreground"
+                />
+              </Button>
+            </FieldGroup.Section>
+            {(switches(configuration).length > 0 ||
+              currentEffort(configuration).selected) && (
+              <FieldGroup.Section>
+                {switches(configuration).length > 0 && (
+                  <SwitchOptions configuration={configuration} />
+                )}
+                {currentEffort(configuration).selected && (
+                  <EffortControl configuration={configuration} />
+                )}
+              </FieldGroup.Section>
+            )}
+          </FieldGroup>
         )}
-        <SwitchOptions configuration={configuration} />
-        <EffortControl configuration={configuration} />
+        {wide && <SwitchOptions configuration={configuration} />}
+        {wide && <EffortControl configuration={configuration} />}
         {configuration.turnRunning && (
           <View className="flex-row gap-2 px-gutter wide:px-3 py-2.5 bg-muted">
             <Icon name="waiting" className="text-muted-foreground" />
@@ -793,7 +823,7 @@ export function ComposerAgentModelControl({
   const wide = useContentWide();
   const windowWide = useWide();
   const model = selection(configuration, 'model');
-  const current = choices(model).find(
+  const current = configurationChoices(model).find(
     (choice) => choice.value === model?.currentValue,
   );
   const effort = currentEffort(configuration);
@@ -886,7 +916,7 @@ export function ComposerModeControl({
 }): React.JSX.Element | null {
   const wide = useContentWide();
   const mode = selection(configuration, 'mode');
-  const current = choices(mode).find(
+  const current = configurationChoices(mode).find(
     (choice) => choice.value === mode?.currentValue,
   );
   if (!mode) return null;
@@ -937,7 +967,7 @@ export function ComposerModeControl({
       {(close) => (
         <View className="px-gutter-list py-1 wide:p-1 gap-0.5">
           <MenuHeading>Mode</MenuHeading>
-          {choices(mode).map((choice) => (
+          {configurationChoices(mode).map((choice) => (
             <Choice
               key={choice.value}
               selected={choice.value === mode.currentValue}

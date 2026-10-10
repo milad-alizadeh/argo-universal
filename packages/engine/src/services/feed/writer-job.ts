@@ -11,6 +11,7 @@ import {
 import { and, eq, gt, inArray, sql } from 'drizzle-orm';
 import { writeBlobFile } from './blob-files';
 import { toFeedRowWrite } from './feed-row';
+import { titleFromRows } from './prompt-title';
 import type { OutputBlob } from './updates/tool-output';
 import {
   applyCatalogSqlJob,
@@ -130,6 +131,7 @@ export function writeJobs(
             .set({
               maxRevision: job.maxRevision,
               activityAt: job.activityAt ?? Date.now(),
+              title: sql`case when ${session.titleSource} = 'prompt' and ${session.title} = '' then ${titleFromRows(job.rows)} else ${session.title} end`,
             })
             .where(
               and(

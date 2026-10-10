@@ -1,15 +1,16 @@
-import type { SessionNewInput } from '@repo/contracts';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SessionNewInput } from '@repo/contracts';
 import {
   newSessionCatalogs,
   newSessionProjects,
   serverInfo,
 } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { View } from 'react-native';
-import { expect, spyOn, waitFor, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { chooseEffort } from '../../mocks/choose-effort';
-import { composerImages } from '../../mocks/composer-mock';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
   agentProbeRequests,
@@ -18,20 +19,31 @@ import {
   newSessionMocks,
   notInstalledNewSessionMocks,
   notSignedInNewSessionMocks,
+  restrictedEffortNewSessionMocks,
   sendingNewSessionMocks,
   unavailableNewSessionMocks,
 } from '../../mocks/new-session-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
-import type { FixtureOutput } from '../../mocks/trpc-mock-link';
-import { fails, pending } from '../../mocks/trpc-mock-link';
+import type {
+  FixtureArguments,
+  FixtureOutput,
+} from '../../mocks/trpc-mock-link';
+import { pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
+import { TrpcMocks } from '../../mocks/with-trpc-mocks';
 import { ContentLayout } from '../components/content-layout';
+import { Button } from '../primitives/button';
+import { Text } from '../primitives/text';
 import { NewSessionScreen } from './new-session-screen';
 
+const openSessionLabel = 'Open Session';
+const createdSessionId = 'new-session';
+const chooseAgentLabel = 'Choose Agent';
 const agentModelLabel = 'Agent and model';
-const loginTestPrompt = 'Fix the flaky login test';
-const imagePickerDraft = 'Keep this draft while choosing images.';
-const failedImageName = 'failed-selection.png';
+const effortLabel = 'Effort';
+const defaultEffortLabel = 'Medium';
+const effortValueAttribute = 'aria-valuetext';
+const chooseModelLabel = 'Choose model';
 
 const recorder = createNavigationRecorder();
 const started: SessionNewInput[] = [];
@@ -114,13 +126,16 @@ const meta = {
     navigation: recorder,
     trpc: {
       ...newSessionMocks,
-      'session.new': (input: SessionNewInput): FixtureOutput<'session.new'> => {
-        started.push(input);
-        return { sessionId: 'new-session' };
+      'session.new': (
+        input: FixtureArguments<'session.new'>[0],
+      ): FixtureOutput<'session.new'> => {
+        started.push(SessionNewInput.parse(input));
+        return { sessionId: createdSessionId };
       },
     },
   },
-  beforeEach: (): void => {
+  beforeEach: async (): Promise<void> => {
+    await AsyncStorage.clear();
     recorder.reset();
     started.length = 0;
   },
@@ -143,14 +158,14 @@ function unavailableAgentRetry(width: number, agentIndex: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await expect(
-        await canvas.findByRole('button', { name: 'Send' }),
+        await canvas.findByRole('button', { name: openSessionLabel }),
       ).toBeDisabled();
       await userEvent.click(
         await canvas.findByRole('button', { name: agentModelLabel }),
       );
       if (width === layoutWidths.phone)
         await userEvent.click(
-          await overlay.findByRole('button', { name: 'Choose Agent' }),
+          await overlay.findByRole('button', { name: chooseAgentLabel }),
         );
       const row = await overlay.findByRole('button', {
         name: `Select ${agent.label}`,
@@ -272,8 +287,8 @@ export const Ready: Story = {
         await expect(checkout).not.toHaveTextContent('main');
       }
       await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveAttribute('placeholder', '');
+        canvas.queryByRole('textbox', { name: 'Message' }),
+      ).toBeNull();
       await expect(
         canvas.getByRole('img', { name: 'Connected' }),
       ).toBeVisible();
@@ -285,17 +300,15 @@ function reconnecting(width: number, mode: Mode): Story {
   return {
     parameters: { connection: 'reconnecting' },
     globals: { mode },
-    play: async ({ canvas, userEvent }) => {
+    play: async ({ canvas }) => {
       await settleViewport(width);
       await expect(
         await canvas.findByRole('img', { name: 'Reconnecting' }),
       ).toBeVisible();
       await expect(canvas.getByText('Reconnecting…')).toBeVisible();
-      const input = canvas.getByRole('textbox', { name: 'Message' });
-      await expect(input).toHaveValue('');
-      await userEvent.type(input, 'Keep this draft');
-      await expect(input).toHaveValue('Keep this draft');
-      await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+      await expect(
+        canvas.getByRole('button', { name: openSessionLabel }),
+      ).toBeDisabled();
     },
   };
 }
@@ -304,15 +317,15 @@ export const ReconnectingPhoneDark = reconnecting(layoutWidths.phone, 'dark');
 export const ReconnectingWideLight = reconnecting(layoutWidths.wide, 'light');
 export const ReconnectingWideDark = reconnecting(layoutWidths.wide, 'dark');
 
-export const SendReplacesThePage: Story = {
+export const OpeningReplacesThePage: Story = {
   args: { projectId: exampleProject.id },
   play: async ({ canvas, userEvent }) => {
-    const input = await canvas.findByRole('textbox', { name: 'Message' });
-    await userEvent.type(input, 'Fix the flaky login test\nThen tidy up.');
-    await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+    await userEvent.click(
+      await canvas.findByRole('button', { name: openSessionLabel }),
+    );
     await waitFor(() =>
       expect(recorder.replacements).toEqual([
-        { to: 'session', id: 'new-session' },
+        { to: 'session', id: createdSessionId },
       ]),
     );
     await expect(started).toEqual([
@@ -320,13 +333,256 @@ export const SendReplacesThePage: Story = {
         projectId: exampleProject.id,
         agent: firstAgent.agent,
         checkout: { type: 'worktree', baseBranch: 'main' },
-        configOptions: firstAgent.configOptions.map(
-          ({ configId, currentValue }) => ({ configId, value: currentValue }),
-        ),
-        prompt: [
-          { type: 'text', text: 'Fix the flaky login test\nThen tidy up.' },
+        configOptions: [
+          { configId: 'model', value: 'default' },
+          { configId: 'effort', value: 'medium' },
         ],
+        prompt: [],
       },
+    ]);
+  },
+};
+
+function openSessionBeforePrompt(width: number, agentIndex: number): Story {
+  const agent = newSessionCatalogs.bothAvailable[agentIndex];
+  if (!agent) throw new Error('Recorded catalog needs two Agents.');
+  return {
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await expect(
+        canvas.queryByRole('textbox', { name: 'Message' }),
+      ).toBeNull();
+      await userEvent.click(
+        await canvas.findByRole('button', { name: agentModelLabel }),
+      );
+      if (width === layoutWidths.phone)
+        await userEvent.click(
+          await overlay.findByRole('button', { name: chooseAgentLabel }),
+        );
+      await userEvent.click(
+        await overlay.findByRole('button', { name: `Select ${agent.label}` }),
+      );
+      if (agentIndex !== 0) {
+        await userEvent.keyboard('{Escape}');
+        const trigger = await canvas.findByRole('button', {
+          name: agentModelLabel,
+        });
+        await waitFor(() => expect(trigger).toBeEnabled());
+        await userEvent.click(trigger);
+      }
+      await expect(
+        await overlay.findByRole('slider', { name: effortLabel }),
+      ).toHaveAttribute(effortValueAttribute, defaultEffortLabel);
+      if (width === layoutWidths.phone)
+        await userEvent.click(
+          await overlay.findByRole('button', { name: chooseModelLabel }),
+        );
+      await expect(
+        await overlay.findByRole('button', {
+          name: agentIndex === 0 ? 'Opus 5.5 (recommended)' : 'GPT-6-Astra',
+        }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      await userEvent.keyboard('{Escape}');
+      await userEvent.click(
+        await canvas.findByRole('button', { name: openSessionLabel }),
+      );
+      await waitFor(() => expect(started).toHaveLength(1));
+      await expect(started[0]).toMatchObject({
+        agent: agent.agent,
+        prompt: [],
+        configOptions: [
+          {
+            configId: 'model',
+            value: agentIndex === 0 ? 'default' : 'gpt-6-astra',
+          },
+          { configId: 'effort', value: 'medium' },
+        ],
+      });
+      await expect(recorder.replacements).toEqual([
+        { to: 'session', id: createdSessionId },
+      ]);
+    },
+  };
+}
+export const OpenActualSessionPhoneFirstAgent = openSessionBeforePrompt(
+  layoutWidths.phone,
+  0,
+);
+export const OpenActualSessionPhoneSecondAgent = openSessionBeforePrompt(
+  layoutWidths.phone,
+  1,
+);
+export const OpenActualSessionWideFirstAgent = openSessionBeforePrompt(
+  layoutWidths.wide,
+  0,
+);
+export const OpenActualSessionWideSecondAgent = openSessionBeforePrompt(
+  layoutWidths.wide,
+  1,
+);
+
+function rememberedSelection(agentIndex: number): Story {
+  const agent = newSessionCatalogs.bothAvailable[agentIndex];
+  if (!agent) throw new Error('Recorded catalog needs two Agents.');
+  const model =
+    agentIndex === 0
+      ? { name: 'Opus 4.6', value: 'agent-one-opus-4-6' }
+      : { name: 'GPT-6-Luna', value: 'gpt-6-luna' };
+  return {
+    render: function RestartableApp(): React.JSX.Element {
+      const [restart, setRestart] = useState(0);
+      return (
+        <View className="flex-1">
+          <Button onPress={() => setRestart((value) => value + 1)}>
+            <Text>Restart App</Text>
+          </Button>
+          <TrpcMocks
+            key={restart}
+            fixtures={meta.parameters.trpc}
+            connectionState="open"
+          >
+            <NewSessionScreen />
+          </TrpcMocks>
+        </View>
+      );
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(layoutWidths.wide);
+      const configure = async (): Promise<void> => {
+        await userEvent.click(
+          await canvas.findByRole('button', { name: agentModelLabel }),
+        );
+        await userEvent.click(
+          await overlay.findByRole('button', { name: `Select ${agent.label}` }),
+        );
+        if (agentIndex !== 0)
+          await userEvent.click(
+            await canvas.findByRole('button', { name: agentModelLabel }),
+          );
+      };
+      await configure();
+      await userEvent.click(
+        await overlay.findByRole('button', { name: model.name }),
+      );
+      await chooseEffort(
+        overlay.getByRole('slider', { name: effortLabel }),
+        ['Low', 'Medium', 'High', 'Ultra'],
+        'High',
+      );
+      await expect(
+        overlay.getByRole('slider', { name: effortLabel }),
+      ).toHaveAttribute(effortValueAttribute, 'High');
+      await userEvent.keyboard('{Escape}');
+      await userEvent.click(
+        canvas.getByRole('button', { name: openSessionLabel }),
+      );
+      await waitFor(() => expect(started).toHaveLength(1));
+      await expect(started[0]?.configOptions).toEqual([
+        { configId: 'model', value: model.value },
+        { configId: 'effort', value: 'high' },
+      ]);
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Restart App' }),
+      );
+      await configure();
+      await expect(
+        await overlay.findByRole('button', { name: model.name }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      await expect(
+        overlay.getByRole('slider', { name: effortLabel }),
+      ).toHaveAttribute(effortValueAttribute, 'High');
+      await userEvent.keyboard('{Escape}');
+    },
+  };
+}
+export const RemembersSelectionFirstAgent = rememberedSelection(0);
+export const RemembersSelectionSecondAgent = rememberedSelection(1);
+
+export const ModelWithoutEffort: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: agentModelLabel }),
+    );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: 'Haiku 4.5' }),
+    );
+    await expect(
+      overlay.queryByRole('slider', { name: effortLabel }),
+    ).toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(
+      canvas.getByRole('button', { name: openSessionLabel }),
+    );
+    await waitFor(() => expect(started).toHaveLength(1));
+    await expect(started[0]?.configOptions).toEqual([
+      { configId: 'model', value: 'haiku' },
+    ]);
+  },
+};
+
+export const FallsBackToDefaultEffortForModel: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: agentModelLabel }),
+    );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: 'Select Second Agent' }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: agentModelLabel }),
+    );
+    await chooseEffort(
+      await overlay.findByRole('slider', { name: effortLabel }),
+      ['Low', 'Medium', 'High', 'Extra high', 'Max', 'Ultra'],
+      'Ultra',
+    );
+    await userEvent.click(overlay.getByRole('button', { name: 'GPT-5.5' }));
+    await expect(
+      overlay.getByRole('slider', { name: effortLabel }),
+    ).toHaveAttribute(effortValueAttribute, defaultEffortLabel);
+    await expect(
+      overlay.getByRole('slider', { name: effortLabel }),
+    ).toHaveAttribute('max', '3');
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(
+      canvas.getByRole('button', { name: openSessionLabel }),
+    );
+    await waitFor(() => expect(started).toHaveLength(1));
+    await expect(started[0]?.configOptions).toEqual([
+      { configId: 'model', value: 'gpt-5.5' },
+      { configId: 'effort', value: 'medium' },
+    ]);
+  },
+};
+
+export const FallsBackToSupportedEffort: Story = {
+  parameters: {
+    trpc: {
+      ...meta.parameters.trpc,
+      'agents.list': restrictedEffortNewSessionMocks['agents.list'],
+    },
+  },
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: agentModelLabel }),
+    );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: 'Opus 4.6' }),
+    );
+    await expect(
+      overlay.getByRole('slider', { name: effortLabel }),
+    ).toHaveAttribute(effortValueAttribute, 'High');
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(
+      canvas.getByRole('button', { name: openSessionLabel }),
+    );
+    await waitFor(() => expect(started).toHaveLength(1));
+    await expect(started[0]?.configOptions).toEqual([
+      { configId: 'model', value: 'agent-one-opus-4-6' },
+      { configId: 'effort', value: 'high' },
     ]);
   },
 };
@@ -370,11 +626,9 @@ export const SwitchProjectWideDark = switchProject(layoutWidths.wide, 'dark');
 export const StartsOnTheChosenProject: Story = {
   args: { projectId: landingProject.id },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.type(
-      await canvas.findByRole('textbox', { name: 'Message' }),
-      'Update the hero copy',
+    await userEvent.click(
+      await canvas.findByRole('button', { name: openSessionLabel }),
     );
-    await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
     await waitFor(() => expect(started).toHaveLength(1));
     await expect(started[0]?.projectId).toBe(landingProject.id);
     await expect(started[0]?.checkout).toEqual({ type: 'main' });
@@ -410,7 +664,7 @@ function agentSetup(
       );
       if (width === layoutWidths.phone)
         await userEvent.click(
-          await overlay.findByRole('button', { name: 'Choose Agent' }),
+          await overlay.findByRole('button', { name: chooseAgentLabel }),
         );
       // The overlay fades in, so its status turns visible a few frames after it mounts.
       await waitFor(() => expect(overlay.getByText(status)).toBeVisible());
@@ -486,28 +740,25 @@ export const NoAgentReady: Story = {
       await expect(await canvas.findByRole('alert')).toHaveTextContent(
         agent?.installStep ?? '',
       );
-      await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+      await expect(
+        canvas.getByRole('button', { name: openSessionLabel }),
+      ).toBeDisabled();
     });
   },
 };
 
-export const Sending: Story = {
+export const Opening: Story = {
   parameters: { trpc: sendingNewSessionMocks },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.type(
-      await canvas.findByRole('textbox', { name: 'Message' }),
-      loginTestPrompt,
+    await userEvent.click(
+      await canvas.findByRole('button', { name: openSessionLabel }),
     );
-    await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
     await eachLayout(async () => {
       const sending = await canvas.findByRole('progressbar', {
-        name: 'Sending',
+        name: 'Opening Session',
       });
       const bounds = sending.getBoundingClientRect();
       await expect(bounds.bottom).toBeLessThanOrEqual(window.innerHeight);
-      await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue(loginTestPrompt);
       await expect(
         canvas.getByRole('button', { name: `Project: ${exampleProject.name}` }),
       ).toBeDisabled();
@@ -516,18 +767,16 @@ export const Sending: Story = {
   },
 };
 
-// A local Project's new worktree starts from its current branch, so Send waits for it.
+// A local Project's new worktree starts from its current branch, so opening waits for it.
 export const WaitsForTheBaseBranch: Story = {
   args: { projectId: landingProject.id },
   parameters: {
     trpc: { ...newSessionMocks, 'projects.branches': pending() },
   },
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.type(
-      await canvas.findByRole('textbox', { name: 'Message' }),
-      'Update the hero copy',
-    );
-    await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole('button', { name: openSessionLabel }),
+    ).toBeDisabled();
   },
 };
 
@@ -544,24 +793,21 @@ export const FailedStart: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.type(
-      await canvas.findByRole('textbox', { name: 'Message' }),
-      loginTestPrompt,
-    );
     const callsBeforeSend = agentsListCalls;
-    await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+    await userEvent.click(
+      await canvas.findByRole('button', { name: openSessionLabel }),
+    );
     // A failed start can mean the Agent is no longer available, so the screen asks again.
     await waitFor(() =>
       expect(agentsListCalls).toBeGreaterThan(callsBeforeSend),
     );
     await eachLayout(async () => {
       await expect(await canvas.findByRole('alert')).toHaveTextContent(
-        `Couldn't start the Session. ${failedStartMessage}`,
+        `Couldn't open the Session. ${failedStartMessage}`,
       );
       await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue(loginTestPrompt);
-      await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
+        canvas.getByRole('button', { name: openSessionLabel }),
+      ).toBeEnabled();
     });
     await expect(recorder.replacements).toEqual([]);
   },
@@ -612,7 +858,10 @@ function effortFollowsModel(width: number, agentIndex: number): Story {
       await userEvent.click(trigger);
       const slider = await overlay.findByRole('slider', { name: 'Effort' });
       await chooseEffort(slider, offered, unsupported.name);
-      await expect(slider).toHaveAttribute('aria-valuetext', unsupported.name);
+      await expect(slider).toHaveAttribute(
+        effortValueAttribute,
+        unsupported.name,
+      );
       if (width === layoutWidths.phone)
         await userEvent.click(
           overlay.getByRole('button', { name: 'Choose model' }),
@@ -627,7 +876,7 @@ function effortFollowsModel(width: number, agentIndex: number): Story {
       const nextSlider = await overlay.findByRole('slider', { name: 'Effort' });
       await waitFor(() =>
         expect(nextSlider).toHaveAttribute(
-          'aria-valuetext',
+          effortValueAttribute,
           defaultEffort.name,
         ),
       );
@@ -643,11 +892,9 @@ function effortFollowsModel(width: number, agentIndex: number): Story {
         overlay.queryByRole('switch', { name: 'Fast mode' }),
       ).not.toBeInTheDocument();
       await userEvent.keyboard('{Escape}');
-      await userEvent.type(
-        canvas.getByRole('textbox', { name: 'Message' }),
-        'Use this model and effort',
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Open Session' }),
       );
-      await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
       await waitFor(() => expect(started).toHaveLength(1));
       await expect(started[0]?.agent).toBe(agent.agent);
       await expect(started[0]?.configOptions).toContainEqual({
@@ -681,193 +928,3 @@ export const EffortFollowsModelWideSecondAgent = effortFollowsModel(
   layoutWidths.wide,
   1,
 );
-
-const uploadCatalogs = newSessionCatalogs.bothAvailable.map((agent, index) => {
-  const image = composerImages[index];
-  if (!image)
-    throw new Error(`Recorded catalog needs an image for ${agent.label}.`);
-  return { agent, image };
-});
-
-function failedUpload(width: number, agentIndex: 0 | 1): Story {
-  const catalog = uploadCatalogs[agentIndex];
-  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
-  let calls = 0;
-  const failure = 'The Server could not store the image.';
-  return {
-    beforeEach: () => {
-      calls = 0;
-    },
-    parameters: {
-      trpc: {
-        ...newSessionMocks,
-        'agents.list': (): FixtureOutput<'agents.list'> => [catalog.agent],
-        'blob.upload': fails(failure),
-        'session.new': (): FixtureOutput<'session.new'> => {
-          calls += 1;
-          return { sessionId: 'unexpected-session' };
-        },
-      },
-    },
-    play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
-      const message = await canvas.findByRole('textbox', { name: 'Message' });
-      await userEvent.type(message, 'Name the dominant color in this image.');
-      await userEvent.click(
-        canvas.getByRole('button', {
-          name: width >= 720 ? 'Attach' : 'Attach images',
-        }),
-      );
-      await userEvent.click(
-        await within(document.body).findByRole('button', {
-          name: width === layoutWidths.wide ? 'Files and Folder' : 'Photos',
-        }),
-      );
-      const file = new File(
-        [await (await fetch(catalog.image.uri)).blob()],
-        catalog.image.name,
-        { type: 'image/png' },
-      );
-      await userEvent.upload(
-        await within(document.body).findByTestId('file-input'),
-        file,
-      );
-      await expect(
-        await canvas.findByRole('img', { name: catalog.image.name }),
-      ).toBeVisible();
-      await expect(canvas.queryByRole('alert')).toBeNull();
-      await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
-      const alert = await canvas.findByRole('alert');
-      await expect(alert.textContent).toBe(
-        `Couldn't upload the image. ${failure}`,
-      );
-      await expect(alert).toBeVisible();
-      await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue('Name the dominant color in this image.');
-      await expect(
-        canvas.getByRole('img', { name: catalog.image.name }),
-      ).toBeVisible();
-      await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
-      await expect(calls).toBe(0);
-    },
-  };
-}
-export const FailedUploadPhoneFirstAgent = failedUpload(layoutWidths.phone, 0);
-export const FailedUploadPhoneSecondAgent = failedUpload(layoutWidths.phone, 1);
-export const FailedUploadWideFirstAgent = failedUpload(layoutWidths.wide, 0);
-export const FailedUploadWideSecondAgent = failedUpload(layoutWidths.wide, 1);
-
-function failedPick(width: number, agentIndex: 0 | 1): Story {
-  const catalog = uploadCatalogs[agentIndex];
-  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
-  let calls = 0;
-  let restorePicker = (): void => {};
-  return {
-    beforeEach: () => {
-      restorePicker();
-      calls = 0;
-      return () => restorePicker();
-    },
-    parameters: {
-      trpc: {
-        ...newSessionMocks,
-        'agents.list': (): FixtureOutput<'agents.list'> => [catalog.agent],
-        'session.new': (): FixtureOutput<'session.new'> => {
-          calls += 1;
-          return { sessionId: 'unexpected-session' };
-        },
-      },
-    },
-    play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
-      const bytes = await (await fetch(catalog.image.uri)).blob();
-      const attachImage = async (name: string): Promise<void> => {
-        await userEvent.click(
-          canvas.getByRole('button', {
-            name: width >= 720 ? 'Attach' : 'Attach images',
-          }),
-        );
-        const menuName =
-          width === layoutWidths.wide ? 'Files and Folder' : 'Photos';
-        const menu = await within(document.body).findByRole('button', {
-          name: menuName,
-        });
-        await waitFor(() => expect(menu).toBeVisible());
-        await userEvent.click(menu);
-        await userEvent.upload(
-          await within(document.body).findByTestId('file-input'),
-          new File([bytes], name, { type: 'image/png' }),
-        );
-        await waitFor(() =>
-          expect(
-            within(document.body).queryByRole('button', { name: menuName }),
-          ).toBeNull(),
-        );
-      };
-      await userEvent.type(
-        await canvas.findByRole('textbox', { name: 'Message' }),
-        imagePickerDraft,
-      );
-      await attachImage(catalog.image.name);
-      await expect(
-        await canvas.findByRole('img', { name: catalog.image.name }),
-      ).toBeVisible();
-      const picker = spyOn(URL, 'createObjectURL').mockImplementationOnce(
-        () => {
-          throw new Error('Image selection failed');
-        },
-      );
-      restorePicker = (): void => picker.mockRestore();
-      try {
-        await attachImage(failedImageName);
-        const alert = await canvas.findByRole('alert');
-        await expect(alert.textContent).toBe(
-          "Couldn't select images. Try again.",
-        );
-        await expect(alert).toBeVisible();
-        await expect(
-          canvas.getByRole('textbox', { name: 'Message' }),
-        ).toHaveValue(imagePickerDraft);
-        await expect(
-          canvas.getByRole('img', { name: catalog.image.name }),
-        ).toBeVisible();
-        await expect(
-          canvas.queryByRole('img', { name: failedImageName }),
-        ).toBeNull();
-        await expect(
-          canvas.getAllByRole('button', { name: /^Remove / }),
-        ).toHaveLength(1);
-        await expect(
-          canvas.queryByRole('button', { name: 'Retry' }),
-        ).toBeNull();
-        await expect(calls).toBe(0);
-        await expect(picker).toHaveBeenCalledOnce();
-      } finally {
-        picker.mockRestore();
-      }
-      await attachImage('retry-selection.png');
-      await expect(
-        await canvas.findByRole('img', { name: 'retry-selection.png' }),
-      ).toBeVisible();
-      await expect(canvas.queryByRole('alert')).toBeNull();
-      await expect(
-        canvas.getByRole('img', { name: catalog.image.name }),
-      ).toBeVisible();
-      await expect(
-        canvas.queryByRole('img', { name: failedImageName }),
-      ).toBeNull();
-      await expect(
-        canvas.getAllByRole('button', { name: /^Remove / }),
-      ).toHaveLength(2);
-      await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue(imagePickerDraft);
-      await expect(calls).toBe(0);
-    },
-  };
-}
-export const FailedPickPhoneFirstAgent = failedPick(layoutWidths.phone, 0);
-export const FailedPickPhoneSecondAgent = failedPick(layoutWidths.phone, 1);
-export const FailedPickWideFirstAgent = failedPick(layoutWidths.wide, 0);
-export const FailedPickWideSecondAgent = failedPick(layoutWidths.wide, 1);

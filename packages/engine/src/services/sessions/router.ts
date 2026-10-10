@@ -32,7 +32,6 @@ import { userMessageId } from '../feed';
 import {
   validatePermissionAnswer,
   validateElicitationAnswer,
-  validateConfigChoice,
 } from './session-admission';
 import { closeSession } from './session-closure';
 import {
@@ -40,6 +39,7 @@ import {
   submitSessionPrompt,
   validateSessionCommandAdmission,
 } from './session-command';
+import { configureSession } from './session-configuration';
 import { createSession } from './session-creation';
 import { openReadySession } from './session-opening';
 import { findSessionActor, requireLiveSessionActor } from './session-system';
@@ -114,23 +114,9 @@ export const sessionRouter = router({
   setConfigOption: publicProcedure
     .input(SessionSetConfigOptionInput)
     .output(SessionSetConfigOptionOutput)
-    .mutation(async ({ ctx, input }): Promise<SessionSetConfigOptionOutput> => {
-      const sessionActor = await openReadySession(
-        ctx,
-        input.sessionId,
-        'session.setConfigOption',
-      );
-      validateConfigChoice(sessionActor, input);
-      validateSessionCommandAdmission(ctx);
-      sendSessionCommand(sessionActor, {
-        type: 'session.setConfigOption',
-        configId: input.configId,
-        value: input.value,
-      });
-      return {
-        configOptions: sessionActor.getSnapshot().context.configOptions,
-      };
-    }),
+    .mutation(({ ctx, input }): Promise<SessionSetConfigOptionOutput> =>
+      configureSession(ctx, input),
+    ),
   answerPermission: publicProcedure
     .input(SessionAnswerPermissionInput)
     .output(SessionAnswerPermissionOutput)

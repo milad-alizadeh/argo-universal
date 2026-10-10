@@ -1108,10 +1108,15 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
         });
         await waitFor(() => expect(menu).toBeVisible());
         await userEvent.click(menu);
+        const input = await within(document.body).findByTestId('file-input');
         await userEvent.upload(
-          await within(document.body).findByTestId('file-input'),
+          input,
           new File([bytes], name, { type: 'image/png' }),
         );
+        // Upload dispatches change; Expo removes the picker after reading the image.
+        await waitFor(() => expect(input).not.toBeInTheDocument(), {
+          timeout: 5000,
+        });
         await waitFor(() =>
           expect(
             within(document.body).queryByRole('button', { name: menuName }),

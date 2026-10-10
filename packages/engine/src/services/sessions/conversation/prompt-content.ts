@@ -10,6 +10,9 @@ type PromptContentInput = {
   capabilities: PromptCapabilities;
   storage: BlobStorage;
 };
+const promptMetadata = (
+  metadata: ContentBlock['_meta'],
+): AcpContentBlock['_meta'] => metadata?.acp;
 const readPromptImage = async (
   storage: BlobStorage,
   image: Extract<ContentBlock, { type: 'image' }>,
@@ -20,7 +23,7 @@ const readPromptImage = async (
     type: 'image',
     mimeType: image.mimeType,
     data: (await readBlobBytes(storage, image.blob)).toString('base64'),
-    ...(image._meta ? { _meta: image._meta } : {}),
+    _meta: promptMetadata(image._meta),
   };
 };
 const readSupportedImage = (
@@ -33,6 +36,18 @@ const readSupportedImage = (
     );
   return readPromptImage(input.storage, image);
 };
+const contextPrompt = (
+  context: Extract<ContentBlock, { type: 'resource' }>,
+  text: string,
+): AcpContentBlock => ({
+  ...context,
+  _meta: promptMetadata(context._meta),
+  resource: {
+    ...context.resource,
+    text,
+    _meta: promptMetadata(context.resource._meta),
+  },
+});
 const readSupportedContext = (
   capabilities: PromptCapabilities,
   context: Extract<ContentBlock, { type: 'resource' }>,
@@ -41,10 +56,7 @@ const readSupportedContext = (
     return Promise.reject(
       new Error('This Agent does not support this embedded context'),
     );
-  return Promise.resolve({
-    ...context,
-    resource: { ...context.resource, text: context.resource.text },
-  });
+  return Promise.resolve(contextPrompt(context, context.resource.text));
 };
 const readTextOrReferencePrompt = (
   block: Exclude<ContentBlock, { type: 'image' | 'resource' }>,
@@ -53,7 +65,7 @@ const readTextOrReferencePrompt = (
     return Promise.reject(
       new Error('Unsupported output placeholders cannot be sent as prompts'),
     );
-  return Promise.resolve(block);
+  return Promise.resolve({ ...block, _meta: promptMetadata(block._meta) });
 };
 const convertPromptBlock = (
   input: Omit<PromptContentInput, 'content'>,

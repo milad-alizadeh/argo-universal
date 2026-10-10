@@ -69,12 +69,15 @@ const nativeSheets: NativeSheets | undefined =
         close: () => router.dismiss(),
       };
 
-// A sheet opens this tall until its first page has measured itself.
+// iOS opens this tall until its first page has measured itself.
 const sheetStartHeight = 0.4;
 
 const sheetOptions = {
   presentation: 'formSheet' as const,
-  sheetAllowedDetents: [sheetStartHeight, 1],
+  sheetAllowedDetents:
+    Platform.OS === 'android'
+      ? ('fitToContents' as const)
+      : [sheetStartHeight, 1],
   sheetGrabberVisible: true,
 };
 

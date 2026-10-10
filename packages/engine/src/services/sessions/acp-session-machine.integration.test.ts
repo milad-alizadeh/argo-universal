@@ -2,6 +2,7 @@ import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import {
+  acpModelEventKey,
   createAcpSessionModel,
   type AcpModelSnapshot,
 } from '#mocks/acp-session-model';
@@ -55,9 +56,9 @@ it('the ACP structural graph walks every opening, recovery, closing and retained
       models: [model],
       paths,
       stateKey: (snapshot) => JSON.stringify(snapshot.value),
-      eventKey: (event) => event.type,
+      eventKey: acpModelEventKey,
     }),
   ).toEqual([]);
   expect(paths.length).toBeGreaterThan(0);
   await host.caller.session.close(created);
-});
+}, 15_000);

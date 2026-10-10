@@ -5,6 +5,7 @@ import type {
   SessionAnswerElicitationInput,
   SessionSetConfigOptionInput,
   SessionConfigSelectOption,
+  SessionConfigOption,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { SessionActorRef } from './session-machine';
@@ -68,14 +69,12 @@ export function validateElicitationAnswer(
 }
 
 export function validateConfigChoice(
-  sessionActor: SessionActorRef,
+  configOptions: SessionConfigOption[],
   configChoice: Pick<SessionSetConfigOptionInput, 'configId' | 'value'>,
 ): void {
-  const option = sessionActor
-    .getSnapshot()
-    .context.configOptions.find(
-      (option): boolean => option.configId === configChoice.configId,
-    );
+  const option = configOptions.find(
+    (option): boolean => option.configId === configChoice.configId,
+  );
   const isOfferedChoice =
     option?.type === 'boolean'
       ? typeof configChoice.value === 'boolean'

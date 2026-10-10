@@ -13,7 +13,7 @@ const knownIcons = new Set<string>(configOptionIcons);
 let unknownIcons = 0;
 
 // ACP extension fields are kept; Argo's known fields are checked at this boundary.
-const ConfigOptionMeta = z.looseObject({
+export const ConfigOptionMeta = z.looseObject({
   argo: z
     .looseObject({
       icon: z
