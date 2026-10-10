@@ -20,6 +20,7 @@ const meta = {
     <FieldGroup>
       <FieldSection title="Server">
         <ListItem {...args} />
+        <ListItem title="Version" value="1.0" />
         <ListItem
           title="Agents"
           value="2"
@@ -49,6 +50,9 @@ export const KeyboardAndAccessibleNames: Story = {
       name: 'Projects, 1, needs attention',
     });
     await expect(canvas.getAllByRole('link')).toHaveLength(3);
+    await expect(
+      canvas.getByRole('group', { name: 'Version, 1.0' }),
+    ).toBeInTheDocument();
     await userEvent.tab();
     await expect(projects).toHaveFocus();
     await userEvent.keyboard('{Enter}');

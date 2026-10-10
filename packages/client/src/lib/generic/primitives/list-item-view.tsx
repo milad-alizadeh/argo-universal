@@ -9,16 +9,22 @@ import { isModifiedClick } from './web-row-link';
 
 export function ListItem(props: ListItemProps): React.JSX.Element {
   const navigation = useNavigationFields();
+  const rowProps = {
+    accessibilityLabel: listItemName(props),
+    accessibilityState: { disabled: !!props.disabled },
+    'aria-current': props.selected ? ('page' as const) : undefined,
+    className: rowClasses(props, navigation),
+  };
+  const content = <ListItemContent {...props} />;
+  if (!props.onPress)
+    return (
+      <View {...rowProps} role="group">
+        {content}
+      </View>
+    );
   return (
-    <Pressable
-      {...linkProps(props)}
-      accessibilityLabel={listItemName(props)}
-      accessibilityState={{ disabled: !!props.disabled }}
-      aria-current={props.selected ? 'page' : undefined}
-      disabled={props.disabled}
-      className={rowClasses(props, navigation)}
-    >
-      <ListItemContent {...props} />
+    <Pressable {...linkProps(props)} {...rowProps} disabled={props.disabled}>
+      {content}
     </Pressable>
   );
 }
@@ -40,7 +46,9 @@ function linkProps(
 
 function rowClasses(props: ListItemProps, navigation: boolean): string {
   return cn(
-    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 web:hover:bg-border web:active:bg-border web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2',
+    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3',
+    props.onPress &&
+      'web:hover:bg-border web:active:bg-border web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2',
     separatorClasses(props, navigation),
     navigation && 'min-h-8 rounded-md gap-2 py-1.5 pl-2.5 pr-2',
     selectionClass(props, navigation),
@@ -87,7 +95,7 @@ function selectionClass(
 function RowIcon({
   icon,
 }: Pick<ListItemProps, 'icon'>): React.JSX.Element | null {
-  return icon ? <Icon name={icon} className="shrink-0" /> : null;
+  return icon ? <Icon name={icon} size="lg" className="shrink-0" /> : null;
 }
 
 function Attention({
@@ -122,7 +130,7 @@ function separatorClasses(
     !navigation &&
     cn(
       'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-[var(--color-separator)] web:last:after:hidden',
-      props.icon && 'web:after:left-11',
+      props.icon && 'web:after:left-13 wide:web:after:left-12',
     )
   );
 }

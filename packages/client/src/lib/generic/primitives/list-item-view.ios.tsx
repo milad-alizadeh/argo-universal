@@ -33,14 +33,26 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
   const wide = useWide();
   const { colors } = useNativeTheme();
   if (wide) return <WebListItem {...props} />;
+  const modifiers = rowModifiers(props, colors);
+  const content = <RowContent {...props} />;
+  if (!props.onPress)
+    return (
+      <HStack key={colors.separator} modifiers={modifiers}>
+        {content}
+      </HStack>
+    );
   // SwiftUI caches separator tint on the row; replace it when Appearance changes.
   return (
     <Button
       key={colors.separator}
       onPress={props.onPress}
-      modifiers={rowModifiers(props, colors)}
+      modifiers={[
+        buttonStyle('automatic'),
+        ...modifiers,
+        accessibilityAddTraits(['isButton']),
+      ]}
     >
-      <RowContent {...props} />
+      {content}
     </Button>
   );
 }
@@ -48,15 +60,13 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
 function rowModifiers(
   props: ListItemProps,
   { muted, separator }: Pick<NativeColors, 'muted' | 'separator'>,
-): React.ComponentProps<typeof Button>['modifiers'] {
+): NonNullable<React.ComponentProps<typeof HStack>['modifiers']> {
   return [
-    buttonStyle('automatic'),
     listRowBackground(muted ?? 'transparent'),
     listRowSeparatorTint(separator),
     listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
     accessibilityElement('ignore'),
     accessibilityLabel(listItemName(props)),
-    accessibilityAddTraits(props.onPress ? ['isButton'] : []),
     disabled(!!props.disabled),
   ];
 }
