@@ -3,6 +3,7 @@ import type { SetSessionConfigOptionRequest } from '@agentclientprotocol/sdk';
 import type {
   PromptResponse,
   SessionConfigOption,
+  SetSessionConfigOptionResponse,
 } from '@agentclientprotocol/sdk';
 import { agentAdapters } from '@repo/agents';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
@@ -336,9 +337,7 @@ it('initial settings finish before prompted creation dispatches any Agent work',
 
 it('explicit closure rejects a pending configuration instead of reporting false success', async () => {
   const started = Promise.withResolvers<void>();
-  const completion = Promise.withResolvers<{
-    configOptions: SessionConfigOption[];
-  }>();
+  const completion = Promise.withResolvers<SetSessionConfigOptionResponse>();
   const host = await startAcpEngine({
     newSession: () => ({
       sessionId: configuredSessionId,
