@@ -2,9 +2,8 @@ import type { AgentsListOutput, ProjectsListOutput } from '@repo/contracts';
 import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { ConnectionBanner, type ConnectionState } from '#features/connection';
-import { hasLiquidGlass } from '#lib/generic/native-header';
 import { Text } from '#lib/generic/primitives/text';
 import { LoadError } from '#lib/product/load-error';
 import { Screen } from '#lib/product/screen';
@@ -80,27 +79,21 @@ export function SessionsView({
     </>
   );
 
-  let sessionContent: ReactNode;
-  if (loadState === 'error') {
-    sessionContent = (
-      <BelowHeader>
-        {!wide && listTop}
-        <LoadError
-          title="Couldn't load Sessions"
-          description="The Server didn't respond. Check that it's running, then retry."
-          onRetry={onRetry}
-        />
-      </BelowHeader>
+  let placeholder: React.JSX.Element | undefined;
+  if (loadState === 'error')
+    placeholder = (
+      <LoadError
+        title="Couldn't load Sessions"
+        description="The Server didn't respond. Check that it's running, then retry."
+        onRetry={onRetry}
+      />
     );
-  } else if (loadState === 'loading') {
-    sessionContent = (
-      <BelowHeader>
-        {!wide && listTop}
-        <SessionsLoading />
-      </BelowHeader>
-    );
-  } else {
-    sessionContent = (
+  else if (loadState === 'loading') placeholder = <SessionsLoading />;
+
+  const sessionContent =
+    wide && placeholder ? (
+      placeholder
+    ) : (
       <SessionsList
         projects={projects}
         agents={agents}
@@ -118,9 +111,12 @@ export function SessionsView({
             <View className="-mx-gutter-list -mt-5">{listTop}</View>
           )
         }
+        // The list insets it below a transparent header, as it does the rows.
+        placeholder={
+          placeholder && <View className="-mx-gutter-list">{placeholder}</View>
+        }
       />
     );
-  }
 
   let newSessionControl: ReactNode;
   if (wide) {
@@ -168,20 +164,5 @@ export function SessionsView({
       )}
       {newSessionControl}
     </Screen>
-  );
-}
-
-// Keeps content that doesn't scroll out from under a transparent header.
-function BelowHeader({ children }: { children: ReactNode }): ReactNode {
-  const wide = useWide();
-  if (!hasLiquidGlass || wide) return children;
-  return (
-    // The system insets it by the header's height, as it does the loaded list.
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      style={{ flex: 1, minHeight: 0 }}
-    >
-      {children}
-    </ScrollView>
   );
 }
