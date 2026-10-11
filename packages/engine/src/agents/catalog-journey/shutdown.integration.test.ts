@@ -8,7 +8,13 @@ import type { FetchAgents } from '../index';
 
 const statusSql = 'SELECT status FROM sync_jobs';
 const rejection = "SELECT RAISE(ABORT, 'catalog rejected');";
+const finalStatus: Record<string, string> = {
+  commit: 'idle',
+  rollback: 'running',
+};
 const rejects = (outcome: string): boolean => outcome === 'rollback';
+const rejectionFor = (outcome: string): string =>
+  rejects(outcome) ? rejection : '';
 afterEach(() => vi.useRealTimers());
 
 it.each(['commit', 'rollback'])(
@@ -31,7 +37,7 @@ it.each(['commit', 'rollback'])(
       return 0;
     });
     host.database.$client.exec(
-      `CREATE TEMP TRIGGER stop_catalog BEFORE INSERT ON agents BEGIN SELECT request_catalog_shutdown(); ${rejects(outcome) ? rejection : ''} END`,
+      `CREATE TEMP TRIGGER stop_catalog BEFORE INSERT ON agents BEGIN SELECT request_catalog_shutdown(); ${rejectionFor(outcome)} END`,
     );
     await host.caller.agents.syncCatalog();
     await expect.poll(() => stopped !== undefined).toBe(true);
@@ -45,7 +51,7 @@ it.each(['commit', 'rollback'])(
       rejects(outcome) ? before : after,
     );
     expect(stored.database.$client.prepare(statusSql).get()).toEqual({
-      status: rejects(outcome) ? 'running' : 'idle',
+      status: finalStatus[outcome],
     });
   },
 );
