@@ -6,11 +6,12 @@
   "scripts": {
     "check-types": "bddgen && tsc --noEmit",
     "test:electron": "bddgen && playwright test --project=electron",
-    "test:web": "bddgen && playwright test --project=web"
+    "test:web": "bddgen && playwright test --project=web --project=web-phone"
   },
   "devDependencies": {
     "@playwright/test": "catalog:",
     "@repo/desktop": "workspace:*",
+    "@repo/engine": "workspace:*",
     "@repo/mocks": "workspace:*",
     "@repo/server": "workspace:*",
     "@repo/typescript": "workspace:*",

@@ -1,12 +1,21 @@
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Button, type ButtonProps } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
+import type { IconButtonProps } from '../../../lib/generic/primitives/icon-button';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 
-type RequestActionProps = Omit<ButtonProps, 'children'> & {
+type RequestActionProps = Pick<
+  IconButtonProps,
+  'className' | 'disabled' | 'onPress'
+> & {
+  accessibilityLabel?: string;
   children: string;
   primary?: boolean;
 };
@@ -14,11 +23,15 @@ type RequestActionProps = Omit<ButtonProps, 'children'> & {
 function actionProps(
   { primary, children: _, className, ...props }: RequestActionProps,
   wide: boolean,
-): ButtonProps {
+): React.ComponentProps<typeof Pressable> {
   return {
-    variant: primary ? 'default' : 'ghost',
+    role: 'button',
     ...props,
-    className: actionClassName({ primary, className }, wide),
+    className: contentActionClass({
+      variant: primary ? 'default' : 'ghost',
+      disabled: !!props.disabled,
+      className: actionClassName({ primary, className }, wide),
+    }),
   };
 }
 
@@ -43,9 +56,9 @@ function primaryInset(
 export function RequestAction(props: RequestActionProps): ReactNode {
   const wide = useContentWide();
   return (
-    <Button {...actionProps(props, wide)}>
+    <Pressable {...actionProps(props, wide)}>
       <ActionContent {...props} wide={wide} />
-    </Button>
+    </Pressable>
   );
 }
 
@@ -58,7 +71,9 @@ function ActionContent({
 }): ReactNode {
   return (
     <>
-      <Text role="control">{children}</Text>
+      <Text role="control" className={cn(primary && 'text-primary-foreground')}>
+        {children}
+      </Text>
       {primary && <ReturnKey wide={wide} />}
     </>
   );

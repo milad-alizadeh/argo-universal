@@ -1,8 +1,7 @@
 import type { CustomAgentDefinition } from '@repo/contracts';
 import type * as React from 'react';
 import { useState } from 'react';
-import { Button } from '#lib/generic/primitives/button';
-import { Text } from '#lib/generic/primitives/text';
+import { Button } from '../../../lib/generic/primitives/button';
 import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
 import { AgentPlaceholder } from './agent-placeholder';
 import { CustomAgentForm } from './custom-agent-form';
@@ -63,9 +62,7 @@ function LaunchSection(props: LaunchProps): React.JSX.Element {
 
 function EditButton({ onPress }: { onPress: () => void }): React.JSX.Element {
   return (
-    <Button variant="outline" size="sm" onPress={onPress}>
-      <Text>Edit</Text>
-    </Button>
+    <Button variant="outline" size="sm" onPress={onPress} label={'Edit'} />
   );
 }
 

@@ -1,6 +1,5 @@
 import type { SessionInfo } from '@repo/contracts';
 import {
-  type ActorRefFrom,
   assertEvent,
   assign,
   enqueueActions,
@@ -8,11 +7,11 @@ import {
   type Subscription,
   setup,
 } from 'xstate';
+import type { WriterActorRef } from '../../storage';
 import type { FeedActorRef } from '../feed';
-import type { WriterChange } from '../feed';
-import type { writerMachine } from '../feed';
 import type { RegistryActorRef } from './registry-machine';
 import type { SessionActorRef } from './session-machine';
+import { onWriterChange, type WriterChange } from './writer-changes';
 
 const listFailedEvent = 'list.failed';
 
@@ -25,7 +24,7 @@ interface SessionListContext extends SessionListMachineInput {
 export type SessionListState = { information: SessionInfo; running: boolean }[];
 export interface SessionListMachineInput {
   sessions: RegistryActorRef;
-  writer: ActorRefFrom<typeof writerMachine> | undefined;
+  writer: WriterActorRef | undefined;
   readRows: (sessionIds?: readonly string[]) => SessionListState;
   relatedSessionIds: (sessionIds: readonly string[]) => string[];
   sessionIdsForChanges: (change: WriterChange) => string[];
@@ -101,14 +100,16 @@ export const sessionListMachine = setup({
           error: (error): void => sendBack({ type: listFailedEvent, error }),
           complete: (): void => sendBack({ type: 'list.stop' }),
         });
-        const writer = input.writer?.on('writer.changed', (change): void => {
-          try {
-            const ids = input.sessionIdsForChanges(change);
-            if (ids.length) refresh(ids);
-          } catch (error) {
-            sendBack({ type: listFailedEvent, error });
-          }
-        });
+        const writer =
+          input.writer &&
+          onWriterChange(input.writer, (change): void => {
+            try {
+              const ids = input.sessionIdsForChanges(change);
+              if (ids.length) refresh(ids);
+            } catch (error) {
+              sendBack({ type: listFailedEvent, error });
+            }
+          });
         connect();
         return (): void => {
           registry.unsubscribe();

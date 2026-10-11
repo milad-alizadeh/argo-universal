@@ -568,6 +568,9 @@ importers:
       electron:
         specifier: 'catalog:'
         version: 44.5.1(supports-color@8.1.1)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -580,9 +583,6 @@ importers:
 
   apps/server:
     dependencies:
-      '@repo/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
       '@repo/engine':
         specifier: workspace:*
         version: link:../../packages/engine
@@ -847,6 +847,9 @@ importers:
       '@repo/desktop':
         specifier: workspace:*
         version: link:../apps/desktop
+      '@repo/engine':
+        specifier: workspace:*
+        version: link:../packages/engine
       '@repo/mocks':
         specifier: workspace:*
         version: link:../mocks

@@ -1,15 +1,22 @@
 import { randomUUID } from 'node:crypto';
-import { createServer } from 'node:net';
 import { dirname, join } from 'node:path';
 import type { Database } from '@repo/db';
+import { findFreePort } from '@repo/mocks/network/free-port';
 import { onTestFinished } from 'vitest';
-import { createActor, waitFor, type Actor } from 'xstate';
+import { waitFor, type ActorRefFrom } from 'xstate';
+import { composeEngine, type EngineActor } from '../src/engine/compose';
 import type { HttpServer } from '../src/engine/http-server';
-import { engineMachine, type EngineInput } from '../src/engine/machine';
-import { findDatabaseWriter } from '../src/services/feed';
-import { findSessionRegistry } from '../src/services/sessions';
+import type { EngineInput } from '../src/engine/machine';
+import { findMachineActor } from '../src/lib/machine-actor';
+import type { RegistryActorRef } from '../src/services/sessions';
+import { sessionRegistryId, registryMachine } from '../src/services/sessions';
+import { databaseWriterId, writerMachine } from '../src/storage';
 import { openTestDatabase } from './database';
 import { scriptedEngineInput } from './scripted-engine';
+
+// A module's test drives the Engine through here: modules never import engine/.
+export { engineMachine } from '../src/engine/machine';
+export type { EngineMessage } from '../src/engine/ipc';
 
 type EngineTestOptions = Partial<EngineInput> & {
   database?: Database;
@@ -17,10 +24,10 @@ type EngineTestOptions = Partial<EngineInput> & {
 };
 
 type EngineConnections = {
-  engine: Actor<typeof engineMachine>;
+  engine: EngineActor;
   database: Database;
-  sessionRegistry: NonNullable<ReturnType<typeof findSessionRegistry>>;
-  databaseWriter: NonNullable<ReturnType<typeof findDatabaseWriter>>;
+  sessionRegistry: RegistryActorRef;
+  databaseWriter: ActorRefFrom<typeof writerMachine>;
   createCaller: HttpServer['createCaller'];
   caller: ReturnType<HttpServer['createCaller']>;
 };
@@ -45,19 +52,17 @@ export async function startEngineTestHost(
       ? dirname(options.database.$client.location() ?? '')
       : (options.runtimeDirectory ?? storage?.directory));
   if (!home) throw new Error('Engine test storage is missing');
-  const port = options.port ?? (await findAvailableLoopbackPort());
-  const engine = createActor(engineMachine, {
-    input: {
-      version: '1.2.3',
-      startedAt: '2026-10-03T00:00:00.000Z',
-      now: Date.now,
-      createId: randomUUID,
-      ...scriptedEngineInput(),
-      fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
-      ...options,
-      home,
-      port,
-    },
+  const port = options.port ?? (await findFreePort());
+  const engine = composeEngine({
+    version: '1.2.3',
+    startedAt: '2026-10-03T00:00:00.000Z',
+    now: Date.now,
+    createId: randomUUID,
+    ...scriptedEngineInput(),
+    fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
+    ...options,
+    home,
+    port,
   }).start();
   const stop = registerEngineCleanup(engine, storage);
   await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
@@ -70,12 +75,18 @@ export async function startEngineTestHost(
   };
 }
 
-function readEngineTestHost(
-  engine: Actor<typeof engineMachine>,
-): EngineConnections {
+function readEngineTestHost(engine: EngineActor): EngineConnections {
   const { database, server } = engine.getSnapshot().context;
-  const sessionRegistry = findSessionRegistry(engine.system);
-  const databaseWriter = findDatabaseWriter(engine.system);
+  const sessionRegistry = findMachineActor(
+    engine.system,
+    sessionRegistryId,
+    registryMachine,
+  );
+  const databaseWriter = findMachineActor(
+    engine.system,
+    databaseWriterId,
+    writerMachine,
+  );
   if (!database || !server || !sessionRegistry || !databaseWriter)
     throw new Error('Engine is not ready');
   return {
@@ -89,7 +100,7 @@ function readEngineTestHost(
 }
 
 function registerEngineCleanup(
-  engine: Actor<typeof engineMachine>,
+  engine: EngineActor,
   storage: ReturnType<typeof openTestDatabase> | undefined,
 ): () => Promise<void> {
   const stop = async (): Promise<void> => {
@@ -102,17 +113,4 @@ function registerEngineCleanup(
     storage?.remove();
   });
   return stop;
-}
-
-function findAvailableLoopbackPort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const socket = createServer();
-    socket.once('error', reject);
-    socket.listen(0, '127.0.0.1', () => {
-      const address = socket.address();
-      if (!address || typeof address === 'string')
-        throw new Error('Missing test port');
-      socket.close((error) => (error ? reject(error) : resolve(address.port)));
-    });
-  });
 }

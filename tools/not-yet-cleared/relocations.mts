@@ -11,6 +11,10 @@ const engineRelocations: [string, string[]][] = [
   ['packages/engine/src/services/blob/*', ['apps/server/src/services/blob/*']],
   ['packages/engine/src/services/feed/*', ['apps/server/src/services/feed/*']],
   [
+    'packages/engine/src/storage/*',
+    ['packages/engine/src/services/feed/*', 'apps/server/src/services/feed/*'],
+  ],
+  [
     'packages/engine/src/services/projects/*',
     ['apps/server/src/services/projects/*'],
   ],

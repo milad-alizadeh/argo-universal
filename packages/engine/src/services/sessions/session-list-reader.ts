@@ -24,15 +24,19 @@ import {
   type SQLiteAsyncSelectBase,
   type SQLiteSelectWithout,
 } from 'drizzle-orm/sqlite-core';
-import type { ActorRefFrom } from 'xstate';
+import type { WriterActorRef } from '../../storage';
 import { hydrateStoredFeedRow, newestRows, storedFeedColumns } from '../feed';
-import { readWriterProjection, type WriterChange } from '../feed';
-import type { writerMachine } from '../feed';
+import { readQueuedFeed } from '../feed';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 import type { RegistryActorRef } from './registry-machine';
 import { latestTurnOf, toSessionInfo } from './session-info';
 import type { SessionListState } from './session-list-machine';
 import { decodeStoredSession, storedSessionColumns } from './session-record';
+import {
+  type QueuedSessionRows,
+  readQueuedSessionRows,
+} from './session-storage';
+import type { WriterChange } from './writer-changes';
 
 const storedTurnColumns = {
   ...getTableColumns(turn),
@@ -54,7 +58,7 @@ type ChildTurnIdsQuery = SQLiteSelectWithout<
 
 interface ListReadInput {
   database: Database;
-  writer: ActorRefFrom<typeof writerMachine> | undefined;
+  writer: WriterActorRef | undefined;
   readLiveHeaderRows: ReturnType<typeof createLiveHeaderRowsReader>;
   validate<Value>(read: () => Value): Value | undefined;
   rejectedSessions: Set<string>;
@@ -63,7 +67,7 @@ interface ListReadInput {
 export function createSessionListReader(options: {
   database: Database;
   sessions: RegistryActorRef;
-  writer: () => ActorRefFrom<typeof writerMachine> | undefined;
+  writer: () => WriterActorRef | undefined;
 }): {
   readRows: (sessionIds?: readonly string[]) => SessionListState;
   sessionIdsForChanges: (change: WriterChange) => string[];
@@ -151,7 +155,7 @@ export function createSessionListReader(options: {
         readTurnSessionIds({
           database,
           sessions,
-          projection: readWriterProjection(writer()),
+          projection: readQueuedSessionRows(writer()),
           turnId,
           validate,
         }),
@@ -172,7 +176,7 @@ export function createSessionListReader(options: {
 function readTurnSessionIds(input: {
   database: Database;
   sessions: RegistryActorRef;
-  projection: ReturnType<typeof readWriterProjection>;
+  projection: QueuedSessionRows;
   turnId: string;
   validate: ListReadInput['validate'];
 }): string[] {
@@ -202,7 +206,7 @@ function readListSessions(
   input: ListReadInput,
   sessionIds?: readonly string[],
 ): SessionRecord[] {
-  const projection = readWriterProjection(input.writer);
+  const projection = readQueuedSessionRows(input.writer);
   const stored = input.database
     .select(storedSessionColumns)
     .from(session)
@@ -236,7 +240,7 @@ function readListTurns(
   sessionId: string,
   children: string[],
 ): Turn[] {
-  const projection = readWriterProjection(input.writer);
+  const projection = readQueuedSessionRows(input.writer);
   const updates = projection.changedTurnIds();
   const unchanged = updates.length ? notInArray(turn.id, updates) : undefined;
   const runningIds = readChildTurnIds({
@@ -375,7 +379,7 @@ function readSessionInformation(
             validate((): SessionUpdate => hydrateStoredFeedRow(row.id, stored)),
           ),
     ),
-    ...readWriterProjection(writer).feed(row.id).rows,
+    ...readQueuedFeed(writer, row.id).rows,
     ...Object.values(feedContext?.rows ?? {}),
   ];
   const rejected = changes.includes(undefined);

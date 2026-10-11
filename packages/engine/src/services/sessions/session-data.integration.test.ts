@@ -4,14 +4,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { SessionNewInput } from '@repo/contracts';
 import { project, session } from '@repo/db/schema';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { eq } from 'drizzle-orm';
 import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedMessage } from '#mocks/feed';
-import { initTestRepository } from '#mocks/git';
-import { writeJobs } from '../feed';
-import { writerMachine } from '../feed';
+import { writeJobs, writerMachine } from '../../storage';
+import { FeedRowsJob } from '../feed';
 import {
   createSessionCheckout,
   discardSessionCheckout,
@@ -19,6 +19,7 @@ import {
   titleFromPrompt,
   toSessionInsert,
 } from './session-data';
+import { SessionRowUpdateJob } from './session-storage';
 
 const newSessionId = 'new-session';
 
@@ -49,7 +50,7 @@ it.each([
     cleanups.push((): void =>
       rmSync(directory, { recursive: true, force: true }),
     );
-    initTestRepository(directory);
+    await initTestRepository(directory);
     const { database, remove } = openTestDatabase(
       {},
       join(directory, 'stale-project-path'),
@@ -82,7 +83,7 @@ it.each([
     cleanups.push((): void =>
       rmSync(directory, { recursive: true, force: true }),
     );
-    const git = initTestRepository(directory);
+    const git = await initTestRepository(directory);
     const {
       database,
       directory: runtimeDirectory,
@@ -128,12 +129,12 @@ it.each([
     expect(
       database.select().from(project).where(eq(project.id, 'project-1')).get(),
     ).toMatchObject({ checkoutChoice: checkout });
-    const checkoutGit = (...arguments_: string[]): string =>
+    const checkoutGit = (...arguments_: string[]): Promise<string> =>
       git('-C', created.checkout.path, ...arguments_);
-    expect(checkoutGit('branch', '--show-current')).toBe(
+    expect(await checkoutGit('branch', '--show-current')).toBe(
       created.checkout.branch,
     );
-    expect(checkoutGit('log', '-1', '--format=%s')).toBe(
+    expect(await checkoutGit('log', '-1', '--format=%s')).toBe(
       checkout.type === 'main' ? 'Initial' : 'Feature',
     );
     expect(created.checkout.path).toBe(
@@ -143,7 +144,7 @@ it.each([
     );
     await discardSessionCheckout(input, created.checkout);
     expect(existsSync(created.checkout.path)).toBe(checkout.type === 'main');
-    expect(git('branch', '--list', 'argo/*')).toBe('');
+    expect(await git('branch', '--list', 'argo/*')).toBe('');
   },
 );
 
@@ -190,20 +191,18 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
   cleanups.push((): typeof writer => writer.stop());
   writer.send({
     type: 'writer.write',
-    job: {
-      type: 'sessionRowUpdate',
+    job: new SessionRowUpdateJob({
       id: 'session-1',
       set: { vendorSessionId: 'vendor-resume' },
-    },
+    }),
   });
   writer.send({
     type: 'writer.write',
-    job: {
-      type: 'feedRows',
+    job: new FeedRowsJob({
       sessionId: 'session-1',
       maxRevision: 12,
       rows: [storedMessage(4, 12)],
-    },
+    }),
   });
   await waitFor(writer, (snapshot): boolean =>
     snapshot.matches('waitingToRetry'),

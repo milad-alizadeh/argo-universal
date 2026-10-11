@@ -1,15 +1,21 @@
 import type { AgentAdapter } from '@repo/agents';
 import type { AgentsListInput, AgentsListOutput } from '@repo/contracts';
 import { waitFor } from 'xstate';
+import { findMachineActor } from '../../lib/machine-actor';
 import type { RegistryActorRef } from '../sessions';
 import type { AgentProbeActorRef } from './agent-probe-machine';
-import { findAgentProbe } from './agent-probe-system';
+import { agentProbeMachine } from './agent-probe-machine';
+import { agentProbeId } from './agent-probe-system';
 
 function requireAgentProbe(
   actorSystem: RegistryActorRef['system'],
   adapter: Pick<AgentAdapter, 'agent' | 'label'>,
 ): AgentProbeActorRef {
-  const probeActor = findAgentProbe(actorSystem, adapter.agent);
+  const probeActor = findMachineActor(
+    actorSystem,
+    agentProbeId(adapter.agent),
+    agentProbeMachine,
+  );
   if (!probeActor) throw new Error(`No probe for ${adapter.label}`);
   return probeActor;
 }

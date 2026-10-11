@@ -2,7 +2,7 @@ import type { RowUpsert, SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, asc, eq, gt, lte } from 'drizzle-orm';
-import type { ActorRefFrom } from 'xstate';
+import type { WriterActorRef } from '../../storage';
 import type { FeedStreamEvent } from './feed-change';
 import type { FeedActorRef } from './feed-machine';
 import {
@@ -10,8 +10,7 @@ import {
   newestRows,
   storedFeedColumns,
 } from './feed-row';
-import type { writerMachine } from './writer-machine';
-import { readWriterProjection } from './writer-projection';
+import { readQueuedFeed } from './feed-storage';
 
 const catchUpPageRows = 200;
 // SQLite reads every row for a negative LIMIT.
@@ -21,7 +20,7 @@ export interface FeedRowSources {
   database: Database;
   // The feed actor of an open Session; a closed Session has none.
   findFeed: (sessionId: string) => FeedActorRef | undefined;
-  findWriter: () => ActorRefFrom<typeof writerMachine> | undefined;
+  findWriter: () => WriterActorRef | undefined;
 }
 
 interface RevisionRange {
@@ -37,7 +36,7 @@ const readUnsavedRows = (
   sources: FeedRowSources,
   sessionId: string,
 ): { rows: SessionUpdate[]; maxRevision: number } => {
-  const pending = readWriterProjection(sources.findWriter()).feed(sessionId);
+  const pending = readQueuedFeed(sources.findWriter(), sessionId);
   const feed = sources.findFeed(sessionId)?.getSnapshot().context;
   return {
     rows: [...pending.rows, ...Object.values(feed?.rows ?? {})],

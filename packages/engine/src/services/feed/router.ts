@@ -6,27 +6,42 @@ import {
   FeedSubscribeInput,
   FeedSubscribeOutput,
 } from '@repo/contracts';
-import { publicProcedure, router, zAsyncIterable } from '../../engine/trpc';
-import { readFeedPage, readFeedRow, streamFeed } from './feed';
+import {
+  mergeRouters,
+  publicProcedure,
+  router,
+  routerFactory,
+  zAsyncIterable,
+} from '../../rpc';
+import { type FeedDeps, readFeedPage, readFeedRow, streamFeed } from './feed';
 
-// The Feed procedures.
-export const feedRouter = router({
-  page: publicProcedure
-    .input(FeedPageInput)
-    .output(FeedPageOutput)
-    .query(({ ctx, input }): FeedPageOutput => readFeedPage(ctx, input)),
-  row: publicProcedure
-    .input(FeedRowInput)
-    .output(FeedRowOutput)
-    .query(({ ctx, input }): FeedRowOutput => readFeedRow(ctx, input)),
-  subscribe: publicProcedure
-    .input(FeedSubscribeInput)
-    .output(zAsyncIterable({ yield: FeedSubscribeOutput }))
-    .subscription(async function* ({
-      ctx,
-      input,
-      signal,
-    }): AsyncGenerator<FeedSubscribeOutput, void> {
-      yield* streamFeed(ctx, input, signal);
-    }),
-});
+const createFeedReadRouter = routerFactory((deps: FeedDeps) =>
+  router({
+    page: publicProcedure
+      .input(FeedPageInput)
+      .output(FeedPageOutput)
+      .query(({ input }): FeedPageOutput => readFeedPage(deps, input)),
+    row: publicProcedure
+      .input(FeedRowInput)
+      .output(FeedRowOutput)
+      .query(({ input }): FeedRowOutput => readFeedRow(deps, input)),
+  }),
+);
+
+const createFeedStreamRouter = routerFactory((deps: FeedDeps) =>
+  router({
+    subscribe: publicProcedure
+      .input(FeedSubscribeInput)
+      .output(zAsyncIterable({ yield: FeedSubscribeOutput }))
+      .subscription(async function* ({
+        input,
+        signal,
+      }): AsyncGenerator<FeedSubscribeOutput, void> {
+        yield* streamFeed(deps, input, signal);
+      }),
+  }),
+);
+
+export const createFeedRouter = routerFactory((deps: FeedDeps) =>
+  mergeRouters(createFeedReadRouter(deps), createFeedStreamRouter(deps)),
+);

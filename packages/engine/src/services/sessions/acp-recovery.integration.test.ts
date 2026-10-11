@@ -8,15 +8,19 @@ import { waitFor } from 'xstate';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
-import { findSessionActor } from './index';
+import { findMachineActor } from '../../lib/machine-actor';
+import type { SessionActorRef } from './index';
+import { sessionMachine } from './session-machine';
+import { sessionActorId } from './session-system';
 
 type AcpHost = Awaited<ReturnType<typeof startAcpEngine>>;
 const recoveryTimeout = { timeout: 10_000 };
-const requireSession = (
-  host: AcpHost,
-  sessionId: string,
-): NonNullable<ReturnType<typeof findSessionActor>> => {
-  const session = findSessionActor(host.engine.system, sessionId);
+const requireSession = (host: AcpHost, sessionId: string): SessionActorRef => {
+  const session = findMachineActor(
+    host.engine.system,
+    sessionActorId(sessionId),
+    sessionMachine,
+  );
   if (!session) throw new Error(`Session ${sessionId} is not open`);
   return session;
 };

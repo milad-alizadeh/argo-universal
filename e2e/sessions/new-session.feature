@@ -76,8 +76,9 @@ Feature: New Session
 
   Scenario Outline: An image prompt starts a Session with Agent <agent>
     Given a phone Frame
-    And Agent <agent> can inspect image prompts
-    When I attach the red square image
+    And a New Session with Agent <agent>
+    When I open the Session before prompting
+    And I attach the red square image
     And I send the prompt "Name the dominant color in this image."
     Then the Session Feed contains the image prompt
     And the Agent replies "The dominant color is red."

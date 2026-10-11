@@ -1,15 +1,17 @@
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
-import type { Context } from '../../engine/context';
+import { findMachineActor } from '../../lib/machine-actor';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
+import type { SessionRouterDeps } from './router-deps';
 import {
   rejectSessionCommand,
   rejectRegistryCommand,
   validateSessionCommandAdmission,
 } from './session-command';
 import type { SessionActorRef, SessionCommand } from './session-machine';
+import { sessionMachine } from './session-machine';
 import { isSessionReady } from './session-snapshot';
-import { findSessionActor } from './session-system';
+import { sessionActorId } from './session-system';
 
 export function sendCheckedRegistryCommand(
   sessionRegistry: RegistryActorRef,
@@ -25,7 +27,11 @@ export function requireOpenSessionActor(
   sessionRegistry: RegistryActorRef,
   sessionId: string,
 ): SessionActorRef {
-  const sessionActor = findSessionActor(sessionRegistry.system, sessionId);
+  const sessionActor = findMachineActor(
+    sessionRegistry.system,
+    sessionActorId(sessionId),
+    sessionMachine,
+  );
   if (!sessionActor)
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
@@ -88,36 +94,40 @@ function rejectClosedSession(
 }
 
 export async function openReadySession(
-  context: Pick<Context, 'sessions' | 'readSession' | 'sessionCommandSignal'>,
+  deps: Pick<
+    SessionRouterDeps,
+    'sessions' | 'readSession' | 'sessionCommandSignal'
+  >,
   sessionId: string,
   commandType: SessionCommand['type'] = 'session.prompt',
 ): Promise<SessionActorRef> {
-  validateSessionCommandAdmission(context);
-  const liveSession = findSessionActor(context.sessions.system, sessionId);
-  if (liveSession) return waitForSessionReady(liveSession, commandType);
-  return waitForSessionReady(
-    openStoredSession(context, sessionId),
-    commandType,
+  validateSessionCommandAdmission(deps);
+  const liveSession = findMachineActor(
+    deps.sessions.system,
+    sessionActorId(sessionId),
+    sessionMachine,
   );
+  if (liveSession) return waitForSessionReady(liveSession, commandType);
+  return waitForSessionReady(openStoredSession(deps, sessionId), commandType);
 }
 
 function openStoredSession(
-  context: Pick<Context, 'sessions' | 'readSession'>,
+  deps: Pick<SessionRouterDeps, 'sessions' | 'readSession'>,
   sessionId: string,
 ): SessionActorRef {
-  const sessionRecord = readWritableSession(context.readSession, sessionId);
-  sendCheckedRegistryCommand(context.sessions, {
+  const sessionRecord = readWritableSession(deps.readSession, sessionId);
+  sendCheckedRegistryCommand(deps.sessions, {
     type: 'sessions.open',
     sessionId,
     agent: sessionRecord.agent,
   });
-  return requireOpenSessionActor(context.sessions, sessionId);
+  return requireOpenSessionActor(deps.sessions, sessionId);
 }
 
 function readWritableSession(
-  readSession: Context['readSession'],
+  readSession: SessionRouterDeps['readSession'],
   sessionId: string,
-): ReturnType<Context['readSession']> {
+): ReturnType<SessionRouterDeps['readSession']> {
   const sessionRecord = readSession(sessionId);
   if (sessionRecord.parentSessionId !== null)
     throw new TRPCError({

@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { LoadError } from '#lib/product/load-error';
+import { Button } from '../../../lib/generic/primitives/button';
 import type { CatalogLoad } from '../state/catalog-sync';
 import { AgentCatalog, type CatalogRefreshProps } from './catalog';
 import { CatalogSearch, type CatalogSearchProps } from './catalog-search';
@@ -88,11 +88,7 @@ function HeadingButton({
   label,
   ...button
 }: HeadingButtonProps): React.JSX.Element {
-  return (
-    <Button variant="outline" size="sm" className="h-8 shadow-none" {...button}>
-      <Text className="font-sans leading-5">{label}</Text>
-    </Button>
-  );
+  return <Button variant="outline" size="sm" {...button} label={label} />;
 }
 
 function CatalogResult(props: ResultProps): React.JSX.Element {

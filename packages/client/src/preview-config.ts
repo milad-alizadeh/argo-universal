@@ -1,13 +1,8 @@
 import { withNavigationMocks } from '../mocks/with-navigation-mocks';
-import { withTrpcMocks } from '../mocks/with-trpc-mocks';
 import { withReusablesPreview } from './with-theme';
 
-// Stories get tRPC fixtures from parameters.trpc through the mock link (ADR 0010).
-export const previewDecorators = [
-  withReusablesPreview,
-  withTrpcMocks,
-  withNavigationMocks,
-];
+// Stories render views from props (ADR-0021); no decorator serves data.
+export const previewDecorators = [withReusablesPreview, withNavigationMocks];
 
 export const previewGlobals = { mode: 'light' };
 

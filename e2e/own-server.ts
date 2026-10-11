@@ -1,11 +1,12 @@
 import { type ChildProcess, spawn } from 'node:child_process';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { readServerAddress } from '@repo/engine/server-runtime';
+import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
+import { findFreePort } from '@repo/mocks/network/free-port';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { z } from 'zod';
-import type { MockAgents } from './mock-agents';
-import { createProjectRepository } from './project-repository';
-import { findFreePort, serverHttpUrl, serverUrlFor } from './server-port';
+import { serverHttpUrl, serverUrlFor } from './server-port';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 const fixtureEngineArguments = ['--import', 'tsx', 'mocks/e2e-engine.ts'];
@@ -29,7 +30,6 @@ export async function pollServer<T>(
   throw new Error(timeoutMessage(serverStartMilliseconds / 1000));
 }
 
-const ServerFile = z.object({ port: z.int() });
 const portTakenPattern = /EADDRINUSE/;
 const attempts = 3;
 const STDERR_TAIL_LENGTH = 2000;
@@ -53,11 +53,7 @@ async function waitUntilReady({
       if (hasExited(server))
         throw new Error(`${describeExit(server)}${withStderr(stderrTail())}`);
       if (portTaken()) return false;
-      const text = await readFile(path.join(home, 'server.json'), 'utf8').catch(
-        (): null => null,
-      );
-      if (text !== null && ServerFile.parse(JSON.parse(text)).port === port)
-        return true;
+      if (readServerAddress(home)?.port === port) return true;
       return;
     },
     (seconds): string =>
@@ -81,7 +77,7 @@ const withStderr = (tail: string): string =>
 // Starts a real Engine with shared external Agent fixtures in an isolated home.
 export async function startOwnServer(
   directory: string,
-  agents: MockAgents,
+  agents: AppFixtureAgents,
 ): Promise<{
   serverUrl: string;
   httpUrl: string;
@@ -93,7 +89,7 @@ export async function startOwnServer(
   const registryPath = path.join(directory, 'registry.json');
   await mkdir(directory, { recursive: true });
   await writeFile(registryPath, JSON.stringify(publishedRegistry));
-  await createProjectRepository(projectPath);
+  await initTestRepository(projectPath, false);
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
     const server = spawn(process.execPath, fixtureEngineArguments, {

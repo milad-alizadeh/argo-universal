@@ -1,7 +1,7 @@
 export { agentProbeMachine } from './agent-probe-machine';
-export { agentProbeId, findAgentProbe } from './agent-probe-system';
+export { agentProbeId } from './agent-probe-system';
 
-export { agentsRouter } from './router';
+export { type AgentsRouterDeps, createAgentsRouter } from './router';
 export {
   isAgentDisabled,
   readCustomDefinition,
@@ -22,6 +22,7 @@ export type {
   ResolveAgentLaunch,
 } from './acp/resource-types';
 export { type FetchAgents } from './catalog/fetch-agents';
+export { AgentCatalogReplaceJob } from './agent-storage';
 
 export {
   syncSupervisorMachine,

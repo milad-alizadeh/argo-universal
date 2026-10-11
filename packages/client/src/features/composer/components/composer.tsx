@@ -7,11 +7,14 @@ import {
   PlanProposalCard,
   type PlanProposalCardProps,
 } from '#features/requests';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { Textarea } from '#lib/generic/primitives/textarea';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon, IconSpinner } from '../../../lib/generic/symbols/icon';
 import {
   ComposerAgentModelControl,
@@ -202,16 +205,8 @@ export function Composer({
                         className="w-full h-full"
                       />
                     </View>
-                    <Button
-                      variant="ghost"
-                      size="icon"
+                    <Pressable
                       disabled={inactive}
-                      className={cn(
-                        'absolute right-0 top-0 size-8 sm:size-8 active:bg-transparent dark:active:bg-transparent hover:bg-transparent dark:hover:bg-transparent web:wide:opacity-0',
-                        inactive
-                          ? 'web:wide:group-hover:opacity-50'
-                          : 'web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100',
-                      )}
                       accessibilityLabel={`Remove ${image.name}`}
                       onPress={() =>
                         onDraftChange({
@@ -221,11 +216,22 @@ export function Composer({
                           ),
                         })
                       }
+                      role="button"
+                      className={contentActionClass({
+                        variant: 'ghost',
+                        className: cn(
+                          'absolute right-0 top-0 size-8 sm:size-8 p-0 active:bg-transparent dark:active:bg-transparent hover:bg-transparent dark:hover:bg-transparent web:wide:opacity-0',
+                          inactive
+                            ? 'web:wide:group-hover:opacity-50'
+                            : 'web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100',
+                        ),
+                        disabled: inactive,
+                      })}
                     >
                       <View className="size-5 items-center justify-center rounded-sm bg-background">
                         <ComposerGlyph name="remove" size="xs" />
                       </View>
-                    </Button>
+                    </Pressable>
                   </View>
                 </View>
               ))}
@@ -273,17 +279,21 @@ export function Composer({
                 label="Attach"
                 width={248}
                 trigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  <Pressable
                     disabled={inactive}
-                    className="h-7 sm:h-7 w-4 sm:w-4 mr-1.5 p-0 hover:bg-transparent active:bg-transparent dark:hover:bg-transparent dark:active:bg-transparent"
                     onHoverIn={() => setAttachHighlighted(true)}
                     onHoverOut={() => setAttachHighlighted(false)}
                     onPressIn={() => setAttachHighlighted(true)}
                     onPressOut={() => setAttachHighlighted(false)}
                     hitSlop={8}
                     accessibilityLabel={wide ? 'Attach' : 'Attach images'}
+                    role="button"
+                    className={contentActionClass({
+                      variant: 'ghost',
+                      className:
+                        'h-7 sm:h-7 w-4 sm:w-4 mr-1.5 p-0 hover:bg-transparent active:bg-transparent dark:hover:bg-transparent dark:active:bg-transparent',
+                      disabled: inactive,
+                    })}
                   >
                     <View
                       pointerEvents="none"
@@ -295,7 +305,7 @@ export function Composer({
                     <View className="relative z-10">
                       <Icon name="add" className="text-muted-foreground" />
                     </View>
-                  </Button>
+                  </Pressable>
                 }
               >
                 {(close) => (
@@ -344,13 +354,18 @@ export function Composer({
                             : []),
                         ]
                     ).map((item) => (
-                      <Button
+                      <Pressable
                         key={item.label}
-                        variant="ghost"
                         accessibilityLabel={item.label}
                         disabled={!item.onPress}
-                        className="h-12 sm:h-12 wide:h-11 wide:sm:h-11 rounded-sm px-3 gap-3 justify-start"
                         onPress={() => close(item.onPress)}
+                        role="button"
+                        className={contentActionClass({
+                          variant: 'ghost',
+                          className:
+                            'h-12 sm:h-12 wide:h-11 wide:sm:h-11 rounded-sm px-3 gap-3 justify-start',
+                          disabled: !item.onPress,
+                        })}
                       >
                         <View className="size-8 rounded-full bg-muted wide:size-auto wide:rounded-none wide:bg-transparent items-center justify-center">
                           {'glyph' in item ? (
@@ -369,7 +384,7 @@ export function Composer({
                         >
                           {item.label}
                         </Text>
-                      </Button>
+                      </Pressable>
                     ))}
                   </View>
                 )}
@@ -397,15 +412,7 @@ export function Composer({
                   disabled={inactive}
                 />
               )}
-              <Button
-                size="icon"
-                className={cn(
-                  'size-7 sm:size-7 rounded-full',
-                  sendState !== 'stop' && wide && 'shadow-none!',
-                  (sendState === 'sending' || sendState === 'stop') &&
-                    'opacity-100',
-                  sendState === 'blocked' && 'opacity-35',
-                )}
+              <Pressable
                 accessibilityLabel={sendState === 'stop' ? 'Stop' : 'Send'}
                 disabled={
                   sendState === 'stop' ? disabled : sendState !== 'ready'
@@ -417,9 +424,22 @@ export function Composer({
                         if (sendState === 'ready') onSend(draft);
                       }
                 }
+                role="button"
+                className={contentActionClass({
+                  variant: 'default',
+                  className: cn(
+                    'size-7 sm:size-7 rounded-full p-0',
+                    sendState !== 'stop' && wide && 'shadow-none!',
+                    (sendState === 'sending' || sendState === 'stop') &&
+                      'opacity-100',
+                    sendState === 'blocked' && 'opacity-35',
+                  ),
+                  disabled:
+                    sendState === 'stop' ? disabled : sendState !== 'ready',
+                })}
               >
                 {sendButtonContent}
-              </Button>
+              </Pressable>
             </View>
           </View>
         </View>

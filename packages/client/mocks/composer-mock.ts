@@ -13,9 +13,7 @@ import {
   type ComposerImage,
   type ComposerProps,
 } from '../src/features/composer/components/composer';
-
-const imageUri =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC';
+import { redSquareDataUrl } from '../src/lib/product/feed-message.mocks';
 
 export const composerLongAgentCatalog: AgentInfo[] = Array.from(
   { length: 40 },
@@ -38,7 +36,7 @@ export const composerImages: ComposerImage[] = newSessionInputs.flatMap(
             {
               id: `${agent}:image`,
               name: 'screenshot.png',
-              uri: imageUri,
+              uri: redSquareDataUrl,
               bytes: block.blob.bytes,
             },
           ]

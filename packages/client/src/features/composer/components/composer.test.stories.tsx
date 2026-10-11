@@ -10,8 +10,6 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
-import { NewSessionScreen } from '#features/sessions';
-import { SessionScreen } from '#features/sessions';
 import { ContentLayout } from '#lib/product/content-layout';
 import { chooseEffort } from '../../../../mocks/choose-effort';
 import {
@@ -23,11 +21,9 @@ import {
   oversizedComposerImage,
 } from '../../../../mocks/composer-mock';
 import { updateComposerSettings } from '../../../../mocks/composer-mock';
-import { newSessionMocks } from '../../../../mocks/new-session-mock';
-import { idleSessionMocks } from '../../../../mocks/session-screen-mock';
 import { layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
-import { Composer } from './composer';
+import { Composer, type ComposerDraft } from './composer';
 
 const missingAvailableAgentFailure =
   'Recorded catalog needs an available Agent.';
@@ -162,6 +158,28 @@ type PlayContext = Parameters<NonNullable<Story['play']>>[0];
 
 const dark = { globals: { mode: 'dark' } };
 
+// A Composer that keeps its draft and clears it on Send, as the Session view's draft does.
+function SendingComposer({
+  onSend,
+}: {
+  onSend: (draft: ComposerDraft) => void;
+}): React.JSX.Element {
+  const [draft, setDraft] = useState<ComposerDraft>({ text: '', images: [] });
+  return (
+    <Composer
+      {...composerProps({
+        draft,
+        onDraftChange: setDraft,
+        onAttachImages: fn(),
+        onSend: (sent) => {
+          onSend(sent);
+          setDraft({ text: '', images: [] });
+        },
+      })}
+    />
+  );
+}
+
 export const Empty: Story = {
   play: async ({ canvas }) => {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
@@ -203,13 +221,9 @@ export const Empty: Story = {
 };
 
 function typing(width: number): Story {
-  const prompt = fn(() => ({ messageId: 'message-sent' }));
+  const prompt = fn();
   return {
-    render: () => <SessionScreen id="session-1" />,
-    parameters: {
-      screenPreview: true,
-      trpc: { ...idleSessionMocks, 'session.prompt': prompt },
-    },
+    render: () => <SendingComposer onSend={prompt} />,
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
@@ -219,13 +233,10 @@ function typing(width: number): Story {
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
       await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
       await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
-      await expect(prompt).toHaveBeenCalledWith(
-        {
-          sessionId: 'session-1',
-          prompt: [{ type: 'text', text: spacingPrompt }],
-        },
-        expect.any(AbortSignal),
-      );
+      await expect(prompt).toHaveBeenCalledWith({
+        text: spacingPrompt,
+        images: [],
+      });
       await waitFor(() => expect(input).toHaveValue(''));
     },
   };
@@ -367,13 +378,9 @@ export const AttachmentInNarrowContent: Story = {
 };
 
 function multiline(width: number): Story {
-  const prompt = fn(() => ({ messageId: 'message-sent' }));
+  const prompt = fn();
   return {
-    render: () => <SessionScreen id="session-1" />,
-    parameters: {
-      screenPreview: true,
-      trpc: { ...idleSessionMocks, 'session.prompt': prompt },
-    },
+    render: () => <SendingComposer onSend={prompt} />,
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const input = canvas.getByRole('textbox', { name: 'Message' });
@@ -382,18 +389,10 @@ function multiline(width: number): Story {
       await expect(prompt).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
       await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
-      await expect(prompt).toHaveBeenCalledWith(
-        {
-          sessionId: 'session-1',
-          prompt: [
-            {
-              type: 'text',
-              text: multilineSpacingPrompt,
-            },
-          ],
-        },
-        expect.any(AbortSignal),
-      );
+      await expect(prompt).toHaveBeenCalledWith({
+        text: multilineSpacingPrompt,
+        images: [],
+      });
       await waitFor(() => expect(input).toHaveValue(''));
     },
   };
@@ -510,41 +509,6 @@ function disabled(width: number): Story {
 }
 export const DisabledPhone = disabled(layoutWidths.phone);
 export const DisabledWide = disabled(layoutWidths.wide);
-
-function draftsStayOnTheirDevice(width: number): Story {
-  return {
-    parameters: { screenPreview: true, trpc: idleSessionMocks },
-    render: () => (
-      <View className="w-full gap-4">
-        <View testID="first-device">
-          <SessionScreen id="session-1" />
-        </View>
-        <View testID="second-device">
-          <SessionScreen id="session-1" />
-        </View>
-      </View>
-    ),
-    play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
-      const first = within(canvas.getByTestId('first-device'));
-      const second = within(canvas.getByTestId('second-device'));
-      await userEvent.type(first.getByRole('textbox'), 'Draft on this device.');
-      await expect(second.getByRole('textbox')).toHaveValue('');
-      await userEvent.type(second.getByRole('textbox'), 'A different draft.');
-      await userEvent.click(first.getByRole('button', { name: 'Send' }));
-      await waitFor(() => expect(first.getByRole('textbox')).toHaveValue(''));
-      await expect(second.getByRole('textbox')).toHaveValue(
-        'A different draft.',
-      );
-    },
-  };
-}
-export const DraftsStayOnTheirDevicePhone = draftsStayOnTheirDevice(
-  layoutWidths.phone,
-);
-export const DraftsStayOnTheirDeviceWide = draftsStayOnTheirDevice(
-  layoutWidths.wide,
-);
 
 // One story per viewport and Agent; each takes its expectations from its own recorded catalog.
 function pickers(width: number, agentIndex: number): Story {
@@ -721,50 +685,6 @@ async function expectDangerousMode({
   await userEvent.keyboard('{Escape}');
 }
 
-function checkout(width: number): Story {
-  return {
-    parameters: { screenPreview: true, trpc: newSessionMocks },
-    render: () => <NewSessionScreen />,
-    play: async ({ canvas, userEvent }) => {
-      const overlay = within(document.body);
-      await settleViewport(width);
-      const trigger = await canvas.findByRole('button', { name: 'Checkout' });
-      await expect(trigger).toHaveTextContent(newCheckoutLabel);
-      await userEvent.click(trigger);
-      await expect(
-        await overlay.findByRole('button', { name: /^New worktree$/ }),
-      ).toHaveAttribute(pressedAttribute, 'true');
-      await expect(overlay.queryByRole('switch')).not.toBeInTheDocument();
-      await expect(
-        overlay.queryByRole('textbox', { name: 'Search branches' }),
-      ).not.toBeInTheDocument();
-      await expect(
-        overlay.queryByRole('button', { name: 'main' }),
-      ).not.toBeInTheDocument();
-      await userEvent.click(overlay.getByRole('button', { name: /^Local$/ }));
-      await waitFor(() =>
-        expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
-      );
-      await expect(trigger).toHaveTextContent('Local');
-      await expect(trigger).not.toHaveTextContent(newCheckoutLabel);
-      await userEvent.click(trigger);
-      await expect(
-        await overlay.findByRole('button', { name: /^Local$/ }),
-      ).toHaveAttribute(pressedAttribute, 'true');
-      await expect(
-        overlay.getByRole('button', { name: /^New worktree$/ }),
-      ).toHaveAttribute(pressedAttribute, 'false');
-      await userEvent.click(
-        overlay.getByRole('button', { name: /^New worktree$/ }),
-      );
-      await waitFor(() =>
-        expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
-      );
-      await expect(trigger).toHaveTextContent(newCheckoutLabel);
-      await expect(trigger).not.toHaveTextContent('Local');
-    },
-  };
-}
 function phoneStatusControls(
   agent: Pick<AgentInfo, 'agent' | 'configOptions'>,
 ): Story {
@@ -804,7 +724,6 @@ function phoneStatusControls(
 }
 export const CheckoutPhone = phoneStatusControls(firstAgent);
 export const CheckoutPhoneSecondAgent = phoneStatusControls(secondAgent);
-export const CheckoutWide = checkout(layoutWidths.wide);
 
 function createdCheckoutIsReadOnly(width: number): Story {
   return {
@@ -1348,8 +1267,7 @@ async function expectHeldAgentList(): Promise<void> {
 
 function editorScrollsAfterFourLines(width: number): Story {
   return {
-    render: () => <SessionScreen id="session-1" />,
-    parameters: { screenPreview: true, trpc: idleSessionMocks },
+    render: () => <SendingComposer onSend={fn()} />,
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });

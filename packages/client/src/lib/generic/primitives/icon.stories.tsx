@@ -7,6 +7,7 @@ import { Icon } from '../symbols/icon';
 import { iconNames, iconSymbols } from '../symbols/icon-names';
 import { SymbolImagesProvider } from '../symbols/symbol-images';
 import { Variation, Variations } from '../variations';
+import { IconButton } from './icon-button';
 import { renderStorybookSymbol } from './sf-symbol-images.mocks';
 
 const meta = {
@@ -43,9 +44,14 @@ export const Overview: Story = {
               { label: 'Search', icon: 'search' },
             ] as const
           ).map(({ label, icon }) => (
-            <Button key={label} size="icon" aria-label={label}>
-              <Icon name={icon} />
-            </Button>
+            <IconButton
+              key={label}
+              aria-label={label}
+              icon={icon}
+              accessibilityLabel={label}
+              size="md"
+              variant="filled"
+            />
           ))}
         </View>
       </Variation>
@@ -80,9 +86,10 @@ function FilledSymbols(): React.JSX.Element {
   const [filled, setFilled] = useState(false);
   return (
     <View className="gap-3">
-      <Button onPress={() => setFilled(!filled)}>
-        <Text>{filled ? 'Show outlined icons' : 'Show filled icons'}</Text>
-      </Button>
+      <Button
+        onPress={() => setFilled(!filled)}
+        label={filled ? 'Show outlined icons' : 'Show filled icons'}
+      />
       <View className="flex-row items-center gap-3">
         {(
           [

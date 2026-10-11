@@ -1,6 +1,7 @@
-import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { ServerAddress } from '@repo/contracts';
+import {
+  removeServerAddress,
+  writeServerAddress,
+} from '@repo/engine/server-runtime';
 import {
   assign,
   sendTo,
@@ -30,7 +31,6 @@ interface SupervisorContext extends SupervisorInput {
 
 type SupervisorEvent = EngineEvent | { type: 'server.stop' };
 
-const serverAddressFile = 'server.json';
 const crashWindowMs = 600_000;
 const maxCrashesInWindow = 10;
 const backoffBaseMs = 500;
@@ -69,33 +69,19 @@ export const supervisorMachine = setup({
         ];
       },
     }),
-    // Writes a temp file and renames it, so a reader never sees half a file.
     writeServerAddress: ({ context }): void => {
       if (context.port === null) return;
-      const filePath = join(context.home, serverAddressFile);
-      const temporaryPath = `${filePath}.${process.pid}.tmp`;
-      const address = ServerAddress.parse({
+      writeServerAddress(context.home, {
         pid: process.pid,
         port: context.port,
         version: context.version,
         startedAt: context.startedAt,
       });
-      writeFileSync(temporaryPath, `${JSON.stringify(address, null, 2)}\n`);
-      renameSync(temporaryPath, filePath);
     },
     askEngineToStop: sendTo('engine', { type: 'engine.stop' }),
-    // Removes server.json only when it names this pid, so a failed second Supervisor leaves the running Server's file.
+    // A failed second Supervisor leaves the running Server's file.
     removeServerAddress: ({ context }): void => {
-      const filePath = join(context.home, serverAddressFile);
-      let json: unknown;
-      try {
-        json = JSON.parse(readFileSync(filePath, 'utf8'));
-      } catch {
-        return;
-      }
-      const address = ServerAddress.safeParse(json);
-      if (address.success && address.data.pid === process.pid)
-        rmSync(filePath, { force: true });
+      removeServerAddress(context.home, process.pid);
     },
   },
   guards: {

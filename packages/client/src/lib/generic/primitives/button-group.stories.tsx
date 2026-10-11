@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Icon } from '../symbols/icon';
 import { Variation, Variations } from '../variations';
 import { Button } from './button';
 import { ButtonGroup } from './button-group';
-import { Text } from './text';
+import { IconButton } from './icon-button';
 
 const meta = {
   title: 'Design System/Primitives/ButtonGroup',
@@ -27,9 +26,7 @@ function SplitButtonExample(): React.JSX.Element {
     <Variation label="Split button">
       <View className="flex-row">
         <ButtonGroup>
-          <Button>
-            <Text>Allow</Text>
-          </Button>
+          <Button label={'Allow'} appearance="content" />
           <AllowOptions />
         </ButtonGroup>
       </View>
@@ -42,9 +39,12 @@ function SecondaryButtonsExample(): React.JSX.Element {
       <View className="flex-row">
         <ButtonGroup>
           {['Previous', 'Today', 'Next'].map((label) => (
-            <Button key={label} variant="secondary">
-              <Text>{label}</Text>
-            </Button>
+            <Button
+              key={label}
+              variant="secondary"
+              label={label}
+              appearance="content"
+            />
           ))}
         </ButtonGroup>
       </View>
@@ -54,8 +54,12 @@ function SecondaryButtonsExample(): React.JSX.Element {
 
 function AllowOptions(): React.JSX.Element {
   return (
-    <Button size="icon" accessibilityLabel="Allow options">
-      <Icon name="chevron-down" size="xs" />
-    </Button>
+    <IconButton
+      accessibilityLabel="Allow options"
+      icon={'chevron-down'}
+      iconSize="xs"
+      size="md"
+      variant="filled"
+    />
   );
 }

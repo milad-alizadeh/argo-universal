@@ -8,8 +8,8 @@ import { sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { countDatabaseReads, openTestDatabase } from '#mocks/database';
-import { toFeedRowWrite } from '../feed';
-import { writerMachine } from '../feed';
+import { writerMachine } from '../../storage';
+import { FeedRowsJob, toFeedRowWrite } from '../feed';
 import { toLiveHeader } from './live-header';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 
@@ -147,12 +147,11 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
   });
   writer.send({
     type: 'writer.write',
-    job: {
-      type: 'feedRows',
+    job: new FeedRowsJob({
       sessionId: 'session-1',
       maxRevision: 3,
       rows: [{ ...newer, revision: 3, title: 'Queued title' }],
-    },
+    }),
   });
   await waitFor(writer, (snapshot): boolean =>
     snapshot.matches('waitingToRetry'),

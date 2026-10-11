@@ -3,7 +3,8 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
-import { writeDatabaseJobAndWaitForCommit } from '../feed';
+import { writeDatabaseJobAndWaitForCommit } from '../../storage';
+import { SessionRowUpdateJob } from '../sessions';
 
 afterEach(() => vi.useRealTimers());
 
@@ -58,11 +59,13 @@ it('keeps sync admission pending while Session writes retry, then commits both t
     "CREATE TRIGGER reject_session BEFORE UPDATE ON session BEGIN SELECT RAISE(ABORT, 'Session write failed'); END",
   );
   await expect(
-    writeDatabaseJobAndWaitForCommit(databaseWriter, {
-      type: 'sessionRowUpdate',
-      id: 'session-1',
-      set: { title: 'Retried Session' },
-    }),
+    writeDatabaseJobAndWaitForCommit(
+      databaseWriter,
+      new SessionRowUpdateJob({
+        id: 'session-1',
+        set: { title: 'Retried Session' },
+      }),
+    ),
   ).rejects.toThrow('Failed query');
   let accepted = false;
   const admission = caller.agents.syncCatalog().then(() => {

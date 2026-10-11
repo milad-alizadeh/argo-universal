@@ -11,13 +11,15 @@ import { Pressable, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { listTestIdProps } from '#lib/generic/list-test-id';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
+import { Button } from '../../../lib/generic/primitives/button';
 import { FieldGroup } from '../../../lib/generic/primitives/hosted-field-group';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { InfoPopover } from '../../../lib/generic/primitives/info-popover';
+import { contentActionClass } from '../../../lib/generic/primitives/pressable';
 import { Slider } from '../../../lib/generic/primitives/slider';
 import { Switch } from '../../../lib/generic/primitives/switch';
 import { Icon, iconSizeStyle } from '../../../lib/generic/symbols/icon';
@@ -192,19 +194,22 @@ function Choice({
   leading?: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <Button
-      variant="ghost"
+    <Pressable
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ selected }}
       aria-pressed={selected}
       onPress={onPress}
-      className={cn(
-        'min-h-11 wide:min-h-8 h-auto sm:h-auto justify-start gap-2.5 px-2.5 wide:px-2 py-1.5 rounded-sm',
-        'web:focus-visible:ring-0 web:focus-visible:bg-accent',
-        selected && 'bg-accent ios:bg-accent/50',
-        description && 'min-h-13 wide:min-h-0',
-        leading && 'items-start py-2',
-      )}
+      role="button"
+      className={contentActionClass({
+        variant: 'ghost',
+        className: cn(
+          'min-h-11 wide:min-h-8 h-auto sm:h-auto justify-start gap-2.5 px-2.5 wide:px-2 py-1.5 rounded-sm',
+          'web:focus-visible:ring-0 web:focus-visible:bg-accent',
+          selected && 'bg-accent ios:bg-accent/50',
+          description && 'min-h-13 wide:min-h-0',
+          leading && 'items-start py-2',
+        ),
+      })}
     >
       {leading && (
         <View className="h-5 w-4 shrink-0 items-center justify-center">
@@ -237,7 +242,7 @@ function Choice({
       >
         {selected && <Icon name="check" />}
       </View>
-    </Button>
+    </Pressable>
   );
 }
 
@@ -296,8 +301,7 @@ export function AgentChoices({
       availability?.action === 'retry' ? configuration.onAgentRetry : setup;
     return (
       <View key={agent.agent}>
-        <Button
-          variant="ghost"
+        <Pressable
           accessibilityLabel={`Select ${agent.label}`}
           disabled={
             !configuration.onAgentChange || agent.availability !== 'available'
@@ -306,17 +310,24 @@ export function AgentChoices({
             selected: agent.agent === configuration.agent,
           }}
           aria-pressed={agent.agent === configuration.agent}
-          className={cn(
-            'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2.5 has-[>[data-icon]]:px-2.5 wide:px-2 wide:has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
-            // The desktop pane sits on the sidebar colour, so its chosen row needs a deeper fill; a running Session dims only the Agents it cannot switch to.
-            agent.agent === configuration.agent &&
-              'bg-accent ios:bg-accent/50 wide:bg-foreground/7 opacity-100 disabled:opacity-100',
-          )}
           onPress={() => {
             if (agent.agent !== configuration.agent)
               configuration.onAgentChange?.(agent.agent);
             onSelect();
           }}
+          role="button"
+          className={contentActionClass({
+            variant: 'ghost',
+            className: cn(
+              'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2.5 has-[>[data-icon]]:px-2.5 wide:px-2 wide:has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
+              // The desktop pane sits on the sidebar colour, so its chosen row needs a deeper fill; a running Session dims only the Agents it cannot switch to.
+              agent.agent === configuration.agent &&
+                'bg-accent ios:bg-accent/50 wide:bg-foreground/7 opacity-100 disabled:opacity-100',
+            ),
+            disabled:
+              !configuration.onAgentChange ||
+              agent.availability !== 'available',
+          })}
         >
           {wide && <Logo agent={agent} />}
           <View className="flex-1 min-w-0 gap-0.5">
@@ -342,25 +353,20 @@ export function AgentChoices({
             )}
           </View>
           {agent.agent === configuration.agent && <Icon name="check" />}
-        </Button>
+        </Pressable>
         {availability && onAvailabilityAction && (
           <Button
             variant="ghost"
             accessibilityLabel={`${availability.action === 'retry' ? 'Retry' : 'Set up'} ${agent.label}`}
-            className="h-7 sm:h-7 py-0 ml-8 px-2 justify-start"
+            className="web:sm:min-h-0 h-7 sm:h-7 py-0 ml-8 px-2 justify-start"
             onPress={onAvailabilityAction}
-          >
-            <Text
-              selectable={false}
-              role="control"
-              className={cn(
-                unselectableTextClassName,
-                availability.action === 'retry' && 'underline',
-              )}
-            >
-              {availability.button}
-            </Text>
-          </Button>
+            label={availability.button}
+            appearance="content"
+            labelClassName={cn(
+              'select-none type-control',
+              availability.action === 'retry' && 'underline',
+            )}
+          />
         )}
       </View>
     );
@@ -676,15 +682,16 @@ export function AgentModelMenu({
     return (
       <View>
         <View className="h-11 px-1 flex-row items-center">
-          <Button
+          <IconButton
             variant="ghost"
-            size="icon"
             accessibilityLabel="Back to Agent and model"
             className="size-11 sm:size-11"
             onPress={() => setPage('settings')}
-          >
-            <Icon size="md" name="chevron-left" className="text-foreground" />
-          </Button>
+            icon={'chevron-left'}
+            iconSize="md"
+            iconClassName={'text-foreground'}
+            size="md"
+          />
           <Text
             selectable={false}
             role="control"
@@ -728,11 +735,15 @@ export function AgentModelMenu({
         ) : (
           <FieldGroup>
             <FieldGroup.Section className="px-gutter-list py-1 gap-0.5">
-              <Button
-                variant="ghost"
+              <Pressable
                 accessibilityLabel="Choose Agent"
                 onPress={() => openPage('agent')}
-                className="h-11 sm:h-11 px-2.5 native:px-0 gap-2 justify-start"
+                role="button"
+                className={contentActionClass({
+                  variant: 'ghost',
+                  className:
+                    'h-11 sm:h-11 px-2.5 native:px-0 gap-2 justify-start',
+                })}
               >
                 <Text
                   selectable={false}
@@ -754,12 +765,16 @@ export function AgentModelMenu({
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
-              </Button>
-              <Button
-                variant="ghost"
+              </Pressable>
+              <Pressable
                 accessibilityLabel="Choose model"
                 onPress={() => openPage('model')}
-                className="h-11 sm:h-11 px-2.5 native:px-0 gap-2 justify-start"
+                role="button"
+                className={contentActionClass({
+                  variant: 'ghost',
+                  className:
+                    'h-11 sm:h-11 px-2.5 native:px-0 gap-2 justify-start',
+                })}
               >
                 <Text
                   selectable={false}
@@ -780,7 +795,7 @@ export function AgentModelMenu({
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
-              </Button>
+              </Pressable>
             </FieldGroup.Section>
             {(switches(configuration).length > 0 ||
               currentEffort(configuration).selected) && (
@@ -860,11 +875,16 @@ export function ComposerAgentModelControl({
       className="shrink min-w-0"
       onPresent={nativeSheet ? presentSheet : undefined}
       trigger={
-        <Button
-          variant="ghost"
+        <Pressable
           disabled={disabled}
           accessibilityLabel="Agent and model"
-          className="h-7 sm:h-7 py-0 px-1.5 has-[>[data-icon]]:px-1.5 gap-1.5 shrink min-w-0"
+          role="button"
+          className={contentActionClass({
+            variant: 'ghost',
+            className:
+              'h-7 sm:h-7 py-0 px-1.5 has-[>[data-icon]]:px-1.5 gap-1.5 shrink min-w-0',
+            disabled: disabled,
+          })}
         >
           {wide && <Logo agent={agent} />}
           <Text
@@ -902,7 +922,7 @@ export function ComposerAgentModelControl({
               className="-ml-0.5 text-muted-foreground"
             />
           )}
-        </Button>
+        </Pressable>
       }
     >
       {() => <AgentModelMenu configuration={configuration} />}
@@ -927,16 +947,20 @@ export function ComposerModeControl({
     <ComposerPopover
       label="Mode"
       trigger={
-        <Button
-          variant="ghost"
+        <Pressable
           disabled={disabled}
           accessibilityLabel="Mode"
-          className={cn(
-            'h-7 sm:h-7 py-0 gap-1.5',
-            wide
-              ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
-              : 'w-7 p-0 has-[>[data-icon]]:px-0',
-          )}
+          role="button"
+          className={contentActionClass({
+            variant: 'ghost',
+            className: cn(
+              'h-7 sm:h-7 py-0 gap-1.5',
+              wide
+                ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
+                : 'w-7 p-0 has-[>[data-icon]]:px-0',
+            ),
+            disabled: disabled,
+          })}
         >
           <Icon
             name={configurationIcon(current?._meta?.argo?.icon)}
@@ -965,7 +989,7 @@ export function ComposerModeControl({
               className="text-muted-foreground"
             />
           </View>
-        </Button>
+        </Pressable>
       }
     >
       {(close) => (
@@ -1068,11 +1092,16 @@ export function ComposerCheckoutControl({
     <ComposerPopover
       label="Checkout"
       trigger={
-        <Button
-          variant="ghost"
+        <Pressable
           disabled={disabled}
           accessibilityLabel="Checkout"
-          className="h-7 sm:h-7 py-0 px-1.5 has-[>[data-icon]]:px-1.5 pr-0.25 has-[>[data-icon]]:pr-0.25 gap-1.5 rounded-md border-0 bg-transparent shadow-none"
+          role="button"
+          className={contentActionClass({
+            variant: 'ghost',
+            className:
+              'h-7 sm:h-7 py-0 px-1.5 has-[>[data-icon]]:px-1.5 pr-0.25 has-[>[data-icon]]:pr-0.25 gap-1.5 rounded-md border-0 bg-transparent shadow-none',
+            disabled: disabled,
+          })}
         >
           <Icon
             name={checkout.newWorktree ? 'branch' : 'folder'}
@@ -1086,7 +1115,7 @@ export function ComposerCheckoutControl({
             name="chevron-down"
             className="text-muted-foreground"
           />
-        </Button>
+        </Pressable>
       }
     >
       {(close) => (

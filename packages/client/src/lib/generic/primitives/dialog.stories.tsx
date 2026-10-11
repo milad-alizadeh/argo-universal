@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import {
   Dialog,
   DialogClose,
@@ -13,14 +12,19 @@ import {
 } from '#lib/generic/primitives/dialog';
 import { Input } from '#lib/generic/primitives/input';
 import { Text } from '#lib/generic/primitives/text';
+import { Button } from './button';
+import { Pressable, contentActionClass } from './pressable';
 
 function DialogPreview(): React.JSX.Element {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Text>Open Dialog</Text>
-        </Button>
+        <Pressable
+          role="button"
+          className={contentActionClass({ variant: 'outline' })}
+        >
+          <Text>{'Open Dialog'}</Text>
+        </Pressable>
       </DialogTrigger>
       <ProfileContent />
     </Dialog>
@@ -62,13 +66,14 @@ function ProfileFooter(): React.JSX.Element {
   return (
     <DialogFooter>
       <DialogClose asChild>
-        <Button variant="outline">
-          <Text>Cancel</Text>
-        </Button>
+        <Pressable
+          role="button"
+          className={contentActionClass({ variant: 'outline' })}
+        >
+          <Text>{'Cancel'}</Text>
+        </Pressable>
       </DialogClose>
-      <Button>
-        <Text>Save changes</Text>
-      </Button>
+      <Button label={'Save changes'} />
     </DialogFooter>
   );
 }

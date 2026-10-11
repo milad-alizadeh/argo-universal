@@ -10,6 +10,13 @@ import {
   enqueueActions,
   setup,
 } from 'xstate';
+import { findMachineActor } from '../../lib/machine-actor';
+import {
+  databaseWriterId,
+  type WriterCommit,
+  type WriterEvent,
+  writerMachine,
+} from '../../storage';
 import {
   applyFeedChange,
   changedRowId,
@@ -17,15 +24,12 @@ import {
   type FeedStreamEvent,
 } from './feed-change';
 import { outputBlobsOf, promptBlobIds } from './feed-row';
+import { FeedRowsJob } from './feed-storage';
 import type { FeedPublication } from './publication';
 import { prepareAcpFeedApplication } from './updates/application';
 import type { MessageStreams } from './updates/message-identity';
 import { settleFeedTurn } from './updates/settlement';
 import type { OutputBlob } from './updates/tool-output';
-import type { WriterCommit } from './writer-commit';
-import type { WriterJob } from './writer-job';
-import type { WriterEvent } from './writer-machine';
-import { findDatabaseWriter } from './writer-system';
 
 const feedChangeApplied = 'feed.changeApplied';
 const feedChangeRejected = 'feed.changeRejected';
@@ -114,7 +118,7 @@ const createRowsWriteRequest = ({
 }: {
   context: FeedContext;
   event: FeedEvent | FeedInternalEvent;
-}): WriterJobParameters & { job: Extract<WriterJob, { type: 'feedRows' }> } => {
+}): WriterJobParameters => {
   const rows = context.changedRowIds.flatMap((id): SessionUpdate[] => {
     const row = context.rows[id];
     return row ? [row] : [];
@@ -122,15 +126,14 @@ const createRowsWriteRequest = ({
   return {
     committed: 'committed' in event ? event.committed : undefined,
     refused: context.storageFailing,
-    job: {
-      type: 'feedRows',
+    job: new FeedRowsJob({
       sessionId: context.sessionId,
       rows,
       maxRevision: context.maxRevision,
       activityAt: context.activityAt,
       blobIds: promptBlobIds(rows),
       blobs: outputBlobsOf(rows, context.outputBlobs),
-    } satisfies WriterJob,
+    }),
   };
 };
 
@@ -259,7 +262,7 @@ export const feedMachine = setup({
     })),
     clearBatch: assign({ streamEvents: [] }),
     sendToWriter: ({ system }, params: WriterJobParameters): void => {
-      const writer = findDatabaseWriter(system);
+      const writer = findMachineActor(system, databaseWriterId, writerMachine);
       if (writer?.getSnapshot().status !== 'active') {
         params.committed?.reject(new Error('Database Writer is unavailable'));
         return;
