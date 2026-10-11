@@ -9,11 +9,7 @@ import type {
 import { feedRow } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, desc, eq, lt } from 'drizzle-orm';
-import type { Subscription } from 'xstate';
-import type {
-  createSessionReader,
-  createSessionSnapshotWatcher,
-} from '../sessions';
+import type { Observer, Subscription } from 'xstate';
 import {
   FeedCatchUp,
   type FeedRowSources,
@@ -28,10 +24,21 @@ import {
 import { readQueuedFeedRow } from './feed-storage';
 import { LiveFeedQueue } from './live-feed-queue';
 
-export interface FeedDeps extends FeedRowSources {
-  readSession: ReturnType<typeof createSessionReader>;
-  watchSessionSnapshot: ReturnType<typeof createSessionSnapshotWatcher>;
+type SnapshotEvent = Extract<
+  FeedSubscribeOutput,
+  { type: 'snapshot' | 'closed' }
+>;
+
+// What Feed needs from Sessions; the Engine composition supplies it, so Feed imports no Sessions code.
+interface SessionLookup {
+  readSession: (sessionId: string) => { epoch: number; maxRevision: number };
+  watchSessionSnapshot: (
+    sessionId: string,
+    listener: Observer<SnapshotEvent>,
+  ) => Subscription;
 }
+
+export interface FeedDeps extends FeedRowSources, SessionLookup {}
 
 // Stored rows only: the subscription's catch-up adds what the writer has not committed.
 export function readFeedPage(
