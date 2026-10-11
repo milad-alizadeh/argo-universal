@@ -229,7 +229,7 @@ export function Composer({
                       })}
                     >
                       <View className="size-5 items-center justify-center rounded-sm bg-background">
-                        <ComposerGlyph name="remove" size="sm" />
+                        <ComposerGlyph name="remove" size="xs" />
                       </View>
                     </Pressable>
                   </View>

@@ -11,6 +11,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { iconSizeStyle } from '../../../lib/generic/symbols/icon';
 
 const stepMilliseconds = 150;
 const fadeMilliseconds = 400;
@@ -85,7 +86,11 @@ export function WorkingMark(): React.JSX.Element {
     return (): void => cancelAnimation(step);
   }, [reducedMotion, step]);
   return (
-    <View testID="working-mark" className="size-icon-md shrink-0">
+    <View
+      testID="working-mark"
+      style={iconSizeStyle('sm')}
+      className="shrink-0"
+    >
       {cells.map(([left, top], index) => (
         <Cell
           key={`${left}:${top}`}

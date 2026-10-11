@@ -4,53 +4,42 @@ import {
   ActivityIndicator,
   type ActivityIndicatorProps,
   Platform,
+  type ViewStyle,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import { useCSSVariable, useResolveClassNames, withUniwind } from 'uniwind';
+import { withUniwind } from 'uniwind';
 import { TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { type IconName, iconSymbols } from './icon-names';
 import type { NativeSymbol } from './native-symbol';
-import { sfFilledPaths, type SymbolPath } from './sf-filled-paths';
 import { SymbolGlyph } from './symbol-glyph';
-import { useSymbolImageRenderer } from './symbol-images';
 
-// sm for chevrons, carets and check marks; md for every other icon; lg for phone shell controls and the desktop rail.
-export const iconSizeClasses = {
-  sm: 'size-icon-sm',
-  mark: 'size-icon-mark',
-  md: 'size-icon-md',
-  lg: 'size-icon-lg',
+const iconSizes = {
+  xs: 12,
+  sm: 16,
+  md: 20,
+  lg: 24,
 } as const;
 
-export type IconSize = keyof typeof iconSizeClasses;
+// Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
+const materialGlyphScale = 1.125;
 
-// Symbols and ActivityIndicator take a number, so this is the one place a variant becomes pixels.
-export function useIconPixels(size: IconSize): number {
-  const pixels = useCSSVariable(`--spacing-icon-${size}`);
-  return typeof pixels === 'number'
-    ? pixels
-    : Number.parseFloat(String(pixels));
+export type IconSize = keyof typeof iconSizes;
+
+export function iconPixels(size: IconSize): number {
+  return iconSizes[size];
 }
 
-/*
- * Material Symbols draw chevrons and checks much smaller in their box than SF Symbols do, so the browser draws them a
- * size up; Android scales every glyph in SymbolGlyph instead.
- */
-function glyphSize(size: IconSize, material: boolean): IconSize {
-  return material && Platform.OS === 'web' && size === 'sm' ? 'md' : size;
-}
-
-// Android and the browser draw Material Symbols; iOS and the desktop app on macOS draw SF Symbols.
-function useDrawsMaterial(): boolean {
-  const render = useSymbolImageRenderer();
-  return Platform.OS === 'android' || (Platform.OS === 'web' && !render);
+export function iconSizeStyle(
+  size: IconSize,
+): Pick<ViewStyle, 'width' | 'height'> {
+  const pixels = iconPixels(size);
+  return { width: pixels, height: pixels };
 }
 
 export interface IconProps {
   name: IconName;
   size?: IconSize;
-  // Draws the SF Symbol's filled variant where it has one; Material Symbols stay outlined.
+  // Selects the platform's filled variant where the icon has one.
   filled?: boolean;
   className?: string;
   testID?: string;
@@ -65,7 +54,7 @@ const TintedSymbol = withUniwind(SymbolGlyph, {
 
 export function Icon({
   name,
-  size = 'md',
+  size = 'sm',
   filled = false,
   className,
   testID = `icon-${name}`,
@@ -73,64 +62,28 @@ export function Icon({
   const textClass = useContext(TextClassContext);
   const symbol: NativeSymbol = iconSymbols[name];
   const colorClassName = cn('text-foreground', textClass, className);
-  const material = useDrawsMaterial();
-  const pixels = useIconPixels(glyphSize(size, material));
-  const color = useResolveClassNames(colorClassName).color;
-  const filledPath =
-    filled && material && symbol.sfFilled
-      ? sfFilledPaths[symbol.sfFilled]
-      : undefined;
-  if (filledPath)
-    return (
-      <FilledPath
-        path={filledPath}
-        pixels={pixels}
-        color={typeof color === 'string' ? color : undefined}
-        testID={testID}
-      />
-    );
+  const pixels = iconPixels(size);
+  const sf = (filled && symbol.sfFilled) || symbol.sf;
   return (
     <TintedSymbol
       className={colorClassName}
       colorClassName={colorClassName}
-      sf={(filled && symbol.sfFilled) || symbol.sf}
+      sf={sf}
       material={symbol.material}
+      filled={sf !== symbol.sf || sf.endsWith('.fill')}
       pixels={pixels}
+      glyphScale={Platform.OS === 'android' ? materialGlyphScale : 1}
       testID={testID}
     />
   );
 }
 
-// Material Symbols have no filled form, so a filled icon draws the SF symbol's outline there.
-function FilledPath({
-  path,
-  pixels,
-  color,
-  testID,
-}: {
-  path: SymbolPath;
-  pixels: number;
-  color: string | undefined;
-  testID: string;
-}): React.JSX.Element {
-  return (
-    <Svg
-      width={pixels}
-      height={pixels}
-      viewBox={`0 0 ${path.width} ${path.height}`}
-      testID={testID}
-    >
-      <Path d={path.d} fill={color ?? 'currentColor'} />
-    </Svg>
-  );
-}
-
 export function IconSpinner({
-  size = 'md',
+  size = 'sm',
   ...props
 }: Omit<ActivityIndicatorProps, 'size'> & {
   size?: IconSize;
 }): React.JSX.Element {
-  const pixels = useIconPixels(size);
+  const pixels = iconPixels(size);
   return <ActivityIndicator {...props} size={pixels} />;
 }

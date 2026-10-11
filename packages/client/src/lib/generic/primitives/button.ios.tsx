@@ -12,7 +12,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps, ReactElement } from 'react';
 import { PlatformColor } from 'react-native';
-import { useIconPixels } from '../symbols/icon';
+import { iconPixels } from '../symbols/icon';
 import { iconSymbols } from '../symbols/icon-names';
 import { SymbolGlyph } from '../symbols/symbol-glyph';
 import { nativeModifiers } from './button-ios-modifiers';
@@ -115,13 +115,15 @@ function usesSystemRedIcon(
 type NativeIconProps = Pick<ButtonDataProps, 'icon'>;
 
 function SystemRedIcon({ icon }: NativeIconProps): ReactElement | null {
-  const pixels = useIconPixels('md');
+  const pixels = iconPixels('sm');
   if (!icon) return null;
   return (
     <RNHostView matchContents>
       <SymbolGlyph
         {...iconSymbols[icon]}
         pixels={pixels}
+        filled={false}
+        glyphScale={1}
         tintColor={PlatformColor('systemRed')}
         testID={`icon-${icon}`}
       />

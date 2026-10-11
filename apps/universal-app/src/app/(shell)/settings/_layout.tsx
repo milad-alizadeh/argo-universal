@@ -1,6 +1,7 @@
 import { useWide } from '@repo/client';
 import { Slot, Stack } from 'expo-router';
 import type * as React from 'react';
+import { Platform } from 'react-native';
 import { PhoneStack } from '@/navigation/phone-stack';
 
 // On a phone, a Settings page opened directly still has the Settings list below it to go back to.
@@ -11,7 +12,16 @@ export default function SettingsLayout(): React.JSX.Element {
   if (useWide()) return <Slot />;
   return (
     <PhoneStack>
-      <Stack.Screen name="index" options={{ title: 'Settings' }} />
+      <Stack.Screen
+        name="index"
+        options={{
+          title: 'Settings',
+          headerBackVisible: false,
+          ...(Platform.OS === 'android' && {
+            headerTitleAlign: 'left',
+          }),
+        }}
+      />
       <Stack.Screen name="projects/index" options={{ title: 'Projects' }} />
       <Stack.Screen name="agents/index" options={{ title: 'Agents' }} />
       <Stack.Screen name="accounts" options={{ title: 'Accounts' }} />

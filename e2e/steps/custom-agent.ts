@@ -61,7 +61,7 @@ Given(
 When(
   'I open the custom Agent {string} from the Agents list',
   async ({ page }, name: string): Promise<void> => {
-    await page.getByRole('button', { name: 'Agents', exact: true }).click();
+    await page.getByRole('link', { name: /^Agents(?:,|$)/ }).click();
     await page.getByRole('link', { name, exact: true }).click();
   },
 );

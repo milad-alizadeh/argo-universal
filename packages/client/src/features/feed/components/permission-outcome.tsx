@@ -47,7 +47,7 @@ export function PermissionOutcome({
       >
         <Icon
           name={allowed ? 'check' : 'close'}
-          size={allowed ? 'sm' : 'md'}
+          size={allowed ? 'xs' : 'sm'}
           className="text-muted-foreground"
         />
       </View>

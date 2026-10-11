@@ -7,7 +7,7 @@ export const wide = { width: 1280, height: 800 };
 
 export async function openConnection(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('button', { name: 'Connection', exact: true }).click();
+  await page.getByRole('link', { name: /^Connection(?:,|$)/ }).click();
   await expect(page).toHaveURL(/\/settings\/connection$/);
 }
 

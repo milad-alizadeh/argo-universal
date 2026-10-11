@@ -106,7 +106,7 @@ function SettingRow({
         </Text>
       ) : (
         <View className="w-4 h-4">
-          {selected && <Icon name="check" size="sm" />}
+          {selected && <Icon name="check" size="xs" />}
         </View>
       )}
     </Pressable>

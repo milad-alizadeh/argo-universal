@@ -56,7 +56,7 @@ export function HeaderButton({
         ),
       })}
     >
-      <Icon size="lg" name={icon} className="text-foreground" />
+      <Icon size="md" name={icon} className="text-foreground" />
       {dot && (
         <View
           testID="header-button-dot"
