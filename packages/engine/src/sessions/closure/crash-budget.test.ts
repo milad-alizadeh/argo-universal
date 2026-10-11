@@ -28,13 +28,26 @@ it.each([
 });
 
 it.each([
-  [false, []],
-  [false, [1, 2]],
-  [true, [1, 2, 3]],
-  [true, [1, 2, 3, 4]],
-] as const)(
-  'exceeds the crash budget is %s for %j',
-  (expected, crashes): void => {
-    expect(exceedsCrashBudget(crashes)).toBe(expected);
+  {
+    name: 'keeps the Agent with no recent crash',
+    crashes: [],
+    exceeded: false,
   },
-);
+  {
+    name: 'keeps the Agent after two recent crashes',
+    crashes: [1, 2],
+    exceeded: false,
+  },
+  {
+    name: 'gives up on the third recent crash',
+    crashes: [1, 2, 3],
+    exceeded: true,
+  },
+  {
+    name: 'gives up past the third recent crash',
+    crashes: [1, 2, 3, 4],
+    exceeded: true,
+  },
+])('$name', ({ crashes, exceeded }): void => {
+  expect(exceedsCrashBudget(crashes)).toBe(exceeded);
+});

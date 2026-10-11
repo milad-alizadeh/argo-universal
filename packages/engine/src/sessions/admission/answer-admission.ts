@@ -1,9 +1,5 @@
 import type { AgentCapabilities } from '@repo/agents';
-import type {
-  PendingElicitation,
-  PendingPermission,
-  PermissionOption,
-} from '@repo/contracts';
+import type { PendingPermission, PermissionOption } from '@repo/contracts';
 
 type PermissionAnswer = {
   requestId: PendingPermission['requestId'];
@@ -21,22 +17,23 @@ export const chosenOption = (
         (candidate): boolean => candidate.optionId === optionId,
       );
 
-// Only the oldest Permission request is answerable, and only with an option the Agent offered.
+// Only the oldest request is answerable; an answer to any other is already answered or unknown.
+export const answeredRequest = <Request extends { requestId: string }>(
+  queue: readonly Request[],
+  requestId: Request['requestId'],
+): Request | undefined =>
+  queue[0]?.requestId === requestId ? queue[0] : undefined;
+
 export const admitsPermissionAnswer = (
   permissionQueue: readonly PendingPermission[],
   answer: PermissionAnswer,
 ): boolean => {
-  const request = permissionQueue[0];
+  const request = answeredRequest(permissionQueue, answer.requestId);
   return (
-    request?.requestId === answer.requestId &&
+    request !== undefined &&
     chosenOption(request, answer.optionId) !== undefined
   );
 };
-
-export const admitsElicitationAnswer = (
-  elicitationQueue: readonly Pick<PendingElicitation, 'requestId'>[],
-  requestId: PendingElicitation['requestId'],
-): boolean => elicitationQueue[0]?.requestId === requestId;
 
 // Only a rejection carries feedback, and only to an Agent that reads it.
 export const canDeliverFeedback = (

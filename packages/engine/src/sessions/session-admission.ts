@@ -6,7 +6,11 @@ import type {
   SessionConfigOption,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import { canDeliverFeedback, chosenOption } from './admission/answer-admission';
+import {
+  answeredRequest,
+  canDeliverFeedback,
+  chosenOption,
+} from './admission/answer-admission';
 import { isOfferedConfigChoice } from './admission/config-admission';
 import type { SessionActorRef } from './session-machine';
 
@@ -20,8 +24,11 @@ export function validatePermissionAnswer(
   >,
 ): asserts sessionActor is SessionActorRef {
   const context = sessionActor?.getSnapshot().context;
-  const request = context?.permissionQueue[0];
-  if (request?.requestId !== answer.requestId)
+  const request = answeredRequest(
+    context?.permissionQueue ?? [],
+    answer.requestId,
+  );
+  if (!request)
     throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
   const option = chosenOption(request, answer.optionId);
   if (!option)
@@ -46,8 +53,11 @@ export function validateElicitationAnswer(
     'requestId' | 'action' | 'content'
   >,
 ): asserts sessionActor is SessionActorRef {
-  const request = sessionActor?.getSnapshot().context.elicitationQueue[0];
-  if (request?.requestId !== answer.requestId)
+  const request = answeredRequest(
+    sessionActor?.getSnapshot().context.elicitationQueue ?? [],
+    answer.requestId,
+  );
+  if (!request)
     throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
   if (answer.action !== 'accept') return;
   const parsedAnswer = createElicitationAnswerSchema(

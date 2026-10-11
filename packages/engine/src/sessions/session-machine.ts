@@ -70,8 +70,8 @@ import {
 } from './acp/acp-lifetime';
 import { commitLocalPrompt, type LocalSubmission } from './acp/submission';
 import {
-  admitsElicitationAnswer,
   admitsPermissionAnswer,
+  answeredRequest,
   chosenOption,
 } from './admission/answer-admission';
 import { hasConfigurationCapacity } from './admission/config-admission';
@@ -1180,7 +1180,7 @@ const sessionSetup = setup({
       context.elicitationQueue.length > 0,
     isPendingElicitation: ({ context, event }): boolean =>
       event.type === answerElicitationEvent &&
-      admitsElicitationAnswer(context.elicitationQueue, event.requestId),
+      answeredRequest(context.elicitationQueue, event.requestId) !== undefined,
     nativeAlreadyDrained: or([
       stateIn({ open: 'flushing' }),
       stateIn({ open: { acp: 'flushing' } }),
@@ -1253,10 +1253,12 @@ const toPromptTurn = ({
   event: Extract<SessionCommand, { type: 'session.prompt' }>;
 }): StartTurnParameters => ({ turnId: event.turnId, content: event.content });
 
+const discardsSession = { type: 'closesBy', params: 'discard' } as const;
+
 // An Agent that ends before its Session is stored discards the Session; a stored one recovers.
 const nativeFailed = [
   {
-    guard: 'isUnstored',
+    guard: discardsSession,
     target: drainingNativeTarget,
     actions: ['rememberStartFailure', 'refreshAgentProbe'],
   },
@@ -1282,7 +1284,6 @@ const endedTurn = {
   }),
 } as const;
 
-const discardsSession = { type: 'closesBy', params: 'discard' } as const;
 const cancelledTurn = {
   type: 'endTurn',
   params: { stopReason: 'cancelled' },
@@ -1433,7 +1434,7 @@ export const sessionMachine = sessionSetup.createMachine({
             target: '.acp.closing',
             actions: 'rememberFeedEnded',
           },
-          { target: 'stopping', actions: 'rememberFeedEnded' },
+          { target: 'stopping' },
         ],
         onError: [
           {
@@ -1461,15 +1462,12 @@ export const sessionMachine = sessionSetup.createMachine({
           },
           {
             target: 'stopping',
-            actions: [
-              'rememberFeedEnded',
-              {
-                type: 'rememberFailure',
-                params: ({ event }): FailureParameters => ({
-                  error: event.error,
-                }),
-              },
-            ],
+            actions: {
+              type: 'rememberFailure',
+              params: ({ event }): FailureParameters => ({
+                error: event.error,
+              }),
+            },
           },
         ],
       },
@@ -1960,7 +1958,7 @@ export const sessionMachine = sessionSetup.createMachine({
               after: {
                 agentStartLimit: [
                   {
-                    guard: 'isUnstored',
+                    guard: discardsSession,
                     target: drainingNativeTarget,
                     actions: ['rememberStartLimit', 'refreshAgentProbe'],
                   },
@@ -1988,7 +1986,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   { target: 'idle', actions: 'rememberReady' },
                 ],
                 'session.close': {
-                  guard: 'isUnstored',
+                  guard: discardsSession,
                   target: drainingNativeTarget,
                   actions: 'rememberStartFailure',
                 },

@@ -1,8 +1,8 @@
 import type { PendingPermission, PermissionOption } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import {
-  admitsElicitationAnswer,
   admitsPermissionAnswer,
+  answeredRequest,
   canDeliverFeedback,
   chosenOption,
 } from './answer-admission';
@@ -25,7 +25,6 @@ const request = (requestId: string): PendingPermission => ({
 });
 const head = request('first');
 const queue = [head, request('second')];
-const elicitationQueue = [{ requestId: 'first' }, { requestId: 'second' }];
 
 it.each([
   ['cancels the request', null, null],
@@ -33,6 +32,35 @@ it.each([
   ['names an option the Agent did not offer', 'allow_always', undefined],
 ] as const)('reads an answer that %s', (_name, optionId, expected): void => {
   expect(chosenOption(head, optionId)).toEqual(expected);
+});
+
+it.each([
+  {
+    name: 'answers the head request',
+    queued: queue,
+    requestId: 'first',
+    answered: head,
+  },
+  {
+    name: 'leaves a queued request waiting',
+    queued: queue,
+    requestId: 'second',
+    answered: undefined,
+  },
+  {
+    name: 'answers no unknown request',
+    queued: queue,
+    requestId: 'gone',
+    answered: undefined,
+  },
+  {
+    name: 'answers nothing while nothing is asked',
+    queued: [],
+    requestId: 'first',
+    answered: undefined,
+  },
+])('$name', ({ queued, requestId, answered }): void => {
+  expect(answeredRequest(queued, requestId)).toBe(answered);
 });
 
 it.each([
@@ -60,12 +88,6 @@ it.each([
     optionId: 'allow_once',
     admitted: false,
   },
-  {
-    name: 'refuses an answer for an unknown request',
-    requestId: 'gone',
-    optionId: 'allow_once',
-    admitted: false,
-  },
 ])(
   '$name as a Permission answer',
   ({ requestId, optionId, admitted }): void => {
@@ -75,46 +97,31 @@ it.each([
   },
 );
 
-it('admits no Permission answer while nothing is asked', (): void => {
-  expect(
-    admitsPermissionAnswer([], { requestId: 'first', optionId: null }),
-  ).toBe(false);
-});
-
-it.each([
-  ['admits an answer for the head request', 'first', true],
-  ['refuses an answer for a queued request', 'second', false],
-  ['refuses an answer for an unknown request', 'gone', false],
-] as const)(
-  '%s as an Elicitation answer',
-  (_name, requestId, expected): void => {
-    expect(admitsElicitationAnswer(elicitationQueue, requestId)).toBe(expected);
-  },
-);
-
 it.each([
   {
     name: 'delivers a rejection to an Agent that reads feedback',
     option: rejectOnce,
-    permissionFeedback: true,
+    capabilities: { permissionFeedback: true },
     delivered: true,
   },
   {
     name: 'withholds a rejection from an Agent that ignores feedback',
     option: rejectOnce,
-    permissionFeedback: false,
+    capabilities: { permissionFeedback: false },
     delivered: false,
   },
   {
     name: 'withholds an approval from an Agent that reads feedback',
     option: allowOnce,
-    permissionFeedback: true,
+    capabilities: { permissionFeedback: true },
     delivered: false,
   },
-])('$name as feedback', ({ option, permissionFeedback, delivered }): void => {
-  expect(canDeliverFeedback({ permissionFeedback }, option)).toBe(delivered);
-});
-
-it('delivers no feedback before the Agent reports its capabilities', (): void => {
-  expect(canDeliverFeedback(null, rejectOnce)).toBe(false);
+  {
+    name: 'withholds a rejection before the Agent reports its capabilities',
+    option: rejectOnce,
+    capabilities: null,
+    delivered: false,
+  },
+])('$name', ({ option, capabilities, delivered }): void => {
+  expect(canDeliverFeedback(capabilities, option)).toBe(delivered);
 });
