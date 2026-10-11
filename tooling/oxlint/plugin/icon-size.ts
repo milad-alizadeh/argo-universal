@@ -34,7 +34,7 @@ export const iconSize = defineRule({
     type: 'problem',
     messages: {
       iconSize:
-        'Icons take a named size: sm, md or lg. Remove numeric sizes and size-* classes.',
+        'Icons use 16px; chevrons use 12px. Remove size props and size-* classes.',
     },
   },
   create: (context): IconVisitor => {

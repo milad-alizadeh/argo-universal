@@ -7,12 +7,12 @@ import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { BottomSheet } from '../../../lib/generic/primitives/bottom-sheet';
 import { IconButton } from '../../../lib/generic/primitives/icon-button';
+import { Menu } from '../../../lib/generic/primitives/menu';
 import {
   Pressable,
   contentActionClass,
 } from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { ChoiceMenu } from '../../../lib/product/choice-menu';
 
 interface SplitButtonChoice<Value extends string> {
   value: Value;
@@ -64,7 +64,7 @@ function chevron(
         className,
       )}
       icon={'chevron-down'}
-      iconSize={'sm'}
+      iconSize="xs"
       iconClassName={
         primary ? 'text-primary-foreground' : 'text-muted-foreground'
       }
@@ -83,7 +83,8 @@ function ChoiceDropdown<Value extends string>(
   props: ChoiceProps<Value>,
 ): ReactNode {
   return (
-    <ChoiceMenu
+    <Menu
+      disabled={props.disabled}
       accessibilityLabel={props.menuLabel}
       value={props.value}
       choices={props.choices}
@@ -126,7 +127,7 @@ function ChoiceSheet<Value extends string>(
             <Text role="body">{choice.label}</Text>
             <View className="size-4 items-center justify-center">
               {choice.value === value && (
-                <Icon name="check" size="sm" className="text-foreground" />
+                <Icon name="check" size="xs" className="text-foreground" />
               )}
             </View>
           </Pressable>

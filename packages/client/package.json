@@ -6,9 +6,11 @@
   "exports": {
     ".": "./src/index.ts",
     "./custom-symbol-paths.json": "./src/lib/generic/symbols/custom-symbol-paths.json",
+    "./navigation": "./src/lib/product/navigation/routes.tsx",
     "./storybook": "./src/preview-config.ts"
   },
   "imports": {
+    "#primitives/*": "./src/lib/generic/primitives/*.tsx",
     "#features/*": "./src/features/*/index.ts",
     "#lib/generic/*": "./src/lib/generic/*.ts",
     "#lib/generic/primitives/*": "./src/lib/generic/primitives/*.tsx",

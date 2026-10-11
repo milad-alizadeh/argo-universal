@@ -62,6 +62,13 @@
     "vitest": "catalog:"
   },
   "expo": {
+    "autolinking": {
+      "android": {
+        "buildFromSource": [
+          "expo-ui"
+        ]
+      }
+    },
     "install": {
       "exclude": [
         "typescript"

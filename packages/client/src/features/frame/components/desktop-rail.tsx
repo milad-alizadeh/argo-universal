@@ -46,7 +46,7 @@ const SectionButton = memo(function SectionButton({
       })}
     >
       <Icon
-        size="lg"
+        size="md"
         name={icon}
         filled={selected}
         className={cn(!selected && 'text-muted-foreground')}

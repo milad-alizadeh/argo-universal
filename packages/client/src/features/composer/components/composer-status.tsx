@@ -23,7 +23,11 @@ import {
   Pressable,
   contentActionClass,
 } from '../../../lib/generic/primitives/pressable';
-import { Icon, IconSpinner } from '../../../lib/generic/symbols/icon';
+import {
+  Icon,
+  IconSpinner,
+  iconSizeStyle,
+} from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 import { ComposerPopover } from './composer-popover';
 
@@ -97,8 +101,11 @@ const ThemedCircle = withUniwind(Circle, {
 function ContextRing({ percent }: { percent: number }): React.JSX.Element {
   const circumference = 2 * Math.PI * contextRingRadius;
   return (
-    <View className="size-icon-md shrink-0 items-center justify-center">
-      <View className="size-icon-mark">
+    <View
+      style={iconSizeStyle('sm')}
+      className="shrink-0 items-center justify-center"
+    >
+      <View style={iconSizeStyle('sm')}>
         <Svg width="100%" height="100%" viewBox="0 0 14 14">
           <ThemedCircle
             cx={7}
@@ -213,7 +220,7 @@ export function ComposerPlan({
             {entries.find((entry) => entry.status === 'in_progress')?.content}
           </Text>
           <Icon
-            size="sm"
+            size="xs"
             name="chevron-up"
             className={cn(
               'text-muted-foreground web:transition-transform web:duration-200',
@@ -309,9 +316,9 @@ function NativePlanSpinner({ label }: { label: string }): React.JSX.Element {
     <View
       role="progressbar"
       accessibilityLabel={label}
-      className="size-icon-md"
+      style={iconSizeStyle('sm')}
     >
-      <Animated.View style={style} className="size-icon-md">
+      <Animated.View style={[iconSizeStyle('sm'), style]}>
         <Svg width="100%" height="100%" viewBox="0 0 32 32">
           <ThemedCircle
             cx={16}
@@ -362,7 +369,7 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }): React.JSX.Element {
           stepIndicator = <Icon name="check" className={mutedTextClassName} />;
         } else {
           stepIndicator = (
-            <View className="size-icon-md">
+            <View style={iconSizeStyle('sm')}>
               <Svg width="100%" height="100%" viewBox="0 0 32 32">
                 <ThemedCircle
                   cx={16}

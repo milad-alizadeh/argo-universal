@@ -61,7 +61,7 @@ function RequestContents(props: RequestCardProps): ReactNode {
 }
 
 const cardClassName =
-  'w-full max-w-composer rounded-xl border border-input/80 bg-background/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110';
+  'w-full max-w-composer rounded-xl web:rounded-surface web:shadow-card border border-input/80 bg-background/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110';
 
 function RequestBody({
   state,
@@ -142,7 +142,7 @@ function AlreadyAnswered(props: AnsweredStatusProps): ReactNode {
       role="status"
       className="min-w-0 flex-1 flex-row items-center gap-1.5 px-2"
     >
-      <Icon name="info" size="md" className="shrink-0 text-muted-foreground" />
+      <Icon name="info" size="sm" className="shrink-0 text-muted-foreground" />
       <AnsweredText {...props} />
     </View>
   );

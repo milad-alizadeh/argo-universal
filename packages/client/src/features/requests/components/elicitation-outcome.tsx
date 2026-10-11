@@ -28,7 +28,7 @@ export function ElicitationOutcome({
       <View className="flex-row items-center gap-1.5">
         <Icon
           name="question"
-          size="md"
+          size="sm"
           className="shrink-0 text-muted-foreground"
         />
         <Text role="body" className="text-muted-foreground">

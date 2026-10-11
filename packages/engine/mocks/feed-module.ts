@@ -7,13 +7,13 @@ import {
   createAppRouterDeps,
   createFeedSources,
 } from '../src/engine/router-deps';
-import { findMachineActor } from '../src/lib/machine-actor';
 import {
   feedMachine,
   readQueuedFeedRow,
   readWrittenRow,
   type FeedActorRef,
-} from '../src/services/feed';
+} from '../src/feed';
+import { findMachineActor } from '../src/lib/machine-actor';
 import { databaseWriterId, writerMachine } from '../src/storage';
 import { waitForAcpSessionIdle } from './acp-feed';
 import { startEngineTestHost } from './engine';
@@ -47,7 +47,7 @@ export const startFeedModuleTestHost = async ({
     createId: () => (++identity === 1 ? 'turn-1' : `feed-fixture-${identity}`),
     ...input,
   });
-  host.sessionRegistry.send({
+  host.openSessions.send({
     type: 'sessions.open',
     sessionId: 'session-1',
     agent,
@@ -90,7 +90,7 @@ const feedModuleRouterInput = (
   signal: AbortSignal,
 ): AppRouterInput => ({
   database: host.database,
-  sessions: host.sessionRegistry,
+  sessions: host.openSessions,
   databaseWriter: host.databaseWriter,
   blobsFolder: host.blobsFolder,
   version: '1.2.3',

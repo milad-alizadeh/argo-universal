@@ -10,7 +10,7 @@ export type CatalogSearchProps = {
 
 export function CatalogSearch(props: CatalogSearchProps): React.JSX.Element {
   return (
-    <View className="h-10 flex-row items-center gap-2 rounded-lg bg-muted px-3">
+    <View className="h-10 flex-row items-center gap-2 rounded-lg web:rounded-search bg-muted px-3">
       <Icon name="search" className="text-muted-foreground" />
       <CatalogSearchInput {...props} />
     </View>

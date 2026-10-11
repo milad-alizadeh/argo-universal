@@ -74,7 +74,7 @@ export function ShellPane({
       {card && (
         <View
           pointerEvents="none"
-          className="absolute bottom-0 left-0 right-0 top-shell-bar rounded-xl bg-card shadow-card"
+          className="absolute bottom-0 left-0 right-0 top-shell-bar rounded-xl web:rounded-surface bg-card shadow-card"
         />
       )}
       <View className="flex-1 overflow-hidden">

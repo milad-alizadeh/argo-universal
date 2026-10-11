@@ -28,6 +28,7 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 
 ## Rules that no tool checks
 
+- Each PR gets one round of agent reviews. Run another round only when the user explicitly requests it; follow-up fixes, conflict resolution and CI failures do not start a new round.
 - Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them to Git.
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
 - Use LegendList (`@legendapp/list/react-native`) by default for lists in the App.

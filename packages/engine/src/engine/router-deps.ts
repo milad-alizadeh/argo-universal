@@ -1,20 +1,21 @@
 import { randomUUID } from 'node:crypto';
 import type { Database } from '@repo/db';
+import { checkAgentLaunch } from '../acp';
+import type { AgentsRouterDeps } from '../agents';
+import type { BlobUploadDeps } from '../blob';
+import type { FeedDeps } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
-import type { AgentsRouterDeps } from '../services/agents';
-import type { BlobUploadDeps } from '../services/blob';
-import type { FeedDeps } from '../services/feed';
 import {
   createSessionReader,
   createSessionSnapshotWatcher,
-  type RegistryActorRef,
+  type OpenSessionsActorRef,
   type SessionActorRef,
   type SessionRouterDeps,
   sessionActorId,
   sessionMachine,
-} from '../services/sessions';
-import type { SystemDeps } from '../services/system';
+} from '../sessions';
 import { databaseWriterId, writerMachine } from '../storage';
+import type { SystemDeps } from '../system';
 
 export type AppRouterDeps = SessionRouterDeps &
   AgentsRouterDeps &
@@ -22,7 +23,7 @@ export type AppRouterDeps = SessionRouterDeps &
   SystemDeps &
   FeedDeps;
 
-type FeedSourcesInput = { database: Database; sessions: RegistryActorRef };
+type FeedSourcesInput = { database: Database; sessions: OpenSessionsActorRef };
 
 type FeedSources = FeedSourcesInput &
   Pick<FeedDeps, 'findFeed' | 'findWriter'> & {
@@ -30,7 +31,7 @@ type FeedSources = FeedSourcesInput &
   };
 
 const findLiveSession =
-  (sessions: RegistryActorRef) =>
+  (sessions: OpenSessionsActorRef) =>
   (sessionId: string): SessionActorRef | undefined =>
     findMachineActor(
       sessions.system,
@@ -51,7 +52,9 @@ export function createFeedSources(input: FeedSourcesInput): FeedSources {
   };
 }
 
-export type AppRouterInput = Omit<AppRouterDeps, keyof FeedDeps | 'createId'> &
+// The Engine supplies the ACP check to the Agents module itself.
+type EngineSupplied = keyof FeedDeps | 'createId' | 'checkAgentLaunch';
+export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
   Partial<Pick<AppRouterDeps, 'createId'>>;
 
@@ -63,6 +66,7 @@ export function createAppRouterDeps(
     ...input,
     ...sources,
     createId: input.createId ?? randomUUID,
+    checkAgentLaunch,
     readSession: createSessionReader(input.database),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };

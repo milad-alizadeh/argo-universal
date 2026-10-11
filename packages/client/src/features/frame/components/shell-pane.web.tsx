@@ -175,7 +175,7 @@ export function ShellPane({
         >
           {card && (
             <div
-              className="absolute bottom-0 left-0 right-0 top-shell-bar rounded-xl bg-card shadow-card"
+              className="absolute bottom-0 left-0 right-0 top-shell-bar rounded-xl web:rounded-surface bg-card shadow-card"
               style={{ pointerEvents: 'none' }}
             />
           )}
@@ -194,7 +194,7 @@ export function ShellPane({
           {card && (
             <div
               ref={surface}
-              className="absolute bottom-0 left-0 top-shell-bar rounded-xl bg-card shadow-card"
+              className="absolute bottom-0 left-0 top-shell-bar rounded-xl web:rounded-surface bg-card shadow-card"
               style={{
                 width: surfaceWidth,
                 transformOrigin: 'left center',

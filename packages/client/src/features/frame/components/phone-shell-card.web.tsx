@@ -12,7 +12,7 @@ export function PhoneShellCard({
       testID="phone-shell-card"
       className={cn(
         'flex-1 rounded-none bg-card shadow-card transition-[border-radius] duration-300 ease-[ease]',
-        drawerOpen && 'rounded-xl',
+        drawerOpen && 'rounded-xl web:rounded-surface',
       )}
     >
       <View

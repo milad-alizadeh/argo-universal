@@ -6,7 +6,7 @@ import {
   createMachine,
   fromTransition,
 } from 'xstate';
-import { agentProbeId, agentProbeMachine } from '../services/agents';
+import { agentProbeId, agentProbeMachine } from '../agents';
 import { findMachineActor } from './machine-actor';
 
 const adapter = createAgentMetadata();
