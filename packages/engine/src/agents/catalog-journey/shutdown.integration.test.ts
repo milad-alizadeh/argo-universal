@@ -2,11 +2,19 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase, readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
-import { SessionRowUpdateJob } from '../sessions';
-import { writeDatabaseJobAndWaitForCommit } from '../storage';
-import type { FetchAgents } from './index';
+import { SessionRowUpdateJob } from '../../sessions';
+import { writeDatabaseJobAndWaitForCommit } from '../../storage';
+import type { FetchAgents } from '../index';
 
 const statusSql = 'SELECT status FROM sync_jobs';
+const rejection = "SELECT RAISE(ABORT, 'catalog rejected');";
+const finalStatus: Record<string, string> = {
+  commit: 'idle',
+  rollback: 'running',
+};
+const rejects = (outcome: string): boolean => outcome === 'rollback';
+const rejectionFor = (outcome: string): string =>
+  rejects(outcome) ? rejection : '';
 afterEach(() => vi.useRealTimers());
 
 it.each(['commit', 'rollback'])(
@@ -29,7 +37,7 @@ it.each(['commit', 'rollback'])(
       return 0;
     });
     host.database.$client.exec(
-      `CREATE TEMP TRIGGER stop_catalog BEFORE INSERT ON agents BEGIN SELECT request_catalog_shutdown(); ${outcome === 'rollback' ? "SELECT RAISE(ABORT, 'catalog rejected');" : ''} END`,
+      `CREATE TEMP TRIGGER stop_catalog BEFORE INSERT ON agents BEGIN SELECT request_catalog_shutdown(); ${rejectionFor(outcome)} END`,
     );
     await host.caller.agents.syncCatalog();
     await expect.poll(() => stopped !== undefined).toBe(true);
@@ -40,10 +48,10 @@ it.each(['commit', 'rollback'])(
       catalogSyncedAt: expect.any(Number),
     }));
     expect(readAddedAgentRows(stored.database)).toEqual(
-      outcome === 'rollback' ? before : after,
+      rejects(outcome) ? before : after,
     );
     expect(stored.database.$client.prepare(statusSql).get()).toEqual({
-      status: outcome === 'rollback' ? 'running' : 'idle',
+      status: finalStatus[outcome],
     });
   },
 );

@@ -15,7 +15,7 @@ Argo has four kinds of test. Owned code is never faked: only the Agent process a
 | Engine journey | The composed Engine through tRPC, with every module, the Writer, SQLite and Git | The Agent, as the scripted Agent over in-memory streams, and the Registry, as fixture data |
 | E2E | The App from its UI (Playwright and Gherkin against the Expo web export), tRPC, the Engine and storage | The Agent, as the scripted Agent in a real process launched per ADR-0018, and the Registry, as fixture data |
 
-A file named `*.integration.test.ts` runs something real; the name tells you its cost. View test stories run in Vitest browser mode and are unit tests of a view: they render it from props with no Server, tRPC or data hook (owner, 2026-10-10).
+A file named `*.integration.test.ts` runs something real; the name tells you its cost. `tools/check-test-suffix.mts`, part of `pnpm quality`, fails a `*.test` file that opens SQLite, git, the filesystem, the network or a child process, directly or through its mock modules. View test stories run in Vitest browser mode and are unit tests of a view: they render it from props with no Server, tRPC or data hook (owner, 2026-10-10).
 
 ## Choose the public surface
 
