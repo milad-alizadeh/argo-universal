@@ -32,6 +32,7 @@ export {
   SymbolImagesProvider,
 } from './lib/generic/symbols/symbol-images';
 export { useWide } from './lib/generic/use-wide';
+export { Text, useTextStyle } from './lib/generic/primitives/text';
 export {
   type Navigate,
   type NavigationDestination,

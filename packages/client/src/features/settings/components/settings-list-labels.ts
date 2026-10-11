@@ -6,15 +6,6 @@ export function deviceName(wide: boolean): string {
   return Platform.OS === 'android' ? 'This phone' : 'This iPhone';
 }
 
-export function serverFooter(
-  status: SettingsListProps['status'],
-): string | undefined {
-  if (status === 'loading') return 'Loading Server settings…';
-  if (status === 'disconnected')
-    return 'Server unavailable. Open Connection to reconnect.';
-  return undefined;
-}
-
 export function connectionValue(
   props: SettingsListProps,
   wide: boolean,

@@ -1,4 +1,4 @@
-import { Button, HStack, Image, Spacer, Text } from '@expo/ui/swift-ui';
+import { Button, HStack, Image, LabeledContent, Text } from '@expo/ui/swift-ui';
 import {
   accessibilityElement,
   accessibilityAddTraits,
@@ -6,7 +6,6 @@ import {
   accessibilityLabel,
   buttonStyle,
   disabled,
-  font,
   foregroundStyle,
   frame,
   listRowBackground,
@@ -22,6 +21,7 @@ import { useWide } from '../use-wide';
 import { type ListItemProps, listItemName } from './field-props';
 import { ListItem as WebListItem } from './list-item-view.tsx';
 import { NativeRowIcon, NativeRowStatus } from './native-row';
+import { useSwiftUITextModifiers } from './native-typography';
 
 const rowHeight = 52;
 const inset = 16;
@@ -72,6 +72,7 @@ function rowModifiers(
 }
 
 function RowContent(props: ListItemProps): React.JSX.Element {
+  const bodyModifiers = useSwiftUITextModifiers('body');
   const color = useRowColor('primary');
   const iconSize = iconPixels('lg');
   return (
@@ -88,36 +89,42 @@ function RowContent(props: ListItemProps): React.JSX.Element {
       ]}
     >
       {props.icon && <NativeRowIcon icon={props.icon} />}
-      <Text modifiers={[font({ textStyle: 'body' }), color]}>
-        {props.title}
-      </Text>
-      <Spacer />
-      <RowTrailing {...props} />
+      <LabeledContent
+        label={<Text modifiers={[...bodyModifiers, color]}>{props.title}</Text>}
+        modifiers={[frame({ maxWidth: Infinity, alignment: 'leading' })]}
+      >
+        <RowTrailing {...props} />
+      </LabeledContent>
+      <DisclosureIndicator visible={!!props.onPress} />
     </HStack>
   );
 }
 
 function RowTrailing(props: ListItemProps): React.JSX.Element {
+  const bodyModifiers = useSwiftUITextModifiers('body');
   const color = useRowColor('secondary');
   return (
     <HStack spacing={8}>
       {props.value !== undefined && (
-        <Text modifiers={[font({ textStyle: 'body' }), color]}>
-          {props.value}
-        </Text>
+        <Text modifiers={[...bodyModifiers, color]}>{props.value}</Text>
       )}
       <NativeRowStatus {...props} />
-      {props.onPress && (
-        <Image
-          systemName="chevron.right"
-          size={iconPixels('xs')}
-          modifiers={[
-            foregroundStyle({ type: 'hierarchical', style: 'tertiary' }),
-          ]}
-        />
-      )}
     </HStack>
   );
+}
+
+function DisclosureIndicator({
+  visible,
+}: {
+  visible: boolean;
+}): React.JSX.Element | null {
+  return visible ? (
+    <Image
+      systemName="chevron.right"
+      size={iconPixels('xs')}
+      modifiers={[foregroundStyle({ type: 'hierarchical', style: 'tertiary' })]}
+    />
+  ) : null;
 }
 
 function useRowColor(

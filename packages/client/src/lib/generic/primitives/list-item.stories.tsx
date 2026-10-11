@@ -30,12 +30,14 @@ export const Variations: Story = {
           icon="agent"
           value="2"
           disabled
+          status={{ tone: 'destructive', label: 'unavailable' }}
           onPress={onPress}
         />
         <ListItem
           title="Appearance"
           icon="appearance"
           value="System"
+          status={{ tone: 'success', label: 'available' }}
           onPress={onPress}
         />
       </FieldSection>

@@ -54,6 +54,9 @@ function allGroupsNavigate(width: number): Story {
         const row = canvas.getByRole('link', {
           name: new RegExp(`^${name}(?:,|$)`),
         });
+        await (name === 'Connection'
+          ? expect(row).toHaveAccessibleName(/, available$/)
+          : expect(row).not.toHaveAccessibleName(/, available$/));
         await expect(row).toHaveAttribute(
           'href',
           `/settings/${name.toLowerCase()}`,

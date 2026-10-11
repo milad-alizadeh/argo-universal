@@ -22,10 +22,22 @@ export interface ListItemProps {
   disabled?: boolean;
   selected?: boolean;
   needsAttention?: boolean;
+  status?: { tone: 'success' | 'warning' | 'destructive'; label: string };
 }
 
 export function listItemName(props: ListItemProps): string {
-  return [props.title, props.value, props.needsAttention && 'needs attention']
+  return [props.title, props.value, listItemStatus(props)?.label]
     .filter(Boolean)
     .join(', ');
+}
+
+export function listItemStatus(
+  props: Pick<ListItemProps, 'status' | 'needsAttention'>,
+): ListItemProps['status'] {
+  return (
+    props.status ??
+    (props.needsAttention
+      ? { tone: 'warning', label: 'needs attention' }
+      : undefined)
+  );
 }

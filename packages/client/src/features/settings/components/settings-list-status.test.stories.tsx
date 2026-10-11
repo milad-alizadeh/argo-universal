@@ -43,14 +43,17 @@ function unavailable(status: 'loading' | 'disconnected', width: number): Story {
           name: new RegExp(`^${title}(?:,|$)`),
         });
         await expect(row).toHaveAttribute('aria-disabled', 'true');
+        await expect(row).not.toHaveAccessibleName(
+          /, (?:connecting|server unavailable)$/,
+        );
       }
       await expect(onSelect).not.toHaveBeenCalled();
       await userEvent.tab();
       const connection = canvas.getByRole('link', {
         name:
           status === 'loading'
-            ? 'Connection, Connecting…'
-            : 'Connection, Disconnected',
+            ? 'Connection, Connecting…, connecting'
+            : 'Connection, Disconnected, server unavailable',
       });
       await expect(connection).toHaveFocus();
       await userEvent.keyboard('{Enter}');
@@ -63,13 +66,10 @@ function unavailable(status: 'loading' | 'disconnected', width: number): Story {
       await expect(onSelect).toHaveBeenLastCalledWith({
         to: 'settings-appearance',
       });
+      await expect(canvas.queryByText('Loading Server settings…')).toBeNull();
       await expect(
-        canvas.getByText(
-          status === 'loading'
-            ? 'Loading Server settings…'
-            : 'Server unavailable. Open Connection to reconnect.',
-        ),
-      ).toBeVisible();
+        canvas.queryByText('Server unavailable. Open Connection to reconnect.'),
+      ).toBeNull();
     },
   };
 }

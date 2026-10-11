@@ -1,14 +1,14 @@
 import { hasLiquidGlass } from '@repo/client';
 import type { Stack } from 'expo-router';
 import type { ComponentProps } from 'react';
+import { useHeaderTitleOptions } from './header-title';
 
 // Native header options every sheet page shares: one centred line, no hairline.
-export const sheetHeaderOptions = {
+const sheetHeaderOptions = {
   headerShadowVisible: false,
   // iOS 26 fades the content scrolling under a transparent header.
   headerTransparent: hasLiquidGlass,
   headerBackButtonDisplayMode: 'minimal',
-  headerTitleStyle: { fontSize: 17, fontWeight: '600' },
   headerTitleAlign: 'center',
   // Lets the system sheet's own background show, which is Liquid Glass on iOS 26.
   contentStyle: { backgroundColor: 'transparent' },
@@ -17,3 +17,10 @@ export const sheetHeaderOptions = {
     headerConfig: { disableTopInsetApplication: true },
   },
 } satisfies ComponentProps<typeof Stack>['screenOptions'];
+
+export function useSheetHeaderOptions(): ComponentProps<
+  typeof Stack
+>['screenOptions'] {
+  const titleOptions = useHeaderTitleOptions();
+  return { ...sheetHeaderOptions, ...titleOptions };
+}

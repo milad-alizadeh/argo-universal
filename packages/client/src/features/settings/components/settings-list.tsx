@@ -3,7 +3,7 @@ import { FieldGroup } from '#primitives/field-group';
 import { FieldSection } from '#primitives/field-section';
 import { useWide } from '../../../lib/generic/use-wide';
 import { deviceRows, serverRows } from './settings-list-data';
-import { deviceName, serverFooter } from './settings-list-labels';
+import { deviceName } from './settings-list-labels';
 import type { SettingsListProps } from './settings-list-props';
 import { SettingsRows } from './settings-list-rows';
 
@@ -15,7 +15,6 @@ export function SettingsList(props: SettingsListProps): React.JSX.Element {
     <FieldGroup variant={wide ? 'navigation' : 'grouped'}>
       <FieldSection
         title={props.serverName ? `Server · ${props.serverName}` : 'Server'}
-        footer={serverFooter(props.status)}
       >
         <SettingsRows {...props} rows={serverRows(props, wide)} />
       </FieldSection>

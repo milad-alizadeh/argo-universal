@@ -1,6 +1,8 @@
 @import "./fonts.css";
 
 :root {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   /* RN Web's unlayered placeholder rule needs a fallback when its colour prop is unset. */
   --placeholderTextColor: var(--color-muted-foreground);
 }

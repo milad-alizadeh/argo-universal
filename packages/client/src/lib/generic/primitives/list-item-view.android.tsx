@@ -13,6 +13,7 @@ import { useWide } from '../use-wide';
 import { type ListItemProps, listItemName } from './field-props';
 import * as Web from './list-item-view.tsx';
 import { NativeRowIcon, NativeRowStatus } from './native-row';
+import { useComposeTextStyle } from './native-typography';
 
 const rowHeight = 56;
 const tileRadius = 4;
@@ -58,6 +59,7 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
 }
 
 function RowContent(props: ListItemProps): React.JSX.Element {
+  const bodyStyle = useComposeTextStyle('body');
   const { foreground } = useNativeTheme().colors;
   return (
     <Row
@@ -71,11 +73,7 @@ function RowContent(props: ListItemProps): React.JSX.Element {
       ]}
     >
       {props.icon && <NativeRowIcon icon={props.icon} />}
-      <Text
-        color={foreground}
-        style={{ typography: 'bodyLarge' }}
-        modifiers={[weight(1)]}
-      >
+      <Text color={foreground} style={bodyStyle} modifiers={[weight(1)]}>
         {props.title}
       </Text>
       <RowTrailing {...props} />
@@ -84,6 +82,7 @@ function RowContent(props: ListItemProps): React.JSX.Element {
 }
 
 function RowTrailing(props: ListItemProps): React.JSX.Element {
+  const bodyStyle = useComposeTextStyle('body');
   const { mutedForeground } = useNativeTheme().colors;
   return (
     <Row
@@ -94,7 +93,7 @@ function RowTrailing(props: ListItemProps): React.JSX.Element {
       {props.value !== undefined && (
         <Text
           color={mutedForeground}
-          style={{ typography: 'bodyMedium', textAlign: 'end' }}
+          style={{ ...bodyStyle, textAlign: 'end' }}
           modifiers={[weight(1)]}
         >
           {props.value}

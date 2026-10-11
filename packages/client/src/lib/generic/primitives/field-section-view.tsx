@@ -12,7 +12,7 @@ export function FieldSection(props: FieldSectionProps): React.JSX.Element {
       <SectionTitle title={props.title} />
       <View
         className={cn(
-          'overflow-hidden rounded-[28px] bg-muted',
+          'overflow-hidden rounded-[28px]',
           navigation && 'rounded-none bg-transparent gap-0.5',
         )}
       >

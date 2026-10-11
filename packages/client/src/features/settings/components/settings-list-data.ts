@@ -1,4 +1,5 @@
 import type { NavigationDestination } from '#lib/product/navigation/context';
+import type { ListItemProps } from '../../../lib/generic/primitives/field-props';
 import type { IconName } from '../../../lib/generic/symbols/icon-names';
 import { connectionValue, serverValue } from './settings-list-labels';
 import type { SettingsListProps } from './settings-list-props';
@@ -10,6 +11,7 @@ export interface SettingsRow {
   value?: string;
   needsAttention?: boolean;
   disabled?: boolean;
+  status?: ListItemProps['status'];
 }
 
 export function serverRows(
@@ -23,6 +25,7 @@ export function serverRows(
       icon: 'server',
       destination: { to: 'settings-connection' },
       value: connectionValue(props, wide),
+      status: connectionStatus(props.status),
     },
     ...(wide
       ? [
@@ -36,6 +39,15 @@ export function serverRows(
         ]
       : []),
   ];
+}
+
+function connectionStatus(
+  status: SettingsListProps['status'],
+): ListItemProps['status'] {
+  if (status === 'disconnected')
+    return { tone: 'destructive', label: 'server unavailable' };
+  if (status === 'loading') return { tone: 'warning', label: 'connecting' };
+  return { tone: 'success', label: 'available' };
 }
 
 function serverDestinations(props: SettingsListProps): SettingsRow[] {

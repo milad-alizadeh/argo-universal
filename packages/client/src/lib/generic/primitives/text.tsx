@@ -2,6 +2,7 @@ import { Slot } from '@rn-primitives/slot';
 import type { ReactElement } from 'react';
 import * as React from 'react';
 import { Dimensions, PixelRatio, Platform, Text as RNText } from 'react-native';
+import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 
 const textRoles = {
@@ -15,6 +16,14 @@ const textRoles = {
   'nav-title': 'type-nav-title',
   'nav-action': 'type-nav-action',
 } as const;
+
+export type TextRole = keyof typeof textRoles;
+
+export function useTextStyle(
+  role: TextRole,
+): ReturnType<typeof useResolveClassNames> {
+  return useResolveClassNames(cn('font-sans', textRoles[role]));
+}
 
 const TextClassContext = React.createContext<string | undefined>(undefined);
 

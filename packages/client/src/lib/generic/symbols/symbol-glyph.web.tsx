@@ -1,5 +1,6 @@
 import { type SFSymbol, SymbolView } from 'expo-symbols';
 import type * as React from 'react';
+import { cn } from '../utils';
 import { customSymbolImage, isCustomSymbol } from './custom-symbols';
 import type { SymbolGlyphProps } from './symbol-glyph';
 import {
@@ -16,6 +17,7 @@ import { symbolWeight } from './symbol-weight';
 export function SymbolGlyph({
   sf,
   material,
+  filled,
   pixels,
   colorClassName,
   testID,
@@ -27,22 +29,26 @@ export function SymbolGlyph({
       data-icon
       data-testid={testID}
       aria-hidden
-      className={colorClassName}
+      className={cn(colorClassName, '[&>div]:text-inherit!')}
       style={{
         display: 'flex',
         flexShrink: 0,
         width: pixels,
         height: pixels,
         userSelect: 'none',
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+        fontSynthesis: 'none',
       }}
     >
       {render ? (
         <AppleSymbolImage render={render} sf={sf} pixels={pixels} />
       ) : (
         <SymbolView
+          key={String(filled)}
           name={{ web: material }}
           size={pixels}
-          weight={symbolWeight}
+          weight={symbolWeight(filled)}
           tintColor="currentColor"
         />
       )}

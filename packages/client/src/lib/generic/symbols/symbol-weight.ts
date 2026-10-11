@@ -1,4 +1,12 @@
+import type { SymbolViewProps } from 'expo-symbols';
 import extraLight from 'expo-symbols/androidWeights/extraLight';
+import filledFont from './assets/material-filled.ttf';
 
-// Material Symbols are drawn for 24px and read heavy at our 12–20px icon sizes; ExtraLight matches SF's regular stroke.
-export const symbolWeight = { ios: 'regular', android: extraLight } as const;
+export function symbolWeight(filled: boolean): SymbolViewProps['weight'] {
+  return {
+    ios: 'regular',
+    android: filled
+      ? { name: 'MaterialSymbols_200ExtraLight_Filled', font: filledFont }
+      : extraLight,
+  } as const;
+}

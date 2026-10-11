@@ -22,7 +22,7 @@ Where SF Symbols has no symbol for an Argo icon, Argo draws its own as a custom 
 - Electron on macOS: the page masks the path itself; no IPC is needed, since the art is Argo's own and its licence allows shipping it.
 - Android, web, Windows and Linux: the Material name, as for every icon.
 
-A filled icon uses the SF `.fill` variant. The Material Symbols font that `expo-symbols` loads has no fill axis, so Android, web, Windows and Linux show the outline.
+A filled icon uses the platform's filled variant (owner correction, 2026-10-11). Apple drawings select the mapped SF filled name. Android and web pass a bundled Material Symbols filled font to `expo-symbols`; it has the same weight and optical size as Expo's outlined font. The font is subset to Argo's icon map and retains Google's Apache licence. No SF paths are shipped as a Material fallback. The Icon component owns this choice and isolates glyph weight from surrounding text.
 
 Paper designs may use SF Symbols exported as SVG, but only as mockups. They never reach the code.
 

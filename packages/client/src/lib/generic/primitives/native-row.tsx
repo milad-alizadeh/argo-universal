@@ -3,7 +3,8 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Icon, iconSizeStyle } from '../symbols/icon';
 import type { IconName } from '../symbols/icon-names';
-import type { ListItemProps } from './field-props';
+import { type ListItemProps, listItemStatus } from './field-props';
+import { StatusDot } from './status-dot';
 
 export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
   return (
@@ -21,22 +22,14 @@ export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
   );
 }
 
-function NativeRowAttention({
-  visible = true,
-}: {
-  visible?: boolean;
-}): React.JSX.Element | null {
-  if (!visible) return null;
+function NativeRowDot(
+  props: Pick<ListItemProps, 'needsAttention' | 'status'>,
+): React.JSX.Element | null {
+  const status = listItemStatus(props);
+  if (!status) return null;
   return (
     <RNHostView matchContents>
-      <View
-        collapsable={false}
-        accessible={false}
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        className="rounded-full bg-warning"
-        style={{ width: 8, height: 8 }}
-      />
+      <StatusDot status={status} />
     </RNHostView>
   );
 }
@@ -48,11 +41,11 @@ function NativeRowAccessory({
 }
 
 export function NativeRowStatus(
-  props: Pick<ListItemProps, 'needsAttention' | 'accessory'>,
+  props: Pick<ListItemProps, 'needsAttention' | 'status' | 'accessory'>,
 ): React.JSX.Element {
   return (
     <>
-      <NativeRowAttention visible={!!props.needsAttention} />
+      <NativeRowDot {...props} />
       <NativeRowAccessory accessory={props.accessory} />
     </>
   );

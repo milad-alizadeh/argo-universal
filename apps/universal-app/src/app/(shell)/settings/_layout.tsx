@@ -18,7 +18,6 @@ export default function SettingsLayout(): React.JSX.Element {
           title: 'Settings',
           headerBackVisible: false,
           ...(Platform.OS === 'android' && {
-            headerTitleStyle: { fontSize: 22, fontWeight: '400' },
             headerTitleAlign: 'left',
           }),
         }}

@@ -1,9 +1,15 @@
 import type * as React from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from '../symbols/icon';
+import { useWide } from '../use-wide';
 import { cn } from '../utils';
 import { useNavigationFields } from './field-layout';
-import { type ListItemProps, listItemName } from './field-props';
+import {
+  type ListItemProps,
+  listItemName,
+  listItemStatus,
+} from './field-props';
+import { StatusDot } from './status-dot';
 import { Text } from './text';
 import { isModifiedClick } from './web-row-link';
 
@@ -46,11 +52,11 @@ function linkProps(
 
 function rowClasses(props: ListItemProps, navigation: boolean): string {
   return cn(
-    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3',
+    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted',
     props.onPress &&
       'web:hover:bg-border web:active:bg-border web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2',
     separatorClasses(props, navigation),
-    navigation && 'min-h-8 rounded-md gap-2 py-1.5 pl-2.5 pr-2',
+    navigation && 'min-h-8 rounded-md gap-2 py-1.5 pl-2.5 pr-2 bg-transparent',
     selectionClass(props, navigation),
   );
 }
@@ -78,7 +84,7 @@ function ListItemTrailing(props: ListItemProps): React.JSX.Element {
   return (
     <View className="max-w-[55%] flex-row items-center gap-2">
       <RowValue value={props.value} />
-      <Attention visible={props.needsAttention} />
+      <StatusDot status={listItemStatus(props)} />
       {props.accessory}
       <Disclosure visible={!!props.onPress && !navigation} />
     </View>
@@ -95,16 +101,9 @@ function selectionClass(
 function RowIcon({
   icon,
 }: Pick<ListItemProps, 'icon'>): React.JSX.Element | null {
-  return icon ? <Icon name={icon} size="lg" className="shrink-0" /> : null;
-}
-
-function Attention({
-  visible,
-}: {
-  visible?: boolean;
-}): React.JSX.Element | null {
-  return visible ? (
-    <View className="size-2 shrink-0 rounded-full bg-warning wide:size-1.5" />
+  const wide = useWide();
+  return icon ? (
+    <Icon name={icon} size={wide ? 'md' : 'lg'} className="shrink-0" />
   ) : null;
 }
 
@@ -130,7 +129,7 @@ function separatorClasses(
     !navigation &&
     cn(
       'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-[var(--color-separator)] web:last:after:hidden',
-      props.icon && 'web:after:left-13 wide:web:after:left-12',
+      props.icon && 'web:after:left-13 wide:web:after:left-11',
     )
   );
 }
@@ -138,13 +137,9 @@ function separatorClasses(
 function RowValue({
   value,
 }: Pick<ListItemProps, 'value'>): React.JSX.Element | null {
-  const navigation = useNavigationFields();
   if (value === undefined) return null;
   return (
-    <Text
-      role={navigation ? 'secondary' : 'body'}
-      className="text-muted-foreground shrink"
-    >
+    <Text role="body" className="text-muted-foreground shrink">
       {value}
     </Text>
   );

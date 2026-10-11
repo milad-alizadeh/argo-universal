@@ -3,18 +3,14 @@ import { useContext } from 'react';
 import {
   ActivityIndicator,
   type ActivityIndicatorProps,
-  Platform,
   type ViewStyle,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import { useResolveClassNames, withUniwind } from 'uniwind';
+import { withUniwind } from 'uniwind';
 import { TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { type IconName, iconSymbols } from './icon-names';
 import type { NativeSymbol } from './native-symbol';
-import { sfFilledPaths, type SymbolPath } from './sf-filled-paths';
 import { SymbolGlyph } from './symbol-glyph';
-import { useSymbolImageRenderer } from './symbol-images';
 
 const iconSizes = {
   xs: 12,
@@ -36,16 +32,10 @@ export function iconSizeStyle(
   return { width: pixels, height: pixels };
 }
 
-// Android and the browser draw Material Symbols; iOS and the desktop app on macOS draw SF Symbols.
-function useDrawsMaterial(): boolean {
-  const render = useSymbolImageRenderer();
-  return Platform.OS === 'android' || (Platform.OS === 'web' && !render);
-}
-
 export interface IconProps {
   name: IconName;
   size?: IconSize;
-  // Draws the SF Symbol's filled variant where it has one; Material Symbols stay outlined.
+  // Selects the platform's filled variant where the icon has one.
   filled?: boolean;
   className?: string;
   testID?: string;
@@ -68,55 +58,18 @@ export function Icon({
   const textClass = useContext(TextClassContext);
   const symbol: NativeSymbol = iconSymbols[name];
   const colorClassName = cn('text-foreground', textClass, className);
-  const material = useDrawsMaterial();
   const pixels = iconPixels(size);
-  const color = useResolveClassNames(colorClassName).color;
-  const filledPath =
-    filled && material && symbol.sfFilled
-      ? sfFilledPaths[symbol.sfFilled]
-      : undefined;
-  if (filledPath)
-    return (
-      <FilledPath
-        path={filledPath}
-        pixels={pixels}
-        color={typeof color === 'string' ? color : undefined}
-        testID={testID}
-      />
-    );
+  const sf = (filled && symbol.sfFilled) || symbol.sf;
   return (
     <TintedSymbol
       className={colorClassName}
       colorClassName={colorClassName}
-      sf={(filled && symbol.sfFilled) || symbol.sf}
+      sf={sf}
       material={symbol.material}
+      filled={sf !== symbol.sf || sf.endsWith('.fill')}
       pixels={pixels}
       testID={testID}
     />
-  );
-}
-
-// Material Symbols have no filled form, so a filled icon draws the SF symbol's outline there.
-function FilledPath({
-  path,
-  pixels,
-  color,
-  testID,
-}: {
-  path: SymbolPath;
-  pixels: number;
-  color: string | undefined;
-  testID: string;
-}): React.JSX.Element {
-  return (
-    <Svg
-      width={pixels}
-      height={pixels}
-      viewBox={`0 0 ${path.width} ${path.height}`}
-      testID={testID}
-    >
-      <Path d={path.d} fill={color ?? 'currentColor'} />
-    </Svg>
   );
 }
 

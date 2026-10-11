@@ -11,8 +11,7 @@
   /* A list's inset, as its rows pad their content 10px more for the highlight. */
   --spacing-gutter-list: 10px;
   --breakpoint-wide: 720px;
-  --font-sans:
-    "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:
     "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-display: var(--font-sans);
@@ -121,10 +120,12 @@
 @layer theme {
   :root {
     @variant ios {
+      --font-sans: System;
       /* React Native resolves ui-monospace to SF Mono on iOS. */
       --font-mono: ui-monospace;
     }
     @variant android {
+      --font-sans: sans-serif;
       --font-mono: monospace;
     }
     @variant light {

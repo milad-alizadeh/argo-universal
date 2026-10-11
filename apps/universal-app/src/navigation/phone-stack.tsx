@@ -7,13 +7,13 @@ import { Stack } from 'expo-router';
 import type * as React from 'react';
 import type { ComponentProps, ReactElement } from 'react';
 import { Platform, View } from 'react-native';
+import { useHeaderTitleOptions } from './header-title';
 
 // Native header options every phone stack shares: one line, no hairline border.
 const screenOptions = {
   headerShadowVisible: false,
   headerTransparent: hasLiquidGlass,
   headerBackButtonDisplayMode: 'minimal',
-  headerTitleStyle: { fontSize: 17, fontWeight: '600' },
 } satisfies ComponentProps<typeof Stack>['screenOptions'];
 
 // A phone section's native stack; its screens set their header through ScreenHeader.
@@ -22,9 +22,12 @@ export function PhoneStack({
 }: {
   children: React.ReactNode;
 }): React.JSX.Element {
+  const titleOptions = useHeaderTitleOptions();
   return (
     <ScreenHeaderProvider header={NativeScreenHeader}>
-      <Stack screenOptions={screenOptions}>{children}</Stack>
+      <Stack screenOptions={{ ...screenOptions, ...titleOptions }}>
+        {children}
+      </Stack>
     </ScreenHeaderProvider>
   );
 }
