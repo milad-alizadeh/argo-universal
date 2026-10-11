@@ -1,7 +1,6 @@
 import type * as React from 'react';
-import { Button } from '#lib/generic/primitives/button';
 import type { IconName } from '#lib/generic/symbols/icon-names';
-import { Icon } from '../../../lib/generic/symbols/icon';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
 
 export interface FloatingActionButtonProps {
   accessibilityLabel: string;
@@ -16,12 +15,15 @@ export function FloatingActionButton({
   onPress,
 }: FloatingActionButtonProps): React.JSX.Element {
   return (
-    <Button
+    <IconButton
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       className="size-14 sm:size-14 rounded-full"
-    >
-      <Icon name={icon} className="text-primary-foreground" />
-    </Button>
+      icon={icon}
+      iconSize="md"
+      iconClassName={'text-primary-foreground'}
+      size="md"
+      variant="filled"
+    />
   );
 }

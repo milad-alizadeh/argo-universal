@@ -279,7 +279,7 @@ function attentionAndSectionStates(count: number, width: number): Story {
           );
           await expect(
             canvas.getByRole('button', { name: shellSections[section].title }),
-          ).toHaveAttribute('aria-selected', 'true');
+          ).toHaveAttribute('aria-pressed', 'true');
           await userEvent.click(
             canvas.getByRole('button', { name: 'Close navigation' }),
           );

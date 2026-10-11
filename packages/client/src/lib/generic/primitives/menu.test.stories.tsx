@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../each-layout';
 import { settleViewport } from '../settle-viewport';
-import { Button } from './button';
 import { Menu } from './menu';
+import { Pressable, contentActionClass } from './pressable';
 import { Text } from './text';
 
 const askLabel = 'Ask before changes';
@@ -37,9 +37,9 @@ function Permissions({
         onValueChange(next);
       }}
       trigger={
-        <Button>
+        <Pressable role="button" className={contentActionClass({})}>
           <Text>Permissions</Text>
-        </Button>
+        </Pressable>
       }
     />
   );

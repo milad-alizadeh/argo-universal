@@ -1,8 +1,8 @@
 import type { AgentCheck } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
+import { Button } from '../../../lib/generic/primitives/button';
 
 // undefined while the Server runs a fresh ACP initialize; readiness is never read from the saved record.
 export type CustomAgentCheck = AgentCheck | undefined;
@@ -74,8 +74,11 @@ function FailedStatus(props: FailedStatusProps): React.JSX.Element {
 
 function CheckAgain({ onPress }: { onPress: () => void }): React.JSX.Element {
   return (
-    <Button variant="outline" size="sm" onPress={onPress}>
-      <Text>Check again</Text>
-    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      onPress={onPress}
+      label={'Check again'}
+    />
   );
 }

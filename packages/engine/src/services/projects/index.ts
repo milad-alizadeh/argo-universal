@@ -1,2 +1,2 @@
 export { readProjectPath, seedProject } from './project';
-export { projectsRouter } from './router';
+export { createProjectsRouter } from './router';

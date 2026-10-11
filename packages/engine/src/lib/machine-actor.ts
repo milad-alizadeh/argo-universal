@@ -1,12 +1,27 @@
-import { Actor, type AnyStateMachine, StateMachine } from 'xstate';
+import {
+  Actor,
+  type ActorRefFrom,
+  type AnyActorRef,
+  type AnyStateMachine,
+  StateMachine,
+} from 'xstate';
 
-export function isMachineActor<Machine extends AnyStateMachine>(
-  actor: unknown,
+export function findMachineActor<Machine extends AnyStateMachine>(
+  system: AnyActorRef['system'],
+  id: string,
   machine: Machine,
-): actor is Actor<Machine> {
-  return actor instanceof Actor && ownsMachine(actor.logic, machine);
+): ActorRefFrom<Machine> | undefined {
+  const actor: unknown = system.get(id);
+  return isActorOf(actor, machine) ? actor : undefined;
 }
 
-function ownsMachine(logic: unknown, machine: AnyStateMachine): boolean {
-  return logic instanceof StateMachine && logic.config === machine.config;
+function isActorOf<Machine extends AnyStateMachine>(
+  actor: unknown,
+  machine: Machine,
+): actor is ActorRefFrom<Machine> {
+  return (
+    actor instanceof Actor &&
+    actor.logic instanceof StateMachine &&
+    actor.logic.config === machine.config
+  );
 }

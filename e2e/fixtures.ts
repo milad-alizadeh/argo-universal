@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import {
@@ -8,9 +7,10 @@ import {
   type ElectronApplication,
   type Disposable,
 } from '@playwright/test';
+import { readServerAddress } from '@repo/engine/server-runtime';
+import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
-import type { MockAgents } from './mock-agents';
 import { pollServer, startOwnServer } from './own-server';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
@@ -25,7 +25,6 @@ const electronPath = z
   );
 
 const ServerPackage = z.object({ version: z.string() });
-const ServerProcess = z.object({ pid: z.int() });
 
 // The version the Server reports in system.info.
 export const serverVersion = ServerPackage.parse(
@@ -33,14 +32,6 @@ export const serverVersion = ServerPackage.parse(
     readFileSync(path.join(repositoryRoot, 'apps/server/package.json'), 'utf8'),
   ),
 ).version;
-
-// The supervisor removes server.json when it stops, so a file left behind names a Server still running.
-const readServerPid = async (home: string): Promise<number | null> => {
-  const text = await readFile(path.join(home, 'server.json'), 'utf8').catch(
-    (): null => null,
-  );
-  return text === null ? null : ServerProcess.parse(JSON.parse(text)).pid;
-};
 
 // The App prefers the Server URL the desktop preload sets over its built-in one, so tests can point it at any port.
 const pointAppAtServer = (page: Page, serverUrl: string): Promise<Disposable> =>
@@ -50,7 +41,7 @@ const pointAppAtServer = (page: Page, serverUrl: string): Promise<Disposable> =>
 
 export type ServerOptions = {
   // Shared Argo fixture options by registered Agent identity.
-  mockAgents: MockAgents;
+  mockAgents: AppFixtureAgents;
 };
 
 type App = { page: Page; httpUrl: string; registryPath: string };
@@ -119,7 +110,8 @@ export const test = base.extend<
           ARGO_HOME: home,
           // Its own app data, so parallel launches each get the single-instance lock.
           ARGO_USER_DATA_DIRECTORY: testInfo.outputPath('user-data'),
-          ARGO_BACKGROUND: '1',
+          // CI's xvfb display has no one's focus to take, and a hidden window there draws a frame only every few seconds, which every click waits for.
+          ARGO_BACKGROUND: process.env.CI ? '0' : '1',
           PATH: '/usr/bin:/bin',
         },
       });
@@ -138,7 +130,8 @@ export const test = base.extend<
         await fixtureServer.stop();
       }
     }
-    const leftoverPid = await readServerPid(home);
+    // The supervisor removes server.json when it stops, so a file left behind names a Server still running.
+    const leftoverPid = readServerAddress(home)?.pid ?? null;
     if (leftoverPid !== null) {
       process.kill(leftoverPid, 'SIGTERM');
       throw new Error(

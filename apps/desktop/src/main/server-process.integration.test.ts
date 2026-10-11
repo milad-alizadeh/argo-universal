@@ -35,21 +35,21 @@ afterEach((): void => {
 });
 
 describe('readLiveServerAddress', (): void => {
-  it('returns server.json of any version when its pid is alive', async (): Promise<void> => {
+  it('returns server.json of any version when its pid is alive', (): void => {
     const address = writeServerJson(process.pid);
 
-    expect(await readLiveServerAddress(home)).toEqual(address);
+    expect(readLiveServerAddress(home)).toEqual(address);
   });
 
-  it('returns null when the pid in server.json has exited', async (): Promise<void> => {
+  it('returns null when the pid in server.json has exited', (): void => {
     const exited = spawnSync(process.execPath, ['--version']).pid;
     writeServerJson(exited);
 
-    expect(await readLiveServerAddress(home)).toBeNull();
+    expect(readLiveServerAddress(home)).toBeNull();
   });
 
-  it('returns null without server.json', async (): Promise<void> => {
-    expect(await readLiveServerAddress(home)).toBeNull();
+  it('returns null without server.json', (): void => {
+    expect(readLiveServerAddress(home)).toBeNull();
   });
 });
 

@@ -8,10 +8,15 @@ import {
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
-import type { WriterChange } from '../feed';
-import { writerMachine } from '../feed';
+import { writerMachine } from '../../storage';
 import { registryMachine } from './registry-machine';
 import { createSessionListReader } from './session-list-reader';
+import {
+  SessionRowUpdateJob,
+  TurnInsertJob,
+  TurnUpdateJob,
+} from './session-storage';
+import { onWriterChange, type WriterChange } from './writer-changes';
 
 const writeEvent = 'writer.write';
 const queuedTurnId = 'queued-turn';
@@ -206,7 +211,7 @@ it.each(['session-1', 'child-1'])(
     reader.readRows();
     const observed: { ids: string[]; running: boolean; subagents: number }[] =
       [];
-    const listener = writer.on('writer.changed', (change: WriterChange) => {
+    const listener = onWriterChange(writer, (change: WriterChange) => {
       const ids = reader.relatedSessionIds(reader.sessionIdsForChanges(change));
       const parent = reader
         .readRows(ids)
@@ -220,19 +225,17 @@ it.each(['session-1', 'child-1'])(
     onTestFinished(() => listener.unsubscribe());
     writer.send({
       type: writeEvent,
-      job: {
-        type: 'turnInsert',
+      job: new TurnInsertJob({
         turn: { id: queuedTurnId, sessionId, status: 'running', startedAt: 1 },
-      },
+      }),
     });
     await waitFor(writer, (snapshot) => snapshot.matches('waitingToRetry'));
     writer.send({
       type: writeEvent,
-      job: {
-        type: 'turnUpdate',
+      job: new TurnUpdateJob({
         id: queuedTurnId,
         set: { status: 'ended', endedAt: 2, stopReason: 'end_turn' },
-      },
+      }),
     });
     expect(observed).toEqual([
       {
@@ -289,11 +292,10 @@ it('rejects a malformed stored Session before a pending patch can replace its in
   });
   writer.send({
     type: writeEvent,
-    job: {
-      type: 'sessionRowUpdate',
+    job: new SessionRowUpdateJob({
       id: 'session-1',
       set: { titleSource: 'agent' },
-    },
+    }),
   });
   await waitFor(writer, (snapshot) => snapshot.matches('waitingToRetry'));
   expect(reader.readRows(['session-1'])).toEqual([]);

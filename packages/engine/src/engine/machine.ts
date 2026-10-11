@@ -11,6 +11,7 @@ import {
   type InputFrom,
   type AnyActorRef,
 } from 'xstate';
+import { findMachineActor } from '../lib/machine-actor';
 import {
   createAcpResources,
   type AcpResources,
@@ -20,15 +21,19 @@ import {
   type SyncSupervisorInput,
 } from '../services/agents';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
-import { writerMachine, databaseWriterId } from '../services/feed';
 import { seedProject } from '../services/projects';
 import {
   type RegistryInput,
+  recoverAfterRestart,
   registryMachine,
   sessionRegistryId,
-  findSessionRegistry,
   type RegistryActorRef,
 } from '../services/sessions';
+import {
+  databaseWriterId,
+  type WriterActorRef,
+  writerMachine,
+} from '../storage';
 import {
   type HttpServer,
   type HttpServerOptions,
@@ -36,7 +41,6 @@ import {
 } from './http-server';
 import type { EngineMessage } from './ipc';
 import { type EngineStop, processSignals } from './process-signals';
-import { recoverAfterRestart } from './recovery';
 
 const finishingEngineTarget = '#engine.finishing';
 
@@ -404,7 +408,11 @@ export const engineMachine = setup({
                 src: 'closeAcpResources',
                 input: ({ context, self }): CloseAcpResourcesInput => ({
                   resources: context.acpResources,
-                  sessions: findSessionRegistry(self.system),
+                  sessions: findMachineActor(
+                    self.system,
+                    sessionRegistryId,
+                    registryMachine,
+                  ),
                 }),
                 onDone: { target: 'drainingWriter' },
                 onError: {
@@ -484,14 +492,12 @@ export const engineMachine = setup({
 function requireSessionRegistry(
   system: AnyActorRef['system'],
 ): RegistryActorRef {
-  const actor = findSessionRegistry(system);
+  const actor = findMachineActor(system, sessionRegistryId, registryMachine);
   if (!actor) throw new Error('The Session registry is not running');
   return actor;
 }
 
-function requireDatabaseWriter(
-  system: AnyActorRef['system'],
-): ActorRefFrom<typeof writerMachine> {
+function requireDatabaseWriter(system: AnyActorRef['system']): WriterActorRef {
   const actor = system.get(databaseWriterId);
   if (!actor) throw new Error('Database Writer is not running');
   return actor;

@@ -3,13 +3,16 @@ import { lexer, type Tokens } from 'marked';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block';
 import { PlanDocument } from '#lib/product/plan-document';
 import { BottomSheet } from '../../../lib/generic/primitives/bottom-sheet';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { resourceName } from '../../../lib/product/markdown/resource-name';
 import { useWrittenPlanEscape } from '../hooks/use-written-plan-escape';
@@ -37,16 +40,19 @@ export function WrittenPlan({
           (token): token is Tokens.Heading => token.type === 'heading',
         )?.text ?? 'Written plan');
   const trigger = (
-    <Button
-      variant="ghost"
+    <Pressable
       accessibilityLabel="Written plan"
       aria-expanded={open}
       onPress={() => setOpen(!open)}
-      className={cn(
-        'h-6 sm:h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer',
-        wide &&
-          'h-8 sm:h-8 w-full justify-start pl-2 pr-1.5 rounded-none border-0 bg-transparent shadow-none',
-      )}
+      role="button"
+      className={contentActionClass({
+        variant: 'ghost',
+        className: cn(
+          'h-6 sm:h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer',
+          wide &&
+            'h-8 sm:h-8 w-full justify-start pl-2 pr-1.5 rounded-none border-0 bg-transparent shadow-none',
+        ),
+      })}
     >
       <Icon name="file-text" className="text-muted-foreground" />
       <Text
@@ -65,10 +71,10 @@ export function WrittenPlan({
           >
             {title}
           </Text>
-          <Icon name="chevron-up" className="text-muted-foreground" />
+          <Icon size="xs" name="chevron-up" className="text-muted-foreground" />
         </>
       )}
-    </Button>
+    </Pressable>
   );
   if (!wide)
     return (

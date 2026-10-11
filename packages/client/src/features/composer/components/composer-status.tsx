@@ -15,11 +15,19 @@ import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { fullTurnDegrees } from '#lib/generic/motion';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Icon, IconSpinner } from '../../../lib/generic/symbols/icon';
+import { Button } from '../../../lib/generic/primitives/button';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
+import {
+  Icon,
+  IconSpinner,
+  iconSizeStyle,
+} from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 import { ComposerPopover } from './composer-popover';
 
@@ -93,8 +101,11 @@ const ThemedCircle = withUniwind(Circle, {
 function ContextRing({ percent }: { percent: number }): React.JSX.Element {
   const circumference = 2 * Math.PI * contextRingRadius;
   return (
-    <View className="size-icon-md shrink-0 items-center justify-center">
-      <View className="size-icon-md">
+    <View
+      style={iconSizeStyle('sm')}
+      className="shrink-0 items-center justify-center"
+    >
+      <View style={iconSizeStyle('sm')}>
         <Svg width="100%" height="100%" viewBox="0 0 14 14">
           <ThemedCircle
             cx={7}
@@ -159,19 +170,23 @@ export function ComposerPlan({
     [revealHeight],
   );
   const trigger = (
-    <Button
-      variant="ghost"
+    <Pressable
       disabled={disabled}
       accessibilityLabel="Plan"
       accessibilityState={{ expanded: wide ? expanded : undefined }}
       aria-expanded={wide ? expanded : undefined}
       onPress={wide ? (): void => setExpanded(!expanded) : undefined}
-      className={cn(
-        'h-6 sm:h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card',
-        wide
-          ? 'h-8 sm:h-8 py-0 w-full pl-2 pr-1.5 rounded-none border-0 bg-transparent shadow-none justify-start'
-          : 'shadow-composer',
-      )}
+      role="button"
+      className={contentActionClass({
+        variant: 'ghost',
+        className: cn(
+          'h-6 sm:h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card',
+          wide
+            ? 'h-8 sm:h-8 py-0 w-full pl-2 pr-1.5 rounded-none border-0 bg-transparent shadow-none justify-start'
+            : 'shadow-composer',
+        ),
+        disabled: disabled,
+      })}
     >
       <View className="flex-row gap-0.5">
         {withOccurrenceKeys(entries, (entry) => entry.content).map(
@@ -205,6 +220,7 @@ export function ComposerPlan({
             {entries.find((entry) => entry.status === 'in_progress')?.content}
           </Text>
           <Icon
+            size="xs"
             name="chevron-up"
             className={cn(
               'text-muted-foreground web:transition-transform web:duration-200',
@@ -213,7 +229,7 @@ export function ComposerPlan({
           />
         </>
       )}
-    </Button>
+    </Pressable>
   );
   if (wide)
     return (
@@ -300,9 +316,9 @@ function NativePlanSpinner({ label }: { label: string }): React.JSX.Element {
     <View
       role="progressbar"
       accessibilityLabel={label}
-      className="size-icon-md"
+      style={iconSizeStyle('sm')}
     >
-      <Animated.View style={style} className="size-icon-md">
+      <Animated.View style={[iconSizeStyle('sm'), style]}>
         <Svg width="100%" height="100%" viewBox="0 0 32 32">
           <ThemedCircle
             cx={16}
@@ -353,7 +369,7 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }): React.JSX.Element {
           stepIndicator = <Icon name="check" className={mutedTextClassName} />;
         } else {
           stepIndicator = (
-            <View className="size-icon-md">
+            <View style={iconSizeStyle('sm')}>
               <Svg width="100%" height="100%" viewBox="0 0 32 32">
                 <ThemedCircle
                   cx={16}
@@ -426,16 +442,20 @@ export function ComposerStatusControls({
           label="Usage"
           width={320}
           trigger={
-            <Button
-              variant="ghost"
+            <Pressable
               disabled={disabled}
               accessibilityLabel="Usage"
-              className={cn(
-                'h-7 sm:h-7 py-0 gap-1.5',
-                wide
-                  ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
-                  : 'w-7 px-0 has-[>[data-icon]]:px-0',
-              )}
+              role="button"
+              className={contentActionClass({
+                variant: 'ghost',
+                className: cn(
+                  'h-7 sm:h-7 py-0 gap-1.5',
+                  wide
+                    ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
+                    : 'w-7 px-0 has-[>[data-icon]]:px-0',
+                ),
+                disabled: disabled,
+              })}
             >
               <Icon name="scheduled" className={mutedTextClassName} />
               <Text
@@ -452,7 +472,7 @@ export function ComposerStatusControls({
               >
                 {status.usage.limits[0]?.usedPercent}%
               </Text>
-            </Button>
+            </Pressable>
           }
         >
           {() => (
@@ -504,16 +524,20 @@ export function ComposerStatusControls({
           label="Context window"
           width={320}
           trigger={
-            <Button
-              variant="ghost"
+            <Pressable
               disabled={disabled}
               accessibilityLabel="Context window"
-              className={cn(
-                'h-7 sm:h-7 py-0 gap-1.5',
-                wide
-                  ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
-                  : 'w-7 px-0 has-[>[data-icon]]:px-0',
-              )}
+              role="button"
+              className={contentActionClass({
+                variant: 'ghost',
+                className: cn(
+                  'h-7 sm:h-7 py-0 gap-1.5',
+                  wide
+                    ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
+                    : 'w-7 px-0 has-[>[data-icon]]:px-0',
+                ),
+                disabled: disabled,
+              })}
             >
               <ContextRing percent={percent} />
               <Text
@@ -540,7 +564,7 @@ export function ComposerStatusControls({
                   / {compactNumber(context.size)}
                 </Text>
               </View>
-            </Button>
+            </Pressable>
           }
         >
           {(close) => (
@@ -642,21 +666,16 @@ export function ComposerStatusControls({
                 </Text>
                 <Button
                   variant="outline"
-                  className="h-7 sm:h-7 py-0 rounded-md gap-1.5 px-2.5 has-[>[data-icon]]:px-2.5"
+                  className="web:sm:min-h-0 h-7 sm:h-7 py-0 rounded-md gap-1.5 px-2.5 has-[>[data-icon]]:px-2.5"
                   onPress={() => {
                     context.onCompact();
                     close();
                   }}
-                >
-                  <Icon name="compaction" />
-                  <Text
-                    selectable={false}
-                    role="control"
-                    className="select-none"
-                  >
-                    Compact
-                  </Text>
-                </Button>
+                  label={'Compact'}
+                  icon={'compaction'}
+                  appearance="content"
+                  labelClassName={'select-none type-control'}
+                />
               </View>
             </View>
           )}
@@ -683,13 +702,18 @@ export function ComposerWorkChips({
       ).map(
         ([label, icon, work]) =>
           work && (
-            <Button
+            <Pressable
               key={label}
-              variant="ghost"
               disabled={disabled}
               accessibilityLabel={`${label}: ${work.count}`}
               onPress={work.onPress}
-              className="h-6 sm:h-6 py-0 px-2.5 has-[>[data-icon]]:px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer"
+              role="button"
+              className={contentActionClass({
+                variant: 'ghost',
+                className:
+                  'h-6 sm:h-6 py-0 px-2.5 has-[>[data-icon]]:px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer',
+                disabled: disabled,
+              })}
             >
               <Icon name={icon} className={mutedTextClassName} />
               <View className="flex-row items-center gap-1">
@@ -707,7 +731,7 @@ export function ComposerWorkChips({
                   {label}
                 </Text>
               </View>
-            </Button>
+            </Pressable>
           ),
       )}
     </>

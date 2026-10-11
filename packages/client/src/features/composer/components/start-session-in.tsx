@@ -2,11 +2,14 @@ import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Input } from '#lib/generic/primitives/input';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import {
   CheckoutContents,
@@ -43,16 +46,20 @@ export function StartSessionIn({
       label="Project"
       width={300}
       trigger={
-        <Button
-          variant="ghost"
+        <Pressable
           disabled={disabled}
           accessibilityLabel={`Project: ${project?.name ?? 'None'}`}
-          className={cn(
-            'gap-1.5 justify-start shadow-none',
-            wide
-              ? 'h-7 sm:h-7 px-1.5 has-[>[data-icon]]:px-1.5 rounded-md'
-              : 'h-10 sm:h-10 px-4 has-[>[data-icon]]:px-4 rounded-md',
-          )}
+          role="button"
+          className={contentActionClass({
+            variant: 'ghost',
+            className: cn(
+              'gap-1.5 justify-start shadow-none',
+              wide
+                ? 'h-7 sm:h-7 px-1.5 has-[>[data-icon]]:px-1.5 rounded-md'
+                : 'h-10 sm:h-10 px-4 has-[>[data-icon]]:px-4 rounded-md',
+            ),
+            disabled: disabled,
+          })}
         >
           <Icon name="folder" className="text-muted-foreground" />
           <Text
@@ -63,8 +70,12 @@ export function StartSessionIn({
           >
             {project?.name ?? 'Choose a Project'}
           </Text>
-          <Icon name="chevron-down" className="-ml-0.5 text-muted-foreground" />
-        </Button>
+          <Icon
+            size="xs"
+            name="chevron-down"
+            className="-ml-0.5 text-muted-foreground"
+          />
+        </Pressable>
       }
     >
       {(close) => (
@@ -128,11 +139,16 @@ export function StartSessionIn({
       <ComposerPopover
         label="Checkout"
         trigger={
-          <Button
-            variant="ghost"
+          <Pressable
             disabled={disabled || !checkout.onNewWorktreeChange}
             accessibilityLabel="Checkout"
-            className="h-10 sm:h-10 px-4 has-[>[data-icon]]:px-4 gap-1.5 justify-start rounded-md shadow-none"
+            role="button"
+            className={contentActionClass({
+              variant: 'ghost',
+              className:
+                'h-10 sm:h-10 px-4 has-[>[data-icon]]:px-4 gap-1.5 justify-start rounded-md shadow-none',
+              disabled: disabled || !checkout.onNewWorktreeChange,
+            })}
           >
             <Icon
               name={checkout.newWorktree ? 'branch' : 'folder'}
@@ -146,10 +162,11 @@ export function StartSessionIn({
               {checkout.newWorktree ? 'New worktree' : 'Local'}
             </Text>
             <Icon
+              size="xs"
               name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
-          </Button>
+          </Pressable>
         }
       >
         {(close) => (
@@ -204,17 +221,20 @@ function ProjectPicker({
         {found.map((project) => {
           const selected = project.id === projectId;
           return (
-            <Button
+            <Pressable
               key={project.id}
-              variant="ghost"
               accessibilityLabel={project.name}
               accessibilityState={{ selected }}
               aria-pressed={selected}
               onPress={() => onSelect(project.id)}
-              className={cn(
-                'h-auto sm:h-auto items-start justify-start gap-1.5 px-2.5 py-2 has-[>[data-icon]]:px-2.5 has-[>[data-icon]]:py-2 wide:p-2 wide:has-[>[data-icon]]:p-2 rounded-md web:focus-visible:ring-0 web:focus-visible:bg-accent',
-                selected && 'bg-accent ios:bg-accent/50',
-              )}
+              role="button"
+              className={contentActionClass({
+                variant: 'ghost',
+                className: cn(
+                  'h-auto sm:h-auto items-start justify-start gap-1.5 px-2.5 py-2 has-[>[data-icon]]:px-2.5 has-[>[data-icon]]:py-2 wide:p-2 wide:has-[>[data-icon]]:p-2 rounded-md web:focus-visible:ring-0 web:focus-visible:bg-accent',
+                  selected && 'bg-accent ios:bg-accent/50',
+                ),
+              })}
             >
               <View className="h-5 shrink-0 justify-center">
                 <Icon name="folder" className="text-muted-foreground" />
@@ -240,7 +260,7 @@ function ProjectPicker({
               <View className="h-5 w-4 shrink-0 items-center justify-center">
                 {selected && <Icon name="check" className="text-foreground" />}
               </View>
-            </Button>
+            </Pressable>
           );
         })}
         {found.length === 0 && (

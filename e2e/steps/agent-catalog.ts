@@ -47,7 +47,7 @@ export async function browseAgents(page: Page): Promise<void> {
   if (viewport && viewport.width < 600)
     await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('button', { name: 'Agents', exact: true }).click();
+  await page.getByRole('link', { name: /^Agents(?:,|$)/ }).click();
   await expect(
     page.getByRole('heading', { name: exampleAgentName, exact: true }),
   ).toBeVisible();

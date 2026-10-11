@@ -75,22 +75,11 @@ export const LongPlan: Story = {
       await waitFor(async () => {
         await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
       });
-      const card = canvas.getByTestId('plan-proposal-card');
-      const titleTop =
-        canvas.getByText(approvePlanQuestion).getBoundingClientRect().top -
-        card.getBoundingClientRect().top;
       const approve = canvas.getByRole('button', { name: 'Approve' });
-      const buttonTop =
-        approve.getBoundingClientRect().top - card.getBoundingClientRect().top;
+      const before = await settledPinnedOffsets(canvas);
       scroll.scrollTop = scroll.scrollHeight;
       await waitFor(() => expect(scroll.scrollTop).toBeGreaterThan(0));
-      await expect(
-        canvas.getByText(approvePlanQuestion).getBoundingClientRect().top -
-          card.getBoundingClientRect().top,
-      ).toBe(titleTop);
-      await expect(
-        approve.getBoundingClientRect().top - card.getBoundingClientRect().top,
-      ).toBe(buttonTop);
+      await waitFor(() => expect(pinnedOffsets(canvas)).toEqual(before));
       await expect(approve).toBeVisible();
       await expect(approve.getBoundingClientRect().bottom).toBeLessThanOrEqual(
         window.innerHeight,
@@ -99,6 +88,39 @@ export const LongPlan: Story = {
     }
   },
 };
+
+type Canvas = ReturnType<typeof within>;
+
+// Where the question and Approve sit inside the card; scrolling the plan must not move them.
+const pinnedOffsets = (canvas: Canvas): { title: number; button: number } => {
+  const cardTop = canvas
+    .getByTestId('plan-proposal-card')
+    .getBoundingClientRect().top;
+  return {
+    title:
+      canvas.getByText(approvePlanQuestion).getBoundingClientRect().top -
+      cardTop,
+    button:
+      canvas.getByRole('button', { name: 'Approve' }).getBoundingClientRect()
+        .top - cardTop,
+  };
+};
+
+// The offsets once two readings a frame apart agree, so a layout still settling is not the baseline.
+async function settledPinnedOffsets(
+  canvas: Canvas,
+): Promise<{ title: number; button: number }> {
+  let previous = pinnedOffsets(canvas);
+  await waitFor(async () => {
+    await new Promise(requestAnimationFrame);
+    const current = pinnedOffsets(canvas);
+    const settled =
+      current.title === previous.title && current.button === previous.button;
+    previous = current;
+    await expect(settled).toBe(true);
+  });
+  return previous;
+}
 
 function keepPlanning(width: number): Story {
   return {

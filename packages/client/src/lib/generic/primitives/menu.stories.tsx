@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { Variation, Variations } from '../variations';
-import { Button } from './button';
 import { Menu } from './menu';
+import { Pressable, contentActionClass } from './pressable';
 import { Text } from './text';
 
 const choices = [
@@ -27,13 +27,16 @@ function PermissionsMenu({
       onValueChange={setValue}
       disabled={disabled}
       trigger={
-        <Button
-          variant="ghost"
+        <Pressable
+          role="button"
           disabled={disabled}
-          className="android:h-auto android:min-h-10"
+          className={contentActionClass({
+            variant: 'ghost',
+            className: 'android:h-auto android:min-h-10',
+          })}
         >
           <Text>{selected?.label}</Text>
-        </Button>
+        </Pressable>
       }
     />
   );

@@ -1,12 +1,11 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from '#lib/generic/primitives/dialog';
-import { Text } from '#lib/generic/primitives/text';
+import { Button } from '../../../lib/generic/primitives/button';
 import { FieldMessage, FormLabel, FormInput } from './form-field';
 
 export type EntrySheetField = {
@@ -55,9 +54,12 @@ export const removalOf = (
 function EntrySheetHeader(props: EntrySheetProps): React.JSX.Element {
   return (
     <View className="flex-row items-center justify-between gap-2">
-      <Button variant="ghost" size="sm" onPress={props.onClose}>
-        <Text>Cancel</Text>
-      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onPress={props.onClose}
+        label={'Cancel'}
+      />
       <DialogTitle className="type-heading">{props.title}</DialogTitle>
       <SaveButton onPress={props.onSave} />
     </View>
@@ -65,11 +67,7 @@ function EntrySheetHeader(props: EntrySheetProps): React.JSX.Element {
 }
 
 function SaveButton({ onPress }: { onPress: () => void }): React.JSX.Element {
-  return (
-    <Button size="sm" onPress={onPress}>
-      <Text>Save</Text>
-    </Button>
-  );
+  return <Button size="sm" onPress={onPress} label={'Save'} />;
 }
 
 function EntrySheetInput({
@@ -92,8 +90,13 @@ function RemoveEntry({
   removeLabel,
 }: EntrySheetProps): React.JSX.Element {
   return (
-    <Button variant="ghost" onPress={onRemove}>
-      <Text className="text-destructive">{removeLabel}</Text>
-    </Button>
+    <Button
+      variant="ghost"
+      onPress={onRemove}
+      label={removeLabel}
+      {...destructiveAction}
+    />
   );
 }
+
+const destructiveAction = { role: 'destructive' } as const;

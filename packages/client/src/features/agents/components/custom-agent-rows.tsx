@@ -40,7 +40,11 @@ function CustomAgentRow(props: OneRowProps): React.JSX.Element {
 // Desktop rows carry no chevron, as in Paper.
 function PhoneChevron(): React.JSX.Element {
   return (
-    <Icon name="chevron-right" className="text-muted-foreground wide:hidden" />
+    <Icon
+      name="chevron-right"
+      size="xs"
+      className="text-muted-foreground wide:hidden"
+    />
   );
 }
 

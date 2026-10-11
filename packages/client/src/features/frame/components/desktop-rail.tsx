@@ -2,9 +2,12 @@ import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
 import { Badge } from '#lib/generic/primitives/badge';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { attentionBadge } from '../state/attention-badge';
 import { type Section, shellSections } from './shell-sections';
@@ -27,19 +30,23 @@ const SectionButton = memo(function SectionButton({
   const { title, icon } = shellSections[section];
   const badge = attentionBadge(attentionCount);
   return (
-    <Button
+    <Pressable
       key={section}
-      variant="ghost"
-      className={cn(
-        'size-10 sm:size-10 rounded-md border border-transparent p-0 transition-none',
-        selected && 'border-border bg-card shadow-sm',
-      )}
       accessibilityLabel={title}
       accessibilityState={{ selected: selected }}
-      aria-selected={selected}
+      aria-pressed={selected}
       onPress={() => onSectionChange(section)}
+      role="button"
+      className={contentActionClass({
+        variant: 'ghost',
+        className: cn(
+          'size-10 sm:size-10 rounded-md border border-transparent p-0 transition-none',
+          selected && 'border-border bg-card shadow-sm',
+        ),
+      })}
     >
       <Icon
+        size="md"
         name={icon}
         filled={selected}
         className={cn(!selected && 'text-muted-foreground')}
@@ -54,7 +61,7 @@ const SectionButton = memo(function SectionButton({
           </Text>
         </Badge>
       )}
-    </Button>
+    </Pressable>
   );
 });
 

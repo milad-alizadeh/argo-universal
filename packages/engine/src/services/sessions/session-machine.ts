@@ -41,14 +41,20 @@ import {
   type AnyActorRef,
   type InputFrom,
 } from 'xstate';
-import { findAgentProbe, RecoveryBlockedError } from '../agents';
+import { findMachineActor } from '../../lib/machine-actor';
+import {
+  databaseWriterId,
+  type WriterActorRef,
+  writerMachine,
+} from '../../storage';
+import { RecoveryBlockedError } from '../agents';
 import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';
+import { agentProbeId, agentProbeMachine } from '../agents';
 import { blobsFolderIn } from '../blob';
 import {
   acpToolCallRowId,
-  findDatabaseWriter,
-  readWriterProjection,
+  readQueuedFeedRow,
   publishTurnContent,
   type FeedEvent,
   type FeedActorRef,
@@ -56,7 +62,6 @@ import {
 import { userMessageChange } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow, readUnaddressedPlan } from '../feed';
-import type { writerMachine } from '../feed';
 import { readAcpConfiguration } from './conversation/acp-configuration';
 import {
   AcpSessionLifetime,
@@ -84,6 +89,11 @@ import {
   interruptionDisclosureId,
   toSessionInsert,
 } from './session-data';
+import {
+  SessionRowUpdateJob,
+  TurnInsertJob,
+  TurnUpdateJob,
+} from './session-storage';
 
 const setConfigEvent = 'session.setConfigOption';
 const nativeFailedEvent = 'native.failed';
@@ -111,7 +121,7 @@ type FailureParameters = { error: unknown };
 type CrashNoticeParameters = { description?: string } | undefined;
 type LoadSessionInput = {
   session: SessionInput;
-  writer: ActorRefFrom<typeof writerMachine> | undefined;
+  writer: WriterActorRef | undefined;
 };
 type DiscardCheckoutInput = {
   session: NewSessionInput;
@@ -262,7 +272,8 @@ const writer = ({
 }: {
   system: AnyActorRef['system'];
   self: AnyActorRef;
-}): AnyActorRef => findDatabaseWriter(system) ?? self;
+}): AnyActorRef =>
+  findMachineActor(system, databaseWriterId, writerMachine) ?? self;
 
 // A native Tool call's row is named by its id; an ACP one's is scoped to its ACP session.
 const permissionOutcomeChange = (
@@ -605,11 +616,10 @@ const sessionSetup = setup({
         });
         enqueue.sendTo(writer, {
           type: writeFeedEvent,
-          job: {
-            type: 'sessionRowUpdate',
+          job: new SessionRowUpdateJob({
             id: context.sessionId,
             set: { configValues },
-          },
+          }),
         });
       },
     ),
@@ -727,7 +737,11 @@ const sessionSetup = setup({
     ),
     // An Agent that could not start may have been signed out or removed since its last probe.
     refreshAgentProbe: enqueueActions(({ context, system, enqueue }): void => {
-      const probe = findAgentProbe(system, context.input.adapter.agent);
+      const probe = findMachineActor(
+        system,
+        agentProbeId(context.input.adapter.agent),
+        agentProbeMachine,
+      );
       if (probe) enqueue.sendTo(probe, { type: 'agentProbe.refresh' });
     }),
     rememberReady: enqueueActions(({ context, event, enqueue }): void => {
@@ -735,15 +749,14 @@ const sessionSetup = setup({
       if (context.stored)
         enqueue.sendTo(writer, {
           type: writeFeedEvent,
-          job: {
-            type: 'sessionRowUpdate',
+          job: new SessionRowUpdateJob({
             id: context.sessionId,
             set: {
               vendorSessionId: event.vendorSessionId,
               failure: null,
               configValues: toConfigValues(event.configOptions),
             },
-          },
+          }),
         });
       enqueue.assign({
         vendorSessionId: event.vendorSessionId,
@@ -787,8 +800,7 @@ const sessionSetup = setup({
         });
         enqueue.sendTo(writer, {
           type: writeFeedEvent,
-          job: {
-            type: 'turnInsert',
+          job: new TurnInsertJob({
             turn: {
               id: params.turnId,
               sessionId: context.sessionId,
@@ -796,7 +808,7 @@ const sessionSetup = setup({
               status: 'running',
               model: currentModel(context.configOptions),
             },
-          },
+          }),
         });
       },
     ),
@@ -826,8 +838,7 @@ const sessionSetup = setup({
         if (context.activeTurnId)
           enqueue.sendTo(writer, {
             type: writeFeedEvent,
-            job: {
-              type: 'turnUpdate',
+            job: new TurnUpdateJob({
               id: context.activeTurnId,
               set: {
                 status: 'ended',
@@ -836,7 +847,7 @@ const sessionSetup = setup({
                 usage: params.usage ?? null,
                 error: params.error ?? null,
               },
-            },
+            }),
           });
         enqueue.assign({
           activeTurnId: null,
@@ -869,11 +880,10 @@ const sessionSetup = setup({
       if (context.stored)
         enqueue.sendTo(writer, {
           type: writeFeedEvent,
-          job: {
-            type: 'sessionRowUpdate',
+          job: new SessionRowUpdateJob({
             id: context.sessionId,
             set: { configValues },
-          },
+          }),
         });
       enqueue.assign({
         configOptions: keepHeldConfigChoices(
@@ -1105,11 +1115,10 @@ const sessionSetup = setup({
         enqueue.assign({ failure });
         enqueue.sendTo(writer, {
           type: writeFeedEvent,
-          job: {
-            type: 'sessionRowUpdate',
+          job: new SessionRowUpdateJob({
             id: context.sessionId,
             set: { failure },
-          },
+          }),
         });
       },
     ),
@@ -1405,7 +1414,11 @@ export const sessionMachine = sessionSetup.createMachine({
         src: 'loadSession',
         input: ({ context, self }): LoadSessionInput => ({
           session: context.input,
-          writer: findDatabaseWriter(self.system),
+          writer: findMachineActor(
+            self.system,
+            databaseWriterId,
+            writerMachine,
+          ),
         }),
         ...sessionEntryOutcome,
       },
@@ -1424,9 +1437,10 @@ export const sessionMachine = sessionSetup.createMachine({
           findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
             readWrittenRow({
               database: context.input.database,
-              pending: readWriterProjection(
-                findDatabaseWriter(self.system),
-              ).feedRow(context.sessionId, id),
+              pending: readQueuedFeedRow(
+                findMachineActor(self.system, databaseWriterId, writerMachine),
+                { sessionId: context.sessionId, id },
+              ),
               sessionId: context.sessionId,
               id,
             }),
@@ -1436,7 +1450,11 @@ export const sessionMachine = sessionSetup.createMachine({
           ): ReturnType<typeof readUnaddressedPlan> =>
             readUnaddressedPlan({
               database: context.input.database,
-              writer: findDatabaseWriter(self.system),
+              writer: findMachineActor(
+                self.system,
+                databaseWriterId,
+                writerMachine,
+              ),
               sessionId: context.sessionId,
               acpSessionId,
             }),

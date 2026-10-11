@@ -10,8 +10,8 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
+import { Icon, iconSizeStyle } from '../symbols/icon';
 import { Host } from './host';
-import { MenuCheck } from './menu-check';
 import type { MenuProps } from './menu-props';
 import { usePrimitiveColor } from './primitive-color';
 
@@ -135,11 +135,14 @@ function MenuIndicator({ selected }: { selected: boolean }): React.JSX.Element {
   return (
     <RNHostView matchContents>
       <View
-        className="size-icon-menu-check items-center justify-center"
+        style={iconSizeStyle('md')}
+        className="items-center justify-center"
         accessible={false}
         importantForAccessibility="no-hide-descendants"
       >
-        {selected && <MenuCheck />}
+        {selected && (
+          <Icon name="check" size="md" className="text-popover-foreground" />
+        )}
       </View>
     </RNHostView>
   );

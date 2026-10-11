@@ -18,8 +18,8 @@ import {
   readRepository,
   sessionBranch,
 } from '@repo/git';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, onTestFinished } from 'vitest';
-import { initTestRepository } from './git';
 
 const occupiedBranch = 'argo/occupied';
 
@@ -30,7 +30,7 @@ it('reads the repository root and common directory from a nested path', async ()
   onTestFinished((): void =>
     rmSync(directory, { recursive: true, force: true }),
   );
-  initTestRepository(directory);
+  await initTestRepository(directory);
   const nested = join(directory, 'nested folder');
   mkdirSync(nested);
   expect(await readRepository(nested)).toEqual({
@@ -64,9 +64,9 @@ it('reads a linked worktree through its nested directory alias', async (): Promi
   );
   const root = join(directory, 'repository');
   mkdirSync(root);
-  const git = initTestRepository(root);
+  const git = await initTestRepository(root);
   const worktree = join(directory, 'linked checkout');
-  git('worktree', 'add', '-q', '-b', 'linked', worktree, 'main');
+  await git('worktree', 'add', '-q', '-b', 'linked', worktree, 'main');
   const nested = join(worktree, 'nested folder');
   mkdirSync(nested);
   const alias = join(directory, 'alias');
@@ -92,7 +92,7 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
     await Promise.allSettled([checkoutResources.creation]);
     rmSync(directory, { recursive: true, force: true });
   });
-  const git = initTestRepository(directory);
+  const git = await initTestRepository(directory);
   const checkoutPath = join(
     directory,
     'runtime',
@@ -134,8 +134,8 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
   controller.abort();
   await expect(creation).rejects.toMatchObject({ name: 'AbortError' });
   expect(existsSync(checkoutPath)).toBe(false);
-  expect(git('branch', '--list', 'argo/blocked').trim()).toBe('');
-  expect(git('worktree', 'list')).not.toContain(checkoutPath);
+  expect((await git('branch', '--list', 'argo/blocked')).trim()).toBe('');
+  expect(await git('worktree', 'list')).not.toContain(checkoutPath);
 });
 
 it('preserves an existing Session branch when Checkout creation fails', async (): Promise<void> => {
@@ -145,9 +145,9 @@ it('preserves an existing Session branch when Checkout creation fails', async ()
   onTestFinished((): void =>
     rmSync(directory, { recursive: true, force: true }),
   );
-  const git = initTestRepository(directory);
-  git('branch', occupiedBranch);
-  const original = git('rev-parse', occupiedBranch);
+  const git = await initTestRepository(directory);
+  await git('branch', occupiedBranch);
+  const original = await git('rev-parse', occupiedBranch);
   await expect(
     createCheckout(
       {
@@ -163,7 +163,7 @@ it('preserves an existing Session branch when Checkout creation fails', async ()
     name: 'Error',
     stderr: expect.stringContaining('already exists'),
   });
-  expect(git('rev-parse', occupiedBranch)).toBe(original);
+  expect(await git('rev-parse', occupiedBranch)).toBe(original);
 });
 
 it('preserves an existing worktree and branch when creation starts with an aborted signal', async (): Promise<void> => {
@@ -173,7 +173,7 @@ it('preserves an existing worktree and branch when creation starts with an abort
   onTestFinished((): void =>
     rmSync(directory, { recursive: true, force: true }),
   );
-  const git = initTestRepository(directory);
+  const git = await initTestRepository(directory);
   const checkoutPath = join(
     directory,
     'runtime',
@@ -184,8 +184,16 @@ it('preserves an existing worktree and branch when creation starts with an abort
   mkdirSync(join(directory, 'runtime', 'worktrees', 'project'), {
     recursive: true,
   });
-  git('worktree', 'add', '-q', '-b', occupiedBranch, checkoutPath, 'main');
-  const original = git('rev-parse', occupiedBranch);
+  await git(
+    'worktree',
+    'add',
+    '-q',
+    '-b',
+    occupiedBranch,
+    checkoutPath,
+    'main',
+  );
+  const original = await git('rev-parse', occupiedBranch);
   await expect(
     createCheckout(
       {
@@ -199,8 +207,8 @@ it('preserves an existing worktree and branch when creation starts with an abort
     ),
   ).rejects.toMatchObject({ name: 'AbortError' });
   expect(existsSync(checkoutPath)).toBe(true);
-  expect(git('rev-parse', occupiedBranch)).toBe(original);
-  expect(git('worktree', 'list')).toContain(checkoutPath);
+  expect(await git('rev-parse', occupiedBranch)).toBe(original);
+  expect(await git('worktree', 'list')).toContain(checkoutPath);
 });
 
 it('refuses a normal discard of a dirty Checkout', async (): Promise<void> => {
@@ -210,7 +218,7 @@ it('refuses a normal discard of a dirty Checkout', async (): Promise<void> => {
   onTestFinished((): void =>
     rmSync(directory, { recursive: true, force: true }),
   );
-  const git = initTestRepository(directory);
+  const git = await initTestRepository(directory);
   const checkout = await createCheckout(
     {
       projectPath: directory,
@@ -231,6 +239,8 @@ it('refuses a normal discard of a dirty Checkout', async (): Promise<void> => {
   });
   expect(existsSync(file)).toBe(true);
   expect(
-    git('branch', '--list', '--format=%(refname:short)', 'argo/dirty').trim(),
+    (
+      await git('branch', '--list', '--format=%(refname:short)', 'argo/dirty')
+    ).trim(),
   ).toBe('argo/dirty');
 });

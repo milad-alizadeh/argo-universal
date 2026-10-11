@@ -1,8 +1,8 @@
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
+import { findFreePort } from '@repo/mocks/network/free-port';
 import { defineBddConfig } from 'playwright-bdd';
 import type { AppOptions, ServerOptions } from './fixtures';
-import { findFreePort } from './server-port';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 // A free port per run, so runs in several worktrees never meet; workers inherit it from the runner, which loads this file first.
@@ -37,6 +37,15 @@ export default defineConfig<AppOptions & ServerOptions>({
     {
       name: 'web',
       use: { ...devices['Desktop Chrome'], appTarget: 'web' },
+    },
+    // The same export at phone width, so the phone frame is proven on the web build (Spec 0011).
+    {
+      name: 'web-phone',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 390, height: 844 },
+        appTarget: 'web',
+      },
     },
     // The desktop App in production mode connects to its fixture Engine.
     {

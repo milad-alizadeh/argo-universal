@@ -43,7 +43,7 @@ function ScrollButton({
   const { Component, icon } = scrollButtons[direction];
   return (
     <Component className={scrollClassName}>
-      <Icon name={icon} />
+      <Icon size="xs" name={icon} />
     </Component>
   );
 }

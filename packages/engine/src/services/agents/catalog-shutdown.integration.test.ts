@@ -2,7 +2,8 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase, readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
-import { writeDatabaseJobAndWaitForCommit } from '../feed';
+import { writeDatabaseJobAndWaitForCommit } from '../../storage';
+import { SessionRowUpdateJob } from '../sessions';
 import type { FetchAgents } from './index';
 
 const statusSql = 'SELECT status FROM sync_jobs';
@@ -78,11 +79,13 @@ it('drains retained Session writes while stopping an active catalog fetch', asyn
     "CREATE TEMP TRIGGER reject_session BEFORE UPDATE ON session BEGIN SELECT RAISE(ABORT, 'storage busy'); END",
   );
   await expect(
-    writeDatabaseJobAndWaitForCommit(host.databaseWriter, {
-      type: 'sessionRowUpdate',
-      id: 'session-1',
-      set: { title: 'Committed before close' },
-    }),
+    writeDatabaseJobAndWaitForCommit(
+      host.databaseWriter,
+      new SessionRowUpdateJob({
+        id: 'session-1',
+        set: { title: 'Committed before close' },
+      }),
+    ),
   ).rejects.toThrow('Failed query');
   host.database.$client.exec('DROP TRIGGER reject_session');
   await host.stop();

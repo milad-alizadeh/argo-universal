@@ -39,7 +39,7 @@ function ReusablesPreview({
   screen: boolean;
 }): React.JSX.Element {
   useLayoutEffect(() => {
-    Uniwind.setTheme(mode);
+    Uniwind.setTheme(Platform.OS === 'web' ? mode : 'system');
   }, [mode]);
   let preview: ReactNode;
   if (screen) {

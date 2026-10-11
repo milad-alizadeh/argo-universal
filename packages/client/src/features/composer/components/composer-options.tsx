@@ -6,8 +6,11 @@ import type {
 import type * as React from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { configurationChoices } from '../state/configuration-choices';
 import type { ComposerConfigurationProps } from './composer-configuration';
@@ -80,17 +83,21 @@ function SettingRow({
     : option.currentValue === row.choice.value;
   const name = boolean ? option.name : row.choice.name;
   return (
-    <Button
-      variant="ghost"
+    <Pressable
       accessibilityLabel={boolean ? name : `${option.name}: ${name}`}
       aria-pressed={selected}
-      className="h-auto sm:h-auto min-h-10 px-2 py-2 justify-start rounded-sm"
       onPress={() =>
         onConfigChange(
           option.configId,
           boolean ? !option.currentValue : row.choice.value,
         )
       }
+      role="button"
+      className={contentActionClass({
+        variant: 'ghost',
+        className:
+          'h-auto sm:h-auto min-h-10 px-2 py-2 justify-start rounded-sm',
+      })}
     >
       <Text className="flex-1 font-normal">{name}</Text>
       {boolean ? (
@@ -98,9 +105,11 @@ function SettingRow({
           {selected ? 'On' : 'Off'}
         </Text>
       ) : (
-        <View className="w-4 h-4">{selected && <Icon name="check" />}</View>
+        <View className="w-4 h-4">
+          {selected && <Icon name="check" size="xs" />}
+        </View>
       )}
-    </Button>
+    </Pressable>
   );
 }
 
@@ -123,14 +132,18 @@ export function ComposerOptions({
     <ComposerPopover
       label="Session settings"
       trigger={
-        <Button
-          variant="ghost"
+        <Pressable
           disabled={disabled}
           accessibilityLabel="Session settings"
-          className="h-7 sm:h-7 px-1.5 py-0"
+          role="button"
+          className={contentActionClass({
+            variant: 'ghost',
+            disabled,
+            className: 'h-7 sm:h-7 px-1.5 py-0',
+          })}
         >
           <Text className="text-xs text-muted-foreground">Settings</Text>
-        </Button>
+        </Pressable>
       }
     >
       {() => (

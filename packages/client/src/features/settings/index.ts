@@ -1,1 +1,1 @@
-export { SettingsNavigationList } from './components/settings-navigation-list';
+export { SettingsNavigationList } from './screens/settings-navigation-list';

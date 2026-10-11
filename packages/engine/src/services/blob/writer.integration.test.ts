@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { writeDatabaseJobAndWaitForCommit } from '../feed';
+import { writeDatabaseJobAndWaitForCommit } from '../../storage';
+import { SessionRowUpdateJob } from '../sessions';
 
 it('keeps Blob upload pending through a shared Writer retry and returns only committed metadata', async () => {
   const { caller, database, databaseWriter } = await startEngineTestHost();
@@ -13,11 +14,13 @@ it('keeps Blob upload pending through a shared Writer retry and returns only com
     "CREATE TRIGGER reject_session BEFORE UPDATE ON session BEGIN SELECT count_rejected_write(); SELECT RAISE(ABORT, 'Session write failed'); END",
   );
   await expect(
-    writeDatabaseJobAndWaitForCommit(databaseWriter, {
-      type: 'sessionRowUpdate',
-      id: 'session-1',
-      set: { title: 'Retried Session' },
-    }),
+    writeDatabaseJobAndWaitForCommit(
+      databaseWriter,
+      new SessionRowUpdateJob({
+        id: 'session-1',
+        set: { title: 'Retried Session' },
+      }),
+    ),
   ).rejects.toThrow('Failed query');
   const form = new FormData();
   form.set('file', new Blob(['attachment']), 'attachment.txt');

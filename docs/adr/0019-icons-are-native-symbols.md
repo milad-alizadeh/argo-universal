@@ -10,9 +10,7 @@ Every icon is a native system symbol drawn through `expo-symbols` (owner, 2026-1
 | Electron on Windows and Linux | Material Symbols | as on web |
 | Electron on macOS | SF Symbols | macOS, at runtime |
 
-One map, `packages/client/src/lib/generic/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" />`; colour comes from the text class.
-
-App icons default to 16px, including checkmarks, Agent logos, Context rings, phone shell controls and desktop rail icons (owner, 2026-10-10). Chevrons use 12px. Web and Android Menu selected checks use a dedicated 20px token and matching trailing slots (owner, 2026-10-11); MenuCheck scopes that token without adding a caller size prop to Icon. The Icon component chooses the default size from its name. Both symbol sets use the same size tokens.
+One map, `packages/client/src/lib/generic/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" size="md" />`; size stays sm/md/lg and colour comes from the text class.
 
 Apple's licence allows SF Symbols only in apps for Apple platforms, so no SF Symbol image is ever committed or shipped in the web build. On macOS, the Electron main process draws the symbol with `nativeImage.createFromNamedImage` and the preload script returns it as a PNG data URL. The page uses that image as a CSS mask filled with the text colour, caches it, and keeps an empty box of the same size while it loads. The IPC request is validated, and an unrecognised request is rejected, reported and counted.
 
@@ -24,7 +22,7 @@ Where SF Symbols has no symbol for an Argo icon, Argo draws its own as a custom 
 - Electron on macOS: the page masks the path itself; no IPC is needed, since the art is Argo's own and its licence allows shipping it.
 - Android, web, Windows and Linux: the Material name, as for every icon.
 
-A filled icon uses the SF `.fill` variant. The Material Symbols font that `expo-symbols` loads has no fill axis, so Android, web, Windows and Linux show the outline.
+A filled icon uses the platform's filled variant (owner correction, 2026-10-11). Apple drawings select the mapped SF filled name. Android and web pass a bundled Material Symbols filled font to `expo-symbols`; it has the same weight and optical size as Expo's outlined font. The font is subset to Argo's icon map and retains Google's Apache licence. No SF paths are shipped as a Material fallback. The Icon component owns this choice and isolates glyph weight from surrounding text.
 
 Paper designs may use SF Symbols exported as SVG, but only as mockups. They never reach the code.
 

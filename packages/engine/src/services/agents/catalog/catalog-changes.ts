@@ -1,7 +1,7 @@
 import { EventEmitter, on } from 'node:events';
 import type { Database } from '@repo/db';
-import type { ActorRefFrom } from 'xstate';
-import type { writerMachine } from '../../feed';
+import type { WriterActorRef } from '../../../storage';
+import { changesAgentCatalog } from '../agent-storage';
 import { readLatestCatalogChangeIds } from './catalog-sql';
 
 type CatalogChangeEvents = EventEmitter<{
@@ -10,7 +10,7 @@ type CatalogChangeEvents = EventEmitter<{
 }>;
 type CatalogWatchInput = {
   database: Database;
-  writer: ActorRefFrom<typeof writerMachine>;
+  databaseWriter: WriterActorRef;
 };
 
 export async function* watchCommittedCatalogChanges(
@@ -30,9 +30,10 @@ function subscribeCatalogCommitNotifications(
   input: CatalogWatchInput,
   events: CatalogChangeEvents,
 ): { unsubscribe(): void } {
-  return input.writer.on('catalog.sqlCommitted', () =>
-    publishCommittedCatalogChanges(input, events),
-  );
+  return input.databaseWriter.on('writer.committed', ({ jobs }): void => {
+    if (jobs.some(changesAgentCatalog))
+      publishCommittedCatalogChanges(input, events);
+  });
 }
 
 function publishCommittedCatalogChanges(

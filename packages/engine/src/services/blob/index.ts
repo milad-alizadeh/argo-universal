@@ -1,3 +1,8 @@
-export { blobsFolderIn, uploadBlob, removeUnusedBlobs } from './blob';
-export { blobRouter } from './router';
+export {
+  type BlobUploadDeps,
+  blobsFolderIn,
+  removeUnusedBlobs,
+  uploadBlob,
+} from './blob';
+export { createBlobRouter } from './router';
 export { readBlobBytes, type BlobStorage } from './blob-content';

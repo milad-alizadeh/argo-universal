@@ -2,13 +2,16 @@ import type { ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import {
   Collapsible,
   CollapsibleContent,
 } from '#lib/generic/primitives/collapsible';
 import { Text, TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { type FileDiff, toFileDiffs } from '../view/file-diff';
 import { DiffView } from './diff-view';
@@ -46,12 +49,16 @@ function FileEdit({
   const verb = verbs[file.operation];
   return (
     <Collapsible open={open}>
-      <Button
-        variant="link"
+      <Pressable
         aria-label={`${verb} ${file.path}`}
         aria-expanded={open}
-        className="h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>[data-icon]]:px-0"
         onPress={() => setOpen(!open)}
+        role="button"
+        className={contentActionClass({
+          variant: 'link',
+          className:
+            'h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>[data-icon]]:px-0',
+        })}
       >
         <TextClassContext.Provider
           value={cn(
@@ -85,7 +92,7 @@ function FileEdit({
             <DisclosureCaret open={open} />
           </View>
         </TextClassContext.Provider>
-      </Button>
+      </Pressable>
       {/* The space above opens with the content; a gap on the root would appear at once. */}
       <CollapsibleContent className="pt-2">
         <DiffView key={file.path} file={file} inline />
@@ -137,11 +144,15 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
   if (files.length === 1 && files[0]) return <FileEdit file={files[0]} />;
   return (
     <Collapsible open={expanded}>
-      <Button
-        variant="link"
-        className="h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>[data-icon]]:px-0"
+      <Pressable
         aria-expanded={expanded}
         onPress={() => setExpanded(!expanded)}
+        role="button"
+        className={contentActionClass({
+          variant: 'link',
+          className:
+            'h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>[data-icon]]:px-0',
+        })}
       >
         <Icon name="edit" className="text-muted-foreground" />
         <Text
@@ -152,7 +163,7 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
           Edited {files.length} files
         </Text>
         <DisclosureCaret open={expanded} />
-      </Button>
+      </Pressable>
       <CollapsibleContent className="gap-2 pt-2">
         {files.map((file) => (
           <FileEdit key={file.path} file={file} nested />

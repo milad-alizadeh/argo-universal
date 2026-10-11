@@ -366,7 +366,7 @@ function sectionsAndSidebar(width: number): Story {
         });
         await expect(
           canvas.getByRole('button', { name: section }),
-        ).toHaveAttribute('aria-selected', 'true');
+        ).toHaveAttribute('aria-pressed', 'true');
         await expect(canvas.getByTestId(listContentId)).toHaveTextContent(
           `${section} list`,
         );

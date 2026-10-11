@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { MenuCheck } from './menu-check';
+import { Icon, iconSizeStyle } from '../symbols/icon';
 import type { MenuProps } from './menu-props';
 import { Text } from './text';
 
@@ -69,9 +69,16 @@ export function Menu<Value extends string>({
                     {choice.label}
                   </Text>
                 </View>
-                <View className="size-icon-menu-check items-center justify-center">
+                <View
+                  style={iconSizeStyle('md')}
+                  className="items-center justify-center"
+                >
                   <MenuPrimitive.ItemIndicator>
-                    <MenuCheck />
+                    <Icon
+                      name="check"
+                      size="md"
+                      className="text-popover-foreground"
+                    />
                   </MenuPrimitive.ItemIndicator>
                 </View>
               </MenuPrimitive.RadioItem>

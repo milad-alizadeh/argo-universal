@@ -2,9 +2,10 @@ import type { SessionNewInput, SessionNewOutput } from '@repo/contracts';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
-import type { Context } from '../../engine/context';
-import { findDatabaseWriter } from '../feed';
+import { findMachineActor } from '../../lib/machine-actor';
+import { databaseWriterId, writerMachine } from '../../storage';
 import { readProjectPath } from '../projects';
+import type { SessionRouterDeps } from './router-deps';
 import {
   submitSessionPrompt,
   validateSessionCommandAdmission,
@@ -17,7 +18,7 @@ import {
 } from './session-opening';
 
 async function requireCheckoutProjectPath(
-  database: Context['database'],
+  database: SessionRouterDeps['database'],
   newSession: Pick<SessionNewInput, 'projectId' | 'checkout'>,
 ): Promise<string> {
   const projectPath = readProjectPath(database, newSession.projectId);
@@ -55,7 +56,11 @@ async function waitForSessionStored(
 async function waitForSessionInsertCommitted(
   sessionActor: SessionActorRef,
 ): Promise<void> {
-  const databaseWriter = findDatabaseWriter(sessionActor.system);
+  const databaseWriter = findMachineActor(
+    sessionActor.system,
+    databaseWriterId,
+    writerMachine,
+  );
   if (!databaseWriter || databaseWriter.getSnapshot().status !== 'active')
     throw new Error('Database Writer is unavailable');
   const { sessionId, sessionInsertCommitted } =
@@ -72,37 +77,35 @@ async function waitForSessionInsertCommitted(
 }
 
 export async function createSession(
-  context: Pick<
-    Context,
+  deps: Pick<
+    SessionRouterDeps,
     'database' | 'sessions' | 'createId' | 'sessionCommandSignal'
   >,
   newSession: SessionNewInput,
 ): Promise<SessionNewOutput> {
   const projectPath = await requireCheckoutProjectPath(
-    context.database,
+    deps.database,
     newSession,
   );
-  validateSessionCommandAdmission(context);
-  const sessionId = context.createId();
-  sendCheckedRegistryCommand(context.sessions, {
+  validateSessionCommandAdmission(deps);
+  const sessionId = deps.createId();
+  sendCheckedRegistryCommand(deps.sessions, {
     type: 'sessions.create',
     sessionId,
-    turnId: context.createId(),
+    turnId: deps.createId(),
     ...newSession,
     projectPath,
   });
-  await waitForSessionStored(
-    requireOpenSessionActor(context.sessions, sessionId),
-  );
+  await waitForSessionStored(requireOpenSessionActor(deps.sessions, sessionId));
   await waitForSessionInsertCommitted(
-    requireOpenSessionActor(context.sessions, sessionId),
+    requireOpenSessionActor(deps.sessions, sessionId),
   );
   await applyInitialConfiguration(
-    requireOpenSessionActor(context.sessions, sessionId),
+    requireOpenSessionActor(deps.sessions, sessionId),
     newSession,
   );
   await submitInitialAcpPrompt(
-    requireOpenSessionActor(context.sessions, sessionId),
+    requireOpenSessionActor(deps.sessions, sessionId),
   );
   return { sessionId };
 }

@@ -2,11 +2,10 @@ import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { Button } from '#lib/generic/primitives/button';
 import { cn } from '#lib/generic/utils';
 import { ContentLayout } from '#lib/product/content-layout';
 import { ScrollFadeView } from '#lib/product/scroll-fade';
-import { Icon } from '../../../lib/generic/symbols/icon';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import type { Section } from '../../../lib/product/navigation/sections';
 import { DesktopRail } from './desktop-rail';
 import { PanelResizeHandle } from './panel-resize-handle';
@@ -32,6 +31,7 @@ export interface DesktopShellProps {
 }
 
 // With the sidebar hidden, a header title starts this far in, clear of the sidebar toggle.
+const shellIconClass = 'text-muted-foreground';
 const hiddenSidebarTitleInset = 32;
 // The expanded Inspector's resize handle sits this far right when the sidebar shows.
 const expandedInspectorHandleShift = 4;
@@ -134,14 +134,15 @@ export function DesktopShell({
       onLayout={({ nativeEvent }) => setWidth(nativeEvent.layout.width)}
     >
       <View className="absolute left-shell-bar top-0 z-20 h-shell-bar w-12 items-start justify-center pl-1">
-        <Button
+        <IconButton
           variant="ghost"
           className="size-8 p-0 sm:size-8"
           accessibilityLabel={sidebarShown ? 'Hide sidebar' : 'Show sidebar'}
           onPress={() => onSidebarShownChange(!sidebarShown)}
-        >
-          <Icon name="sidebar" className="text-muted-foreground" />
-        </Button>
+          icon={'sidebar'}
+          iconClassName={shellIconClass}
+          size="md"
+        />
       </View>
       <DesktopRail
         selectedSection={selectedSection}
@@ -281,7 +282,7 @@ export function DesktopShell({
                 transitionKey={transitionKey}
                 animate={!resizing}
               >
-                <Button
+                <IconButton
                   variant="ghost"
                   className="size-8 p-0 sm:size-8"
                   accessibilityLabel={
@@ -292,20 +293,19 @@ export function DesktopShell({
                       inspectorExpanded ? 'open' : 'expanded',
                     )
                   }
-                >
-                  <Icon
-                    name={inspectorExpanded ? 'collapse' : 'expand'}
-                    className="text-muted-foreground"
-                  />
-                </Button>
-                <Button
+                  icon={inspectorExpanded ? 'collapse' : 'expand'}
+                  iconClassName={shellIconClass}
+                  size="md"
+                />
+                <IconButton
                   variant="ghost"
                   className="size-8 p-0 sm:size-8"
                   accessibilityLabel="Close Inspector"
                   onPress={() => onInspectorStateChange('closed')}
-                >
-                  <Icon name="close" className="text-muted-foreground" />
-                </Button>
+                  icon={'close'}
+                  iconClassName={shellIconClass}
+                  size="md"
+                />
               </ShellHeaderActions>
             </View>
           }

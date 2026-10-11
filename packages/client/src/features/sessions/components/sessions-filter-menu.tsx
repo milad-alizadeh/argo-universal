@@ -1,8 +1,7 @@
 import type * as React from 'react';
-import { Button } from '#lib/generic/primitives/button';
 import { HeaderButton } from '#lib/product/header-button';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { Menu } from '../../../lib/generic/primitives/menu';
-import { Icon } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 
 const sessionsFilterChoices = [
@@ -29,9 +28,14 @@ export function SessionsFilterMenu({
       onValueChange={(value) => onArchivedChange(value === 'archived')}
       trigger={
         wide ? (
-          <Button variant="ghost" size="icon" className="size-8 sm:size-8">
-            <Icon name="filters" className="text-muted-foreground" />
-          </Button>
+          <IconButton
+            variant="ghost"
+            className="size-8 sm:size-8"
+            icon={'filters'}
+            iconClassName={'text-muted-foreground'}
+            accessibilityLabel="Filter Sessions"
+            size="md"
+          />
         ) : (
           <HeaderButton
             icon="filters"

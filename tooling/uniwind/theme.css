@@ -11,8 +11,7 @@
   /* A list's inset, as its rows pad their content 10px more for the highlight. */
   --spacing-gutter-list: 10px;
   --breakpoint-wide: 720px;
-  --font-sans:
-    "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:
     "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-display: var(--font-sans);
@@ -30,9 +29,6 @@
   --spacing-8: 32px;
   --spacing-10: 40px;
   --spacing-12: 48px;
-  --spacing-icon-sm: 12px;
-  --spacing-icon-md: 16px;
-  --spacing-icon-menu-check: 20px;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -127,11 +123,13 @@
   :root {
     @variant ios {
       --radius-search: 6px;
+      --font-sans: System;
       /* React Native resolves ui-monospace to SF Mono on iOS. */
       --font-mono: ui-monospace;
     }
     @variant android {
       --radius-search: 6px;
+      --font-sans: sans-serif;
       --font-mono: monospace;
     }
     @variant light {
@@ -154,6 +152,7 @@
       --color-destructive: var(--color-red-500);
       --color-destructive-foreground: var(--color-white);
       --color-border: var(--color-neutral-200);
+      --color-separator: var(--color-neutral-200);
       --color-input: var(--color-neutral-200);
       --color-ring: var(--color-neutral-400);
       --color-chart-1: hsl(12 76% 61%);
@@ -193,6 +192,7 @@
       --color-destructive: var(--color-red-500);
       --color-destructive-foreground: var(--color-white);
       --color-border: hsl(0 0% 14.9%);
+      --color-separator: var(--color-neutral-700);
       --color-input: hsl(0 0% 14.9%);
       --color-ring: hsl(300 0% 45%);
       --color-chart-1: hsl(220 70% 50%);

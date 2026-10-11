@@ -1,9 +1,9 @@
 import * as DropdownMenuPrimitive from '@rn-primitives/dropdown-menu';
 import * as React from 'react';
 import { Platform, Text, View } from 'react-native';
-import { Icon } from '#lib/generic/primitives/icon';
 import { TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import { Icon, iconSizeStyle } from '../symbols/icon';
 import { DropdownMenuContent } from './dropdown-menu-content';
 import {
   dropdownItemClassName,
@@ -49,9 +49,9 @@ function DropdownMenuItem(itemProps: ItemProps): React.JSX.Element {
 
 function RadioIndicator(): React.JSX.Element {
   return (
-    <View className="size-icon-md items-center justify-center">
+    <View style={iconSizeStyle('sm')} className="items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
-        <Icon name="check" className={indicatorClassName} />
+        <Icon name="check" size="xs" className={indicatorClassName} />
       </DropdownMenuPrimitive.ItemIndicator>
     </View>
   );

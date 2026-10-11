@@ -21,16 +21,14 @@ export const Loading: Story = {};
 
 // The root slots the first active Session.
 export const Chosen: Story = {
-  args: {
-    view: {
-      state: 'chosen',
-      children: (
-        <DetailHeaderSlots>
-          <SessionView state="open" {...idleSession} />
-        </DetailHeaderSlots>
-      ),
-    },
-  },
+  args: { view: { state: 'chosen', children: null } },
+  render: (): React.JSX.Element => (
+    <FirstSessionView state="chosen">
+      <DetailHeaderSlots>
+        <SessionView state="open" {...idleSession} />
+      </DetailHeaderSlots>
+    </FirstSessionView>
+  ),
 };
 
 export const LoadFailure: Story = {

@@ -1,49 +1,28 @@
-import type { Page } from '@playwright/test';
-import { z } from 'zod';
 import { expect } from '../fixtures';
-import { sessionId } from './feed';
+import { type FeedRows, readFeed, sessionId } from './feed';
 import { Given, Then } from './fixtures';
 import { startSession } from './live-session';
-import { mutate, query } from './server-query';
+import { mutate } from './server-query';
 
-const CompletedRow = z.object({
-  sessionUpdate: z.string(),
-  turnId: z.string(),
-  state: z.literal('settled'),
-  content: z.array(z.object({ type: z.literal('text'), text: z.string() })),
-});
-const CompletedFeed = z.object({
-  rows: z.tuple([CompletedRow, CompletedRow, CompletedRow, CompletedRow]),
-});
-const readCompletedPromptFeed = (
-  page: Page,
-  httpUrl: string,
-): Promise<z.infer<typeof CompletedFeed>> =>
-  query({
-    page,
-    httpUrl,
-    procedure: 'feed.page',
-    input: { sessionId: sessionId(page), direction: 'tail' },
-    output: CompletedFeed,
-  });
 const promptRowKinds = [
   'user_message',
   'agent_message',
   'user_message',
   'agent_message',
 ];
-const expectSeparatePromptTurns = ({
-  rows,
-}: z.infer<typeof CompletedFeed>): void => {
-  const [firstPrompt, firstReply, secondPrompt, secondReply] = rows;
+const expectSeparatePromptTurns = (rows: FeedRows): void => {
   expect(rows.map((row) => row.sessionUpdate)).toEqual(promptRowKinds);
-  expect(firstPrompt.content).toEqual([{ type: 'text', text: 'First prompt' }]);
-  expect(secondPrompt.content).toEqual([
-    { type: 'text', text: 'Second prompt' },
-  ]);
-  expect(firstPrompt.turnId).toBe(firstReply.turnId);
-  expect(secondPrompt.turnId).toBe(secondReply.turnId);
-  expect(firstPrompt.turnId).not.toBe(secondPrompt.turnId);
+  expect(rows.map((row) => row.state)).toEqual(
+    promptRowKinds.map(() => 'settled'),
+  );
+  expect(rows[0]?.content).toEqual([{ type: 'text', text: 'First prompt' }]);
+  expect(rows[2]?.content).toEqual([{ type: 'text', text: 'Second prompt' }]);
+  const [firstPrompt, firstReply, secondPrompt, secondReply] = rows.map(
+    (row) => row.turnId,
+  );
+  expect(firstPrompt).toBe(firstReply);
+  expect(secondPrompt).toBe(secondReply);
+  expect(firstPrompt).not.toBe(secondPrompt);
 };
 Then(
   'both submitted prompts have separate completed Turns',
@@ -53,9 +32,7 @@ Then(
         .getByTestId('feed-scroll')
         .getByText('The shared fixture completed this Turn.', { exact: true }),
     ).toHaveCount(2);
-    expectSeparatePromptTurns(
-      await readCompletedPromptFeed(page, server.httpUrl),
-    );
+    expectSeparatePromptTurns(await readFeed(page, server.httpUrl));
   },
 );
 

@@ -14,10 +14,13 @@ import {
   motionDuration,
   quarterTurnDegrees,
 } from '#lib/generic/motion';
-import { Button } from '#lib/generic/primitives/button';
 import { Input } from '#lib/generic/primitives/input';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 
@@ -162,17 +165,19 @@ export function ListSearch({
           style={{ paddingRight: buttonSize, textAlignVertical: 'center' }}
         />
       </Animated.View>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn(
-          'absolute right-0 size-11 sm:size-11 wide:size-8 wide:sm:size-8',
-          searching &&
-            'web:hover:bg-transparent! web:dark:hover:bg-transparent!',
-        )}
+      <Pressable
         accessibilityLabel={searching ? 'Close search' : `Search ${title}`}
         accessibilityState={{ expanded: searching }}
         onPress={searching ? closeSearch : (): void => setSearching(true)}
+        role="button"
+        className={contentActionClass({
+          variant: 'ghost',
+          className: cn(
+            'absolute right-0 size-11 sm:size-11 p-0 wide:size-8 wide:sm:size-8',
+            searching &&
+              'web:hover:bg-transparent! web:dark:hover:bg-transparent!',
+          ),
+        })}
       >
         <Animated.View
           pointerEvents="none"
@@ -181,16 +186,18 @@ export function ListSearch({
         >
           <Icon
             name="search"
+            size={wide ? 'sm' : 'md'}
             className="text-foreground wide:text-muted-foreground"
           />
         </Animated.View>
         <Animated.View style={closeStyle}>
           <Icon
             name="close"
+            size={wide ? 'sm' : 'md'}
             className="text-foreground wide:text-muted-foreground"
           />
         </Animated.View>
-      </Button>
+      </Pressable>
     </View>
   );
 }

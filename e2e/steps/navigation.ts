@@ -41,7 +41,9 @@ Then(
   async ({ page }): Promise<void> => {
     await expectSettingsList(page);
     await expect(page.getByTestId('phone-shell')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Accounts' })).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: /^Accounts(?:,|$)/ }),
+    ).toBeVisible();
     await expect(page.getByText('Accounts will appear here.')).toHaveCount(0);
   },
 );

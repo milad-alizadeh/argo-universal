@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import {
   Card,
   CardContent,
@@ -11,6 +10,7 @@ import {
 } from '#lib/generic/primitives/card';
 import { Input } from '#lib/generic/primitives/input';
 import { Text } from '#lib/generic/primitives/text';
+import { Button } from './button';
 
 function CardPreview(): React.JSX.Element {
   return (
@@ -51,12 +51,13 @@ function NewsletterFields(): React.JSX.Element {
 function NewsletterFooter(): React.JSX.Element {
   return (
     <CardFooter className="flex-col gap-2">
-      <Button className="w-full">
-        <Text>Subscribe</Text>
-      </Button>
-      <Button variant="outline" className="w-full">
-        <Text>Later</Text>
-      </Button>
+      <Button className="w-full" label={'Subscribe'} appearance="content" />
+      <Button
+        variant="outline"
+        className="w-full"
+        label={'Later'}
+        appearance="content"
+      />
     </CardFooter>
   );
 }

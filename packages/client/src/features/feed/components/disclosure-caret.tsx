@@ -31,6 +31,7 @@ export function DisclosureCaret({
   return (
     <Animated.View style={style} className="shrink-0">
       <Icon
+        size="xs"
         name="chevron-right"
         className={cn('text-muted-foreground', className)}
       />

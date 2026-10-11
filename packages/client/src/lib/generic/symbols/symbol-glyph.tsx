@@ -7,7 +7,9 @@ import { symbolWeight } from './symbol-weight';
 export interface SymbolGlyphProps {
   sf: AppleSymbol;
   material: AndroidSymbol;
+  filled: boolean;
   pixels: number;
+  glyphScale: number;
   tintColor?: ColorValue;
   // The colour classes again, for web, where CSS resolves state variants such as group-active that tintColor misses.
   colorClassName?: string;
@@ -21,15 +23,21 @@ export interface SymbolGlyphProps {
 export function SymbolGlyph({
   sf,
   material,
+  filled,
   pixels,
+  glyphScale,
   tintColor,
   testID,
 }: SymbolGlyphProps): React.JSX.Element {
   return (
     <SymbolView
+      key={String(filled)}
       name={{ ios: sf, android: material }}
       size={pixels}
-      weight={symbolWeight}
+      style={
+        glyphScale === 1 ? undefined : { transform: [{ scale: glyphScale }] }
+      }
+      weight={symbolWeight(filled)}
       tintColor={tintColor}
       testID={testID}
     />

@@ -55,7 +55,7 @@ afterEach((): void => {
 
 describe('serverAnswers', (): void => {
   it('is false without server.json', async (): Promise<void> => {
-    expect(await serverAnswers(serverFile())).toBe(false);
+    expect(await serverAnswers(home)).toBe(false);
   });
 
   it('is false while nothing answers on the port in server.json', async (): Promise<void> => {
@@ -63,13 +63,13 @@ describe('serverAnswers', (): void => {
     mockServer?.close();
     writeServerFile(port);
 
-    expect(await serverAnswers(serverFile())).toBe(false);
+    expect(await serverAnswers(home)).toBe(false);
   });
 
   it('is false when system.info answers with another shape', async (): Promise<void> => {
     writeServerFile(await startMockServer({ result: { data: { ok: true } } }));
 
-    expect(await serverAnswers(serverFile())).toBe(false);
+    expect(await serverAnswers(home)).toBe(false);
   });
 
   it('is true once system.info answers on the port in server.json', async (): Promise<void> => {
@@ -85,6 +85,6 @@ describe('serverAnswers', (): void => {
       }),
     );
 
-    expect(await serverAnswers(serverFile())).toBe(true);
+    expect(await serverAnswers(home)).toBe(true);
   });
 });

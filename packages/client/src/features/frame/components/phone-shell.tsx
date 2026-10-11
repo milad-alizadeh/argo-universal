@@ -4,9 +4,12 @@ import { useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable, useResolveClassNames } from 'uniwind';
 import { Badge } from '#lib/generic/primitives/badge';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import {
+  Pressable,
+  contentActionClass,
+} from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { attentionBadge } from '../state/attention-badge';
 import { PhoneDrawer } from './phone-drawer';
@@ -75,19 +78,23 @@ export function PhoneShell({
     const { title, icon } = shellSections[section];
     const badge = attentionBadge(attentionCount);
     return (
-      <Button
+      <Pressable
         key={section}
-        variant="ghost"
-        className={cn(
-          'h-12 sm:h-12 justify-start gap-3 px-3',
-          selectedSection === section && 'bg-sidebar',
-        )}
         accessibilityLabel={title}
         accessibilityState={{ selected: selectedSection === section }}
-        aria-selected={selectedSection === section}
+        aria-pressed={selectedSection === section}
         onPress={() => selectSection(section)}
+        role="button"
+        className={contentActionClass({
+          variant: 'ghost',
+          className: cn(
+            'h-12 sm:h-12 justify-start gap-3 px-3',
+            selectedSection === section && 'bg-sidebar',
+          ),
+        })}
       >
         <Icon
+          size="lg"
           name={icon}
           filled={selectedSection === section}
           className={cn(selectedSection !== section && 'text-muted-foreground')}
@@ -105,7 +112,7 @@ export function PhoneShell({
             </Text>
           </Badge>
         )}
-      </Button>
+      </Pressable>
     );
   }
 

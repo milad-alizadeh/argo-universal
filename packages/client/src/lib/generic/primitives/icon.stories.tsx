@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { Icon } from '../symbols/icon';
 import { iconNames, iconSymbols } from '../symbols/icon-names';
 import { SymbolImagesProvider } from '../symbols/symbol-images';
 import { Variation, Variations } from '../variations';
+import { Button } from './button';
+import { IconButton } from './icon-button';
 import { renderStorybookSymbol } from './sf-symbol-images.mocks';
 
 const meta = {
@@ -42,25 +44,27 @@ export const Overview: Story = {
               { label: 'Search', icon: 'search' },
             ] as const
           ).map(({ label, icon }) => (
-            <Button key={label} size="icon" aria-label={label}>
-              <Icon name={icon} />
-            </Button>
+            <IconButton
+              key={label}
+              aria-label={label}
+              icon={icon}
+              accessibilityLabel={label}
+              size="md"
+              variant="filled"
+            />
           ))}
         </View>
       </Variation>
-      <Variation label="Sizes: 16px icons, 12px chevrons">
+      <Variation label="Sizes: xs 12, sm 16 (default), md 20, lg 24">
         <View className="flex-row items-center gap-3">
-          <Icon name="chevron-right" />
-          <Icon name="add" />
-          <Icon name="check" />
+          <Icon name="chevron-right" size="xs" />
+          <Icon name="add" size="sm" />
+          <Icon name="add" size="md" />
+          <Icon name="add" size="lg" />
         </View>
       </Variation>
-      <Variation label="Filled: selected shell sections draw the SF fill; Material stays outlined">
-        <View className="flex-row items-center gap-3">
-          {(['sessions', 'issue', 'atlas', 'settings'] as const).map((name) => (
-            <Icon key={name} name={name} filled />
-          ))}
-        </View>
+      <Variation label="Fill follows selection on every platform">
+        <FilledSymbols />
       </Variation>
       <Variation label="Colors: foreground, muted, primary and destructive">
         <View className="flex-row items-center gap-3">
@@ -77,6 +81,40 @@ export const Overview: Story = {
     </Variations>
   ),
 };
+
+function FilledSymbols(): React.JSX.Element {
+  const [filled, setFilled] = useState(false);
+  return (
+    <View className="gap-3">
+      <Button
+        onPress={() => setFilled(!filled)}
+        label={filled ? 'Show outlined icons' : 'Show filled icons'}
+      />
+      <View className="flex-row items-center gap-3">
+        {(
+          [
+            'sessions',
+            'issue',
+            'atlas',
+            'settings',
+            'fast-mode',
+            'voice',
+            'failed',
+            'permission',
+          ] as const
+        ).map((name) => (
+          <Icon
+            key={name}
+            name={name}
+            size="md"
+            filled={filled}
+            testID={`fill-${name}`}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
 
 // SF is drawn by this Mac through Storybook's dev server, so the SF column is empty off macOS.
 export const SfAndMaterial: Story = {
@@ -95,11 +133,11 @@ export const SfAndMaterial: Story = {
           <Text className="w-36 text-sm">{name}</Text>
           <View className="w-10">
             <SymbolImagesProvider render={renderStorybookSymbol}>
-              <Icon name={name} testID={`sf-${name}`} />
+              <Icon name={name} size="md" testID={`sf-${name}`} />
             </SymbolImagesProvider>
           </View>
           <View className="w-10">
-            <Icon name={name} testID={`material-${name}`} />
+            <Icon name={name} size="md" testID={`material-${name}`} />
           </View>
           <Text className="w-64 font-mono text-xs text-muted-foreground">
             {iconSymbols[name].sf}

@@ -2,6 +2,10 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
+import {
+  type IconSize,
+  iconSizeStyle,
+} from '../../../lib/generic/symbols/icon';
 
 const ThemedSvg = withUniwind(Svg, {
   stroke: { fromClassName: 'className', styleProperty: 'color' },
@@ -40,16 +44,18 @@ const warningStrokeWidth = 1.7;
 
 export function ComposerGlyph({
   name,
+  size = 'sm',
   className = 'text-foreground',
 }: {
   name: keyof typeof drawings;
+  size?: IconSize;
   className?: string;
 }): React.JSX.Element {
   let strokeWidth = defaultStrokeWidth;
   if (name === 'remove') strokeWidth = removeStrokeWidth;
   else if (name === 'warning') strokeWidth = warningStrokeWidth;
   return (
-    <View className="size-icon-md shrink-0">
+    <View style={iconSizeStyle(size)} className="shrink-0">
       <ThemedSvg
         accessible={false}
         width="100%"

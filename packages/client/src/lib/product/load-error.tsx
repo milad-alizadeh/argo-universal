@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
+import { Button } from '../generic/primitives/button';
 
 export interface LoadErrorProps {
   title: string;
@@ -23,9 +23,7 @@ export function LoadError({
         {description}
       </Text>
       <View className="pt-3">
-        <Button variant="outline" size="sm" onPress={onRetry}>
-          <Text>Retry</Text>
-        </Button>
+        <Button variant="outline" size="sm" onPress={onRetry} label={'Retry'} />
       </View>
     </View>
   );

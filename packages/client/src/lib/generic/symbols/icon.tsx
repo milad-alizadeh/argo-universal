@@ -4,34 +4,42 @@ import {
   ActivityIndicator,
   type ActivityIndicatorProps,
   Platform,
+  type ViewStyle,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import { useCSSVariable, useResolveClassNames, withUniwind } from 'uniwind';
+import { withUniwind } from 'uniwind';
 import { TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { type IconName, iconSymbols } from './icon-names';
 import type { NativeSymbol } from './native-symbol';
-import { sfFilledPaths, type SymbolPath } from './sf-filled-paths';
 import { SymbolGlyph } from './symbol-glyph';
-import { useSymbolImageRenderer } from './symbol-images';
 
-// Symbols and ActivityIndicator take a number, so this is the one place a variant becomes pixels.
-export function useIconPixels(size: 'sm' | 'md' | 'menu-check' = 'md'): number {
-  const pixels = useCSSVariable(`--spacing-icon-${size}`);
-  return typeof pixels === 'number'
-    ? pixels
-    : Number.parseFloat(String(pixels));
+const iconSizes = {
+  xs: 12,
+  sm: 16,
+  md: 20,
+  lg: 24,
+} as const;
+
+// Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
+const materialGlyphScale = 1.125;
+
+export type IconSize = keyof typeof iconSizes;
+
+export function iconPixels(size: IconSize): number {
+  return iconSizes[size];
 }
 
-// Android and the browser draw Material Symbols; iOS and the desktop app on macOS draw SF Symbols.
-function useDrawsMaterial(): boolean {
-  const render = useSymbolImageRenderer();
-  return Platform.OS === 'android' || (Platform.OS === 'web' && !render);
+export function iconSizeStyle(
+  size: IconSize,
+): Pick<ViewStyle, 'width' | 'height'> {
+  const pixels = iconPixels(size);
+  return { width: pixels, height: pixels };
 }
 
 export interface IconProps {
   name: IconName;
-  // Draws the SF Symbol's filled variant where it has one; Material Symbols stay outlined.
+  size?: IconSize;
+  // Selects the platform's filled variant where the icon has one.
   filled?: boolean;
   className?: string;
   testID?: string;
@@ -46,6 +54,7 @@ const TintedSymbol = withUniwind(SymbolGlyph, {
 
 export function Icon({
   name,
+  size = 'sm',
   filled = false,
   className,
   testID = `icon-${name}`,
@@ -53,61 +62,28 @@ export function Icon({
   const textClass = useContext(TextClassContext);
   const symbol: NativeSymbol = iconSymbols[name];
   const colorClassName = cn('text-foreground', textClass, className);
-  const material = useDrawsMaterial();
-  const pixels = useIconPixels(name.startsWith('chevron-') ? 'sm' : 'md');
-  const color = useResolveClassNames(colorClassName).color;
-  const filledPath =
-    filled && material && symbol.sfFilled
-      ? sfFilledPaths[symbol.sfFilled]
-      : undefined;
-  if (filledPath)
-    return (
-      <FilledPath
-        path={filledPath}
-        pixels={pixels}
-        color={typeof color === 'string' ? color : undefined}
-        testID={testID}
-      />
-    );
+  const pixels = iconPixels(size);
+  const sf = (filled && symbol.sfFilled) || symbol.sf;
   return (
     <TintedSymbol
       className={colorClassName}
       colorClassName={colorClassName}
-      sf={(filled && symbol.sfFilled) || symbol.sf}
+      sf={sf}
       material={symbol.material}
+      filled={sf !== symbol.sf || sf.endsWith('.fill')}
       pixels={pixels}
+      glyphScale={Platform.OS === 'android' ? materialGlyphScale : 1}
       testID={testID}
     />
   );
 }
 
-// Material Symbols have no filled form, so a filled icon draws the SF symbol's outline there.
-function FilledPath({
-  path,
-  pixels,
-  color,
-  testID,
-}: {
-  path: SymbolPath;
-  pixels: number;
-  color: string | undefined;
-  testID: string;
+export function IconSpinner({
+  size = 'sm',
+  ...props
+}: Omit<ActivityIndicatorProps, 'size'> & {
+  size?: IconSize;
 }): React.JSX.Element {
-  return (
-    <Svg
-      width={pixels}
-      height={pixels}
-      viewBox={`0 0 ${path.width} ${path.height}`}
-      testID={testID}
-    >
-      <Path d={path.d} fill={color ?? 'currentColor'} />
-    </Svg>
-  );
-}
-
-export function IconSpinner(
-  props: Omit<ActivityIndicatorProps, 'size'>,
-): React.JSX.Element {
-  const pixels = useIconPixels();
+  const pixels = iconPixels(size);
   return <ActivityIndicator {...props} size={pixels} />;
 }

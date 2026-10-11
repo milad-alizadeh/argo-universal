@@ -12,7 +12,7 @@ index 5a0433e22333e29720265e6c9d7a3f09e4feaf2a..3d6e54d16367d9cc872f8805ccdc1496
          web?: AndroidSymbol;
      };
 diff --git a/build/SymbolView.js b/build/SymbolView.js
-index 6b352b5bef63ede4877eee3a8ed2cae359c5ebdf..1d0da01ded8c93bf1d35b832295ab53be2ffb4ce 100644
+index 6b352b5bef63ede4877eee3a8ed2cae359c5ebdf..32a26b8d0428acdb8149169dfd3ca1fbc21a32d5 100644
 --- a/build/SymbolView.js
 +++ b/build/SymbolView.js
 @@ -32,7 +32,7 @@ export function SymbolView(props) {

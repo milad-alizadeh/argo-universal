@@ -1,17 +1,21 @@
-import { agentsRouter } from '../services/agents';
-import { blobRouter } from '../services/blob';
-import { feedRouter } from '../services/feed';
-import { projectsRouter } from '../services/projects';
-import { sessionRouter } from '../services/sessions';
-import { systemRouter } from '../services/system';
-import { router } from './trpc';
+import { router, routerFactory } from '../rpc';
+import { createAgentsRouter } from '../services/agents';
+import { createBlobRouter } from '../services/blob';
+import { createFeedRouter } from '../services/feed';
+import { createProjectsRouter } from '../services/projects';
+import { createSessionRouter } from '../services/sessions';
+import { createSystemRouter } from '../services/system';
+import type { AppRouterDeps } from './router-deps';
 
-export const appRouter = router({
-  blob: blobRouter,
-  agents: agentsRouter,
-  projects: projectsRouter,
-  system: systemRouter,
-  feed: feedRouter,
-  session: sessionRouter,
-});
-export type AppRouter = typeof appRouter;
+// Each router takes only the slice of the Engine's dependencies its type names.
+export const createAppRouter = routerFactory((deps: AppRouterDeps) =>
+  router({
+    blob: createBlobRouter(deps),
+    agents: createAgentsRouter(deps),
+    projects: createProjectsRouter(deps),
+    system: createSystemRouter(deps),
+    feed: createFeedRouter(deps),
+    session: createSessionRouter(deps),
+  }),
+);
+export type AppRouter = ReturnType<typeof createAppRouter>;

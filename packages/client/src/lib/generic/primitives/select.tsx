@@ -1,8 +1,8 @@
 import * as SelectPrimitive from '@rn-primitives/select';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon } from '#lib/generic/primitives/icon';
 import { cn } from '#lib/generic/utils';
+import { Icon, iconSizeStyle } from '../symbols/icon';
 import { SelectContent } from './select-content';
 import { selectItemClassName, selectTriggerClassName } from './select-styles';
 
@@ -36,6 +36,7 @@ function SelectValue({ className, ...props }: ValueProps): React.JSX.Element {
 
 const triggerChevron = (
   <Icon
+    size="xs"
     name="chevron-down"
     aria-hidden={true}
     className="text-muted-foreground"
@@ -74,7 +75,10 @@ function SelectLabel({
 
 function ItemIndicator(): React.JSX.Element {
   return (
-    <View className="absolute right-2 flex size-icon-md items-center justify-center">
+    <View
+      style={iconSizeStyle('sm')}
+      className="absolute right-2 flex items-center justify-center"
+    >
       <SelectPrimitive.ItemIndicator>
         <Icon name="check" className="text-muted-foreground shrink-0" />
       </SelectPrimitive.ItemIndicator>

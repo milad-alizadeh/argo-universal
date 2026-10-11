@@ -4,13 +4,12 @@ import { feedRow } from '@repo/db/schema';
 import { createRejectionCounter } from '@repo/machine-log';
 import { and, desc, eq, gt, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
-import type { ActorRefFrom } from 'xstate';
+import type { WriterActorRef } from '../../storage';
 import { hydrateStoredFeedRow, newestRows, storedFeedColumns } from '../feed';
-import { type FeedRowWrite, readWriterProjection } from '../feed';
-import type { writerMachine } from '../feed';
+import { type FeedRowWrite, readQueuedFeed } from '../feed';
 
 type LiveHeaderRowsReader = (input: {
-  writer: ActorRefFrom<typeof writerMachine> | undefined;
+  writer: WriterActorRef | undefined;
   sessionId: string;
   turnId: string | null;
   rows: Record<string, SessionUpdate>;
@@ -31,9 +30,9 @@ export function createLiveHeaderRowsReader({
   }): ReturnType<LiveHeaderRowsReader> => {
     if (turnId === null) return { rows: {}, rejected: false };
     const stored = readStoredHeaderRows({ database, sessionId, turnId });
-    const queued = readWriterProjection(writer)
-      .feed(sessionId)
-      .rows.filter((row): boolean => row.turnId === turnId);
+    const queued = readQueuedFeed(writer, sessionId).rows.filter(
+      (row): boolean => row.turnId === turnId,
+    );
     let rejected = false;
     // A row still in Feed memory is newer than its stored copy, so the stored payload is not parsed again.
     const parsed = [

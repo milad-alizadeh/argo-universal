@@ -25,8 +25,8 @@ import {
   readWrittenRow,
   storedFeedColumns,
 } from './feed-row';
+import { readQueuedFeedRow } from './feed-storage';
 import { LiveFeedQueue } from './live-feed-queue';
-import { readWriterProjection } from './writer-projection';
 
 export interface FeedDeps extends FeedRowSources {
   readSession: ReturnType<typeof createSessionReader>;
@@ -86,10 +86,10 @@ export function readFeedRow(
     feedResources.findFeed(sessionId)?.getSnapshot().context.rows[id] ??
     readWrittenRow({
       database: feedResources.database,
-      pending: readWriterProjection(feedResources.findWriter()).feedRow(
+      pending: readQueuedFeedRow(feedResources.findWriter(), {
         sessionId,
         id,
-      ),
+      }),
       sessionId,
       id,
     });
