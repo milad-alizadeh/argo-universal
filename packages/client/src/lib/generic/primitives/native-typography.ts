@@ -1,5 +1,5 @@
 import type { Text as ComposeText } from '@expo/ui/jetpack-compose';
-import { font, lineHeight } from '@expo/ui/swift-ui/modifiers';
+import { createModifier, font, lineHeight } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { type TextRole, useTextStyle } from './text';
@@ -30,12 +30,13 @@ const fontWeights: Record<
 
 export function useSwiftUITextModifiers(
   role: TextRole,
+  alignment: 'line' | 'row' = 'line',
 ): ReturnType<typeof font>[] {
   const style = useTextStyle(role);
   const { fontScale } = useWindowDimensions();
   return [
+    ...swiftLeading(style.lineHeight, fontScale, alignment),
     font(swiftFont(style, fontScale)),
-    ...swiftLeading(style.lineHeight, fontScale),
   ];
 }
 
@@ -61,8 +62,15 @@ function swiftFamily(family: string | undefined): string | undefined {
 function swiftLeading(
   leading: number | undefined,
   fontScale: number,
+  alignment: 'line' | 'row',
 ): ReturnType<typeof lineHeight>[] {
-  return leading === undefined ? [] : [lineHeight(leading * fontScale)];
+  if (leading === undefined) return [];
+  const value = leading * fontScale;
+  return [
+    alignment === 'row'
+      ? createModifier('balancedLineHeight', { value })
+      : lineHeight(value),
+  ];
 }
 
 function scaledValue(

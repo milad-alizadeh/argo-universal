@@ -72,7 +72,7 @@ function rowModifiers(
 }
 
 function RowContent(props: ListItemProps): React.JSX.Element {
-  const bodyModifiers = useSwiftUITextModifiers('body');
+  const bodyModifiers = useSwiftUITextModifiers('body', 'row');
   const color = useRowColor('primary');
   const iconSize = iconPixels('lg');
   return (
@@ -101,7 +101,7 @@ function RowContent(props: ListItemProps): React.JSX.Element {
 }
 
 function RowTrailing(props: ListItemProps): React.JSX.Element {
-  const bodyModifiers = useSwiftUITextModifiers('body');
+  const bodyModifiers = useSwiftUITextModifiers('body', 'row');
   const color = useRowColor('secondary');
   return (
     <HStack spacing={8}>
