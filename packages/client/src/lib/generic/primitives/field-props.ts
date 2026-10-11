@@ -22,6 +22,10 @@ export interface ListItemProps {
   disabled?: boolean;
   selected?: boolean;
   needsAttention?: boolean;
+  // A spinner replaces the icon while the row's content is on its way.
+  loading?: boolean;
+  // The title reads as a failure, in the destructive colour.
+  destructive?: boolean;
   status?: { tone: 'success' | 'warning' | 'destructive'; label: string };
 }
 

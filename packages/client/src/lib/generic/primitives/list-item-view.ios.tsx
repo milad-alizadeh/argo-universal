@@ -20,7 +20,7 @@ import { iconPixels } from '../symbols/icon';
 import { useWide } from '../use-wide';
 import { type ListItemProps, listItemName } from './field-props';
 import { ListItem as WebListItem } from './list-item-view.tsx';
-import { NativeRowIcon, NativeRowStatus } from './native-row';
+import { NativeRowLeading, NativeRowStatus } from './native-row';
 import { useSwiftUITextModifiers } from './native-typography';
 
 const rowHeight = 52;
@@ -73,7 +73,7 @@ function rowModifiers(
 
 function RowContent(props: ListItemProps): React.JSX.Element {
   const bodyModifiers = useSwiftUITextModifiers('body', 'row');
-  const color = useRowColor('primary');
+  const color = useRowColor(props.destructive ? 'destructive' : 'primary');
   const iconSize = iconPixels('lg');
   return (
     <HStack
@@ -88,7 +88,7 @@ function RowContent(props: ListItemProps): React.JSX.Element {
         ),
       ]}
     >
-      {props.icon && <NativeRowIcon icon={props.icon} />}
+      <NativeRowLeading icon={props.icon} loading={props.loading} />
       <LabeledContent
         label={<Text modifiers={[...bodyModifiers, color]}>{props.title}</Text>}
         modifiers={[frame({ maxWidth: Infinity, alignment: 'leading' })]}
@@ -128,11 +128,16 @@ function DisclosureIndicator({
 }
 
 function useRowColor(
-  role: 'primary' | 'secondary',
+  role: 'primary' | 'secondary' | 'destructive',
 ): ReturnType<typeof foregroundStyle> {
-  const { foreground, mutedForeground } = useNativeTheme().colors;
-  const color = role === 'primary' ? foreground : mutedForeground;
-  return foregroundStyle(color ?? { type: 'hierarchical', style: role });
+  const { foreground, mutedForeground, destructive } = useNativeTheme().colors;
+  const colors = {
+    primary: foreground,
+    secondary: mutedForeground,
+    destructive,
+  };
+  const style = role === 'secondary' ? 'secondary' : 'primary';
+  return foregroundStyle(colors[role] ?? { type: 'hierarchical', style });
 }
 
 function rowOpacity(disabled: boolean | undefined): ReturnType<typeof opacity> {

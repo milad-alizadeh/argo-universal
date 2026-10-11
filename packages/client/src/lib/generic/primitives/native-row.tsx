@@ -1,6 +1,6 @@
 import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { Icon, iconSizeStyle } from '../symbols/icon';
 import type { IconName } from '../symbols/icon-names';
 import { type ListItemProps, listItemStatus } from './field-props';
@@ -49,4 +49,28 @@ export function NativeRowStatus(
       <NativeRowAccessory accessory={props.accessory} />
     </>
   );
+}
+
+export function NativeRowSpinner(): React.JSX.Element {
+  return (
+    <RNHostView matchContents>
+      <View
+        collapsable={false}
+        accessible={false}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={iconSizeStyle('lg')}
+      >
+        <ActivityIndicator />
+      </View>
+    </RNHostView>
+  );
+}
+
+export function NativeRowLeading({
+  icon,
+  loading,
+}: Pick<ListItemProps, 'icon' | 'loading'>): React.JSX.Element | null {
+  if (loading) return <NativeRowSpinner />;
+  return icon ? <NativeRowIcon icon={icon} /> : null;
 }
