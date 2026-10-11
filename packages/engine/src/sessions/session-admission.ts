@@ -1,24 +1,20 @@
 import { createElicitationAnswerSchema } from '@repo/contracts';
 import type {
-  PermissionOption,
   SessionAnswerPermissionInput,
   SessionAnswerElicitationInput,
   SessionSetConfigOptionInput,
-  SessionConfigSelectOption,
   SessionConfigOption,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import {
+  answeredRequest,
+  canDeliverFeedback,
+  chosenOption,
+} from './admission/answer-admission';
+import { isOfferedConfigChoice } from './admission/config-admission';
 import type { SessionActorRef } from './session-machine';
 
 const alreadyAnswered = 'already answered';
-
-// Only a rejection carries feedback, and only to an Agent that reads it.
-const canDeliverFeedback = (
-  sessionSnapshot: ReturnType<SessionActorRef['getSnapshot']> | undefined,
-  option: PermissionOption,
-): boolean =>
-  option.kind.startsWith('reject') &&
-  sessionSnapshot?.context.capabilities?.permissionFeedback === true;
 
 export function validatePermissionAnswer(
   sessionActor: SessionActorRef | undefined,
@@ -27,19 +23,23 @@ export function validatePermissionAnswer(
     'requestId' | 'optionId' | 'message'
   >,
 ): asserts sessionActor is SessionActorRef {
-  const sessionSnapshot = sessionActor?.getSnapshot();
-  const request = sessionSnapshot?.context.permissionQueue[0];
-  if (request?.requestId !== answer.requestId)
-    throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
-  const option = request.options.find(
-    (candidate): boolean => candidate.optionId === answer.optionId,
+  const context = sessionActor?.getSnapshot().context;
+  const request = answeredRequest(
+    context?.permissionQueue ?? [],
+    answer.requestId,
   );
+  if (!request)
+    throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
+  const option = chosenOption(request, answer.optionId);
   if (!option)
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: 'The Agent did not offer that option',
     });
-  if (answer.message && !canDeliverFeedback(sessionSnapshot, option))
+  if (
+    answer.message &&
+    !canDeliverFeedback(context?.capabilities ?? null, option)
+  )
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: 'The Agent does not support Permission feedback',
@@ -53,8 +53,11 @@ export function validateElicitationAnswer(
     'requestId' | 'action' | 'content'
   >,
 ): asserts sessionActor is SessionActorRef {
-  const request = sessionActor?.getSnapshot().context.elicitationQueue[0];
-  if (request?.requestId !== answer.requestId)
+  const request = answeredRequest(
+    sessionActor?.getSnapshot().context.elicitationQueue ?? [],
+    answer.requestId,
+  );
+  if (!request)
     throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
   if (answer.action !== 'accept') return;
   const parsedAnswer = createElicitationAnswerSchema(
@@ -72,18 +75,7 @@ export function validateConfigChoice(
   configOptions: SessionConfigOption[],
   configChoice: Pick<SessionSetConfigOptionInput, 'configId' | 'value'>,
 ): void {
-  const option = configOptions.find(
-    (option): boolean => option.configId === configChoice.configId,
-  );
-  const isOfferedChoice =
-    option?.type === 'boolean'
-      ? typeof configChoice.value === 'boolean'
-      : option?.options
-          .flatMap((choice): SessionConfigSelectOption[] =>
-            'groupId' in choice ? choice.options : [choice],
-          )
-          .some((choice): boolean => choice.value === configChoice.value);
-  if (!isOfferedChoice)
+  if (!isOfferedConfigChoice(configOptions, configChoice))
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: `The Agent did not offer ${configChoice.configId}=${String(configChoice.value)}`,

@@ -69,3 +69,22 @@ export function keepHeldConfigChoices(
     options,
   );
 }
+
+// A choice made during a Turn waits for the next Turn; a later choice for the same setting replaces it.
+export function holdConfigChoice(
+  held: readonly AgentConfigValue[],
+  choice: AgentConfigValue,
+): AgentConfigValue[] {
+  return held.some((value): boolean => value.configId === choice.configId)
+    ? held.map((value): AgentConfigValue =>
+        value.configId === choice.configId ? choice : value,
+      )
+    : [...held, choice];
+}
+
+export function releaseHeldChoice(
+  held: readonly AgentConfigValue[],
+  configId: AgentConfigValue['configId'],
+): AgentConfigValue[] {
+  return held.filter((choice): boolean => choice.configId !== configId);
+}
