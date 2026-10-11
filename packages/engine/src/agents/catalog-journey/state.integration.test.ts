@@ -1,7 +1,7 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { afterEach, expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { RegistryHttpError } from './registry/fetch-agents';
+import { RegistryHttpError } from '../registry/fetch-agents';
 
 const offlineMessage = 'Registry offline';
 afterEach(() => vi.useRealTimers());

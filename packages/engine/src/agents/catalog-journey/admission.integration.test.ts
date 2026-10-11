@@ -3,8 +3,8 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
-import { SessionRowUpdateJob } from '../sessions';
-import { writeDatabaseJobAndWaitForCommit } from '../storage';
+import { SessionRowUpdateJob } from '../../sessions';
+import { writeDatabaseJobAndWaitForCommit } from '../../storage';
 
 afterEach(() => vi.useRealTimers());
 
