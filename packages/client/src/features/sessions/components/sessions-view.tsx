@@ -2,8 +2,7 @@ import type { AgentsListOutput, ProjectsListOutput } from '@repo/contracts';
 import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, View } from 'react-native';
 import { ConnectionBanner, type ConnectionState } from '#features/connection';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { Text } from '#lib/generic/primitives/text';
@@ -177,8 +176,12 @@ function BelowHeader({ children }: { children: ReactNode }): ReactNode {
   const wide = useWide();
   if (!hasLiquidGlass || wide) return children;
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, minHeight: 0 }}>
+    // The system insets it by the header's height, as it does the loaded list.
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      style={{ flex: 1, minHeight: 0 }}
+    >
       {children}
-    </SafeAreaView>
+    </ScrollView>
   );
 }

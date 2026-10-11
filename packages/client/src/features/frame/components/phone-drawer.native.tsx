@@ -13,7 +13,6 @@ export function PhoneDrawer({
   open,
   onOpen,
   onClose,
-  onClosed,
   width,
   surfaceStyle,
   swipeEnabled = true,
@@ -52,7 +51,6 @@ export function PhoneDrawer({
         onDrawerClose={() => {
           targetOpen.current = false;
           if (open) onClose();
-          onClosed?.();
         }}
       >
         {(progress) =>
