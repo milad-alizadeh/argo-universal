@@ -1,14 +1,9 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '#lib/generic/primitives/card';
-import { Text } from '#lib/generic/primitives/text';
+import { FieldGroup } from '#primitives/field-group';
+import { FieldSection } from '#primitives/field-section';
+import { ListItem } from '#primitives/list-item';
 import type { ConnectionState } from '../state/context';
 import { ConnectionBanner } from './connection-banner';
 
@@ -24,7 +19,7 @@ export type ServerDetails =
       clock?: string;
     };
 
-// Placeholder until the Connection page is built: the Server's details and its live clock.
+// The Server's details and its live clock, in one grouped section.
 export function ConnectionView({
   connection,
   server,
@@ -32,54 +27,29 @@ export function ConnectionView({
   connection: ConnectionState;
   server: ServerDetails;
 }): React.JSX.Element {
-  let serverInformation: ReactNode;
-  if (server.status === 'loading') {
-    serverInformation = <Text role="secondary">Connecting to the Server…</Text>;
-  } else if (server.status === 'error') {
-    serverInformation = (
-      <Text role="body" className="text-destructive">
-        {server.message}
-      </Text>
-    );
-  } else {
-    serverInformation = (
-      <>
-        <Row label="Version" value={server.version} />
-        <Row label="Started" value={server.startedAt} />
-        <Row label="PID" value={String(server.pid)} />
-        <Row label="Clock" value={server.clock ?? '…'} />
-      </>
-    );
-  }
   return (
     <View className="flex-1 bg-background">
       <ConnectionBanner state={connection} />
-      <View className="flex-1 items-center justify-center p-6">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="type-heading">Server</CardTitle>
-            <CardDescription className="type-secondary">
-              The local Argo Server
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="gap-3">{serverInformation}</CardContent>
-        </Card>
+      <View className="w-full max-w-[720px] flex-1 self-center">
+        <FieldGroup>
+          <FieldSection title="Server">{serverRows(server)}</FieldSection>
+        </FieldGroup>
       </View>
     </View>
   );
 }
 
-function Row({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}): React.JSX.Element {
+function serverRows(server: ServerDetails): ReactNode {
+  if (server.status === 'loading')
+    return <ListItem title="Connecting to the Server…" loading />;
+  if (server.status === 'error')
+    return <ListItem title={server.message} destructive />;
   return (
-    <View className="flex-row justify-between gap-4">
-      <Text role="secondary">{label}</Text>
-      <Text role="code">{value}</Text>
-    </View>
+    <>
+      <ListItem title="Version" value={server.version} />
+      <ListItem title="Started" value={server.startedAt} />
+      <ListItem title="PID" value={String(server.pid)} />
+      <ListItem title="Clock" value={server.clock ?? '…'} />
+    </>
   );
 }

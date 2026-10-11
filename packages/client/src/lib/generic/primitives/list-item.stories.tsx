@@ -41,6 +41,10 @@ export const Variations: Story = {
           onPress={onPress}
         />
       </FieldSection>
+      <FieldSection title="States">
+        <ListItem title="Connecting to the Server…" loading />
+        <ListItem title="Couldn't reach the Server." destructive />
+      </FieldSection>
       <FieldSection title="Without icons">
         <ListItem title="Name" value="Argo" onPress={onPress} />
         <ListItem title="Version" value="1.0" />

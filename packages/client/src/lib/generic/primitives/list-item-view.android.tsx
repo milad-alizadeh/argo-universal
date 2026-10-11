@@ -12,7 +12,7 @@ import { useNativeTheme } from '../native-theme';
 import { useWide } from '../use-wide';
 import { type ListItemProps, listItemName } from './field-props';
 import * as Web from './list-item-view.tsx';
-import { NativeRowIcon, NativeRowStatus } from './native-row';
+import { NativeRowLeading, NativeRowStatus } from './native-row';
 import { useComposeTextStyle } from './native-typography';
 
 const rowHeight = 56;
@@ -60,7 +60,7 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
 
 function RowContent(props: ListItemProps): React.JSX.Element {
   const bodyStyle = useComposeTextStyle('body');
-  const { foreground } = useNativeTheme().colors;
+  const { foreground, destructive } = useNativeTheme().colors;
   return (
     <Row
       horizontalArrangement={{ spacedBy: gutter }}
@@ -72,8 +72,12 @@ function RowContent(props: ListItemProps): React.JSX.Element {
         alpha(props.disabled ? disabledOpacity : 1),
       ]}
     >
-      {props.icon && <NativeRowIcon icon={props.icon} />}
-      <Text color={foreground} style={bodyStyle} modifiers={[weight(1)]}>
+      <NativeRowLeading icon={props.icon} loading={props.loading} />
+      <Text
+        color={props.destructive ? destructive : foreground}
+        style={bodyStyle}
+        modifiers={[weight(1)]}
+      >
         {props.title}
       </Text>
       <RowTrailing {...props} />

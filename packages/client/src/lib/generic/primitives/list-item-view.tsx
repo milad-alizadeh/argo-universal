@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Pressable, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { Icon } from '../symbols/icon';
 import { useWide } from '../use-wide';
 import { cn } from '../utils';
@@ -70,8 +70,14 @@ function ListItemContent(props: ListItemProps): React.JSX.Element {
         props.disabled && 'opacity-65',
       )}
     >
-      <RowIcon icon={props.icon} />
-      <Text role="body" className="min-w-0 flex-1">
+      <RowLeading {...props} />
+      <Text
+        role="body"
+        className={cn(
+          'min-w-0 flex-1',
+          props.destructive && 'text-destructive',
+        )}
+      >
         {props.title}
       </Text>
       <ListItemTrailing {...props} />
@@ -96,6 +102,14 @@ function selectionClass(
   navigation: boolean,
 ): string | false | undefined {
   return navigation && props.selected && 'bg-border';
+}
+
+function RowLeading({
+  icon,
+  loading,
+}: Pick<ListItemProps, 'icon' | 'loading'>): React.JSX.Element | null {
+  if (loading) return <ActivityIndicator className="shrink-0" />;
+  return <RowIcon icon={icon} />;
 }
 
 function RowIcon({

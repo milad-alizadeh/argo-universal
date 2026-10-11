@@ -6,6 +6,7 @@ const meta = {
   title: 'Screens/ConnectionScreen',
   component: ConnectionView,
   args: { connection: 'open', server: loadedServer },
+  parameters: { screenPreview: true },
 } satisfies Meta<typeof ConnectionView>;
 
 export default meta;
