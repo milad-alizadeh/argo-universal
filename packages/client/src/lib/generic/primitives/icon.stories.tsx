@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { Icon } from '../symbols/icon';
 import { iconNames, iconSymbols } from '../symbols/icon-names';
 import { SymbolImagesProvider } from '../symbols/symbol-images';
 import { Variation, Variations } from '../variations';
+import { Button } from './button';
 import { IconButton } from './icon-button';
 import { renderStorybookSymbol } from './sf-symbol-images.mocks';
 
