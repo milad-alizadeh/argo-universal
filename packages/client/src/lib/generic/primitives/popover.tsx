@@ -10,7 +10,7 @@ type ContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
 const Popover = PopoverPrimitive.Root;
 const PopoverTrigger = PopoverPrimitive.Trigger;
 const contentClassName =
-  'bg-popover border-border outline-hidden z-50 w-72 rounded-md border p-4 shadow-md shadow-black/5 popover-content cursor-auto';
+  'bg-popover border-border outline-hidden z-50 w-72 rounded-md web:rounded-surface border p-4 shadow-card popover-content cursor-auto';
 
 function contentPlacement({
   align = 'center',

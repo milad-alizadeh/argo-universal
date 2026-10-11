@@ -7,7 +7,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useResolveClassNames } from 'uniwind';
+import { useCSSVariable, useResolveClassNames } from 'uniwind';
 import {
   bezierEasing,
   easingCurve,
@@ -21,13 +21,12 @@ import {
   Pressable,
   contentActionClass,
 } from '../../../lib/generic/primitives/pressable';
-import { Icon, iconPixels } from '../../../lib/generic/symbols/icon';
+import { Icon } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 
 const wideButtonSize = 32;
 const narrowButtonSize = 44;
 const fieldHeight = 32;
-const fieldRadius = 6;
 // Where the magnifier's centre settles inside the open field, from its left edge.
 const fieldIconCentre = 17;
 const titleShift = 8;
@@ -47,9 +46,12 @@ export function ListSearch({
 }: ListSearchProps): React.JSX.Element {
   const wide = useWide();
   const buttonSize = wide ? wideButtonSize : narrowButtonSize;
-  const iconSize = iconPixels(wide ? 'sm' : 'md');
-  const fieldIconSize = iconPixels('sm');
   const placeholderStyle = useResolveClassNames('text-muted-foreground');
+  const searchRadius = useCSSVariable('--radius-search');
+  const fieldRadius =
+    typeof searchRadius === 'number'
+      ? searchRadius
+      : Number.parseFloat(String(searchRadius));
   const [searching, setSearching] = useState(false);
   const [width, setWidth] = useState(buttonSize);
   const input = useRef<TextInput>(null);
@@ -85,7 +87,7 @@ export function ListSearch({
         buttonSize / 2 + (fieldRadius - buttonSize / 2) * progress.get(),
       opacity: progress.get(),
     }),
-    [buttonSize, width, progress],
+    [buttonSize, width, progress, fieldRadius],
   );
   const magnifierStyle = useAnimatedStyle(
     () => ({
@@ -94,10 +96,9 @@ export function ListSearch({
           translateX:
             -(width - buttonSize / 2 - fieldIconCentre) * progress.get(),
         },
-        { scale: 1 + (fieldIconSize / iconSize - 1) * progress.get() },
       ],
     }),
-    [buttonSize, iconSize, fieldIconSize, width, progress],
+    [buttonSize, width, progress],
   );
   const closeStyle = useAnimatedStyle(
     () => ({

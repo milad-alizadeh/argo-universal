@@ -92,6 +92,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-surface: 28px;
+  --radius-search: 8px;
   --spacing-hairline: hairlineWidth();
   --spacing-phone-drawer: 300px;
   --spacing-phone-drawer-peek: 64px;
@@ -120,11 +122,13 @@
 @layer theme {
   :root {
     @variant ios {
+      --radius-search: 6px;
       --font-sans: System;
       /* React Native resolves ui-monospace to SF Mono on iOS. */
       --font-mono: ui-monospace;
     }
     @variant android {
+      --radius-search: 6px;
       --font-sans: sans-serif;
       --font-mono: monospace;
     }
@@ -204,6 +208,11 @@
       --color-sidebar: oklch(20.5% 0 0);
       --color-shell-chrome: oklch(14.5% 0 0);
       --shadow-card: 0 0 40px -8px #ffffff24, 0 16px 32px -16px #ffffff14;
+      @variant web {
+        --color-card: var(--color-neutral-900);
+        --color-popover: var(--color-neutral-900);
+        --shadow-card: 0 8px 24px -8px #00000066, 0 16px 32px -16px #00000080;
+      }
     }
   }
 }
@@ -285,12 +294,13 @@
   font-weight: var(--font-weight-nav-action);
 }
 
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
 @layer utilities {
   .shadow-composer {
     box-shadow: var(--shadow-composer);
-  }
-  .shadow-card {
-    box-shadow: var(--shadow-card);
   }
   .shadow-sm {
     box-shadow:
