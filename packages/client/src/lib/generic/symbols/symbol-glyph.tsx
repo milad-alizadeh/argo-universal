@@ -1,10 +1,8 @@
 import { type AndroidSymbol, SymbolView } from 'expo-symbols';
 import type * as React from 'react';
-import { type ColorValue, Platform } from 'react-native';
+import type { ColorValue } from 'react-native';
 import type { AppleSymbol } from './custom-symbols';
 import { symbolWeight } from './symbol-weight';
-
-const materialOpticalScale = 1.125;
 
 export interface SymbolGlyphProps {
   sf: AppleSymbol;
@@ -34,11 +32,6 @@ export function SymbolGlyph({
       key={String(filled)}
       name={{ ios: sf, android: material }}
       size={pixels}
-      style={
-        Platform.OS === 'android'
-          ? { transform: [{ scale: materialOpticalScale }] }
-          : undefined
-      }
       weight={symbolWeight(filled)}
       tintColor={tintColor}
       testID={testID}
