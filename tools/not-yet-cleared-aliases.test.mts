@@ -43,33 +43,37 @@ it.each([
 );
 
 it.each([
-  'mocks',
-  'src/engine',
-  'src/services',
-  'src/services/agents',
-  'src/services/blob',
-  'src/services/feed',
-  'src/services/projects',
-  'src/services/sessions',
-  'src/services/system',
-])('accepts only the approved relocation of %s', (folder): void => {
-  const glob = `packages/engine/${folder}/*`;
-  const measured = JSON.stringify({
-    diagnostics: [
-      {
-        filename: `packages/engine/${folder}/example.ts`,
-        code: complexityCode,
-      },
+  ['mocks', 'apps/server/mocks'],
+  ['src/engine', 'apps/server/src/engine'],
+  ...['agents', 'blob', 'feed', 'projects', 'sessions', 'system'].flatMap(
+    (module): [string, string][] => [
+      [`src/${module}`, `apps/server/src/services/${module}`],
+      [`src/${module}`, `packages/engine/src/services/${module}`],
     ],
-  });
-  expect(
-    evaluateWaivers({
-      current: waiver(glob),
-      baseline: waiver(`apps/server/${folder}/*`),
-      report: measured,
-    }).problems,
-  ).toEqual([]);
-});
+  ),
+  ['src/sessions/list', 'packages/engine/src/services/sessions'],
+  ['src/storage', 'packages/engine/src/services/feed'],
+])(
+  'accepts only the approved relocation of %s from %s',
+  (folder, old): void => {
+    const glob = `packages/engine/${folder}/*`;
+    const measured = JSON.stringify({
+      diagnostics: [
+        {
+          filename: `packages/engine/${folder}/example.ts`,
+          code: complexityCode,
+        },
+      ],
+    });
+    expect(
+      evaluateWaivers({
+        current: waiver(glob),
+        baseline: waiver(`${old}/*`),
+        report: measured,
+      }).problems,
+    ).toEqual([]);
+  },
+);
 
 it.each([
   [oldFolder, engineFolder],

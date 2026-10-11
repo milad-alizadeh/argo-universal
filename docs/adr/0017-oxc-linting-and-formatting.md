@@ -90,3 +90,19 @@ Spec 0011 #449 moves the Writer, with behaviour unchanged, out of the Feed into 
 | New folder entry | Original folder entries |
 |---|---|
 | `packages/engine/src/storage/*` | `packages/engine/src/services/feed/*`, `apps/server/src/services/feed/*` |
+
+## Engine modules flatten
+
+Spec 0011 #451 flattens `packages/engine/src/services/<module>/` to `packages/engine/src/<module>/`, with behaviour unchanged, and moves the Session read models into `sessions/list/`. Owner approval of these rows is pending in the pull request. Each new folder keeps the historical waiver identity of the folders listed for it, with only the rules its files still break:
+
+| New folder entry | Original folder entries |
+|---|---|
+| `packages/engine/src/agents/*` | `packages/engine/src/services/agents/*`, `apps/server/src/services/agents/*` |
+| `packages/engine/src/blob/*` | `packages/engine/src/services/blob/*`, `apps/server/src/services/blob/*` |
+| `packages/engine/src/feed/*` | `packages/engine/src/services/feed/*`, `apps/server/src/services/feed/*` |
+| `packages/engine/src/projects/*` | `packages/engine/src/services/projects/*`, `apps/server/src/services/projects/*` |
+| `packages/engine/src/sessions/*` | `packages/engine/src/services/sessions/*`, `apps/server/src/services/sessions/*` |
+| `packages/engine/src/sessions/list/*` | `packages/engine/src/services/sessions/*`, `apps/server/src/services/sessions/*` |
+| `packages/engine/src/system/*` | `packages/engine/src/services/system/*`, `apps/server/src/services/system/*` |
+
+The Sessions folder splits under the client-move rules above: `sessions/*` and `sessions/list/*` share one identity, and each keeps a subset of its rules. The folders that held no waiver (`agents/acp`, `agents/catalog`, `agents/configuration`, `feed/updates`, `sessions/conversation`) move without one.

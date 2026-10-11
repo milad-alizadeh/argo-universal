@@ -16,13 +16,13 @@ import { z } from 'zod';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
-import type { RegistryActorRef } from '../services/sessions';
+import type { OpenSessionsActorRef } from '../sessions';
 import { startHttpServer, type HttpServerOptions } from './http-server';
 
 let home: string;
 let port: number;
 let database: Database;
-let sessions: RegistryActorRef;
+let sessions: OpenSessionsActorRef;
 let databaseWriter: HttpServerOptions['databaseWriter'];
 let removeDatabase: () => void;
 let closeServer: () => Promise<void>;
@@ -88,7 +88,7 @@ beforeEach(async (): Promise<void> => {
   syncSupervisor = started.engine.system.get('syncSupervisor');
   home = started.home;
   port = Number(new URL(started.url).port);
-  sessions = started.sessionRegistry;
+  sessions = started.openSessions;
   databaseWriter = started.databaseWriter;
   closeServer = started.stop;
 });

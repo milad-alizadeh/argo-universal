@@ -34,8 +34,8 @@ import {
   getAdjacencyMap,
   toDirectedGraph,
 } from 'xstate/graph';
-import type { AcpResources } from '../services/agents';
-import type { RegistryActorRef } from '../services/sessions';
+import type { AcpResources } from '../acp';
+import type { OpenSessionsActorRef } from '../sessions';
 import type { HttpServer, HttpServerOptions } from './http-server';
 import type { EngineMessage } from './ipc';
 import { engineMachine } from './machine';
@@ -72,7 +72,7 @@ let recoveryCalls: PendingCall<
 let startHttpServerCalls: PendingCall<HttpServerOptions, HttpServer>[];
 let closeHttpServerCalls: PendingCall<{ server: HttpServer | null }, void>[];
 let closeResourceCalls: PendingCall<
-  { resources: AcpResources; sessions: RegistryActorRef | undefined },
+  { resources: AcpResources; sessions: OpenSessionsActorRef | undefined },
   void
 >[];
 let shutdownCommands: string[];
@@ -145,7 +145,7 @@ const input = {
   port: 7337,
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
-  // No Agents, so the registry never probes a real CLI.
+  // No Agents, so the open Sessions machine never probes a real CLI.
   adapters: [],
 };
 const openError = new Error('database is locked');
@@ -521,7 +521,7 @@ const startRunningEngine = async (logic = machine): Promise<void> => {
   );
 };
 
-it('finishes shutdown when the Session registry and writer complete immediately', async (): Promise<void> => {
+it('finishes shutdown when the open Sessions machine and the writer complete immediately', async (): Promise<void> => {
   await startRunningEngine(machineWithExternalMocks);
   engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
   await settle((): void => latest(closeHttpServerCalls).resolve());

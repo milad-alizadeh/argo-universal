@@ -2,9 +2,9 @@ import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type {
   AcpOpenInput,
   AcpSessionDestination,
-  AgentLaunch,
   AcpSessionLease,
-} from '../src/services/agents';
+} from '../src/acp';
+import type { AgentLaunch } from '../src/agents';
 
 export const resourceLaunch: AgentLaunch = {
   projectId: 'project',

@@ -748,7 +748,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/services/feed/**"],
+      "files": ["packages/engine/src/acp/*"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -771,29 +771,24 @@
               },
               {
                 "group": [
-                  "../sessions/**",
-                  "**/services/sessions/**",
+                  "../blob",
+                  "../feed",
+                  "../projects",
+                  "../sessions",
+                  "../system",
                   "../agents/**",
-                  "**/services/agents/**",
                   "../blob/**",
-                  "**/services/blob/**",
+                  "../feed/**",
                   "../projects/**",
-                  "**/services/projects/**",
-
-                  "!../agents/index",
-                  "!../agents/index.ts",
-                  "!**/services/agents/index",
-                  "!**/services/agents/index.ts",
-                  "!../blob/index",
-                  "!../blob/index.ts",
-                  "!**/services/blob/index",
-                  "!**/services/blob/index.ts",
-                  "!../projects/index",
-                  "!../projects/index.ts",
-                  "!**/services/projects/index",
-                  "!**/services/projects/index.ts"
+                  "../sessions/**",
+                  "../system/**"
                 ],
-                "message": "Import another Engine domain through its index.ts face."
+                "message": "acp sits below the modules; it reads only the Agents launch types."
+              },
+              {
+                "group": ["../agents", "../agents/index", "../agents/index.ts"],
+                "allowTypeImports": true,
+                "message": "acp reads only the Agents launch types, never Agents code."
               },
               {
                 "group": ["**/engine/**"],
@@ -805,7 +800,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/services/sessions/**"],
+      "files": ["packages/engine/src/acp/*/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -828,32 +823,28 @@
               },
               {
                 "group": [
-                  "../feed/**",
-                  "**/services/feed/**",
-                  "../agents/**",
-                  "**/services/agents/**",
-                  "../blob/**",
-                  "**/services/blob/**",
-                  "../projects/**",
-                  "**/services/projects/**",
-                  "!../feed/index",
-                  "!../feed/index.ts",
-                  "!**/services/feed/index",
-                  "!**/services/feed/index.ts",
-                  "!../agents/index",
-                  "!../agents/index.ts",
-                  "!**/services/agents/index",
-                  "!**/services/agents/index.ts",
-                  "!../blob/index",
-                  "!../blob/index.ts",
-                  "!**/services/blob/index",
-                  "!**/services/blob/index.ts",
-                  "!../projects/index",
-                  "!../projects/index.ts",
-                  "!**/services/projects/index",
-                  "!**/services/projects/index.ts"
+                  "../../blob",
+                  "../../feed",
+                  "../../projects",
+                  "../../sessions",
+                  "../../system",
+                  "../../agents/**",
+                  "../../blob/**",
+                  "../../feed/**",
+                  "../../projects/**",
+                  "../../sessions/**",
+                  "../../system/**"
                 ],
-                "message": "Import another Engine domain through its index.ts face."
+                "message": "acp sits below the modules; it reads only the Agents launch types."
+              },
+              {
+                "group": [
+                  "../../agents",
+                  "../../agents/index",
+                  "../../agents/index.ts"
+                ],
+                "allowTypeImports": true,
+                "message": "acp reads only the Agents launch types, never Agents code."
               },
               {
                 "group": ["**/engine/**"],
@@ -865,7 +856,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/services/agents/**"],
+      "files": ["packages/engine/src/agents/*"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -888,32 +879,27 @@
               },
               {
                 "group": [
-                  "../feed/**",
-                  "**/services/feed/**",
-                  "../sessions/**",
-                  "**/services/sessions/**",
                   "../blob/**",
-                  "**/services/blob/**",
+                  "../feed/**",
                   "../projects/**",
-                  "**/services/projects/**",
+                  "../sessions/**",
+                  "../system/**",
+                  "!../blob/index",
+                  "!../blob/index.ts",
                   "!../feed/index",
                   "!../feed/index.ts",
-                  "!**/services/feed/index",
-                  "!**/services/feed/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
                   "!../sessions/index",
                   "!../sessions/index.ts",
-                  "!**/services/sessions/index",
-                  "!**/services/sessions/index.ts",
-                  "!../blob/index",
-                  "!../blob/index.ts",
-                  "!**/services/blob/index",
-                  "!**/services/blob/index.ts",
-                  "!../projects/index",
-                  "!../projects/index.ts",
-                  "!**/services/projects/index",
-                  "!**/services/projects/index.ts"
+                  "!../system/index",
+                  "!../system/index.ts"
                 ],
                 "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["../acp", "../acp/**"],
+                "message": "agents never imports acp: it receives the ACP check as a port."
               },
               {
                 "group": ["**/engine/**"],
@@ -925,7 +911,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/services/blob/**"],
+      "files": ["packages/engine/src/agents/*/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -948,90 +934,79 @@
               },
               {
                 "group": [
-                  "../feed/**",
-                  "**/services/feed/**",
-                  "../sessions/**",
-                  "**/services/sessions/**",
+                  "../../blob/**",
+                  "../../feed/**",
+                  "../../projects/**",
+                  "../../sessions/**",
+                  "../../system/**",
+                  "!../../blob/index",
+                  "!../../blob/index.ts",
+                  "!../../feed/index",
+                  "!../../feed/index.ts",
+                  "!../../projects/index",
+                  "!../../projects/index.ts",
+                  "!../../sessions/index",
+                  "!../../sessions/index.ts",
+                  "!../../system/index",
+                  "!../../system/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["../../acp", "../../acp/**"],
+                "message": "agents never imports acp: it receives the ACP check as a port."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/blob/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../acp/**",
                   "../agents/**",
-                  "**/services/agents/**",
+                  "../feed/**",
                   "../projects/**",
-                  "**/services/projects/**",
-                  "!../feed/index",
-                  "!../feed/index.ts",
-                  "!**/services/feed/index",
-                  "!**/services/feed/index.ts",
-                  "!../sessions/index",
-                  "!../sessions/index.ts",
-                  "!**/services/sessions/index",
-                  "!**/services/sessions/index.ts",
+                  "../sessions/**",
+                  "../system/**",
+                  "!../acp/index",
+                  "!../acp/index.ts",
                   "!../agents/index",
                   "!../agents/index.ts",
-                  "!**/services/agents/index",
-                  "!**/services/agents/index.ts",
-                  "!../projects/index",
-                  "!../projects/index.ts",
-                  "!**/services/projects/index",
-                  "!**/services/projects/index.ts"
-                ],
-                "message": "Import another Engine domain through its index.ts face."
-              },
-              {
-                "group": ["**/engine/**"],
-                "message": "A module sits below the Engine composition, so it never imports engine/."
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "files": ["packages/engine/src/services/projects/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": [
-                  "@repo/client",
-                  "@repo/client/**",
-                  "@repo/universal-app",
-                  "@repo/universal-app/**",
-                  "@repo/storybook",
-                  "@repo/storybook/**",
-                  "@repo/desktop",
-                  "@repo/desktop/**",
-                  "@repo/server",
-                  "@repo/server/**"
-                ],
-                "message": "The Engine and Supervisor never import client or an App."
-              },
-              {
-                "group": [
-                  "../feed/**",
-                  "**/services/feed/**",
-                  "../sessions/**",
-                  "**/services/sessions/**",
-                  "../agents/**",
-                  "**/services/agents/**",
-                  "../blob/**",
-                  "**/services/blob/**",
                   "!../feed/index",
                   "!../feed/index.ts",
-                  "!**/services/feed/index",
-                  "!**/services/feed/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
                   "!../sessions/index",
                   "!../sessions/index.ts",
-                  "!**/services/sessions/index",
-                  "!**/services/sessions/index.ts",
-                  "!../agents/index",
-                  "!../agents/index.ts",
-                  "!**/services/agents/index",
-                  "!**/services/agents/index.ts",
-                  "!../blob/index",
-                  "!../blob/index.ts",
-                  "!**/services/blob/index",
-                  "!**/services/blob/index.ts"
+                  "!../system/index",
+                  "!../system/index.ts"
                 ],
                 "message": "Import another Engine domain through its index.ts face."
               },
@@ -1045,7 +1020,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/services/system/**"],
+      "files": ["packages/engine/src/blob/*/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -1068,20 +1043,456 @@
               },
               {
                 "group": [
-                  "../feed/**",
-                  "**/services/feed/**",
-                  "../sessions/**",
-                  "**/services/sessions/**",
+                  "../../acp/**",
+                  "../../agents/**",
+                  "../../feed/**",
+                  "../../projects/**",
+                  "../../sessions/**",
+                  "../../system/**",
+                  "!../../acp/index",
+                  "!../../acp/index.ts",
+                  "!../../agents/index",
+                  "!../../agents/index.ts",
+                  "!../../feed/index",
+                  "!../../feed/index.ts",
+                  "!../../projects/index",
+                  "!../../projects/index.ts",
+                  "!../../sessions/index",
+                  "!../../sessions/index.ts",
+                  "!../../system/index",
+                  "!../../system/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/feed/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../acp/**",
                   "../agents/**",
-                  "**/services/agents/**",
                   "../blob/**",
-                  "**/services/blob/**",
                   "../projects/**",
-                  "**/services/projects/**",
-                  "!../*/index",
-                  "!../*/index.ts",
-                  "!**/services/*/index",
-                  "!**/services/*/index.ts"
+                  "../sessions/**",
+                  "../system/**",
+                  "!../acp/index",
+                  "!../acp/index.ts",
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!../sessions/index",
+                  "!../sessions/index.ts",
+                  "!../system/index",
+                  "!../system/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/feed/*/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../../acp/**",
+                  "../../agents/**",
+                  "../../blob/**",
+                  "../../projects/**",
+                  "../../sessions/**",
+                  "../../system/**",
+                  "!../../acp/index",
+                  "!../../acp/index.ts",
+                  "!../../agents/index",
+                  "!../../agents/index.ts",
+                  "!../../blob/index",
+                  "!../../blob/index.ts",
+                  "!../../projects/index",
+                  "!../../projects/index.ts",
+                  "!../../sessions/index",
+                  "!../../sessions/index.ts",
+                  "!../../system/index",
+                  "!../../system/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/projects/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../acp/**",
+                  "../agents/**",
+                  "../blob/**",
+                  "../feed/**",
+                  "../sessions/**",
+                  "../system/**",
+                  "!../acp/index",
+                  "!../acp/index.ts",
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!../sessions/index",
+                  "!../sessions/index.ts",
+                  "!../system/index",
+                  "!../system/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/projects/*/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../../acp/**",
+                  "../../agents/**",
+                  "../../blob/**",
+                  "../../feed/**",
+                  "../../sessions/**",
+                  "../../system/**",
+                  "!../../acp/index",
+                  "!../../acp/index.ts",
+                  "!../../agents/index",
+                  "!../../agents/index.ts",
+                  "!../../blob/index",
+                  "!../../blob/index.ts",
+                  "!../../feed/index",
+                  "!../../feed/index.ts",
+                  "!../../sessions/index",
+                  "!../../sessions/index.ts",
+                  "!../../system/index",
+                  "!../../system/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/sessions/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../acp/**",
+                  "../agents/**",
+                  "../blob/**",
+                  "../feed/**",
+                  "../projects/**",
+                  "../system/**",
+                  "!../acp/index",
+                  "!../acp/index.ts",
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!../system/index",
+                  "!../system/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/sessions/*/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../../acp/**",
+                  "../../agents/**",
+                  "../../blob/**",
+                  "../../feed/**",
+                  "../../projects/**",
+                  "../../system/**",
+                  "!../../acp/index",
+                  "!../../acp/index.ts",
+                  "!../../agents/index",
+                  "!../../agents/index.ts",
+                  "!../../blob/index",
+                  "!../../blob/index.ts",
+                  "!../../feed/index",
+                  "!../../feed/index.ts",
+                  "!../../projects/index",
+                  "!../../projects/index.ts",
+                  "!../../system/index",
+                  "!../../system/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/system/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../acp/**",
+                  "../agents/**",
+                  "../blob/**",
+                  "../feed/**",
+                  "../projects/**",
+                  "../sessions/**",
+                  "!../acp/index",
+                  "!../acp/index.ts",
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!../sessions/index",
+                  "!../sessions/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/system/*/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../../acp/**",
+                  "../../agents/**",
+                  "../../blob/**",
+                  "../../feed/**",
+                  "../../projects/**",
+                  "../../sessions/**",
+                  "!../../acp/index",
+                  "!../../acp/index.ts",
+                  "!../../agents/index",
+                  "!../../agents/index.ts",
+                  "!../../blob/index",
+                  "!../../blob/index.ts",
+                  "!../../feed/index",
+                  "!../../feed/index.ts",
+                  "!../../projects/index",
+                  "!../../projects/index.ts",
+                  "!../../sessions/index",
+                  "!../../sessions/index.ts"
                 ],
                 "message": "Import another Engine domain through its index.ts face."
               },
@@ -1117,7 +1528,7 @@
                 "message": "The Engine and Supervisor never import client or an App."
               },
               {
-                "group": ["**/services/**", "**/engine/**", "../**"],
+                "group": ["**/engine/**", "../**"],
                 "message": "rpc/ sits below every module, so it imports none."
               }
             ]
@@ -1148,7 +1559,7 @@
                 "message": "The Engine and Supervisor never import client or an App."
               },
               {
-                "group": ["**/services/**", "**/engine/**", "../**"],
+                "group": ["**/engine/**", "../**"],
                 "message": "Storage imports no module: each module brings its own jobs."
               }
             ]
@@ -1161,12 +1572,13 @@
       "excludeFiles": [
         "packages/engine/src/rpc/**",
         "packages/engine/src/storage/**",
-        "packages/engine/src/services/system/**",
-        "packages/engine/src/services/feed/**",
-        "packages/engine/src/services/sessions/**",
-        "packages/engine/src/services/agents/**",
-        "packages/engine/src/services/blob/**",
-        "packages/engine/src/services/projects/**"
+        "packages/engine/src/acp/**",
+        "packages/engine/src/agents/**",
+        "packages/engine/src/blob/**",
+        "packages/engine/src/feed/**",
+        "packages/engine/src/projects/**",
+        "packages/engine/src/sessions/**",
+        "packages/engine/src/system/**"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -1190,18 +1602,31 @@
               },
               {
                 "group": [
-                  "**/services/feed/**",
-                  "**/services/sessions/**",
-                  "**/services/agents/**",
-                  "**/services/blob/**",
-                  "**/services/projects/**",
-                  "!**/services/*/index",
-                  "!**/services/*/index.ts",
-                  "./feed/**",
-                  "./sessions/**",
+                  "**/src/acp/**",
+                  "**/src/agents/**",
+                  "**/src/blob/**",
+                  "**/src/feed/**",
+                  "**/src/projects/**",
+                  "**/src/sessions/**",
+                  "**/src/system/**",
+                  "!**/src/*/index",
+                  "!**/src/*/index.ts",
+                  "../acp/**",
+                  "../agents/**",
+                  "../blob/**",
+                  "../feed/**",
+                  "../projects/**",
+                  "../sessions/**",
+                  "../system/**",
+                  "!../*/index",
+                  "!../*/index.ts",
+                  "./acp/**",
                   "./agents/**",
                   "./blob/**",
+                  "./feed/**",
                   "./projects/**",
+                  "./sessions/**",
+                  "./system/**",
                   "!./*/index",
                   "!./*/index.ts"
                 ],
@@ -1266,8 +1691,8 @@
         "**/*.test.*",
         "**/mocks/**",
         "apps/server/src/supervisor/engine-process.ts",
-        "packages/engine/src/services/system/info.ts",
-        "packages/engine/src/services/agents/acp/process.ts",
+        "packages/engine/src/system/info.ts",
+        "packages/engine/src/acp/process.ts",
         "apps/desktop/src/main/server-process.ts"
       ],
       "rules": { "argo/child-process": "error" }
