@@ -8,7 +8,7 @@ const engineRelocations: [string, string[]][] = [
     ['packages/engine/src/services/feed/*', 'apps/server/src/services/feed/*'],
   ],
   // Spec 0011 #451: services/<x> flattens to src/<x>; the Session read models split into sessions/list.
-  ...['agents', 'blob', 'feed', 'projects', 'sessions', 'system'].map(
+  ...['agents', 'blob', 'feed', 'sessions', 'system'].map(
     (module): [string, string[]] => [
       `packages/engine/src/${module}/*`,
       [

@@ -89,7 +89,7 @@ it('aborts timed-out Agent discovery before returning an unavailable result', as
   expect(signals[0]?.aborted).toBe(true);
 });
 
-it('cancels pending Agent discovery when the owning registry shuts down', async (): Promise<void> => {
+it('cancels pending Agent discovery when the open Sessions machine stops', async (): Promise<void> => {
   const signals: AbortSignal[] = [];
   const { stop } = await startEngineTestHost({
     adapters: [

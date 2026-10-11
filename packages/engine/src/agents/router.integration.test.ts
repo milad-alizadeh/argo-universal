@@ -127,7 +127,7 @@ it.each(['not_installed', 'not_signed_in'] as const)(
   },
 );
 
-it('returns Agents in registry order when later discovery finishes first', async (): Promise<void> => {
+it('returns Agents in adapter order when later discovery finishes first', async (): Promise<void> => {
   const firstDiscovery = Promise.withResolvers<AgentProbe>();
   const { caller } = await startEngineTestHost({
     adapters: [

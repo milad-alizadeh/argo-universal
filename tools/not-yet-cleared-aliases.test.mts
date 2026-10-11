@@ -45,7 +45,7 @@ it.each([
 it.each([
   ['mocks', 'apps/server/mocks'],
   ['src/engine', 'apps/server/src/engine'],
-  ...['agents', 'blob', 'feed', 'projects', 'sessions', 'system'].flatMap(
+  ...['agents', 'blob', 'feed', 'sessions', 'system'].flatMap(
     (module): [string, string][] => [
       [`src/${module}`, `apps/server/src/services/${module}`],
       [`src/${module}`, `packages/engine/src/services/${module}`],

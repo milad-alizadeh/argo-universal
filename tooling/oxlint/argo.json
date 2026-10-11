@@ -747,6 +747,7 @@
         ]
       }
     },
+    // Each Engine module has one block for its own files and one for its subfolders, since a relative path names a module by depth; a deeper folder needs its own block.
     {
       "files": ["packages/engine/src/acp/*"],
       "rules": {
@@ -800,7 +801,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/acp/*/**"],
+      "files": ["packages/engine/src/acp/*/*"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -911,7 +912,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/agents/*/**"],
+      "files": ["packages/engine/src/agents/*/*"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -1020,7 +1021,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/blob/*/**"],
+      "files": ["packages/engine/src/blob/*/*"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -1128,7 +1129,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/feed/*/**"],
+      "files": ["packages/engine/src/feed/*/*"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -1236,7 +1237,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/projects/*/**"],
+      "files": ["packages/engine/src/projects/*/*"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -1344,7 +1345,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/sessions/*/**"],
+      "files": ["packages/engine/src/sessions/*/*"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -1452,7 +1453,7 @@
       }
     },
     {
-      "files": ["packages/engine/src/system/*/**"],
+      "files": ["packages/engine/src/system/*/*"],
       "rules": {
         "no-restricted-imports": [
           "error",

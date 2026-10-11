@@ -95,7 +95,7 @@ export const sessionListMachine = setup({
               feeds.delete(feed);
             }
         };
-        const openSessions = input.sessions.subscribe({
+        const openSessionsSubscription = input.sessions.subscribe({
           next: connect,
           error: (error): void => sendBack({ type: listFailedEvent, error }),
           complete: (): void => sendBack({ type: 'list.stop' }),
@@ -112,7 +112,7 @@ export const sessionListMachine = setup({
           });
         connect();
         return (): void => {
-          openSessions.unsubscribe();
+          openSessionsSubscription.unsubscribe();
           writer?.unsubscribe();
           for (const listener of feeds.values()) listener.unsubscribe();
           for (const listener of sessions.values()) listener.unsubscribe();
