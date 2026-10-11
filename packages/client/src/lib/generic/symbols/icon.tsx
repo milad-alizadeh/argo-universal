@@ -3,6 +3,7 @@ import { useContext } from 'react';
 import {
   ActivityIndicator,
   type ActivityIndicatorProps,
+  Platform,
   type ViewStyle,
 } from 'react-native';
 import { withUniwind } from 'uniwind';
@@ -18,6 +19,9 @@ const iconSizes = {
   md: 20,
   lg: 24,
 } as const;
+
+// Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
+const materialGlyphScale = 1.125;
 
 export type IconSize = keyof typeof iconSizes;
 
@@ -68,6 +72,7 @@ export function Icon({
       material={symbol.material}
       filled={sf !== symbol.sf || sf.endsWith('.fill')}
       pixels={pixels}
+      glyphScale={Platform.OS === 'android' ? materialGlyphScale : 1}
       testID={testID}
     />
   );

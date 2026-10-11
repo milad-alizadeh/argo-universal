@@ -9,6 +9,7 @@ export interface SymbolGlyphProps {
   material: AndroidSymbol;
   filled: boolean;
   pixels: number;
+  glyphScale: number;
   tintColor?: ColorValue;
   // The colour classes again, for web, where CSS resolves state variants such as group-active that tintColor misses.
   colorClassName?: string;
@@ -24,6 +25,7 @@ export function SymbolGlyph({
   material,
   filled,
   pixels,
+  glyphScale,
   tintColor,
   testID,
 }: SymbolGlyphProps): React.JSX.Element {
@@ -32,6 +34,9 @@ export function SymbolGlyph({
       key={String(filled)}
       name={{ ios: sf, android: material }}
       size={pixels}
+      style={
+        glyphScale === 1 ? undefined : { transform: [{ scale: glyphScale }] }
+      }
       weight={symbolWeight(filled)}
       tintColor={tintColor}
       testID={testID}
