@@ -11,11 +11,18 @@ export function PhoneShellCard({
     <View
       testID="phone-shell-card"
       className={cn(
-        'flex-1 rounded-none bg-card shadow-card transition-[margin,border-radius] duration-300 ease-[ease]',
-        drawerOpen && 'my-3 rounded-xl web:rounded-surface',
+        'flex-1 rounded-none bg-card shadow-card transition-[border-radius] duration-300 ease-[ease]',
+        drawerOpen && 'rounded-xl web:rounded-surface',
       )}
     >
-      {children}
+      <View
+        className={cn(
+          'flex-1 transition-opacity duration-300 ease-[ease]',
+          drawerOpen && 'opacity-50',
+        )}
+      >
+        {children}
+      </View>
     </View>
   );
 }
