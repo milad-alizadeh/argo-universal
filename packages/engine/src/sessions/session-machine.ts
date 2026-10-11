@@ -68,13 +68,28 @@ import {
   type AcpLifetimeEvent,
   type AcpSessionDependencies,
 } from './acp/acp-lifetime';
+import { commitLocalPrompt, type LocalSubmission } from './acp/submission';
+import {
+  admitsElicitationAnswer,
+  admitsPermissionAnswer,
+  chosenOption,
+} from './admission/answer-admission';
+import { hasConfigurationCapacity } from './admission/config-admission';
+import { isReplayedHistory } from './admission/update-admission';
+import { type ClosureStep, nextClosureStep } from './closure/closure-step';
+import {
+  addCrash,
+  crashBudgetFailure,
+  exceedsCrashBudget,
+} from './closure/crash-budget';
 import {
   chooseConfigValue,
   currentModel,
+  holdConfigChoice,
   keepHeldConfigChoices,
+  releaseHeldChoice,
   toConfigValues,
-} from './acp/configuration';
-import { commitLocalPrompt, type LocalSubmission } from './acp/submission';
+} from './configuration/config-choices';
 import { validateConfigChoice } from './session-admission';
 import {
   createSessionCheckout,
@@ -110,7 +125,6 @@ const writeFeedEvent = 'writer.write';
 const feedChangeEvent = 'feed.change';
 const configuringState = 'configuring';
 const acpUpdateEvent = 'acp.update';
-const pendingConfigurationLimit = 32;
 
 type FeedChangeEvent = Extract<FeedEvent, { type: 'feed.change' }>;
 type SessionDataParameters = { data: SessionData };
@@ -225,10 +239,6 @@ export interface SessionContext extends SessionData {
 const checkoutLimit = 10_000;
 const agentStartLimit = 10_000;
 
-// The Session gives up on its Agent after this many crashes within the window.
-const crashWindowMs = 600_000;
-const maxCrashesInWindow = 3;
-const crashBudgetFailure = 'The Agent stopped three times in ten minutes';
 const interruptedTurn = (message: string): EndTurnParameters => ({
   stopReason: 'error',
   error: { code: 'interrupted', message },
@@ -241,15 +251,6 @@ const connectionLostDuringTurn = interruptedTurn(
 );
 const connectionLostBeforePrompt =
   'The Agent connection failed before the prompt was sent';
-// Resumed Agent context is not new Feed content.
-const replayedHistoryKinds = new Set([
-  'user_message_chunk',
-  'agent_message_chunk',
-  'agent_thought_chunk',
-  'tool_call',
-  'tool_call_update',
-  'plan',
-]);
 const interruptionDisclosure = (turnId: string): FeedChange => ({
   type: 'upsert',
   update: {
@@ -316,17 +317,6 @@ const headPermission = (context: SessionContext): PendingPermission => {
   if (!request) throw new Error('No Permission request to answer');
   return request;
 };
-
-// The offered option an answer chose: null when it cancels, undefined when the Agent did not offer it.
-const chosenOption = (
-  request: PendingPermission,
-  optionId: string | null,
-): PendingPermission['options'][number] | null | undefined =>
-  optionId === null
-    ? null
-    : request.options.find(
-        (candidate): boolean => candidate.optionId === optionId,
-      );
 
 // Each cancelled Permission request shows its outcome on its Tool call.
 const cancelledPermissions = (
@@ -894,8 +884,9 @@ const sessionSetup = setup({
       assertEvent(event, setConfigEvent);
       enqueue.assign({
         configOptions: chooseConfigValue(context.configOptions, event, false),
-        heldConfigValues: context.heldConfigValues.filter(
-          (choice): boolean => choice.configId !== event.configId,
+        heldConfigValues: releaseHeldChoice(
+          context.heldConfigValues,
+          event.configId,
         ),
       });
       enqueue.sendTo('vendorSession', {
@@ -910,16 +901,8 @@ const sessionSetup = setup({
       }): Pick<SessionContext, 'heldConfigValues' | 'configOptions'> => {
         assertEvent(event, setConfigEvent);
         const choice = { configId: event.configId, value: event.value };
-        const previous = context.heldConfigValues;
-        const heldConfigValues = previous.some(
-          (value): boolean => value.configId === choice.configId,
-        )
-          ? previous.map((value): AgentConfigValue =>
-              value.configId === choice.configId ? choice : value,
-            )
-          : [...previous, choice];
         return {
-          heldConfigValues,
+          heldConfigValues: holdConfigChoice(context.heldConfigValues, choice),
           configOptions: chooseConfigValue(context.configOptions, choice, true),
         };
       },
@@ -1071,12 +1054,7 @@ const sessionSetup = setup({
     recordCrash: enqueueActions(
       ({ context, enqueue }, params: CrashNoticeParameters): void => {
         const now = context.input.now();
-        const agentCrashes = [
-          ...context.agentCrashes.filter(
-            (at): boolean => at > now - crashWindowMs,
-          ),
-          now,
-        ];
+        const agentCrashes = addCrash(context.agentCrashes, now);
         enqueue.assign({ agentCrashes });
         enqueue.sendTo('feed', {
           type: feedChangeEvent,
@@ -1171,11 +1149,13 @@ const sessionSetup = setup({
       'error' in event && event.error instanceof RecoveryBlockedError,
     isReplayedHistory: ({ context, event }): boolean =>
       event.type === acpUpdateEvent &&
-      context.vendorSessionId !== null &&
-      replayedHistoryKinds.has(event.notification.update.sessionUpdate),
+      isReplayedHistory(
+        context.vendorSessionId,
+        event.notification.update.sessionUpdate,
+      ),
     hasAcpConfig: ({ context }) => context.configQueue.length > 0,
     hasConfigurationCapacity: ({ context }): boolean =>
-      context.configQueue.length < pendingConfigurationLimit,
+      hasConfigurationCapacity(context.configQueue.length),
     acceptsAcpConfig: and([
       'hasConfigurationCapacity',
       or([
@@ -1190,21 +1170,17 @@ const sessionSetup = setup({
       (context.input.kind === 'new' && context.input.prompt.length === 0),
     isNew: ({ context }): boolean => context.input.kind === 'new',
     isUnstored: ({ context }): boolean => !context.stored,
-    hasEndedFeed: ({ context }): boolean => context.feedEnded,
-    isPermissionHead: ({ context, event }): boolean => {
-      const request = context.permissionQueue[0];
-      return (
-        event.type === answerPermissionEvent &&
-        request?.requestId === event.requestId &&
-        chosenOption(request, event.optionId) !== undefined
-      );
-    },
+    closesBy: ({ context }, step: ClosureStep): boolean =>
+      nextClosureStep(context) === step,
+    isPermissionHead: ({ context, event }): boolean =>
+      event.type === answerPermissionEvent &&
+      admitsPermissionAnswer(context.permissionQueue, event),
     hasPermission: ({ context }): boolean => context.permissionQueue.length > 0,
     hasElicitation: ({ context }): boolean =>
       context.elicitationQueue.length > 0,
     isPendingElicitation: ({ context, event }): boolean =>
       event.type === answerElicitationEvent &&
-      context.elicitationQueue[0]?.requestId === event.requestId,
+      admitsElicitationAnswer(context.elicitationQueue, event.requestId),
     nativeAlreadyDrained: or([
       stateIn({ open: 'flushing' }),
       stateIn({ open: { acp: 'flushing' } }),
@@ -1213,7 +1189,7 @@ const sessionSetup = setup({
       open: { acp: { publishing: 'disconnected' } },
     }),
     tooManyCrashes: ({ context }): boolean =>
-      context.agentCrashes.length >= maxCrashesInWindow,
+      exceedsCrashBudget(context.agentCrashes),
   },
   delays: {
     checkoutLimit,
@@ -1306,30 +1282,24 @@ const endedTurn = {
   }),
 } as const;
 
+const discardsSession = { type: 'closesBy', params: 'discard' } as const;
+const cancelledTurn = {
+  type: 'endTurn',
+  params: { stopReason: 'cancelled' },
+} as const;
+
 const acpReleaseTransitions = [
   {
-    guard: 'isUnstored',
+    guard: discardsSession,
     target: discardingSessionTarget,
-    actions: {
-      type: 'endTurn',
-      params: { stopReason: 'cancelled' },
-    },
+    actions: cancelledTurn,
   },
   {
-    guard: 'hasEndedFeed',
+    guard: { type: 'closesBy', params: 'close' },
     target: closedSessionTarget,
-    actions: {
-      type: 'endTurn',
-      params: { stopReason: 'cancelled' },
-    },
+    actions: cancelledTurn,
   },
-  {
-    target: 'flushing',
-    actions: {
-      type: 'endTurn',
-      params: { stopReason: 'cancelled' },
-    },
-  },
+  { target: 'flushing', actions: cancelledTurn },
 ] as const;
 
 export const sessionMachine = sessionSetup.createMachine({
@@ -1463,7 +1433,7 @@ export const sessionMachine = sessionSetup.createMachine({
             target: '.acp.closing',
             actions: 'rememberFeedEnded',
           },
-          { target: 'stopping' },
+          { target: 'stopping', actions: 'rememberFeedEnded' },
         ],
         onError: [
           {
@@ -1491,12 +1461,15 @@ export const sessionMachine = sessionSetup.createMachine({
           },
           {
             target: 'stopping',
-            actions: {
-              type: 'rememberFailure',
-              params: ({ event }): FailureParameters => ({
-                error: event.error,
-              }),
-            },
+            actions: [
+              'rememberFeedEnded',
+              {
+                type: 'rememberFailure',
+                params: ({ event }): FailureParameters => ({
+                  error: event.error,
+                }),
+              },
+            ],
           },
         ],
       },
@@ -2098,18 +2071,12 @@ export const sessionMachine = sessionSetup.createMachine({
               after: {
                 cancelLimit: {
                   target: '#session.open.recovering',
-                  actions: [
-                    'cancelNotice',
-                    { type: 'endTurn', params: { stopReason: 'cancelled' } },
-                  ],
+                  actions: ['cancelNotice', cancelledTurn],
                 },
               },
             },
             closing: {
-              entry: [
-                'cancelRequests',
-                { type: 'endTurn', params: { stopReason: 'cancelled' } },
-              ],
+              entry: ['cancelRequests', cancelledTurn],
               always: drainingNativeTarget,
             },
           },
@@ -2133,13 +2100,13 @@ export const sessionMachine = sessionSetup.createMachine({
             input: ({ context }): SessionContext['pendingNativeStops'] =>
               context.pendingNativeStops,
             onDone: [
-              { guard: 'isUnstored', target: discardingSessionTarget },
+              { guard: discardsSession, target: discardingSessionTarget },
               { target: 'flushing' },
             ],
           },
           after: {
             agentStopLimit: [
-              { guard: 'isUnstored', target: discardingSessionTarget },
+              { guard: discardsSession, target: discardingSessionTarget },
               { target: 'flushing' },
             ],
           },
@@ -2157,13 +2124,13 @@ export const sessionMachine = sessionSetup.createMachine({
         input: ({ context }): SessionContext['pendingNativeStops'] =>
           context.pendingNativeStops,
         onDone: [
-          { guard: 'isUnstored', target: 'discarding' },
+          { guard: discardsSession, target: 'discarding' },
           { target: 'closed' },
         ],
       },
       after: {
         agentStopLimit: [
-          { guard: 'isUnstored', target: 'discarding' },
+          { guard: discardsSession, target: 'discarding' },
           { target: 'closed' },
         ],
       },
