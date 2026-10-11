@@ -1,2 +1,2 @@
 export type { SystemDeps } from './info';
-export { systemRouter } from './router';
+export { createSystemRouter } from './router';

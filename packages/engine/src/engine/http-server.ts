@@ -7,10 +7,10 @@ import type { syncSupervisorMachine } from '../services/agents';
 import { blobsFolderIn } from '../services/blob';
 import type { RegistryActorRef } from '../services/sessions';
 import type { WriterActorRef } from '../storage';
-import { createEngineContext, type Context } from './context';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
-import { appRouter } from './router';
+import { type AppRouter, createAppRouter } from './router';
+import { createAppRouterDeps } from './router-deps';
 
 export interface HttpServerOptions {
   home: string;
@@ -27,8 +27,8 @@ export interface HttpServerOptions {
 
 export interface HttpServer {
   createCaller: (
-    options?: Parameters<typeof appRouter.createCaller>[1],
-  ) => ReturnType<typeof appRouter.createCaller>;
+    options?: Parameters<AppRouter['createCaller']>[1],
+  ) => ReturnType<AppRouter['createCaller']>;
   close: () => Promise<void>;
 }
 
@@ -54,13 +54,13 @@ export async function startHttpServer(
 ): Promise<HttpServer> {
   const blobsFolder = blobsFolderIn(options.home);
   const commandAdmission = options.commandAdmission ?? new AbortController();
-  const context = createEngineContext({
-    ...options,
-    blobsFolder,
-    sessionCommandSignal: commandAdmission.signal,
-  });
-
-  const createContext = (): Context => context;
+  const appRouter = createAppRouter(
+    createAppRouterDeps({
+      ...options,
+      blobsFolder,
+      sessionCommandSignal: commandAdmission.signal,
+    }),
+  );
 
   const guard = createRequestGuard(options.port);
   const server = createServer(
@@ -68,7 +68,6 @@ export async function startHttpServer(
       guard,
       blobsFolder,
       router: appRouter,
-      createContext,
     }),
   );
 
@@ -90,7 +89,6 @@ export async function startHttpServer(
   const handler = applyWSSHandler({
     wss: webSocketServer,
     router: appRouter,
-    createContext,
     keepAlive: { enabled: true, pingMs: 30_000, pongWaitMs: 5000 },
   });
 
@@ -113,7 +111,6 @@ export async function startHttpServer(
 
   return {
     close,
-    createCaller: (callerOptions) =>
-      appRouter.createCaller(context, callerOptions),
+    createCaller: (callerOptions) => appRouter.createCaller({}, callerOptions),
   };
 }

@@ -30,7 +30,6 @@ import {
 } from '#mocks/feed-module';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
-import { appRouter } from '../../engine/router';
 import { writeJobs } from '../../storage';
 import { FeedRowsJob } from './feed-storage';
 import type { FeedActorRef } from './index';
@@ -73,7 +72,7 @@ const startFeedTestHost = async (
   appliedFeed = moduleHost.feed;
 };
 
-const createFeedRouterCaller = (): ReturnType<typeof appRouter.createCaller> =>
+const createFeedRouterCaller = (): ReturnType<typeof createFeedModuleCaller> =>
   createFeedModuleCaller(feedTestHost, appliedFeed, controller.signal);
 
 const applyFeedChange = (change: FeedChange): void => {

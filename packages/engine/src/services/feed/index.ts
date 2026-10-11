@@ -22,5 +22,5 @@ export { publishTurnContent } from './publication';
 export { acpToolCallRowId } from './updates/tools';
 export { readUnaddressedPlan } from './unaddressed-plan';
 
-export { feedRouter } from './router';
+export { createFeedRouter } from './router';
 export { titleFromPrompt } from './prompt-title';

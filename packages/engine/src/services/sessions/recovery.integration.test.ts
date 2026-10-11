@@ -29,8 +29,7 @@ import {
 } from 'vitest';
 import { type ActorRefFrom, createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
-import type { EngineMessage } from '../../engine/ipc';
-import { engineMachine } from '../../engine/machine';
+import { engineMachine, type EngineMessage } from '#mocks/engine';
 import { writeJobs } from '../../storage';
 import { type FeedRowWrite, storedFeedColumns } from '../feed';
 import { recoverAfterRestart } from './recovery';

@@ -1,7 +1,12 @@
 import { ClockTick, SystemInfo } from '@repo/contracts';
-import { publicProcedure, router, zAsyncIterable } from '../../engine/trpc';
+import {
+  publicProcedure,
+  router,
+  routerFactory,
+  zAsyncIterable,
+} from '../../rpc';
 import { streamClock } from './clock';
-import { readSystemInfo } from './info';
+import { readSystemInfo, type SystemDeps } from './info';
 
 const clock = publicProcedure
   .output(zAsyncIterable({ yield: ClockTick }))
@@ -9,8 +14,11 @@ const clock = publicProcedure
     yield* streamClock(signal);
   });
 
-const info = publicProcedure
-  .output(SystemInfo)
-  .query(({ ctx: engineContext }): SystemInfo => readSystemInfo(engineContext));
-
-export const systemRouter = router({ info, clock });
+export const createSystemRouter = routerFactory((deps: SystemDeps) =>
+  router({
+    info: publicProcedure
+      .output(SystemInfo)
+      .query((): SystemInfo => readSystemInfo(deps)),
+    clock,
+  }),
+);

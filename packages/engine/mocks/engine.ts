@@ -14,6 +14,10 @@ import { databaseWriterId, writerMachine } from '../src/storage';
 import { openTestDatabase } from './database';
 import { scriptedEngineInput } from './scripted-engine';
 
+// A module's test drives the Engine through here: modules never import engine/.
+export { engineMachine } from '../src/engine/machine';
+export type { EngineMessage } from '../src/engine/ipc';
+
 type EngineTestOptions = Partial<EngineInput> & {
   database?: Database;
   runtimeDirectory?: string;

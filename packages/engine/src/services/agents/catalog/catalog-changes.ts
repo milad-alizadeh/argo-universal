@@ -10,7 +10,7 @@ type CatalogChangeEvents = EventEmitter<{
 }>;
 type CatalogWatchInput = {
   database: Database;
-  writer: WriterActorRef;
+  databaseWriter: WriterActorRef;
 };
 
 export async function* watchCommittedCatalogChanges(
@@ -30,7 +30,7 @@ function subscribeCatalogCommitNotifications(
   input: CatalogWatchInput,
   events: CatalogChangeEvents,
 ): { unsubscribe(): void } {
-  return input.writer.on('writer.committed', ({ jobs }): void => {
+  return input.databaseWriter.on('writer.committed', ({ jobs }): void => {
     if (jobs.some(changesAgentCatalog))
       publishCommittedCatalogChanges(input, events);
   });

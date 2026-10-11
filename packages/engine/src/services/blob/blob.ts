@@ -57,11 +57,13 @@ const mimeOf = (bytes: Buffer, declared: string): string =>
   imageSignatures.find(([, matches]): boolean => matches(bytes))?.[0] ??
   (declared || 'application/octet-stream');
 
+export interface BlobUploadDeps {
+  databaseWriter: WriterActorRef;
+  blobsFolder: string;
+}
+
 export async function uploadBlob(
-  resources: {
-    databaseWriter: WriterActorRef;
-    blobsFolder: string;
-  },
+  resources: BlobUploadDeps,
   file: z.output<typeof BlobUploadInput>,
 ): Promise<BlobUploadOutput> {
   if (file.size > maxBlobUploadBytes)

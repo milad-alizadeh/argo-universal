@@ -3,17 +3,11 @@ import {
   SessionAnswerElicitationOutput,
   SessionAnswerPermissionInput,
   SessionAnswerPermissionOutput,
-  SessionAnswerPlanProposalInput,
-  SessionAnswerPlanProposalOutput,
   SessionCancelInput,
   SessionCancelOutput,
   SessionCloseInput,
   SessionCloseOutput,
-  SessionChangesInput,
-  SessionChangesOutput,
   SessionCounts,
-  SessionDiffInput,
-  SessionDiffOutput,
   SessionListInput,
   SessionListOutput,
   SessionListUpdate,
@@ -21,163 +15,123 @@ import {
   SessionNewOutput,
   SessionPromptInput,
   SessionPromptOutput,
-  SessionRenameInput,
-  SessionRenameOutput,
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
 } from '@repo/contracts';
-import { TRPCError } from '@trpc/server';
-import { publicProcedure, router, zAsyncIterable } from '../../engine/trpc';
-import { findMachineActor } from '../../lib/machine-actor';
-import { userMessageId } from '../feed';
 import {
-  validatePermissionAnswer,
-  validateElicitationAnswer,
-} from './session-admission';
-import { closeSession } from './session-closure';
+  mergeRouters,
+  publicProcedure,
+  router,
+  routerFactory,
+  zAsyncIterable,
+} from '../../rpc';
+import type { SessionRouterDeps } from './router-deps';
 import {
-  sendSessionCommand,
-  submitSessionPrompt,
-  validateSessionCommandAdmission,
-} from './session-command';
+  answerSessionElicitation,
+  answerSessionPermission,
+} from './session-answers';
+import { cancelSession, closeSession } from './session-closure';
 import { configureSession } from './session-configuration';
 import { createSession } from './session-creation';
-import { sessionMachine } from './session-machine';
-import { openReadySession } from './session-opening';
-import { requireLiveSessionActor } from './session-system';
-import { sessionActorId } from './session-system';
+import { createSessionList } from './session-list';
+import { promptSession } from './session-prompt';
+import { unimplementedSessionRouter } from './unimplemented-router';
 
-export const sessionRouter = router({
-  list: publicProcedure
-    .input(SessionListInput)
-    .output(SessionListOutput)
-    .query(({ ctx, input }): Promise<SessionListOutput> =>
-      ctx.sessionList.list(input),
-    ),
-  listUpdates: publicProcedure
-    .output(zAsyncIterable({ yield: SessionListUpdate }))
-    .subscription(async function* ({
-      ctx,
-      signal,
-    }): AsyncGenerator<SessionListUpdate, void> {
-      yield* ctx.sessionList.listUpdates(signal);
-    }),
-  counts: publicProcedure
-    .output(zAsyncIterable({ yield: SessionCounts }))
-    .subscription(async function* ({
-      ctx,
-      signal,
-    }): AsyncGenerator<SessionCounts, void> {
-      yield* ctx.sessionList.counts(signal);
-    }),
-  new: publicProcedure
-    .input(SessionNewInput)
-    .output(SessionNewOutput)
-    .mutation(({ ctx, input }): Promise<SessionNewOutput> =>
-      createSession(ctx, input),
-    ),
-  prompt: publicProcedure
-    .input(SessionPromptInput)
-    .output(SessionPromptOutput)
-    .mutation(async ({ ctx, input }): Promise<SessionPromptOutput> => {
-      const sessionActor = await openReadySession(ctx, input.sessionId);
-      const turnId = ctx.createId();
-      validateSessionCommandAdmission(ctx);
-      await submitSessionPrompt(sessionActor, {
-        turnId,
-        content: input.prompt,
-      });
-      return { messageId: userMessageId(turnId) };
-    }),
-  close: publicProcedure
-    .input(SessionCloseInput)
-    .output(SessionCloseOutput)
-    .mutation(({ ctx, input }): Promise<SessionCloseOutput> =>
-      closeSession(ctx, input.sessionId),
-    ),
-  rename: publicProcedure
-    .input(SessionRenameInput)
-    .output(SessionRenameOutput)
-    .mutation((): never =>
-      rejectUnimplementedProcedure('Session rename is not implemented yet'),
-    ),
-  cancel: publicProcedure
-    .input(SessionCancelInput)
-    .output(SessionCancelOutput)
-    .mutation(({ ctx, input }): SessionCancelOutput => {
-      validateSessionCommandAdmission(ctx);
-      sendSessionCommand(
-        requireLiveSessionActor(ctx.sessions.system, input.sessionId),
-        {
-          type: 'session.cancel',
-        },
-      );
-      return {};
-    }),
-  setConfigOption: publicProcedure
-    .input(SessionSetConfigOptionInput)
-    .output(SessionSetConfigOptionOutput)
-    .mutation(({ ctx, input }): Promise<SessionSetConfigOptionOutput> =>
-      configureSession(ctx, input),
-    ),
-  answerPermission: publicProcedure
-    .input(SessionAnswerPermissionInput)
-    .output(SessionAnswerPermissionOutput)
-    .mutation(({ ctx, input }): SessionAnswerPermissionOutput => {
-      validateSessionCommandAdmission(ctx);
-      const sessionActor = findMachineActor(
-        ctx.sessions.system,
-        sessionActorId(input.sessionId),
-        sessionMachine,
-      );
-      validatePermissionAnswer(sessionActor, input);
-      sendSessionCommand(sessionActor, {
-        type: 'session.answerPermission',
-        requestId: input.requestId,
-        optionId: input.optionId,
-        message: input.message,
-      });
-      return {};
-    }),
-  answerElicitation: publicProcedure
-    .input(SessionAnswerElicitationInput)
-    .output(SessionAnswerElicitationOutput)
-    .mutation(({ ctx, input }): SessionAnswerElicitationOutput => {
-      validateSessionCommandAdmission(ctx);
-      const sessionActor = findMachineActor(
-        ctx.sessions.system,
-        sessionActorId(input.sessionId),
-        sessionMachine,
-      );
-      validateElicitationAnswer(sessionActor, input);
-      sendSessionCommand(sessionActor, {
-        type: 'session.answerElicitation',
-        requestId: input.requestId,
-        action: input.action,
-        content: input.content,
-      });
-      return {};
-    }),
-  answerPlanProposal: publicProcedure
-    .input(SessionAnswerPlanProposalInput)
-    .output(SessionAnswerPlanProposalOutput)
-    .mutation((): never =>
-      rejectUnimplementedProcedure(
-        'Plan proposal answers are not implemented yet',
+type SessionList = ReturnType<typeof createSessionList>;
+
+const createListRouter = routerFactory((sessionList: SessionList) =>
+  router({
+    list: publicProcedure
+      .input(SessionListInput)
+      .output(SessionListOutput)
+      .query(({ input }): Promise<SessionListOutput> =>
+        sessionList.list(input),
       ),
-    ),
-  changes: publicProcedure
-    .input(SessionChangesInput)
-    .output(SessionChangesOutput)
-    .query((): never => rejectUnimplementedProcedure()),
-  diff: publicProcedure
-    .input(SessionDiffInput)
-    .output(SessionDiffOutput)
-    .query((): never => rejectUnimplementedProcedure()),
-});
+  }),
+);
 
-function rejectUnimplementedProcedure(
-  message = 'This procedure is not implemented yet',
-): never {
-  throw new TRPCError({ code: 'NOT_IMPLEMENTED', message });
-}
+const createListUpdatesRouter = routerFactory((sessionList: SessionList) =>
+  router({
+    listUpdates: publicProcedure
+      .output(zAsyncIterable({ yield: SessionListUpdate }))
+      .subscription(async function* ({
+        signal,
+      }): AsyncGenerator<SessionListUpdate, void> {
+        yield* sessionList.listUpdates(signal);
+      }),
+  }),
+);
+
+const createCountsRouter = routerFactory((sessionList: SessionList) =>
+  router({
+    counts: publicProcedure
+      .output(zAsyncIterable({ yield: SessionCounts }))
+      .subscription(async function* ({
+        signal,
+      }): AsyncGenerator<SessionCounts, void> {
+        yield* sessionList.counts(signal);
+      }),
+  }),
+);
+
+const createStartRouter = routerFactory((deps: SessionRouterDeps) =>
+  router({
+    new: publicProcedure
+      .input(SessionNewInput)
+      .output(SessionNewOutput)
+      .mutation(({ input }) => createSession(deps, input)),
+    prompt: publicProcedure
+      .input(SessionPromptInput)
+      .output(SessionPromptOutput)
+      .mutation(({ input }) => promptSession(deps, input)),
+  }),
+);
+
+const createStopRouter = routerFactory((deps: SessionRouterDeps) =>
+  router({
+    close: publicProcedure
+      .input(SessionCloseInput)
+      .output(SessionCloseOutput)
+      .mutation(({ input }) => closeSession(deps, input.sessionId)),
+    cancel: publicProcedure
+      .input(SessionCancelInput)
+      .output(SessionCancelOutput)
+      .mutation(({ input }) => cancelSession(deps, input.sessionId)),
+  }),
+);
+
+const createConfigurationRouter = routerFactory((deps: SessionRouterDeps) =>
+  router({
+    setConfigOption: publicProcedure
+      .input(SessionSetConfigOptionInput)
+      .output(SessionSetConfigOptionOutput)
+      .mutation(({ input }) => configureSession(deps, input)),
+  }),
+);
+
+const createAnswerRouter = routerFactory((deps: SessionRouterDeps) =>
+  router({
+    answerPermission: publicProcedure
+      .input(SessionAnswerPermissionInput)
+      .output(SessionAnswerPermissionOutput)
+      .mutation(({ input }) => answerSessionPermission(deps, input)),
+    answerElicitation: publicProcedure
+      .input(SessionAnswerElicitationInput)
+      .output(SessionAnswerElicitationOutput)
+      .mutation(({ input }) => answerSessionElicitation(deps, input)),
+  }),
+);
+
+export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
+  const sessionList = createSessionList(deps);
+  return mergeRouters(
+    createListRouter(sessionList),
+    createListUpdatesRouter(sessionList),
+    createCountsRouter(sessionList),
+    createStartRouter(deps),
+    createStopRouter(deps),
+    createConfigurationRouter(deps),
+    createAnswerRouter(deps),
+    unimplementedSessionRouter,
+  );
+});

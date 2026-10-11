@@ -6,16 +6,20 @@ import type {
   CustomAgentDefinition,
   CustomAgentEditInput,
 } from '@repo/contracts';
-import type { Context } from '../../../engine/context';
-import { writeDatabaseJobAndWaitForCommit } from '../../../storage';
+import type { Database } from '@repo/db';
+import {
+  type WriterActorRef,
+  writeDatabaseJobAndWaitForCommit,
+} from '../../../storage';
 import { AgentConfigurationSaveJob } from '../agent-storage';
 import { type CustomCheck, checkCustomDefinition } from './agent-check';
 import { readConfiguredAgent } from './configuration-sql';
 
-type ConfigurationContext = Pick<
-  Context,
-  'database' | 'databaseWriter' | 'createId'
->;
+export interface ConfigurationDeps {
+  database: Database;
+  databaseWriter: WriterActorRef;
+  createId: () => string;
+}
 type CustomSave = CustomCheck;
 type SavedAgent = Pick<ConfiguredAgent, 'id' | 'enabled'> & {
   configuration: ConfiguredAgent['configuration'] | null;
@@ -25,28 +29,28 @@ const serializeConfiguration = ({
 }: SavedAgent): string | null =>
   configuration === null ? null : JSON.stringify(configuration);
 const saveConfiguration = (
-  context: ConfigurationContext,
+  deps: ConfigurationDeps,
   agent: SavedAgent,
 ): Promise<void> =>
   writeDatabaseJobAndWaitForCommit(
-    context.databaseWriter,
+    deps.databaseWriter,
     new AgentConfigurationSaveJob({
       ...agent,
       configuration: serializeConfiguration(agent),
     }),
   );
 const requireAgent = (
-  context: ConfigurationContext,
+  deps: ConfigurationDeps,
   agentId: string,
 ): ConfiguredAgent => {
-  const agent = readConfiguredAgent(context.database, agentId);
+  const agent = readConfiguredAgent(deps.database, agentId);
   if (!agent) throw new Error(`No configured Agent ${agentId}`);
   return agent;
 };
 
 // Saves only a definition whose program answered ACP initialize.
 const saveCheckedCustomAgent = async (
-  context: ConfigurationContext,
+  deps: ConfigurationDeps,
   save: CustomSave & { enabled: boolean },
 ): Promise<AgentRegistration> => {
   const check = await checkCustomDefinition(save);
@@ -56,35 +60,35 @@ const saveCheckedCustomAgent = async (
     source: 'custom',
     definition,
   };
-  await saveConfiguration(context, { id, enabled, configuration });
+  await saveConfiguration(deps, { id, enabled, configuration });
   return { status: 'ready', agentId: id };
 };
 
 export const registerCustomAgent = (
-  context: ConfigurationContext,
+  deps: ConfigurationDeps,
   definition: CustomAgentDefinition,
 ): Promise<AgentRegistration> =>
-  saveCheckedCustomAgent(context, {
-    agentId: context.createId(),
+  saveCheckedCustomAgent(deps, {
+    agentId: deps.createId(),
     definition,
     enabled: true,
   });
 
 export const editCustomAgent = (
-  context: ConfigurationContext,
+  deps: ConfigurationDeps,
   { agentId, definition }: CustomAgentEditInput,
 ): Promise<AgentRegistration> => {
-  const { enabled, configuration } = requireAgent(context, agentId);
+  const { enabled, configuration } = requireAgent(deps, agentId);
   if (configuration.source !== 'custom')
     throw new Error(`Agent ${agentId} is not a custom Agent`);
-  return saveCheckedCustomAgent(context, { agentId, definition, enabled });
+  return saveCheckedCustomAgent(deps, { agentId, definition, enabled });
 };
 
 export const checkConfiguredAgent = (
-  context: ConfigurationContext,
+  deps: ConfigurationDeps,
   agentId: string,
 ): Promise<AgentCheck> => {
-  const { configuration } = requireAgent(context, agentId);
+  const { configuration } = requireAgent(deps, agentId);
   if (configuration.source === 'registry')
     return Promise.resolve({
       status: 'failed',
@@ -97,9 +101,9 @@ export const checkConfiguredAgent = (
 };
 
 export const setAgentEnabled = (
-  context: ConfigurationContext,
+  deps: ConfigurationDeps,
   { agentId, enabled }: AgentEnablementInput,
 ): Promise<void> => {
-  const { configuration } = requireAgent(context, agentId);
-  return saveConfiguration(context, { id: agentId, enabled, configuration });
+  const { configuration } = requireAgent(deps, agentId);
+  return saveConfiguration(deps, { id: agentId, enabled, configuration });
 };
