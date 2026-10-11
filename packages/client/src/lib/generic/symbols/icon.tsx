@@ -16,7 +16,7 @@ import { SymbolGlyph } from './symbol-glyph';
 import { useSymbolImageRenderer } from './symbol-images';
 
 // Symbols and ActivityIndicator take a number, so this is the one place a variant becomes pixels.
-export function useIconPixels(size: 'sm' | 'md' = 'md'): number {
+export function useIconPixels(size: 'sm' | 'md' | 'menu-check' = 'md'): number {
   const pixels = useCSSVariable(`--spacing-icon-${size}`);
   return typeof pixels === 'number'
     ? pixels

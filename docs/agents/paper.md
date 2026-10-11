@@ -43,7 +43,7 @@ Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same
 ## Tokens
 
 - Paper tokens use the Tailwind names in `tooling/uniwind/theme.css`. Fractional steps take an underscore: `--spacing-0_5`, `--leading-4_5`.
-- Icon width and height take a size token, never px: `--spacing-icon-sm` (12) for chevrons and `--spacing-icon-md` (16) for every other icon. Checkmarks, Agent logos, Context rings, phone shell controls and desktop rail icons all use 16px (owner, 2026-10-10). A box that holds an icon takes the same token.
+- Icon width and height take a size token, never px: `--spacing-icon-sm` (12) for chevrons and `--spacing-icon-md` (16) by default. Web and Android Menu selected checks use `--spacing-icon-menu-check` (20), including their trailing slots (owner, 2026-10-11). Other checkmarks, Agent logos, Context rings, phone shell controls and desktop rail icons use 16px (owner, 2026-10-10). A box that holds an icon takes the same token.
 - Web card and popover surfaces use `--radius-surface` (28px) and the shared `--shadow-card` shadow, including menus, dialogs and sheets (owner, 2026-10-10). Web sheets round their top corners. Native surfaces keep their platform drawings.
 - Web inputs match the Android TextInput master at `--radius-lg` (10px); web search fields match the Android SearchField master at `--radius-search` (8px) (owner, 2026-10-10). The existing native ListSearch animation retains 6px through the platform token value.
 - Web dialogs have no border in light mode and use the shared `--shadow-card` shadow. Dark web cards, popovers, menus, dialogs and sheets use a 1px `--color-border` edge and a black shadow, without a white glow (owner, 2026-10-10).

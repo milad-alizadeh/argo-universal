@@ -12,7 +12,7 @@ Every icon is a native system symbol drawn through `expo-symbols` (owner, 2026-1
 
 One map, `packages/client/src/lib/generic/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" />`; colour comes from the text class.
 
-All App icons use 16px, including checkmarks, Agent logos, Context rings, phone shell controls and desktop rail icons (owner, 2026-10-10). Chevrons alone use 12px. The Icon component chooses the size from its name, so callers cannot override it. Both symbol sets use the same size tokens.
+App icons default to 16px, including checkmarks, Agent logos, Context rings, phone shell controls and desktop rail icons (owner, 2026-10-10). Chevrons use 12px. Web and Android Menu selected checks use a dedicated 20px token and matching trailing slots (owner, 2026-10-11); MenuCheck scopes that token without adding a caller size prop to Icon. The Icon component chooses the default size from its name. Both symbol sets use the same size tokens.
 
 Apple's licence allows SF Symbols only in apps for Apple platforms, so no SF Symbol image is ever committed or shipped in the web build. On macOS, the Electron main process draws the symbol with `nativeImage.createFromNamedImage` and the preload script returns it as a PNG data URL. The page uses that image as a CSS mask filled with the text colour, caches it, and keeps an empty box of the same size while it loads. The IPC request is validated, and an unrecognised request is rejected, reported and counted.
 
