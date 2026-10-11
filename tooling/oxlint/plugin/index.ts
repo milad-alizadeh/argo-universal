@@ -1,4 +1,5 @@
 import { definePlugin } from '@oxlint/plugins';
+import { acpSdkZone } from './acp-sdk-zone.ts';
 import { apiTypeOnly } from './api-type-only.ts';
 import { childProcessImport } from './child-process.ts';
 import { crossPackageImport } from './cross-package-import.ts';
@@ -16,6 +17,7 @@ import { vendorName } from './vendor-name.ts';
 export default definePlugin({
   meta: { name: 'argo' },
   rules: {
+    'acp-sdk-zone': acpSdkZone,
     'api-type-only': apiTypeOnly,
     'child-process': childProcessImport,
     'cross-package-import': crossPackageImport,

@@ -1686,6 +1686,19 @@
       }
     },
     {
+      // Spec 0011: the ACP SDK stays in acp/ and the two translators; tests and mocks script an Agent with it.
+      "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
+      "excludeFiles": [
+        "packages/engine/src/acp/**",
+        "packages/engine/src/feed/acp/**",
+        "packages/engine/src/sessions/acp/**",
+        "**/*.test.*",
+        "**/mocks/**",
+        "mocks/**"
+      ],
+      "rules": { "argo/acp-sdk-zone": "error" }
+    },
+    {
       // Process ownership stays at the launchers; all git work stays in packages/git (ADR-0008).
       "files": ["apps/**", "packages/engine/**"],
       "excludeFiles": [
