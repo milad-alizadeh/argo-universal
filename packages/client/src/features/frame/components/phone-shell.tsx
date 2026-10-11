@@ -35,7 +35,6 @@ export interface PhoneShellProps {
   attentionCount: number;
   drawerOpen: boolean;
   onDrawerOpenChange: (open: boolean) => void;
-  onDrawerClosed?: () => void;
   onSectionChange: (section: Section) => void;
   swipeEnabled?: boolean;
   children: ReactNode;
@@ -46,7 +45,6 @@ export function PhoneShell({
   attentionCount,
   drawerOpen,
   onDrawerOpenChange,
-  onDrawerClosed,
   onSectionChange,
   swipeEnabled = true,
   children,
@@ -126,7 +124,6 @@ export function PhoneShell({
         open={drawerOpen}
         onOpen={() => onDrawerOpenChange(true)}
         onClose={() => onDrawerOpenChange(false)}
-        onClosed={onDrawerClosed}
         width={offset}
         surfaceStyle={chrome}
         layout={layout}

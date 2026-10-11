@@ -204,7 +204,7 @@ function ProjectPicker({
   return (
     <View className="px-gutter-list py-1 wide:p-1">
       <View className="py-1">
-        <View className="h-8 flex-row items-center gap-1.5 rounded-md px-2.5 wide:px-2">
+        <View className="h-8 flex-row items-center gap-1.5 rounded-md web:rounded-search px-2.5 wide:px-2">
           <Icon name="search" className="text-muted-foreground" />
           <Input
             accessibilityLabel="Find a Project"

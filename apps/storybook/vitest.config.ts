@@ -12,6 +12,7 @@ export default defineProject({
     // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
     storybookTest({
       configDir: `${import.meta.dirname}/.storybook`,
+      storybookUrl: process.env.STORYBOOK_URL ?? 'http://localhost:6006',
       tags: { exclude: ['third-party'] },
     }),
   ],

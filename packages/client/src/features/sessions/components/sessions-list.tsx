@@ -63,6 +63,8 @@ export interface SessionsListProps {
   onProjectSettings?: (projectName: string) => void;
   // Scrolls with the rows, above the first Project.
   header?: ReactElement;
+  // Shown instead of the rows while Sessions load or fail to load.
+  placeholder?: ReactElement;
 }
 
 // Which Project headings are collapsed, and the toggle for one.
@@ -150,6 +152,8 @@ function useAnimateReorder(entries: SessionsListEntry[]): void {
   }, [entryOrder]);
 }
 
+const noEntries: SessionsListEntry[] = [];
+
 export function SessionsList({
   projects,
   agents,
@@ -163,6 +167,7 @@ export function SessionsList({
   onNewSession,
   onProjectSettings,
   header,
+  placeholder,
 }: SessionsListProps): React.JSX.Element {
   const contentContainerStyle = useContentStyle(useWide());
   const loadingFooter = useRevealLoadingFooter(isFetchingNextPage);
@@ -231,7 +236,7 @@ export function SessionsList({
           contentContainerStyle={contentContainerStyle}
           // On iOS it scrolls by the fade's top padding on mount, then snaps back.
           maintainVisibleContentPosition={false}
-          data={entries}
+          data={placeholder ? noEntries : entries}
           keyExtractor={entryKey}
           estimatedItemSize={76}
           ItemSeparatorComponent={ProjectEntrySeparator}
@@ -249,7 +254,9 @@ export function SessionsList({
             isFetchingNextPage ? <LoadingMoreSessions /> : null
           }
           ListEmptyComponent={
-            <EmptySessionsList query={query} archived={archived} />
+            placeholder ?? (
+              <EmptySessionsList query={query} archived={archived} />
+            )
           }
           renderItem={renderItem}
         />

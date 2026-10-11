@@ -1,4 +1,3 @@
-import type { PromptRequest, PromptResponse } from '@agentclientprotocol/sdk';
 import {
   type AgentAdapter,
   type AgentCapabilities,
@@ -68,6 +67,10 @@ import {
   type AcpLifetimeEvent,
   type AcpSessionDependencies,
 } from './acp/acp-lifetime';
+import type {
+  AcpPromptRequest as PromptRequest,
+  AcpPromptResponse as PromptResponse,
+} from './acp/prompt-types';
 import { commitLocalPrompt, type LocalSubmission } from './acp/submission';
 import {
   admitsPermissionAnswer,

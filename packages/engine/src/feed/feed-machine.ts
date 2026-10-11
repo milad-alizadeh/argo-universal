@@ -1,4 +1,3 @@
-import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { FeedChange, PlanUpdate, SessionUpdate } from '@repo/contracts';
 import type { session } from '@repo/db/schema';
 import { countRejection } from '@repo/machine-log';
@@ -19,6 +18,7 @@ import {
 } from '../storage';
 import { prepareAcpFeedApplication } from './acp/application';
 import type { MessageStreams } from './acp/message-identity';
+import type { AcpSessionNotification as SessionNotification } from './acp/session-notification';
 import { settleFeedTurn } from './acp/settlement';
 import type { OutputBlob } from './acp/tool-output';
 import {

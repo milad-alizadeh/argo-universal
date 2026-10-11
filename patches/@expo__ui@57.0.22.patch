@@ -1,0 +1,74 @@
+diff --git a/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt b/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt
+index 13ca95ed0a9f0a20afdd828fd18331a00067e2d2..ab612b60fd95a5650a4203f5ab6fe0bcf9221e68 100644
+--- a/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt
++++ b/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt
+@@ -1,6 +1,8 @@
+ package expo.modules.ui.menu
+ 
++import androidx.compose.foundation.BorderStroke
+ import androidx.compose.foundation.layout.Box
++import androidx.compose.foundation.shape.RoundedCornerShape
+ import androidx.compose.material3.DropdownMenu
+ import androidx.compose.material3.MenuDefaults
+ import androidx.compose.runtime.Composable
+@@ -25,6 +27,8 @@ fun FunctionalComposableScope.DropdownMenuContent(
+ 
+     DropdownMenu(
+       containerColor = props.color?.composeOrNull ?: MenuDefaults.containerColor,
++      shape = props.cornerRadius?.let { RoundedCornerShape(it.dp) } ?: MenuDefaults.shape,
++      border = props.borderColor?.composeOrNull?.let { BorderStroke((props.borderWidth ?: 1f).dp, it) },
+       shadowElevation = props.shadowElevation?.dp ?: MenuDefaults.ShadowElevation,
+       expanded = props.expanded,
+       onDismissRequest = onDismissRequest
+diff --git a/android/src/main/java/expo/modules/ui/menu/DropdownMenuRecords.kt b/android/src/main/java/expo/modules/ui/menu/DropdownMenuRecords.kt
+index 63640f80c09ee4a25716c4cf9602b1a5ef2c9620..2b2be90e347723cfb7a50142f577c463b8aae2d0 100644
+--- a/android/src/main/java/expo/modules/ui/menu/DropdownMenuRecords.kt
++++ b/android/src/main/java/expo/modules/ui/menu/DropdownMenuRecords.kt
+@@ -17,5 +17,8 @@ data class DropdownMenuProps(
+   val expanded: Boolean = false,
+   val color: Color? = null,
+   val modifiers: ModifierList = emptyList(),
+-  val shadowElevation: Float? = null
++  val shadowElevation: Float? = null,
++  val cornerRadius: Float? = null,
++  val borderWidth: Float? = null,
++  val borderColor: Color? = null
+ ) : ComposeProps
+diff --git a/build/jetpack-compose/DropdownMenu/index.d.ts b/build/jetpack-compose/DropdownMenu/index.d.ts
+index 652fd5ebed3efa231c87399689852f016818d445..5f8c5ed8c3858f7456a5e44d6b22be72d166e302 100644
+--- a/build/jetpack-compose/DropdownMenu/index.d.ts
++++ b/build/jetpack-compose/DropdownMenu/index.d.ts
+@@ -30,6 +30,9 @@ export interface DropdownMenuProps {
+      * @platform android
+      */
+     shadowElevation?: number;
++  cornerRadius?: number;
++  borderWidth?: number;
++  borderColor?: ColorValue;
+     /**
+      * Optional styles to apply to the `DropdownMenu`.
+      */
+diff --git a/src/jetpack-compose/DropdownMenu/index.tsx b/src/jetpack-compose/DropdownMenu/index.tsx
+index bd6101006fcef124674ef53be9a767eb43f69edd..997f8085e30cf83585dd6032dcd160b1e297cdaa 100644
+--- a/src/jetpack-compose/DropdownMenu/index.tsx
++++ b/src/jetpack-compose/DropdownMenu/index.tsx
+@@ -50,6 +50,9 @@ export interface DropdownMenuProps {
+    * @platform android
+    */
+   shadowElevation?: number;
++  cornerRadius?: number;
++  borderWidth?: number;
++  borderColor?: ColorValue;
+ 
+   /**
+    * Optional styles to apply to the `DropdownMenu`.
+@@ -67,6 +70,9 @@ type NativeMenuProps = {
+   onDismissRequest?: () => void;
+   color?: ColorValue;
+   shadowElevation?: number;
++  cornerRadius?: number;
++  borderWidth?: number;
++  borderColor?: ColorValue;
+   style?: StyleProp<ViewStyle>;
+   modifiers?: ModifierConfig[];
+   children?: ReactNode;
