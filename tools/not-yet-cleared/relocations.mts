@@ -3,28 +3,26 @@ const engineRelocations: [string, string[]][] = [
   ['mocks/app/*', ['packages/api/mocks/*']],
   ['packages/engine/mocks/*', ['apps/server/mocks/*']],
   ['packages/engine/src/engine/*', ['apps/server/src/engine/*']],
-  ['packages/engine/src/services/*', ['apps/server/src/services/*']],
-  [
-    'packages/engine/src/services/agents/*',
-    ['apps/server/src/services/agents/*'],
-  ],
-  ['packages/engine/src/services/blob/*', ['apps/server/src/services/blob/*']],
-  ['packages/engine/src/services/feed/*', ['apps/server/src/services/feed/*']],
   [
     'packages/engine/src/storage/*',
     ['packages/engine/src/services/feed/*', 'apps/server/src/services/feed/*'],
   ],
+  // Spec 0011 #451: services/<x> flattens to src/<x>; the Session read models split into sessions/list.
+  ...['agents', 'blob', 'feed', 'sessions', 'system'].map(
+    (module): [string, string[]] => [
+      `packages/engine/src/${module}/*`,
+      [
+        `packages/engine/src/services/${module}/*`,
+        `apps/server/src/services/${module}/*`,
+      ],
+    ],
+  ),
   [
-    'packages/engine/src/services/projects/*',
-    ['apps/server/src/services/projects/*'],
-  ],
-  [
-    'packages/engine/src/services/sessions/*',
-    ['apps/server/src/services/sessions/*'],
-  ],
-  [
-    'packages/engine/src/services/system/*',
-    ['apps/server/src/services/system/*'],
+    'packages/engine/src/sessions/list/*',
+    [
+      'packages/engine/src/services/sessions/*',
+      'apps/server/src/services/sessions/*',
+    ],
   ],
 ];
 

@@ -6,9 +6,9 @@ import {
   type StatePath,
   type AdjacencyMap,
 } from 'xstate/graph';
-import type { AcpSessionLease } from '../src/services/agents';
-import { RecoveryBlockedError } from '../src/services/agents';
-import { sessionMachine } from '../src/services/sessions';
+import type { AcpSessionLease } from '../src/acp';
+import { RecoveryBlockedError } from '../src/acp';
+import { sessionMachine } from '../src/sessions';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
 const closeEvent = 'session.close';

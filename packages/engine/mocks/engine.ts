@@ -8,8 +8,8 @@ import { composeEngine, type EngineActor } from '../src/engine/compose';
 import type { HttpServer } from '../src/engine/http-server';
 import type { EngineInput } from '../src/engine/machine';
 import { findMachineActor } from '../src/lib/machine-actor';
-import type { RegistryActorRef } from '../src/services/sessions';
-import { sessionRegistryId, registryMachine } from '../src/services/sessions';
+import type { OpenSessionsActorRef } from '../src/sessions';
+import { openSessionsId, openSessionsMachine } from '../src/sessions';
 import { databaseWriterId, writerMachine } from '../src/storage';
 import { openTestDatabase } from './database';
 import { scriptedEngineInput } from './scripted-engine';
@@ -26,7 +26,7 @@ type EngineTestOptions = Partial<EngineInput> & {
 type EngineConnections = {
   engine: EngineActor;
   database: Database;
-  sessionRegistry: RegistryActorRef;
+  openSessions: OpenSessionsActorRef;
   databaseWriter: ActorRefFrom<typeof writerMachine>;
   createCaller: HttpServer['createCaller'];
   caller: ReturnType<HttpServer['createCaller']>;
@@ -77,22 +77,22 @@ export async function startEngineTestHost(
 
 function readEngineTestHost(engine: EngineActor): EngineConnections {
   const { database, server } = engine.getSnapshot().context;
-  const sessionRegistry = findMachineActor(
+  const openSessions = findMachineActor(
     engine.system,
-    sessionRegistryId,
-    registryMachine,
+    openSessionsId,
+    openSessionsMachine,
   );
   const databaseWriter = findMachineActor(
     engine.system,
     databaseWriterId,
     writerMachine,
   );
-  if (!database || !server || !sessionRegistry || !databaseWriter)
+  if (!database || !server || !openSessions || !databaseWriter)
     throw new Error('Engine is not ready');
   return {
     engine,
     database,
-    sessionRegistry,
+    openSessions,
     databaseWriter,
     createCaller: server.createCaller,
     caller: server.createCaller(),

@@ -11,24 +11,26 @@ import {
   type InputFrom,
   type AnyActorRef,
 } from 'xstate';
-import { findMachineActor } from '../lib/machine-actor';
 import {
   createAcpResources,
   type AcpResources,
   type AcpResourceInput,
+} from '../acp';
+import {
   type FetchAgents,
   syncSupervisorMachine,
   type SyncSupervisorInput,
-} from '../services/agents';
-import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
-import { seedProject } from '../services/projects';
+} from '../agents';
+import { blobsFolderIn, removeUnusedBlobs } from '../blob';
+import { findMachineActor } from '../lib/machine-actor';
+import { seedProject } from '../projects';
 import {
-  type RegistryInput,
+  type OpenSessionsInput,
   recoverAfterRestart,
-  registryMachine,
-  sessionRegistryId,
-  type RegistryActorRef,
-} from '../services/sessions';
+  openSessionsMachine,
+  openSessionsId,
+  type OpenSessionsActorRef,
+} from '../sessions';
 import {
   databaseWriterId,
   type WriterActorRef,
@@ -52,7 +54,7 @@ type CloseHttpServerInput = { server: HttpServer | null };
 type SyncSupervisorActor = ActorRefFrom<typeof syncSupervisorMachine>;
 type CloseAcpResourcesInput = {
   resources: AcpResources;
-  sessions: RegistryActorRef | undefined;
+  sessions: OpenSessionsActorRef | undefined;
 };
 const closingAgentsTarget = 'closingAgents';
 
@@ -63,7 +65,7 @@ function openDatabaseOf(context: { database: Database | null }): Database {
 }
 
 export interface EngineInput extends Pick<
-  RegistryInput,
+  OpenSessionsInput,
   'adapters' | 'now' | 'createId' | 'resolveAgentLaunch'
 > {
   home: string;
@@ -132,7 +134,7 @@ export const engineMachine = setup({
     ),
     syncSupervisor: syncSupervisorMachine,
     databaseWriter: writerMachine,
-    sessions: registryMachine,
+    sessions: openSessionsMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
       async ({ input, signal }): Promise<HttpServer> => {
         const server = await startHttpServer(input);
@@ -258,9 +260,9 @@ export const engineMachine = setup({
         },
         {
           id: 'sessions',
-          systemId: sessionRegistryId,
+          systemId: openSessionsId,
           src: 'sessions',
-          input: ({ context }): RegistryInput => ({
+          input: ({ context }): OpenSessionsInput => ({
             database: openDatabaseOf(context),
             runtimeDirectory: context.home,
             adapters: context.adapters,
@@ -290,7 +292,7 @@ export const engineMachine = setup({
             src: 'startHttpServer',
             input: ({ context, self }): HttpServerOptions => ({
               createId: context.createId,
-              sessions: requireSessionRegistry(self.system),
+              sessions: requireOpenSessions(self.system),
               databaseWriter: requireDatabaseWriter(self.system),
               syncSupervisor: requireSyncSupervisor(self.system),
               commandAdmission: context.commandAdmission,
@@ -410,8 +412,8 @@ export const engineMachine = setup({
                   resources: context.acpResources,
                   sessions: findMachineActor(
                     self.system,
-                    sessionRegistryId,
-                    registryMachine,
+                    openSessionsId,
+                    openSessionsMachine,
                   ),
                 }),
                 onDone: { target: 'drainingWriter' },
@@ -489,11 +491,11 @@ export const engineMachine = setup({
   }),
 });
 
-function requireSessionRegistry(
+function requireOpenSessions(
   system: AnyActorRef['system'],
-): RegistryActorRef {
-  const actor = findMachineActor(system, sessionRegistryId, registryMachine);
-  if (!actor) throw new Error('The Session registry is not running');
+): OpenSessionsActorRef {
+  const actor = findMachineActor(system, openSessionsId, openSessionsMachine);
+  if (!actor) throw new Error('The open Sessions machine is not running');
   return actor;
 }
 

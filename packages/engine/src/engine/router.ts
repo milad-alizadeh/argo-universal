@@ -1,10 +1,10 @@
+import { createAgentsRouter } from '../agents';
+import { createBlobRouter } from '../blob';
+import { createFeedRouter } from '../feed';
+import { createProjectsRouter } from '../projects';
 import { router, routerFactory } from '../rpc';
-import { createAgentsRouter } from '../services/agents';
-import { createBlobRouter } from '../services/blob';
-import { createFeedRouter } from '../services/feed';
-import { createProjectsRouter } from '../services/projects';
-import { createSessionRouter } from '../services/sessions';
-import { createSystemRouter } from '../services/system';
+import { createSessionRouter } from '../sessions';
+import { createSystemRouter } from '../system';
 import type { AppRouterDeps } from './router-deps';
 
 // Each router takes only the slice of the Engine's dependencies its type names.

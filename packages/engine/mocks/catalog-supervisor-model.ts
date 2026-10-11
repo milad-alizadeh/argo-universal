@@ -8,10 +8,7 @@ import {
   type StatePath,
   type AdjacencyMap,
 } from 'xstate/graph';
-import {
-  AgentCatalogReplaceJob,
-  syncSupervisorMachine,
-} from '../src/services/agents';
+import { AgentCatalogReplaceJob, syncSupervisorMachine } from '../src/agents';
 import { writerMachine } from '../src/storage';
 
 type SupervisorSnapshot = SnapshotFrom<typeof syncSupervisorMachine>;

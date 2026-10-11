@@ -28,13 +28,9 @@ import { liveHeaderMocks } from '#mocks/live-header';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { createScriptedAgentLauncher } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
+import { FeedRowsJob } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
-import { FeedRowsJob } from '../services/feed';
-import {
-  SessionRowUpdateJob,
-  TurnInsertJob,
-  TurnUpdateJob,
-} from '../services/sessions';
+import { SessionRowUpdateJob, TurnInsertJob, TurnUpdateJob } from '../sessions';
 import { databaseWriterId, writerMachine } from '../storage';
 
 const missingWriterMessage = 'Writer actor is missing';
