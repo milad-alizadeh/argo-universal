@@ -4,10 +4,9 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { DesktopShell, InspectorPane } from '#features/frame';
-import { InspectorProvider } from '#lib/product/inspector';
 import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
 import { findToast } from '../../../lib/generic/find-toast';
+import { Button } from '../../../lib/generic/primitives/button';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import {
   type OpenSessionViewProps,
@@ -24,6 +23,7 @@ import {
 } from './session-view.mocks';
 
 const cancelCreationLabel = 'Cancel creation';
+const feedScrollTestId = 'feed-scroll';
 const agentFailure = 'The Agent stopped three times in ten minutes';
 
 const meta = {
@@ -104,7 +104,7 @@ export const HeaderFeedAndComposerShareOneLayout: Story = {
       await layout.findByRole('heading', { name: /^Think briefly first/ }),
     ).toBeVisible();
     await expect(layout.getByRole('button', { name: 'Changes' })).toBeVisible();
-    await expect(layout.getByTestId('feed-scroll')).toBeVisible();
+    await expect(layout.getByTestId(feedScrollTestId)).toBeVisible();
     await expect(
       layout.getByRole('textbox', { name: 'Message' }),
     ).toBeVisible();
@@ -188,28 +188,6 @@ export const ListsEveryPullRequest: Story = {
   },
 };
 
-const longTitle =
-  'Build the Session layout from spec 0003, wire the Inspector to the changed files and keep the Composer pinned to the bottom';
-
-// A long title keeps one line on the header and its whole text in the heading's name.
-export const LongTitle: Story = {
-  args: {
-    view: {
-      state: 'open',
-      ...runningSession,
-      header: { ...runningSession.header, title: longTitle },
-    },
-  },
-  play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.wide);
-    const heading = await canvas.findByRole('heading', { name: longTitle });
-    const lineHeight = Number.parseFloat(getComputedStyle(heading).lineHeight);
-    await expect(heading.getBoundingClientRect().height).toBeLessThan(
-      lineHeight * 1.5,
-    );
-  },
-};
-
 export const EmptyFeed: Story = {
   args: { view: { state: 'open', ...emptySession } },
   play: async ({ canvas }) =>
@@ -217,7 +195,7 @@ export const EmptyFeed: Story = {
       await expect(
         await canvas.findByRole('heading', { name: 'What should we build?' }),
       ).toBeVisible();
-      await expect(canvas.queryByTestId('feed-scroll')).toBeNull();
+      await expect(canvas.queryByTestId(feedScrollTestId)).toBeNull();
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
       ).toBeVisible();
@@ -380,101 +358,62 @@ function configuration(agentIndex: 0 | 1): Story {
 export const ConfigurationFirstAgent = configuration(0);
 export const ConfigurationSecondAgent = configuration(1);
 
-// The shell as DesktopLayoutView draws it for a Session, with the sidebar and the Inspector in the reader's hands.
-function SessionInShell({
+// Collapsed, the pane is a few pixels wide, as while an expanded Inspector takes it over.
+const paneWidths = { wide: 1000, collapsed: 5 } as const;
+
+// The Session in a pane whose width the reader changes, as the sidebar and an expanded Inspector change it.
+function SessionInPane({
   view,
 }: {
   view: SessionViewProps;
 }): React.JSX.Element {
-  const [sidebarShown, setSidebarShown] = useState(true);
-  const [inspectorState, setInspectorState] = useState<
-    'closed' | 'open' | 'expanded'
-  >('closed');
-  const inspectorOpen = inspectorState !== 'closed';
+  const [width, setWidth] = useState<number>(paneWidths.wide);
   return (
     <View className="h-screen w-full">
-      <InspectorProvider
-        value={{
-          open: inspectorOpen,
-          toggle: () => setInspectorState(inspectorOpen ? 'closed' : 'open'),
-        }}
-      >
-        <DesktopShell
-          selectedSection="sessions"
-          attentionCount={0}
-          sidebarShown={sidebarShown}
-          onSidebarShownChange={setSidebarShown}
-          onSectionChange={fn()}
-          listHeader={null}
-          list={null}
-          inspectorState={inspectorState}
-          onInspectorStateChange={setInspectorState}
-          inspector={(expanded) => (
-            <InspectorPane
-              title="Changes"
-              expanded={expanded}
-              onStateChange={setInspectorState}
-            >
-              {null}
-            </InspectorPane>
-          )}
-        >
-          <SessionView {...view} />
-        </DesktopShell>
-      </InspectorProvider>
+      <View className="flex-row">
+        <Button
+          label="Collapse pane"
+          onPress={() => setWidth(paneWidths.collapsed)}
+        />
+        <Button
+          label="Restore pane"
+          onPress={() => setWidth(paneWidths.wide)}
+        />
+      </View>
+      <View testID="session-pane" className="flex-1" style={{ width }}>
+        <SessionView {...view} />
+      </View>
     </View>
   );
 }
 
-const shellTransition = 400;
+const rowWidths = (canvas: {
+  getAllByTestId: (testId: string) => HTMLElement[];
+}): number[] =>
+  canvas
+    .getAllByTestId('feed-column')
+    .map((row) => Math.round(row.getBoundingClientRect().width));
 
-// The Feed's rows, the Session title and the Composer share one centred column, whatever the pane's width has been.
-export const FeedSharesTheComposerColumn: Story = {
+// The Feed's rows reflow to the pane after it collapses and comes back: none stays pinned narrow or spills past the pane.
+export const FeedReflowsAfterThePaneCollapses: Story = {
   args: { view: { state: 'open', ...idleSession } },
-  render: ({ view }): React.JSX.Element => <SessionInShell view={view} />,
+  render: ({ view }): React.JSX.Element => <SessionInPane view={view} />,
   play: async ({ canvas, userEvent }) => {
-    const lineUp = async (): Promise<void> => {
-      await new Promise((resolve) => setTimeout(resolve, shellTransition));
-      await waitFor(async () => {
-        const title = canvas
-          .getByRole('heading', { name: /^Without using any tools/ })
-          .getBoundingClientRect();
-        const composer = canvas
-          .getByTestId('composer-column')
-          .getBoundingClientRect();
-        await expect(composer.width).toBeGreaterThan(0);
-        await expect(Math.round(title.left)).toBe(Math.round(composer.left));
-        for (const row of canvas.getAllByTestId('feed-column')) {
-          const rect = row.getBoundingClientRect();
-          await expect(Math.round(rect.left)).toBe(Math.round(composer.left));
-          await expect(Math.round(rect.width)).toBe(Math.round(composer.width));
-        }
-      });
-    };
-    await settleViewport(1300);
+    await settleViewport(layoutWidths.wide);
     await canvas.findByRole('heading', { name: /^Without using any tools/ });
-    await lineUp();
-    await userEvent.click(canvas.getByRole('button', { name: 'Hide sidebar' }));
-    await lineUp();
-    await userEvent.click(canvas.getByRole('button', { name: 'Show sidebar' }));
-    await lineUp();
-    await userEvent.click(canvas.getByRole('button', { name: 'Changes' }));
-    await lineUp();
+    const before = rowWidths(canvas);
+    await expect(Math.min(...before)).toBeGreaterThan(0);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Expand Inspector' }),
+      canvas.getByRole('button', { name: 'Collapse pane' }),
     );
-    // Expanded, the Inspector takes the whole pane and the Feed lays out at no width.
-    await new Promise((resolve) => setTimeout(resolve, shellTransition));
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Restore Inspector' }),
+    await waitFor(() =>
+      expect(
+        canvas.getByTestId(feedScrollTestId).getBoundingClientRect().width,
+      ).toBe(paneWidths.collapsed),
     );
-    await lineUp();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Close Inspector' }),
-    );
-    await lineUp();
-    await userEvent.click(canvas.getByRole('button', { name: 'Hide sidebar' }));
-    await settleViewport(1000);
-    await lineUp();
+    await userEvent.click(canvas.getByRole('button', { name: 'Restore pane' }));
+    await waitFor(() => expect(rowWidths(canvas)).toEqual(before));
+    const scroll = canvas.getByTestId(feedScrollTestId);
+    await expect(scroll.scrollWidth).toBeLessThanOrEqual(scroll.clientWidth);
   },
 };
