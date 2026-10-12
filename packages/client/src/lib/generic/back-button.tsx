@@ -6,12 +6,12 @@ export interface BackButtonProps {
   onBack: () => void;
 }
 
-// Returns to the page this one was opened from; its chevron follows the body text beside it.
+// Returns to the page this one was opened from; its chevron follows the page title beside it.
 export function BackButton({ onBack }: BackButtonProps): React.JSX.Element {
   return (
     <IconButton
       icon="chevron-left"
-      iconSize={useTextIconSize()}
+      iconSize={useTextIconSize('title')}
       iconClassName="text-foreground"
       size="sm"
       variant="ghost"

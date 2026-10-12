@@ -43,13 +43,13 @@ export function PageTitleRow(props: PageTitleRowProps): React.JSX.Element {
   );
 }
 
-// The back button hangs in the margin left of the title, so titles line up with or without it.
+// The back button hangs in the margin left of the title, so titles line up with or without it, centred on the title's line.
 function HangingBack({
   onBack,
 }: Pick<PageTitleRowProps, 'onBack'>): React.JSX.Element | null {
   if (!onBack) return null;
   return (
-    <View className="absolute -left-9 -top-0.5">
+    <View className="absolute inset-y-0 -left-9 justify-center">
       <BackButton onBack={onBack} />
     </View>
   );
