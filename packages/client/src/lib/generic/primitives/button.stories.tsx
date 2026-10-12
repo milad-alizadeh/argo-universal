@@ -18,7 +18,10 @@ const buttons: { state: string; props: ButtonProps }[] = [
     state: 'Destructive',
     props: { label: 'Remove Agent', role: 'destructive', fullWidth: true },
   },
-  { state: 'Small', props: { label: saveLabel, size: 'sm' } },
+  {
+    state: 'Small (a phone draws Default)',
+    props: { label: saveLabel, size: 'sm' },
+  },
   {
     state: 'Full width on a phone',
     props: {
