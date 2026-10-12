@@ -451,7 +451,7 @@ export function ComposerStatusControls({
                 disabled: disabled,
               })}
             >
-              <Icon name="scheduled" className={mutedTextClassName} />
+              <Icon name="usage" className={mutedTextClassName} />
               <Text
                 selectable={false}
                 role="secondary"
