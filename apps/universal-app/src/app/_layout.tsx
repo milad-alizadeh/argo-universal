@@ -6,6 +6,7 @@ import {
   NavigationProvider,
   type RenderSymbolImage,
   SymbolImagesProvider,
+  Toaster,
   useConnection,
 } from '@repo/client';
 import '../../global.css';
@@ -116,6 +117,7 @@ export default function RootLayout(): React.JSX.Element {
                 </NativeSheetsProvider>
               </NavigationProvider>
               <PortalHost />
+              <Toaster />
             </ThemeProvider>
           </AppProviders>
         </SymbolImagesProvider>
