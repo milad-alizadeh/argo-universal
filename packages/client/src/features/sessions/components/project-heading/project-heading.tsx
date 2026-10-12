@@ -38,10 +38,11 @@ export const ProjectHeading = memo(function ProjectHeading({
   };
   return (
     <Pressable
+      accessible={false}
       onHoverIn={() => setHovered(true)}
       onHoverOut={() => setHovered(false)}
       className={cn(
-        'h-10 wide:h-8 flex-row items-center rounded-md pr-1',
+        'min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-md pr-1',
         (hovered || focused) && 'bg-sidebar-accent',
       )}
     >
@@ -55,7 +56,7 @@ export const ProjectHeading = memo(function ProjectHeading({
         className={contentActionClass({
           variant: 'ghost',
           className:
-            'h-full sm:h-full min-w-0 flex-1 justify-start gap-1.5 pl-2.5 pr-2 py-1 wide:gap-3 wide:pl-4 hover:bg-transparent dark:hover:bg-transparent',
+            'web:h-full web:sm:h-full min-w-0 flex-1 justify-start gap-1.5 pl-2.5 pr-2 py-1 wide:gap-3 wide:pl-4 hover:bg-transparent dark:hover:bg-transparent',
         })}
       >
         <TextClassContext.Provider value={undefined}>
