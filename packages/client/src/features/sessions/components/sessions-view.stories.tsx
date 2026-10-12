@@ -18,9 +18,6 @@ const meta = {
     onNewSessionInProject: action('new Session in Project'),
     onProjectSettings: action('Project settings'),
     onLoadMore: action('load next page'),
-    onRetry: action('retry'),
-    onRetryLiveUpdates: action('retry live updates'),
-    onRetryLoadMore: action('retry next page'),
   },
   // The list under a plain header row, as a shell draws it.
   render: function Preview(args): React.JSX.Element {
@@ -28,7 +25,7 @@ const meta = {
     return (
       <View className="flex-1 w-full" style={{ minHeight: 0 }}>
         <View className="h-11 wide:h-14 flex-row items-center gap-0.5 px-2">
-          <SessionsHeader {...filter} />
+          <SessionsHeader {...filter} onNewSession={args.onNewSession} />
         </View>
         <SessionsView {...args} />
       </View>

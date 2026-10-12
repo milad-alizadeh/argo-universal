@@ -24,12 +24,15 @@ import { sessionsLoadState } from '../state/sessions-load-state';
 export interface SessionsScreenProps {
   query: string;
   archived: boolean;
+  // The open Session, which the wide sidebar marks.
+  selectedSessionId?: string;
 }
 
 // The Sessions list: its queries and live updates, passed to the view as props.
 export function SessionsScreen({
   query,
   archived,
+  selectedSessionId,
 }: SessionsScreenProps): React.JSX.Element {
   const trpc = useTRPC();
   const navigate = useNavigate();
@@ -77,6 +80,7 @@ export function SessionsScreen({
       sessions={rows}
       query={query}
       archived={archived}
+      selectedSessionId={selectedSessionId}
       onSelect={(id) => navigate({ to: 'session', id })}
       onNewSession={() => navigate({ to: 'new-session' })}
       onNewSessionInProject={(projectId) =>
@@ -84,15 +88,6 @@ export function SessionsScreen({
       }
       onProjectSettings={(name) => navigate({ to: 'settings-project', name })}
       onLoadMore={loadMore}
-      onRetry={() => {
-        void projects.refetch();
-        void agents.refetch();
-        void sessions.refetch();
-      }}
-      onRetryLiveUpdates={listUpdates.reset}
-      onRetryLoadMore={() => {
-        void sessions.fetchNextPage();
-      }}
     />
   );
 }

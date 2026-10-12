@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { fn } from 'storybook/test';
 import { NewSessionView, type NewSessionViewProps } from './new-session-view';
 import { readyNewSession } from './new-session-view.mocks';
 
@@ -44,6 +43,4 @@ export const FailedStart: Story = {
 
 export const Loading: Story = { args: { view: { state: 'loading' } } };
 
-export const LoadFailure: Story = {
-  args: { view: { state: 'load-failed', onRetry: fn() } },
-};
+export const LoadFailure: Story = { args: { view: { state: 'load-failed' } } };

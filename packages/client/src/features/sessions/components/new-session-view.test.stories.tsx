@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
+import { findToast } from '../../../lib/generic/find-toast';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import {
   NewSessionView,
@@ -113,12 +114,12 @@ export const Ready: Story = {
   play: async ({ canvas }) =>
     eachLayout(async (wide) => {
       await expect(
-        await canvas.findByText(readyNewSession.serverName),
+        await canvas.findByRole('button', { name: projectLabel }),
       ).toBeVisible();
+      // The Server runs on this computer, so the host is not named.
       await expect(
-        canvas.getByRole('button', { name: projectLabel }),
-      ).toBeVisible();
-      await expect(canvas.getByText('Start the Session in')).toBeVisible();
+        canvas.queryByText(readyNewSession.serverName),
+      ).not.toBeInTheDocument();
       const heading = canvas.queryByRole('heading', {
         name: 'What should we work on?',
       });
@@ -130,9 +131,6 @@ export const Ready: Story = {
       await expect(
         canvas.queryByRole('textbox', { name: 'Message' }),
       ).toBeNull();
-      await expect(
-        canvas.getByRole('img', { name: 'Connected' }),
-      ).toBeVisible();
       await expect(canvas.queryByText('Reconnecting…')).toBeNull();
     }),
 };
@@ -186,26 +184,21 @@ export const Opening: Story = {
 
 export const FailedStart: Story = {
   args: readyArgs({ openError: failedStartMessage }),
-  play: async ({ canvas }) =>
-    eachLayout(async () => {
-      await expect(await canvas.findByRole('alert')).toHaveTextContent(
-        `Couldn't open the Session. ${failedStartMessage}`,
-      );
-      await expect(
-        canvas.getByRole('button', { name: openSessionLabel }),
-      ).toBeEnabled();
-    }),
+  play: async ({ canvas }) => {
+    await expect(await findToast("Couldn't open the Session")).toBeVisible();
+    await expect(await findToast(failedStartMessage)).toBeVisible();
+    await expect(canvas.queryByRole('alert')).toBeNull();
+    await expect(
+      canvas.getByRole('button', { name: openSessionLabel }),
+    ).toBeEnabled();
+  },
 };
 
 export const LoadFailure: Story = {
-  args: { view: { state: 'load-failed', onRetry: fn() } },
-  play: async ({ canvas, args, userEvent }) => {
-    await expect(
-      await canvas.findByText("Couldn't load New Session"),
-    ).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
-    if (args.view.state !== 'load-failed')
-      throw new Error('The story needs a load failure.');
-    await expect(args.view.onRetry).toHaveBeenCalledOnce();
+  args: { view: { state: 'load-failed' } },
+  play: async ({ canvas }) => {
+    await expect(await findToast("Couldn't load New Session")).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Retry' })).toBeNull();
+    await expect(canvas.queryByRole('alert')).toBeNull();
   },
 };

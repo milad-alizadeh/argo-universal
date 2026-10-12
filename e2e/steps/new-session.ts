@@ -10,7 +10,9 @@ const checkedAttribute = 'aria-checked';
 export async function openNewSession(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/new$/);
-  await expect(page.getByRole('img', { name: 'Connected' })).toBeVisible();
+  // The Server runs on this computer, so New Session names no host; its Project shows once it is ready.
+  await expect(page.getByRole('button', { name: /^Project: / })).toBeVisible();
+  await expect(page.getByText('Reconnecting…')).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: openSessionLabel, exact: true }),
   ).toBeVisible();

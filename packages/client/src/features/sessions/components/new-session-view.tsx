@@ -10,8 +10,9 @@ import {
 } from '#features/composer';
 import { Text } from '#lib/generic/primitives/text';
 import { useContentWide } from '#lib/product/content-layout';
-import { LoadError } from '#lib/product/load-error';
+import { PageHeader } from '#lib/product/page-header';
 import { keyboardAvoidingStyle, Screen } from '#lib/product/screen';
+import { type ErrorToast, useErrorToast } from '#primitives/toast';
 import { Button } from '../../../lib/generic/primitives/button';
 
 export interface ReadyNewSessionViewProps {
@@ -35,29 +36,30 @@ export interface ReadyNewSessionViewProps {
 
 export type NewSessionViewProps =
   | { state: 'loading' }
-  | { state: 'load-failed'; onRetry: () => void }
+  | { state: 'load-failed' }
   | ({ state: 'ready' } & ReadyNewSessionViewProps);
+
+const loadFailed: ErrorToast = {
+  title: "Couldn't load New Session",
+  message: "The Server didn't respond. Check that it's running.",
+};
+
+const openFailed = (message: string): ErrorToast => ({
+  title: "Couldn't open the Session",
+  message,
+});
 
 // Opens the chosen Session with its model and effort before the first prompt.
 export function NewSessionView(props: NewSessionViewProps): React.JSX.Element {
-  switch (props.state) {
-    case 'loading':
-      return <Screen edges={['bottom']} />;
-    case 'load-failed':
-      return (
-        <Screen edges={['bottom']}>
-          <View className="flex-1 justify-center">
-            <LoadError
-              title="Couldn't load New Session"
-              description="The Server didn't respond. Check that it's running, then retry."
-              onRetry={props.onRetry}
-            />
-          </View>
-        </Screen>
-      );
-    case 'ready':
-      return <ReadyNewSessionView {...props} />;
-  }
+  // A failed load stays blank: the toast says why, and the page retries when the Connection reopens.
+  useErrorToast(props.state === 'load-failed' ? loadFailed : undefined);
+  if (props.state !== 'ready')
+    return (
+      <Screen edges={['bottom']}>
+        <PageHeader title="New Session" />
+      </Screen>
+    );
+  return <ReadyNewSessionView {...props} />;
 }
 
 function NewSessionHeading(): React.JSX.Element {
@@ -75,8 +77,12 @@ function ReadyNewSessionView(
 ): React.JSX.Element {
   const wide = useContentWide();
   const { configuration, opening } = props;
+  useErrorToast(
+    props.openError === undefined ? undefined : openFailed(props.openError),
+  );
   return (
     <Screen edges={['bottom']}>
+      <PageHeader title="New Session" />
       <KeyboardAvoidingView
         behavior="padding"
         automaticOffset
@@ -124,11 +130,6 @@ function ReadyNewSessionView(
             {props.setupStep !== undefined && (
               <Text semanticRole="alert" className="text-destructive">
                 {props.setupStep}
-              </Text>
-            )}
-            {props.openError !== undefined && (
-              <Text semanticRole="alert" className="text-destructive">
-                Couldn't open the Session. {props.openError}
               </Text>
             )}
           </View>

@@ -1,13 +1,19 @@
 import { activeSessions, projectsList } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { expect, fn } from 'storybook/test';
 import { eachLayout } from '../../../lib/generic/each-layout';
+import { allToasts, findToast } from '../../../lib/generic/find-toast';
+import { useWide } from '../../../lib/generic/use-wide';
+import { useSessionsFilter } from '../state/sessions-filter';
+import { SessionsHeader } from './sessions-header';
 import { SessionsView } from './sessions-view';
 import { loadedSessionsView } from './sessions-view.mocks';
 
 const exampleProjectName = 'Example Project';
 const retry = { name: 'Retry' };
 const loadFailure = "Couldn't load Sessions";
+const loadMoreFailure = "Couldn't load more Sessions";
 const noMatches = 'No matching Sessions';
 
 const spies = {
@@ -16,9 +22,6 @@ const spies = {
   onNewSessionInProject: fn(),
   onProjectSettings: fn(),
   onLoadMore: fn(),
-  onRetry: fn(),
-  onRetryLiveUpdates: fn(),
-  onRetryLoadMore: fn(),
 };
 
 const meta = {
@@ -26,6 +29,19 @@ const meta = {
   component: SessionsView,
   parameters: { screenPreview: true },
   args: { ...loadedSessionsView, ...spies },
+  // Wide, New Session sits in the sidebar's header row above the list.
+  render: function WithHeader(args): React.JSX.Element {
+    const wide = useWide();
+    const filter = useSessionsFilter();
+    return (
+      <>
+        {wide && (
+          <SessionsHeader {...filter} onNewSession={args.onNewSession} />
+        )}
+        <SessionsView {...args} />
+      </>
+    );
+  },
   beforeEach: (): void => {
     for (const spy of Object.values(spies)) spy.mockClear();
   },
@@ -46,28 +62,32 @@ export const LoadingKeepsNewSession: Story = {
     }),
 };
 
-export const RetryAfterLoadError: Story = {
+// The toast says why; the list keeps its loading rows and offers no inline retry.
+export const LoadErrorShowsAToastOnce: Story = {
   args: { loadState: 'error' },
-  play: async ({ canvas, userEvent, args }) =>
-    eachLayout(async () => {
-      args.onRetry.mockClear();
-      await expect(await canvas.findByText(loadFailure)).toBeVisible();
-      await userEvent.click(canvas.getByRole('button', retry));
-      await expect(args.onRetry).toHaveBeenCalledTimes(1);
-    }),
+  play: async ({ canvas }) => {
+    await expect(await findToast(loadFailure)).toBeVisible();
+    await eachLayout(async () => {
+      await expect(
+        canvas.getByRole('status', { name: 'Loading Sessions' }),
+      ).toBeVisible();
+      await expect(canvas.queryByRole('button', retry)).toBeNull();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+    });
+    await expect(await allToasts(loadFailure)).toHaveLength(1);
+  },
 };
 
-export const RetryLiveUpdates: Story = {
+export const LiveUpdatesStoppedShowsAToast: Story = {
   args: { liveUpdatesStopped: true },
-  play: async ({ canvas, userEvent, args }) =>
-    eachLayout(async () => {
-      args.onRetryLiveUpdates.mockClear();
-      const alert = await canvas.findByRole('alert');
-      await expect(alert).toHaveTextContent('Live updates stopped');
-      await expect(canvas.queryByText(loadFailure)).toBeNull();
-      await userEvent.click(canvas.getByRole('button', retry));
-      await expect(args.onRetryLiveUpdates).toHaveBeenCalledTimes(1);
-    }),
+  play: async ({ canvas }) => {
+    const first = activeSessions.sessions[0];
+    if (!first) throw new Error('Missing Session mock');
+    await expect(await findToast('Live updates stopped')).toBeVisible();
+    await expect((await canvas.findAllByText(first.title))[0]).toBeVisible();
+    await expect(canvas.queryByRole('button', retry)).toBeNull();
+    await expect(canvas.queryByRole('alert')).toBeNull();
+  },
 };
 
 export const OfflineShowsBannerOnly: Story = {
@@ -105,16 +125,14 @@ export const SearchWithoutMatches: Story = {
 
 export const NextPageFailureKeepsRows: Story = {
   args: { loadMoreFailed: true },
-  play: async ({ canvas, userEvent, args }) => {
+  play: async ({ canvas }) => {
     const first = activeSessions.sessions[0];
     if (!first) throw new Error('Missing Session mock');
-    await expect(
-      await canvas.findByText("Couldn't load more Sessions"),
-    ).toBeVisible();
+    await expect(await findToast(loadMoreFailure)).toBeVisible();
     await expect((await canvas.findAllByText(first.title))[0]).toBeVisible();
     await expect(canvas.queryByText(loadFailure)).toBeNull();
-    await userEvent.click(canvas.getByRole('button', retry));
-    await expect(args.onRetryLoadMore).toHaveBeenCalledTimes(1);
+    await expect(canvas.queryByRole('button', retry)).toBeNull();
+    await expect(canvas.queryByRole('alert')).toBeNull();
   },
 };
 
