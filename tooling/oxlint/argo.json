@@ -1819,6 +1819,7 @@
         "**/*.test.*",
         "**/mocks/**",
         "apps/server/src/supervisor/engine-process.ts",
+        "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
         "packages/engine/src/acp/process.ts",
         "apps/desktop/src/main/server-process.ts",

@@ -54,9 +54,12 @@ it('releasing a dead Engine group kills the descendants it left running', async 
   expect(isAlive(child)).toBe(false);
 });
 
-it('releasing a group with no members reports it released', async () => {
-  const { leader, child } = await startOrphanedGroup();
-  await releaseProcessGroup(leader);
-  expect(isAlive(child)).toBe(false);
-  await expect(releaseProcessGroup(leader)).resolves.toBe('released');
+it('releasing a group whose leader exited and left nothing reports it released', async () => {
+  const leader = spawn(process.execPath, ['-e', ''], { detached: true });
+  const pid = leader.pid;
+  if (pid === undefined) throw new Error('The leader did not start');
+  await new Promise<void>((resolve): void => {
+    leader.once('exit', (): void => resolve());
+  });
+  await expect(releaseProcessGroup(pid)).resolves.toBe('released');
 });

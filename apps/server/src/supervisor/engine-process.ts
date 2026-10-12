@@ -13,14 +13,21 @@ import { releaseProcessGroup, supportsProcessGroups } from './process-group';
 const engineEntry = fileURLToPath(
   new URL('../engine/main.ts', import.meta.url),
 );
+export interface EngineProcessInput {
+  watch: boolean;
+  // Tests fork a stand-in Engine and shorten the kill timeout.
+  entry?: string;
+  killTimeoutMs?: number;
+}
+
 // Allow the Engine's HTTP close, Session stop, and writer drain limits, plus five seconds.
 const killTimeoutMs = 25_000;
 
 // Forks the Engine under tsx as the leader of its own process group, so the Engine and every Agent it launched can be released together; in watch mode Node restarts it on a file change and relays its IPC messages.
-export const engineProcess = fromCallback<EngineCommand, { watch: boolean }>(
+export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
   ({ input, sendBack, receive }): (() => void) => {
     const send = (event: EngineEvent): void => sendBack(event);
-    const child = fork(engineEntry, [], {
+    const child = fork(input.entry ?? engineEntry, [], {
       detached: supportsProcessGroups,
       execArgv: [
         '--import',
@@ -53,37 +60,34 @@ export const engineProcess = fromCallback<EngineCommand, { watch: boolean }>(
     // Without a pid nothing was spawned, so no group exists.
     const release = async (): Promise<'released' | 'unresolved'> =>
       child.pid === undefined ? 'released' : releaseProcessGroup(child.pid);
-    // Asks the Engine to stop, kills it after the timeout, then proves its whole group is gone.
-    const stop = async (): Promise<void> => {
+    // Asks the Engine to stop, kills its group after the timeout, then proves the whole group is gone.
+    const terminate = async (): Promise<'released' | 'unresolved'> => {
       if (!hasExited()) {
         child.kill('SIGTERM');
         const forceKill = setTimeout(
-          (): boolean => child.kill('SIGKILL'),
-          killTimeoutMs,
+          (): void => void release(),
+          input.killTimeoutMs ?? killTimeoutMs,
         );
         await exited;
         clearTimeout(forceKill);
       }
-      const outcome = await release();
-      send({
-        type: outcome === 'released' ? 'engine.exited' : 'engine.unresolved',
-      });
+      return release();
     };
 
     child.on('message', onMessage);
     child.on('exit', onExit);
     receive((): void => {
-      void stop();
+      void terminate().then((outcome): void =>
+        send({
+          type: outcome === 'released' ? 'engine.exited' : 'engine.unresolved',
+        }),
+      );
     });
     return (): void => {
       child.off('message', onMessage);
       child.off('exit', onExit);
       // The Supervisor is going away; take the whole group down with the Engine.
-      if (!hasExited()) {
-        child.kill('SIGTERM');
-        setTimeout((): void => void release(), killTimeoutMs).unref();
-      }
-      void exited.then((): Promise<unknown> => release());
+      void terminate();
     };
   },
 );
