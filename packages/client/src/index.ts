@@ -31,7 +31,6 @@ export {
   type RenderSymbolImage,
   SymbolImagesProvider,
 } from './lib/generic/symbols/symbol-images';
-export { iconSymbols } from './lib/generic/symbols/icon-names';
 export { useWide } from './lib/generic/use-wide';
 export { Text, useTextStyle } from './lib/generic/primitives/text';
 export { Toaster } from './lib/generic/primitives/toast';
@@ -44,7 +43,6 @@ export {
   type ScreenHeaderProps,
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
-export { HeaderButton } from '#lib/product/header-button';
 export {
   HeaderSearchRow,
   useHeaderSearch,
