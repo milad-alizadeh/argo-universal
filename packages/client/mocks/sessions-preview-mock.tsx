@@ -16,7 +16,7 @@ export function SessionsPreviewMock(args: SessionsViewProps): ReactElement {
   );
   return (
     <View className="flex-1 w-full" style={{ minHeight: 0 }}>
-      <View className="h-11 wide:h-14 flex-row items-center gap-0.5 px-2">
+      <View className="min-h-11 web:h-11 wide:min-h-14 web:wide:h-14 flex-row items-center gap-0.5 px-2">
         <SessionsHeader
           query={query}
           onQueryChange={setQuery}
