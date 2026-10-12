@@ -123,7 +123,7 @@ export function DetailHeaderSlots({
 }): React.JSX.Element {
   const wide = useWide();
   return (
-    <View className="w-full flex-1 bg-background" style={{ minHeight: 0 }}>
+    <View className="w-full flex-1 bg-sidebar" style={{ minHeight: 0 }}>
       {wide && (
         <View className="h-shell-bar flex-row items-center gap-2 px-4">
           <View className="min-w-0 flex-1">

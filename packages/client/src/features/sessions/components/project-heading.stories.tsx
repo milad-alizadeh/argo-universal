@@ -23,7 +23,7 @@ export const Heading: Story = {
   render: function HeadingPreview(args) {
     const [collapsed, setCollapsed] = useState(args.collapsed);
     return (
-      <View className="w-full wide:w-shell-list bg-background wide:bg-sidebar">
+      <View className="w-full wide:w-shell-list bg-sidebar">
         <ProjectHeading
           {...args}
           collapsed={collapsed}

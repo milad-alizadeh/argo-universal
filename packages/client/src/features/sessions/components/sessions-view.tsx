@@ -150,7 +150,7 @@ export function SessionsView({
   return (
     <Screen
       edges={['bottom']}
-      className="relative flex-1 bg-background wide:bg-sidebar"
+      className="relative flex-1 bg-sidebar"
       style={{ minHeight: 0 }}
     >
       {wide && listTop}
