@@ -30,7 +30,7 @@ export function AddAgentButton(props: {
     <IconButton
       variant="ghost"
       size="sm"
-      iconSize="sm"
+      iconSize="md"
       iconClassName="text-muted-foreground"
       icon="add"
       accessibilityLabel={addCustomAgentLabel}
