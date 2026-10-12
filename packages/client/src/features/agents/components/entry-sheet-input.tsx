@@ -9,12 +9,11 @@ export function EntrySheetInput({
 }: {
   field: EntrySheetField;
 }): React.JSX.Element {
-  const errors = field.error ? [field.error] : [];
   return (
     <View className="gap-2">
       <FormLabel>{field.label}</FormLabel>
-      <FormInput mono {...field} errors={errors} />
-      <FieldMessage errors={errors} />
+      <FormInput mono {...field} />
+      <FieldMessage errors={field.errors} />
     </View>
   );
 }
