@@ -63,6 +63,18 @@ export const PastedFromVsCode = pastedFrom(pastedHtml.vsCode);
 export const PastedScriptLinkIsPlainText = pastedFrom(pastedHtml.scriptLink);
 export const PastedFromWikipedia = pastedFrom(pastedHtml.wikipedia);
 
+// A pasted external link opens as Argo opens any link, not in the new tab its source page asked for.
+export const PastedLinkDropsItsTarget: Story = {
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await pasteInto(field, pastedHtml.wikipedia);
+    await waitFor(() => expect(args.onChangeText).toHaveBeenCalled());
+    const link = canvas.getByRole('link', { name: 'original syntax' });
+    await expect(link).not.toHaveAttribute('target');
+    await expect(link).not.toHaveAttribute('rel');
+  },
+};
+
 // Colours, fonts, alignment, highlight, subscript and superscript do not show in the field.
 function pastedStylingDropped(pasted: PastedHtml): Story {
   return {
