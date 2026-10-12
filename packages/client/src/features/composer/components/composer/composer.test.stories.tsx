@@ -1305,35 +1305,41 @@ async function expectHeldAgentList(): Promise<void> {
   ).toHaveLength(1);
 }
 
-function editorScrollsAfterFourLines(width: number): Story {
+// On the web the field grows with its draft to 10 lines, then scrolls inside the card (#539).
+const draftLines = (from: number, to: number): string =>
+  Array.from(
+    { length: to - from + 1 },
+    (_, index) => `Line ${from + index}`,
+  ).join('\n');
+
+function editorScrollsAfterTenLines(width: number): Story {
   return {
     render: () => <SendingComposer onSend={fn()} />,
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
-      await userEvent.type(
-        input,
-        'First line\nSecond line\nThird line\nFourth line',
-      );
-      await waitFor(() => expect(input.scrollHeight).toBe(input.clientHeight));
       const card = input.parentElement?.parentElement;
       if (!card) throw new Error('Composer card is missing.');
+      await userEvent.type(input, draftLines(1, 1));
+      const oneLineHeight = input.clientHeight;
+      await userEvent.type(input, `\n${draftLines(2, 10)}`);
+      await waitFor(() => expect(input.scrollHeight).toBe(input.clientHeight));
+      await expect(input.clientHeight).toBeGreaterThan(oneLineHeight * 9);
       const height = card.getBoundingClientRect().height;
-      await userEvent.type(input, '\nFifth line\nSixth line');
-      await expect(input).toHaveValue(
-        'First line\nSecond line\nThird line\nFourth line\nFifth line\nSixth line',
-      );
+      await userEvent.type(input, `\n${draftLines(11, 12)}`);
+      await expect(input).toHaveValue(draftLines(1, 12));
       await expect(card.getBoundingClientRect().height).toBe(height);
       await expect(input.scrollHeight).toBeGreaterThan(input.clientHeight);
+      await expect(canvas.getByRole('button', { name: 'Send' })).toBeVisible();
       await browserUserEvent.wheel(input, { delta: { y: 200 } });
       await waitFor(() => expect(input.scrollTop).toBeGreaterThan(0));
     },
   };
 }
-export const EditorScrollsAfterFourLinesPhone = editorScrollsAfterFourLines(
+export const EditorScrollsAfterTenLinesPhone = editorScrollsAfterTenLines(
   layoutWidths.phone,
 );
-export const EditorScrollsAfterFourLinesWide = editorScrollsAfterFourLines(
+export const EditorScrollsAfterTenLinesWide = editorScrollsAfterTenLines(
   layoutWidths.wide,
 );
 
