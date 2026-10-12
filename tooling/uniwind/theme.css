@@ -1,5 +1,5 @@
 @theme static {
-  --container-composer: 640px;
+  --container-composer: 800px;
   --spacing-plan-proposal: 280px;
   --blur-composer: 3px;
   --shadow-composer:
@@ -104,10 +104,13 @@
   --spacing-hairline: hairlineWidth();
   --spacing-phone-drawer: 300px;
   --spacing-phone-drawer-peek: 64px;
-  --spacing-phone-shell-badge: 20px;
+  --spacing-phone-shell-badge: 22px;
   --spacing-shell-bar: 64px;
-  --spacing-shell-list: 300px;
-  --spacing-shell-inspector: 380px;
+  /* The rail, the sidebar control bar and the Inspector bar on a wide window. */
+  --spacing-shell-rail: 72px;
+  --spacing-shell-control: 44px;
+  --spacing-shell-list: 312px;
+  --spacing-shell-inspector: 352px;
   --spacing-shell-inset: 8px;
   --spacing-session-plan: 40px;
   --spacing-session-phone: 390px;
@@ -180,7 +183,6 @@
       --color-warning: var(--color-amber-600);
       --color-warning-foreground: var(--color-white);
       --color-sidebar: var(--color-neutral-50);
-      --color-shell-chrome: oklch(94% 0 0);
       /* Glass: the sidebar panel, its darker tray, and a card on glass. */
       --color-glass: #ffffff80;
       --color-glass-muted: #e5e5e5b3;
@@ -240,7 +242,6 @@
       --color-warning: oklch(76.9% 0.188 70.08);
       --color-warning-foreground: hsl(0 0% 3.9%);
       --color-sidebar: oklch(20.5% 0 0);
-      --color-shell-chrome: oklch(14.5% 0 0);
       --color-glass: #17171780;
       --color-glass-muted: #262626b3;
       --color-glass-card: #171717e6;

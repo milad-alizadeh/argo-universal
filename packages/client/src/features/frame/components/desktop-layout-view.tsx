@@ -1,19 +1,17 @@
-import { PortalHost } from '@rn-primitives/portal';
 import type * as React from 'react';
-import { type ReactNode, useState } from 'react';
-import { detailActionsHost, detailHeaderHost } from '#features/sessions';
+import { type ReactNode, useMemo, useState } from 'react';
 import { Text } from '#lib/generic/primitives/text';
+import { InspectorProvider } from '#lib/product/inspector';
 import {
   type NavigationDestination,
   useNavigate,
 } from '#lib/product/navigation/context';
 import {
-  destinationTitle,
   sectionDestination,
   sectionOf,
 } from '../../../lib/product/navigation/sections';
-import { detailDestination } from '../state/detail-destination';
 import { DesktopShell, type InspectorState } from './desktop-shell';
+import { InspectorPane } from './inspector-pane';
 import { shellSections } from './shell-sections';
 
 export interface DesktopLayoutViewProps {
@@ -26,7 +24,7 @@ export interface DesktopLayoutViewProps {
   children: ReactNode;
 }
 
-// The wide window's shell: the open section's list in the sidebar, and `children` in the detail pane.
+// The wide window's shell: the open section's list in the sidebar, `children` in the detail pane with its own header, and the Session's changes in the Inspector.
 export function DesktopLayoutView({
   destination,
   attentionCount,
@@ -40,54 +38,45 @@ export function DesktopLayoutView({
     useState<InspectorState>('closed');
   const section = sectionOf(destination);
   const { title } = shellSections[section];
-  const detail = detailDestination(destination);
+  const inspectorOpen = inspectorState !== 'closed';
+  const inspector = useMemo(
+    () => ({
+      open: inspectorOpen,
+      toggle: (): void => setInspectorState(inspectorOpen ? 'closed' : 'open'),
+    }),
+    [inspectorOpen],
+  );
 
   return (
-    <DesktopShell
-      selectedSection={section}
-      attentionCount={attentionCount}
-      sidebarShown={sidebarShown}
-      onSidebarShownChange={setSidebarShown}
-      onSectionChange={(next) => navigate(sectionDestination(next))}
-      listHeader={
-        listHeader ?? (
-          <Text
-            role={'heading'}
-            semanticRole="heading"
-            aria-level={2}
-            className="pl-2"
+    <InspectorProvider value={inspector}>
+      <DesktopShell
+        selectedSection={section}
+        attentionCount={attentionCount}
+        sidebarShown={sidebarShown}
+        onSidebarShownChange={setSidebarShown}
+        onSectionChange={(next) => navigate(sectionDestination(next))}
+        listHeader={
+          listHeader ?? (
+            <Text role={'heading'} semanticRole="heading" aria-level={2}>
+              {title}
+            </Text>
+          )
+        }
+        list={list}
+        inspectorState={inspectorState}
+        onInspectorStateChange={setInspectorState}
+        inspector={(expanded) => (
+          <InspectorPane
+            title="Changes"
+            expanded={expanded}
+            onStateChange={setInspectorState}
           >
-            {title}
-          </Text>
-        )
-      }
-      list={list}
-      detailHeader={
-        // A Session draws its own title and status here.
-        detail.to === 'session' ? (
-          <PortalHost name={detailHeaderHost} />
-        ) : (
-          <Text
-            role={'heading'}
-            semanticRole="heading"
-            aria-level={2}
-            numberOfLines={1}
-          >
-            {destinationTitle(detail)}
-          </Text>
-        )
-      }
-      detailActions={
-        detail.to === 'session' ? (
-          <PortalHost name={detailActionsHost} />
-        ) : undefined
-      }
-      inspectorState={inspectorState}
-      onInspectorStateChange={setInspectorState}
-      inspectorHeader={null}
-      inspector={null}
-    >
-      {children}
-    </DesktopShell>
+            {null}
+          </InspectorPane>
+        )}
+      >
+        {children}
+      </DesktopShell>
+    </InspectorProvider>
   );
 }

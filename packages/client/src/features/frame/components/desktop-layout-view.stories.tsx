@@ -35,7 +35,7 @@ type Story = StoryObj<typeof meta>;
 export const Overview: Story = { name: 'DesktopLayoutView' };
 
 export const Destination: Story = {
-  args: { destination: { to: 'settings-connection' } },
+  args: { destination: { to: 'settings-devices' } },
 };
 
 export const NoAttention: Story = { args: { attentionCount: 0 } };

@@ -55,21 +55,21 @@ export const RailOpensSectionLists: Story = {
 export const SettingsRootSelectsAccounts: Story = {
   args: { destination: { to: 'settings' } },
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByRole('heading', { name: 'Accounts' }),
-    ).toBeVisible();
+    await expect(await canvas.findByText('Detail')).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: 'Settings' }),
-    ).toHaveAttribute('aria-pressed', 'true');
+    ).toHaveAttribute('aria-current', 'page');
   },
 };
 
-export const DetailTitleFollowsDestination: Story = {
-  args: { destination: { to: 'settings-connection' } },
+// Every page draws its own header, so the shell adds no title above the detail page.
+export const ShellDrawsNoPageTitle: Story = {
+  args: { destination: { to: 'settings-agent-new' } },
   play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Detail')).toBeVisible();
     await expect(
-      await canvas.findByRole('heading', { name: 'Connection' }),
-    ).toBeVisible();
+      canvas.queryByRole('heading', { name: 'Add custom Agent' }),
+    ).toBeNull();
   },
 };
 

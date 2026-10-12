@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import {
   DropdownMenu,
@@ -8,7 +9,16 @@ import {
 } from '../../../lib/generic/primitives/dropdown-menu';
 import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { Text } from '../../../lib/generic/primitives/text';
+import { PageHeader } from '../../../lib/product/page-header';
 import { DesktopShell, type DesktopShellProps } from './desktop-shell';
+import { InspectorPane } from './inspector-pane';
+
+export type DesktopShellFrameProps = Partial<
+  Omit<DesktopShellProps, 'inspector'>
+> & {
+  // The Inspector's content, under its header.
+  inspector?: ReactNode;
+};
 
 export function DesktopShellFrame({
   selectedSection = 'sessions',
@@ -20,7 +30,7 @@ export function DesktopShellFrame({
   onSectionChange = () => {},
   onSidebarShownChange = () => {},
   onInspectorStateChange = () => {},
-}: Partial<DesktopShellProps>): React.JSX.Element {
+}: DesktopShellFrameProps): React.JSX.Element {
   const title =
     selectedSection.charAt(0).toUpperCase() + selectedSection.slice(1);
   return (
@@ -33,22 +43,21 @@ export function DesktopShellFrame({
         onSectionChange={onSectionChange}
         inspectorState={inspectorState}
         onInspectorStateChange={onInspectorStateChange}
-        inspectorHeader={
-          <Text className="text-sm font-semibold">Inspector</Text>
-        }
-        inspector={
-          inspector ?? (
-            <View className="p-4">
-              <Text testID="inspector-content">{title} Inspector</Text>
-            </View>
-          )
-        }
-        listHeader={
-          <Text
-            semanticRole="heading"
-            aria-level={2}
-            className="text-base font-semibold"
+        inspector={(expanded) => (
+          <InspectorPane
+            title="Inspector"
+            expanded={expanded}
+            onStateChange={onInspectorStateChange}
           >
+            {inspector ?? (
+              <View className="p-4">
+                <Text testID="inspector-content">{title} Inspector</Text>
+              </View>
+            )}
+          </InspectorPane>
+        )}
+        listHeader={
+          <Text role="heading" semanticRole="heading" aria-level={2}>
             {title}
           </Text>
         }
@@ -57,40 +66,35 @@ export function DesktopShellFrame({
             <Text testID="list-content">{title} list</Text>
           </View>
         }
-        detailHeader={
-          <Text
-            semanticRole="heading"
-            aria-level={2}
-            className="text-base font-semibold"
-            numberOfLines={1}
-          >
-            {title} detail
-          </Text>
-        }
-        detailActions={
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <IconButton
-                variant="ghost"
-                className="size-8 p-0 sm:size-8"
-                accessibilityLabel="More actions"
-                icon={'more'}
-                iconSize="sm"
-                iconClassName={'text-muted-foreground'}
-                size="md"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>
-                <Text>Example action</Text>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        }
       >
         {children ?? (
-          <View className="flex-1 p-4">
-            <Text testID="detail-content">{title} detail</Text>
+          <View className="flex-1">
+            <PageHeader
+              title={`${title} page`}
+              actions={
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <IconButton
+                      variant="ghost"
+                      className="size-7 p-0 sm:size-7"
+                      accessibilityLabel="More actions"
+                      icon={'more'}
+                      iconSize="sm"
+                      iconClassName={'text-muted-foreground'}
+                      size="md"
+                    />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem>
+                      <Text>Example action</Text>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              }
+            />
+            <View className="flex-1 p-4">
+              <Text testID="detail-content">{title} detail</Text>
+            </View>
           </View>
         )}
       </DesktopShell>

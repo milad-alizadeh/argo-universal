@@ -45,11 +45,19 @@ const server = createActor(serverConnectionMachine, {
   input: { home, serverDirectory },
 });
 
+// The 12px lights centred in the rail's 44px row: the glass is inset 8, and the row's 52px of lights centres in the 72px rail.
+const trafficLights = { x: 18, y: 24 };
+
 const createWindow = (url: string): void => {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     show: !runsInBackground,
+    // On macOS the traffic lights sit in the rail's window-controls row on the glass, with no title bar above.
+    ...(process.platform === 'darwin' && {
+      titleBarStyle: 'hidden',
+      trafficLightPosition: trafficLights,
+    }),
     webPreferences: {
       // A hidden window would otherwise throttle timers and animations.
       backgroundThrottling: !runsInBackground,
