@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState } from 'react';
-import { Text } from '#lib/generic/primitives/text';
 import { InspectorProvider } from '#lib/product/inspector';
+import { ListTitle } from '#lib/product/list-title';
 import {
   type NavigationDestination,
   useNavigate,
@@ -55,13 +55,7 @@ export function DesktopLayoutView({
         sidebarShown={sidebarShown}
         onSidebarShownChange={setSidebarShown}
         onSectionChange={(next) => navigate(sectionDestination(next))}
-        listHeader={
-          listHeader ?? (
-            <Text role={'heading'} semanticRole="heading" aria-level={2}>
-              {title}
-            </Text>
-          )
-        }
+        listHeader={listHeader ?? <ListTitle>{title}</ListTitle>}
         list={list}
         inspectorState={inspectorState}
         onInspectorStateChange={setInspectorState}

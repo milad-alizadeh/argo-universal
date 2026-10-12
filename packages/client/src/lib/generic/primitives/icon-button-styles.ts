@@ -16,6 +16,8 @@ export const iconButtonClasses = cva(
         sm: 'size-11 sm:size-7',
         md: 'size-11 sm:size-8',
         lg: 'size-11 sm:size-10',
+        xl: 'size-11 sm:size-11',
+        '2xl': 'size-12 sm:size-12',
       },
     },
     defaultVariants: { size: 'md', variant: 'default' },
