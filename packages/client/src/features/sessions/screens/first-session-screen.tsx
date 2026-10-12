@@ -15,14 +15,9 @@ export function FirstSessionScreen(): React.JSX.Element {
   const trpc = useTRPC();
   const list = useQuery(trpc.session.list.queryOptions({ archived: false }));
   const [chosen, setChosen] = useState<FirstSessionChoice | undefined>();
-  if (list.isPending) return <FirstSessionView state="loading" />;
-  if (list.isError)
-    return (
-      <FirstSessionView
-        state="load-failed"
-        onRetry={() => void list.refetch()}
-      />
-    );
+  // A failed list stays blank: the Sessions sidebar beside it shows the failure's toast, and the list retries when the Connection reopens.
+  if (list.isPending || list.isError)
+    return <FirstSessionView state="loading" />;
   const next = chooseFirstSession(
     list.data.sessions.map((session) => session.sessionId),
     chosen,

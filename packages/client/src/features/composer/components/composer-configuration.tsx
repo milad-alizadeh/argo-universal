@@ -7,22 +7,27 @@ import type {
 } from '@repo/contracts';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, useWindowDimensions, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
-import { withUniwind } from 'uniwind';
+import { useCSSVariable, withUniwind } from 'uniwind';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { Text } from '#lib/generic/primitives/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { ScrollFadeList } from '#lib/product/scroll-fade-list';
+import {
+  ScrollFadeList,
+  type ScrollFadeListProps,
+} from '#lib/product/scroll-fade-list';
 import { Button } from '../../../lib/generic/primitives/button';
 import { FieldGroup } from '../../../lib/generic/primitives/hosted-field-group';
 import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { InfoPopover } from '../../../lib/generic/primitives/info-popover';
 import { contentActionClass } from '../../../lib/generic/primitives/pressable';
+import { SelectedCheck } from '../../../lib/generic/primitives/selected-check';
 import { Slider } from '../../../lib/generic/primitives/slider';
 import { Switch } from '../../../lib/generic/primitives/switch';
+import { Chevron } from '../../../lib/generic/symbols/chevron';
 import { Icon, iconSizeStyle } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 import {
@@ -125,6 +130,16 @@ const configurationIcons: Record<string, IconName> = {
 const agentModelMenuWidth = 580;
 const agentMenuWidth = 280;
 const modelListMaxHeight = 320;
+// The phone web sheet stops at 85% of the screen; the list's share leaves room for its grip, header and bottom inset.
+const phoneAgentListScreenFraction = 0.6;
+// Legend List's web build drops the paddingHorizontal and paddingVertical shorthands, so each side is set.
+const paneListPadding = {
+  paddingLeft: 4,
+  paddingRight: 4,
+  paddingTop: 2,
+  paddingBottom: 4,
+};
+const phoneListPadding = { paddingTop: 4, paddingBottom: 4 };
 function configurationIcon(name?: string): IconName {
   return (
     (name && Object.hasOwn(configurationIcons, name)
@@ -203,7 +218,7 @@ function Choice({
       className={contentActionClass({
         variant: 'ghost',
         className: cn(
-          'min-h-11 wide:min-h-8 h-auto sm:h-auto justify-start gap-2.5 px-2.5 wide:px-2 py-1.5 rounded-sm',
+          'min-h-11 wide:min-h-8 h-auto sm:h-auto justify-start gap-2.5 px-2.5 wide:px-2 py-1.5 rounded-sm wide:rounded-xl',
           'web:focus-visible:ring-0 web:focus-visible:bg-accent',
           selected && 'bg-accent ios:bg-accent/50',
           description && 'min-h-13 wide:min-h-0',
@@ -240,7 +255,7 @@ function Choice({
           !!leading && { height: iconSizeStyle('md').height },
         ]}
       >
-        {selected && <Icon name="check" />}
+        {selected && <SelectedCheck />}
       </View>
     </Pressable>
   );
@@ -287,6 +302,7 @@ export function AgentChoices({
   onSelect: () => void;
 }): React.JSX.Element {
   const wide = useWide();
+  const agentListLayout = useAgentListLayout(wide);
   // A running Session keeps its Agent: the list stays, disabled, with that Agent chosen.
   const agents = configuration.agents;
   const renderAgent = (agent: AgentInfo): React.JSX.Element => {
@@ -319,7 +335,7 @@ export function AgentChoices({
           className={contentActionClass({
             variant: 'ghost',
             className: cn(
-              'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2.5 has-[>[data-icon]]:px-2.5 wide:px-2 wide:has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
+              'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2.5 has-[>[data-icon]]:px-2.5 wide:px-2 wide:has-[>[data-icon]]:px-2 rounded-sm wide:rounded-xl justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
               // The desktop pane sits on the sidebar colour, so its chosen row needs a deeper fill; a running Session dims only the Agents it cannot switch to.
               agent.agent === configuration.agent &&
                 'bg-accent ios:bg-accent/50 wide:bg-foreground/7 opacity-100 disabled:opacity-100',
@@ -352,7 +368,7 @@ export function AgentChoices({
               </Text>
             )}
           </View>
-          {agent.agent === configuration.agent && <Icon name="check" />}
+          {agent.agent === configuration.agent && <SelectedCheck />}
         </Pressable>
         {availability && onAvailabilityAction && (
           <Button
@@ -375,16 +391,12 @@ export function AgentChoices({
   const currentIndex = agents.findIndex(
     (agent) => agent.agent === configuration.agent,
   );
-  if (wide)
+  // A native sheet scrolls its own page; the web sheet needs the list to scroll and fade inside it.
+  if (wide || Platform.OS === 'web')
     return (
       <ScrollFadeList
         {...listTestIdProps('composer-agents-scroll')}
-        surfaceClassName="bg-sidebar"
-        contentContainerStyle={{
-          paddingHorizontal: 4,
-          paddingTop: 2,
-          paddingBottom: 4,
-        }}
+        {...agentListLayout}
         data={agents}
         initialScrollIndex={currentIndex > 0 ? currentIndex : undefined}
         keyExtractor={(agent) => agent.agent}
@@ -399,6 +411,32 @@ export function AgentChoices({
       {agents.map(renderAgent)}
     </View>
   );
+}
+
+function useAgentListLayout(
+  wide: boolean,
+): Pick<
+  ScrollFadeListProps<AgentInfo>,
+  'surfaceClassName' | 'maxHeight' | 'contentContainerStyle'
+> {
+  const windowHeight = useWindowDimensions().height;
+  const gutter = Number.parseFloat(
+    String(useCSSVariable('--spacing-gutter-list')),
+  );
+  if (wide)
+    return {
+      surfaceClassName: 'bg-sidebar',
+      contentContainerStyle: paneListPadding,
+    };
+  return {
+    surfaceClassName: 'bg-popover',
+    maxHeight: windowHeight * phoneAgentListScreenFraction,
+    contentContainerStyle: {
+      ...phoneListPadding,
+      paddingLeft: gutter,
+      paddingRight: gutter,
+    },
+  };
 }
 
 function ChoiceSeparator(): React.JSX.Element {
@@ -446,11 +484,7 @@ function ModelList({
       {...listTestIdProps('composer-models-scroll')}
       surfaceClassName="bg-popover"
       maxHeight={modelListMaxHeight}
-      contentContainerStyle={{
-        paddingHorizontal: 4,
-        paddingTop: 2,
-        paddingBottom: 4,
-      }}
+      contentContainerStyle={paneListPadding}
       data={configurationChoices(model)}
       keyExtractor={(choice) => choice.value}
       renderItem={({ item: choice }) => (
@@ -631,7 +665,7 @@ function SwitchOptions({
           <Pressable
             key={option.configId}
             {...rowProps}
-            className="px-2 py-2 flex-row items-center gap-3 rounded-sm web:outline-none web:hover:bg-accent web:focus-visible:bg-accent"
+            className="px-2 py-2 flex-row items-center gap-3 rounded-xl web:outline-none web:hover:bg-accent web:focus-visible:bg-accent"
           >
             <View className="flex-1 min-w-0 gap-0.5">
               {label}
@@ -688,7 +722,7 @@ export function AgentModelMenu({
             className="size-11 sm:size-11"
             onPress={() => setPage('settings')}
             icon={'chevron-left'}
-            iconSize="md"
+            iconSize="xs"
             iconClassName={'text-foreground'}
             size="md"
           />
@@ -760,8 +794,7 @@ export function AgentModelMenu({
                 >
                   {agent?.label}
                 </Text>
-                <Icon
-                  size="xs"
+                <Chevron
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
@@ -790,8 +823,7 @@ export function AgentModelMenu({
                 >
                   {modelName(current)}
                 </Text>
-                <Icon
-                  size="xs"
+                <Chevron
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
@@ -916,8 +948,8 @@ export function ComposerAgentModelControl({
             />
           )}
           {wide && (
-            <Icon
-              size="xs"
+            <Chevron
+              textRole="control"
               name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
@@ -983,8 +1015,8 @@ export function ComposerModeControl({
             {current?.name.replace(/\s*\(recommended\)\s*$/i, '')}
           </Text>
           <View className={cn('-ml-0.5', !wide && 'hidden')}>
-            <Icon
-              size="xs"
+            <Chevron
+              textRole="control"
               name="chevron-down"
               className="text-muted-foreground"
             />
@@ -1110,8 +1142,8 @@ export function ComposerCheckoutControl({
           <Text selectable={false} role="secondary" className="select-none">
             {checkout.newWorktree ? 'New worktree' : 'Local'}
           </Text>
-          <Icon
-            size="xs"
+          <Chevron
+            textRole="secondary"
             name="chevron-down"
             className="text-muted-foreground"
           />

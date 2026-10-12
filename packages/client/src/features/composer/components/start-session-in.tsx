@@ -2,14 +2,17 @@ import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Input } from '#lib/generic/primitives/input';
+import { ComboboxSearch } from '#lib/generic/primitives/combobox-search';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
+import { useServerPaired } from '#lib/product/server-place';
 import {
   Pressable,
   contentActionClass,
 } from '../../../lib/generic/primitives/pressable';
+import { SelectedCheck } from '../../../lib/generic/primitives/selected-check';
+import { Chevron } from '../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import {
   CheckoutContents,
@@ -18,6 +21,7 @@ import {
 import { ComposerPopover } from './composer-popover';
 
 export interface StartSessionInProps {
+  // The Server computer's name, shown only when this device is paired to a Server on another computer.
   serverName: string;
   // False while the Connection to the Server is down and the App retries.
   serverConnected: boolean;
@@ -40,6 +44,7 @@ export function StartSessionIn({
   disabled = false,
 }: StartSessionInProps): React.JSX.Element {
   const wide = useContentWide();
+  const paired = useServerPaired();
   const project = projects.find((entry) => entry.id === projectId);
   const projectControl = (
     <ComposerPopover
@@ -70,8 +75,7 @@ export function StartSessionIn({
           >
             {project?.name ?? 'Choose a Project'}
           </Text>
-          <Icon
-            size="xs"
+          <Chevron
             name="chevron-down"
             className="-ml-0.5 text-muted-foreground"
           />
@@ -90,17 +94,22 @@ export function StartSessionIn({
       )}
     </ComposerPopover>
   );
-  const server = (
+  // On the Server's own computer the host needs no name; only a lost Connection shows.
+  const server = (paired || !serverConnected) && (
     <View
       className={cn(
         'flex-row items-center gap-1.5 shrink-0',
         wide ? 'h-7 px-1.5' : 'h-10 px-4',
       )}
     >
-      <Icon name="computer" className="text-muted-foreground" />
-      <Text numberOfLines={1} role="body">
-        {serverName}
-      </Text>
+      {paired && (
+        <>
+          <Icon name="computer" className="text-muted-foreground" />
+          <Text numberOfLines={1} role="body">
+            {serverName}
+          </Text>
+        </>
+      )}
       <View
         role="img"
         accessibilityLabel={serverConnected ? 'Connected' : 'Reconnecting'}
@@ -122,18 +131,12 @@ export function StartSessionIn({
         accessibilityLabel="Start the Session in"
         className="w-full max-w-composer flex-row items-center gap-4 pl-2.5"
       >
-        <Text role="secondary" className="pl-1.5 shrink-0">
-          Start the Session in
-        </Text>
         {server}
         {projectControl}
       </View>
     );
   return (
     <View accessibilityLabel="Start the Session in" className="w-full">
-      <Text role="secondary" className="pl-4 pb-1">
-        Start the Session in
-      </Text>
       {server}
       {projectControl}
       <ComposerPopover
@@ -161,8 +164,7 @@ export function StartSessionIn({
             >
               {checkout.newWorktree ? 'New worktree' : 'Local'}
             </Text>
-            <Icon
-              size="xs"
+            <Chevron
               name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
@@ -204,18 +206,13 @@ function ProjectPicker({
   return (
     <View className="px-gutter-list py-1 wide:p-1">
       <View className="py-1">
-        <View className="h-8 flex-row items-center gap-1.5 rounded-md web:rounded-search px-2.5 wide:px-2">
-          <Icon name="search" className="text-muted-foreground" />
-          <Input
-            accessibilityLabel="Find a Project"
-            placeholder="Find a Project…"
-            value={query}
-            onChangeText={setQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-            className="h-5 sm:h-5 flex-1 rounded-none border-0 bg-transparent dark:bg-transparent p-0 px-0 type-control shadow-none web:focus-visible:ring-0"
-          />
-        </View>
+        <ComboboxSearch
+          label="Find a Project"
+          placeholder="Find a Project…"
+          value={query}
+          onChangeText={setQuery}
+          className="native:mx-1.5"
+        />
       </View>
       <View className="pt-1 gap-0.5">
         {found.map((project) => {
@@ -231,7 +228,7 @@ function ProjectPicker({
               className={contentActionClass({
                 variant: 'ghost',
                 className: cn(
-                  'h-auto sm:h-auto items-start justify-start gap-1.5 px-2.5 py-2 has-[>[data-icon]]:px-2.5 has-[>[data-icon]]:py-2 wide:p-2 wide:has-[>[data-icon]]:p-2 rounded-md web:focus-visible:ring-0 web:focus-visible:bg-accent',
+                  'h-auto sm:h-auto items-start justify-start gap-1.5 px-2.5 py-2 has-[>[data-icon]]:px-2.5 has-[>[data-icon]]:py-2 wide:p-2 wide:has-[>[data-icon]]:p-2 rounded-md wide:rounded-xl web:focus-visible:ring-0 web:focus-visible:bg-accent',
                   selected && 'bg-accent ios:bg-accent/50',
                 ),
               })}
@@ -258,7 +255,7 @@ function ProjectPicker({
                 </Text>
               </View>
               <View className="h-5 w-4 shrink-0 items-center justify-center">
-                {selected && <Icon name="check" className="text-foreground" />}
+                {selected && <SelectedCheck className="text-foreground" />}
               </View>
             </Pressable>
           );

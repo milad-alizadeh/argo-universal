@@ -9,6 +9,7 @@ import { Text } from '#lib/generic/primitives/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';
+import { useTextIconSize } from '../../../lib/generic/symbols/text-icon-size';
 import { ShimmerText } from './shimmer-text';
 
 const noticeAppearance = new Map<string, { icon: IconName; color: string }>([
@@ -41,14 +42,19 @@ function NoticeMessage({
   live = false,
 }: NoticeMessageProps): React.JSX.Element {
   const appearance = noticeAppearance.get(severity) ?? unrecognisedAppearance;
+  const iconSize = useTextIconSize();
   return (
     <View
       role={severity === 'error' ? 'alert' : 'status'}
       accessibilityLabel={`${severity}: ${title}`}
       className="min-h-5 flex-row items-start gap-1.5"
     >
-      <View className="h-5 w-icon-md shrink-0 items-center justify-center">
-        <Icon name={icon ?? appearance.icon} className={appearance.color} />
+      <View className="h-5 shrink-0 items-center justify-center">
+        <Icon
+          name={icon ?? appearance.icon}
+          size={iconSize}
+          className={appearance.color}
+        />
       </View>
       <View className="min-w-0 flex-1 gap-0.5">
         {live ? (

@@ -6,6 +6,7 @@ import { cn } from '#lib/generic/utils';
 import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { contentActionClass } from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
+import { useWide } from '../../../lib/generic/use-wide';
 
 export interface ProjectHeadingProps {
   name: string;
@@ -24,9 +25,11 @@ export const ProjectHeading = memo(function ProjectHeading({
   addLabel = `Add to ${name}`,
   onProjectSettings,
 }: ProjectHeadingProps): React.JSX.Element {
+  const wide = useWide();
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
-  const actionsVisible = Platform.OS !== 'web' || hovered || focused;
+  // A phone always shows ⋯ and +; a wide window shows them on hover or focus.
+  const actionsVisible = Platform.OS !== 'web' || !wide || hovered || focused;
   const interactionEvents = {
     onHoverIn: (): void => setHovered(true),
     onHoverOut: (): void => setHovered(false),
@@ -52,18 +55,21 @@ export const ProjectHeading = memo(function ProjectHeading({
         className={contentActionClass({
           variant: 'ghost',
           className:
-            'h-full sm:h-full min-w-0 flex-1 justify-start gap-2 pl-2.5 pr-2 py-1 hover:bg-transparent dark:hover:bg-transparent web:has-[>[data-icon]]:pl-2.5 web:has-[>[data-icon]]:pr-2',
+            'h-full sm:h-full min-w-0 flex-1 justify-start gap-1.5 pl-2.5 pr-2 py-1 wide:gap-3 wide:pl-4 hover:bg-transparent dark:hover:bg-transparent',
         })}
       >
         <TextClassContext.Provider value={undefined}>
-          <Icon
-            name={collapsed ? 'folder' : 'folder-open'}
-            className="text-muted-foreground wide:text-foreground"
-          />
+          {/* Wide, the folder sits in the same 20 slot as a Session's logo. */}
+          <View className="items-center wide:w-5">
+            <Icon
+              name={collapsed ? 'folder' : 'folder-open'}
+              className="text-muted-foreground wide:text-foreground"
+            />
+          </View>
           <Text
             selectable={false}
             numberOfLines={1}
-            role={'heading'}
+            role={wide ? 'body' : 'heading'}
 
             className="select-none min-w-0 flex-1"
           >

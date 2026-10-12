@@ -90,13 +90,13 @@ export const SessionRow = memo(function SessionRow({
       className={contentActionClass({
         variant: 'ghost',
         className: cn(
-          'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:py-2 bg-sidebar dark:active:bg-accent web:dark:hover:bg-accent',
-          selected && 'bg-sidebar-accent wide:bg-sidebar-accent',
+          'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:gap-3 wide:px-4 wide:py-2 wide:rounded-selection bg-sidebar wide:bg-transparent dark:active:bg-accent web:dark:hover:bg-accent',
+          selected && 'bg-sidebar-accent wide:bg-selected',
         ),
       })}
     >
       <TextClassContext.Provider value={undefined}>
-        <View className="relative h-6 shrink-0 items-center justify-center wide:h-5">
+        <View className="relative h-6 shrink-0 items-center justify-center wide:size-5">
           <Animated.View style={[iconSizeStyle('sm'), logoStyle]}>
             <SvgXml
               testID="session-logo"

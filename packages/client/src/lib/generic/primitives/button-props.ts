@@ -8,7 +8,8 @@ export type ButtonVariant =
   | 'secondary'
   | 'ghost'
   | 'link';
-export type ButtonSize = 'sm' | 'md' | 'lg';
+// `xs` is the compact toolbar button of a desktop header.
+export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 export interface ButtonDataProps {
   label: string;

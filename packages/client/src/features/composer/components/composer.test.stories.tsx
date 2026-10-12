@@ -11,6 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import { ContentLayout } from '#lib/product/content-layout';
+import { SessionColumn } from '#lib/product/session-layout';
 import { chooseEffort } from '../../../../mocks/choose-effort';
 import {
   composerProps,
@@ -140,6 +141,13 @@ if (!secondAgent)
 
 const meta = {
   title: 'Tests/Composer',
+  decorators: [
+    (Story): React.JSX.Element => (
+      <SessionColumn>
+        <Story />
+      </SessionColumn>
+    ),
+  ],
   globals: { mode: 'light' },
   component: Composer,
   render: (args): React.JSX.Element => (
@@ -374,6 +382,38 @@ export const AttachmentInNarrowContent: Story = {
       within(document.body).queryByRole('button', { name: filesFolderLabel }),
     ).not.toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
+  },
+};
+
+// The Session column on a 1440 window with the sidebar and the Inspector open.
+const inspectorOpenColumn = 688;
+
+export const EnvelopeWithInspectorOpen: Story = {
+  args: {
+    configuration: {
+      agents: newSessionCatalogs.bothAvailable,
+      agent: firstAgent.agent,
+      configOptions: firstAgent.configOptions,
+      onConfigChange: fn(),
+      checkout: {
+        branch: 'main',
+        newWorktree: false,
+        onNewWorktreeChange: fn(),
+      },
+    },
+  },
+  render: (args): ReactElement => (
+    <View style={{ width: inspectorOpenColumn }}>
+      <ContentLayout>
+        <Composer {...composerProps(args)} />
+      </ContentLayout>
+    </View>
+  ),
+  play: async ({ canvas }): Promise<void> => {
+    await settleViewport(layoutWidths.wide);
+    await expect(
+      await canvas.findByRole('button', { name: 'Checkout' }),
+    ).toBeVisible();
   },
 };
 

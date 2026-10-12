@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
+import { ServerPlaceProvider } from '../../../lib/product/server-place';
 import { StartSessionIn, type StartSessionInProps } from './start-session-in';
 
 const [exampleProject, landingProject] = ((): [
@@ -105,3 +106,35 @@ function switchProject(width: number): Story {
 }
 export const SwitchProjectPhone = switchProject(layoutWidths.phone);
 export const SwitchProjectWide = switchProject(layoutWidths.wide);
+
+// On the Server's own computer the App does not name the host.
+export const ServerOnThisComputer: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText(serverInfo.name)).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('img', { name: 'Connected' }),
+    ).not.toBeInTheDocument();
+  },
+};
+
+// A lost Connection still shows, even without the host's name.
+export const ReconnectingOnThisComputer: Story = {
+  args: { serverConnected: false },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Reconnecting…')).toBeVisible();
+    await expect(canvas.queryByText(serverInfo.name)).not.toBeInTheDocument();
+  },
+};
+
+// A device paired to a Server on another computer names that computer.
+export const PairedToAnotherComputer: Story = {
+  render: (args): React.JSX.Element => (
+    <ServerPlaceProvider paired>
+      <ChoosingProject {...args} />
+    </ServerPlaceProvider>
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(serverInfo.name)).toBeVisible();
+    await expect(canvas.getByRole('img', { name: 'Connected' })).toBeVisible();
+  },
+};

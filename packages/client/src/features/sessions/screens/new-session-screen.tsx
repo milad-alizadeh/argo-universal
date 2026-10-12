@@ -85,14 +85,7 @@ function useNewSessionViewProps(
   );
 
   if (serverInfo.isError || projects.isError || agents.isError)
-    return {
-      state: 'load-failed',
-      onRetry: () => {
-        void serverInfo.refetch();
-        void projects.refetch();
-        void agents.refetch();
-      },
-    };
+    return { state: 'load-failed' };
   if (!serverInfo.data || !projects.data || !agents.data)
     return { state: 'loading' };
 

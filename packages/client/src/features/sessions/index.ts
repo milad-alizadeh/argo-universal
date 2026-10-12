@@ -1,10 +1,8 @@
-export {
-  detailActionsHost,
-  detailHeaderHost,
-} from './components/session-header';
+export { SessionHeader } from './components/session-header';
 export {
   SessionsHeader,
   sessionsHeaderItems,
+  sessionsHeaderSearch,
 } from './components/sessions-header';
 export { FirstSessionScreen } from './screens/first-session-screen';
 export { NewSessionScreen } from './screens/new-session-screen';

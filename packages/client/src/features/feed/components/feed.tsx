@@ -25,6 +25,7 @@ import { listTestIdProps } from '#lib/generic/list-test-id';
 import { motionDuration } from '#lib/generic/motion';
 import { CollapsibleLayoutSyncContext } from '#lib/generic/primitives/collapsible';
 import { Text } from '#lib/generic/primitives/text';
+import { FeedFade, SessionColumn } from '#lib/product/session-layout';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 import { type FeedViewItem, feedItemKey } from '../view/feed-view';
@@ -113,9 +114,9 @@ function JumpToLatest({
 const phoneContentStyle = { paddingTop: 16 };
 const wideContentStyle = { paddingTop: 24 };
 
-// Paper's 72 (wide 60) clear the Composer's overlap; a footer, since `alignItemsAtEnd` ignores bottom padding.
+// Paper's 72 clear the Composer's 48 overlap and leave the Feed's 24 above it; a footer, since `alignItemsAtEnd` ignores bottom padding.
 function FeedEnd(): React.JSX.Element {
-  return <View className="h-18 wide:h-15" />;
+  return <View className="h-18" />;
 }
 
 // Streaming rows grow at the end, so the Feed follows rows as they measure.
@@ -136,10 +137,8 @@ const endThreshold = 0.02;
 // In screens from the top: older rows load this far ahead of the reader.
 const startThreshold = 2;
 
-// One column as wide as the Composer, centred in the pane.
-const columnClassName = 'w-full max-w-composer self-center';
-
-const fill = { flex: 1 };
+// LegendList pins a list it once measured under 10 wide, such as under an expanded Inspector, to its widest row; the pane's width overrides that pin.
+const fill = { flex: 1, minWidth: '100%' } as const;
 const fillShrinkable = { flex: 1, minHeight: 0 };
 
 // A row's collapsibles resize it in the list each frame they move, so the rows below move in the same frame.
@@ -169,9 +168,9 @@ function FeedRow({
   );
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
-      <View className="px-4 wide:px-6">
-        <View className={`${columnClassName} ${spaceBelow}`}>{children}</View>
-      </View>
+      <SessionColumn testID="feed-column" className={spaceBelow}>
+        {children}
+      </SessionColumn>
     </CollapsibleLayoutSyncContext.Provider>
   );
 }
@@ -311,6 +310,15 @@ function FeedList({
     [],
   );
 
+  // At the oldest row nothing hides under the header, so the first row stays whole.
+  const [atStart, setAtStart] = useState(false);
+  useEffect(() => {
+    const state = list.current?.getState();
+    if (!state) return;
+    setAtStart(state.isAtStart);
+    return state.listen('isAtStart', setAtStart);
+  }, []);
+
   // While any collapsible is opening or closing, the Feed holds still.
   const [movingCollapsibles, setMovingCollapsibles] = useState(0);
   const onMotionChange = useCallback((started: boolean) => {
@@ -404,32 +412,34 @@ function FeedList({
   return (
     <View style={fillShrinkable}>
       <FeedGrowthContext.Provider value={feedGrowth}>
-        <LegendList
-          ref={list}
-          {...listTestIdProps('feed-scroll')}
-          style={fill}
-          contentContainerStyle={wide ? wideContentStyle : phoneContentStyle}
-          data={entries}
-          keyExtractor={entryKey}
-          renderItem={renderItem}
-          estimatedItemSize={48}
-          // Each kind keeps its own average size, so a row not yet measured lands near its real place.
-          getItemType={entryType}
-          // Each row keeps its own expanded state, which a recycled row would inherit.
-          recycleItems={false}
-          initialScrollIndex={initialIndex}
-          alignItemsAtEnd
-          // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
-          maintainScrollAtEnd={movingCollapsibles ? holdEnd : followEnd}
-          maintainScrollAtEndThreshold={endThreshold}
-          maintainVisibleContentPosition={keepPosition}
-          // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
-          onStartReached={onStartReached}
-          onStartReachedThreshold={startThreshold}
-          drawDistance={800}
-          ListFooterComponent={FeedEnd}
-          {...keyboardProps}
-        />
+        <FeedFade atStart={atStart} atEnd={newestKeyWhenLeftEnd === null}>
+          <LegendList
+            ref={list}
+            {...listTestIdProps('feed-scroll')}
+            style={fill}
+            contentContainerStyle={wide ? wideContentStyle : phoneContentStyle}
+            data={entries}
+            keyExtractor={entryKey}
+            renderItem={renderItem}
+            estimatedItemSize={48}
+            // Each kind keeps its own average size, so a row not yet measured lands near its real place.
+            getItemType={entryType}
+            // Each row keeps its own expanded state, which a recycled row would inherit.
+            recycleItems={false}
+            initialScrollIndex={initialIndex}
+            alignItemsAtEnd
+            // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
+            maintainScrollAtEnd={movingCollapsibles ? holdEnd : followEnd}
+            maintainScrollAtEndThreshold={endThreshold}
+            maintainVisibleContentPosition={keepPosition}
+            // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
+            onStartReached={onStartReached}
+            onStartReachedThreshold={startThreshold}
+            drawDistance={800}
+            ListFooterComponent={FeedEnd}
+            {...keyboardProps}
+          />
+        </FeedFade>
       </FeedGrowthContext.Provider>
       {newestKeyWhenLeftEnd !== null && (
         <JumpToLatest

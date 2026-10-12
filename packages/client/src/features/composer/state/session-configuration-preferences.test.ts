@@ -38,6 +38,10 @@ const catalogCases = newSessionCatalogs.bothAvailable.map((agent) => {
   };
   const model = select('model');
   const effort = select('thought_level');
+  const mode = select('mode');
+  const otherMode = choicesOf(mode).find(
+    (choice) => choice.value !== mode.currentValue,
+  );
   const models = choicesOf(model);
   const defaultModel = models.find(
     (choice) => choice.value === model.currentValue,
@@ -58,14 +62,17 @@ const catalogCases = newSessionCatalogs.bothAvailable.map((agent) => {
   const chosenEffort =
     narrower &&
     levelsOf(narrower).find((level) => level !== effort.currentValue);
-  if (!narrower || !unsupported || !chosenEffort)
+  if (!narrower || !unsupported || !chosenEffort || !otherMode)
     throw new Error(
-      `Recorded catalog needs a default effort and models with differing effort levels for ${agent.label}.`,
+      `Recorded catalog needs two modes, a default effort and models with differing effort levels for ${agent.label}.`,
     );
   return {
     agent,
     model,
     effort,
+    mode,
+    otherMode,
+    defaultMode: { configId: mode.configId, value: mode.currentValue },
     narrower,
     unsupported,
     chosenEffort,
@@ -112,43 +119,53 @@ afterEach(() => {
 describe('draftConfiguration', () => {
   it.each(catalogCases)(
     'starts $agent.label from each saved choice the Agent still offers',
-    ({ agent, model, effort, narrower, chosenEffort }) => {
+    ({ agent, model, effort, mode, otherMode, narrower, chosenEffort }) => {
       expect(
-        drafted(agent, { model: narrower.value, thought_level: chosenEffort }),
+        drafted(agent, {
+          model: narrower.value,
+          thought_level: chosenEffort,
+          mode: otherMode.value,
+        }),
       ).toEqual([
         { configId: model.configId, value: narrower.value },
         { configId: effort.configId, value: chosenEffort },
+        { configId: mode.configId, value: otherMode.value },
       ]);
     },
   );
 
   it.each(withoutEffortCases)(
     'leaves effort out for $agent.label on a model without effort',
-    ({ agent, model, withoutEffort }) => {
+    ({ agent, model, withoutEffort, defaultMode }) => {
       expect(
         drafted(agent, { model: withoutEffort.value, thought_level: 'high' }),
-      ).toEqual([{ configId: model.configId, value: withoutEffort.value }]);
+      ).toEqual([
+        { configId: model.configId, value: withoutEffort.value },
+        defaultMode,
+      ]);
     },
   );
 
   it.each(catalogCases)(
     'falls back to the default effort when $agent.label saved a level the saved model lacks',
-    ({ agent, model, effort, narrower, unsupported }) => {
+    ({ agent, model, effort, narrower, unsupported, defaultMode }) => {
       expect(
         drafted(agent, { model: narrower.value, thought_level: unsupported }),
       ).toEqual([
         { configId: model.configId, value: narrower.value },
         { configId: effort.configId, value: effort.currentValue },
+        defaultMode,
       ]);
     },
   );
 
   it.each(catalogCases)(
     'falls back to the first offered level when $agent.label model lacks the default effort',
-    ({ agent, model, effort, chosenEffort }) => {
+    ({ agent, model, effort, chosenEffort, defaultMode }) => {
       expect(drafted(restrictedEffort(agent, chosenEffort), {})).toEqual([
         { configId: model.configId, value: model.currentValue },
         { configId: effort.configId, value: chosenEffort },
+        defaultMode,
       ]);
     },
   );
@@ -168,7 +185,7 @@ function memoryStorage(): Pick<
   };
 }
 
-// The Agent's options with a model and effort the Session accepted.
+// The Agent's options with a model, effort and mode the Session accepted.
 function accepted(
   agent: AgentInfo,
   choices: Record<string, string>,
@@ -183,7 +200,7 @@ function accepted(
 describe('rememberSessionConfiguration', () => {
   it.each(catalogCases)(
     'keeps the choice $agent.label accepted while an older read is still loading',
-    async ({ agent, model, effort, narrower, chosenEffort }) => {
+    async ({ agent, model, effort, narrower, chosenEffort, defaultMode }) => {
       vi.stubGlobal('window', { localStorage: memoryStorage() });
       const client = new QueryClient();
       const query = savedChoicesQuery(agent.agent);
@@ -192,7 +209,7 @@ describe('rememberSessionConfiguration', () => {
         .spyOn(AsyncStorage, 'getItem')
         .mockReturnValue(olderRead.promise);
       const loading = client.fetchQuery(query).catch(() => null);
-      await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(2));
+      await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(3));
       rememberSessionConfiguration(
         client,
         agent.agent,
@@ -204,6 +221,7 @@ describe('rememberSessionConfiguration', () => {
         [
           { configId: model.configId, value: narrower.value },
           { configId: effort.configId, value: chosenEffort },
+          defaultMode,
         ],
       );
     },
@@ -211,18 +229,23 @@ describe('rememberSessionConfiguration', () => {
 
   it.each(catalogCases)(
     'saves the choice $agent.label accepted for the next App start',
-    async ({ agent, narrower, chosenEffort }) => {
+    async ({ agent, narrower, chosenEffort, otherMode }) => {
       vi.stubGlobal('window', { localStorage: memoryStorage() });
       rememberSessionConfiguration(
         new QueryClient(),
         agent.agent,
-        accepted(agent, { model: narrower.value, thought_level: chosenEffort }),
+        accepted(agent, {
+          model: narrower.value,
+          thought_level: chosenEffort,
+          mode: otherMode.value,
+        }),
       );
       await expect(
         new QueryClient().fetchQuery(savedChoicesQuery(agent.agent)),
       ).resolves.toEqual({
         model: narrower.value,
         thought_level: chosenEffort,
+        mode: otherMode.value,
       });
     },
   );

@@ -1,13 +1,16 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { ScrollView } from 'react-native';
 import {
   SessionsHeader,
   SessionsScreen,
   sessionsHeaderItems,
+  sessionsHeaderSearch,
   useSessionsFilter,
 } from '#features/sessions';
 import { SettingsNavigationList } from '#features/settings';
+import { SearchField } from '#lib/generic/primitives/search-field';
 import { Text } from '#lib/generic/primitives/text';
+import { ListTitle } from '#lib/product/list-title';
 import {
   type NavigationDestination,
   useNavigate,
@@ -24,36 +27,51 @@ export interface SectionList {
   list: ReactNode;
 }
 
+function openSessionId(
+  destination: NavigationDestination | undefined,
+): string | undefined {
+  return destination?.to === 'session' ? destination.id : undefined;
+}
+
 // A section's list and its header row: full screen on a phone, and in the sidebar on a wide window.
 export function useSectionList(
   section: Section,
   selectedDestination?: NavigationDestination,
 ): SectionList {
   const sessionsFilter = useSessionsFilter();
+  const [settingsQuery, setSettingsQuery] = useState('');
   const navigate = useNavigate();
+  const newSession = (): void => navigate({ to: 'new-session' });
   if (section === 'sessions')
     return {
-      header: <SessionsHeader {...sessionsFilter} />,
+      header: <SessionsHeader {...sessionsFilter} onNewSession={newSession} />,
       phoneHeader: {
-        right: sessionsHeaderItems(sessionsFilter, () =>
-          navigate({ to: 'new-session' }),
-        ),
-        search: {
-          placeholder: 'Search Sessions',
-          onChangeText: sessionsFilter.onQueryChange,
-        },
+        right: sessionsHeaderItems(sessionsFilter),
+        search: sessionsHeaderSearch(sessionsFilter, newSession),
       },
       list: (
         <SessionsScreen
           query={sessionsFilter.query}
           archived={sessionsFilter.archived}
+          selectedSessionId={openSessionId(selectedDestination)}
         />
       ),
     };
   if (section === 'settings')
     return {
+      header: (
+        <SearchField
+          label="Search Settings"
+          value={settingsQuery}
+          onChangeText={setSettingsQuery}
+          title={<ListTitle>Settings</ListTitle>}
+        />
+      ),
       list: (
-        <SettingsNavigationList selectedDestination={selectedDestination} />
+        <SettingsNavigationList
+          selectedDestination={selectedDestination}
+          query={settingsQuery}
+        />
       ),
     };
   // Placeholders until each section's list screen is built.

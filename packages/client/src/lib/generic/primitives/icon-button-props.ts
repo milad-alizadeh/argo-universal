@@ -10,7 +10,7 @@ type ActionProps = Omit<
 >;
 
 // Past `lg`, the button keeps one size at every width, such as a tile in a desktop rail.
-export type IconButtonSize = ButtonSize | 'xl' | '2xl';
+export type IconButtonSize = Exclude<ButtonSize, 'xs'> | 'xl' | '2xl';
 
 export type IconButtonProps = ActionProps & {
   icon: IconName;

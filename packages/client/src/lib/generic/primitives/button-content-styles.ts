@@ -18,6 +18,7 @@ const buttonClasses = cva(
         link: '',
       },
       size: {
+        xs: 'min-h-11 px-1.5 py-2 gap-1.5 web:sm:min-h-7 web:sm:h-7 web:sm:py-0',
         sm: 'min-h-11 px-3 py-2 gap-1.5 web:sm:min-h-8 web:sm:h-8 web:sm:py-0',
         md: 'min-h-11 px-4 py-2 web:sm:min-h-10',
         lg: 'min-h-11 px-6 py-2',
