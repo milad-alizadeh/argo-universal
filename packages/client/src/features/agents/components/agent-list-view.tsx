@@ -63,7 +63,7 @@ export function AgentListView(props: AgentListViewProps): React.JSX.Element {
   const list: ListProps = { ...props, ...useListState(props) };
   useCatalogErrorToast(props.catalog);
   return (
-    <View className="flex-1 min-h-0 bg-background wide:bg-transparent">
+    <View className="flex-1 min-h-0 bg-sidebar wide:bg-transparent">
       <AgentsPhoneHeader {...list} />
       <AgentsPage {...list} />
     </View>

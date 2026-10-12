@@ -26,7 +26,7 @@ function useRegisterAgent(): CustomAgentFormProps['onSubmit'] {
 // Adds an Agent from outside the ACP Registry; the Server saves it only once it answers ACP initialize.
 export function CustomAgentNewScreen(): React.JSX.Element {
   return (
-    <View className="flex-1 bg-background wide:bg-transparent">
+    <View className="flex-1 bg-sidebar wide:bg-transparent">
       <SettingsPage
         title="Add custom Agent"
         caption={customAgentFormDescription}

@@ -25,7 +25,7 @@ export function AgentDetailView(
   props: AgentDetailViewProps,
 ): React.JSX.Element {
   return (
-    <View className="flex-1 bg-background wide:bg-transparent">
+    <View className="flex-1 bg-sidebar wide:bg-transparent">
       <PhoneTitle title={props.agent.name} />
       <SettingsPage title={props.agent.name} onBack={props.onBack}>
         <AgentSections {...props} />

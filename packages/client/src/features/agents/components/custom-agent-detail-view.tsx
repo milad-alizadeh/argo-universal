@@ -48,7 +48,7 @@ export function CustomAgentDetailView({
 
 function CustomAgentSettings(props: SettingsProps): React.JSX.Element {
   return (
-    <View className="flex-1 bg-background wide:bg-transparent">
+    <View className="flex-1 bg-sidebar wide:bg-transparent">
       <PhoneTitle title={props.definition.name} />
       <SettingsPage title={props.definition.name} onBack={props.onBack}>
         <CustomAgentContent {...props} />
