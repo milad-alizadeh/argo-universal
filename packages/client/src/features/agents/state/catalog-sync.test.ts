@@ -1,6 +1,6 @@
 import type { AgentsCatalogOutput } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { applyCatalogSync } from './catalog-sync';
+import { applyCatalogSync, catalogFailed } from './catalog-sync';
 
 const saved: AgentsCatalogOutput = {
   status: 'fresh',
@@ -94,5 +94,44 @@ describe('applyCatalogSync', () => {
     expect(
       applyCatalogSync({ catalog: undefined, error: null }, sync).refreshing,
     ).toBe(true);
+  });
+});
+
+const refused = { pending: false, error: stopping };
+
+describe('catalogFailed', () => {
+  it.each([
+    {
+      name: 'a fresh catalog',
+      catalog: saved,
+      error: null,
+      refresh: idle,
+      failed: false,
+    },
+    {
+      name: 'a loading catalog',
+      catalog: undefined,
+      error: null,
+      refresh: idle,
+      failed: false,
+    },
+    {
+      name: 'an unreadable catalog',
+      catalog: undefined,
+      error: stopping,
+      refresh: idle,
+      failed: true,
+    },
+    {
+      name: 'a refused refresh',
+      catalog: saved,
+      error: null,
+      refresh: refused,
+      failed: true,
+    },
+  ])('is $failed for $name', ({ catalog, error, refresh, failed }) => {
+    expect(catalogFailed(applyCatalogSync({ catalog, error }, refresh))).toBe(
+      failed,
+    );
   });
 });

@@ -4,13 +4,14 @@ import { layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { CustomAgentForm } from './custom-agent-form';
 import {
+  customAgentDefinition,
   customAgentFailure,
   failsItsCheck,
   registers,
 } from './custom-agent.mocks';
 
 const meta = {
-  title: 'Tests/CustomAgentScreen',
+  title: 'Tests/Screens/Settings/Add custom Agent',
   component: CustomAgentForm,
   args: {
     submitLabel: 'Add Agent',
@@ -29,6 +30,10 @@ type Layout = keyof typeof layoutWidths;
 const addAgent = { name: 'Add Agent' };
 const exampleName = 'Example ACP';
 
+async function openedEditor(name: string): Promise<Canvas> {
+  return within(await within(document.body).findByRole('dialog', { name }));
+}
+
 async function fillProgram(
   canvas: Canvas,
   userEvent: UserEvent,
@@ -37,25 +42,20 @@ async function fillProgram(
   await userEvent.type(canvas.getByLabelText('Executable'), 'example-acp');
 }
 
-// The phone adds an argument through a sheet; desktop types it into an inline row.
+// Every width adds an argument in its editor: a sheet on a phone, a dialog on a wide window.
 async function addArgument(
-  layout: Layout,
   canvas: Canvas,
   userEvent: UserEvent,
 ): Promise<void> {
-  await userEvent.click(canvas.getByRole('button', { name: 'Add argument' }));
-  if (layout === 'wide') {
-    await userEvent.type(canvas.getByLabelText('Argument 1'), '--acp');
-    return;
-  }
-  const sheet = within(document.body);
+  await userEvent.click(canvas.getByRole('link', { name: 'Add argument' }));
+  const editor = await openedEditor('Argument');
   await userEvent.type(
-    await sheet.findByRole('textbox', { name: 'Argument' }),
+    editor.getByRole('textbox', { name: 'Argument' }),
     '--acp',
   );
-  await userEvent.click(sheet.getByRole('button', { name: 'Save' }));
+  await userEvent.click(editor.getByRole('button', { name: 'Save' }));
   await expect(
-    await canvas.findByRole('button', { name: 'Edit --acp' }),
+    await canvas.findByRole('link', { name: '--acp' }),
   ).toBeVisible();
 }
 
@@ -66,7 +66,7 @@ function registersAt(layout: Layout): Story {
       const submit = canvas.getByRole('button', addAgent);
       await expect(submit).toBeDisabled();
       await fillProgram(canvas, userEvent);
-      await addArgument(layout, canvas, userEvent);
+      await addArgument(canvas, userEvent);
       await waitFor(() => expect(submit).toBeEnabled());
       await userEvent.click(submit);
       await waitFor(() =>
@@ -81,8 +81,43 @@ function registersAt(layout: Layout): Story {
   };
 }
 
+// An empty field shows an example value, so it reads as a place to type.
+export const ShowsExamplesInEmptyFields: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText('Name')).toHaveAttribute(
+      'placeholder',
+      'Example Agent',
+    );
+    await expect(canvas.getByLabelText('Executable')).toHaveAttribute(
+      'placeholder',
+      '/usr/local/bin/example-agent',
+    );
+  },
+};
+
 export const RegistersOnPhone: Story = registersAt('phone');
 export const RegistersOnDesktop: Story = registersAt('wide');
+
+// The phone edits a variable in a sheet that the backdrop closes: Save and Remove, no Cancel or close button.
+export const RemovesAVariableInASheetOnPhone: Story = {
+  args: { initial: customAgentDefinition, submitLabel: 'Save' },
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
+  play: async ({ canvas, userEvent }) => {
+    const variable = { name: /^EXAMPLE_HOME,/ };
+    await userEvent.click(canvas.getByRole('link', variable));
+    const sheet = await openedEditor('Environment variable');
+    await expect(sheet.getByRole('button', { name: 'Save' })).toBeVisible();
+    await expect(
+      sheet.queryByRole('button', { name: /^(Cancel|Close)$/ }),
+    ).toBeNull();
+    await userEvent.click(
+      sheet.getByRole('button', { name: 'Remove variable' }),
+    );
+    await waitFor(() =>
+      expect(canvas.queryByRole('link', variable)).toBeNull(),
+    );
+  },
+};
 
 export const ShowsTheFailedCheck: Story = {
   args: {
@@ -97,7 +132,6 @@ export const ShowsTheFailedCheck: Story = {
 };
 
 export const RejectsShellLinesAndCredentials: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.type(canvas.getByLabelText('Name'), exampleName);
     await userEvent.type(
@@ -110,15 +144,20 @@ export const RejectsShellLinesAndCredentials: Story = {
       ),
     ).toBeVisible();
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Add environment variable' }),
+      canvas.getByRole('link', { name: 'Add environment variable' }),
     );
-    await userEvent.type(canvas.getByLabelText('Variable 1 name'), 'API_KEY');
+    const editor = await openedEditor('Environment variable');
+    await userEvent.type(
+      editor.getByRole('textbox', { name: 'Name' }),
+      'API_KEY',
+    );
     await expect(
-      await canvas.findByText(
+      await editor.findByText(
         'Argo does not store credentials. Sign in through the Agent instead.',
       ),
     ).toBeVisible();
-    await expect(canvas.getByRole('button', addAgent)).toBeDisabled();
+    await userEvent.keyboard('{Escape}');
+    await expect(await canvas.findByRole('button', addAgent)).toBeDisabled();
     await expect(args.onSubmit).not.toHaveBeenCalled();
   },
 };

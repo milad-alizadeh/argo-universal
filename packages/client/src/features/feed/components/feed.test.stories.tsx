@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
+import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
 import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { recordedImageUrl } from '../../../lib/product/feed-message.mocks';
@@ -350,6 +351,83 @@ export const JumpsToLatest: Story = {
   },
 };
 
+// Long enough for the slowest close and the frames after it.
+const closingFrames = 40;
+const expandedAttribute = 'aria-expanded';
+
+// Opens a closed row and waits until it reads as open.
+async function openRow(row: HTMLElement): Promise<void> {
+  row.click();
+  await waitFor(() => expect(row).toHaveAttribute(expandedAttribute, 'true'));
+}
+
+// Waits until an element, in view or not, holds still for two frames, as it does once the rows around it stop moving.
+function restingTopOf(element: HTMLElement): Promise<number> {
+  let lastTop: number | undefined;
+  return waitFor(
+    async () => {
+      await afterTwoFrames();
+      const { top } = element.getBoundingClientRect();
+      const resting = top === lastTop;
+      lastTop = top;
+      if (!resting) throw new Error('The element is still moving');
+      return top;
+    },
+    { timeout: 5000 },
+  );
+}
+
+// The reader follows what they opened down to the very end.
+const scrollToEnd = (feedScroll: HTMLElement): Promise<void> =>
+  waitFor(
+    async () => {
+      feedScroll.scrollTop = feedScroll.scrollHeight;
+      feedScroll.dispatchEvent(new Event('scroll'));
+      await afterTwoFrames();
+      await expect(scrolledToEnd(feedScroll)).toBe(true);
+    },
+    { timeout: 5000 },
+  );
+
+// At the end, closing a row draws the rows above down into its place, while the rows below it hold still on every frame.
+export const KeepsRowsBelowStillWhenRowClosesAtEnd: Story = {
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.phone);
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+    const closedRows = (): HTMLElement[] =>
+      within(scroll).getAllByRole('button', { expanded: false });
+    // The last group opens on its own rows: the reader opens one and reads on to the end, where the next one sits below it.
+    const lastGroup = closedRows().at(-1);
+    if (!lastGroup) throw new Error('No closed row at the end');
+    await openRow(lastGroup);
+    const inGroup = (row: HTMLElement | undefined): row is HTMLElement =>
+      row !== undefined &&
+      Boolean(
+        lastGroup.compareDocumentPosition(row) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+    const [trigger, below] = await waitFor(() => {
+      const rows = closedRows().slice(-2);
+      if (!rows.every(inGroup) || rows.length < 2)
+        throw new Error('The last group has not drawn two rows');
+      return rows;
+    });
+    if (!trigger || !below) throw new Error('No two rows in the last group');
+    await openRow(trigger);
+    await restingTopOf(below);
+    await scrollToEnd(scroll);
+    await settledTopOf(() => below);
+    const tops = await sampleEachFrame(
+      () => trigger.click(),
+      () => below.getBoundingClientRect().top,
+      closingFrames,
+    );
+    await expect(trigger).toHaveAttribute(expandedAttribute, 'false');
+    await expect(tops).toEqual(tops.map(() => tops[0]));
+  },
+};
+
 export const KeepsPlaceWhenRowOpens: Story = {
   render: (args) => <PagedFeed {...args} rows={longRows} />,
   play: async ({ canvas }) => {
@@ -384,7 +462,7 @@ export const KeepsPlaceWhenRowOpens: Story = {
     const heightBefore = collapsible.offsetHeight;
     trigger.click();
     await waitFor(() =>
-      expect(trigger).toHaveAttribute('aria-expanded', 'true'),
+      expect(trigger).toHaveAttribute(expandedAttribute, 'true'),
     );
     // Once the row stops growing, the open has finished.
     let lastHeight = heightBefore;

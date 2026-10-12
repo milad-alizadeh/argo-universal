@@ -22,7 +22,6 @@ import {
   type ComposerConfigurationProps,
   ComposerModeControl,
 } from './composer-configuration';
-import { ComposerGlyph } from './composer-glyph';
 import { ComposerOptions } from './composer-options';
 import { ComposerPopover } from './composer-popover';
 import {
@@ -152,7 +151,7 @@ export function Composer({
     </>
   );
   return (
-    <View nativeID={composerId} className="w-full max-w-composer items-center">
+    <View nativeID={composerId} className="w-full items-center">
       {!wide &&
         (shownWrittenPlan ||
           status?.plan?.length ||
@@ -168,14 +167,14 @@ export function Composer({
       {wide &&
         !planProposal &&
         (!!shownWrittenPlan || !!status?.plan?.length) && (
-          <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-lg web:rounded-t-surface web:shadow-card border border-b-0 border-border bg-sidebar/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110">
+          <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-2xl bg-glass-muted shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180">
             {planControls}
           </View>
         )}
       {planProposal ? (
         <PlanProposalCard {...planProposal} />
       ) : (
-        <View className="w-full rounded-xl web:rounded-surface web:shadow-card border border-border bg-background/80 native:bg-background shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
+        <View className="w-full rounded-2xl bg-glass-card native:bg-background shadow-glass-card web:backdrop-blur-glass web:backdrop-saturate-180 z-10">
           {draft.images.length > 0 && (
             <ScrollView
               horizontal
@@ -229,7 +228,7 @@ export function Composer({
                       })}
                     >
                       <View className="size-5 items-center justify-center rounded-sm bg-background">
-                        <ComposerGlyph name="remove" size="xs" />
+                        <Icon name="close" size="xs" />
                       </View>
                     </Pressable>
                   </View>
@@ -333,21 +332,21 @@ export function Composer({
                             ? [
                                 {
                                   label: 'Camera',
-                                  glyph: 'camera' as const,
+                                  icon: 'camera' as const,
                                   onPress: onAttachCamera,
                                 },
                               ]
                             : []),
                           {
                             label: 'Photos',
-                            glyph: 'photos' as const,
+                            icon: 'photos' as const,
                             onPress: onAttachImages,
                           },
                           ...(onAttachFiles
                             ? [
                                 {
                                   label: 'Files',
-                                  glyph: 'files' as const,
+                                  icon: 'attach' as const,
                                   onPress: onAttachFiles,
                                 },
                               ]
@@ -368,14 +367,7 @@ export function Composer({
                         })}
                       >
                         <View className="size-8 rounded-full bg-muted wide:size-auto wide:rounded-none wide:bg-transparent items-center justify-center">
-                          {'glyph' in item ? (
-                            <ComposerGlyph name={item.glyph} />
-                          ) : (
-                            <Icon
-                              name={item.icon}
-                              className="text-foreground"
-                            />
-                          )}
+                          <Icon name={item.icon} className="text-foreground" />
                         </View>
                         <Text
                           selectable={false}
@@ -429,7 +421,9 @@ export function Composer({
                   variant: 'default',
                   className: cn(
                     'size-7 sm:size-7 rounded-full p-0',
-                    sendState !== 'stop' && wide && 'shadow-none!',
+                    sendState !== 'stop' &&
+                      wide &&
+                      'shadow-[0_1px_2px_#0000000d]!',
                     (sendState === 'sending' || sendState === 'stop') &&
                       'opacity-100',
                     sendState === 'blocked' && 'opacity-35',
@@ -447,7 +441,7 @@ export function Composer({
       {wide && (configuration || status) && (
         <View
           className={cn(
-            'h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-lg web:rounded-b-surface web:shadow-card border border-t-0 border-border bg-sidebar/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110',
+            'h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-2xl bg-glass-muted shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180',
           )}
         >
           <View className="flex-1 min-h-0 flex-row items-center pl-0.5 gap-1">
@@ -494,7 +488,7 @@ function ComposerWarning({
 }): React.JSX.Element {
   return (
     <View role="alert" className="mx-4 mt-2 flex-row items-start gap-2">
-      <ComposerGlyph name="warning" className="text-destructive" />
+      <Icon name="error" className="text-destructive" />
       <Text
         role="secondary"
         className="min-w-0 flex-1 text-destructive"

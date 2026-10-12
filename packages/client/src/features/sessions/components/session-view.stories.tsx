@@ -1,29 +1,65 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { fn } from 'storybook/test';
 import { SessionView, type SessionViewProps } from './session-view';
 import {
-  DetailHeaderSlots,
   emptySession,
   idleSession,
   longSession,
+  pullRequestMocks,
   runningSession,
+  withPullRequests,
 } from './session-view.mocks';
 
 const meta = {
   title: 'Screens/SessionScreen',
   parameters: { screenPreview: true },
   args: { view: { state: 'open', ...runningSession } },
-  render: ({ view }): React.JSX.Element => (
-    <DetailHeaderSlots>
-      <SessionView {...view} />
-    </DetailHeaderSlots>
-  ),
+  render: ({ view }): React.JSX.Element => <SessionView {...view} />,
 } satisfies Meta<{ view: SessionViewProps }>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = { name: 'SessionScreen' };
+
+export const ChecksRunning: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...withPullRequests(runningSession, [pullRequestMocks.checksRunning]),
+    },
+  },
+};
+
+export const ChecksFailing: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...withPullRequests(runningSession, [pullRequestMocks.checksFailing]),
+    },
+  },
+};
+
+// Every check passed, so Merge PR is ready.
+export const ChecksPassed: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
+    },
+  },
+};
+
+export const SeveralPullRequests: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...withPullRequests(runningSession, [
+        pullRequestMocks.checksRunning,
+        pullRequestMocks.followUp,
+      ]),
+    },
+  },
+};
 
 export const Idle: Story = {
   args: { view: { state: 'open', ...idleSession } },
@@ -54,23 +90,11 @@ export const Disconnected: Story = {
       state: 'open',
       ...idleSession,
       composer: { ...idleSession.composer, sendable: false },
-      cancelCreation: { ...idleSession.cancelCreation, disabled: true },
     },
   },
 };
 
 export const Opening: Story = { args: { view: { state: 'opening' } } };
 
-export const FailedToOpen: Story = {
-  args: {
-    view: {
-      state: 'open-failed',
-      message: 'The Agent stopped three times in ten minutes',
-      onRetry: fn(),
-    },
-  },
-};
-
-export const FailedToLoad: Story = {
-  args: { view: { state: 'load-failed', onRetry: fn() } },
-};
+// The page behind the failure's toast stays blank, whether or not the Server gave a reason.
+export const Failed: Story = { args: { view: { state: 'failed' } } };

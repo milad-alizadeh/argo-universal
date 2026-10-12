@@ -39,6 +39,11 @@ function configurationForStep(step: string): AppFixtureAgents {
   const unavailable =
     /^(?:Given|And) (?:Agent (\d+)|(?:every) Agent) is "([^"]+)"$/.exec(step);
   if (unavailable) return unavailableConfiguration(unavailable);
+  const refusing = /^(?:Given|And) Agent (\d+) refuses to open a Session$/.exec(
+    step,
+  );
+  if (refusing)
+    return { [agentId(Number(refusing[1]))]: { scenario: 'refuse-session' } };
   return {};
 }
 

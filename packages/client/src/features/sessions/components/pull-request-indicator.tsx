@@ -6,7 +6,7 @@ import { Icon } from '../../../lib/generic/symbols/icon';
 
 const pullRequest = 'pull-request';
 
-const statusAppearance = {
+export const pullRequestAppearance = {
   open: { icon: pullRequest, className: 'text-success' },
   draft: { icon: pullRequest, className: 'text-muted-foreground' },
   merged: { icon: 'merged', className: 'text-merged' },
@@ -14,16 +14,26 @@ const statusAppearance = {
   closed: { icon: pullRequest, className: 'text-destructive' },
 } as const;
 
+export const pullRequestStatusLabels = {
+  open: 'Open',
+  draft: 'Draft',
+  merged: 'Merged',
+  conflict: 'Conflict',
+  closed: 'Closed',
+} satisfies Record<PullRequestStatus, string>;
+
+export type PullRequestStatus = keyof typeof pullRequestAppearance;
+
 export interface PullRequestIndicatorProps {
   number: number;
-  status: keyof typeof statusAppearance;
+  status: PullRequestStatus;
 }
 
 export function PullRequestIndicator({
   number,
   status,
 }: PullRequestIndicatorProps): React.JSX.Element {
-  const appearance = statusAppearance[status];
+  const appearance = pullRequestAppearance[status];
   return (
     <View
       accessibilityLabel={`${status} PR #${number}`}

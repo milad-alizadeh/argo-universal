@@ -9,7 +9,6 @@ export interface SendFailures {
   attachment?: AttachmentError;
   prompt?: Failure | null;
   configuration?: Failure | null;
-  close?: Failure | null;
 }
 
 const reason = (
@@ -22,15 +21,13 @@ const inOrder = ({
   attachment,
   prompt,
   configuration,
-  close,
 }: SendFailures): (string | undefined)[] => [
   reason("Couldn't send.", prompt),
   attachment?.message,
   reason("Couldn't change settings.", configuration),
-  reason("Couldn't close the Session.", close),
 ];
 
-// The one error the Composer shows: a failed selection first, then the prompt, the upload, settings and closing.
+// The one error the Composer shows: a failed selection first, then the prompt, the upload and settings.
 export function toSendError(failures: SendFailures): string | undefined {
   const { attachment } = failures;
   if (attachment?.kind === 'selection') return attachment.message;

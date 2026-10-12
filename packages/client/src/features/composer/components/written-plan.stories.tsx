@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { type ReactElement, useState } from 'react';
 import { action } from 'storybook/actions';
+import { SessionColumn } from '#lib/product/session-layout';
 import { composerProps } from '../../../../mocks/composer-mock';
 import { longWrittenPlan } from '../../../../mocks/feed-paper';
 import { recordedAcpContent } from '../../../lib/product/acp-feed-content.mocks';
@@ -14,6 +16,13 @@ if (fileRow?.sessionUpdate !== 'plan_update' || fileRow.plan.type !== 'file')
   throw new Error('ACP recording needs a file Plan');
 const meta = {
   title: 'Composer/WrittenPlan',
+  decorators: [
+    (Story): React.JSX.Element => (
+      <SessionColumn>
+        <Story />
+      </SessionColumn>
+    ),
+  ],
   component: Composer,
   render: function EditableComposer(args): ReactElement {
     const [draft, setDraft] = useState(args.draft);

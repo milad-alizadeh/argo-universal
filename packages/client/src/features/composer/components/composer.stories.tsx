@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { action } from 'storybook/actions';
+import { SessionColumn } from '#lib/product/session-layout';
 import {
   composerProps,
   type ComposerMockProps,
@@ -21,6 +22,13 @@ if (!firstAgent) throw new Error('Recorded catalog needs an available Agent.');
 
 const meta = {
   title: 'Composer/Composer',
+  decorators: [
+    (Story): React.JSX.Element => (
+      <SessionColumn>
+        <Story />
+      </SessionColumn>
+    ),
+  ],
   component: Composer,
   render: (args): React.JSX.Element => <Composer {...composerProps(args)} />,
   parameters: {

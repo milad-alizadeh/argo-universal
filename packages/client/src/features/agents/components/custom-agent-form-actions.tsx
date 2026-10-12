@@ -1,6 +1,7 @@
 import { useStore } from '@tanstack/react-form';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { FieldRow } from '#primitives/field-row';
 import { Button } from '../../../lib/generic/primitives/button';
 import { useWide } from '../../../lib/generic/use-wide';
 import type { FormPartProps } from './custom-agent-form-sections';
@@ -10,14 +11,17 @@ export type ActionProps = FormPartProps & {
   onCancel: () => void;
 };
 
-// A phone leaves Cancel to the header's Back and gives the form one full-width action.
+// The form's foot row. A phone leaves Cancel to the header's Back and gives the form one full-width action.
 export function FormActions(props: ActionProps): React.JSX.Element {
-  if (!useWide()) return <SubmitButton {...props} fullWidth />;
   return (
-    <View className="flex-row justify-end gap-2">
-      <CancelButton disabled={props.disabled} onPress={props.onCancel} />
-      <SubmitButton {...props} />
-    </View>
+    <FieldRow>
+      <View className="items-stretch gap-2 wide:flex-row wide:justify-end">
+        {useWide() && (
+          <CancelButton disabled={props.disabled} onPress={props.onCancel} />
+        )}
+        <SubmitButton {...props} />
+      </View>
+    </FieldRow>
   );
 }
 
@@ -35,14 +39,12 @@ function CancelButton({ disabled, onPress }: CancelProps): React.JSX.Element {
   );
 }
 
-function SubmitButton(
-  props: ActionProps & { fullWidth?: boolean },
-): React.JSX.Element {
+function SubmitButton(props: ActionProps): React.JSX.Element {
   const canSubmit = useStore(props.form.store, (state) => state.canSubmit);
   return (
     <Button
       size="sm"
-      fullWidth={props.fullWidth}
+      fullWidth="narrow"
       disabled={props.disabled || !canSubmit}
       onPress={() => void props.form.handleSubmit()}
       label={props.disabled ? 'Checking…' : props.submitLabel}

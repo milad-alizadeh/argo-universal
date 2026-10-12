@@ -17,7 +17,9 @@ type Story = StoryObj<typeof meta>;
 
 export const RecordsNavigation: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Open Session' }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Go to the Session' }),
+    );
     await expect(recorder.destinations).toEqual([
       { to: 'session', id: 'session-1' },
     ]);

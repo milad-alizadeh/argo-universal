@@ -54,7 +54,7 @@ export function FeedImage({
         <Image source={source} resizeMode="cover" className="size-full" />
       </Pressable>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-auto gap-0 overflow-hidden p-0 sm:max-w-none">
+        <DialogContent className="w-auto min-w-0 gap-0 overflow-hidden p-0 sm:max-w-none">
           <DialogTitle className="sr-only">{label ?? 'Image'}</DialogTitle>
           <Image
             source={source}

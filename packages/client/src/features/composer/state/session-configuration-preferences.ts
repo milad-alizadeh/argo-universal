@@ -15,7 +15,7 @@ import {
   configurationEffortChoices,
 } from './configuration-choices';
 
-const categories = ['model', 'thought_level'] as const;
+const categories = ['model', 'thought_level', 'mode'] as const;
 type Category = (typeof categories)[number];
 type SavedChoices = Partial<Record<Category, string>>;
 type SelectOption = Extract<SessionConfigOption, { type: 'select' }>;
@@ -38,7 +38,7 @@ export function isRememberedConfiguration(
 ): option is RememberedOption {
   return (
     option.type === 'select' &&
-    (option.category === 'model' || option.category === 'thought_level')
+    categories.some((category) => category === option.category)
   );
 }
 function orderedOptions(options: SessionConfigOption[]): RememberedOption[] {
@@ -49,12 +49,17 @@ function orderedOptions(options: SessionConfigOption[]): RememberedOption[] {
 }
 async function load(agent: string): Promise<SavedChoices> {
   await writes;
-  const [model, effort] = await Promise.all(
+  const values = await Promise.all(
     categories.map((category) =>
       AsyncStorage.getItem(storageKey(agent, category)),
     ),
   );
-  return { model: model ?? undefined, thought_level: effort ?? undefined };
+  return Object.fromEntries(
+    categories.flatMap((category, index) => {
+      const value = values[index];
+      return value ? [[category, value]] : [];
+    }),
+  );
 }
 
 // The choices this device saved for an Agent; a failed read starts from the Agent's defaults.
@@ -88,7 +93,7 @@ function withSavedChoice(
   ].find((candidate) => offered.some((choice) => choice.value === candidate));
   return value === undefined ? undefined : { ...option, currentValue: value };
 }
-// The model and effort a new Session starts with: each saved choice the Agent still offers, else its default, else its first offered value.
+// The model, effort and mode a new Session starts with: each saved choice the Agent still offers, else its default, else its first offered value.
 export function draftConfiguration(
   agent: AgentInfo | undefined,
   saved: SavedChoices,

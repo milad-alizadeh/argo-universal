@@ -270,7 +270,7 @@ export const LongListsScrollUnderFadesWide: Story = {
   },
 };
 
-// The phone sheet scrolls as a whole, so the last row of each page is reachable.
+// The last row of each phone sheet page is reachable: the model page scrolls with the sheet, the Agent list scrolls under its own fades.
 export const LongListsReachableInPhoneSheet: Story = {
   args: { configuration: longListConfiguration() },
   render: renderArgs,
@@ -300,7 +300,12 @@ export const LongListsReachableInPhoneSheet: Story = {
     await userEvent.click(
       await overlay.findByRole('button', { name: 'Choose Agent' }),
     );
-    await userEvent.click(await lastVisible(`Select ${lastLongAgent.label}`));
+    const lastAgent = await expectScrollsUnderFades(
+      await overlay.findByTestId(agentsScrollId),
+      () =>
+        overlay.findByRole('button', { name: `Select ${lastLongAgent.label}` }),
+    );
+    await userEvent.click(lastAgent);
     await expect(args.configuration?.onAgentChange).toHaveBeenCalledWith(
       lastLongAgent.agent,
     );

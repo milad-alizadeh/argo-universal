@@ -17,6 +17,7 @@ import {
 } from '#features/connection';
 import { useNavigate } from '#lib/product/navigation/context';
 import { SessionsView } from '../components/sessions-view';
+import { useResubscribeOnFocus } from '../hooks/use-resubscribe-on-focus';
 import { createCoalescedRefetch } from '../state/coalesced-refetch';
 import { liveUpdatesStopped } from '../state/live-updates-stopped';
 import { sessionsLoadState } from '../state/sessions-load-state';
@@ -24,12 +25,15 @@ import { sessionsLoadState } from '../state/sessions-load-state';
 export interface SessionsScreenProps {
   query: string;
   archived: boolean;
+  // The open Session, which the wide sidebar marks.
+  selectedSessionId?: string;
 }
 
 // The Sessions list: its queries and live updates, passed to the view as props.
 export function SessionsScreen({
   query,
   archived,
+  selectedSessionId,
 }: SessionsScreenProps): React.JSX.Element {
   const trpc = useTRPC();
   const navigate = useNavigate();
@@ -77,6 +81,7 @@ export function SessionsScreen({
       sessions={rows}
       query={query}
       archived={archived}
+      selectedSessionId={selectedSessionId}
       onSelect={(id) => navigate({ to: 'session', id })}
       onNewSession={() => navigate({ to: 'new-session' })}
       onNewSessionInProject={(projectId) =>
@@ -84,20 +89,11 @@ export function SessionsScreen({
       }
       onProjectSettings={(name) => navigate({ to: 'settings-project', name })}
       onLoadMore={loadMore}
-      onRetry={() => {
-        void projects.refetch();
-        void agents.refetch();
-        void sessions.refetch();
-      }}
-      onRetryLiveUpdates={listUpdates.reset}
-      onRetryLoadMore={() => {
-        void sessions.fetchNextPage();
-      }}
     />
   );
 }
 
-// Live list updates refetch its pages and resume after Connection recovery.
+// Live list updates refetch its pages and resume after Connection recovery or when the window regains focus.
 function useSessionListUpdates(): TRPCSubscriptionResult<
   SessionListUpdate,
   ClientError
@@ -120,5 +116,6 @@ function useSessionListUpdates(): TRPCSubscriptionResult<
     }),
   );
   useResubscribeOnReconnect(subscription);
+  useResubscribeOnFocus(subscription);
   return subscription;
 }

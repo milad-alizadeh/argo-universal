@@ -6,6 +6,7 @@ import {
   Shapes,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
+import { useResolveClassNames } from 'uniwind';
 import { useNativeTheme } from '../native-theme';
 import { useWide } from '../use-wide';
 import { useNavigationFields } from './field-layout';
@@ -18,24 +19,40 @@ const gutter = 16;
 const captionPadding = 4;
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {
-  const navigation = useNavigationFields();
+  const rows = useRowsLayout(props);
   if (useWide()) return <WebFieldSection {...props} />;
   return (
     <Column verticalArrangement={{ spacedBy: 8 }} modifiers={[fillMaxWidth()]}>
       <SectionCaption text={props.title} heading />
-      <Column {...rowsLayout(navigation)}>{props.children}</Column>
-      <SectionCaption text={props.footer} tone={props.footerTone} />
+      <Column {...rows}>{props.children}</Column>
+      {props.textFields ? null : (
+        <SectionCaption text={props.footer} tone={props.footerTone} />
+      )}
     </Column>
   );
 }
 
-// A navigation list's rows sit flat and together, like the sidebar's; grouped rows share a rounded card.
-function rowsLayout(
-  navigation: boolean,
-): Pick<
+type RowsLayout = Pick<
   React.ComponentProps<typeof Column>,
   'verticalArrangement' | 'modifiers'
-> {
+>;
+
+/*
+ * A navigation list's rows sit flat and together, like the sidebar's; grouped rows share a rounded card.
+ * Text fields stand bare, apart by Material's field spacing, each saying its own hint or error.
+ */
+function useRowsLayout(props: FieldSectionProps): RowsLayout {
+  const navigation = useNavigationFields();
+  const { gap } = useResolveClassNames('gap-4');
+  if (props.textFields)
+    return {
+      verticalArrangement: { spacedBy: typeof gap === 'number' ? gap : 0 },
+      modifiers: [fillMaxWidth()],
+    };
+  return groupedLayout(navigation);
+}
+
+function groupedLayout(navigation: boolean): RowsLayout {
   if (navigation) return { modifiers: [fillMaxWidth()] };
   return {
     verticalArrangement: { spacedBy: 1 },

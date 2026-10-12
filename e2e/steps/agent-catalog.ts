@@ -3,44 +3,41 @@ import type { Locator, Page } from '@playwright/test';
 import {
   malformedRegistry,
   offlineRegistry,
+  publishedRegistry,
 } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
 
 const exampleAgentName = 'Example Agent';
-const exampleMetadata = [
-  'A compatible coding Agent',
-  'v1.2.3 · npm · needs Node.js',
-];
+const exampleDescription = 'A compatible coding Agent';
 
-async function expectExampleMetadata(row: Locator): Promise<void> {
-  for (const text of exampleMetadata)
-    await expect(row.getByText(text, { exact: true })).toBeVisible();
-  await expect(
-    row.getByLabel(`${exampleAgentName} icon`, { exact: true }),
-  ).toBeVisible();
+// Rows are links named "<name>, <description>, <status>".
+const agentLink = (page: Page, name: string): Locator =>
+  page.getByRole('link', { name: new RegExp(`^${name},`) });
+
+const aboutRow = (page: Page, name: string | RegExp): Locator =>
+  page.getByRole('group', { name, exact: true });
+
+// Opens an Agent's page, reads its version and distribution, and comes back.
+async function expectAbout(
+  page: Page,
+  name: string,
+  distribution: string | RegExp,
+): Promise<void> {
+  await agentLink(page, name).click();
+  await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();
+  await expect(aboutRow(page, 'Version, v1.2.3')).toBeVisible();
+  await expect(aboutRow(page, distributionRow(distribution))).toBeVisible();
+  await page.goBack();
 }
 
-async function readDisplayedServerPlatform(page: Page): Promise<string> {
-  const text = await page.getByText(/^For this Server · /).textContent();
-  if (!text) throw new Error('The catalog must show the Server platform');
-  return text.replace('For this Server · ', '');
-}
+const distributionRow = (distribution: string | RegExp): string | RegExp =>
+  typeof distribution === 'string'
+    ? `Distribution, ${distribution}`
+    : new RegExp(`^Distribution, ${distribution.source}$`, 'u');
 
-async function expectWindowsRecipe(page: Page): Promise<void> {
-  const platform = await readDisplayedServerPlatform(page);
-  const recipe =
-    platform === 'windows-x86_64'
-      ? 'Binary'
-      : `No distribution for ${platform}`;
-  const windows = page.getByRole('listitem', {
-    name: 'Windows Agent',
-    exact: true,
-  });
-  await expect(
-    windows.getByText(`v1.2.3 · ${recipe}`, { exact: true }),
-  ).toBeVisible();
-}
+// The registry offers a Windows binary only, so the Server names its own platform when it has none.
+const windowsDistribution = /(?:Binary|No distribution for \S+)/u;
 
 export async function browseAgents(page: Page): Promise<void> {
   const viewport = page.viewportSize();
@@ -48,9 +45,7 @@ export async function browseAgents(page: Page): Promise<void> {
     await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('link', { name: /^Agents(?:,|$)/ }).click();
-  await expect(
-    page.getByRole('heading', { name: exampleAgentName, exact: true }),
-  ).toBeVisible();
+  await expect(agentLink(page, exampleAgentName)).toBeVisible();
 }
 
 When('I browse available Agents', async ({ page }): Promise<void> => {
@@ -60,18 +55,20 @@ When('I browse available Agents', async ({ page }): Promise<void> => {
 Then(
   'the catalog shows upstream Agent metadata',
   async ({ page }): Promise<void> => {
-    const example = page.getByRole('listitem', {
-      name: exampleAgentName,
-      exact: true,
-    });
-    await expectExampleMetadata(example);
-    await expectWindowsRecipe(page);
+    await expect(
+      agentLink(page, exampleAgentName).getByText(exampleDescription, {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expectAbout(page, exampleAgentName, 'npm · needs Node.js');
+    await expectAbout(page, 'Windows Agent', windowsDistribution);
   },
 );
 
 When(
   'I search the catalog for {string}',
   async ({ page }, search: string): Promise<void> => {
+    await page.getByRole('button', { name: 'Search Agents' }).click();
     await page.getByRole('textbox', { name: 'Search Agents' }).fill(search);
   },
 );
@@ -79,12 +76,8 @@ When(
 Then(
   'only Python Agent is shown in the catalog',
   async ({ page }): Promise<void> => {
-    await expect(
-      page.getByRole('heading', { name: 'Python Agent', exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: exampleAgentName, exact: true }),
-    ).toHaveCount(0);
+    await expect(agentLink(page, 'Python Agent')).toBeVisible();
+    await expect(agentLink(page, exampleAgentName)).toHaveCount(0);
   },
 );
 
@@ -100,19 +93,45 @@ When(
   },
 );
 
-When('I refresh the Agent catalog', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: 'Refresh catalog' }).click();
+// Opening the Agents page again syncs the catalog with the registry.
+When('I open the Agents page again', async ({ page }): Promise<void> => {
+  await page.goBack();
+  await page.getByRole('link', { name: /^Agents(?:,|$)/ }).click();
 });
 
 Then(
   'the catalog keeps the last-good Agents with an explicit error',
   async ({ page }): Promise<void> => {
-    await expect(page.getByRole('alert')).toContainText(
-      'showing saved catalog',
+    const toasts = page.getByRole('region', { name: /^Notifications/ });
+    await expect(toasts).toContainText('showing saved catalog');
+    await expect(toasts).toContainText(/offline|malformed/);
+    await expect(agentLink(page, exampleAgentName)).toBeVisible();
+  },
+);
+
+When(
+  'the registry publishes {string}',
+  async ({ app }, name: string): Promise<void> => {
+    const [first] = publishedRegistry.agents;
+    const added = { ...first, id: 'late-agent', name };
+    await writeFile(
+      app.registryPath,
+      JSON.stringify({
+        ...publishedRegistry,
+        agents: [...publishedRegistry.agents, added],
+      }),
     );
-    await expect(page.getByRole('alert')).toContainText(/offline|malformed/);
-    await expect(
-      page.getByRole('heading', { name: exampleAgentName, exact: true }),
-    ).toBeVisible();
+  },
+);
+
+// The browser tells the page it is visible again, as when the person returns to the window.
+When('the window regains focus', async ({ page }): Promise<void> => {
+  await page.locator('body').dispatchEvent('visibilitychange');
+});
+
+Then(
+  'the catalog lists {string}',
+  async ({ page }, name: string): Promise<void> => {
+    await expect(agentLink(page, name)).toBeVisible();
   },
 );

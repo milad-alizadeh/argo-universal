@@ -1,4 +1,4 @@
-import type { SessionConfigOption } from '@repo/contracts';
+import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
 import { newSessionBranches, newSessionCatalogs } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { canOpenSession, toNewSessionInput } from './open-session';
@@ -13,21 +13,24 @@ import {
 } from './session-choices.mocks';
 
 const configuration: SessionConfigOption[] = firstAgent.configOptions;
+const firstPrompt: SessionNewInput['prompt'] = [
+  { type: 'text', text: 'Fix the flaky login test' },
+];
 
 describe('toNewSessionInput', () => {
-  it("sends the Project's defaults, the Agent and its configuration with no prompt", () => {
-    expect(toNewSessionInput(toSessionChoices(input()), configuration)).toEqual(
-      {
-        projectId: worktreeProject.id,
-        agent: firstAgent.agent,
-        checkout: { type: 'worktree', baseBranch: projectBaseBranch },
-        configOptions: configuration.map(({ configId, currentValue }) => ({
-          configId,
-          value: currentValue,
-        })),
-        prompt: [],
-      },
-    );
+  it("sends the Project's defaults, the Agent, its configuration and the first prompt", () => {
+    expect(
+      toNewSessionInput(toSessionChoices(input()), configuration, firstPrompt),
+    ).toEqual({
+      projectId: worktreeProject.id,
+      agent: firstAgent.agent,
+      checkout: { type: 'worktree', baseBranch: projectBaseBranch },
+      configOptions: configuration.map(({ configId, currentValue }) => ({
+        configId,
+        value: currentValue,
+      })),
+      prompt: firstPrompt,
+    });
   });
 
   it('starts a main Project on its own checkout', () => {
@@ -37,14 +40,18 @@ describe('toNewSessionInput', () => {
         branches: newSessionBranches,
       }),
     );
-    expect(toNewSessionInput(choices, [])?.checkout).toEqual({
+    expect(toNewSessionInput(choices, [], firstPrompt)?.checkout).toEqual({
       type: 'main',
     });
   });
 
   it('sends nothing without a Project', () => {
     expect(
-      toNewSessionInput(toSessionChoices(input({ projects: [] })), []),
+      toNewSessionInput(
+        toSessionChoices(input({ projects: [] })),
+        [],
+        firstPrompt,
+      ),
     ).toBeUndefined();
   });
 });

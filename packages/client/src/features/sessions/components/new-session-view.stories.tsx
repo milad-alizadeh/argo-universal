@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { fn } from 'storybook/test';
 import { NewSessionView, type NewSessionViewProps } from './new-session-view';
-import { readyNewSession } from './new-session-view.mocks';
+import { readyNewSession, typedDraft } from './new-session-view.mocks';
 
 const meta = {
   title: 'Screens/NewSessionScreen',
@@ -14,6 +13,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = { name: 'NewSessionScreen' };
+
+export const Draft: Story = {
+  args: { view: { state: 'ready', ...readyNewSession, draft: typedDraft } },
+};
 
 export const Reconnecting: Story = {
   args: {
@@ -28,7 +31,13 @@ export const Reconnecting: Story = {
 
 export const Opening: Story = {
   args: {
-    view: { state: 'ready', ...readyNewSession, opening: true, canOpen: false },
+    view: {
+      state: 'ready',
+      ...readyNewSession,
+      draft: typedDraft,
+      opening: true,
+      canOpen: false,
+    },
   },
 };
 
@@ -37,6 +46,7 @@ export const FailedStart: Story = {
     view: {
       state: 'ready',
       ...readyNewSession,
+      draft: typedDraft,
       openError: 'The Agent exited before it was ready.',
     },
   },
@@ -44,6 +54,4 @@ export const FailedStart: Story = {
 
 export const Loading: Story = { args: { view: { state: 'loading' } } };
 
-export const LoadFailure: Story = {
-  args: { view: { state: 'load-failed', onRetry: fn() } },
-};
+export const LoadFailure: Story = { args: { view: { state: 'load-failed' } } };

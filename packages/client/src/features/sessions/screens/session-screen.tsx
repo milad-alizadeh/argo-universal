@@ -9,7 +9,10 @@ import {
   isRememberedConfiguration,
   rememberSessionConfiguration,
 } from '#features/composer';
-import { useConnectionState } from '#features/connection';
+import {
+  useConnectionState,
+  useResubscribeOnReconnect,
+} from '#features/connection';
 import { useBlobUrl } from '#features/connection';
 import type { ClientError } from '#features/connection';
 import { useTRPC } from '#features/connection';
@@ -17,6 +20,7 @@ import { useSessionFeed } from '#features/feed';
 import { useNavigate } from '#lib/product/navigation/context';
 import type { SessionHeaderStatus } from '../components/session-header';
 import { SessionView, type SessionViewProps } from '../components/session-view';
+import { composerStatus } from '../state/composer-status';
 import { toSendError } from '../state/send-error';
 
 type SessionMutation<Name extends 'prompt' | 'cancel' | 'setConfigOption'> =
@@ -67,27 +71,22 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
   const connected = useConnectionState() === 'open';
   const feed = useSessionFeed(sessionId);
   const agents = useAgents();
-  const trpc = useTRPC();
-  const closeSession = useMutation(
-    trpc.session.close.mutationOptions({
-      onSuccess: () => navigate({ to: 'sessions' }),
-    }),
-  );
   const commands = useSessionCommands(
     sessionId,
     feed.resumeAfterCommand,
     feed.snapshot?.agent,
   );
   const { promptSession, cancelTurn, setConfigOption } = commands;
+  // A Session the Server refused to open tries again when the Connection reopens; its toast already said why.
+  useResubscribeOnReconnect({
+    status: feed.openError ? 'error' : 'idle',
+    reset: feed.retryOpen,
+  });
 
-  if (feed.error)
-    return { state: 'load-failed', onRetry: () => void feed.retry() };
+  // A failed first page refetches by itself when the Connection reopens or the window regains focus.
+  if (feed.error) return { state: 'failed' };
   if (feed.openError)
-    return {
-      state: 'open-failed',
-      message: feed.openError.message,
-      onRetry: feed.retryOpen,
-    };
+    return { state: 'failed', reason: feed.openError.message };
   const { snapshot, view } = feed;
   if (!feed.ready || !snapshot || !view) return { state: 'opening' };
 
@@ -108,10 +107,6 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
       imageUrl,
       checkoutBranch: snapshot.checkout.branch ?? undefined,
     },
-    cancelCreation: {
-      disabled: !connected || closeSession.isPending || promptSession.isPending,
-      onCancel: () => closeSession.mutate({ sessionId }),
-    },
     composer: {
       draft: commands.draft,
       onDraftChange: commands.changeDraft,
@@ -127,12 +122,10 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
         attachment: commands.attachmentError,
         prompt: promptSession.error,
         configuration: setConfigOption.error,
-        close: closeSession.error,
       }),
       writtenPlan:
         view.plan && view.plan.type !== 'items' ? view.plan : undefined,
-      status:
-        view.plan?.type === 'items' ? { plan: view.plan.entries } : undefined,
+      status: composerStatus(view.plan, snapshot.usage ?? undefined),
       configuration: {
         agents: agents.data ?? [],
         agent: snapshot.agent,

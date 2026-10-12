@@ -29,19 +29,6 @@ describe('toSendError', () => {
       failures: { attachment: upload, configuration: failure('Refused') },
       expected: "Couldn't upload the image.",
     },
-    {
-      case: 'a failed settings change before a failed close',
-      failures: {
-        configuration: failure('Refused'),
-        close: failure('Server is down'),
-      },
-      expected: "Couldn't change settings. Refused",
-    },
-    {
-      case: 'a failed close',
-      failures: { close: failure('Server is down') },
-      expected: "Couldn't close the Session. Server is down",
-    },
   ])('shows $case', ({ failures, expected }) => {
     expect(toSendError(failures)).toBe(expected);
   });

@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { type ReactElement, useState } from 'react';
 import { expect, fn, spyOn, waitFor, within } from 'storybook/test';
+import { SessionColumn } from '#lib/product/session-layout';
 import { composerProps } from '../../../../mocks/composer-mock';
 import { longWrittenPlan } from '../../../../mocks/feed-paper';
 import { layoutWidths } from '../../../lib/generic/each-layout';
@@ -13,6 +15,13 @@ const writtenPlanRegionName = 'Written plan content';
 
 const meta = {
   title: 'Tests/WrittenPlan',
+  decorators: [
+    (Story): React.JSX.Element => (
+      <SessionColumn>
+        <Story />
+      </SessionColumn>
+    ),
+  ],
   component: Composer,
   render: function EditableComposer(args): ReactElement {
     const [draft, setDraft] = useState(args.draft);

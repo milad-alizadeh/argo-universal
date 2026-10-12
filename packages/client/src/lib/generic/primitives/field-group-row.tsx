@@ -32,8 +32,9 @@ function MeasuredRow({
 }: ChildrenProps & { onHeight: (height: number) => void }): React.JSX.Element {
   return (
     <RNHostView>
+      {/* Pinned to the top only, so its height follows the content, not the row frame it sets. */}
       <View
-        className="w-full"
+        className="absolute inset-x-0 top-0"
         onLayout={(event) => onHeight(event.nativeEvent.layout.height)}
       >
         {children}

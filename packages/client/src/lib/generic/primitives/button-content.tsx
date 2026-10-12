@@ -1,17 +1,34 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
+import type { IconSize } from '../symbols/icon';
 import { ButtonAdornment } from './button-adornment';
 import { contentButtonClass, contentTextClass } from './button-content-styles';
-import type { ButtonProps, ContentButtonProps } from './button-props';
+import type {
+  ButtonProps,
+  ButtonSize,
+  ContentButtonProps,
+} from './button-props';
 import { buttonInteractionProps } from './button-state';
 import { Text, TextClassContext } from './text';
+
+// Each size draws its icon at the same step, except `xs`, which keeps the 16 icon of a control.
+const iconSizes = {
+  xs: 'sm',
+  sm: 'sm',
+  md: 'md',
+  lg: 'lg',
+} as const satisfies Record<ButtonSize, IconSize>;
 
 export function ContentButton(props: ButtonProps): ReactElement {
   const textClass = contentTextClass(props);
   return (
     <TextClassContext.Provider value={textClass}>
       <Pressable {...contentPressableProps(props)}>
-        <ButtonAdornment {...props} textClass={textClass} />
+        <ButtonAdornment
+          {...props}
+          size={props.size && iconSizes[props.size]}
+          textClass={textClass}
+        />
         <ButtonText {...props} />
       </Pressable>
     </TextClassContext.Provider>
