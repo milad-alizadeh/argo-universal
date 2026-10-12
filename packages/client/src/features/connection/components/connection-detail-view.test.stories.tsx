@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
+import { findToast } from '../../../../mocks/find-toast';
 import { layoutWidths } from '../../../lib/generic/each-layout';
-import { findToast } from '../../../lib/generic/find-toast';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { ConnectionDetailView } from './connection-detail-view';
 import { loadedServer } from './connection-detail-view.fixtures';

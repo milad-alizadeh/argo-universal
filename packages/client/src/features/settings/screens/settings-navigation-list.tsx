@@ -19,7 +19,7 @@ export interface SettingsNavigationListProps {
 
 type ServerCounts = Pick<
   SettingsListProps,
-  'projects' | 'agents' | 'agentsNeedAttention'
+  'projectCount' | 'agentCount' | 'agentsNeedAttention'
 >;
 
 /*
@@ -32,10 +32,8 @@ function useServerCounts(): ServerCounts {
   const agents = useInstalledAgents();
   const agentsKnown = useAgents().data !== undefined;
   return {
-    projects: useProjects().data,
-    agents: agentsKnown
-      ? agents.map(({ id, name }) => ({ agent: id, label: name }))
-      : undefined,
+    projectCount: useProjects().data?.length,
+    agentCount: agentsKnown ? agents.length : undefined,
     agentsNeedAttention: agents.some(needsAction),
   };
 }

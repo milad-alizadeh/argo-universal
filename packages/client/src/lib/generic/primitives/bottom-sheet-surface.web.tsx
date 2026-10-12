@@ -1,7 +1,8 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
+import { useSwipeToClose } from './bottom-sheet-swipe.web';
 
 type SurfaceProps = {
   open: boolean;
@@ -23,6 +24,11 @@ type SurfaceProps = {
 export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
   const state = props.open ? 'open' : 'closed';
   const card = useHiddenWhileClosing(props.open || !props.hiddenWhileClosing);
+  const { onOpenChange } = DialogPrimitive.useRootContext();
+  useSwipeToClose(
+    card,
+    useCallback(() => onOpenChange(false), [onOpenChange]),
+  );
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay
@@ -95,6 +101,6 @@ function sheetContentProps(
     'aria-describedby': undefined,
     onCloseAutoFocus: props.onClosed,
     className:
-      'bottom-sheet max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
+      'bottom-sheet touch-none max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
   };
 }

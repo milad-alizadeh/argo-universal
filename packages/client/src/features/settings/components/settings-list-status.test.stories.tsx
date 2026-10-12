@@ -11,8 +11,8 @@ const meta = {
   title: 'Tests/SettingsList status',
   component: SettingsList,
   args: {
-    projects: [{ name: 'argo' }],
-    agents: [],
+    projectCount: 1,
+    agentCount: 0,
     accountState: 'GitHub',
     onSelect,
   },
@@ -84,7 +84,7 @@ export const DisconnectedWide = unavailable('disconnected', layoutWidths.wide);
 
 // Counts the Server has not sent yet never read as 0.
 export const CountsBeforeTheServerAnswers: Story = {
-  args: { status: 'ready', projects: undefined, agents: undefined },
+  args: { status: 'ready', projectCount: undefined, agentCount: undefined },
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.phone);
     for (const title of ['Projects', 'Agents'])
@@ -95,7 +95,11 @@ export const CountsBeforeTheServerAnswers: Story = {
 };
 
 export const DisconnectedBeforeTheServerAnswers: Story = {
-  args: { status: 'disconnected', projects: undefined, agents: undefined },
+  args: {
+    status: 'disconnected',
+    projectCount: undefined,
+    agentCount: undefined,
+  },
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.phone);
     for (const title of ['Projects', 'Agents'])

@@ -53,6 +53,11 @@ function LeadingSlot({
 
 function slotSize(size: ListItemProps['size'], wide: boolean): string {
   if (size === 'large') return 'size-10 rounded-xl bg-background';
+  return iconSlotClass(wide);
+}
+
+// The icon's slot: 20 on wide rows, 24 on phone rows.
+function iconSlotClass(wide: boolean): string {
   return wide ? 'size-5' : 'size-6';
 }
 
@@ -80,7 +85,7 @@ function RowSpinner(): React.JSX.Element {
       aria-hidden
       className={cn(
         'shrink-0 items-center justify-center',
-        wide ? 'size-5' : 'size-6',
+        iconSlotClass(wide),
       )}
     >
       <IconSpinner

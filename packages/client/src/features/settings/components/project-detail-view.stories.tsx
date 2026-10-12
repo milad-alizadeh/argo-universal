@@ -4,7 +4,6 @@ import { ProjectDetailView } from './project-detail-view';
 import {
   localProject,
   otherDeviceName,
-  serverCaption,
   worktreeProject,
 } from './settings-pages.mocks';
 
@@ -14,7 +13,6 @@ const meta = {
   parameters: { screenPreview: true },
   args: {
     name: worktreeProject.name,
-    caption: serverCaption,
     project: { status: 'loaded', project: worktreeProject },
     onBack: action('back'),
   },

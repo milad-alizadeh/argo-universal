@@ -1,7 +1,5 @@
 import type { ProjectInfo } from '@repo/contracts';
-import { newSessionProjects, serverInfo } from '@repo/mocks/app';
-
-export const serverCaption = `On ${serverInfo.name}`;
+import { newSessionProjects } from '@repo/mocks/app';
 
 const [worktreeProject, localProject] = ((): [
   (typeof newSessionProjects)[number],

@@ -52,7 +52,7 @@ export const RailOpensSectionLists: Story = {
   },
 };
 
-export const SettingsRootSelectsAccounts: Story = {
+export const SettingsRootMarksSettingsCurrent: Story = {
   args: { destination: { to: 'settings' } },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Detail')).toBeVisible();

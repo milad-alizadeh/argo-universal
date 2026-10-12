@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { Menu } from './menu';
 import { Pressable, contentActionClass } from './pressable';
 import { Text } from './text';
@@ -46,16 +46,16 @@ const meta = { title: 'Design System/Primitives/Menu' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Menu',
   render: () => (
-    <Variations>
+    <VariationList>
       <Variation label="Permissions">
         <PermissionsMenu />
       </Variation>
       <Variation label="Disabled">
         <PermissionsMenu disabled />
       </Variation>
-    </Variations>
+    </VariationList>
   ),
 };

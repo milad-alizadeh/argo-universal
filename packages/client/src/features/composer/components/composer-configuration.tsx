@@ -15,6 +15,7 @@ import { Text } from '#lib/generic/primitives/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
+import { ScrollFadeList } from '#lib/product/scroll-fade-list';
 import { Button } from '../../../lib/generic/primitives/button';
 import { FieldGroup } from '../../../lib/generic/primitives/hosted-field-group';
 import { IconButton } from '../../../lib/generic/primitives/icon-button';
@@ -33,7 +34,6 @@ import {
   useNativeSheets,
 } from './agent-model-sheet-context';
 import { ComposerPopover } from './composer-popover';
-import { ScrollFadeList } from './scroll-fade-list';
 
 const destructiveTextClassName = 'text-destructive';
 const unselectableTextClassName = 'select-none';

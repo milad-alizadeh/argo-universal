@@ -13,8 +13,8 @@ const meta = {
   title: 'Tests/SettingsList',
   component: SettingsList,
   args: {
-    projects: [{ name: 'example-project' }],
-    agents: [{ agent: 'example-agent', label: 'Example Agent' }],
+    projectCount: 1,
+    agentCount: 1,
     accountState: 'GitHub',
     deviceCount: 2,
     onSelect: recorder.navigate,
@@ -112,7 +112,7 @@ export const AllPagesNavigatePhone = allPagesNavigate(layoutWidths.phone);
 export const AllPagesNavigateWide = allPagesNavigate(layoutWidths.wide);
 
 export const WaitingForData: Story = {
-  args: { projects: [], agents: [] },
+  args: { projectCount: 0, agentCount: 0 },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);

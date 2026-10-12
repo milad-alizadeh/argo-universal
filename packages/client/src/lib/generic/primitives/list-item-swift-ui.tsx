@@ -30,13 +30,19 @@ export function RowLabel(props: ListItemProps): React.JSX.Element {
       {props.title}
     </Text>
   );
-  if (!props.subtitle) return title;
+  // The label takes the row's spare width, so the value and status trail it on the same line.
   return (
-    <VStack alignment="leading" spacing={0}>
+    <VStack
+      alignment="leading"
+      spacing={0}
+      modifiers={[frame({ maxWidth: Infinity, alignment: 'leading' })]}
+    >
       {title}
-      <Text modifiers={[...secondaryModifiers, muted, lineLimit(1)]}>
-        {props.subtitle.text}
-      </Text>
+      {props.subtitle && (
+        <Text modifiers={[...secondaryModifiers, muted, lineLimit(1)]}>
+          {props.subtitle.text}
+        </Text>
+      )}
     </VStack>
   );
 }

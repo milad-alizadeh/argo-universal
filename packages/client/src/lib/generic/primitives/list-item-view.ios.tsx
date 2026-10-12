@@ -1,4 +1,4 @@
-import { Button, HStack, Image, LabeledContent, Text } from '@expo/ui/swift-ui';
+import { Button, HStack, Image, Text } from '@expo/ui/swift-ui';
 import {
   accessibilityElement,
   accessibilityAddTraits,
@@ -6,6 +6,7 @@ import {
   accessibilityLabel,
   buttonStyle,
   disabled,
+  fixedSize,
   foregroundStyle,
   frame,
   listRowBackground,
@@ -110,12 +111,8 @@ function RowContent(props: ListItemProps): React.JSX.Element {
       ]}
     >
       <RowLeading {...props} />
-      <LabeledContent
-        label={<RowLabel {...props} />}
-        modifiers={[frame({ maxWidth: Infinity, alignment: 'leading' })]}
-      >
-        <RowTrailing {...props} />
-      </LabeledContent>
+      <RowLabel {...props} />
+      <RowTrailing {...props} />
       <DisclosureIndicator visible={hasDisclosure(props)} />
     </HStack>
   );
@@ -125,7 +122,7 @@ function RowTrailing(props: ListItemProps): React.JSX.Element {
   const bodyModifiers = useSwiftUITextModifiers('body', 'row');
   const color = useRowColor('secondary');
   return (
-    <HStack spacing={8}>
+    <HStack spacing={8} modifiers={[fixedSize({ horizontal: true })]}>
       {props.value !== undefined && (
         <Text modifiers={[...bodyModifiers, color]}>{props.value}</Text>
       )}

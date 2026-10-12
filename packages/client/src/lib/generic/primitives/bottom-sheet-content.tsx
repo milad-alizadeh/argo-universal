@@ -1,10 +1,11 @@
 import type * as React from 'react';
 import { ScrollView, View } from 'react-native';
+import { cn } from '#lib/generic/utils';
 import type { BottomSheetProps } from './bottom-sheet.types';
 
 type SheetContentProps = Pick<
   BottomSheetProps,
-  'children' | 'label' | 'onOpenChange'
+  'children' | 'label' | 'onOpenChange' | 'fit'
 >;
 
 export function BottomSheetContent(
@@ -12,7 +13,7 @@ export function BottomSheetContent(
 ): React.JSX.Element {
   return (
     <View
-      className="flex-1 bg-popover ios:pt-4 pb-8"
+      className={cn('bg-popover ios:pt-4 pb-8', !props.fit && 'flex-1')}
       {...sheetAccessibility(props)}
     >
       <ScrollView keyboardShouldPersistTaps="handled">

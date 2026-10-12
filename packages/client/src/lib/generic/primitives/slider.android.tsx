@@ -16,12 +16,17 @@ export function Slider(props: SliderProps): React.JSX.Element {
       <NativeSlider
         {...sliderAttributes(props)}
         colors={colors}
-        modifiers={[
-          semantics({ contentDescription: props.accessibilityLabel }),
-        ]}
+        modifiers={[semantics({ contentDescription: spokenName(props) })]}
       />
     </Host>
   );
+}
+
+// @expo/ui's semantics take no state description, so TalkBack hears the value label inside the name.
+function spokenName(
+  props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
+): string {
+  return `${props.accessibilityLabel}, ${props.valueLabel}`;
 }
 
 function useSliderColors(): NativeSliderProps['colors'] {

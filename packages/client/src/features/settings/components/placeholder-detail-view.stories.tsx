@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { serverCaption } from './settings-pages.mocks';
-import { SettingsPlaceholderPage } from './settings-placeholder-page';
+import { PlaceholderDetailView } from './placeholder-detail-view';
 
 const meta = {
   title: 'Screens/Settings/Placeholder',
-  component: SettingsPlaceholderPage,
+  component: PlaceholderDetailView,
   parameters: { screenPreview: true },
-} satisfies Meta<typeof SettingsPlaceholderPage>;
+} satisfies Meta<typeof PlaceholderDetailView>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -20,7 +19,6 @@ export const Accounts: Story = {
 export const Devices: Story = {
   args: {
     title: 'Devices',
-    caption: serverCaption,
     description: 'Devices will appear here.',
   },
 };

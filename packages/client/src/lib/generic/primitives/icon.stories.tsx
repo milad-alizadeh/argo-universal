@@ -5,7 +5,7 @@ import { Text } from '#lib/generic/primitives/text';
 import { Icon } from '../symbols/icon';
 import { iconNames, iconSymbols } from '../symbols/icon-names';
 import { SymbolImagesProvider } from '../symbols/symbol-images';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { Button } from './button';
 import { IconButton } from './icon-button';
 import { renderStorybookSymbol } from './sf-symbol-images.mocks';
@@ -19,10 +19,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Icon',
   render: () => (
-    <Variations>
+    <VariationList>
       <Variation label="Every Argo icon">
         <View className="flex-row flex-wrap gap-x-2 gap-y-3">
           {iconNames.map((name) => (
@@ -78,7 +78,7 @@ export const Overview: Story = {
           ))}
         </View>
       </Variation>
-    </Variations>
+    </VariationList>
   ),
 };
 

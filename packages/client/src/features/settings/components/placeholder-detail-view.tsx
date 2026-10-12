@@ -7,7 +7,7 @@ import { FieldSection } from '#primitives/field-section';
 import { ListItem } from '#primitives/list-item';
 import { useWide } from '../../../lib/generic/use-wide';
 
-export interface SettingsPlaceholderPageProps {
+export interface PlaceholderDetailViewProps {
   title: string;
   caption?: string;
   // What will appear here once the App can show it.
@@ -15,11 +15,11 @@ export interface SettingsPlaceholderPageProps {
 }
 
 // A Settings page whose content the App cannot show yet: its title and caption, and a note in place of its rows.
-export function SettingsPlaceholderPage({
+export function PlaceholderDetailView({
   title,
   caption,
   description,
-}: SettingsPlaceholderPageProps): React.JSX.Element {
+}: PlaceholderDetailViewProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-sidebar wide:bg-transparent">
       <SettingsPage title={title} caption={caption}>
@@ -32,7 +32,7 @@ export function SettingsPlaceholderPage({
 // A wide page keeps the note in a row's card, where the rows will go; a phone centres it.
 function PlaceholderNote({
   description,
-}: Pick<SettingsPlaceholderPageProps, 'description'>): React.JSX.Element {
+}: Pick<PlaceholderDetailViewProps, 'description'>): React.JSX.Element {
   if (useWide())
     return (
       <FieldGroup>

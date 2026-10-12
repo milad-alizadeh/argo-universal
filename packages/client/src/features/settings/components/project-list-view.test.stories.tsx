@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
+import { findToast } from '../../../../mocks/find-toast';
 import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
-import { findToast } from '../../../lib/generic/find-toast';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { homePath } from '../state/home-path';
 import { ProjectListView } from './project-list-view';
 import {
   localProject,
   missingFolderProject,
-  serverCaption,
   settingsProjects,
   worktreeProject,
 } from './settings-pages.mocks';
@@ -36,7 +35,6 @@ const meta = {
   component: ProjectListView,
   parameters: { screenPreview: true },
   args: {
-    caption: serverCaption,
     projects: { status: 'loaded', projects: settingsProjects },
     onOpenProject: fn(),
   },
@@ -50,7 +48,6 @@ export const ListsAndOpensProjects: Story = {
     await expect(
       canvas.getByRole('heading', { name: 'Projects', level: 1 }),
     ).toBeVisible();
-    await expect(canvas.getByText(serverCaption)).toBeVisible();
     await expect(
       canvas.getByText(`${settingsProjects.length} Projects`),
     ).toBeVisible();

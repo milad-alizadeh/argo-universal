@@ -29,12 +29,12 @@ import { useComposeTextStyle } from './native-typography';
 
 const rowHeight = 56;
 const tileRadius = 4;
-const corners = Object.fromEntries(
-  ['topStart', 'topEnd', 'bottomStart', 'bottomEnd'].map((k) => [
-    k,
-    tileRadius,
-  ]),
-);
+const tileCorners = {
+  topStart: tileRadius,
+  topEnd: tileRadius,
+  bottomStart: tileRadius,
+  bottomEnd: tileRadius,
+};
 const gutter = 16;
 const verticalPadding = 8;
 const disabledOpacity = 0.5;
@@ -44,7 +44,7 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
   const background = useRowBackground();
   if (wide) return <Web.ListItem {...props} />;
   const rowProps = {
-    shape: Shape.RoundedCorner({ cornerRadii: corners }),
+    shape: Shape.RoundedCorner({ cornerRadii: tileCorners }),
     modifiers: [
       fillMaxWidth(),
       semantics({ contentDescription: listItemName(props) }),

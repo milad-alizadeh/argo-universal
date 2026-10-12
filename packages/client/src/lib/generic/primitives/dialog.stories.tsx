@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import {
   Dialog,
-  DialogClose,
+  DialogCancel,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -65,15 +65,9 @@ function ProfileFields(): React.JSX.Element {
 function ProfileFooter(): React.JSX.Element {
   return (
     <DialogFooter>
-      <DialogClose asChild>
-        <Pressable
-          role="button"
-          className={contentActionClass({ variant: 'outline' })}
-        >
-          <Text>{'Cancel'}</Text>
-        </Pressable>
-      </DialogClose>
-      <Button label={'Save changes'} />
+      <DialogCancel label="Cancel" />
+      {/* A phone's Save fills the sheet's width, as Cancel does. */}
+      <Button label="Save changes" fullWidth="narrow" />
     </DialogFooter>
   );
 }
@@ -85,7 +79,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Dialog',
   render: () => <DialogPreview />,
 };

@@ -8,52 +8,12 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
+import { sidebarGlows } from './sidebar-glows';
 
-// Paper's phone "SidebarBackdrop / Warm frost (contained)": the desktop glows, smaller, behind the drawer's glass.
-interface Glow {
-  colour: 'warm' | 'graphite' | 'sand';
-  left: number;
-  top: number;
-  size: number;
-  // Opacity of the glow colour at each offset along the radius.
-  stops: readonly { opacity: number; offset: number }[];
-}
+const { glows, edgeFadeWidth } = sidebarGlows('phone', 'full');
 
-const glows: readonly Glow[] = [
-  {
-    colour: 'warm',
-    left: -308,
-    top: -225,
-    size: 675,
-    stops: [
-      { opacity: 0.16, offset: 0 },
-      { opacity: 0.06, offset: 0.3 },
-      { opacity: 0, offset: 0.62 },
-    ],
-  },
-  {
-    colour: 'graphite',
-    left: -195,
-    top: 248,
-    size: 480,
-    stops: [
-      { opacity: 0.06, offset: 0 },
-      { opacity: 0, offset: 0.66 },
-    ],
-  },
-  {
-    colour: 'sand',
-    left: -173,
-    top: 544,
-    size: 525,
-    stops: [
-      { opacity: 0.12, offset: 0 },
-      { opacity: 0, offset: 0.64 },
-    ],
-  },
-];
-
-const edgeFadeWidth = 42;
+// SVG stops take fractions where the glows give percent.
+const percent = 100;
 
 // Static, so the drawer's slide moves only the card above it and never repaints the glow.
 export function PhoneDrawerBackdrop({
@@ -87,12 +47,12 @@ export function PhoneDrawerBackdrop({
               // CSS "circle farthest-corner" on a square: half its diagonal.
               r={(glow.size / 2) * Math.SQRT2}
             >
-              {glow.stops.map(({ opacity, offset }) => (
+              {glow.stops.map(({ alpha, at }) => (
                 <Stop
-                  key={offset}
-                  offset={offset}
+                  key={at}
+                  offset={at / percent}
                   stopColor={String(colours[glow.colour])}
-                  stopOpacity={opacity}
+                  stopOpacity={alpha / percent}
                 />
               ))}
             </RadialGradient>

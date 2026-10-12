@@ -16,8 +16,15 @@ const pascal = (name: string): string =>
 
 const groupOf = (name: string): string => featureGroups[name] ?? pascal(name);
 
+// Only a view, a page or a file in `screens/` may draw a screen; ADR-0021 gives the custom Agent form the screen's stories.
+const screenStory =
+  /(?:-view|-page)\.stories\.tsx$|\/screens\/|^features\/agents\/components\/custom-agent-form\.stories\.tsx$/;
+
+const screenGroups = (path: string): string[] =>
+  screenStory.test(path) ? ['Screens/'] : [];
+
 const featureGroup = (path: string): string[] => [
-  'Screens/',
+  ...screenGroups(path),
   `${groupOf(feature.exec(path)?.[1] ?? '')}/`,
 ];
 
@@ -45,17 +52,29 @@ const rules: readonly {
   { test: (path) => feature.test(path), groups: featureGroup },
 ];
 
+// A story outside every rule's folder would start a new top-level group, so it has none.
 const allowedGroups = (path: string): string[] =>
   rules.find((rule) => rule.test(path))?.groups(path) ?? [];
 
 const quoted = (group: string): string => `'${group}'`;
 
-const titleProblem = (file: string, title: string): string[] => {
-  const groups = allowedGroups(file.slice(clientSource.length));
-  const fits = groups.some((group) => title.startsWith(group));
-  if (groups.length === 0 || fits) return [];
+interface Placement {
+  file: string;
+  title: string;
+  groups: string[];
+}
+
+const groupProblem = ({ file, title, groups }: Placement): string[] => {
+  if (groups.some((group) => title.startsWith(group))) return [];
   const expected = groups.map(quoted).join(' or ');
   return [`${file}: title '${title}' must start with ${expected}`];
+};
+
+const titleProblem = (file: string, title: string): string[] => {
+  const groups = allowedGroups(file.slice(clientSource.length));
+  return groups.length === 0
+    ? [`${file}: no story group belongs to this folder`]
+    : groupProblem({ file, title, groups });
 };
 
 const isClientStory = (file: string): boolean =>
