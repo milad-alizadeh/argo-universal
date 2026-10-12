@@ -24,6 +24,7 @@
     "@storybook/addon-ondevice-actions": "catalog:",
     "@storybook/addon-ondevice-controls": "catalog:",
     "@storybook/react-native": "catalog:",
+    "burnt": "catalog:",
     "expo": "catalog:",
     "expo-clipboard": "catalog:",
     "expo-constants": "catalog:",

@@ -30,6 +30,8 @@ catalog:
   "@electron-forge/shared-types": 8.0.1
   "@electron/fuses": 2.1.3
   "@expo/ui": 57.0.22
+  # Native toasts; Expo SDK 57 lists no version for it, so this is its newest release.
+  burnt: 0.13.0
   "@playwright/test": 1.63.0
   "@gorhom/bottom-sheet": 5.2.14
   "@react-native-async-storage/async-storage": 2.2.0
