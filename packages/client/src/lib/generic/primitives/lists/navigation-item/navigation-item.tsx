@@ -47,7 +47,7 @@ function NavigationItemContent(props: NavigationItemProps): React.JSX.Element {
   const label = cn('flex-1', selected && 'font-semibold');
   return (
     <>
-      <Icon name={icon} size="lg" filled={selected} className={muted} />
+      <Icon name={icon} role="nav" filled={selected} className={muted} />
       <Text role="body" className={label}>
         {title}
       </Text>

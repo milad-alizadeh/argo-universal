@@ -34,6 +34,7 @@ export function CodeBlockHeader({
         <>
           <View className="h-6 w-icon-md shrink-0 items-center justify-center wide:h-5">
             <Icon
+              role="control"
               name={resourceIcon(resource.uri)}
               className="text-muted-foreground"
             />

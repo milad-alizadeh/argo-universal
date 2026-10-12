@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
-import { Chevron } from '../../../symbols/chevron';
+import { Icon } from '../../../symbols/icon';
 import { Text } from '../../display/text/text';
 
 // A menu's trigger passes its press handlers and ref through these props.
@@ -21,8 +21,8 @@ export function MenuButton({ label, ...props }: MenuButtonProps): ReactElement {
       <Text role="secondary" className="text-muted-foreground">
         {label}
       </Text>
-      <Chevron
-        textRole="secondary"
+      <Icon
+        role="secondary"
         name="chevron-down"
         className="text-muted-foreground"
       />

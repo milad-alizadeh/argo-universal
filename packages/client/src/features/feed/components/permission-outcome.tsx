@@ -6,7 +6,6 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { useTextIconSize } from '../../../lib/generic/symbols/text-icon-size';
 
 export interface PermissionOutcomeProps {
   outcome: Outcome;
@@ -36,7 +35,6 @@ export function PermissionOutcome({
   outcome,
   message,
 }: PermissionOutcomeProps): React.JSX.Element | null {
-  const iconSize = useTextIconSize();
   const kind = chosenPermissionKind(outcome);
   if (outcome.outcome !== 'selected' || !kind) return null;
   const label = outcomeLabel(kind, outcome.name, message);
@@ -47,7 +45,7 @@ export function PermissionOutcome({
       <View className="h-6 shrink-0 justify-center wide:h-5">
         <Icon
           name={allowed ? 'check' : 'close'}
-          size={iconSize}
+          role="body"
           className="text-muted-foreground"
         />
       </View>

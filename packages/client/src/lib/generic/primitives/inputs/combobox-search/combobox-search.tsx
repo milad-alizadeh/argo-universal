@@ -30,7 +30,7 @@ export function ComboboxSearch(props: ComboboxSearchProps): React.JSX.Element {
     >
       <Icon
         name="search"
-        size="sm"
+        role="control"
         className="text-foreground wide:text-muted-foreground"
       />
       <TextInput

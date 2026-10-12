@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { IconButton } from '../primitives/buttons/icon-button/icon-button';
-import { useTextIconSize } from '../symbols/text-icon-size';
 
 export interface BackButtonProps {
   onBack: () => void;
@@ -11,7 +10,7 @@ export function BackButton({ onBack }: BackButtonProps): React.JSX.Element {
   return (
     <IconButton
       icon="chevron-left"
-      iconSize={useTextIconSize('title')}
+      iconRole="title"
       iconClassName="text-foreground"
       size="sm"
       variant="ghost"

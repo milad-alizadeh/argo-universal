@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon, IconSpinner } from '../../../symbols/icon';
-import { useWide } from '../../../use-wide/use-wide';
+import { Icon, IconSlot, IconSpinner } from '../../../symbols/icon';
 import { cn } from '../../../utils';
 import type { ListItemProps } from '../../fields/field-props';
 
@@ -31,34 +30,24 @@ function RowGlyph({
   return icon ? <RowIcon icon={icon} className={className} /> : null;
 }
 
-// An image sits centred in the icon's slot: 20 on wide rows, 24 on phone rows, or on a large row's 40 tile.
+// An image sits centred in the row icon's slot, or on a large row's 40 tile.
 function LeadingSlot({
   size,
   children,
 }: Pick<ListItemProps, 'size'> & {
   children: React.ReactNode;
 }): React.JSX.Element {
-  const wide = useWide();
+  if (size === 'large')
+    return (
+      <View className="size-10 shrink-0 items-center justify-center rounded-xl bg-background">
+        {children}
+      </View>
+    );
   return (
-    <View
-      className={cn(
-        'shrink-0 items-center justify-center',
-        slotSize(size, wide),
-      )}
-    >
+    <IconSlot role="row" className="shrink-0 items-center justify-center">
       {children}
-    </View>
+    </IconSlot>
   );
-}
-
-function slotSize(size: ListItemProps['size'], wide: boolean): string {
-  if (size === 'large') return 'size-10 rounded-xl bg-background';
-  return iconSlotClass(wide);
-}
-
-// The icon's slot: 20 on wide rows, 24 on phone rows.
-function iconSlotClass(wide: boolean): string {
-  return wide ? 'size-5' : 'size-6';
 }
 
 function RowIcon({
@@ -67,31 +56,14 @@ function RowIcon({
 }: Required<Pick<ListItemProps, 'icon'>> & {
   className: string;
 }): React.JSX.Element {
-  const wide = useWide();
-  return (
-    <Icon
-      name={icon}
-      size={wide ? 'md' : 'lg'}
-      className={cn('shrink-0', className)}
-    />
-  );
+  return <Icon name={icon} role="row" className={cn('shrink-0', className)} />;
 }
 
-// Paper: a 16 spinner in the 20 icon slot on wide rows, a 20 spinner in the 24 slot on phone rows.
+// Paper: a Body-sized spinner in the row icon's slot.
 function RowSpinner(): React.JSX.Element {
-  const wide = useWide();
   return (
-    <View
-      aria-hidden
-      className={cn(
-        'shrink-0 items-center justify-center',
-        iconSlotClass(wide),
-      )}
-    >
-      <IconSpinner
-        size={wide ? 'sm' : 'md'}
-        colorClassName="accent-foreground"
-      />
-    </View>
+    <IconSlot role="row" className="shrink-0 items-center justify-center">
+      <IconSpinner iconRole="body" colorClassName="accent-foreground" />
+    </IconSlot>
   );
 }

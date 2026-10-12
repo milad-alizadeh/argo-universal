@@ -141,7 +141,7 @@ function FailureBox({ failure }: { failure: string }): React.JSX.Element {
       role="alert"
       className="flex-row gap-2 rounded-md bg-destructive/8 p-3"
     >
-      <Icon name="warning" className="text-destructive" />
+      <Icon role="control" name="warning" className="text-destructive" />
       <FailureMessage failure={failure} />
     </View>
   );
