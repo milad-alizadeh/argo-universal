@@ -43,6 +43,8 @@ export const sectionFooter = (
 const hasErrors = (errors: FieldErrors = []): boolean => errors.length > 0;
 const inputClass = ({ mono, className }: FormInputProps): string =>
   cn(mono ? 'type-code' : 'type-body', className);
+// Names, paths and values are typed exactly as the Agent reads them.
+const verbatimEntry = { autoCapitalize: 'none', autoCorrect: false } as const;
 
 export function FormInput(props: FormInputProps): React.JSX.Element {
   return (
@@ -55,8 +57,7 @@ export function FormInput(props: FormInputProps): React.JSX.Element {
       onChangeText={props.onChange}
       onBlur={props.onBlur}
       editable={!props.disabled}
-      autoCapitalize="none"
-      autoCorrect={false}
+      {...verbatimEntry}
     />
   );
 }

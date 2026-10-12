@@ -30,6 +30,10 @@ type Layout = keyof typeof layoutWidths;
 const addAgent = { name: 'Add Agent' };
 const exampleName = 'Example ACP';
 
+async function openedEditor(name: string): Promise<Canvas> {
+  return within(await within(document.body).findByRole('dialog', { name }));
+}
+
 async function fillProgram(
   canvas: Canvas,
   userEvent: UserEvent,
@@ -44,9 +48,7 @@ async function addArgument(
   userEvent: UserEvent,
 ): Promise<void> {
   await userEvent.click(canvas.getByRole('link', { name: 'Add argument' }));
-  const editor = within(
-    await within(document.body).findByRole('dialog', { name: 'Argument' }),
-  );
+  const editor = await openedEditor('Argument');
   await userEvent.type(
     editor.getByRole('textbox', { name: 'Argument' }),
     '--acp',
@@ -103,11 +105,7 @@ export const RemovesAVariableInASheetOnPhone: Story = {
   play: async ({ canvas, userEvent }) => {
     const variable = { name: /^EXAMPLE_HOME,/ };
     await userEvent.click(canvas.getByRole('link', variable));
-    const sheet = within(
-      await within(document.body).findByRole('dialog', {
-        name: 'Environment variable',
-      }),
-    );
+    const sheet = await openedEditor('Environment variable');
     await expect(sheet.getByRole('button', { name: 'Save' })).toBeVisible();
     await expect(
       sheet.queryByRole('button', { name: /^(Cancel|Close)$/ }),
@@ -134,7 +132,6 @@ export const ShowsTheFailedCheck: Story = {
 };
 
 export const RejectsShellLinesAndCredentials: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.type(canvas.getByLabelText('Name'), exampleName);
     await userEvent.type(
@@ -149,11 +146,7 @@ export const RejectsShellLinesAndCredentials: Story = {
     await userEvent.click(
       canvas.getByRole('link', { name: 'Add environment variable' }),
     );
-    const editor = within(
-      await within(document.body).findByRole('dialog', {
-        name: 'Environment variable',
-      }),
-    );
+    const editor = await openedEditor('Environment variable');
     await userEvent.type(
       editor.getByRole('textbox', { name: 'Name' }),
       'API_KEY',
