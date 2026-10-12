@@ -1,9 +1,8 @@
 import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { shellTiming } from '../hooks/use-shell-transition.web';
 import type { ShellPaneProps } from './shell-pane';
-
-const timing = { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
 
 // Content that keeps its width rides on the pane's moving edge and fades as it narrows, so text slides away whole instead of being wiped.
 function slideStyle(
@@ -106,7 +105,7 @@ export function ShellPane({
               },
               { width: `${width}px`, transform: 'translateX(0px)' },
             ],
-            timing,
+            shellTiming,
           ),
         );
       } else {
@@ -117,7 +116,7 @@ export function ShellPane({
                 slideStyle(currentWidth, stableContentWidth),
                 slideStyle(width, stableContentWidth),
               ],
-              timing,
+              shellTiming,
             ),
           );
         if (translation !== 0)
@@ -127,7 +126,7 @@ export function ShellPane({
                 { transform: `translateX(${translation}px)` },
                 { transform: 'translateX(0px)' },
               ],
-              timing,
+              shellTiming,
             ),
           );
       }

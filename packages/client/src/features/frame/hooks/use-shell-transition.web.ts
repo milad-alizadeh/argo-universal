@@ -1,6 +1,10 @@
 import { useLayoutEffect, useRef } from 'react';
 
-const timing = { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+// The shell's one open and close motion.
+export const shellTiming = {
+  duration: 280,
+  easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+};
 
 export interface ShellTransition<T> {
   value: T;
@@ -32,7 +36,7 @@ export function useShellTransition<T>({
     if (!animate || matchMedia('(prefers-reduced-motion: reduce)').matches)
       return;
     for (const [element, keyframes] of frames(last.value, value))
-      if (element) motion.current.push(element.animate(keyframes, timing));
+      if (element) motion.current.push(element.animate(keyframes, shellTiming));
   });
   useLayoutEffect(
     () => (): void => {
