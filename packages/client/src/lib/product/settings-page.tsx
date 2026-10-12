@@ -5,6 +5,7 @@ import { IconButton } from '#primitives/icon-button';
 import { SearchField, type SearchFieldProps } from '#primitives/search-field';
 import { Text } from '#primitives/text';
 import { ScrollColumnContext } from '../generic/scroll-column';
+import { useTextIconSize } from '../generic/symbols/text-icon-size';
 import { useWide } from '../generic/use-wide';
 import { cn } from '../generic/utils';
 
@@ -121,7 +122,7 @@ function BackButton({ onBack }: { onBack: () => void }): React.JSX.Element {
     <View className="absolute -left-9 -top-0.5">
       <IconButton
         icon="chevron-left"
-        iconSize="xs"
+        iconSize={useTextIconSize()}
         iconClassName="text-foreground"
         size="sm"
         variant="ghost"
