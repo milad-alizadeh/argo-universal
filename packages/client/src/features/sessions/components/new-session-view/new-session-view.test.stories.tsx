@@ -203,9 +203,7 @@ export const Starting: Story = {
     eachLayout(async () => {
       const [prompt] = await canvas.findAllByText(typedDraft.text);
       await expect(prompt).toBeVisible();
-      await expect(canvas.getByRole('status')).toHaveAccessibleName(
-        /^Working/,
-      );
+      await expect(canvas.getByRole('status')).toHaveAccessibleName(/^Working/);
       await expect(
         canvas.queryByRole('progressbar', { name: 'Sending' }),
       ).toBeNull();

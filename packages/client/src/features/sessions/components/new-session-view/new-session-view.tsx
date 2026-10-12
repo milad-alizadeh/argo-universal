@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import {
   Composer,
   type ComposerConfigurationProps,
+  type ComposerProps,
   type ComposerDraft,
   StartSessionIn,
 } from '#features/composer';
@@ -99,6 +100,41 @@ function NewSessionHeading(): React.JSX.Element | null {
   );
 }
 
+// The sent prompt and Working while the Session starts, else the question.
+function NewSessionFeed({
+  starting,
+}: {
+  starting?: StartingFeed;
+}): React.JSX.Element {
+  if (!starting) return <NewSessionHeading />;
+  return (
+    <Feed
+      items={starting.items}
+      liveHeader={starting.liveHeader}
+      imageUrl={starting.imageUrl}
+      loadingOlder={false}
+      onStartReached={noOlderRows}
+    />
+  );
+}
+
+type ComposerDraftProps = Pick<
+  ComposerProps,
+  'draft' | 'onDraftChange' | 'sending' | 'disabled'
+>;
+
+// Once the prompt shows in the Feed the Composer stands empty and still; the draft returns if the start fails.
+const composerDraftProps = (
+  props: ReadyNewSessionViewProps,
+): ComposerDraftProps =>
+  props.starting
+    ? { draft: emptyDraft, onDraftChange: ignoreDraft, disabled: true }
+    : {
+        draft: props.draft,
+        onDraftChange: props.onDraftChange,
+        sending: props.opening,
+      };
+
 function ReadyNewSessionView(
   props: ReadyNewSessionViewProps,
 ): React.JSX.Element {
@@ -109,19 +145,7 @@ function ReadyNewSessionView(
   return (
     <SessionLayout
       header={<PageHeader title={newSessionTitle} />}
-      feed={
-        props.starting ? (
-          <Feed
-            items={props.starting.items}
-            liveHeader={props.starting.liveHeader}
-            imageUrl={props.starting.imageUrl}
-            loadingOlder={false}
-            onStartReached={noOlderRows}
-          />
-        ) : (
-          <NewSessionHeading />
-        )
-      }
+      feed={<NewSessionFeed starting={props.starting} />}
       composer={
         <>
           <View className="w-full items-center pb-2">
@@ -144,14 +168,11 @@ function ReadyNewSessionView(
             </Text>
           )}
           <Composer
-            draft={props.starting ? emptyDraft : props.draft}
-            onDraftChange={props.starting ? ignoreDraft : props.onDraftChange}
+            {...composerDraftProps(props)}
             onAttachImages={props.onAttachImages}
             onSend={props.onSend}
             configuration={configuration}
             placeholder="What should the Agent work on?"
-            sending={opening && !props.starting}
-            disabled={Boolean(props.starting)}
             sendable={props.canOpen}
             error={props.attachmentError}
           />

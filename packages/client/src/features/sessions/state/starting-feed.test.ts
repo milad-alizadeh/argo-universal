@@ -33,12 +33,15 @@ describe('startingFeed', () => {
 
   it('shows the attached images from the device before they upload', () => {
     const feed = startingFeed({ text: ' ', images: [screenshot] }, 1_000);
-    const [item] = feed.items;
-    if (item?.type !== 'row' || item.row.sessionUpdate !== 'user_message')
-      throw new Error('Expected the sent prompt.');
-    const [image] = item.row.content;
-    if (image?.type !== 'image') throw new Error('Expected the image.');
-    expect(item.row.content).toHaveLength(1);
-    expect(feed.imageUrl(image.blob)).toBe('blob:local/screenshot');
+    const blob = { blobId: 'image-1', mime: 'image/*', bytes: 10 };
+    expect(feed.items).toEqual([
+      {
+        type: 'row',
+        row: expect.objectContaining({
+          content: [{ type: 'image', mimeType: 'image/*', blob }],
+        }),
+      },
+    ]);
+    expect(feed.imageUrl(blob)).toBe('blob:local/screenshot');
   });
 });
