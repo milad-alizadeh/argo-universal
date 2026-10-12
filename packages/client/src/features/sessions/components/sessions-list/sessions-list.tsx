@@ -19,7 +19,6 @@ import {
   useState,
 } from 'react';
 import {
-  ActivityIndicator,
   LayoutAnimation,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -29,7 +28,6 @@ import {
 } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { hasLiquidGlass } from '#lib/generic/native-header';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import {
   ScrollColumnContext,
   useScrollColumnStyle,
@@ -37,6 +35,8 @@ import {
 import { cn } from '#lib/generic/utils';
 import { useScrollFadeEdges } from '#lib/product/scroll-fade/scroll-fade';
 import { ScrollFadeFrame } from '#lib/product/scroll-fade/scroll-fade-frame';
+import { Spinner } from '#primitives/display/spinner/spinner';
+import { Text } from '#primitives/display/text/text';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ProjectHeading } from '../project-heading/project-heading';
 import { SessionRow, type SessionRowProps } from '../session-row/session-row';
@@ -329,12 +329,7 @@ function NoSessionsYet(): React.JSX.Element {
 function LoadingMoreSessions(): React.JSX.Element {
   return (
     <View className="h-24 items-center justify-center">
-      <ActivityIndicator
-        role="progressbar"
-        accessibilityLabel="Loading more Sessions"
-        colorClassName="accent-muted-foreground"
-        size="small"
-      />
+      <Spinner label="Loading more Sessions" />
     </View>
   );
 }

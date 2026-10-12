@@ -1,14 +1,11 @@
 import type * as React from 'react';
 import { memo, useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
-import {
-  Text,
-  TextClassContext,
-} from '#lib/generic/primitives/display/text/text';
+import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { IconButton } from '../../../../lib/generic/primitives/buttons/icon-button/icon-button';
-import { contentActionClass } from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+import { Icon } from '#primitives/display/icon/icon';
+import { Text, TextClassContext } from '#primitives/display/text/text';
+import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 export interface ProjectHeadingProps {
@@ -73,7 +70,6 @@ export const ProjectHeading = memo(function ProjectHeading({
             selectable={false}
             numberOfLines={1}
             role={wide ? 'body' : 'heading'}
-
             className="select-none min-w-0 flex-1"
           >
             {name}

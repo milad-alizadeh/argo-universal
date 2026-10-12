@@ -1,9 +1,11 @@
-import { activeSessions, projectsList } from '@repo/mocks/app';
+import { activeSessions, projectsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn } from 'storybook/test';
 import { allToasts, findToast } from '../../../../../mocks/find-toast';
+import { SessionsPreviewMock } from '../../../../../mocks/sessions-preview-mock';
 import { eachLayout } from '../../../../lib/generic/each-layout';
+import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useSessionsFilter } from '../../state/sessions-filter';
 import { SessionsHeader } from '../sessions-header';
@@ -169,3 +171,72 @@ export const NavigationCallbacks: Story = {
     await expect(args.onProjectSettings).toHaveBeenCalledWith(project.name);
   },
 };
+
+function searchPreview(width: number, query: string): Story {
+  return {
+    args: { query, sessions: [sessionRows.running, sessionRows.idle] },
+    render: (args) => <SessionsPreviewMock {...args} />,
+    beforeEach: async () => {
+      await settleViewport(width);
+    },
+  };
+}
+
+function matchingSearch(width: number): Story {
+  return {
+    ...searchPreview(width, 'setting'),
+    play: async ({ canvas, userEvent }) => {
+      const input = canvas.getByRole('textbox', { name: 'Search Sessions' });
+      await userEvent.type(input, 's');
+      await expect(input).toHaveValue('settings');
+      await expect(
+        await canvas.findByRole('button', {
+          name: 'Build the settings screen, Running',
+        }),
+      ).toBeVisible();
+      await expect(
+        canvas.queryByRole('button', { name: 'Finished work, Idle' }),
+      ).toBeNull();
+    },
+  };
+}
+
+function noMatchingSearch(width: number): Story {
+  return {
+    ...searchPreview(width, 'settings'),
+    play: async ({ canvas, userEvent }) => {
+      await userEvent.type(
+        canvas.getByRole('textbox', { name: 'Search Sessions' }),
+        'xyz',
+      );
+      await expect(await canvas.findByText(noMatches)).toBeVisible();
+      await expect(
+        canvas.queryByRole('button', {
+          name: 'Build the settings screen, Running',
+        }),
+      ).toBeNull();
+    },
+  };
+}
+
+function closingSearch(width: number): Story {
+  return {
+    ...searchPreview(width, 'xyz'),
+    play: async ({ canvas, userEvent }) => {
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Close search' }),
+      );
+      await expect(
+        await canvas.findByRole('button', { name: 'Finished work, Idle' }),
+      ).toBeVisible();
+      await expect(canvas.queryByText(noMatches)).toBeNull();
+    },
+  };
+}
+
+export const MatchingSearchPhone = matchingSearch(390);
+export const MatchingSearchWide = matchingSearch(1440);
+export const NoMatchingSearchPhone = noMatchingSearch(390);
+export const NoMatchingSearchWide = noMatchingSearch(1440);
+export const ClosingSearchPhone = closingSearch(390);
+export const ClosingSearchWide = closingSearch(1440);
