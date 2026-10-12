@@ -48,11 +48,10 @@ export const InlineCode: Story = {
       await expect(
         canvas.queryByRole('button', { name: 'Show more' }),
       ).toBeNull();
-      const bubble = prose.parentElement?.parentElement;
       const container = prose.closest('.w-full');
-      if (!bubble || !container) throw new Error('Expected the bubble');
-      await expect(bubble.getBoundingClientRect().width).toBeLessThanOrEqual(
-        container.getBoundingClientRect().width,
+      if (!container) throw new Error('Expected the Feed row');
+      await expect(prose.getBoundingClientRect().right).toBeLessThanOrEqual(
+        container.getBoundingClientRect().right,
       );
     }
   },

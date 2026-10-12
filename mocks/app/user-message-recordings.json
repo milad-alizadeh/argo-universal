@@ -1,0 +1,42 @@
+[
+  {
+    "agent": "agent-1",
+    "recording": "markdown-prompt",
+    "row": {
+      "id": "99146525-c38e-487d-a0a9-e07f59781c9a:user",
+      "sessionId": "46960ff9-195a-44f8-81e9-c9f1cb8498d8",
+      "position": 0,
+      "revision": 1,
+      "turnId": "99146525-c38e-487d-a0a9-e07f59781c9a",
+      "state": "settled",
+      "sessionUpdate": "user_message",
+      "messageId": "99146525-c38e-487d-a0a9-e07f59781c9a:user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Please review the **Composer** change with *care*, ~~skip the docs~~ and check `draftPrompt`:\n\n1. Read the [ADR-0023](https://example.com/adr/0023) notes\n2. Run the tests\n    - unit\n    - e2e\n\n> The stored text stays exactly as typed.\n\n```ts\nconst text = draft.text;\n```"
+        }
+      ]
+    }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "markdown-prompt",
+    "row": {
+      "id": "3a23e306-80e5-4926-b785-cf7564cd6c7a:user",
+      "sessionId": "aa39f74b-79bd-4a41-8f04-9af6b74578c9",
+      "position": 0,
+      "revision": 1,
+      "turnId": "3a23e306-80e5-4926-b785-cf7564cd6c7a",
+      "state": "settled",
+      "sessionUpdate": "user_message",
+      "messageId": "3a23e306-80e5-4926-b785-cf7564cd6c7a:user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Please review the **Composer** change with *care*, ~~skip the docs~~ and check `draftPrompt`:\n\n1. Read the [ADR-0023](https://example.com/adr/0023) notes\n2. Run the tests\n    - unit\n    - e2e\n\n> The stored text stays exactly as typed.\n\n```ts\nconst text = draft.text;\n```"
+        }
+      ]
+    }
+  }
+]

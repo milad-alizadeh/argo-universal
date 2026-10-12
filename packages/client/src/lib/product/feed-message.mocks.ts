@@ -8,6 +8,7 @@ import {
   type FeedMock,
   recordedFeedMocks,
   recordedStreamingMessages,
+  recordedUserMessages,
 } from '@repo/mocks/app';
 
 // The bytes of `mocks/agent/red-square.png`, the shared image attachment mock.
@@ -48,10 +49,15 @@ function recordedRow<Kind extends SessionUpdate['sessionUpdate']>(
   return row;
 }
 
-export const recordedUserMessage = (
+export function recordedUserMessage(
   agent: MockAgent,
   recording: string,
-): UserMessage => recordedRow(agent, recording, 'user_message');
+): UserMessage {
+  const sent = recordedUserMessages.find(
+    (message) => message.agent === agent && message.recording === recording,
+  );
+  return sent?.row ?? recordedRow(agent, recording, 'user_message');
+}
 
 export const recordedAgentMessage = (
   agent: MockAgent,

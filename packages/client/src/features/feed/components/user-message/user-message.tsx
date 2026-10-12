@@ -6,10 +6,10 @@ import type {
 } from '@repo/contracts';
 import type * as React from 'react';
 import { memo, useLayoutEffect, useRef, useState } from 'react';
-import { Pressable, Text as Span, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { inlineCodeClassName } from '#lib/product/markdown/feed-markdown';
+import { Text, useTextStyle } from '#lib/generic/primitives/display/text/text';
+import { FeedMarkdown } from '#lib/product/markdown/feed-markdown';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useTextIconSize } from '../../../../lib/generic/symbols/text-icon-size';
 import { resourceName } from '../../../../lib/product/markdown/resource-name';
@@ -25,25 +25,16 @@ const clampedLines = 4;
 
 type Reference = Extract<ContentBlock, { type: 'resource_link' | 'resource' }>;
 
-// Text exactly as typed, with backtick spans drawn as inline code.
-function TypedText({ text }: { text: string }): (string | React.JSX.Element)[] {
-  return withOccurrenceKeys(text.split(/(`[^`\n]+`)/), (part) => part).map(
-    ({ item: part, key }) =>
-      part.length > 2 && part.startsWith('`') && part.endsWith('`') ? (
-        <Span key={key} className={inlineCodeClassName}>
-          {part.slice(1, -1)}
-        </Span>
-      ) : (
-        part
-      ),
-  );
-}
-
 function Bubble({ text }: { text: string }): React.JSX.Element {
   const [expanded, setExpanded] = useState(false);
   const [fullHeight, setFullHeight] = useState(0);
-  const [shownHeight, setShownHeight] = useState(0);
-  const clamped = !expanded && fullHeight > shownHeight + 1;
+  // The web resolves the line height as a pixel string, native as a number.
+  const lineHeight = Number.parseFloat(String(useTextStyle('body').lineHeight));
+  const clampHeight = Number.isFinite(lineHeight)
+    ? lineHeight * clampedLines
+    : undefined;
+  const clamped =
+    !expanded && clampHeight !== undefined && fullHeight > clampHeight + 1;
   // "Show more" lands a layout after the bubble, which Legend List on the web misses until it next measures every row, so the Feed tells it.
   const syncLayout = useSyncLayout();
   const syncedClamped = useRef<boolean | undefined>(undefined);
@@ -54,25 +45,15 @@ function Bubble({ text }: { text: string }): React.JSX.Element {
   }, [clamped, syncLayout]);
   return (
     <View className="max-w-[70%] gap-0.5 rounded-2xl bg-muted px-3.5 py-2.5 wide:px-3 wide:py-2">
-      <View>
-        <Text
-          numberOfLines={expanded ? undefined : clampedLines}
-          onLayout={(event) => setShownHeight(event.nativeEvent.layout.height)}
-          role="body"
-          className="font-sans"
+      <View
+        className="overflow-hidden"
+        style={expanded ? undefined : { maxHeight: clampHeight }}
+      >
+        <View
+          onLayout={(event) => setFullHeight(event.nativeEvent.layout.height)}
         >
-          <TypedText text={text} />
-        </Text>
-        {!expanded && (
-          <Text
-            aria-hidden
-            onLayout={(event) => setFullHeight(event.nativeEvent.layout.height)}
-            role="body"
-            className="pointer-events-none absolute top-0 right-0 left-0 font-sans opacity-0"
-          >
-            <TypedText text={text} />
-          </Text>
-        )}
+          <FeedMarkdown text={text} />
+        </View>
       </View>
       {clamped && (
         <Pressable role="button" onPress={() => setExpanded(true)}>

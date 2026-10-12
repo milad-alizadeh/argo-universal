@@ -24,7 +24,7 @@ export interface FeedMarkdownProps {
 
 const MarkdownVariant = createContext<FeedMarkdownProps['variant']>('feed');
 
-export const inlineCodeClassName =
+const inlineCodeClassName =
   'rounded-sm bg-foreground/5 px-1.5 py-px type-code text-foreground';
 
 function Caret(): React.JSX.Element {
