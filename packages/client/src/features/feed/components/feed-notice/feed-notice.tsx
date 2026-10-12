@@ -8,7 +8,6 @@ import { View } from 'react-native';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { Icon } from '../../../../lib/generic/symbols/icon';
-import { useTextIconSize } from '../../../../lib/generic/symbols/text-icon-size';
 import { ShimmerText } from '../shimmer-text';
 
 const noticeAppearance = new Map<string, { icon: IconName; color: string }>([
@@ -41,7 +40,6 @@ function NoticeMessage({
   live = false,
 }: NoticeMessageProps): React.JSX.Element {
   const appearance = noticeAppearance.get(severity) ?? unrecognisedAppearance;
-  const iconSize = useTextIconSize();
   return (
     <View
       role={severity === 'error' ? 'alert' : 'status'}
@@ -51,7 +49,7 @@ function NoticeMessage({
       <View className="h-6 shrink-0 items-center justify-center wide:h-5">
         <Icon
           name={icon ?? appearance.icon}
-          size={iconSize}
+          role="body"
           className={appearance.color}
         />
       </View>

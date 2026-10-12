@@ -131,12 +131,17 @@ export function Composer({
       <IconSpinner
         accessibilityLabel="Sending"
         role="progressbar"
+        iconRole="control"
         colorClassName="accent-primary-foreground"
       />
     );
   } else {
     sendButtonContent = (
-      <Icon name="arrow-up" className="text-primary-foreground" />
+      <Icon
+        role="control"
+        name="arrow-up"
+        className="text-primary-foreground"
+      />
     );
   }
   const planControls = (
@@ -231,7 +236,7 @@ export function Composer({
                       })}
                     >
                       <View className="size-5 items-center justify-center rounded-sm bg-background">
-                        <Icon name="close" size="xs" />
+                        <Icon name="close" role="inset" />
                       </View>
                     </Pressable>
                   </View>
@@ -305,7 +310,11 @@ export function Composer({
                       )}
                     />
                     <View className="relative z-10">
-                      <Icon name="add" className="text-muted-foreground" />
+                      <Icon
+                        role="control"
+                        name="add"
+                        className="text-muted-foreground"
+                      />
                     </View>
                   </Pressable>
                 }
@@ -370,7 +379,11 @@ export function Composer({
                         })}
                       >
                         <View className="size-8 rounded-full bg-muted wide:size-auto wide:rounded-none wide:bg-transparent items-center justify-center">
-                          <Icon name={item.icon} className="text-foreground" />
+                          <Icon
+                            role="control"
+                            name={item.icon}
+                            className="text-foreground"
+                          />
                         </View>
                         <Text
                           selectable={false}
@@ -491,7 +504,7 @@ function ComposerWarning({
 }): React.JSX.Element {
   return (
     <View role="alert" className="mx-4 mt-2 flex-row items-start gap-2">
-      <Icon name="error" className="text-destructive" />
+      <Icon role="control" name="error" className="text-destructive" />
       <Text
         role="secondary"
         className="min-w-0 flex-1 text-destructive"

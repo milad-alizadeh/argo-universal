@@ -144,7 +144,11 @@ function PlanProposalInteraction({
             </Text>
             {wide && (
               <View className="size-5 rounded-sm items-center justify-center bg-primary-foreground/15">
-                <Icon name="return" className="text-primary-foreground" />
+                <Icon
+                  role="control"
+                  name="return"
+                  className="text-primary-foreground"
+                />
               </View>
             )}
           </Pressable>
@@ -171,7 +175,11 @@ function PlanProposalInteraction({
           }
         >
           <View className="flex-row items-center gap-1.5">
-            <Icon name="plan-mode" className="text-muted-foreground" />
+            <Icon
+              role="body"
+              name="plan-mode"
+              className="text-muted-foreground"
+            />
             <Text role={'heading'} className="min-w-0 flex-1">
               Approve this plan?
             </Text>

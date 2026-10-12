@@ -13,7 +13,7 @@ export function InfoPopoverTrigger(props: {
       {...props}
       className={infoPopoverTriggerClass}
     >
-      <Icon name="info" className="text-muted-foreground" />
+      <Icon role="control" name="info" className="text-muted-foreground" />
     </Pressable>
   );
 }

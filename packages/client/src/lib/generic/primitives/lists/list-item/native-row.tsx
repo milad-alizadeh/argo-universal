@@ -2,18 +2,18 @@ import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { iconSizeStyle } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
+import { useIconBox } from '../../../symbols/icon-role';
 import { type ListItemProps, listItemStatus } from '../../fields/field-props';
 import { NativeIcon } from '../../native/native-icon';
 import { ListItemAccessory } from './list-item-accessory';
 import { StatusDot } from './status-dot';
 
 export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
-  return <NativeIcon name={icon} size="lg" />;
+  return <NativeIcon name={icon} role="row" />;
 }
 
-// An image, such as an Agent's logo, centred in the native row's 24 icon slot.
+// An image, such as an Agent's logo, centred in the native row's icon slot.
 export function NativeRowImage({
   image,
 }: {
@@ -27,7 +27,7 @@ export function NativeRowImage({
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
         className="items-center justify-center"
-        style={iconSizeStyle('lg')}
+        style={useIconBox('row')}
       >
         {image}
       </View>

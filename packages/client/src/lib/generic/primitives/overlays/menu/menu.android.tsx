@@ -10,7 +10,8 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { Icon, iconSizeStyle } from '../../../symbols/icon';
+import { useIconBox } from '../../../symbols/icon-role';
+import { SelectedCheck } from '../../display/selected-check';
 import { Host } from '../../native/host';
 import { usePrimitiveColor } from '../../native/primitive-color';
 import type { MenuProps } from './menu-props';
@@ -125,13 +126,14 @@ function MenuIndicator({ selected }: { selected: boolean }): React.JSX.Element {
   return (
     <RNHostView matchContents>
       <View
-        style={iconSizeStyle('md')}
+        style={useIconBox('body')}
         className="items-center justify-center"
         accessible={false}
         importantForAccessibility="no-hide-descendants"
       >
         {selected && (
-          <Icon name="check" size="md" className="text-popover-foreground" />
+          // Material's check glyph is padded, so beside bodyLarge it takes the Body size, not the 14 mark.
+          <SelectedCheck role="body" className="text-popover-foreground" />
         )}
       </View>
     </RNHostView>

@@ -63,6 +63,7 @@ export const ProjectHeading = memo(function ProjectHeading({
           {/* Wide, the folder sits in the same 20 slot as a Session's logo. */}
           <View className="items-center wide:w-5">
             <Icon
+              role="control"
               name={collapsed ? 'folder' : 'folder-open'}
               className="text-muted-foreground wide:text-foreground"
             />

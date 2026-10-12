@@ -8,7 +8,6 @@ import Animated, {
 import { motionDuration, quarterTurnDegrees } from '#lib/generic/motion';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { useTextIconSize } from '../../../lib/generic/symbols/text-icon-size';
 
 export function DisclosureCaret({
   open,
@@ -17,7 +16,6 @@ export function DisclosureCaret({
   open: boolean;
   className?: string;
 }): React.JSX.Element {
-  const size = useTextIconSize();
   const rotation = useDerivedValue(
     () =>
       withTiming(open ? quarterTurnDegrees : 0, {
@@ -33,7 +31,7 @@ export function DisclosureCaret({
   return (
     <Animated.View style={style} className="shrink-0">
       <Icon
-        size={size}
+        role="body"
         name="chevron-right"
         className={cn('text-muted-foreground', className)}
       />

@@ -6,7 +6,7 @@ import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { NativeOnlyAnimatedView } from '#lib/generic/primitives/native/native-only-animated-view/native-only-animated-view';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
-import { Chevron } from '../../../symbols/chevron';
+import { Icon } from '../../../symbols/icon';
 import {
   dropdownSubContentClassName,
   dropdownSubTriggerClassName,
@@ -31,8 +31,9 @@ function SubTriggerChevron({
   iconClassName,
 }: Pick<TriggerProps, 'iconClassName'> & { open: boolean }): React.JSX.Element {
   return (
-    <Chevron
+    <Icon
       name={subTriggerIcon(open)}
+      role="body"
       className={cn('text-foreground shrink-0', iconClassName)}
     />
   );

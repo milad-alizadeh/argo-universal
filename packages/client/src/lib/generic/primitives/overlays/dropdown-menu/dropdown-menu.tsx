@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Platform, Text, View } from 'react-native';
 import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
-import { iconSizeStyle } from '../../../symbols/icon';
+import { IconSlot } from '../../../symbols/icon';
 import { SelectedCheck } from '../../display/selected-check';
 import { DropdownMenuContent } from './dropdown-menu-content';
 import {
@@ -50,11 +50,11 @@ function DropdownMenuItem(itemProps: ItemProps): React.JSX.Element {
 
 function RadioIndicator(): React.JSX.Element {
   return (
-    <View style={iconSizeStyle('sm')} className="items-center justify-center">
+    <IconSlot role="control" className="items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
         <SelectedCheck className={indicatorClassName} />
       </DropdownMenuPrimitive.ItemIndicator>
-    </View>
+    </IconSlot>
   );
 }
 

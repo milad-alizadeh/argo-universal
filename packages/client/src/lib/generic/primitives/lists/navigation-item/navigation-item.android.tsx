@@ -19,8 +19,9 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { Icon, iconSizeStyle } from '../../../symbols/icon';
+import { Icon } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
+import { useIconBox } from '../../../symbols/icon-role';
 import { cn } from '../../../utils';
 import { Host } from '../../native/host';
 import { useComposeTextStyle } from '../../native/native-typography';
@@ -90,7 +91,7 @@ function NavigationItemIcon({
 }: NavigationItemProps): React.JSX.Element {
   return (
     <RNHostView matchContents>
-      <View collapsable={false} style={iconSizeStyle('lg')}>
+      <View collapsable={false} style={useIconBox('nav')}>
         <IconLayer icon={icon} filled shown={selected} />
         <IconLayer icon={icon} filled={false} shown={!selected} />
       </View>
@@ -108,7 +109,7 @@ function IconLayer({ icon, filled, shown }: IconLayerProps): React.JSX.Element {
   const tone = filled ? 'text-foreground' : 'text-muted-foreground';
   return (
     <View className={cn('absolute', !shown && 'opacity-0')}>
-      <Icon name={icon} size="lg" filled={filled} className={tone} />
+      <Icon name={icon} role="nav" filled={filled} className={tone} />
     </View>
   );
 }

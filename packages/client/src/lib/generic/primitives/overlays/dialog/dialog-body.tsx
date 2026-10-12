@@ -33,6 +33,7 @@ function ContentClose(): React.JSX.Element {
   return (
     <DialogPrimitive.Close className={closeClassName} hitSlop={12}>
       <Icon
+        role="control"
         name="close"
         className="text-accent-foreground web:pointer-events-none shrink-0"
       />

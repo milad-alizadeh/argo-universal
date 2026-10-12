@@ -1,9 +1,7 @@
 import * as SelectPrimitive from '@rn-primitives/select';
 import type * as React from 'react';
-import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Chevron } from '../../../symbols/chevron';
-import { iconSizeStyle } from '../../../symbols/icon';
+import { Icon, IconSlot } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { useWide } from '../../../use-wide/use-wide';
 import { SelectedCheck } from '../../display/selected-check';
@@ -56,8 +54,9 @@ function TriggerChevron({
   variant,
 }: Pick<TriggerProps, 'variant'>): React.JSX.Element {
   return (
-    <Chevron
+    <Icon
       name={chevronName(variant, useWide())}
+      role="body"
       aria-hidden={true}
       className="text-muted-foreground"
     />
@@ -94,14 +93,14 @@ function SelectLabel({
 
 function ItemIndicator(): React.JSX.Element {
   return (
-    <View
-      style={iconSizeStyle('sm')}
+    <IconSlot
+      role="control"
       className="absolute right-2 flex items-center justify-center"
     >
       <SelectPrimitive.ItemIndicator>
         <SelectedCheck className="text-muted-foreground shrink-0" />
       </SelectPrimitive.ItemIndicator>
-    </View>
+    </IconSlot>
   );
 }
 

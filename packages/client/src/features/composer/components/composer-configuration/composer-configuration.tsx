@@ -27,8 +27,7 @@ import { Slider } from '../../../../lib/generic/primitives/inputs/slider/slider'
 import { Switch } from '../../../../lib/generic/primitives/inputs/switch/switch';
 import { InfoPopover } from '../../../../lib/generic/primitives/overlays/info-popover/info-popover';
 import { contentActionClass } from '../../../../lib/generic/primitives/pressable/pressable';
-import { Chevron } from '../../../../lib/generic/symbols/chevron';
-import { Icon, iconSizeStyle } from '../../../../lib/generic/symbols/icon';
+import { Icon, IconSlot } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import {
   configurationChoices,
@@ -176,11 +175,8 @@ const ThemedLogo = withUniwind(SvgXml, {
 
 function Logo({ agent }: { agent?: AgentInfo }): React.JSX.Element | null {
   return agent ? (
-    <View
-      style={iconSizeStyle('sm')}
-      className="shrink-0 items-center justify-center"
-    >
-      <View testID="composer-agent-icon" style={iconSizeStyle('sm')}>
+    <IconSlot role="control" className="shrink-0 items-center justify-center">
+      <View testID="composer-agent-icon" className="h-full w-full">
         <ThemedLogo
           xml={agent.logo}
           className="text-foreground"
@@ -188,7 +184,7 @@ function Logo({ agent }: { agent?: AgentInfo }): React.JSX.Element | null {
           height="100%"
         />
       </View>
-    </View>
+    </IconSlot>
   ) : null;
 }
 function Choice({
@@ -248,15 +244,12 @@ function Choice({
           </Text>
         )}
       </View>
-      <View
-        className="items-center justify-center"
-        style={[
-          iconSizeStyle('sm'),
-          !!leading && { height: iconSizeStyle('md').height },
-        ]}
+      <IconSlot
+        role="control"
+        className={cn('items-center justify-center', !!leading && 'h-5')}
       >
         {selected && <SelectedCheck />}
-      </View>
+      </IconSlot>
     </Pressable>
   );
 }
@@ -722,7 +715,7 @@ export function AgentModelMenu({
             className="size-11 sm:size-11"
             onPress={() => setPage('settings')}
             icon={'chevron-left'}
-            iconSize="xs"
+            iconRole="inset"
             iconClassName={'text-foreground'}
             size="md"
           />
@@ -794,7 +787,8 @@ export function AgentModelMenu({
                 >
                   {agent?.label}
                 </Text>
-                <Chevron
+                <Icon
+                  role="body"
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
@@ -823,7 +817,8 @@ export function AgentModelMenu({
                 >
                   {modelName(current)}
                 </Text>
-                <Chevron
+                <Icon
+                  role="body"
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
@@ -846,7 +841,11 @@ export function AgentModelMenu({
         {wide && <EffortControl configuration={configuration} />}
         {configuration.turnRunning && (
           <View className="flex-row gap-2 px-gutter wide:px-3 py-2.5 bg-muted">
-            <Icon name="waiting" className="text-muted-foreground" />
+            <Icon
+              role="control"
+              name="waiting"
+              className="text-muted-foreground"
+            />
             <Text
               selectable={false}
               role="secondary"
@@ -941,6 +940,7 @@ export function ComposerAgentModelControl({
             )}
           {fastOn && (
             <Icon
+              role="control"
               name="fast-mode"
               filled
               className="text-foreground"
@@ -948,8 +948,8 @@ export function ComposerAgentModelControl({
             />
           )}
           {wide && (
-            <Chevron
-              textRole="control"
+            <Icon
+              role="control"
               name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
@@ -995,6 +995,7 @@ export function ComposerModeControl({
           })}
         >
           <Icon
+            role="control"
             name={configurationIcon(current?._meta?.argo?.icon)}
             className={cn(
               'text-muted-foreground',
@@ -1015,8 +1016,8 @@ export function ComposerModeControl({
             {current?.name.replace(/\s*\(recommended\)\s*$/i, '')}
           </Text>
           <View className={cn('-ml-0.5', !wide && 'hidden')}>
-            <Chevron
-              textRole="control"
+            <Icon
+              role="control"
               name="chevron-down"
               className="text-muted-foreground"
             />
@@ -1036,6 +1037,7 @@ export function ComposerModeControl({
               dangerous={choice._meta?.argo?.tone === 'dangerous'}
               leading={
                 <Icon
+                  role="control"
                   name={configurationIcon(choice._meta?.argo?.icon)}
                   className={cn(
                     'text-foreground',
@@ -1074,6 +1076,7 @@ export function CheckoutContents({
           selected={checkout.newWorktree === newWorktree}
           leading={
             <Icon
+              role="control"
               name={newWorktree ? 'branch' : 'folder'}
               className="text-muted-foreground"
             />
@@ -1102,6 +1105,7 @@ export function ComposerCheckoutControl({
     return (
       <View className="h-7 min-w-0 max-w-96 px-1.5 flex-row items-center gap-1.5">
         <Icon
+          role="control"
           name={checkout.newWorktree ? 'branch' : 'folder'}
           className="text-muted-foreground"
         />
@@ -1136,14 +1140,15 @@ export function ComposerCheckoutControl({
           })}
         >
           <Icon
+            role="control"
             name={checkout.newWorktree ? 'branch' : 'folder'}
             className="text-muted-foreground"
           />
           <Text selectable={false} role="secondary" className="select-none">
             {checkout.newWorktree ? 'New worktree' : 'Local'}
           </Text>
-          <Chevron
-            textRole="secondary"
+          <Icon
+            role="secondary"
             name="chevron-down"
             className="text-muted-foreground"
           />

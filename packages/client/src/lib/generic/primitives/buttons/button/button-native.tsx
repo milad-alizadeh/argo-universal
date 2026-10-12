@@ -45,7 +45,7 @@ export function NativeButtonIcon({
   if (!icon) return null;
   return (
     <HostView matchContents>
-      <Icon name={icon} className={contentClass} />
+      <Icon name={icon} role="control" className={contentClass} />
     </HostView>
   );
 }

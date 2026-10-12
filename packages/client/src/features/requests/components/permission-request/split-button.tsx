@@ -64,7 +64,7 @@ function chevron(
         className,
       )}
       icon={'chevron-down'}
-      iconSize="xs"
+      iconRole="inset"
       iconClassName={
         primary ? 'text-primary-foreground' : 'text-muted-foreground'
       }
@@ -127,7 +127,7 @@ function ChoiceSheet<Value extends string>(
             <Text role="body">{choice.label}</Text>
             <View className="size-4 items-center justify-center">
               {choice.value === value && (
-                <Icon name="check" size="xs" className="text-foreground" />
+                <Icon name="check" role="inset" className="text-foreground" />
               )}
             </View>
           </Pressable>
