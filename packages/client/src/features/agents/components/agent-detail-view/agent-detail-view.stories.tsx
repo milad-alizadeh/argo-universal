@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { fn } from 'storybook/test';
 import { AgentDetailView } from './agent-detail-view';
 import {
   agentDetailArgs,
@@ -18,7 +19,10 @@ type Story = StoryObj<typeof meta>;
 export const Ready: Story = {};
 
 export const NotSignedIn: Story = {
-  args: { agent: { ...readyAgent, status: 'sign-in', signInCommand } },
+  args: {
+    agent: { ...readyAgent, status: 'sign-in', signInCommand },
+    onSignIn: fn(),
+  },
 };
 
 export const UpdateAvailable: Story = {

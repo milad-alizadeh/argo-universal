@@ -22,7 +22,10 @@ export const emptySessionInput = {
 };
 export const startAcpEngine = async (
   scenario: ScriptedScenario & { autoExit?: boolean } & Partial<
-      Pick<EngineInput, 'fetchAgents'>
+      Pick<
+        EngineInput,
+        'fetchAgents' | 'loginTimeoutMs' | 'loginCleanupTimeoutMs'
+      >
     > &
     Pick<AcpResourceInput, 'closeTimeoutMs' | 'releaseTimeoutMs'> = {
     steps: [],
@@ -41,6 +44,8 @@ export const startAcpEngine = async (
   const host = await startEngineTestHost({
     database: storage.database,
     createId,
+    loginTimeoutMs: scenario.loginTimeoutMs,
+    loginCleanupTimeoutMs: scenario.loginCleanupTimeoutMs,
     ...(scenario.fetchAgents ? { fetchAgents: scenario.fetchAgents } : {}),
     adapters: [{ ...createAgentMetadata(), agent: agentId }],
     acp: {

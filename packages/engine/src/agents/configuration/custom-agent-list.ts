@@ -20,9 +20,15 @@ const describeCustomAgent = async (
     agent: agent.agentId,
     label: agent.definition.name,
     logo: '',
-    availability: check.status === 'ready' ? 'available' : 'unavailable',
+    availability: customAvailability(check),
     configOptions: [],
   };
+};
+const customAvailability = (
+  check: Awaited<ReturnType<typeof checkCustomDefinition>>,
+): AgentInfo['availability'] => {
+  if (check.status !== 'ready') return 'unavailable';
+  return check.authentication ? 'not_signed_in' : 'available';
 };
 
 // Each listing checks every enabled custom program afresh; readiness is never read from the record.

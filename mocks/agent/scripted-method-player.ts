@@ -4,6 +4,7 @@ import type {
   AgentRequestParamsByMethod,
   AgentRequestResponsesByMethod,
   PromptResponse,
+  JsonRpcId,
 } from '@agentclientprotocol/sdk';
 import {
   playResponse,
@@ -61,13 +62,16 @@ export class ScriptedMethodPlayer {
     };
   }
   public turn(
-    context: { client: ScriptedTurn['client'] },
+    context: { client: ScriptedTurn['client']; requestId?: JsonRpcId },
     sessionId: string,
     active = true,
   ): ScriptedTurn {
     return {
       sessionId,
       client: context.client,
+      ...(context.requestId === undefined
+        ? {}
+        : { requestId: context.requestId }),
       ...(active
         ? this.sessions.startTurn(sessionId)
         : { cancelled: new Promise<void>(() => {}), isCancelled: () => false }),

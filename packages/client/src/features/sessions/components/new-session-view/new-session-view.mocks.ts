@@ -5,6 +5,7 @@ import {
 } from '@repo/mocks/app';
 import { fn } from 'storybook/test';
 import type { ComposerDraft } from '#features/composer';
+import { startingFeed } from '../../state/starting-feed';
 import type { ReadyNewSessionViewProps } from './new-session-view';
 
 const [firstAgent] = newSessionCatalogs.bothAvailable;
@@ -40,4 +41,12 @@ export const readyNewSession: ReadyNewSessionViewProps = {
 export const typedDraft: ComposerDraft = {
   text: 'Fix the flaky login test',
   images: [],
+};
+
+// The typed first prompt sent, while the Session opens.
+export const startingNewSession: Partial<ReadyNewSessionViewProps> = {
+  draft: typedDraft,
+  opening: true,
+  canOpen: false,
+  starting: startingFeed(typedDraft, Date.now()),
 };

@@ -97,6 +97,7 @@ const mockHttpServer: HttpServer = {
     expect.unreachable('Structural model does not call procedures'),
   close: (): never =>
     expect.unreachable('The machine closes through closeHttpServer'),
+  closeSetup: async (): Promise<void> => {},
 };
 
 const machineWithExternalMocks = engineMachine.provide({
@@ -433,6 +434,9 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
           databaseWriter: expect.anything(),
           syncSupervisor: expect.anything(),
           commandAdmission: expect.any(AbortController),
+          acp: undefined,
+          loginTimeoutMs: undefined,
+          loginCleanupTimeoutMs: undefined,
         },
       }),
     ]);

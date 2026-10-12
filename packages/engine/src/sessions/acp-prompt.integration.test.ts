@@ -42,6 +42,7 @@ it('a negotiated image prompt delivers every byte from the stored Blob', async (
     initialize: {
       protocolVersion: 1,
       agentCapabilities: {
+        _meta: { authStatus: {} },
         promptCapabilities: { image: true },
         sessionCapabilities: { close: {} },
       },

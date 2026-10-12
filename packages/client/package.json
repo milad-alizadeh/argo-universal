@@ -48,6 +48,7 @@
     "clsx": "catalog:",
     "diff": "catalog:",
     "expo-clipboard": "catalog:",
+    "expo-crypto": "catalog:",
     "expo-file-system": "catalog:",
     "expo-haptics": "catalog:",
     "expo-image-picker": "catalog:",

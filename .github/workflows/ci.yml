@@ -1,4 +1,5 @@
 # Quality and web e2e on every pull request and push to main; Electron e2e on main and release/*.
+# The jobs run in parallel and the web e2e suite is split into shards, so a run takes as long as its slowest job.
 name: CI
 
 on:
@@ -6,7 +7,7 @@ on:
   push:
     branches:
       - main
-      # Pushes to release branches run CI so the Electron step below can run there.
+      # Pushes to release branches run CI so the Electron job below can run there.
       - "release/**"
 
 concurrency:
@@ -17,10 +18,10 @@ permissions:
   contents: read
 
 jobs:
-  ci:
-    name: Quality and end-to-end tests
+  quality:
+    name: Quality
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     permissions:
       contents: read
       # The Vercel Remote Cache step trades GitHub's OIDC token for a short-lived Turborepo token.
@@ -33,27 +34,9 @@ jobs:
       - name: Fetch main for the waiver merge base
         run: git fetch origin main:refs/remotes/origin/main
 
-      # Installs the pnpm version in package.json's packageManager.
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
+      - uses: ./.github/actions/setup
         with:
-          node-version-file: .node-version
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # Chromium for the web e2e project and the Storybook Vitest tests in pnpm quality; --with-deps also installs xvfb.
-      - name: Install Playwright Chromium
-        run: pnpm --filter @repo/e2e exec playwright install --with-deps chromium
-
-      # Shares turbo's task cache with every run and machine, so unchanged tasks replay instead of running; skipped until the TURBO_TEAM variable exists.
-      - name: Set up the Turborepo Remote Cache
-        if: ${{ vars.TURBO_TEAM != '' }}
-        uses: vercel/setup-turborepo-remote-cache-action@v1.1.0
-        with:
-          team: ${{ vars.TURBO_TEAM }}
+          turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Quality
         run: pnpm quality
@@ -68,40 +51,99 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-      # Through turbo, so an unchanged app restores dist/ from the cache.
-      - name: Export the Expo web build
-        run: pnpm exec turbo run build --filter=@repo/universal-app
+  e2e-web:
+    name: End-to-end tests (web ${{ matrix.shard }}/3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v7
 
-      # Replays from cache when nothing @repo/e2e depends on changed.
+      - uses: ./.github/actions/setup
+        with:
+          turbo-team: ${{ vars.TURBO_TEAM }}
+
+      # Builds or restores the Expo web export through turbo, then replays from cache when nothing @repo/e2e depends on changed.
       - name: End-to-end tests (web)
         run: pnpm test:e2e
+        env:
+          ARGO_E2E_SHARD: ${{ matrix.shard }}/3
 
-      - name: Upload the web e2e report
+      # The blob report carries each failure's trace into the merged HTML report.
+      - name: Upload the shard's blob report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
+          name: blob-report-${{ matrix.shard }}
+          path: e2e/blob-report/
+          retention-days: 1
+
+  e2e-web-report:
+    name: Merge the web e2e report
+    if: ${{ !cancelled() }}
+    needs: e2e-web
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: none
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: blob-report-*
+          path: e2e/all-blob-reports
+          merge-multiple: true
+
+      - name: Merge the shard reports into one HTML report
+        working-directory: e2e
+        run: pnpm exec playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload the web e2e report
+        uses: actions/upload-artifact@v7
+        with:
           name: playwright-web
-          path: |
-            e2e/playwright-report/
-            e2e/test-results/
+          path: e2e/playwright-report/
           retention-days: 30
+
+  e2e-electron:
+    name: End-to-end tests (Electron)
+    if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # Electron brings its own Chromium; this installs only the system libraries and xvfb.
+      - uses: ./.github/actions/setup
+        with:
+          playwright: system-deps
+          turbo-team: ${{ vars.TURBO_TEAM }}
 
       # Electron 44 downloads its binary on first use; fetch it before the tests start their timers.
       - name: Install Electron
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
         run: pnpm --filter @repo/desktop exec install-electron
 
       # Ubuntu 24.04 blocks the unprivileged user namespaces Electron's sandbox uses (electron/electron#42510).
       - name: Allow user namespaces for Electron
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
       - name: End-to-end tests (Electron)
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
         run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- pnpm test:e2e:electron
 
       - name: Upload the Electron e2e report
-        if: ${{ !cancelled() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')) }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: playwright-electron
@@ -109,3 +151,15 @@ jobs:
             e2e/playwright-report/
             e2e/test-results/
           retention-days: 30
+
+  # Branch protection requires this one check, so splitting or renaming the jobs above never changes the required checks.
+  ci:
+    name: Quality and end-to-end tests
+    if: ${{ always() }}
+    needs: [quality, e2e-web, e2e-electron]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail when any job failed or was cancelled
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1

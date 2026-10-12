@@ -1,4 +1,8 @@
 import type { AgentLaunch } from '../agents';
+import {
+  authenticationContextKey,
+  ResourceInUseError,
+} from '../lib/authentication-context';
 import { CheckoutReleases } from './checkout-releases';
 import { AcpResourceEntry } from './resource-entry';
 import type {
@@ -32,6 +36,8 @@ const createLaunchReuseKey = (launch: AgentLaunch): string =>
 class EngineAcpResources implements AcpResources {
   private readonly entries = new Map<string, AcpResourceEntry>();
   private readonly retired = new Set<AcpResourceEntry>();
+  private readonly authentication = new Map<string, symbol>();
+  private readonly contexts = new Map<AcpResourceEntry, string>();
   private readonly checkoutReleases: CheckoutReleases;
   private stopped = false;
   public constructor(private readonly input: AcpResourceInput) {
@@ -41,6 +47,8 @@ class EngineAcpResources implements AcpResources {
     if (this.stopped)
       return Promise.reject(new Error('ACP resources are stopped'));
     const launch = captureLaunch(opening.launch);
+    if (this.authentication.has(authenticationContextKey(launch)))
+      return Promise.reject(new Error('Agent sign-in is in progress'));
     return this.getOrStartResource(launch).open({ ...opening, launch }, () =>
       this.checkoutReleases.confirm(opening.opening.params.cwd),
     );
@@ -53,6 +61,7 @@ class EngineAcpResources implements AcpResources {
       this.retireFailedGeneration(key, entry, checkouts),
     );
     this.entries.set(key, entry);
+    this.contexts.set(entry, authenticationContextKey(launch));
     void entry
       .closed()
       .then(() => this.forget(key, entry))
@@ -72,6 +81,23 @@ class EngineAcpResources implements AcpResources {
   private forget(key: string, entry: AcpResourceEntry): void {
     if (this.entries.get(key) === entry) this.entries.delete(key);
     this.retired.delete(entry);
+    this.contexts.delete(entry);
+  }
+  public reserveAuthentication = (launch: AgentLaunch): (() => void) => {
+    if (this.stopped) throw new Error('ACP resources are stopped');
+    const key = authenticationContextKey(launch);
+    if (this.isAuthenticationContextInUse(key)) throw new ResourceInUseError();
+    const reservation = Symbol();
+    this.authentication.set(key, reservation);
+    return (): void => {
+      if (this.authentication.get(key) === reservation)
+        this.authentication.delete(key);
+    };
+  };
+  private isAuthenticationContextInUse(key: string): boolean {
+    return (
+      this.authentication.has(key) || [...this.contexts.values()].includes(key)
+    );
   }
   public async shutdown(): Promise<void> {
     this.stopped = true;
