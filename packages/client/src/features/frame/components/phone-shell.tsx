@@ -102,6 +102,7 @@ export function PhoneShell({
       >
         <Icon
           name={icon}
+          size="lg"
           filled={selectedSection === section}
           className={cn(selectedSection !== section && 'text-muted-foreground')}
         />
