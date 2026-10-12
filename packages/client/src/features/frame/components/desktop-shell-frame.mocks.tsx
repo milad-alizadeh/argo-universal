@@ -9,6 +9,7 @@ import {
 } from '../../../lib/generic/primitives/dropdown-menu';
 import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { Text } from '../../../lib/generic/primitives/text';
+import { ListTitle } from '../../../lib/product/list-title';
 import { PageHeader } from '../../../lib/product/page-header';
 import { DesktopShell, type DesktopShellProps } from './desktop-shell';
 import { InspectorPane } from './inspector-pane';
@@ -56,11 +57,7 @@ export function DesktopShellFrame({
             )}
           </InspectorPane>
         )}
-        listHeader={
-          <Text role="heading" semanticRole="heading" aria-level={2}>
-            {title}
-          </Text>
-        }
+        listHeader={<ListTitle>{title}</ListTitle>}
         list={
           <View className="p-4">
             <Text testID="list-content">{title} list</Text>

@@ -9,10 +9,13 @@ type ActionProps = Omit<
   'children' | 'role' | 'accessibilityLabel'
 >;
 
+// Past `lg`, the button keeps one size at every width, such as a tile in a desktop rail.
+export type IconButtonSize = ButtonSize | 'xl' | '2xl';
+
 export type IconButtonProps = ActionProps & {
   icon: IconName;
   accessibilityLabel: string;
-  size?: ButtonSize;
+  size?: IconButtonSize;
   loading?: boolean;
   variant?: 'default' | 'ghost' | 'outline' | 'filled';
   iconSize?: IconSize;
