@@ -5,6 +5,7 @@ import { BottomSheet } from '../bottom-sheet/bottom-sheet';
 export type DialogSheetProps = {
   label?: string;
   dismissible?: boolean;
+  onCloseAutoFocus?: (event: Event) => void;
   children: React.ReactNode;
 };
 

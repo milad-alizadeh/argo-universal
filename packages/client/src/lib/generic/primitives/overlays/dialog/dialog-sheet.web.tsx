@@ -11,6 +11,7 @@ export function DialogSheet(props: DialogSheetProps): React.JSX.Element {
       open={open}
       hiddenWhileClosing
       dismissible={props.dismissible}
+      onCloseAutoFocus={props.onCloseAutoFocus}
       title={props.label && <SheetLabel label={props.label} />}
     >
       {props.children}

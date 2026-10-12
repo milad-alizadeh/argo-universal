@@ -8,6 +8,7 @@ import { useSwipeToClose } from './bottom-sheet-swipe.web';
 type SurfaceProps = {
   open: boolean;
   onClosed?: () => void;
+  onCloseAutoFocus?: (event: Event) => void;
   dismissible?: boolean;
   // A hidden title for a sheet whose content has none of its own.
   title?: React.ReactNode;
@@ -93,7 +94,10 @@ function useTallestHeight(): {
 }
 
 function sheetContentProps(
-  props: Pick<SurfaceProps, 'open' | 'onClosed' | 'dismissible'>,
+  props: Pick<
+    SurfaceProps,
+    'open' | 'onClosed' | 'dismissible' | 'onCloseAutoFocus'
+  >,
 ): React.ComponentProps<typeof DialogPrimitive.Content> & {
   'data-state': string;
   'aria-describedby': undefined;
@@ -101,7 +105,10 @@ function sheetContentProps(
   return {
     'data-state': props.open ? 'open' : 'closed',
     'aria-describedby': undefined,
-    onCloseAutoFocus: props.onClosed,
+    onCloseAutoFocus: (event) => {
+      props.onCloseAutoFocus?.(event);
+      props.onClosed?.();
+    },
     onEscapeKeyDown: keepOpen(props.dismissible),
     onInteractOutside: keepOpen(props.dismissible),
     className:
