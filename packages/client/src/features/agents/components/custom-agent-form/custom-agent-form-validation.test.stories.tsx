@@ -41,5 +41,6 @@ export const AnnouncesAnErrorWithItsField: Story = {
     await expect(executable).toHaveAccessibleDescription(
       'One path or command, without spaces. Put arguments below.',
     );
+    await expect(canvas.getByLabelText('Name')).toHaveAccessibleDescription('');
   },
 };

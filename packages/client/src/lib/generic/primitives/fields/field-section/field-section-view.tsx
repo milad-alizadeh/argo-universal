@@ -3,7 +3,7 @@ import { useId } from 'react';
 import { View } from 'react-native';
 import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
-import { FooterIdProvider } from '../field-footer';
+import { FooterProvider, type SectionFooter } from '../field-footer';
 import { useNavigationFields } from '../field-layout';
 import type { FieldSectionProps } from '../field-props';
 
@@ -19,9 +19,9 @@ export function FieldSection(props: FieldSectionProps): React.JSX.Element {
           navigation && 'rounded-none bg-transparent',
         )}
       >
-        <FooterIdProvider value={props.footer ? footerId : undefined}>
+        <FooterProvider value={footerOf(props, footerId)}>
           {props.children}
-        </FooterIdProvider>
+        </FooterProvider>
       </View>
       <SectionFooter
         id={footerId}
@@ -31,6 +31,14 @@ export function FieldSection(props: FieldSectionProps): React.JSX.Element {
     </View>
   );
 }
+
+const footerOf = (
+  props: FieldSectionProps,
+  id: string,
+): SectionFooter | undefined =>
+  props.footer
+    ? { id, failure: props.footerTone === 'destructive' }
+    : undefined;
 
 type FooterProps = {
   id: string;

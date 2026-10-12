@@ -4,7 +4,7 @@ import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
 import { Input } from '../../inputs/input/input';
 import { rowClasses } from '../../lists/list-item/list-item-styles';
-import { useFooterId } from '../field-footer';
+import { useFooterDescription } from '../field-footer';
 import type { FieldInputProps } from '../field-props';
 
 export const isInvalid = (props: Pick<FieldInputProps, 'errors'>): boolean =>
@@ -40,7 +40,10 @@ function RowInput(props: FieldInputProps): React.JSX.Element {
     <Input
       accessibilityLabel={props.label}
       aria-invalid={isInvalid(props)}
-      aria-describedby={useFooterId()}
+      aria-describedby={useFooterDescription({
+        invalid: isInvalid(props),
+        hint: props.hint,
+      })}
       value={props.value}
       placeholder={props.placeholder}
       onChangeText={props.onChange}
