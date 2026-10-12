@@ -4,7 +4,7 @@ import {
   roundTrip,
   type ShownLink,
 } from '../../../../../../mocks/rich-textarea-headless';
-import { isLinkUrl } from './rich-textarea-links';
+import { isLinkUrl, isScriptUrl } from './rich-textarea-links';
 
 describe('A pasted text links the selection', () => {
   it.each([
@@ -25,6 +25,30 @@ describe('A pasted text links the selection', () => {
     '',
   ])('not when it is %j', (text) => {
     expect(isLinkUrl(text)).toBe(false);
+  });
+});
+
+describe('A link that would run a script', () => {
+  it.each([
+    'javascript:alert(1)',
+    'JavaScript:alert(1)',
+    ' \tjava\nscript:alert(1)',
+    'data:text/html,<script>alert(1)</script>',
+    'VBScript:msgbox(1)',
+  ])('is refused when it is %j', (url) => {
+    expect(isScriptUrl(url)).toBe(true);
+  });
+
+  it.each([
+    'https://argo.dev',
+    '#top',
+    './README.md',
+    '/docs',
+    'sftp://argo.dev/files',
+    'tel:+441234567890',
+    'docs/javascript:notes',
+  ])('is not %j', (url) => {
+    expect(isScriptUrl(url)).toBe(false);
   });
 });
 

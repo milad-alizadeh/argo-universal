@@ -1827,6 +1827,8 @@
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-markdown.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-value.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-blocks.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-paste.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-editing-plugins.tsx",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-link-editing.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-placement.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-formats.ts",

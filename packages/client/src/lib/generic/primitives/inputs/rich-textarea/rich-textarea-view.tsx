@@ -1,4 +1,3 @@
-import { $isListItemNode } from '@lexical/list';
 import {
   type InitialConfigType,
   LexicalComposer,
@@ -6,15 +5,12 @@ import {
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
-import { ListPlugin } from '@lexical/react/LexicalListPlugin';
-import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
-import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
+import { EditingPlugins } from './rich-textarea-editing-plugins';
 import { FormatBarPlugin } from './rich-textarea-format-bar-plugin';
 import {
   registerBlockShortcuts,
@@ -22,11 +18,7 @@ import {
   registerReturnToSubmit,
 } from './rich-textarea-keys';
 import { LinkPlugins } from './rich-textarea-link-plugins';
-import {
-  $importMarkdown,
-  richTextareaNodes,
-  richTextareaTransformers,
-} from './rich-textarea-markdown';
+import { $importMarkdown, richTextareaNodes } from './rich-textarea-markdown';
 import {
   plainFieldClassName,
   type RichTextareaProps,
@@ -45,18 +37,6 @@ function KeyboardPlugin({
     [editor, onSubmit],
   );
   return null;
-}
-
-// Typing, undo, and lists that nest with Tab; only list items indent, since markdown has no other indent.
-function EditingPlugins(): React.JSX.Element {
-  return (
-    <>
-      <HistoryPlugin />
-      <ListPlugin />
-      <TabIndentationPlugin $canIndent={$isListItemNode} />
-      <MarkdownShortcutPlugin transformers={richTextareaTransformers} />
-    </>
-  );
 }
 
 function EditablePlugin({ editable }: { editable: boolean }): null {
