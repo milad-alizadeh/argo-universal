@@ -11,8 +11,8 @@ import { agentStatusLabels, statusTone } from '../state/agent-status';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
 import {
   AboutSection,
+  AgentStatusSection,
   DefaultsSection,
-  StatusSection,
 } from './agent-detail-sections';
 import { AgentIdentity } from './agent-identity';
 import { PhoneTitle } from './phone-title';
@@ -78,7 +78,7 @@ function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
     <FieldGroup>
       <DetailIdentity {...props} />
       <PhoneSummary {...props} />
-      <StatusSection {...props} />
+      <AgentStatusSection {...props} />
       <DefaultsSection {...props} />
       <AboutSection agent={props.agent} />
       <RemoveAgent {...props} />

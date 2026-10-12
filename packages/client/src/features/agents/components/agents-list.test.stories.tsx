@@ -64,7 +64,11 @@ export const HasNoRefreshButton: Story = {
 
 export const FiltersByThePills: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Installed, 4' }));
+    await userEvent.click(
+      canvas.getByRole('button', {
+        name: `Installed, ${installedAgents.length}`,
+      }),
+    );
     await expect(
       canvas.queryByRole('link', { name: agentLink(registryName) }),
     ).not.toBeInTheDocument();
