@@ -6,6 +6,8 @@ import { Given, When, Then } from './fixtures';
 export const agentModelLabel = 'Agent and model';
 export const messageLabel = 'Message';
 const checkedAttribute = 'aria-checked';
+// Opening a Session starts the Agent process, which outlasts the default 5s under parallel load.
+const sessionOpenTimeout = { timeout: 15_000 };
 
 export async function openNewSession(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
@@ -69,7 +71,7 @@ When(
 export async function sendPrompt(page: Page, prompt: string): Promise<void> {
   await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
-  await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/);
+  await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/, sessionOpenTimeout);
   await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
     '',
   );
@@ -134,7 +136,7 @@ Then(
   async ({ page }): Promise<void> => {
     await expect(
       page.getByRole('region', { name: /^Notifications/ }),
-    ).toContainText("Couldn't open the Session");
+    ).toContainText("Couldn't open the Session", sessionOpenTimeout);
     await expect(page).toHaveURL(/\/sessions\/new$/);
   },
 );
