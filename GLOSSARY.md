@@ -9,7 +9,7 @@ A registered git repository that Argo works in. One git common directory is one 
 _Avoid_: Repo, workspace
 
 **Server**:
-The local program that owns Sessions, git work, and storage for one machine. It runs as a Supervisor and an Engine. It plays the role that ACP calls the Client.
+The local program that owns Sessions, git work, and storage for its Server Device. It runs as a Supervisor and an Engine. It plays the role that ACP calls the Client.
 _Avoid_: Daemon, backend, host
 
 **Supervisor**:
@@ -25,8 +25,24 @@ A program that shows Argo to a person: the universal app on iOS, Android, and we
 _Avoid_: Client (ACP uses that word for the Server), frontend
 
 **Connection**:
-The live link between an App and the Server.
+The live link between an App and one Server. An App can hold one Connection to each of several Servers.
 _Avoid_: Binding, socket
+
+**Device**:
+A computer or phone that runs an App.
+_Avoid_: Client, machine (for a phone)
+
+**Server Device**:
+The Device that a Server runs on. Each Server has one.
+_Avoid_: Host, host Device, Server machine
+
+**Pairing**:
+Giving a Device access to a Server that runs on another Device.
+_Avoid_: Linking, enrolment, registration
+
+**Paired Device**:
+A Device whose App has access to a Server through Pairing. It is never that Server's Server Device.
+_Avoid_: Remote Device, guest, client
 
 **Issue**:
 A work item in a Project's tracker, such as Linear or GitHub.

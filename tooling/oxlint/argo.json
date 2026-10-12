@@ -1707,7 +1707,8 @@
         "apps/server/src/supervisor/engine-process.ts",
         "packages/engine/src/system/info.ts",
         "packages/engine/src/acp/process.ts",
-        "apps/desktop/src/main/server-process.ts"
+        "apps/desktop/src/main/server-process.ts",
+        "apps/desktop/scripts/storybook-mac.mts"
       ],
       "rules": { "argo/child-process": "error" }
     },

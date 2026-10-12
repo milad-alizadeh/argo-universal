@@ -6,7 +6,7 @@ import { ListItem } from './list-item';
 
 const onPress = action('open list item');
 const meta = {
-  title: 'Primitives/FieldSection',
+  title: 'Design System/Primitives/FieldSection',
   args: { children: null },
   component: FieldSection,
   parameters: { screenPreview: true },

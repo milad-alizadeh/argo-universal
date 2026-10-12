@@ -4,14 +4,18 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check-types": "tsc --noEmit",
-    "test": "vitest run"
+    "check-types": "tsc --noEmit && tsc --noEmit -p perf",
+    "test": "vitest run",
+    "perf": "playwright test -c perf/playwright.config.mts"
   },
   "dependencies": {
+    "@repo/db": "workspace:*",
     "jsonc-parser": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:",
+    "@repo/contracts": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",

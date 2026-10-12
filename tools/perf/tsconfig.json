@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  // The page-side callbacks run in Chromium, so this folder also sees the DOM.
+  "compilerOptions": {
+    "lib": ["es2025", "dom"]
+  },
+  "include": ["**/*.mts"],
+  "exclude": []
+}

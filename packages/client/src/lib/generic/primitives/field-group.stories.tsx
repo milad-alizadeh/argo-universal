@@ -6,7 +6,7 @@ import { ListItem } from './list-item';
 
 const onPress = action('open list item');
 const meta = {
-  title: 'Primitives/FieldGroup',
+  title: 'Design System/Primitives/FieldGroup',
   args: { children: null },
   component: FieldGroup,
   parameters: { screenPreview: true },

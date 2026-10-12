@@ -31,7 +31,7 @@ function EffortItem(): React.JSX.Element {
   );
 }
 const meta = {
-  title: 'Primitives/ListItem',
+  title: 'Design System/Primitives/ListItem',
   args: { title: 'Name' },
   component: ListItem,
   parameters: { screenPreview: true },

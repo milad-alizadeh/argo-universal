@@ -2,6 +2,7 @@ import { LegendList } from '@legendapp/list/react-native';
 import type { AgentsCatalogOutput } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { listTestIdProps } from '#lib/generic/list-test-id';
 import { Text } from '#lib/generic/primitives/text';
 import { Button } from '../../../lib/generic/primitives/button';
 import { Icon } from '../../../lib/generic/symbols/icon';
@@ -34,6 +35,7 @@ function CatalogEntries(props: CatalogProps): React.JSX.Element {
   return (
     <LegendList
       role="list"
+      {...listTestIdProps('agents-catalog')}
       data={props.catalog.agents}
       style={{ flex: 1 }}
       estimatedItemSize={120}
