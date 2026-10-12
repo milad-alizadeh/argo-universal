@@ -3,7 +3,7 @@ import type { ComponentType } from 'react';
 import { FirstSessionScreen } from '#features/sessions';
 import { AccountsScreen } from '#features/settings';
 import type { Section } from '../../../lib/product/navigation/sections';
-import { SectionRootView } from '../components/section-root-view';
+import { SectionRootView } from '../components/section-root-view/section-root-view';
 import { PhoneSectionScreen } from './phone-section-screen';
 import { AtlasScreen, IssuesScreen } from './placeholder-screens';
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ComposerImage } from '../components/composer';
+import type { ComposerImage } from '../components/composer/composer';
 import {
   emptyImageDraft,
   imageDraftReducer,

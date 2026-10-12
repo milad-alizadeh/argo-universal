@@ -3,16 +3,19 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { formatElapsed } from '#lib/generic/format-elapsed';
-import { Text } from '#lib/generic/primitives/text';
+import { Text } from '#lib/generic/primitives/display/text/text';
 import { useClock } from '#lib/generic/use-clock';
 import { cn } from '#lib/generic/utils';
 import { HeaderButton } from '#lib/product/header-button';
 import { useInspector } from '#lib/product/inspector';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { PageHeader } from '#lib/product/page-header';
-import { StatusIndicator, statusLabels } from '#lib/product/status-indicator';
-import { IconButton } from '../../../lib/generic/primitives/icon-button';
-import { useWide } from '../../../lib/generic/use-wide';
+import {
+  StatusIndicator,
+  statusLabels,
+} from '#lib/product/status-indicator/status-indicator';
+import { IconButton } from '../../../lib/generic/primitives/buttons/icon-button/icon-button';
+import { useWide } from '../../../lib/generic/use-wide/use-wide';
 import { type MergeMethod, MergePrButton } from './merge-pr-button';
 import { PullRequestChecks } from './pull-request-checks';
 import {

@@ -18,7 +18,7 @@ import { useNavigate } from '#lib/product/navigation/context';
 import {
   NewSessionView,
   type NewSessionViewProps,
-} from '../components/new-session-view';
+} from '../components/new-session-view/new-session-view';
 import { canOpenSession, toNewSessionInput } from '../state/open-session';
 import {
   type ChosenSettings,

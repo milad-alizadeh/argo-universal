@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/text';
+import { Text } from '#lib/generic/primitives/display/text/text';
 import { PageHeader } from './page-header';
 
 export function Placeholder({

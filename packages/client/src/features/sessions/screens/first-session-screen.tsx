@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useState } from 'react';
 import { useTRPC } from '#features/connection';
-import { FirstSessionView } from '../components/first-session-view';
+import { FirstSessionView } from '../components/first-session-view/first-session-view';
 import {
   chooseFirstSession,
   type FirstSessionChoice,

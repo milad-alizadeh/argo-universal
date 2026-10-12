@@ -8,7 +8,7 @@ import {
   sectionDestination,
   sectionOf,
 } from '../../../lib/product/navigation/sections';
-import { PhoneShell } from './phone-shell';
+import { PhoneShell } from './phone-shell/phone-shell';
 
 export interface PhoneLayoutViewProps {
   destination: NavigationDestination;

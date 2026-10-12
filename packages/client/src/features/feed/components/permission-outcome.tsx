@@ -4,7 +4,7 @@ import {
 } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/text';
+import { Text } from '#lib/generic/primitives/display/text/text';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { useTextIconSize } from '../../../lib/generic/symbols/text-icon-size';
 

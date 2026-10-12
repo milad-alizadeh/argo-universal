@@ -11,9 +11,9 @@ import {
 import { Linking, ScrollView, Text as Span, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Text } from '#lib/generic/primitives/text';
+import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
-import { FeedCodeBlock } from './feed-code-block';
+import { FeedCodeBlock } from './feed-code-block/feed-code-block';
 
 export interface FeedMarkdownProps {
   text: string;

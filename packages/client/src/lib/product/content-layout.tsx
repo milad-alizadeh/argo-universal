@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { createContext, useContext, useState } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { useWide } from '../generic/use-wide';
+import { useWide } from '../generic/use-wide/use-wide';
 
 const ContentWide = createContext<boolean | undefined>(undefined);
 

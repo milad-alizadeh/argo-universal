@@ -1,4 +1,4 @@
-import { useWide } from '../use-wide';
+import { useWide } from '../use-wide/use-wide';
 import type { IconSize } from './icon';
 
 export type IconTextRole = 'title' | 'body' | 'control' | 'secondary';

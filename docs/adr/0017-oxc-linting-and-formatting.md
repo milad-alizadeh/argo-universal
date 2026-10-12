@@ -105,3 +105,24 @@ Spec 0011 #451 flattens `packages/engine/src/services/<module>/` to `packages/en
 | `packages/engine/src/system/*` | `packages/engine/src/services/system/*`, `apps/server/src/services/system/*` |
 
 The Sessions folder splits under the client-move rules above: `sessions/*` and `sessions/list/*` share one identity, and each keeps a subset of its rules. The folders that held no waiver (`projects`, `agents/acp`, `agents/configuration`, `feed/updates`, `sessions/conversation`) move without one. The `agents/catalog` files now sit directly in `agents/` and fall under its existing waiver.
+
+## Component folders
+
+Spec 421 moves each component, with behaviour unchanged, into its own folder inside the folder that held it: its platform files, props, styles, stories, test stories, mocks and unit tests sit together. Primitives also group by kind under `lib/generic/primitives/` (`buttons`, `inputs`, `fields`, `overlays`, `lists`, `display`, `native`); `pressable` stays a folder beside them, because many groups use it. The owner approved these rows (#518, 2026-10-12). Each component folder keeps the historical waiver identity of the folder that held it, with only the rules its files still break. The folder that held it keeps the files that stay, so it and its component folders share that identity, as a split does under the client-move rules above. `tools/not-yet-cleared/component-relocations.mts` lists the exact folders; the rows below are under `packages/client/src/`:
+
+| New folder entries | Original folder entry |
+|---|---|
+| `features/composer/components/<component>/*` for composer, composer-configuration, composer-options, composer-popover, composer-status, start-session-in, written-plan | `features/composer/components/*` |
+| `features/connection/components/<component>/*` for connection-banner, connection-detail-view | `features/connection/components/*` |
+| `features/feed/components/<component>/*` for agent-message, command-row, diff-view, edit-row, feed, feed-content, feed-notice, live-header, tool-call-group, tool-call-row, user-message | `features/feed/components/*` |
+| `features/frame/components/<component>/*` for desktop-layout-view, desktop-shell, glass-surface, panel-resize-handle, phone-drawer, phone-section-view, phone-shell, phone-shell-card, shell-backdrop, shell-pane | `features/frame/components/*` |
+| `features/requests/components/<component>/*` for elicitation-form, permission-request, plan-proposal-card, plan-proposal-expansion, request-card | `features/requests/components/*` |
+| `features/sessions/components/<component>/*` for new-session-view, project-heading, pull-request-indicator, session-row, session-view, sessions-filter-menu, sessions-list, sessions-loading, sessions-view | `features/sessions/components/*` |
+| `features/settings/components/<component>/*` for placeholder-detail-view, project-detail-view, project-list-view, settings-list | `features/settings/components/*` |
+| `lib/generic/<component>/*` for page-title-row, use-wide | `lib/generic/*` |
+| `lib/generic/primitives/<folder>/*` for buttons/button, buttons/button-group, buttons/filter-pill, buttons/icon-button, buttons/menu-button, display/badge, display/collapsible, display/icon, fields/field-group, fields/field-input, fields/field-section, inputs/combobox-search, inputs/search-field, inputs/select, inputs/select-menu, inputs/slider, lists/list-item, native, overlays/alert, overlays/bottom-sheet, overlays/info-popover, overlays/menu | `lib/generic/primitives/*` |
+| `lib/generic/symbols/symbol-glyph/*` | `lib/generic/symbols/*` |
+| `lib/product/<component>/*` for field-list, screen, scroll-fade, status-indicator | `lib/product/*` |
+| `lib/product/markdown/<component>/*` for code-block-title, feed-code-block | `lib/product/markdown/*` |
+
+Component folders whose files break no waived rule move without an entry.

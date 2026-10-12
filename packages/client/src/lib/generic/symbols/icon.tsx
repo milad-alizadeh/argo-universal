@@ -7,11 +7,11 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { withUniwind } from 'uniwind';
-import { TextClassContext } from '#lib/generic/primitives/text';
+import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { type IconName, iconSymbols } from './icon-names';
 import type { NativeSymbol } from './native-symbol';
-import { SymbolGlyph } from './symbol-glyph';
+import { SymbolGlyph } from './symbol-glyph/symbol-glyph';
 
 const iconSizes = {
   xs: 12,

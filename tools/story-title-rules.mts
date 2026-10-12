@@ -18,7 +18,7 @@ const groupOf = (name: string): string => featureGroups[name] ?? pascal(name);
 
 // Only a view, a page or a file in `screens/` may draw a screen; ADR-0021 gives the custom Agent form the screen's stories.
 const screenStory =
-  /(?:-view|-page)\.stories\.tsx$|\/screens\/|^features\/agents\/components\/custom-agent-form\.stories\.tsx$/;
+  /(?:-view|-page)\.stories\.tsx$|\/screens\/|^features\/agents\/components\/custom-agent-form\/custom-agent-form\.stories\.tsx$/;
 
 const screenGroups = (path: string): string[] =>
   screenStory.test(path) ? ['Screens/'] : [];

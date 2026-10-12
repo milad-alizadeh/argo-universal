@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { action } from 'storybook/actions';
-import { FieldGroup } from '../src/lib/generic/primitives/field-group';
-import { FieldSection } from '../src/lib/generic/primitives/field-section';
-import { ListItem } from '../src/lib/generic/primitives/list-item';
+import { FieldGroup } from '../src/lib/generic/primitives/fields/field-group/field-group';
+import { FieldSection } from '../src/lib/generic/primitives/fields/field-section/field-section';
+import { ListItem } from '../src/lib/generic/primitives/lists/list-item/list-item';
 
 const onPress = action('open list item');
 

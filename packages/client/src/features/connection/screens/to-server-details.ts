@@ -1,4 +1,4 @@
-import type { ServerDetails } from '../components/connection-detail-view';
+import type { ServerDetails } from '../components/connection-detail-view/connection-detail-view';
 
 interface InfoQuery {
   isPending: boolean;

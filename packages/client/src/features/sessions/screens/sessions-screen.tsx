@@ -16,7 +16,7 @@ import {
   useTRPC,
 } from '#features/connection';
 import { useNavigate } from '#lib/product/navigation/context';
-import { SessionsView } from '../components/sessions-view';
+import { SessionsView } from '../components/sessions-view/sessions-view';
 import { useResubscribeOnFocus } from '../hooks/use-resubscribe-on-focus';
 import { createCoalescedRefetch } from '../state/coalesced-refetch';
 import { liveUpdatesStopped } from '../state/live-updates-stopped';

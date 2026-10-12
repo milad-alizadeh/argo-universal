@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import type * as React from 'react';
-import { ConnectionDetailView } from '../components/connection-detail-view';
+import { ConnectionDetailView } from '../components/connection-detail-view/connection-detail-view';
 import { useConnectionState } from '../state/context';
 import { useTRPC } from '../trpc/context';
 import { toServerDetails } from './to-server-details';

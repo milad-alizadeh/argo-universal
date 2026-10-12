@@ -12,7 +12,7 @@ import {
   AgentChoices,
   AgentModelMenu,
   ModelChoices,
-} from './composer-configuration';
+} from './composer-configuration/composer-configuration';
 
 // The pages of the native Agent and model sheet; the app stacks them.
 export function AgentModelSheetSettings({

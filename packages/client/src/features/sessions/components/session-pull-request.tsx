@@ -1,13 +1,13 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { MenuButton } from '#lib/generic/primitives/buttons/menu-button/menu-button';
+import { Text } from '#lib/generic/primitives/display/text/text';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '#lib/generic/primitives/dropdown-menu';
-import { MenuButton } from '#lib/generic/primitives/menu-button';
-import { Text } from '#lib/generic/primitives/text';
+} from '#lib/generic/primitives/overlays/dropdown-menu/dropdown-menu';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import type { PullRequestChecksProps } from './pull-request-checks';
@@ -15,7 +15,7 @@ import {
   type PullRequestStatus,
   pullRequestAppearance,
   pullRequestStatusLabels,
-} from './pull-request-indicator';
+} from './pull-request-indicator/pull-request-indicator';
 
 // One of a Session's PRs, as its header shows it.
 export interface SessionPullRequest {

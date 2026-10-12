@@ -1,4 +1,7 @@
-import type { ComposerDraft, ComposerImage } from '../components/composer';
+import type {
+  ComposerDraft,
+  ComposerImage,
+} from '../components/composer/composer';
 
 export interface ImageDraftState {
   draft: ComposerDraft;

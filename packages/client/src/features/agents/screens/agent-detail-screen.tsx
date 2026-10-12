@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useTRPC } from '#features/connection';
 import { useNavigate } from '#lib/product/navigation/context';
-import { AgentDetailView } from '../components/agent-detail-view';
+import { AgentDetailView } from '../components/agent-detail-view/agent-detail-view';
 import { AgentPlaceholder } from '../components/agent-placeholder';
-import { CustomAgentDetailView } from '../components/custom-agent-detail-view';
+import { CustomAgentDetailView } from '../components/custom-agent-detail-view/custom-agent-detail-view';
 import { useAgents } from '../hooks/use-agents';
 import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
 import {

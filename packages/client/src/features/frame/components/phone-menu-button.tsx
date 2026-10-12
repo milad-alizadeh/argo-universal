@@ -1,7 +1,10 @@
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import type * as React from 'react';
 import { HeaderButton } from '#lib/product/header-button';
-import { useOpenDrawer, useShellAttentionCount } from './phone-shell';
+import {
+  useOpenDrawer,
+  useShellAttentionCount,
+} from './phone-shell/phone-shell';
 
 // ☰ at the leading edge of a phone section's header; opens the drawer of sections.
 export function PhoneMenuButton(): React.JSX.Element {
