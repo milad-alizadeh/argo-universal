@@ -3,8 +3,11 @@ import type {
   AgentInstallOperation,
   AgentInstallStatus,
 } from '@repo/contracts';
+import { defaultInstallPorts } from '../default-ports';
+import type { InstallPorts } from '../ports';
+import { InstallCleanupError } from '../processes/process';
+import { readInstallationStatus } from '../selection/status';
 import { ConfigurationReservations } from './configuration-reservations';
-import { defaultInstallPorts } from './default-ports';
 import { executeAgentInstall } from './execution';
 import {
   abortInstallation,
@@ -15,9 +18,6 @@ import {
   startOperation,
 } from './operation-results';
 import type { InstallBindings, OwnedInstall } from './operation-types';
-import type { InstallPorts } from './ports';
-import { InstallCleanupError } from './process';
-import { readInstallationStatus } from './status';
 export class AgentInstallations {
   private bindings: InstallBindings | undefined;
   private readonly active = new Map<string, OwnedInstall>();

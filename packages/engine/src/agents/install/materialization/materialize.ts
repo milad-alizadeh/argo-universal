@@ -2,14 +2,17 @@ import { mkdir, rename, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { CustomAgentDefinition, type ACPAgent } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
+import type { InstallPorts } from '../ports';
+import { InstallCleanupError } from '../processes/process';
+import { installedCommand } from '../selection/installed-command';
+import {
+  agentInstallDirectory,
+  type InstallSelection,
+} from '../selection/selection';
 import { materializeBinary } from './archive';
 import { checkInstallationFile } from './files';
-import { installedCommand } from './installed-command';
 import { materializePackage } from './packages';
-import type { InstallPorts } from './ports';
-import { InstallCleanupError } from './process';
 import type { InstallRecipe } from './recipe';
-import { agentInstallDirectory, type InstallSelection } from './selection';
 export type MaterializationInput = {
   home: string;
   agentId: string;

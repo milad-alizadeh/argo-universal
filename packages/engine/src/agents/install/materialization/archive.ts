@@ -3,13 +3,13 @@ import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { unzipSync } from 'fflate';
 import { extract, list } from 'tar';
+import type { InstallPorts } from '../ports';
 import {
   ArchiveBudget,
   executableMode,
   extractedLimit,
 } from './archive-budget';
 import { installationPath } from './files';
-import type { InstallPorts } from './ports';
 import type { InstallRecipe } from './recipe';
 type BinaryRecipe = Extract<InstallRecipe, { kind: 'binary' }>;
 export type BinaryInput = {

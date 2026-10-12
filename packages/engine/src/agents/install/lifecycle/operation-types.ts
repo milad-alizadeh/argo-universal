@@ -1,5 +1,5 @@
 import type { AgentInstallOperation } from '@repo/contracts';
-import type { ConfigurationDeps } from '../configuration/configuration-commands';
+import type { ConfigurationDeps } from '../../configuration/configuration-commands';
 export type InstallBindings = ConfigurationDeps & {
   isInUse: (agentId: string) => boolean;
 };

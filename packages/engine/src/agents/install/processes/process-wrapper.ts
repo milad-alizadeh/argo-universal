@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import type { InstallToolInput } from './ports';
+import type { InstallToolInput } from '../ports';
 import { cleanInstallProcess } from './process-cleanup';
 import { recordInstallerGroup } from './process-record';
 const installerWrapper = `

@@ -1,5 +1,5 @@
 import type { ChildProcess } from 'node:child_process';
-import type { InstallToolInput } from './ports';
+import type { InstallToolInput } from '../ports';
 import {
   cleanExitedInstallProcess,
   cleanInstallProcess,

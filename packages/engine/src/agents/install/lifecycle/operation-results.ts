@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { AgentInstallInput, AgentInstallOperation } from '@repo/contracts';
+import { installationFailure } from '../selection/status';
 import type { OwnedInstall } from './operation-types';
-import { installationFailure } from './status';
 const installTimeout = 300_000;
 const wasCancelled = (reason: unknown): boolean =>
   reason instanceof DOMException && reason.name === 'AbortError';

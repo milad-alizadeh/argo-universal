@@ -9,7 +9,7 @@ import {
   waitForInstalledSelection,
 } from '#mocks/installation-storage';
 import { readInstallSelection } from './index';
-import { selectedLaunchDefinition } from './install/selection';
+import { selectedLaunchDefinition } from './install/selection/selection';
 it.each(['completion', 'cancellation'])(
   'retains installation ownership through Writer retry during %s',
   async (outcome) => {

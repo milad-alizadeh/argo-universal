@@ -1,6 +1,6 @@
 import { readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { releaseInstallationProcessGroups } from './reconcile-processes';
+import { releaseInstallationProcessGroups } from '../processes/reconcile-processes';
 const missingFolder = (error: unknown): boolean =>
   error instanceof Error && 'code' in error && error.code === 'ENOENT';
 const readFolders = async (path: string): Promise<string[]> => {

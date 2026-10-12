@@ -5,7 +5,7 @@ import { nativeInstallationPorts } from '#mocks/npm-native-installation';
 import {
   readInstallSelection,
   selectedLaunchDefinition,
-} from './install/selection';
+} from './install/selection/selection';
 it('persists and resolves a native npm bin replaced by package installation', async () => {
   const entry = installEntry('npx');
   const host = await startInstallEngine(entry, nativeInstallationPorts);

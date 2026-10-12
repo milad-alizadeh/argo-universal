@@ -6,7 +6,7 @@ import {
   AgentInstallStatus,
 } from '@repo/contracts';
 import { publicProcedure, router, routerFactory } from '../../rpc';
-import type { AgentInstallations } from './operations';
+import type { AgentInstallations } from './lifecycle/operations';
 export const createInstallRouter = routerFactory(
   (installations: AgentInstallations) =>
     router({

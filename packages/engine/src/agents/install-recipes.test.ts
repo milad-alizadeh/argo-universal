@@ -1,6 +1,6 @@
 import type { ACPAgent } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { resolveInstallRecipe } from './install/recipe';
+import { resolveInstallRecipe } from './install/materialization/recipe';
 const packageName = 'example-agent';
 const entry: ACPAgent = {
   id: packageName,

@@ -19,8 +19,8 @@ import { installEntry } from '#mocks/installation';
 import {
   materializeAgent,
   type MaterializationInput,
-} from './install/materialize';
-import { selectedLaunchDefinition } from './install/selection';
+} from './install/materialization/materialize';
+import { selectedLaunchDefinition } from './install/selection/selection';
 let home: string;
 beforeEach(async () => {
   home = await mkdtemp(join(tmpdir(), 'install-archives-'));

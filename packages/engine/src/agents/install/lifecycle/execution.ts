@@ -3,14 +3,20 @@ import type {
   AgentInstallOperation,
   AgentsCatalogOutput,
 } from '@repo/contracts';
-import { writeDatabaseJobAndWaitForCommit } from '../../storage';
-import { AgentConfigurationSaveJob } from '../agent-storage';
-import { readAgentCatalog } from '../catalog-sql';
-import type { ConfigurationDeps } from '../configuration/configuration-commands';
-import { materializeAgent, type MaterializationInput } from './materialize';
-import { resolveInstallRecipe } from './recipe';
-import { savedInstallation } from './saved-configuration';
-import { selectedDirectory, type InstallSelection } from './selection';
+import { writeDatabaseJobAndWaitForCommit } from '../../../storage';
+import { AgentConfigurationSaveJob } from '../../agent-storage';
+import { readAgentCatalog } from '../../catalog-sql';
+import type { ConfigurationDeps } from '../../configuration/configuration-commands';
+import {
+  materializeAgent,
+  type MaterializationInput,
+} from '../materialization/materialize';
+import { resolveInstallRecipe } from '../materialization/recipe';
+import { savedInstallation } from '../selection/saved-configuration';
+import {
+  selectedDirectory,
+  type InstallSelection,
+} from '../selection/selection';
 export type InstallExecutionInput = Pick<
   MaterializationInput,
   'home' | 'ports' | 'signal'

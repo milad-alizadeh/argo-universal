@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { stripVTControlCharacters } from 'node:util';
-import type { InstallToolInput } from './ports';
+import type { InstallToolInput } from '../ports';
 const textOutputLimit = 1_048_576;
 const isDiagnosticWhitespace = (character: string): boolean =>
   character === '\n' || character === '\t';

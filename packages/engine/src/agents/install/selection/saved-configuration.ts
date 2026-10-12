@@ -1,6 +1,6 @@
 import type { AgentConfiguration, ConfiguredAgent } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { readConfiguredAgent } from '../configuration/configuration-sql';
+import { readConfiguredAgent } from '../../configuration/configuration-sql';
 import type { InstallSelection } from './selection';
 type RegistryConfiguration = Extract<
   AgentConfiguration,

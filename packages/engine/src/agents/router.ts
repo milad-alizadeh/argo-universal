@@ -13,10 +13,10 @@ import { readAgentCatalog } from './catalog-sql';
 import type { ConfigurationDeps } from './configuration/configuration-commands';
 import { createConfigurationRouter } from './configuration/configuration-router';
 import { listCustomAgents } from './configuration/custom-agent-list';
-import { listInstalledAgents } from './install/list';
-import type { AgentInstallations } from './install/operations';
+import type { AgentInstallations } from './install/lifecycle/operations';
 import { createInstallRouter } from './install/router';
-import { readInstallSelection } from './install/selection';
+import { listInstalledAgents } from './install/selection/list';
+import { readInstallSelection } from './install/selection/selection';
 import {
   requestAgentCatalogSync,
   type syncSupervisorMachine,

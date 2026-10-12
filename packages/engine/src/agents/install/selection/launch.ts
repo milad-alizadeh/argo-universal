@@ -1,11 +1,11 @@
 import type { ConfiguredAgent, CustomAgentDefinition } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import type { AgentLaunch, ResolveAgentLaunch } from '../agent-launch';
-import { readConfiguredAgent } from '../configuration/configuration-sql';
+import type { AgentLaunch, ResolveAgentLaunch } from '../../agent-launch';
+import { readConfiguredAgent } from '../../configuration/configuration-sql';
 import {
   createCustomAgentLaunch,
   resolveCustomAgentLaunch,
-} from '../configuration/custom-launch';
+} from '../../configuration/custom-launch';
 import {
   readInstallSelection,
   selectedLaunchDefinition,

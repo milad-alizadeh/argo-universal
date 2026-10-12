@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { z } from 'zod';
+import type { InstallPorts, InstallToolInput } from '../ports';
 import { rejectInstallMetadata } from './metadata-rejections';
-import type { InstallPorts, InstallToolInput } from './ports';
 import type { InstallRecipe } from './recipe';
 import { installUv } from './uv-packages';
 type PackageRecipe = Exclude<InstallRecipe, { kind: 'binary' }>;

@@ -12,12 +12,12 @@ import { installEntry } from '#mocks/installation';
 import {
   materializeAgent,
   type MaterializationInput,
-} from './install/materialize';
-import type { InstallRecipe } from './install/recipe';
+} from './install/materialization/materialize';
+import type { InstallRecipe } from './install/materialization/recipe';
 import {
   selectedDirectory,
   selectedLaunchDefinition,
-} from './install/selection';
+} from './install/selection/selection';
 const fixturePackage = 'fixture-install';
 let home: string;
 beforeEach(async () => {

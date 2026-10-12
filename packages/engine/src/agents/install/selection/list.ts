@@ -1,6 +1,6 @@
 import type { AgentInfo } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { readConfiguredAgents } from '../configuration/configuration-sql';
+import { readConfiguredAgents } from '../../configuration/configuration-sql';
 import {
   checkSelectedFiles,
   readInstallSelection,

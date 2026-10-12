@@ -1,7 +1,7 @@
 import { constants } from 'node:fs';
 import { access, realpath, stat } from 'node:fs/promises';
 import { isAbsolute, relative, resolve, win32 } from 'node:path';
-import { isInstallerRecordName } from './process-record';
+import { isInstallerRecordName } from '../processes/process-record';
 
 const requireUnreservedPath = (path: string): void => {
   const first = path.split(/[\\/]/).find((part) => part !== '' && part !== '.');
