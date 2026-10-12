@@ -8,10 +8,8 @@ export {
 export {
   AgentModelSheetChoices,
   AgentModelSheetSettings,
-  ComposerSheetContent,
   type NativeSheets,
   NativeSheetsProvider,
-  useSheetLabel,
 } from '#features/composer';
 export { ConnectionDetailScreen, useConnection } from '#features/connection';
 export { DesktopLayout, PhoneLayout, SectionRootScreen } from '#features/frame';
@@ -44,5 +42,6 @@ export {
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
 export { HeaderButton } from '#lib/product/header-button';
+export type { Section } from './lib/product/navigation/sections';
 export { HeaderSearchRow } from './lib/product/navigation/header-search';
 export { AppProviders } from './app-providers';

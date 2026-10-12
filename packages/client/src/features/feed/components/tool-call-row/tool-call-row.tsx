@@ -38,7 +38,7 @@ export function ToolCallRow({
       <ToolOutput content={row.content} language={path?.split('/').at(-1)} />
       {(row.status === 'failed' || row.status === 'cancelled') && (
         <View className="px-3 pb-2">
-          <Text role="secondary">
+          <Text className="text-muted-foreground">
             {row.status === 'failed' ? 'Failed' : 'Stopped'}
           </Text>
         </View>

@@ -48,9 +48,12 @@ function StatusRow({ agent }: AgentProps): React.JSX.Element {
  */
 function SignInSection(props: AgentDetailViewProps): React.JSX.Element {
   return (
-    <FieldSection title="Status" footer={signInFooter}>
+    <FieldSection
+      title="Status"
+      footer={props.onSignIn ? undefined : signInFooter}
+    >
       <ListItem title="Not signed in" status={{ tone: 'warning', label: '' }} />
-      <SignInCommand command={props.agent.signInCommand} />
+      <SignInAction {...props} />
       <CheckAgainRow onPress={props.onCheckAgain} />
     </FieldSection>
   );
@@ -162,4 +165,10 @@ function AboutRow(props: {
 }): React.JSX.Element | null {
   if (!props.value) return null;
   return <ListItem title={props.title} value={props.value} />;
+}
+
+function SignInAction(props: AgentDetailViewProps): React.JSX.Element | null {
+  if (props.onSignIn)
+    return <ListItem title="Sign in" tone="accent" onPress={props.onSignIn} />;
+  return <SignInCommand command={props.agent.signInCommand} />;
 }

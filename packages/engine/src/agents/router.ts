@@ -17,6 +17,8 @@ import type { AgentInstallations } from './install/lifecycle/operations';
 import { createInstallRouter } from './install/router';
 import { listInstalledAgents } from './install/selection/list';
 import { readInstallSelection } from './install/selection/selection';
+import type { AgentLogins } from './login';
+import { createLoginRouter } from './login-router';
 import {
   requestAgentCatalogSync,
   type syncSupervisorMachine,
@@ -31,6 +33,7 @@ export type AgentsRouterDeps = ConfigurationDeps &
   CatalogDeps & {
     sessions: OpenSessionsActorRef;
     installations: AgentInstallations;
+    agentLogins: AgentLogins;
     home?: string;
   };
 
@@ -85,5 +88,6 @@ export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
     createCatalogRouter(deps),
     createCatalogSyncRouter(deps),
     createListRouter(deps),
+    createLoginRouter(deps),
   ),
 );

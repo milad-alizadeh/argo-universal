@@ -44,7 +44,6 @@ export function InspectorPane({
           }
           onPress={() => onStateChange(expanded ? 'open' : 'expanded')}
           icon={expanded ? 'collapse' : 'expand'}
-          iconSize="sm"
           iconClassName={controlIconClass}
           size="md"
         />
@@ -54,7 +53,6 @@ export function InspectorPane({
           accessibilityLabel="Close Inspector"
           onPress={() => onStateChange('closed')}
           icon="close"
-          iconSize="sm"
           iconClassName={controlIconClass}
           size="md"
         />

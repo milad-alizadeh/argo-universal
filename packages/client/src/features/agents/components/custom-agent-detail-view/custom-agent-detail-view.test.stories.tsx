@@ -95,3 +95,12 @@ export const KeepsTheFormOpenWhenTheEditFailsItsCheck: Story = {
     await expect(canvas.getByRole('button', { name: 'Save' })).toBeVisible();
   },
 };
+
+export const AuthenticationRequiredIsNotReady: Story = {
+  args: { check: { status: 'ready', authentication: 'required' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getAllByText('Sign-in required')).toHaveLength(2);
+    await expect(canvas.queryByText('Ready')).toBeNull();
+    await expect(canvas.queryByText(answered)).toBeNull();
+  },
+};

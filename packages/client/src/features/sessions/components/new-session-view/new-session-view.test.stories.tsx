@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { findToast } from '../../../../../mocks/find-toast';
+import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
@@ -15,6 +16,7 @@ import {
 import {
   exampleProject,
   readyNewSession,
+  startingNewSession,
   typedDraft,
 } from './new-session-view.mocks';
 
@@ -196,13 +198,19 @@ export const NeedsSetup: Story = {
     }),
 };
 
-export const Opening: Story = {
-  args: readyArgs({ opening: true, canOpen: false, draft: typedDraft }),
+export const Starting: Story = {
+  args: readyArgs(startingNewSession),
   play: async ({ canvas }) =>
     eachLayout(async () => {
+      const [prompt] = await canvas.findAllByText(typedDraft.text);
+      await expect(prompt).toBeVisible();
+      await expect(canvas.getByRole('status')).toHaveAccessibleName(/^Working/);
       await expect(
-        await canvas.findByRole('progressbar', { name: 'Sending' }),
-      ).toBeVisible();
+        canvas.queryByRole('progressbar', { name: 'Sending' }),
+      ).toBeNull();
+      await expect(
+        shownText(canvas.getByRole('textbox', { name: messageLabel })),
+      ).toBe('');
       await expect(
         canvas.getByRole('button', { name: sendLabel }),
       ).toBeDisabled();

@@ -3,7 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { composerLongSettingsOptions } from '../../../../../mocks/composer-mock';
+import {
+  composerLongSettingsOptions,
+  composerSettingsOptions,
+} from '../../../../../mocks/composer-mock';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { ComposerOptions } from './composer-options';
@@ -72,3 +75,41 @@ export const LongSettingsPhoneFirstAgent = longSettings(layoutWidths.phone, 0);
 export const LongSettingsPhoneSecondAgent = longSettings(layoutWidths.phone, 1);
 export const LongSettingsWideFirstAgent = longSettings(layoutWidths.wide, 0);
 export const LongSettingsWideSecondAgent = longSettings(layoutWidths.wide, 1);
+
+function keyboardSettings(width: number): Story {
+  const onConfigChange = fn();
+  const agent = newSessionCatalogs.bothAvailable[0];
+  if (!agent) throw new Error('Recorded settings need an Agent.');
+  return {
+    args: {
+      disabled: false,
+      configuration: {
+        agents: [agent],
+        agent: agent.agent,
+        configOptions: composerSettingsOptions,
+        onConfigChange,
+        checkout: { branch: 'main', newWorktree: false },
+      },
+    },
+    beforeEach: () => onConfigChange.mockClear(),
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Session settings' }),
+      );
+      const overlay = within(document.body);
+      const fast = await overlay.findByRole('switch', { name: 'Fast mode' });
+      fast.focus();
+      await userEvent.keyboard(' ');
+      await expect(onConfigChange).toHaveBeenCalledOnce();
+      await expect(onConfigChange).toHaveBeenCalledWith('fast', true);
+      await userEvent.tab();
+      await expect(
+        overlay.getByRole('button', { name: 'Response style: Concise' }),
+      ).toHaveFocus();
+      await userEvent.keyboard('{Escape}');
+    },
+  };
+}
+export const KeyboardSettingsPhone = keyboardSettings(layoutWidths.phone);
+export const KeyboardSettingsWide = keyboardSettings(layoutWidths.wide);

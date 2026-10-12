@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 import type { Pressable } from 'react-native';
-import type { IconSize } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
+import type { IconRole } from '../../../symbols/icon-role';
 import type { ButtonSize } from '../button/button-props';
 
 type ActionProps = Omit<
@@ -18,7 +18,8 @@ export type IconButtonProps = ActionProps & {
   size?: IconButtonSize;
   loading?: boolean;
   variant?: 'default' | 'ghost' | 'outline' | 'filled';
-  iconSize?: IconSize;
+  // A button is a control; a header action or a rail tile names its own role.
+  iconRole?: IconRole;
   iconClassName?: string;
   filled?: boolean;
 };

@@ -1,5 +1,5 @@
 import { agentAdapters, findAgentAdapter } from '@repo/agents';
-import { resolveInstalledAgentLaunch, readInstallSelection } from '../agents';
+import { selectAgentLaunchResolver } from '../agents';
 import { readProjectPath } from '../projects';
 import type { AcpSessionDependencies } from './acp/acp-lifetime';
 import type {
@@ -14,24 +14,12 @@ type OpenSession = Extract<
   { type: 'sessions.create' | 'sessions.open' }
 >;
 type SessionSource = { context: OpenSessionsInput; event: OpenSession };
-// A custom Agent has no native adapter, so it always launches from its saved definition.
-const selectLaunchResolver = (
-  context: OpenSessionsInput,
-  agent: string,
-): AcpSessionDependencies['resolveLaunch'] | undefined => {
-  const native = (context.adapters ?? agentAdapters).some(
-    (adapter): boolean => adapter.agent === agent,
-  );
-  // An injected resolver stands in for native Agents only; custom Agents always launch from SQLite.
-  return native && !readInstallSelection(context.database, agent)
-    ? context.resolveAgentLaunch
-    : resolveInstalledAgentLaunch(context.database, context.runtimeDirectory);
-};
+
 const createAcpSessionDependencies = (
   context: OpenSessionsInput,
   agent: string,
 ): AcpSessionDependencies | undefined => {
-  const resolveLaunch = selectLaunchResolver(context, agent);
+  const resolveLaunch = selectAgentLaunchResolver(context, agent);
   if (!context.acpResources || !resolveLaunch) return undefined;
   return {
     resources: context.acpResources,

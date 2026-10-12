@@ -43,6 +43,7 @@ export function CopyButton({
       )}
     >
       <Icon
+        role="control"
         name={copied ? 'check' : 'copy'}
         className="text-muted-foreground"
       />

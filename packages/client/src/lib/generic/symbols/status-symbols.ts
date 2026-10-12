@@ -1,4 +1,4 @@
-import type { NativeSymbol } from './native-symbol';
+import type { SymbolSource } from './symbol-source';
 
 // Outcomes and states a row or mark reports.
 export const statusSymbols = {
@@ -23,4 +23,4 @@ export const statusSymbols = {
   scheduled: { sf: 'timer', material: 'timer' },
   waiting: { sf: 'hourglass', material: 'hourglass' },
   warning: { sf: 'exclamationmark.triangle', material: 'warning' },
-} as const satisfies Record<string, NativeSymbol>;
+} as const satisfies Record<string, SymbolSource>;

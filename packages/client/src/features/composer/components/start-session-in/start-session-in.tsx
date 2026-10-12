@@ -1,24 +1,17 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { ComboboxSearch } from '#lib/generic/primitives/inputs/combobox-search/combobox-search';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { useServerPaired } from '#lib/product/server-place';
-import { SelectedCheck } from '../../../../lib/generic/primitives/display/selected-check';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
-import { Chevron } from '../../../../lib/generic/symbols/chevron';
+import { Button } from '#primitives/buttons/button/button';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import {
   CheckoutContents,
   type ComposerConfigurationProps,
 } from '../composer-configuration/composer-configuration';
 import { ComposerPopover } from '../composer-popover/composer-popover';
+import { ProjectPicker } from './project-picker';
+import { ServerLocation } from './server-location';
 
 export interface StartSessionInProps {
   // The Server computer's name, shown only when this device is paired to a Server on another computer.
@@ -44,42 +37,34 @@ export function StartSessionIn({
   disabled = false,
 }: StartSessionInProps): React.JSX.Element {
   const wide = useContentWide();
-  const paired = useServerPaired();
   const project = projects.find((entry) => entry.id === projectId);
+  const disclosure = (
+    <Icon
+      role="control"
+      name="chevron-down"
+      className="text-muted-foreground"
+    />
+  );
   const projectControl = (
     <ComposerPopover
+      listContent
       label="Project"
-      width={300}
       trigger={
-        <Pressable
+        <Button
+          appearance="content"
+          variant="ghost"
           disabled={disabled}
           accessibilityLabel={`Project: ${project?.name ?? 'None'}`}
-          role="button"
-          className={contentActionClass({
-            variant: 'ghost',
-            className: cn(
-              'gap-1.5 justify-start shadow-none',
-              wide
-                ? 'h-7 sm:h-7 px-1.5 has-[>[data-icon]]:px-1.5 rounded-md'
-                : 'h-10 sm:h-10 px-4 has-[>[data-icon]]:px-4 rounded-md',
-            ),
-            disabled: disabled,
-          })}
-        >
-          <Icon name="folder" className="text-muted-foreground" />
-          <Text
-            selectable={false}
-            numberOfLines={1}
-            role="body"
-            className="select-none shrink"
-          >
-            {project?.name ?? 'Choose a Project'}
-          </Text>
-          <Chevron
-            name="chevron-down"
-            className="-ml-0.5 text-muted-foreground"
-          />
-        </Pressable>
+          label={project?.name ?? 'Choose a Project'}
+          labelNumberOfLines={1}
+          icon="folder"
+          labelClassName="shrink"
+          className={cn(
+            'gap-1.5 justify-start',
+            wide ? 'h-7 sm:h-7 px-1.5 py-0' : 'h-10 sm:h-10 px-4',
+          )}
+          trailing={disclosure}
+        />
       }
     >
       {(close) => (
@@ -94,36 +79,8 @@ export function StartSessionIn({
       )}
     </ComposerPopover>
   );
-  // On the Server's own computer the host needs no name; only a lost Connection shows.
-  const server = (paired || !serverConnected) && (
-    <View
-      className={cn(
-        'flex-row items-center gap-1.5 shrink-0',
-        wide ? 'h-7 px-1.5' : 'h-10 px-4',
-      )}
-    >
-      {paired && (
-        <>
-          <Icon name="computer" className="text-muted-foreground" />
-          <Text numberOfLines={1} role="body">
-            {serverName}
-          </Text>
-        </>
-      )}
-      <View
-        role="img"
-        accessibilityLabel={serverConnected ? 'Connected' : 'Reconnecting'}
-        className={cn(
-          'size-[7px] shrink-0 rounded-full',
-          serverConnected ? 'bg-success' : 'bg-warning',
-        )}
-      />
-      {!serverConnected && (
-        <Text role="secondary" className="pl-1 text-warning">
-          Reconnecting…
-        </Text>
-      )}
-    </View>
+  const server = (
+    <ServerLocation name={serverName} connected={serverConnected} />
   );
   if (wide)
     return (
@@ -140,35 +97,20 @@ export function StartSessionIn({
       {server}
       {projectControl}
       <ComposerPopover
+        listContent
         label="Checkout"
         trigger={
-          <Pressable
+          <Button
+            appearance="content"
+            variant="ghost"
             disabled={disabled || !checkout.onNewWorktreeChange}
             accessibilityLabel="Checkout"
-            role="button"
-            className={contentActionClass({
-              variant: 'ghost',
-              className:
-                'h-10 sm:h-10 px-4 has-[>[data-icon]]:px-4 gap-1.5 justify-start rounded-md shadow-none',
-              disabled: disabled || !checkout.onNewWorktreeChange,
-            })}
-          >
-            <Icon
-              name={checkout.newWorktree ? 'branch' : 'folder'}
-              className="text-muted-foreground"
-            />
-            <Text
-              selectable={false}
-              role="body"
-              className="select-none text-muted-foreground"
-            >
-              {checkout.newWorktree ? 'New worktree' : 'Local'}
-            </Text>
-            <Chevron
-              name="chevron-down"
-              className="-ml-0.5 text-muted-foreground"
-            />
-          </Pressable>
+            label={checkout.newWorktree ? 'New worktree' : 'Local'}
+            icon={checkout.newWorktree ? 'branch' : 'folder'}
+            labelClassName="text-muted-foreground"
+            className="h-10 sm:h-10 px-4 gap-1.5 justify-start"
+            trailing={disclosure}
+          />
         }
       >
         {(close) => (
@@ -179,93 +121,6 @@ export function StartSessionIn({
           />
         )}
       </ComposerPopover>
-    </View>
-  );
-}
-
-interface ProjectPickerProps {
-  projects: ProjectInfo[];
-  projectId: string;
-  onSelect: (projectId: string) => void;
-}
-
-// The Projects on the Server, found by name or folder; one tap picks one.
-function ProjectPicker({
-  projects,
-  projectId,
-  onSelect,
-}: ProjectPickerProps): React.JSX.Element {
-  const [query, setQuery] = useState('');
-  const search = query.trim().toLowerCase();
-  const found = projects.filter(
-    (project) =>
-      !search ||
-      project.name.toLowerCase().includes(search) ||
-      project.path.toLowerCase().includes(search),
-  );
-  return (
-    <View className="px-gutter-list py-1 wide:p-1">
-      <View className="py-1">
-        <ComboboxSearch
-          label="Find a Project"
-          placeholder="Find a Project…"
-          value={query}
-          onChangeText={setQuery}
-          className="native:mx-1.5"
-        />
-      </View>
-      <View className="pt-1 gap-0.5">
-        {found.map((project) => {
-          const selected = project.id === projectId;
-          return (
-            <Pressable
-              key={project.id}
-              accessibilityLabel={project.name}
-              accessibilityState={{ selected }}
-              aria-pressed={selected}
-              onPress={() => onSelect(project.id)}
-              role="button"
-              className={contentActionClass({
-                variant: 'ghost',
-                className: cn(
-                  'h-auto sm:h-auto items-start justify-start gap-1.5 px-2.5 py-2 has-[>[data-icon]]:px-2.5 has-[>[data-icon]]:py-2 wide:p-2 wide:has-[>[data-icon]]:p-2 rounded-md wide:rounded-xl web:focus-visible:ring-0 web:focus-visible:bg-accent',
-                  selected && 'bg-accent ios:bg-accent/50',
-                ),
-              })}
-            >
-              <View className="h-5 shrink-0 justify-center">
-                <Icon name="folder" className="text-muted-foreground" />
-              </View>
-              <View className="min-w-0 flex-1 gap-0.5">
-                <Text
-                  selectable={false}
-                  numberOfLines={1}
-                  role="body"
-                  className="select-none"
-                >
-                  {project.name}
-                </Text>
-                <Text
-                  selectable={false}
-                  numberOfLines={1}
-                  role="code"
-                  className="select-none text-muted-foreground"
-                >
-                  {project.path}
-                </Text>
-              </View>
-              <View className="h-5 w-4 shrink-0 items-center justify-center">
-                {selected && <SelectedCheck className="text-foreground" />}
-              </View>
-            </Pressable>
-          );
-        })}
-        {found.length === 0 && (
-          <Text role="secondary" className="px-2 py-2">
-            No Project matches.
-          </Text>
-        )}
-      </View>
     </View>
   );
 }

@@ -1,7 +1,6 @@
 import { maxBlobUploadBytes, maxBlobUploadMebibytes } from '@repo/contracts';
 import type * as React from 'react';
-import type { ReactNode } from 'react';
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import { Image, ScrollView, View } from 'react-native';
 import {
   PlanProposalCard,
@@ -11,12 +10,12 @@ import { LiquidGlass } from '#lib/generic/primitives/display/liquid-glass/liquid
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
+import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+import { FieldGroup } from '#primitives/fields/field-group/field-group';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
 import { RichTextarea } from '#primitives/inputs/rich-textarea/rich-textarea';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon, IconSpinner } from '../../../../lib/generic/symbols/icon';
+import { ListItem } from '#primitives/lists/list-item/list-item';
+import { Icon } from '../../../../lib/generic/symbols/icon';
 import {
   ComposerAgentModelControl,
   ComposerCheckoutControl,
@@ -94,7 +93,6 @@ export function Composer({
   const composerId = useId();
   const wide = useContentWide();
   const shownWrittenPlan = planProposal ? undefined : writtenPlan;
-  const [attachHighlighted, setAttachHighlighted] = useState(false);
   const inactive = sending || disabled;
   const canRecoverAgent = Boolean(
     configuration?.onAgentRetry &&
@@ -117,24 +115,6 @@ export function Composer({
   const send = (): void => {
     if (sendState === 'ready') onSend(draft);
   };
-  let sendButtonContent: ReactNode;
-  if (sendState === 'stop') {
-    sendButtonContent = (
-      <View className="size-2.5 rounded-xs bg-primary-foreground" />
-    );
-  } else if (sendState === 'sending') {
-    sendButtonContent = (
-      <IconSpinner
-        accessibilityLabel="Sending"
-        role="progressbar"
-        colorClassName="accent-primary-foreground"
-      />
-    );
-  } else {
-    sendButtonContent = (
-      <Icon name="arrow-up" className="text-primary-foreground" />
-    );
-  }
   const planControls = (
     <>
       {!!status?.plan?.length && (
@@ -209,9 +189,18 @@ export function Composer({
                         className="w-full h-full"
                       />
                     </View>
-                    <Pressable
+                    <IconButton
                       disabled={inactive}
                       accessibilityLabel={`Remove ${image.name}`}
+                      icon="close"
+                      iconRole="secondary"
+                      variant="ghost"
+                      className={cn(
+                        'absolute right-0 top-0 size-8 sm:size-8 rounded-sm bg-background web:wide:opacity-0',
+                        inactive
+                          ? 'web:wide:group-hover:opacity-50'
+                          : 'web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100',
+                      )}
                       onPress={() =>
                         onDraftChange({
                           ...draft,
@@ -220,22 +209,7 @@ export function Composer({
                           ),
                         })
                       }
-                      role="button"
-                      className={contentActionClass({
-                        variant: 'ghost',
-                        className: cn(
-                          'absolute right-0 top-0 size-8 sm:size-8 p-0 active:bg-transparent dark:active:bg-transparent hover:bg-transparent dark:hover:bg-transparent web:wide:opacity-0',
-                          inactive
-                            ? 'web:wide:group-hover:opacity-50'
-                            : 'web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100',
-                        ),
-                        disabled: inactive,
-                      })}
-                    >
-                      <View className="size-5 items-center justify-center rounded-sm bg-background">
-                        <Icon name="close" size="xs" />
-                      </View>
-                    </Pressable>
+                    />
                   </View>
                 </View>
               ))}
@@ -263,109 +237,81 @@ export function Composer({
               className={cn('min-w-0 flex-1 flex-row items-center gap-1')}
             >
               <ComposerPopover
+                listContent
                 label="Attach"
-                width={248}
                 trigger={
-                  <Pressable
+                  <IconButton
                     disabled={inactive}
-                    onHoverIn={() => setAttachHighlighted(true)}
-                    onHoverOut={() => setAttachHighlighted(false)}
-                    onPressIn={() => setAttachHighlighted(true)}
-                    onPressOut={() => setAttachHighlighted(false)}
+                    icon="add"
+                    variant="ghost"
+                    iconRole="control"
                     hitSlop={8}
                     accessibilityLabel={wide ? 'Attach' : 'Attach images'}
-                    role="button"
-                    className={contentActionClass({
-                      variant: 'ghost',
-                      className:
-                        'h-7 sm:h-7 w-4 sm:w-4 mr-1.5 p-0 hover:bg-transparent active:bg-transparent dark:hover:bg-transparent dark:active:bg-transparent',
-                      disabled: inactive,
-                    })}
-                  >
-                    <View
-                      pointerEvents="none"
-                      className={cn(
-                        'absolute -left-1.5 top-0 size-7 rounded-md z-0',
-                        attachHighlighted && !inactive && 'bg-accent',
-                      )}
-                    />
-                    <View className="relative z-10">
-                      <Icon name="add" className="text-muted-foreground" />
-                    </View>
-                  </Pressable>
+                    className="size-7 sm:size-7 p-0"
+                    iconClassName="text-muted-foreground"
+                  />
                 }
               >
                 {(close) => (
-                  <View className="p-1">
-                    {(wide
-                      ? [
-                          {
-                            label: 'Files and Folder',
-                            icon: 'folder' as const,
-                            onPress: onAttachFiles ?? onAttachImages,
-                          },
-                          {
-                            label: 'Slash Commands',
-                            icon: 'code' as const,
-                            onPress: onSelectSlashCommand,
-                          },
-                          {
-                            label: 'Goal',
-                            icon: 'goal' as const,
-                            onPress: onCreateGoal,
-                          },
-                        ]
-                      : [
-                          ...(onAttachCamera
-                            ? [
-                                {
-                                  label: 'Camera',
-                                  icon: 'camera' as const,
-                                  onPress: onAttachCamera,
-                                },
-                              ]
-                            : []),
-                          {
-                            label: 'Photos',
-                            icon: 'photos' as const,
-                            onPress: onAttachImages,
-                          },
-                          ...(onAttachFiles
-                            ? [
-                                {
-                                  label: 'Files',
-                                  icon: 'attach' as const,
-                                  onPress: onAttachFiles,
-                                },
-                              ]
-                            : []),
-                        ]
-                    ).map((item) => (
-                      <Pressable
-                        key={item.label}
-                        accessibilityLabel={item.label}
-                        disabled={!item.onPress}
-                        onPress={() => close(item.onPress)}
-                        role="button"
-                        className={contentActionClass({
-                          variant: 'ghost',
-                          className:
-                            'h-12 sm:h-12 wide:h-11 wide:sm:h-11 rounded-sm px-3 gap-3 justify-start',
-                          disabled: !item.onPress,
-                        })}
-                      >
-                        <View className="size-8 rounded-full bg-muted wide:size-auto wide:rounded-none wide:bg-transparent items-center justify-center">
-                          <Icon name={item.icon} className="text-foreground" />
-                        </View>
-                        <Text
-                          selectable={false}
-                          role="body"
-                          className="select-none"
-                        >
-                          {item.label}
-                        </Text>
-                      </Pressable>
-                    ))}
+                  <View className="native:flex-1 wide:p-3 bg-sidebar">
+                    <FieldGroup fit>
+                      <FieldSection>
+                        {(wide
+                          ? [
+                              {
+                                label: 'Files and Folder',
+                                icon: 'folder' as const,
+                                onPress: onAttachFiles ?? onAttachImages,
+                              },
+                              {
+                                label: 'Slash Commands',
+                                icon: 'code' as const,
+                                onPress: onSelectSlashCommand,
+                              },
+                              {
+                                label: 'Goal',
+                                icon: 'goal' as const,
+                                onPress: onCreateGoal,
+                              },
+                            ]
+                          : [
+                              ...(onAttachCamera
+                                ? [
+                                    {
+                                      label: 'Camera',
+                                      icon: 'camera' as const,
+                                      onPress: onAttachCamera,
+                                    },
+                                  ]
+                                : []),
+                              {
+                                label: 'Photos',
+                                icon: 'photos' as const,
+                                onPress: onAttachImages,
+                              },
+                              ...(onAttachFiles
+                                ? [
+                                    {
+                                      label: 'Files',
+                                      icon: 'attach' as const,
+                                      onPress: onAttachFiles,
+                                    },
+                                  ]
+                                : []),
+                            ]
+                        ).map((item) => (
+                          <ListItem
+                            key={item.label}
+                            title={item.label}
+                            icon={item.icon}
+                            role="button"
+                            disclosure={false}
+                            disabled={!item.onPress}
+                            onPress={() => close(item.onPress)}
+                          />
+                        ))}
+                      </FieldSection>
+                    </FieldGroup>
                   </View>
                 )}
               </ComposerPopover>
@@ -392,30 +338,22 @@ export function Composer({
                   disabled={inactive}
                 />
               )}
-              <Pressable
+              <IconButton
                 accessibilityLabel={sendState === 'stop' ? 'Stop' : 'Send'}
+                icon={sendState === 'stop' ? 'cancelled' : 'arrow-up'}
+                filled
+                loading={sendState === 'sending'}
                 disabled={
                   sendState === 'stop' ? disabled : sendState !== 'ready'
                 }
                 onPress={sendState === 'stop' ? (): void => onStop?.() : send}
-                role="button"
-                className={contentActionClass({
-                  variant: 'default',
-                  className: cn(
-                    'size-7 sm:size-7 rounded-full p-0',
-                    sendState !== 'stop' &&
-                      wide &&
-                      'shadow-[0_1px_2px_#0000000d]!',
-                    (sendState === 'sending' || sendState === 'stop') &&
-                      'opacity-100',
-                    sendState === 'blocked' && 'opacity-35',
-                  ),
-                  disabled:
-                    sendState === 'stop' ? disabled : sendState !== 'ready',
-                })}
-              >
-                {sendButtonContent}
-              </Pressable>
+                className={cn(
+                  'size-7 sm:size-7 rounded-full',
+                  sendState === 'blocked' && 'opacity-35',
+                )}
+                iconRole="control"
+                iconClassName="text-primary-foreground"
+              />
             </View>
           </View>
         </LiquidGlass>
@@ -470,7 +408,7 @@ function ComposerWarning({
 }): React.JSX.Element {
   return (
     <View role="alert" className="mx-4 mt-2 flex-row items-start gap-2">
-      <Icon name="error" className="text-destructive" />
+      <Icon role="control" name="error" className="text-destructive" />
       <Text
         role="secondary"
         className="min-w-0 flex-1 text-destructive"

@@ -76,7 +76,6 @@ export function DesktopShellFrame({
                       className="size-7 p-0 sm:size-7"
                       accessibilityLabel="More actions"
                       icon={'more'}
-                      iconSize="sm"
                       iconClassName={'text-muted-foreground'}
                       size="md"
                     />

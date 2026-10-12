@@ -5,7 +5,7 @@ import {
   useQuery,
 } from '@tanstack/react-query';
 import type * as React from 'react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAgents } from '#features/agents';
 import {
   type ComposerDraft,
@@ -27,6 +27,7 @@ import {
   type SessionChoices,
   toSessionChoices,
 } from '../state/session-choices';
+import { startingFeed } from '../state/starting-feed';
 
 export interface NewSessionScreenProps {
   // The Project whose heading + opened this page.
@@ -83,26 +84,34 @@ function useNewSessionViewProps(
   const imageDraft = useImageDraft(
     choices.project && { type: 'new-session', projectId: choices.project.id },
   );
+  // The first prompt as sent, shown in the Feed until the Session opens; a failure clears it and keeps the draft.
+  const [sent, setSent] = useState<{ draft: ComposerDraft; at: number }>();
   const newSession = useMutation(
     trpc.session.new.mutationOptions({
       onSuccess: ({ sessionId }) => {
         imageDraft.clearDraft();
         navigate({ to: 'session', id: sessionId }, { replace: true });
       },
-      onError: () => void agents.refetch(),
+      onError: () => {
+        setSent(undefined);
+        void agents.refetch();
+      },
     }),
+  );
+  const starting = useMemo(
+    () => sent && startingFeed(sent.draft, sent.at),
+    [sent],
   );
   // Uploads the draft's images, then opens the Session with the draft as its first prompt; a failure keeps the draft.
   async function sendFirstPrompt(sent: ComposerDraft): Promise<void> {
     newSession.reset();
+    setSent({ draft: sent, at: Date.now() });
     const prompt = await imageDraft.uploadDraftAsPrompt(sent);
-    if (!prompt?.length) return;
-    const input = toNewSessionInput(
-      choices,
-      configuration.configOptions,
-      prompt,
-    );
+    const input =
+      prompt?.length &&
+      toNewSessionInput(choices, configuration.configOptions, prompt);
     if (input) newSession.mutate(input);
+    else setSent(undefined);
   }
 
   if (serverInfo.isError || projects.isError || agents.isError)
@@ -152,6 +161,7 @@ function useNewSessionViewProps(
       opening,
     }),
     opening,
+    starting,
     attachmentError: imageDraft.attachmentError?.message,
     setupStep:
       agent && agent.availability !== 'available'

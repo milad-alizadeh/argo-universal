@@ -24,6 +24,7 @@ export type CustomAgentDetailViewProps = {
   onCheck: () => void;
   onSave: SubmitCustomAgent;
   onBack?: () => void;
+  onSignIn?: () => void;
 };
 type SettingsProps = Omit<
   CustomAgentDetailViewProps,
@@ -63,7 +64,7 @@ function CustomAgentIdentity({
 }: Pick<SettingsProps, 'check'>): React.JSX.Element {
   return (
     <AgentIdentity
-      logo={<Icon name="agent" size="lg" className="text-foreground" />}
+      logo={<Icon name="agent" role="title" className="text-foreground" />}
       description={customAgentDescription}
       trailing={<ReadinessChip check={check} />}
     />
@@ -80,6 +81,7 @@ function CustomAgentContent(props: SettingsProps): React.JSX.Element {
       key="status"
       check={props.check}
       onCheck={props.onCheck}
+      onSignIn={props.onSignIn}
     />,
   ];
   const content = { ...props, status, onEditing };

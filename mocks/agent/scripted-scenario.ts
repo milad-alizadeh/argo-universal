@@ -1,67 +1,14 @@
 import {
   RequestError,
-  type AgentContext,
-  type CreateElicitationRequest,
   type InitializeResponse,
   type PromptResponse,
-  type RequestPermissionRequest,
-  type SessionConfigOption,
-  type SessionUpdate,
-  type RequestPermissionResponse,
-  type CreateElicitationResponse,
 } from '@agentclientprotocol/sdk';
-import type {
-  ScriptedResponses,
-  ScriptedNotifications,
-} from './scripted-responses.ts';
-
-// Node runs the stdio entry without a build, so this file imports only the SDK.
-
-type SessionElicitation =
-  | Omit<
-      Extract<CreateElicitationRequest, { mode: 'form'; sessionId: string }>,
-      'sessionId'
-    >
-  | Omit<
-      Extract<CreateElicitationRequest, { mode: 'url'; sessionId: string }>,
-      'sessionId'
-    >;
-
-// One step of a prompt; the Agent fills in the Session's own id.
-export type ScriptedStep =
-  | { type: 'update'; update: SessionUpdate; sessionId?: string }
-  | {
-      type: 'permission';
-      request: Omit<RequestPermissionRequest, 'sessionId'>;
-      responses?: RequestPermissionResponse[];
-      detached?: boolean;
-      signal?: AbortSignal;
-    }
-  | {
-      type: 'elicitation';
-      request: SessionElicitation;
-      responses?: CreateElicitationResponse[];
-      detached?: boolean;
-      signal?: AbortSignal;
-    }
-  | { type: 'wait-for-cancel'; until?: Promise<void> }
-  | { type: 'gate'; waitFor: Promise<void>; entered?: { resolve: () => void } }
-  | { type: 'yield' }
-  | { type: 'parallel'; steps: readonly ScriptedStep[] }
-  // Ignores cancellation until the connection closes.
-  | { type: 'hold' }
-  | { type: 'fail'; message: string }
-  // Bypasses the SDK's encoder, so frames the SDK would refuse still reach the Client.
-  | { type: 'raw'; frame: string };
-
-export type ScriptedScenario = {
-  initialize?: InitializeResponse;
-  configOptions?: readonly SessionConfigOption[];
-  steps: readonly ScriptedStep[];
-  responses?: ScriptedResponses;
-  notifications?: ScriptedNotifications;
-  sessionIds?: readonly string[];
-};
+import type { ScriptedStep, ScriptedTurn } from './scripted-types.ts';
+export type {
+  ScriptedStep,
+  ScriptedScenario,
+  ScriptedTurn,
+} from './scripted-types.ts';
 
 export const scriptedInitialization: InitializeResponse = {
   protocolVersion: 1,
@@ -69,16 +16,8 @@ export const scriptedInitialization: InitializeResponse = {
     promptCapabilities: { image: true },
     loadSession: true,
     sessionCapabilities: { close: {}, resume: {} },
+    _meta: { authStatus: {} },
   },
-};
-
-export type ScriptedTurn = {
-  sessionId: string;
-  client: AgentContext;
-  cancelled: Promise<void>;
-  isCancelled: () => boolean;
-  writeRaw: (frame: string) => Promise<void>;
-  closed: Promise<void>;
 };
 
 const runStep = async (
@@ -111,6 +50,20 @@ const runStep = async (
           {
             ...step.request,
             sessionId,
+          },
+          step.signal ? { cancellationSignal: step.signal } : undefined,
+        ),
+        step,
+      );
+    case 'request-elicitation':
+      if (turn.requestId == null)
+        throw new Error('Missing scripted request scope');
+      return observeQuestion(
+        client.request(
+          'elicitation/create',
+          {
+            ...step.request,
+            requestId: turn.requestId,
           },
           step.signal ? { cancellationSignal: step.signal } : undefined,
         ),

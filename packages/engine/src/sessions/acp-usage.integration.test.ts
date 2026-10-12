@@ -15,7 +15,10 @@ const context = { used: 34_000, size: 200_000 } satisfies UsageUpdate;
 const initialization = (name: string, version: string): InitializeResponse => ({
   protocolVersion: 1,
   agentInfo: { name, version },
-  agentCapabilities: { sessionCapabilities: { close: {} } },
+  agentCapabilities: {
+    _meta: { authStatus: {} },
+    sessionCapabilities: { close: {} },
+  },
 });
 
 it.each<[string, PromptResponse['usage'], object | null]>([

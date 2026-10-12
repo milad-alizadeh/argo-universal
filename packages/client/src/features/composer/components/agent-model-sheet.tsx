@@ -1,13 +1,7 @@
 import type * as React from 'react';
-import { ScrollView } from 'react-native';
-
-// Long enough for a native sheet to finish sliding away before a system picker opens.
-const sheetDismissMs = 400;
-import {
-  useAgentModelConfiguration,
-  useNativeSheets,
-  useSheetContent,
-} from './agent-model-sheet-context';
+import { useEffect } from 'react';
+import { View } from 'react-native';
+import { useAgentModelConfiguration } from './agent-model-sheet-context';
 import {
   AgentChoices,
   AgentModelMenu,
@@ -24,14 +18,12 @@ export function AgentModelSheetSettings({
   onContentHeightChange: (height: number) => void;
 }): React.JSX.Element | null {
   const configuration = useAgentModelConfiguration();
+  useEffect(() => onContentHeightChange(0), [onContentHeightChange]);
   if (!configuration) return null;
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      onContentSizeChange={(_width, height) => onContentHeightChange(height)}
-    >
+    <View className="flex-1 bg-sidebar">
       <AgentModelMenu configuration={configuration} onOpenPage={onOpenPage} />
-    </ScrollView>
+    </View>
   );
 }
 
@@ -48,35 +40,8 @@ export function AgentModelSheetChoices({
   if (!configuration) return null;
   const Choices = page === 'agent' ? AgentChoices : ModelChoices;
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic">
+    <View className="flex-1 bg-sidebar">
       <Choices configuration={configuration} onSelect={onDone} />
-    </ScrollView>
+    </View>
   );
-}
-
-// Any other Composer menu, drawn as the one page of a native sheet.
-export function ComposerSheetContent({
-  onContentHeightChange,
-}: {
-  onContentHeightChange: (height: number) => void;
-}): React.JSX.Element | null {
-  const content = useSheetContent();
-  const sheets = useNativeSheets();
-  if (!content || !sheets) return null;
-  return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      keyboardShouldPersistTaps="handled"
-      onContentSizeChange={(_width, height) => onContentHeightChange(height)}
-    >
-      {content.render((after) => {
-        sheets.close();
-        if (after) setTimeout(after, sheetDismissMs);
-      })}
-    </ScrollView>
-  );
-}
-
-export function useSheetLabel(): string | undefined {
-  return useSheetContent()?.label;
 }

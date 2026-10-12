@@ -7,10 +7,7 @@ import { initialMappingState, toAgentEvents } from './to-agent-events';
 export const codexAdapter = {
   agent: 'codex',
   label: 'Codex',
-  logo: readFileSync(
-    new URL('./assets/openai-blossom-black.svg', import.meta.url),
-    'utf8',
-  ),
+  logo: readFileSync(new URL('./assets/registry.svg', import.meta.url), 'utf8'),
   probe,
   connect,
   initialMappingState,

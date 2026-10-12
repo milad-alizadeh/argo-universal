@@ -4,6 +4,7 @@ import {
   FieldList,
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
+import type { ListSearchBarProps } from '../../../../lib/generic/primitives/inputs/list-search-bar/list-search-bar';
 import {
   offeredAgents,
   platformName,
@@ -16,6 +17,7 @@ import {
 } from '../../state/agent-status';
 import type { CatalogLoad } from '../../state/catalog-sync';
 import { agentRows } from '../agent-list-item/agent-list-item';
+import { searchLabel } from '../agents-toolbar';
 import { catalogEmptySection, catalogLoadingSection } from './catalog-states';
 
 export type AgentCatalogProps = {
@@ -23,6 +25,7 @@ export type AgentCatalogProps = {
   installed: readonly AgentRowEntry[];
   filter: AgentsFilter;
   search: string;
+  onSearch: (search: string) => void;
   onOpenAgent: (agentId: string) => void;
 };
 type LoadedProps = AgentCatalogProps & { saved: AgentsCatalogOutput };
@@ -36,9 +39,21 @@ export const agentsCatalogTestId = 'agents-catalog';
  */
 export function AgentCatalog(props: AgentCatalogProps): React.JSX.Element {
   return (
-    <FieldList testID={agentsCatalogTestId} sections={catalogSections(props)} />
+    <FieldList
+      testID={agentsCatalogTestId}
+      search={catalogSearch(props)}
+      sections={catalogSections(props)}
+    />
   );
 }
+
+// The Agents page is pushed from Settings, so a back button leads its header.
+const catalogSearch = (props: AgentCatalogProps): ListSearchBarProps => ({
+  placeholder: searchLabel,
+  value: props.search,
+  onChangeText: props.onSearch,
+  leading: 'back',
+});
 
 /*
  * Until the registry's Agents arrive, or while a failed load waits to retry, the installed

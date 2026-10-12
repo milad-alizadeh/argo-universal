@@ -18,9 +18,8 @@ const sheetHeaderOptions = {
   },
 } satisfies ComponentProps<typeof Stack>['screenOptions'];
 
-export function useSheetHeaderOptions(): ComponentProps<
-  typeof Stack
->['screenOptions'] {
+export function useSheetHeaderOptions(): typeof sheetHeaderOptions &
+  ReturnType<typeof useHeaderTitleOptions> {
   const titleOptions = useHeaderTitleOptions();
   return { ...sheetHeaderOptions, ...titleOptions };
 }

@@ -20,7 +20,7 @@ export function FloatingActionButton({
       onPress={onPress}
       className="size-14 sm:size-14 rounded-full"
       icon={icon}
-      iconSize="md"
+      iconRole="action"
       iconClassName={'text-primary-foreground'}
       size="md"
       variant="filled"

@@ -21,6 +21,7 @@ it.each(newSessionInputs)(
         initialize: {
           protocolVersion: 1,
           agentCapabilities: {
+            _meta: { authStatus: {} },
             promptCapabilities: { image: true },
             sessionCapabilities: { close: {} },
           },

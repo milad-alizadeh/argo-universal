@@ -1,4 +1,4 @@
-import type { NativeSymbol } from './native-symbol';
+import type { SymbolSource } from './symbol-source';
 
 // Text marks and blocks a person formats a message with.
 export const formatSymbols = {
@@ -10,4 +10,4 @@ export const formatSymbols = {
   quote: { sf: 'text.quote', material: 'format_quote' },
   strikethrough: { sf: 'strikethrough', material: 'format_strikethrough' },
   underline: { sf: 'underline', material: 'format_underlined' },
-} as const satisfies Record<string, NativeSymbol>;
+} as const satisfies Record<string, SymbolSource>;
