@@ -28,6 +28,7 @@ import {
   iconSizeStyle,
 } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { useNativeSheets } from '../agent-model-sheet-context';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 
 const successBackgroundClassName = 'bg-success';
@@ -260,20 +261,36 @@ export function ComposerPlan({
     );
   return (
     <ComposerPopover label="Plan" width={420} trigger={trigger}>
-      {() => (
-        <View>
-          <View className="px-4 py-3 gap-1.5">
-            <View className="flex-row items-center gap-2">
-              <Icon name="checklist" className="text-foreground" />
-              <Text
-                selectable={false}
-                role={'heading'}
+      {() => <PlanPopoverContent entries={entries} />}
+    </ComposerPopover>
+  );
+}
 
-                className="select-none"
-              >
-                Plan
-              </Text>
-            </View>
+function PlanPopoverContent({
+  entries,
+}: {
+  entries: PlanEntry[];
+}): React.JSX.Element {
+  const windowWide = useWide();
+  const nativeSheets = useNativeSheets();
+  const done = entries.filter((entry) => entry.status === 'completed').length;
+  return (
+    <View>
+      {(windowWide || !nativeSheets) && (
+        <View className="px-4 py-3 gap-1.5">
+          <View className="flex-row items-center gap-2">
+            <Icon name="checklist" className="text-foreground" />
+            <Text
+              selectable={false}
+              role="heading"
+              semanticRole="heading"
+              aria-level={2}
+              className="select-none"
+            >
+              Plan
+            </Text>
+          </View>
+          {windowWide && (
             <View className="flex-row items-center gap-2">
               <View className="w-16">
                 <Meter
@@ -285,11 +302,11 @@ export function ComposerPlan({
                 {done} of {entries.length} done
               </Text>
             </View>
-          </View>
-          <PlanSteps entries={entries} />
+          )}
         </View>
       )}
-    </ComposerPopover>
+      <PlanSteps entries={entries} />
+    </View>
   );
 }
 
