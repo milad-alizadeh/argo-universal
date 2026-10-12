@@ -17,6 +17,7 @@ import {
 } from '#features/connection';
 import { useNavigate } from '#lib/product/navigation/context';
 import { SessionsView } from '../components/sessions-view';
+import { useResubscribeOnFocus } from '../hooks/use-resubscribe-on-focus';
 import { createCoalescedRefetch } from '../state/coalesced-refetch';
 import { liveUpdatesStopped } from '../state/live-updates-stopped';
 import { sessionsLoadState } from '../state/sessions-load-state';
@@ -92,7 +93,7 @@ export function SessionsScreen({
   );
 }
 
-// Live list updates refetch its pages and resume after Connection recovery.
+// Live list updates refetch its pages and resume after Connection recovery or when the window regains focus.
 function useSessionListUpdates(): TRPCSubscriptionResult<
   SessionListUpdate,
   ClientError
@@ -115,5 +116,6 @@ function useSessionListUpdates(): TRPCSubscriptionResult<
     }),
   );
   useResubscribeOnReconnect(subscription);
+  useResubscribeOnFocus(subscription);
   return subscription;
 }
