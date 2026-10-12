@@ -8,7 +8,7 @@ import Animated, {
 import { motionDuration, quarterTurnDegrees } from '#lib/generic/motion';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { useFeedIconSize } from './feed-icon-size';
+import { useTextIconSize } from '../../../lib/generic/symbols/text-icon-size';
 
 export function DisclosureCaret({
   open,
@@ -17,7 +17,7 @@ export function DisclosureCaret({
   open: boolean;
   className?: string;
 }): React.JSX.Element {
-  const size = useFeedIconSize();
+  const size = useTextIconSize();
   const rotation = useDerivedValue(
     () =>
       withTiming(open ? quarterTurnDegrees : 0, {

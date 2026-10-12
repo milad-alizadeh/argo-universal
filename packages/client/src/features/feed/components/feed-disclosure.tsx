@@ -10,8 +10,8 @@ import { Text, TextClassContext } from '#lib/generic/primitives/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';
+import { useTextIconSize } from '../../../lib/generic/symbols/text-icon-size';
 import { DisclosureCaret } from './disclosure-caret';
-import { useFeedIconSize } from './feed-icon-size';
 import { ShimmerText } from './shimmer-text';
 
 const foregroundTextClassName = 'text-foreground';
@@ -64,7 +64,7 @@ export function FeedDisclosure({
 }: FeedDisclosureProps): React.JSX.Element {
   const [open, setOpen] = useState(initialOpen);
   const [hovered, setHovered] = useState(false);
-  const iconSize = useFeedIconSize();
+  const iconSize = useTextIconSize();
   const title = trailing ? `${label} ${trailing}` : label;
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="w-full">

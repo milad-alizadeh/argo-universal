@@ -9,7 +9,7 @@ import { Text } from '#lib/generic/primitives/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { useFeedIconSize } from './feed-icon-size';
+import { useTextIconSize } from '../../../lib/generic/symbols/text-icon-size';
 import { ShimmerText } from './shimmer-text';
 
 const noticeAppearance = new Map<string, { icon: IconName; color: string }>([
@@ -42,7 +42,7 @@ function NoticeMessage({
   live = false,
 }: NoticeMessageProps): React.JSX.Element {
   const appearance = noticeAppearance.get(severity) ?? unrecognisedAppearance;
-  const iconSize = useFeedIconSize();
+  const iconSize = useTextIconSize();
   return (
     <View
       role={severity === 'error' ? 'alert' : 'status'}

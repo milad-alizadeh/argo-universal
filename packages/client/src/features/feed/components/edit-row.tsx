@@ -13,10 +13,10 @@ import {
   contentActionClass,
 } from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
+import { useTextIconSize } from '../../../lib/generic/symbols/text-icon-size';
 import { type FileDiff, toFileDiffs } from '../view/file-diff';
 import { DiffView } from './diff-view';
 import { DisclosureCaret } from './disclosure-caret';
-import { useFeedIconSize } from './feed-icon-size';
 import { FileName } from './file-name';
 import { fileTypeIcon } from './file-type-icon';
 import { ToolOutput } from './tool-output';
@@ -47,7 +47,7 @@ function FileEdit({
   nested?: boolean;
 }): React.JSX.Element {
   const [open, setOpen] = useState(false);
-  const iconSize = useFeedIconSize();
+  const iconSize = useTextIconSize();
   const verb = verbs[file.operation];
   return (
     <Collapsible open={open}>
@@ -114,7 +114,7 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
     [row.content],
   );
   const [expanded, setExpanded] = useState(false);
-  const iconSize = useFeedIconSize();
+  const iconSize = useTextIconSize();
   if (row.status === 'failed') {
     const path = files[0]?.path ?? row.locations?.[0]?.path;
     const error = row.content

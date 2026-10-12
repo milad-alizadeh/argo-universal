@@ -27,6 +27,7 @@ import { contentActionClass } from '../../../lib/generic/primitives/pressable';
 import { SelectedCheck } from '../../../lib/generic/primitives/selected-check';
 import { Slider } from '../../../lib/generic/primitives/slider';
 import { Switch } from '../../../lib/generic/primitives/switch';
+import { Chevron } from '../../../lib/generic/symbols/chevron';
 import { Icon, iconSizeStyle } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 import {
@@ -793,8 +794,7 @@ export function AgentModelMenu({
                 >
                   {agent?.label}
                 </Text>
-                <Icon
-                  size="xs"
+                <Chevron
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
@@ -823,8 +823,7 @@ export function AgentModelMenu({
                 >
                   {modelName(current)}
                 </Text>
-                <Icon
-                  size="xs"
+                <Chevron
                   name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
@@ -949,8 +948,8 @@ export function ComposerAgentModelControl({
             />
           )}
           {wide && (
-            <Icon
-              size="xs"
+            <Chevron
+              textRole="control"
               name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
@@ -1016,8 +1015,8 @@ export function ComposerModeControl({
             {current?.name.replace(/\s*\(recommended\)\s*$/i, '')}
           </Text>
           <View className={cn('-ml-0.5', !wide && 'hidden')}>
-            <Icon
-              size="xs"
+            <Chevron
+              textRole="control"
               name="chevron-down"
               className="text-muted-foreground"
             />
@@ -1143,8 +1142,8 @@ export function ComposerCheckoutControl({
           <Text selectable={false} role="secondary" className="select-none">
             {checkout.newWorktree ? 'New worktree' : 'Local'}
           </Text>
-          <Icon
-            size="xs"
+          <Chevron
+            textRole="secondary"
             name="chevron-down"
             className="text-muted-foreground"
           />

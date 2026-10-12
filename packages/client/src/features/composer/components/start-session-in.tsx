@@ -12,6 +12,7 @@ import {
   contentActionClass,
 } from '../../../lib/generic/primitives/pressable';
 import { SelectedCheck } from '../../../lib/generic/primitives/selected-check';
+import { Chevron } from '../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import {
   CheckoutContents,
@@ -74,8 +75,7 @@ export function StartSessionIn({
           >
             {project?.name ?? 'Choose a Project'}
           </Text>
-          <Icon
-            size="xs"
+          <Chevron
             name="chevron-down"
             className="-ml-0.5 text-muted-foreground"
           />
@@ -164,8 +164,7 @@ export function StartSessionIn({
             >
               {checkout.newWorktree ? 'New worktree' : 'Local'}
             </Text>
-            <Icon
-              size="xs"
+            <Chevron
               name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />

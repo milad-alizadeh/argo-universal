@@ -198,7 +198,7 @@ export function SessionHeader({
             aria-expanded={inspector?.open ?? false}
             onPress={inspector?.toggle}
             icon="diff"
-            iconSize="sm"
+            iconSize="md"
             className="bg-foreground/7"
             iconClassName="text-foreground"
           />
@@ -208,7 +208,7 @@ export function SessionHeader({
             size="sm"
             accessibilityLabel="More"
             icon="more"
-            iconSize="sm"
+            iconSize="md"
             iconClassName="text-foreground"
           />
         </View>

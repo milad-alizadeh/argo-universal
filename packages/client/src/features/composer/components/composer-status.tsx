@@ -23,6 +23,7 @@ import {
   Pressable,
   contentActionClass,
 } from '../../../lib/generic/primitives/pressable';
+import { Chevron } from '../../../lib/generic/symbols/chevron';
 import {
   Icon,
   IconSpinner,
@@ -220,8 +221,8 @@ export function ComposerPlan({
           >
             {entries.find((entry) => entry.status === 'in_progress')?.content}
           </Text>
-          <Icon
-            size="xs"
+          <Chevron
+            textRole="secondary"
             name="chevron-up"
             className={cn(
               'text-muted-foreground web:transition-transform web:duration-200',

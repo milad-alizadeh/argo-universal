@@ -13,6 +13,7 @@ import {
   Pressable,
   contentActionClass,
 } from '../../../lib/generic/primitives/pressable';
+import { Chevron } from '../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { resourceName } from '../../../lib/product/markdown/resource-name';
 import { useWrittenPlanEscape } from '../hooks/use-written-plan-escape';
@@ -71,7 +72,11 @@ export function WrittenPlan({
           >
             {title}
           </Text>
-          <Icon size="xs" name="chevron-up" className="text-muted-foreground" />
+          <Chevron
+            textRole="secondary"
+            name="chevron-up"
+            className="text-muted-foreground"
+          />
         </>
       )}
     </Pressable>

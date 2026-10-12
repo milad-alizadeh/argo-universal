@@ -9,6 +9,7 @@ import {
 import { Pressable } from '#lib/generic/primitives/pressable';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import { Chevron } from '../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import type { PullRequestChecksProps } from './pull-request-checks';
 import {
@@ -87,9 +88,9 @@ export function MorePullRequests({
           <Text role="secondary" className="text-muted-foreground">
             +{more} PR
           </Text>
-          <Icon
+          <Chevron
+            textRole="secondary"
             name="chevron-down"
-            size="xs"
             className="text-muted-foreground"
           />
         </Pressable>

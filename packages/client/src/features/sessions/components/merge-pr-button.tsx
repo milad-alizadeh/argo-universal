@@ -10,6 +10,7 @@ import {
 import { Pressable } from '#lib/generic/primitives/pressable';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import { Chevron } from '../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../lib/generic/symbols/icon';
 // jscpd:ignore-end
 
@@ -67,9 +68,9 @@ export function MergePrButton({
             disabled={disabled}
             className={cn(halfClassName, 'w-6')}
           >
-            <Icon
+            <Chevron
+              textRole="control"
               name="chevron-down"
-              size="xs"
               className="text-primary-foreground"
             />
           </Pressable>

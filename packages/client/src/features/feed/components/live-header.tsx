@@ -24,7 +24,7 @@ import { Text } from '#lib/generic/primitives/text';
 import { useClock } from '#lib/generic/use-clock';
 import { StatusIndicator } from '#lib/product/status-indicator';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { useFeedIconSize } from './feed-icon-size';
+import { useTextIconSize } from '../../../lib/generic/symbols/text-icon-size';
 import { ShimmerText } from './shimmer-text';
 import { toolCallIcon } from './tool-call-icon';
 import { WorkingMark } from './working-mark';
@@ -42,7 +42,7 @@ export interface LiveHeaderProps {
 function RetryIcon(): React.JSX.Element {
   const rotation = useSharedValue(0);
   const reducedMotion = useReducedMotion();
-  const iconSize = useFeedIconSize();
+  const iconSize = useTextIconSize();
   useEffect(() => {
     if (!reducedMotion)
       rotation.set(
@@ -74,7 +74,7 @@ function SourceIcon({
   source: LiveHeaderSource;
   toolCall?: ToolCallUpdate;
 }): React.JSX.Element {
-  const iconSize = useFeedIconSize();
+  const iconSize = useTextIconSize();
   switch (source.type) {
     case 'request':
       return <StatusIndicator testID="live-header-dot" status="needs_input" />;
