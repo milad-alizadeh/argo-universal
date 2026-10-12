@@ -264,7 +264,7 @@ export function SessionsList({
   return (
     <View
       className={cn(
-        'relative flex-1 overflow-hidden bg-background wide:bg-transparent web:select-none web:[&_*]:select-none!',
+        'relative flex-1 overflow-hidden bg-sidebar wide:bg-transparent web:select-none web:[&_*]:select-none!',
         // Rows glide to their measured places at rest; while scrolling they snap, so reused rows never slide across the list.
         !scrolling.scrolling &&
           'web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200',
@@ -371,7 +371,7 @@ function EmptySessionsList({
 }
 
 // The page's colour, which a native list fades into; the web fades the rows themselves over the glass.
-const fadeSurface = 'bg-background';
+const fadeSurface = 'bg-sidebar';
 
 const SessionListRow = memo(function SessionListRow({
   session,
@@ -383,7 +383,7 @@ const SessionListRow = memo(function SessionListRow({
     <View
       testID="session-row-surface"
       className={cn(
-        'overflow-hidden bg-background wide:bg-transparent',
+        'overflow-hidden bg-sidebar wide:bg-transparent',
         selected && 'bg-sidebar-accent wide:bg-transparent',
       )}
     >

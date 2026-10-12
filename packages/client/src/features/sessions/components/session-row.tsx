@@ -78,7 +78,7 @@ export const SessionRow = memo(function SessionRow({
   );
   const markSurface = selected
     ? 'border-sidebar-accent bg-sidebar-accent'
-    : 'border-background bg-background';
+    : 'border-sidebar bg-sidebar';
 
   return (
     <Pressable
@@ -90,7 +90,7 @@ export const SessionRow = memo(function SessionRow({
       className={contentActionClass({
         variant: 'ghost',
         className: cn(
-          'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:gap-3 wide:px-4 wide:py-2 wide:rounded-selection bg-background wide:bg-transparent dark:active:bg-accent web:dark:hover:bg-accent',
+          'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:gap-3 wide:px-4 wide:py-2 wide:rounded-selection bg-sidebar wide:bg-transparent dark:active:bg-accent web:dark:hover:bg-accent',
           selected && 'bg-sidebar-accent wide:bg-selected',
         ),
       })}

@@ -128,7 +128,7 @@ function SessionsLayout({
   return (
     <Screen
       edges={['bottom']}
-      className="relative flex-1 bg-background wide:bg-transparent"
+      className="relative flex-1 bg-sidebar wide:bg-transparent"
       style={{ minHeight: 0 }}
     >
       {wide && listTop}

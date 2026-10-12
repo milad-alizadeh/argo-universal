@@ -10,7 +10,7 @@ export type FirstSessionViewProps =
 export function FirstSessionView(props: FirstSessionViewProps): ReactNode {
   switch (props.state) {
     case 'loading':
-      return <View className="flex-1 bg-background" />;
+      return <View className="flex-1 bg-sidebar" />;
     case 'chosen':
       return props.children;
   }
