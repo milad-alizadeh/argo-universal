@@ -1,321 +1,74 @@
-diff --git a/android/build.gradle b/android/build.gradle
-index 7a92788cb9318f4081628ec17a5339445db205aa..0b064868c53a9c45a856c7bf93480ed58eaa4cb8 100644
---- a/android/build.gradle
-+++ b/android/build.gradle
-@@ -42,6 +42,7 @@ dependencies {
-   implementation "androidx.compose.material3:material3:1.5.0-alpha17"
-   implementation 'androidx.compose.material3:material3-android:1.5.0-alpha17'
-   implementation 'androidx.lifecycle:lifecycle-runtime:2.10.0'
-+  implementation 'androidx.activity:activity-compose:1.10.1'
-   implementation 'androidx.fragment:fragment-ktx:1.8.9'
-   implementation "androidx.graphics:graphics-shapes:1.1.0"
-   implementation "com.squareup.okhttp3:okhttp:4.9.2"
-diff --git a/android/src/main/java/expo/modules/ui/DockedSearchBarView.kt b/android/src/main/java/expo/modules/ui/DockedSearchBarView.kt
-index 7eea9bb56053917fa158c538635400155f4533b1..09cad22fad44f1b7d8e2f781b92cfae2035331e2 100644
---- a/android/src/main/java/expo/modules/ui/DockedSearchBarView.kt
-+++ b/android/src/main/java/expo/modules/ui/DockedSearchBarView.kt
-@@ -2,53 +2,168 @@
+diff --git a/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt b/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt
+index 13ca95ed0a9f0a20afdd828fd18331a00067e2d2..ab612b60fd95a5650a4203f5ab6fe0bcf9221e68 100644
+--- a/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt
++++ b/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt
+@@ -1,6 +1,8 @@
+ package expo.modules.ui.menu
  
- package expo.modules.ui
- 
-+import androidx.activity.compose.BackHandler
-+import androidx.appcompat.widget.Toolbar
-+import androidx.compose.foundation.layout.Box
-+import androidx.compose.foundation.layout.fillMaxWidth
-+import androidx.compose.foundation.text.input.clearText
- import androidx.compose.foundation.text.input.rememberTextFieldState
- import androidx.compose.material3.DockedSearchBar
- import androidx.compose.material3.ExperimentalMaterial3Api
-+import androidx.compose.material3.IconButton
- import androidx.compose.material3.SearchBarDefaults
-+import androidx.compose.material3.SearchBarValue
- import androidx.compose.material3.rememberSearchBarState
-+import android.view.View
++import androidx.compose.foundation.BorderStroke
+ import androidx.compose.foundation.layout.Box
++import androidx.compose.foundation.shape.RoundedCornerShape
+ import androidx.compose.material3.DropdownMenu
+ import androidx.compose.material3.MenuDefaults
  import androidx.compose.runtime.Composable
-+import androidx.compose.runtime.DisposableEffect
-+import androidx.compose.runtime.remember
- import androidx.compose.runtime.LaunchedEffect
--import androidx.compose.runtime.getValue
-+import androidx.compose.runtime.rememberCoroutineScope
- import androidx.compose.runtime.snapshotFlow
-+import android.graphics.Color
-+import androidx.compose.ui.Alignment
-+import androidx.compose.ui.Modifier
-+import androidx.compose.ui.focus.FocusRequester
-+import androidx.compose.ui.focus.focusRequester
-+import androidx.compose.ui.platform.LocalFocusManager
-+import androidx.compose.ui.input.pointer.pointerInput
-+import androidx.compose.ui.platform.LocalView
- import expo.modules.kotlin.views.ComposeProps
- import expo.modules.kotlin.views.FunctionalComposableScope
- import expo.modules.kotlin.views.OptimizedComposeProps
-+import kotlinx.coroutines.launch
+@@ -25,6 +27,8 @@ fun FunctionalComposableScope.DropdownMenuContent(
  
- @OptimizedComposeProps
- data class DockedSearchBarProps(
--  val modifiers: ModifierList = emptyList()
-+  val modifiers: ModifierList = emptyList(),
-+  val containerColor: Color? = null
+     DropdownMenu(
+       containerColor = props.color?.composeOrNull ?: MenuDefaults.containerColor,
++      shape = props.cornerRadius?.let { RoundedCornerShape(it.dp) } ?: MenuDefaults.shape,
++      border = props.borderColor?.composeOrNull?.let { BorderStroke((props.borderWidth ?: 1f).dp, it) },
+       shadowElevation = props.shadowElevation?.dp ?: MenuDefaults.ShadowElevation,
+       expanded = props.expanded,
+       onDismissRequest = onDismissRequest
+diff --git a/android/src/main/java/expo/modules/ui/menu/DropdownMenuRecords.kt b/android/src/main/java/expo/modules/ui/menu/DropdownMenuRecords.kt
+index 63640f80c09ee4a25716c4cf9602b1a5ef2c9620..2b2be90e347723cfb7a50142f577c463b8aae2d0 100644
+--- a/android/src/main/java/expo/modules/ui/menu/DropdownMenuRecords.kt
++++ b/android/src/main/java/expo/modules/ui/menu/DropdownMenuRecords.kt
+@@ -17,5 +17,8 @@ data class DropdownMenuProps(
+   val expanded: Boolean = false,
+   val color: Color? = null,
+   val modifiers: ModifierList = emptyList(),
+-  val shadowElevation: Float? = null
++  val shadowElevation: Float? = null,
++  val cornerRadius: Float? = null,
++  val borderWidth: Float? = null,
++  val borderColor: Color? = null
  ) : ComposeProps
- 
- @Composable
- fun FunctionalComposableScope.DockedSearchBarContent(
-   props: DockedSearchBarProps,
--  onQueryChange: (GenericEventPayload1<String>) -> Unit
-+  onQueryChange: (GenericEventPayload1<String>) -> Unit,
-+  onExpandedChange: (GenericEventPayload1<Boolean>) -> Unit
- ) {
-   val searchBarState = rememberSearchBarState()
-   val textFieldState = rememberTextFieldState()
-+  val scope = rememberCoroutineScope()
-+  val focusManager = LocalFocusManager.current
-+  val expanded = searchBarState.targetValue == SearchBarValue.Expanded
-+  val collapse: () -> Unit = { scope.launch { searchBarState.animateToCollapsed() } }
- 
-   LaunchedEffect(Unit) {
-     snapshotFlow { textFieldState.text.toString() }
-       .collect { onQueryChange(GenericEventPayload1(it)) }
-   }
-+  // Collapsing, by Back or the back slot, clears the query and the focus.
-+  LaunchedEffect(Unit) {
-+    snapshotFlow { searchBarState.targetValue == SearchBarValue.Expanded }
-+      .collect { isExpanded ->
-+        if (!isExpanded) {
-+          textFieldState.clearText()
-+          focusManager.clearFocus()
-+        }
-+        onExpandedChange(GenericEventPayload1(isExpanded))
-+      }
-+  }
-+  BackHandler(enabled = expanded) { collapse() }
-+  val focusRequester = remember { FocusRequester() }
-+  RefocusOnReattach(expanded, focusRequester)
-+  SpanToolbarWhileOpen(expanded)
- 
-   DockedSearchBar(
-     expanded = false,
-     onExpandedChange = {},
-+    colors = props.containerColor.composeOrNull?.let { SearchBarDefaults.colors(containerColor = it) }
-+      ?: SearchBarDefaults.colors(),
-     inputField = @Composable {
-       SearchBarDefaults.InputField(
-         searchBarState = searchBarState,
-         textFieldState = textFieldState,
-         onSearch = {},
-+        modifier = Modifier.focusRequester(focusRequester).fillMaxWidth(),
-         placeholder = {
-           Children(UIComposableScope(), filter = { isSlotWithName(it, "placeholder") })
-         },
-         leadingIcon = {
--          Children(UIComposableScope(), filter = { isSlotWithName(it, "leadingIcon") })
-+          if (expanded) {
-+            SlotButton(onClick = collapse) {
-+              Children(UIComposableScope(), filter = { isSlotWithName(it, "backIcon") })
-+            }
-+          } else {
-+            Children(UIComposableScope(), filter = { isSlotWithName(it, "leadingIcon") })
-+          }
-+        },
-+        trailingIcon = if (textFieldState.text.isEmpty()) null else {
-+          {
-+            SlotButton(onClick = { textFieldState.clearText() }) {
-+              Children(UIComposableScope(), filter = { isSlotWithName(it, "clearIcon") })
-+            }
-+          }
-         }
-       )
-     },
-     modifier = ModifierRegistry.applyModifiers(props.modifiers, appContext, composableScope, globalEventDispatcher)
-   ) {}
- }
-+
-+// A host that changes around the open bar (a header dropping its other items) can re-attach this
-+// view, which moves focus elsewhere; the open field takes it back so typing still lands in it.
-+@Composable
-+private fun RefocusOnReattach(expanded: Boolean, focusRequester: FocusRequester) {
-+  val view = LocalView.current
-+  DisposableEffect(view, expanded) {
-+    val listener = object : View.OnAttachStateChangeListener {
-+      override fun onViewAttachedToWindow(v: View) {
-+        if (expanded) v.post { focusRequester.requestFocus() }
-+      }
-+      override fun onViewDetachedFromWindow(v: View) {}
-+    }
-+    view.addOnAttachStateChangeListener(listener)
-+    onDispose { view.removeOnAttachStateChangeListener(listener) }
-+  }
-+}
-+
-+// A React Native view in the slot would take the tap; a cover over it leaves the tap to the button.
-+@Composable
-+private fun SlotButton(onClick: () -> Unit, content: @Composable () -> Unit) {
-+  IconButton(onClick = onClick) {
-+    Box(contentAlignment = Alignment.Center) {
-+      content()
-+      Box(Modifier.matchParentSize().pointerInput(Unit) {})
-+    }
-+  }
-+}
-+
-+// Open, the bar spans its toolbar host: the host's content insets would stack on the field's own,
-+// pushing Back and clear off the page gutter. The host resets them when it re-attaches the bar.
-+@Composable
-+private fun SpanToolbarWhileOpen(expanded: Boolean) {
-+  val view = LocalView.current
-+  DisposableEffect(view, expanded) {
-+    val toolbar = if (expanded) view.toolbarAncestor() else null
-+    val start = toolbar?.contentInsetStart ?: 0
-+    val end = toolbar?.contentInsetEnd ?: 0
-+    val span = { toolbar?.setInsets(0, 0) }
-+    val listener = object : View.OnAttachStateChangeListener {
-+      override fun onViewAttachedToWindow(v: View) { span() }
-+      override fun onViewDetachedFromWindow(v: View) {}
-+    }
-+    span()
-+    view.addOnAttachStateChangeListener(listener)
-+    onDispose {
-+      view.removeOnAttachStateChangeListener(listener)
-+      toolbar?.setInsets(start, end)
-+    }
-+  }
-+}
-+
-+private fun View.toolbarAncestor(): Toolbar? =
-+  generateSequence(parent) { it.parent }.filterIsInstance<Toolbar>().firstOrNull()
-+
-+private fun Toolbar.setInsets(start: Int, end: Int) {
-+  setContentInsetsRelative(start, end)
-+  requestLayout()
-+}
-diff --git a/android/src/main/java/expo/modules/ui/ExpoUIModule.kt b/android/src/main/java/expo/modules/ui/ExpoUIModule.kt
-index f7f0d1b7e9e83b3f8fa06d38cb71799c895985dd..51ac2cef600f327fd2d6b0e4fa5279afefc6f976 100644
---- a/android/src/main/java/expo/modules/ui/ExpoUIModule.kt
-+++ b/android/src/main/java/expo/modules/ui/ExpoUIModule.kt
-@@ -511,9 +511,10 @@ class ExpoUIModule : Module() {
- 
-     ExpoUIView<DockedSearchBarProps>("DockedSearchBarView") {
-       val onQueryChange by Event<GenericEventPayload1<String>>()
-+      val onExpandedChange by Event<GenericEventPayload1<Boolean>>()
- 
-       Content { props ->
--        DockedSearchBarContent(props) { onQueryChange(it) }
-+        DockedSearchBarContent(props, { onQueryChange(it) }, { onExpandedChange(it) })
-       }
-     }
- 
-diff --git a/build/jetpack-compose/DockedSearchBar/index.d.ts b/build/jetpack-compose/DockedSearchBar/index.d.ts
-index f3b0d5be7f4e8340e31c2698dbf04041f78756df..ec4c0def40a7b43474add55b4d70a335000ac892 100644
---- a/build/jetpack-compose/DockedSearchBar/index.d.ts
-+++ b/build/jetpack-compose/DockedSearchBar/index.d.ts
-@@ -1,9 +1,18 @@
-+import { type ColorValue } from 'react-native';
- import { type ExpoModifier } from '../../types';
- export interface DockedSearchBarProps {
-     /**
-      * Callback function that is called when the search query changes.
+diff --git a/build/jetpack-compose/DropdownMenu/index.d.ts b/build/jetpack-compose/DropdownMenu/index.d.ts
+index 652fd5ebed3efa231c87399689852f016818d445..5f8c5ed8c3858f7456a5e44d6b22be72d166e302 100644
+--- a/build/jetpack-compose/DropdownMenu/index.d.ts
++++ b/build/jetpack-compose/DropdownMenu/index.d.ts
+@@ -30,6 +30,9 @@ export interface DropdownMenuProps {
+      * @platform android
       */
-     onQueryChange?: (query: string) => void;
-+    /**
-+     * Called when the bar expands (the field takes focus) or collapses. Collapsing clears the query.
-+     */
-+    onExpandedChange?: (expanded: boolean) => void;
-+    /**
-+     * The bar's fill. Defaults to Material's search bar container colour.
-+     */
-+    containerColor?: ColorValue;
+     shadowElevation?: number;
++  cornerRadius?: number;
++  borderWidth?: number;
++  borderColor?: ColorValue;
      /**
-      * Modifiers for the component.
+      * Optional styles to apply to the `DropdownMenu`.
       */
-@@ -21,10 +30,14 @@ type LeadingIconProps = {
- };
- export declare function DockedSearchBarPlaceholder(props: PlaceholderProps): import("react/jsx-runtime").JSX.Element;
- export declare function DockedSearchBarLeadingIcon(props: LeadingIconProps): import("react/jsx-runtime").JSX.Element;
-+export declare function DockedSearchBarBackIcon(props: LeadingIconProps): import("react/jsx-runtime").JSX.Element;
-+export declare function DockedSearchBarClearIcon(props: LeadingIconProps): import("react/jsx-runtime").JSX.Element;
- declare function DockedSearchBar(props: DockedSearchBarProps): import("react/jsx-runtime").JSX.Element;
- declare namespace DockedSearchBar {
-     var Placeholder: typeof DockedSearchBarPlaceholder;
-     var LeadingIcon: typeof DockedSearchBarLeadingIcon;
-+    var BackIcon: typeof DockedSearchBarBackIcon;
-+    var ClearIcon: typeof DockedSearchBarClearIcon;
- }
- export { DockedSearchBar };
- //# sourceMappingURL=index.d.ts.map
-\ No newline at end of file
-diff --git a/src/jetpack-compose/DockedSearchBar/index.tsx b/src/jetpack-compose/DockedSearchBar/index.tsx
-index eff7887d4c122ea5188734d77359fb3aaa0bf999..fda5adc971cefa5e7f9609a8d2beb4091e4199df 100644
---- a/src/jetpack-compose/DockedSearchBar/index.tsx
-+++ b/src/jetpack-compose/DockedSearchBar/index.tsx
-@@ -1,4 +1,5 @@
- import { requireNativeView } from 'expo';
-+import { type ColorValue } from 'react-native';
- 
- import { type ExpoModifier, type ViewEvent } from '../../types';
- import { createViewModifierEventListener } from '../modifiers/utils';
-@@ -9,6 +10,16 @@ export interface DockedSearchBarProps {
+diff --git a/src/jetpack-compose/DropdownMenu/index.tsx b/src/jetpack-compose/DropdownMenu/index.tsx
+index bd6101006fcef124674ef53be9a767eb43f69edd..997f8085e30cf83585dd6032dcd160b1e297cdaa 100644
+--- a/src/jetpack-compose/DropdownMenu/index.tsx
++++ b/src/jetpack-compose/DropdownMenu/index.tsx
+@@ -50,6 +50,9 @@ export interface DropdownMenuProps {
+    * @platform android
     */
-   onQueryChange?: (query: string) => void;
+   shadowElevation?: number;
++  cornerRadius?: number;
++  borderWidth?: number;
++  borderColor?: ColorValue;
  
-+  /**
-+   * Called when the bar expands (the field takes focus) or collapses. Collapsing clears the query.
-+   */
-+  onExpandedChange?: (expanded: boolean) => void;
-+
-+  /**
-+   * The bar's fill. Defaults to Material's search bar container colour.
-+   */
-+  containerColor?: ColorValue;
-+
    /**
-    * Modifiers for the component.
-    */
-@@ -28,8 +39,9 @@ type LeadingIconProps = {
-   children: React.ReactNode;
- };
- 
--type NativeDockedSearchBarProps = Omit<DockedSearchBarProps, 'onQueryChange'> &
--  ViewEvent<'onQueryChange', { value: string }>;
-+type NativeDockedSearchBarProps = Omit<DockedSearchBarProps, 'onQueryChange' | 'onExpandedChange'> &
-+  ViewEvent<'onQueryChange', { value: string }> &
-+  ViewEvent<'onExpandedChange', { value: boolean }>;
- 
- type NativeSlotViewProps = {
-   slotName: string;
-@@ -52,8 +64,18 @@ export function DockedSearchBarLeadingIcon(props: LeadingIconProps) {
-   return <SlotNativeView slotName="leadingIcon">{props.children}</SlotNativeView>;
- }
- 
-+// Shown in place of the leading icon while expanded; pressing it collapses the bar.
-+export function DockedSearchBarBackIcon(props: LeadingIconProps) {
-+  return <SlotNativeView slotName="backIcon">{props.children}</SlotNativeView>;
-+}
-+
-+// Shown at the end while the query has text; pressing it clears the query.
-+export function DockedSearchBarClearIcon(props: LeadingIconProps) {
-+  return <SlotNativeView slotName="clearIcon">{props.children}</SlotNativeView>;
-+}
-+
- function transformDockedSearchBarProps(props: DockedSearchBarProps): NativeDockedSearchBarProps {
--  const { modifiers, onQueryChange, ...restProps } = props;
-+  const { modifiers, onQueryChange, onExpandedChange, ...restProps } = props;
-   return {
-     modifiers,
-     ...(modifiers ? createViewModifierEventListener(modifiers) : undefined),
-@@ -61,6 +83,9 @@ function transformDockedSearchBarProps(props: DockedSearchBarProps): NativeDocke
-     onQueryChange: (event) => {
-       onQueryChange?.(event.nativeEvent.value);
-     },
-+    onExpandedChange: (event) => {
-+      onExpandedChange?.(event.nativeEvent.value);
-+    },
-   };
- }
- 
-@@ -74,5 +99,7 @@ function DockedSearchBar(props: DockedSearchBarProps) {
- 
- DockedSearchBar.Placeholder = DockedSearchBarPlaceholder;
- DockedSearchBar.LeadingIcon = DockedSearchBarLeadingIcon;
-+DockedSearchBar.BackIcon = DockedSearchBarBackIcon;
-+DockedSearchBar.ClearIcon = DockedSearchBarClearIcon;
- 
- export { DockedSearchBar };
+    * Optional styles to apply to the `DropdownMenu`.
+@@ -67,6 +70,9 @@ type NativeMenuProps = {
+   onDismissRequest?: () => void;
+   color?: ColorValue;
+   shadowElevation?: number;
++  cornerRadius?: number;
++  borderWidth?: number;
++  borderColor?: ColorValue;
+   style?: StyleProp<ViewStyle>;
+   modifiers?: ModifierConfig[];
+   children?: ReactNode;
