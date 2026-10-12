@@ -130,7 +130,7 @@ export function QueryInput({
       }}
       autoCapitalize="none"
       autoCorrect={false}
-      className="type-body h-10 w-full py-0 pl-9 pr-11 text-foreground web:outline-none"
+      className="type-body ios:leading-none h-10 w-full py-0 pl-9 pr-11 text-foreground web:outline-none"
       style={{ textAlignVertical: 'center' }}
     />
   );
