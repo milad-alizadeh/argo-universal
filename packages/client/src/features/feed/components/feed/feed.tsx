@@ -25,7 +25,11 @@ import { listTestIdProps } from '#lib/generic/list-test-id';
 import { motionDuration } from '#lib/generic/motion';
 import { CollapsibleLayoutSyncContext } from '#lib/generic/primitives/display/collapsible/collapsible';
 import { Text } from '#lib/generic/primitives/display/text/text';
-import { FeedFade, SessionColumn } from '#lib/product/session-layout';
+import {
+  FeedFade,
+  feedBottomFadeTop,
+  SessionColumn,
+} from '#lib/product/session-layout';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type FeedViewItem, feedItemKey } from '../../view/feed-view';
@@ -91,7 +95,9 @@ function JumpToLatest({
     <Animated.View
       entering={FadeIn.duration(motionDuration.tooltipEnter)}
       exiting={FadeOut.duration(motionDuration.exit)}
-      className="absolute bottom-16 self-center"
+      className="absolute self-center"
+      // Above the Feed's bottom fade, so no row fades out behind it.
+      style={jumpToLatestPlace}
     >
       <Pressable
         role="button"
@@ -113,6 +119,10 @@ function JumpToLatest({
 // Stable objects, since Legend List lays out again whenever its content style changes. Rows hold the side padding, which Legend List drops on web.
 const phoneContentStyle = { paddingTop: 16 };
 const wideContentStyle = { paddingTop: 24 };
+
+// How far Jump to latest sits clear of the Feed's bottom fade.
+const jumpToLatestGap = 8;
+const jumpToLatestPlace = { bottom: feedBottomFadeTop + jumpToLatestGap };
 
 // Paper's 72 clear the Composer's 48 overlap and leave the Feed's 24 above it; a footer, since `alignItemsAtEnd` ignores bottom padding.
 function FeedEnd(): React.JSX.Element {
@@ -215,6 +225,8 @@ function spaceBelowEntry(
 // Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android. Web's list is a plain element, which takes neither.
 const keyboardProps = Platform.select({
   ios: {
+    // Under iOS 26's transparent header, the Feed starts below it and scrolls on under the glass.
+    contentInsetAdjustmentBehavior: 'automatic',
     keyboardDismissMode: 'interactive',
     keyboardShouldPersistTaps: 'handled',
   },
