@@ -14,6 +14,7 @@ export type ImageDraftEvent =
   | { type: 'picked'; picked: readonly { image: ComposerImage; file: Blob }[] }
   | { type: 'pickFailed' }
   | { type: 'changed'; draft: ComposerDraft }
+  | { type: 'restored'; text: string }
   | { type: 'cleared' };
 
 export type AttachmentError =
@@ -60,6 +61,8 @@ export function imageDraftReducer(
       return { ...state, selectionError: imageSelectionFailureMessage };
     case 'changed':
       return changeDraft(state, event.draft);
+    case 'restored':
+      return { ...state, draft: { ...state.draft, text: event.text } };
     case 'cleared':
       return emptyImageDraft;
   }

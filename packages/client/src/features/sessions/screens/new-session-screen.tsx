@@ -80,11 +80,15 @@ function useNewSessionViewProps(
   const connected = useConnectionState() === 'open';
   const data = useNewSessionData(projectId);
   const { serverInfo, projects, agents, choices, configuration } = data;
-  const imageDraft = useImageDraft();
+  const imageDraft = useImageDraft(
+    choices.project && { type: 'new-session', projectId: choices.project.id },
+  );
   const newSession = useMutation(
     trpc.session.new.mutationOptions({
-      onSuccess: ({ sessionId }) =>
-        navigate({ to: 'session', id: sessionId }, { replace: true }),
+      onSuccess: ({ sessionId }) => {
+        imageDraft.clearDraft();
+        navigate({ to: 'session', id: sessionId }, { replace: true });
+      },
       onError: () => void agents.refetch(),
     }),
   );

@@ -7,6 +7,18 @@ export const agentModelLabel = 'Agent and model';
 export const messageLabel = 'Message';
 const checkedAttribute = 'aria-checked';
 
+// The text a Message box shows, whether it draws a plain text area or a rich-text editor.
+export async function expectMessage(page: Page, text: string): Promise<void> {
+  const box = page.getByRole('textbox', { name: messageLabel });
+  await expect
+    .poll(() =>
+      box.evaluate((element) =>
+        'value' in element ? String(element.value) : element.innerText.trim(),
+      ),
+    )
+    .toBe(text);
+}
+
 export async function openNewSession(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/new$/);
@@ -70,9 +82,7 @@ export async function sendPrompt(page: Page, prompt: string): Promise<void> {
   await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/);
-  await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
-    '',
-  );
+  await expectMessage(page, '');
 }
 
 When(
@@ -142,8 +152,6 @@ Then(
 Then(
   'the Composer keeps the prompt {string}',
   async ({ page }, prompt: string): Promise<void> => {
-    await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
-      prompt,
-    );
+    await expectMessage(page, prompt);
   },
 );

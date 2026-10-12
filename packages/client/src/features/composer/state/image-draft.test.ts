@@ -67,6 +67,21 @@ describe('imageDraftReducer', () => {
     expect([...next.files.keys()]).toEqual(['second']);
   });
 
+  it('replaces the text with a kept draft and leaves attached images', () => {
+    const attached = imageDraftReducer(withText, {
+      type: 'picked',
+      picked: [picked('first')],
+    });
+    const next = imageDraftReducer(attached, {
+      type: 'restored',
+      text: 'Kept on this Device',
+    });
+    expect(next.draft).toEqual({
+      text: 'Kept on this Device',
+      images: [image('first')],
+    });
+  });
+
   it('empties the draft and its error once the prompt is sent', () => {
     const failed = imageDraftReducer(withText, { type: 'pickFailed' });
     expect(imageDraftReducer(failed, { type: 'cleared' })).toEqual(
