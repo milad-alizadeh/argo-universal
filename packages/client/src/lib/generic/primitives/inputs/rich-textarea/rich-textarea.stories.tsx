@@ -17,6 +17,16 @@ const examples = [
     label: 'Three lines',
     value: 'Match the spacing.\nKeep the phone readable.\nUse both themes.',
   },
+  {
+    label: 'Nested lists',
+    value:
+      '- Plan the layout\n    - Draft the rows\n        - Outline\n- Ship\n\n1. Build\n    1. Test\n2. Release',
+  },
+  { label: 'Quote', value: '> Keep the phone readable.\n> Use both themes.' },
+  {
+    label: 'Code block',
+    value: 'Run this first:\n\n```\npnpm install\npnpm test\n```',
+  },
   { label: 'Long draft at max height', value: longDraft },
 ];
 

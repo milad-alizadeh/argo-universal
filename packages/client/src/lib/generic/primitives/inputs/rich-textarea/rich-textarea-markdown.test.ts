@@ -1,4 +1,5 @@
 import { createHeadlessEditor } from '@lexical/headless';
+import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical';
 import { describe, expect, it } from 'vitest';
 import {
   $exportMarkdown,
@@ -6,8 +7,8 @@ import {
   richTextareaNodes,
 } from './rich-textarea-markdown';
 
-// The editor as the web drawing builds it, without a DOM: import a draft, then export what it shows.
-function roundTrip(markdown: string): string {
+// The editor as the web drawing builds it, without a DOM, filled and then read.
+function filled<T>(fill: () => void, read: () => T): T {
   const editor = createHeadlessEditor({
     namespace: 'rich-textarea-test',
     nodes: richTextareaNodes,
@@ -15,8 +16,33 @@ function roundTrip(markdown: string): string {
       throw error;
     },
   });
-  editor.update(() => $importMarkdown(markdown), { discrete: true });
-  return editor.getEditorState().read(() => $exportMarkdown());
+  editor.update(fill, { discrete: true });
+  return editor.getEditorState().read(read);
+}
+
+// Import a draft, then export what it shows.
+function roundTrip(markdown: string): string {
+  return filled(() => $importMarkdown(markdown), $exportMarkdown);
+}
+
+// The kinds of block a draft shows once imported.
+function shownBlocks(markdown: string): string[] {
+  return filled(
+    () => $importMarkdown(markdown),
+    () =>
+      $getRoot()
+        .getChildren()
+        .map((node) => node.getType()),
+  );
+}
+
+// Typed text that a shortcut did not turn into a block stays a plain paragraph.
+function typedParagraph(text: string): string {
+  return filled(
+    () =>
+      $getRoot().append($createParagraphNode().append($createTextNode(text))),
+    $exportMarkdown,
+  );
 }
 
 const unchanged: { name: string; markdown: string }[] = [
@@ -60,11 +86,78 @@ const unchanged: { name: string; markdown: string }[] = [
     name: 'noncharacters in inline code',
     markdown: 'Keep `\uFDD0_\uFDD4` as it is',
   },
+  { name: 'a bulleted list', markdown: '- First\n- Second' },
+  { name: 'a numbered list', markdown: '1. First\n2. Second' },
+  {
+    name: 'a nested bulleted list',
+    markdown: '- Plan\n    - Draft\n        - Outline\n- Ship',
+  },
+  {
+    name: 'a nested numbered list',
+    markdown: '1. Plan\n    1. Draft\n    2. Review\n2. Ship',
+  },
+  {
+    name: 'a bulleted list inside a numbered list',
+    markdown: '1. Plan\n    - Draft\n    - Review\n2. Ship',
+  },
+  {
+    name: 'marks inside a list item',
+    markdown: '- Keep **snake_case** _as is_',
+  },
+  { name: 'a quote', markdown: '> Keep the phone readable.' },
+  { name: 'a quote over two lines', markdown: '> First line\n> Second line' },
+  {
+    name: 'marks inside a quote',
+    markdown: '> Rename snake_case to **camelCase**',
+  },
+  {
+    name: 'a code block',
+    markdown: '```\nconst snake_case = 2 * 3; // ~ \\\n```',
+  },
+  {
+    name: 'a code block with a language',
+    markdown: '```ts\nconst a = 1;\n```',
+  },
+  {
+    name: 'blocks after one another',
+    markdown: 'Steps:\n\n- Build\n- Test\n\n> Then ship\n\n```\npnpm test\n```',
+  },
+];
+
+// Lexical escapes only `* _ ` ~ \` in text, so block markers typed as text are sent as typed.
+const typedBlockMarkers = [
+  '# not a heading',
+  '> not a quote',
+  '- not a list',
+  '+ not a list',
+  '* not a list',
+  '1. not a list',
+  '```not code',
 ];
 
 describe('RichTextarea markdown', () => {
   it.each(unchanged)('exports $name as it was imported', ({ markdown }) => {
     expect(roundTrip(markdown)).toBe(markdown);
+  });
+
+  it.each(typedBlockMarkers)('exports the typed text %s as it is', (text) => {
+    expect(typedParagraph(text)).toBe(text);
+  });
+
+  it('shows lists, a quote and a code block as blocks', () => {
+    expect(
+      shownBlocks(
+        'Steps:\n\n- Build\n\n1. Test\n\n> Then ship\n\n```\npnpm test\n```',
+      ),
+    ).toEqual(['paragraph', 'list', 'list', 'quote', 'code']);
+  });
+
+  it('writes a nested item four spaces in', () => {
+    expect(roundTrip('- Plan\n  - Draft')).toBe('- Plan\n    - Draft');
+  });
+
+  it('numbers a list in order', () => {
+    expect(roundTrip('1. Plan\n3. Ship')).toBe('1. Plan\n2. Ship');
   });
 
   it('writes a single-tilde strikethrough with two tildes', () => {

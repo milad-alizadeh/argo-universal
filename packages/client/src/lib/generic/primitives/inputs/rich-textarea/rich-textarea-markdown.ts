@@ -1,21 +1,33 @@
+import { CodeNode } from '@lexical/code';
+import { ListItemNode, ListNode } from '@lexical/list';
 import {
   $convertFromMarkdownString,
   $convertToMarkdownString,
   BOLD_STAR,
+  CODE,
   INLINE_CODE,
   ITALIC_UNDERSCORE,
+  ORDERED_LIST,
+  QUOTE,
   STRIKETHROUGH,
   type TextFormatTransformer,
   type TextMatchTransformer,
   type Transformer,
+  UNORDERED_LIST,
 } from '@lexical/markdown';
+import { QuoteNode } from '@lexical/rich-text';
 import { $getRoot, $isTextNode, type Klass, type LexicalNode } from 'lexical';
 
 /*
  * The nodes and markdown transformers the web editor uses, shared by its drawing and its tests.
- * Block nodes (lists, quotes, code blocks) and links join these lists as the editor grows.
+ * Headings are left out: `# ` stays text.
  */
-export const richTextareaNodes: Klass<LexicalNode>[] = [];
+export const richTextareaNodes: Klass<LexicalNode>[] = [
+  ListNode,
+  ListItemNode,
+  QuoteNode,
+  CodeNode,
+];
 
 const SINGLE_TILDE_STRIKETHROUGH: TextFormatTransformer = {
   type: 'text-format',
@@ -25,6 +37,10 @@ const SINGLE_TILDE_STRIKETHROUGH: TextFormatTransformer = {
 
 // Export writes the first transformer of a format, so `~~` comes before `~`.
 export const richTextareaTransformers: Transformer[] = [
+  UNORDERED_LIST,
+  ORDERED_LIST,
+  QUOTE,
+  CODE,
   INLINE_CODE,
   BOLD_STAR,
   ITALIC_UNDERSCORE,
