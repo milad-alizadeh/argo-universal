@@ -12,10 +12,9 @@ export function EntrySheetInput({
   field: EntrySheetField;
 }): React.JSX.Element {
   if (useWide()) return <WideEntrySheetInput field={field} />;
-  const errors = field.error ? [field.error] : [];
   return (
     <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-      <FieldInput mono {...field} errors={errors} />
+      <FieldInput mono {...field} />
     </Host>
   );
 }
