@@ -3,11 +3,7 @@ import { View } from 'react-native';
 import { Badge } from '#lib/generic/primitives/badge';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../lib/generic/primitives/pressable';
-import { Icon } from '../../../lib/generic/symbols/icon';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { attentionBadge } from '../state/attention-badge';
 import { type Section, shellSections } from './shell-sections';
 
@@ -20,7 +16,7 @@ interface DesktopRailProps {
 }
 
 const railSections = ['sessions', 'issues', 'atlas', 'settings'] as const;
-const tileClass = 'rounded-selection p-0 transition-none';
+const tileClass = 'rounded-selection';
 
 const SectionButton = memo(function SectionButton({
   section,
@@ -34,28 +30,22 @@ const SectionButton = memo(function SectionButton({
   const { title, icon } = shellSections[section];
   const badge = attentionBadge(attentionCount);
   return (
-    <Pressable
-      accessibilityLabel={title}
-      aria-current={selected ? 'page' : undefined}
-      onPress={() => onSectionChange(section)}
-      role="button"
-      className={contentActionClass({
-        variant: 'ghost',
-        className: cn(
-          'size-12 sm:size-12',
-          tileClass,
-          selected && 'bg-selected',
-        ),
-      })}
-    >
-      <Icon
-        size="lg"
-        name={icon}
+    <View>
+      <IconButton
+        icon={icon}
+        iconSize="lg"
         filled={selected}
-        className={selected ? 'text-foreground' : 'text-foreground/72'}
+        iconClassName={selected ? 'text-foreground' : 'text-foreground/72'}
+        size="2xl"
+        variant="ghost"
+        accessibilityLabel={title}
+        aria-current={selected ? 'page' : undefined}
+        onPress={() => onSectionChange(section)}
+        className={cn(tileClass, selected && 'bg-selected')}
       />
       {badge && (
         <Badge
+          pointerEvents="none"
           className="absolute right-0.5 top-0.5 min-w-4 border-0 bg-warning px-1 py-0"
           accessibilityLabel={badge.label}
         >
@@ -64,7 +54,7 @@ const SectionButton = memo(function SectionButton({
           </Text>
         </Badge>
       )}
-    </Pressable>
+    </View>
   );
 });
 
@@ -94,17 +84,16 @@ export const DesktopRail = memo(function DesktopRail({
           />
         ))}
       </View>
-      <Pressable
+      <IconButton
+        icon="sidebar"
+        iconSize="lg"
+        iconClassName="text-muted-foreground"
+        size="xl"
+        variant="ghost"
         accessibilityLabel={sidebarShown ? 'Hide sidebar' : 'Show sidebar'}
         onPress={() => onSidebarShownChange(!sidebarShown)}
-        role="button"
-        className={contentActionClass({
-          variant: 'ghost',
-          className: cn('size-11 sm:size-11', tileClass),
-        })}
-      >
-        <Icon size="lg" name="sidebar" className="text-muted-foreground" />
-      </Pressable>
+        className={tileClass}
+      />
       {sidebarShown && (
         <View
           pointerEvents="none"
