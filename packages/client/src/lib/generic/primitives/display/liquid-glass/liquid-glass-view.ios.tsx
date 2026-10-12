@@ -12,12 +12,8 @@ const shapeClassName = {
   capsule: 'rounded-full',
 } as const;
 
-const glassLayout = ({
-  className,
-  glassClassName,
-  shape,
-}: LiquidGlassProps): string =>
-  cn(className, glassClassName, shapeClassName[shape]);
+const glassLayout = ({ className, shape }: LiquidGlassProps): string =>
+  cn(className, shapeClassName[shape]);
 
 // iOS 26 and later draw the system's Liquid Glass in the App's light or dark; earlier iOS keeps the caller's surface.
 export function LiquidGlass(props: LiquidGlassProps): React.JSX.Element {

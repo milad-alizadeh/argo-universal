@@ -702,7 +702,7 @@ export function ComposerWorkChips({
   );
 }
 
-// Liquid Glass on iOS 26 and later, one step taller; elsewhere, and for Shells, the chip's card surface as before.
+// Liquid Glass on iOS 26 and later; elsewhere, and for Shells, the chip's card surface as before.
 function ChipSurface({
   glass,
   children,
@@ -715,8 +715,8 @@ function ChipSurface({
       shape="capsule"
       interactive
       glass={glass}
-      glassClassName="h-7"
-      fallbackClassName="h-6 rounded-full border border-border bg-card shadow-composer"
+      className="h-6"
+      fallbackClassName="rounded-full border border-border bg-card shadow-composer"
     >
       {children}
     </LiquidGlass>

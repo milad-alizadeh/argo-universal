@@ -21,10 +21,9 @@ const examples: (Omit<LiquidGlassProps, 'children'> & {
     text: '2 Subagents',
     shape: 'capsule',
     interactive: true,
-    className: 'justify-center self-start',
-    glassClassName: 'h-7',
+    className: 'h-6 justify-center self-start',
     fallbackClassName:
-      'h-6 rounded-full border border-border bg-card shadow-composer',
+      'rounded-full border border-border bg-card shadow-composer',
   },
 ];
 

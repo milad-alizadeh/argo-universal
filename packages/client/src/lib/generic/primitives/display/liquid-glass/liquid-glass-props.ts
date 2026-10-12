@@ -8,8 +8,6 @@ export interface LiquidGlassProps {
   fallbackClassName: string;
   // Layout only (width, alignment, stacking), kept by both drawings.
   className?: string;
-  // Layout only the glass drawing takes, where the glass shape differs from the fallback.
-  glassClassName?: string;
   // False draws the fallback surface even where glass is available.
   glass?: boolean;
   // Whether the glass answers touches, as a pressable chip does.
