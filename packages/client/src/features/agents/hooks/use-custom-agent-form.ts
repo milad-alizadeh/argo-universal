@@ -47,10 +47,11 @@ async function submitDefinition(
   value: CustomAgentDefinition,
   onSubmit: SubmitCustomAgent,
   setFailure: (failure: string | null) => void,
-): Promise<void> {
+): Promise<AgentRegistration> {
   setFailure(null);
   const result = await onSubmit(CustomAgentDefinition.parse(value));
   if (result.status === 'failed') setFailure(result.failure);
+  return result;
 }
 
 // The contract schema validates the whole definition once; its issue paths mark each field.
@@ -62,7 +63,11 @@ export function useCustomAgentForm({
   const form = useForm({
     defaultValues: initial ?? emptyCustomAgent,
     validators,
-    onSubmit: ({ value }) => submitDefinition(value, onSubmit, setFailure),
+    onSubmit: async ({ value, formApi }) => {
+      const result = await submitDefinition(value, onSubmit, setFailure);
+      // What was saved is the form's new starting point, so leaving it is not a loss.
+      if (result.status === 'ready') formApi.reset(value);
+    },
   });
   return { form, failure };
 }

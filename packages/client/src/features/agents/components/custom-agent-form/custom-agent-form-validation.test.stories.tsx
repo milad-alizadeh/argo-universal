@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, type Mock, waitFor } from 'storybook/test';
+import { expect, fn, type Mock, waitFor, within } from 'storybook/test';
+import {
+  type LeaveGuard,
+  NavigationProvider,
+} from '#lib/product/navigation/context';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import type { SubmitCustomAgent } from '../../hooks/use-custom-agent-form';
@@ -42,5 +46,39 @@ export const AnnouncesAnErrorWithItsField: Story = {
       'One path or command, without spaces. Put arguments below.',
     );
     await expect(canvas.getByLabelText('Name')).toHaveAccessibleDescription('');
+  },
+};
+
+// The page's back action, as the router offers it: held while the guard is active, else it just goes.
+type Blocked = Parameters<LeaveGuard>[1];
+const leaving: { blocked: Blocked | null } = { blocked: null };
+const guarded: LeaveGuard = (active, onBlocked) => {
+  leaving.blocked = active ? onBlocked : null;
+};
+const goBack = fn();
+
+export const AsksBeforeLeavingATouchedForm: Story = {
+  decorators: [
+    (Story) => (
+      <NavigationProvider navigate={fn()} leaveGuard={guarded}>
+        <Story />
+      </NavigationProvider>
+    ),
+  ],
+  play: async ({ canvas, userEvent }) => {
+    await expect(leaving.blocked).toBeNull();
+    await userEvent.type(canvas.getByLabelText('Name'), 'Example ACP');
+    await waitFor(() => expect(leaving.blocked).not.toBeNull());
+    leaving.blocked?.(goBack);
+    const alert = within(document.body);
+    await userEvent.click(
+      await alert.findByRole('button', { name: 'Keep editing' }),
+    );
+    await expect(goBack).not.toHaveBeenCalled();
+    leaving.blocked?.(goBack);
+    await userEvent.click(
+      await alert.findByRole('button', { name: 'Discard' }),
+    );
+    await expect(goBack).toHaveBeenCalledTimes(1);
   },
 };

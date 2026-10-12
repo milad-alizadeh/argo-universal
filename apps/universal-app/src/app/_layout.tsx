@@ -1,5 +1,6 @@
 import {
   AppProviders,
+  type LeaveGuard,
   type Navigate,
   type NativeSheets,
   NativeSheetsProvider,
@@ -12,7 +13,7 @@ import {
 import '../../global.css';
 import { PortalHost } from '@rn-primitives/portal';
 import { registerDevMenuItems } from 'expo-dev-client';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useNavigation } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
 import type * as React from 'react';
@@ -82,6 +83,20 @@ const sheetOptions = {
   sheetGrabberVisible: true,
 };
 
+// The page asks to hold its own removal; the router's beforeRemove lets it, and carries on when told to.
+const useLeaveGuard: LeaveGuard = (active, onBlocked) => {
+  const navigation = useNavigation();
+  useEffect(
+    () =>
+      navigation.addListener('beforeRemove', (event) => {
+        if (!active) return;
+        event.preventDefault();
+        onBlocked(() => navigation.dispatch(event.data.action));
+      }),
+    [navigation, active, onBlocked],
+  );
+};
+
 // Screens in @repo/client navigate through this.
 const navigate: Navigate = (destination, options) =>
   options?.replace
@@ -102,7 +117,10 @@ export default function RootLayout(): React.JSX.Element {
             <ForegroundSignal />
             <ThemeProvider value={navigationTheme}>
               <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-              <NavigationProvider navigate={navigate}>
+              <NavigationProvider
+                navigate={navigate}
+                leaveGuard={useLeaveGuard}
+              >
                 <NativeSheetsProvider value={nativeSheets}>
                   {/* Storybook stays outside the shell. */}
                   <Stack screenOptions={{ headerShown: false }}>

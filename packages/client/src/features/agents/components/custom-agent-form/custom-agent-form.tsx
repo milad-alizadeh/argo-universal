@@ -20,6 +20,7 @@ import { CustomAgentArguments } from './custom-agent-arguments';
 import { CustomAgentEnvironment } from './custom-agent-environment';
 import { FormActions } from './custom-agent-form-actions';
 import { ProgramSection } from './custom-agent-form-sections';
+import { DiscardGuard } from './discard-guard';
 import {
   type Editing as VariableEditing,
   VariableSheet,
@@ -61,6 +62,7 @@ export function CustomAgentForm(
   return (
     <>
       <FormSections {...props} {...sheets} {...state} />
+      <DiscardGuard form={state.form} />
       <ArgumentEditor form={state.form} {...sheets} />
       <VariableEditor form={state.form} {...sheets} />
     </>
