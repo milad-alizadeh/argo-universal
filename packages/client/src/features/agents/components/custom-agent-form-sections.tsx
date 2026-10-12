@@ -3,17 +3,22 @@ import type * as React from 'react';
 import { FieldInput } from '#primitives/field-input';
 import { FieldSection } from '#primitives/field-section';
 import { ListItem } from '#primitives/list-item';
-import type { CustomAgentFormApi } from '../hooks/use-custom-agent-form';
 import {
   type FieldErrors,
   errorMessage,
-  sectionFooter,
-  touchedInput,
-} from './form-field';
+} from '../../../lib/generic/primitives/field-errors';
+import type { CustomAgentFormApi } from '../hooks/use-custom-agent-form';
+import { sectionFooter, touchedInput } from './form-field';
 
 export type FormPartProps = { form: CustomAgentFormApi; disabled: boolean };
 type FieldMeta = { isTouched: boolean; errors: FieldErrors } | undefined;
 const executableHint = "An absolute path, or a command on the Server's PATH.";
+const executableInput = {
+  mono: true,
+  label: 'Executable',
+  placeholder: '/usr/local/bin/example-agent',
+  hint: executableHint,
+};
 
 // Errors show once the person has changed the field.
 const touchedErrors = (meta: FieldMeta): FieldErrors =>
@@ -28,10 +33,11 @@ function useProgramError(form: CustomAgentFormApi): string | undefined {
   );
 }
 
-// The name and the program; the footer gives the program's hint until a field has an error.
+// The name and the program; the footer gives the program's hint until a field has an error. Android puts each under its field.
 export function ProgramSection(props: FormPartProps): React.JSX.Element {
   return (
     <FieldSection
+      textFields
       title="Program"
       {...sectionFooter(useProgramError(props.form), executableHint)}
     >
@@ -61,9 +67,7 @@ function ExecutableField({ form, disabled }: FormPartProps): React.JSX.Element {
     <form.Field name="executable">
       {(field) => (
         <FieldInput
-          mono
-          label="Executable"
-          placeholder="/usr/local/bin/example-agent"
+          {...executableInput}
           {...touchedInput(field)}
           disabled={disabled}
         />

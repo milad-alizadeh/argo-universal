@@ -1,8 +1,8 @@
 import { EnvironmentVariable } from '@repo/contracts';
 import type * as React from 'react';
+import { errorMessage } from '../../../lib/generic/primitives/field-errors';
 import type { CustomAgentFormApi } from '../hooks/use-custom-agent-form';
 import { EntrySheet, type EntrySheetField, removalOf } from './entry-sheet';
-import { errorMessage } from './form-field';
 
 export type Editing = { index: number | null; variable: EnvironmentVariable };
 type EditVariable = (editing: Editing | null) => void;

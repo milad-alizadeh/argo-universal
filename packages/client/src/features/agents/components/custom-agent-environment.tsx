@@ -1,9 +1,10 @@
 import type { EnvironmentVariable } from '@repo/contracts';
 import type * as React from 'react';
 import { FieldSection } from '#primitives/field-section';
+import { errorMessage } from '../../../lib/generic/primitives/field-errors';
 import { AddEntryRow, type FormPartProps } from './custom-agent-form-sections';
 import { VariableRow } from './custom-agent-launch';
-import { errorMessage, sectionFooter } from './form-field';
+import { sectionFooter } from './form-field';
 import { keyedRows } from './keyed-rows';
 import { type Editing, newVariable } from './variable-sheet';
 
