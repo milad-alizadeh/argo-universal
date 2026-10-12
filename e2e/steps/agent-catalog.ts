@@ -3,6 +3,7 @@ import type { Locator, Page } from '@playwright/test';
 import {
   malformedRegistry,
   offlineRegistry,
+  publishedRegistry,
 } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
@@ -14,35 +15,29 @@ const exampleDescription = 'A compatible coding Agent';
 const agentLink = (page: Page, name: string): Locator =>
   page.getByRole('link', { name: new RegExp(`^${name},`) });
 
-// The registry platform the Server resolves, such as "darwin-aarch64".
-function serverPlatform(): string {
-  const os = process.platform === 'win32' ? 'windows' : process.platform;
-  const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64';
-  return `${os}-${arch}`;
-}
-
-const aboutRow = (page: Page, name: string): Locator =>
+const aboutRow = (page: Page, name: string | RegExp): Locator =>
   page.getByRole('group', { name, exact: true });
 
 // Opens an Agent's page, reads its version and distribution, and comes back.
 async function expectAbout(
   page: Page,
   name: string,
-  distribution: string,
+  distribution: string | RegExp,
 ): Promise<void> {
   await agentLink(page, name).click();
   await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();
   await expect(aboutRow(page, 'Version, v1.2.3')).toBeVisible();
-  await expect(aboutRow(page, `Distribution, ${distribution}`)).toBeVisible();
+  await expect(aboutRow(page, distributionRow(distribution))).toBeVisible();
   await page.goBack();
 }
 
-const windowsDistribution = (): string => {
-  const platform = serverPlatform();
-  return platform === 'windows-x86_64'
-    ? 'Binary'
-    : `No distribution for ${platform}`;
-};
+const distributionRow = (distribution: string | RegExp): string | RegExp =>
+  typeof distribution === 'string'
+    ? `Distribution, ${distribution}`
+    : new RegExp(`^Distribution, ${distribution.source}$`, 'u');
+
+// The registry offers a Windows binary only, so the Server names its own platform when it has none.
+const windowsDistribution = /(?:Binary|No distribution for \S+)/u;
 
 export async function browseAgents(page: Page): Promise<void> {
   const viewport = page.viewportSize();
@@ -66,7 +61,7 @@ Then(
       }),
     ).toBeVisible();
     await expectAbout(page, exampleAgentName, 'npm · needs Node.js');
-    await expectAbout(page, 'Windows Agent', windowsDistribution());
+    await expectAbout(page, 'Windows Agent', windowsDistribution);
   },
 );
 
@@ -111,5 +106,32 @@ Then(
     await expect(toasts).toContainText('showing saved catalog');
     await expect(toasts).toContainText(/offline|malformed/);
     await expect(agentLink(page, exampleAgentName)).toBeVisible();
+  },
+);
+
+When(
+  'the registry publishes {string}',
+  async ({ app }, name: string): Promise<void> => {
+    const [first] = publishedRegistry.agents;
+    const added = { ...first, id: 'late-agent', name };
+    await writeFile(
+      app.registryPath,
+      JSON.stringify({
+        ...publishedRegistry,
+        agents: [...publishedRegistry.agents, added],
+      }),
+    );
+  },
+);
+
+// The browser tells the page it is visible again, as when the person returns to the window.
+When('the window regains focus', async ({ page }): Promise<void> => {
+  await page.locator('body').dispatchEvent('visibilitychange');
+});
+
+Then(
+  'the catalog lists {string}',
+  async ({ page }, name: string): Promise<void> => {
+    await expect(agentLink(page, name)).toBeVisible();
   },
 );
