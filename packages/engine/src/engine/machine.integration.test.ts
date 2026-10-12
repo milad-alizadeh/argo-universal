@@ -35,6 +35,7 @@ import {
   toDirectedGraph,
 } from 'xstate/graph';
 import type { AcpResources } from '../acp';
+import type { AgentInstallations } from '../agents';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { HttpServer, HttpServerOptions } from './http-server';
 import type { EngineMessage } from './ipc';
@@ -66,13 +67,17 @@ const createPromiseMock = <TOutput, TInput>(
 
 let openDatabaseCalls: PendingCall<{ home: string }, Database>[];
 let recoveryCalls: PendingCall<
-  { database: Database; blobsFolder: string },
+  { database: Database; blobsFolder: string; home: string },
   void
 >[];
 let startHttpServerCalls: PendingCall<HttpServerOptions, HttpServer>[];
 let closeHttpServerCalls: PendingCall<{ server: HttpServer | null }, void>[];
 let closeResourceCalls: PendingCall<
-  { resources: AcpResources; sessions: OpenSessionsActorRef | undefined },
+  {
+    resources: AcpResources;
+    installations: AgentInstallations;
+    sessions: OpenSessionsActorRef | undefined;
+  },
   void
 >[];
 let shutdownCommands: string[];
@@ -100,8 +105,10 @@ const machineWithExternalMocks = engineMachine.provide({
       (): PendingCall<{ home: string }, Database>[] => openDatabaseCalls,
     ),
     recoverAfterRestart: createPromiseMock(
-      (): PendingCall<{ database: Database; blobsFolder: string }, void>[] =>
-        recoveryCalls,
+      (): PendingCall<
+        { database: Database; blobsFolder: string; home: string },
+        void
+      >[] => recoveryCalls,
     ),
     startHttpServer: createPromiseMock(
       (): PendingCall<HttpServerOptions, HttpServer>[] => startHttpServerCalls,
@@ -394,6 +401,7 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
         input: {
           database: mockDatabase,
           blobsFolder: '/unused/blobs',
+          home: input.home,
         },
       }),
     ]);
@@ -417,6 +425,7 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
           createId: input.createId,
           home: input.home,
           port: 7337,
+          installations: snapshot.context.installations,
           version: '1.2.3',
           startedAt: input.startedAt,
           database: mockDatabase,

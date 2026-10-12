@@ -79,6 +79,9 @@ const config: StorybookConfig = {
       optimizeDeps: {
         include: [
           'react-native-svg',
+          '@repo/client > @rn-primitives/popover',
+          '@repo/client > @rn-primitives/dialog',
+          '@repo/client > react-native > invariant',
           '@repo/client > @rn-primitives/collapsible',
           '@repo/client > @rn-primitives/checkbox',
           '@repo/client > @rn-primitives/select',

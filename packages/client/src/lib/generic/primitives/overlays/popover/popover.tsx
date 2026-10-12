@@ -7,7 +7,7 @@ type ContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
   portalHost?: string;
   onClosed?: () => void;
 };
-const Popover = PopoverPrimitive.Root;
+import { Popover } from './popover-root';
 const PopoverTrigger = PopoverPrimitive.Trigger;
 const contentClassName =
   'bg-popover border-border outline-hidden z-50 w-72 rounded-2xl border p-4 shadow-card popover-content cursor-auto';
@@ -31,10 +31,23 @@ function contentProps({
   };
 }
 
+function namePopoverTarget(
+  target: EventTarget | null,
+  label: string | undefined,
+): void {
+  if (!(target instanceof HTMLElement)) return;
+  if (label) target.setAttribute('aria-label', label);
+}
+function nameOpenedPopover(props: ContentProps, event: Event): void {
+  namePopoverTarget(event.target, props.accessibilityLabel);
+  props.onOpenAutoFocus?.(event);
+}
+
 function PopoverBody(props: ContentProps): React.JSX.Element {
   const { open } = PopoverPrimitive.useRootContext();
   const primitiveProps = {
     ...contentProps(props),
+    onOpenAutoFocus: (event: Event): void => nameOpenedPopover(props, event),
     'data-state': open ? 'open' : 'closed',
   };
   return React.createElement(

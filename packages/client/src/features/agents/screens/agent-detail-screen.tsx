@@ -1,4 +1,8 @@
-import type { AgentInfo, CustomAgentDefinition } from '@repo/contracts';
+import type {
+  AgentInfo,
+  AgentInstallation,
+  CustomAgentDefinition,
+} from '@repo/contracts';
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useTRPC } from '#features/connection';
@@ -6,6 +10,7 @@ import { useNavigate } from '#lib/product/navigation/context';
 import { AgentDetailView } from '../components/agent-detail-view/agent-detail-view';
 import { AgentPlaceholder } from '../components/agent-placeholder';
 import { CustomAgentDetailView } from '../components/custom-agent-detail-view/custom-agent-detail-view';
+import { useAgentInstallation } from '../hooks/use-agent-installation';
 import { useAgents } from '../hooks/use-agents';
 import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
 import {
@@ -83,10 +88,11 @@ function useAgentDetail(agent: string): {
 function AgentPage({ agent, onBack }: PageProps): React.JSX.Element {
   const { info, detail, retry } = useAgentDetail(agent);
   const { defaults, change } = useSessionDefaults(info);
+  const installation = useAgentInstallation(agent, detailVersion(detail));
   if (!detail) return <AgentPlaceholder agent={agent} />;
   return (
     <AgentDetailView
-      agent={detail}
+      {...{ agent: installedDetail(detail, installation), installation }}
       defaults={defaults}
       onDefaultChange={change}
       onBack={onBack}
@@ -94,3 +100,22 @@ function AgentPage({ agent, onBack }: PageProps): React.JSX.Element {
     />
   );
 }
+
+function installedDetail(
+  detail: AgentDetail,
+  installation: ReturnType<typeof useAgentInstallation>,
+): AgentDetail {
+  if (installation.phase === 'installing')
+    return { ...detail, status: 'not-installed' };
+  return withInstallation(detail, installation.status?.installation);
+}
+function withInstallation(
+  detail: AgentDetail,
+  saved: AgentInstallation | undefined,
+): AgentDetail {
+  if (saved?.status !== 'installed') return detail;
+  return { ...detail, status: 'unavailable', version: saved.version };
+}
+
+const detailVersion = (detail: AgentDetail | undefined): string =>
+  detail?.version ?? '';

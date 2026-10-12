@@ -44,7 +44,12 @@ export type ServerOptions = {
   mockAgents: AppFixtureAgents;
 };
 
-type App = { page: Page; httpUrl: string; registryPath: string };
+type App = {
+  page: Page;
+  httpUrl: string;
+  registryPath: string;
+  installationPath: string;
+};
 
 // Polls system.info, so a test never calls a Server that is still starting.
 const waitForServer = (httpUrl: string): Promise<true> =>
@@ -84,6 +89,7 @@ export const test = base.extend<
           page,
           httpUrl: server.httpUrl,
           registryPath: server.registryPath,
+          installationPath: server.installationPath,
         });
       } finally {
         await server.stop();
@@ -121,6 +127,7 @@ export const test = base.extend<
         page: await electronApp.firstWindow(),
         httpUrl,
         registryPath: fixtureServer.registryPath,
+        installationPath: fixtureServer.installationPath,
       });
     } finally {
       // Close the App before gracefully stopping its fixture Engine.

@@ -85,7 +85,7 @@ function deriveCatalogStatus(
 
 export function readAgentCatalog(
   database: Database,
-  request: AgentsCatalogInput,
+  request?: AgentsCatalogInput,
 ): AgentsCatalogOutput {
   const reader = createRegistryReader();
   try {

@@ -126,6 +126,8 @@ catalog:
   xstate: 5.33.2
   zod: 4.6.5
   diff: 9.0.0
+  fflate: 0.8.3
+  tar: 7.5.22
 
 # `pnpm add` fails when a version is outside the catalog.
 catalogMode: strict

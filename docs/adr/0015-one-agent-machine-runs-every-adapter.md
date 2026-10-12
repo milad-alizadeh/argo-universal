@@ -29,3 +29,26 @@ This follows old Argo's ADR-0047, which replaced its per-vendor machines with as
 - A stateful class per vendor, as Paseo's `ClaudeAgentSession` is. Rejected: pure mapping is driven by typed response fixtures, with state owned by the Session's native lifetime.
 - Zod schemas for every vendor message. Replaced: the SDK already types its messages, and the Feed checks the result against the contract.
 - A shared Agent machine beneath each Session, the previous design. Replaced: Session already owns Turn state and recovery; its private resource callback preserves native ordering and cleanup without another lifecycle or event hop.
+
+Spec 0009 #363 extends Agents with one Engine-owned installation operation per Agent definition. Its promise retains ownership until materialization and cleanup finish. Session admission rejects that Agent while setup owns it. Live and opening Sessions also prevent replacement. Configuration mutations reserve setup ownership until their Writer commit completes. Failed Writer attempts retain the reservation and selected files while the Writer retries.
+
+A successful operation saves the selected upstream Registry record and exact distribution provenance in the existing Agent configuration. SQLite remains the only writable authority. Immutable managed directories contain the verified launch files. Registry refresh cannot change this selection. Session launch resolves those files through the existing shared ACP resource path. Installation status checks actual files; it never claims sign-in readiness from installation success.
+
+Managed installation currently supports POSIX Servers. Windows requests return an unsupported-platform explanation before materialization starts. Windows support requires observed descendant cleanup before ownership can be released.
+
+Each external installer starts behind a Node launch gate. Its process group and unique wrapper token are recorded and synced in staging before the gate opens. The wrapper keeps its group-leader identity through tool completion and SIGTERM; owned IPC carries the tool result until the parent observes group release. Engine IPC closure stops that group. The Supervisor releases recorded installer groups before reporting Engine cleanup complete, and startup observes those groups before deleting interrupted staging. A changed or unobservable group identity retains the record and blocks recovery. This preserves ownership across abrupt Engine exit and force-stop, including a wrapper that cannot handle IPC closure.
+
+```mermaid
+flowchart TD
+    App[App: approved Install Sheet and Alert] --> Router[Agents tRPC procedures]
+    Router --> Setup[Engine-owned Agent installation]
+    Registry[Validated Registry cache] --> Setup
+    Setup --> Tools[External download and package tools]
+    Tools --> Files[Verified managed launch files]
+    Setup --> Writer[Shared Writer]
+    Writer --> SQLite[(SQLite Agent configuration)]
+    SQLite --> Launch[Configured Agent launch]
+    Files --> Launch
+    Launch --> ACP[Shared ACP resources]
+    Setup --> Admission[Session and configuration admission]
+```
