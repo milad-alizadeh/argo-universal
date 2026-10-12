@@ -3,10 +3,11 @@ import {
   ToolCallLocation,
   ToolCallTerminal,
   ToolCallUpdate,
+  WebAction,
 } from '@repo/contracts';
 import { dictionary } from './dictionary';
 import type { ToolShape, ToolUseBlock } from './tool-rows';
-// How each built-in tool reads; any other tool shows as `other`.
+// How each built-in tool reads.
 const toolShapes: Record<string, (input: unknown) => ToolShape> = {
   Write: (input): ToolShape => {
     const fields = dictionary(input);
@@ -51,17 +52,15 @@ const toolShapes: Record<string, (input: unknown) => ToolShape> = {
     });
     return terminalShape(fields.description, terminal);
   },
-  Grep: (input): ToolShape =>
-    search('Grep', ToolCallUpdate.shape.title.parse(dictionary(input).pattern)),
-  Glob: (input): ToolShape =>
-    search('Glob', ToolCallUpdate.shape.title.parse(dictionary(input).pattern)),
+  Grep: (input): ToolShape => search('Search for', input),
+  Glob: (input): ToolShape => search('Find files matching', input),
   WebFetch: (input): ToolShape => ({
     title: `Fetch ${ToolCallUpdate.shape.title.parse(dictionary(input).url)}`,
     kind: 'fetch',
     content: [],
   }),
   WebSearch: (input): ToolShape => ({
-    title: `Search ${ToolCallUpdate.shape.title.parse(dictionary(input).query)}`,
+    title: `Search the web for ${ToolCallUpdate.shape.title.parse(dictionary(input).query)}`,
     kind: 'fetch',
     content: [],
   }),
@@ -72,15 +71,46 @@ const toolShapes: Record<string, (input: unknown) => ToolShape> = {
   }),
 };
 
-const search = (name: string, pattern: string): ToolShape => ({
-  title: `${name} ${pattern}`,
-  kind: 'search',
-  content: [],
-});
+function search(verb: string, input: unknown): ToolShape {
+  const fields = dictionary(input);
+  const pattern = ToolCallUpdate.shape.title.parse(fields.pattern);
+  const path = ToolCallLocation.shape.path.optional().parse(fields.path);
+  return {
+    title: `${verb} ${pattern}${path ? ` in ${path}` : ''}`,
+    kind: 'search',
+    content: [],
+  };
+}
 
 export function ownToolShape(block: ToolUseBlock): ToolShape | undefined {
   if (!Object.hasOwn(toolShapes, block.name)) return undefined;
   return toolShapes[block.name]?.(block.input);
+}
+
+const mcpToolName = /^mcp__(.+?)__(.+)$/;
+const subagentTools = new Set(['Agent', 'Task']);
+// Any other tool shows as `other`, named by its MCP server and tool or by the Subagent's description.
+export function otherToolShape(block: ToolUseBlock): ToolShape {
+  return { title: otherToolTitle(block), kind: 'other', content: [] };
+}
+function otherToolTitle(block: ToolUseBlock): string {
+  const mcp = mcpToolName.exec(block.name);
+  if (mcp) return `${mcp[1]}: ${mcp[2]}`;
+  if (!subagentTools.has(block.name)) return block.name;
+  const description = dictionary(block.input).description;
+  return typeof description === 'string' && description.trim()
+    ? description
+    : block.name;
+}
+
+// The web action a WebSearch or WebFetch input names.
+export function webActionOf(block: ToolUseBlock): WebAction | undefined {
+  const fields = dictionary(block.input);
+  if (block.name === 'WebSearch')
+    return WebAction.parse({ type: 'search', query: fields.query });
+  if (block.name === 'WebFetch')
+    return WebAction.parse({ type: 'fetch', url: fields.url });
+  return undefined;
 }
 
 function editShape(

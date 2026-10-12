@@ -1,19 +1,14 @@
-import type { ToolKind } from '@repo/contracts';
 import { ToolCallUpdate } from '@repo/contracts';
 import { dictionary } from './dictionary';
 import type { ToolCallRow, ToolUseBlock } from './tool-rows';
-import { ownToolShape } from './tool-shapes';
+import { otherToolShape, ownToolShape, webActionOf } from './tool-shapes';
 export type { ToolCallRow, ToolResultBlock } from './tool-rows';
 export { toolCallEnded } from './tool-results';
 export function toolCallStarted(
   block: ToolUseBlock,
   timestamp?: number,
 ): ToolCallRow {
-  const shape = ownToolShape(block) ?? {
-    title: block.name,
-    kind: 'other' satisfies ToolKind,
-    content: [],
-  };
+  const shape = ownToolShape(block) ?? otherToolShape(block);
   return {
     ...openToolRow(block),
     ...shape,
@@ -46,7 +41,12 @@ function startMetadata(
   timestamp: number | undefined,
 ): Pick<ToolCallRow, '_meta'> {
   const description = toolDescription(block);
-  const argo = { ...startedAt(timestamp), ...describedTool(description) };
+  const webAction = webActionOf(block);
+  const argo = {
+    ...startedAt(timestamp),
+    ...describedTool(description),
+    ...(webAction ? { webAction } : {}),
+  };
   return Object.keys(argo).length === 0 ? {} : { _meta: { argo } };
 }
 function toolDescription(block: ToolUseBlock): string | undefined {

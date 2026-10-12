@@ -1,7 +1,15 @@
+import type {
+  AgentInput,
+  GlobInput,
+  GrepInput,
+  WebFetchInput,
+  WebSearchInput,
+} from '@anthropic-ai/claude-agent-sdk/sdk-tools';
 import { expect, it } from 'vitest';
 import type { FeedUpdate } from '../src/agent-events';
 import type { VendorMessage } from './messages';
 import { mapAll, feedChanges, foldRows } from './mocks/mapping';
+import { assistant } from './mocks/sdk-messages';
 import { edits } from './mocks/sdk-tools';
 it('maps the edits and the command onto Tool call rows', (): void => {
   const messages = edits;
@@ -92,3 +100,95 @@ it('gives text rows message.id#blockIndex, the same with or without streaming', 
   );
   expect(foldRows(feedChanges(recordsOnly.events))).toEqual(rows);
 });
+
+const startedTool = (
+  name: string,
+  input: Record<string, unknown>,
+): Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }> | undefined =>
+  foldRows(
+    feedChanges(
+      mapAll([
+        assistant('msg_tool', [
+          {
+            type: 'tool_use',
+            id: 'toolu_1',
+            name,
+            input,
+            caller: { type: 'direct' },
+          },
+        ]),
+      ]).events,
+    ),
+  ).find(
+    (row): row is Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }> =>
+      row.sessionUpdate === 'tool_call_update',
+  );
+
+it.each([
+  {
+    name: 'WebSearch',
+    input: { query: 'expo router' } satisfies WebSearchInput,
+    expected: {
+      kind: 'fetch',
+      title: 'Search the web for expo router',
+      _meta: { argo: { webAction: { type: 'search', query: 'expo router' } } },
+    },
+  },
+  {
+    name: 'WebFetch',
+    input: {
+      url: 'https://docs.expo.dev',
+      prompt: 'Summarise',
+    } satisfies WebFetchInput,
+    expected: {
+      kind: 'fetch',
+      title: 'Fetch https://docs.expo.dev',
+      _meta: {
+        argo: { webAction: { type: 'fetch', url: 'https://docs.expo.dev' } },
+      },
+    },
+  },
+  {
+    name: 'Grep',
+    input: { pattern: 'TODO' } satisfies GrepInput,
+    expected: { kind: 'search', title: 'Search for TODO' },
+  },
+  {
+    name: 'Grep',
+    input: { pattern: 'TODO', path: 'src' } satisfies GrepInput,
+    expected: { kind: 'search', title: 'Search for TODO in src' },
+  },
+  {
+    name: 'Glob',
+    input: { pattern: '**/*.ts' } satisfies GlobInput,
+    expected: { kind: 'search', title: 'Find files matching **/*.ts' },
+  },
+  {
+    name: 'Glob',
+    input: { pattern: '*.md', path: 'docs' } satisfies GlobInput,
+    expected: { kind: 'search', title: 'Find files matching *.md in docs' },
+  },
+  {
+    name: 'mcp__github__list_issues',
+    input: { repo: 'argo' },
+    expected: { kind: 'other', title: 'github: list_issues' },
+  },
+  {
+    name: 'Agent',
+    input: {
+      description: 'Find Feed tests',
+      prompt: 'Look',
+    } satisfies AgentInput,
+    expected: { kind: 'other', title: 'Find Feed tests' },
+  },
+  {
+    name: 'Task',
+    input: { description: 'Find Feed tests', prompt: 'Look' },
+    expected: { kind: 'other', title: 'Find Feed tests' },
+  },
+])(
+  'names a $name Tool call from its input',
+  ({ name, input, expected }): void => {
+    expect(startedTool(name, input)).toEqual(expect.objectContaining(expected));
+  },
+);

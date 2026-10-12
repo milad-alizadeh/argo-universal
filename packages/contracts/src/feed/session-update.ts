@@ -10,6 +10,7 @@ import {
   ToolCallContent,
   ToolCallLocation,
   ToolCallStatus,
+  WebAction,
   ToolKind,
 } from './tool-call';
 
@@ -89,6 +90,7 @@ export const ToolCallUpdate = z.strictObject({
         .optional(),
       permissionOutcome: PermissionOutcome.optional(),
       commandActions: z.array(CommandAction).optional(),
+      webAction: WebAction.optional(),
       startedAt: z.int().optional(),
       endedAt: z.int().optional(),
       shellId: z.string().optional(),

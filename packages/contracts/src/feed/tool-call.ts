@@ -52,6 +52,13 @@ export function knownCommandActions(toolCall: ToolCallUpdate): CommandAction[] {
     : [];
 }
 
+// Only a web action the Agent supplied; the App never reads one from a title.
+export const WebAction = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('search'), query: z.string().optional() }),
+  z.strictObject({ type: z.literal('fetch'), url: z.string().optional() }),
+]);
+export type WebAction = z.infer<typeof WebAction>;
+
 export const ToolCallLocation = z.strictObject({
   path: z.string(),
   line: z.int().optional(),

@@ -416,6 +416,41 @@ describe('toFeedView', () => {
   );
 
   it.each(workMocks)(
+    'counts fetched pages apart from web searches for $agent',
+    ({ rows, snapshot }) => {
+      const web = (
+        id: string,
+        position: number,
+        webAction?: NonNullable<
+          NonNullable<ToolCallUpdate['_meta']>['argo']
+        >['webAction'],
+      ): ToolCallUpdate => ({
+        ...commandRow(rows),
+        id,
+        toolCallId: id,
+        position,
+        kind: 'fetch',
+        content: [],
+        _meta: webAction ? { argo: { webAction } } : undefined,
+      });
+      const view = toFeedView(
+        [
+          web('search', 1, { type: 'search', query: 'expo' }),
+          web('fetch', 2, { type: 'fetch', url: 'https://expo.dev' }),
+          web('unknown', 3),
+        ],
+        snapshot,
+      );
+      expect(view.items).toEqual([
+        expect.objectContaining({
+          type: 'group',
+          title: 'Searched the web 2 times, Fetched 1 page',
+        }),
+      ]);
+    },
+  );
+
+  it.each(workMocks)(
     'keeps one finished command plain for $agent',
     ({ rows, snapshot }) => {
       const row = commandRow(rows);
@@ -502,7 +537,6 @@ describe('toFeedView', () => {
               type: 'exploration',
               id: firstReadId,
               title: 'Explored',
-              lines: ['Read a.ts, b.ts'],
               toolCalls: [first, second],
             },
             { type: 'thought', row: thought },
@@ -518,24 +552,20 @@ describe('toFeedView', () => {
       it.each<{
         name: string;
         actions: CommandAction[];
-        lines: string[];
       }>([
         {
           name: 'read',
           actions: [{ type: 'read', command: 'opaque', path: 'a.ts' }],
-          lines: ['Read a.ts'],
         },
         {
           name: 'search',
           actions: [
             { type: 'search', command: 'opaque', query: 'needle', path: 'src' },
           ],
-          lines: ['Searched for needle in src'],
         },
         {
           name: 'list',
           actions: [{ type: 'list', command: 'opaque', path: 'src' }],
-          lines: ['Listed files in src'],
         },
         {
           name: 'multiple actions',
@@ -544,9 +574,8 @@ describe('toFeedView', () => {
             { type: 'search', command: 'opaque', query: 'needle' },
             { type: 'list', command: 'opaque', path: 'src' },
           ],
-          lines: ['Read a.ts', 'Searched for needle', 'Listed files in src'],
         },
-      ])('draws supplied $name metadata', ({ actions, lines }) => {
+      ])('explores with supplied $name metadata', ({ actions }) => {
         const row: ToolCallUpdate = {
           ...commandRow(rows),
           state: 'open',
@@ -565,7 +594,6 @@ describe('toFeedView', () => {
                 type: 'exploration',
                 id: row.id,
                 title: 'Exploring',
-                lines,
                 toolCalls: [row],
               },
             ],

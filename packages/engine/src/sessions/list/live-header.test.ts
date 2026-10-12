@@ -137,6 +137,50 @@ describe.each(liveHeaderMocks)(
         ]),
       ).toBe(expected);
     });
+    it.each([
+      {
+        webAction: { type: 'search' as const, query: 'expo router' },
+        expected: 'Searching the web for expo router',
+      },
+      { webAction: { type: 'search' as const }, expected: 'Searching the web' },
+      {
+        webAction: { type: 'fetch' as const, url: 'https://docs.expo.dev' },
+        expected: 'Fetching https://docs.expo.dev',
+      },
+      { webAction: { type: 'fetch' as const }, expected: 'Fetching a page' },
+    ])(
+      'step 5: names the supplied web action $webAction',
+      ({ webAction, expected }): void => {
+        expect(
+          headerText(running, [
+            {
+              ...command,
+              title: 'Fetch it',
+              kind: 'fetch',
+              content: [],
+              _meta: { argo: { webAction } },
+            },
+          ]),
+        ).toBe(expected);
+      },
+    );
+    it.each(['search' as const, 'fetch' as const, 'other' as const])(
+      'step 6: uses the Tool call title for a %s Tool call without a kind label',
+      (kind): void => {
+        expect(
+          headerText(running, [
+            {
+              ...command,
+              kind,
+              title: 'github: list_issues',
+              name: 'list_issues',
+              content: [],
+              _meta: undefined,
+            },
+          ]),
+        ).toBe('github: list_issues');
+      },
+    );
     it('step 6: uses the Tool call name when no kind label applies', (): void => {
       expect(
         headerText(running, [

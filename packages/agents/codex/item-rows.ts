@@ -1,7 +1,7 @@
 import type { FeedUpdate } from '../src/agent-events';
 import { type MappingState, textRow } from './mapping-state';
 import type { ThreadItem } from './protocol.gen';
-import { toToolCall } from './tool-calls';
+import { isToolItem, toToolCall } from './tool-calls';
 export interface ItemInput {
   item: ThreadItem;
   state: 'open' | 'settled';
@@ -37,8 +37,7 @@ const toolTimestamp = ({
 };
 const toolRow = (input: ItemInput): Row | undefined => {
   const { item, state } = input;
-  if (item.type !== 'fileChange' && item.type !== 'commandExecution')
-    return undefined;
+  if (!isToolItem(item)) return undefined;
   const row = toToolCall(item, state);
   row._meta = {
     argo: {

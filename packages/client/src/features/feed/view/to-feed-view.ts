@@ -22,31 +22,6 @@ function explorationActions(row: ToolCallUpdate): CommandAction[] {
   return [];
 }
 
-function explorationLines(toolCalls: ToolCallUpdate[]): string[] {
-  const lines: string[] = [];
-  let previousWasRead = false;
-  for (const row of toolCalls) {
-    for (const action of explorationActions(row)) {
-      if (action.type === 'read' && action.path) {
-        const lastIndex = lines.length - 1;
-        if (previousWasRead) lines[lastIndex] += `, ${action.path}`;
-        else lines.push(`Read ${action.path}`);
-        previousWasRead = true;
-      } else {
-        if (action.type === 'search' && action.query)
-          lines.push(
-            `Searched for ${action.query}${action.path ? ` in ${action.path}` : ''}`,
-          );
-        else if (action.type === 'list' && action.path)
-          lines.push(`Listed files in ${action.path}`);
-        else lines.push(row.title);
-        previousWasRead = false;
-      }
-    }
-  }
-  return lines;
-}
-
 function editsSeveralFiles(row: ToolCallUpdate): boolean {
   if (!['edit', 'delete', 'move'].includes(row.kind)) return false;
   const paths = new Set(row.locations?.map((location) => location.path));
@@ -102,11 +77,15 @@ function groupTitle(toolCalls: ToolCallUpdate[]): string {
     actions.filter((action) => action.type === 'list').length,
     'folder',
   );
+  const web = toolCalls.filter((row) => row.kind === 'fetch');
+  const isPageFetch = (row: ToolCallUpdate): boolean =>
+    row._meta?.argo?.webAction?.type === 'fetch';
   add(
     'Searched the web',
-    toolCalls.filter((row) => row.kind === 'fetch').length,
+    web.filter((row) => !isPageFetch(row)).length,
     'time',
   );
+  add('Fetched', web.filter(isPageFetch).length, 'page');
   add('Called', toolCalls.filter((row) => row.kind === 'other').length, 'tool');
   return parts.join(', ') || 'Worked';
 }
@@ -128,12 +107,10 @@ export function toFeedView(
     const first = activities[0];
     if (!first) return;
     for (const activity of activities)
-      if (activity.type === 'exploration') {
-        activity.lines = explorationLines(activity.toolCalls);
+      if (activity.type === 'exploration')
         activity.title = activity.toolCalls.some(isToolCallRunning)
           ? 'Exploring'
           : 'Explored';
-      }
     if (
       !toolCalls.length ||
       (activities.length === 1 &&
@@ -201,7 +178,6 @@ export function toFeedView(
             type: 'exploration',
             id: row.id,
             title: 'Explored',
-            lines: [],
             toolCalls: [],
           };
           activities.push(exploration);
