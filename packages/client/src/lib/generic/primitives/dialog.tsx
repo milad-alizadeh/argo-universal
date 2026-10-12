@@ -62,8 +62,8 @@ function DialogContent(props: ContentProps): React.JSX.Element {
   if (useWide()) return <CentredDialog {...props} />;
   return (
     <DialogSheet label={props.accessibilityLabel}>
-      {/* The iOS grabber sits in the sheet's top inset, so the title starts a step lower to clear it. */}
-      <View className={cn('ios:pt-2 gap-6 px-4', props.className)}>
+      {/* Paper's iOS sheet pads its content 16 on every side; Android's drag handle zone already sets the top. */}
+      <View className={cn('gap-6 px-4 ios:py-4', props.className)}>
         {props.children}
       </View>
     </DialogSheet>

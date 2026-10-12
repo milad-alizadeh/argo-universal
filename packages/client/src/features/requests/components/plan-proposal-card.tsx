@@ -15,6 +15,7 @@ import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import {
   Pressable,
   contentActionClass,
+  nativeLabelClass,
 } from '../../../lib/generic/primitives/pressable';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
@@ -121,6 +122,7 @@ function PlanProposalInteraction({
             role="button"
             className={contentActionClass({
               variant: 'default',
+              native: !wide,
               className: cn(
                 'pl-3',
                 wide
@@ -132,7 +134,10 @@ function PlanProposalInteraction({
           >
             <Text
               role="control"
-              className="text-primary-foreground"
+              className={cn(
+                'text-primary-foreground',
+                !wide && nativeLabelClass,
+              )}
               semanticRole={submitting ? 'status' : undefined}
             >
               {submitting ? 'Sending…' : answerLabel}
