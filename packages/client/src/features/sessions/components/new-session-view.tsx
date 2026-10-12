@@ -54,7 +54,8 @@ const openFailed = (message: string): ErrorToast => ({
   message,
 });
 
-const newSessionTitle = 'New Session';
+// The header stays empty until the first prompt starts the Session and gives it a title.
+const newSessionTitle = null;
 
 // The Composer of a Session not yet opened: its first prompt opens it with the chosen Agent, model and effort.
 export function NewSessionView(props: NewSessionViewProps): React.JSX.Element {

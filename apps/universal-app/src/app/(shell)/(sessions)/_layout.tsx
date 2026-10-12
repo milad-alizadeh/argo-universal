@@ -12,7 +12,7 @@ export default function SessionsLayout(): React.JSX.Element {
   return (
     <PhoneStack>
       <Stack.Screen name="index" options={{ title: 'Sessions' }} />
-      <Stack.Screen name="sessions/new" options={{ title: 'New Session' }} />
+      <Stack.Screen name="sessions/new" options={{ title: '' }} />
       <Stack.Screen name="sessions/[id]" options={{ title: 'Session' }} />
     </PhoneStack>
   );
