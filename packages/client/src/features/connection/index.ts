@@ -1,5 +1,5 @@
 export { ConnectionBanner } from './components/connection-banner';
-export { ConnectionScreen } from './screens/connection-screen';
+export { ConnectionDetailScreen } from './screens/connection-detail-screen';
 export {
   ConnectionContext,
   type ConnectionState,
