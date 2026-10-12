@@ -21,7 +21,6 @@ export interface FeedExploration {
   type: 'exploration';
   id: string;
   title: 'Exploring' | 'Explored';
-  lines: string[];
   toolCalls: ToolCallUpdate[];
 }
 

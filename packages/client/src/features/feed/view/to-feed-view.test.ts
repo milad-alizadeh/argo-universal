@@ -502,7 +502,6 @@ describe('toFeedView', () => {
               type: 'exploration',
               id: firstReadId,
               title: 'Explored',
-              lines: ['Read a.ts, b.ts'],
               toolCalls: [first, second],
             },
             { type: 'thought', row: thought },
@@ -518,24 +517,20 @@ describe('toFeedView', () => {
       it.each<{
         name: string;
         actions: CommandAction[];
-        lines: string[];
       }>([
         {
           name: 'read',
           actions: [{ type: 'read', command: 'opaque', path: 'a.ts' }],
-          lines: ['Read a.ts'],
         },
         {
           name: 'search',
           actions: [
             { type: 'search', command: 'opaque', query: 'needle', path: 'src' },
           ],
-          lines: ['Searched for needle in src'],
         },
         {
           name: 'list',
           actions: [{ type: 'list', command: 'opaque', path: 'src' }],
-          lines: ['Listed files in src'],
         },
         {
           name: 'multiple actions',
@@ -544,9 +539,8 @@ describe('toFeedView', () => {
             { type: 'search', command: 'opaque', query: 'needle' },
             { type: 'list', command: 'opaque', path: 'src' },
           ],
-          lines: ['Read a.ts', 'Searched for needle', 'Listed files in src'],
         },
-      ])('draws supplied $name metadata', ({ actions, lines }) => {
+      ])('explores with supplied $name metadata', ({ actions }) => {
         const row: ToolCallUpdate = {
           ...commandRow(rows),
           state: 'open',
@@ -565,7 +559,6 @@ describe('toFeedView', () => {
                 type: 'exploration',
                 id: row.id,
                 title: 'Exploring',
-                lines,
                 toolCalls: [row],
               },
             ],
