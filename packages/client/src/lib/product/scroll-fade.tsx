@@ -1,103 +1,35 @@
 import type * as React from 'react';
-import { useCallback, useId, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   ScrollView,
   type ScrollViewProps,
-  View,
 } from 'react-native';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  ReduceMotion,
-} from 'react-native-reanimated';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { useResolveClassNames } from 'uniwind';
-import { bezierEasing, easingCurve, motionDuration } from '#lib/generic/motion';
+import {
+  ScrollColumnContext,
+  useScrollColumnStyle,
+} from '#lib/generic/scroll-column';
 import { cn } from '#lib/generic/utils';
-
-export interface ScrollFadeProps {
-  edge: 'top' | 'bottom';
-  // The surface colour the content fades into.
-  className?: string;
-  height?: number;
-}
-
-const scrollFadeHeight = { top: 28, bottom: 36 } as const;
-
-const fadeEasing = bezierEasing(easingCurve.standard);
-const [fadeIn, fadeOut] = [FadeIn, FadeOut].map((animation) =>
-  animation
-    .duration(motionDuration.enter)
-    .easing(fadeEasing)
-    .reduceMotion(ReduceMotion.System),
-);
-
-// A gradient from the surface colour to transparent where a list meets its edge; it fades in and out.
-export function ScrollFade({
-  edge,
-  className = 'bg-background',
-  height,
-}: ScrollFadeProps): React.JSX.Element {
-  const gradientId = `${useId().replace(/:/g, '')}-${edge}`;
-  const { backgroundColor } = useResolveClassNames(className);
-  return (
-    <Animated.View
-      entering={fadeIn}
-      exiting={fadeOut}
-      pointerEvents="none"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      testID={`scroll-fade-${edge}`}
-      style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        height: height ?? scrollFadeHeight[edge],
-        ...(edge === 'top' ? { top: 0 } : { bottom: 0 }),
-      }}
-    >
-      <Svg width="100%" height="100%">
-        <Defs>
-          <LinearGradient id={gradientId} x1="0" y1="0%" x2="0" y2="100%">
-            <Stop
-              offset="0"
-              stopColor={backgroundColor}
-              stopOpacity={edge === 'top' ? 1 : 0}
-            />
-            <Stop offset="0.5" stopColor={backgroundColor} stopOpacity={0.85} />
-            <Stop
-              offset="1"
-              stopColor={backgroundColor}
-              stopOpacity={edge === 'top' ? 0 : 1}
-            />
-          </LinearGradient>
-        </Defs>
-        <Rect width="100%" height="100%" fill={`url(#${gradientId})`} />
-      </Svg>
-    </Animated.View>
-  );
-}
+import { type ScrollFadeEdges, ScrollFadeFrame } from './scroll-fade-frame';
 
 // Which edges have content hidden past them, fed by a scroll view's events.
 export function useScrollFadeEdges({
-  surfaceClassName,
   onScroll,
 }: {
-  surfaceClassName?: string;
   onScroll?: ScrollViewProps['onScroll'];
 } = {}): {
-  edges: { top: boolean; bottom: boolean };
-  overlays: React.JSX.Element;
+  edges: ScrollFadeEdges;
   onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   onContentSizeChange: (width: number, height: number) => void;
   onLayout: (event: LayoutChangeEvent) => void;
   onViewportChange: (height: number) => void;
 } {
-  const [edges, setEdges] = useState({ top: false, bottom: false });
+  const [edges, setEdges] = useState<ScrollFadeEdges>({
+    top: false,
+    bottom: false,
+  });
   const metrics = useRef({ offset: 0, inset: 0, content: 0, viewport: 0 });
   const update = useCallback(() => {
     const { offset, inset, content, viewport } = metrics.current;
@@ -144,14 +76,6 @@ export function useScrollFadeEdges({
   );
   return {
     edges,
-    overlays: (
-      <>
-        {edges.top && <ScrollFade edge="top" className={surfaceClassName} />}
-        {edges.bottom && (
-          <ScrollFade edge="bottom" className={surfaceClassName} />
-        )}
-      </>
-    ),
     onScroll: handleScroll,
     onContentSizeChange,
     onLayout,
@@ -160,7 +84,7 @@ export function useScrollFadeEdges({
 }
 
 export interface ScrollFadeViewProps extends ScrollViewProps {
-  // The surface colour the content fades into, as for ScrollFade.
+  // The surface colour the content fades into, as for ScrollFadeFrame.
   surfaceClassName?: string;
 }
 
@@ -171,26 +95,37 @@ export function ScrollFadeView({
   onScroll,
   onContentSizeChange,
   onLayout,
+  contentContainerStyle,
   ...props
 }: ScrollFadeViewProps): React.JSX.Element {
-  const fade = useScrollFadeEdges({ surfaceClassName, onScroll });
+  const fade = useScrollFadeEdges({ onScroll });
+  const columnStyle = useScrollColumnStyle(contentContainerStyle);
   return (
-    <View className={cn('relative min-h-0 flex-1', className)}>
-      <ScrollView
-        scrollEventThrottle={16}
-        {...props}
-        className="flex-1"
-        onScroll={fade.onScroll}
-        onContentSizeChange={(width, height) => {
-          fade.onContentSizeChange(width, height);
-          onContentSizeChange?.(width, height);
-        }}
-        onLayout={(event) => {
-          fade.onLayout(event);
-          onLayout?.(event);
-        }}
-      />
-      {fade.overlays}
-    </View>
+    <ScrollFadeFrame
+      edges={fade.edges}
+      surfaceClassName={surfaceClassName}
+      className={cn('min-h-0 flex-1', className)}
+    >
+      <ScrollColumnContext value={undefined}>
+        <ScrollView
+          scrollEventThrottle={16}
+          {...props}
+          contentContainerStyle={columnStyle}
+          className="flex-1"
+          onScroll={fade.onScroll}
+          onContentSizeChange={(width, height) => {
+            fade.onContentSizeChange(width, height);
+            onContentSizeChange?.(width, height);
+          }}
+          onLayout={(event) => {
+            fade.onLayout(event);
+            onLayout?.(event);
+          }}
+        />
+      </ScrollColumnContext>
+    </ScrollFadeFrame>
   );
 }
+
+// The Sessions list and Session page still place their own fades until the Session change.
+export { ScrollFade } from './scroll-fade-overlay';
