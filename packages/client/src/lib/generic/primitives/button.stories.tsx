@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { Button } from './button';
 import type { ButtonProps } from './button-props';
 
@@ -18,7 +18,10 @@ const buttons: { state: string; props: ButtonProps }[] = [
     state: 'Destructive',
     props: { label: 'Remove Agent', role: 'destructive', fullWidth: true },
   },
-  { state: 'Small', props: { label: saveLabel, size: 'sm' } },
+  {
+    state: 'Small (a phone draws Default)',
+    props: { label: saveLabel, size: 'sm' },
+  },
   {
     state: 'Full width on a phone',
     props: {
@@ -43,10 +46,10 @@ const meta = { title: 'Design System/Primitives/Button' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Button',
   render: () => (
-    <Variations>
+    <VariationList>
       {buttons.map(({ state, props }) => (
         <Variation key={state} label={state}>
           <View className="flex-row">
@@ -54,6 +57,6 @@ export const Overview: Story = {
           </View>
         </Variation>
       ))}
-    </Variations>
+    </VariationList>
   ),
 };

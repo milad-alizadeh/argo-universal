@@ -4,6 +4,7 @@ import { Badge, type BadgeTone } from '#lib/generic/primitives/badge';
 import { Text } from '#lib/generic/primitives/text';
 import { FieldSection } from '#primitives/field-section';
 import { ListItem } from '#primitives/list-item';
+import { CheckAgainRow } from './check-again-row';
 import { sectionFooter } from './form-field';
 
 // undefined while the Server runs a fresh ACP initialize; readiness is never read from the saved record.
@@ -39,7 +40,7 @@ const failureOf = (check: CustomAgentCheck): string | undefined =>
   check?.status === 'failed' ? check.failure : undefined;
 
 // The last ACP initialize: running, answered, or what failed and a row to run it again.
-export function StatusSection({
+export function ReadinessSection({
   check,
   onCheck,
 }: StatusProps): React.JSX.Element {
@@ -47,19 +48,8 @@ export function StatusSection({
   return (
     <FieldSection title="Status" {...sectionFooter(failure)}>
       <StatusRow check={check} />
-      {failure !== undefined && <CheckAgain onPress={onCheck} />}
+      {failure !== undefined && <CheckAgainRow onPress={onCheck} />}
     </FieldSection>
-  );
-}
-
-function CheckAgain({ onPress }: { onPress: () => void }): React.JSX.Element {
-  return (
-    <ListItem
-      icon="retry"
-      tone="accent"
-      title="Check again"
-      onPress={onPress}
-    />
   );
 }
 

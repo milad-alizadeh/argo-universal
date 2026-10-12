@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { Checkbox } from './checkbox';
 
 type CheckedExampleProps = {
@@ -30,10 +30,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Checkbox',
   render: () => (
-    <Variations>
+    <VariationList>
       <Variation label="Unchecked">
         <CheckedExample />
       </Variation>
@@ -43,6 +43,6 @@ export const Overview: Story = {
       <Variation label="Disabled">
         <CheckedExample disabled />
       </Variation>
-    </Variations>
+    </VariationList>
   ),
 };

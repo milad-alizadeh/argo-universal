@@ -12,7 +12,7 @@ import { AgentPlaceholder } from './agent-placeholder';
 import { CustomAgentForm } from './custom-agent-form';
 import { LaunchSections } from './custom-agent-launch';
 import type { CustomAgentCheck } from './custom-agent-status';
-import { ReadinessChip, StatusSection } from './custom-agent-status';
+import { ReadinessChip, ReadinessSection } from './custom-agent-status';
 import { PhoneTitle } from './phone-title';
 
 export type CustomAgentDetailViewProps = {
@@ -76,7 +76,11 @@ function CustomAgentContent(props: SettingsProps): React.JSX.Element {
   // A list rather than a fragment, so a native group still sees each section.
   const status = [
     <CustomAgentIdentity key="identity" check={props.check} />,
-    <StatusSection key="status" check={props.check} onCheck={props.onCheck} />,
+    <ReadinessSection
+      key="status"
+      check={props.check}
+      onCheck={props.onCheck}
+    />,
   ];
   const content = { ...props, status, onEditing };
   return editing ? <LaunchForm {...content} /> : <LaunchView {...content} />;

@@ -105,11 +105,12 @@ export function useTextStyle(progress: SharedValue<number>): AnimatedStyle {
   );
 }
 
-// Close turns in from a quarter turn as it grows.
+// Close turns in from a quarter turn as it grows, and is not drawn at all while the field is shut.
 export function useCloseStyle(progress: SharedValue<number>): AnimatedStyle {
   return useAnimatedStyle(() => {
     const p = Math.min(progress.get(), 1);
     return {
+      display: p > 0 ? 'flex' : 'none',
       opacity: interpolate(p, [closeAppearing, 1], [0, 1], Extrapolation.CLAMP),
       transform: [
         { rotate: `${-quarterTurnDegrees * (1 - p)}deg` },

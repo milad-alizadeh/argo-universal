@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from '#lib/generic/primitives/dialog';
 import { Button } from '../../../lib/generic/primitives/button';
+import { useWide } from '../../../lib/generic/use-wide';
 import { FieldMessage, FormLabel, FormInput } from './form-field';
 
 export type EntrySheetField = {
@@ -54,13 +55,23 @@ export const removalOf = (
         close();
       };
 
+// Save fills a phone sheet's foot; a wide dialog puts Cancel beside it.
 function EntrySheetActions(props: EntrySheetProps): React.JSX.Element {
   return (
     <View className="gap-3">
-      <Button fullWidth="narrow" onPress={props.onSave} label={'Save'} />
+      <View className="flex-row justify-end gap-2">
+        {useWide() && <CancelEntry onClose={props.onClose} />}
+        <Button fullWidth="narrow" onPress={props.onSave} label={'Save'} />
+      </View>
       {props.onRemove && <RemoveEntry {...props} />}
     </View>
   );
+}
+
+function CancelEntry({
+  onClose,
+}: Pick<EntrySheetProps, 'onClose'>): React.JSX.Element {
+  return <Button variant="outline" onPress={onClose} label={'Cancel'} />;
 }
 
 function EntrySheetInput({

@@ -32,6 +32,7 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 - Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them to Git.
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
 - Use LegendList (`@legendapp/list/react-native`) by default for lists in the App.
+- Name screens and views `<entity>-<list|detail|new|edit>-{screen,view}`. No two names may differ only by plural, and none may use a "settings" infix.
 - Test assets live outside `src/`: `e2e/<flow>/`, `mocks/`, `tools/`. Call them mocks.
 - Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions.
 - The product name lives only in app config, environment variables and UI text, so a rename stays small. The Session branch prefix in `packages/git` is stored data and stays as it is.

@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { Text } from '#lib/generic/primitives/text';
-import { cn } from '#lib/generic/utils';
 import { Icon, iconSizeStyle } from '../../../lib/generic/symbols/icon';
 
 // A PR's CI checks: how many passed, failed and still run, out of all of them.
@@ -50,8 +49,7 @@ function checksState({
   return running > 0 ? 'running' : 'passed';
 }
 
-function stateText(checks: PullRequestChecksProps): string {
-  const state = checksState(checks);
+function stateText(checks: PullRequestChecksProps, state: ChecksState): string {
   if (state === 'failing') return `${checks.failing} failing`;
   return state === 'running' ? `${checks.running} running` : 'passed';
 }
@@ -60,8 +58,13 @@ function arc(share: number, total: number): number {
   return total === 0 ? 0 : (ringCircumference * share) / total;
 }
 
-function Ring(checks: PullRequestChecksProps): React.JSX.Element {
-  const state = checksState(checks);
+function Ring({
+  checks,
+  state,
+}: {
+  checks: PullRequestChecksProps;
+  state: ChecksState;
+}): React.JSX.Element {
   if (state === 'passed')
     return <Icon name="passed" className="text-success" />;
   const passedArc = arc(checks.passed, checks.total);
@@ -93,22 +96,20 @@ export function PullRequestChecks(
   checks: PullRequestChecksProps,
 ): React.JSX.Element {
   const summary = `Checks ${checks.passed}/${checks.total}`;
-  const state = stateText(checks);
+  const state = checksState(checks);
+  const label = stateText(checks, state);
   return (
     <View
       accessible
-      accessibilityLabel={`${summary}, ${state}`}
+      accessibilityLabel={`${summary}, ${label}`}
       className="flex-row items-center gap-1"
     >
-      <Ring {...checks} />
+      <Ring checks={checks} state={state} />
       <Text role="secondary" className="font-medium text-foreground">
         {summary}
       </Text>
-      <Text
-        role="secondary"
-        className={cn(stateTone[checksState(checks)].text)}
-      >
-        {state}
+      <Text role="secondary" className={stateTone[state].text}>
+        {label}
       </Text>
     </View>
   );

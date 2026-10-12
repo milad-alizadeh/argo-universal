@@ -7,7 +7,6 @@ import { ProjectDetailView } from './project-detail-view';
 import {
   localProject,
   otherDeviceName,
-  serverCaption,
   worktreeProject,
 } from './settings-pages.mocks';
 
@@ -17,7 +16,6 @@ const meta = {
   parameters: { screenPreview: true },
   args: {
     name: worktreeProject.name,
-    caption: serverCaption,
     project: { status: 'loaded', project: worktreeProject },
     onBack: fn(),
   },
@@ -27,7 +25,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const ShowsTheFolderAndCheckout: Story = {
-  play: async ({ args, canvas, userEvent }) => {
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('heading', { name: worktreeProject.name, level: 1 }),
     ).toBeVisible();
@@ -38,12 +36,23 @@ export const ShowsTheFolderAndCheckout: Story = {
     await expect(
       canvas.getByRole('group', { name: 'Base branch' }),
     ).toBeVisible();
+  },
+};
+
+// The Server cannot change the archive setting or remove a Project yet.
+export const OffersNoUnbuiltChanges: Story = {
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('switch', { name: 'Delete the worktree on archive' }),
     ).toHaveAttribute('aria-disabled', 'true');
     await expect(
       canvas.getByRole('button', { name: 'Remove Project' }),
     ).toBeDisabled();
+  },
+};
+
+export const BackLeavesTheProject: Story = {
+  play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
     await expect(args.onBack).toHaveBeenCalledOnce();
   },

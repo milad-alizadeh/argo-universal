@@ -17,7 +17,7 @@ export const ScrollColumnContext = createContext<ScrollColumn | undefined>(
   undefined,
 );
 
-const length = (value: ViewStyle['paddingLeft']): number =>
+const numericPadding = (value: ViewStyle['paddingLeft']): number =>
   typeof value === 'number' ? value : 0;
 
 // A scroll view's content container style inside the pane's column: its own padding sits inside the column's.
@@ -35,8 +35,8 @@ export function useScrollColumnStyle(
       // Auto margins centre it whether or not its scroll view lays it out as a flex item, as Legend List's web build does not.
       marginLeft: 'auto',
       marginRight: 'auto',
-      paddingLeft: length(style.paddingLeft) + column.paddingLeft,
-      paddingRight: length(style.paddingRight) + column.paddingRight,
+      paddingLeft: numericPadding(style.paddingLeft) + column.paddingLeft,
+      paddingRight: numericPadding(style.paddingRight) + column.paddingRight,
     };
   }, [column, own]);
 }

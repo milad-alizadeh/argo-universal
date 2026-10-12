@@ -13,6 +13,10 @@ import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen';
 import { SessionColumn, SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/toast';
+import {
+  serverSilentMessage,
+  sessionOpenFailedTitle,
+} from './failure-messages';
 
 export interface ReadyNewSessionViewProps {
   serverName: string;
@@ -46,11 +50,11 @@ export type NewSessionViewProps =
 
 const loadFailed: ErrorToast = {
   title: "Couldn't load New Session",
-  message: "The Server didn't respond. Check that it's running.",
+  message: serverSilentMessage,
 };
 
 const openFailed = (message: string): ErrorToast => ({
-  title: "Couldn't open the Session",
+  title: sessionOpenFailedTitle,
   message,
 });
 

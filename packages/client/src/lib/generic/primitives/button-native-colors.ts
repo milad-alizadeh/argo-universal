@@ -1,6 +1,6 @@
 import { useNativeTheme } from '../native-theme';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
-import { isButtonDisabled, nativeButtonVariant } from './button-state';
+import { nativeButtonVariant } from './button-state';
 import { usePrimitiveColor } from './primitive-color';
 
 const destructiveClass = 'text-destructive';
@@ -24,6 +24,8 @@ const buttonColorClasses: Record<
 
 export interface ButtonTheme {
   primary: string | undefined;
+  // The edge an outlined button draws where the system has no outlined style.
+  border: string | undefined;
   contentClass: string;
   colors: {
     containerColor: string | undefined;
@@ -33,19 +35,15 @@ export interface ButtonTheme {
   };
 }
 
-type ThemeProps = Pick<
-  ButtonDataProps,
-  'variant' | 'role' | 'disabled' | 'loading'
->;
+type ThemeProps = Pick<ButtonDataProps, 'variant' | 'role' | 'disabled'>;
 
 export function useNativeButtonTheme(props: ThemeProps): ButtonTheme {
   const { colors } = useNativeTheme();
   const classes = nativeColorClasses(props);
   return {
     primary: colors.tint,
-    contentClass: isButtonDisabled(props)
-      ? mutedForegroundClass
-      : classes.content,
+    border: usePrimitiveColor('text-border'),
+    contentClass: props.disabled ? mutedForegroundClass : classes.content,
     colors: useNativeButtonColors(classes),
   };
 }

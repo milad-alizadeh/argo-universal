@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { Slider, type SliderProps } from './slider';
 
 type ExampleProps = Pick<
@@ -45,15 +45,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Slider',
   render: () => (
-    <Variations>
+    <VariationList>
       {examples.map(({ label, props }) => (
         <Variation key={label} label={label}>
           <SliderExample {...props} />
         </Variation>
       ))}
-    </Variations>
+    </VariationList>
   ),
 };
