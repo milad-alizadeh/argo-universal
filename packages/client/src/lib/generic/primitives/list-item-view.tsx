@@ -9,6 +9,7 @@ import {
   listItemName,
   listItemStatus,
 } from './field-props';
+import { ListItemAccessory } from './list-item-accessory';
 import { StatusDot } from './status-dot';
 import { Text } from './text';
 import { isModifiedClick } from './web-row-link';
@@ -85,7 +86,7 @@ function ListItemTrailing(props: ListItemProps): React.JSX.Element {
     <View className="max-w-[55%] flex-row items-center gap-2">
       <RowValue value={props.value} />
       <StatusDot status={listItemStatus(props)} />
-      {props.accessory}
+      <ListItemAccessory>{props.accessory}</ListItemAccessory>
       <Disclosure visible={!!props.onPress && !navigation} />
     </View>
   );

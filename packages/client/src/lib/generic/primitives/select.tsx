@@ -4,13 +4,18 @@ import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon, iconSizeStyle } from '../symbols/icon';
 import { SelectContent } from './select-content';
-import { selectItemClassName, selectTriggerClassName } from './select-styles';
+import {
+  type SelectVariant,
+  selectItemClassName,
+  selectTriggerClassName,
+} from './select-styles';
 
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
 type TriggerProps = React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   children?: React.ReactNode;
   size?: 'default' | 'sm';
+  variant?: SelectVariant;
 };
 type ValueProps = React.ComponentProps<typeof SelectPrimitive.Value> & {
   className?: string;
@@ -34,26 +39,37 @@ function SelectValue({ className, ...props }: ValueProps): React.JSX.Element {
   );
 }
 
-const triggerChevron = (
-  <Icon
-    size="xs"
-    name="chevron-down"
-    aria-hidden={true}
-    className="text-muted-foreground"
-  />
-);
+function TriggerChevron({
+  variant,
+}: Pick<TriggerProps, 'variant'>): React.JSX.Element {
+  return (
+    <Icon
+      size="xs"
+      name={variant === 'plain' ? 'chevron-up-down' : 'chevron-down'}
+      aria-hidden={true}
+      className="text-muted-foreground"
+    />
+  );
+}
 
 function SelectTrigger(triggerProps: TriggerProps): React.JSX.Element {
-  const { className, children, size, ...props } = triggerProps;
+  const {
+    className,
+    children,
+    size,
+    variant = 'default',
+    ...props
+  } = triggerProps;
   const triggerStyle = selectTriggerClassName({
     className,
     size,
+    variant,
     disabled: props.disabled,
   });
   return (
     <SelectPrimitive.Trigger className={triggerStyle} {...props}>
       {children}
-      {triggerChevron}
+      <TriggerChevron variant={variant} />
     </SelectPrimitive.Trigger>
   );
 }

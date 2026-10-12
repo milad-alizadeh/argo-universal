@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { Icon, iconSizeStyle } from '../symbols/icon';
 import type { IconName } from '../symbols/icon-names';
 import { type ListItemProps, listItemStatus } from './field-props';
+import { ListItemAccessory } from './list-item-accessory';
 import { StatusDot } from './status-dot';
 
 export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
@@ -37,7 +38,12 @@ function NativeRowDot(
 function NativeRowAccessory({
   accessory,
 }: Pick<ListItemProps, 'accessory'>): React.JSX.Element | null {
-  return accessory ? <RNHostView matchContents>{accessory}</RNHostView> : null;
+  if (!accessory) return null;
+  return (
+    <RNHostView matchContents>
+      <ListItemAccessory>{accessory}</ListItemAccessory>
+    </RNHostView>
+  );
 }
 
 export function NativeRowStatus(

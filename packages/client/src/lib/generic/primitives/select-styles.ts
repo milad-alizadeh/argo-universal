@@ -14,10 +14,25 @@ const itemClassName = cn(
   }),
 );
 
+export type SelectVariant = 'default' | 'plain';
+
+// Plain has no background, border or shadow, so it sits on a ListItem row (Paper: Picker / Plain).
+const plainTriggerClassName = cn(
+  'h-8 sm:h-8 gap-1.5 border-0 bg-transparent py-0 pl-2 pr-0 shadow-none active:bg-foreground/4 dark:bg-transparent dark:active:bg-foreground/4',
+  Platform.select({
+    web: 'hover:bg-foreground/4 dark:hover:bg-foreground/4',
+  }),
+);
+const variantClassNames: Record<SelectVariant, string | undefined> = {
+  default: undefined,
+  plain: plainTriggerClassName,
+};
+
 type TriggerStyle = {
   className?: string;
   disabled?: boolean | null;
   size?: 'default' | 'sm';
+  variant: SelectVariant;
 };
 type ContentStyle = {
   className?: string;
@@ -29,11 +44,13 @@ export function selectTriggerClassName({
   className,
   disabled,
   size,
+  variant,
 }: TriggerStyle): string {
   return cn(
     triggerClassName,
     disabled && 'opacity-50',
     size === 'sm' && 'h-8 py-2 sm:py-1.5',
+    variantClassNames[variant],
     className,
   );
 }
