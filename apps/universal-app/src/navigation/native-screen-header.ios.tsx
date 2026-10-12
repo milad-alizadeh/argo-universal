@@ -5,6 +5,7 @@ import { rightItems } from './header-right-items';
 import { headerSearchOptions } from './header-search-options';
 
 // iOS draws the native search bar; iOS 26 docks it at the bottom, in the thumb's reach.
+// Before iOS 26 an integrated bar falls back to inline and squeezes the title, so it stacks below the header row.
 export function NativeScreenHeader({
   title,
   left,
@@ -19,9 +20,10 @@ export function NativeScreenHeader({
           title,
           headerLeft: left ? () => left : undefined,
           ...rightItems(right),
-          headerSearchBarOptions: search
-            ? headerSearchOptions(search)
-            : undefined,
+          headerSearchBarOptions: search && {
+            ...headerSearchOptions(search),
+            placement: hasLiquidGlass ? 'integrated' : 'stacked',
+          },
         }}
       />
       {search && hasLiquidGlass && (
