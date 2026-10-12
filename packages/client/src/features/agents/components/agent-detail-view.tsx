@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Badge } from '#primitives/badge';
 import { FieldGroup } from '#primitives/field-group';
+import { FieldRow } from '#primitives/field-row';
 import { Text } from '#primitives/text';
 import type { IconSize } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
@@ -81,7 +82,9 @@ function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
       <AgentStatusSection {...props} />
       <DefaultsSection {...props} />
       <AboutSection agent={props.agent} />
-      <RemoveAgent {...props} />
+      <FieldRow>
+        <RemoveAgent {...props} />
+      </FieldRow>
     </FieldGroup>
   );
 }
@@ -91,13 +94,21 @@ function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element | null {
   const { agent } = props;
   if (useWide()) return null;
   return (
-    <View className="items-center gap-3">
-      <View className="size-16 items-center justify-center rounded-[18px] bg-muted">
-        <AgentIcon {...props} size="lg" />
+    <FieldRow>
+      <View className="items-center gap-3">
+        <PhoneIconTile {...props} />
+        <AgentStatusChip agent={agent} />
+        <PhoneDescription description={agent.description} />
+        <AgentAction {...props} fullWidth="narrow" />
       </View>
-      <AgentStatusChip agent={agent} />
-      <PhoneDescription description={agent.description} />
-      <AgentAction {...props} fullWidth="narrow" />
+    </FieldRow>
+  );
+}
+
+function PhoneIconTile(props: AgentDetailViewProps): React.JSX.Element {
+  return (
+    <View className="size-16 items-center justify-center rounded-[18px] bg-muted">
+      <AgentIcon {...props} size="lg" />
     </View>
   );
 }
