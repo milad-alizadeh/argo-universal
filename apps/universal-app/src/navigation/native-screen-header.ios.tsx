@@ -33,6 +33,8 @@ export function NativeScreenHeader({
           headerSearchBarOptions: search && {
             ...headerSearchOptions(search),
             placement: hasLiquidGlass ? 'integrated' : 'stacked',
+            // Before iOS 26 a focused bar hides the header row, but not our custom items in it, which pile up in its corner; the row stays.
+            hideNavigationBar: hasLiquidGlass,
           },
         }}
       />
