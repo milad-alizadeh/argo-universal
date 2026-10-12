@@ -120,6 +120,7 @@
   --shadow-glass:
     inset 0 1px 0 #fffffff2, inset 0 0 0 1px #ffffff99, 0 0 0 1px #0000000d,
     0 12px 32px #0000000f;
+  --shadow-glass-tray: 0 0 0 1px #0000000d, 0 12px 32px #0000000f;
   --shadow-glass-card:
     inset 0 1px 0 #ffffff, 0 0 0 1px #0000000f, 0 1px 2px #0000000a,
     0 8px 24px -8px #00000014;
@@ -194,6 +195,7 @@
       --shadow-glass:
         inset 0 1px 0 #fffffff2, inset 0 0 0 1px #ffffff99, 0 0 0 1px #0000000d,
         0 12px 32px #0000000f;
+      --shadow-glass-tray: 0 0 0 1px #0000000d, 0 12px 32px #0000000f;
       --shadow-glass-card:
         inset 0 1px 0 #ffffff, 0 0 0 1px #0000000f, 0 1px 2px #0000000a,
         0 8px 24px -8px #00000014;
@@ -249,6 +251,7 @@
       --color-glow-graphite: oklch(40% 0 0);
       --shadow-glass:
         inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
+      --shadow-glass-tray: 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
       --shadow-glass-card:
         inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff1f, 0 8px 24px -8px #00000066;
       /* Light's shadows, plus a 1px bezel: a dark shadow on a dark ground cannot show the edge. */
@@ -350,6 +353,9 @@
   }
   .shadow-glass {
     box-shadow: var(--shadow-glass);
+  }
+  .shadow-glass-tray {
+    box-shadow: var(--shadow-glass-tray);
   }
   .shadow-glass-card {
     box-shadow: var(--shadow-glass-card);

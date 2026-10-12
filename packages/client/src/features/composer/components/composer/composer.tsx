@@ -170,7 +170,7 @@ export function Composer({
       {wide &&
         !planProposal &&
         (!!shownWrittenPlan || !!status?.plan?.length) && (
-          <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-2xl bg-glass-muted shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180">
+          <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-2xl bg-glass-muted shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-180">
             {planControls}
           </View>
         )}
@@ -444,7 +444,7 @@ export function Composer({
       {wide && (configuration || status) && (
         <View
           className={cn(
-            'h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-2xl bg-glass-muted shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180',
+            'h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-2xl bg-glass-muted shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-180',
           )}
         >
           <View className="flex-1 min-h-0 flex-row items-center pl-0.5 gap-1">
