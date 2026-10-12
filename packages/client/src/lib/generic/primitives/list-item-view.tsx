@@ -13,6 +13,7 @@ import {
   listItemName,
   listItemStatus,
 } from './field-props';
+import { ListItemAccessory } from './list-item-accessory';
 import { ListItemLeading } from './list-item-leading';
 import {
   contentGap,
@@ -123,7 +124,7 @@ function ListItemTrailing(
     <View className="max-w-[55%] flex-row items-center gap-2 wide:gap-3">
       <RowValue value={props.value} className={valueColor} />
       <StatusDot status={listItemStatus(props)} />
-      {props.accessory}
+      <ListItemAccessory>{props.accessory}</ListItemAccessory>
       <Disclosure visible={hasDisclosure(props) && !sidebar} />
     </View>
   );
