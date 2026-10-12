@@ -4,7 +4,7 @@ import { extendTailwindMerge } from 'tailwind-merge';
 /**
  * A text role (`type-body`) sets size, leading, weight and colour, so it
  * replaces those classes before it, such as the Text primitive's
- * `text-base text-foreground`. A single class after it still overrides one
+ * `text-foreground`. A single class after it still overrides one
  * property, because the CSS puts the roles first.
  */
 const twMerge = extendTailwindMerge<'type-role' | 'type-face'>({

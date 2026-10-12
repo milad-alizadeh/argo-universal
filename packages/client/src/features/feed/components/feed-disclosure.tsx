@@ -111,9 +111,7 @@ export function FeedDisclosure({
             )}
             {awaitingApproval && (
               <View className="rounded-sm border border-warning/20 bg-warning/10 px-1.5">
-                <Text role="badge" className="text-warning">
-                  Awaiting approval
-                </Text>
+                <Text className="text-warning">Awaiting approval</Text>
               </View>
             )}
             <DisclosureCaret

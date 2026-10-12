@@ -216,8 +216,7 @@ export function DiffView({
           >
             <Text
               selectable={false}
-              role="secondary"
-              className="select-none no-underline group-hover:no-underline group-active:no-underline"
+              className="select-none text-muted-foreground no-underline group-hover:no-underline group-active:no-underline"
             >
               Show all {lineCount} lines
             </Text>
