@@ -53,6 +53,10 @@ const unchanged: { name: string; markdown: string }[] = [
     markdown: 'Keep \uFDD0 and \uFDD4 as they are',
   },
   {
+    name: 'every first-choice stand-in in plain text',
+    markdown: 'Keep \uFDD0\uFDD1\uFDD2\uFDD3\uFDD4 and *_`~\\ as they are',
+  },
+  {
     name: 'noncharacters in inline code',
     markdown: 'Keep `\uFDD0_\uFDD4` as it is',
   },

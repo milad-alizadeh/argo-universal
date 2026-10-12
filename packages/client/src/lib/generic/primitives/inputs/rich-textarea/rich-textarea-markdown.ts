@@ -57,15 +57,11 @@ function unusedCharacters(text: string, count: number): string[] {
 }
 
 function replacer(from: string[], to: string[]): (value: string) => string {
-  const pattern = new RegExp(
-    `[${from.map((character) => RegExp.escape(character)).join('')}]`,
-    'gu',
-  );
   return (value) =>
-    value.replaceAll(
-      pattern,
-      (character) => to[from.indexOf(character)] ?? character,
-    );
+    Array.from(value, (character) => {
+      const index = from.indexOf(character);
+      return index === -1 ? character : to[index];
+    }).join('');
 }
 
 function swapFor(text: string): Swap {
