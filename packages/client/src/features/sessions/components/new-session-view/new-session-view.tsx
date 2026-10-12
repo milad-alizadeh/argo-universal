@@ -7,6 +7,7 @@ import {
   type ComposerDraft,
   StartSessionIn,
 } from '#features/composer';
+import { Feed } from '#features/feed';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import {
   type ErrorToast,
@@ -16,6 +17,7 @@ import { useContentWide } from '#lib/product/content-layout';
 import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionColumn, SessionLayout } from '#lib/product/session-layout';
+import type { StartingFeed } from '../../state/starting-feed';
 import {
   serverSilentMessage,
   sessionOpenFailedTitle,
@@ -39,6 +41,8 @@ export interface ReadyNewSessionViewProps {
   canOpen: boolean;
   // True while the draft's images upload and the Session opens.
   opening: boolean;
+  // The sent first prompt and Working, drawn in the Feed while the Session opens.
+  starting?: StartingFeed;
   // Why the chosen Agent can't start a Session, and how to set it up.
   setupStep?: string;
   // An attached image that couldn't be selected or uploaded.
@@ -60,6 +64,10 @@ const openFailed = (message: string): ErrorToast => ({
   title: sessionOpenFailedTitle,
   message,
 });
+
+const emptyDraft: ComposerDraft = { text: '', images: [] };
+const ignoreDraft = (): void => {};
+const noOlderRows = (): void => {};
 
 // The header stays empty until the first prompt starts the Session and gives it a title.
 const newSessionTitle = null;
@@ -101,7 +109,19 @@ function ReadyNewSessionView(
   return (
     <SessionLayout
       header={<PageHeader title={newSessionTitle} />}
-      feed={<NewSessionHeading />}
+      feed={
+        props.starting ? (
+          <Feed
+            items={props.starting.items}
+            liveHeader={props.starting.liveHeader}
+            imageUrl={props.starting.imageUrl}
+            loadingOlder={false}
+            onStartReached={noOlderRows}
+          />
+        ) : (
+          <NewSessionHeading />
+        )
+      }
       composer={
         <>
           <View className="w-full items-center pb-2">
@@ -124,13 +144,14 @@ function ReadyNewSessionView(
             </Text>
           )}
           <Composer
-            draft={props.draft}
-            onDraftChange={props.onDraftChange}
+            draft={props.starting ? emptyDraft : props.draft}
+            onDraftChange={props.starting ? ignoreDraft : props.onDraftChange}
             onAttachImages={props.onAttachImages}
             onSend={props.onSend}
             configuration={configuration}
             placeholder="What should the Agent work on?"
-            sending={opening}
+            sending={opening && !props.starting}
+            disabled={Boolean(props.starting)}
             sendable={props.canOpen}
             error={props.attachmentError}
           />

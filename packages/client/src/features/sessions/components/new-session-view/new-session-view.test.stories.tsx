@@ -15,6 +15,7 @@ import {
 import {
   exampleProject,
   readyNewSession,
+  startingNewSession,
   typedDraft,
 } from './new-session-view.mocks';
 
@@ -196,13 +197,21 @@ export const NeedsSetup: Story = {
     }),
 };
 
-export const Opening: Story = {
-  args: readyArgs({ opening: true, canOpen: false, draft: typedDraft }),
+export const Starting: Story = {
+  args: readyArgs(startingNewSession),
   play: async ({ canvas }) =>
     eachLayout(async () => {
+      const [prompt] = await canvas.findAllByText(typedDraft.text);
+      await expect(prompt).toBeVisible();
+      await expect(canvas.getByRole('status')).toHaveAccessibleName(
+        /^Working/,
+      );
       await expect(
-        await canvas.findByRole('progressbar', { name: 'Sending' }),
-      ).toBeVisible();
+        canvas.queryByRole('progressbar', { name: 'Sending' }),
+      ).toBeNull();
+      await expect(
+        canvas.getByRole('textbox', { name: messageLabel }),
+      ).toHaveValue('');
       await expect(
         canvas.getByRole('button', { name: sendLabel }),
       ).toBeDisabled();
