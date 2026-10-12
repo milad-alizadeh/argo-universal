@@ -40,6 +40,7 @@ export function PullRequestIndicator({
       className="flex-row items-center gap-1"
     >
       <Icon
+        role="secondary"
         name={appearance.icon}
         className={cn('shrink-0', appearance.className)}
       />

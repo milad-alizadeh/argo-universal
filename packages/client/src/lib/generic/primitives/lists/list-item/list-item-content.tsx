@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Chevron } from '../../../symbols/chevron';
 import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
 import { useSidebarFields } from '../../fields/field-layout';
 import { type ListItemProps, listItemStatus } from '../../fields/field-props';
 import { ListItemAccessory } from './list-item-accessory';
+import { Disclosure } from './list-item-disclosure';
 import { ListItemLeading } from './list-item-leading';
 import {
   contentGap,
@@ -88,16 +88,6 @@ function ListItemTrailing(
       <Disclosure visible={hasDisclosure(props) && !sidebar} />
     </View>
   );
-}
-
-function Disclosure({
-  visible,
-}: {
-  visible: boolean;
-}): React.JSX.Element | null {
-  return visible ? (
-    <Chevron name="chevron-right" className="text-muted-foreground shrink-0" />
-  ) : null;
 }
 
 function RowValue({

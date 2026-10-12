@@ -53,7 +53,7 @@ export function AgentChoice({
       <ListItem
         title={agent.label}
         accessibilityLabel={`Select ${agent.label}`}
-        leading={<AgentIcon agent={agent} size={wide ? 'sm' : 'lg'} />}
+        leading={<AgentIcon agent={agent} role={wide ? 'control' : 'row'} />}
         role="button"
         disclosure={false}
         subtitle={agentSubtitle(agent)}

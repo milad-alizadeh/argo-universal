@@ -1,3 +1,27 @@
+diff --git a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
+index 16958ee1fc85341b94d07f84c328bc9dc487f1a6..4f15adaab70757dea1e7bc4a3a0c4f620e041eda 100644
+--- a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
++++ b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
+@@ -64,6 +64,7 @@ import androidx.compose.ui.layout.onVisibilityChanged
+ import androidx.compose.ui.layout.positionInWindow
+ import androidx.compose.ui.platform.LocalDensity
+ import androidx.compose.ui.semantics.Role
++import androidx.compose.ui.semantics.clearAndSetSemantics
+ import androidx.compose.ui.semantics.contentDescription
+ import androidx.compose.ui.semantics.contentType
+ import androidx.compose.ui.semantics.semantics
+@@ -677,6 +678,11 @@ object ModifierRegistry {
+       } ?: Modifier
+     }
+ 
++    // Decorative labels must not compete with the native control they describe.
++    register("clearSemantics") { _, _, _, _ ->
++      Modifier.clearAndSetSemantics {}
++    }
++
+     register("semantics") { map, _, _, _ ->
+       val params = recordFromMap<SemanticsParams>(map)
+       val type = params.contentType.toContentType()
 diff --git a/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt b/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt
 index 13ca95ed0a9f0a20afdd828fd18331a00067e2d2..ab612b60fd95a5650a4203f5ab6fe0bcf9221e68 100644
 --- a/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt
@@ -48,6 +72,19 @@ index 652fd5ebed3efa231c87399689852f016818d445..5f8c5ed8c3858f7456a5e44d6b22be72
      /**
       * Optional styles to apply to the `DropdownMenu`.
       */
+diff --git a/build/jetpack-compose/modifiers/index.d.ts b/build/jetpack-compose/modifiers/index.d.ts
+index 7c6245da00fefd2741f659b963f6b45cfbbc85b4..4384809b6d26323440387068cab46a72dd5eef68 100644
+--- a/build/jetpack-compose/modifiers/index.d.ts
++++ b/build/jetpack-compose/modifiers/index.d.ts
+@@ -334,6 +334,8 @@ export type SemanticsConfig = {
+ /**
+  * Applies semantic properties. Wraps `Modifier.semantics { ... }`.
+  */
++export declare const clearSemantics: () => import("./createModifier").ModifierConfig;
++
+ export declare const semantics: (params: SemanticsConfig) => import("./createModifier").ModifierConfig;
+ type MaterialShapeName = 'cookie4Sided' | 'cookie6Sided' | 'cookie7Sided' | 'cookie9Sided' | 'cookie12Sided' | 'clover4Leaf' | 'clover8Leaf' | 'softBurst' | 'boom' | 'oval' | 'pill' | 'triangle' | 'diamond' | 'pentagon' | 'sunny' | 'verySunny' | 'fan' | 'pixelCircle' | 'pixelTriangle' | 'ghostish' | 'bun' | 'heart' | 'arch' | 'slanted' | 'puffy' | 'puffyDiamond';
+ type CornerRadii = {
 diff --git a/src/jetpack-compose/DropdownMenu/index.tsx b/src/jetpack-compose/DropdownMenu/index.tsx
 index bd6101006fcef124674ef53be9a767eb43f69edd..997f8085e30cf83585dd6032dcd160b1e297cdaa 100644
 --- a/src/jetpack-compose/DropdownMenu/index.tsx
@@ -72,3 +109,17 @@ index bd6101006fcef124674ef53be9a767eb43f69edd..997f8085e30cf83585dd6032dcd160b1
    style?: StyleProp<ViewStyle>;
    modifiers?: ModifierConfig[];
    children?: ReactNode;
+diff --git a/src/jetpack-compose/modifiers/index.ts b/src/jetpack-compose/modifiers/index.ts
+index 8484690b71dfc1acc458b35641754e2c5e05a931..25c66ee6c428c9bbe1f3a82d0a814f7ecfc2fddf 100644
+--- a/src/jetpack-compose/modifiers/index.ts
++++ b/src/jetpack-compose/modifiers/index.ts
+@@ -475,6 +475,9 @@ export type SemanticsConfig = {
+ /**
+  * Applies semantic properties. Wraps `Modifier.semantics { ... }`.
+  */
++/** Clears semantics from this decorative view and its descendants. Do not apply to interactive controls. */
++export const clearSemantics = () => createModifier('clearSemantics');
++
+ export const semantics = (params: SemanticsConfig) => createModifier('semantics', params);
+ 
+ // =============================================================================

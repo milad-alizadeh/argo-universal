@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Platform, Text, View } from 'react-native';
 import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
-import { iconSizeStyle } from '../../../symbols/icon';
+import { IconSlot } from '../../../symbols/icon';
 import { SelectedCheck } from '../../display/selected-check';
 import { DropdownMenuContent } from './dropdown-menu-content';
 import {
@@ -50,11 +50,11 @@ function DropdownMenuItem(itemProps: ItemProps): React.JSX.Element {
 
 function RadioIndicator(): React.JSX.Element {
   return (
-    <View style={iconSizeStyle('sm')} className="items-center justify-center">
+    <IconSlot role="control">
       <DropdownMenuPrimitive.ItemIndicator>
         <SelectedCheck className={indicatorClassName} />
       </DropdownMenuPrimitive.ItemIndicator>
-    </View>
+    </IconSlot>
   );
 }
 
@@ -74,7 +74,7 @@ function RadioBody(radioProps: RadioProps): React.JSX.Element {
 
 function DropdownMenuRadioItem(props: RadioProps): React.JSX.Element {
   return (
-    <TextClassContext.Provider value="text-sm text-popover-foreground select-none group-active:text-accent-foreground">
+    <TextClassContext.Provider value="text-popover-foreground select-none group-active:text-accent-foreground">
       <RadioBody {...props} />
     </TextClassContext.Provider>
   );
@@ -89,7 +89,7 @@ function DropdownMenuLabel({
   inset?: boolean;
 }): React.JSX.Element {
   const labelStyle = cn(
-    'text-foreground px-2 py-2 text-sm font-medium sm:py-1.5',
+    'type-heading px-2 py-2 sm:py-1.5',
     inset && 'pl-8',
     className,
   );
@@ -116,10 +116,7 @@ function DropdownMenuShortcut({
 }: React.ComponentProps<typeof Text>): React.JSX.Element {
   return (
     <Text
-      className={cn(
-        'text-muted-foreground ml-auto text-xs tracking-widest',
-        className,
-      )}
+      className={cn('type-secondary ml-auto tracking-widest', className)}
       {...props}
     />
   );

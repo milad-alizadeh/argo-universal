@@ -34,7 +34,7 @@ function PullRequestIcon({
   return (
     <Icon
       name={appearance.icon}
-      size="sm"
+      role="secondary"
       className={cn('shrink-0', appearance.className)}
     />
   );

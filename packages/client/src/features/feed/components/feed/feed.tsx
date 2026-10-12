@@ -25,7 +25,12 @@ import { listTestIdProps } from '#lib/generic/list-test-id';
 import { motionDuration } from '#lib/generic/motion';
 import { CollapsibleLayoutSyncContext } from '#lib/generic/primitives/display/collapsible/collapsible';
 import { Text } from '#lib/generic/primitives/display/text/text';
-import { FeedFade, SessionColumn } from '#lib/product/session-layout';
+import { useHeaderCover } from '#lib/product/navigation/screen-header';
+import {
+  FeedFade,
+  feedBottomFadeTop,
+  SessionColumn,
+} from '#lib/product/session-layout';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type FeedViewItem, feedItemKey } from '../../view/feed-view';
@@ -67,7 +72,7 @@ function LoadingEarlier(): React.JSX.Element {
 function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
   return (
     <View className="flex-1 items-center justify-center gap-1.5 p-6">
-      <Text semanticRole="heading" aria-level={2} role={'heading'}>
+      <Text semanticRole="heading" aria-level={2}>
         What should we build?
       </Text>
       {!!branch && (
@@ -91,7 +96,9 @@ function JumpToLatest({
     <Animated.View
       entering={FadeIn.duration(motionDuration.tooltipEnter)}
       exiting={FadeOut.duration(motionDuration.exit)}
-      className="absolute bottom-16 self-center"
+      className="absolute self-center"
+      // Above the Feed's bottom fade, so no row fades out behind it.
+      style={jumpToLatestPlace}
     >
       <Pressable
         role="button"
@@ -101,7 +108,7 @@ function JumpToLatest({
         onPress={onPress}
         className="size-8 items-center justify-center rounded-full border border-border bg-card shadow-[0_1px_2px_#0000000f,0_4px_12px_-4px_#00000014] active:opacity-70"
       >
-        <Icon name="arrow-down" className="text-foreground" />
+        <Icon name="arrow-down" role="control" className="text-foreground" />
         {hasNewRows && (
           <View className="absolute -top-px -right-px size-[9px] rounded-full border-2 border-card bg-info" />
         )}
@@ -113,6 +120,10 @@ function JumpToLatest({
 // Stable objects, since Legend List lays out again whenever its content style changes. Rows hold the side padding, which Legend List drops on web.
 const phoneContentStyle = { paddingTop: 16 };
 const wideContentStyle = { paddingTop: 24 };
+
+// How far Jump to latest sits clear of the Feed's bottom fade.
+const jumpToLatestGap = 8;
+const jumpToLatestPlace = { bottom: feedBottomFadeTop + jumpToLatestGap };
 
 // Paper's 72 clear the Composer's 48 overlap and leave the Feed's 24 above it; a footer, since `alignItemsAtEnd` ignores bottom padding.
 function FeedEnd(): React.JSX.Element {
@@ -215,6 +226,8 @@ function spaceBelowEntry(
 // Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android. Web's list is a plain element, which takes neither.
 const keyboardProps = Platform.select({
   ios: {
+    // Under iOS 26's transparent header, the Feed starts below it and scrolls on under the glass.
+    contentInsetAdjustmentBehavior: 'automatic',
     keyboardDismissMode: 'interactive',
     keyboardShouldPersistTaps: 'handled',
   },
@@ -273,6 +286,7 @@ function FeedList({
   now,
 }: FeedListProps): React.JSX.Element {
   const wide = useWide();
+  const headerCover = useHeaderCover();
   const list = useRef<LegendListRef>(null);
   // Opens on the newest row by estimated sizes, then a frame later at the very end; from there `followEnd` keeps it there as rows measure.
   const [initialIndex] = useState(entries.length - 1);
@@ -449,7 +463,11 @@ function FeedList({
       )}
       {/* Over the list, so keeping the reading position never scrolls it out of view. */}
       {loadingOlder && (
-        <View className="absolute top-4 self-center rounded-full bg-sidebar px-2 wide:top-6">
+        <View
+          className="absolute top-4 self-center rounded-full bg-sidebar px-2 wide:top-6"
+          // Below a transparent header, which lies over the Feed's top.
+          style={{ marginTop: headerCover }}
+        >
           <LoadingEarlier />
         </View>
       )}

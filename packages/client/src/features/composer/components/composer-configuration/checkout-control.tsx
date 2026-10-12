@@ -5,7 +5,6 @@ import { Button } from '#primitives/buttons/button/button';
 import { Text } from '#primitives/display/text/text';
 import { FieldGroup } from '#primitives/fields/field-group/field-group';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { Chevron } from '../../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ConfigurationChoice } from './configuration-choice';
@@ -31,6 +30,7 @@ export function CheckoutContents({
               selected={checkout.newWorktree === newWorktree}
               leading={
                 <Icon
+                  role="control"
                   name={newWorktree ? 'branch' : 'folder'}
                   className="text-muted-foreground"
                 />
@@ -61,6 +61,7 @@ export function ComposerCheckoutControl({
     return (
       <View className="h-7 min-w-0 max-w-96 px-1.5 flex-row items-center gap-1.5">
         <Icon
+          role="control"
           name={checkout.newWorktree ? 'branch' : 'folder'}
           className="text-muted-foreground"
         />
@@ -94,8 +95,8 @@ export function ComposerCheckoutControl({
           className="h-7 sm:h-7 py-0 px-1.5 gap-1.5"
           labelClassName="text-muted-foreground"
           trailing={
-            <Chevron
-              textRole="control"
+            <Icon
+              role="control"
               name="chevron-down"
               className="text-muted-foreground"
             />

@@ -52,6 +52,7 @@ export function useSectionList(
       list: (
         <SessionsScreen
           query={sessionsFilter.query}
+          onQueryChange={sessionsFilter.onQueryChange}
           archived={sessionsFilter.archived}
           selectedSessionId={openSessionId(selectedDestination)}
         />

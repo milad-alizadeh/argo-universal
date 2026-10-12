@@ -6,10 +6,11 @@ import type { ButtonProps } from '../../../../lib/generic/primitives/buttons/but
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import type { AgentStatus } from '../../state/agent-status';
+import { AgentInstallControl } from '../agent-install-sheet/agent-install-control';
 
 type ActionProps = Pick<
   AgentDetailViewProps,
-  'agent' | 'onInstall' | 'onUpdate'
+  'agent' | 'onInstall' | 'onUpdate' | 'installation'
 > &
   Pick<ButtonProps, 'fullWidth'>;
 interface ActionButton {
@@ -26,6 +27,8 @@ const statusActions = (
 
 // Install or Update, whichever the Agent needs; without a handler the Server cannot do it yet.
 export function AgentAction(props: ActionProps): React.JSX.Element | null {
+  if (props.installation)
+    return <InstallationAction {...props} installation={props.installation} />;
   const action = statusActions(props)[props.agent.status];
   if (!action) return null;
   return (
@@ -35,6 +38,26 @@ export function AgentAction(props: ActionProps): React.JSX.Element | null {
       label={action.label}
       onPress={action.onPress}
       disabled={!action.onPress}
+    />
+  );
+}
+const showsInstallation = (
+  props: ActionProps,
+  installation: NonNullable<ActionProps['installation']>,
+): boolean =>
+  props.agent.status === 'not-installed' ||
+  installation.phase === 'installing' ||
+  installation.open;
+function InstallationAction(
+  props: ActionProps & {
+    installation: NonNullable<ActionProps['installation']>;
+  },
+): React.JSX.Element | null {
+  if (!showsInstallation(props, props.installation)) return null;
+  return (
+    <AgentInstallControl
+      agent={props.agent}
+      installation={props.installation}
     />
   );
 }

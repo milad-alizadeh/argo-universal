@@ -1,0 +1,22 @@
+# The Composer edits rich text on the web only
+
+On web and desktop, the Composer is a Lexical editor that renders markdown as you type, Slack-style: `**bold**`, ⌘B, `` `code` ``, `1. ` lists, quotes, code blocks and links take the Feed's markdown look, and Slash commands become tokens (owner, 2026-10-12, #443). iOS and Android keep a plain-text native text area: inside a native glass view on iOS where the system supports it, the Material equivalent on Android. Phones get no rich text.
+
+## Decision
+
+- **Markdown is the only format.** The editor sends, and the Device stores as the draft, the markdown string it shows. Tokens are rebuilt from that text when a draft loads. Nothing else is stored.
+- **Lexical's own presets.** `@lexical/markdown` transformers drive the shortcuts and the markdown export. Argo adds only custom nodes and transformers for tokens.
+- **A Slash command is sent as plain prompt text** `/name args`, as ACP defines it and ADR-0012 records it; the ACP adapter turns it into what its Agent understands. It may stand anywhere in the prompt. No `_meta` copy.
+- **The Server keeps each Agent's ACP `available_commands_update` per Agent and Project**, because skills live in the Project as well as the user's folders. New Session's empty opening already starts the ACP session in the Checkout, so the list is there before the first prompt; every later Session refreshes it. Phones get no suggestions.
+- **An Issue reference is sent as `#443`** in the text plus a `resource_link` to Argo's own Issue, named with its title (ADR-0006 passes the block through).
+- **Return** sends, except in a list item (new item; on an empty item, leave the list) and in a code block (new line). ⇧Return adds a line.
+- **Paste** keeps what markdown can express and drops the rest; ⌘⇧V pastes plain text.
+- **The Feed renders user messages as markdown**, with the same renderer as Agent messages. The stored text stays exactly as typed, so ADR-0012 holds.
+- **One primitive.** The editor is a `#primitives` control whose web file draws Lexical and whose native files draw the plain text area, so the Composer screen has one API. This sits beside ADR-0020: the Composer surface stays Argo's own drawing; only the text field differs by platform.
+
+## Considered options
+
+- Plain text everywhere: no way to make Slash commands and Issue references look different, which the owner asked for.
+- Rich text on phones too: no native rich-text field matches iOS and Android behaviour, and a web view in the Composer breaks the native keyboard and glass.
+- TipTap or ProseMirror: as capable, but Lexical ships markdown shortcuts and export as presets, so Argo writes no rules by hand.
+- A hand-made `contentEditable`: selection, IME and undo bugs that Lexical already solves.

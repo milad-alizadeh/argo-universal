@@ -28,6 +28,7 @@ export interface OpenSessionsInput {
   adapters?: readonly AgentAdapter[];
   acpResources?: AcpResources;
   resolveAgentLaunch?: ResolveAgentLaunch;
+  isAgentSetupBusy?: (agentId: string) => boolean;
 }
 
 interface OpenSessionsContext extends OpenSessionsInput {

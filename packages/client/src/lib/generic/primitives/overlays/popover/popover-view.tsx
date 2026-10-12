@@ -6,6 +6,7 @@ import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { HoverProvider, PopoverHover } from './popover-hover';
 import { hoverContentProps } from './popover-hover-focus';
+import { Popover as PopoverRoot } from './popover-root';
 export { PopoverTrigger } from './popover-trigger';
 export { PopoverHoverGroup } from './popover-hover';
 
@@ -25,11 +26,12 @@ export function Popover({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Root> & {
   openOnHover?: boolean;
+  open?: boolean;
 }): React.JSX.Element {
   return (
-    <PopoverPrimitive.Root {...props}>
+    <PopoverRoot {...props}>
       <HoverProvider enabled={openOnHover}>{children}</HoverProvider>
-    </PopoverPrimitive.Root>
+    </PopoverRoot>
   );
 }
 

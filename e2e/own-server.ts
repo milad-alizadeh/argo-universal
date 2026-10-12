@@ -82,13 +82,19 @@ export async function startOwnServer(
   serverUrl: string;
   httpUrl: string;
   registryPath: string;
+  installationPath: string;
   stop: () => Promise<void>;
 }> {
   const projectPath = path.join(directory, 'project');
   const home = path.join(directory, 'server-home');
   const registryPath = path.join(directory, 'registry.json');
+  const installationPath = path.join(directory, 'installation.json');
   await mkdir(directory, { recursive: true });
   await writeFile(registryPath, JSON.stringify(publishedRegistry));
+  await writeFile(
+    installationPath,
+    JSON.stringify({ outcome: 'success', released: true }),
+  );
   await initTestRepository(projectPath, false);
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
@@ -101,6 +107,7 @@ export async function startOwnServer(
         ARGO_PROJECT_PATH: projectPath,
         ARGO_E2E_AGENTS: JSON.stringify(agents),
         ARGO_E2E_REGISTRY_PATH: registryPath,
+        ARGO_E2E_INSTALLATION_PATH: installationPath,
         PATH: '/usr/bin:/bin',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -137,6 +144,7 @@ export async function startOwnServer(
           serverUrl: serverUrlFor(port),
           httpUrl: serverHttpUrl(port),
           registryPath,
+          installationPath,
           stop,
         };
       }

@@ -1,6 +1,12 @@
 import type * as React from 'react';
 import { type ReactNode, type RefObject, useRef, useState } from 'react';
-import { Pressable, type TextInput, View } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  type TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import { iconButtonClasses } from '../../buttons/icon-button/icon-button-styles';
 import {
@@ -25,11 +31,14 @@ interface Morph {
   geometry: SearchFieldGeometry;
 }
 
+const searchRowHeight = 40;
+
 /*
  * Header and list search: a search button, last in its row, that morphs into a field over the whole row.
  * Closing clears the query. Pickers and sheets draw their own search, never this one.
  */
 export function SearchField(props: SearchFieldProps): React.JSX.Element {
+  const { fontScale } = useWindowDimensions();
   const [geometry, measureRow, measureTrigger] = useGeometry();
   // A query left over from before, such as a restored screen, keeps the field open.
   const [open, setOpen] = useState(props.value !== '');
@@ -37,6 +46,11 @@ export function SearchField(props: SearchFieldProps): React.JSX.Element {
   return (
     <View
       className="h-10 min-w-0 flex-1 flex-row items-center gap-1"
+      style={
+        Platform.OS === 'web'
+          ? undefined
+          : { height: searchRowHeight * Math.max(1, fontScale) }
+      }
       onLayout={measureRow}
     >
       <RestRow {...morph} title={props.title} actions={props.actions} />

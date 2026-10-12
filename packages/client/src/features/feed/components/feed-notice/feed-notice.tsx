@@ -7,9 +7,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
-import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../../lib/generic/symbols/icon';
-import { useTextIconSize } from '../../../../lib/generic/symbols/text-icon-size';
 import { ShimmerText } from '../shimmer-text';
 
 const noticeAppearance = new Map<string, { icon: IconName; color: string }>([
@@ -42,41 +40,36 @@ function NoticeMessage({
   live = false,
 }: NoticeMessageProps): React.JSX.Element {
   const appearance = noticeAppearance.get(severity) ?? unrecognisedAppearance;
-  const iconSize = useTextIconSize();
   return (
     <View
       role={severity === 'error' ? 'alert' : 'status'}
       accessibilityLabel={`${severity}: ${title}`}
-      className="min-h-5 flex-row items-start gap-1.5"
+      className="min-h-6 flex-row items-start gap-1.5 wide:min-h-5"
     >
-      <View className="h-5 shrink-0 items-center justify-center">
+      <View className="h-6 shrink-0 items-center justify-center wide:h-5">
         <Icon
           name={icon ?? appearance.icon}
-          size={iconSize}
+          role="body"
           className={appearance.color}
         />
       </View>
       <View className="min-w-0 flex-1 gap-0.5">
         {live ? (
-          <ShimmerText text={title} className="font-sans text-sm leading-5.5" />
+          <ShimmerText text={title} className="type-body" />
         ) : (
-          <Text
-            numberOfLines={1}
-            className={cn('font-sans text-sm leading-5.5', appearance.color)}
-          >
+          <Text numberOfLines={1} className={appearance.color}>
             {title}
           </Text>
         )}
         {!!description && (
-          <Text className="font-sans text-sm leading-5.5 text-muted-foreground">
-            {description}
-          </Text>
+          <Text className="text-muted-foreground">{description}</Text>
         )}
         {!!excerpt && (
           <Text
             selectable
             numberOfLines={1}
-            className="font-mono text-xs leading-5 text-muted-foreground"
+            role="code"
+            className="text-muted-foreground"
           >
             {excerpt}
           </Text>

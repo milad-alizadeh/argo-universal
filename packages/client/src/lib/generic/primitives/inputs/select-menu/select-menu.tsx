@@ -39,8 +39,7 @@ function selectMenuClassName({
 }
 
 // A plain picker on a phone row shows its value like a row value: body size, muted (Paper 2V85).
-const rowValueClassName =
-  'text-base leading-6 font-normal text-muted-foreground';
+const rowValueClassName = 'type-body text-muted-foreground';
 const isRowValue = (
   variant: SelectVariant | undefined,
   wide: boolean,

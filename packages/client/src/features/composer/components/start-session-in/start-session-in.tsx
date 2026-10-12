@@ -1,12 +1,9 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { useServerPaired } from '#lib/product/server-place';
 import { Button } from '#primitives/buttons/button/button';
-import { Chevron } from '../../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import {
   CheckoutContents,
@@ -14,6 +11,7 @@ import {
 } from '../composer-configuration/composer-configuration';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ProjectPicker } from './project-picker';
+import { ServerLocation } from './server-location';
 
 export interface StartSessionInProps {
   // The Server computer's name, shown only when this device is paired to a Server on another computer.
@@ -39,8 +37,14 @@ export function StartSessionIn({
   disabled = false,
 }: StartSessionInProps): React.JSX.Element {
   const wide = useContentWide();
-  const paired = useServerPaired();
   const project = projects.find((entry) => entry.id === projectId);
+  const disclosure = (
+    <Icon
+      role="control"
+      name="chevron-down"
+      className="text-muted-foreground"
+    />
+  );
   const projectControl = (
     <ComposerPopover
       listContent
@@ -59,9 +63,7 @@ export function StartSessionIn({
             'gap-1.5 justify-start',
             wide ? 'h-7 sm:h-7 px-1.5 py-0' : 'h-10 sm:h-10 px-4',
           )}
-          trailing={
-            <Chevron name="chevron-down" className="text-muted-foreground" />
-          }
+          trailing={disclosure}
         />
       }
     >
@@ -77,36 +79,8 @@ export function StartSessionIn({
       )}
     </ComposerPopover>
   );
-  // On the Server's own computer the host needs no name; only a lost Connection shows.
-  const server = (paired || !serverConnected) && (
-    <View
-      className={cn(
-        'flex-row items-center gap-1.5 shrink-0',
-        wide ? 'h-7 px-1.5' : 'h-10 px-4',
-      )}
-    >
-      {paired && (
-        <>
-          <Icon name="computer" className="text-muted-foreground" />
-          <Text numberOfLines={1} role="body">
-            {serverName}
-          </Text>
-        </>
-      )}
-      <View
-        role="img"
-        accessibilityLabel={serverConnected ? 'Connected' : 'Reconnecting'}
-        className={cn(
-          'size-[7px] shrink-0 rounded-full',
-          serverConnected ? 'bg-success' : 'bg-warning',
-        )}
-      />
-      {!serverConnected && (
-        <Text role="secondary" className="pl-1 text-warning">
-          Reconnecting…
-        </Text>
-      )}
-    </View>
+  const server = (
+    <ServerLocation name={serverName} connected={serverConnected} />
   );
   if (wide)
     return (
@@ -135,9 +109,7 @@ export function StartSessionIn({
             icon={checkout.newWorktree ? 'branch' : 'folder'}
             labelClassName="text-muted-foreground"
             className="h-10 sm:h-10 px-4 gap-1.5 justify-start"
-            trailing={
-              <Chevron name="chevron-down" className="text-muted-foreground" />
-            }
+            trailing={disclosure}
           />
         }
       >

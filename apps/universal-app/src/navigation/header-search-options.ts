@@ -8,7 +8,6 @@ type SearchBarOptions = NativeStackNavigationOptions['headerSearchBarOptions'];
 export function headerSearchOptions(search: Search): SearchBarOptions {
   return {
     placeholder: search.placeholder,
-    placement: 'integrated',
     autoCapitalize: 'none',
     hideWhenScrolling: false,
     onChangeText: ({ nativeEvent }) => search.onChangeText(nativeEvent.text),

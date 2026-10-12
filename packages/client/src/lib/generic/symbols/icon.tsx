@@ -4,43 +4,23 @@ import {
   ActivityIndicator,
   type ActivityIndicatorProps,
   Platform,
-  type ViewStyle,
+  View,
+  type ViewProps,
 } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { type IconName, iconSymbols } from './icon-names';
-import type { NativeSymbol } from './native-symbol';
+import { type IconRole, useIconBox, useIconPixels } from './icon-role';
 import { SymbolGlyph } from './symbol-glyph/symbol-glyph';
-
-const iconSizes = {
-  xs: 12,
-  // One step below the icons, inside their 16 slot: full-box marks and a selected row's check.
-  mark: 14,
-  sm: 16,
-  md: 20,
-  lg: 24,
-} as const;
+import type { SymbolSource } from './symbol-source';
 
 // Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
 const materialGlyphScale = 1.125;
 
-export type IconSize = keyof typeof iconSizes;
-
-export function iconPixels(size: IconSize): number {
-  return iconSizes[size];
-}
-
-export function iconSizeStyle(
-  size: IconSize,
-): Pick<ViewStyle, 'width' | 'height'> {
-  const pixels = iconPixels(size);
-  return { width: pixels, height: pixels };
-}
-
 export interface IconProps {
   name: IconName;
-  size?: IconSize;
+  role: IconRole;
   // Selects the platform's filled variant where the icon has one.
   filled?: boolean;
   className?: string;
@@ -60,15 +40,15 @@ const TintedSymbol =
 
 export function Icon({
   name,
-  size = 'sm',
+  role,
   filled = false,
   className,
   testID = `icon-${name}`,
 }: IconProps): React.JSX.Element {
   const textClass = useContext(TextClassContext);
-  const symbol: NativeSymbol = iconSymbols[name];
+  const symbol: SymbolSource = iconSymbols[name];
   const colorClassName = cn('text-foreground', textClass, className);
-  const pixels = iconPixels(size);
+  const pixels = useIconPixels(role);
   const sf = (filled && symbol.sfFilled) || symbol.sf;
   return (
     <TintedSymbol
@@ -84,12 +64,27 @@ export function Icon({
   );
 }
 
+// `role` stays the spinner's accessibility role, so its size takes `iconRole`.
 export function IconSpinner({
-  size = 'sm',
+  iconRole,
   ...props
 }: Omit<ActivityIndicatorProps, 'size'> & {
-  size?: IconSize;
+  iconRole: IconRole;
 }): React.JSX.Element {
-  const pixels = iconPixels(size);
-  return <ActivityIndicator {...props} size={pixels} />;
+  return <ActivityIndicator {...props} size={useIconPixels(iconRole)} />;
+}
+
+// A box the size of an icon in that role, its content centred: a spinner, a status ring, or an icon hosted in a native tree.
+export function IconSlot({
+  role,
+  className,
+  ...props
+}: Omit<ViewProps, 'role'> & { role: IconRole }): React.JSX.Element {
+  return (
+    <View
+      {...props}
+      style={useIconBox(role)}
+      className={cn('shrink-0 items-center justify-center', className)}
+    />
+  );
 }

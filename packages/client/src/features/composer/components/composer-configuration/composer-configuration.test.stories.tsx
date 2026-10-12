@@ -362,6 +362,11 @@ function fastMode(width: number): Story {
         'fast',
         true,
       );
+      fast.focus();
+      await userEvent.tab();
+      await expect(
+        overlay.getByRole('slider', { name: 'Effort' }),
+      ).toHaveFocus();
       await userEvent.keyboard('{Escape}');
     },
   };

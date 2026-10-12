@@ -122,9 +122,13 @@
       }
     },
     {
-      // Icons take a named size (sm, md or lg) instead of a number or size-* class.
+      // Icons take a role, so where an icon sits decides its size on every platform; only lib/generic/symbols turns roles into pixels.
       "files": ["packages/client/src/**"],
-      "rules": { "argo/icon-size": "error" }
+      "rules": { "argo/icon-role": "error" }
+    },
+    {
+      "files": ["packages/client/src/lib/generic/symbols/**"],
+      "rules": { "argo/icon-role": "off" }
     },
     {
       // Vendor names and vendor types belong in the adapter folders (ADR-0015).
@@ -1822,6 +1826,10 @@
         "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
         "packages/engine/src/acp/process.ts",
+        "packages/engine/src/agents/install/processes/process.ts",
+        "packages/engine/src/agents/install/processes/process-cleanup.ts",
+        "packages/engine/src/agents/install/processes/process-wrapper.ts",
+        "packages/engine/src/agents/install/processes/process-group.ts",
         "apps/desktop/src/main/server-process.ts",
         "apps/desktop/scripts/storybook-mac.mts"
       ],

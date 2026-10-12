@@ -42,7 +42,7 @@ export function dropdownItemTextClassName(
   variant: ItemStyle['variant'],
 ): string {
   return cn(
-    'select-none text-sm text-popover-foreground group-active:text-popover-foreground',
+    'select-none text-popover-foreground group-active:text-popover-foreground',
     variant === 'destructive' &&
       'text-destructive group-active:text-destructive',
   );

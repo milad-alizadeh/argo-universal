@@ -21,7 +21,7 @@ import { Badge } from '#primitives/display/badge/badge';
 import { Icon } from '#primitives/display/icon/icon';
 import { Text, TextClassContext } from '#primitives/display/text/text';
 import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
-import { iconSizeStyle } from '../../../../lib/generic/symbols/icon';
+import { useIconBox } from '../../../../lib/generic/symbols/icon-role';
 import {
   IssueIndicator,
   type IssueIndicatorProps,
@@ -101,7 +101,7 @@ export const SessionRow = memo(function SessionRow({
     >
       <TextClassContext.Provider value={undefined}>
         <View className="relative h-6 shrink-0 items-center justify-center wide:size-5">
-          <Animated.View style={[iconSizeStyle('sm'), logoStyle]}>
+          <Animated.View style={[useIconBox('mark'), logoStyle]}>
             <SvgXml
               testID="session-logo"
               xml={logo}
@@ -156,7 +156,11 @@ export const SessionRow = memo(function SessionRow({
                   className="shrink-0 flex-row items-center gap-1"
                 >
                   <View className="relative">
-                    <Icon name="agent" className="text-muted-foreground" />
+                    <Icon
+                      role="secondary"
+                      name="agent"
+                      className="text-muted-foreground"
+                    />
                     {(subagentsFailed || session.subagents.running > 0) && (
                       <StatusIndicator
                         testID="subagents-status"

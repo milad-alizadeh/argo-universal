@@ -78,6 +78,18 @@ _Avoid_: Target, loop
 The git working tree that a Session runs in: its own worktree, or the Project's main checkout.
 _Avoid_: Workspace, worktree (when the main checkout is also possible)
 
+**Composer**:
+Where the user writes the next prompt for a Session, with its Agent, model and mode controls.
+_Avoid_: Input, chat box, prompt bar
+
+**Slash command**:
+A command or skill the Agent offers, named in a prompt as `/name` with optional arguments.
+_Avoid_: Command (alone), shortcut, action
+
+**Issue reference**:
+An Issue named in a prompt as `#` and its number.
+_Avoid_: Mention, issue link, tag
+
 **Turn**:
 A stretch of Agent work started by a prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange

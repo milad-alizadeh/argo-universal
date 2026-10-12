@@ -26,6 +26,7 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
       {...linkProps(props)}
       {...rowProps}
       {...triggerProps(props)}
+      {...switchKeyboardProps(props, props.onPress)}
       disabled={props.disabled}
     >
       {content}
@@ -90,4 +91,33 @@ function triggerProps(props: ListItemProps): React.ComponentProps<
 
 function rowHref(props: ListItemProps): string | undefined {
   return props.role ? undefined : (props.href ?? '#');
+}
+
+// React Native Web handles Space for buttons only; a switch row owns the same activation.
+function switchKeyboardProps(
+  props: ListItemProps,
+  press: () => void,
+): {
+  tabIndex?: 0 | -1;
+  onKeyDown?: React.KeyboardEventHandler;
+} {
+  if (props.role !== 'switch') return {};
+  return {
+    tabIndex: props.disabled ? -1 : 0,
+    onKeyDown: (event) => {
+      if (!isSwitchSpace(event)) return;
+      event.preventDefault();
+      if (canActivateSwitch(props.disabled, event.repeat)) press();
+    },
+  };
+}
+
+function isSwitchSpace(event: React.KeyboardEvent): boolean {
+  return event.key === ' ' && event.target === event.currentTarget;
+}
+function canActivateSwitch(
+  disabled: boolean | undefined,
+  repeat: boolean,
+): boolean {
+  return !disabled && !repeat;
 }

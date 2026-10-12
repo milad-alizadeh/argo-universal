@@ -82,6 +82,7 @@ export function SwitchOptions({
               importantForAccessibility="no-hide-descendants"
             >
               <Switch
+                tabIndex={-1}
                 checked={option.currentValue}
                 aria-checked={option.currentValue}
                 onCheckedChange={() => {}}

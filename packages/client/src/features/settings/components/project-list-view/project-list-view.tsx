@@ -13,6 +13,7 @@ import {
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
 import type { ListItemProps } from '../../../../lib/generic/primitives/fields/field-props';
+import type { ListSearchBarProps } from '../../../../lib/generic/primitives/inputs/list-search-bar/list-search-bar';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 export type ProjectsLoad =
@@ -27,7 +28,10 @@ export interface ProjectListViewProps {
   // Where the search starts, for stories.
   initialSearch?: string;
 }
-type SearchedProps = ProjectListViewProps & { search: string };
+type SearchedProps = ProjectListViewProps & {
+  search: string;
+  onSearch: (search: string) => void;
+};
 type LoadedProps = Omit<SearchedProps, 'projects'> & {
   projects: ProjectInfo[];
 };
@@ -48,7 +52,7 @@ export function ProjectListView(
         actions={<AddProject />}
         search={{ label: searchLabel, value: search, onChangeText: setSearch }}
       >
-        <ProjectsBody {...props} search={search} />
+        <ProjectsBody {...props} search={search} onSearch={setSearch} />
       </SettingsPage>
     </View>
   );
@@ -63,7 +67,10 @@ function PhoneHeader({
   return (
     <ScreenHeader
       title="Projects"
-      search={{ placeholder: searchLabel, onChangeText: onSearch }}
+      search={{
+        placeholder: searchLabel,
+        onChangeText: onSearch,
+      }}
     />
   );
 }
@@ -75,13 +82,23 @@ function AddProject(): React.JSX.Element {
       variant="ghost"
       size="sm"
       icon="add"
-      iconSize="md"
+      iconRole="action"
       iconClassName="text-muted-foreground"
       accessibilityLabel="Add Project"
       disabled
     />
   );
 }
+
+// The Projects page is pushed from Settings, so a back button leads its header.
+const listSearch = (
+  props: Pick<SearchedProps, 'search' | 'onSearch'>,
+): ListSearchBarProps => ({
+  placeholder: searchLabel,
+  value: props.search,
+  onChangeText: props.onSearch,
+  leading: 'back',
+});
 
 const loadFailed: ErrorToast = {
   title: 'Could not load Projects',
@@ -94,7 +111,7 @@ function ProjectsBody(props: SearchedProps): React.JSX.Element {
   useErrorToast(projects.status === 'error' ? loadFailed : undefined);
   if (projects.status !== 'loaded')
     return (
-      <FieldGroup>
+      <FieldGroup search={listSearch(props)}>
         <FieldSection>
           <ListItem title="Loading Projects…" loading />
         </FieldSection>
@@ -113,7 +130,7 @@ function LoadedProjects(props: LoadedProps): React.JSX.Element {
   const found = props.projects.filter((project) => matches(project, query));
   return (
     <View className="flex-1 pt-2 wide:pt-0">
-      <FieldGroup>
+      <FieldGroup search={listSearch(props)}>
         <ProjectRows {...props} found={found} searching={query !== ''} />
       </FieldGroup>
     </View>

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Database } from '@repo/db';
 import { checkAgentLaunch } from '../acp';
-import type { AgentsRouterDeps } from '../agents';
+import { AgentInstallations, type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
 import type { FeedDeps } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
@@ -53,21 +53,46 @@ export function createFeedSources(input: FeedSourcesInput): FeedSources {
 }
 
 // The Engine supplies the ACP check to the Agents module itself.
-type EngineSupplied = keyof FeedDeps | 'createId' | 'checkAgentLaunch';
+type EngineSupplied =
+  | keyof FeedDeps
+  | 'createId'
+  | 'checkAgentLaunch'
+  | 'installations';
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId'>>;
+  Partial<Pick<AppRouterDeps, 'createId' | 'installations'>>;
 
 export function createAppRouterDeps(
   input: AppRouterInput,
   sources: FeedSources = createFeedSources(input),
 ): AppRouterDeps {
+  const installations =
+    input.installations ?? new AgentInstallations(input.home ?? '');
+  bindInstallations(installations, input);
   return {
     ...input,
     ...sources,
     createId: input.createId ?? randomUUID,
     checkAgentLaunch,
+    installations,
     readSession: createSessionReader(input.database),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };
+}
+
+function bindInstallations(
+  installations: AgentInstallations,
+  input: AppRouterInput,
+): void {
+  installations.bind({
+    ...input,
+    createId: input.createId ?? randomUUID,
+    checkAgentLaunch,
+    isInUse: (agentId) =>
+      Object.values(input.sessions.getSnapshot().context.sessions).some(
+        (session) =>
+          !session.getSnapshot().context.agent ||
+          session.getSnapshot().context.agent === agentId,
+      ),
+  });
 }

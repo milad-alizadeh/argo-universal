@@ -111,7 +111,7 @@ function RequestForm({
         <View className="gap-1 px-4 pt-4 pb-1">
           {source && (
             <View className="flex-row items-center gap-1.5">
-              <Icon name="plug" size="sm" className="text-muted-foreground" />
+              <Icon name="plug" role="body" className="text-muted-foreground" />
               <Text role="secondary">{source} asks</Text>
             </View>
           )}
@@ -143,7 +143,11 @@ function RequestForm({
       </View>
       {!alreadyAnswered && invalid.length > 0 && (
         <View role="alert" className="flex-row items-center gap-1.5 px-4 pt-3">
-          <Icon name="error" size="sm" className="shrink-0 text-destructive" />
+          <Icon
+            name="error"
+            role="body"
+            className="shrink-0 text-destructive"
+          />
           <Text role="secondary" className="min-w-0 flex-1 text-destructive">
             Fix{' '}
             {invalid

@@ -27,6 +27,7 @@ export {
   type RenderSymbolImage,
   SymbolImagesProvider,
 } from './lib/generic/symbols/symbol-images';
+export { iconSymbols } from './lib/generic/symbols/icon-names';
 export { useWide } from './lib/generic/use-wide/use-wide';
 export { Text, useTextStyle } from './lib/generic/primitives/display/text/text';
 export { Toaster } from './lib/generic/primitives/overlays/toast/toast';
@@ -40,5 +41,7 @@ export {
   type ScreenHeaderProps,
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
+export { HeaderButton } from '#lib/product/header-button';
+export type { Section } from './lib/product/navigation/sections';
 export { HeaderSearchRow } from './lib/product/navigation/header-search';
 export { AppProviders } from './app-providers';

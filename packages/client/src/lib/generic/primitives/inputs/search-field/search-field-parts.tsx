@@ -48,7 +48,7 @@ export function Lens(props: MorphState): React.JSX.Element {
         useLensStyle(props.progress, props.geometry),
       ]}
     >
-      <Icon name="search" size="md" className="text-muted-foreground" />
+      <Icon name="search" role="action" className="text-muted-foreground" />
     </Animated.View>
   );
 }
@@ -130,7 +130,7 @@ export function QueryInput({
       }}
       autoCapitalize="none"
       autoCorrect={false}
-      className="type-body ios:leading-none h-10 w-full py-0 pl-9 pr-11 text-foreground web:outline-none"
+      className="type-body ios:leading-none h-full web:h-10 w-full py-0 pl-9 pr-11 text-foreground web:outline-none"
       style={{ textAlignVertical: 'center' }}
     />
   );

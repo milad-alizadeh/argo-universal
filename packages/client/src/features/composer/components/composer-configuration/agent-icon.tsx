@@ -3,10 +3,8 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
-import {
-  iconSizeStyle,
-  type IconSize,
-} from '../../../../lib/generic/symbols/icon';
+import { IconSlot } from '../../../../lib/generic/symbols/icon';
+import type { IconRole } from '../../../../lib/generic/symbols/icon-role';
 
 const ThemedLogo = withUniwind(SvgXml, {
   color: { fromClassName: 'className', styleProperty: 'color' },
@@ -14,17 +12,14 @@ const ThemedLogo = withUniwind(SvgXml, {
 
 export function AgentIcon({
   agent,
-  size = 'sm',
+  role = 'control',
 }: {
   agent?: AgentInfo;
-  size?: IconSize;
+  role?: IconRole;
 }): React.JSX.Element | null {
   return agent ? (
-    <View
-      style={iconSizeStyle(size)}
-      className="shrink-0 items-center justify-center"
-    >
-      <View testID="composer-agent-icon" style={iconSizeStyle(size)}>
+    <IconSlot role={role}>
+      <View testID="composer-agent-icon" className="h-full w-full">
         <ThemedLogo
           xml={agent.logo}
           className="text-foreground"
@@ -32,6 +27,6 @@ export function AgentIcon({
           height="100%"
         />
       </View>
-    </View>
+    </IconSlot>
   ) : null;
 }

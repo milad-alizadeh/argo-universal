@@ -55,7 +55,7 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
 export const nativeLabelClass = 'ios:text-nav-action ios:font-medium';
 
 const textClasses = cva(
-  `text-sm font-medium ${nativeLabelClass} web:pointer-events-none web:transition-colors`,
+  `type-control ${nativeLabelClass} web:pointer-events-none web:transition-colors`,
   {
     variants: {
       variant: {

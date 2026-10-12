@@ -5,7 +5,6 @@ import { useContentWide } from '#lib/product/content-layout';
 import { Button } from '#primitives/buttons/button/button';
 import { FieldGroup } from '#primitives/fields/field-group/field-group';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { Chevron } from '../../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { configurationChoices } from '../../state/configuration-choices';
 import { ComposerPopover } from '../composer-popover/composer-popover';
@@ -52,8 +51,8 @@ export function ComposerModeControl({
           )}
           trailing={
             wide ? (
-              <Chevron
-                textRole="control"
+              <Icon
+                role="control"
                 name="chevron-down"
                 className="text-muted-foreground"
               />
@@ -75,6 +74,7 @@ export function ComposerModeControl({
                   dangerous={choice._meta?.argo?.tone === 'dangerous'}
                   leading={
                     <Icon
+                      role="control"
                       name={configurationIcon(choice._meta?.argo?.icon)}
                       className={cn(
                         'text-foreground',

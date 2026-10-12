@@ -38,11 +38,7 @@ export const Settings: Story = {
     return (
       <View className="w-full bg-sidebar wide:w-shell-list" style={{ flex: 1 }}>
         <View className="hidden h-14 flex-row items-center px-4 wide:flex">
-          <Text
-            semanticRole="heading"
-            aria-level={1}
-            className="text-base font-semibold"
-          >
+          <Text semanticRole="heading" aria-level={1} role={'heading'}>
             Settings
           </Text>
         </View>

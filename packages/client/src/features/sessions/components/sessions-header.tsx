@@ -33,7 +33,6 @@ export function SessionsHeader({
             size="md"
             className="size-7 sm:size-7"
             icon="new-session"
-            iconSize="sm"
             iconClassName="text-muted-foreground"
             accessibilityLabel="New Session"
             onPress={onNewSession}
@@ -44,7 +43,7 @@ export function SessionsHeader({
   );
 }
 
-// A phone's native header search; on iOS New Session sits beside the bar.
+// A phone's native header search; on iOS New Session is a header item, on Android its own round button.
 export function sessionsHeaderSearch(
   filter: SessionsFilter,
   onNewSession: () => void,

@@ -43,7 +43,7 @@ export const Variations: Story = {
         <PageTitleRow
           title="Claude Code"
           onBack={() => {}}
-          icon={<Icon name="sparkle" />}
+          icon={<Icon name="sparkle" role="title" />}
           badge={
             <Badge tone="success">
               <Text>Ready</Text>

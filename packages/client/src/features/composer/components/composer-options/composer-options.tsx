@@ -40,6 +40,7 @@ function BooleanSetting({
   const toggle = (
     <Switch
       accessibilityLabel={option.name}
+      tabIndex={native ? undefined : -1}
       checked={option.currentValue}
       onCheckedChange={(checked) => onChange(option.configId, checked)}
     />

@@ -4,7 +4,6 @@ import { Platform, View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import { Button } from '#primitives/buttons/button/button';
 import { Text } from '#primitives/display/text/text';
-import { Chevron } from '../../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { configurationChoices } from '../../state/configuration-choices';
 import {
@@ -89,11 +88,18 @@ export function ComposerAgentModelControl({
                     {effortLabel}
                   </Text>
                 )}
-              {fastOn && <Icon name="fast-mode" filled testID="fast-mode-on" />}
+              {fastOn && (
+                <Icon
+                  role="control"
+                  name="fast-mode"
+                  filled
+                  testID="fast-mode-on"
+                />
+              )}
               {wide && (
-                <Chevron
+                <Icon
                   name="chevron-down"
-                  textRole="control"
+                  role="control"
                   className="text-muted-foreground"
                 />
               )}

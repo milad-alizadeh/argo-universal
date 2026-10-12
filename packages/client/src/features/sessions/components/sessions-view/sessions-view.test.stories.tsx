@@ -24,6 +24,7 @@ const spies = {
   onNewSessionInProject: fn(),
   onProjectSettings: fn(),
   onLoadMore: fn(),
+  onQueryChange: fn(),
 };
 
 const meta = {

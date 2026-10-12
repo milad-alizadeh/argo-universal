@@ -191,7 +191,7 @@ export function Composer({
                       disabled={inactive}
                       accessibilityLabel={`Remove ${image.name}`}
                       icon="close"
-                      iconSize="xs"
+                      iconRole="secondary"
                       variant="ghost"
                       className={cn(
                         'absolute right-0 top-0 size-8 sm:size-8 rounded-sm bg-background web:wide:opacity-0',
@@ -259,7 +259,7 @@ export function Composer({
                     disabled={inactive}
                     icon="add"
                     variant="ghost"
-                    iconSize="sm"
+                    iconRole="control"
                     hitSlop={8}
                     accessibilityLabel={wide ? 'Attach' : 'Attach images'}
                     className="size-7 sm:size-7 p-0"
@@ -372,7 +372,7 @@ export function Composer({
                   'size-7 sm:size-7 rounded-full',
                   sendState === 'blocked' && 'opacity-35',
                 )}
-                iconSize="sm"
+                iconRole="control"
                 iconClassName="text-primary-foreground"
               />
             </View>
@@ -429,7 +429,7 @@ function ComposerWarning({
 }): React.JSX.Element {
   return (
     <View role="alert" className="mx-4 mt-2 flex-row items-start gap-2">
-      <Icon name="error" className="text-destructive" />
+      <Icon role="control" name="error" className="text-destructive" />
       <Text
         role="secondary"
         className="min-w-0 flex-1 text-destructive"

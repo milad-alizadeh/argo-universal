@@ -4,6 +4,7 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ConnectionBanner, type ConnectionState } from '#features/connection';
+import { PhoneListSearch } from '#lib/product/phone-list-search';
 import { Screen } from '#lib/product/screen/screen';
 import {
   type ErrorToast,
@@ -29,6 +30,8 @@ export interface SessionsViewProps {
   agents: AgentsListOutput;
   sessions: SessionInfo[];
   query: string;
+  // A phone's search at the top of the list sets it; iOS's header and a wide window's title row set it themselves.
+  onQueryChange: (query: string) => void;
   archived: boolean;
   selectedSessionId?: string;
   onSelect: (sessionId: string) => void;
@@ -77,6 +80,7 @@ function SessionsLayout({
   agents,
   sessions,
   query,
+  onQueryChange,
   archived,
   selectedSessionId,
   onSelect,
@@ -108,7 +112,18 @@ function SessionsLayout({
         onEndReached={onLoadMore}
         // On a phone the rows scroll under the header, so what sits above them scrolls too.
         header={
-          wide ? undefined : <View className="-mx-2 -mt-5">{listTop}</View>
+          wide ? undefined : (
+            <View className="-mx-2 -mt-5">
+              <PhoneListSearch
+                placeholder="Search Sessions"
+                value={query}
+                onChangeText={onQueryChange}
+                leading="menu"
+                className="px-4 pt-2 pb-2"
+              />
+              {listTop}
+            </View>
+          )
         }
         // The list insets it below a transparent header, as it does the rows.
         placeholder={

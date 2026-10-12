@@ -1,16 +1,16 @@
-import { HStack, Image, Text, VStack } from '@expo/ui/swift-ui';
+import { HStack, Text, VStack } from '@expo/ui/swift-ui';
 import {
   accessibilityHidden,
   alignmentGuide,
   fixedSize,
-  foregroundStyle,
   frame,
   opacity,
   padding,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useWindowDimensions } from 'react-native';
-import { iconPixels } from '../../../symbols/icon';
+import { useIconPixels } from '../../../symbols/icon-role';
+import { NativeSymbol } from '../../../symbols/native-symbol';
 import type { ListItemProps } from '../../fields/field-props';
 import { useSwiftUITextModifiers } from '../../native/native-typography';
 import { hasDisclosure, hasLeadingSlot } from './list-item-styles';
@@ -22,7 +22,7 @@ const disabledOpacity = 0.5;
 const reflowFontScale = 1.5;
 const reflowSpacing = 8;
 export function RowContent(props: ListItemProps): React.JSX.Element {
-  const iconSize = iconPixels('lg');
+  const iconSize = useIconPixels('row');
   return (
     <HStack
       spacing={rowSpacing}
@@ -67,11 +67,7 @@ function DisclosureIndicator({
   visible: boolean;
 }): React.JSX.Element | null {
   return visible ? (
-    <Image
-      systemName="chevron.right"
-      size={iconPixels('xs')}
-      modifiers={[foregroundStyle({ type: 'hierarchical', style: 'tertiary' })]}
-    />
+    <NativeSymbol name="chevron-right" role="body" muted />
   ) : null;
 }
 

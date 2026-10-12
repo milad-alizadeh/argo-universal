@@ -1,0 +1,63 @@
+import type * as React from 'react';
+import type { ViewStyle } from 'react-native';
+import Animated, {
+  ReduceMotion,
+  useAnimatedStyle,
+  useDerivedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { motionDuration, quarterTurnDegrees } from '../../../motion';
+import { Icon } from '../../../symbols/icon';
+import { cn } from '../../../utils';
+
+interface DisclosureChevronProps {
+  // Turns the chevron down when its section is open; leave it out for a row that opens another page.
+  open?: boolean;
+  className?: string;
+}
+
+export function DisclosureChevron({
+  open,
+  className,
+}: DisclosureChevronProps): React.JSX.Element {
+  const chevron = (
+    <Icon
+      role="body"
+      name="chevron-right"
+      className={cn('text-muted-foreground', className)}
+    />
+  );
+  if (open === undefined) return chevron;
+  return <Turning open={open}>{chevron}</Turning>;
+}
+
+function Turning({
+  open,
+  children,
+}: {
+  open: boolean;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <Animated.View style={useTurn(open)} className="shrink-0">
+      {children}
+    </Animated.View>
+  );
+}
+
+type TurnStyle = ReturnType<typeof useAnimatedStyle<ViewStyle>>;
+
+function useTurn(open: boolean): TurnStyle {
+  const rotation = useDerivedValue(
+    () =>
+      withTiming(open ? quarterTurnDegrees : 0, {
+        duration: motionDuration.enter,
+        reduceMotion: ReduceMotion.System,
+      }),
+    [open],
+  );
+  return useAnimatedStyle<ViewStyle>(
+    () => ({ transform: [{ rotate: `${rotation.value}deg` }] }),
+    [rotation],
+  );
+}

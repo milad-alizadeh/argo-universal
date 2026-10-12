@@ -14,7 +14,8 @@ export function rightItems(right: readonly ReactElement[]): ScreenOptions {
   if (!right.length) return {};
   return {
     headerRight: (): React.JSX.Element => (
-      <View className="flex-row gap-1">{right}</View>
+      // iOS ends the last 32pt item's glyph at the screen inset, in line with the search bar.
+      <View className="flex-row gap-1 ios:-mr-1.5">{right}</View>
     ),
   };
 }

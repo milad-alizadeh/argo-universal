@@ -16,7 +16,7 @@ import {
   type ModifierConfig,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ComponentProps, ReactElement } from 'react';
-import { iconPixels } from '../../../symbols/icon';
+import { useIconPixels } from '../../../symbols/icon-role';
 import { createNativeButton, NativeButtonIcon } from './button-native';
 import type { ButtonTheme } from './button-native-colors';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
@@ -116,7 +116,7 @@ function ButtonIcon(props: ButtonIconProps): ReactElement | null {
 }
 
 function LoadingIcon(props: { color?: string }): ReactElement {
-  const pixels = iconPixels('sm');
+  const pixels = useIconPixels('control');
   return (
     <CircularProgressIndicator
       color={props.color}

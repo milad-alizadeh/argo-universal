@@ -13,11 +13,7 @@ export default function SessionsLayout(): React.JSX.Element {
     <PhoneStack>
       <Stack.Screen name="index" options={{ title: 'Sessions' }} />
       <Stack.Screen name="sessions/new" options={{ title: '' }} />
-      <Stack.Screen
-        name="sessions/[id]"
-        // The Feed is a separate viewport below the header, including while it scrolls.
-        options={{ title: 'Session', headerTransparent: false }}
-      />
+      <Stack.Screen name="sessions/[id]" options={{ title: 'Session' }} />
     </PhoneStack>
   );
 }

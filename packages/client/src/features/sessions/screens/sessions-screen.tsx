@@ -24,6 +24,7 @@ import { sessionsLoadState } from '../state/sessions-load-state';
 
 export interface SessionsScreenProps {
   query: string;
+  onQueryChange: (query: string) => void;
   archived: boolean;
   // The open Session, which the wide sidebar marks.
   selectedSessionId?: string;
@@ -32,6 +33,7 @@ export interface SessionsScreenProps {
 // The Sessions list: its queries and live updates, passed to the view as props.
 export function SessionsScreen({
   query,
+  onQueryChange,
   archived,
   selectedSessionId,
 }: SessionsScreenProps): React.JSX.Element {
@@ -80,6 +82,7 @@ export function SessionsScreen({
       agents={agents.data ?? []}
       sessions={rows}
       query={query}
+      onQueryChange={onQueryChange}
       archived={archived}
       selectedSessionId={selectedSessionId}
       onSelect={(id) => navigate({ to: 'session', id })}

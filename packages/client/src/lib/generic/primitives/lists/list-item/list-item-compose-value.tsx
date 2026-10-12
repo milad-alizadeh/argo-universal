@@ -1,5 +1,5 @@
 import { Row, Text } from '@expo/ui/jetpack-compose';
-import { weight } from '@expo/ui/jetpack-compose/modifiers';
+import { clearSemantics, weight } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import type { ListItemProps } from '../../fields/field-props';
@@ -16,7 +16,7 @@ export function RowTrailing(props: ListItemProps): React.JSX.Element {
       modifiers={valueWidth(props.value)}
     >
       <NativeRowGlyph leading={props.valueLeading} />
-      <RowValue value={props.value} />
+      <RowValue value={props.value} decorative={!!props.control} />
       <NativeRowStatus {...props} />
       <RowDisclosure visible={hasDisclosure(props)} />
     </Row>
@@ -28,14 +28,17 @@ function valueWidth(value: string | undefined): ReturnType<typeof weight>[] {
 }
 function RowValue({
   value,
-}: Pick<ListItemProps, 'value'>): React.JSX.Element | null {
+  decorative,
+}: Pick<ListItemProps, 'value'> & {
+  decorative: boolean;
+}): React.JSX.Element | null {
   const style = useComposeTextStyle('body');
   const { mutedForeground } = useNativeTheme().colors;
   return value === undefined ? null : (
     <Text
       color={mutedForeground}
       style={{ ...style, textAlign: 'end' }}
-      modifiers={[weight(1)]}
+      modifiers={[weight(1), ...(decorative ? [clearSemantics()] : [])]}
     >
       {value}
     </Text>

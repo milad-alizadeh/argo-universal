@@ -41,7 +41,7 @@ export function ConfigurationDrill({
       value={page === 'agent' ? agent?.label : modelName(current)}
       valueLeading={
         page === 'agent' ? (
-          <AgentIcon agent={agent} size={wide ? 'sm' : 'lg'} />
+          <AgentIcon agent={agent} role={wide ? 'control' : 'row'} />
         ) : undefined
       }
       role="button"

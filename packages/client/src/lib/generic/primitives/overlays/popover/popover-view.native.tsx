@@ -6,15 +6,44 @@ import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { NativeOnlyAnimatedView } from '#lib/generic/primitives/native/native-only-animated-view/native-only-animated-view';
 import { cn } from '#lib/generic/utils';
 import { usePopoverDismissal } from './popover-dismissal';
-
-function Popover({
-  openOnHover: _openOnHover,
-  ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Root> & {
-  openOnHover?: boolean;
-}): React.JSX.Element {
-  return <PopoverPrimitive.Root {...props} />;
+import { ControlledPopoverState, Popover } from './popover-root';
+type TriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>;
+function PopoverTrigger({ ref, ...props }: TriggerProps): React.JSX.Element {
+  const { trigger, setRef } = useTriggerRef(ref);
+  const open = React.useContext(ControlledPopoverState);
+  const { triggerPosition } = PopoverPrimitive.useRootContext();
+  React.useEffect(() => {
+    if (open && !triggerPosition) openMeasuredTrigger(trigger.current);
+  }, [open, triggerPosition, trigger]);
+  return <PopoverPrimitive.Trigger {...props} ref={setRef} />;
 }
+function openMeasuredTrigger(
+  trigger: PopoverPrimitive.TriggerRef | null,
+): void {
+  trigger?.open();
+}
+function useTriggerRef(ref: TriggerProps['ref']): {
+  trigger: React.RefObject<PopoverPrimitive.TriggerRef | null>;
+  setRef: React.RefCallback<PopoverPrimitive.TriggerRef>;
+} {
+  const trigger = React.useRef<PopoverPrimitive.TriggerRef>(null);
+  const setRef = React.useCallback(
+    (node: PopoverPrimitive.TriggerRef | null) => {
+      trigger.current = node;
+      return forwardTriggerRef(ref, node);
+    },
+    [ref],
+  );
+  return { trigger, setRef };
+}
+function forwardTriggerRef(
+  ref: TriggerProps['ref'],
+  node: PopoverPrimitive.TriggerRef | null,
+): void | (() => void) {
+  if (typeof ref === 'function') return ref(node);
+  if (ref) ref.current = node;
+}
+
 export function PopoverHoverGroup({
   children,
 }: {
@@ -22,8 +51,6 @@ export function PopoverHoverGroup({
 }): React.ReactNode {
   return children;
 }
-const PopoverTrigger = PopoverPrimitive.Trigger;
-
 export function usePopoverClose(): () => void {
   const { onOpenChange } = PopoverPrimitive.useRootContext();
   return React.useCallback(() => onOpenChange(false), [onOpenChange]);

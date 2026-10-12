@@ -23,8 +23,7 @@ import { fullTurnDegrees } from '#lib/generic/motion';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { useClock } from '#lib/generic/use-clock';
 import { StatusIndicator } from '#lib/product/status-indicator/status-indicator';
-import { Icon } from '../../../../lib/generic/symbols/icon';
-import { useTextIconSize } from '../../../../lib/generic/symbols/text-icon-size';
+import { Icon, IconSlot } from '../../../../lib/generic/symbols/icon';
 import { ShimmerText } from '../shimmer-text';
 import { toolCallIcon } from '../tool-call-icon';
 import { WorkingMark } from '../working-mark';
@@ -42,7 +41,6 @@ export interface LiveHeaderProps {
 function RetryIcon(): React.JSX.Element {
   const rotation = useSharedValue(0);
   const reducedMotion = useReducedMotion();
-  const iconSize = useTextIconSize();
   useEffect(() => {
     if (!reducedMotion)
       rotation.set(
@@ -62,7 +60,7 @@ function RetryIcon(): React.JSX.Element {
   );
   return (
     <Animated.View testID="live-header-retry" style={style}>
-      <Icon name="retry" size={iconSize} className="text-muted-foreground" />
+      <Icon name="retry" role="body" className="text-muted-foreground" />
     </Animated.View>
   );
 }
@@ -74,7 +72,6 @@ function SourceIcon({
   source: LiveHeaderSource;
   toolCall?: ToolCallUpdate;
 }): React.JSX.Element {
-  const iconSize = useTextIconSize();
   switch (source.type) {
     case 'request':
       return <StatusIndicator testID="live-header-dot" status="needs_input" />;
@@ -84,17 +81,13 @@ function SourceIcon({
       return <WorkingMark />;
     case 'thought':
       return (
-        <Icon
-          name="thinking"
-          size={iconSize}
-          className="text-muted-foreground"
-        />
+        <Icon name="thinking" role="body" className="text-muted-foreground" />
       );
     case 'tool_call':
       return (
         <Icon
           name={toolCall ? toolCallIcon(toolCall) : 'tool'}
-          size={iconSize}
+          role="body"
           className="text-muted-foreground"
         />
       );
@@ -118,9 +111,9 @@ export function LiveHeader({
       accessibilityLabel={title}
       className="w-full flex-row items-center gap-1.5"
     >
-      <View className="size-5 shrink-0 items-center justify-center wide:size-4">
+      <IconSlot role="body">
         <SourceIcon source={source} toolCall={toolCall} />
-      </View>
+      </IconSlot>
       {request ? (
         <Text
           numberOfLines={1}

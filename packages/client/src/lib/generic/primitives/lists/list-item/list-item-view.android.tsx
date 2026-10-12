@@ -8,6 +8,7 @@ import {
 } from '@expo/ui/jetpack-compose';
 import {
   alpha,
+  clearSemantics,
   defaultMinSize,
   fillMaxWidth,
   padding,
@@ -17,7 +18,7 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
-import { iconPixels } from '../../../symbols/icon';
+import { useIconPixels } from '../../../symbols/icon-role';
 import { useWide } from '../../../use-wide/use-wide';
 import { useNavigationFields } from '../../fields/field-layout';
 import { type ListItemProps, listItemName } from '../../fields/field-props';
@@ -44,12 +45,7 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
   if (wide) return <Web.ListItem {...props} />;
   const rowProps = {
     shape: Shape.RoundedCorner({ cornerRadii: tileCorners }),
-    modifiers: [
-      fillMaxWidth(),
-      semantics({
-        contentDescription: rowName(props),
-      }),
-    ],
+    modifiers: [fillMaxWidth(), ...rowSemantics(props)],
   };
   if (!props.onPress)
     return (
@@ -99,11 +95,13 @@ function RowContent(props: ListItemProps): React.JSX.Element {
         fillMaxWidth(),
         defaultMinSize({ minHeight: rowHeight }),
         padding(gutter, verticalPadding, gutter, verticalPadding),
-        alpha(props.disabled ? disabledOpacity : 1),
+        ...headerModifiers(props),
       ]}
     >
       <RowLeading {...props} />
-      <Column modifiers={[weight(1)]}>
+      <Column
+        modifiers={[weight(1), ...(props.control ? [clearSemantics()] : [])]}
+      >
         <RowTitle {...props} />
         <RowSubtitle subtitle={props.subtitle} />
       </Column>
@@ -116,7 +114,7 @@ function RowLeading(
   props: Pick<ListItemProps, 'icon' | 'loading' | 'leading'>,
 ): React.JSX.Element | null {
   const { primary } = useNativeTheme().colors;
-  const pixels = iconPixels('md');
+  const pixels = useIconPixels('row');
   if (props.loading)
     return (
       <CircularProgressIndicator
@@ -126,4 +124,17 @@ function RowLeading(
       />
     );
   return <NativeRowGlyph {...props} />;
+}
+
+function rowSemantics(props: ListItemProps): ReturnType<typeof semantics>[] {
+  if (props.control || props.detail) return [];
+  return [semantics({ contentDescription: rowName(props) })];
+}
+function headerModifiers(
+  props: ListItemProps,
+): NonNullable<React.ComponentProps<typeof Row>['modifiers']> {
+  return [
+    alpha(props.disabled ? disabledOpacity : 1),
+    ...(props.detail ? [clearSemantics()] : []),
+  ];
 }

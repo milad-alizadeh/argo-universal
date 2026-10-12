@@ -16,7 +16,7 @@ export type { FieldListProps, FieldListSection } from './field-list-view.tsx';
 export function FieldList(props: FieldListProps): React.JSX.Element {
   if (useWide()) return <VirtualFieldList {...props} />;
   return (
-    <FieldGroup>
+    <FieldGroup search={props.search}>
       {props.sections.map((section, index) => (
         <FieldSection
           key={section.title ?? `section-${index}`}

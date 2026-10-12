@@ -1,12 +1,15 @@
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
 import type { IconName } from '../../symbols/icon-names';
+import type { ListSearchBarProps } from '../inputs/list-search-bar/list-search-bar';
 
 export interface FieldGroupProps {
   children: ReactNode;
   variant?: 'grouped' | 'navigation';
   // A content-sized overlay uses compact groups rather than a full screen's scrolling column.
   fit?: boolean;
+  // A phone's search above the sections, scrolling with them; only Android draws it, as iOS searches from its header.
+  search?: ListSearchBarProps;
 }
 
 export interface FieldSectionProps {
