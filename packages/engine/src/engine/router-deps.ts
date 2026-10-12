@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Database } from '@repo/db';
 import { checkAgentLaunch } from '../acp';
-import type { AgentsRouterDeps } from '../agents';
+import { AgentInstallations, type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
 import type { FeedDeps } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
@@ -58,27 +58,52 @@ type EngineSupplied =
   | keyof FeedDeps
   | 'createId'
   | 'checkAgentLaunch'
-  | 'agentLogins';
+  | 'agentLogins'
+  | 'installations';
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins'>>;
+  Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>>;
 
 export function createAppRouterDeps(
   input: AppRouterInput,
   sources: FeedSources = createFeedSources(input),
 ): AppRouterDeps {
+  const installations =
+    input.installations ?? new AgentInstallations(input.home ?? '');
+  const agentLogins =
+    input.agentLogins ??
+    createEngineAgentLogins({
+      sessions: input.sessions,
+      createId: input.createId ?? randomUUID,
+      installations,
+    });
+  bindInstallations(installations, { ...input, agentLogins });
   return {
     ...input,
     ...sources,
     createId: input.createId ?? randomUUID,
     checkAgentLaunch,
-    agentLogins:
-      input.agentLogins ??
-      createEngineAgentLogins({
-        sessions: input.sessions,
-        createId: input.createId ?? randomUUID,
-      }),
+    agentLogins,
+    installations,
     readSession: createSessionReader(input.database),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };
+}
+
+function bindInstallations(
+  installations: AgentInstallations,
+  input: AppRouterInput & Pick<AppRouterDeps, 'agentLogins'>,
+): void {
+  installations.bind({
+    ...input,
+    createId: input.createId ?? randomUUID,
+    checkAgentLaunch,
+    isInUse: (agentId) =>
+      input.agentLogins.isBusy(agentId) ||
+      Object.values(input.sessions.getSnapshot().context.sessions).some(
+        (session) =>
+          !session.getSnapshot().context.agent ||
+          session.getSnapshot().context.agent === agentId,
+      ),
+  });
 }

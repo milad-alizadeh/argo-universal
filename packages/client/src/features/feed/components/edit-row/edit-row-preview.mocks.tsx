@@ -31,7 +31,7 @@ export function EditRowPreview({
       sidebarShown={true}
       onSidebarShownChange={() => {}}
       onSectionChange={() => {}}
-      listHeader={<Text className="text-base font-semibold">Sessions</Text>}
+      listHeader={<Text role={'heading'}>Sessions</Text>}
       list={null}
       inspector={() => null}
       inspectorState="closed"

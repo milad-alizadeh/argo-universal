@@ -69,6 +69,7 @@ beforeEach((): void => {
   events = [];
   killTimeoutMs = 25_000;
   vi.stubEnv('ARGO_FIXTURE_PIDFILE', join(folder, 'pids.json'));
+  vi.stubEnv('ARGO_HOME', folder);
 });
 
 afterEach((): void => {

@@ -1,3 +1,4 @@
+import type { AgentInstallPresentation } from './agent-install-types';
 import type { AgentRowEntry } from './agent-status';
 
 interface AgentLink {
@@ -30,6 +31,7 @@ export interface AgentDetailViewProps {
   onBack?: () => void;
   // Each action shows disabled until the Server can do it.
   onInstall?: () => void;
+  installation?: AgentInstallPresentation;
   onUpdate?: () => void;
   onRemove?: () => void;
   // Probes the Agent again, such as after signing in with the CLI.

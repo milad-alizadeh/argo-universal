@@ -23,6 +23,10 @@ export interface ConfigurationDeps {
   createId: () => string;
   checkAgentLaunch: CheckAgentLaunch;
   agentLogins?: Pick<AgentLogins, 'runMutation'>;
+  withAgentSetup?: <Result>(
+    agentId: string,
+    operation: () => Promise<Result>,
+  ) => Promise<Result>;
 }
 type CustomSave = CustomCheck;
 type SavedAgent = Pick<ConfiguredAgent, 'id' | 'enabled'> & {
@@ -42,7 +46,14 @@ const saveConfiguration = (
       ...agent,
       configuration: serializeConfiguration(agent),
     }),
+    true,
   );
+const withSetup = <Result>(
+  deps: ConfigurationDeps,
+  agentId: string,
+  operation: () => Promise<Result>,
+): Promise<Result> =>
+  deps.withAgentSetup ? deps.withAgentSetup(agentId, operation) : operation();
 const requireAgent = (
   deps: ConfigurationDeps,
   agentId: string,
@@ -71,14 +82,14 @@ const saveCheckedCustomAgent = async (
 export const registerCustomAgent = (
   deps: ConfigurationDeps,
   definition: CustomAgentDefinition,
-): Promise<AgentRegistration> =>
-  saveCheckedCustomAgent(deps, {
-    agentId: deps.createId(),
-    definition,
-    enabled: true,
-  });
+): Promise<AgentRegistration> => {
+  const agentId = deps.createId();
+  return withSetup(deps, agentId, () =>
+    saveCheckedCustomAgent(deps, { agentId, definition, enabled: true }),
+  );
+};
 
-export const editCustomAgent = (
+const saveCustomEdit = (
   deps: ConfigurationDeps,
   { agentId, definition }: CustomAgentEditInput,
 ): Promise<AgentRegistration> =>
@@ -88,6 +99,12 @@ export const editCustomAgent = (
       throw new Error(`Agent ${agentId} is not a custom Agent`);
     return saveCheckedCustomAgent(deps, { agentId, definition, enabled });
   });
+
+export const editCustomAgent = (
+  deps: ConfigurationDeps,
+  input: CustomAgentEditInput,
+): Promise<AgentRegistration> =>
+  withSetup(deps, input.agentId, () => saveCustomEdit(deps, input));
 
 export const checkConfiguredAgent = (
   deps: ConfigurationDeps,
@@ -105,7 +122,7 @@ export const checkConfiguredAgent = (
   });
 };
 
-export const setAgentEnabled = (
+const saveEnablement = (
   deps: ConfigurationDeps,
   { agentId, enabled }: AgentEnablementInput,
 ): Promise<void> =>
@@ -113,6 +130,12 @@ export const setAgentEnabled = (
     const { configuration } = requireAgent(deps, agentId);
     return saveConfiguration(deps, { id: agentId, enabled, configuration });
   });
+
+export const setAgentEnabled = (
+  deps: ConfigurationDeps,
+  input: AgentEnablementInput,
+): Promise<void> =>
+  withSetup(deps, input.agentId, () => saveEnablement(deps, input));
 
 const runMutation = <T>(
   deps: ConfigurationDeps,

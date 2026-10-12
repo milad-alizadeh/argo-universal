@@ -37,3 +37,12 @@ export {
   syncSupervisorMachine,
   type SyncSupervisorInput,
 } from './sync-supervisor-machine';
+
+export { AgentInstallations } from './install/lifecycle/operations';
+export { runInstallTool } from './install/processes/process';
+export { releaseInstallationProcessGroups } from './install/processes/reconcile-processes';
+export type { InstallPorts } from './install/ports';
+export { readInstallSelection } from './install/selection/selection';
+export { resolveInstalledAgentLaunch } from './install/selection/launch';
+export { reconcileInterruptedInstallations } from './install/lifecycle/reconcile';
+export type { InstallToolInput } from './install/ports';

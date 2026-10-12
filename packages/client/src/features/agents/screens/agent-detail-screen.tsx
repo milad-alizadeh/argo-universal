@@ -1,4 +1,8 @@
-import type { AgentInfo, CustomAgentDefinition } from '@repo/contracts';
+import type {
+  AgentInfo,
+  AgentInstallation,
+  CustomAgentDefinition,
+} from '@repo/contracts';
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useTRPC } from '#features/connection';
@@ -7,6 +11,7 @@ import { AgentDetailView } from '../components/agent-detail-view/agent-detail-vi
 import { AgentLoginSheet } from '../components/agent-login-sheet/agent-login-sheet';
 import { AgentPlaceholder } from '../components/agent-placeholder';
 import { CustomAgentDetailView } from '../components/custom-agent-detail-view/custom-agent-detail-view';
+import { useAgentInstallation } from '../hooks/use-agent-installation';
 import { useAgentLogin } from '../hooks/use-agent-login';
 import { useAgents } from '../hooks/use-agents';
 import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
@@ -17,12 +22,17 @@ import {
 } from '../hooks/use-custom-agents';
 import { useSessionDefaults } from '../hooks/use-session-defaults';
 import { agentDetail } from '../state/agent-detail';
-import type { AgentDetail } from '../state/agent-detail-types';
+import type {
+  AgentDetail,
+  AgentDetailViewProps,
+} from '../state/agent-detail-types';
 
 export interface AgentDetailScreenProps {
   agent: string;
 }
 type PageProps = AgentDetailScreenProps & { onBack: () => void };
+type AgentPageProps = PageProps & { onSignIn: () => void };
+type AgentPageView = AgentDetailViewProps | undefined;
 
 // Which page to draw waits for the custom Agents, so a custom Agent never shows the built-in page first.
 type CustomDefinition =
@@ -88,19 +98,18 @@ function AgentPage({ agent, onBack }: PageProps): React.JSX.Element {
     </LoginPage>
   );
 }
-function useAgentPageView(
-  props: PageProps & { onSignIn: () => void },
-): React.ComponentProps<typeof AgentDetailView> | undefined {
+function useAgentPageView(props: AgentPageProps): AgentPageView {
   const { info, detail, retry } = useAgentDetail(props.agent);
   const { defaults, change } = useSessionDefaults(info);
+  const installation = useAgentInstallation(props.agent, detailVersion(detail));
   if (!detail) return undefined;
   return {
-    agent: detail,
+    ...props,
+    agent: installedDetail(detail, installation),
+    installation,
     defaults,
     onDefaultChange: change,
-    onBack: props.onBack,
     onCheckAgain: retry,
-    onSignIn: props.onSignIn,
   };
 }
 
@@ -135,3 +144,21 @@ function useCustomView(
     onBack: props.onBack,
   };
 }
+
+function installedDetail(
+  detail: AgentDetail,
+  installation: ReturnType<typeof useAgentInstallation>,
+): AgentDetail {
+  if (installation.phase === 'installing')
+    return { ...detail, status: 'not-installed' };
+  return withInstallation(detail, installation.status?.installation);
+}
+function withInstallation(
+  detail: AgentDetail,
+  saved: AgentInstallation | undefined,
+): AgentDetail {
+  if (saved?.status !== 'installed') return detail;
+  return { ...detail, status: 'unavailable', version: saved.version };
+}
+
+const detailVersion = (detail?: AgentDetail): string => detail?.version ?? '';

@@ -14,6 +14,7 @@ type OpenSession = Extract<
   { type: 'sessions.create' | 'sessions.open' }
 >;
 type SessionSource = { context: OpenSessionsInput; event: OpenSession };
+
 const createAcpSessionDependencies = (
   context: OpenSessionsInput,
   agent: string,

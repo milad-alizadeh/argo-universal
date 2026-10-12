@@ -9,6 +9,7 @@ import {
   contentActionClass,
 } from '../generic/primitives/pressable/pressable';
 import { Icon } from '../generic/symbols/icon';
+import { narrowPairs } from './header-button-pairing';
 
 export interface HeaderButtonProps extends Pick<
   IconButtonProps,
@@ -17,10 +18,8 @@ export interface HeaderButtonProps extends Pick<
   onPress?: () => void;
   icon: IconName;
   accessibilityLabel: string;
-  // Paired trailing items are 32pt wide; a lone item fills its 44pt slot.
+  // Paired trailing items are 32pt wide, except on Android; a lone item fills its 44pt slot.
   paired?: boolean;
-  // The header's leading item; Android draws its glyph at the slot's edge, the screen inset.
-  leading?: boolean;
   // A dot on the icon: Sessions need attention, or a filter other than the default is set.
   dot?: 'attention' | 'filter';
 }
@@ -30,14 +29,14 @@ export function HeaderButton({
   icon,
   accessibilityLabel,
   paired = false,
-  leading = false,
   dot,
   ...props
 }: HeaderButtonProps): React.JSX.Element {
-  const narrow = paired || hasLiquidGlass;
+  const pairNarrow = paired && narrowPairs;
+  const narrow = pairNarrow || hasLiquidGlass;
   let hitSlop: IconButtonProps['hitSlop'];
   if (hasLiquidGlass) hitSlop = 10;
-  else if (paired) hitSlop = { left: 6, right: 6 };
+  else if (pairNarrow) hitSlop = { left: 6, right: 6 };
   return (
     <Pressable
       hitSlop={hitSlop}
@@ -51,12 +50,7 @@ export function HeaderButton({
           // iOS 26 pads each item into a glass bubble, so a 24pt item matches the system search bubble.
           hasLiquidGlass
             ? 'size-6 sm:size-6'
-            : cn(
-                'h-11 sm:h-11',
-                paired ? 'w-8 sm:w-8' : 'w-11 sm:w-11',
-                // The glyph starts at the screen inset, in line with the search bar and the content below.
-                leading && 'ios:justify-start android:justify-start',
-              ),
+            : cn('h-11 sm:h-11', pairNarrow ? 'w-8 sm:w-8' : 'w-11 sm:w-11'),
         ),
       })}
     >
@@ -69,11 +63,7 @@ export function HeaderButton({
             dot === 'attention' ? 'bg-warning' : 'bg-foreground',
             hasLiquidGlass
               ? '-top-0.5 -right-0.5'
-              : cn(
-                  'top-2.5',
-                  narrow ? 'right-1' : 'right-[9px]',
-                  leading && 'ios:right-[21px] android:right-[21px]',
-                ),
+              : cn('top-2.5', narrow ? 'right-1' : 'right-[9px]'),
           )}
         />
       )}

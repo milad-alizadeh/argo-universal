@@ -44,7 +44,7 @@ export function SessionsHeader({
   );
 }
 
-// A phone's native header search; on iOS New Session sits beside the bar.
+// A phone's native header search; on iOS New Session is a header item, on Android its own round button.
 export function sessionsHeaderSearch(
   filter: SessionsFilter,
   onNewSession: () => void,

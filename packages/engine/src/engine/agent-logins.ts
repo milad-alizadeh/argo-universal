@@ -2,6 +2,7 @@ import { homedir } from 'node:os';
 import { createLoginAgentOpener, type AcpResourceInput } from '../acp';
 import {
   createAgentLogins,
+  type AgentInstallations,
   isAgentDisabled,
   selectAgentLaunchResolver,
 } from '../agents';
@@ -9,6 +10,7 @@ import type { OpenSessionsActorRef } from '../sessions';
 
 type LoginSources = {
   sessions: OpenSessionsActorRef;
+  installations?: Pick<AgentInstallations, 'isBusy'>;
   createId: () => string;
   acp?: AcpResourceInput;
   loginTimeoutMs?: number;
@@ -19,6 +21,8 @@ export const createEngineAgentLogins = (
 ): ReturnType<typeof createAgentLogins> =>
   createAgentLogins({
     createId: input.createId,
+    isAgentSetupBusy: (agentId) =>
+      input.installations?.isBusy(agentId) ?? false,
     timeoutMs: input.loginTimeoutMs,
     cleanupTimeoutMs: input.loginCleanupTimeoutMs,
     openLoginAgent: createLoginAgentOpener(input.acp),

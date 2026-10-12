@@ -18,6 +18,9 @@ import {
 } from '../acp';
 import {
   type FetchAgents,
+  AgentInstallations,
+  type InstallPorts,
+  reconcileInterruptedInstallations,
   syncSupervisorMachine,
   type SyncSupervisorInput,
 } from '../agents';
@@ -49,12 +52,13 @@ const finishingEngineTarget = '#engine.finishing';
 type EngineLogParameters = { line: string };
 type EngineOutput = { exitCode: number };
 type OpenDatabaseInput = { home: string };
-type RecoveryInput = { database: Database; blobsFolder: string };
+type RecoveryInput = { database: Database; blobsFolder: string; home: string };
 type CloseHttpServerInput = { server: HttpServer | null };
 type SyncSupervisorActor = ActorRefFrom<typeof syncSupervisorMachine>;
 type CloseAcpResourcesInput = {
   resources: AcpResources;
   server?: HttpServer | null;
+  installations: AgentInstallations;
   sessions: OpenSessionsActorRef | undefined;
 };
 const closingAgentsTarget = 'closingAgents';
@@ -77,6 +81,7 @@ export interface EngineInput extends Pick<
   loginTimeoutMs?: number;
   loginCleanupTimeoutMs?: number;
   fetchAgents?: FetchAgents;
+  installationPorts?: InstallPorts;
 }
 
 interface EngineContext extends EngineInput {
@@ -84,6 +89,7 @@ interface EngineContext extends EngineInput {
   server: HttpServer | null;
   failure: string | null;
   acpResources: AcpResources;
+  installations: AgentInstallations;
   commandAdmission: AbortController;
 }
 
@@ -107,7 +113,10 @@ export const engineMachine = setup({
   actors: {
     closeAcpResources: fromPromise<void, CloseAcpResourcesInput>(
       async ({ input }): Promise<void> => {
-        await input.server?.closeSetup();
+        await Promise.all([
+          input.server?.closeSetup(),
+          input.installations.shutdown(),
+        ]);
         await input.resources.shutdown();
         if (!input.sessions) return;
         await waitFor(
@@ -133,6 +142,7 @@ export const engineMachine = setup({
     recoverAfterRestart: fromPromise<void, RecoveryInput>(
       async ({ input }): Promise<void> => {
         recoverAfterRestart(input.database);
+        await reconcileInterruptedInstallations(input.home);
         await removeUnusedBlobs(input);
       },
     ),
@@ -182,6 +192,7 @@ export const engineMachine = setup({
     server: null,
     failure: null,
     acpResources: createAcpResources(input.acp),
+    installations: new AgentInstallations(input.home, input.installationPorts),
     commandAdmission: new AbortController(),
   }),
   invoke: { id: 'processSignals', src: 'processSignals' },
@@ -224,6 +235,7 @@ export const engineMachine = setup({
         input: ({ context }): RecoveryInput => {
           return {
             database: openDatabaseOf(context),
+            home: context.home,
             blobsFolder: blobsFolderIn(context.home),
           };
         },
@@ -274,6 +286,8 @@ export const engineMachine = setup({
             createId: context.createId,
             acpResources: context.acpResources,
             resolveAgentLaunch: context.resolveAgentLaunch,
+            isAgentSetupBusy: (agentId) =>
+              context.installations.isBusy(agentId),
           }),
         },
       ],
@@ -296,6 +310,7 @@ export const engineMachine = setup({
             src: 'startHttpServer',
             input: ({ context, self }): HttpServerOptions => ({
               createId: context.createId,
+              installations: context.installations,
               sessions: requireOpenSessions(self.system),
               databaseWriter: requireDatabaseWriter(self.system),
               syncSupervisor: requireSyncSupervisor(self.system),
@@ -418,6 +433,7 @@ export const engineMachine = setup({
                 input: ({ context, self }): CloseAcpResourcesInput => ({
                   resources: context.acpResources,
                   server: context.server,
+                  installations: context.installations,
                   sessions: findMachineActor(
                     self.system,
                     openSessionsId,

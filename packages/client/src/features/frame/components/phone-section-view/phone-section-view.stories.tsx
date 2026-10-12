@@ -25,6 +25,7 @@ const meta = {
       <PhoneLayoutView
         destination={sectionDestination(args.section)}
         attentionCount={0}
+        onSectionChange={() => {}}
       >
         <PhoneSectionView {...args} list={<LayoutListMock name="Section" />} />
       </PhoneLayoutView>

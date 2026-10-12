@@ -55,3 +55,8 @@ Then(
     await expect(page.getByText('Accounts will appear here.')).toBeVisible();
   },
 );
+
+When('I return to Sessions', async ({ page }): Promise<void> => {
+  await page.getByRole('button', { name: 'Open navigation' }).click();
+  await page.getByRole('button', { name: 'Sessions', exact: true }).click();
+});

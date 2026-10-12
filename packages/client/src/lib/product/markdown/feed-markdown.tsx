@@ -121,12 +121,10 @@ function InlineTokens({
 function Prose({
   tokens,
   caret,
-  role = 'body',
   headingLevel,
 }: {
   tokens: Token[] | undefined;
   caret: boolean;
-  role?: React.ComponentProps<typeof Text>['role'];
   headingLevel?: number;
 }): React.JSX.Element {
   const variant = useContext(MarkdownVariant);
@@ -134,9 +132,9 @@ function Prose({
     <Text
       semanticRole={headingLevel === undefined ? undefined : 'heading'}
       aria-level={headingLevel}
-      role={role}
       className={cn(
         'font-sans',
+        headingLevel !== undefined && 'font-semibold',
         variant === 'summary' && 'text-muted-foreground',
       )}
     >
@@ -195,7 +193,7 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
             {withOccurrenceKeys(token.header, (cell) => cell.text).map(
               ({ item: cell, key }, column) => (
                 <View key={key} className={cellClassName(column)}>
-                  <Text role={'heading'} className="font-sans">
+                  <Text className="font-sans font-semibold">
                     <InlineTokens
                       tokens={cell.tokens}
                       codeClassName={inlineCodeClassName}
@@ -252,12 +250,7 @@ function Block({
   switch (token.type) {
     case 'heading':
       return (
-        <Prose
-          tokens={token.tokens}
-          caret={caret}
-          headingLevel={token.depth}
-          role={token.depth === 1 ? 'title' : 'heading'}
-        />
+        <Prose tokens={token.tokens} caret={caret} headingLevel={token.depth} />
       );
     case 'paragraph':
       return <Prose tokens={token.tokens} caret={caret} />;

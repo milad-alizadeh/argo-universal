@@ -12,7 +12,7 @@ import type { IconName } from '#lib/generic/symbols/icon-names';
 export interface ScreenHeaderSearch {
   placeholder: string;
   onChangeText: (text: string) => void;
-  // A button beside the search bar, such as New Session; iOS 26 docks both at the bottom.
+  // A header item that goes with the search, such as New Session; iOS only, Android has its own button.
   action?: ScreenHeaderAction;
 }
 

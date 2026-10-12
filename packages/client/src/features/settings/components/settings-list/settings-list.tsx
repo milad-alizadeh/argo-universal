@@ -9,7 +9,7 @@ import { SettingsRows } from './settings-list-rows';
 
 export type { SettingsListProps } from './settings-list-props';
 
-// Every width draws the pages in one flat list, without group headings, narrowed by the search.
+// One list of the pages, without group headings, narrowed by the search: a grouped card on a phone, the sidebar in a wide window.
 export function SettingsList(props: SettingsListProps): React.JSX.Element {
   const wide = useWide();
   const rows = matchingRows(
@@ -17,7 +17,7 @@ export function SettingsList(props: SettingsListProps): React.JSX.Element {
     props.query,
   );
   return (
-    <FieldGroup variant="navigation">
+    <FieldGroup variant={wide ? 'navigation' : 'grouped'}>
       <FieldSection>
         {rows.length > 0 ? (
           <SettingsRows {...props} rows={rows} />

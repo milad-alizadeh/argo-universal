@@ -13,6 +13,7 @@ export type AgentLoginsDeps = Omit<
   'timeoutMs' | 'cleanupTimeoutMs'
 > & {
   createId: () => string;
+  isAgentSetupBusy?: (agentId: string) => boolean;
   timeoutMs?: number;
   cleanupTimeoutMs?: number;
 };
@@ -29,6 +30,8 @@ export class AgentLogins {
   public start(input: AgentLoginStart): AgentLoginSnapshot {
     if (this.stopping) throw new Error('Engine is shutting down');
     this.requireNoMutation(input.agentId);
+    if (this.deps.isAgentSetupBusy?.(input.agentId))
+      throw new Error('Agent is in use by setup');
     const previous = this.current(input.agentId);
     if (previous?.blocksMutation()) return previous.snapshot(input.ownerToken);
     this.evictFinished();
@@ -67,6 +70,11 @@ export class AgentLogins {
     const operation = this.requireOwner(input);
     operation.cancel();
     return operation.snapshot(input.ownerToken);
+  }
+  public isBusy(agentId: string): boolean {
+    return (
+      this.mutations.has(agentId) || !!this.current(agentId)?.blocksMutation()
+    );
   }
   public requireMutable(agentId: string): void {
     if (this.stopping) throw new Error('Engine is shutting down');
