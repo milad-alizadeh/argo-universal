@@ -12,7 +12,7 @@ export function ScreenHeaderMock({
   search,
 }: ScreenHeaderProps): React.JSX.Element {
   return (
-    <View className="h-11 flex-row items-center bg-background px-1">
+    <View className="h-11 flex-row items-center bg-sidebar px-1">
       <View className="w-23 flex-row">{left}</View>
       {search ? (
         // As the web header draws it: Search last, opening over the whole row.

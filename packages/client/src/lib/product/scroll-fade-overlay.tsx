@@ -33,7 +33,7 @@ const [fadeIn, fadeOut] = [FadeIn, FadeOut].map((animation) =>
 // A gradient from the surface colour to transparent where a list meets its edge; it fades in and out.
 export function ScrollFade({
   edge,
-  className = 'bg-background',
+  className = 'bg-sidebar',
   height,
   inset = 0,
 }: ScrollFadeProps): React.JSX.Element {

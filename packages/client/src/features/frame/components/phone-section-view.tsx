@@ -23,7 +23,7 @@ export function PhoneSectionView({
   list,
 }: PhoneSectionViewProps): React.JSX.Element {
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1 bg-sidebar">
       <ScreenHeader
         title={shellSections[section].title}
         left={<PhoneMenuButton />}

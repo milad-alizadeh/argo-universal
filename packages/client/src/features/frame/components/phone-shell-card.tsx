@@ -21,7 +21,7 @@ export function PhoneShellCard({
   const progress = useDrawerProgress();
   const { borderRadius } = useResolveClassNames('rounded-xl');
   // Resolved here: the Reanimated views below would not paint the class's colour.
-  const card = useResolveClassNames('bg-card');
+  const card = useResolveClassNames('bg-sidebar');
   const radius = Number(borderRadius);
   const cornerStyle = useAnimatedStyle(() => ({
     borderRadius: radius * progress.value,

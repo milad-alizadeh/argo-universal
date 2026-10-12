@@ -7,8 +7,8 @@ import { useWide } from '../generic/use-wide';
 import { keyboardAvoidingStyle, Screen } from './screen';
 import { ScrollFadeFrame } from './scroll-fade-frame';
 
-// The one surface a Session sits on: the phone's card, and the window's own surface when wide. The screen and the Feed's native fades take it from here.
-const sessionSurface = 'bg-card wide:bg-sidebar';
+// The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.
+const sessionSurface = 'bg-sidebar';
 
 // How far the Composer reaches up over the end of the Feed; the Feed's rows are hidden under it, so none shows through its glass.
 const composerOverlap = 48;

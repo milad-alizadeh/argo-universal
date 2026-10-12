@@ -11,7 +11,7 @@ export function Placeholder({
   description: string;
 }): React.JSX.Element {
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1 bg-sidebar">
       <PageHeader title={title} />
       <View className="flex-1 items-center justify-center gap-2 px-gutter py-6">
         <Text semanticRole="heading" aria-level={1} role="title">

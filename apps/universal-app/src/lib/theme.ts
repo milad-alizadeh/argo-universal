@@ -10,9 +10,10 @@ export function useNavigationTheme(): Theme {
   const baseline = theme === 'dark' ? DarkTheme : DefaultTheme;
   const [background, border, card, notification, primary, text] =
     useCSSVariable([
-      '--color-background',
+      // Screens and native headers sit on the App's one content surface.
+      '--color-sidebar',
       '--color-border',
-      '--color-card',
+      '--color-sidebar',
       '--color-destructive',
       '--color-primary',
       '--color-foreground',

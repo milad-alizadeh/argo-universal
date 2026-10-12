@@ -11,7 +11,7 @@ export function PhoneShellCard({
     <View
       testID="phone-shell-card"
       className={cn(
-        'flex-1 rounded-none bg-card shadow-card transition-[border-radius] duration-300 ease-[ease]',
+        'flex-1 rounded-none bg-sidebar shadow-card transition-[border-radius] duration-300 ease-[ease]',
         drawerOpen && 'rounded-xl web:rounded-surface',
       )}
     >
