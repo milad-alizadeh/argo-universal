@@ -2,8 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { expect, fn, waitFor, within } from 'storybook/test';
-import type { ComposerDraft } from '#features/composer';
+import { expect, waitFor, within } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
 import { findToast } from '../../../lib/generic/find-toast';
@@ -153,40 +152,16 @@ function readyArgs(changes: Partial<ReadyNewSessionViewProps>): Story['args'] {
   return { view: { state: 'ready', ...readyNewSession, ...changes } };
 }
 
-// The draft follows the reader's typing, as the screen's state does.
-function Drafting({
-  onSend,
-}: {
-  onSend: (draft: ComposerDraft) => void;
-}): React.JSX.Element {
-  const [draft, setDraft] = useState<ComposerDraft>(readyNewSession.draft);
-  return (
-    <NewSessionView
-      state="ready"
-      {...readyNewSession}
-      draft={draft}
-      onDraftChange={setDraft}
-      onSend={onSend}
-    />
-  );
-}
-
-const sendFirstPrompt = fn();
-
 export const SendsTheFirstPrompt: Story = {
-  render: () => <Drafting onSend={sendFirstPrompt} />,
-  beforeEach: (): void => {
-    sendFirstPrompt.mockClear();
-  },
-  play: async ({ canvas, userEvent }) => {
+  args: readyArgs({ draft: typedDraft }),
+  play: async ({ args, canvas, userEvent }) => {
     await settleViewport(layoutWidths.phone);
-    await userEvent.type(
-      await canvas.findByRole('textbox', { name: messageLabel }),
-      typedDraft.text,
+    await userEvent.click(
+      await canvas.findByRole('button', { name: sendLabel }),
     );
-    await userEvent.click(canvas.getByRole('button', { name: sendLabel }));
-    await expect(sendFirstPrompt).toHaveBeenCalledOnce();
-    await expect(sendFirstPrompt).toHaveBeenCalledWith(typedDraft);
+    if (args.view.state !== 'ready') throw new Error('The view is not ready.');
+    await expect(args.view.onSend).toHaveBeenCalledOnce();
+    await expect(args.view.onSend).toHaveBeenCalledWith(typedDraft);
   },
 };
 
@@ -243,10 +218,6 @@ export const FailedStart: Story = {
     await expect(await findToast("Couldn't open the Session")).toBeVisible();
     await expect(await findToast(failedStartMessage)).toBeVisible();
     await expect(canvas.queryByRole('alert')).toBeNull();
-    // The draft stays, ready to send again.
-    await expect(
-      canvas.getByRole('textbox', { name: messageLabel }),
-    ).toHaveValue(typedDraft.text);
     await expect(canvas.getByRole('button', { name: sendLabel })).toBeEnabled();
   },
 };

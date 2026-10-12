@@ -74,6 +74,19 @@ Feature: New Session
       | 1     |
       | 2     |
 
+  Scenario Outline: A failed open keeps the first prompt with Agent <agent>
+    Given a phone Frame
+    And Agent <agent> refuses to open a Session
+    And a New Session with Agent <agent>
+    When I try to send the prompt "Fix the flaky login test"
+    Then New Session says the Session couldn't open
+    And the Composer keeps the prompt "Fix the flaky login test"
+
+    Examples:
+      | agent |
+      | 1     |
+      | 2     |
+
   Scenario: The Checkout choice is remembered
     Given a phone Frame
     And a New Session

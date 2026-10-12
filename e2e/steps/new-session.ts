@@ -110,3 +110,40 @@ Then('Fast mode remains enabled', async ({ page }): Promise<void> => {
   ).toHaveAttribute(checkedAttribute, 'true');
   await page.keyboard.press('Escape');
 });
+
+Given(
+  'Agent {int} refuses to open a Session',
+  async ({ page, server }, ordinal: number): Promise<void> => {
+    // The refusal shows only when a Session opens, so the Agent is listed as available.
+    expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
+      availability: 'available',
+    });
+  },
+);
+
+When(
+  'I try to send the prompt {string}',
+  async ({ page }, prompt: string): Promise<void> => {
+    await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
+    await page.getByRole('button', { name: 'Send', exact: true }).click();
+  },
+);
+
+Then(
+  "New Session says the Session couldn't open",
+  async ({ page }): Promise<void> => {
+    await expect(
+      page.getByRole('region', { name: /^Notifications/ }),
+    ).toContainText("Couldn't open the Session");
+    await expect(page).toHaveURL(/\/sessions\/new$/);
+  },
+);
+
+Then(
+  'the Composer keeps the prompt {string}',
+  async ({ page }, prompt: string): Promise<void> => {
+    await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
+      prompt,
+    );
+  },
+);
