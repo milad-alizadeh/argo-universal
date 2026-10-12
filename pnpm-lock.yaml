@@ -197,13 +197,25 @@ catalogs:
     '@legendapp/list':
       specifier: 3.6.0
       version: 3.6.0
+    '@lexical/code':
+      specifier: 0.52.0
+      version: 0.52.0
     '@lexical/headless':
+      specifier: 0.52.0
+      version: 0.52.0
+    '@lexical/list':
       specifier: 0.52.0
       version: 0.52.0
     '@lexical/markdown':
       specifier: 0.52.0
       version: 0.52.0
     '@lexical/react':
+      specifier: 0.52.0
+      version: 0.52.0
+    '@lexical/rich-text':
+      specifier: 0.52.0
+      version: 0.52.0
+    '@lexical/selection':
       specifier: 0.52.0
       version: 0.52.0
     '@oxlint/plugins':
@@ -973,12 +985,24 @@ importers:
       '@legendapp/list':
         specifier: 'catalog:'
         version: 3.6.0(react-dom@19.2.3(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
+      '@lexical/code':
+        specifier: 'catalog:'
+        version: 0.52.0(typescript@7.0.2)
+      '@lexical/list':
+        specifier: 'catalog:'
+        version: 0.52.0(typescript@7.0.2)
       '@lexical/markdown':
         specifier: 'catalog:'
         version: 0.52.0(typescript@7.0.2)
       '@lexical/react':
         specifier: 'catalog:'
         version: 0.52.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@7.0.2)(yjs@13.6.33)
+      '@lexical/rich-text':
+        specifier: 'catalog:'
+        version: 0.52.0(typescript@7.0.2)
+      '@lexical/selection':
+        specifier: 'catalog:'
+        version: 0.52.0(typescript@7.0.2)
       '@react-native-async-storage/async-storage':
         specifier: 'catalog:'
         version: 2.2.0(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))
@@ -2784,6 +2808,14 @@ packages:
 
   '@lexical/code-core@0.52.0':
     resolution: {integrity: sha512-4ofNvUXEal2tm6DLGHtjJUc7C1qQP2RHUO4v/RHSSdWEHLKM1kITgIUUvWkf6FHnQNrTvrL2U5vxACv2bo0HVQ==}
+    peerDependencies:
+      typescript: '>=5.2'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  '@lexical/code@0.52.0':
+    resolution: {integrity: sha512-pAARDF1XTvKn/FBxlFIMAiUYr0bE5EPCiSY5JZF6cOYG1xRN8GL2N9G+r0phhKdBc6LlMssA2AxuOABaP3tZqQ==}
     peerDependencies:
       typescript: '>=5.2'
     peerDependenciesMeta:
@@ -11033,6 +11065,14 @@ snapshots:
       '@lexical/html': 0.52.0(typescript@7.0.2)
       '@lexical/internal': 0.52.0(typescript@7.0.2)
       '@lexical/utils': 0.52.0(typescript@7.0.2)
+      lexical: 0.52.0(typescript@7.0.2)
+    optionalDependencies:
+      typescript: 7.0.2
+
+  '@lexical/code@0.52.0(typescript@7.0.2)':
+    dependencies:
+      '@lexical/code-core': 0.52.0(typescript@7.0.2)
+      '@lexical/extension': 0.52.0(typescript@7.0.2)
       lexical: 0.52.0(typescript@7.0.2)
     optionalDependencies:
       typescript: 7.0.2

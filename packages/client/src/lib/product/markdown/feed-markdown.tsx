@@ -10,7 +10,10 @@ import {
 } from 'react';
 import { Linking, ScrollView, Text as Span, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
+import {
+  markdownBlockClassNames,
+  markdownMarkClassNames,
+} from '#lib/generic/markdown-marks';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
@@ -169,7 +172,7 @@ function List({
               role="body"
               className={cn(
                 'w-4 shrink-0 font-sans',
-                variant !== 'proposal' && 'text-muted-foreground',
+                variant !== 'proposal' && markdownBlockClassNames.listMarker,
               )}
             >
               {token.ordered ? `${start + index}.` : '•'}
@@ -287,7 +290,7 @@ function Block({
       );
     case 'blockquote':
       return (
-        <View className="gap-2.5 border-l-2 border-border pl-3">
+        <View className={cn('gap-2.5', markdownBlockClassNames.quote)}>
           <Blocks tokens={token.tokens} caret={caret} />
         </View>
       );
