@@ -446,6 +446,9 @@ catalogs:
     react-native-worklets:
       specifier: 0.10.1
       version: 0.10.1
+    rolldown:
+      specifier: 1.2.12
+      version: 1.2.12
     sherif:
       specifier: 1.13.0
       version: 1.13.0
@@ -881,6 +884,9 @@ importers:
       playwright-bdd:
         specifier: 'catalog:'
         version: 9.2.1(@playwright/test@1.63.0)
+      rolldown:
+        specifier: 'catalog:'
+        version: 1.2.12
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

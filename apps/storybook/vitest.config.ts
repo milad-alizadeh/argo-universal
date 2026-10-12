@@ -18,7 +18,8 @@ export default defineProject({
   ],
   test: {
     name: 'storybook',
-    maxWorkers: 2,
+    // One browser page per CI core; story tests are CPU-bound.
+    maxWorkers: 4,
     testTimeout: STORY_TEST_TIMEOUT_MS,
     // Zero retries: a flaky story fails like a flaky end-to-end test.
     retry: 0,

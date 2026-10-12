@@ -1,0 +1,59 @@
+# The setup every CI job shares: pnpm, Node, dependencies, Playwright and the Turborepo Remote Cache.
+name: Set up the workspace
+description: Installs pnpm, Node and the dependencies, then Playwright and the Turborepo Remote Cache as asked.
+
+inputs:
+  playwright:
+    description: "chromium installs Chromium's headless shell and its system libraries; system-deps installs only the libraries and xvfb; none skips Playwright."
+    default: chromium
+  turbo-team:
+    description: "The Vercel team behind the Turborepo Remote Cache; empty skips it. The job needs `id-token: write`."
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    # Installs the pnpm version in package.json's packageManager.
+    - uses: pnpm/action-setup@v6
+
+    - uses: actions/setup-node@v7
+      with:
+        node-version-file: .node-version
+        cache: pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Read the Playwright version
+      id: playwright
+      if: ${{ inputs.playwright == 'chromium' }}
+      shell: bash
+      working-directory: e2e
+      run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+    # The browser download is cached by Playwright version; the system libraries still come from apt every run.
+    - name: Restore the Playwright browsers
+      if: ${{ inputs.playwright == 'chromium' }}
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+    # The headless shell serves the web e2e projects and the Storybook Vitest tests in pnpm quality; --with-deps also installs xvfb.
+    - name: Install Playwright Chromium
+      if: ${{ inputs.playwright == 'chromium' }}
+      shell: bash
+      run: pnpm --filter @repo/e2e exec playwright install --with-deps --only-shell chromium
+
+    - name: Install the Playwright system libraries
+      if: ${{ inputs.playwright == 'system-deps' }}
+      shell: bash
+      run: pnpm --filter @repo/e2e exec playwright install-deps chromium
+
+    # Shares turbo's task cache with every run and machine, so unchanged tasks replay instead of running; skipped until the TURBO_TEAM variable exists.
+    - name: Set up the Turborepo Remote Cache
+      if: ${{ inputs.turbo-team != '' }}
+      uses: vercel/setup-turborepo-remote-cache-action@v1.1.0
+      with:
+        team: ${{ inputs.turbo-team }}
