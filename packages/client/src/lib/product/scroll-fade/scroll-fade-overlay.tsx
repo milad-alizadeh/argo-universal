@@ -58,9 +58,9 @@ export function ScrollFade({
         ...(edge === 'top' ? { top: 0 } : { bottom: 0 }),
       }}
     >
-      {/* In points: a percentage keeps the first depth when the depth changes, as the Feed's does leaving its end. */}
+      {/* Drawn afresh for each depth: the native gradient keeps the size it was first drawn at, so when the Feed leaves its end and the fade deepens, only its top would fade. */}
       <View style={{ height: depth }}>
-        <Svg width="100%" height={depth}>
+        <Svg key={depth} width="100%" height="100%">
           <Defs>
             <LinearGradient id={gradientId} x1="0" y1="0%" x2="0" y2="100%">
               <Stop
