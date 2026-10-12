@@ -41,6 +41,7 @@ const engineExitedEvent = 'engine.exit';
 const stopServerEvent = 'server.stop';
 const heartbeatEngineEvent = 'engine.heartbeat';
 const engineStoppedEvent = 'engine.exited';
+const engineUnresolvedEvent = 'engine.unresolved';
 const readyDelayEvent = 'xstate.after.readyTimeout.supervisor.starting';
 const heartbeatDelayEvent = 'xstate.after.heartbeatTimeout.supervisor.running';
 const backoffDelayEvent =
@@ -56,6 +57,7 @@ const backoffMs = (crashes: number): number =>
 interface MockEngine {
   send: (event: AnyEventObject) => void;
   exit: () => void;
+  unresolved: () => void;
   askedToStop: boolean;
   stopped: boolean;
 }
@@ -72,6 +74,7 @@ const createMockEngine = (options: {
       const engine: MockEngine = {
         send: sendBack,
         exit: (): void => sendBack({ type: engineStoppedEvent }),
+        unresolved: (): void => sendBack({ type: engineUnresolvedEvent }),
         askedToStop: false,
         stopped: false,
       };
@@ -134,6 +137,7 @@ describe('supervisor model', (): void => {
     { type: engineExitedEvent, code: 1 },
     { type: heartbeatEngineEvent },
     { type: engineStoppedEvent },
+    { type: engineUnresolvedEvent },
     { type: stopServerEvent },
     { type: readyDelayEvent },
     { type: heartbeatDelayEvent },
@@ -221,6 +225,10 @@ describe('supervisor model', (): void => {
       expect(latestEngine().askedToStop).toBe(true);
       latestEngine().exit();
     },
+    [engineUnresolvedEvent]: (): void => {
+      expect(latestEngine().askedToStop).toBe(true);
+      latestEngine().unresolved();
+    },
     'server.stop': (): void => supervisor.send({ type: stopServerEvent }),
     [readyDelayEvent]: (): void => crossDelay(readyTimeoutMs),
     [heartbeatDelayEvent]: (): void => crossDelay(heartbeatTimeoutMs),
@@ -269,6 +277,14 @@ describe('supervisor model', (): void => {
     stopping: (snapshot): void => {
       expectModelState(snapshot);
       expect(liveEngines()).toBe(0);
+      expect(serverAddressRemovals).toBe(1);
+    },
+    // Release could not be verified: no replacement Engine starts.
+    blocked: (snapshot): void => {
+      expectModelState(snapshot);
+      expect(snapshot.status).toBe('done');
+      expect(liveEngines()).toBe(0);
+      expect(engines).toHaveLength(snapshot.context.crashTimes.length);
       expect(serverAddressRemovals).toBe(1);
     },
   };

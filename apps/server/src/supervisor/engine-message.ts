@@ -6,12 +6,13 @@ export const WatchModeMessage = z.record(
   z.unknown(),
 );
 
-// Events that the Engine actor sends to the Supervisor machine; `engine.exited` answers `engine.stop`.
+// Events that the Engine actor sends to the Supervisor machine; `engine.exited` answers `engine.stop` once the Engine's whole process group is gone, `engine.unresolved` when that could not be verified.
 export type EngineEvent =
   | { type: 'engine.ready'; port: number }
   | { type: 'engine.heartbeat' }
   | { type: 'engine.exit'; code: number | null }
-  | { type: 'engine.exited' };
+  | { type: 'engine.exited' }
+  | { type: 'engine.unresolved' };
 
 // The event that the Supervisor machine sends the Engine actor.
 export type EngineCommand = { type: 'engine.stop' };

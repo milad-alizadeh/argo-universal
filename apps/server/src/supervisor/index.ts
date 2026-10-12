@@ -32,7 +32,11 @@ export function startSupervisor(options: { watch: boolean }): void {
     },
     // The Engine process keeps the event loop alive until it exits, then Node exits with this code.
     complete: (): void => {
-      process.exitCode = supervisor.getSnapshot().matches('failed') ? 1 : 0;
+      process.exitCode =
+        supervisor.getSnapshot().matches('failed') ||
+        supervisor.getSnapshot().matches('blocked')
+          ? 1
+          : 0;
     },
     error: (error): void => {
       log(`error: ${String(error)}`);

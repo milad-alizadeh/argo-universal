@@ -153,6 +153,8 @@ export const supervisorMachine = setup({
                   target: 'exited',
                   actions: stopChild('engine'),
                 },
+                // A descendant may still run in the Checkout, so no new Engine starts.
+                'engine.unresolved': { target: '#supervisor.blocked' },
               },
             },
             exited: { type: 'final' },
@@ -171,6 +173,10 @@ export const supervisorMachine = setup({
     failed: {
       type: 'final',
       entry: [{ type: 'removeServerAddress' }],
+    },
+    blocked: {
+      type: 'final',
+      entry: [stopChild('engine'), { type: 'removeServerAddress' }],
     },
     stopping: {
       type: 'final',
