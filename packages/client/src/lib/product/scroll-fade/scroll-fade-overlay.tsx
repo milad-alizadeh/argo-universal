@@ -39,6 +39,7 @@ export function ScrollFade({
 }: ScrollFadeProps): React.JSX.Element {
   const gradientId = `${useId().replace(/:/g, '')}-${edge}`;
   const { backgroundColor } = useResolveClassNames(className);
+  const depth = height ?? scrollFadeDepth[edge];
   return (
     <Animated.View
       entering={fadeIn}
@@ -52,13 +53,14 @@ export function ScrollFade({
         left: 0,
         right: 0,
         zIndex: 10,
-        height: (height ?? scrollFadeDepth[edge]) + inset,
+        height: depth + inset,
         flexDirection: edge === 'top' ? 'column-reverse' : 'column',
         ...(edge === 'top' ? { top: 0 } : { bottom: 0 }),
       }}
     >
-      <View style={{ flex: 1 }}>
-        <Svg width="100%" height="100%">
+      {/* In points: a percentage keeps the first depth when the depth changes, as the Feed's does leaving its end. */}
+      <View style={{ height: depth }}>
+        <Svg width="100%" height={depth}>
           <Defs>
             <LinearGradient id={gradientId} x1="0" y1="0%" x2="0" y2="100%">
               <Stop

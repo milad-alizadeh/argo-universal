@@ -34,21 +34,34 @@ export interface ScreenHeaderProps {
 const ScreenHeaderContext =
   createContext<ComponentType<ScreenHeaderProps> | null>(null);
 
+const noCover = (): number => 0;
+const HeaderCoverContext = createContext<() => number>(noCover);
+
 export interface ScreenHeaderProviderProps {
   header: ComponentType<ScreenHeaderProps>;
+  // How far down the screen a transparent header lies over the content; a solid header takes its own space.
+  useHeaderCover?: () => number;
   children: ReactNode;
 }
 
 // The app supplies the native stack's header, so this package stays free of the router.
 export function ScreenHeaderProvider({
   header,
+  useHeaderCover: headerCover = noCover,
   children,
 }: ScreenHeaderProviderProps): React.JSX.Element {
   return (
     <ScreenHeaderContext.Provider value={header}>
-      {children}
+      <HeaderCoverContext.Provider value={headerCover}>
+        {children}
+      </HeaderCoverContext.Provider>
     </ScreenHeaderContext.Provider>
   );
+}
+
+// How far down the screen its header lies over the content, so something pinned to the top can sit below it.
+export function useHeaderCover(): number {
+  return useContext(HeaderCoverContext)();
 }
 
 // Sets the header of the phone stack screen it renders in; outside a phone stack it draws nothing.

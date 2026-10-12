@@ -25,6 +25,7 @@ import { listTestIdProps } from '#lib/generic/list-test-id';
 import { motionDuration } from '#lib/generic/motion';
 import { CollapsibleLayoutSyncContext } from '#lib/generic/primitives/display/collapsible/collapsible';
 import { Text } from '#lib/generic/primitives/display/text/text';
+import { useHeaderCover } from '#lib/product/navigation/screen-header';
 import {
   FeedFade,
   feedBottomFadeTop,
@@ -285,6 +286,7 @@ function FeedList({
   now,
 }: FeedListProps): React.JSX.Element {
   const wide = useWide();
+  const headerCover = useHeaderCover();
   const list = useRef<LegendListRef>(null);
   // Opens on the newest row by estimated sizes, then a frame later at the very end; from there `followEnd` keeps it there as rows measure.
   const [initialIndex] = useState(entries.length - 1);
@@ -461,7 +463,11 @@ function FeedList({
       )}
       {/* Over the list, so keeping the reading position never scrolls it out of view. */}
       {loadingOlder && (
-        <View className="absolute top-4 self-center rounded-full bg-sidebar px-2 wide:top-6">
+        <View
+          className="absolute top-4 self-center rounded-full bg-sidebar px-2 wide:top-6"
+          // Below a transparent header, which lies over the Feed's top.
+          style={{ marginTop: headerCover }}
+        >
           <LoadingEarlier />
         </View>
       )}
