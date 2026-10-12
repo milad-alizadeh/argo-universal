@@ -226,7 +226,7 @@ export function SessionsList({
 
   return (
     <View
-      className="relative flex-1 overflow-hidden bg-sidebar web:select-none web:[&_*]:select-none! web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200"
+      className="relative flex-1 overflow-hidden bg-sidebar wide:bg-transparent web:select-none web:[&_*]:select-none! web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200"
       style={{ minHeight: 0 }}
     >
       <View className="flex-1" style={{ minHeight: 0 }}>
@@ -338,7 +338,7 @@ const SessionListRow = memo(function SessionListRow({
     <View
       testID="session-row-surface"
       className={cn(
-        'overflow-hidden bg-sidebar',
+        'overflow-hidden bg-sidebar wide:bg-transparent',
         selected && 'bg-sidebar-accent wide:bg-sidebar-accent',
       )}
     >

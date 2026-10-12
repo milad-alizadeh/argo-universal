@@ -1,11 +1,15 @@
 import type * as React from 'react';
-import { useMemo } from 'react';
-import { View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Image, Platform, View } from 'react-native';
 import { SvgUri, SvgXml, type XmlProps } from 'react-native-svg';
 import { Icon, iconPixels } from '../../../lib/generic/symbols/icon';
 
 interface RegistryIconProps {
   uri: string | undefined;
+  agentName: string;
+}
+interface LoadedIconProps {
+  uri: string;
   agentName: string;
 }
 type IconSource =
@@ -24,16 +28,29 @@ export function RegistryIcon({
   agentName,
 }: RegistryIconProps): React.JSX.Element {
   if (!uri) return <UnavailableIcon agentName={agentName} />;
+  if (Platform.OS === 'web')
+    return <WebRegistryImage uri={uri} agentName={agentName} />;
   return <RegistryImage uri={uri} agentName={agentName} />;
 }
 
-function RegistryImage({
+// The browser draws the SVG itself: react-native-svg's web build hands the file's attributes, such as data-name, to DOM elements as unknown props.
+function WebRegistryImage({
   uri,
   agentName,
-}: {
-  uri: string;
-  agentName: string;
-}): React.JSX.Element {
+}: LoadedIconProps): React.JSX.Element {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <UnavailableIcon agentName={agentName} />;
+  return (
+    <Image
+      accessibilityLabel={`${agentName} icon`}
+      source={{ uri }}
+      style={{ width: iconPixels('sm'), height: iconPixels('sm') }}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+function RegistryImage({ uri, agentName }: LoadedIconProps): React.JSX.Element {
   const source = useMemo(
     (): IconSource => decodeRegistryIconSource(uri),
     [uri],

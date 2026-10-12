@@ -33,7 +33,8 @@ export function PageTitleRow(props: PageTitleRowProps): React.JSX.Element {
       </View>
     );
   return (
-    <View className="flex-row items-center gap-4">
+    // As tall as the search row, so the title sits at one height on every page.
+    <View className="h-10 flex-row items-center gap-4">
       <HangingBack onBack={props.onBack} />
       <View className="min-w-0 flex-1">
         <PageTitle {...props} />
