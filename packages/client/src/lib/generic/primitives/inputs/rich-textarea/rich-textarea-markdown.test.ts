@@ -1,52 +1,8 @@
-import { createHeadlessEditor } from '@lexical/headless';
-import { $isLinkNode } from '@lexical/link';
-import { $getRoot } from 'lexical';
 import { describe, expect, it } from 'vitest';
 import {
-  $exportMarkdown,
-  $importMarkdown,
-  richTextareaNodes,
-} from './rich-textarea-markdown';
-
-// The editor as the web drawing builds it, without a DOM: import a draft, then export what it shows.
-function editorWith(markdown: string): ReturnType<typeof createHeadlessEditor> {
-  const editor = createHeadlessEditor({
-    namespace: 'rich-textarea-test',
-    nodes: richTextareaNodes,
-    onError: (error) => {
-      throw error;
-    },
-  });
-  editor.update(() => $importMarkdown(markdown), { discrete: true });
-  return editor;
-}
-
-function roundTrip(markdown: string): string {
-  return editorWith(markdown)
-    .getEditorState()
-    .read(() => $exportMarkdown());
-}
-
-interface ShownLink {
-  text: string;
-  url: string;
-}
-
-// The links a draft shows, each with its text and where it goes.
-function linksIn(markdown: string): ShownLink[] {
-  return editorWith(markdown)
-    .getEditorState()
-    .read(() => {
-      const links = $getRoot()
-        .getAllTextNodes()
-        .map((text) => text.getParent())
-        .filter($isLinkNode);
-      return [...new Set(links)].map((link) => ({
-        text: link.getTextContent(),
-        url: link.getURL(),
-      }));
-    });
-}
+  roundTrip,
+  typedParagraph,
+} from '../../../../../../mocks/rich-textarea-headless';
 
 const unchanged: { name: string; markdown: string }[] = [
   { name: 'bold', markdown: 'Make it **bold** now' },
@@ -89,28 +45,53 @@ const unchanged: { name: string; markdown: string }[] = [
     name: 'noncharacters in inline code',
     markdown: 'Keep `\uFDD0_\uFDD4` as it is',
   },
+  { name: 'a bulleted list', markdown: '- First\n- Second' },
+  { name: 'a numbered list', markdown: '1. First\n2. Second' },
   {
-    name: 'a link',
-    markdown: 'Read the [Composer spec](https://argo.dev/spec)',
+    name: 'a nested bulleted list',
+    markdown: '- Plan\n    - Draft\n        - Outline\n- Ship',
   },
   {
-    name: 'a link next to marks',
-    markdown: '**Read** the [spec](https://argo.dev/spec) _now_',
-  },
-  { name: 'a bold link', markdown: '[**spec**](https://argo.dev/spec)' },
-  {
-    name: 'a link whose URL holds underscores and stars',
-    markdown: 'See [the run](https://ci.argo.dev/runs/snake_case_name?q=a*b*c)',
+    name: 'a nested numbered list',
+    markdown: '1. Plan\n    1. Draft\n    2. Review\n2. Ship',
   },
   {
-    name: 'a link whose text holds markdown characters',
-    markdown: 'See [snake_case and 2 * 3 ~ 4 \\ end](https://argo.dev/a)',
+    name: 'a bulleted list inside a numbered list',
+    markdown: '1. Plan\n    - Draft\n    - Review\n2. Ship',
   },
   {
-    name: 'a link whose URL holds noncharacters the text does not',
-    markdown: 'Keep [it](https://argo.dev/\uFDD0\uFDD1) as it is',
+    name: 'marks inside a list item',
+    markdown: '- Keep **snake_case** _as is_',
   },
-  { name: 'a bare URL', markdown: 'Logs: https://ci.argo.dev/runs/8812' },
+  { name: 'a quote', markdown: '> Keep the phone readable.' },
+  { name: 'a quote over two lines', markdown: '> First line\n> Second line' },
+  {
+    name: 'marks inside a quote',
+    markdown: '> Rename snake_case to **camelCase**',
+  },
+  {
+    name: 'a code block',
+    markdown: '```\nconst snake_case = 2 * 3; // ~ \\\n```',
+  },
+  {
+    name: 'a code block with a language',
+    markdown: '```ts\nconst a = 1;\n```',
+  },
+  {
+    name: 'blocks after one another',
+    markdown: 'Steps:\n\n- Build\n- Test\n\n> Then ship\n\n```\npnpm test\n```',
+  },
+];
+
+// Lexical escapes only `* _ ` ~ \` in text, so block markers typed as text are sent as typed.
+const typedBlockMarkers = [
+  '# not a heading',
+  '> not a quote',
+  '- not a list',
+  '+ not a list',
+  '* not a list',
+  '1. not a list',
+  '```not code',
 ];
 
 describe('RichTextarea markdown', () => {
@@ -118,23 +99,16 @@ describe('RichTextarea markdown', () => {
     expect(roundTrip(markdown)).toBe(markdown);
   });
 
-  it.each<{ name: string; markdown: string; links: ShownLink[] }>([
-    {
-      name: 'a link',
-      markdown: 'Read the [Composer spec](https://argo.dev/spec)',
-      links: [{ text: 'Composer spec', url: 'https://argo.dev/spec' }],
-    },
-    {
-      name: 'a link whose URL holds underscores and stars',
-      markdown: '[run](https://ci.argo.dev/a_b_c?q=a*b*c)',
-      links: [{ text: 'run', url: 'https://ci.argo.dev/a_b_c?q=a*b*c' }],
-    },
-  ])('shows $name as a link', ({ markdown, links }) => {
-    expect(linksIn(markdown)).toEqual(links);
+  it.each(typedBlockMarkers)('exports the typed text %s as it is', (text) => {
+    expect(typedParagraph(text)).toBe(text);
   });
 
-  it('shows a bare URL as text until it is typed', () => {
-    expect(linksIn('Logs: https://ci.argo.dev/runs/8812')).toEqual([]);
+  it('writes a nested item four spaces in', () => {
+    expect(roundTrip('- Plan\n  - Draft')).toBe('- Plan\n    - Draft');
+  });
+
+  it('numbers a list in order', () => {
+    expect(roundTrip('1. Plan\n3. Ship')).toBe('1. Plan\n2. Ship');
   });
 
   it('writes a single-tilde strikethrough with two tildes', () => {

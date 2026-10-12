@@ -1,3 +1,4 @@
+import { $isListItemNode } from '@lexical/list';
 import {
   type InitialConfigType,
   LexicalComposer,
@@ -6,16 +7,16 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
+import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
+import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 import type * as React from 'react';
 import { useEffect } from 'react';
-import {
-  markdownLinkClassNames,
-  markdownMarkClassNames,
-} from '#lib/generic/markdown-marks';
+import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
 import {
+  registerBlockShortcuts,
   registerMarkShortcuts,
   registerReturnToSubmit,
 } from './rich-textarea-keys';
@@ -29,6 +30,7 @@ import {
   plainFieldClassName,
   type RichTextareaProps,
 } from './rich-textarea-props';
+import { blockThemeClassNames } from './rich-textarea-theme';
 import { useMarkdownValue } from './rich-textarea-value';
 
 function KeyboardPlugin({
@@ -36,11 +38,24 @@ function KeyboardPlugin({
 }: Pick<RichTextareaProps, 'onSubmit'>): null {
   const [editor] = useLexicalComposerContext();
   useEffect(() => registerMarkShortcuts(editor), [editor]);
+  useEffect(() => registerBlockShortcuts(editor), [editor]);
   useEffect(
     () => onSubmit && registerReturnToSubmit(editor, onSubmit),
     [editor, onSubmit],
   );
   return null;
+}
+
+// Typing, undo, and lists that nest with Tab; only list items indent, since markdown has no other indent.
+function EditingPlugins(): React.JSX.Element {
+  return (
+    <>
+      <HistoryPlugin />
+      <ListPlugin />
+      <TabIndentationPlugin $canIndent={$isListItemNode} />
+      <MarkdownShortcutPlugin transformers={richTextareaTransformers} />
+    </>
+  );
 }
 
 function EditablePlugin({ editable }: { editable: boolean }): null {
@@ -105,16 +120,16 @@ function MessageField({
   );
 }
 
-const editorTheme = {
+const theme: InitialConfigType['theme'] = {
   text: markdownMarkClassNames,
-  link: cn(markdownLinkClassNames.underline, markdownLinkClassNames.domColor),
+  ...blockThemeClassNames,
 };
 
 function editorConfig(value: string, editable: boolean): InitialConfigType {
   return {
     namespace: 'RichTextarea',
     nodes: richTextareaNodes,
-    theme: editorTheme,
+    theme,
     editable,
     editorState: () => $importMarkdown(value),
     onError: (error) => {
@@ -131,8 +146,7 @@ function RichTextarea({
   return (
     <LexicalComposer initialConfig={editorConfig(props.value, editable)}>
       <MessageField {...props} editable={editable} />
-      <HistoryPlugin />
-      <MarkdownShortcutPlugin transformers={richTextareaTransformers} />
+      <EditingPlugins />
       <KeyboardPlugin onSubmit={props.onSubmit} />
       <EditablePlugin editable={editable} />
       <MarkdownValuePlugin {...props} />

@@ -1813,7 +1813,7 @@
       "rules": { "argo/acp-sdk-zone": "error" }
     },
     {
-      // ADR-0023: Lexical stays in the RichTextarea web drawing, its markdown module and their tests.
+      // ADR-0023: Lexical stays in the RichTextarea web drawing, its markdown module and their tests, with the tests' headless editor.
       "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
       "excludeFiles": [
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-view.tsx",
@@ -1822,7 +1822,9 @@
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-link-plugins.tsx",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-markdown.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-value.ts",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*"
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-blocks.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*",
+        "packages/client/mocks/rich-textarea-headless.ts"
       ],
       "rules": { "argo/lexical-zone": "error" }
     },

@@ -1,4 +1,6 @@
 import {
+  $getSelection,
+  $isRangeSelection,
   COMMAND_PRIORITY_HIGH,
   CONTROL_OR_META,
   FORMAT_TEXT_COMMAND,
@@ -9,6 +11,10 @@ import {
   type LexicalEditor,
   type TextFormatType,
 } from 'lexical';
+import { $returnBlock, $wrapInCodeBlock } from './rich-textarea-blocks';
+import { sendsOnReturn } from './rich-textarea-return';
+
+const codeBlockModifiers = { ...CONTROL_OR_META, shiftKey: true };
 
 /*
  * Marks Lexical does not bind itself; ⌘B and ⌘I are built in. Underline has no markdown, so ⌘U
@@ -50,9 +56,33 @@ export function registerMarkShortcuts(editor: LexicalEditor): () => void {
   );
 }
 
+// ⌘⇧C wraps the selection in a code block.
+export function registerBlockShortcuts(editor: LexicalEditor): () => void {
+  return editor.registerCommand(
+    KEY_DOWN_COMMAND,
+    (event) => {
+      if (!isExactShortcutMatch(event, 'c', codeBlockModifiers)) return false;
+      event.preventDefault();
+      editor.update($wrapInCodeBlock);
+      return true;
+    },
+    COMMAND_PRIORITY_HIGH,
+  );
+}
+
 // ⇧Return and a Return that ends an IME composition stay with Lexical, which adds a line.
-function sendsOnReturn(event: KeyboardEvent | null): event is KeyboardEvent {
+function plainReturn(event: KeyboardEvent | null): event is KeyboardEvent {
   return event !== null && !event.shiftKey && !event.isComposing;
+}
+
+// Return sends from a paragraph or quote; Lexical's list and code nodes carry out the other actions.
+function $sendsOnReturn(event: KeyboardEvent | null): event is KeyboardEvent {
+  const selection = $getSelection();
+  return (
+    plainReturn(event) &&
+    $isRangeSelection(selection) &&
+    sendsOnReturn({ block: $returnBlock(selection) })
+  );
 }
 
 export function registerReturnToSubmit(
@@ -62,7 +92,7 @@ export function registerReturnToSubmit(
   return editor.registerCommand(
     KEY_ENTER_COMMAND,
     (event) => {
-      if (!sendsOnReturn(event)) return false;
+      if (!$sendsOnReturn(event)) return false;
       event.preventDefault();
       submit();
       return true;
