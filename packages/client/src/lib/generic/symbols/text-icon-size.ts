@@ -5,8 +5,8 @@ export type IconTextRole = 'title' | 'body' | 'control' | 'secondary';
 
 // An icon or chevron beside text follows that text's role, so it steps up on the phone when the text does.
 const textIconSizes = {
-  // A page title keeps one size at every width, and so does its Back chevron.
-  title: { wide: 'lg', phone: 'lg' },
+  // A wide page title's Back chevron matches the header actions, not the title's cap height.
+  title: { wide: 'md', phone: 'lg' },
   body: { wide: 'sm', phone: 'md' },
   control: { wide: 'sm', phone: 'sm' },
   secondary: { wide: 'xs', phone: 'sm' },

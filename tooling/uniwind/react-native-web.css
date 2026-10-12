@@ -19,6 +19,38 @@
   :where([class*="css-text-"]) {
     font-family: var(--font-text);
   }
+  /* Controls stay clickable over the desktop shell's window drag strip. */
+  :where(
+    button,
+    a,
+    input,
+    textarea,
+    select,
+    [role="button"],
+    [role="link"],
+    [role="switch"],
+    [role="checkbox"],
+    [role="combobox"],
+    [role="menuitem"],
+    [role="tab"],
+    [role="slider"],
+    [role="searchbox"]
+  ) {
+    app-region: no-drag;
+  }
+  /* Rows, controls and headings are chrome, not text to copy. */
+  [role="button"],
+  [role="button"] *,
+  [role="link"],
+  [role="link"] *,
+  [role="menuitem"],
+  [role="menuitem"] *,
+  [role="tab"],
+  [role="tab"] *,
+  [role="heading"],
+  [role="heading"] * {
+    user-select: none;
+  }
   :where([role="heading"]) {
     font-family: var(--font-display);
   }

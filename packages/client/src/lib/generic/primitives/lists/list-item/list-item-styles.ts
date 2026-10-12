@@ -8,7 +8,7 @@ export function rowClasses(
   endsSection?: boolean,
 ): string {
   return cn(
-    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted wide:min-h-12 wide:py-1.5',
+    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted wide:min-h-12 wide:py-1.5 web:select-none web:[&_*]:select-none',
     sizeClasses(props),
     stateClasses(props),
     showsSeparator(navigation, endsSection) &&
@@ -39,8 +39,11 @@ function stateClasses(props: ListItemProps): string {
 
 function sidebarClasses(props: ListItemProps): string {
   return cn(
-    'rounded-selection bg-transparent web:hover:bg-selected web:active:bg-selected',
-    props.selected && 'bg-selected',
+    'rounded-selection',
+    // Hover is a lighter tint than selected; a selected row keeps its tint.
+    props.selected
+      ? 'bg-selected'
+      : 'bg-transparent web:hover:bg-selected/50 web:active:bg-selected',
   );
 }
 

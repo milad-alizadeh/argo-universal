@@ -132,6 +132,12 @@ export function DesktopShell({
         transitionKey={transitionKey}
         animate={!resizing}
       />
+      {/* An invisible strip along the window's top drags the Electron window; controls above it stay clickable. */}
+      <View
+        testID="window-drag-strip"
+        pointerEvents="none"
+        className="absolute inset-x-0 top-0 h-[calc(var(--spacing-shell-inset)+var(--spacing-shell-control))] web:[app-region:drag]"
+      />
       <View className="p-shell-inset">
         <View className="flex-1 flex-row">
           <GlassSurface
