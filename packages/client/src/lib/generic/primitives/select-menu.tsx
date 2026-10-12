@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { cn } from '#lib/generic/utils';
+import { useInListItem } from './list-item-accessory';
 import {
   Select,
   SelectContent,
@@ -7,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './select';
+import type { SelectVariant } from './select-styles';
 
 interface SelectMenuOption<Value extends string> {
   value: Value;
@@ -20,8 +22,14 @@ export interface SelectMenuProps<Value extends string> {
   placeholder?: string;
   disabled?: boolean;
   invalid?: boolean;
+  // Plain has no border or background. A ListItem's accessory takes it by default.
+  variant?: SelectVariant;
 }
-function selectMenuClassName(invalid?: boolean): string {
+function selectMenuClassName(
+  variant: SelectVariant,
+  invalid?: boolean,
+): string | undefined {
+  if (variant === 'plain') return undefined;
   return cn(
     'h-9 sm:h-9 w-full! bg-background dark:bg-background',
     invalid && 'border-destructive',
@@ -41,12 +49,14 @@ function SelectMenuValue<Value extends string>(
 function SelectMenuTrigger<Value extends string>(
   props: SelectMenuProps<Value>,
 ): ReactElement {
-  const classes = selectMenuClassName(props.invalid);
+  const inListItem = useInListItem();
+  const variant = props.variant ?? (inListItem ? 'plain' : 'default');
   return (
     <SelectTrigger
       accessibilityLabel={props.accessibilityLabel}
       disabled={props.disabled}
-      className={classes}
+      variant={variant}
+      className={selectMenuClassName(variant, props.invalid)}
     >
       <SelectMenuValue {...props} />
     </SelectTrigger>
