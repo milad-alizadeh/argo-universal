@@ -4,7 +4,8 @@ name: Configure controls own Android accessibility
 # Start in the native ComposerConfiguration "Fast mode on" Storybook preview,
 # with Configure open. Use the real shared rows, Switch and Slider.
 - assertVisible:
-    text: "^Fast mode$"
+    containsChild:
+      text: "^Fast mode$"
     checked: true
     enabled: true
 - assertNotVisible:
@@ -20,9 +21,11 @@ name: Configure controls own Android accessibility
     index: 1
 - tapOn: "^Fast mode$"
 - assertVisible:
-    text: "^Fast mode$"
+    containsChild:
+      text: "^Fast mode$"
     checked: false
 - tapOn: "^Fast mode$"
 - assertVisible:
-    text: "^Fast mode$"
+    containsChild:
+      text: "^Fast mode$"
     checked: true

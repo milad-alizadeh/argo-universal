@@ -15,10 +15,27 @@ export function RowTrailing(props: ListItemProps): React.JSX.Element {
       verticalAlignment="center"
       modifiers={valueWidth(props.value)}
     >
-      <NativeRowGlyph leading={props.valueLeading} />
-      <RowValue value={props.value} decorative={!!props.control} />
+      <RowValueGroup {...props} />
       <NativeRowStatus {...props} />
       <RowDisclosure visible={hasDisclosure(props)} />
+    </Row>
+  );
+}
+
+function RowValueGroup(
+  props: Pick<ListItemProps, 'value' | 'valueLeading' | 'control'>,
+): React.JSX.Element | null {
+  if (props.value === undefined) return null;
+  return (
+    <Row
+      horizontalArrangement="end"
+      verticalAlignment="center"
+      modifiers={[weight(1)]}
+    >
+      <Row horizontalArrangement={{ spacedBy: 8 }} verticalAlignment="center">
+        <NativeRowGlyph leading={props.valueLeading} />
+        <RowValue value={props.value} decorative={!!props.control} />
+      </Row>
     </Row>
   );
 }
@@ -38,7 +55,7 @@ function RowValue({
     <Text
       color={mutedForeground}
       style={{ ...style, textAlign: 'end' }}
-      modifiers={[weight(1), ...(decorative ? [clearSemantics()] : [])]}
+      modifiers={decorative ? [clearSemantics()] : []}
     >
       {value}
     </Text>
