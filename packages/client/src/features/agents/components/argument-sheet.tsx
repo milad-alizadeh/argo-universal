@@ -1,8 +1,8 @@
 import { AgentArgument } from '@repo/contracts';
 import type * as React from 'react';
+import { errorMessage } from '../../../lib/generic/primitives/field-errors';
 import type { CustomAgentFormApi } from '../hooks/use-custom-agent-form';
 import { EntrySheet, type EntrySheetField, removalOf } from './entry-sheet';
-import { errorMessage } from './form-field';
 
 export type ArgumentsField = {
   state: { value: string[] };
