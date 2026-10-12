@@ -5,6 +5,7 @@ import {
   useNavigate,
 } from '#lib/product/navigation/context';
 import {
+  type Section,
   sectionDestination,
   sectionOf,
 } from '../../../lib/product/navigation/sections';
@@ -14,6 +15,8 @@ export interface PhoneLayoutViewProps {
   destination: NavigationDestination;
   // The Sessions that need input or are Unread, for the drawer's badge.
   attentionCount: number;
+  // Shows a picked section; without it the section's list is navigated to.
+  onSectionChange?: (section: Section) => void;
   children: ReactNode;
 }
 
@@ -21,6 +24,7 @@ export interface PhoneLayoutViewProps {
 export function PhoneLayoutView({
   destination,
   attentionCount,
+  onSectionChange,
   children,
 }: PhoneLayoutViewProps): React.JSX.Element {
   const navigate = useNavigate();
@@ -49,7 +53,8 @@ export function PhoneLayoutView({
       onSectionChange={(next) => {
         if (next === section) return;
         deferClose.current = true;
-        navigate(sectionDestination(next));
+        if (onSectionChange) onSectionChange(next);
+        else navigate(sectionDestination(next));
       }}
       swipeEnabled={atSectionRoot}
     >

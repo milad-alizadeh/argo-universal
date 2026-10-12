@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
@@ -19,8 +19,6 @@ export interface HeaderButtonProps extends Pick<
   accessibilityLabel: string;
   // Paired trailing items are 32pt wide; a lone item fills its 44pt slot.
   paired?: boolean;
-  // The header's leading item; Android draws its glyph at the slot's edge, the screen inset.
-  leading?: boolean;
   // A dot on the icon: Sessions need attention, or a filter other than the default is set.
   dot?: 'attention' | 'filter';
 }
@@ -29,15 +27,33 @@ export interface HeaderButtonProps extends Pick<
 export function HeaderButton({
   icon,
   accessibilityLabel,
-  paired = false,
-  leading = false,
+  paired: pairedProp = false,
   dot,
   ...props
 }: HeaderButtonProps): React.JSX.Element {
+  // Android: a menu's native host clips hitSlop, so every item keeps the full 44pt target.
+  const paired = pairedProp && Platform.OS !== 'android';
   const narrow = paired || hasLiquidGlass;
   let hitSlop: IconButtonProps['hitSlop'];
   if (hasLiquidGlass) hitSlop = 10;
   else if (paired) hitSlop = { left: 6, right: 6 };
+  const content = (
+    <>
+      <Icon size="md" name={icon} className="text-foreground" />
+      {dot && (
+        <View
+          testID="header-button-dot"
+          className={cn(
+            'absolute size-[7px] rounded-full border-[1.5px] border-background',
+            dot === 'attention' ? 'bg-warning' : 'bg-foreground',
+            hasLiquidGlass
+              ? '-top-0.5 -right-0.5'
+              : cn('top-2.5', narrow ? 'right-1' : 'right-[9px]'),
+          )}
+        />
+      )}
+    </>
+  );
   return (
     <Pressable
       hitSlop={hitSlop}
@@ -51,32 +67,11 @@ export function HeaderButton({
           // iOS 26 pads each item into a glass bubble, so a 24pt item matches the system search bubble.
           hasLiquidGlass
             ? 'size-6 sm:size-6'
-            : cn(
-                'h-11 sm:h-11',
-                paired ? 'w-8 sm:w-8' : 'w-11 sm:w-11',
-                // The glyph starts at the screen inset, in line with the search bar and the content below.
-                leading && 'ios:justify-start android:justify-start',
-              ),
+            : cn('h-11 sm:h-11', paired ? 'w-8 sm:w-8' : 'w-11 sm:w-11'),
         ),
       })}
     >
-      <Icon size="md" name={icon} className="text-foreground" />
-      {dot && (
-        <View
-          testID="header-button-dot"
-          className={cn(
-            'absolute size-[7px] rounded-full border-[1.5px] border-background',
-            dot === 'attention' ? 'bg-warning' : 'bg-foreground',
-            hasLiquidGlass
-              ? '-top-0.5 -right-0.5'
-              : cn(
-                  'top-2.5',
-                  narrow ? 'right-1' : 'right-[9px]',
-                  leading && 'ios:right-[21px] android:right-[21px]',
-                ),
-          )}
-        />
-      )}
+      {content}
     </Pressable>
   );
 }

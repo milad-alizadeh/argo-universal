@@ -44,5 +44,7 @@ export {
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
 export { HeaderButton } from '#lib/product/header-button';
+export type { Section } from './lib/product/navigation/sections';
 export { HeaderSearchRow } from './lib/product/navigation/header-search';
+export { DockedSearch } from './lib/product/navigation/docked-search';
 export { AppProviders } from './app-providers';

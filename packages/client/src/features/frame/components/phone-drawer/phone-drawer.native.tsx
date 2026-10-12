@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { useEffect, useRef } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { DrawerProgressContext } from 'react-native-drawer-layout';
 import ReanimatedDrawerLayout, {
   type DrawerLayoutMethods,
@@ -37,8 +37,11 @@ export function PhoneDrawer({
       <ReanimatedDrawerLayout
         ref={drawer}
         drawerType={DrawerType.BACK}
+        // Android's back gesture owns the screen edge, and the drawer's edge swipe takes any moving press near it (☰, rows), so there only ☰ opens it; a swipe still closes it.
         drawerLockMode={
-          swipeEnabled ? DrawerLockMode.UNLOCKED : DrawerLockMode.LOCKED_CLOSED
+          swipeEnabled && Platform.OS !== 'android'
+            ? DrawerLockMode.UNLOCKED
+            : DrawerLockMode.LOCKED_CLOSED
         }
         drawerWidth={width}
         drawerBackgroundColor={String(surfaceStyle.backgroundColor)}
