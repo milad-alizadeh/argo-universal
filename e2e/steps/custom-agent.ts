@@ -21,18 +21,29 @@ async function chooseAgentBeside(page: Page, name: string): Promise<void> {
   await page.keyboard.press('Escape');
 }
 
+// The wide title row and the phone header both carry the + button.
+async function openAddCustomAgent(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Add custom Agent' }).click();
+}
+
+// Each argument is a row; its editor opens as a dialog on a wide Frame and a sheet on a phone.
+async function addArgument(page: Page, argument: string): Promise<void> {
+  await page.getByRole('link', { name: 'Add argument', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'Argument' });
+  await editor
+    .getByRole('textbox', { name: 'Argument', exact: true })
+    .fill(argument);
+  await editor.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(editor).toBeHidden();
+}
+
 async function addScriptedAgent(page: Page, name: string): Promise<void> {
-  await page.getByRole('button', { name: 'Add custom' }).click();
+  await openAddCustomAgent(page);
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill(name);
   await page
     .getByRole('textbox', { name: 'Executable', exact: true })
     .fill(scriptedAgent.executable);
-  for (const [index, argument] of scriptedAgent.args.entries()) {
-    await page.getByRole('button', { name: 'Add argument' }).click();
-    await page
-      .getByRole('textbox', { name: `Argument ${index + 1}`, exact: true })
-      .fill(argument);
-  }
+  for (const argument of scriptedAgent.args) await addArgument(page, argument);
   await page.getByRole('button', { name: 'Add Agent' }).click();
 }
 
@@ -62,18 +73,18 @@ When(
   'I open the custom Agent {string} from the Agents list',
   async ({ page }, name: string): Promise<void> => {
     await page.getByRole('link', { name: /^Agents(?:,|$)/ }).click();
-    await page.getByRole('link', { name, exact: true }).click();
+    await page.getByRole('link', { name: new RegExp(`^${name},`) }).click();
   },
 );
 
 When(
   'I rename the custom Agent to {string}',
   async ({ page }, name: string): Promise<void> => {
-    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await page.getByRole('link', { name: 'Edit', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill(name);
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(
-      page.getByRole('button', { name: 'Edit', exact: true }),
+      page.getByRole('link', { name: 'Edit', exact: true }),
     ).toBeVisible();
   },
 );

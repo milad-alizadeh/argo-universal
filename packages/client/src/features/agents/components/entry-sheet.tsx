@@ -12,6 +12,7 @@ export type EntrySheetField = {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
   error?: string;
 };
 export type EntrySheetProps = {
@@ -23,16 +24,18 @@ export type EntrySheetProps = {
   removeLabel: string;
 };
 
-// A phone edits one argument or variable at a time, with labelled fields.
+// A phone edits one argument or variable at a time, with labelled fields, in a sheet that the backdrop closes.
 export function EntrySheet(props: EntrySheetProps): React.JSX.Element {
   return (
     <Dialog open onOpenChange={(open) => !open && props.onClose()}>
-      <DialogContent className="gap-4">
-        <EntrySheetHeader {...props} />
-        {props.fields.map((field) => (
-          <EntrySheetInput key={field.label} field={field} />
-        ))}
-        {props.onRemove && <RemoveEntry {...props} />}
+      <DialogContent accessibilityLabel={props.title}>
+        <DialogTitle className="type-heading">{props.title}</DialogTitle>
+        <View className="gap-4">
+          {props.fields.map((field) => (
+            <EntrySheetInput key={field.label} field={field} />
+          ))}
+        </View>
+        <EntrySheetActions {...props} />
       </DialogContent>
     </Dialog>
   );
@@ -51,23 +54,13 @@ export const removalOf = (
         close();
       };
 
-function EntrySheetHeader(props: EntrySheetProps): React.JSX.Element {
+function EntrySheetActions(props: EntrySheetProps): React.JSX.Element {
   return (
-    <View className="flex-row items-center justify-between gap-2">
-      <Button
-        variant="ghost"
-        size="sm"
-        onPress={props.onClose}
-        label={'Cancel'}
-      />
-      <DialogTitle className="type-heading">{props.title}</DialogTitle>
-      <SaveButton onPress={props.onSave} />
+    <View className="gap-3">
+      <Button fullWidth="narrow" onPress={props.onSave} label={'Save'} />
+      {props.onRemove && <RemoveEntry {...props} />}
     </View>
   );
-}
-
-function SaveButton({ onPress }: { onPress: () => void }): React.JSX.Element {
-  return <Button size="sm" onPress={onPress} label={'Save'} />;
 }
 
 function EntrySheetInput({
@@ -92,6 +85,7 @@ function RemoveEntry({
   return (
     <Button
       variant="ghost"
+      fullWidth="narrow"
       onPress={onRemove}
       label={removeLabel}
       {...destructiveAction}

@@ -11,7 +11,7 @@ type SheetProps = {
   editing: Editing;
   onEdit: EditVariable;
 };
-export const emptyVariable: EnvironmentVariable = { name: '', value: '' };
+const emptyVariable: EnvironmentVariable = { name: '', value: '' };
 export const newVariable: Editing = { index: null, variable: emptyVariable };
 
 function nameField(
@@ -22,6 +22,7 @@ function nameField(
   return {
     label: 'Name',
     value: variable.name,
+    placeholder: 'EXAMPLE_HOME',
     onChange: (next) =>
       onEdit({ index, variable: { ...variable, name: next } }),
     error: name.success ? undefined : errorMessage(name.error.issues),
@@ -34,6 +35,7 @@ const valueField = (
 ): EntrySheetField => ({
   label: 'Value',
   value: variable.value,
+  placeholder: '/Users/you/.example',
   onChange: (next) => onEdit({ index, variable: { ...variable, value: next } }),
 });
 

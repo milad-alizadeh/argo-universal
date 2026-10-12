@@ -1,17 +1,17 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
 import { Input } from '#lib/generic/primitives/input';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import type { FieldSectionProps } from '../../../lib/generic/primitives/field-props';
 
 export type FieldErrors = readonly unknown[];
-type FieldMessageProps = { hint?: string; errors: FieldErrors };
 export type FormInputProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
+  placeholder?: string;
   errors?: FieldErrors;
   mono?: boolean;
   disabled?: boolean;
@@ -31,6 +31,15 @@ export const errorMessage = (errors: FieldErrors): string | undefined => {
   return typeof error === 'string' ? error : objectMessage(error);
 };
 
+// A section's footer: an error in the destructive tone in place of the hint.
+export const sectionFooter = (
+  error: string | undefined,
+  hint?: string,
+): Pick<FieldSectionProps, 'footer' | 'footerTone'> =>
+  error === undefined
+    ? { footer: hint }
+    : { footer: error, footerTone: 'destructive' };
+
 const hasErrors = (errors: FieldErrors = []): boolean => errors.length > 0;
 const inputClass = ({ mono, className }: FormInputProps): string =>
   cn(mono ? 'type-code' : 'type-body', className);
@@ -42,6 +51,7 @@ export function FormInput(props: FormInputProps): React.JSX.Element {
       aria-invalid={hasErrors(props.errors)}
       className={inputClass(props)}
       value={props.value}
+      placeholder={props.placeholder}
       onChangeText={props.onChange}
       onBlur={props.onBlur}
       editable={!props.disabled}
@@ -51,27 +61,17 @@ export function FormInput(props: FormInputProps): React.JSX.Element {
   );
 }
 
+// What is wrong with an entry, under its input.
 export function FieldMessage({
-  hint,
   errors,
-}: FieldMessageProps): React.JSX.Element | null {
+}: {
+  errors: FieldErrors;
+}): React.JSX.Element | null {
   const error = errorMessage(errors);
-  const message = error ?? hint;
-  if (!message) return null;
-  return <MessageText message={message} isError={error !== undefined} />;
-}
-
-function MessageText(props: {
-  message: string;
-  isError: boolean;
-}): React.JSX.Element {
+  if (!error) return null;
   return (
-    <Text
-      role="secondary"
-      className={cn(props.isError && 'text-destructive')}
-      semanticRole={props.isError ? 'alert' : undefined}
-    >
-      {props.message}
+    <Text role="secondary" className="text-destructive" semanticRole="alert">
+      {error}
     </Text>
   );
 }
@@ -84,18 +84,6 @@ export function FormLabel({
   return <Text role="body">{children}</Text>;
 }
 
-export function LabelledInput(
-  props: FormInputProps & { hint?: string },
-): React.JSX.Element {
-  return (
-    <View className="gap-2 pt-4">
-      <FormLabel>{props.label}</FormLabel>
-      <FormInput {...props} />
-      <FieldMessage hint={props.hint} errors={props.errors ?? []} />
-    </View>
-  );
-}
-
 // The part of a TanStack Form field that a text input reads.
 export type TextField = {
   state: { value: string; meta: { isTouched: boolean; errors: FieldErrors } };
@@ -105,7 +93,7 @@ export type TextField = {
 type BoundInput = Pick<FormInputProps, 'value' | 'onChange' | 'onBlur'> &
   Required<Pick<FormInputProps, 'errors'>>;
 
-export const fieldInput = (field: TextField): BoundInput => ({
+const fieldInput = (field: TextField): BoundInput => ({
   value: field.state.value,
   onChange: field.handleChange,
   onBlur: field.handleBlur,

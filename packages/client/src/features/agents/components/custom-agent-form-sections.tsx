@@ -1,64 +1,43 @@
+import { useStore } from '@tanstack/react-form';
 import type * as React from 'react';
-import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/text';
+import { FieldInput } from '#primitives/field-input';
+import { FieldSection } from '#primitives/field-section';
+import { ListItem } from '#primitives/list-item';
 import type { CustomAgentFormApi } from '../hooks/use-custom-agent-form';
-import { CustomAgentArguments } from './custom-agent-arguments';
-import { CustomAgentEnvironment } from './custom-agent-environment';
-import { LabelledInput, touchedInput } from './form-field';
+import {
+  type FieldErrors,
+  errorMessage,
+  sectionFooter,
+  touchedInput,
+} from './form-field';
 
 export type FormPartProps = { form: CustomAgentFormApi; disabled: boolean };
+type FieldMeta = { isTouched: boolean; errors: FieldErrors } | undefined;
 const executableHint = "An absolute path, or a command on the Server's PATH.";
 
-function Dimmed({
-  disabled,
-  children,
-}: {
-  disabled: boolean;
-  children: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <View className={disabled ? 'opacity-50' : undefined}>{children}</View>
+// Errors show once the person has changed the field.
+const touchedErrors = (meta: FieldMeta): FieldErrors =>
+  meta?.isTouched ? meta.errors : [];
+
+function useProgramError(form: CustomAgentFormApi): string | undefined {
+  return useStore(form.store, ({ fieldMeta }) =>
+    errorMessage([
+      ...touchedErrors(fieldMeta.name),
+      ...touchedErrors(fieldMeta.executable),
+    ]),
   );
 }
 
+// The name and the program; the footer gives the program's hint until a field has an error.
 export function ProgramSection(props: FormPartProps): React.JSX.Element {
   return (
-    <Dimmed disabled={props.disabled}>
-      <SectionHeading>Program</SectionHeading>
-      <ProgramFields {...props} />
-      <CustomAgentArguments {...props} />
-    </Dimmed>
-  );
-}
-
-export function EnvironmentSection(props: FormPartProps): React.JSX.Element {
-  return (
-    <Dimmed disabled={props.disabled}>
-      <SectionHeading>Environment variables</SectionHeading>
-      <CustomAgentEnvironment {...props} />
-    </Dimmed>
-  );
-}
-
-function SectionHeading({ children }: { children: string }): React.JSX.Element {
-  return (
-    <Text
-      semanticRole="heading"
-      aria-level={2}
-      role={'heading'}
-      className="h-8 leading-8"
+    <FieldSection
+      title="Program"
+      {...sectionFooter(useProgramError(props.form), executableHint)}
     >
-      {children}
-    </Text>
-  );
-}
-
-function ProgramFields(props: FormPartProps): React.JSX.Element {
-  return (
-    <>
       <NameField {...props} />
       <ExecutableField {...props} />
-    </>
+    </FieldSection>
   );
 }
 
@@ -66,8 +45,9 @@ function NameField({ form, disabled }: FormPartProps): React.JSX.Element {
   return (
     <form.Field name="name">
       {(field) => (
-        <LabelledInput
+        <FieldInput
           label="Name"
+          placeholder="Example Agent"
           {...touchedInput(field)}
           disabled={disabled}
         />
@@ -80,14 +60,23 @@ function ExecutableField({ form, disabled }: FormPartProps): React.JSX.Element {
   return (
     <form.Field name="executable">
       {(field) => (
-        <LabelledInput
+        <FieldInput
           mono
           label="Executable"
-          hint={executableHint}
+          placeholder="/usr/local/bin/example-agent"
           {...touchedInput(field)}
           disabled={disabled}
         />
       )}
     </form.Field>
   );
+}
+
+// The last row of a list section, which adds an entry in its editor.
+export function AddEntryRow(props: {
+  title: string;
+  disabled: boolean;
+  onPress: () => void;
+}): React.JSX.Element {
+  return <ListItem icon="add" tone="accent" {...props} />;
 }

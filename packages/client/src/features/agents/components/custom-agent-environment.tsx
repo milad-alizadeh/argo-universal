@@ -1,112 +1,58 @@
 import type { EnvironmentVariable } from '@repo/contracts';
 import type * as React from 'react';
-import { useState } from 'react';
-import { View } from 'react-native';
-import { useWide } from '../../../lib/generic/use-wide';
-import type { CustomAgentFormApi } from '../hooks/use-custom-agent-form';
-import { AddEntry, EntryList, type EntryListItem } from './entry-controls';
-import { FieldMessage } from './form-field';
+import { FieldSection } from '#primitives/field-section';
+import { AddEntryRow, type FormPartProps } from './custom-agent-form-sections';
+import { VariableRow } from './custom-agent-launch';
+import { errorMessage, sectionFooter } from './form-field';
 import { keyedRows } from './keyed-rows';
-import { VariableColumns, VariableInputRow } from './variable-inputs';
-import {
-  type Editing,
-  VariableSheet,
-  emptyVariable,
-  newVariable,
-} from './variable-sheet';
+import { type Editing, newVariable } from './variable-sheet';
 
-type SectionProps = { form: CustomAgentFormApi; disabled: boolean };
-type VariablesField = {
-  state: { value: EnvironmentVariable[]; meta: { errors: readonly unknown[] } };
-  pushValue: (value: EnvironmentVariable) => void;
+type SectionProps = FormPartProps & { onEdit: (editing: Editing) => void };
+type FieldProps = SectionProps & {
+  field: {
+    state: {
+      value: EnvironmentVariable[];
+      meta: { errors: readonly unknown[] };
+    };
+  };
 };
-type BodyProps = SectionProps & { field: VariablesField };
-type EditVariable = (editing: Editing) => void;
 const environmentHint =
   'Stored on the Server in plain text. Not for API keys or other secrets; sign in through the Agent instead.';
 
 export function CustomAgentEnvironment(props: SectionProps): React.JSX.Element {
   return (
     <props.form.Field name="env" mode="array">
-      {(field) => <EnvironmentBody {...props} field={field} />}
+      {(field) => <EnvironmentSection {...props} field={field} />}
     </props.form.Field>
   );
 }
 
-function EnvironmentBody(props: BodyProps): React.JSX.Element {
-  return (
-    <View className="gap-2 pt-4">
-      <VariableList {...props} />
-      <FieldMessage
-        hint={environmentHint}
-        errors={props.field.state.meta.errors}
-      />
-    </View>
-  );
-}
+const environmentFooter = ({
+  field,
+}: FieldProps): ReturnType<typeof sectionFooter> =>
+  sectionFooter(errorMessage(field.state.meta.errors), environmentHint);
 
-function VariableList(props: BodyProps): React.JSX.Element {
-  if (!useWide()) return <VariableRows {...props} />;
+// One row per variable; each opens its editor, and the last row adds one. A list error replaces the hint.
+function EnvironmentSection(props: FieldProps): React.JSX.Element {
   return (
-    <>
-      <VariableInputs {...props} />
-      <AddEntry
-        label="Add environment variable"
+    <FieldSection title="Environment variables" {...environmentFooter(props)}>
+      <VariableRows {...props} />
+      <AddEntryRow
+        title="Add environment variable"
         disabled={props.disabled}
-        onPress={() => props.field.pushValue(emptyVariable)}
+        onPress={() => props.onEdit(newVariable)}
       />
-    </>
+    </FieldSection>
   );
 }
 
-function VariableInputs(props: BodyProps): React.JSX.Element {
-  const rows = keyedRows(props.field.state.value);
-  return (
-    <>
-      {rows.length > 0 && <VariableColumns />}
-      {rows.map((row) => (
-        <VariableInputRow key={row.key} {...props} index={row.index} />
-      ))}
-    </>
-  );
-}
-
-const variableItems = (
-  values: readonly EnvironmentVariable[],
-  onEdit: EditVariable,
-): EntryListItem[] =>
-  keyedRows(values).map(({ key, index, value }) => ({
-    key,
-    label: value.name,
-    detail: value.value,
-    onPress: () => onEdit({ index, variable: value }),
-  }));
-
-function VariableEntries(
-  props: BodyProps & { onEdit: EditVariable },
-): React.JSX.Element {
-  return (
-    <EntryList
-      items={variableItems(props.field.state.value, props.onEdit)}
+function VariableRows(props: FieldProps): React.JSX.Element[] {
+  return keyedRows(props.field.state.value).map(({ key, index, value }) => (
+    <VariableRow
+      key={key}
+      variable={value}
       disabled={props.disabled}
-      addLabel="Add environment variable"
-      onAdd={() => props.onEdit(newVariable)}
+      onPress={() => props.onEdit({ index, variable: value })}
     />
-  );
-}
-
-function VariableRows(props: BodyProps): React.JSX.Element {
-  const [editing, setEditing] = useState<Editing | null>(null);
-  return (
-    <>
-      <VariableEntries {...props} onEdit={setEditing} />
-      {editing && (
-        <VariableSheet
-          form={props.form}
-          editing={editing}
-          onEdit={setEditing}
-        />
-      )}
-    </>
-  );
+  ));
 }

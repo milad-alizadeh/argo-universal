@@ -1,13 +1,14 @@
 import type { AgentCheck } from '@repo/contracts';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Badge, type BadgeTone } from '#lib/generic/primitives/badge';
 import { Text } from '#lib/generic/primitives/text';
-import { Button } from '../../../lib/generic/primitives/button';
+import { FieldSection } from '#primitives/field-section';
+import { ListItem } from '#primitives/list-item';
+import { sectionFooter } from './form-field';
 
 // undefined while the Server runs a fresh ACP initialize; readiness is never read from the saved record.
 export type CustomAgentCheck = AgentCheck | undefined;
 type StatusProps = { check: CustomAgentCheck; onCheck: () => void };
-type FailedStatusProps = { failure: string; onCheck: () => void };
 
 export function ReadinessChip({
   check,
@@ -19,66 +20,58 @@ export function ReadinessChip({
   return <FailedChip />;
 }
 
-const chipTones = {
-  checking: {
-    label: 'Checking',
-    tone: 'bg-muted',
-    text: 'text-muted-foreground',
-  },
-  ready: { label: 'Ready', tone: 'bg-success/10', text: 'text-success' },
-  failed: {
-    label: 'Check failed',
-    tone: 'bg-destructive/10',
-    text: 'text-destructive',
-  },
-};
+const Chip = (props: { label: string; tone: BadgeTone }): React.JSX.Element => (
+  <Badge tone={props.tone}>
+    <Text>{props.label}</Text>
+  </Badge>
+);
+const CheckingChip = (): React.JSX.Element => (
+  <Chip label="Checking" tone="muted" />
+);
+const ReadyChip = (): React.JSX.Element => (
+  <Chip label="Ready" tone="success" />
+);
+const FailedChip = (): React.JSX.Element => (
+  <Chip label="Check failed" tone="destructive" />
+);
 
-function Chip({ kind }: { kind: keyof typeof chipTones }): React.JSX.Element {
-  const { label, tone, text } = chipTones[kind];
-  return (
-    <View className={`h-5 justify-center rounded-full px-2 ${tone}`}>
-      <Text role="badge" className={text}>
-        {label}
-      </Text>
-    </View>
-  );
-}
+const failureOf = (check: CustomAgentCheck): string | undefined =>
+  check?.status === 'failed' ? check.failure : undefined;
 
-const CheckingChip = (): React.JSX.Element => <Chip kind="checking" />;
-const ReadyChip = (): React.JSX.Element => <Chip kind="ready" />;
-const FailedChip = (): React.JSX.Element => <Chip kind="failed" />;
-
-export function CustomAgentStatus({
+// The last ACP initialize: running, answered, or what failed and a row to run it again.
+export function StatusSection({
   check,
   onCheck,
 }: StatusProps): React.JSX.Element {
-  if (!check) return <Text role="secondary">Running ACP initialize…</Text>;
-  if (check.status === 'ready')
-    return <Text role="body">Answered ACP initialize</Text>;
-  return <FailedStatus failure={check.failure} onCheck={onCheck} />;
-}
-
-function FailedStatus(props: FailedStatusProps): React.JSX.Element {
+  const failure = failureOf(check);
   return (
-    <View className="flex-row items-start gap-4">
-      <View className="flex-1 gap-1">
-        <Text role="body">Did not answer ACP initialize</Text>
-        <Text role="code" className="text-destructive">
-          {props.failure}
-        </Text>
-      </View>
-      <CheckAgain onPress={props.onCheck} />
-    </View>
+    <FieldSection title="Status" {...sectionFooter(failure)}>
+      <StatusRow check={check} />
+      {failure !== undefined && <CheckAgain onPress={onCheck} />}
+    </FieldSection>
   );
 }
 
 function CheckAgain({ onPress }: { onPress: () => void }): React.JSX.Element {
   return (
-    <Button
-      variant="outline"
-      size="sm"
+    <ListItem
+      icon="retry"
+      tone="accent"
+      title="Check again"
       onPress={onPress}
-      label={'Check again'}
+    />
+  );
+}
+
+function StatusRow({ check }: { check: CustomAgentCheck }): React.JSX.Element {
+  if (!check) return <ListItem title="Running ACP initialize…" loading />;
+  if (check.status === 'ready')
+    return <ListItem icon="check" title="Answered ACP initialize" />;
+  return (
+    <ListItem
+      icon="warning"
+      tone="destructive"
+      title="Did not answer ACP initialize"
     />
   );
 }

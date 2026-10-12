@@ -26,6 +26,7 @@ const argumentFields = (
   {
     label: 'Argument',
     value,
+    placeholder: '--acp',
     onChange: (next) => onEdit({ index, value: next }),
     error: parsed.success ? undefined : errorMessage(parsed.error.issues),
   },

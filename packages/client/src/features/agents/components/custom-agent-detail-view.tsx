@@ -1,0 +1,122 @@
+import type { CustomAgentDefinition } from '@repo/contracts';
+import type * as React from 'react';
+import { useState } from 'react';
+import { View } from 'react-native';
+import { SettingsPage } from '#lib/product/settings-page';
+import { FieldGroup } from '#primitives/field-group';
+import { Icon } from '../../../lib/generic/symbols/icon';
+import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
+import { customAgentDescription } from '../state/agent-list';
+import { AgentIdentity } from './agent-identity';
+import { AgentPlaceholder } from './agent-placeholder';
+import { CustomAgentForm } from './custom-agent-form';
+import { LaunchSections } from './custom-agent-launch';
+import type { CustomAgentCheck } from './custom-agent-status';
+import { ReadinessChip, StatusSection } from './custom-agent-status';
+import { PhoneTitle } from './phone-title';
+
+export type CustomAgentDetailViewProps = {
+  agentId: string;
+  // Absent until the Server lists the Agent as custom; other Agents get a placeholder.
+  definition: CustomAgentDefinition | undefined;
+  // Absent while the Server checks the program again.
+  check: CustomAgentCheck;
+  onCheck: () => void;
+  onSave: SubmitCustomAgent;
+  onBack?: () => void;
+};
+type SettingsProps = Omit<
+  CustomAgentDetailViewProps,
+  'agentId' | 'definition'
+> & {
+  definition: CustomAgentDefinition;
+};
+// The page below its header: the Status, and the launch values or their form.
+type ContentProps = SettingsProps & {
+  status: React.ReactNode;
+  onEditing: (editing: boolean) => void;
+};
+
+export function CustomAgentDetailView({
+  agentId,
+  definition,
+  ...settings
+}: CustomAgentDetailViewProps): React.JSX.Element {
+  if (!definition) return <AgentPlaceholder agent={agentId} />;
+  return <CustomAgentSettings definition={definition} {...settings} />;
+}
+
+function CustomAgentSettings(props: SettingsProps): React.JSX.Element {
+  return (
+    <View className="flex-1 bg-background wide:bg-transparent">
+      <PhoneTitle title={props.definition.name} />
+      <SettingsPage title={props.definition.name} onBack={props.onBack}>
+        <CustomAgentContent {...props} />
+      </SettingsPage>
+    </View>
+  );
+}
+
+// The generic Agent glyph stands in for the logo a custom Agent lacks.
+function CustomAgentIdentity({
+  check,
+}: Pick<SettingsProps, 'check'>): React.JSX.Element {
+  return (
+    <AgentIdentity
+      logo={<Icon name="agent" size="lg" className="text-foreground" />}
+      description={customAgentDescription}
+      trailing={<ReadinessChip check={check} />}
+    />
+  );
+}
+
+// The identity card and the Status, then the launch values; Edit turns the values into the form, under the same Status.
+function CustomAgentContent(props: SettingsProps): React.JSX.Element {
+  const [editing, onEditing] = useState(false);
+  // A list rather than a fragment, so a native group still sees each section.
+  const status = [
+    <CustomAgentIdentity key="identity" check={props.check} />,
+    <StatusSection key="status" check={props.check} onCheck={props.onCheck} />,
+  ];
+  const content = { ...props, status, onEditing };
+  return editing ? <LaunchForm {...content} /> : <LaunchView {...content} />;
+}
+
+function LaunchView(props: ContentProps): React.JSX.Element {
+  return (
+    <FieldGroup>
+      {props.status}
+      <LaunchSections
+        definition={props.definition}
+        onEdit={() => props.onEditing(true)}
+      />
+    </FieldGroup>
+  );
+}
+
+// The read-only values return once the edited program passes its check.
+const closeWhenSaved =
+  ({
+    onSave,
+    onClose,
+  }: Pick<SettingsProps, 'onSave'> & {
+    onClose: () => void;
+  }): SubmitCustomAgent =>
+  async (edited) => {
+    const result = await onSave(edited);
+    if (result.status === 'ready') onClose();
+    return result;
+  };
+
+function LaunchForm(props: ContentProps): React.JSX.Element {
+  const onClose = (): void => props.onEditing(false);
+  return (
+    <CustomAgentForm
+      initial={props.definition}
+      submitLabel="Save"
+      onSubmit={closeWhenSaved({ onSave: props.onSave, onClose })}
+      onCancel={onClose}
+      leading={props.status}
+    />
+  );
+}

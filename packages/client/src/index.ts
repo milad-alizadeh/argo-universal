@@ -1,9 +1,9 @@
 import type {} from './lib/generic/reusables-compatibility';
 
 export {
-  AgentSettingsScreen,
-  AgentsSettingsScreen,
-  CustomAgentScreen,
+  AgentDetailScreen,
+  AgentListScreen,
+  CustomAgentNewScreen,
 } from '#features/agents';
 export {
   AgentModelSheetChoices,
