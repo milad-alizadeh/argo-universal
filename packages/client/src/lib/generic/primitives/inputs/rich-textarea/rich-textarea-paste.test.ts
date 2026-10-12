@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { marksAfterPasting } from '../../../../../../mocks/rich-textarea-headless';
+import {
+  marksAfterPasting,
+  roundTripWithPasteCleanUp,
+} from '../../../../../../mocks/rich-textarea-headless';
 
 // Lexical draws underline as a theme class, so only the editor's text nodes show it is gone.
 const pastedMarks = [
@@ -23,4 +26,13 @@ describe('RichTextarea paste', () => {
       expect(marksAfterPasting(html)).toEqual(marks);
     },
   );
+
+  // Only a paste loses links Argo does not follow; a typed or restored draft keeps them.
+  it.each([
+    '[docs](./README.md)',
+    '[a](#top)',
+    '[files](sftp://argo.dev/files)',
+  ])('keeps the relative or other link %s in a draft', (markdown) => {
+    expect(roundTripWithPasteCleanUp(markdown)).toBe(markdown);
+  });
 });

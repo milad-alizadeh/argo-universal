@@ -61,6 +61,7 @@ export const PastedFromGoogleDocs = pastedFrom(pastedHtml.googleDocs);
 export const PastedFromNotion = pastedFrom(pastedHtml.notion);
 export const PastedFromVsCode = pastedFrom(pastedHtml.vsCode);
 export const PastedScriptLinkIsPlainText = pastedFrom(pastedHtml.scriptLink);
+export const PastedFromWikipedia = pastedFrom(pastedHtml.wikipedia);
 
 // Colours, fonts, alignment, highlight, subscript and superscript do not show in the field.
 function pastedStylingDropped(pasted: PastedHtml): Story {

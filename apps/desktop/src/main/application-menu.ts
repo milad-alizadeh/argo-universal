@@ -30,7 +30,7 @@ function editMenu(isMac: boolean): MenuItemConstructorOptions {
   };
 }
 
-// Electron's default menus, with the Edit menu above; macOS adds the app menu first.
+// Electron's default menus, with the Edit menu above and an empty Help menu; macOS adds the app menu first.
 export function applicationMenu(
   platform: NodeJS.Platform,
 ): MenuItemConstructorOptions[] {
@@ -44,5 +44,7 @@ export function applicationMenu(
     editMenu(isMac),
     { role: 'viewMenu' },
     { role: 'windowMenu' },
+    // On macOS the Help menu holds the menu search field.
+    { role: 'help', submenu: [] },
   ];
 }

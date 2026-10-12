@@ -13,6 +13,17 @@ export function isLinkUrl(text: string): boolean {
   return linkProtocols.has(new URL(text).protocol);
 }
 
+const scriptSchemes = ['javascript:', 'data:', 'vbscript:'];
+
+/*
+ * Whether a URL would run a script when followed. Browsers ignore spaces and control characters in a
+ * scheme, and its case.
+ */
+export function isScriptUrl(url: string): boolean {
+  const scheme = url.replaceAll(/[\s\p{Cc}]/gu, '').toLowerCase();
+  return scriptSchemes.some((script) => scheme.startsWith(script));
+}
+
 function $collapsedSelection(): RangeSelection | undefined {
   const selection = $getSelection();
   return $isRangeSelection(selection) && selection.isCollapsed()

@@ -15,6 +15,7 @@ import {
   type RangeSelection,
 } from 'lexical';
 import type { LinkFields } from './rich-textarea-link-form';
+import { isScriptUrl } from './rich-textarea-links';
 import { selectedRect } from './rich-textarea-placement';
 
 // The selected text the link editor edits, and where it shows it.
@@ -104,11 +105,12 @@ function $retext(selection: RangeSelection, text: string): void {
   selection.anchor.set(focus.key, focus.offset - text.length, 'text');
 }
 
-// Links the selected text as the editor's fields say; an empty Link removes the link.
+// Links the selected text as the editor's fields say; an empty Link removes the link, a script URL saves nothing.
 export function $saveLink(
   selection: RangeSelection,
   { text, url }: LinkFields,
 ): void {
+  if (isScriptUrl(url)) return;
   const restored = selection.clone();
   $setSelection(restored);
   $retext(restored, text);

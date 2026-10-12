@@ -56,26 +56,48 @@ export const LinkEditorOpen: Story = {
   },
 };
 
-export const LinkEditorReturnSaves: Story = {
+// Return saves the typed link, whether a URL or a link within the page.
+function linkEditorSaves(typedUrl: string): Story {
+  return {
+    args: { initialValue: draft },
+    play: async ({ canvas, args }) => {
+      const field = canvas.getByRole('textbox', { name: label });
+      await openLinkEditor(field);
+      await userEvent.keyboard(`${typedUrl}{Enter}`);
+      await waitFor(() =>
+        expect(args.onChangeText).toHaveBeenLastCalledWith(
+          `Read the [spec](${typedUrl})`,
+        ),
+      );
+      await expect(
+        within(field).getByRole('link', { name: 'spec' }),
+      ).toHaveAttribute('href', typedUrl);
+      await waitFor(() =>
+        expect(
+          within(document.body).queryByRole('dialog', { name: 'Edit link' }),
+        ).not.toBeInTheDocument(),
+      );
+      await expect(args.onSubmit).not.toHaveBeenCalled();
+    },
+  };
+}
+export const LinkEditorReturnSaves = linkEditorSaves(url);
+export const LinkEditorSavesARelativeLink = linkEditorSaves('#top');
+
+// A script URL would run when the link is followed, so the editor saves nothing.
+export const LinkEditorRefusesAScriptUrl: Story = {
   args: { initialValue: draft },
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
     await openLinkEditor(field);
-    await userEvent.keyboard(`${url}{Enter}`);
-    await waitFor(() =>
-      expect(args.onChangeText).toHaveBeenLastCalledWith(
-        `Read the [spec](${url})`,
-      ),
-    );
-    await expect(
-      within(field).getByRole('link', { name: 'spec' }),
-    ).toHaveAttribute('href', url);
+    await userEvent.keyboard(' JavaScript:alert(1){Enter}');
     await waitFor(() =>
       expect(
         within(document.body).queryByRole('dialog', { name: 'Edit link' }),
       ).not.toBeInTheDocument(),
     );
-    await expect(args.onSubmit).not.toHaveBeenCalled();
+    await expect(within(field).queryByRole('link')).not.toBeInTheDocument();
+    await expect(args.onChangeText).not.toHaveBeenCalled();
   },
 };
 

@@ -72,4 +72,20 @@ const scriptLink: PastedHtml = {
   sent: 'x',
 };
 
-export const pastedHtml = { webPage, googleDocs, notion, vsCode, scriptLink };
+// Wikipedia's links carry a title, and external ones rel and target; markdown keeps only text and URL.
+const wikipedia: PastedHtml = {
+  source: 'Wikipedia',
+  html: `<meta charset="utf-8"><p><b>Markdown</b> is a lightweight <a href="https://en.wikipedia.org/wiki/Markup_language" title="Markup language">markup language</a> created by <a href="https://en.wikipedia.org/wiki/John_Gruber" class="mw-redirect" title="John Gruber">John Gruber</a> in 2004. See the <a rel="nofollow" class="external text" target="_blank" href="https://daringfireball.net/projects/markdown/" title="Daring Fireball">original syntax</a>.</p>`,
+  plain:
+    'Markdown is a lightweight markup language created by John Gruber in 2004. See the original syntax.',
+  sent: '**Markdown** is a lightweight [markup language](https://en.wikipedia.org/wiki/Markup_language) created by [John Gruber](https://en.wikipedia.org/wiki/John_Gruber) in 2004. See the [original syntax](https://daringfireball.net/projects/markdown/).',
+};
+
+export const pastedHtml = {
+  webPage,
+  googleDocs,
+  notion,
+  vsCode,
+  scriptLink,
+  wikipedia,
+};

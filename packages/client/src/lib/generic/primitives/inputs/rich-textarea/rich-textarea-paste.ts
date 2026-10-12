@@ -2,12 +2,14 @@ import { LinkNode } from '@lexical/link';
 import { ListItemNode } from '@lexical/list';
 import { QuoteNode } from '@lexical/rich-text';
 import {
+  $hasUpdateTag,
   type ElementNode,
   IS_BOLD,
   IS_CODE,
   IS_ITALIC,
   IS_STRIKETHROUGH,
   type LexicalEditor,
+  PASTE_TAG,
   ParagraphNode,
   TextNode,
 } from 'lexical';
@@ -77,12 +79,31 @@ function $unwrap(link: LinkNode): void {
   link.remove();
 }
 
+// Markdown writes a link's text and URL only, so a pasted title, rel or target goes.
+const pastedLinkStrips: Strip<LinkNode>[] = [
+  {
+    has: (link) => link.getTitle() !== null,
+    clear: (link) => link.setTitle(null),
+  },
+  { has: (link) => link.getRel() !== null, clear: (link) => link.setRel(null) },
+  {
+    has: (link) => link.getTarget() !== null,
+    clear: (link) => link.setTarget(null),
+  },
+];
+
 /*
- * A link Argo does not follow (only http, https and mailto) keeps its text as plain text; a link
- * around only an image has nothing left to show once the image is dropped.
+ * A pasted link Argo does not follow (only http, https and mailto) keeps its text as plain text; a
+ * link around only an image has nothing left to show once the image is dropped.
  */
-function $plainLink(link: LinkNode): void {
+function $plainPastedLink(link: LinkNode): void {
   if (link.isEmpty() || !isLinkUrl(link.getURL())) $unwrap(link);
+  else $strip(link, pastedLinkStrips);
+}
+
+// Links typed, saved with the link editor or restored with a draft stay as they are.
+function $plainLink(link: LinkNode): void {
+  if ($hasUpdateTag(PASTE_TAG)) $plainPastedLink(link);
 }
 
 /*

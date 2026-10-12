@@ -29,8 +29,11 @@ function headlessEditor(): LexicalEditor {
 }
 
 // The editor filled and then read.
-function filled<T>(fill: () => void, read: () => T): T {
-  const editor = headlessEditor();
+function filled<T>(
+  fill: () => void,
+  read: () => T,
+  editor = headlessEditor(),
+): T {
   editor.update(fill, { discrete: true });
   return editor.getEditorState().read(read);
 }
@@ -38,6 +41,19 @@ function filled<T>(fill: () => void, read: () => T): T {
 // Import a draft, then export what it shows.
 export function roundTrip(markdown: string): string {
   return filled(() => $importMarkdown(markdown), $exportMarkdown);
+}
+
+// The same, with the web drawing's clean-up of pasted formatting registered.
+export function roundTripWithPasteCleanUp(markdown: string): string {
+  const editor = headlessEditor();
+  const stopCleanUp = registerMarkdownOnly(editor);
+  const exported = filled(
+    () => $importMarkdown(markdown),
+    $exportMarkdown,
+    editor,
+  );
+  stopCleanUp();
+  return exported;
 }
 
 export interface ShownLink {

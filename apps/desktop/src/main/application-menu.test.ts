@@ -16,4 +16,8 @@ describe('application menu', () => {
       expect(pasteAsPlainText(platform)).toBe('CmdOrCtrl+Shift+V');
     },
   );
+
+  it('ends with the Help menu, where macOS puts menu search', () => {
+    expect(applicationMenu('darwin').at(-1)?.role).toBe('help');
+  });
 });
