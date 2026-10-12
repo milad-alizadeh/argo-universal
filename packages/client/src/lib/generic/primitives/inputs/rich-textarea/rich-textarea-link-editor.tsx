@@ -1,23 +1,12 @@
 import type * as React from 'react';
-import { View } from 'react-native';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '../../overlays/popover/popover';
+import { PopoverContent } from '../../overlays/popover/popover';
 import { type LinkFields, LinkForm } from './rich-textarea-link-form';
-
-// Where the selection sits inside the field, so the editor opens beside it.
-interface LinkEditorPlacement {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
+import type { FieldPlacement } from './rich-textarea-placement';
+import { SelectionPopover } from './rich-textarea-selection-popover';
 
 export interface LinkEditorProps {
   // The selection being linked; the editor is closed without one.
-  target?: { fields: LinkFields; placement: LinkEditorPlacement };
+  target?: { fields: LinkFields; placement: FieldPlacement };
   onSave: (fields: LinkFields) => void;
   onClose: () => void;
   // Called once the editor has left, so the field takes focus back.
@@ -65,15 +54,11 @@ function LinkPopover(props: LinkEditorProps): React.JSX.Element {
 // The ⌘K link editor: Text and Link fields in a popover anchored to the selection.
 export function LinkEditor(props: LinkEditorProps): React.JSX.Element {
   return (
-    <Popover
-      open={props.target !== undefined}
-      onOpenChange={(open) => !open && props.onClose()}
-      className="pointer-events-none absolute inset-0"
+    <SelectionPopover
+      placement={props.target?.placement}
+      onClose={props.onClose}
     >
-      <PopoverTrigger asChild>
-        <View className="absolute" style={props.target?.placement} />
-      </PopoverTrigger>
       <LinkPopover {...props} />
-    </Popover>
+    </SelectionPopover>
   );
 }

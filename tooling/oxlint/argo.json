@@ -1824,6 +1824,12 @@
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-value.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-blocks.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-paste.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-editing-plugins.tsx",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-link-editing.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-placement.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-formats.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-format-bar-plugin.tsx",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-mouse-selection.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*",
         "packages/client/mocks/rich-textarea-headless.ts"
       ],
