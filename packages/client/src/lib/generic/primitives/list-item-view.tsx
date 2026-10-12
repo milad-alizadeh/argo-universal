@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { useContext } from 'react';
 import { Pressable, View } from 'react-native';
-import { Icon } from '../symbols/icon';
+import { Chevron } from '../symbols/chevron';
 import { cn } from '../utils';
 import {
   FieldRowEnd,
@@ -135,11 +135,7 @@ function Disclosure({
   visible: boolean;
 }): React.JSX.Element | null {
   return visible ? (
-    <Icon
-      name="chevron-right"
-      size="xs"
-      className="text-muted-foreground shrink-0"
-    />
+    <Chevron name="chevron-right" className="text-muted-foreground shrink-0" />
   ) : null;
 }
 

@@ -2,7 +2,8 @@ import * as SelectPrimitive from '@rn-primitives/select';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon, iconSizeStyle } from '../symbols/icon';
+import { Chevron } from '../symbols/chevron';
+import { iconSizeStyle } from '../symbols/icon';
 import type { IconName } from '../symbols/icon-names';
 import { useWide } from '../use-wide';
 import { SelectContent } from './select-content';
@@ -55,8 +56,7 @@ function TriggerChevron({
   variant,
 }: Pick<TriggerProps, 'variant'>): React.JSX.Element {
   return (
-    <Icon
-      size="xs"
+    <Chevron
       name={chevronName(variant, useWide())}
       aria-hidden={true}
       className="text-muted-foreground"

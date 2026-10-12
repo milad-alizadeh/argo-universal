@@ -3,9 +3,9 @@ import * as React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
-import { Icon } from '#lib/generic/primitives/icon';
 import { NativeOnlyAnimatedView } from '#lib/generic/primitives/native-only-animated-view';
 import { TextClassContext } from '#lib/generic/primitives/text';
+import { Chevron } from '../symbols/chevron';
 import {
   selectContentClassName,
   selectViewportClassName,
@@ -43,7 +43,7 @@ function ScrollButton({
   const { Component, icon } = scrollButtons[direction];
   return (
     <Component className={scrollClassName}>
-      <Icon size="xs" name={icon} />
+      <Chevron name={icon} />
     </Component>
   );
 }

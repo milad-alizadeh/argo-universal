@@ -2,11 +2,11 @@ import * as DropdownMenuPrimitive from '@rn-primitives/dropdown-menu';
 import * as React from 'react';
 import { Platform } from 'react-native';
 import { FadeIn, ReduceMotion } from 'react-native-reanimated';
-import { Icon } from '#lib/generic/primitives/icon';
 import { NativeOnlyAnimatedView } from '#lib/generic/primitives/native-only-animated-view';
 import { TextClassContext } from '#lib/generic/primitives/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
+import { Chevron } from '../symbols/chevron';
 import {
   dropdownSubContentClassName,
   dropdownSubTriggerClassName,
@@ -31,8 +31,7 @@ function SubTriggerChevron({
   iconClassName,
 }: Pick<TriggerProps, 'iconClassName'> & { open: boolean }): React.JSX.Element {
   return (
-    <Icon
-      size="xs"
+    <Chevron
       name={subTriggerIcon(open)}
       className={cn('text-foreground shrink-0', iconClassName)}
     />

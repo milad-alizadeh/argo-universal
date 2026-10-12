@@ -48,7 +48,7 @@ export function Lens(props: MorphState): React.JSX.Element {
         useLensStyle(props.progress, props.geometry),
       ]}
     >
-      <Icon name="search" size="sm" className="text-muted-foreground" />
+      <Icon name="search" size="md" className="text-muted-foreground" />
     </Animated.View>
   );
 }
