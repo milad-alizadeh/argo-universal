@@ -20,7 +20,7 @@ When(
   'I start a Session named {string}',
   async ({ page }, title: string): Promise<void> => {
     await expect(
-      page.getByRole('heading', { name: 'Sessions', level: 1, exact: true }),
+      page.getByRole('heading', { name: 'Sessions', level: 2, exact: true }),
     ).toBeVisible();
     await expect(page.getByTestId('desktop-shell')).toBeVisible();
     await startSession(page, title);
