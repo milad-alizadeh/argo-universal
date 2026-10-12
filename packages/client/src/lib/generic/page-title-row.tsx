@@ -49,7 +49,7 @@ function HangingBack({
 }: Pick<PageTitleRowProps, 'onBack'>): React.JSX.Element | null {
   if (!onBack) return null;
   return (
-    <View className="absolute inset-y-0 -left-9 justify-center">
+    <View className="absolute inset-y-0 -left-8 justify-center">
       <BackButton onBack={onBack} />
     </View>
   );
