@@ -25,7 +25,7 @@ export function Screen({
   return (
     <View
       {...props}
-      className={cn('flex-1 bg-background', className)}
+      className={cn('flex-1 bg-sidebar', className)}
       style={[
         { minHeight: 0 },
         safeArea && {

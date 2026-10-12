@@ -28,7 +28,7 @@ export function AgentsSettingsView(
   props: AgentsSettingsViewProps,
 ): React.JSX.Element {
   return (
-    <View className="flex-1 min-h-0 bg-background p-4">
+    <View className="flex-1 min-h-0 bg-sidebar p-4">
       <CatalogControls {...props} />
       <CustomAgentRows
         agents={props.customAgents}

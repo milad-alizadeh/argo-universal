@@ -32,3 +32,6 @@ type Story = StoryObj<typeof meta>;
 
 // Controls set the drawer and section; product controls report their callbacks.
 export const Overview: Story = { name: 'PhoneShell' };
+
+// Paper's "SessionsScreen (phone) / Drawer open": the glass drawer over its warm glow.
+export const DrawerOpen: Story = { args: { drawerOpen: true } };

@@ -8,7 +8,7 @@ export function SettingsScroll({
 }): React.JSX.Element {
   return (
     <ScrollView
-      className="flex-1 bg-background"
+      className="flex-1 bg-sidebar"
       contentContainerClassName="w-full max-w-2xl self-center p-4 wide:p-8"
       keyboardShouldPersistTaps="handled"
     >

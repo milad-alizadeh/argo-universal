@@ -13,8 +13,17 @@ import {
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { attentionBadge } from '../state/attention-badge';
 import { PhoneDrawer } from './phone-drawer';
+import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
 import { PhoneShellCard } from './phone-shell-card';
 import { type Section, shellSections } from './shell-sections';
+
+// The drawer's rows start this far down, and clear the status bar by this much more (Paper).
+const drawerInset = 12;
+const statusBarGap = 3;
+
+// The content's edge shades the drawer under it, as if the content lay on top.
+const contentEdgeShadow =
+  'shadow-[inset_-12px_0_16px_-8px_#0000001a] dark:shadow-[inset_-12px_0_16px_-8px_#00000066]';
 
 const OpenDrawerContext = createContext<() => void>(() => {});
 
@@ -64,7 +73,7 @@ export function PhoneShell({
     drawerWidth,
     Math.max(0, layout.width - visibleScreenWidth),
   );
-  const chrome = useResolveClassNames('bg-shell-chrome');
+  const surface = useResolveClassNames('bg-sidebar');
   const { top } = useSafeAreaInsets();
 
   function selectSection(section: Section): void {
@@ -86,14 +95,14 @@ export function PhoneShell({
         className={contentActionClass({
           variant: 'ghost',
           className: cn(
-            'h-12 sm:h-12 justify-start gap-3 px-3',
-            selectedSection === section && 'bg-sidebar',
+            'h-12 sm:h-12 justify-start gap-1.5 rounded-lg px-3 has-[>[data-icon]]:px-3',
+            selectedSection === section && 'bg-selected',
           ),
         })}
       >
         <Icon
-          size="lg"
           name={icon}
+          size="lg"
           filled={selectedSection === section}
           className={cn(selectedSection !== section && 'text-muted-foreground')}
         />
@@ -117,7 +126,7 @@ export function PhoneShell({
   return (
     <View
       testID="phone-shell"
-      className="flex-1 overflow-hidden bg-shell-chrome"
+      className="flex-1 overflow-hidden bg-sidebar"
       onLayout={({ nativeEvent }) => setLayout(nativeEvent.layout)}
     >
       <PhoneDrawer
@@ -125,26 +134,37 @@ export function PhoneShell({
         onOpen={() => onDrawerOpenChange(true)}
         onClose={() => onDrawerOpenChange(false)}
         width={offset}
-        surfaceStyle={chrome}
+        surfaceStyle={surface}
         layout={layout}
         swipeEnabled={swipeEnabled}
         renderDrawerContent={() => (
           <View
-            className="flex-1 py-3"
+            className="flex-1"
             aria-hidden={!drawerOpen}
             accessibilityElementsHidden={!drawerOpen}
           >
-            <View style={{ height: top }} />
-            <View className="h-14 justify-center px-6">
-              <Text role="title" semanticRole="heading" aria-level={2}>
-                Argo
-              </Text>
+            <PhoneDrawerBackdrop width={offset} />
+            {/* Plain translucent glass: over a still, soft glow a blur would cost a filter pass and show nothing. */}
+            <View
+              className={cn(
+                'flex-1 gap-1 bg-glass px-5 pb-8',
+                contentEdgeShadow,
+              )}
+              style={{
+                paddingTop:
+                  drawerInset + Math.max(top + statusBarGap, drawerInset),
+              }}
+            >
+              <View className="h-14 px-3 pt-2.5">
+                <Text role="heading" semanticRole="heading" aria-level={2}>
+                  Argo
+                </Text>
+              </View>
+              <View className="flex-1 gap-1">
+                {(['sessions', 'issues', 'atlas'] as const).map(sectionButton)}
+              </View>
+              {sectionButton('settings')}
             </View>
-            <View className="gap-1 px-3">
-              {(['sessions', 'issues', 'atlas'] as const).map(sectionButton)}
-            </View>
-            <View className="flex-1" />
-            <View className="px-3">{sectionButton('settings')}</View>
           </View>
         )}
       >

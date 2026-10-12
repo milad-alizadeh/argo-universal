@@ -5,7 +5,7 @@ import { Composer, type ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
 import { LoadError, type LoadErrorProps } from '#lib/product/load-error';
 import { keyboardAvoidingStyle, Screen } from '#lib/product/screen';
-import { ScrollFade } from '#lib/product/scroll-fade';
+import { ScrollFade } from '#lib/product/scroll-fade-overlay';
 import { Button } from '../../../lib/generic/primitives/button';
 import { useWide } from '../../../lib/generic/use-wide';
 import { SessionHeader, type SessionHeaderProps } from './session-header';

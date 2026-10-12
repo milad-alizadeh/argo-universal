@@ -1,9 +1,20 @@
 import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { shellTiming } from '../hooks/use-shell-transition.web';
 import type { ShellPaneProps } from './shell-pane';
 
-const timing = { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+// Content that keeps its width rides on the pane's moving edge and fades as it narrows, so text slides away whole instead of being wiped.
+function slideStyle(
+  width: number,
+  contentWidth: number,
+): { transform: string; opacity: number } {
+  const hiddenPart = Math.max(0, contentWidth - width);
+  return {
+    transform: `translateX(${-hiddenPart}px)`,
+    opacity: contentWidth > 0 ? 1 - hiddenPart / contentWidth : 1,
+  };
+}
 
 export function ShellPane({
   testID,
@@ -13,15 +24,13 @@ export function ShellPane({
   hidden,
   transitionKey,
   animate = true,
-  card,
-  header,
   children,
 }: ShellPaneProps): React.JSX.Element {
   const viewport = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
+  const slide = useRef<HTMLDivElement>(null);
   // Content that reflows with the pane needs real width; a transform would move it twice.
   const reflows = contentWidth === undefined;
-  const surface = useRef<HTMLDivElement>(null);
   const motion = useRef<Animation[]>([]);
   const [held, setHeld] = useState({
     width,
@@ -33,7 +42,7 @@ export function ShellPane({
   const previous = useRef(held);
   const stableContentWidth =
     contentWidth ?? (width > 0 ? width : held.contentWidth);
-  // The frame keeps its width until the transition, width or content width changes, so a running animation's clip holds.
+  // The frame keeps its width until the transition, width or content width changes, so a running slide stays inside it.
   const unchanged =
     held.transitionKey === transitionKey &&
     held.width === width &&
@@ -41,7 +50,6 @@ export function ShellPane({
   const frameWidth = unchanged
     ? held.frameWidth
     : Math.max(width, held.width, stableContentWidth);
-  const surfaceWidth = Math.max(1, width || held.width || stableContentWidth);
 
   if (
     held.width !== width ||
@@ -70,14 +78,13 @@ export function ShellPane({
       const style = getComputedStyle(frame.current);
       currentWidth = Number.parseFloat(style.width);
       currentOffset += new DOMMatrixReadOnly(style.transform).m41;
-    } else if (running) {
-      const style = getComputedStyle(element);
+    } else if (running && slide.current) {
       currentWidth =
-        last.frameWidth -
-        Number.parseFloat(
-          style.clipPath.match(/inset\(0px ([\d.]+)px/)?.[1] ?? '0',
-        );
-      currentOffset += new DOMMatrixReadOnly(style.transform).m41;
+        last.contentWidth +
+        new DOMMatrixReadOnly(getComputedStyle(slide.current).transform).m41;
+      currentOffset += new DOMMatrixReadOnly(
+        getComputedStyle(element).transform,
+      ).m41;
     }
     for (const animation of motion.current) animation.cancel();
     motion.current = [];
@@ -98,40 +105,30 @@ export function ShellPane({
               },
               { width: `${width}px`, transform: 'translateX(0px)' },
             ],
-            timing,
+            shellTiming,
           ),
         );
       } else {
-        motion.current.push(
-          element.animate(
-            [
-              {
-                transform: `translateX(${translation}px)`,
-                clipPath: `inset(0 ${Math.max(0, frameWidth - currentWidth)}px 0 0)`,
-              },
-              {
-                transform: 'translateX(0px)',
-                clipPath: `inset(0 ${Math.max(0, frameWidth - width)}px 0 0)`,
-              },
-            ],
-            timing,
-          ),
-        );
-        if (surface.current) {
+        if (slide.current)
           motion.current.push(
-            surface.current.animate(
+            slide.current.animate(
               [
-                {
-                  transform: `translateX(${translation}px) scaleX(${currentWidth / surfaceWidth})`,
-                },
-                {
-                  transform: `translateX(0px) scaleX(${width / surfaceWidth})`,
-                },
+                slideStyle(currentWidth, stableContentWidth),
+                slideStyle(width, stableContentWidth),
               ],
-              timing,
+              shellTiming,
             ),
           );
-        }
+        if (translation !== 0)
+          motion.current.push(
+            element.animate(
+              [
+                { transform: `translateX(${translation}px)` },
+                { transform: 'translateX(0px)' },
+              ],
+              shellTiming,
+            ),
+          );
       }
     }
     previous.current = {
@@ -147,7 +144,6 @@ export function ShellPane({
     stableContentWidth,
     transitionKey,
     frameWidth,
-    surfaceWidth,
     animate,
     reflows,
   ]);
@@ -173,12 +169,6 @@ export function ShellPane({
           className="absolute bottom-0 left-0 top-0"
           style={{ width, willChange: 'transform, width' }}
         >
-          {card && (
-            <div
-              className="absolute bottom-0 left-0 right-0 top-shell-bar rounded-xl web:rounded-surface bg-card shadow-card"
-              style={{ pointerEvents: 'none' }}
-            />
-          )}
           <div
             ref={viewport}
             data-testid={`${testID}-viewport`}
@@ -190,28 +180,18 @@ export function ShellPane({
           </div>
         </div>
       ) : (
-        <>
-          {card && (
-            <div
-              ref={surface}
-              className="absolute bottom-0 left-0 top-shell-bar rounded-xl web:rounded-surface bg-card shadow-card"
-              style={{
-                width: surfaceWidth,
-                transformOrigin: 'left center',
-                transform: `scaleX(${width / surfaceWidth})`,
-                willChange: 'transform',
-                pointerEvents: 'none',
-              }}
-            />
-          )}
+        <div
+          ref={viewport}
+          data-testid={`${testID}-viewport`}
+          className="absolute bottom-0 left-0 top-0 overflow-hidden"
+          style={{ width: frameWidth, willChange: 'transform' }}
+        >
           <div
-            ref={viewport}
-            data-testid={`${testID}-viewport`}
-            className="absolute bottom-0 left-0 top-0 overflow-hidden"
+            ref={slide}
+            className="h-full"
             style={{
-              width: frameWidth,
-              clipPath: `inset(0 ${Math.max(0, frameWidth - width)}px 0 0)`,
-              willChange: 'transform, clip-path',
+              ...slideStyle(width, stableContentWidth),
+              willChange: 'transform, opacity',
             }}
           >
             <View
@@ -222,14 +202,6 @@ export function ShellPane({
               {children}
             </View>
           </div>
-        </>
-      )}
-      {header && (
-        <div
-          className="absolute left-0 right-0 top-0 h-shell-bar"
-          style={{ visibility: hidden ? 'hidden' : 'visible' }}
-        >
-          {header}
         </div>
       )}
     </div>

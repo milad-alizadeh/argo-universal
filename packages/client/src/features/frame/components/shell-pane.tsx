@@ -14,11 +14,9 @@ export interface ShellPaneProps {
   width: number;
   offset: number;
   contentWidth?: number;
-  card?: boolean;
   hidden: boolean;
   transitionKey: string;
   animate?: boolean;
-  header?: ReactNode;
   children: ReactNode;
 }
 
@@ -26,11 +24,9 @@ export function ShellPane({
   testID,
   width,
   contentWidth,
-  card,
   hidden,
   transitionKey,
   animate = true,
-  header,
   children,
 }: ShellPaneProps): React.JSX.Element {
   const [lastContentWidth, setLastContentWidth] = useState(
@@ -71,12 +67,6 @@ export function ShellPane({
       aria-hidden={hidden}
       {...{ inert: hidden }}
     >
-      {card && (
-        <View
-          pointerEvents="none"
-          className="absolute bottom-0 left-0 right-0 top-shell-bar rounded-xl web:rounded-surface bg-card shadow-card"
-        />
-      )}
       <View className="flex-1 overflow-hidden">
         <View
           testID={`${testID}-content`}
@@ -86,14 +76,6 @@ export function ShellPane({
           {children}
         </View>
       </View>
-      {header && (
-        <View
-          className="absolute left-0 right-0 top-0 h-shell-bar"
-          style={{ opacity: hidden ? 0 : 1 }}
-        >
-          {header}
-        </View>
-      )}
     </Animated.View>
   );
 }

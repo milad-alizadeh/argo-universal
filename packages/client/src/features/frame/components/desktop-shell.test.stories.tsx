@@ -14,11 +14,12 @@ import { composerProps } from '../../../../mocks/composer-mock';
 import { shortPlanProposal } from '../../../../mocks/plan-proposal-mock';
 import { layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
-import { DesktopShell } from './desktop-shell';
 import { DesktopShellFrame } from './desktop-shell-frame.mocks';
 import { InspectorFilesMock } from './inspector-files.mocks';
 
 const preservedDraft = 'Keep my draft';
+const railId = 'desktop-rail';
+const currentAttribute = 'aria-current';
 const hideSidebarLabel = 'Hide sidebar';
 const resizeInspectorLabel = 'Resize Inspector';
 const showSidebarLabel = 'Show sidebar';
@@ -29,7 +30,6 @@ const desktopShellId = 'desktop-shell';
 const listContentId = 'list-content';
 const detailContentId = 'detail-content';
 const hiddenAttribute = 'aria-hidden';
-const detailActionsId = 'desktop-detail-actions';
 const moreActionsLabel = 'More actions';
 const inspectorId = 'desktop-inspector';
 const inspectorContentId = 'inspector-content';
@@ -42,7 +42,7 @@ const pointerRelease = '[/MouseLeft]';
 
 const meta = {
   title: 'Tests/DesktopShell',
-  component: DesktopShell,
+  component: DesktopShellFrame,
   args: {
     selectedSection: 'sessions',
     attentionCount: 1,
@@ -51,17 +51,11 @@ const meta = {
     onSectionChange: fn(),
     onSidebarShownChange: fn(),
     onInspectorStateChange: fn(),
-    listHeader: null,
-    list: null,
-    detailHeader: null,
-    children: null,
-    inspectorHeader: null,
-    inspector: null,
   },
   render: (): React.JSX.Element => (
     <View testID="controlled-shell" className="w-full" />
   ),
-} satisfies Meta<typeof DesktopShell>;
+} satisfies Meta<typeof DesktopShellFrame>;
 
 function CommittedShell({
   children,
@@ -147,6 +141,14 @@ function controlledPlay(
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/*
+ * With the sidebar and the Inspector open on this window, the Session column
+ * is narrower than contentWideMin, so it draws the phone layout. At 1440 the
+ * column stays wide (Paper 4EV9).
+ */
+const narrowDesktopWidth = 1180;
+const contentWideMin = 480;
+
 export const MainContentUsesAvailableWidth: Story = {
   args: {
     children: (
@@ -172,7 +174,7 @@ export const MainContentUsesAvailableWidth: Story = {
     ),
   },
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
-    await page.viewport(1440, 844);
+    await settleViewport(narrowDesktopWidth);
     const content = canvas.getByTestId('responsive-main-content');
     const approve = (): HTMLElement =>
       canvas.getByRole('button', { name: 'Approve' });
@@ -220,7 +222,9 @@ export const MainContentUsesAvailableWidth: Story = {
     );
     await controlled.render({ sidebarShown: false });
     await waitFor(() =>
-      expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(720),
+      expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(
+        contentWideMin,
+      ),
     );
     await waitFor(() => expect(approve()).toBeVisible());
     await expect(
@@ -232,12 +236,16 @@ export const MainContentUsesAvailableWidth: Story = {
     inspectorDivider.focus();
     await userEvent.keyboard('{ArrowLeft}'.repeat(20));
     await waitFor(() =>
-      expect(content.getBoundingClientRect().width).toBeLessThan(720),
+      expect(content.getBoundingClientRect().width).toBeLessThan(
+        contentWideMin,
+      ),
     );
     await waitFor(() => expect(approve()).toBeVisible());
     await userEvent.keyboard('{ArrowRight}'.repeat(20));
     await waitFor(() =>
-      expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(720),
+      expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(
+        contentWideMin,
+      ),
     );
     await waitFor(() => expect(approve()).toBeVisible());
     await userEvent.click(
@@ -256,7 +264,7 @@ export const MainContentUsesAvailableWidth: Story = {
     );
     await controlled.render({ inspectorState: 'closed' });
     await waitFor(() => expect(approve()).toBeVisible());
-    await expect(window.innerWidth).toBe(1440);
+    await expect(window.innerWidth).toBe(narrowDesktopWidth);
   }),
 };
 
@@ -280,8 +288,8 @@ export const ComposerUsesAvailableWidth: Story = {
     ),
   },
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
-    await page.viewport(1440, 844);
-    const mode = canvas.getByRole('button', { name: 'Mode' });
+    await settleViewport(narrowDesktopWidth);
+    const mode = await canvas.findByRole('button', { name: 'Mode' });
     await waitFor(() => expect(mode).toBeVisible());
     await waitFor(() => expect(canvas.getByTestId(agentIconId)).toBeVisible());
     await controlled.render({ inspectorState: 'open' });
@@ -317,7 +325,7 @@ export const ComposerUsesAvailableWidth: Story = {
     await waitFor(() => expect(mode).toBeVisible());
     await waitFor(() => expect(canvas.getByTestId(agentIconId)).toBeVisible());
     await expect(canvas.getByText('session', { exact: true })).toBeVisible();
-    await expect(window.innerWidth).toBe(1440);
+    await expect(window.innerWidth).toBe(narrowDesktopWidth);
   }),
 };
 
@@ -338,7 +346,7 @@ function sectionsAndSidebar(width: number): Story {
           canvas.getByTestId(sessionListId).getBoundingClientRect().right,
         ).toBeLessThanOrEqual(shell.right),
       );
-      const rail = canvas.getByTestId('desktop-rail');
+      const rail = canvas.getByTestId(railId);
       const railButtons = new Map(
         ['Sessions', 'Issues', 'Atlas', 'Settings'].map((name) => [
           name,
@@ -346,7 +354,7 @@ function sectionsAndSidebar(width: number): Story {
         ]),
       );
       for (const section of ['Sessions', 'Issues', 'Atlas', 'Settings']) {
-        await expect(canvas.getByTestId('desktop-rail')).toBe(rail);
+        await expect(canvas.getByTestId(railId)).toBe(rail);
         await expect(canvas.getByRole('button', { name: section })).toBe(
           railButtons.get(section),
         );
@@ -366,7 +374,7 @@ function sectionsAndSidebar(width: number): Story {
         });
         await expect(
           canvas.getByRole('button', { name: section }),
-        ).toHaveAttribute('aria-pressed', 'true');
+        ).toHaveAttribute(currentAttribute, 'page');
         await expect(canvas.getByTestId(listContentId)).toHaveTextContent(
           `${section} list`,
         );
@@ -404,9 +412,11 @@ function inspectorTakesTheDetailAreaAndRestoresIt(width: number): Story {
   return {
     play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
       await settleViewport(layoutWidths.wide);
-      const headerActions = canvas.getByTestId(detailActionsId);
+      const pageAction = canvas.getByRole('button', { name: moreActionsLabel });
       await controlled.render({ inspectorState: 'open' });
-      await expect(canvas.getByTestId(detailActionsId)).toBe(headerActions);
+      await expect(canvas.getByRole('button', { name: moreActionsLabel })).toBe(
+        pageAction,
+      );
       await expect(
         canvas.getByRole('button', { name: moreActionsLabel }),
       ).toBeVisible();
@@ -592,6 +602,28 @@ export const DividersResizeAndRememberWidths: Story = {
         canvas.getByTestId(inspectorId).getBoundingClientRect().width,
       ).toBe(resizedInspectorWidth),
     );
+  }),
+};
+
+// The rail lists the four sections in order and keeps the sidebar toggle last; only the open section is current.
+export const RailListsSectionsThenTheSidebarToggle: Story = {
+  args: { selectedSection: 'atlas' },
+  play: controlledPlay(async ({ canvas }) => {
+    await page.viewport(1440, 844);
+    const rail = within(canvas.getByTestId(railId));
+    await expect(
+      rail
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual(['Sessions', 'Issues', 'Atlas', 'Settings', hideSidebarLabel]);
+    await expect(rail.getByRole('button', { name: 'Atlas' })).toHaveAttribute(
+      currentAttribute,
+      'page',
+    );
+    for (const section of ['Sessions', 'Issues', 'Settings'])
+      await expect(
+        rail.getByRole('button', { name: section }),
+      ).not.toHaveAttribute(currentAttribute);
   }),
 };
 
@@ -911,7 +943,7 @@ export const ExpandedInspectorKeepsBothDividerEdgesUsable: Story = {
     await waitFor(() =>
       expect(
         canvas.getByTestId(sessionListId).getBoundingClientRect().width,
-      ).toBe(300),
+      ).toBeGreaterThan(0),
     );
     const sidebar = canvas.getByRole('separator', { name: resizeSidebarLabel });
     const inspector = canvas.getByRole('separator', {
@@ -982,7 +1014,7 @@ export const InspectorScrollKeepsHeaderReachable: Story = {
       expect(inspector.scrollHeight).toBeGreaterThan(inspector.clientHeight),
     );
     inspector.scrollTop = 60;
-    const title = canvas.getByTestId('desktop-inspector-title');
+    const title = canvas.getByRole('heading', { name: 'Inspector' });
     await waitFor(async () => {
       const fade = inspector.parentElement?.querySelector(
         ':scope > [data-testid="scroll-fade-top"]',

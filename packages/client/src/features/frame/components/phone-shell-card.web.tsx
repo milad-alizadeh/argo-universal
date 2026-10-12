@@ -8,13 +8,7 @@ export function PhoneShellCard({
   children,
 }: PhoneShellCardProps): React.JSX.Element {
   return (
-    <View
-      testID="phone-shell-card"
-      className={cn(
-        'flex-1 rounded-none bg-card shadow-card transition-[border-radius] duration-300 ease-[ease]',
-        drawerOpen && 'rounded-xl web:rounded-surface',
-      )}
-    >
+    <View testID="phone-shell-card" className="flex-1 bg-sidebar">
       <View
         className={cn(
           'flex-1 transition-opacity duration-300 ease-[ease]',

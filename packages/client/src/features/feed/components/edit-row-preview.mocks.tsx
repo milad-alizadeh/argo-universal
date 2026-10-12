@@ -4,6 +4,7 @@ import { ScrollView, View } from 'react-native';
 import { DesktopShell } from '#features/frame';
 import { Text } from '../../../lib/generic/primitives/text';
 import { useWide } from '../../../lib/generic/use-wide';
+import { PageHeader } from '../../../lib/product/page-header';
 import { EditRow } from './edit-row';
 
 export function EditRowPreview({
@@ -32,13 +33,14 @@ export function EditRowPreview({
       onSectionChange={() => {}}
       listHeader={<Text className="text-base font-semibold">Sessions</Text>}
       list={null}
-      detailHeader={<Text className="text-sm">Recorded edits</Text>}
-      inspectorHeader={null}
-      inspector={null}
+      inspector={() => null}
       inspectorState="closed"
       onInspectorStateChange={() => {}}
     >
-      {feed}
+      <View className="flex-1">
+        <PageHeader title="Recorded edits" />
+        {feed}
+      </View>
     </DesktopShell>
   );
 }

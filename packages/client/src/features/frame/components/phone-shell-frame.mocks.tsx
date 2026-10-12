@@ -38,21 +38,21 @@ export function PhoneShellFrame({
         left={<PhoneMenuButton />}
         right={[
           <HeaderButton
-            key="search"
-            icon="search"
-            paired
-            accessibilityLabel={`Search ${title}`}
-            onPress={() => {
-              onSearch?.();
-            }}
-          />,
-          <HeaderButton
             key="filter"
             icon="filters"
             paired
             accessibilityLabel={`Filter ${title}`}
             onPress={() => {
               onFilter?.();
+            }}
+          />,
+          <HeaderButton
+            key="search"
+            icon="search"
+            paired
+            accessibilityLabel={`Search ${title}`}
+            onPress={() => {
+              onSearch?.();
             }}
           />,
         ]}

@@ -1,59 +1,52 @@
-import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
 import { Badge } from '#lib/generic/primitives/badge';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../lib/generic/primitives/pressable';
-import { Icon } from '../../../lib/generic/symbols/icon';
+import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import { attentionBadge } from '../state/attention-badge';
 import { type Section, shellSections } from './shell-sections';
 
 interface DesktopRailProps {
   selectedSection: Section;
   attentionCount: number;
+  sidebarShown: boolean;
   onSectionChange: (section: Section) => void;
+  onSidebarShownChange: (shown: boolean) => void;
 }
+
+const railSections = ['sessions', 'issues', 'atlas', 'settings'] as const;
+const tileClass = 'rounded-selection';
 
 const SectionButton = memo(function SectionButton({
   section,
   selected,
   attentionCount,
   onSectionChange,
-}: Omit<DesktopRailProps, 'selectedSection'> & {
+}: Pick<DesktopRailProps, 'attentionCount' | 'onSectionChange'> & {
   section: Section;
   selected: boolean;
 }) {
   const { title, icon } = shellSections[section];
   const badge = attentionBadge(attentionCount);
   return (
-    <Pressable
-      key={section}
-      accessibilityLabel={title}
-      accessibilityState={{ selected: selected }}
-      aria-pressed={selected}
-      onPress={() => onSectionChange(section)}
-      role="button"
-      className={contentActionClass({
-        variant: 'ghost',
-        className: cn(
-          'size-10 sm:size-10 rounded-md border border-transparent p-0 transition-none',
-          selected && 'border-border bg-card shadow-sm',
-        ),
-      })}
-    >
-      <Icon
-        size="md"
-        name={icon}
+    <View>
+      <IconButton
+        icon={icon}
+        iconSize="lg"
         filled={selected}
-        className={cn(!selected && 'text-muted-foreground')}
+        iconClassName={selected ? 'text-foreground' : 'text-foreground/72'}
+        size="2xl"
+        variant="ghost"
+        accessibilityLabel={title}
+        aria-current={selected ? 'page' : undefined}
+        onPress={() => onSectionChange(section)}
+        className={cn(tileClass, selected && 'bg-selected')}
       />
-      {section === 'sessions' && badge && (
+      {badge && (
         <Badge
-          className="absolute -right-1 -top-1 min-w-4 border-0 bg-warning px-1 py-0"
+          pointerEvents="none"
+          className="absolute right-0.5 top-0.5 min-w-4 border-0 bg-warning px-1 py-0"
           accessibilityLabel={badge.label}
         >
           <Text role="badge" className="text-warning-foreground">
@@ -61,32 +54,52 @@ const SectionButton = memo(function SectionButton({
           </Text>
         </Badge>
       )}
-    </Pressable>
+    </View>
   );
 });
 
+// The wide window's rail on the glass: a window-controls row, the sections, and the sidebar toggle at the bottom.
 export const DesktopRail = memo(function DesktopRail({
   selectedSection,
   attentionCount,
+  sidebarShown,
   onSectionChange,
+  onSidebarShownChange,
 }: DesktopRailProps) {
-  const sectionButton = (section: Section): React.JSX.Element => (
-    <SectionButton
-      key={section}
-      section={section}
-      selected={selectedSection === section}
-      attentionCount={section === 'sessions' ? attentionCount : 0}
-      onSectionChange={onSectionChange}
-    />
-  );
   return (
-    <View testID="desktop-rail" className="w-shell-bar items-center pb-3">
-      <View className="h-shell-bar" />
-      <View className="gap-1">
-        {(['sessions', 'issues', 'atlas'] as const).map(sectionButton)}
+    <View
+      testID="desktop-rail"
+      className="relative w-shell-rail shrink-0 items-center pb-2"
+    >
+      {/* Electron draws the traffic lights here, and the window drags by it. */}
+      <View className="h-shell-control self-stretch web:[app-region:drag]" />
+      <View className="-mt-0.5 flex-1">
+        {railSections.map((section) => (
+          <SectionButton
+            key={section}
+            section={section}
+            selected={selectedSection === section}
+            attentionCount={section === 'sessions' ? attentionCount : 0}
+            onSectionChange={onSectionChange}
+          />
+        ))}
       </View>
-      <View className="flex-1" />
-      {sectionButton('settings')}
+      <IconButton
+        icon="sidebar"
+        iconSize="lg"
+        iconClassName="text-muted-foreground"
+        size="xl"
+        variant="ghost"
+        accessibilityLabel={sidebarShown ? 'Hide sidebar' : 'Show sidebar'}
+        onPress={() => onSidebarShownChange(!sidebarShown)}
+        className={tileClass}
+      />
+      {sidebarShown && (
+        <View
+          pointerEvents="none"
+          className="absolute bottom-4 right-0 top-4 w-px bg-selected"
+        />
+      )}
     </View>
   );
 });

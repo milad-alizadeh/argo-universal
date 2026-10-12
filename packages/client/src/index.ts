@@ -33,6 +33,7 @@ export {
 } from './lib/generic/symbols/symbol-images';
 export { useWide } from './lib/generic/use-wide';
 export { Text, useTextStyle } from './lib/generic/primitives/text';
+export { Toaster } from './lib/generic/primitives/toast';
 export {
   type Navigate,
   type NavigationDestination,
@@ -42,4 +43,5 @@ export {
   type ScreenHeaderProps,
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
+export { HeaderSearchRow } from './lib/product/navigation/header-search';
 export { AppProviders } from './app-providers';

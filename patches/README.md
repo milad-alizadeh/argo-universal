@@ -2,7 +2,7 @@
 
 ## @expo/ui@57.0.22
 
-`@expo__ui@57.0.22.patch` exposes DropdownMenu's `cornerRadius`, `borderWidth` and `borderColor` through its published types and Compose props, then passes them to Material's native menu shape and BorderStroke. Argo's Android Menu uses the approved 16dp radius. Android autolinking compiles `expo-ui` from source so the Kotlin patch applies instead of linking the precompiled AAR. Menus without the prop retain Material's default shape.
+`@expo__ui@57.0.22.patch` exposes DropdownMenu's `cornerRadius`, `borderWidth` and `borderColor` through its published types and Compose props, then passes them to Material's native menu shape and BorderStroke. Argo's Android Menu passes none of them. Android autolinking compiles `expo-ui` from source so the Kotlin patch applies instead of linking the precompiled AAR. Menus without the prop retain Material's default shape.
 
 Remove this patch when the pinned Expo UI release ships the documented `cornerRadius` prop. It requires rebuilding the Android development client.
 

@@ -1,16 +1,14 @@
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { cn } from '#lib/generic/utils';
+import { ScrollColumnContext } from '#lib/generic/scroll-column';
 import { ContentLayout } from '#lib/product/content-layout';
-import { ScrollFadeView } from '#lib/product/scroll-fade';
-import { IconButton } from '../../../lib/generic/primitives/icon-button';
 import type { Section } from '../../../lib/product/navigation/sections';
 import { DesktopRail } from './desktop-rail';
+import { GlassSurface } from './glass-surface';
 import { PanelResizeHandle } from './panel-resize-handle';
-import { ShellHeaderActions } from './shell-header-actions';
-import { ShellHeaderContent } from './shell-header-content';
+import { ShellBackdrop } from './shell-backdrop';
 import { ShellPane } from './shell-pane';
 
 export interface DesktopShellProps {
@@ -21,23 +19,29 @@ export interface DesktopShellProps {
   onSectionChange: (section: Section) => void;
   listHeader: ReactNode;
   list: ReactNode;
-  detailHeader: ReactNode;
-  detailActions?: ReactNode;
+  // The detail page, which draws its own header.
   children: ReactNode;
   inspectorState: InspectorState;
   onInspectorStateChange: (state: InspectorState) => void;
-  inspectorHeader: ReactNode;
-  inspector: ReactNode;
+  // The Inspector pane's page, told whether the Inspector fills the detail area, which the shell decides from the window's width.
+  inspector: (expanded: boolean) => ReactNode;
 }
 
-// With the sidebar hidden, a header title starts this far in, clear of the sidebar toggle.
-const shellIconClass = 'text-muted-foreground';
-const hiddenSidebarTitleInset = 32;
 // The expanded Inspector's resize handle sits this far right when the sidebar shows.
 const expandedInspectorHandleShift = 4;
+// With the Inspector closed, its handle keeps its whole grip inside the window's flush right edge.
+const closedInspectorHandleInset = 4;
 
 export type InspectorState = 'closed' | 'open' | 'expanded';
 
+// The list scrolls across the whole pane, so its scrollbar sits at the pane's edge; its rows keep 8 from the rail and 14 from the pane's edge.
+const listColumn = { paddingLeft: 8, paddingRight: 14 };
+
+function useCSSPixels(name: string): number {
+  return Number.parseFloat(String(useCSSVariable(name)));
+}
+
+// The wide window: a floating glass panel holds the rail and the open section's list over a faint warm glow; the detail and a flush Inspector sit on the window surface.
 export function DesktopShell({
   selectedSection,
   attentionCount,
@@ -46,43 +50,32 @@ export function DesktopShell({
   onSectionChange,
   listHeader,
   list,
-  detailHeader,
-  detailActions,
   children,
   inspectorState,
   onInspectorStateChange,
-  inspectorHeader,
   inspector,
 }: DesktopShellProps): React.JSX.Element {
-  const listWidth = Number.parseFloat(
-    String(useCSSVariable('--spacing-shell-list')),
-  );
-  const inspectorWidth = Number.parseFloat(
-    String(useCSSVariable('--spacing-shell-inspector')),
-  );
+  const listWidth = useCSSPixels('--spacing-shell-list');
+  const inspectorWidth = useCSSPixels('--spacing-shell-inspector');
+  const railWidth = useCSSPixels('--spacing-shell-rail');
+  const inset = useCSSPixels('--spacing-shell-inset');
   const detailMinimum = 360;
-  const railWidth = Number.parseFloat(
-    String(useCSSVariable('--spacing-shell-bar')),
-  );
-  const inset = Number.parseFloat(
-    String(useCSSVariable('--spacing-shell-inset')),
-  );
   const listMaximum = 460;
   const [preferredListWidth, setPreferredListWidth] = useState(listWidth);
   const [preferredInspectorWidth, setPreferredInspectorWidth] =
     useState(inspectorWidth);
-  const [width, setWidth] = useState(0);
+  // The window's width until the shell measures itself: a pane first laid out at 0 wide pins the Feed's list to that width.
+  const [width, setWidth] = useState(useWindowDimensions().width);
   const [resizing, setResizing] = useState(false);
-  const usableWidth = Math.max(0, width - railWidth - inset);
+  // The glass zone keeps the rail and its inset on both sides; the list, detail and Inspector share the rest.
+  const usableWidth = Math.max(0, width - railWidth - inset * 2);
   const listLimit = Math.max(
     0,
     usableWidth - Math.min(detailMinimum, usableWidth / 2),
   );
   const visibleListWidth = Math.min(preferredListWidth, listLimit);
-  const availableWidth = Math.max(
-    0,
-    width - railWidth - inset - (sidebarShown ? visibleListWidth : 0),
-  );
+  const shownListWidth = sidebarShown ? visibleListWidth : 0;
+  const availableWidth = Math.max(0, usableWidth - shownListWidth);
   const inspectorOpen = inspectorState !== 'closed';
   const inspectorExpanded =
     inspectorOpen &&
@@ -97,6 +90,7 @@ export function DesktopShell({
   let inspectorTargetWidth = 0;
   if (inspectorOpen && inspectorExpanded) inspectorTargetWidth = availableWidth;
   else if (inspectorOpen) inspectorTargetWidth = visibleInspectorWidth;
+  const detailWidth = Math.max(0, availableWidth - inspectorTargetWidth);
 
   function resizeList(nextWidth: number): void {
     if (nextWidth < listWidth / 2) {
@@ -130,33 +124,57 @@ export function DesktopShell({
   return (
     <View
       testID="desktop-shell"
-      className="flex-1 flex-row overflow-hidden bg-shell-chrome"
+      className="flex-1 flex-row overflow-hidden bg-sidebar"
       onLayout={({ nativeEvent }) => setWidth(nativeEvent.layout.width)}
     >
-      <View className="absolute left-shell-bar top-0 z-20 h-shell-bar w-12 items-start justify-center pl-1">
-        <IconButton
-          variant="ghost"
-          className="size-8 p-0 sm:size-8"
-          accessibilityLabel={sidebarShown ? 'Hide sidebar' : 'Show sidebar'}
-          onPress={() => onSidebarShownChange(!sidebarShown)}
-          icon={'sidebar'}
-          iconClassName={shellIconClass}
-          size="md"
-        />
-      </View>
-      <DesktopRail
-        selectedSection={selectedSection}
-        attentionCount={attentionCount}
-        onSectionChange={onSectionChange}
+      <ShellBackdrop
+        sidebarShown={sidebarShown}
+        transitionKey={transitionKey}
+        animate={!resizing}
       />
+      <View className="p-shell-inset">
+        <View className="flex-1 flex-row">
+          <GlassSurface
+            width={railWidth + shownListWidth}
+            expandedWidth={railWidth + visibleListWidth}
+            transitionKey={transitionKey}
+            animate={!resizing}
+          />
+          <DesktopRail
+            selectedSection={selectedSection}
+            attentionCount={attentionCount}
+            sidebarShown={sidebarShown}
+            onSectionChange={onSectionChange}
+            onSidebarShownChange={onSidebarShownChange}
+          />
+          <ShellPane
+            testID="desktop-list"
+            width={shownListWidth}
+            offset={0}
+            contentWidth={visibleListWidth}
+            hidden={!sidebarShown}
+            transitionKey={transitionKey}
+            animate={!resizing}
+          >
+            <View className="h-shell-control flex-row items-center gap-1 pl-6 pr-3.5">
+              {listHeader}
+            </View>
+            <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
+              <ScrollColumnContext value={listColumn}>
+                {list}
+              </ScrollColumnContext>
+            </View>
+          </ShellPane>
+        </View>
+      </View>
       {listLimit > listWidth && (
         <View
           className="absolute top-0 bottom-shell-inset z-40"
-          style={{ left: railWidth + (sidebarShown ? visibleListWidth : 0) }}
+          style={{ left: inset + railWidth + shownListWidth }}
         >
           <PanelResizeHandle
             label="Resize sidebar"
-            value={sidebarShown ? visibleListWidth : 0}
+            value={shownListWidth}
             minimum={0}
             maximum={Math.min(listMaximum, listLimit)}
             direction={1}
@@ -166,12 +184,11 @@ export function DesktopShell({
         </View>
       )}
       <View
-        className="absolute top-0 bottom-shell-inset z-30"
+        className="absolute top-0 bottom-0 z-30"
         style={{
           left:
-            railWidth +
-            usableWidth -
-            inspectorTargetWidth +
+            width -
+            Math.max(inspectorTargetWidth, closedInspectorHandleInset) +
             (inspectorExpanded && sidebarShown
               ? expandedInspectorHandleShift
               : 0),
@@ -188,65 +205,16 @@ export function DesktopShell({
           onDragStateChange={setResizing}
         />
       </View>
-      <View className="min-w-0 flex-1 flex-row pb-shell-inset pr-shell-inset">
-        <View
-          testID="desktop-panel"
-          pointerEvents="none"
-          className="absolute bottom-shell-inset left-0 right-shell-inset top-shell-bar rounded-xl web:rounded-surface web:shadow-card bg-sidebar"
-        />
-        <ShellPane
-          testID="desktop-list"
-          width={sidebarShown ? visibleListWidth : 0}
-          offset={0}
-          contentWidth={visibleListWidth}
-          hidden={!sidebarShown}
-          transitionKey={transitionKey}
-          animate={!resizing}
-        >
-          <View className="h-shell-bar" />
-          <View className="min-h-0 flex-1 overflow-hidden">
-            <View className="h-14 flex-row items-center gap-0.5 px-2">
-              {listHeader}
-            </View>
-            {list}
-          </View>
-        </ShellPane>
+      <View className="min-w-0 flex-1 flex-row">
         <ShellPane
           testID="desktop-detail"
-          card
-          offset={sidebarShown ? visibleListWidth : 0}
-          width={Math.max(0, availableWidth - inspectorTargetWidth)}
+          offset={shownListWidth}
+          width={detailWidth}
           hidden={inspectorExpanded}
           transitionKey={transitionKey}
           animate={!resizing}
-          header={
-            <View className="h-shell-bar flex-row items-center gap-2 px-4">
-              <ShellHeaderContent
-                testID="desktop-detail-title"
-                animate={!resizing}
-                position={
-                  sidebarShown ? visibleListWidth : hiddenSidebarTitleInset
-                }
-                transitionKey={transitionKey}
-                inset={sidebarShown ? 0 : hiddenSidebarTitleInset}
-              >
-                {detailHeader}
-              </ShellHeaderContent>
-              <ShellHeaderActions
-                testID="desktop-detail-actions"
-                position={railWidth + usableWidth - inspectorTargetWidth}
-                transitionKey={transitionKey}
-                animate={!resizing}
-              >
-                {detailActions}
-              </ShellHeaderActions>
-            </View>
-          }
         >
-          <View className="h-shell-bar" />
-          <ContentLayout className="overflow-hidden rounded-xl web:rounded-surface">
-            {children}
-          </ContentLayout>
+          <ContentLayout className="overflow-hidden">{children}</ContentLayout>
         </ShellPane>
         <ShellPane
           testID="desktop-inspector"
@@ -255,75 +223,8 @@ export function DesktopShell({
           hidden={!inspectorOpen}
           transitionKey={transitionKey}
           animate={!resizing}
-          header={
-            <View className="h-shell-bar flex-row items-center gap-2 pl-4 pr-1">
-              <ShellHeaderContent
-                testID="desktop-inspector-title"
-                animate={!resizing}
-                position={
-                  usableWidth -
-                  inspectorTargetWidth +
-                  (!sidebarShown && inspectorExpanded
-                    ? hiddenSidebarTitleInset
-                    : 0)
-                }
-                transitionKey={transitionKey}
-                inset={
-                  !sidebarShown && inspectorExpanded
-                    ? hiddenSidebarTitleInset
-                    : 0
-                }
-              >
-                {inspectorHeader}
-              </ShellHeaderContent>
-              <ShellHeaderActions
-                testID="desktop-inspector-actions"
-                position={railWidth + usableWidth}
-                transitionKey={transitionKey}
-                animate={!resizing}
-              >
-                <IconButton
-                  variant="ghost"
-                  className="size-8 p-0 sm:size-8"
-                  accessibilityLabel={
-                    inspectorExpanded ? 'Restore Inspector' : 'Expand Inspector'
-                  }
-                  onPress={() =>
-                    onInspectorStateChange(
-                      inspectorExpanded ? 'open' : 'expanded',
-                    )
-                  }
-                  icon={inspectorExpanded ? 'collapse' : 'expand'}
-                  iconClassName={shellIconClass}
-                  size="md"
-                />
-                <IconButton
-                  variant="ghost"
-                  className="size-8 p-0 sm:size-8"
-                  accessibilityLabel="Close Inspector"
-                  onPress={() => onInspectorStateChange('closed')}
-                  icon={'close'}
-                  iconClassName={shellIconClass}
-                  size="md"
-                />
-              </ShellHeaderActions>
-            </View>
-          }
         >
-          <View className="h-shell-bar" />
-          <ScrollFadeView
-            testID="desktop-inspector-scroll"
-            className={cn(
-              'overflow-hidden',
-              inspectorExpanded
-                ? 'rounded-xl web:rounded-surface'
-                : 'rounded-r-xl web:rounded-r-surface',
-            )}
-            contentContainerClassName="grow"
-            surfaceClassName="bg-sidebar"
-          >
-            {inspector}
-          </ScrollFadeView>
+          {inspector(inspectorExpanded)}
         </ShellPane>
       </View>
     </View>

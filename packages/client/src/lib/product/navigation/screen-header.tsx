@@ -8,7 +8,7 @@ import {
   useContext,
 } from 'react';
 
-interface ScreenHeaderSearch {
+export interface ScreenHeaderSearch {
   placeholder: string;
   onChangeText: (text: string) => void;
 }
