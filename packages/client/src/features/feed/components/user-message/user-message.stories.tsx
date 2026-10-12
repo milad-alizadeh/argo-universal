@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import {
   recordedImageUrl,
+  recordedPrompt,
   recordedUserMessage,
 } from '../../../../lib/product/feed-message.mocks';
 import { UserMessage } from './user-message';
@@ -37,7 +38,7 @@ export const Overview: Story = {
       <Variation label="Markdown">
         <UserMessage
           {...args}
-          row={recordedUserMessage('agent-1', 'markdown-prompt')}
+          row={recordedPrompt('agent-1', 'markdown-prompt')}
         />
       </Variation>
       <Variation label="Long text">

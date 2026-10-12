@@ -49,14 +49,21 @@ function recordedRow<Kind extends SessionUpdate['sessionUpdate']>(
   return row;
 }
 
-export function recordedUserMessage(
+export const recordedUserMessage = (
+  agent: MockAgent,
+  recording: string,
+): UserMessage => recordedRow(agent, recording, 'user_message');
+
+// A prompt recorded on its own, for user message text no Feed recording holds.
+export function recordedPrompt(
   agent: MockAgent,
   recording: string,
 ): UserMessage {
-  const sent = recordedUserMessages.find(
+  const prompt = recordedUserMessages.find(
     (message) => message.agent === agent && message.recording === recording,
   );
-  return sent?.row ?? recordedRow(agent, recording, 'user_message');
+  if (!prompt) throw new Error(`No recorded prompt ${agent}/${recording}`);
+  return prompt.row;
 }
 
 export const recordedAgentMessage = (

@@ -13,6 +13,7 @@ import { useResolveClassNames } from 'uniwind';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
+import { useClampLeaf, useLineHeight } from './clamp-leaves';
 import { FeedCodeBlock } from './feed-code-block/feed-code-block';
 
 export interface FeedMarkdownProps {
@@ -130,8 +131,10 @@ function Prose({
   headingLevel?: number;
 }): React.JSX.Element {
   const variant = useContext(MarkdownVariant);
+  const leaf = useClampLeaf(useLineHeight(role));
   return (
     <Text
+      ref={leaf}
       semanticRole={headingLevel === undefined ? undefined : 'heading'}
       aria-level={headingLevel}
       role={role}
@@ -155,12 +158,14 @@ function List({
 }): React.JSX.Element {
   const variant = useContext(MarkdownVariant);
   const start = typeof token.start === 'number' ? token.start : 1;
+  const marker = useClampLeaf(useLineHeight('body'));
   return (
     <View className={variant === 'proposal' ? 'gap-2' : 'gap-1'}>
       {withOccurrenceKeys(token.items, (item) => item.raw).map(
         ({ item, key }, index) => (
           <View key={key} className="flex-row gap-2">
             <Text
+              ref={marker}
               role="body"
               className={cn(
                 'w-4 shrink-0 font-sans',
@@ -249,6 +254,7 @@ function Block({
   token: Token;
   caret: boolean;
 }): React.JSX.Element | null {
+  const block = useClampLeaf();
   switch (token.type) {
     case 'heading':
       return (
@@ -267,14 +273,14 @@ function Block({
       return isList(token) ? <List token={token} caret={caret} /> : null;
     case 'code':
       return (
-        <View className="gap-2.5">
+        <View ref={block} className="gap-2.5">
           <FeedCodeBlock code={token.text} language={token.lang || undefined} />
           {caret && <Caret />}
         </View>
       );
     case 'table':
       return (
-        <View className="gap-2.5">
+        <View ref={block} className="gap-2.5">
           {isTable(token) && <Table token={token} />}
           {caret && <Caret />}
         </View>

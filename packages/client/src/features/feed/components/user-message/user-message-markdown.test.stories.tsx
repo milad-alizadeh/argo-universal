@@ -7,7 +7,7 @@ import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   type MockAgent,
   recordedImageUrl,
-  recordedUserMessage,
+  recordedPrompt,
 } from '../../../../lib/product/feed-message.mocks';
 import { UserMessage } from './user-message';
 
@@ -26,63 +26,68 @@ const meta = {
     ),
   ],
   args: {
-    row: recordedUserMessage('agent-1', markdownPrompt),
+    row: recordedPrompt('agent-1', markdownPrompt),
     imageUrl: recordedImageUrl,
   },
 } satisfies Meta<typeof UserMessage>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const markdownPromptText = recordedUserMessage('agent-1', markdownPrompt)
+// Each markdown source in the recorded prompt and the text it draws once its markers are gone.
+const drawn = [
+  { source: '**Composer**', text: 'Composer' },
+  { source: '*care*', text: 'care' },
+  { source: '~~skip the docs~~', text: 'skip the docs' },
+  { source: '`draftPrompt`', text: 'draftPrompt' },
+  { source: '\n1. Read', text: '1.' },
+  { source: '\n2. Run', text: '2.' },
+  { source: '    - unit', text: 'unit' },
+  { source: '    - e2e', text: 'e2e' },
+  {
+    source: '> The stored text stays exactly as typed.',
+    text: 'The stored text stays exactly as typed.',
+  },
+  {
+    source: '```ts\nconst text = draft.text;\n```',
+    text: 'const text = draft.text;',
+  },
+] as const;
+const link = { source: '[ADR-0023](', name: 'ADR-0023' } as const;
+const codeLine = 'const text = draft.text;';
+
+const promptText = recordedPrompt('agent-1', markdownPrompt)
   .content.flatMap((block) => (block.type === 'text' ? [block.text] : []))
   .join('');
-for (const fact of [
-  '**Composer**',
-  '*care*',
-  '~~skip the docs~~',
-  '[ADR-0023](',
-  '1. ',
-  '    - unit',
-  '> ',
-  '```ts',
-])
-  if (!markdownPromptText.includes(fact))
-    throw new Error(`Recorded catalog needs ${fact} in the markdown prompt`);
+for (const { source } of [...drawn, link])
+  if (!promptText.includes(source))
+    throw new Error(`Recorded catalog needs ${source} in the markdown prompt`);
 
-// Whether a person can see and point at the element, rather than it being hidden by the clamp.
+// Whether a person can see and point at the element's first line, rather than it being hidden by the clamp.
 function isUncovered(element: HTMLElement): boolean {
-  const { left, top, width, height } = element.getBoundingClientRect();
+  const firstLine = element.getClientRects()[0];
+  if (!firstLine) return false;
+  const { left, top, width, height } = firstLine;
   const hit = document.elementFromPoint(left + width / 2, top + height / 2);
   return hit !== null && element.contains(hit);
 }
 
+// The clamp hides the code block; expanded, every mark, list, quote, link and code block draws without its markers.
 function rendersMarkdown(agent: MockAgent, width: number): Story {
   return {
-    args: { row: recordedUserMessage(agent, markdownPrompt) },
+    args: { row: recordedPrompt(agent, markdownPrompt) },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+      const code = canvas.getByText(codeLine, { exact: true });
+      await expect(isUncovered(code)).toBe(false);
       await userEvent.click(
         await canvas.findByRole('button', { name: 'Show more' }),
       );
-      for (const text of [
-        'Composer',
-        'care',
-        'skip the docs',
-        'draftPrompt',
-        '1.',
-        '2.',
-        'unit',
-        'e2e',
-        'The stored text stays exactly as typed.',
-        'const text = draft.text;',
-      ]) {
+      for (const { text } of drawn) {
         const element = canvas.getByText(text, { exact: true });
         element.scrollIntoView({ block: 'center' });
-        await expect(element).toBeVisible();
+        await waitFor(() => expect(isUncovered(element)).toBe(true));
       }
-      await expect(
-        canvas.getByRole('link', { name: 'ADR-0023' }),
-      ).toBeVisible();
+      await expect(canvas.getByRole('link', { name: link.name })).toBeVisible();
       await expect(canvas.queryByText(/\*\*|~~|```|^> /)).toBeNull();
     },
   };
@@ -91,20 +96,3 @@ export const FirstAgentPhone = rendersMarkdown('agent-1', layoutWidths.phone);
 export const FirstAgentWide = rendersMarkdown('agent-1', layoutWidths.wide);
 export const SecondAgentPhone = rendersMarkdown('agent-2', layoutWidths.phone);
 export const SecondAgentWide = rendersMarkdown('agent-2', layoutWidths.wide);
-
-// The prompt clamps to four lines, hiding its code block until expanded.
-export const ShowMore: Story = {
-  play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
-    const code = canvas.getByText('const text = draft.text;', { exact: true });
-    await expect(isUncovered(code)).toBe(false);
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Show more' }),
-    );
-    await expect(
-      canvas.queryByRole('button', { name: 'Show more' }),
-    ).toBeNull();
-    code.scrollIntoView({ block: 'center' });
-    await waitFor(() => expect(isUncovered(code)).toBe(true));
-  },
-};

@@ -7,6 +7,7 @@ import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   type MockAgent,
   recordedImageUrl,
+  recordedPrompt,
   recordedUserMessage,
 } from '../../../../lib/product/feed-message.mocks';
 import { UserMessage } from './user-message';
@@ -96,23 +97,67 @@ export const SecondAgentOpensImageWide = opensImage(
   layoutWidths.wide,
 );
 
-// The long prompt passes four lines on a phone and fits on a wide screen.
-export const ShowMore: Story = {
-  args: { row: recordedUserMessage('agent-2', 'markdown-answer') },
-  play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
-    await expect(
-      canvas.queryByRole('button', { name: 'Show more' }),
-    ).toBeNull();
-    await settleViewport(layoutWidths.phone);
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Show more' }),
-    );
-    await expect(
-      canvas.queryByRole('button', { name: 'Show more' }),
-    ).toBeNull();
-    await expect(
-      canvas.getAllByText(/^Without using/)[0]?.getBoundingClientRect().height,
-    ).toBeGreaterThan(80);
-  },
-};
+type LineView = 'shown' | 'hidden' | 'cut';
+const trailingSpaceWidth = 6;
+
+function lineView(seenEdges: boolean[]): LineView {
+  if (seenEdges.every(Boolean)) return 'shown';
+  return seenEdges.some(Boolean) ? 'cut' : 'hidden';
+}
+
+// How a person sees each drawn line of text: whole, hidden, or cut through by the clamp.
+function lineViews(root: HTMLElement): LineView[] {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const views: LineView[] = [];
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const owner = node.parentElement;
+    if (!owner || !node.textContent?.trim() || owner.closest('[role=button]'))
+      continue;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    for (const line of range.getClientRects()) {
+      // A wrapped line's trailing space hangs past the text edge, where nothing is drawn.
+      if (line.width < trailingSpaceWidth) continue;
+      const x = line.left + Math.min(4, line.width / 2);
+      const seen = [line.top + 1, line.bottom - 1].map((y) => {
+        const hit = document.elementFromPoint(x, y);
+        return hit !== null && owner.contains(hit);
+      });
+      views.push(lineView(seen));
+    }
+  }
+  return views;
+}
+
+// A long markdown prompt shows only whole lines above Show more, then every line once expanded.
+function showsMore(agent: MockAgent, width: number): Story {
+  return {
+    args: { row: recordedPrompt(agent, 'markdown-prompt') },
+    play: async ({ canvas, canvasElement, userEvent }) => {
+      await settleViewport(width);
+      const showMore = await canvas.findByRole('button', { name: 'Show more' });
+      await waitFor(() =>
+        expect(lineViews(canvasElement)).not.toContain('cut'),
+      );
+      await expect(lineViews(canvasElement)).toContain('hidden');
+      await userEvent.click(showMore);
+      await expect(
+        canvas.queryByRole('button', { name: 'Show more' }),
+      ).toBeNull();
+      await waitFor(() =>
+        expect(new Set(lineViews(canvasElement))).toEqual(new Set(['shown'])),
+      );
+    },
+  };
+}
+// Between phone and wide, the prompt's fourth line ends inside a list rather than at a paragraph end.
+const narrowWidth = 600;
+export const FirstAgentShowMorePhone = showsMore('agent-1', layoutWidths.phone);
+export const FirstAgentShowMoreNarrow = showsMore('agent-1', narrowWidth);
+export const FirstAgentShowMoreWide = showsMore('agent-1', layoutWidths.wide);
+export const SecondAgentShowMorePhone = showsMore(
+  'agent-2',
+  layoutWidths.phone,
+);
+export const SecondAgentShowMoreNarrow = showsMore('agent-2', narrowWidth);
+export const SecondAgentShowMoreWide = showsMore('agent-2', layoutWidths.wide);

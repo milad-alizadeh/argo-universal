@@ -8,11 +8,13 @@ import type * as React from 'react';
 import { memo, useLayoutEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Text, useTextStyle } from '#lib/generic/primitives/display/text/text';
+import { Text } from '#lib/generic/primitives/display/text/text';
 import { FeedMarkdown } from '#lib/product/markdown/feed-markdown';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useTextIconSize } from '../../../../lib/generic/symbols/text-icon-size';
+import { ClampLeaves } from '../../../../lib/product/markdown/clamp-leaves';
 import { resourceName } from '../../../../lib/product/markdown/resource-name';
+import { useWholeLineClamp } from '../../../../lib/product/markdown/use-whole-line-clamp';
 import { FeedImage } from '../feed-image';
 
 export interface UserMessageProps {
@@ -27,14 +29,9 @@ type Reference = Extract<ContentBlock, { type: 'resource_link' | 'resource' }>;
 
 function Bubble({ text }: { text: string }): React.JSX.Element {
   const [expanded, setExpanded] = useState(false);
-  const [fullHeight, setFullHeight] = useState(0);
-  // The web resolves the line height as a pixel string, native as a number.
-  const lineHeight = Number.parseFloat(String(useTextStyle('body').lineHeight));
-  const clampHeight = Number.isFinite(lineHeight)
-    ? lineHeight * clampedLines
-    : undefined;
-  const clamped =
-    !expanded && clampHeight !== undefined && fullHeight > clampHeight + 1;
+  const { content, onContentLayout, registerLeaf, clipHeight } =
+    useWholeLineClamp(clampedLines);
+  const clamped = !expanded && clipHeight !== undefined;
   // "Show more" lands a layout after the bubble, which Legend List on the web misses until it next measures every row, so the Feed tells it.
   const syncLayout = useSyncLayout();
   const syncedClamped = useRef<boolean | undefined>(undefined);
@@ -47,12 +44,12 @@ function Bubble({ text }: { text: string }): React.JSX.Element {
     <View className="max-w-[70%] gap-0.5 rounded-2xl bg-muted px-3.5 py-2.5 wide:px-3 wide:py-2">
       <View
         className="overflow-hidden"
-        style={expanded ? undefined : { maxHeight: clampHeight }}
+        style={clamped ? { maxHeight: clipHeight } : undefined}
       >
-        <View
-          onLayout={(event) => setFullHeight(event.nativeEvent.layout.height)}
-        >
-          <FeedMarkdown text={text} />
+        <View ref={content} onLayout={onContentLayout}>
+          <ClampLeaves.Provider value={registerLeaf}>
+            <FeedMarkdown text={text} />
+          </ClampLeaves.Provider>
         </View>
       </View>
       {clamped && (
