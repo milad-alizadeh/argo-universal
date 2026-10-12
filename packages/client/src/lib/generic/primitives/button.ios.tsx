@@ -19,7 +19,7 @@ import { nativeModifiers } from './button-ios-modifiers';
 import { createNativeButton, NativeButtonIcon } from './button-native';
 import type { ButtonTheme } from './button-native-colors';
 import type { ButtonDataProps } from './button-props';
-import { nativeButtonVariant } from './button-state';
+import { nativeButtonVariant, readyPress } from './button-state';
 
 export const Button = createNativeButton(NativeControl);
 
@@ -55,7 +55,7 @@ function nativeControlProps(
 ): Omit<ComponentProps<typeof SwiftButton>, 'children'> {
   return {
     role: props.role,
-    onPress: props.onPress,
+    onPress: readyPress(props),
     testID: props.testID,
     modifiers: nativeModifiers(props, props.theme),
   };

@@ -1,6 +1,6 @@
 import { useNativeTheme } from '../native-theme';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
-import { isButtonDisabled, nativeButtonVariant } from './button-state';
+import { nativeButtonVariant } from './button-state';
 import { usePrimitiveColor } from './primitive-color';
 
 const destructiveClass = 'text-destructive';
@@ -35,10 +35,7 @@ export interface ButtonTheme {
   };
 }
 
-type ThemeProps = Pick<
-  ButtonDataProps,
-  'variant' | 'role' | 'disabled' | 'loading'
->;
+type ThemeProps = Pick<ButtonDataProps, 'variant' | 'role' | 'disabled'>;
 
 export function useNativeButtonTheme(props: ThemeProps): ButtonTheme {
   const { colors } = useNativeTheme();
@@ -46,9 +43,7 @@ export function useNativeButtonTheme(props: ThemeProps): ButtonTheme {
   return {
     primary: colors.tint,
     border: usePrimitiveColor('text-border'),
-    contentClass: isButtonDisabled(props)
-      ? mutedForegroundClass
-      : classes.content,
+    contentClass: props.disabled ? mutedForegroundClass : classes.content,
     colors: useNativeButtonColors(classes),
   };
 }

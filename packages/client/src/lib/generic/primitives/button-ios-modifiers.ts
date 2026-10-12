@@ -16,7 +16,7 @@ import type {
   ButtonSize,
   ButtonVariant,
 } from './button-props';
-import { isButtonDisabled, nativeButtonVariant } from './button-state';
+import { nativeButtonVariant } from './button-state';
 
 type ModifierProps = Pick<
   ButtonDataProps,
@@ -56,16 +56,13 @@ export function nativeModifiers(
 }
 
 function buttonStyleModifiers(
-  props: Pick<
-    ButtonDataProps,
-    'role' | 'variant' | 'size' | 'disabled' | 'loading'
-  >,
+  props: Pick<ButtonDataProps, 'role' | 'variant' | 'size' | 'disabled'>,
 ): ModifierConfig[] {
   return [
     buttonStyle(buttonStyles[nativeButtonVariant(props)]),
     controlSize(controlSizes[props.size ?? 'md']),
     frame({ minWidth: 44, minHeight: 44 }),
-    disabled(isButtonDisabled(props)),
+    disabled(!!props.disabled),
   ];
 }
 
