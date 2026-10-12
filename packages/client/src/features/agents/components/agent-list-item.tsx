@@ -57,11 +57,16 @@ const glyphSizes = {
   phone: { glyph: 'lg', logo: 'md' },
 } as const;
 
+// A registry Agent with no logo shows the glyph too, at the glyph's size.
+function hasLogo(agent: AgentListItemProps['agent']): boolean {
+  return !agent.custom && Boolean(agent.icon);
+}
+
 function AgentGlyph({
   agent,
 }: Pick<AgentListItemProps, 'agent'>): React.JSX.Element {
   const sizes = glyphSizes[useWide() ? 'wide' : 'phone'];
-  if (agent.custom)
+  if (!hasLogo(agent))
     return <Icon name="agent" size={sizes.glyph} className="text-foreground" />;
   return (
     <RegistryIcon uri={agent.icon} agentName={agent.name} size={sizes.logo} />
