@@ -21,23 +21,22 @@ export interface SettingsPageProps extends PageTitleRowProps {
   children: ReactNode;
 }
 
-// The page's centred column, its side padding included. The left padding fits the back button's hang (-left-8 in PageTitleRow), so the button stays inside the pane when the column meets the pane's edge.
+// The page's centred column, its side padding included. The padding fits the back button's hang (-left-8 in PageTitleRow), so the button stays inside the pane when the column meets the pane's edge.
 const settingsColumnMaxWidth = 848;
-
-function useSpacing(name: string): number {
-  return Number.parseFloat(String(useCSSVariable(name)));
-}
 
 function useSettingsColumn(): {
   maxWidth: number;
   paddingLeft: number;
   paddingRight: number;
 } {
-  const paddingLeft = useSpacing('--spacing-8');
-  const paddingRight = useSpacing('--spacing-6');
+  const padding = Number.parseFloat(String(useCSSVariable('--spacing-8')));
   return useMemo(
-    () => ({ maxWidth: settingsColumnMaxWidth, paddingLeft, paddingRight }),
-    [paddingLeft, paddingRight],
+    () => ({
+      maxWidth: settingsColumnMaxWidth,
+      paddingLeft: padding,
+      paddingRight: padding,
+    }),
+    [padding],
   );
 }
 
