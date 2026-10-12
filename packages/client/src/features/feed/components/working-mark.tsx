@@ -11,7 +11,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { iconSizeStyle } from '../../../lib/generic/symbols/icon';
+import { useIconBox } from '../../../lib/generic/symbols/icon-role';
 
 const stepMilliseconds = 150;
 const fadeMilliseconds = 400;
@@ -88,7 +88,7 @@ export function WorkingMark(): React.JSX.Element {
   return (
     <View
       testID="working-mark"
-      style={iconSizeStyle('sm')}
+      style={useIconBox('control')}
       className="shrink-0"
     >
       {cells.map(([left, top], index) => (

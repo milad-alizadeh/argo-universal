@@ -63,7 +63,7 @@ function CustomAgentIdentity({
 }: Pick<SettingsProps, 'check'>): React.JSX.Element {
   return (
     <AgentIdentity
-      logo={<Icon name="agent" size="lg" className="text-foreground" />}
+      logo={<Icon name="agent" role="title" className="text-foreground" />}
       description={customAgentDescription}
       trailing={<ReadinessChip check={check} />}
     />

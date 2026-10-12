@@ -16,7 +16,6 @@ import {
   contentActionClass,
 } from '../../../../lib/generic/primitives/pressable/pressable';
 import { Icon } from '../../../../lib/generic/symbols/icon';
-import { useTextIconSize } from '../../../../lib/generic/symbols/text-icon-size';
 import { type FileDiff, toFileDiffs } from '../../view/file-diff';
 import { DiffView } from '../diff-view/diff-view';
 import { DisclosureCaret } from '../disclosure-caret';
@@ -50,7 +49,6 @@ function FileEdit({
   nested?: boolean;
 }): React.JSX.Element {
   const [open, setOpen] = useState(false);
-  const iconSize = useTextIconSize();
   const verb = verbs[file.operation];
   return (
     <Collapsible open={open}>
@@ -73,7 +71,7 @@ function FileEdit({
         >
           <Icon
             name={nested ? fileTypeIcon(file.path) : editIcons[file.operation]}
-            size={iconSize}
+            role="body"
             className={cn('shrink-0', nested && 'text-muted-foreground')}
           />
           <View className="min-w-0 shrink flex-row items-center gap-1">
@@ -117,7 +115,6 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
     [row.content],
   );
   const [expanded, setExpanded] = useState(false);
-  const iconSize = useTextIconSize();
   if (row.status === 'failed') {
     const path = files[0]?.path ?? row.locations?.[0]?.path;
     const error = row.content
@@ -129,11 +126,7 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
       .join(' ');
     return (
       <View className="min-h-5 flex-row items-center gap-1.5">
-        <Icon
-          name="edit"
-          size={iconSize}
-          className="shrink-0 text-destructive"
-        />
+        <Icon name="edit" role="body" className="shrink-0 text-destructive" />
         <Text role="body" className="text-destructive">
           Couldn't edit
         </Text>
@@ -165,7 +158,7 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
             'h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>[data-icon]]:px-0',
         })}
       >
-        <Icon name="edit" size={iconSize} className="text-muted-foreground" />
+        <Icon name="edit" role="body" className="text-muted-foreground" />
         <Text
           selectable={false}
           role="body"

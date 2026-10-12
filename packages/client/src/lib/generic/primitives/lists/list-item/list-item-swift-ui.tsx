@@ -2,7 +2,7 @@ import { ProgressView, Text, VStack } from '@expo/ui/swift-ui';
 import { foregroundStyle, frame, lineLimit } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
-import { iconPixels } from '../../../symbols/icon';
+import { useIconPixels } from '../../../symbols/icon-role';
 import type { ListItemProps } from '../../fields/field-props';
 import { useSwiftUITextModifiers } from '../../native/native-typography';
 import { subtitleRole, titleRole, useToneColor } from './list-item-text';
@@ -12,8 +12,8 @@ import { NativeRowGlyph } from './native-row';
 export function RowLeading(
   props: Pick<ListItemProps, 'icon' | 'loading' | 'leading'>,
 ): React.JSX.Element | null {
-  if (props.loading)
-    return <ProgressView modifiers={[frame({ width: iconPixels('lg') })]} />;
+  const width = useIconPixels('row');
+  if (props.loading) return <ProgressView modifiers={[frame({ width })]} />;
   return <NativeRowGlyph {...props} />;
 }
 

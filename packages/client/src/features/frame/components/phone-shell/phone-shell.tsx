@@ -103,7 +103,7 @@ export function PhoneShell({
       >
         <Icon
           name={icon}
-          size="lg"
+          role="nav"
           filled={selected}
           className={cn(!selected && 'text-muted-foreground')}
         />

@@ -33,7 +33,6 @@ export function SessionsHeader({
             size="md"
             className="size-7 sm:size-7"
             icon="new-session"
-            iconSize="sm"
             iconClassName="text-muted-foreground"
             accessibilityLabel="New Session"
             onPress={onNewSession}

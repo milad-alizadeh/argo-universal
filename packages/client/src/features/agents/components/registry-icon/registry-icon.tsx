@@ -2,16 +2,13 @@ import type * as React from 'react';
 import { useMemo, useState } from 'react';
 import { Image, Platform, View } from 'react-native';
 import { SvgUri, SvgXml, type XmlProps } from 'react-native-svg';
-import {
-  Icon,
-  type IconSize,
-  iconPixels,
-} from '../../../../lib/generic/symbols/icon';
+import { Icon, type IconRole } from '../../../../lib/generic/symbols/icon';
+import { useIconPixels } from '../../../../lib/generic/symbols/icon-role';
 
 interface RegistryIconProps {
   uri: string | undefined;
   agentName: string;
-  size?: IconSize;
+  role: IconRole;
 }
 type IconSource =
   | { kind: 'inline'; xml: string }
@@ -27,10 +24,10 @@ type ImageProps = Pick<
 export function RegistryIcon({
   uri,
   agentName,
-  size = 'sm',
+  role,
 }: RegistryIconProps): React.JSX.Element {
-  if (!uri) return <UnavailableIcon agentName={agentName} size={size} />;
-  return <LoadedImage uri={uri} agentName={agentName} size={size} />;
+  if (!uri) return <UnavailableIcon agentName={agentName} role={role} />;
+  return <LoadedImage uri={uri} agentName={agentName} role={role} />;
 }
 
 type LoadedIconProps = Required<RegistryIconProps> & { uri: string };
@@ -38,7 +35,7 @@ type LoadedIconProps = Required<RegistryIconProps> & { uri: string };
 // The browser draws the SVG itself: react-native-svg's web build hands the file's attributes, such as data-name, to DOM elements as unknown props.
 function WebRegistryImage(props: LoadedIconProps): React.JSX.Element {
   const [failed, setFailed] = useState(false);
-  const pixels = iconPixels(props.size);
+  const pixels = useIconPixels(props.role);
   if (failed) return <UnavailableIcon {...props} />;
   return (
     <Image
@@ -53,23 +50,29 @@ function WebRegistryImage(props: LoadedIconProps): React.JSX.Element {
 function RegistryImage({
   uri,
   agentName,
-  size,
+  role,
 }: LoadedIconProps): React.JSX.Element {
   const source = useMemo(
     (): IconSource => decodeRegistryIconSource(uri),
     [uri],
   );
-  return renderIcon(source, imageProps(agentName, size));
+  const pixels = useIconPixels(role);
+  return renderIcon(source, imageProps({ agentName, role, pixels }));
 }
 
-function imageProps(agentName: string, size: IconSize): ImageProps {
-  const pixels = iconPixels(size);
+function imageProps({
+  agentName,
+  role,
+  pixels,
+}: Pick<RegistryIconProps, 'agentName' | 'role'> & {
+  pixels: number;
+}): ImageProps {
   return {
     width: pixels,
     height: pixels,
     accessibilityRole: 'image',
     accessibilityLabel: `${agentName} icon`,
-    fallback: <UnavailableIcon agentName={agentName} size={size} />,
+    fallback: <UnavailableIcon agentName={agentName} role={role} />,
   };
 }
 
@@ -126,15 +129,15 @@ function numberAttribute(open: string, name: string): string | undefined {
 
 function UnavailableIcon({
   agentName,
-  size,
-}: Pick<Required<RegistryIconProps>, 'agentName' | 'size'>): React.JSX.Element {
+  role,
+}: Pick<RegistryIconProps, 'agentName' | 'role'>): React.JSX.Element {
   return (
     <View
       accessible
       accessibilityRole="image"
       accessibilityLabel={`${agentName} icon unavailable`}
     >
-      <Icon name="agent" size={size} />
+      <Icon name="agent" role={role} />
     </View>
   );
 }

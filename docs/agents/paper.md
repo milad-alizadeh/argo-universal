@@ -43,7 +43,7 @@ Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same
 ## Tokens
 
 - Paper tokens use the Tailwind names in `tooling/uniwind/theme.css`. Fractional steps take an underscore: `--spacing-0_5`, `--leading-4_5`.
-- Icon dimensions come from the named sizes encapsulated in `packages/client/src/lib/generic/symbols/icon.tsx`. Paper records their resolved dimensions as literals. An icon slot uses the same size as its glyph.
+- Icon dimensions come from the role table in `packages/client/src/lib/generic/symbols/icon-role.ts`: desktop frames use a role's wide size, phone frames its phone size. Paper records the resolved dimensions as literals. An icon slot uses the same size as its glyph.
 - Web card and popover surfaces use `--radius-surface` (28px) and the shared `--shadow-card` shadow, including menus, dialogs and sheets (owner, 2026-10-10). Web sheets round their top corners. Native surfaces keep their platform drawings.
 - Web inputs match the Android TextInput master at `--radius-lg` (10px) (owner, 2026-10-10). Web search fields are not styled as inputs: they use `--radius-2xl` (18px, the list card radius), a `--color-muted` fill, and no border or shadow (owner, 2026-10-12). The existing native ListSearch animation retains 6px through the `--radius-search` platform token value.
 - Web dialogs have no border in light mode and use the shared `--shadow-card` shadow. Dark web cards, popovers, menus, dialogs and sheets use a 1px `--color-border` edge and a black shadow, without a white glow (owner, 2026-10-10).
@@ -61,7 +61,7 @@ Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same
 - Where SF Symbols has no symbol, Argo draws its own (`custom.<name>` in `packages/client/src/lib/generic/symbols/custom-symbol-paths.json`, ADR-0019). Its Paper SVG uses the JSON's viewBox and path, so design and app share one outline.
 - An icon layer is named `Icon / <name>`, where `<name>` is a key of `iconSymbols` in `packages/client/src/lib/generic/symbols/icon-names.ts`. That map is the only list of icons. An icon a design needs that the app lacks is added there first, with its SF and Material names.
 - The library is "Components / Icons" on the Global Components page, one tile per app icon. Copy icons from it.
-- `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box. Use it with that viewBox, the fill on a `--color-*` token, and the dimensions from the named Icon size.
+- `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box. Use it with that viewBox, the fill on a `--color-*` token, and the dimensions from the icon's role.
 
 ## Building from Paper
 

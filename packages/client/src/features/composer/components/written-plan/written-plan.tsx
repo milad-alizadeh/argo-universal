@@ -13,7 +13,6 @@ import {
   Pressable,
   contentActionClass,
 } from '../../../../lib/generic/primitives/pressable/pressable';
-import { Chevron } from '../../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { resourceName } from '../../../../lib/product/markdown/resource-name';
 import { useWrittenPlanEscape } from '../../hooks/use-written-plan-escape';
@@ -55,7 +54,7 @@ export function WrittenPlan({
         ),
       })}
     >
-      <Icon name="file-text" className="text-muted-foreground" />
+      <Icon role="control" name="file-text" className="text-muted-foreground" />
       <Text
         className={cn(
           'text-xs leading-4 font-normal',
@@ -72,8 +71,8 @@ export function WrittenPlan({
           >
             {title}
           </Text>
-          <Chevron
-            textRole="secondary"
+          <Icon
+            role="secondary"
             name="chevron-up"
             className="text-muted-foreground"
           />
@@ -90,7 +89,11 @@ export function WrittenPlan({
         label={title}
       >
         <View className="flex-row items-center gap-1.5 px-4 py-2">
-          <Icon name="file-text" className="text-muted-foreground" />
+          <Icon
+            role="control"
+            name="file-text"
+            className="text-muted-foreground"
+          />
           <Text role={'heading'} className="min-w-0 flex-1">
             {title}
           </Text>

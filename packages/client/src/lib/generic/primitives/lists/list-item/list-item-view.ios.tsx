@@ -1,4 +1,4 @@
-import { Button, HStack, Image, Text } from '@expo/ui/swift-ui';
+import { Button, HStack, Text } from '@expo/ui/swift-ui';
 import {
   accessibilityElement,
   accessibilityAddTraits,
@@ -18,7 +18,8 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { type NativeColors, useNativeTheme } from '../../../native-theme';
-import { iconPixels } from '../../../symbols/icon';
+import { useIconPixels } from '../../../symbols/icon-role';
+import { SwiftUISymbol } from '../../../symbols/swift-ui-symbol';
 import { useWide } from '../../../use-wide/use-wide';
 import { useNavigationFields } from '../../fields/field-layout';
 import { type ListItemProps, listItemName } from '../../fields/field-props';
@@ -96,7 +97,7 @@ function rowSurface(
 }
 
 function RowContent(props: ListItemProps): React.JSX.Element {
-  const iconSize = iconPixels('lg');
+  const iconPixels = useIconPixels('row');
   return (
     <HStack
       spacing={rowSpacing}
@@ -106,7 +107,7 @@ function RowContent(props: ListItemProps): React.JSX.Element {
         rowOpacity(props.disabled),
         alignmentGuide(
           'listRowSeparatorLeading',
-          hasLeadingSlot(props) ? iconSize + rowSpacing : 0,
+          hasLeadingSlot(props) ? iconPixels + rowSpacing : 0,
         ),
       ]}
     >
@@ -137,9 +138,9 @@ function DisclosureIndicator({
   visible: boolean;
 }): React.JSX.Element | null {
   return visible ? (
-    <Image
-      systemName="chevron.right"
-      size={iconPixels('xs')}
+    <SwiftUISymbol
+      name="chevron-right"
+      role="body"
       modifiers={[foregroundStyle({ type: 'hierarchical', style: 'tertiary' })]}
     />
   ) : null;

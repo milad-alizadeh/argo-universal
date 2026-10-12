@@ -32,7 +32,6 @@ export function SessionsFilterMenu({
             variant="ghost"
             className="size-7 sm:size-7"
             icon={'filters'}
-            iconSize="sm"
             iconClassName={'text-muted-foreground'}
             accessibilityLabel="Filter Sessions"
             size="md"

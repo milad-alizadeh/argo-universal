@@ -5,7 +5,7 @@ import { childProcessImport } from './child-process.ts';
 import { crossPackageImport } from './cross-package-import.ts';
 import { databaseClient } from './database-client.ts';
 import { drizzleSchemaBoundary } from './drizzle-schema-boundary.ts';
-import { iconSize } from './icon-size.ts';
+import { iconRole } from './icon-role.ts';
 import { jsonParseCast } from './json-parse-cast.ts';
 import { machineClock } from './machine-clock.ts';
 import { noInternalMock } from './no-internal-mock.ts';
@@ -23,7 +23,7 @@ export default definePlugin({
     'cross-package-import': crossPackageImport,
     'database-client': databaseClient,
     'drizzle-schema-boundary': drizzleSchemaBoundary,
-    'icon-size': iconSize,
+    'icon-role': iconRole,
     'json-parse-cast': jsonParseCast,
     'machine-clock': machineClock,
     'no-internal-mock': noInternalMock,

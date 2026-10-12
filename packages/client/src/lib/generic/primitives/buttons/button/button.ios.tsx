@@ -14,8 +14,8 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps, ReactElement } from 'react';
 import { PlatformColor } from 'react-native';
-import { iconPixels } from '../../../symbols/icon';
 import { iconSymbols } from '../../../symbols/icon-names';
+import { useIconPixels } from '../../../symbols/icon-role';
 import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
 import { nativeModifiers } from './button-ios-modifiers';
 import { createNativeButton, NativeButtonIcon } from './button-native';
@@ -130,7 +130,7 @@ function ButtonSpinner(props: { contentColor?: string }): ReactElement {
 type NativeIconProps = Pick<ButtonDataProps, 'icon'>;
 
 function SystemRedIcon({ icon }: NativeIconProps): ReactElement | null {
-  const pixels = iconPixels('sm');
+  const pixels = useIconPixels('control');
   if (!icon) return null;
   return (
     <RNHostView matchContents>
