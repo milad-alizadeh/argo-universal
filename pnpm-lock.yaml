@@ -1317,6 +1317,9 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../packages/contracts
       '@repo/typescript':
         specifier: workspace:*
         version: link:../tooling/typescript
