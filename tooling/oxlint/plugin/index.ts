@@ -7,6 +7,7 @@ import { databaseClient } from './database-client.ts';
 import { drizzleSchemaBoundary } from './drizzle-schema-boundary.ts';
 import { iconSize } from './icon-size.ts';
 import { jsonParseCast } from './json-parse-cast.ts';
+import { lexicalZone } from './lexical-zone.ts';
 import { machineClock } from './machine-clock.ts';
 import { noInternalMock } from './no-internal-mock.ts';
 import { staticImports } from './static-imports.ts';
@@ -25,6 +26,7 @@ export default definePlugin({
     'drizzle-schema-boundary': drizzleSchemaBoundary,
     'icon-size': iconSize,
     'json-parse-cast': jsonParseCast,
+    'lexical-zone': lexicalZone,
     'machine-clock': machineClock,
     'no-internal-mock': noInternalMock,
     'vendor-name': vendorName,

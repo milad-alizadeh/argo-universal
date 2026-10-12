@@ -37,6 +37,9 @@ const spacingPrompt = 'Match the spacing.';
 const multilineSpacingPrompt =
   'Match the spacing.\nKeep the phone readable.\nUse both themes.';
 const chooseAgentLabel = 'Choose Agent';
+// The web Composer edits with real key events, where Return sends and ⇧Return adds a line.
+const typedLines = (text: string): string =>
+  text.replaceAll('\n', '{Shift>}{Enter}{/Shift}');
 const valueTextAttribute = 'aria-valuetext';
 const chooseModelLabel = 'Choose model';
 const pressedAttribute = 'aria-pressed';
@@ -194,7 +197,7 @@ export const Empty: Story = {
       await settleViewport(width);
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue('');
+      ).toHaveTextContent(/^$/);
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
       await expect(
         canvas.getByRole('button', {
@@ -236,8 +239,8 @@ function typing(width: number): Story {
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
-      await userEvent.type(input, spacingPrompt);
-      await expect(input).toHaveValue(spacingPrompt);
+      await browserUserEvent.type(input, spacingPrompt);
+      await expect(input).toHaveTextContent(spacingPrompt);
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
       await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
       await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
@@ -245,12 +248,28 @@ function typing(width: number): Story {
         text: spacingPrompt,
         images: [],
       });
-      await waitFor(() => expect(input).toHaveValue(''));
+      await waitFor(() => expect(input).toHaveTextContent(/^$/));
     },
   };
 }
 export const TypingPhone = typing(layoutWidths.phone);
 export const TypingWide = typing(layoutWidths.wide);
+
+const sentDraft = fn();
+export const ReturnSendsTheMarkdown: Story = {
+  render: () => <SendingComposer onSend={sentDraft} />,
+  play: async ({ canvas }) => {
+    const input = await canvas.findByRole('textbox', { name: 'Message' });
+    await browserUserEvent.type(input, '{Enter}');
+    await expect(sentDraft).not.toHaveBeenCalled();
+    await browserUserEvent.type(input, '**Match** the _spacing_.{Enter}');
+    await waitFor(() => expect(sentDraft).toHaveBeenCalledOnce());
+    await expect(sentDraft).toHaveBeenCalledWith({
+      text: '**Match** the _spacing_.',
+      images: [],
+    });
+  },
+};
 
 function imageComposer(
   props: React.ComponentProps<typeof Composer>,
@@ -424,8 +443,8 @@ function multiline(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const input = canvas.getByRole('textbox', { name: 'Message' });
-      await userEvent.type(input, multilineSpacingPrompt);
-      await expect(input).toHaveValue(multilineSpacingPrompt);
+      await browserUserEvent.type(input, typedLines(multilineSpacingPrompt));
+      await expect(input.innerText).toBe(multilineSpacingPrompt);
       await expect(prompt).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
       await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
@@ -433,7 +452,7 @@ function multiline(width: number): Story {
         text: multilineSpacingPrompt,
         images: [],
       });
-      await waitFor(() => expect(input).toHaveValue(''));
+      await waitFor(() => expect(input).toHaveTextContent(/^$/));
     },
   };
 }
@@ -480,7 +499,7 @@ export const ImageTooLarge: Story = {
       await waitFor(() =>
         expect(canvas.queryByRole('alert')).not.toBeInTheDocument(),
       );
-      await expect(canvas.getByRole('textbox')).toHaveValue(draft.text);
+      await expect(canvas.getByRole('textbox')).toHaveTextContent(draft.text);
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
     } finally {
       root.unmount();
@@ -496,9 +515,13 @@ function sending(width: number): Story {
       await expect(
         canvas.getByRole('progressbar', { name: 'Sending' }),
       ).toBeVisible();
-      await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
+      await expect(canvas.getByRole('textbox')).toHaveTextContent(
+        spacingPrompt,
+      );
       await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
-      await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
+      await expect(canvas.getByRole('textbox')).toHaveTextContent(
+        spacingPrompt,
+      );
       await expect(
         canvas.getByRole('button', {
           name: width >= 720 ? 'Attach' : attachImagesLabel,
@@ -528,7 +551,9 @@ function disabled(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
-      await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
+      await expect(canvas.getByRole('textbox')).toHaveTextContent(
+        spacingPrompt,
+      );
       await expect(
         canvas.getByRole('button', {
           name: width >= 720 ? 'Attach' : attachImagesLabel,
@@ -1322,19 +1347,19 @@ async function expectSendUnobscured(send: HTMLElement): Promise<void> {
 function editorScrollsAfterTenLines(width: number): Story {
   return {
     render: () => <SendingComposer onSend={fn()} />,
-    play: async ({ canvas, userEvent }) => {
+    play: async ({ canvas }) => {
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
-      const card = input.parentElement?.parentElement;
+      const card = input.parentElement?.parentElement?.parentElement;
       if (!card) throw new Error('Composer card is missing.');
-      await userEvent.type(input, 'Line 1');
+      await browserUserEvent.type(input, 'Line 1');
       const oneLineHeight = input.clientHeight;
-      await userEvent.type(input, linesTwoToTen);
+      await browserUserEvent.type(input, typedLines(linesTwoToTen));
       await waitFor(() => expect(input.scrollHeight).toBe(input.clientHeight));
       await expect(input.clientHeight).toBeGreaterThan(oneLineHeight * 9);
       const height = card.getBoundingClientRect().height;
-      await userEvent.type(input, '\nLine 11\nLine 12');
-      await expect(input).toHaveValue(
+      await browserUserEvent.type(input, typedLines('\nLine 11\nLine 12'));
+      await expect(input.innerText).toBe(
         `Line 1${linesTwoToTen}\nLine 11\nLine 12`,
       );
       await expect(card.getBoundingClientRect().height).toBe(height);

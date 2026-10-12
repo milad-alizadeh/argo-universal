@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { type ReactElement, useState } from 'react';
 import { expect, fn, spyOn, waitFor, within } from 'storybook/test';
+import { userEvent as browserUserEvent } from 'vitest/browser';
 import { SessionColumn } from '#lib/product/session-layout';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { longWrittenPlan } from '../../../../../mocks/feed-paper';
@@ -102,11 +103,11 @@ function opensWrittenPlan(
         body.queryByRole('button', { name: 'Keep planning' }),
       ).not.toBeInTheDocument();
       if (width === layoutWidths.wide) {
-        await userEvent.type(
+        await browserUserEvent.type(
           canvas.getByRole('textbox'),
           'Follow up on this plan.',
         );
-        await expect(canvas.getByRole('textbox')).toHaveValue(
+        await expect(canvas.getByRole('textbox')).toHaveTextContent(
           'Follow up on this plan.',
         );
         await expect(
@@ -202,8 +203,8 @@ function readsLongWrittenPlan(width: number, agent: MockAgent): Story {
         await expect(
           composer.getBoundingClientRect().bottom,
         ).toBeLessThanOrEqual(window.innerHeight);
-        await userEvent.type(composer, 'Keep the last step.');
-        await expect(composer).toHaveValue('Keep the last step.');
+        await browserUserEvent.type(composer, 'Keep the last step.');
+        await expect(composer).toHaveTextContent('Keep the last step.');
       }
       await userEvent.keyboard('{Escape}');
       await waitFor(() =>

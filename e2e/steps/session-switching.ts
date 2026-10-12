@@ -44,5 +44,5 @@ Then(
 );
 
 Then('the Message box is empty', async ({ page }): Promise<void> => {
-  await expect(page.getByRole('textbox', { name: 'Message' })).toHaveValue('');
+  await expect(page.getByRole('textbox', { name: 'Message' })).toHaveText('');
 });

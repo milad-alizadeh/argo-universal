@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { Linking, ScrollView, Text as Span, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
@@ -25,8 +26,7 @@ export interface FeedMarkdownProps {
 
 const MarkdownVariant = createContext<FeedMarkdownProps['variant']>('feed');
 
-const inlineCodeClassName =
-  'rounded-sm bg-foreground/5 px-1.5 py-px type-code text-foreground';
+const inlineCodeClassName = markdownMarkClassNames.code;
 
 function Caret(): React.JSX.Element {
   return (
@@ -77,19 +77,19 @@ function InlineTokens({
         );
       case 'strong':
         return (
-          <Span key={key} className="font-semibold">
+          <Span key={key} className={markdownMarkClassNames.bold}>
             <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
           </Span>
         );
       case 'em':
         return (
-          <Span key={key} className="italic">
+          <Span key={key} className={markdownMarkClassNames.italic}>
             <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
           </Span>
         );
       case 'del':
         return (
-          <Span key={key} className="line-through">
+          <Span key={key} className={markdownMarkClassNames.strikethrough}>
             <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
           </Span>
         );

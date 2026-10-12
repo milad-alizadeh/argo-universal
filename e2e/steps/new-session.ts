@@ -70,7 +70,7 @@ export async function sendPrompt(page: Page, prompt: string): Promise<void> {
   await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/);
-  await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
+  await expect(page.getByRole('textbox', { name: messageLabel })).toHaveText(
     '',
   );
 }
@@ -142,7 +142,7 @@ Then(
 Then(
   'the Composer keeps the prompt {string}',
   async ({ page }, prompt: string): Promise<void> => {
-    await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
+    await expect(page.getByRole('textbox', { name: messageLabel })).toHaveText(
       prompt,
     );
   },

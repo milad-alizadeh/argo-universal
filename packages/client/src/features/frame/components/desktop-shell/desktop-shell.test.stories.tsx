@@ -312,9 +312,9 @@ export const ComposerUsesAvailableWidth: Story = {
       await expect(control.left).toBeGreaterThanOrEqual(content.left);
       await expect(control.right).toBeLessThanOrEqual(content.right);
     }
-    await expect(canvas.getByRole('textbox', { name: 'Message' })).toHaveValue(
-      preservedDraft,
-    );
+    await expect(
+      canvas.getByRole('textbox', { name: 'Message' }),
+    ).toHaveTextContent(preservedDraft);
     await userEvent.click(
       canvas.getByRole('button', { name: closeInspectorLabel }),
     );

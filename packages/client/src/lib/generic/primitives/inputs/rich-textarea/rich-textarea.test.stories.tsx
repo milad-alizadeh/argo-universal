@@ -1,0 +1,111 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { expect, fn, waitFor } from 'storybook/test';
+import { userEvent } from 'vitest/browser';
+import { RichTextareaExample } from '../../../../../../mocks/rich-textarea-mock';
+
+const meta = {
+  title: 'Tests/RichTextarea',
+  component: RichTextareaExample,
+  args: { onChangeText: fn(), onSubmit: fn() },
+} satisfies Meta<typeof RichTextareaExample>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+/*
+ * Lexical edits from real key events, so these stories type through the browser, not simulated events.
+ * Lexical binds its shortcuts to ⌘ on Apple platforms and Ctrl elsewhere.
+ */
+const label = 'Message';
+const modifier = /Mac|iPhone|iPad/.test(navigator.platform)
+  ? 'Meta'
+  : 'Control';
+
+export const Empty: Story = {
+  play: async ({ canvas }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await expect(field).toHaveTextContent(/^$/);
+    await expect(canvas.getByText('Message the Agent…')).toBeVisible();
+  },
+};
+
+// The mark is in what the field sends while its markers are gone from what it shows.
+function typedMark({
+  typed,
+  sent = typed,
+}: {
+  typed: string;
+  sent?: string;
+}): Story {
+  return {
+    play: async ({ canvas, args }) => {
+      const field = canvas.getByRole('textbox', { name: label });
+      await userEvent.type(field, typed);
+      await waitFor(() =>
+        expect(args.onChangeText).toHaveBeenLastCalledWith(sent),
+      );
+      await expect(field).toHaveTextContent(/^Ship it$/);
+    },
+  };
+}
+export const TypedBold = typedMark({ typed: '**Ship** it' });
+export const TypedItalic = typedMark({ typed: '_Ship_ it' });
+export const TypedStrikethrough = typedMark({
+  typed: '~Ship~ it',
+  sent: '~~Ship~~ it',
+});
+export const TypedDoubleTildeStrikethrough = typedMark({
+  typed: '~~Ship~~ it',
+});
+export const TypedInlineCode = typedMark({ typed: '`Ship` it' });
+
+function shortcutMark({ keys, sent }: { keys: string; sent: string }): Story {
+  return {
+    play: async ({ canvas, args }) => {
+      const field = canvas.getByRole('textbox', { name: label });
+      await userEvent.type(field, 'Ship');
+      await userEvent.keyboard(`{${modifier}>}a{/${modifier}}`);
+      await userEvent.keyboard(`{${modifier}>}${keys}{/${modifier}}`);
+      await waitFor(() =>
+        expect(args.onChangeText).toHaveBeenLastCalledWith(sent),
+      );
+      await expect(field).toHaveTextContent(/^Ship$/);
+    },
+  };
+}
+export const ShortcutBold = shortcutMark({ keys: 'b', sent: '**Ship**' });
+export const ShortcutItalic = shortcutMark({ keys: 'i', sent: '_Ship_' });
+export const ShortcutStrikethrough = shortcutMark({
+  keys: '{Shift>}x{/Shift}',
+  sent: '~~Ship~~',
+});
+export const ShortcutInlineCode = shortcutMark({ keys: 'e', sent: '`Ship`' });
+
+export const ReturnSends: Story = {
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await userEvent.type(field, 'Ship it{Enter}');
+    await expect(args.onSubmit).toHaveBeenCalledOnce();
+    await expect(args.onChangeText).toHaveBeenLastCalledWith('Ship it');
+  },
+};
+
+export const ShiftReturnAddsALine: Story = {
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await userEvent.type(field, 'Ship{Shift>}{Enter}{/Shift}it');
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('Ship\nit'),
+    );
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
+
+export const ShowsADraftsMarks: Story = {
+  args: { initialValue: '**Ship** _it_ ~~now~~ `today`' },
+  play: async ({ canvas, args }) => {
+    await expect(
+      canvas.getByRole('textbox', { name: label }),
+    ).toHaveTextContent(/^Ship it now today$/);
+    await expect(args.onChangeText).not.toHaveBeenCalled();
+  },
+};
