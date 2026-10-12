@@ -1,6 +1,5 @@
 import type { SessionConfigSelectOption } from '@repo/contracts';
 import { newSessionCatalogs } from '@repo/mocks/app';
-import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { PortalHost } from '#primitives/overlays/portal/portal';
 import { chooseEffort } from '../../../../../mocks/choose-effort';
 import {
   composerFastModeConfiguration,

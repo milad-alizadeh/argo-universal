@@ -1,3 +1,4 @@
+const answeredElsewhere = 'Already answered on another device';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
@@ -5,6 +6,7 @@ import { View } from 'react-native';
 import { toFeedView } from '#features/feed';
 import { FeedItem } from '#features/feed';
 import { PermissionOutcome } from '#features/feed';
+import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import {
   agentOptionsProps,
@@ -52,12 +54,29 @@ export default meta;
 
 export const Overview = {
   name: 'PermissionRequest',
-  render: (args): React.JSX.Element => {
+  render: function RequestGallery(args): React.JSX.Element {
     const selected = permissionProps({
       mock:
         permissionMocks.find((mock) => mock.agent === args.agent) ??
         permissionMock,
     });
+    if (!useWide())
+      return (
+        <PermissionRequest
+          {...permissionProps({
+            ...args,
+            request: selected.request,
+            input: selected.input,
+            state:
+              args.requestState === 'answered'
+                ? {
+                    kind: 'answered',
+                    reason: answeredElsewhere,
+                  }
+                : { kind: args.requestState },
+          })}
+        />
+      );
     return (
       <View className="w-full items-center py-4">
         <Variations className="max-w-composer!">
@@ -71,7 +90,7 @@ export const Overview = {
                   args.requestState === 'answered'
                     ? {
                         kind: 'answered',
-                        reason: 'Already answered on another device',
+                        reason: answeredElsewhere,
                       }
                     : { kind: args.requestState },
               })}
@@ -99,7 +118,7 @@ export const Overview = {
               {...permissionProps({
                 state: {
                   kind: 'answered',
-                  reason: 'Already answered on another device',
+                  reason: answeredElsewhere,
                 },
               })}
             />

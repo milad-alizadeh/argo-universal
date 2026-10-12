@@ -1,18 +1,15 @@
 import type * as React from 'react';
 import { type ReactElement, type ReactNode, useState } from 'react';
 import { View } from 'react-native';
-import { ButtonGroup } from '#lib/generic/primitives/buttons/button-group/button-group';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { IconButton } from '../../../../lib/generic/primitives/buttons/icon-button/icon-button';
-import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-sheet/bottom-sheet';
-import { Menu } from '../../../../lib/generic/primitives/overlays/menu/menu';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { ButtonGroup } from '#primitives/buttons/button-group/button-group';
+import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+import { Icon } from '#primitives/display/icon/icon';
+import { Text } from '#primitives/display/text/text';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
+import { Menu } from '#primitives/overlays/menu/menu';
+import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
 
 interface SplitButtonChoice<Value extends string> {
   value: Value;

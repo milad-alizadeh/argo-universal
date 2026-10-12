@@ -1,14 +1,20 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
+import { cn } from '#lib/generic/utils';
 import { keepOpen } from '../keep-open';
+import { SheetBody } from './bottom-sheet-body.web';
 import { useSwipeToClose } from './bottom-sheet-swipe.web';
 
 type SurfaceProps = {
   open: boolean;
   onClosed?: () => void;
   dismissible?: boolean;
+  expandable?: boolean;
+  initialSize?: 'compact' | 'expanded';
+  footer?: React.ReactNode;
+  label?: string;
   // A hidden title for a sheet whose content has none of its own.
   title?: React.ReactNode;
   /*
@@ -24,22 +30,34 @@ type SurfaceProps = {
  * Both stay direct children of the portal, so each one finishes its exit animation before it unmounts.
  */
 export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
-  const state = props.open ? 'open' : 'closed';
-  const card = useHiddenWhileClosing(props.open || !props.hiddenWhileClosing);
+  const [expanded, setExpanded] = useState(props.initialSize === 'expanded');
+  const card = useHiddenWhileClosing(isAccessible(props));
   const { onOpenChange } = DialogPrimitive.useRootContext();
-  const close = useCallback(() => {
-    if (props.dismissible !== false) onOpenChange(false);
-  }, [onOpenChange, props.dismissible]);
-  useSwipeToClose(card, close);
+  const close = useCallback(
+    () => closeSheet(props.dismissible, onOpenChange),
+    [onOpenChange, props.dismissible],
+  );
+  const resize = props.expandable ? setExpanded : undefined;
+  useSwipeToClose(card, close, resize);
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay
-        data-state={state}
+        data-state={props.open ? 'open' : 'closed'}
         className="bottom-sheet-overlay absolute inset-0 bg-black/20"
       />
-      <DialogPrimitive.Content ref={card} {...sheetContentProps(props)}>
+      <DialogPrimitive.Content
+        ref={card}
+        {...sheetContentProps(props, expanded)}
+      >
         {props.title}
-        <SheetBody>{props.children}</SheetBody>
+        <SheetBody
+          label={props.label}
+          expanded={expanded}
+          onResize={resize}
+          footer={props.footer}
+        >
+          {props.children}
+        </SheetBody>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   );
@@ -58,42 +76,9 @@ function useHiddenWhileClosing(
   return card;
 }
 
-function SheetBody({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.JSX.Element {
-  const { tallest, onLayout } = useTallestHeight();
-  return (
-    <View style={{ minHeight: tallest }} className="shrink" onLayout={onLayout}>
-      <SheetGrip />
-      <ScrollView>{children}</ScrollView>
-    </View>
-  );
-}
-
-function SheetGrip(): React.JSX.Element {
-  return (
-    <View className="items-center pt-1.5 pb-2">
-      <View className="w-9 h-1.25 rounded-full bg-muted-foreground/40" />
-    </View>
-  );
-}
-
-function useTallestHeight(): {
-  tallest: number;
-  onLayout: React.ComponentProps<typeof View>['onLayout'];
-} {
-  const [tallest, setTallest] = useState(0);
-  const onLayout: React.ComponentProps<typeof View>['onLayout'] = (event) => {
-    const { height } = event.nativeEvent.layout;
-    setTallest((previous) => Math.max(previous, height));
-  };
-  return { tallest, onLayout };
-}
-
 function sheetContentProps(
   props: Pick<SurfaceProps, 'open' | 'onClosed' | 'dismissible'>,
+  expanded: boolean,
 ): React.ComponentProps<typeof DialogPrimitive.Content> & {
   'data-state': string;
   'aria-describedby': undefined;
@@ -104,7 +89,22 @@ function sheetContentProps(
     onCloseAutoFocus: props.onClosed,
     onEscapeKeyDown: keepOpen(props.dismissible),
     onInteractOutside: keepOpen(props.dismissible),
-    className:
-      'bottom-sheet touch-none max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
+    className: cn(
+      'bottom-sheet max-h-[85dvh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
+      expanded && 'h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)]',
+    ),
   };
+}
+
+function closeSheet(
+  dismissible: boolean | undefined,
+  onOpenChange: (open: boolean) => void,
+): void {
+  if (dismissible !== false) onOpenChange(false);
+}
+
+function isAccessible(
+  props: Pick<SurfaceProps, 'open' | 'hiddenWhileClosing'>,
+): boolean {
+  return props.open || !props.hiddenWhileClosing;
 }

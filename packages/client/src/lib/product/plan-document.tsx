@@ -22,8 +22,7 @@ export function PlanDocument({
   const thumbHeight =
     (viewportHeight * viewportHeight) / Math.max(1, contentHeight);
   const markdown = <FeedMarkdown text={content} variant="proposal" />;
-  if (layout === 'sheet')
-    return <View className="px-4 pt-2 pb-4">{markdown}</View>;
+  if (layout === 'sheet') return <View className="pt-2 pb-4">{markdown}</View>;
   return (
     <View
       className={cn(
@@ -35,7 +34,10 @@ export function PlanDocument({
     >
       <ScrollView
         testID={written ? undefined : 'plan-proposal-scroll'}
-        accessibilityLabel={written ? 'Written plan document' : undefined}
+        role="region"
+        accessibilityLabel={
+          written ? 'Written plan document' : 'Plan proposal document'
+        }
         className={
           expanded ? flexibleContentClassName : 'max-h-plan-proposal grow-0'
         }

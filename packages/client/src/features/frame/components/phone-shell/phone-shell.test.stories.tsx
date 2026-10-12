@@ -1,4 +1,3 @@
-import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { createRoot } from 'react-dom/client';
@@ -12,6 +11,7 @@ import {
   ScreenHeader,
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
+import { PortalHost } from '#primitives/overlays/portal/portal';
 import { ScreenHeaderMock } from '../../../../../mocks/screen-header-mock';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';

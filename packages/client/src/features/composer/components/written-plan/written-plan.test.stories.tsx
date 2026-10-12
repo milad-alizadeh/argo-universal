@@ -113,7 +113,11 @@ function opensWrittenPlan(
           body.getByRole('region', { name: writtenPlanRegionName }),
         ).toBeVisible();
       }
-      await userEvent.keyboard('{Escape}');
+      await (width === layoutWidths.phone
+        ? userEvent.click(
+            body.getByRole('button', { name: 'Close written plan' }),
+          )
+        : userEvent.keyboard('{Escape}'));
       await waitFor(() =>
         expect(
           body.queryByRole('region', { name: writtenPlanRegionName }),

@@ -1,10 +1,15 @@
 import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
-import { useContentWide } from '#lib/product/content-layout';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import {
+  ContentWidthProvider,
+  useContentWide,
+} from '#lib/product/content-layout';
+import { Text } from '#primitives/display/text/text';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
+import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
+import { RequestFooter } from './request-footer';
 export { RequestAction } from './request-action';
 
 export type RequestState =
@@ -12,7 +17,10 @@ export type RequestState =
   | { kind: 'submitting' }
   | { kind: 'answered'; reason: string };
 
-interface RequestCardProps extends Pick<ViewProps, 'className' | 'testID'> {
+export interface RequestCardProps extends Pick<
+  ViewProps,
+  'className' | 'testID'
+> {
   state: RequestState;
   error?: string;
   onEnter: () => void;
@@ -23,15 +31,19 @@ interface RequestCardProps extends Pick<ViewProps, 'className' | 'testID'> {
   bodyClassName?: string;
   footerClassName?: string;
   mutedStatus?: boolean;
+  sheetLabel?: string;
 }
 
 export function RequestCard(props: RequestCardProps): ReactNode {
+  const wide = useContentWide();
+  const windowWide = useWide();
   const nativeID = useRequestKeyboard({
     inactive: props.state.kind !== 'open',
-    wide: useContentWide(),
+    wide,
     onEnter: props.onEnter,
     onEscape: props.onEscape,
   });
+  if (props.sheetLabel && !windowWide) return <RequestSheet {...props} />;
   return <RequestContainer {...props} nativeID={nativeID} />;
 }
 
@@ -61,7 +73,7 @@ function RequestContents(props: RequestCardProps): ReactNode {
 }
 
 const cardClassName =
-  'w-full max-w-composer rounded-2xl bg-glass-card native:bg-background shadow-glass-card web:backdrop-blur-glass web:backdrop-saturate-180';
+  'w-full max-w-composer rounded-surface bg-card shadow-card dark:border dark:border-border';
 
 function RequestBody({
   state,
@@ -91,74 +103,24 @@ function RequestError({ error }: Pick<RequestCardProps, 'error'>): ReactNode {
   );
 }
 
-type FooterProps = Pick<
-  RequestCardProps,
-  'state' | 'mutedStatus' | 'actions' | 'footerClassName'
->;
-
-function RequestFooter(props: FooterProps): ReactNode {
+function RequestSheet(props: RequestCardProps): ReactNode {
   return (
-    <View
-      className={cn(
-        'min-h-13 flex-row items-center gap-1 px-2 pt-3 pb-2',
-        props.footerClassName,
-      )}
+    <BottomSheet
+      open
+      onOpenChange={() => {}}
+      dismissible={false}
+      expandable
+      label={props.sheetLabel}
+      footer={
+        <ContentWidthProvider wide={false}>
+          <RequestFooter {...props} />
+        </ContentWidthProvider>
+      }
     >
-      <RequestFooterContents {...props} />
-    </View>
-  );
-}
-
-function RequestFooterContents(props: FooterProps): ReactNode {
-  const wide = useContentWide();
-  return (
-    <>
-      <RequestStatus state={props.state} mutedStatus={props.mutedStatus} />
-      {showActions(props.state, wide) && props.actions}
-    </>
-  );
-}
-
-function showActions(state: RequestState, wide: boolean): boolean {
-  return state.kind !== 'answered' || wide;
-}
-
-type AnsweredStatusProps = {
-  reason: string;
-  muted?: boolean;
-};
-
-function RequestStatus({
-  state,
-  mutedStatus,
-}: Pick<RequestCardProps, 'state' | 'mutedStatus'>): ReactNode {
-  if (state.kind !== 'answered') return null;
-  return <AlreadyAnswered reason={state.reason} muted={mutedStatus} />;
-}
-
-function AlreadyAnswered(props: AnsweredStatusProps): ReactNode {
-  return (
-    <View
-      role="status"
-      className="min-w-0 flex-1 flex-row items-center gap-1.5 px-2"
-    >
-      <Icon
-        name="info"
-        role="body"
-        className="shrink-0 text-muted-foreground"
-      />
-      <AnsweredText {...props} />
-    </View>
-  );
-}
-
-function AnsweredText({ reason, muted }: AnsweredStatusProps): ReactNode {
-  return (
-    <Text
-      role="body"
-      className={cn('min-w-0 flex-1', muted && 'text-muted-foreground')}
-    >
-      {reason}
-    </Text>
+      <ContentWidthProvider wide={false}>
+        <RequestBody {...props} />
+        <RequestError error={props.error} />
+      </ContentWidthProvider>
+    </BottomSheet>
   );
 }

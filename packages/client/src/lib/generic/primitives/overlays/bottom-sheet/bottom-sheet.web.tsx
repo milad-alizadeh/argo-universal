@@ -10,9 +10,13 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
     <BottomSheetRoot {...props}>
       {props.trigger && <BottomSheetTrigger trigger={props.trigger} />}
       <BottomSheetSurface
+        label={props.label}
         open={props.open}
         onClosed={props.onClosed}
         dismissible={props.dismissible}
+        expandable={props.expandable}
+        initialSize={props.initialSize}
+        footer={props.footer}
         title={
           <DialogPrimitive.Title className="sr-only">
             {props.label}

@@ -146,10 +146,8 @@
     { "files": ["packages/client/src/features/requests/components/elicitation-form/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/cognitive-complexity": "off", "sonarjs/no-nested-conditional": "off", "unicorn/prefer-ternary": "off" } },
     // complexity, jsx-a11y/no-autofocus, max-lines, max-lines-per-function, max-statements, unicorn/no-useless-undefined, unicorn/prefer-ternary
     { "files": ["packages/client/src/features/requests/components/permission-request/*"], "rules": { "complexity": "off", "jsx-a11y/no-autofocus": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "unicorn/no-useless-undefined": "off", "unicorn/prefer-ternary": "off" } },
-    // complexity, jsx-a11y/no-autofocus, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/no-nested-conditional, sonarjs/no-unused-vars, unicorn/prefer-ternary
-    { "files": ["packages/client/src/features/requests/components/plan-proposal-card/*"], "rules": { "complexity": "off", "jsx-a11y/no-autofocus": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/cognitive-complexity": "off", "sonarjs/no-nested-conditional": "off", "sonarjs/no-unused-vars": "off", "unicorn/prefer-ternary": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/features/requests/components/plan-proposal-expansion/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
+    // complexity, jsx-a11y/no-autofocus, max-lines, max-lines-per-function, sonarjs/no-unused-vars, unicorn/prefer-ternary
+    { "files": ["packages/client/src/features/requests/components/plan-proposal-card/*"], "rules": { "complexity": "off", "jsx-a11y/no-autofocus": "off", "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-unused-vars": "off", "unicorn/prefer-ternary": "off" } },
     // max-lines-per-function
     { "files": ["packages/client/src/features/requests/components/request-card/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, max-params, max-statements

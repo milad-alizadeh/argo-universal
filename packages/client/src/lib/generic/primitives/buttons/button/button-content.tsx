@@ -18,7 +18,7 @@ export function ContentButton(props: ButtonProps): ReactElement {
   );
 }
 
-type ButtonTextProps = Pick<ButtonProps, 'label'> & {
+type ButtonTextProps = Pick<ButtonProps, 'label' | 'loading'> & {
   labelNumberOfLines?: number;
   labelClassName?: string;
 };
@@ -26,6 +26,7 @@ type ButtonTextProps = Pick<ButtonProps, 'label'> & {
 function ButtonText(props: ButtonTextProps): ReactElement {
   return (
     <Text
+      semanticRole={props.loading ? 'status' : undefined}
       role="control"
       className={props.labelClassName}
       numberOfLines={props.labelNumberOfLines}

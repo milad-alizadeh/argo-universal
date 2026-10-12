@@ -1,4 +1,3 @@
-import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useLayoutEffect } from 'react';
@@ -10,6 +9,7 @@ import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { Composer } from '#features/composer';
 import { PlanProposalRegion } from '#features/requests';
+import { PortalHost } from '#primitives/overlays/portal/portal';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { shortPlanProposal } from '../../../../../mocks/plan-proposal-mock';
 import { layoutWidths } from '../../../../lib/generic/each-layout';

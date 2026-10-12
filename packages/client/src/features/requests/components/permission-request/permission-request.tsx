@@ -6,11 +6,11 @@ import type {
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { Platform, View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { Textarea } from '#lib/generic/primitives/inputs/textarea/textarea';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon/icon';
+import { Text } from '#primitives/display/text/text';
+import { Textarea } from '#primitives/inputs/textarea/textarea';
 import {
   RequestAction,
   RequestCard,
@@ -50,6 +50,7 @@ export function PermissionRequest(
 
   return (
     <RequestCard
+      sheetLabel={request.title}
       state={state}
       error={error}
       onEnter={answers.enter}
@@ -214,10 +215,10 @@ function DenialActions({
   const wide = useContentWide();
   if (!denial) return null;
   return (
-    <>
+    <View className={wide ? 'flex-row gap-1' : 'w-full flex-col-reverse gap-2'}>
       <RequestAction
         disabled={inactive}
-        className={wide ? 'flex-none bg-transparent' : 'flex-1 bg-secondary'}
+        className={wide ? 'flex-none' : undefined}
         onPress={back}
       >
         Back
@@ -225,12 +226,12 @@ function DenialActions({
       <RequestAction
         primary
         disabled={inactive}
-        className={wide ? 'flex-none' : 'flex-1'}
+        className={wide ? 'flex-none' : undefined}
         onPress={deny}
       >
         {label(denial)}
       </RequestAction>
-    </>
+    </View>
   );
 }
 

@@ -33,6 +33,7 @@ export type SystemButtonProps = ButtonDataProps & { appearance?: 'system' };
 export type ContentButtonProps = Omit<ButtonDataProps, 'className' | 'style'> &
   Pick<ComponentProps<typeof Pressable>, 'className' | 'style' | 'ref'> & {
     appearance: 'content';
+    drawing?: 'platform' | 'shared';
     labelClassName?: string;
     labelNumberOfLines?: number;
   };

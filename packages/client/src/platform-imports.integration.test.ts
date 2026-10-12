@@ -6,12 +6,26 @@ import clientPackage from '../package.json' with { type: 'json' };
 const packageRoot = join(import.meta.dirname, '..');
 const platformSuffix = /\.(?:ios|android|web|native)\.tsx?$/;
 
-const aliasFolders = Object.entries(clientPackage.imports).map(
-  ([alias, target]) => ({
-    prefix: alias.slice(0, alias.indexOf('*')),
-    folder: target.slice(0, target.indexOf('*')).replace(/^\.\//, ''),
-  }),
+const aliasFolders = Object.entries(clientPackage.imports).flatMap(
+  ([alias, target]) =>
+    fixedAliasFolder(
+      alias,
+      typeof target === 'string' ? target : target.default,
+    ),
 );
+
+function fixedAliasFolder(
+  alias: string,
+  target: string,
+): { prefix: string; folder: string }[] {
+  if (!/\.tsx?$/.test(target)) return [];
+  return [
+    {
+      prefix: alias.slice(0, alias.indexOf('*')),
+      folder: target.slice(0, target.indexOf('*')).replace(/^\.\//, ''),
+    },
+  ];
+}
 
 function listFiles(directory: string): string[] {
   return readdirSync(join(packageRoot, directory), { recursive: true })
@@ -33,7 +47,7 @@ const forbiddenSpecifiers = new Set(
   ),
 );
 
-it('imports each platform file by relative path, so Metro can pick the platform file', () => {
+it('keeps fixed-extension aliases away from platform drawings', () => {
   expect(platformFiles.length).toBeGreaterThan(0);
   expect(forbiddenSpecifiers.size).toBeGreaterThan(0);
 
@@ -52,6 +66,6 @@ it('imports each platform file by relative path, so Metro can pick the platform 
 
   expect(
     hits,
-    'Import platform files by relative path: an alias resolves to the base file, so iOS and Android ship it.',
+    'Use relative paths or the extensionless #primitives alias for platform drawings.',
   ).toEqual([]);
 });

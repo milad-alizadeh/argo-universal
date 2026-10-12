@@ -1,6 +1,6 @@
 import { cva } from 'class-variance-authority';
 import { cn } from '#lib/generic/utils';
-import type { ButtonProps } from './button-props';
+import type { ButtonProps, ContentButtonProps } from './button-props';
 
 const buttonClasses = cva(
   'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none web:whitespace-nowrap web:outline-none web:transition-all web:focus-visible:border-ring web:focus-visible:ring-[3px] web:focus-visible:ring-ring/50 disabled:pointer-events-none',
@@ -55,7 +55,7 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
 export const nativeLabelClass = 'ios:text-nav-action ios:font-medium';
 
 const textClasses = cva(
-  `type-control ${nativeLabelClass} web:pointer-events-none web:transition-colors`,
+  'type-control web:pointer-events-none web:transition-colors',
   {
     variants: {
       variant: {
@@ -77,13 +77,16 @@ const textClasses = cva(
 type ButtonClassProps = Pick<
   ButtonProps,
   'variant' | 'size' | 'role' | 'disabled' | 'fullWidth' | 'className'
->;
+> &
+  Pick<ContentButtonProps, 'drawing'>;
 
 export function contentButtonClass(props: ButtonClassProps): string {
-  const { className, fullWidth, ...variants } = props;
+  const { className, fullWidth, drawing, ...variants } = props;
   return cn(
     buttonClasses({ ...variants, fullWidth: fullWidth === true }),
-    nativeClasses({ variant: props.variant, disabled: props.disabled }),
+    drawing === 'shared'
+      ? 'ios:min-h-11 android:min-h-12'
+      : nativeClasses({ variant: props.variant, disabled: props.disabled }),
     destructiveButtonClass(props),
     className,
   );
@@ -110,15 +113,16 @@ function destructiveButtonClass(
 }
 
 export function contentTextClass(
-  props: Pick<ButtonProps, 'role' | 'variant'>,
+  props: Pick<ButtonProps, 'role' | 'variant'> &
+    Pick<ContentButtonProps, 'drawing'>,
 ): string {
-  const filledDestructive =
-    props.role === 'destructive' && isFilledVariant(props.variant);
+  const filledDestructive = isFilledDestructive(props);
   return cn(
     textClasses({
       variant: props.variant,
       destructive: props.role === 'destructive',
     }),
+    props.drawing !== 'shared' && nativeLabelClass,
     filledDestructive && 'text-destructive-foreground',
   );
 }
@@ -140,4 +144,10 @@ export function contentActionClass(
 
 function isFilledVariant(variant: ButtonProps['variant']): boolean {
   return variant === 'default';
+}
+
+function isFilledDestructive(
+  props: Pick<ButtonProps, 'role' | 'variant'>,
+): boolean {
+  return props.role === 'destructive' && isFilledVariant(props.variant);
 }

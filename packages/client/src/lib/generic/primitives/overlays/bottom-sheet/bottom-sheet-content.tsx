@@ -5,7 +5,7 @@ import type { BottomSheetProps } from './bottom-sheet.types';
 
 type SheetContentProps = Pick<
   BottomSheetProps,
-  'children' | 'label' | 'onOpenChange' | 'fit' | 'dismissible'
+  'children' | 'label' | 'onOpenChange' | 'fit' | 'dismissible' | 'footer'
 >;
 
 export function BottomSheetContent(
@@ -20,9 +20,15 @@ export function BottomSheetContent(
       )}
       {...sheetAccessibility(props)}
     >
-      <ScrollView keyboardShouldPersistTaps="handled">
+      <ScrollView
+        className={cn('shrink min-h-0', !props.fit && 'flex-1')}
+        keyboardShouldPersistTaps="handled"
+        role="region"
+        accessibilityLabel={documentLabel(props.label)}
+      >
         {props.children}
       </ScrollView>
+      {props.footer}
     </View>
   );
 }
@@ -38,4 +44,8 @@ function sheetAccessibility(
       if (props.dismissible !== false) props.onOpenChange(false);
     },
   };
+}
+
+function documentLabel(label: string | undefined): string {
+  return `${label ?? 'Sheet'} document`;
 }
