@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { cn } from '#lib/generic/utils';
 import { useWide } from '../use-wide';
+import { useInListItem } from './list-item-accessory';
 import {
   Select,
   SelectContent,
@@ -66,14 +67,17 @@ function SelectMenuValue<Value extends string>(
 function SelectMenuTrigger<Value extends string>(
   props: SelectMenuProps<Value>,
 ): ReactElement {
+  const inListItem = useInListItem();
+  // A ListItem's accessory is plain unless it asks otherwise.
+  const variant = props.variant ?? (inListItem ? 'plain' : 'default');
   return (
     <SelectTrigger
       accessibilityLabel={props.accessibilityLabel}
       disabled={props.disabled}
-      variant={props.variant}
-      className={selectMenuClassName(props)}
+      variant={variant}
+      className={selectMenuClassName({ invalid: props.invalid, variant })}
     >
-      <SelectMenuValue {...props} />
+      <SelectMenuValue {...props} variant={variant} />
     </SelectTrigger>
   );
 }
