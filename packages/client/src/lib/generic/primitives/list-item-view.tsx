@@ -62,19 +62,24 @@ function rowClasses(props: ListItemProps, navigation: boolean): string {
   );
 }
 
+// The row's accessibilityLabel already names the title and value, so only those are hidden; the accessory stays reachable.
 function ListItemContent(props: ListItemProps): React.JSX.Element {
   return (
     <View
-      aria-hidden
       className={cn(
         'flex-1 flex-row items-center gap-3 wide:gap-2',
         props.disabled && 'opacity-65',
       )}
     >
-      <RowIcon icon={props.icon} />
-      <Text role="body" className="min-w-0 flex-1">
-        {props.title}
-      </Text>
+      <View
+        aria-hidden
+        className="min-w-0 flex-1 flex-row items-center gap-3 wide:gap-2"
+      >
+        <RowIcon icon={props.icon} />
+        <Text role="body" className="min-w-0 flex-1">
+          {props.title}
+        </Text>
+      </View>
       <ListItemTrailing {...props} />
     </View>
   );
@@ -140,7 +145,7 @@ function RowValue({
 }: Pick<ListItemProps, 'value'>): React.JSX.Element | null {
   if (value === undefined) return null;
   return (
-    <Text role="body" className="text-muted-foreground shrink">
+    <Text aria-hidden role="body" className="text-muted-foreground shrink">
       {value}
     </Text>
   );
