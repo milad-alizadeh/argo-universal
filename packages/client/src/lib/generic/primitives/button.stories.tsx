@@ -42,6 +42,20 @@ const buttons: { state: string; props: ButtonProps }[] = [
   },
 ];
 
+// Each row draws the system button beside the Argo-drawn one, which must look the same.
+const pairs: { state: string; props: ButtonProps }[] = [
+  { state: 'Default', props: { label: 'Save' } },
+  { state: 'Secondary', props: { label: 'Save', variant: 'secondary' } },
+  { state: 'Outlined', props: { label: 'Save', variant: 'outline' } },
+  { state: 'Text', props: { label: 'Save', variant: 'ghost' } },
+  {
+    state: 'Destructive',
+    props: { label: 'Remove', role: 'destructive', variant: 'default' },
+  },
+  { state: 'Disabled', props: { label: 'Save', disabled: true } },
+  { state: 'Loading', props: { label: 'Save', loading: true } },
+];
+
 const meta = { title: 'Design System/Primitives/Button' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -54,6 +68,14 @@ export const Variations: Story = {
         <Variation key={state} label={state}>
           <View className="flex-row">
             <Button {...props} />
+          </View>
+        </Variation>
+      ))}
+      {pairs.map(({ state, props }) => (
+        <Variation key={state} label={`${state}: system, then Argo content`}>
+          <View className="flex-row items-center gap-3">
+            <Button {...props} />
+            <Button {...props} appearance="content" />
           </View>
         </Variation>
       ))}
