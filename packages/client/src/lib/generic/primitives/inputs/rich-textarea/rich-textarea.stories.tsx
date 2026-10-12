@@ -9,27 +9,24 @@ const longDraft = Array.from(
 ).join('\n');
 
 const examples = [
-  { label: 'Empty', value: '', editable: true },
-  { label: 'Filled', value: 'Match the **spacing**.', editable: true },
+  { label: 'Empty', value: '' },
   {
     label: 'Three lines',
     value: 'Match the spacing.\nKeep the phone readable.\nUse both themes.',
-    editable: true,
   },
-  { label: 'Read-only', value: 'Match the spacing.', editable: false },
-  { label: 'Long draft at max height', value: longDraft, editable: true },
+  { label: 'Long draft at max height', value: longDraft },
 ];
 
-type ExampleProps = { initialValue: string; editable: boolean };
+type ExampleProps = { initialValue: string };
 
-function Example({ initialValue, editable }: ExampleProps): React.JSX.Element {
+function Example({ initialValue }: ExampleProps): React.JSX.Element {
   const [value, setValue] = useState(initialValue);
-  const field = { value, onChangeText: setValue, editable };
   return (
     <RichTextarea
       accessibilityLabel="Message"
       placeholder="Message the Agent…"
-      {...field}
+      value={value}
+      onChangeText={setValue}
     />
   );
 }
@@ -44,9 +41,9 @@ export const Variations: Story = {
   name: 'RichTextarea',
   render: () => (
     <VariationList>
-      {examples.map(({ label, value, editable }) => (
+      {examples.map(({ label, value }) => (
         <Variation key={label} label={label}>
-          <Example initialValue={value} editable={editable} />
+          <Example initialValue={value} />
         </Variation>
       ))}
     </VariationList>

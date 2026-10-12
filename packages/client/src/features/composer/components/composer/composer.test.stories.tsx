@@ -1306,11 +1306,18 @@ async function expectHeldAgentList(): Promise<void> {
 }
 
 // On the web the field grows with its draft to 10 lines, then scrolls inside the card (#539).
-const draftLines = (from: number, to: number): string =>
-  Array.from(
-    { length: to - from + 1 },
-    (_, index) => `Line ${from + index}`,
-  ).join('\n');
+const linesTwoToTen =
+  '\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10';
+
+// Nothing covers Send: the topmost element at its centre is the button or inside it.
+async function expectSendUnobscured(send: HTMLElement): Promise<void> {
+  const bounds = send.getBoundingClientRect();
+  const top = document.elementFromPoint(
+    bounds.left + bounds.width / 2,
+    bounds.top + bounds.height / 2,
+  );
+  await expect(top !== null && send.contains(top)).toBe(true);
+}
 
 function editorScrollsAfterTenLines(width: number): Story {
   return {
@@ -1320,17 +1327,19 @@ function editorScrollsAfterTenLines(width: number): Story {
       const input = await canvas.findByRole('textbox', { name: 'Message' });
       const card = input.parentElement?.parentElement;
       if (!card) throw new Error('Composer card is missing.');
-      await userEvent.type(input, draftLines(1, 1));
+      await userEvent.type(input, 'Line 1');
       const oneLineHeight = input.clientHeight;
-      await userEvent.type(input, `\n${draftLines(2, 10)}`);
+      await userEvent.type(input, linesTwoToTen);
       await waitFor(() => expect(input.scrollHeight).toBe(input.clientHeight));
       await expect(input.clientHeight).toBeGreaterThan(oneLineHeight * 9);
       const height = card.getBoundingClientRect().height;
-      await userEvent.type(input, `\n${draftLines(11, 12)}`);
-      await expect(input).toHaveValue(draftLines(1, 12));
+      await userEvent.type(input, '\nLine 11\nLine 12');
+      await expect(input).toHaveValue(
+        `Line 1${linesTwoToTen}\nLine 11\nLine 12`,
+      );
       await expect(card.getBoundingClientRect().height).toBe(height);
       await expect(input.scrollHeight).toBeGreaterThan(input.clientHeight);
-      await expect(canvas.getByRole('button', { name: 'Send' })).toBeVisible();
+      await expectSendUnobscured(canvas.getByRole('button', { name: 'Send' }));
       await browserUserEvent.wheel(input, { delta: { y: 200 } });
       await waitFor(() => expect(input.scrollTop).toBeGreaterThan(0));
     },
