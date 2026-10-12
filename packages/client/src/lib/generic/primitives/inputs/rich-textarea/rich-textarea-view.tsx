@@ -15,6 +15,7 @@ import type * as React from 'react';
 import { useEffect } from 'react';
 import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
+import { FormatBarPlugin } from './rich-textarea-format-bar-plugin';
 import {
   registerBlockShortcuts,
   registerMarkShortcuts,
@@ -116,6 +117,7 @@ function MessageField({
         ErrorBoundary={LexicalErrorBoundary}
       />
       <LinkPlugins />
+      <FormatBarPlugin />
     </div>
   );
 }
