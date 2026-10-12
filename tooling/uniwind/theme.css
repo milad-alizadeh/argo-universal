@@ -183,7 +183,7 @@
       --color-shell-chrome: oklch(94% 0 0);
       /* Glass: the sidebar panel, its darker tray, and a card on glass. */
       --color-glass: #ffffff80;
-      --color-glass-muted: #f2f2f2b3;
+      --color-glass-muted: #e5e5e5b3;
       --color-glass-card: #ffffffe6;
       /* A selected row or rail tile: a flat tint, no border or shadow. */
       --color-selected: #0000000a;
