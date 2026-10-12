@@ -32,9 +32,19 @@ _Avoid_: Binding, socket
 A work item in a Project's tracker, such as Linear or GitHub.
 _Avoid_: Ticket, task
 
-**Integration**:
-A Project's link to an outside service, such as GitHub.
-_Avoid_: Connection, account link
+## Plugins
+
+**Plugin**:
+A package the Server runs that connects Argo to an outside service or adds to its UI through contribution points, such as Linear's issue tracker. Built-in Plugins ship with Argo.
+_Avoid_: Integration, extension, add-on, mod
+
+**Contribution point**:
+A named place where a Plugin adds to Argo, with a fixed shape that Argo draws: an Account, an issue tracker, a sidebar item, an Inspector widget.
+_Avoid_: Slot, hook, extension point
+
+**Account**:
+A Plugin's sign-in to its outside service, kept on the Server and used by every Project there.
+_Avoid_: Login, credential, connection
 
 ## Agents and Sessions
 
