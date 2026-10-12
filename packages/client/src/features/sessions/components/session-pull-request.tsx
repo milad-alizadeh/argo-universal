@@ -6,10 +6,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#lib/generic/primitives/dropdown-menu';
-import { Pressable } from '#lib/generic/primitives/pressable';
+import { MenuButton } from '#lib/generic/primitives/menu-button';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
-import { Chevron } from '../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import type { PullRequestChecksProps } from './pull-request-checks';
 import {
@@ -80,20 +79,7 @@ export function MorePullRequests({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`+${more} PR`}
-          className="h-5 flex-row items-center gap-1 rounded-sm px-1 web:outline-none web:hover:bg-selected web:focus-visible:bg-selected"
-        >
-          <Text role="secondary" className="text-muted-foreground">
-            +{more} PR
-          </Text>
-          <Chevron
-            textRole="secondary"
-            name="chevron-down"
-            className="text-muted-foreground"
-          />
-        </Pressable>
+        <MenuButton label={`+${more} PR`} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         {pullRequests.map((pullRequest) => (
