@@ -27,7 +27,7 @@ export function RestRow(
     <Animated.View
       aria-hidden={props.open}
       accessibilityElementsHidden={props.open}
-      {...{ inert: props.open }}
+      inert={props.open}
       className="min-w-0 flex-1 flex-row items-center gap-1"
       style={useRestStyle(props.progress)}
     >
@@ -63,7 +63,7 @@ export function OpenField(
       aria-hidden={!props.open}
       accessibilityElementsHidden={!props.open}
       importantForAccessibility={props.open ? 'auto' : 'no-hide-descendants'}
-      {...{ inert: !props.open }}
+      inert={!props.open}
       className="absolute inset-0"
     >
       <Animated.View
