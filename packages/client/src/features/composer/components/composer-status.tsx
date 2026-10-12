@@ -54,7 +54,8 @@ export interface ComposerStatusProps {
   usage?: {
     limits: { label: string; usedPercent: number; resets: string }[];
   };
-  context?: ContextUsage & { onCompact: () => void };
+  // Without `onCompact` the popover offers no Compact, while the Server has no way to compact.
+  context?: ContextUsage & { onCompact?: () => void };
 }
 
 function Meter({
@@ -369,18 +370,10 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }): React.JSX.Element {
           stepIndicator = <Icon name="check" className={mutedTextClassName} />;
         } else {
           stepIndicator = (
-            <View style={iconSizeStyle('sm')}>
-              <Svg width="100%" height="100%" viewBox="0 0 32 32">
-                <ThemedCircle
-                  cx={16}
-                  cy={16}
-                  r={14}
-                  fill="none"
-                  strokeClassName="bg-ring wide:bg-muted-foreground"
-                  strokeWidth={4}
-                />
-              </Svg>
-            </View>
+            <Icon
+              name="pending"
+              className="text-ring wide:text-muted-foreground"
+            />
           );
         }
         return (
@@ -656,27 +649,29 @@ export function ComposerStatusControls({
                   </View>
                 ))}
               </View>
-              <View className="px-0 gap-3 flex-row items-center">
-                <Text
-                  selectable={false}
-                  role="secondary"
-                  className="select-none flex-1"
-                >
-                  Compact before the next task.
-                </Text>
-                <Button
-                  variant="outline"
-                  className="web:sm:min-h-0 h-7 sm:h-7 py-0 rounded-md gap-1.5 px-2.5 has-[>[data-icon]]:px-2.5"
-                  onPress={() => {
-                    context.onCompact();
-                    close();
-                  }}
-                  label={'Compact'}
-                  icon={'compaction'}
-                  appearance="content"
-                  labelClassName={'select-none type-control'}
-                />
-              </View>
+              {context.onCompact && (
+                <View className="px-0 gap-3 flex-row items-center">
+                  <Text
+                    selectable={false}
+                    role="secondary"
+                    className="select-none flex-1"
+                  >
+                    Compact before the next task.
+                  </Text>
+                  <Button
+                    variant="outline"
+                    className="web:sm:min-h-0 h-7 sm:h-7 py-0 rounded-md gap-1.5 px-2.5 has-[>[data-icon]]:px-2.5"
+                    onPress={() => {
+                      context.onCompact?.();
+                      close();
+                    }}
+                    label={'Compact'}
+                    icon={'compaction'}
+                    appearance="content"
+                    labelClassName={'select-none type-control'}
+                  />
+                </View>
+              )}
             </View>
           )}
         </ComposerPopover>

@@ -96,7 +96,7 @@ function SettingRow({
       className={contentActionClass({
         variant: 'ghost',
         className:
-          'h-auto sm:h-auto min-h-10 px-2 py-2 justify-start rounded-sm',
+          'h-auto sm:h-auto min-h-10 px-2 py-2 justify-start rounded-sm wide:rounded-xl',
       })}
     >
       <Text className="flex-1 font-normal">{name}</Text>

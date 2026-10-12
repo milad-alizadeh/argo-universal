@@ -114,7 +114,7 @@ export function ComposerPopover({
         accessibilityLabel={label}
         onClosed={closed}
         style={{ width }}
-        className="composer-popover p-0 rounded-lg overflow-hidden"
+        className="composer-popover p-0 overflow-hidden"
       >
         <PopoverPanel disabled={!!trigger.props.disabled} close={close}>
           {children}
