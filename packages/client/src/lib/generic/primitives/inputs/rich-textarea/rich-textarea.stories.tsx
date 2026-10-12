@@ -11,6 +11,11 @@ const longDraft = Array.from(
 const examples = [
   { label: 'Empty', value: '', editable: true },
   { label: 'Filled', value: 'Match the **spacing**.', editable: true },
+  {
+    label: 'Three lines',
+    value: 'Match the spacing.\nKeep the phone readable.\nUse both themes.',
+    editable: true,
+  },
   { label: 'Read-only', value: 'Match the spacing.', editable: false },
   { label: 'Long draft at max height', value: longDraft, editable: true },
 ];
