@@ -51,3 +51,9 @@ export function applyCatalogSync(
     refreshing: refresh.pending || syncing,
   };
 }
+
+// The catalog could not load, or its last sync failed and the list shows what the Server saved.
+export function catalogFailed({ load }: CatalogSync): boolean {
+  if (load.status === 'loaded') return load.catalog.status !== 'fresh';
+  return load.status === 'failed';
+}

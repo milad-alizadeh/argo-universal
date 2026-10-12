@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, spyOn, waitFor } from 'storybook/test';
-import { CatalogRow } from './catalog-row';
+import { expect, fn, spyOn, waitFor } from 'storybook/test';
+import type { AgentRowEntry } from '../state/agent-status';
+import { AgentListItem } from './agent-list-item';
 import {
   base64Icon,
   encodedIcon,
@@ -9,11 +10,19 @@ import {
   malformedIconXml,
 } from './registry-icons.mocks';
 
+const agent: AgentRowEntry = {
+  id: iconAgent.id,
+  name: iconAgent.entry.name,
+  description: iconAgent.entry.description,
+  icon: iconAgent.entry.icon,
+  status: 'not-installed',
+};
+
 const meta = {
-  title: 'Tests/CatalogRow',
-  component: CatalogRow,
-  args: { agent: iconAgent },
-} satisfies Meta<typeof CatalogRow>;
+  title: 'Tests/AgentListItem',
+  component: AgentListItem,
+  args: { agent, onOpen: fn() },
+} satisfies Meta<typeof AgentListItem>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 interface IconCase {
@@ -31,7 +40,7 @@ function iconCase(options: IconCase): Story {
     ...options,
   };
   return {
-    args: { agent: { ...iconAgent, entry: { ...iconAgent.entry, icon: uri } } },
+    args: { agent: { ...agent, icon: uri } },
     beforeEach: (): (() => void) => {
       const port = spyOn(globalThis, 'fetch').mockResolvedValue(
         new Response(response, { status }),
@@ -39,8 +48,8 @@ function iconCase(options: IconCase): Story {
       return (): void => port.mockRestore();
     },
     play: async ({ canvas }): Promise<void> => {
-      const present = `${iconAgent.entry.name} icon${unavailable ? ' unavailable' : ''}`;
-      const absent = `${iconAgent.entry.name} icon${unavailable ? '' : ' unavailable'}`;
+      const present = `${agent.name} icon${unavailable ? ' unavailable' : ''}`;
+      const absent = `${agent.name} icon${unavailable ? '' : ' unavailable'}`;
       await waitFor(() =>
         expect(canvas.getByLabelText(present, { exact: true })).toBeVisible(),
       );
@@ -77,3 +86,16 @@ export const MalformedUrlXml: Story = iconCase({
   response: malformedIconXml,
   unavailable: true,
 });
+
+// Install, Update and Sign in live on the Agent's page; a row only opens it, naming its description and status.
+export const NamesItsStatusAndCarriesNoAction: Story = {
+  args: { agent: { ...agent, status: 'update' } },
+  play: async ({ args, canvas, userEvent }) => {
+    const row = canvas.getByRole('link', {
+      name: `${agent.name}, ${agent.description}, Update available`,
+    });
+    await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
+    await userEvent.click(row);
+    await expect(args.onOpen).toHaveBeenCalledWith(agent.id);
+  },
+};

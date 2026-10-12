@@ -1,138 +1,93 @@
-import { LegendList } from '@legendapp/list/react-native';
 import type { AgentsCatalogOutput } from '@repo/contracts';
 import type * as React from 'react';
-import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/text';
-import { Button } from '../../../lib/generic/primitives/button';
-import { Icon } from '../../../lib/generic/symbols/icon';
-import { CatalogRow } from './catalog-row';
+import { FieldList, type FieldListSection } from '#lib/product/field-list';
+import {
+  offeredAgents,
+  platformName,
+  withRegistryEntries,
+} from '../state/agent-list';
+import {
+  type AgentRowEntry,
+  type AgentsFilter,
+  filterAgents,
+} from '../state/agent-status';
+import type { CatalogLoad } from '../state/catalog-sync';
+import { agentRows } from './agent-list-item';
+import { catalogEmptySection, catalogLoadingSection } from './catalog-states';
 
-export type CatalogRefreshProps = {
-  refreshing: boolean;
-  onRefresh: () => void;
-};
-type CatalogProps = CatalogRefreshProps & {
-  catalog: AgentsCatalogOutput;
+export type AgentCatalogProps = {
+  catalog: CatalogLoad;
+  installed: readonly AgentRowEntry[];
+  filter: AgentsFilter;
   search: string;
+  onOpenAgent: (agentId: string) => void;
 };
-type CatalogStatusProps = Pick<CatalogProps, 'catalog'>;
-type CatalogMessageProps = { title: string; children: React.ReactNode };
-type CatalogSearchProps = Pick<CatalogProps, 'search'>;
-const catalogNoticeClassName =
-  'flex-row items-start gap-2.5 rounded-lg bg-warning/8 p-3';
+type LoadedProps = AgentCatalogProps & { saved: AgentsCatalogOutput };
+type AgentGroup = { title: string; agents: AgentRowEntry[] };
 
-export function AgentCatalog(props: CatalogProps): React.JSX.Element {
+export const agentsCatalogTestId = 'agents-catalog';
+
+/*
+ * The installed Agents, then the ACP Registry's other Agents for this Server, as grouped rows.
+ * The registry can list hundreds of Agents, so a FieldList mounts only the rows in view.
+ */
+export function AgentCatalog(props: AgentCatalogProps): React.JSX.Element {
   return (
-    <View className="flex-1 min-h-0">
-      <CatalogStatus catalog={props.catalog} />
-      <CatalogEntries {...props} />
-    </View>
+    <FieldList testID={agentsCatalogTestId} sections={catalogSections(props)} />
   );
 }
 
-function CatalogEntries(props: CatalogProps): React.JSX.Element {
-  return (
-    <LegendList
-      role="list"
-      data={props.catalog.agents}
-      style={{ flex: 1 }}
-      estimatedItemSize={120}
-      recycleItems={false}
-      keyExtractor={({ id }): string => id}
-      renderItem={({ item }): React.JSX.Element => <CatalogRow agent={item} />}
-      ListEmptyComponent={<CatalogEmpty {...props} />}
-    />
-  );
+/*
+ * Until the registry's Agents arrive, or while a failed load waits to retry, the installed
+ * Agents show above a loading row; a toast says why a load failed.
+ */
+function catalogSections(props: AgentCatalogProps): FieldListSection[] {
+  const { catalog } = props;
+  if (catalog.status !== 'loaded') return [loadingSection(props)];
+  if (catalog.catalog.status === 'unavailable')
+    return [
+      loadingSection(props, platformName(catalog.catalog.serverPlatform)),
+    ];
+  return loadedSections({ ...props, saved: catalog.catalog });
 }
 
-function CatalogEmpty(props: CatalogProps): React.JSX.Element {
-  if (props.catalog.status === 'unavailable')
-    return <CatalogUnavailable {...props} />;
-  return <CatalogNoMatches search={props.search} />;
-}
+const loadingSection = (
+  props: AgentCatalogProps,
+  platform?: string,
+): FieldListSection =>
+  catalogLoadingSection({
+    ...props,
+    ...(platform ? { platform } : {}),
+    installed: filterAgents(props.installed, props),
+  });
 
-function CatalogNoMatches({ search }: CatalogSearchProps): React.JSX.Element {
-  const title = search ? `No Agents match “${search}”` : 'No Agents found.';
-  return (
-    <View className="px-4 py-12">
-      <CatalogMessage title={title}>
-        {search && (
-          <Text role="secondary" className="text-center">
-            Check the spelling.
-          </Text>
-        )}
-      </CatalogMessage>
-    </View>
-  );
-}
+const registryGroups = (props: LoadedProps, platform: string): AgentGroup[] => [
+  {
+    title: 'Installed',
+    agents: withRegistryEntries(props.installed, props.saved),
+  },
+  {
+    title: `Available for ${platform}`,
+    agents: offeredAgents(props.installed, props.saved),
+  },
+];
 
-function CatalogUnavailable({
-  catalog,
-  ...refresh
-}: CatalogStatusProps & CatalogRefreshProps): React.JSX.Element {
-  return (
-    <View role="alert" className="items-center gap-3 px-4 py-10">
-      <CatalogUnavailableMessage catalog={catalog} />
-      <CatalogRetry {...refresh} />
-    </View>
-  );
-}
+// Installed, then Available for the Server's platform, leaving out a group the filters empty.
+const agentGroups = (props: LoadedProps, platform: string): AgentGroup[] =>
+  registryGroups(props, platform)
+    .map(({ title, agents }) => ({
+      title,
+      agents: filterAgents(agents, props),
+    }))
+    .filter(({ agents }) => agents.length > 0);
 
-function CatalogUnavailableMessage({
-  catalog,
-}: CatalogStatusProps): React.JSX.Element {
-  return (
-    <CatalogMessage title="Couldn’t load the registry">
-      <Text role="secondary" className="text-center">
-        No saved catalog yet. Try again.
-      </Text>
-      <Text role="secondary" className="text-center">
-        {catalog.error}
-      </Text>
-    </CatalogMessage>
-  );
-}
-
-function CatalogMessage(props: CatalogMessageProps): React.JSX.Element {
-  return (
-    <View className="items-center gap-1">
-      <Text role={'heading'} className="text-center">
-        {props.title}
-      </Text>
-      {props.children}
-    </View>
-  );
-}
-
-function CatalogRetry(props: CatalogRefreshProps): React.JSX.Element {
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onPress={props.onRefresh}
-      disabled={props.refreshing}
-      label={'Retry'}
-    />
-  );
-}
-
-function CatalogStatus({ catalog }: CatalogStatusProps): React.JSX.Element {
-  return (
-    <View className="gap-4 pb-4">
-      <Text role="secondary">For this Server · {catalog.serverPlatform}</Text>
-      {catalog.status === 'stale' && <CatalogNotice catalog={catalog} />}
-    </View>
-  );
-}
-
-function CatalogNotice({ catalog }: CatalogStatusProps): React.JSX.Element {
-  return (
-    <View role="alert" className={catalogNoticeClassName}>
-      <Icon name="warning" className="text-warning" />
-      <View className="min-w-0 flex-1 gap-0.5">
-        <Text role={'heading'}>Refresh failed · showing saved catalog</Text>
-        <Text role="secondary">{catalog.error}</Text>
-      </View>
-    </View>
-  );
+function loadedSections(props: LoadedProps): FieldListSection[] {
+  const platform = platformName(props.saved.serverPlatform);
+  const groups = agentGroups(props, platform);
+  if (groups.length === 0)
+    return [catalogEmptySection({ platform, search: props.search })];
+  return groups.map(({ title, agents }) => ({
+    title,
+    rows: agentRows(agents, props.onOpenAgent),
+  }));
 }

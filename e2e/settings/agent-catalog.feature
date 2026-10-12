@@ -11,11 +11,11 @@ Feature: Agent catalog
       | wide   |
       | phone  |
 
-  Scenario Outline: Keep the last-good catalog after an unavailable refresh
+  Scenario Outline: Keep the last-good catalog after an unavailable sync
     Given a <layout> Frame
     When I browse available Agents
     And the registry becomes <failure>
-    And I refresh the Agent catalog
+    And I open the Agents page again
     Then the catalog keeps the last-good Agents with an explicit error
 
     Examples:
