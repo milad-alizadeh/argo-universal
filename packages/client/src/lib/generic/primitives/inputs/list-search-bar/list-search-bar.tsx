@@ -12,3 +12,8 @@ export function ListSearchBar(
 ): null {
   return null;
 }
+
+// The same bar as Compose content, for a list that is itself a Compose view.
+export function ListSearchField(_: ListSearchBarProps): null {
+  return null;
+}

@@ -23,6 +23,3 @@ export const FieldRowEnd = createContext<boolean | undefined>(undefined);
 // A grouped list's gutters, and the space between its sections, on a phone and a wide window.
 export const fieldGroupPadding = 'px-4 pb-8 pt-4 wide:px-0 wide:pb-6 wide:pt-0';
 export const fieldGroupGap = 'gap-8 wide:gap-6';
-
-// A row in a native Host of its own, as a virtualised phone list holds it, outside any native list, so it draws its own surface.
-export const FieldRowHosted = createContext(false);

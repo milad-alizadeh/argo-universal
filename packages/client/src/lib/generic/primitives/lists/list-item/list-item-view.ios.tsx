@@ -1,8 +1,11 @@
 import { Button, HStack, Image, Text } from '@expo/ui/swift-ui';
 import {
+  accessibilityElement,
   accessibilityAddTraits,
   alignmentGuide,
+  accessibilityLabel,
   buttonStyle,
+  disabled,
   fixedSize,
   foregroundStyle,
   frame,
@@ -14,46 +17,28 @@ import {
   padding,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { useContext } from 'react';
 import { type NativeColors, useNativeTheme } from '../../../native-theme';
 import { iconPixels } from '../../../symbols/icon';
 import { useWide } from '../../../use-wide/use-wide';
-import { FieldRowHosted, useNavigationFields } from '../../fields/field-layout';
-import type { ListItemProps } from '../../fields/field-props';
+import { useNavigationFields } from '../../fields/field-layout';
+import { type ListItemProps, listItemName } from '../../fields/field-props';
 import { useSwiftUITextModifiers } from '../../native/native-typography';
-import { HostedListItem } from './list-item-hosted.ios';
 import { hasDisclosure, hasLeadingSlot } from './list-item-styles';
-import {
-  RowLabel,
-  RowLeading,
-  inset,
-  rowAccessibility,
-  rowSpacing,
-  useRowColor,
-} from './list-item-swift-ui';
+import { RowLabel, RowLeading, useRowColor } from './list-item-swift-ui';
 import { ListItem as WebListItem } from './list-item-view.tsx';
 import { NativeRowStatus } from './native-row';
 
 const rowHeight = 52;
+const inset = 16;
+
+const rowSpacing = 12;
 const disabledOpacity = 0.5;
 
 export function ListItem(props: ListItemProps): React.JSX.Element {
   const wide = useWide();
-  const hosted = useContext(FieldRowHosted);
-  if (wide) return <WebListItem {...props} />;
-  if (hosted)
-    return (
-      <HostedListItem {...props}>
-        <RowContent {...props} />
-      </HostedListItem>
-    );
-  return <FormListItem {...props} />;
-}
-
-// A row of a SwiftUI Form, which draws its surface and separator.
-function FormListItem(props: ListItemProps): React.JSX.Element {
   const { colors } = useNativeTheme();
   const navigation = useNavigationFields();
+  if (wide) return <WebListItem {...props} />;
   const modifiers = rowModifiers(props, colors, navigation);
   const content = <RowContent {...props} />;
   if (!props.onPress)
@@ -91,7 +76,9 @@ function rowModifiers(
   return [
     ...rowSurface(colors, navigation),
     listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
-    ...rowAccessibility(props),
+    accessibilityElement('ignore'),
+    accessibilityLabel(listItemName(props)),
+    disabled(!!props.disabled),
   ];
 }
 

@@ -51,7 +51,7 @@ export function ListSearchBar({
   );
 }
 
-function ListSearchField(props: ListSearchBarProps): React.JSX.Element {
+export function ListSearchField(props: ListSearchBarProps): React.JSX.Element {
   const textStyle = { ...useTypography(), color: useForeground() };
   return (
     <BasicTextField
