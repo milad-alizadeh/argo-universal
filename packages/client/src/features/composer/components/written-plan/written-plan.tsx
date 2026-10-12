@@ -55,19 +55,15 @@ export function WrittenPlan({
       })}
     >
       <Icon role="control" name="file-text" className="text-muted-foreground" />
-      <Text
-        className={cn(
-          'text-xs leading-4 font-normal',
-          wide && 'text-muted-foreground',
-        )}
-      >
+      <Text role="secondary" className={cn(!wide && 'text-foreground')}>
         Written plan
       </Text>
       {wide && (
         <>
           <Text
             numberOfLines={1}
-            className="min-w-0 flex-1 text-xs leading-4 font-normal text-foreground"
+            role="secondary"
+            className="min-w-0 flex-1 text-foreground"
           >
             {title}
           </Text>

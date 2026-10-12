@@ -142,7 +142,7 @@ export function ComposerOptions({
             className: 'h-7 sm:h-7 px-1.5 py-0',
           })}
         >
-          <Text className="text-xs text-muted-foreground">Settings</Text>
+          <Text role="secondary">Settings</Text>
         </Pressable>
       }
     >

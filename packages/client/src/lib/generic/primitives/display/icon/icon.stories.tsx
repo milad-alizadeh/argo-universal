@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
+import {
+  Text,
+  TextClassContext,
+} from '#lib/generic/primitives/display/text/text';
 import { Icon } from '../../../symbols/icon';
 import { iconNames, iconSymbols } from '../../../symbols/icon-names';
 import { iconRoleNames } from '../../../symbols/icon-role';
@@ -28,9 +31,7 @@ export const Variations: Story = {
           {iconNames.map((name) => (
             <View key={name} className="w-28 items-center gap-1">
               <Icon name={name} role="control" />
-              <Text className="text-xs leading-4 text-muted-foreground">
-                {name}
-              </Text>
+              <Text role="secondary">{name}</Text>
             </View>
           ))}
         </View>
@@ -96,16 +97,18 @@ export const SfAndMaterial: Story = {
   name: 'SF and Material',
   render: () => (
     <View className="gap-1 p-4">
-      <View className="flex-row gap-4 pb-2">
-        <Text className="w-36 text-xs text-muted-foreground">Name</Text>
-        <Text className="w-10 text-xs text-muted-foreground">SF</Text>
-        <Text className="w-10 text-xs text-muted-foreground">Material</Text>
-        <Text className="w-64 text-xs text-muted-foreground">SF Symbol</Text>
-        <Text className="text-xs text-muted-foreground">Material Symbol</Text>
-      </View>
+      <TextClassContext.Provider value="type-secondary">
+        <View className="flex-row gap-4 pb-2">
+          <Text className="w-36">Name</Text>
+          <Text className="w-10">SF</Text>
+          <Text className="w-10">Material</Text>
+          <Text className="w-64">SF Symbol</Text>
+          <Text>Material Symbol</Text>
+        </View>
+      </TextClassContext.Provider>
       {iconNames.map((name) => (
         <View key={name} className="flex-row items-center gap-4">
-          <Text className="w-36 text-sm">{name}</Text>
+          <Text className="w-36">{name}</Text>
           <View className="w-10">
             <SymbolImagesProvider render={renderStorybookSymbol}>
               <Icon name={name} role="action" testID={`sf-${name}`} />
@@ -114,10 +117,10 @@ export const SfAndMaterial: Story = {
           <View className="w-10">
             <Icon name={name} role="action" testID={`material-${name}`} />
           </View>
-          <Text className="w-64 font-mono text-xs text-muted-foreground">
+          <Text role="code" className="w-64 text-muted-foreground">
             {iconSymbols[name].sf}
           </Text>
-          <Text className="font-mono text-xs text-muted-foreground">
+          <Text role="code" className="text-muted-foreground">
             {iconSymbols[name].material}
           </Text>
         </View>

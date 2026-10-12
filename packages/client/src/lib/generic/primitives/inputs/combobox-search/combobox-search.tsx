@@ -41,7 +41,7 @@ export function ComboboxSearch(props: ComboboxSearchProps): React.JSX.Element {
         onChangeText={props.onChangeText}
         autoCapitalize="none"
         autoCorrect={false}
-        className="type-body ios:text-[17px] ios:leading-[22px] min-w-0 flex-1 py-0 text-foreground web:outline-none"
+        className="type-body ios:text-nav-action ios:leading-nav-action min-w-0 flex-1 py-0 text-foreground web:outline-none"
       />
     </View>
   );

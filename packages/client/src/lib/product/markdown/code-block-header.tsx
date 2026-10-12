@@ -32,7 +32,7 @@ export function CodeBlockHeader({
     >
       {resource ? (
         <>
-          <View className="h-5 w-icon-md shrink-0 items-center justify-center">
+          <View className="h-6 w-icon-md shrink-0 items-center justify-center wide:h-5">
             <Icon
               role="control"
               name={resourceIcon(resource.uri)}
@@ -40,12 +40,10 @@ export function CodeBlockHeader({
             />
           </View>
           <View className="min-w-0 flex-1 gap-0.5">
-            <Text className="font-sans text-sm leading-5 text-foreground">
-              {title}
-            </Text>
+            <Text>{title}</Text>
             <ResourceUri uri={resource.uri} />
             {!!resource.description && (
-              <Text className="font-sans text-sm leading-5 text-muted-foreground">
+              <Text className="text-muted-foreground">
                 {resource.description}
               </Text>
             )}
@@ -67,7 +65,8 @@ function ResourceUri({ uri }: { uri: string }): React.JSX.Element {
       <Text
         aria-hidden
         numberOfLines={1}
-        className="min-w-0 shrink font-mono text-xs leading-4.5 text-muted-foreground"
+        role="code"
+        className="min-w-0 shrink text-muted-foreground"
       >
         {uri.slice(0, split)}
       </Text>
@@ -75,7 +74,8 @@ function ResourceUri({ uri }: { uri: string }): React.JSX.Element {
         aria-hidden
         numberOfLines={1}
         ellipsizeMode="head"
-        className="max-w-[75%] shrink-0 font-mono text-xs leading-4.5 text-muted-foreground"
+        role="code"
+        className="max-w-[75%] shrink-0 text-muted-foreground"
       >
         {uri.slice(split)}
       </Text>
