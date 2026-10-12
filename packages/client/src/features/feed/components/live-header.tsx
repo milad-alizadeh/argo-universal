@@ -24,6 +24,7 @@ import { Text } from '#lib/generic/primitives/text';
 import { useClock } from '#lib/generic/use-clock';
 import { StatusIndicator } from '#lib/product/status-indicator';
 import { Icon } from '../../../lib/generic/symbols/icon';
+import { useFeedIconSize } from './feed-icon-size';
 import { ShimmerText } from './shimmer-text';
 import { toolCallIcon } from './tool-call-icon';
 import { WorkingMark } from './working-mark';
@@ -41,6 +42,7 @@ export interface LiveHeaderProps {
 function RetryIcon(): React.JSX.Element {
   const rotation = useSharedValue(0);
   const reducedMotion = useReducedMotion();
+  const iconSize = useFeedIconSize();
   useEffect(() => {
     if (!reducedMotion)
       rotation.set(
@@ -60,7 +62,7 @@ function RetryIcon(): React.JSX.Element {
   );
   return (
     <Animated.View testID="live-header-retry" style={style}>
-      <Icon name="retry" className="text-muted-foreground" />
+      <Icon name="retry" size={iconSize} className="text-muted-foreground" />
     </Animated.View>
   );
 }
@@ -72,6 +74,7 @@ function SourceIcon({
   source: LiveHeaderSource;
   toolCall?: ToolCallUpdate;
 }): React.JSX.Element {
+  const iconSize = useFeedIconSize();
   switch (source.type) {
     case 'request':
       return <StatusIndicator testID="live-header-dot" status="needs_input" />;
@@ -80,11 +83,18 @@ function SourceIcon({
     case 'working':
       return <WorkingMark />;
     case 'thought':
-      return <Icon name="thinking" className="text-muted-foreground" />;
+      return (
+        <Icon
+          name="thinking"
+          size={iconSize}
+          className="text-muted-foreground"
+        />
+      );
     case 'tool_call':
       return (
         <Icon
           name={toolCall ? toolCallIcon(toolCall) : 'tool'}
+          size={iconSize}
           className="text-muted-foreground"
         />
       );
@@ -108,7 +118,7 @@ export function LiveHeader({
       accessibilityLabel={title}
       className="w-full flex-row items-center gap-1.5"
     >
-      <View className="size-4 shrink-0 items-center justify-center">
+      <View className="size-5 shrink-0 items-center justify-center wide:size-4">
         <SourceIcon source={source} toolCall={toolCall} />
       </View>
       {request ? (

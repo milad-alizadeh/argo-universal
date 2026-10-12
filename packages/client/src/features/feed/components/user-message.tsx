@@ -12,6 +12,7 @@ import { Text } from '#lib/generic/primitives/text';
 import { inlineCodeClassName } from '#lib/product/markdown/feed-markdown';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { resourceName } from '../../../lib/product/markdown/resource-name';
+import { useFeedIconSize } from './feed-icon-size';
 import { FeedImage } from './feed-image';
 
 export interface UserMessageProps {
@@ -52,7 +53,7 @@ function Bubble({ text }: { text: string }): React.JSX.Element {
     syncLayout();
   }, [clamped, syncLayout]);
   return (
-    <View className="max-w-[70%] gap-0.5 rounded-xl bg-muted px-3.5 py-2.5 wide:px-3 wide:py-2">
+    <View className="max-w-[70%] gap-0.5 rounded-2xl bg-muted px-3.5 py-2.5 wide:px-3 wide:py-2">
       <View>
         <Text
           numberOfLines={expanded ? undefined : clampedLines}
@@ -104,10 +105,12 @@ function ReferenceChip({
 }: {
   reference: Reference;
 }): React.JSX.Element {
+  const iconSize = useFeedIconSize();
   return (
     <View className="h-[26px] flex-row items-center gap-1.5 rounded-md border border-border bg-card px-2">
       <Icon
         name={isFolder(reference) ? 'folder' : 'file'}
+        size={iconSize}
         className="text-muted-foreground"
       />
       <Text role="body" className="font-sans">
