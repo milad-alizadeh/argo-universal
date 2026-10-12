@@ -20,7 +20,9 @@ export function NativeScreenHeader({
           ...rightItems(right),
         }}
       />
-      {search && <DockedSearch search={search} />}
+      {search && (
+        <DockedSearch search={search} leading={left ? 'menu' : 'back'} />
+      )}
     </>
   );
 }

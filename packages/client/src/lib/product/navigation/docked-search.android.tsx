@@ -23,22 +23,21 @@ import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#lib/generic/primitives/native/host';
 import { useComposeTextStyle } from '../../generic/primitives/native/native-typography';
 import { Icon, iconSizeStyle } from '../../generic/symbols/icon';
-import type { ScreenHeaderSearch } from './screen-header';
+import type { DockedSearchProps } from './docked-search.tsx';
 
 // The header's side inset, and a gap above the list.
 const inset = 16;
 const gap = 8;
 // Material's search bar: a 56dp pill.
 const barHeight = 56;
-// ☰'s 44pt slot in the header, so the icon sits under ☰ and the text starts where the title does.
-const headerItem = 44;
+// The icon's slot, so the text starts where the header title does: after ☰'s 44pt slot, or after Material's back button, whose title sits 72dp in.
+const leadingSlot = { menu: 44, back: 56 } as const;
 
 // A bare native text field drawn as a search bar under the header, in the theme's selection tint.
 export function DockedSearch({
   search,
-}: {
-  search: ScreenHeaderSearch;
-}): React.JSX.Element {
+  leading,
+}: DockedSearchProps): React.JSX.Element {
   const text = useNativeState('');
   const { fontFamily, fontSize, lineHeight, fontWeight } =
     useComposeTextStyle('body');
@@ -77,7 +76,7 @@ export function DockedSearch({
           >
             <Box
               contentAlignment="center"
-              modifiers={[size(headerItem, barHeight)]}
+              modifiers={[size(leadingSlot[leading], barHeight)]}
             >
               <RNHostView matchContents>
                 <View collapsable={false} style={iconSizeStyle('md')}>
