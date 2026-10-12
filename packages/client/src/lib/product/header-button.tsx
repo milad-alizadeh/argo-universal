@@ -54,7 +54,8 @@ export function HeaderButton({
             : cn(
                 'h-11 sm:h-11',
                 paired ? 'w-8 sm:w-8' : 'w-11 sm:w-11',
-                leading && 'android:justify-start',
+                // The glyph starts at the screen inset, in line with the search bar and the content below.
+                leading && 'ios:justify-start android:justify-start',
               ),
         ),
       })}
@@ -71,7 +72,7 @@ export function HeaderButton({
               : cn(
                   'top-2.5',
                   narrow ? 'right-1' : 'right-[9px]',
-                  leading && 'android:right-[21px]',
+                  leading && 'ios:right-[21px] android:right-[21px]',
                 ),
           )}
         />
