@@ -23,6 +23,8 @@
   "dependencies": {
     "@expo/ui": "catalog:",
     "@legendapp/list": "catalog:",
+    "@lexical/markdown": "catalog:",
+    "@lexical/react": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@repo/contracts": "workspace:*",
     "@rn-primitives/checkbox": "catalog:",
@@ -52,6 +54,7 @@
     "expo-haptics": "catalog:",
     "expo-image-picker": "catalog:",
     "expo-symbols": "catalog:",
+    "lexical": "catalog:",
     "marked": "catalog:",
     "react-native-drawer-layout": "catalog:",
     "react-native-gesture-handler": "catalog:",
@@ -69,6 +72,7 @@
     "react-native": "catalog:"
   },
   "devDependencies": {
+    "@lexical/headless": "catalog:",
     "@repo/engine": "workspace:*",
     "@repo/mocks": "workspace:*",
     "@repo/typescript": "workspace:*",

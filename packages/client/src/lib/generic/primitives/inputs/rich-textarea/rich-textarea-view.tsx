@@ -1,23 +1,132 @@
+import {
+  type InitialConfigType,
+  LexicalComposer,
+} from '@lexical/react/LexicalComposer';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { ContentEditable } from '@lexical/react/LexicalContentEditable';
+import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
+import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
+import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
+import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import type * as React from 'react';
+import { useEffect } from 'react';
+import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
-import { Textarea } from '../textarea/textarea';
+import {
+  registerMarkShortcuts,
+  registerReturnToSubmit,
+} from './rich-textarea-keys';
+import {
+  $importMarkdown,
+  richTextareaNodes,
+  richTextareaTransformers,
+} from './rich-textarea-markdown';
 import {
   plainFieldClassName,
-  plainFieldProps,
   type RichTextareaProps,
 } from './rich-textarea-props';
+import { useMarkdownValue } from './rich-textarea-value';
 
-// The web drawing: today's plain field, growing with its content to 10 lines, then scrolling.
-function RichTextarea(props: RichTextareaProps): React.JSX.Element {
+function KeyboardPlugin({
+  onSubmit,
+}: Pick<RichTextareaProps, 'onSubmit'>): null {
+  const [editor] = useLexicalComposerContext();
+  useEffect(() => registerMarkShortcuts(editor), [editor]);
+  useEffect(
+    () => onSubmit && registerReturnToSubmit(editor, onSubmit),
+    [editor, onSubmit],
+  );
+  return null;
+}
+
+function EditablePlugin({ editable }: { editable: boolean }): null {
+  const [editor] = useLexicalComposerContext();
+  useEffect(() => editor.setEditable(editable), [editor, editable]);
+  return null;
+}
+
+function MarkdownValuePlugin({
+  value,
+  onChangeText,
+}: Pick<RichTextareaProps, 'value' | 'onChangeText'>): null {
+  useMarkdownValue(value, onChangeText);
+  return null;
+}
+
+function Placeholder({ text }: { text: string }): React.JSX.Element {
   return (
-    <Textarea
-      {...plainFieldProps(props)}
-      numberOfLines={1}
-      className={cn(
-        plainFieldClassName,
-        'max-h-[10lh] overflow-y-auto resize-none focus-visible:ring-0',
-      )}
+    <div className="pointer-events-none absolute inset-x-0 top-0 truncate type-control text-muted-foreground/70">
+      {text}
+    </div>
+  );
+}
+
+type MessageFieldProps = Pick<
+  RichTextareaProps,
+  'accessibilityLabel' | 'placeholder'
+>;
+
+const editableClassName = cn(
+  plainFieldClassName,
+  'max-h-[10lh] overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
+);
+
+function MessageEditable({
+  accessibilityLabel,
+  placeholder = '',
+}: MessageFieldProps): React.JSX.Element {
+  return (
+    <ContentEditable
+      aria-label={accessibilityLabel}
+      aria-multiline
+      aria-placeholder={placeholder}
+      placeholder={<Placeholder text={placeholder} />}
+      className={editableClassName}
     />
+  );
+}
+
+function MessageField({
+  editable,
+  ...props
+}: MessageFieldProps & { editable: boolean }): React.JSX.Element {
+  return (
+    <div className={cn('relative w-full', !editable && 'opacity-50')}>
+      <RichTextPlugin
+        contentEditable={<MessageEditable {...props} />}
+        ErrorBoundary={LexicalErrorBoundary}
+      />
+    </div>
+  );
+}
+
+function editorConfig(value: string, editable: boolean): InitialConfigType {
+  return {
+    namespace: 'RichTextarea',
+    nodes: richTextareaNodes,
+    theme: { text: markdownMarkClassNames },
+    editable,
+    editorState: () => $importMarkdown(value),
+    onError: (error) => {
+      throw error;
+    },
+  };
+}
+
+// The web drawing: a Lexical editor that shows markdown as you type, growing to 10 lines, then scrolling.
+function RichTextarea({
+  editable = true,
+  ...props
+}: RichTextareaProps): React.JSX.Element {
+  return (
+    <LexicalComposer initialConfig={editorConfig(props.value, editable)}>
+      <MessageField {...props} editable={editable} />
+      <HistoryPlugin />
+      <MarkdownShortcutPlugin transformers={richTextareaTransformers} />
+      <KeyboardPlugin onSubmit={props.onSubmit} />
+      <EditablePlugin editable={editable} />
+      <MarkdownValuePlugin {...props} />
+    </LexicalComposer>
   );
 }
 

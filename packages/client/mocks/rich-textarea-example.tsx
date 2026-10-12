@@ -1,0 +1,36 @@
+import type * as React from 'react';
+import { useState } from 'react';
+import { RichTextarea } from '../src/lib/generic/primitives/inputs/rich-textarea/rich-textarea';
+
+// A stateful controlled wrapper: a RichTextarea that keeps its own value, as the Composer's draft does.
+export function RichTextareaExample({
+  initialValue = '',
+  onChangeText,
+  onSubmit,
+}: {
+  initialValue?: string;
+  onChangeText?: (value: string) => void;
+  onSubmit?: () => void;
+}): React.JSX.Element {
+  const [value, setValue] = useState(initialValue);
+  return (
+    <RichTextarea
+      accessibilityLabel="Message"
+      placeholder="Message the Agent…"
+      value={value}
+      onChangeText={(changed) => {
+        setValue(changed);
+        onChangeText?.(changed);
+      }}
+      onSubmit={onSubmit}
+    />
+  );
+}
+
+/*
+ * The text a RichTextarea shows, line breaks included. On the web, Lexical holds an empty line open
+ * with a <br>, which innerText reads as one trailing newline.
+ */
+export function shownText(field: HTMLElement): string {
+  return field.innerText.replace(/\n$/, '');
+}
