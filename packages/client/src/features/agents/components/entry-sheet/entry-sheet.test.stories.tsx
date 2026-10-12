@@ -9,7 +9,7 @@ const meta = {
   component: EntrySheet,
   args: {
     title: 'Argument',
-    fields: [{ label: 'Argument', value: '--acp', onChange: fn() }],
+    fields: [{ label: 'Argument', value: '--acp', onChange: fn(), errors: [] }],
     onSave: fn(),
     onClose: fn(),
     onRemove: fn(),

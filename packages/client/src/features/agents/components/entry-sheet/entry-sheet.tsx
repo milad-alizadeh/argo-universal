@@ -7,23 +7,30 @@ import {
 } from '#lib/generic/primitives/overlays/dialog/dialog';
 import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import { FieldMessage, FormLabel, FormInput } from '../form-field';
+import { type TextField, touchedInput } from '../form-field';
+import { EntrySheetInput } from './entry-sheet-input';
 
+// A field of an entry, bound to the sheet's form: its errors show once it is touched or saved.
 export type EntrySheetField = {
   label: string;
-  value: string;
-  onChange: (value: string) => void;
   placeholder?: string;
-  error?: string;
-};
+} & ReturnType<typeof touchedInput>;
 export type EntrySheetProps = {
   title: string;
   fields: readonly EntrySheetField[];
+  // Save submits the entry's form: a valid entry is kept, and an invalid one shows every error.
   onSave: () => void;
   onClose: () => void;
   onRemove?: () => void;
   removeLabel: string;
 };
+type EntryInput = Pick<EntrySheetField, 'label' | 'placeholder'>;
+export const entryField = (
+  input: EntryInput,
+  field: TextField,
+): EntrySheetField => ({ ...input, ...touchedInput(field) });
+// What an entry's form gives its sheet.
+export type EntrySheetEntry = Pick<EntrySheetProps, 'fields' | 'onSave'>;
 
 // A phone edits one argument or variable at a time, with labelled fields, in a sheet that the backdrop closes.
 export function EntrySheet(props: EntrySheetProps): React.JSX.Element {
@@ -72,21 +79,6 @@ function CancelEntry({
   onClose,
 }: Pick<EntrySheetProps, 'onClose'>): React.JSX.Element {
   return <Button variant="outline" onPress={onClose} label={'Cancel'} />;
-}
-
-function EntrySheetInput({
-  field,
-}: {
-  field: EntrySheetField;
-}): React.JSX.Element {
-  const errors = field.error ? [field.error] : [];
-  return (
-    <View className="gap-2">
-      <FormLabel>{field.label}</FormLabel>
-      <FormInput mono {...field} errors={errors} />
-      <FieldMessage errors={errors} />
-    </View>
-  );
 }
 
 function RemoveEntry({

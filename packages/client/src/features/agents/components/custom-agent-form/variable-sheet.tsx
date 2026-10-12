@@ -1,10 +1,11 @@
 import { EnvironmentVariable } from '@repo/contracts';
+import { useField, useForm } from '@tanstack/react-form';
 import type * as React from 'react';
-import { errorMessage } from '../../../../lib/generic/primitives/fields/field-errors';
 import type { CustomAgentFormApi } from '../../hooks/use-custom-agent-form';
 import {
   EntrySheet,
-  type EntrySheetField,
+  type EntrySheetEntry,
+  entryField,
   removalOf,
 } from '../entry-sheet/entry-sheet';
 
@@ -18,36 +19,17 @@ type SheetProps = {
 const emptyVariable: EnvironmentVariable = { name: '', value: '' };
 export const newVariable: Editing = { index: null, variable: emptyVariable };
 
-function nameField(
-  { index, variable }: Editing,
-  onEdit: EditVariable,
-): EntrySheetField {
-  const name = EnvironmentVariable.shape.name.safeParse(variable.name);
-  return {
-    label: 'Name',
-    value: variable.name,
-    placeholder: 'EXAMPLE_HOME',
-    onChange: (next) =>
-      onEdit({ index, variable: { ...variable, name: next } }),
-    error: name.success ? undefined : errorMessage(name.error.issues),
-  };
-}
+// Each part validates as the form does: on mount for Save, on change while typing.
+const { name: nameSchema, value: valueSchema } = EnvironmentVariable.shape;
+const forName = { onMount: nameSchema, onChange: nameSchema };
+const forValue = { onMount: valueSchema, onChange: valueSchema };
 
-const valueField = (
-  { index, variable }: Editing,
-  onEdit: EditVariable,
-): EntrySheetField => ({
-  label: 'Value',
-  value: variable.value,
-  placeholder: '/Users/you/.example',
-  onChange: (next) => onEdit({ index, variable: { ...variable, value: next } }),
-});
-
-function saveVariable({ form, editing, onEdit }: SheetProps): void {
-  const parsed = EnvironmentVariable.safeParse(editing.variable);
-  if (!parsed.success) return;
-  if (editing.index === null) form.pushFieldValue('env', parsed.data);
-  else void form.replaceFieldValue('env', editing.index, parsed.data);
+function saveVariable(
+  { form, editing, onEdit }: SheetProps,
+  variable: EnvironmentVariable,
+): void {
+  if (editing.index === null) form.pushFieldValue('env', variable);
+  else void form.replaceFieldValue('env', editing.index, variable);
   onEdit(null);
 }
 
@@ -56,6 +38,22 @@ const removeVariable =
   (index: number): void =>
     void form.removeFieldValue('env', index);
 
+const nameInput = { label: 'Name', placeholder: 'EXAMPLE_HOME' };
+const valueInput = { label: 'Value', placeholder: '/Users/you/.example' };
+
+function useVariableEntry(props: SheetProps): EntrySheetEntry {
+  const entry = useForm({
+    defaultValues: props.editing.variable,
+    onSubmit: ({ value }) => saveVariable(props, value),
+  });
+  const name = useField({ form: entry, name: 'name', validators: forName });
+  const value = useField({ form: entry, name: 'value', validators: forValue });
+  return {
+    fields: [entryField(nameInput, name), entryField(valueInput, value)],
+    onSave: () => void entry.handleSubmit(),
+  };
+}
+
 export function VariableSheet(props: SheetProps): React.JSX.Element {
   const { form, editing, onEdit } = props;
   const close = (): void => onEdit(null);
@@ -63,8 +61,7 @@ export function VariableSheet(props: SheetProps): React.JSX.Element {
     <EntrySheet
       title="Environment variable"
       removeLabel="Remove variable"
-      fields={[nameField(editing, onEdit), valueField(editing, onEdit)]}
-      onSave={() => saveVariable(props)}
+      {...useVariableEntry(props)}
       onClose={close}
       onRemove={removalOf(editing.index, removeVariable(form), close)}
     />
