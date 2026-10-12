@@ -73,7 +73,7 @@ export const DesktopRail = memo(function DesktopRail({
     >
       {/* Electron draws the traffic lights here, and the window drags by it. */}
       <View className="h-shell-control self-stretch web:[app-region:drag]" />
-      <View className="-mt-0.5 flex-1">
+      <View className="-mt-0.5 flex-1 gap-px">
         {railSections.map((section) => (
           <SectionButton
             key={section}

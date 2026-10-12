@@ -2,6 +2,7 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { hasLiquidGlass } from '#lib/generic/native-header';
 import { cn } from '#lib/generic/utils';
 import { useWide } from '../generic/use-wide/use-wide';
 import { keyboardAvoidingStyle, Screen } from './screen/screen';
@@ -18,6 +19,9 @@ const composerFadeDepth = { atEnd: 24, away: 48 };
 
 // How far the Feed fades out under the header: Paper's mask over the Feed column.
 const headerFadeDepth = 56;
+
+// How far above the Feed's bottom edge its deepest fade ends; anything laid over the Feed's end, such as Jump to latest, sits above it.
+export const feedBottomFadeTop = composerOverlap + composerFadeDepth.away;
 
 // The Session's one column: as wide as the Composer at most, centred in the pane with the pane's side padding. CSS centres it on every width change, so nothing in it depends on a width measured earlier.
 export function SessionColumn({
@@ -62,9 +66,10 @@ export function FeedFade({
   const wide = useWide();
   return (
     <ScrollFadeFrame
-      edges={{ top: wide && !atStart, bottom: true }}
+      // iOS 26's glass header shades the Feed scrolled under it; every other header is solid, so the Feed fades out below it.
+      edges={{ top: (wide || !hasLiquidGlass) && !atStart, bottom: true }}
       depth={{
-        top: headerFadeDepth,
+        top: wide ? headerFadeDepth : undefined,
         bottom: atEnd ? composerFadeDepth.atEnd : composerFadeDepth.away,
       }}
       inset={{ bottom: composerOverlap }}
