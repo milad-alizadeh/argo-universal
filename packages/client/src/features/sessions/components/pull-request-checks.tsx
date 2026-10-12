@@ -3,7 +3,8 @@ import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { Text } from '#lib/generic/primitives/display/text/text';
-import { Icon, iconSizeStyle } from '../../../lib/generic/symbols/icon';
+import { Icon } from '../../../lib/generic/symbols/icon';
+import { useIconBox } from '../../../lib/generic/symbols/icon-role';
 
 // A PR's CI checks: how many passed, failed and still run, out of all of them.
 export interface PullRequestChecksProps {
@@ -65,12 +66,13 @@ function Ring({
   checks: PullRequestChecksProps;
   state: ChecksState;
 }): React.JSX.Element {
+  const box = useIconBox('secondary');
   if (state === 'passed')
-    return <Icon name="passed" className="text-success" />;
+    return <Icon role="secondary" name="passed" className="text-success" />;
   const passedArc = arc(checks.passed, checks.total);
   const restArc = arc(checks.total - checks.passed, checks.total);
   return (
-    <View style={iconSizeStyle('sm')} className="shrink-0">
+    <View style={box} className="shrink-0">
       <Svg width="100%" height="100%" viewBox="0 0 14 14">
         <ThemedCircle {...ringCircle} strokeClassName="bg-border" />
         <ThemedCircle

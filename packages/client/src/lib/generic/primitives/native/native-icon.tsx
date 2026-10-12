@@ -1,16 +1,12 @@
 import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
 import { View } from 'react-native';
-import {
-  Icon,
-  type IconProps,
-  type IconSize,
-  iconSizeStyle,
-} from '../../symbols/icon';
+import { Icon, type IconProps, type IconRole } from '../../symbols/icon';
+import { useIconBox } from '../../symbols/icon-role';
 
 // Argo's Icon inside a native row or bar, sized to its glyph; the row it sits in names it for screen readers.
 export function NativeIcon(
-  props: Pick<IconProps, 'name' | 'filled' | 'className'> & { size: IconSize },
+  props: Pick<IconProps, 'name' | 'filled' | 'className'> & { role: IconRole },
 ): React.JSX.Element {
   return (
     <RNHostView matchContents>
@@ -19,7 +15,7 @@ export function NativeIcon(
         accessible={false}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
-        style={iconSizeStyle(props.size)}
+        style={useIconBox(props.role)}
       >
         <Icon {...props} />
       </View>

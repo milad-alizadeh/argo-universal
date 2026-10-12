@@ -33,7 +33,7 @@ const SectionButton = memo(function SectionButton({
     <View>
       <IconButton
         icon={icon}
-        iconSize="lg"
+        iconRole="nav"
         filled={selected}
         iconClassName={selected ? 'text-foreground' : 'text-foreground/72'}
         size="2xl"
@@ -86,7 +86,7 @@ export const DesktopRail = memo(function DesktopRail({
       </View>
       <IconButton
         icon="sidebar"
-        iconSize="lg"
+        iconRole="nav"
         iconClassName="text-muted-foreground"
         size="xl"
         variant="ghost"

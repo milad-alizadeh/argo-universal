@@ -15,8 +15,18 @@ export function IssueIndicator({
       accessibilityLabel={`Issue #${number}`}
       className="flex-row items-center gap-1"
     >
-      <Icon name="issue" className="shrink-0 text-muted-foreground" />
+      <IssueIcon />
       <Text role="secondary">#{number}</Text>
     </View>
+  );
+}
+
+function IssueIcon(): React.JSX.Element {
+  return (
+    <Icon
+      role="secondary"
+      name="issue"
+      className="shrink-0 text-muted-foreground"
+    />
   );
 }

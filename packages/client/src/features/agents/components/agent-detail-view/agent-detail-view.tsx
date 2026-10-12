@@ -5,7 +5,6 @@ import { Text } from '#lib/generic/primitives/display/text/text';
 import { FieldGroup } from '#lib/generic/primitives/fields/field-group/field-group';
 import { FieldRow } from '#lib/generic/primitives/fields/field-row/field-row';
 import { SettingsPage } from '#lib/product/settings-page';
-import type { IconSize } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { agentStatusLabels, statusTone } from '../../state/agent-status';
@@ -51,7 +50,7 @@ function AgentStatusChip({
 function DetailIdentity(props: AgentDetailViewProps): React.JSX.Element {
   return (
     <AgentIdentity
-      logo={<AgentIcon {...props} size="lg" />}
+      logo={<AgentIcon {...props} />}
       description={props.agent.description ?? ''}
       trailing={<IdentityTrailing {...props} />}
     />
@@ -70,11 +69,9 @@ function IdentityTrailing(
   return <AgentAction {...props} />;
 }
 
-function AgentIcon({
-  agent,
-  size,
-}: AgentDetailViewProps & { size: IconSize }): React.JSX.Element {
-  return <RegistryIcon uri={agent.icon} agentName={agent.name} size={size} />;
+// The logo sits beside the Agent's name, so it takes the title's size.
+function AgentIcon({ agent }: AgentDetailViewProps): React.JSX.Element {
+  return <RegistryIcon uri={agent.icon} agentName={agent.name} role="title" />;
 }
 
 function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
@@ -111,7 +108,7 @@ function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element | null {
 function PhoneIconTile(props: AgentDetailViewProps): React.JSX.Element {
   return (
     <View className="size-16 items-center justify-center rounded-[18px] bg-muted">
-      <AgentIcon {...props} size="lg" />
+      <AgentIcon {...props} />
     </View>
   );
 }

@@ -58,7 +58,6 @@ export function MergePrButton({
             variant="filled"
             size="sm"
             icon="chevron-down"
-            iconSize="sm"
             accessibilityLabel="Merge options"
             disabled={disabled}
             className={cn('rounded-l-none sm:w-6', undimmed)}

@@ -1,9 +1,7 @@
 import * as SelectPrimitive from '@rn-primitives/select';
 import type * as React from 'react';
-import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Chevron } from '../../../symbols/chevron';
-import { iconSizeStyle } from '../../../symbols/icon';
+import { Icon, IconSlot } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { useWide } from '../../../use-wide/use-wide';
 import { SelectedCheck } from '../../display/selected-check';
@@ -34,7 +32,7 @@ function SelectValue({ className, ...props }: ValueProps): React.JSX.Element {
   return (
     <SelectPrimitive.Value
       className={cn(
-        'text-foreground line-clamp-1 flex flex-row items-center gap-2 text-sm',
+        'type-body line-clamp-1 flex flex-row items-center gap-2',
         !value && 'text-muted-foreground',
         className,
       )}
@@ -56,8 +54,9 @@ function TriggerChevron({
   variant,
 }: Pick<TriggerProps, 'variant'>): React.JSX.Element {
   return (
-    <Chevron
+    <Icon
       name={chevronName(variant, useWide())}
+      role="body"
       aria-hidden={true}
       className="text-muted-foreground"
     />
@@ -86,10 +85,7 @@ function SelectLabel({
 }: React.ComponentProps<typeof SelectPrimitive.Label>): React.JSX.Element {
   return (
     <SelectPrimitive.Label
-      className={cn(
-        'text-muted-foreground px-2 py-2 text-xs sm:py-1.5',
-        className,
-      )}
+      className={cn('type-secondary px-2 py-2 sm:py-1.5', className)}
       {...props}
     />
   );
@@ -97,14 +93,14 @@ function SelectLabel({
 
 function ItemIndicator(): React.JSX.Element {
   return (
-    <View
-      style={iconSizeStyle('sm')}
+    <IconSlot
+      role="control"
       className="absolute right-2 flex items-center justify-center"
     >
       <SelectPrimitive.ItemIndicator>
         <SelectedCheck className="text-muted-foreground shrink-0" />
       </SelectPrimitive.ItemIndicator>
-    </View>
+    </IconSlot>
   );
 }
 
@@ -115,7 +111,7 @@ function SelectItem({ className, ...props }: ItemProps): React.JSX.Element {
       {...props}
     >
       <ItemIndicator />
-      <SelectPrimitive.ItemText className="text-foreground group-active:text-accent-foreground select-none text-sm" />
+      <SelectPrimitive.ItemText className="type-body group-active:text-accent-foreground select-none" />
     </SelectPrimitive.Item>
   );
 }

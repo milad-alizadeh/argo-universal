@@ -13,7 +13,6 @@ import {
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { useTextIconSize } from '../../../lib/generic/symbols/text-icon-size';
 import { DisclosureCaret } from './disclosure-caret';
 import { ShimmerText } from './shimmer-text';
 
@@ -67,7 +66,6 @@ export function FeedDisclosure({
 }: FeedDisclosureProps): React.JSX.Element {
   const [open, setOpen] = useState(initialOpen);
   const [hovered, setHovered] = useState(false);
-  const iconSize = useTextIconSize();
   const title = trailing ? `${label} ${trailing}` : label;
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="w-full">
@@ -80,7 +78,7 @@ export function FeedDisclosure({
         >
           <Icon
             name={icon}
-            size={iconSize}
+            role="body"
             className={cn(
               'shrink-0 text-muted-foreground',
               failed && 'text-destructive',
@@ -111,9 +109,7 @@ export function FeedDisclosure({
             )}
             {awaitingApproval && (
               <View className="rounded-sm border border-warning/20 bg-warning/10 px-1.5">
-                <Text role="badge" className="text-warning">
-                  Awaiting approval
-                </Text>
+                <Text className="text-warning">Awaiting approval</Text>
               </View>
             )}
             <DisclosureCaret

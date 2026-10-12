@@ -10,7 +10,11 @@ Every icon is a native system symbol drawn through `expo-symbols` (owner, 2026-1
 | Electron on Windows and Linux | Material Symbols | as on web |
 | Electron on macOS | SF Symbols | macOS, at runtime |
 
-One map, `packages/client/src/lib/generic/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" size="md" />`; size stays sm/md/lg and colour comes from the text class.
+One map, `packages/client/src/lib/generic/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" role="control" />`; colour comes from the text class.
+
+## Icon roles
+
+An icon takes a role, never a size (owner, 2026-10-12): where it sits decides its size, and an icon beside text steps up on the phone as the text does. `packages/client/src/lib/generic/symbols/icon-role.ts` is the one table of roles and their wide and phone sizes, on the 12, 14, 16, 20 and 24 scale. SwiftUI and Compose trees, which cannot hold `Icon`, read the same table through `useIconPixels(role)` or draw with `SwiftUISymbol`, so native icons cannot drift from the rest. The `argo/icon-role` lint rule rejects a size prop, a `size-*` class on an icon, a hand-written `systemName` and a numeric Compose `size` modifier outside `lib/generic/symbols`.
 
 Apple's licence allows SF Symbols only in apps for Apple platforms, so no SF Symbol image is ever committed or shipped in the web build. On macOS, the Electron main process draws the symbol with `nativeImage.createFromNamedImage` and the preload script returns it as a PNG data URL. The page uses that image as a CSS mask filled with the text colour, caches it, and keeps an empty box of the same size while it loads. The IPC request is validated, and an unrecognised request is rejected, reported and counted.
 

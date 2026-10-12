@@ -54,7 +54,7 @@ export function EntrySheet(props: EntrySheetProps): React.JSX.Element {
 function EntrySheetBody(props: EntrySheetProps): React.JSX.Element {
   return (
     <>
-      <DialogTitle className="type-heading">{props.title}</DialogTitle>
+      <DialogTitle>{props.title}</DialogTitle>
       <View className="gap-4">
         {props.fields.map((field) => (
           <EntrySheetInput key={field.label} field={field} />

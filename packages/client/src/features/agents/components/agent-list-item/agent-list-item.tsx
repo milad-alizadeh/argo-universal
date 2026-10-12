@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import { Icon } from '../../../../lib/generic/symbols/icon';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import {
   type AgentRowEntry,
   agentStatusLabels,
@@ -51,28 +50,18 @@ export const agentRows = (
     <AgentListItem key={agent.id} agent={agent} onOpen={onOpen} />
   ));
 
-// A custom Agent has no registry logo, so it shows the Agent glyph. A logo fills its whole box where the glyph keeps a margin, so the logo draws one step smaller to look the same size.
-const glyphSizes = {
-  wide: { glyph: 'md', logo: 'sm' },
-  phone: { glyph: 'lg', logo: 'md' },
-} as const;
-
-function useGlyphSizes(): (typeof glyphSizes)['wide' | 'phone'] {
-  return glyphSizes[useWide() ? 'wide' : 'phone'];
-}
-
+// A custom Agent has no registry logo, so it shows the Agent glyph. A logo fills its whole box where the glyph keeps a margin, so the logo draws one step smaller, at the Body size, to look the same size.
 function AgentGlyph({
   agent,
 }: Pick<AgentListItemProps, 'agent'>): React.JSX.Element {
-  const sizes = useGlyphSizes();
   if (agent.custom)
-    return <Icon name="agent" size={sizes.glyph} className="text-foreground" />;
+    return <Icon name="agent" role="row" className="text-foreground" />;
   // A registry Agent with no logo falls back to the glyph, so it takes the glyph's size.
   return (
     <RegistryIcon
       uri={agent.icon}
       agentName={agent.name}
-      size={agent.icon ? sizes.logo : sizes.glyph}
+      role={agent.icon ? 'body' : 'row'}
     />
   );
 }

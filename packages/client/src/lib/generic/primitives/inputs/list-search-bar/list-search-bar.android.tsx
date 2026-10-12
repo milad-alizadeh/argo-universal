@@ -116,12 +116,14 @@ function SearchBarDecoration({
 function SearchIcon({
   leading,
 }: Pick<ListSearchBarProps, 'leading'>): React.JSX.Element {
+  const slot = size(leadingSlot[leading], barHeight);
   return (
-    <Box
-      contentAlignment="center"
-      modifiers={[size(leadingSlot[leading], barHeight)]}
-    >
-      <NativeIcon name="search" size="md" className="text-muted-foreground" />
+    <Box contentAlignment="center" modifiers={[slot]}>
+      <NativeIcon
+        name="search"
+        role="action"
+        className="text-muted-foreground"
+      />
     </Box>
   );
 }

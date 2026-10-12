@@ -12,7 +12,6 @@ import {
   Pressable,
   contentActionClass,
 } from '../../../../lib/generic/primitives/pressable/pressable';
-import { Chevron } from '../../../../lib/generic/symbols/chevron';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import {
   CheckoutContents,
@@ -66,7 +65,11 @@ export function StartSessionIn({
             disabled: disabled,
           })}
         >
-          <Icon name="folder" className="text-muted-foreground" />
+          <Icon
+            role="control"
+            name="folder"
+            className="text-muted-foreground"
+          />
           <Text
             selectable={false}
             numberOfLines={1}
@@ -75,7 +78,8 @@ export function StartSessionIn({
           >
             {project?.name ?? 'Choose a Project'}
           </Text>
-          <Chevron
+          <Icon
+            role="body"
             name="chevron-down"
             className="-ml-0.5 text-muted-foreground"
           />
@@ -104,7 +108,11 @@ export function StartSessionIn({
     >
       {paired && (
         <>
-          <Icon name="computer" className="text-muted-foreground" />
+          <Icon
+            role="control"
+            name="computer"
+            className="text-muted-foreground"
+          />
           <Text numberOfLines={1} role="body">
             {serverName}
           </Text>
@@ -154,6 +162,7 @@ export function StartSessionIn({
             })}
           >
             <Icon
+              role="control"
               name={checkout.newWorktree ? 'branch' : 'folder'}
               className="text-muted-foreground"
             />
@@ -164,7 +173,8 @@ export function StartSessionIn({
             >
               {checkout.newWorktree ? 'New worktree' : 'Local'}
             </Text>
-            <Chevron
+            <Icon
+              role="body"
               name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
@@ -234,7 +244,11 @@ function ProjectPicker({
               })}
             >
               <View className="h-5 shrink-0 justify-center">
-                <Icon name="folder" className="text-muted-foreground" />
+                <Icon
+                  role="control"
+                  name="folder"
+                  className="text-muted-foreground"
+                />
               </View>
               <View className="min-w-0 flex-1 gap-0.5">
                 <Text

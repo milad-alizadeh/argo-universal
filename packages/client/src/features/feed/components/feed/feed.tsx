@@ -72,7 +72,7 @@ function LoadingEarlier(): React.JSX.Element {
 function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
   return (
     <View className="flex-1 items-center justify-center gap-1.5 p-6">
-      <Text semanticRole="heading" aria-level={2} role={'heading'}>
+      <Text semanticRole="heading" aria-level={2}>
         What should we build?
       </Text>
       {!!branch && (
@@ -108,7 +108,7 @@ function JumpToLatest({
         onPress={onPress}
         className="size-8 items-center justify-center rounded-full border border-border bg-card shadow-[0_1px_2px_#0000000f,0_4px_12px_-4px_#00000014] active:opacity-70"
       >
-        <Icon name="arrow-down" className="text-foreground" />
+        <Icon name="arrow-down" role="control" className="text-foreground" />
         {hasNewRows && (
           <View className="absolute -top-px -right-px size-[9px] rounded-full border-2 border-card bg-info" />
         )}

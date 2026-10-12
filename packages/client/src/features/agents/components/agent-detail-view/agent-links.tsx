@@ -38,7 +38,17 @@ function ExternalLink({ link }: { link: AgentLink }): React.JSX.Element {
       className="flex-row items-center gap-1"
     >
       <Text role="body">{link.label}</Text>
-      <Icon name="external-link" size="sm" className="text-muted-foreground" />
+      <ExternalLinkIcon />
     </Pressable>
+  );
+}
+
+function ExternalLinkIcon(): React.JSX.Element {
+  return (
+    <Icon
+      name="external-link"
+      role="control"
+      className="text-muted-foreground"
+    />
   );
 }
