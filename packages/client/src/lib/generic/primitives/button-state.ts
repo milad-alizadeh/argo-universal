@@ -13,12 +13,22 @@ export function isButtonDisabled(
   return !!(props.disabled || props.loading);
 }
 
+// A loading button keeps its look but ignores presses, so the system never greys it out like a disabled one.
+export function readyPress(
+  props: Pick<ButtonDataProps, 'onPress' | 'disabled' | 'loading'>,
+): ButtonDataProps['onPress'] {
+  return isButtonDisabled(props) ? undefined : props.onPress;
+}
+
+// A button sits in the page's own layout, so a hosted one near the screen's edge keeps its place.
 export function nativeButtonLayout(fullWidth?: boolean): {
   matchContents: { vertical: boolean; horizontal: boolean };
+  ignoreSafeArea: 'all';
   style: { width: '100%' } | undefined;
 } {
   return {
     matchContents: { vertical: true, horizontal: !fullWidth },
+    ignoreSafeArea: 'all',
     style: fullWidth ? { width: '100%' } : undefined,
   };
 }

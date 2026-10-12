@@ -20,7 +20,7 @@ import { iconPixels } from '../symbols/icon';
 import { createNativeButton, NativeButtonIcon } from './button-native';
 import type { ButtonTheme } from './button-native-colors';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
-import { isButtonDisabled, nativeButtonVariant } from './button-state';
+import { nativeButtonVariant, readyPress } from './button-state';
 
 const nativeButtons = {
   default: ComposeButton,
@@ -41,7 +41,7 @@ function NativeControl(
       <ButtonLabel
         {...props}
         contentClass={props.theme.contentClass}
-        color={props.theme.colors.disabledContentColor}
+        color={props.theme.colors.contentColor}
       />
     </NativeButton>
   );
@@ -62,8 +62,8 @@ function nativeControlProps(
   props: NativeControlProps,
 ): Omit<ComponentProps<typeof ComposeButton>, 'children'> {
   return {
-    onClick: props.onPress,
-    enabled: !isButtonDisabled(props),
+    onClick: readyPress(props),
+    enabled: !props.disabled,
     colors: props.theme.colors,
     modifiers: nativeModifiers(props),
   };

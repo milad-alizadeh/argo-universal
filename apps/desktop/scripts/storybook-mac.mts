@@ -56,7 +56,7 @@ const stop = (storybook: ChildProcess | undefined): void => {
   if (storybook?.pid) process.kill(-storybook.pid, 'SIGTERM');
 };
 
-const waitForStorybook = async (): Promise<void> => {
+const pollStorybook = async (): Promise<void> => {
   const deadline = Date.now() + startTimeoutMs;
   while (!(await answers())) {
     if (Date.now() > deadline) {
@@ -65,6 +65,26 @@ const waitForStorybook = async (): Promise<void> => {
     await delay(retryDelayMs);
   }
 };
+
+// A Storybook that exits before it answers (port taken, build error) fails the wait at once; a later exit is not an error here.
+const exitBeforeAnswer = (storybook: ChildProcess): Promise<never> => {
+  const exited = new Promise<never>((_, reject): void => {
+    storybook.once('exit', (code, signal): void => {
+      reject(
+        new Error(`Storybook exited (${signal ?? code}) before it answered`),
+      );
+    });
+  });
+  exited.catch((): void => undefined);
+  return exited;
+};
+
+const waitForStorybook = (
+  storybook: ChildProcess | undefined,
+): Promise<void> =>
+  storybook
+    ? Promise.race([pollStorybook(), exitBeforeAnswer(storybook)])
+    : pollStorybook();
 
 // The Storybook window's main process, and the desktop app's own preload, unchanged.
 const buildWindow = (): Promise<unknown> =>
@@ -92,7 +112,7 @@ const buildWindow = (): Promise<unknown> =>
 
 const storybook = (await answers()) ? undefined : startStorybook();
 try {
-  await waitForStorybook();
+  await waitForStorybook(storybook);
   await buildWindow();
 } catch (error) {
   stop(storybook);
