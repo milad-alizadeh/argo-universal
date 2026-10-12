@@ -84,35 +84,30 @@ export function PhoneShell({
   function sectionButton(section: Section): React.JSX.Element {
     const { title, icon } = shellSections[section];
     const badge = attentionBadge(attentionCount);
+    const selected = selectedSection === section;
     return (
       <Pressable
         key={section}
         accessibilityLabel={title}
-        accessibilityState={{ selected: selectedSection === section }}
-        aria-pressed={selectedSection === section}
+        accessibilityState={{ selected }}
+        aria-pressed={selected}
         onPress={() => selectSection(section)}
         role="button"
         className={contentActionClass({
           variant: 'ghost',
           className: cn(
             'h-12 sm:h-12 justify-start gap-1.5 rounded-lg px-3 has-[>[data-icon]]:px-3',
-            selectedSection === section && 'bg-selected',
+            selected && 'bg-selected',
           ),
         })}
       >
         <Icon
           name={icon}
           size="lg"
-          filled={selectedSection === section}
-          className={cn(selectedSection !== section && 'text-muted-foreground')}
+          filled={selected}
+          className={cn(!selected && 'text-muted-foreground')}
         />
-        <Text
-          role="body"
-          className={cn(
-            'flex-1',
-            selectedSection === section && 'font-semibold',
-          )}
-        >
+        <Text role="body" className={cn('flex-1', selected && 'font-semibold')}>
           {title}
         </Text>
         {section === 'sessions' && badge && (
