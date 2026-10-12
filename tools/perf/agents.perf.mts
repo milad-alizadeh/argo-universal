@@ -60,8 +60,8 @@ test.afterAll(async () => {
   await report(results, { agents: agentCount }, 'agents');
 });
 
-const agentRow = (page: Page, name: string): ReturnType<Page['getByRole']> =>
-  page.getByRole('listitem', { name, exact: true });
+const agentLink = (page: Page, name: string): ReturnType<Page['getByRole']> =>
+  page.getByRole('link', { name: new RegExp(`^${name},`, 'u') });
 
 // Opens Settings, then Agents, and waits for the long registry's rows.
 async function openAgents(page: Page, viewport: Viewport): Promise<CDPSession> {
@@ -73,14 +73,14 @@ async function openAgents(page: Page, viewport: Viewport): Promise<CDPSession> {
     await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('link', { name: /^Agents(?:,|$)/u }).click();
-  await agentRow(page, 'Example Agent 1').waitFor();
+  await agentLink(page, 'Example Agent 1').waitFor();
   return session;
 }
 
 // Reaches the last Agent once, so the list has measured every row before the flicks.
 async function warmList(page: Page): Promise<void> {
   await jump(page, catalogScroll, false);
-  await agentRow(page, `Windows Agent ${agentCount}`).waitFor();
+  await agentLink(page, `Windows Agent ${agentCount}`).waitFor();
   await jump(page, catalogScroll, true);
   await page.waitForTimeout(settleMilliseconds);
 }

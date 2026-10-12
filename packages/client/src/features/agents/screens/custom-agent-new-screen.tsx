@@ -1,10 +1,12 @@
 import type * as React from 'react';
+import { View } from 'react-native';
 import { useNavigate } from '#lib/product/navigation/context';
+import { SettingsPage } from '#lib/product/settings-page';
 import {
   CustomAgentForm,
   type CustomAgentFormProps,
+  customAgentFormDescription,
 } from '../components/custom-agent-form';
-import { SettingsScroll } from '../components/settings-scroll';
 import { useCustomAgentMutations } from '../hooks/use-custom-agents';
 
 function useRegisterAgent(): CustomAgentFormProps['onSubmit'] {
@@ -22,15 +24,26 @@ function useRegisterAgent(): CustomAgentFormProps['onSubmit'] {
 }
 
 // Adds an Agent from outside the ACP Registry; the Server saves it only once it answers ACP initialize.
-export function CustomAgentScreen(): React.JSX.Element {
+export function CustomAgentNewScreen(): React.JSX.Element {
+  return (
+    <View className="flex-1 bg-sidebar wide:bg-transparent">
+      <SettingsPage
+        title="Add custom Agent"
+        caption={customAgentFormDescription}
+      >
+        <AddAgentForm />
+      </SettingsPage>
+    </View>
+  );
+}
+
+function AddAgentForm(): React.JSX.Element {
   const navigate = useNavigate();
   return (
-    <SettingsScroll>
-      <CustomAgentForm
-        submitLabel="Add Agent"
-        onSubmit={useRegisterAgent()}
-        onCancel={() => navigate({ to: 'settings-agents' })}
-      />
-    </SettingsScroll>
+    <CustomAgentForm
+      submitLabel="Add Agent"
+      onSubmit={useRegisterAgent()}
+      onCancel={() => navigate({ to: 'settings-agents' })}
+    />
   );
 }

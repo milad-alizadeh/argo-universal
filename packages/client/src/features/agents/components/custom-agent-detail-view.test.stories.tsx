@@ -2,23 +2,23 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
-import { AgentSettingsView } from './agent-settings-view';
+import { CustomAgentDetailView } from './custom-agent-detail-view';
 import {
   customAgentDefinition,
   customAgentFailure,
   failsItsCheck,
-  agentSettingsArgs,
+  customAgentDetailArgs,
 } from './custom-agent.mocks';
 
 const answered = 'Answered ACP initialize';
 
 const meta = {
-  title: 'Tests/AgentSettingsScreen',
-  component: AgentSettingsView,
-  args: agentSettingsArgs(),
+  title: 'Tests/Screens/Settings/Custom Agent',
+  component: CustomAgentDetailView,
+  args: customAgentDetailArgs(),
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
-} satisfies Meta<typeof AgentSettingsView>;
+} satisfies Meta<typeof CustomAgentDetailView>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -48,7 +48,7 @@ export const ShowsAFailedCheck: Story = {
 export const ChecksAgainAfterAFailure: Story = {
   args: { check: { status: 'failed', failure: customAgentFailure } },
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Check again' }));
+    await userEvent.click(canvas.getByRole('link', { name: 'Check again' }));
     await expect(args.onCheck).toHaveBeenCalledOnce();
   },
 };
@@ -67,7 +67,7 @@ export const ShowsAPlaceholderForAnAgentThatIsNotCustom: Story = {
 
 export const EditsTheLaunch: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Edit' }));
+    await userEvent.click(canvas.getByRole('link', { name: 'Edit' }));
     const name = canvas.getByLabelText('Name');
     await userEvent.clear(name);
     await userEvent.type(name, 'Renamed ACP');
@@ -79,7 +79,7 @@ export const EditsTheLaunch: Story = {
       }),
     );
     await expect(
-      await canvas.findByRole('button', { name: 'Edit' }),
+      await canvas.findByRole('link', { name: 'Edit' }),
     ).toBeVisible();
   },
 };
@@ -89,7 +89,7 @@ export const KeepsTheFormOpenWhenTheEditFailsItsCheck: Story = {
     onSave: failsItsCheck(),
   },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Edit' }));
+    await userEvent.click(canvas.getByRole('link', { name: 'Edit' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
     await expect(await canvas.findByText('Check failed')).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Save' })).toBeVisible();

@@ -1,21 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
-import { useState } from 'react';
-import { AgentsSettingsView } from './agents-settings-view';
+import { AgentListView } from './agent-list-view';
 import {
-  catalog,
   failedSyncCatalog,
   unavailableCatalog,
-  agentsSettingsArgs,
+  agentListArgs,
   emptyCatalog,
-} from './agents-settings-view.mocks';
+  longCatalog,
+} from './agent-list-view.mocks';
 
 const meta = {
-  title: 'Screens/AgentsSettingsScreen',
-  component: AgentsSettingsView,
-  args: agentsSettingsArgs(),
+  title: 'Screens/Settings/Agents',
+  component: AgentListView,
+  args: agentListArgs(),
   parameters: { screenPreview: true },
-} satisfies Meta<typeof AgentsSettingsView>;
+} satisfies Meta<typeof AgentListView>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -34,7 +32,7 @@ export const ErrorState: Story = {
 export const Empty: Story = {
   args: {
     catalog: { status: 'loaded', catalog: emptyCatalog },
-    customAgents: [],
+    installed: [],
   },
 };
 
@@ -44,22 +42,19 @@ export const RefreshFailed: Story = {
 
 export const NoMatches: Story = {
   args: {
-    search: 'mistral',
+    initialSearch: 'mistral',
     catalog: { status: 'loaded', catalog: emptyCatalog },
   },
 };
 
-export const Refreshing: Story = { args: { refreshing: true } };
+export const LongCatalog: Story = {
+  args: { catalog: { status: 'loaded', catalog: longCatalog } },
+};
+
+export const NotInstalled: Story = {
+  args: { initialFilter: 'not-installed' },
+};
 
 export const NoSavedCatalog: Story = {
-  render: function RetryCatalog(args): React.JSX.Element {
-    const [saved, setSaved] = useState(unavailableCatalog);
-    return (
-      <AgentsSettingsView
-        {...args}
-        catalog={{ status: 'loaded', catalog: saved }}
-        onRefresh={(): void => setSaved(catalog)}
-      />
-    );
-  },
+  args: { catalog: { status: 'loaded', catalog: unavailableCatalog } },
 };

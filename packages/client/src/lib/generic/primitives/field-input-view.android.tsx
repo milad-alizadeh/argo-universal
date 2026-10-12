@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { useMemo } from 'react';
 import { useNativeTheme } from '../native-theme';
 import { useWide } from '../use-wide';
+import { errorMessage } from './field-errors';
 import { useFollowedText } from './field-input-text';
 import {
   FieldInput as WideFieldInput,
@@ -18,7 +19,7 @@ export function FieldInput(props: FieldInputProps): React.JSX.Element {
   return <Field {...props} />;
 }
 
-// A Material filled field on the section's tile colour, its label floating inside it.
+// A bare Material filled field on the muted fill, its label floating inside it and its hint or error under it.
 function FormField(props: FieldInputProps): React.JSX.Element {
   const text = useNativeState(props.value);
   useFollowedText(text, props.value);
@@ -60,6 +61,21 @@ function FieldSlots(props: FieldInputProps): React.JSX.Element {
           <Text>{props.placeholder}</Text>
         </TextField.Placeholder>
       ) : null}
+      <SupportingLine {...props} />
     </>
+  );
+}
+
+// Material's supporting text: the error in its place when there is one, else the hint.
+const supportingLine = (props: FieldInputProps): string | undefined =>
+  errorMessage(props.errors ?? []) ?? props.hint;
+
+function SupportingLine(props: FieldInputProps): React.JSX.Element | null {
+  const line = supportingLine(props);
+  if (!line) return null;
+  return (
+    <TextField.SupportingText>
+      <Text>{line}</Text>
+    </TextField.SupportingText>
   );
 }

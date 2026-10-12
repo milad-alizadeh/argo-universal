@@ -19,15 +19,22 @@ export const Variations: Story = {
   render: () => (
     <FieldGroup>
       <FieldSection
+        textFields
         title="Program"
         footer="An absolute path, or a command on the Server's PATH."
       >
         <TypedInput label="Name" initial="Example ACP" />
-        <TypedInput mono label="Executable" initial="example-acp" />
+        <TypedInput
+          mono
+          label="Executable"
+          initial="example-acp"
+          hint="An absolute path, or a command on the Server's PATH."
+        />
       </FieldSection>
       <FieldSection
+        textFields
         title="Invalid"
-        footer="One path or command, without spaces. Put arguments below."
+        footer="One path or command, without spaces."
         footerTone="destructive"
       >
         <TypedInput
