@@ -3,9 +3,12 @@ import type { ReactNode } from 'react';
 import { Input } from '#lib/generic/primitives/input';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import {
+  type FieldErrors,
+  errorMessage,
+} from '../../../lib/generic/primitives/field-errors';
 import type { FieldSectionProps } from '../../../lib/generic/primitives/field-props';
 
-export type FieldErrors = readonly unknown[];
 export type FormInputProps = {
   label: string;
   value: string;
@@ -16,19 +19,6 @@ export type FormInputProps = {
   mono?: boolean;
   disabled?: boolean;
   className?: string;
-};
-
-const textOf = (value: unknown): string | undefined =>
-  typeof value === 'string' ? value : undefined;
-const objectMessage = (error: unknown): string | undefined =>
-  error instanceof Object && 'message' in error
-    ? textOf(error.message)
-    : undefined;
-
-// Standard Schema issues and plain strings both carry the message the person reads.
-export const errorMessage = (errors: FieldErrors): string | undefined => {
-  const [error] = errors;
-  return typeof error === 'string' ? error : objectMessage(error);
 };
 
 // A section's footer: an error in the destructive tone in place of the hint.
