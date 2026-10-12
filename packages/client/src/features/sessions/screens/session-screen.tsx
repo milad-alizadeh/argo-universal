@@ -88,12 +88,6 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
   const connected = useConnectionState() === 'open';
   const feed = useSessionFeed(sessionId);
   const agents = useAgents();
-  const trpc = useTRPC();
-  const closeSession = useMutation(
-    trpc.session.close.mutationOptions({
-      onSuccess: () => navigate({ to: 'sessions' }),
-    }),
-  );
   const commands = useSessionCommands(
     sessionId,
     feed.resumeAfterCommand,
@@ -126,10 +120,6 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
       imageUrl,
       checkoutBranch: snapshot.checkout.branch ?? undefined,
     },
-    cancelCreation: {
-      disabled: !connected || closeSession.isPending || promptSession.isPending,
-      onCancel: () => closeSession.mutate({ sessionId }),
-    },
     composer: {
       draft: commands.draft,
       onDraftChange: commands.changeDraft,
@@ -145,7 +135,6 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
         attachment: commands.attachmentError,
         prompt: promptSession.error,
         configuration: setConfigOption.error,
-        close: closeSession.error,
       }),
       writtenPlan:
         view.plan && view.plan.type !== 'items' ? view.plan : undefined,

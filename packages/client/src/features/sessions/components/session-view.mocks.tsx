@@ -58,7 +58,6 @@ function openSessionProps(
       checkoutBranch: snapshot.checkout.branch ?? undefined,
       now: runningTurnNow,
     },
-    cancelCreation: { disabled: false, onCancel: fn() },
     composer: {
       draft: { text: '', images: [] },
       onDraftChange: fn(),

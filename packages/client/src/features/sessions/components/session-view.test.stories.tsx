@@ -23,7 +23,6 @@ import {
   withPullRequests,
 } from './session-view.mocks';
 
-const cancelCreationLabel = 'Cancel creation';
 const agentFailure = 'The Agent stopped three times in ten minutes';
 
 const meta = {
@@ -61,10 +60,6 @@ export const RunningTurn: Story = {
       await expect(canvas.getByRole('status')).toHaveTextContent(
         runningHeader.text,
       );
-      // A running Turn is no Session to cancel.
-      await expect(
-        canvas.queryByRole('button', { name: cancelCreationLabel }),
-      ).toBeNull();
     }),
 };
 
@@ -221,23 +216,7 @@ export const EmptyFeed: Story = {
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
       ).toBeVisible();
-      await expect(
-        canvas.getByRole('button', { name: cancelCreationLabel }),
-      ).toBeVisible();
     }),
-};
-
-export const CancelsCreation: Story = {
-  args: { view: { state: 'open', ...emptySession } },
-  play: async ({ canvas, args, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
-    await userEvent.click(
-      await canvas.findByRole('button', { name: cancelCreationLabel }),
-    );
-    await expect(
-      openProps(args.view).cancelCreation.onCancel,
-    ).toHaveBeenCalledOnce();
-  },
 };
 
 export const Disconnected: Story = {
