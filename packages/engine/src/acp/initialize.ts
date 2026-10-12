@@ -1,27 +1,34 @@
 import type {
   ClientContext,
+  ElicitationCapabilities,
   InitializeRequest,
   InitializeResponse,
 } from '@agentclientprotocol/sdk';
 import { sessionCapabilities } from './open-session';
 import type { createAcpResponseReaders } from './response-readers';
 
-const initializeRequest: InitializeRequest = {
+const initializeRequest = (
+  urlElicitation?: Pick<ElicitationCapabilities, 'url'>,
+): InitializeRequest => ({
   protocolVersion: 1,
   clientCapabilities: {
     plan: {},
     session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
-    elicitation: { form: {}, url: {} },
+    elicitation: { form: {}, ...urlElicitation },
   },
-};
+});
 
 // The one ACP initialize Argo sends; an Agent that cannot close single Sessions is refused.
 export const negotiateAcpInitialize = async (
   agent: ClientContext,
   readers: ReturnType<typeof createAcpResponseReaders>,
+  urlElicitation?: Pick<ElicitationCapabilities, 'url'>,
 ): Promise<InitializeResponse> => {
   const response = readers.initialize.parse(
-    await agent.request<unknown>('initialize', initializeRequest),
+    await agent.request<unknown>(
+      'initialize',
+      initializeRequest(urlElicitation),
+    ),
   );
   if (!sessionCapabilities(response)?.close)
     throw new Error('Agent cannot close independent ACP sessions');

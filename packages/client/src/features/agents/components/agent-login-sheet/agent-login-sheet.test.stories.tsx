@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
+import { View } from 'react-native';
 import { expect, fn, within, waitFor } from 'storybook/test';
 import { AgentLoginSheet } from './agent-login-sheet';
 import { loginSnapshot } from './agent-login.mocks';
@@ -83,5 +85,25 @@ export const StartingCannotCancelBeforeAdmission: Story = {
   play: async () => {
     const dialog = within(await within(document.body).findByRole('dialog'));
     await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+  },
+};
+
+export const BackClosesUnsupportedSignIn: Story = {
+  args: { snapshot: loginSnapshot('unsupported') },
+  render: function UnsupportedSignIn(args) {
+    const [open, setOpen] = useState(true);
+    const close = (): void => {
+      args.onClose();
+      setOpen(false);
+    };
+    return open ? <AgentLoginSheet {...args} onClose={close} /> : <View />;
+  },
+  play: async ({ args, userEvent }) => {
+    const body = within(document.body);
+    const dialog = within(await body.findByRole('dialog'));
+    await userEvent.click(dialog.getByRole('button', { name: 'Back' }));
+    await expect(args.onClose).toHaveBeenCalledOnce();
+    await expect(args.onRetry).not.toHaveBeenCalled();
+    await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
   },
 };

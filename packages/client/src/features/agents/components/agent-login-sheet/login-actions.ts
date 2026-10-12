@@ -126,5 +126,5 @@ function initialActions(props: AgentLoginSheetProps): Action[] {
 const back = (props: AgentLoginSheetProps): Action => ({
   id: 'back',
   label: 'Back',
-  onPress: props.onRetry,
+  onPress: props.onClose,
 });

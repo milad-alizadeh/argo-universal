@@ -2,7 +2,7 @@ import type { InitializeRequest } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 
-it('the real Client advertises implemented Plan, Notice, Compaction and URL Elicitation extensions', async () => {
+it('Session connections advertise implemented extensions without URL Elicitation', async () => {
   const received = Promise.withResolvers<InitializeRequest>();
   const host = await startAcpEngine({
     steps: [],
@@ -16,12 +16,16 @@ it('the real Client advertises implemented Plan, Notice, Compaction and URL Elic
     responses: { initialize: [{ received }] },
   });
   await host.caller.session.new(emptySessionInput);
-  expect(await received.promise).toMatchObject({
+  const initialization = await received.promise;
+  expect(initialization).toMatchObject({
     protocolVersion: 1,
     clientCapabilities: {
       plan: {},
       session: { notices: {}, compaction: {} },
-      elicitation: { form: {}, url: {} },
+      elicitation: { form: {} },
     },
   });
+  expect(initialization.clientCapabilities?.elicitation).not.toHaveProperty(
+    'url',
+  );
 });

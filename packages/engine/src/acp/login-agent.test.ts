@@ -1,4 +1,7 @@
-import type { AuthenticateRequest } from '@agentclientprotocol/sdk';
+import type {
+  AuthenticateRequest,
+  InitializeRequest,
+} from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { resourceLaunch, resourceInitialization } from '#mocks/acp-resource';
 import {
@@ -15,6 +18,23 @@ const callbacks = {
     action: 'cancel',
   }),
 };
+
+it('advertises URL Elicitation on the connection that presents login requests', async () => {
+  const received = Promise.withResolvers<InitializeRequest>();
+  const peer = createScriptedAgentProcess({
+    steps: [],
+    responses: { initialize: [{ received }] },
+  });
+  const login = await createLoginAgentOpener(peer)(subject, callbacks);
+  try {
+    expect((await received.promise).clientCapabilities?.elicitation).toEqual({
+      form: {},
+      url: {},
+    });
+  } finally {
+    await login.close();
+  }
+});
 
 it('offers advertised protocol methods while omitting terminal authentication', async () => {
   const peer = createScriptedAgentProcess({

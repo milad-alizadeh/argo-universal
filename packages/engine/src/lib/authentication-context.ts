@@ -1,5 +1,4 @@
 type AuthenticationContext = {
-  executable: string;
   authContext: string;
   env: Readonly<Record<string, string>>;
 };
@@ -15,7 +14,6 @@ export const authenticationContextKey = (
   launch: AuthenticationContext,
 ): string =>
   JSON.stringify([
-    launch.executable,
     launch.authContext,
     accountEnvironment.map((name) => [name, launch.env[name] ?? null]),
   ]);

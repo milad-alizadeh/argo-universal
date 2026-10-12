@@ -66,6 +66,7 @@ class AcpLoginConnection {
     this.initialization = await negotiateAcpInitialize(
       this.connection.agent,
       this.readers,
+      { url: {} },
     );
     return {
       methods: loginMethods(this.initialization),
