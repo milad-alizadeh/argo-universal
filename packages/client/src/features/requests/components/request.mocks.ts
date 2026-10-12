@@ -3,8 +3,8 @@ import { type RequestMock, recordedRequestMocks } from '@repo/mocks/app';
 import type {
   ElicitationFormProps,
   ElicitationValues,
-} from './elicitation-form';
-import type { PermissionRequestProps } from './permission-request';
+} from './elicitation-form/elicitation-form';
+import type { PermissionRequestProps } from './permission-request/permission-request';
 export const permissionMocks = recordedRequestMocks.filter(
   (mock) => mock.recording === 'permission',
 );

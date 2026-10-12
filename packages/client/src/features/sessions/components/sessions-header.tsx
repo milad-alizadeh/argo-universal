@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { SearchField } from '#lib/generic/primitives/search-field';
+import { SearchField } from '#lib/generic/primitives/inputs/search-field/search-field';
 import { ListTitle } from '#lib/product/list-title';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
-import { IconButton } from '../../../lib/generic/primitives/icon-button';
+import { IconButton } from '../../../lib/generic/primitives/buttons/icon-button/icon-button';
 import type { SessionsFilter } from '../state/sessions-filter';
-import { SessionsFilterMenu } from './sessions-filter-menu';
+import { SessionsFilterMenu } from './sessions-filter-menu/sessions-filter-menu';
 
 // On iOS a phone's New Session sits beside the search bar, where it replaces the floating button.
 export const newSessionBesideSearch = Platform.OS === 'ios';

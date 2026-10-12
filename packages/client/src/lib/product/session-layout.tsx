@@ -3,9 +3,9 @@ import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { cn } from '#lib/generic/utils';
-import { useWide } from '../generic/use-wide';
-import { keyboardAvoidingStyle, Screen } from './screen';
-import { ScrollFadeFrame } from './scroll-fade-frame';
+import { useWide } from '../generic/use-wide/use-wide';
+import { keyboardAvoidingStyle, Screen } from './screen/screen';
+import { ScrollFadeFrame } from './scroll-fade/scroll-fade-frame';
 
 // The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.
 const sessionSurface = 'bg-sidebar';

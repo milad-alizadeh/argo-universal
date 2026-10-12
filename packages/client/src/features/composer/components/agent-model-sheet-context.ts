@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useSyncExternalStore } from 'react';
-import type { ComposerConfigurationProps } from './composer-configuration';
+import type { ComposerConfigurationProps } from './composer-configuration/composer-configuration';
 
 // The app presents Composer menus as native sheet routes through these.
 export interface NativeSheets {

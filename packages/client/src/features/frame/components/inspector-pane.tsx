@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { IconButton } from '#lib/generic/primitives/icon-button';
-import { Text } from '#lib/generic/primitives/text';
-import { ScrollFadeView } from '#lib/product/scroll-fade';
-import type { InspectorState } from './desktop-shell';
+import { IconButton } from '#lib/generic/primitives/buttons/icon-button/icon-button';
+import { Text } from '#lib/generic/primitives/display/text/text';
+import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
+import type { InspectorState } from './desktop-shell/desktop-shell';
 
 export interface InspectorPaneProps {
   title: string;

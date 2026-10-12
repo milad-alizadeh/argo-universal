@@ -8,7 +8,7 @@ import {
 import {
   SettingsList,
   type SettingsListProps,
-} from '../components/settings-list';
+} from '../components/settings-list/settings-list';
 import { useProjects } from '../hooks/use-projects';
 
 export interface SettingsNavigationListProps {

@@ -1,3 +1,5 @@
+import { componentRelocations } from './component-relocations.mts';
+
 // Owner-approved folder moves (ADR-0017). Each new folder keeps the historical waiver identity of the folders listed for it.
 const engineRelocations: [string, string[]][] = [
   ['mocks/app/*', ['packages/api/mocks/*']],
@@ -61,4 +63,5 @@ const clientRelocations: [string, string[]][] = [
 export const relocatedFolders = new Map([
   ...engineRelocations,
   ...clientRelocations,
+  ...componentRelocations,
 ]);

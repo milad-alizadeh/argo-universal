@@ -4,9 +4,9 @@ import { View } from 'react-native';
 import {
   PlanProposalCard,
   type PlanProposalCardProps,
-} from '../src/features/requests/components/plan-proposal-card';
+} from '../src/features/requests/components/plan-proposal-card/plan-proposal-card';
 import { PlanProposalRegion } from '../src/features/requests/components/plan-proposal-region';
-import { Text } from '../src/lib/generic/primitives/text';
+import { Text } from '../src/lib/generic/primitives/display/text/text';
 
 export const planProposalMocks = recordedRequestMocks.flatMap((mock) =>
   mock.answer.procedure === 'answerPlanProposal' &&

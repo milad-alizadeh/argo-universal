@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
-import { Text } from '#lib/generic/primitives/text';
+import { Text } from '#lib/generic/primitives/display/text/text';
 import { Icon, iconSizeStyle } from '../../../lib/generic/symbols/icon';
 
 // A PR's CI checks: how many passed, failed and still run, out of all of them.

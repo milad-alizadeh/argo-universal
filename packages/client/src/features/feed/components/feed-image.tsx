@@ -6,7 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from '#lib/generic/primitives/dialog';
+} from '#lib/generic/primitives/overlays/dialog/dialog';
 
 export const FeedImageUrlContext = createContext<
   ((blob: BlobRef) => string) | null

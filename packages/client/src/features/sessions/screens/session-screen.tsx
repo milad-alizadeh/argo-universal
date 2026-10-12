@@ -19,7 +19,10 @@ import { useTRPC } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
 import { useNavigate } from '#lib/product/navigation/context';
 import type { SessionHeaderStatus } from '../components/session-header';
-import { SessionView, type SessionViewProps } from '../components/session-view';
+import {
+  SessionView,
+  type SessionViewProps,
+} from '../components/session-view/session-view';
 import { composerStatus } from '../state/composer-status';
 import { toSendError } from '../state/send-error';
 

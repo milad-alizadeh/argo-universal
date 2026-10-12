@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { useNavigate } from '#lib/product/navigation/context';
-import { AgentListView } from '../components/agent-list-view';
+import { AgentListView } from '../components/agent-list-view/agent-list-view';
 import { useAgentCatalog } from '../hooks/use-agent-catalog';
 import { useInstalledAgents } from '../hooks/use-installed-agents';
 

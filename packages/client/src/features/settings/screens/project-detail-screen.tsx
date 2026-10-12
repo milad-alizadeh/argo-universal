@@ -4,7 +4,7 @@ import { useNavigate } from '#lib/product/navigation/context';
 import {
   type ProjectLoad,
   ProjectDetailView,
-} from '../components/project-detail-view';
+} from '../components/project-detail-view/project-detail-view';
 import { useProjects } from '../hooks/use-projects';
 import { useServerPageCaption } from '../hooks/use-server-caption';
 

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useCSSVariable, useUniwind } from 'uniwind';
-import { usePrimitiveColor } from './primitives/primitive-color';
+import { usePrimitiveColor } from './primitives/native/primitive-color';
 
 const colorTokens = [
   ['tint', '--color-tint'],

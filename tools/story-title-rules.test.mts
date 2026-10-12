@@ -8,18 +8,21 @@ const meta = (title: string): string =>
 describe('a story title', (): void => {
   it.each([
     [
-      `${src}/lib/generic/primitives/list-item.stories.tsx`,
+      `${src}/lib/generic/primitives/lists/list-item/list-item.stories.tsx`,
       'Design System/Primitives/ListItem',
     ],
     [`${src}/lib/generic/symbols/icon.stories.tsx`, 'Design System/Icon'],
-    [`${src}/lib/product/screen.stories.tsx`, 'Shared/Screen'],
-    [`${src}/features/feed/components/edit-row.stories.tsx`, 'Feed/EditRow'],
+    [`${src}/lib/product/screen/screen.stories.tsx`, 'Shared/Screen'],
     [
-      `${src}/features/frame/components/desktop-shell.stories.tsx`,
+      `${src}/features/feed/components/edit-row/edit-row.stories.tsx`,
+      'Feed/EditRow',
+    ],
+    [
+      `${src}/features/frame/components/desktop-shell/desktop-shell.stories.tsx`,
       'Shell/DesktopShell',
     ],
     [
-      `${src}/features/agents/components/agent-list-view.stories.tsx`,
+      `${src}/features/agents/components/agent-list-view/agent-list-view.stories.tsx`,
       'Screens/Settings/Agents',
     ],
     [
@@ -31,11 +34,11 @@ describe('a story title', (): void => {
       'Screens/PlaceholderScreens',
     ],
     [
-      `${src}/features/agents/components/custom-agent-form.stories.tsx`,
+      `${src}/features/agents/components/custom-agent-form/custom-agent-form.stories.tsx`,
       'Screens/Settings/Add custom Agent',
     ],
     [
-      `${src}/features/agents/components/agents-list.test.stories.tsx`,
+      `${src}/features/agents/components/agent-list-view/agents-list.test.stories.tsx`,
       'Tests/AgentsList',
     ],
   ])('passes in its folder: %s', (file, title): void => {
@@ -44,7 +47,7 @@ describe('a story title', (): void => {
 
   it.each([
     [
-      `${src}/lib/generic/primitives/field-row.stories.tsx`,
+      `${src}/lib/generic/primitives/fields/field-row/field-row.stories.tsx`,
       'Primitives/FieldRow',
       /'Design System\/Primitives\/'/,
     ],
@@ -54,7 +57,7 @@ describe('a story title', (): void => {
       /'Design System\/'/,
     ],
     [
-      `${src}/features/feed/components/edit-row.stories.tsx`,
+      `${src}/features/feed/components/edit-row/edit-row.stories.tsx`,
       'EditRow',
       /must start with 'Feed\/'$/,
     ],
@@ -64,13 +67,13 @@ describe('a story title', (): void => {
       /must start with 'Agents\/'$/,
     ],
     [
-      `${src}/features/frame/components/desktop-shell.stories.tsx`,
+      `${src}/features/frame/components/desktop-shell/desktop-shell.stories.tsx`,
       'Frame/DesktopShell',
       /'Shell\/'/,
     ],
-    [`${src}/lib/product/screen.stories.tsx`, 'Screen', /'Shared\/'/],
+    [`${src}/lib/product/screen/screen.stories.tsx`, 'Screen', /'Shared\/'/],
     [
-      `${src}/features/feed/components/feed.test.stories.tsx`,
+      `${src}/features/feed/components/feed/feed.test.stories.tsx`,
       'Feed/Feed',
       /'Tests\/'/,
     ],
@@ -89,7 +92,7 @@ describe('a story title', (): void => {
   it('reads a one-line meta', (): void => {
     expect(
       storyTitleProblems(
-        `${src}/lib/product/screen.stories.tsx`,
+        `${src}/lib/product/screen/screen.stories.tsx`,
         `const meta = { title: 'Screen' } satisfies Meta;`,
       ),
     ).toEqual([expect.stringMatching(/'Shared\/'/)]);
@@ -98,14 +101,16 @@ describe('a story title', (): void => {
   it('needs a literal title', (): void => {
     expect(
       storyTitleProblems(
-        `${src}/lib/product/screen.stories.tsx`,
+        `${src}/lib/product/screen/screen.stories.tsx`,
         'const meta = {};',
       ),
     ).toEqual([expect.stringMatching(/needs a literal title/)]);
   });
 
   it('ignores files that are not client stories', (): void => {
-    expect(storyTitleProblems(`${src}/lib/product/screen.tsx`, '')).toEqual([]);
+    expect(
+      storyTitleProblems(`${src}/lib/product/screen/screen.tsx`, ''),
+    ).toEqual([]);
     expect(storyTitleProblems('apps/storybook/x.stories.tsx', '')).toEqual([]);
   });
 });
