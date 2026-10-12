@@ -34,10 +34,21 @@ const isPixelModifier = (node: ESTree.CallExpression): boolean =>
   node.callee.name === 'size' &&
   node.arguments.some(isNumber);
 
+// SwiftUI's Image, which takes a pixel size; NativeSymbol wraps it with a role.
+const isSwiftUIImage = (node: ESTree.ImportDeclaration): boolean =>
+  node.source.value === '@expo/ui/swift-ui' &&
+  node.specifiers.some(
+    (specifier) =>
+      specifier.type === 'ImportSpecifier' &&
+      specifier.imported.type === 'Identifier' &&
+      specifier.imported.name === 'Image',
+  );
+
 type IconVisitor = {
   JSXOpeningElement: NonNullable<Visitor['JSXOpeningElement']>;
   JSXAttribute: NonNullable<Visitor['JSXAttribute']>;
   CallExpression: NonNullable<Visitor['CallExpression']>;
+  ImportDeclaration: NonNullable<Visitor['ImportDeclaration']>;
 };
 
 const hasPixelSize =
@@ -49,17 +60,21 @@ const hasPixelSize =
       context.sourceCode.getText(attribute.value),
     );
 
+const isSystemName = (node: ESTree.JSXAttribute): boolean =>
+  attributeName(node) === 'systemName';
+
+const reportNativeSymbol =
+  <Node extends ESTree.Node>(context: Context, test: (node: Node) => boolean) =>
+  (node: Node): void => {
+    if (test(node)) context.report({ node, messageId: 'nativeSymbol' });
+  };
+
 const nativeSymbolChecks = (
   context: Context,
 ): Omit<IconVisitor, 'JSXOpeningElement'> => ({
-  JSXAttribute: (node): void => {
-    if (attributeName(node) === 'systemName')
-      context.report({ node, messageId: 'nativeSymbol' });
-  },
-  CallExpression: (node): void => {
-    if (isPixelModifier(node))
-      context.report({ node, messageId: 'nativeSymbol' });
-  },
+  JSXAttribute: reportNativeSymbol(context, isSystemName),
+  CallExpression: reportNativeSymbol(context, isPixelModifier),
+  ImportDeclaration: reportNativeSymbol(context, isSwiftUIImage),
 });
 
 export const iconRole = defineRule({
@@ -67,9 +82,9 @@ export const iconRole = defineRule({
     type: 'problem',
     messages: {
       iconRole:
-        'Icons take a role (body, secondary, control, inset, mark, row, action, nav, title), never a size prop or size-* class.',
+        'Icons take a role (body, secondary, control, mark, row, action, nav, title), never a size prop or size-* class.',
       nativeSymbol:
-        'Draw a native symbol with SwiftUISymbol, or size it with useIconPixels(role), so native icons follow the same roles.',
+        'Draw a native symbol with NativeSymbol, or size it with useIconPixels(role), so native icons follow the same roles.',
     },
   },
   create: (context): IconVisitor => ({

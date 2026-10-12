@@ -19,9 +19,8 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { Icon } from '../../../symbols/icon';
+import { Icon, IconSlot } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
-import { useIconBox } from '../../../symbols/icon-role';
 import { cn } from '../../../utils';
 import { Host } from '../../native/host';
 import { useComposeTextStyle } from '../../native/native-typography';
@@ -91,10 +90,10 @@ function NavigationItemIcon({
 }: NavigationItemProps): React.JSX.Element {
   return (
     <RNHostView matchContents>
-      <View collapsable={false} style={useIconBox('nav')}>
+      <IconSlot role="nav" collapsable={false}>
         <IconLayer icon={icon} filled shown={selected} />
         <IconLayer icon={icon} filled={false} shown={!selected} />
-      </View>
+      </IconSlot>
     </RNHostView>
   );
 }

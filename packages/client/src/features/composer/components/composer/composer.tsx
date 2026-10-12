@@ -236,7 +236,7 @@ export function Composer({
                       })}
                     >
                       <View className="size-5 items-center justify-center rounded-sm bg-background">
-                        <Icon name="close" role="inset" />
+                        <Icon name="close" role="secondary" />
                       </View>
                     </Pressable>
                   </View>

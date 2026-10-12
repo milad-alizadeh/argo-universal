@@ -6,6 +6,7 @@ import {
   Collapsible,
   CollapsibleContent,
 } from '#lib/generic/primitives/display/collapsible/collapsible';
+import { DisclosureChevron } from '#lib/generic/primitives/display/disclosure-chevron/disclosure-chevron';
 import {
   Text,
   TextClassContext,
@@ -18,7 +19,6 @@ import {
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { type FileDiff, toFileDiffs } from '../../view/file-diff';
 import { DiffView } from '../diff-view/diff-view';
-import { DisclosureCaret } from '../disclosure-caret';
 import { ToolOutput } from '../tool-output';
 import { FileName } from './file-name';
 import { fileTypeIcon } from './file-type-icon';
@@ -93,7 +93,7 @@ function FileEdit({
                 -{file.removed.toLocaleString('en-US')}
               </Text>
             )}
-            <DisclosureCaret open={open} />
+            <DisclosureChevron open={open} />
           </View>
         </TextClassContext.Provider>
       </Pressable>
@@ -166,7 +166,7 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
         >
           Edited {files.length} files
         </Text>
-        <DisclosureCaret open={expanded} />
+        <DisclosureChevron open={expanded} />
       </Pressable>
       <CollapsibleContent className="gap-2 pt-2">
         {files.map((file) => (

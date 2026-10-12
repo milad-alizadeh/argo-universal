@@ -43,11 +43,7 @@ function LeadingSlot({
         {children}
       </View>
     );
-  return (
-    <IconSlot role="row" className="shrink-0 items-center justify-center">
-      {children}
-    </IconSlot>
-  );
+  return <IconSlot role="row">{children}</IconSlot>;
 }
 
 function RowIcon({
@@ -62,7 +58,7 @@ function RowIcon({
 // Paper: a Body-sized spinner in the row icon's slot.
 function RowSpinner(): React.JSX.Element {
   return (
-    <IconSlot role="row" className="shrink-0 items-center justify-center">
+    <IconSlot role="row">
       <IconSpinner iconRole="body" colorClassName="accent-foreground" />
     </IconSlot>
   );

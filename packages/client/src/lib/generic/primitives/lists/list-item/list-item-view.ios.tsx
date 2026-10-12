@@ -7,7 +7,6 @@ import {
   buttonStyle,
   disabled,
   fixedSize,
-  foregroundStyle,
   frame,
   listRowBackground,
   listRowInsets,
@@ -19,7 +18,7 @@ import {
 import type * as React from 'react';
 import { type NativeColors, useNativeTheme } from '../../../native-theme';
 import { useIconPixels } from '../../../symbols/icon-role';
-import { SwiftUISymbol } from '../../../symbols/swift-ui-symbol';
+import { NativeSymbol } from '../../../symbols/native-symbol';
 import { useWide } from '../../../use-wide/use-wide';
 import { useNavigationFields } from '../../fields/field-layout';
 import { type ListItemProps, listItemName } from '../../fields/field-props';
@@ -138,11 +137,7 @@ function DisclosureIndicator({
   visible: boolean;
 }): React.JSX.Element | null {
   return visible ? (
-    <SwiftUISymbol
-      name="chevron-right"
-      role="body"
-      modifiers={[foregroundStyle({ type: 'hierarchical', style: 'tertiary' })]}
-    />
+    <NativeSymbol name="chevron-right" role="body" muted />
   ) : null;
 }
 

@@ -111,7 +111,7 @@ export function LiveHeader({
       accessibilityLabel={title}
       className="w-full flex-row items-center gap-1.5"
     >
-      <IconSlot role="body" className="shrink-0 items-center justify-center">
+      <IconSlot role="body">
         <SourceIcon source={source} toolCall={toolCall} />
       </IconSlot>
       {request ? (
