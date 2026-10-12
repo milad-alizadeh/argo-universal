@@ -1,6 +1,6 @@
 const client = (folder: string): string => `packages/client/src/${folder}/*`;
 
-// Spec 421: each component moves into its own folder inside the folder that held it, which keeps the files that stay.
+// A component folder shares its parent's waiver identity, so the move adds no waiver (ADR-0017, Component folders).
 const componentFolders: [string, string[]][] = [
   [
     'features/composer/components',
