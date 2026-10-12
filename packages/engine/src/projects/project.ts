@@ -108,7 +108,7 @@ async function readProjectDetail({
 }: StoredProject): Promise<ProjectDetail> {
   if (!(await isFolder(path))) return missingFolderDetail(checkoutChoice);
   const [choice, remoteHost] = await Promise.all([
-    checkoutChoice ?? readDefaultCheckoutChoice(path),
+    Promise.resolve(checkoutChoice ?? readDefaultCheckoutChoice(path)),
     readRemoteHost(path),
   ]);
   return { checkoutChoice: choice, remoteHost, folderExists: true };
