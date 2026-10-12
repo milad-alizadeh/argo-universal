@@ -17,14 +17,12 @@ type SelectMenuExampleProps = {
   initialValue?: Effort;
   disabled?: boolean;
   invalid?: boolean;
-  variant?: 'default' | 'plain';
 };
 
 function SelectMenuExample({
   initialValue,
   disabled = false,
   invalid = false,
-  variant,
 }: SelectMenuExampleProps): React.JSX.Element {
   const [value, setValue] = useState(initialValue);
   const menuProps = {
@@ -33,7 +31,6 @@ function SelectMenuExample({
     onValueChange: setValue,
     disabled,
     invalid,
-    variant,
   };
   return <SelectMenu accessibilityLabel="Effort" {...menuProps} />;
 }
@@ -67,9 +64,7 @@ export const Overview: Story = {
         <FieldSection>
           <ListItem
             title="Effort"
-            accessory={
-              <SelectMenuExample initialValue="medium" variant="plain" />
-            }
+            accessory={<SelectMenuExample initialValue="medium" />}
           />
         </FieldSection>
       </Variation>
