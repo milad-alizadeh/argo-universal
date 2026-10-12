@@ -1,18 +1,16 @@
-// jscpd:ignore-start -- only the import list matches session-pull-request.tsx; no logic is shared.
 import type * as React from 'react';
 import { View } from 'react-native';
+import { Button } from '#lib/generic/primitives/button';
+import { ButtonGroup } from '#lib/generic/primitives/button-group';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#lib/generic/primitives/dropdown-menu';
-import { Pressable } from '#lib/generic/primitives/pressable';
+import { IconButton } from '#lib/generic/primitives/icon-button';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
-import { Chevron } from '../../../lib/generic/symbols/chevron';
-import { Icon } from '../../../lib/generic/symbols/icon';
-// jscpd:ignore-end
 
 export type MergeMethod = 'squash' | 'merge' | 'rebase';
 
@@ -29,8 +27,8 @@ export interface MergePrButtonProps {
   onMerge?: (method: MergeMethod) => void;
 }
 
-const halfClassName =
-  'h-7 flex-row items-center justify-center web:outline-none web:hover:bg-primary-foreground/10 web:focus-visible:bg-primary-foreground/15 active:bg-primary-foreground/15';
+// The group dims as one, so its buttons do not dim a second time.
+const undimmed = 'opacity-100';
 
 // "Merge PR" with a menu of merge methods on its chevron; dimmed until the PR can merge.
 export function MergePrButton({
@@ -39,41 +37,32 @@ export function MergePrButton({
 }: MergePrButtonProps): React.JSX.Element {
   const disabled = !mergeable || !onMerge;
   return (
-    <View
-      className={cn(
-        'h-7 flex-row items-center overflow-hidden rounded-md bg-primary shadow-sm',
-        disabled && 'opacity-35',
-      )}
+    <ButtonGroup
+      className={cn('rounded-md web:shadow-xs', disabled && 'opacity-35')}
     >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Merge PR"
-        accessibilityState={{ disabled }}
+      <Button
+        appearance="content"
+        size="xs"
+        icon="merged"
+        label="Merge PR"
         disabled={disabled}
         onPress={() => onMerge?.('squash')}
-        className={cn(halfClassName, 'gap-1.5 px-1.5')}
-      >
-        <Icon name="merged" size="sm" className="text-primary-foreground" />
-        <Text role="control" className="text-primary-foreground">
-          Merge PR
-        </Text>
-      </Pressable>
-      <View className="h-3.5 w-px bg-primary-foreground/25" />
+        className={cn('web:shadow-none', undimmed)}
+      />
+      <View className="h-7 w-px justify-center bg-primary">
+        <View className="h-3.5 bg-primary-foreground/25" />
+      </View>
       <DropdownMenu>
         <DropdownMenuTrigger asChild disabled={disabled}>
-          <Pressable
-            accessibilityRole="button"
+          <IconButton
+            variant="filled"
+            size="sm"
+            icon="chevron-down"
+            iconSize="sm"
             accessibilityLabel="Merge options"
-            accessibilityState={{ disabled }}
             disabled={disabled}
-            className={cn(halfClassName, 'w-6')}
-          >
-            <Chevron
-              textRole="control"
-              name="chevron-down"
-              className="text-primary-foreground"
-            />
-          </Pressable>
+            className={cn('rounded-l-none sm:w-6', undimmed)}
+          />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {mergeMethods.map(({ method, label }) => (
@@ -83,6 +72,6 @@ export function MergePrButton({
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-    </View>
+    </ButtonGroup>
   );
 }
