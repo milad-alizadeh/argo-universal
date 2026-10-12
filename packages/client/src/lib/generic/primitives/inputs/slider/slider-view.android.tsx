@@ -2,7 +2,7 @@ import { Slider as NativeSlider } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { Host } from '../../native/host';
+import { ControlHost } from '../../native/native-control';
 import type { SliderProps } from './slider';
 import { type SliderRange, sliderStopCount } from './slider-steps';
 
@@ -12,13 +12,13 @@ type NativeSliderProps = React.ComponentProps<typeof NativeSlider>;
 export function Slider(props: SliderProps): React.JSX.Element {
   const colors = useSliderColors();
   return (
-    <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
+    <ControlHost matchContents={{ vertical: true }} style={{ width: '100%' }}>
       <NativeSlider
         {...sliderAttributes(props)}
         colors={colors}
         modifiers={[semantics({ contentDescription: spokenName(props) })]}
       />
-    </Host>
+    </ControlHost>
   );
 }
 
@@ -30,11 +30,11 @@ function spokenName(
 }
 
 function useSliderColors(): NativeSliderProps['colors'] {
-  const { tint, muted } = useNativeTheme().colors;
+  const { tint, muted, separator } = useNativeTheme().colors;
   return {
     thumbColor: tint,
     activeTrackColor: tint,
-    inactiveTrackColor: muted,
+    inactiveTrackColor: separator,
     activeTickColor: muted,
     inactiveTickColor: tint,
   };

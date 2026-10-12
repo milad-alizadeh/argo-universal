@@ -1,9 +1,12 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ComponentProps, ReactElement, ReactNode } from 'react';
+import type { Pressable } from 'react-native';
 import type { IconName } from '../../symbols/icon-names';
 
 export interface FieldGroupProps {
   children: ReactNode;
   variant?: 'grouped' | 'navigation';
+  // A content-sized overlay uses compact groups rather than a full screen's scrolling column.
+  fit?: boolean;
 }
 
 export interface FieldSectionProps {
@@ -44,8 +47,26 @@ export interface ListItemProps {
   icon?: IconName;
   // An image in the icon's slot, such as an Agent's logo; it stands in for icon.
   leading?: ReactElement;
+  // An image beside the value, such as the selected Agent in Configure.
+  valueLeading?: ReactElement;
   accessory?: ReactElement;
+  // A native control in the row, such as a Switch; it shares the field's native Host.
+  control?: ReactElement;
+  // A control below the title and value, such as an effort slider.
+  detail?: ReactElement;
   onPress?: () => void;
+  onHoverIn?: ComponentProps<typeof Pressable>['onHoverIn'];
+  onHoverOut?: ComponentProps<typeof Pressable>['onHoverOut'];
+  role?: 'button' | 'switch';
+  checked?: boolean;
+  'aria-checked'?: boolean;
+  disclosure?: boolean;
+  accessibilityLabel?: string;
+  ref?: ComponentProps<typeof Pressable>['ref'];
+  id?: string;
+  'aria-haspopup'?: 'dialog';
+  'aria-expanded'?: boolean;
+  'aria-controls'?: string;
   href?: string;
   disabled?: boolean;
   selected?: boolean;
@@ -73,6 +94,7 @@ function distinctStatus(props: ListItemProps): string | undefined {
 }
 
 export function listItemName(props: ListItemProps): string {
+  if (props.accessibilityLabel) return props.accessibilityLabel;
   return [props.title, props.subtitle?.text, props.value, distinctStatus(props)]
     .filter(Boolean)
     .join(', ');

@@ -1,28 +1,18 @@
-import { useRootContext } from '@rn-primitives/popover';
 import type * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import {
-  cloneElement,
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from 'react';
+import { cloneElement, useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-sheet/bottom-sheet';
+import { Text } from '#primitives/display/text/text';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '../../../../lib/generic/primitives/overlays/popover/popover';
+  usePopoverClose,
+} from '#primitives/overlays/popover/popover';
+import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-sheet/bottom-sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import {
-  currentSheetContent,
-  publishSheetContent,
-  useNativeSheets,
-} from '../agent-model-sheet-context';
 
 function PopoverPanel({
   children,
@@ -33,27 +23,29 @@ function PopoverPanel({
   disabled?: boolean;
   close: (after?: () => void) => void;
 }): ReactNode {
-  const { onOpenChange } = useRootContext();
+  const dismiss = usePopoverClose();
   useEffect(() => {
-    if (disabled) onOpenChange(false);
-  }, [disabled, onOpenChange]);
+    if (disabled) dismiss();
+  }, [disabled, dismiss]);
   return children((after) => {
     close(after);
-    onOpenChange(false);
+    dismiss();
   });
 }
 
 export function ComposerPopover({
   trigger,
   label,
-  width = 280,
+  width = 320,
   className,
   onPresent,
+  listContent,
   children,
 }: {
   trigger: ReactElement<{ disabled?: boolean | null; onPress?: () => void }>;
   label: string;
   width?: number;
+  listContent?: boolean;
   className?: string;
   // Replaces the overlay, for a menu the app presents itself.
   onPresent?: () => void;
@@ -65,29 +57,10 @@ export function ComposerPopover({
   const [open, setOpen] = useState(false);
   const { close, closed, onOpenChange } = useAfterClose(setOpen);
   if (trigger.props.disabled && open) setOpen(false);
-  const sheets = useNativeSheets();
-  const owner = useId();
-  const nativeSheet = !wide && sheets;
-  // Keeps the sheet drawing this menu's latest state while it shows it.
-  useEffect(() => {
-    if (nativeSheet && currentSheetContent()?.owner === owner)
-      publishSheetContent({ owner, label, render: children });
-  });
   if (onPresent)
     return (
       <View style={layout}>
         {cloneElement(trigger, { onPress: onPresent })}
-      </View>
-    );
-  if (nativeSheet)
-    return (
-      <View style={layout}>
-        {cloneElement(trigger, {
-          onPress: () => {
-            publishSheetContent({ owner, label, render: children });
-            sheets.content();
-          },
-        })}
       </View>
     );
   if (!wide)
@@ -99,12 +72,25 @@ export function ComposerPopover({
         onClosed={closed}
         trigger={trigger}
         label={label}
+        surface="sidebar"
+        contentScrolls={listContent}
       >
-        {children(close)}
+        <View
+          className={
+            listContent && Platform.OS !== 'web'
+              ? 'flex-1 bg-sidebar'
+              : 'bg-sidebar'
+          }
+        >
+          <Text role="control" className="py-3 px-4 text-center">
+            {label === 'Agent and model' ? 'Configure' : label}
+          </Text>
+          {children(close)}
+        </View>
       </BottomSheet>
     );
   return (
-    <Popover style={layout} onOpenChange={onOpenChange}>
+    <Popover openOnHover style={layout} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild disabled={trigger.props.disabled}>
         {trigger}
       </PopoverTrigger>
@@ -114,7 +100,7 @@ export function ComposerPopover({
         accessibilityLabel={label}
         onClosed={closed}
         style={{ width }}
-        className="composer-popover p-0 overflow-hidden"
+        className="composer-popover bg-sidebar rounded-surface border-0 dark:border dark:border-border p-0 overflow-hidden"
       >
         <PopoverPanel disabled={!!trigger.props.disabled} close={close}>
           {children}

@@ -36,9 +36,9 @@ const agentIconId = 'composer-agent-icon';
 const spacingPrompt = 'Match the spacing.';
 const multilineSpacingPrompt =
   'Match the spacing.\nKeep the phone readable.\nUse both themes.';
-const chooseAgentLabel = 'Choose Agent';
+const chooseAgentLabel = /^Agent,/;
 const valueTextAttribute = 'aria-valuetext';
-const chooseModelLabel = 'Choose model';
+const chooseModelLabel = /^Model,/;
 const pressedAttribute = 'aria-pressed';
 const expandedAttribute = 'aria-expanded';
 const subagentCountLabel = 'Subagents: 2';
@@ -494,8 +494,8 @@ function sending(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(
-        canvas.getByRole('progressbar', { name: 'Sending' }),
-      ).toBeVisible();
+        canvas.getByRole('button', { name: 'Send' }),
+      ).toHaveAttribute('aria-busy', 'true');
       await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
       await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
       await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
@@ -623,11 +623,15 @@ async function chooseModel({
   name,
 }: Omit<PickerStep, 'canvas'> & { name: string }): Promise<void> {
   const overlay = within(document.body);
-  if (width < 720)
-    await userEvent.click(
-      await overlay.findByRole('button', { name: chooseModelLabel }),
-    );
+  await userEvent.click(
+    await overlay.findByRole('button', { name: chooseModelLabel }),
+  );
   await userEvent.click(await overlay.findByRole('button', { name }));
+  await waitFor(() =>
+    expect(
+      overlay.queryByRole('dialog', { name: 'Select Model' }),
+    ).not.toBeInTheDocument(),
+  );
   if (width < 720)
     await expect(
       await overlay.findByRole('button', { name: chooseModelLabel }),
@@ -639,11 +643,6 @@ async function expectEffortControlsVisible(): Promise<void> {
   await waitFor(() =>
     expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible(),
   );
-  for (const end of ['Fastest', 'Smartest']) {
-    const label = overlay.getByText(end, { exact: true });
-    await expect(label).toBeVisible();
-    await expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
-  }
 }
 
 async function expectHighEffort({
@@ -1027,19 +1026,22 @@ export const ScrollableAgentCatalog: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: chooseAgentLabel }),
+    );
     const scroll = await overlay.findByTestId('composer-agents-scroll');
     await waitFor(async () => {
       await expect(scroll.clientHeight).toBeGreaterThan(100);
       await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
     });
-    const menu = overlay.getByRole('dialog');
+    const menu = overlay.getByRole('dialog', { name: 'Select Agent' });
     await Promise.all(
       menu
         .getAnimations({ subtree: true })
         .map((animation) => animation.finished),
     );
     await waitFor(() => expect(menu).toBeVisible());
-    const heading = overlay.getByText('Agent', { exact: true });
+    const heading = overlay.getByText('Select Agent', { exact: true });
     const headingTop = heading.getBoundingClientRect().top;
     const menuHeight = menu.getBoundingClientRect().height;
     await expect(menu.getBoundingClientRect().bottom).toBeLessThanOrEqual(
@@ -1088,10 +1090,9 @@ function unavailableAgents(width: number): Story {
       await userEvent.click(
         canvas.getByRole('button', { name: agentModelLabel }),
       );
-      if (width < 720)
-        await userEvent.click(
-          await overlay.findByRole('button', { name: chooseAgentLabel }),
-        );
+      await userEvent.click(
+        await overlay.findByRole('button', { name: chooseAgentLabel }),
+      );
       const agents = args.configuration?.agents ?? [];
       await expect(agents).toHaveLength(2);
       for (const agent of agents) {
@@ -1176,7 +1177,7 @@ function responsiveLayout(width: number, agentIndex: number): Story {
         await expectHeldAgentList();
         await userEvent.click(
           await within(document.body).findByRole('button', {
-            name: 'Back to Agent and model',
+            name: 'Back to Configure',
           }),
         );
         await userEvent.click(
@@ -1186,13 +1187,21 @@ function responsiveLayout(width: number, agentIndex: number): Story {
         );
         await userEvent.click(
           await within(document.body).findByRole('button', {
-            name: 'Back to Agent and model',
+            name: 'Back to Configure',
           }),
         );
         await expect(
           await within(document.body).findByRole('slider', { name: 'Effort' }),
         ).toBeVisible();
-      } else await expectWideAgentMenu();
+      } else {
+        await userEvent.click(
+          await within(document.body).findByRole('button', {
+            name: chooseAgentLabel,
+          }),
+        );
+        await expectWideAgentMenu();
+        await userEvent.keyboard('{Escape}');
+      }
       await userEvent.keyboard('{Escape}');
     },
   };

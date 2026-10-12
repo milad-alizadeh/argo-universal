@@ -7,8 +7,27 @@ import { NativeOnlyAnimatedView } from '#lib/generic/primitives/native/native-on
 import { cn } from '#lib/generic/utils';
 import { usePopoverDismissal } from './popover-dismissal';
 
-const Popover = PopoverPrimitive.Root;
+function Popover({
+  openOnHover: _openOnHover,
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Root> & {
+  openOnHover?: boolean;
+}): React.JSX.Element {
+  return <PopoverPrimitive.Root {...props} />;
+}
+export function PopoverHoverGroup({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactNode {
+  return children;
+}
 const PopoverTrigger = PopoverPrimitive.Trigger;
+
+export function usePopoverClose(): () => void {
+  const { onOpenChange } = PopoverPrimitive.useRootContext();
+  return React.useCallback(() => onOpenChange(false), [onOpenChange]);
+}
 const FullWindowOverlay =
   Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
 type ContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {

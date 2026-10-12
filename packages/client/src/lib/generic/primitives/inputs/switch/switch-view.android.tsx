@@ -2,7 +2,7 @@ import { Switch as ComposeSwitch } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
-import { Host } from '../../native/host';
+import { ControlHost } from '../../native/native-control';
 import type { SwitchProps } from './switch-props';
 
 type SwitchColors = NonNullable<
@@ -12,7 +12,7 @@ type SwitchColors = NonNullable<
 function Switch(props: SwitchProps): React.JSX.Element {
   const { colors } = useNativeTheme();
   return (
-    <Host matchContents>
+    <ControlHost matchContents>
       <ComposeSwitch
         value={props.checked}
         onCheckedChange={props.onCheckedChange}
@@ -20,7 +20,7 @@ function Switch(props: SwitchProps): React.JSX.Element {
         colors={{ ...enabledColors(colors), ...disabledColors(colors) }}
         modifiers={switchSemantics(props.accessibilityLabel)}
       />
-    </Host>
+    </ControlHost>
   );
 }
 

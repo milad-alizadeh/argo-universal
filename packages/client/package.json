@@ -23,6 +23,7 @@
   "dependencies": {
     "@expo/ui": "catalog:",
     "@legendapp/list": "catalog:",
+    "@radix-ui/react-popover": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@repo/contracts": "workspace:*",
     "@rn-primitives/checkbox": "catalog:",

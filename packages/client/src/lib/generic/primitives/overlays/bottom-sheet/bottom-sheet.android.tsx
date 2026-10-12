@@ -6,10 +6,9 @@ import {
 import { fillMaxHeight } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { useResolveClassNames } from 'uniwind';
-import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '../../native/host';
 import { usePresentationClosed } from '../../native/native-only-animated-view/native-only-animated-view';
+import { useSheetColors } from './bottom-sheet-colors.android';
 import { BottomSheetContent } from './bottom-sheet-content';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
@@ -29,7 +28,7 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
 
 function SheetPresentation(presentation: SheetProps): React.JSX.Element {
   const { sheetRef, ...props } = presentation;
-  const sheet = useSheetColors();
+  const sheet = useSheetColors(props.surface);
   const dismissible = props.dismissible !== false;
   return (
     <SheetHost>
@@ -109,27 +108,24 @@ function hideSheet(
   };
 }
 
-function useSheetColors(): Pick<
-  React.ComponentProps<typeof ModalBottomSheet>,
-  'containerColor' | 'contentColor' | 'scrimColor'
-> {
-  const { popover, popoverForeground } = useNativeTheme().colors;
-  const scrim = useResolveClassNames('bg-black/20');
-  return {
-    containerColor: popover,
-    contentColor: popoverForeground,
-    scrimColor: scrim.backgroundColor,
-  };
-}
-
 type SheetProps = Pick<
   BottomSheetProps,
-  'onOpenChange' | 'label' | 'children' | 'dismissible'
+  | 'onOpenChange'
+  | 'label'
+  | 'children'
+  | 'dismissible'
+  | 'contentScrolls'
+  | 'surface'
 > & { sheetRef: SheetRef };
 function HostedSheetContent(
   props: Pick<
     BottomSheetProps,
-    'onOpenChange' | 'label' | 'children' | 'dismissible'
+    | 'onOpenChange'
+    | 'label'
+    | 'children'
+    | 'dismissible'
+    | 'contentScrolls'
+    | 'surface'
   >,
 ): React.JSX.Element {
   return (
@@ -138,6 +134,8 @@ function HostedSheetContent(
         label={props.label}
         onOpenChange={props.onOpenChange}
         dismissible={props.dismissible}
+        contentScrolls={props.contentScrolls}
+        surface={props.surface}
       >
         {props.children}
       </BottomSheetContent>

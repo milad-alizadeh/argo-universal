@@ -14,7 +14,7 @@ import { useNavigationFields } from '../field-layout';
 import type { FieldSectionProps } from '../field-props';
 import { FieldSection as WebFieldSection } from './field-section-view.tsx';
 
-const sectionRadius = 20;
+const sectionRadius = 28;
 const gutter = 16;
 const captionPadding = 4;
 

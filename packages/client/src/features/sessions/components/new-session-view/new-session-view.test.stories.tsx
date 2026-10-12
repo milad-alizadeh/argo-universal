@@ -201,8 +201,8 @@ export const Opening: Story = {
   play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(
-        await canvas.findByRole('progressbar', { name: 'Sending' }),
-      ).toBeVisible();
+        await canvas.findByRole('button', { name: 'Send' }),
+      ).toHaveAttribute('aria-busy', 'true');
       await expect(
         canvas.getByRole('button', { name: sendLabel }),
       ).toBeDisabled();
