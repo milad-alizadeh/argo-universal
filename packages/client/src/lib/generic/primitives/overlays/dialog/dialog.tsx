@@ -18,6 +18,7 @@ function DialogContent(props: ContentProps): React.JSX.Element {
     <DialogSheet
       label={props.accessibilityLabel}
       dismissible={props.dismissible}
+      onCloseAutoFocus={props.onCloseAutoFocus}
     >
       {/* Paper's iOS sheet pads its content 16 on every side; Android's drag handle zone already sets the top. */}
       <View className={cn('gap-6 px-4 ios:py-4', props.className)}>

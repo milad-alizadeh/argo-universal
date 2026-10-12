@@ -13,6 +13,7 @@ export type ContentProps = {
   // False while the content holds unsaved input: only its own actions close it.
   dismissible?: boolean;
   showClose?: boolean;
+  onCloseAutoFocus?: (event: Event) => void;
   children: React.ReactNode;
 };
 const contentClassName = cn(
@@ -55,9 +56,11 @@ function contentProps({
   className,
   dismissible,
   accessibilityLabel,
+  onCloseAutoFocus,
 }: ContentProps): React.ComponentProps<typeof DialogPrimitive.Content> {
   return {
     accessibilityLabel,
+    onCloseAutoFocus,
     className: cn(contentClassName, className),
     onEscapeKeyDown: keepOpen(dismissible),
   };
