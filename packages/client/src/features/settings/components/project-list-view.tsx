@@ -72,6 +72,7 @@ function AddProject(): React.JSX.Element {
       variant="ghost"
       size="sm"
       icon="add"
+      iconSize="md"
       iconClassName="text-muted-foreground"
       accessibilityLabel="Add Project"
       disabled
