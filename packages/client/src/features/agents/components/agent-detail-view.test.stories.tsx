@@ -38,6 +38,15 @@ export const ShowsTheVersionAndDistribution: Story = {
   },
 };
 
+export const LabelsTheNewSessionsDefaultsAsThisDevices: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('heading', { name: 'New Sessions' }),
+    ).toBeVisible();
+    await expect(canvas.getByText(/on this Device\.$/)).toBeVisible();
+  },
+};
+
 export const RemovesTheAgent: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: removeLabel }));
@@ -111,7 +120,7 @@ export const SignsInAndChecksAgain: Story = {
     await expect(
       canvas.queryByRole('heading', { name: 'New Sessions' }),
     ).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: 'Check again' }));
+    await userEvent.click(canvas.getByRole('link', { name: 'Check again' }));
     await expect(args.onCheckAgain).toHaveBeenCalledOnce();
   },
 };

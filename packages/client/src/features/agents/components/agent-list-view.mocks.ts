@@ -129,5 +129,5 @@ export const longCatalog: AgentsCatalogOutput = {
   ).flat(),
 };
 
-// A row's link is named "<name>, <status>"; this matches it by name whatever the status.
+// A row's link is named "<name>, <description>, <status>"; this matches it by name alone.
 export const agentLink = (name: string): RegExp => new RegExp(`^${name}, `);

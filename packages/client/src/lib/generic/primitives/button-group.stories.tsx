@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { Button } from './button';
 import { ButtonGroup } from './button-group';
 import { IconButton } from './icon-button';
@@ -11,13 +11,13 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'ButtonGroup',
   render: () => (
-    <Variations>
+    <VariationList>
       <SplitButtonExample />
       <SecondaryButtonsExample />
-    </Variations>
+    </VariationList>
   ),
 };
 

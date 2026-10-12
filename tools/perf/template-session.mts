@@ -1,76 +1,117 @@
+import {
+  AgentsListInput,
+  AgentsListOutput,
+  ProjectsListOutput,
+  SessionListInput,
+  SessionListOutput,
+  SessionNewInput,
+  SessionNewOutput,
+} from '@repo/contracts';
 import { z } from 'zod';
-import { startOwnServer } from '../../e2e/own-server.ts';
+import { pollServer, startOwnServer } from '../../e2e/own-server.ts';
 
-// Gives a fresh fixture Server one real Session, so the perf seed clones only columns the Server wrote.
-const settleMilliseconds = 30_000;
-
-async function query<T>(url: string, data: z.ZodType<T>): Promise<T> {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`${url} answered ${response.status}`);
-  return z.object({ result: z.object({ data }) }).parse(await response.json())
-    .result.data;
+// Gives a fresh fixture Server one real Session through the router's own contract schemas, so the perf seed clones only columns the Server wrote.
+interface Procedure<Input extends z.ZodType, Output extends z.ZodType> {
+  path: string;
+  input: Input;
+  output: Output;
 }
 
-async function mutate(url: string, body: object): Promise<void> {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+const procedures = {
+  projects: {
+    path: 'projects.list',
+    input: z.undefined(),
+    output: ProjectsListOutput,
+  },
+  agents: {
+    path: 'agents.list',
+    input: AgentsListInput,
+    output: AgentsListOutput,
+  },
+  sessions: {
+    path: 'session.list',
+    input: SessionListInput,
+    output: SessionListOutput,
+  },
+  newSession: {
+    path: 'session.new',
+    input: SessionNewInput,
+    output: SessionNewOutput,
+  },
+};
+
+async function answer<Output extends z.ZodType>(
+  response: Response,
+  output: Output,
+): Promise<z.output<Output>> {
   if (!response.ok)
     throw new Error(
-      `${url} answered ${response.status}: ${await response.text()}`,
+      `${response.url} answered ${response.status}: ${await response.text()}`,
     );
+  const envelope = z.object({ result: z.object({ data: z.unknown() }) });
+  return output.parse(envelope.parse(await response.json()).result.data);
 }
 
-const firstProject = async (httpUrl: string): Promise<string | undefined> =>
-  (
-    await query(
-      `${httpUrl}/trpc/projects.list`,
-      z.array(z.looseObject({ id: z.string() })),
-    )
-  ).at(0)?.id;
+const encodedInput = (input: unknown): string =>
+  input === undefined
+    ? ''
+    : `?input=${encodeURIComponent(JSON.stringify(input))}`;
 
-const availableAgent = async (httpUrl: string): Promise<string | undefined> =>
-  (
-    await query(
-      `${httpUrl}/trpc/agents.list`,
-      z.array(z.looseObject({ agent: z.string(), availability: z.string() })),
-    )
-  ).find((entry) => entry.availability === 'available')?.agent;
-
-async function projectAndAgent(
+async function query<Input extends z.ZodType, Output extends z.ZodType>(
   httpUrl: string,
-): Promise<{ projectId: string; agent: string }> {
-  const projectId = await firstProject(httpUrl);
-  const agent = await availableAgent(httpUrl);
-  if (!projectId || !agent)
-    throw new Error('The fixture Server has no Project or Agent');
-  return { projectId, agent };
+  { path, input, output }: Procedure<Input, Output>,
+  value?: z.input<Input>,
+): Promise<z.output<Output>> {
+  const search = encodedInput(input.parse(value));
+  return answer(await fetch(`${httpUrl}/trpc/${path}${search}`), output);
 }
 
-async function settled(httpUrl: string): Promise<boolean> {
-  const { sessions } = await query(
-    `${httpUrl}/trpc/session.list?input=${encodeURIComponent('{"archived":false}')}`,
-    z.looseObject({
-      sessions: z.array(z.looseObject({ status: z.string().optional() })),
-    }),
-  );
-  return sessions.length > 0 && sessions[0]?.status !== 'running';
+async function mutate<Input extends z.ZodType, Output extends z.ZodType>(
+  httpUrl: string,
+  { path, input, output }: Procedure<Input, Output>,
+  value: z.input<Input>,
+): Promise<z.output<Output>> {
+  const response = await fetch(`${httpUrl}/trpc/${path}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(input.parse(value)),
+  });
+  return answer(response, output);
+}
+
+async function firstProjectId(httpUrl: string): Promise<string> {
+  const projectId = (await query(httpUrl, procedures.projects)).at(0)?.id;
+  if (!projectId) throw new Error('The fixture Server has no Project');
+  return projectId;
+}
+
+async function availableAgent(httpUrl: string): Promise<string> {
+  const agents = await query(httpUrl, procedures.agents);
+  const agent = agents.find((entry) => entry.availability === 'available');
+  if (!agent) throw new Error('The fixture Server has no available Agent');
+  return agent.agent;
+}
+
+async function settled(httpUrl: string): Promise<true | undefined> {
+  const { sessions } = await query(httpUrl, procedures.sessions, {
+    archived: false,
+  });
+  const first = sessions.at(0);
+  return first && first.status !== 'running' ? true : undefined;
 }
 
 async function startTemplateSession(httpUrl: string): Promise<void> {
-  await mutate(`${httpUrl}/trpc/session.new`, {
-    ...(await projectAndAgent(httpUrl)),
+  await mutate(httpUrl, procedures.newSession, {
+    projectId: await firstProjectId(httpUrl),
+    agent: await availableAgent(httpUrl),
     checkout: { type: 'main' },
     configOptions: [],
     prompt: [{ type: 'text', text: 'Template Session' }],
   });
-  const deadline = Date.now() + settleMilliseconds;
-  while (!(await settled(httpUrl)))
-    if (Date.now() > deadline)
-      throw new Error('The template Session did not settle');
-    else await new Promise((resolve) => setTimeout(resolve, 200));
+  await pollServer(
+    () => settled(httpUrl),
+    (seconds) => `The template Session did not settle within ${seconds} s`,
+  );
 }
 
 // Starts a fixture Server in `directory`, runs one Session to its end, and stops the Server.

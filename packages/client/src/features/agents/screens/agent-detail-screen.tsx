@@ -22,8 +22,16 @@ export interface AgentDetailScreenProps {
 }
 type PageProps = AgentDetailScreenProps & { onBack: () => void };
 
-function useCustomDefinition(agent: string): CustomAgentDefinition | undefined {
-  return useCustomAgents().data?.find(({ id }) => id === agent)?.definition;
+// Which page to draw waits for the custom Agents, so a custom Agent never shows the built-in page first.
+type CustomDefinition =
+  | { status: 'pending' }
+  | { status: 'known'; definition?: CustomAgentDefinition };
+
+function useCustomDefinition(agent: string): CustomDefinition {
+  const { data } = useCustomAgents();
+  if (!data) return { status: 'pending' };
+  const custom = data.find(({ id }) => id === agent);
+  return { status: 'known', definition: custom?.definition };
 }
 
 function useSaveAgent(agent: string): SubmitCustomAgent {
@@ -36,11 +44,11 @@ export function AgentDetailScreen({
 }: AgentDetailScreenProps): React.JSX.Element {
   const navigate = useNavigate();
   const onBack = (): void => navigate({ to: 'settings-agents' });
-  const definition = useCustomDefinition(agent);
+  const custom = useCustomDefinition(agent);
+  if (custom.status === 'pending') return <AgentPlaceholder agent={agent} />;
+  const { definition } = custom;
   if (!definition) return <AgentPage agent={agent} onBack={onBack} />;
-  return (
-    <CustomAgentPage agent={agent} definition={definition} onBack={onBack} />
-  );
+  return <CustomAgentPage {...{ agent, definition, onBack }} />;
 }
 
 function CustomAgentPage(

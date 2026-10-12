@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { ProjectListView } from './project-list-view';
-import { serverCaption, settingsProjects } from './settings-pages.mocks';
+import { settingsProjects } from './settings-pages.mocks';
 
 const meta = {
   title: 'Screens/Settings/Projects',
   component: ProjectListView,
   parameters: { screenPreview: true },
   args: {
-    caption: serverCaption,
     projects: { status: 'loaded', projects: settingsProjects },
     onOpenProject: action('open Project'),
   },

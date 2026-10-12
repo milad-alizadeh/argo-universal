@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
+import { SidebarRows } from '../../../../mocks/list-item-mock';
+import { SampleLogo } from '../../../../mocks/sample-logo';
 import { Icon } from '../symbols/icon';
 import { Badge } from './badge';
 import { FieldGroup } from './field-group';
@@ -22,8 +24,13 @@ type Story = StoryObj<typeof meta>;
 export const Variations: Story = {
   render: () => (
     <View className="flex-1 wide:flex-row">
-      <GroupedRows />
-      <SidebarRows />
+      {/* Each group scrolls on a phone, so the three sidebar rows keep only their own height. */}
+      <View className="flex-1">
+        <GroupedRows />
+      </View>
+      <View className="h-60 wide:h-auto wide:flex-1">
+        <SidebarRows />
+      </View>
     </View>
   ),
 };
@@ -52,6 +59,14 @@ function GroupedRows(): React.JSX.Element {
           icon="appearance"
           value="System"
           status={{ tone: 'success', label: 'available' }}
+          onPress={onPress}
+        />
+      </FieldSection>
+      <FieldSection title="With an image">
+        <ListItem
+          title="Example Agent"
+          leading={<SampleLogo />}
+          value="1.0"
           onPress={onPress}
         />
       </FieldSection>
@@ -117,36 +132,6 @@ function GroupedRows(): React.JSX.Element {
       <FieldSection title="Loading and failure">
         <ListItem title="Connecting to the Server…" loading />
         <ListItem title="Couldn't reach the Server." tone="destructive" />
-      </FieldSection>
-    </FieldGroup>
-  );
-}
-
-function SidebarRows(): React.JSX.Element {
-  return (
-    <FieldGroup variant="navigation">
-      <FieldSection title="Sidebar">
-        <ListItem
-          title="Projects"
-          icon="folder"
-          value="1"
-          needsAttention
-          onPress={onPress}
-        />
-        <ListItem
-          title="Connection"
-          icon="connection"
-          value="This Mac"
-          status={{ tone: 'success', label: 'connected' }}
-          selected
-          onPress={onPress}
-        />
-        <ListItem
-          title="Appearance"
-          icon="appearance"
-          value="System"
-          onPress={onPress}
-        />
       </FieldSection>
     </FieldGroup>
   );

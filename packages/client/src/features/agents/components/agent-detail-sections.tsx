@@ -2,7 +2,6 @@ import type * as React from 'react';
 import { CopyButton } from '#lib/product/markdown/copy-button';
 import { FieldSection } from '#primitives/field-section';
 import { ListItem } from '#primitives/list-item';
-import { Button } from '../../../lib/generic/primitives/button';
 import { SelectMenu } from '../../../lib/generic/primitives/select-menu';
 import type {
   AgentDetail,
@@ -11,6 +10,7 @@ import type {
 } from '../state/agent-detail-types';
 import { agentStatusLabels, statusTone } from '../state/agent-status';
 import { AgentLinks } from './agent-links';
+import { CheckAgainRow } from './check-again-row';
 
 type AgentProps = { agent: AgentDetail };
 
@@ -20,7 +20,7 @@ const statusFooters: Partial<Record<AgentDetail['status'], string>> = {
 const signInFooter = 'Run this in a terminal on the Server, then check again.';
 
 // Where an installed Agent stands, when the chip alone does not say what to do.
-export function StatusSection(
+export function AgentStatusSection(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
   const { status } = props.agent;
@@ -49,12 +49,9 @@ function StatusRow({ agent }: AgentProps): React.JSX.Element {
 function SignInSection(props: AgentDetailViewProps): React.JSX.Element {
   return (
     <FieldSection title="Status" footer={signInFooter}>
-      <ListItem
-        title="Not signed in"
-        status={{ tone: 'warning', label: '' }}
-        accessory={<CheckAgain onPress={props.onCheckAgain} />}
-      />
+      <ListItem title="Not signed in" status={{ tone: 'warning', label: '' }} />
       <SignInCommand command={props.agent.signInCommand} />
+      <CheckAgainRow onPress={props.onCheckAgain} />
     </FieldSection>
   );
 }
@@ -75,26 +72,21 @@ function SignInCommand({
   );
 }
 
-function CheckAgain({ onPress }: { onPress?: () => void }): React.JSX.Element {
-  return (
-    <Button
-      size="sm"
-      variant="outline"
-      label="Check again"
-      onPress={onPress}
-      disabled={!onPress}
-    />
-  );
-}
-
 const defaultsFooter =
   'The model a new Session starts with. More effort thinks longer and uses more of your plan.';
 const modeFooter = 'Mode is what the Agent may do without asking you first.';
+// ADR-0022: each Device keeps its own New Sessions defaults.
+const deviceFooter =
+  'These choices apply to Sessions you start on this Device.';
 
 const footerFor = (defaults: readonly SessionDefault[]): string =>
-  defaults.some(({ label }) => label === 'Mode')
-    ? `${defaultsFooter} ${modeFooter}`
-    : defaultsFooter;
+  [
+    defaultsFooter,
+    defaults.some(({ label }) => label === 'Mode') && modeFooter,
+    deviceFooter,
+  ]
+    .filter(Boolean)
+    .join(' ');
 type DefaultProps = Pick<AgentDetailViewProps, 'onDefaultChange'> & {
   choice: SessionDefault;
 };

@@ -22,8 +22,8 @@ export function serverValue(
  */
 export function countValue(
   props: SettingsListProps,
-  list: readonly unknown[] | undefined,
+  count: number | undefined,
 ): string | undefined {
-  if (list) return serverValue(props, String(list.length));
+  if (count !== undefined) return serverValue(props, String(count));
   return props.status === 'disconnected' ? undefined : '…';
 }

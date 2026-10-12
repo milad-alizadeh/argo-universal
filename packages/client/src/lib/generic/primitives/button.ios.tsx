@@ -6,9 +6,11 @@ import {
   Text,
 } from '@expo/ui/swift-ui';
 import {
+  controlSize,
   frame,
   foregroundStyle,
   type ModifierConfig,
+  tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps, ReactElement } from 'react';
 import { PlatformColor } from 'react-native';
@@ -19,7 +21,7 @@ import { nativeModifiers } from './button-ios-modifiers';
 import { createNativeButton, NativeButtonIcon } from './button-native';
 import type { ButtonTheme } from './button-native-colors';
 import type { ButtonDataProps } from './button-props';
-import { nativeButtonVariant } from './button-state';
+import { nativeButtonVariant, readyPress } from './button-state';
 
 export const Button = createNativeButton(NativeControl);
 
@@ -48,16 +50,16 @@ type NativeControlProps = Pick<
   | 'accessibilityLabel'
   | 'onPress'
   | 'testID'
-> & { theme: Pick<ButtonTheme, 'primary'> };
+> & { theme: Pick<ButtonTheme, 'primary' | 'border'> };
 
 function nativeControlProps(
   props: NativeControlProps,
 ): Omit<ComponentProps<typeof SwiftButton>, 'children'> {
   return {
     role: props.role,
-    onPress: props.onPress,
+    onPress: readyPress(props),
     testID: props.testID,
-    modifiers: nativeModifiers(props, props.theme.primary),
+    modifiers: nativeModifiers(props, props.theme),
   };
 }
 
@@ -99,9 +101,10 @@ function destructiveLabelColor(
 function ButtonIcon(
   props: Pick<ButtonDataProps, 'loading' | 'icon' | 'role' | 'variant'> & {
     contentClass: string;
+    contentColor?: string;
   },
 ): ReactElement | null {
-  if (props.loading) return <ProgressView />;
+  if (props.loading) return <ButtonSpinner contentColor={props.contentColor} />;
   if (usesSystemRedIcon(props)) return <SystemRedIcon icon={props.icon} />;
   return <NativeButtonIcon {...props} HostView={RNHostView} />;
 }
@@ -112,6 +115,16 @@ function usesSystemRedIcon(
   return (
     props.role === 'destructive' && nativeButtonVariant(props) !== 'default'
   );
+}
+
+/*
+ * The button's large control size and fill tint would reach the spinner too, drawing it taller than the label
+ * and in the fill's own colour; it stays small and takes the label's colour.
+ */
+function ButtonSpinner(props: { contentColor?: string }): ReactElement {
+  const color =
+    props.contentColor === undefined ? [] : [tint(props.contentColor)];
+  return <ProgressView modifiers={[controlSize('small'), ...color]} />;
 }
 
 type NativeIconProps = Pick<ButtonDataProps, 'icon'>;

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { FilterPill } from './filter-pill';
 
 const pills = [
@@ -30,13 +30,13 @@ const meta = { title: 'Design System/Primitives/FilterPill' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'FilterPill',
   render: () => (
-    <Variations>
+    <VariationList>
       <Variation label="Filters">
         <Pills />
       </Variation>
-    </Variations>
+    </VariationList>
   ),
 };
