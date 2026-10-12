@@ -30,12 +30,18 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
 function SheetPresentation(presentation: SheetProps): React.JSX.Element {
   const { sheetRef, ...props } = presentation;
   const sheet = useSheetColors();
+  const dismissible = props.dismissible !== false;
   return (
     <SheetHost>
       <ModalBottomSheet
         {...sheet}
         ref={sheetRef}
         onDismissRequest={() => props.onOpenChange(false)}
+        sheetGesturesEnabled={dismissible}
+        properties={{
+          shouldDismissOnBackPress: dismissible,
+          shouldDismissOnClickOutside: dismissible,
+        }}
       >
         <HostedSheetContent {...props} />
       </ModalBottomSheet>
@@ -118,14 +124,21 @@ function useSheetColors(): Pick<
 
 type SheetProps = Pick<
   BottomSheetProps,
-  'onOpenChange' | 'label' | 'children'
+  'onOpenChange' | 'label' | 'children' | 'dismissible'
 > & { sheetRef: SheetRef };
 function HostedSheetContent(
-  props: Pick<BottomSheetProps, 'onOpenChange' | 'label' | 'children'>,
+  props: Pick<
+    BottomSheetProps,
+    'onOpenChange' | 'label' | 'children' | 'dismissible'
+  >,
 ): React.JSX.Element {
   return (
     <RNHostView modifiers={[fillMaxHeight()]}>
-      <BottomSheetContent label={props.label} onOpenChange={props.onOpenChange}>
+      <BottomSheetContent
+        label={props.label}
+        onOpenChange={props.onOpenChange}
+        dismissible={props.dismissible}
+      >
         {props.children}
       </BottomSheetContent>
     </RNHostView>

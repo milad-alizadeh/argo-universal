@@ -11,6 +11,7 @@ const meta = {
     title: 'Argument',
     fields: [{ label: 'Argument', value: '--acp', onChange: fn(), errors: [] }],
     onSave: fn(),
+    dirty: false,
     onClose: fn(),
     onRemove: fn(),
     removeLabel: 'Remove argument',
@@ -44,5 +45,50 @@ export const HasNoCancelOnAPhone: Story = {
       dialog.getByRole('button', { name: 'Remove argument' }),
     ).toBeVisible();
     await expect(dialog.queryByRole('button', { name: 'Cancel' })).toBeNull();
+  },
+};
+
+// Escape closes a sheet that holds nothing yet.
+export const EscapeClosesAnUntouchedSheet: Story = {
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  play: async ({ args, userEvent }) => {
+    await editor();
+    await userEvent.keyboard('{Escape}');
+    await expect(args.onClose).toHaveBeenCalled();
+  },
+};
+
+// Typed input is not lost to Escape: the sheet stays open.
+export const EscapeKeepsATouchedSheet: Story = {
+  args: { dirty: true },
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  play: async ({ args, userEvent }) => {
+    await editor();
+    await userEvent.keyboard('{Escape}');
+    await expect(args.onClose).not.toHaveBeenCalled();
+    await expect(await editor()).toBeInTheDocument();
+  },
+};
+
+// With the backdrop no longer a way out, a phone's touched sheet offers Cancel to discard its input.
+export const OffersCancelOnAPhoneOnceTouched: Story = {
+  args: { dirty: true },
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
+  play: async ({ args, userEvent }) => {
+    const dialog = within(await editor());
+    await userEvent.click(dialog.getByRole('button', { name: 'Cancel' }));
+    await expect(args.onClose).toHaveBeenCalled();
+  },
+};
+
+// A narrow window's sheet holds typed input against Escape as the wide dialog does.
+export const EscapeKeepsATouchedSheetOnAPhone: Story = {
+  args: { dirty: true },
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
+  play: async ({ args, userEvent }) => {
+    await editor();
+    await userEvent.keyboard('{Escape}');
+    await expect(args.onClose).not.toHaveBeenCalled();
+    await expect(await editor()).toBeInTheDocument();
   },
 };

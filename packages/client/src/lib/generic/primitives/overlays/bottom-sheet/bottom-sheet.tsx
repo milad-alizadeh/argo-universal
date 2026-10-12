@@ -5,6 +5,7 @@ import {
 } from '@expo/ui/swift-ui';
 import {
   type ModifierConfig,
+  interactiveDismissDisabled,
   presentationBackground,
   presentationDetents,
   presentationDragIndicator,
@@ -48,7 +49,7 @@ function presentationProps(
 
 type SheetContentProps = Pick<
   BottomSheetProps,
-  'children' | 'label' | 'onOpenChange' | 'fit'
+  'children' | 'label' | 'onOpenChange' | 'fit' | 'dismissible'
 >;
 
 function SheetContent(props: SheetContentProps): React.JSX.Element {
@@ -56,6 +57,7 @@ function SheetContent(props: SheetContentProps): React.JSX.Element {
   const modifiers = [
     ...sheetDetents(props.fit),
     presentationDragIndicator('visible'),
+    interactiveDismissDisabled(props.dismissible === false),
     ...sheetFill(popover),
   ];
   return (

@@ -10,7 +10,7 @@ import { cn } from '#lib/generic/utils';
 type OverlayProps = Omit<
   React.ComponentProps<typeof DialogPrimitive.Overlay>,
   'asChild'
-> & { children?: React.ReactNode };
+> & { children?: React.ReactNode; dismissible?: boolean };
 const FullWindowOverlay =
   Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
 const overlayClassName = cn(
@@ -33,13 +33,22 @@ function isBackdropPress(event: GestureResponderEvent): boolean {
   return event.target === event.currentTarget && !event.isDefaultPrevented();
 }
 
+// A press on the bare backdrop closes the dialog, unless its content holds input to keep.
+function closesDialog(
+  event: GestureResponderEvent,
+  dismissible: boolean | undefined,
+): boolean {
+  return dismissible !== false && isBackdropPress(event);
+}
+
 function useOverlayPress(
   onPress: OverlayProps['onPress'],
+  dismissible: boolean | undefined,
 ): OverlayProps['onPress'] {
   const { onOpenChange } = DialogPrimitive.useRootContext();
   return (event): void => {
     onPress?.(event);
-    if (isBackdropPress(event)) onOpenChange(false);
+    if (closesDialog(event, dismissible)) onOpenChange(false);
   };
 }
 
@@ -58,9 +67,10 @@ const animationProps = { entering, exiting, as: 'Pressable' } as const;
 function useOverlayProps({
   className,
   onPress,
+  dismissible,
   ...props
 }: OverlayProps): React.ComponentProps<typeof DialogPrimitive.Overlay> {
-  const onOverlayPress = useOverlayPress(onPress);
+  const onOverlayPress = useOverlayPress(onPress, dismissible);
   return {
     ...props,
     className: cn(overlayClassName, className),

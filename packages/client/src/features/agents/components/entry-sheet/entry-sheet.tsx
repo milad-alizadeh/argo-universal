@@ -20,6 +20,8 @@ export type EntrySheetProps = {
   fields: readonly EntrySheetField[];
   // Save submits the entry's form: a valid entry is kept, and an invalid one shows every error.
   onSave: () => void;
+  // Typed input is not lost to a swipe, the backdrop or Escape; Cancel discards it.
+  dirty: boolean;
   onClose: () => void;
   onRemove?: () => void;
   removeLabel: string;
@@ -30,22 +32,36 @@ export const entryField = (
   field: TextField,
 ): EntrySheetField => ({ ...input, ...touchedInput(field) });
 // What an entry's form gives its sheet.
-export type EntrySheetEntry = Pick<EntrySheetProps, 'fields' | 'onSave'>;
+export type EntrySheetEntry = Pick<
+  EntrySheetProps,
+  'fields' | 'onSave' | 'dirty'
+>;
 
-// A phone edits one argument or variable at a time, with labelled fields, in a sheet that the backdrop closes.
+// A phone edits one argument or variable at a time, with labelled fields, in a sheet that the backdrop closes until it holds input.
 export function EntrySheet(props: EntrySheetProps): React.JSX.Element {
   return (
     <Dialog open onOpenChange={(open) => !open && props.onClose()}>
-      <DialogContent accessibilityLabel={props.title}>
-        <DialogTitle className="type-heading">{props.title}</DialogTitle>
-        <View className="gap-4">
-          {props.fields.map((field) => (
-            <EntrySheetInput key={field.label} field={field} />
-          ))}
-        </View>
-        <EntrySheetActions {...props} />
+      <DialogContent
+        accessibilityLabel={props.title}
+        dismissible={!props.dirty}
+      >
+        <EntrySheetBody {...props} />
       </DialogContent>
     </Dialog>
+  );
+}
+
+function EntrySheetBody(props: EntrySheetProps): React.JSX.Element {
+  return (
+    <>
+      <DialogTitle className="type-heading">{props.title}</DialogTitle>
+      <View className="gap-4">
+        {props.fields.map((field) => (
+          <EntrySheetInput key={field.label} field={field} />
+        ))}
+      </View>
+      <EntrySheetActions {...props} />
+    </>
   );
 }
 
@@ -67,12 +83,18 @@ function EntrySheetActions(props: EntrySheetProps): React.JSX.Element {
   return (
     <View className="gap-3">
       <View className="flex-row justify-end gap-2">
-        {useWide() && <CancelEntry onClose={props.onClose} />}
+        {useShowsCancel(props.dirty) && <CancelEntry onClose={props.onClose} />}
         <Button fullWidth="narrow" onPress={props.onSave} label={'Save'} />
       </View>
       {props.onRemove && <RemoveEntry {...props} />}
     </View>
   );
+}
+
+// The backdrop closes a phone sheet until it holds input, which then needs its own way out.
+function useShowsCancel(dirty: boolean): boolean {
+  const wide = useWide();
+  return wide || dirty;
 }
 
 function CancelEntry({

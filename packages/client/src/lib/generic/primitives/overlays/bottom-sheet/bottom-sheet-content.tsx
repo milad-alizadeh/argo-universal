@@ -5,7 +5,7 @@ import type { BottomSheetProps } from './bottom-sheet.types';
 
 type SheetContentProps = Pick<
   BottomSheetProps,
-  'children' | 'label' | 'onOpenChange' | 'fit'
+  'children' | 'label' | 'onOpenChange' | 'fit' | 'dismissible'
 >;
 
 export function BottomSheetContent(
@@ -28,12 +28,14 @@ export function BottomSheetContent(
 }
 
 function sheetAccessibility(
-  props: Pick<SheetContentProps, 'label' | 'onOpenChange'>,
+  props: Pick<SheetContentProps, 'label' | 'onOpenChange' | 'dismissible'>,
 ): React.ComponentProps<typeof View> {
   return {
     role: 'dialog',
     accessibilityLabel: props.label,
     accessibilityViewIsModal: true,
-    onAccessibilityEscape: (): void => props.onOpenChange(false),
+    onAccessibilityEscape: (): void => {
+      if (props.dismissible !== false) props.onOpenChange(false);
+    },
   };
 }

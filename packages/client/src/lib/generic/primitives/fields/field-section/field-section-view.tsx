@@ -1,12 +1,15 @@
 import type * as React from 'react';
+import { useId } from 'react';
 import { View } from 'react-native';
 import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
+import { FooterProvider, type SectionFooter } from '../field-footer';
 import { useNavigationFields } from '../field-layout';
 import type { FieldSectionProps } from '../field-props';
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {
   const navigation = useNavigationFields();
+  const footerId = useId();
   return (
     <View className="gap-2 wide:gap-3">
       <SectionTitle title={props.title} />
@@ -16,14 +19,32 @@ export function FieldSection(props: FieldSectionProps): React.JSX.Element {
           navigation && 'rounded-none bg-transparent',
         )}
       >
-        {props.children}
+        <FooterProvider value={footerOf(props, footerId)}>
+          {props.children}
+        </FooterProvider>
       </View>
-      <SectionFooter text={props.footer} tone={props.footerTone} />
+      <SectionFooter
+        id={footerId}
+        text={props.footer}
+        tone={props.footerTone}
+      />
     </View>
   );
 }
 
-type FooterProps = { text?: string; tone?: FieldSectionProps['footerTone'] };
+const footerOf = (
+  props: FieldSectionProps,
+  id: string,
+): SectionFooter | undefined =>
+  props.footer
+    ? { id, failure: props.footerTone === 'destructive' }
+    : undefined;
+
+type FooterProps = {
+  id: string;
+  text?: string;
+  tone?: FieldSectionProps['footerTone'];
+};
 
 function SectionFooter(props: FooterProps): React.JSX.Element | null {
   return props.text ? <FooterText {...props} text={props.text} /> : null;
@@ -34,6 +55,7 @@ function FooterText(props: FooterProps & { text: string }): React.JSX.Element {
   const failure = props.tone === 'destructive';
   return (
     <Text
+      id={props.id}
       role="secondary"
       semanticRole={failure ? 'alert' : undefined}
       className={cn('px-4', failure && 'text-destructive')}
