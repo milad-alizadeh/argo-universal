@@ -6,11 +6,11 @@ import type {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block';
+import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
 import { toFileDiffs } from '../view/file-diff';
-import { DiffView } from './diff-view';
-import { FeedContent } from './feed-content';
-import { UnsupportedFeedContent } from './feed-notice';
+import { DiffView } from './diff-view/diff-view';
+import { FeedContent } from './feed-content/feed-content';
+import { UnsupportedFeedContent } from './feed-notice/feed-notice';
 
 function ToolDiffOutput({ block }: { block: ToolCallDiff }): React.JSX.Element {
   return (

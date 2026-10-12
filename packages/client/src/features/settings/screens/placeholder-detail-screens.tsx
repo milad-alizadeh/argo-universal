@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { PlaceholderDetailView } from '../components/placeholder-detail-view';
+import { PlaceholderDetailView } from '../components/placeholder-detail-view/placeholder-detail-view';
 import { useServerPageCaption } from '../hooks/use-server-caption';
 
 // The Server has no accounts, pairing or notifications yet, so these pages show where they will go.

@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/text';
-import { useWide } from '../generic/use-wide';
+import { Text } from '#lib/generic/primitives/display/text/text';
+import { useWide } from '../generic/use-wide/use-wide';
 import { cn } from '../generic/utils';
 import { SessionColumn } from './session-layout';
 

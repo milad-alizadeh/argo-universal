@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '../src/lib/generic/primitives/button';
-import { useErrorToast } from '../src/lib/generic/primitives/toast';
+import { Button } from '../src/lib/generic/primitives/buttons/button/button';
+import { useErrorToast } from '../src/lib/generic/primitives/overlays/toast/toast';
 
 export const failedOpen = {
   title: 'Could not open the Project',

@@ -5,8 +5,11 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '#lib/generic/primitives/collapsible';
-import { Text, TextClassContext } from '#lib/generic/primitives/text';
+} from '#lib/generic/primitives/display/collapsible/collapsible';
+import {
+  Text,
+  TextClassContext,
+} from '#lib/generic/primitives/display/text/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';

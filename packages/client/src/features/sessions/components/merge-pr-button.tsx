@@ -1,16 +1,16 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { ButtonGroup } from '#lib/generic/primitives/button-group';
+import { ButtonGroup } from '#lib/generic/primitives/buttons/button-group/button-group';
+import { IconButton } from '#lib/generic/primitives/buttons/icon-button/icon-button';
+import { Text } from '#lib/generic/primitives/display/text/text';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '#lib/generic/primitives/dropdown-menu';
-import { IconButton } from '#lib/generic/primitives/icon-button';
-import { Text } from '#lib/generic/primitives/text';
+} from '#lib/generic/primitives/overlays/dropdown-menu/dropdown-menu';
 import { cn } from '#lib/generic/utils';
-import { Button } from '../../../lib/generic/primitives/button';
+import { Button } from '../../../lib/generic/primitives/buttons/button/button';
 
 export type MergeMethod = 'squash' | 'merge' | 'rebase';
 

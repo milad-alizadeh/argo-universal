@@ -2,7 +2,7 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import type { NavigationDestination } from '#lib/product/navigation/context';
 import { sectionOf } from '../../../lib/product/navigation/sections';
-import { DesktopLayoutView } from '../components/desktop-layout-view';
+import { DesktopLayoutView } from '../components/desktop-layout-view/desktop-layout-view';
 import { useAttentionCount } from '../hooks/use-attention-count';
 import { detailDestination } from '../state/detail-destination';
 import { useSectionList } from './section-list';

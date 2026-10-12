@@ -29,9 +29,9 @@ export {
   type RenderSymbolImage,
   SymbolImagesProvider,
 } from './lib/generic/symbols/symbol-images';
-export { useWide } from './lib/generic/use-wide';
-export { Text, useTextStyle } from './lib/generic/primitives/text';
-export { Toaster } from './lib/generic/primitives/toast';
+export { useWide } from './lib/generic/use-wide/use-wide';
+export { Text, useTextStyle } from './lib/generic/primitives/display/text/text';
+export { Toaster } from './lib/generic/primitives/overlays/toast/toast';
 export {
   type Navigate,
   type NavigationDestination,

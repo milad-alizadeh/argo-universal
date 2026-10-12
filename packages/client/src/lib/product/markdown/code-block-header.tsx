@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/text';
+import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../generic/symbols/icon';
-import { CodeBlockTitle } from './code-block-title';
+import { CodeBlockTitle } from './code-block-title/code-block-title';
 import { CopyButton } from './copy-button';
 import { resourceIcon } from './resource-name';
 

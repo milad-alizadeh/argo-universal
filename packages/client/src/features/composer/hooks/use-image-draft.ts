@@ -2,7 +2,7 @@ import type { BlobRef, SessionNewInput } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
 import { useReducer } from 'react';
 import { useTRPC } from '#features/connection';
-import type { ComposerDraft } from '../components/composer';
+import type { ComposerDraft } from '../components/composer/composer';
 import { draftPrompt } from '../state/draft-prompt';
 import {
   type AttachmentError,

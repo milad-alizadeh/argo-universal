@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Text } from './primitives/text';
+import { Text } from './primitives/display/text/text';
 import { cn } from './utils';
 
 export function Variation({

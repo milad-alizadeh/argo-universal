@@ -8,8 +8,8 @@ import {
   useSessionsFilter,
 } from '#features/sessions';
 import { SettingsNavigationList } from '#features/settings';
-import { SearchField } from '#lib/generic/primitives/search-field';
-import { Text } from '#lib/generic/primitives/text';
+import { Text } from '#lib/generic/primitives/display/text/text';
+import { SearchField } from '#lib/generic/primitives/inputs/search-field/search-field';
 import { ListTitle } from '#lib/product/list-title';
 import {
   type NavigationDestination,

@@ -12,7 +12,7 @@ import {
 import {
   type ComposerImage,
   type ComposerProps,
-} from '../src/features/composer/components/composer';
+} from '../src/features/composer/components/composer/composer';
 import { redSquareDataUrl } from '../src/lib/product/feed-message.mocks';
 
 export const composerLongAgentCatalog: AgentInfo[] = Array.from(

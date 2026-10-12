@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import type { ReactElement } from 'react';
-import { FieldSection } from '#primitives/field-section';
-import { ListItem } from '#primitives/list-item';
-import { useWide } from '../../../lib/generic/use-wide';
+import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
+import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
+import { useWide } from '../../../lib/generic/use-wide/use-wide';
 
 export interface AgentIdentityProps {
   logo: ReactElement;

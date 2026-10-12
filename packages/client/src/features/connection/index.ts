@@ -1,4 +1,4 @@
-export { ConnectionBanner } from './components/connection-banner';
+export { ConnectionBanner } from './components/connection-banner/connection-banner';
 export { ConnectionDetailScreen } from './screens/connection-detail-screen';
 export {
   ConnectionContext,

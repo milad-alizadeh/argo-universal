@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import type { Section } from '../../../lib/product/navigation/sections';
-import { PhoneSectionView } from '../components/phone-section-view';
+import { PhoneSectionView } from '../components/phone-section-view/phone-section-view';
 import { useSectionList } from './section-list';
 
 export interface PhoneSectionScreenProps {

@@ -6,7 +6,7 @@ import {
   CustomAgentForm,
   type CustomAgentFormProps,
   customAgentFormDescription,
-} from '../components/custom-agent-form';
+} from '../components/custom-agent-form/custom-agent-form';
 import { useCustomAgentMutations } from '../hooks/use-custom-agents';
 
 function useRegisterAgent(): CustomAgentFormProps['onSubmit'] {
