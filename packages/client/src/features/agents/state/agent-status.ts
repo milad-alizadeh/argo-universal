@@ -55,8 +55,9 @@ const isInstalled = ({ status }: Pick<AgentRowEntry, 'status'>): boolean =>
   status !== 'not-installed';
 
 // The user has to act before the Agent can run new Sessions.
-export const needsAction = ({ status }: Pick<AgentRowEntry, 'status'>): boolean =>
-  statusTone(status) === 'warning';
+export const needsAction = ({
+  status,
+}: Pick<AgentRowEntry, 'status'>): boolean => statusTone(status) === 'warning';
 
 const filters: Record<AgentsFilter, (agent: AgentRowEntry) => boolean> = {
   all: () => true,
