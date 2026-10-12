@@ -36,6 +36,27 @@ function Caret(): React.JSX.Element {
   );
 }
 
+// Only a link resolves its underline colour, so plain text never pays for the style lookup.
+function Link({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}): React.JSX.Element {
+  const { color: underline } = useResolveClassNames('text-ring');
+  return (
+    <Span
+      role="link"
+      className="underline underline-offset-2"
+      style={{ textDecorationColor: underline }}
+      onPress={() => Linking.openURL(href)}
+    >
+      {children}
+    </Span>
+  );
+}
+
 // Inline spans are plain native Text so they inherit the size of the block around them.
 function InlineTokens({
   tokens,
@@ -44,7 +65,6 @@ function InlineTokens({
   tokens: Token[] | undefined;
   codeClassName?: string;
 }): (React.JSX.Element | '\n' | null)[] | undefined {
-  const { color: linkUnderline } = useResolveClassNames('text-ring');
   return tokens?.map((token, index) => {
     const key = `${token.type}-${index}`;
     switch (token.type) {
@@ -74,15 +94,9 @@ function InlineTokens({
         );
       case 'link':
         return (
-          <Span
-            key={key}
-            role="link"
-            className="underline underline-offset-2"
-            style={{ textDecorationColor: linkUnderline }}
-            onPress={() => Linking.openURL(token.href)}
-          >
+          <Link key={key} href={token.href}>
             <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
-          </Span>
+          </Link>
         );
       case 'br':
         return '\n';
@@ -170,7 +184,7 @@ function List({
 
 function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
   return (
-    <View className="overflow-hidden rounded-xl web:rounded-surface border border-border">
+    <View className="overflow-hidden rounded-2xl border border-border">
       <ScrollView
         horizontal
         contentContainerClassName="min-w-full"

@@ -10,6 +10,7 @@ export interface CopyButtonProps {
   label: string;
   // On web, stay hidden until the surrounding code block is hovered.
   revealOnHover?: boolean;
+  className?: string;
 }
 
 const copiedMilliseconds = 2000;
@@ -19,6 +20,7 @@ export function CopyButton({
   value,
   label,
   revealOnHover = false,
+  className,
 }: CopyButtonProps): React.JSX.Element {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
@@ -37,6 +39,7 @@ export function CopyButton({
           Platform.select({
             web: cn('code-block-copy', copied && 'is-copied'),
           }),
+        className,
       )}
     >
       <Icon

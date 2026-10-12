@@ -5,9 +5,12 @@ import { ConnectionContext } from '#features/connection';
 import { openConnection } from '#features/connection';
 import { BlobUrlContext, createServerBlobUrl } from '#features/connection';
 import { TRPCProvider } from '#features/connection';
+import { ServerPlaceProvider } from '#lib/product/server-place';
 
 export interface AppProvidersProps {
   serverUrl: string;
+  // True when this device is paired to a Server on another computer; the App has no pairing yet.
+  serverPaired?: boolean;
   children: ReactNode;
 }
 
@@ -16,6 +19,7 @@ type Connection = ReturnType<typeof openConnection>;
 // One QueryClient and one Connection for the App's lifetime; give it a new key to switch Servers.
 export function AppProviders({
   serverUrl,
+  serverPaired = false,
   children,
 }: AppProvidersProps): React.JSX.Element | null {
   const [queryClient] = useState(() => new QueryClient());
@@ -36,7 +40,9 @@ export function AppProviders({
       <TRPCProvider trpcClient={connection.client} queryClient={queryClient}>
         <ConnectionContext.Provider value={connection.connection}>
           <BlobUrlContext.Provider value={blobUrl}>
-            {children}
+            <ServerPlaceProvider paired={serverPaired}>
+              {children}
+            </ServerPlaceProvider>
           </BlobUrlContext.Provider>
         </ConnectionContext.Provider>
       </TRPCProvider>
