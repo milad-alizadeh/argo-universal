@@ -34,17 +34,14 @@ it('normal installer exit cleans descendants retaining its output pipes before c
     child.unref();
     process.exit(0);
   `;
-  let settled = false;
   const result = runInstallTool({
     executable: process.execPath,
     args: ['-e', script],
     cwd: directory,
     signal: controller.signal,
-  }).then(() => {
-    settled = true;
   });
   try {
-    await expect.poll(() => settled, { timeout: 1500 }).toBe(true);
+    await result;
     expect(
       isAlive(Number(await readFile(join(directory, 'descendant'), 'utf8'))),
     ).toBe(false);

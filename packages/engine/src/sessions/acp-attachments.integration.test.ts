@@ -33,6 +33,7 @@ it.each(agentAdapters.map(({ agent }) => agent))(
         initialize: {
           protocolVersion: 1,
           agentCapabilities: {
+            _meta: { authStatus: {} },
             promptCapabilities: { embeddedContext: true },
             sessionCapabilities: { close: {} },
           },

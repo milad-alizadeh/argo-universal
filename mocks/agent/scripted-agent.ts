@@ -4,6 +4,7 @@ import {
   type AgentApp,
   type AgentConnection,
 } from '@agentclientprotocol/sdk';
+import { initializeScriptedAgent } from './scripted-initialize.ts';
 import {
   ScriptedMethodPlayer,
   type ScriptedWire,
@@ -34,7 +35,11 @@ const serveOpenings = (
   const resume = player.respond('session/resume');
   return app
     .onRequest('initialize', (context) =>
-      initialize(context, scenario.initialize ?? scriptedInitialization),
+      initializeScriptedAgent(
+        context,
+        initialize,
+        scenario.initialize ?? scriptedInitialization,
+      ),
     )
     .onRequest('session/new', (context) => {
       const sessionId = nextId();

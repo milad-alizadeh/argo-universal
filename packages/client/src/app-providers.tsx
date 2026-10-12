@@ -1,10 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState, useSyncExternalStore } from 'react';
+import { initializeLoginOwner } from '#features/agents';
 import { ConnectionContext } from '#features/connection';
 import { openConnection } from '#features/connection';
 import { BlobUrlContext, createServerBlobUrl } from '#features/connection';
 import { TRPCProvider } from '#features/connection';
+
+initializeLoginOwner();
 
 export interface AppProvidersProps {
   serverUrl: string;
