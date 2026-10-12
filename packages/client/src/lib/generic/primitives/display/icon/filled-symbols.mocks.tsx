@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { Icon } from '../../../symbols/icon';
 import { Button } from '../../buttons/button/button';
 
-// Toggles a row of icons between their outlined and filled variants.
 export function FilledSymbols(): React.JSX.Element {
   const [filled, setFilled] = useState(false);
   return (

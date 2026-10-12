@@ -93,10 +93,7 @@ function SelectLabel({
 
 function ItemIndicator(): React.JSX.Element {
   return (
-    <IconSlot
-      role="control"
-      className="absolute right-2 flex items-center justify-center"
-    >
+    <IconSlot role="control" className="absolute right-2">
       <SelectPrimitive.ItemIndicator>
         <SelectedCheck className="text-muted-foreground shrink-0" />
       </SelectPrimitive.ItemIndicator>

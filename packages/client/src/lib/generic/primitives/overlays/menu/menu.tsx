@@ -70,10 +70,7 @@ export function Menu<Value extends string>({
                     {choice.label}
                   </Text>
                 </View>
-                <IconSlot
-                  role="control"
-                  className="items-center justify-center"
-                >
+                <IconSlot role="control">
                   <MenuPrimitive.ItemIndicator>
                     <SelectedCheck className="text-popover-foreground" />
                   </MenuPrimitive.ItemIndicator>

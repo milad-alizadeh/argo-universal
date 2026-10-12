@@ -100,7 +100,7 @@ const ThemedCircle = withUniwind(Circle, {
 function ContextRing({ percent }: { percent: number }): React.JSX.Element {
   const circumference = 2 * Math.PI * contextRingRadius;
   return (
-    <IconSlot role="control" className="shrink-0 items-center justify-center">
+    <IconSlot role="mark">
       <View className="h-full w-full">
         <Svg width="100%" height="100%" viewBox="0 0 14 14">
           <ThemedCircle
