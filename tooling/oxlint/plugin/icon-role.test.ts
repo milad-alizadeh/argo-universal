@@ -11,6 +11,9 @@ ruleTester.run('icon-role', iconRole, {
     '<IconButton icon="add" size="md" iconRole="action" />;',
     '<Icon name="add" role="body" className="max-size-4" />;',
     'size(pixels, pixels);',
+    "import { Host, Text } from '@expo/ui/swift-ui';",
+    "import { Image } from 'expo-image';",
+    '<NativeSymbol name="search" role="action" muted />;',
   ],
   invalid: [
     { code: '<Icon name="add" size={16} />;', errors: pixelSize },
@@ -22,5 +25,9 @@ ruleTester.run('icon-role', iconRole, {
     { code: '<IconSlot role="row" className="size-6" />;', errors: pixelSize },
     { code: '<Image systemName="chevron.right" />;', errors: nativeSymbol },
     { code: 'size(16, 16);', errors: nativeSymbol },
+    {
+      code: "import { Host, Image } from '@expo/ui/swift-ui';",
+      errors: nativeSymbol,
+    },
   ],
 });

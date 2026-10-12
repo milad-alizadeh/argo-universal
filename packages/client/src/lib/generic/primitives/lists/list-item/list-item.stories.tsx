@@ -121,9 +121,7 @@ function GroupedRows(): React.JSX.Element {
           size="large"
           tone="muted"
           title="ACP wrapper for Anthropic’s Claude"
-          leading={
-            <Icon name="agent" role="title" className="text-foreground" />
-          }
+          leading={<Icon name="agent" role="row" className="text-foreground" />}
           accessory={
             <Badge tone="success">
               <Text>Ready</Text>

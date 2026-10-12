@@ -175,7 +175,7 @@ const ThemedLogo = withUniwind(SvgXml, {
 
 function Logo({ agent }: { agent?: AgentInfo }): React.JSX.Element | null {
   return agent ? (
-    <IconSlot role="control" className="shrink-0 items-center justify-center">
+    <IconSlot role="control">
       <View testID="composer-agent-icon" className="h-full w-full">
         <ThemedLogo
           xml={agent.logo}
@@ -244,10 +244,7 @@ function Choice({
           </Text>
         )}
       </View>
-      <IconSlot
-        role="control"
-        className={cn('items-center justify-center', !!leading && 'h-5')}
-      >
+      <IconSlot role="control" className={leading ? 'h-5' : undefined}>
         {selected && <SelectedCheck />}
       </IconSlot>
     </Pressable>
@@ -715,7 +712,7 @@ export function AgentModelMenu({
             className="size-11 sm:size-11"
             onPress={() => setPage('settings')}
             icon={'chevron-left'}
-            iconRole="inset"
+            iconRole="body"
             iconClassName={'text-foreground'}
             size="md"
           />

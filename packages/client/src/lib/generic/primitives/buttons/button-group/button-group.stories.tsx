@@ -57,7 +57,7 @@ function AllowOptions(): React.JSX.Element {
     <IconButton
       accessibilityLabel="Allow options"
       icon={'chevron-down'}
-      iconRole="inset"
+      iconRole="secondary"
       size="md"
       variant="filled"
     />

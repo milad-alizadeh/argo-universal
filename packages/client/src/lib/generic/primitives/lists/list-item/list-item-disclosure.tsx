@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Icon } from '../../../symbols/icon';
+import { DisclosureChevron } from '../../display/disclosure-chevron/disclosure-chevron';
 
 // The chevron that says a row opens another page.
 export function Disclosure({
@@ -7,11 +7,5 @@ export function Disclosure({
 }: {
   visible: boolean;
 }): React.JSX.Element | null {
-  return visible ? (
-    <Icon
-      name="chevron-right"
-      role="body"
-      className="text-muted-foreground shrink-0"
-    />
-  ) : null;
+  return visible ? <DisclosureChevron className="shrink-0" /> : null;
 }

@@ -7,11 +7,12 @@ import type * as React from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { Text } from '#lib/generic/primitives/display/text/text';
+import { SelectedCheck } from '../../../../lib/generic/primitives/display/selected-check';
 import {
   Pressable,
   contentActionClass,
 } from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { IconSlot } from '../../../../lib/generic/symbols/icon';
 import { configurationChoices } from '../../state/configuration-choices';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 import { ComposerPopover } from '../composer-popover/composer-popover';
@@ -105,9 +106,7 @@ function SettingRow({
           {selected ? 'On' : 'Off'}
         </Text>
       ) : (
-        <View className="w-4 h-4">
-          {selected && <Icon name="check" role="inset" />}
-        </View>
+        <IconSlot role="control">{selected && <SelectedCheck />}</IconSlot>
       )}
     </Pressable>
   );

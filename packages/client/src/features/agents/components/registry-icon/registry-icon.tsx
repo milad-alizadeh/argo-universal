@@ -2,8 +2,11 @@ import type * as React from 'react';
 import { useMemo, useState } from 'react';
 import { Image, Platform, View } from 'react-native';
 import { SvgUri, SvgXml, type XmlProps } from 'react-native-svg';
-import { Icon, type IconRole } from '../../../../lib/generic/symbols/icon';
-import { useIconPixels } from '../../../../lib/generic/symbols/icon-role';
+import { Icon } from '../../../../lib/generic/symbols/icon';
+import {
+  type IconRole,
+  useIconPixels,
+} from '../../../../lib/generic/symbols/icon-role';
 
 interface RegistryIconProps {
   uri: string | undefined;
@@ -17,9 +20,7 @@ type IconSource =
 type ImageProps = Pick<
   XmlProps,
   'width' | 'height' | 'accessibilityRole' | 'accessibilityLabel'
-> & {
-  fallback: React.JSX.Element;
-};
+>;
 
 export function RegistryIcon({
   uri,
@@ -52,32 +53,33 @@ function RegistryImage({
   agentName,
   role,
 }: LoadedIconProps): React.JSX.Element {
-  const source = useMemo(
-    (): IconSource => decodeRegistryIconSource(uri),
-    [uri],
+  const source = useRegistrySource(uri);
+  const props = imageProps(agentName, useIconPixels(role));
+  return renderIcon(
+    source,
+    props,
+    <UnavailableIcon {...{ agentName, role }} />,
   );
-  const pixels = useIconPixels(role);
-  return renderIcon(source, imageProps({ agentName, role, pixels }));
 }
 
-function imageProps({
-  agentName,
-  role,
-  pixels,
-}: Pick<RegistryIconProps, 'agentName' | 'role'> & {
-  pixels: number;
-}): ImageProps {
+const useRegistrySource = (uri: string): IconSource =>
+  useMemo(() => decodeRegistryIconSource(uri), [uri]);
+
+function imageProps(agentName: string, pixels: number): ImageProps {
   return {
     width: pixels,
     height: pixels,
     accessibilityRole: 'image',
     accessibilityLabel: `${agentName} icon`,
-    fallback: <UnavailableIcon agentName={agentName} role={role} />,
   };
 }
 
-function renderIcon(source: IconSource, props: ImageProps): React.JSX.Element {
-  if (source.kind === 'unavailable') return props.fallback;
+function renderIcon(
+  source: IconSource,
+  props: ImageProps,
+  fallback: React.JSX.Element,
+): React.JSX.Element {
+  if (source.kind === 'unavailable') return fallback;
   return source.kind === 'inline' ? (
     <SvgXml {...props} xml={source.xml} />
   ) : (

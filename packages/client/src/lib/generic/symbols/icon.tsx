@@ -1,18 +1,19 @@
 import type * as React from 'react';
-import { type ReactNode, useContext } from 'react';
+import { useContext } from 'react';
 import {
   ActivityIndicator,
   type ActivityIndicatorProps,
   Platform,
   View,
+  type ViewProps,
 } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { type IconName, iconSymbols } from './icon-names';
 import { type IconRole, useIconBox, useIconPixels } from './icon-role';
-import type { NativeSymbol } from './native-symbol';
 import { SymbolGlyph } from './symbol-glyph/symbol-glyph';
+import type { SymbolSource } from './symbol-source';
 
 // Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
 const materialGlyphScale = 1.125;
@@ -45,7 +46,7 @@ export function Icon({
   testID = `icon-${name}`,
 }: IconProps): React.JSX.Element {
   const textClass = useContext(TextClassContext);
-  const symbol: NativeSymbol = iconSymbols[name];
+  const symbol: SymbolSource = iconSymbols[name];
   const colorClassName = cn('text-foreground', textClass, className);
   const pixels = useIconPixels(role);
   const sf = (filled && symbol.sfFilled) || symbol.sf;
@@ -73,21 +74,17 @@ export function IconSpinner({
   return <ActivityIndicator {...props} size={useIconPixels(iconRole)} />;
 }
 
-// A box the size of an icon in that role, for a spinner, a status dot or an image that stands in for the icon.
+// A box the size of an icon in that role, its content centred: a spinner, a status ring, or an icon hosted in a native tree.
 export function IconSlot({
   role,
   className,
-  children,
-}: {
-  role: IconRole;
-  className?: string;
-  children?: ReactNode;
-}): React.JSX.Element {
+  ...props
+}: Omit<ViewProps, 'role'> & { role: IconRole }): React.JSX.Element {
   return (
-    <View style={useIconBox(role)} className={className}>
-      {children}
-    </View>
+    <View
+      {...props}
+      style={useIconBox(role)}
+      className={cn('shrink-0 items-center justify-center', className)}
+    />
   );
 }
-
-export type { IconRole } from './icon-role';

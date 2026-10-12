@@ -6,6 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '#lib/generic/primitives/display/collapsible/collapsible';
+import { DisclosureChevron } from '#lib/generic/primitives/display/disclosure-chevron/disclosure-chevron';
 import {
   Text,
   TextClassContext,
@@ -13,7 +14,6 @@ import {
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { DisclosureCaret } from './disclosure-caret';
 import { ShimmerText } from './shimmer-text';
 
 const foregroundTextClassName = 'text-foreground';
@@ -112,7 +112,7 @@ export function FeedDisclosure({
                 <Text className="text-warning">Awaiting approval</Text>
               </View>
             )}
-            <DisclosureCaret
+            <DisclosureChevron
               open={open}
               className={hovered ? foregroundTextClassName : undefined}
             />

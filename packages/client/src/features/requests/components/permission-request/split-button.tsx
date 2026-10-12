@@ -6,13 +6,14 @@ import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { IconButton } from '../../../../lib/generic/primitives/buttons/icon-button/icon-button';
+import { SelectedCheck } from '../../../../lib/generic/primitives/display/selected-check';
 import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-sheet/bottom-sheet';
 import { Menu } from '../../../../lib/generic/primitives/overlays/menu/menu';
 import {
   Pressable,
   contentActionClass,
 } from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { IconSlot } from '../../../../lib/generic/symbols/icon';
 
 interface SplitButtonChoice<Value extends string> {
   value: Value;
@@ -64,7 +65,7 @@ function chevron(
         className,
       )}
       icon={'chevron-down'}
-      iconRole="inset"
+      iconRole="secondary"
       iconClassName={
         primary ? 'text-primary-foreground' : 'text-muted-foreground'
       }
@@ -125,11 +126,11 @@ function ChoiceSheet<Value extends string>(
             })}
           >
             <Text role="body">{choice.label}</Text>
-            <View className="size-4 items-center justify-center">
+            <IconSlot role="control">
               {choice.value === value && (
-                <Icon name="check" role="inset" className="text-foreground" />
+                <SelectedCheck className="text-foreground" />
               )}
-            </View>
+            </IconSlot>
           </Pressable>
         ))}
       </View>
