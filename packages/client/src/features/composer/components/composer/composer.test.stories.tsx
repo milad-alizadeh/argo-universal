@@ -1359,9 +1359,13 @@ function planDone(width: number): Story {
         await waitFor(() => expect(canvas.getByText(planTitle)).toBeVisible());
       } else {
         await userEvent.click(plan);
-        await waitFor(() =>
-          expect(overlay.getByText('3 of 3 done')).toBeVisible(),
-        );
+        await waitFor(() => expect(overlay.getByText(planTitle)).toBeVisible());
+        const sheet = within(overlay.getByRole('dialog', { name: 'Plan' }));
+        await expect(
+          sheet.getAllByRole('heading', { name: 'Plan' }),
+        ).toHaveLength(1);
+        await expect(sheet.queryByText('3 of 3 done')).not.toBeInTheDocument();
+        await expect(sheet.queryByRole('progressbar')).not.toBeInTheDocument();
       }
       await expect(
         overlay.queryByRole('progressbar', { name: /in progress$/ }),

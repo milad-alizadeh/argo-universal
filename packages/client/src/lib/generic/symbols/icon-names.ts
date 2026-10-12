@@ -78,6 +78,8 @@ export const iconSymbols = {
     sf: 'point.topleft.down.curvedto.point.bottomright.up',
     material: 'route',
   },
+  'measure-area': { sf: 'square', material: 'crop_square' },
+  'measure-height': { sf: 'arrow.up.and.down', material: 'height' },
   menu: { sf: 'line.3.horizontal', material: 'menu' },
   message: { sf: 'bubble.left', material: 'chat_bubble' },
   milestone: { sf: 'diamond', material: 'diamond' },

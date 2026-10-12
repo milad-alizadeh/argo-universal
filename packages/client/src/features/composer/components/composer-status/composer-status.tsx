@@ -2,18 +2,16 @@ import type { ContextUsage, PlanEntry } from '@repo/contracts';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { Platform, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
-  withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
-import { fullTurnDegrees } from '#lib/generic/motion';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
@@ -30,6 +28,7 @@ import {
   iconSizeStyle,
 } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { useNativeSheets } from '../agent-model-sheet-context';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 
 const successBackgroundClassName = 'bg-success';
@@ -42,7 +41,6 @@ const fullPercent = 100;
 const smartZonePercent = 20;
 const contextRingRadius = 5.5;
 const maximumPlanStepsHeight = 264;
-const spinnerTurnMilliseconds = 750;
 
 function contextZone(percent: number): 'smart' | 'dumb' {
   return percent < smartZonePercent ? 'smart' : 'dumb';
@@ -263,20 +261,36 @@ export function ComposerPlan({
     );
   return (
     <ComposerPopover label="Plan" width={420} trigger={trigger}>
-      {() => (
-        <View>
-          <View className="px-4 py-3 gap-1.5">
-            <View className="flex-row items-center gap-2">
-              <Icon name="checklist" className="text-foreground" />
-              <Text
-                selectable={false}
-                role={'heading'}
+      {() => <PlanPopoverContent entries={entries} />}
+    </ComposerPopover>
+  );
+}
 
-                className="select-none"
-              >
-                Plan
-              </Text>
-            </View>
+function PlanPopoverContent({
+  entries,
+}: {
+  entries: PlanEntry[];
+}): React.JSX.Element {
+  const windowWide = useWide();
+  const nativeSheets = useNativeSheets();
+  const done = entries.filter((entry) => entry.status === 'completed').length;
+  return (
+    <View>
+      {(windowWide || !nativeSheets) && (
+        <View className="px-4 py-3 gap-1.5">
+          <View className="flex-row items-center gap-2">
+            <Icon name="checklist" className="text-foreground" />
+            <Text
+              selectable={false}
+              role="heading"
+              semanticRole="heading"
+              aria-level={2}
+              className="select-none"
+            >
+              Plan
+            </Text>
+          </View>
+          {windowWide && (
             <View className="flex-row items-center gap-2">
               <View className="w-16">
                 <Meter
@@ -288,61 +302,10 @@ export function ComposerPlan({
                 {done} of {entries.length} done
               </Text>
             </View>
-          </View>
-          <PlanSteps entries={entries} />
+          )}
         </View>
       )}
-    </ComposerPopover>
-  );
-}
-
-function NativePlanSpinner({ label }: { label: string }): React.JSX.Element {
-  const rotation = useSharedValue(0);
-  useEffect(() => {
-    rotation.set(
-      withRepeat(
-        withTiming(fullTurnDegrees, {
-          duration: spinnerTurnMilliseconds,
-          easing: Easing.linear,
-        }),
-        -1,
-      ),
-    );
-    return (): void => cancelAnimation(rotation);
-  }, [rotation]);
-  const style = useAnimatedStyle(
-    () => ({ transform: [{ rotate: `${rotation.get()}deg` }] }),
-    [rotation],
-  );
-  return (
-    <View
-      role="progressbar"
-      accessibilityLabel={label}
-      style={iconSizeStyle('sm')}
-    >
-      <Animated.View style={[iconSizeStyle('sm'), style]}>
-        <Svg width="100%" height="100%" viewBox="0 0 32 32">
-          <ThemedCircle
-            cx={16}
-            cy={16}
-            r={14}
-            fill="none"
-            strokeWidth={4}
-            strokeClassName="bg-muted-foreground"
-            opacity={0.2}
-          />
-          <ThemedCircle
-            cx={16}
-            cy={16}
-            r={14}
-            fill="none"
-            strokeWidth={4}
-            strokeClassName="bg-muted-foreground"
-            strokeDasharray={80}
-            strokeDashoffset={60}
-          />
-        </Svg>
-      </Animated.View>
+      <PlanSteps entries={entries} />
     </View>
   );
 }
@@ -356,13 +319,11 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }): React.JSX.Element {
         const occurrence = occurrences.get(entry.content) ?? 0;
         occurrences.set(entry.content, occurrence + 1);
         let stepIndicator: ReactNode;
-        if (entry.status === 'in_progress' && Platform.OS !== 'web' && !wide) {
-          stepIndicator = (
-            <NativePlanSpinner label={`${entry.content} in progress`} />
-          );
-        } else if (entry.status === 'in_progress') {
+        if (entry.status === 'in_progress') {
           stepIndicator = (
             <IconSpinner
+              accessible
+              role="progressbar"
               colorClassName="accent-muted-foreground wide:accent-foreground"
               accessibilityLabel={`${entry.content} in progress`}
             />
