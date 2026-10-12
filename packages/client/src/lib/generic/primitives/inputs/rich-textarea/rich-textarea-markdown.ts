@@ -9,7 +9,7 @@ import {
   type TextMatchTransformer,
   type Transformer,
 } from '@lexical/markdown';
-import { $isTextNode, type Klass, type LexicalNode } from 'lexical';
+import { $getRoot, $isTextNode, type Klass, type LexicalNode } from 'lexical';
 
 /*
  * The nodes and markdown transformers the web editor uses, shared by its drawing and its tests.
@@ -33,50 +33,71 @@ export const richTextareaTransformers: Transformer[] = [
 ];
 
 /*
- * Lexical backslash-escapes markdown characters in plain text on export. The draft is sent exactly
- * as shown (ADR-0012), so those characters pass through export as Unicode noncharacters and come back after.
+ * Lexical backslash-escapes markdown characters in plain text on export, and has no option to stop.
+ * The draft is sent exactly as shown (ADR-0012), so each export swaps those characters for stand-ins
+ * the draft does not contain, lets Lexical format the text, and swaps them back.
  */
-const firstNoncharacter = 0xfd_d0;
-const standIns = new Map(
-  ['*', '_', '`', '~', '\\'].map((character, index) => [
-    character,
-    String.fromCodePoint(firstNoncharacter + index),
-  ]),
-);
-const originals = new Map(
-  [...standIns].map(([character, standIn]) => [standIn, character]),
-);
+const markdownCharacters = ['*', '_', '`', '~', '\\'];
+const firstStandIn = 0xfd_d0;
 
-function shield(text: string): string {
-  return text.replaceAll(
-    /[*_`~\\]/g,
-    (character) => standIns.get(character) ?? character,
-  );
+interface Swap {
+  shield: (text: string) => string;
+  unshield: (markdown: string) => string;
 }
 
-function unshield(markdown: string): string {
-  return markdown.replaceAll(
-    /[\uFDD0-\uFDD4]/g,
-    (standIn) => originals.get(standIn) ?? standIn,
-  );
+function unusedCharacters(text: string, count: number): string[] {
+  const found: string[] = [];
+  let point = firstStandIn;
+  while (found.length < count) {
+    const character = String.fromCodePoint(point);
+    if (!text.includes(character)) found.push(character);
+    point += 1;
+  }
+  return found;
 }
 
-const unescapedText: TextMatchTransformer = {
-  type: 'text-match',
-  dependencies: [],
-  regExp: /$^/,
-  export: (node, _exportChildren, exportFormat) =>
-    $isTextNode(node) && !node.hasFormat('code')
-      ? exportFormat(node, shield(node.getTextContent()))
-      : null,
-};
+function replacer(from: string[], to: string[]): (value: string) => string {
+  const pattern = new RegExp(
+    `[${from.map((character) => RegExp.escape(character)).join('')}]`,
+    'gu',
+  );
+  return (value) =>
+    value.replaceAll(
+      pattern,
+      (character) => to[from.indexOf(character)] ?? character,
+    );
+}
+
+function swapFor(text: string): Swap {
+  const standIns = unusedCharacters(text, markdownCharacters.length);
+  return {
+    shield: replacer(markdownCharacters, standIns),
+    unshield: replacer(standIns, markdownCharacters),
+  };
+}
+
+function unescapedText({ shield }: Swap): TextMatchTransformer {
+  return {
+    type: 'text-match',
+    dependencies: [],
+    regExp: /$^/,
+    export: (node, _exportChildren, exportFormat) =>
+      $isTextNode(node) && !node.hasFormat('code')
+        ? exportFormat(node, shield(node.getTextContent()))
+        : null,
+  };
+}
 
 export function $importMarkdown(markdown: string): void {
   $convertFromMarkdownString(markdown, richTextareaTransformers);
 }
 
 export function $exportMarkdown(): string {
-  return unshield(
-    $convertToMarkdownString([...richTextareaTransformers, unescapedText]),
+  const swap = swapFor($getRoot().getTextContent());
+  return swap.unshield(
+    $convertToMarkdownString([
+      ...richTextareaTransformers,
+      unescapedText(swap),
+    ]),
   );
 }

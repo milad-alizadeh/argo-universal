@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { RichTextarea } from '../src/lib/generic/primitives/inputs/rich-textarea/rich-textarea';
 
-// A RichTextarea that keeps its own value, as the Composer's draft does, for RichTextarea stories.
+// A stateful controlled wrapper: a RichTextarea that keeps its own value, as the Composer's draft does.
 export function RichTextareaExample({
   initialValue = '',
   onChangeText,
@@ -25,4 +25,12 @@ export function RichTextareaExample({
       onSubmit={onSubmit}
     />
   );
+}
+
+/*
+ * The text a RichTextarea shows, line breaks included. On the web, Lexical holds an empty line open
+ * with a <br>, which innerText reads as one trailing newline.
+ */
+export function shownText(field: HTMLElement): string {
+  return field.innerText.replace(/\n$/, '');
 }

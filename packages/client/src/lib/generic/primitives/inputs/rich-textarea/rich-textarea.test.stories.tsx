@@ -1,12 +1,22 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
-import { RichTextareaExample } from '../../../../../../mocks/rich-textarea-mock';
+import {
+  RichTextareaExample,
+  shownText,
+} from '../../../../../../mocks/rich-textarea-example';
+import { layoutWidths } from '../../../each-layout';
+import { settleViewport } from '../../../settle-viewport';
+
+// These stories cover the web drawing (Lexical) only; the phone drawing is checked in the app.
 
 const meta = {
   title: 'Tests/RichTextarea',
   component: RichTextareaExample,
   args: { onChangeText: fn(), onSubmit: fn() },
+  beforeEach: async (): Promise<void> => {
+    await settleViewport(layoutWidths.wide);
+  },
 } satisfies Meta<typeof RichTextareaExample>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -23,7 +33,7 @@ const modifier = /Mac|iPhone|iPad/.test(navigator.platform)
 export const Empty: Story = {
   play: async ({ canvas }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await expect(field).toHaveTextContent(/^$/);
+    await expect(shownText(field)).toBe('');
     await expect(canvas.getByText('Message the Agent…')).toBeVisible();
   },
 };
@@ -43,7 +53,7 @@ function typedMark({
       await waitFor(() =>
         expect(args.onChangeText).toHaveBeenLastCalledWith(sent),
       );
-      await expect(field).toHaveTextContent(/^Ship it$/);
+      await expect(shownText(field)).toBe('Ship it');
     },
   };
 }
@@ -68,7 +78,7 @@ function shortcutMark({ keys, sent }: { keys: string; sent: string }): Story {
       await waitFor(() =>
         expect(args.onChangeText).toHaveBeenLastCalledWith(sent),
       );
-      await expect(field).toHaveTextContent(/^Ship$/);
+      await expect(shownText(field)).toBe('Ship');
     },
   };
 }
@@ -96,16 +106,18 @@ export const ShiftReturnAddsALine: Story = {
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('Ship\nit'),
     );
+    await expect(shownText(field)).toBe('Ship\nit');
     await expect(args.onSubmit).not.toHaveBeenCalled();
   },
 };
 
-export const ShowsADraftsMarks: Story = {
-  args: { initialValue: '**Ship** _it_ ~~now~~ `today`' },
+// Drawing a draft that arrives from outside is not an edit, so nothing is sent back.
+export const ShowingADraftDoesNotChangeIt: Story = {
+  args: { initialValue: '**Ship** _it_' },
   play: async ({ canvas, args }) => {
-    await expect(
-      canvas.getByRole('textbox', { name: label }),
-    ).toHaveTextContent(/^Ship it now today$/);
+    await expect(shownText(canvas.getByRole('textbox', { name: label }))).toBe(
+      'Ship it',
+    );
     await expect(args.onChangeText).not.toHaveBeenCalled();
   },
 };

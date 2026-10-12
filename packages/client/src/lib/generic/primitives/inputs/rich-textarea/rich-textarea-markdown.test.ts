@@ -37,6 +37,25 @@ const unchanged: { name: string; markdown: string }[] = [
   { name: 'a line break', markdown: 'First line\nSecond line' },
   { name: 'two paragraphs', markdown: 'First paragraph\n\nSecond paragraph' },
   { name: 'an empty draft', markdown: '' },
+  {
+    name: 'stars around a trailing space, which are not bold',
+    markdown: '**bold **',
+  },
+  { name: 'a space before a mark', markdown: ' _it_ now' },
+  { name: 'an unmatched backtick', markdown: 'Type ` to start code' },
+  { name: 'markers inside bold', markdown: '**snake_case and 2 * 3 ~ 4**' },
+  {
+    name: 'markers inside strikethrough',
+    markdown: '~~snake_case and 2 * 3~~',
+  },
+  {
+    name: 'noncharacters in plain text',
+    markdown: 'Keep \uFDD0 and \uFDD4 as they are',
+  },
+  {
+    name: 'noncharacters in inline code',
+    markdown: 'Keep `\uFDD0_\uFDD4` as it is',
+  },
 ];
 
 describe('RichTextarea markdown', () => {

@@ -6,6 +6,7 @@ import { userEvent as browserUserEvent } from 'vitest/browser';
 import { SessionColumn } from '#lib/product/session-layout';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { longWrittenPlan } from '../../../../../mocks/feed-paper';
+import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.mocks';
@@ -107,7 +108,7 @@ function opensWrittenPlan(
           canvas.getByRole('textbox'),
           'Follow up on this plan.',
         );
-        await expect(canvas.getByRole('textbox')).toHaveTextContent(
+        await expect(shownText(canvas.getByRole('textbox'))).toBe(
           'Follow up on this plan.',
         );
         await expect(
@@ -204,7 +205,7 @@ function readsLongWrittenPlan(width: number, agent: MockAgent): Story {
           composer.getBoundingClientRect().bottom,
         ).toBeLessThanOrEqual(window.innerHeight);
         await browserUserEvent.type(composer, 'Keep the last step.');
-        await expect(composer).toHaveTextContent('Keep the last step.');
+        await expect(shownText(composer)).toBe('Keep the last step.');
       }
       await userEvent.keyboard('{Escape}');
       await waitFor(() =>
