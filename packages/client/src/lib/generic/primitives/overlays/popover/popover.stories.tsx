@@ -33,10 +33,8 @@ function DimensionContent(): React.JSX.Element {
 function DimensionHeading(): React.JSX.Element {
   return (
     <View className="gap-2">
-      <Text className="font-medium leading-none">Dimensions</Text>
-      <Text className="text-muted-foreground text-sm">
-        Set the dimensions for the layer.
-      </Text>
+      <Text role={'heading'}>Dimensions</Text>
+      <Text role="secondary">Set the dimensions for the layer.</Text>
     </View>
   );
 }
@@ -63,7 +61,7 @@ function DimensionField({
   const inputProps = { id, accessibilityLabel: label, defaultValue };
   return (
     <View className="flex-row items-center gap-4">
-      <Text className="text-sm font-medium web:block w-24">{label}</Text>
+      <Text className="web:block w-24">{label}</Text>
       <Input {...inputProps} className="flex-1 sm:h-8" />
     </View>
   );

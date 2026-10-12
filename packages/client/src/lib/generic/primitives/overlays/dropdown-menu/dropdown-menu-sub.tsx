@@ -63,7 +63,7 @@ function SubTriggerBody(subProps: OpenTriggerProps): React.JSX.Element {
 export function DropdownMenuSubTrigger(props: TriggerProps): React.JSX.Element {
   const { open } = DropdownMenuPrimitive.useSubContext();
   const textStyle = cn(
-    'text-sm select-none group-active:text-accent-foreground',
+    'select-none group-active:text-accent-foreground',
     open && 'text-accent-foreground',
   );
   return (

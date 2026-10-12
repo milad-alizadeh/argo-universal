@@ -79,10 +79,7 @@ function DialogTitle({
 }: React.ComponentProps<typeof DialogPrimitive.Title>): React.JSX.Element {
   return (
     <DialogPrimitive.Title
-      className={cn(
-        'text-foreground text-lg font-semibold leading-none',
-        className,
-      )}
+      className={cn('type-heading', className)}
       {...props}
     />
   );
@@ -96,7 +93,7 @@ function DialogDescription({
 >): React.JSX.Element {
   return (
     <DialogPrimitive.Description
-      className={cn('text-muted-foreground text-sm', className)}
+      className={cn('type-secondary', className)}
       {...props}
     />
   );

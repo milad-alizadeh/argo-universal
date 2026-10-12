@@ -21,7 +21,7 @@ export function ScrollFadePreview({
       style={{ height: 320 }}
     >
       <View className="h-11 flex-row items-center px-4">
-        <Text className="text-sm leading-5 font-medium">pnpm dev</Text>
+        <Text role="control">pnpm dev</Text>
       </View>
       <ScrollFadeView
         testID="scroll-fade-scroll"
@@ -29,7 +29,7 @@ export function ScrollFadePreview({
         contentContainerClassName="px-4 pb-3"
       >
         {lines.map((line) => (
-          <Text key={line} className="font-mono text-xs leading-5">
+          <Text key={line} role="code">
             {line}
           </Text>
         ))}
