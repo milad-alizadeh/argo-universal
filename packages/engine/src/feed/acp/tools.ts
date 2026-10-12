@@ -7,6 +7,7 @@ import {
   mapToolCallContent,
   collectUnsupportedToolContentReasons,
 } from './tool-content';
+import { nameToolCall } from './tool-names';
 import { capToolOutput } from './tool-output';
 
 type ToolUpdate = Extract<
@@ -95,7 +96,9 @@ const readOrCreateToolRow = (toolInput: ToolInput): ToolRow => {
 export const assembleToolCall = (input: ToolInput): AssembledContent => {
   const { row: update, blobs } = capToolOutput(
     setToolRowState(
-      mergeToolCallUpdate(readOrCreateToolRow(input), input.update),
+      nameToolCall(
+        mergeToolCallUpdate(readOrCreateToolRow(input), input.update),
+      ),
     ),
     input.update,
   );

@@ -27,7 +27,6 @@ function sameItem(first: FeedViewItem, second: FeedViewItem): boolean {
     return (
       first.id === second.id &&
       first.title === second.title &&
-      sameList(first.lines, second.lines) &&
       sameList(first.toolCalls, second.toolCalls)
     );
   if ('row' in first && 'row' in second)
