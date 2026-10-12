@@ -9,7 +9,9 @@ export const iconButtonClasses = cva(
         ghost: 'bg-transparent active:bg-accent web:hover:bg-accent',
         outline:
           'border-border bg-background active:bg-accent web:hover:bg-accent',
-        filled: 'bg-primary active:bg-primary/90 web:hover:bg-primary/90',
+        // Reacts as the filled Button does, so both halves of a split button match.
+        filled:
+          'bg-primary active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
       },
       disabled: { true: 'opacity-[0.38]' },
       size: {
