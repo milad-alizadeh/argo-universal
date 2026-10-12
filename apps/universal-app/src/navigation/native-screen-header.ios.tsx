@@ -1,9 +1,8 @@
 import { hasLiquidGlass, type ScreenHeaderProps } from '@repo/client';
-import { type NativeStackNavigationOptions, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import type * as React from 'react';
 import { rightItems } from './header-right-items';
-
-type Search = NonNullable<ScreenHeaderProps['search']>;
+import { headerSearchOptions } from './header-search-options';
 
 // iOS draws the native search bar; iOS 26 docks it at the bottom, in the thumb's reach.
 export function NativeScreenHeader({
@@ -20,7 +19,9 @@ export function NativeScreenHeader({
           title,
           headerLeft: left ? () => left : undefined,
           ...rightItems(right),
-          headerSearchBarOptions: search ? searchBarOptions(search) : undefined,
+          headerSearchBarOptions: search
+            ? headerSearchOptions(search)
+            : undefined,
         }}
       />
       {search && hasLiquidGlass && (
@@ -30,18 +31,4 @@ export function NativeScreenHeader({
       )}
     </>
   );
-}
-
-function searchBarOptions(
-  search: Search,
-): NativeStackNavigationOptions['headerSearchBarOptions'] {
-  return {
-    placeholder: search.placeholder,
-    placement: 'integrated',
-    autoCapitalize: 'none',
-    hideWhenScrolling: false,
-    onChangeText: ({ nativeEvent }) => search.onChangeText(nativeEvent.text),
-    onCancelButtonPress: () => search.onChangeText(''),
-    onClose: () => search.onChangeText(''),
-  };
 }
