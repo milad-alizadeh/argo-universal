@@ -11,7 +11,7 @@ export function NavigationMock(): React.JSX.Element {
         accessibilityRole="button"
         onPress={() => navigate({ to: 'session', id: 'session-1' })}
       >
-        <Text>Open Session</Text>
+        <Text>Go to the Session</Text>
       </Pressable>
     </View>
   );

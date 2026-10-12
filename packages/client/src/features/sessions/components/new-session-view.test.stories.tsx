@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import type { ComposerDraft } from '#features/composer';
 import { ContentLayout } from '#lib/product/content-layout';
 import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
 import { findToast } from '../../../lib/generic/find-toast';
@@ -12,12 +13,18 @@ import {
   type NewSessionViewProps,
   type ReadyNewSessionViewProps,
 } from './new-session-view';
-import { exampleProject, readyNewSession } from './new-session-view.mocks';
+import {
+  exampleProject,
+  readyNewSession,
+  typedDraft,
+} from './new-session-view.mocks';
 
 const pressedAttribute = 'aria-pressed';
 const newWorktreeLabel = 'New worktree';
-const openSessionLabel = 'Open Session';
+const sendLabel = 'Send';
+const messageLabel = 'Message';
 const failedStartMessage = 'The Agent exited before it was ready.';
+const setupStepText = 'Run `claude login` on the Server, then check again.';
 const projectLabel = `Project: ${exampleProject.name}`;
 
 const meta = {
@@ -129,7 +136,14 @@ export const Ready: Story = {
         canvas.getAllByRole('button', { name: 'Checkout' }),
       ).toHaveLength(1);
       await expect(
-        canvas.queryByRole('textbox', { name: 'Message' }),
+        canvas.getByRole('textbox', { name: messageLabel }),
+      ).toBeVisible();
+      // An empty prompt has nothing to send.
+      await expect(
+        canvas.getByRole('button', { name: sendLabel }),
+      ).toBeDisabled();
+      await expect(
+        canvas.queryByRole('button', { name: 'Open Session' }),
       ).toBeNull();
       await expect(canvas.queryByText('Reconnecting…')).toBeNull();
     }),
@@ -139,20 +153,45 @@ function readyArgs(changes: Partial<ReadyNewSessionViewProps>): Story['args'] {
   return { view: { state: 'ready', ...readyNewSession, ...changes } };
 }
 
-export const OpensTheSession: Story = {
-  args: readyArgs({ onOpen: fn() }),
-  play: async ({ canvas, args, userEvent }) => {
+// The draft follows the reader's typing, as the screen's state does.
+function Drafting({
+  onSend,
+}: {
+  onSend: (draft: ComposerDraft) => void;
+}): React.JSX.Element {
+  const [draft, setDraft] = useState<ComposerDraft>(readyNewSession.draft);
+  return (
+    <NewSessionView
+      state="ready"
+      {...readyNewSession}
+      draft={draft}
+      onDraftChange={setDraft}
+      onSend={onSend}
+    />
+  );
+}
+
+const sendFirstPrompt = fn();
+
+export const SendsTheFirstPrompt: Story = {
+  render: () => <Drafting onSend={sendFirstPrompt} />,
+  beforeEach: (): void => {
+    sendFirstPrompt.mockClear();
+  },
+  play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.phone);
-    await userEvent.click(
-      await canvas.findByRole('button', { name: openSessionLabel }),
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: messageLabel }),
+      typedDraft.text,
     );
-    if (args.view.state !== 'ready') throw new Error('The story needs ready.');
-    await expect(args.view.onOpen).toHaveBeenCalledOnce();
+    await userEvent.click(canvas.getByRole('button', { name: sendLabel }));
+    await expect(sendFirstPrompt).toHaveBeenCalledOnce();
+    await expect(sendFirstPrompt).toHaveBeenCalledWith(typedDraft);
   },
 };
 
 export const Reconnecting: Story = {
-  args: readyArgs({ connected: false, canOpen: false }),
+  args: readyArgs({ connected: false, canOpen: false, draft: typedDraft }),
   play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(
@@ -160,22 +199,38 @@ export const Reconnecting: Story = {
       ).toBeVisible();
       await expect(canvas.getByText('Reconnecting…')).toBeVisible();
       await expect(
-        canvas.getByRole('button', { name: openSessionLabel }),
+        canvas.getByRole('button', { name: sendLabel }),
+      ).toBeDisabled();
+    }),
+};
+
+export const NeedsSetup: Story = {
+  args: readyArgs({
+    canOpen: false,
+    draft: typedDraft,
+    setupStep: setupStepText,
+  }),
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      await expect(await canvas.findByRole('alert')).toHaveTextContent(
+        setupStepText,
+      );
+      await expect(
+        canvas.getByRole('button', { name: sendLabel }),
       ).toBeDisabled();
     }),
 };
 
 export const Opening: Story = {
-  args: readyArgs({ opening: true, canOpen: false }),
+  args: readyArgs({ opening: true, canOpen: false, draft: typedDraft }),
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      const button = await canvas.findByRole('button', {
-        name: openSessionLabel,
-      });
-      await expect(button).toBeVisible();
-      await expect(button).toHaveTextContent(openSessionLabel);
-      await expect(button).toBeDisabled();
-      await expect(button).toHaveAttribute('aria-busy', 'true');
+      await expect(
+        await canvas.findByRole('progressbar', { name: 'Sending' }),
+      ).toBeVisible();
+      await expect(
+        canvas.getByRole('button', { name: sendLabel }),
+      ).toBeDisabled();
       await expect(
         canvas.getByRole('button', { name: projectLabel }),
       ).toBeDisabled();
@@ -183,14 +238,16 @@ export const Opening: Story = {
 };
 
 export const FailedStart: Story = {
-  args: readyArgs({ openError: failedStartMessage }),
+  args: readyArgs({ openError: failedStartMessage, draft: typedDraft }),
   play: async ({ canvas }) => {
     await expect(await findToast("Couldn't open the Session")).toBeVisible();
     await expect(await findToast(failedStartMessage)).toBeVisible();
     await expect(canvas.queryByRole('alert')).toBeNull();
+    // The draft stays, ready to send again.
     await expect(
-      canvas.getByRole('button', { name: openSessionLabel }),
-    ).toBeEnabled();
+      canvas.getByRole('textbox', { name: messageLabel }),
+    ).toHaveValue(typedDraft.text);
+    await expect(canvas.getByRole('button', { name: sendLabel })).toBeEnabled();
   },
 };
 
