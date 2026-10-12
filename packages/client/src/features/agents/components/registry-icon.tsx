@@ -2,11 +2,16 @@ import type * as React from 'react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { SvgUri, SvgXml, type XmlProps } from 'react-native-svg';
-import { Icon, iconPixels } from '../../../lib/generic/symbols/icon';
+import {
+  Icon,
+  type IconSize,
+  iconPixels,
+} from '../../../lib/generic/symbols/icon';
 
 interface RegistryIconProps {
   uri: string | undefined;
   agentName: string;
+  size?: IconSize;
 }
 type IconSource =
   | { kind: 'inline'; xml: string }
@@ -22,33 +27,32 @@ type ImageProps = Pick<
 export function RegistryIcon({
   uri,
   agentName,
+  size = 'sm',
 }: RegistryIconProps): React.JSX.Element {
-  if (!uri) return <UnavailableIcon agentName={agentName} />;
-  return <RegistryImage uri={uri} agentName={agentName} />;
+  if (!uri) return <UnavailableIcon agentName={agentName} size={size} />;
+  return <RegistryImage uri={uri} agentName={agentName} size={size} />;
 }
 
 function RegistryImage({
   uri,
   agentName,
-}: {
-  uri: string;
-  agentName: string;
-}): React.JSX.Element {
+  size,
+}: Required<RegistryIconProps> & { uri: string }): React.JSX.Element {
   const source = useMemo(
     (): IconSource => decodeRegistryIconSource(uri),
     [uri],
   );
-  return renderIcon(source, imageProps(agentName));
+  return renderIcon(source, imageProps(agentName, size));
 }
 
-function imageProps(agentName: string): ImageProps {
-  const pixels = iconPixels('sm');
+function imageProps(agentName: string, size: IconSize): ImageProps {
+  const pixels = iconPixels(size);
   return {
     width: pixels,
     height: pixels,
     accessibilityRole: 'image',
     accessibilityLabel: `${agentName} icon`,
-    fallback: <UnavailableIcon agentName={agentName} />,
+    fallback: <UnavailableIcon agentName={agentName} size={size} />,
   };
 }
 
@@ -78,21 +82,42 @@ function decodeInlineSvgDataUri(iconUri: string): string | null {
   const header = iconUri.slice(0, comma).split(';');
   if (header[0] !== 'data:image/svg+xml') return null;
   if (header.includes('base64')) return null;
-  return decodeURIComponent(iconUri.slice(comma + 1));
+  return withViewBox(decodeURIComponent(iconUri.slice(comma + 1)));
+}
+
+// An SVG with a width and height but no viewBox draws at its own size in the corner of the box; a viewBox scales it to fill the box, centred.
+function withViewBox(xml: string): string {
+  const [open] = /<svg\b[^>]*>/i.exec(xml) ?? [''];
+  const viewBox = missingViewBox(open);
+  return viewBox
+    ? xml.replace(open, open.replace(/<svg\b/i, `<svg viewBox="${viewBox}"`))
+    : xml;
+}
+
+function missingViewBox(open: string): string | undefined {
+  if (/\bviewBox\s*=/i.test(open)) return undefined;
+  const size = [
+    numberAttribute(open, 'width'),
+    numberAttribute(open, 'height'),
+  ];
+  return size.every(Boolean) ? `0 0 ${size.join(' ')}` : undefined;
+}
+
+function numberAttribute(open: string, name: string): string | undefined {
+  return new RegExp(`\\b${name}\\s*=\\s*["']?([\\d.]+)`, 'i').exec(open)?.[1];
 }
 
 function UnavailableIcon({
   agentName,
-}: {
-  agentName: string;
-}): React.JSX.Element {
+  size,
+}: Pick<Required<RegistryIconProps>, 'agentName' | 'size'>): React.JSX.Element {
   return (
     <View
       accessible
       accessibilityRole="image"
       accessibilityLabel={`${agentName} icon unavailable`}
     >
-      <Icon name="agent" size="sm" />
+      <Icon name="agent" size={size} />
     </View>
   );
 }

@@ -26,3 +26,7 @@ export {
   rememberSessionConfiguration,
   useNewSessionConfiguration,
 } from './state/session-configuration-preferences';
+export {
+  configurationChoices,
+  configurationEffortChoices,
+} from './state/configuration-choices';

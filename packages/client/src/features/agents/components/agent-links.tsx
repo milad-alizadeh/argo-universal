@@ -1,0 +1,44 @@
+import type * as React from 'react';
+import { Linking, Pressable, View } from 'react-native';
+import { ListItem } from '#primitives/list-item';
+import { Text } from '#primitives/text';
+import { Icon } from '../../../lib/generic/symbols/icon';
+import type { AgentDetail } from '../state/agent-detail-types';
+
+type AgentLink = NonNullable<AgentDetail['links']>[number];
+
+// The registry entry's GitHub, Licence and Website links, each opening outside the App.
+export function AgentLinks({
+  links,
+}: Pick<AgentDetail, 'links'>): React.JSX.Element | null {
+  if (!links?.length) return null;
+  return <ListItem title="Links" accessory={<LinkList links={links} />} />;
+}
+
+function LinkList({
+  links,
+}: {
+  links: readonly AgentLink[];
+}): React.JSX.Element {
+  return (
+    <View className="flex-row items-center gap-4">
+      {links.map((link) => (
+        <ExternalLink key={link.url} link={link} />
+      ))}
+    </View>
+  );
+}
+
+function ExternalLink({ link }: { link: AgentLink }): React.JSX.Element {
+  return (
+    <Pressable
+      role="link"
+      accessibilityLabel={link.label}
+      onPress={() => void Linking.openURL(link.url)}
+      className="flex-row items-center gap-1"
+    >
+      <Text role="body">{link.label}</Text>
+      <Icon name="external-link" size="sm" className="text-muted-foreground" />
+    </Pressable>
+  );
+}
