@@ -10,5 +10,7 @@ export interface BottomSheetProps {
   trigger?: ReactElement<Pick<PressableProps, 'disabled'>>;
   // Absent when the content names the sheet with its own title.
   label?: string;
+  // The sheet rises only as tall as its content, as a dialog's does, instead of to fixed heights.
+  fit?: boolean;
   children: ReactNode;
 }

@@ -126,6 +126,3 @@ export function ScrollFadeView({
     </ScrollFadeFrame>
   );
 }
-
-// The Sessions list and Session page still place their own fades until the Session change.
-export { ScrollFade } from './scroll-fade-overlay';

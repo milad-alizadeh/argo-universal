@@ -125,7 +125,9 @@ function HostedSheetContent(
 ): React.JSX.Element {
   return (
     <RNHostView modifiers={[fillMaxHeight()]}>
-      <BottomSheetContent {...props} />
+      <BottomSheetContent label={props.label} onOpenChange={props.onOpenChange}>
+        {props.children}
+      </BottomSheetContent>
     </RNHostView>
   );
 }

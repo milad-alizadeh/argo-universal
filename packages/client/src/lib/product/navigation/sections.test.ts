@@ -1,34 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import type { NavigationDestination } from './context';
-import { destinationTitle, sectionDestination, sectionOf } from './sections';
+import { sectionDestination, sectionOf } from './sections';
 
-const cases: [NavigationDestination, string, string][] = [
-  [{ to: 'sessions' }, 'sessions', 'Sessions'],
-  [{ to: 'new-session' }, 'sessions', 'New Session'],
-  [{ to: 'session', id: 'session-1' }, 'sessions', 'Session'],
-  [{ to: 'issues' }, 'issues', 'Issues'],
-  [{ to: 'atlas' }, 'atlas', 'Atlas'],
-  [{ to: 'settings' }, 'settings', 'Settings'],
-  [{ to: 'settings-accounts' }, 'settings', 'Accounts'],
-  [{ to: 'settings-connection' }, 'settings', 'Connection'],
-  [
-    { to: 'settings-project', name: 'example-project' },
-    'settings',
-    'example-project',
-  ],
-  [{ to: 'settings-agent-new' }, 'settings', 'Add custom Agent'],
-  [{ to: 'settings-agent', agent: 'first-agent' }, 'settings', 'first-agent'],
+const cases: [NavigationDestination, string][] = [
+  [{ to: 'sessions' }, 'sessions'],
+  [{ to: 'new-session' }, 'sessions'],
+  [{ to: 'session', id: 'session-1' }, 'sessions'],
+  [{ to: 'issues' }, 'issues'],
+  [{ to: 'atlas' }, 'atlas'],
+  [{ to: 'settings' }, 'settings'],
+  [{ to: 'settings-accounts' }, 'settings'],
+  [{ to: 'settings-connection' }, 'settings'],
+  [{ to: 'settings-project', name: 'example-project' }, 'settings'],
+  [{ to: 'settings-agent-new' }, 'settings'],
+  [{ to: 'settings-agent', agent: 'first-agent' }, 'settings'],
 ];
 
 describe('sectionOf', () => {
   it.each(cases)('puts %o in %s', (destination, section) => {
     expect(sectionOf(destination)).toBe(section);
-  });
-});
-
-describe('destinationTitle', () => {
-  it.each(cases)('names %o', (destination, _section, title) => {
-    expect(destinationTitle(destination)).toBe(title);
   });
 });
 

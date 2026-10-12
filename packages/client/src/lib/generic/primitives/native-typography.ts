@@ -2,6 +2,7 @@ import type { Text as ComposeText } from '@expo/ui/jetpack-compose';
 import { createModifier, font, lineHeight } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps } from 'react';
 import { useWindowDimensions } from 'react-native';
+import { swiftFontFace } from './swift-font-face';
 import { type TextRole, useTextStyle } from './text';
 
 type ComposeTextStyle = NonNullable<
@@ -44,19 +45,15 @@ function swiftFont(
   style: ReturnType<typeof useTextStyle>,
   fontScale: number,
 ): Parameters<typeof font>[0] {
-  const family = swiftFamily(style.fontFamily);
+  const face = swiftFontFace(style.fontFamily);
   return {
-    family,
+    ...face,
     size:
-      family === undefined
+      face.family === undefined
         ? scaledValue(style.fontSize, fontScale)
         : style.fontSize,
     weight: fontWeights[String(style.fontWeight)]?.swift,
   };
-}
-
-function swiftFamily(family: string | undefined): string | undefined {
-  return family === 'System' ? undefined : family;
 }
 
 function swiftLeading(

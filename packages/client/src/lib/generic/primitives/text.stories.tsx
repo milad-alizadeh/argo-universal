@@ -11,18 +11,18 @@ const roles = [
 ] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { Text } from './text';
 
 function RoleExamples(): React.JSX.Element {
   return (
-    <Variations>
+    <VariationList>
       {roles.map((role) => (
         <Variation key={role} label={role}>
           <Text role={role}>The quick brown fox jumps over the lazy dog.</Text>
         </Variation>
       ))}
-    </Variations>
+    </VariationList>
   );
 }
 
@@ -32,7 +32,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Text',
   render: RoleExamples,
 };

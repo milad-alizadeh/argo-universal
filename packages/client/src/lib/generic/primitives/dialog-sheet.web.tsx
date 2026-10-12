@@ -3,12 +3,22 @@ import type * as React from 'react';
 import { BottomSheetSurface } from './bottom-sheet-surface.web';
 import type { DialogSheetProps } from './dialog-sheet';
 
-// A narrow web window draws the dialog as a bottom sheet; the dialog's own title names it.
+// A narrow web window draws the dialog as a bottom sheet, named by its label or else by the dialog's own title.
 export function DialogSheet(props: DialogSheetProps): React.JSX.Element {
   const { open } = DialogPrimitive.useRootContext();
   return (
-    <BottomSheetSurface open={open} hiddenWhileClosing>
+    <BottomSheetSurface
+      open={open}
+      hiddenWhileClosing
+      title={props.label && <SheetLabel label={props.label} />}
+    >
       {props.children}
     </BottomSheetSurface>
+  );
+}
+
+function SheetLabel({ label }: { label: string }): React.JSX.Element {
+  return (
+    <DialogPrimitive.Title className="sr-only">{label}</DialogPrimitive.Title>
   );
 }
