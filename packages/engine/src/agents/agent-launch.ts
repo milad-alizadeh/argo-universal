@@ -21,3 +21,31 @@ export type AgentLaunchSubject = { name: string; launch: AgentLaunch };
 export type CheckAgentLaunch = (
   subject: AgentLaunchSubject,
 ) => Promise<AgentCheck>;
+
+export type LoginAgentMethod = {
+  id: string;
+  name: string;
+  description?: string;
+};
+export type LoginAgentRequest = { id: string; url: string; message: string };
+export type LoginAgentOutcome = {
+  status: 'ready' | 'account-rejected' | 'authentication-required';
+  failure?: string;
+};
+export type LoginAgentCallbacks = {
+  createElicitation: (
+    request: LoginAgentRequest,
+    signal?: AbortSignal,
+  ) => Promise<{ action: 'accept' | 'decline' | 'cancel' }>;
+  signal: AbortSignal;
+};
+export type LoginAgentConnection = {
+  methods: readonly LoginAgentMethod[];
+  authenticate: (methodId: string) => Promise<void>;
+  checkReady: () => Promise<LoginAgentOutcome>;
+  close: () => Promise<void>;
+};
+export type OpenLoginAgent = (
+  subject: AgentLaunchSubject,
+  callbacks: LoginAgentCallbacks,
+) => Promise<LoginAgentConnection>;

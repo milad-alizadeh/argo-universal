@@ -2,13 +2,16 @@ import type { InitializeRequest } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 
-it('the real Client advertises only implemented Plan, Notice and Compaction extensions', async () => {
+it('the real Client advertises implemented Plan, Notice, Compaction and URL Elicitation extensions', async () => {
   const received = Promise.withResolvers<InitializeRequest>();
   const host = await startAcpEngine({
     steps: [],
     initialize: {
       protocolVersion: 1,
-      agentCapabilities: { sessionCapabilities: { close: {} } },
+      agentCapabilities: {
+        sessionCapabilities: { close: {} },
+        _meta: { authStatus: {} },
+      },
     },
     responses: { initialize: [{ received }] },
   });
@@ -18,7 +21,7 @@ it('the real Client advertises only implemented Plan, Notice and Compaction exte
     clientCapabilities: {
       plan: {},
       session: { notices: {}, compaction: {} },
-      elicitation: { form: {} },
+      elicitation: { form: {}, url: {} },
     },
   });
 });

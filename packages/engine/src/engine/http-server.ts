@@ -3,10 +3,12 @@ import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 import type { ActorRefFrom } from 'xstate';
-import type { syncSupervisorMachine } from '../agents';
+import { type AcpResourceInput } from '../acp';
+import { type syncSupervisorMachine } from '../agents';
 import { blobsFolderIn } from '../blob';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
+import { createEngineAgentLogins } from './agent-logins';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
 import { type AppRouter, createAppRouter } from './router';
@@ -23,6 +25,9 @@ export interface HttpServerOptions {
   databaseWriter: WriterActorRef;
   syncSupervisor: ActorRefFrom<typeof syncSupervisorMachine>;
   commandAdmission?: AbortController;
+  acp?: AcpResourceInput;
+  loginTimeoutMs?: number;
+  loginCleanupTimeoutMs?: number;
 }
 
 export interface HttpServer {
@@ -30,6 +35,7 @@ export interface HttpServer {
     options?: Parameters<AppRouter['createCaller']>[1],
   ) => ReturnType<AppRouter['createCaller']>;
   close: () => Promise<void>;
+  closeSetup: () => Promise<void>;
 }
 
 const forbiddenStatus = 403;
@@ -54,11 +60,13 @@ export async function startHttpServer(
 ): Promise<HttpServer> {
   const blobsFolder = blobsFolderIn(options.home);
   const commandAdmission = options.commandAdmission ?? new AbortController();
+  const agentLogins = createEngineAgentLogins(options);
   const appRouter = createAppRouter(
     createAppRouterDeps({
       ...options,
       blobsFolder,
       sessionCommandSignal: commandAdmission.signal,
+      agentLogins,
     }),
   );
 
@@ -111,6 +119,7 @@ export async function startHttpServer(
 
   return {
     close,
+    closeSetup: () => agentLogins.shutdown(),
     createCaller: (callerOptions) => appRouter.createCaller({}, callerOptions),
   };
 }

@@ -34,4 +34,5 @@ export interface AgentDetailViewProps {
   onRemove?: () => void;
   // Probes the Agent again, such as after signing in with the CLI.
   onCheckAgain?: () => void;
+  onSignIn?: () => void;
 }

@@ -12,6 +12,7 @@ export type ContentProps = {
   accessibilityLabel?: string;
   // False while the content holds unsaved input: only its own actions close it.
   dismissible?: boolean;
+  showClose?: boolean;
   children: React.ReactNode;
 };
 const contentClassName = cn(
@@ -45,7 +46,7 @@ export function DialogBody(props: ContentProps): React.JSX.Element {
     DialogPrimitive.Content,
     contentProps(props),
     props.children,
-    <ContentClose />,
+    props.showClose === false ? null : <ContentClose />,
   );
 }
 

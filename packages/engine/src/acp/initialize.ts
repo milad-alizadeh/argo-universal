@@ -11,7 +11,7 @@ const initializeRequest: InitializeRequest = {
   clientCapabilities: {
     plan: {},
     session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
-    elicitation: { form: {} },
+    elicitation: { form: {}, url: {} },
   },
 };
 

@@ -344,6 +344,9 @@ catalogs:
     expo-constants:
       specifier: ~57.0.20
       version: 57.0.20
+    expo-crypto:
+      specifier: ~57.0.4
+      version: 57.0.4
     expo-dev-client:
       specifier: ~57.0.19
       version: 57.0.19
@@ -1021,6 +1024,9 @@ importers:
       expo-clipboard:
         specifier: 'catalog:'
         version: 57.0.2(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
+      expo-crypto:
+        specifier: 'catalog:'
+        version: 57.0.4(expo@57.0.26)
       expo-file-system:
         specifier: 'catalog:'
         version: 57.0.7(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))
@@ -1134,6 +1140,9 @@ importers:
       json-schema-to-typescript:
         specifier: 'catalog:'
         version: 16.0.0
+      ts-json-schema-generator:
+        specifier: 'catalog:'
+        version: 2.9.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -6007,6 +6016,11 @@ packages:
     peerDependencies:
       expo: '*'
       react-native: '*'
+
+  expo-crypto@57.0.4:
+    resolution: {integrity: sha512-LqMMs/N6wvwZyw4deVmcl3AgXgqMwCVQ9WyWf2eaWyrk99TXSKk5da3QspiLOOjnn5Qv9f8C50cDNuoyLThpdw==}
+    peerDependencies:
+      expo: '*'
 
   expo-dev-client@57.0.19:
     resolution: {integrity: sha512-7giMK6BLL685GECHem2UAQvS473ImZLi5l+Q5tq+XSyv6I9UNVPs0p07mKwgBzq8z7DR3d4nTl702ziFxTjO3Q==}
@@ -13613,6 +13627,10 @@ snapshots:
       react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
+
+  expo-crypto@57.0.4(expo@57.0.26):
+    dependencies:
+      expo: 57.0.26(20d7116fd28de8d0bee1b55e844b7a77)
 
   expo-dev-client@57.0.19(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)):
     dependencies:

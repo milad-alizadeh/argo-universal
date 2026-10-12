@@ -16,6 +16,7 @@ import {
 } from '../sessions';
 import { databaseWriterId, writerMachine } from '../storage';
 import type { SystemDeps } from '../system';
+import { createEngineAgentLogins } from './agent-logins';
 
 export type AppRouterDeps = SessionRouterDeps &
   AgentsRouterDeps &
@@ -53,10 +54,14 @@ export function createFeedSources(input: FeedSourcesInput): FeedSources {
 }
 
 // The Engine supplies the ACP check to the Agents module itself.
-type EngineSupplied = keyof FeedDeps | 'createId' | 'checkAgentLaunch';
+type EngineSupplied =
+  | keyof FeedDeps
+  | 'createId'
+  | 'checkAgentLaunch'
+  | 'agentLogins';
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId'>>;
+  Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins'>>;
 
 export function createAppRouterDeps(
   input: AppRouterInput,
@@ -67,6 +72,12 @@ export function createAppRouterDeps(
     ...sources,
     createId: input.createId ?? randomUUID,
     checkAgentLaunch,
+    agentLogins:
+      input.agentLogins ??
+      createEngineAgentLogins({
+        sessions: input.sessions,
+        createId: input.createId ?? randomUUID,
+      }),
     readSession: createSessionReader(input.database),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };

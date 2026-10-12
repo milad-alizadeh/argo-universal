@@ -102,7 +102,10 @@ it('unsupported image prompts reject before success or Agent work', async () => 
     steps: [],
     initialize: {
       protocolVersion: 1,
-      agentCapabilities: { sessionCapabilities: { close: {}, resume: {} } },
+      agentCapabilities: {
+        _meta: { authStatus: {} },
+        sessionCapabilities: { close: {}, resume: {} },
+      },
     },
     responses: { 'session/prompt': [{ requests }] },
   });

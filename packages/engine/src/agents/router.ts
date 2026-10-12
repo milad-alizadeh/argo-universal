@@ -13,6 +13,8 @@ import { readAgentCatalog } from './catalog-sql';
 import type { ConfigurationDeps } from './configuration/configuration-commands';
 import { createConfigurationRouter } from './configuration/configuration-router';
 import { listCustomAgents } from './configuration/custom-agent-list';
+import type { AgentLogins } from './login';
+import { createLoginRouter } from './login-router';
 import {
   requestAgentCatalogSync,
   type syncSupervisorMachine,
@@ -24,7 +26,7 @@ type CatalogDeps = Pick<ConfigurationDeps, 'database' | 'databaseWriter'> & {
 };
 
 export type AgentsRouterDeps = ConfigurationDeps &
-  CatalogDeps & { sessions: OpenSessionsActorRef };
+  CatalogDeps & { sessions: OpenSessionsActorRef; agentLogins: AgentLogins };
 
 const createCatalogRouter = routerFactory((deps: CatalogDeps) =>
   router({
@@ -67,5 +69,6 @@ export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
     createCatalogRouter(deps),
     createCatalogSyncRouter(deps),
     createListRouter(deps),
+    createLoginRouter(deps),
   ),
 );
