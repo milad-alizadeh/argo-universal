@@ -7,7 +7,7 @@ import {
 } from '#lib/generic/primitives/dialog';
 import { Button } from '../../../lib/generic/primitives/button';
 import { useWide } from '../../../lib/generic/use-wide';
-import { FieldMessage, FormLabel, FormInput } from './form-field';
+import { EntrySheetInput } from './entry-sheet-input';
 
 export type EntrySheetField = {
   label: string;
@@ -72,21 +72,6 @@ function CancelEntry({
   onClose,
 }: Pick<EntrySheetProps, 'onClose'>): React.JSX.Element {
   return <Button variant="outline" onPress={onClose} label={'Cancel'} />;
-}
-
-function EntrySheetInput({
-  field,
-}: {
-  field: EntrySheetField;
-}): React.JSX.Element {
-  const errors = field.error ? [field.error] : [];
-  return (
-    <View className="gap-2">
-      <FormLabel>{field.label}</FormLabel>
-      <FormInput mono {...field} errors={errors} />
-      <FieldMessage errors={errors} />
-    </View>
-  );
 }
 
 function RemoveEntry({
