@@ -13,7 +13,6 @@ export function PhoneMenuButton(): React.JSX.Element {
   return (
     <HeaderButton
       icon="menu"
-      leading
       dot={attentionCount > 0 ? 'attention' : undefined}
       accessibilityLabel="Open navigation"
       onPress={() => {

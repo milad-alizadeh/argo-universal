@@ -7,6 +7,7 @@ import ReanimatedDrawerLayout, {
   DrawerLockMode,
   DrawerType,
 } from 'react-native-gesture-handler/ReanimatedDrawerLayout';
+import { swipeOpens } from './drawer-swipe';
 import type { PhoneDrawerProps } from './phone-drawer';
 
 export function PhoneDrawer({
@@ -38,7 +39,9 @@ export function PhoneDrawer({
         ref={drawer}
         drawerType={DrawerType.BACK}
         drawerLockMode={
-          swipeEnabled ? DrawerLockMode.UNLOCKED : DrawerLockMode.LOCKED_CLOSED
+          swipeEnabled && swipeOpens
+            ? DrawerLockMode.UNLOCKED
+            : DrawerLockMode.LOCKED_CLOSED
         }
         drawerWidth={width}
         drawerBackgroundColor={String(surfaceStyle.backgroundColor)}

@@ -7,6 +7,7 @@ import {
 import type * as React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWide } from '../../../use-wide/use-wide';
+import { ListSearchField } from '../../inputs/list-search-bar/list-search-bar';
 import { Host } from '../../native/host';
 import { FieldLayout } from '../field-layout';
 import type { FieldGroupProps } from '../field-props';
@@ -17,29 +18,32 @@ const topPadding = 8;
 const sectionGap = 24;
 
 export function FieldGroup(props: FieldGroupProps): React.JSX.Element {
-  const insets = useSafeAreaInsets();
   if (useWide()) return <WebFieldGroup {...props} />;
-  const sideGutter = sideGutterFor(props.variant);
   return (
     <FieldLayout value={props.variant ?? 'grouped'}>
       <Host style={{ flex: 1 }} matchContents={false}>
-        <Column
-          verticalArrangement={{ spacedBy: sectionGap }}
-          modifiers={[
-            fillMaxSize(),
-            verticalScroll(),
-            padding(
-              sideGutter,
-              topPadding,
-              sideGutter,
-              insets.bottom + sectionGap,
-            ),
-          ]}
-        >
-          {props.children}
-        </Column>
+        <ScrollingColumn {...props} />
       </Host>
     </FieldLayout>
+  );
+}
+
+// The sections in one scrolling Compose column, the search first when there is one.
+function ScrollingColumn(props: FieldGroupProps): React.JSX.Element {
+  const insets = useSafeAreaInsets();
+  const sideGutter = sideGutterFor(props.variant);
+  return (
+    <Column
+      verticalArrangement={{ spacedBy: sectionGap }}
+      modifiers={[
+        fillMaxSize(),
+        verticalScroll(),
+        padding(sideGutter, topPadding, sideGutter, insets.bottom + sectionGap),
+      ]}
+    >
+      {props.search && <ListSearchField {...props.search} />}
+      {props.children}
+    </Column>
   );
 }
 

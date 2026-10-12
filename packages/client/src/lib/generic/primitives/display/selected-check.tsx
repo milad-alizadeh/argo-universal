@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import type { IconRole } from '../../symbols/icon-role';
 import { Icon } from '../../symbols/icon';
+import type { IconRole } from '../../symbols/icon-role';
 
 export function SelectedCheck({
   className,
