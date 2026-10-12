@@ -44,5 +44,4 @@ export {
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
 export { HeaderSearchRow } from './lib/product/navigation/header-search';
-export { HeaderSearchBar } from './lib/product/navigation/header-search-bar';
 export { AppProviders } from './app-providers';
