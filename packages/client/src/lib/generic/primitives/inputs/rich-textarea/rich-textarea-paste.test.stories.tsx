@@ -126,8 +126,9 @@ export const PastingCopiedHtmlKeepsMarkdownMarks: Story = {
 };
 
 /*
- * ⌘⇧V (Ctrl+Shift+V off Apple platforms) is the browser's Paste and Match Style. Playwright binds no
- * command to it on macOS, so the key carries the command a browser's binding gives it.
+ * ⌘⇧V (Ctrl+Shift+V off Apple platforms) is the browser's Paste and Match Style. Chromium binds
+ * Ctrl+Shift+V itself, but headless Chromium binds nothing on macOS, so there the key carries the
+ * command a browser's binding gives it; sending it on both would paste twice.
  */
 const cdpModifier = { Control: 2, Meta: 4, Shift: 8 } as const;
 const plainPasteKey = {
@@ -141,7 +142,7 @@ async function pressPlainPaste(): Promise<void> {
   await session.send('Input.dispatchKeyEvent', {
     type: 'rawKeyDown',
     ...plainPasteKey,
-    commands: ['pasteAndMatchStyle'],
+    commands: modifier === 'Meta' ? ['pasteAndMatchStyle'] : [],
   });
   await session.send('Input.dispatchKeyEvent', {
     type: 'keyUp',
