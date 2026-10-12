@@ -3,13 +3,15 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { IconButton } from '#lib/generic/primitives/buttons/icon-button/icon-button';
-import { FieldGroup } from '#lib/generic/primitives/fields/field-group/field-group';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import {
   type ErrorToast,
   useErrorToast,
 } from '#lib/generic/primitives/overlays/toast/toast';
+import {
+  FieldList,
+  type FieldListSection,
+} from '#lib/product/field-list/field-list';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
 import type { ListItemProps } from '../../../../lib/generic/primitives/fields/field-props';
@@ -107,17 +109,20 @@ const loadFailed: ErrorToast = {
 
 // A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
 function ProjectsBody(props: SearchedProps): React.JSX.Element {
+  useErrorToast(props.projects.status === 'error' ? loadFailed : undefined);
+  return (
+    <FieldList search={listSearch(props)} sections={projectSections(props)} />
+  );
+}
+
+const loadingSection: FieldListSection = {
+  rows: [<ListItem key="loading" title="Loading Projects…" loading />],
+};
+
+function projectSections(props: SearchedProps): FieldListSection[] {
   const { projects } = props;
-  useErrorToast(projects.status === 'error' ? loadFailed : undefined);
-  if (projects.status !== 'loaded')
-    return (
-      <FieldGroup search={listSearch(props)}>
-        <FieldSection>
-          <ListItem title="Loading Projects…" loading />
-        </FieldSection>
-      </FieldGroup>
-    );
-  return <LoadedProjects {...props} projects={projects.projects} />;
+  if (projects.status !== 'loaded') return [loadingSection];
+  return [loadedSection({ ...props, projects: projects.projects })];
 }
 
 const matches = (project: ProjectInfo, search: string): boolean =>
@@ -125,49 +130,29 @@ const matches = (project: ProjectInfo, search: string): boolean =>
     text.toLowerCase().includes(search),
   );
 
-function LoadedProjects(props: LoadedProps): React.JSX.Element {
-  const query = props.search.trim().toLowerCase();
-  const found = props.projects.filter((project) => matches(project, query));
-  return (
-    <View className="flex-1 pt-2 wide:pt-0">
-      <FieldGroup search={listSearch(props)}>
-        <ProjectRows {...props} found={found} searching={query !== ''} />
-      </FieldGroup>
-    </View>
-  );
-}
-
 const countTitle = (count: number): string =>
   count === 1 ? '1 Project' : `${count} Projects`;
 
-function ProjectRows({
-  found,
-  searching,
-  onOpenProject,
-}: LoadedProps & {
-  found: ProjectInfo[];
-  searching: boolean;
-}): React.JSX.Element {
+// The Projects the search finds under their count, or a row that says none did.
+function loadedSection(props: LoadedProps): FieldListSection {
+  const query = props.search.trim().toLowerCase();
+  const found = props.projects.filter((project) => matches(project, query));
   if (found.length === 0)
-    return (
-      <FieldSection>
-        <ListItem
-          title={searching ? 'No Project matches.' : 'No Projects yet.'}
-        />
-      </FieldSection>
-    );
-  return (
-    <FieldSection title={countTitle(found.length)}>
-      {found.map((project) => (
-        <ProjectRow
-          key={project.id}
-          project={project}
-          onOpen={() => onOpenProject(project.name)}
-        />
-      ))}
-    </FieldSection>
-  );
+    return { rows: [<ListItem key="empty" title={emptyTitle(query)} />] };
+  return {
+    title: countTitle(found.length),
+    rows: found.map((project) => (
+      <ProjectRow
+        key={project.id}
+        project={project}
+        onOpen={() => props.onOpenProject(project.name)}
+      />
+    )),
+  };
 }
+
+const emptyTitle = (query: string): string =>
+  query === '' ? 'No Projects yet.' : 'No Project matches.';
 
 const folderNotFound = 'Folder not found';
 const missingFolder: ListItemProps['status'] = {

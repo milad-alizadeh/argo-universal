@@ -1,12 +1,34 @@
 import { ProgressView, Text, VStack } from '@expo/ui/swift-ui';
-import { foregroundStyle, frame, lineLimit } from '@expo/ui/swift-ui/modifiers';
+import {
+  accessibilityElement,
+  accessibilityLabel,
+  disabled,
+  foregroundStyle,
+  frame,
+  lineLimit,
+} from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import { iconPixels } from '../../../symbols/icon';
-import type { ListItemProps } from '../../fields/field-props';
+import { type ListItemProps, listItemName } from '../../fields/field-props';
 import { useSwiftUITextModifiers } from '../../native/native-typography';
 import { subtitleRole, titleRole, useToneColor } from './list-item-text';
 import { NativeRowGlyph } from './native-row';
+
+// A row's side inset, and the space between its leading slot, label and trailing items.
+export const inset = 16;
+export const rowSpacing = 12;
+
+type RowModifiers = NonNullable<
+  React.ComponentProps<typeof VStack>['modifiers']
+>;
+
+// The row reads as one element, named by its title and detail.
+export const rowAccessibility = (props: ListItemProps): RowModifiers => [
+  accessibilityElement('ignore'),
+  accessibilityLabel(listItemName(props)),
+  disabled(!!props.disabled),
+];
 
 // The SwiftUI row's icon or image, or the system spinner in the icon's slot while the row loads.
 export function RowLeading(

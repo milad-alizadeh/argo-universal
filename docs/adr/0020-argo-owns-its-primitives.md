@@ -30,6 +30,10 @@ Argo's Android FieldGroup and FieldSection are Argo's own Compose compositions, 
 
 This amends ADR-0019. SwiftUI `Image` draws only system symbols, so `custom.<name>` symbols such as `custom.robot` cannot render inside a native row. Native rows draw Argo's `Icon` inside an `RNHostView` sized to its contents, with leading phone list icons using `size="lg"`. Icon dimensions are encapsulated in the Icon component, and callers choose a named size (owner correction, 2026-10-10). Disclosure chevrons stay system-drawn. Android Paper frames use Material Symbols, as ADR-0019 sets.
 
+## Long lists on a phone
+
+A grouped list that can grow, such as the Agents catalog or Projects, is a virtualised Legend List on every phone, as it already was on a wide window, so it mounts only the rows in view (owner decision, 2026-10-12). Android's Compose column builds every row, and the SwiftUI Form cannot hold Legend List's own search bar or scroll fade. Each row still draws natively, in a `Host` of its own: on iOS it draws the Form's grouped surface and inset separator itself, and the list rounds each card's ends. Section titles and footers are React Native text. Short, fixed lists, such as the Settings root or a detail page, stay in FieldGroup's SwiftUI Form or Compose column.
+
 ## Considered options
 
 - Keep Reusables and restyle it: two kits stay side by side, and the phone still looks like the web.
