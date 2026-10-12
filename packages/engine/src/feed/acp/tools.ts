@@ -93,13 +93,13 @@ const readOrCreateToolRow = (toolInput: ToolInput): ToolRow => {
     ? previous
     : createInitialToolRow(id, toolInput.update.toolCallId);
 };
+const assembleToolRow = (input: ToolInput): ToolRow =>
+  setToolRowState(
+    nameToolCall(mergeToolCallUpdate(readOrCreateToolRow(input), input.update)),
+  );
 export const assembleToolCall = (input: ToolInput): AssembledContent => {
   const { row: update, blobs } = capToolOutput(
-    setToolRowState(
-      nameToolCall(
-        mergeToolCallUpdate(readOrCreateToolRow(input), input.update),
-      ),
-    ),
+    assembleToolRow(input),
     input.update,
   );
   return {
