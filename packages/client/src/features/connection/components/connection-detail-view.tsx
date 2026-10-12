@@ -32,7 +32,7 @@ export function ConnectionDetailView({
   server: ServerDetails;
 }): React.JSX.Element {
   return (
-    <View className="flex-1 bg-background wide:bg-transparent">
+    <View className="flex-1 bg-sidebar wide:bg-transparent">
       <ConnectionBanner state={connection} />
       <SettingsPage
         title="Connection"

@@ -37,7 +37,7 @@ export function ProjectListView(
 ): React.JSX.Element {
   const [search, setSearch] = useState(props.initialSearch ?? '');
   return (
-    <View className="flex-1 bg-background wide:bg-transparent">
+    <View className="flex-1 bg-sidebar wide:bg-transparent">
       <PhoneHeader onSearch={setSearch} />
       <SettingsPage
         title="Projects"
