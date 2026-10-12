@@ -11,8 +11,8 @@ import {
   type LexicalEditor,
   type TextFormatType,
 } from 'lexical';
-import { $returnPlace, $wrapInCodeBlock } from './rich-textarea-blocks';
-import { returnAction } from './rich-textarea-return';
+import { $returnBlock, $wrapInCodeBlock } from './rich-textarea-blocks';
+import { sendsOnReturn } from './rich-textarea-return';
 
 const codeBlockModifiers = { ...CONTROL_OR_META, shiftKey: true };
 
@@ -81,7 +81,7 @@ function $sendsOnReturn(event: KeyboardEvent | null): event is KeyboardEvent {
   return (
     plainReturn(event) &&
     $isRangeSelection(selection) &&
-    returnAction($returnPlace(selection)) === 'send'
+    sendsOnReturn({ block: $returnBlock(selection) })
   );
 }
 

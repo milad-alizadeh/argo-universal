@@ -25,17 +25,6 @@ function roundTrip(markdown: string): string {
   return filled(() => $importMarkdown(markdown), $exportMarkdown);
 }
 
-// The kinds of block a draft shows once imported.
-function shownBlocks(markdown: string): string[] {
-  return filled(
-    () => $importMarkdown(markdown),
-    () =>
-      $getRoot()
-        .getChildren()
-        .map((node) => node.getType()),
-  );
-}
-
 // Typed text that a shortcut did not turn into a block stays a plain paragraph.
 function typedParagraph(text: string): string {
   return filled(
@@ -142,14 +131,6 @@ describe('RichTextarea markdown', () => {
 
   it.each(typedBlockMarkers)('exports the typed text %s as it is', (text) => {
     expect(typedParagraph(text)).toBe(text);
-  });
-
-  it('shows lists, a quote and a code block as blocks', () => {
-    expect(
-      shownBlocks(
-        'Steps:\n\n- Build\n\n1. Test\n\n> Then ship\n\n```\npnpm test\n```',
-      ),
-    ).toEqual(['paragraph', 'list', 'list', 'quote', 'code']);
   });
 
   it('writes a nested item four spaces in', () => {

@@ -1,24 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { type ReturnPlace, returnAction } from './rich-textarea-return';
+import { type ReturnBlock, sendsOnReturn } from './rich-textarea-return';
 
-// ADR-0023 and #544: what one Return does, by the block the caret is in and whether that block is empty.
-const table: { place: ReturnPlace; action: ReturnType<typeof returnAction> }[] =
-  [
-    { place: { block: 'paragraph', empty: false }, action: 'send' },
-    { place: { block: 'paragraph', empty: true }, action: 'send' },
-    { place: { block: 'quote', empty: false }, action: 'send' },
-    { place: { block: 'quote', empty: true }, action: 'send' },
-    { place: { block: 'list-item', empty: false }, action: 'add-item' },
-    { place: { block: 'list-item', empty: true }, action: 'leave-list' },
-    { place: { block: 'code-block', empty: false }, action: 'add-line' },
-    { place: { block: 'code-block', empty: true }, action: 'leave-code-block' },
-  ];
+// ADR-0023: whether one Return sends, by the block the caret is in.
+const table: { block: ReturnBlock; sends: boolean }[] = [
+  { block: 'paragraph', sends: true },
+  { block: 'quote', sends: true },
+  { block: 'list-item', sends: false },
+  { block: 'code-block', sends: false },
+];
 
 describe('Return in the RichTextarea', () => {
-  it.each(table)(
-    'in a $place.block (empty: $place.empty) does $action',
-    ({ place, action }) => {
-      expect(returnAction(place)).toBe(action);
-    },
-  );
+  it.each(table)('in a $block sends: $sends', ({ block, sends }) => {
+    expect(sendsOnReturn({ block })).toBe(sends);
+  });
 });

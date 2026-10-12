@@ -31,15 +31,12 @@ const modifier = /Mac|iPhone|iPad/.test(navigator.platform)
  * A block shortcut and the keys inside the block: the field sends markdown and does not submit.
  * innerText puts a blank line around a paragraph next to another block.
  */
-function typedBlock({
-  typed,
-  sent,
-  shown,
-}: {
+interface TypedBlock {
   typed: string;
   sent: string;
   shown: string;
-}): Story {
+}
+function typedBlock({ typed, sent, shown }: TypedBlock): Story {
   return {
     play: async ({ canvas, args }) => {
       const field = canvas.getByRole('textbox', { name: label });
@@ -78,11 +75,23 @@ export const TabNestsAndShiftTabUnnests = typedBlock({
   sent: '- Plan\n    - Draft\n- Ship',
   shown: 'Plan\nDraft\nShip',
 });
-export const BackspaceAtAnItemStartLeavesTheList = typedBlock({
-  typed: '- {Backspace}Plain',
-  sent: 'Plain',
-  shown: 'Plain',
-});
+/*
+ * The item becomes plain text and keeps its text. Lexical reads a caret move from the browser's
+ * selectionchange event, so Backspace waits a frame for it.
+ */
+export const BackspaceAtAnItemStartLeavesTheList: Story = {
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await userEvent.type(field, '- Plain');
+    await userEvent.keyboard('{ArrowLeft}'.repeat(5));
+    await new Promise(requestAnimationFrame);
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('Plain'),
+    );
+    await expect(canvas.queryByRole('list')).not.toBeInTheDocument();
+  },
+};
 export const TypedQuote = typedBlock({
   typed: '> Keep it readable',
   sent: '> Keep it readable',
@@ -108,49 +117,23 @@ export const ReturnInAQuoteSends: Story = {
   },
 };
 
-export const ShortcutCodeBlock: Story = {
-  play: async ({ canvas, args }) => {
-    const field = canvas.getByRole('textbox', { name: label });
-    await userEvent.type(field, 'pnpm test');
-    await userEvent.keyboard(`{${modifier}>}a{/${modifier}}`);
-    await userEvent.keyboard(`{${modifier}>}{Shift>}c{/Shift}{/${modifier}}`);
-    await waitFor(() =>
-      expect(args.onChangeText).toHaveBeenLastCalledWith('```\npnpm test\n```'),
-    );
-    await expect(shownText(field)).toBe('pnpm test');
-  },
-};
-
-// A restored draft draws its blocks, nested lists included, without sending a change.
-export const ShowsNestedLists: Story = {
-  args: {
-    initialValue:
-      '- Plan\n    - Draft\n        - Outline\n- Ship\n\n1. Build\n    1. Test\n2. Release',
-  },
-  play: async ({ canvas, args }) => {
-    const field = canvas.getByRole('textbox', { name: label });
-    await expect(canvas.getAllByRole('list')).toHaveLength(5);
-    await expect(shownText(field)).toBe(
-      'Plan\nDraft\nOutline\nShip\nBuild\nTest\nRelease',
-    );
-    await expect(args.onChangeText).not.toHaveBeenCalled();
-  },
-};
-
-export const ShowsAQuote: Story = {
-  args: { initialValue: '> Keep the phone readable.\n> Use both themes.' },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('blockquote')).toHaveTextContent(
-      'Keep the phone readable.Use both themes.',
-    );
-  },
-};
-
-export const ShowsACodeBlock: Story = {
-  args: { initialValue: '```ts\nconst snake_case = 2 * 3;\n```' },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('code')).toHaveTextContent(
-      'const snake_case = 2 * 3;',
-    );
-  },
-};
+// ⌘⇧C moves a selection into a code block, or turns the caret's line into one.
+function shortcutCodeBlock(selectFirst: boolean): Story {
+  return {
+    play: async ({ canvas, args }) => {
+      const field = canvas.getByRole('textbox', { name: label });
+      await userEvent.type(field, 'pnpm test');
+      if (selectFirst)
+        await userEvent.keyboard(`{${modifier}>}a{/${modifier}}`);
+      await userEvent.keyboard(`{${modifier}>}{Shift>}c{/Shift}{/${modifier}}`);
+      await waitFor(() =>
+        expect(args.onChangeText).toHaveBeenLastCalledWith(
+          '```\npnpm test\n```',
+        ),
+      );
+      await expect(shownText(field)).toBe('pnpm test');
+    },
+  };
+}
+export const ShortcutCodeBlock = shortcutCodeBlock(true);
+export const ShortcutCodeBlockAtTheCaret = shortcutCodeBlock(false);

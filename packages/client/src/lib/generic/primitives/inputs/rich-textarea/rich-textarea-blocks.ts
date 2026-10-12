@@ -1,16 +1,14 @@
-import { $createCodeNode, $isCodeNode, type CodeNode } from '@lexical/code';
+import { $createCodeNode, $isCodeNode } from '@lexical/code';
 import { $isListItemNode } from '@lexical/list';
 import { $isQuoteNode } from '@lexical/rich-text';
 import { $setBlocksType } from '@lexical/selection';
 import {
-  $createPoint,
   $getSelection,
-  $isLineBreakNode,
   $isRangeSelection,
   type LexicalNode,
   type RangeSelection,
 } from 'lexical';
-import type { ReturnPlace } from './rich-textarea-return';
+import type { ReturnBlock } from './rich-textarea-return';
 
 function $moveIntoCodeBlock(selection: RangeSelection): void {
   const text = selection.getTextContent();
@@ -28,49 +26,14 @@ export function $wrapInCodeBlock(): void {
   else $moveIntoCodeBlock(selection);
 }
 
-function $caretAtEnd(code: CodeNode, selection: RangeSelection): boolean {
-  const end = $createPoint(code.getKey(), code.getChildrenSize(), 'element');
-  return selection.isCollapsed() && selection.anchor.is(end);
-}
-
-// Lexical's own test for leaving a code block: the caret ends it after two empty lines.
-function $endsAfterTwoEmptyLines(
-  code: CodeNode,
-  selection: RangeSelection,
-): boolean {
-  const lastTwo = code.getChildren().slice(-2);
-  return (
-    $caretAtEnd(code, selection) &&
-    lastTwo.length === 2 &&
-    lastTwo.every($isLineBreakNode)
-  );
-}
-
-function $listItemPlace(caret: LexicalNode): ReturnPlace | undefined {
-  const item = [caret, ...caret.getParents()].find($isListItemNode);
-  return item && { block: 'list-item', empty: item.getTextContentSize() === 0 };
-}
-
-function $blockPlace(
-  block: LexicalNode,
-  selection: RangeSelection,
-): ReturnPlace {
-  if ($isCodeNode(block))
-    return {
-      block: 'code-block',
-      empty: $endsAfterTwoEmptyLines(block, selection),
-    };
-  return {
-    block: $isQuoteNode(block) ? 'quote' : 'paragraph',
-    empty: block.getTextContentSize() === 0,
-  };
+function $blockKind(block: LexicalNode): ReturnBlock {
+  if ($isCodeNode(block)) return 'code-block';
+  return $isQuoteNode(block) ? 'quote' : 'paragraph';
 }
 
 // The block the caret is in, for the Return decision.
-export function $returnPlace(selection: RangeSelection): ReturnPlace {
+export function $returnBlock(selection: RangeSelection): ReturnBlock {
   const caret = selection.anchor.getNode();
-  return (
-    $listItemPlace(caret) ??
-    $blockPlace(caret.getTopLevelElement() ?? caret, selection)
-  );
+  if ([caret, ...caret.getParents()].some($isListItemNode)) return 'list-item';
+  return $blockKind(caret.getTopLevelElement() ?? caret);
 }
