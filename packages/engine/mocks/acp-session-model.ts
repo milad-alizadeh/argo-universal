@@ -159,6 +159,13 @@ export const createAcpSessionModel = (
       type: updateEvent,
       notification: {
         sessionId: lease.sessionId,
+        update: { sessionUpdate: 'usage_update', used: 10, size: 100 },
+      },
+    },
+    {
+      type: updateEvent,
+      notification: {
+        sessionId: lease.sessionId,
         update: {
           sessionUpdate: 'config_option_update',
           configOptions: [],

@@ -44,6 +44,30 @@ describe('composerStatus', () => {
       usage,
       expected: { plan: undefined, context: usage },
     },
+    {
+      case: 'nothing for a latest-model-call proxy',
+      plan: null,
+      usage: { ...usage, scope: 'model-call' },
+      expected: undefined,
+    },
+    {
+      case: 'nothing before upstream scope is verified',
+      plan: null,
+      usage: { ...usage, scope: 'unverified' },
+      expected: undefined,
+    },
+    {
+      case: 'nothing without a known context capacity',
+      plan: null,
+      usage: { used: 0, size: 0 },
+      expected: undefined,
+    },
+    {
+      case: 'a plan without presenting a model-call proxy as context',
+      plan: itemsPlan,
+      usage: { ...usage, scope: 'model-call' },
+      expected: { plan: entries, context: undefined },
+    },
   ])('shows $case', ({ plan, usage: contextUsage, expected }) => {
     expect(composerStatus(plan, contextUsage)).toEqual(expected);
   });
