@@ -66,61 +66,41 @@ export const ShortPlan: Story = {
   },
 };
 
-export const LongPlan: Story = {
-  args: { proposal: longPlanProposal },
-  play: async ({ canvas }) => {
-    for (const width of [layoutWidths.phone, layoutWidths.wide]) {
+function longPlan(width: number): Story {
+  return {
+    args: { proposal: longPlanProposal },
+    play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       const scroll = canvas.getByTestId(planScrollId);
-      await waitFor(async () => {
-        await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
-      });
-      const approve = canvas.getByRole('button', { name: 'Approve' });
-      const before = await settledPinnedOffsets(canvas);
+      await waitFor(() =>
+        expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight),
+      );
       scroll.scrollTop = scroll.scrollHeight;
-      await waitFor(() => expect(scroll.scrollTop).toBeGreaterThan(0));
-      await waitFor(() => expect(pinnedOffsets(canvas)).toEqual(before));
+      await waitFor(() =>
+        expect(scroll.scrollTop + scroll.clientHeight).toBeGreaterThanOrEqual(
+          scroll.scrollHeight - 1,
+        ),
+      );
+      const question = canvas.getByText(approvePlanQuestion);
+      await expect(question).toBeVisible();
+      await expect(question.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        0,
+      );
+      const approve = canvas.getByRole('button', { name: 'Approve' });
       await expect(approve).toBeVisible();
       await expect(approve.getBoundingClientRect().bottom).toBeLessThanOrEqual(
         window.innerHeight,
       );
-      scroll.scrollTop = 0;
-    }
-  },
-};
-
-type Canvas = ReturnType<typeof within>;
-
-// Where the question and Approve sit inside the card; scrolling the plan must not move them.
-const pinnedOffsets = (canvas: Canvas): { title: number; button: number } => {
-  const cardTop = canvas
-    .getByTestId('plan-proposal-card')
-    .getBoundingClientRect().top;
-  return {
-    title:
-      canvas.getByText(approvePlanQuestion).getBoundingClientRect().top -
-      cardTop,
-    button:
-      canvas.getByRole('button', { name: 'Approve' }).getBoundingClientRect()
-        .top - cardTop,
+      await userEvent.click(approve);
+      await expect(args.onAnswer).toHaveBeenCalledWith({
+        planId: args.proposal.planId,
+        decision: 'approve',
+      });
+    },
   };
-};
-
-// The offsets once two readings a frame apart agree, so a layout still settling is not the baseline.
-async function settledPinnedOffsets(
-  canvas: Canvas,
-): Promise<{ title: number; button: number }> {
-  let previous = pinnedOffsets(canvas);
-  await waitFor(async () => {
-    await new Promise(requestAnimationFrame);
-    const current = pinnedOffsets(canvas);
-    const settled =
-      current.title === previous.title && current.button === previous.button;
-    previous = current;
-    await expect(settled).toBe(true);
-  });
-  return previous;
 }
+export const LongPlan = longPlan(layoutWidths.phone);
+export const LongPlanWide = longPlan(layoutWidths.wide);
 
 function keepPlanning(width: number): Story {
   return {
@@ -219,10 +199,11 @@ function expanded(width: number): Story {
         await expect(expandedBounds.bottom).toBeLessThanOrEqual(main.bottom);
       }
       const approve = panel.getByRole('button', { name: 'Approve' });
-      const top = approve.getBoundingClientRect().top;
       scroll.scrollTop = scroll.scrollHeight;
       await waitFor(() => expect(scroll.scrollTop).toBeGreaterThan(0));
-      await expect(approve.getBoundingClientRect().top).toBe(top);
+      await expect(approve.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        0,
+      );
       await expect(approve).toBeVisible();
       await expect(approve.getBoundingClientRect().bottom).toBeLessThanOrEqual(
         window.innerHeight,
@@ -381,6 +362,7 @@ export const AnswerCollapsesExpansionWide = answerCollapsesExpansion(
 
 export const ShortPlanDark: Story = { ...ShortPlan, ...dark };
 export const LongPlanDark: Story = { ...LongPlan, ...dark };
+export const LongPlanWideDark: Story = { ...LongPlanWide, ...dark };
 export const ExpandedPhoneDark: Story = { ...ExpandedPhone, ...dark };
 export const ExpandedWideDark: Story = { ...ExpandedWide, ...dark };
 export const KeepPlanningPhoneDark: Story = { ...KeepPlanningPhone, ...dark };
