@@ -1,15 +1,24 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  focusManager,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type * as React from 'react';
+import { useEffect, useEffectEvent } from 'react';
 import { useAgents } from '#features/agents';
 import { type ComposerDraft, useImageDraft } from '#features/composer';
 import {
+  type ComposerProps,
   isRememberedConfiguration,
   rememberSessionConfiguration,
 } from '#features/composer';
-import { useConnectionState } from '#features/connection';
+import {
+  useConnectionState,
+  useResubscribeOnReconnect,
+} from '#features/connection';
 import { useBlobUrl } from '#features/connection';
 import type { ClientError } from '#features/connection';
 import { useTRPC } from '#features/connection';
@@ -48,6 +57,18 @@ const headerStatus = {
   idle: 'idle',
 } satisfies Record<SessionSnapshot['state'], SessionHeaderStatus>;
 
+type FeedPlan = NonNullable<ReturnType<typeof useSessionFeed>['view']>['plan'];
+
+// The Composer's plan chips and its Context ring; Usage limits wait for a Server source.
+function composerStatus(
+  plan: FeedPlan,
+  usage: SessionSnapshot['usage'],
+): ComposerProps['status'] {
+  const entries = plan?.type === 'items' ? plan.entries : undefined;
+  if (!entries && !usage) return undefined;
+  return { plan: entries, context: usage ?? undefined };
+}
+
 // One Session. A new id starts every piece of state over.
 export function SessionScreen({ id }: SessionScreenProps): React.JSX.Element {
   return <ConnectedSession key={id} sessionId={id} />;
@@ -79,15 +100,12 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
     feed.snapshot?.agent,
   );
   const { promptSession, cancelTurn, setConfigOption } = commands;
+  useRetryOpenOnReturn(feed.openError !== null, feed.retryOpen);
 
-  if (feed.error)
-    return { state: 'load-failed', onRetry: () => void feed.retry() };
+  // A failed first page refetches by itself when the Connection reopens or the window regains focus.
+  if (feed.error) return { state: 'failed' };
   if (feed.openError)
-    return {
-      state: 'open-failed',
-      message: feed.openError.message,
-      onRetry: feed.retryOpen,
-    };
+    return { state: 'failed', reason: feed.openError.message };
   const { snapshot, view } = feed;
   if (!feed.ready || !snapshot || !view) return { state: 'opening' };
 
@@ -131,8 +149,7 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
       }),
       writtenPlan:
         view.plan && view.plan.type !== 'items' ? view.plan : undefined,
-      status:
-        view.plan?.type === 'items' ? { plan: view.plan.entries } : undefined,
+      status: composerStatus(view.plan, snapshot.usage),
       configuration: {
         agents: agents.data ?? [],
         agent: snapshot.agent,
@@ -155,6 +172,24 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
       },
     },
   };
+}
+
+// A Session the Server refused to open tries again when the Connection reopens or the window regains focus, as its failed queries do.
+function useRetryOpenOnReturn(failed: boolean, retryOpen: () => void): void {
+  useResubscribeOnReconnect({
+    status: failed ? 'error' : 'idle',
+    reset: retryOpen,
+  });
+  const retryIfFailed = useEffectEvent(() => {
+    if (failed) retryOpen();
+  });
+  useEffect(
+    () =>
+      focusManager.subscribe((focused) => {
+        if (focused) retryIfFailed();
+      }),
+    [],
+  );
 }
 
 // Draft uploads and successful commands resume a Feed that has closed.

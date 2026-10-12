@@ -1,8 +1,13 @@
 import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { useState } from 'react';
+import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { DesktopShell, InspectorPane } from '#features/frame';
+import { InspectorProvider } from '#lib/product/inspector';
 import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
+import { findToast } from '../../../lib/generic/find-toast';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import {
   type OpenSessionViewProps,
@@ -10,11 +15,12 @@ import {
   type SessionViewProps,
 } from './session-view';
 import {
-  DetailHeaderSlots,
   emptySession,
   idleSession,
+  pullRequestMocks,
   runningHeader,
   runningSession,
+  withPullRequests,
 } from './session-view.mocks';
 
 const cancelCreationLabel = 'Cancel creation';
@@ -24,11 +30,7 @@ const meta = {
   title: 'Tests/SessionView',
   parameters: { screenPreview: true },
   args: { view: { state: 'open', ...runningSession } },
-  render: ({ view }): React.JSX.Element => (
-    <DetailHeaderSlots>
-      <SessionView {...view} />
-    </DetailHeaderSlots>
-  ),
+  render: ({ view }): React.JSX.Element => <SessionView {...view} />,
 } satisfies Meta<{ view: SessionViewProps }>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -39,12 +41,6 @@ function openProps(view: SessionViewProps): OpenSessionViewProps {
   return view;
 }
 
-function retryOf(view: SessionViewProps): () => void {
-  if (view.state !== 'open-failed' && view.state !== 'load-failed')
-    throw new Error('The story needs a failed Session.');
-  return view.onRetry;
-}
-
 export const RunningTurn: Story = {
   play: async ({ canvas }) =>
     eachLayout(async (wide) => {
@@ -53,7 +49,7 @@ export const RunningTurn: Story = {
       ).toBeVisible();
       if (wide) {
         await expect(canvas.getByText('Running')).toBeVisible();
-        await expect(canvas.getByText('for 4m 12s')).toBeVisible();
+        await expect(canvas.getByText('4m 12s')).toBeVisible();
       } else {
         // The native header holds the plain title and two items, no status.
         await expect(
@@ -97,6 +93,121 @@ export const Idle: Story = {
       await expect(canvas.queryByRole('button', { name: 'Stop' })).toBeNull();
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeVisible();
     }),
+};
+
+// The header, the Feed and the Composer sit in one SessionLayout container, so they share its one surface.
+export const HeaderFeedAndComposerShareOneLayout: Story = {
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    const layout = within(await canvas.findByTestId('session-layout'));
+    await expect(
+      await layout.findByRole('heading', { name: /^Think briefly first/ }),
+    ).toBeVisible();
+    await expect(layout.getByRole('button', { name: 'Changes' })).toBeVisible();
+    await expect(layout.getByTestId('feed-scroll')).toBeVisible();
+    await expect(
+      layout.getByRole('textbox', { name: 'Message' }),
+    ).toBeVisible();
+  },
+};
+
+const mergeLabel = 'Merge PR';
+
+// Checks still run: the header names the PR and its checks, and Merge PR waits.
+export const MergeWaitsForChecks: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...withPullRequests(runningSession, [pullRequestMocks.checksRunning]),
+    },
+  },
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    await expect(await canvas.findByLabelText('PR #45, Open')).toBeVisible();
+    await expect(canvas.getByLabelText('Checks 3/5, 2 running')).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: mergeLabel }),
+    ).toBeDisabled();
+  },
+};
+
+export const MergesWhenChecksPass: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
+    },
+  },
+  play: async ({ canvas, args, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await expect(
+      await canvas.findByLabelText('Checks 5/5, passed'),
+    ).toBeVisible();
+    const merge = canvas.getByRole('button', { name: mergeLabel });
+    await expect(merge).toBeEnabled();
+    await userEvent.click(merge);
+    await expect(openProps(args.view).header.onMerge).toHaveBeenCalledWith(
+      45,
+      'squash',
+    );
+  },
+};
+
+// The header shows one PR; "+1 PR" lists them all and picks the one shown.
+export const ListsEveryPullRequest: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...withPullRequests(runningSession, [
+        pullRequestMocks.checksFailing,
+        pullRequestMocks.followUp,
+      ]),
+    },
+  },
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await expect(
+      await canvas.findByLabelText('Checks 4/5, 1 failing'),
+    ).toBeVisible();
+    await expect(canvas.queryByLabelText('PR #46, Draft')).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: '+1 PR' }));
+    const overlay = within(document.body);
+    const listed = await overlay.findByRole('menuitem', {
+      name: new RegExp(pullRequestMocks.checksFailing.title),
+    });
+    // The menu fades in.
+    await waitFor(() => expect(listed).toBeVisible());
+    await userEvent.click(
+      overlay.getByRole('menuitem', {
+        name: new RegExp(pullRequestMocks.followUp.title),
+      }),
+    );
+    await expect(await canvas.findByLabelText('PR #46, Draft')).toBeVisible();
+    // The draft has no checks to show.
+    await expect(canvas.queryByLabelText(/^Checks /)).toBeNull();
+  },
+};
+
+const longTitle =
+  'Build the Session layout from spec 0003, wire the Inspector to the changed files and keep the Composer pinned to the bottom';
+
+// A long title keeps one line on the header and its whole text in the heading's name.
+export const LongTitle: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...runningSession,
+      header: { ...runningSession.header, title: longTitle },
+    },
+  },
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    const heading = await canvas.findByRole('heading', { name: longTitle });
+    const lineHeight = Number.parseFloat(getComputedStyle(heading).lineHeight);
+    await expect(heading.getBoundingClientRect().height).toBeLessThan(
+      lineHeight * 1.5,
+    );
+  },
 };
 
 export const EmptyFeed: Story = {
@@ -158,28 +269,24 @@ export const Opening: Story = {
   },
 };
 
-export const AgentFailedToOpen: Story = {
-  args: {
-    view: { state: 'open-failed', message: agentFailure, onRetry: fn() },
-  },
-  play: async ({ canvas, args, userEvent }) => {
-    const alert = await canvas.findByRole('alert');
-    await expect(alert).toHaveTextContent("Couldn't open the Session");
-    await expect(alert).toHaveTextContent(agentFailure);
-    // A Session that failed to open takes no prompt.
+// A Session that failed gives no prompt and toasts the Server's reason.
+export const FailedWithReason: Story = {
+  args: { view: { state: 'failed', reason: agentFailure } },
+  play: async ({ canvas }) => {
+    await expect(await findToast("Couldn't open the Session")).toBeVisible();
+    await expect(await findToast(agentFailure)).toBeVisible();
     await expect(canvas.queryByRole('textbox', { name: 'Message' })).toBeNull();
-    await userEvent.click(within(alert).getByRole('button', { name: 'Retry' }));
-    await expect(retryOf(args.view)).toHaveBeenCalledOnce();
   },
 };
 
-export const FailedToLoad: Story = {
-  args: { view: { state: 'load-failed', onRetry: fn() } },
-  play: async ({ canvas, args, userEvent }) => {
-    const alert = await canvas.findByRole('alert');
-    await expect(alert).toHaveTextContent("Couldn't load the Session");
-    await userEvent.click(within(alert).getByRole('button', { name: 'Retry' }));
-    await expect(retryOf(args.view)).toHaveBeenCalledOnce();
+// Without a reason from the Server, the toast says the Server didn't respond.
+export const FailedWithoutReason: Story = {
+  args: { view: { state: 'failed' } },
+  play: async () => {
+    await expect(await findToast("Couldn't open the Session")).toBeVisible();
+    await expect(
+      await findToast("The Server didn't respond. Check that it's running."),
+    ).toBeVisible();
   },
 };
 
@@ -272,3 +379,102 @@ function configuration(agentIndex: 0 | 1): Story {
 
 export const ConfigurationFirstAgent = configuration(0);
 export const ConfigurationSecondAgent = configuration(1);
+
+// The shell as DesktopLayoutView draws it for a Session, with the sidebar and the Inspector in the reader's hands.
+function SessionInShell({
+  view,
+}: {
+  view: SessionViewProps;
+}): React.JSX.Element {
+  const [sidebarShown, setSidebarShown] = useState(true);
+  const [inspectorState, setInspectorState] = useState<
+    'closed' | 'open' | 'expanded'
+  >('closed');
+  const inspectorOpen = inspectorState !== 'closed';
+  return (
+    <View className="h-screen w-full">
+      <InspectorProvider
+        value={{
+          open: inspectorOpen,
+          toggle: () => setInspectorState(inspectorOpen ? 'closed' : 'open'),
+        }}
+      >
+        <DesktopShell
+          selectedSection="sessions"
+          attentionCount={0}
+          sidebarShown={sidebarShown}
+          onSidebarShownChange={setSidebarShown}
+          onSectionChange={fn()}
+          listHeader={null}
+          list={null}
+          inspectorState={inspectorState}
+          onInspectorStateChange={setInspectorState}
+          inspector={(expanded) => (
+            <InspectorPane
+              title="Changes"
+              expanded={expanded}
+              onStateChange={setInspectorState}
+            >
+              {null}
+            </InspectorPane>
+          )}
+        >
+          <SessionView {...view} />
+        </DesktopShell>
+      </InspectorProvider>
+    </View>
+  );
+}
+
+const shellTransition = 400;
+
+// The Feed's rows, the Session title and the Composer share one centred column, whatever the pane's width has been.
+export const FeedSharesTheComposerColumn: Story = {
+  args: { view: { state: 'open', ...idleSession } },
+  render: ({ view }): React.JSX.Element => <SessionInShell view={view} />,
+  play: async ({ canvas, userEvent }) => {
+    const lineUp = async (): Promise<void> => {
+      await new Promise((resolve) => setTimeout(resolve, shellTransition));
+      await waitFor(async () => {
+        const title = canvas
+          .getByRole('heading', { name: /^Without using any tools/ })
+          .getBoundingClientRect();
+        const composer = canvas
+          .getByTestId('composer-column')
+          .getBoundingClientRect();
+        await expect(composer.width).toBeGreaterThan(0);
+        await expect(Math.round(title.left)).toBe(Math.round(composer.left));
+        for (const row of canvas.getAllByTestId('feed-column')) {
+          const rect = row.getBoundingClientRect();
+          await expect(Math.round(rect.left)).toBe(Math.round(composer.left));
+          await expect(Math.round(rect.width)).toBe(Math.round(composer.width));
+        }
+      });
+    };
+    await settleViewport(1300);
+    await canvas.findByRole('heading', { name: /^Without using any tools/ });
+    await lineUp();
+    await userEvent.click(canvas.getByRole('button', { name: 'Hide sidebar' }));
+    await lineUp();
+    await userEvent.click(canvas.getByRole('button', { name: 'Show sidebar' }));
+    await lineUp();
+    await userEvent.click(canvas.getByRole('button', { name: 'Changes' }));
+    await lineUp();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Expand Inspector' }),
+    );
+    // Expanded, the Inspector takes the whole pane and the Feed lays out at no width.
+    await new Promise((resolve) => setTimeout(resolve, shellTransition));
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Restore Inspector' }),
+    );
+    await lineUp();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Close Inspector' }),
+    );
+    await lineUp();
+    await userEvent.click(canvas.getByRole('button', { name: 'Hide sidebar' }));
+    await settleViewport(1000);
+    await lineUp();
+  },
+};
