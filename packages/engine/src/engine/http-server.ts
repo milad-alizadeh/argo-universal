@@ -3,7 +3,7 @@ import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 import type { ActorRefFrom } from 'xstate';
-import type { syncSupervisorMachine } from '../agents';
+import type { AgentInstallations, syncSupervisorMachine } from '../agents';
 import { blobsFolderIn } from '../blob';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
@@ -14,6 +14,7 @@ import { createAppRouterDeps } from './router-deps';
 
 export interface HttpServerOptions {
   home: string;
+  installations?: AgentInstallations;
   createId: () => string;
   port: number;
   version: string;

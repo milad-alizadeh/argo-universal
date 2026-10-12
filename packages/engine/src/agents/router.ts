@@ -13,6 +13,10 @@ import { readAgentCatalog } from './catalog-sql';
 import type { ConfigurationDeps } from './configuration/configuration-commands';
 import { createConfigurationRouter } from './configuration/configuration-router';
 import { listCustomAgents } from './configuration/custom-agent-list';
+import { listInstalledAgents } from './install/list';
+import type { AgentInstallations } from './install/operations';
+import { createInstallRouter } from './install/router';
+import { readInstallSelection } from './install/selection';
 import {
   requestAgentCatalogSync,
   type syncSupervisorMachine,
@@ -24,7 +28,11 @@ type CatalogDeps = Pick<ConfigurationDeps, 'database' | 'databaseWriter'> & {
 };
 
 export type AgentsRouterDeps = ConfigurationDeps &
-  CatalogDeps & { sessions: OpenSessionsActorRef };
+  CatalogDeps & {
+    sessions: OpenSessionsActorRef;
+    installations: AgentInstallations;
+    home?: string;
+  };
 
 const createCatalogRouter = routerFactory((deps: CatalogDeps) =>
   router({
@@ -55,7 +63,12 @@ const createListRouter = routerFactory((deps: AgentsRouterDeps) =>
       .input(AgentsListInput)
       .output(AgentsListOutput)
       .query(async ({ input }): Promise<AgentsListOutput> => [
-        ...(await listAgents(deps.sessions, input)),
+        ...(await listAgents(deps.sessions, input)).filter(
+          (agent) => !readInstallSelection(deps.database, agent.agent),
+        ),
+        ...(deps.home
+          ? await listInstalledAgents(deps.database, deps.home)
+          : []),
         ...(await listCustomAgents(deps)),
       ]),
   }),
@@ -63,7 +76,12 @@ const createListRouter = routerFactory((deps: AgentsRouterDeps) =>
 
 export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
   mergeRouters(
-    createConfigurationRouter(deps),
+    createConfigurationRouter({
+      ...deps,
+      withAgentSetup: (agentId, operation) =>
+        deps.installations.configure(agentId, operation),
+    }),
+    createInstallRouter(deps.installations),
     createCatalogRouter(deps),
     createCatalogSyncRouter(deps),
     createListRouter(deps),

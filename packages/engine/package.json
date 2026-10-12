@@ -21,6 +21,8 @@
     "ajv": "catalog:",
     "ajv-formats": "catalog:",
     "drizzle-orm": "catalog:",
+    "fflate": "catalog:",
+    "tar": "catalog:",
     "ws": "catalog:",
     "xstate": "catalog:",
     "zod": "catalog:"
@@ -39,6 +41,7 @@
     "./router": "./src/engine/router.ts",
     "./mocks": "./mocks/engine.ts",
     "./ipc": "./src/engine/ipc.ts",
-    "./server-runtime": "./src/server-runtime.ts"
+    "./server-runtime": "./src/server-runtime.ts",
+    "./installation-runtime": "./src/installation-runtime.ts"
   }
 }

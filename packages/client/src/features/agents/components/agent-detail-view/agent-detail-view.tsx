@@ -59,9 +59,12 @@ function DetailIdentity(props: AgentDetailViewProps): React.JSX.Element {
 }
 
 // The card's one trailing slot: the status chip, or Install for a registry Agent, which has no chip.
+const hasInstallDialog = (props: AgentDetailViewProps): boolean =>
+  props.installation?.open === true;
 function IdentityTrailing(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
+  if (hasInstallDialog(props)) return <AgentAction {...props} />;
   if (statusTone(props.agent.status))
     return <AgentStatusChip agent={props.agent} />;
   return <AgentAction {...props} />;

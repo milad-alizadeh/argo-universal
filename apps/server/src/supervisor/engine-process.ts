@@ -1,6 +1,8 @@
 import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { releaseInstallationProcessGroups } from '@repo/engine/installation-runtime';
 import { EngineMessage } from '@repo/engine/ipc';
+import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { createRejectionCounter } from '@repo/machine-log';
 import { fromCallback } from 'xstate';
 import {
@@ -22,6 +24,17 @@ export interface EngineProcessInput {
 
 // Allow the Engine's HTTP close, Session stop, and writer drain limits, plus five seconds.
 const killTimeoutMs = 25_000;
+const releaseEngineGroups = async (
+  pid: number,
+): Promise<'released' | 'unresolved'> => {
+  if ((await releaseProcessGroup(pid)) !== 'released') return 'unresolved';
+  try {
+    await releaseInstallationProcessGroups(resolveRuntimeDirectory());
+    return 'released';
+  } catch {
+    return 'unresolved';
+  }
+};
 
 // Forks the Engine under tsx as the leader of its own process group, so the Engine and every Agent it launched can be released together; in watch mode Node restarts it on a file change and relays its IPC messages.
 export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
@@ -59,7 +72,7 @@ export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
     });
     // Without a pid nothing was spawned, so no group exists.
     const release = async (): Promise<'released' | 'unresolved'> =>
-      child.pid === undefined ? 'released' : releaseProcessGroup(child.pid);
+      child.pid === undefined ? 'released' : releaseEngineGroups(child.pid);
     // Asks the Engine to stop, kills its group after the timeout, then proves the whole group is gone.
     const terminate = async (): Promise<'released' | 'unresolved'> => {
       if (!hasExited()) {
