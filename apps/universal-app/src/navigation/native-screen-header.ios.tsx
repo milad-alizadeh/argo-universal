@@ -12,8 +12,7 @@ import { headerSearchOptions } from './header-search-options';
 
 type Action = NonNullable<NonNullable<ScreenHeaderProps['search']>['action']>;
 
-// iOS draws the native search bar; iOS 26 docks it at the bottom, in the thumb's reach.
-// Before iOS 26 an integrated bar falls back to inline and squeezes the title, so it stacks below the header row.
+// iOS draws the native search bar: iOS 26 docks it at the bottom, in the thumb's reach; earlier iOS stacks it below the header row, since an integrated bar there falls back to inline and squeezes the title.
 export function NativeScreenHeader({
   title,
   left,
