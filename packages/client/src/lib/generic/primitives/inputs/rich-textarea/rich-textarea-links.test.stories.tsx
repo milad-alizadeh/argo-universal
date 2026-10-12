@@ -95,29 +95,31 @@ export const LinkEditorEscapeCancels: Story = {
   },
 };
 
-function pasteText(field: HTMLElement, text: string): void {
-  const clipboardData = new DataTransfer();
-  clipboardData.setData('text/plain', text);
-  field.dispatchEvent(
-    new ClipboardEvent('paste', {
-      clipboardData,
-      bubbles: true,
-      cancelable: true,
-    }),
-  );
+// Copies text through a scratch input, so the paste comes from the clipboard.
+async function copyText(text: string): Promise<void> {
+  const source = document.createElement('input');
+  source.value = text;
+  document.body.append(source);
+  source.select();
+  await userEvent.copy();
+  source.remove();
 }
 
 export const PastingAUrlOverASelectionLinksIt: Story = {
   args: { initialValue: draft },
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
+    await copyText(url);
     await selectLastWord(field);
-    pasteText(field, url);
+    await userEvent.paste();
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith(
         `Read the [spec](${url})`,
       ),
     );
+    await expect(
+      within(field).getByRole('link', { name: 'spec' }),
+    ).toHaveAttribute('href', url);
     await expect(shownText(field)).toBe(draft);
   },
 };
@@ -132,8 +134,8 @@ export const TypedUrlLinksItselfOnSpace: Story = {
     await expect(
       await within(field).findByRole('link', { name: typedUrl }),
     ).toHaveAttribute('href', typedUrl);
-    await expect(args.onChangeText).toHaveBeenLastCalledWith(
-      `Logs: ${typedUrl} `,
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith(`Logs: ${typedUrl} `),
     );
   },
 };
