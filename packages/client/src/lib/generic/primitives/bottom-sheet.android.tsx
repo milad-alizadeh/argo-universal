@@ -21,7 +21,7 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const { mounted, sheetRef } = useSheetDismissal(props.open, props.onClosed);
   return (
     <BottomSheetRoot {...props}>
-      <BottomSheetTrigger trigger={props.trigger} />
+      {props.trigger && <BottomSheetTrigger trigger={props.trigger} />}
       {mounted && <SheetPresentation {...props} sheetRef={sheetRef} />}
     </BottomSheetRoot>
   );

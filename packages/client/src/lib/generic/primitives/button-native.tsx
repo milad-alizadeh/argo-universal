@@ -2,6 +2,7 @@ import type { ComponentType, ReactElement } from 'react';
 import { Icon } from '../symbols/icon';
 import type { IconName } from '../symbols/icon-names';
 import { ContentButton } from './button-content';
+import { withNarrowLayout } from './button-layout';
 import { useNativeButtonTheme, type ButtonTheme } from './button-native-colors';
 import type { ButtonProps, SystemButtonProps } from './button-props';
 import { nativeButtonLayout } from './button-state';
@@ -10,10 +11,10 @@ import { Host } from './host';
 export function createNativeButton(
   NativeButton: ComponentType<NativeDrawingProps>,
 ): ComponentType<ButtonProps> {
-  return function Button(props: ButtonProps): ReactElement {
+  return withNarrowLayout(function Button(props: ButtonProps): ReactElement {
     if (props.appearance === 'content') return <ContentButton {...props} />;
     return <NativeButtonHost {...props} Drawing={NativeButton} />;
-  };
+  });
 }
 
 type NativeDrawingProps = SystemButtonProps & { theme: ButtonTheme };
@@ -24,7 +25,7 @@ type NativeHostProps = SystemButtonProps & {
 function NativeButtonHost(props: NativeHostProps): ReactElement {
   const theme = useNativeButtonTheme(props);
   return (
-    <Host {...nativeButtonLayout(props.fullWidth)}>
+    <Host {...nativeButtonLayout(props.fullWidth === true)}>
       <props.Drawing {...props} theme={theme} />
     </Host>
   );

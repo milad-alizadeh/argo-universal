@@ -33,7 +33,7 @@ function presentationProps(
     isPresented: props.open,
     onIsPresentedChange: props.onOpenChange,
     onDismiss: () => dismissPresentation(props),
-    anchor: (
+    anchor: props.trigger && (
       <RNHostView matchContents>
         <BottomSheetTrigger trigger={props.trigger} />
       </RNHostView>

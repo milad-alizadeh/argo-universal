@@ -34,7 +34,7 @@ export function Menu<Value extends string>({
           align="end"
           onKeyDown={() => setKeyboardFocus(true)}
           onPointerMove={() => setKeyboardFocus(false)}
-          className="w-65 overflow-hidden bg-popover rounded-surface py-2 shadow-card dark:border dark:border-border"
+          className="w-65 overflow-hidden bg-popover rounded-2xl py-2 shadow-card dark:border dark:border-border"
         >
           <MenuPrimitive.RadioGroup
             value={value}

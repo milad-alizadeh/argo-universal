@@ -70,7 +70,9 @@ function ButtonLabel(props: ButtonLabelProps): ReactElement {
   return (
     <HStack
       spacing={8}
-      modifiers={props.fullWidth ? [frame({ maxWidth: Infinity })] : []}
+      modifiers={
+        props.fullWidth === true ? [frame({ maxWidth: Infinity })] : []
+      }
     >
       <ButtonIcon {...props} />
       <Text modifiers={buttonLabelColor(props)}>{props.label}</Text>

@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { cn } from '#lib/generic/utils';
+import { useWide } from '../use-wide';
 import {
   Select,
   SelectContent,
@@ -7,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './select';
+import type { SelectVariant } from './select-styles';
 
 interface SelectMenuOption<Value extends string> {
   value: Value;
@@ -20,12 +22,35 @@ export interface SelectMenuProps<Value extends string> {
   placeholder?: string;
   disabled?: boolean;
   invalid?: boolean;
+  variant?: SelectVariant;
+  // The values are code, such as branch names, and draw in the mono face.
+  code?: boolean;
 }
-function selectMenuClassName(invalid?: boolean): string {
+function selectMenuClassName({
+  invalid,
+  variant,
+}: Pick<SelectMenuProps<string>, 'invalid' | 'variant'>): string {
   return cn(
-    'h-9 sm:h-9 w-full! bg-background dark:bg-background',
+    variant !== 'plain' &&
+      'h-9 sm:h-9 w-full! bg-background dark:bg-background',
     invalid && 'border-destructive',
   );
+}
+
+// A plain picker on a phone row shows its value like a row value: body size, muted (Paper 2V85).
+const rowValueClassName =
+  'text-base leading-6 font-normal text-muted-foreground';
+const isRowValue = (
+  variant: SelectVariant | undefined,
+  wide: boolean,
+): boolean => variant === 'plain' && !wide;
+
+function valueClassName(
+  { code, variant }: Pick<SelectMenuProps<string>, 'code' | 'variant'>,
+  wide: boolean,
+): string {
+  if (code) return 'type-code';
+  return isRowValue(variant, wide) ? rowValueClassName : 'type-control';
 }
 
 function SelectMenuValue<Value extends string>(
@@ -33,7 +58,7 @@ function SelectMenuValue<Value extends string>(
 ): ReactElement {
   return (
     <SelectValue
-      className="type-control"
+      className={valueClassName(props, useWide())}
       placeholder={props.placeholder ?? 'Choose…'}
     />
   );
@@ -41,12 +66,12 @@ function SelectMenuValue<Value extends string>(
 function SelectMenuTrigger<Value extends string>(
   props: SelectMenuProps<Value>,
 ): ReactElement {
-  const classes = selectMenuClassName(props.invalid);
   return (
     <SelectTrigger
       accessibilityLabel={props.accessibilityLabel}
       disabled={props.disabled}
-      className={classes}
+      variant={props.variant}
+      className={selectMenuClassName(props)}
     >
       <SelectMenuValue {...props} />
     </SelectTrigger>

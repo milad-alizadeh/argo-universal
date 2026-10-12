@@ -18,7 +18,7 @@ const buttonClasses = cva(
         link: '',
       },
       size: {
-        sm: 'min-h-11 px-3 py-2 gap-1.5 web:sm:min-h-8',
+        sm: 'min-h-11 px-3 py-2 gap-1.5 web:sm:min-h-8 web:sm:h-8 web:sm:py-0',
         md: 'min-h-11 px-4 py-2 web:sm:min-h-10',
         lg: 'min-h-11 px-6 py-2',
       },
@@ -54,9 +54,9 @@ type ButtonClassProps = Pick<
 >;
 
 export function contentButtonClass(props: ButtonClassProps): string {
-  const { className, ...variants } = props;
+  const { className, fullWidth, ...variants } = props;
   return cn(
-    buttonClasses(variants),
+    buttonClasses({ ...variants, fullWidth: fullWidth === true }),
     'android:min-h-12',
     destructiveButtonClass(props),
     className,
@@ -64,7 +64,7 @@ export function contentButtonClass(props: ButtonClassProps): string {
 }
 
 const destructiveOutline =
-  'border border-destructive bg-transparent web:shadow-none active:bg-destructive/10 web:hover:bg-destructive/10';
+  'border border-border bg-background web:shadow-xs active:bg-destructive/10 web:hover:bg-destructive/10';
 const destructiveText =
   'bg-transparent active:bg-destructive/10 web:hover:bg-destructive/10';
 const destructiveClasses = {
@@ -101,7 +101,11 @@ export function contentActionClass(
   props: Pick<ButtonClassProps, 'variant' | 'className' | 'disabled'>,
 ): string {
   const { className, ...variants } = props;
-  return cn(buttonClasses(variants), 'min-h-0 android:min-h-0', className);
+  return cn(
+    buttonClasses(variants),
+    'min-h-0 android:min-h-0 web:sm:min-h-0',
+    className,
+  );
 }
 
 function isFilledVariant(variant: ButtonProps['variant']): boolean {

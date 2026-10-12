@@ -19,6 +19,16 @@ const buttons: { state: string; props: ButtonProps }[] = [
     props: { label: 'Remove Agent', role: 'destructive', fullWidth: true },
   },
   { state: 'Small', props: { label: saveLabel, size: 'sm' } },
+  {
+    state: 'Full width on a phone',
+    props: {
+      label: 'Add argument',
+      variant: 'ghost',
+      size: 'sm',
+      icon: 'add',
+      fullWidth: 'narrow',
+    },
+  },
   { state: 'Large', props: { label: saveLabel, size: 'lg' } },
   { state: 'Disabled', props: { label: saveLabel, disabled: true } },
   { state: 'Loading', props: { label: saveLabel, loading: true } },

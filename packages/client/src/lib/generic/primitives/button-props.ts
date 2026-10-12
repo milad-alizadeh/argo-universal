@@ -19,7 +19,8 @@ export interface ButtonDataProps {
   variant?: ButtonVariant;
   role?: 'destructive';
   size?: ButtonSize;
-  fullWidth?: boolean;
+  // "narrow" fills a narrow window and stays compact on a wide one.
+  fullWidth?: boolean | 'narrow';
   loading?: boolean;
   disabled?: boolean;
   onPress?: () => void;

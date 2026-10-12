@@ -20,17 +20,25 @@ type SelectExampleProps = {
   size?: 'default' | 'sm';
   disabled?: boolean;
   initialValue?: { value: string; label: string };
+  variant?: 'default' | 'plain';
 };
 
+const triggerWidth = { default: 'w-[180px]', plain: undefined };
+
 function SelectExample({
-  size = 'default',
+  size,
   disabled = false,
   initialValue,
+  variant,
 }: SelectExampleProps): React.JSX.Element {
   const [value, setValue] = useState(initialValue);
   return (
     <Select value={value} onValueChange={setValue} disabled={disabled}>
-      <SelectTrigger size={size} className="w-[180px]">
+      <SelectTrigger
+        size={size}
+        variant={variant}
+        className={triggerWidth[variant ?? 'default']}
+      >
         <SelectValue placeholder="Select a fruit" />
       </SelectTrigger>
       <FruitOptions />
@@ -46,6 +54,7 @@ const examples: {
   { label: 'Selected', props: { initialValue: fruits[0] } },
   { label: 'Small', props: { size: 'sm' } },
   { label: 'Disabled', props: { disabled: true } },
+  { label: 'Plain', props: { initialValue: fruits[0], variant: 'plain' } },
 ];
 
 const meta = {

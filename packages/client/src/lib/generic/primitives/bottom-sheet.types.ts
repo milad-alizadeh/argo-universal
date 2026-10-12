@@ -6,7 +6,9 @@ export interface BottomSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClosed?: () => void;
-  trigger: ReactElement<Pick<PressableProps, 'disabled'>>;
-  label: string;
+  // Absent when the app opens the sheet itself, as a dialog on a narrow window does.
+  trigger?: ReactElement<Pick<PressableProps, 'disabled'>>;
+  // Absent when the content names the sheet with its own title.
+  label?: string;
   children: ReactNode;
 }

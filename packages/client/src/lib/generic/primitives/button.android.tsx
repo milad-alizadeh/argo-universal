@@ -77,7 +77,7 @@ type AccessibleButtonProps = Pick<
 function nativeModifiers(props: AccessibleButtonProps): ModifierConfig[] {
   return [
     semantics({ contentDescription: buttonDescription(props) }),
-    ...(props.fullWidth ? [fillMaxWidth()] : []),
+    ...(props.fullWidth === true ? [fillMaxWidth()] : []),
     ...buttonIdentifier(props.testID),
   ];
 }

@@ -3,14 +3,22 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon, iconSizeStyle } from '../symbols/icon';
+import type { IconName } from '../symbols/icon-names';
+import { useWide } from '../use-wide';
 import { SelectContent } from './select-content';
-import { selectItemClassName, selectTriggerClassName } from './select-styles';
+import {
+  type SelectVariant,
+  selectItemClassName,
+  selectTriggerClassName,
+} from './select-styles';
+import { SelectedCheck } from './selected-check';
 
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
 type TriggerProps = React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   children?: React.ReactNode;
   size?: 'default' | 'sm';
+  variant?: SelectVariant;
 };
 type ValueProps = React.ComponentProps<typeof SelectPrimitive.Value> & {
   className?: string;
@@ -34,26 +42,40 @@ function SelectValue({ className, ...props }: ValueProps): React.JSX.Element {
   );
 }
 
-const triggerChevron = (
-  <Icon
-    size="xs"
-    name="chevron-down"
-    aria-hidden={true}
-    className="text-muted-foreground"
-  />
-);
+// A plain picker on a phone row reads like a navigation row (Paper 2V85).
+function chevronName(
+  variant: TriggerProps['variant'],
+  wide: boolean,
+): IconName {
+  if (variant !== 'plain') return 'chevron-down';
+  return wide ? 'chevron-up-down' : 'chevron-right';
+}
+
+function TriggerChevron({
+  variant,
+}: Pick<TriggerProps, 'variant'>): React.JSX.Element {
+  return (
+    <Icon
+      size="xs"
+      name={chevronName(variant, useWide())}
+      aria-hidden={true}
+      className="text-muted-foreground"
+    />
+  );
+}
 
 function SelectTrigger(triggerProps: TriggerProps): React.JSX.Element {
-  const { className, children, size, ...props } = triggerProps;
+  const { className, children, size, variant, ...props } = triggerProps;
   const triggerStyle = selectTriggerClassName({
     className,
     size,
+    variant,
     disabled: props.disabled,
   });
   return (
     <SelectPrimitive.Trigger className={triggerStyle} {...props}>
       {children}
-      {triggerChevron}
+      <TriggerChevron variant={variant} />
     </SelectPrimitive.Trigger>
   );
 }
@@ -80,7 +102,7 @@ function ItemIndicator(): React.JSX.Element {
       className="absolute right-2 flex items-center justify-center"
     >
       <SelectPrimitive.ItemIndicator>
-        <Icon name="check" className="text-muted-foreground shrink-0" />
+        <SelectedCheck className="text-muted-foreground shrink-0" />
       </SelectPrimitive.ItemIndicator>
     </View>
   );

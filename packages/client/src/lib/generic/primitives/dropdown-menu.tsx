@@ -21,7 +21,11 @@ type ItemProps = React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
 };
 type RadioProps = React.ComponentProps<
   typeof DropdownMenuPrimitive.RadioItem
-> & { children?: React.ReactNode };
+> & {
+  children?: React.ReactNode;
+  // Where the check sits; Paper's phone menus lead with it.
+  indicator?: 'leading' | 'trailing';
+};
 const DropdownMenu = DropdownMenuPrimitive.Root;
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
@@ -58,16 +62,19 @@ function RadioIndicator(): React.JSX.Element {
 }
 
 function RadioBody(radioProps: RadioProps): React.JSX.Element {
-  const { className, children, ...props } = radioProps;
+  const { className, children, indicator, ...props } = radioProps;
   const radioStyle = dropdownItemClassName({
     className,
     disabled: props.disabled,
   });
+  const body = <View className="min-w-0 flex-1">{children}</View>;
+  const check = <RadioIndicator />;
+  const leading = indicator === 'leading';
   return React.createElement(
     DropdownMenuPrimitive.RadioItem,
     { ...props, className: radioStyle },
-    <View className="min-w-0 flex-1">{children}</View>,
-    <RadioIndicator />,
+    leading ? check : body,
+    leading ? body : check,
   );
 }
 

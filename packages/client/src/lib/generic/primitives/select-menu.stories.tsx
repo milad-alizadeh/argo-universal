@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { Variation, Variations } from '../variations';
+import { FieldSection } from './field-section';
+import { ListItem } from './list-item';
 import { SelectMenu } from './select-menu';
 
 const efforts = [
@@ -15,12 +17,14 @@ type SelectMenuExampleProps = {
   initialValue?: Effort;
   disabled?: boolean;
   invalid?: boolean;
+  variant?: 'default' | 'plain';
 };
 
 function SelectMenuExample({
   initialValue,
   disabled = false,
   invalid = false,
+  variant,
 }: SelectMenuExampleProps): React.JSX.Element {
   const [value, setValue] = useState(initialValue);
   const menuProps = {
@@ -29,6 +33,7 @@ function SelectMenuExample({
     onValueChange: setValue,
     disabled,
     invalid,
+    variant,
   };
   return <SelectMenu accessibilityLabel="Effort" {...menuProps} />;
 }
@@ -58,6 +63,16 @@ export const Overview: Story = {
           <SelectMenuExample {...props} />
         </Variation>
       ))}
+      <Variation label="Plain, inside a ListItem">
+        <FieldSection>
+          <ListItem
+            title="Effort"
+            accessory={
+              <SelectMenuExample initialValue="medium" variant="plain" />
+            }
+          />
+        </FieldSection>
+      </Variation>
     </Variations>
   ),
 };
