@@ -1,10 +1,35 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { action } from 'storybook/actions';
 import { FieldGroup } from './field-group';
 import { FieldSection } from './field-section';
 import { ListItem } from './list-item';
+import { SelectMenu } from './select-menu';
 
 const onPress = action('open list item');
+const efforts = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+] as const;
+
+function EffortItem(): React.JSX.Element {
+  const [effort, setEffort] =
+    useState<(typeof efforts)[number]['value']>('medium');
+  return (
+    <ListItem
+      title="Effort"
+      accessory={
+        <SelectMenu
+          accessibilityLabel="Effort"
+          value={effort}
+          options={efforts}
+          onValueChange={setEffort}
+        />
+      }
+    />
+  );
+}
 const meta = {
   title: 'Design System/Primitives/ListItem',
   args: { title: 'Name' },
@@ -44,6 +69,9 @@ export const Variations: Story = {
       <FieldSection title="Without icons">
         <ListItem title="Name" value="Argo" onPress={onPress} />
         <ListItem title="Version" value="1.0" />
+      </FieldSection>
+      <FieldSection title="With a dropdown">
+        <EffortItem />
       </FieldSection>
     </FieldGroup>
   ),
