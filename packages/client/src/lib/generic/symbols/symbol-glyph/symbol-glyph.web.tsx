@@ -1,7 +1,11 @@
 import { type SFSymbol, SymbolView } from 'expo-symbols';
 import type * as React from 'react';
 import { cn } from '../../utils';
-import { customSymbolImage, isCustomSymbol } from '../custom-symbols';
+import {
+  customSymbolBox,
+  customSymbolImage,
+  isCustomSymbol,
+} from '../custom-symbols';
 import {
   type RenderSymbolImage,
   useSymbolImage,
@@ -9,6 +13,17 @@ import {
 } from '../symbol-images';
 import type { SymbolGlyphProps } from './symbol-glyph';
 import { symbolWeight } from './symbol-weight';
+
+/*
+ * SF Symbols draw like text: every symbol in a role at one point size, the one that makes `circle` fill
+ * `referenceShare` of the role's box, so narrow symbols such as chevrons stay narrow. A symbol larger than `circle`
+ * shrinks to `circle`'s size, so wide ones such as the Sessions bubbles keep to the box.
+ */
+const referenceSymbol = 'circle';
+// Leaves `circle`'s ink at three quarters of the box: 18 points on the rail, 12 beside Body text.
+const referenceShare = 0.88;
+// `circle` is this wide in 100-point type, the units of Argo's custom symbol paths.
+const referenceSymbolCustomUnits = 117;
 
 /*
  * The desktop app on macOS draws SF Symbols from the system and Argo's custom symbols from their paths; the browser
@@ -32,6 +47,8 @@ export function SymbolGlyph({
       className={cn(colorClassName, '[&>div]:text-inherit!')}
       style={{
         display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         flexShrink: 0,
         width: pixels,
         height: pixels,
@@ -68,7 +85,19 @@ function AppleSymbolImage({
   sf,
   pixels,
 }: AppleSymbolImageProps): React.JSX.Element {
-  if (isCustomSymbol(sf)) return <SymbolMask image={customSymbolImage(sf)} />;
+  if (isCustomSymbol(sf)) {
+    const { width, height } = customSymbolBox(sf);
+    const scale =
+      (pixels * referenceShare) /
+      Math.max(referenceSymbolCustomUnits, width, height);
+    return (
+      <SymbolMask
+        url={customSymbolImage(sf)}
+        width={width * scale}
+        height={height * scale}
+      />
+    );
+  }
   return <MaskedSymbol render={render} sf={sf} pixels={pixels} />;
 }
 
@@ -83,22 +112,45 @@ function MaskedSymbol({
   sf,
   pixels,
 }: MaskedSymbolProps): React.JSX.Element | null {
-  const image = useSymbolImage(render, {
-    name: sf,
-    pointSize: Math.round(pixels * globalThis.devicePixelRatio),
+  const pointSize = Math.round(pixels * globalThis.devicePixelRatio);
+  const image = useSymbolImage(render, { name: sf, pointSize });
+  const reference = useSymbolImage(render, {
+    name: referenceSymbol,
+    pointSize,
   });
-  if (!image) return null;
-  return <SymbolMask image={image} />;
+  if (!image || !reference) return null;
+  const scale =
+    (pixels * referenceShare) /
+    Math.max(reference.width, reference.height, image.width, image.height);
+  return (
+    <SymbolMask
+      url={image.url}
+      width={image.width * scale}
+      height={image.height * scale}
+    />
+  );
 }
 
-function SymbolMask({ image }: { image: string }): React.JSX.Element {
-  const mask = `url("${image}") center / contain no-repeat`;
+interface SymbolMaskProps {
+  url: string;
+  width: number;
+  height: number;
+}
+
+// Centred in the icon's box.
+function SymbolMask({
+  url,
+  width,
+  height,
+}: SymbolMaskProps): React.JSX.Element {
+  const mask = `url("${url}") center / 100% 100% no-repeat`;
   return (
     <span
       style={{
         display: 'block',
-        width: '100%',
-        height: '100%',
+        flexShrink: 0,
+        width,
+        height,
         backgroundColor: 'currentColor',
         mask,
         WebkitMask: mask,
