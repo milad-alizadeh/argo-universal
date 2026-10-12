@@ -25,7 +25,7 @@ type NativeHostProps = SystemButtonProps & {
 function NativeButtonHost(props: NativeHostProps): ReactElement {
   const theme = useNativeButtonTheme(props);
   return (
-    <Host {...nativeButtonLayout(props.fullWidth === true)}>
+    <Host {...nativeButtonLayout(props)}>
       <props.Drawing {...props} theme={theme} />
     </Host>
   );
