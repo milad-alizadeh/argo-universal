@@ -6,10 +6,10 @@ import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { findFreePort } from '@repo/mocks/network/free-port';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { engineBundlePath } from './engine-bundle';
 import { serverHttpUrl, serverUrlFor } from './server-port';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
-const fixtureEngineArguments = ['--import', 'tsx', 'mocks/e2e-engine.ts'];
 
 const serverStartMilliseconds = 30_000;
 const serverPollMilliseconds = 200;
@@ -98,7 +98,7 @@ export async function startOwnServer(
   await initTestRepository(projectPath, false);
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
-    const server = spawn(process.execPath, fixtureEngineArguments, {
+    const server = spawn(process.execPath, [engineBundlePath], {
       cwd: serverDirectory,
       env: {
         ...process.env,

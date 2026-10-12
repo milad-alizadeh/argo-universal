@@ -74,7 +74,7 @@ export const test = base.extend<
     use,
     testInfo,
   ): Promise<void> => {
-    // Starting a Server compiles it with tsx, which takes seconds when several runs share the machine.
+    // Starting each test's own Server takes seconds when several runs share the machine.
     test.slow();
     if (appTarget === 'web') {
       const server = await startOwnServer(

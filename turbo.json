@@ -20,7 +20,9 @@
     // @repo/e2e lists the Server, App, and Desktop as dependencies, so their sources and the web export feed this hash (Turborepo Playwright guide).
     "test:web": {
       "dependsOn": ["^build"],
-      "outputs": ["playwright-report/**"],
+      // A CI shard's blob report replays from the cache too, so the merged HTML report stays whole.
+      "outputs": ["playwright-report/**", "blob-report/**"],
+      "env": ["ARGO_E2E_SHARD"],
       "passThroughEnv": ["PLAYWRIGHT_*"]
     },
     "test:electron": {
