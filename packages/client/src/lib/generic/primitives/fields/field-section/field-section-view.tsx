@@ -16,7 +16,8 @@ export function FieldSection(props: FieldSectionProps): React.JSX.Element {
       <View
         className={cn(
           'overflow-hidden rounded-2xl',
-          navigation && 'rounded-none bg-transparent',
+          // Wide, a navigation list's selected and hovered rows keep a 1px gap from their neighbours.
+          navigation && 'rounded-none bg-transparent wide:gap-px',
         )}
       >
         <FooterProvider value={footerOf(props, footerId)}>
