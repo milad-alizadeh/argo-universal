@@ -77,14 +77,14 @@ export const TabNestsAndShiftTabUnnests = typedBlock({
 });
 /*
  * The item becomes plain text and keeps its text. Lexical reads a caret move from the browser's
- * selectionchange event, so Backspace waits a frame for it.
+ * selectionchange event, so Backspace waits until the caret is at the item start.
  */
 export const BackspaceAtAnItemStartLeavesTheList: Story = {
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
     await userEvent.type(field, '- Plain');
     await userEvent.keyboard('{ArrowLeft}'.repeat(5));
-    await new Promise(requestAnimationFrame);
+    await waitFor(() => expect(getSelection()?.anchorOffset).toBe(0));
     await userEvent.keyboard('{Backspace}');
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('Plain'),
