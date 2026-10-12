@@ -17,9 +17,13 @@ import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
 import { PhoneShellCard } from './phone-shell-card';
 import { type Section, shellSections } from './shell-sections';
 
-// The drawer's glass starts this far down, and its content clears the status bar by this much (Paper).
+// The drawer's rows start this far down, and clear the status bar by this much more (Paper).
 const drawerInset = 12;
 const statusBarGap = 3;
+
+// The content's edge shades the drawer under it, as if the content lay on top.
+const contentEdgeShadow =
+  'shadow-[inset_-12px_0_16px_-8px_#0000001a] dark:shadow-[inset_-12px_0_16px_-8px_#00000066]';
 
 const OpenDrawerContext = createContext<() => void>(() => {});
 
@@ -134,15 +138,21 @@ export function PhoneShell({
         swipeEnabled={swipeEnabled}
         renderDrawerContent={() => (
           <View
-            className="flex-1 px-3 py-3"
+            className="flex-1"
             aria-hidden={!drawerOpen}
             accessibilityElementsHidden={!drawerOpen}
           >
             <PhoneDrawerBackdrop width={offset} />
             {/* Plain translucent glass: over a still, soft glow a blur would cost a filter pass and show nothing. */}
             <View
-              className="flex-1 gap-1 rounded-2xl bg-glass px-2 pb-5 shadow-glass"
-              style={{ paddingTop: Math.max(top + statusBarGap, drawerInset) }}
+              className={cn(
+                'flex-1 gap-1 bg-glass px-5 pb-8',
+                contentEdgeShadow,
+              )}
+              style={{
+                paddingTop:
+                  drawerInset + Math.max(top + statusBarGap, drawerInset),
+              }}
             >
               <View className="h-14 px-3 pt-2.5">
                 <Text role="heading" semanticRole="heading" aria-level={2}>

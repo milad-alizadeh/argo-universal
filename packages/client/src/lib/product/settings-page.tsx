@@ -1,6 +1,7 @@
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 import { Text } from '#primitives/text';
 import {
   PageTitleRow,
@@ -20,8 +21,24 @@ export interface SettingsPageProps extends PageTitleRowProps {
   children: ReactNode;
 }
 
-// The page's centred column, its 24 side padding included.
-const settingsColumn = { maxWidth: 848, paddingLeft: 24, paddingRight: 24 };
+// The page's centred column, its side padding included. The padding fits the back button's hang (-left-8 in PageTitleRow), so the button stays inside the pane when the column meets the pane's edge.
+const settingsColumnMaxWidth = 848;
+
+function useSettingsColumn(): {
+  maxWidth: number;
+  paddingLeft: number;
+  paddingRight: number;
+} {
+  const padding = Number.parseFloat(String(useCSSVariable('--spacing-8')));
+  return useMemo(
+    () => ({
+      maxWidth: settingsColumnMaxWidth,
+      paddingLeft: padding,
+      paddingRight: padding,
+    }),
+    [padding],
+  );
+}
 
 /*
  * One Settings page on a wide window: a centred column under its own title and caption.
@@ -29,6 +46,7 @@ const settingsColumn = { maxWidth: 848, paddingLeft: 24, paddingRight: 24 };
  * A phone's native header already shows the title, so there the page is its content alone.
  */
 export function SettingsPage(props: SettingsPageProps): ReactNode {
+  const settingsColumn = useSettingsColumn();
   if (!useWide()) return props.children;
   return (
     <View className="mt-shell-inset flex-1">
