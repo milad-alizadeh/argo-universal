@@ -226,7 +226,7 @@ export function SessionsList({
 
   return (
     <View
-      className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none! web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200"
+      className="relative flex-1 overflow-hidden bg-sidebar web:select-none web:[&_*]:select-none! web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200"
       style={{ minHeight: 0 }}
     >
       <View className="flex-1" style={{ minHeight: 0 }}>
@@ -322,7 +322,7 @@ function EmptySessionsList({
   );
 }
 
-const fadeSurface = 'bg-background wide:bg-sidebar';
+const fadeSurface = 'bg-sidebar';
 
 function ProjectEntrySeparator(): React.JSX.Element {
   return <View className="h-0 wide:h-0.5" />;
@@ -338,7 +338,7 @@ const SessionListRow = memo(function SessionListRow({
     <View
       testID="session-row-surface"
       className={cn(
-        'overflow-hidden bg-background wide:bg-sidebar',
+        'overflow-hidden bg-sidebar',
         selected && 'bg-sidebar-accent wide:bg-sidebar-accent',
       )}
     >

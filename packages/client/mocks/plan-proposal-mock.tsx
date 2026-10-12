@@ -53,7 +53,7 @@ export function PlanProposalPreview(
       </View>
       <PlanProposalRegion
         testID="plan-proposal-main-content"
-        className="relative flex-1 min-h-0 w-full bg-card"
+        className="relative flex-1 min-h-0 w-full bg-sidebar"
       >
         <View className="flex-1 min-h-0" />
         <View className="items-center px-4 pb-4 wide:px-6">

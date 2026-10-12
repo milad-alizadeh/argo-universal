@@ -52,7 +52,7 @@ export function ConnectionView({
     );
   }
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1 bg-sidebar">
       <ConnectionBanner state={connection} />
       <View className="flex-1 items-center justify-center p-6">
         <Card className="w-full max-w-md">

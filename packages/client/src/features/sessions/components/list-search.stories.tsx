@@ -12,7 +12,7 @@ const meta = {
   render: function SearchPreview(args): React.JSX.Element {
     const [query, setQuery] = useState(args.value);
     return (
-      <View className="h-11 w-full flex-row items-center bg-background px-2 wide:h-14 wide:w-shell-list wide:bg-sidebar">
+      <View className="h-11 w-full flex-row items-center bg-sidebar px-2 wide:h-14 wide:w-shell-list">
         <ListSearch title={args.title} value={query} onChangeText={setQuery} />
       </View>
     );
