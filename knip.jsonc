@@ -17,7 +17,9 @@
         "vite.main.config.mts",
         "vite.preload.config.mts",
         "src/main/main.ts",
-        "src/preload/preload.ts"
+        "src/preload/preload.ts",
+        // `scripts/storybook-mac.mts` builds this by path.
+        "src/storybook/storybook-window.ts"
       ],
       // A shell builtin in the dev and start scripts, not an npm binary.
       "ignoreBinaries": ["unset"]
@@ -34,6 +36,7 @@
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
       "ignoreDependencies": [
         "@expo/ui",
+        "burnt",
         "expo-clipboard",
         "expo-file-system",
         "expo-font",
@@ -65,10 +68,8 @@
       ]
     },
     "tools": {
-      // Each script runs by path from a package script, a hook config or by hand.
-      "entry": ["*.{mts,mjs}"],
-      // profile-shell.mjs resolves Playwright from @repo/e2e on purpose.
-      "ignoreDependencies": ["@playwright/test"]
+      // Each script runs by path from a package script, a hook config or by hand; `pnpm perf` runs the perf suites.
+      "entry": ["*.{mts,mjs}", "perf/*.perf.mts"]
     }
   }
 }

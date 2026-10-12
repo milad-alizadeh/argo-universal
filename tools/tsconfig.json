@@ -4,5 +4,6 @@
     "allowImportingTsExtensions": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": ["**/*.mts"]
+  "include": ["**/*.mts"],
+  "exclude": ["perf"]
 }
