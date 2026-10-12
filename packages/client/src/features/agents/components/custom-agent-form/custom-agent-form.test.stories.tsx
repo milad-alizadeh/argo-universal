@@ -98,7 +98,7 @@ export const ShowsExamplesInEmptyFields: Story = {
 export const RegistersOnPhone: Story = registersAt('phone');
 export const RegistersOnDesktop: Story = registersAt('wide');
 
-// The phone edits a variable in a sheet that the backdrop closes: Save and Remove, no Cancel or close button.
+// The phone edits a variable in a sheet that the backdrop closes until it is touched: Save and Remove, no Cancel or close button.
 export const RemovesAVariableInASheetOnPhone: Story = {
   args: { initial: customAgentDefinition, submitLabel: 'Save' },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),

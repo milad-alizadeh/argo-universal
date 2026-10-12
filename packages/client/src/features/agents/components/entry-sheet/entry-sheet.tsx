@@ -37,7 +37,7 @@ export type EntrySheetEntry = Pick<
   'fields' | 'onSave' | 'dirty'
 >;
 
-// A phone edits one argument or variable at a time, with labelled fields, in a sheet that the backdrop closes.
+// A phone edits one argument or variable at a time, with labelled fields, in a sheet that the backdrop closes until it holds input.
 export function EntrySheet(props: EntrySheetProps): React.JSX.Element {
   return (
     <Dialog open onOpenChange={(open) => !open && props.onClose()}>
