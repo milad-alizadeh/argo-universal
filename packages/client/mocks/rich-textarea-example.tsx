@@ -2,6 +2,13 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { RichTextarea } from '../src/lib/generic/primitives/inputs/rich-textarea/rich-textarea';
 
+export const exampleLabel = 'Message';
+
+// Lexical binds its shortcuts to ⌘ on Apple platforms and Ctrl elsewhere.
+export const shortcutModifier = /Mac|iPhone|iPad/.test(navigator.platform)
+  ? 'Meta'
+  : 'Control';
+
 // A stateful controlled wrapper: a RichTextarea that keeps its own value, as the Composer's draft does.
 export function RichTextareaExample({
   initialValue = '',
@@ -15,7 +22,7 @@ export function RichTextareaExample({
   const [value, setValue] = useState(initialValue);
   return (
     <RichTextarea
-      accessibilityLabel="Message"
+      accessibilityLabel={exampleLabel}
       placeholder="Message the Agent…"
       value={value}
       onChangeText={(changed) => {

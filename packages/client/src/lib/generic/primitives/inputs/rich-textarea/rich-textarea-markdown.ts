@@ -1,9 +1,11 @@
+import { $isLinkNode, AutoLinkNode, LinkNode } from '@lexical/link';
 import {
   $convertFromMarkdownString,
   $convertToMarkdownString,
   BOLD_STAR,
   INLINE_CODE,
   ITALIC_UNDERSCORE,
+  LINK,
   STRIKETHROUGH,
   type TextFormatTransformer,
   type TextMatchTransformer,
@@ -13,9 +15,9 @@ import { $getRoot, $isTextNode, type Klass, type LexicalNode } from 'lexical';
 
 /*
  * The nodes and markdown transformers the web editor uses, shared by its drawing and its tests.
- * Block nodes (lists, quotes, code blocks) and links join these lists as the editor grows.
+ * Block nodes (lists, quotes, code blocks) join these lists as the editor grows.
  */
-export const richTextareaNodes: Klass<LexicalNode>[] = [];
+export const richTextareaNodes: Klass<LexicalNode>[] = [LinkNode, AutoLinkNode];
 
 const SINGLE_TILDE_STRIKETHROUGH: TextFormatTransformer = {
   type: 'text-format',
@@ -28,8 +30,10 @@ export const richTextareaTransformers: Transformer[] = [
   INLINE_CODE,
   BOLD_STAR,
   ITALIC_UNDERSCORE,
+  LINK,
   STRIKETHROUGH,
   SINGLE_TILDE_STRIKETHROUGH,
+  LINK,
 ];
 
 /*
@@ -88,8 +92,18 @@ export function $importMarkdown(markdown: string): void {
   $convertFromMarkdownString(markdown, richTextareaTransformers);
 }
 
+// Everything an export writes: the text, and the URLs links write beside it.
+function $writtenText(): string {
+  const texts = $getRoot().getAllTextNodes();
+  const urls = texts.map((text) => text.getParent()).filter($isLinkNode);
+  return [
+    ...texts.map((text) => text.getTextContent()),
+    ...urls.map((link) => link.getURL()),
+  ].join('');
+}
+
 export function $exportMarkdown(): string {
-  const swap = swapFor($getRoot().getTextContent());
+  const swap = swapFor($writtenText());
   return swap.unshield(
     $convertToMarkdownString([
       ...richTextareaTransformers,

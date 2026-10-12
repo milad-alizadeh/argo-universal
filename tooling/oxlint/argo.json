@@ -1818,6 +1818,8 @@
       "excludeFiles": [
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-view.tsx",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-keys.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-links.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-link-plugins.tsx",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-markdown.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-value.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*"

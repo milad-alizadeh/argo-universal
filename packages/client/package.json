@@ -23,6 +23,7 @@
   "dependencies": {
     "@expo/ui": "catalog:",
     "@legendapp/list": "catalog:",
+    "@lexical/link": "catalog:",
     "@lexical/markdown": "catalog:",
     "@lexical/react": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",

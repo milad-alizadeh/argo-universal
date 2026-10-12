@@ -10,12 +10,16 @@ import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPl
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import type * as React from 'react';
 import { useEffect } from 'react';
-import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
+import {
+  markdownLinkClassNames,
+  markdownMarkClassNames,
+} from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
 import {
   registerMarkShortcuts,
   registerReturnToSubmit,
 } from './rich-textarea-keys';
+import { LinkPlugins } from './rich-textarea-link-plugins';
 import {
   $importMarkdown,
   richTextareaNodes,
@@ -96,15 +100,21 @@ function MessageField({
         contentEditable={<MessageEditable {...props} />}
         ErrorBoundary={LexicalErrorBoundary}
       />
+      <LinkPlugins />
     </div>
   );
 }
+
+const editorTheme = {
+  text: markdownMarkClassNames,
+  link: cn(markdownLinkClassNames.underline, markdownLinkClassNames.domColor),
+};
 
 function editorConfig(value: string, editable: boolean): InitialConfigType {
   return {
     namespace: 'RichTextarea',
     nodes: richTextareaNodes,
-    theme: { text: markdownMarkClassNames },
+    theme: editorTheme,
     editable,
     editorState: () => $importMarkdown(value),
     onError: (error) => {

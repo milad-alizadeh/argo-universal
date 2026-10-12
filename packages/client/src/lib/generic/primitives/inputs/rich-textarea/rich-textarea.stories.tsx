@@ -14,6 +14,10 @@ const examples = [
   { label: 'Strikethrough', value: 'Keep the ~~tablet~~ phone readable.' },
   { label: 'Inline code', value: 'Run `pnpm test` before you push.' },
   {
+    label: 'Link',
+    value: 'Read the [Composer spec](https://argo.dev/spec) before you start.',
+  },
+  {
     label: 'Three lines',
     value: 'Match the spacing.\nKeep the phone readable.\nUse both themes.',
   },

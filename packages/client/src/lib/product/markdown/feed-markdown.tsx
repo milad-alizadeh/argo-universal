@@ -10,7 +10,10 @@ import {
 } from 'react';
 import { Linking, ScrollView, Text as Span, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
+import {
+  markdownLinkClassNames,
+  markdownMarkClassNames,
+} from '#lib/generic/markdown-marks';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
@@ -45,11 +48,13 @@ function Link({
   href: string;
   children: ReactNode;
 }): React.JSX.Element {
-  const { color: underline } = useResolveClassNames('text-ring');
+  const { color: underline } = useResolveClassNames(
+    markdownLinkClassNames.viewColor,
+  );
   return (
     <Span
       role="link"
-      className="underline underline-offset-2"
+      className={markdownLinkClassNames.underline}
       style={{ textDecorationColor: underline }}
       onPress={() => Linking.openURL(href)}
     >
