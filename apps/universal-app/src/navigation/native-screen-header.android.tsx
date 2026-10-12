@@ -1,51 +1,47 @@
-import { HeaderSearchBar, type ScreenHeaderProps } from '@repo/client';
+import type { ScreenHeaderProps } from '@repo/client';
 import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type * as React from 'react';
-import { useState } from 'react';
+import { useCSSVariable } from 'uniwind';
 import { rightItems } from './header-right-items';
+import { headerSearchOptions } from './header-search-options';
 
-type ScreenOptions = NativeStackNavigationOptions;
+type SearchBarOptions = NativeStackNavigationOptions['headerSearchBarOptions'];
 
-// Open search takes the whole header; options merge, so each item is cleared by name.
-const searchingItems: ScreenOptions = {
-  headerLeft: undefined,
-  headerBackVisible: false,
-  headerRight: undefined,
-};
-
-// With search, Material's search bar takes the title's place; open, it takes the whole header.
-export function NativeScreenHeader(
-  props: ScreenHeaderProps,
-): React.JSX.Element {
-  const [searching, setSearching] = useState(false);
+// Android draws the native stack's search: a Search action that opens a field over the whole header.
+export function NativeScreenHeader({
+  title,
+  left,
+  right = [],
+  search,
+}: ScreenHeaderProps): React.JSX.Element {
+  const colors = useSearchColors();
   return (
     <Stack.Screen
       options={{
         headerShown: true,
-        title: props.title,
-        ...(searching ? searchingItems : restingItems(props)),
-        ...searchTitle(props.search, setSearching),
+        title,
+        headerLeft: left ? () => left : undefined,
+        ...rightItems(right),
+        headerSearchBarOptions: search && {
+          ...headerSearchOptions(search),
+          ...colors,
+        },
       }}
     />
   );
 }
 
-function restingItems({ left, right = [] }: ScreenHeaderProps): ScreenOptions {
+// The field's plate takes the page surface, which also replaces its default underline; text and icons follow the theme.
+function useSearchColors(): SearchBarOptions {
+  const [surface, text, hint] = useCSSVariable([
+    '--color-sidebar',
+    '--color-foreground',
+    '--color-muted-foreground',
+  ]).map((value) => (typeof value === 'string' ? value : undefined));
   return {
-    headerLeft: left ? () => left : undefined,
-    headerBackVisible: true,
-    ...rightItems(right),
-  };
-}
-
-function searchTitle(
-  search: ScreenHeaderProps['search'],
-  onSearchingChange: (searching: boolean) => void,
-): ScreenOptions {
-  if (!search) return {};
-  return {
-    headerTitle: () => (
-      <HeaderSearchBar search={search} onSearchingChange={onSearchingChange} />
-    ),
+    barTintColor: surface,
+    textColor: text,
+    hintTextColor: hint,
+    headerIconColor: text,
   };
 }
