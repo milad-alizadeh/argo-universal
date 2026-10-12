@@ -6,7 +6,7 @@ import { ListItem } from './list-item';
 
 const onPress = action('open list item');
 const meta = {
-  title: 'Primitives/ListItem',
+  title: 'Design System/Primitives/ListItem',
   args: { title: 'Name' },
   component: ListItem,
   parameters: { screenPreview: true },
