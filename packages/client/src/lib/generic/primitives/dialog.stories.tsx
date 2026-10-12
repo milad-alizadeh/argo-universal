@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import {
   Dialog,
-  DialogClose,
+  DialogCancel,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -65,15 +65,8 @@ function ProfileFields(): React.JSX.Element {
 function ProfileFooter(): React.JSX.Element {
   return (
     <DialogFooter>
-      <DialogClose asChild>
-        <Pressable
-          role="button"
-          className={contentActionClass({ variant: 'outline' })}
-        >
-          <Text>{'Cancel'}</Text>
-        </Pressable>
-      </DialogClose>
-      {/* A phone's Save fills the sheet's width. */}
+      <DialogCancel label="Cancel" />
+      {/* A phone's Save fills the sheet's width, as Cancel does. */}
       <Button label="Save changes" fullWidth="narrow" />
     </DialogFooter>
   );

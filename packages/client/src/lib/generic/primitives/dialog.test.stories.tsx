@@ -4,7 +4,13 @@ import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../each-layout';
 import { settleViewport } from '../settle-viewport';
 import { Button } from './button';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from './dialog';
+import {
+  Dialog,
+  DialogCancel,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from './dialog';
 import { Text } from './text';
 
 const meta = {
@@ -19,6 +25,7 @@ const meta = {
         <DialogTitle>Rename the Project</DialogTitle>
         <Text>The folder keeps its name.</Text>
         <Button label="Save" />
+        <DialogCancel label="Cancel" />
       </DialogContent>
     </Dialog>
   ),
@@ -117,3 +124,24 @@ function swipesDown(distance: number, staysOpen: boolean): Story {
 
 export const SheetClosesOnSwipeDown: Story = swipesDown(200, false);
 export const SheetStaysOpenAfterShortDrag: Story = swipesDown(20, true);
+
+// Cancel is the dialog's own action: it closes the sheet or the centred dialog.
+function cancelsAt(layout: Layout): Story {
+  return {
+    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    play: async ({ canvas, userEvent }) => {
+      const trigger = canvas.getByRole('button', rename);
+      await userEvent.click(trigger);
+      const dialog = await body.findByRole('dialog', dialogName);
+      await userEvent.click(
+        within(dialog).getByRole('button', { name: 'Cancel' }),
+      );
+      await waitFor(() =>
+        expect(body.queryByRole('dialog', dialogName)).toBeNull(),
+      );
+    },
+  };
+}
+
+export const SheetClosesOnCancel: Story = cancelsAt('phone');
+export const DialogClosesOnCancel: Story = cancelsAt('wide');
