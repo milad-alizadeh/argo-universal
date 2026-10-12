@@ -8,10 +8,12 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Uniwind } from 'uniwind';
 import { BlobUrlContext } from './features/connection/trpc/blob-url';
+import { dismissToasts, Toaster } from './lib/generic/primitives/toast';
 import { cn } from './lib/generic/utils';
 import { recordedImageUrl } from './lib/product/feed-message.mocks';
 
 interface PreviewContext {
+  id: string;
   globals: { mode?: string };
   parameters: {
     standalonePreview?: boolean;
@@ -27,12 +29,14 @@ const initialMetrics = {
 
 function ReusablesPreview({
   Story,
+  storyId,
   mode,
   standalone,
   padding,
   screen,
 }: {
   Story: ComponentType;
+  storyId: string;
   mode: 'light' | 'dark';
   standalone: boolean;
   padding: boolean;
@@ -41,10 +45,12 @@ function ReusablesPreview({
   useLayoutEffect(() => {
     Uniwind.setTheme(Platform.OS === 'web' ? mode : 'system');
   }, [mode]);
+  // No toast outlives the story that showed it.
+  useLayoutEffect(() => dismissToasts, [storyId]);
   let preview: ReactNode;
   if (screen) {
     preview = (
-      <View className="flex-1 w-full min-h-0 bg-background web:h-screen web:flex-none">
+      <View className="flex-1 w-full min-h-0 bg-sidebar web:h-screen web:flex-none">
         <Story />
       </View>
     );
@@ -52,7 +58,7 @@ function ReusablesPreview({
     preview = (
       <View
         className={cn(
-          'min-h-full w-full items-center justify-center bg-background',
+          'min-h-full w-full items-center justify-center bg-sidebar',
           padding && 'p-6',
         )}
       >
@@ -62,7 +68,7 @@ function ReusablesPreview({
   } else {
     preview = (
       <ScrollView
-        className="flex-1 bg-background"
+        className="flex-1 bg-sidebar"
         contentContainerClassName={cn(
           'grow items-center justify-center',
           padding && 'p-6',
@@ -79,6 +85,7 @@ function ReusablesPreview({
           <BlobUrlContext.Provider value={recordedImageUrl}>
             {preview}
             {standalone && <PortalHost />}
+            {standalone && <Toaster key={storyId} />}
           </BlobUrlContext.Provider>
         </KeyboardProvider>
       </SafeAreaProvider>
@@ -93,6 +100,7 @@ export function withReusablesPreview(
   return (
     <ReusablesPreview
       Story={Story}
+      storyId={context.id}
       mode={context.globals.mode === 'dark' ? 'dark' : 'light'}
       standalone={context.parameters.standalonePreview === true}
       padding={context.parameters.previewPadding !== false}

@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { cn } from '#lib/generic/utils';
+import { useWide } from '../use-wide';
 import { useInListItem } from './list-item-accessory';
 import {
   Select,
@@ -22,18 +23,35 @@ export interface SelectMenuProps<Value extends string> {
   placeholder?: string;
   disabled?: boolean;
   invalid?: boolean;
-  // Plain has no border or background. A ListItem's accessory takes it by default.
   variant?: SelectVariant;
+  // The values are code, such as branch names, and draw in the mono face.
+  code?: boolean;
 }
-function selectMenuClassName(
-  variant: SelectVariant,
-  invalid?: boolean,
-): string | undefined {
-  if (variant === 'plain') return undefined;
+function selectMenuClassName({
+  invalid,
+  variant,
+}: Pick<SelectMenuProps<string>, 'invalid' | 'variant'>): string {
   return cn(
-    'h-9 sm:h-9 w-full! bg-background dark:bg-background',
+    variant !== 'plain' &&
+      'h-9 sm:h-9 w-full! bg-background dark:bg-background',
     invalid && 'border-destructive',
   );
+}
+
+// A plain picker on a phone row shows its value like a row value: body size, muted (Paper 2V85).
+const rowValueClassName =
+  'text-base leading-6 font-normal text-muted-foreground';
+const isRowValue = (
+  variant: SelectVariant | undefined,
+  wide: boolean,
+): boolean => variant === 'plain' && !wide;
+
+function valueClassName(
+  { code, variant }: Pick<SelectMenuProps<string>, 'code' | 'variant'>,
+  wide: boolean,
+): string {
+  if (code) return 'type-code';
+  return isRowValue(variant, wide) ? rowValueClassName : 'type-control';
 }
 
 function SelectMenuValue<Value extends string>(
@@ -41,7 +59,7 @@ function SelectMenuValue<Value extends string>(
 ): ReactElement {
   return (
     <SelectValue
-      className="type-control"
+      className={valueClassName(props, useWide())}
       placeholder={props.placeholder ?? 'Choose…'}
     />
   );
@@ -50,15 +68,16 @@ function SelectMenuTrigger<Value extends string>(
   props: SelectMenuProps<Value>,
 ): ReactElement {
   const inListItem = useInListItem();
+  // A ListItem's accessory is plain unless it asks otherwise.
   const variant = props.variant ?? (inListItem ? 'plain' : 'default');
   return (
     <SelectTrigger
       accessibilityLabel={props.accessibilityLabel}
       disabled={props.disabled}
       variant={variant}
-      className={selectMenuClassName(variant, props.invalid)}
+      className={selectMenuClassName({ invalid: props.invalid, variant })}
     >
-      <SelectMenuValue {...props} />
+      <SelectMenuValue {...props} variant={variant} />
     </SelectTrigger>
   );
 }

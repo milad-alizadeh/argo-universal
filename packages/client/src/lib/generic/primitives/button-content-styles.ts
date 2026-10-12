@@ -18,7 +18,7 @@ const buttonClasses = cva(
         link: '',
       },
       size: {
-        sm: 'min-h-11 px-3 py-2 gap-1.5 web:sm:min-h-8',
+        sm: 'min-h-11 px-3 py-2 gap-1.5 web:sm:min-h-8 web:sm:h-8 web:sm:py-0',
         md: 'min-h-11 px-4 py-2 web:sm:min-h-10',
         lg: 'min-h-11 px-6 py-2',
       },
@@ -29,8 +29,32 @@ const buttonClasses = cva(
   },
 );
 
+/*
+ * On a phone an Argo-drawn button draws what the system button of its variant draws: a capsule at SwiftUI's
+ * large control size on iOS, Material 3's height and padding on Android, and the whole button faded when disabled.
+ */
+const filledNative =
+  'ios:min-h-12.5 ios:px-5 ios:border-0 ios:bg-secondary android:min-h-10 android:px-6';
+const textNative = 'android:min-h-10 android:px-3';
+const nativeClasses = cva('ios:rounded-full android:rounded-full', {
+  variants: {
+    variant: {
+      default: `${filledNative} ios:bg-primary`,
+      outline: `${filledNative} android:bg-transparent`,
+      secondary: `${filledNative} android:border-0 android:bg-secondary`,
+      ghost: textNative,
+      link: textNative,
+    },
+    disabled: { true: 'ios:opacity-38 android:opacity-38' },
+  },
+  defaultVariants: { variant: 'default' },
+});
+
+// iOS labels its buttons at the size of its header text buttons, in medium weight.
+export const nativeLabelClass = 'ios:text-nav-action ios:font-medium';
+
 const textClasses = cva(
-  'text-sm font-medium web:pointer-events-none web:transition-colors',
+  `text-sm font-medium ${nativeLabelClass} web:pointer-events-none web:transition-colors`,
   {
     variants: {
       variant: {
@@ -39,8 +63,9 @@ const textClasses = cva(
           'text-foreground group-active:text-accent-foreground web:group-hover:text-accent-foreground',
         secondary:
           'text-foreground group-active:text-accent-foreground web:group-hover:text-accent-foreground',
-        ghost: 'text-foreground group-active:text-accent-foreground',
-        link: 'text-primary web:underline-offset-4 group-active:underline web:group-hover:underline',
+        ghost:
+          'text-foreground group-active:text-accent-foreground ios:font-normal',
+        link: 'text-primary web:underline-offset-4 group-active:underline web:group-hover:underline ios:font-normal',
       },
       destructive: { true: 'text-destructive' },
     },
@@ -54,22 +79,22 @@ type ButtonClassProps = Pick<
 >;
 
 export function contentButtonClass(props: ButtonClassProps): string {
-  const { className, ...variants } = props;
+  const { className, fullWidth, ...variants } = props;
   return cn(
-    buttonClasses(variants),
-    'android:min-h-12',
+    buttonClasses({ ...variants, fullWidth: fullWidth === true }),
+    nativeClasses({ variant: props.variant, disabled: props.disabled }),
     destructiveButtonClass(props),
     className,
   );
 }
 
 const destructiveOutline =
-  'border border-destructive bg-transparent web:shadow-none active:bg-destructive/10 web:hover:bg-destructive/10';
+  'border border-border bg-background web:shadow-xs active:bg-destructive/10 web:hover:bg-destructive/10';
 const destructiveText =
   'bg-transparent active:bg-destructive/10 web:hover:bg-destructive/10';
 const destructiveClasses = {
   default:
-    'bg-destructive active:bg-destructive/90 web:hover:bg-destructive/90',
+    'bg-destructive ios:bg-destructive active:bg-destructive/90 web:hover:bg-destructive/90',
   outline: destructiveOutline,
   secondary: destructiveOutline,
   ghost: destructiveText,
@@ -97,11 +122,19 @@ export function contentTextClass(
   );
 }
 
+// A Pressable that stands beside a phone Button takes `native` so the two draw the same system button.
 export function contentActionClass(
-  props: Pick<ButtonClassProps, 'variant' | 'className' | 'disabled'>,
+  props: Pick<ButtonClassProps, 'variant' | 'className' | 'disabled'> & {
+    native?: boolean;
+  },
 ): string {
-  const { className, ...variants } = props;
-  return cn(buttonClasses(variants), 'min-h-0 android:min-h-0', className);
+  const { className, native, ...variants } = props;
+  return cn(
+    buttonClasses(variants),
+    'min-h-0 android:min-h-0 web:sm:min-h-0',
+    native && nativeClasses(variants),
+    className,
+  );
 }
 
 function isFilledVariant(variant: ButtonProps['variant']): boolean {

@@ -2,13 +2,17 @@ import * as SelectPrimitive from '@rn-primitives/select';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon, iconSizeStyle } from '../symbols/icon';
+import { Chevron } from '../symbols/chevron';
+import { iconSizeStyle } from '../symbols/icon';
+import type { IconName } from '../symbols/icon-names';
+import { useWide } from '../use-wide';
 import { SelectContent } from './select-content';
 import {
   type SelectVariant,
   selectItemClassName,
   selectTriggerClassName,
 } from './select-styles';
+import { SelectedCheck } from './selected-check';
 
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
@@ -39,13 +43,21 @@ function SelectValue({ className, ...props }: ValueProps): React.JSX.Element {
   );
 }
 
+// A plain picker on a phone row reads like a navigation row (Paper 2V85).
+function chevronName(
+  variant: TriggerProps['variant'],
+  wide: boolean,
+): IconName {
+  if (variant !== 'plain') return 'chevron-down';
+  return wide ? 'chevron-up-down' : 'chevron-right';
+}
+
 function TriggerChevron({
   variant,
 }: Pick<TriggerProps, 'variant'>): React.JSX.Element {
   return (
-    <Icon
-      size="xs"
-      name={variant === 'plain' ? 'chevron-up-down' : 'chevron-down'}
+    <Chevron
+      name={chevronName(variant, useWide())}
       aria-hidden={true}
       className="text-muted-foreground"
     />
@@ -53,13 +65,7 @@ function TriggerChevron({
 }
 
 function SelectTrigger(triggerProps: TriggerProps): React.JSX.Element {
-  const {
-    className,
-    children,
-    size,
-    variant = 'default',
-    ...props
-  } = triggerProps;
+  const { className, children, size, variant, ...props } = triggerProps;
   const triggerStyle = selectTriggerClassName({
     className,
     size,
@@ -96,7 +102,7 @@ function ItemIndicator(): React.JSX.Element {
       className="absolute right-2 flex items-center justify-center"
     >
       <SelectPrimitive.ItemIndicator>
-        <Icon name="check" className="text-muted-foreground shrink-0" />
+        <SelectedCheck className="text-muted-foreground shrink-0" />
       </SelectPrimitive.ItemIndicator>
     </View>
   );

@@ -1,15 +1,27 @@
 import type * as React from 'react';
+import { useContext } from 'react';
 import { Pressable, View } from 'react-native';
-import { Icon } from '../symbols/icon';
-import { useWide } from '../use-wide';
+import { Chevron } from '../symbols/chevron';
 import { cn } from '../utils';
-import { useNavigationFields } from './field-layout';
+import {
+  FieldRowEnd,
+  useNavigationFields,
+  useSidebarFields,
+} from './field-layout';
 import {
   type ListItemProps,
   listItemName,
   listItemStatus,
 } from './field-props';
 import { ListItemAccessory } from './list-item-accessory';
+import { ListItemLeading } from './list-item-leading';
+import {
+  contentGap,
+  hasDisclosure,
+  rowClasses,
+  rowEmphasis,
+  titleClasses,
+} from './list-item-styles';
 import { StatusDot } from './status-dot';
 import { Text } from './text';
 import { isModifiedClick } from './web-row-link';
@@ -20,7 +32,7 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
     accessibilityLabel: listItemName(props),
     accessibilityState: { disabled: !!props.disabled },
     'aria-current': props.selected ? ('page' as const) : undefined,
-    className: rowClasses(props, navigation),
+    className: rowClasses(props, navigation, useContext(FieldRowEnd)),
   };
   const content = <ListItemContent {...props} />;
   if (!props.onPress)
@@ -51,66 +63,71 @@ function linkProps(
   };
 }
 
-function rowClasses(props: ListItemProps, navigation: boolean): string {
-  return cn(
-    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted',
-    props.onPress &&
-      'web:hover:bg-border web:active:bg-border web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2',
-    separatorClasses(props, navigation),
-    navigation && 'min-h-8 rounded-md gap-2 py-1.5 pl-2.5 pr-2 bg-transparent',
-    selectionClass(props, navigation),
-  );
-}
-
-// The row's accessibilityLabel already names the title and value, so only those are hidden; the accessory stays reachable.
 function ListItemContent(props: ListItemProps): React.JSX.Element {
+  const sidebar = useSidebarFields();
+  const emphasis = rowEmphasis(props, sidebar);
+  // The row's name already carries its text; only an accessory, such as a picker, stays reachable.
   return (
     <View
       className={cn(
-        'flex-1 flex-row items-center gap-3 wide:gap-2',
+        'flex-1 flex-row items-center gap-3',
+        contentGap(sidebar, props.size),
         props.disabled && 'opacity-65',
       )}
     >
-      <View
-        aria-hidden
-        className="min-w-0 flex-1 flex-row items-center gap-3 wide:gap-2"
-      >
-        <RowIcon icon={props.icon} />
-        <Text role="body" className="min-w-0 flex-1">
-          {props.title}
-        </Text>
-      </View>
-      <ListItemTrailing {...props} />
+      <ListItemLeading
+        icon={props.icon}
+        loading={props.loading}
+        leading={props.leading}
+        size={props.size}
+        className={emphasis}
+      />
+      <ListItemTitle {...props} />
+      <ListItemTrailing {...props} emphasis={emphasis} />
     </View>
   );
 }
 
-function ListItemTrailing(props: ListItemProps): React.JSX.Element {
-  const navigation = useNavigationFields();
+function ListItemTitle(props: ListItemProps): React.JSX.Element {
+  const title = (
+    <Text
+      aria-hidden
+      role="body"
+      numberOfLines={1}
+      className={titleClasses(props)}
+    >
+      {props.title}
+    </Text>
+  );
+  if (!props.subtitle) return title;
   return (
-    <View className="max-w-[55%] flex-row items-center gap-2">
-      <RowValue value={props.value} />
+    <View className="min-w-0 flex-1">
+      {title}
+      <Text
+        aria-hidden
+        role="secondary"
+        numberOfLines={1}
+        className={cn(props.subtitle.code && 'type-code text-muted-foreground')}
+      >
+        {props.subtitle.text}
+      </Text>
+    </View>
+  );
+}
+
+function ListItemTrailing(
+  props: ListItemProps & { emphasis: string },
+): React.JSX.Element {
+  const sidebar = useSidebarFields();
+  const valueColor = sidebar ? props.emphasis : 'text-muted-foreground';
+  return (
+    <View className="max-w-[55%] flex-row items-center gap-2 wide:gap-3">
+      <RowValue value={props.value} className={valueColor} />
       <StatusDot status={listItemStatus(props)} />
       <ListItemAccessory>{props.accessory}</ListItemAccessory>
-      <Disclosure visible={!!props.onPress && !navigation} />
+      <Disclosure visible={hasDisclosure(props) && !sidebar} />
     </View>
   );
-}
-
-function selectionClass(
-  props: ListItemProps,
-  navigation: boolean,
-): string | false | undefined {
-  return navigation && props.selected && 'bg-border';
-}
-
-function RowIcon({
-  icon,
-}: Pick<ListItemProps, 'icon'>): React.JSX.Element | null {
-  const wide = useWide();
-  return icon ? (
-    <Icon name={icon} size={wide ? 'md' : 'lg'} className="shrink-0" />
-  ) : null;
 }
 
 function Disclosure({
@@ -119,33 +136,19 @@ function Disclosure({
   visible: boolean;
 }): React.JSX.Element | null {
   return visible ? (
-    <Icon
-      name="chevron-right"
-      size="xs"
-      className="text-muted-foreground/50 shrink-0"
-    />
+    <Chevron name="chevron-right" className="text-muted-foreground shrink-0" />
   ) : null;
-}
-
-function separatorClasses(
-  props: ListItemProps,
-  navigation: boolean,
-): string | false {
-  return (
-    !navigation &&
-    cn(
-      'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-[var(--color-separator)] web:last:after:hidden',
-      props.icon && 'web:after:left-13 wide:web:after:left-11',
-    )
-  );
 }
 
 function RowValue({
   value,
-}: Pick<ListItemProps, 'value'>): React.JSX.Element | null {
+  className,
+}: Pick<ListItemProps, 'value'> & {
+  className: string;
+}): React.JSX.Element | null {
   if (value === undefined) return null;
   return (
-    <Text aria-hidden role="body" className="text-muted-foreground shrink">
+    <Text aria-hidden role="body" className={cn('shrink', className)}>
       {value}
     </Text>
   );

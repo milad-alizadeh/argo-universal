@@ -4,7 +4,7 @@ import type { BottomSheetProps } from './bottom-sheet.types';
 
 export function BottomSheetTrigger({
   trigger,
-}: Pick<BottomSheetProps, 'trigger'>): React.JSX.Element {
+}: Required<Pick<BottomSheetProps, 'trigger'>>): React.JSX.Element {
   return (
     <DialogPrimitive.Trigger asChild disabled={!!trigger.props.disabled}>
       {trigger}

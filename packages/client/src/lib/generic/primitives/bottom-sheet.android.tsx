@@ -21,7 +21,7 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const { mounted, sheetRef } = useSheetDismissal(props.open, props.onClosed);
   return (
     <BottomSheetRoot {...props}>
-      <BottomSheetTrigger trigger={props.trigger} />
+      {props.trigger && <BottomSheetTrigger trigger={props.trigger} />}
       {mounted && <SheetPresentation {...props} sheetRef={sheetRef} />}
     </BottomSheetRoot>
   );
@@ -125,7 +125,9 @@ function HostedSheetContent(
 ): React.JSX.Element {
   return (
     <RNHostView modifiers={[fillMaxHeight()]}>
-      <BottomSheetContent {...props} />
+      <BottomSheetContent label={props.label} onOpenChange={props.onOpenChange}>
+        {props.children}
+      </BottomSheetContent>
     </RNHostView>
   );
 }

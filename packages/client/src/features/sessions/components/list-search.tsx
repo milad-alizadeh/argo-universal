@@ -100,8 +100,10 @@ export function ListSearch({
     }),
     [buttonSize, width, progress],
   );
+  // The shut search draws no Close, so no shrunken icon lingers behind the magnifier.
   const closeStyle = useAnimatedStyle(
     () => ({
+      display: progress.get() > 0 ? 'flex' : 'none',
       opacity: progress.get(),
       transform: [
         { rotate: `${-quarterTurnDegrees * (1 - progress.get())}deg` },

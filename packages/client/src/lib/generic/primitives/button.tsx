@@ -1,9 +1,6 @@
-import type { ReactElement } from 'react';
 import { ContentButton } from './button-content';
-import type { ButtonProps } from './button-props';
+import { withNarrowLayout } from './button-layout';
 
-export function Button(props: ButtonProps): ReactElement {
-  return <ContentButton {...props} />;
-}
+export const Button = withNarrowLayout(ContentButton);
 
 export type { ButtonProps } from './button-props';

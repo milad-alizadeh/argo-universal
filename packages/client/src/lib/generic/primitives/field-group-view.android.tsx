@@ -8,6 +8,7 @@ import type * as React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWide } from '../use-wide';
 import { FieldGroup as WebFieldGroup } from './field-group-view.tsx';
+import { FieldLayout } from './field-layout';
 import type { FieldGroupProps } from './field-props';
 import { Host } from './host';
 
@@ -18,18 +19,31 @@ const sectionGap = 24;
 export function FieldGroup(props: FieldGroupProps): React.JSX.Element {
   const insets = useSafeAreaInsets();
   if (useWide()) return <WebFieldGroup {...props} />;
+  const sideGutter = sideGutterFor(props.variant);
   return (
-    <Host style={{ flex: 1 }} matchContents={false}>
-      <Column
-        verticalArrangement={{ spacedBy: sectionGap }}
-        modifiers={[
-          fillMaxSize(),
-          verticalScroll(),
-          padding(gutter, topPadding, gutter, insets.bottom + sectionGap),
-        ]}
-      >
-        {props.children}
-      </Column>
-    </Host>
+    <FieldLayout value={props.variant ?? 'grouped'}>
+      <Host style={{ flex: 1 }} matchContents={false}>
+        <Column
+          verticalArrangement={{ spacedBy: sectionGap }}
+          modifiers={[
+            fillMaxSize(),
+            verticalScroll(),
+            padding(
+              sideGutter,
+              topPadding,
+              sideGutter,
+              insets.bottom + sectionGap,
+            ),
+          ]}
+        >
+          {props.children}
+        </Column>
+      </Host>
+    </FieldLayout>
   );
+}
+
+// A navigation list's rows span the screen, flat like the sidebar's; grouped cards sit in the gutter.
+function sideGutterFor(variant: FieldGroupProps['variant']): number {
+  return variant === 'navigation' ? 0 : gutter;
 }

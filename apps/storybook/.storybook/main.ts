@@ -85,6 +85,8 @@ const config: StorybookConfig = {
           '@repo/client > @tanstack/react-form',
           '@repo/client > ajv',
           '@repo/client > ajv-formats',
+          '@repo/client > burnt',
+          '@repo/client > burnt/web',
           '@repo/client > @legendapp/list/react-native',
           '@repo/client > react-native-keyboard-controller',
           '@repo/client > expo-haptics',

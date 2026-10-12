@@ -7,51 +7,47 @@ const triggerClassName = cn(
     web: 'focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-input/50 w-fit whitespace-nowrap text-sm outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0',
   }),
 );
+const plainTriggerClassName = cn(
+  'flex h-8 flex-row items-center gap-1.5 rounded-md pl-2',
+  Platform.select({
+    web: 'hover:bg-selected focus-visible:outline-2 focus-visible:outline-ring w-fit whitespace-nowrap outline-none disabled:cursor-not-allowed',
+  }),
+);
 const itemClassName = cn(
-  'active:bg-accent group relative flex w-full flex-row items-center gap-2 rounded-sm py-2 pl-2 pr-8 sm:py-1.5',
+  'active:bg-accent group relative flex w-full flex-row items-center gap-2 rounded-xl py-2 pl-2 pr-8 sm:py-1.5',
   Platform.select({
     web: 'focus:bg-accent focus:text-accent-foreground *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 cursor-default outline-none data-[disabled]:pointer-events-none [&_svg]:pointer-events-none',
   }),
 );
 
-export type SelectVariant = 'default' | 'plain';
-
-// Plain has no background, border or shadow, so it sits on a ListItem row (Paper: Picker / Plain).
-const plainTriggerClassName = cn(
-  'h-8 sm:h-8 gap-1.5 border-0 bg-transparent py-0 pl-2 pr-0 shadow-none active:bg-foreground/4 dark:bg-transparent dark:active:bg-foreground/4',
-  Platform.select({
-    web: 'hover:bg-foreground/4 dark:hover:bg-foreground/4',
-  }),
-);
-const variantClassNames: Record<SelectVariant, string | undefined> = {
-  default: undefined,
-  plain: plainTriggerClassName,
-};
-
 type TriggerStyle = {
   className?: string;
   disabled?: boolean | null;
   size?: 'default' | 'sm';
-  variant: SelectVariant;
+  variant?: SelectVariant;
 };
+export type SelectVariant = 'default' | 'plain';
 type ContentStyle = {
   className?: string;
   side?: 'top' | 'bottom';
   position?: 'popper' | 'item-aligned';
 };
 
-export function selectTriggerClassName({
-  className,
-  disabled,
+const disabledClassName = 'opacity-50';
+
+function triggerShapeClassName({
   size,
   variant,
-}: TriggerStyle): string {
+}: Pick<TriggerStyle, 'size' | 'variant'>): string {
+  if (variant === 'plain') return plainTriggerClassName;
+  return cn(triggerClassName, size === 'sm' && 'h-8 py-2 sm:py-1.5');
+}
+
+export function selectTriggerClassName(style: TriggerStyle): string {
   return cn(
-    triggerClassName,
-    disabled && 'opacity-50',
-    size === 'sm' && 'h-8 py-2 sm:py-1.5',
-    variantClassNames[variant],
-    className,
+    triggerShapeClassName(style),
+    style.disabled && disabledClassName,
+    style.className,
   );
 }
 
@@ -59,7 +55,7 @@ export function selectItemClassName({
   className,
   disabled,
 }: Pick<TriggerStyle, 'className' | 'disabled'>): string {
-  return cn(itemClassName, disabled && 'opacity-50', className);
+  return cn(itemClassName, disabled && disabledClassName, className);
 }
 
 function slideClassName(side: ContentStyle['side']): string {
@@ -83,7 +79,7 @@ function popperClassName({ position, side }: ContentStyle): string | undefined {
 
 export function selectContentClassName(props: ContentStyle): string {
   return cn(
-    'bg-popover border-border relative z-50 min-w-[8rem] rounded-md web:rounded-surface web:shadow-card border shadow-md shadow-black/5',
+    'bg-popover border-border relative z-50 min-w-[8rem] rounded-2xl web:shadow-card border shadow-md shadow-black/5',
     Platform.select({
       web: cn(
         'animate-in fade-in-0 zoom-in-95 origin-(--radix-select-content-transform-origin) max-h-52 overflow-y-auto overflow-x-hidden',

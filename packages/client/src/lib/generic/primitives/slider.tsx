@@ -1,11 +1,28 @@
 import type * as React from 'react';
-import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { sliderStops } from './slider-steps';
 
 const fullPercent = 100;
-const sliderClass =
-  'm-0 h-1 w-full appearance-none rounded-full cursor-pointer disabled:opacity-50 focus-visible:outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-background [&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-background';
+const progressProperty = '--slider-progress';
+/*
+ * Expo's universal web Slider hard-codes its palette, so web keeps this range input for the thumb and the full-width hit area.
+ * The input's own track is hidden: a range input runs its track under the thumb at each end, so Argo draws the track from the minimum's thumb centre to the maximum's.
+ */
+const rangeClass =
+  'relative block m-0 h-4 w-full appearance-none bg-transparent cursor-pointer disabled:cursor-default focus-visible:outline-none';
+const webkitTrackClass =
+  '[&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:bg-transparent';
+const webkitThumbClass =
+  '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:-mt-1.5 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-background [&::-webkit-slider-thumb]:shadow-xs [&::-webkit-slider-thumb]:transition-[scale,box-shadow] [&::-webkit-slider-thumb]:duration-100';
+const webkitThumbStateClass =
+  'enabled:hover:[&::-webkit-slider-thumb]:scale-110 enabled:active:[&::-webkit-slider-thumb]:scale-115 enabled:active:[&::-webkit-slider-thumb]:shadow-[0_0_0_6px_color-mix(in_oklab,var(--color-primary)_18%,transparent)] focus-visible:[&::-webkit-slider-thumb]:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-ring)_50%,transparent)]';
+const mozClass =
+  '[&::-moz-range-track]:bg-transparent [&::-moz-range-progress]:bg-transparent [&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-background focus-visible:[&::-moz-range-thumb]:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-ring)_50%,transparent)]';
+const unsetClass =
+  '[&::-webkit-slider-thumb]:opacity-0 [&::-moz-range-thumb]:opacity-0';
+// Inset by the thumb's radius, so each end of the track is where the thumb's centre stops.
+const trackClass =
+  'absolute inset-x-2 top-1.5 h-1 rounded-full bg-[linear-gradient(to_right,var(--color-primary)_var(--slider-progress),var(--color-muted)_var(--slider-progress))]';
 
 export interface SliderProps {
   value?: number;
@@ -18,19 +35,47 @@ export interface SliderProps {
   disabled?: boolean;
 }
 
+type SliderPosition = Pick<
+  SliderProps,
+  'value' | 'minimumValue' | 'maximumValue' | 'step'
+>;
+
 export function Slider(props: SliderProps): React.JSX.Element {
   return (
-    <View className="relative h-4 justify-center">
+    <div className={cn('relative h-4', props.disabled && 'opacity-50')}>
+      <SliderTrack {...props} />
       <input {...rangeAttributes(props)} {...rangeInteraction(props)} />
-      <View
-        pointerEvents="none"
-        className="absolute left-1.5 right-1.5 flex-row justify-between"
-      >
-        {sliderStops(props).map((stop) => (
-          <SliderStop key={stop} stop={stop} value={props.value} />
+    </div>
+  );
+}
+
+// The track's rounded ends mark the first and last stops, so only the stops between them get a dot.
+function SliderTrack(props: SliderPosition): React.JSX.Element {
+  return (
+    <div className={trackClass} style={progressStyle(props)}>
+      {sliderStops(props)
+        .slice(1, -1)
+        .map((stop) => (
+          <SliderStop key={stop} stop={stop} {...props} />
         ))}
-      </View>
-    </View>
+    </div>
+  );
+}
+
+function SliderStop({
+  stop,
+  ...props
+}: SliderPosition & { stop: number }): React.JSX.Element {
+  return (
+    <div
+      className={cn(
+        'absolute top-0 -ml-0.5 size-1 rounded-full',
+        props.value !== undefined && stop < props.value
+          ? 'bg-primary-foreground'
+          : 'bg-ring',
+      )}
+      style={{ left: `${fraction(stop, props) * fullPercent}%` }}
+    />
   );
 }
 
@@ -58,45 +103,30 @@ function rangeInteraction(
         props.onValueChange(Number(event.currentTarget.value));
     },
     onChange: (event) => props.onValueChange(Number(event.currentTarget.value)),
-    className: rangeClass(props.value),
-    style: { background: sliderBackground(props) },
+    className: cn(
+      rangeClass,
+      webkitTrackClass,
+      webkitThumbClass,
+      webkitThumbStateClass,
+      mozClass,
+      props.value === undefined && unsetClass,
+    ),
   };
 }
 
-function sliderBackground(
-  props: Pick<SliderProps, 'value' | 'minimumValue' | 'maximumValue'>,
-): string {
-  if (props.value === undefined) return 'var(--color-muted)';
+function progressStyle(
+  props: SliderPosition,
+): React.CSSProperties & Record<typeof progressProperty, string> {
   const progress =
-    ((props.value - props.minimumValue) /
-      (props.maximumValue - props.minimumValue)) *
-    fullPercent;
-  return `linear-gradient(to right, var(--color-primary) ${progress}%, var(--color-muted) ${progress}%)`;
+    props.value === undefined ? 0 : fraction(props.value, props) * fullPercent;
+  return { [progressProperty]: `${progress}%` };
 }
 
-function SliderStop({
-  stop,
-  value,
-}: {
-  stop: number;
-  value: number | undefined;
-}): React.JSX.Element {
-  const className = stopClass(stop, value);
+function fraction(
+  value: number,
+  range: Pick<SliderProps, 'minimumValue' | 'maximumValue'>,
+): number {
   return (
-    <View className={className} style={{ opacity: stop === value ? 0 : 1 }} />
+    (value - range.minimumValue) / (range.maximumValue - range.minimumValue)
   );
-}
-
-function rangeClass(value: number | undefined): string {
-  return cn(
-    sliderClass,
-    value === undefined &&
-      '[&::-webkit-slider-thumb]:opacity-0 [&::-moz-range-thumb]:opacity-0',
-  );
-}
-
-function stopClass(stop: number, value: number | undefined): string {
-  return value !== undefined && stop < value
-    ? 'size-1 rounded-full bg-primary-foreground'
-    : 'size-1 rounded-full bg-ring';
 }

@@ -1,19 +1,29 @@
 import type * as React from 'react';
 import { ScrollView } from 'react-native';
-import { FieldLayout } from './field-layout';
+import { ScrollColumnContext, useScrollColumnStyle } from '../scroll-column';
+import { cn } from '../utils';
+import { FieldLayout, fieldGroupGap, fieldGroupPadding } from './field-layout';
 import type { FieldGroupProps } from './field-props';
 
 export function FieldGroup({
   children,
   variant = 'grouped',
 }: FieldGroupProps): React.JSX.Element {
+  // Wide, the group pads none of its own, so the pane's column is all its side padding.
+  const columnStyle = useScrollColumnStyle();
   return (
     <FieldLayout value={variant}>
       <ScrollView
         className="flex-1"
-        contentContainerClassName="gap-6 px-gutter-list pb-6 pt-2 wide:gap-3 wide:px-2 wide:pt-0"
+        contentContainerStyle={columnStyle}
+        contentContainerClassName={cn(
+          fieldGroupGap,
+          fieldGroupPadding,
+          // A navigation list's rows span a phone's width, as a native plain list's do.
+          variant === 'navigation' && 'px-0',
+        )}
       >
-        {children}
+        <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>
       </ScrollView>
     </FieldLayout>
   );

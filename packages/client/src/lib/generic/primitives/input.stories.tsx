@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { Input } from './input';
 
 const examples: {
@@ -26,15 +26,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Input',
   render: () => (
-    <Variations>
+    <VariationList>
       {examples.map(({ label, props }) => (
         <Variation key={label} label={label}>
           <Input {...props} />
         </Variation>
       ))}
-    </Variations>
+    </VariationList>
   ),
 };

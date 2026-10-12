@@ -24,6 +24,14 @@ export function durationFor(height: number): number {
   );
 }
 export const easeInOut = Easing.inOut(Easing.quad);
+// A frame that began before the motion started reads as its start, since the eased curve rises on both sides of zero and would move the content backwards.
+export function elapsedFraction(elapsed: number, duration: number): number {
+  return Math.min(Math.max(elapsed / duration, 0), 1);
+}
+// While it moves, the content's height steps in whole points, as the scroll offset does, so a Feed held at its end keeps the rows below still instead of shaking them by a fraction of a point.
+export function drawnHeight(height: number, progress: number): number {
+  return progress === 1 ? height : Math.round(height * progress);
+}
 export const movingContentStyle = {
   position: 'absolute',
   top: 0,

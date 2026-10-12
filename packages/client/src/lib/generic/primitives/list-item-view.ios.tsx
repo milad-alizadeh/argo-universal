@@ -1,4 +1,4 @@
-import { Button, HStack, Image, LabeledContent, Text } from '@expo/ui/swift-ui';
+import { Button, HStack, Image, Text } from '@expo/ui/swift-ui';
 import {
   accessibilityElement,
   accessibilityAddTraits,
@@ -6,10 +6,12 @@ import {
   accessibilityLabel,
   buttonStyle,
   disabled,
+  fixedSize,
   foregroundStyle,
   frame,
   listRowBackground,
   listRowInsets,
+  listRowSeparator,
   listRowSeparatorTint,
   opacity,
   padding,
@@ -18,9 +20,12 @@ import type * as React from 'react';
 import { type NativeColors, useNativeTheme } from '../native-theme';
 import { iconPixels } from '../symbols/icon';
 import { useWide } from '../use-wide';
+import { useNavigationFields } from './field-layout';
 import { type ListItemProps, listItemName } from './field-props';
+import { hasDisclosure, hasLeadingSlot } from './list-item-styles';
+import { RowLabel, RowLeading, useRowColor } from './list-item-swift-ui';
 import { ListItem as WebListItem } from './list-item-view.tsx';
-import { NativeRowIcon, NativeRowStatus } from './native-row';
+import { NativeRowStatus } from './native-row';
 import { useSwiftUITextModifiers } from './native-typography';
 
 const rowHeight = 52;
@@ -32,8 +37,9 @@ const disabledOpacity = 0.5;
 export function ListItem(props: ListItemProps): React.JSX.Element {
   const wide = useWide();
   const { colors } = useNativeTheme();
+  const navigation = useNavigationFields();
   if (wide) return <WebListItem {...props} />;
-  const modifiers = rowModifiers(props, colors);
+  const modifiers = rowModifiers(props, colors, navigation);
   const content = <RowContent {...props} />;
   if (!props.onPress)
     return (
@@ -57,13 +63,18 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
   );
 }
 
+type RowColors = Pick<NativeColors, 'muted' | 'separator'>;
+type RowModifiers = NonNullable<
+  React.ComponentProps<typeof HStack>['modifiers']
+>;
+
 function rowModifiers(
   props: ListItemProps,
-  { muted, separator }: Pick<NativeColors, 'muted' | 'separator'>,
-): NonNullable<React.ComponentProps<typeof HStack>['modifiers']> {
+  colors: RowColors,
+  navigation: boolean,
+): RowModifiers {
   return [
-    listRowBackground(muted ?? 'transparent'),
-    listRowSeparatorTint(separator),
+    ...rowSurface(colors, navigation),
     listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
     accessibilityElement('ignore'),
     accessibilityLabel(listItemName(props)),
@@ -71,9 +82,20 @@ function rowModifiers(
   ];
 }
 
+// A navigation row sits flat on the screen, without the card or its separators, like the sidebar's.
+function rowSurface(
+  { muted, separator }: RowColors,
+  navigation: boolean,
+): RowModifiers {
+  if (navigation)
+    return [listRowBackground('transparent'), listRowSeparator('hidden')];
+  return [
+    listRowBackground(muted ?? 'transparent'),
+    listRowSeparatorTint(separator),
+  ];
+}
+
 function RowContent(props: ListItemProps): React.JSX.Element {
-  const bodyModifiers = useSwiftUITextModifiers('body', 'row');
-  const color = useRowColor('primary');
   const iconSize = iconPixels('lg');
   return (
     <HStack
@@ -84,18 +106,14 @@ function RowContent(props: ListItemProps): React.JSX.Element {
         rowOpacity(props.disabled),
         alignmentGuide(
           'listRowSeparatorLeading',
-          props.icon ? iconSize + rowSpacing : 0,
+          hasLeadingSlot(props) ? iconSize + rowSpacing : 0,
         ),
       ]}
     >
-      {props.icon && <NativeRowIcon icon={props.icon} />}
-      <LabeledContent
-        label={<Text modifiers={[...bodyModifiers, color]}>{props.title}</Text>}
-        modifiers={[frame({ maxWidth: Infinity, alignment: 'leading' })]}
-      >
-        <RowTrailing {...props} />
-      </LabeledContent>
-      <DisclosureIndicator visible={!!props.onPress} />
+      <RowLeading {...props} />
+      <RowLabel {...props} />
+      <RowTrailing {...props} />
+      <DisclosureIndicator visible={hasDisclosure(props)} />
     </HStack>
   );
 }
@@ -104,7 +122,7 @@ function RowTrailing(props: ListItemProps): React.JSX.Element {
   const bodyModifiers = useSwiftUITextModifiers('body', 'row');
   const color = useRowColor('secondary');
   return (
-    <HStack spacing={8}>
+    <HStack spacing={8} modifiers={[fixedSize({ horizontal: true })]}>
       {props.value !== undefined && (
         <Text modifiers={[...bodyModifiers, color]}>{props.value}</Text>
       )}
@@ -125,14 +143,6 @@ function DisclosureIndicator({
       modifiers={[foregroundStyle({ type: 'hierarchical', style: 'tertiary' })]}
     />
   ) : null;
-}
-
-function useRowColor(
-  role: 'primary' | 'secondary',
-): ReturnType<typeof foregroundStyle> {
-  const { foreground, mutedForeground } = useNativeTheme().colors;
-  const color = role === 'primary' ? foreground : mutedForeground;
-  return foregroundStyle(color ?? { type: 'hierarchical', style: role });
 }
 
 function rowOpacity(disabled: boolean | undefined): ReturnType<typeof opacity> {

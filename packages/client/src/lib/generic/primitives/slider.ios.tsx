@@ -1,4 +1,4 @@
-import { Slider as NativeSlider } from '@expo/ui/swift-ui';
+import { Slider as UniversalSlider } from '@expo/ui';
 import {
   accessibilityLabel,
   accessibilityValue,
@@ -13,11 +13,12 @@ export function Slider(props: SliderProps): React.JSX.Element {
   const modifiers = useSliderModifiers(props);
   return (
     <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-      <NativeSlider
+      <UniversalSlider
         value={props.value ?? props.minimumValue}
         min={props.minimumValue}
         max={props.maximumValue}
         step={props.step}
+        disabled={props.disabled}
         onValueChange={props.onValueChange}
         modifiers={modifiers}
       />
@@ -27,7 +28,7 @@ export function Slider(props: SliderProps): React.JSX.Element {
 
 function useSliderModifiers(
   props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
-): React.ComponentProps<typeof NativeSlider>['modifiers'] {
+): React.ComponentProps<typeof UniversalSlider>['modifiers'] {
   const { tint } = useNativeTheme().colors;
   return [
     accessibilityLabel(props.accessibilityLabel),

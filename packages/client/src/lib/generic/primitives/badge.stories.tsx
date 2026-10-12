@@ -1,14 +1,15 @@
 const variants = ['default', 'secondary', 'destructive', 'outline'] as const;
+const tones = ['muted', 'success', 'warning', 'destructive'] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { Badge } from './badge';
 import { Text } from './text';
 
 function VariantExamples(): React.JSX.Element {
   return (
-    <Variations>
+    <VariationList>
       {variants.map((variant) => (
         <Variation key={variant} label={variant}>
           <View className="flex-row">
@@ -18,7 +19,16 @@ function VariantExamples(): React.JSX.Element {
           </View>
         </Variation>
       ))}
-    </Variations>
+      {tones.map((tone) => (
+        <Variation key={tone} label={`tone ${tone}`}>
+          <View className="flex-row">
+            <Badge tone={tone}>
+              <Text>Ready</Text>
+            </Badge>
+          </View>
+        </Variation>
+      ))}
+    </VariationList>
   );
 }
 
@@ -29,7 +39,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Badge',
   render: VariantExamples,
 };

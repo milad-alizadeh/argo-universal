@@ -154,6 +154,67 @@
   }
 }
 
+/* ScrollFadeFrame: a scroll view's content fades to nothing at each edge that
+   hides more of it, over whatever lies behind; an edge's depth eases in and out. */
+@property --scroll-fade-top {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-bottom {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+/* How far something laid over the list covers an edge: the fade ends where it begins, and the content under it is hidden. */
+@property --scroll-fade-top-inset {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-bottom-inset {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+.scroll-fade-mask {
+  /* Its own compositor layer, so rows painting in while it scrolls never hold up a frame. */
+  will-change: transform;
+  /* The scrollbar's strip at the right stays whole; ScrollFadeFrame sets a classic scrollbar's width, and an overlay scrollbar, which takes none, keeps this. */
+  --scroll-fade-bar: 12px;
+  mask-repeat: no-repeat;
+  mask-position:
+    left top,
+    right top;
+  mask-size:
+    calc(100% - var(--scroll-fade-bar)) 100%,
+    var(--scroll-fade-bar) 100%;
+  mask-image:
+    linear-gradient(
+      to bottom,
+      transparent var(--scroll-fade-top-inset),
+      rgb(0 0 0 / 0.15)
+        calc(var(--scroll-fade-top-inset) + var(--scroll-fade-top) / 2),
+      black calc(var(--scroll-fade-top-inset) + var(--scroll-fade-top)),
+      black
+        calc(100% - var(--scroll-fade-bottom-inset) - var(--scroll-fade-bottom)),
+      rgb(0 0 0 / 0.15)
+        calc(
+          100% - var(--scroll-fade-bottom-inset) - var(--scroll-fade-bottom) / 2
+        ),
+      transparent calc(100% - var(--scroll-fade-bottom-inset))
+    ),
+    linear-gradient(black, black);
+  transition:
+    --scroll-fade-top 200ms cubic-bezier(0.25, 0.1, 0.25, 1),
+    --scroll-fade-bottom 200ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-fade-mask {
+    transition: none;
+  }
+}
+
 /* Radix positions a wrapper around native-web Content; tips opened from sheets share their layer. */
 [data-radix-popper-content-wrapper]:has(.popover-content) {
   z-index: 50 !important;

@@ -7,6 +7,7 @@ import {
   CollapsibleTrigger,
 } from '#lib/generic/primitives/collapsible';
 import { Text } from '#lib/generic/primitives/text';
+import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
 import { layoutWidths } from '../each-layout';
 import { settleViewport } from '../settle-viewport';
 
@@ -50,6 +51,58 @@ function disclosure(width: number): Story {
 }
 export const DisclosurePhone = disclosure(layoutWidths.phone);
 export const DisclosureWide = disclosure(layoutWidths.wide);
+
+// Long enough for the close and the content leaving after it.
+const closingFrames = 40;
+// A row still for this many frames has come to rest.
+const restingFrames = 2;
+
+// Where the samples first hold still after they start to move.
+function firstRest(tops: readonly number[]): number {
+  const moved = tops.findIndex((top) => top !== tops[0]);
+  return tops.findIndex(
+    (top, index) =>
+      moved !== -1 &&
+      index >= moved + restingFrames &&
+      tops
+        .slice(index - restingFrames, index)
+        .every((before) => before === top),
+  );
+}
+
+// The row below rises in one motion and comes to rest once, where it stays; padding on the content closes with it.
+export const RowBelowRestsOnce: Story = {
+  render: () => (
+    <View>
+      <Collapsible defaultOpen>
+        <CollapsibleTrigger accessibilityLabel="Toggle details">
+          <Text>Toggle details</Text>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-2">
+          <View className="h-32">
+            <Text>Tool call detail</Text>
+          </View>
+        </CollapsibleContent>
+      </Collapsible>
+      <Text>Next row</Text>
+    </View>
+  ),
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    const trigger = canvas.getByRole('button', { name: 'Toggle details' });
+    const below = canvas.getByText('Next row');
+    const tops = await sampleEachFrame(
+      () => trigger.click(),
+      () => below.getBoundingClientRect().top,
+      closingFrames,
+    );
+    const rest = firstRest(tops);
+    await expect(rest).toBeGreaterThan(0);
+    await expect(tops.slice(rest)).toEqual(
+      tops.slice(rest).map(() => tops.at(-1)),
+    );
+  },
+};
 
 const dark = { globals: { mode: 'dark' } };
 export const DisclosurePhoneDark: Story = {

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { Button } from './button';
 import type { ButtonProps } from './button-props';
 
@@ -18,7 +18,20 @@ const buttons: { state: string; props: ButtonProps }[] = [
     state: 'Destructive',
     props: { label: 'Remove Agent', role: 'destructive', fullWidth: true },
   },
-  { state: 'Small', props: { label: saveLabel, size: 'sm' } },
+  {
+    state: 'Small (a phone draws Default)',
+    props: { label: saveLabel, size: 'sm' },
+  },
+  {
+    state: 'Full width on a phone',
+    props: {
+      label: 'Add argument',
+      variant: 'ghost',
+      size: 'sm',
+      icon: 'add',
+      fullWidth: 'narrow',
+    },
+  },
   { state: 'Large', props: { label: saveLabel, size: 'lg' } },
   { state: 'Disabled', props: { label: saveLabel, disabled: true } },
   { state: 'Loading', props: { label: saveLabel, loading: true } },
@@ -29,14 +42,28 @@ const buttons: { state: string; props: ButtonProps }[] = [
   },
 ];
 
+// Each row draws the system button beside the Argo-drawn one, which must look the same.
+const pairs: { state: string; props: ButtonProps }[] = [
+  { state: 'Default', props: { label: 'Save' } },
+  { state: 'Secondary', props: { label: 'Save', variant: 'secondary' } },
+  { state: 'Outlined', props: { label: 'Save', variant: 'outline' } },
+  { state: 'Text', props: { label: 'Save', variant: 'ghost' } },
+  {
+    state: 'Destructive',
+    props: { label: 'Remove', role: 'destructive', variant: 'default' },
+  },
+  { state: 'Disabled', props: { label: 'Save', disabled: true } },
+  { state: 'Loading', props: { label: 'Save', loading: true } },
+];
+
 const meta = { title: 'Design System/Primitives/Button' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Button',
   render: () => (
-    <Variations>
+    <VariationList>
       {buttons.map(({ state, props }) => (
         <Variation key={state} label={state}>
           <View className="flex-row">
@@ -44,6 +71,14 @@ export const Overview: Story = {
           </View>
         </Variation>
       ))}
-    </Variations>
+      {pairs.map(({ state, props }) => (
+        <Variation key={state} label={`${state}: system, then Argo content`}>
+          <View className="flex-row items-center gap-3">
+            <Button {...props} />
+            <Button {...props} appearance="content" />
+          </View>
+        </Variation>
+      ))}
+    </VariationList>
   ),
 };

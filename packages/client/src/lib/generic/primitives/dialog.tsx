@@ -3,16 +3,23 @@ import * as React from 'react';
 import { Platform, Text, View, type ViewProps } from 'react-native';
 import { Icon } from '#lib/generic/primitives/icon';
 import { cn } from '#lib/generic/utils';
+import { useWide } from '../use-wide';
+import { Button } from './button';
+import type { ButtonDataProps } from './button-props';
 import { DialogOverlay } from './dialog-overlay';
+import { DialogSheet } from './dialog-sheet';
 
-type ContentProps = React.ComponentProps<typeof DialogPrimitive.Content> & {
-  portalHost?: string;
+// Only what both the centred dialog and the narrow window's sheet honour.
+type ContentProps = {
+  className?: string;
+  // Names a dialog that has no DialogTitle of its own.
+  accessibilityLabel?: string;
+  children: React.ReactNode;
 };
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
-const DialogClose = DialogPrimitive.Close;
 const contentClassName = cn(
-  'bg-background web:bg-popover border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-lg web:rounded-surface border p-6 sm:max-w-lg',
+  'bg-background web:bg-popover border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-2xl border p-6 min-w-[360px] sm:max-w-lg',
   Platform.select({
     web: 'border-0 dark:border shadow-card animate-in fade-in-0 zoom-in-95 web:max-w-[calc(100%-2rem)] duration-200',
     native: 'shadow-lg shadow-black/5',
@@ -50,12 +57,22 @@ function DialogBody({
   );
 }
 
-function DialogContent({
-  portalHost,
-  ...props
-}: ContentProps): React.JSX.Element {
+// A wide window centres the dialog; a narrow one, phone or web, raises the same content as a bottom sheet.
+function DialogContent(props: ContentProps): React.JSX.Element {
+  if (useWide()) return <CentredDialog {...props} />;
   return (
-    <DialogPrimitive.Portal hostName={portalHost}>
+    <DialogSheet label={props.accessibilityLabel}>
+      {/* Paper's iOS sheet pads its content 16 on every side; Android's drag handle zone already sets the top. */}
+      <View className={cn('gap-6 px-4 ios:py-4', props.className)}>
+        {props.children}
+      </View>
+    </DialogSheet>
+  );
+}
+
+function CentredDialog(props: ContentProps): React.JSX.Element {
+  return (
+    <DialogPrimitive.Portal>
       <DialogOverlay>
         <DialogBody {...props} />
       </DialogOverlay>
@@ -80,6 +97,21 @@ function DialogFooter({ className, ...props }: ViewProps): React.JSX.Element {
         className,
       )}
       {...props}
+    />
+  );
+}
+
+// The dialog's own dismiss action, drawn as the same Button as its other actions so they share shape and height.
+function DialogCancel(
+  props: Omit<ButtonDataProps, 'onPress' | 'variant' | 'fullWidth'>,
+): React.JSX.Element {
+  const { onOpenChange } = DialogPrimitive.useRootContext();
+  return (
+    <Button
+      {...props}
+      variant="outline"
+      fullWidth="narrow"
+      onPress={() => onOpenChange(false)}
     />
   );
 }
@@ -115,7 +147,7 @@ function DialogDescription({
 
 export {
   Dialog,
-  DialogClose,
+  DialogCancel,
   DialogContent,
   DialogDescription,
   DialogFooter,

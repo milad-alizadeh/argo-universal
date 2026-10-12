@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
+import { FieldSection } from './field-section';
+import { ListItem } from './list-item';
 import { SelectMenu } from './select-menu';
 
 const efforts = [
@@ -49,15 +51,23 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'SelectMenu',
   render: () => (
-    <Variations>
+    <VariationList>
       {examples.map(({ label, props }) => (
         <Variation key={label} label={label}>
           <SelectMenuExample {...props} />
         </Variation>
       ))}
-    </Variations>
+      <Variation label="Plain, inside a ListItem">
+        <FieldSection>
+          <ListItem
+            title="Effort"
+            accessory={<SelectMenuExample initialValue="medium" />}
+          />
+        </FieldSection>
+      </Variation>
+    </VariationList>
   ),
 };

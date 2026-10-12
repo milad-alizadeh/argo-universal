@@ -1,20 +1,20 @@
 import { useNativeTheme } from '../native-theme';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
-import { isButtonDisabled, nativeButtonVariant } from './button-state';
+import { nativeButtonVariant } from './button-state';
 import { usePrimitiveColor } from './primitive-color';
 
 const destructiveClass = 'text-destructive';
 const primaryClass = 'text-primary';
 const foregroundClass = 'text-foreground';
 const transparentClass = 'text-transparent';
-const mutedForegroundClass = 'text-muted-foreground';
+const mutedFillClass = 'text-secondary';
 const buttonColorClasses: Record<
   ButtonVariant,
   { container: string; content: string }
 > = {
   default: { container: primaryClass, content: 'text-primary-foreground' },
   secondary: {
-    container: 'text-secondary',
+    container: mutedFillClass,
     content: 'text-secondary-foreground',
   },
   outline: { container: transparentClass, content: foregroundClass },
@@ -24,6 +24,8 @@ const buttonColorClasses: Record<
 
 export interface ButtonTheme {
   primary: string | undefined;
+  // The fill an outlined button takes where the system has no outlined style.
+  mutedFill: string | undefined;
   contentClass: string;
   colors: {
     containerColor: string | undefined;
@@ -33,19 +35,15 @@ export interface ButtonTheme {
   };
 }
 
-type ThemeProps = Pick<
-  ButtonDataProps,
-  'variant' | 'role' | 'disabled' | 'loading'
->;
+type ThemeProps = Pick<ButtonDataProps, 'variant' | 'role'>;
 
 export function useNativeButtonTheme(props: ThemeProps): ButtonTheme {
   const { colors } = useNativeTheme();
   const classes = nativeColorClasses(props);
   return {
     primary: colors.tint,
-    contentClass: isButtonDisabled(props)
-      ? mutedForegroundClass
-      : classes.content,
+    mutedFill: usePrimitiveColor(mutedFillClass),
+    contentClass: classes.content,
     colors: useNativeButtonColors(classes),
   };
 }
@@ -54,18 +52,15 @@ function useNativeButtonColors(classes: {
   container: string;
   content: string;
 }): ButtonTheme['colors'] {
+  const containerColor = usePrimitiveColor(classes.container);
+  const contentColor = usePrimitiveColor(classes.content);
+  // A disabled button keeps its colours; its Host fades the whole button instead.
   return {
-    containerColor: usePrimitiveColor(classes.container),
-    contentColor: usePrimitiveColor(classes.content),
-    disabledContainerColor: usePrimitiveColor(
-      disabledContainerClass(classes.container),
-    ),
-    disabledContentColor: usePrimitiveColor(mutedForegroundClass),
+    containerColor,
+    contentColor,
+    disabledContainerColor: containerColor,
+    disabledContentColor: contentColor,
   };
-}
-
-function disabledContainerClass(container: string): string {
-  return container === transparentClass ? transparentClass : 'text-muted';
 }
 
 function nativeColorClasses(props: Pick<ButtonDataProps, 'variant' | 'role'>): {
