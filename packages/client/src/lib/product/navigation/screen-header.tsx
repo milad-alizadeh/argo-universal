@@ -7,10 +7,19 @@ import {
   type ReactNode,
   useContext,
 } from 'react';
+import type { IconName } from '#lib/generic/symbols/icon-names';
 
 export interface ScreenHeaderSearch {
   placeholder: string;
   onChangeText: (text: string) => void;
+  // A button beside the search bar, such as New Session; iOS 26 docks both at the bottom.
+  action?: ScreenHeaderAction;
+}
+
+interface ScreenHeaderAction {
+  icon: IconName;
+  accessibilityLabel: string;
+  onPress: () => void;
 }
 
 // One line: a leading item, the title, and one or two trailing items.
