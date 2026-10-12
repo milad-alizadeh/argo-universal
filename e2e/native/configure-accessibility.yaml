@@ -21,9 +21,11 @@ name: Configure controls own Android accessibility
     index: 1
 - tapOn: "^Fast mode$"
 - assertVisible:
+    text: "^Fast mode$"
+- assertNotVisible:
     containsChild:
       text: "^Fast mode$"
-    checked: false
+    checked: true
 - tapOn: "^Fast mode$"
 - assertVisible:
     containsChild:

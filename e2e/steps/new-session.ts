@@ -37,6 +37,11 @@ async function expectAgentSelection(page: Page, label: string): Promise<void> {
   await expect(page.getByRole('button', { name: /^Agent,/ })).toContainText(
     label,
   );
+  await page.getByRole('button', { name: /^Agent,/ }).click();
+  await expect(
+    page.getByRole('button', { name: `Select ${label}` }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
 }
 
