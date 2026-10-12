@@ -13,6 +13,7 @@ import {
   listRowBackground,
   listRowInsets,
   listRowSeparatorTint,
+  multilineTextAlignment,
   textInputAutocapitalization,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
@@ -31,7 +32,7 @@ export function FieldInput(props: FieldInputProps): React.JSX.Element {
   return <FormRow {...props} />;
 }
 
-// A Settings form row: the label leading, the SwiftUI field taking the rest of the row.
+// A Settings form row: the label leading, the SwiftUI field taking the rest of the row with its text trailing.
 function FormRow(props: FieldInputProps): React.JSX.Element {
   const { muted, separator } = useNativeTheme().colors;
   return (
@@ -72,6 +73,7 @@ function RowField(props: FieldInputProps): React.JSX.Element {
       onFocusChange={(focused) => focused || props.onBlur?.()}
       modifiers={[
         ...fieldModifiers,
+        multilineTextAlignment('trailing'),
         disabled(!!props.disabled),
         textInputAutocapitalization('never'),
         autocorrectionDisabled(true),
