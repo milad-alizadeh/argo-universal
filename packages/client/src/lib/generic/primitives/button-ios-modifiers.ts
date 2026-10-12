@@ -1,15 +1,14 @@
 import {
   accessibilityLabel,
   accessibilityValue,
+  buttonBorderShape,
   buttonStyle,
   controlSize,
-  disabled,
   frame,
-  strokeBorder,
   tint,
   type ModifierConfig,
 } from '@expo/ui/swift-ui/modifiers';
-import { PlatformColor } from 'react-native';
+import { PlatformColor, type ColorValue } from 'react-native';
 import type { ButtonTheme } from './button-native-colors';
 import type {
   ButtonDataProps,
@@ -29,10 +28,11 @@ type ModifierProps = Pick<
   | 'accessibilityLabel'
 >;
 
+// Secondary and outlined draw the same muted capsule: SwiftUI has no outlined button.
 const buttonStyles = {
   default: 'borderedProminent',
-  outline: 'bordered',
-  secondary: 'bordered',
+  outline: 'borderedProminent',
+  secondary: 'borderedProminent',
   ghost: 'plain',
   link: 'plain',
 } as const satisfies Record<ButtonVariant, string>;
@@ -42,7 +42,7 @@ const controlSizes = {
   lg: 'extraLarge',
 } as const satisfies Record<ButtonSize, string>;
 
-type ModifierTheme = Pick<ButtonTheme, 'primary' | 'border'>;
+type ModifierTheme = Pick<ButtonTheme, 'primary' | 'mutedFill' | 'colors'>;
 
 export function nativeModifiers(
   props: ModifierProps,
@@ -56,46 +56,59 @@ export function nativeModifiers(
 }
 
 function buttonStyleModifiers(
-  props: Pick<ButtonDataProps, 'role' | 'variant' | 'size' | 'disabled'>,
+  props: Pick<ButtonDataProps, 'role' | 'variant' | 'size'>,
 ): ModifierConfig[] {
   return [
     buttonStyle(buttonStyles[nativeButtonVariant(props)]),
+    buttonBorderShape('capsule'),
     controlSize(controlSizes[props.size ?? 'md']),
     frame({ minWidth: 44, minHeight: 44 }),
-    disabled(!!props.disabled),
   ];
 }
 
 function buttonAccessibility(
-  props: Pick<ButtonDataProps, 'label' | 'accessibilityLabel' | 'loading'>,
+  props: Pick<
+    ButtonDataProps,
+    'label' | 'accessibilityLabel' | 'loading' | 'disabled'
+  >,
 ): ModifierConfig[] {
+  const value = accessibilityState(props);
   return [
     accessibilityLabel(props.accessibilityLabel ?? props.label),
-    ...(props.loading ? [accessibilityValue('Loading')] : []),
+    ...(value ? [accessibilityValue(value)] : []),
   ];
+}
+
+function accessibilityState(
+  props: Pick<ButtonDataProps, 'loading' | 'disabled'>,
+): string | undefined {
+  if (props.loading) return 'Loading';
+  return props.disabled ? 'Dimmed' : undefined;
 }
 
 function buttonTint(
   props: Pick<ButtonDataProps, 'role' | 'variant'>,
   theme: ModifierTheme,
 ): ModifierConfig[] {
-  if (nativeButtonVariant(props) === 'outline') return outlineEdge(theme);
-  return fillTint(props, theme);
+  const fill = buttonFill(props, theme);
+  return fill === undefined ? [] : [tint(fill)];
 }
 
-function fillTint(
-  props: Pick<ButtonDataProps, 'role'>,
+function buttonFill(
+  props: Pick<ButtonDataProps, 'role' | 'variant'>,
   theme: ModifierTheme,
-): ModifierConfig[] {
-  if (props.role === 'destructive') return [tint(PlatformColor('systemRed'))];
-  if (theme.primary === undefined) return [];
-  return [tint(theme.primary)];
+): ColorValue | undefined {
+  const variant = nativeButtonVariant(props);
+  if (buttonStyles[variant] !== 'borderedProminent') return theme.primary;
+  if (variant === 'outline') return theme.mutedFill;
+  return filledTint(props.role, theme);
 }
 
-// SwiftUI has no outlined button: a bordered one with a clear fill, edged in Argo's border colour.
-function outlineEdge(theme: ModifierTheme): ModifierConfig[] {
-  return [
-    tint('transparent'),
-    strokeBorder({ content: theme.border, shape: 'capsule' }),
-  ];
+function filledTint(
+  role: ButtonDataProps['role'],
+  theme: ModifierTheme,
+): ColorValue | undefined {
+  return role === 'destructive'
+    ? PlatformColor('systemRed')
+    : theme.colors.containerColor;
 }

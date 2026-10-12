@@ -50,7 +50,7 @@ type NativeControlProps = Pick<
   | 'accessibilityLabel'
   | 'onPress'
   | 'testID'
-> & { theme: Pick<ButtonTheme, 'primary' | 'border'> };
+> & { theme: Pick<ButtonTheme, 'primary' | 'mutedFill' | 'colors'> };
 
 function nativeControlProps(
   props: NativeControlProps,
@@ -93,9 +93,9 @@ function buttonLabelColor(
 function destructiveLabelColor(
   props: Pick<ButtonDataProps, 'role' | 'variant'>,
 ): ModifierConfig[] {
-  return ['ghost', 'link'].includes(nativeButtonVariant(props))
-    ? [foregroundStyle(PlatformColor('systemRed'))]
-    : [];
+  return nativeButtonVariant(props) === 'default'
+    ? []
+    : [foregroundStyle(PlatformColor('systemRed'))];
 }
 
 function ButtonIcon(

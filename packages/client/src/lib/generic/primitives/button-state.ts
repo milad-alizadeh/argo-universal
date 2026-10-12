@@ -20,16 +20,29 @@ export function readyPress(
   return isButtonDisabled(props) ? undefined : props.onPress;
 }
 
-// A button sits in the page's own layout, so a hosted one near the screen's edge keeps its place.
-export function nativeButtonLayout(fullWidth?: boolean): {
+// Paper and Material 3 draw a disabled button as the enabled one at this opacity, label colours kept.
+const disabledOpacity = 0.38;
+
+/*
+ * A button sits in the page's own layout, so a hosted one near the screen's edge keeps its place.
+ * The Host fades a disabled button as one layer. Each native view would fade on its own, letting the fill
+ * show through the label, and the system's own disabled style greys the fill under a label kept white.
+ */
+export function nativeButtonLayout(
+  props: Pick<ButtonDataProps, 'fullWidth' | 'disabled'>,
+): {
   matchContents: { vertical: boolean; horizontal: boolean };
   ignoreSafeArea: 'all';
-  style: { width: '100%' } | undefined;
+  style: { width?: '100%'; opacity?: number };
 } {
+  const fullWidth = props.fullWidth === true;
   return {
     matchContents: { vertical: true, horizontal: !fullWidth },
     ignoreSafeArea: 'all',
-    style: fullWidth ? { width: '100%' } : undefined,
+    style: {
+      ...(fullWidth ? { width: '100%' } : {}),
+      ...(props.disabled ? { opacity: disabledOpacity } : {}),
+    },
   };
 }
 
