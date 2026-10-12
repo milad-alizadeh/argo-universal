@@ -15,7 +15,7 @@ export type ActionProps = FormPartProps & {
 export function FormActions(props: ActionProps): React.JSX.Element {
   return (
     <FieldRow>
-      <View className="flex-row justify-end gap-2">
+      <View className="items-stretch gap-2 wide:flex-row wide:justify-end">
         {useWide() && (
           <CancelButton disabled={props.disabled} onPress={props.onCancel} />
         )}
