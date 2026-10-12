@@ -20,6 +20,7 @@ import {
   registerMarkShortcuts,
   registerReturnToSubmit,
 } from './rich-textarea-keys';
+import { LinkPlugins } from './rich-textarea-link-plugins';
 import {
   $importMarkdown,
   richTextareaNodes,
@@ -114,6 +115,7 @@ function MessageField({
         contentEditable={<MessageEditable {...props} />}
         ErrorBoundary={LexicalErrorBoundary}
       />
+      <LinkPlugins />
     </div>
   );
 }

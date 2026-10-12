@@ -1,38 +1,8 @@
-import { createHeadlessEditor } from '@lexical/headless';
-import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical';
 import { describe, expect, it } from 'vitest';
 import {
-  $exportMarkdown,
-  $importMarkdown,
-  richTextareaNodes,
-} from './rich-textarea-markdown';
-
-// The editor as the web drawing builds it, without a DOM, filled and then read.
-function filled<T>(fill: () => void, read: () => T): T {
-  const editor = createHeadlessEditor({
-    namespace: 'rich-textarea-test',
-    nodes: richTextareaNodes,
-    onError: (error) => {
-      throw error;
-    },
-  });
-  editor.update(fill, { discrete: true });
-  return editor.getEditorState().read(read);
-}
-
-// Import a draft, then export what it shows.
-function roundTrip(markdown: string): string {
-  return filled(() => $importMarkdown(markdown), $exportMarkdown);
-}
-
-// Typed text that a shortcut did not turn into a block stays a plain paragraph.
-function typedParagraph(text: string): string {
-  return filled(
-    () =>
-      $getRoot().append($createParagraphNode().append($createTextNode(text))),
-    $exportMarkdown,
-  );
-}
+  roundTrip,
+  typedParagraph,
+} from '../../../../../../mocks/rich-textarea-headless';
 
 const unchanged: { name: string; markdown: string }[] = [
   { name: 'bold', markdown: 'Make it **bold** now' },

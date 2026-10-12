@@ -1,4 +1,5 @@
 import { CodeNode } from '@lexical/code';
+import { $isLinkNode, AutoLinkNode, LinkNode } from '@lexical/link';
 import { ListItemNode, ListNode } from '@lexical/list';
 import {
   $convertFromMarkdownString,
@@ -7,6 +8,7 @@ import {
   CODE,
   INLINE_CODE,
   ITALIC_UNDERSCORE,
+  LINK,
   ORDERED_LIST,
   QUOTE,
   STRIKETHROUGH,
@@ -27,6 +29,8 @@ export const richTextareaNodes: Klass<LexicalNode>[] = [
   ListItemNode,
   QuoteNode,
   CodeNode,
+  LinkNode,
+  AutoLinkNode,
 ];
 
 const SINGLE_TILDE_STRIKETHROUGH: TextFormatTransformer = {
@@ -46,6 +50,7 @@ export const richTextareaTransformers: Transformer[] = [
   ITALIC_UNDERSCORE,
   STRIKETHROUGH,
   SINGLE_TILDE_STRIKETHROUGH,
+  LINK,
 ];
 
 /*
@@ -104,8 +109,18 @@ export function $importMarkdown(markdown: string): void {
   $convertFromMarkdownString(markdown, richTextareaTransformers);
 }
 
+// Everything an export writes: the text, and the URLs links write beside it.
+function $writtenText(): string {
+  const texts = $getRoot().getAllTextNodes();
+  const urls = texts.map((text) => text.getParent()).filter($isLinkNode);
+  return [
+    ...texts.map((text) => text.getTextContent()),
+    ...urls.map((link) => link.getURL()),
+  ].join('');
+}
+
 export function $exportMarkdown(): string {
-  const swap = swapFor($getRoot().getTextContent());
+  const swap = swapFor($writtenText());
   return swap.unshield(
     $convertToMarkdownString([
       ...richTextareaTransformers,

@@ -1,9 +1,12 @@
-import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
+import {
+  markdownBlockClassNames,
+  markdownLinkClassNames,
+} from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
 
 const listClassName = 'my-1 pl-5 marker:text-muted-foreground';
 
-// The Feed's block look in the editor's DOM; a list draws its own markers, in the Feed's marker colour.
+// The Feed's block and link look in the editor's DOM; a list draws its own markers, in the Feed's marker colour.
 export const blockThemeClassNames = {
   list: {
     ul: cn('list-disc', listClassName),
@@ -16,4 +19,5 @@ export const blockThemeClassNames = {
     markdownBlockClassNames.codeBlock,
     markdownBlockClassNames.codeText,
   ),
+  link: cn(markdownLinkClassNames.underline, markdownLinkClassNames.domColor),
 };

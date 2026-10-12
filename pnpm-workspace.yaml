@@ -54,6 +54,7 @@ catalog:
   lexical: 0.52.0
   "@lexical/code": 0.52.0
   "@lexical/headless": 0.52.0
+  "@lexical/link": 0.52.0
   "@lexical/list": 0.52.0
   "@lexical/markdown": 0.52.0
   "@lexical/react": 0.52.0

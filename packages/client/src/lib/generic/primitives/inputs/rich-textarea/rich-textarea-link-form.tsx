@@ -1,0 +1,90 @@
+import type * as React from 'react';
+import { useState } from 'react';
+import { View } from 'react-native';
+import { Button } from '../../buttons/button/button';
+import { Text } from '../../display/text/text';
+import { Input } from '../input/input';
+
+export interface LinkFields {
+  text: string;
+  url: string;
+}
+
+interface LinkFieldProps {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  onSubmitEditing: () => void;
+}
+
+const urlInput = {
+  autoCapitalize: 'none',
+  autoCorrect: false,
+  className:
+    'h-8 sm:h-8 rounded-lg border-0 bg-muted dark:bg-muted px-2.5 py-0 type-body shadow-none focus-visible:ring-1 focus-visible:ring-ring',
+} as const;
+
+function LinkField({ label, ...input }: LinkFieldProps): React.JSX.Element {
+  return (
+    <View className="gap-1">
+      <Text aria-hidden role="secondary" className="text-muted-foreground">
+        {label}
+      </Text>
+      <Input {...input} {...urlInput} accessibilityLabel={label} />
+    </View>
+  );
+}
+
+function LinkActions({
+  onSave,
+  onCancel,
+}: {
+  onSave: () => void;
+  onCancel: () => void;
+}): React.JSX.Element {
+  return (
+    <View className="flex-row justify-end gap-2 pt-1">
+      <Button label="Cancel" variant="ghost" size="xs" onPress={onCancel} />
+      <Button label="Save" size="xs" onPress={onSave} />
+    </View>
+  );
+}
+
+interface LinkFormProps {
+  initial: LinkFields;
+  onSave: (fields: LinkFields) => void;
+  onCancel: () => void;
+}
+
+interface LinkFieldsState {
+  field: (label: string, key: keyof LinkFields) => LinkFieldProps;
+  save: () => void;
+}
+
+// Each field's props; Return in either field saves.
+function useLinkFields({
+  initial,
+  onSave,
+}: Pick<LinkFormProps, 'initial' | 'onSave'>): LinkFieldsState {
+  const [fields, setFields] = useState(initial);
+  const save = (): void => onSave(fields);
+  const field = (label: string, key: keyof LinkFields): LinkFieldProps => ({
+    label,
+    value: fields[key],
+    onChangeText: (value) => setFields({ ...fields, [key]: value }),
+    onSubmitEditing: save,
+  });
+  return { field, save };
+}
+
+// The link editor's Text and Link fields, with Cancel and Save.
+export function LinkForm(props: LinkFormProps): React.JSX.Element {
+  const { field, save } = useLinkFields(props);
+  return (
+    <>
+      <LinkField {...field('Text', 'text')} />
+      <LinkField {...field('Link', 'url')} />
+      <LinkActions onSave={save} onCancel={props.onCancel} />
+    </>
+  );
+}
