@@ -2,15 +2,15 @@ import { maxBlobUploadBytes, maxBlobUploadMebibytes } from '@repo/contracts';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
-import { Image, Platform, ScrollView, View } from 'react-native';
+import { Image, ScrollView, View } from 'react-native';
 import {
   PlanProposalCard,
   type PlanProposalCardProps,
 } from '#features/requests';
 import { Text } from '#lib/generic/primitives/display/text/text';
-import { Textarea } from '#lib/generic/primitives/inputs/textarea/textarea';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
+import { RichTextarea } from '#primitives/inputs/rich-textarea/rich-textarea';
 import {
   Pressable,
   contentActionClass,
@@ -34,11 +34,6 @@ import {
   WrittenPlan,
   type WrittenPlanValue,
 } from '../written-plan/written-plan';
-
-// The message field grows a line at a time up to this many lines, then scrolls.
-const maximumVisibleLines = 4;
-const lineHeight = 20;
-const maximumTextHeight = maximumVisibleLines * lineHeight;
 
 export interface ComposerImage {
   id: string;
@@ -99,9 +94,6 @@ export function Composer({
   const wide = useContentWide();
   const shownWrittenPlan = planProposal ? undefined : writtenPlan;
   const [attachHighlighted, setAttachHighlighted] = useState(false);
-  const [textHeight, setTextHeight] = useState(
-    Math.min(maximumVisibleLines, draft.text.split('\n').length) * lineHeight,
-  );
   const inactive = sending || disabled;
   const canRecoverAgent = Boolean(
     configuration?.onAgentRetry &&
@@ -121,6 +113,9 @@ export function Composer({
       oversized.length === 0 &&
       (draft.text.trim().length > 0 || draft.images.length > 0),
   });
+  const send = (): void => {
+    if (sendState === 'ready') onSend(draft);
+  };
   let sendButtonContent: ReactNode;
   if (sendState === 'stop') {
     sendButtonContent = (
@@ -246,30 +241,13 @@ export function Composer({
           )}
           {error && <ComposerWarning>{error}</ComposerWarning>}
           <View className="px-4 pt-3 pb-2">
-            <Textarea
+            <RichTextarea
               accessibilityLabel="Message"
               placeholder={placeholder}
-              placeholderTextColorClassName="accent-muted-foreground/70"
               value={draft.text}
               editable={!inactive}
               onChangeText={(text) => onDraftChange({ ...draft, text })}
-              numberOfLines={Platform.OS === 'web' ? 1 : maximumVisibleLines}
-              scrollEnabled={
-                Platform.OS === 'web' || textHeight >= maximumTextHeight
-              }
-              onContentSizeChange={(event) =>
-                setTextHeight(
-                  Math.max(
-                    lineHeight,
-                    Math.min(
-                      maximumTextHeight,
-                      event.nativeEvent.contentSize.height,
-                    ),
-                  ),
-                )
-              }
-              style={Platform.OS === 'web' ? undefined : { height: textHeight }}
-              className="min-h-5 max-h-20 web:overflow-y-auto border-0 rounded-none bg-transparent dark:bg-transparent p-0 type-control shadow-none web:resize-none web:focus-visible:ring-0"
+              onSubmit={send}
             />
           </View>
           <View className="flex-row items-center justify-between gap-2 pl-3.75 pr-2.5 pb-2.5">
@@ -412,13 +390,7 @@ export function Composer({
                 disabled={
                   sendState === 'stop' ? disabled : sendState !== 'ready'
                 }
-                onPress={
-                  sendState === 'stop'
-                    ? (): void => onStop?.()
-                    : (): void => {
-                        if (sendState === 'ready') onSend(draft);
-                      }
-                }
+                onPress={sendState === 'stop' ? (): void => onStop?.() : send}
                 role="button"
                 className={contentActionClass({
                   variant: 'default',
