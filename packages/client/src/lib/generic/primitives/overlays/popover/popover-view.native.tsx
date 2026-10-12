@@ -43,6 +43,18 @@ function forwardTriggerRef(
   if (typeof ref === 'function') return ref(node);
   if (ref) ref.current = node;
 }
+
+export function PopoverHoverGroup({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactNode {
+  return children;
+}
+export function usePopoverClose(): () => void {
+  const { onOpenChange } = PopoverPrimitive.useRootContext();
+  return React.useCallback(() => onOpenChange(false), [onOpenChange]);
+}
 const FullWindowOverlay =
   Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
 type ContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {

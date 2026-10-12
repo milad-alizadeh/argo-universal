@@ -7,20 +7,20 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { Host } from '../../native/host';
+import { ControlHost } from '../../native/native-control';
 import { optionalTint } from '../../native/swift-tint';
 import type { SwitchProps } from './switch-props';
 
 function Switch(props: SwitchProps): React.JSX.Element {
   const modifiers = useSwitchModifiers(props);
   return (
-    <Host matchContents>
+    <ControlHost matchContents>
       <Toggle
         isOn={props.checked}
         onIsOnChange={props.onCheckedChange}
         modifiers={modifiers}
       />
-    </Host>
+    </ControlHost>
   );
 }
 

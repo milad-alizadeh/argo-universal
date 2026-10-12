@@ -1,40 +1,20 @@
 import type * as React from 'react';
 import { useContext } from 'react';
 import { Pressable, View } from 'react-native';
-import { cn } from '../../../utils';
-import { Text } from '../../display/text/text';
-import {
-  FieldRowEnd,
-  useNavigationFields,
-  useSidebarFields,
-} from '../../fields/field-layout';
-import {
-  type ListItemProps,
-  listItemName,
-  listItemStatus,
-} from '../../fields/field-props';
-import { ListItemAccessory } from './list-item-accessory';
-import { Disclosure } from './list-item-disclosure';
-import { ListItemLeading } from './list-item-leading';
-import {
-  contentGap,
-  hasDisclosure,
-  rowClasses,
-  rowEmphasis,
-  titleClasses,
-} from './list-item-styles';
-import { StatusDot } from './status-dot';
+import { FieldRowEnd, useNavigationFields } from '../../fields/field-layout';
+import { type ListItemProps, listItemName } from '../../fields/field-props';
+import { ListItemBody } from './list-item-content';
+import { rowClasses } from './list-item-styles';
 import { isModifiedClick } from './web-row-link';
 
 export function ListItem(props: ListItemProps): React.JSX.Element {
   const navigation = useNavigationFields();
   const rowProps = {
     accessibilityLabel: listItemName(props),
-    accessibilityState: { disabled: !!props.disabled },
-    'aria-current': props.selected ? ('page' as const) : undefined,
+    ...selectionProps(props),
     className: rowClasses(props, navigation, useContext(FieldRowEnd)),
   };
-  const content = <ListItemContent {...props} />;
+  const content = <ListItemBody {...props} />;
   if (!props.onPress)
     return (
       <View {...rowProps} role="group">
@@ -42,7 +22,13 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
       </View>
     );
   return (
-    <Pressable {...linkProps(props)} {...rowProps} disabled={props.disabled}>
+    <Pressable
+      {...linkProps(props)}
+      {...rowProps}
+      {...triggerProps(props)}
+      {...switchKeyboardProps(props, props.onPress)}
+      disabled={props.disabled}
+    >
       {content}
     </Pressable>
   );
@@ -51,95 +37,87 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
 function linkProps(
   props: ListItemProps,
 ): React.ComponentProps<typeof Pressable> & { href?: string } {
-  if (!props.onPress) return {};
   return {
-    role: 'link',
-    href: props.href ?? '#',
-    onPress: (event) => {
-      if (isModifiedClick(event)) return;
+    role: props.role ?? 'link',
+    href: rowHref(props),
+    onPress: rowPress(props.onPress),
+  };
+}
+
+function rowPress(
+  onPress: ListItemProps['onPress'],
+): React.ComponentProps<typeof Pressable>['onPress'] {
+  return (event) => {
+    if (isModifiedClick(event)) return;
+    event.preventDefault();
+    onPress?.();
+  };
+}
+
+function selectionProps(
+  props: ListItemProps,
+): Pick<
+  React.ComponentProps<typeof View>,
+  'accessibilityState' | 'aria-checked'
+> & { 'aria-current'?: 'page'; 'aria-pressed'?: boolean } {
+  return {
+    accessibilityState: { disabled: !!props.disabled, checked: props.checked },
+    'aria-current': currentPage(props),
+    'aria-pressed': props.role === 'button' ? props.selected : undefined,
+    'aria-checked': props.checked,
+  };
+}
+
+function currentPage(props: ListItemProps): 'page' | undefined {
+  return !props.role && props.selected ? 'page' : undefined;
+}
+
+function triggerProps(props: ListItemProps): React.ComponentProps<
+  typeof Pressable
+> & {
+  'aria-haspopup'?: 'dialog';
+  'aria-controls'?: string;
+} {
+  return {
+    ref: props.ref,
+    onHoverIn: props.onHoverIn,
+    onHoverOut: props.onHoverOut,
+    id: props.id,
+    'aria-haspopup': props['aria-haspopup'],
+    'aria-expanded': props['aria-expanded'],
+    'aria-controls': props['aria-controls'],
+  };
+}
+
+function rowHref(props: ListItemProps): string | undefined {
+  return props.role ? undefined : (props.href ?? '#');
+}
+
+// React Native Web handles Space for buttons only; a switch row owns the same activation.
+function switchKeyboardProps(
+  props: ListItemProps,
+  press: () => void,
+): {
+  tabIndex?: 0 | -1;
+  onKeyDown?: React.KeyboardEventHandler;
+} {
+  if (props.role !== 'switch') return {};
+  return {
+    tabIndex: props.disabled ? -1 : 0,
+    onKeyDown: (event) => {
+      if (!isSwitchSpace(event)) return;
       event.preventDefault();
-      props.onPress?.();
+      if (canActivateSwitch(props.disabled, event.repeat)) press();
     },
   };
 }
 
-function ListItemContent(props: ListItemProps): React.JSX.Element {
-  const sidebar = useSidebarFields();
-  const emphasis = rowEmphasis(props, sidebar);
-  // The row's name already carries its text; only an accessory, such as a picker, stays reachable.
-  return (
-    <View
-      className={cn(
-        'flex-1 flex-row items-center gap-3',
-        contentGap(sidebar, props.size),
-        props.disabled && 'opacity-65',
-      )}
-    >
-      <ListItemLeading
-        icon={props.icon}
-        loading={props.loading}
-        leading={props.leading}
-        size={props.size}
-        className={emphasis}
-      />
-      <ListItemTitle {...props} />
-      <ListItemTrailing {...props} emphasis={emphasis} />
-    </View>
-  );
+function isSwitchSpace(event: React.KeyboardEvent): boolean {
+  return event.key === ' ' && event.target === event.currentTarget;
 }
-
-function ListItemTitle(props: ListItemProps): React.JSX.Element {
-  const title = (
-    <Text
-      aria-hidden
-      role="body"
-      numberOfLines={1}
-      className={titleClasses(props)}
-    >
-      {props.title}
-    </Text>
-  );
-  if (!props.subtitle) return title;
-  return (
-    <View className="min-w-0 flex-1">
-      {title}
-      <Text
-        aria-hidden
-        role="secondary"
-        numberOfLines={1}
-        className={cn(props.subtitle.code && 'type-code text-muted-foreground')}
-      >
-        {props.subtitle.text}
-      </Text>
-    </View>
-  );
-}
-
-function ListItemTrailing(
-  props: ListItemProps & { emphasis: string },
-): React.JSX.Element {
-  const sidebar = useSidebarFields();
-  const valueColor = sidebar ? props.emphasis : 'text-muted-foreground';
-  return (
-    <View className="max-w-[55%] flex-row items-center gap-2 wide:gap-3">
-      <RowValue value={props.value} className={valueColor} />
-      <StatusDot status={listItemStatus(props)} />
-      <ListItemAccessory>{props.accessory}</ListItemAccessory>
-      <Disclosure visible={hasDisclosure(props) && !sidebar} />
-    </View>
-  );
-}
-
-function RowValue({
-  value,
-  className,
-}: Pick<ListItemProps, 'value'> & {
-  className: string;
-}): React.JSX.Element | null {
-  if (value === undefined) return null;
-  return (
-    <Text aria-hidden role="body" className={cn('shrink', className)}>
-      {value}
-    </Text>
-  );
+function canActivateSwitch(
+  disabled: boolean | undefined,
+  repeat: boolean,
+): boolean {
+  return !disabled && !repeat;
 }

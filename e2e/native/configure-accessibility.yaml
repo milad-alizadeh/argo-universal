@@ -1,0 +1,33 @@
+appId: dev.argo.app
+name: Configure controls own Android accessibility
+---
+# Start in the native ComposerConfiguration "Fast mode on" Storybook preview,
+# with Configure open. Use the real shared rows, Switch and Slider.
+- assertVisible:
+    containsChild:
+      text: "^Fast mode$"
+    checked: true
+    enabled: true
+- assertNotVisible:
+    text: "^Fast mode$"
+    index: 1
+- assertVisible:
+    text: "^Effort, Medium$"
+    enabled: true
+- assertNotVisible: "^Effort$"
+- assertNotVisible: "^Medium$"
+- assertNotVisible:
+    text: "^Effort, Medium$"
+    index: 1
+- tapOn: "^Fast mode$"
+- assertVisible:
+    text: "^Fast mode$"
+- assertNotVisible:
+    containsChild:
+      text: "^Fast mode$"
+    checked: true
+- tapOn: "^Fast mode$"
+- assertVisible:
+    containsChild:
+      text: "^Fast mode$"
+    checked: true

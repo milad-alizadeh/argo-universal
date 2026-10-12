@@ -6,9 +6,11 @@ export const ControlledPopoverState = createContext<boolean | undefined>(
 );
 type RootProps = React.ComponentProps<typeof PopoverPrimitive.Root> & {
   open?: boolean;
+  openOnHover?: boolean;
 };
 export function Popover({
   open,
+  openOnHover: _openOnHover,
   children,
   ...props
 }: RootProps): React.JSX.Element {

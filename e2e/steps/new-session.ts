@@ -20,16 +20,28 @@ export async function openNewSession(page: Page): Promise<void> {
 
 export async function chooseAgent(page: Page, label: string): Promise<void> {
   await page.getByRole('button', { name: agentModelLabel }).click();
-  await page.getByRole('button', { name: 'Choose Agent' }).click();
+  await page.getByRole('button', { name: /^Agent,/ }).click();
   await page.getByRole('button', { name: `Select ${label}` }).click();
+  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toHaveCount(
+    0,
+  );
   await page.keyboard.press('Escape');
   await expect(
     page.getByRole('button', { name: agentModelLabel }),
   ).toHaveAttribute('aria-expanded', 'false');
+  await expectAgentSelection(page, label);
+}
+
+async function expectAgentSelection(page: Page, label: string): Promise<void> {
   await page.getByRole('button', { name: agentModelLabel }).click();
+  await expect(page.getByRole('button', { name: /^Agent,/ })).toContainText(
+    label,
+  );
+  await page.getByRole('button', { name: /^Agent,/ }).click();
   await expect(
-    page.getByRole('button', { name: 'Choose Agent' }),
-  ).toContainText(label);
+    page.getByRole('button', { name: `Select ${label}` }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
 }
 

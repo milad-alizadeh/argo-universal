@@ -1,12 +1,24 @@
 import { RNHostView } from '@expo/ui';
+import { Column } from '@expo/ui/jetpack-compose';
+import {
+  fillMaxWidth,
+  padding as composePadding,
+} from '@expo/ui/jetpack-compose/modifiers';
+import { VStack } from '@expo/ui/swift-ui';
+import { padding as swiftPadding } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
+import { Platform } from 'react-native';
 import { IconSlot } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { type ListItemProps, listItemStatus } from '../../fields/field-props';
+import { NativeControl } from '../../native/native-control';
 import { ListItemAccessory } from './list-item-accessory';
 import { StatusDot } from './status-dot';
+
+const detailGutter = 16;
+const detailBottom = 12;
 
 export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
   return <NativeSymbol name={icon} role="row" />;
@@ -57,12 +69,16 @@ function NativeRowAccessory({
 }
 
 export function NativeRowStatus(
-  props: Pick<ListItemProps, 'needsAttention' | 'status' | 'accessory'>,
+  props: Pick<
+    ListItemProps,
+    'needsAttention' | 'status' | 'accessory' | 'control'
+  >,
 ): React.JSX.Element {
   return (
     <>
       <NativeRowDot {...props} />
       <NativeRowAccessory accessory={props.accessory} />
+      {props.control && <NativeControl>{props.control}</NativeControl>}
     </>
   );
 }
@@ -77,4 +93,25 @@ export function NativeRowGlyph({
 }): React.JSX.Element | null {
   if (leading) return <NativeRowImage image={leading} />;
   return icon ? <NativeRowIcon icon={icon} /> : null;
+}
+
+export function NativeRowDetail({
+  detail,
+}: Pick<ListItemProps, 'detail'>): React.JSX.Element | null {
+  if (!detail) return null;
+  const control = <NativeControl>{detail}</NativeControl>;
+  return Platform.OS === 'ios' ? (
+    <VStack modifiers={[swiftPadding({ bottom: detailBottom })]}>
+      {control}
+    </VStack>
+  ) : (
+    <Column
+      modifiers={[
+        fillMaxWidth(),
+        composePadding(detailGutter, 0, detailGutter, detailBottom),
+      ]}
+    >
+      {control}
+    </Column>
+  );
 }
