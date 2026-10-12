@@ -21,16 +21,11 @@ export function DiscardGuard({
 }): React.JSX.Element {
   const dirty = useStore(form.store, (s) => s.isDirty && !s.isSubmitting);
   const { open, setOpen, proceed } = useHeldLeave(dirty);
-  return (
-    <Alert
-      open={open}
-      onOpenChange={setOpen}
-      title="Discard changes?"
-      message="Your changes have not been saved."
-      actions={answers(proceed)}
-    />
-  );
+  const props = { open, onOpenChange: setOpen, actions: answers(proceed) };
+  return <Alert {...props} title="Discard changes?" message={unsavedMessage} />;
 }
+
+const unsavedMessage = 'Your changes have not been saved.';
 
 // The leave the guard is holding: asked about while open, let go by proceed.
 function useHeldLeave(active: boolean): {
