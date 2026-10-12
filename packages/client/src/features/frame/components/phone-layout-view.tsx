@@ -1,10 +1,8 @@
 import type * as React from 'react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
+import type { NavigationDestination } from '#lib/product/navigation/context';
 import {
-  type NavigationDestination,
-  useNavigate,
-} from '#lib/product/navigation/context';
-import {
+  type Section,
   sectionDestination,
   sectionOf,
 } from '../../../lib/product/navigation/sections';
@@ -14,6 +12,8 @@ export interface PhoneLayoutViewProps {
   destination: NavigationDestination;
   // The Sessions that need input or are Unread, for the drawer's badge.
   attentionCount: number;
+  // Shows a picked section.
+  onSectionChange: (section: Section) => void;
   children: ReactNode;
 }
 
@@ -21,9 +21,9 @@ export interface PhoneLayoutViewProps {
 export function PhoneLayoutView({
   destination,
   attentionCount,
+  onSectionChange,
   children,
 }: PhoneLayoutViewProps): React.JSX.Element {
-  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const section = sectionOf(destination);
   const atSectionRoot = destination.to === sectionDestination(section).to;
@@ -49,7 +49,7 @@ export function PhoneLayoutView({
       onSectionChange={(next) => {
         if (next === section) return;
         deferClose.current = true;
-        navigate(sectionDestination(next));
+        onSectionChange(next);
       }}
       swipeEnabled={atSectionRoot}
     >

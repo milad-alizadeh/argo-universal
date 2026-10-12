@@ -1,9 +1,12 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { IconName } from '../../symbols/icon-names';
+import type { ListSearchBarProps } from '../inputs/list-search-bar/list-search-bar';
 
 export interface FieldGroupProps {
   children: ReactNode;
   variant?: 'grouped' | 'navigation';
+  // A phone's search above the sections, scrolling with them; only Android draws it, as iOS searches from its header.
+  search?: ListSearchBarProps;
 }
 
 export interface FieldSectionProps {

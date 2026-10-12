@@ -47,20 +47,21 @@ function mountPhoneLayout(
 ): {
   root: ReturnType<typeof createRoot>;
   render: (section: Section) => Promise<void>;
-  onNavigate: ReturnType<typeof fn>;
+  onSectionChange: ReturnType<typeof fn>;
 } {
   const root = createRoot(element);
-  const onNavigate = fn();
+  const onSectionChange = fn();
   const render = async (section: Section): Promise<void> => {
     root.render(
       <SafeAreaProvider>
         <KeyboardProvider>
-          <NavigationProvider navigate={onNavigate}>
+          <NavigationProvider navigate={fn()}>
             <ScreenHeaderProvider header={ScreenHeaderMock}>
               <View style={{ height: 600 }} className="w-full">
                 <PhoneLayoutView
                   destination={sectionDestination(section)}
                   attentionCount={attention}
+                  onSectionChange={onSectionChange}
                 >
                   <View testID="phone-shell-content" className="flex-1">
                     <ScreenHeader
@@ -81,7 +82,7 @@ function mountPhoneLayout(
       name: shellSections[section].title,
     });
   };
-  return { root, render, onNavigate };
+  return { root, render, onSectionChange };
 }
 
 export default meta;
@@ -138,8 +139,8 @@ function menuOpensAndSelectionClosesDrawer(width: number): Story {
             canvas.getByRole('button', { name: shellSections[section].title }),
           );
           if (section !== 'sessions')
-            await expect(controlled.onNavigate).toHaveBeenLastCalledWith(
-              sectionDestination(section),
+            await expect(controlled.onSectionChange).toHaveBeenLastCalledWith(
+              section,
             );
           await controlled.render(section);
           await expect(
@@ -191,8 +192,8 @@ function attentionAndSectionStates(count: number, width: number): Story {
             canvas.getByRole('button', { name: shellSections[section].title }),
           );
           if (section !== 'sessions')
-            await expect(controlled.onNavigate).toHaveBeenLastCalledWith(
-              sectionDestination(section),
+            await expect(controlled.onSectionChange).toHaveBeenLastCalledWith(
+              section,
             );
           await controlled.render(section);
           await expect(

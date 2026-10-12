@@ -2,26 +2,15 @@ import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Icon, iconSizeStyle } from '../../../symbols/icon';
+import { iconSizeStyle } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { type ListItemProps, listItemStatus } from '../../fields/field-props';
+import { NativeIcon } from '../../native/native-icon';
 import { ListItemAccessory } from './list-item-accessory';
 import { StatusDot } from './status-dot';
 
 export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
-  return (
-    <RNHostView matchContents>
-      <View
-        collapsable={false}
-        accessible={false}
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        style={iconSizeStyle('lg')}
-      >
-        <Icon name={icon} size="lg" />
-      </View>
-    </RNHostView>
-  );
+  return <NativeIcon name={icon} size="lg" />;
 }
 
 // An image, such as an Agent's logo, centred in the native row's 24 icon slot.
