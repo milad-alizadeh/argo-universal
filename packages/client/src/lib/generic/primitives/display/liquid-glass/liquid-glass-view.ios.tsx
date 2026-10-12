@@ -12,6 +12,13 @@ const shapeClassName = {
   capsule: 'rounded-full',
 } as const;
 
+const glassLayout = ({
+  className,
+  glassClassName,
+  shape,
+}: LiquidGlassProps): string =>
+  cn(className, glassClassName, shapeClassName[shape]);
+
 // iOS 26 and later draw the system's Liquid Glass in the App's light or dark; earlier iOS keeps the caller's surface.
 export function LiquidGlass(props: LiquidGlassProps): React.JSX.Element {
   if (!hasLiquidGlass || props.glass === false)
@@ -22,8 +29,7 @@ export function LiquidGlass(props: LiquidGlassProps): React.JSX.Element {
 // GlassView takes a resolved style: a className wrapper leaves the glass undrawn.
 function SystemGlass(props: LiquidGlassProps): React.JSX.Element {
   const { colorScheme } = useNativeTheme();
-  const layout = cn(props.className, shapeClassName[props.shape]);
-  const style = useResolveClassNames(layout);
+  const style = useResolveClassNames(glassLayout(props));
   return (
     <GlassView
       glassEffectStyle="regular"

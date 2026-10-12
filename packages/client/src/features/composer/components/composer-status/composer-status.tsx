@@ -666,7 +666,7 @@ export function ComposerWorkChips({
       ).map(
         ([label, icon, work]) =>
           work && (
-            <ChipSurface key={label}>
+            <ChipSurface key={label} glass={label === 'Subagents'}>
               <Pressable
                 disabled={disabled}
                 accessibilityLabel={`${label}: ${work.count}`}
@@ -702,14 +702,21 @@ export function ComposerWorkChips({
   );
 }
 
-// Liquid Glass on iOS 26 and later; elsewhere the chip's card surface, as before.
-function ChipSurface({ children }: { children: ReactNode }): React.JSX.Element {
+// Liquid Glass on iOS 26 and later, one step taller; elsewhere, and for Shells, the chip's card surface as before.
+function ChipSurface({
+  glass,
+  children,
+}: {
+  glass?: boolean;
+  children: ReactNode;
+}): React.JSX.Element {
   return (
     <LiquidGlass
       shape="capsule"
       interactive
-      className="h-6"
-      fallbackClassName="rounded-full border border-border bg-card shadow-composer"
+      glass={glass}
+      glassClassName="h-7"
+      fallbackClassName="h-6 rounded-full border border-border bg-card shadow-composer"
     >
       {children}
     </LiquidGlass>
