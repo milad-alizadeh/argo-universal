@@ -7,6 +7,7 @@ import {
   PlanProposalCard,
   type PlanProposalCardProps,
 } from '#features/requests';
+import { LiquidGlass } from '#lib/generic/primitives/display/liquid-glass/liquid-glass';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
@@ -172,7 +173,13 @@ export function Composer({
       {planProposal ? (
         <PlanProposalCard {...planProposal} />
       ) : (
-        <View className="w-full rounded-2xl bg-glass-card native:bg-background shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180 z-10">
+        // Wide, the card sits between its glass trays and keeps Argo's own glass.
+        <LiquidGlass
+          shape="card"
+          glass={!wide}
+          className="w-full z-10"
+          fallbackClassName="rounded-2xl bg-glass-card native:bg-background shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180"
+        >
           {draft.images.length > 0 && (
             <ScrollView
               horizontal
@@ -411,7 +418,7 @@ export function Composer({
               </Pressable>
             </View>
           </View>
-        </View>
+        </LiquidGlass>
       )}
       {wide && (configuration || status) && (
         <View

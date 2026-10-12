@@ -13,6 +13,7 @@ import Animated, {
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
+import { LiquidGlass } from '#lib/generic/primitives/display/liquid-glass/liquid-glass';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
@@ -35,6 +36,8 @@ const successBackgroundClassName = 'bg-success';
 const warningBackgroundClassName = 'bg-warning';
 const mutedTextClassName = 'text-muted-foreground';
 const unselectableTextClassName = 'select-none';
+// A chip above the phone Composer: its pressable fills the chip, so a fallback border stays inside the chip's height.
+const chipClassName = 'h-full sm:h-full py-0 px-2.5 gap-1.5 rounded-full';
 
 const fullPercent = 100;
 // Context use below this percent is the Smart zone; at or above, the Dumb zone.
@@ -179,12 +182,9 @@ export function ComposerPlan({
       role="button"
       className={contentActionClass({
         variant: 'ghost',
-        className: cn(
-          'h-6 sm:h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card',
-          wide
-            ? 'h-8 sm:h-8 py-0 w-full pl-2 pr-1.5 rounded-none border-0 bg-transparent shadow-none justify-start'
-            : 'shadow-composer',
-        ),
+        className: wide
+          ? 'h-8 sm:h-8 py-0 w-full pl-2 pr-1.5 gap-1.5 rounded-none justify-start'
+          : chipClassName,
         disabled: disabled,
       })}
     >
@@ -260,9 +260,16 @@ export function ComposerPlan({
       </View>
     );
   return (
-    <ComposerPopover label="Plan" width={420} trigger={trigger}>
-      {() => <PlanPopoverContent entries={entries} />}
-    </ComposerPopover>
+    <ChipSurface>
+      <ComposerPopover
+        label="Plan"
+        width={420}
+        className="h-full"
+        trigger={trigger}
+      >
+        {() => <PlanPopoverContent entries={entries} />}
+      </ComposerPopover>
+    </ChipSurface>
   );
 }
 
@@ -659,38 +666,59 @@ export function ComposerWorkChips({
       ).map(
         ([label, icon, work]) =>
           work && (
-            <Pressable
-              key={label}
-              disabled={disabled}
-              accessibilityLabel={`${label}: ${work.count}`}
-              onPress={work.onPress}
-              role="button"
-              className={contentActionClass({
-                variant: 'ghost',
-                className:
-                  'h-6 sm:h-6 py-0 px-2.5 has-[>[data-icon]]:px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer',
-                disabled: disabled,
-              })}
-            >
-              <Icon name={icon} className={mutedTextClassName} />
-              <View className="flex-row items-center gap-1">
-                <Text
-                  selectable={false}
-                  role="badge"
-                  className={cn(
-                    unselectableTextClassName,
-                    work.running ? 'text-success' : mutedTextClassName,
-                  )}
-                >
-                  {work.count}
-                </Text>
-                <Text selectable={false} role="badge" className="select-none">
-                  {label}
-                </Text>
-              </View>
-            </Pressable>
+            <ChipSurface key={label} glass={label === 'Subagents'}>
+              <Pressable
+                disabled={disabled}
+                accessibilityLabel={`${label}: ${work.count}`}
+                onPress={work.onPress}
+                role="button"
+                className={contentActionClass({
+                  variant: 'ghost',
+                  className: cn(chipClassName, 'has-[>[data-icon]]:px-2.5'),
+                  disabled: disabled,
+                })}
+              >
+                <Icon name={icon} className={mutedTextClassName} />
+                <View className="flex-row items-center gap-1">
+                  <Text
+                    selectable={false}
+                    role="badge"
+                    className={cn(
+                      unselectableTextClassName,
+                      work.running ? 'text-success' : mutedTextClassName,
+                    )}
+                  >
+                    {work.count}
+                  </Text>
+                  <Text selectable={false} role="badge" className="select-none">
+                    {label}
+                  </Text>
+                </View>
+              </Pressable>
+            </ChipSurface>
           ),
       )}
     </>
+  );
+}
+
+// Liquid Glass on iOS 26 and later; elsewhere, and for Shells, the chip's card surface as before.
+function ChipSurface({
+  glass,
+  children,
+}: {
+  glass?: boolean;
+  children: ReactNode;
+}): React.JSX.Element {
+  return (
+    <LiquidGlass
+      shape="capsule"
+      interactive
+      glass={glass}
+      className="h-6"
+      fallbackClassName="rounded-full border border-border bg-card shadow-composer"
+    >
+      {children}
+    </LiquidGlass>
   );
 }
