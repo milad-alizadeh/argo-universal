@@ -50,7 +50,7 @@ function ReusablesPreview({
   let preview: ReactNode;
   if (screen) {
     preview = (
-      <View className="flex-1 w-full min-h-0 bg-background web:h-screen web:flex-none">
+      <View className="flex-1 w-full min-h-0 bg-sidebar web:h-screen web:flex-none">
         <Story />
       </View>
     );
@@ -58,7 +58,7 @@ function ReusablesPreview({
     preview = (
       <View
         className={cn(
-          'min-h-full w-full items-center justify-center bg-background',
+          'min-h-full w-full items-center justify-center bg-sidebar',
           padding && 'p-6',
         )}
       >
@@ -68,7 +68,7 @@ function ReusablesPreview({
   } else {
     preview = (
       <ScrollView
-        className="flex-1 bg-background"
+        className="flex-1 bg-sidebar"
         contentContainerClassName={cn(
           'grow items-center justify-center',
           padding && 'p-6',
