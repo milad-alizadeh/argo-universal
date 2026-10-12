@@ -36,10 +36,7 @@ export const Settings: Story = {
       args.selectedDestination,
     );
     return (
-      <View
-        className="w-full bg-background wide:w-shell-list wide:bg-sidebar"
-        style={{ flex: 1 }}
-      >
+      <View className="w-full bg-sidebar wide:w-shell-list" style={{ flex: 1 }}>
         <View className="hidden h-14 flex-row items-center px-4 wide:flex">
           <Text
             semanticRole="heading"
