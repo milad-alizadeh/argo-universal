@@ -18,10 +18,17 @@ Given(
 );
 
 Given(
-  'the draft {string} in New Session',
+  'this draft in New Session:',
   async ({ page }, draft: string): Promise<void> => {
     await expect(page).toHaveURL(/\/sessions\/new$/);
     await writeDraft(page, draft);
+  },
+);
+
+Then(
+  "the Composer says the prompt couldn't send",
+  async ({ page }): Promise<void> => {
+    await expect(page.getByText(/^Couldn't send\./)).toBeVisible();
   },
 );
 
@@ -46,12 +53,20 @@ When(
   },
 );
 
-Then(
-  'the Message box shows {string}',
-  async ({ page }, draft: string): Promise<void> => {
-    await expectMessage(page, draft);
-  },
-);
+async function showsDraft(
+  { page }: { page: Page },
+  draft: string,
+): Promise<void> {
+  await expectMessage(page, draft);
+}
+Then('the Message box shows {string}', showsDraft);
+Then('the Message box shows:', showsDraft);
+
+Then('no image is attached', async ({ page }): Promise<void> => {
+  await expect(page.getByRole('img', { name: 'red-square.png' })).toHaveCount(
+    0,
+  );
+});
 
 Then('the Message box is empty', async ({ page }): Promise<void> => {
   await expectMessage(page, '');

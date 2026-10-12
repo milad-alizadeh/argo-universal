@@ -8,13 +8,16 @@ export interface ImageDraftState {
   // The file behind each attached image, by its id in the draft.
   files: ReadonlyMap<string, Blob>;
   selectionError?: string;
+  // The kept-draft key of whoever owns this draft: a Session, or New Session for a Project.
+  ownerKey?: string;
 }
 
 export type ImageDraftEvent =
   | { type: 'picked'; picked: readonly { image: ComposerImage; file: Blob }[] }
   | { type: 'pickFailed' }
   | { type: 'changed'; draft: ComposerDraft }
-  | { type: 'restored'; text: string }
+  | { type: 'ownerChanged'; key: string }
+  | { type: 'restored'; key: string; text: string }
   | { type: 'cleared' };
 
 export type AttachmentError =
@@ -39,6 +42,10 @@ function changeDraft(
   return { ...state, draft, files };
 }
 
+function withText(state: ImageDraftState, text: string): ImageDraftState {
+  return { ...state, draft: { ...state.draft, text } };
+}
+
 function attach(
   state: ImageDraftState,
   picked: Extract<ImageDraftEvent, { type: 'picked' }>['picked'],
@@ -46,10 +53,15 @@ function attach(
   const files = new Map(state.files);
   for (const { image, file } of picked) files.set(image.id, file);
   const images = [...state.draft.images, ...picked.map(({ image }) => image)];
-  return { draft: { ...state.draft, images }, files };
+  return {
+    ...state,
+    draft: { ...state.draft, images },
+    files,
+    selectionError: undefined,
+  };
 }
 
-// A Composer draft with attached images: what each pick, edit and send does to it.
+// A Composer draft with attached images: what each pick, edit, send and change of owner does to it.
 export function imageDraftReducer(
   state: ImageDraftState,
   event: ImageDraftEvent,
@@ -61,10 +73,12 @@ export function imageDraftReducer(
       return { ...state, selectionError: imageSelectionFailureMessage };
     case 'changed':
       return changeDraft(state, event.draft);
+    case 'ownerChanged':
+      return { ...withText(state, ''), ownerKey: event.key };
     case 'restored':
-      return { ...state, draft: { ...state.draft, text: event.text } };
+      return event.key === state.ownerKey ? withText(state, event.text) : state;
     case 'cleared':
-      return emptyImageDraft;
+      return { ...emptyImageDraft, ownerKey: state.ownerKey };
   }
 }
 

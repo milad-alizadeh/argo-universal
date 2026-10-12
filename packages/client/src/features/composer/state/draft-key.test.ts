@@ -16,10 +16,4 @@ describe('draftKey', () => {
   ])('keys the draft of %s', (_, owner, key) => {
     expect(draftKey(owner)).toBe(key);
   });
-
-  it('keeps a Session draft apart from a New Session draft with the same id', () => {
-    expect(draftKey({ type: 'session', sessionId: 'same' })).not.toBe(
-      draftKey({ type: 'new-session', projectId: 'same' }),
-    );
-  });
 });

@@ -40,20 +40,17 @@ function useImageUpload(): ReturnType<
   });
 }
 
-// Restores the text this Device kept for the draft's owner whenever the owner changes.
+// Empties the text when the draft's owner changes, then restores what this Device kept for the new owner.
 function useKeptDraft(
   key: string | undefined,
   dispatch: Dispatch<ImageDraftEvent>,
 ): void {
   useEffect(() => {
     if (!key) return;
-    let current = true;
+    dispatch({ type: 'ownerChanged', key });
     void loadKeptDraft(key).then((text) => {
-      if (current) dispatch({ type: 'restored', text });
+      dispatch({ type: 'restored', key, text });
     });
-    return (): void => {
-      current = false;
-    };
   }, [key, dispatch]);
 }
 

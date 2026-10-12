@@ -122,9 +122,9 @@ Then('Fast mode remains enabled', async ({ page }): Promise<void> => {
 });
 
 Given(
-  'Agent {int} refuses to open a Session',
+  'Agent {int} refuses to open/reopen a Session',
   async ({ page, server }, ordinal: number): Promise<void> => {
-    // The refusal shows only when a Session opens, so the Agent is listed as available.
+    // The refusal shows only when a Session opens or reopens, so the Agent is listed as available.
     expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
       availability: 'available',
     });
