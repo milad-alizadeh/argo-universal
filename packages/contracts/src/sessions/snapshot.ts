@@ -7,10 +7,11 @@ import { SessionConfigOption } from './set-config-option';
 
 const SessionState = z.enum(['running', 'idle', 'requires_action']);
 
-// ACP `usage_update`: how full the context window is.
+// ACP `usage_update`: reported context or a scoped upstream proxy.
 export const ContextUsage = z.strictObject({
   used: z.int(),
   size: z.int(),
+  scope: z.enum(['model-call', 'unverified']).optional(),
   cost: z
     .strictObject({
       amount: z.number(),

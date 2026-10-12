@@ -13,8 +13,9 @@ export const TurnError = z.strictObject({
 });
 export type TurnError = z.infer<typeof TurnError>;
 
-// ACP `Usage`: tokens one Turn used.
+// Counters reported at Turn completion; scope qualifies the total.
 export const TurnUsage = z.strictObject({
+  scope: z.enum(['turn', 'model-call', 'agent-reported']).optional(),
   totalTokens: z.int(),
   inputTokens: z.int(),
   outputTokens: z.int(),

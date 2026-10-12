@@ -1,5 +1,6 @@
 export { agentProbeMachine } from './agent-probe-machine';
 export { agentProbeId } from './agent-probe-system';
+export { reportsModelCallContext, promptUsageScope } from './usage-scope';
 
 export { type AgentsRouterDeps, createAgentsRouter } from './router';
 export {

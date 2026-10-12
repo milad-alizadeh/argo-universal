@@ -72,6 +72,7 @@ import type {
   AcpPromptResponse as PromptResponse,
 } from './acp/prompt-types';
 import { commitLocalPrompt, type LocalSubmission } from './acp/submission';
+import { acpContextUsage, acpTurnUsage } from './acp/usage';
 import {
   admitsPermissionAnswer,
   answeredRequest,
@@ -627,6 +628,17 @@ const sessionSetup = setup({
       for (const config of context.configQueue) config.applied?.reject(error);
       return { configQueue: [], applyingConfig: null };
     }),
+    rememberAcpUsage: assign(
+      ({ context, event }): Pick<SessionContext, 'usage'> => {
+        assertEvent(event, acpUpdateEvent);
+        const update = event.notification.update;
+        if (update.sessionUpdate !== 'usage_update')
+          return { usage: context.usage };
+        return {
+          usage: acpContextUsage(update, context.acpLease?.initialization),
+        };
+      },
+    ),
     forwardAcpUpdate: sendTo(
       'feed',
       ({ context, event }): Extract<FeedEvent, { type: 'feed.acpUpdate' }> => {
@@ -679,17 +691,24 @@ const sessionSetup = setup({
     ),
     rememberAcpLease: assign(
       (
-        _,
+        { context },
         { lease, configOptions }: OpenedAcpSession,
       ): Pick<
         SessionContext,
-        'acpLease' | 'vendorSessionId' | 'configOptions' | 'configValues'
+        | 'acpLease'
+        | 'vendorSessionId'
+        | 'configOptions'
+        | 'configValues'
+        | 'usage'
       > => {
         return {
           acpLease: lease,
           vendorSessionId: lease.sessionId,
           configOptions,
           configValues: toConfigValues(configOptions),
+          usage: context.usage
+            ? acpContextUsage(context.usage, lease.initialization)
+            : null,
         };
       },
     ),
@@ -1496,6 +1515,11 @@ export const sessionMachine = sessionSetup.createMachine({
                   'config_option_update',
                 actions: 'applyAcpConfig',
               },
+              {
+                guard: ({ event }): boolean =>
+                  event.notification.update.sessionUpdate === 'usage_update',
+                actions: 'rememberAcpUsage',
+              },
               { actions: 'forwardAcpUpdate' },
             ],
             [setConfigEvent]: {
@@ -1649,8 +1673,12 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: 'publishing',
                   actions: {
                     type: 'rememberAcpOutcome',
-                    params: ({ event }) => ({
+                    params: ({ context, event }) => ({
                       stopReason: event.output.stopReason,
+                      usage: acpTurnUsage(
+                        event.output.usage,
+                        context.acpLease?.initialization.agentInfo,
+                      ),
                     }),
                   },
                 },
