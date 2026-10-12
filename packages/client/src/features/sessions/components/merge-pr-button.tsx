@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#lib/generic/primitives/button';
 import { ButtonGroup } from '#lib/generic/primitives/button-group';
 import {
   DropdownMenu,
@@ -11,6 +10,7 @@ import {
 import { IconButton } from '#lib/generic/primitives/icon-button';
 import { Text } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
+import { Button } from '../../../lib/generic/primitives/button';
 
 export type MergeMethod = 'squash' | 'merge' | 'rebase';
 
