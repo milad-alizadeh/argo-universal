@@ -1,28 +1,17 @@
 import type * as React from 'react';
 import { createContext, type ReactNode, useContext, useState } from 'react';
-import { Platform, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable, useResolveClassNames } from 'uniwind';
-import { hasLiquidGlass } from '#lib/generic/native-header';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
+import { NavigationItem } from '../../../../lib/generic/primitives/lists/navigation-item/navigation-item';
 import { attentionBadge } from '../../state/attention-badge';
 import { PhoneDrawer } from '../phone-drawer/phone-drawer';
 import { PhoneShellCard } from '../phone-shell-card/phone-shell-card';
 import { type Section, shellSections } from '../shell-sections';
-import { DrawerItem } from './drawer-item';
+import { headerBarHeight } from './header-bar-height';
 import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
-
-// The native header bar's height under the status bar: Material's top app bar on Android, the navigation bar on iOS.
-const materialTopAppBar = 56;
-const iosNavigationBar = 44;
-// Before iOS 26 the bar's items sit higher, 17.5pt below the status bar (measured on iOS 18).
-const classicIosNavigationBar = 35;
-function barHeight(): number {
-  if (Platform.OS === 'android') return materialTopAppBar;
-  return hasLiquidGlass ? iosNavigationBar : classicIosNavigationBar;
-}
-const headerBarHeight = barHeight();
 
 // The content's edge shades the drawer under it, as if the content lay on top.
 const contentEdgeShadow =
@@ -87,7 +76,7 @@ export function PhoneShell({
   function sectionButton(section: Section): React.JSX.Element {
     const { title, icon } = shellSections[section];
     return (
-      <DrawerItem
+      <NavigationItem
         key={section}
         title={title}
         icon={icon}
@@ -127,7 +116,7 @@ export function PhoneShell({
               className={cn('flex-1 bg-glass px-5 pb-8', contentEdgeShadow)}
               style={{ paddingTop: top }}
             >
-              {/* The header bar's own height, so the title sits level with ☰ and the page's title, and the first row level with the page's search. */}
+              {/* The header bar's own height, so the title sits level with ☰ and the page's title; on Android the first row then sits level with the docked search. */}
               <View
                 className="justify-center px-3"
                 style={{ height: headerBarHeight }}
@@ -137,9 +126,10 @@ export function PhoneShell({
                 </Text>
               </View>
               <View className="flex-1 gap-1">
-                {(['sessions', 'issues', 'atlas'] as const).map(sectionButton)}
+                {(['sessions', 'issues', 'atlas', 'settings'] as const).map(
+                  sectionButton,
+                )}
               </View>
-              {sectionButton('settings')}
             </View>
           </View>
         )}

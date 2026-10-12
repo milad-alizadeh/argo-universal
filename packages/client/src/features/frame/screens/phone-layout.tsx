@@ -7,8 +7,8 @@ import { useAttentionCount } from '../hooks/use-attention-count';
 
 export interface PhoneLayoutProps {
   destination: NavigationDestination;
-  // Shows a picked section; without it the section's list is navigated to.
-  onSectionChange?: (section: Section) => void;
+  // Shows a picked section.
+  onSectionChange: (section: Section) => void;
   children: ReactNode;
 }
 
