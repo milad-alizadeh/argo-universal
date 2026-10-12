@@ -1,38 +1,14 @@
-import { mkdtempSync, realpathSync, rmSync, mkdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { rmSync, mkdirSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { project } from '@repo/db/schema';
-import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
+import { startProjectTestHost } from '#mocks/project-host';
 import { seedProject } from './index';
 
 const internalServerError = 'INTERNAL_SERVER_ERROR';
 const firstShapeRejection = 'projects: rejected shape #1';
-
-async function startProjectTestHost(): Promise<
-  Awaited<ReturnType<typeof startEngineTestHost>> & {
-    projectPath: string;
-    git: Awaited<ReturnType<typeof initTestRepository>>;
-  }
-> {
-  const projectPath = realpathSync(mkdtempSync(join(tmpdir(), 'project-')));
-  const git = await initTestRepository(projectPath);
-  const { database, remove } = openTestDatabase({}, projectPath);
-  onTestFinished((): void => {
-    vi.unstubAllEnvs();
-    remove();
-    rmSync(projectPath, { recursive: true, force: true });
-  });
-  vi.stubEnv('ARGO_PROJECT_PATH', projectPath);
-  return {
-    ...(await startEngineTestHost({ database })),
-    projectPath,
-    git,
-  };
-}
 
 it('preserves a registered Project identity and stored metadata through a nested path', async (): Promise<void> => {
   const { database, caller, projectPath } = await startProjectTestHost();
@@ -55,6 +31,8 @@ it('preserves a registered Project identity and stored metadata through a nested
       name: basename(projectPath),
       createdAt: 123,
       checkoutChoice: { type: 'worktree', baseBranch: 'feature' },
+      remoteHost: null,
+      folderExists: true,
     },
   ]);
 });

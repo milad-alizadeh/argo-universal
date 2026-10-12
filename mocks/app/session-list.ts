@@ -16,6 +16,8 @@ export const projectsList: ProjectsListOutput = [
     path: exampleProjectPath,
     createdAt: activityAt - 60_000,
     checkoutChoice: { type: 'worktree', baseBranch: 'main' },
+    remoteHost: 'GitHub',
+    folderExists: true,
   },
 ];
 

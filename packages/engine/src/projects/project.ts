@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { stat } from 'node:fs/promises';
 import { basename } from 'node:path';
 import {
   ProjectInfo,
@@ -8,7 +9,7 @@ import {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { project } from '@repo/db/schema';
-import { listBranches, readRepository } from '@repo/git';
+import { listBranches, readOriginHost, readRepository } from '@repo/git';
 import type { createRejectionCounter } from '@repo/machine-log';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
@@ -66,14 +67,59 @@ export function readProjectPath(
   });
 }
 
+const hostNames: Record<string, string> = {
+  'github.com': 'GitHub',
+  'gitlab.com': 'GitLab',
+  'bitbucket.org': 'Bitbucket',
+};
+
+// A failed remote read leaves this Project without one rather than failing the list.
+const readRemoteHost = (projectPath: string): Promise<string | null> =>
+  readOriginHost(projectPath).then(
+    (host): string | null => (host === null ? null : (hostNames[host] ?? host)),
+    (): null => null,
+  );
+
+const isFolder = (path: string): Promise<boolean> =>
+  stat(path).then(
+    (found): boolean => found.isDirectory(),
+    (): boolean => false,
+  );
+
+type Rejections = Pick<ReturnType<typeof createRejectionCounter>, 'report'>;
+type StoredProject = typeof project.$inferSelect;
+// The stored choice stays unchecked until the Project's shape is parsed.
+type ProjectDetail = Pick<ProjectInfo, 'remoteHost' | 'folderExists'> & {
+  checkoutChoice: NonNullable<StoredProject['checkoutChoice']>;
+};
+
+// A Project whose folder is gone keeps its stored choice and reads nothing from Git.
+const missingFolderDetail = (
+  checkoutChoice: StoredProject['checkoutChoice'],
+): ProjectDetail => ({
+  checkoutChoice: checkoutChoice ?? { type: 'main' },
+  remoteHost: null,
+  folderExists: false,
+});
+
+async function readProjectDetail({
+  path,
+  checkoutChoice,
+}: StoredProject): Promise<ProjectDetail> {
+  if (!(await isFolder(path))) return missingFolderDetail(checkoutChoice);
+  const [choice, remoteHost] = await Promise.all([
+    checkoutChoice ?? readDefaultCheckoutChoice(path),
+    readRemoteHost(path),
+  ]);
+  return { checkoutChoice: choice, remoteHost, folderExists: true };
+}
+
 async function readStoredProject(
-  storedProject: typeof project.$inferSelect,
-  rejections: Pick<ReturnType<typeof createRejectionCounter>, 'report'>,
+  storedProject: StoredProject,
+  rejections: Rejections,
 ): Promise<ProjectInfo> {
-  const checkoutChoice =
-    storedProject.checkoutChoice ??
-    (await readDefaultCheckoutChoice(storedProject.path));
-  const result = ProjectInfo.safeParse({ ...storedProject, checkoutChoice });
+  const detail = await readProjectDetail(storedProject);
+  const result = ProjectInfo.safeParse({ ...storedProject, ...detail });
   if (!result.success) {
     rejections.report('rejected shape', result.error);
     throw result.error;
@@ -83,7 +129,7 @@ async function readStoredProject(
 
 export function readProjects(
   database: Database,
-  rejections: Pick<ReturnType<typeof createRejectionCounter>, 'report'>,
+  rejections: Rejections,
 ): Promise<ProjectsListOutput> {
   return Promise.all(
     database

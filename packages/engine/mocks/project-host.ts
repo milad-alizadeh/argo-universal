@@ -1,0 +1,30 @@
+import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
+import { onTestFinished, vi } from 'vitest';
+import { openTestDatabase } from './database';
+import { startEngineTestHost } from './engine';
+
+// An Engine whose one registered Project, project-1, is a fresh repository in a temporary folder.
+export async function startProjectTestHost(): Promise<
+  Awaited<ReturnType<typeof startEngineTestHost>> & {
+    projectPath: string;
+    git: Awaited<ReturnType<typeof initTestRepository>>;
+  }
+> {
+  const projectPath = realpathSync(mkdtempSync(join(tmpdir(), 'project-')));
+  const git = await initTestRepository(projectPath);
+  const { database, remove } = openTestDatabase({}, projectPath);
+  onTestFinished((): void => {
+    vi.unstubAllEnvs();
+    remove();
+    rmSync(projectPath, { recursive: true, force: true });
+  });
+  vi.stubEnv('ARGO_PROJECT_PATH', projectPath);
+  return {
+    ...(await startEngineTestHost({ database })),
+    projectPath,
+    git,
+  };
+}
