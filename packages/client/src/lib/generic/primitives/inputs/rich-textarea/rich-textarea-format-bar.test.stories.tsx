@@ -35,6 +35,9 @@ async function selectWordWithMouse(word: HTMLElement): Promise<HTMLElement> {
   return within(document.body).findByRole('toolbar', formatBar);
 }
 
+const shownBar = (): HTMLElement | null =>
+  within(document.body).queryByRole('toolbar', formatBar);
+
 const buttonNames = (buttons: HTMLElement[]): (string | null)[] =>
   buttons.map((button) => button.getAttribute('aria-label'));
 
@@ -59,27 +62,29 @@ export const MouseSelectionShowsTheBar: Story = {
   },
 };
 
-const nextFrame = (): Promise<number> =>
-  new Promise((resolve) => requestAnimationFrame(resolve));
-
-// Two frames let the selection reach the editor before the bar's absence is read.
+// The bar's absence is read once the browser has reported the keyboard's selection.
 export const KeyboardSelectionShowsNoBar: Story = {
   args: { initialValue: 'Ship' },
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole('textbox', { name: label }));
-    await userEvent.keyboard('{End}{Shift>}{Home}{/Shift}');
-    await nextFrame();
-    await nextFrame();
-    await expect(
-      within(document.body).queryByRole('toolbar', formatBar),
-    ).not.toBeInTheDocument();
+    await userEvent.keyboard('{End}');
+    const selected = new Promise((resolve) =>
+      document.addEventListener('selectionchange', resolve, { once: true }),
+    );
+    await userEvent.keyboard('{Shift>}{Home}{/Shift}');
+    await selected;
+    await expect(shownBar()).not.toBeInTheDocument();
   },
 };
 
-// Each button sends what its shortcut or markdown would.
-function appliedByButton(button: string, sent: string): Story {
+// Each button sends what its shortcut or markdown would; on what the text already has, it takes it off.
+function appliedByButton(
+  button: string,
+  sent: string,
+  initialValue = 'Ship',
+): Story {
   return {
-    args: { initialValue: 'Ship' },
+    args: { initialValue },
     play: async ({ canvas, args }) => {
       const bar = within(await selectWordWithMouse(canvas.getByText('Ship')));
       await userEvent.click(bar.getByRole('button', { name: button }));
@@ -96,7 +101,15 @@ export const CodeButton = appliedByButton(code, '`Ship`');
 export const BulletedListButton = appliedByButton(bulletedList, '- Ship');
 export const NumberedListButton = appliedByButton(numberedList, '1. Ship');
 export const QuoteButton = appliedByButton(quote, '> Ship');
+export const BoldButtonOnBoldText = appliedByButton(bold, 'Ship', '**Ship**');
+export const BulletedListButtonOnAList = appliedByButton(
+  bulletedList,
+  'Ship',
+  '- Ship',
+);
+export const QuoteButtonOnAQuote = appliedByButton(quote, 'Ship', '> Ship');
 
+// The link editor takes over from the bar.
 export const LinkButtonOpensTheLinkEditor: Story = {
   args: { initialValue: 'Ship' },
   play: async ({ canvas }) => {
@@ -108,6 +121,7 @@ export const LinkButtonOpensTheLinkEditor: Story = {
     await expect(editor.getByRole('textbox', { name: 'Text' })).toHaveValue(
       'Ship',
     );
+    await waitFor(() => expect(shownBar()).not.toBeInTheDocument());
   },
 };
 
@@ -123,7 +137,6 @@ function pressedFor(initialValue: string, pressed: string[]): Story {
     },
   };
 }
-export const BoldShowsPressed = pressedFor('**Ship**', [bold]);
 export const StackedMarksShowPressed = pressedFor('**_~~Ship~~_**', [
   bold,
   italic,
