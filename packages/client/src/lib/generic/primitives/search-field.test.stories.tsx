@@ -62,6 +62,7 @@ export const EscapeCloses: Story = {
     );
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(canvas.queryByRole('textbox')).toBeNull());
+    await expect(canvas.getByRole('button', { name: label })).toHaveFocus();
   },
 };
 

@@ -7,8 +7,12 @@ import { useWide } from '../use-wide';
 import { DialogOverlay } from './dialog-overlay';
 import { DialogSheet } from './dialog-sheet';
 
-type ContentProps = React.ComponentProps<typeof DialogPrimitive.Content> & {
-  portalHost?: string;
+// Only what both the centred dialog and the narrow window's sheet honour.
+type ContentProps = {
+  className?: string;
+  // Names a dialog that has no DialogTitle of its own.
+  accessibilityLabel?: string;
+  children: React.ReactNode;
 };
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -64,12 +68,9 @@ function DialogContent(props: ContentProps): React.JSX.Element {
   );
 }
 
-function CentredDialog({
-  portalHost,
-  ...props
-}: ContentProps): React.JSX.Element {
+function CentredDialog(props: ContentProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Portal hostName={portalHost}>
+    <DialogPrimitive.Portal>
       <DialogOverlay>
         <DialogBody {...props} />
       </DialogOverlay>
