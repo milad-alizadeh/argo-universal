@@ -1,9 +1,11 @@
 import { fileSymbols } from './file-symbols';
+import { formatSymbols } from './format-symbols';
 import type { NativeSymbol } from './native-symbol';
 import { statusSymbols } from './status-symbols';
 
 export const iconSymbols = {
   ...fileSymbols,
+  ...formatSymbols,
   ...statusSymbols,
   activity: { sf: 'waveform.path.ecg', material: 'monitor_heart' },
   add: { sf: 'plus', material: 'add' },
@@ -21,7 +23,6 @@ export const iconSymbols = {
     material: 'share',
   },
   attach: { sf: 'paperclip', material: 'attach_file' },
-  bold: { sf: 'bold', material: 'format_bold' },
   branch: { sf: 'arrow.triangle.branch', material: 'alt_route' },
   camera: { sf: 'camera', material: 'photo_camera' },
   check: { sf: 'checkmark', material: 'check' },
@@ -72,7 +73,6 @@ export const iconSymbols = {
     sfFilled: 'ticket.fill',
     material: 'confirmation_number',
   },
-  italic: { sf: 'italic', material: 'format_italic' },
   key: { sf: 'key', material: 'key_vertical' },
   maps: {
     sf: 'point.topleft.down.curvedto.point.bottomright.up',
@@ -130,7 +130,6 @@ export const iconSymbols = {
   trace: { sf: 'figure.walk', material: 'footprint' },
   'tree-view': { sf: 'list.bullet.indent', material: 'account_tree' },
   triage: { sf: 'tray', material: 'inbox' },
-  underline: { sf: 'underline', material: 'format_underlined' },
   usage: { sf: 'gauge.medium', material: 'speed' },
   'view-3d': { sf: 'cube.transparent', material: 'view_in_ar' },
   voice: { sf: 'mic', sfFilled: 'mic.fill', material: 'mic' },
