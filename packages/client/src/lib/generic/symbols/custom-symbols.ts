@@ -14,6 +14,17 @@ export function isCustomSymbol(name: string): name is CustomSymbol {
   return Object.hasOwn(symbols, name);
 }
 
+// The symbol box in the paths' units, 100-point type, where the system `circle` symbol is 117 points wide.
+export function customSymbolBox(name: CustomSymbol): {
+  width: number;
+  height: number;
+} {
+  const [, , width = 0, height = 0] = symbols[name].viewBox
+    .split(' ')
+    .map(Number);
+  return { width, height };
+}
+
 // The symbol as an SVG data URL, for the page to use as a mask like the system symbols' PNGs.
 export function customSymbolImage(name: CustomSymbol): string {
   const { viewBox, d } = symbols[name];

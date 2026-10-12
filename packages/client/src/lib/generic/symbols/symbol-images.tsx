@@ -41,22 +41,37 @@ export function useSymbolImageRenderer(): RenderSymbolImage | null {
   return useContext(SymbolImagesContext);
 }
 
-const pendingImages = new Map<string, Promise<string | null>>();
-const loadedImages = new Map<string, string | null>();
+// A drawn symbol with its size in image pixels, so symbols drawn at one point size can share one scale.
+export interface SymbolImage {
+  url: string;
+  width: number;
+  height: number;
+}
+
+const pendingImages = new Map<string, Promise<SymbolImage | null>>();
+const loadedImages = new Map<string, SymbolImage | null>();
 
 function symbolKey({ name, pointSize }: SymbolImageRequest): string {
   return `${name}@${pointSize}`;
+}
+
+async function measureImage(url: string): Promise<SymbolImage> {
+  const image = new Image();
+  image.src = url;
+  await image.decode();
+  return { url, width: image.naturalWidth, height: image.naturalHeight };
 }
 
 // A failed render draws nothing, as an unknown symbol does.
 function loadImage(
   render: RenderSymbolImage,
   request: SymbolImageRequest,
-): Promise<string | null> {
+): Promise<SymbolImage | null> {
   const key = symbolKey(request);
   const pending =
     pendingImages.get(key) ??
     render(request)
+      .then((url) => (url ? measureImage(url) : null))
       .catch(() => null)
       .then((image) => {
         loadedImages.set(key, image);
@@ -70,7 +85,7 @@ function loadImage(
 export function useSymbolImage(
   render: RenderSymbolImage,
   request: SymbolImageRequest,
-): string | null | undefined {
+): SymbolImage | null | undefined {
   const { name, pointSize } = request;
   const key = symbolKey(request);
   const [image, setImage] = useState(() => loadedImages.get(key));
