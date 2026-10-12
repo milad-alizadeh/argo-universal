@@ -5,8 +5,8 @@ import type {
 
 export interface SettingsListProps {
   // Undefined until the Server has answered: the row shows "…", or nothing while disconnected.
-  projects?: readonly { name: string }[];
-  agents?: readonly { agent: string; label: string }[];
+  projectCount?: number;
+  agentCount?: number;
   selectedDestination?: NavigationDestination;
   onSelect: Navigate;
   projectsNeedAttention?: boolean;

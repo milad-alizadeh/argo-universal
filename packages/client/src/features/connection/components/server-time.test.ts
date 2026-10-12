@@ -6,6 +6,12 @@ function local(day: number, time: [number, number, number?]): string {
   return new Date(2026, 9, day, ...time).toISOString();
 }
 
+// The day as the reader's locale names it, such as "1 Oct".
+const dayLabel = (day: number): string =>
+  new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' }).format(
+    new Date(2026, 9, day),
+  );
+
 describe('formatServerClock', () => {
   it('shows the tick as a 24-hour local time', () => {
     expect(formatServerClock(local(3, [10, 0, 5]))).toMatch(/^10:00:05$/);
@@ -24,14 +30,12 @@ describe('formatServerStart', () => {
   });
 
   it('names the day when the Server started earlier', () => {
-    const started = formatServerStart(local(1, [9, 30]), local(3, [10, 0]));
-    expect(started).toMatch(/1/);
-    expect(started).toMatch(/ at 09:30$/);
-    expect(started).not.toMatch(/^Today/);
+    expect(formatServerStart(local(1, [9, 30]), local(3, [10, 0]))).toBe(
+      `${dayLabel(1)} at 09:30`,
+    );
   });
 
   it('names the day before the first clock tick', () => {
-    expect(formatServerStart(local(3, [9, 0]))).toMatch(/ at 09:00$/);
-    expect(formatServerStart(local(3, [9, 0]))).not.toMatch(/^Today/);
+    expect(formatServerStart(local(3, [9, 0]))).toBe(`${dayLabel(3)} at 09:00`);
   });
 });
