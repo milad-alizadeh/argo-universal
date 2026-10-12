@@ -6,6 +6,10 @@ import { SessionLayout } from '#lib/product/session-layout';
 import { useErrorToast } from '#primitives/toast';
 import { Button } from '../../../lib/generic/primitives/button';
 import { useWide } from '../../../lib/generic/use-wide';
+import {
+  serverSilentMessage,
+  sessionOpenFailedTitle,
+} from './failure-messages';
 import { SessionHeader, type SessionHeaderProps } from './session-header';
 
 export interface OpenSessionViewProps {
@@ -22,16 +26,14 @@ export type SessionViewProps =
   | { state: 'failed'; reason?: string }
   | ({ state: 'open' } & OpenSessionViewProps);
 
-const serverSilent = "The Server didn't respond. Check that it's running.";
-
 // One Session: its header, its Feed, and the Composer pinned below.
 export function SessionView(props: SessionViewProps): React.JSX.Element {
-  // A failed Session stays on its blank opening page: the toast says why, and the Session retries when the Connection reopens or the window regains focus.
+  // A failed Session stays on its blank opening page: the toast says why, and the Session retries when the Connection reopens.
   useErrorToast(
     props.state === 'failed'
       ? {
-          title: "Couldn't open the Session",
-          message: props.reason ?? serverSilent,
+          title: sessionOpenFailedTitle,
+          message: props.reason ?? serverSilentMessage,
         }
       : undefined,
   );

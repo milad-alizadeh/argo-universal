@@ -8,6 +8,7 @@ import { Screen } from '#lib/product/screen';
 import { type ErrorToast, useErrorToast } from '#primitives/toast';
 import { useWide } from '../../../lib/generic/use-wide';
 import type { SessionsLoadState } from '../state/sessions-load-state';
+import { serverSilentMessage } from './failure-messages';
 import { FloatingActionButton } from './floating-action-button';
 import { newSessionBesideSearch } from './sessions-header';
 import { SessionsList } from './sessions-list';
@@ -36,7 +37,7 @@ export interface SessionsViewProps {
 
 const loadFailed: ErrorToast = {
   title: "Couldn't load Sessions",
-  message: "The Server didn't respond. Check that it's running.",
+  message: serverSilentMessage,
 };
 const liveUpdatesFailed: ErrorToast = {
   title: 'Live updates stopped',
