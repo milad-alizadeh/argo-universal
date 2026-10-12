@@ -11,6 +11,8 @@ export const statusSymbols = {
   },
   info: { sf: 'info.circle', material: 'info' },
   merged: { sf: 'arrow.triangle.merge', material: 'merge' },
+  passed: { sf: 'checkmark.circle', material: 'check_circle' },
+  pending: { sf: 'circle', material: 'radio_button_unchecked' },
   permission: {
     sf: 'exclamationmark.shield',
     sfFilled: 'exclamationmark.shield.fill',

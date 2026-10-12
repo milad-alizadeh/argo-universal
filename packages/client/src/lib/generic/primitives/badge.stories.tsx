@@ -1,4 +1,5 @@
 const variants = ['default', 'secondary', 'destructive', 'outline'] as const;
+const tones = ['muted', 'success', 'warning', 'destructive'] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
@@ -14,6 +15,15 @@ function VariantExamples(): React.JSX.Element {
           <View className="flex-row">
             <Badge variant={variant}>
               <Text>Badge</Text>
+            </Badge>
+          </View>
+        </Variation>
+      ))}
+      {tones.map((tone) => (
+        <Variation key={tone} label={`tone ${tone}`}>
+          <View className="flex-row">
+            <Badge tone={tone}>
+              <Text>Ready</Text>
             </Badge>
           </View>
         </Variation>

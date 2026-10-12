@@ -7,8 +7,10 @@ import {
 } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 import {
+  drawnHeight,
   durationFor,
   easeInOut,
+  elapsedFraction,
   type CollapsibleLayoutSync,
 } from './collapsible-context';
 
@@ -31,7 +33,10 @@ interface FrameMotion {
 function advanceProgress(motion: FrameMotion, fraction: number): void {
   const progress =
     motion.from + (motion.target - motion.from) * easeInOut(fraction);
-  motion.grow(motion.height * (progress - motion.latestProgress.current));
+  motion.grow(
+    drawnHeight(motion.height, progress) -
+      drawnHeight(motion.height, motion.latestProgress.current),
+  );
   motion.latestProgress.current = progress;
   motion.setProgress(progress);
 }
@@ -44,7 +49,10 @@ function runFrames(motion: FrameMotion): () => void {
   let moving = true;
   const startTime = performance.now();
   let frame = requestAnimationFrame(function step(time): void {
-    const fraction = Math.min((time - startTime) / motion.remainingDuration, 1);
+    const fraction = elapsedFraction(
+      time - startTime,
+      motion.remainingDuration,
+    );
     advanceProgress(motion, fraction);
     if (fraction < 1) frame = requestAnimationFrame(step);
     else {

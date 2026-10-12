@@ -114,7 +114,7 @@ export const iconSymbols = {
     sfFilled: 'gearshape.fill',
     material: 'settings',
   },
-  sidebar: { sf: 'sidebar.left', material: 'dock_to_left' },
+  sidebar: { sf: 'sidebar.left', material: 'side_navigation' },
   sparkle: { sf: 'sparkles', material: 'auto_awesome' },
   speaker: { sf: 'speaker.wave.2', material: 'volume_up' },
   'speaker-off': { sf: 'speaker.slash', material: 'volume_off' },

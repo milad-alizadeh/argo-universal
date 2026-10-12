@@ -15,6 +15,8 @@ import { SymbolGlyph } from './symbol-glyph';
 
 const iconSizes = {
   xs: 12,
+  // One step below the icons, inside their 16 slot: full-box marks and a selected row's check.
+  mark: 14,
   sm: 16,
   md: 20,
   lg: 24,
@@ -45,12 +47,16 @@ export interface IconProps {
   testID?: string;
 }
 
-const TintedSymbol = withUniwind(SymbolGlyph, {
-  tintColor: {
-    fromClassName: 'className',
-    styleProperty: 'color',
-  },
-});
+// Web colours the glyph with CSS from `colorClassName`, so only native resolves the class to a tint, which costs a style lookup each render on web.
+const TintedSymbol =
+  Platform.OS === 'web'
+    ? SymbolGlyph
+    : withUniwind(SymbolGlyph, {
+        tintColor: {
+          fromClassName: 'className',
+          styleProperty: 'color',
+        },
+      });
 
 export function Icon({
   name,

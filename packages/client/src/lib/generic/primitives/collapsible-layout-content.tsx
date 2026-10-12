@@ -8,6 +8,7 @@ import {
 import { View } from 'react-native';
 import {
   contentAccessibility,
+  drawnHeight,
   movingContentStyle,
   OpenContext,
   type ContentProps,
@@ -79,7 +80,7 @@ function contentHeightStyle(
 ): { height: number; overflow: 'hidden' } | undefined {
   if (state.open && state.progress === 1) return;
   return {
-    height: state.measurement.renderedHeight * state.progress,
+    height: drawnHeight(state.measurement.renderedHeight, state.progress),
     overflow: 'hidden',
   };
 }

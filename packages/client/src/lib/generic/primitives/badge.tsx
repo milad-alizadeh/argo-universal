@@ -52,20 +52,49 @@ const badgeTextVariants = cva('text-xs font-medium', {
   },
 });
 
+// A tinted status chip, such as "Ready" in green beside an Agent's name.
+export type BadgeTone = 'muted' | 'success' | 'warning' | 'destructive';
+
+const badgeTones: Record<BadgeTone, { fill: string; text: string }> = {
+  muted: { fill: 'bg-muted', text: 'text-muted-foreground' },
+  success: { fill: 'bg-success/10', text: 'text-success' },
+  warning: { fill: 'bg-warning/10', text: 'text-warning' },
+  destructive: { fill: 'bg-destructive/10', text: 'text-destructive' },
+};
+
 type BadgeProps = React.ComponentProps<typeof View> &
   React.RefAttributes<View> & {
     asChild?: boolean;
+    tone?: BadgeTone;
   } & VariantProps<typeof badgeVariants>;
 
+function badgeClasses({ variant, tone, className }: BadgeProps): {
+  box: string;
+  text: string;
+} {
+  if (!tone)
+    return {
+      box: cn(badgeVariants({ variant }), className),
+      text: badgeTextVariants({ variant }),
+    };
+  return {
+    box: cn(
+      badgeVariants(),
+      'h-5 border-transparent py-0',
+      badgeTones[tone].fill,
+      className,
+    ),
+    text: cn('type-badge', badgeTones[tone].text),
+  };
+}
+
 function Badge(options: BadgeProps): ReactElement {
-  const { className, variant, asChild, ...props } = options;
+  const { className, variant, tone, asChild, ...props } = options;
   const Component = asChild ? Slot : View;
+  const classes = badgeClasses({ variant, tone, className });
   return (
-    <TextClassContext.Provider value={badgeTextVariants({ variant })}>
-      <Component
-        className={cn(badgeVariants({ variant }), className)}
-        {...props}
-      />
+    <TextClassContext.Provider value={classes.text}>
+      <Component className={classes.box} {...props} />
     </TextClassContext.Provider>
   );
 }

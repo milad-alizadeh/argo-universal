@@ -66,3 +66,61 @@ export const KeyboardAndAccessibleNames: Story = {
     ).toHaveAttribute('aria-disabled', 'true');
   },
 };
+
+// A status the value already says is named once; the description joins the name.
+export const DescriptionAndStatus: Story = {
+  render: (): React.JSX.Element => (
+    <FieldGroup>
+      <FieldSection>
+        <ListItem
+          title="Codex"
+          subtitle={{ text: 'Coding assistant' }}
+          value="Update available"
+          status={{ tone: 'warning', label: 'Update available' }}
+          onPress={onPress}
+        />
+        <ListItem title="goose" value="Not installed" onPress={onPress} />
+      </FieldSection>
+    </FieldGroup>
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('link', {
+        name: 'Codex, Coding assistant, Update available',
+      }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole('link', { name: 'goose, Not installed' }),
+    ).toBeVisible();
+  },
+};
+
+export const SidebarSelection: Story = {
+  render: (): React.JSX.Element => (
+    <FieldGroup variant="navigation">
+      <FieldSection>
+        <ListItem
+          title="Projects"
+          value="1"
+          onPress={onPress}
+          href="/settings/projects"
+        />
+        <ListItem
+          title="Connection"
+          value="This Mac"
+          selected
+          onPress={onPress}
+          href="/settings/connection"
+        />
+      </FieldSection>
+    </FieldGroup>
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('link', { name: 'Connection, This Mac' }),
+    ).toHaveAttribute('aria-current', 'page');
+    await expect(
+      canvas.getByRole('link', { name: 'Projects, 1' }),
+    ).not.toHaveAttribute('aria-current');
+  },
+};
