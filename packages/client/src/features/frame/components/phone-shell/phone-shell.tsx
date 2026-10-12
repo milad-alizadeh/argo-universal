@@ -106,7 +106,13 @@ export function PhoneShell({
           filled={selectedSection === section}
           className={cn(selectedSection !== section && 'text-muted-foreground')}
         />
-        <Text role="body" className="flex-1">
+        <Text
+          role="body"
+          className={cn(
+            'flex-1',
+            selectedSection === section && 'font-semibold',
+          )}
+        >
           {title}
         </Text>
         {section === 'sessions' && badge && (
