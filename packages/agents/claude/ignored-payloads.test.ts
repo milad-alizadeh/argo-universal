@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { isKnownMessage } from './known-messages';
 import { stream } from './mocks/sdk-messages';
+import { stopHookSummary } from './mocks/sdk-stop-hook-summary';
 import { initialMappingState, toAgentEvents } from './to-agent-events';
 
 const message = stream({ type: 'message_stop' });
@@ -45,6 +46,7 @@ const knownExtensions = [
   { type: 'command_lifecycle' },
   { type: 'system', subtype: 'post_turn_summary' },
   { type: 'system', subtype: 'session_title_changed' },
+  stopHookSummary,
 ];
 it.each(knownExtensions)(
   'accepts the approved $type/$subtype extension tag',
