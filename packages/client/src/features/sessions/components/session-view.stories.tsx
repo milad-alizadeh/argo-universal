@@ -90,7 +90,6 @@ export const Disconnected: Story = {
       state: 'open',
       ...idleSession,
       composer: { ...idleSession.composer, sendable: false },
-      cancelCreation: { ...idleSession.cancelCreation, disabled: true },
     },
   },
 };

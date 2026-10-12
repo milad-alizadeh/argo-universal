@@ -7,7 +7,11 @@ import {
 import type * as React from 'react';
 import { useState } from 'react';
 import { useAgents } from '#features/agents';
-import { useNewSessionConfiguration } from '#features/composer';
+import {
+  type ComposerDraft,
+  useImageDraft,
+  useNewSessionConfiguration,
+} from '#features/composer';
 import { useConnectionState } from '#features/connection';
 import { useTRPC } from '#features/connection';
 import { useNavigate } from '#lib/product/navigation/context';
@@ -76,6 +80,7 @@ function useNewSessionViewProps(
   const connected = useConnectionState() === 'open';
   const data = useNewSessionData(projectId);
   const { serverInfo, projects, agents, choices, configuration } = data;
+  const imageDraft = useImageDraft();
   const newSession = useMutation(
     trpc.session.new.mutationOptions({
       onSuccess: ({ sessionId }) =>
@@ -83,6 +88,18 @@ function useNewSessionViewProps(
       onError: () => void agents.refetch(),
     }),
   );
+  // Uploads the draft's images, then opens the Session with the draft as its first prompt; a failure keeps the draft.
+  async function sendFirstPrompt(sent: ComposerDraft): Promise<void> {
+    newSession.reset();
+    const prompt = await imageDraft.uploadDraftAsPrompt(sent);
+    if (!prompt?.length) return;
+    const input = toNewSessionInput(
+      choices,
+      configuration.configOptions,
+      prompt,
+    );
+    if (input) newSession.mutate(input);
+  }
 
   if (serverInfo.isError || projects.isError || agents.isError)
     return { state: 'load-failed' };
@@ -93,8 +110,8 @@ function useNewSessionViewProps(
     data.setChosen((current) => ({ ...current, ...next }));
     newSession.reset();
   };
-  const sessionInput = toNewSessionInput(choices, configuration.configOptions);
   const { agent } = choices;
+  const opening = imageDraft.uploading || newSession.isPending;
   return {
     state: 'ready',
     serverName: serverInfo.data.name,
@@ -120,17 +137,18 @@ function useNewSessionViewProps(
           data.setChosen((current) => ({ ...current, newWorktree })),
       },
     },
-    configReady: configuration.ready,
+    draft: imageDraft.draft,
+    onDraftChange: imageDraft.changeDraft,
+    onAttachImages: () => void imageDraft.attachImages(),
+    onSend: (sent) => void sendFirstPrompt(sent),
     canOpen: canOpenSession({
       connected,
       choices,
       configReady: configuration.ready,
-      opening: newSession.isPending,
+      opening,
     }),
-    opening: newSession.isPending,
-    onOpen: () => {
-      if (sessionInput) newSession.mutate(sessionInput);
-    },
+    opening,
+    attachmentError: imageDraft.attachmentError?.message,
     setupStep:
       agent && agent.availability !== 'available'
         ? agent.installStep

@@ -3,16 +3,18 @@ Feature: New Session
     Given a phone Frame
     And a New Session with Agent <agent>
     When I choose model "Small" and effort "High"
-    And I open the Session before prompting
-    Then the configuration shows model "Small" and effort "High"
+    And I send the prompt "Use my configured Session"
+    Then the Agent replies "The shared fixture completed this Turn."
+    And the configuration shows model "Small" and effort "High"
     When I choose model "Large" and effort "Low"
     And I return to the Sessions list
     And I open another New Session with Agent <agent>
     Then the configuration shows model "Large" and effort "Low"
     When I reload the App and open New Session with Agent <agent>
     Then the configuration shows model "Large" and effort "Low"
-    When I open the Session before prompting
-    Then the configuration shows model "Large" and effort "Low"
+    When I send the prompt "Use my configured Session"
+    Then the Agent replies "The shared fixture completed this Turn."
+    And the configuration shows model "Large" and effort "Low"
 
     Examples:
       | agent |
@@ -23,25 +25,9 @@ Feature: New Session
     Given a phone Frame
     And a New Session with Agent <agent>
     When I enable Fast mode
-    And I open the Session before prompting
-    Then Fast mode remains enabled
-    When I disable Fast mode
-    And I enable Fast mode
     And I send the prompt "Use my configured Session"
     Then the Agent replies "The shared fixture completed this Turn."
     And Fast mode remains enabled
-
-    Examples:
-      | agent |
-      | 1     |
-      | 2     |
-
-  Scenario Outline: Explicitly cancel an empty Session with Agent <agent>
-    Given a phone Frame
-    And a New Session with Agent <agent>
-    When I open the Session before prompting
-    And I cancel Session creation
-    Then the Sessions list is shown
 
     Examples:
       | agent |
@@ -77,12 +63,24 @@ Feature: New Session
   Scenario Outline: An image prompt starts a Session with Agent <agent>
     Given a phone Frame
     And a New Session with Agent <agent>
-    When I open the Session before prompting
-    And I attach the red square image
+    When I attach the red square image
     And I send the prompt "Name the dominant color in this image."
     Then the Session Feed contains the image prompt
     And the Agent replies "The dominant color is red."
     And the Server preserves the attached image
+
+    Examples:
+      | agent |
+      | 1     |
+      | 2     |
+
+  Scenario Outline: A failed open keeps the first prompt with Agent <agent>
+    Given a phone Frame
+    And Agent <agent> refuses to open a Session
+    And a New Session with Agent <agent>
+    When I try to send the prompt "Fix the flaky login test"
+    Then New Session says the Session couldn't open
+    And the Composer keeps the prompt "Fix the flaky login test"
 
     Examples:
       | agent |

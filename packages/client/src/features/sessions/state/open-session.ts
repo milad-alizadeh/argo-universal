@@ -15,10 +15,11 @@ const configValues = (
     value: currentValue,
   }));
 
-// The Session New Session opens, before its first prompt.
+// The Session New Session opens with its configuration, then its first prompt.
 export function toNewSessionInput(
   choices: SessionChoices,
   configOptions: readonly SessionConfigOption[],
+  prompt: SessionNewInput['prompt'],
 ): SessionNewInput | undefined {
   const { project, agent } = choices;
   if (!project || !agent) return undefined;
@@ -27,7 +28,7 @@ export function toNewSessionInput(
     agent: agent.agent,
     checkout: checkoutInput(choices),
     configOptions: configValues(configOptions),
-    prompt: [],
+    prompt,
   };
 }
 
@@ -38,7 +39,7 @@ export interface OpenSessionReadiness {
   opening: boolean;
 }
 
-// Open Session works once the Server is reachable and every choice has settled.
+// A New Session can open once the Server is reachable and every choice has settled.
 export function canOpenSession({
   connected,
   choices,

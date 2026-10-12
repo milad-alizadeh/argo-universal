@@ -1,7 +1,7 @@
 import { expect } from '../fixtures';
 import { readAgent, readAgents } from './agents';
 import { Given, When, Then } from './fixtures';
-import { openNewSession } from './new-session';
+import { messageLabel, openNewSession } from './new-session';
 import { availabilityValue, type Unavailable } from './scenario-agents';
 
 Given(
@@ -54,8 +54,8 @@ Then(
 );
 
 Then('New Session cannot send a prompt', async ({ page }): Promise<void> => {
-  await expect(page.getByRole('textbox', { name: 'Message' })).toHaveCount(0);
+  await page.getByRole('textbox', { name: messageLabel }).fill('Hello');
   await expect(
-    page.getByRole('button', { name: 'Open Session' }),
+    page.getByRole('button', { name: 'Send', exact: true }),
   ).toBeDisabled();
 });

@@ -31,6 +31,10 @@ export const scenarios = {
   reply: scenario([reply]),
   image: scenario([message(imageReply)]),
   'cancel-wait': scenario([{ type: 'wait-for-cancel' }]),
+  'refuse-session': {
+    ...scenario([reply]),
+    responses: { 'session/new': [{ error: 'The Agent refused the Session.' }] },
+  },
   permission: scenario([
     update({
       sessionUpdate: 'tool_call',

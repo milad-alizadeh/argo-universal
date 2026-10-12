@@ -4,7 +4,7 @@ import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 
 export const agentModelLabel = 'Agent and model';
-const openSessionLabel = 'Open Session';
+export const messageLabel = 'Message';
 const checkedAttribute = 'aria-checked';
 
 export async function openNewSession(page: Page): Promise<void> {
@@ -13,9 +13,7 @@ export async function openNewSession(page: Page): Promise<void> {
   // The Server runs on this computer, so New Session names no host; its Project shows once it is ready.
   await expect(page.getByRole('button', { name: /^Project: / })).toBeVisible();
   await expect(page.getByText('Reconnecting…')).toHaveCount(0);
-  await expect(
-    page.getByRole('button', { name: openSessionLabel, exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('textbox', { name: messageLabel })).toBeVisible();
 }
 
 export async function chooseAgent(page: Page, label: string): Promise<void> {
@@ -67,13 +65,14 @@ When(
     await startWithAgent(page, server.httpUrl, ordinal);
   },
 );
+// From New Session, the first prompt opens the Session.
 export async function sendPrompt(page: Page, prompt: string): Promise<void> {
-  if (new URL(page.url()).pathname === '/sessions/new')
-    await openSessionBeforePrompt(page);
-  await page.getByRole('textbox', { name: 'Message' }).fill(prompt);
+  await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/);
-  await expect(page.getByRole('textbox', { name: 'Message' })).toHaveValue('');
+  await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
+    '',
+  );
 }
 
 When(
@@ -94,18 +93,6 @@ Then('Back returns to the Sessions list', async ({ page }): Promise<void> => {
   );
 });
 
-export async function openSessionBeforePrompt(page: Page): Promise<void> {
-  await page
-    .getByRole('button', { name: openSessionLabel, exact: true })
-    .click();
-  await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/);
-  await expect(
-    page.getByRole('button', { name: 'Cancel creation' }),
-  ).toBeVisible();
-}
-When('I open the Session before prompting', async ({ page }): Promise<void> => {
-  await openSessionBeforePrompt(page);
-});
 When('I enable Fast mode', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: agentModelLabel }).click();
   await page.getByRole('switch', { name: 'Fast mode', exact: true }).click();
@@ -123,23 +110,40 @@ Then('Fast mode remains enabled', async ({ page }): Promise<void> => {
   ).toHaveAttribute(checkedAttribute, 'true');
   await page.keyboard.press('Escape');
 });
-When('I cancel Session creation', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: 'Cancel creation' }).click();
-});
-Then('the Sessions list is shown', async ({ page }): Promise<void> => {
-  await expect(page).toHaveURL(/\/$/);
-  await expect(
-    page.getByRole('heading', { name: 'Sessions', level: 1, exact: true }),
-  ).toBeVisible();
-});
 
-When('I disable Fast mode', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: agentModelLabel }).click();
-  await page.getByRole('switch', { name: 'Fast mode', exact: true }).click();
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: agentModelLabel }).click();
-  await expect(
-    page.getByRole('switch', { name: 'Fast mode', exact: true }),
-  ).toHaveAttribute(checkedAttribute, 'false');
-  await page.keyboard.press('Escape');
-});
+Given(
+  'Agent {int} refuses to open a Session',
+  async ({ page, server }, ordinal: number): Promise<void> => {
+    // The refusal shows only when a Session opens, so the Agent is listed as available.
+    expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
+      availability: 'available',
+    });
+  },
+);
+
+When(
+  'I try to send the prompt {string}',
+  async ({ page }, prompt: string): Promise<void> => {
+    await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
+    await page.getByRole('button', { name: 'Send', exact: true }).click();
+  },
+);
+
+Then(
+  "New Session says the Session couldn't open",
+  async ({ page }): Promise<void> => {
+    await expect(
+      page.getByRole('region', { name: /^Notifications/ }),
+    ).toContainText("Couldn't open the Session");
+    await expect(page).toHaveURL(/\/sessions\/new$/);
+  },
+);
+
+Then(
+  'the Composer keeps the prompt {string}',
+  async ({ page }, prompt: string): Promise<void> => {
+    await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
+      prompt,
+    );
+  },
+);
