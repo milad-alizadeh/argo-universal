@@ -12,7 +12,7 @@ import { useWide } from '../../../use-wide/use-wide';
 import { useComposeTextStyle } from '../../native/native-typography';
 import { useNavigationFields } from '../field-layout';
 import type { FieldSectionProps } from '../field-props';
-import { FieldSection as WebFieldSection } from './field-section-view.tsx';
+import { FieldSection as WebFieldSection } from './field-section-rn';
 
 const sectionRadius = 20;
 const gutter = 16;
