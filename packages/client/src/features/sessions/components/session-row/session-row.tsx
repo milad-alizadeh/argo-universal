@@ -12,21 +12,16 @@ import Animated, {
 import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { fullTurnDegrees } from '#lib/generic/motion';
-import { Badge } from '#lib/generic/primitives/display/badge/badge';
-import {
-  Text,
-  TextClassContext,
-} from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import {
   StatusIndicator,
   statusLabels,
 } from '#lib/product/status-indicator/status-indicator';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon, iconSizeStyle } from '../../../../lib/generic/symbols/icon';
+import { Badge } from '#primitives/display/badge/badge';
+import { Icon } from '#primitives/display/icon/icon';
+import { Text, TextClassContext } from '#primitives/display/text/text';
+import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
+import { iconSizeStyle } from '../../../../lib/generic/symbols/icon';
 import {
   IssueIndicator,
   type IssueIndicatorProps,

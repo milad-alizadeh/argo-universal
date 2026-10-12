@@ -1,9 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
-import { View } from 'react-native';
+import type { ReactElement } from 'react';
 import { action } from 'storybook/actions';
-import { useSessionsFilter } from '../../state/sessions-filter';
-import { SessionsHeader } from '../sessions-header';
+import { SessionsPreviewMock } from '../../../../../mocks/sessions-preview-mock';
 import { SessionsView } from './sessions-view';
 import { loadedSessionsView } from './sessions-view.mocks';
 
@@ -20,17 +18,7 @@ const meta = {
     onLoadMore: action('load next page'),
   },
   // The list under a plain header row, as a shell draws it.
-  render: function Preview(args): React.JSX.Element {
-    const filter = useSessionsFilter();
-    return (
-      <View className="flex-1 w-full" style={{ minHeight: 0 }}>
-        <View className="h-11 wide:h-14 flex-row items-center gap-0.5 px-2">
-          <SessionsHeader {...filter} onNewSession={args.onNewSession} />
-        </View>
-        <SessionsView {...args} />
-      </View>
-    );
-  },
+  render: (args): ReactElement => <SessionsPreviewMock {...args} />,
 } satisfies Meta<typeof SessionsView>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -51,6 +39,10 @@ export const Offline: Story = { args: { connection: 'offline' } };
 
 export const NoMatchingSessions: Story = {
   args: { query: 'xyz', sessions: [] },
+};
+
+export const SearchMatches: Story = {
+  args: { query: 'settings' },
 };
 
 export const NextPageLoading: Story = {

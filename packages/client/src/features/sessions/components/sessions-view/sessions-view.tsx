@@ -4,11 +4,11 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ConnectionBanner, type ConnectionState } from '#features/connection';
+import { Screen } from '#lib/product/screen/screen';
 import {
   type ErrorToast,
   useErrorToast,
-} from '#lib/generic/primitives/overlays/toast/toast';
-import { Screen } from '#lib/product/screen/screen';
+} from '#primitives/overlays/toast/toast';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SessionsLoadState } from '../../state/sessions-load-state';
 import { serverSilentMessage } from '../failure-messages';
