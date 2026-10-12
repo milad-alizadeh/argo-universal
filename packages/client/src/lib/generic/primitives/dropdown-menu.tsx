@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Platform, Text, View } from 'react-native';
 import { TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
-import { Icon, iconSizeStyle } from '../symbols/icon';
+import { iconSizeStyle } from '../symbols/icon';
 import { DropdownMenuContent } from './dropdown-menu-content';
 import {
   dropdownItemClassName,
@@ -13,6 +13,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from './dropdown-menu-sub';
+import { SelectedCheck } from './selected-check';
 
 type ItemProps = React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
   className?: string;
@@ -21,11 +22,7 @@ type ItemProps = React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
 };
 type RadioProps = React.ComponentProps<
   typeof DropdownMenuPrimitive.RadioItem
-> & {
-  children?: React.ReactNode;
-  // Where the check sits; Paper's phone menus lead with it.
-  indicator?: 'leading' | 'trailing';
-};
+> & { children?: React.ReactNode };
 const DropdownMenu = DropdownMenuPrimitive.Root;
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
@@ -55,26 +52,23 @@ function RadioIndicator(): React.JSX.Element {
   return (
     <View style={iconSizeStyle('sm')} className="items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
-        <Icon name="check" size="xs" className={indicatorClassName} />
+        <SelectedCheck className={indicatorClassName} />
       </DropdownMenuPrimitive.ItemIndicator>
     </View>
   );
 }
 
 function RadioBody(radioProps: RadioProps): React.JSX.Element {
-  const { className, children, indicator, ...props } = radioProps;
+  const { className, children, ...props } = radioProps;
   const radioStyle = dropdownItemClassName({
     className,
     disabled: props.disabled,
   });
-  const body = <View className="min-w-0 flex-1">{children}</View>;
-  const check = <RadioIndicator />;
-  const leading = indicator === 'leading';
   return React.createElement(
     DropdownMenuPrimitive.RadioItem,
     { ...props, className: radioStyle },
-    leading ? check : body,
-    leading ? body : check,
+    <View className="min-w-0 flex-1">{children}</View>,
+    <RadioIndicator />,
   );
 }
 
