@@ -11,6 +11,7 @@ describe('a story title', (): void => {
       `${src}/lib/generic/primitives/list-item.stories.tsx`,
       'Design System/Primitives/ListItem',
     ],
+    [`${src}/lib/generic/symbols/icon.stories.tsx`, 'Design System/Icon'],
     [`${src}/lib/product/screen.stories.tsx`, 'Shared/Screen'],
     [`${src}/features/feed/components/edit-row.stories.tsx`, 'Feed/EditRow'],
     [
@@ -20,6 +21,18 @@ describe('a story title', (): void => {
     [
       `${src}/features/agents/components/agent-list-view.stories.tsx`,
       'Screens/Settings/Agents',
+    ],
+    [
+      `${src}/features/settings/components/settings-placeholder-page.stories.tsx`,
+      'Screens/Settings/Placeholder',
+    ],
+    [
+      `${src}/features/frame/screens/placeholder-screens.stories.tsx`,
+      'Screens/PlaceholderScreens',
+    ],
+    [
+      `${src}/features/agents/components/custom-agent-form.stories.tsx`,
+      'Screens/Settings/Add custom Agent',
     ],
     [
       `${src}/features/agents/components/agents-list.test.stories.tsx`,
@@ -36,9 +49,19 @@ describe('a story title', (): void => {
       /'Design System\/Primitives\/'/,
     ],
     [
+      `${src}/lib/generic/symbols/icon.stories.tsx`,
+      'Symbols/Icon',
+      /'Design System\/'/,
+    ],
+    [
       `${src}/features/feed/components/edit-row.stories.tsx`,
       'EditRow',
-      /'Screens\/' or 'Feed\/'/,
+      /must start with 'Feed\/'$/,
+    ],
+    [
+      `${src}/features/agents/components/catalog-row.stories.tsx`,
+      'Screens/Settings/Catalog row',
+      /must start with 'Agents\/'$/,
     ],
     [
       `${src}/features/frame/components/desktop-shell.stories.tsx`,
@@ -55,6 +78,12 @@ describe('a story title', (): void => {
     expect(storyTitleProblems(file, meta(title))).toEqual([
       expect.stringMatching(group),
     ]);
+  });
+
+  it('fails a story in a folder with no group', (): void => {
+    expect(
+      storyTitleProblems(`${src}/helpers/thing.stories.tsx`, meta('Thing')),
+    ).toEqual([expect.stringMatching(/no story group belongs/)]);
   });
 
   it('reads a one-line meta', (): void => {
