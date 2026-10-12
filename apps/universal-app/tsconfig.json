@@ -7,7 +7,14 @@
       "@/assets/*": ["./assets/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    // The client's React Native typing for the inert prop, which its components use.
+    "../../packages/client/src/lib/generic/view-inert.d.ts"
+  ],
   // expo/tsconfig.base excluded these; the shared base does not.
   "exclude": ["node_modules", "android", "ios"]
 }
