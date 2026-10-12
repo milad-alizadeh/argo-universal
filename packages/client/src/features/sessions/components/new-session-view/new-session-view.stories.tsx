@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { NewSessionView, type NewSessionViewProps } from './new-session-view';
-import { readyNewSession, typedDraft } from './new-session-view.mocks';
+import {
+  readyNewSession,
+  startingNewSession,
+  typedDraft,
+} from './new-session-view.mocks';
 
 const meta = {
   title: 'Screens/NewSessionScreen',
@@ -29,16 +33,8 @@ export const Reconnecting: Story = {
   },
 };
 
-export const Opening: Story = {
-  args: {
-    view: {
-      state: 'ready',
-      ...readyNewSession,
-      draft: typedDraft,
-      opening: true,
-      canOpen: false,
-    },
-  },
+export const Starting: Story = {
+  args: { view: { state: 'ready', ...readyNewSession, ...startingNewSession } },
 };
 
 export const FailedStart: Story = {
