@@ -47,14 +47,28 @@ export const PutsSearchAfterTheTrailingItems: Story = {
   },
 };
 
-export const OpensAFieldOverTheItemsAndClearsItOnClose: Story = {
+export const OpeningSearchReplacesTheTrailingItems: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: placeholder }));
+    await expect(canvas.getByPlaceholderText(placeholder)).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: 'Filter Sessions' }),
+    ).toBeNull();
+  },
+};
+
+export const TypingSendsTheQuery: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: placeholder }));
     await userEvent.type(canvas.getByPlaceholderText(placeholder), 'flaky');
     await expect(args.onChangeText).toHaveBeenLastCalledWith('flaky');
-    await expect(
-      canvas.queryByRole('button', { name: 'Filter Sessions' }),
-    ).toBeNull();
+  },
+};
+
+export const ClosingSearchClearsTheQuery: Story = {
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: placeholder }));
+    await userEvent.type(canvas.getByPlaceholderText(placeholder), 'flaky');
     await userEvent.click(canvas.getByRole('button', { name: 'Close search' }));
     await expect(args.onChangeText).toHaveBeenLastCalledWith('');
     await expect(canvas.queryByPlaceholderText(placeholder)).toBeNull();
