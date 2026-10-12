@@ -1,3 +1,4 @@
+import type { ProjectInfo } from '@repo/contracts';
 import { newSessionProjects, serverInfo } from '@repo/mocks/app';
 
 export const serverCaption = `On ${serverInfo.name}`;
@@ -17,11 +18,23 @@ const [worktreeProject, localProject] = ((): [
   return [worktree, local];
 })();
 
-export {
-  localProject,
-  newSessionProjects as settingsProjects,
-  worktreeProject,
+// A Project whose folder was moved or deleted on the Server.
+export const missingFolderProject: ProjectInfo = {
+  id: 'project-old-api',
+  name: 'old-api',
+  path: '/projects/old-api',
+  createdAt: localProject.createdAt + 1,
+  checkoutChoice: { type: 'main' },
+  remoteHost: null,
+  folderExists: false,
 };
+
+export const settingsProjects: ProjectInfo[] = [
+  ...newSessionProjects,
+  missingFolderProject,
+];
+
+export { localProject, worktreeProject };
 
 // A paired Device's name, for a Project that is not on the Server Device.
 export const otherDeviceName = 'Studio MacBook Pro';

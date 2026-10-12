@@ -9,6 +9,7 @@ import { FieldSection } from '#primitives/field-section';
 import { IconButton } from '#primitives/icon-button';
 import { ListItem } from '#primitives/list-item';
 import { type ErrorToast, useErrorToast } from '#primitives/toast';
+import type { ListItemProps } from '../../../lib/generic/primitives/field-props';
 import { useWide } from '../../../lib/generic/use-wide';
 
 export type ProjectsLoad =
@@ -147,12 +148,33 @@ function ProjectRows({
   );
 }
 
+const folderNotFound = 'Folder not found';
+const missingFolder: ListItemProps['status'] = {
+  tone: 'warning',
+  label: folderNotFound,
+};
+
+// Where the Project's remote is, or that its folder is gone: a phone shows only the dot, which the row's name still says.
+function projectDetail(
+  project: ProjectInfo,
+  wide: boolean,
+): Pick<ListItemProps, 'value' | 'status'> {
+  if (!project.folderExists)
+    return { value: wide ? folderNotFound : undefined, status: missingFolder };
+  return { value: project.remoteHost ?? 'No remote' };
+}
+
 // One line at every width: the folder path sits only on the Project's own page.
 function ProjectRow(props: {
   project: ProjectInfo;
   onOpen: () => void;
 }): React.JSX.Element {
   return (
-    <ListItem icon="folder" title={props.project.name} onPress={props.onOpen} />
+    <ListItem
+      icon="folder"
+      title={props.project.name}
+      {...projectDetail(props.project, useWide())}
+      onPress={props.onOpen}
+    />
   );
 }
