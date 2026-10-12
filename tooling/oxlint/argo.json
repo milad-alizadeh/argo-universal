@@ -1823,6 +1823,7 @@
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-markdown.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-value.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-blocks.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-paste.ts",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*",
         "packages/client/mocks/rich-textarea-headless.ts"
       ],

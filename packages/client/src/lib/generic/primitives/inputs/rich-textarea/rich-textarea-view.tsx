@@ -26,6 +26,7 @@ import {
   richTextareaNodes,
   richTextareaTransformers,
 } from './rich-textarea-markdown';
+import { registerMarkdownOnly } from './rich-textarea-paste';
 import {
   plainFieldClassName,
   type RichTextareaProps,
@@ -56,6 +57,12 @@ function EditingPlugins(): React.JSX.Element {
       <MarkdownShortcutPlugin transformers={richTextareaTransformers} />
     </>
   );
+}
+
+function MarkdownOnlyPlugin(): null {
+  const [editor] = useLexicalComposerContext();
+  useEffect(() => registerMarkdownOnly(editor), [editor]);
+  return null;
 }
 
 function EditablePlugin({ editable }: { editable: boolean }): null {
@@ -147,6 +154,7 @@ function RichTextarea({
     <LexicalComposer initialConfig={editorConfig(props.value, editable)}>
       <MessageField {...props} editable={editable} />
       <EditingPlugins />
+      <MarkdownOnlyPlugin />
       <KeyboardPlugin onSubmit={props.onSubmit} />
       <EditablePlugin editable={editable} />
       <MarkdownValuePlugin {...props} />
