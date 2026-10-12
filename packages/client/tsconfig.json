@@ -2,9 +2,8 @@
   "extends": "@repo/typescript/react-native.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    // className props on React Native components come from Uniwind's type augmentation;
-    // test stories' CDP session comes from the Playwright provider's.
-    "types": ["uniwind/types", "@vitest/browser-playwright"]
+    // className props on React Native components come from Uniwind's type augmentation.
+    "types": ["uniwind/types"]
   },
   "include": ["src", "mocks", "vitest.config.ts"]
 }

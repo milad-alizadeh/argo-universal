@@ -203,6 +203,9 @@ catalogs:
     '@lexical/headless':
       specifier: 0.52.0
       version: 0.52.0
+    '@lexical/html':
+      specifier: 0.52.0
+      version: 0.52.0
     '@lexical/link':
       specifier: 0.52.0
       version: 0.52.0
@@ -1134,6 +1137,9 @@ importers:
         version: 5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759)
     devDependencies:
       '@lexical/headless':
+        specifier: 'catalog:'
+        version: 0.52.0(typescript@7.0.2)
+      '@lexical/html':
         specifier: 'catalog:'
         version: 0.52.0(typescript@7.0.2)
       '@repo/engine':

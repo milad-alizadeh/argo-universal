@@ -10,7 +10,7 @@ export interface PastedHtml {
 }
 
 const webPage: PastedHtml = {
-  source: 'a web page',
+  source: 'a web page (composite)',
   html: `<meta charset='utf-8'><h2 style="color: rgb(31, 35, 40); font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif; font-size: 1.5em; font-weight: 600; margin-top: 24px;">Install</h2><p style="color: rgb(31, 35, 40); font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif; font-size: 16px;">Run <code style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13.6px; background-color: rgba(129, 139, 152, 0.12); border-radius: 6px; padding: 0.2em 0.4em;">pnpm install</code>, then read the <a href="https://argo.dev/docs/install" style="color: rgb(9, 105, 218); text-decoration: underline;">install guide</a>. It is <strong>fast</strong> and <em>safe</em>.</p><p style="color: rgb(31, 35, 40); font-size: 16px;"><img src="https://argo.dev/images/install.png" alt="Install screen" width="640" height="360"></p><table style="border-collapse: collapse;"><thead><tr><th style="border: 1px solid rgb(209, 217, 224);">Runtime</th></tr></thead><tbody><tr><td style="border: 1px solid rgb(209, 217, 224);">Node 24</td></tr></tbody></table><p style="color: rgb(31, 35, 40); font-size: 16px;"><span style="color: rgb(207, 34, 46); font-family: Georgia, serif; font-size: 18px;">Red serif</span> notes, <u>underlined</u>, <mark>highlighted</mark>, H<sub>2</sub>O and x<sup>2</sup>.</p>`,
   plain:
     'Install\n\nRun pnpm install, then read the install guide. It is fast and safe.\n\nRuntime\nNode 24\n\nRed serif notes, underlined, highlighted, H2O and x2.',
@@ -64,4 +64,12 @@ const vsCode: PastedHtml = {
   sent: '```\nconst snake_case = 2 * 3;\nconsole.log(snake_case);\n```',
 };
 
-export const pastedHtml = { webPage, googleDocs, notion, vsCode };
+// A link Argo does not follow (only http, https and mailto) keeps its text without the link.
+const scriptLink: PastedHtml = {
+  source: 'a link to a script',
+  html: '<a href="javascript:alert(1)">x</a>',
+  plain: 'x',
+  sent: 'x',
+};
+
+export const pastedHtml = { webPage, googleDocs, notion, vsCode, scriptLink };

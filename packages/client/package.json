@@ -78,6 +78,7 @@
   },
   "devDependencies": {
     "@lexical/headless": "catalog:",
+    "@lexical/html": "catalog:",
     "@repo/engine": "workspace:*",
     "@repo/mocks": "workspace:*",
     "@repo/typescript": "workspace:*",

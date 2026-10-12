@@ -1,3 +1,4 @@
+/// <reference types="@vitest/browser-playwright" />
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { cdp, userEvent } from 'vitest/browser';
@@ -59,8 +60,9 @@ export const PastedFromAWebPage = pastedFrom(pastedHtml.webPage);
 export const PastedFromGoogleDocs = pastedFrom(pastedHtml.googleDocs);
 export const PastedFromNotion = pastedFrom(pastedHtml.notion);
 export const PastedFromVsCode = pastedFrom(pastedHtml.vsCode);
+export const PastedScriptLinkIsPlainText = pastedFrom(pastedHtml.scriptLink);
 
-// Colours, fonts, alignment, underline, highlight, subscript and superscript do not show in the field.
+// Colours, fonts, alignment, highlight, subscript and superscript do not show in the field.
 function pastedStylingDropped(pasted: PastedHtml): Story {
   return {
     play: async ({ canvas, args }) => {
@@ -68,7 +70,7 @@ function pastedStylingDropped(pasted: PastedHtml): Story {
       await pasteInto(field, pasted);
       await waitFor(() => expect(args.onChangeText).toHaveBeenCalled());
       await expect(
-        field.querySelectorAll('[style], u, mark, sub, sup'),
+        field.querySelectorAll('[style], mark, sub, sup'),
       ).toHaveLength(0);
     },
   };

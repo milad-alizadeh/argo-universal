@@ -11,6 +11,7 @@ import {
   ParagraphNode,
   TextNode,
 } from 'lexical';
+import { isLinkUrl } from './rich-textarea-links';
 
 // The marks markdown can write; underline, highlight, subscript, superscript and case changes cannot.
 const markdownMarks = IS_BOLD | IS_ITALIC | IS_STRIKETHROUGH | IS_CODE;
@@ -71,9 +72,17 @@ const $plainBlock = (block: ElementNode): void => $strip(block, blockStrips);
 const $plainUnindentedBlock = (block: ElementNode): void =>
   $strip(block, unindentedBlockStrips);
 
-// A link around only an image has nothing left to show once the image is dropped.
-function $dropEmptyLink(link: LinkNode): void {
-  if (link.isEmpty()) link.remove();
+function $unwrap(link: LinkNode): void {
+  for (const child of link.getChildren()) link.insertBefore(child);
+  link.remove();
+}
+
+/*
+ * A link Argo does not follow (only http, https and mailto) keeps its text as plain text; a link
+ * around only an image has nothing left to show once the image is dropped.
+ */
+function $plainLink(link: LinkNode): void {
+  if (link.isEmpty() || !isLinkUrl(link.getURL())) $unwrap(link);
 }
 
 /*
@@ -87,7 +96,7 @@ export function registerMarkdownOnly(editor: LexicalEditor): () => void {
     editor.registerNodeTransform(ParagraphNode, $plainUnindentedBlock),
     editor.registerNodeTransform(QuoteNode, $plainUnindentedBlock),
     editor.registerNodeTransform(ListItemNode, $plainBlock),
-    editor.registerNodeTransform(LinkNode, $dropEmptyLink),
+    editor.registerNodeTransform(LinkNode, $plainLink),
   ];
   return () => {
     for (const stop of unregister) stop();
