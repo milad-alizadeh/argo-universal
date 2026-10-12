@@ -45,6 +45,8 @@ function contentPressableProps(
     accessibilityLabel: props.accessibilityLabel ?? props.label,
     testID: props.testID,
     className: contentButtonClass(props),
+    // Android fades each child on its own unless the button composites first, showing the fill through the label.
+    needsOffscreenAlphaCompositing: !!props.disabled,
   };
 }
 
