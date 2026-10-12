@@ -8,6 +8,7 @@ import {
   type FeedMock,
   recordedFeedMocks,
   recordedStreamingMessages,
+  recordedUserMessages,
 } from '@repo/mocks/app';
 
 // The bytes of `mocks/agent/red-square.png`, the shared image attachment mock.
@@ -52,6 +53,18 @@ export const recordedUserMessage = (
   agent: MockAgent,
   recording: string,
 ): UserMessage => recordedRow(agent, recording, 'user_message');
+
+// A prompt recorded on its own, for user message text no Feed recording holds.
+export function recordedPrompt(
+  agent: MockAgent,
+  recording: string,
+): UserMessage {
+  const prompt = recordedUserMessages.find(
+    (message) => message.agent === agent && message.recording === recording,
+  );
+  if (!prompt) throw new Error(`No recorded prompt ${agent}/${recording}`);
+  return prompt.row;
+}
 
 export const recordedAgentMessage = (
   agent: MockAgent,
