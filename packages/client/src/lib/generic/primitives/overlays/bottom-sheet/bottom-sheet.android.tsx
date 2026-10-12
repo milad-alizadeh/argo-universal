@@ -127,11 +127,18 @@ type SheetProps = Pick<
   'onOpenChange' | 'label' | 'children' | 'dismissible'
 > & { sheetRef: SheetRef };
 function HostedSheetContent(
-  props: Pick<BottomSheetProps, 'onOpenChange' | 'label' | 'children'>,
+  props: Pick<
+    BottomSheetProps,
+    'onOpenChange' | 'label' | 'children' | 'dismissible'
+  >,
 ): React.JSX.Element {
   return (
     <RNHostView modifiers={[fillMaxHeight()]}>
-      <BottomSheetContent label={props.label} onOpenChange={props.onOpenChange}>
+      <BottomSheetContent
+        label={props.label}
+        onOpenChange={props.onOpenChange}
+        dismissible={props.dismissible}
+      >
         {props.children}
       </BottomSheetContent>
     </RNHostView>

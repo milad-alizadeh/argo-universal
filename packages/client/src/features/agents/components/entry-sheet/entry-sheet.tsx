@@ -20,7 +20,7 @@ export type EntrySheetProps = {
   fields: readonly EntrySheetField[];
   // Save submits the entry's form: a valid entry is kept, and an invalid one shows every error.
   onSave: () => void;
-  // Typed input is not lost to a swipe, the backdrop or Escape; Cancel stays on every window to discard it.
+  // Typed input is not lost to a swipe, the backdrop or Escape; Cancel discards it.
   dirty: boolean;
   onClose: () => void;
   onRemove?: () => void;

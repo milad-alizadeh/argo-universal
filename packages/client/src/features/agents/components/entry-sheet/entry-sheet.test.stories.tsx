@@ -80,3 +80,15 @@ export const OffersCancelOnAPhoneOnceTouched: Story = {
     await expect(args.onClose).toHaveBeenCalled();
   },
 };
+
+// A narrow window's sheet holds typed input against Escape as the wide dialog does.
+export const EscapeKeepsATouchedSheetOnAPhone: Story = {
+  args: { dirty: true },
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
+  play: async ({ args, userEvent }) => {
+    await editor();
+    await userEvent.keyboard('{Escape}');
+    await expect(args.onClose).not.toHaveBeenCalled();
+    await expect(await editor()).toBeInTheDocument();
+  },
+};

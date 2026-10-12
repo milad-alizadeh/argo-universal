@@ -10,6 +10,7 @@ export function DialogSheet(props: DialogSheetProps): React.JSX.Element {
     <BottomSheetSurface
       open={open}
       hiddenWhileClosing
+      dismissible={props.dismissible}
       title={props.label && <SheetLabel label={props.label} />}
     >
       {props.children}

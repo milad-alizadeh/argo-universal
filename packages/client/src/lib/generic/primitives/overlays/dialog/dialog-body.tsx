@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Platform, Text } from 'react-native';
 import { Icon } from '#lib/generic/primitives/display/icon/icon';
 import { cn } from '#lib/generic/utils';
+import { keepOpen } from '../keep-open';
 
 // Only what both the centred dialog and the narrow window's sheet honour.
 export type ContentProps = {
@@ -57,12 +58,5 @@ function contentProps({
     accessibilityLabel,
     className: cn(contentClassName, className),
     onEscapeKeyDown: keepOpen(dismissible),
-  };
-}
-
-// Radix closes on Escape unless the event is cancelled.
-function keepOpen(dismissible: boolean | undefined): (event: Event) => void {
-  return (event) => {
-    if (dismissible === false) event.preventDefault();
   };
 }
