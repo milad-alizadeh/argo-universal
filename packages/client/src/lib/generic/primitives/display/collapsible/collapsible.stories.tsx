@@ -56,9 +56,7 @@ export const Variations: Story = {
 function RepositoriesHeader(): React.JSX.Element {
   return (
     <View className="flex-row items-center justify-between gap-4">
-      <Text className="text-sm font-semibold">
-        @peduarte starred 3 repositories
-      </Text>
+      <Text role={'heading'}>@peduarte starred 3 repositories</Text>
       <RepositoriesTrigger />
     </View>
   );
@@ -66,7 +64,7 @@ function RepositoriesHeader(): React.JSX.Element {
 function RepositoryRow({ name }: { name: string }): React.JSX.Element {
   return (
     <View className="rounded-md border border-border px-4 py-2">
-      <Text className="text-sm">{name}</Text>
+      <Text>{name}</Text>
     </View>
   );
 }

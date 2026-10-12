@@ -1,8 +1,6 @@
 export {
   AgentModelSheetChoices,
   AgentModelSheetSettings,
-  ComposerSheetContent,
-  useSheetLabel,
 } from './components/agent-model-sheet';
 export {
   type NativeSheets,

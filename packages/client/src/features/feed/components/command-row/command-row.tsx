@@ -64,7 +64,7 @@ export function CommandRow({
             {!running && !stopped && (
               <Icon
                 name={failed ? 'close' : 'check'}
-                size="xs"
+                role="secondary"
                 className={cn('text-success', failed && 'text-destructive')}
               />
             )}

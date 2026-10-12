@@ -137,6 +137,23 @@ describe.each(liveHeaderMocks)(
         ]),
       ).toBe(expected);
     });
+    it.each(['search' as const, 'fetch' as const, 'other' as const])(
+      'step 6: uses the Tool call title for a %s Tool call without a kind label',
+      (kind): void => {
+        expect(
+          headerText(running, [
+            {
+              ...command,
+              kind,
+              title: 'github: list_issues',
+              name: 'list_issues',
+              content: [],
+              _meta: undefined,
+            },
+          ]),
+        ).toBe('github: list_issues');
+      },
+    );
     it('step 6: uses the Tool call name when no kind label applies', (): void => {
       expect(
         headerText(running, [

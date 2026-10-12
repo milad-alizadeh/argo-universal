@@ -11,7 +11,6 @@ import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { FeedMarkdown } from '#lib/product/markdown/feed-markdown';
 import { Icon } from '../../../../lib/generic/symbols/icon';
-import { useTextIconSize } from '../../../../lib/generic/symbols/text-icon-size';
 import { ClampLeaves } from '../../../../lib/product/markdown/clamp-leaves';
 import { resourceName } from '../../../../lib/product/markdown/resource-name';
 import { useWholeLineClamp } from '../../../../lib/product/markdown/use-whole-line-clamp';
@@ -83,12 +82,11 @@ function ReferenceChip({
 }: {
   reference: Reference;
 }): React.JSX.Element {
-  const iconSize = useTextIconSize();
   return (
     <View className="h-[26px] flex-row items-center gap-1.5 rounded-md border border-border bg-card px-2">
       <Icon
         name={isFolder(reference) ? 'folder' : 'file'}
-        size={iconSize}
+        role="body"
         className="text-muted-foreground"
       />
       <Text role="body" className="font-sans">

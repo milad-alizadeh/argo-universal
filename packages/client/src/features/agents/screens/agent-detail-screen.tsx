@@ -8,9 +8,11 @@ import type * as React from 'react';
 import { useTRPC } from '#features/connection';
 import { useNavigate } from '#lib/product/navigation/context';
 import { AgentDetailView } from '../components/agent-detail-view/agent-detail-view';
+import { AgentLoginSheet } from '../components/agent-login-sheet/agent-login-sheet';
 import { AgentPlaceholder } from '../components/agent-placeholder';
 import { CustomAgentDetailView } from '../components/custom-agent-detail-view/custom-agent-detail-view';
 import { useAgentInstallation } from '../hooks/use-agent-installation';
+import { useAgentLogin } from '../hooks/use-agent-login';
 import { useAgents } from '../hooks/use-agents';
 import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
 import {
@@ -20,12 +22,17 @@ import {
 } from '../hooks/use-custom-agents';
 import { useSessionDefaults } from '../hooks/use-session-defaults';
 import { agentDetail } from '../state/agent-detail';
-import type { AgentDetail } from '../state/agent-detail-types';
+import type {
+  AgentDetail,
+  AgentDetailViewProps,
+} from '../state/agent-detail-types';
 
 export interface AgentDetailScreenProps {
   agent: string;
 }
 type PageProps = AgentDetailScreenProps & { onBack: () => void };
+type AgentPageProps = PageProps & { onSignIn: () => void };
+type AgentPageView = AgentDetailViewProps | undefined;
 
 // Which page to draw waits for the custom Agents, so a custom Agent never shows the built-in page first.
 type CustomDefinition =
@@ -59,16 +66,12 @@ export function AgentDetailScreen({
 function CustomAgentPage(
   props: PageProps & { definition: CustomAgentDefinition },
 ): React.JSX.Element {
-  const check = useAgentCheck(props.agent, true);
+  const view = useCustomView(props);
+  const login = useAgentLogin(props.agent);
   return (
-    <CustomAgentDetailView
-      agentId={props.agent}
-      definition={props.definition}
-      check={check.isFetching ? undefined : check.data}
-      onCheck={() => void check.refetch()}
-      onSave={useSaveAgent(props.agent)}
-      onBack={props.onBack}
-    />
+    <LoginPage name={props.definition.name} login={login}>
+      <CustomAgentDetailView {...view} onSignIn={login.start} />
+    </LoginPage>
   );
 }
 
@@ -86,19 +89,60 @@ function useAgentDetail(agent: string): {
 
 // A built-in or registry Agent: the Server's probe and the saved ACP Registry entry.
 function AgentPage({ agent, onBack }: PageProps): React.JSX.Element {
-  const { info, detail, retry } = useAgentDetail(agent);
-  const { defaults, change } = useSessionDefaults(info);
-  const installation = useAgentInstallation(agent, detailVersion(detail));
-  if (!detail) return <AgentPlaceholder agent={agent} />;
+  const login = useAgentLogin(agent);
+  const view = useAgentPageView({ agent, onBack, onSignIn: login.start });
+  if (!view) return <AgentPlaceholder agent={agent} />;
   return (
-    <AgentDetailView
-      {...{ agent: installedDetail(detail, installation), installation }}
-      defaults={defaults}
-      onDefaultChange={change}
-      onBack={onBack}
-      onCheckAgain={retry}
-    />
+    <LoginPage name={view.agent.name} login={login}>
+      <AgentDetailView {...view} />
+    </LoginPage>
   );
+}
+function useAgentPageView(props: AgentPageProps): AgentPageView {
+  const { info, detail, retry } = useAgentDetail(props.agent);
+  const { defaults, change } = useSessionDefaults(info);
+  const installation = useAgentInstallation(props.agent, detailVersion(detail));
+  if (!detail) return undefined;
+  return {
+    ...props,
+    agent: installedDetail(detail, installation),
+    installation,
+    defaults,
+    onDefaultChange: change,
+    onCheckAgain: retry,
+  };
+}
+
+type LoginPageProps = {
+  name: string;
+  login: ReturnType<typeof useAgentLogin>;
+  children: React.ReactNode;
+};
+function LoginPage({
+  name,
+  login,
+  children,
+}: LoginPageProps): React.JSX.Element {
+  return (
+    <>
+      {children}
+      {login.sheet && <AgentLoginSheet agentName={name} {...login.sheet} />}
+    </>
+  );
+}
+
+function useCustomView(
+  props: PageProps & { definition: CustomAgentDefinition },
+): React.ComponentProps<typeof CustomAgentDetailView> {
+  const check = useAgentCheck(props.agent, true);
+  return {
+    agentId: props.agent,
+    definition: props.definition,
+    check: check.isFetching ? undefined : check.data,
+    onCheck: () => void check.refetch(),
+    onSave: useSaveAgent(props.agent),
+    onBack: props.onBack,
+  };
 }
 
 function installedDetail(
@@ -117,5 +161,4 @@ function withInstallation(
   return { ...detail, status: 'unavailable', version: saved.version };
 }
 
-const detailVersion = (detail: AgentDetail | undefined): string =>
-  detail?.version ?? '';
+const detailVersion = (detail?: AgentDetail): string => detail?.version ?? '';

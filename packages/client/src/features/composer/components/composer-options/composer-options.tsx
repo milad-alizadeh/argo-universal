@@ -1,115 +1,161 @@
 import { LegendList } from '@legendapp/list/react-native';
-import type {
-  SessionConfigOption,
-  SessionConfigSelectOption,
-} from '@repo/contracts';
+import type { SessionConfigOption } from '@repo/contracts';
 import type * as React from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { Platform, View, useWindowDimensions } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Button } from '#primitives/buttons/button/button';
+import { SelectedCheck } from '#primitives/display/selected-check';
+import { FieldGroup } from '#primitives/fields/field-group/field-group';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { Switch } from '#primitives/inputs/switch/switch';
+import { ListItem } from '#primitives/lists/list-item/list-item';
 import { configurationChoices } from '../../state/configuration-choices';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 
-const settingsRowEstimate = 44;
-const settingsMenuPadding = 8;
-const maximumSettingsHeight = 320;
-const maximumScreenFraction = 0.6;
+type Option = SessionConfigOption;
+type Change = ComposerConfigurationProps['onConfigChange'];
+const maximumHeight = 320;
+const rowEstimate = 52;
+const sectionGap = 16;
+const screenFraction = 0.6;
 
-type SettingsRow =
-  | { id: string; type: 'header'; name: string }
-  | {
-      id: string;
-      type: 'boolean';
-      option: Extract<SessionConfigOption, { type: 'boolean' }>;
-    }
-  | {
-      id: string;
-      type: 'choice';
-      option: Extract<SessionConfigOption, { type: 'select' }>;
-      choice: SessionConfigSelectOption;
-    };
-
-function settingRows(options: SessionConfigOption[]): SettingsRow[] {
-  return options.flatMap((option): SettingsRow[] => {
-    if (option.type === 'boolean')
-      return [
-        {
-          id: JSON.stringify(['boolean', option.configId]),
-          type: 'boolean',
-          option,
-        },
-      ];
-    if (['mode', 'model', 'thought_level'].includes(option.category ?? ''))
-      return [];
-    return [
-      {
-        id: JSON.stringify(['header', option.configId]),
-        type: 'header',
-        name: option.name,
-      },
-      ...configurationChoices(option).map((choice): SettingsRow => ({
-        id: JSON.stringify(['choice', option.configId, choice.value]),
-        type: 'choice',
-        option,
-        choice,
-      })),
-    ];
-  });
+function optionsFor(configuration: ComposerConfigurationProps): Option[] {
+  return configuration.configOptions.filter(
+    (option) =>
+      option.type === 'boolean' ||
+      !['mode', 'model', 'thought_level'].includes(option.category ?? ''),
+  );
 }
 
-function SettingRow({
-  row,
-  onConfigChange,
+function BooleanSetting({
+  option,
+  onChange,
 }: {
-  row: SettingsRow;
-  onConfigChange: ComposerConfigurationProps['onConfigChange'];
+  option: Extract<Option, { type: 'boolean' }>;
+  onChange: Change;
 }): React.JSX.Element {
-  if (row.type === 'header')
-    return (
-      <Text role="secondary" className="px-2 pt-1.5 pb-1">
-        {row.name}
-      </Text>
-    );
-  const { option } = row;
-  const boolean = row.type === 'boolean';
-  const selected = boolean
-    ? option.currentValue === true
-    : option.currentValue === row.choice.value;
-  const name = boolean ? option.name : row.choice.name;
+  const change = (): void => onChange(option.configId, !option.currentValue);
+  const native = Platform.OS !== 'web';
+  const toggle = (
+    <Switch
+      accessibilityLabel={option.name}
+      tabIndex={native ? undefined : -1}
+      checked={option.currentValue}
+      onCheckedChange={(checked) => onChange(option.configId, checked)}
+    />
+  );
   return (
-    <Pressable
-      accessibilityLabel={boolean ? name : `${option.name}: ${name}`}
-      aria-pressed={selected}
-      onPress={() =>
-        onConfigChange(
-          option.configId,
-          boolean ? !option.currentValue : row.choice.value,
+    <ListItem
+      title={option.name}
+      role={native ? undefined : 'switch'}
+      checked={native ? undefined : option.currentValue}
+      disclosure={false}
+      onPress={native ? undefined : change}
+      control={native ? toggle : undefined}
+      accessory={
+        native ? undefined : (
+          <View
+            pointerEvents="none"
+            aria-hidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            {toggle}
+          </View>
         )
       }
-      role="button"
-      className={contentActionClass({
-        variant: 'ghost',
-        className:
-          'h-auto sm:h-auto min-h-10 px-2 py-2 justify-start rounded-sm wide:rounded-xl',
-      })}
-    >
-      <Text className="flex-1 font-normal">{name}</Text>
-      {boolean ? (
-        <Text className="w-8 text-right font-normal text-muted-foreground">
-          {selected ? 'On' : 'Off'}
-        </Text>
-      ) : (
-        <View className="w-4 h-4">
-          {selected && <Icon name="check" size="xs" />}
-        </View>
-      )}
-    </Pressable>
+    />
+  );
+}
+
+function SettingSection({
+  option,
+  onChange,
+}: {
+  option: Option;
+  onChange: Change;
+}): React.JSX.Element {
+  if (option.type === 'boolean')
+    return (
+      <FieldSection>
+        <BooleanSetting option={option} onChange={onChange} />
+      </FieldSection>
+    );
+  return (
+    <FieldSection title={option.name}>
+      {configurationChoices(option).map((choice) => (
+        <ListItem
+          key={choice.value}
+          title={choice.name}
+          accessibilityLabel={`${option.name}: ${choice.name}`}
+          role="button"
+          disclosure={false}
+          selected={option.currentValue === choice.value}
+          onPress={() => onChange(option.configId, choice.value)}
+          accessory={
+            option.currentValue === choice.value ? <SelectedCheck /> : undefined
+          }
+        />
+      ))}
+    </FieldSection>
+  );
+}
+
+function OptionsContents({
+  options,
+  onChange,
+}: {
+  options: Option[];
+  onChange: Change;
+}): React.JSX.Element {
+  const { height } = useWindowDimensions();
+  if (Platform.OS !== 'web')
+    return (
+      <View className="flex-1 bg-sidebar">
+        <FieldGroup>
+          {options.map((option) => (
+            <SettingSection
+              key={option.configId}
+              option={option}
+              onChange={onChange}
+            />
+          ))}
+        </FieldGroup>
+      </View>
+    );
+  const rows = options.reduce(
+    (count, option) =>
+      count +
+      (option.type === 'boolean' ? 1 : configurationChoices(option).length + 1),
+    0,
+  );
+  return (
+    <View className="wide:p-3 bg-sidebar">
+      <View
+        style={{
+          height: Math.min(
+            rows * rowEstimate + options.length * sectionGap,
+            maximumHeight,
+            height * screenFraction,
+          ),
+        }}
+      >
+        <LegendList
+          {...listTestIdProps('composer-settings-scroll')}
+          style={{ flex: 1 }}
+          data={options}
+          keyExtractor={(option) => option.configId}
+          renderItem={({ item }) => (
+            <SettingSection option={item} onChange={onChange} />
+          )}
+          estimatedItemSize={120}
+          recycleItems={false}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
+          contentContainerStyle={{ gap: 16 }}
+        />
+      </View>
+    </View>
   );
 }
 
@@ -120,52 +166,29 @@ export function ComposerOptions({
   configuration: ComposerConfigurationProps;
   disabled: boolean;
 }): React.JSX.Element | null {
-  const { height } = useWindowDimensions();
-  const rows = settingRows(configuration.configOptions);
-  if (!rows.length) return null;
-  const menuHeight = Math.min(
-    rows.length * settingsRowEstimate + settingsMenuPadding,
-    maximumSettingsHeight,
-    height * maximumScreenFraction,
-  );
+  const options = optionsFor(configuration);
+  if (!options.length) return null;
   return (
     <ComposerPopover
+      listContent
       label="Session settings"
       trigger={
-        <Pressable
+        <Button
+          appearance="content"
+          variant="ghost"
           disabled={disabled}
           accessibilityLabel="Session settings"
-          role="button"
-          className={contentActionClass({
-            variant: 'ghost',
-            disabled,
-            className: 'h-7 sm:h-7 px-1.5 py-0',
-          })}
-        >
-          <Text className="text-xs text-muted-foreground">Settings</Text>
-        </Pressable>
+          label="Settings"
+          className="h-7 sm:h-7 px-1.5 py-0"
+          labelClassName="text-muted-foreground"
+        />
       }
     >
       {() => (
-        <View style={{ height: menuHeight }}>
-          <LegendList
-            {...listTestIdProps('composer-settings-scroll')}
-            style={{ flex: 1 }}
-            contentContainerStyle={{ padding: 4 }}
-            data={rows}
-            keyExtractor={(row) => row.id}
-            renderItem={({ item }) => (
-              <SettingRow
-                row={item}
-                onConfigChange={configuration.onConfigChange}
-              />
-            )}
-            estimatedItemSize={settingsRowEstimate}
-            recycleItems={false}
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
-          />
-        </View>
+        <OptionsContents
+          options={options}
+          onChange={configuration.onConfigChange}
+        />
       )}
     </ComposerPopover>
   );

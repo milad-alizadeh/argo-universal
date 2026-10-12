@@ -1,4 +1,4 @@
-import type { NativeSymbol } from './native-symbol';
+import type { SymbolSource } from './symbol-source';
 
 // Files, folders and repositories.
 export const fileSymbols = {
@@ -17,4 +17,4 @@ export const fileSymbols = {
   folders: { sf: 'rectangle.stack', material: 'folder_copy' },
   registry: { sf: 'doc.plaintext', material: 'article' },
   repository: { sf: 'book.closed', material: 'book' },
-} as const satisfies Record<string, NativeSymbol>;
+} as const satisfies Record<string, SymbolSource>;

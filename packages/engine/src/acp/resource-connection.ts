@@ -4,6 +4,7 @@ import type {
 } from '@agentclientprotocol/sdk';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunch } from '../agents';
+import { AcpAuthenticationStatus } from './auth-status';
 import { createAgentClient } from './client';
 import { negotiateAcpInitialize } from './initialize';
 import { openProtocolSession } from './open-session';
@@ -14,22 +15,16 @@ import type {
   AcpSessionLease,
   AcpSessionOpening,
 } from './resource-types';
-import {
-  createPermissionResponder,
-  createElicitationResponder,
-} from './responders';
+import { createResourceResponders } from './responders';
 import { createAcpResponseReaders } from './response-readers';
 import { AcpResponseWrites } from './response-writes';
 import type { AcpRouting } from './routing';
+import { reportsAuthStatus } from './subscription-status';
 
 type Ready = {
   connection: ClientConnection;
   initialization: InitializeResponse;
 };
-type ClientRequestHandlers = Pick<
-  Parameters<typeof createAgentClient>[0],
-  'requestPermission' | 'createElicitation'
->;
 export class AcpResourceConnection {
   private onResourceFailure: ((error: unknown) => void) | undefined;
   private readonly writes = new AcpResponseWrites((error) =>
@@ -38,6 +33,7 @@ export class AcpResourceConnection {
   private readonly readers = createAcpResponseReaders(
     createRejectionCounter('ACP responses'),
   );
+  private readonly status = new AcpAuthenticationStatus();
   private readonly process: Promise<AcpProcess>;
   private readonly startup: Promise<Ready>;
   private connection: ClientConnection | undefined;
@@ -56,27 +52,21 @@ export class AcpResourceConnection {
     this.connection = createAgentClient({
       stream: this.writes.observeResponseWrites(process.stream),
       acceptSessionUpdate: this.routing.accept,
-      ...this.createClientRequestHandlers(),
+      acceptAuthStatus: (notification) => this.status.accept(notification),
+      rejectAuthStatus: () => this.status.invalidate(),
+      ...createResourceResponders(this.routing, this.writes),
     });
     return {
       connection: this.connection,
-      initialization: await negotiateAcpInitialize(
-        this.connection.agent,
-        this.readers,
-      ),
+      initialization: await this.negotiate(this.connection),
     };
   }
-  private createClientRequestHandlers(): ClientRequestHandlers {
-    return {
-      requestPermission: createPermissionResponder(
-        this.routing.findSessionReservation,
-        this.writes,
-      ),
-      createElicitation: createElicitationResponder(
-        this.routing.findSessionReservation,
-        this.writes,
-      ),
-    };
+  private negotiate(connection: ClientConnection): Promise<InitializeResponse> {
+    return negotiateAcpInitialize(connection.agent, this.readers);
+  }
+  private failSubscription(error: Error): void {
+    this.connection?.close();
+    this.onResourceFailure?.(error);
   }
   public observeResourceFailures(
     onResourceFailure: (error: unknown) => void,
@@ -105,14 +95,32 @@ export class AcpResourceConnection {
     beforeDispatch: () => void,
   ): Promise<Omit<AcpSessionLease, 'close' | 'released'>> {
     const { connection, initialization } = await this.startup;
+    await this.status.requireReady(initialization);
     beforeDispatch();
-    const opened = await openProtocolSession({
-      agent: connection.agent,
-      initialization,
+    const opened = await this.openSession(
+      { connection, initialization },
+      opening,
+    );
+    await this.status.requireReady(initialization);
+    this.activateSubscription(initialization);
+    return { agent: connection.agent, initialization, ...opened };
+  }
+  private activateSubscription(initialization: InitializeResponse): void {
+    if (reportsAuthStatus(initialization))
+      this.status.guardActiveSubscription((error) =>
+        this.failSubscription(error),
+      );
+  }
+  private openSession(
+    ready: Ready,
+    opening: AcpSessionOpening,
+  ): ReturnType<typeof openProtocolSession> {
+    return openProtocolSession({
+      agent: ready.connection.agent,
+      initialization: ready.initialization,
       opening,
       readers: this.readers,
     });
-    return { agent: connection.agent, initialization, ...opened };
   }
   public async closeSession(sessionId: string): Promise<void> {
     const { connection } = await this.startup;

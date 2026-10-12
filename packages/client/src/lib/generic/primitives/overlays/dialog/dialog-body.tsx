@@ -12,6 +12,7 @@ export type ContentProps = {
   accessibilityLabel?: string;
   // False while the content holds unsaved input: only its own actions close it.
   dismissible?: boolean;
+  showClose?: boolean;
   children: React.ReactNode;
 };
 const contentClassName = cn(
@@ -32,6 +33,7 @@ function ContentClose(): React.JSX.Element {
   return (
     <DialogPrimitive.Close className={closeClassName} hitSlop={12}>
       <Icon
+        role="control"
         name="close"
         className="text-accent-foreground web:pointer-events-none shrink-0"
       />
@@ -45,7 +47,7 @@ export function DialogBody(props: ContentProps): React.JSX.Element {
     DialogPrimitive.Content,
     contentProps(props),
     props.children,
-    <ContentClose />,
+    props.showClose === false ? null : <ContentClose />,
   );
 }
 

@@ -11,23 +11,30 @@ import type { FieldGroupProps } from '../field-props';
 export function FieldGroup({
   children,
   variant = 'grouped',
+  fit,
 }: FieldGroupProps): React.JSX.Element {
   // Wide, the group pads none of its own, so the pane's column is all its side padding.
   const columnStyle = useScrollColumnStyle();
   return (
     <FieldLayout value={variant}>
       <ScrollView
-        className="flex-1"
+        className={fit ? 'shrink' : 'flex-1'}
         contentContainerStyle={columnStyle}
-        contentContainerClassName={cn(
-          fieldGroupGap,
-          fieldGroupPadding,
-          // A navigation list's rows span a phone's width, as a native plain list's do.
-          variant === 'navigation' && 'px-0',
-        )}
+        contentContainerClassName={groupClasses(fit, variant)}
       >
         <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>
       </ScrollView>
     </FieldLayout>
   );
+}
+
+function groupClasses(
+  fit: boolean | undefined,
+  variant: FieldGroupProps['variant'],
+): string {
+  return cn(groupSpacing(fit), variant === 'navigation' && 'px-0');
+}
+
+function groupSpacing(fit: boolean | undefined): string {
+  return fit ? 'gap-4 p-4 wide:p-0' : cn(fieldGroupGap, fieldGroupPadding);
 }

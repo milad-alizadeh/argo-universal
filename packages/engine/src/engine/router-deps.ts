@@ -16,6 +16,7 @@ import {
 } from '../sessions';
 import { databaseWriterId, writerMachine } from '../storage';
 import type { SystemDeps } from '../system';
+import { createEngineAgentLogins } from './agent-logins';
 
 export type AppRouterDeps = SessionRouterDeps &
   AgentsRouterDeps &
@@ -57,10 +58,11 @@ type EngineSupplied =
   | keyof FeedDeps
   | 'createId'
   | 'checkAgentLaunch'
+  | 'agentLogins'
   | 'installations';
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId' | 'installations'>>;
+  Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>>;
 
 export function createAppRouterDeps(
   input: AppRouterInput,
@@ -68,12 +70,20 @@ export function createAppRouterDeps(
 ): AppRouterDeps {
   const installations =
     input.installations ?? new AgentInstallations(input.home ?? '');
-  bindInstallations(installations, input);
+  const agentLogins =
+    input.agentLogins ??
+    createEngineAgentLogins({
+      sessions: input.sessions,
+      createId: input.createId ?? randomUUID,
+      installations,
+    });
+  bindInstallations(installations, { ...input, agentLogins });
   return {
     ...input,
     ...sources,
     createId: input.createId ?? randomUUID,
     checkAgentLaunch,
+    agentLogins,
     installations,
     readSession: createSessionReader(input.database),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
@@ -82,13 +92,14 @@ export function createAppRouterDeps(
 
 function bindInstallations(
   installations: AgentInstallations,
-  input: AppRouterInput,
+  input: AppRouterInput & Pick<AppRouterDeps, 'agentLogins'>,
 ): void {
   installations.bind({
     ...input,
     createId: input.createId ?? randomUUID,
     checkAgentLaunch,
     isInUse: (agentId) =>
+      input.agentLogins.isBusy(agentId) ||
       Object.values(input.sessions.getSnapshot().context.sessions).some(
         (session) =>
           !session.getSnapshot().context.agent ||

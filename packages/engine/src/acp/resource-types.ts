@@ -50,5 +50,6 @@ export type AcpResourceInput = {
 };
 export type AcpResources = {
   open: (input: AcpOpenInput) => Promise<AcpSessionLease>;
+  reserveAuthentication: (launch: AgentLaunch) => () => void;
   shutdown: () => Promise<void>;
 };

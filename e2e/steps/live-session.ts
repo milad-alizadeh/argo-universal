@@ -68,7 +68,7 @@ Then(
   },
 );
 
-const chooseModelLabel = 'Choose model';
+const chooseModelLabel = /^Model,/;
 const effortValueAttribute = 'aria-valuetext';
 async function chooseEffort(page: Page, effort: string): Promise<void> {
   const slider = page.getByRole('slider', { name: 'Effort' });
@@ -79,6 +79,9 @@ async function chooseEffort(page: Page, effort: string): Promise<void> {
 }
 
 async function reopenConfiguration(page: Page): Promise<void> {
+  await expect(page.getByRole('dialog', { name: 'Select Model' })).toHaveCount(
+    0,
+  );
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: agentModelLabel }).click();
 }

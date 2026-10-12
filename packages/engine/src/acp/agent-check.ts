@@ -1,9 +1,12 @@
 import { setTimeout as sleep } from 'node:timers/promises';
+import type { InitializeResponse } from '@agentclientprotocol/sdk';
 import type { AgentCheck } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunchSubject, CheckAgentLaunch } from '../agents';
+import { AcpAuthenticationStatus } from './auth-status';
 import { createAgentClient } from './client';
 import { negotiateAcpInitialize } from './initialize';
+import { closeLoginProcess } from './login-cleanup';
 import { launchAcpProcess } from './process';
 import type { AcpProcess } from './resource-types';
 import { createAcpResponseReaders } from './response-readers';
@@ -15,18 +18,44 @@ const millisecondsPerSecond = 1000;
 // An unreferenced timer, so a pending check never keeps the process alive.
 const after = (milliseconds: number): Promise<'timeout'> =>
   sleep(milliseconds, 'timeout' as const, { ref: false });
-const initialize = async (process: AcpProcess): Promise<'answered'> => {
-  const connection = createAgentClient({
+const createCheckingClient = (
+  process: AcpProcess,
+  status: AcpAuthenticationStatus,
+): ReturnType<typeof createAgentClient> => {
+  return createAgentClient({
     stream: process.stream,
     acceptSessionUpdate: (): undefined => {},
     requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
     createElicitation: () => ({ action: 'cancel' }),
+    acceptAuthStatus: (notification) => status.accept(notification),
+    rejectAuthStatus: () => status.invalidate(),
   });
+};
+const authenticationState = (
+  status: 'authentication-required' | 'account-rejected',
+): 'required' | 'unverified' =>
+  status === 'authentication-required' ? 'required' : 'unverified';
+const checkAuthentication = async (
+  initialization: InitializeResponse,
+  status: AcpAuthenticationStatus,
+): Promise<AgentCheck> => {
+  const result = await status.check(initialization);
+  if (result.status === 'ready') return { status: 'ready' };
+  return {
+    status: 'ready',
+    authentication: authenticationState(result.status),
+  };
+};
+const initialize = async (process: AcpProcess): Promise<AgentCheck> => {
+  const status = new AcpAuthenticationStatus();
+  const connection = createCheckingClient(process, status);
   const readers = createAcpResponseReaders(
     createRejectionCounter('ACP initialize check'),
   );
-  await negotiateAcpInitialize(connection.agent, readers);
-  return 'answered';
+  return checkAuthentication(
+    await negotiateAcpInitialize(connection.agent, readers),
+    status,
+  );
 };
 const spawnFailures = new Map<unknown, string>([
   ['ENOENT', 'was not found.'],
@@ -59,13 +88,14 @@ const describeFailure = async (
     return `${subject.name} exited before answering ACP initialize.`;
   return `${subject.name} failed ACP initialize: ${describeError(error)}`;
 };
-const answerOrTimeout = async (process: AcpProcess): Promise<void> => {
+const answerOrTimeout = async (process: AcpProcess): Promise<AgentCheck> => {
   const answer = await Promise.race([
     initialize(process),
     after(answerTimeoutSeconds * millisecondsPerSecond),
   ]);
   if (answer === 'timeout')
     throw new Error(`no answer within ${answerTimeoutSeconds} seconds`);
+  return answer;
 };
 
 // Starts the program, sends the shared ACP initialize and stops it; readiness is never read from storage.
@@ -74,12 +104,11 @@ export const checkAgentLaunch: CheckAgentLaunch = async (
 ): Promise<AgentCheck> => {
   const process = await launchAcpProcess(subject.launch);
   try {
-    await answerOrTimeout(process);
-    return { status: 'ready' };
+    return await answerOrTimeout(process);
   } catch (error) {
     const failure = await describeFailure(error, process, subject);
     return { status: 'failed', failure };
   } finally {
-    await process.terminate();
+    await closeLoginProcess(process);
   }
 };

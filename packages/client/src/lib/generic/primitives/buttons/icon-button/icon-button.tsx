@@ -8,7 +8,7 @@ import { iconButtonClasses } from './icon-button-styles';
 
 type IconAppearance = Pick<
   IconButtonProps,
-  'icon' | 'iconSize' | 'iconClassName' | 'filled'
+  'icon' | 'iconRole' | 'iconClassName' | 'filled'
 >;
 type IconControlProps = Omit<IconButtonProps, keyof IconAppearance>;
 type IconPresentation = Pick<IconControlProps, 'size' | 'variant' | 'loading'>;
@@ -29,12 +29,12 @@ export function IconButton(props: IconButtonProps): ReactElement {
 
 function iconDrawing({
   icon,
-  iconSize,
+  iconRole = 'control',
   iconClassName,
   filled,
   ...props
 }: IconButtonProps): IconDrawing {
-  return createIconDrawing(props, { icon, iconSize, iconClassName, filled });
+  return createIconDrawing(props, { icon, iconRole, iconClassName, filled });
 }
 
 function createIconDrawing(
@@ -45,7 +45,7 @@ function createIconDrawing(
     pressable: iconPressableProps(props),
     adornment: {
       icon: appearance.icon,
-      size: appearance.iconSize,
+      role: appearance.iconRole ?? 'control',
       filled: appearance.filled,
       loading: props.loading,
       textClass: iconTextClass({ ...props, ...appearance }),

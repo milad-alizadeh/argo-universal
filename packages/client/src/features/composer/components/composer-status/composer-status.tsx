@@ -22,11 +22,10 @@ import {
   Pressable,
   contentActionClass,
 } from '../../../../lib/generic/primitives/pressable/pressable';
-import { Chevron } from '../../../../lib/generic/symbols/chevron';
 import {
   Icon,
+  IconSlot,
   IconSpinner,
-  iconSizeStyle,
 } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useNativeSheets } from '../agent-model-sheet-context';
@@ -104,11 +103,8 @@ const ThemedCircle = withUniwind(Circle, {
 function ContextRing({ percent }: { percent: number }): React.JSX.Element {
   const circumference = 2 * Math.PI * contextRingRadius;
   return (
-    <View
-      style={iconSizeStyle('sm')}
-      className="shrink-0 items-center justify-center"
-    >
-      <View style={iconSizeStyle('sm')}>
+    <IconSlot role="mark">
+      <View className="h-full w-full">
         <Svg width="100%" height="100%" viewBox="0 0 14 14">
           <ThemedCircle
             cx={7}
@@ -135,7 +131,7 @@ function ContextRing({ percent }: { percent: number }): React.JSX.Element {
           />
         </Svg>
       </View>
-    </View>
+    </IconSlot>
   );
 }
 
@@ -219,8 +215,8 @@ export function ComposerPlan({
           >
             {entries.find((entry) => entry.status === 'in_progress')?.content}
           </Text>
-          <Chevron
-            textRole="secondary"
+          <Icon
+            role="secondary"
             name="chevron-up"
             className={cn(
               'text-muted-foreground web:transition-transform web:duration-200',
@@ -286,7 +282,7 @@ function PlanPopoverContent({
       {(windowWide || !nativeSheets) && (
         <View className="px-4 py-3 gap-1.5">
           <View className="flex-row items-center gap-2">
-            <Icon name="checklist" className="text-foreground" />
+            <Icon role="control" name="checklist" className="text-foreground" />
             <Text
               selectable={false}
               role="heading"
@@ -331,15 +327,19 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }): React.JSX.Element {
             <IconSpinner
               accessible
               role="progressbar"
+              iconRole="control"
               colorClassName="accent-muted-foreground wide:accent-foreground"
               accessibilityLabel={`${entry.content} in progress`}
             />
           );
         } else if (entry.status === 'completed') {
-          stepIndicator = <Icon name="check" className={mutedTextClassName} />;
+          stepIndicator = (
+            <Icon role="control" name="check" className={mutedTextClassName} />
+          );
         } else {
           stepIndicator = (
             <Icon
+              role="control"
               name="pending"
               className="text-ring wide:text-muted-foreground"
             />
@@ -419,7 +419,11 @@ export function ComposerStatusControls({
                 disabled: disabled,
               })}
             >
-              <Icon name="usage" className={mutedTextClassName} />
+              <Icon
+                role="control"
+                name="usage"
+                className={mutedTextClassName}
+              />
               <Text
                 selectable={false}
                 role="secondary"
@@ -678,7 +682,11 @@ export function ComposerWorkChips({
                   disabled: disabled,
                 })}
               >
-                <Icon name={icon} className={mutedTextClassName} />
+                <Icon
+                  role="control"
+                  name={icon}
+                  className={mutedTextClassName}
+                />
                 <View className="flex-row items-center gap-1">
                   <Text
                     selectable={false}

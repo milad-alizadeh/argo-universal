@@ -41,6 +41,7 @@ export const resourceInitialization = {
   agentCapabilities: {
     loadSession: true,
     sessionCapabilities: { close: {}, resume: {} },
+    _meta: { authStatus: {} },
   },
 };
 export const createResourceUpdate = (

@@ -1,35 +1,20 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
-import type { IconSize } from '../../../symbols/icon';
 import { Text, TextClassContext } from '../../display/text/text';
 import { ButtonAdornment } from './button-adornment';
 import { contentButtonClass, contentTextClass } from './button-content-styles';
-import type {
-  ButtonProps,
-  ButtonSize,
-  ContentButtonProps,
-} from './button-props';
+import type { ButtonProps, ContentButtonProps } from './button-props';
 import { buttonInteractionProps } from './button-state';
-
-// Each size draws its icon at the same step, except `xs`, which keeps the 16 icon of a control.
-const iconSizes = {
-  xs: 'sm',
-  sm: 'sm',
-  md: 'md',
-  lg: 'lg',
-} as const satisfies Record<ButtonSize, IconSize>;
 
 export function ContentButton(props: ButtonProps): ReactElement {
   const textClass = contentTextClass(props);
   return (
     <TextClassContext.Provider value={textClass}>
       <Pressable {...contentPressableProps(props)}>
-        <ButtonAdornment
-          {...props}
-          size={props.size && iconSizes[props.size]}
-          textClass={textClass}
-        />
+        <ContentAdornment button={props} side="leading" />
+        <ButtonAdornment {...props} role="control" textClass={textClass} />
         <ButtonText {...props} />
+        <ContentAdornment button={props} side="trailing" />
       </Pressable>
     </TextClassContext.Provider>
   );
@@ -57,6 +42,7 @@ function contentPressableProps(
 ): ComponentProps<typeof Pressable> {
   return {
     ...contentLayoutProps(props),
+    ...contentTriggerProps(props),
     ...buttonInteractionProps(props),
     onPress: props.onPress,
     accessibilityLabel: props.accessibilityLabel ?? props.label,
@@ -74,4 +60,36 @@ function contentLayoutProps(
 ): Pick<ComponentProps<typeof Pressable>, 'ref' | 'style'> {
   if (props.appearance !== 'content') return {};
   return { ref: props.ref, style: props.style };
+}
+
+function ContentAdornment({
+  button,
+  side,
+}: {
+  button: ButtonProps;
+  side: 'leading' | 'trailing';
+}): ReactElement | undefined {
+  return button.appearance === 'content' ? button[side] : undefined;
+}
+
+function contentTriggerProps(
+  props: ButtonProps,
+): Pick<
+  ContentButtonProps,
+  | 'id'
+  | 'aria-haspopup'
+  | 'aria-expanded'
+  | 'aria-controls'
+  | 'onHoverIn'
+  | 'onHoverOut'
+> {
+  if (props.appearance !== 'content') return {};
+  return {
+    id: props.id,
+    onHoverIn: props.onHoverIn,
+    onHoverOut: props.onHoverOut,
+    'aria-haspopup': props['aria-haspopup'],
+    'aria-expanded': props['aria-expanded'],
+    'aria-controls': props['aria-controls'],
+  };
 }

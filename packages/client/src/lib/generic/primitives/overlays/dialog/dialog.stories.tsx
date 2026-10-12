@@ -92,7 +92,7 @@ function ProfileField({
   const inputProps = { id, accessibilityLabel: label, defaultValue };
   return (
     <View className="grid gap-3">
-      <Text className="text-sm font-medium">{label}</Text>
+      <Text>{label}</Text>
       <Input {...inputProps} />
     </View>
   );

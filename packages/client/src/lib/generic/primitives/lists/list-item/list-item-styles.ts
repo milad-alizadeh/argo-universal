@@ -8,12 +8,22 @@ export function rowClasses(
   endsSection?: boolean,
 ): string {
   return cn(
-    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted wide:min-h-12 wide:py-1.5 web:select-none web:[&_*]:select-none',
+    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted wide:min-h-11 web:select-none web:[&_*]:select-none',
+    controlClasses(props),
     sizeClasses(props),
     stateClasses(props),
     showsSeparator(navigation, endsSection) &&
       separatorClasses(props, endsSection),
     navigation && sidebarClasses(props),
+  );
+}
+
+function controlClasses(
+  props: Pick<ListItemProps, 'subtitle' | 'detail'>,
+): string {
+  return cn(
+    props.subtitle && 'wide:min-h-12.5 wide:py-1.5',
+    props.detail && 'px-0 py-0 wide:py-0',
   );
 }
 
@@ -33,7 +43,7 @@ function stateClasses(props: ListItemProps): string {
   return cn(
     props.loading && 'py-4',
     props.onPress &&
-      'web:hover:bg-border web:active:bg-border web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2',
+      'web:hover:bg-[var(--color-separator)] web:active:bg-[var(--color-separator)] web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2 web:before:absolute web:before:-top-px web:before:inset-x-0 web:before:h-px web:before:bg-inherit web:before:hidden web:hover:before:block web:active:before:block web:hover:after:bg-inherit web:active:after:bg-inherit',
   );
 }
 
@@ -80,8 +90,8 @@ function separatorClasses(
 
 // An action row, such as "Add argument", acts in place, so it has no chevron.
 export const hasDisclosure = (
-  props: Pick<ListItemProps, 'onPress' | 'tone'>,
-): boolean => !!props.onPress && props.tone !== 'accent';
+  props: Pick<ListItemProps, 'onPress' | 'tone' | 'disclosure'>,
+): boolean => props.disclosure ?? (!!props.onPress && props.tone !== 'accent');
 
 export function hasLeadingSlot(
   props: Pick<ListItemProps, 'icon' | 'loading' | 'leading'>,

@@ -3,23 +3,15 @@ import { createContext, type ReactNode, useContext, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable, useResolveClassNames } from 'uniwind';
-import { Badge } from '#lib/generic/primitives/display/badge/badge';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { NavigationItem } from '../../../../lib/generic/primitives/lists/navigation-item/navigation-item';
 import { attentionBadge } from '../../state/attention-badge';
 import { PhoneDrawer } from '../phone-drawer/phone-drawer';
 import { PhoneShellCard } from '../phone-shell-card/phone-shell-card';
 import { type Section, shellSections } from '../shell-sections';
+import { headerBarHeight } from './header-bar-height';
 import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
-
-// The drawer's rows start this far down, and clear the status bar by this much more (Paper).
-const drawerInset = 12;
-const statusBarGap = 3;
 
 // The content's edge shades the drawer under it, as if the content lay on top.
 const contentEdgeShadow =
@@ -83,44 +75,18 @@ export function PhoneShell({
 
   function sectionButton(section: Section): React.JSX.Element {
     const { title, icon } = shellSections[section];
-    const badge = attentionBadge(attentionCount);
-    const selected = selectedSection === section;
     return (
-      <Pressable
+      <NavigationItem
         key={section}
-        accessibilityLabel={title}
-        accessibilityState={{ selected }}
-        aria-pressed={selected}
+        title={title}
+        icon={icon}
+        selected={selectedSection === section}
+        badge={
+          (section === 'sessions' && attentionBadge(attentionCount)) ||
+          undefined
+        }
         onPress={() => selectSection(section)}
-        role="button"
-        className={contentActionClass({
-          variant: 'ghost',
-          className: cn(
-            'h-12 sm:h-12 justify-start gap-1.5 rounded-lg px-3 has-[>[data-icon]]:px-3',
-            selected && 'bg-selected',
-          ),
-        })}
-      >
-        <Icon
-          name={icon}
-          size="lg"
-          filled={selected}
-          className={cn(!selected && 'text-muted-foreground')}
-        />
-        <Text role="body" className={cn('flex-1', selected && 'font-semibold')}>
-          {title}
-        </Text>
-        {section === 'sessions' && badge && (
-          <Badge
-            className="h-phone-shell-badge min-w-phone-shell-badge border-0 bg-warning px-1.5"
-            accessibilityLabel={badge.label}
-          >
-            <Text role="badge" className="text-warning-foreground">
-              {badge.text}
-            </Text>
-          </Badge>
-        )}
-      </Pressable>
+      />
     );
   }
 
@@ -147,24 +113,23 @@ export function PhoneShell({
             <PhoneDrawerBackdrop width={offset} />
             {/* Plain translucent glass: over a still, soft glow a blur would cost a filter pass and show nothing. */}
             <View
-              className={cn(
-                'flex-1 gap-1 bg-glass px-5 pb-8',
-                contentEdgeShadow,
-              )}
-              style={{
-                paddingTop:
-                  drawerInset + Math.max(top + statusBarGap, drawerInset),
-              }}
+              className={cn('flex-1 bg-glass px-5 pb-8', contentEdgeShadow)}
+              style={{ paddingTop: top }}
             >
-              <View className="h-14 px-3 pt-2.5">
+              {/* The header bar's own height, so the title sits level with ☰ and the page's title; on Android the first row then sits level with the docked search. */}
+              <View
+                className="justify-center px-3"
+                style={{ height: headerBarHeight }}
+              >
                 <Text role="heading" semanticRole="heading" aria-level={2}>
                   Argo
                 </Text>
               </View>
               <View className="flex-1 gap-1">
-                {(['sessions', 'issues', 'atlas'] as const).map(sectionButton)}
+                {(['sessions', 'issues', 'atlas', 'settings'] as const).map(
+                  sectionButton,
+                )}
               </View>
-              {sectionButton('settings')}
             </View>
           </View>
         )}

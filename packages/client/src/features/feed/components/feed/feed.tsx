@@ -31,6 +31,7 @@ import { FeedFade, SessionColumn } from '#lib/product/session-layout';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type FeedViewItem, feedItemKey } from '../../view/feed-view';
+import { shownLiveHeader } from '../../view/shown-live-header';
 import { type FeedGrowth, FeedGrowthContext } from '../feed-growth-context';
 import { FeedItem, isDrawnFeedItem } from '../feed-item';
 import { LiveHeader } from '../live-header/live-header';
@@ -39,7 +40,7 @@ import { WorkingMark } from '../working-mark';
 
 export interface FeedProps {
   items: readonly FeedViewItem[];
-  // The Turn's live line, drawn last while a Turn runs.
+  // The Turn's live line, drawn last while a Turn runs and no open group already draws the work.
   liveHeader: LiveHeaderValue | null;
   // The Feed row a `tool_call` live header names, for its icon.
   liveToolCall?: ToolCallUpdate;
@@ -69,7 +70,7 @@ function LoadingEarlier(): React.JSX.Element {
 function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
   return (
     <View className="flex-1 items-center justify-center gap-1.5 p-6">
-      <Text semanticRole="heading" aria-level={2} role={'heading'}>
+      <Text semanticRole="heading" aria-level={2}>
         What should we build?
       </Text>
       {!!branch && (
@@ -106,7 +107,7 @@ function JumpToLatest({
         onPress={onPress}
         className="size-8 items-center justify-center rounded-full border border-border bg-card shadow-[0_1px_2px_#0000000f,0_4px_12px_-4px_#00000014] active:opacity-70"
       >
-        <Icon name="arrow-down" className="text-foreground" />
+        <Icon name="arrow-down" role="control" className="text-foreground" />
         {hasNewRows && (
           <View className="absolute -top-px -right-px size-[9px] rounded-full border-2 border-card bg-info" />
         )}
@@ -245,16 +246,15 @@ export function Feed({
   ...props
 }: FeedProps): React.JSX.Element {
   const drawnItems = useMemo(() => items.filter(isDrawnFeedItem), [items]);
-  const entries = useMemo<FeedEntry[]>(
-    () =>
-      liveHeader
-        ? [
-            ...drawnItems,
-            { type: 'live_header', liveHeader, toolCall: liveToolCall },
-          ]
-        : drawnItems,
-    [drawnItems, liveHeader, liveToolCall],
-  );
+  const entries = useMemo<FeedEntry[]>(() => {
+    const shown = shownLiveHeader(drawnItems, liveHeader);
+    return shown
+      ? [
+          ...drawnItems,
+          { type: 'live_header', liveHeader: shown, toolCall: liveToolCall },
+        ]
+      : drawnItems;
+  }, [drawnItems, liveHeader, liveToolCall]);
   if (!entries.length) return <EmptyFeed branch={checkoutBranch} />;
   const newestItem = drawnItems.at(-1);
   return (

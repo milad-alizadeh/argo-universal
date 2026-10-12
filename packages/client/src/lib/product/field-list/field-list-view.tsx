@@ -10,6 +10,7 @@ import {
   fieldGroupGap,
   fieldGroupPadding,
 } from '../../generic/primitives/fields/field-layout';
+import type { ListSearchBarProps } from '../../generic/primitives/inputs/list-search-bar/list-search-bar';
 import { cn } from '../../generic/utils';
 import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
 import {
@@ -23,6 +24,8 @@ import {
 export type { FieldListSection } from './field-list-entries';
 export interface FieldListProps {
   sections: readonly FieldListSection[];
+  // A phone's search above the sections; the native FieldGroup draws it, as a wide window searches from its title row.
+  search?: ListSearchBarProps;
   testID?: string;
 }
 
@@ -84,14 +87,16 @@ function useGroupPadding(): ViewStyle {
 function useEntryRenderer(): (
   props: LegendListRenderItemProps<FieldListEntry>,
 ) => React.JSX.Element {
-  const { rowGap } = useResolveClassNames(fieldGroupGap);
+  // The web resolves the gap class to rowGap; native resolves it to gap.
+  const { rowGap, gap } = useResolveClassNames(fieldGroupGap);
+  const sectionGap = pixels(rowGap ?? gap);
   return useCallback(
     ({ item }: LegendListRenderItemProps<FieldListEntry>) => (
-      <View style={item.gapAbove ? { paddingTop: pixels(rowGap) } : undefined}>
+      <View style={item.gapAbove ? { paddingTop: sectionGap } : undefined}>
         <EntryContent entry={item} />
       </View>
     ),
-    [rowGap],
+    [sectionGap],
   );
 }
 

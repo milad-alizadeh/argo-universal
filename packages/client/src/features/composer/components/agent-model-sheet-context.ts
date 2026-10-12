@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { createContext, useContext, useSyncExternalStore } from 'react';
 import type { ComposerConfigurationProps } from './composer-configuration/composer-configuration';
 
@@ -6,9 +5,6 @@ import type { ComposerConfigurationProps } from './composer-configuration/compos
 export interface NativeSheets {
   // The Agent and model menu, with its own stack of pages.
   agentModel: () => void;
-  // Any other Composer menu, as one page.
-  content: () => void;
-  close: () => void;
 }
 
 const NativeSheetsContext = createContext<NativeSheets | undefined>(undefined);
@@ -49,14 +45,3 @@ function createStore<Value>(): {
 const configurationStore = createStore<ComposerConfigurationProps>();
 export const publishAgentModelConfiguration = configurationStore.publish;
 export const useAgentModelConfiguration = configurationStore.use;
-
-interface SheetContent {
-  // Which menu drew it, so only that menu keeps it current.
-  owner: string;
-  label: string;
-  render: (close: (after?: () => void) => void) => ReactNode;
-}
-const contentStore = createStore<SheetContent>();
-export const publishSheetContent = contentStore.publish;
-export const currentSheetContent = contentStore.current;
-export const useSheetContent = contentStore.use;

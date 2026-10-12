@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { useEffect } from 'react';
-import { View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -11,7 +10,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { iconSizeStyle } from '../../../lib/generic/symbols/icon';
+import { IconSlot } from '../../../lib/generic/symbols/icon';
 
 const stepMilliseconds = 150;
 const fadeMilliseconds = 400;
@@ -86,11 +85,7 @@ export function WorkingMark(): React.JSX.Element {
     return (): void => cancelAnimation(step);
   }, [reducedMotion, step]);
   return (
-    <View
-      testID="working-mark"
-      style={iconSizeStyle('sm')}
-      className="shrink-0"
-    >
+    <IconSlot role="control" testID="working-mark">
       {cells.map(([left, top], index) => (
         <Cell
           key={`${left}:${top}`}
@@ -101,6 +96,6 @@ export function WorkingMark(): React.JSX.Element {
           still={reducedMotion}
         />
       ))}
-    </View>
+    </IconSlot>
   );
 }

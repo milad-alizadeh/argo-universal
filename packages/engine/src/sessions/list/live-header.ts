@@ -53,14 +53,12 @@ function toolKindLabel(tool: ToolCallUpdate): string | null {
       return path ? `Deleting ${path}` : 'Deleting files';
     case 'move':
       return path ? `Moving ${path}` : 'Moving files';
-    case 'search':
-      return 'Searching files';
-    case 'fetch':
-      return 'Searching the web';
     case 'think':
       return 'Thinking';
     case 'switch_mode':
       return 'Switching mode';
+    case 'search':
+    case 'fetch':
     case 'other':
       return null;
   }
@@ -123,6 +121,7 @@ export function toLiveHeader(
   const text =
     tool._meta?.argo?.description?.trim() ||
     toolKindLabel(tool) ||
+    tool.title.trim() ||
     tool.name?.trim();
   return text
     ? header(text, { type: 'tool_call', toolCallId: tool.toolCallId })

@@ -9,6 +9,7 @@ const colorTokens = [
   ['muted', '--color-muted'],
   ['mutedForeground', '--color-muted-foreground'],
   ['popover', '--color-popover'],
+  ['sidebar', '--color-sidebar'],
   ['popoverForeground', '--color-popover-foreground'],
   ['primary', '--color-primary'],
   ['primaryForeground', '--color-primary-foreground'],
