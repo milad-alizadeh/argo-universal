@@ -45,7 +45,7 @@
     // complexity, max-lines-per-function, typescript/consistent-type-assertions
     { "files": ["apps/universal-app/src/lib/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function, no-inline-comments, sonarjs/no-duplicate-string, sonarjs/no-unused-vars, stylistic/line-comment-position, typescript/consistent-type-assertions, typescript/explicit-function-return-type
-    { "files": ["apps/universal-app/src/navigation/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "no-inline-comments": "off", "sonarjs/no-unused-vars": "off", "stylistic/line-comment-position": "off" } },
+    { "files": ["apps/universal-app/src/navigation/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "sonarjs/no-unused-vars": "off" } },
     // complexity, max-lines-per-function, max-statements, sonarjs/no-redundant-jump, sonarjs/no-unused-vars, typescript/consistent-type-assertions, typescript/explicit-function-return-type
     { "files": ["e2e/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/no-redundant-jump": "off", "sonarjs/no-unused-vars": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/unbound-method, unicorn-js/prefer-switch, unicorn/no-useless-undefined, vitest/expect-expect, vitest/no-standalone-expect
@@ -53,7 +53,7 @@
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/no-duplicate-string, sonarjs/no-nested-template-literals, sonarjs/no-unused-vars, sonarjs/super-linear-regex, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/restrict-template-expressions, vitest/no-conditional-expect
     { "files": ["packages/agents/src/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "stylistic/multiline-comment-style": "off" } },
     // complexity, jsx-a11y/no-autofocus, jsx-a11y/role-has-required-aria-props, max-lines, max-lines-per-function, max-statements, react/set-state-in-effect, sonarjs/cognitive-complexity, sonarjs/no-duplicate-string, sonarjs/no-nested-conditional, stylistic/multiline-comment-style, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/no-floating-promises, typescript/unbound-method, unicorn-js/prefer-switch, unicorn/no-useless-undefined, unicorn/prefer-spread
-    { "files": ["packages/client/mocks/*"], "rules": { "complexity": "off", "jsx-a11y/no-autofocus": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off" } },
+    { "files": ["packages/client/mocks/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off" } },
     // complexity, max-depth, max-lines-per-function
     { "files": ["packages/client/src/*"], "rules": { "complexity": "off", "max-depth": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/super-linear-regex, unicorn/no-useless-undefined, unicorn/prefer-ternary
@@ -97,7 +97,7 @@
     // complexity, max-lines-per-function
     { "files": ["packages/client/src/lib/generic/symbols/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-nested-conditional, unicorn/prefer-string-replace-all
-    { "files": ["packages/client/src/lib/product/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-nested-conditional": "off", "unicorn/prefer-string-replace-all": "off" } },
+    { "files": ["packages/client/src/lib/product/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "sonarjs/no-nested-conditional": "off", "unicorn/prefer-string-replace-all": "off" } },
     // complexity, max-lines, max-lines-per-function, typescript/no-misused-promises, unicorn/no-useless-undefined
     { "files": ["packages/client/src/lib/product/markdown/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "typescript/no-misused-promises": "off", "unicorn/no-useless-undefined": "off" } },
     // complexity, max-lines-per-function
