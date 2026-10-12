@@ -1,27 +1,27 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { View, type ViewProps } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { cn } from '#lib/generic/utils';
 import { useWide } from '../generic/use-wide/use-wide';
-import { keyboardAvoidingStyle, Screen } from './screen/screen';
+import {
+  ComposerCover,
+  composerFadeDepth,
+  composerOverlap,
+  useGlassComposer,
+} from './composer-cover';
+import { KeyboardAvoidingContent, Screen } from './screen/screen';
 import { ScrollFadeFrame } from './scroll-fade/scroll-fade-frame';
 
 // The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.
 const sessionSurface = 'bg-sidebar';
 
-// How far the Composer reaches up over the end of the Feed; the Feed's rows are hidden under it, so none shows through its glass.
-const composerOverlap = 48;
-
-// The Feed fades out within the space it leaves above the Composer, so a row is gone before it meets the Composer: at the end only through the empty 24 under the last row, so that row stays whole; scrolled back, deeper.
-const composerFadeDepth = { atEnd: 24, away: 48 };
-
 // How far the Feed fades out under the header: Paper's mask over the Feed column.
 const headerFadeDepth = 56;
-
-// How far above the Feed's bottom edge its deepest fade ends; anything laid over the Feed's end, such as Jump to latest, sits above it.
-export const feedBottomFadeTop = composerOverlap + composerFadeDepth.away;
 
 // The Session's one column: as wide as the Composer at most, centred in the pane with the pane's side padding. CSS centres it on every width change, so nothing in it depends on a width measured earlier.
 export function SessionColumn({
@@ -64,10 +64,14 @@ export function FeedFade({
   children,
 }: FeedFadeProps): React.JSX.Element {
   const wide = useWide();
+  const glassComposer = useGlassComposer();
   return (
     <ScrollFadeFrame
       // iOS 26's glass header shades the Feed scrolled under it; every other header is solid, so the Feed fades out below it.
-      edges={{ top: (wide || !hasLiquidGlass) && !atStart, bottom: true }}
+      edges={{
+        top: (wide || !hasLiquidGlass) && !atStart,
+        bottom: !glassComposer,
+      }}
       depth={{
         top: wide ? headerFadeDepth : undefined,
         bottom: atEnd ? composerFadeDepth.atEnd : composerFadeDepth.away,
@@ -82,7 +86,16 @@ export function FeedFade({
 }
 
 // One Session in one container on one surface: the header at the top, the Composer pinned to the bottom, and the Feed filling and scrolling between them.
-export function SessionLayout({
+export function SessionLayout(props: SessionLayoutProps): React.JSX.Element {
+  return useGlassComposer() ? (
+    <GlassComposerLayout {...props} />
+  ) : (
+    <OverlapComposerLayout {...props} />
+  );
+}
+
+// The Composer overlaps the Feed's end, where the Feed fades out.
+function OverlapComposerLayout({
   header,
   feed,
   composer,
@@ -95,13 +108,7 @@ export function SessionLayout({
       className={cn(sessionSurface, 'wide:bg-transparent')}
     >
       {header}
-      <KeyboardAvoidingView
-        behavior="padding"
-        automaticOffset
-        // Above an open keyboard the Composer keeps the 16 it has from the screen's sides.
-        keyboardVerticalOffset={16}
-        style={keyboardAvoidingStyle}
-      >
+      <KeyboardAvoidingContent>
         <View className="relative min-h-0 flex-1">{feed}</View>
         <View
           className="relative z-10 wide:pb-4"
@@ -111,7 +118,48 @@ export function SessionLayout({
             {composer}
           </SessionColumn>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoidingContent>
+    </Screen>
+  );
+}
+
+// The Feed runs to the screen's bottom edge and scrolls under the glass Composer, which keeps the home indicator's space below it until the keyboard opens.
+function GlassComposerLayout({
+  header,
+  feed,
+  composer,
+}: SessionLayoutProps): React.JSX.Element {
+  const [cover, setCover] = useState(composerOverlap);
+  const { bottom } = useSafeAreaInsets();
+  const { progress } = useReanimatedKeyboardAnimation();
+  const homeIndicatorSpace = useAnimatedStyle(
+    () => ({ paddingBottom: bottom * (1 - progress.get()) }),
+    [bottom, progress],
+  );
+  return (
+    <Screen testID="session-layout" edges={[]} className={sessionSurface}>
+      {header}
+      <KeyboardAvoidingContent>
+        {/* Its own box, so the Composer laid over its end stays above the keyboard's padding. */}
+        <View className="relative min-h-0 flex-1">
+          <ComposerCover.Provider value={cover}>{feed}</ComposerCover.Provider>
+          <Animated.View
+            className="absolute bottom-0 left-0 right-0 z-10"
+            style={homeIndicatorSpace}
+          >
+            <SessionColumn
+              testID="composer-column"
+              className="items-center"
+              // Measured without the home indicator's space, which follows the keyboard frame by frame.
+              onLayout={(event) =>
+                setCover(event.nativeEvent.layout.height + bottom)
+              }
+            >
+              {composer}
+            </SessionColumn>
+          </Animated.View>
+        </View>
+      </KeyboardAvoidingContent>
     </Screen>
   );
 }
