@@ -11,6 +11,7 @@
     "dev": "export ARGO_EXPO_WEB_URL=${ARGO_EXPO_WEB_URL:-http://localhost:8081} && unset ELECTRON_RUN_AS_NODE && node --import tsx scripts/wait-for-dev-servers.mts && electron-forge start",
     "package": "electron-forge package",
     "start": "unset ELECTRON_RUN_AS_NODE && electron-forge start",
+    "storybook:mac": "tsx scripts/storybook-mac.mts",
     "test": "vitest run"
   },
   "dependencies": {

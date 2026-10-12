@@ -1,6 +1,12 @@
 import { withNavigationMocks } from '../mocks/with-navigation-mocks';
 import { withReusablesPreview } from './with-theme';
 
+// The macOS Storybook window passes the desktop preload's SF Symbol renderer through this.
+export {
+  type RenderSymbolImage,
+  SymbolImagesProvider,
+} from './lib/generic/symbols/symbol-images';
+
 // Stories render views from props (ADR-0021); no decorator serves data.
 export const previewDecorators = [withReusablesPreview, withNavigationMocks];
 
