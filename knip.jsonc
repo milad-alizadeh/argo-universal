@@ -36,7 +36,6 @@
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
       "ignoreDependencies": [
         "@expo/ui",
-        "burnt",
         "expo-clipboard",
         "expo-file-system",
         "expo-font",
