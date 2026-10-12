@@ -3,6 +3,7 @@ import { useWide } from '../use-wide';
 import type { ButtonProps, ButtonSize, ButtonVariant } from './button-props';
 
 const narrowSizes: Record<ButtonSize, ButtonSize> = {
+  xs: 'md',
   sm: 'md',
   md: 'md',
   lg: 'lg',

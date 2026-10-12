@@ -37,6 +37,7 @@ const buttonStyles = {
   link: 'plain',
 } as const satisfies Record<ButtonVariant, string>;
 const controlSizes = {
+  xs: 'small',
   sm: 'regular',
   md: 'large',
   lg: 'extraLarge',
