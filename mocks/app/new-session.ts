@@ -100,6 +100,8 @@ export const newSessionProjects: ProjectsListOutput = [
     path: '/projects/landing-page',
     createdAt: (projectsList[0]?.createdAt ?? 0) + 1,
     checkoutChoice: { type: 'main' },
+    remoteHost: null,
+    folderExists: true,
   },
 ];
 

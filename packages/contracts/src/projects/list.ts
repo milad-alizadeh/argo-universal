@@ -8,6 +8,10 @@ export type ProjectCheckoutChoice = z.infer<typeof ProjectCheckoutChoice>;
 export const ProjectInfo = z.strictObject({
   ...projectColumns.shape,
   checkoutChoice: ProjectCheckoutChoice,
+  // Where the origin remote is hosted, named for people, such as "GitHub"; null without a hosted origin.
+  remoteHost: z.string().min(1).nullable(),
+  // The Project's folder is still on the Server.
+  folderExists: z.boolean(),
 });
 export type ProjectInfo = z.infer<typeof ProjectInfo>;
 

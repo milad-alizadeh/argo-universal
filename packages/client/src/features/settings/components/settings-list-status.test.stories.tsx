@@ -11,8 +11,8 @@ const meta = {
   title: 'Tests/SettingsList status',
   component: SettingsList,
   args: {
-    projects: [{ name: 'argo' }],
-    agents: [],
+    projectCount: 1,
+    agentCount: 0,
     accountState: 'GitHub',
     onSelect,
   },
@@ -81,3 +81,43 @@ export const DisconnectedPhone = unavailable(
   layoutWidths.phone,
 );
 export const DisconnectedWide = unavailable('disconnected', layoutWidths.wide);
+
+// Counts the Server has not sent yet never read as 0.
+export const CountsBeforeTheServerAnswers: Story = {
+  args: { status: 'ready', projectCount: undefined, agentCount: undefined },
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.phone);
+    for (const title of ['Projects', 'Agents'])
+      await expect(
+        canvas.getByRole('link', { name: `${title}, …` }),
+      ).toBeVisible();
+  },
+};
+
+export const DisconnectedBeforeTheServerAnswers: Story = {
+  args: {
+    status: 'disconnected',
+    projectCount: undefined,
+    agentCount: undefined,
+  },
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.phone);
+    for (const title of ['Projects', 'Agents'])
+      await expect(
+        canvas.getByRole('link', { name: title }),
+      ).toBeInTheDocument();
+  },
+};
+
+export const DisconnectedKeepsLastCounts: Story = {
+  args: { status: 'disconnected' },
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.phone);
+    await expect(
+      canvas.getByRole('link', { name: 'Projects, 1' }),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.getByRole('link', { name: 'Agents, 0' }),
+    ).toBeInTheDocument();
+  },
+};

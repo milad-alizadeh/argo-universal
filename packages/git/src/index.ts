@@ -121,6 +121,44 @@ export async function listBranches(
   return { branches: listed.data, currentBranch: current.data };
 }
 
+// `git remote get-url` exits with this code when the remote does not exist.
+const noSuchRemote = 2;
+const hasExitCode = (error: unknown, code: number): boolean =>
+  error instanceof Error && 'code' in error && error.code === code;
+const schemeUrl = /^[a-z][a-z\d+.-]*:\/\//i;
+// scp-like syntax, such as git@github.com:owner/repo.git
+const scpUrl = /^(?:[^@/]+@)?(?<host>[^:/]+):(?!\/\/)/;
+
+// A URL remote's host, or null for a remote on this machine; throws on a URL with no host.
+function readRemoteUrlHost(url: string): string | null {
+  if (schemeUrl.test(url)) {
+    const parsed = URL.parse(url);
+    if (parsed?.protocol === 'file:') return null;
+    return parsed?.hostname || rejectResponse('remote URL');
+  }
+  return scpUrl.exec(url)?.groups?.host ?? null;
+}
+
+// The host the origin remote lives on, or null when there is no origin or it is a local path.
+export async function readOriginHost(
+  projectPath: string,
+): Promise<string | null> {
+  const url = await run([
+    '-C',
+    projectPath,
+    'remote',
+    'get-url',
+    'origin',
+  ]).then(
+    ({ stdout }): string => stdout.trim(),
+    (error: unknown): null => {
+      if (hasExitCode(error, noSuchRemote)) return null;
+      throw error;
+    },
+  );
+  return url === null ? null : readRemoteUrlHost(url);
+}
+
 // The prefix is stored data and must survive a product rename.
 export const sessionBranch = (id: string): string =>
   `${sessionBranchPrefix}${id}`;

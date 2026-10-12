@@ -1,14 +1,11 @@
 import type * as React from 'react';
 import type { ComponentType } from 'react';
 import { FirstSessionScreen } from '#features/sessions';
+import { AccountsScreen } from '#features/settings';
 import type { Section } from '../../../lib/product/navigation/sections';
 import { SectionRootView } from '../components/section-root-view';
 import { PhoneSectionScreen } from './phone-section-screen';
-import {
-  AccountsScreen,
-  AtlasScreen,
-  IssuesScreen,
-} from './placeholder-screens';
+import { AtlasScreen, IssuesScreen } from './placeholder-screens';
 
 // The page a wide window opens beside each section's list.
 const rootPages = {

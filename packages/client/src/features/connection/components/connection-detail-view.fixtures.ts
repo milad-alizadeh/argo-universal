@@ -1,4 +1,4 @@
-import type { ServerDetails } from './connection-view';
+import type { ServerDetails } from './connection-detail-view';
 
 export const loadedServer = {
   status: 'loaded',

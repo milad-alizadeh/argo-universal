@@ -13,9 +13,8 @@ const meta = {
   title: 'Tests/SettingsList',
   component: SettingsList,
   args: {
-    projects: [{ name: 'example-project' }],
-    agents: [{ agent: 'example-agent', label: 'Example Agent' }],
-    serverName: "Milad's Mac mini",
+    projectCount: 1,
+    agentCount: 1,
     accountState: 'GitHub',
     deviceCount: 2,
     onSelect: recorder.navigate,
@@ -31,19 +30,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function allGroupsNavigate(width: number): Story {
+function allPagesNavigate(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await expect(recorder.destinations).toEqual([]);
-      for (const group of [
-        "Server · Milad's Mac mini",
-        width === layoutWidths.phone ? 'This iPhone' : 'This Mac',
-      ]) {
-        await expect(
-          await canvas.findByRole('heading', { name: group }),
-        ).toBeVisible();
-      }
+      await expectOneFlatList(canvas, width);
       for (const name of [
         'Projects',
         'Agents',
@@ -70,33 +62,57 @@ function allGroupsNavigate(width: number): Story {
         { to: 'settings-connection' },
         { to: 'settings-appearance' },
       ]);
-      if (width === layoutWidths.phone) {
-        await expect(
-          canvas.queryByRole('link', { name: /^Devices(?:,|$)/ }),
-        ).toBeNull();
-        await expect(
-          canvas.queryByRole('link', { name: /^Notifications(?:,|$)/ }),
-        ).toBeNull();
-      } else {
-        await userEvent.click(
-          canvas.getByRole('link', { name: /^Devices(?:,|$)/ }),
-        );
-        await userEvent.click(
-          canvas.getByRole('link', { name: /^Notifications(?:,|$)/ }),
-        );
-        await expect(recorder.destinations.slice(-2)).toEqual([
-          { to: 'settings-devices' },
-          { to: 'settings-notifications' },
-        ]);
-      }
+      if (width === layoutWidths.phone) return;
+      await userEvent.click(
+        canvas.getByRole('link', { name: /^Devices(?:,|$)/ }),
+      );
+      await userEvent.click(
+        canvas.getByRole('link', { name: /^Notifications(?:,|$)/ }),
+      );
+      await expect(recorder.destinations.slice(-2)).toEqual([
+        { to: 'settings-devices' },
+        { to: 'settings-notifications' },
+      ]);
     },
   };
 }
-export const AllGroupsNavigatePhone = allGroupsNavigate(layoutWidths.phone);
-export const AllGroupsNavigateWide = allGroupsNavigate(layoutWidths.wide);
+type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
+
+// A phone leaves out Devices and Notifications.
+const phonePages = [
+  'Projects',
+  'Agents',
+  'Accounts',
+  'Connection',
+  'Appearance',
+];
+const widePages = [
+  'Projects',
+  'Agents',
+  'Accounts',
+  'Connection',
+  'Devices',
+  'Appearance',
+  'Notifications',
+];
+
+// Every width lists its pages in one list, without group headings.
+async function expectOneFlatList(canvas: Canvas, width: number): Promise<void> {
+  await waitFor(() =>
+    expect(
+      canvas
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('aria-label')?.split(',')[0]),
+    ).toEqual(width === layoutWidths.phone ? phonePages : widePages),
+  );
+  await expect(canvas.queryByRole('heading')).toBeNull();
+}
+
+export const AllPagesNavigatePhone = allPagesNavigate(layoutWidths.phone);
+export const AllPagesNavigateWide = allPagesNavigate(layoutWidths.wide);
 
 export const WaitingForData: Story = {
-  args: { projects: [], agents: [] },
+  args: { projectCount: 0, agentCount: 0 },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
@@ -118,12 +134,12 @@ export const WaitingForData: Story = {
   },
 };
 
-export const AllGroupsNavigatePhoneDark: Story = {
-  ...AllGroupsNavigatePhone,
+export const AllPagesNavigatePhoneDark: Story = {
+  ...AllPagesNavigatePhone,
   globals: { mode: 'dark' },
 };
-export const AllGroupsNavigateWideDark: Story = {
-  ...AllGroupsNavigateWide,
+export const AllPagesNavigateWideDark: Story = {
+  ...AllPagesNavigateWide,
   globals: { mode: 'dark' },
 };
 
@@ -162,3 +178,43 @@ export const ChildSelectionAndAttentionDark: Story = {
   ...ChildSelectionAndAttention,
   globals: { mode: 'dark' },
 };
+
+function searchNarrowsThePages(width: number): Story {
+  return {
+    args: { query: ' agen' },
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(
+        canvas.getByRole('link', { name: /^Agents, 1/ }),
+      ).toBeVisible();
+      await expect(
+        canvas.queryByRole('link', { name: /^Projects/ }),
+      ).not.toBeInTheDocument();
+    },
+  };
+}
+
+function searchSaysWhenNothingMatches(width: number): Story {
+  return {
+    args: { query: 'mistral' },
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(
+        canvas.getByRole('group', { name: 'No settings match.' }),
+      ).toBeVisible();
+      await expect(canvas.queryByRole('link')).toBeNull();
+    },
+  };
+}
+
+export const TheSearchNarrowsThePagesPhone = searchNarrowsThePages(
+  layoutWidths.phone,
+);
+export const TheSearchNarrowsThePagesWide = searchNarrowsThePages(
+  layoutWidths.wide,
+);
+export const TheSearchSaysWhenNothingMatchesPhone =
+  searchSaysWhenNothingMatches(layoutWidths.phone);
+export const TheSearchSaysWhenNothingMatchesWide = searchSaysWhenNothingMatches(
+  layoutWidths.wide,
+);

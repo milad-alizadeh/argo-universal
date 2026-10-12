@@ -4,12 +4,11 @@ import type {
 } from '#lib/product/navigation/context';
 
 export interface SettingsListProps {
-  projects: readonly { name: string }[];
-  agents: readonly { agent: string; label: string }[];
+  // Undefined until the Server has answered: the row shows "…", or nothing while disconnected.
+  projectCount?: number;
+  agentCount?: number;
   selectedDestination?: NavigationDestination;
   onSelect: Navigate;
-  serverName?: string;
-  deviceName?: string;
   projectsNeedAttention?: boolean;
   agentsNeedAttention?: boolean;
   accountState?: string;
@@ -18,4 +17,6 @@ export interface SettingsListProps {
   appearanceState?: string;
   notificationsState?: string;
   status?: 'ready' | 'loading' | 'disconnected';
+  // The sidebar's search: only pages whose title matches show.
+  query?: string;
 }

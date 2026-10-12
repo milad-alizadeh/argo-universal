@@ -3,10 +3,9 @@ import { expect, serverVersion } from '../fixtures';
 import { When, Then } from './fixtures';
 import { openConnection } from './frame';
 
-function rowValue(page: Page, label: string): Locator {
-  return page
-    .getByText(label, { exact: true })
-    .locator('xpath=following-sibling::*[1]');
+// A Server row is named "<label>, <value>".
+function row(page: Page, label: string): Locator {
+  return page.getByRole('group', { name: new RegExp(`^${label}, `) });
 }
 
 When('I view the Connection', async ({ page }): Promise<void> => {
@@ -16,18 +15,20 @@ When('I view the Connection', async ({ page }): Promise<void> => {
 Then(
   'the Connection shows the Server version',
   async ({ page }): Promise<void> => {
-    await expect(rowValue(page, 'Version')).toHaveText(serverVersion);
+    await expect(row(page, 'Version')).toHaveAccessibleName(
+      `Version, ${serverVersion}`,
+    );
   },
 );
 
 Then(
   'the Connection follows the Server clock',
   async ({ page }): Promise<void> => {
-    const clock = rowValue(page, 'Clock');
-    await expect(clock).toHaveText(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-    const first = await clock.textContent();
-    await expect(clock).not.toHaveText(first ?? '');
-    const second = await clock.textContent();
-    await expect(clock).not.toHaveText(second ?? '');
+    const clock = row(page, 'Clock');
+    await expect(clock).toHaveAccessibleName(/^Clock, \d{2}:\d{2}:\d{2}$/);
+    const first = await clock.getAttribute('aria-label');
+    await expect(clock).not.toHaveAccessibleName(first ?? '');
+    const second = await clock.getAttribute('aria-label');
+    await expect(clock).not.toHaveAccessibleName(second ?? '');
   },
 );

@@ -1,26 +1,27 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { ConnectionView } from './connection-view';
-import { loadedServer } from './connection-view.fixtures';
+import { ConnectionDetailView } from './connection-detail-view';
+import { loadedServer } from './connection-detail-view.fixtures';
 
 const meta = {
-  title: 'Screens/ConnectionScreen',
-  component: ConnectionView,
+  title: 'Screens/Settings/Connection',
+  component: ConnectionDetailView,
   args: { connection: 'open', server: loadedServer },
-} satisfies Meta<typeof ConnectionView>;
+  parameters: { screenPreview: true },
+} satisfies Meta<typeof ConnectionDetailView>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Loaded: Story = {};
+export const Connected: Story = {};
 
-export const Loading: Story = {
+export const Connecting: Story = {
   args: { server: { status: 'loading' } },
 };
 
 // Named so it does not shadow the global Error.
 export const ErrorState: Story = {
   name: 'Error',
-  args: { server: { status: 'error', message: 'Server is down' } },
+  args: { server: { status: 'error', message: "Couldn't reach the Server." } },
 };
 
 export const Reconnecting: Story = {
