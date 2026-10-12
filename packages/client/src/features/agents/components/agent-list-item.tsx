@@ -51,12 +51,19 @@ export const agentRows = (
     <AgentListItem key={agent.id} agent={agent} onOpen={onOpen} />
   ));
 
-// A custom Agent has no registry logo, so it shows the Agent glyph.
+// A custom Agent has no registry logo, so it shows the Agent glyph. A logo fills its whole box where the glyph keeps a margin, so the logo draws one step smaller to look the same size.
+const glyphSizes = {
+  wide: { glyph: 'md', logo: 'sm' },
+  phone: { glyph: 'lg', logo: 'md' },
+} as const;
+
 function AgentGlyph({
   agent,
 }: Pick<AgentListItemProps, 'agent'>): React.JSX.Element {
-  const customSize = useWide() ? 'md' : 'lg';
+  const sizes = glyphSizes[useWide() ? 'wide' : 'phone'];
   if (agent.custom)
-    return <Icon name="agent" size={customSize} className="text-foreground" />;
-  return <RegistryIcon uri={agent.icon} agentName={agent.name} size="md" />;
+    return <Icon name="agent" size={sizes.glyph} className="text-foreground" />;
+  return (
+    <RegistryIcon uri={agent.icon} agentName={agent.name} size={sizes.logo} />
+  );
 }
