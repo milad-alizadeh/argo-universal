@@ -1,33 +1,22 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { IconButton } from '#primitives/icon-button';
-import { SearchField, type SearchFieldProps } from '#primitives/search-field';
 import { Text } from '#primitives/text';
+import {
+  PageTitleRow,
+  type PageTitleRowProps,
+  type PageTitleSearch,
+} from '../generic/page-title-row';
 import { ScrollColumnContext } from '../generic/scroll-column';
-import { useTextIconSize } from '../generic/symbols/text-icon-size';
 import { useWide } from '../generic/use-wide';
 import { cn } from '../generic/utils';
 
-export type SettingsPageSearch = Pick<
-  SearchFieldProps,
-  'label' | 'value' | 'onChangeText'
->;
+export type SettingsPageSearch = PageTitleSearch;
 
-export interface SettingsPageProps {
-  title: string;
+export interface SettingsPageProps extends PageTitleRowProps {
   caption?: string;
-  // Controls that sit to the right of the title.
-  actions?: ReactNode;
-  // An image before the title, and a badge after it, such as an Agent's icon and status.
-  icon?: ReactNode;
-  badge?: ReactNode;
   // A row of controls under the title, such as filters.
   toolbar?: ReactNode;
-  // Search, last after the actions, opens a field over the whole title row.
-  search?: SettingsPageSearch;
-  // A drill-in page returns to the page it came from.
-  onBack?: () => void;
   children: ReactNode;
 }
 
@@ -62,7 +51,7 @@ function SettingsPageHeader(props: SettingsPageProps): React.JSX.Element {
   return (
     <View className={cn('gap-4', props.search && 'gap-2')}>
       <View className="gap-1">
-        <TitleRow {...props} />
+        <PageTitleRow {...props} />
         {props.caption ? (
           <Text role="body" className="text-muted-foreground">
             {props.caption}
@@ -70,66 +59,6 @@ function SettingsPageHeader(props: SettingsPageProps): React.JSX.Element {
         ) : null}
       </View>
       {props.toolbar}
-    </View>
-  );
-}
-
-function TitleRow(props: SettingsPageProps): React.JSX.Element {
-  const back = props.onBack ? <BackButton onBack={props.onBack} /> : null;
-  if (props.search)
-    return (
-      <View className="flex-row items-center">
-        {back}
-        <SearchField
-          {...props.search}
-          title={<Title {...props} />}
-          actions={props.actions}
-        />
-      </View>
-    );
-  return (
-    <View className="flex-row items-center gap-4">
-      {back}
-      <View className="min-w-0 flex-1">
-        <Title {...props} />
-      </View>
-      {props.actions}
-    </View>
-  );
-}
-
-function Title(props: SettingsPageProps): React.JSX.Element {
-  return (
-    <View className="flex-row items-center gap-2">
-      {props.icon}
-      <Text
-        role="title"
-        semanticRole="heading"
-        aria-level={1}
-        numberOfLines={1}
-        className="min-w-0 shrink"
-      >
-        {props.title}
-      </Text>
-      {props.badge}
-    </View>
-  );
-}
-
-// The back button hangs in the margin left of the title, so titles line up with or without it.
-function BackButton({ onBack }: { onBack: () => void }): React.JSX.Element {
-  return (
-    <View className="absolute -left-9 -top-0.5">
-      <IconButton
-        icon="chevron-left"
-        iconSize={useTextIconSize()}
-        iconClassName="text-foreground"
-        size="sm"
-        variant="ghost"
-        accessibilityLabel="Back"
-        onPress={onBack}
-        className="web:[app-region:no-drag]"
-      />
     </View>
   );
 }

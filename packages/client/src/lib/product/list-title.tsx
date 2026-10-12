@@ -1,20 +1,20 @@
-import type * as React from 'react';
+import { memo } from 'react';
 import { Text } from '#primitives/text';
 
-// The title at the top of a wide window's sidebar list, such as Sessions or Settings.
-export function ListTitle({
+// The title at the top of a wide window's sidebar list, such as Sessions or Settings, under the window's own page title.
+export const ListTitle = memo(function ListTitle({
   children,
 }: {
   children: string;
-}): React.JSX.Element {
+}) {
   return (
     <Text
       semanticRole="heading"
-      aria-level={1}
+      aria-level={2}
       role="heading"
       numberOfLines={1}
     >
       {children}
     </Text>
   );
-}
+});
