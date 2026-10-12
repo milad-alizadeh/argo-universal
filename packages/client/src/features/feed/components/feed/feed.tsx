@@ -34,6 +34,7 @@ import {
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type FeedViewItem, feedItemKey } from '../../view/feed-view';
+import { shownLiveHeader } from '../../view/shown-live-header';
 import { type FeedGrowth, FeedGrowthContext } from '../feed-growth-context';
 import { FeedItem, isDrawnFeedItem } from '../feed-item';
 import { LiveHeader } from '../live-header/live-header';
@@ -42,7 +43,7 @@ import { WorkingMark } from '../working-mark';
 
 export interface FeedProps {
   items: readonly FeedViewItem[];
-  // The Turn's live line, drawn last while a Turn runs.
+  // The Turn's live line, drawn last while a Turn runs and no open group already draws the work.
   liveHeader: LiveHeaderValue | null;
   // The Feed row a `tool_call` live header names, for its icon.
   liveToolCall?: ToolCallUpdate;
@@ -247,16 +248,15 @@ export function Feed({
   ...props
 }: FeedProps): React.JSX.Element {
   const drawnItems = useMemo(() => items.filter(isDrawnFeedItem), [items]);
-  const entries = useMemo<FeedEntry[]>(
-    () =>
-      liveHeader
-        ? [
-            ...drawnItems,
-            { type: 'live_header', liveHeader, toolCall: liveToolCall },
-          ]
-        : drawnItems,
-    [drawnItems, liveHeader, liveToolCall],
-  );
+  const entries = useMemo<FeedEntry[]>(() => {
+    const shown = shownLiveHeader(drawnItems, liveHeader);
+    return shown
+      ? [
+          ...drawnItems,
+          { type: 'live_header', liveHeader: shown, toolCall: liveToolCall },
+        ]
+      : drawnItems;
+  }, [drawnItems, liveHeader, liveToolCall]);
   if (!entries.length) return <EmptyFeed branch={checkoutBranch} />;
   const newestItem = drawnItems.at(-1);
   return (
