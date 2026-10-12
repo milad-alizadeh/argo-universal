@@ -50,6 +50,7 @@
     "diff": "catalog:",
     "expo-clipboard": "catalog:",
     "expo-file-system": "catalog:",
+    "expo-glass-effect": "catalog:",
     "expo-haptics": "catalog:",
     "expo-image-picker": "catalog:",
     "expo-symbols": "catalog:",

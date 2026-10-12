@@ -362,6 +362,9 @@ catalogs:
     expo-font:
       specifier: ~57.0.4
       version: 57.0.4
+    expo-glass-effect:
+      specifier: ~57.0.4
+      version: 57.0.4
     expo-haptics:
       specifier: ~57.0.3
       version: 57.0.3
@@ -778,6 +781,9 @@ importers:
       expo-font:
         specifier: 'catalog:'
         version: 57.0.4(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
+      expo-glass-effect:
+        specifier: 'catalog:'
+        version: 57.0.4(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
       expo-haptics:
         specifier: 'catalog:'
         version: 57.0.3(expo@57.0.26)
@@ -1048,6 +1054,9 @@ importers:
       expo-file-system:
         specifier: 'catalog:'
         version: 57.0.7(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))
+      expo-glass-effect:
+        specifier: 'catalog:'
+        version: 57.0.4(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
       expo-haptics:
         specifier: 'catalog:'
         version: 57.0.3(expo@57.0.26)
