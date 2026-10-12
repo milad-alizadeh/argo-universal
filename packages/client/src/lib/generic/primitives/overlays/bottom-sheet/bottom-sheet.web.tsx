@@ -12,6 +12,7 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
       <BottomSheetSurface
         open={props.open}
         onClosed={props.onClosed}
+        dismissible={props.dismissible}
         title={
           <DialogPrimitive.Title className="sr-only">
             {props.label}

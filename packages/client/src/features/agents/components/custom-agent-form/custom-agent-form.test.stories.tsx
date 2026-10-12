@@ -156,7 +156,7 @@ export const RejectsShellLinesAndCredentials: Story = {
         'Argo does not store credentials. Sign in through the Agent instead.',
       ),
     ).toBeVisible();
-    await userEvent.keyboard('{Escape}');
+    await userEvent.click(editor.getByRole('button', { name: 'Cancel' }));
     await expect(await canvas.findByRole('button', addAgent)).toBeDisabled();
     await expect(args.onSubmit).not.toHaveBeenCalled();
   },

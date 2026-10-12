@@ -1,5 +1,5 @@
 import { AgentArgument } from '@repo/contracts';
-import { useField, useForm } from '@tanstack/react-form';
+import { useField, useForm, useStore } from '@tanstack/react-form';
 import type * as React from 'react';
 import type { CustomAgentFormApi } from '../../hooks/use-custom-agent-form';
 import {
@@ -50,6 +50,7 @@ function useArgumentEntry(props: SheetProps): EntrySheetEntry {
   return {
     fields: [entryField(argumentInput, field)],
     onSave: () => void entry.handleSubmit(),
+    dirty: useStore(entry.store, (state) => state.isDirty),
   };
 }
 

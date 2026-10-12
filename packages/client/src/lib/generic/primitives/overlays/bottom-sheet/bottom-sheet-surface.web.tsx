@@ -7,6 +7,7 @@ import { useSwipeToClose } from './bottom-sheet-swipe.web';
 type SurfaceProps = {
   open: boolean;
   onClosed?: () => void;
+  dismissible?: boolean;
   // A hidden title for a sheet whose content has none of its own.
   title?: React.ReactNode;
   /*
@@ -25,10 +26,10 @@ export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
   const state = props.open ? 'open' : 'closed';
   const card = useHiddenWhileClosing(props.open || !props.hiddenWhileClosing);
   const { onOpenChange } = DialogPrimitive.useRootContext();
-  useSwipeToClose(
-    card,
-    useCallback(() => onOpenChange(false), [onOpenChange]),
-  );
+  const close = useCallback(() => {
+    if (props.dismissible !== false) onOpenChange(false);
+  }, [onOpenChange, props.dismissible]);
+  useSwipeToClose(card, close);
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay
@@ -91,7 +92,7 @@ function useTallestHeight(): {
 }
 
 function sheetContentProps(
-  props: Pick<SurfaceProps, 'open' | 'onClosed'>,
+  props: Pick<SurfaceProps, 'open' | 'onClosed' | 'dismissible'>,
 ): React.ComponentProps<typeof DialogPrimitive.Content> & {
   'data-state': string;
   'aria-describedby': undefined;
@@ -100,7 +101,16 @@ function sheetContentProps(
     'data-state': props.open ? 'open' : 'closed',
     'aria-describedby': undefined,
     onCloseAutoFocus: props.onClosed,
+    onEscapeKeyDown: keepOpen(props.dismissible),
+    onInteractOutside: keepOpen(props.dismissible),
     className:
       'bottom-sheet touch-none max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
+  };
+}
+
+// Radix closes on Escape and on a press outside unless the event is cancelled.
+function keepOpen(dismissible: boolean | undefined): (event: Event) => void {
+  return (event) => {
+    if (dismissible === false) event.preventDefault();
   };
 }
