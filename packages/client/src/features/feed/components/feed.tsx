@@ -439,7 +439,7 @@ function FeedList({
       )}
       {/* Over the list, so keeping the reading position never scrolls it out of view. */}
       {loadingOlder && (
-        <View className="absolute top-4 self-center rounded-full bg-background px-2 wide:top-6">
+        <View className="absolute top-4 self-center rounded-full bg-sidebar px-2 wide:top-6">
           <LoadingEarlier />
         </View>
       )}

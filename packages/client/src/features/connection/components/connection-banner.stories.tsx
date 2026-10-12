@@ -23,7 +23,7 @@ export const Overview: Story = {
         ] as const
       ).map(([label, state]) => (
         <Variation key={state} label={label}>
-          <View className="w-full bg-background wide:bg-sidebar">
+          <View className="w-full bg-sidebar">
             <ConnectionBanner state={state} />
           </View>
         </Variation>
