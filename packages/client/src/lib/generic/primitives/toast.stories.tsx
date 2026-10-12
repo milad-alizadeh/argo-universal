@@ -1,18 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { ErrorToastExample } from '../../../../mocks/toast-mock';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 
 const meta = { title: 'Design System/Primitives/Toast' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'Toast',
   render: () => (
-    <Variations>
+    <VariationList>
       <Variation label="Error">
         <ErrorToastExample />
       </Variation>
-    </Variations>
+    </VariationList>
   ),
 };

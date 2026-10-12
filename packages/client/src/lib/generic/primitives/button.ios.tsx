@@ -48,7 +48,7 @@ type NativeControlProps = Pick<
   | 'accessibilityLabel'
   | 'onPress'
   | 'testID'
-> & { theme: Pick<ButtonTheme, 'primary'> };
+> & { theme: Pick<ButtonTheme, 'primary' | 'border'> };
 
 function nativeControlProps(
   props: NativeControlProps,
@@ -57,7 +57,7 @@ function nativeControlProps(
     role: props.role,
     onPress: props.onPress,
     testID: props.testID,
-    modifiers: nativeModifiers(props, props.theme.primary),
+    modifiers: nativeModifiers(props, props.theme),
   };
 }
 

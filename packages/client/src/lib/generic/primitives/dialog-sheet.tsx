@@ -8,7 +8,12 @@ export type DialogSheetProps = { label?: string; children: React.ReactNode };
 export function DialogSheet(props: DialogSheetProps): React.JSX.Element {
   const { open, onOpenChange } = DialogPrimitive.useRootContext();
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange} label={props.label}>
+    <BottomSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      label={props.label}
+      fit
+    >
       {props.children}
     </BottomSheet>
   );

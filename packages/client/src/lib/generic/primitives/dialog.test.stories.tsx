@@ -88,3 +88,32 @@ function returnsFocusAt(layout: Layout): Story {
 
 export const SheetReturnsFocus: Story = returnsFocusAt('phone');
 export const DialogReturnsFocus: Story = returnsFocusAt('wide');
+
+// Dragging the phone sheet down far enough closes it; a short drag lets it settle back open.
+function swipesDown(distance: number, staysOpen: boolean): Story {
+  return {
+    beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
+    play: async ({ canvas, userEvent }) => {
+      await userEvent.click(canvas.getByRole('button', rename));
+      const dialog = await body.findByRole('dialog', dialogName);
+      const title = within(dialog).getByText(dialogName.name);
+      const { left, top } = title.getBoundingClientRect();
+      const at = (y: number): { clientX: number; clientY: number } => ({
+        clientX: left + 4,
+        clientY: top + 4 + y,
+      });
+      await userEvent.pointer([
+        { keys: '[MouseLeft>]', target: title, coords: at(0) },
+        { target: title, coords: at(distance / 2) },
+        { target: title, coords: at(distance) },
+        { keys: '[/MouseLeft]', target: title, coords: at(distance) },
+      ]);
+      await waitFor(() =>
+        expect(body.queryByRole('dialog', dialogName) !== null).toBe(staysOpen),
+      );
+    },
+  };
+}
+
+export const SheetClosesOnSwipeDown: Story = swipesDown(200, false);
+export const SheetStaysOpenAfterShortDrag: Story = swipesDown(20, true);

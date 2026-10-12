@@ -5,10 +5,12 @@ import {
   controlSize,
   disabled,
   frame,
+  strokeBorder,
   tint,
   type ModifierConfig,
 } from '@expo/ui/swift-ui/modifiers';
 import { PlatformColor } from 'react-native';
+import type { ButtonTheme } from './button-native-colors';
 import type {
   ButtonDataProps,
   ButtonSize,
@@ -40,14 +42,16 @@ const controlSizes = {
   lg: 'extraLarge',
 } as const satisfies Record<ButtonSize, string>;
 
+type ModifierTheme = Pick<ButtonTheme, 'primary' | 'border'>;
+
 export function nativeModifiers(
   props: ModifierProps,
-  primary: string | undefined,
+  theme: ModifierTheme,
 ): ModifierConfig[] {
   return [
     ...buttonStyleModifiers(props),
     ...buttonAccessibility(props),
-    ...buttonTint(props, primary),
+    ...buttonTint(props, theme),
   ];
 }
 
@@ -75,10 +79,26 @@ function buttonAccessibility(
 }
 
 function buttonTint(
+  props: Pick<ButtonDataProps, 'role' | 'variant'>,
+  theme: ModifierTheme,
+): ModifierConfig[] {
+  if (nativeButtonVariant(props) === 'outline') return outlineEdge(theme);
+  return fillTint(props, theme);
+}
+
+function fillTint(
   props: Pick<ButtonDataProps, 'role'>,
-  primary: string | undefined,
+  theme: ModifierTheme,
 ): ModifierConfig[] {
   if (props.role === 'destructive') return [tint(PlatformColor('systemRed'))];
-  if (primary === undefined) return [];
-  return [tint(primary)];
+  if (theme.primary === undefined) return [];
+  return [tint(theme.primary)];
+}
+
+// SwiftUI has no outlined button: a bordered one with a clear fill, edged in Argo's border colour.
+function outlineEdge(theme: ModifierTheme): ModifierConfig[] {
+  return [
+    tint('transparent'),
+    strokeBorder({ content: theme.border, shape: 'capsule' }),
+  ];
 }

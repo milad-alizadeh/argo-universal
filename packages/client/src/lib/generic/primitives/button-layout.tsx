@@ -26,24 +26,24 @@ function narrowLayout(props: ButtonProps): ButtonProps {
 }
 
 function useWidthLayout(props: ButtonProps): ButtonProps {
-  const wide = useWide();
-  return wide ? { ...props, fullWidth: false } : narrowLayout(props);
+  if (useWide()) return { ...props, fullWidth: props.fullWidth === true };
+  return phoneLayout(props);
+}
+
+// A phone has no small buttons; fullWidth "narrow" also fills the width.
+function phoneLayout(props: ButtonProps): ButtonProps {
+  if (props.fullWidth === 'narrow') return narrowLayout(props);
+  return { ...props, size: narrowSizes[props.size ?? 'md'] };
 }
 
 type Drawing = ComponentType<ButtonProps>;
 
-function NarrowAwareButton({
-  Drawing,
-  ...props
-}: ButtonProps & { Drawing: Drawing }): ReactElement {
-  return <Drawing {...useWidthLayout(props)} />;
-}
-
-// Resolves fullWidth "narrow" by the window's width, so pages never choose a phone button themselves.
+/*
+ * Resolves the button's layout by the window's width, so pages never choose a phone button themselves:
+ * a phone has no small buttons, and fullWidth "narrow" fills a narrow window.
+ */
 export function withNarrowLayout(Drawing: Drawing): Drawing {
   return function Button(props: ButtonProps): ReactElement {
-    if (props.fullWidth === 'narrow')
-      return <NarrowAwareButton Drawing={Drawing} {...props} />;
-    return <Drawing {...props} />;
+    return <Drawing {...useWidthLayout(props)} />;
   };
 }

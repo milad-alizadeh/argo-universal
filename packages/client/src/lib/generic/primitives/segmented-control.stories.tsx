@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { Variation, Variations } from '../variations';
+import { Variation, Variations as VariationList } from '../variations';
 import { SegmentedControl } from './segmented-control';
 
 const choices = [
@@ -32,16 +32,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {
+export const Variations: Story = {
   name: 'SegmentedControl',
   render: () => (
-    <Variations>
+    <VariationList>
       <Variation label="Default">
         <Example />
       </Variation>
       <Variation label="Disabled">
         <Example disabled />
       </Variation>
-    </Variations>
+    </VariationList>
   ),
 };

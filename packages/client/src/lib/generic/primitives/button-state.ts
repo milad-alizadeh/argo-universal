@@ -13,12 +13,15 @@ export function isButtonDisabled(
   return !!(props.disabled || props.loading);
 }
 
+// A button sits in the page's own layout, so a hosted one near the screen's edge keeps its place.
 export function nativeButtonLayout(fullWidth?: boolean): {
   matchContents: { vertical: boolean; horizontal: boolean };
+  ignoreSafeArea: 'all';
   style: { width: '100%' } | undefined;
 } {
   return {
     matchContents: { vertical: true, horizontal: !fullWidth },
+    ignoreSafeArea: 'all',
     style: fullWidth ? { width: '100%' } : undefined,
   };
 }

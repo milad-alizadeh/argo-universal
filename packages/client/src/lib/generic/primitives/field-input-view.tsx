@@ -21,7 +21,11 @@ export function FieldInput(props: FieldInputProps): React.JSX.Element {
       <Text
         aria-hidden
         role="body"
-        className={cn('shrink-0', isInvalid(props) && 'text-destructive')}
+        className={cn(
+          'shrink-0',
+          props.disabled && 'text-muted-foreground',
+          isInvalid(props) && 'text-destructive',
+        )}
       >
         {props.label}
       </Text>

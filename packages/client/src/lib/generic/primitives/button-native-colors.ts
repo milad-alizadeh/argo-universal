@@ -24,6 +24,8 @@ const buttonColorClasses: Record<
 
 export interface ButtonTheme {
   primary: string | undefined;
+  // The edge an outlined button draws where the system has no outlined style.
+  border: string | undefined;
   contentClass: string;
   colors: {
     containerColor: string | undefined;
@@ -43,6 +45,7 @@ export function useNativeButtonTheme(props: ThemeProps): ButtonTheme {
   const classes = nativeColorClasses(props);
   return {
     primary: colors.tint,
+    border: usePrimitiveColor('text-border'),
     contentClass: isButtonDisabled(props)
       ? mutedForegroundClass
       : classes.content,
