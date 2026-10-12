@@ -23,6 +23,7 @@ import {
   SessionView,
   type SessionViewProps,
 } from '../components/session-view/session-view';
+import { useStartingFeed } from '../hooks/starting-session';
 import { composerStatus } from '../state/composer-status';
 import { toSendError } from '../state/send-error';
 
@@ -73,6 +74,7 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
   const imageUrl = useBlobUrl();
   const connected = useConnectionState() === 'open';
   const feed = useSessionFeed(sessionId);
+  const starting = useStartingFeed(sessionId, feed.ready);
   const agents = useAgents();
   const commands = useSessionCommands(
     sessionId,
@@ -91,7 +93,7 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
   if (feed.openError)
     return { state: 'failed', reason: feed.openError.message };
   const { snapshot, view } = feed;
-  if (!feed.ready || !snapshot || !view) return { state: 'opening' };
+  if (!feed.ready || !snapshot || !view) return { state: 'opening', starting };
 
   const turnRunning = snapshot.state !== 'idle';
   return {

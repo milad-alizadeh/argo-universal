@@ -3,6 +3,7 @@ import {
   type UseQueryResult,
   useMutation,
   useQuery,
+  useQueryClient,
 } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useMemo, useState } from 'react';
@@ -19,6 +20,7 @@ import {
   NewSessionView,
   type NewSessionViewProps,
 } from '../components/new-session-view/new-session-view';
+import { handOverStartingFeed } from '../hooks/starting-session';
 import { canOpenSession, toNewSessionInput } from '../state/open-session';
 import {
   type ChosenSettings,
@@ -84,19 +86,22 @@ function useNewSessionViewProps(
   const imageDraft = useImageDraft();
   // The first prompt as sent, shown in the Feed until the Session opens; a failure clears it and keeps the draft.
   const [sent, setSent] = useState<{ draft: ComposerDraft; at: number }>();
+  const starting = useMemo(
+    () => sent && startingFeed(sent.draft, sent.at),
+    [sent],
+  );
+  const queryClient = useQueryClient();
   const newSession = useMutation(
     trpc.session.new.mutationOptions({
-      onSuccess: ({ sessionId }) =>
-        navigate({ to: 'session', id: sessionId }, { replace: true }),
+      onSuccess: ({ sessionId }) => {
+        if (starting) handOverStartingFeed(queryClient, sessionId, starting);
+        navigate({ to: 'session', id: sessionId }, { replace: true });
+      },
       onError: () => {
         setSent(undefined);
         void agents.refetch();
       },
     }),
-  );
-  const starting = useMemo(
-    () => sent && startingFeed(sent.draft, sent.at),
-    [sent],
   );
   // Uploads the draft's images, then opens the Session with the draft as its first prompt; a failure keeps the draft.
   async function sendFirstPrompt(sent: ComposerDraft): Promise<void> {

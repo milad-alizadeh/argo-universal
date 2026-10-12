@@ -8,7 +8,6 @@ import {
   type ComposerDraft,
   StartSessionIn,
 } from '#features/composer';
-import { Feed } from '#features/feed';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import {
   type ErrorToast,
@@ -23,6 +22,7 @@ import {
   serverSilentMessage,
   sessionOpenFailedTitle,
 } from '../failure-messages';
+import { StartingSessionFeed } from '../starting-session-feed';
 
 export interface ReadyNewSessionViewProps {
   serverName: string;
@@ -68,7 +68,6 @@ const openFailed = (message: string): ErrorToast => ({
 
 const emptyDraft: ComposerDraft = { text: '', images: [] };
 const ignoreDraft = (): void => {};
-const noOlderRows = (): void => {};
 
 // The header stays empty until the first prompt starts the Session and gives it a title.
 const newSessionTitle = null;
@@ -107,15 +106,7 @@ function NewSessionFeed({
   starting?: StartingFeed;
 }): React.JSX.Element {
   if (!starting) return <NewSessionHeading />;
-  return (
-    <Feed
-      items={starting.items}
-      liveHeader={starting.liveHeader}
-      imageUrl={starting.imageUrl}
-      loadingOlder={false}
-      onStartReached={noOlderRows}
-    />
-  );
+  return <StartingSessionFeed starting={starting} />;
 }
 
 type ComposerDraftProps = Pick<

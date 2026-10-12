@@ -8,6 +8,7 @@ import { findToast } from '../../../../../mocks/find-toast';
 import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
 import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
+import { startingFeed } from '../../state/starting-feed';
 import {
   type OpenSessionViewProps,
   SessionView,
@@ -224,6 +225,29 @@ export const Opening: Story = {
     await expect(canvas.queryByRole('alert')).toBeNull();
     await expect(canvas.queryByRole('textbox', { name: 'Message' })).toBeNull();
   },
+};
+
+// Opened from New Session, the sent prompt and Working stay until the Session's Feed loads.
+export const OpeningAfterNewSession: Story = {
+  args: {
+    view: {
+      state: 'opening',
+      starting: startingFeed(
+        { text: 'Fix the flaky login test', images: [] },
+        Date.now(),
+      ),
+    },
+  },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      const [prompt] = await canvas.findAllByText('Fix the flaky login test');
+      await expect(prompt).toBeVisible();
+      await expect(canvas.getByRole('status')).toHaveAccessibleName(/^Working/);
+      await expect(
+        canvas.getByRole('textbox', { name: 'Message' }),
+      ).toHaveValue('');
+      await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+    }),
 };
 
 // A Session that failed gives no prompt and toasts the Server's reason.
