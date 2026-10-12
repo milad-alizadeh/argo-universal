@@ -2,16 +2,22 @@
 
 ## @expo/ui@57.0.22
 
-`@expo__ui@57.0.22.patch` exposes DropdownMenu's `cornerRadius`, `borderWidth` and `borderColor` through its published types and Compose props, then passes them to Material's native menu shape and BorderStroke. Argo's Android Menu uses the approved 16dp radius. Android autolinking compiles `expo-ui` from source so the Kotlin patch applies instead of linking the precompiled AAR. Menus without the prop retain Material's default shape.
-
-It also gives DockedSearchBar what Argo's Android header search needs from Paper:
+`@expo__ui@57.0.22.patch` gives DockedSearchBar what Argo's Android header search needs from Paper:
 - `containerColor` sets the bar's fill.
 - `BackIcon` and `ClearIcon` slots add a leading Back button while the bar is open, and a trailing clear button while it holds text.
 - `onExpandedChange` reports when the bar opens and closes.
 
 Closing the bar, by Back or the system Back gesture, clears its text and focus. When its host re-attaches it, the open field takes focus back; this happens when a header drops its other items. Each slot button covers its React Native content, so the button receives the tap. The Back gesture comes from `activity-compose`, which the patch declares directly.
 
-Remove the corresponding changes when the pinned Expo UI release ships the documented `cornerRadius` prop and a DockedSearchBar with these props and slots. The patch requires rebuilding the Android development client.
+While open, the field fills the bar and the bar clears its header Toolbar's content insets, restoring them on close. Otherwise those insets stack on Material's own button spacing and push Back and clear off the page gutter. Android autolinking compiles `expo-ui` from source so the Kotlin patch applies instead of linking the precompiled AAR.
+
+Remove the corresponding changes when the pinned Expo UI release ships a DockedSearchBar with these props and slots. The patch requires rebuilding the Android development client.
+
+## react-native-screens@4.26.2
+
+`react-native-screens@4.26.2.patch` makes the Android header Toolbar send its layout to the Shadow Tree when its content insets change, as it already does when its size changes. Without it, the open header search keeps the width it had beside the insets, so its clear button sits short of the page gutter.
+
+Remove this patch when the pinned release updates the Shadow Tree on content inset changes. When upgrading, check `CustomToolbar.kt`. The patch requires rebuilding the Android development client.
 
 ## expo-symbols@57.0.3
 

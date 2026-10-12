@@ -7,7 +7,10 @@ import { Text } from './primitives/text';
 import { Icon } from './symbols/icon';
 import { Variation, Variations as VariationList } from './variations';
 
-const meta = { title: 'Design System/PageTitleRow' } satisfies Meta;
+const meta = {
+  title: 'Design System/PageTitleRow',
+  parameters: { screenPreview: true },
+} satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -29,7 +32,7 @@ function SearchableTitle(): React.JSX.Element {
 export const Variations: Story = {
   name: 'PageTitleRow',
   render: () => (
-    <VariationList className="pl-9">
+    <VariationList className="p-6 pl-15">
       <Variation label="Title">
         <PageTitleRow title="General" />
       </Variation>

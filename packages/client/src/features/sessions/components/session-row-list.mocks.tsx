@@ -23,7 +23,7 @@ export function SessionRowListMock({
   return (
     <View
       testID="session-row-list"
-      className="w-session-phone max-w-full bg-background wide:w-session-desktop wide:gap-1 wide:bg-sidebar wide:px-2 wide:py-4"
+      className="w-session-phone max-w-full bg-sidebar wide:w-session-desktop wide:gap-1 wide:px-2 wide:py-4"
     >
       {sessions.map((session) => (
         <SessionRow

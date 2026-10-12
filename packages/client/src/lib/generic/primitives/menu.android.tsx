@@ -16,7 +16,6 @@ import type { MenuProps } from './menu-props';
 import { usePrimitiveColor } from './primitive-color';
 
 const menuWidth = 280;
-const menuRadius = 16;
 
 export function Menu<Value extends string>(
   props: MenuProps<Value>,
@@ -51,17 +50,8 @@ export function Menu<Value extends string>(
 function MenuPopup(
   props: Pick<DropdownMenuProps, 'expanded' | 'onDismissRequest' | 'children'>,
 ): React.JSX.Element {
-  const { colors, colorScheme } = useNativeTheme();
   const popupColor = usePrimitiveColor('text-popover dark:text-neutral-900');
-  return (
-    <DropdownMenu
-      {...props}
-      color={popupColor}
-      borderWidth={1}
-      borderColor={colorScheme === 'dark' ? colors.border : undefined}
-      cornerRadius={menuRadius}
-    />
-  );
+  return <DropdownMenu {...props} color={popupColor} />;
 }
 
 function MenuTrigger<Value extends string>(
