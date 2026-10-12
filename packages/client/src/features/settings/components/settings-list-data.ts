@@ -1,7 +1,11 @@
 import type { NavigationDestination } from '#lib/product/navigation/context';
 import type { ListItemProps } from '../../../lib/generic/primitives/field-props';
 import type { IconName } from '../../../lib/generic/symbols/icon-names';
-import { connectionValue, serverValue } from './settings-list-labels';
+import {
+  connectionValue,
+  countValue,
+  serverValue,
+} from './settings-list-labels';
 import type { SettingsListProps } from './settings-list-props';
 
 export interface SettingsRow {
@@ -57,7 +61,7 @@ function serverDestinations(props: SettingsListProps): SettingsRow[] {
       title: 'Projects',
       icon: 'folder',
       destination: { to: 'settings-projects' },
-      value: serverValue(props, String(props.projects.length)),
+      value: countValue(props, props.projects),
       needsAttention: props.projectsNeedAttention,
       disabled,
     },
@@ -65,7 +69,7 @@ function serverDestinations(props: SettingsListProps): SettingsRow[] {
       title: 'Agents',
       icon: 'agent',
       destination: { to: 'settings-agents' },
-      value: serverValue(props, String(props.agents.length)),
+      value: countValue(props, props.agents),
       needsAttention: props.agentsNeedAttention,
       disabled,
     },
@@ -105,4 +109,13 @@ export function deviceRows(
         ]
       : []),
   ];
+}
+
+// The rows whose title holds the search, ignoring case.
+export function matchingRows(
+  rows: readonly SettingsRow[],
+  query = '',
+): SettingsRow[] {
+  const search = query.trim().toLowerCase();
+  return rows.filter(({ title }) => title.toLowerCase().includes(search));
 }

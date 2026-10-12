@@ -13,18 +13,16 @@ export {
   NativeSheetsProvider,
   useSheetLabel,
 } from '#features/composer';
-export { ConnectionScreen, useConnection } from '#features/connection';
+export { ConnectionDetailScreen, useConnection } from '#features/connection';
+export { DesktopLayout, PhoneLayout, SectionRootScreen } from '#features/frame';
 export {
   AccountsScreen,
   AppearanceScreen,
-  DesktopLayout,
   DevicesScreen,
   NotificationsScreen,
-  PhoneLayout,
-  ProjectSettingsScreen,
-  ProjectsSettingsScreen,
-  SectionRootScreen,
-} from '#features/frame';
+  ProjectDetailScreen,
+  ProjectListScreen,
+} from '#features/settings';
 export { NewSessionScreen, SessionScreen } from '#features/sessions';
 export { hasLiquidGlass } from '#lib/generic/native-header';
 export {

@@ -81,3 +81,39 @@ export const DisconnectedPhone = unavailable(
   layoutWidths.phone,
 );
 export const DisconnectedWide = unavailable('disconnected', layoutWidths.wide);
+
+// Counts the Server has not sent yet never read as 0.
+export const CountsBeforeTheServerAnswers: Story = {
+  args: { status: 'ready', projects: undefined, agents: undefined },
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.phone);
+    for (const title of ['Projects', 'Agents'])
+      await expect(
+        canvas.getByRole('link', { name: `${title}, …` }),
+      ).toBeVisible();
+  },
+};
+
+export const DisconnectedBeforeTheServerAnswers: Story = {
+  args: { status: 'disconnected', projects: undefined, agents: undefined },
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.phone);
+    for (const title of ['Projects', 'Agents'])
+      await expect(
+        canvas.getByRole('link', { name: title }),
+      ).toBeInTheDocument();
+  },
+};
+
+export const DisconnectedKeepsLastCounts: Story = {
+  args: { status: 'disconnected' },
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.phone);
+    await expect(
+      canvas.getByRole('link', { name: 'Projects, 1' }),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.getByRole('link', { name: 'Agents, 0' }),
+    ).toBeInTheDocument();
+  },
+};

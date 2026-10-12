@@ -1,10 +1,4 @@
-import { Platform } from 'react-native';
 import type { SettingsListProps } from './settings-list-props';
-
-export function deviceName(wide: boolean): string {
-  if (wide) return 'This Mac';
-  return Platform.OS === 'android' ? 'This phone' : 'This iPhone';
-}
 
 export function connectionValue(
   props: SettingsListProps,
@@ -20,4 +14,16 @@ export function serverValue(
   value?: string,
 ): string | undefined {
   return props.status === 'loading' ? '…' : value;
+}
+
+/*
+ * A count the Server sends: "…" until it first answers, nothing while
+ * disconnected with no answer yet, else the last known count.
+ */
+export function countValue(
+  props: SettingsListProps,
+  list: readonly unknown[] | undefined,
+): string | undefined {
+  if (list) return serverValue(props, String(list.length));
+  return props.status === 'disconnected' ? undefined : '…';
 }

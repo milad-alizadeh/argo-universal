@@ -19,7 +19,6 @@ const meta = {
   },
   args: {
     ...settingsListMocks,
-    serverName: "Milad's Mac mini",
     projectsNeedAttention: true,
     agentsNeedAttention: true,
     accountState: 'GitHub',
