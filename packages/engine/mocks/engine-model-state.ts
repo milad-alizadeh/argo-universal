@@ -1,12 +1,10 @@
 import { type Database, openDatabase } from '@repo/db';
 import { afterAll, afterEach, beforeEach, vi } from 'vitest';
 import { type Actor, type AnyEventObject, createActor } from 'xstate';
-import type { AcpResources } from '../src/acp';
-import type { AgentInstallations } from '../src/agents';
+import type { CloseAcpResourcesInput } from '../src/engine/agent-cleanup';
 import type { HttpServer, HttpServerOptions } from '../src/engine/http-server';
 import type { EngineMessage } from '../src/engine/ipc';
 import type { engineMachine as machine } from '../src/engine/machine';
-import type { OpenSessionsActorRef } from '../src/sessions';
 import { type PendingCall, input } from './engine-model-fixtures';
 export let openDatabaseCalls: PendingCall<{ home: string }, Database>[];
 export let recoveryCalls: PendingCall<
@@ -18,14 +16,7 @@ export let closeHttpServerCalls: PendingCall<
   { server: HttpServer | null },
   void
 >[];
-export let closeResourceCalls: PendingCall<
-  {
-    resources: AcpResources;
-    installations: AgentInstallations;
-    sessions: OpenSessionsActorRef | undefined;
-  },
-  void
->[];
+export let closeResourceCalls: PendingCall<CloseAcpResourcesInput, void>[];
 export let shutdownCommands: string[];
 export let logs: string[];
 export let processSignals: {

@@ -40,6 +40,9 @@ jobs:
 
       - name: Quality
         run: pnpm quality
+        env:
+          # Each test runner uses the available cores; overlapping runners distort timing budgets.
+          TURBO_CONCURRENCY: 1
 
       # apps/storybook/vitest.setup.ts saves a failed story's screenshot in __screenshots__/failures beside its test file.
       - name: Upload the story failure screenshots

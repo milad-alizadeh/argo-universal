@@ -1,36 +1,22 @@
-import { join } from 'node:path';
-import { type Database, openDatabase } from '@repo/db';
+import type { Database } from '@repo/db';
 import { writeLog } from '@repo/machine-log';
 import {
   fromPromise,
   sendTo,
   setup,
-  waitFor,
   type ActorRefFrom,
   type AnyActorRef,
 } from 'xstate';
-import {
-  releaseLoginTerminalGroups,
-  type AcpResources,
-  type AcpResourceInput,
-} from '../acp';
+import { type AcpResources, type AcpResourceInput } from '../acp';
 import {
   type FetchAgents,
   AgentInstallations,
   type InstallPorts,
-  reconcileInterruptedInstallations,
   syncSupervisorMachine,
 } from '../agents';
-import {
-  attachmentsFolderIn,
-  removeOrphanAttachments,
-  removeUnusedBlobs,
-} from '../blob';
 import { findMachineActor } from '../lib/machine-actor';
-import { seedProject } from '../projects';
 import {
   type OpenSessionsInput,
-  recoverAfterRestart,
   openSessionsMachine,
   openSessionsId,
   type OpenSessionsActorRef,
@@ -41,6 +27,15 @@ import {
   writerMachine,
 } from '../storage';
 import {
+  closeAgentResources,
+  type CloseAcpResourcesInput,
+} from './agent-cleanup';
+import { openEngineDatabase, type OpenDatabaseInput } from './engine-database';
+import {
+  recoverEngineAfterRestart,
+  type RecoveryInput,
+} from './engine-recovery';
+import {
   type HttpServer,
   type HttpServerOptions,
   startHttpServer,
@@ -50,20 +45,8 @@ import { type EngineStop, processSignals } from './process-signals';
 
 export type EngineLogParameters = { line: string };
 export type EngineOutput = { exitCode: number };
-export type OpenDatabaseInput = { home: string };
-export type RecoveryInput = {
-  database: Database;
-  blobsFolder: string;
-  home: string;
-};
 export type CloseHttpServerInput = { server: HttpServer | null };
 type SyncSupervisorActor = ActorRefFrom<typeof syncSupervisorMachine>;
-export type CloseAcpResourcesInput = {
-  resources: AcpResources;
-  server?: HttpServer | null;
-  installations: AgentInstallations;
-  sessions: OpenSessionsActorRef | undefined;
-};
 
 // `openingDatabase` sets the database before `recovering` and `live` run.
 export function openDatabaseOf(context: {
@@ -116,44 +99,13 @@ export const engineSetup = setup({
   },
   actors: {
     closeAcpResources: fromPromise<void, CloseAcpResourcesInput>(
-      async ({ input }): Promise<void> => {
-        await Promise.all([
-          input.server?.closeSetup(),
-          input.installations.shutdown(),
-        ]);
-        await input.resources.shutdown();
-        if (!input.sessions) return;
-        await waitFor(
-          input.sessions,
-          (snapshot) => snapshot.status !== 'active',
-          { timeout: Infinity },
-        );
-      },
+      ({ input }): Promise<void> => closeAgentResources(input),
     ),
-    // `openDatabase` also runs the Drizzle migrations.
     openDatabase: fromPromise<Database, OpenDatabaseInput>(
-      async ({ input }): Promise<Database> => {
-        const database = openDatabase(join(input.home, 'argo.db'));
-        try {
-          await seedProject(database);
-          return database;
-        } catch (error) {
-          database.$client.close();
-          throw error;
-        }
-      },
+      ({ input }): Promise<Database> => openEngineDatabase(input),
     ),
     recoverAfterRestart: fromPromise<void, RecoveryInput>(
-      async ({ input }): Promise<void> => {
-        recoverAfterRestart(input.database);
-        await reconcileInterruptedInstallations(input.home);
-        await releaseLoginTerminalGroups(input.home);
-        await removeUnusedBlobs(input);
-        await removeOrphanAttachments({
-          database: input.database,
-          attachmentsFolder: attachmentsFolderIn(input.home),
-        });
-      },
+      ({ input }): Promise<void> => recoverEngineAfterRestart(input),
     ),
     syncSupervisor: syncSupervisorMachine,
     databaseWriter: writerMachine,
@@ -217,3 +169,9 @@ export function requireSyncSupervisor(
   if (!actor) throw new Error('Sync supervisor is not running');
   return actor;
 }
+
+export const stoppingLog = ({
+  event,
+}: {
+  event: EngineStop;
+}): EngineLogParameters => ({ line: `stopping: ${event.reason}` });
