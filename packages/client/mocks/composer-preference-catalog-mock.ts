@@ -1,0 +1,131 @@
+import type {
+  AgentInfo,
+  SessionConfigOption,
+  SessionConfigSelectOption,
+} from '@repo/contracts';
+type SelectOption = Extract<SessionConfigOption, { type: 'select' }>;
+interface CatalogBasics {
+  agent: AgentInfo;
+  model: SelectOption;
+  effort: SelectOption;
+  mode: SelectOption;
+}
+interface EffortFacts {
+  narrower: SessionConfigSelectOption;
+  unsupported: string;
+  chosenEffort: string;
+}
+interface CatalogCase extends CatalogBasics, EffortFacts {
+  otherMode: SessionConfigSelectOption;
+  defaultMode: { configId: string; value: string };
+  withoutEffort: SessionConfigSelectOption | undefined;
+}
+export function catalogCase(agent: AgentInfo): CatalogCase {
+  const model = select(agent, 'model');
+  const effort = select(agent, 'thought_level');
+  const mode = select(agent, 'mode');
+  const basics = { agent, model, effort, mode };
+  return {
+    ...basics,
+    ...effortFacts(basics),
+    ...modeFacts(basics),
+    withoutEffort: choicesOf(model).find(noEffort),
+  };
+}
+function select(agent: AgentInfo, category: string): SelectOption {
+  const option = agent.configOptions.find(
+    (entry): entry is SelectOption =>
+      entry.type === 'select' && entry.category === category,
+  );
+  if (!option)
+    throw new Error(
+      `Recorded catalog needs ${category} options for ${agent.label}.`,
+    );
+  return option;
+}
+function choicesOf(option: SelectOption): SessionConfigSelectOption[] {
+  return option.options.flatMap((entry) =>
+    'groupId' in entry ? entry.options : [entry],
+  );
+}
+function metadata(
+  choice: SessionConfigSelectOption,
+):
+  | NonNullable<NonNullable<SessionConfigSelectOption['_meta']>['argo']>
+  | undefined {
+  return choice._meta?.argo;
+}
+function levelsOf(choice: SessionConfigSelectOption): string[] {
+  return metadata(choice)?.supportedEffortLevels ?? [];
+}
+function noEffort(choice: SessionConfigSelectOption): boolean {
+  return metadata(choice)?.supportsEffort === false;
+}
+function offersEffort(choice: SessionConfigSelectOption): boolean {
+  return !!metadata(choice)?.supportsEffort;
+}
+function fewerLevels(
+  choice: SessionConfigSelectOption,
+  defaultModel: SessionConfigSelectOption,
+  effort: SelectOption,
+): boolean {
+  return (
+    offersEffort(choice) &&
+    levelsOf(choice).includes(effort.currentValue) &&
+    levelsOf(defaultModel).some((level) => !levelsOf(choice).includes(level))
+  );
+}
+function needed<Value>(value: Value | undefined, label: string): Value {
+  if (!value)
+    throw new Error(
+      `Recorded catalog needs two modes, a default effort and models with differing effort levels for ${label}.`,
+    );
+  return value;
+}
+function effortFacts(basics: CatalogBasics): EffortFacts {
+  const { agent, model, effort } = basics;
+  const models = choicesOf(model);
+  const defaultModel = defaultChoice(models, model, agent.label);
+  const narrower = narrowerChoice(models, defaultModel, basics);
+  const unsupported = needed(
+    levelsOf(defaultModel).find((level) => !levelsOf(narrower).includes(level)),
+    agent.label,
+  );
+  const chosenEffort = needed(
+    levelsOf(narrower).find((level) => level !== effort.currentValue),
+    agent.label,
+  );
+  return { narrower, unsupported, chosenEffort };
+}
+function modeFacts({
+  agent,
+  mode,
+}: CatalogBasics): Pick<CatalogCase, 'otherMode' | 'defaultMode'> {
+  return {
+    otherMode: needed(
+      choicesOf(mode).find((choice) => choice.value !== mode.currentValue),
+      agent.label,
+    ),
+    defaultMode: { configId: mode.configId, value: mode.currentValue },
+  };
+}
+function defaultChoice(
+  models: SessionConfigSelectOption[],
+  model: SelectOption,
+  label: string,
+): SessionConfigSelectOption {
+  return needed(
+    models.find((choice) => choice.value === model.currentValue),
+    label,
+  );
+}
+function narrowerChoice(
+  models: SessionConfigSelectOption[],
+  defaultModel: SessionConfigSelectOption,
+  { agent, effort }: CatalogBasics,
+): SessionConfigSelectOption {
+  return needed(
+    models.find((choice) => fewerLevels(choice, defaultModel, effort)),
+    agent.label,
+  );
+}

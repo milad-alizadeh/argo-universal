@@ -6,6 +6,7 @@ import type {
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import {
   configurationChoices,
+  currentConfigurationChoice,
   configurationEffortChoices,
 } from '../../state/configuration-choices';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -29,26 +30,31 @@ export function selection(
       option.type === 'select' && option.category === category,
   );
 }
-export function currentEffort(configuration: ConfigurationValues): {
+export interface EffortSelection {
   option: ReturnType<typeof selection>;
   choices: SessionConfigSelectOption[];
   selected: SessionConfigSelectOption | undefined;
-  // True when the Agent's value is not a level this model offers, so selected is the fallback.
   fallback: boolean;
-} {
+}
+export function currentEffort(
+  configuration: ConfigurationValues,
+): EffortSelection {
   const model = selection(configuration, 'model');
   const option = selection(configuration, 'thought_level');
-  const effortChoices = configurationEffortChoices(model, option);
-  const current = effortChoices.find(
-    (choice) => choice.value === option?.currentValue,
-  );
+  const choices = configurationEffortChoices(model, option);
+  return resolveEffort(option, choices);
+}
+function resolveEffort(
+  option: ReturnType<typeof selection>,
+  choices: SessionConfigSelectOption[],
+): EffortSelection {
+  const current = currentConfigurationChoice(option, choices);
   return {
     option,
-    choices: effortChoices,
+    choices,
     selected:
-      current ??
-      fallbackEffort(configurationChoices(option), effortChoices, option),
-    fallback: !current && effortChoices.length > 0,
+      current ?? fallbackEffort(configurationChoices(option), choices, option),
+    fallback: !current && choices.length > 0,
   };
 }
 
@@ -75,16 +81,53 @@ const configurationIcons: Record<string, IconName> = {
   WarningTriangle: 'warning',
 } satisfies Record<ConfigOptionIcon, IconName>;
 export function configurationIcon(name?: string): IconName {
-  return (
-    (name && Object.hasOwn(configurationIcons, name)
-      ? configurationIcons[name]
-      : undefined) ?? 'permission'
-  );
+  if (!name) return 'permission';
+  return Object.hasOwn(configurationIcons, name)
+    ? knownConfigurationIcon(name)
+    : 'permission';
 }
 export function modelName(choice?: SessionConfigSelectOption): string {
-  return (
-    choice?._meta?.argo?.shortName ??
-    choice?.name.replace(/\s*\(recommended\)\s*$/i, '') ??
-    ''
-  );
+  if (!choice) return '';
+  return shortModelName(choice) ?? configurationLabel(choice.name);
+}
+export function configurationLabel(name: string): string {
+  const trimmed = name.trimEnd();
+  const suffix = '(recommended)';
+  return trimmed.toLowerCase().endsWith(suffix)
+    ? trimmed.slice(0, -suffix.length).trimEnd()
+    : name;
+}
+export function selectedChoice(
+  configuration: ConfigurationValues,
+  category: string,
+): SessionConfigSelectOption | undefined {
+  return currentConfigurationChoice(selection(configuration, category));
+}
+
+export function choiceMetadata(
+  choice: SessionConfigSelectOption,
+):
+  | NonNullable<NonNullable<SessionConfigSelectOption['_meta']>['argo']>
+  | undefined {
+  return choice._meta?.argo;
+}
+export function isDangerous(choice?: SessionConfigSelectOption): boolean {
+  return choice ? choiceMetadata(choice)?.tone === 'dangerous' : false;
+}
+
+function shortModelName(choice: SessionConfigSelectOption): string | undefined {
+  return choiceMetadata(choice)?.shortName;
+}
+export function checkoutName(
+  checkout: ComposerConfigurationProps['checkout'],
+): string {
+  if (!checkout.newWorktree) return 'Local';
+  return checkoutBasename(checkout.path) || checkout.branch.toLowerCase();
+}
+function checkoutBasename(path?: string): string | undefined {
+  return path?.split(/[\\/]/).findLast((part) => part !== '');
+}
+
+function knownConfigurationIcon(name: string): IconName {
+  return configurationIcons[name] ?? 'permission';
 }

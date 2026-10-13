@@ -21,6 +21,11 @@ const blockedSourceFile = 'blocked.ts';
 
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
 const BLOCKED = 2;
+const hookScripts = [
+  'agent-hooks.mts',
+  'agent-hook-run.mts',
+  'hook-checks.mts',
+];
 const anyViolation = 'export const value: any = 1;\n';
 const explicitAnyRule = 'no-explicit-any';
 const unformattedJson = '{"a":1}\n';
@@ -85,7 +90,7 @@ const patchArray = (
 beforeAll((): void => {
   root = mkdtempSync(path.join(tmpdir(), 'agent-hooks-'));
   mkdirSync(path.join(root, 'tools'));
-  for (const script of ['agent-hooks.mts', 'hook-checks.mts'])
+  for (const script of hookScripts)
     cpSync(
       path.join(repositoryRoot, 'tools', script),
       path.join(root, 'tools', script),
@@ -221,6 +226,27 @@ describe('after-edit', (): void => {
 
   it('skips input that is not JSON', (): void => {
     expect(runHook(afterEditHook, 'not json').status).toBe(0);
+  });
+});
+
+describe('a Checkout without dependencies', (): void => {
+  it('passes quietly, as there is nothing to check with', (): void => {
+    const bare = mkdtempSync(path.join(tmpdir(), 'agent-hooks-bare-'));
+    mkdirSync(path.join(bare, 'tools'));
+    for (const script of hookScripts)
+      cpSync(
+        path.join(repositoryRoot, 'tools', script),
+        path.join(bare, 'tools', script),
+      );
+    writeFileSync(path.join(bare, blockedSourceFile), anyViolation);
+    const result = spawnSync(
+      'node',
+      [path.join(bare, 'tools/agent-hooks.mts'), beforeStopHook],
+      { cwd: bare, input: '{}', encoding: 'utf8' },
+    );
+    rmSync(bare, { recursive: true, force: true });
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe('');
   });
 });
 

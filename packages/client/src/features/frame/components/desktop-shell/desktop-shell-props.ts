@@ -13,6 +13,8 @@ export interface DesktopShellProps {
   list: ReactNode;
   // The detail page, which draws its own header.
   children: ReactNode;
+  // Floats over the top of the detail pane, so the page under it never moves.
+  banner?: ReactNode;
   inspectorState: InspectorState;
   onInspectorStateChange: (state: InspectorState) => void;
   // The Inspector pane's page, told whether the Inspector fills the detail area, which the shell decides from the window's width.

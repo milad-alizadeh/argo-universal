@@ -37,13 +37,15 @@ function SectionsScroll(props: FieldGroupProps): React.JSX.Element {
   );
 }
 
+type OverflowScroll = Pick<
+  ScrollViewProps,
+  'nestedScrollEnabled' | 'onLayout' | 'onContentSizeChange'
+>;
+
 // Only a group that overflows nest-scrolls, as Android's sheet picks its scrolling list when it resizes.
 function useOverflowScroll(
   onContentHeightChange: FieldGroupProps['onContentHeightChange'],
-): Pick<
-  ScrollViewProps,
-  'nestedScrollEnabled' | 'onLayout' | 'onContentSizeChange'
-> {
+): OverflowScroll {
   const [viewport, setViewport] = useState(0);
   const [content, setContent] = useState(0);
   return {
@@ -58,20 +60,27 @@ function useOverflowScroll(
 
 // The sections in one Compose column, the search first when there is one.
 function SectionsColumn(props: FieldGroupProps): React.JSX.Element {
-  const insets = useSafeAreaInsets();
-  const sideGutter = sideGutterFor(props.variant);
+  const modifiers = useColumnModifiers(props.variant);
   return (
     <Column
       verticalArrangement={{ spacedBy: sectionGap }}
-      modifiers={[
-        fillMaxWidth(),
-        padding(sideGutter, topPadding, sideGutter, insets.bottom + sectionGap),
-      ]}
+      modifiers={modifiers}
     >
       {props.search && <ListSearchField {...props.search} />}
       {props.children}
     </Column>
   );
+}
+
+function useColumnModifiers(
+  variant: FieldGroupProps['variant'],
+): React.ComponentProps<typeof Column>['modifiers'] {
+  const insets = useSafeAreaInsets();
+  const sideGutter = sideGutterFor(variant);
+  return [
+    fillMaxWidth(),
+    padding(sideGutter, topPadding, sideGutter, insets.bottom + sectionGap),
+  ];
 }
 
 // A navigation list's rows span the screen, flat like the sidebar's; grouped cards sit in the gutter.

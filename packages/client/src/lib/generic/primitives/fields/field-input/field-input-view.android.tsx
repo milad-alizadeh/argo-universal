@@ -23,30 +23,49 @@ export function FieldInput(props: FieldInputProps): React.JSX.Element {
 function FormField(props: FieldInputProps): React.JSX.Element {
   const text = useNativeState(props.value);
   useFollowedText(text, props.value);
-  const { fontFamily, fontSize, lineHeight, fontWeight } = useComposeTextStyle(
-    props.mono ? 'code' : 'body',
-  );
-  const { muted } = useNativeTheme().colors;
-  const onFocusChanged = useMemo(
-    () => blurOnFocusLoss(props.onBlur),
-    [props.onBlur],
-  );
+  const onFocusChanged = useFocusLossHandler(props.onBlur);
+  const appearance = useFieldAppearance(props.mono);
   return (
-    <TextField
-      value={text}
-      onValueChange={props.onChange}
-      onFocusChanged={onFocusChanged}
-      enabled={!props.disabled}
-      isError={isInvalid(props)}
-      singleLine
-      textStyle={{ fontFamily, fontSize, lineHeight, fontWeight }}
-      keyboardOptions={{ capitalization: 'none', autoCorrectEnabled: false }}
-      colors={{ focusedContainerColor: muted, unfocusedContainerColor: muted }}
-      modifiers={[fillMaxWidth()]}
-    >
+    <TextField {...fieldBehaviour(props, text, onFocusChanged)} {...appearance}>
       <FieldSlots {...props} />
     </TextField>
   );
+}
+
+type TextFieldProps = React.ComponentProps<typeof TextField>;
+
+function useFocusLossHandler(
+  onBlur: FieldInputProps['onBlur'],
+): ReturnType<typeof blurOnFocusLoss> {
+  return useMemo(() => blurOnFocusLoss(onBlur), [onBlur]);
+}
+
+function fieldBehaviour(
+  props: FieldInputProps,
+  text: TextFieldProps['value'],
+  onFocusChanged: TextFieldProps['onFocusChanged'],
+): TextFieldProps {
+  return {
+    value: text,
+    onValueChange: props.onChange,
+    onFocusChanged,
+    enabled: !props.disabled,
+    isError: isInvalid(props),
+  };
+}
+
+function useFieldAppearance(mono: FieldInputProps['mono']): TextFieldProps {
+  const { fontFamily, fontSize, lineHeight, fontWeight } = useComposeTextStyle(
+    mono ? 'code' : 'body',
+  );
+  const { muted } = useNativeTheme().colors;
+  return {
+    singleLine: true,
+    textStyle: { fontFamily, fontSize, lineHeight, fontWeight },
+    keyboardOptions: { capitalization: 'none', autoCorrectEnabled: false },
+    colors: { focusedContainerColor: muted, unfocusedContainerColor: muted },
+    modifiers: [fillMaxWidth()],
+  };
 }
 
 // Compose slots draw only Compose views, so each string goes in a Compose Text.

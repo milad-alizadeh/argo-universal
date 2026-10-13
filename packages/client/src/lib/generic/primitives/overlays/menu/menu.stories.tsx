@@ -12,13 +12,12 @@ const choices = [
 ] as const;
 type Permission = (typeof choices)[number]['value'];
 
+type PermissionsMenuProps = { disabled?: boolean };
+
 function PermissionsMenu({
   disabled = false,
-}: {
-  disabled?: boolean;
-}): React.JSX.Element {
+}: PermissionsMenuProps): React.JSX.Element {
   const [value, setValue] = useState<Permission>('default');
-  const selected = choices.find((choice) => choice.value === value);
   return (
     <Menu
       accessibilityLabel="Permissions"
@@ -26,20 +25,31 @@ function PermissionsMenu({
       choices={choices}
       onValueChange={setValue}
       disabled={disabled}
-      trigger={
-        <Pressable
-          role="button"
-          disabled={disabled}
-          className={contentActionClass({
-            variant: 'ghost',
-            className: 'android:h-auto android:min-h-10',
-          })}
-        >
-          <Text>{selected?.label}</Text>
-        </Pressable>
-      }
+      trigger={renderPermissionsTrigger(disabled, labelOf(value))}
     />
   );
+}
+
+function labelOf(value: Permission): string | undefined {
+  return choices.find((choice) => choice.value === value)?.label;
+}
+
+function renderPermissionsTrigger(
+  disabled: boolean,
+  label: string | undefined,
+): React.JSX.Element {
+  return (
+    <Pressable role="button" disabled={disabled} className={triggerClassName()}>
+      <Text>{label}</Text>
+    </Pressable>
+  );
+}
+
+function triggerClassName(): string {
+  return contentActionClass({
+    variant: 'ghost',
+    className: 'android:h-auto android:min-h-10',
+  });
 }
 
 const meta = { title: 'Design System/Primitives/Menu' } satisfies Meta;

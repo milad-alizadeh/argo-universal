@@ -5,7 +5,7 @@ import { loadedServer } from './connection-detail-view.fixtures';
 const meta = {
   title: 'Screens/Settings/Connection',
   component: ConnectionDetailView,
-  args: { connection: 'open', server: loadedServer },
+  args: { server: loadedServer },
   parameters: { screenPreview: true },
 } satisfies Meta<typeof ConnectionDetailView>;
 
@@ -22,12 +22,4 @@ export const Connecting: Story = {
 export const ErrorState: Story = {
   name: 'Error',
   args: { server: { status: 'error', message: "Couldn't reach the Server." } },
-};
-
-export const Reconnecting: Story = {
-  args: { connection: 'reconnecting' },
-};
-
-export const Offline: Story = {
-  args: { connection: 'offline' },
 };

@@ -16,40 +16,68 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {
-  render: () => (
+  render: () => <VariationsExample />,
+};
+
+function VariationsExample(): React.JSX.Element {
+  return (
     <FieldGroup>
-      <FieldSection
-        textFields
-        title="Program"
-        footer="An absolute path, or a command on the Server's PATH."
-      >
-        <TypedInput label="Name" initial="Example ACP" />
-        <TypedInput
-          mono
-          label="Executable"
-          initial="example-acp"
-          hint="An absolute path, or a command on the Server's PATH."
-        />
-      </FieldSection>
-      <FieldSection
-        textFields
-        title="Invalid"
-        footer="One path or command, without spaces."
-        footerTone="destructive"
-      >
-        <TypedInput
-          mono
-          label="Executable"
-          initial="example-acp --acp"
-          errors={['One path or command, without spaces.']}
-        />
-      </FieldSection>
+      <ProgramSection />
+      <InvalidSection />
       <FieldSection title="Disabled">
         <TypedInput label="Name" initial="Example ACP" disabled />
       </FieldSection>
     </FieldGroup>
-  ),
-};
+  );
+}
+
+function ProgramSection(): React.JSX.Element {
+  return (
+    <FieldSection
+      textFields
+      title="Program"
+      footer="An absolute path, or a command on the Server's PATH."
+    >
+      <TypedInput label="Name" initial="Example ACP" />
+      <ExecutableInput />
+    </FieldSection>
+  );
+}
+
+function ExecutableInput(): React.JSX.Element {
+  return (
+    <TypedInput
+      mono
+      label="Executable"
+      initial="example-acp"
+      hint="An absolute path, or a command on the Server's PATH."
+    />
+  );
+}
+
+function InvalidSection(): React.JSX.Element {
+  return (
+    <FieldSection
+      textFields
+      title="Invalid"
+      footer="One path or command, without spaces."
+      footerTone="destructive"
+    >
+      <InvalidExecutableInput />
+    </FieldSection>
+  );
+}
+
+function InvalidExecutableInput(): React.JSX.Element {
+  return (
+    <TypedInput
+      mono
+      label="Executable"
+      initial="example-acp --acp"
+      errors={['One path or command, without spaces.']}
+    />
+  );
+}
 
 type TypedInputProps = Omit<
   React.ComponentProps<typeof FieldInput>,

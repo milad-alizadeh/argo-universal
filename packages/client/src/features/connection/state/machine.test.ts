@@ -29,6 +29,7 @@ import {
   options,
   pathGroups,
   retryDelayEvent,
+  retryEvent,
   title,
 } from './connection-model.mocks';
 
@@ -79,6 +80,14 @@ const executors: Record<
     const before = harness.allowedAttempts;
     connection.send({ type: foregroundEvent });
     expect(harness.allowedAttempts).toBe(before + 1);
+  },
+  [retryEvent]: () => {
+    const before = harness.allowedAttempts;
+    const waiting = connection.getSnapshot().matches({ attempt: 'waiting' });
+    connection.send({ type: retryEvent });
+    // Try again shows Reconnecting, and lets a waiting attempt go at once.
+    expect(linkState(connection.getSnapshot())).toBe('reconnecting');
+    expect(harness.allowedAttempts).toBe(before + (waiting ? 1 : 0));
   },
   [retryDelayEvent]: (step) => {
     const before = harness.allowedAttempts;

@@ -14,16 +14,27 @@ export function Slider(props: SliderProps): React.JSX.Element {
   return (
     <ControlHost matchContents={{ vertical: true }} style={{ width: '100%' }}>
       <UniversalSlider
-        value={props.value ?? props.minimumValue}
-        min={props.minimumValue}
-        max={props.maximumValue}
-        step={props.step}
+        {...sliderRange(props)}
         disabled={props.disabled}
         onValueChange={props.onValueChange}
         modifiers={modifiers}
       />
     </ControlHost>
   );
+}
+
+function sliderRange(
+  props: SliderProps,
+): Pick<
+  React.ComponentProps<typeof UniversalSlider>,
+  'value' | 'min' | 'max' | 'step'
+> {
+  return {
+    value: props.value ?? props.minimumValue,
+    min: props.minimumValue,
+    max: props.maximumValue,
+    step: props.step,
+  };
 }
 
 function useSliderModifiers(

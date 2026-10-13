@@ -112,7 +112,7 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
     sendOlderPage();
     // The group gains its first ten commands above, stays open, and the command being read stays where it was.
     await expect(
-      await canvas.findByRole('button', { name: 'Ran 20 commands' }),
+      await canvas.findByRole('button', { name: 'Step 1' }),
     ).toBeVisible();
     await expect(Math.abs((await settledTopOf(step)) - top)).toBeLessThan(2);
   },

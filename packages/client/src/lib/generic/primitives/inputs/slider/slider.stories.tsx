@@ -12,22 +12,28 @@ type ExampleProps = Pick<
 const speeds = { minimumValue: 0.5, maximumValue: 2, step: 0.5 };
 const efforts = { minimumValue: 0, maximumValue: 5, step: 1 };
 
-function SliderExample({
-  initialValue,
-  ...range
-}: ExampleProps): React.JSX.Element {
+function SliderExample(props: ExampleProps): React.JSX.Element {
+  const { initialValue, ...range } = props;
   const [value, setValue] = useState(initialValue);
   return (
     <View className="w-80">
       <Slider
         {...range}
+        {...speechLabels(value)}
         value={value}
         onValueChange={setValue}
-        accessibilityLabel="Speech speed"
-        valueLabel={value === undefined ? 'None' : `${value.toFixed(1)}×`}
       />
     </View>
   );
+}
+
+function speechLabels(
+  value: number | undefined,
+): Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'> {
+  return {
+    accessibilityLabel: 'Speech speed',
+    valueLabel: value === undefined ? 'None' : `${value.toFixed(1)}×`,
+  };
 }
 
 const examples: { label: string; props: ExampleProps }[] = [

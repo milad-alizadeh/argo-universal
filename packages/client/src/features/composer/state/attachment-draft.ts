@@ -64,8 +64,6 @@ function attach(
   state: AttachmentDraftState,
   picked: readonly PickedAttachment[],
 ): AttachmentDraftState {
-  const files = new Map(state.files);
-  for (const { attachment, file } of picked) files.set(attachment.id, file);
   const attachments = [
     ...state.draft.attachments,
     ...picked.map(({ attachment }) => attachment),
@@ -73,32 +71,57 @@ function attach(
   return {
     ...state,
     draft: { ...state.draft, attachments },
-    files,
+    files: attachedFiles(state.files, picked),
     selectionError: undefined,
   };
 }
+
+function attachedFiles(
+  files: AttachmentDraftState['files'],
+  picked: readonly PickedAttachment[],
+): Map<string, Blob> {
+  return new Map([
+    ...files,
+    ...picked.map(({ attachment, file }): [string, Blob] => [
+      attachment.id,
+      file,
+    ]),
+  ]);
+}
+
+type DraftTransition = (
+  state: AttachmentDraftState,
+  event: AttachmentDraftEvent,
+) => AttachmentDraftState;
+const draftTransitions: Record<AttachmentDraftEvent['type'], DraftTransition> =
+  {
+    picked: (state, event) =>
+      event.type === 'picked' ? attach(state, event.picked) : state,
+    pickFailed: (state) => ({
+      ...state,
+      selectionError: attachmentSelectionFailureMessage,
+    }),
+    folderDropped: (state) => ({
+      ...state,
+      selectionError: folderRefusedMessage,
+    }),
+    changed: (state, event) =>
+      event.type === 'changed' ? changeDraft(state, event.draft) : state,
+    ownerChanged: (state, event) =>
+      event.type === 'ownerChanged'
+        ? { ...emptyAttachmentDraft, awaitedKey: event.key }
+        : state,
+    restored: (state, event) =>
+      event.type === 'restored' ? restore(state, event) : state,
+    cleared: () => emptyAttachmentDraft,
+  };
 
 // A Composer draft with attachments: what each pick, drop, edit, send and change of owner does to it.
 export function attachmentDraftReducer(
   state: AttachmentDraftState,
   event: AttachmentDraftEvent,
 ): AttachmentDraftState {
-  switch (event.type) {
-    case 'picked':
-      return attach(state, event.picked);
-    case 'pickFailed':
-      return { ...state, selectionError: attachmentSelectionFailureMessage };
-    case 'folderDropped':
-      return { ...state, selectionError: folderRefusedMessage };
-    case 'changed':
-      return changeDraft(state, event.draft);
-    case 'ownerChanged':
-      return { ...emptyAttachmentDraft, awaitedKey: event.key };
-    case 'restored':
-      return restore(state, event);
-    case 'cleared':
-      return emptyAttachmentDraft;
-  }
+  return draftTransitions[event.type](state, event);
 }
 
 export interface UploadForm {

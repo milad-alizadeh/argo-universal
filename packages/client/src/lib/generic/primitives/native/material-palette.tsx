@@ -40,15 +40,40 @@ function argoPalette(
 ): MaterialColors {
   return {
     ...seeded,
+    ...surfaceRoles(seeded, colors),
+    ...accentRoles(seeded, colors),
+  };
+}
+
+function accentRoles(
+  seeded: MaterialColors,
+  colors: NativeColors,
+): Pick<MaterialColors, 'primary' | 'onPrimary' | 'outline' | 'error'> {
+  return {
     primary: role(colors.primary, seeded.primary),
     onPrimary: role(colors.primaryForeground, seeded.onPrimary),
+    outline: role(colors.border, seeded.outline),
+    error: role(colors.destructive, seeded.error),
+  };
+}
+
+type SurfaceRoleName =
+  | 'surface'
+  | 'surfaceContainer'
+  | 'surfaceContainerHigh'
+  | 'onSurface'
+  | 'onSurfaceVariant';
+
+function surfaceRoles(
+  seeded: MaterialColors,
+  colors: NativeColors,
+): Pick<MaterialColors, SurfaceRoleName> {
+  return {
     surface: role(colors.background, seeded.surface),
     surfaceContainer: role(colors.muted, seeded.surfaceContainer),
     surfaceContainerHigh: role(colors.popover, seeded.surfaceContainerHigh),
     onSurface: role(colors.foreground, seeded.onSurface),
     onSurfaceVariant: role(colors.mutedForeground, seeded.onSurfaceVariant),
-    outline: role(colors.border, seeded.outline),
-    error: role(colors.destructive, seeded.error),
   };
 }
 

@@ -29,19 +29,14 @@ export function IconButton(props: IconButtonProps): ReactElement {
 
 function iconDrawing({
   icon,
-  iconRole = 'control',
+  iconRole,
   iconClassName,
   filled,
   iconWeight,
   ...props
 }: IconButtonProps): IconDrawing {
-  return createIconDrawing(props, {
-    icon,
-    iconRole,
-    iconClassName,
-    filled,
-    iconWeight,
-  });
+  const appearance = { icon, iconRole, iconClassName, filled, iconWeight };
+  return createIconDrawing(props, appearance);
 }
 
 function createIconDrawing(
@@ -50,14 +45,21 @@ function createIconDrawing(
 ): IconDrawing {
   return {
     pressable: iconPressableProps(props),
-    adornment: {
-      icon: appearance.icon,
-      role: appearance.iconRole ?? 'control',
-      filled: appearance.filled,
-      weight: appearance.iconWeight,
-      loading: props.loading,
-      textClass: iconTextClass({ ...props, ...appearance }),
-    },
+    adornment: iconAdornment(props, appearance),
+  };
+}
+
+function iconAdornment(
+  props: IconControlProps,
+  appearance: IconAppearance,
+): IconDrawing['adornment'] {
+  return {
+    icon: appearance.icon,
+    role: appearance.iconRole ?? 'control',
+    filled: appearance.filled,
+    weight: appearance.iconWeight,
+    loading: props.loading,
+    textClass: iconTextClass({ ...props, ...appearance }),
   };
 }
 
@@ -89,15 +91,10 @@ function iconContainerClass(
     'size' | 'variant' | 'disabled' | 'className' | 'aria-pressed'
   >,
 ): string {
-  return cn(
-    iconButtonClasses({
-      size: props.size,
-      variant: props.variant,
-      disabled: !!props.disabled,
-      pressed: props['aria-pressed'] === true,
-    }),
-    props.className,
-  );
+  const { size, variant, className } = props;
+  const disabled = !!props.disabled;
+  const pressed = props['aria-pressed'] === true;
+  return cn(iconButtonClasses({ size, variant, disabled, pressed }), className);
 }
 
 function iconTextClass(

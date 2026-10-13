@@ -24,19 +24,19 @@ function SettingsPreview({
   const [configOptions, setConfigOptions] = useState(
     configuration.configOptions,
   );
+  const shown = previewConfiguration(
+    configuration,
+    configOptions,
+    setConfigOptions,
+  );
+  return <SettingsLayout configuration={shown} disabled={disabled} />;
+}
+function SettingsLayout(
+  props: React.ComponentProps<typeof ComposerOptions>,
+): React.JSX.Element {
   return (
     <View className="flex-1 justify-end items-start p-4">
-      <ComposerOptions
-        disabled={disabled}
-        configuration={{
-          ...configuration,
-          configOptions,
-          onConfigChange: (configId, value) =>
-            setConfigOptions((options) =>
-              updateComposerSettings(options, configId, value),
-            ),
-        }}
-      />
+      <ComposerOptions {...props} />
     </View>
   );
 }
@@ -52,3 +52,17 @@ const meta = {
 } satisfies Meta<typeof ComposerOptions>;
 export default meta;
 export const Overview: StoryObj<typeof meta> = { name: 'ComposerOptions' };
+function previewConfiguration(
+  configuration: React.ComponentProps<typeof ComposerOptions>['configuration'],
+  configOptions: typeof configuration.configOptions,
+  setConfigOptions: React.Dispatch<React.SetStateAction<typeof configOptions>>,
+): typeof configuration {
+  return {
+    ...configuration,
+    configOptions,
+    onConfigChange: (configId, value) =>
+      setConfigOptions((options) =>
+        updateComposerSettings(options, configId, value),
+      ),
+  };
+}

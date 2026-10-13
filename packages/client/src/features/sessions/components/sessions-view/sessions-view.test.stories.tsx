@@ -93,17 +93,6 @@ export const LiveUpdatesStoppedShowsAToast: Story = {
   },
 };
 
-export const OfflineShowsBannerOnly: Story = {
-  args: { connection: 'offline' },
-  play: async ({ canvas }) =>
-    eachLayout(async () => {
-      await expect(await canvas.findByRole('status')).toHaveTextContent(
-        'The Server is offline.',
-      );
-      await expect(canvas.queryByRole('alert')).toBeNull();
-    }),
-};
-
 export const EmptyListKeepsProjects: Story = {
   args: { sessions: [] },
   play: async ({ canvas }) =>

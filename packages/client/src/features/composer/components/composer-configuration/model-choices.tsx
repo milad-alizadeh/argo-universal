@@ -9,99 +9,108 @@ import { FieldRowEnd } from '../../../../lib/generic/primitives/fields/field-lay
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { configurationChoices } from '../../state/configuration-choices';
 import { ConfigurationChoice } from './configuration-choice';
-import type {
-  ComposerConfigurationProps,
-  ConfigurationChoicesProps,
-} from './configuration-types';
+import type { ConfigurationChoicesProps as ModelChoicesProps } from './configuration-types';
 import { modelName, selection } from './configuration-values';
+interface ModelChoiceProps extends ModelChoicesProps {
+  choice: SessionConfigSelectOption;
+}
 const modelListMaxHeight = 320;
-
-export function ModelChoices({
-  configuration,
-  onSelect,
-  onContentHeightChange,
-}: ConfigurationChoicesProps): React.JSX.Element | null {
-  const wide = useWide() && Platform.OS === 'web';
-  const model = selection(configuration, 'model');
+export function ModelChoices(
+  props: ModelChoicesProps,
+): React.JSX.Element | null {
+  const wide = useWide();
+  const model = selection(props.configuration, 'model');
   if (!model) return null;
-  if (wide)
-    return <ModelList configuration={configuration} onSelect={onSelect} />;
+  return <ModelChoicesLayout {...props} wide={wide} />;
+}
+function ModelChoicesLayout(
+  props: ModelChoicesProps & { wide: boolean },
+): React.JSX.Element {
+  return props.wide && Platform.OS === 'web' ? (
+    <ModelList {...props} />
+  ) : (
+    <GroupedModelChoices {...props} />
+  );
+}
+function GroupedModelChoices(props: ModelChoicesProps): React.JSX.Element {
+  const choices = configurationChoices(selection(props.configuration, 'model'));
   return (
     <FieldGroup
       fit={Platform.OS === 'web'}
-      onContentHeightChange={onContentHeightChange}
+      onContentHeightChange={props.onContentHeightChange}
     >
       <FieldSection>
-        {configurationChoices(model).map((choice) => (
-          <ModelChoice
-            key={choice.value}
-            configuration={configuration}
-            choice={choice}
-            onSelect={onSelect}
-          />
+        {choices.map((choice) => (
+          <ModelChoice key={choice.value} choice={choice} {...props} />
         ))}
       </FieldSection>
     </FieldGroup>
   );
 }
-
-// The desktop model list grows with its models up to a cap, then scrolls.
-function ModelList({
-  configuration,
-  onSelect,
-}: {
-  configuration: ComposerConfigurationProps;
-  onSelect: () => void;
-}): React.JSX.Element | null {
-  const model = selection(configuration, 'model');
-  if (!model) return null;
+function ModelList(props: ModelChoicesProps): React.JSX.Element {
   return (
     <FieldSection>
-      <ScrollFadeList
-        {...listTestIdProps('composer-models-scroll')}
-        surfaceClassName="bg-sidebar"
-        maxHeight={modelListMaxHeight}
-        contentContainerStyle={{}}
-        data={configurationChoices(model)}
-        keyExtractor={(choice) => choice.value}
-        renderItem={({ item: choice, index }) => (
-          <FieldRowEnd value={index === configurationChoices(model).length - 1}>
-            <ModelChoice
-              configuration={configuration}
-              choice={choice}
-              onSelect={onSelect}
-            />
-          </FieldRowEnd>
-        )}
-        estimatedItemSize={60}
-
-        extraData={configuration}
-      />
+      <ScrollFadeList {...modelListProps(props)} />
     </FieldSection>
   );
 }
-
-function ModelChoice({
-  configuration,
-  choice,
-  onSelect,
-}: {
-  configuration: ComposerConfigurationProps;
-  choice: SessionConfigSelectOption;
-  onSelect: () => void;
-}): React.JSX.Element | null {
-  const model = selection(configuration, 'model');
-  if (!model) return null;
-  return (
-    <ConfigurationChoice
-      selected={choice.value === model.currentValue}
-      label={modelName(choice)}
-      accessibilityLabel={choice.name}
-      description={choice.description}
-      onPress={() => {
-        configuration.onConfigChange(model.configId, choice.value);
-        onSelect();
-      }}
-    />
+const modelListPresentation = {
+  ...listTestIdProps('composer-models-scroll'),
+  surfaceClassName: 'bg-sidebar',
+  maxHeight: modelListMaxHeight,
+  contentContainerStyle: {},
+  estimatedItemSize: 60,
+};
+function modelListProps(
+  props: ModelChoicesProps,
+): React.ComponentProps<typeof ScrollFadeList<SessionConfigSelectOption>> {
+  const choices = configurationChoices(selection(props.configuration, 'model'));
+  return {
+    ...modelListPresentation,
+    data: choices,
+    keyExtractor: (choice) => choice.value,
+    renderItem: modelListRenderer(props, choices.length),
+    extraData: props.configuration,
+  };
+}
+function modelListRenderer(
+  props: ModelChoicesProps,
+  count: number,
+): NonNullable<
+  React.ComponentProps<
+    typeof ScrollFadeList<SessionConfigSelectOption>
+  >['renderItem']
+> {
+  return ({ item, index }) => (
+    <ModelListRow {...props} choice={item} last={index === count - 1} />
   );
+}
+function ModelListRow(
+  props: ModelChoiceProps & { last: boolean },
+): React.JSX.Element {
+  return (
+    <FieldRowEnd value={props.last}>
+      <ModelChoice {...props} />
+    </FieldRowEnd>
+  );
+}
+function ModelChoice(props: ModelChoiceProps): React.JSX.Element | null {
+  const model = selection(props.configuration, 'model');
+  if (!model) return null;
+  return <ConfigurationChoice {...modelChoiceProps(props, model)} />;
+}
+function modelChoiceProps(
+  { configuration, choice, onSelect }: ModelChoiceProps,
+  model: NonNullable<ReturnType<typeof selection>>,
+): React.ComponentProps<typeof ConfigurationChoice> {
+  return {
+    selected: choice.value === model.currentValue,
+    label: modelName(choice),
+    accessibilityLabel: choice.name,
+    description: choice.description,
+    onPress: () => {
+      configuration.onConfigChange(model.configId, choice.value);
+      onSelect();
+    },
+  };
 }

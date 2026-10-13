@@ -60,27 +60,35 @@ function groupedLayout(navigation: boolean): RowsLayout {
   };
 }
 
-function SectionCaption({
-  text,
-  heading,
-  tone,
-}: {
+type CaptionProps = {
   text?: string;
   heading?: boolean;
   tone?: FieldSectionProps['footerTone'];
-}): React.JSX.Element | null {
-  const textStyle = useComposeTextStyle(heading ? 'heading' : 'secondary');
-  const color = useCaptionColor(tone);
-  if (!text) return null;
+};
+
+function SectionCaption(props: CaptionProps): React.JSX.Element | null {
+  return props.text ? <CaptionText {...props} text={props.text} /> : null;
+}
+
+function CaptionText(
+  props: CaptionProps & { text: string },
+): React.JSX.Element {
+  const captionStyle = useCaptionStyle(props);
   return (
     <Text
-      color={color}
-      style={textStyle}
+      {...captionStyle}
       modifiers={[padding(gutter, captionPadding, gutter, captionPadding)]}
     >
-      {text}
+      {props.text}
     </Text>
   );
+}
+
+function useCaptionStyle(
+  props: Pick<CaptionProps, 'heading' | 'tone'>,
+): Pick<React.ComponentProps<typeof Text>, 'color' | 'style'> {
+  const style = useComposeTextStyle(props.heading ? 'heading' : 'secondary');
+  return { color: useCaptionColor(props.tone), style };
 }
 
 // A failure, such as a field's error, reads in the destructive colour.

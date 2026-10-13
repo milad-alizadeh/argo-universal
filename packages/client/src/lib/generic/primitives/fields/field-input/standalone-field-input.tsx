@@ -18,29 +18,42 @@ export function StandaloneFieldInput(
 }
 
 function TextField(props: StandaloneFieldInputProps): ReactElement {
+  const describedBy = useFooterDescription({
+    invalid: isInvalid(props),
+    hint: props.hint,
+  });
   return (
     <View className="gap-1.5">
-      <Text aria-hidden role="body">
-        {props.label}
-        {props.required ? ' *' : ''}
-      </Text>
-      <Input
-        {...inputProps(props)}
-        aria-describedby={useFooterDescription({
-          invalid: isInvalid(props),
-          hint: props.hint,
-        })}
-      />
+      <FieldLabel {...props} />
+      <Input {...inputProps(props)} aria-describedby={describedBy} />
     </View>
   );
 }
 
-function inputProps(props: StandaloneFieldInputProps): ComponentProps<
-  typeof Input
-> & {
+function FieldLabel(props: StandaloneFieldInputProps): ReactElement {
+  return (
+    <Text aria-hidden role="body">
+      {props.label}
+      {props.required ? ' *' : ''}
+    </Text>
+  );
+}
+
+type InputProps = ComponentProps<typeof Input>;
+
+function inputProps(props: StandaloneFieldInputProps): InputProps & {
   'aria-invalid': boolean;
   'aria-required'?: boolean;
 } {
+  return {
+    ...inputBehaviour(props),
+    'aria-invalid': isInvalid(props),
+    'aria-required': props.required,
+    className: 'rounded-lg type-control shadow-none dark:bg-background',
+  };
+}
+
+function inputBehaviour(props: StandaloneFieldInputProps): InputProps {
   return {
     accessibilityLabel: props.label,
     value: props.value,
@@ -49,8 +62,5 @@ function inputProps(props: StandaloneFieldInputProps): ComponentProps<
     placeholder: props.placeholder,
     editable: !props.disabled,
     keyboardType: props.numeric ? 'numbers-and-punctuation' : 'default',
-    'aria-invalid': isInvalid(props),
-    'aria-required': props.required,
-    className: 'rounded-lg type-control shadow-none dark:bg-background',
   };
 }

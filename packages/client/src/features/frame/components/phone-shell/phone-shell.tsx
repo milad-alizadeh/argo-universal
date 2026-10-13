@@ -5,6 +5,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable, useResolveClassNames } from 'uniwind';
 import {
   PhoneDrawer,
@@ -12,6 +13,7 @@ import {
 } from '../phone-drawer/phone-drawer';
 import { PhoneShellCard } from '../phone-shell-card/phone-shell-card';
 import type { Section } from '../shell-sections';
+import { headerBarHeight } from './header-bar-height';
 import { PhoneDrawerContent } from './phone-drawer-content';
 
 const OpenDrawerContext = createContext<() => void>(() => {});
@@ -35,6 +37,8 @@ export interface PhoneShellProps {
   onDrawerOpenChange: (open: boolean) => void;
   onSectionChange: (section: Section) => void;
   swipeEnabled?: boolean;
+  // Floats just under the section's header, so the page under it never moves.
+  banner?: ReactNode;
   children: ReactNode;
 }
 
@@ -103,7 +107,24 @@ function ShellCard(shell: PhoneShellProps): React.JSX.Element {
           {shell.children}
         </AttentionCountContext.Provider>
       </OpenDrawerContext.Provider>
+      <ShellBanner>{shell.banner}</ShellBanner>
     </PhoneShellCard>
+  );
+}
+
+// The gap between the header bar and the banner.
+const bannerGap = 8;
+
+function ShellBanner({ children }: { children: ReactNode }): React.JSX.Element {
+  const { top } = useSafeAreaInsets();
+  return (
+    <View
+      pointerEvents="box-none"
+      className="absolute inset-x-0 items-center"
+      style={{ top: top + headerBarHeight + bannerGap }}
+    >
+      {children}
+    </View>
   );
 }
 
