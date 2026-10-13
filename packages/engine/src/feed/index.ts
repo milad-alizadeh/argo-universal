@@ -19,6 +19,11 @@ export {
 } from './feed-storage';
 export { writeBlobFile } from './blob-files';
 export { publishTurnContent } from './publication';
+export {
+  interruptionDisclosureId,
+  turnEndingEvent,
+  permissionsCancelledEvent,
+} from './turn-ending';
 export { acpToolCallRowId } from './acp/tools';
 export { readUnaddressedPlan } from './unaddressed-plan';
 

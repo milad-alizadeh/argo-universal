@@ -32,6 +32,8 @@ import { createAcpResponseReaders } from '../agents';
 import { attachmentsFolderIn, blobsFolderIn } from '../blob';
 import {
   acpToolCallRowId,
+  turnEndingEvent,
+  permissionsCancelledEvent,
   readQueuedFeedRow,
   publishTurnContent,
   type FeedEvent,
@@ -81,7 +83,6 @@ import {
   type SessionData,
   type SessionDiscard,
   type SessionInput,
-  interruptionDisclosureId,
   toSessionInsert,
 } from './session-data';
 import {
@@ -213,19 +214,6 @@ const connectionLostDuringTurn = interruptedTurn(
 );
 const connectionLostBeforePrompt =
   'The Agent connection failed before the prompt was sent';
-const interruptionDisclosure = (turnId: string): FeedChange => ({
-  type: 'upsert',
-  update: {
-    id: interruptionDisclosureId(turnId),
-    sessionUpdate: 'notice',
-    state: 'settled',
-    severity: 'warning',
-    title: 'Output may be missing',
-    description:
-      'The Turn was interrupted, so its output may be missing. Argo did not resend the prompt.',
-  },
-});
-
 const writer = ({
   system,
   self,
@@ -239,17 +227,14 @@ const writer = ({
 const permissionOutcomeChange = (
   context: SessionContext,
   toolCallId: string,
-  option: PendingPermission['options'][number] | null,
+  option: PendingPermission['options'][number],
 ): FeedChange => ({
   type: 'patch',
   id: acpToolCallRowId(context.acpLease?.sessionId ?? '', toolCallId),
   set: {
     _meta: {
       argo: {
-        permissionOutcome:
-          option === null
-            ? { outcome: 'cancelled' }
-            : { outcome: 'selected', ...option },
+        permissionOutcome: { outcome: 'selected', ...option },
       },
     },
   },
@@ -282,12 +267,12 @@ const headPermission = (context: SessionContext): PendingPermission => {
 const cancelledPermissions = (
   context: SessionContext,
   requests: readonly PendingPermission[],
-): FeedChangeEvent[] =>
-  requests.map((request): FeedChangeEvent => ({
-    type: feedChangeEvent,
-    turnId: context.activeTurnId,
-    change: permissionOutcomeChange(context, request.toolCallId, null),
-  }));
+): Extract<FeedEvent, { type: 'feed.permissionsCancelled' }> => ({
+  type: permissionsCancelledEvent,
+  turnId: context.activeTurnId,
+  acpSessionId: context.acpLease?.sessionId ?? '',
+  toolCallIds: requests.map((request) => request.toolCallId),
+});
 
 const sessionSetup = setup({
   types: {
@@ -677,11 +662,15 @@ const sessionSetup = setup({
       assertEvent(event, acpRequestWithdrawnEvent);
       const isOther = (request: { requestId: string }): boolean =>
         request.requestId !== event.requestId;
-      for (const change of cancelledPermissions(
-        context,
-        context.permissionQueue.filter((request): boolean => !isOther(request)),
-      ))
-        enqueue.sendTo('feed', change);
+      enqueue.sendTo(
+        'feed',
+        cancelledPermissions(
+          context,
+          context.permissionQueue.filter(
+            (request): boolean => !isOther(request),
+          ),
+        ),
+      );
       enqueue.assign({
         permissionQueue: context.permissionQueue.filter(isOther),
         elicitationQueue: context.elicitationQueue.filter(isOther),
@@ -689,12 +678,13 @@ const sessionSetup = setup({
     }),
     publishPermissionOutcome: sendTo(
       'feed',
-      ({ context, event }): FeedChangeEvent => {
+      ({ context, event }): FeedEvent => {
         assertEvent(event, answerPermissionEvent);
         const request = headPermission(context);
         const option = chosenOption(request, event.optionId);
         if (option === undefined)
           throw new Error('The Agent did not offer that option');
+        if (option === null) return cancelledPermissions(context, [request]);
         return {
           type: feedChangeEvent,
           turnId: context.activeTurnId,
@@ -725,11 +715,10 @@ const sessionSetup = setup({
     }),
     cancelAcpRequests: enqueueActions(({ context, enqueue }): void => {
       context.acpLifetime.cancelRequests();
-      for (const change of cancelledPermissions(
-        context,
-        context.permissionQueue,
-      ))
-        enqueue.sendTo('feed', change);
+      enqueue.sendTo(
+        'feed',
+        cancelledPermissions(context, context.permissionQueue),
+      );
       enqueue.assign({ permissionQueue: [], elicitationQueue: [] });
     }),
     recordCrash: enqueueActions(
@@ -738,18 +727,13 @@ const sessionSetup = setup({
         const agentCrashes = addCrash(context.agentCrashes, now);
         enqueue.assign({ agentCrashes });
         enqueue.sendTo('feed', {
-          type: feedChangeEvent,
+          type: turnEndingEvent,
           turnId: context.activeTurnId,
-          change: {
-            type: 'upsert',
-            update: {
-              id: `${context.sessionId}:crash:${now}:${agentCrashes.length}`,
-              sessionUpdate: 'notice',
-              state: 'settled',
-              severity: 'warning',
-              title: 'The Agent stopped unexpectedly',
-              ...params,
-            },
+          ending: {
+            kind: 'agent_crash',
+            occurredAt: now,
+            crashCount: agentCrashes.length,
+            ...params,
           },
         });
       },
@@ -759,9 +743,9 @@ const sessionSetup = setup({
         context.activeTurnId ?? context.undisclosedInterruptedTurnId;
       if (!turnId) return;
       enqueue.sendTo('feed', {
-        type: feedChangeEvent,
+        type: turnEndingEvent,
         turnId,
-        change: interruptionDisclosure(turnId),
+        ending: { kind: 'interruption' },
       });
       enqueue.assign({ undisclosedInterruptedTurnId: null });
     }),
@@ -809,19 +793,10 @@ const sessionSetup = setup({
         `session ${context.sessionId}: rejected an Agent message: ${event.reason}`,
       );
     },
-    cancelNotice: sendTo('feed', ({ context }): FeedChangeEvent => ({
-      type: feedChangeEvent,
+    cancelNotice: sendTo('feed', ({ context }): FeedEvent => ({
+      type: turnEndingEvent,
       turnId: context.activeTurnId,
-      change: {
-        type: 'upsert',
-        update: {
-          id: `${context.activeTurnId}:cancel-timeout`,
-          sessionUpdate: 'notice',
-          state: 'settled',
-          severity: 'warning',
-          title: 'The Agent did not stop after cancellation',
-        },
-      },
+      ending: { kind: 'cancel_timeout' },
     })),
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },

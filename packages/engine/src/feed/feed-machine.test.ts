@@ -17,6 +17,7 @@ import {
   type FeedSnapshot,
   type FeedMachineEvent,
 } from '#mocks/feed-model';
+import { turnEndingEvent, permissionsCancelledEvent } from './turn-ending';
 const vertex = (of: FeedSnapshot | undefined): string | undefined =>
   of && JSON.stringify({ value: of.value, open: Object.keys(of.context.rows) });
 
@@ -73,13 +74,16 @@ const transitionOptions = {
   ...modelOptions,
   serializeState: serializeWith((): true => true),
 };
+const excludedOrderingEvents = new Set<string>([
+  acpUpdateEventType,
+  'feed.completeTurn',
+  turnEndingEvent,
+  permissionsCancelledEvent,
+]);
 // A vertex only for each self-transition keeps simple paths below 1,000.
 const orderingOptions = {
   ...modelOptions,
-  events: events.filter(
-    (event) =>
-      event.type !== acpUpdateEventType && event.type !== 'feed.completeTurn',
-  ),
+  events: events.filter((event) => !excludedOrderingEvents.has(event.type)),
   serializeState: serializeWith((sameAsPrevious): boolean => sameAsPrevious),
 };
 
