@@ -10,32 +10,7 @@ export default meta;
 
 export const Variations: StoryObj<typeof meta> = {
   name: 'StandaloneFieldInput',
-  render: (): ReactElement => (
-    <Examples>
-      <Variation label="Required">
-        <EditableField
-          label="Title"
-          initial="Drafts vanish after a reconnect"
-          required
-        />
-      </Variation>
-      <Variation label="Invalid">
-        <EditableField
-          label="Estimate"
-          initial="12"
-          numeric
-          errors={['Enter a whole number from 1 to 8.']}
-        />
-      </Variation>
-      <Variation label="Disabled">
-        <EditableField
-          label="Title"
-          initial="Drafts vanish after a reconnect"
-          disabled
-        />
-      </Variation>
-    </Examples>
-  ),
+  render: (): ReactElement => <AllVariations />,
 };
 
 function EditableField({
@@ -46,4 +21,51 @@ function EditableField({
 }): ReactElement {
   const [value, setValue] = useState(initial);
   return <StandaloneFieldInput {...props} value={value} onChange={setValue} />;
+}
+
+function AllVariations(): ReactElement {
+  return (
+    <Examples>
+      <RequiredVariation />
+      <InvalidVariation />
+      <DisabledVariation />
+    </Examples>
+  );
+}
+
+function RequiredVariation(): ReactElement {
+  return (
+    <Variation label="Required">
+      <EditableField
+        label="Title"
+        initial="Drafts vanish after a reconnect"
+        required
+      />
+    </Variation>
+  );
+}
+
+function InvalidVariation(): ReactElement {
+  return (
+    <Variation label="Invalid">
+      <EditableField
+        label="Estimate"
+        initial="12"
+        numeric
+        errors={['Enter a whole number from 1 to 8.']}
+      />
+    </Variation>
+  );
+}
+
+function DisabledVariation(): ReactElement {
+  return (
+    <Variation label="Disabled">
+      <EditableField
+        label="Title"
+        initial="Drafts vanish after a reconnect"
+        disabled
+      />
+    </Variation>
+  );
 }

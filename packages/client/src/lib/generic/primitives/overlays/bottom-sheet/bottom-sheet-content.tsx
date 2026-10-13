@@ -40,17 +40,24 @@ function SheetBody(props: SheetContentProps): React.ReactNode {
   return (
     <ScrollView
       className={cn('shrink min-h-0', { 'flex-1': !props.fit })}
-      keyboardShouldPersistTaps="handled"
-      automaticallyAdjustKeyboardInsets={!props.footer}
-      onContentSizeChange={(_width, height) =>
-        props.onContentHeightChange?.(height + grabberInset)
-      }
-      role="region"
-      accessibilityLabel={`${props.label ?? 'Sheet'} document`}
+      {...scrollProps(props)}
     >
       {props.children}
     </ScrollView>
   );
+}
+
+function scrollProps(
+  props: SheetContentProps,
+): React.ComponentProps<typeof ScrollView> {
+  return {
+    keyboardShouldPersistTaps: 'handled',
+    automaticallyAdjustKeyboardInsets: !props.footer,
+    onContentSizeChange: (_width, height) =>
+      props.onContentHeightChange?.(height + grabberInset),
+    role: 'region',
+    accessibilityLabel: `${props.label ?? 'Sheet'} document`,
+  };
 }
 
 function sheetAccessibility(
@@ -66,12 +73,7 @@ function sheetAccessibility(
   };
 }
 
-function sheetClass(
-  props: Pick<
-    SheetContentProps,
-    'surface' | 'fit' | 'footer' | 'viewportHeight'
-  >,
-): string {
+function sheetClass(props: SheetContentProps): string {
   return cn(
     props.surface === 'sidebar' ? 'bg-sidebar' : 'bg-popover',
     'ios:pt-8 ios:pb-0 min-h-0',

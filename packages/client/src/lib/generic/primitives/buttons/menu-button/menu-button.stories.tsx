@@ -22,19 +22,44 @@ function RangeMenu(): React.JSX.Element {
         <DropdownMenuTrigger asChild>
           <MenuButton label={`+${ranges.length - 1} more`} />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          {ranges.map((range) => (
-            <DropdownMenuItem
-              key={range}
-              accessibilityState={{ selected: range === shown }}
-              onPress={() => setShown(range)}
-            >
-              <Text>{range}</Text>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
+        <RangeOptions shown={shown} onSelect={setShown} />
       </DropdownMenu>
     </View>
+  );
+}
+
+interface RangeOptionsProps {
+  shown: string | undefined;
+  onSelect: (range: string) => void;
+}
+
+function RangeOptions(props: RangeOptionsProps): React.JSX.Element {
+  return (
+    <DropdownMenuContent align="start">
+      {ranges.map((range) => (
+        <RangeItem
+          key={range}
+          range={range}
+          selected={range === props.shown}
+          onSelect={props.onSelect}
+        />
+      ))}
+    </DropdownMenuContent>
+  );
+}
+
+function RangeItem(props: {
+  range: string;
+  selected: boolean;
+  onSelect: (range: string) => void;
+}): React.JSX.Element {
+  return (
+    <DropdownMenuItem
+      accessibilityState={{ selected: props.selected }}
+      onPress={() => props.onSelect(props.range)}
+    >
+      <Text>{props.range}</Text>
+    </DropdownMenuItem>
   );
 }
 

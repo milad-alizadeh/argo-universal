@@ -7,30 +7,29 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '../../../native-theme';
-import { useWide } from '../../../use-wide/use-wide';
-import { Host } from '../../native/host';
 import { FieldInput } from './field-input-view.ios';
-import { StandaloneField } from './standalone-field';
 import type { StandaloneFieldInputProps } from './standalone-field-input-props';
-import { StandaloneFieldInput as WebField } from './standalone-field-input.tsx';
+import { StandaloneNativeField } from './standalone-native-field';
 
 export function StandaloneFieldInput(
   props: StandaloneFieldInputProps,
 ): ReactElement {
-  const wide = useWide();
-  const modifiers = useRowModifiers();
-  if (wide) return <WebField {...props} />;
   return (
-    <StandaloneField {...props}>
-      <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-        <VStack modifiers={modifiers}>
-          <FieldInput
-            {...props}
-            label={props.required ? `${props.label} *` : props.label}
-          />
-        </VStack>
-      </Host>
-    </StandaloneField>
+    <StandaloneNativeField {...props}>
+      <NativeRow {...props} />
+    </StandaloneNativeField>
+  );
+}
+
+function NativeRow(props: StandaloneFieldInputProps): ReactElement {
+  const modifiers = useRowModifiers();
+  return (
+    <VStack modifiers={modifiers}>
+      <FieldInput
+        {...props}
+        label={props.required ? `${props.label} *` : props.label}
+      />
+    </VStack>
   );
 }
 

@@ -9,16 +9,20 @@ const tones = {
   destructive: 'bg-destructive',
 } as const;
 
+export const hiddenFromAccessibility = {
+  collapsable: false,
+  accessible: false,
+  accessibilityElementsHidden: true,
+  importantForAccessibility: 'no-hide-descendants',
+} as const;
+
 export function StatusDot({
   status,
 }: Pick<ListItemProps, 'status'>): React.JSX.Element | null {
   if (!status) return null;
   return (
     <View
-      collapsable={false}
-      accessible={false}
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
+      {...hiddenFromAccessibility}
       className={cn(
         'size-2 shrink-0 rounded-full wide:size-1.5',
         tones[status.tone],

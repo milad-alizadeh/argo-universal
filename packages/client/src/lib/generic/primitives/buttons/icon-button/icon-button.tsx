@@ -79,15 +79,10 @@ function iconContainerClass(
     'size' | 'variant' | 'disabled' | 'className' | 'aria-pressed'
   >,
 ): string {
-  return cn(
-    iconButtonClasses({
-      size: props.size,
-      variant: props.variant,
-      disabled: !!props.disabled,
-      pressed: props['aria-pressed'] === true,
-    }),
-    props.className,
-  );
+  const { size, variant, className } = props;
+  const disabled = !!props.disabled;
+  const pressed = props['aria-pressed'] === true;
+  return cn(iconButtonClasses({ size, variant, disabled, pressed }), className);
 }
 
 function iconTextClass(

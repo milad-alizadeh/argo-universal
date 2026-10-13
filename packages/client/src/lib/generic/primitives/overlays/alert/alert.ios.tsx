@@ -25,48 +25,69 @@ export function Alert(props: AlertProps): React.JSX.Element {
   );
 }
 
+type AlertActionsProps = Pick<AlertProps, 'actions' | 'onOpenChange'> & {
+  explicitCancel?: boolean;
+};
+
+function alertPresentation(props: AlertProps): {
+  title: string;
+  isPresented: boolean;
+  onIsPresentedChange: (open: boolean) => void;
+} {
+  return {
+    title: props.title,
+    isPresented: props.open,
+    onIsPresentedChange: props.onOpenChange,
+  };
+}
+
 function PlainAlert(props: AlertProps): React.JSX.Element {
   return (
-    <SwiftAlert
-      title={props.title}
-      isPresented={props.open}
-      onIsPresentedChange={props.onOpenChange}
-    >
+    <SwiftAlert {...alertPresentation(props)}>
       <SwiftAlert.Trigger>
         <AnchorText />
       </SwiftAlert.Trigger>
       <SwiftAlert.Actions>
         <AlertActions {...props} />
       </SwiftAlert.Actions>
-      {props.message ? (
-        <SwiftAlert.Message>
-          <Text>{props.message}</Text>
-        </SwiftAlert.Message>
-      ) : null}
+      <PlainAlertMessage message={props.message} />
     </SwiftAlert>
+  );
+}
+
+function PlainAlertMessage(props: {
+  message: AlertProps['message'];
+}): React.JSX.Element | null {
+  if (!props.message) return null;
+  return (
+    <SwiftAlert.Message>
+      <Text>{props.message}</Text>
+    </SwiftAlert.Message>
   );
 }
 
 function Confirmation(props: AlertProps): React.JSX.Element {
   return (
-    <ConfirmationDialog
-      title={props.title}
-      titleVisibility="visible"
-      isPresented={props.open}
-      onIsPresentedChange={props.onOpenChange}
-    >
+    <ConfirmationDialog {...alertPresentation(props)} titleVisibility="visible">
       <ConfirmationDialog.Trigger>
         <AnchorText />
       </ConfirmationDialog.Trigger>
       <ConfirmationDialog.Actions>
         <AlertActions {...props} explicitCancel />
       </ConfirmationDialog.Actions>
-      {props.message ? (
-        <ConfirmationDialog.Message>
-          <Text>{props.message}</Text>
-        </ConfirmationDialog.Message>
-      ) : null}
+      <ConfirmationMessage message={props.message} />
     </ConfirmationDialog>
+  );
+}
+
+function ConfirmationMessage(props: {
+  message: AlertProps['message'];
+}): React.JSX.Element | null {
+  if (!props.message) return null;
+  return (
+    <ConfirmationDialog.Message>
+      <Text>{props.message}</Text>
+    </ConfirmationDialog.Message>
   );
 }
 
@@ -79,25 +100,24 @@ function AnchorText(): React.JSX.Element {
  * iOS 26 hides a confirmation dialog's cancel-role button when it anchors the dialog to its source,
  * so Paper's explicit Cancel is drawn as a plain button there; tapping outside still dismisses.
  */
-function AlertActions(
-  props: Pick<AlertProps, 'actions' | 'onOpenChange'> & {
-    explicitCancel?: boolean;
-  },
-): React.JSX.Element {
+function AlertActions(props: AlertActionsProps): React.JSX.Element {
   return (
     <>
       {props.actions.map((action) => (
         <SwiftButton
           key={action.label}
           label={action.label}
-          role={
-            props.explicitCancel && action.role === 'cancel'
-              ? undefined
-              : action.role
-          }
+          role={actionRole(action, props.explicitCancel)}
           onPress={alertActionPress(action, props.onOpenChange)}
         />
       ))}
     </>
   );
+}
+
+function actionRole(
+  action: AlertProps['actions'][number],
+  explicitCancel: boolean | undefined,
+): AlertProps['actions'][number]['role'] {
+  return explicitCancel && action.role === 'cancel' ? undefined : action.role;
 }

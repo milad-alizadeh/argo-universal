@@ -23,15 +23,6 @@ export function RowLeading(
 
 // The title and subtitle reflow at the system text size; code draws in the mono face.
 export function RowLabel(props: ListItemProps): React.JSX.Element {
-  const bodyModifiers = useSwiftUITextModifiers(titleRole(props.code), 'row');
-  const secondaryModifiers = useSwiftUITextModifiers(
-    subtitleRole(props.subtitle),
-  );
-  const color = useTitleColor(props.tone);
-  const muted = useRowColor('secondary');
-  const title = (
-    <Text modifiers={[...bodyModifiers, color]}>{props.title}</Text>
-  );
   // The label takes the row's spare width, so the value and status trail it on the same line.
   return (
     <VStack
@@ -42,13 +33,25 @@ export function RowLabel(props: ListItemProps): React.JSX.Element {
         accessibilityHidden(!!props.control),
       ]}
     >
-      {title}
-      {props.subtitle && (
-        <Text modifiers={[...secondaryModifiers, muted]}>
-          {props.subtitle.text}
-        </Text>
-      )}
+      <RowTitleText {...props} />
+      {props.subtitle && <RowSubtitleText subtitle={props.subtitle} />}
     </VStack>
+  );
+}
+
+function RowTitleText(props: ListItemProps): React.JSX.Element {
+  const bodyModifiers = useSwiftUITextModifiers(titleRole(props.code), 'row');
+  const color = useTitleColor(props.tone);
+  return <Text modifiers={[...bodyModifiers, color]}>{props.title}</Text>;
+}
+
+function RowSubtitleText({
+  subtitle,
+}: Required<Pick<ListItemProps, 'subtitle'>>): React.JSX.Element {
+  const secondaryModifiers = useSwiftUITextModifiers(subtitleRole(subtitle));
+  const muted = useRowColor('secondary');
+  return (
+    <Text modifiers={[...secondaryModifiers, muted]}>{subtitle.text}</Text>
   );
 }
 

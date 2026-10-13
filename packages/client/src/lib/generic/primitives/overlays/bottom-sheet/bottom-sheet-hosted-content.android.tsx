@@ -8,19 +8,19 @@ import { View, useWindowDimensions } from 'react-native';
 import { BottomSheetContent } from './bottom-sheet-content';
 import type { BottomSheetProps } from './bottom-sheet.types';
 
-export function HostedSheetContent(
-  props: Pick<
-    BottomSheetProps,
-    | 'onOpenChange'
-    | 'label'
-    | 'children'
-    | 'footer'
-    | 'dismissible'
-    | 'contentScrolls'
-    | 'surface'
-    | 'fit'
-  >,
-): React.JSX.Element {
+type HostedSheetProps = Pick<
+  BottomSheetProps,
+  | 'onOpenChange'
+  | 'label'
+  | 'children'
+  | 'footer'
+  | 'dismissible'
+  | 'contentScrolls'
+  | 'surface'
+  | 'fit'
+>;
+
+export function HostedSheetContent(props: HostedSheetProps): React.JSX.Element {
   const { width } = useWindowDimensions();
   return (
     <RNHostView
@@ -28,17 +28,7 @@ export function HostedSheetContent(
       modifiers={props.fit ? [fillMaxWidth()] : [fillMaxHeight()]}
     >
       <View style={props.fit ? { width } : { flex: 1 }}>
-        <BottomSheetContent
-          fit={props.fit}
-          footer={props.footer}
-          label={props.label}
-          onOpenChange={props.onOpenChange}
-          dismissible={props.dismissible}
-          contentScrolls={props.contentScrolls}
-          surface={props.surface}
-        >
-          {props.children}
-        </BottomSheetContent>
+        <BottomSheetContent {...props} />
       </View>
     </RNHostView>
   );
@@ -49,14 +39,20 @@ export function SheetDragHandle(): React.JSX.Element {
   return (
     <ModalBottomSheet.DragHandle>
       <RNHostView matchContents modifiers={[fillMaxWidth()]}>
-        <View
-          pointerEvents="none"
-          style={{ width }}
-          className="h-8 items-center justify-center"
-        >
-          <View className="w-8 h-1 rounded-full bg-muted-foreground" />
-        </View>
+        <DragGrip width={width} />
       </RNHostView>
     </ModalBottomSheet.DragHandle>
+  );
+}
+
+function DragGrip(props: { width: number }): React.JSX.Element {
+  return (
+    <View
+      pointerEvents="none"
+      style={{ width: props.width }}
+      className="h-8 items-center justify-center"
+    >
+      <View className="w-8 h-1 rounded-full bg-muted-foreground" />
+    </View>
   );
 }

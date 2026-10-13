@@ -24,19 +24,7 @@ const reflowSpacing = 8;
 export function RowContent(props: ListItemProps): React.JSX.Element {
   const iconSize = useIconPixels('row');
   return (
-    <HStack
-      spacing={rowSpacing}
-      modifiers={[
-        padding({ vertical: 12 }),
-        accessibilityHidden(!!props.detail),
-        frame({ minHeight: rowHeight }),
-        rowOpacity(props.disabled),
-        alignmentGuide(
-          'listRowSeparatorLeading',
-          hasLeadingSlot(props) ? iconSize + rowSpacing : 0,
-        ),
-      ]}
-    >
+    <HStack spacing={rowSpacing} modifiers={contentModifiers(props, iconSize)}>
       <RowLeading {...props} />
       <RowFields {...props} />
       <DisclosureIndicator visible={hasDisclosure(props)} />
@@ -44,21 +32,39 @@ export function RowContent(props: ListItemProps): React.JSX.Element {
   );
 }
 
+function contentModifiers(
+  props: ListItemProps,
+  iconSize: number,
+): NonNullable<React.ComponentProps<typeof HStack>['modifiers']> {
+  return [
+    padding({ vertical: 12 }),
+    accessibilityHidden(!!props.detail),
+    frame({ minHeight: rowHeight }),
+    rowOpacity(props.disabled),
+    alignmentGuide(
+      'listRowSeparatorLeading',
+      hasLeadingSlot(props) ? iconSize + rowSpacing : 0,
+    ),
+  ];
+}
+
 function RowTrailing(props: ListItemProps): React.JSX.Element {
-  const bodyModifiers = useSwiftUITextModifiers('body', 'row');
-  const color = useRowColor('secondary');
   return (
     <HStack
       spacing={8}
       modifiers={[fixedSize({ horizontal: false, vertical: true })]}
     >
       {props.valueLeading && <NativeRowImage image={props.valueLeading} />}
-      {props.value !== undefined && (
-        <Text modifiers={[...bodyModifiers, color]}>{props.value}</Text>
-      )}
+      {props.value !== undefined && <RowValueText value={props.value} />}
       <NativeRowStatus {...props} />
     </HStack>
   );
+}
+
+function RowValueText({ value }: { value: string }): React.JSX.Element {
+  const bodyModifiers = useSwiftUITextModifiers('body', 'row');
+  const color = useRowColor('secondary');
+  return <Text modifiers={[...bodyModifiers, color]}>{value}</Text>;
 }
 
 function DisclosureIndicator({
@@ -77,20 +83,32 @@ function rowOpacity(disabled: boolean | undefined): ReturnType<typeof opacity> {
 
 function RowFields(props: ListItemProps): React.JSX.Element {
   const { fontScale } = useWindowDimensions();
-  const fields = (
+  const fields = <RowFieldItems {...props} />;
+  if (fontScale < reflowFontScale || props.value === undefined) return fields;
+  return <ReflowedFields>{fields}</ReflowedFields>;
+}
+
+function RowFieldItems(props: ListItemProps): React.JSX.Element {
+  return (
     <>
       <RowLabel {...props} />
       <RowTrailing {...props} />
     </>
   );
-  if (fontScale < reflowFontScale || props.value === undefined) return fields;
+}
+
+function ReflowedFields({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
   return (
     <VStack
       alignment="leading"
       spacing={reflowSpacing}
       modifiers={[frame({ maxWidth: Infinity, alignment: 'leading' })]}
     >
-      {fields}
+      {children}
     </VStack>
   );
 }

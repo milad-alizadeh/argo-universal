@@ -35,14 +35,20 @@ export function nativeButtonLayout(
   ignoreSafeArea: 'all';
   style: { width?: '100%'; opacity?: number };
 } {
-  const fullWidth = props.fullWidth === true;
   return {
-    matchContents: { vertical: true, horizontal: !fullWidth },
+    matchContents: { vertical: true, horizontal: props.fullWidth !== true },
     ignoreSafeArea: 'all',
-    style: {
-      ...(fullWidth ? { width: '100%' } : {}),
-      ...(props.disabled ? { opacity: disabledOpacity } : {}),
-    },
+    style: layoutStyle(props),
+  };
+}
+
+function layoutStyle(props: Pick<ButtonDataProps, 'fullWidth' | 'disabled'>): {
+  width?: '100%';
+  opacity?: number;
+} {
+  return {
+    ...(props.fullWidth === true ? { width: '100%' } : {}),
+    ...(props.disabled ? { opacity: disabledOpacity } : {}),
   };
 }
 

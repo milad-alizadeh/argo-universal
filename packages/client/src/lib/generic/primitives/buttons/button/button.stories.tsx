@@ -64,25 +64,46 @@ const meta = { title: 'Design System/Primitives/Button' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Variations: Story = {
-  name: 'Button',
-  render: () => (
+function ButtonExamples(): React.JSX.Element {
+  return (
     <VariationList>
       {buttons.map(({ state, props }) => (
-        <Variation key={state} label={state}>
-          <View className="flex-row">
-            <Button {...props} />
-          </View>
-        </Variation>
+        <ButtonExample key={state} state={state} props={props} />
       ))}
       {pairs.map(({ state, props }) => (
-        <Variation key={state} label={`${state}: system, then Argo content`}>
-          <View className="flex-row items-center gap-3">
-            <Button {...props} />
-            <Button {...props} appearance="content" />
-          </View>
-        </Variation>
+        <PairExample key={state} state={state} props={props} />
       ))}
     </VariationList>
-  ),
+  );
+}
+
+interface ExampleOptions {
+  state: string;
+  props: React.ComponentProps<typeof Button>;
+}
+
+function ButtonExample(options: ExampleOptions): React.JSX.Element {
+  return (
+    <Variation label={options.state}>
+      <View className="flex-row">
+        <Button {...options.props} />
+      </View>
+    </Variation>
+  );
+}
+
+function PairExample(options: ExampleOptions): React.JSX.Element {
+  return (
+    <Variation label={`${options.state}: system, then Argo content`}>
+      <View className="flex-row items-center gap-3">
+        <Button {...options.props} />
+        <Button {...options.props} appearance="content" />
+      </View>
+    </Variation>
+  );
+}
+
+export const Variations: Story = {
+  name: 'Button',
+  render: ButtonExamples,
 };

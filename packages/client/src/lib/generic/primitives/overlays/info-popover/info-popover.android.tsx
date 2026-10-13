@@ -37,10 +37,19 @@ function TooltipText({
       titleContentColor={popoverForeground}
       actionContentColor={popoverForeground}
     >
-      <TooltipBox.RichTooltip.Text>
-        <Text color={popoverForeground}>{text}</Text>
-      </TooltipBox.RichTooltip.Text>
+      <TooltipLabel text={text} color={popoverForeground} />
     </TooltipBox.RichTooltip>
+  );
+}
+
+function TooltipLabel(props: {
+  text: string;
+  color: string | undefined;
+}): React.JSX.Element {
+  return (
+    <TooltipBox.RichTooltip.Text>
+      <Text color={props.color}>{props.text}</Text>
+    </TooltipBox.RichTooltip.Text>
   );
 }
 
