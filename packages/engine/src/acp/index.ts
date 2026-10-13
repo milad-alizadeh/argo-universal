@@ -1,5 +1,6 @@
+export { releaseLoginTerminalGroups } from './terminal-record';
 export { checkAgentLaunch } from './agent-check';
-export { createLoginAgentOpener } from './login-agent';
+export { createLoginAgentOpener } from './terminal-login-agent';
 export { createAcpResources } from './resources';
 export { RecoveryBlockedError } from './checkout-releases';
 export { createAcpResponseReaders } from './response-readers';

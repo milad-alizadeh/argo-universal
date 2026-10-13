@@ -13,6 +13,7 @@ import type {
   Stream,
 } from '@agentclientprotocol/sdk';
 import type { AgentLaunch } from '../agents';
+import type { LaunchLoginTerminal } from '../agents';
 
 export type AcpSessionOpening =
   | { method: 'session/new'; params: NewSessionRequest }
@@ -44,6 +45,7 @@ export type AcpProcess = {
   terminate: () => Promise<void>;
 };
 export type AcpResourceInput = {
+  launchLoginTerminal?: LaunchLoginTerminal;
   launchProcess?: (launch: AgentLaunch) => Promise<AcpProcess>;
   closeTimeoutMs?: number;
   releaseTimeoutMs?: number;

@@ -13,6 +13,7 @@ import {
 } from 'xstate';
 import {
   createAcpResources,
+  releaseLoginTerminalGroups,
   type AcpResources,
   type AcpResourceInput,
 } from '../acp';
@@ -148,6 +149,7 @@ export const engineMachine = setup({
       async ({ input }): Promise<void> => {
         recoverAfterRestart(input.database);
         await reconcileInterruptedInstallations(input.home);
+        await releaseLoginTerminalGroups(input.home);
         await removeUnusedBlobs(input);
         await removeOrphanAttachments({
           database: input.database,

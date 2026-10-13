@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '#lib/generic/primitives/overlays/dialog/dialog';
+import { AgentLoginTerminal } from '../agent-login-terminal/agent-login-terminal';
 import { dismissLogin, loginActions, loginStatus } from './login-actions';
 import { LoginButton } from './login-button';
 import { loginCopy } from './login-copy';
@@ -23,18 +24,49 @@ export function AgentLoginSheet(
 }
 
 function LoginContent(props: AgentLoginSheetProps): React.JSX.Element {
-  const copy = sheetCopy(props);
   return (
-    <DialogContent
-      showClose={false}
-      accessibilityLabel={copy.title}
-      dismissible={false}
-      className="gap-3 p-6 wide:w-[380px] wide:rounded-surface"
-    >
-      <DialogTitle className="type-heading">{copy.title}</DialogTitle>
-      <Text>{copy.message}</Text>
+    <DialogContent {...contentProps(props)}>
+      <DialogTitle className="type-heading">
+        {sheetCopy(props).title}
+      </DialogTitle>
+      <LoginMessage {...props} />
+      <LoginTerminalContent {...props} />
       <LoginActions {...props} />
     </DialogContent>
+  );
+}
+const isTerminalLogin = (props: AgentLoginSheetProps): boolean =>
+  props.snapshot?.terminal === true;
+const contentProps = (
+  props: AgentLoginSheetProps,
+): Omit<React.ComponentProps<typeof DialogContent>, 'children'> => ({
+  showClose: false,
+  accessibilityLabel: sheetCopy(props).title,
+  dismissible: false,
+  className: isTerminalLogin(props)
+    ? 'gap-3 p-6 wide:w-[620px] wide:max-w-none wide:rounded-surface'
+    : 'gap-3 p-6 wide:w-[380px] wide:rounded-surface',
+});
+const terminalHasCopy = (props: AgentLoginSheetProps): boolean =>
+  isTerminalLogin(props) && !props.disconnected;
+function LoginMessage(props: AgentLoginSheetProps): React.JSX.Element | null {
+  if (terminalHasCopy(props) && !props.failure) return null;
+  return <Text>{sheetCopy(props).message}</Text>;
+}
+const terminalDisabled = (props: AgentLoginSheetProps): boolean =>
+  !!(props.disconnected || props.failure || props.busy);
+function LoginTerminalContent(
+  props: AgentLoginSheetProps,
+): React.JSX.Element | null {
+  if (!isTerminalLogin(props)) return null;
+  const operationId = terminalIdentity(props);
+  if (!props.terminal) return null;
+  return (
+    <AgentLoginTerminal
+      key={operationId}
+      {...props.terminal}
+      enabled={!terminalDisabled(props)}
+    />
   );
 }
 
@@ -65,23 +97,34 @@ function connectedCopy(props: AgentLoginSheetProps): {
 const agentMessage = (props: AgentLoginSheetProps): string | undefined =>
   props.snapshot?.request?.message;
 function sheetTitle(props: AgentLoginSheetProps): string {
-  if (loginStatus(props) === 'choose-method')
+  if (isTerminalLogin(props) || loginStatus(props) === 'choose-method')
     return `Sign in to ${props.agentName}`;
   return loginCopy[loginStatus(props)].title;
 }
 
 function LoginActions(props: AgentLoginSheetProps): React.JSX.Element {
   return (
-    <View className="gap-2">
+    <View className={props.snapshot?.terminal ? 'items-end gap-2' : 'gap-2'}>
       {loginActions(props).map((action, index) => (
         <LoginButton
           key={action.id}
           {...action}
-          fullWidth
+          fullWidth={!props.snapshot?.terminal}
           disabled={props.busy}
-          variant={index ? 'secondary' : 'default'}
+          variant={actionVariant(index, isTerminalLogin(props))}
         />
       ))}
     </View>
   );
 }
+
+const actionVariant = (
+  index: number,
+  terminal: boolean,
+): 'secondary' | 'default' => {
+  if (terminal) return 'secondary';
+  return index ? 'secondary' : 'default';
+};
+
+const terminalIdentity = (props: AgentLoginSheetProps): string | undefined =>
+  props.snapshot?.operationId;

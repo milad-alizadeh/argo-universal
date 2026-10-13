@@ -29,6 +29,8 @@ export type {
   LoginAgentCallbacks,
   LoginAgentConnection,
   OpenLoginAgent,
+  LoginTerminalProcess,
+  LaunchLoginTerminal,
 } from './agent-launch';
 export { type FetchAgents } from './registry/fetch-agents';
 export { AgentCatalogReplaceJob } from './agent-storage';
