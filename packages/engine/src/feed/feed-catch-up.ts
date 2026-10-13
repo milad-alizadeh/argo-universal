@@ -1,84 +1,14 @@
-import type { RowUpsert, SessionUpdate } from '@repo/contracts';
-import type { Database } from '@repo/db';
-import { feedRow } from '@repo/db/schema';
-import { and, asc, eq, gt, lte } from 'drizzle-orm';
-import type { WriterActorRef } from '../storage';
-import type { FeedStreamEvent } from './feed-change';
-import type { FeedActorRef } from './feed-machine';
+import type { SessionUpdate } from '@repo/contracts';
 import {
-  hydrateStoredFeedRow,
-  newestRows,
-  storedFeedColumns,
-} from './feed-row';
-import { readQueuedFeed } from './feed-storage';
+  readChangedRows,
+  readStoredRows,
+  readUnsavedRows,
+  type FeedRowSources,
+} from './feed-catch-up-rows';
+export type { FeedRowSources } from './feed-catch-up-rows';
 
 const catchUpPageRows = 200;
-// SQLite reads every row for a negative LIMIT.
 const everyRow = -1;
-
-export interface FeedRowSources {
-  database: Database;
-  // The feed actor of an open Session; a closed Session has none.
-  findFeed: (sessionId: string) => FeedActorRef | undefined;
-  findWriter: () => WriterActorRef | undefined;
-}
-
-interface RevisionRange {
-  after: number;
-  through?: number;
-}
-
-const byRevision = (first: SessionUpdate, second: SessionUpdate): number =>
-  first.revision - second.revision;
-
-// Rows the database does not hold yet: queued in the writer, then held by the feed actor.
-const readUnsavedRows = (
-  sources: FeedRowSources,
-  sessionId: string,
-): { rows: SessionUpdate[]; maxRevision: number } => {
-  const pending = readQueuedFeed(sources.findWriter(), sessionId);
-  const feed = sources.findFeed(sessionId)?.getSnapshot().context;
-  return {
-    rows: [...pending.rows, ...Object.values(feed?.rows ?? {})],
-    maxRevision: Math.max(0, pending.maxRevision, feed?.maxRevision ?? 0),
-  };
-};
-
-const readStoredRows = (
-  database: Database,
-  sessionId: string,
-  range: RevisionRange & { limit: number },
-): SessionUpdate[] =>
-  database
-    .select(storedFeedColumns)
-    .from(feedRow)
-    .where(
-      and(
-        eq(feedRow.sessionId, sessionId),
-        gt(feedRow.revision, range.after),
-        range.through === undefined
-          ? undefined
-          : lte(feedRow.revision, range.through),
-      ),
-    )
-    .orderBy(asc(feedRow.revision))
-    .limit(range.limit)
-    .all()
-    .map((stored): SessionUpdate => hydrateStoredFeedRow(sessionId, stored));
-
-// The newest copy of each row changed in the range, oldest change first; a row whose newest change is past `range.through` waits for a later read.
-const readChangedRows = (
-  sources: FeedRowSources,
-  sessionId: string,
-  { stored, range }: { stored: SessionUpdate[]; range: RevisionRange },
-): SessionUpdate[] => {
-  const unsaved = readUnsavedRows(sources, sessionId).rows.filter(
-    (row): boolean => row.revision > range.after,
-  );
-  return [...newestRows([...stored, ...unsaved]).values()]
-    .filter((row): boolean => row.revision <= (range.through ?? Infinity))
-    .sort(byRevision);
-};
 
 // What a subscriber missed after its sync point, a page at a time, up to the revision captured when it subscribed.
 export class FeedCatchUp {
@@ -133,55 +63,26 @@ export class FeedCatchUp {
   private readPage(): readonly SessionUpdate[] {
     let page: SessionUpdate[] = [];
     while (page.length === 0 && !this.isComplete()) {
-      const range = { after: this.cursor, through: this.highWaterMark };
-      const stored = readStoredRows(this.sources.database, this.sessionId, {
-        ...range,
-        limit: catchUpPageRows,
-      });
-      this.cursor =
-        stored.length < catchUpPageRows
-          ? this.highWaterMark
-          : (stored.at(-1)?.revision ?? this.highWaterMark);
-      page = readChangedRows(this.sources, this.sessionId, {
-        stored,
-        range: { ...range, through: this.cursor },
-      });
+      page = this.readStoredPage();
     }
     return page;
   }
-}
-
-const changedRowId = (event: FeedStreamEvent): string =>
-  event.type === 'row.upsert' ? event.row.id : event.id;
-
-// Sends each moved row whole at its own revision, before the first live change after it, in place of its older live changes.
-export class MovedRowDelivery {
-  private readonly waiting: SessionUpdate[];
-  private readonly movedRevisions: ReadonlyMap<string, number>;
-
-  public constructor(movedRows: readonly SessionUpdate[]) {
-    this.waiting = movedRows.toSorted(byRevision);
-    this.movedRevisions = new Map(
-      movedRows.map((row): [string, number] => [row.id, row.revision]),
-    );
+  private readStoredPage(): SessionUpdate[] {
+    const range = { after: this.cursor, through: this.highWaterMark };
+    const stored = readStoredRows(this.sources.database, this.sessionId, {
+      ...range,
+      limit: catchUpPageRows,
+    });
+    this.cursor = this.pageEnd(stored);
+    return readChangedRows(this.sources, this.sessionId, {
+      stored,
+      range: { ...range, through: this.cursor },
+    });
   }
 
-  public *deliver(
-    event: FeedStreamEvent,
-  ): Generator<FeedStreamEvent | RowUpsert> {
-    yield* this.releaseThrough(event.rev);
-    if ((this.movedRevisions.get(changedRowId(event)) ?? 0) < event.rev)
-      yield event;
-  }
-
-  public *releaseThrough(revision = Infinity): Generator<RowUpsert> {
-    for (
-      let row = this.waiting[0];
-      row && row.revision <= revision;
-      row = this.waiting[0]
-    ) {
-      this.waiting.shift();
-      yield { type: 'row.upsert', rev: row.revision, row };
-    }
+  private pageEnd(stored: SessionUpdate[]): number {
+    const last = stored.at(-1);
+    if (stored.length < catchUpPageRows || !last) return this.highWaterMark;
+    return last.revision;
   }
 }

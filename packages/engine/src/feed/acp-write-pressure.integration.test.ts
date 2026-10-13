@@ -1,8 +1,9 @@
-import type { SessionUpdate } from '@repo/contracts';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
+import { assert } from 'vitest';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { readThrough, isQueuedTool } from '#mocks/feed-stream-reading';
 
 it('partial ACP tools remain readable during storage failure and retry commits the newest complete row', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -50,14 +51,9 @@ it('partial ACP tools remain readable during storage failure and retry commits t
     prompt: [{ type: 'text', text: 'Read' }],
   });
   try {
-    let tool: SessionUpdate | undefined;
-    for await (const event of {
-      [Symbol.asyncIterator]: (): typeof events => events,
-    })
-      if (event.type === 'row.upsert' && event.row.revision === 3) {
-        tool = event.row;
-        break;
-      }
+    const event = (await readThrough(events, isQueuedTool)).at(-1);
+    assert(event?.type === 'row.upsert');
+    const tool = event.row;
     expect(tool).toMatchObject({
       revision: 3,
       title: 'Read original',
@@ -66,7 +62,6 @@ it('partial ACP tools remain readable during storage failure and retry commits t
       content: [{ content: { text: 'Original' } }],
       position: 1,
     });
-    if (!tool) throw new Error('Queued tool is missing');
     expect(await host.caller.feed.row({ ...created, id: tool.id })).toEqual(
       tool,
     );

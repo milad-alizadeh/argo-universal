@@ -24,3 +24,5 @@ export { readUnaddressedPlan } from './unaddressed-plan';
 
 export { createFeedRouter } from './router';
 export { titleFromPrompt } from './prompt-title';
+
+export type { Feed, FeedStreamEvent } from './feed-change';

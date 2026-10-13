@@ -81,7 +81,19 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     ...steps.map(configurationForStep),
     attachmentConfiguration(steps),
     elicitationConfiguration(steps),
+    feedHistoryConfiguration(steps),
   );
+}
+
+function feedHistoryConfiguration(steps: string[]): AppFixtureAgents {
+  const chosen = steps
+    .map((step) =>
+      /^(?:Given|And) Agent (\d+) supplies a long Feed history$/.exec(step),
+    )
+    .find((match) => match !== null);
+  return chosen
+    ? { [agentId(Number(chosen[1]))]: { scenario: 'feed-history' } }
+    : {};
 }
 
 function elicitationConfiguration(steps: string[]): AppFixtureAgents {

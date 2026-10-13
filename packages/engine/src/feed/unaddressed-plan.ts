@@ -4,6 +4,7 @@ import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, sql, type SQL } from 'drizzle-orm';
 import type { WriterActorRef } from '../storage';
 import {
+  type FeedRowWrite,
   hydrateStoredFeedRow,
   newestRows,
   storedFeedColumns,
@@ -44,13 +45,7 @@ const createUnaddressedPlanFilter = (
 const readStoredUnaddressedPlan = (
   input: UnaddressedPlanRead,
 ): PlanUpdate | undefined => {
-  const stored = input.database
-    .select(storedFeedColumns)
-    .from(feedRow)
-    .where(createUnaddressedPlanFilter(input))
-    .orderBy(desc(feedRow.revision))
-    .limit(1)
-    .get();
+  const stored = readUnaddressedPlanStorage(input);
   return stored
     ? selectUnaddressedPlanRow(
         [hydrateStoredFeedRow(input.sessionId, stored)],
@@ -58,6 +53,16 @@ const readStoredUnaddressedPlan = (
       )
     : undefined;
 };
+const readUnaddressedPlanStorage = (
+  input: UnaddressedPlanRead,
+): FeedRowWrite | undefined =>
+  input.database
+    .select(storedFeedColumns)
+    .from(feedRow)
+    .where(createUnaddressedPlanFilter(input))
+    .orderBy(desc(feedRow.revision))
+    .limit(1)
+    .get();
 export const readUnaddressedPlan = (
   input: UnaddressedPlanRead,
 ): PlanUpdate | undefined => {

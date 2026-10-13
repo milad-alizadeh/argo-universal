@@ -1,9 +1,11 @@
 import type { SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { recordedFeedMocks } from '@repo/mocks/app';
+import { assert } from 'vitest';
 import { beforeEach, expect, it, onTestFinished } from 'vitest';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
+import { closeStream } from '#mocks/feed-stream-reading';
 
 // The `feed_row` layout every Server has written since payload version 1: the envelope in columns, the rest as JSON.
 const insertStoredRow = (database: Database, row: SessionUpdate): void => {
@@ -89,9 +91,10 @@ it.each(recordedFeedMocks)(
 
     while (received.length < rows.length) {
       const { value } = await updates.next();
-      if (value?.type === 'row.upsert') received.push(value.row);
+      assert(value);
+      if (value.type === 'row.upsert') received.push(value.row);
     }
-    await updates.return?.();
+    await closeStream(updates);
 
     expect(received).toEqual(
       rows.toSorted((a, b): number => a.revision - b.revision),

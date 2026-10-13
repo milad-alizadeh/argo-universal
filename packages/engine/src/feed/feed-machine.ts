@@ -10,28 +10,20 @@ import {
   setup,
 } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
-import {
-  databaseWriterId,
-  type WriterCommit,
-  type WriterEvent,
-  writerMachine,
-} from '../storage';
+import { databaseWriterId, type WriterCommit, writerMachine } from '../storage';
 import { prepareAcpFeedApplication } from './acp/application';
 import type { MessageStreams } from './acp/message-identity';
 import type { AcpSessionNotification as SessionNotification } from './acp/session-notification';
-import { settleFeedTurn } from './acp/settlement';
 import type { OutputBlob } from './acp/tool-output';
+import { prepareFeedApplication } from './feed-application';
+import { type Feed, type FeedStreamEvent } from './feed-change';
+import { prepareTurnSettlement } from './feed-turn-settlement';
 import {
-  applyFeedChange,
-  changedRowId,
-  type Feed,
-  type FeedStreamEvent,
-} from './feed-change';
-import { outputBlobsOf, promptBlobIds } from './feed-row';
-import { FeedRowsJob } from './feed-storage';
+  createRowsWriteRequest,
+  type WriterJobParameters,
+} from './feed-write-request';
 import type { FeedPublication } from './publication';
 
-const feedChangeApplied = 'feed.changeApplied';
 const feedChangeRejected = 'feed.changeRejected';
 
 type FeedLogParameters = { line: string };
@@ -106,41 +98,26 @@ export type FeedInternalEvent =
 
 export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
 
-type WriterJobParameters = Pick<
-  Extract<WriterEvent, { type: 'writer.write' }>,
-  'job' | 'committed' | 'refused'
->;
-
-// Every changed row with the newest revision, as one job for the database writer.
-const createRowsWriteRequest = ({
-  context,
-  event,
-}: {
-  context: FeedContext;
-  event: FeedEvent | FeedInternalEvent;
-}): WriterJobParameters => {
-  const rows = context.changedRowIds.flatMap((id): SessionUpdate[] => {
-    const row = context.rows[id];
-    return row ? [row] : [];
-  });
-  return {
-    committed: 'committed' in event ? event.committed : undefined,
-    refused: context.storageFailing,
-    job: new FeedRowsJob({
-      sessionId: context.sessionId,
-      rows,
-      maxRevision: context.maxRevision,
-      activityAt: context.activityAt,
-      blobIds: promptBlobIds(rows),
-      blobs: outputBlobsOf(rows, context.outputBlobs),
-    }),
-  };
+const rejectUnavailableWriter = (params: WriterJobParameters): void => {
+  params.committed?.reject(new Error('Database Writer is unavailable'));
 };
 
 const writeRows = [
   { type: 'sendToWriter', params: createRowsWriteRequest },
   'dropWrittenRows',
 ] as const;
+
+const raiseFeedEvents = (
+  events: FeedInternalEvent[],
+  raise: (event: FeedInternalEvent) => void,
+): void => {
+  for (const event of events) raise(event);
+};
+const enqueueWriteRows = (
+  enqueue: (action: (typeof writeRows)[number]) => void,
+): void => {
+  for (const action of writeRows) enqueue(action);
+};
 
 export const feedMachine = setup({
   types: {
@@ -160,43 +137,13 @@ export const feedMachine = setup({
           reason: result.rejection,
         });
       enqueue.assign(result.state);
-      for (const raised of result.events) enqueue.raise(raised);
+      raiseFeedEvents(result.events, (raised) => enqueue.raise(raised));
     }),
     settleTurnRows: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.completeTurn');
-      const result = settleFeedTurn(context, event.turnId);
-      if ('rejection' in result) {
-        event.published?.reject(new Error(result.rejection));
-        enqueue.raise({
-          type: feedChangeRejected,
-          reason: result.rejection,
-        });
-        return;
-      }
-      enqueue.assign({
-        rows: result.feed.rows,
-        maxRevision: result.feed.maxRevision,
-        nextPosition: result.feed.nextPosition,
-        streamEvents: [...context.streamEvents, ...result.events],
-        changedRowIds: [
-          ...new Set([
-            ...context.changedRowIds,
-            ...result.events.map((change) =>
-              change.type === 'row.upsert' ? change.row.id : change.id,
-            ),
-          ]),
-        ],
-      });
-      enqueue.assign({
-        messageStreams: Object.fromEntries(
-          Object.entries(context.messageStreams).filter(
-            ([, stream]) => stream.turnId !== event.turnId,
-          ),
-        ),
-      });
-      if (result.events.length > 0)
-        enqueue.raise({ type: feedChangeApplied, settled: true });
-      enqueue.raise({ type: 'feed.publish', published: event.published });
+      const result = prepareTurnSettlement(context, event);
+      if (result.state) enqueue.assign(result.state);
+      raiseFeedEvents(result.events, (raised) => enqueue.raise(raised));
     }),
     acknowledgePublication: ({ event }): void => {
       assertEvent(event, 'feed.publish');
@@ -204,53 +151,9 @@ export const feedMachine = setup({
     },
     applyChange: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.change');
-      const id = changedRowId(event.change);
-      const { sessionId, maxRevision, nextPosition } = context;
-      // A written row comes back with its position, so a later change keeps its place.
-      let written: SessionUpdate | undefined;
-      if (!Object.hasOwn(context.rows, id))
-        try {
-          written = context.findWrittenRow(id);
-        } catch (error) {
-          event.committed?.reject(error);
-          enqueue.raise({
-            type: feedChangeRejected,
-            reason: `could not read written row ${id}: ${error instanceof Error ? error.message : String(error)}`,
-          });
-          return;
-        }
-      const result = applyFeedChange(
-        {
-          sessionId,
-          maxRevision,
-          nextPosition,
-          rows: written ? { ...context.rows, [id]: written } : context.rows,
-        },
-        event.change,
-        event.turnId,
-      );
-      if ('rejection' in result) {
-        event.committed?.reject(new Error(result.rejection));
-        enqueue.raise({
-          type: feedChangeRejected,
-          reason: result.rejection,
-        });
-        return;
-      }
-      const { feed, streamEvent } = result;
-      enqueue.assign({
-        ...feed,
-        activityAt: context.now(),
-        changedRowIds: context.changedRowIds.includes(id)
-          ? context.changedRowIds
-          : [...context.changedRowIds, id],
-        streamEvents: [...context.streamEvents, streamEvent],
-      });
-      enqueue.raise({
-        type: feedChangeApplied,
-        settled: feed.rows[id]?.state === 'settled',
-        committed: event.committed,
-      });
+      const result = prepareFeedApplication(context, event);
+      if (result.state) enqueue.assign(result.state);
+      raiseFeedEvents(result.events, (raised) => enqueue.raise(raised));
     }),
     countRejectedChange: assign({
       rejectedChanges: ({ context }): number =>
@@ -263,8 +166,8 @@ export const feedMachine = setup({
     clearBatch: assign({ streamEvents: [] }),
     sendToWriter: ({ system }, params: WriterJobParameters): void => {
       const writer = findMachineActor(system, databaseWriterId, writerMachine);
-      if (writer?.getSnapshot().status !== 'active') {
-        params.committed?.reject(new Error('Database Writer is unavailable'));
+      if (!writer || writer.getSnapshot().status !== 'active') {
+        rejectUnavailableWriter(params);
         return;
       }
       writer.send({ type: 'writer.write', ...params });
@@ -331,7 +234,7 @@ export const feedMachine = setup({
               enqueue('clearBatch');
             }
             if (check('hasChangedRows'))
-              for (const action of writeRows) enqueue(action);
+              enqueueWriteRows((action) => enqueue(action));
           }),
         },
       },

@@ -1,32 +1,12 @@
-import type { FeedSubscribeOutput } from '@repo/contracts';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { readMessageText } from '#mocks/feed-message-observation';
+import { readThrough, isIdle, closeStream } from '#mocks/feed-stream-reading';
 
 const chunkCount = 5000;
 const chunks = Array.from({ length: chunkCount }, (_, index) => `${index},`);
-
-const readMessageText = (
-  events: readonly FeedSubscribeOutput[],
-): { text: string; gaps: number } => {
-  let text = '';
-  let gaps = 0;
-  for (const event of events) {
-    if (
-      event.type === 'row.upsert' &&
-      event.row.sessionUpdate === 'agent_message'
-    ) {
-      const block = event.row.content[0];
-      text = block?.type === 'text' ? block.text : '';
-    }
-    if (event.type === 'row.append') {
-      if (event.off !== text.length) gaps += 1;
-      text += event.text;
-    }
-  }
-  return { text, gaps };
-};
 
 it('a subscriber that stops reading during a long message catches up whole without a gap', async () => {
   const host = await startAcpEngine(
@@ -47,13 +27,8 @@ it('a subscriber that stops reading during a long message catches up whole witho
     prompt: [{ type: 'text', text: 'Count' }],
   });
   await waitForAcpSessionIdle(host, created.sessionId);
-  const received: FeedSubscribeOutput[] = [];
-  for (let next = await slow.next(); !next.done; next = await slow.next()) {
-    received.push(next.value);
-    if (next.value.type === 'snapshot' && next.value.snapshot.state === 'idle')
-      break;
-  }
-  await slow.return?.();
+  const received = await readThrough(slow, isIdle);
+  await closeStream(slow);
   expect(readMessageText(received)).toEqual({ text: chunks.join(''), gaps: 0 });
   expect(received.length).toBeLessThan(chunkCount);
 });
