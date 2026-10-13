@@ -1,15 +1,22 @@
 import { Uniwind } from 'uniwind';
 import { settleViewport } from './settle-viewport';
 
-// The --breakpoint-wide token from tooling/uniwind/theme.css, read from the page so tests never copy it.
-export function wideBreakpoint(): number {
+// Reads a width token from tooling/uniwind/theme.css off the page, so tests never copy it.
+function tokenWidth(name: string): number {
   const token = getComputedStyle(document.documentElement).getPropertyValue(
-    '--breakpoint-wide',
+    name,
   );
   const width = Number.parseFloat(token);
-  if (Number.isNaN(width))
-    throw new Error('The --breakpoint-wide token is missing.');
+  if (Number.isNaN(width)) throw new Error(`The ${name} token is missing.`);
   return width;
+}
+
+export function wideBreakpoint(): number {
+  return tokenWidth('--breakpoint-wide');
+}
+
+export function contentWideMin(): number {
+  return tokenWidth('--container-content-wide');
 }
 
 // Tablet sits between the phone and wide layouts, like an iPad in portrait.
