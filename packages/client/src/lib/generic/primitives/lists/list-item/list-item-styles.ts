@@ -10,6 +10,8 @@ interface Corners {
 export interface RowPlace {
   endsSection?: boolean;
   corners?: Corners;
+  // The row below is hovered, which draws its own shade over the line between them.
+  separatorHidden?: boolean;
 }
 
 export function rowClasses(
@@ -21,7 +23,7 @@ export function rowClasses(
     'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted wide:min-h-11 web:select-none web:[&_*]:select-none',
     controlClasses(props),
     sizeClasses(props),
-    stateClasses(props, navigation, place),
+    stateClasses(props, navigation),
     cornerClasses(place.corners),
     edgeClasses(props, navigation, place),
   );
@@ -36,10 +38,10 @@ function edgeClasses(
   if (navigation) return sidebarClasses(props);
   return place.endsSection === true
     ? undefined
-    : separatorClasses(props, place.endsSection);
+    : separatorClasses(props, place);
 }
 
-// A card's rows round their own corners: a wrapper's clip would also hide the line that covers the separator above on hover.
+// A card's rows round their own corners.
 const cornerClasses = (corners: Corners | undefined): string =>
   cn(topCorners(corners), bottomCorners(corners));
 
@@ -70,35 +72,20 @@ export const contentGap = (
   sidebar || size === 'large' ? undefined : 'wide:gap-2';
 
 // A loading row pads to Paper's 56, its spinner in a 20 slot; a pressable row shades on hover.
-function stateClasses(
-  props: ListItemProps,
-  navigation: boolean,
-  place: RowPlace,
-): string {
-  return cn(
-    props.loading && 'py-4',
-    props.onPress && pressClasses(navigation, place),
-  );
+function stateClasses(props: ListItemProps, navigation: boolean): string {
+  return cn(props.loading && 'py-4', props.onPress && pressClasses(navigation));
 }
 
 const focusClasses =
   'web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2';
 
 // A sidebar row has no separators to hide and keeps its own hover tint (none when selected), so it only takes the focus ring.
-const pressClasses = (navigation: boolean, place: RowPlace): string =>
-  navigation
-    ? focusClasses
-    : cn(focusClasses, hoverClasses, separatorAbove(place));
+const pressClasses = (navigation: boolean): string =>
+  navigation ? focusClasses : cn(focusClasses, hoverClasses);
 
-const separatorAbove = (place: RowPlace): string | undefined =>
-  place.corners?.first ? undefined : hoverSeparatorAbove;
-
+// The hover shade's own line is out of flow, or it would add a gap's width to the row.
 const hoverClasses =
-  'web:hover:bg-[var(--color-separator)] web:active:bg-[var(--color-separator)] web:hover:after:bg-inherit web:active:after:bg-inherit';
-
-// The line over the separator above; a card's first row has none, as it would stick out of the card.
-const hoverSeparatorAbove =
-  'web:before:absolute web:before:-top-px web:before:inset-x-0 web:before:h-px web:before:bg-inherit web:before:hidden web:hover:before:block web:active:before:block';
+  'web:hover:bg-[var(--color-separator)] web:active:bg-[var(--color-separator)] web:hover:after:absolute web:active:after:absolute web:hover:after:bg-inherit web:active:after:bg-inherit';
 
 function sidebarClasses(props: ListItemProps): string {
   return cn(
@@ -122,14 +109,17 @@ function plainEmphasis(props: ListItemProps, navigation: boolean): string {
     : 'text-foreground';
 }
 
+// The last child's, outside a virtualised list, and the one above a hovered row.
+const hiddenSeparator = (place: RowPlace): string | undefined => {
+  if (place.separatorHidden) return 'web:after:hidden';
+  return place.endsSection === undefined ? 'web:last:after:hidden' : undefined;
+};
+
 // 1px on every web width: Chrome drops a 0.5px line on a phone-width page, even at 3x.
-function separatorClasses(
-  props: ListItemProps,
-  endsSection: boolean | undefined,
-): string {
+function separatorClasses(props: ListItemProps, place: RowPlace): string {
   return cn(
     'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-[var(--color-separator)]',
-    endsSection === undefined && 'web:last:after:hidden',
+    hiddenSeparator(place),
     // Inset to the text: the 16 gutter, the icon slot (24 phone, 20 wide) and the 12 gap.
     hasLeadingSlot(props) && 'web:after:left-13 wide:web:after:left-12',
   );

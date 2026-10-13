@@ -1,18 +1,17 @@
 import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import type * as React from 'react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Platform, View, type ViewStyle } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
 import { listTestIdProps } from '../../generic/list-test-id';
 import {
-  FieldRowCorners,
-  FieldRowEnd,
   fieldGroupGap,
   fieldGroupPadding,
 } from '../../generic/primitives/fields/field-layout';
 import type { ListSearchBarProps } from '../../generic/primitives/inputs/list-search-bar/list-search-bar';
 import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
+import { CardRow } from './card-row';
 import {
   type FieldListEntry,
   type FieldListSection,
@@ -20,6 +19,7 @@ import {
   fieldListEntryKey,
   fieldListEntryKind,
 } from './field-list-entries';
+import { type HoverStore, createHoverStore } from './field-row-hover-store';
 
 export type { FieldListSection } from './field-list-entries';
 export interface FieldListProps {
@@ -42,13 +42,13 @@ export function FieldList(props: FieldListProps): React.JSX.Element {
     () => fieldListEntries(props.sections),
     [props.sections],
   );
+  const [store] = useState(createHoverStore);
   return (
     <ScrollFadeList
-      {...listTestIdPropsFor(props.testID)}
-      {...fieldListDefaults}
+      {...fieldListProps(props.testID)}
       contentContainerStyle={useGroupPadding()}
       data={entries}
-      renderItem={useEntryRenderer()}
+      renderItem={useEntryRenderer(store)}
     />
   );
 }
@@ -64,10 +64,8 @@ const fieldListDefaults = {
   estimatedItemSize: rowHeightEstimate,
 };
 
-function listTestIdPropsFor(
-  testID: string | undefined,
-): Partial<ReturnType<typeof listTestIdProps>> {
-  return testID ? listTestIdProps(testID) : {};
+function fieldListProps(testID: string | undefined): object {
+  return { ...(testID ? listTestIdProps(testID) : {}), ...fieldListDefaults };
 }
 
 // The web resolves a class to a CSS length such as "16px"; native resolves it to a number.
@@ -108,38 +106,32 @@ function useGroupPadding(): ViewStyle {
   };
 }
 
-function useEntryRenderer(): (
-  props: LegendListRenderItemProps<FieldListEntry>,
-) => React.JSX.Element {
+function useEntryRenderer(
+  store: HoverStore,
+): (props: LegendListRenderItemProps<FieldListEntry>) => React.JSX.Element {
   // The web resolves the gap class to rowGap; native resolves it to gap.
   const { rowGap, gap } = useResolveClassNames(fieldGroupGap);
   const sectionGap = pixels(rowGap ?? gap);
   return useCallback(
-    ({ item }: LegendListRenderItemProps<FieldListEntry>) => (
+    ({ item, index }: LegendListRenderItemProps<FieldListEntry>) => (
       <View style={item.gapAbove ? { paddingTop: sectionGap } : undefined}>
-        <EntryContent entry={item} />
+        <EntryContent entry={item} index={index} store={store} />
       </View>
     ),
-    [sectionGap],
+    [sectionGap, store],
   );
 }
 
 // A title or footer is FieldSection's own, with an empty card where the rows would be.
-function EntryContent({ entry }: { entry: FieldListEntry }): React.JSX.Element {
+function EntryContent(props: {
+  entry: FieldListEntry;
+  index: number;
+  store: HoverStore;
+}): React.JSX.Element {
+  const { entry } = props;
   if (entry.kind === 'title')
     return <FieldSection title={entry.title}>{null}</FieldSection>;
   if (entry.kind === 'footer')
     return <FieldSection footer={entry.footer}>{null}</FieldSection>;
-  return <CardRow entry={entry} />;
-}
-
-type RowEntry = Extract<FieldListEntry, { kind: 'row' }>;
-
-// One row of the section's card: the first rounds its top, the last its bottom and drops its separator.
-function CardRow({ entry }: { entry: RowEntry }): React.JSX.Element {
-  return (
-    <FieldRowCorners value={{ first: entry.first, last: entry.last }}>
-      <FieldRowEnd value={entry.last}>{entry.row}</FieldRowEnd>
-    </FieldRowCorners>
-  );
+  return <CardRow entry={entry} index={props.index} store={props.store} />;
 }
