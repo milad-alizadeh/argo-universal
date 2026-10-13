@@ -16,6 +16,13 @@ export interface PhoneDrawerProps {
   children: ReactNode;
 }
 
+const backDrawer = {
+  drawerType: 'back',
+  drawerPosition: 'left',
+  overlayStyle: { backgroundColor: 'transparent' },
+  overlayAccessibilityLabel: 'Close navigation',
+} as const;
+
 export function PhoneDrawer({
   width,
   surfaceStyle: _surfaceStyle,
@@ -25,13 +32,10 @@ export function PhoneDrawer({
   return (
     <Drawer
       {...props}
+      {...backDrawer}
       swipeEnabled={swipeEnabled}
-      drawerType="back"
-      drawerPosition="left"
       // The shell's themed chrome shows through; a resolved colour here misses the theme on web.
       drawerStyle={{ backgroundColor: 'transparent', width }}
-      overlayStyle={{ backgroundColor: 'transparent' }}
-      overlayAccessibilityLabel="Close navigation"
     />
   );
 }

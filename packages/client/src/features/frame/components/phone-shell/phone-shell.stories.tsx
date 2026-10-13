@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
+import { sectionOrder } from '../shell-sections';
 import { PhoneShellFrame } from './phone-shell-frame.mocks';
 
 const meta = {
@@ -10,7 +11,7 @@ const meta = {
   argTypes: {
     selectedSection: {
       control: 'select',
-      options: ['sessions', 'issues', 'atlas', 'settings'],
+      options: [...sectionOrder],
     },
     attentionCount: { control: 'number' },
     drawerOpen: { control: 'boolean' },

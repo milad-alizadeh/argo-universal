@@ -1,3 +1,5 @@
+import type { Section } from '../../../lib/product/navigation/sections';
+
 // Badges show counts above this as "99+".
 const maximumAttentionBadgeCount = 99;
 
@@ -26,4 +28,12 @@ export function attentionBadge(attentionCount: number): AttentionBadge | null {
     label: badgeLabel(attentionCount),
     text: badgeText(attentionCount),
   };
+}
+
+// Only the Sessions section counts attention; every other section shows none.
+export function sectionAttentionCount(
+  section: Section,
+  attentionCount: number,
+): number {
+  return section === 'sessions' ? attentionCount : 0;
 }

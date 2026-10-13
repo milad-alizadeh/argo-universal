@@ -78,22 +78,33 @@ const layoutScale: Readonly<Record<GlowLayout, number>> = {
 
 const desktopEdgeFadeWidth = 56;
 
+function stopsAt(
+  source: GlowSource,
+  strength: GlowStrength,
+): readonly GlowStop[] {
+  return source.stops.map(({ at, alpha }) => ({ at, alpha: alpha[strength] }));
+}
+
+function scaledGlow(
+  source: GlowSource,
+  { layout, strength }: { layout: GlowLayout; strength: GlowStrength },
+): Glow {
+  const scale = layoutScale[layout];
+  return {
+    colour: source.colour,
+    left: Math.round(source.left * scale),
+    top: Math.round(source.top[layout] * scale),
+    size: Math.round(source.size * scale),
+    stops: stopsAt(source, strength),
+  };
+}
+
 export function sidebarGlows(
   layout: GlowLayout,
   strength: GlowStrength,
 ): SidebarGlows {
-  const scale = layoutScale[layout];
   return {
-    edgeFadeWidth: Math.round(desktopEdgeFadeWidth * scale),
-    glows: warmFrost.map((source) => ({
-      colour: source.colour,
-      left: Math.round(source.left * scale),
-      top: Math.round(source.top[layout] * scale),
-      size: Math.round(source.size * scale),
-      stops: source.stops.map(({ at, alpha }) => ({
-        at,
-        alpha: alpha[strength],
-      })),
-    })),
+    edgeFadeWidth: Math.round(desktopEdgeFadeWidth * layoutScale[layout]),
+    glows: warmFrost.map((source) => scaledGlow(source, { layout, strength })),
   };
 }

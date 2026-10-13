@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { sectionDestination } from '../../../../lib/product/navigation/sections';
 import { LayoutListMock } from '../layout-list.mocks';
 import { PhoneLayoutView } from '../phone-layout-view';
+import { sectionOrder } from '../shell-sections';
 import {
   PhoneSectionView,
   type PhoneSectionViewProps,
@@ -16,7 +17,7 @@ const meta = {
   argTypes: {
     section: {
       control: 'select',
-      options: ['sessions', 'issues', 'atlas', 'settings'],
+      options: [...sectionOrder],
     },
   },
   args: { section: 'settings', list: null },
