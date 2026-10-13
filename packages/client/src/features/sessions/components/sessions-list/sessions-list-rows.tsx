@@ -2,7 +2,6 @@ import type * as React from 'react';
 import { memo, useCallback } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Spinner } from '#primitives/display/spinner/spinner';
 import { Text } from '#primitives/display/text/text';
 import {
   ProjectHeading,
@@ -15,14 +14,6 @@ export function NoSessionsYet(): React.JSX.Element {
     <Text role="secondary" className="pb-1 pl-session-name pr-1">
       No Sessions yet.
     </Text>
-  );
-}
-
-export function LoadingMoreSessions(): React.JSX.Element {
-  return (
-    <View className="h-24 items-center justify-center">
-      <Spinner label="Loading more Sessions" />
-    </View>
   );
 }
 

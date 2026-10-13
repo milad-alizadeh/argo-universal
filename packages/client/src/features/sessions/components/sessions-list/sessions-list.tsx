@@ -19,7 +19,7 @@ import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
-import { EmptySessionsList, LoadingMoreSessions } from './sessions-list-rows';
+import { EmptySessionsList } from './sessions-list-rows';
 import { nativeOnlyListProps, useScrolling } from './sessions-list-scrolling';
 
 /*
@@ -67,8 +67,6 @@ const listBehaviour = {
   recycleItems: true,
   getItemType: entryKind,
   onEndReachedThreshold: 0.5,
-  // When the next page starts loading while the reader is at the end, the loading footer scrolls into view.
-  maintainScrollAtEnd: { on: { footerLayout: true } },
   ...nativeOnlyListProps,
 };
 
@@ -117,16 +115,12 @@ function SessionsListSurface(
 
 interface ListChrome {
   ListHeaderComponent?: React.ReactElement;
-  ListFooterComponent: React.ReactElement | null;
   ListEmptyComponent: React.ReactElement;
 }
 
 function listChrome(props: SessionsListProps): ListChrome {
   return {
     ListHeaderComponent: props.header,
-    ListFooterComponent: props.isFetchingNextPage ? (
-      <LoadingMoreSessions />
-    ) : null,
     ListEmptyComponent: props.placeholder ?? (
       <EmptySessionsList query={props.query} archived={props.archived} />
     ),

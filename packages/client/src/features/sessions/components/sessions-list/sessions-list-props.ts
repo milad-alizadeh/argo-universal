@@ -14,7 +14,6 @@ export interface SessionsListProps {
   selectedSessionId?: string;
   onSelect: (id: string) => void;
   onEndReached: () => void;
-  isFetchingNextPage?: boolean;
   onNewSession?: (projectId: string) => void;
   onProjectSettings?: (projectName: string) => void;
   // Scrolls with the rows, above the first Project.

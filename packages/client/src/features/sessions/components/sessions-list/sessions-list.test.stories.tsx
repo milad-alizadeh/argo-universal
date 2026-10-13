@@ -3,7 +3,6 @@ import { expect, waitFor } from 'storybook/test';
 import { firstAndLastRowsReachable } from '../../../../../mocks/sessions-list/first-and-last-rows.test.mocks';
 import { insertSessionWithoutOverlap } from '../../../../../mocks/sessions-list/insert-session.test.mocks';
 import { memoizedRows } from '../../../../../mocks/sessions-list/memoized-rows.test.mocks';
-import { paginationSpinnerVisible } from '../../../../../mocks/sessions-list/pagination-spinner.test.mocks';
 import {
   exampleProjectName,
   meta as sessionsListMeta,
@@ -70,12 +69,6 @@ export const InsertSessionWithoutOverlapDark: Story = {
 export const FirstAndLastRowsReachable = firstAndLastRowsReachable;
 export const FirstAndLastRowsReachableDark: Story = {
   ...FirstAndLastRowsReachable,
-  globals: { mode: 'dark' },
-};
-
-export const PaginationSpinnerVisible = paginationSpinnerVisible;
-export const PaginationSpinnerVisibleDark: Story = {
-  ...PaginationSpinnerVisible,
   globals: { mode: 'dark' },
 };
 

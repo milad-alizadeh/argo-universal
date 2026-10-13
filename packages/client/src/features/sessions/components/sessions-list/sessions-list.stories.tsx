@@ -58,11 +58,6 @@ export const States: Story = {
   ),
 };
 
-export const Pagination: Story = {
-  parameters: { screenPreview: true },
-  args: { sessions: largeSessions.slice(0, 20), isFetchingNextPage: true },
-};
-
 export const NewSession: Story = {
   name: 'New Session',
   parameters: { screenPreview: true },

@@ -32,7 +32,6 @@ type ListData = Pick<
   | 'projects'
   | 'agents'
   | 'sessions'
-  | 'isFetchingNextPage'
   | 'query'
   | 'archived'
   | 'selectedSessionId'
@@ -43,7 +42,6 @@ function listData(props: SessionsViewProps): ListData {
     projects: props.projects,
     agents: props.agents,
     sessions: props.sessions,
-    isFetchingNextPage: props.isFetchingNextPage,
     query: props.query,
     archived: props.archived,
     selectedSessionId: props.selectedSessionId,

@@ -4,7 +4,6 @@ import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { SessionsList } from '../../src/features/sessions/components/sessions-list/sessions-list';
 import { sessionsListProps } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
-import { installFooterLayoutDelay } from './delayed-footer-layout.test.mocks';
 
 export const exampleProjectName = 'Example Project';
 export const sessionsScrollId = 'sessions-scroll';
@@ -26,11 +25,9 @@ export const meta = {
       <SessionsList {...args} />
     </View>
   ),
-  beforeEach: (): (() => void) => {
-    const restoreResizeObserver = installFooterLayoutDelay();
+  beforeEach: (): void => {
     onNewSession.mockClear();
     onProjectSettings.mockClear();
-    return restoreResizeObserver;
   },
 } satisfies Meta<typeof SessionsList>;
 export type Story = StoryObj<typeof meta>;
