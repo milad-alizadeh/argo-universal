@@ -1,10 +1,11 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import Animated, { Keyframe } from 'react-native-reanimated';
+import { Keyframe } from 'react-native-reanimated';
 import { Button } from '#lib/generic/primitives/buttons/button/button';
 import { LiquidGlass } from '#lib/generic/primitives/display/liquid-glass/liquid-glass';
 import { Spinner } from '#lib/generic/primitives/display/spinner/spinner';
 import { Text } from '#lib/generic/primitives/display/text/text';
+import { NativeOnlyAnimatedView } from '#lib/generic/primitives/native/native-only-animated-view/native-only-animated-view';
 import { motionDuration } from '../../../../lib/generic/motion';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { ConnectionState } from '../../state/context';
@@ -36,14 +37,15 @@ export function ConnectionBanner({
 }: ConnectionBannerProps): React.JSX.Element | null {
   if (state !== 'reconnecting' && state !== 'offline') return null;
   return (
-    <Animated.View
+    // Reanimated's web entering animation leaves the view absolutely placed, so only phones animate it.
+    <NativeOnlyAnimatedView
       entering={entering}
       exiting={exiting}
       className="self-center"
     >
       <LiquidGlass
         shape="capsule"
-        className="h-9 wide:h-8"
+        className="h-9 self-center wide:h-8"
         fallbackClassName="rounded-full bg-card shadow-card dark:border dark:border-border"
       >
         <View
@@ -57,7 +59,7 @@ export function ConnectionBanner({
           )}
         </View>
       </LiquidGlass>
-    </Animated.View>
+    </NativeOnlyAnimatedView>
   );
 }
 
@@ -70,7 +72,10 @@ function Reconnecting(): React.JSX.Element {
   return (
     <>
       <Spinner label="Reconnecting" />
-      <Text role={useBannerTextRole()} className="pr-3.5 wide:pr-3">
+      <Text
+        role={useBannerTextRole()}
+        className="pr-3.5 text-foreground wide:pr-3"
+      >
         Reconnecting…
       </Text>
     </>
@@ -84,7 +89,11 @@ function Offline({
   return (
     <>
       <View className="size-2 shrink-0 rounded-full bg-warning" />
-      <Text role={useBannerTextRole()} numberOfLines={1} className="shrink">
+      <Text
+        role={useBannerTextRole()}
+        numberOfLines={1}
+        className="shrink text-foreground"
+      >
         Can't reach {serverName ?? 'the Server'}
       </Text>
       <View className="pr-1">
@@ -93,7 +102,7 @@ function Offline({
           variant="secondary"
           label="Try again"
           onPress={onRetry}
-          className="h-7 rounded-full px-3 wide:h-6 wide:px-2.5"
+          className="h-7 min-h-0 rounded-full px-3 py-0 web:sm:min-h-0 ios:min-h-0 ios:px-3 android:min-h-0 android:px-3 wide:h-6 wide:px-2.5"
           labelClassName="type-control"
         />
       </View>
