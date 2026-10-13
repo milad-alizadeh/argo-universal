@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
 import { When } from './fixtures';
+import { toast } from './toasts';
 
 const connectSecondApp = async (page: Page, httpUrl: string): Promise<void> => {
   await page.addInitScript(
@@ -19,17 +20,30 @@ const releaseSuccessfulRetry = async (path: string): Promise<void> => {
   );
   await rename(`${path}.next`, path);
 };
+const confirmInstall = async (page: Page): Promise<void> => {
+  await page.getByRole('button', { name: 'Install', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Install Example Agent?' })
+    .getByRole('button', { name: 'Install', exact: true })
+    .click();
+};
 async function retryInApp(page: Page, httpUrl: string): Promise<void> {
   await connectSecondApp(page, httpUrl);
   await page.goto('/');
   await browseAgents(page);
   await page.getByRole('link', { name: /^Example Agent,/ }).click();
-  await page.getByRole('button', { name: 'Install', exact: true }).click();
-  await page.getByRole('button', { name: 'Try again', exact: true }).click();
-  await expect(page.getByRole('dialog')).toContainText(
-    'Example Agent installed',
-  );
+  await confirmInstall(page);
+  await expect(toast(page, 'Example Agent installed')).toBeVisible();
 }
+// The installed Agent leaves the registry offer: no Install action and no registry source.
+const showsInstalled = async (page: Page): Promise<void> => {
+  await expect(
+    page.getByRole('button', { name: /^Install(ing…)?$/ }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('group', { name: 'Source, ACP Registry' }),
+  ).toHaveCount(0);
+};
 When(
   'another App retries and both Apps show the installed release',
   async ({ page, app }): Promise<void> => {
@@ -37,9 +51,8 @@ When(
     const second = await page.context().newPage();
     try {
       await retryInApp(second, app.httpUrl);
-      await expect(page.getByRole('dialog')).toContainText(
-        'Example Agent installed',
-      );
+      await showsInstalled(second);
+      await showsInstalled(page);
     } finally {
       await second.close();
     }

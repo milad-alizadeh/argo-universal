@@ -3,7 +3,9 @@ import { fn } from 'storybook/test';
 import { AgentDetailView } from './agent-detail-view';
 import {
   agentDetailArgs,
+  installationArgs,
   readyAgent,
+  registryAgent,
   signInCommand,
 } from './agent-detail.mocks';
 
@@ -30,7 +32,25 @@ export const UpdateAvailable: Story = {
 };
 
 export const FromTheRegistry: Story = {
-  args: { agent: { ...readyAgent, status: 'not-installed' } },
+  args: { agent: registryAgent },
+};
+export const ConfirmingInstall: Story = {
+  args: {
+    agent: registryAgent,
+    installation: installationArgs({ confirming: true }),
+  },
+};
+export const Installing: Story = {
+  args: {
+    agent: registryAgent,
+    installation: installationArgs({ installing: true }),
+  },
+};
+export const Updating: Story = {
+  args: {
+    agent: { ...readyAgent, status: 'update' },
+    installation: installationArgs({ action: 'Update', installing: true }),
+  },
 };
 export const Enabled: Story = {
   args: {

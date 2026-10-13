@@ -3,6 +3,7 @@ import type { Page, Locator } from '@playwright/test';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
 import { When, Then, test } from './fixtures';
+import { toast } from './toasts';
 const versionRow = (page: Page, version: string): Locator =>
   page.getByRole('group', { name: `Version, v${version}`, exact: true });
 
@@ -68,25 +69,10 @@ Then(
   'Example Agent settles with selected version {word}',
   async ({ page }, version: string): Promise<void> => {
     const expected = version === 'two' ? updated : retained;
-    const dialog = page.getByRole('dialog');
-    await expect(dialog).toContainText(expected.title);
-    await dialog
-      .getByRole('button', {
-        name: expected.action,
-        exact: true,
-      })
-      .click();
-    await expect(dialog).toBeHidden();
+    await expect(toast(page, expected.title)).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(versionRow(page, expected.version)).toBeVisible();
   },
 );
-const updated = {
-  title: 'Example Agent updated',
-  action: 'Done',
-  version: '2.0.0',
-};
-const retained = {
-  title: 'Installation failed',
-  action: 'Close',
-  version: '1.2.3',
-};
+const updated = { title: 'Example Agent updated', version: '2.0.0' };
+const retained = { title: 'Could not update Example Agent', version: '1.2.3' };

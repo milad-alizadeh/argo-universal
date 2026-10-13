@@ -2,8 +2,9 @@ import type * as React from 'react';
 import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
 import type { ButtonProps } from '../../../../lib/generic/primitives/buttons/button/button-props';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
+import { installationActive } from '../../state/agent-install-phase';
 import type { AgentStatus } from '../../state/agent-status';
-import { AgentInstallControl } from '../agent-install-sheet/agent-install-control';
+import { AgentInstallControl } from '../agent-install-control/agent-install-control';
 import { AgentRemoval } from '../agent-management/agent-removal';
 
 type ActionProps = Pick<
@@ -44,8 +45,7 @@ const showsInstallation = (
   installation: NonNullable<ActionProps['installation']>,
 ): boolean =>
   ['not-installed', 'update'].includes(props.agent.status) ||
-  installation.phase === 'installing' ||
-  installation.open;
+  installationActive(installation);
 function InstallationAction(
   props: ActionProps & {
     installation: NonNullable<ActionProps['installation']>;

@@ -3,6 +3,7 @@ import type {
   AgentDetail,
   AgentDetailViewProps,
 } from '../../state/agent-detail-types';
+import type { AgentInstallPresentation } from '../../state/agent-install-types';
 import { iconAgent } from '../registry-icons.mocks';
 
 export const readyAgent: AgentDetail = {
@@ -30,4 +31,25 @@ export const agentDetailArgs = (): AgentDetailViewProps => ({
   onUpdate: fn(),
   onRemove: fn(),
   onCheckAgain: fn(),
+});
+
+export const registryAgent: AgentDetail = {
+  ...readyAgent,
+  status: 'not-installed',
+};
+
+export const serverName = 'Milad’s Mac mini';
+
+// An idle Install offer from the connected Server, with spies; override its state per story.
+export const installationArgs = (
+  overrides: Partial<AgentInstallPresentation> = {},
+): AgentInstallPresentation => ({
+  action: 'Install',
+  version: readyAgent.version ?? '',
+  server: serverName,
+  confirming: false,
+  installing: false,
+  onConfirmingChange: fn(),
+  onInstall: fn(),
+  ...overrides,
 });

@@ -1,84 +1,39 @@
-import type {
-  AgentInstallInput,
-  AgentInstallOperation,
-  AgentInstallStatus,
-} from '@repo/contracts';
-import {
-  type UseMutationResult,
-  type UseQueryResult,
-  useMutation,
-  useQuery,
-} from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import type { AgentInstallStatus } from '@repo/contracts';
+import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import { type ClientError, useTRPC } from '#features/connection';
 import {
-  installationFailure,
-  installationPhase,
-  visibleInstallOperation,
+  installationNotice,
+  installationRunning,
   type InstallPhaseInput,
 } from '../state/agent-install-phase';
-import type { AgentInstallPresentation } from '../state/agent-install-types';
+import type {
+  AgentInstallPresentation,
+  InstallAction,
+} from '../state/agent-install-types';
 import {
   useInstallationOperation,
-  useSheetState,
+  useConfirmationState,
+  useRunningAction,
+  useWatchedOperations,
   activeVersion,
   type ObservedOperation,
 } from './use-installation-operation';
 import { useCompletedRefresh } from './use-installation-refresh';
+import {
+  type StartInput,
+  type StartInstall,
+  useStart,
+  useStartInstall,
+} from './use-start-install';
 const installPollMs = 500;
-type StartInstall = UseMutationResult<
-  AgentInstallOperation,
-  ClientError,
-  AgentInstallInput
->;
-type CancelInput = { agentId: string; operationId: string };
-type CancelInstall = UseMutationResult<void, ClientError, CancelInput>;
-type Commands = { install: StartInstall; cancel: CancelInstall };
-type PresentationInput = Commands & {
-  action: 'Install' | 'Update';
-  open: boolean;
-  setOpen: (value: boolean) => void;
-  acceptOffer: () => void;
-  operation?: AgentInstallOperation;
+type InstallationControls = ObservedOperation & {
+  install: StartInstall;
+  // When the start request last failed, to tell a confirmed failure from a lost response.
+  failedAt: number;
+  statusAt: number;
   status?: AgentInstallStatus;
-  agentId: string;
-  version: string;
-  previousOperationId?: string;
-  dismissedOperationId?: string;
-  rememberPrevious: (operationId: string | undefined) => void;
+  watched: readonly string[];
 };
-const openIfInstalling = (
-  operation: AgentInstallOperation,
-  open: (value: boolean) => void,
-): void => {
-  if (operation.status === 'installing') open(true);
-};
-function useReconnectedInstallation(
-  operation: AgentInstallOperation | undefined,
-  open: (value: boolean) => void,
-): void {
-  const observed = useRef(false);
-  useEffect(() => {
-    if (!operation) return;
-    if (observed.current) return;
-    observed.current = true;
-    openIfInstalling(operation, open);
-  }, [operation, open]);
-}
-function useCommands(
-  status: UseQueryResult<AgentInstallStatus, ClientError>,
-): Commands {
-  const trpc = useTRPC();
-  return {
-    install: useMutation({
-      ...trpc.agents.install.mutationOptions(),
-      onSuccess: async () => {
-        await status.refetch();
-      },
-    }),
-    cancel: useMutation(trpc.agents.cancelInstall.mutationOptions()),
-  };
-}
 function useInstallStatus(
   agentId: string,
 ): UseQueryResult<AgentInstallStatus, ClientError> {
@@ -87,62 +42,86 @@ function useInstallStatus(
     refetchInterval: installPollMs,
   });
 }
-const phaseInput = (input: PresentationInput): InstallPhaseInput => ({
-  operation: visibleInstallOperation(input),
-  previousOperationId: input.previousOperationId,
-  pending: input.install.isPending,
-  failure: input.install.error?.message,
+// Where the Agent installs, for the confirmation to name.
+function useServerName(): string | undefined {
+  return useQuery(useTRPC().system.info.queryOptions()).data?.name;
+}
+const requestFailure = (
+  controls: InstallationControls,
+): Pick<
+  InstallPhaseInput,
+  'pending' | 'failure' | 'requestId' | 'failureConfirmed'
+> => ({
+  pending: controls.install.isPending,
+  failure: controls.install.error?.message,
+  requestId: controls.install.submittedAt,
+  failureConfirmed: controls.statusAt > controls.failedAt,
 });
-const startInstall = (input: PresentationInput): void => {
-  input.rememberPrevious(input.status?.operation?.operationId);
-  input.acceptOffer();
-  input.setOpen(true);
-  input.install.mutate({ agentId: input.agentId, version: input.version });
-};
-const cancelInstall = (input: PresentationInput): void => {
-  const operation = input.operation;
-  if (!operation || operation.status !== 'installing') return;
-  input.cancel.mutate(
-    { agentId: operation.agentId, operationId: operation.operationId },
-    { onSuccess: () => input.setOpen(false) },
-  );
-};
-const presentation = (input: PresentationInput): AgentInstallPresentation => ({
-  action: input.action,
-  version: input.version,
-  open: input.open,
-  onOpenChange: input.setOpen,
-  phase: installationPhase(phaseInput(input)),
-  failure: installationFailure(phaseInput(input)),
-  cancelling: input.cancel.isPending,
-  status: input.status,
-  onInstall: () => startInstall(input),
-  onCancel: () => cancelInstall(input),
+const phaseInput = (controls: InstallationControls): InstallPhaseInput => ({
+  operation: controls.operation,
+  previousOperationId: controls.previousOperationId,
+  watched: controls.watched,
+  ...requestFailure(controls),
 });
-type InstallationControls = Commands &
-  ObservedOperation & { status?: AgentInstallStatus };
-function useInstallationControls(agentId: string): InstallationControls {
-  const status = useInstallStatus(agentId),
-    commands = useCommands(status);
-  const observed = useInstallationOperation(
-    commands.install.data,
-    status,
-    commands.install.submittedAt,
-  );
+function useObservedInstallation(
+  install: StartInstall,
+  status: UseQueryResult<AgentInstallStatus, ClientError>,
+): ObservedOperation & { watched: readonly string[] } {
+  const { data, submittedAt } = install;
+  const observed = useInstallationOperation(data, status, submittedAt);
+  const watched = useWatchedOperations(observed.operation, data?.operationId);
   useCompletedRefresh(observed.operation);
-  return { ...commands, ...observed, status: status.data };
+  return { ...observed, watched };
+}
+function useInstallationControls(agentId: string): InstallationControls {
+  const status = useInstallStatus(agentId);
+  const { install, failedAt } = useStartInstall(status);
+  const observed = useObservedInstallation(install, status);
+  const statusAt = status.dataUpdatedAt;
+  return { install, failedAt, statusAt, ...observed, status: status.data };
+}
+const startInput = (
+  controls: InstallationControls,
+  agentId: string,
+  version: string,
+): StartInput => ({
+  agentId,
+  version,
+  install: controls.install,
+  current: controls.status?.operation?.operationId,
+  rememberPrevious: controls.rememberPrevious,
+  running: installationRunning(phaseInput(controls)),
+});
+function useProgress(
+  controls: InstallationControls,
+  action: InstallAction,
+): Pick<AgentInstallPresentation, 'installing' | 'notice' | 'status'> {
+  const phase = phaseInput(controls);
+  const installing = installationRunning(phase);
+  const ranAs = useRunningAction(action, installing);
+  const notice = installationNotice(phase);
+  const status = controls.status;
+  return { installing, notice: notice && { ...notice, action: ranAs }, status };
+}
+function useAgentInstallationControls(
+  agentId: string,
+  version: string,
+  action: InstallAction,
+): AgentInstallPresentation {
+  const controls = useInstallationControls(agentId);
+  const { setConfirming, ...offer } = useConfirmationState({
+    action,
+    version: activeVersion(controls.operation, version),
+  });
+  const onInstall = useStart(startInput(controls, agentId, offer.version));
+  const shown = { ...offer, ...useProgress(controls, offer.action) };
+  return { ...shown, onConfirmingChange: setConfirming, onInstall };
 }
 export function useAgentInstallation(
   agentId: string,
   version: string,
-  action: 'Install' | 'Update' = 'Install',
+  action: InstallAction = 'Install',
 ): AgentInstallPresentation {
-  const controls = useInstallationControls(agentId);
-  const sheet = useSheetState({
-    action,
-    version: activeVersion(controls.operation, version),
-    operationId: controls.operation?.operationId,
-  });
-  useReconnectedInstallation(controls.operation, sheet.setOpen);
-  return presentation({ ...controls, ...sheet, agentId });
+  const installation = useAgentInstallationControls(agentId, version, action);
+  return { ...installation, server: useServerName() };
 }

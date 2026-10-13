@@ -1,4 +1,5 @@
 import { rename, writeFile } from 'node:fs/promises';
+import type { Locator, Page } from '@playwright/test';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
@@ -18,6 +19,8 @@ const versionThree: typeof publishedRegistry = {
       : entry,
   ),
 };
+const updating = (page: Page): Locator =>
+  page.getByRole('button', { name: 'Updating…', exact: true });
 async function installer(path: string, released: boolean): Promise<void> {
   await writeFile(
     `${path}.next`,
@@ -34,9 +37,7 @@ When(
       .getByRole('dialog')
       .getByRole('button', { name: 'Update', exact: true })
       .click();
-    await expect(page.getByRole('dialog')).toContainText(
-      'checking version 2.0.0',
-    );
+    await expect(updating(page)).toBeDisabled();
   },
 );
 When(
@@ -52,15 +53,10 @@ When(
     });
   },
 );
-Then(
-  'the running update still names version two',
-  async ({ page }): Promise<void> => {
-    await expect(page.getByRole('dialog')).toContainText(
-      'checking version 2.0.0',
-    );
-    await expect(page.getByRole('dialog')).not.toContainText('3.0.0');
-  },
-);
+Then('the update stays in progress', async ({ page }): Promise<void> => {
+  await expect(updating(page)).toBeDisabled();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
 When('the version two installer completes', async ({ app }): Promise<void> => {
   await installer(app.installationPath, true);
 });

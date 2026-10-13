@@ -3,7 +3,7 @@ Feature: Registry Agent installation
     Given a <layout> Frame
     And the external Agent installer is held
     When I confirm installing Example Agent
-    Then the installation keeps its title and disables the loading Install button
+    Then the Install button shows the installation in progress
     When the external Agent installer completes
     Then Example Agent installation completes with readiness checked separately
 
@@ -25,12 +25,11 @@ Feature: Registry Agent installation
       | wide   | failure         |
       | phone  | failure         |
 
-  Scenario Outline: Cancel an installation while the external package download is held
+  Scenario Outline: Cancelling the confirmation starts no installation
     Given a <layout> Frame
     And the external Agent installer is held
-    When I confirm installing Example Agent
-    And I cancel the Agent installation
-    Then no new installation is activated
+    When I cancel installing Example Agent
+    Then no installation is started
 
     Examples:
       | layout |
@@ -56,7 +55,7 @@ Feature: Registry Agent installation
     And the external Agent installer is held
     And the App loses the accepted installation response
     When I confirm installing Example Agent
-    Then the installation keeps its title and disables the loading Install button
+    Then the Install button shows the installation in progress
     And the App recovered the dropped installation response
     When the external Agent installer completes
     Then Example Agent installation completes with readiness checked separately
