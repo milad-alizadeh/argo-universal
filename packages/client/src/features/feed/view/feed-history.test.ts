@@ -1,7 +1,7 @@
 import type { FeedPageOutput } from '@repo/contracts';
 import { recordedFeedMocks } from '@repo/mocks/app';
 import { expect, it } from 'vitest';
-import { mergeHistoryPages } from './feed-history';
+import { mergeHistoryPages, needsOlderHistory } from './feed-history';
 import {
   applySubscriptionEvent,
   emptyFeed,
@@ -90,3 +90,21 @@ it('keeps older history available when live rows arrive before the reset tail', 
   ).feed;
   expect(mergeHistoryPages(live, [tail]).hasOlder).toBe(true);
 });
+
+it.each([
+  { cursor: 10, epoch: 1, hasOlder: true, needed: true },
+  { cursor: 5, epoch: 1, hasOlder: true, needed: true },
+  { cursor: 4, epoch: 1, hasOlder: true, needed: false },
+  { cursor: 5, epoch: 1, hasOlder: false, needed: false },
+  { cursor: 10, epoch: 2, hasOlder: true, needed: false },
+])(
+  'continues past overlapping history at $cursor in epoch $epoch with hasOlder=$hasOlder',
+  ({ cursor, epoch, hasOlder, needed }) => {
+    expect(
+      needsOlderHistory(
+        { startCursor: cursor, epoch, hasOlder },
+        { startCursor: 5, epoch: 1 },
+      ),
+    ).toBe(needed);
+  },
+);

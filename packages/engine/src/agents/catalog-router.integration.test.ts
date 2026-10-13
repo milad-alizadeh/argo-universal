@@ -17,6 +17,7 @@ it('browses upstream metadata through Agents without opening a conversation', as
     adapters: [adapter],
   });
   const startupProbes = probe.mock.calls.length;
+  const sessionsBefore = await caller.session.list({ archived: false });
   await caller.agents.syncCatalog();
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus, {
@@ -30,9 +31,9 @@ it('browses upstream metadata through Agents without opening a conversation', as
     rejectedValues: 0,
     agents: [{ entry: publishedRegistry.agents[0], support: { kind: 'npx' } }],
   });
-  expect(
-    (await caller.session.list({ archived: false })).sessions,
-  ).toHaveLength(1);
+  expect(await caller.session.list({ archived: false })).toEqual(
+    sessionsBefore,
+  );
   expect(fetchAgents).toHaveBeenCalledTimes(1);
   expect(connect).not.toHaveBeenCalled();
   expect(probe).toHaveBeenCalledTimes(startupProbes);

@@ -1,12 +1,11 @@
 import type * as React from 'react';
 import { memo, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { Icon } from '#primitives/display/icon/icon';
-import { Text, TextClassContext } from '#primitives/display/text/text';
-import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
+import { Pressable } from '#primitives/pressable/pressable';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { ProjectActions } from './project-heading-actions';
+import { ProjectToggle } from './project-heading-toggle';
 
 export interface ProjectHeadingProps {
   name: string;
@@ -17,96 +16,84 @@ export interface ProjectHeadingProps {
   onProjectSettings?: () => void;
 }
 
-export const ProjectHeading = memo(function ProjectHeading({
-  name,
-  collapsed,
-  onToggle,
-  onAdd,
-  addLabel = `Add to ${name}`,
-  onProjectSettings,
-}: ProjectHeadingProps): React.JSX.Element {
-  const wide = useWide();
+export interface InteractionEvents {
+  onHoverIn: () => void;
+  onHoverOut: () => void;
+  onFocus: () => void;
+  onBlur: () => void;
+}
+
+interface HeadingInteraction {
+  highlighted: boolean;
+  events: InteractionEvents;
+}
+
+// Whether the pointer is over the heading or focus is inside it, and the events that track both.
+function useHeadingInteraction(): HeadingInteraction {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
-  // A phone always shows ⋯ and +; a wide window shows them on hover or focus.
-  const actionsVisible = Platform.OS !== 'web' || !wide || hovered || focused;
-  const interactionEvents = {
-    onHoverIn: (): void => setHovered(true),
-    onHoverOut: (): void => setHovered(false),
-    onFocus: (): void => setFocused(true),
-    onBlur: (): void => setFocused(false),
+  return {
+    highlighted: hovered || focused,
+    events: {
+      onHoverIn: (): void => setHovered(true),
+      onHoverOut: (): void => setHovered(false),
+      onFocus: (): void => setFocused(true),
+      onBlur: (): void => setFocused(false),
+    },
   };
+}
+
+// A phone always shows ⋯ and +; a wide window shows them on hover or focus.
+function actionsVisible(wide: boolean, highlighted: boolean): boolean {
+  return Platform.OS !== 'web' || !wide || highlighted;
+}
+
+function rowClassName(highlighted: boolean): string {
+  return cn(
+    'min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-md pr-1',
+    highlighted && 'bg-sidebar-accent',
+  );
+}
+
+interface HeadingRowProps extends HeadingInteraction {
+  children: React.ReactNode;
+}
+
+function HeadingRow(props: HeadingRowProps): React.JSX.Element {
   return (
     <Pressable
       accessible={false}
-      onHoverIn={() => setHovered(true)}
-      onHoverOut={() => setHovered(false)}
-      className={cn(
-        'min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-md pr-1',
-        (hovered || focused) && 'bg-sidebar-accent',
-      )}
+      onHoverIn={props.events.onHoverIn}
+      onHoverOut={props.events.onHoverOut}
+      className={rowClassName(props.highlighted)}
     >
-      <Pressable
-        accessibilityLabel={name}
-        accessibilityState={{ expanded: !collapsed }}
-        aria-expanded={!collapsed}
-        onPress={onToggle}
-        {...interactionEvents}
-        role="button"
-        className={contentActionClass({
-          variant: 'ghost',
-          className:
-            'web:h-full web:sm:h-full min-w-0 flex-1 justify-start gap-1.5 pl-2.5 pr-2 py-1 wide:gap-3 wide:pl-4 hover:bg-transparent dark:hover:bg-transparent',
-        })}
-      >
-        <TextClassContext.Provider value={undefined}>
-          {/* Wide, the folder sits in the same 20 slot as a Session's logo. */}
-          <View className="items-center wide:w-5">
-            <Icon
-              role="control"
-              name={collapsed ? 'folder' : 'folder-open'}
-              className="text-muted-foreground wide:text-foreground"
-            />
-          </View>
-          <Text
-            selectable={false}
-            numberOfLines={1}
-            role={wide ? 'body' : 'heading'}
-            className="select-none min-w-0 flex-1"
-          >
-            {name}
-          </Text>
-        </TextClassContext.Provider>
-      </Pressable>
-      <View
-        className={cn(
-          'flex-row items-center gap-0.5',
-          !actionsVisible && 'opacity-0',
-        )}
-      >
-        <IconButton
-          variant="ghost"
-          accessibilityLabel={`Project settings for ${name}`}
-          className="size-6 sm:size-6 rounded-sm p-0 web:has-[>[data-icon]]:px-0"
-          onPress={onProjectSettings}
-          disabled={!onProjectSettings}
-          {...interactionEvents}
-          icon={'more'}
-          iconClassName={'text-foreground'}
-          size="md"
-        />
-        <IconButton
-          variant="ghost"
-          accessibilityLabel={addLabel}
-          className="size-6 sm:size-6 rounded-sm p-0 web:has-[>[data-icon]]:px-0"
-          onPress={onAdd}
-          disabled={!onAdd}
-          {...interactionEvents}
-          icon={'add'}
-          iconClassName={'text-foreground'}
-          size="md"
-        />
-      </View>
+      {props.children}
     </Pressable>
+  );
+}
+
+function useHeadingState(): HeadingInteraction & {
+  wide: boolean;
+  visible: boolean;
+} {
+  const wide = useWide();
+  const interaction = useHeadingInteraction();
+  const visible = actionsVisible(wide, interaction.highlighted);
+  return { ...interaction, wide, visible };
+}
+
+export const ProjectHeading = memo(function ProjectHeading(
+  props: ProjectHeadingProps,
+): React.JSX.Element {
+  const { wide, visible, ...interaction } = useHeadingState();
+  return (
+    <HeadingRow {...interaction}>
+      <ProjectToggle {...props} wide={wide} events={interaction.events} />
+      <ProjectActions
+        {...props}
+        visible={visible}
+        events={interaction.events}
+      />
+    </HeadingRow>
   );
 });

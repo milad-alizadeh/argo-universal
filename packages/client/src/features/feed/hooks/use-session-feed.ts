@@ -11,7 +11,6 @@ import { type ClientError, useTRPC } from '#features/connection';
 import { mergeHistoryPages } from '../view/feed-history';
 import {
   applySubscriptionEvent,
-  emptyFeed,
   type FeedState,
   syncPointOf,
 } from '../view/feed-state';
@@ -19,6 +18,7 @@ import type { FeedView } from '../view/feed-view';
 import { keepUnchangedItems } from '../view/keep-unchanged-items';
 import { findLiveToolCall } from '../view/live-tool-call';
 import { toFeedView } from '../view/to-feed-view';
+import { useHeldFeedStart, useKeepHeldFeed } from './held-feed';
 import { useFeedHistory } from './use-feed-history';
 
 type FeedHistory = ReturnType<typeof useFeedHistory>;
@@ -43,8 +43,9 @@ const uncached = { staleTime: 0, gcTime: 0 };
 export function useSessionFeed(sessionId: string): SessionFeed {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const history = useFeedHistory(sessionId);
-  const [feed, setFeed] = useState<FeedState>(emptyFeed);
+  const start = useHeldFeedStart(sessionId);
+  const [feed, setFeed] = useState<FeedState>(start.feed);
+  const history = useFeedHistory(sessionId, feed);
   const feedRef = useRef(feed);
   const replaceFeed = useCallback((next: FeedState) => {
     feedRef.current = next;
@@ -52,9 +53,14 @@ export function useSessionFeed(sessionId: string): SessionFeed {
   }, []);
   const closed = useRef(false);
   const [closureError, setClosureError] = useState<Error | null>(null);
-  const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(
+    start.snapshot,
+  );
   // Pages advance the held revision without restarting live updates.
-  const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(null);
+  const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(
+    start.syncPoint,
+  );
+  useKeepHeldFeed(sessionId, { feed, snapshot });
   useEffect(() => {
     const pages = history.data?.pages;
     const first = pages?.[0];

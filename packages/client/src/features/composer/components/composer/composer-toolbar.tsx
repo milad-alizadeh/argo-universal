@@ -8,7 +8,7 @@ import {
 } from '../composer-configuration/composer-configuration';
 import { ComposerOptions } from '../composer-options/composer-options';
 import { ComposerStatusControls } from '../composer-status/composer-status';
-import { ComposerAttachMenu } from './composer-attach-menu';
+import { ComposerAttachMenu, composerIconButton } from './composer-attach-menu';
 import type {
   ToolbarLayout,
   LeftControlsLayout,
@@ -21,7 +21,10 @@ import type {
 
 export function ComposerToolbar(layout: ToolbarLayout): React.JSX.Element {
   return (
-    <View className="flex-row items-center justify-between gap-2 pl-3.75 pr-2.5 pb-2.5">
+    <View
+      pointerEvents="box-none"
+      className="flex-row items-center justify-between gap-2 pl-2 wide:pl-3.75 pr-2.5 pb-2.5"
+    >
       <ComposerLeftControls {...layout} />
       <ComposerRightControls {...layout} />
     </View>
@@ -30,7 +33,7 @@ export function ComposerToolbar(layout: ToolbarLayout): React.JSX.Element {
 function ComposerLeftControls(layout: LeftControlsLayout): React.JSX.Element {
   return (
     <View
-      pointerEvents={layout.configurationInactive ? 'none' : 'auto'}
+      pointerEvents={layout.configurationInactive ? 'none' : 'box-none'}
       className="min-w-0 flex-1 flex-row items-center gap-1"
     >
       <ComposerAttachMenu {...layout} />
@@ -62,7 +65,7 @@ function ComposerPhoneStatus({
 }
 function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
-    <View className="flex-row items-center gap-2.5">
+    <View pointerEvents="box-none" className="flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
       <ComposerSendButton {...layout} />
     </View>
@@ -94,11 +97,10 @@ function sendButtonProps(
     ...filledSendProps,
     loading: layout.sendState === 'sending',
     className: cn(
-      'size-7 sm:size-7 rounded-full',
+      'rounded-full',
+      composerIconButton,
       layout.sendState === 'blocked' && 'opacity-35',
     ),
-    iconRole: 'control',
-    iconClassName: 'text-primary-foreground',
   };
 }
 function sendButtonAction(
@@ -124,4 +126,10 @@ function stopButtonAction(
   };
 }
 
-const filledSendProps = { variant: 'filled', filled: true } as const;
+const filledSendProps = {
+  variant: 'filled',
+  filled: true,
+  hitSlop: 8,
+  iconRole: 'control',
+  iconWeight: 'light',
+} as const;

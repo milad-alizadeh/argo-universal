@@ -23,7 +23,8 @@ export async function expectScrollsUnderFades(
   const item = await resolveLastRow(last);
   await waitFor(() => expectRowInsideScroll(scroll, item));
   await waitFor(() => expect(fades(scroll).bottom).toBeNull());
-  await expect(fades(scroll).top).toBeVisible();
+  // The top fade mounts on its own scroll event, which can land after the bottom one goes.
+  await waitFor(() => expect(fades(scroll).top).toBeVisible());
   return item;
 }
 

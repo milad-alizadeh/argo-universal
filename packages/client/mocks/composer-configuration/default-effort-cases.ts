@@ -2,7 +2,7 @@ import type {
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
-import { newSessionCatalogs } from '@repo/mocks/app';
+import { newSessionOptions } from '@repo/mocks/app';
 import { composerUnlistedEffortConfigurations } from '../composer-mock';
 import type { Configuration } from './common';
 import { recordedFlat, recordedLevels } from './recorded-choices';
@@ -12,7 +12,7 @@ function defaultEffortCase(
   configuration: Configuration,
   agentIndex: number,
 ): DefaultEffortCase {
-  const recorded = newSessionCatalogs.bothAvailable[agentIndex];
+  const recorded = newSessionOptions[agentIndex];
   const options = recorded?.configOptions ?? [];
   const model = options.find((entry) => entry.category === 'model');
   const option = recordedEffortOption(options);

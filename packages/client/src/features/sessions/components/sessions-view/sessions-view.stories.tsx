@@ -44,10 +44,6 @@ export const SearchMatches: Story = {
   args: { query: 'settings' },
 };
 
-export const NextPageLoading: Story = {
-  args: { isFetchingNextPage: true },
-};
-
 export const NextPageFailure: Story = {
   args: { loadMoreFailed: true },
 };

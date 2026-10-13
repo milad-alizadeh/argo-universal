@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { NewSessionView, type NewSessionViewProps } from './new-session-view';
 import {
+  openingNewSession,
   readyNewSession,
   startingNewSession,
   typedDraft,
@@ -31,6 +32,10 @@ export const Reconnecting: Story = {
       canOpen: false,
     },
   },
+};
+
+export const Opening: Story = {
+  args: { view: { state: 'ready', ...readyNewSession, ...openingNewSession } },
 };
 
 export const Starting: Story = {

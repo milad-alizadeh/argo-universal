@@ -8,11 +8,7 @@ import { FieldSection } from '#primitives/fields/field-section/field-section';
 import { FieldRowEnd } from '../../../../lib/generic/primitives/fields/field-layout';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentChoice } from './agent-choice';
-import type { ComposerConfigurationProps } from './configuration-types';
-interface AgentChoicesProps {
-  configuration: ComposerConfigurationProps;
-  onSelect: () => void;
-}
+import type { ConfigurationChoicesProps as AgentChoicesProps } from './configuration-types';
 const maximumHeight = 320;
 const screenFraction = 0.6;
 export function AgentChoices(props: AgentChoicesProps): React.JSX.Element {
@@ -22,7 +18,7 @@ export function AgentChoices(props: AgentChoicesProps): React.JSX.Element {
 }
 function NativeAgentChoices(props: AgentChoicesProps): React.JSX.Element {
   return (
-    <FieldGroup>
+    <FieldGroup onContentHeightChange={props.onContentHeightChange}>
       <FieldSection>
         {props.configuration.agents.map((agent) => (
           <AgentChoice key={agent.agent} agent={agent} {...props} />

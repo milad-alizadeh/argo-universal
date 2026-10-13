@@ -3,7 +3,8 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { Variation, Variations } from '../../../../lib/generic/variations';
-import { SessionsList, type SessionsListProps } from './sessions-list';
+import { SessionsList } from './sessions-list';
+import type { SessionsListProps } from './sessions-list-props';
 import {
   multipleProjects,
   sessionsListProps,
@@ -55,11 +56,6 @@ export const States: Story = {
       ))}
     </Variations>
   ),
-};
-
-export const Pagination: Story = {
-  parameters: { screenPreview: true },
-  args: { sessions: largeSessions.slice(0, 20), isFetchingNextPage: true },
 };
 
 export const NewSession: Story = {

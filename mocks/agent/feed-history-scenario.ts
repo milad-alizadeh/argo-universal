@@ -1,6 +1,6 @@
 import type { ScriptedStep } from './scripted-scenario.ts';
 
-const messageCount = 90;
+const messageCount = 180;
 
 const historyPair = (index: number): ScriptedStep[] => [
   {

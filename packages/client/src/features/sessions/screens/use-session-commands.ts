@@ -1,29 +1,22 @@
-import type { SessionConfigOption } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
-import {
-  type QueryClient,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
-import {
-  type ComposerDraft,
-  isRememberedConfiguration,
-  rememberSessionConfiguration,
-  useAttachmentDraft,
-} from '#features/composer';
+import { type ComposerDraft, useAttachmentDraft } from '#features/composer';
 import type { ClientError } from '#features/connection';
 import { useTRPC } from '#features/connection';
+import {
+  type SessionConfigChange,
+  useSessionConfigChange,
+} from '../hooks/use-session-config-change';
 
-type SessionMutation<Name extends 'prompt' | 'cancel' | 'setConfigOption'> =
-  ReturnType<
-    typeof useMutation<
-      inferRouterOutputs<AppRouter>['session'][Name],
-      ClientError,
-      inferRouterInputs<AppRouter>['session'][Name],
-      undefined
-    >
-  >;
+type SessionMutation<Name extends 'prompt' | 'cancel'> = ReturnType<
+  typeof useMutation<
+    inferRouterOutputs<AppRouter>['session'][Name],
+    ClientError,
+    inferRouterInputs<AppRouter>['session'][Name],
+    undefined
+  >
+>;
 type AttachmentDraft = ReturnType<typeof useAttachmentDraft>;
 export type SessionCommands = Omit<
   AttachmentDraft,
@@ -31,7 +24,8 @@ export type SessionCommands = Omit<
 > & {
   promptSession: SessionMutation<'prompt'>;
   cancelTurn: SessionMutation<'cancel'>;
-  setConfigOption: SessionMutation<'setConfigOption'>;
+  setConfigOption: SessionConfigChange['setConfigOption'];
+  changeConfig: SessionConfigChange['change'];
   sendDraft: (sent: ComposerDraft) => Promise<void>;
 };
 
@@ -41,28 +35,15 @@ interface SessionCommandTarget {
   agent: string | undefined;
 }
 
-type DraftCommands = Omit<SessionCommands, 'cancelTurn' | 'setConfigOption'>;
+type DraftCommands = Omit<
+  SessionCommands,
+  'cancelTurn' | 'setConfigOption' | 'changeConfig'
+>;
 
 interface PromptFollowUp {
   clearDraft: () => void;
   resumeAfterCommand: () => void;
 }
-
-interface ConfigFollowUp {
-  queryClient: QueryClient;
-  resumeAfterCommand: () => void;
-  agent: string | undefined;
-}
-
-interface ConfigurationChange {
-  configOptions: SessionConfigOption[];
-  configId: string;
-}
-
-type ConfigChangeSuccess = (
-  changed: Pick<ConfigurationChange, 'configOptions'>,
-  input: Pick<ConfigurationChange, 'configId'>,
-) => void;
 
 // Draft uploads and successful commands resume a Feed that has closed.
 export function useSessionCommands(
@@ -71,8 +52,24 @@ export function useSessionCommands(
   return {
     ...useDraftCommands(target),
     cancelTurn: useCancelTurn(target.resumeAfterCommand),
-    setConfigOption: useSetConfigOption(target),
+    ...useConfigCommands(target),
   };
+}
+
+function useConfigCommands({
+  sessionId,
+  agent,
+  resumeAfterCommand,
+}: SessionCommandTarget): Pick<
+  SessionCommands,
+  'setConfigOption' | 'changeConfig'
+> {
+  const { setConfigOption, change } = useSessionConfigChange(
+    sessionId,
+    agent,
+    resumeAfterCommand,
+  );
+  return { setConfigOption, changeConfig: change };
 }
 
 function useDraftCommands({
@@ -103,42 +100,6 @@ function usePromptSession({
 function useCancelTurn(onSuccess: () => void): SessionMutation<'cancel'> {
   const trpc = useTRPC();
   return useMutation(trpc.session.cancel.mutationOptions({ onSuccess }));
-}
-
-function useSetConfigOption(
-  target: SessionCommandTarget,
-): SessionMutation<'setConfigOption'> {
-  const trpc = useTRPC();
-  const onSuccess = afterConfigChange({
-    ...target,
-    queryClient: useQueryClient(),
-  });
-  return useMutation(
-    trpc.session.setConfigOption.mutationOptions({ onSuccess }),
-  );
-}
-
-function afterConfigChange(followUp: ConfigFollowUp): ConfigChangeSuccess {
-  return ({ configOptions }, { configId }) => {
-    followUp.resumeAfterCommand();
-    rememberChangedConfiguration(followUp, { configOptions, configId });
-  };
-}
-
-function isRememberedChange({
-  configOptions,
-  configId,
-}: ConfigurationChange): boolean {
-  const changed = configOptions.find((option) => option.configId === configId);
-  return changed !== undefined && isRememberedConfiguration(changed);
-}
-
-function rememberChangedConfiguration(
-  { queryClient, agent }: ConfigFollowUp,
-  change: ConfigurationChange,
-): void {
-  if (agent && isRememberedChange(change))
-    rememberSessionConfiguration(queryClient, agent, change.configOptions);
 }
 
 function draftSender(

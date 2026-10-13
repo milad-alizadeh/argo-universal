@@ -1,4 +1,4 @@
-import { newSessionCatalogs } from '@repo/mocks/app';
+import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
@@ -19,7 +19,7 @@ export function unavailableAgents(width: number): Story {
           ...newSessionCatalogs.oneNotSignedIn,
         ].filter((entry) => entry.availability !== 'available'),
         agent: firstAgent.agent,
-        configOptions: firstAgent.configOptions,
+        configOptions: recordedSessionOptions(firstAgent.agent),
         onConfigChange: fn(),
         onAgentChange: fn(),
         onAgentSetup: fn(),

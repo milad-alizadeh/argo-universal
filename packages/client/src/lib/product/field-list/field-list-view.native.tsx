@@ -4,6 +4,7 @@ import { FieldSection } from '#lib/generic/primitives/fields/field-section/field
 import { useWide } from '../../generic/use-wide/use-wide';
 import {
   type FieldListProps,
+  type FieldListSection,
   FieldList as VirtualFieldList,
 } from './field-list-view.tsx';
 
@@ -18,14 +19,21 @@ export function FieldList(props: FieldListProps): React.JSX.Element {
   return (
     <FieldGroup search={props.search}>
       {props.sections.map((section, index) => (
-        <FieldSection
+        <NativeFieldSection
           key={section.title ?? `section-${index}`}
-          title={section.title}
-          footer={section.footer}
-        >
-          {section.rows}
-        </FieldSection>
+          section={section}
+        />
       ))}
     </FieldGroup>
+  );
+}
+
+function NativeFieldSection(props: {
+  section: FieldListSection;
+}): React.JSX.Element {
+  return (
+    <FieldSection title={props.section.title} footer={props.section.footer}>
+      {props.section.rows}
+    </FieldSection>
   );
 }

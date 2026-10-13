@@ -49,6 +49,10 @@ it.each([
       patch,
     });
     expect(diff).toMatchObject({ path, added, removed });
-    expect(diff?.hunks).toHaveLength(path.endsWith('.png') ? 0 : 1);
+    expect(diff?.hunks).toHaveLength(expectedHunks(path));
   },
 );
+
+function expectedHunks(path: string): number {
+  return path.endsWith('.png') ? 0 : 1;
+}

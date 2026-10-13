@@ -1,8 +1,12 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { View, type ViewProps } from 'react-native';
+import { View, type ViewProps, type ViewStyle } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { type Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  type Edge,
+  type EdgeInsets,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { cn } from '#lib/generic/utils';
 
 const allEdges: readonly Edge[] = ['top', 'right', 'bottom', 'left'];
@@ -11,9 +15,7 @@ const allEdges: readonly Edge[] = ['top', 'right', 'bottom', 'left'];
 const keyboardAvoidingStyle = { flex: 1, minHeight: 0 };
 
 // A screen's content that rises with the keyboard, keeping 16 above it as it keeps from the screen's sides.
-export function KeyboardAvoidingContent({
-  children,
-}: {
+export function KeyboardAvoidingContent(props: {
   children: ReactNode;
 }): React.JSX.Element {
   return (
@@ -23,7 +25,7 @@ export function KeyboardAvoidingContent({
       keyboardVerticalOffset={16}
       style={keyboardAvoidingStyle}
     >
-      {children}
+      {props.children}
     </KeyboardAvoidingView>
   );
 }
@@ -33,33 +35,37 @@ export interface ScreenProps extends ViewProps {
   edges?: readonly Edge[];
 }
 
-export function Screen({
-  safeArea = true,
-  edges = allEdges,
-  className,
-  style,
-  children,
-  ...props
-}: ScreenProps): React.JSX.Element {
-  const insets = useSafeAreaInsets();
+export function Screen(screenProps: ScreenProps): React.JSX.Element {
+  const { safeArea, edges, style, ...props } = screenProps;
+  const padding = useSafeAreaPadding({ safeArea, edges });
   return (
     <View
       {...props}
-      className={cn('flex-1 bg-sidebar', className)}
-      style={[
-        { minHeight: 0 },
-        safeArea && {
-          paddingTop: edges.includes('top') ? insets.top : 0,
-          paddingRight: edges.includes('right') ? insets.right : 0,
-          paddingBottom: edges.includes('bottom') ? insets.bottom : 0,
-          paddingLeft: edges.includes('left') ? insets.left : 0,
-        },
-        style,
-      ]}
+      className={cn('flex-1 bg-sidebar', props.className)}
+      style={[{ minHeight: 0 }, padding, style]}
     >
       <View className="relative flex-1" style={{ minHeight: 0 }}>
-        {children}
+        {props.children}
       </View>
     </View>
   );
+}
+
+function useSafeAreaPadding({
+  safeArea,
+  edges = allEdges,
+}: Pick<ScreenProps, 'safeArea' | 'edges'>): ViewStyle | false {
+  const insets = useSafeAreaInsets();
+  return safeArea !== false && edgePadding(insets, edges);
+}
+
+function edgePadding(insets: EdgeInsets, edges: readonly Edge[]): ViewStyle {
+  const inset = (edge: Edge): number =>
+    edges.includes(edge) ? insets[edge] : 0;
+  return {
+    paddingTop: inset('top'),
+    paddingRight: inset('right'),
+    paddingBottom: inset('bottom'),
+    paddingLeft: inset('left'),
+  };
 }

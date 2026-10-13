@@ -7,6 +7,8 @@ import {
 } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { useTRPC, useTRPCClient } from '#features/connection';
+import { type HistoryWindow, needsOlderHistory } from '../view/feed-history';
+import { handOverGraceMs } from './held-feed';
 
 type HistoryCursor = Pick<FeedPageInput, 'direction' | 'cursor' | 'epoch'>;
 type FeedHistory = Pick<
@@ -21,7 +23,10 @@ const olderCursor = (page: FeedPageOutput): HistoryCursor | undefined =>
     ? { direction: 'before', cursor: page.startCursor, epoch: page.epoch }
     : undefined;
 
-export function useFeedHistory(sessionId: string): FeedHistory {
+export function useFeedHistory(
+  sessionId: string,
+  { epoch, startCursor }: HistoryWindow,
+): FeedHistory {
   const trpc = useTRPC();
   const client = useTRPCClient();
   const queryClient = useQueryClient();
@@ -39,13 +44,21 @@ export function useFeedHistory(sessionId: string): FeedHistory {
     initialPageParam,
     getNextPageParam: olderCursor,
     staleTime: Infinity,
-    gcTime: 0,
+    gcTime: handOverGraceMs,
   });
-  const { fetchNextPage, hasNextPage, isFetching } = history;
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = history;
   const loadOlder = useCallback(async (): Promise<void> => {
-    if (hasNextPage && !isFetching)
-      await fetchNextPage({ cancelRefetch: false });
-  }, [fetchNextPage, hasNextPage, isFetching]);
+    if (!hasNextPage || isFetchingNextPage) return;
+    const window = { epoch, startCursor };
+    let result = await fetchNextPage();
+    while (
+      result.isSuccess &&
+      result.hasNextPage &&
+      needsOlderHistory(result.data.pages.at(-1), window)
+    ) {
+      result = await fetchNextPage({ cancelRefetch: false });
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, epoch, startCursor]);
   const resetHistory = useCallback(
     (): Promise<void> =>
       queryClient.resetQueries({
