@@ -1,22 +1,25 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
-import path from 'node:path';
+const path = require('node:path');
 // Metro-specific wrapper, not the generator's entry-swap one: Storybook renders in the (dev)/storybook route (ADR 0010).
-import { withStorybook } from '@storybook/react-native/metro/withStorybook';
-import { getDefaultConfig } from 'expo/metro-config.js';
-import { withUniwindConfig } from 'uniwind/metro';
+const {
+  withStorybook,
+} = require('@storybook/react-native/metro/withStorybook');
+
+const { getDefaultConfig } = require('expo/metro-config');
+const { withUniwindConfig } = require('uniwind/metro');
 
 /** @import { MetroConfig } from 'expo/metro-config' */
 /** @type {MetroConfig} */
-const config = getDefaultConfig(import.meta.dirname);
+const config = getDefaultConfig(__dirname);
 
 // Production bundles stub Storybook out; configPath must be absolute for the stub to match.
 const storybookConfig = withStorybook(config, {
   enabled: process.env.NODE_ENV !== 'production',
-  configPath: path.resolve(import.meta.dirname, '.rnstorybook'),
+  configPath: path.resolve(__dirname, '.rnstorybook'),
 });
 
 // Other wrappers go inside; withUniwindConfig must stay outermost.
-export default withUniwindConfig(storybookConfig, {
+module.exports = withUniwindConfig(storybookConfig, {
   cssEntryFile: './global.css',
   dtsFile: './src/uniwind-types.d.ts',
 });
