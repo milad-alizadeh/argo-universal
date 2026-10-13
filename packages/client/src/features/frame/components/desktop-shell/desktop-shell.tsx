@@ -1,10 +1,10 @@
 import type * as React from 'react';
-import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ContentLayout } from '#lib/product/content-layout';
 import { ShellBackdrop } from '../shell-backdrop/shell-backdrop';
 import { ShellPane, type ShellPaneProps } from '../shell-pane/shell-pane';
 import type { DesktopShellProps } from './desktop-shell-props';
+import { PaneBanner, WindowDragStrip } from './shell-chrome';
 import { ShellResizeHandles } from './shell-resize-handles';
 import { ShellSidebar } from './shell-sidebar';
 import { type ShellPartProps, useShellLayout } from './use-shell-layout';
@@ -13,25 +13,8 @@ function ShellBackground({ shell, layout }: ShellPartProps): React.JSX.Element {
   return (
     <>
       <ShellBackdrop sidebarShown={shell.sidebarShown} {...layout.motion} />
-      {/* An invisible strip along the window's top drags the Electron window; controls above it stay clickable. */}
-      <View
-        testID="window-drag-strip"
-        pointerEvents="none"
-        className="absolute inset-x-0 top-0 h-[calc(var(--spacing-shell-inset)+var(--spacing-shell-control))] web:[app-region:drag]"
-      />
+      <WindowDragStrip />
     </>
-  );
-}
-
-// Floats over the top of the detail and Inspector, so an expanded Inspector still shows it; touches outside the banner reach the page.
-function PaneBanner({ children }: { children: ReactNode }): React.JSX.Element {
-  return (
-    <View
-      pointerEvents="box-none"
-      className="absolute inset-x-0 top-3 items-center"
-    >
-      {children}
-    </View>
   );
 }
 
