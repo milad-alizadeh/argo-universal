@@ -29,3 +29,8 @@ export {
   TurnInsertJob,
   TurnUpdateJob,
 } from './session-storage';
+
+export {
+  discoveryCacheId,
+  discoveryCacheMachine,
+} from './discovery-cache-machine';

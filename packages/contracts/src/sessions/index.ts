@@ -29,3 +29,5 @@ export * from './set-config-option';
 export * from './snapshot';
 
 export * from './turn';
+
+export * from './discovery';
