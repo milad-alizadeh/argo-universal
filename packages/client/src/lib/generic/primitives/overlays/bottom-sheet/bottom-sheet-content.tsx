@@ -13,27 +13,34 @@ type SheetContentProps = Pick<
   | 'footer'
   | 'contentScrolls'
   | 'surface'
->;
+> & { viewportHeight?: number };
 
 export function BottomSheetContent(
   props: SheetContentProps,
 ): React.JSX.Element {
   return (
-    <View className={sheetClass(props)} {...sheetAccessibility(props)}>
-      {props.contentScrolls ? (
-        props.children
-      ) : (
-        <ScrollView
-          className={cn('shrink min-h-0', !props.fit && 'flex-1')}
-          keyboardShouldPersistTaps="handled"
-          role="region"
-          accessibilityLabel={`${props.label ?? 'Sheet'} document`}
-        >
-          {props.children}
-        </ScrollView>
-      )}
+    <View
+      style={{ height: props.viewportHeight }}
+      className={sheetClass(props)}
+      {...sheetAccessibility(props)}
+    >
+      <SheetBody {...props} />
       {props.footer}
     </View>
+  );
+}
+
+function SheetBody(props: SheetContentProps): React.ReactNode {
+  if (props.contentScrolls) return props.children;
+  return (
+    <ScrollView
+      className={cn('shrink min-h-0', { 'flex-1': !props.fit })}
+      keyboardShouldPersistTaps="handled"
+      role="region"
+      accessibilityLabel={`${props.label ?? 'Sheet'} document`}
+    >
+      {props.children}
+    </ScrollView>
   );
 }
 
@@ -50,10 +57,18 @@ function sheetAccessibility(
   };
 }
 
-function sheetClass(props: Pick<SheetContentProps, 'surface' | 'fit'>): string {
+function sheetClass(
+  props: Pick<
+    SheetContentProps,
+    'surface' | 'fit' | 'footer' | 'viewportHeight'
+  >,
+): string {
   return cn(
     props.surface === 'sidebar' ? 'bg-sidebar' : 'bg-popover',
-    'ios:pt-8 pb-8 ios:pb-0 min-h-0',
-    !props.fit && 'flex-1',
+    'ios:pt-8 ios:pb-0 min-h-0',
+    {
+      'pb-8': !props.footer,
+      'flex-1': !props.fit && props.viewportHeight === undefined,
+    },
   );
 }

@@ -1,8 +1,26 @@
 diff --git a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
-index 16958ee1fc85341b94d07f84c328bc9dc487f1a6..4f15adaab70757dea1e7bc4a3a0c4f620e041eda 100644
+index 16958ee1fc85341b94d07f84c328bc9dc487f1a6..f40559865fc3ba590bce1e6f1245ee35cfba93f8 100644
 --- a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
 +++ b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
-@@ -64,6 +64,7 @@ import androidx.compose.ui.layout.onVisibilityChanged
+@@ -19,6 +19,9 @@ import androidx.compose.foundation.combinedClickable
+ import androidx.compose.foundation.horizontalScroll
+ import androidx.compose.foundation.rememberScrollState
+ import androidx.compose.foundation.verticalScroll
++import androidx.compose.foundation.layout.WindowInsets
++import androidx.compose.foundation.layout.ime
++import androidx.compose.foundation.layout.navigationBars
+ import androidx.compose.foundation.layout.IntrinsicSize
+ import androidx.compose.foundation.layout.fillMaxHeight
+ import androidx.compose.foundation.layout.fillMaxSize
+@@ -42,6 +45,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
+ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+ import androidx.compose.material3.ExposedDropdownMenuAnchorType
+ import androidx.compose.material3.toShape
++import androidx.compose.runtime.LaunchedEffect
+ import androidx.compose.runtime.Composable
+ import androidx.compose.runtime.getValue
+ import androidx.compose.ui.Modifier
+@@ -64,6 +68,7 @@ import androidx.compose.ui.layout.onVisibilityChanged
  import androidx.compose.ui.layout.positionInWindow
  import androidx.compose.ui.platform.LocalDensity
  import androidx.compose.ui.semantics.Role
@@ -10,7 +28,7 @@ index 16958ee1fc85341b94d07f84c328bc9dc487f1a6..4f15adaab70757dea1e7bc4a3a0c4f62
  import androidx.compose.ui.semantics.contentDescription
  import androidx.compose.ui.semantics.contentType
  import androidx.compose.ui.semantics.semantics
-@@ -677,6 +678,11 @@ object ModifierRegistry {
+@@ -677,6 +682,11 @@ object ModifierRegistry {
        } ?: Modifier
      }
  
@@ -22,6 +40,24 @@ index 16958ee1fc85341b94d07f84c328bc9dc487f1a6..4f15adaab70757dea1e7bc4a3a0c4f62
      register("semantics") { map, _, _, _ ->
        val params = recordFromMap<SemanticsParams>(map)
        val type = params.contentType.toContentType()
+@@ -723,6 +733,17 @@ object ModifierRegistry {
+       }
+     }
+ 
++    register("onWindowInsetsChanged") { _, _, _, eventDispatcher ->
++      val density = LocalDensity.current
++      val bottom = with(density) {
++        maxOf(WindowInsets.ime.getBottom(this), WindowInsets.navigationBars.getBottom(this)).toDp().value
++      }
++      LaunchedEffect(bottom) {
++        eventDispatcher("onWindowInsetsChanged", mapOf("bottom" to bottom))
++      }
++      Modifier
++    }
++
+     register("onGloballyPositioned") { _, _, _, eventDispatcher ->
+       val density = LocalDensity.current
+       Modifier.onGloballyPositioned { coordinates ->
 diff --git a/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt b/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt
 index 13ca95ed0a9f0a20afdd828fd18331a00067e2d2..ab612b60fd95a5650a4203f5ab6fe0bcf9221e68 100644
 --- a/android/src/main/java/expo/modules/ui/menu/DropdownMenu.kt
@@ -73,10 +109,20 @@ index 652fd5ebed3efa231c87399689852f016818d445..5f8c5ed8c3858f7456a5e44d6b22be72
       * Optional styles to apply to the `DropdownMenu`.
       */
 diff --git a/build/jetpack-compose/modifiers/index.d.ts b/build/jetpack-compose/modifiers/index.d.ts
-index 7c6245da00fefd2741f659b963f6b45cfbbc85b4..4384809b6d26323440387068cab46a72dd5eef68 100644
+index 7c6245da00fefd2741f659b963f6b45cfbbc85b4..f2cb427cdfa5415c137e0e3ecf1daf7266661a4c 100644
 --- a/build/jetpack-compose/modifiers/index.d.ts
 +++ b/build/jetpack-compose/modifiers/index.d.ts
-@@ -334,6 +334,8 @@ export type SemanticsConfig = {
+@@ -306,6 +306,9 @@ export declare const onSizeChanged: (handler: (size: {
+  * `x` and `y` are relative to the window. All values are in dp.
+  * @param handler - Function called with the new layout.
+  */
++export declare const onWindowInsetsChanged: (handler: (insets: {
++    bottom: number;
++}) => void) => import("./createModifier").ModifierConfig;
+ export declare const onGloballyPositioned: (handler: (layout: {
+     x: number;
+     y: number;
+@@ -334,6 +337,8 @@ export type SemanticsConfig = {
  /**
   * Applies semantic properties. Wraps `Modifier.semantics { ... }`.
   */
@@ -110,10 +156,21 @@ index bd6101006fcef124674ef53be9a767eb43f69edd..997f8085e30cf83585dd6032dcd160b1
    modifiers?: ModifierConfig[];
    children?: ReactNode;
 diff --git a/src/jetpack-compose/modifiers/index.ts b/src/jetpack-compose/modifiers/index.ts
-index 8484690b71dfc1acc458b35641754e2c5e05a931..25c66ee6c428c9bbe1f3a82d0a814f7ecfc2fddf 100644
+index 8484690b71dfc1acc458b35641754e2c5e05a931..e00994f308c21dd0ba864446d3654568ea112c1d 100644
 --- a/src/jetpack-compose/modifiers/index.ts
 +++ b/src/jetpack-compose/modifiers/index.ts
-@@ -475,6 +475,9 @@ export type SemanticsConfig = {
+@@ -434,6 +434,10 @@ export const onSizeChanged = (handler: (size: { width: number; height: number })
+     handler(size)
+   );
+ 
++/** Reports the presented window's keyboard or navigation-bar inset, in dp. */
++export const onWindowInsetsChanged = (handler: (insets: { bottom: number }) => void) =>
++  createModifierWithEventListener('onWindowInsetsChanged', handler);
++
+ /**
+  * Calls the handler whenever the composable is positioned, with its position and size.
+  * `x` and `y` are relative to the window. All values are in dp.
+@@ -475,6 +479,9 @@ export type SemanticsConfig = {
  /**
   * Applies semantic properties. Wraps `Modifier.semantics { ... }`.
   */

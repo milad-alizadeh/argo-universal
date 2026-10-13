@@ -1,8 +1,4 @@
-import { ModalBottomSheet, RNHostView } from '@expo/ui/jetpack-compose';
-import {
-  fillMaxHeight,
-  fillMaxWidth,
-} from '@expo/ui/jetpack-compose/modifiers';
+import { ModalBottomSheet } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { Host } from '../../native/host';
 import { useSheetColors } from './bottom-sheet-colors.android';
@@ -13,7 +9,7 @@ import {
 } from './bottom-sheet-dismissal.android';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
-import { SheetWidth } from './bottom-sheet-width';
+import { SheetViewport } from './bottom-sheet-viewport.android';
 import type { BottomSheetProps } from './bottom-sheet.types';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
@@ -78,24 +74,11 @@ function HostedSheetContent(
   >,
 ): React.JSX.Element {
   return (
-    <RNHostView
-      matchContents={props.fit}
-      modifiers={props.fit ? [fillMaxWidth()] : [fillMaxHeight()]}
-    >
-      <SheetWidth fit={props.fit}>
-        <BottomSheetContent
-          fit={props.fit}
-          label={props.label}
-          onOpenChange={props.onOpenChange}
-          dismissible={props.dismissible}
-          footer={props.footer}
-          contentScrolls={props.contentScrolls}
-          surface={props.surface}
-        >
-          {props.children}
-        </BottomSheetContent>
-      </SheetWidth>
-    </RNHostView>
+    <SheetViewport fit={props.fit}>
+      {(viewportHeight) => (
+        <BottomSheetContent {...props} viewportHeight={viewportHeight} />
+      )}
+    </SheetViewport>
   );
 }
 

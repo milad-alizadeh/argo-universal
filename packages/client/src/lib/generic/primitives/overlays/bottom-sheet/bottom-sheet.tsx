@@ -18,7 +18,7 @@ import { Host } from '../../native/host';
 import { BottomSheetContent } from './bottom-sheet-content';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
-import { SheetWidth } from './bottom-sheet-width';
+import { SheetViewport } from './bottom-sheet-viewport';
 import type { BottomSheetProps } from './bottom-sheet.types';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
@@ -72,11 +72,11 @@ function SheetContent(props: SheetContentProps): React.JSX.Element {
   ];
   return (
     <Group modifiers={modifiers}>
-      <RNHostView matchContents={props.fit}>
-        <SheetWidth fit={props.fit}>
-          <BottomSheetContent {...props} />
-        </SheetWidth>
-      </RNHostView>
+      <SheetViewport fit={props.fit}>
+        {(viewportHeight) => (
+          <BottomSheetContent {...props} viewportHeight={viewportHeight} />
+        )}
+      </SheetViewport>
     </Group>
   );
 }
