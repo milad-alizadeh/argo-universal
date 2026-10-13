@@ -5,7 +5,7 @@ import { createActor, waitFor } from 'xstate';
 import { agentProbeMachine } from './agent-probe-machine';
 
 const refreshProbeEvent = 'agentProbe.refresh';
-const available: AgentProbe = { availability: 'available', configOptions: [] };
+const available: AgentProbe = { availability: 'available' };
 afterEach((): VitestUtils => vi.useRealTimers());
 
 it('shares a running probe with a refresh, and probes again once settled', async (): Promise<void> => {
@@ -40,7 +40,6 @@ it('reports an Agent whose probe fails as unavailable, with the reason', async (
   expect(actor.getSnapshot().context.probe).toEqual({
     availability: 'unavailable',
     installStep: 'mock did not start: Spawn failed',
-    configOptions: [],
   });
   actor.stop();
 });

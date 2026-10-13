@@ -38,18 +38,23 @@ function SecondaryButtonsExample(): React.JSX.Element {
     <Variation label="Secondary">
       <View className="flex-row">
         <ButtonGroup>
-          {['Previous', 'Today', 'Next'].map((label) => (
-            <Button
-              key={label}
-              variant="secondary"
-              label={label}
-              appearance="content"
-            />
-          ))}
+          {secondaryButtons(['Previous', 'Today', 'Next'])}
         </ButtonGroup>
       </View>
     </Variation>
   );
+}
+
+// ButtonGroup joins the corners of its direct children, so these stay Buttons, not a wrapper.
+function secondaryButtons(labels: string[]): React.JSX.Element[] {
+  return labels.map((label) => (
+    <Button
+      key={label}
+      variant="secondary"
+      label={label}
+      appearance="content"
+    />
+  ));
 }
 
 function AllowOptions(): React.JSX.Element {

@@ -10,23 +10,29 @@ const ThemedLogo = withUniwind(SvgXml, {
   color: { fromClassName: 'className', styleProperty: 'color' },
 });
 
+interface AgentIconProps {
+  agent?: AgentInfo;
+  role?: IconRole;
+}
 export function AgentIcon({
   agent,
   role = 'control',
-}: {
-  agent?: AgentInfo;
-  role?: IconRole;
-}): React.JSX.Element | null {
+}: AgentIconProps): React.JSX.Element | null {
   return agent ? (
     <IconSlot role={role}>
-      <View testID="composer-agent-icon" className="h-full w-full">
-        <ThemedLogo
-          xml={agent.logo}
-          className="text-foreground"
-          width="100%"
-          height="100%"
-        />
-      </View>
+      <AgentLogo agent={agent} />
     </IconSlot>
   ) : null;
+}
+function AgentLogo({ agent }: { agent: AgentInfo }): React.JSX.Element {
+  return (
+    <View testID="composer-agent-icon" className="h-full w-full">
+      <ThemedLogo
+        xml={agent.logo}
+        className="text-foreground"
+        width="100%"
+        height="100%"
+      />
+    </View>
+  );
 }

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
-import { SessionConfigOption } from '../sessions/set-config-option';
 
 export const AgentAvailability = z.enum([
   'available',
@@ -24,7 +23,6 @@ export const AgentInfo = z.strictObject({
   availableVersion: z.string().optional(),
   availability: AgentAvailability,
   installStep: z.string().optional(),
-  configOptions: z.array(SessionConfigOption),
 });
 export type AgentInfo = z.infer<typeof AgentInfo>;
 

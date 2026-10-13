@@ -1,21 +1,16 @@
 import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { Platform, ScrollView, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { action } from 'storybook/actions';
-import { SessionColumn } from '#lib/product/session-layout';
+import { SessionColumn } from '#lib/product/session-column';
 import {
   composerProps,
   type ComposerMockProps,
-  composerImages,
-  composerPlanDone,
-  oversizedComposerImage,
 } from '../../../../../mocks/composer-mock';
-import { Variation, Variations } from '../../../../lib/generic/variations';
 import { attachmentSelectionFailureMessage } from '../../state/attachment-draft';
 import { Composer } from './composer';
-
-const spacingAndColoursPrompt = 'Match the spacing and colours.';
+import { ComposerOverview } from './composer-overview';
 
 const [firstAgent] = newSessionCatalogs.bothAvailable;
 if (!firstAgent) throw new Error('Recorded catalog needs an available Agent.');
@@ -81,119 +76,5 @@ export const ImageSelectionFailed: Story = {
 
 export const Overview: Story = {
   name: 'Composer',
-  render: (args) => {
-    const overview = (
-      <View className="w-full items-center p-4">
-        <View className="w-full max-w-composer">
-          <Variations className="max-w-none">
-            <Variation label="Empty">
-              <Composer {...composerProps({ ...args })} />
-            </Variation>
-            <Variation label="Typing">
-              <Composer
-                {...composerProps({
-                  ...args,
-                  draft: { text: spacingAndColoursPrompt, attachments: [] },
-                })}
-              />
-            </Variation>
-            <Variation label="Multi-line">
-              <Composer
-                {...composerProps({
-                  ...args,
-                  draft: {
-                    text: 'Match the spacing and colours.\nKeep the phone layout readable.\nUse the shared light and dark themes.',
-                    attachments: [],
-                  },
-                })}
-              />
-            </Variation>
-            <Variation label="Scrollable draft">
-              <Composer
-                {...composerProps({
-                  ...args,
-                  draft: {
-                    text: 'First line\nSecond line\nThird line\nFourth line\nFifth line\nSixth line',
-                    attachments: [],
-                  },
-                })}
-              />
-            </Variation>
-            <Variation label="Images attached">
-              <Composer
-                {...composerProps({
-                  ...args,
-                  draft: {
-                    text: 'Match these screenshots.',
-                    attachments: composerImages,
-                  },
-                })}
-              />
-            </Variation>
-            <Variation label="Attachment too large">
-              <Composer
-                {...composerProps({
-                  ...args,
-                  draft: {
-                    text: 'Match these screenshots.',
-                    attachments: [oversizedComposerImage],
-                  },
-                })}
-              />
-            </Variation>
-            <Variation label="Sending">
-              <Composer
-                {...composerProps({
-                  ...args,
-                  draft: { text: spacingAndColoursPrompt, attachments: [] },
-                  sending: true,
-                })}
-              />
-            </Variation>
-            <Variation label="Disabled">
-              <Composer
-                {...composerProps({
-                  ...args,
-                  draft: { text: spacingAndColoursPrompt, attachments: [] },
-                  disabled: true,
-                })}
-              />
-            </Variation>
-            <Variation label="Turn running">
-              <Composer
-                {...composerProps({
-                  ...args,
-                  sessionStarted: true,
-                  running: true,
-                  onStop: action('stop Turn'),
-                })}
-              />
-            </Variation>
-            <Variation label="In a Session">
-              <Composer {...composerProps({ ...args, sessionStarted: true })} />
-            </Variation>
-            <Variation label="Plan done">
-              <Composer
-                {...composerProps({
-                  ...args,
-                  sessionStarted: true,
-                  plan: composerPlanDone,
-                })}
-              />
-            </Variation>
-            <Variation label="No Plan">
-              <Composer
-                {...composerProps({ ...args, sessionStarted: true, plan: [] })}
-              />
-            </Variation>
-          </Variations>
-        </View>
-      </View>
-    );
-    return Platform.OS === 'web' ? (
-      overview
-    ) : (
-      <ScrollView style={{ flex: 1 }}>{overview}</ScrollView>
-    );
-  },
+  render: (args) => <ComposerOverview {...args} />,
 };

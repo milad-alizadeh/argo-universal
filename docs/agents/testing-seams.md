@@ -2,7 +2,7 @@
 
 This maps Argo's test boundaries to [Prickles TS4, TS6 and TS7](prickles/prickles-testing.md). [ADR-0016](../adr/0016-the-prickles-canon-is-the-coding-standard.md) records their application; [ADR-0018](../adr/0018-app-e2e-uses-shared-agent-fixtures.md) records the external Agent and Registry fixture exception.
 
-**Fixtures describe scenarios; minimal shared boundary code delivers them; production code performs the behaviour under test.** Test setup may start and clean up the real system, but must not recreate its business logic.
+**Fixtures describe scenarios; minimal shared boundary code delivers them; production code performs the behaviour under test.** Test setup may start and clean up the real system, never recreate its business logic.
 
 ## Test kinds
 
@@ -15,11 +15,11 @@ Argo has four kinds of test. Owned code is never faked: only the Agent process a
 | Engine journey | The composed Engine through tRPC, with every module, the Writer, SQLite and Git | The Agent, as the scripted Agent over in-memory streams, and the Registry, as fixture data |
 | E2E | The App from its UI (Playwright and Gherkin against the Expo web export), tRPC, the Engine and storage | The Agent, as the scripted Agent in a real process launched per ADR-0018, and the Registry, as fixture data |
 
-A file named `*.integration.test.ts` runs something real; the name tells you its cost. `tools/check-test-suffix.mts`, part of `pnpm quality`, fails a `*.test` file that opens SQLite, git, the filesystem, the network or a child process, directly or through its mock modules. View test stories run in Vitest browser mode and are unit tests of a view: they render it from props with no Server, tRPC or data hook (owner, 2026-10-10).
+A `*.integration.test.ts` file runs something real; the name tells its cost. `tools/check-test-suffix.mts`, part of `pnpm quality`, fails a `*.test` file that opens SQLite, git, the filesystem, the network or a child process, directly or through its mock modules. View test stories run in Vitest browser mode and are unit tests of a view: they render it from props with no Server, tRPC or data hook (owner, 2026-10-10).
 
 ## Choose the public surface
 
-Choose the smallest surface used by real callers that proves the required behaviour. Add a broader test when composition, transport or lifecycle is itself the behaviour. The table lists test entry points, not a required suite per layer. A file or package does not earn a separate suite merely by existing.
+Choose the smallest surface used by real callers that proves the required behaviour; add a broader test when composition, transport or lifecycle is itself the behaviour. The table lists test entry points, not a required suite per layer: a file or package does not earn a suite merely by existing.
 
 | Surface | Runs for real | Controlled inputs and observations |
 |---|---|---|
@@ -36,39 +36,39 @@ Choose the smallest surface used by real callers that proves the required behavi
 | Process ownership | The real process launcher and OS lifecycle | The scripted Agent as a real process; startup, stdio, exit and cleanup observations |
 | Native App behaviour | The actual shared UI and native modules on a simulator or device | The same external fixtures; native interaction and rendering observations |
 
-App end-to-end (E2E) tests drive the App and observe user-visible outcomes across the real Server flow above. Running them through a direct Engine bootstrap does not prove Supervisor startup. Procedure calls in-process do not prove HTTP serialization, subscription transport or connection disconnect handling. Cover those through the corresponding real surface when they are the claim.
+A direct Engine bootstrap does not prove Supervisor startup, and in-process procedure calls do not prove HTTP serialization, subscription transport or Connection disconnect handling. Cover those through the real surface when they are the claim.
 
-Every XState machine retains `xstate/graph` coverage of all transitions. Symbolic actor completions can drive graph traversal, but traversal proves structure only. Persistence, ordering, resource ownership and cleanup require public integration behaviour with their real dependencies.
+Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions. Symbolic actor completions can drive traversal, but traversal proves structure only; persistence, ordering, resource ownership and cleanup need public integration behaviour with their real dependencies.
 
 ## Fixtures and boundary code
 
-A fixture is data: input, response, update, file content, initial row or expected result. A mock supplies external behaviour, such as delivering those responses, holding a reply or closing a connection. A bootstrap starts and cleans up real code. These roles do not require separate folders or a new framework. Test assets remain outside `src/` in the existing `mocks/`, `e2e/<flow>/` and `tools/` locations; keep the repository's mock naming convention.
+A fixture is data: input, response, update, file content, initial row or expected result. A mock supplies external behaviour, such as delivering those responses, holding a reply or closing a connection. A bootstrap starts and cleans up real code. These roles need no separate folders or new framework. Test assets live outside `src/`, in `mocks/`, `e2e/<flow>/` and `tools/`; call them mocks.
 
-Prefer a fixture and a direct public call. Reuse an existing boundary implementation before adding another. Keep helpers local until actual reuse earns extraction under F3/A2. Wrappers must earn their existence through required context, realistic layout or shared setup; a feature-specific component that only prepares fixtures and forwards props should become explicit setup beside the actual component's story.
+Prefer a fixture and a direct public call. Reuse an existing boundary implementation before adding another. Keep helpers local until actual reuse earns extraction under F3/A2. A wrapper earns its place through required context, realistic layout or shared setup; a feature-specific component that only prepares fixtures and forwards props becomes explicit setup beside the actual component's story.
 
-Boundary code may coordinate external timing and failures. It must not implement Session transitions, Feed projection, catalog sync, Writer acknowledgements or another copy of product rules. Integration tests keep those owned collaborators real. In unit tests, use TS7's isolated boundary instead of mocking private collaborators. Multiple required mocks are a reason to reconsider the unit's interface.
+Boundary code may coordinate external timing and failures, never implement Session transitions, Feed projection, catalog sync, Writer acknowledgements or another copy of product rules; integration tests keep those owned collaborators real. In unit tests, use TS7's isolated boundary instead of mocking private collaborators. Needing several mocks is a reason to reconsider the unit's interface.
 
-For Feed presentation, follow [ADR-0021](../adr/0021-storybook-renders-views-from-props.md): build Feed props from recordings through the real converter and render the actual Feed. A presentation test proves rendering; a projection test calls the public projection with independent expectations; an Engine test proves an ACP update becomes durable content. Broader App coverage proves the composition when that composition is the requirement.
+For Feed presentation, follow [ADR-0021](../adr/0021-storybook-renders-views-from-props.md): build Feed props from recordings through the real converter and render the actual Feed. A presentation test proves rendering; a projection test calls the public projection with independent expectations; an Engine test proves an ACP update becomes durable content; broader App coverage proves the composition when that is the requirement.
 
 ## Review each test's claim
 
-The test name, setup and assertions must make these four facts clear: the public surface, which dependencies run for real, which boundary is replaced, and the observable outcome. Record any remaining limitation in the PR evidence.
+A test's name, setup and assertions make four facts clear: the public surface, which dependencies run for real, which boundary is replaced, and the observable outcome. Record any remaining limitation in the PR evidence.
 
-For changes to tests, fixtures, mocks or wrappers, review coverage against existing suites, including relevant tests outside the diff:
+For changes to tests, fixtures, mocks or wrappers, review coverage against existing suites, including tests outside the diff:
 
-- Compare every added or changed scenario with coverage of the same public behaviour. Identify its independent observable claim or failure path. Group suites by behaviour within the repository's caps, rather than by implementation file. Consolidate equivalent claims into an existing behaviour suite or parameterise repeated scenarios; helper extraction alone does not remove duplicate coverage.
-- Repeated coverage at another layer earns its place when it proves a distinct composition, transport or lifecycle claim. Name that distinction; equivalent assertions through another entry point alone do not justify it. Preserve mandatory graph traversal alongside the integration claims described above.
-- For removed or consolidated cases, trace every unique assertion and failure path to retained coverage, including parameterised rows. Test counts and passing results alone do not prove coverage was preserved.
-- Apply the fixture and boundary rules above to every new or changed mock and wrapper. Identify the controlled boundary and scenario for a mock, or the required context, realistic layout or shared setup for a wrapper. Check existing boundary code for reuse first and verify that integration seams keep owned collaborators real.
+- Compare every added or changed scenario with coverage of the same public behaviour, and identify its independent observable claim or failure path. Group suites by behaviour within the repository's caps, not by implementation file. Consolidate equivalent claims into an existing behaviour suite or parameterise repeated scenarios; helper extraction alone does not remove duplicate coverage.
+- Repeated coverage at another layer earns its place only by a distinct composition, transport or lifecycle claim; name it. Keep the mandatory graph traversal alongside integration claims.
+- For removed or consolidated cases, trace every unique assertion and failure path to retained coverage, including parameterised rows; test counts and passing results do not prove it.
+- For every new or changed mock, name its controlled boundary and scenario; for a wrapper, its required context, realistic layout or shared setup. Check existing boundary code for reuse first, and that integration seams keep owned collaborators real.
 
-Report compact PR evidence with test or source references: suites compared, distinct claims, boundary decisions and original-to-retained coverage for removals. Include this evidence when there are no findings. Ordinary test names and references suffice; no per-test metadata wrapper, comment template or new framework is required.
+Report compact PR evidence with test or source references, even with no findings: suites compared, distinct claims, boundary decisions and original-to-retained coverage for removals. Ordinary test names and references suffice; add no per-test metadata wrapper, comment template or framework.
 
-Apply TS3 and TS8: parameterise repeated scenarios and keep one behaviour per test. Expected results come from the contract and fixture facts, independently of the production calculation being checked. Calling that calculation to generate both actual and expected results proves nothing. Await observable completion; reset storage and clean up processes, actors, timers and subscriptions between runs.
+Apply TS3 and TS8: parameterise repeated scenarios and keep one behaviour per test. Expected results come from the contract and fixture facts, independently of the production calculation under test; calling it for both actual and expected proves nothing. Await observable completion; reset storage and clean up processes, actors, timers and subscriptions between runs.
 
-UI assertions prove behaviour, content and accessibility. Review appearance in the shared Storybook and native previews. Tests must not freeze font sizes, colours, backgrounds, borders, shadows, padding, design tokens, CSS classes or computed style values. Geometry or style observations are justified only when they prove a functional outcome, such as a control remaining visible, reachable and unobscured, content reflowing without loss, or scrolling reaching its destination. Assert that outcome rather than exact styling or equality with a production style value.
+UI assertions prove behaviour, content and accessibility. Appearance belongs to Paper and is reviewed in the shared Storybook and native previews: tests never assert font sizes, line heights, weights, colours, backgrounds, borders, shadows, spacing, radii, fixed widths and heights, design tokens, CSS classes or computed style values. When a design change breaks such an assertion, delete it. A geometry or style observation is justified only by a functional outcome a user would see, such as a control remaining visible, reachable and unobscured, content reflowing without overflow, clipping or loss, or scrolling reaching its destination. Assert that outcome, not exact styling or equality with a production style value.
 
-The scripted Agent and typed fixtures prove Argo's handling of the supplied scenarios. They do not prove compatibility with an actual upstream Agent, authentication, descendant isolation or resource savings. State those limits as specified in ADR-0018.
+The scripted Agent and typed fixtures prove Argo's handling of the supplied scenarios, not compatibility with an actual upstream Agent, authentication, descendant isolation or resource savings. State those limits as ADR-0018 specifies.
 
-For Agent installation under Spec 0009 #363, external download and installer process ports may also deliver fixtures. Real App journeys keep tRPC, Engine, SQLite, file materialization and launch checks. Installer mocks supply package metadata, files, timing and failures only. They do not implement selection, admission, persistence or installation status. Real process tests separately prove cancellation and observed POSIX descendant cleanup.
+For Agent installation under Spec 0009 #363, external download and installer process ports may also deliver fixtures. Real App journeys keep tRPC, Engine, SQLite, file materialization and launch checks. Installer mocks supply only package metadata, files, timing and failures, never selection, admission, persistence or installation status. Real process tests separately prove cancellation and observed POSIX descendant cleanup.
 
 Supervisor installation process tests use the real installer launcher and process groups. Their parent process supplies only the Engine lifetime needed to trigger abrupt exit and force-stop; these tests prove OS cleanup and restart fencing, rather than Engine business behaviour. A stopped launch wrapper forces durable group recovery to run instead of relying on its IPC closure handler. Recovery tests also retain an unmatched record without signaling an unrelated process.

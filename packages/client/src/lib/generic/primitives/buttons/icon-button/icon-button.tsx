@@ -8,7 +8,7 @@ import { iconButtonClasses } from './icon-button-styles';
 
 type IconAppearance = Pick<
   IconButtonProps,
-  'icon' | 'iconRole' | 'iconClassName' | 'filled'
+  'icon' | 'iconRole' | 'iconClassName' | 'filled' | 'iconWeight'
 >;
 type IconControlProps = Omit<IconButtonProps, keyof IconAppearance>;
 type IconPresentation = Pick<IconControlProps, 'size' | 'variant' | 'loading'>;
@@ -29,12 +29,14 @@ export function IconButton(props: IconButtonProps): ReactElement {
 
 function iconDrawing({
   icon,
-  iconRole = 'control',
+  iconRole,
   iconClassName,
   filled,
+  iconWeight,
   ...props
 }: IconButtonProps): IconDrawing {
-  return createIconDrawing(props, { icon, iconRole, iconClassName, filled });
+  const appearance = { icon, iconRole, iconClassName, filled, iconWeight };
+  return createIconDrawing(props, appearance);
 }
 
 function createIconDrawing(
@@ -43,13 +45,21 @@ function createIconDrawing(
 ): IconDrawing {
   return {
     pressable: iconPressableProps(props),
-    adornment: {
-      icon: appearance.icon,
-      role: appearance.iconRole ?? 'control',
-      filled: appearance.filled,
-      loading: props.loading,
-      textClass: iconTextClass({ ...props, ...appearance }),
-    },
+    adornment: iconAdornment(props, appearance),
+  };
+}
+
+function iconAdornment(
+  props: IconControlProps,
+  appearance: IconAppearance,
+): IconDrawing['adornment'] {
+  return {
+    icon: appearance.icon,
+    role: appearance.iconRole ?? 'control',
+    filled: appearance.filled,
+    weight: appearance.iconWeight,
+    loading: props.loading,
+    textClass: iconTextClass({ ...props, ...appearance }),
   };
 }
 
@@ -69,6 +79,8 @@ function createIconPressable(
   return {
     ...pressable,
     ...buttonInteractionProps({ ...pressable, loading: presentation.loading }),
+    // Android fades each child on its own, so a dimmed filled disc would show through its glyph; iOS fades the whole button.
+    needsOffscreenAlphaCompositing: presentation.variant === 'filled',
     className: iconContainerClass({ ...pressable, ...presentation }),
   };
 }
@@ -79,15 +91,10 @@ function iconContainerClass(
     'size' | 'variant' | 'disabled' | 'className' | 'aria-pressed'
   >,
 ): string {
-  return cn(
-    iconButtonClasses({
-      size: props.size,
-      variant: props.variant,
-      disabled: !!props.disabled,
-      pressed: props['aria-pressed'] === true,
-    }),
-    props.className,
-  );
+  const { size, variant, className } = props;
+  const disabled = !!props.disabled;
+  const pressed = props['aria-pressed'] === true;
+  return cn(iconButtonClasses({ size, variant, disabled, pressed }), className);
 }
 
 function iconTextClass(

@@ -22,9 +22,13 @@ const previewCharacters = 2048;
 
 let picked = 0;
 
+function canPreview(chosen: ChosenFile): boolean {
+  return (
+    !isPromptImage(chosen.mimeType) && chosen.bytes <= inlineTextLimitBytes
+  );
+}
 async function readPreview(chosen: ChosenFile): Promise<string | undefined> {
-  if (isPromptImage(chosen.mimeType) || chosen.bytes > inlineTextLimitBytes)
-    return undefined;
+  if (!canPreview(chosen)) return;
   const text = await chosen.file.text();
   return isPlainText(text) ? text.slice(0, previewCharacters) : undefined;
 }
@@ -34,15 +38,21 @@ async function toPickedAttachment(
 ): Promise<PickedAttachment> {
   picked += 1;
   return {
-    attachment: {
-      id: `${chosen.key}#${picked}`,
-      name: chosen.name,
-      uri: chosen.uri,
-      bytes: chosen.bytes,
-      mimeType: chosen.mimeType,
-      preview: await readPreview(chosen).catch((): undefined => undefined),
-    },
+    attachment: await attachmentDescription(chosen, picked),
     file: chosen.file,
+  };
+}
+async function attachmentDescription(
+  chosen: ChosenFile,
+  occurrence: number,
+): Promise<PickedAttachment['attachment']> {
+  return {
+    id: `${chosen.key}#${occurrence}`,
+    name: chosen.name,
+    uri: chosen.uri,
+    bytes: chosen.bytes,
+    mimeType: chosen.mimeType,
+    preview: await readPreview(chosen).catch((): undefined => undefined),
   };
 }
 
@@ -59,22 +69,25 @@ function fromPicker<Asset extends PickerAsset>(
   assets: readonly Asset[],
   describe: (asset: Asset, file: File | Blob) => Described,
 ): Promise<PickedAttachment[]> {
-  return Promise.all(
-    assets.map((asset) => {
-      const file = asset.file ?? new File(asset.uri);
-      const { key, name, bytes } = describe(asset, file);
-      const mimeType = asset.mimeType ?? file.type;
-      const size = bytes ?? file.size;
-      return toPickedAttachment({
-        key,
-        name,
-        uri: asset.uri,
-        bytes: size,
-        mimeType,
-        file,
-      });
-    }),
-  );
+  return Promise.all(assets.map((asset) => describePicked(asset, describe)));
+}
+function describePicked<Asset extends PickerAsset>(
+  asset: Asset,
+  describe: (asset: Asset, file: File | Blob) => Described,
+): Promise<PickedAttachment> {
+  const file = asset.file ?? new File(asset.uri);
+  const { key, name, bytes } = describe(asset, file);
+  return toPickedAttachment({
+    key,
+    name,
+    uri: asset.uri,
+    bytes: bytes ?? file.size,
+    mimeType: pickerMime(asset, file),
+    file,
+  });
+}
+function imageName(file: File | Blob): string {
+  return 'name' in file ? file.name : 'Image';
 }
 
 // Opens the photo library, or the browser's file chooser, and returns none when the user cancels.
@@ -87,7 +100,7 @@ export async function pickImages(): Promise<PickedAttachment[]> {
   if (result.canceled) return [];
   return fromPicker(result.assets, (asset, file) => ({
     key: asset.assetId ?? asset.uri,
-    name: asset.fileName ?? ('name' in file ? file.name : 'Image'),
+    name: asset.fileName ?? imageName(file),
     bytes: asset.fileSize,
   }));
 }
@@ -105,16 +118,18 @@ export async function pickFiles(): Promise<PickedAttachment[]> {
 export function droppedFiles(
   files: readonly globalThis.File[],
 ): Promise<PickedAttachment[]> {
-  return Promise.all(
-    files.map((file) =>
-      toPickedAttachment({
-        key: file.name,
-        name: file.name,
-        uri: URL.createObjectURL(file),
-        bytes: file.size,
-        mimeType: file.type,
-        file,
-      }),
-    ),
-  );
+  return Promise.all(files.map(droppedAttachment));
+}
+function droppedAttachment(file: globalThis.File): Promise<PickedAttachment> {
+  return toPickedAttachment({
+    key: file.name,
+    name: file.name,
+    uri: URL.createObjectURL(file),
+    bytes: file.size,
+    mimeType: file.type,
+    file,
+  });
+}
+function pickerMime(asset: PickerAsset, file: File | Blob): string {
+  return asset.mimeType ?? file.type;
 }

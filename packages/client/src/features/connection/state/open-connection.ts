@@ -1,43 +1,68 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { type ActorRefFrom, createActor } from 'xstate';
-import { createTRPCClient } from '../trpc/create-trpc-client';
+import { type ActorRefFrom, createActor, type Subscription } from 'xstate';
+import {
+  createTRPCClient,
+  type ServerClient,
+} from '../trpc/create-trpc-client';
 import { connectionMachine } from './machine';
 
 export interface OpenConnection {
-  client: ReturnType<typeof createTRPCClient>['client'];
+  client: ServerClient['client'];
   connection: ReturnType<typeof createActor<typeof connectionMachine>>;
   close: () => Promise<void>;
 }
 
 export type ConnectionActor = ActorRefFrom<typeof connectionMachine>;
 
+const closedError = (): Error => new Error('The Connection is closed');
+
+function settleOnAttempt(
+  connection: ConnectionActor,
+  settle: { resolve: () => void; reject: (error: unknown) => void },
+): Subscription[] {
+  return [
+    connection.on('connection.attemptAllowed', () => settle.resolve()),
+    connection.subscribe({
+      error: settle.reject,
+      complete: () => settle.reject(closedError()),
+    }),
+  ];
+}
+
 // Resolves once the machine allows the attempt, and rejects once the machine stops.
 function waitForAttempt(connection: ConnectionActor): Promise<void> {
+  if (connection.getSnapshot().status !== 'active')
+    return Promise.reject(closedError());
+  const subscriptions: Subscription[] = [];
   return new Promise<void>((resolve, reject) => {
-    if (connection.getSnapshot().status !== 'active') {
-      reject(new Error('The Connection is closed'));
-      return;
-    }
-    const allowed = connection.on('connection.attemptAllowed', () => {
-      settled();
-      resolve();
-    });
-    const stopped = connection.subscribe({
-      error: (error) => {
-        settled();
-        reject(error);
-      },
-      complete: () => {
-        settled();
-        reject(new Error('The Connection is closed'));
-      },
-    });
-    const settled = (): void => {
-      allowed.unsubscribe();
-      stopped.unsubscribe();
-    };
+    subscriptions.push(...settleOnAttempt(connection, { resolve, reject }));
     connection.send({ type: 'connection.attemptRequested' });
+  }).finally(() => {
+    for (const subscription of subscriptions) subscription.unsubscribe();
   });
+}
+
+function startConnection(
+  webSocketClient: ServerClient['webSocketClient'],
+  queryClient: QueryClient,
+): OpenConnection['connection'] {
+  return createActor(connectionMachine, {
+    input: { webSocketClient, queryClient },
+  }).start();
+}
+
+function openedConnection(
+  connection: OpenConnection['connection'],
+  trpc: ServerClient,
+): OpenConnection {
+  return {
+    client: trpc.client,
+    connection,
+    close: async () => {
+      connection.stop();
+      await trpc.close();
+    },
+  };
 }
 
 // The App's Connection to the Server: a tRPC client whose WebSocket opens only when the Connection machine allows it.
@@ -45,23 +70,15 @@ export function openConnection(
   serverUrl: string,
   queryClient: QueryClient,
 ): OpenConnection {
-  let connection: ConnectionActor | undefined;
+  const created: { connection?: ConnectionActor } = {};
   const trpc = createTRPCClient(serverUrl, async () => {
-    // wsClient asks for its first URL while it is built, before `connection` below exists.
+    // wsClient asks for its first URL while it is built, before the Connection machine below exists.
     await Promise.resolve();
-    if (!connection) throw new Error('The Connection machine was not created');
-    await waitForAttempt(connection);
+    if (!created.connection)
+      throw new Error('The Connection machine was not created');
+    await waitForAttempt(created.connection);
   });
-  const started = createActor(connectionMachine, {
-    input: { webSocketClient: trpc.webSocketClient, queryClient },
-  }).start();
-  connection = started;
-  return {
-    client: trpc.client,
-    connection: started,
-    close: async () => {
-      started.stop();
-      await trpc.close();
-    },
-  };
+  const connection = startConnection(trpc.webSocketClient, queryClient);
+  created.connection = connection;
+  return openedConnection(connection, trpc);
 }

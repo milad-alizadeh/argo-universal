@@ -36,18 +36,12 @@ export const LiveUpdatesStopped: Story = {
   args: { liveUpdatesStopped: true },
 };
 
-export const Offline: Story = { args: { connection: 'offline' } };
-
 export const NoMatchingSessions: Story = {
   args: { query: 'xyz', sessions: [] },
 };
 
 export const SearchMatches: Story = {
   args: { query: 'settings' },
-};
-
-export const NextPageLoading: Story = {
-  args: { isFetchingNextPage: true },
 };
 
 export const NextPageFailure: Story = {

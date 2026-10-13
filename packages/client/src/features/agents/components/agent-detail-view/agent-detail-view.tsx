@@ -16,15 +16,11 @@ import {
 import { PhoneTitle } from '../phone-title';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
-import {
-  AboutSection,
-  AgentStatusSection,
-  DefaultsSection,
-} from './agent-detail-sections';
+import { AboutSection, AgentStatusSection } from './agent-detail-sections';
 
 export type { AgentDetailViewProps } from '../../state/agent-detail-types';
 
-// One Agent: where it stands, the choices new Sessions start with, where it comes from, and Remove.
+// One Agent: where it stands, where it comes from, and Remove.
 export function AgentDetailView(
   props: AgentDetailViewProps,
 ): React.JSX.Element {
@@ -88,7 +84,6 @@ function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
       <PhoneSummary {...props} />
       <AgentStatusSection {...props} />
       <AgentEnablement management={props.management} />
-      <DefaultsSection {...props} />
       <AboutSection {...props} />
       <FieldRow>
         <RemoveAgent {...props} />

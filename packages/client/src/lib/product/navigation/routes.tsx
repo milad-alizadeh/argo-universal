@@ -3,22 +3,39 @@ import type { NavigationDestination } from './context';
 type RouteHref = {
   [Key in NavigationDestination['to']]: {
     pathname: (typeof routes)[Key]['pathname'];
-    params: Omit<Extract<NavigationDestination, { to: Key }>, 'to'>;
+    params: Omit<Extract<NavigationDestination, { to: Key }>, 'to'> &
+      (Key extends 'new-session' ? { id: typeof newSessionId } : unknown);
   };
 }[NavigationDestination['to']];
 
 // The route that draws each destination; a destination's fields are its route's params.
 type RouteParams = Record<string, string | string[] | undefined>;
 
+// The Session id New Session's URL carries; Session ids are UUIDs, so none is ever this.
+export const newSessionId = 'new';
+
+// One route draws New Session and the Session it becomes, so the first prompt keeps the same screen.
+const sessionOrNew = (params: RouteParams): NavigationDestination => {
+  const id = String(params.id);
+  return id === newSessionId ? newSession(params) : { to: 'session', id };
+};
+
+function newSession({ projectId }: RouteParams): NavigationDestination {
+  return {
+    to: 'new-session',
+    ...(typeof projectId === 'string' ? { projectId } : {}),
+  };
+}
+
 const routes = {
   sessions: { pathname: '/', destination: () => ({ to: 'sessions' }) },
   'new-session': {
-    pathname: '/sessions/new',
-    destination: () => ({ to: 'new-session' }),
+    pathname: '/sessions/[id]',
+    destination: sessionOrNew,
   },
   session: {
     pathname: '/sessions/[id]',
-    destination: (params) => ({ to: 'session', id: String(params.id) }),
+    destination: sessionOrNew,
   },
   issues: { pathname: '/issues', destination: () => ({ to: 'issues' }) },
   atlas: { pathname: '/atlas', destination: () => ({ to: 'atlas' }) },
@@ -79,11 +96,15 @@ const routes = {
 
 export function hrefFor(destination: NavigationDestination): RouteHref {
   if (destination.to === 'session') return sessionHref(destination);
+  if (destination.to === 'new-session') return newSessionHref(destination);
   return settingsOrStaticHref(destination);
 }
 
 function settingsOrStaticHref(
-  destination: Exclude<NavigationDestination, { to: 'session' }>,
+  destination: Exclude<
+    NavigationDestination,
+    { to: 'session' | 'new-session' }
+  >,
 ): RouteHref {
   if (destination.to === 'settings-project') return projectHref(destination);
   if (destination.to === 'settings-agent') return agentHref(destination);
@@ -96,6 +117,17 @@ function sessionHref(
 ): RouteHref {
   const { to, ...params } = destination;
   return { pathname: routes[to].pathname, params };
+}
+
+// New Session's URL is a Session's, with an id no Session has.
+function newSessionHref(
+  destination: Extract<NavigationDestination, { to: 'new-session' }>,
+): RouteHref {
+  const { to, ...params } = destination;
+  return {
+    pathname: routes[to].pathname,
+    params: { ...params, id: newSessionId },
+  };
 }
 
 function projectHref(

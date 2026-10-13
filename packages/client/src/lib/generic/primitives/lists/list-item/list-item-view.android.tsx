@@ -1,33 +1,14 @@
-import {
-  Button,
-  CircularProgressIndicator,
-  Column,
-  Shape,
-  Row,
-  Surface,
-} from '@expo/ui/jetpack-compose';
-import {
-  alpha,
-  clearSemantics,
-  defaultMinSize,
-  fillMaxWidth,
-  padding,
-  semantics,
-  size,
-  weight,
-} from '@expo/ui/jetpack-compose/modifiers';
+import { Button, Column, Shape, Surface } from '@expo/ui/jetpack-compose';
+import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
-import { useIconPixels } from '../../../symbols/icon-role';
 import { useWide } from '../../../use-wide/use-wide';
 import { useNavigationFields } from '../../fields/field-layout';
 import { type ListItemProps, listItemName } from '../../fields/field-props';
-import { RowSubtitle, RowTitle } from './list-item-compose-text';
-import { RowTrailing } from './list-item-compose-value';
+import { RowContent } from './list-item-android-row';
 import * as Web from './list-item-view.tsx';
-import { NativeRowGlyph, NativeRowDetail } from './native-row';
+import { NativeRowDetail } from './native-row';
 
-const rowHeight = 56;
 const tileRadius = 4;
 const tileCorners = {
   topStart: tileRadius,
@@ -35,43 +16,64 @@ const tileCorners = {
   bottomStart: tileRadius,
   bottomEnd: tileRadius,
 };
-const gutter = 16;
-const verticalPadding = 8;
-const disabledOpacity = 0.5;
 
 export function ListItem(props: ListItemProps): React.JSX.Element {
   const wide = useWide();
   const background = useRowBackground();
   if (wide) return <Web.ListItem {...props} />;
-  const rowProps = {
+  if (!props.onPress) return <StaticRow item={props} color={background} />;
+  return <PressableRow item={props} press={props.onPress} color={background} />;
+}
+
+const noPadding = { start: 0, top: 0, end: 0, bottom: 0 };
+
+interface RowProps {
+  item: ListItemProps;
+  color: string | undefined;
+}
+
+function StaticRow({ item, color }: RowProps): React.JSX.Element {
+  return (
+    <Surface {...rowShapeProps(item)} color={color}>
+      <RowColumn {...item} />
+    </Surface>
+  );
+}
+
+interface PressableRowProps extends RowProps {
+  press: () => void;
+}
+
+function PressableRow(props: PressableRowProps): React.JSX.Element {
+  const { item, color } = props;
+  return (
+    <Button
+      {...rowShapeProps(item)}
+      enabled={!item.disabled}
+      onClick={props.press}
+      colors={{ containerColor: color, disabledContainerColor: color }}
+      contentPadding={noPadding}
+    >
+      <RowColumn {...item} />
+    </Button>
+  );
+}
+
+function rowShapeProps(
+  props: ListItemProps,
+): Pick<React.ComponentProps<typeof Button>, 'shape' | 'modifiers'> {
+  return {
     shape: Shape.RoundedCorner({ cornerRadii: tileCorners }),
     modifiers: [fillMaxWidth(), ...rowSemantics(props)],
   };
-  if (!props.onPress)
-    return (
-      <Surface {...rowProps} color={background}>
-        <Column>
-          <RowContent {...props} />
-          <NativeRowDetail detail={props.detail} />
-        </Column>
-      </Surface>
-    );
+}
+
+function RowColumn(props: ListItemProps): React.JSX.Element {
   return (
-    <Button
-      {...rowProps}
-      enabled={!props.disabled}
-      onClick={props.onPress}
-      colors={{
-        containerColor: background,
-        disabledContainerColor: background,
-      }}
-      contentPadding={{ start: 0, top: 0, end: 0, bottom: 0 }}
-    >
-      <Column>
-        <RowContent {...props} />
-        <NativeRowDetail detail={props.detail} />
-      </Column>
-    </Button>
+    <Column>
+      <RowContent {...props} />
+      <NativeRowDetail detail={props.detail} />
+    </Column>
   );
 }
 
@@ -86,55 +88,7 @@ function useRowBackground(): string | undefined {
   return useNavigationFields() ? 'transparent' : muted;
 }
 
-function RowContent(props: ListItemProps): React.JSX.Element {
-  return (
-    <Row
-      horizontalArrangement={{ spacedBy: gutter }}
-      verticalAlignment="center"
-      modifiers={[
-        fillMaxWidth(),
-        defaultMinSize({ minHeight: rowHeight }),
-        padding(gutter, verticalPadding, gutter, verticalPadding),
-        ...headerModifiers(props),
-      ]}
-    >
-      <RowLeading {...props} />
-      <Column
-        modifiers={[weight(1), ...(props.control ? [clearSemantics()] : [])]}
-      >
-        <RowTitle {...props} />
-        <RowSubtitle subtitle={props.subtitle} />
-      </Column>
-      <RowTrailing {...props} />
-    </Row>
-  );
-}
-
-function RowLeading(
-  props: Pick<ListItemProps, 'icon' | 'loading' | 'leading'>,
-): React.JSX.Element | null {
-  const { primary } = useNativeTheme().colors;
-  const pixels = useIconPixels('row');
-  if (props.loading)
-    return (
-      <CircularProgressIndicator
-        color={primary}
-        trackColor="transparent"
-        modifiers={[size(pixels, pixels)]}
-      />
-    );
-  return <NativeRowGlyph {...props} />;
-}
-
 function rowSemantics(props: ListItemProps): ReturnType<typeof semantics>[] {
   if (props.control || props.detail) return [];
   return [semantics({ contentDescription: rowName(props) })];
-}
-function headerModifiers(
-  props: ListItemProps,
-): NonNullable<React.ComponentProps<typeof Row>['modifiers']> {
-  return [
-    alpha(props.disabled ? disabledOpacity : 1),
-    ...(props.detail ? [clearSemantics()] : []),
-  ];
 }

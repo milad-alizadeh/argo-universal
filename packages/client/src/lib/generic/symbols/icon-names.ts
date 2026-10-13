@@ -23,6 +23,7 @@ export const iconSymbols = {
     material: 'share',
   },
   attach: { sf: 'paperclip', material: 'attach_file' },
+  'question-bubble': { sf: 'questionmark.bubble', material: 'help' },
   branch: { sf: 'arrow.triangle.branch', material: 'alt_route' },
   camera: { sf: 'camera', material: 'photo_camera' },
   check: { sf: 'checkmark', material: 'check' },
@@ -67,6 +68,7 @@ export const iconSymbols = {
   'flat-view': { sf: 'list.bullet', material: 'view_list' },
   goal: { sf: 'target', material: 'target' },
   guide: { sf: 'text.book.closed', material: 'import_contacts' },
+  hand: { sf: 'hand.raised', material: 'front_hand' },
   improve: { sf: 'lightbulb', material: 'lightbulb' },
   issue: {
     sf: 'ticket',

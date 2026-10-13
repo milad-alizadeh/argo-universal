@@ -38,12 +38,10 @@ export const ShowsTheVersionAndDistribution: Story = {
   },
 };
 
-export const LabelsTheNewSessionsDefaultsAsThisDevices: Story = {
+export const ShowsTheReadyStatusOnAPhone: Story = {
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('heading', { name: 'New Sessions' }),
-    ).toBeVisible();
-    await expect(canvas.getByText(/on this Device\.$/)).toBeVisible();
+    await expect(canvas.getAllByText('Ready')[0]).toBeVisible();
   },
 };
 
@@ -97,9 +95,6 @@ export const SignsInAndChecksAgain: Story = {
     await expect(
       canvas.queryByRole('button', { name: 'Sign in' }),
     ).not.toBeInTheDocument();
-    await expect(
-      canvas.queryByRole('heading', { name: 'New Sessions' }),
-    ).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('link', { name: 'Check again' }));
     await expect(args.onCheckAgain).toHaveBeenCalledOnce();
   },
@@ -118,14 +113,5 @@ export const GoesBack: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
     await expect(args.onBack).toHaveBeenCalledOnce();
-  },
-};
-
-export const ShowsThePlainPickers: Story = {
-  play: async ({ canvas }) => {
-    for (const name of ['Model', 'Effort', 'Mode']) {
-      const row = canvas.getByRole('group', { name });
-      await expect(within(row).getByLabelText(name)).toBeVisible();
-    }
   },
 };

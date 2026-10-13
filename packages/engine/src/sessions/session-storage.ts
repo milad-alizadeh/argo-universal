@@ -167,6 +167,30 @@ export class SessionRowUpdateJob implements WriterJob {
   }
 }
 
+// Removes a Session no prompt reached; its Turns, Feed rows and Blobs go with it.
+export class SessionDeleteJob implements WriterJob {
+  public constructor(private readonly sessionId: string) {}
+
+  public describe(): string {
+    return `delete Session ${this.sessionId}`;
+  }
+
+  public commit(transaction: StorageTransaction): void {
+    transaction.delete(session).where(eq(session.id, this.sessionId)).run();
+  }
+
+  public project(
+    current: SessionRecord | undefined,
+    sessionId: string,
+  ): SessionRecord | undefined {
+    return this.sessionId === sessionId ? undefined : current;
+  }
+
+  public changedSessionIds(): string[] {
+    return [this.sessionId];
+  }
+}
+
 export class TurnInsertJob implements WriterJob {
   public constructor(
     private readonly insert: { turn: typeof turn.$inferInsert },
@@ -236,7 +260,11 @@ const projectSessionJob = (
   job: WriterJob,
   sessionId: string,
 ): SessionRecord | undefined => {
-  if (job instanceof SessionInsertJob || job instanceof SessionRowUpdateJob)
+  if (
+    job instanceof SessionInsertJob ||
+    job instanceof SessionRowUpdateJob ||
+    job instanceof SessionDeleteJob
+  )
     return job.project(current, sessionId);
   return current?.id === sessionId
     ? projectQueuedFeedSession(job, current)
@@ -297,6 +325,7 @@ export const changedSessionIds = (job: WriterJob): string[] => {
   if (
     job instanceof SessionInsertJob ||
     job instanceof SessionRowUpdateJob ||
+    job instanceof SessionDeleteJob ||
     job instanceof TurnInsertJob
   )
     return job.changedSessionIds();

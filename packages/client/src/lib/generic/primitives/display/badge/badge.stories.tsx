@@ -11,24 +11,40 @@ function VariantExamples(): React.JSX.Element {
   return (
     <VariationList>
       {variants.map((variant) => (
-        <Variation key={variant} label={variant}>
-          <View className="flex-row">
-            <Badge variant={variant}>
-              <Text>Badge</Text>
-            </Badge>
-          </View>
-        </Variation>
+        <VariantExample key={variant} variant={variant} />
       ))}
       {tones.map((tone) => (
-        <Variation key={tone} label={`tone ${tone}`}>
-          <View className="flex-row">
-            <Badge tone={tone}>
-              <Text>Ready</Text>
-            </Badge>
-          </View>
-        </Variation>
+        <ToneExample key={tone} tone={tone} />
       ))}
     </VariationList>
+  );
+}
+
+function VariantExample(props: {
+  variant: (typeof variants)[number];
+}): React.JSX.Element {
+  return (
+    <Variation label={props.variant}>
+      <View className="flex-row">
+        <Badge variant={props.variant}>
+          <Text>Badge</Text>
+        </Badge>
+      </View>
+    </Variation>
+  );
+}
+
+function ToneExample(props: {
+  tone: (typeof tones)[number];
+}): React.JSX.Element {
+  return (
+    <Variation label={`tone ${props.tone}`}>
+      <View className="flex-row">
+        <Badge tone={props.tone}>
+          <Text>Ready</Text>
+        </Badge>
+      </View>
+    </Variation>
   );
 }
 

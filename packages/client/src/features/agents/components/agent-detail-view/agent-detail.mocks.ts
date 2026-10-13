@@ -2,7 +2,6 @@ import { fn } from 'storybook/test';
 import type {
   AgentDetail,
   AgentDetailViewProps,
-  SessionDefault,
 } from '../../state/agent-detail-types';
 import { iconAgent } from '../registry-icons.mocks';
 
@@ -23,41 +22,9 @@ export const readyAgent: AgentDetail = {
 
 export const signInCommand = 'example-agent login';
 
-const modelDefault: SessionDefault = {
-  id: 'model',
-  label: 'Model',
-  value: 'large',
-  options: [
-    { value: 'large', label: 'Large' },
-    { value: 'small', label: 'Small' },
-  ],
-};
-const effortDefault: SessionDefault = {
-  id: 'effort',
-  label: 'Effort',
-  value: 'medium',
-  options: [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-  ],
-};
-
-const modeDefault: SessionDefault = {
-  id: 'mode',
-  label: 'Mode',
-  value: 'ask',
-  options: [
-    { value: 'ask', label: 'Ask before edits' },
-    { value: 'auto', label: 'Edit automatically' },
-  ],
-};
-
-// A ready Agent with model, effort and mode choices, and a spy for every callback.
+// A ready Agent with a spy for every callback.
 export const agentDetailArgs = (): AgentDetailViewProps => ({
   agent: readyAgent,
-  defaults: [modelDefault, effortDefault, modeDefault],
-  onDefaultChange: fn(),
   onBack: fn(),
   onInstall: fn(),
   onUpdate: fn(),

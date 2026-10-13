@@ -5,7 +5,9 @@ import type {
   SessionConfigOption,
 } from '@agentclientprotocol/sdk';
 import { agentAdapters } from '@repo/agents';
+import { session } from '@repo/db/schema';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
+import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
@@ -87,9 +89,11 @@ it('an empty Session shows configuration returned for its actual Checkout before
     },
   });
   expect(openings[0]?.cwd).toBe(
-    (await host.caller.session.list({ archived: false })).sessions.find(
-      (session) => session.sessionId === created.sessionId,
-    )?.cwd,
+    host.database
+      .select({ cwd: session.checkoutPath })
+      .from(session)
+      .where(eq(session.id, created.sessionId))
+      .get()?.cwd,
   );
   await feed.return?.();
 });

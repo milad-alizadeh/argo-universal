@@ -30,8 +30,11 @@ function SectionHeader({
 }: {
   title?: string;
 }): React.JSX.Element | null {
+  return title ? <HeaderText title={title} /> : null;
+}
+
+function HeaderText({ title }: { title: string }): React.JSX.Element {
   const headingModifiers = useSwiftUITextModifiers('heading');
-  if (!title) return null;
   return (
     <Text
       modifiers={[

@@ -34,15 +34,24 @@ function SelectExample({
   const [value, setValue] = useState(initialValue);
   return (
     <Select value={value} onValueChange={setValue} disabled={disabled}>
-      <SelectTrigger
-        size={size}
-        variant={variant}
-        className={triggerWidth[variant ?? 'default']}
-      >
-        <SelectValue placeholder="Select a fruit" />
-      </SelectTrigger>
+      <FruitTrigger size={size} variant={variant} />
       <FruitOptions />
     </Select>
+  );
+}
+
+function FruitTrigger({
+  size,
+  variant,
+}: Pick<SelectExampleProps, 'size' | 'variant'>): React.JSX.Element {
+  return (
+    <SelectTrigger
+      size={size}
+      variant={variant}
+      className={triggerWidth[variant ?? 'default']}
+    >
+      <SelectValue placeholder="Select a fruit" />
+    </SelectTrigger>
   );
 }
 

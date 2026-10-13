@@ -16,29 +16,34 @@ export function useNativeSheets(): NativeSheets | undefined {
 }
 
 // The sheet routes sit outside the Composer, so the Composer hands them what to draw.
-function createStore<Value>(): {
+interface PublishedStore<Value> {
   publish: (value: Value) => void;
   current: () => Value | undefined;
   use: () => Value | undefined;
-} {
+}
+function subscribeTo(
+  listeners: Set<() => void>,
+): (listener: () => void) => () => void {
+  return (listener) => {
+    listeners.add(listener);
+    return (): void => {
+      listeners.delete(listener);
+    };
+  };
+}
+function createStore<Value>(): PublishedStore<Value> {
   let latest: Value | undefined;
   const listeners = new Set<() => void>();
+  const subscribe = subscribeTo(listeners);
+  const current = (): Value | undefined => latest;
+  const publish = (value: Value): void => {
+    latest = value;
+    for (const listener of listeners) listener();
+  };
   return {
-    publish: (value) => {
-      latest = value;
-      for (const listener of listeners) listener();
-    },
-    current: () => latest,
-    use: () =>
-      useSyncExternalStore(
-        (listener) => {
-          listeners.add(listener);
-          return (): void => {
-            listeners.delete(listener);
-          };
-        },
-        () => latest,
-      ),
+    publish,
+    current,
+    use: () => useSyncExternalStore(subscribe, current),
   };
 }
 

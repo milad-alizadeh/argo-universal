@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import {
@@ -9,7 +9,10 @@ import {
   composerUnavailableConfigurations,
 } from '../../../../../mocks/composer-mock';
 import { updateComposerSettings } from '../../../../../mocks/composer-mock';
-import { ComposerAgentModelControl } from './composer-configuration';
+import {
+  ComposerAgentModelControl,
+  type ComposerConfigurationProps,
+} from './composer-configuration';
 
 const configuration = composerUnlistedEffortConfigurations[0];
 if (!configuration)
@@ -24,24 +27,10 @@ export default meta;
 export const DefaultEffort: StoryObj<typeof meta> = {
   name: 'Default effort',
   render: function ConfigurationRender(args) {
-    const [configOptions, setConfigOptions] = useState(
-      args.configuration.configOptions,
-    );
+    const configuration = useInteractiveConfiguration(args.configuration);
     return (
       <View className="p-4">
-        <ComposerAgentModelControl
-          {...args}
-          configuration={{
-            ...args.configuration,
-            configOptions,
-            onConfigChange: (configId, value) => {
-              action('configuration changed')(configId, value);
-              setConfigOptions((options) =>
-                updateComposerSettings(options, configId, value),
-              );
-            },
-          }}
-        />
+        <ComposerAgentModelControl {...args} configuration={configuration} />
       </View>
     );
   },
@@ -78,3 +67,27 @@ export const FastMode: StoryObj<typeof meta> = {
   args: { configuration: composerFastModeConfiguration(true) },
   render: DefaultEffort.render,
 };
+
+function useInteractiveConfiguration(
+  configuration: ComposerConfigurationProps,
+): ComposerConfigurationProps {
+  const [configOptions, setConfigOptions] = useState(
+    configuration.configOptions,
+  );
+  const onConfigChange = configurationChanged(setConfigOptions);
+  return { ...configuration, configOptions, onConfigChange };
+}
+
+type SetConfigOptions = Dispatch<
+  SetStateAction<ComposerConfigurationProps['configOptions']>
+>;
+function configurationChanged(
+  setConfigOptions: SetConfigOptions,
+): ComposerConfigurationProps['onConfigChange'] {
+  return (configId, value) => {
+    action('configuration changed')(configId, value);
+    setConfigOptions((options) =>
+      updateComposerSettings(options, configId, value),
+    );
+  };
+}

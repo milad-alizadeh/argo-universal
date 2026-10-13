@@ -2,28 +2,27 @@ import type { NavigationDestination } from './context';
 
 export type Section = 'sessions' | 'issues' | 'atlas' | 'settings';
 
+const destinationSections: Record<NavigationDestination['to'], Section> = {
+  sessions: 'sessions',
+  'new-session': 'sessions',
+  session: 'sessions',
+  issues: 'issues',
+  atlas: 'atlas',
+  settings: 'settings',
+  'settings-projects': 'settings',
+  'settings-agents': 'settings',
+  'settings-devices': 'settings',
+  'settings-appearance': 'settings',
+  'settings-notifications': 'settings',
+  'settings-accounts': 'settings',
+  'settings-project': 'settings',
+  'settings-connection': 'settings',
+  'settings-agent-new': 'settings',
+  'settings-agent': 'settings',
+};
+
 export function sectionOf(destination: NavigationDestination): Section {
-  switch (destination.to) {
-    case 'sessions':
-    case 'new-session':
-    case 'session':
-      return 'sessions';
-    case 'issues':
-    case 'atlas':
-      return destination.to;
-    case 'settings':
-    case 'settings-projects':
-    case 'settings-agents':
-    case 'settings-devices':
-    case 'settings-appearance':
-    case 'settings-notifications':
-    case 'settings-accounts':
-    case 'settings-project':
-    case 'settings-connection':
-    case 'settings-agent-new':
-    case 'settings-agent':
-      return 'settings';
-  }
+  return destinationSections[destination.to];
 }
 
 // Each section opens on its list; a wide window adds the first detail beside it without changing the URL.

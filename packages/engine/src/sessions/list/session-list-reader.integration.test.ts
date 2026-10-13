@@ -5,6 +5,7 @@ import { expect, it, onTestFinished, vi } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import {
   countDatabaseReads,
+  insertEndedTurn,
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
@@ -71,6 +72,7 @@ it('reads one Session with a thousand Turns without fetching its history', (): v
 it('reads the existence of a running Subagent Turn without fetching its history', (): void => {
   const { database, directory, remove } = openTestDatabase();
   onTestFinished(remove);
+  insertEndedTurn(database);
   insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
   database
     .insert(turn)
@@ -116,7 +118,7 @@ it('reads the existence of a running Subagent Turn without fetching its history'
     },
   ]);
   expect(counted.metrics.queries).toBeLessThanOrEqual(5);
-  expect(counted.metrics.rows).toBeLessThanOrEqual(3);
+  expect(counted.metrics.rows).toBeLessThanOrEqual(4);
 });
 
 it('excludes only the Subagent with a malformed latest Turn from its healthy parent', (): void => {
@@ -126,6 +128,7 @@ it('excludes only the Subagent with a malformed latest Turn from its healthy par
     .spyOn(console, 'error')
     .mockImplementation((): undefined => undefined);
   onTestFinished((): void => report.mockRestore());
+  insertEndedTurn(database);
   insertSession(database, { id: 'bad-child', parentSessionId: 'session-1' });
   insertSession(database, {
     id: 'healthy-child',
@@ -184,6 +187,7 @@ it.each(['session-1', 'child-1'])(
   async (sessionId): Promise<void> => {
     const { database, directory, remove } = openTestDatabase();
     onTestFinished(remove);
+    insertEndedTurn(database);
     insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
     database.$client.exec(
       "CREATE TRIGGER reject_turn BEFORE INSERT ON turn BEGIN SELECT RAISE(ABORT, 'locked'); END",
@@ -251,11 +255,15 @@ it.each(['session-1', 'child-1'])(
         subagents: 0,
       },
     ]);
-    expect(database.select().from(turn).all()).toEqual([]);
+    const queuedTurn = database
+      .select()
+      .from(turn)
+      .where(eq(turn.id, queuedTurnId));
+    expect(queuedTurn.all()).toEqual([]);
     database.$client.exec('DROP TRIGGER reject_turn');
     writer.send({ type: 'writer.drain' });
     await waitFor(writer, (snapshot) => snapshot.status === 'done');
-    expect(database.select().from(turn).all()).toMatchObject([
+    expect(queuedTurn.all()).toMatchObject([
       { id: queuedTurnId, status: 'ended' },
     ]);
     expect(observed).toHaveLength(3);

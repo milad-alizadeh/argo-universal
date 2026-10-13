@@ -10,7 +10,10 @@
     "./storybook": "./src/preview-config.ts"
   },
   "imports": {
-    "#primitives/*": "./src/lib/generic/primitives/*.tsx",
+    "#primitives/*": {
+      "types": "./src/lib/generic/primitives/*.tsx",
+      "default": "./src/lib/generic/primitives/*"
+    },
     "#features/*": "./src/features/*/index.ts",
     "#lib/generic/*": "./src/lib/generic/*.ts",
     "#lib/generic/primitives/*": "./src/lib/generic/primitives/*.tsx",
@@ -33,7 +36,6 @@
     "@radix-ui/react-popover": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@repo/contracts": "workspace:*",
-    "@rn-primitives/checkbox": "catalog:",
     "@rn-primitives/collapsible": "catalog:",
     "@rn-primitives/dialog": "catalog:",
     "@rn-primitives/dropdown-menu": "catalog:",

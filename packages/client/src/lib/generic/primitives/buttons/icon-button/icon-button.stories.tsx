@@ -9,56 +9,101 @@ const meta = { title: 'Design System/Primitives/IconButton' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+function DefaultExample(): React.JSX.Element {
+  return (
+    <Variation label="Default">
+      <View className="flex-row">
+        <IconButton icon="more" accessibilityLabel="More actions" />
+      </View>
+    </Variation>
+  );
+}
+
+function SidebarButton(props: {
+  size: (typeof sizes)[number];
+}): React.JSX.Element {
+  return (
+    <IconButton
+      icon="sidebar"
+      size={props.size}
+      variant="ghost"
+      accessibilityLabel={`Sidebar, ${props.size}`}
+    />
+  );
+}
+
+function SizesExample(): React.JSX.Element {
+  return (
+    <Variation label="Sizes">
+      <View className="flex-row items-center gap-2">
+        {sizes.map((size) => (
+          <SidebarButton key={size} size={size} />
+        ))}
+      </View>
+    </Variation>
+  );
+}
+
+function FormatButton(props: {
+  icon: 'bold' | 'italic';
+  label: string;
+  pressed: boolean;
+}): React.JSX.Element {
+  return (
+    <IconButton
+      icon={props.icon}
+      variant="ghost"
+      size="sm"
+      accessibilityLabel={props.label}
+      aria-pressed={props.pressed}
+    />
+  );
+}
+
+function PressedExample(): React.JSX.Element {
+  return (
+    <Variation label="Pressed">
+      <View className="flex-row gap-0.5">
+        <FormatButton icon="bold" label="Bold" pressed />
+        <FormatButton icon="italic" label="Italic" pressed={false} />
+      </View>
+    </Variation>
+  );
+}
+
+function DisabledExample(): React.JSX.Element {
+  return (
+    <Variation label="Disabled">
+      <View className="flex-row">
+        <IconButton icon="more" accessibilityLabel="More actions" disabled />
+      </View>
+    </Variation>
+  );
+}
+
+function LoadingExample(): React.JSX.Element {
+  return (
+    <Variation label="Loading">
+      <View className="flex-row">
+        <IconButton icon="more" accessibilityLabel="More actions" loading />
+      </View>
+    </Variation>
+  );
+}
+
+function IconButtonExamples(): React.JSX.Element {
+  return (
+    <VariationList>
+      <DefaultExample />
+      <SizesExample />
+      <PressedExample />
+      <DisabledExample />
+      <LoadingExample />
+    </VariationList>
+  );
+}
+
 export const Variations: Story = {
   name: 'IconButton',
-  render: () => (
-    <VariationList>
-      <Variation label="Default">
-        <View className="flex-row">
-          <IconButton icon="more" accessibilityLabel="More actions" />
-        </View>
-      </Variation>
-      <Variation label="Sizes">
-        <View className="flex-row items-center gap-2">
-          {sizes.map((size) => (
-            <IconButton
-              key={size}
-              icon="sidebar"
-              size={size}
-              variant="ghost"
-              accessibilityLabel={`Sidebar, ${size}`}
-            />
-          ))}
-        </View>
-      </Variation>
-      <Variation label="Pressed">
-        <View className="flex-row gap-0.5">
-          <IconButton
-            icon="bold"
-            variant="ghost"
-            size="sm"
-            accessibilityLabel="Bold"
-            aria-pressed
-          />
-          <IconButton
-            icon="italic"
-            variant="ghost"
-            size="sm"
-            accessibilityLabel="Italic"
-            aria-pressed={false}
-          />
-        </View>
-      </Variation>
-      <Variation label="Disabled">
-        <View className="flex-row">
-          <IconButton icon="more" accessibilityLabel="More actions" disabled />
-        </View>
-      </Variation>
-      <Variation label="Loading">
-        <View className="flex-row">
-          <IconButton icon="more" accessibilityLabel="More actions" loading />
-        </View>
-      </Variation>
-    </VariationList>
-  ),
+  render: IconButtonExamples,
 };

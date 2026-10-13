@@ -2,7 +2,7 @@
 
 A connected screen is two files (Spec 0011, owner, 2026-10-10). The screen is a thin shell in its feature's `screens/`: it calls tRPC and data hooks and passes their results to the view as props. The view, in the feature's `components/`, takes props only. Storybook renders views from plain props fixtures and callback spies; no story uses a tRPC fixture. App E2E proves each screen is wired, through real journeys against the real Engine with the scripted Agent and the Registry fixture of [ADR-0018](0018-app-e2e-uses-shared-agent-fixtures.md). Rules that hid in screens become named pure functions with unit tests.
 
-This supersedes [ADR-0010](0010-storybook-mocks-data-at-the-trpc-link.md). Its fake tRPC link, subscription publisher, screen preview wrappers and procedure-keyed fixtures restated the Server by hand. They had to follow every contract and Engine change, and a screen story proved only that a screen agreed with that copy. The fake link and the publisher are deleted, so there is no second copy of the Server to keep in step.
+This supersedes [ADR-0010](0010-storybook-mocks-data-at-the-trpc-link.md). Its fake tRPC link, subscription publisher, screen preview wrappers and procedure-keyed fixtures restated the Server by hand, had to follow every contract and Engine change, and let a screen story prove only that a screen agreed with that copy. The fake link and the publisher are deleted, so there is no second copy of the Server to keep in step.
 
 It amends [ADR-0009](0009-screens-live-in-the-client-package.md): screens still live in the client package and fetch through `useTRPC()`, and Expo Router route files still only render a screen. Storybook renders views, not screens.
 
@@ -10,7 +10,7 @@ It amends [ADR-0009](0009-screens-live-in-the-client-package.md): screens still 
 
 - Web Storybook is its own app, `apps/storybook` (`@storybook/react-native-web-vite` with the Vitest addon), and CI runs it. On-device Storybook is a dev-only route in `apps/universal-app`. Both read the same stories from `packages/client`.
 - Play functions go only in `*.test.stories.tsx`, which the device skips.
-- Feed props come from recorded Agent sessions that run through the real converter, never from hand-written rows. Running the converter prepares a Feed story; it does not prove conversion. Projection tests call the public projection with independent expected outputs.
+- Feed props come from recorded Agent sessions run through the real converter, never from hand-written rows. Running the converter prepares a Feed story; it does not prove conversion. Projection tests call the public projection with independent expected outputs.
 
 ## Rules
 

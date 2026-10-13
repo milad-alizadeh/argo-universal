@@ -33,7 +33,6 @@ const customAgentInfo = (
   label: agent.definition.name,
   logo: '',
   availability: customAvailability(check),
-  configOptions: [],
 });
 const customAvailability = (
   check: Awaited<ReturnType<typeof checkConfiguredAgent>>,

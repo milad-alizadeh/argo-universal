@@ -1,9 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { Variation, Variations } from '../../generic/variations';
 import { Screen, type ScreenProps } from './screen';
-import { ScreenPreview } from './screen-preview.mocks';
+import { ScreenPreview, ScreenPreviewContent } from './screen-preview.mocks';
 
 const meta = { title: 'Shared/Screen', component: Screen } satisfies Meta<
   typeof Screen
@@ -11,23 +9,21 @@ const meta = { title: 'Shared/Screen', component: Screen } satisfies Meta<
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const screenVariations = [
+  { label: 'Default safe-area insets', props: {} },
+  { label: 'Bottom inset only', props: { edges: ['bottom'] } },
+  { label: 'Insets disabled', props: { safeArea: false } },
+] satisfies { label: string; props: Partial<ScreenProps> }[];
+
 export const Overview: Story = {
   name: 'Screen',
   render: (args) => (
     <Variations>
-      {(
-        [
-          { label: 'Default safe-area insets', props: {} },
-          { label: 'Bottom inset only', props: { edges: ['bottom'] } },
-          { label: 'Insets disabled', props: { safeArea: false } },
-        ] satisfies { label: string; props: Partial<ScreenProps> }[]
-      ).map(({ label, props }) => (
+      {screenVariations.map(({ label, props }) => (
         <Variation key={label} label={label}>
           <ScreenPreview>
             <Screen {...args} {...props} className="bg-sidebar">
-              <View className="flex-1 items-center justify-center bg-background">
-                <Text>Screen content</Text>
-              </View>
+              <ScreenPreviewContent />
             </Screen>
           </ScreenPreview>
         </Variation>

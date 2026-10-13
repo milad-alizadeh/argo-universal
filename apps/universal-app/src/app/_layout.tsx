@@ -1,5 +1,7 @@
 import {
   AppProviders,
+  PortalHost,
+  FormSheetProvider,
   type LeaveGuard,
   type Navigate,
   type NativeSheets,
@@ -11,7 +13,6 @@ import {
   useConnection,
 } from '@repo/client';
 import '../../global.css';
-import { PortalHost } from '@rn-primitives/portal';
 import { registerDevMenuItems } from 'expo-dev-client';
 import { router, Stack, useNavigation } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
@@ -23,7 +24,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
-import { hrefFor } from '@/navigation/routes';
+import { formSheetRoutes } from '@/navigation/form-sheet';
+import { hrefFor, paramsOf } from '@/navigation/routes';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -97,14 +99,14 @@ const useLeaveGuard: LeaveGuard = (active, onBlocked) => {
 
 // Screens in @repo/client navigate through this.
 const navigate: Navigate = (destination, options) =>
-  options?.replace
-    ? router.replace(hrefFor(destination))
-    : router.navigate(hrefFor(destination));
+  options?.inPlace
+    ? router.setParams(paramsOf(destination))
+    : moveFor(options)(hrefFor(destination));
+
+const moveFor = (options: Parameters<Navigate>[1]): typeof router.navigate =>
+  options?.replace ? router.replace : router.navigate;
 
 export default function RootLayout(): React.JSX.Element {
-  const { theme } = useUniwind();
-  const navigationTheme = useNavigationTheme();
-
   return (
     // The phone drawer's gestures need this root.
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -113,28 +115,47 @@ export default function RootLayout(): React.JSX.Element {
         <SymbolImagesProvider render={renderSymbolImage}>
           <AppProviders serverUrl={serverUrl}>
             <ForegroundSignal />
-            <ThemeProvider value={navigationTheme}>
-              <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-              <NavigationProvider
-                navigate={navigate}
-                leaveGuard={useLeaveGuard}
-              >
-                <NativeSheetsProvider value={nativeSheets}>
-                  {/* Storybook stays outside the shell. */}
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="(shell)" />
-                    <Stack.Screen name="agent-model" options={sheetOptions} />
-                    <Stack.Screen name="(dev)/storybook" />
-                  </Stack>
-                </NativeSheetsProvider>
-              </NavigationProvider>
-              <PortalHost />
-              <Toaster />
-            </ThemeProvider>
+            <ThemedApp />
           </AppProviders>
         </SymbolImagesProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
+  );
+}
+
+function ThemedApp(): React.JSX.Element {
+  const { theme } = useUniwind();
+  return (
+    <ThemeProvider value={useNavigationTheme()}>
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+      <RootNavigator />
+      <PortalHost />
+      <Toaster />
+    </ThemeProvider>
+  );
+}
+
+function RootNavigator(): React.JSX.Element {
+  return (
+    <NavigationProvider navigate={navigate} leaveGuard={useLeaveGuard}>
+      <NativeSheetsProvider value={nativeSheets}>
+        <FormSheetProvider routes={formSheetRoutes}>
+          <RootStack />
+        </FormSheetProvider>
+      </NativeSheetsProvider>
+    </NavigationProvider>
+  );
+}
+
+// Storybook stays outside the shell.
+function RootStack(): React.JSX.Element {
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(shell)" />
+      <Stack.Screen name="agent-model" options={sheetOptions} />
+      <Stack.Screen name="form-sheet" options={sheetOptions} />
+      <Stack.Screen name="(dev)/storybook" />
+    </Stack>
   );
 }
 

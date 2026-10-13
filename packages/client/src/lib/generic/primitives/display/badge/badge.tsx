@@ -68,15 +68,10 @@ type BadgeProps = React.ComponentProps<typeof View> &
     tone?: BadgeTone;
   } & VariantProps<typeof badgeVariants>;
 
-function badgeClasses({ variant, tone, className }: BadgeProps): {
-  box: string;
-  text: string;
-} {
-  if (!tone)
-    return {
-      box: cn(badgeVariants({ variant }), className),
-      text: badgeTextVariants({ variant }),
-    };
+function toneClasses(
+  tone: BadgeTone,
+  className: BadgeProps['className'],
+): { box: string; text: string } {
   return {
     box: cn(
       badgeVariants(),
@@ -85,6 +80,17 @@ function badgeClasses({ variant, tone, className }: BadgeProps): {
       className,
     ),
     text: cn('type-badge', badgeTones[tone].text),
+  };
+}
+
+function badgeClasses({ variant, tone, className }: BadgeProps): {
+  box: string;
+  text: string;
+} {
+  if (tone) return toneClasses(tone, className);
+  return {
+    box: cn(badgeVariants({ variant }), className),
+    text: badgeTextVariants({ variant }),
   };
 }
 

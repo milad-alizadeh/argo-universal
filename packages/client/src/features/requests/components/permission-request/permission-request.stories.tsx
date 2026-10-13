@@ -1,3 +1,4 @@
+const answeredElsewhere = 'Already answered on another device';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
@@ -5,6 +6,8 @@ import { View } from 'react-native';
 import { toFeedView } from '#features/feed';
 import { FeedItem } from '#features/feed';
 import { PermissionOutcome } from '#features/feed';
+import { RequestComposerPreview } from '../../../../../mocks/request-composer';
+import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import {
   agentOptionsProps,
@@ -13,7 +16,10 @@ import {
   permissionMock,
   permissionMocks,
 } from '../request.mocks';
-import { PermissionRequest } from './permission-request';
+import {
+  PermissionRequest,
+  type PermissionRequestProps,
+} from './permission-request';
 
 type GalleryArgs = ComponentProps<typeof PermissionRequest> & {
   agent: (typeof permissionMock)['agent'];
@@ -52,17 +58,34 @@ export default meta;
 
 export const Overview = {
   name: 'PermissionRequest',
-  render: (args): React.JSX.Element => {
+  render: function RequestGallery(args): React.JSX.Element {
     const selected = permissionProps({
       mock:
         permissionMocks.find((mock) => mock.agent === args.agent) ??
         permissionMock,
     });
+    if (!useWide())
+      return (
+        <PermissionPreview
+          {...permissionProps({
+            ...args,
+            request: selected.request,
+            input: selected.input,
+            state:
+              args.requestState === 'answered'
+                ? {
+                    kind: 'answered',
+                    reason: answeredElsewhere,
+                  }
+                : { kind: args.requestState },
+          })}
+        />
+      );
     return (
       <View className="w-full items-center py-4">
         <Variations className="max-w-composer!">
           <Variation label="Permission request">
-            <PermissionRequest
+            <PermissionPreview
               {...permissionProps({
                 ...args,
                 request: selected.request,
@@ -71,22 +94,22 @@ export const Overview = {
                   args.requestState === 'answered'
                     ? {
                         kind: 'answered',
-                        reason: 'Already answered on another device',
+                        reason: answeredElsewhere,
                       }
                     : { kind: args.requestState },
               })}
             />
           </Variation>
           <Variation label="Agent options">
-            <PermissionRequest {...agentOptionsProps({})} />
+            <PermissionPreview {...agentOptionsProps({})} />
           </Variation>
           <Variation label="Several reject options">
-            <PermissionRequest
+            <PermissionPreview
               {...agentOptionsProps({ options: agentOptionsWithAlwaysReject })}
             />
           </Variation>
           <Variation label="Deny with a message">
-            <PermissionRequest
+            <PermissionPreview
               {...permissionProps({
                 feedback: true,
                 denialMessage:
@@ -95,11 +118,11 @@ export const Overview = {
             />
           </Variation>
           <Variation label="Already answered">
-            <PermissionRequest
+            <PermissionPreview
               {...permissionProps({
                 state: {
                   kind: 'answered',
-                  reason: 'Already answered on another device',
+                  reason: answeredElsewhere,
                 },
               })}
             />
@@ -158,3 +181,7 @@ export const Overview = {
     );
   },
 } satisfies StoryObj<GalleryArgs>;
+
+function PermissionPreview(props: PermissionRequestProps): React.JSX.Element {
+  return <RequestComposerPreview permissionRequest={props} />;
+}

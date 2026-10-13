@@ -22,47 +22,42 @@ export const newSessionOptions = z
   )
   .parse(recordedOptions);
 
-const available: AgentsListOutput = agentsList.map(
-  (agent): AgentsListOutput[number] => ({
-    ...agent,
-    configOptions:
-      newSessionOptions.find(
-        (options): boolean => options.agent === agent.agent,
-      )?.configOptions ?? [],
-  }),
-);
+// The configuration a recorded empty Session of `agent` returned before its first prompt.
+export function recordedSessionOptions(agent: string): SessionConfigOption[] {
+  const recorded = newSessionOptions.find((entry) => entry.agent === agent);
+  if (!recorded) throw new Error(`No recorded Session options for ${agent}.`);
+  return recorded.configOptions;
+}
 
 export const newSessionCatalogs = {
-  bothAvailable: available,
-  bothUnavailable: available.map(
+  bothAvailable: agentsList,
+  bothUnavailable: agentsList.map(
     (
       agent,
-    ): Omit<AgentsListOutput[number], 'availability' | 'configOptions'> & {
+    ): Omit<AgentsListOutput[number], 'availability'> & {
       installStep: string;
-    } & { availability: 'unavailable'; configOptions: never[] } => ({
+      availability: 'unavailable';
+    } => ({
       ...agent,
       availability: 'unavailable' as const,
       installStep: "CLI didn't start",
-      configOptions: [],
     }),
   ),
-  oneNotInstalled: available.map((agent, index): AgentsListOutput[number] =>
+  oneNotInstalled: agentsList.map((agent, index): AgentsListOutput[number] =>
     index === 0
       ? {
           ...agent,
           availability: 'not_installed' as const,
           installStep: 'Install this Agent on the Server.',
-          configOptions: [],
         }
       : agent,
   ),
-  oneNotSignedIn: available.map((agent, index): AgentsListOutput[number] =>
+  oneNotSignedIn: agentsList.map((agent, index): AgentsListOutput[number] =>
     index === 1
       ? {
           ...agent,
           availability: 'not_signed_in' as const,
           installStep: 'Sign in to this Agent on the Server.',
-          configOptions: [],
         }
       : agent,
   ),

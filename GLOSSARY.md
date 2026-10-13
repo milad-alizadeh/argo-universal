@@ -1,6 +1,6 @@
 # Argo
 
-Argo is a cockpit for coding agents. It runs Claude and Codex sessions on your machine and shows them on desktop, web, and phone.
+Argo is a cockpit for coding agents. It runs Claude and Codex Sessions on your machine and shows them on desktop, web, and phone.
 
 ## Places and processes
 
@@ -17,7 +17,7 @@ The long-lived Server process that starts the Engine, restarts it when it fails,
 _Avoid_: Parent, watchdog, launcher
 
 **Engine**:
-The Server process that does the Server's work: storage, the Connections, and Sessions. The Supervisor can restart it without the Server going away.
+The Server process that runs storage, the Connections, and Sessions. The Supervisor can restart it without the Server going away.
 _Avoid_: Worker, child, core
 
 **App**:
@@ -61,6 +61,10 @@ _Avoid_: Harness, provider, vendor, model
 **Session**:
 One conversation with one Agent, with an Argo id and the Agent's own session id.
 _Avoid_: Chat, thread, conversation
+
+**Empty Session**:
+A Session that New Session opened and no prompt has reached yet. It is not listed, and closing it discards it with its worktree and branch.
+_Avoid_: Draft Session, pending Session
 
 **Subagent**:
 A Session that another Session started to do delegated work.

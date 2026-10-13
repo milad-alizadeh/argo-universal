@@ -16,9 +16,9 @@ const systemInfo = {
   name: expect.stringMatching(/\S/),
 };
 
-const closers: (() => void)[] = [];
-afterEach(() => {
-  for (const close of closers.splice(0)) close();
+const closers: (() => unknown)[] = [];
+afterEach(async () => {
+  for (const close of closers.splice(0)) await close();
 });
 
 // Observe browser transport calls while the real Engine owns its listener and router.
@@ -92,11 +92,8 @@ describe('createTRPCClient', () => {
 
   it('waits before each WebSocket attempt, but not before an upload', async () => {
     const server = await startTransportTestServer();
-    let allowAttempt = (): void => {};
-    const attemptAllowed = new Promise<void>((resolve) => {
-      allowAttempt = resolve;
-    });
-    const trpc = createTRPCClient(server.url, () => attemptAllowed);
+    const attemptAllowed = Promise.withResolvers<void>();
+    const trpc = createTRPCClient(server.url, () => attemptAllowed.promise);
     closers.push(trpc.close);
     const { client } = trpc;
 
@@ -109,7 +106,7 @@ describe('createTRPCClient', () => {
     });
     expect(server.connections()).toBe(0);
 
-    allowAttempt();
+    attemptAllowed.resolve();
     expect(await client.system.info.query()).toEqual(systemInfo);
     expect(server.connections()).toBe(1);
   });

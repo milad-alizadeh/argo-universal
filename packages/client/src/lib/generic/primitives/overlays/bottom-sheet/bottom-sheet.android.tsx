@@ -1,20 +1,20 @@
-import {
-  ModalBottomSheet,
-  type ModalBottomSheetRef,
-  RNHostView,
-} from '@expo/ui/jetpack-compose';
-import { fillMaxHeight } from '@expo/ui/jetpack-compose/modifiers';
+import { ModalBottomSheet } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
 import { Host } from '../../native/host';
-import { usePresentationClosed } from '../../native/native-only-animated-view/native-only-animated-view';
 import { useSheetColors } from './bottom-sheet-colors.android';
 import { BottomSheetContent } from './bottom-sheet-content';
+import {
+  useSheetDismissal,
+  type SheetRef,
+} from './bottom-sheet-dismissal.android';
+import {
+  HostedSheetContent as FittedSheetContent,
+  SheetDragHandle,
+} from './bottom-sheet-hosted-content.android';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
+import { SheetViewport } from './bottom-sheet-viewport.android';
 import type { BottomSheetProps } from './bottom-sheet.types';
-
-type SheetRef = React.RefObject<ModalBottomSheetRef | null>;
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const { mounted, sheetRef } = useSheetDismissal(props.open, props.onClosed);
@@ -28,83 +28,41 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
 
 function SheetPresentation(presentation: SheetProps): React.JSX.Element {
   const { sheetRef, ...props } = presentation;
-  const sheet = useSheetColors(props.surface);
-  const dismissible = props.dismissible !== false;
+  const modalProps = useModalProps(props, sheetRef);
   return (
     <SheetHost>
-      <ModalBottomSheet
-        {...sheet}
-        ref={sheetRef}
-        onDismissRequest={() => props.onOpenChange(false)}
-        sheetGesturesEnabled={dismissible}
-        properties={{
-          shouldDismissOnBackPress: dismissible,
-          shouldDismissOnClickOutside: dismissible,
-        }}
-      >
+      <ModalBottomSheet {...modalProps} ref={sheetRef}>
+        {props.fit && <SheetDragHandle />}
         <HostedSheetContent {...props} />
       </ModalBottomSheet>
     </SheetHost>
   );
 }
 
-function useSheetDismissal(
-  open: boolean,
-  onClosed?: () => void,
-): { mounted: boolean; sheetRef: SheetRef } {
-  const sheetRef = useRef<ModalBottomSheetRef>(null);
-  const [mounted, setMounted] = useState(open);
-  const closing = useRef(false);
-  if (open && !mounted) setMounted(true);
-  useEffect(() => {
-    const sheet = sheetRef.current;
-    return dismissSheet({ open, mounted, closing, setMounted, sheet });
-  }, [open, mounted]);
-  usePresentationClosed(mounted, onClosed);
-  return { mounted, sheetRef };
+type ModalProps = Omit<
+  React.ComponentProps<typeof ModalBottomSheet>,
+  'children' | 'ref'
+>;
+
+function useModalProps(
+  props: Omit<SheetProps, 'sheetRef'>,
+  sheetRef: SheetRef,
+): ModalProps {
+  const sheet = useSheetColors(props.surface);
+  const dismissible = props.dismissible !== false;
+  return {
+    ...sheet,
+    initialFullyExpanded: startsExpanded(props),
+    onDismissRequest: () => dismissOrCollapse(props, sheetRef),
+    sheetGesturesEnabled: dismissible || props.expandable === true,
+    properties: dismissProperties(dismissible),
+  };
 }
 
-type SheetDismissal = {
-  open: boolean;
-  mounted: boolean;
-  sheet: ModalBottomSheetRef | null;
-  closing: React.RefObject<boolean>;
-  setMounted: (mounted: boolean) => void;
-};
-
-function dismissSheet(state: SheetDismissal): (() => void) | undefined {
-  if (!state.mounted) return;
-  return dismissMountedSheet(state);
-}
-
-function dismissMountedSheet(state: SheetDismissal): (() => void) | undefined {
-  if (!state.sheet) return;
-  if (state.open) {
-    reopenSheet(state.sheet, state.closing);
-    return;
-  }
-  state.closing.current = true;
-  return hideSheet(state.sheet, state.setMounted);
-}
-
-function reopenSheet(
-  sheet: ModalBottomSheetRef,
-  closing: React.RefObject<boolean>,
-): void {
-  if (closing.current) void sheet.partialExpand();
-  closing.current = false;
-}
-
-function hideSheet(
-  sheet: ModalBottomSheetRef,
-  setMounted: (mounted: boolean) => void,
-): () => void {
-  let cancelled = false;
-  void sheet.hide().then(() => {
-    if (!cancelled) setMounted(false);
-  });
-  return (): void => {
-    cancelled = true;
+function dismissProperties(dismissible: boolean): ModalProps['properties'] {
+  return {
+    shouldDismissOnBackPress: dismissible,
+    shouldDismissOnClickOutside: dismissible,
   };
 }
 
@@ -114,32 +72,24 @@ type SheetProps = Pick<
   | 'label'
   | 'children'
   | 'dismissible'
+  | 'expandable'
+  | 'footer'
+  | 'initialSize'
+  | 'fit'
+  | 'size'
   | 'contentScrolls'
   | 'surface'
 > & { sheetRef: SheetRef };
 function HostedSheetContent(
-  props: Pick<
-    BottomSheetProps,
-    | 'onOpenChange'
-    | 'label'
-    | 'children'
-    | 'dismissible'
-    | 'contentScrolls'
-    | 'surface'
-  >,
+  props: Omit<SheetProps, 'sheetRef'>,
 ): React.JSX.Element {
+  if (props.fit) return <FittedSheetContent {...props} />;
   return (
-    <RNHostView modifiers={[fillMaxHeight()]}>
-      <BottomSheetContent
-        label={props.label}
-        onOpenChange={props.onOpenChange}
-        dismissible={props.dismissible}
-        contentScrolls={props.contentScrolls}
-        surface={props.surface}
-      >
-        {props.children}
-      </BottomSheetContent>
-    </RNHostView>
+    <SheetViewport fit={props.fit}>
+      {(viewportHeight) => (
+        <BottomSheetContent {...props} viewportHeight={viewportHeight} />
+      )}
+    </SheetViewport>
   );
 }
 
@@ -153,4 +103,21 @@ function SheetHost({
       {children}
     </Host>
   );
+}
+
+function dismissOrCollapse(
+  props: Pick<BottomSheetProps, 'onOpenChange' | 'dismissible'>,
+  sheetRef: SheetRef,
+): void {
+  if (props.dismissible === false) {
+    void sheetRef.current?.partialExpand();
+    return;
+  }
+  props.onOpenChange(false);
+}
+
+function startsExpanded(
+  props: Pick<BottomSheetProps, 'size' | 'initialSize'>,
+): boolean {
+  return props.size === 'form' || props.initialSize === 'expanded';
 }

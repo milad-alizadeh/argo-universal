@@ -1,115 +1,42 @@
-import type { NavigationDestination } from '#lib/product/navigation/context';
-import type { ListItemProps } from '../../../../lib/generic/primitives/fields/field-props';
-import type { IconName } from '../../../../lib/generic/symbols/icon-names';
+import type { SettingsListProps, SettingsRow } from './settings-list-props';
 import {
-  connectionValue,
-  countValue,
-  serverValue,
-} from './settings-list-labels';
-import type { SettingsListProps } from './settings-list-props';
+  accountsRow,
+  agentsRow,
+  connectionRow,
+  devicesRow,
+  projectsRow,
+} from './settings-list-server-rows';
 
-export interface SettingsRow {
-  title: string;
-  icon: IconName;
-  destination: NavigationDestination;
-  value?: string;
-  needsAttention?: boolean;
-  disabled?: boolean;
-  status?: ListItemProps['status'];
-}
+const wideOnly = (wide: boolean, row: SettingsRow): SettingsRow[] =>
+  wide ? [row] : [];
 
-export function serverRows(
-  props: SettingsListProps,
-  wide: boolean,
-): SettingsRow[] {
+function serverRows(props: SettingsListProps, wide: boolean): SettingsRow[] {
   return [
-    ...serverDestinations(props),
-    {
-      title: 'Connection',
-      icon: 'server',
-      destination: { to: 'settings-connection' },
-      value: connectionValue(props, wide),
-      status: connectionStatus(props.status),
-    },
-    ...(wide
-      ? [
-          {
-            title: 'Devices',
-            icon: 'phone',
-            destination: { to: 'settings-devices' },
-            value: serverValue(props, props.deviceCount?.toString()),
-            disabled: serverDisabled(props),
-          } satisfies SettingsRow,
-        ]
-      : []),
+    projectsRow(props),
+    agentsRow(props),
+    accountsRow(props),
+    connectionRow(props, wide),
+    ...wideOnly(wide, devicesRow(props)),
   ];
 }
 
-function connectionStatus(
-  status: SettingsListProps['status'],
-): ListItemProps['status'] {
-  if (status === 'disconnected')
-    return { tone: 'destructive', label: 'server unavailable' };
-  if (status === 'loading') return { tone: 'warning', label: 'connecting' };
-  return { tone: 'success', label: 'available' };
+function deviceRows(props: SettingsListProps, wide: boolean): SettingsRow[] {
+  return [appearanceRow(props), ...wideOnly(wide, notificationsRow(props))];
 }
 
-function serverDestinations(props: SettingsListProps): SettingsRow[] {
-  const disabled = serverDisabled(props);
-  return [
-    {
-      title: 'Projects',
-      icon: 'folder',
-      destination: { to: 'settings-projects' },
-      value: countValue(props, props.projectCount),
-      needsAttention: props.projectsNeedAttention,
-      disabled,
-    },
-    {
-      title: 'Agents',
-      icon: 'agent',
-      destination: { to: 'settings-agents' },
-      value: countValue(props, props.agentCount),
-      needsAttention: props.agentsNeedAttention,
-      disabled,
-    },
-    {
-      title: 'Accounts',
-      icon: 'key',
-      destination: { to: 'settings-accounts' },
-      value: serverValue(props, props.accountState),
-      disabled,
-    },
-  ];
-}
+const appearanceRow = (props: SettingsListProps): SettingsRow => ({
+  title: 'Appearance',
+  icon: 'appearance',
+  destination: { to: 'settings-appearance' },
+  value: props.appearanceState ?? 'System',
+});
 
-function serverDisabled(props: SettingsListProps): boolean {
-  return props.status !== undefined && props.status !== 'ready';
-}
-
-export function deviceRows(
-  props: SettingsListProps,
-  wide: boolean,
-): SettingsRow[] {
-  return [
-    {
-      title: 'Appearance',
-      icon: 'appearance',
-      destination: { to: 'settings-appearance' },
-      value: props.appearanceState ?? 'System',
-    },
-    ...(wide
-      ? [
-          {
-            title: 'Notifications',
-            icon: 'notifications',
-            destination: { to: 'settings-notifications' },
-            value: props.notificationsState ?? 'On',
-          } satisfies SettingsRow,
-        ]
-      : []),
-  ];
-}
+const notificationsRow = (props: SettingsListProps): SettingsRow => ({
+  title: 'Notifications',
+  icon: 'notifications',
+  destination: { to: 'settings-notifications' },
+  value: props.notificationsState ?? 'On',
+});
 
 // The rows whose title holds the search, ignoring case.
 export function matchingRows(
@@ -118,4 +45,14 @@ export function matchingRows(
 ): SettingsRow[] {
   const search = query.trim().toLowerCase();
   return rows.filter(({ title }) => title.toLowerCase().includes(search));
+}
+
+export function settingsRows(
+  props: SettingsListProps,
+  wide: boolean,
+): SettingsRow[] {
+  return matchingRows(
+    [...serverRows(props, wide), ...deviceRows(props, wide)],
+    props.query,
+  );
 }

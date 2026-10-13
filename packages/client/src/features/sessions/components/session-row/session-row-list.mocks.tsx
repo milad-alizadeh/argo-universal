@@ -5,12 +5,7 @@ import { View } from 'react-native';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { SessionRow, type SessionRowProps } from './session-row';
 
-export function SessionRowListMock({
-  sessions,
-  onSelect,
-  selectedSessionId,
-  metadata = {},
-}: {
+interface SessionRowListMockProps {
   sessions: readonly SessionInfo[];
   onSelect: (sessionId: string) => void;
   selectedSessionId?: string;
@@ -18,24 +13,39 @@ export function SessionRowListMock({
     string,
     Pick<SessionRowProps, 'issue' | 'pullRequest' | 'subagentsFailed'>
   >;
-}): React.JSX.Element {
+}
+
+const listClassName =
+  'w-session-phone max-w-full bg-sidebar wide:w-session-desktop wide:gap-1 wide:px-2 wide:py-4';
+
+function agentLogo(agent: string): string {
+  return agentsList.find((entry) => entry.agent === agent)?.logo ?? '';
+}
+
+function listedRowProps(
+  session: SessionInfo,
+  list: SessionRowListMockProps,
+  wide: boolean,
+): SessionRowProps {
+  return {
+    session,
+    logo: agentLogo(session.agent),
+    selected: wide && session.sessionId === list.selectedSessionId,
+    onSelect: list.onSelect,
+    ...list.metadata?.[session.sessionId],
+  };
+}
+
+export function SessionRowListMock(
+  props: SessionRowListMockProps,
+): React.JSX.Element {
   const wide = useWide();
   return (
-    <View
-      testID="session-row-list"
-      className="w-session-phone max-w-full bg-sidebar wide:w-session-desktop wide:gap-1 wide:px-2 wide:py-4"
-    >
-      {sessions.map((session) => (
+    <View testID="session-row-list" className={listClassName}>
+      {props.sessions.map((session) => (
         <SessionRow
           key={session.sessionId}
-          session={session}
-          logo={
-            agentsList.find((agent) => agent.agent === session.agent)?.logo ??
-            ''
-          }
-          selected={wide && session.sessionId === selectedSessionId}
-          onSelect={onSelect}
-          {...metadata[session.sessionId]}
+          {...listedRowProps(session, props, wide)}
         />
       ))}
     </View>

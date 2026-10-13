@@ -15,7 +15,7 @@ import { NativeSymbol } from '../../../symbols/native-symbol';
 import { type ListItemProps, listItemStatus } from '../../fields/field-props';
 import { NativeControl } from '../../native/native-control';
 import { ListItemAccessory } from './list-item-accessory';
-import { StatusDot } from './status-dot';
+import { hiddenFromAccessibility, StatusDot } from './status-dot';
 
 const detailGutter = 16;
 const detailBottom = 12;
@@ -32,13 +32,7 @@ export function NativeRowImage({
 }): React.JSX.Element {
   return (
     <RNHostView matchContents>
-      <IconSlot
-        role="row"
-        collapsable={false}
-        accessible={false}
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-      >
+      <IconSlot role="row" {...hiddenFromAccessibility}>
         {image}
       </IconSlot>
     </RNHostView>
@@ -101,17 +95,35 @@ export function NativeRowDetail({
   if (!detail) return null;
   const control = <NativeControl>{detail}</NativeControl>;
   return Platform.OS === 'ios' ? (
-    <VStack modifiers={[swiftPadding({ bottom: detailBottom })]}>
-      {control}
-    </VStack>
+    <SwiftUIDetail>{control}</SwiftUIDetail>
   ) : (
-    <Column
-      modifiers={[
-        fillMaxWidth(),
-        composePadding(detailGutter, 0, detailGutter, detailBottom),
-      ]}
-    >
-      {control}
-    </Column>
+    <ComposeDetail>{control}</ComposeDetail>
   );
+}
+
+function SwiftUIDetail({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <VStack modifiers={[swiftPadding({ bottom: detailBottom })]}>
+      {children}
+    </VStack>
+  );
+}
+
+function composeDetailModifiers(): ReturnType<typeof fillMaxWidth>[] {
+  return [
+    fillMaxWidth(),
+    composePadding(detailGutter, 0, detailGutter, detailBottom),
+  ];
+}
+
+function ComposeDetail({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return <Column modifiers={composeDetailModifiers()}>{children}</Column>;
 }

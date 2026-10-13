@@ -1,0 +1,117 @@
+import { mkdirSync } from 'node:fs';
+import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { type AgentAdapter, agentAdapters } from '@repo/agents';
+import { turn } from '@repo/db/schema';
+import { createAppFixtureAdapter } from '@repo/mocks/agent/app-fixtures';
+import { scenarios } from '@repo/mocks/agent/scenarios';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
+import { eq } from 'drizzle-orm';
+import { expect, it, onTestFinished } from 'vitest';
+import { openTestDatabase } from '#mocks/database';
+import { startEngineTestHost } from '#mocks/engine';
+import { createScriptedAgentLauncher } from '#mocks/scripted-agent';
+
+async function startNewSessionEngine(identity: AgentAdapter): Promise<
+  Awaited<ReturnType<typeof startEngineTestHost>> & {
+    project: string;
+    database: ReturnType<typeof openTestDatabase>['database'];
+  }
+> {
+  const root = realpathSync(mkdtempSync(path.join(tmpdir(), 'argo-fixture-')));
+  onTestFinished((): void => rmSync(root, { recursive: true, force: true }));
+  const project = path.join(root, 'project');
+  mkdirSync(project);
+  await initTestRepository(project);
+  const { database, remove } = openTestDatabase({}, project);
+  onTestFinished(remove);
+  return {
+    project,
+    ...(await startEngineTestHost({
+      database,
+      adapters: [createAppFixtureAdapter(identity)],
+      acp: {
+        launchProcess: createScriptedAgentLauncher(() => scenarios.reply),
+      },
+      resolveAgentLaunch: async (input) => ({
+        agentId: input.agent,
+        projectId: input.projectId,
+        executable: '/mock-agent',
+        version: '1',
+        args: [],
+        cwd: input.projectPath,
+        env: {},
+        authContext: 'shared-fixture',
+      }),
+    })),
+  };
+}
+
+function rejectUpstreamCall(): never {
+  throw new Error('App fixture contacted upstream');
+}
+
+it.each(agentAdapters)(
+  'creates a $agent Session and persists its initial prompt and completed Turn with shared fixtures without contacting upstream',
+  async (identity): Promise<void> => {
+    const root = await startNewSessionEngine({
+      ...identity,
+      probe: rejectUpstreamCall,
+      connect: rejectUpstreamCall,
+    });
+    const caller = root.createCaller();
+    expect(await caller.agents.list()).toMatchObject([
+      {
+        agent: identity.agent,
+        label: identity.label,
+        logo: identity.logo,
+        availability: 'available',
+      },
+    ]);
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: identity.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Initial prompt' }],
+    });
+    await expect
+      .poll(async (): Promise<string | undefined> => {
+        const { rows } = await caller.feed.page({
+          sessionId,
+          direction: 'tail',
+        });
+        return rows.at(-1)?.sessionUpdate;
+      })
+      .toBe('agent_message');
+    const { rows } = await caller.feed.page({ sessionId, direction: 'tail' });
+    expect(rows).toEqual([
+      expect.objectContaining({
+        sessionUpdate: 'user_message',
+        content: [{ type: 'text', text: 'Initial prompt' }],
+      }),
+      expect.objectContaining({
+        sessionUpdate: 'agent_message',
+        state: 'settled',
+        content: [
+          { type: 'text', text: 'The shared fixture completed this Turn.' },
+        ],
+      }),
+    ]);
+    expect(new Set(rows.map((row) => row.turnId)).size).toBe(1);
+    expect(
+      root.database
+        .select()
+        .from(turn)
+        .where(eq(turn.sessionId, sessionId))
+        .all(),
+    ).toEqual([
+      expect.objectContaining({
+        id: rows[0]?.turnId,
+        status: 'ended',
+        stopReason: 'end_turn',
+      }),
+    ]);
+  },
+);

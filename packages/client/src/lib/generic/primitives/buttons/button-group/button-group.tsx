@@ -5,7 +5,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { View } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 
 type Item = ReactElement<{ className?: string }>;
@@ -14,7 +14,7 @@ function isItem(child: ReactNode): child is Item {
   return isValidElement(child);
 }
 
-interface ButtonGroupProps {
+interface ButtonGroupProps extends Pick<ViewProps, 'onLayout'> {
   // Each child passes className on to its Button.
   children: ReactNode;
   className?: string;
@@ -31,10 +31,14 @@ function joinButton(item: Item, index: number, count: number): ReactElement {
 }
 
 // Joins buttons edge to edge: no gap, and no corner radius where two meet.
-function ButtonGroup({ children, className }: ButtonGroupProps): ReactElement {
+function ButtonGroup({
+  children,
+  className,
+  onLayout,
+}: ButtonGroupProps): ReactElement {
   const items = Children.toArray(children).filter(isItem);
   return (
-    <View className={cn('flex-row', className)}>
+    <View className={cn('flex-row', className)} onLayout={onLayout}>
       {items.map((item, index) => joinButton(item, index, items.length))}
     </View>
   );

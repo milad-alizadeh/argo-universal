@@ -1,4 +1,4 @@
-import type { AgentInfo, AgentInstallation } from '@repo/contracts';
+import type { AgentInstallation } from '@repo/contracts';
 import { useQuery } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
 import { agentDetail } from '../state/agent-detail';
@@ -9,7 +9,6 @@ import type {
 import { useAgentInstallation } from './use-agent-installation';
 import { useAgentManagement } from './use-agent-management';
 import { useAgents } from './use-agents';
-import { useSessionDefaults } from './use-session-defaults';
 type AgentPageProps = {
   agent: string;
   onBack: () => void;
@@ -17,7 +16,6 @@ type AgentPageProps = {
 };
 type AgentPageView = AgentDetailViewProps | undefined;
 function useAgentDetail(agent: string): {
-  info: AgentInfo | undefined;
   detail: AgentDetail | undefined;
   retry: () => void;
 } {
@@ -25,12 +23,11 @@ function useAgentDetail(agent: string): {
   const catalog = useQuery(useTRPC().agents.catalog.queryOptions());
   const info = agents.data?.find((entry) => entry.agent === agent);
   const registry = catalog.data?.agents.find(({ id }) => id === agent);
-  return { info, detail: agentDetail(info, registry), retry: agents.retry };
+  return { detail: agentDetail(info, registry), retry: agents.retry };
 }
 
 export function useAgentPageView(props: AgentPageProps): AgentPageView {
-  const { info, detail, retry } = useAgentDetail(props.agent);
-  const defaults = useDetailDefaults(info);
+  const { detail, retry } = useAgentDetail(props.agent);
   const installation = useDetailInstallation(props.agent, detail);
   const management = useAgentManagement(props.agent, props.onBack);
   if (!detail) return undefined;
@@ -38,7 +35,6 @@ export function useAgentPageView(props: AgentPageProps): AgentPageView {
     ...props,
     agent: installedDetail(detail, installation),
     installation,
-    ...defaults,
     onCheckAgain: retry,
     ...managementCallbacks(management),
   };
@@ -83,13 +79,6 @@ const managementCallbacks = (
   management,
   onRemove: management?.onRemove,
 });
-function useDetailDefaults(
-  info: AgentInfo | undefined,
-): Pick<AgentDetailViewProps, 'defaults' | 'onDefaultChange'> {
-  const { defaults, change } = useSessionDefaults(info);
-  return { defaults, onDefaultChange: change };
-}
-
 const initialInstalling = (
   installation: ReturnType<typeof useAgentInstallation>,
 ): boolean =>

@@ -19,7 +19,6 @@ const installationInfo = ({
   ...input
 }: InstalledAgent): AgentInfo => ({
   ...installationIdentity(input),
-  configOptions: [],
   availability: 'unavailable',
   installStep: enabled
     ? 'Installed. Sign-in readiness has not been checked.'

@@ -24,6 +24,11 @@ const version = packageJson.version;
 const options = AppFixtureAgents.parse(
   JSON.parse(process.env.ARGO_E2E_AGENTS ?? '{}'),
 );
+const requestLog = process.env.ARGO_E2E_REQUEST_LOG;
+// The scripted Agents log the ACP requests e2e steps check.
+const agentEnvironment: Record<string, string> = requestLog
+  ? { ARGO_E2E_REQUEST_LOG: requestLog }
+  : {};
 const port = z.coerce
   .number()
   .int()
@@ -64,7 +69,7 @@ const engine = composeEngine({
     ),
     version: '1',
     cwd: input.projectPath,
-    env: {},
+    env: agentEnvironment,
     authContext: 'shared-fixture',
   }),
   fetchAgents: createFileAgentsFetcher(

@@ -5,38 +5,30 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 ## Where things are written down
 
 - Words: `GLOSSARY.md`. Use its terms in code, docs, and messages.
-- Decisions: `docs/adr/`. Name any ADR that your change contradicts, and ask before you contradict it.
-- Specs: GitHub Issues, as transient briefs for implementation; never commit one. Build a spec as written. When it is unclear or wrong, stop and ask.
+- Decisions: `docs/adr/`. Ask before contradicting an ADR, and name it.
+- Specs: GitHub Issues, as transient briefs; never commit one. Build a spec as written; when it is unclear or wrong, stop and ask.
 - Tests: before adding, changing or auditing tests, fixtures or test wrappers, read `docs/agents/testing-seams.md`.
 - Storybook: before authoring stories or testing UI components, read `docs/agents/storybook.md`.
 - Designs: every new UI or visible state needs a Paper design. Before changing UI or editing Paper, read `docs/agents/paper.md` and identify its design source.
-- Prickles: before you write or review code, read the pillar files in `docs/agents/prickles/`, the Prickles canon v2.0 verbatim (https://prickles.org, CC BY-NC 4.0). It wins over everything else here; ADR-0016 records how it applies where it cannot as written.
 
 ## Agent skills
 
 ### Issue tracker
 
-Issues live in GitHub Issues on this repo, managed with `gh`. See `docs/agents/issue-tracker.md`.
+GitHub Issues on this repo, via `gh`. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-The five default label names: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+The five default names: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
-One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context"). See `docs/agents/domain.md`.
+Single-context: the root `GLOSSARY.md` and `docs/adr/`. See `docs/agents/domain.md`.
 
-## Rules that no tool checks
+## PR rules
 
-- Each PR gets one round of agent reviews. Run another round only when the user explicitly requests it; follow-up fixes, conflict resolution and CI failures do not start a new round.
-- Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them to Git.
-- Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
-- Use LegendList (`@legendapp/list/react-native`) by default for lists in the App.
-- Name screens and views `<entity>-<list|detail|new|edit>-{screen,view}`. No two names may differ only by plural, and none may use a "settings" infix.
-- Test assets live outside `src/`: `e2e/<flow>/`, `mocks/`, `tools/`. Call them mocks.
-- Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions.
-- The product name lives only in app config, environment variables and UI text, so a rename stays small. The Session branch prefix in `packages/git` is stored data and stays as it is.
-- Reject, report and count unrecognised outside data. Before changing an adapter or its response mocks, read ADR-0015 and the installed SDK or generated protocol types.
+- One round of agent reviews per PR; another only when the user explicitly asks. Follow-up fixes, conflict resolution and CI failures do not start one.
+- Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them.
 
 <!-- BEGIN:turborepo-agent-rules -->
 

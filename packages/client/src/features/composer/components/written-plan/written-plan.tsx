@@ -1,31 +1,25 @@
-import type { Plan } from '@repo/contracts';
 import { lexer, type Tokens } from 'marked';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
-import { PlanDocument } from '#lib/product/plan-document';
-import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-sheet/bottom-sheet';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
 import { resourceName } from '../../../../lib/product/markdown/resource-name';
 import { useWrittenPlanEscape } from '../../hooks/use-written-plan-escape';
-
-export type WrittenPlanValue = Exclude<Plan, { type: 'items' }>;
-
+import { WrittenPlanContent } from './written-plan-content';
+import {
+  WrittenPlanTrigger,
+  type WrittenPlanTriggerProps,
+} from './written-plan-trigger';
+import type { WrittenPlanProps, WrittenPlanValue } from './written-plan-types';
+export type { WrittenPlanValue } from './written-plan-types';
+interface PlanPresentation extends WrittenPlanTriggerProps {
+  plan: WrittenPlanValue;
+}
 export function WrittenPlan({
   plan,
   composerId,
-}: {
-  plan: WrittenPlanValue;
-  composerId: string;
-}): React.JSX.Element {
+}: WrittenPlanProps): React.JSX.Element {
   const wide = useContentWide();
   const [open, setOpen] = useState(false);
   useWrittenPlanEscape({
@@ -33,99 +27,57 @@ export function WrittenPlan({
     expanded: wide && open,
     onCollapse: () => setOpen(false),
   });
-  const title =
-    plan.type === 'file'
-      ? resourceName(plan.uri)
-      : (lexer(plan.content).find(
-          (token): token is Tokens.Heading => token.type === 'heading',
-        )?.text ?? 'Written plan');
-  const trigger = (
-    <Pressable
-      accessibilityLabel="Written plan"
-      aria-expanded={open}
-      onPress={() => setOpen(!open)}
-      role="button"
-      className={contentActionClass({
-        variant: 'ghost',
-        className: cn(
-          'h-6 sm:h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer',
-          wide &&
-            'h-8 sm:h-8 w-full justify-start pl-2 pr-1.5 rounded-none border-0 bg-transparent shadow-none',
-        ),
-      })}
-    >
-      <Icon role="control" name="file-text" className="text-muted-foreground" />
-      <Text role="secondary" className={cn(!wide && 'text-foreground')}>
-        Written plan
-      </Text>
-      {wide && (
-        <>
-          <Text
-            numberOfLines={1}
-            role="secondary"
-            className="min-w-0 flex-1 text-foreground"
-          >
-            {title}
-          </Text>
-          <Icon
-            role="secondary"
-            name="chevron-up"
-            className="text-muted-foreground"
-          />
-        </>
-      )}
-    </Pressable>
-  );
-  if (!wide)
-    return (
-      <BottomSheet
-        open={open}
-        onOpenChange={setOpen}
-        trigger={trigger}
-        label={title}
-      >
-        <View className="flex-row items-center gap-1.5 px-4 py-2">
-          <Icon
-            role="control"
-            name="file-text"
-            className="text-muted-foreground"
-          />
-          <Text role={'heading'} className="min-w-0 flex-1">
-            {title}
-          </Text>
-        </View>
-        <WrittenPlanContent plan={plan} title={title} layout="sheet" />
-      </BottomSheet>
-    );
+  const props = { plan, wide, open, setOpen, title: writtenPlanTitle(plan) };
+  return wide ? <PlanTray {...props} /> : <PlanSheet {...props} />;
+}
+function writtenPlanTitle(plan: WrittenPlanValue): string {
+  if (plan.type === 'file') return resourceName(plan.uri);
+  return markdownTitle(plan.content);
+}
+function PlanTray(props: PlanPresentation): React.JSX.Element {
   return (
     <View>
-      {trigger}
-      {open && <WrittenPlanContent plan={plan} title={title} layout="tray" />}
+      <WrittenPlanTrigger {...props} />
+      {props.open && (
+        <WrittenPlanContent
+          plan={props.plan}
+          title={props.title}
+          layout="tray"
+        />
+      )}
     </View>
   );
 }
-
-function WrittenPlanContent({
-  plan,
-  title,
-  layout,
-}: {
-  plan: WrittenPlanValue;
-  title: string;
-  layout: 'tray' | 'sheet';
-}): React.JSX.Element {
+function PlanSheet(props: PlanPresentation): React.JSX.Element {
   return (
-    <View role="region" accessibilityLabel="Written plan content">
-      {plan.type === 'markdown' ? (
-        <PlanDocument content={plan.content} layout={layout} />
-      ) : (
-        <View className="gap-2 px-4 pt-2 pb-4">
-          <FeedCodeBlock resource={{ name: title, uri: plan.uri }} />
-          <Text role="secondary">
-            The Agent shared where the plan is, not its text.
-          </Text>
-        </View>
-      )}
-    </View>
+    <BottomSheet {...planSheetProps(props)}>
+      <WrittenPlanContent
+        plan={props.plan}
+        title={props.title}
+        layout="sheet"
+      />
+    </BottomSheet>
   );
+}
+function markdownTitle(content: string): string {
+  return (
+    lexer(content).find(
+      (token): token is Tokens.Heading => token.type === 'heading',
+    )?.text ?? 'Written plan'
+  );
+}
+function planSheetProps(
+  props: PlanPresentation,
+): Pick<
+  React.ComponentProps<typeof BottomSheet>,
+  'open' | 'onOpenChange' | 'trigger' | 'label' | 'initialSize' | 'fit'
+> {
+  return {
+    open: props.open,
+    onOpenChange: props.setOpen,
+    trigger: WrittenPlanTrigger(props),
+    label: props.title,
+    initialSize: props.plan.type === 'markdown' ? 'expanded' : 'compact',
+    fit: props.plan.type === 'file',
+  };
 }

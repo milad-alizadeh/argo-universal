@@ -1,6 +1,7 @@
 import type { SessionListInput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
+import { insertEndedTurn } from '#mocks/database';
 
 const pagingInputs: SessionListInput[] = [
   { archived: false },
@@ -9,7 +10,8 @@ const pagingInputs: SessionListInput[] = [
 it.each(pagingInputs)(
   'lists stored Sessions without starting their Agent: %j',
   async (input): Promise<void> => {
-    const { caller, agent } = await startAcpEngine({ steps: [] });
+    const { caller, agent, database } = await startAcpEngine({ steps: [] });
+    insertEndedTurn(database);
     expect(await caller.session.list(input)).toMatchObject({
       sessions: [{ sessionId: 'session-1' }],
       nextCursor: null,

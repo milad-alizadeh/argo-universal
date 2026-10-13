@@ -1,8 +1,38 @@
 import { describe, expect, it } from 'vitest';
 import {
   getConfigOptionDiagnostics,
+  SessionConfigOption,
   SessionConfigSelectOption,
 } from './set-config-option';
+
+const extensionOption = {
+  configId: 'extension',
+  name: 'Extension',
+  category: 'custom_category',
+  type: 'select',
+  currentValue: 'on',
+  _meta: { extension: { enabled: true } },
+  options: [
+    {
+      groupId: 'group',
+      name: 'Group',
+      _meta: { source: 'extension' },
+      options: [
+        {
+          value: 'on',
+          name: 'On',
+          _meta: { argo: { icon: 'Shield', tone: 'safe' }, extension: 1 },
+        },
+      ],
+    },
+  ],
+};
+
+it('keeps extension categories and metadata on options, groups and values', (): void => {
+  const before = getConfigOptionDiagnostics().unknownCategories;
+  expect(SessionConfigOption.parse(extensionOption)).toEqual(extensionOption);
+  expect(getConfigOptionDiagnostics().unknownCategories).toBe(before + 1);
+});
 
 describe('config option icon diagnostics', (): void => {
   it.each([

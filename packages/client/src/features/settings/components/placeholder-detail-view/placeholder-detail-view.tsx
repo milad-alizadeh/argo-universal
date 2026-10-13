@@ -29,18 +29,25 @@ export function PlaceholderDetailView({
   );
 }
 
+type NoteProps = Pick<PlaceholderDetailViewProps, 'description'>;
+
 // A wide page keeps the note in a row's card, where the rows will go; a phone centres it.
-function PlaceholderNote({
-  description,
-}: Pick<PlaceholderDetailViewProps, 'description'>): React.JSX.Element {
-  if (useWide())
-    return (
-      <FieldGroup>
-        <FieldSection>
-          <ListItem title={description} />
-        </FieldSection>
-      </FieldGroup>
-    );
+function PlaceholderNote(props: NoteProps): React.JSX.Element {
+  if (useWide()) return <RowNote {...props} />;
+  return <CentredNote {...props} />;
+}
+
+function RowNote({ description }: NoteProps): React.JSX.Element {
+  return (
+    <FieldGroup>
+      <FieldSection>
+        <ListItem title={description} />
+      </FieldSection>
+    </FieldGroup>
+  );
+}
+
+function CentredNote({ description }: NoteProps): React.JSX.Element {
   return (
     <View className="flex-1 items-center justify-center px-gutter py-6">
       <Text role="secondary" className="text-center">
