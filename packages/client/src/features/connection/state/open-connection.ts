@@ -16,29 +16,29 @@ export type ConnectionActor = ActorRefFrom<typeof connectionMachine>;
 
 const closedError = (): Error => new Error('The Connection is closed');
 
-function rejectOnStop(
+function settleOnAttempt(
   connection: ConnectionActor,
-  settled: PromiseWithResolvers<void>,
-): Subscription {
-  return connection.subscribe({
-    error: settled.reject,
-    complete: () => settled.reject(closedError()),
-  });
+  settle: { resolve: () => void; reject: (error: unknown) => void },
+): Subscription[] {
+  return [
+    connection.on('connection.attemptAllowed', () => settle.resolve()),
+    connection.subscribe({
+      error: settle.reject,
+      complete: () => settle.reject(closedError()),
+    }),
+  ];
 }
 
 // Resolves once the machine allows the attempt, and rejects once the machine stops.
 function waitForAttempt(connection: ConnectionActor): Promise<void> {
   if (connection.getSnapshot().status !== 'active')
     return Promise.reject(closedError());
-  const settled = Promise.withResolvers<void>();
-  const allowed = connection.on('connection.attemptAllowed', () =>
-    settled.resolve(),
-  );
-  const stopped = rejectOnStop(connection, settled);
-  connection.send({ type: 'connection.attemptRequested' });
-  return settled.promise.finally(() => {
-    allowed.unsubscribe();
-    stopped.unsubscribe();
+  const subscriptions: Subscription[] = [];
+  return new Promise<void>((resolve, reject) => {
+    subscriptions.push(...settleOnAttempt(connection, { resolve, reject }));
+    connection.send({ type: 'connection.attemptRequested' });
+  }).finally(() => {
+    for (const subscription of subscriptions) subscription.unsubscribe();
   });
 }
 
@@ -70,12 +70,15 @@ export function openConnection(
   serverUrl: string,
   queryClient: QueryClient,
 ): OpenConnection {
-  // wsClient asks for its first URL while it is built, before the Connection machine exists.
-  const created = Promise.withResolvers<ConnectionActor>();
-  const trpc = createTRPCClient(serverUrl, async () =>
-    waitForAttempt(await created.promise),
-  );
+  const created: { connection?: ConnectionActor } = {};
+  const trpc = createTRPCClient(serverUrl, async () => {
+    // wsClient asks for its first URL while it is built, before the Connection machine below exists.
+    await Promise.resolve();
+    if (!created.connection)
+      throw new Error('The Connection machine was not created');
+    await waitForAttempt(created.connection);
+  });
   const connection = startConnection(trpc.webSocketClient, queryClient);
-  created.resolve(connection);
+  created.connection = connection;
   return openedConnection(connection, trpc);
 }
