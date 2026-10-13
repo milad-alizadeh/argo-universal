@@ -1,6 +1,10 @@
 import type { SessionUpdate } from '@agentclientprotocol/sdk';
 import { acpConfiguration } from './acp-configuration.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
+import {
+  feedWorkSteps,
+  unfinishedFeedWorkSteps,
+} from './feed-work-scenario.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { terminalLogin } from './terminal-login.ts';
@@ -35,6 +39,11 @@ const scenario = (steps: ScriptedStep[]): ScriptedScenario => ({
 export const scenarios = {
   reply: scenario([reply]),
   'feed-history': scenario(feedHistorySteps),
+  'feed-work': scenario([
+    ...feedWorkSteps,
+    message('The greeting is updated.'),
+  ]),
+  'feed-interrupted': scenario([...unfinishedFeedWorkSteps, { type: 'hold' }]),
   'terminal-login': { ...scenario([reply]), ...terminalLogin },
   'protocol-login': { ...scenario([reply]), ...protocolLogin },
   'signed-out': { ...scenario([reply]), ...signedOutProtocolLogin },

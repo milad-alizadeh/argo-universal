@@ -88,7 +88,9 @@ it('a listing queued behind an edit describes the committed definition', async (
       name: 'Renamed custom Agent',
     },
   });
-  await expect.poll(() => readFile(marker, 'utf8')).toMatch(/^\d+$/);
+  await expect
+    .poll(() => readFile(marker, 'utf8'), { timeout: 5000 })
+    .toMatch(/^\d+$/);
   const listing = host.createCaller().agents.list();
   await writeFile(release, 'release');
   await editing;

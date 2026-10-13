@@ -82,6 +82,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     attachmentConfiguration(steps),
     elicitationConfiguration(steps),
     feedHistoryConfiguration(steps),
+    liveFeedConfiguration(steps),
   );
 }
 
@@ -104,5 +105,23 @@ function elicitationConfiguration(steps: string[]): AppFixtureAgents {
     .find((match) => match !== null);
   return chosen
     ? { [agentId(Number(chosen[1]))]: { scenario: 'elicitation' } }
+    : {};
+}
+
+const liveFeedStep =
+  /^(?:Given|And) Agent (\d+) supplies (edits and commands|an unfinished command)$/;
+function liveFeedConfiguration(steps: string[]): AppFixtureAgents {
+  const chosen = steps
+    .map((step) => liveFeedStep.exec(step))
+    .find((match) => match !== null);
+  return chosen
+    ? {
+        [agentId(Number(chosen[1]))]: {
+          scenario:
+            chosen[2] === 'edits and commands'
+              ? 'feed-work'
+              : 'feed-interrupted',
+        },
+      }
     : {};
 }
