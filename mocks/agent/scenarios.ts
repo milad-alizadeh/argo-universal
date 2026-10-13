@@ -20,6 +20,7 @@ const update = (value: SessionUpdate): ScriptedStep => ({
 const reply = message(sharedReply);
 const editReadme = { toolCallId: 'edit-readme', title: 'Edit README.md' };
 const writePressureTools = 32;
+const refusedReopen = 'The Agent refused to reopen the Session.';
 
 // Every shared scenario opens its Sessions with the shared configuration.
 const scenario = (steps: ScriptedStep[]): ScriptedScenario => ({
@@ -37,6 +38,14 @@ export const scenarios = {
   'refuse-session': {
     ...scenario([reply]),
     responses: { 'session/new': [{ error: 'The Agent refused the Session.' }] },
+  },
+  // Refuses only the first reopen, so the Session opens again afterwards.
+  'refuse-reopen': {
+    ...scenario([reply]),
+    responses: {
+      'session/load': [{ error: refusedReopen }, {}],
+      'session/resume': [{ error: refusedReopen }, {}],
+    },
   },
   permission: scenario([
     update({

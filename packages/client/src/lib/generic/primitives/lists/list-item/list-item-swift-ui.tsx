@@ -1,5 +1,9 @@
 import { ProgressView, Text, VStack } from '@expo/ui/swift-ui';
-import { foregroundStyle, frame, lineLimit } from '@expo/ui/swift-ui/modifiers';
+import {
+  foregroundStyle,
+  frame,
+  accessibilityHidden,
+} from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import { useIconPixels } from '../../../symbols/icon-role';
@@ -17,7 +21,7 @@ export function RowLeading(
   return <NativeRowGlyph {...props} />;
 }
 
-// The title, and under it a one-line subtitle such as an Agent's description; code draws in the mono face.
+// The title and subtitle reflow at the system text size; code draws in the mono face.
 export function RowLabel(props: ListItemProps): React.JSX.Element {
   const bodyModifiers = useSwiftUITextModifiers(titleRole(props.code), 'row');
   const secondaryModifiers = useSwiftUITextModifiers(
@@ -26,20 +30,21 @@ export function RowLabel(props: ListItemProps): React.JSX.Element {
   const color = useTitleColor(props.tone);
   const muted = useRowColor('secondary');
   const title = (
-    <Text modifiers={[...bodyModifiers, color, lineLimit(1)]}>
-      {props.title}
-    </Text>
+    <Text modifiers={[...bodyModifiers, color]}>{props.title}</Text>
   );
   // The label takes the row's spare width, so the value and status trail it on the same line.
   return (
     <VStack
       alignment="leading"
       spacing={0}
-      modifiers={[frame({ maxWidth: Infinity, alignment: 'leading' })]}
+      modifiers={[
+        frame({ maxWidth: Infinity, alignment: 'leading' }),
+        accessibilityHidden(!!props.control),
+      ]}
     >
       {title}
       {props.subtitle && (
-        <Text modifiers={[...secondaryModifiers, muted, lineLimit(1)]}>
+        <Text modifiers={[...secondaryModifiers, muted]}>
           {props.subtitle.text}
         </Text>
       )}

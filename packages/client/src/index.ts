@@ -8,10 +8,8 @@ export {
 export {
   AgentModelSheetChoices,
   AgentModelSheetSettings,
-  ComposerSheetContent,
   type NativeSheets,
   NativeSheetsProvider,
-  useSheetLabel,
 } from '#features/composer';
 export { ConnectionDetailScreen, useConnection } from '#features/connection';
 export { DesktopLayout, PhoneLayout, SectionRootScreen } from '#features/frame';

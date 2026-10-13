@@ -12,10 +12,7 @@ import {
 export const claudeAdapter: AgentAdapter<VendorMessage, MappingState> = {
   agent: 'claude',
   label: 'Claude',
-  logo: readFileSync(
-    new URL('./assets/claude-spark.svg', import.meta.url),
-    'utf8',
-  ),
+  logo: readFileSync(new URL('./assets/registry.svg', import.meta.url), 'utf8'),
   probe,
   connect,
   initialMappingState,

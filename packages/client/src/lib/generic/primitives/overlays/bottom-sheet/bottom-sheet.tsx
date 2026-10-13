@@ -54,16 +54,22 @@ function presentationProps(
 
 type SheetContentProps = Pick<
   BottomSheetProps,
-  'children' | 'label' | 'onOpenChange' | 'fit' | 'dismissible'
+  | 'children'
+  | 'label'
+  | 'onOpenChange'
+  | 'fit'
+  | 'dismissible'
+  | 'contentScrolls'
+  | 'surface'
 >;
 
 function SheetContent(props: SheetContentProps): React.JSX.Element {
-  const { popover } = useNativeTheme().colors;
+  const colors = useNativeTheme().colors;
   const modifiers = [
     ...sheetDetents(props.fit),
     presentationDragIndicator('visible'),
     interactiveDismissDisabled(props.dismissible === false),
-    ...sheetFill(popover),
+    ...sheetFill(props.surface === 'sidebar' ? colors.sidebar : colors.popover),
   ];
   return (
     <Group modifiers={modifiers}>

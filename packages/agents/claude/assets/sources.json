@@ -17,5 +17,13 @@
       "archivePath": "Anthropic media resources/Anthropic logos/Claude logos/2 Claude Code logo/SVG/Claude Code logo - Ivory.svg",
       "sha256": "809cf3443fa244db49ca8af919eb93080eb496da11a6800011b25d7c7752178b"
     }
-  ]
+  ],
+  "registry": {
+    "source": "https://cdn.agentclientprotocol.com/registry/v1/latest/claude-acp.svg",
+    "retrievedAt": "2026-10-12",
+    "file": "registry.svg",
+    "sha256": "30c1a5c5e597b030d17bd7ff55ad62fd38975a7ba560d32589bd96de99b5fe8d",
+    "note": "Default ACP Registry icon; currentColor follows Appearance.",
+    "manifest": "https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json"
+  }
 }

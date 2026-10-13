@@ -74,13 +74,17 @@ function createIconPressable(
 }
 
 function iconContainerClass(
-  props: Pick<IconButtonProps, 'size' | 'variant' | 'disabled' | 'className'>,
+  props: Pick<
+    IconButtonProps,
+    'size' | 'variant' | 'disabled' | 'className' | 'aria-pressed'
+  >,
 ): string {
   return cn(
     iconButtonClasses({
       size: props.size,
       variant: props.variant,
       disabled: !!props.disabled,
+      pressed: props['aria-pressed'] === true,
     }),
     props.className,
   );

@@ -12,18 +12,13 @@ export function RowTitle(
   const style = useComposeTextStyle(titleRole(props.code));
   const { foreground } = useNativeTheme().colors;
   return (
-    <Text
-      color={useToneColor(props.tone) ?? foreground}
-      style={style}
-      maxLines={1}
-      overflow="ellipsis"
-    >
+    <Text color={useToneColor(props.tone) ?? foreground} style={style}>
       {props.title}
     </Text>
   );
 }
 
-// A one-line second line under the title, such as an Agent's description.
+// The subtitle reflows under the title, such as an Agent's setup explanation.
 export function RowSubtitle({
   subtitle,
 }: Pick<ListItemProps, 'subtitle'>): React.JSX.Element | null {
@@ -31,12 +26,7 @@ export function RowSubtitle({
   const { mutedForeground } = useNativeTheme().colors;
   if (!subtitle) return null;
   return (
-    <Text
-      color={mutedForeground}
-      style={style}
-      maxLines={1}
-      overflow="ellipsis"
-    >
+    <Text color={mutedForeground} style={style}>
       {subtitle.text}
     </Text>
   );

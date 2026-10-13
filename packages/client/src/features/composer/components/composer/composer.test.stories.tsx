@@ -22,6 +22,8 @@ import {
   oversizedComposerImage,
 } from '../../../../../mocks/composer-mock';
 import { updateComposerSettings } from '../../../../../mocks/composer-mock';
+import { canPointAt } from '../../../../../mocks/point-hit';
+import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer, type ComposerDraft } from './composer';
@@ -36,9 +38,13 @@ const agentIconId = 'composer-agent-icon';
 const spacingPrompt = 'Match the spacing.';
 const multilineSpacingPrompt =
   'Match the spacing.\nKeep the phone readable.\nUse both themes.';
-const chooseAgentLabel = 'Choose Agent';
+const chooseAgentLabel = /^Agent,/;
+// The web Composer edits with real key events, where Return sends and ⇧Return adds a line.
+const typedLines = (text: string): string =>
+  text.replaceAll('\n', '{Shift>}{Enter}{/Shift}');
+const readOnlyAttribute = 'aria-readonly';
 const valueTextAttribute = 'aria-valuetext';
-const chooseModelLabel = 'Choose model';
+const chooseModelLabel = /^Model,/;
 const pressedAttribute = 'aria-pressed';
 const expandedAttribute = 'aria-expanded';
 const subagentCountLabel = 'Subagents: 2';
@@ -193,8 +199,8 @@ export const Empty: Story = {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue('');
+        shownText(canvas.getByRole('textbox', { name: 'Message' })),
+      ).toBe('');
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
       await expect(
         canvas.getByRole('button', {
@@ -236,8 +242,8 @@ function typing(width: number): Story {
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
-      await userEvent.type(input, spacingPrompt);
-      await expect(input).toHaveValue(spacingPrompt);
+      await browserUserEvent.type(input, spacingPrompt);
+      await expect(shownText(input)).toBe(spacingPrompt);
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
       await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
       await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
@@ -245,12 +251,37 @@ function typing(width: number): Story {
         text: spacingPrompt,
         images: [],
       });
-      await waitFor(() => expect(input).toHaveValue(''));
+      await waitFor(() => expect(shownText(input)).toBe(''));
     },
   };
 }
-export const TypingPhone = typing(layoutWidths.phone);
+// Storybook draws the web field at both widths; the phone drawing is checked in the app.
+export const TypingWebAtPhoneWidth = typing(layoutWidths.phone);
 export const TypingWide = typing(layoutWidths.wide);
+
+/*
+ * Return sends only a ready draft, and sends exactly the text the field shows. The web field handles
+ * Return the same at every width, so one width covers it.
+ */
+const returnPrompt = fn();
+export const ReturnSends: Story = {
+  render: () => <SendingComposer onSend={returnPrompt} />,
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    const input = await canvas.findByRole('textbox', { name: 'Message' });
+    await browserUserEvent.type(input, '{Enter}');
+    await expect(returnPrompt).not.toHaveBeenCalled();
+    await browserUserEvent.type(input, spacingPrompt);
+    const shown = shownText(input);
+    await browserUserEvent.keyboard('{Enter}');
+    await waitFor(() => expect(returnPrompt).toHaveBeenCalledOnce());
+    await expect(returnPrompt).toHaveBeenCalledWith({
+      text: shown,
+      images: [],
+    });
+    await expect(shown).toBe(spacingPrompt);
+  },
+};
 
 function imageComposer(
   props: React.ComponentProps<typeof Composer>,
@@ -424,8 +455,8 @@ function multiline(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const input = canvas.getByRole('textbox', { name: 'Message' });
-      await userEvent.type(input, multilineSpacingPrompt);
-      await expect(input).toHaveValue(multilineSpacingPrompt);
+      await browserUserEvent.type(input, typedLines(multilineSpacingPrompt));
+      await expect(shownText(input)).toBe(multilineSpacingPrompt);
       await expect(prompt).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
       await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
@@ -433,11 +464,11 @@ function multiline(width: number): Story {
         text: multilineSpacingPrompt,
         images: [],
       });
-      await waitFor(() => expect(input).toHaveValue(''));
+      await waitFor(() => expect(shownText(input)).toBe(''));
     },
   };
 }
-export const MultilinePhone = multiline(layoutWidths.phone);
+export const MultilineWebAtPhoneWidth = multiline(layoutWidths.phone);
 export const MultilineWide = multiline(layoutWidths.wide);
 
 export const ImageTooLarge: Story = {
@@ -480,7 +511,7 @@ export const ImageTooLarge: Story = {
       await waitFor(() =>
         expect(canvas.queryByRole('alert')).not.toBeInTheDocument(),
       );
-      await expect(canvas.getByRole('textbox')).toHaveValue(draft.text);
+      await expect(shownText(canvas.getByRole('textbox'))).toBe(draft.text);
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
     } finally {
       root.unmount();
@@ -491,14 +522,16 @@ export const ImageTooLarge: Story = {
 function sending(width: number): Story {
   return {
     args: { draft: { text: spacingPrompt, images: [] }, sending: true },
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ canvas, args }) => {
       await settleViewport(width);
       await expect(
-        canvas.getByRole('progressbar', { name: 'Sending' }),
-      ).toBeVisible();
-      await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
-      await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
-      await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
+        canvas.getByRole('button', { name: 'Send' }),
+      ).toHaveAttribute('aria-busy', 'true');
+      const input = canvas.getByRole('textbox');
+      await expect(input).toHaveAttribute(readOnlyAttribute, 'true');
+      await expect(shownText(input)).toBe(spacingPrompt);
+      await browserUserEvent.type(input, 'Another prompt');
+      await expect(shownText(input)).toBe(spacingPrompt);
       await expect(
         canvas.getByRole('button', {
           name: width >= 720 ? 'Attach' : attachImagesLabel,
@@ -525,10 +558,12 @@ function disabled(width: number): Story {
       },
       disabled: true,
     },
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ canvas, args }) => {
       await settleViewport(width);
-      await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
-      await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
+      const input = canvas.getByRole('textbox');
+      await expect(input).toHaveAttribute(readOnlyAttribute, 'true');
+      await browserUserEvent.type(input, 'Another prompt');
+      await expect(shownText(input)).toBe(spacingPrompt);
       await expect(
         canvas.getByRole('button', {
           name: width >= 720 ? 'Attach' : attachImagesLabel,
@@ -623,11 +658,15 @@ async function chooseModel({
   name,
 }: Omit<PickerStep, 'canvas'> & { name: string }): Promise<void> {
   const overlay = within(document.body);
-  if (width < 720)
-    await userEvent.click(
-      await overlay.findByRole('button', { name: chooseModelLabel }),
-    );
+  await userEvent.click(
+    await overlay.findByRole('button', { name: chooseModelLabel }),
+  );
   await userEvent.click(await overlay.findByRole('button', { name }));
+  await waitFor(() =>
+    expect(
+      overlay.queryByRole('dialog', { name: 'Select Model' }),
+    ).not.toBeInTheDocument(),
+  );
   if (width < 720)
     await expect(
       await overlay.findByRole('button', { name: chooseModelLabel }),
@@ -639,11 +678,6 @@ async function expectEffortControlsVisible(): Promise<void> {
   await waitFor(() =>
     expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible(),
   );
-  for (const end of ['Fastest', 'Smartest']) {
-    const label = overlay.getByText(end, { exact: true });
-    await expect(label).toBeVisible();
-    await expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
-  }
 }
 
 async function expectHighEffort({
@@ -1027,19 +1061,22 @@ export const ScrollableAgentCatalog: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: chooseAgentLabel }),
+    );
     const scroll = await overlay.findByTestId('composer-agents-scroll');
     await waitFor(async () => {
       await expect(scroll.clientHeight).toBeGreaterThan(100);
       await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
     });
-    const menu = overlay.getByRole('dialog');
+    const menu = overlay.getByRole('dialog', { name: 'Select Agent' });
     await Promise.all(
       menu
         .getAnimations({ subtree: true })
         .map((animation) => animation.finished),
     );
     await waitFor(() => expect(menu).toBeVisible());
-    const heading = overlay.getByText('Agent', { exact: true });
+    const heading = overlay.getByText('Select Agent', { exact: true });
     const headingTop = heading.getBoundingClientRect().top;
     const menuHeight = menu.getBoundingClientRect().height;
     await expect(menu.getBoundingClientRect().bottom).toBeLessThanOrEqual(
@@ -1088,10 +1125,9 @@ function unavailableAgents(width: number): Story {
       await userEvent.click(
         canvas.getByRole('button', { name: agentModelLabel }),
       );
-      if (width < 720)
-        await userEvent.click(
-          await overlay.findByRole('button', { name: chooseAgentLabel }),
-        );
+      await userEvent.click(
+        await overlay.findByRole('button', { name: chooseAgentLabel }),
+      );
       const agents = args.configuration?.agents ?? [];
       await expect(agents).toHaveLength(2);
       for (const agent of agents) {
@@ -1176,7 +1212,7 @@ function responsiveLayout(width: number, agentIndex: number): Story {
         await expectHeldAgentList();
         await userEvent.click(
           await within(document.body).findByRole('button', {
-            name: 'Back to Agent and model',
+            name: 'Back to Configure',
           }),
         );
         await userEvent.click(
@@ -1186,13 +1222,21 @@ function responsiveLayout(width: number, agentIndex: number): Story {
         );
         await userEvent.click(
           await within(document.body).findByRole('button', {
-            name: 'Back to Agent and model',
+            name: 'Back to Configure',
           }),
         );
         await expect(
           await within(document.body).findByRole('slider', { name: 'Effort' }),
         ).toBeVisible();
-      } else await expectWideAgentMenu();
+      } else {
+        await userEvent.click(
+          await within(document.body).findByRole('button', {
+            name: chooseAgentLabel,
+          }),
+        );
+        await expectWideAgentMenu();
+        await userEvent.keyboard('{Escape}');
+      }
       await userEvent.keyboard('{Escape}');
     },
   };
@@ -1305,35 +1349,45 @@ async function expectHeldAgentList(): Promise<void> {
   ).toHaveLength(1);
 }
 
-function editorScrollsAfterFourLines(width: number): Story {
+// On the web the field grows with its draft to 10 lines, then scrolls inside the card (#539).
+const linesTwoToTen =
+  '\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10';
+
+// Nothing covers Send: the topmost element at its centre is the button or inside it.
+async function expectSendUnobscured(send: HTMLElement): Promise<void> {
+  await expect(canPointAt(send)).toBe(true);
+}
+
+function editorScrollsAfterTenLines(width: number): Story {
   return {
     render: () => <SendingComposer onSend={fn()} />,
-    play: async ({ canvas, userEvent }) => {
+    play: async ({ canvas }) => {
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
-      await userEvent.type(
-        input,
-        'First line\nSecond line\nThird line\nFourth line',
-      );
+      await browserUserEvent.type(input, 'Line 1');
+      const oneLineHeight = input.clientHeight;
+      // Up to ten lines the field grows and every line shows without scrolling.
+      await browserUserEvent.type(input, typedLines(linesTwoToTen));
       await waitFor(() => expect(input.scrollHeight).toBe(input.clientHeight));
-      const card = input.parentElement?.parentElement;
-      if (!card) throw new Error('Composer card is missing.');
-      const height = card.getBoundingClientRect().height;
-      await userEvent.type(input, '\nFifth line\nSixth line');
-      await expect(input).toHaveValue(
-        'First line\nSecond line\nThird line\nFourth line\nFifth line\nSixth line',
+      await expect(input.clientHeight).toBeGreaterThan(oneLineHeight);
+      const tenLinesHeight = input.clientHeight;
+      // Past ten lines it stops growing and scrolls instead.
+      await browserUserEvent.type(input, typedLines('\nLine 11\nLine 12'));
+      await expect(shownText(input)).toBe(
+        `Line 1${linesTwoToTen}\nLine 11\nLine 12`,
       );
-      await expect(card.getBoundingClientRect().height).toBe(height);
+      await expect(input.clientHeight).toBe(tenLinesHeight);
       await expect(input.scrollHeight).toBeGreaterThan(input.clientHeight);
+      await expectSendUnobscured(canvas.getByRole('button', { name: 'Send' }));
       await browserUserEvent.wheel(input, { delta: { y: 200 } });
       await waitFor(() => expect(input.scrollTop).toBeGreaterThan(0));
     },
   };
 }
-export const EditorScrollsAfterFourLinesPhone = editorScrollsAfterFourLines(
+export const EditorScrollsAfterTenLinesPhone = editorScrollsAfterTenLines(
   layoutWidths.phone,
 );
-export const EditorScrollsAfterFourLinesWide = editorScrollsAfterFourLines(
+export const EditorScrollsAfterTenLinesWide = editorScrollsAfterTenLines(
   layoutWidths.wide,
 );
 

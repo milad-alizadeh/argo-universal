@@ -9,6 +9,7 @@ import { Button } from '../../../../lib/generic/primitives/buttons/button/button
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type TextField, touchedInput } from '../form-field';
 import { EntrySheetInput } from './entry-sheet-input';
+import { useEntryFocusReturn } from './use-entry-focus-return';
 
 // A field of an entry, bound to the sheet's form: its errors show once it is touched or saved.
 export type EntrySheetField = {
@@ -39,11 +40,13 @@ export type EntrySheetEntry = Pick<
 
 // A phone edits one argument or variable at a time, with labelled fields, in a sheet that the backdrop closes until it holds input.
 export function EntrySheet(props: EntrySheetProps): React.JSX.Element {
+  const onCloseAutoFocus = useEntryFocusReturn();
   return (
     <Dialog open onOpenChange={(open) => !open && props.onClose()}>
       <DialogContent
         accessibilityLabel={props.title}
         dismissible={!props.dirty}
+        onCloseAutoFocus={onCloseAutoFocus}
       >
         <EntrySheetBody {...props} />
       </DialogContent>

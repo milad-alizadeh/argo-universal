@@ -13,5 +13,13 @@
       "sha256": "b94ea61d860fae6f82f43571f36f17111fcf5d348e8e9cc22ae4b441c7560011"
     }
   ],
-  "note": "The public OpenAI logo kit contains the OpenAI Blossom, not a separate Codex mark."
+  "note": "The public OpenAI logo kit contains the OpenAI Blossom, not a separate Codex mark.",
+  "registry": {
+    "source": "https://cdn.agentclientprotocol.com/registry/v1/latest/codex-acp.svg",
+    "retrievedAt": "2026-10-12",
+    "file": "registry.svg",
+    "sha256": "3304f6c5797ebce8f5c3d0e0af28e1eb970e81697deaae986466970523e46b96",
+    "note": "Default ACP Registry icon; currentColor follows Appearance.",
+    "manifest": "https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json"
+  }
 }

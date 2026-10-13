@@ -2,6 +2,8 @@
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
   // No cacheDir, so every worktree of a clone shares the main worktree's .turbo/cache (Turborepo caching guide).
+  // .turbo/config.json from `turbo link` stays in the main worktree, so the team lives here for linked worktrees to reach the Remote Cache.
+  "remoteCache": { "teamSlug": "miladalizadehs-projects" },
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -37,8 +39,15 @@
       "outputs": [".vite/build/**"]
     },
     // No package has this script; it only carries dependency hashes so a change in a dependency misses its dependents' test cache.
+    // A package's own tests feed its test hash; leaving them out here keeps a dependency's test edit from missing its dependents' cache.
     "transit": {
-      "dependsOn": ["^transit"]
+      "dependsOn": ["^transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!**/*.test.mts"
+      ]
     },
     "dev": {
       "cache": false,
