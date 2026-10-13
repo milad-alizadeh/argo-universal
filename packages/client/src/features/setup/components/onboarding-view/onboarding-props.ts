@@ -11,5 +11,4 @@ export interface OnboardingViewProps {
   onConnectGitHub?: () => void;
   // Unset until the App can add a Project, so its button shows disabled.
   onAddProject?: () => void;
-  onUseOnPhone: () => void;
 }

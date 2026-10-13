@@ -7,7 +7,6 @@ import {
   useErrorToast,
 } from '#lib/generic/primitives/overlays/toast/toast';
 import { useNavigate } from '#lib/product/navigation/context';
-import type { OnboardingViewProps } from '../components/onboarding-view/onboarding-props';
 import { OnboardingView } from '../components/onboarding-view/onboarding-view';
 import { type AgentStep, agentStep } from '../state/onboarding';
 
@@ -38,20 +37,14 @@ function useAgentStep(): { step?: AgentStep; checkAgain: () => void } {
 const useServerName = (): string | undefined =>
   useQuery(useTRPC().system.info.queryOptions()).data?.name;
 
-function useSetupLinks(): Pick<
-  OnboardingViewProps,
-  'onChangeAgent' | 'onUseOnPhone'
-> {
+function useChangeAgent(): () => void {
   const navigate = useNavigate();
-  return {
-    onChangeAgent: () => navigate({ to: 'settings-agents' }),
-    onUseOnPhone: () => navigate({ to: 'settings-devices' }),
-  };
+  return () => navigate({ to: 'settings-agents' });
 }
 
 // Onboarding on the Server: GitHub sign-in and Add Project are not built yet, so the view shows them disabled; it draws once the Agents are known.
 export function OnboardingScreen(): React.JSX.Element | null {
-  const links = useSetupLinks();
+  const onChangeAgent = useChangeAgent();
   const { step, checkAgain } = useAgentStep();
   const serverName = useServerName();
   if (!step) return null;
@@ -61,7 +54,7 @@ export function OnboardingScreen(): React.JSX.Element | null {
       agent={step}
       github={{ status: 'not-connected' }}
       onCheckAgentAgain={checkAgain}
-      {...links}
+      onChangeAgent={onChangeAgent}
     />
   );
 }

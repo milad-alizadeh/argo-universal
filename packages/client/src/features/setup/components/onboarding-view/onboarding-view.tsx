@@ -2,7 +2,6 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
-import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
 import { stepMarks } from '../../state/onboarding';
 import { AgentStepView } from './agent-step';
 import { GitHubStepView } from './github-step';
@@ -50,33 +49,6 @@ function OnboardingSteps(props: OnboardingViewProps): React.JSX.Element {
   );
 }
 
-function UseOnPhoneButton({
-  onUseOnPhone,
-}: Pick<OnboardingViewProps, 'onUseOnPhone'>): React.JSX.Element {
-  return (
-    <Button
-      label="Use Argo on your phone"
-      icon="phone"
-      variant="ghost"
-      size="sm"
-      onPress={onUseOnPhone}
-    />
-  );
-}
-
-function OnboardingFooter({
-  onUseOnPhone,
-}: Pick<OnboardingViewProps, 'onUseOnPhone'>): React.JSX.Element {
-  return (
-    <View className="flex-row items-center gap-3">
-      <Text role="secondary" className="min-w-0 flex-1 text-muted-foreground">
-        You can change any of this later in Settings.
-      </Text>
-      <UseOnPhoneButton onUseOnPhone={onUseOnPhone} />
-    </View>
-  );
-}
-
 // What a Server with no Projects shows on the desktop: three steps to the first Session, centred in the window.
 export function OnboardingView(props: OnboardingViewProps): React.JSX.Element {
   return (
@@ -88,7 +60,6 @@ export function OnboardingView(props: OnboardingViewProps): React.JSX.Element {
       <View className="w-full max-w-130 gap-6">
         <OnboardingHeader serverName={props.serverName} />
         <OnboardingSteps {...props} />
-        <OnboardingFooter onUseOnPhone={props.onUseOnPhone} />
       </View>
     </ScrollFadeView>
   );

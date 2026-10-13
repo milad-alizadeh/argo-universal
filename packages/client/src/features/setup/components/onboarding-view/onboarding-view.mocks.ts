@@ -23,7 +23,6 @@ export const onboardingArgs = (): OnboardingViewProps => ({
   onCheckAgentAgain: fn(),
   onConnectGitHub: fn(),
   onAddProject: fn(),
-  onUseOnPhone: fn(),
 });
 
 // The accessible names of GitHub's sign-in buttons.

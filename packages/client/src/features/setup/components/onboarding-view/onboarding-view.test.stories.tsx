@@ -41,11 +41,7 @@ export const DoneStepsShowTheAccount: Story = {
   },
 };
 
-type Handler =
-  | 'onChangeAgent'
-  | 'onCheckAgentAgain'
-  | 'onAddProject'
-  | 'onUseOnPhone';
+type Handler = 'onChangeAgent' | 'onCheckAgentAgain' | 'onAddProject';
 
 // Pressing the button calls its handler.
 const pressCalls = (
@@ -63,11 +59,6 @@ const pressCalls = (
 export const ChangeOpensAgents = pressCalls('Change', 'onChangeAgent');
 
 export const AddProjectAddsOne = pressCalls(addProject, 'onAddProject');
-
-export const UseOnPhoneOpensDevices = pressCalls(
-  'Use Argo on your phone',
-  'onUseOnPhone',
-);
 
 export const CheckAgainLooksAgain = pressCalls(
   'Check again',
