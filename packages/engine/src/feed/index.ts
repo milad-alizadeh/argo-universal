@@ -31,3 +31,9 @@ export { createFeedRouter } from './router';
 export { titleFromPrompt } from './prompt-title';
 
 export type { Feed, FeedStreamEvent } from './feed-change';
+
+export {
+  settleFeedTurn,
+  type FeedTurnEnding,
+  type SettledFeed,
+} from './turn-settlement';
