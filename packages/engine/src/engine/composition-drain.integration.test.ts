@@ -2,7 +2,7 @@ import { agentAdapters } from '@repo/agents';
 import { feedRow } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { waitFor } from 'xstate';
-import { openTestDatabase } from '#mocks/database';
+import { insertEndedTurn, openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
@@ -13,6 +13,7 @@ it.each(agentAdapters)(
   'serves live Session procedures and drains their Feed before closing the database for $agent',
   async ({ agent }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const input = scriptedEngineInput(
       {

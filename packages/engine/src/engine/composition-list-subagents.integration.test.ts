@@ -2,7 +2,11 @@ import { agentAdapters } from '@repo/agents';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
 import { closeSubscription } from '#mocks/composition-subscriptions';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  insertEndedTurn,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { TurnInsertJob, TurnUpdateJob } from '../sessions';
@@ -14,8 +18,10 @@ it.each(agentAdapters)(
   'updates a cached parent when its stored Subagent Turn changes for $agent',
   async ({ agent }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
+    insertEndedTurn(database, 'child-1');
     const { engine, createCaller } = await startEngineTestHost({
       database,
       ...scriptedEngineInput(undefined, agent),

@@ -1,6 +1,10 @@
 import type { SessionListUpdate } from '@repo/contracts';
 import { onTestFinished, vi } from 'vitest';
-import { countDatabaseReads, openTestDatabase } from './database';
+import {
+  countDatabaseReads,
+  insertEndedTurn,
+  openTestDatabase,
+} from './database';
 import { startEngineTestHost } from './engine';
 import { scriptedEngineInput } from './scripted-engine';
 
@@ -13,6 +17,7 @@ export const startCountedList = async (
   counted: ReturnType<typeof countDatabaseReads>;
 }> => {
   const { database, remove } = openTestDatabase({ agent });
+  insertEndedTurn(database);
   onTestFinished(remove);
   const host = await startEngineTestHost({
     database,

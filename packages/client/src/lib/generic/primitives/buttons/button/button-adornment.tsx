@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Icon, IconSpinner } from '../../../symbols/icon';
+import type { IconProps } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import type { IconRole } from '../../../symbols/icon-role';
 import { usePrimitiveColor } from '../../native/primitive-color';
@@ -11,6 +12,7 @@ interface AdornmentProps {
   textClass: string;
   role: IconRole;
   filled?: boolean;
+  weight?: IconProps['weight'];
 }
 
 export function ButtonAdornment(props: AdornmentProps): ReactElement | null {
@@ -26,6 +28,7 @@ function adornment(props: AdornmentProps, color?: string): ReactElement {
       name={props.icon ?? 'more'}
       role={props.role}
       filled={props.filled}
+      weight={props.weight}
       className={props.textClass}
     />
   );

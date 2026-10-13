@@ -1,3 +1,4 @@
+import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
@@ -21,7 +22,7 @@ export function responsiveLayout(width: number, agentIndex: number): Story {
       configuration: {
         agents: [catalog.agent],
         agent: catalog.agent.agent,
-        configOptions: catalog.agent.configOptions,
+        configOptions: recordedSessionOptions(catalog.agent.agent),
         onConfigChange: fn(),
         checkout: {
           branch: 'main',

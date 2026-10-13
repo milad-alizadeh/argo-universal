@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react';
 import type { Pressable } from 'react-native';
+import type { IconProps } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import type { IconRole } from '../../../symbols/icon-role';
 import type { ButtonSize } from '../button/button-props';
@@ -22,6 +23,7 @@ export type IconButtonProps = ActionProps & {
   iconRole?: IconRole;
   iconClassName?: string;
   filled?: boolean;
+  iconWeight?: IconProps['weight'];
   // A toggle: true draws it on, false draws it off; leave it out for a plain button.
   'aria-pressed'?: boolean;
 };

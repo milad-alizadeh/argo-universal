@@ -8,7 +8,6 @@ import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useState } from 'react';
 import { useAgents } from '#features/agents';
-import { useNewSessionConfiguration } from '#features/composer';
 import { useTRPC } from '#features/connection';
 import {
   type ChosenSettings,
@@ -23,7 +22,6 @@ export interface NewSessionData {
   agents: ReturnType<typeof useAgents>;
   setChosen: React.Dispatch<React.SetStateAction<ChosenSettings>>;
   choices: SessionChoices;
-  configuration: ReturnType<typeof useNewSessionConfiguration>;
 }
 
 interface ListedChoices {
@@ -74,6 +72,5 @@ export function useNewSessionData(
     { projects: projects.data ?? [], agents: agents.data ?? [] },
     projectId,
   );
-  const configuration = useNewSessionConfiguration(choices.agent);
-  return { serverInfo, projects, agents, setChosen, choices, configuration };
+  return { serverInfo, projects, agents, setChosen, choices };
 }

@@ -21,7 +21,6 @@ const describeCustomAgent = async (
     label: agent.definition.name,
     logo: '',
     availability: customAvailability(check),
-    configOptions: [],
   };
 };
 const customAvailability = (

@@ -13,7 +13,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTRPC } from '#features/connection';
 import {
   applySubscriptionEvent,
-  emptyFeed,
   type FeedState,
   mergeNewestPage,
   mergeOlderPage,
@@ -23,6 +22,7 @@ import type { FeedView } from '../view/feed-view';
 import { keepUnchangedItems } from '../view/keep-unchanged-items';
 import { findLiveToolCall } from '../view/live-tool-call';
 import { toFeedView } from '../view/to-feed-view';
+import { useHeldFeedStart, useKeepHeldFeed } from './held-feed';
 
 type FeedPageQuery = ReturnType<
   typeof useQuery<
@@ -58,7 +58,8 @@ export function useSessionFeed(sessionId: string): SessionFeed {
       { staleTime: Number.POSITIVE_INFINITY, gcTime: 0 },
     ),
   );
-  const [feed, setFeed] = useState<FeedState>(emptyFeed);
+  const start = useHeldFeedStart(sessionId);
+  const [feed, setFeed] = useState<FeedState>(start.feed);
   const feedRef = useRef(feed);
   const replaceFeed = useCallback((next: FeedState) => {
     feedRef.current = next;
@@ -66,9 +67,14 @@ export function useSessionFeed(sessionId: string): SessionFeed {
   }, []);
   const closed = useRef(false);
   const [closureError, setClosureError] = useState<Error | null>(null);
-  const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(
+    start.snapshot,
+  );
   // Pages advance the held revision without restarting live updates.
-  const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(null);
+  const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(
+    start.syncPoint,
+  );
+  useKeepHeldFeed(sessionId, { feed, snapshot });
   const { loadingOlder, loadOlder } = useOlderPages({
     sessionId,
     getFeed: useCallback(() => feedRef.current, []),

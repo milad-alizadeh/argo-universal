@@ -5,7 +5,7 @@ import {
   notifyHeaderChange,
 } from './composition-header-rows';
 import { nextMatching } from './composition-subscriptions';
-import { openTestDatabase } from './database';
+import { insertEndedTurn, openTestDatabase } from './database';
 import { startEngineTestHost } from './engine';
 import { scriptedEngineInput } from './scripted-engine';
 
@@ -19,6 +19,7 @@ export type HeaderHost = EngineHost & {
 
 export async function startHeaderHost(agent: string): Promise<HeaderHost> {
   const { database, remove } = openTestDatabase({ agent });
+  insertEndedTurn(database);
   onTestFinished(remove);
   const completed = Promise.withResolvers<void>();
   const input = headerInput(agent, completed.promise);

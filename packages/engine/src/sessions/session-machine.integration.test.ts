@@ -479,8 +479,8 @@ it('attaches live Feed updates when a subscription starts while the Session open
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 const checkoutCreatedEvent = 'xstate.done.actor.createCheckout';
 const checkoutCreateFailedEvent = 'xstate.error.actor.createCheckout';
-const checkoutDiscardedEvent = 'xstate.done.actor.discardCheckout';
-const checkoutDiscardFailedEvent = 'xstate.error.actor.discardCheckout';
+const sessionDiscardedEvent = 'xstate.done.actor.discardSession';
+const sessionDiscardFailedEvent = 'xstate.error.actor.discardSession';
 const sessionLoadedEvent = 'xstate.done.actor.loadSession';
 const sessionLoadFailedEvent = 'xstate.error.actor.loadSession';
 const feedFailedEvent = 'xstate.error.actor.feed';
@@ -509,6 +509,7 @@ const data = {
   nextPosition: 0,
   configValues: [],
   activityAt: 1000,
+  kept: true,
   undisclosedInterruptedTurnId: null,
 } satisfies SessionData;
 /*
@@ -543,13 +544,13 @@ const events = [
     error: 'Could not create',
   },
   {
-    type: checkoutDiscardedEvent,
-    actorId: 'discardCheckout',
+    type: sessionDiscardedEvent,
+    actorId: 'discardSession',
     output: undefined,
   },
   {
-    type: checkoutDiscardFailedEvent,
-    actorId: 'discardCheckout',
+    type: sessionDiscardFailedEvent,
+    actorId: 'discardSession',
     error: 'Could not remove',
   },
   {
@@ -630,6 +631,7 @@ const key = (snapshot: SessionSnapshot | undefined): string | undefined =>
     elicitation: snapshot.context.elicitationQueue.length > 0,
     crashes: snapshot.context.agentCrashes.length,
     stored: snapshot.context.stored,
+    kept: snapshot.context.kept,
     activeTurnId: snapshot.context.activeTurnId,
   });
 const canGraphEvent = (
@@ -644,8 +646,8 @@ const canGraphEvent = (
     case sessionLoadedEvent:
     case sessionLoadFailedEvent:
       return snapshot.matches('loading');
-    case checkoutDiscardedEvent:
-    case checkoutDiscardFailedEvent:
+    case sessionDiscardedEvent:
+    case sessionDiscardFailedEvent:
       return snapshot.matches('discarding');
     case feedFlushedEvent:
     case feedFailedEvent:

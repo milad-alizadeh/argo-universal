@@ -2,7 +2,11 @@ import { agentAdapters } from '@repo/agents';
 import { session } from '@repo/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  insertEndedTurn,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
@@ -12,6 +16,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
   'drops only a malformed Session for %s',
   async (agent): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const reported = vi
       .spyOn(console, 'error')
@@ -23,6 +28,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
+    insertEndedTurn(database, 'healthy');
     database
       .update(session)
       .set({ titleSource: sql`'invalid'` })

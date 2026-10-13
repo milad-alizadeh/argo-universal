@@ -2,7 +2,7 @@ import { agentAdapters } from '@repo/agents';
 import { feedRow } from '@repo/db/schema';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { openTestDatabase } from '#mocks/database';
+import { insertEndedTurn, openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
@@ -13,6 +13,7 @@ it.each(agentAdapters)(
   'keeps the Feed subscription open after malformed stored activity for $agent',
   async ({ agent }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const input = scriptedEngineInput(
       { steps: [{ type: waitForCancelStep }] },

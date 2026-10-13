@@ -5,7 +5,7 @@ import {
   nextMatching,
   changedSession,
 } from '#mocks/composition-subscriptions';
-import { openTestDatabase } from '#mocks/database';
+import { insertEndedTurn, openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { SessionRowUpdateJob } from '../sessions';
@@ -20,6 +20,7 @@ it.each(agentAdapters)(
       maxRevision: 1,
       title: 'Unread',
     });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const host = await startEngineTestHost({
       database,

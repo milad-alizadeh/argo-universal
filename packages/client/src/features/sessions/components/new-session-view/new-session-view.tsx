@@ -137,10 +137,30 @@ const composerDraftProps = (
         sending: props.opening,
       };
 
+// A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off.
+function StartSessionInRow(
+  props: ReadyNewSessionViewProps,
+): React.JSX.Element | null {
+  if (props.starting) return null;
+  return (
+    <View className="w-full items-center pb-2">
+      <StartSessionIn
+        serverName={props.serverName}
+        serverConnected={props.connected}
+        projects={props.projects}
+        projectId={props.projectId}
+        onProjectChange={props.onProjectChange}
+        checkout={props.configuration.checkout}
+        disabled={props.opening}
+      />
+    </View>
+  );
+}
+
 function ReadyNewSessionView(
   props: ReadyNewSessionViewProps,
 ): React.JSX.Element {
-  const { configuration, opening } = props;
+  const { configuration } = props;
   useErrorToast(
     props.openError === undefined ? undefined : openFailed(props.openError),
   );
@@ -150,17 +170,7 @@ function ReadyNewSessionView(
       feed={<NewSessionFeed starting={props.starting} />}
       composer={
         <>
-          <View className="w-full items-center pb-2">
-            <StartSessionIn
-              serverName={props.serverName}
-              serverConnected={props.connected}
-              projects={props.projects}
-              projectId={props.projectId}
-              onProjectChange={props.onProjectChange}
-              checkout={configuration.checkout}
-              disabled={opening}
-            />
-          </View>
+          <StartSessionInRow {...props} />
           {props.setupStep !== undefined && (
             <Text
               semanticRole="alert"

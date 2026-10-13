@@ -1,6 +1,6 @@
 # Model-based tests for XState machines with `xstate/graph`
 
-Research for the owner's rule that every XState machine is covered by model-based tests. It covers the Server supervisor (`apps/server/src/supervisor/machine.ts`), a proposed worker machine (`apps/server/src/worker/`), spec 0001 section 5, and ADR 0003. Checked on 2026-10-03 against xstate 5.33.2 and Vitest 5.0.3.
+For the owner's rule that every XState machine has model-based tests. Covers the Server supervisor (`apps/server/src/supervisor/machine.ts`), a proposed worker machine (`apps/server/src/worker/`), spec 0001 section 5, and ADR 0003. Checked on 2026-10-03 against xstate 5.33.2 and Vitest 5.0.3.
 
 ## Sources
 
@@ -23,18 +23,16 @@ Research for the owner's rule that every XState machine is covered by model-base
 
 ## Versions
 
-Checked 2026-10-03.
-
-- **`@xstate/graph`**: newest stable **3.0.4**, `latest` tag, published 2025-05-31 (S1). Peer: `xstate ^5.19.4` (S1), so 5.33.2 satisfies it. 3.0.4 only bumped its `xstate` dependency to 5.19.4 (S5). No release since. npm does not mark it deprecated (S1), but the docs do (S9).
+- **`@xstate/graph`**: newest stable **3.0.4**, `latest` tag, published 2025-05-31 (S1). Peer: `xstate ^5.19.4` (S1), so 5.33.2 satisfies it. 3.0.4 only bumped its `xstate` dependency to 5.19.4 (S5). No release since. Deprecated in the docs (S9), not on npm (S1).
 - **The utilities moved into `xstate` itself in 5.20.0** (2025-06-19): "The graph and model-based testing utilities from @xstate/graph (and @xstate/test previously) were moved to the core `xstate` package", imported from `xstate/graph` (S4, S3). The graph docs say: "Import from `xstate/graph` instead of the deprecated `@xstate/graph` package" (S9).
-- `xstate/graph` has had fixes since the split. For example, 5.30.0 (2026-03-28) added `filterEvents` (S4). `@xstate/graph` 3.0.4 lacks them.
+- `xstate/graph` has had fixes since the split, such as `filterEvents` in 5.30.0 (2026-03-28) (S4). `@xstate/graph` 3.0.4 lacks them.
 - **xstate 5.33.2 already ships `xstate/graph`** with `types`, `import`, `module` and `development` conditions (S8). The repo pins xstate 5.33.2 exactly, so **no new dependency is needed**.
-- **`@xstate/test`**: `latest` is 0.5.1, peer `xstate ^4.29.0`, deprecated with "Superseded by @xstate/test@2 (model-based and property-based testing for XState v6). Path utilities live in xstate/graph." (S2). `2.0.0-alpha.1` (2026-09-30) is built on fast-check and peers `xstate ^6.0.0-alpha.63` and `vitest ^3.0.0` (S2), so it does not fit xstate 5 or Vitest 5. The Testing docs call `@xstate/test` deprecated in favour of `xstate/graph` (S10).
+- **`@xstate/test`**: `latest` is 0.5.1, peer `xstate ^4.29.0`, deprecated with "Superseded by @xstate/test@2 (model-based and property-based testing for XState v6). Path utilities live in xstate/graph." (S2). `2.0.0-alpha.1` (2026-09-30) is built on fast-check and peers `xstate ^6.0.0-alpha.63` and `vitest ^3.0.0` (S2): no fit for xstate 5 or Vitest 5. The Testing docs call `@xstate/test` deprecated in favour of `xstate/graph` (S10).
 - Docs drift: the `@xstate/test` page still says the utilities "are now part of the latest `@xstate/graph` package" (S11), and the `@xstate/graph` page still says to install it (S12). The changelog (S4), the Graph page (S9) and the Testing page (S10) agree on `xstate/graph`.
 
 ## Install command
 
-None. Import from the subpath that the pinned `xstate` already exports:
+None; the pinned `xstate` exports the subpath:
 
 ```ts
 import { TestModel, getShortestPaths, getSimplePaths } from 'xstate/graph';
@@ -137,11 +135,11 @@ export type EventExecutor<TSnapshot, TEvent> = (step: Step<TSnapshot, TEvent>) =
 - `testPath` loops over the steps in order. For each one it awaits the executor for `step.event.type` if there is one (`eventExec?.(step)`, so a missing executor is a silent no-op), then runs every `states` entry whose key passes `stateMatcher`. `'*'` runs only when no key matches (S6).
 - On failure it appends the whole path, state by state, to the error message (S6 `formatPathTestResult`).
 - `description` embeds the full context as JSON (S6 `getDescription`). Build your own test titles.
-- `getPathsFromEvents(logic, events, options)` returns the one path for a fixed event list, and throws `Invalid transition from … with …` if an event is not in the adjacency map (S6). It is useful for one named scenario.
+- `getPathsFromEvents(logic, events, options)` returns the one path for a fixed event list, and throws `Invalid transition from … with …` if an event is not in the adjacency map (S6). Use it for one named scenario.
 
 ## How traversal treats delays, guards, actors and final states
 
-The traversal is pure. It calls `logic.transition(snapshot, event, actorScope)` with a mock actor scope whose `actionExecutor`, `defer`, `stopChild` and `emit` do nothing (S6 `actorScope.ts`, `adjacency.ts`). In the prototype, no custom action ran and no worker was forked while paths were generated (S14).
+The traversal is pure. It calls `logic.transition(snapshot, event, actorScope)` with a mock actor scope whose `actionExecutor`, `defer`, `stopChild` and `emit` do nothing (S6 `actorScope.ts`, `adjacency.ts`). In the prototype, path generation ran no custom action and forked no worker (S14).
 
 - **Delayed transitions (`after`)**: `getShortestPaths` and `getSimplePaths` treat them as events named `xstate.after.<delay>.<state id>`. A first-party test asserts the path `['xstate.init', 'xstate.after.1000.(machine).a']` (S7 `shortestPaths.test.ts`). For the supervisor the names are `xstate.after.readyTimeout.supervisor.starting`, `xstate.after.heartbeatTimeout.supervisor.running` and `xstate.after.backoff.supervisor.backingOff` (S14). The naming is not documented on the Stately site (S9, S13). Named delays in `setup({ delays })` give readable names; inline numbers would give `xstate.after.5000.…`. In the graph a delay is an input that you can send any number of times, but a real timer fires once per state entry.
 - **Guards with context** run on the real context during traversal. The crash counter works, but `recordCrash` calls `Date.now()`, so traversal stores real timestamps. All of them fall inside the 10-minute window, so the graph can never reach "old crashes forgotten" (S14).
@@ -157,13 +155,13 @@ The traversal is pure. It calls `logic.transition(snapshot, event, actorScope)` 
 - To observe a transient state, use the inspection API or `after: { 0: … }` instead of `always` (S10).
 - For model-based testing, use `createTestModel` and give `path.test({ events, states })` executors and assertions (S9). The docs do not say what to do about `after` or `invoke`; the validator just refuses them (S6). The delayed-transitions page lists "Simulated clock" under Testing with no text (S13).
 
-In short, the first-party path for machines with timers and invoked actors is the path functions or `new TestModel`, with time driven by the test. That is what this note recommends.
+So for machines with timers and invoked actors, the first-party route is the path functions or `new TestModel`, with the test driving time.
 
 ## Plan for the supervisor
 
 ### Machine changes
 
-None are required for coverage: the prototype ran at both `HEAD~1` and `42e3143` (S14). Three changes make the model cleaner and follow the owner's comments.
+None needed for coverage: the prototype ran at both `HEAD~1` and `42e3143` (S14). Three changes make the model cleaner and follow the owner's comments.
 
 1. **Model the `backingOff` wait as parallel regions, not context flags.** Since `42e3143`, `backingOff` waits for both `worker.exited` and the backoff delay, using `workerExited` and `backoffElapsed` in context. In the prototype at `42e3143`:
    - The flags are not reset on leaving `backingOff`, so `starting` and `running` carry a stale `backoffElapsed: true`. That doubles those vertices.
@@ -206,7 +204,7 @@ None are required for coverage: the prototype ran at both `HEAD~1` and `42e3143`
    - Write only when the port is known.
    - Remove the file only when it names this `process.pid`.
 
-   The prototype ran with this change and the model suite passed (S14). Two facts matter:
+   The model suite passed with this change (S14). Two facts:
    - Model tests replace both actions with `machine.provide({ actions: { writeServerAddress, removeServerAddress } })`, which record calls in memory (S10 "Mocking effects"; sketch below). The model then checks **when** the machine writes and removes, and example tests on the real actions check **what** they do to the disk.
    - A custom action that throws puts the actor in `status: 'error'` and calls the observer's `error` (verified with 5.33.2, S14). A failed write (disk full, permissions) would therefore end the supervisor through `index.ts`'s `error` handler with exit code 1. Today the helper throws in the same place, so behaviour does not change, but it is now visible in the machine.
 
@@ -220,13 +218,13 @@ The real machine actor (`createActor(machine.provide(…))`) is the system under
 - **Mock `server.json` actions** that record writes and removals.
 - **Vitest fake timers** (`vi.useFakeTimers()`), which also fake `Date.now()` for `recordCrash`.
 
-The model is the same machine as the system under test. Without effect checks, state checks would only compare the machine with itself, and the mutation runs below show that. The value comes from three things that the model does not supply:
+The model is the same machine, so state checks alone only compare the machine with itself, and the mutation runs below show that. The value comes from three things the model does not supply:
 
 - the **timer executors**, which use the spec's 15 s, 5 s and `500·2^(n-1)` capped at 30 s, and check that the state holds 1 ms before each delay;
 - the **effect assertions** per state (live workers, `server.json` writes and removals, `status`);
 - the **crash limit of 10**, asserted in `failed`.
 
-Mutation runs on the prototype (S14). Each change was caught:
+Mutation runs on the prototype caught each change (S14):
 
 | Change | Failing tests |
 |---|---|
@@ -246,8 +244,6 @@ One change cannot be caught: removing a transition, such as the watch-mode `work
 - **Simple paths, bounded**: `model.getSimplePaths({ stopWhen: (snapshot) => snapshot.context.crashTimes.length >= 2 })` gives 474 tests. These cover the orderings: exit before the delay, delay before the exit, and stop from each sub-state.
   - Do not run simple paths unbounded. Each extra allowed crash multiplies the count by about 4. Measured on the pre-`42e3143` machine: 6, 30, 126, 510, 2 046 and 8 190 paths for bounds of 1 to 6 crashes, and 6.5 s just to generate the last one. A bound of 10 would be about 2 million paths (S14).
 - **A transition-coverage test**: build the adjacency map with the same options, list every `(from value, event, to value)`, and assert that the generated paths walk each one. This fails when a new transition is only reachable beyond the simple-path bound, or when dedup hides it.
-
-The whole supervisor suite, path generation included, ran in about 5 s on the prototype (S14).
 
 ### What to assert in each state
 
@@ -289,7 +285,7 @@ Today's `fakeWorker` and `FakeWorker` should be renamed `mockWorker` and `MockWo
 
 ### Sketch of the test file
 
-This is the prototype that ran green against the parallel `backingOff` with the actions inside the machine. It type-checks under `tooling/typescript/node.json` (S14). The four example tests above go in the same file, using a second `provide` with only the worker mock.
+The prototype that ran green against the parallel `backingOff` with the actions inside the machine; it type-checks under `tooling/typescript/node.json` (S14). The four example tests above go in the same file, using a second `provide` with only the worker mock.
 
 ```ts
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -512,7 +508,7 @@ worker
 root: invoke processSignals; on worker.stop → stopping
 ```
 
-Opening the database and running the migrations are **one state**, because `@repo/db` exposes them as one call. Separate `openingDatabase` and `migrating` states would need `@repo/db` to export a separate migrate step, which is a change to the package in spec section 7. Ask the owner if they want two states. The error message already tells the two failures apart.
+Opening the database and running the migrations are **one state**, because `@repo/db` exposes them as one call (see Spec section 7 under Conflicts). Ask the owner if they want two states. The error message already tells the two failures apart.
 
 ### Effects
 
@@ -539,7 +535,7 @@ The routes stay inside `httpServer`. If `/health` becomes a tRPC procedure, only
 
 ### Model test
 
-This follows the same pattern as the supervisor, and ran green in the prototype: 7 shortest and 8 simple paths, type-checked (S14).
+Same pattern as the supervisor; green in the prototype with 7 shortest and 8 simple paths, type-checked (S14).
 
 - `workerMachine.provide({ actors, actions })` supplies:
   - an `openDatabase` mock whose promise the executor resolves or rejects;
@@ -637,7 +633,7 @@ export const workerMachine = setup({
 
 ## Gotchas
 
-1. **`createTestModel` throws on `after`, `invoke` and inline delayed actions** (S6, S7). Use `new TestModel(machine, options)` and pass `events`, `stateMatcher` and `serializeState` yourself, because its defaults are `[]`, `'*'` only, and the whole snapshot (S6).
+1. **`createTestModel` throws on `after`, `invoke` and inline delayed actions** (S6, S7). Use `new TestModel(machine, options)` and pass `events`, `stateMatcher` and `serializeState` yourself (defaults under API).
 2. **Internal event names are not documented.** `xstate.after.<delay>.<state id>`, `xstate.done.actor.<id>` and `xstate.done.state.<id>` come from the source and first-party tests (S6, S7), not the docs. The exact pin protects us. If the names change, the state assertions fail loudly, because the missing executor does nothing and the actor stays put. Name delays and invoke ids so the names are readable.
 3. **A plain `events` array replaces the derived event list in `getShortestPaths` and `getAdjacencyMap`.** `resolveTraversalOptions` spreads the caller's options last, over the merged default (S6 `graph.ts`). In the prototype, `getShortestPaths(machine, { events: [ready, exit] })` never reached `stopping` (S14). `createTestModel` merges correctly; `new TestModel` takes the list as given. List every event, as the sketch does with `toDirectedGraph`.
 4. **Final states still transition in traversal** through a root-level `on` (S14). Add `filterEvents: (snapshot) => snapshot.status === 'active'`.
@@ -646,9 +642,9 @@ export const workerMachine = setup({
 7. **Context makes the graph explode.** Timestamps in context make every vertex unique and nondeterministic; serialize the crash **count**. Simple paths grow about 4× per allowed crash (S14), so bound them with `stopWhen`, and keep `limit` as a tripwire.
 8. **`toState` also stops traversal** at matching states (S6). Use `stopWhen` to bound, and `toState` only to pick the ends.
 9. **Flags in context hide states.** Boolean context such as `workerExited` and `backoffElapsed` doubles vertices, leaks across states when not reset, and moves assertions off the state value (S14). Prefer parallel regions or child states.
-10. **The model grades itself.** State assertions only compare the machine with itself. Use spec numbers in the executors and effect checks in `states`, and keep example tests for required behaviour, because deleting a transition shrinks the model too (S14).
+10. **The model grades itself.** Use spec numbers in the executors and effect checks in `states`, and keep example tests for required behaviour, because deleting a transition shrinks the model too (S14).
 11. **Real time does not pass in traversal.** Logic that reads `Date.now()`, like the crash window, cannot be reached through the graph (S14). Keep an example test.
-12. **Docs and package disagree.** The docs list `deduplicatePaths` as an export, but 5.33.2 does not export it (S8, S9). Two docs pages still point at `@xstate/graph` (S11, S12).
+12. **Docs and package disagree** on `deduplicatePaths` and `@xstate/graph` (see API and Versions).
 13. **`EventExecutor` gets `step.event` typed as `{ type }` only**, without the payload (S6 `types.ts`). Take payloads from your own table, as the sketch does.
 
 ## Recommendation
@@ -670,9 +666,8 @@ For "Rules that no tool checks":
 ## Conflicts with the spec and ADRs
 
 - **The package name in the request.** The owner asked for `@xstate/graph`. The primary sources say it is superseded by `xstate/graph` inside `xstate` (S4, S9). This note and the AGENTS.md line use `xstate/graph`.
-- **ADR 0003** lists where XState runs: "the supervisor, the Session machines, and Agent lifecycles". A worker machine is still on the Server, so it does not contradict the ADR, but the ADR does not name it. Amend the ADR to add the worker lifecycle. ADR 0003's supervisor states (`starting`, `running`, `backingOff`, `failed`, `stopping`) are unchanged by the parallel `backingOff`, which only adds child states.
+- **ADR 0003** lists where XState runs: "the supervisor, the Session machines, and Agent lifecycles". A worker machine is on the Server, so it does not contradict the ADR, but the ADR does not name it: amend it to add the worker lifecycle. ADR 0003's supervisor states (`starting`, `running`, `backingOff`, `failed`, `stopping`) are unchanged by the parallel `backingOff`, which only adds child states.
 - **Spec section 5, Supervisor.** It says "an XState 5 machine and a small runner, about 100 lines" and "imports no app code, only `contracts` for the `server.json` schema". With the file actions inline, the supervisor still imports only `contracts` (plus `node:fs`). `machine.ts` is already 156 lines at `42e3143`, and the inline file actions add more, so the line count in the spec is out of date.
 - **Spec section 5, Worker**, and the folder tree in section 3 (`worker/  HTTP and WebSocket server, tRPC adapter, /health, /blobs/:id`) do not mention a machine. Adding `machine.ts`, `http-server.ts` and `process-signals.ts`, and dropping `start.ts`, needs a spec edit.
 - **ADR 0002** allows plain HTTP only for `GET /health` and `GET /blobs/:id`. Moving `/health` to tRPC would change that ADR, spec section 5, and the places that wait on `/health`: the Playwright `webServer` URL and the dev wait from `e61eb2f`. The worker design does not depend on the answer.
-- **AGENTS.md "Call them mocks"**: today's `machine.test.ts` names its worker double `fakeWorker`. Rename it to `mockWorker`.
 - **Spec section 7** has `@repo/db` open and migrate in one call. Separate `openingDatabase` and `migrating` states would need a second export from that package.

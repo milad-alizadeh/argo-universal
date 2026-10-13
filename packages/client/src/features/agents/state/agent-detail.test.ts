@@ -10,7 +10,6 @@ const probed: AgentInfo = {
   logo: '',
   availability: 'not_signed_in',
   installStep: 'example-agent login',
-  configOptions: [],
 };
 
 describe('installedAgents', () => {

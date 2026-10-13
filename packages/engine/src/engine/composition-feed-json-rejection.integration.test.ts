@@ -2,7 +2,11 @@ import { agentAdapters } from '@repo/agents';
 import { feedRow, turn } from '@repo/db/schema';
 import { sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  insertEndedTurn,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
@@ -26,6 +30,7 @@ it.each(
   'degrades only the Session with unreadable $kind $field JSON for $agent',
   async ({ agent, kind, column }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const reported = vi
       .spyOn(console, 'error')
@@ -37,6 +42,7 @@ it.each(
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
+    insertEndedTurn(database, 'healthy');
     database
       .insert(turn)
       .values({ id: 'running', sessionId: 'session-1', status: 'running' })

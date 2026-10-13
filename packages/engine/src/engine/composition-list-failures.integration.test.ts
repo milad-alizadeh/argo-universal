@@ -1,7 +1,11 @@
 import { agentAdapters } from '@repo/agents';
 import { turn } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  insertEndedTurn,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
@@ -9,10 +13,14 @@ it.each(agentAdapters)(
   'uses the newest Turn for failures and excludes interrupted Turns from Failed for $agent',
   async ({ agent }): Promise<void> => {
     const { database, remove } = openTestDatabase({ maxRevision: 2 });
+    insertEndedTurn(database);
     onTestFinished(remove);
     insertSession(database, { id: 'interrupted', maxRevision: 2 });
+    insertEndedTurn(database, 'interrupted');
     insertSession(database, { id: 'recovered', maxRevision: 2 });
+    insertEndedTurn(database, 'recovered');
     insertSession(database, { id: 'gave-up', failure: 'Repeated crashes' });
+    insertEndedTurn(database, 'gave-up');
     database
       .insert(turn)
       .values([

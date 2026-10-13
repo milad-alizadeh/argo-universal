@@ -5,6 +5,7 @@ import { expect, it, onTestFinished, vi } from 'vitest';
 import { watchList, useListTimers } from '#mocks/composition-list';
 import {
   countDatabaseReads,
+  insertEndedTurn,
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
@@ -18,8 +19,10 @@ it.each(agentAdapters)(
   'pages current queued activity before the list publication delay for $agent',
   async ({ agent }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     insertSession(database, { id: 'session-2', activityAt: 10 });
+    insertEndedTurn(database, 'session-2');
     const host = await startEngineTestHost({
       database,
       ...scriptedEngineInput(undefined, agent),

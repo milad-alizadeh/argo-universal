@@ -4,7 +4,7 @@ The model is Project, then Session. Each Session owns its Checkout: the Project'
 
 A Subagent is the one exception: it borrows its parent's Checkout, because the Agent runs it there. It is read-only in Argo, and it is archived with its parent (owner, 2026-10-03).
 
-The Server runs all git work by calling `git` and `gh` from `packages/git`. Apps only send requests.
+The Server runs all git work, calling `git` and `gh` from `packages/git`; Apps only send requests.
 
 ## Considered Options
 

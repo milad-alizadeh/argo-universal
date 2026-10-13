@@ -1,4 +1,5 @@
 import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
+import { recordedSessionOptions } from '@repo/mocks/app';
 export interface CatalogSelection {
   choices: SessionConfigSelectOption[];
   current: string;
@@ -7,7 +8,7 @@ export function selection(
   agent: AgentInfo,
   category: string,
 ): CatalogSelection {
-  const option = agent.configOptions.find(
+  const option = recordedSessionOptions(agent.agent).find(
     (entry) => entry.category === category && entry.type === 'select',
   );
   if (option?.type !== 'select')

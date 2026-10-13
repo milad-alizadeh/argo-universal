@@ -3,6 +3,7 @@ import { expect, it, onTestFinished, vi } from 'vitest';
 import { watchList, useListTimers } from '#mocks/composition-list';
 import {
   countDatabaseReads,
+  insertEndedTurn,
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
@@ -17,9 +18,12 @@ it.each(agentAdapters)(
   'reads only the changed Session and pages the shared cache for $agent',
   async ({ agent }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
-    for (let index = 2; index <= 60; index++)
+    for (let index = 2; index <= 60; index++) {
       insertSession(database, { id: `session-${index}` });
+      insertEndedTurn(database, `session-${index}`);
+    }
     const host = await startEngineTestHost({
       database,
       ...scriptedEngineInput(undefined, agent),

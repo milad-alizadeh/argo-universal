@@ -4,7 +4,6 @@ import type { AgentProbe } from '../src/agent-adapter';
 import { findExecutable } from '../src/find-executable';
 import { usesSubscription } from './account';
 import { cliEnvironment, EXECUTABLE } from './cli-environment';
-import { startingValues, toConfigOptions } from './config-options';
 import { createPromptQueue } from './prompt-queue';
 
 export async function probe(signal: AbortSignal): Promise<AgentProbe> {
@@ -15,7 +14,6 @@ export async function probe(signal: AbortSignal): Promise<AgentProbe> {
       availability: 'not_installed',
       installStep:
         'Install Claude Code: npm install -g @anthropic-ai/claude-code',
-      configOptions: [],
     };
   return probeInstalled(signal, { environment, executable });
 }
@@ -61,12 +59,10 @@ function probeOptions(
 async function initializedProbe(
   vendor: ReturnType<typeof query>,
 ): Promise<AgentProbe> {
-  const { models, account } = await vendor.initializationResult();
-  if (!usesSubscription(account)) return signedOut();
-  return {
-    availability: 'available',
-    configOptions: toConfigOptions(models, startingValues(models, [])),
-  };
+  const { account } = await vendor.initializationResult();
+  return usesSubscription(account)
+    ? { availability: 'available' }
+    : signedOut();
 }
 
 function signedOut(): AgentProbe {
@@ -74,7 +70,6 @@ function signedOut(): AgentProbe {
     availability: 'not_signed_in',
     installStep:
       'Run claude in a terminal and sign in with /login using a Claude subscription',
-    configOptions: [],
   };
 }
 

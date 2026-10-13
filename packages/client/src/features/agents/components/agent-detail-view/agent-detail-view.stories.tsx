@@ -30,5 +30,5 @@ export const UpdateAvailable: Story = {
 };
 
 export const FromTheRegistry: Story = {
-  args: { agent: { ...readyAgent, status: 'not-installed' }, defaults: [] },
+  args: { agent: { ...readyAgent, status: 'not-installed' } },
 };

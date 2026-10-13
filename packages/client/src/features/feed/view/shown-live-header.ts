@@ -1,16 +1,29 @@
 import type { LiveHeader } from '@repo/contracts';
 import type { FeedViewItem } from './feed-view';
 
-const isOpenWork = (item: FeedViewItem | undefined): boolean =>
-  (item?.type === 'group' && item.state === 'open') ||
-  (item?.type === 'exploration' && item.title === 'Exploring');
+function isOpenWork(item: FeedViewItem | undefined): boolean {
+  if (!item) return false;
+  return isOpenGroup(item) || isLiveExploration(item);
+}
 
-// An open group already draws the running work, so the live header shows only what waits on you or a retry.
+function isOpenGroup(item: FeedViewItem): boolean {
+  return item.type === 'group' && item.state === 'open';
+}
+
+function isLiveExploration(item: FeedViewItem): boolean {
+  return item.type === 'exploration' && item.title === 'Exploring';
+}
+
 export function shownLiveHeader(
   items: readonly FeedViewItem[],
   liveHeader: LiveHeader | null,
 ): LiveHeader | null {
   if (!liveHeader || !isOpenWork(items.at(-1))) return liveHeader;
-  const { type } = liveHeader.source;
-  return type === 'request' || type === 'retry' ? liveHeader : null;
+  return waitingHeader(liveHeader);
+}
+
+function waitingHeader(liveHeader: LiveHeader): LiveHeader | null {
+  return ['request', 'retry'].includes(liveHeader.source.type)
+    ? liveHeader
+    : null;
 }

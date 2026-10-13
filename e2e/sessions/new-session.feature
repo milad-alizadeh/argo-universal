@@ -34,18 +34,21 @@ Feature: New Session
       | 1     |
       | 2     |
 
-  Scenario Outline: A text prompt starts a Session with Agent <agent>
-    Given a phone Frame
+  Scenario Outline: A text prompt turns New Session into its Session in place with Agent <agent> in a <frame> Frame
+    Given a <frame> Frame
     And a New Session with Agent <agent>
-    When I send the prompt "Fix the flaky login test"
-    Then the Session Feed contains the text prompt "Fix the flaky login test"
+    When I send the first prompt "Fix the flaky login test"
+    Then New Session became that Session in place with the prompt shown throughout
+    And the Session Feed contains the text prompt "Fix the flaky login test"
     And the Agent replies "The shared fixture completed this Turn."
     And Back returns to the Sessions list
 
     Examples:
-      | agent |
-      | 1     |
-      | 2     |
+      | agent | frame |
+      | 1     | phone |
+      | 2     | phone |
+      | 1     | wide  |
+      | 2     | wide  |
 
   Scenario Outline: Successive prompts share one ACP Session with Agent <agent>
     Given a phone Frame
@@ -76,10 +79,11 @@ Feature: New Session
       | 1     | release notes file | Summarise these release notes.          | The release notes list one change. |
       | 2     | release notes file | Summarise these release notes.          | The release notes list one change. |
 
-  Scenario Outline: A failed open keeps the first prompt with Agent <agent>
+  Scenario Outline: A refused Session keeps the first prompt with Agent <agent>
     Given a phone Frame
     And Agent <agent> refuses to open a Session
     And a New Session with Agent <agent>
+    Then New Session says the Session couldn't open
     When I try to send the prompt "Fix the flaky login test"
     Then New Session says the Session couldn't open
     And the Composer keeps the prompt "Fix the flaky login test"
@@ -88,6 +92,34 @@ Feature: New Session
       | agent |
       | 1     |
       | 2     |
+
+  Scenario: Leaving New Session without sending discards its empty Session
+    Given a phone Frame
+    And a New Session with Agent 1
+    When the empty Session is open
+    And I return to the Sessions list
+    Then the Agent closed the empty Session
+    And the empty Session left no worktree or branch
+    And no Session is listed
+
+  Scenario: Choosing another Agent closes the previous empty Session
+    Given a phone Frame
+    And a New Session with Agent 1
+    When the empty Session is open
+    And I choose Agent 2
+    Then the Agent closed the empty Session
+    And only the new empty Session remains
+
+  @web-only
+  Scenario: A lost Connection keeps the empty Session
+    Given a phone Frame
+    And the App's Connection can be dropped
+    And a New Session with Agent 1
+    When the empty Session is open
+    And the Connection drops and comes back
+    And I send the prompt "Fix the flaky login test"
+    Then the prompt went to the Session opened before the drop
+    And the Agent closed no Session
 
   Scenario: The Checkout choice is remembered
     Given a phone Frame

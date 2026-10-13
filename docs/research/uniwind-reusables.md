@@ -1,6 +1,6 @@
 # Uniwind and React Native Reusables
 
-Research note for spec 0001, step 1. Checked on 2026-10-03.
+Research for spec 0001, step 1. Checked on 2026-10-03.
 
 ## Sources
 
@@ -63,15 +63,15 @@ Checked with `npm view` on 2026-10-03 [S28].
 
 ## Install command
 
-Uniwind, as documented [S1]:
+Uniwind [S1]:
 
 ```bash
 pnpm add uniwind tailwindcss
 ```
 
-In Argo, add both to the pnpm catalog and refer to them as `catalog:` (spec section 2). The Storybook app also needs `@tailwindcss/vite` [S4].
+In Argo, put both in the pnpm catalog as `catalog:` (spec section 2). The Storybook app also needs `@tailwindcss/vite` [S4].
 
-React Native Reusables has no package to install. Its CLI copies source files and installs each component's own dependencies [S21, S24]. The other runtime packages come from the template's `package.json`: `class-variance-authority`, `clsx`, `tailwind-merge`, `tw-animate-css`, `@rn-primitives/portal`, `lucide-react-native`, `react-native-svg`, `react-native-reanimated`, `react-native-safe-area-context`, and `uniwind` [S25]. The CLI's `doctor` treats `expo`, `react-native-reanimated`, `react-native-safe-area-context`, `tailwindcss-animate`, `class-variance-authority`, `clsx`, `tailwind-merge`, and `uniwind` as required [S24].
+React Native Reusables has no package: its CLI copies source files and installs each component's own dependencies [S21, S24]. The other runtime packages come from the template's `package.json`: `class-variance-authority`, `clsx`, `tailwind-merge`, `tw-animate-css`, `@rn-primitives/portal`, `lucide-react-native`, `react-native-svg`, `react-native-reanimated`, `react-native-safe-area-context`, and `uniwind` [S25]. The CLI's `doctor` treats `expo`, `react-native-reanimated`, `react-native-safe-area-context`, `tailwindcss-animate`, `class-variance-authority`, `clsx`, `tailwind-merge`, and `uniwind` as required [S24].
 
 ## Generator command and its prompts
 
@@ -86,14 +86,14 @@ Flags: `-c, --cwd <cwd>` and `-t, --template <template>` [S21]. Templates: `mini
 What it does [S24, S29]:
 
 1. If `package.json` exists in the working directory, it asks: "Initialize a new project here anyway", "Inspect project configuration", or "Cancel and exit".
-2. Asks "What is the name of your project? (e.g. my-app)". The default is `my-app`.
+2. Asks "What is the name of your project? (e.g. my-app)", default `my-app`.
 3. Without `-t`, asks to pick a template: "Minimal (Nativewind)", "Minimal (Uniwind)", "Clerk auth (Nativewind)".
 4. If the folder `<name>` exists, asks to cancel or overwrite.
 5. Runs `git clone --depth=1 --branch main https://github.com/founded-labs/react-native-reusables-templates.git` and copies `minimal-uniwind/` into `<name>/`.
 6. Asks "Would you like to install dependencies?". If yes, asks for a package manager (bun, pnpm, npm, yarn), runs `<pm> install`, then `npx expo install --fix`. With pnpm and no `.npmrc`, it writes `node-linker=hoisted` and `enable-pre-post-scripts=true`. The template already ships that `.npmrc`.
 7. Asks "Would you like to initialize a Git repository?". If yes, it runs `git init`, `git add -A`, and commits.
 
-`init` always creates a whole new Expo app in a new folder. It does not install into an existing package. I ran it with answers `argo-rnr`, no install, no git; the output was byte-identical to the template folder [S29].
+`init` always creates a whole new Expo app in a new folder, never into an existing package. I ran it with answers `argo-rnr`, no install, no git; the output was byte-identical to the template folder [S29].
 
 Generated files [S25, S29]:
 
@@ -121,7 +121,7 @@ Key template content [S25]:
 npx @react-native-reusables/cli@latest add text button card --styling-library uniwind -y
 ```
 
-Flags [S21, S24]: `-c, --cwd`, `--styling-library nativewind|uniwind`, `-y, --yes`, `-o, --overwrite`, `-a, --all`, `-p, --path`. With no components named, it shows a multi-select list. The 30 components are: accordion, alert-dialog, alert, aspect-ratio, avatar, badge, button, card, checkbox, collapsible, context-menu, dialog, dropdown-menu, hover-card, input, label, menubar, popover, progress, radio-group, select, separator, skeleton, switch, tabs, text, textarea, toggle-group, toggle, tooltip [S24].
+Flags [S21, S24]: `-c, --cwd`, `--styling-library nativewind|uniwind`, `-y, --yes`, `-o, --overwrite`, `-a, --all`, `-p, --path`. With no components named, it shows a multi-select list of the 30 components: accordion, alert-dialog, alert, aspect-ratio, avatar, badge, button, card, checkbox, collapsible, context-menu, dialog, dropdown-menu, hover-card, input, label, menubar, popover, progress, radio-group, select, separator, skeleton, switch, tabs, text, textarea, toggle-group, toggle, tooltip [S24].
 
 What it does [S24]:
 
@@ -132,7 +132,7 @@ What it does [S24]:
 
 Per-component dependencies [S26]: `text` adds `@rn-primitives/slot`. `button` and `card` add no packages but pull in `text`. Files have type `registry:ui`, so they land in the `ui` alias folder.
 
-Local run in a pnpm workspace, from `packages/client` [S29]: it created `src/primitives/text.tsx`, `button.tsx`, and `card.tsx`. It rewrote imports to the configured aliases, for example `import { cn } from '@repo/client/lib/utils'` and `import { Text, TextClassContext } from '@repo/client/primitives/text'`. It added `"@rn-primitives/slot": "^1.5.2"` to `packages/client/package.json`. It did not add `class-variance-authority`, `clsx`, or `tailwind-merge`.
+Local run in a pnpm workspace, from `packages/client` [S29]: it created `src/primitives/text.tsx`, `button.tsx`, and `card.tsx`, rewrote imports to the configured aliases for example `import { cn } from '@repo/client/lib/utils'` and `import { Text, TextClassContext } from '@repo/client/primitives/text'`. and added `"@rn-primitives/slot": "^1.5.2"` to `packages/client/package.json`, but not `class-variance-authority`, `clsx`, or `tailwind-merge`.
 
 ### `doctor`
 
@@ -144,7 +144,7 @@ It checks dependencies, `metro.config` for `withUniwindConfig(`, the root layout
 
 ## Recommended configuration
 
-These snippets follow the documented setup [S1–S5] and fit it into the spec 0001 tree.
+The documented setup [S1–S5] fitted to the spec 0001 tree.
 
 `apps/universal-app/metro.config.js` [S1, S2]:
 
@@ -161,7 +161,7 @@ module.exports = withUniwindConfig(config, {
 });
 ```
 
-Other options: `extraThemes: string[]` (names beyond light and dark), `polyfills: { rem: number }` (default 16), `isTV` (1.5.0+), `debug` (logs unsupported CSS; turn it off in production) [S2]. A `dtsFile` in `src/` or `app/` is picked up by TypeScript without changes. Any other location must be added to `tsconfig.json` `include` [S1, S2].
+Other options: `extraThemes: string[]` (names beyond light and dark), `polyfills: { rem: number }` (default 16), `isTV` (1.5.0+), `debug` (logs unsupported CSS; turn it off in production) [S2]. TypeScript picks up a `dtsFile` in `src/` or `app/`; any other location must be added to `tsconfig.json` `include` [S1, S2].
 
 `apps/universal-app/global.css` [S1, S3, S5]:
 
@@ -202,11 +202,11 @@ Other options: `extraThemes: string[]` (names beyond light and dark), `polyfills
 }
 ```
 
-`tooling/uniwind/package.json` needs `"exports": { "./theme.css": "./theme.css" }`, and every app that imports it lists `"@repo/uniwind": "workspace:*"`. I tested this locally: `uniwind generate-artifacts` followed the `@repo/uniwind/theme.css` import and found the light and dark variables [S10, S29].
+`tooling/uniwind/package.json` needs `"exports": { "./theme.css": "./theme.css" }`, and every app that imports it lists `"@repo/uniwind": "workspace:*"`. Tested locally: `uniwind generate-artifacts` followed the `@repo/uniwind/theme.css` import and found the light and dark variables [S10, S29].
 
-Import the CSS in the root layout, not in the entry file that registers the root component. Importing it in the entry file turns every CSS edit into a full reload [S1, S8]. With the spec tree, `apps/universal-app/src/app/_layout.tsx` imports `'../../global.css'`.
+Import the CSS in the root layout, not in the entry file that registers the root component, where every CSS edit becomes a full reload [S1, S8]. With the spec tree, `apps/universal-app/src/app/_layout.tsx` imports `'../../global.css'`.
 
-Themes [S6]: `light`, `dark`, and `system` are built in. `system` follows the device, and `Uniwind.setTheme('light' | 'dark' | 'system')` switches theme. `useUniwind()` returns `{ theme, hasAdaptiveThemes }`. Light and dark need no Metro option. On web, the `dark` and `light` variants match a `.dark` or `.light` class, or else `prefers-color-scheme` [S10, S29].
+Themes [S6]: `light`, `dark`, and `system` (follows the device) are built in; `Uniwind.setTheme('light' | 'dark' | 'system')` switches theme. `useUniwind()` returns `{ theme, hasAdaptiveThemes }`. Light and dark need no Metro option. On web, the `dark` and `light` variants match a `.dark` or `.light` class, or else `prefers-color-scheme` [S10, S29].
 
 `packages/client/components.json` (tested in [S29]; alias pattern from [S27]):
 
@@ -230,15 +230,11 @@ Themes [S6]: `light`, `dark`, and `system` are built in. `system` follows the de
 
 `packages/client/tsconfig.json` needs `"paths": { "@repo/client/*": ["./src/*"] }`, because the CLI resolves aliases through `tsconfig` paths [S24, S29]. `packages/client/package.json` needs `exports` for each aliased folder, for example `"./primitives/*": "./src/primitives/*.tsx"` and `"./lib/*": "./src/lib/*.ts"`, so other workspaces and Metro can resolve the same specifiers [S27]. Leave `tailwind.config` empty for Tailwind 4 [S27].
 
-The `cn` helper: copy the template `lib/utils.ts` to the path behind the `utils` alias [S22, S25]. `add` never creates it [S24, S29]. The spec tree does not name a `lib/` folder in `packages/client`. Either add `src/lib/utils.ts` (tested), or point `utils` at `@repo/client/primitives/utils` and put it in `src/primitives/utils.ts`. Both work, because the alias is only a rewritten import string. This is a choice for the owner.
+The `cn` helper: copy the template `lib/utils.ts` to the path behind the `utils` alias [S22, S25]; `add` never creates it [S24, S29]. The spec tree names no `lib/` folder in `packages/client`. Either add `src/lib/utils.ts` (tested), or point `utils` at `@repo/client/primitives/utils` and put it in `src/primitives/utils.ts`; both work, since the alias is only a rewritten import string. Owner's choice.
 
-Command for the spec's primitives (run it in `packages/client`):
+For the spec's primitives, run the `add` command above in `packages/client`.
 
-```bash
-npx @react-native-reusables/cli@latest add text button card --styling-library uniwind -y
-```
-
-Web Storybook, `apps/storybook/.storybook/main.ts`. This follows [S4] and [S16]; I did not run it locally:
+Web Storybook, `apps/storybook/.storybook/main.ts`, following [S4] and [S16]; not run locally:
 
 ```ts
 import tailwindcss from '@tailwindcss/vite';
@@ -257,26 +253,26 @@ viteFinal: async (config) => {
 
 `apps/storybook/global.css` has the same four imports as the app and `@source '../../packages/client/src'`. `preview.tsx` imports it.
 
-How classes reach the DOM in Vite [S9, S12]: the `uniwind` plugin (`enforce: 'pre'`) aliases `react-native` to Uniwind's web components. It makes Vite use Lightning CSS with Uniwind's visitor, keeps `uniwind` and `react-native` out of dependency pre-bundling, pre-bundles `react-native-web` on Vite 8, and writes the theme artifact at build start. Each web component turns `className` into a React Native Web CSS class with `toRNWClassName`. That only paints if the Tailwind-generated CSS is loaded, which is why `preview.tsx` must import the entry CSS. Uniwind's docs say to use the same `uniwind/vite` plugin in Storybook's Vite config [S4].
+How classes reach the DOM in Vite [S9, S12]: the `uniwind` plugin (`enforce: 'pre'`) aliases `react-native` to Uniwind's web components. It makes Vite use Lightning CSS with Uniwind's visitor, keeps `uniwind` and `react-native` out of dependency pre-bundling, pre-bundles `react-native-web` on Vite 8, and writes the theme artifact at build start. Each web component turns `className` into a React Native Web CSS class with `toRNWClassName`. That only paints if the Tailwind-generated CSS is loaded, so `preview.tsx` must import the entry CSS. Uniwind's docs use the same `uniwind/vite` plugin in Storybook's Vite config [S4].
 
-Types in CI. Metro or Vite writes `uniwind-types.d.ts` only while running [S1]. To run `tsc` first, use:
+Types in CI: Metro or Vite writes `uniwind-types.d.ts` only while running [S1]. To run `tsc` first:
 
 ```bash
 uniwind generate-artifacts --css ./global.css --dts ./src/uniwind-types.d.ts
 ```
 
-This is available in 1.8.0+ [S7]. The template instead commits the generated file [S25].
+Available in 1.8.0+ [S7]. The template instead commits the generated file [S25].
 
 ## pnpm and Turborepo monorepo specifics
 
-- Scan root and `@source`. Tailwind scans from the folder that holds the CSS entry, skips `.gitignore`d files, and needs `@source` for anything outside that folder. That covers symlinked pnpm workspace packages [S3]. A `@source` path is relative to the CSS file [S3].
-- Working directory. `cssEntryFile` must be a relative string, not `path.resolve(...)` [S1, S2]. The code joins it to `process.cwd()` [S11], so run Metro and Vite from the app folder. `pnpm --filter` and Turborepo tasks already do this.
-- Imported theme files. Uniwind follows relative and package `@import`s to collect `@variant` theme variables [S10]. A shared `tooling/uniwind/theme.css` therefore works (tested, [S29]).
-- One artifact per installed copy. `uniwind.css` is written inside the installed `uniwind` package [S7, S9]. pnpm keys the install folder by peer set. The path I saw included the Metro peers (`uniwind@1.12.1_metro-cache@…_metro@…_react-native@…`) [S29]. So the Expo app and Storybook can each get their own copy, and each writes its own artifact. Keep the themes the same in both entry files.
-- Several copies of `uniwind` in one Metro graph used to recurse forever. This was fixed for duplicate copies in 1.9.0 (PR #570) and for pnpm symlink paths in 1.12.0 (#598, #609) [S14, S18]. If `packages/client` lists `uniwind` (it needs `uniwind/types` for `className` on React Native props, and `withUniwind` in `icon.tsx`), use 1.12.1 everywhere. One catalog entry plus `sherif` keeps the versions equal.
-- Isolated vs hoisted `node_modules`. The React Native Reusables template and `init` set `node-linker=hoisted` for pnpm [S24, S25]. Uniwind issue #619 (uniwind 1.10.0, Expo 57) reported `Unable to resolve module ./node_modules/expo-router/entry` with pnpm's default isolated layout, and `node-linker=hoisted` worked around it. The issue was closed for process reasons, not with a fix [S17]. 1.12.1 adds a Metro `main`/`react-native` fallback for the root entry (#683) [S13]. Whether the isolated layout now works is unverified. Test it in the spike, and keep hoisted as the fallback.
+- Scan root and `@source`. Tailwind scans from the CSS entry's folder, skips `.gitignore`d files, and needs `@source` (relative to the CSS file) for anything outside it, symlinked pnpm workspace packages included [S3].
+- Working directory. `cssEntryFile` must be a relative string, not `path.resolve(...)` [S1, S2]. The code joins it to `process.cwd()` [S11], so run Metro and Vite from the app folder, as `pnpm --filter` and Turborepo tasks already do.
+- Imported theme files. Uniwind follows relative and package `@import`s to collect `@variant` theme variables [S10], so a shared `tooling/uniwind/theme.css` works (tested, [S29]).
+- One artifact per installed copy. `uniwind.css` is written inside the installed `uniwind` package [S7, S9]. pnpm keys the install folder by peer set; the observed path included the Metro peers (`uniwind@1.12.1_metro-cache@…_metro@…_react-native@…`) [S29]. So the Expo app and Storybook can each get their own copy, and each writes its own artifact. Keep the themes the same in both entry files.
+- Several copies of `uniwind` in one Metro graph used to recurse forever. Fixed for duplicate copies in 1.9.0 (PR #570) and for pnpm symlink paths in 1.12.0 (#598, #609) [S14, S18]. If `packages/client` lists `uniwind` (it needs `uniwind/types` for `className` on React Native props, and `withUniwind` in `icon.tsx`), use 1.12.1 everywhere. One catalog entry plus `sherif` keeps the versions equal.
+- Isolated vs hoisted `node_modules`. The React Native Reusables template and `init` set `node-linker=hoisted` for pnpm [S24, S25]. Uniwind issue #619 (uniwind 1.10.0, Expo 57) reported `Unable to resolve module ./node_modules/expo-router/entry` with pnpm's default isolated layout, and `node-linker=hoisted` worked around it. The issue closed for process reasons, not with a fix [S17]. 1.12.1 adds a Metro `main`/`react-native` fallback for the root entry (#683) [S13]. Whether the isolated layout now works is unverified: test it in the spike, keep hoisted as the fallback.
 - `add` in a library package. `packages/client` has no `metro.config.js`, so without `--styling-library uniwind` the CLI fetches the NativeWind registry [S24]. The changelog says detection uses `uniwind-types.d.ts` [S23], but the 0.7.1 code reads `metro.config` [S24].
-- `add` writes caret ranges, such as `"@rn-primitives/slot": "^1.5.2"`, into the `package.json` in its working directory [S29]. Move them to the catalog and switch them to `catalog:`, as spec section 2 requires.
+- `add` writes caret ranges, such as `"@rn-primitives/slot": "^1.5.2"`, into the `package.json` in its working directory [S29]. Move them to the catalog as `catalog:`, as spec section 2 requires.
 - `doctor` run in `packages/client` reports false problems: no Metro config, so it assumes NativeWind and asks for `tailwindcss@^3.4.14` and `tailwindcss-animate` [S24, S29]. Run it in `apps/universal-app`, or ignore it for the library.
 
 ## Gotchas
@@ -289,7 +285,7 @@ This is available in 1.8.0+ [S7]. The template instead commits the generated fil
 6. Uniwind does not deduplicate conflicting classes, especially on web. Merge them with `cn` (`clsx` + `tailwind-merge`) [S8].
 7. Keep `tailwindcss` at 4.3.3. Uniwind 1.12.1 pins `@tailwindcss/node` 4.3.3 exactly [S28], and 4.3.3 changed theme selectors that Uniwind had to catch up with [S14, S19]. Matching versions is my inference, not a documented rule.
 8. Vite 8 needs Uniwind 1.10.1+. 1.10.0 broke Storybook RNW on Vite 8 with an `@react-native/normalize-colors` default-export error [S4, S15]. The Storybook 9 `path.resolve(undefined)` bug did not occur on Storybook 10 [S16].
-9. `init` makes a whole new Expo app, so it cannot "point output" into `packages/client`. Run it in a temp folder, then harvest: `components/ui/*` goes to `packages/client/src/primitives/`, `lib/utils.ts` to the `utils` alias path, the `global.css` tokens to `tooling/uniwind/theme.css`, `PortalHost` and `NAV_THEME` to the root layout or `AppProviders`, and `metro.config.js` to `apps/universal-app` [S24, S25]. The template also brings its own Expo app (SDK 56), which overlaps with `create-expo-app` (SDK 57) in spec step 2. Use only the files that the Expo generator does not produce.
+9. `init` cannot "point output" into `packages/client`. Run it in a temp folder, then harvest: `components/ui/*` goes to `packages/client/src/primitives/`, `lib/utils.ts` to the `utils` alias path, the `global.css` tokens to `tooling/uniwind/theme.css`, `PortalHost` and `NAV_THEME` to the root layout or `AppProviders`, and `metro.config.js` to `apps/universal-app` [S24, S25]. Its Expo app (SDK 56) overlaps with `create-expo-app` (SDK 57) in spec step 2; use only files the Expo generator does not produce.
 10. Portal-based primitives (dialog, dropdown-menu, popover, tooltip, select) need `<PortalHost />` as the last child of the root providers [S22, S24]. Text, button, and card do not.
 11. Safe-area classes (`pt-safe` and so on) need `react-native-safe-area-context` and `Uniwind.updateInsets(insets)` from a root `SafeAreaListener` (free version, 1.2.0+) [S8].
 12. Switching from `system` to `light` or `dark` turns off following the device until `setTheme('system')` is called again [S6].

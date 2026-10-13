@@ -8,7 +8,11 @@ import {
   nextMatching,
   changedSession,
 } from '#mocks/composition-subscriptions';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  insertEndedTurn,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
@@ -20,13 +24,15 @@ it.each(agentAdapters)(
   'sends live list changes and attention/running counts through request and Turn transitions for $agent',
   async ({ agent }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
-    insertSession(database, { id: 'archived', archivedAt: 1, maxRevision: 1 });
-    insertSession(database, {
-      id: 'subagent',
-      parentSessionId: 'session-1',
-      maxRevision: 1,
-    });
+    for (const values of [
+      { id: 'archived', archivedAt: 1, maxRevision: 1 },
+      { id: 'subagent', parentSessionId: 'session-1', maxRevision: 1 },
+    ]) {
+      insertSession(database, values);
+      insertEndedTurn(database, values.id);
+    }
     const completed = Promise.withResolvers<void>();
     const input = scriptedEngineInput(
       {

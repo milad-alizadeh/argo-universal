@@ -2,7 +2,7 @@
 
 Status: Proposed (owner, 2026-10-12).
 
-An App runs either on the Server Device or on a paired Device. A few actions decide who can reach the Server or how the Server Device runs, so only the Server Device may do them:
+An App runs on the Server Device or on a paired Device. Only the Server Device may do the actions that decide who can reach the Server or how the Server Device runs:
 
 - pairing a new Device;
 - unpairing another Device;
@@ -12,7 +12,7 @@ An App runs either on the Server Device or on a paired Device. A few actions dec
 
 Everything else works on every Device: Projects, Agents (custom Agents, install and remove included), Accounts and Sessions. This amends ADR-0002's "the phone, the web app, and the desktop app must have the same abilities" for this list only. A lost phone must not be able to unpair the owner's other Devices or turn off Remote access, and a Device away from home that turned off Remote access would cut off its own Connection.
 
-**The Server says where each Connection comes from.** For each Connection, the Server tells the App whether it is on the Server Device and which Device it comes from. The App uses that answer and never guesses from window width, platform or Electron. A narrow browser on the Server Device is still on the Server Device; a wide paired MacBook is still a paired Device. The Server checks the list above itself, from a per-Connection tRPC context. Hiding a row in the App is not the check.
+**The Server says where each Connection comes from.** For each Connection, the Server tells the App whether it is on the Server Device and which Device it comes from. The App uses that answer and never guesses from window width, platform or Electron. The Server checks the list above itself, from a per-Connection tRPC context; hiding a row in the App is not the check.
 
 **A paired Device never sees the other Devices.** The Devices page shows only on the Server Device. A paired Device can still unpair itself.
 

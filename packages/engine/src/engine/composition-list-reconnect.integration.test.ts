@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
 import { closeSubscription } from '#mocks/composition-subscriptions';
-import { openTestDatabase } from '#mocks/database';
+import { insertEndedTurn, openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { SessionRowUpdateJob } from '../sessions';
@@ -17,6 +17,7 @@ it.each(agentAdapters)(
   'initializes a fresh list after all watchers leave and unwatched data changes for $agent',
   async ({ agent }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const { engine, createCaller } = await startEngineTestHost({
       database,
