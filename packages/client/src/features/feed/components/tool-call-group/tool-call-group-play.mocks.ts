@@ -1,6 +1,5 @@
-import type { ToolCallUpdate } from '@repo/contracts';
+import type { CommandAction, ToolCallUpdate } from '@repo/contracts';
 import { startedAt } from '../recorded-tool-calls.mocks';
-import { commandActions, firstLocationPath } from '../tool-call-meta';
 import { runningRead, toolCallGroupMocks } from '../tool-call.mocks';
 
 export const commandAndFileSummary = 'Ran 1 command, Read 1 file';
@@ -17,9 +16,20 @@ const terminalCommand = (row: ToolCallUpdate): string | undefined =>
 const expectedTitle = (row: ToolCallUpdate): string =>
   row.title === terminalCommand(row) ? 'Running command' : row.title;
 
+// Read straight from the recorded row, independently of the rows' own path lookup.
+const recordedActions = (row: ToolCallUpdate): CommandAction[] | undefined =>
+  row._meta?.argo?.commandActions;
+
+const readActionPath = (
+  actions: CommandAction[] | undefined,
+): string | undefined =>
+  actions?.find((action) => action.type === 'read')?.path;
+
+const recordedLocation = (row: ToolCallUpdate): string | undefined =>
+  row.locations?.[0]?.path;
+
 const readPath = (row: ToolCallUpdate): string | undefined =>
-  commandActions(row).find((action) => action.type === 'read')?.path ??
-  firstLocationPath(row);
+  readActionPath(recordedActions(row)) ?? recordedLocation(row);
 
 export function parallelCase(agentIndex: number): {
   recorded: (typeof toolCallGroupMocks)[number];

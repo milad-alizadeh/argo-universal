@@ -1,50 +1,52 @@
+import type { Tokens } from 'marked';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Caret } from './caret';
 import { ClampedBlock } from './clamped-block';
 import { FeedCodeBlock } from './feed-code-block/feed-code-block';
-import { type BlockTokenProps, isToken, literal } from './markdown-tokens';
+import { type BlockTokenProps, literal } from './markdown-tokens';
 import { Prose } from './prose';
 
 export function HeadingToken({
   token,
   caret,
-}: BlockTokenProps): React.JSX.Element | null {
-  return isToken(token, 'heading') ? (
+}: BlockTokenProps<Tokens.Heading>): React.JSX.Element | null {
+  return (
     <Prose tokens={token.tokens} caret={caret} headingLevel={token.depth} />
-  ) : null;
+  );
 }
 
 export function ParagraphToken({
   token,
   caret,
-}: BlockTokenProps): React.JSX.Element | null {
-  return isToken(token, 'paragraph') ? (
-    <Prose tokens={token.tokens} caret={caret} />
-  ) : null;
+}: BlockTokenProps<Tokens.Paragraph>): React.JSX.Element | null {
+  return <Prose tokens={token.tokens} caret={caret} />;
 }
 
 export function TextToken({
   token,
   caret,
-}: BlockTokenProps): React.JSX.Element | null {
-  return isToken(token, 'text') ? (
-    <Prose tokens={token.tokens ?? [token]} caret={caret} />
-  ) : null;
+}: BlockTokenProps<Tokens.Text>): React.JSX.Element | null {
+  return <Prose tokens={token.tokens ?? [token]} caret={caret} />;
 }
 
 export function HtmlToken({
   token,
   caret,
-}: BlockTokenProps): React.JSX.Element {
+}: BlockTokenProps<Tokens.HTML | Tokens.Tag>): React.JSX.Element {
   return <Prose tokens={[literal(token)]} caret={caret} />;
 }
 
-export function DefToken({ token, caret }: BlockTokenProps): React.JSX.Element {
+export function DefToken({
+  token,
+  caret,
+}: BlockTokenProps<Tokens.Def>): React.JSX.Element {
   return <Prose tokens={[literal(token)]} caret={caret} />;
 }
 
-export function HrToken({ caret }: BlockTokenProps): React.JSX.Element {
+export function HrToken({
+  caret,
+}: BlockTokenProps<Tokens.Hr>): React.JSX.Element {
   return (
     <ClampedBlock caret={caret}>
       <View role="separator" className="border-t border-border" />
@@ -55,12 +57,10 @@ export function HrToken({ caret }: BlockTokenProps): React.JSX.Element {
 export function CodeToken({
   token,
   caret,
-}: BlockTokenProps): React.JSX.Element {
+}: BlockTokenProps<Tokens.Code>): React.JSX.Element {
   return (
     <ClampedBlock caret={caret}>
-      {isToken(token, 'code') && (
-        <FeedCodeBlock code={token.text} language={token.lang || undefined} />
-      )}
+      <FeedCodeBlock code={token.text} language={token.lang || undefined} />
     </ClampedBlock>
   );
 }

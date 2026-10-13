@@ -8,7 +8,7 @@ import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { ClampedBlock } from './clamped-block';
 import { InlineTokens } from './inline-tokens';
-import { type BlockTokenProps, isToken } from './markdown-tokens';
+import type { BlockTokenProps } from './markdown-tokens';
 
 type Cells = Tokens.TableCell[];
 
@@ -114,10 +114,10 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
 export function TableToken({
   token,
   caret,
-}: BlockTokenProps): React.JSX.Element {
+}: BlockTokenProps<Tokens.Table>): React.JSX.Element {
   return (
     <ClampedBlock caret={caret}>
-      {isToken(token, 'table') && <Table token={token} />}
+      <Table token={token} />
     </ClampedBlock>
   );
 }

@@ -1,14 +1,14 @@
-import type { Token } from 'marked';
+import type { Token, Tokens } from 'marked';
 import type * as React from 'react';
 import { type ComponentType, createElement, type ReactNode } from 'react';
 import { Text as Span } from 'react-native';
 import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { Link } from './markdown-link';
-import { isToken } from './markdown-tokens';
+import { byType } from './markdown-tokens';
 
-interface InlineTokenProps {
-  token: Token;
+interface InlineTokenProps<T extends Token = Token> {
+  token: T;
   codeClassName: string;
 }
 
@@ -17,66 +17,41 @@ interface InlineTokensProps {
   codeClassName?: string;
 }
 
+type MarkToken = Tokens.Strong | Tokens.Em | Tokens.Del;
+
+const markClassNames: Record<MarkToken['type'], string> = {
+  strong: markdownMarkClassNames.bold,
+  em: markdownMarkClassNames.italic,
+  del: markdownMarkClassNames.strikethrough,
+};
+
 function CodespanToken({
   token,
   codeClassName,
-}: InlineTokenProps): React.JSX.Element | null {
-  return isToken(token, 'codespan') ? (
-    <Span className={codeClassName}>{token.text}</Span>
-  ) : null;
+}: InlineTokenProps<Tokens.Codespan>): React.JSX.Element {
+  return <Span className={codeClassName}>{token.text}</Span>;
 }
 
-function MarkSpan({
-  tokens,
+function MarkToken({
+  token,
   codeClassName,
-  className,
-}: InlineTokensProps & { className: string }): React.JSX.Element {
+}: InlineTokenProps<MarkToken>): React.JSX.Element {
   return (
-    <Span className={className}>
-      <InlineTokens tokens={tokens} codeClassName={codeClassName} />
+    <Span className={markClassNames[token.type]}>
+      <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
     </Span>
   );
-}
-
-function StrongToken({ token, codeClassName }: InlineTokenProps): ReactNode {
-  return isToken(token, 'strong') ? (
-    <MarkSpan
-      tokens={token.tokens}
-      codeClassName={codeClassName}
-      className={markdownMarkClassNames.bold}
-    />
-  ) : null;
-}
-
-function EmToken({ token, codeClassName }: InlineTokenProps): ReactNode {
-  return isToken(token, 'em') ? (
-    <MarkSpan
-      tokens={token.tokens}
-      codeClassName={codeClassName}
-      className={markdownMarkClassNames.italic}
-    />
-  ) : null;
-}
-
-function DelToken({ token, codeClassName }: InlineTokenProps): ReactNode {
-  return isToken(token, 'del') ? (
-    <MarkSpan
-      tokens={token.tokens}
-      codeClassName={codeClassName}
-      className={markdownMarkClassNames.strikethrough}
-    />
-  ) : null;
 }
 
 function LinkToken({
   token,
   codeClassName,
-}: InlineTokenProps): React.JSX.Element | null {
-  return isToken(token, 'link') ? (
+}: InlineTokenProps<Tokens.Link>): React.JSX.Element {
+  return (
     <Link href={token.href}>
       <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
     </Link>
-  ) : null;
+  );
 }
 
 function BrToken(): string {
@@ -86,8 +61,7 @@ function BrToken(): string {
 function InlineTextToken({
   token,
   codeClassName,
-}: InlineTokenProps): ReactNode {
-  if (!isToken(token, 'text')) return null;
+}: InlineTokenProps<Tokens.Text>): ReactNode {
   return token.tokens ? (
     <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
   ) : (
@@ -100,13 +74,13 @@ function OtherInlineToken({ token }: InlineTokenProps): ReactNode {
 }
 
 const inlineTokens = new Map<string, ComponentType<InlineTokenProps>>([
-  ['codespan', CodespanToken],
-  ['strong', StrongToken],
-  ['em', EmToken],
-  ['del', DelToken],
-  ['link', LinkToken],
-  ['br', BrToken],
-  ['text', InlineTextToken],
+  byType('codespan', CodespanToken),
+  byType('strong', MarkToken),
+  byType('em', MarkToken),
+  byType('del', MarkToken),
+  byType('link', LinkToken),
+  byType('br', BrToken),
+  byType('text', InlineTextToken),
 ]);
 
 function inlineToken(

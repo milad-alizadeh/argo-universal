@@ -23,7 +23,7 @@ import {
   ParagraphToken,
   TextToken,
 } from './leaf-block-tokens';
-import { type BlockTokenProps, isToken } from './markdown-tokens';
+import { type BlockTokenProps, byType } from './markdown-tokens';
 import { MarkdownVariant, type MarkdownVariantName } from './markdown-variant';
 import { TableToken } from './table-token';
 
@@ -92,9 +92,11 @@ function ListItem({ marker, tokens, caret }: ListItemProps): ReactElement {
   );
 }
 
-function ListToken({ token, caret }: BlockTokenProps): ReactElement | null {
+function ListToken({
+  token,
+  caret,
+}: BlockTokenProps<Tokens.List>): ReactElement {
   const variant = useContext(MarkdownVariant);
-  if (!isToken(token, 'list')) return null;
   return (
     <View className={listGaps[variant]}>
       {listItems(token, caret).map(({ key, ...item }) => (
@@ -107,25 +109,25 @@ function ListToken({ token, caret }: BlockTokenProps): ReactElement | null {
 function BlockquoteToken({
   token,
   caret,
-}: BlockTokenProps): ReactElement | null {
-  return isToken(token, 'blockquote') ? (
+}: BlockTokenProps<Tokens.Blockquote>): ReactElement {
+  return (
     <View className={cn('gap-2.5', markdownBlockClassNames.quote)}>
       <Blocks tokens={token.tokens} caret={caret} />
     </View>
-  ) : null;
+  );
 }
 
 const blockTokens = new Map<string, ComponentType<BlockTokenProps>>([
-  ['heading', HeadingToken],
-  ['paragraph', ParagraphToken],
-  ['text', TextToken],
-  ['html', HtmlToken],
-  ['def', DefToken],
-  ['hr', HrToken],
-  ['list', ListToken],
-  ['code', CodeToken],
-  ['table', TableToken],
-  ['blockquote', BlockquoteToken],
+  byType('heading', HeadingToken),
+  byType('paragraph', ParagraphToken),
+  byType('text', TextToken),
+  byType('html', HtmlToken),
+  byType('def', DefToken),
+  byType('hr', HrToken),
+  byType('list', ListToken),
+  byType('code', CodeToken),
+  byType('table', TableToken),
+  byType('blockquote', BlockquoteToken),
 ]);
 
 function Block({ token, caret }: BlockTokenProps): ReactElement {
