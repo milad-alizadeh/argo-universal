@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
-import { ImageContent, TextContent } from '../feed/content-block';
+import {
+  ImageContent,
+  TextContent,
+  UploadedFileLink,
+} from '../feed/content-block';
 
 // Where a Session runs (ADR-0008).
 export const CheckoutChoice = z.enum(['worktree', 'main']);
@@ -28,7 +32,13 @@ export const SessionNewInput = z.strictObject({
   checkout: SessionCheckoutChoice,
   configOptions: z.array(InitialConfigOption),
   prompt: z
-    .array(z.discriminatedUnion('type', [TextContent, ImageContent]))
+    .array(
+      z.discriminatedUnion('type', [
+        TextContent,
+        ImageContent,
+        UploadedFileLink,
+      ]),
+    )
     .default([]),
 });
 export type SessionNewInput = z.infer<typeof SessionNewInput>;

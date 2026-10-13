@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { findToast } from '../../../../../mocks/find-toast';
+import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
@@ -226,8 +227,8 @@ export const Starting: Story = {
         canvas.queryByRole('progressbar', { name: 'Sending' }),
       ).toBeNull();
       await expect(
-        canvas.getByRole('textbox', { name: messageLabel }),
-      ).toHaveValue('');
+        shownText(canvas.getByRole('textbox', { name: messageLabel })),
+      ).toBe('');
       await expect(
         canvas.getByRole('button', { name: sendLabel }),
       ).toBeDisabled();

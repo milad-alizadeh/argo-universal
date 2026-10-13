@@ -1,12 +1,32 @@
 import type * as React from 'react';
+import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { type Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '#lib/generic/utils';
 
 const allEdges: readonly Edge[] = ['top', 'right', 'bottom', 'left'];
 
-// The KeyboardAvoidingView's style: it follows the keyboard frame by frame on both phones; `automaticOffset` measures the view on screen, below any header.
-export const keyboardAvoidingStyle = { flex: 1, minHeight: 0 };
+// It follows the keyboard frame by frame on both phones; `automaticOffset` measures the view on screen, below any header.
+const keyboardAvoidingStyle = { flex: 1, minHeight: 0 };
+
+// A screen's content that rises with the keyboard, keeping 16 above it as it keeps from the screen's sides.
+export function KeyboardAvoidingContent({
+  children,
+}: {
+  children: ReactNode;
+}): React.JSX.Element {
+  return (
+    <KeyboardAvoidingView
+      behavior="padding"
+      automaticOffset
+      keyboardVerticalOffset={16}
+      style={keyboardAvoidingStyle}
+    >
+      {children}
+    </KeyboardAvoidingView>
+  );
+}
 
 export interface ScreenProps extends ViewProps {
   safeArea?: boolean;

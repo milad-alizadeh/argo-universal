@@ -30,9 +30,11 @@ export const readyNewSession: ReadyNewSessionViewProps = {
     onAgentChange: fn(),
     checkout: { branch: 'main', newWorktree: true, onNewWorktreeChange: fn() },
   },
-  draft: { text: '', images: [] },
+  draft: { text: '', attachments: [] },
   onDraftChange: fn(),
   onAttachImages: fn(),
+  onAttachFiles: fn(),
+  onDropFiles: fn(),
   onSend: fn(),
   canOpen: true,
   opening: false,
@@ -41,7 +43,7 @@ export const readyNewSession: ReadyNewSessionViewProps = {
 // A first prompt typed and ready to send.
 export const typedDraft: ComposerDraft = {
   text: 'Fix the flaky login test',
-  images: [],
+  attachments: [],
 };
 
 // The typed first prompt sent, while the Session opens.

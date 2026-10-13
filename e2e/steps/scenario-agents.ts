@@ -39,32 +39,46 @@ function configurationForStep(step: string): AppFixtureAgents {
   const unavailable =
     /^(?:Given|And) (?:Agent (\d+)|(?:every) Agent) is "([^"]+)"$/.exec(step);
   if (unavailable) return unavailableConfiguration(unavailable);
-  const refusing = /^(?:Given|And) Agent (\d+) refuses to open a Session$/.exec(
-    step,
-  );
-  if (refusing)
-    return { [agentId(Number(refusing[1]))]: { scenario: 'refuse-session' } };
-  return {};
+  const refusing =
+    /^(?:Given|And) Agent (\d+) refuses to (open|reopen) a Session$/.exec(step);
+  return refusing ? refusingConfiguration(refusing) : {};
 }
 
-// An Agent that is given an image prompt answers with the image scenario.
-function imageConfiguration(steps: string[]): AppFixtureAgents {
-  if (
-    !steps.some((step) =>
-      /^(?:When|And) I attach the red square image$/.test(step),
-    )
-  )
-    return {};
+function refusingConfiguration(match: RegExpExecArray): AppFixtureAgents {
+  const scenario = match[2] === 'open' ? 'refuse-session' : 'refuse-reopen';
+  return { [agentId(Number(match[1]))]: { scenario } };
+}
+
+const attachmentScenarios = [
+  [/^(?:When|And) I attach the red square image$/, 'image'],
+  [/^(?:When|And) I attach the release notes file$/, 'file'],
+] as const;
+
+const attachedScenario = (
+  steps: string[],
+): (typeof attachmentScenarios)[number][1] | undefined =>
+  attachmentScenarios.find(([attach]) =>
+    steps.some((step) => attach.test(step)),
+  )?.[1];
+
+const chosenAgent = (steps: string[]): string | undefined => {
   const chosen = steps
     .map((step) => /^(?:Given|And) a New Session with Agent (\d+)$/.exec(step))
     .find((match) => match !== null);
-  return chosen ? { [agentId(Number(chosen[1]))]: { scenario: 'image' } } : {};
+  return chosen ? agentId(Number(chosen[1])) : undefined;
+};
+
+// An Agent that is given an attachment answers with that attachment's scenario.
+function attachmentConfiguration(steps: string[]): AppFixtureAgents {
+  const scenario = attachedScenario(steps);
+  const agent = chosenAgent(steps);
+  return scenario && agent ? { [agent]: { scenario } } : {};
 }
 
 export function scenarioAgents(steps: string[]): AppFixtureAgents {
   return Object.assign(
     {},
     ...steps.map(configurationForStep),
-    imageConfiguration(steps),
+    attachmentConfiguration(steps),
   );
 }

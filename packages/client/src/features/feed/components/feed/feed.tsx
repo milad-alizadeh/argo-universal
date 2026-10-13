@@ -25,12 +25,9 @@ import { listTestIdProps } from '#lib/generic/list-test-id';
 import { motionDuration } from '#lib/generic/motion';
 import { CollapsibleLayoutSyncContext } from '#lib/generic/primitives/display/collapsible/collapsible';
 import { Text } from '#lib/generic/primitives/display/text/text';
+import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useHeaderCover } from '#lib/product/navigation/screen-header';
-import {
-  FeedFade,
-  feedBottomFadeTop,
-  SessionColumn,
-} from '#lib/product/session-layout';
+import { FeedFade, SessionColumn } from '#lib/product/session-layout';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type FeedViewItem, feedItemKey } from '../../view/feed-view';
@@ -93,13 +90,14 @@ function JumpToLatest({
   hasNewRows: boolean;
   onPress: () => void;
 }): React.JSX.Element {
+  const { overlayBottom } = useFeedEndClearance();
   return (
     <Animated.View
       entering={FadeIn.duration(motionDuration.tooltipEnter)}
       exiting={FadeOut.duration(motionDuration.exit)}
       className="absolute self-center"
-      // Above the Feed's bottom fade, so no row fades out behind it.
-      style={jumpToLatestPlace}
+      // Above the Composer and the Feed's bottom fade, so no row fades out behind it.
+      style={{ bottom: overlayBottom + jumpToLatestGap }}
     >
       <Pressable
         role="button"
@@ -124,17 +122,22 @@ const wideContentStyle = { paddingTop: 24 };
 
 // How far Jump to latest sits clear of the Feed's bottom fade.
 const jumpToLatestGap = 8;
-const jumpToLatestPlace = { bottom: feedBottomFadeTop + jumpToLatestGap };
 
-// Paper's 72 clear the Composer's 48 overlap and leave the Feed's 24 above it; a footer, since `alignItemsAtEnd` ignores bottom padding.
+// Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it; a footer, since `alignItemsAtEnd` ignores bottom padding.
 function FeedEnd(): React.JSX.Element {
-  return <View className="h-18" />;
+  const { endSpace } = useFeedEndClearance();
+  return <View style={{ height: endSpace }} />;
 }
 
-// Streaming rows grow at the end, so the Feed follows rows as they measure.
-const followEnd = { on: { dataChange: true, layout: true, itemLayout: true } };
+/*
+ * Streaming rows grow at the end, so the Feed follows rows as they measure. The end clearance is the
+ * footer, which grows with a glass Composer, so the Feed follows the footer too.
+ */
+const followEnd = {
+  on: { dataChange: true, layout: true, itemLayout: true, footerLayout: true },
+};
 // While a reader opens or closes a collapsible it holds still, so opening one at the end grows below instead of scrolling the page up.
-const holdEnd = { on: { dataChange: true, layout: true } };
+const holdEnd = { on: { dataChange: true, layout: true, footerLayout: true } };
 // Older rows paging in above keep the reader's place, and so do rows above that measure as the reader scrolls.
 const keepPosition = { data: true };
 

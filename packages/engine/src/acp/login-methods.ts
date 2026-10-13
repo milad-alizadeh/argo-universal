@@ -1,15 +1,46 @@
-import type { AuthMethod, InitializeResponse } from '@agentclientprotocol/sdk';
+import type {
+  AuthMethod,
+  AuthMethodTerminal,
+  InitializeResponse,
+} from '@agentclientprotocol/sdk';
 import type { LoginAgentMethod } from '../agents';
-
 const unsupportedMethods = new Set(['api-key', 'gateway', 'chat-gpt']);
-const supportsMethod = (method: AuthMethod): boolean =>
-  !('type' in method && method.type === 'terminal') &&
-  !unsupportedMethods.has(method.id);
+const isTerminal = (
+  method: AuthMethod,
+): method is AuthMethodTerminal & { type: 'terminal' } =>
+  'type' in method && method.type === 'terminal';
+const terminalInvocation = (
+  method: AuthMethodTerminal,
+): NonNullable<LoginAgentMethod['terminal']> => ({
+  args: method.args ?? [],
+  env: method.env ?? {},
+});
+const terminalMethod = (
+  method: AuthMethod,
+): Pick<LoginAgentMethod, 'terminal'> =>
+  isTerminal(method) ? { terminal: terminalInvocation(method) } : {};
+const loginMethod = (method: AuthMethod): LoginAgentMethod => ({
+  id: method.id,
+  name: method.name,
+  ...terminalMethod(method),
+  ...(method.description ? { description: method.description } : {}),
+});
+const eligibleMethods = (initialization: InitializeResponse): AuthMethod[] =>
+  (initialization.authMethods ?? []).filter(
+    (method) => !unsupportedMethods.has(method.id),
+  );
+const selectLoginMethods = (
+  methods: AuthMethod[],
+  terminalSupported: boolean,
+): AuthMethod[] => {
+  const protocol = methods.filter((method) => !isTerminal(method));
+  if (protocol.length) return protocol;
+  return terminalSupported ? methods : [];
+};
 export const loginMethods = (
   initialization: InitializeResponse,
+  terminalSupported = false,
 ): LoginAgentMethod[] =>
-  (initialization.authMethods ?? []).filter(supportsMethod).map((method) => ({
-    id: method.id,
-    name: method.name,
-    ...(method.description ? { description: method.description } : {}),
-  }));
+  selectLoginMethods(eligibleMethods(initialization), terminalSupported).map(
+    loginMethod,
+  );

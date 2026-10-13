@@ -5,12 +5,12 @@ import type {
 } from '@repo/contracts';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useEffectEvent, useMemo, useState } from 'react';
 import { useAgents } from '#features/agents';
 import {
   type ComposerDraft,
   savedChoicesQuery,
-  useImageDraft,
+  useAttachmentDraft,
 } from '#features/composer';
 import { useConnectionState } from '#features/connection';
 import { useTRPC } from '#features/connection';
@@ -167,13 +167,16 @@ function useNewSessionViewProps(projectId: string | undefined): {
   const data = useNewSessionData(projectId);
   const { serverInfo, projects, agents, choices } = data;
   const session = useEmptySession(toNewSessionInput(choices), connected);
-  const imageDraft = useImageDraft();
+  const attachmentDraft = useAttachmentDraft(
+    choices.project && { type: 'new-session', projectId: choices.project.id },
+  );
+  useClearDraftOnHandOff(session.handedOff, attachmentDraft.clearDraft);
   // The first prompt as sent, shown in the Feed until the Session has it; a failure clears it and keeps the draft.
   const [sent, setSent] = useState<{ draft: ComposerDraft; at: number }>();
   const waiting =
     session.context.pendingPrompt !== undefined || session.handedOff;
   const shownSent =
-    sent && (imageDraft.uploading || waiting) ? sent : undefined;
+    sent && (attachmentDraft.uploading || waiting) ? sent : undefined;
   const starting = useMemo(
     () => shownSent && startingFeed(shownSent.draft, shownSent.at),
     [shownSent],
@@ -181,7 +184,7 @@ function useNewSessionViewProps(projectId: string | undefined): {
   // Uploads the draft's images, then queues the draft as the first prompt until the Session is ready.
   async function sendFirstPrompt(draft: ComposerDraft): Promise<void> {
     setSent({ draft, at: Date.now() });
-    const prompt = await imageDraft.uploadDraftAsPrompt(draft);
+    const prompt = await attachmentDraft.uploadDraftAsPrompt(draft);
     if (prompt?.length) session.actor.send({ type: 'send', prompt });
     else setSent(undefined);
   }
@@ -192,7 +195,7 @@ function useNewSessionViewProps(projectId: string | undefined): {
     return { view: { state: 'loading' } };
 
   const { agent } = choices;
-  const sending = imageDraft.uploading || waiting;
+  const sending = attachmentDraft.uploading || waiting;
   const opened =
     session.openSessionId && agent
       ? {
@@ -229,9 +232,12 @@ function useNewSessionViewProps(projectId: string | undefined): {
             data.setChosen((current) => ({ ...current, newWorktree })),
         },
       },
-      draft: imageDraft.draft,
-      onDraftChange: imageDraft.changeDraft,
-      onAttachImages: () => void imageDraft.attachImages(),
+      draft: attachmentDraft.draft,
+      onDraftChange: attachmentDraft.changeDraft,
+      onAttachImages: () => void attachmentDraft.attachImages(),
+      onAttachFiles: () => void attachmentDraft.attachFiles(),
+      onDropFiles: (dropped) =>
+        void attachmentDraft.attachDroppedFiles(dropped),
       onSend: (draft) => void sendFirstPrompt(draft),
       canOpen: canOpenSession({
         connected,
@@ -241,7 +247,7 @@ function useNewSessionViewProps(projectId: string | undefined): {
       }),
       opening: sending,
       starting,
-      attachmentError: imageDraft.attachmentError?.message,
+      attachmentError: attachmentDraft.attachmentError?.message,
       setupStep:
         agent && agent.availability !== 'available'
           ? agent.installStep
@@ -249,4 +255,15 @@ function useNewSessionViewProps(projectId: string | undefined): {
       openError: session.context.error,
     },
   };
+}
+
+// The first prompt now belongs to the Session, so the Project's kept draft goes.
+function useClearDraftOnHandOff(
+  handedOff: boolean,
+  clearDraft: () => void,
+): void {
+  const clear = useEffectEvent(clearDraft);
+  useEffect(() => {
+    if (handedOff) clear();
+  }, [handedOff]);
 }

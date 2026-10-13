@@ -60,9 +60,11 @@ function openSessionProps(
       now: runningTurnNow,
     },
     composer: {
-      draft: { text: '', images: [] },
+      draft: { text: '', attachments: [] },
       onDraftChange: fn(),
       onAttachImages: fn(),
+      onAttachFiles: fn(),
+      onDropFiles: fn(),
       onSend: fn(),
       onStop: fn(),
       configuration: {

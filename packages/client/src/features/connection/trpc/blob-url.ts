@@ -1,4 +1,4 @@
-import type { BlobRef } from '@repo/contracts';
+import { type BlobRef, blobPath } from '@repo/contracts';
 import { createContext, useContext } from 'react';
 import { serverHttpUrl } from './create-trpc-client';
 
@@ -15,5 +15,5 @@ export function useBlobUrl(): BlobUrl {
 
 // The Server serves blobs over HTTP beside tRPC, on its WebSocket address.
 export function createServerBlobUrl(serverUrl: string): BlobUrl {
-  return (blob) => serverHttpUrl(serverUrl, `/blobs/${blob.blobId}`);
+  return (blob) => serverHttpUrl(serverUrl, blobPath(blob.blobId));
 }

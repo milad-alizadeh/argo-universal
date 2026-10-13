@@ -7,6 +7,7 @@ import {
   scriptedInitialization,
   type ScriptedScenario,
 } from './scripted-scenario.ts';
+import { runTerminalLoginMock } from './terminal-login.ts';
 
 // The scripted Agent over stdio; `node scripted-agent-process.ts <scenario>`.
 const name = process.argv[2];
@@ -35,19 +36,23 @@ const selected: ScriptedScenario =
     ? { ...scenario, responses: loggedCloses(requestLog) }
     : scenario;
 const initialization = selected.initialize ?? scriptedInitialization;
-createScriptedAgent({
-  ...selected,
-  // Process ownership tests read the environment the launcher handed over.
-  initialize: {
-    ...initialization,
-    _meta: { ...initialization._meta, environment: { ...process.env } },
-  },
-}).connect(
-  Writable.toWeb(process.stdout),
-  new ReadableStream<Uint8Array>({
-    start: (controller): void => {
-      process.stdin.on('data', (chunk: Buffer) => controller.enqueue(chunk));
-      process.stdin.on('end', () => controller.close());
+const connect = (): void => {
+  createScriptedAgent({
+    ...selected,
+    // Process ownership tests read the environment the launcher handed over.
+    initialize: {
+      ...initialization,
+      _meta: { ...initialization._meta, environment: { ...process.env } },
     },
-  }),
-);
+  }).connect(
+    Writable.toWeb(process.stdout),
+    new ReadableStream<Uint8Array>({
+      start: (controller): void => {
+        process.stdin.on('data', (chunk: Buffer) => controller.enqueue(chunk));
+        process.stdin.on('end', () => controller.close());
+      },
+    }),
+  );
+};
+if (process.argv.includes('--interactive-login')) runTerminalLoginMock();
+else connect();

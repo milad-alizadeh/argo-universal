@@ -1,5 +1,3 @@
-import { Easing } from 'react-native-reanimated';
-
 // Animation lengths in milliseconds.
 export const motionDuration = {
   enter: 200,
@@ -19,15 +17,14 @@ export const easingCurve = {
   standard: { x1: 0.25, y1: 0.1, x2: 0.25, y2: 1 },
 };
 
-export function bezierEasing({
-  x1,
-  y1,
-  x2,
-  y2,
-}: (typeof easingCurve)[keyof typeof easingCurve]): ReturnType<
-  typeof Easing.bezier
-> {
-  return Easing.bezier(x1, y1, x2, y2);
+export type CubicBezier = (typeof easingCurve)[keyof typeof easingCurve];
+
+// A motion length and curve as the Web Animations API and CSS take them.
+export function cssTransition(
+  duration: number,
+  { x1, y1, x2, y2 }: CubicBezier,
+): { duration: number; easing: string } {
+  return { duration, easing: `cubic-bezier(${x1}, ${y1}, ${x2}, ${y2})` };
 }
 
 export const fullTurnDegrees = 360;

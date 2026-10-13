@@ -44,7 +44,7 @@ import { RecoveryBlockedError } from '../acp';
 import type { AcpSessionLease } from '../acp';
 import { createAcpResponseReaders } from '../acp';
 import { agentProbeId, agentProbeMachine } from '../agents';
-import { blobsFolderIn } from '../blob';
+import { attachmentsFolderIn, blobsFolderIn } from '../blob';
 import {
   acpToolCallRowId,
   readQueuedFeedRow,
@@ -392,6 +392,9 @@ const sessionSetup = setup({
             storage: {
               database: sessionInput.database,
               blobsFolder: blobsFolderIn(sessionInput.runtimeDirectory),
+              attachmentsFolder: attachmentsFolderIn(
+                sessionInput.runtimeDirectory,
+              ),
             },
           },
           signal,

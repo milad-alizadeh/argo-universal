@@ -27,7 +27,13 @@ export const startAcpEngine = async (
         'fetchAgents' | 'loginTimeoutMs' | 'loginCleanupTimeoutMs'
       >
     > &
-    Pick<AcpResourceInput, 'closeTimeoutMs' | 'releaseTimeoutMs'> = {
+    Pick<
+      AcpResourceInput,
+      | 'closeTimeoutMs'
+      | 'releaseTimeoutMs'
+      | 'launchLoginTerminal'
+      | 'launchProcess'
+    > = {
     steps: [],
   },
   createId: () => string = randomUUID,
@@ -50,6 +56,8 @@ export const startAcpEngine = async (
     adapters: [{ ...createAgentMetadata(), agent: agentId }],
     acp: {
       ...agent,
+      launchProcess: scenario.launchProcess ?? agent.launchProcess,
+      launchLoginTerminal: scenario.launchLoginTerminal,
       closeTimeoutMs: scenario.closeTimeoutMs,
       releaseTimeoutMs: scenario.releaseTimeoutMs,
     },

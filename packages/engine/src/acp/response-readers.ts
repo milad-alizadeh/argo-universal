@@ -7,6 +7,7 @@ import {
   type FormatDefinition,
   type ValidateFunction,
 } from 'ajv/dist/2020.js';
+import { initializeResponseSchema } from './initialize-response-schema';
 
 type RejectionReporter = Pick<
   ReturnType<typeof createRejectionCounter>,
@@ -68,8 +69,12 @@ const compileAcpResponseSchema = <Response>(
   accepts: validator.compile<Response>({ $ref: `acp-v1#/$defs/${schemaName}` }),
 });
 const schemas = {
-  initialize:
-    compileAcpResponseSchema<AcpResponses['initialize']>('InitializeResponse'),
+  initialize: {
+    name: 'InitializeResponse',
+    accepts: validator.compile<AcpResponses['initialize']>(
+      initializeResponseSchema,
+    ),
+  } satisfies ResponseSchema<AcpResponses['initialize']>,
   authenticate: compileAcpResponseSchema<AcpResponses['authenticate']>(
     'AuthenticateResponse',
   ),

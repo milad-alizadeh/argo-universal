@@ -1,20 +1,26 @@
 import { maxBlobUploadBytes, maxBlobUploadMebibytes } from '@repo/contracts';
 import type * as React from 'react';
-import { useId, useState } from 'react';
-import { Image, Platform, ScrollView, View } from 'react-native';
+import { useId } from 'react';
+import { ScrollView, View } from 'react-native';
 import {
   PlanProposalCard,
   type PlanProposalCardProps,
 } from '#features/requests';
+import { LiquidGlass } from '#lib/generic/primitives/display/liquid-glass/liquid-glass';
 import { Text } from '#lib/generic/primitives/display/text/text';
-import { Textarea } from '#lib/generic/primitives/inputs/textarea/textarea';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { IconButton } from '#primitives/buttons/icon-button/icon-button';
 import { FieldGroup } from '#primitives/fields/field-group/field-group';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { RichTextarea } from '#primitives/inputs/rich-textarea/rich-textarea';
 import { ListItem } from '#primitives/lists/list-item/list-item';
 import { Icon } from '../../../../lib/generic/symbols/icon';
+import { type DroppedFiles, useFileDrop } from '../../hooks/use-file-drop';
+import {
+  type ComposerAttachment,
+  ComposerAttachmentCard,
+} from '../composer-attachment-card/composer-attachment-card';
 import {
   ComposerAgentModelControl,
   ComposerCheckoutControl,
@@ -34,21 +40,11 @@ import {
   type WrittenPlanValue,
 } from '../written-plan/written-plan';
 
-// The message field grows a line at a time up to this many lines, then scrolls.
-const maximumVisibleLines = 4;
-const lineHeight = 20;
-const maximumTextHeight = maximumVisibleLines * lineHeight;
-
-export interface ComposerImage {
-  id: string;
-  name: string;
-  uri: string;
-  bytes: number;
-}
+export type { ComposerAttachment };
 
 export interface ComposerDraft {
   text: string;
-  images: ComposerImage[];
+  attachments: ComposerAttachment[];
 }
 
 export interface ComposerProps {
@@ -59,6 +55,8 @@ export interface ComposerProps {
   onAttachImages: () => void;
   onAttachCamera?: () => void;
   onAttachFiles?: () => void;
+  // Files dragged onto the Composer, on the web and desktop.
+  onDropFiles?: (dropped: DroppedFiles) => void;
   onSelectSlashCommand?: () => void;
   onCreateGoal?: () => void;
   onSend: (draft: ComposerDraft) => void;
@@ -82,6 +80,7 @@ export function Composer({
   onAttachImages,
   onAttachCamera,
   onAttachFiles,
+  onDropFiles,
   onSelectSlashCommand,
   onCreateGoal,
   onSend,
@@ -95,19 +94,17 @@ export function Composer({
   error,
 }: ComposerProps): React.JSX.Element {
   const composerId = useId();
+  useFileDrop({ targetId: composerId, onDropFiles });
   const wide = useContentWide();
   const shownWrittenPlan = planProposal ? undefined : writtenPlan;
-  const [textHeight, setTextHeight] = useState(
-    Math.min(maximumVisibleLines, draft.text.split('\n').length) * lineHeight,
-  );
   const inactive = sending || disabled;
   const canRecoverAgent = Boolean(
     configuration?.onAgentRetry &&
     configuration.agents.every((agent) => agent.availability !== 'available'),
   );
   const configurationInactive = sending || (disabled && !canRecoverAgent);
-  const oversized = draft.images.filter(
-    (image) => image.bytes > maxBlobUploadBytes,
+  const oversized = draft.attachments.filter(
+    (attachment) => attachment.bytes > maxBlobUploadBytes,
   );
   const sendState = sendButtonState({
     stop: Boolean(configuration?.turnRunning && onStop),
@@ -117,8 +114,11 @@ export function Composer({
       sendable &&
       !configuration?.turnRunning &&
       oversized.length === 0 &&
-      (draft.text.trim().length > 0 || draft.images.length > 0),
+      (draft.text.trim().length > 0 || draft.attachments.length > 0),
   });
+  const send = (): void => {
+    if (sendState === 'ready') onSend(draft);
+  };
   const planControls = (
     <>
       {!!status?.plan?.length && (
@@ -157,93 +157,50 @@ export function Composer({
       {planProposal ? (
         <PlanProposalCard {...planProposal} />
       ) : (
-        <View className="w-full rounded-2xl bg-glass-card native:bg-background shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180 z-10">
-          {draft.images.length > 0 && (
+        // Wide, the card sits between its glass trays and keeps Argo's own glass.
+        <LiquidGlass
+          shape="card"
+          glass={!wide}
+          className="w-full z-10"
+          fallbackClassName="rounded-2xl bg-glass-card native:bg-background shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180"
+        >
+          {draft.attachments.length > 0 && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerClassName="gap-3 px-4 pt-3"
             >
-              {draft.images.map((image) => (
-                <View key={image.id} className="w-40 h-30 shrink-0">
-                  <View
-                    className={cn(
-                      'group relative w-40 h-30 overflow-hidden rounded-md border bg-muted',
-                      image.bytes > maxBlobUploadBytes
-                        ? 'border-destructive'
-                        : 'border-border',
-                    )}
-                  >
-                    <View
-                      role="img"
-                      accessibilityLabel={image.name}
-                      className="w-full h-full"
-                    >
-                      <Image
-                        source={{ uri: image.uri }}
-                        aria-hidden
-                        accessibilityElementsHidden
-                        resizeMode="cover"
-                        className="w-full h-full"
-                      />
-                    </View>
-                    <IconButton
-                      disabled={inactive}
-                      accessibilityLabel={`Remove ${image.name}`}
-                      icon="close"
-                      iconRole="secondary"
-                      variant="ghost"
-                      className={cn(
-                        'absolute right-0 top-0 size-8 sm:size-8 rounded-sm bg-background web:wide:opacity-0',
-                        inactive
-                          ? 'web:wide:group-hover:opacity-50'
-                          : 'web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100',
-                      )}
-                      onPress={() =>
-                        onDraftChange({
-                          ...draft,
-                          images: draft.images.filter(
-                            (attached) => attached.id !== image.id,
-                          ),
-                        })
-                      }
-                    />
-                  </View>
-                </View>
+              {draft.attachments.map((attachment) => (
+                <ComposerAttachmentCard
+                  key={attachment.id}
+                  attachment={attachment}
+                  disabled={inactive}
+                  onRemove={() =>
+                    onDraftChange({
+                      ...draft,
+                      attachments: draft.attachments.filter(
+                        (attached) => attached.id !== attachment.id,
+                      ),
+                    })
+                  }
+                />
               ))}
             </ScrollView>
           )}
           {oversized.length > 0 && (
             <ComposerWarning numberOfLines={1}>
-              {`Image exceeds ${maxBlobUploadMebibytes} MB.`}
+              {`Attachment exceeds ${maxBlobUploadMebibytes} MB.`}
             </ComposerWarning>
           )}
           {error && <ComposerWarning>{error}</ComposerWarning>}
           <View className="px-4 pt-3 pb-2">
-            <Textarea
+            <RichTextarea
               accessibilityLabel="Message"
               placeholder={placeholder}
-              placeholderTextColorClassName="accent-muted-foreground/70"
               value={draft.text}
               editable={!inactive}
               onChangeText={(text) => onDraftChange({ ...draft, text })}
-              numberOfLines={Platform.OS === 'web' ? 1 : maximumVisibleLines}
-              scrollEnabled={
-                Platform.OS === 'web' || textHeight >= maximumTextHeight
-              }
-              onContentSizeChange={(event) =>
-                setTextHeight(
-                  Math.max(
-                    lineHeight,
-                    Math.min(
-                      maximumTextHeight,
-                      event.nativeEvent.contentSize.height,
-                    ),
-                  ),
-                )
-              }
-              style={Platform.OS === 'web' ? undefined : { height: textHeight }}
-              className="min-h-5 max-h-20 web:overflow-y-auto border-0 rounded-none bg-transparent dark:bg-transparent p-0 type-control shadow-none web:resize-none web:focus-visible:ring-0"
+              onSubmit={send}
             />
           </View>
           <View className="flex-row items-center justify-between gap-2 pl-3.75 pr-2.5 pb-2.5">
@@ -261,7 +218,7 @@ export function Composer({
                     variant="ghost"
                     iconRole="control"
                     hitSlop={8}
-                    accessibilityLabel={wide ? 'Attach' : 'Attach images'}
+                    accessibilityLabel="Attach"
                     className="size-7 sm:size-7 p-0"
                     iconClassName="text-muted-foreground"
                   />
@@ -274,7 +231,7 @@ export function Composer({
                         {(wide
                           ? [
                               {
-                                label: 'Files and Folder',
+                                label: 'Files',
                                 icon: 'folder' as const,
                                 onPress: onAttachFiles ?? onAttachImages,
                               },
@@ -308,7 +265,7 @@ export function Composer({
                                 ? [
                                     {
                                       label: 'Files',
-                                      icon: 'attach' as const,
+                                      icon: 'folder' as const,
                                       onPress: onAttachFiles,
                                     },
                                   ]
@@ -361,13 +318,7 @@ export function Composer({
                 disabled={
                   sendState === 'stop' ? disabled : sendState !== 'ready'
                 }
-                onPress={
-                  sendState === 'stop'
-                    ? () => onStop?.()
-                    : () => {
-                        if (sendState === 'ready') onSend(draft);
-                      }
-                }
+                onPress={sendState === 'stop' ? (): void => onStop?.() : send}
                 className={cn(
                   'size-7 sm:size-7 rounded-full',
                   sendState === 'blocked' && 'opacity-35',
@@ -377,7 +328,7 @@ export function Composer({
               />
             </View>
           </View>
-        </View>
+        </LiquidGlass>
       )}
       {wide && (configuration || status) && (
         <View

@@ -15,6 +15,7 @@ import { SessionColumn } from '#lib/product/session-layout';
 import { chooseEffort } from '../../../../../mocks/choose-effort';
 import {
   composerProps,
+  composerFiles,
   composerImages,
   composerLongAgentCatalog,
   composerPlan,
@@ -22,6 +23,8 @@ import {
   oversizedComposerImage,
 } from '../../../../../mocks/composer-mock';
 import { updateComposerSettings } from '../../../../../mocks/composer-mock';
+import { canPointAt } from '../../../../../mocks/point-hit';
+import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer, type ComposerDraft } from './composer';
@@ -30,13 +33,15 @@ const missingAvailableAgentFailure =
   'Recorded catalog needs an available Agent.';
 const agentModelLabel = 'Agent and model';
 const newCheckoutLabel = 'New worktree';
-const attachImagesLabel = 'Attach images';
-const filesFolderLabel = 'Files and Folder';
 const agentIconId = 'composer-agent-icon';
 const spacingPrompt = 'Match the spacing.';
 const multilineSpacingPrompt =
   'Match the spacing.\nKeep the phone readable.\nUse both themes.';
 const chooseAgentLabel = /^Agent,/;
+// The web Composer edits with real key events, where Return sends and ⇧Return adds a line.
+const typedLines = (text: string): string =>
+  text.replaceAll('\n', '{Shift>}{Enter}{/Shift}');
+const readOnlyAttribute = 'aria-readonly';
 const valueTextAttribute = 'aria-valuetext';
 const chooseModelLabel = /^Model,/;
 const pressedAttribute = 'aria-pressed';
@@ -154,7 +159,7 @@ const meta = {
     <Composer {...composerProps({ ...args })} />
   ),
   args: {
-    draft: { text: '', images: [] },
+    draft: { text: '', attachments: [] },
     onDraftChange: fn(),
     onAttachImages: fn(),
     onSend: fn(),
@@ -172,7 +177,10 @@ function SendingComposer({
 }: {
   onSend: (draft: ComposerDraft) => void;
 }): React.JSX.Element {
-  const [draft, setDraft] = useState<ComposerDraft>({ text: '', images: [] });
+  const [draft, setDraft] = useState<ComposerDraft>({
+    text: '',
+    attachments: [],
+  });
   return (
     <Composer
       {...composerProps({
@@ -181,7 +189,7 @@ function SendingComposer({
         onAttachImages: fn(),
         onSend: (sent) => {
           onSend(sent);
-          setDraft({ text: '', images: [] });
+          setDraft({ text: '', attachments: [] });
         },
       })}
     />
@@ -193,12 +201,12 @@ export const Empty: Story = {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue('');
+        shownText(canvas.getByRole('textbox', { name: 'Message' })),
+      ).toBe('');
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
       await expect(
         canvas.getByRole('button', {
-          name: width >= 720 ? 'Attach' : attachImagesLabel,
+          name: 'Attach',
         }),
       ).toBeEnabled();
       await expect(
@@ -236,21 +244,46 @@ function typing(width: number): Story {
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
-      await userEvent.type(input, spacingPrompt);
-      await expect(input).toHaveValue(spacingPrompt);
+      await browserUserEvent.type(input, spacingPrompt);
+      await expect(shownText(input)).toBe(spacingPrompt);
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
       await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
       await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
       await expect(prompt).toHaveBeenCalledWith({
         text: spacingPrompt,
-        images: [],
+        attachments: [],
       });
-      await waitFor(() => expect(input).toHaveValue(''));
+      await waitFor(() => expect(shownText(input)).toBe(''));
     },
   };
 }
-export const TypingPhone = typing(layoutWidths.phone);
+// Storybook draws the web field at both widths; the phone drawing is checked in the app.
+export const TypingWebAtPhoneWidth = typing(layoutWidths.phone);
 export const TypingWide = typing(layoutWidths.wide);
+
+/*
+ * Return sends only a ready draft, and sends exactly the text the field shows. The web field handles
+ * Return the same at every width, so one width covers it.
+ */
+const returnPrompt = fn();
+export const ReturnSends: Story = {
+  render: () => <SendingComposer onSend={returnPrompt} />,
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    const input = await canvas.findByRole('textbox', { name: 'Message' });
+    await browserUserEvent.type(input, '{Enter}');
+    await expect(returnPrompt).not.toHaveBeenCalled();
+    await browserUserEvent.type(input, spacingPrompt);
+    const shown = shownText(input);
+    await browserUserEvent.keyboard('{Enter}');
+    await waitFor(() => expect(returnPrompt).toHaveBeenCalledOnce());
+    await expect(returnPrompt).toHaveBeenCalledWith({
+      text: shown,
+      attachments: [],
+    });
+    await expect(shown).toBe(spacingPrompt);
+  },
+};
 
 function imageComposer(
   props: React.ComponentProps<typeof Composer>,
@@ -272,7 +305,7 @@ function withImages(width: number): Story {
       const root = createRoot(canvas.getByTestId('controlled-images'));
       const onDraftChange = fn();
       const props = composerProps({
-        draft: { text: '', images: composerImages.slice(0, 1) },
+        draft: { text: '', attachments: composerImages.slice(0, 1) },
         onDraftChange,
         onSend: fn(),
         onAttachImages: fn(),
@@ -290,10 +323,10 @@ function withImages(width: number): Story {
         );
         await expect(onDraftChange).toHaveBeenCalledWith({
           text: '',
-          images: [],
+          attachments: [],
         });
         root.render(
-          imageComposer({ ...props, draft: { text: '', images: [] } }),
+          imageComposer({ ...props, draft: { text: '', attachments: [] } }),
         );
         await waitFor(() =>
           expect(canvas.queryByRole('img')).not.toBeInTheDocument(),
@@ -309,6 +342,54 @@ function withImages(width: number): Story {
 }
 export const WithImagesPhone = withImages(layoutWidths.phone);
 export const WithImagesWide = withImages(layoutWidths.wide);
+
+export const WithFiles: Story = {
+  args: { draft: { text: '', attachments: composerFiles } },
+  play: async ({ canvas, userEvent, args }) => {
+    await expect(
+      await canvas.findByRole('img', { name: 'release-notes.md' }),
+    ).toHaveTextContent('# Release notes');
+    await expect(
+      canvas.getByRole('img', { name: 'quarterly-report.pdf' }),
+    ).toHaveTextContent('PDF');
+    await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Remove quarterly-report.pdf' }),
+    );
+    await expect(args.onDraftChange).toHaveBeenCalledWith({
+      text: '',
+      attachments: composerFiles.slice(0, 1),
+    });
+  },
+};
+
+const dragFiles = (type: 'dragover' | 'drop', files: File[]): DragEvent => {
+  const transfer = new DataTransfer();
+  for (const file of files) transfer.items.add(file);
+  return new DragEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    dataTransfer: transfer,
+  });
+};
+
+export const DropFiles: Story = {
+  args: { onDropFiles: fn() },
+  play: async ({ canvas, args }) => {
+    const message = await canvas.findByRole('textbox');
+    const file = new File(['# Notes'], 'notes.md', { type: 'text/markdown' });
+    const over = dragFiles('dragover', [file]);
+    message.dispatchEvent(over);
+    await expect(over.defaultPrevented).toBe(true);
+    const drop = dragFiles('drop', [file]);
+    message.dispatchEvent(drop);
+    await expect(drop.defaultPrevented).toBe(true);
+    await expect(args.onDropFiles).toHaveBeenCalledWith({
+      files: [file],
+      folders: 0,
+    });
+  },
+};
 
 function attachmentMenus(width: number): Story {
   return {
@@ -329,14 +410,14 @@ function attachmentMenus(width: number): Story {
               ['Files', args.onAttachFiles],
             ] as const)
           : ([
-              [filesFolderLabel, args.onAttachFiles],
+              ['Files', args.onAttachFiles],
               ['Slash Commands', args.onSelectSlashCommand],
               ['Goal', args.onCreateGoal],
             ] as const);
       for (const [label, callback] of choices) {
         await userEvent.click(
           canvas.getByRole('button', {
-            name: width >= 720 ? 'Attach' : attachImagesLabel,
+            name: 'Attach',
           }),
         );
         await expect(
@@ -366,20 +447,16 @@ export const AttachmentInNarrowContent: Story = {
   ),
   play: async ({ canvas, userEvent }): Promise<void> => {
     await settleViewport(layoutWidths.wide);
-    const attach = await canvas.findByRole('button', {
-      name: attachImagesLabel,
-    });
-    await expect(
-      canvas.queryByRole('button', { name: 'Attach' }),
-    ).not.toBeInTheDocument();
-    await userEvent.click(attach);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Attach' }),
+    );
     await waitFor(() =>
       expect(
         within(document.body).getByRole('button', { name: 'Photos' }),
       ).toBeVisible(),
     );
     await expect(
-      within(document.body).queryByRole('button', { name: filesFolderLabel }),
+      within(document.body).queryByRole('button', { name: 'Slash Commands' }),
     ).not.toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
   },
@@ -424,20 +501,20 @@ function multiline(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const input = canvas.getByRole('textbox', { name: 'Message' });
-      await userEvent.type(input, multilineSpacingPrompt);
-      await expect(input).toHaveValue(multilineSpacingPrompt);
+      await browserUserEvent.type(input, typedLines(multilineSpacingPrompt));
+      await expect(shownText(input)).toBe(multilineSpacingPrompt);
       await expect(prompt).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
       await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
       await expect(prompt).toHaveBeenCalledWith({
         text: multilineSpacingPrompt,
-        images: [],
+        attachments: [],
       });
-      await waitFor(() => expect(input).toHaveValue(''));
+      await waitFor(() => expect(shownText(input)).toBe(''));
     },
   };
 }
-export const MultilinePhone = multiline(layoutWidths.phone);
+export const MultilineWebAtPhoneWidth = multiline(layoutWidths.phone);
 export const MultilineWide = multiline(layoutWidths.wide);
 
 export const ImageTooLarge: Story = {
@@ -447,7 +524,7 @@ export const ImageTooLarge: Story = {
     const onDraftChange = fn();
     const draft = {
       text: 'Match these screenshots.',
-      images: [oversizedComposerImage],
+      attachments: [oversizedComposerImage],
     };
     const props = composerProps({
       draft,
@@ -460,7 +537,7 @@ export const ImageTooLarge: Story = {
       for (const width of [layoutWidths.phone, layoutWidths.wide]) {
         await settleViewport(width);
         await expect(await canvas.findByRole('alert')).toHaveTextContent(
-          'Image exceeds 20 MB.',
+          'Attachment exceeds 20 MB.',
         );
         await expect(
           canvas.getByRole('button', { name: 'Send' }),
@@ -472,15 +549,18 @@ export const ImageTooLarge: Story = {
       );
       await expect(onDraftChange).toHaveBeenCalledWith({
         text: draft.text,
-        images: [],
+        attachments: [],
       });
       root.render(
-        imageComposer({ ...props, draft: { text: draft.text, images: [] } }),
+        imageComposer({
+          ...props,
+          draft: { text: draft.text, attachments: [] },
+        }),
       );
       await waitFor(() =>
         expect(canvas.queryByRole('alert')).not.toBeInTheDocument(),
       );
-      await expect(canvas.getByRole('textbox')).toHaveValue(draft.text);
+      await expect(shownText(canvas.getByRole('textbox'))).toBe(draft.text);
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
     } finally {
       root.unmount();
@@ -490,18 +570,20 @@ export const ImageTooLarge: Story = {
 
 function sending(width: number): Story {
   return {
-    args: { draft: { text: spacingPrompt, images: [] }, sending: true },
-    play: async ({ canvas, userEvent, args }) => {
+    args: { draft: { text: spacingPrompt, attachments: [] }, sending: true },
+    play: async ({ canvas, args }) => {
       await settleViewport(width);
       await expect(
         canvas.getByRole('button', { name: 'Send' }),
       ).toHaveAttribute('aria-busy', 'true');
-      await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
-      await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
-      await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
+      const input = canvas.getByRole('textbox');
+      await expect(input).toHaveAttribute(readOnlyAttribute, 'true');
+      await expect(shownText(input)).toBe(spacingPrompt);
+      await browserUserEvent.type(input, 'Another prompt');
+      await expect(shownText(input)).toBe(spacingPrompt);
       await expect(
         canvas.getByRole('button', {
-          name: width >= 720 ? 'Attach' : attachImagesLabel,
+          name: 'Attach',
         }),
       ).toBeDisabled();
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
@@ -521,17 +603,19 @@ function disabled(width: number): Story {
     args: {
       draft: {
         text: spacingPrompt,
-        images: composerImages.slice(0, 1),
+        attachments: composerImages.slice(0, 1),
       },
       disabled: true,
     },
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ canvas, args }) => {
       await settleViewport(width);
-      await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
-      await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
+      const input = canvas.getByRole('textbox');
+      await expect(input).toHaveAttribute(readOnlyAttribute, 'true');
+      await browserUserEvent.type(input, 'Another prompt');
+      await expect(shownText(input)).toBe(spacingPrompt);
       await expect(
         canvas.getByRole('button', {
-          name: width >= 720 ? 'Attach' : attachImagesLabel,
+          name: 'Attach',
         }),
       ).toBeDisabled();
       await expect(
@@ -592,7 +676,7 @@ function ConfiguredComposer({
   return (
     <Composer
       {...composerProps({
-        draft: { text: '', images: [] },
+        draft: { text: '', attachments: [] },
         onDraftChange: fn(),
         onSend: fn(),
         onAttachImages: fn(),
@@ -922,7 +1006,7 @@ function stopPrecedence(
     args: {
       draft: {
         text: 'A draft during a Turn.',
-        images: [oversizedComposerImage],
+        attachments: [oversizedComposerImage],
       },
       sending: true,
       disabled,
@@ -996,7 +1080,7 @@ export const RunningWithoutStop: Story = {
       {...composerProps({ ...args, sessionStarted: true, running: true })}
     />
   ),
-  args: { draft: { text: 'A draft during a Turn.', images: [] } },
+  args: { draft: { text: 'A draft during a Turn.', attachments: [] } },
   play: async ({ canvas, args }) => {
     await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
     await expect(
@@ -1140,7 +1224,7 @@ function responsiveLayout(width: number, agentIndex: number): Story {
       const card = input.parentElement?.parentElement;
       if (!card) throw new Error('Composer card is missing.');
       const attachButton = canvas.getByRole('button', {
-        name: width >= 720 ? 'Attach' : attachImagesLabel,
+        name: 'Attach',
       });
       await expect(attachButton).toBeVisible();
       const trigger = canvas.getByRole('button', { name: agentModelLabel });
@@ -1314,35 +1398,45 @@ async function expectHeldAgentList(): Promise<void> {
   ).toHaveLength(1);
 }
 
-function editorScrollsAfterFourLines(width: number): Story {
+// On the web the field grows with its draft to 10 lines, then scrolls inside the card (#539).
+const linesTwoToTen =
+  '\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10';
+
+// Nothing covers Send: the topmost element at its centre is the button or inside it.
+async function expectSendUnobscured(send: HTMLElement): Promise<void> {
+  await expect(canPointAt(send)).toBe(true);
+}
+
+function editorScrollsAfterTenLines(width: number): Story {
   return {
     render: () => <SendingComposer onSend={fn()} />,
-    play: async ({ canvas, userEvent }) => {
+    play: async ({ canvas }) => {
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
-      await userEvent.type(
-        input,
-        'First line\nSecond line\nThird line\nFourth line',
-      );
+      await browserUserEvent.type(input, 'Line 1');
+      const oneLineHeight = input.clientHeight;
+      // Up to ten lines the field grows and every line shows without scrolling.
+      await browserUserEvent.type(input, typedLines(linesTwoToTen));
       await waitFor(() => expect(input.scrollHeight).toBe(input.clientHeight));
-      const card = input.parentElement?.parentElement;
-      if (!card) throw new Error('Composer card is missing.');
-      const height = card.getBoundingClientRect().height;
-      await userEvent.type(input, '\nFifth line\nSixth line');
-      await expect(input).toHaveValue(
-        'First line\nSecond line\nThird line\nFourth line\nFifth line\nSixth line',
+      await expect(input.clientHeight).toBeGreaterThan(oneLineHeight);
+      const tenLinesHeight = input.clientHeight;
+      // Past ten lines it stops growing and scrolls instead.
+      await browserUserEvent.type(input, typedLines('\nLine 11\nLine 12'));
+      await expect(shownText(input)).toBe(
+        `Line 1${linesTwoToTen}\nLine 11\nLine 12`,
       );
-      await expect(card.getBoundingClientRect().height).toBe(height);
+      await expect(input.clientHeight).toBe(tenLinesHeight);
       await expect(input.scrollHeight).toBeGreaterThan(input.clientHeight);
+      await expectSendUnobscured(canvas.getByRole('button', { name: 'Send' }));
       await browserUserEvent.wheel(input, { delta: { y: 200 } });
       await waitFor(() => expect(input.scrollTop).toBeGreaterThan(0));
     },
   };
 }
-export const EditorScrollsAfterFourLinesPhone = editorScrollsAfterFourLines(
+export const EditorScrollsAfterTenLinesPhone = editorScrollsAfterTenLines(
   layoutWidths.phone,
 );
-export const EditorScrollsAfterFourLinesWide = editorScrollsAfterFourLines(
+export const EditorScrollsAfterTenLinesWide = editorScrollsAfterTenLines(
   layoutWidths.wide,
 );
 

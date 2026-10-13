@@ -63,19 +63,21 @@ Feature: New Session
       | 1     |
       | 2     |
 
-  Scenario Outline: An image prompt starts a Session with Agent <agent>
+  Scenario Outline: A prompt with the <attachment> starts a Session with Agent <agent>
     Given a phone Frame
     And a New Session with Agent <agent>
-    When I attach the red square image
-    And I send the prompt "Name the dominant color in this image."
-    Then the Session Feed contains the image prompt
-    And the Agent replies "The dominant color is red."
-    And the Server preserves the attached image
+    When I attach the <attachment>
+    And I send the prompt "<prompt>"
+    Then the Session Feed contains the prompt "<prompt>" with the <attachment>
+    And the Agent replies "<reply>"
+    And the Server preserves the attached <attachment>
 
     Examples:
-      | agent |
-      | 1     |
-      | 2     |
+      | agent | attachment         | prompt                                  | reply                              |
+      | 1     | red square image   | Name the dominant color in this image.  | The dominant color is red.         |
+      | 2     | red square image   | Name the dominant color in this image.  | The dominant color is red.         |
+      | 1     | release notes file | Summarise these release notes.          | The release notes list one change. |
+      | 2     | release notes file | Summarise these release notes.          | The release notes list one change. |
 
   Scenario Outline: A refused Session keeps the first prompt with Agent <agent>
     Given a phone Frame

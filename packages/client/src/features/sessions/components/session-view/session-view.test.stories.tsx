@@ -204,7 +204,7 @@ export const Disconnected: Story = {
       ...idleSession,
       composer: {
         ...idleSession.composer,
-        draft: { text: 'Keep this while offline', images: [] },
+        draft: { text: 'Keep this while offline', attachments: [] },
         sendable: false,
       },
     },

@@ -1,8 +1,15 @@
-import type { AgentLoginSnapshot, AgentLoginAnswer } from '@repo/contracts';
+import type {
+  AgentLoginSnapshot,
+  AgentLoginAnswer,
+  AgentLoginTerminalFrame,
+  AgentLoginTerminalInput,
+} from '@repo/contracts';
 import { createActor } from 'xstate';
 import type { LoginAgentRequest } from './agent-launch';
 import { LoginBrowser } from './login-browser';
+import { startLoginDeadline } from './login-deadline';
 import {
+  loginStatus,
   loginMachine,
   type LoginActor,
   type LoginOutcome,
@@ -36,18 +43,14 @@ export class LoginOperation {
       deps,
       (request, signal) => this.elicit(request, signal),
     );
-    this.timer = this.startDeadline(deps.timeoutMs);
+    const expired = (): void => this.finish('timed-out');
+    this.timer = startLoginDeadline(expired, deps.timeoutMs);
     this.actor = createActor(loginMachine, { input: this.ports() });
+    this.start();
+  }
+  private start(): void {
     this.actor.subscribe({ complete: (): void => this.completed.resolve() });
     this.actor.start();
-  }
-  private startDeadline(milliseconds: number): ReturnType<typeof setTimeout> {
-    const timer = setTimeout(
-      (): void => this.finish('timed-out'),
-      milliseconds,
-    );
-    timer.unref();
-    return timer;
   }
   public isOwnedBy(token: string): boolean {
     return token === this.identity.ownerToken;
@@ -65,8 +68,9 @@ export class LoginOperation {
       return { ...identity, status: 'other-app', methods: [] };
     return {
       ...identity,
-      status: this.status(),
+      status: loginStatus(this.actor.getSnapshot()),
       methods: this.resources.methods(),
+      ...(this.isTerminalRunning() ? { terminal: true } : {}),
       ...(this.browser.request() ? { request: this.browser.request() } : {}),
       ...(this.failure ? { failure: this.failure } : {}),
     };
@@ -77,6 +81,24 @@ export class LoginOperation {
     if (!this.resources.methods().some((method) => method.id === methodId))
       throw new Error('Login method was not advertised');
     this.actor.send({ type: 'choose', methodId });
+  }
+  public readTerminal(cursor: number): AgentLoginTerminalFrame {
+    if (!this.isTerminalRunning()) return { cursor, output: '', closed: true };
+    return this.resources.readTerminal(cursor);
+  }
+  public inputTerminal(input: AgentLoginTerminalInput): void {
+    this.requireTerminal();
+    this.resources.inputTerminal(input);
+  }
+  private requireTerminal(): void {
+    if (!this.isTerminalRunning())
+      throw new Error('The sign-in terminal is not running');
+  }
+  private isTerminalRunning(): boolean {
+    return (
+      this.actor.getSnapshot().matches('authenticating') &&
+      this.resources.terminalActive()
+    );
   }
   public respond(input: Pick<AgentLoginAnswer, 'requestId' | 'action'>): void {
     this.browser.respond(input);
@@ -89,17 +111,6 @@ export class LoginOperation {
     await this.completed.promise;
     if (this.actor.getSnapshot().matches('cleanup-failed'))
       throw new Error(this.failure ?? 'Login cleanup failed');
-  }
-  private status(): AgentLoginSnapshot['status'] {
-    const state = this.actor.getSnapshot();
-    if (state.matches('finished')) return state.context.outcome;
-    if (state.matches({ authenticating: 'awaiting-browser' }))
-      return 'awaiting-browser';
-    if (state.matches('authenticating')) return 'authenticating';
-    const value = state.value;
-    if (typeof value !== 'string' || value === 'finished')
-      throw new Error('Unexpected login state');
-    return value;
   }
   private ports(): LoginMachineInput {
     return {
