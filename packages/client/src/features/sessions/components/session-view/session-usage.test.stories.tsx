@@ -15,8 +15,11 @@ const meta = {
     <SessionView state="open" {...idleSession} />
   ),
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 const contextLabel = 'Context window';
 
 const indicator = (
@@ -36,13 +39,16 @@ const indicator = (
   ),
   play: async ({ canvas, userEvent }) => {
     await settleViewport(width);
+
     if (!shown) {
       await expect(
         canvas.queryByRole('button', { name: contextLabel }),
       ).not.toBeInTheDocument();
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeVisible();
+
       return;
     }
+
     await userEvent.click(canvas.getByRole('button', { name: contextLabel }));
     const panel = within(document.body);
     await waitFor(() => expect(panel.getByText('/ 200k tokens')).toBeVisible());
@@ -57,20 +63,25 @@ export const MeasuredDesktop = indicator(
   { used: 34_000, size: 200_000 },
   true,
 );
+
 export const MeasuredPhone = indicator(
   layoutWidths.phone,
   { used: 34_000, size: 200_000 },
   true,
 );
+
 export const PartialDesktop = indicator(
   layoutWidths.wide,
   { used: 34_000, size: 200_000, scope: 'model-call' },
   false,
 );
+
 export const PartialPhone = indicator(
   layoutWidths.phone,
   { used: 34_000, size: 200_000, scope: 'model-call' },
   false,
 );
+
 export const MissingDesktop = indicator(layoutWidths.wide, undefined, false);
+
 export const MissingPhone = indicator(layoutWidths.phone, undefined, false);

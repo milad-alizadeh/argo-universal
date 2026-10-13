@@ -30,8 +30,11 @@ const meta = {
     </Dialog>
   ),
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 type Layout = keyof typeof layoutWidths;
 
 const dialogName = { name: 'Rename the Project' };
@@ -40,6 +43,7 @@ const dialogName = { name: 'Rename the Project' };
 const closeButtonsAt: Record<Layout, number> = { phone: 0, tablet: 0, wide: 1 };
 
 const body = within(document.body);
+
 const rename = { name: 'Rename' };
 
 function opensAt(layout: Layout): Story {
@@ -60,6 +64,7 @@ function opensAt(layout: Layout): Story {
 }
 
 export const SheetOnPhone: Story = opensAt('phone');
+
 export const CentredOnDesktop: Story = opensAt('wide');
 
 // Tabbing past the last control comes back round inside the dialog, never to the page behind it.
@@ -78,6 +83,7 @@ function trapsFocusAt(layout: Layout): Story {
 }
 
 export const FocusStaysInSheet: Story = trapsFocusAt('phone');
+
 export const FocusStaysInDialog: Story = trapsFocusAt('wide');
 
 function returnsFocusAt(layout: Layout): Story {
@@ -94,7 +100,13 @@ function returnsFocusAt(layout: Layout): Story {
 }
 
 export const SheetReturnsFocus: Story = returnsFocusAt('phone');
+
 export const DialogReturnsFocus: Story = returnsFocusAt('wide');
+
+interface PointerCoords {
+  clientX: number;
+  clientY: number;
+}
 
 // Dragging the phone sheet down far enough closes it; a short drag lets it settle back open.
 function swipesDown(distance: number, staysOpen: boolean): Story {
@@ -105,10 +117,12 @@ function swipesDown(distance: number, staysOpen: boolean): Story {
       const dialog = await body.findByRole('dialog', dialogName);
       const title = within(dialog).getByText(dialogName.name);
       const { left, top } = title.getBoundingClientRect();
-      const at = (y: number): { clientX: number; clientY: number } => ({
+
+      const at = (y: number): PointerCoords => ({
         clientX: left + 4,
         clientY: top + 4 + y,
       });
+
       await userEvent.pointer([
         { keys: '[MouseLeft>]', target: title, coords: at(0) },
         { target: title, coords: at(distance / 2) },
@@ -123,6 +137,7 @@ function swipesDown(distance: number, staysOpen: boolean): Story {
 }
 
 export const SheetClosesOnSwipeDown: Story = swipesDown(200, false);
+
 export const SheetStaysOpenAfterShortDrag: Story = swipesDown(20, true);
 
 // Cancel is the dialog's own action: it closes the sheet or the centred dialog.
@@ -144,4 +159,5 @@ function cancelsAt(layout: Layout): Story {
 }
 
 export const SheetClosesOnCancel: Story = cancelsAt('phone');
+
 export const DialogClosesOnCancel: Story = cancelsAt('wide');

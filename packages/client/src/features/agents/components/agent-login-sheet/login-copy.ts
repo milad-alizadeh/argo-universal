@@ -1,6 +1,7 @@
 import type { AgentLoginSnapshot } from '@repo/contracts';
 
 type Copy = { title: string; message: string };
+
 export const loginCopy: Record<AgentLoginSnapshot['status'], Copy> = {
   'choose-method': {
     title: 'Sign in',
@@ -73,6 +74,7 @@ export const loginCopy: Record<AgentLoginSnapshot['status'], Copy> = {
       'The Server could not confirm that the login resources closed. Another sign-in is blocked.',
   },
 };
+
 export const ongoingLogin = (status: AgentLoginSnapshot['status']): boolean =>
   [
     'starting',

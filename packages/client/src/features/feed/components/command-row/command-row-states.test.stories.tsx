@@ -23,7 +23,9 @@ const meta = {
   component: CommandRow,
   args: { row: completedCommand },
 } satisfies Meta<typeof CommandRow>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function running(width: number): Story {
@@ -31,9 +33,11 @@ function running(width: number): Story {
     args: { row: runningCommand, now: commandNow },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+
       const row = canvas.getByRole('button', {
         name: commandTitle,
       });
+
       await expect(row).toBeVisible();
       await expect(row).toHaveTextContent('short git status 23s');
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
@@ -62,7 +66,9 @@ function running(width: number): Story {
     },
   };
 }
+
 export const RunningPhone = running(layoutWidths.phone);
+
 export const RunningWide = running(layoutWidths.wide);
 
 function agentParity(width: number): Story {
@@ -76,6 +82,7 @@ function agentParity(width: number): Story {
     ),
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+
       for (const label of [commandTitle, completedCommandTitle]) {
         const row = canvas.getByRole('button', { name: label });
         await expect(row).toBeVisible();
@@ -86,7 +93,9 @@ function agentParity(width: number): Story {
     },
   };
 }
+
 export const AgentParityPhone = agentParity(layoutWidths.phone);
+
 export const AgentParityWide = agentParity(layoutWidths.wide);
 
 function stopped(width: number): Story {
@@ -94,9 +103,11 @@ function stopped(width: number): Story {
     args: { row: stoppedCommand },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+
       const row = canvas.getByRole('button', {
         name: 'Wait 20 seconds then print done',
       });
+
       await expect(row).toBeVisible();
       await expect(row).toHaveTextContent('done after 1.5s');
       await userEvent.click(row);
@@ -110,12 +121,19 @@ function stopped(width: number): Story {
     },
   };
 }
+
 export const StoppedPhone = stopped(layoutWidths.phone);
+
 export const StoppedWide = stopped(layoutWidths.wide);
 
 export const RunningPhoneDark: Story = { ...RunningPhone, ...dark };
+
 export const RunningWideDark: Story = { ...RunningWide, ...dark };
+
 export const AgentParityPhoneDark: Story = { ...AgentParityPhone, ...dark };
+
 export const AgentParityWideDark: Story = { ...AgentParityWide, ...dark };
+
 export const StoppedPhoneDark: Story = { ...StoppedPhone, ...dark };
+
 export const StoppedWideDark: Story = { ...StoppedWide, ...dark };

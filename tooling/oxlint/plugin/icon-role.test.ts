@@ -2,6 +2,7 @@ import { iconRole } from './icon-role.ts';
 import { ruleTester } from './rule-tester.ts';
 
 const pixelSize = [{ messageId: 'iconRole' }];
+
 const nativeSymbol = [{ messageId: 'nativeSymbol' }];
 
 ruleTester.run('icon-role', iconRole, {

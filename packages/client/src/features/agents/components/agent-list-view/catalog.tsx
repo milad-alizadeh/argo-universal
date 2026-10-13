@@ -18,7 +18,11 @@ import {
 import type { CatalogLoad } from '../../state/catalog-sync';
 import { agentRows } from '../agent-list-item/agent-list-item';
 import { searchLabel } from '../agents-toolbar';
-import { catalogEmptySection, catalogLoadingSection } from './catalog-states';
+import {
+  catalogEmptySection,
+  catalogLoadingSection,
+  type LoadingSectionProps,
+} from './catalog-states';
 
 export type AgentCatalogProps = {
   catalog: CatalogLoad;
@@ -28,7 +32,9 @@ export type AgentCatalogProps = {
   onSearch: (search: string) => void;
   onOpenAgent: (agentId: string) => void;
 };
+
 type LoadedProps = AgentCatalogProps & { saved: AgentsCatalogOutput };
+
 type AgentGroup = { title: string; agents: AgentRowEntry[] };
 
 export const agentsCatalogTestId = 'agents-catalog';
@@ -61,23 +67,30 @@ const catalogSearch = (props: AgentCatalogProps): ListSearchBarProps => ({
  */
 function catalogSections(props: AgentCatalogProps): FieldListSection[] {
   const { catalog } = props;
+
   if (catalog.status !== 'loaded') return [loadingSection(props)];
+
   if (catalog.catalog.status === 'unavailable')
     return [
       loadingSection(props, platformName(catalog.catalog.serverPlatform)),
     ];
+
   return loadedSections({ ...props, saved: catalog.catalog });
 }
 
-const loadingSection = (
+function loadingSection(
   props: AgentCatalogProps,
   platform?: string,
-): FieldListSection =>
-  catalogLoadingSection({
-    ...props,
-    ...(platform ? { platform } : {}),
+): FieldListSection {
+  const section: LoadingSectionProps = {
     installed: filterAgents(props.installed, props),
-  });
+    onOpenAgent: props.onOpenAgent,
+  };
+
+  if (platform) section.platform = platform;
+
+  return catalogLoadingSection(section);
+}
 
 const registryGroups = (props: LoadedProps, platform: string): AgentGroup[] => [
   {
@@ -102,8 +115,10 @@ const agentGroups = (props: LoadedProps, platform: string): AgentGroup[] =>
 function loadedSections(props: LoadedProps): FieldListSection[] {
   const platform = platformName(props.saved.serverPlatform);
   const groups = agentGroups(props, platform);
+
   if (groups.length === 0)
     return [catalogEmptySection({ platform, search: props.search })];
+
   return groups.map(({ title, agents }) => ({
     title,
     rows: agentRows(agents, props.onOpenAgent),

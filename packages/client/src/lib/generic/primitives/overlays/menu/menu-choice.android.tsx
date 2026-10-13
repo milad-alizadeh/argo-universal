@@ -19,6 +19,7 @@ export type MenuChoiceProps = {
 
 export function MenuChoice(props: MenuChoiceProps): React.JSX.Element {
   const { colors } = useNativeTheme();
+
   return (
     <DropdownMenuItem
       modifiers={choiceModifiers(props)}
@@ -40,6 +41,7 @@ function choiceModifiers(props: MenuChoiceProps): ModifierConfig[] {
 
 function ChoiceLabel(props: { label: string }): React.JSX.Element {
   const { colors } = useNativeTheme();
+
   return (
     <DropdownMenuItem.Text>
       <Text

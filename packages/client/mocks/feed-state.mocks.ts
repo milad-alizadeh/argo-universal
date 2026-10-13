@@ -7,6 +7,7 @@ import {
   type FeedState,
   mergeNewestPage,
 } from '../src/features/feed/view/feed-state';
+
 type RowEvent = Exclude<FeedSubscribeOutput, { type: 'snapshot' | 'closed' }>;
 
 // What `feed.page` answers for a recorded Feed, as the Server pages it.
@@ -17,8 +18,10 @@ export function page(
 ): FeedPageOutput {
   const window = beforeRows(rows, before);
   const slice = window.slice(-limit);
+
   return pageWindow(window, slice, maxRevision);
 }
+
 function pageWindow(
   window: FeedState['rows'],
   slice: FeedPageOutput['rows'],
@@ -33,11 +36,13 @@ function pageWindow(
     staleCursor: false,
   };
 }
+
 function sliceCursor(rows: FeedState['rows']): number | null {
   return rows[0]?.position ?? null;
 }
 
 export const upsert = 'row.upsert' as const;
+
 export const rowEvents = (stream: readonly FeedSubscribeOutput[]): RowEvent[] =>
   stream.filter(
     (event): event is RowEvent =>
@@ -51,6 +56,7 @@ export function replay(
   return events.reduce((current, event) => {
     const result = applySubscriptionEvent(current, event);
     expect(result.missingRowId).toBeUndefined();
+
     return result.feed;
   }, state);
 }
@@ -65,16 +71,22 @@ function beforeRows(
 const streamedRecording = recordedFeedMocks.find(
   (mock) => mock.agent === 'agent-2' && mock.recording === 'markdown-answer',
 );
+
 if (!streamedRecording) throw new Error('No streamed recording');
+
 export const streamed = streamedRecording;
+
 const firstAppend = streamed.stream.findIndex(
   (event) => event.type === 'row.append',
 );
+
 export const beforeAppend = replay(
   mergeNewestPage(emptyFeed, page([], 0)),
   rowEvents(streamed.stream.slice(0, firstAppend)),
 );
+
 const appendedEvent = streamed.stream[firstAppend];
+
 if (appendedEvent?.type !== 'row.append')
   throw new Error('No append in streamed recording');
 

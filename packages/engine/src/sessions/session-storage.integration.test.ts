@@ -37,6 +37,7 @@ it('rejects a new Session whose insert is queued behind another retrying job', a
   const rejectedUpdate = Promise.withResolvers<void>();
   database.$client.function('record_rejected_update', () => {
     rejectedUpdate.resolve();
+
     return 0;
   });
   database.$client.exec(

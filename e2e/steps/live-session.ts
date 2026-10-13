@@ -5,6 +5,7 @@ import { phone, wide } from './frame';
 import { agentModelLabel, openNewSession, sendPrompt } from './new-session';
 
 export const liveTitle = 'Check the live list';
+
 export const attentionLabel = '1 Session needs attention';
 
 export function liveSessionRow(page: Page): Locator {
@@ -69,11 +70,14 @@ Then(
 );
 
 const chooseModelLabel = /^Model,/;
+
 const effortValueAttribute = 'aria-valuetext';
+
 async function chooseEffort(page: Page, effort: string): Promise<void> {
   const slider = page.getByRole('slider', { name: 'Effort' });
   await slider.focus();
   await slider.press('Home');
+
   if ((await slider.getAttribute(effortValueAttribute)) !== effort)
     await slider.press('End');
 }
@@ -100,6 +104,7 @@ When(
     await page.keyboard.press('Escape');
   },
 );
+
 Then(
   'the configuration shows model {string} and effort {string}',
   async ({ page }, model: string, effort: string): Promise<void> => {
@@ -115,6 +120,7 @@ async function expectModel(page: Page, model: string): Promise<void> {
     page.getByRole('button', { name: chooseModelLabel }),
   ).toContainText(model);
 }
+
 async function expectEffort(page: Page, effort: string): Promise<void> {
   await expect(page.getByRole('slider', { name: 'Effort' })).toHaveAttribute(
     effortValueAttribute,

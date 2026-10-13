@@ -34,6 +34,7 @@ type NoteProps = Pick<PlaceholderDetailViewProps, 'description'>;
 // A wide page keeps the note in a row's card, where the rows will go; a phone centres it.
 function PlaceholderNote(props: NoteProps): React.JSX.Element {
   if (useWide()) return <RowNote {...props} />;
+
   return <CentredNote {...props} />;
 }
 

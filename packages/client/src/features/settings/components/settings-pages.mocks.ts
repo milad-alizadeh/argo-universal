@@ -8,11 +8,14 @@ const [worktreeProject, localProject] = ((): [
   const worktree = newSessionProjects.find(
     (project) => project.checkoutChoice.type === 'worktree',
   );
+
   const local = newSessionProjects.find(
     (project) => project.checkoutChoice.type === 'main',
   );
+
   if (!worktree || !local)
     throw new Error('Recorded Projects need a worktree and a local checkout.');
+
   return [worktree, local];
 })();
 

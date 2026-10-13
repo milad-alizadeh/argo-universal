@@ -14,9 +14,11 @@ export function denial(width: number): Story {
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
       await settleViewport(width);
+
       const input = canvas.getByRole('textbox', {
         name: 'What should the Agent do instead?',
       });
+
       await expect(input).toHaveFocus();
       await expect(input).toHaveValue(denialFeedback);
       await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));

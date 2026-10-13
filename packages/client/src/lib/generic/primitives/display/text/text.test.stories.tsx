@@ -3,7 +3,9 @@ import { expect } from 'storybook/test';
 import { Text } from './text';
 
 const meta = { title: 'Tests/Text', tags: ['!dev'] } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const TypographyPreservesHeadingSemantics: Story = {

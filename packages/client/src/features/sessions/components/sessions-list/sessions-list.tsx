@@ -111,6 +111,7 @@ interface SessionsLegendListProps extends SessionsListProps {
 function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
   const contentContainerStyle = useContentStyle(useWide());
   const rows = useListRows(props);
+
   return (
     <ScrollFadeList
       {...listBehaviour}
@@ -126,6 +127,7 @@ function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
 
 export function SessionsList(props: SessionsListProps): React.JSX.Element {
   const scrolling = useScrolling();
+
   return (
     <SessionsListSurface scrolling={scrolling.scrolling}>
       <SessionsLegendList {...props} onScroll={scrolling.onScroll} />

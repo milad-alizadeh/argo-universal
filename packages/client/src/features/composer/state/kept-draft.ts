@@ -9,10 +9,13 @@ export interface KeptDrafts {
 // Draft text kept on this Device, written in order; a read waits for the writes before it.
 export function keptDraftsOnDevice(): KeptDrafts {
   let writes = Promise.resolve();
+
   const load = async (key: DraftKey): Promise<string> => {
     await writes;
+
     return (await AsyncStorage.getItem(key).catch(loadFailed)) ?? '';
   };
+
   const keep = (key: DraftKey, text: string): void => {
     writes = writes
       .then(() =>
@@ -20,13 +23,18 @@ export function keptDraftsOnDevice(): KeptDrafts {
       )
       .catch(keepFailed);
   };
+
   return { load, keep };
 }
-function loadFailed(error: unknown): null {
-  console.error('Could not load the Composer draft', error);
+
+function loadFailed(cause: unknown): null {
+  console.error('Could not load the Composer draft', cause);
+
   return null;
 }
-function keepFailed(error: unknown): void {
-  console.error('Could not keep the Composer draft', error);
+
+function keepFailed(cause: unknown): void {
+  console.error('Could not keep the Composer draft', cause);
 }
+
 export const keptDrafts = keptDraftsOnDevice();

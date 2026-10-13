@@ -5,6 +5,7 @@ import { releaseProcessGroup } from './process-group';
 const isAlive = (pid: number): boolean => {
   try {
     process.kill(pid, 0);
+
     return true;
   } catch {
     return false;
@@ -27,23 +28,29 @@ async function startOrphanedGroup(): Promise<{
     ],
     { detached: true, stdio: ['ignore', 'pipe', 'ignore'] },
   );
+
   const leaderPid = leader.pid;
+
   if (leaderPid === undefined) throw new Error('The leader did not start');
   onTestFinished((): void => {
     try {
       process.kill(-leaderPid, 'SIGKILL');
     } catch {}
   });
+
   const child = await new Promise<number>((resolve): void => {
     leader.stdout.once('data', (chunk: Buffer): void =>
       resolve(Number(chunk.toString().trim())),
     );
   });
+
   const exited = new Promise<void>((resolve): void => {
     leader.once('exit', (): void => resolve());
   });
+
   process.kill(leaderPid, 'SIGKILL');
   await exited;
+
   return { leader: leaderPid, child };
 }
 
@@ -57,6 +64,7 @@ it('releasing a dead Engine group kills the descendants it left running', async 
 it('releasing a group whose leader exited and left nothing reports it released', async () => {
   const leader = spawn(process.execPath, ['-e', ''], { detached: true });
   const pid = leader.pid;
+
   if (pid === undefined) throw new Error('The leader did not start');
   await new Promise<void>((resolve): void => {
     leader.once('exit', (): void => resolve());

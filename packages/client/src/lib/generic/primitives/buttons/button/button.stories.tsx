@@ -5,6 +5,7 @@ import { Button } from './button';
 import type { ButtonProps } from './button-props';
 
 const saveLabel = 'Save changes';
+
 const buttons: { state: string; props: ButtonProps }[] = [
   { state: 'Default', props: { label: saveLabel } },
   {
@@ -61,7 +62,9 @@ const pairs: { state: string; props: ButtonProps }[] = [
 ];
 
 const meta = { title: 'Design System/Primitives/Button' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function ButtonExamples(): React.JSX.Element {

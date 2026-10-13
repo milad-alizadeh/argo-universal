@@ -18,6 +18,7 @@ export function Picker<Value extends string>(
   const field = usePickerField(props);
   const inListItem = useInListItem();
   const row = props.appearance === 'row' || inListItem;
+
   return <PickerFrame {...props} {...field} row={row} />;
 }
 
@@ -40,6 +41,7 @@ function PickerLabel(
   props: Pick<FrameProps<string>, 'row' | 'label' | 'required'>,
 ): React.JSX.Element | null {
   if (props.row) return null;
+
   return (
     <Text role="body" aria-hidden>
       {pickerLabel(props)}

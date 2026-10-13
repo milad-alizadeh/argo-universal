@@ -12,6 +12,7 @@ import {
 } from './acp-session-destination';
 import { selectSessionOpening } from './acp-session-opening';
 import { AcpSessionRequests } from './acp-session-requests';
+
 export type { AcpLifetimeEvent } from './acp-session-destination';
 
 export type AcpSessionDependencies = {
@@ -19,9 +20,12 @@ export type AcpSessionDependencies = {
   resolveLaunch: ResolveAgentLaunch;
   projectPath: (id: string) => string;
 };
-const isWithdrawn = (error: unknown): boolean =>
-  error instanceof Error && error.name === 'AbortError';
+
+const isWithdrawn = (cause: unknown): boolean =>
+  cause instanceof Error && cause.name === 'AbortError';
+
 type SendLifetimeEvent = (event: AcpLifetimeEvent) => void;
+
 // Each opening gets its own destination; a replaced generation's late callbacks are dropped.
 export class AcpSessionLifetime {
   private readonly bound = Promise.withResolvers<SendLifetimeEvent>();
@@ -41,6 +45,7 @@ export class AcpSessionLifetime {
   public bind(sendBack: SendLifetimeEvent): () => void {
     this.attached = true;
     this.bound.resolve(sendBack);
+
     return () => {
       this.attached = false;
       void this.close().catch(() => {});
@@ -50,12 +55,14 @@ export class AcpSessionLifetime {
     sendBack: SendLifetimeEvent,
   ): AcpSessionDestination {
     const generation = this.generation;
+
     return createLifetimeDestination(this.requests, (event) => {
       if (this.attached && generation === this.generation) sendBack(event);
     });
   }
   public open(session: SessionData): Promise<AcpSessionLease> {
     this.opening ??= this.openOwned(session);
+
     return this.opening;
   }
   // Empty Sessions have no persisted Agent context; the failed lease is released by its owner.
@@ -65,14 +72,17 @@ export class AcpSessionLifetime {
     this.opening = this.openOwned(
       session.kept ? session : { ...session, vendorSessionId: null },
     );
+
     return this.opening;
   }
   public replace(session: SessionData): Promise<AcpSessionLease> {
     const lease = this.lease;
+
     if (!lease) throw new Error('No owned ACP Session to replace');
     this.requests.cancelAll();
     this.generation += 1;
     this.opening = this.replaceOwned(session, lease);
+
     return this.opening;
   }
   private async replaceOwned(
@@ -84,6 +94,7 @@ export class AcpSessionLifetime {
       destination: this.createSessionDestination(await this.bound.promise),
       signal: this.controller.signal,
     });
+
     return this.lease;
   }
   private async openOwned(session: SessionData): Promise<AcpSessionLease> {
@@ -96,6 +107,7 @@ export class AcpSessionLifetime {
       destination,
       signal: this.controller.signal,
     });
+
     return this.lease;
   }
   private resolveSessionAgentLaunch(
@@ -110,6 +122,7 @@ export class AcpSessionLifetime {
   }
   private requireDependencies(): AcpSessionDependencies {
     if (!this.dependencies) throw new Error('No configured ACP Agent launch');
+
     return this.dependencies;
   }
   public answerPermission(requestId: string, optionId: string | null): void {
@@ -129,6 +142,7 @@ export class AcpSessionLifetime {
     this.requests.cancelAll();
     this.controller.abort();
     this.closing ??= this.closeOwned();
+
     return this.closing;
   }
   private async closeOwned(): Promise<void> {

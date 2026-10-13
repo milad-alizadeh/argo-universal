@@ -12,6 +12,7 @@ import {
   mergeRouters,
 } from '../../rpc';
 import type { AgentInstallations } from './lifecycle/operations';
+
 export const createInstallRouter = routerFactory(
   (installations: AgentInstallations) =>
     mergeRouters(
@@ -19,6 +20,7 @@ export const createInstallRouter = routerFactory(
       installationRouter(installations),
     ),
 );
+
 const installationRouter = routerFactory((installations: AgentInstallations) =>
   router({
     install: publicProcedure

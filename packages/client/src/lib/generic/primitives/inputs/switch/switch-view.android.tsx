@@ -11,6 +11,7 @@ type SwitchColors = NonNullable<
 
 function Switch(props: SwitchProps): React.JSX.Element {
   const { colors } = useNativeTheme();
+
   return (
     <ControlHost matchContents>
       <ComposeSwitch

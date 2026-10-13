@@ -56,6 +56,7 @@ it('removal refuses a redirected managed root and leaves its selection and exter
 it('setup ownership refuses removal from another App until installation settles', async () => {
   const started = Promise.withResolvers<void>(),
     release = Promise.withResolvers<void>();
+
   const host = await startInstallEngine(undefined, {
     ...installationPorts,
     runTool: async (input) => {
@@ -63,10 +64,13 @@ it('setup ownership refuses removal from another App until installation settles'
         started.resolve();
         await release.promise;
       }
+
       return installationPorts.runTool(input);
     },
   });
+
   const { agentId } = host;
+
   try {
     await host.caller.agents.install({ agentId, version: '1.2.3' });
     await started.promise;
@@ -76,6 +80,7 @@ it('setup ownership refuses removal from another App until installation settles'
   } finally {
     release.resolve();
   }
+
   await waitForInstalledSelection(host);
   await host.createCaller().agents.remove({ agentId });
   await expect(

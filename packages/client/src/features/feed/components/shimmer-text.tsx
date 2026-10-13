@@ -15,7 +15,9 @@ import { Text } from '#lib/generic/primitives/display/text/text';
 
 // How many characters the bright band spans on each side of its centre.
 const bandHalfWidth = 8;
+
 const sweepMilliseconds = 1600;
+
 const shimmerOpacity = {
   plain: { resting: 0.45, highlight: 0.55 },
   emphasized: { resting: 0.7, highlight: 0.3 },
@@ -37,9 +39,12 @@ function useSweepPosition(
   const position = useSharedValue(-bandHalfWidth);
   useEffect(() => {
     position.set(-bandHalfWidth);
+
     if (!reducedMotion) position.set(sweep(characterCount));
+
     return (): void => cancelAnimation(position);
   }, [characterCount, reducedMotion, position]);
+
   return position;
 }
 
@@ -57,6 +62,7 @@ export function ShimmerText({
   const reducedMotion = useReducedMotion();
   const characters = Array.from(text, (character) => character);
   const position = useSweepPosition(characters.length, reducedMotion);
+
   return (
     <Text numberOfLines={1} selectable={false} className={className}>
       {reducedMotion ? text : shimmered({ characters, position, emphasized })}
@@ -73,6 +79,7 @@ interface ShimmeredProps {
 function shimmered(props: ShimmeredProps): React.JSX.Element[] {
   const { characters, position } = props;
   const opacity = shimmerOpacity[props.emphasized ? 'emphasized' : 'plain'];
+
   return withOccurrenceKeys(characters, (character) => character).map(
     ({ item: character, key }, index) => (
       <ShimmerCharacter
@@ -95,6 +102,7 @@ function useShimmerStyle(
 ): ReturnType<typeof useAnimatedStyle<{ opacity: number }>> {
   const { index, position } = props;
   const { resting, highlight } = props.opacity;
+
   return useAnimatedStyle(
     () => ({
       opacity:
@@ -113,6 +121,7 @@ interface ShimmerCharacterProps {
 
 function ShimmerCharacter(props: ShimmerCharacterProps): React.JSX.Element {
   const style = useShimmerStyle(props.shimmer);
+
   return (
     <Animated.Text accessible={false} selectable={false} style={style}>
       {props.character}

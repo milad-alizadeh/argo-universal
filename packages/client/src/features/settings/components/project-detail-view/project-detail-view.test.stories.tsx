@@ -21,7 +21,9 @@ const meta = {
   },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof ProjectDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ShowsTheFolderAndCheckout: Story = {

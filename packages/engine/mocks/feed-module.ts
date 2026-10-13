@@ -40,27 +40,33 @@ export const startFeedModuleTestHost = async ({
     .prepare('UPDATE session SET agent = ? WHERE id = ?')
     .run(agent, 'session-1');
   let identity = 0;
+
   const input = scriptedEngineInput(
     { ...scenario, sessionIds: ['vendor-1'] },
     agent,
   );
+
   const host = await startEngineTestHost({
     database,
     runtimeDirectory,
     createId: () => (++identity === 1 ? 'turn-1' : `feed-fixture-${identity}`),
     ...input,
   });
+
   host.openSessions.send({
     type: 'sessions.open',
     sessionId: 'session-1',
     agent,
   });
   await waitForAcpSessionIdle(host, 'session-1');
+
   const count = database.$client
     .prepare('SELECT count(*) AS count FROM feed_row WHERE session_id = ?')
     .get('session-1');
+
   if (typeof count?.count !== 'number')
     throw new Error('Stored Feed row count is missing');
+
   const feed = createActor(feedMachine, {
     parent: host.engine,
     input: {
@@ -85,6 +91,7 @@ export const startFeedModuleTestHost = async ({
         }),
     },
   }).start();
+
   return { ...host, feed, agent: input.agent };
 };
 
@@ -110,8 +117,10 @@ export const createFeedModuleCaller = (
 ): ReturnType<AppRouter['createCaller']> => {
   const input = feedModuleRouterInput(host, signal);
   const sources = createFeedSources(input);
+
   const findFeed = (sessionId: string): FeedActorRef | undefined =>
     sessionId === 'session-1' && feed ? feed : sources.findFeed(sessionId);
+
   return createAppRouter(
     createAppRouterDeps(input, { ...sources, findFeed }),
   ).createCaller({}, { signal });

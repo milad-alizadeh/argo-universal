@@ -11,6 +11,7 @@ import {
   selectedLaunchDefinition,
   type InstallSelection,
 } from './selection';
+
 type InstalledLaunch = {
   database: Database;
   home: string;
@@ -18,12 +19,14 @@ type InstalledLaunch = {
   selection: InstallSelection;
   project: { id: string; path: string };
 };
+
 const overrideLaunch = (
   launch: AgentLaunch,
   agent: ConfiguredAgent | undefined,
 ): AgentLaunch => {
   if (agent?.configuration.source !== 'registry') return launch;
   const { args, env } = agent.configuration.overrides;
+
   return {
     ...launch,
     args: [...launch.args, ...args],
@@ -33,12 +36,15 @@ const overrideLaunch = (
     },
   };
 };
+
 const launchForDefinition = (
   { agentId, project }: InstalledLaunch,
   definition: CustomAgentDefinition,
 ): AgentLaunch => createCustomAgentLaunch({ agentId, definition, project });
+
 const installedVersion = (selection: InstallSelection): string =>
   selection.packageVersion ?? selection.entry.version;
+
 const createInstalledLaunch = async (
   input: InstalledLaunch,
 ): Promise<AgentLaunch> => {
@@ -47,17 +53,22 @@ const createInstalledLaunch = async (
     input.agentId,
     input.selection,
   );
+
   const launch = launchForDefinition(input, definition);
   const version = installedVersion(input.selection);
   const configured = readConfiguredAgent(input.database, input.agentId);
+
   return overrideLaunch({ ...launch, version }, configured);
 };
+
 const selectLaunch = (
   source: { database: Database; home: string },
   input: Parameters<ResolveAgentLaunch>[0],
 ): Promise<AgentLaunch> => {
   const selection = readInstallSelection(source.database, input.agent);
+
   if (!selection) return resolveCustomAgentLaunch(source.database)(input);
+
   return createInstalledLaunch({
     ...source,
     agentId: input.agent,
@@ -65,6 +76,7 @@ const selectLaunch = (
     project: { id: input.projectId, path: input.projectPath },
   });
 };
+
 export const resolveInstalledAgentLaunch =
   (database: Database, home: string): ResolveAgentLaunch =>
   (input) =>

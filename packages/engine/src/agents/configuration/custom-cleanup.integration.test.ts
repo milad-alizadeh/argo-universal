@@ -8,15 +8,19 @@ import {
   gatedCustomAgentDefinition,
   startCustomAgentEngine,
 } from '#mocks/custom-agent';
+
 const cleanupFailure = 'process exit was not observed';
 
 it('failed probe cleanup keeps management owned until the real process exits', async () => {
   const host = await startCustomAgentEngine({ acp: {} });
+
   const registered = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registered.status !== 'ready') throw new Error(registered.failure);
   const marker = join(host.home, 'probe-pid');
+
   const definition = {
     ...customAgentDefinition,
     args: [
@@ -28,11 +32,13 @@ it('failed probe cleanup keeps management owned until the real process exits', a
     ],
     env: [{ name: 'ARGO_PROBE_EXIT_MARKER', value: marker }],
   };
+
   const pending = host.caller.agents.editCustom({
     agentId: registered.agentId,
     definition,
   });
-  const failure = pending.catch((error: unknown) => error);
+
+  const failure = pending.catch((cause: unknown) => cause);
   await expect
     .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
     .toMatch(/^\d+$/);
@@ -53,6 +59,7 @@ it('failed probe cleanup keeps management owned until the real process exits', a
     .poll(async () => {
       try {
         await host.caller.agents.remove({ agentId: registered.agentId });
+
         return true;
       } catch {
         return false;
@@ -63,19 +70,23 @@ it('failed probe cleanup keeps management owned until the real process exits', a
 
 it('shutdown waits for retained setup cleanup after the probe reports failure', async () => {
   const host = await startCustomAgentEngine({ acp: {} });
+
   const registered = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registered.status !== 'ready') throw new Error(registered.failure);
   const marker = join(host.home, 'probe-pid');
   const release = join(host.home, 'probe-release');
   onTestFinished(() => writeFile(release, 'release'));
+
   const editing = host.caller.agents
     .editCustom({
       agentId: registered.agentId,
       definition: gatedCustomAgentDefinition(marker, release),
     })
-    .catch((error: unknown) => error);
+    .catch((cause: unknown) => cause);
+
   await expect
     .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
     .toMatch(/^\d+$/);
@@ -83,6 +94,7 @@ it('shutdown waits for retained setup cleanup after the probe reports failure', 
   expect(await editing).toMatchObject({
     message: expect.stringContaining(cleanupFailure),
   });
+
   try {
     expect(
       await Promise.race([
@@ -102,16 +114,20 @@ it('shared readiness cleanup failure fences management until the process exits',
   const release = join(host.home, 'probe-release');
   onTestFinished(() => writeFile(release, 'release'));
   await writeFile(release, 'release');
+
   const registered = await host.caller.agents.registerCustom(
     gatedCustomAgentDefinition(marker, release),
   );
+
   if (registered.status !== 'ready') throw new Error(registered.failure);
   await rm(release);
   await rm(marker);
   const input = { agentId: registered.agentId };
+
   const checking = host.caller.agents
     .check(input)
-    .catch((error: unknown) => error);
+    .catch((cause: unknown) => cause);
+
   await expect
     .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
     .toMatch(/^\d+$/);
@@ -121,10 +137,12 @@ it('shared readiness cleanup failure fences management until the process exits',
       process.kill(pid, 'SIGKILL');
     } catch {}
   });
+
   const other = host
     .createCaller()
     .agents.check(input)
-    .catch((error: unknown) => error);
+    .catch((cause: unknown) => cause);
+
   expect(await checking).toMatchObject({
     message: expect.stringContaining(cleanupFailure),
   });

@@ -21,6 +21,7 @@ import { $closest } from './rich-textarea-selection';
 
 // What the format bar applies: a mark markdown writes, a link, or a block.
 export type BlockFormat = 'bullet' | 'number' | 'quote';
+
 export type Format = MarkdownMark | 'link' | BlockFormat;
 
 function isMarkFormat(format: Format): format is MarkdownMark {
@@ -29,12 +30,14 @@ function isMarkFormat(format: Format): format is MarkdownMark {
 
 function $listFormat(node: LexicalNode): BlockFormat | undefined {
   const list = $closest(node, $isListNode);
+
   return list && (list.getListType() === 'number' ? 'number' : 'bullet');
 }
 
 function $blockFormat(selection: RangeSelection): BlockFormat | undefined {
   const anchor = selection.anchor.getNode();
   const quoted = $isQuoteNode(anchor.getTopLevelElement());
+
   return $listFormat(anchor) ?? (quoted ? 'quote' : undefined);
 }
 
@@ -42,11 +45,13 @@ function $blockFormat(selection: RangeSelection): BlockFormat | undefined {
 export function $appliedFormats(selection: RangeSelection): Format[] {
   const marks = markdownMarks.filter((mark) => selection.hasFormat(mark));
   const block = $blockFormat(selection);
+
   return block ? [...marks, block] : marks;
 }
 
 function $setBlocks(createBlock: () => ElementNode): void {
   const selection = $getSelection();
+
   if ($isRangeSelection(selection)) $setBlocksType(selection, createBlock);
 }
 

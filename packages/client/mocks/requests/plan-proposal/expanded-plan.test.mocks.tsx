@@ -17,38 +17,49 @@ export function expanded(width: number): Story {
     play: async ({ userEvent }) => {
       const canvas = within(document.body);
       await settleViewport(width);
+
       if (width === layoutWidths.phone) {
         await checkExpandedSheet(canvas, userEvent);
+
         return;
       }
+
       const collapsedHeight = canvas
         .getByRole('region', { name: documentLabel })
         .getBoundingClientRect().height;
+
       await userEvent.click(
         canvas.getByRole('button', { name: expandPlanLabel }),
       );
+
       const dialog = await within(document.body).findByRole('dialog', {
         name: expandedPlanLabel,
       });
+
       const panel = within(dialog);
+
       const scroll = panel.getByRole('region', {
         name: documentLabel,
       });
+
       await waitFor(() =>
         expect(scroll.getBoundingClientRect().height).toBeGreaterThan(
           collapsedHeight,
         ),
       );
+
       if (width === layoutWidths.wide) {
         const main = canvas
           .getByTestId('plan-proposal-main-content')
           .getBoundingClientRect();
+
         const expandedBounds = dialog.getBoundingClientRect();
         await expect(expandedBounds.left).toBeGreaterThanOrEqual(main.left);
         await expect(expandedBounds.right).toBeLessThanOrEqual(main.right);
         await expect(expandedBounds.top).toBeGreaterThanOrEqual(main.top);
         await expect(expandedBounds.bottom).toBeLessThanOrEqual(main.bottom);
       }
+
       const approve = panel.getByRole('button', { name: 'Approve' });
       scroll.scrollTop = scroll.scrollHeight;
       await waitFor(() => expect(scroll.scrollTop).toBeGreaterThan(0));

@@ -5,6 +5,7 @@ it('removes a closed Session and resumes its stored Agent identity on the next p
   const { caller, openings, resumes, prompts } = await startSessionJourney();
   const { sessionId } = await caller.session.new(newSession);
   const opening = openings[0];
+
   if (!opening) throw new Error('No opened Agent Session');
   await expect.poll(() => prompts).toHaveLength(1);
   await caller.session.close({ sessionId });

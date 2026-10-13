@@ -24,9 +24,11 @@ const normalizedStories = [
 declare global {
   var view: View;
   var STORIES: typeof normalizedStories;
+
   var STORYBOOK_WEBSOCKET:
     | { host?: string; port?: number; secured?: boolean }
     | undefined;
+
   var FEATURES: Features;
 }
 

@@ -16,7 +16,9 @@ export interface PullRequestChecksProps {
 type ChecksState = 'failing' | 'running' | 'passed';
 
 const ringRadius = 5.5;
+
 const ringCircumference = 2 * Math.PI * ringRadius;
+
 const ringCircle = {
   cx: 7,
   cy: 7,
@@ -46,11 +48,13 @@ function checksState({
   running,
 }: PullRequestChecksProps): ChecksState {
   if (failing > 0) return 'failing';
+
   return running > 0 ? 'running' : 'passed';
 }
 
 function stateText(checks: PullRequestChecksProps, state: ChecksState): string {
   if (state === 'failing') return `${checks.failing} failing`;
+
   return state === 'running' ? `${checks.running} running` : 'passed';
 }
 
@@ -83,6 +87,7 @@ function RingArc({ length, ...circle }: RingArcProps): React.JSX.Element {
 
 function SplitRing({ checks, state }: ChecksRingProps): React.JSX.Element {
   const passedArc = arc(checks.passed, checks.total);
+
   return (
     <Svg width="100%" height="100%" viewBox="0 0 14 14">
       <ThemedCircle {...ringCircle} strokeClassName="bg-border" />
@@ -99,6 +104,7 @@ function SplitRing({ checks, state }: ChecksRingProps): React.JSX.Element {
 function Ring(props: ChecksRingProps): React.JSX.Element {
   if (props.state === 'passed')
     return <Icon role="secondary" name="passed" className="text-success" />;
+
   return (
     <IconSlot role="secondary">
       <SplitRing {...props} />
@@ -114,6 +120,7 @@ interface ChecksSummaryProps {
 
 function describeChecks(checks: PullRequestChecksProps): ChecksSummaryProps {
   const state = checksState(checks);
+
   return {
     summary: `Checks ${checks.passed}/${checks.total}`,
     label: stateText(checks, state),
@@ -139,6 +146,7 @@ export function PullRequestChecks(
   checks: PullRequestChecksProps,
 ): React.JSX.Element {
   const description = describeChecks(checks);
+
   return (
     <View
       accessible

@@ -49,6 +49,7 @@ export interface SymbolImage {
 }
 
 const pendingImages = new Map<string, Promise<SymbolImage | null>>();
+
 const loadedImages = new Map<string, SymbolImage | null>();
 
 function symbolKey({ name, pointSize }: SymbolImageRequest): string {
@@ -59,6 +60,7 @@ async function measureImage(url: string): Promise<SymbolImage> {
   const image = new Image();
   image.src = url;
   await image.decode();
+
   return { url, width: image.naturalWidth, height: image.naturalHeight };
 }
 
@@ -77,13 +79,17 @@ function loadImage(
   request: SymbolImageRequest,
 ): Promise<SymbolImage | null> {
   const key = symbolKey(request);
+
   const pending =
     pendingImages.get(key) ??
     renderImage(render, request).then((image) => {
       loadedImages.set(key, image);
+
       return image;
     });
+
   pendingImages.set(key, pending);
+
   return pending;
 }
 
@@ -95,6 +101,7 @@ function deliverUntilCancelled<T>(
   void pending.then((value) => {
     if (current) deliver(value);
   });
+
   return (): void => {
     current = false;
   };
@@ -113,5 +120,6 @@ export function useSymbolImage(
       deliverUntilCancelled(loadImage(render, { name, pointSize }), setImage),
     [render, name, pointSize],
   );
+
   return loadedImages.has(key) ? loadedImages.get(key) : image;
 }

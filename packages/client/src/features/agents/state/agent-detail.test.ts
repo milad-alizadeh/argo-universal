@@ -18,6 +18,7 @@ describe('installedAgents', () => {
       [{ ...probed, availability: 'available' }],
       [{ id: iconAgent.id, name: 'Mine' }],
     );
+
     expect(rows).toEqual([
       expect.objectContaining({ status: 'ready', custom: true }),
     ]);

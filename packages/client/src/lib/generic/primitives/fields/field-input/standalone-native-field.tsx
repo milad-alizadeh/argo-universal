@@ -10,6 +10,7 @@ export function StandaloneNativeField({
   ...props
 }: StandaloneFieldInputProps & { children: ReactNode }): ReactElement {
   if (useWide()) return <WebField {...props} />;
+
   return (
     <StandaloneField {...props}>
       <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>

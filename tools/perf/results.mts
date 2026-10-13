@@ -8,11 +8,17 @@ import { hotspots, trace } from './trace.mts';
 
 // PERF_LABEL names the run (before, after-…); PERF_CPU lists CPU slowdowns; PERF_RUNS repeats each measurement; PERF_TRACE=1 saves one trace and PERF_PROFILE=1 one CPU profile per interaction; PERF_ONLY picks interactions; PERF_OUT is where results go.
 const label = process.env.PERF_LABEL ?? 'current';
+
 export const cpuRates = (process.env.PERF_CPU ?? '1,4').split(',').map(Number);
+
 const runs = Number(process.env.PERF_RUNS ?? 3);
+
 const tracing = process.env.PERF_TRACE === '1';
+
 const profiling = process.env.PERF_PROFILE === '1';
+
 const only = process.env.PERF_ONLY?.split(',');
+
 const outputDirectory =
   process.env.PERF_OUT ?? path.join(os.tmpdir(), 'argo-perf');
 
@@ -49,6 +55,7 @@ async function traceOnce({
     output(`${label}-${interaction}-${cpu}x.trace.json`),
     recorded.raw,
   );
+
   return hotspots(recorded.events);
 }
 
@@ -70,8 +77,10 @@ async function samples({
   once,
 }: Measurement): Promise<Sample[]> {
   const measured: Sample[] = [];
+
   for (let index = 0; index < runs; index += 1)
     measured.push(await measure(page, session, once));
+
   return measured;
 }
 
@@ -85,6 +94,7 @@ async function extras(
   measurement: Measurement,
 ): Promise<Pick<Result, 'hotspots'>> {
   if (profiling) await profileOnce(measurement);
+
   return tracing ? { hotspots: await traceOnce(measurement) } : {};
 }
 
@@ -96,6 +106,7 @@ export async function run(measurement: Measurement): Promise<Result> {
   const measured = await samples(measurement);
   const more = await extras(measurement);
   await session.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+
   return {
     interaction,
     cpu,
@@ -106,9 +117,21 @@ export async function run(measurement: Measurement): Promise<Result> {
 }
 
 const fixed = (value: number, digits: number): string => value.toFixed(digits);
-type Row = Record<string, string | number>;
 
-const frameColumns = (value: Sample): Row => ({
+type FrameColumns = {
+  fps: string;
+  p95: string;
+  max: string;
+  dropped: number;
+  ccDropped: number;
+};
+
+type CostColumns = { layoutMs: string; styleMs: string; scriptMs: string };
+
+// One printed line of the medians table.
+type Row = { interaction: string; cpu: string } & FrameColumns & CostColumns;
+
+const frameColumns = (value: Sample): FrameColumns => ({
   fps: fixed(value.fps, 1),
   p95: fixed(value.p95Ms, 1),
   max: fixed(value.maxMs, 1),
@@ -116,7 +139,7 @@ const frameColumns = (value: Sample): Row => ({
   ccDropped: value.compositorDropped,
 });
 
-const costColumns = (value: Sample): Row => ({
+const costColumns = (value: Sample): CostColumns => ({
   layoutMs: fixed(value.layoutMs, 0),
   styleMs: fixed(value.styleMs, 0),
   scriptMs: fixed(value.scriptMs, 0),

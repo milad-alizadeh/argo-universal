@@ -13,7 +13,9 @@ const meta = {
     onArchivedChange.mockClear();
   },
 } satisfies Meta<typeof SessionsFilterMenu>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ChoosesArchived: Story = {

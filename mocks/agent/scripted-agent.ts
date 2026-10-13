@@ -17,6 +17,7 @@ import {
 import { ScriptedSessions } from './scripted-sessions.ts';
 
 type ConnectedScript = { connection: AgentConnection; wire: ScriptedWire };
+
 class ScriptedAgent {
   private readonly scenario: ScriptedScenario;
   private readonly nextSessionId: () => string;
@@ -31,6 +32,7 @@ class ScriptedAgent {
   }
   private createScript(wire: ScriptedWire): Script {
     const sessions = new ScriptedSessions(this.scenario.configOptions ?? []);
+
     return {
       scenario: this.scenario,
       sessions,
@@ -49,15 +51,19 @@ class ScriptedAgent {
     const shared = shareScriptedOutput(output);
     const closed = Promise.withResolvers<void>();
     const wire = { writeRaw: shared.writeRaw, closed: closed.promise };
+
     const connection = serveScript(agent(), this.createScript(wire)).connect(
       ndJsonStream(shared.stream, input),
     );
+
     void connection.closed.then(() => closed.resolve());
     this.connected = { connection, wire };
+
     return connection;
   }
   private requireConnection(): ConnectedScript {
     if (!this.connected) throw new Error('Scripted Agent is not connected');
+
     return this.connected;
   }
   public async play(
@@ -83,6 +89,7 @@ export const createScriptedAgent = (
   nextSessionId = (): string => `${process.pid}:${crypto.randomUUID()}`,
 ): Pick<ScriptedAgent, 'connect' | 'play' | 'sendRaw'> => {
   const scripted = new ScriptedAgent(scenario, nextSessionId);
+
   return {
     connect: (output, input) => scripted.connect(output, input),
     play: (steps, sessionId) => scripted.play(steps, sessionId),

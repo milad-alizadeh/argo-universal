@@ -8,6 +8,7 @@ const choices = [
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
 ] as const;
+
 type Appearance = (typeof choices)[number]['value'];
 
 function Example({
@@ -16,6 +17,7 @@ function Example({
   disabled?: boolean;
 }): React.JSX.Element {
   const [value, setValue] = useState<Appearance>('system');
+
   const props = {
     accessibilityLabel: 'Theme',
     choices,
@@ -23,13 +25,16 @@ function Example({
     onValueChange: setValue,
     disabled,
   };
+
   return <SegmentedControl {...props} />;
 }
 
 const meta = {
   title: 'Design System/Primitives/SegmentedControl',
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

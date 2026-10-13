@@ -12,6 +12,7 @@ type IgnoredCancelOptions = {
   resume?: Omit<ScriptedResponse<'session/resume'>, 'requests'>;
   autoExit?: boolean;
 };
+
 type IgnoredCancelEngine = {
   host: Awaited<ReturnType<typeof startAcpEngine>>;
   cancels: CancelNotification[];
@@ -21,6 +22,7 @@ type IgnoredCancelEngine = {
   cancelled: PromiseWithResolvers<CancelNotification>;
   finishSibling: PromiseWithResolvers<void>;
 };
+
 export const startIgnoredCancelEngine = async (
   agentId: string,
   options: IgnoredCancelOptions = {},
@@ -31,6 +33,7 @@ export const startIgnoredCancelEngine = async (
   const prompts: PromptRequest[] = [];
   const cancelled = Promise.withResolvers<CancelNotification>();
   const finishSibling = Promise.withResolvers<void>();
+
   const host = await startAcpEngine(
     {
       steps: [],
@@ -85,13 +88,16 @@ export const startIgnoredCancelEngine = async (
     undefined,
     agentId,
   );
+
   return { host, cancels, closes, resumes, prompts, cancelled, finishSibling };
 };
+
 export const waitForIgnoredCancelTool = async (
   host: IgnoredCancelEngine['host'],
   sessionId: string,
 ): Promise<void> => {
   const events = await host.caller.feed.subscribe({ sessionId, after: null });
+
   for await (const event of events)
     if (
       event.type === 'row.upsert' &&

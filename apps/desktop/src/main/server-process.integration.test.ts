@@ -21,7 +21,9 @@ const writeServerJson = (pid: number): ServerAddress => {
     version: '0.9.0',
     startedAt: '2026-10-03T09:00:00.000Z',
   };
+
   writeFileSync(join(home, 'server.json'), JSON.stringify(address));
+
   return address;
 };
 
@@ -58,6 +60,7 @@ describe('spawnSupervisor', (): void => {
     // No src/main.ts here, so Node exits at once.
     const reports: string[] = [];
     let reportsOnReturn: string[] = [];
+
     const exited = new Promise<void>((resolve): void => {
       spawnSupervisor(
         { home, serverDirectory: home },
@@ -84,6 +87,7 @@ describe('spawnSupervisor', (): void => {
   it('stops reporting once the returned function runs', async (): Promise<void> => {
     const reports: string[] = [];
     let pid = 0;
+
     const stopListening = spawnSupervisor(
       { home, serverDirectory: home },
       {
@@ -93,6 +97,7 @@ describe('spawnSupervisor', (): void => {
         exited: (reason): number => reports.push(reason),
       },
     );
+
     stopListening();
 
     await expect.poll((): boolean => isRunning(pid)).toBe(false);

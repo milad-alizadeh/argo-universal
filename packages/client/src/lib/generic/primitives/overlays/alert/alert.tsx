@@ -73,6 +73,7 @@ function AlertButton(
   props: Pick<AlertProps, 'onOpenChange'> & { action: AlertAction },
 ): React.JSX.Element {
   const { action } = props;
+
   return (
     <Button
       label={action.label}

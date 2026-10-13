@@ -31,6 +31,7 @@ async function addScriptedAgent(page: Page, name: string): Promise<void> {
   await page
     .getByRole('textbox', { name: 'Executable', exact: true })
     .fill(scriptedAgent.executable);
+
   for (const argument of scriptedAgent.args) await addArgument(page, argument);
   await page.getByRole('button', { name: 'Add Agent' }).click();
 }

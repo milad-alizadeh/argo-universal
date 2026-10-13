@@ -15,6 +15,7 @@ import {
 type UnaddressedPlanInput = ContentAssemblyInput & {
   update: Extract<SessionNotification['update'], { sessionUpdate: 'plan' }>;
 };
+
 const recoverUnaddressedPlanRow = (
   input: ContentAssemblyInput,
 ): PlanUpdate | undefined =>
@@ -22,30 +23,38 @@ const recoverUnaddressedPlanRow = (
     Object.values(input.feed.rows),
     input.acpSessionId,
   ) ?? input.findUnaddressedPlan?.(input.acpSessionId);
+
 const readUnaddressedPlanRow = (
   input: ContentAssemblyInput,
 ): PlanUpdate | undefined => {
   const pointer = input.unaddressedPlan;
+
   const row = pointer
     ? input.findRow(pointer.rowId)
     : recoverUnaddressedPlanRow(input);
+
   if (!row) return undefined;
+
   return retainMatchingUnaddressedPlan(input, row);
 };
+
 const retainMatchingUnaddressedPlan = (
   input: ContentAssemblyInput,
   row: SessionUpdate,
 ): PlanUpdate | undefined => {
   if (!isUnaddressedPlan(row, input.acpSessionId)) return undefined;
   input.feed.rows[row.id] = row;
+
   return row;
 };
+
 const allocateLocalPlanRowId = (input: ContentAssemblyInput): string =>
   createScopedFeedRowId({
     acpSessionId: input.acpSessionId,
     kind: 'plan_update',
     localPosition: input.feed.nextPosition,
   });
+
 const createUnaddressedPlanChange = (
   input: UnaddressedPlanInput,
   id: string,
@@ -61,10 +70,12 @@ const createUnaddressedPlanChange = (
     createPlanContentMetadata(input, input.acpSessionId),
   ),
 });
+
 export const assembleUnaddressedPlan = (
   input: UnaddressedPlanInput,
 ): AssembledContent => {
   const id = readUnaddressedPlanRow(input)?.id ?? allocateLocalPlanRowId(input);
+
   return {
     change: createUnaddressedPlanChange(input, id),
     unaddressedPlan: { acpSessionId: input.acpSessionId, rowId: id },

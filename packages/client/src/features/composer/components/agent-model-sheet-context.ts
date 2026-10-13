@@ -21,25 +21,31 @@ interface PublishedStore<Value> {
   current: () => Value | undefined;
   use: () => Value | undefined;
 }
+
 function subscribeTo(
   listeners: Set<() => void>,
 ): (listener: () => void) => () => void {
   return (listener) => {
     listeners.add(listener);
+
     return (): void => {
       listeners.delete(listener);
     };
   };
 }
+
 function createStore<Value>(): PublishedStore<Value> {
   let latest: Value | undefined;
   const listeners = new Set<() => void>();
   const subscribe = subscribeTo(listeners);
   const current = (): Value | undefined => latest;
+
   const publish = (value: Value): void => {
     latest = value;
+
     for (const listener of listeners) listener();
   };
+
   return {
     publish,
     current,
@@ -48,5 +54,7 @@ function createStore<Value>(): PublishedStore<Value> {
 }
 
 const configurationStore = createStore<ComposerConfigurationProps>();
+
 export const publishAgentModelConfiguration = configurationStore.publish;
+
 export const useAgentModelConfiguration = configurationStore.use;

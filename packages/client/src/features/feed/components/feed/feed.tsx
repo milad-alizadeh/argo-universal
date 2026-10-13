@@ -49,10 +49,12 @@ function useFeedEntries({
   liveToolCall,
 }: FeedProps): Pick<FeedListProps, 'entries' | 'newestKey'> {
   const drawnItems = useMemo(() => items.filter(isDrawnFeedItem), [items]);
+
   const entries = useMemo(
     () => withLiveHeader(drawnItems, liveHeader, liveToolCall),
     [drawnItems, liveHeader, liveToolCall],
   );
+
   return { entries, newestKey: newestKeyOf(drawnItems) };
 }
 
@@ -62,6 +64,8 @@ export function Feed({
   ...props
 }: FeedProps): React.JSX.Element {
   const feed = useFeedEntries(props);
+
   if (!feed.entries.length) return <EmptyFeed branch={checkoutBranch} />;
+
   return <FeedList {...props} {...feed} />;
 }

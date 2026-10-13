@@ -4,38 +4,53 @@ import {
   registrySchema,
 } from '@repo/contracts/registry-schema';
 import { createRejectionCounter } from '@repo/machine-log';
-import Ajv from 'ajv';
+import Ajv, { type ValidateFunction } from 'ajv';
 import addFormats from 'ajv-formats';
+import { z } from 'zod';
+
+type RegistryRejections = ReturnType<typeof createRejectionCounter>;
+
+export type RegistryReader = {
+  parse(text: string): ACPAgentRegistry;
+  parseAgent(metadata: string | null): ACPAgent;
+  count(): number;
+  reject(message: string, cause?: unknown): never;
+};
 
 const validator = addFormats(new Ajv({ strict: false })).addSchema(
   registryAgentSchema,
 );
+
 const acceptsRegistry = validator.compile<ACPAgentRegistry>(registrySchema);
+
 const acceptsAgent = validator.compile<ACPAgent>(registryAgentSchema);
-export type RegistryReader = ReturnType<typeof createRegistryReader>;
-export function createRegistryReader(): {
-  parse(value: unknown): ACPAgentRegistry;
-  parseAgent(value: unknown): ACPAgent;
-  count(): number;
-  reject(message: string, details?: unknown): never;
-} {
+
+// Registry Agent metadata already decoded from a stored JSON document.
+export const RegistryAgent = z.custom<ACPAgent>((value) => acceptsAgent(value));
+
+export function createRegistryReader(): RegistryReader {
   const rejections = createRejectionCounter('Agent registry');
+
   return {
-    parse: (value): ACPAgentRegistry => parseRegistry(value, rejections),
-    parseAgent: (value): ACPAgent => parseRegistryAgent(value, rejections),
+    parse: (text): ACPAgentRegistry => parseRegistry(text, rejections),
+    parseAgent: (metadata): ACPAgent =>
+      parseRegistryAgent(metadata, rejections),
     count: (): number => rejections.count(),
-    reject: (message, details): never =>
-      rejectRegistryValue(rejections, message, details),
+    reject: (message, cause): never =>
+      rejectRegistryValue(rejections, message, cause),
   };
 }
 
 function parseRegistryAgent(
-  value: unknown,
-  rejections: ReturnType<typeof createRejectionCounter>,
+  metadata: string | null,
+  rejections: RegistryRejections,
 ): ACPAgent {
-  const decoded =
-    typeof value === 'string' ? decodeRegistryJson(value, rejections) : value;
-  if (acceptsAgent(decoded)) return decoded;
+  const agent =
+    metadata === null
+      ? undefined
+      : decodeRegistryJson(metadata, acceptsAgent, rejections);
+
+  if (agent) return agent;
   rejections.report(
     'Rejected malformed stored Agent metadata',
     acceptsAgent.errors,
@@ -44,13 +59,12 @@ function parseRegistryAgent(
 }
 
 function parseRegistry(
-  value: unknown,
-  rejections: ReturnType<typeof createRejectionCounter>,
+  text: string,
+  rejections: RegistryRejections,
 ): ACPAgentRegistry {
-  const decoded =
-    typeof value === 'string' ? decodeRegistryJson(value, rejections) : value;
-  if (acceptsRegistry(decoded))
-    return requireUniqueRegistryAgents(decoded, rejections);
+  const registry = decodeRegistryJson(text, acceptsRegistry, rejections);
+
+  if (registry) return requireUniqueRegistryAgents(registry, rejections);
   rejections.report(
     'Rejected malformed registry metadata',
     acceptsRegistry.errors,
@@ -60,10 +74,12 @@ function parseRegistry(
 
 function requireUniqueRegistryAgents(
   registry: ACPAgentRegistry,
-  rejections: ReturnType<typeof createRejectionCounter>,
+  rejections: RegistryRejections,
 ): ACPAgentRegistry {
   const identities = new Set(registry.agents.map(({ id }) => id));
+
   if (identities.size === registry.agents.length) return registry;
+
   return rejectRegistryValue(
     rejections,
     'Registry contains duplicate Agent identities',
@@ -71,12 +87,16 @@ function requireUniqueRegistryAgents(
   );
 }
 
-function decodeRegistryJson(
+// Decodes registry JSON and returns it only when it matches the schema.
+function decodeRegistryJson<Value>(
   text: string,
-  rejections: ReturnType<typeof createRejectionCounter>,
-): unknown {
+  accepts: ValidateFunction<Value>,
+  rejections: RegistryRejections,
+): Value | undefined {
   try {
-    return JSON.parse(text);
+    const decoded = JSON.parse(text);
+
+    return accepts(decoded) ? decoded : undefined;
   } catch (error) {
     rejections.report('Rejected malformed registry JSON', error);
     throw new Error('Registry JSON is malformed');
@@ -84,10 +104,10 @@ function decodeRegistryJson(
 }
 
 function rejectRegistryValue(
-  rejections: ReturnType<typeof createRejectionCounter>,
+  rejections: RegistryRejections,
   message: string,
-  details: unknown,
+  cause: unknown,
 ): never {
-  rejections.report(message, details);
+  rejections.report(message, cause);
   throw new Error(message);
 }

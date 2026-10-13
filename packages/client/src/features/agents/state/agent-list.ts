@@ -2,20 +2,23 @@ import type { AgentInfo, AgentsCatalogOutput } from '@repo/contracts';
 import { type AgentRowEntry, availabilityStatus } from './agent-status';
 
 type CatalogAgent = AgentsCatalogOutput['agents'][number];
+
 interface CustomAgentName {
   id: string;
   name: string;
 }
-const platformNames: Record<string, string> = {
-  darwin: 'macOS',
-  linux: 'Linux',
-  windows: 'Windows',
-};
+
+const platformNames = new Map([
+  ['darwin', 'macOS'],
+  ['linux', 'Linux'],
+  ['windows', 'Windows'],
+]);
 
 // "darwin-aarch64" reads as "macOS"; an unknown platform keeps its own name.
 export function platformName(serverPlatform: string): string {
   const [system = serverPlatform] = serverPlatform.split('-');
-  return platformNames[system] ?? serverPlatform;
+
+  return platformNames.get(system) ?? serverPlatform;
 }
 
 const fromCatalog = ({ id, entry }: CatalogAgent): AgentRowEntry => ({
@@ -31,6 +34,7 @@ const withEntry = (
   entry?: CatalogAgent['entry'],
 ): AgentRowEntry => {
   if (!entry) return agent;
+
   return {
     description: entry.description,
     ...agent,
@@ -44,6 +48,7 @@ export function withRegistryEntries(
   catalog: AgentsCatalogOutput,
 ): AgentRowEntry[] {
   const entries = new Map(catalog.agents.map(({ id, entry }) => [id, entry]));
+
   return installed.map((agent) => withEntry(agent, entries.get(agent.id)));
 }
 
@@ -57,6 +62,7 @@ export function offeredAgents(
   catalog: AgentsCatalogOutput,
 ): AgentRowEntry[] {
   const installedIds = new Set(installed.map(({ id }) => id));
+
   return availableAgents(catalog).filter(({ id }) => !installedIds.has(id));
 }
 
@@ -87,8 +93,10 @@ export function probedRow(info: AgentInfo, custom = false): AgentRowEntry {
     ...customDescription(custom),
   };
 }
+
 const hasPublishedUpdate = (info: AgentInfo): boolean => {
   if (!info.version || !info.availableVersion) return false;
+
   return info.version !== info.availableVersion;
 };
 
@@ -99,9 +107,12 @@ export function installedAgents(
 ): AgentRowEntry[] {
   const customIds = new Set(custom.map(({ id }) => id));
   const probed = new Set(agents.map(({ agent }) => agent));
+
   return [
     ...agents.map((info) => probedRow(info, customIds.has(info.agent))),
-    ...custom.filter(({ id }) => !probed.has(id)).map(customRow),
+    ...custom.flatMap((agent) =>
+      probed.has(agent.id) ? [] : [customRow(agent)],
+    ),
   ];
 }
 

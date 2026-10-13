@@ -1,8 +1,15 @@
-import { spawn, type ChildProcess } from 'node:child_process';
+import {
+  spawn,
+  type ChildProcess,
+  type Serializable,
+} from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { createRejectionCounter } from '@repo/machine-log';
+import { z } from 'zod';
 import type { InstallToolInput } from '../ports';
 import { cleanInstallProcess } from './process-cleanup';
 import { recordInstallerGroup } from './process-record';
+
 const installerWrapper = `
 const { spawn } = require('node:child_process');
 const stop = () => process.kill(-process.pid, 'SIGKILL');
@@ -21,6 +28,23 @@ process.once('message', () => {
   child.once('exit', code => completed(code));
 });
 `;
+
+// The completion message the wrapper sends over IPC.
+const InstallerExit = z.strictObject({
+  type: z.literal('installer.exit'),
+  code: z.number().int().nonnegative().nullable(),
+});
+
+const rejections = createRejectionCounter('Installer messages');
+
+export const readInstallerExitCode = (message: Serializable): number | null => {
+  const exit = InstallerExit.safeParse(message);
+
+  if (exit.success) return exit.data.code;
+  rejections.report('Unrecognised installer completion');
+  throw new Error('Unrecognised installer completion');
+};
+
 const wrapperArguments = (input: InstallToolInput, token: string): string[] => [
   '-e',
   installerWrapper,
@@ -29,12 +53,14 @@ const wrapperArguments = (input: InstallToolInput, token: string): string[] => [
   input.executable,
   ...input.args,
 ];
+
 const saveSpawnedGroup = async (
   child: ChildProcess,
   directory: string,
   token: string,
 ): Promise<void> => {
   if (!child.pid) throw new Error('Installer wrapper failed to start');
+
   try {
     await recordInstallerGroup(directory, { pid: child.pid, token });
   } catch (error) {
@@ -42,16 +68,20 @@ const saveSpawnedGroup = async (
     throw error;
   }
 };
+
 export const spawnInstallWrapper = async (
   input: InstallToolInput,
 ): Promise<ChildProcess> => {
   const token = randomUUID();
+
   const child = spawn(process.execPath, wrapperArguments(input, token), {
     cwd: input.cwd,
     env: { ...process.env, ...input.env },
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     detached: true,
   });
+
   await saveSpawnedGroup(child, input.cwd, token);
+
   return child;
 };

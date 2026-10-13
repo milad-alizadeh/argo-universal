@@ -7,6 +7,7 @@ import {
   writtenPlanRegionName,
   type WrittenPlanPlayContext,
 } from './written-plan-story-types';
+
 function scrollableDocument(
   width: number,
   body: ReturnType<typeof within>,
@@ -16,15 +17,21 @@ function scrollableDocument(
     width === layoutWidths.wide
       ? body.getByLabelText('Written plan document')
       : content.parentElement;
+
   return nearestScrollable(scroll);
 }
+
 function nearestScrollable(scroll: HTMLElement | null): HTMLElement {
   let ancestor = scroll;
+
   while (canAdvanceScroll(ancestor)) ancestor = ancestor.parentElement;
+
   if (!ancestor)
     throw new Error('Long written Plan needs a scrollable document');
+
   return ancestor;
 }
+
 function canAdvanceScroll(scroll: HTMLElement | null): scroll is HTMLElement {
   return scroll !== null && scroll.scrollHeight <= scroll.clientHeight;
 }
@@ -42,6 +49,7 @@ async function scrollToPlanEnd(
     scroll.getBoundingClientRect().top,
   );
 }
+
 async function typeBesideLongPlan({
   canvas,
 }: WrittenPlanPlayContext): Promise<void> {
@@ -53,6 +61,7 @@ async function typeBesideLongPlan({
   await browserUserEvent.type(composer, 'Keep the last step.');
   await expect(shownText(composer)).toBe('Keep the last step.');
 }
+
 export async function readsLongWrittenPlan(
   width: number,
   context: WrittenPlanPlayContext,
@@ -61,6 +70,7 @@ export async function readsLongWrittenPlan(
   const content = body.getByRole('region', { name: writtenPlanRegionName });
   const end = within(content).getByText('End of the written plan.');
   await scrollToPlanEnd(scrollableDocument(width, body, content), end);
+
   if (width === layoutWidths.wide) await typeBesideLongPlan(context);
   await closeWrittenPlan(context, body);
 }

@@ -5,6 +5,7 @@ import { feedMachine } from './feed-machine';
 
 it('a Feed without an active Writer permanently rejects prompt admission', async () => {
   const committed = Promise.withResolvers<void>();
+
   const feed = createActor(feedMachine, {
     input: {
       sessionId: 'session',
@@ -15,6 +16,7 @@ it('a Feed without an active Writer permanently rejects prompt admission', async
       findWrittenRow: () => {},
     },
   }).start();
+
   feed.send({
     type: 'feed.change',
     turnId: 'turn',

@@ -7,10 +7,12 @@ import { startSessionJourney } from '#mocks/session-journey';
 it('prompts and cancels through tRPC, with the same Session reopened only once', async (): Promise<void> => {
   const host = await startSessionJourney();
   const { caller, agent, openings } = host;
+
   const { messageId } = await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Hello' }],
   });
+
   const process = requireScriptedProcessAt(agent.processes);
   expect(
     await caller.feed.row({ sessionId: 'session-1', id: messageId }),
@@ -26,10 +28,12 @@ it('prompts and cancels through tRPC, with the same Session reopened only once',
   });
   expect(await caller.session.cancel({ sessionId: 'session-1' })).toEqual({});
   await waitForAcpSessionIdle(host, 'session-1');
+
   const next = await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'After cancel' }],
   });
+
   expect(next.messageId).not.toBe(messageId);
   expect(requireScriptedProcessAt(agent.processes)).toBe(process);
   expect(openings).toHaveLength(1);
@@ -54,10 +58,12 @@ it('reads a stored Session snapshot without connecting an Agent when its Feed is
   const controller = new AbortController();
   onTestFinished(() => controller.abort());
   const caller = createCaller({ signal: controller.signal });
+
   const updates = await caller.feed.subscribe({
     sessionId: 'session-1',
     after: null,
   });
+
   const iterator = updates[Symbol.asyncIterator]();
   expect((await iterator.next()).value).toMatchObject({
     type: 'snapshot',

@@ -11,8 +11,10 @@ import type { FieldInputProps } from '../field-props';
 type FieldProps = Pick<FieldInputProps, 'errors' | 'hint'> & {
   children: ReactNode;
 };
+
 export function StandaloneField(props: FieldProps): ReactElement {
   const description = useFieldDescription(props);
+
   return (
     <View className="gap-1.5">
       <FooterProvider value={footerContext(description)}>

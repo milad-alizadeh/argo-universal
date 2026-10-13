@@ -13,8 +13,10 @@ import {
 export const shortPlan: Story = {
   play: async ({ userEvent, args }) => {
     const canvas = within(document.body);
+
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
+
       if (width === layoutWidths.phone) {
         await expect(
           within(document.body).getByRole('dialog', { name: 'Plan proposal' }),
@@ -35,6 +37,7 @@ export const shortPlan: Story = {
         canvas.getByRole('button', { name: keepPlanningLabel }),
       ).toBeEnabled();
     }
+
     await userEvent.click(canvas.getByRole('button', { name: 'Approve' }));
     await expect(args.onAnswer).toHaveBeenCalledWith({
       planId: args.proposal.planId,
@@ -51,9 +54,11 @@ export function longPlan(width: number): Story {
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
       await settleViewport(width);
+
       const scroll = canvas.getByRole('region', {
         name: documentLabel,
       });
+
       await waitFor(() =>
         expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight),
       );
@@ -84,7 +89,9 @@ export function longPlan(width: number): Story {
 
 export function open(width: number, index: number): Story {
   const mock = planProposalMocks[index];
+
   if (!mock) throw new Error('Recorded catalog needs a Plan proposal.');
+
   return {
     args: { proposal: mock.proposal },
     play: async ({ userEvent, args }) => {

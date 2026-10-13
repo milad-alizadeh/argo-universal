@@ -3,8 +3,11 @@ import { startedAt } from '../recorded-tool-calls.mocks';
 import { runningRead, toolCallGroupMocks } from '../tool-call.mocks';
 
 export const commandAndFileSummary = 'Ran 1 command, Read 1 file';
+
 export const readFileTitle = 'Read /project/hello.txt';
+
 export const commandTitle = 'Show hello.txt and short git status';
+
 export const dark = { globals: { mode: 'dark' } };
 
 export const runningReadNow = startedAt(runningRead) + 23000;
@@ -31,17 +34,22 @@ const recordedLocation = (row: ToolCallUpdate): string | undefined =>
 const readPath = (row: ToolCallUpdate): string | undefined =>
   readActionPath(recordedActions(row)) ?? recordedLocation(row);
 
-export function parallelCase(agentIndex: number): {
+type ParallelCase = {
   recorded: (typeof toolCallGroupMocks)[number];
   expectedTitle: string;
   read: string;
-} {
+};
+
+export function parallelCase(agentIndex: number): ParallelCase {
   const recorded = toolCallGroupMocks[agentIndex];
+
   if (!recorded)
     throw new Error(
       'Recorded catalog needs parallel Tool calls for both Agents',
     );
   const read = readPath(recorded.later);
+
   if (!read) throw new Error('Recorded catalog needs a completed read path');
+
   return { recorded, expectedTitle: expectedTitle(recorded.earlier), read };
 }

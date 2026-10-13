@@ -19,6 +19,7 @@ export const ComposerCover = createContext(composerOverlap);
 // Where the system draws Liquid Glass, the phone Composer is glass, and the Feed scrolls under it.
 export function useGlassComposer(): boolean {
   const contentWide = useContentWide();
+
   return liquidGlassAvailable && !contentWide;
 }
 
@@ -31,6 +32,7 @@ export interface FeedEndClearance {
 
 export function useFeedEndClearance(): FeedEndClearance {
   const cover = useContext(ComposerCover);
+
   return { endSpace: cover + feedEndGap, composerTop: cover };
 }
 
@@ -44,6 +46,7 @@ export function useGlassCover(bottom: number): GlassCover {
   const [composerHeight, setComposerHeight] = useState<number>();
   const keyboardOpen = useKeyboardState((state) => state.isVisible);
   const below = keyboardOpen ? 0 : bottom;
+
   return {
     cover:
       composerHeight === undefined ? composerOverlap : composerHeight + below,

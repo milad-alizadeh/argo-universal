@@ -27,8 +27,8 @@ export const promptShowTimeoutMs = 3_000;
 const choiceKey = (input: SessionNewInput | undefined): string | undefined =>
   input && JSON.stringify(input);
 
-const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+const errorMessage = (cause: unknown): string =>
+  cause instanceof Error ? cause.message : String(cause);
 
 const nextChange = (
   context: EmptySessionContext,
@@ -46,6 +46,7 @@ const appliedOnce = (context: EmptySessionContext): string[] => [
 
 // New Session's real, empty Session: opened for the current choices, reopened when they change, prompted once.
 export const emptySessionMachine = setup({
+  // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as EmptySessionPorts,
     context: {} as EmptySessionContext,
@@ -59,6 +60,7 @@ export const emptySessionMachine = setup({
     open: fromPromise<{ sessionId: string }, EmptySessionContext>(
       ({ input, signal }) => {
         if (!input.input) throw new Error('No Session to open.');
+
         return input.ports.open(input.input, signal);
       },
     ),
@@ -70,11 +72,13 @@ export const emptySessionMachine = setup({
       { context: EmptySessionContext; change: ConfigurationChange }
     >(({ input: { context, change } }) => {
       if (!context.sessionId) throw new Error('No Session is open.');
+
       return context.ports.setConfigOption(context.sessionId, change);
     }),
     prompt: fromPromise<unknown, EmptySessionContext>(({ input }) => {
       if (!input.sessionId || !input.pendingPrompt)
         throw new Error('No prompt to send.');
+
       return input.ports.prompt(input.sessionId, input.pendingPrompt);
     }),
   },
@@ -227,7 +231,9 @@ export const emptySessionMachine = setup({
                 src: 'setConfigOption',
                 input: ({ context }) => {
                   const change = nextChange(context);
+
                   if (!change) throw new Error('No remembered change.');
+
                   return { context, change };
                 },
                 onDone: {

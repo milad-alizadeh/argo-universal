@@ -16,9 +16,11 @@ it('owned callback overflow reports resource failure and cannot release without 
     steps: [],
     autoExit: false,
   });
+
   const resources = createAcpResources(peer);
   const failures: unknown[] = [];
   const pending = Promise.withResolvers<never>();
+
   const lease = await resources.open(
     createResourceOpening({
       ...createResourceDestination(),
@@ -28,12 +30,15 @@ it('owned callback overflow reports resource failure and cannot release without 
       requestPermission: () => pending.promise,
     }),
   );
+
   const process = requireScriptedProcessAt(peer.processes);
+
   const answers = Array.from({ length: 17 }, () =>
     process
       .play([{ type: 'permission', request: acpPermission }], lease.sessionId)
-      .catch((error: unknown): unknown => error),
+      .catch((cause: unknown) => cause),
   );
+
   await vi.waitFor(() =>
     expect(failures).toContainEqual(
       new Error('ACP pending request limit reached'),
@@ -41,9 +46,11 @@ it('owned callback overflow reports resource failure and cannot release without 
   );
   await expect(lease.close()).rejects.toThrow('ACP connection closed');
   let released = false;
+
   const release = lease.released.then(() => {
     released = true;
   });
+
   expect(released).toBe(false);
   expect(process.terminations).toBe(1);
   process.exited.resolve();
@@ -53,6 +60,7 @@ it('owned callback overflow reports resource failure and cannot release without 
 
 it('more than 64 early updates fail the opening resource instead of growing the buffer', async () => {
   const failures: unknown[] = [];
+
   const peer = createScriptedAgentProcess({
     steps: [],
     responses: {
@@ -68,7 +76,9 @@ it('more than 64 early updates fail the opening resource instead of growing the 
       ],
     },
   });
+
   const resources = createAcpResources(peer);
+
   const opening = resources.open(
     createResourceOpening({
       ...createResourceDestination(),
@@ -77,6 +87,7 @@ it('more than 64 early updates fail the opening resource instead of growing the 
       },
     }),
   );
+
   await expect(opening).rejects.toBeDefined();
   expect(failures).toContainEqual(
     new Error('ACP early update buffer limit reached'),
@@ -86,14 +97,18 @@ it('more than 64 early updates fail the opening resource instead of growing the 
 
 it('a resource refuses a 65th concurrent opening', async () => {
   const gate = Promise.withResolvers<void>();
+
   const peer = createScriptedAgentProcess({
     steps: [],
     responses: { 'session/new': [{ waitFor: gate.promise }] },
   });
+
   const resources = createAcpResources(peer);
+
   const openings = Array.from({ length: 64 }, () =>
     resources.open(createResourceOpening()),
   );
+
   await vi.waitFor(() => expect(peer.processes).toHaveLength(1));
   await expect(resources.open(createResourceOpening())).rejects.toThrow(
     'ACP resource is unavailable',
@@ -106,15 +121,18 @@ it('a resource refuses a 65th concurrent opening', async () => {
 
 it('an Agent frame over the 32 MiB limit fails its connection with the SDK limit error', async () => {
   const failures: unknown[] = [];
+
   const base = createResourceOpening({
     ...createResourceDestination(),
     failed: (error) => {
       failures.push(error);
     },
   });
+
   const agent = createScriptedAgentProcess({
     steps: [{ type: 'raw', frame: 'x'.repeat(32 * 1024 * 1024 + 1) }],
   });
+
   const resources = createAcpResources(agent);
   onTestFinished(() => resources.shutdown());
   const lease = await resources.open(base);

@@ -39,15 +39,18 @@ export interface FormatBarProps {
 interface GroupProps extends Pick<FormatBarProps, 'onFormat'> {
   applied: Format[];
 }
+
 type ToggleProps = GroupProps & { button: FormatButton };
 
 // Link opens an editor rather than toggling, so it has no pressed state.
 const isPressed = ({ button, applied }: ToggleProps): boolean | undefined =>
   button.format === 'link' ? undefined : applied.includes(button.format);
+
 const toggleLook = { variant: 'ghost', size: 'sm' } as const;
 
 function FormatToggle(props: ToggleProps): React.JSX.Element {
   const pressed = isPressed(props);
+
   return (
     <IconButton
       {...toggleLook}
@@ -83,6 +86,7 @@ const toolbar = {
 
 function FormatButtons({ shown, onFormat }: FormatBarProps): React.JSX.Element {
   const applied = shown?.applied ?? [];
+
   return (
     <div {...toolbar}>
       {buttonGroups.map((group) => (
@@ -98,6 +102,7 @@ function FormatButtons({ shown, onFormat }: FormatBarProps): React.JSX.Element {
 }
 
 const keepFocus = (event: Event): void => event.preventDefault();
+
 const barLook = {
   side: 'top',
   align: 'start',

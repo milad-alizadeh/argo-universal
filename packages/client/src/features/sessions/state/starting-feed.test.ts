@@ -23,6 +23,7 @@ describe('startingFeed', () => {
       { text: 'Fix the flaky login test', attachments: [] },
       1_000,
     );
+
     expect(feed.items).toEqual([
       {
         type: 'row',

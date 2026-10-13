@@ -19,12 +19,14 @@ type StoredColumnCase<Table, Column> = {
   id: string;
   field: string;
 };
+
 type StoredColumnCases = [
   StoredColumnCase<typeof session, typeof session.configValues>,
   StoredColumnCase<typeof session, typeof session.vendorRef>,
   StoredColumnCase<typeof turn, typeof turn.usage>,
   StoredColumnCase<typeof turn, typeof turn.error>,
 ];
+
 it.each(
   fixtureAgents.flatMap(({ agent }): StoredColumnCases => [
     {
@@ -62,14 +64,18 @@ it.each(
     const { database, remove } = openTestDatabase({ agent });
     insertEndedTurn(database);
     onTestFinished(remove);
+
     const reported = vi
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
+
     onTestFinished((): void => reported.mockRestore());
+
     const { createCaller } = await startEngineTestHost({
       database,
       ...scriptedEngineInput({ steps: [] }, agent),
     });
+
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
     insertEndedTurn(database, 'healthy');

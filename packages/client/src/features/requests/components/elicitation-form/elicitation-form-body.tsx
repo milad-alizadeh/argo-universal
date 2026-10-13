@@ -40,6 +40,7 @@ type FormFieldProps = {
   model: ElicitationModel;
   entry: ElicitationModel['schema']['fields'][number];
 };
+
 type FieldBinding = {
   state: {
     value: ElicitationValue | undefined;
@@ -51,6 +52,7 @@ type FieldBinding = {
 
 function FormField({ model, entry }: FormFieldProps): ReactElement {
   const Field = model.form.Field;
+
   return (
     <Field name={entry.key}>
       {(field) => <BoundField model={model} entry={entry} field={field} />}
@@ -62,6 +64,7 @@ function BoundField(
   props: FormFieldProps & { field: FieldBinding },
 ): ReactElement {
   const { model, entry, field } = props;
+
   return (
     <ElicitationField
       name={entry.name}
@@ -97,6 +100,7 @@ export function ElicitationValidation(props: {
   labels: readonly string[];
 }): ReactElement | null {
   if (props.answered || props.labels.length === 0) return null;
+
   return (
     <Text
       semanticRole="alert"

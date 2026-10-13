@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { draftPrompt } from './draft-prompt';
 
 const screenshot: BlobRef = { blobId: 'blob-1', mime: 'image/png', bytes: 10 };
+
 const photo: BlobRef = { blobId: 'blob-2', mime: 'image/jpeg', bytes: 20 };
+
 const brief: BlobRef = { blobId: 'blob-3', mime: 'text/markdown', bytes: 30 };
+
 const vector: BlobRef = { blobId: 'blob-4', mime: 'image/svg+xml', bytes: 40 };
 
 describe('draftPrompt', () => {

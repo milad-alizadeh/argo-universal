@@ -6,7 +6,7 @@ import type {
   ToolCallUpdate,
 } from '@repo/contracts';
 
-interface FeedToolCall {
+export interface FeedToolCall {
   type: 'tool_call';
   awaitingApproval?: boolean;
   row: ToolCallUpdate;

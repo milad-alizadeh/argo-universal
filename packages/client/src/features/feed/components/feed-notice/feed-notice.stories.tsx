@@ -7,14 +7,19 @@ import { Variation, Variations } from '../../../../lib/generic/variations';
 import { FeedNotice } from './feed-notice';
 
 const [notice] = noticeStates;
+
 if (!notice) throw new Error('Notice gallery needs a Notice');
+
 const meta = {
   title: 'Feed/Notices',
   component: FeedNotice,
   args: { row: notice },
 } satisfies Meta<typeof FeedNotice>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 export const Notices: Story = {
   render: () => (
     <Variations>

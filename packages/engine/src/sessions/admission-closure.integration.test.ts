@@ -14,6 +14,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     onTestFinished(() => stopped.resolve());
     const began = Promise.withResolvers<CloseSessionRequest>();
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -28,6 +29,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agent,
     );
+
     host.database.update(session).set({ agent }).run();
     await host.caller.session.setConfigOption({
       sessionId: 'session-1',

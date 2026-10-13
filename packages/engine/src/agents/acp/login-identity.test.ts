@@ -9,13 +9,17 @@ import {
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 import type { LoginAgentRequest } from '..';
 import { createLoginAgentOpener } from './index';
+
 const loginInitialization = loginScenario().initialize;
+
 const methodId = 'opaque-subscription';
+
 const verificationUrl = 'https://example.test/verify';
 
 it('carries a URL Elicitation from the exact authenticate request and returns the same App answer', async () => {
   const requests: LoginAgentRequest[] = [];
   const responses: CreateElicitationResponse[] = [];
+
   const peer = createScriptedAgentProcess({
     steps: [],
     initialize: loginInitialization,
@@ -39,16 +43,19 @@ it('carries a URL Elicitation from the exact authenticate request and returns th
       ],
     },
   });
+
   const login = await createLoginAgentOpener(peer)(
     { name: 'Agent', launch: resourceLaunch },
     {
       signal: new AbortController().signal,
       createElicitation: async (request) => {
         requests.push(request);
+
         return { action: 'accept' };
       },
     },
   );
+
   await login.authenticate(methodId);
   expect({ requests, responses, readiness: await login.checkReady() }).toEqual({
     requests: [
@@ -67,21 +74,26 @@ it('carries a URL Elicitation from the exact authenticate request and returns th
 it('does not send another request’s URL Elicitation to the initiating App', async () => {
   const responses: CreateElicitationResponse[] = [];
   const requests: LoginAgentRequest[] = [];
+
   const peer = createScriptedAgentProcess({
     steps: [],
     initialize: loginInitialization,
   });
+
   const login = await createLoginAgentOpener(peer)(
     { name: 'Agent', launch: resourceLaunch },
     {
       signal: new AbortController().signal,
       createElicitation: async (request) => {
         requests.push(request);
+
         return { action: 'accept' };
       },
     },
   );
+
   const child = peer.processes[0];
+
   if (!child) throw new Error('Missing mock process');
   await child.connection.client
     .request('elicitation/create', {
@@ -103,6 +115,7 @@ it('settles the exact URL question when the Agent cancels it while the App answe
   const cancellation = new AbortController();
   const entered = Promise.withResolvers<AbortSignal>();
   const answers: CreateElicitationResponse[] = [];
+
   const peer = createScriptedAgentProcess({
     steps: [],
     initialize: loginInitialization,
@@ -127,6 +140,7 @@ it('settles the exact URL question when the Agent cancels it while the App answe
       ],
     },
   });
+
   const login = await createLoginAgentOpener(peer)(
     { name: 'Agent', launch: resourceLaunch },
     {
@@ -134,10 +148,12 @@ it('settles the exact URL question when the Agent cancels it while the App answe
       createElicitation: (_, signal) => {
         if (!signal) throw new Error('Missing request lifetime');
         entered.resolve(signal);
+
         return new Promise(() => {});
       },
     },
   );
+
   const authenticating = login.authenticate(methodId);
   const observedSignal = await entered.promise;
   cancellation.abort();

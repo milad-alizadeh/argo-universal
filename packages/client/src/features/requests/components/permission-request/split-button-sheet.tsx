@@ -48,6 +48,7 @@ export function ChoiceSheet<Value extends string>(
   props: SheetProps<Value>,
 ): ReactNode {
   const sheet = useChoiceSheet(props);
+
   return (
     <BottomSheet
       open={sheet.open}
@@ -66,11 +67,14 @@ function useChoiceSheet<Value extends string>({
   onValueChange,
 }: SheetProps<Value>): ChoiceSheetState<Value> {
   const [open, setOpen] = useState(false);
+
   if (disabled && open) setOpen(false);
+
   const choose = (value: Value): void => {
     setOpen(false);
     onValueChange(value);
   };
+
   return { open, setOpen, choose };
 }
 
@@ -90,6 +94,7 @@ function SheetChoice<Value extends string>(
   props: SheetChoiceProps<Value>,
 ): ReactNode {
   const selected = props.choice.value === props.value;
+
   return (
     <Pressable
       {...sheetChoiceProps}

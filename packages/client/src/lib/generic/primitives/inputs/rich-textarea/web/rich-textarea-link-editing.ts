@@ -31,11 +31,14 @@ function $linkedUrl(selection: RangeSelection): string {
 function $linkTarget(): LinkTarget | undefined {
   const selection = $rangeSelection({ collapsed: false });
   const rect = selectedRect();
+
   if (!selection || !rect) return undefined;
+
   const fields = {
     text: selection.getTextContent(),
     url: $linkedUrl(selection),
   };
+
   return { fields, selection: selection.clone(), rect };
 }
 
@@ -49,8 +52,10 @@ function openOnShortcut(
 ): (event: KeyboardEvent) => boolean {
   return (event) => {
     if (!isExactShortcutMatch(event, 'k', CONTROL_OR_META)) return false;
+
     if (!editor.dispatchCommand(OPEN_LINK_EDITOR_COMMAND)) return false;
     event.preventDefault();
+
     return true;
   };
 }
@@ -60,7 +65,9 @@ function openOnSelection(
 ): () => boolean {
   return () => {
     const target = $linkTarget();
+
     if (target) openEditor(target);
+
     return target !== undefined;
   };
 }

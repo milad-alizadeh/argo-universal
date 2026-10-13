@@ -1,12 +1,14 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
 import { startAcpEngine, emptySessionInput } from '#mocks/acp-engine';
+import type { FetchAgents } from '../registry/fetch-agents';
 
 it.each(['accepted', 'rejected'] as const)(
   'keeps a live Session and Feed durable while a catalog replacement is %s',
   async (catalogResult) => {
-    const response = Promise.withResolvers<unknown>();
-    const fetchAgents = vi.fn<() => Promise<unknown>>(() => response.promise);
+    const response = Promise.withResolvers<string>();
+    const fetchAgents = vi.fn<FetchAgents>(() => response.promise);
+
     const host = await startAcpEngine({
       fetchAgents,
       steps: [
@@ -19,10 +21,13 @@ it.each(['accepted', 'rejected'] as const)(
         },
       ],
     });
+
     const { sessionId } = await host.caller.session.new(emptySessionInput);
+
     const refresh = host.caller.agents
       .syncCatalog()
-      .catch((error: unknown) => error);
+      .catch((cause: unknown) => cause);
+
     await vi.waitFor(() => expect(fetchAgents).toHaveBeenCalledTimes(1));
     await host.caller.session.prompt({
       sessionId,
@@ -35,17 +40,21 @@ it.each(['accepted', 'rejected'] as const)(
           .get(sessionId),
       ).toEqual({ status: 'ended' }),
     );
+
     const savedFeed = host.database.$client
       .prepare(
         'SELECT session_update, payload FROM feed_row WHERE session_id = ? ORDER BY rowid',
       )
       .all(sessionId);
+
     expect(savedFeed).toEqual([
       expect.objectContaining({ session_update: 'user_message' }),
       expect.objectContaining({ session_update: 'agent_message' }),
     ]);
     response.resolve(
-      catalogResult === 'accepted' ? publishedRegistry : { malformed: true },
+      JSON.stringify(
+        catalogResult === 'accepted' ? publishedRegistry : { malformed: true },
+      ),
     );
     expect(await refresh).toEqual({ accepted: true });
     await expect

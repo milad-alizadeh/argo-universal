@@ -22,6 +22,7 @@ export function usePlanProposal(
   props: PlanProposalCardProps,
 ): PlanProposalInteraction {
   const draft = useProposalDraft();
+
   return {
     ...draft,
     submit: (): void => submitProposal(props, draft),
@@ -41,6 +42,7 @@ function useProposalDraft(): ProposalDraft {
   const [planning, setPlanning] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [expanded, setExpanded] = useState(false);
+
   return {
     planning,
     setPlanning,

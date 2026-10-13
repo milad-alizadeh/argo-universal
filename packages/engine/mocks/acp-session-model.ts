@@ -11,57 +11,72 @@ import { RecoveryBlockedError } from '../src/agents';
 import { sessionMachine } from '../src/sessions';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
+
 const closeEvent = 'session.close';
+
 const updateEvent = 'acp.update';
+
 const modelRequest = 'model-request';
+
 const canApplyLifecycleEvent = (
   snapshot: AcpModelSnapshot,
   event: AcpModelEvent,
 ): boolean => {
-  const roots = {
-    'xstate.done.actor.createCheckout': 'creating',
-    'xstate.error.actor.createCheckout': 'creating',
-    'xstate.after.checkoutLimit.session.creating': 'creating',
-    'xstate.done.actor.loadSession': 'loading',
-    'xstate.error.actor.loadSession': 'loading',
-    'xstate.done.actor.discardSession': 'discarding',
-    'xstate.error.actor.discardSession': 'discarding',
-  } as const;
-  if (event.type in roots)
-    return snapshot.matches(Reflect.get(roots, event.type));
-  const invoking = {
-    'xstate.done.actor.openAcp': 'opening',
-    'xstate.error.actor.openAcp': 'opening',
-    'xstate.done.actor.configureAcp': 'configuring',
-    'xstate.error.actor.configureAcp': 'configuring',
-    'xstate.done.actor.commitPrompt': 'committing',
-    'xstate.error.actor.commitPrompt': 'committing',
-    'xstate.done.actor.cancelAcp': { activeTurn: { cancelling: 'sending' } },
-    'xstate.error.actor.cancelAcp': { activeTurn: { cancelling: 'sending' } },
-    'xstate.after.cancelLimit.session.open.acp.activeTurn.cancelling.waiting': {
-      activeTurn: { cancelling: 'waiting' },
-    },
-    'xstate.done.actor.promptAcp': 'activeTurn',
-    'xstate.error.actor.promptAcp': 'activeTurn',
-    'xstate.done.actor.publishTurn': 'publishing',
-    'xstate.error.actor.publishTurn': 'publishing',
-    'xstate.done.actor.closeAcp': 'closing',
-    'xstate.error.actor.closeAcp': 'closing',
-    'xstate.done.actor.awaitAcpRelease': 'retainingCleanup',
-    'xstate.done.actor.publishInterruptedTurn': 'interrupting',
-    'xstate.error.actor.publishInterruptedTurn': 'interrupting',
-    'xstate.after.agentRestartDelay.session.open.acp.recovering': 'recovering',
-    'xstate.done.actor.reopenAcp': 'reopening',
-    'xstate.error.actor.reopenAcp': 'reopening',
-    'xstate.done.actor.replaceAcp': 'replacing',
-    'xstate.error.actor.replaceAcp': 'replacing',
-    'xstate.after.feedFlushLimit.session.open.acp.flushing': 'flushing',
-  } as const;
-  if (event.type in invoking) {
-    const state = Reflect.get(invoking, event.type);
-    return snapshot.matches({ open: { acp: state } });
-  }
+  const roots = new Map(
+    Object.entries({
+      'xstate.done.actor.createCheckout': 'creating',
+      'xstate.error.actor.createCheckout': 'creating',
+      'xstate.after.checkoutLimit.session.creating': 'creating',
+      'xstate.done.actor.loadSession': 'loading',
+      'xstate.error.actor.loadSession': 'loading',
+      'xstate.done.actor.discardSession': 'discarding',
+      'xstate.error.actor.discardSession': 'discarding',
+    } as const),
+  );
+
+  const root = roots.get(event.type);
+
+  if (root) return snapshot.matches(root);
+
+  const invoking = new Map(
+    Object.entries({
+      'xstate.done.actor.openAcp': 'opening',
+      'xstate.error.actor.openAcp': 'opening',
+      'xstate.done.actor.configureAcp': 'configuring',
+      'xstate.error.actor.configureAcp': 'configuring',
+      'xstate.done.actor.commitPrompt': 'committing',
+      'xstate.error.actor.commitPrompt': 'committing',
+      'xstate.done.actor.cancelAcp': { activeTurn: { cancelling: 'sending' } },
+      'xstate.error.actor.cancelAcp': { activeTurn: { cancelling: 'sending' } },
+      'xstate.after.cancelLimit.session.open.acp.activeTurn.cancelling.waiting':
+        {
+          activeTurn: { cancelling: 'waiting' },
+        },
+      'xstate.done.actor.promptAcp': 'activeTurn',
+      'xstate.error.actor.promptAcp': 'activeTurn',
+      'xstate.done.actor.publishTurn': 'publishing',
+      'xstate.error.actor.publishTurn': 'publishing',
+      'xstate.done.actor.closeAcp': 'closing',
+      'xstate.error.actor.closeAcp': 'closing',
+      'xstate.done.actor.awaitAcpRelease': 'retainingCleanup',
+      'xstate.done.actor.publishInterruptedTurn': 'interrupting',
+      'xstate.error.actor.publishInterruptedTurn': 'interrupting',
+      'xstate.after.agentRestartDelay.session.open.acp.recovering':
+        'recovering',
+      'xstate.done.actor.reopenAcp': 'reopening',
+      'xstate.error.actor.reopenAcp': 'reopening',
+      'xstate.done.actor.replaceAcp': 'replacing',
+      'xstate.error.actor.replaceAcp': 'replacing',
+      'xstate.after.feedFlushLimit.session.open.acp.flushing': 'flushing',
+    } as const),
+  );
+
+  const state = invoking.get(event.type);
+
+  if (state) return snapshot.matches({ open: { acp: state } });
+
   if (event.type === closeEvent) return snapshot.can({ type: closeEvent });
+
   if (
     event.type === 'session.prompt' ||
     event.type === 'session.cancel' ||
@@ -71,12 +86,16 @@ const canApplyLifecycleEvent = (
     event.type === 'session.answerElicitation'
   )
     return snapshot.can(event);
+
   return snapshot.matches({ open: 'acp' });
 };
+
 type AcpModelEvent = GraphEventFromLogic<typeof sessionMachine>;
+
 export function acpModelEventKey(event: AcpModelEvent): string {
   if ('error' in event && event.error instanceof RecoveryBlockedError)
     return `${event.type} blocked`;
+
   return event.type === updateEvent
     ? `${event.type}:${event.notification.update.sessionUpdate}`
     : event.type;
@@ -91,42 +110,52 @@ const walksAfterCrash = (
   event.type === 'acp.failed' ||
   event.type === closeEvent ||
   event.type.startsWith('xstate.');
-export const createAcpSessionModel = (
-  initial: AcpModelSnapshot,
-  entry: 'new' | 'existing' | 'opened' = 'opened',
-): {
+
+interface AcpSessionModel {
   paths: StatePath<AcpModelSnapshot, AcpModelEvent>[];
   model: {
     getAdjacencyMap: () => AdjacencyMap<AcpModelSnapshot, AcpModelEvent>;
   };
   lease: AcpSessionLease;
-} => {
+}
+
+export const createAcpSessionModel = (
+  initial: AcpModelSnapshot,
+  entry: 'new' | 'existing' | 'opened' = 'opened',
+): AcpSessionModel => {
   const lease = initial.context.acpLease;
+
   if (!lease) throw new Error('The ACP structural model has no lease');
+
   const input =
     entry === 'existing'
       ? { ...initial.context.input, kind: 'existing' as const }
       : initial.context.input;
+
   const data = {
     ...initial.context,
     input,
     acpLease: null,
     stored: entry === 'existing',
   };
+
   const entryStates = {
     new: 'creating',
     existing: 'loading',
     opened: { open: { acp: 'opening' } },
   } as const;
+
   const fromState = sessionMachine.resolveState({
     value: entryStates[entry],
     context: { ...data, failure: null },
   });
+
   /*
    * Graph transitions resolve symbolic sends against these existing child identities;
    * no actors are executed by the graph and no protocol or storage effect is proved.
    */
   Object.assign(fromState.children, initial.children);
+
   const events = [
     {
       type: 'xstate.done.actor.createCheckout',
@@ -353,6 +382,7 @@ export const createAcpSessionModel = (
     },
     { type: 'xstate.after.feedFlushLimit.session.open.acp.flushing' },
   ] satisfies AcpModelEvent[];
+
   const options = {
     fromState,
     events,
@@ -378,6 +408,7 @@ export const createAcpSessionModel = (
           `${JSON.stringify(previous?.value)} ${acpModelEventKey(event)}`,
       }),
   };
+
   return {
     paths: getShortestPaths(sessionMachine, options),
     model: {

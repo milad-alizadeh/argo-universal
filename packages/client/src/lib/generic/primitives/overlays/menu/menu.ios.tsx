@@ -18,6 +18,7 @@ export function Menu<Value extends string>(
   props: MenuProps<Value>,
 ): React.JSX.Element {
   const modifiers = useMenuModifiers(props);
+
   return (
     <Host matchContents>
       <SwiftMenu
@@ -35,6 +36,7 @@ function useMenuModifiers<Value extends string>(
 ): ModifierConfig[] {
   const { tint } = useNativeTheme().colors;
   const selected = props.choices.find((choice) => choice.value === props.value);
+
   return [
     accessibilityLabel(props.accessibilityLabel),
     accessibilityValue(selected?.label ?? props.value),

@@ -9,6 +9,7 @@ import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const prompt = [{ type: 'text' as const, text: 'Run the checks' }];
+
 describe.each(appFixtureAgentIds)('%s ACP cancel cleanup', (agentId) => {
   it('a failed owned close retains cleanup after the shared five-second deadline', async () => {
     const { host, cancelled, closes, resumes } = await startIgnoredCancelEngine(
@@ -18,13 +19,16 @@ describe.each(appFixtureAgentIds)('%s ACP cancel cleanup', (agentId) => {
         autoExit: false,
       },
     );
+
     const stuck = await host.caller.session.new({
       ...emptySessionInput,
       agent: agentId,
     });
+
     await host.caller.session.prompt({ ...stuck, prompt });
     await waitForIgnoredCancelTool(host, stuck.sessionId);
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
     try {
       await host.caller.session.cancel(stuck);
       await cancelled.promise;
@@ -44,6 +48,7 @@ describe.each(appFixtureAgentIds)('%s ACP cancel cleanup', (agentId) => {
     } finally {
       vi.useRealTimers();
     }
+
     const process = requireScriptedProcessAt(host.agent.processes);
     expect({
       processes: host.agent.processes.length,
@@ -58,20 +63,25 @@ describe.each(appFixtureAgentIds)('%s ACP cancel cleanup', (agentId) => {
     async (stage) => {
       const entered = Promise.withResolvers<void>();
       const gate = Promise.withResolvers<void>();
+
       const blocked = {
         steps: [{ type: 'gate' as const, entered, waitFor: gate.promise }],
       };
+
       const { host, cancelled } = await startIgnoredCancelEngine(agentId, {
         [stage]: blocked,
         autoExit: false,
       });
+
       const stuck = await host.caller.session.new({
         ...emptySessionInput,
         agent: agentId,
       });
+
       await host.caller.session.prompt({ ...stuck, prompt });
       await waitForIgnoredCancelTool(host, stuck.sessionId);
       vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
       try {
         await host.caller.session.cancel(stuck);
         await cancelled.promise;
@@ -89,9 +99,11 @@ describe.each(appFixtureAgentIds)('%s ACP cancel cleanup', (agentId) => {
         ).rejects.toThrow('cannot accept session.prompt');
         const process = requireScriptedProcessAt(host.agent.processes);
         let stopped = false;
+
         const stopping = host.stop().then(() => {
           stopped = true;
         });
+
         await vi.advanceTimersByTimeAsync(5_000);
         expect(process.terminations).toBe(1);
         expect(stopped).toBe(false);

@@ -19,9 +19,10 @@ import { scriptedEngineInput } from './scripted-engine';
 
 // A module's test drives the Engine through here: modules never import engine/.
 export { engineMachine } from '../src/engine/machine';
+
 export type { EngineMessage } from '../src/engine/ipc';
 
-type EngineTestOptions = Partial<EngineInput> & {
+export type EngineTestOptions = Partial<EngineInput> & {
   fixtureAgents?: readonly AgentIdentity[];
   database?: Database;
   runtimeDirectory?: string;
@@ -35,6 +36,7 @@ type EngineConnections = {
   createCaller: HttpServer['createCaller'];
   caller: ReturnType<HttpServer['createCaller']>;
 };
+
 type EngineTestHost = EngineConnections & {
   home: string;
   blobsFolder: string;
@@ -50,27 +52,32 @@ export async function startEngineTestHost(
     options.database || options.home || options.runtimeDirectory
       ? undefined
       : openTestDatabase();
+
   const home =
     options.home ??
     (options.database
       ? dirname(options.database.$client.location() ?? '')
       : (options.runtimeDirectory ?? storage?.directory));
+
   if (!home) throw new Error('Engine test storage is missing');
   const port = options.port ?? (await findFreePort());
   seedTestCommands(options, home, storage);
+
   const engine = composeEngine({
     version: '1.2.3',
     startedAt: '2026-10-03T00:00:00.000Z',
     now: Date.now,
     createId: randomUUID,
     ...scriptedEngineInput(),
-    fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
+    fetchAgents: async () => JSON.stringify({ version: '1.0.0', agents: [] }),
     ...options,
     home,
     port,
   }).start();
+
   const stop = registerEngineCleanup(engine, storage);
   await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
+
   return {
     ...readEngineTestHost(engine),
     home,
@@ -82,18 +89,22 @@ export async function startEngineTestHost(
 
 function readEngineTestHost(engine: EngineActor): EngineConnections {
   const { database, server } = engine.getSnapshot().context;
+
   const openSessions = findMachineActor(
     engine.system,
     openSessionsId,
     openSessionsMachine,
   );
+
   const databaseWriter = findMachineActor(
     engine.system,
     databaseWriterId,
     writerMachine,
   );
+
   if (!database || !server || !openSessions || !databaseWriter)
     throw new Error('Engine is not ready');
+
   return {
     engine,
     database,
@@ -113,10 +124,12 @@ function registerEngineCleanup(
     engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
     await waitFor(engine, (snapshot) => snapshot.status === 'done');
   };
+
   onTestFinished(async () => {
     await stop();
     storage?.remove();
   });
+
   return stop;
 }
 
@@ -129,9 +142,11 @@ function seedTestCommands(
     options.database ??
     storage?.database ??
     openDatabase(join(home, 'argo.db'));
+
   seedAgentFixtures(
     seeded,
     options.fixtureAgents ?? [{ agent: 'mock', label: 'mock', logo: '' }],
   );
+
   if (!options.database && !storage) seeded.$client.close();
 }

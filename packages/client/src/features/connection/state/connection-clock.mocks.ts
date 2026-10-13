@@ -20,7 +20,9 @@ const scheduledDelay = (
   const event = Object.values(
     connection.system.getSnapshot()._scheduledEvents,
   ).find((scheduled) => scheduled.event.type === eventType);
+
   if (!event) throw new Error(`No event scheduled for ${eventType}`);
+
   return event.delay;
 };
 
@@ -32,6 +34,7 @@ const fireScheduled = (
 ): void => {
   const delay = scheduledDelay(connection, eventType);
   const scheduled = [...timers].find(([, timer]) => timer.delay === delay);
+
   if (!scheduled) throw new Error(`No callback scheduled for ${eventType}`);
   timers.delete(scheduled[0]);
   scheduled[1].callback();
@@ -39,19 +42,22 @@ const fireScheduled = (
 
 const createClock = (timers: Timers): ConnectionClock => {
   const ids = { next: 0 };
+
   return {
     setTimeout: (callback, delay): number => {
       timers.set(ids.next, { callback, delay });
+
       return ids.next++;
     },
-    clearTimeout: (id: unknown): void => {
-      if (typeof id === 'number') timers.delete(id);
+    clearTimeout: (id: number): void => {
+      timers.delete(id);
     },
   };
 };
 
 export const createModelClock = (): ModelClock => {
   const timers: Timers = new Map();
+
   return {
     clock: createClock(timers),
     fire: (connection, eventType): void =>

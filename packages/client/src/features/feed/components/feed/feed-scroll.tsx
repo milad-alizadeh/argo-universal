@@ -17,11 +17,13 @@ import { useCollapsibleMotion } from './use-collapsible-motion';
 
 // Stable objects, since Legend List lays out again whenever its content style changes. Rows hold the side padding, which Legend List drops on web.
 const phoneContentStyle = { paddingTop: 16 };
+
 const wideContentStyle = { paddingTop: 24 };
 
 // Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it; a footer, since `alignItemsAtEnd` ignores bottom padding.
 function FeedEnd(): React.JSX.Element {
   const { endSpace } = useFeedEndClearance();
+
   return <View style={{ height: endSpace }} />;
 }
 
@@ -118,6 +120,7 @@ function useFeedListProps(
   { entries, ...props }: Omit<FeedScrollProps, 'list' | 'atEnd'>,
 ): FeedListProps {
   const { maintainScrollAtEnd, ...motion } = useCollapsibleMotion(list);
+
   return {
     contentContainerStyle: useWide() ? wideContentStyle : phoneContentStyle,
     data: entries,
@@ -135,6 +138,7 @@ export function FeedScroll({
   ...props
 }: FeedScrollProps): React.JSX.Element {
   const listProps = useFeedListProps(list, props);
+
   return (
     <ScrollFadeList
       ref={list}

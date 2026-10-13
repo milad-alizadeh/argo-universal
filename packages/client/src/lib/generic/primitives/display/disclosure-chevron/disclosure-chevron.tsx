@@ -27,7 +27,9 @@ export function DisclosureChevron({
       className={cn('text-muted-foreground', className)}
     />
   );
+
   if (open === undefined) return chevron;
+
   return <Turning open={open}>{chevron}</Turning>;
 }
 
@@ -56,6 +58,7 @@ function useTurn(open: boolean): TurnStyle {
       }),
     [open],
   );
+
   return useAnimatedStyle<ViewStyle>(
     () => ({ transform: [{ rotate: `${rotation.value}deg` }] }),
     [rotation],

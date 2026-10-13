@@ -7,28 +7,44 @@ import { readUntilIdle } from '#mocks/feed-workload-observation';
 
 // Published budgets for 8 Sessions each streaming a 200 KB Agent message (measured alone: ~2.3 MiB, p95 ~10 ms, worst 30–80 ms; beside the whole test run: p95 ~31 ms, worst ~109 ms).
 const retainedByteBudget = 8_388_608;
+
 const eventLoopDelayP95BudgetMs = 50;
+
 // One garbage collection may stall a single sample; a whole-message reparse would stall for seconds.
 const eventLoopDelayWorstBudgetMs = 250;
+
 const p95 = 0.95;
+
 const sessionCount = 8;
+
 const chunkCount = 2000;
+
 const burstSize = 10;
+
 const chunk = 'x'.repeat(99);
 
 setFlagsFromString('--expose-gc');
+
 const gc: unknown = runInNewContext('gc');
+
 const readRetainedBytes = (): number => {
   if (typeof gc !== 'function') throw new Error('gc is unavailable');
   gc();
   gc();
+
   return process.memoryUsage().heapUsed;
 };
 
+interface EventLoopDelaySample {
+  // Ends the sample; resolves to each timer's lateness in ms, smallest first.
+  stop: () => number[];
+}
+
 // How late each 10 ms timer fires through the event loop's own work: lateness counts only up to the CPU time the main thread used meanwhile, so neither other test files sharing the machine nor V8's helper threads count.
-const sampleEventLoopDelay = (): { stop: () => number[] } => {
+const sampleEventLoopDelay = (): EventLoopDelaySample => {
   const delays: number[] = [];
   let timer: NodeJS.Timeout | undefined;
+
   const schedule = (): void => {
     const due = performance.now() + 10;
     const cpu = process.threadCpuUsage();
@@ -39,10 +55,13 @@ const sampleEventLoopDelay = (): { stop: () => number[] } => {
       schedule();
     }, 10);
   };
+
   schedule();
+
   return {
     stop: (): number[] => {
       clearTimeout(timer);
+
       return delays.toSorted((left, right) => left - right);
     },
   };
@@ -61,18 +80,22 @@ it('long Agent messages in several Sessions stay within the retained-byte and ev
       { type: 'yield' as const },
     ]).flat(),
   });
+
   const sessions = await Promise.all(
     Array.from({ length: sessionCount }, () =>
       host.caller.session.new(emptySessionInput),
     ),
   );
+
   const before = readRetainedBytes();
   const delay = sampleEventLoopDelay();
+
   const subscriptions = await Promise.all(
     sessions.map((created) =>
       host.caller.feed.subscribe({ ...created, after: null }),
     ),
   );
+
   const reading = Promise.all(subscriptions.map(readUntilIdle));
   await Promise.all(
     sessions.map((created) =>

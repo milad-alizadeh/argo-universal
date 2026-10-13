@@ -9,6 +9,7 @@ export type AcpLifetimeEvent =
   | { type: 'acp.update'; notification: SessionNotification }
   | { type: 'acp.failed'; error: unknown }
   | AcpRequestEvent;
+
 export const createLifetimeDestination = (
   requests: AcpSessionRequests,
   send: (event: AcpLifetimeEvent) => void,

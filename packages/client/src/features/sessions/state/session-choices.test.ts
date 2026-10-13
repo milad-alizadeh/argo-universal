@@ -15,6 +15,7 @@ describe('toSessionChoices', () => {
     const choices = toSessionChoices(
       input({ agents: newSessionCatalogs.oneNotInstalled }),
     );
+
     expect([choices.project?.id, choices.agent?.agent]).toEqual([
       worktreeProject.id,
       secondAgent.agent,
@@ -25,6 +26,7 @@ describe('toSessionChoices', () => {
     const choices = toSessionChoices(
       input({ agents: newSessionCatalogs.bothUnavailable }),
     );
+
     expect(choices.agent?.agent).toBe(firstAgent.agent);
   });
 
@@ -32,6 +34,7 @@ describe('toSessionChoices', () => {
     const choices = toSessionChoices(
       input({ chosen: { projectId: mainProject.id } }),
     );
+
     expect(choices.project?.id).toBe(mainProject.id);
   });
 
@@ -39,6 +42,7 @@ describe('toSessionChoices', () => {
     const choices = toSessionChoices(
       input({ chosen: { projectId: 'deleted-project' } }),
     );
+
     expect(choices.project?.id).toBe(worktreeProject.id);
   });
 
@@ -46,6 +50,7 @@ describe('toSessionChoices', () => {
     const choices = toSessionChoices(
       input({ chosen: { agent: secondAgent.agent } }),
     );
+
     expect(choices.agent?.agent).toBe(secondAgent.agent);
   });
 
@@ -89,6 +94,7 @@ describe('chooseAnotherProject', () => {
       { projectId: worktreeProject.id, newWorktree: true },
       mainProject.id,
     );
+
     expect(chosen).toEqual({
       projectId: mainProject.id,
       newWorktree: undefined,

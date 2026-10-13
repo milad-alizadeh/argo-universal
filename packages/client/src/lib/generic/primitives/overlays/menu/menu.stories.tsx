@@ -10,6 +10,7 @@ const choices = [
   { value: 'ask', label: 'Ask before changes' },
   { value: 'full', label: 'Full access' },
 ] as const;
+
 type Permission = (typeof choices)[number]['value'];
 
 type PermissionsMenuProps = { disabled?: boolean };
@@ -18,6 +19,7 @@ function PermissionsMenu({
   disabled = false,
 }: PermissionsMenuProps): React.JSX.Element {
   const [value, setValue] = useState<Permission>('default');
+
   return (
     <Menu
       accessibilityLabel="Permissions"
@@ -53,7 +55,9 @@ function triggerClassName(): string {
 }
 
 const meta = { title: 'Design System/Primitives/Menu' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

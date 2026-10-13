@@ -11,13 +11,17 @@ import {
 } from '#mocks/scripted-agent';
 import { createAcpResources } from './index';
 
-const failureRecorder = (
-  updates: SessionNotification[] = [],
-): {
+// Records each failure the resources report to the Session destination.
+type FailureRecorder = {
   failures: unknown[];
   destination: ReturnType<typeof createResourceDestination>;
-} => {
+};
+
+const failureRecorder = (
+  updates: SessionNotification[] = [],
+): FailureRecorder => {
   const failures: unknown[] = [];
+
   return {
     failures,
     destination: {
@@ -34,6 +38,7 @@ it('a failed shared connection informs each attached Session once', async () => 
     steps: [],
     autoExit: false,
   });
+
   const resources = createAcpResources(peer);
   const first = failureRecorder();
   const second = failureRecorder();
@@ -50,11 +55,14 @@ it('a failed connection fences its late Session updates', async () => {
     steps: [],
     autoExit: false,
   });
+
   const resources = createAcpResources(peer);
   const updates: SessionNotification[] = [];
+
   const lease = await resources.open(
     createResourceOpening(failureRecorder(updates).destination),
   );
+
   const old = requireScriptedProcessAt(peer.processes);
   old.disconnect();
   await vi.waitFor(() => expect(old.terminations).toBe(1));

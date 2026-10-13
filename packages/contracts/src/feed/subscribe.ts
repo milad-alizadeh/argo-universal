@@ -9,12 +9,14 @@ export const FeedSyncPoint = z.strictObject({
   epoch: sessionColumns.shape.epoch,
   revision: feedRowColumns.shape.revision,
 });
+
 export type FeedSyncPoint = z.infer<typeof FeedSyncPoint>;
 
 export const FeedSubscribeInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
   after: FeedSyncPoint.nullable(),
 });
+
 export type FeedSubscribeInput = z.infer<typeof FeedSubscribeInput>;
 
 // A whole row, new or changed.
@@ -23,6 +25,7 @@ export const RowUpsert = z.strictObject({
   rev: feedRowColumns.shape.revision,
   row: SessionUpdate,
 });
+
 export type RowUpsert = z.infer<typeof RowUpsert>;
 
 // Text appended to the string at `field`, a dotted path such as `content.0.text`; the App applies it only when `off` equals that string's length.
@@ -31,6 +34,7 @@ export const RowAppend = FeedAppend.extend({
   rev: feedRowColumns.shape.revision,
   off: z.int(),
 });
+
 export type RowAppend = z.infer<typeof RowAppend>;
 
 // Top-level fields of a row that changed.
@@ -38,12 +42,14 @@ export const RowPatch = FeedPatch.extend({
   type: z.literal('row.patch'),
   rev: feedRowColumns.shape.revision,
 });
+
 export type RowPatch = z.infer<typeof RowPatch>;
 
 export const FeedSnapshot = z.strictObject({
   type: z.literal('snapshot'),
   snapshot: SessionSnapshot,
 });
+
 export type FeedSnapshot = z.infer<typeof FeedSnapshot>;
 
 // The Server rebuilt the Session's rows; the App drops its cache for the Session.
@@ -66,4 +72,5 @@ export const FeedSubscribeOutput = z.discriminatedUnion('type', [
   FeedReset,
   FeedClosed,
 ]);
+
 export type FeedSubscribeOutput = z.infer<typeof FeedSubscribeOutput>;

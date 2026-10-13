@@ -12,6 +12,7 @@ import { $closest } from './rich-textarea-selection';
 
 function $inListItem(): boolean {
   const selection = $getSelection();
+
   return (
     $isRangeSelection(selection) &&
     $closest(selection.anchor.getNode(), $isListItemNode) !== undefined
@@ -28,9 +29,11 @@ export function registerListTab(editor: LexicalEditor): () => void {
     (event) => {
       if (!$inListItem()) return false;
       event.preventDefault();
+
       const command = event.shiftKey
         ? OUTDENT_CONTENT_COMMAND
         : INDENT_CONTENT_COMMAND;
+
       return editor.dispatchCommand(command);
     },
     COMMAND_PRIORITY_EDITOR,

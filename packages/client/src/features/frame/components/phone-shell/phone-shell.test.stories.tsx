@@ -22,6 +22,7 @@ const meta = {
 } satisfies Meta<typeof controlledPhoneLayout.component>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function menuOpensAndSelectionClosesDrawer(width: number): Story {
@@ -34,9 +35,11 @@ function menuOpensAndSelectionClosesDrawer(width: number): Story {
             canvas.queryByRole('button', { name: 'Sessions' }),
           ).toBeNull();
           const content = canvas.getByTestId('phone-shell-content');
+
           const closedPosition = canvas
             .getByTestId('phone-shell')
             .getBoundingClientRect().left;
+
           // The previous selection's close animation must settle before the menu button is clicked.
           await waitFor(() =>
             expect(content.getBoundingClientRect().left).toBeCloseTo(
@@ -67,8 +70,10 @@ function menuOpensAndSelectionClosesDrawer(width: number): Story {
     },
   };
 }
+
 export const MenuOpensAndSelectionClosesDrawerPhone =
   menuOpensAndSelectionClosesDrawer(layoutWidths.phone);
+
 export const MenuOpensAndSelectionClosesDrawerTablet =
   menuOpensAndSelectionClosesDrawer(layoutWidths.tablet);
 
@@ -79,6 +84,7 @@ export const HeaderActionsReportCallbacks: Story = {
     const root = createRoot(canvas.getByTestId('header-actions-root'));
     const onSearch = fn();
     const onFilter = fn();
+
     try {
       root.render(
         <SafeAreaProvider>

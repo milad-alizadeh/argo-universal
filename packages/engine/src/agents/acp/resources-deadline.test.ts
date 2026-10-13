@@ -19,18 +19,23 @@ it('the close deadline bounds a blocked accepted write and retains ownership whi
     steps: [],
     autoExit: false,
   });
+
   let paused: ReturnType<typeof pauseAcpResponses> | undefined;
+
   const resources = createAcpResources({
     closeTimeoutMs: 50,
     launchProcess: async (launch) => {
       const process = await peer.launchProcess(launch);
       paused = pauseAcpResponses(process.stream);
+
       return { ...process, stream: paused.stream };
     },
   });
+
   const failures: unknown[] = [];
   const pending = Promise.withResolvers<never>();
   let requested = false;
+
   const lease = await resources.open(
     createResourceOpening({
       ...createResourceDestination(),
@@ -39,26 +44,32 @@ it('the close deadline bounds a blocked accepted write and retains ownership whi
       },
       requestPermission: () => {
         requested = true;
+
         return pending.promise;
       },
     }),
   );
+
   const updates: ReturnType<typeof createResourceUpdate>[] = [];
+
   const sibling = await resources.open(
     createResourceOpening(createResourceDestination(updates)),
   );
+
   if (!paused) throw new Error('Missing pressured stream');
   onTestFinished(paused.resume);
   const process = requireScriptedProcessAt(peer.processes);
   const answers: RequestPermissionResponse[] = [];
+
   const permission = process
     .play(
       [{ type: 'permission', request: acpPermission, responses: answers }],
       lease.sessionId,
     )
     .then(() => answers[0]);
+
   await vi.waitFor(() => expect(requested).toBe(true));
-  const closing = lease.close().catch((error: unknown): unknown => error);
+  const closing = lease.close().catch((cause: unknown) => cause);
   await paused.entered;
   await vi.waitFor(() =>
     expect(failures).toContainEqual(

@@ -11,18 +11,22 @@ const allowOnce: PermissionOption = {
   name: 'Allow once',
   kind: 'allow_once',
 };
+
 const rejectOnce: PermissionOption = {
   optionId: 'reject_once',
   name: 'Deny',
   kind: 'reject_once',
 };
+
 const request = (requestId: string): PendingPermission => ({
   requestId,
   toolCallId: `tool-${requestId}`,
   title: 'Read a file',
   options: [allowOnce, rejectOnce],
 });
+
 const head = request('first');
+
 const queue = [head, request('second')];
 
 it.each([

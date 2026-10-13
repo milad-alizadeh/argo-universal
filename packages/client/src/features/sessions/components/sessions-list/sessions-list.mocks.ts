@@ -12,13 +12,18 @@ export const sessionsListProps = {
   query: '',
   archived: false,
 };
+
 const project = projectsList[0];
+
 if (!project) throw new Error('Missing Project mock');
+
 export const multipleProjects = [
   ...projectsList,
   { ...project, id: 'project-empty', name: 'Empty Project' },
 ];
+
 const largeSessionCount = 2000;
+
 export const largeSessions = Array.from(
   { length: largeSessionCount },
   (_, index) => ({

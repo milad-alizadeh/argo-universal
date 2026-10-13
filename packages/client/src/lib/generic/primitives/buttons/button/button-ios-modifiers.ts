@@ -1,7 +1,6 @@
 import {
   accessibilityLabel,
   accessibilityValue,
-  buttonBorderShape,
   buttonStyle,
   controlSize,
   frame,
@@ -9,6 +8,7 @@ import {
   type ModifierConfig,
 } from '@expo/ui/swift-ui/modifiers';
 import { PlatformColor, type ColorValue } from 'react-native';
+import { capsuleButtonBorder } from '../../native/swift-outline-modifiers';
 import type { ButtonTheme } from './button-native-colors';
 import type {
   ButtonDataProps,
@@ -36,6 +36,7 @@ const buttonStyles = {
   ghost: 'plain',
   link: 'plain',
 } as const satisfies Record<ButtonVariant, string>;
+
 const controlSizes = {
   xs: 'small',
   sm: 'regular',
@@ -61,7 +62,7 @@ function buttonStyleModifiers(
 ): ModifierConfig[] {
   return [
     buttonStyle(buttonStyles[nativeButtonVariant(props)]),
-    buttonBorderShape('capsule'),
+    capsuleButtonBorder(),
     controlSize(controlSizes[props.size ?? 'md']),
     frame({ minWidth: 44, minHeight: 44 }),
   ];
@@ -74,6 +75,7 @@ function buttonAccessibility(
   >,
 ): ModifierConfig[] {
   const value = accessibilityState(props);
+
   return [
     accessibilityLabel(props.accessibilityLabel ?? props.label),
     ...(value ? [accessibilityValue(value)] : []),
@@ -84,6 +86,7 @@ function accessibilityState(
   props: Pick<ButtonDataProps, 'loading' | 'disabled'>,
 ): string | undefined {
   if (props.loading) return 'Loading';
+
   return props.disabled ? 'Dimmed' : undefined;
 }
 
@@ -92,6 +95,7 @@ function buttonTint(
   theme: ModifierTheme,
 ): ModifierConfig[] {
   const fill = buttonFill(props, theme);
+
   return fill === undefined ? [] : [tint(fill)];
 }
 
@@ -100,8 +104,11 @@ function buttonFill(
   theme: ModifierTheme,
 ): ColorValue | undefined {
   const variant = nativeButtonVariant(props);
+
   if (buttonStyles[variant] !== 'borderedProminent') return theme.primary;
+
   if (variant === 'outline') return theme.mutedFill;
+
   return filledTint(props.role, theme);
 }
 

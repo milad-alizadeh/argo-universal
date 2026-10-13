@@ -59,6 +59,7 @@ export const publishedRegistry: ACPAgentRegistry = {
 };
 
 export const offlineRegistry = { offline: true };
+
 export const malformedRegistry = {
   version: '1.0.0',
   agents: [{ id: 'broken' }],

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { serverAnswers } from './wait-for-dev-servers.mjs';
 
 let home: string;
+
 let mockServer: Server | undefined;
 
 const serverFile = (): string => join(home, 'server.json');
@@ -22,15 +23,17 @@ const writeServerFile = (port: number): void =>
     }),
   );
 
-// Starts an HTTP server whose tRPC system.info answers with `body`, and returns its port.
-async function startMockServer(body: unknown): Promise<number> {
+// Starts an HTTP server whose tRPC system.info answers with the JSON text `body`, and returns its port.
+async function startMockServer(body: string): Promise<number> {
   mockServer = createServer((request, response): void => {
     if (request.url !== '/trpc/system.info') {
       response.writeHead(404).end();
+
       return;
     }
+
     response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify(body));
+    response.end(body);
   });
   const server = mockServer;
   await new Promise<void>(
@@ -38,8 +41,10 @@ async function startMockServer(body: unknown): Promise<number> {
       server.listen(0, '127.0.0.1', (): void => resolve()),
   );
   const address = server.address();
+
   if (!address || typeof address === 'string')
     throw new Error('Server has no TCP address');
+
   return address.port;
 }
 
@@ -59,7 +64,7 @@ describe('serverAnswers', (): void => {
   });
 
   it('is false while nothing answers on the port in server.json', async (): Promise<void> => {
-    const port = await startMockServer({});
+    const port = await startMockServer('{}');
     mockServer?.close();
     writeServerFile(port);
 
@@ -67,22 +72,26 @@ describe('serverAnswers', (): void => {
   });
 
   it('is false when system.info answers with another shape', async (): Promise<void> => {
-    writeServerFile(await startMockServer({ result: { data: { ok: true } } }));
+    writeServerFile(
+      await startMockServer(JSON.stringify({ result: { data: { ok: true } } })),
+    );
 
     expect(await serverAnswers(home)).toBe(false);
   });
 
   it('is true once system.info answers on the port in server.json', async (): Promise<void> => {
     writeServerFile(
-      await startMockServer({
-        result: {
-          data: {
-            version: '1.2.3',
-            startedAt: '2026-10-03T00:00:00.000Z',
-            pid: 4242,
+      await startMockServer(
+        JSON.stringify({
+          result: {
+            data: {
+              version: '1.2.3',
+              startedAt: '2026-10-03T00:00:00.000Z',
+              pid: 4242,
+            },
           },
-        },
-      }),
+        }),
+      ),
     );
 
     expect(await serverAnswers(home)).toBe(true);

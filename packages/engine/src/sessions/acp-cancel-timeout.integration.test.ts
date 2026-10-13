@@ -1,4 +1,6 @@
+import { turn } from '@repo/db/schema';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
+import { eq, sql } from 'drizzle-orm';
 import { describe, expect, it, vi } from 'vitest';
 import {
   startIgnoredCancelEngine,
@@ -9,13 +11,22 @@ import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 type Host = Awaited<ReturnType<typeof startIgnoredCancelEngine>>['host'];
+
 const prompt = [{ type: 'text' as const, text: 'Run the checks' }];
-const readTurns = (host: Host, sessionId: string): unknown =>
-  host.database.$client
-    .prepare(
-      'SELECT status, stop_reason FROM turn WHERE session_id = ? ORDER BY rowid',
-    )
-    .all(sessionId);
+
+const readTurns = (
+  host: Host,
+  sessionId: string,
+): {
+  status: (typeof turn.$inferSelect)['status'];
+  stop_reason: (typeof turn.$inferSelect)['stopReason'];
+}[] =>
+  host.database
+    .select({ status: turn.status, stop_reason: turn.stopReason })
+    .from(turn)
+    .where(eq(turn.sessionId, sessionId))
+    .orderBy(sql`rowid`)
+    .all();
 
 describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
   it.each([false, true])(
@@ -23,6 +34,7 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
     async (withSibling) => {
       const resumed = Promise.withResolvers<void>();
       const resumeGate = Promise.withResolvers<void>();
+
       const fixture = await startIgnoredCancelEngine(agentId, {
         resume: {
           steps: [
@@ -30,6 +42,7 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
           ],
         },
       });
+
       const {
         host,
         cancels,
@@ -39,10 +52,12 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
         cancelled,
         finishSibling,
       } = fixture;
+
       const sessionInput = { ...emptySessionInput, agent: agentId };
       const stuck = await host.caller.session.new(sessionInput);
       await host.caller.session.prompt({ ...stuck, prompt });
       await waitForIgnoredCancelTool(host, stuck.sessionId);
+
       const sibling = withSibling
         ? await host.caller.session.new({
             ...sessionInput,
@@ -50,7 +65,9 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
             prompt,
           })
         : null;
+
       vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
       try {
         await host.caller.session.cancel(stuck);
         await cancelled.promise;
@@ -65,10 +82,12 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
           resumes: [],
         });
         await vi.advanceTimersByTimeAsync(1);
+
         const page = await host.caller.feed.page({
           ...stuck,
           direction: 'tail',
         });
+
         expect(page.rows).toMatchObject([
           { sessionUpdate: 'user_message' },
           {
@@ -84,6 +103,7 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
       } finally {
         vi.useRealTimers();
       }
+
       await resumed.promise;
       expect(
         await waitForAcpSnapshot(host, stuck.sessionId, () => true),
@@ -142,6 +162,7 @@ const readSibling = async (
   sessionId
     ? (await waitForAcpSnapshot(host, sessionId, () => true)).state
     : null;
+
 const finishSiblingTurn = async (
   host: Host,
   sessionId?: string,

@@ -12,9 +12,11 @@ import {
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 
 const meta = { ...settingsListTestMeta, title: 'Tests/SettingsList' };
+
 export default meta;
 
 export const AllPagesNavigatePhone = allPagesNavigate(layoutWidths.phone);
+
 export const AllPagesNavigateWide = allPagesNavigate(layoutWidths.wide);
 
 export const WaitingForData: Story = {
@@ -44,6 +46,7 @@ export const AllPagesNavigatePhoneDark: Story = {
   ...AllPagesNavigatePhone,
   globals: { mode: 'dark' },
 };
+
 export const AllPagesNavigateWideDark: Story = {
   ...AllPagesNavigateWide,
   globals: { mode: 'dark' },
@@ -88,11 +91,14 @@ export const ChildSelectionAndAttentionDark: Story = {
 export const TheSearchNarrowsThePagesPhone = searchNarrowsThePages(
   layoutWidths.phone,
 );
+
 export const TheSearchNarrowsThePagesWide = searchNarrowsThePages(
   layoutWidths.wide,
 );
+
 export const TheSearchSaysWhenNothingMatchesPhone =
   searchSaysWhenNothingMatches(layoutWidths.phone);
+
 export const TheSearchSaysWhenNothingMatchesWide = searchSaysWhenNothingMatches(
   layoutWidths.wide,
 );

@@ -26,6 +26,7 @@ async function startNewSessionEngine(identity: AgentIdentity): Promise<
   await initTestRepository(project);
   const { database, remove } = openTestDatabase({}, project);
   onTestFinished(remove);
+
   return {
     project,
     ...(await startEngineTestHost({
@@ -52,6 +53,7 @@ it.each(fixtureAgents)(
         }),
       ]),
     );
+
     const { sessionId } = await caller.session.new({
       projectId: 'project-1',
       agent: identity.agent,
@@ -59,12 +61,14 @@ it.each(fixtureAgents)(
       configOptions: [],
       prompt: [{ type: 'text', text: 'Initial prompt' }],
     });
+
     await expect
       .poll(async (): Promise<string | undefined> => {
         const { rows } = await caller.feed.page({
           sessionId,
           direction: 'tail',
         });
+
         return rows.at(-1)?.sessionUpdate;
       })
       .toBe('agent_message');

@@ -25,8 +25,10 @@ import type { BottomSheetProps } from './bottom-sheet.types';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const commands = useFormSheetCommands();
+
   if (commands && props.size === 'form')
     return <RoutedFormSheet {...props} commands={commands} />;
+
   return (
     <BottomSheetRoot {...props}>
       <Host matchContents>
@@ -81,6 +83,7 @@ function SheetContent(props: SheetContentProps): React.JSX.Element {
 
 function useSheetModifiers(props: SheetContentProps): ModifierConfig[] {
   const colors = useNativeTheme().colors;
+
   return [
     ...useSheetDetents(props),
     presentationDragIndicator('visible'),
@@ -96,6 +99,7 @@ function useSheetDetents(
   const [selection, setSelection] = useState<PresentationDetent>(
     initialDetent(props.initialSize),
   );
+
   return props.fit
     ? []
     : [
@@ -110,6 +114,7 @@ function initialDetent(
   size: BottomSheetProps['initialSize'],
 ): PresentationDetent {
   if (size === 'expanded') return 'large';
+
   return size === 'medium' ? 'medium' : { height: 320 };
 }
 

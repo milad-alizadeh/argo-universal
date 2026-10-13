@@ -54,6 +54,8 @@
     // Installed by the skills tool, not written in this repo.
     ".agents/",
     ".claude/skills/",
-    "skills-lock.json"
+    "skills-lock.json",
+    // Vendored anti-slop keeps upstream's formatting so updates diff cleanly.
+    "tooling/oxlint/anti-slop/"
   ]
 }

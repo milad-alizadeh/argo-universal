@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 import { z } from 'zod';
 
 const execute = promisify(execFile);
+
 const run = (
   arguments_: string[],
   signal?: AbortSignal,
@@ -14,9 +15,13 @@ const run = (
   stdout: string;
   stderr: string;
 }> => execute('git', arguments_, { signal });
+
 let rejectedResponses = 0;
+
 const branchRefPrefix = 'refs/heads/';
+
 const sessionBranchPrefix = 'argo/';
+
 // A local branch ref, read as the branch name.
 const branchName = z
   .string()
@@ -32,6 +37,7 @@ const rejectResponse = (what: string, detail?: string): never => {
   );
   throw new Error(`Unrecognised git ${what} response`);
 };
+
 const checkoutRecord = z
   .strictObject({
     worktree: z.string().refine(isAbsolute),
@@ -49,22 +55,28 @@ const checkoutRecord = z
 // NUL-delimited porcelain keeps paths containing line breaks intact.
 const readMainCheckout = (output: string): Checkout => {
   const fields = (output.split('\0\0')[0] ?? '').split('\0').filter(Boolean);
+
   const record = Object.fromEntries(
     fields.map((field): [string, string] | [string, boolean] => {
       const separator = field.indexOf(' ');
+
       return separator === -1
         ? [field, true]
         : [field.slice(0, separator), field.slice(separator + 1)];
     }),
   );
+
   const result = checkoutRecord.safeParse(record);
+
   if (!result.success)
     return rejectResponse('worktree list', result.error.message);
+
   return {
     path: result.data.worktree,
     branch: result.data.branch ?? null,
   };
 };
+
 export interface Checkout {
   path: string;
   branch: string | null;
@@ -80,18 +92,22 @@ export async function readRepository(
   path: string,
 ): Promise<{ root: string; commonDirectory: string }> {
   const directory = await realpath(path);
+
   const responses = await Promise.all([
     run(['-C', directory, 'rev-parse', '--show-toplevel']),
     run(['-C', directory, 'rev-parse', '--git-common-dir']),
   ]);
+
   const paths = z
     .tuple([
       z.string().trim().min(1).refine(isAbsolute),
       z.string().trim().min(1),
     ])
     .safeParse(responses.map(({ stdout }): string => stdout));
+
   if (!paths.success)
     return rejectResponse('repository paths', paths.error.message);
+
   return {
     root: paths.data[0],
     commonDirectory: await realpath(resolve(directory, paths.data[1])),
@@ -105,6 +121,7 @@ export async function listBranches(
 ): Promise<{ branches: string[]; currentBranch: string | null }> {
   const git = (...arguments_: string[]): ReturnType<typeof run> =>
     run(['-C', projectPath, ...arguments_], signal);
+
   const [{ stdout }, head] = await Promise.all([
     git('for-each-ref', '--format=%(refname)', 'refs/heads/'),
     git('symbolic-ref', '--quiet', 'HEAD').then(
@@ -112,20 +129,31 @@ export async function listBranches(
       (): null => null,
     ),
   ]);
+
   signal?.throwIfAborted();
+
   const listed = z
     .array(branchName)
     .safeParse(stdout.split('\n').filter(Boolean));
+
   const current = branchName.nullable().safeParse(head);
+
   if (!listed.success || !current.success) return rejectResponse('branch list');
+
   return { branches: listed.data, currentBranch: current.data };
 }
 
 // `git remote get-url` exits with this code when the remote does not exist.
 const noSuchRemote = 2;
-const hasExitCode = (error: unknown, code: number): boolean =>
+
+const hasExitCode = (
+  error: unknown,
+  code: number,
+): error is Error & { code: number } =>
   error instanceof Error && 'code' in error && error.code === code;
+
 const schemeUrl = /^[a-z][a-z\d+.-]*:\/\//i;
+
 // scp-like syntax, such as git@github.com:owner/repo.git
 const scpUrl = /^(?:[^@/]+@)?(?<host>[^:/]+):(?!\/\/)/;
 
@@ -133,9 +161,12 @@ const scpUrl = /^(?:[^@/]+@)?(?<host>[^:/]+):(?!\/\/)/;
 function readRemoteUrlHost(url: string): string | null {
   if (schemeUrl.test(url)) {
     const parsed = URL.parse(url);
+
     if (parsed?.protocol === 'file:') return null;
+
     return parsed?.hostname || rejectResponse('remote URL');
   }
+
   return scpUrl.exec(url)?.groups?.host ?? null;
 }
 
@@ -143,25 +174,32 @@ function readRemoteUrlHost(url: string): string | null {
 export async function readOriginHost(
   projectPath: string,
 ): Promise<string | null> {
-  const url = await run([
-    '-C',
-    projectPath,
-    'remote',
-    'get-url',
-    'origin',
-  ]).then(
-    ({ stdout }): string => stdout.trim(),
-    (error: unknown): null => {
-      if (hasExitCode(error, noSuchRemote)) return null;
-      throw error;
-    },
-  );
+  const url = await readOriginUrl(projectPath);
+
   return url === null ? null : readRemoteUrlHost(url);
+}
+
+async function readOriginUrl(projectPath: string): Promise<string | null> {
+  try {
+    const { stdout } = await run([
+      '-C',
+      projectPath,
+      'remote',
+      'get-url',
+      'origin',
+    ]);
+
+    return stdout.trim();
+  } catch (error) {
+    if (hasExitCode(error, noSuchRemote)) return null;
+    throw error;
+  }
 }
 
 // The prefix is stored data and must survive a product rename.
 export const sessionBranch = (id: string): string =>
   `${sessionBranchPrefix}${id}`;
+
 export const isSessionBranch = (branch: string | null, id: string): boolean =>
   branch === sessionBranch(id);
 
@@ -178,26 +216,34 @@ export async function createCheckout(
 ): Promise<Checkout> {
   const git = async (...arguments_: string[]): Promise<string> =>
     (await run(['-C', input.projectPath, ...arguments_], signal)).stdout.trim();
+
   const main = readMainCheckout(
     await git('worktree', 'list', '--porcelain', '-z'),
   );
+
   if (input.choice.type === 'main') return main;
+
   for (const segment of [input.projectId, input.sessionId])
     if (!/^[a-zA-Z0-9_-]+$/.test(segment))
       throw new Error('Invalid Checkout path segment');
+
   const checkoutPath = join(
     input.runtimeDirectory,
     'worktrees',
     input.projectId,
     input.sessionId,
   );
+
   const branch = sessionBranch(input.sessionId);
   await mkdir(dirname(checkoutPath), { recursive: true });
   const checkoutExists = existsSync(checkoutPath);
+
   const branchExists = (
     await listBranches(input.projectPath, signal)
   ).branches.includes(branch);
+
   signal?.throwIfAborted();
+
   try {
     // A full ref keeps the base a local branch, and never an option.
     await git(
@@ -218,8 +264,10 @@ export async function createCheckout(
         true,
       );
     }
+
     throw error;
   }
+
   return { path: checkoutPath, branch };
 }
 
@@ -242,6 +290,7 @@ export async function discardCheckout(
       ],
       signal,
     );
+
   if (
     checkout.branch &&
     (await listBranches(projectPath, signal)).branches.includes(checkout.branch)

@@ -11,6 +11,7 @@ export interface ServerClient {
 export function serverHttpUrl(serverUrl: string, path: string): string {
   const url = new URL(path, serverUrl);
   url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
+
   return url.toString();
 }
 
@@ -22,6 +23,7 @@ function createWebSocketClient(
     // `beforeConnect` waits out the retry delay, so the Connection machine can cut it short.
     url: async () => {
       await beforeConnect();
+
       return serverUrl;
     },
     retryDelayMs: () => 0,
@@ -51,6 +53,7 @@ export function createTRPCClient(
 ): ServerClient {
   const webSocketClient = createWebSocketClient(serverUrl, beforeConnect);
   const client = createServerClient(serverUrl, webSocketClient);
+
   return { client, webSocketClient, close: () => webSocketClient.close() };
 }
 

@@ -16,19 +16,25 @@ import {
 } from './configuration-values';
 import { ModeContents } from './mode-choices';
 import type { Mode } from './mode-types';
+
 interface ModeControlProps {
   configuration: ComposerConfigurationProps;
   disabled: boolean;
 }
+
 const destructiveTextClassName = 'text-destructive';
+
 export function ComposerModeControl(
   props: ModeControlProps,
 ): React.JSX.Element | null {
   const wide = useContentWide();
   const mode = selection(props.configuration, 'mode');
+
   if (!mode) return null;
+
   return <ModePopover {...props} mode={mode} wide={wide} />;
 }
+
 function ModePopover(
   props: ModeControlProps & { mode: Mode; wide: boolean },
 ): React.JSX.Element {
@@ -38,19 +44,23 @@ function ModePopover(
     </ComposerPopover>
   );
 }
+
 function modeTrigger(
   props: ModeControlProps & { wide: boolean },
 ): React.JSX.Element {
   const wide = props.wide;
   const current = selectedChoice(props.configuration, 'mode');
+
   return <Button {...modeButtonProps(props, current, wide)} />;
 }
+
 const modeButtonAppearance = {
   appearance: 'content',
   size: 'xs',
   variant: 'ghost',
   accessibilityLabel: 'Mode',
 } as const;
+
 function modeButtonProps(
   props: ModeControlProps,
   current: SessionConfigSelectOption | undefined,
@@ -66,9 +76,11 @@ function modeButtonProps(
     trailing: wide ? <ModeChevron /> : undefined,
   };
 }
+
 function modeLabel(current?: SessionConfigSelectOption): string {
   return current ? configurationLabel(current.name) || 'Mode' : 'Mode';
 }
+
 function modeLabelClassName(
   current: SessionConfigSelectOption | undefined,
   wide: boolean,
@@ -79,6 +91,7 @@ function modeLabelClassName(
     isDangerous(current) && destructiveTextClassName,
   );
 }
+
 function ModeChevron(): React.JSX.Element {
   return (
     <Icon

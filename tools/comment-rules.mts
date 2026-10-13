@@ -6,6 +6,7 @@ interface CommentRule {
 
 const SUPPRESSION =
   /\b(?:oxlint|eslint)-disable(?:-next-line|-line)?(?![\w-])(.*)$/;
+
 const RULE_NAME = String.raw`[@\w][\w@/-]*`;
 
 const textRules: CommentRule[] = [
@@ -47,26 +48,31 @@ const suppressionRules: CommentRule[] = [
 // The text after a comment opener on this line, or undefined when the line has none.
 const commentText = (line: string): string | undefined => {
   const opener = line.search(/\/\/|\/\*/);
+
   if (opener !== -1) return line.slice(opener + 2);
   const trimmed = line.trimStart();
+
   return trimmed.startsWith('*') ? trimmed.slice(1) : undefined;
 };
 
 const messages = (rules: CommentRule[], text: string): string[] =>
-  rules
-    .filter(({ pattern }): boolean => pattern.test(text))
-    .map(({ message }): string => message);
+  rules.flatMap(({ pattern, message }): string[] =>
+    pattern.test(text) ? [message] : [],
+  );
 
 const ruleList = (suppression: string): string =>
   suppression.split('*/', 1).join('').split('--', 1).join('');
 
 const suppressionProblems = (text: string): string[] => {
   const match = SUPPRESSION.exec(text);
+
   return match ? messages(suppressionRules, ruleList(match[1] ?? '')) : [];
 };
 
 export const commentProblems = (line: string): string[] => {
   const text = commentText(line);
+
   if (text === undefined) return [];
+
   return [...messages(textRules, text), ...suppressionProblems(text)];
 };

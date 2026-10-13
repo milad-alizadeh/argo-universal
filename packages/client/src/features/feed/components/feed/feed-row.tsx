@@ -33,6 +33,7 @@ function useLayoutSync(
   { onMotionChange, onGrow }: RowMotion,
 ): LayoutSync {
   const syncLayout = useSyncLayout();
+
   return useMemo(
     (): LayoutSync => ({
       syncLayout,
@@ -62,6 +63,7 @@ function entryContent(
 export function FeedRow(props: FeedRowProps): React.JSX.Element {
   const { entry, next } = props;
   const layoutSync = useLayoutSync(entryKey(entry), props);
+
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
       <SessionColumn

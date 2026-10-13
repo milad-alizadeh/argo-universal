@@ -38,6 +38,7 @@ const variations: EditVariation[] = [
 
 function EditVariationRow({ row, testID }: EditVariation): React.JSX.Element {
   if (!testID) return <EditRow row={row} />;
+
   return (
     <View testID={testID}>
       <EditRow row={row} />
@@ -51,7 +52,9 @@ const meta = {
   args: { row: recordedEdit('agent-1') },
   argTypes: { row: { control: false } },
 } satisfies Meta<typeof EditRow>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {

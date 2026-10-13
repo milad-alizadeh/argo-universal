@@ -7,7 +7,9 @@ export type AgentStatus =
   | 'sign-in'
   | 'unavailable'
   | 'not-installed';
+
 export type StatusTone = 'success' | 'warning';
+
 export type AgentsFilter = 'all' | 'installed' | 'not-installed';
 
 // One Agent in the Agents list: installed on the Server or offered by the ACP Registry.

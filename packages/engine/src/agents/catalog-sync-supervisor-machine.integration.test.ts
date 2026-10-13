@@ -9,7 +9,9 @@ import {
 import { openTestDatabase } from '#mocks/database';
 
 const idle = openTestDatabase();
+
 const interrupted = openTestDatabase();
+
 interrupted.database
   .insert(syncJobs)
   .values({
@@ -19,10 +21,12 @@ interrupted.database
     requestedAt: 1,
   })
   .run();
+
 afterAll((): void => {
   idle.remove();
   interrupted.remove();
 });
+
 const models = [idle, interrupted].map(({ database }) =>
   createCatalogSupervisorModel(database),
 );

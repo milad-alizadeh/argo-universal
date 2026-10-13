@@ -15,6 +15,7 @@ export const ToolKind = z.enum([
   'switch_mode',
   'other',
 ]);
+
 export type ToolKind = z.infer<typeof ToolKind>;
 
 export const ToolCallStatus = z.enum([
@@ -24,6 +25,7 @@ export const ToolCallStatus = z.enum([
   'failed',
   'cancelled',
 ]);
+
 export type ToolCallStatus = z.infer<typeof ToolCallStatus>;
 
 export const runningToolCallStatuses: readonly [
@@ -42,10 +44,12 @@ export const CommandAction = z.strictObject({
   path: z.string().optional(),
   query: z.string().optional(),
 });
+
 export type CommandAction = z.infer<typeof CommandAction>;
 
 export function knownCommandActions(toolCall: ToolCallUpdate): CommandAction[] {
   const actions = toolCall._meta?.argo?.commandActions;
+
   return actions?.length &&
     actions.every((action): boolean => action.type !== 'unknown')
     ? actions
@@ -56,6 +60,7 @@ export const ToolCallLocation = z.strictObject({
   path: z.string(),
   line: z.int().optional(),
 });
+
 export type ToolCallLocation = z.infer<typeof ToolCallLocation>;
 
 export const DiffChange = z.strictObject({
@@ -65,12 +70,14 @@ export const DiffChange = z.strictObject({
   oldText: z.string().optional(),
   newText: z.string().optional(),
 });
+
 export type DiffChange = z.infer<typeof DiffChange>;
 
 export const DiffPatch = z.strictObject({
   format: z.literal('git_patch'),
   text: z.string(),
 });
+
 export type DiffPatch = z.infer<typeof DiffPatch>;
 
 // ACP `TerminalExitStatus`.
@@ -78,6 +85,7 @@ export const TerminalExitStatus = z.strictObject({
   exitCode: z.int().optional(),
   signal: z.string().optional(),
 });
+
 export type TerminalExitStatus = z.infer<typeof TerminalExitStatus>;
 
 const ToolCallContentBlock = z.strictObject({
@@ -92,6 +100,7 @@ export const ToolCallDiff = z.strictObject({
   patch: DiffPatch.optional(),
   _meta: createFeedMetadataSchema(z.strictObject({})),
 });
+
 export type ToolCallDiff = z.infer<typeof ToolCallDiff>;
 
 export const ToolCallTerminal = z.strictObject({
@@ -102,6 +111,7 @@ export const ToolCallTerminal = z.strictObject({
   exitStatus: TerminalExitStatus.optional(),
   _meta: createFeedMetadataSchema(z.strictObject({})),
 });
+
 export type ToolCallTerminal = z.infer<typeof ToolCallTerminal>;
 
 export const ToolCallContent = z.discriminatedUnion('type', [
@@ -110,6 +120,7 @@ export const ToolCallContent = z.discriminatedUnion('type', [
   ToolCallTerminal,
   UnsupportedContent,
 ]);
+
 export type ToolCallContent = z.infer<typeof ToolCallContent>;
 
 // ACP `PermissionOptionKind`.
@@ -119,6 +130,7 @@ export const PermissionOptionKind = z.enum([
   'reject_once',
   'reject_always',
 ]);
+
 export type PermissionOptionKind = z.infer<typeof PermissionOptionKind>;
 
 // ACP `RequestPermissionOutcome`: how the user answered a Permission request, with the chosen option's name and kind so the Feed can show it. Rows written before the name and kind were kept lack them.
@@ -131,4 +143,5 @@ export const PermissionOutcome = z.discriminatedUnion('outcome', [
     kind: PermissionOptionKind.optional(),
   }),
 ]);
+
 export type PermissionOutcome = z.infer<typeof PermissionOutcome>;

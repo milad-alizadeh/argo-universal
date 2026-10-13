@@ -14,20 +14,29 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const scratchSourceFile = 'scratch.ts';
+
 const afterEditHook = 'after-edit';
+
 const invalidJsonFile = 'crooked.json';
+
 const beforeStopHook = 'before-stop';
+
 const blockedSourceFile = 'blocked.ts';
 
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
+
 const BLOCKED = 2;
+
 const hookScripts = [
   'agent-hooks.mts',
   'agent-hook-run.mts',
   'hook-checks.mts',
 ];
+
 const anyViolation = 'export const value: any = 1;\n';
+
 const explicitAnyRule = 'no-explicit-any';
+
 const unformattedJson = '{"a":1}\n';
 
 let root: string;
@@ -36,11 +45,22 @@ function git(...args: string[]): void {
   spawnSync('git', args, { cwd: root, encoding: 'utf8' });
 }
 
-function runHook(
-  command: string,
-  input: unknown,
-): { status: number | null; stderr: string; stdout: string } {
+// A recorded hook input: an Edit or Write call carries file_path; an apply_patch call carries a command.
+type RecordedInput = {
+  cwd?: string;
+  tool_name?: string;
+  stop_hook_active?: boolean;
+  tool_input?: { file_path?: string; command?: string | string[] };
+};
+
+// What a test pipes to a hook: a recorded input, or input the hook must skip.
+type HookStdin = RecordedInput | [] | string;
+
+type HookRun = { status: number | null; stderr: string; stdout: string };
+
+function runHook(command: string, input: HookStdin): HookRun {
   const stdin = typeof input === 'string' ? input : JSON.stringify(input);
+
   const result = spawnSync(
     'node',
     [path.join(root, 'tools/agent-hooks.mts'), command],
@@ -50,6 +70,7 @@ function runHook(
       encoding: 'utf8',
     },
   );
+
   return {
     status: result.status,
     stderr: result.stderr,
@@ -57,26 +78,21 @@ function runHook(
   };
 }
 
-// Recorded input shapes: an Edit or Write call carries file_path; an apply_patch call carries a command.
-const fileEdit = (
-  file: string,
-): { cwd: string; tool_name: string; tool_input: { file_path: string } } => ({
+const fileEdit = (file: string): RecordedInput => ({
   cwd: root,
   tool_name: 'Edit',
   tool_input: { file_path: file },
 });
-const patchEdit = (
-  file: string,
-): { cwd: string; tool_name: string; tool_input: { command: string } } => ({
+
+const patchEdit = (file: string): RecordedInput => ({
   cwd: root,
   tool_name: 'apply_patch',
   tool_input: {
     command: `*** Begin Patch\n*** Update File: ${file}\n@@\n-a\n+b\n*** End Patch`,
   },
 });
-const patchArray = (
-  file: string,
-): { cwd: string; tool_name: string; tool_input: { command: string[] } } => ({
+
+const patchArray = (file: string): RecordedInput => ({
   cwd: root,
   tool_name: 'apply_patch',
   tool_input: {
@@ -90,6 +106,7 @@ const patchArray = (
 beforeAll((): void => {
   root = mkdtempSync(path.join(tmpdir(), 'agent-hooks-'));
   mkdirSync(path.join(root, 'tools'));
+
   for (const script of hookScripts)
     cpSync(
       path.join(repositoryRoot, 'tools', script),
@@ -136,18 +153,13 @@ afterAll((): void => {
 
 describe('after-edit', (): void => {
   it.each([
-    [
-      'an Edit call',
-      (): ReturnType<typeof fileEdit> => fileEdit(scratchSourceFile),
-    ],
-    [
-      'an apply_patch call',
-      (): ReturnType<typeof patchEdit> => patchEdit(scratchSourceFile),
-    ],
+    ['an Edit call', (): RecordedInput => fileEdit(scratchSourceFile)],
+    ['an apply_patch call', (): RecordedInput => patchEdit(scratchSourceFile)],
     [
       'an apply_patch command array',
-      (): ReturnType<typeof patchArray> => {
+      (): RecordedInput => {
         writeFileSync(path.join(root, 'added.ts'), anyViolation);
+
         return patchArray('added.ts');
       },
     ],
@@ -161,10 +173,12 @@ describe('after-edit', (): void => {
   it('reports a finding through a Checkout directory alias', (): void => {
     const alias = path.join(root, 'checkout-alias');
     symlinkSync(root, alias, 'dir');
+
     const result = runHook(afterEditHook, {
       ...fileEdit(scratchSourceFile),
       cwd: alias,
     });
+
     expect(result.status).toBe(BLOCKED);
     expect(result.stderr).toContain(explicitAnyRule);
   });
@@ -215,6 +229,7 @@ describe('after-edit', (): void => {
         command: '*** Begin Patch\n*** Delete File: scratch.ts\n*** End Patch',
       },
     };
+
     expect(runHook(afterEditHook, deletion).status).toBe(0);
   });
 
@@ -233,17 +248,20 @@ describe('a Checkout without dependencies', (): void => {
   it('passes quietly, as there is nothing to check with', (): void => {
     const bare = mkdtempSync(path.join(tmpdir(), 'agent-hooks-bare-'));
     mkdirSync(path.join(bare, 'tools'));
+
     for (const script of hookScripts)
       cpSync(
         path.join(repositoryRoot, 'tools', script),
         path.join(bare, 'tools', script),
       );
     writeFileSync(path.join(bare, blockedSourceFile), anyViolation);
+
     const result = spawnSync(
       'node',
       [path.join(bare, 'tools/agent-hooks.mts'), beforeStopHook],
       { cwd: bare, input: '{}', encoding: 'utf8' },
     );
+
     rmSync(bare, { recursive: true, force: true });
     expect(result.status).toBe(0);
     expect(result.stderr).toBe('');
@@ -269,6 +287,7 @@ describe('before-stop', (): void => {
       cwd: root,
       stop_hook_active: false,
     });
+
     expect(first.status).toBe(BLOCKED);
     expect(first.stderr).toContain(blockedSourceFile);
     expect(

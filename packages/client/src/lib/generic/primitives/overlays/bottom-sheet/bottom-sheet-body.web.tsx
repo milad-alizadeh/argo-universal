@@ -40,6 +40,7 @@ function SheetScroll(props: SheetBodyProps): ReactElement {
 function SheetGrip(props: GripProps): ReactElement {
   const ref = useRef<View>(null);
   useGripKeyboard(ref, props.onResize);
+
   return (
     <View
       ref={ref}
@@ -57,9 +58,11 @@ function useGripKeyboard(
 ): void {
   useEffect(() => {
     const element = ref.current;
+
     if (!(element instanceof HTMLElement) || !onResize) return;
     const resize = resizeOnKey(onResize);
     element.addEventListener('keydown', resize);
+
     return (): void => element.removeEventListener('keydown', resize);
   }, [ref, onResize]);
 }
@@ -80,6 +83,7 @@ function gripAccessibility(
   props: GripProps,
 ): React.ComponentProps<typeof View> {
   if (!props.onResize) return {};
+
   return {
     role: 'slider',
     accessibilityLabel: 'Sheet size',

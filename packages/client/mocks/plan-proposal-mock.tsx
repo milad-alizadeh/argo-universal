@@ -31,8 +31,11 @@ if (
   );
 
 const shortMock = planProposalMocks.at(-2);
+
 if (!shortMock) throw new Error('Plan proposal recording is missing.');
+
 export const shortPlanProposal = shortMock.proposal;
+
 export const longPlanProposal = {
   ...shortMock.proposal,
   content: planProposalMocks
@@ -40,6 +43,7 @@ export const longPlanProposal = {
     .join('\n\n')
     .repeat(4),
 };
+
 export const planProposalFeedback =
   planProposalMocks.find(({ answer }) => answer.decision === 'keep_planning')
     ?.answer.feedback ?? '';
@@ -63,6 +67,7 @@ function PreviewSessions(): React.JSX.Element {
     </View>
   );
 }
+
 function PreviewInspector(): React.JSX.Element {
   return (
     <View className="hidden wide:flex w-64 bg-sidebar border-l border-border p-4">
@@ -70,6 +75,7 @@ function PreviewInspector(): React.JSX.Element {
     </View>
   );
 }
+
 function PreviewProposal(
   props: PlanProposalCardProps & { composer?: boolean },
 ): React.JSX.Element {
@@ -85,6 +91,7 @@ function PreviewProposal(
     </PlanProposalRegion>
   );
 }
+
 function PreviewCard(
   props: PlanProposalCardProps & { composer?: boolean },
 ): React.JSX.Element {

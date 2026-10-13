@@ -13,7 +13,9 @@ import {
 } from './desktop-layout-view';
 
 const recorder = createNavigationRecorder();
+
 const expanded = 'aria-expanded';
+
 const meta = {
   title: 'Tests/DesktopLayoutView',
   component: DesktopLayoutView,
@@ -34,13 +36,16 @@ const meta = {
     await page.viewport(1440, 844);
   },
 } satisfies Meta<DesktopLayoutViewProps>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const RailOpensSectionLists: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByTestId('detail-content')).toBeVisible();
     await expect(await canvas.findByText('Section list')).toBeVisible();
+
     for (const section of ['Issues', 'Atlas', 'Settings', 'Sessions'])
       await userEvent.click(
         canvas.getByRole('button', { name: new RegExp(`^${section}$`) }),
@@ -129,11 +134,13 @@ export const LongSessionTitle: Story = {
     const heading = await canvas.findByRole('heading', { name: longTitle });
     const changes = canvas.getByRole('button', { name: 'Changes' });
     const lineHeight = Number.parseFloat(getComputedStyle(heading).lineHeight);
+
     for (const open of [false, true]) {
       if (open) {
         await userEvent.click(changes);
         await expect(changes).toHaveAttribute(expanded, 'true');
       }
+
       await expect(heading.getBoundingClientRect().height).toBeLessThan(
         lineHeight * 1.5,
       );

@@ -16,13 +16,20 @@ import { useSwiftUITextModifiers } from '../../native/native-typography';
 import { hasDisclosure, hasLeadingSlot } from './list-item-styles';
 import { RowLabel, RowLeading, useRowColor } from './list-item-swift-ui';
 import { NativeRowImage, NativeRowStatus } from './native-row';
+
 const rowHeight = 44;
+
 const rowSpacing = 12;
+
 const disabledOpacity = 0.5;
+
 const reflowFontScale = 1.5;
+
 const reflowSpacing = 8;
+
 export function RowContent(props: ListItemProps): React.JSX.Element {
   const iconSize = useIconPixels('row');
+
   return (
     <HStack spacing={rowSpacing} modifiers={contentModifiers(props, iconSize)}>
       <RowLeading {...props} />
@@ -64,6 +71,7 @@ function RowTrailing(props: ListItemProps): React.JSX.Element {
 function RowValueText({ value }: { value: string }): React.JSX.Element {
   const bodyModifiers = useSwiftUITextModifiers('body', 'row');
   const color = useRowColor('secondary');
+
   return <Text modifiers={[...bodyModifiers, color]}>{value}</Text>;
 }
 
@@ -84,7 +92,9 @@ function rowOpacity(disabled: boolean | undefined): ReturnType<typeof opacity> {
 function RowFields(props: ListItemProps): React.JSX.Element {
   const { fontScale } = useWindowDimensions();
   const fields = <RowFieldItems {...props} />;
+
   if (fontScale < reflowFontScale || props.value === undefined) return fields;
+
   return <ReflowedFields>{fields}</ReflowedFields>;
 }
 

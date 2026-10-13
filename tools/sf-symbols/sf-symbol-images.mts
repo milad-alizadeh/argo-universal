@@ -6,8 +6,11 @@ import { promisify } from 'node:util';
 import { z } from 'zod';
 
 const run = promisify(execFile);
+
 const largestPointSize = 512;
+
 const source = join(import.meta.dirname, 'render-sf-symbol.swift');
+
 const binary = join(
   import.meta.dirname,
   '../node_modules/.cache/render-sf-symbol',
@@ -21,12 +24,18 @@ const SymbolRequest = z.object({
 type SymbolRequest = z.infer<typeof SymbolRequest>;
 
 let unrecognisedRequests = 0;
-let compiled: Promise<unknown> | undefined;
 
-function compile(): Promise<unknown> {
+let compiled: Promise<void> | undefined;
+
+const compileBinary = async (): Promise<void> => {
+  await run('swiftc', ['-O', source, '-o', binary]);
+};
+
+function compile(): Promise<void> {
   if (existsSync(binary)) return Promise.resolve();
   mkdirSync(dirname(binary), { recursive: true });
-  compiled ??= run('swiftc', ['-O', source, '-o', binary]);
+  compiled ??= compileBinary();
+
   return compiled;
 }
 
@@ -50,9 +59,11 @@ async function render(
   response: ServerResponse,
 ): Promise<void> {
   await compile();
+
   const { stdout } = await run(binary, [name, String(pointSize)], {
     encoding: 'buffer',
   });
+
   response.setHeader('Content-Type', 'image/png');
   response.end(stdout);
 }
@@ -62,6 +73,7 @@ function handle(request: IncomingMessage, response: ServerResponse): void {
   const symbol = SymbolRequest.safeParse(
     Object.fromEntries(new URLSearchParams(String(request.url).split('?')[1])),
   );
+
   if (!symbol.success) return reject(symbol.error, response);
   render(symbol.data, response).catch(() => answerEmpty(response));
 }

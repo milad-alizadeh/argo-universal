@@ -9,7 +9,9 @@ const meta = {
   args: { name: 'add', role: 'control' },
   tags: ['third-party'],
 } satisfies Meta<typeof Icon>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

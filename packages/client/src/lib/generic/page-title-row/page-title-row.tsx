@@ -25,6 +25,7 @@ export interface PageTitleRowProps extends PageTitleProps {
 // A page's title row: an optional back button, the title, its actions and its search.
 export function PageTitleRow(props: PageTitleRowProps): React.JSX.Element {
   if (props.search) return <SearchTitleRow {...props} search={props.search} />;
+
   return <PlainTitleRow {...props} />;
 }
 
@@ -61,6 +62,7 @@ function HangingBack({
   onBack,
 }: Pick<PageTitleRowProps, 'onBack'>): React.JSX.Element | null {
   if (!onBack) return null;
+
   return (
     <View className="absolute inset-y-0 -left-8 justify-center">
       <BackButton onBack={onBack} />

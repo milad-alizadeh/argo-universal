@@ -26,6 +26,7 @@ const meta = {
   title: 'Tests/DesktopShell',
   ...shellMeta,
 } satisfies Meta<typeof DesktopShellFrame>;
+
 export default meta;
 
 const sections = [
@@ -59,9 +60,11 @@ async function openEachSection(
 ): Promise<void> {
   const { canvas, userEvent } = context;
   const rail = canvas.getByTestId(railId);
+
   const railButtons = new Map(
     sections.map(([name]) => [name, canvas.getByRole('button', { name })]),
   );
+
   for (const [section, value] of sections) {
     await expect(canvas.getByTestId(railId)).toBe(rail);
     const button = canvas.getByRole('button', { name: section });
@@ -100,7 +103,9 @@ function sectionsAndSidebar(width: number): ShellStory {
     }),
   };
 }
+
 export const SectionsAndSidebarPhone = sectionsAndSidebar(layoutWidths.phone);
+
 export const SectionsAndSidebarWide = sectionsAndSidebar(layoutWidths.wide);
 
 // The rail lists the four sections in order and keeps the sidebar toggle last; only the open section is current.
@@ -118,6 +123,7 @@ export const RailListsSectionsThenTheSidebarToggle: ShellStory = {
       currentAttribute,
       'page',
     );
+
     for (const section of ['Sessions', 'Issues', 'Settings'])
       await expect(
         rail.getByRole('button', { name: section }),

@@ -32,6 +32,7 @@ function FailedPath({ path }: { path?: string }): React.JSX.Element | null {
 
 function FailedError({ error }: { error: string }): React.JSX.Element | null {
   if (!error) return null;
+
   return (
     <Text
       numberOfLines={1}

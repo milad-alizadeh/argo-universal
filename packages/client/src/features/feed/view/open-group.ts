@@ -7,6 +7,7 @@ import {
   type FeedActivity,
   type FeedExploration,
   type FeedGroup,
+  type FeedToolCall,
   type FeedViewItem,
   feedItemKey,
 } from './feed-view';
@@ -29,6 +30,8 @@ function settleExploration(activity: FeedActivity): void {
 
 type LiveCall = Extract<FeedGroup, { state: 'open' }>['live'];
 
+type GroupState = Pick<FeedGroup, 'state'> & { live?: LiveCall };
+
 export class OpenGroup {
   private activities: FeedActivity[] = [];
   private toolCalls: ToolCallUpdate[] = [];
@@ -43,10 +46,13 @@ export class OpenGroup {
 
   public add(row: GroupRow): void {
     if (row.sessionUpdate === 'tool_call_update') return this.addToolCall(row);
+
     if (row.sessionUpdate === 'notice') {
       this.activities.push({ type: 'row', row });
+
       return;
     }
+
     this.activities.push({ type: 'thought', row });
     this.noteThought(row.state);
   }
@@ -58,21 +64,25 @@ export class OpenGroup {
   private addToolCall(row: ToolCallUpdate): void {
     const awaitingPermission =
       row.toolCallId === this.snapshot.pendingPermission?.toolCallId;
+
     this.toolCalls.push(row);
     this.noteLiveCall(row, awaitingPermission);
+
     if (joinsExploration(row, awaitingPermission)) {
       this.addExploration(row);
+
       return;
     }
+
     this.addPlainCall(row, awaitingPermission);
   }
 
   private addPlainCall(row: ToolCallUpdate, awaitingPermission: boolean): void {
-    this.activities.push({
-      type: 'tool_call',
-      row,
-      ...(awaitingPermission ? { awaitingApproval: true } : {}),
-    });
+    const call: FeedToolCall = { type: 'tool_call', row };
+
+    if (awaitingPermission) call.awaitingApproval = true;
+    this.activities.push(call);
+
     if (!explorationActions(row).length) this.exploration = undefined;
   }
 
@@ -102,15 +112,19 @@ export class OpenGroup {
       };
       this.activities.push(this.exploration);
     }
+
     this.exploration.toolCalls.push(row);
   }
 
   public flush(): FeedViewItem[] {
     const first = this.activities[0];
+
     if (!first) return [];
+
     for (const activity of this.activities) settleExploration(activity);
     const items = this.groupItems(first);
     this.reset();
+
     return items;
   }
 
@@ -130,10 +144,13 @@ export class OpenGroup {
     };
   }
 
-  private groupState(): Pick<FeedGroup, 'state'> & { live?: LiveCall } {
-    return this.liveTitle
-      ? { state: 'open', ...(this.live ? { live: this.live } : {}) }
-      : { state: 'settled' };
+  private groupState(): GroupState {
+    if (!this.liveTitle) return { state: 'settled' };
+    const open: GroupState = { state: 'open' };
+
+    if (this.live) open.live = this.live;
+
+    return open;
   }
 
   private reset(): void {

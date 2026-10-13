@@ -35,10 +35,12 @@ interface FirstPromptSend {
 function useSentFirstPrompt(sending: boolean): SentFirstPrompt {
   const [sent, setSent] = useState<{ draft: ComposerDraft; at: number }>();
   const shown = sending ? sent : undefined;
+
   const starting = useMemo(
     () => shown && startingFeed(shown.draft, shown.at),
     [shown],
   );
+
   return {
     starting,
     show: (draft) => setSent({ draft, at: Date.now() }),
@@ -56,6 +58,7 @@ function useClearDraftOnHandOff(
     const subscription = actor.subscribe((snapshot) => {
       if (snapshot.status === 'done') clear();
     });
+
     return (): void => subscription.unsubscribe();
   }, [actor]);
 }
@@ -77,6 +80,7 @@ async function sendFirstPrompt(
 ): Promise<void> {
   sent.show(draft);
   const prompt = await attachmentDraft.uploadDraftAsPrompt(draft);
+
   if (prompt?.length) actor.send({ type: 'send', prompt });
   else sent.clear();
 }
@@ -88,6 +92,7 @@ function useFirstPrompt(
   const sending = isSending(attachmentDraft, session);
   const sent = useSentFirstPrompt(sending);
   const send = { attachmentDraft, actor: session.actor, sent };
+
   return {
     sending,
     starting: sent.starting,
@@ -103,5 +108,6 @@ export function useSessionOpening(
 ): SessionOpening {
   const session = useEmptySession(toNewSessionInput(data.choices), connected);
   useClearDraftOnHandOff(session.actor, attachmentDraft.clearDraft);
+
   return { session, ...useFirstPrompt(attachmentDraft, session) };
 }

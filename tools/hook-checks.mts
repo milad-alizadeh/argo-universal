@@ -8,9 +8,13 @@ export const root = fileURLToPath(new URL('..', import.meta.url)).replace(
   /[\\/]$/,
   '',
 );
+
 const BLOCK_EXIT_CODE = 2;
+
 const OUTPUT_LINE_LIMIT = 60;
+
 const BLOCKED_HINT = 'docs/agents/hooks.md says what the hooks run.\n';
+
 const UNMATCHED = '--no-error-on-unmatched-pattern';
 
 const lintReport = z.object({
@@ -26,7 +30,9 @@ const lintReport = z.object({
     }),
   ),
 });
+
 type LintReport = z.infer<typeof lintReport>;
+
 type Diagnostic = LintReport['diagnostics'][number];
 
 export interface Result {
@@ -45,22 +51,34 @@ const binary = (name: string): string =>
 
 export function run(command: string, args: string[]): Result {
   const result = spawnSync(command, args, { cwd: root, encoding: 'utf8' });
+
   return {
     status: result.status ?? 1,
     output: `${result.stdout}${result.stderr}`,
   };
 }
 
-export function parseJson(text: string): unknown {
+const jsonText = z.string().transform((text, context) => {
   try {
     return JSON.parse(text);
   } catch {
-    return undefined;
+    context.addIssue({ code: 'custom', message: 'Not JSON' });
+
+    return z.NEVER;
   }
+});
+
+// Text that is not JSON fails like a value that does not match `schema`.
+export function parseJson<Schema extends z.ZodType>(
+  schema: Schema,
+  text: string,
+): z.ZodSafeParseResult<z.output<Schema>> {
+  return jsonText.pipe(schema).safeParse(text);
 }
 
 function describe(diagnostic: Diagnostic): string {
   const line = diagnostic.labels[0]?.span.line ?? 0;
+
   return `${diagnostic.filename}:${line}: ${diagnostic.message} [${diagnostic.code}]`;
 }
 
@@ -68,6 +86,7 @@ function findings(report: LintReport, skipped: ReadonlySet<string>): Result {
   const kept = report.diagnostics
     .filter((diagnostic): boolean => !skipped.has(diagnostic.code))
     .map(describe);
+
   return { status: kept.length > 0 ? 1 : 0, output: kept.join('\n') };
 }
 
@@ -76,7 +95,8 @@ export function lint({ files, typeAware, skipped }: LintRun): Result {
   const flags = typeAware ? ['--type-aware'] : [];
   const args = [...flags, '--format=json', UNMATCHED, ...files];
   const result = run(binary('oxlint'), args);
-  const parsed = lintReport.safeParse(parseJson(result.output));
+  const parsed = parseJson(lintReport, result.output);
+
   return parsed.success ? findings(parsed.data, skipped) : result;
 }
 
@@ -91,15 +111,18 @@ export function checkTypes(): Result {
     '--affected',
     '--output-logs=errors-only',
   ];
+
   return run(binary('turbo'), args);
 }
 
 // Prints the first lines of every failed check and returns the exit code that blocks the agent.
 export function block(results: Result[]): number {
   const failed = results.filter((result): boolean => result.status !== 0);
+
   if (failed.length === 0) return 0;
   const output = failed.map((result): string => result.output).join('\n');
   const head = output.split('\n').slice(0, OUTPUT_LINE_LIMIT).join('\n');
   process.stderr.write(`${head}\n${BLOCKED_HINT}`);
+
   return BLOCK_EXIT_CODE;
 }

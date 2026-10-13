@@ -12,6 +12,7 @@ export function AgentLinks({
   links,
 }: Pick<AgentDetail, 'links'>): React.JSX.Element | null {
   if (!links?.length) return null;
+
   return <ListItem title="Links" accessory={<LinkList links={links} />} />;
 }
 

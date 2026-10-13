@@ -9,14 +9,18 @@ import { reconcileInterruptedInstallations } from './index';
 it('restart retains staging rather than signaling a reused process group', async () => {
   const home = await mkdtemp(join(tmpdir(), 'argo-installer-record-'));
   const staging = join(home, 'agents', 'scope', '.install-operation');
+
   const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
     detached: true,
     stdio: 'ignore',
   });
+
   const exited = new Promise<void>((resolve) =>
     child.once('exit', () => resolve()),
   );
+
   if (!child.pid) throw new Error('Unrelated process did not start');
+
   try {
     await mkdir(staging, { recursive: true });
     const record = { pid: child.pid, token: randomUUID() };

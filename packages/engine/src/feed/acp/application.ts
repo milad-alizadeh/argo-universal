@@ -18,31 +18,41 @@ import type {
 import { assembleContentChange } from './content-dispatch';
 
 type ContentResult = FeedChangeResult & Omit<AssembledContent, 'change'>;
+
 const readExistingFeedRow = (
   input: AcpContentInput,
   id: string,
 ): SessionUpdate | undefined => {
   const row = input.feed.rows[id] ?? input.findWrittenRow(id);
+
   if (row) input.feed.rows[id] = row;
+
   return row;
 };
+
 const copyFeedForAssembly = (feed: Feed): Feed => ({
   sessionId: feed.sessionId,
   maxRevision: feed.maxRevision,
   nextPosition: feed.nextPosition,
   rows: { ...feed.rows },
 });
+
 const createAssemblyInput = (input: AcpContentInput): ContentAssemblyInput => {
   const copied = { ...input, feed: copyFeedForAssembly(input.feed) };
+
   return { ...copied, findRow: (id) => readExistingFeedRow(copied, id) };
 };
+
 const applyContentChange = (
   input: ContentAssemblyInput,
 ): ContentResult | undefined => {
   const assembled = assembleContentChange(input);
+
   if (!assembled) return undefined;
+
   if ('rejection' in assembled) return assembled;
   input.findRow(changedRowId(assembled.change));
+
   return {
     ...applyFeedChange(input.feed, assembled.change, input.turnId),
     streams: assembled.streams,
@@ -51,6 +61,7 @@ const applyContentChange = (
     unaddressedPlan: assembled.unaddressedPlan,
   };
 };
+
 const applyAcpContentUpdate = (
   input: AcpContentInput,
 ): ContentResult | undefined => {
@@ -67,6 +78,7 @@ type AcpFeedApplication = {
   state: Partial<FeedContext>;
   events: FeedInternalEvent[];
 };
+
 const createAcpContentInput = (
   context: FeedContext,
   event: Extract<FeedEvent, { type: 'feed.acpUpdate' }>,
@@ -78,6 +90,7 @@ const createAcpContentInput = (
   findUnaddressedPlan: context.findUnaddressedPlan,
   unaddressedPlan: context.unaddressedPlan,
 });
+
 const appendOutputBlobs = (
   context: FeedContext,
   result: Pick<ContentResult, 'blobs'>,
@@ -85,6 +98,7 @@ const appendOutputBlobs = (
   ...context.outputBlobs,
   ...(result.blobs ?? []),
 ];
+
 const createAcceptedFeedState = (
   context: FeedContext,
   result: Extract<ContentResult, { feed: Feed }>,
@@ -98,6 +112,7 @@ const createAcceptedFeedState = (
   streamEvents: [...context.streamEvents, result.streamEvent],
   outputBlobs: appendOutputBlobs(context, result),
 });
+
 const createAcceptedFeedEvents = (
   result: Extract<ContentResult, { feed: Feed }>,
   id: string,
@@ -111,6 +126,7 @@ const createAcceptedFeedEvents = (
     reason,
   })),
 ];
+
 const prepareAcceptedFeedApplication = (
   context: FeedContext,
   result: Extract<ContentResult, { feed: Feed }>,
@@ -119,17 +135,21 @@ const prepareAcceptedFeedApplication = (
     result.streamEvent.type === 'row.upsert'
       ? result.streamEvent.row.id
       : result.streamEvent.id;
+
   return {
     state: createAcceptedFeedState(context, result, id),
     events: createAcceptedFeedEvents(result, id),
   };
 };
+
 export const prepareAcpFeedApplication = (
   context: FeedContext,
   event: Extract<FeedEvent, { type: 'feed.acpUpdate' }>,
 ): AcpFeedApplication | { rejection: string } | undefined => {
   const result = applyAcpContentUpdate(createAcpContentInput(context, event));
+
   if (!result) return undefined;
+
   return 'rejection' in result
     ? result
     : prepareAcceptedFeedApplication(context, result);

@@ -18,9 +18,12 @@ const machine = createMachine({
 
 const stateKey = (snapshot: { value: unknown }): string =>
   JSON.stringify(snapshot.value);
+
 const eventKey = (event: { type: string }): string => event.type;
+
 const active = (snapshot: AnyMachineSnapshot, event: EventObject): boolean =>
   snapshot.status === 'active' && snapshot.can(event);
+
 const model = new TestModel(machine, {
   filterEvents: active,
   events: [{ type: 'start' }, { type: 'skip' }, { type: 'finish' }],
@@ -42,6 +45,7 @@ describe('unwalkedTransitions', (): void => {
     const paths = model
       .getSimplePaths()
       .filter((path): boolean => !path.description.includes('skip'));
+
     expect(
       unwalkedTransitions({ models: [model], paths, stateKey, eventKey }),
     ).toEqual(['"idle" skip "done"']);
@@ -52,6 +56,7 @@ describe('unwalkedTransitions', (): void => {
       events: [{ type: 'skip' }],
       filterEvents: active,
     });
+
     const paths = skipModel.getSimplePaths();
     expect(
       unwalkedTransitions({ models: [skipModel], paths, stateKey, eventKey }),
@@ -75,6 +80,7 @@ describe('unwalkedTransitions', (): void => {
 
   it('fails at the path cap', (): void => {
     const [path] = model.getSimplePaths();
+
     if (!path) throw new Error('The model has no paths.');
     const paths = Array.from({ length: 1000 }, (): typeof path => path);
     expect((): string[] =>

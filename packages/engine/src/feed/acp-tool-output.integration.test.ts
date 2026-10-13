@@ -9,13 +9,15 @@ import {
   startToolHost,
   readToolRow,
   readPreview,
-  readBlob,
+  readBlobText,
 } from '#mocks/feed-tool-output';
+
 it('large tool output keeps a 64 KB head and tail, marks the row truncated and stores the full output as Blobs', async () => {
   const host = await startToolHost({
     content: [{ type: 'content', content: { type: 'text', text: output } }],
     rawOutput: { stdout },
   });
+
   const row = await readToolRow(host);
   const text = readPreview(row);
   expect(text.startsWith('output-head')).toBe(true);
@@ -37,12 +39,12 @@ it('large tool output keeps a 64 KB head and tail, marks the row truncated and s
     content: { mime: 'application/json' },
     rawOutput: { mime: 'application/json' },
   });
-  expect(await readBlob(host, meta.fullOutput.content.blobId)).toEqual([
-    { type: 'content', content: { type: 'text', text: output } },
-  ]);
-  expect(await readBlob(host, meta.fullOutput.rawOutput.blobId)).toEqual({
-    stdout,
-  });
+  expect(
+    JSON.parse(await readBlobText(host, meta.fullOutput.content.blobId)),
+  ).toEqual([{ type: 'content', content: { type: 'text', text: output } }]);
+  expect(
+    JSON.parse(await readBlobText(host, meta.fullOutput.rawOutput.blobId)),
+  ).toEqual({ stdout });
 });
 
 it('tool output within 64 KB is stored whole without a truncation mark', async () => {
@@ -50,6 +52,7 @@ it('tool output within 64 KB is stored whole without a truncation mark', async (
     content: [{ type: 'content', content: { type: 'text', text: 'Done' } }],
     rawOutput: { stdout: 'ok' },
   });
+
   const row = await readToolRow(host);
   expect(row).toMatchObject({
     content: [{ type: 'content', content: { type: 'text', text: 'Done' } }],
@@ -89,6 +92,7 @@ it('a later update replaces only the output fields it supplies', async () => {
       },
     ]),
   );
+
   const row = await readToolRow(host);
   expect(row.content).toEqual([
     { type: 'content', content: { type: 'text', text: 'Done' } },
@@ -104,9 +108,11 @@ it('a later update replaces only the output fields it supplies', async () => {
 
 it('a capped multibyte text keeps only whole characters', async () => {
   const wide = '€'.repeat(40_000);
+
   const host = await startToolHost({
     content: [{ type: 'content', content: { type: 'text', text: wide } }],
   });
+
   const row = await readToolRow(host);
   const text = readPreview(row);
   expect(text).not.toContain('�');

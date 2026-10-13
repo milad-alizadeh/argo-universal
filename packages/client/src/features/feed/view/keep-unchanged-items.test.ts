@@ -57,22 +57,30 @@ describe('keepUnchangedItems', () => {
     'rebuilds only the item that holds a changed row for $agent',
     ({ rows, snapshot }) => {
       const previous = toFeedView(rows, snapshot);
+
       const groupIndex = previous.items.findIndex(
         (item) => item.type === 'group',
       );
+
       const group = requireGroup(previous.items[groupIndex]);
+
       const changedIndex = group.items.findIndex(
         (activity) =>
           activity.type === 'tool_call' || activity.type === 'exploration',
       );
+
       const changed = changedActivity(group.items[changedIndex]);
+
       const changedId =
         changed.type === 'tool_call' ? changed.row.id : changed.id;
+
       const changedRows = bumpRevision(rows, changedId);
+
       const next = keepUnchangedItems(
         previous,
         toFeedView(changedRows, snapshot),
       );
+
       expect(keptObjects(previous.items, next.items)).toEqual(
         previous.items.map((_, index) => index !== groupIndex),
       );
@@ -89,6 +97,7 @@ describe('keepUnchangedItems', () => {
       const group = requireGroup(
         toFeedView(rows, snapshot).items.find((item) => item.type === 'group'),
       );
+
       // The newer page starts at the group's second row.
       const start = rows.findIndex((row) => row.id === group.id) + 1;
       const previous = toFeedView(rows.slice(start), snapshot);
@@ -102,6 +111,7 @@ describe('keepUnchangedItems', () => {
 
   it('keeps nothing without a previous view', () => {
     const [mock] = mocks;
+
     if (!mock) throw new Error('No recording');
     const next = toFeedView(mock.rows, mock.snapshot);
     expect(keepUnchangedItems(null, next)).toBe(next);

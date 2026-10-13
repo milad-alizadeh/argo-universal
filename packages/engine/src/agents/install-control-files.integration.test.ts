@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { startArchiveInstallEngine } from '#mocks/archive-installation';
+
 it.each(['.installer-group.json', './.installer-group.json.pending'])(
   'rejects archive entry %s that collides with installer ownership metadata',
   async (name) => {

@@ -2,7 +2,9 @@ import { expect, it, vi } from 'vitest';
 import { countRejection, createRejectionCounter } from './count-rejections';
 
 const readerLabel = 'reader';
+
 const rejectedRow = 'rejected row';
+
 const firstReaderReport = 'reader: rejected row #1';
 
 it('starts each counter with no rejected values', (): void => {

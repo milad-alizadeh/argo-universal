@@ -9,6 +9,7 @@ import type { FieldSectionProps } from '../field-props';
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {
   const footerId = useId();
+
   return (
     <View className="gap-2 wide:gap-3">
       <SectionTitle title={props.title} />
@@ -26,6 +27,7 @@ function SectionRows(
   props: FieldSectionProps & { footerId: string },
 ): React.JSX.Element {
   const navigation = useNavigationFields();
+
   return (
     <View className={rowsClasses(navigation)}>
       <FooterProvider value={footerOf(props, props.footerId)}>
@@ -63,6 +65,7 @@ function SectionFooter(props: FooterProps): React.JSX.Element | null {
 // A failure, such as a field's error, reads in the destructive colour and is announced.
 function FooterText(props: FooterProps & { text: string }): React.JSX.Element {
   const failure = props.tone === 'destructive';
+
   return (
     <Text
       id={props.id}
@@ -77,6 +80,7 @@ function FooterText(props: FooterProps & { text: string }): React.JSX.Element {
 
 function SectionTitle({ title }: { title?: string }): React.JSX.Element | null {
   if (!title) return null;
+
   return (
     <View className="justify-center px-4">
       <Text

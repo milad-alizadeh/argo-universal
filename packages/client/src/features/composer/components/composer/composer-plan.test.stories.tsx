@@ -14,30 +14,43 @@ import { sessionControls } from '../../../../../mocks/composer/session-controls.
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer } from './composer';
+
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+
 export default meta;
+
 export const SessionControlsPhone = sessionControls(layoutWidths.phone);
+
 export const SessionControlsWide = sessionControls(layoutWidths.wide);
+
 export const PlanDonePhone = planDone(layoutWidths.phone);
+
 export const PlanDoneWide = planDone(layoutWidths.wide);
+
 export const PlanDonePhoneDark: Story = { ...PlanDonePhone, ...dark };
+
 export const PlanDoneWideDark: Story = { ...PlanDoneWide, ...dark };
+
 export const EqualPlanStepsPhoneFirstAgent = equalPlanSteps(
   layoutWidths.phone,
   0,
 );
+
 export const EqualPlanStepsPhoneSecondAgent = equalPlanSteps(
   layoutWidths.phone,
   1,
 );
+
 export const EqualPlanStepsWideFirstAgent = equalPlanSteps(
   layoutWidths.wide,
   0,
 );
+
 export const EqualPlanStepsWideSecondAgent = equalPlanSteps(
   layoutWidths.wide,
   1,
 );
+
 export const NoPlan: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true, plan: [] })} />
@@ -55,7 +68,9 @@ export const NoPlan: Story = {
     }
   },
 };
+
 export const NoPlanDark: Story = { ...NoPlan, ...dark };
+
 export const PlanOpensAndCloses: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />

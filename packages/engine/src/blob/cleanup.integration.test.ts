@@ -14,9 +14,13 @@ import { removeUnusedBlobs } from './blob';
 import { removeOrphanAttachments } from './blob-attachment';
 
 const newUnusedBlobId = 'new-unused';
+
 const day = 24 * 60 * 60 * 1000;
+
 let database: Database;
+
 let blobsFolder: string;
+
 let uploadFile: Awaited<
   ReturnType<typeof startEngineTestHost>
 >['caller']['blob']['upload'];
@@ -27,6 +31,7 @@ beforeEach(async (): Promise<void> => {
     blobsFolder: storedBlobsFolder,
     caller,
   } = await startEngineTestHost();
+
   database = storedDatabase;
   blobsFolder = storedBlobsFolder;
   uploadFile = caller.blob.upload;
@@ -34,6 +39,7 @@ beforeEach(async (): Promise<void> => {
 
 describe('removeUnusedBlobs', (): void => {
   const now = Date.UTC(2026, 9, 5);
+
   const storeBlob = (id: string, createdAt: number): void => {
     mkdirSync(blobsFolder, { recursive: true });
     writeFileSync(join(blobsFolder, id), id);
@@ -64,6 +70,7 @@ describe('removeUnusedBlobs', (): void => {
     'recovers an old %s file while retaining an upload still in flight',
     async (extension): Promise<void> => {
       mkdirSync(blobsFolder, { recursive: true });
+
       for (const [name, age] of [
         [`old.${extension}`, day + 1],
         [`new.${extension}`, day - 1000],
@@ -82,8 +89,10 @@ describe('removeUnusedBlobs', (): void => {
   it('retains uploaded content when deduplication refreshes its cleanup age', async (): Promise<void> => {
     const uploadedAt = Date.now();
     const content = 'deduplicated';
+
     const blobId =
       'bb60c16478a264b151c0e6c514b2c242d89ff3f5a92b6ebc8154c479dc43d9d3';
+
     storeBlob(blobId, uploadedAt - day - 1);
     writeFileSync(join(blobsFolder, blobId), content);
     const form = new FormData();
@@ -109,6 +118,7 @@ describe('removeOrphanAttachments', (): void => {
       .insert(blob)
       .values({ id: 'kept', mime: 'text/plain', bytes: 1, createdAt: 0 })
       .run();
+
     for (const id of ['kept', 'deleted']) {
       mkdirSync(join(attachmentsFolder, id), { recursive: true });
       writeFileSync(join(attachmentsFolder, id, 'notes.md'), id);

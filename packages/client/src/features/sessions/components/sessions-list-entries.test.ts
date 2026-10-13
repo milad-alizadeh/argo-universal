@@ -3,15 +3,21 @@ import { describe, expect, it } from 'vitest';
 import { listEntries, type ListEntriesInput } from './sessions-list-entries';
 
 const firstProjectEntryId = 'project:project-1';
+
 const secondProjectEntryId = 'project:project-2';
 
 const [exampleProject] = projectsList;
+
 if (!exampleProject) throw new Error('No Project mock');
+
 const otherProject = { ...exampleProject, id: 'project-2', name: 'Other' };
+
 const projects = [exampleProject, otherProject];
 
 const older = { ...sessionRows.running, activityAt: 1000 };
+
 const newer = { ...sessionRows.needsInput, activityAt: 2000 };
+
 // Ties with `newer`, and its id sorts first.
 const tiedEarlierId = { ...sessionRows.failed, activityAt: 2000 };
 

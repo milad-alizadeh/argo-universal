@@ -15,7 +15,9 @@ const meta = {
   args: agentDetailArgs(),
   parameters: { screenPreview: true },
 } satisfies Meta<typeof AgentDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Ready: Story = {};
@@ -34,24 +36,28 @@ export const UpdateAvailable: Story = {
 export const FromTheRegistry: Story = {
   args: { agent: registryAgent },
 };
+
 export const ConfirmingInstall: Story = {
   args: {
     agent: registryAgent,
     installation: installationArgs({ confirming: true }),
   },
 };
+
 export const Installing: Story = {
   args: {
     agent: registryAgent,
     installation: installationArgs({ installing: true }),
   },
 };
+
 export const Updating: Story = {
   args: {
     agent: { ...readyAgent, status: 'update' },
     installation: installationArgs({ action: 'Update', installing: true }),
   },
 };
+
 export const Enabled: Story = {
   args: {
     management: {
@@ -63,6 +69,7 @@ export const Enabled: Story = {
     },
   },
 };
+
 export const Disabled: Story = {
   args: {
     management: {

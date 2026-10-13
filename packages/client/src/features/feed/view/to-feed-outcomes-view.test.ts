@@ -12,12 +12,15 @@ it.each(workMocks)(
   'keeps a failed multi-file edit plain for $agent',
   ({ rows, snapshot }) => {
     const source = toolCalls(rows).find((row) => row.kind === 'edit');
+
     if (!source) throw new Error('Recording needs an edit');
+
     const row: ToolCallUpdate = {
       ...source,
       status: 'failed',
       locations: [{ path: 'a.ts' }, { path: 'b.ts' }],
     };
+
     expect(toFeedView([row], snapshot).items).toEqual([
       { type: 'tool_call', row },
     ]);
@@ -42,6 +45,7 @@ it.each(workMocks)(
       state: 'open',
       status: 'in_progress',
     };
+
     expect(toFeedView([row], snapshot).items).toEqual([
       {
         type: 'group',

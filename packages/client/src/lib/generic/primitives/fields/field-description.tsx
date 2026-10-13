@@ -13,6 +13,7 @@ export type DescribedField = {
   invalid?: boolean;
   hint?: string;
 };
+
 export type FieldDescription = {
   invalid: boolean;
   description?: string;
@@ -24,10 +25,12 @@ export type FieldDescription = {
 export function useFieldDescription(props: DescribedField): FieldDescription {
   const message = fieldMessage(props);
   const footerId = useId();
+
   const inherited = useFooterDescription({
     invalid: message.invalid,
     hint: props.hint,
   });
+
   return {
     ...message,
     footerId,
@@ -40,6 +43,7 @@ function fieldMessage(
   props: DescribedField,
 ): Pick<FieldDescription, 'invalid' | 'description'> {
   const error = errorMessage(props.errors ?? []);
+
   return {
     invalid: fieldInvalid(props.invalid, error),
     description: error ?? props.hint,
@@ -51,6 +55,7 @@ function ownDescription(id: string, text?: string): string | undefined {
 }
 
 type FooterProps = Pick<FieldDescription, 'footerId' | 'invalid' | 'footer'>;
+
 export function FieldDescriptionFooter(
   props: FooterProps,
 ): ReactElement | null {

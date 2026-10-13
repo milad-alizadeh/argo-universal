@@ -19,6 +19,7 @@ afterEach((): void => {
 describe('server address', (): void => {
   it('creates a missing home', (): void => {
     const nested = join(home, 'argo');
+
     const address = {
       pid: 4242,
       port: 7337,
@@ -38,6 +39,7 @@ describe('server address', (): void => {
     const report = vi
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
+
     writeFileSync(join(home, 'server.json'), text);
 
     expect(readServerAddress(home)).toBeNull();
@@ -48,6 +50,7 @@ describe('server address', (): void => {
     const report = vi
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
+
     writeFileSync(join(home, 'server.json'), `{"damaged": "${home}"`);
 
     readServerAddress(home);

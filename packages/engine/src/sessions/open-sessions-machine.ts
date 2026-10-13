@@ -15,6 +15,7 @@ import { type SessionActorRef, sessionMachine } from './session-machine';
 import { sessionActorId } from './session-system';
 
 const createSessionEvent = 'sessions.create';
+
 const closeSessionEvent = 'session.close';
 
 export interface OpenSessionsInput {
@@ -57,6 +58,7 @@ type OpenSessionsEvent =
     };
 
 export const openSessionsMachine = setup({
+  // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as OpenSessionsInput,
     context: {} as OpenSessionsContext,
@@ -67,13 +69,16 @@ export const openSessionsMachine = setup({
     openSession: assign(
       ({ context, event, spawn }): Partial<OpenSessionsContext> => {
         assertEvent(event, [createSessionEvent, 'sessions.open']);
+
         if (context.sessions[event.sessionId]) return {};
+
         const session = spawn('session', {
           id: sessionActorId(event.sessionId),
           systemId: sessionActorId(event.sessionId),
           syncSnapshot: true,
           input: createSessionActorInput({ context, event }),
         });
+
         return {
           sessions: { ...context.sessions, [event.sessionId]: session },
         };
@@ -104,6 +109,7 @@ export const openSessionsMachine = setup({
       if (!('snapshot' in event)) return;
       const { snapshot } = event;
       const session = context.sessions[snapshot.context.sessionId];
+
       if (
         session &&
         snapshot.can({ type: closeSessionEvent }) &&
@@ -117,6 +123,7 @@ export const openSessionsMachine = setup({
     isRegisteredAgent: ({ context, event }): boolean => {
       if (event.type === createSessionEvent)
         return admitsNewSession(context, event.agent);
+
       return (
         event.type === 'sessions.open' &&
         admitsExistingSession(context, event.agent)

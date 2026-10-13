@@ -23,6 +23,7 @@ function steppedWidth(
 ): number {
   const step =
     nativeEvent.actionName === 'increment' ? keyboardStep : -keyboardStep;
+
   return Math.max(minimum, Math.min(maximum, value + step));
 }
 
@@ -46,6 +47,7 @@ export function PanelResizeHandle(
   props: PanelResizeHandleProps,
 ): React.JSX.Element {
   const responder = useResizeResponder(props);
+
   return (
     <View
       {...responder.panHandlers}

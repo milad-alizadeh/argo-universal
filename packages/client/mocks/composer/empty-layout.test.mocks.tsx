@@ -1,6 +1,7 @@
 import { expect } from 'storybook/test';
 import type { PlayContext } from './composer-story-context.test.mocks';
 import { agentModelLabel } from './composer-test-contract.test.mocks';
+
 export async function expectAgentTextFits(
   canvas: PlayContext['canvas'],
 ): Promise<void> {

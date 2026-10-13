@@ -54,6 +54,8 @@ export function EditRowPreview({
 }): React.JSX.Element {
   const wide = useWide();
   const feed = <EditFeed row={row} />;
+
   if (!wide) return <View className="flex-1 bg-card">{feed}</View>;
+
   return <WidePreview>{feed}</WidePreview>;
 }

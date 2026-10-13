@@ -74,10 +74,16 @@ type BadgeProps = React.ComponentProps<typeof View> &
     tone?: BadgeTone;
   } & VariantProps<typeof badgeVariants>;
 
+// The classes for the badge's box and for the text inside it.
+interface BadgeClasses {
+  box: string;
+  text: string;
+}
+
 function toneClasses(
   tone: BadgeTone,
   className: BadgeProps['className'],
-): { box: string; text: string } {
+): BadgeClasses {
   return {
     box: cn(
       badgeVariants(),
@@ -89,11 +95,9 @@ function toneClasses(
   };
 }
 
-function badgeClasses({ variant, tone, className }: BadgeProps): {
-  box: string;
-  text: string;
-} {
+function badgeClasses({ variant, tone, className }: BadgeProps): BadgeClasses {
   if (tone) return toneClasses(tone, className);
+
   return {
     box: cn(badgeVariants({ variant }), className),
     text: badgeTextVariants({ variant }),
@@ -104,6 +108,7 @@ function Badge(options: BadgeProps): ReactElement {
   const { className, variant, tone, asChild, ...props } = options;
   const Component = asChild ? Slot : View;
   const classes = badgeClasses({ variant, tone, className });
+
   return (
     <TextClassContext.Provider value={classes.text}>
       <Component className={classes.box} {...props} />

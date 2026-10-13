@@ -18,12 +18,14 @@ function badgeText(attentionCount: number): string {
 
 function badgeLabel(attentionCount: number): string {
   const sessions = attentionCount === 1 ? 'Session needs' : 'Sessions need';
+
   return `${attentionCount} ${sessions} attention`;
 }
 
 // The Sessions-section badge for the Sessions that need input or are Unread; none when no Session does.
 export function attentionBadge(attentionCount: number): AttentionBadge | null {
   if (attentionCount <= 0) return null;
+
   return {
     label: badgeLabel(attentionCount),
     text: badgeText(attentionCount),

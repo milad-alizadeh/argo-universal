@@ -7,8 +7,10 @@ export function sameList<Value>(
 ): boolean {
   if (first.length !== second.length) return false;
   const following = second.values();
+
   return first.every((value) => {
     const other = following.next();
+
     return !other.done && isSame(value, other.value);
   });
 }
@@ -33,7 +35,9 @@ function sameGroupItems(first: FeedGroup, second: FeedGroup): boolean {
 
 function sameGroup(first: FeedViewItem, second: FeedViewItem): boolean {
   if (first.type !== 'group') return false;
+
   if (second.type !== 'group') return false;
+
   return sameGroupContent(first, second);
 }
 
@@ -48,13 +52,17 @@ function sameExplorationContent(
 
 function sameExploration(first: FeedViewItem, second: FeedViewItem): boolean {
   if (first.type !== 'exploration') return false;
+
   if (second.type !== 'exploration') return false;
+
   return sameExplorationContent(first, second);
 }
 
 function sameRow(first: FeedViewItem, second: FeedViewItem): boolean {
   if (!('row' in first)) return false;
+
   if (!('row' in second)) return false;
+
   return first.row === second.row;
 }
 
@@ -68,6 +76,8 @@ function sameContents(first: FeedViewItem, second: FeedViewItem): boolean {
 
 export function sameItem(first: FeedViewItem, second: FeedViewItem): boolean {
   if (first === second) return true;
+
   if (first.type !== second.type) return false;
+
   return sameContents(first, second);
 }

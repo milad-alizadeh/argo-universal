@@ -14,7 +14,9 @@ export const ConnectionContext = createContext<ConnectionActor | null>(null);
 // The App's Connection machine, from AppProviders or a story's mock.
 export function useConnection(): ConnectionActor {
   const connection = useContext(ConnectionContext);
+
   if (!connection) throw new Error('useConnection needs AppProviders');
+
   return connection;
 }
 

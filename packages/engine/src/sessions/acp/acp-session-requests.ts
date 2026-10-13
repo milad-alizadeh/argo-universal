@@ -16,12 +16,15 @@ export type AcpRequestEvent =
   // The Agent withdrew the request, or its ACP lifetime ended.
   | { type: 'acp.requestWithdrawn'; requestId: string }
   | { type: 'agent.messageRejected'; reason: string };
+
 type Send = (event: AcpRequestEvent) => void;
+
 type Waiting = {
   requestId: string;
   signal: AbortSignal;
   withdrawn: () => void;
 };
+
 type PresentInput<Request, Response> = {
   send: Send;
   signal: AbortSignal;
@@ -29,6 +32,7 @@ type PresentInput<Request, Response> = {
   pending: PendingResponses<Response>;
   presented: (request: Request) => AcpRequestEvent;
 };
+
 type Pending<Response> = {
   resolve: (response: Response) => void;
   release: () => void;
@@ -40,14 +44,17 @@ class PendingResponses<Response> {
   public constructor(public readonly cancelled: Response) {}
   public wait({ requestId, signal, withdrawn }: Waiting): Promise<Response> {
     const response = Promise.withResolvers<Response>();
+
     const withdraw = (): void => {
       if (this.settle(requestId, this.cancelled)) withdrawn();
     };
+
     signal.addEventListener('abort', withdraw, { once: true });
     this.pending.set(requestId, {
       resolve: response.resolve,
       release: () => signal.removeEventListener('abort', withdraw),
     });
+
     return response.promise;
   }
   public settle(requestId: string, response: Response): boolean {
@@ -55,6 +62,7 @@ class PendingResponses<Response> {
     this.pending.delete(requestId);
     pending?.release();
     pending?.resolve(response);
+
     return pending !== undefined;
   }
   public cancelAll(): void {
@@ -100,15 +108,19 @@ export class AcpSessionRequests {
     input: PresentInput<Request, Response>,
   ): Promise<Response> {
     const { intake, pending, send } = input;
+
     if (intake.type !== 'presented' || input.signal.aborted)
       return this.refuse(intake, input);
     const { requestId } = intake.request;
+
     const response = pending.wait({
       requestId,
       signal: input.signal,
       withdrawn: (): void => send({ type: 'acp.requestWithdrawn', requestId }),
     });
+
     send(input.presented(intake.request));
+
     return response;
   }
   private refuse<Request, Response>(
@@ -117,6 +129,7 @@ export class AcpSessionRequests {
   ): Promise<Response> {
     if (intake.type === 'rejected')
       send({ type: 'agent.messageRejected', reason: intake.reason });
+
     return Promise.resolve(pending.cancelled);
   }
   // A null option cancels the request.

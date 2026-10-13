@@ -12,6 +12,7 @@ import {
   longHistoryPositions,
   storeLongHistory,
 } from '#mocks/feed-suite';
+
 it.each([
   { copy: 'stored', holdWrites: false },
   { copy: 'queued', holdWrites: true },
@@ -20,6 +21,7 @@ it.each([
   async ({ holdWrites }): Promise<void> => {
     storeLongHistory();
     await startFeedTestHost();
+
     if (holdWrites)
       database.$client
         .exec(`CREATE TRIGGER hold_feed_writes BEFORE UPDATE ON feed_row

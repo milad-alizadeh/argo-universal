@@ -8,12 +8,16 @@ const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
   'base64',
 );
+
 const pngMime = 'image/png';
+
 const textMime = 'text/plain';
+
 const pngId =
   '6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0';
 
 let blobsFolder: string;
+
 let uploadFile: Awaited<
   ReturnType<typeof startEngineTestHost>
 >['caller']['blob']['upload'];
@@ -21,13 +25,17 @@ let uploadFile: Awaited<
 const formWith = (file: Blob): FormData => {
   const form = new FormData();
   form.set('file', file, 'image.png');
+
   return form;
 };
+
 const upload = (file: Blob): Promise<BlobUploadOutput> =>
   uploadFile(formWith(file));
+
 beforeEach(async (): Promise<void> => {
   const { blobsFolder: storedBlobsFolder, caller } =
     await startEngineTestHost();
+
   blobsFolder = storedBlobsFolder;
   uploadFile = caller.blob.upload;
 });
@@ -50,11 +58,14 @@ describe('blob upload', (): void => {
     'stores the same content once for %s uploads',
     async (ordering): Promise<void> => {
       const firstUpload = upload(new Blob([png], { type: pngMime }));
+
       if (ordering === 'serial') await firstUpload;
+
       const [first, second] = await Promise.all([
         firstUpload,
         upload(new Blob([png], { type: pngMime })),
       ]);
+
       expect(second).toEqual(first);
       expect(readdirSync(blobsFolder)).toEqual([pngId]);
     },

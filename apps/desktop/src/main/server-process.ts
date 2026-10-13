@@ -14,6 +14,7 @@ export const resolveHome = resolveRuntimeDirectory;
 export const isRunning = (pid: number): boolean => {
   try {
     process.kill(pid, 0);
+
     return true;
   } catch {
     return false;
@@ -23,6 +24,7 @@ export const isRunning = (pid: number): boolean => {
 // server.json when its pid is alive; the Supervisor removes the file when it stops, so a crash can leave one behind.
 export function readLiveServerAddress(home: string): ServerAddress | null {
   const address = readServerAddress(home);
+
   return address && isRunning(address.pid) ? address : null;
 }
 
@@ -53,12 +55,14 @@ export function spawnSupervisor(
 ): () => void {
   let listening = true;
   const { ELECTRON_RUN_AS_NODE: _runAsNode, ...environment } = process.env;
+
   const child = spawn('node', ['--import', 'tsx', 'src/main.ts'], {
     cwd: paths.serverDirectory,
     detached: true,
     stdio: 'ignore',
     env: { ...environment, ARGO_HOME: paths.home },
   });
+
   child.unref();
   child.once('error', (error): void => {
     if (listening) report.exited(`The Supervisor could not start: ${error}`);
@@ -69,8 +73,10 @@ export function spawnSupervisor(
         `The Supervisor exited while starting (${code ?? signal}); see ${join(paths.home, 'logs')}`,
       );
   });
+
   // The pid exists once `spawn` returns; its `spawn` event only follows a tick later, too late for a quit in between.
   if (child.pid !== undefined) report.spawned(child.pid);
+
   return (): void => {
     listening = false;
   };

@@ -20,16 +20,22 @@ import { z } from 'zod';
 import packageJson from '../package.json' with { type: 'json' };
 
 const home = resolveRuntimeDirectory();
+
 const startedAt = new Date().toISOString();
+
 const version = packageJson.version;
+
 const options = AppFixtureAgents.parse(
   JSON.parse(process.env.ARGO_E2E_AGENTS ?? '{}'),
 );
+
 const requestLog = process.env.ARGO_E2E_REQUEST_LOG;
+
 // The scripted Agents log the ACP requests e2e steps check.
 const agentEnvironment: Record<string, string> = requestLog
   ? { ARGO_E2E_REQUEST_LOG: requestLog }
   : {};
+
 const port = z.coerce
   .number()
   .int()
@@ -49,11 +55,14 @@ function publishAddress(message: EngineMessage): void {
 }
 
 const seed = openDatabase(join(home, 'argo.db'));
+
 const save = seed.$client.prepare(
   "update agents set configuration = ? where id = ? and json_extract(configuration, '$.source') = 'registry' and json_extract(configuration, '$.release') is null",
 );
+
 for (const identity of fixtureAgents) {
   const fixture = AppFixtureOptions.parse(options[identity.agent] ?? {});
+
   const configuration =
     fixture.availability === 'not_installed'
       ? { source: 'registry', release: null, overrides: { args: [], env: [] } }
@@ -72,8 +81,10 @@ for (const identity of fixtureAgents) {
             })),
           },
         };
+
   save.run(JSON.stringify(configuration), identity.agent);
 }
+
 seed.$client.close();
 
 const engine = composeEngine({
@@ -102,7 +113,9 @@ engine.subscribe({
   complete: (): never => finish(engine.getSnapshot().output?.exitCode ?? 1),
   error: (error): never => {
     console.error(error);
+
     return finish(1);
   },
 });
+
 engine.start();

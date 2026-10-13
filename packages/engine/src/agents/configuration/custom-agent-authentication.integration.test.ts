@@ -7,11 +7,14 @@ import {
 
 it('saves a signed-out ACP program while reporting that its account still requires sign-in', async () => {
   const host = await startCustomAgentEngine();
+
   const definition = {
     ...customAgentDefinition,
     ...scriptedAgentCommand('signed-out'),
   };
+
   const registration = await host.caller.agents.registerCustom(definition);
+
   if (registration.status !== 'ready') throw new Error(registration.failure);
   expect(
     await host.caller.agents.check({ agentId: registration.agentId }),

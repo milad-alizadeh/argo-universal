@@ -1,10 +1,13 @@
 import type { LoginAgentRequest } from './agent-launch';
+
 type BrowserAnswer = { action: 'accept' | 'cancel' };
+
 type BrowserEvents = {
   requested: () => void;
   answered: () => void;
   cancelled: () => void;
 };
+
 export class LoginBrowser {
   private pending?: LoginAgentRequest;
   private answer?: ReturnType<typeof Promise.withResolvers<BrowserAnswer>>;
@@ -19,11 +22,13 @@ export class LoginBrowser {
   ): Promise<BrowserAnswer> {
     if (this.pending)
       return Promise.reject(new Error('Another login request is pending'));
+
     if (signal?.aborted) return this.answerCancelled();
     this.pending = request;
     this.answer = Promise.withResolvers<BrowserAnswer>();
     this.watchCancellation(signal);
     this.events.requested();
+
     return this.answer.promise;
   }
   public respond(input: {
@@ -34,6 +39,7 @@ export class LoginBrowser {
       throw new Error('Login request is no longer pending');
     this.resolve(input.action);
     this.events.answered();
+
     if (input.action === 'cancel') this.events.cancelled();
   }
   public cancel(): void {
@@ -41,6 +47,7 @@ export class LoginBrowser {
   }
   private answerCancelled(): Promise<BrowserAnswer> {
     this.events.cancelled();
+
     return Promise.resolve({ action: 'cancel' });
   }
   private watchCancellation(signal?: AbortSignal): void {

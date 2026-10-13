@@ -17,7 +17,9 @@ it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
   'rejects and counts unsupported metadata %i once at ingress',
   (_, value): void => {
     const reader = createRegistryReader();
-    expect(() => reader.parse(value)).toThrow('Registry metadata is malformed');
+    expect(() => reader.parse(JSON.stringify(value))).toThrow(
+      'Registry metadata is malformed',
+    );
     expect(reader.count()).toBe(1);
   },
 );

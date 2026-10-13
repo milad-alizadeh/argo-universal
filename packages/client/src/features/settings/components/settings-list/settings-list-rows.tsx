@@ -6,6 +6,7 @@ import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SettingsListProps, SettingsRow } from './settings-list-props';
 
 type Selection = Pick<SettingsListProps, 'selectedDestination' | 'onSelect'>;
+
 type RowsProps = Selection & { rows: SettingsRow[] };
 
 export function SettingsRows({
@@ -27,6 +28,7 @@ function SettingsRowItem({
   onSelect,
 }: Selection & { row: SettingsRow }): React.JSX.Element {
   const wide = useWide();
+
   return (
     <ListItem
       {...row}
@@ -51,5 +53,6 @@ function selectedRow(
 ): boolean {
   if (selected === undefined) return false;
   const pages = [destination.to, ...(childPages[destination.to] ?? [])];
+
   return pages.includes(selected.to);
 }

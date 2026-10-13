@@ -8,7 +8,9 @@ import { Pressable, contentActionClass } from '../../pressable/pressable';
 import { Menu } from './menu';
 
 const askLabel = 'Ask before changes';
+
 const defaultLabel = 'Default';
+
 const checkedAttribute = 'aria-checked';
 
 const choices = [
@@ -16,6 +18,7 @@ const choices = [
   { value: 'ask', label: askLabel },
   { value: 'full', label: 'Full access' },
 ] as const;
+
 type Permission = (typeof choices)[number]['value'];
 
 function Permissions({
@@ -26,6 +29,7 @@ function Permissions({
   disabled?: boolean;
 }): React.JSX.Element {
   const [value, setValue] = useState<Permission>('default');
+
   return (
     <Menu
       accessibilityLabel="Permissions"
@@ -50,7 +54,9 @@ const meta = {
   component: Permissions,
   args: { onValueChange: fn() },
 } satisfies Meta<typeof Permissions>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function keyboardSelection(width: number): Story {
@@ -61,9 +67,11 @@ function keyboardSelection(width: number): Story {
       const trigger = canvas.getByRole('button', { name: 'Permissions' });
       trigger.focus();
       await userEvent.keyboard('{Enter}');
+
       const first = await page.findByRole('menuitemradio', {
         name: defaultLabel,
       });
+
       await expect(first).toHaveAttribute(checkedAttribute, 'true');
       await waitFor(() => expect(first).toHaveFocus());
       await userEvent.keyboard('{ArrowDown}');
@@ -101,6 +109,7 @@ function keyboardSelection(width: number): Story {
 }
 
 export const KeyboardSelectionWide = keyboardSelection(layoutWidths.wide);
+
 export const KeyboardSelectionPhone = keyboardSelection(layoutWidths.phone);
 
 function pointerSelection(width: number): Story {
@@ -145,6 +154,9 @@ function disabledTrigger(width: number): Story {
 }
 
 export const PointerSelectionWide = pointerSelection(layoutWidths.wide);
+
 export const PointerSelectionPhone = pointerSelection(layoutWidths.phone);
+
 export const DisabledWide = disabledTrigger(layoutWidths.wide);
+
 export const DisabledPhone = disabledTrigger(layoutWidths.phone);

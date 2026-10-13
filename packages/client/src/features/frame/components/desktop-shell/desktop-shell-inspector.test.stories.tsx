@@ -31,6 +31,7 @@ const meta = {
   title: 'Tests/DesktopShell/Inspector',
   ...shellMeta,
 } satisfies Meta<typeof DesktopShellFrame>;
+
 export default meta;
 
 async function expectHidden(
@@ -95,9 +96,11 @@ function inspectorTakesTheDetailAreaAndRestoresIt(
     }),
   };
 }
+
 // The narrowest wide window.
 export const InspectorTakesTheDetailAreaAndRestoresItTablet =
   inspectorTakesTheDetailAreaAndRestoresIt(wideBreakpoint);
+
 export const InspectorTakesTheDetailAreaAndRestoresItPhone =
   inspectorTakesTheDetailAreaAndRestoresIt(() => layoutWidths.phone);
 

@@ -41,7 +41,7 @@ interface SkeletonRowProps {
   widths: SkeletonRowWidths;
 }
 
-const sessionLineShapes = [
+const sessionSkeletonLines = [
   {
     slot: 'h-6 wide:h-5 justify-center',
     bar: 'h-2.5 rounded-sm bg-foreground/5',
@@ -57,11 +57,11 @@ const sessionLineShapes = [
 function SkeletonSessionLines({ widths }: SkeletonRowProps): React.JSX.Element {
   return (
     <View className="flex-1 gap-0.5">
-      {sessionLineShapes.map((shape, index) => (
+      {sessionSkeletonLines.map((line, index) => (
         <SkeletonLine
-          key={shape.slot}
-          {...shape}
-          bar={`${shape.bar} ${widths[index] ?? ''}`}
+          key={line.slot}
+          {...line}
+          bar={`${line.bar} ${widths[index] ?? ''}`}
         />
       ))}
     </View>

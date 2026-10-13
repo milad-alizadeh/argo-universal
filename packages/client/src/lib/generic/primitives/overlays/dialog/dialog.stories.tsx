@@ -30,6 +30,7 @@ function DialogPreview(): React.JSX.Element {
     </Dialog>
   );
 }
+
 function ProfileContent(): React.JSX.Element {
   return (
     <DialogContent className="sm:max-w-[425px]">
@@ -39,6 +40,7 @@ function ProfileContent(): React.JSX.Element {
     </DialogContent>
   );
 }
+
 function ProfileHeader(): React.JSX.Element {
   return (
     <DialogHeader>
@@ -49,10 +51,12 @@ function ProfileHeader(): React.JSX.Element {
     </DialogHeader>
   );
 }
+
 const profileFields = [
   { id: 'name-1', label: 'Name', defaultValue: 'Pedro Duarte' },
   { id: 'username-1', label: 'Username', defaultValue: '@peduarte' },
 ];
+
 function ProfileFields(): React.JSX.Element {
   return (
     <View className="grid gap-4">
@@ -62,6 +66,7 @@ function ProfileFields(): React.JSX.Element {
     </View>
   );
 }
+
 function ProfileFooter(): React.JSX.Element {
   return (
     <DialogFooter>
@@ -76,7 +81,9 @@ const meta = {
   title: 'Design System/Primitives/Dialog',
   tags: ['third-party'],
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {
@@ -90,6 +97,7 @@ function ProfileField({
   defaultValue,
 }: (typeof profileFields)[number]): React.JSX.Element {
   const inputProps = { id, accessibilityLabel: label, defaultValue };
+
   return (
     <View className="grid gap-3">
       <Text>{label}</Text>
