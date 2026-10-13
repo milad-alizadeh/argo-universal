@@ -3,7 +3,8 @@ import type { NavigationDestination } from './context';
 type RouteHref = {
   [Key in NavigationDestination['to']]: {
     pathname: (typeof routes)[Key]['pathname'];
-    params: Omit<Extract<NavigationDestination, { to: Key }>, 'to'>;
+    params: Omit<Extract<NavigationDestination, { to: Key }>, 'to'> &
+      (Key extends 'new-session' ? { id: typeof newSessionId } : unknown);
   };
 }[NavigationDestination['to']];
 
@@ -29,8 +30,8 @@ function newSession({ projectId }: RouteParams): NavigationDestination {
 const routes = {
   sessions: { pathname: '/', destination: () => ({ to: 'sessions' }) },
   'new-session': {
-    pathname: `/sessions/${newSessionId}`,
-    destination: newSession,
+    pathname: '/sessions/[id]',
+    destination: sessionOrNew,
   },
   session: {
     pathname: '/sessions/[id]',
@@ -95,11 +96,15 @@ const routes = {
 
 export function hrefFor(destination: NavigationDestination): RouteHref {
   if (destination.to === 'session') return sessionHref(destination);
+  if (destination.to === 'new-session') return newSessionHref(destination);
   return settingsOrStaticHref(destination);
 }
 
 function settingsOrStaticHref(
-  destination: Exclude<NavigationDestination, { to: 'session' }>,
+  destination: Exclude<
+    NavigationDestination,
+    { to: 'session' | 'new-session' }
+  >,
 ): RouteHref {
   if (destination.to === 'settings-project') return projectHref(destination);
   if (destination.to === 'settings-agent') return agentHref(destination);
@@ -112,6 +117,17 @@ function sessionHref(
 ): RouteHref {
   const { to, ...params } = destination;
   return { pathname: routes[to].pathname, params };
+}
+
+// New Session's URL is a Session's, with an id no Session has.
+function newSessionHref(
+  destination: Extract<NavigationDestination, { to: 'new-session' }>,
+): RouteHref {
+  const { to, ...params } = destination;
+  return {
+    pathname: routes[to].pathname,
+    params: { ...params, id: newSessionId },
+  };
 }
 
 function projectHref(

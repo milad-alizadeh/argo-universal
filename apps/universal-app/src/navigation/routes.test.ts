@@ -5,6 +5,10 @@ import { destinationFor, hrefFor } from './routes';
 
 const sessionsRouteGroup = '(sessions)';
 const firstAgentId = 'first-agent';
+const newSessionInProject: NavigationDestination = {
+  to: 'new-session',
+  projectId: 'project-1',
+};
 
 // The route params beyond the destination's own fields.
 const destinations: [NavigationDestination, string[], object][] = [
@@ -15,7 +19,7 @@ const destinations: [NavigationDestination, string[], object][] = [
     { id: newSessionId },
   ],
   [
-    { to: 'new-session', projectId: 'project-1' },
+    newSessionInProject,
     ['(shell)', sessionsRouteGroup, 'sessions', '[id]'],
     { id: newSessionId },
   ],
@@ -61,6 +65,10 @@ describe('hrefFor', () => {
     expect(hrefFor({ to: 'session', id: 'session-1' })).toEqual({
       pathname: '/sessions/[id]',
       params: { id: 'session-1' },
+    });
+    expect(hrefFor(newSessionInProject)).toEqual({
+      pathname: '/sessions/[id]',
+      params: { projectId: 'project-1', id: newSessionId },
     });
     expect(hrefFor({ to: 'settings-agent', agent: firstAgentId })).toEqual({
       pathname: '/settings/agents/[agent]',
