@@ -20,7 +20,7 @@ import type { SessionsListEntry } from '../sessions-list-entries';
 import { useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
 import { EmptySessionsList, LoadingMoreSessions } from './sessions-list-rows';
-import { useListScrolling, useScrolling } from './sessions-list-scrolling';
+import { nativeOnlyListProps, useScrolling } from './sessions-list-scrolling';
 
 /*
  * Wide, Paper's sidebar list: the first Project sits level with the rail's first tile.
@@ -67,6 +67,9 @@ const listBehaviour = {
   recycleItems: true,
   getItemType: entryKind,
   onEndReachedThreshold: 0.5,
+  // When the next page starts loading while the reader is at the end, the loading footer scrolls into view.
+  maintainScrollAtEnd: { on: { footerLayout: true } },
+  ...nativeOnlyListProps,
 };
 
 // The page's colour, which a native list fades into; the web fades the rows themselves over the glass.
@@ -140,14 +143,13 @@ function useListContentStyle(): ReturnType<typeof useScrollColumnStyle> {
 
 function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
   const contentContainerStyle = useListContentStyle();
-  const scrolling = useListScrolling(props);
   const rows = useListRows(props);
   return (
     <LegendList
       {...listBehaviour}
       contentContainerStyle={contentContainerStyle}
       onEndReached={props.onEndReached}
-      {...scrolling}
+      onScroll={props.onScroll}
       {...rows}
       {...listChrome(props)}
     />

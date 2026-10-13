@@ -1,101 +1,11 @@
-import type * as React from 'react';
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
-import {
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  Platform,
-  type ScrollView,
-} from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 
-const endMeasurementTolerance = 8;
-
-type ScrollHandler = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
-
-interface LoadingFooterReveal {
-  scrollView: React.RefObject<ScrollView | null>;
-  trackAtEnd: ScrollHandler;
-  revealIfPending: () => void;
-}
-
-function scrollToEndNextFrame(
-  scrollView: React.RefObject<ScrollView | null>,
-): void {
-  requestAnimationFrame(() => {
-    scrollView.current?.scrollToEnd({ animated: false });
-  });
-}
-
-function isAtEnd({
-  contentOffset,
-  contentSize,
-  layoutMeasurement,
-}: NativeScrollEvent): boolean {
-  return (
-    contentSize.height - contentOffset.y - layoutMeasurement.height <=
-    endMeasurementTolerance
-  );
-}
-
-function recordAtEnd(
-  atEnd: React.RefObject<boolean>,
-  { nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>,
-): void {
-  atEnd.current = isAtEnd(nativeEvent);
-}
-
-function revealPendingFooter(
-  revealPending: React.RefObject<boolean>,
-  scrollView: React.RefObject<ScrollView | null>,
-): void {
-  if (!revealPending.current) return;
-  revealPending.current = false;
-  scrollToEndNextFrame(scrollView);
-}
-
-function useRevealWhenFetching(
-  isFetchingNextPage: boolean,
-  scrollView: React.RefObject<ScrollView | null>,
-): {
-  atEnd: React.RefObject<boolean>;
-  revealPending: React.RefObject<boolean>;
-} {
-  const atEnd = useRef(false);
-  const revealPending = useRef(false);
-  useLayoutEffect(() => {
-    revealPending.current = isFetchingNextPage && atEnd.current;
-    if (revealPending.current) scrollToEndNextFrame(scrollView);
-  }, [isFetchingNextPage, scrollView]);
-  return { atEnd, revealPending };
-}
-
-// When the next page starts loading while the reader is at the end, scrolls the loading footer into view.
-function useRevealLoadingFooter(
-  isFetchingNextPage: boolean,
-): LoadingFooterReveal {
-  const scrollView = useRef<ScrollView>(null);
-  const reveal = useRevealWhenFetching(isFetchingNextPage, scrollView);
-  return {
-    scrollView,
-    trackAtEnd: (event) => recordAtEnd(reveal.atEnd, event),
-    revealIfPending: () =>
-      revealPendingFooter(reveal.revealPending, scrollView),
-  };
-}
-
-// Legend List's web build hands unknown props to its DOM element, and never calls onContentSizeChange.
-function nativeOnlyListProps(onContentSizeChange: () => void): {
+// Legend List's web build hands unknown props to its DOM element.
+export const nativeOnlyListProps: {
   contentInsetAdjustmentBehavior?: 'automatic';
-  onContentSizeChange?: () => void;
-} {
-  if (Platform.OS === 'web') return {};
-  return { contentInsetAdjustmentBehavior: 'automatic', onContentSizeChange };
-}
+} =
+  Platform.OS === 'web' ? {} : { contentInsetAdjustmentBehavior: 'automatic' };
 
 // Scroll events stop for this long before the list counts as at rest.
 const scrollSettleMilliseconds = 150;
@@ -115,30 +25,4 @@ export function useScrolling(): { scrolling: boolean; onScroll: () => void } {
     );
   }, []);
   return { scrolling, onScroll };
-}
-
-interface ListScrolling {
-  refScrollView: React.RefObject<ScrollView | null>;
-  onScroll: ScrollHandler;
-  contentInsetAdjustmentBehavior?: 'automatic';
-  onContentSizeChange?: () => void;
-}
-
-interface ListScrollingInput {
-  isFetchingNextPage?: boolean;
-  onScroll: ScrollHandler;
-}
-
-export function useListScrolling(props: ListScrollingInput): ListScrolling {
-  const loadingFooter = useRevealLoadingFooter(
-    props.isFetchingNextPage ?? false,
-  );
-  return {
-    refScrollView: loadingFooter.scrollView,
-    onScroll: (event) => {
-      props.onScroll(event);
-      loadingFooter.trackAtEnd(event);
-    },
-    ...nativeOnlyListProps(loadingFooter.revealIfPending),
-  };
 }
