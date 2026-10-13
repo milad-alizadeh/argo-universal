@@ -58,6 +58,8 @@ export const ScrollableAgentCatalog: Story = {
     await Promise.all(
       menu
         .getAnimations({ subtree: true })
+        // The opening ones; a scroll fade follows the scroll and never finishes.
+        .filter((animation) => animation.timeline instanceof DocumentTimeline)
         .map((animation) => animation.finished),
     );
     await waitFor(() => expect(menu).toBeVisible());

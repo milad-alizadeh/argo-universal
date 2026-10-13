@@ -1,14 +1,15 @@
-import {
-  LegendList,
-  type LegendListRef,
-  type LegendListProps,
-  type LegendListRenderItemProps,
+import type {
+  LegendListRef,
+  LegendListProps,
+  LegendListRenderItemProps,
 } from '@legendapp/list/react-native';
 import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
 import { Platform, View } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
+import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
+import { useFeedFade } from '#lib/product/session-layout';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type FeedEntry, entryKey, entryType } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
@@ -98,6 +99,8 @@ export interface FeedScrollProps extends EntryDrawing {
   entries: FeedEntry[];
   initialIndex: number;
   onStartReached: () => void;
+  // Whether the reader is at the Feed's end, where its bottom fade is shallower.
+  atEnd: boolean;
 }
 
 type FeedListProps = Pick<
@@ -112,7 +115,7 @@ type FeedListProps = Pick<
 
 function useFeedListProps(
   list: ListRef,
-  { entries, ...props }: Omit<FeedScrollProps, 'list'>,
+  { entries, ...props }: Omit<FeedScrollProps, 'list' | 'atEnd'>,
 ): FeedListProps {
   const { maintainScrollAtEnd, ...motion } = useCollapsibleMotion(list);
   return {
@@ -128,8 +131,16 @@ function useFeedListProps(
 
 export function FeedScroll({
   list,
+  atEnd,
   ...props
 }: FeedScrollProps): React.JSX.Element {
   const listProps = useFeedListProps(list, props);
-  return <LegendList ref={list} {...feedListProps} {...listProps} />;
+  return (
+    <ScrollFadeList
+      ref={list}
+      {...feedListProps}
+      {...listProps}
+      {...useFeedFade(atEnd)}
+    />
+  );
 }

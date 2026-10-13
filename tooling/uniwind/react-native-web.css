@@ -203,8 +203,11 @@
   }
 }
 
-/* ScrollFadeFrame: a scroll view's content fades to nothing at each edge that
-   hides more of it, over whatever lies behind; an edge's depth eases in and out. */
+/* ScrollFadeFrame: a scroll view's content fades to nothing at each edge with
+   content past it, over whatever lies behind. The scroll view's own scroll
+   position drives each depth, so scrolling runs no JavaScript. The frame sets
+   each edge's depth, its depth with nothing past it, and its inset; the scroll
+   view, its one child, takes the mask. */
 @property --scroll-fade-top {
   syntax: "<length>";
   inherits: false;
@@ -215,21 +218,45 @@
   inherits: false;
   initial-value: 0px;
 }
-/* How far something laid over the list covers an edge: the fade ends where it begins, and the content under it is hidden. */
-@property --scroll-fade-top-inset {
+/* Registered, so a depth the frame changes, as the Feed's does at its end, eases. */
+@property --scroll-fade-top-depth {
   syntax: "<length>";
-  inherits: false;
+  inherits: true;
   initial-value: 0px;
 }
-@property --scroll-fade-bottom-inset {
+@property --scroll-fade-bottom-depth {
   syntax: "<length>";
-  inherits: false;
+  inherits: true;
   initial-value: 0px;
 }
-.scroll-fade-mask {
+@keyframes scroll-fade-top {
+  from {
+    --scroll-fade-top: var(--scroll-fade-top-rest);
+  }
+  to {
+    --scroll-fade-top: var(--scroll-fade-top-depth);
+  }
+}
+@keyframes scroll-fade-bottom {
+  from {
+    --scroll-fade-bottom: var(--scroll-fade-bottom-depth);
+  }
+  to {
+    --scroll-fade-bottom: var(--scroll-fade-bottom-rest);
+  }
+}
+.scroll-fade {
+  display: contents;
+}
+.scroll-fade > * {
   /* Its own compositor layer, so rows painting in while it scrolls never hold up a frame. */
   will-change: transform;
-  /* The scrollbar's strip at the right stays whole; ScrollFadeFrame sets a classic scrollbar's width, and an overlay scrollbar, which takes none, keeps this. */
+  /* With nothing to scroll the timeline is inactive, and each edge keeps its depth at rest. */
+  --scroll-fade-top: var(--scroll-fade-top-rest);
+  --scroll-fade-bottom: var(--scroll-fade-bottom-rest);
+  /* How far content scrolls past an edge before its fade is whole; scroll-fade-options.ts keeps the same length for native. */
+  --scroll-fade-ramp: 24px;
+  /* The scrollbar's strip at the right stays whole. */
   --scroll-fade-bar: 12px;
   mask-repeat: no-repeat;
   mask-position:
@@ -254,12 +281,26 @@
       transparent calc(100% - var(--scroll-fade-bottom-inset))
     ),
     linear-gradient(black, black);
+  animation:
+    scroll-fade-top linear both,
+    scroll-fade-bottom linear both;
+  animation-timeline: scroll(self), scroll(self);
+  animation-range:
+    0 var(--scroll-fade-ramp),
+    calc(100% - var(--scroll-fade-ramp)) 100%;
   transition:
-    --scroll-fade-top 200ms cubic-bezier(0.25, 0.1, 0.25, 1),
-    --scroll-fade-bottom 200ms cubic-bezier(0.25, 0.1, 0.25, 1);
+    --scroll-fade-top-depth 200ms cubic-bezier(0.25, 0.1, 0.25, 1),
+    --scroll-fade-bottom-depth 200ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+/* Without scroll-driven animations, as in Firefox, each edge fades whatever the scroll position. */
+@supports not (animation-timeline: scroll()) {
+  .scroll-fade > * {
+    --scroll-fade-top: var(--scroll-fade-top-depth);
+    --scroll-fade-bottom: var(--scroll-fade-bottom-depth);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .scroll-fade-mask {
+  .scroll-fade > * {
     transition: none;
   }
 }

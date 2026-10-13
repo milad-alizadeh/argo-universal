@@ -4,95 +4,112 @@ import {
   type LegendListRef,
 } from '@legendapp/list/react-native';
 import type * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
-import { Platform } from 'react-native';
 import {
-  ScrollColumnContext,
-  useScrollColumnStyle,
-} from '#lib/generic/scroll-column';
-import { cn } from '#lib/generic/utils';
-import { useScrollFadeEdges } from './scroll-fade';
-import { ScrollFadeFrame } from './scroll-fade-frame';
+  type Ref,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { Platform } from 'react-native';
+import { ScrollFadeFrame } from './scroll-fade-frame-view';
+import type { ScrollFadeOptions } from './scroll-fade-options';
+import { useScrollFade } from './scroll-fade-props';
 
-// Legend List's web build hands this to the scroll element as an unknown DOM attribute.
-const persistTaps =
-  Platform.OS === 'web'
+const listDefaults = {
+  style: { position: 'absolute', inset: 0 },
+  // Otherwise it shifts the scroll position as rows are measured.
+  maintainVisibleContentPosition: false,
+  recycleItems: false,
+  // Legend List's web build hands this to the scroll element as an unknown DOM attribute.
+  ...(Platform.OS === 'web'
     ? {}
-    : { keyboardShouldPersistTaps: 'handled' as const };
+    : { keyboardShouldPersistTaps: 'handled' as const }),
+} as const;
 
-// A list that leaves its edges to the platform fades neither.
-const noEdges = { top: false, bottom: false };
+export type ScrollFadeListProps<T> = LegendListProps<T> &
+  ScrollFadeOptions & {
+    ref?: Ref<LegendListRef>;
+    // Grows with its content up to this height, then scrolls; without it the list fills its parent.
+    maxHeight?: number;
+  };
 
-export type ScrollFadeListProps<T> = LegendListProps<T> & {
-  // The surface colour the content fades into, as for ScrollFadeFrame.
-  surfaceClassName?: string;
-  // Grows with its content up to this height, then scrolls; without it the list fills its parent.
-  maxHeight?: number;
-  // False where the platform fades the edges itself, as iOS does under its glass bars.
-  fade?: boolean;
+const sizeSignals = ['totalSize', 'headerSize', 'footerSize'] as const;
+
+// Reports the list's content length now and whenever it changes; returns how to stop.
+function followContentLength(
+  list: LegendListRef,
+  report: (length: number) => void,
+): () => void {
+  const update = (): void => report(list.getState().contentLength);
+  update();
+  const stops = sizeSignals.map((size) => list.getState().listen(size, update));
+  return (): void => {
+    for (const stop of stops) stop();
+  };
+}
+
+// The list's content length, followed only while capped: Legend List's web build never calls onContentSizeChange.
+function useContentLength(
+  list: RefObject<LegendListRef | null>,
+  follow: boolean,
+): number | undefined {
+  const [length, setLength] = useState<number>();
+  useEffect(() => {
+    if (!follow || !list.current) return;
+    return followContentLength(list.current, setLength);
+  }, [list, follow]);
+  return length;
+}
+
+interface FrameSize {
+  className?: string;
+  style?: { height: number };
+}
+
+// As tall as the content, up to the cap; with no cap the frame fills its parent.
+function useFrameSize(
+  list: RefObject<LegendListRef | null>,
+  maxHeight: number | undefined,
+): FrameSize {
+  const length = useContentLength(list, maxHeight !== undefined);
+  if (maxHeight === undefined) return { className: 'min-h-0 flex-1' };
+  return { style: { height: Math.min(length ?? maxHeight, maxHeight) } };
+}
+
+const assignRef = <T,>(ref: Ref<T> | undefined, instance: T | null): void => {
+  if (typeof ref === 'function') ref(instance);
+  else if (ref) ref.current = instance;
 };
 
-// A Legend List whose content fades under whichever edge hides more of it.
-export function ScrollFadeList<T>({
-  surfaceClassName,
-  maxHeight,
-  onScroll,
-  fade: drawsFade = true,
-  contentContainerStyle,
-  ...props
-}: ScrollFadeListProps<T>): React.JSX.Element {
-  const fade = useScrollFadeEdges({ onScroll });
-  const columnStyle = useScrollColumnStyle(contentContainerStyle);
-  const { onContentSizeChange, onViewportChange } = fade;
+// One ref that sets both.
+function useBothRefs<T>(
+  first: Ref<T> | undefined,
+  second: Ref<T> | undefined,
+): (instance: T | null) => void {
+  return useCallback(
+    (instance: T | null) => {
+      assignRef(first, instance);
+      assignRef(second, instance);
+    },
+    [first, second],
+  );
+}
+
+// A Legend List whose content fades under each edge that hides more of it.
+export function ScrollFadeList<T>(
+  props: ScrollFadeListProps<T>,
+): React.JSX.Element {
+  const { ref, maxHeight, refScrollView, ...rest } = props;
   const list = useRef<LegendListRef>(null);
-  const [contentHeight, setContentHeight] = useState<number>();
-  // Legend List's web build never calls onContentSizeChange, and web layout events can miss a popover, so follow the list's own sizes.
-  useEffect(() => {
-    const state = list.current?.getState();
-    if (!state) return;
-    const measure = (): void => {
-      const current = list.current?.getState();
-      if (!current) return;
-      setContentHeight(current.contentLength);
-      onContentSizeChange(0, current.contentLength);
-      // A capped list is exactly as tall as its content, up to the cap.
-      if (maxHeight !== undefined)
-        onViewportChange(Math.min(current.contentLength, maxHeight));
-      else if (current.scrollLength > 0) onViewportChange(current.scrollLength);
-    };
-    measure();
-    const stops = (['totalSize', 'headerSize', 'footerSize'] as const).map(
-      (signal) => state.listen(signal, measure),
-    );
-    return (): void => {
-      for (const stop of stops) stop();
-    };
-  }, [onContentSizeChange, onViewportChange, maxHeight]);
+  const { frame, scroll, attachScrollView } = useScrollFade(rest);
+  const listRef = useBothRefs(list, ref);
+  const scrollRef = useBothRefs(attachScrollView, refScrollView);
+  const listProps = { ...listDefaults, ...scroll, refScrollView: scrollRef };
   return (
-    <ScrollFadeFrame
-      edges={drawsFade ? fade.edges : noEdges}
-      surfaceClassName={surfaceClassName}
-      className={cn(maxHeight === undefined && 'flex-1 min-h-0')}
-      style={
-        maxHeight === undefined
-          ? undefined
-          : { height: Math.min(contentHeight ?? maxHeight, maxHeight) }
-      }
-      onLayout={maxHeight === undefined ? fade.onLayout : undefined}
-    >
-      <ScrollColumnContext value={undefined}>
-        <LegendList
-          ref={list}
-          style={{ position: 'absolute', inset: 0 }}
-          // Otherwise it shifts the scroll position as rows are measured.
-          maintainVisibleContentPosition={false}
-          recycleItems={false}
-          {...persistTaps}
-          {...props}
-          contentContainerStyle={columnStyle}
-          onScroll={fade.onScroll}
-        />
-      </ScrollColumnContext>
+    <ScrollFadeFrame {...frame} {...useFrameSize(list, maxHeight)}>
+      <LegendList {...listProps} ref={listRef} />
     </ScrollFadeFrame>
   );
 }

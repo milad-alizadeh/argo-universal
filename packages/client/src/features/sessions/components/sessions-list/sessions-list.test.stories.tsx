@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor } from 'storybook/test';
+import { fadedEdges } from '../../../../../mocks/scroll-fade';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   delayFooterLayout,
@@ -385,19 +386,17 @@ export const ScrollFade: Story = {
     if ('__vitest_browser__' in globalThis) await settleViewport(390);
     const scroll = await canvas.findByTestId(sessionsScrollId);
     scroll.scrollTop = 0;
+    // The last rows always sink into the bottom edge; the top fades once rows scroll under it.
     await waitFor(() =>
-      expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
-    );
-    await waitFor(() =>
-      expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
+      expect(fadedEdges(scroll)).toEqual({ top: false, bottom: true }),
     );
     scroll.scrollTop = 200;
     await waitFor(() =>
-      expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
+      expect(fadedEdges(scroll)).toEqual({ top: true, bottom: true }),
     );
     scroll.scrollTop = scroll.scrollHeight;
     await waitFor(() =>
-      expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
+      expect(fadedEdges(scroll)).toEqual({ top: true, bottom: true }),
     );
   },
 };

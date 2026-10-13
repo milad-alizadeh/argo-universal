@@ -33,6 +33,9 @@ export interface FieldListProps {
 const fadeSurface = 'bg-sidebar';
 const rowHeightEstimate = 52;
 
+// iOS's glass bars already fade the edges.
+const glassBarsFade = { top: 'never', bottom: 'never' } as const;
+
 /*
  * FieldGroup's sections as one virtualised list, so a long list mounts only the rows in view.
  * Each title, row and footer is an item; rows round the card's ends and draw separators between them.
@@ -47,8 +50,7 @@ export function FieldList({
     <ScrollFadeList
       {...(testID ? listTestIdProps(testID) : {})}
       surfaceClassName={fadeSurface}
-      // iOS's glass bars already fade the edges.
-      fade={Platform.OS !== 'ios'}
+      edges={Platform.OS === 'ios' ? glassBarsFade : undefined}
       contentContainerStyle={useGroupPadding()}
       data={entries}
       keyExtractor={fieldListEntryKey}

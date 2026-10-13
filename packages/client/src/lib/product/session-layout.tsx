@@ -16,7 +16,7 @@ import {
   useGlassCover,
 } from './composer-cover';
 import { KeyboardAvoidingContent, Screen } from './screen/screen';
-import { ScrollFadeFrame } from './scroll-fade/scroll-fade-frame';
+import type { ScrollFadeOptions } from './scroll-fade/scroll-fade-options';
 
 // The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.
 const sessionSurface = 'bg-sidebar';
@@ -50,40 +50,23 @@ export interface SessionLayoutProps {
   composer: ReactNode;
 }
 
-interface FeedFadeProps {
-  // Whether the reader is at the Feed's start, where nothing hides above, and at its end.
-  atStart: boolean;
-  atEnd: boolean;
-  // The Feed's scroll view alone, so Jump to latest and the loading pill over it stay whole.
-  children: ReactNode;
-}
-
-// The Feed fades out above the Composer, and wide under the header too; every fade lies in the space it can be seen in.
-export function FeedFade({
-  atStart,
-  atEnd,
-  children,
-}: FeedFadeProps): React.JSX.Element {
+// The Feed fades out above the Composer, and wide under the header too; every fade lies in the space it can be seen in. At its end, whether the reader is there.
+export function useFeedFade(atEnd: boolean): ScrollFadeOptions {
   const wide = useWide();
   const glassComposer = useGlassComposer();
-  return (
-    <ScrollFadeFrame
+  return {
+    edges: {
       // iOS 26's glass header shades the Feed scrolled under it; every other header is solid, so the Feed fades out below it.
-      edges={{
-        top: (wide || !hasLiquidGlass) && !atStart,
-        bottom: !glassComposer,
-      }}
-      depth={{
-        top: wide ? headerFadeDepth : undefined,
-        bottom: atEnd ? composerFadeDepth.atEnd : composerFadeDepth.away,
-      }}
-      inset={{ bottom: composerOverlap }}
-      surfaceClassName={sessionSurface}
-      className="min-h-0 flex-1"
-    >
-      {children}
-    </ScrollFadeFrame>
-  );
+      top: wide || !hasLiquidGlass ? 'scrolled' : 'never',
+      bottom: glassComposer ? 'never' : 'always',
+    },
+    depth: {
+      top: wide ? headerFadeDepth : undefined,
+      bottom: atEnd ? composerFadeDepth.atEnd : composerFadeDepth.away,
+    },
+    inset: { bottom: composerOverlap },
+    surfaceClassName: sessionSurface,
+  };
 }
 
 // One Session in one container on one surface: the header at the top, the Composer pinned to the bottom, and the Feed filling and scrolling between them.

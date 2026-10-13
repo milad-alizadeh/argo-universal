@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { FeedMarkdown } from './markdown/feed-markdown';
-import { ScrollFade } from './scroll-fade/scroll-fade-overlay';
+import { ScrollFadeGradient } from './scroll-fade/scroll-fade-gradient';
 const flexibleContentClassName = 'flex-1 min-h-0';
 
 export function PlanDocument({
@@ -66,7 +66,7 @@ export function PlanDocument({
         !written &&
         overflow &&
         contentHeight - viewportHeight - offset > 1 && (
-          <ScrollFade edge="bottom" className="bg-card" height={40} />
+          <ScrollFadeGradient edge="bottom" className="bg-card" height={40} />
         )}
       {overflow && (
         <View

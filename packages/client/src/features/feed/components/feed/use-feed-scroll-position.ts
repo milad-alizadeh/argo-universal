@@ -64,30 +64,12 @@ function useNewestKeyWhenLeftEnd(
   return leftEndAt;
 }
 
-function followAtStart(
-  list: ListRef,
-  setAtStart: (atStart: boolean) => void,
-): (() => void) | undefined {
-  const state = list.current?.getState();
-  if (!state) return;
-  setAtStart(state.isAtStart);
-  return state.listen('isAtStart', setAtStart);
-}
-
-// At the oldest row nothing hides under the header, so the first row stays whole.
-function useAtStart(list: ListRef): boolean {
-  const [atStart, setAtStart] = useState(false);
-  useEffect(() => followAtStart(list, setAtStart), [list]);
-  return atStart;
-}
-
 export interface FeedScrollPosition {
   initialIndex: number;
   newestKeyWhenLeftEnd: string | null;
-  atStart: boolean;
 }
 
-// Where the reader is in the Feed: where it opened, whether they left the end, and whether they reached the oldest row.
+// Where the reader is in the Feed: where it opened, and whether they left the end.
 export function useFeedScrollPosition(
   list: ListRef,
   {
@@ -99,6 +81,5 @@ export function useFeedScrollPosition(
   const initialIndex = useOpensAtEnd(list, entries.length - 1);
   useRequestsOlderNearTop(list, keyOf(entries[0]), onStartReached);
   const newestKeyWhenLeftEnd = useNewestKeyWhenLeftEnd(list, newestKey);
-  const atStart = useAtStart(list);
-  return { initialIndex, newestKeyWhenLeftEnd, atStart };
+  return { initialIndex, newestKeyWhenLeftEnd };
 }

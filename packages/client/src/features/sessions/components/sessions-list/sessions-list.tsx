@@ -1,7 +1,4 @@
-import {
-  LegendList,
-  type LegendListRenderItemProps,
-} from '@legendapp/list/react-native';
+import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import type {
   AgentsListOutput,
   ProjectsListOutput,
@@ -28,13 +25,8 @@ import {
 } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { hasLiquidGlass } from '#lib/generic/native-header';
-import {
-  ScrollColumnContext,
-  useScrollColumnStyle,
-} from '#lib/generic/scroll-column';
 import { cn } from '#lib/generic/utils';
-import { useScrollFadeEdges } from '#lib/product/scroll-fade/scroll-fade';
-import { ScrollFadeFrame } from '#lib/product/scroll-fade/scroll-fade-frame';
+import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import { Spinner } from '#primitives/display/spinner/spinner';
 import { Text } from '#primitives/display/text/text';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
@@ -204,12 +196,8 @@ export function SessionsList({
   header,
   placeholder,
 }: SessionsListProps): React.JSX.Element {
-  const contentContainerStyle = useScrollColumnStyle(
-    useContentStyle(useWide()),
-  );
+  const contentContainerStyle = useContentStyle(useWide());
   const loadingFooter = useRevealLoadingFooter(isFetchingNextPage);
-  // The top fade shows once content has scrolled under the header.
-  const scrollFade = useScrollFadeEdges();
   const scrolling = useScrolling();
   const { collapsed, toggleProject } = useCollapsedProjects();
   const entries = useMemo(
@@ -271,49 +259,35 @@ export function SessionsList({
       )}
       style={{ minHeight: 0 }}
     >
-      <ScrollFadeFrame
-        // The bottom fade stays, so the last rows always sink into the edge.
-        edges={{ top: scrollFade.edges.top && !hasLiquidGlass, bottom: true }}
+      <ScrollFadeList
+        edges={sessionsFade}
         surfaceClassName={fadeSurface}
-        className="flex-1"
-        style={{ minHeight: 0 }}
-      >
-        <ScrollColumnContext value={undefined}>
-          <LegendList
-            refScrollView={loadingFooter.scrollView}
-            {...listTestIdProps('sessions-scroll')}
-            style={{ flex: 1 }}
-            contentContainerStyle={contentContainerStyle}
-            // On iOS it scrolls by the fade's top padding on mount, then snaps back.
-            maintainVisibleContentPosition={false}
-            data={placeholder ? noEntries : entries}
-            keyExtractor={entryKey}
-            estimatedItemSize={76}
-            // Rows hold no state of their own, so scrolling reuses them instead of mounting new ones.
-            recycleItems
-            getItemType={entryKind}
-            extraData={extraData}
-            onEndReached={onEndReached}
-            onEndReachedThreshold={0.5}
-            ListHeaderComponent={header}
-            onScroll={(event) => {
-              scrollFade.onScroll(event);
-              loadingFooter.trackAtEnd(event);
-              scrolling.onScroll();
-            }}
-            {...nativeOnlyListProps(loadingFooter.revealIfPending)}
-            ListFooterComponent={
-              isFetchingNextPage ? <LoadingMoreSessions /> : null
-            }
-            ListEmptyComponent={
-              placeholder ?? (
-                <EmptySessionsList query={query} archived={archived} />
-              )
-            }
-            renderItem={renderItem}
-          />
-        </ScrollColumnContext>
-      </ScrollFadeFrame>
+        refScrollView={loadingFooter.scrollView}
+        {...listTestIdProps('sessions-scroll')}
+        contentContainerStyle={contentContainerStyle}
+        data={placeholder ? noEntries : entries}
+        keyExtractor={entryKey}
+        estimatedItemSize={76}
+        // Rows hold no state of their own, so scrolling reuses them instead of mounting new ones.
+        recycleItems
+        getItemType={entryKind}
+        extraData={extraData}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
+        ListHeaderComponent={header}
+        onScroll={(event) => {
+          loadingFooter.trackAtEnd(event);
+          scrolling.onScroll();
+        }}
+        {...nativeOnlyListProps(loadingFooter.revealIfPending)}
+        ListFooterComponent={
+          isFetchingNextPage ? <LoadingMoreSessions /> : null
+        }
+        ListEmptyComponent={
+          placeholder ?? <EmptySessionsList query={query} archived={archived} />
+        }
+        renderItem={renderItem}
+      />
     </View>
   );
 }
@@ -367,6 +341,12 @@ function EmptySessionsList({
 
 // The page's colour, which a native list fades into; the web fades the rows themselves over the glass.
 const fadeSurface = 'bg-sidebar';
+
+// The top fades once content scrolls under the header, unless iOS's glass header shades it; the last rows always sink into the bottom edge.
+const sessionsFade = {
+  top: hasLiquidGlass ? 'never' : 'scrolled',
+  bottom: 'always',
+} as const;
 
 const SessionListRow = memo(function SessionListRow({
   session,
