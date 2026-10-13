@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { View } from 'react-native';
+import { cn } from '#lib/generic/utils';
 import { Host } from '../../native/host';
 import type { CheckboxProps } from './checkbox-props';
 import {
@@ -18,7 +19,7 @@ export function NativeCheckbox({
 }: NativeProps): React.JSX.Element {
   const state = useCheckboxState(props);
   return (
-    <View className="gap-2">
+    <View className={nativeContainerClass(props)}>
       <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
         <Control {...props} state={state} />
       </Host>
@@ -33,4 +34,17 @@ export function createNativeCheckbox(
   return function Checkbox(props: CheckboxProps): React.JSX.Element {
     return <NativeCheckbox {...props} Control={Control} />;
   };
+}
+
+function nativeContainerClass(props: CheckboxProps): string {
+  return cn(
+    'gap-2',
+    props.appearance === 'option' && optionContainerClass(props),
+  );
+}
+function optionContainerClass(props: CheckboxProps): string {
+  return cn(
+    'overflow-hidden rounded-lg android:rounded-[12px]',
+    props.value && 'bg-foreground/4',
+  );
 }

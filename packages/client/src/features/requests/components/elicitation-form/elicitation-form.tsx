@@ -12,6 +12,8 @@ import {
   ElicitationValidation,
 } from './elicitation-form-body';
 import type { ElicitationFormProps } from './elicitation-form-props';
+import { ElicitationQuestionForm } from './elicitation-question-form';
+import { elicitationQuestions } from './elicitation-questions';
 
 export type { ElicitationValues } from './elicitation-schema';
 export type {
@@ -24,7 +26,24 @@ export function ElicitationForm(props: ElicitationFormProps): ReactElement {
 }
 
 function RequestForm(props: ElicitationFormProps): ReactElement {
+  const questions = elicitationQuestions(props.request);
+  return questions ? (
+    <ElicitationQuestionForm {...props} questions={questions} />
+  ) : (
+    <FieldForm {...props} />
+  );
+}
+
+function FieldForm(props: ElicitationFormProps): ReactElement {
   const model = useElicitationForm(props);
+  return <ElicitationFieldForm model={model} />;
+}
+
+export function ElicitationFieldForm({
+  model,
+}: {
+  model: ElicitationModel;
+}): ReactElement {
   return (
     <RequestCard {...cardProps(model)}>
       <FormBody model={model} />
@@ -39,6 +58,7 @@ function cardProps(
     state: model.state,
     error: model.error,
     onEnter: (): void => model.answer('accept'),
+    onEscape: (): void => model.answer('cancel'),
     className:
       'rounded-none bg-transparent native:bg-transparent shadow-none web:backdrop-blur-none',
     footerClassName: 'flex-col items-stretch gap-2 px-4 pb-4',

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { cn } from '../../../utils';
 import { Icon } from '../../display/icon/icon';
 import { Text } from '../../display/text/text';
-import type { CheckboxProps } from './checkbox-props';
+import type { CheckboxProps, CheckboxIndicatorProps } from './checkbox-props';
 import {
   CheckboxFooter,
   type CheckboxState,
@@ -35,10 +35,7 @@ function controlProps(
     disabled: props.disabled,
     onClick: state.toggle,
     onBlur: props.onBlur,
-    className: cn(
-      'flex min-h-13 w-full cursor-default justify-start items-center rounded-md border-0 bg-muted p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring',
-      props.disabled && 'opacity-50',
-    ),
+    className: controlClass(props),
   };
 }
 
@@ -48,7 +45,7 @@ function checkboxSemantics(
 ): React.ButtonHTMLAttributes<HTMLButtonElement> {
   return {
     type: 'button',
-    role: 'checkbox',
+    role: props.selection === 'single' ? 'radio' : 'checkbox',
     'aria-label': props.label,
     'aria-disabled': !!props.disabled,
     'aria-checked': props.value,
@@ -59,29 +56,61 @@ function checkboxSemantics(
 
 function CheckboxRow(props: CheckboxProps): React.JSX.Element {
   return (
-    <View className="flex-row items-center gap-2.5">
-      <CheckboxMark {...props} />
+    <View className="w-full flex-row items-center gap-2.5">
+      {props.selection !== 'single' && <CheckboxIndicator {...props} />}
       <Text role="body" className="min-w-0 flex-1">
         {props.label}
       </Text>
+      <SelectedMark {...props} />
     </View>
   );
 }
 
-function CheckboxMark(props: CheckboxProps): React.JSX.Element {
+export function CheckboxIndicator(
+  props: CheckboxIndicatorProps,
+): React.JSX.Element {
   return (
     <View aria-hidden className={markClassName(props)}>
       {props.value && (
-        <Icon name="check" role="mark" className="text-primary-foreground" />
+        <Icon
+          name="check"
+          role={props.appearance === 'option' ? 'secondary' : 'mark'}
+          className="text-primary-foreground"
+        />
       )}
     </View>
   );
 }
 
-function markClassName(props: CheckboxProps): string {
+function markClassName(props: CheckboxIndicatorProps): string {
   return cn(
     'size-4.5 shrink-0 items-center justify-center rounded-sm border-[1.5px] border-input',
+    optionMarkClass(props),
     props.value && 'border-primary bg-primary',
     props.invalid && 'border-destructive',
   );
+}
+
+function controlClass(props: CheckboxProps): string {
+  return cn(
+    'flex min-h-13 w-full cursor-default justify-start items-center rounded-md border-0 bg-muted p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring',
+    props.appearance === 'option' && optionClass(props),
+    props.disabled && 'opacity-50',
+  );
+}
+function optionClass(props: CheckboxProps): string {
+  return cn(
+    'min-h-9 rounded-lg bg-transparent px-2.5 py-2',
+    props.value && 'bg-foreground/4',
+  );
+}
+function SelectedMark(props: CheckboxProps): React.JSX.Element | null {
+  if (props.selection !== 'single' || !props.value) return null;
+  return <Icon name="check" role="secondary" />;
+}
+
+function optionMarkClass(props: CheckboxIndicatorProps): string | undefined {
+  return props.appearance === 'option'
+    ? 'size-4 rounded-xs border border-ring'
+    : undefined;
 }

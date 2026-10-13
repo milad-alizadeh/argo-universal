@@ -16,21 +16,32 @@ import {
 import { createElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { NativeSymbol } from '../../../symbols/native-symbol';
+import { Host } from '../../native/host';
 import { useSwiftUITextModifiers } from '../../native/native-typography';
 import { createNativeCheckbox } from './checkbox-native';
-import type { CheckboxProps } from './checkbox-props';
+import type { CheckboxProps, CheckboxIndicatorProps } from './checkbox-props';
 import type { CheckboxState } from './checkbox-state';
 
 export type { CheckboxProps } from './checkbox-props';
 
 const rowHeight = 48;
+const optionHeight = 32;
+const optionInset = 12;
 const horizontalInset = 16;
 const verticalInset = 8;
-const rowModifiers = [
-  frame({ minHeight: rowHeight, maxWidth: Infinity }),
-  padding({ horizontal: horizontalInset, vertical: verticalInset }),
-  contentShape(shapes.rectangle()),
-];
+function rowModifiers(props: CheckboxProps): ReturnType<typeof frame>[] {
+  return [
+    frame({
+      minHeight: props.appearance === 'option' ? optionHeight : rowHeight,
+      maxWidth: Infinity,
+    }),
+    padding({
+      horizontal: props.appearance === 'option' ? optionInset : horizontalInset,
+      vertical: verticalInset,
+    }),
+    contentShape(shapes.rectangle()),
+  ];
+}
 
 export const Checkbox = createNativeCheckbox(CheckboxButton);
 
@@ -51,15 +62,15 @@ function buttonModifiers(props: ButtonProps): ReturnType<typeof buttonStyle>[] {
     accessibilityElement('ignore'),
     accessibilityLabel(props.label),
     accessibilityValue(props.value ? 'Checked' : 'Unchecked'),
-    accessibilityAddTraits(['isToggle']),
+    selectionTraits(props),
     accessibilityHint(props.state.description ?? ''),
   ];
 }
 
 function CheckboxRow(props: CheckboxProps): React.JSX.Element {
-  const textModifiers = useSwiftUITextModifiers('body', 'row');
+  const textModifiers = useOptionTextModifiers(props);
   return (
-    <HStack modifiers={rowModifiers}>
+    <HStack modifiers={rowModifiers(props)}>
       <Text modifiers={textModifiers}>{props.label}</Text>
       <Spacer />
       {props.value && <CheckboxMark />}
@@ -73,5 +84,34 @@ function CheckboxMark(): React.JSX.Element {
     <Group modifiers={[foregroundStyle(colors.tint ?? 'primary')]}>
       <NativeSymbol name="check" role="mark" />
     </Group>
+  );
+}
+
+function useOptionTextModifiers(
+  props: CheckboxProps,
+): ReturnType<typeof frame>[] {
+  return useSwiftUITextModifiers(
+    props.appearance === 'option' ? 'nav-action' : 'body',
+    'row',
+  );
+}
+
+function selectionTraits(
+  props: CheckboxProps,
+): ReturnType<typeof accessibilityAddTraits> {
+  if (props.selection !== 'single') return accessibilityAddTraits(['isToggle']);
+  return accessibilityAddTraits(
+    props.value ? ['isButton', 'isSelected'] : ['isButton'],
+  );
+}
+
+export function CheckboxIndicator(
+  props: CheckboxIndicatorProps,
+): React.JSX.Element | null {
+  if (!props.value) return null;
+  return (
+    <Host matchContents>
+      <CheckboxMark />
+    </Host>
   );
 }

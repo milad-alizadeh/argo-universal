@@ -12,12 +12,19 @@ import {
   fillMaxWidth,
   semantics,
   toggleable,
+  selectable,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { createElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { useComposeTextStyle } from '../../native/native-typography';
+import {
+  useCheckboxColors,
+  RadioMark,
+  indicatorSize,
+} from './checkbox-indicator.android';
 import { createNativeCheckbox } from './checkbox-native';
+export { CheckboxIndicator } from './checkbox-indicator.android';
 import type { CheckboxProps } from './checkbox-props';
 import type { CheckboxState } from './checkbox-state';
 
@@ -27,13 +34,16 @@ export const Checkbox = createNativeCheckbox(CheckboxRow);
 
 type RowProps = CheckboxProps & { state: CheckboxState };
 const rowGap = 12;
+const optionGap = 16;
 
 function CheckboxRow(props: RowProps): React.JSX.Element {
   return createElement(
     Row,
     {
       verticalAlignment: 'center',
-      horizontalArrangement: { spacedBy: rowGap },
+      horizontalArrangement: {
+        spacedBy: props.appearance === 'option' ? optionGap : rowGap,
+      },
       modifiers: useRowModifiers(props),
     },
     <CheckboxMark {...props} />,
@@ -45,23 +55,35 @@ const rowRadius = 10;
 const rowHeight = 64;
 const rowInset = 16;
 const rowPadding = 8;
+const optionHeight = 48;
+const optionInset = 12;
 function useRowModifiers(props: RowProps): ReturnType<typeof semantics>[] {
   const { muted } = useNativeTheme().colors;
+  const inset = props.appearance === 'option' ? optionInset : rowInset;
   return [
     clip(Shapes.RoundedCorner(rowRadius)),
-    background(muted ?? 'transparent'),
+    background(rowBackground(props, muted)),
     fillMaxWidth(),
-    defaultMinSize({ minHeight: rowHeight }),
-    padding(rowInset, rowPadding, rowInset, rowPadding),
+    defaultMinSize({
+      minHeight: props.appearance === 'option' ? optionHeight : rowHeight,
+    }),
+    padding(inset, rowPadding, inset, rowPadding),
     ...rowToggle(props),
   ];
+}
+function rowBackground(props: RowProps, muted?: string): string {
+  return props.appearance === 'option'
+    ? 'transparent'
+    : (muted ?? 'transparent');
 }
 
 function rowToggle(props: RowProps): ReturnType<typeof toggleable>[] {
   if (props.disabled) return [];
   return [
     checkboxSemantics(props),
-    toggleable(props.value, props.state.toggle, { role: 'checkbox' }),
+    props.selection === 'single'
+      ? selectable(props.value, props.state.toggle, 'radioButton')
+      : toggleable(props.value, props.state.toggle, { role: 'checkbox' }),
   ];
 }
 
@@ -74,27 +96,15 @@ function checkboxSemantics(props: RowProps): ReturnType<typeof semantics> {
 }
 
 function CheckboxMark(props: RowProps): React.JSX.Element {
-  const { colors } = useNativeTheme();
+  const colors = useCheckboxColors({ ...props, invalid: props.state.invalid });
+  if (props.selection === 'single') return <RadioMark {...props} />;
   return createElement(ComposeCheckbox, {
     value: props.value,
-    modifiers: props.disabled ? [checkboxSemantics(props)] : [],
+    modifiers: markModifiers(props),
     enabled: !props.disabled,
     onCheckedChange: props.disabled ? props.state.toggle : undefined,
-    colors: checkboxColors(colors, props.state.invalid),
+    colors,
   });
-}
-
-function checkboxColors(
-  colors: ReturnType<typeof useNativeTheme>['colors'],
-  invalid: boolean,
-): React.ComponentProps<typeof ComposeCheckbox>['colors'] {
-  return {
-    checkedColor: colors.tint,
-    uncheckedColor: invalid ? colors.destructive : colors.mutedForeground,
-    checkmarkColor: colors.background,
-    disabledCheckedColor: colors.disabledContent,
-    disabledUncheckedColor: colors.disabledContent,
-  };
 }
 
 function CheckboxLabel(
@@ -111,4 +121,11 @@ function CheckboxLabel(
       {props.label}
     </Text>
   );
+}
+
+function markModifiers(props: RowProps): ReturnType<typeof semantics>[] {
+  return [
+    ...indicatorSize(props),
+    ...(props.disabled ? [checkboxSemantics(props)] : []),
+  ];
 }

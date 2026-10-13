@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { View } from 'react-native';
 import { Composer, type ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
 import {
@@ -64,16 +65,32 @@ function OpenSessionView({
       header={<SessionHeader {...header} />}
       feed={<Feed {...feed} />}
       composer={
-        <>
-          <Composer {...composer} configuration={configuration} />
+        <View className="w-full max-w-[640px] self-center web:mx-auto items-center">
           {elicitation && (
             <ElicitationSheet
               key={elicitation.request.requestId}
               {...elicitation}
             />
           )}
-        </>
+          <Composer
+            {...composerUnderQuestion(composer, elicitation)}
+            configuration={configuration}
+          />
+        </View>
       }
     />
   );
+}
+
+function composerUnderQuestion(
+  composer: ComposerProps,
+  question?: ElicitationFormProps,
+): ComposerProps {
+  if (!question) return composer;
+  return {
+    ...composer,
+    planProposal: undefined,
+    writtenPlan: undefined,
+    status: composer.status && { ...composer.status, plan: undefined },
+  };
 }

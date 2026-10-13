@@ -3,9 +3,10 @@ import { expect, fn, waitFor, within } from 'storybook/test';
 import {
   elicitationMocks,
   elicitationProps,
-  fieldsRequest,
-  fieldsValues,
+  questionsRequest,
+  questionsValues,
 } from '../../../../../mocks/elicitation';
+import { questionPlan } from '../../../../../mocks/elicitation-questions';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import type { SessionViewProps } from './session-view';
 import { idleSession, runningSession } from './session-view.mocks';
@@ -50,10 +51,14 @@ function pendingSession(
     state: 'open',
     ...session,
     header: { ...session.header, status: 'needs_input' },
+    composer: {
+      ...session.composer,
+      status: { ...session.composer.status, plan: questionPlan },
+    },
     elicitation: elicitationProps({
       mock,
-      request: fieldsRequest,
-      values: { ...fieldsValues, estimate: '5' },
+      request: questionsRequest,
+      values: questionsValues,
       onAnswer,
     }),
   };
@@ -63,8 +68,13 @@ async function resizeAndDismiss({
   canvas,
   userEvent,
 }: PlayContext): Promise<void> {
+  await expect(
+    canvas.queryByRole('button', { name: /^Plan/ }),
+  ).not.toBeInTheDocument();
   const page = within(document.body);
-  const sheet = within(await page.findByRole('dialog'));
+  const sheet = within(
+    await page.findByRole('region', { name: 'Elicitation questions' }),
+  );
   const title = await resizeAnswer(sheet, userEvent);
   await waitFor(() =>
     assertInputInSession(title, canvas.getByTestId('session-layout')),
@@ -73,13 +83,14 @@ async function resizeAndDismiss({
   await expect(
     await canvas.findByRole('textbox', { name: 'Message' }),
   ).toBeVisible();
+  await expect(canvas.getByRole('button', { name: /^Plan/ })).toBeVisible();
 }
 
 async function resizeAnswer(
   sheet: ReturnType<typeof within>,
   userEvent: PlayContext['userEvent'],
 ): Promise<HTMLElement> {
-  const title = sheet.getByRole('textbox', { name: 'Title' });
+  const title = sheet.getByRole('textbox', { name: 'Custom answer' });
   await userEvent.clear(title);
   await userEvent.type(title, 'Keep this answer while resizing');
   await settleViewport(1120);

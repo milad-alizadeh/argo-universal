@@ -33,6 +33,7 @@ export function ComposerModeControl({
       trigger={
         <Button
           appearance="content"
+          size="xs"
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Mode"

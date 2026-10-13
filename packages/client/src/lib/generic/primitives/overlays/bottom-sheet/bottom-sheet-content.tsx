@@ -60,5 +60,10 @@ function sheetClass(props: Pick<SheetContentProps, 'surface' | 'fit'>): string {
     props.surface === 'sidebar' ? 'bg-sidebar' : 'bg-popover',
     'ios:pt-8 pb-8 ios:pb-0',
     !props.fit && 'flex-1',
+    fitSheetPadding(props.fit),
   );
+}
+
+function fitSheetPadding(fit?: boolean): string | undefined {
+  return fit ? 'android:pb-0' : undefined;
 }
