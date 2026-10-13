@@ -8,17 +8,25 @@ export function SheetViewport(props: {
   fit?: boolean;
   children: (height?: number) => React.ReactElement;
 }): React.JSX.Element {
-  const [height, setHeight] = useState<number>();
+  const { height, onLayout } = useMeasuredHeight();
   return (
-    <RNHostView
-      matchContents={props.fit}
-      onLayout={(event) => setHeight(event.nativeEvent.layout.height)}
-    >
+    <RNHostView matchContents={props.fit} onLayout={onLayout}>
       <SheetWidth fit={props.fit}>
         <ViewportContent {...props} height={height} />
       </SheetWidth>
     </RNHostView>
   );
+}
+
+function useMeasuredHeight(): {
+  height: number | undefined;
+  onLayout: React.ComponentProps<typeof RNHostView>['onLayout'];
+} {
+  const [height, setHeight] = useState<number>();
+  return {
+    height,
+    onLayout: (event) => setHeight(event.nativeEvent.layout.height),
+  };
 }
 
 function ViewportContent(props: {

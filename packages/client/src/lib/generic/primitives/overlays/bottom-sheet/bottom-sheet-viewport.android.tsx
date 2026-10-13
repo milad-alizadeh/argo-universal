@@ -12,10 +12,17 @@ import { SheetWidth } from './bottom-sheet-width';
 
 type ContentLayout = { y: number; height: number };
 
-export function SheetViewport(props: {
+type ViewportProps = {
   fit?: boolean;
   children: (height?: number) => React.ReactElement;
-}): React.JSX.Element {
+};
+
+type VisibleArea = {
+  height: number | undefined;
+  modifiers: ReturnType<typeof fillMaxHeight>[];
+};
+
+export function SheetViewport(props: ViewportProps): React.JSX.Element {
   const { height, modifiers } = useVisibleContent();
   const hostModifiers = props.fit ? [fillMaxWidth()] : [fillMaxHeight()];
   return (
@@ -29,19 +36,11 @@ export function SheetViewport(props: {
   );
 }
 
-function useVisibleContent(): {
-  height: number | undefined;
-  modifiers: ReturnType<typeof fillMaxHeight>[];
-} {
+function useVisibleContent(): VisibleArea {
   const window = useWindowDimensions();
   const [layout, setLayout] = useState<ContentLayout>();
   const [bottomInset, setBottomInset] = useState(0);
-  const height =
-    layout &&
-    Math.max(
-      0,
-      Math.min(layout.height, window.height - layout.y - bottomInset),
-    );
+  const height = visibleHeight(layout, window.height, bottomInset);
   const modifiers = [
     fillMaxHeight(),
     onGloballyPositioned((next) =>
@@ -50,6 +49,18 @@ function useVisibleContent(): {
     onWindowInsetsChanged((insets) => setBottomInset(insets.bottom)),
   ];
   return { height, modifiers };
+}
+
+function visibleHeight(
+  layout: ContentLayout | undefined,
+  windowHeight: number,
+  bottomInset: number,
+): number | undefined {
+  if (!layout) return undefined;
+  return Math.max(
+    0,
+    Math.min(layout.height, windowHeight - layout.y - bottomInset),
+  );
 }
 
 function sameLayout(
@@ -72,11 +83,9 @@ function VisibleContent(props: {
   );
 }
 
-function SheetBody(props: {
-  fit?: boolean;
-  height: number | undefined;
-  children: (height?: number) => React.ReactElement;
-}): React.JSX.Element {
+function SheetBody(
+  props: ViewportProps & { height: number | undefined },
+): React.JSX.Element {
   return props.fit ? (
     props.children()
   ) : (
