@@ -9,7 +9,7 @@ import { loadedServer } from './connection-detail-view.fixtures';
 const meta = {
   title: 'Tests/Screens/Settings/Connection',
   component: ConnectionDetailView,
-  args: { connection: 'open', server: loadedServer },
+  args: { server: loadedServer },
 } satisfies Meta<typeof ConnectionDetailView>;
 
 export default meta;
@@ -92,27 +92,5 @@ export const ShowsPlaceholderBeforeFirstClockTick: Story = {
   args: { server: { ...loadedServer, clock: undefined } },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('group', { name: 'Clock, …' })).toBeVisible();
-  },
-};
-
-export const ShowsReconnectingBanner: Story = {
-  args: { connection: 'reconnecting' },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('status')).toHaveTextContent(
-      'Reconnecting to the Server…',
-    );
-    // The last data stays on screen while the Connection is down.
-    await expect(
-      canvas.getByRole('group', { name: 'PID, 4242' }),
-    ).toBeVisible();
-  },
-};
-
-export const ShowsOfflineBanner: Story = {
-  args: { connection: 'offline' },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('status')).toHaveTextContent(
-      'The Server is offline. Argo keeps trying to reconnect.',
-    );
   },
 };

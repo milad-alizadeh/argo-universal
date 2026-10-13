@@ -22,6 +22,8 @@ export interface PhoneLayoutViewProps {
   attentionCount: number;
   // Shows a picked section.
   onSectionChange: (section: Section) => void;
+  // Floats just under the section's header.
+  banner?: ReactNode;
   children: ReactNode;
 }
 

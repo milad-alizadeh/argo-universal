@@ -30,21 +30,28 @@ export function FieldGroup(props: FieldGroupProps): React.JSX.Element {
 
 // The sections in one scrolling Compose column, the search first when there is one.
 function ScrollingColumn(props: FieldGroupProps): React.JSX.Element {
-  const insets = useSafeAreaInsets();
-  const sideGutter = sideGutterFor(props.variant);
+  const modifiers = useColumnModifiers(props.variant);
   return (
     <Column
       verticalArrangement={{ spacedBy: sectionGap }}
-      modifiers={[
-        fillMaxSize(),
-        verticalScroll(),
-        padding(sideGutter, topPadding, sideGutter, insets.bottom + sectionGap),
-      ]}
+      modifiers={modifiers}
     >
       {props.search && <ListSearchField {...props.search} />}
       {props.children}
     </Column>
   );
+}
+
+function useColumnModifiers(
+  variant: FieldGroupProps['variant'],
+): React.ComponentProps<typeof Column>['modifiers'] {
+  const insets = useSafeAreaInsets();
+  const sideGutter = sideGutterFor(variant);
+  return [
+    fillMaxSize(),
+    verticalScroll(),
+    padding(sideGutter, topPadding, sideGutter, insets.bottom + sectionGap),
+  ];
 }
 
 // A navigation list's rows span the screen, flat like the sidebar's; grouped cards sit in the gutter.

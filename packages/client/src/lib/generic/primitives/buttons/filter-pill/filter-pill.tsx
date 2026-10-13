@@ -15,24 +15,26 @@ const pillName = ({ label, count }: FilterPillProps): string[] =>
 
 // One filter in a toolbar, with its count; the chosen one sits on the selected fill.
 export function FilterPill(props: FilterPillProps): React.JSX.Element {
-  const name = pillName(props);
   return (
     <Pressable
       role="button"
-      accessibilityLabel={name.join(', ')}
+      accessibilityLabel={pillName(props).join(', ')}
       aria-pressed={props.selected}
       onPress={props.onPress}
-      className={cn(
-        'h-7 flex-row items-center gap-1.5 rounded-full px-3 web:hover:bg-selected',
-        props.selected && 'bg-selected',
-      )}
+      className={pillClass(props.selected)}
     >
-      <Text
-        role="control"
-        className={cn(!props.selected && 'text-muted-foreground')}
-      >
-        {name.join(' ')}
+      <Text role="control" className={pillTextClass(props.selected)}>
+        {pillName(props).join(' ')}
       </Text>
     </Pressable>
   );
 }
+
+const pillClass = (selected: boolean): string =>
+  cn(
+    'h-7 flex-row items-center gap-1.5 rounded-full px-3 web:hover:bg-selected',
+    selected && 'bg-selected',
+  );
+
+const pillTextClass = (selected: boolean): string =>
+  cn(!selected && 'text-muted-foreground');

@@ -19,6 +19,7 @@ import {
 export const connectionLostEvent = 'connection.lost';
 export const connectionOpenedEvent = 'connection.opened';
 export const foregroundEvent = 'app.foreground';
+export const retryEvent = 'connection.retry';
 export const connectionAttemptEvent = 'connection.attemptRequested';
 export const retryDelayEvent =
   'xstate.after.retryDelay.connection.attempt.waiting';
@@ -30,6 +31,7 @@ const fixtures = [
   { type: connectionLostEvent, error: lostError },
   { type: connectionAttemptEvent },
   { type: foregroundEvent },
+  { type: retryEvent },
   { type: retryDelayEvent },
   { type: offlineDelayEvent },
 ] satisfies GraphEventFromLogic<typeof machine>[];

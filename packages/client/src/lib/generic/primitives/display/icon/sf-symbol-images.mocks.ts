@@ -9,7 +9,10 @@ export const renderStorybookSymbol: RenderSymbolImage = async ({
     `/__sf-symbol?name=${encodeURIComponent(name)}&pointSize=${pointSize}`,
   );
   if (response.status !== 200) return null;
-  const image = await response.blob();
+  return readAsDataUrl(await response.blob());
+};
+
+function readAsDataUrl(image: Blob): Promise<string | null> {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (): void =>
@@ -17,4 +20,4 @@ export const renderStorybookSymbol: RenderSymbolImage = async ({
     reader.onerror = (): void => resolve(null);
     reader.readAsDataURL(image);
   });
-};
+}

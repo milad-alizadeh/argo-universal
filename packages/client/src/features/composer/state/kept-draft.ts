@@ -9,27 +9,24 @@ export interface KeptDrafts {
 // Draft text kept on this Device, written in order; a read waits for the writes before it.
 export function keptDraftsOnDevice(): KeptDrafts {
   let writes = Promise.resolve();
-  return {
-    // Empty when none was kept or the read failed.
-    load: async (key) => {
-      await writes;
-      const kept = await AsyncStorage.getItem(key).catch((error: unknown) => {
-        console.error('Could not load the Composer draft', error);
-        return null;
-      });
-      return kept ?? '';
-    },
-    // An empty draft is forgotten.
-    keep: (key, text) => {
-      writes = writes
-        .then(() =>
-          text ? AsyncStorage.setItem(key, text) : AsyncStorage.removeItem(key),
-        )
-        .catch((error: unknown) => {
-          console.error('Could not keep the Composer draft', error);
-        });
-    },
+  const load = async (key: DraftKey): Promise<string> => {
+    await writes;
+    return (await AsyncStorage.getItem(key).catch(loadFailed)) ?? '';
   };
+  const keep = (key: DraftKey, text: string): void => {
+    writes = writes
+      .then(() =>
+        text ? AsyncStorage.setItem(key, text) : AsyncStorage.removeItem(key),
+      )
+      .catch(keepFailed);
+  };
+  return { load, keep };
 }
-
+function loadFailed(error: unknown): null {
+  console.error('Could not load the Composer draft', error);
+  return null;
+}
+function keepFailed(error: unknown): void {
+  console.error('Could not keep the Composer draft', error);
+}
 export const keptDrafts = keptDraftsOnDevice();

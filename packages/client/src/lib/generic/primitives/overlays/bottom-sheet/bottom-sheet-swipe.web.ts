@@ -79,24 +79,36 @@ type Drag = Omit<SheetDragOptions, 'sheet'> & {
 };
 
 function followPointer(drag: Drag): () => void {
-  const move = (event: PointerEvent): void => {
-    drag.sheet.style.transform = `translateY(${Math.max(0, event.clientY - drag.startY)}px)`;
-  };
-  const stop = (): void => {
-    window.removeEventListener('pointermove', move);
-    window.removeEventListener('pointerup', release);
-    window.removeEventListener('pointercancel', release);
-    settleBack(drag.sheet);
-  };
+  const move = (event: PointerEvent): void => moveSheet(drag, event);
   const release = (event: PointerEvent): void => {
     stop();
     releaseDrag(drag, event);
   };
   drag.sheet.style.transition = '';
+  const unlisten = listenToPointer(move, release);
+  const stop = (): void => {
+    unlisten();
+    settleBack(drag.sheet);
+  };
+  return stop;
+}
+
+function moveSheet(drag: Drag, event: PointerEvent): void {
+  drag.sheet.style.transform = `translateY(${Math.max(0, event.clientY - drag.startY)}px)`;
+}
+
+function listenToPointer(
+  move: (event: PointerEvent) => void,
+  release: (event: PointerEvent) => void,
+): () => void {
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
-  return stop;
+  return () => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', release);
+    window.removeEventListener('pointercancel', release);
+  };
 }
 
 function releaseDrag(drag: Drag, event: PointerEvent): void {

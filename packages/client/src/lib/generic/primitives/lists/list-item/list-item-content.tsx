@@ -32,23 +32,31 @@ function ListItemContent(props: ListItemProps): React.JSX.Element {
   const emphasis = rowEmphasis(props, sidebar);
   // The row's name already carries its text; only an accessory, such as a picker, stays reachable.
   return (
-    <View
-      className={cn(
-        'flex-1 flex-row items-center gap-3',
-        contentGap(sidebar, props.size),
-        props.disabled && 'opacity-65',
-      )}
-    >
-      <ListItemLeading
-        icon={props.icon}
-        loading={props.loading}
-        leading={props.leading}
-        size={props.size}
-        className={emphasis}
-      />
+    <View className={contentClasses(props, sidebar)}>
+      <ListItemLeadingSlot {...props} emphasis={emphasis} />
       <ListItemTitle {...props} />
       <ListItemTrailing {...props} emphasis={emphasis} />
     </View>
+  );
+}
+
+function contentClasses(props: ListItemProps, sidebar: boolean): string {
+  return cn(
+    'flex-1 flex-row items-center gap-3',
+    contentGap(sidebar, props.size),
+    props.disabled && 'opacity-65',
+  );
+}
+
+function ListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
+  return (
+    <ListItemLeading
+      icon={props.icon}
+      loading={props.loading}
+      leading={props.leading}
+      size={props.size}
+      className={props.emphasis}
+    />
   );
 }
 
@@ -62,20 +70,28 @@ function ListItemTitle(props: ListItemProps): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1">
       {title}
-      <Text
-        aria-hidden
-        role="secondary"
-        className={cn(props.subtitle.code && 'type-code text-muted-foreground')}
-      >
-        {props.subtitle.text}
-      </Text>
+      <ListItemSubtitle subtitle={props.subtitle} />
     </View>
   );
 }
 
-function ListItemTrailing(
-  props: ListItemProps & { emphasis: string },
-): React.JSX.Element {
+function ListItemSubtitle({
+  subtitle,
+}: Required<Pick<ListItemProps, 'subtitle'>>): React.JSX.Element {
+  return (
+    <Text
+      aria-hidden
+      role="secondary"
+      className={cn(subtitle.code && 'type-code text-muted-foreground')}
+    >
+      {subtitle.text}
+    </Text>
+  );
+}
+
+type TrailingProps = ListItemProps & { emphasis: string };
+
+function ListItemTrailing(props: TrailingProps): React.JSX.Element {
   const sidebar = useSidebarFields();
   const valueColor = sidebar ? props.emphasis : 'text-muted-foreground';
   return (

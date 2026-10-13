@@ -13,18 +13,29 @@ export function FieldGroup({
   variant = 'grouped',
   fit,
 }: FieldGroupProps): React.JSX.Element {
+  return (
+    <FieldLayout value={variant}>
+      <GroupScroll fit={fit} variant={variant}>
+        {children}
+      </GroupScroll>
+    </FieldLayout>
+  );
+}
+
+function GroupScroll(
+  props: Pick<FieldGroupProps, 'children' | 'variant' | 'fit'>,
+): React.JSX.Element {
+  const { children, fit, variant } = props;
   // Wide, the group pads none of its own, so the pane's column is all its side padding.
   const columnStyle = useScrollColumnStyle();
   return (
-    <FieldLayout value={variant}>
-      <ScrollView
-        className={fit ? 'shrink' : 'flex-1'}
-        contentContainerStyle={columnStyle}
-        contentContainerClassName={groupClasses(fit, variant)}
-      >
-        <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>
-      </ScrollView>
-    </FieldLayout>
+    <ScrollView
+      className={fit ? 'shrink' : 'flex-1'}
+      contentContainerStyle={columnStyle}
+      contentContainerClassName={groupClasses(fit, variant)}
+    >
+      <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>
+    </ScrollView>
   );
 }
 

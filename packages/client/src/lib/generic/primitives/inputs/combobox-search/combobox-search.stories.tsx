@@ -20,12 +20,20 @@ function Example({ initial = '' }: { initial?: string }): React.JSX.Element {
         value={value}
         onChangeText={setValue}
       />
+      <MatchList matches={matches} />
+    </View>
+  );
+}
+
+function MatchList({ matches }: { matches: string[] }): React.JSX.Element {
+  return (
+    <>
       {matches.map((project) => (
         <Text key={project} className="px-4 py-2 wide:px-2 wide:py-1.5">
           {project}
         </Text>
       ))}
-    </View>
+    </>
   );
 }
 

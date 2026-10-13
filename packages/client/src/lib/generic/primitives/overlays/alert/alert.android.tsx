@@ -1,6 +1,6 @@
 import { AlertDialog, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
+import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '../../native/host';
 import {
   alertActionPress,
@@ -10,34 +10,57 @@ import {
 
 // Material's AlertDialog shows while it is drawn, so a closed alert draws nothing.
 export function Alert(props: AlertProps): React.JSX.Element | null {
-  const { colors } = useNativeTheme();
   if (!props.open) return null;
-  const answers = props.actions.filter((action) => action.role !== 'cancel');
-  const cancel = props.actions.find((action) => action.role === 'cancel');
   return (
     <Host matchContents>
-      <AlertDialog
-        onDismissRequest={() => props.onOpenChange(false)}
-        colors={{
-          containerColor: colors.popover,
-          titleContentColor: colors.popoverForeground,
-          textContentColor: colors.mutedForeground,
-        }}
-      >
-        <AlertDialog.Title>
-          <Text style={{ typography: 'headlineSmall' }}>{props.title}</Text>
-        </AlertDialog.Title>
-        <AlertMessage message={props.message} />
-        <AlertDialog.ConfirmButton>
-          <Row horizontalArrangement={{ spacedBy: 8 }}>
-            {answers.map((action) => (
-              <AlertButton key={action.label} action={action} {...props} />
-            ))}
-          </Row>
-        </AlertDialog.ConfirmButton>
-        <AlertCancel action={cancel} onOpenChange={props.onOpenChange} />
-      </AlertDialog>
+      <OpenAlert {...props} />
     </Host>
+  );
+}
+
+function OpenAlert(props: AlertProps): React.JSX.Element {
+  const { colors } = useNativeTheme();
+  return (
+    <AlertDialog
+      onDismissRequest={() => props.onOpenChange(false)}
+      colors={alertColors(colors)}
+    >
+      <AlertTitle title={props.title} />
+      <AlertMessage message={props.message} />
+      <AlertAnswers {...props} />
+      <AlertCancel actions={props.actions} onOpenChange={props.onOpenChange} />
+    </AlertDialog>
+  );
+}
+
+function alertColors(
+  colors: NativeColors,
+): React.ComponentProps<typeof AlertDialog>['colors'] {
+  return {
+    containerColor: colors.popover,
+    titleContentColor: colors.popoverForeground,
+    textContentColor: colors.mutedForeground,
+  };
+}
+
+function AlertTitle(props: Pick<AlertProps, 'title'>): React.JSX.Element {
+  return (
+    <AlertDialog.Title>
+      <Text style={{ typography: 'headlineSmall' }}>{props.title}</Text>
+    </AlertDialog.Title>
+  );
+}
+
+function AlertAnswers(props: AlertProps): React.JSX.Element {
+  const answers = props.actions.filter((action) => action.role !== 'cancel');
+  return (
+    <AlertDialog.ConfirmButton>
+      <Row horizontalArrangement={{ spacedBy: 8 }}>
+        {answers.map((action) => (
+          <AlertButton key={action.label} action={action} {...props} />
+        ))}
+      </Row>
+    </AlertDialog.ConfirmButton>
   );
 }
 
@@ -53,12 +76,13 @@ function AlertMessage(props: {
 }
 
 function AlertCancel(
-  props: Pick<AlertProps, 'onOpenChange'> & { action: AlertAction | undefined },
+  props: Pick<AlertProps, 'actions' | 'onOpenChange'>,
 ): React.JSX.Element | null {
-  if (!props.action) return null;
+  const action = props.actions.find((candidate) => candidate.role === 'cancel');
+  if (!action) return null;
   return (
     <AlertDialog.DismissButton>
-      <AlertButton action={props.action} onOpenChange={props.onOpenChange} />
+      <AlertButton action={action} onOpenChange={props.onOpenChange} />
     </AlertDialog.DismissButton>
   );
 }

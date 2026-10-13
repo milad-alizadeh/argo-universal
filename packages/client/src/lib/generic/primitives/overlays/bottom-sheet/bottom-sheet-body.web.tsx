@@ -2,33 +2,42 @@ import { useEffect, useRef, type ReactElement, type ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 
-export function SheetBody(props: {
+type SheetBodyProps = {
   children: ReactNode;
   label?: string;
   footer?: ReactNode;
   expanded: boolean;
   onResize?: (expanded: boolean) => void;
-}): ReactElement {
+};
+
+export function SheetBody(props: SheetBodyProps): ReactElement {
   return (
-    <View className={cn('shrink min-h-0', props.expanded && 'flex-1')}>
+    <View className={shrinkClass(props.expanded)}>
       <SheetGrip expanded={props.expanded} onResize={props.onResize} />
-      <ScrollView
-        className={cn('shrink min-h-0', props.expanded && 'flex-1')}
-        keyboardShouldPersistTaps="handled"
-        role="region"
-        accessibilityLabel={documentLabel(props.label)}
-      >
-        {props.children}
-      </ScrollView>
+      <SheetScroll {...props} />
       {props.footer}
     </View>
   );
 }
 
-function SheetGrip(props: {
-  expanded: boolean;
-  onResize?: (expanded: boolean) => void;
-}): ReactElement {
+function shrinkClass(expanded: boolean): string {
+  return cn('shrink min-h-0', expanded && 'flex-1');
+}
+
+function SheetScroll(props: SheetBodyProps): ReactElement {
+  return (
+    <ScrollView
+      className={shrinkClass(props.expanded)}
+      keyboardShouldPersistTaps="handled"
+      role="region"
+      accessibilityLabel={documentLabel(props.label)}
+    >
+      {props.children}
+    </ScrollView>
+  );
+}
+
+function SheetGrip(props: GripProps): ReactElement {
   const ref = useRef<View>(null);
   useGripKeyboard(ref, props.onResize);
   return (
@@ -49,20 +58,27 @@ function useGripKeyboard(
   useEffect(() => {
     const element = ref.current;
     if (!(element instanceof HTMLElement) || !onResize) return;
-    const resize = (event: KeyboardEvent): void => {
-      if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
-      event.preventDefault();
-      onResize(event.key === 'ArrowUp' || event.key === 'End');
-    };
+    const resize = resizeOnKey(onResize);
     element.addEventListener('keydown', resize);
     return (): void => element.removeEventListener('keydown', resize);
   }, [ref, onResize]);
 }
 
-function gripAccessibility(props: {
-  expanded: boolean;
-  onResize?: (expanded: boolean) => void;
-}): React.ComponentProps<typeof View> {
+type GripProps = Pick<SheetBodyProps, 'expanded' | 'onResize'>;
+
+function resizeOnKey(
+  onResize: (expanded: boolean) => void,
+): (event: KeyboardEvent) => void {
+  return (event) => {
+    if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    onResize(event.key === 'ArrowUp' || event.key === 'End');
+  };
+}
+
+function gripAccessibility(
+  props: GripProps,
+): React.ComponentProps<typeof View> {
   if (!props.onResize) return {};
   return {
     role: 'slider',

@@ -18,6 +18,14 @@ export function MenuButton({ label, ...props }: MenuButtonProps): ReactElement {
       {...props}
       className="h-5 flex-row items-center gap-1 rounded-sm px-1 web:outline-none web:hover:bg-selected web:focus-visible:bg-selected"
     >
+      <MenuButtonContent label={label} />
+    </Pressable>
+  );
+}
+
+function MenuButtonContent({ label }: { label: string }): ReactElement {
+  return (
+    <>
       <Text role="secondary" className="text-muted-foreground">
         {label}
       </Text>
@@ -26,6 +34,6 @@ export function MenuButton({ label, ...props }: MenuButtonProps): ReactElement {
         name="chevron-down"
         className="text-muted-foreground"
       />
-    </Pressable>
+    </>
   );
 }

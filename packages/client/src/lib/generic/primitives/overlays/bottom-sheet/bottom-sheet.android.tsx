@@ -28,26 +28,42 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
 
 function SheetPresentation(presentation: SheetProps): React.JSX.Element {
   const { sheetRef, ...props } = presentation;
-  const sheet = useSheetColors(props.surface);
-  const dismissible = props.dismissible !== false;
+  const modalProps = useModalProps(props, sheetRef);
   return (
     <SheetHost>
-      <ModalBottomSheet
-        {...sheet}
-        ref={sheetRef}
-        initialFullyExpanded={startsExpanded(props)}
-        onDismissRequest={() => dismissOrCollapse(props, sheetRef)}
-        sheetGesturesEnabled={dismissible || props.expandable === true}
-        properties={{
-          shouldDismissOnBackPress: dismissible,
-          shouldDismissOnClickOutside: dismissible,
-        }}
-      >
+      <ModalBottomSheet {...modalProps} ref={sheetRef}>
         {props.fit && <SheetDragHandle />}
         <HostedSheetContent {...props} />
       </ModalBottomSheet>
     </SheetHost>
   );
+}
+
+type ModalProps = Omit<
+  React.ComponentProps<typeof ModalBottomSheet>,
+  'children' | 'ref'
+>;
+
+function useModalProps(
+  props: Omit<SheetProps, 'sheetRef'>,
+  sheetRef: SheetRef,
+): ModalProps {
+  const sheet = useSheetColors(props.surface);
+  const dismissible = props.dismissible !== false;
+  return {
+    ...sheet,
+    initialFullyExpanded: startsExpanded(props),
+    onDismissRequest: () => dismissOrCollapse(props, sheetRef),
+    sheetGesturesEnabled: dismissible || props.expandable === true,
+    properties: dismissProperties(dismissible),
+  };
+}
+
+function dismissProperties(dismissible: boolean): ModalProps['properties'] {
+  return {
+    shouldDismissOnBackPress: dismissible,
+    shouldDismissOnClickOutside: dismissible,
+  };
 }
 
 type SheetProps = Pick<
@@ -65,20 +81,7 @@ type SheetProps = Pick<
   | 'surface'
 > & { sheetRef: SheetRef };
 function HostedSheetContent(
-  props: Pick<
-    BottomSheetProps,
-    | 'onOpenChange'
-    | 'label'
-    | 'children'
-    | 'dismissible'
-    | 'expandable'
-    | 'footer'
-    | 'initialSize'
-    | 'fit'
-    | 'size'
-    | 'contentScrolls'
-    | 'surface'
-  >,
+  props: Omit<SheetProps, 'sheetRef'>,
 ): React.JSX.Element {
   if (props.fit) return <FittedSheetContent {...props} />;
   return (

@@ -3,7 +3,7 @@ import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { frame } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
-import { Platform, View } from 'react-native';
+import { type LayoutChangeEvent, Platform, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 type ChildrenProps = { children: React.ReactNode };
 export function HostedRow({ children }: ChildrenProps): React.JSX.Element {
@@ -26,19 +26,24 @@ function rowModifiers(
     : [fillMaxWidth()];
 }
 
-function MeasuredRow({
-  children,
-  onHeight,
-}: ChildrenProps & { onHeight: (height: number) => void }): React.JSX.Element {
+type MeasuredRowProps = ChildrenProps & { onHeight: (height: number) => void };
+
+function MeasuredRow(props: MeasuredRowProps): React.JSX.Element {
   return (
     <RNHostView>
       {/* Pinned to the top only, so its height follows the content, not the row frame it sets. */}
       <View
         className="absolute inset-x-0 top-0"
-        onLayout={(event) => onHeight(event.nativeEvent.layout.height)}
+        onLayout={reportHeight(props.onHeight)}
       >
-        {children}
+        {props.children}
       </View>
     </RNHostView>
   );
+}
+
+function reportHeight(
+  onHeight: (height: number) => void,
+): (event: LayoutChangeEvent) => void {
+  return (event) => onHeight(event.nativeEvent.layout.height);
 }

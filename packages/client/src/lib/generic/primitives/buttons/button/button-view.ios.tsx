@@ -136,14 +136,18 @@ function SystemRedIcon({ icon }: NativeIconProps): ReactElement | null {
     <RNHostView matchContents>
       <SymbolGlyph
         {...iconSymbols[icon]}
+        {...systemRedGlyph}
         pixels={pixels}
-        filled={false}
-        glyphScale={1}
-        tintColor={PlatformColor('systemRed')}
         testID={`icon-${icon}`}
       />
     </RNHostView>
   );
 }
+
+const systemRedGlyph = {
+  filled: false,
+  glyphScale: 1,
+  tintColor: PlatformColor('systemRed'),
+};
 
 export type { ButtonProps } from './button-props';

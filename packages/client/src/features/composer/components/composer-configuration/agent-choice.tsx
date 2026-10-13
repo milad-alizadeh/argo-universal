@@ -29,56 +29,88 @@ const agentAvailability = {
   Exclude<AgentAvailability, 'available'>,
   { label: string; button: string; action: 'setup' | 'retry'; reason: boolean }
 >;
-export function AgentChoice({
-  agent,
-  configuration,
-  onSelect,
-}: {
+interface AgentChoiceProps {
   agent: AgentInfo;
   configuration: ComposerConfigurationProps;
   onSelect: () => void;
-}): React.JSX.Element {
-  const wide = useWide();
-  const unavailable =
-    agent.availability === 'available'
-      ? undefined
-      : agentAvailability[agent.availability];
-  const setup = configuration.onAgentSetup
-    ? (): void => configuration.onAgentSetup?.(agent.agent)
-    : undefined;
-  const action =
-    unavailable?.action === 'retry' ? configuration.onAgentRetry : setup;
+}
+export function AgentChoice(props: AgentChoiceProps): React.JSX.Element {
   return (
     <>
-      <ListItem
-        title={agent.label}
-        accessibilityLabel={`Select ${agent.label}`}
-        leading={<AgentIcon agent={agent} role={wide ? 'control' : 'row'} />}
-        role="button"
-        disclosure={false}
-        subtitle={agentSubtitle(agent)}
-        disabled={!configuration.onAgentChange || !!unavailable}
-        selected={agent.agent === configuration.agent}
-        accessory={
-          agent.agent === configuration.agent ? <SelectedCheck /> : undefined
-        }
-        onPress={() => {
-          if (agent.agent !== configuration.agent)
-            configuration.onAgentChange?.(agent.agent);
-          onSelect();
-        }}
-      />
-      {unavailable && action ? (
-        <ListItem
-          title={unavailable.button}
-          accessibilityLabel={`${unavailable.action === 'retry' ? 'Retry' : 'Set up'} ${agent.label}`}
-          role="button"
-          tone="accent"
-          onPress={action}
-        />
-      ) : null}
+      <AgentSelectionRow {...props} />
+      <AgentAvailabilityAction {...props} />
     </>
   );
+}
+function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
+  const wide = useWide();
+  return (
+    <ListItem
+      {...agentSelectionProps(props)}
+      leading={
+        <AgentIcon agent={props.agent} role={wide ? 'control' : 'row'} />
+      }
+    />
+  );
+}
+function agentSelectionProps(
+  props: AgentChoiceProps,
+): React.ComponentProps<typeof ListItem> {
+  const { agent, configuration } = props;
+  const selected = agent.agent === configuration.agent;
+  return {
+    ...agentRowContent(agent),
+    disabled:
+      !configuration.onAgentChange || agent.availability !== 'available',
+    selected,
+    accessory: selected ? <SelectedCheck /> : undefined,
+    onPress: () => selectAgent(props),
+  };
+}
+function agentRowContent(
+  agent: AgentInfo,
+): React.ComponentProps<typeof ListItem> {
+  return {
+    title: agent.label,
+    accessibilityLabel: `Select ${agent.label}`,
+    role: 'button',
+    disclosure: false,
+    subtitle: agentSubtitle(agent),
+  };
+}
+function AgentAvailabilityAction(
+  props: AgentChoiceProps,
+): React.JSX.Element | null {
+  if (props.agent.availability === 'available') return null;
+  const action = agentAction(props.agent, props.configuration);
+  if (!action) return null;
+  return (
+    <ListItem
+      {...agentActionContent(props.agent)}
+      role="button"
+      tone="accent"
+      onPress={action}
+    />
+  );
+}
+function agentActionContent(
+  agent: AgentInfo,
+): React.ComponentProps<typeof ListItem> {
+  if (agent.availability === 'available') return { title: agent.label };
+  const unavailable = agentAvailability[agent.availability];
+  return {
+    title: unavailable.button,
+    accessibilityLabel: `${unavailable.action === 'retry' ? 'Retry' : 'Set up'} ${agent.label}`,
+  };
+}
+function agentAction(
+  agent: AgentInfo,
+  configuration: ComposerConfigurationProps,
+): (() => void) | undefined {
+  if (agent.availability === 'unavailable') return configuration.onAgentRetry;
+  return configuration.onAgentSetup
+    ? () => configuration.onAgentSetup?.(agent.agent)
+    : undefined;
 }
 
 function agentSubtitle(agent: AgentInfo): { text: string } | undefined {
@@ -89,4 +121,14 @@ function agentSubtitle(agent: AgentInfo): { text: string } | undefined {
       .filter(Boolean)
       .join(' · '),
   };
+}
+
+function selectAgent({
+  agent,
+  configuration,
+  onSelect,
+}: AgentChoiceProps): void {
+  if (agent.agent !== configuration.agent)
+    configuration.onAgentChange?.(agent.agent);
+  onSelect();
 }

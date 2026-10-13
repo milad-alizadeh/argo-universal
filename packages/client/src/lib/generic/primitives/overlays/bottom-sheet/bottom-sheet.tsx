@@ -68,15 +68,8 @@ type SheetContentProps = Pick<
 >;
 
 function SheetContent(props: SheetContentProps): React.JSX.Element {
-  const colors = useNativeTheme().colors;
-  const modifiers = [
-    ...useSheetDetents(props),
-    presentationDragIndicator('visible'),
-    interactiveDismissDisabled(props.dismissible === false),
-    ...sheetFill(props.surface === 'sidebar' ? colors.sidebar : colors.popover),
-  ];
   return (
-    <Group modifiers={modifiers}>
+    <Group modifiers={useSheetModifiers(props)}>
       <SheetViewport fit={props.fit}>
         {(viewportHeight) => (
           <BottomSheetContent {...props} viewportHeight={viewportHeight} />
@@ -84,6 +77,16 @@ function SheetContent(props: SheetContentProps): React.JSX.Element {
       </SheetViewport>
     </Group>
   );
+}
+
+function useSheetModifiers(props: SheetContentProps): ModifierConfig[] {
+  const colors = useNativeTheme().colors;
+  return [
+    ...useSheetDetents(props),
+    presentationDragIndicator('visible'),
+    interactiveDismissDisabled(props.dismissible === false),
+    ...sheetFill(props.surface === 'sidebar' ? colors.sidebar : colors.popover),
+  ];
 }
 
 // A fitted sheet takes its height from the content, so only a fixed one names detents.
