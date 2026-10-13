@@ -363,7 +363,7 @@ export function Composer({
                   sendState === 'blocked' && 'opacity-35',
                 )}
                 iconRole="control"
-                iconWeight="regular"
+                iconWeight="light"
               />
             </View>
           </View>
