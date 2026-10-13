@@ -3,15 +3,8 @@ import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
 import { When } from './fixtures';
+import { connectSecondApp } from './second-app';
 
-const connectSecondApp = async (page: Page, httpUrl: string): Promise<void> => {
-  await page.addInitScript(
-    (url): void => {
-      Object.assign(globalThis, { argo: { serverUrl: url } });
-    },
-    httpUrl.replace(/^http/, 'ws'),
-  );
-};
 const releaseSuccessfulRetry = async (path: string): Promise<void> => {
   await writeFile(
     `${path}.next`,

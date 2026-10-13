@@ -1,11 +1,13 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
+import { sessionId } from './feed';
 import { Given, When, Then } from './fixtures';
-import { phone, wide } from './frame';
+import { wide } from './frame';
 import { agentModelLabel, openNewSession, sendPrompt } from './new-session';
 
 export const liveTitle = 'Check the live list';
 export const attentionLabel = '1 Session needs attention';
+const fixtureReply = 'The shared fixture completed this Turn.';
 
 export function liveSessionRow(page: Page): Locator {
   return page.getByRole('button', { name: new RegExp(`^${liveTitle}, `) });
@@ -14,6 +16,28 @@ export function liveSessionRow(page: Page): Locator {
 export async function startSession(page: Page, title: string): Promise<void> {
   await openNewSession(page);
   await sendPrompt(page, title);
+}
+
+export const sessionRow = (
+  page: Page,
+  title: string,
+  status: string,
+): Locator =>
+  page.getByRole('button', { name: `${title}, ${status}`, exact: true });
+
+// Starts a Session in a wide Frame and stays on it until its Turn completes; returns its id.
+export async function startReadSession(
+  page: Page,
+  title: string,
+): Promise<string> {
+  await page.setViewportSize(wide);
+  await startSession(page, title);
+  const id = sessionId(page);
+  await expect(
+    page.getByTestId('feed-scroll').getByText(fixtureReply, { exact: true }),
+  ).toBeVisible();
+  await expect(sessionRow(page, title, 'Idle')).toBeVisible();
+  return id;
 }
 
 When(
@@ -30,34 +54,7 @@ When(
 Given(
   'a Session named {string}',
   async ({ page }, title: string): Promise<void> => {
-    await page.setViewportSize(wide);
-    await startSession(page, title);
-    await expect(
-      page.getByRole('button', { name: `${title}, Unread`, exact: true }),
-    ).toBeVisible();
-  },
-);
-
-Given('an unread Session in a phone Frame', async ({ page }): Promise<void> => {
-  await page.setViewportSize(wide);
-  await startSession(page, liveTitle);
-  await expect(
-    page.getByRole('button', { name: `${liveTitle}, Unread`, exact: true }),
-  ).toBeVisible();
-  await page.setViewportSize(phone);
-  await page.getByRole('link', { name: /back/i }).click();
-});
-
-Then(
-  'the Sessions list shows the unread Session with one attention badge',
-  async ({ page }): Promise<void> => {
-    await expect(liveSessionRow(page)).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: `${liveTitle}, Unread`, exact: true }),
-    ).toBeVisible();
-    await expect(page.getByLabel(attentionLabel, { exact: true })).toHaveText(
-      '1',
-    );
+    await startReadSession(page, title);
   },
 );
 

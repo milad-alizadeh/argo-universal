@@ -1,8 +1,21 @@
 Feature: Live Sessions list
-  Scenario: A completed Turn marks its Session unread
+  Scenario: A Turn that completes while its Session is open leaves it read
     Given a wide Frame
     When I start a Session named "Check the live list"
+    Then the Agent replies "The shared fixture completed this Turn."
+    And the Sessions list shows "Check the live list" as read with no attention badge
+
+  Scenario: A Session that changes while another Session is open turns Unread
+    When another App prompts the Session "Check the live list" while "Plan the release" is open
     Then the Sessions list shows the unread Session with one attention badge
+
+  @web-only
+  Scenario: Opening an unread Session marks it read on every App
+    Given an unread Session in a wide Frame
+    And another App shows the Sessions list
+    When I open the Session "Check the live list"
+    Then the Sessions list shows "Check the live list" as read with no attention badge
+    And the other App shows "Check the live list" as read with no attention badge
 
   Scenario Outline: Search matches Session titles without case sensitivity
     Given a Session named "Check the live list"

@@ -3,6 +3,7 @@ import type { AppRouter } from '@repo/engine/router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type * as React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAgents } from '#features/agents';
 import { type ComposerDraft, useAttachmentDraft } from '#features/composer';
 import {
@@ -73,6 +74,13 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
   const imageUrl = useBlobUrl();
   const connected = useConnectionState() === 'open';
   const feed = useSessionFeed(sessionId);
+  const [endShown, setEndShown] = useState(true);
+  useMarkSeen({
+    sessionId,
+    revision: feed.ready ? feed.snapshot?.maxRevision : undefined,
+    endShown,
+    connected,
+  });
   const agents = useAgents();
   const commands = useSessionCommands(
     sessionId,
@@ -109,6 +117,7 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
       onStartReached: () => void feed.loadOlder(),
       imageUrl,
       checkoutBranch: snapshot.checkout.branch ?? undefined,
+      onEndShownChange: setEndShown,
     },
     composer: {
       draft: commands.draft,
@@ -153,6 +162,38 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
       },
     },
   };
+}
+
+// Each newer revision shown with the Feed's end on screen clears Unread on every App (spec 0003); a send that fails goes again once the Connection reopens.
+function useMarkSeen({
+  sessionId,
+  revision,
+  endShown,
+  connected,
+}: {
+  sessionId: string;
+  revision: number | undefined;
+  endShown: boolean;
+  connected: boolean;
+}): void {
+  const trpc = useTRPC();
+  const { mutate } = useMutation(trpc.session.markSeen.mutationOptions());
+  // A Session starts at seenRevision 0, so revision 0 never needs sending.
+  const sent = useRef(0);
+  useEffect(() => {
+    if (revision === undefined || !endShown || !connected) return;
+    if (revision <= sent.current) return;
+    const before = sent.current;
+    sent.current = revision;
+    mutate(
+      { sessionId, revision },
+      {
+        onError: () => {
+          if (sent.current === revision) sent.current = before;
+        },
+      },
+    );
+  }, [sessionId, revision, endShown, connected, mutate]);
 }
 
 // Draft uploads and successful commands resume a Feed that has closed.

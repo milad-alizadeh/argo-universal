@@ -52,6 +52,8 @@ export interface FeedProps {
   checkoutBranch?: string;
   // Fixes the live header's clock, for stories and tests.
   now?: number;
+  // Whether the reader sees the Feed's end; the Feed opens there, so the first call is the reader leaving it.
+  onEndShownChange?: (shown: boolean) => void;
 }
 
 function LoadingEarlier(): React.JSX.Element {
@@ -273,7 +275,7 @@ export function Feed({
 
 type FeedListProps = Pick<
   FeedProps,
-  'loadingOlder' | 'onStartReached' | 'imageUrl' | 'now'
+  'loadingOlder' | 'onStartReached' | 'imageUrl' | 'now' | 'onEndShownChange'
 > & {
   entries: FeedEntry[];
   // The newest row's key, so a row arriving while the reader is away marks Jump to latest.
@@ -287,6 +289,7 @@ function FeedList({
   onStartReached,
   imageUrl,
   now,
+  onEndShownChange,
 }: FeedListProps): React.JSX.Element {
   const wide = useWide();
   const headerCover = useHeaderCover();
@@ -316,9 +319,10 @@ function FeedList({
   const [newestKeyWhenLeftEnd, setNewestKeyWhenLeftEnd] = useState<
     string | null
   >(null);
-  const onAtEndChange = useEffectEvent((atEnd: boolean) =>
-    setNewestKeyWhenLeftEnd(atEnd ? null : newestKey),
-  );
+  const onAtEndChange = useEffectEvent((atEnd: boolean) => {
+    setNewestKeyWhenLeftEnd(atEnd ? null : newestKey);
+    onEndShownChange?.(atEnd);
+  });
   useEffect(
     () =>
       list.current

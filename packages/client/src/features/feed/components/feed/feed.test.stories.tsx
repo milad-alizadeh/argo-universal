@@ -2,7 +2,7 @@ import type { SessionUpdate } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import {
   canPointAt,
   centreOf,
@@ -344,6 +344,22 @@ export const JumpsToLatest: Story = {
       expect(
         canvas.queryByRole('button', { name: /Jump to latest/ }),
       ).toBeNull(),
+    );
+  },
+};
+
+// The Session counts its Feed seen only while the reader sees the Feed's end.
+export const ReportsWhetherTheEndIsShown: Story = {
+  args: { onEndShownChange: fn() },
+  play: async ({ args, canvas }) => {
+    await settleViewport(layoutWidths.phone);
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+    await scrollAwayFromEnd(canvas, scroll);
+    await expect(args.onEndShownChange).toHaveBeenLastCalledWith(false);
+    canvas.getByRole('button', { name: 'Jump to latest' }).click();
+    await waitFor(() =>
+      expect(args.onEndShownChange).toHaveBeenLastCalledWith(true),
     );
   },
 };
