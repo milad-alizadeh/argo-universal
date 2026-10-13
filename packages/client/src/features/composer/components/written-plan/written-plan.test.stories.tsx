@@ -1,19 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { type ReactElement, useState } from 'react';
-import { expect, fn, spyOn, waitFor, within } from 'storybook/test';
-import { userEvent as browserUserEvent } from 'vitest/browser';
+import type { ReactElement } from 'react';
+import { fn } from 'storybook/test';
 import { SessionColumn } from '#lib/product/session-layout';
-import { composerProps } from '../../../../../mocks/composer-mock';
-import { longWrittenPlan } from '../../../../../mocks/feed-paper';
-import { shownText } from '../../../../../mocks/rich-textarea-example';
+import { useEditableComposerDraft } from '../../../../../mocks/written-plan-composer-draft';
+import {
+  openingWrittenPlan,
+  readingLongWrittenPlan,
+} from '../../../../../mocks/written-plan-stories';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.mocks';
 import type { MockAgent } from '../../../../lib/product/feed-message.mocks';
 import { Composer } from '../composer/composer';
-
-const writtenPlanRegionName = 'Written plan content';
 
 const meta = {
   title: 'Tests/WrittenPlan',
@@ -26,17 +23,8 @@ const meta = {
   ],
   component: Composer,
   render: function EditableComposer(args): ReactElement {
-    const [draft, setDraft] = useState(args.draft);
-    return (
-      <Composer
-        {...args}
-        draft={draft}
-        onDraftChange={(next) => {
-          setDraft(next);
-          args.onDraftChange(next);
-        }}
-      />
-    );
+    const editableDraft = useEditableComposerDraft(args);
+    return <Composer {...args} {...editableDraft} />;
   },
   args: {
     draft: { text: '', attachments: [] },
@@ -53,84 +41,7 @@ function opensWrittenPlan(
   agent: MockAgent,
   form: 'markdown' | 'file',
 ): Story {
-  const row = recordedAcpContent(agent).rows.find(
-    (row) => row.sessionUpdate === 'plan_update' && row.plan.type === form,
-  );
-  if (row?.sessionUpdate !== 'plan_update' || row.plan.type === 'items')
-    throw new Error(`Recording needs ${form} Plan for ${agent}`);
-  return {
-    args: {
-      ...composerProps({ ...meta.args, initialAgent: agent }),
-      writtenPlan: row.plan,
-    },
-    play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Written plan' }),
-      );
-      const body = within(document.body);
-      if (width === layoutWidths.phone)
-        await expect(
-          body.queryByRole('button', { name: 'Close written plan' }),
-        ).not.toBeInTheDocument();
-      if (form === 'markdown')
-        await waitFor(() =>
-          expect(
-            within(
-              body.getByRole('region', { name: writtenPlanRegionName }),
-            ).getByRole('heading', { name: 'Read-only Plan', level: 1 }),
-          ).toBeVisible(),
-        );
-      else {
-        await expect(
-          body.getByLabelText('file:///project/plan.md'),
-        ).toBeVisible();
-        await expect(
-          body.getByText('The Agent shared where the plan is, not its text.'),
-        ).toBeVisible();
-        const clipboard = spyOn(
-          navigator.clipboard,
-          'writeText',
-        ).mockResolvedValue();
-        try {
-          await userEvent.click(body.getByRole('button', { name: 'Copy URI' }));
-          await waitFor(() =>
-            expect(clipboard).toHaveBeenCalledWith('file:///project/plan.md'),
-          );
-        } finally {
-          clipboard.mockRestore();
-        }
-      }
-      if (form === 'markdown' && width === layoutWidths.phone)
-        await expect(
-          body.getAllByRole('heading', { name: 'Read-only Plan' }),
-        ).toHaveLength(1);
-      await expect(
-        body.queryByRole('button', { name: 'Approve' }),
-      ).not.toBeInTheDocument();
-      await expect(
-        body.queryByRole('button', { name: 'Keep planning' }),
-      ).not.toBeInTheDocument();
-      if (width === layoutWidths.wide) {
-        await browserUserEvent.type(
-          canvas.getByRole('textbox'),
-          'Follow up on this plan.',
-        );
-        await expect(shownText(canvas.getByRole('textbox'))).toBe(
-          'Follow up on this plan.',
-        );
-        await expect(
-          body.getByRole('region', { name: writtenPlanRegionName }),
-        ).toBeVisible();
-      }
-      await userEvent.keyboard('{Escape}');
-      await waitFor(() =>
-        expect(
-          body.queryByRole('region', { name: writtenPlanRegionName }),
-        ).not.toBeInTheDocument(),
-      );
-    },
-  };
+  return openingWrittenPlan({ width, agent, form }, meta.args);
 }
 export const MarkdownFirstAgentPhone = opensWrittenPlan(
   layoutWidths.phone,
@@ -174,55 +85,7 @@ export const FileSecondAgentWide = opensWrittenPlan(
 );
 
 function readsLongWrittenPlan(width: number, agent: MockAgent): Story {
-  return {
-    args: {
-      ...composerProps({ ...meta.args, initialAgent: agent }),
-      writtenPlan: longWrittenPlan,
-    },
-    play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Written plan' }),
-      );
-      const body = within(document.body);
-      const content = body.getByRole('region', {
-        name: writtenPlanRegionName,
-      });
-      const end = within(content).getByText('End of the written plan.');
-      let scroll: HTMLElement | null =
-        width === layoutWidths.wide
-          ? body.getByLabelText('Written plan document')
-          : content.parentElement;
-      while (scroll && scroll.scrollHeight <= scroll.clientHeight)
-        scroll = scroll.parentElement;
-      if (!scroll)
-        throw new Error('Long written Plan needs a scrollable document');
-      const documentScroll = scroll;
-      documentScroll.scrollTop = documentScroll.scrollHeight;
-      await waitFor(() => expect(documentScroll.scrollTop).toBeGreaterThan(0));
-      await expect(end.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-        documentScroll.getBoundingClientRect().bottom,
-      );
-      await expect(end.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-        documentScroll.getBoundingClientRect().top,
-      );
-      if (width === layoutWidths.wide) {
-        const composer = canvas.getByRole('textbox');
-        await expect(composer).toBeVisible();
-        await expect(
-          composer.getBoundingClientRect().bottom,
-        ).toBeLessThanOrEqual(window.innerHeight);
-        await browserUserEvent.type(composer, 'Keep the last step.');
-        await expect(shownText(composer)).toBe('Keep the last step.');
-      }
-      await userEvent.keyboard('{Escape}');
-      await waitFor(() =>
-        expect(
-          body.queryByRole('region', { name: writtenPlanRegionName }),
-        ).not.toBeInTheDocument(),
-      );
-    },
-  };
+  return readingLongWrittenPlan({ width, agent }, meta.args);
 }
 export const LongFirstAgentPhone = readsLongWrittenPlan(
   layoutWidths.phone,

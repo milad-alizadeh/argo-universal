@@ -1,16 +1,7 @@
 import type * as React from 'react';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { ListItem } from '#primitives/lists/list-item/list-item';
-
-export function ConfigurationChoice({
-  selected,
-  label,
-  description,
-  onPress,
-  dangerous,
-  leading,
-  accessibilityLabel,
-}: {
+interface ChoiceProps {
   selected: boolean;
   label: string;
   description?: string;
@@ -18,19 +9,30 @@ export function ConfigurationChoice({
   dangerous?: boolean;
   leading?: React.ReactElement;
   accessibilityLabel?: string;
-}): React.JSX.Element {
-  return (
-    <ListItem
-      title={label}
-      accessibilityLabel={accessibilityLabel ?? label}
-      subtitle={description ? { text: description } : undefined}
-      leading={leading}
-      selected={selected}
-      role="button"
-      disclosure={false}
-      onPress={onPress}
-      tone={dangerous ? 'destructive' : undefined}
-      accessory={selected ? <SelectedCheck /> : undefined}
-    />
-  );
+}
+export function ConfigurationChoice(props: ChoiceProps): React.JSX.Element {
+  return <ListItem {...choiceRowProps(props)} />;
+}
+function choiceRowProps(
+  props: ChoiceProps,
+): React.ComponentProps<typeof ListItem> {
+  return {
+    ...choiceContent(props),
+    leading: props.leading,
+    selected: props.selected,
+    role: 'button',
+    disclosure: false,
+    onPress: props.onPress,
+    tone: props.dangerous ? 'destructive' : undefined,
+    accessory: props.selected ? <SelectedCheck /> : undefined,
+  };
+}
+function choiceContent(
+  props: ChoiceProps,
+): React.ComponentProps<typeof ListItem> {
+  return {
+    title: props.label,
+    accessibilityLabel: props.accessibilityLabel ?? props.label,
+    subtitle: props.description ? { text: props.description } : undefined,
+  };
 }

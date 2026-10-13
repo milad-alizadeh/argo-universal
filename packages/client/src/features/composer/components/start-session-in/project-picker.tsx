@@ -1,4 +1,5 @@
 import type { ProjectInfo } from '@repo/contracts';
+import type * as React from 'react';
 import { useState, type JSX } from 'react';
 import { Platform, View } from 'react-native';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
@@ -22,15 +23,7 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
   const found = props.projects.filter((project) => matches(project, query));
   return (
     <View className="native:flex-1 px-4 pt-4 wide:p-3 bg-sidebar">
-      <View className="py-1">
-        <ComboboxSearch
-          label="Find a Project"
-          placeholder="Find a Project…"
-          value={query}
-          onChangeText={setQuery}
-          className="native:mx-1.5"
-        />
-      </View>
+      <ProjectSearch query={query} onChange={setQuery} />
       <ProjectResults {...props} projects={found} />
     </View>
   );
@@ -54,54 +47,89 @@ function ProjectResults(props: ProjectPickerProps): JSX.Element {
   return (
     <FieldGroup fit>
       <FieldSection>
-        {props.projects.map((project) => (
-          <ProjectChoice key={project.id} {...props} project={project} />
-        ))}
-        {props.projects.length === 0 && (
-          <ListItem title="No Project matches." tone="muted" />
-        )}
+        <PhoneProjects {...props} />
       </FieldSection>
     </FieldGroup>
   );
 }
 
 function WebProjects(props: ProjectPickerProps): JSX.Element {
+  return <ScrollFadeList {...projectListProps(props)} />;
+}
+type ProjectListProps = React.ComponentProps<
+  typeof ScrollFadeList<ProjectInfo>
+>;
+function projectListProps(props: ProjectPickerProps): ProjectListProps {
+  return {
+    ...projectListAppearance,
+    data: props.projects,
+    keyExtractor: (project) => project.id,
+    extraData: props.projectId,
+    ListEmptyComponent: <ListItem title="No Project matches." tone="muted" />,
+    renderItem: ({ item, index }) => (
+      <FieldRowEnd value={index === props.projects.length - 1}>
+        <ProjectChoice {...props} project={item} />
+      </FieldRowEnd>
+    ),
+  };
+}
+type ProjectChoiceProps = ProjectPickerProps & { project: ProjectInfo };
+function ProjectChoice(props: ProjectChoiceProps): JSX.Element {
+  return <ListItem {...projectChoiceProps(props)} />;
+}
+function projectChoiceProps(
+  props: ProjectChoiceProps,
+): React.ComponentProps<typeof ListItem> {
+  const { project, projectId, onSelect } = props;
+  const selected = project.id === projectId;
+  return {
+    title: project.name,
+    accessibilityLabel: project.name,
+    subtitle: { text: project.path, code: true },
+    ...projectChoiceAppearance,
+    selected,
+    onPress: () => onSelect(project.id),
+    accessory: selected ? <SelectedCheck /> : undefined,
+  };
+}
+function PhoneProjects(props: ProjectPickerProps): JSX.Element {
   return (
-    <ScrollFadeList
-      surfaceClassName="bg-sidebar"
-      maxHeight={listMaximumHeight}
-      data={props.projects}
-      contentContainerStyle={{}}
-      keyExtractor={(project) => project.id}
-      estimatedItemSize={rowEstimate}
-      extraData={props.projectId}
-      ListEmptyComponent={<ListItem title="No Project matches." tone="muted" />}
-      renderItem={({ item, index }) => (
-        <FieldRowEnd value={index === props.projects.length - 1}>
-          <ProjectChoice {...props} project={item} />
-        </FieldRowEnd>
+    <>
+      {props.projects.map((project) => (
+        <ProjectChoice key={project.id} {...props} project={project} />
+      ))}
+      {props.projects.length === 0 && (
+        <ListItem title="No Project matches." tone="muted" />
       )}
-    />
+    </>
+  );
+}
+interface ProjectSearchProps {
+  query: string;
+  onChange: (query: string) => void;
+}
+function ProjectSearch({ query, onChange }: ProjectSearchProps): JSX.Element {
+  return (
+    <View className="py-1">
+      <ComboboxSearch
+        label="Find a Project"
+        placeholder="Find a Project…"
+        value={query}
+        onChangeText={onChange}
+        className="native:mx-1.5"
+      />
+    </View>
   );
 }
 
-function ProjectChoice({
-  project,
-  projectId,
-  onSelect,
-}: ProjectPickerProps & { project: ProjectInfo }): JSX.Element {
-  const selected = project.id === projectId;
-  return (
-    <ListItem
-      title={project.name}
-      accessibilityLabel={project.name}
-      subtitle={{ text: project.path, code: true }}
-      icon="folder"
-      selected={selected}
-      role="button"
-      disclosure={false}
-      onPress={() => onSelect(project.id)}
-      accessory={selected ? <SelectedCheck /> : undefined}
-    />
-  );
-}
+const projectListAppearance = {
+  surfaceClassName: 'bg-sidebar',
+  maxHeight: listMaximumHeight,
+  contentContainerStyle: {},
+  estimatedItemSize: rowEstimate,
+};
+const projectChoiceAppearance = {
+  icon: 'folder',
+  role: 'button',
+  disclosure: false,
+} as const;
