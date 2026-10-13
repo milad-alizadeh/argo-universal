@@ -16,29 +16,79 @@ export interface ConnectionMockProps {
 
 // Shows AppProviders' Connections over WebSocketMock; it starts unmounted, so StrictMode's double effects reach AppProviders.
 export function ConnectionMock({
-  strictMode = false,
+  strictMode,
 }: ConnectionMockProps): React.JSX.Element {
+  const controls = useConnectionControls();
+  return (
+    <View>
+      <ControlButtonsMock {...controls} />
+      <ProvidersMock {...controls} strictMode={strictMode} />
+      <ConnectionReportMock />
+    </View>
+  );
+}
+
+interface ConnectionControls {
+  mounted: boolean;
+  serverUrl: string;
+  toggleMount: () => void;
+  switchServer: () => void;
+}
+
+function useConnectionControls(): ConnectionControls {
   const [mounted, setMounted] = useState(false);
   const [serverUrl, setServerUrl] = useState('ws://127.0.0.1:7337');
-  const current = useSyncExternalStore(subscribe, currentReport);
-  const providers = mounted ? (
-    <AppProviders serverUrl={serverUrl}>
+  return {
+    mounted,
+    serverUrl,
+    toggleMount: () => setMounted(!mounted),
+    switchServer: () => setServerUrl('ws://127.0.0.1:7338'),
+  };
+}
+
+function ControlButtonsMock(controls: ConnectionControls): React.JSX.Element {
+  return (
+    <>
+      <ButtonMock
+        label={controls.mounted ? 'Unmount' : 'Mount'}
+        onPress={controls.toggleMount}
+      />
+      <ButtonMock label="Switch Server" onPress={controls.switchServer} />
+    </>
+  );
+}
+
+function ButtonMock(props: {
+  label: string;
+  onPress: () => void;
+}): React.JSX.Element {
+  return (
+    <Pressable role="button" onPress={props.onPress}>
+      <Text>{props.label}</Text>
+    </Pressable>
+  );
+}
+
+type ProvidersMockProps = ConnectionMockProps &
+  Pick<ConnectionControls, 'mounted' | 'serverUrl'>;
+
+function ProvidersMock(props: ProvidersMockProps): React.JSX.Element | null {
+  const providers = props.mounted ? (
+    <AppProviders serverUrl={props.serverUrl}>
       <ScreenMock />
     </AppProviders>
   ) : null;
+  return props.strictMode === true ? (
+    <StrictMode>{providers}</StrictMode>
+  ) : (
+    providers
+  );
+}
 
+function ConnectionReportMock(): React.JSX.Element {
+  const current = useSyncExternalStore(subscribe, currentReport);
   return (
-    <View>
-      <Pressable role="button" onPress={() => setMounted(!mounted)}>
-        <Text>{mounted ? 'Unmount' : 'Mount'}</Text>
-      </Pressable>
-      <Pressable
-        role="button"
-        onPress={() => setServerUrl('ws://127.0.0.1:7338')}
-      >
-        <Text>Switch Server</Text>
-      </Pressable>
-      {strictMode ? <StrictMode>{providers}</StrictMode> : providers}
+    <>
       <Text>{`Server: ${current.serverUrl}`}</Text>
       <Text>{`Open Connections: ${current.open}`}</Text>
       <Text>{`Closed Connections: ${current.closed}`}</Text>
@@ -46,7 +96,7 @@ export function ConnectionMock({
       <Text>
         {`Connection states the screens saw: ${current.statesScreensSaw.join(', ')}`}
       </Text>
-    </View>
+    </>
   );
 }
 

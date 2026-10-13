@@ -73,6 +73,13 @@ class WebSocketMock extends EventTarget implements WebSocket {
   ) {
     super();
     this.url = url.toString();
+    this.forwardEventsToHandlers();
+    sockets.push(this);
+    changed();
+    this.openSoon();
+  }
+
+  private forwardEventsToHandlers(): void {
     this.addEventListener('open', (event): void => {
       this.onopen?.call(this, event);
     });
@@ -85,8 +92,9 @@ class WebSocketMock extends EventTarget implements WebSocket {
     this.addEventListener('message', (event): void => {
       if (event instanceof MessageEvent) this.onmessage?.call(this, event);
     });
-    sockets.push(this);
-    changed();
+  }
+
+  private openSoon(): void {
     setTimeout(() => {
       if (this.readyState !== WebSocketMock.CONNECTING) return;
       this.readyState = WebSocketMock.OPEN;
@@ -116,9 +124,13 @@ class WebSocketMock extends EventTarget implements WebSocket {
     code: Parameters<WebSocket['close']>[0] = 1000,
     reason: Parameters<WebSocket['close']>[1] = '',
   ): void {
+    this.closeWith({ code, reason });
+  }
+
+  private closeWith(init: CloseEventInit): void {
     if (this.isClosed()) return;
     this.readyState = WebSocketMock.CLOSED;
-    this.dispatchEvent(new CloseEvent('close', { code, reason }));
+    this.dispatchEvent(new CloseEvent('close', init));
     changed();
   }
 }

@@ -47,22 +47,23 @@ const forbiddenSpecifiers = new Set(
   ),
 );
 
+function forbiddenImportsIn(file: string): string[] {
+  const lines = readFileSync(join(packageRoot, file), 'utf8').split('\n');
+  return lines.flatMap((line, index) =>
+    [...line.matchAll(/(['"])(#[^'"]+)\1/g)]
+      .map((match) => match[2] ?? '')
+      .filter((specifier) => forbiddenSpecifiers.has(specifier))
+      .map((specifier) => `packages/client/${file}:${index + 1} ${specifier}`),
+  );
+}
+
 it('keeps fixed-extension aliases away from platform drawings', () => {
   expect(platformFiles.length).toBeGreaterThan(0);
   expect(forbiddenSpecifiers.size).toBeGreaterThan(0);
 
-  const hits: string[] = [];
-  for (const file of [...listFiles('src'), ...listFiles('mocks')]) {
-    const lines = readFileSync(join(packageRoot, file), 'utf8').split('\n');
-    for (const [index, line] of lines.entries()) {
-      for (const match of line.matchAll(/(['"])(#[^'"]+)\1/g)) {
-        const specifier = match[2];
-        if (specifier && forbiddenSpecifiers.has(specifier)) {
-          hits.push(`packages/client/${file}:${index + 1} ${specifier}`);
-        }
-      }
-    }
-  }
+  const hits = [...listFiles('src'), ...listFiles('mocks')].flatMap((file) =>
+    forbiddenImportsIn(file),
+  );
 
   expect(
     hits,

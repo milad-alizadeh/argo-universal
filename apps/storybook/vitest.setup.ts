@@ -7,7 +7,7 @@ beforeEach(async ({ task, onTestFailed }) => {
   await page.viewport(width, height);
   // Vitest's own failure screenshot finds an unmounted page here, so take it while the story is still up.
   onTestFailed(async () => {
-    const name = task.fullTestName.replace(/\W/g, '-');
+    const name = task.fullTestName.replaceAll(/\W/g, '-');
     await page
       .screenshot({ path: `__screenshots__/failures/${name}.png` })
       .catch((error: unknown) => console.error('No failure screenshot', error));
