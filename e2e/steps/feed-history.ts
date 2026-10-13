@@ -9,6 +9,7 @@ import {
 } from './feed-history-scroll';
 import { Given, When, Then } from './fixtures';
 import { query } from './server-query';
+import { agentWork } from './timeouts';
 
 const lastMessage = 'Latest history reply.';
 const feedScroll = 'feed-scroll';
@@ -69,7 +70,9 @@ Given(
 );
 
 When('I reopen the stored long Feed', async ({ page, server }) => {
-  await expect.poll(() => historyIsStored(page, server.httpUrl)).toBe(true);
+  await expect
+    .poll(() => historyIsStored(page, server.httpUrl), agentWork)
+    .toBe(true);
   await page.goto(new URL('/', page.url()).href);
   await page.getByRole('button', { name: /^Build a long history,/ }).click();
 });
@@ -107,7 +110,9 @@ Then(
   'the Feed shows the new live Turn after its stored history',
   async ({ page, server }) => {
     const feed = page.getByTestId(feedScroll);
-    await expect.poll(() => nextTurnIsStored(page, server.httpUrl)).toBe(true);
+    await expect
+      .poll(() => nextTurnIsStored(page, server.httpUrl), agentWork)
+      .toBe(true);
     await expect(
       feed.getByText(lastMessage, { exact: true }).last(),
     ).toBeInViewport();
