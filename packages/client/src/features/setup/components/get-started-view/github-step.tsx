@@ -29,7 +29,7 @@ const connectGitHub = {
   accessibilityLabel: 'Connect GitHub',
 };
 
-// The chips and captions of Settings › Accounts' AccountRow, by the signed-in login where there is one.
+// The AccountRow chips and captions designed for Settings › Accounts in Paper, by the signed-in login where there is one.
 const githubContents: Record<
   GitHubStep['status'],
   (login: string) => GitHubContent
@@ -65,20 +65,16 @@ const githubContents: Record<
 const githubContent = (step: GitHubStep): GitHubContent =>
   githubContents[step.status]('login' in step ? step.login : '');
 
-function Chip(props: GitHubContent['chip'] & {}): React.JSX.Element {
-  return (
-    <Badge tone={props.tone}>
-      <Text>{props.label}</Text>
+const chipView = (chip: GitHubContent['chip']): React.ReactNode =>
+  chip && (
+    <Badge tone={chip.tone}>
+      <Text>{chip.label}</Text>
     </Badge>
   );
-}
 
-const chipView = (chip: GitHubContent['chip']): React.ReactNode =>
-  chip && <Chip {...chip} />;
+type OnConnect = GitHubStepViewProps['onConnectGitHub'];
 
-type Connect = (() => void) | undefined;
-
-const anotherAccountLink = (onConnect: Connect): React.JSX.Element => (
+const anotherAccountLink = (onConnect: OnConnect): React.JSX.Element => (
   <Button
     label="Sign in with another account"
     variant="link"
@@ -90,7 +86,7 @@ const anotherAccountLink = (onConnect: Connect): React.JSX.Element => (
 
 const connectButton = (
   connect: NonNullable<GitHubContent['connect']>,
-  onConnect: Connect,
+  onConnect: OnConnect,
 ): React.JSX.Element => (
   <Button
     {...connect}
@@ -103,7 +99,7 @@ const connectButton = (
 
 const stepParts = (
   content: GitHubContent,
-  onConnect: Connect,
+  onConnect: OnConnect,
 ): Pick<SetupStepProps, 'chip' | 'footer' | 'action'> => ({
   chip: chipView(content.chip),
   footer: content.anotherAccount && anotherAccountLink(onConnect),

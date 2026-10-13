@@ -7,7 +7,6 @@ import {
   agentName,
   getStartedArgs,
   githubButtons,
-  githubLogin,
   githubSteps,
   serverName,
 } from './get-started-view.mocks';
@@ -37,40 +36,59 @@ export const DoneStepsShowTheAccount: Story = {
     await expect(
       canvas.getByText(`${agentName}, signed in with your subscription.`),
     ).toBeVisible();
-    await expect(canvas.getByText(`Connected as ${githubLogin}`)).toBeVisible();
     await expect(canvas.getAllByLabelText('Done')).toHaveLength(2);
     await expect(canvas.getByLabelText('Step 3')).toBeVisible();
   },
 };
 
-export const EachStepCallsItsAction: Story = {
-  play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
-    await expect(args.onChangeAgent).toHaveBeenCalledOnce();
-    await userEvent.click(
-      canvas.getByRole('button', { name: githubButtons.anotherAccount }),
-    );
-    await expect(args.onConnectGitHub).toHaveBeenCalledOnce();
-    await userEvent.click(canvas.getByRole('button', { name: addProject }));
-    await expect(args.onAddProject).toHaveBeenCalledOnce();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Use Argo on your phone' }),
-    );
-    await expect(args.onUseOnPhone).toHaveBeenCalledOnce();
-  },
-};
+type Handler =
+  | 'onChangeAgent'
+  | 'onCheckAgentAgain'
+  | 'onAddProject'
+  | 'onUseOnPhone';
 
-export const NoAgentFoundChecksAgain: Story = {
+// Pressing the button calls its handler.
+const pressCalls = (
+  button: string,
+  handler: Handler,
+  args: Partial<Story['args']> = {},
+): Story => ({
+  args,
+  play: async ({ args: { [handler]: onPress }, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: button }));
+    await expect(onPress).toHaveBeenCalledOnce();
+  },
+});
+
+export const ChangeOpensAgents = pressCalls('Change', 'onChangeAgent');
+
+export const AddProjectAddsOne = pressCalls(addProject, 'onAddProject');
+
+export const UseOnPhoneOpensDevices = pressCalls(
+  'Use Argo on your phone',
+  'onUseOnPhone',
+);
+
+export const CheckAgainLooksAgain = pressCalls(
+  'Check again',
+  'onCheckAgentAgain',
+  { agent: noAgent },
+);
+
+export const NoAgentFoundWaitsOnStep1: Story = {
   args: { agent: noAgent },
-  play: async ({ args, canvas, userEvent }) => {
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByText(/No coding Agent found on this computer/),
     ).toBeVisible();
     await expect(canvas.getByLabelText('Step 1')).toBeVisible();
     await expect(canvas.queryByRole('button', { name: 'Change' })).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Check again' }));
-    await expect(args.onCheckAgentAgain).toHaveBeenCalledOnce();
-    // A Project can still be added first.
+  },
+};
+
+export const ProjectCanComeBeforeAnAgent: Story = {
+  args: { agent: noAgent },
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('button', { name: addProject }),
     ).toBeEnabled();

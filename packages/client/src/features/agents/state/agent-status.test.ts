@@ -59,7 +59,7 @@ describe('runsSessions', () => {
     ['sign-in', false],
     ['unavailable', false],
     [goose.status, false],
-  ])('is %s → %s', (status, runs) => {
+  ])('a %s Agent runs Sessions: %s', (status, runs) => {
     expect(runsSessions({ status })).toBe(runs);
   });
 });

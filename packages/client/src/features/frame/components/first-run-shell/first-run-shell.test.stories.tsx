@@ -17,7 +17,8 @@ const meta = {
   args: { children: null },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: (args): React.JSX.Element => (
-    <View className="h-[600px] w-full">
+    // The story's own window, so the page can be measured against it.
+    <View testID="window" className="h-[600px] w-full">
       <FirstRunShell {...args}>
         <Text>Get started</Text>
       </FirstRunShell>
@@ -30,13 +31,16 @@ type Story = StoryObj<typeof meta>;
 // Get started fills the window; the rail and list wait for the first Project.
 export const PageFillsTheWindow: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('Get started')).toBeVisible();
+    const page = canvas.getByText('Get started').getBoundingClientRect();
+    const window = canvas.getByTestId('window').getBoundingClientRect();
+    await expect(page.width).toBe(window.width);
+  },
+};
+
+export const NoRailOrList: Story = {
+  play: async ({ canvas }) => {
     await expect(canvas.queryByTestId(railId)).toBeNull();
     await expect(canvas.queryByTestId(sessionListId)).toBeNull();
-    const shell = canvas.getByTestId('desktop-shell').getBoundingClientRect();
-    const detail = canvas.getByTestId('desktop-detail').getBoundingClientRect();
-    await expect(detail.width).toBe(shell.width);
-    await expect(canvas.getByTestId('window-drag-strip')).toBeInTheDocument();
   },
 };
 

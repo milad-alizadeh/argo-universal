@@ -1,8 +1,10 @@
 import {
   DesktopLayout,
+  FirstRunLayout,
   PhoneLayout,
   type NavigationDestination,
   type Section,
+  useGetStartedShown,
   useWide,
 } from '@repo/client';
 import { Slot, usePathname, useRouter } from 'expo-router';
@@ -33,9 +35,10 @@ export default function ShellLayout(): React.JSX.Element {
   const destination = useDestination();
   const wide = useWide();
   const { page, shellChanged } = usePageBeforeShellChange(wide, destination);
+  const Shell = wide ? WideShell : NarrowShell;
   return (
     <>
-      {wide ? <WideShell destination={destination} /> : <PhoneSections />}
+      <Shell destination={destination} />
       {/* The first shell opens on the URL itself; only a later shell has a page to reopen. */}
       {shellChanged && <ReopenPage key={String(wide)} page={page} />}
     </>
@@ -52,6 +55,16 @@ function WideShell({
       <Slot />
     </DesktopLayout>
   );
+}
+
+// A narrow web window still sets up its Server; the phone shell waits for the first Project.
+function NarrowShell({
+  destination,
+}: {
+  destination: NavigationDestination;
+}): React.JSX.Element {
+  const getStarted = useGetStartedShown(destination);
+  return getStarted ? <FirstRunLayout /> : <PhoneSections />;
 }
 
 interface ShownPage {

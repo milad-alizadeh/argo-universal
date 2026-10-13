@@ -4,7 +4,7 @@ export type AgentStep =
   // `checking` while the Agents load or the Server looks again.
   | { status: 'not-found'; checking: boolean };
 
-// Step 2: the Server's GitHub login, in the states of Settings › Accounts' AccountRow.
+// Step 2: the Server's GitHub login, in the AccountRow states designed for Settings › Accounts in Paper.
 export type GitHubStep =
   | { status: 'not-connected' }
   | { status: 'login-found'; login: string }
@@ -42,19 +42,20 @@ export function stepMarks(agent: AgentStep, github: GitHubStep): StepMarks {
   return { ...agentMarks[agent.status], github: githubMarks[github.status] };
 }
 
-type Runner = { name: string };
+type SessionAgent = { name: string };
 
-const loadedAgentStep = ([first]: readonly Runner[]): AgentStep =>
+const loadedAgentStep = (
+  [first]: readonly SessionAgent[],
+  checkingAgain: boolean,
+): AgentStep =>
   first === undefined
-    ? { status: 'not-found', checking: false }
+    ? { status: 'not-found', checking: checkingAgain }
     : { status: 'done', agentName: first.name };
 
-// The first of the Agents that run Sessions, or none; `undefined` while they load.
+// The first of the Agents that run Sessions, or none; `undefined` while they load, so the step never claims none before the list arrives.
 export function agentStep(
-  runners: readonly Runner[] | undefined,
-  lookingAgain: boolean,
-): AgentStep {
-  if (runners === undefined || lookingAgain)
-    return { status: 'not-found', checking: true };
-  return loadedAgentStep(runners);
+  agents: readonly SessionAgent[] | undefined,
+  checkingAgain: boolean,
+): AgentStep | undefined {
+  return agents && loadedAgentStep(agents, checkingAgain);
 }

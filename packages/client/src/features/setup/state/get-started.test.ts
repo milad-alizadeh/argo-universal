@@ -54,31 +54,45 @@ describe('stepMarks', () => {
 });
 
 describe('agentStep', () => {
-  it('is done with the first Agent that runs Sessions', () => {
-    expect(agentStep([{ name: 'Codex' }, { name: 'Claude' }], false)).toEqual({
-      status: 'done',
-      agentName: 'Codex',
-    });
-  });
-
-  it('finds no Agent when none runs Sessions', () => {
-    expect(agentStep([], false)).toEqual({
-      status: 'not-found',
-      checking: false,
-    });
-  });
-
-  it('is checking while the Agents are still loading', () => {
-    expect(agentStep(undefined, false)).toEqual({
-      status: 'not-found',
-      checking: true,
-    });
-  });
-
-  it('is checking while the Server looks again', () => {
-    expect(agentStep([], true)).toEqual({
-      status: 'not-found',
-      checking: true,
-    });
+  const claude = { name: 'Claude' };
+  it.each<{
+    case: string;
+    agents: { name: string }[] | undefined;
+    checkingAgain: boolean;
+    expected: AgentStep | undefined;
+  }>([
+    {
+      case: 'is done with the first Agent that runs Sessions',
+      agents: [{ name: 'Codex' }, claude],
+      checkingAgain: false,
+      expected: { status: 'done', agentName: 'Codex' },
+    },
+    {
+      case: 'finds no Agent when none runs Sessions',
+      agents: [],
+      checkingAgain: false,
+      expected: noAgent,
+    },
+    {
+      // Saying no Agent was found before the list arrives would be wrong.
+      case: 'waits while the Agents are still loading',
+      agents: undefined,
+      checkingAgain: false,
+      expected: undefined,
+    },
+    {
+      case: 'is checking while the Server looks again',
+      agents: [],
+      checkingAgain: true,
+      expected: { status: 'not-found', checking: true },
+    },
+    {
+      case: 'stays done while the Server looks again',
+      agents: [claude],
+      checkingAgain: true,
+      expected: { status: 'done', agentName: 'Claude' },
+    },
+  ])('$case', ({ agents, checkingAgain, expected }) => {
+    expect(agentStep(agents, checkingAgain)).toEqual(expected);
   });
 });

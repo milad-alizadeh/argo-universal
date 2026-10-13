@@ -30,7 +30,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// The chips and captions of Settings › Accounts' AccountRow.
+// The AccountRow chips and captions designed for Settings › Accounts in Paper.
 export const GitHubStep: Story = {
   name: 'GitHubStep',
   render: GitHubSteps,
