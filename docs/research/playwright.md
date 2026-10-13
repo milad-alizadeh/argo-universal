@@ -1,6 +1,6 @@
 # Playwright, Playwright for Electron included
 
-Research note for spec 0001 (step 1). Checked on 2026-10-03.
+Research for spec 0001, step 1. Checked on 2026-10-03.
 
 ## Sources
 
@@ -53,15 +53,15 @@ Checked 2026-10-03 with `npm view` [S1].
 
 ## Install command
 
-- `pnpm add -D -w @playwright/test` puts it in the root `package.json` of a pnpm workspace. This is the exact command the generator runs when it finds `pnpm-workspace.yaml` [S3].
+- `pnpm add -D -w @playwright/test` puts it in the root `package.json`; the generator runs exactly this when it finds `pnpm-workspace.yaml` [S3].
 - Browsers: `pnpm exec playwright install --with-deps chromium` [S14]. `--with-deps` also installs OS packages and needs root on Linux [S3, S13].
 - Headless-only CI can skip the full browser: `playwright install --with-deps --only-shell chromium` [S14].
-- Electron is not a Playwright browser. Playwright runs the `electron` package's binary, so it needs no `playwright install` for Electron [S18].
+- Electron is not a Playwright browser: Playwright runs the `electron` package's binary, so Electron needs no `playwright install` [S18].
 - Update: `pnpm add -D @playwright/test@latest` then `pnpm exec playwright install --with-deps` [S2].
 
 ## Generator command and its prompts
 
-Command: `npm init playwright@latest`, `yarn create playwright`, or `pnpm create playwright` [S2]. The generator picks the package manager from `npm_config_user_agent`, so in this repo use **`pnpm create playwright`**. With `npm init` it would run `npm` commands [S3].
+Command: `npm init playwright@latest`, `yarn create playwright`, or `pnpm create playwright` [S2]. The generator picks the package manager from `npm_config_user_agent`, so `npm init` runs `npm` commands even in a pnpm repo; use **`pnpm create playwright`** [S3].
 
 Usage: `create-playwright [options] [rootDir]`, `rootDir` defaults to `.` [S3].
 
@@ -89,7 +89,7 @@ Usage: `create-playwright [options] [rootDir]`, `rootDir` defaults to `.` [S3].
 
 ### Files it writes
 
-Ran `pnpm create playwright` equivalent (`create-playwright@1.17.139 --quiet --browser=chromium --gha --no-browsers`) in a temp pnpm workspace on 2026-10-03 [S3]:
+Ran a `pnpm create playwright` equivalent (`create-playwright@1.17.139 --quiet --browser=chromium --gha --no-browsers`) in a temp pnpm workspace on 2026-10-03 [S3]:
 
 - `playwright.config.ts`: `defineConfig` with `testDir: './tests'`, `fullyParallel: true`, `forbidOnly: !!process.env.CI`, `retries: process.env.CI ? 2 : 0`, `workers: process.env.CI ? 1 : undefined`, `reporter: 'html'`, `use.trace: 'on-first-retry'`, one `chromium` project (`devices['Desktop Chrome']`), other browsers and `webServer` commented out. Its dotenv comment uses `__dirname`.
 - `tests/example.spec.ts`: two tests against `https://playwright.dev/`.
@@ -99,7 +99,7 @@ Ran `pnpm create playwright` equivalent (`create-playwright@1.17.139 --quiet --b
 
 ## Recommended configuration
 
-These snippets use the documented APIs. The shape (one option that picks web or Electron) is our proposal, not a Playwright default.
+Documented APIs; the shape (one option that picks web or Electron) is our proposal, not a Playwright default.
 
 ### `e2e/playwright.config.ts`
 
@@ -146,10 +146,10 @@ export default defineConfig<AppOptions>({
 
 Facts behind it:
 
-- `webServer` takes one object or an array; each entry starts before the tests [S4]. It is top-level only, not per project [S7]. So both servers start for `--project=electron` too, unless the config builds the array conditionally.
+- `webServer` takes one object or an array; each entry starts before the tests [S4]. It is top-level only, not per project [S7], so `pnpm test:e2e:electron` also starts both servers, `expo serve` included, unless the config builds the array conditionally.
 - Use `url`. `port` is deprecated, and setting both throws [S4, S5]. The URL is ready when it returns 2xx, 3xx, 400, 401, 402 or 403 [S4]. `/health` fits.
 - `env` is merged over `process.env` (plus `PLAYWRIGHT_TEST=1`), not a replacement [S4, S5].
-- `cwd` defaults to the config file's folder [S4]. With the config in `e2e/`, set `cwd` to the repo root.
+- `cwd` defaults to the config file's folder [S4]; with the config in `e2e/`, set it to the repo root.
 - `timeout` defaults to 60 000 ms. `stdout` defaults to `ignore`, `stderr` to `pipe`. Without `gracefulShutdown` the process is killed with `SIGKILL` [S4]. `SIGTERM` lets the Server supervisor remove `server.json` (spec 0001 section 5).
 - `reuseExistingServer: false` (the default) throws if the URL already answers [S4, S5].
 - `use.baseURL` makes `page.goto('/')` resolve against it [S4].
@@ -191,9 +191,9 @@ export { expect } from '@playwright/test';
 Facts behind it:
 
 - `_electron` is exported from `@playwright/test`; Electron's docs use `import { test, expect, _electron as electron } from '@playwright/test'` and `electron.launch({ args: ['.'] })` [S21].
-- Electron support is **experimental** [S16, S21].
+- Electron support is **experimental** and its API may change [S16, S21].
 - `launch()` options include `args`, `cwd`, `env`, `executablePath`, `timeout` (default 30 000 ms), `artifactsDir`, `recordVideo`, `tracesDir`, `chromiumSandbox` (default `false`) [S16].
-- `env`: if you pass it, it **replaces** `process.env`; Playwright also deletes `NODE_OPTIONS` [S18]. Spread `process.env` in.
+- `env`, if passed, **replaces** `process.env`, and Playwright also deletes `NODE_OPTIONS` [S18]. Spread `process.env` in, or the app loses `PATH`, `HOME` and `DISPLAY`.
 - Without `executablePath`, Playwright does `require("electron/index.js")` from its own install, and injects its loader script [S18]. With `executablePath` it skips the loader [S18].
 - `firstWindow({ timeout })` waits for the first window, default 30 000 ms [S17]. `electronApp.evaluate(fn)` runs in the main process; `close()` ends the app; `windows()`, `browserWindow(page)`, `process()`, `context()` and the `window`, `console`, `close` events also exist [S17].
 - Overriding `page` in `test.extend` is documented [S10]. Because this override depends on `page`, the electron project still starts the default browser (inferred from fixture dependency rules, not tested).
@@ -214,7 +214,7 @@ Facts behind it:
 - run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- pnpm test:e2e:electron
 ```
 
-- Linux needs Xvfb for headed browsers and for Electron: `xvfb-run npx playwright test` [S13, S22]. Without it Playwright fails with "Unable to open X display" [S18].
+- Linux needs Xvfb for headed browsers and Electron: `xvfb-run npx playwright test` [S13, S22]; without it Playwright fails with "Unable to open X display" [S18].
 - `--with-deps` installs the `xvfb` package on Ubuntu 22.04 and 24.04 [S19].
 - Playwright runs its own Electron tests on `ubuntu-latest` with `xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24"` after `playwright install --with-deps chromium` [S20].
 - Do not cache browsers; restoring takes about as long as downloading [S13].
@@ -240,14 +240,14 @@ The clock spec waits for at least one tick of one second; the 5 s `expect` defau
 
 - Build: `npx expo export -p web`, output in `dist/` [S26].
 - `web.output` is `single` by default (one `index.html`); `static` writes one HTML file per route; `server` adds API routes [S26].
-- `npx expo serve` hosts `dist` locally, default port 8081, HTTP only [S26]. It takes `--port` [S28]. In static mode it serves files with `index.html` and `.html` extension lookup and returns 404 for anything else, so there is **no SPA fallback** [S28].
+- `npx expo serve` hosts `dist` locally, default port 8081, HTTP only [S26], and takes `--port` [S28]. In static mode it serves files with `index.html` and `.html` extension lookup and returns 404 otherwise: **no SPA fallback** [S28].
 - Expo's static-rendering docs suggest `npx serve dist` for static output [S27]. `serve -s` rewrites not-found requests to `index.html` (SPA mode); it listens on `0.0.0.0:3000` by default [S29].
-- With `single` output, a deep link such as `/sessions/abc` needs `serve -s dist` (or a fixed `expo serve`). The scaffold spec only opens `/`, so `expo serve` is enough for now [S26, S28].
+- With `single` output, a deep link such as `/sessions/abc` 404s under `expo serve` and needs `serve -s dist` (or a fixed `expo serve`). The scaffold spec only opens `/`, so `expo serve` is enough for now [S26, S28].
 
 ## pnpm + Turborepo monorepo specifics
 
 - `pnpm create playwright` run at the repo root detects `pnpm-workspace.yaml` and installs with `pnpm add --save-dev -w` into the root `package.json` [S3, verified in a temp workspace].
-- Run with `rootDir` = `e2e` (`pnpm create playwright e2e`), it finds no `pnpm-workspace.yaml` there, runs `pnpm init` in `e2e/`, installs without `-w`, and writes `e2e/package.json`, `e2e/.gitignore` and `e2e/tests/` [S3]. With local pnpm 9.15.4 this added an `e2e` importer to the root lockfile even though `e2e` is not in the workspace globs (observed, not documented).
+- With `rootDir` = `e2e` (`pnpm create playwright e2e`), it finds no `pnpm-workspace.yaml` there, runs `pnpm init` in `e2e/`, installs without `-w`, and writes `e2e/package.json`, `e2e/.gitignore` and `e2e/tests/` [S3]. With local pnpm 9.15.4 this added an `e2e` importer to the root lockfile even though `e2e` is not in the workspace globs (observed, not documented).
 - Turborepo recommends one Playwright **package** per suite, and `"passThroughEnv": ["PLAYWRIGHT_*"]` on the e2e task (or `globalPassThroughEnv`) [S24]. The e2e task should depend on `^build`, or the Playwright package should list the app as `workspace:*` [S24].
 - Spec 0001 keeps `e2e/` at the root and its workspace globs are `apps/*`, `packages/*`, `tooling/*`. So either Playwright lives in the root `package.json` and runs as `playwright test -c e2e`, or `e2e` becomes a workspace package as Turborepo suggests. The second changes the spec's workspace list. **Owner decision.**
 - `outputDir` defaults to `<package.json-directory>/test-results` [S7]. With no `e2e/package.json`, results land in the root `test-results/`, which the root `.gitignore` entries from the generator cover [S3].
@@ -257,14 +257,9 @@ The clock spec waits for at least one tick of one second; the 5 s `expect` defau
 ## Gotchas
 
 1. **`--quiet` cannot set the tests folder.** It writes `tests/`; move it to `e2e/` in step 3, or answer the prompt interactively [S3].
-2. **`npm init playwright` in a pnpm repo uses npm.** Use `pnpm create playwright` [S3].
-3. **Web servers start before `globalSetup`.** Env vars set in `globalSetup` do not reach `webServer` commands [S6]. Set `ARGO_HOME` in the config or in the calling script.
-4. **`reuseExistingServer: !process.env.CI` can reuse your dev Server** on 7337 with your real `~/.argo` (behaviour from [S4, S5]). Stop `pnpm dev` before local e2e, or use another port for e2e. The port in the web export comes from `EXPO_PUBLIC_ARGO_SERVER_URL` at export time (spec 0001 section 8).
-5. **The Server binds `127.0.0.1` only** (spec 0001 section 5). Use `127.0.0.1`, not `localhost`, in `url` and `baseURL`; Playwright's own default for `port` is `http://localhost:<port>` [S5].
-6. **The config is ESM here** (`"type": "module"` repo). Use `import.meta.dirname`, not the generator's `__dirname` comment [S3].
-7. **Electron needs the `nodeCliInspect` fuse on.** Playwright passes `--inspect=0 --remote-debugging-port=0`; if the fuse is off, launch times out [S16, S18].
-8. **On Linux, Playwright adds `--no-sandbox` to Electron** unless `chromiumSandbox: true` [S18]. Playwright's own CI still runs `sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0` on Ubuntu 24 for Electron jobs, pointing at electron/electron#42510 (still open) [S20, S23]. `ubuntu-latest` is Ubuntu 24.04; add that step if launch fails with the SUID sandbox error.
-9. **`env` in `electron.launch` replaces the whole environment** [S18]. Spread `process.env`, or the app loses `PATH`, `HOME` and `DISPLAY`.
-10. **`webServer` is global.** `pnpm test:e2e:electron` also starts `expo serve` unless the config skips it per run [S7].
-11. **`expo serve` has no SPA fallback** in static mode [S28]. Deep links 404 with `web.output: 'single'`.
-12. **Experimental status.** `_electron` is experimental and its API may change [S16]. Component testing is deprecated as of 1.63 [S15].
+2. **Web servers start before `globalSetup`.** Env vars set in `globalSetup` do not reach `webServer` commands [S6]. Set `ARGO_HOME` in the config or in the calling script.
+3. **`reuseExistingServer: !process.env.CI` can reuse your dev Server** on 7337 with your real `~/.argo` (behaviour from [S4, S5]). Stop `pnpm dev` before local e2e, or use another port for e2e. The port in the web export comes from `EXPO_PUBLIC_ARGO_SERVER_URL` at export time (spec 0001 section 8).
+4. **The Server binds `127.0.0.1` only** (spec 0001 section 5). Use `127.0.0.1`, not `localhost`, in `url` and `baseURL`; Playwright's own default for `port` is `http://localhost:<port>` [S5].
+5. **The config is ESM here** (`"type": "module"` repo). Use `import.meta.dirname`, not the generator's `__dirname` comment [S3].
+6. **Electron needs the `nodeCliInspect` fuse on.** Playwright passes `--inspect=0 --remote-debugging-port=0`; if the fuse is off, launch times out [S16, S18].
+7. **On Linux, Playwright adds `--no-sandbox` to Electron** unless `chromiumSandbox: true` [S18]. Playwright's own CI still runs `sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0` on Ubuntu 24 for Electron jobs, pointing at electron/electron#42510 (still open) [S20, S23]. `ubuntu-latest` is Ubuntu 24.04; add that step if launch fails with the SUID sandbox error.
