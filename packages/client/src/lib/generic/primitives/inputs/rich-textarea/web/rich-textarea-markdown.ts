@@ -22,6 +22,7 @@ import {
 import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { $getRoot, $isTextNode, type Klass, type LexicalNode } from 'lexical';
 import { $importLiteralMarkdown } from './rich-textarea-import';
+import { ReferenceNode } from './rich-textarea-reference-node';
 import { replacer, unusedCharacters } from './rich-textarea-stand-ins';
 
 // The nodes and markdown transformers the web editor uses, shared by its drawing and its tests.
@@ -33,6 +34,7 @@ export const richTextareaNodes: Klass<LexicalNode>[] = [
   CodeNode,
   LinkNode,
   AutoLinkNode,
+  ReferenceNode,
 ];
 
 const SINGLE_TILDE_STRIKETHROUGH: TextFormatTransformer = {

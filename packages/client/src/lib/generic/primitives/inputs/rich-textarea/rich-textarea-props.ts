@@ -1,3 +1,7 @@
+import type { ReferenceOption } from './rich-textarea-references';
+
+export type { ReferenceOption } from './rich-textarea-references';
+
 // One API on every platform: the value is a markdown string (ADR-0023).
 export interface RichTextareaProps {
   value: string;
@@ -7,6 +11,8 @@ export interface RichTextareaProps {
   placeholder?: string;
   editable?: boolean;
   accessibilityLabel: string;
+  // The Issues and pull requests `#` offers; the web editor only, as the phone area has no tokens.
+  references?: readonly ReferenceOption[];
 }
 
 // The text field's own look, shared by the web editor and the phone text area.

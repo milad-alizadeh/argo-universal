@@ -1,11 +1,13 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { RichTextarea } from '../src/lib/generic/primitives/inputs/rich-textarea/rich-textarea';
+import type { ReferenceOption } from '../src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-references';
 
 interface ExampleProps {
   initialValue?: string;
   onChangeText?: (value: string) => void;
   onSubmit?: () => void;
+  references?: readonly ReferenceOption[];
 }
 
 export const exampleLabel = 'Message';
@@ -36,7 +38,7 @@ function useExampleValue(
 export function RichTextareaExample({
   initialValue = '',
   onChangeText,
-  onSubmit,
+  ...props
 }: ExampleProps): React.JSX.Element {
   const controlled = useExampleValue(initialValue, onChangeText);
 
@@ -45,7 +47,7 @@ export function RichTextareaExample({
       accessibilityLabel={exampleLabel}
       placeholder="Message the Agent…"
       {...controlled}
-      onSubmit={onSubmit}
+      {...props}
     />
   );
 }

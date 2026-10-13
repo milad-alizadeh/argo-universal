@@ -91,6 +91,13 @@ function $sendsOnReturn(event: KeyboardEvent | null): event is KeyboardEvent {
   );
 }
 
+// The reference menu is open, so Return chooses a row instead of sending.
+function menuOpen(editor: LexicalEditor): boolean {
+  return (
+    editor.getRootElement()?.getAttribute('aria-controls') === 'typeahead-menu'
+  );
+}
+
 export function registerReturnToSubmit(
   editor: LexicalEditor,
   submit: () => void,
@@ -98,7 +105,7 @@ export function registerReturnToSubmit(
   return editor.registerCommand(
     KEY_ENTER_COMMAND,
     (event) => {
-      if (!$sendsOnReturn(event)) return false;
+      if (menuOpen(editor) || !$sendsOnReturn(event)) return false;
       event.preventDefault();
       submit();
 
