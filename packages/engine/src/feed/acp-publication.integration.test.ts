@@ -1,7 +1,12 @@
-import type { FeedSubscribeOutput } from '@repo/contracts';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import {
+  readThrough,
+  isTurnComplete,
+  isUpsert,
+  closeStream,
+} from '#mocks/feed-stream-reading';
 
 const upsertEvent = 'row.upsert';
 
@@ -55,17 +60,11 @@ it('all wire-earlier content precedes idle and text appends keep the actual bloc
     ...created,
     prompt: [{ type: 'text', text: 'Run' }],
   });
-  const events: FeedSubscribeOutput[] = [];
-  while (true) {
-    const next = await stream.next();
-    if (next.done) throw new Error('Feed closed before idle');
-    events.push(next.value);
-    if (
-      next.value.type === 'snapshot' &&
-      next.value.snapshot.activeTurnId === null
-    )
-      break;
-  }
+  const events = await readThrough(stream, isTurnComplete);
+  expect(events.at(-1)).toMatchObject({
+    type: 'snapshot',
+    snapshot: { activeTurnId: null },
+  });
   expect(events.filter((event) => event.type === 'row.append')).toMatchObject([
     { field: 'content.0.text', off: 2, text: ' first' },
     { field: 'content.2.text', off: 2, text: ' last' },
@@ -86,7 +85,7 @@ it('all wire-earlier content precedes idle and text appends keep the actual bloc
   expect(
     (await host.caller.feed.page({ ...created, direction: 'tail' })).rows,
   ).toHaveLength(6);
-  await stream.return?.();
+  await closeStream(stream);
 });
 
 it('owned unsolicited updates remain visible with a null Turn while idle', async () => {
@@ -108,10 +107,8 @@ it('owned unsolicited updates remain visible with a null Turn while idle', async
     ]).steps,
     'owned-1',
   );
-  let output = await stream.next();
-  while (!output.done && output.value.type !== upsertEvent)
-    output = await stream.next();
-  expect(output.value).toMatchObject({
+  const outputs = await readThrough(stream, isUpsert);
+  expect(outputs.at(-1)).toMatchObject({
     type: upsertEvent,
     row: {
       sessionUpdate: 'notice',
@@ -124,5 +121,5 @@ it('owned unsolicited updates remain visible with a null Turn while idle', async
     (await host.caller.feed.page({ ...created, direction: 'tail' })).rows[0]
       ?.turnId,
   ).toBeNull();
-  await stream.return?.();
+  await closeStream(stream);
 });

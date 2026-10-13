@@ -1,5 +1,6 @@
 import type { SessionUpdate } from '@agentclientprotocol/sdk';
 import { acpConfiguration } from './acp-configuration.ts';
+import { feedHistorySteps } from './feed-history-scenario.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { terminalLogin } from './terminal-login.ts';
@@ -33,6 +34,7 @@ const scenario = (steps: ScriptedStep[]): ScriptedScenario => ({
 // Shared named scenarios; tests reuse them instead of scripting their own peer.
 export const scenarios = {
   reply: scenario([reply]),
+  'feed-history': scenario(feedHistorySteps),
   'terminal-login': { ...scenario([reply]), ...terminalLogin },
   'protocol-login': { ...scenario([reply]), ...protocolLogin },
   'signed-out': { ...scenario([reply]), ...signedOutProtocolLogin },

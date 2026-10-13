@@ -1,5 +1,5 @@
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
-import { expect, it } from 'vitest';
+import { assert, expect, it } from 'vitest';
 import {
   openAcpFeedSession,
   waitForAcpSessionIdle,
@@ -66,6 +66,9 @@ it('equal idless replies in successive Turns remain distinct messages', async ()
     { position: 1, content: [{ text: 'Equal' }] },
     { position: 3, content: [{ text: 'Equal' }] },
   ]);
-  expect(messages[0]?.id).not.toBe(messages[1]?.id);
-  expect(messages[0]?.turnId).not.toBe(messages[1]?.turnId);
+  const [first, second] = messages;
+  assert(first);
+  assert(second);
+  expect(first.id).not.toBe(second.id);
+  expect(first.turnId).not.toBe(second.turnId);
 });
