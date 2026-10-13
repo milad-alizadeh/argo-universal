@@ -3,6 +3,7 @@ import type { Page, Locator } from '@playwright/test';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
 import { When, Then, test } from './fixtures';
+import { toast } from './toasts';
 const versionRow = (page: Page, version: string): Locator =>
   page.getByRole('group', { name: `Version, v${version}`, exact: true });
 
@@ -68,11 +69,7 @@ Then(
   'Example Agent settles with selected version {word}',
   async ({ page }, version: string): Promise<void> => {
     const expected = version === 'two' ? updated : retained;
-    await expect(
-      page
-        .getByRole('region', { name: /^Notifications/ })
-        .getByText(expected.title, { exact: true }),
-    ).toBeVisible();
+    await expect(toast(page, expected.title)).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(versionRow(page, expected.version)).toBeVisible();
   },

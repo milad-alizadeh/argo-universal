@@ -23,40 +23,49 @@ const failed: AgentInstallOperation = {
   status: 'failed',
   failure: 'Node.js is required on the Server',
 };
-it('an accepted Server operation supersedes a lost start response', () => {
-  const input = {
-    ...idle,
-    operation: recovered,
-    failure: disconnected,
-    requestId: 1,
-  };
-  expect(installationRunning(input)).toBe(true);
-  expect(installationNotice(input)).toBeUndefined();
-});
-it('a failed request reports its transport explanation until the Server reports new work', () => {
-  const input = {
-    ...idle,
-    operation: recovered,
-    previousOperationId: recovered.operationId,
-    failure: disconnected,
-    requestId: 1,
-  };
-  expect(installationRunning(input)).toBe(false);
-  expect(installationNotice(input)).toEqual({
-    key: 'request:1',
-    result: 'failed',
-    failure: disconnected,
+const lostResponse = {
+  ...idle,
+  operation: recovered,
+  failure: disconnected,
+  requestId: 1,
+};
+describe('an accepted Server operation after a lost start response', () => {
+  it('keeps the installation running', () => {
+    expect(installationRunning(lostResponse)).toBe(true);
+  });
+  it('holds back the transport failure', () => {
+    expect(installationNotice(lostResponse)).toBeUndefined();
   });
 });
-it('a failed request keeps its progress until the Server status confirms nothing started', () => {
+describe('a failed request the Server reports no new work for', () => {
+  const input = {
+    ...lostResponse,
+    previousOperationId: recovered.operationId,
+  };
+  it('stops the installation', () => {
+    expect(installationRunning(input)).toBe(false);
+  });
+  it('reports its transport explanation', () => {
+    expect(installationNotice(input)).toEqual({
+      key: 'request:1',
+      result: 'failed',
+      failure: disconnected,
+    });
+  });
+});
+describe('a failed request before the Server status confirms nothing started', () => {
   const input = {
     ...idle,
     failure: disconnected,
     failureConfirmed: false,
     requestId: 1,
   };
-  expect(installationRunning(input)).toBe(true);
-  expect(installationNotice(input)).toBeUndefined();
+  it('keeps its progress', () => {
+    expect(installationRunning(input)).toBe(true);
+  });
+  it('holds back its failure', () => {
+    expect(installationNotice(input)).toBeUndefined();
+  });
 });
 it('a recovered operation reports the outcome of the request whose response was lost', () => {
   expect(
@@ -68,10 +77,14 @@ it('a recovered operation reports the outcome of the request whose response was 
     }),
   ).toEqual({ key: 'accepted', result: 'installed', version: '1.2.3' });
 });
-it('a pending request shows progress and no notice', () => {
+describe('a pending request', () => {
   const input = { ...idle, pending: true, failure: disconnected };
-  expect(installationRunning(input)).toBe(true);
-  expect(installationNotice(input)).toBeUndefined();
+  it('shows progress', () => {
+    expect(installationRunning(input)).toBe(true);
+  });
+  it('shows no notice', () => {
+    expect(installationNotice(input)).toBeUndefined();
+  });
 });
 describe('a settled operation', () => {
   it.each([
@@ -89,10 +102,12 @@ describe('a settled operation', () => {
     'notifies once it is %s after this page watched it run',
     (_, operation, notice) => {
       const input = { ...idle, operation, watched: ['accepted'] };
-      expect(installationRunning(input)).toBe(false);
       expect(installationNotice(input)).toEqual(notice);
     },
   );
+  it.each([installed, failed])('is no longer running', (operation) => {
+    expect(installationRunning({ ...idle, operation })).toBe(false);
+  });
   it.each([installed, failed])(
     'stays quiet when it settled before this page saw it run',
     (operation) => {

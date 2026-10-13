@@ -4,16 +4,19 @@ import { InstallationScenario } from '@repo/mocks/registry/installation';
 import { z } from 'zod';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
-import { Given, When, Then } from './fixtures';
+import { Given, When, Then, test } from './fixtures';
 import { query } from './server-query';
+import { toast } from './toasts';
 
 const heading = (page: Page, name: string): Locator =>
   page.getByRole('heading', { name, exact: true });
-// A toast's text, inside the live region that announces it.
-const toast = (page: Page, text: string): Locator =>
-  page
-    .getByRole('region', { name: /^Notifications/ })
-    .getByText(text, { exact: true });
+// Evidence for the PR: each state of the flow, as the user sees it.
+const capture = async (page: Page, name: string): Promise<void> => {
+  await page.screenshot({
+    path: test.info().outputPath(`${name}.png`),
+    animations: 'disabled',
+  });
+};
 const failureMessage = (failure: string): string =>
   failure === 'missing-runtime'
     ? 'Node.js is required on the Server'
@@ -54,6 +57,7 @@ const openInstallation = async (page: Page): Promise<Locator> => {
 When('I confirm installing Example Agent', async ({ page }): Promise<void> => {
   const confirmation = await openInstallation(page);
   await expect(confirmation).toContainText('Version 1.2.3');
+  await capture(page, 'agent-install-confirmation');
   await confirmation
     .getByRole('button', { name: 'Install', exact: true })
     .click();
@@ -71,6 +75,7 @@ Then(
     await expect(
       page.getByRole('button', { name: 'Installing…', exact: true }),
     ).toBeDisabled();
+    await capture(page, 'agent-install-in-progress');
   },
 );
 When(
@@ -94,20 +99,18 @@ Then(
       page.getByRole('button', { name: /^Install(ing…)?$/ }),
     ).toHaveCount(0);
     await expect(heading(page, 'Example Agent')).toBeVisible();
+    await capture(page, 'agent-install-completed');
   },
 );
 Then(
   'the installation explains {word} and offers another attempt',
   async ({ page }, failure: string): Promise<void> => {
     await expect(toast(page, 'Could not install Example Agent')).toBeVisible();
-    await expect(
-      page
-        .getByRole('region', { name: /^Notifications/ })
-        .getByText(failureMessage(failure), { exact: false }),
-    ).toBeVisible();
+    await expect(toast(page, failureMessage(failure), false)).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Install', exact: true }),
     ).toBeEnabled();
+    await capture(page, 'agent-install-failed');
   },
 );
 const installationStatus = z.object({

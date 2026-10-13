@@ -42,15 +42,20 @@ export function useWatchedOperations(
   return [requested, running].filter((id) => id !== undefined);
 }
 
-// The action the running operation started as, kept once it settles for its notice.
+type Run = { action: InstallAction; running: boolean };
+const nextRun = (run: Run, action: InstallAction, running: boolean): Run =>
+  running === run.running
+    ? run
+    : { running, action: running ? action : run.action };
+// The action a run started as, kept until the next run: the page's offer can change mid-run or once it settles.
 export function useRunningAction(
   action: InstallAction,
   running: boolean,
 ): InstallAction {
-  const [ran, setRan] = useState(action);
-  const ranAs = running ? action : ran;
-  if (ranAs !== ran) setRan(ranAs);
-  return ranAs;
+  const [run, setRun] = useState<Run>({ action, running });
+  const next = nextRun(run, action, running);
+  if (next !== run) setRun(next);
+  return next.action;
 }
 
 type ConfirmationState = {

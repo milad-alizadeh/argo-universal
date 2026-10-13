@@ -20,6 +20,7 @@ import {
 } from './use-installation-operation';
 import { useCompletedRefresh } from './use-installation-refresh';
 import {
+  type StartInput,
   type StartInstall,
   useStart,
   useStartInstall,
@@ -83,7 +84,7 @@ const startInput = (
   controls: InstallationControls,
   agentId: string,
   version: string,
-): Parameters<typeof useStart>[0] => ({
+): StartInput => ({
   agentId,
   version,
   install: controls.install,

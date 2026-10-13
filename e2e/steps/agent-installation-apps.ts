@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
 import { When } from './fixtures';
+import { toast } from './toasts';
 
 const connectSecondApp = async (page: Page, httpUrl: string): Promise<void> => {
   await page.addInitScript(
@@ -32,11 +33,7 @@ async function retryInApp(page: Page, httpUrl: string): Promise<void> {
   await browseAgents(page);
   await page.getByRole('link', { name: /^Example Agent,/ }).click();
   await confirmInstall(page);
-  await expect(
-    page
-      .getByRole('region', { name: /^Notifications/ })
-      .getByText('Example Agent installed', { exact: true }),
-  ).toBeVisible();
+  await expect(toast(page, 'Example Agent installed')).toBeVisible();
 }
 // The installed Agent leaves the registry offer: no Install action and no registry source.
 const showsInstalled = async (page: Page): Promise<void> => {
