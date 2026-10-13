@@ -55,4 +55,4 @@ function heldChoiceCase(agent: HeldAgent): HeldChoiceCase {
   };
 }
 export const heldChoiceCases =
-  newSessionCatalogs.bothAvailable.map(heldChoiceCase);
+  newSessionCatalogs.bothReady.map(heldChoiceCase);

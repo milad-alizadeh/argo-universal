@@ -34,10 +34,12 @@ export const installationPorts: InstallPorts = createInstallationPorts();
 export const startInstallEngine = async (
   entry = installEntry('npx'),
   ports = installationPorts,
+  options: Parameters<typeof startEngineTestHost>[0] = {},
 ): Promise<
   Awaited<ReturnType<typeof startEngineTestHost>> & { agentId: string }
 > => {
   const host = await startEngineTestHost({
+    ...options,
     installationPorts: ports,
     fetchAgents: async () => ({ version: '1.0.0', agents: [entry] }),
   });

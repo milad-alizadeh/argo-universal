@@ -20,7 +20,7 @@ const writeLauncher = (): string => {
   return launcher;
 };
 
-it('lists an enabled custom Agent with availability from a fresh check, not from its saved record', async () => {
+it('lists a custom Agent from its saved Readiness until a Recheck observes the missing program', async () => {
   const program = writeLauncher();
   const host = await startCustomAgentEngine();
   const registration = await host.caller.agents.registerCustom({
@@ -36,21 +36,22 @@ it('lists an enabled custom Agent with availability from a fresh check, not from
       );
   await expect(listed()).resolves.toMatchObject({
     label: 'Fixture ACP',
-    availability: 'available',
+    enabled: true,
+    status: 'ready',
   });
   rmSync(program);
-  await expect(listed()).resolves.toMatchObject({
-    availability: 'unavailable',
-  });
+  await expect(listed()).resolves.toMatchObject({ status: 'ready' });
+  const failed = {
+    status: 'cant-start',
+    reason: 'Fixture ACP exited before answering ACP initialize.',
+  };
   await expect(
-    host.caller.agents.check({ agentId: registration.agentId }),
-  ).resolves.toEqual({
-    status: 'failed',
-    failure: 'Fixture ACP exited before answering ACP initialize.',
-  });
+    host.caller.agents.recheck({ agentId: registration.agentId }),
+  ).resolves.toEqual(failed);
+  await expect(listed()).resolves.toMatchObject(failed);
 }, 20_000);
 
-it('leaves a disabled custom Agent out of the list', async () => {
+it('lists a disabled custom Agent as disabled', async () => {
   const host = await startCustomAgentEngine();
   const registration = await host.caller.agents.registerCustom(
     customAgentDefinition,
@@ -60,6 +61,7 @@ it('leaves a disabled custom Agent out of the list', async () => {
     agentId: registration.agentId,
     enabled: false,
   });
-  const agents = await host.caller.agents.list();
-  expect(agents.map(({ agent }) => agent)).not.toContain(registration.agentId);
+  expect(await host.caller.agents.list()).toContainEqual(
+    expect.objectContaining({ agent: registration.agentId, enabled: false }),
+  );
 }, 20_000);

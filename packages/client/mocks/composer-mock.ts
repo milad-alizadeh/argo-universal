@@ -83,7 +83,7 @@ function defaultConfiguration(
 ): ComposerProps['configuration'] {
   const agent = props.initialAgent ?? availableAgent();
   return {
-    agents: newSessionCatalogs.bothAvailable,
+    agents: newSessionCatalogs.bothReady,
     agent,
     configOptions: recordedOptions(agent),
     ...configurationControls(props),
@@ -91,7 +91,7 @@ function defaultConfiguration(
   };
 }
 function availableAgent(): string {
-  return newSessionCatalogs.bothAvailable[0]?.agent ?? '';
+  return newSessionCatalogs.bothReady[0]?.agent ?? '';
 }
 type Configuration = NonNullable<ComposerProps['configuration']>;
 function configurationControls(

@@ -16,7 +16,7 @@ export interface RetryScenario {
 }
 export function retryCase(agentIndex: number): RetryCase {
   const agent = retryAgent(agentIndex);
-  const other = newSessionCatalogs.bothUnavailable.find(
+  const other = newSessionCatalogs.bothCantStart.find(
     (entry) => entry.agent !== agent.agent,
   );
   if (!other) throw new Error(retryRequirements);
@@ -25,7 +25,7 @@ export function retryCase(agentIndex: number): RetryCase {
 const retryRequirements =
   'Recorded catalog needs two unavailable Agents with a reason.';
 function retryAgent(agentIndex: number): AgentInfo {
-  const agent = newSessionCatalogs.bothUnavailable[agentIndex];
+  const agent = newSessionCatalogs.bothCantStart[agentIndex];
   if (!agent) throw new Error(retryRequirements);
   return agent;
 }
@@ -36,7 +36,7 @@ function retryReason(agent: AgentInfo): string {
 export function retryConfiguration(scenario: RetryScenario): Configuration {
   const { recorded, session, onAgentChange, onAgentRetry } = scenario;
   return {
-    agents: newSessionCatalogs.bothUnavailable,
+    agents: newSessionCatalogs.bothCantStart,
     agent: recorded.agent.agent,
     configOptions: recordedSessionOptions(recorded.agent.agent),
     onConfigChange: fn(),

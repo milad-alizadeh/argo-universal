@@ -27,7 +27,7 @@ function useRetryingConfiguration(configuration: Configuration): Configuration {
   const [agents, setAgents] = useState(configuration.agents);
   const onAgentRetry = (): void => {
     configuration.onAgentRetry?.();
-    setAgents(newSessionCatalogs.bothAvailable);
+    setAgents(newSessionCatalogs.bothReady);
   };
   return { ...configuration, agents, onAgentRetry };
 }
@@ -75,7 +75,7 @@ async function assertRetryRowsReachable(width: number): Promise<void> {
     const menu = within(document.body)
       .getByTestId(agentsScrollId)
       .getBoundingClientRect();
-    for (const unavailable of newSessionCatalogs.bothUnavailable)
+    for (const unavailable of newSessionCatalogs.bothCantStart)
       await assertRetryRowInsideMenu(unavailable.label, menu);
   });
 }

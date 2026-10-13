@@ -16,7 +16,7 @@ export function unavailableAgents(width: number): Story {
       configuration: {
         agents: [
           ...newSessionCatalogs.oneNotInstalled,
-          ...newSessionCatalogs.oneNotSignedIn,
+          ...newSessionCatalogs.oneSignInNeeded,
         ].filter((entry) => entry.availability !== 'available'),
         agent: firstAgent.agent,
         configOptions: recordedSessionOptions(firstAgent.agent),

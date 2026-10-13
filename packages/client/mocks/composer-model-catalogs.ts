@@ -3,7 +3,7 @@ import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import type { ComposerProps } from '../src/features/composer/components/composer/composer';
 import { composerLongAgentCatalog } from './composer-agent-catalogs';
 function firstAvailableAgent(): AgentInfo {
-  const agent = newSessionCatalogs.bothAvailable[0];
+  const agent = newSessionCatalogs.bothReady[0];
   if (!agent) throw new Error('Recorded catalog needs an available Agent.');
   return agent;
 }
@@ -54,7 +54,7 @@ export function composerFastModeConfiguration(
   on: boolean,
 ): NonNullable<ComposerProps['configuration']> {
   return {
-    agents: newSessionCatalogs.bothAvailable,
+    agents: newSessionCatalogs.bothReady,
     agent: fastModeAgent.agent,
     configOptions: [
       ...recordedSessionOptions(fastModeAgent.agent),

@@ -43,7 +43,7 @@ const openings = [
 ];
 
 it.each(openings)(
-  'a healthy listing permits $name opening while replacement remains fenced',
+  'a running Recheck permits $name opening while replacement remains fenced',
   async ({ open, scenario }) => {
     const host = await startCustomAgentEngine({ acp: {} });
     const marker = join(host.home, 'probe-pid');
@@ -56,7 +56,9 @@ it.each(openings)(
     if (registered.status !== 'ready') throw new Error(registered.failure);
     await rm(release);
     await rm(marker);
-    const listing = host.createCaller().agents.list();
+    const checking = host
+      .createCaller()
+      .agents.recheck({ agentId: registered.agentId });
     await expect
       .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
       .toMatch(/^\d+$/);
@@ -68,12 +70,7 @@ it.each(openings)(
     } finally {
       await writeFile(release, 'release');
     }
-    expect(await listing).toContainEqual(
-      expect.objectContaining({
-        agent: registered.agentId,
-        availability: 'available',
-      }),
-    );
+    expect(await checking).toEqual({ status: 'ready' });
   },
   15000,
 );

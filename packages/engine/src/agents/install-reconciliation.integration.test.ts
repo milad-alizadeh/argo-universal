@@ -59,7 +59,7 @@ it('missing managed files invalidate installation while retaining its durable id
   expect(await host.caller.agents.list()).toContainEqual(
     expect.objectContaining({
       agent: host.agentId,
-      availability: 'not_installed',
+      status: 'not-found',
     }),
   );
 });

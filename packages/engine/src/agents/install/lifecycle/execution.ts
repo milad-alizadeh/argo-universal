@@ -4,7 +4,10 @@ import type {
   AgentsCatalogOutput,
 } from '@repo/contracts';
 import { writeDatabaseJobAndWaitForCommit } from '../../../storage';
-import { AgentConfigurationSaveJob } from '../../agent-storage';
+import {
+  AgentConfigurationSaveJob,
+  pendingReadiness,
+} from '../../agent-storage';
 import { readAgentCatalog } from '../../catalog-sql';
 import type { ConfigurationDeps } from '../../configuration/configuration-commands';
 import {
@@ -59,7 +62,7 @@ const saveSelection = (
   );
   return writeDatabaseJobAndWaitForCommit(
     input.deps.databaseWriter,
-    new AgentConfigurationSaveJob(saved),
+    new AgentConfigurationSaveJob(saved, pendingReadiness),
     true,
   );
 };

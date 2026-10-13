@@ -64,14 +64,14 @@ it('a credential-like environment variable is rejected at the boundary', async (
   ).rejects.toThrow('Argo does not store credentials');
 }, 20_000);
 
-it('readiness comes from a fresh check, not from the saved record', async () => {
+it('a rejected edit keeps the saved definition, which a Recheck still finds Ready', async () => {
   const host = await startCustomAgentEngine();
   const registration = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
   if (registration.status !== 'ready') throw new Error(registration.failure);
   const { agentId } = registration;
-  await expect(host.caller.agents.check({ agentId })).resolves.toEqual({
+  await expect(host.caller.agents.recheck({ agentId })).resolves.toEqual({
     status: 'ready',
   });
   await expect(
@@ -80,7 +80,7 @@ it('readiness comes from a fresh check, not from the saved record', async () => 
       definition: { ...customAgentDefinition, args: ['-e', ''] },
     }),
   ).resolves.toMatchObject({ status: 'failed' });
-  await expect(host.caller.agents.check({ agentId })).resolves.toEqual({
+  await expect(host.caller.agents.recheck({ agentId })).resolves.toEqual({
     status: 'ready',
   });
 }, 20_000);

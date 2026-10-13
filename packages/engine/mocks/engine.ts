@@ -65,6 +65,8 @@ export async function startEngineTestHost(
     createId: randomUUID,
     ...scriptedEngineInput(),
     fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
+    // Tests that count Agent processes stay exact; readiness journeys turn checks on.
+    automaticReadiness: false,
     ...options,
     home,
     port,

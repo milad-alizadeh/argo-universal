@@ -26,6 +26,12 @@ const initializeRequest = (
     elicitation: { form: {}, ...capabilities?.elicitation },
   },
 });
+// The Agent answered but lacks an ACP capability Argo requires; the check reports it as Not compatible.
+export class MissingAcpCapabilityError extends Error {
+  public constructor(public readonly capability: string) {
+    super('Agent cannot close independent ACP sessions');
+  }
+}
 export const negotiateAcpInitialize = async (
   agent: ClientContext,
   readers: ReturnType<typeof createAcpResponseReaders>,
@@ -35,6 +41,6 @@ export const negotiateAcpInitialize = async (
     await agent.request<unknown>('initialize', initializeRequest(capabilities)),
   );
   if (!sessionCapabilities(response)?.close)
-    throw new Error('Agent cannot close independent ACP sessions');
+    throw new MissingAcpCapabilityError('session/close');
   return response;
 };

@@ -32,7 +32,7 @@ export function preservesComposer(
   requestKind: 'plan' | 'permission',
 ): Story & { args: ComposerProps } {
   const permission = requiredFixture(permissionMocks[agentIndex]);
-  const catalog = requiredFixture(newSessionCatalogs.bothAvailable[agentIndex]);
+  const catalog = requiredFixture(newSessionCatalogs.bothReady[agentIndex]);
   const plan = requiredFixture(
     planProposalMocks.find((mock) => mock.agent === permission.agent),
   );

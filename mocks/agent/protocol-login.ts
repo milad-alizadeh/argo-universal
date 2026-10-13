@@ -14,6 +14,16 @@ const account: AuthStatusUpdateNotification = {
 const signedOut: AuthStatusUpdateNotification = {
   authStatus: { kind: 'none', label: 'Signed out' },
 };
+const authStatusStep = (
+  params: AuthStatusUpdateNotification,
+): { type: 'raw'; frame: string } => ({
+  type: 'raw',
+  frame: JSON.stringify({
+    jsonrpc: '2.0',
+    method: '_auth/status_update',
+    params,
+  }),
+});
 
 export const protocolLogin = {
   initialize: {
@@ -27,16 +37,7 @@ export const protocolLogin = {
   responses: {
     initialize: [
       {
-        steps: [
-          {
-            type: 'raw',
-            frame: JSON.stringify({
-              jsonrpc: '2.0',
-              method: '_auth/status_update',
-              params: account,
-            }),
-          },
-        ],
+        steps: [authStatusStep(account)],
       },
     ],
     authenticate: [
@@ -63,15 +64,27 @@ export const signedOutProtocolLogin = {
     ...protocolLogin.responses,
     initialize: [
       {
+        steps: [authStatusStep(signedOut)],
+      },
+    ],
+  },
+} satisfies Pick<ScriptedScenario, 'initialize' | 'responses'>;
+
+// Signed in, but with an account that is not a subscription Argo accepts.
+export const unsupportedAccountLogin = {
+  ...protocolLogin,
+  responses: {
+    ...protocolLogin.responses,
+    initialize: [
+      {
         steps: [
-          {
-            type: 'raw',
-            frame: JSON.stringify({
-              jsonrpc: '2.0',
-              method: '_auth/status_update',
-              params: signedOut,
-            }),
-          },
+          authStatusStep({
+            authStatus: {
+              kind: 'account',
+              label: 'API key',
+              account: { plan: 'api' },
+            },
+          }),
         ],
       },
     ],

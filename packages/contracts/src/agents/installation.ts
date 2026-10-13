@@ -27,7 +27,6 @@ export const AgentInstallation = z.discriminatedUnion('status', [
   z.strictObject({
     status: z.literal('installed'),
     version: z.string(),
-    readiness: z.literal('not-checked'),
   }),
   z.strictObject({ status: z.literal('failed'), failure: z.string() }),
 ]);

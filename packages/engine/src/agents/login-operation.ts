@@ -52,6 +52,9 @@ export class LoginOperation {
     this.actor.subscribe({ complete: (): void => this.completed.resolve() });
     this.actor.start();
   }
+  public finished(): Promise<void> {
+    return this.completed.promise;
+  }
   public isOwnedBy(token: string): boolean {
     return token === this.identity.ownerToken;
   }

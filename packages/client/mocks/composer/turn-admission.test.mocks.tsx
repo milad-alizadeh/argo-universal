@@ -23,7 +23,7 @@ export function stopPrecedence(
       sendable: false,
       onStop: fn(),
       configuration: {
-        agents: newSessionCatalogs.bothAvailable,
+        agents: newSessionCatalogs.bothReady,
         agent: catalog.agent.agent,
         configOptions: recordedSessionOptions(catalog.agent.agent),
         onConfigChange: fn(),

@@ -25,7 +25,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 function longSettings(width: number, agentIndex: number): Story {
-  const agent = newSessionCatalogs.bothAvailable[agentIndex];
+  const agent = newSessionCatalogs.bothReady[agentIndex];
   if (!agent) throw new Error('Recorded settings need two Agents.');
   const onConfigChange = fn();
   return {
@@ -78,7 +78,7 @@ export const LongSettingsWideSecondAgent = longSettings(layoutWidths.wide, 1);
 
 function keyboardSettings(width: number): Story {
   const onConfigChange = fn();
-  const agent = newSessionCatalogs.bothAvailable[0];
+  const agent = newSessionCatalogs.bothReady[0];
   if (!agent) throw new Error('Recorded settings need an Agent.');
   return {
     args: {

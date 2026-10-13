@@ -15,7 +15,7 @@ import type { OpenSessionViewProps } from './session-view';
 
 // Each recording's Agent in the catalog: agent-1 is the first entry, agent-2 the second.
 function catalogAgentOf(mock: FeedMock): AgentInfo {
-  const agent = newSessionCatalogs.bothAvailable.at(
+  const agent = newSessionCatalogs.bothReady.at(
     mock.agent === 'agent-1' ? 0 : 1,
   );
   if (!agent) throw new Error(`No catalog Agent for ${mock.agent}`);
@@ -83,7 +83,7 @@ function recordedConfiguration(
 ): RecordedConfiguration {
   const catalogAgent = catalogAgentOf(mock);
   return {
-    agents: newSessionCatalogs.bothAvailable,
+    agents: newSessionCatalogs.bothReady,
     agent: catalogAgent.agent,
     configOptions: recordedSessionOptions(catalogAgent.agent),
     onConfigChange: fn(),

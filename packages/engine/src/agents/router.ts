@@ -1,4 +1,6 @@
 import {
+  AgentCheck,
+  AgentId,
   AgentsCatalogInput,
   type AgentsCatalogOutput,
   AgentsListInput,
@@ -7,16 +9,16 @@ import {
 import type { ActorRefFrom } from 'xstate';
 import { mergeRouters, publicProcedure, router, routerFactory } from '../rpc';
 import type { OpenSessionsActorRef } from '../sessions';
+import { listAgents } from './agent-list';
 import { watchCommittedCatalogChanges } from './catalog-changes';
 import { readAgentCatalog } from './catalog-sql';
 import type { ConfigurationDeps } from './configuration/configuration-commands';
 import { createConfigurationRouter } from './configuration/configuration-router';
-import { listCustomAgents } from './configuration/custom-agent-list';
 import type { AgentInstallations } from './install/lifecycle/operations';
 import { createInstallRouter } from './install/router';
-import { listInstalledAgents } from './install/selection/list';
 import type { AgentLogins } from './login';
 import { createLoginRouter } from './login-router';
+import type { AgentReadiness } from './readiness/agent-readiness';
 import {
   requestAgentCatalogSync,
   type syncSupervisorMachine,
@@ -32,6 +34,7 @@ export type AgentsRouterDeps = ConfigurationDeps &
     sessions: OpenSessionsActorRef;
     installations: AgentInstallations;
     agentLogins: AgentLogins;
+    readiness: AgentReadiness;
     home?: string;
   };
 
@@ -60,19 +63,24 @@ const createCatalogSyncRouter = routerFactory((deps: CatalogDeps) =>
 
 const configuredAgentList = async (
   deps: AgentsRouterDeps,
+  refresh: boolean,
 ): Promise<AgentsListOutput> => {
-  const configured = ownedConfiguration(deps);
-  const installed = deps.home
-    ? await listInstalledAgents(deps.database, deps.home, configured)
-    : [];
-  return [...installed, ...(await listCustomAgents(configured))];
+  if (refresh) await deps.readiness.recheckEvery();
+  return listAgents(deps.database, deps.home ?? '');
 };
 const createListRouter = routerFactory((deps: AgentsRouterDeps) =>
   router({
     list: publicProcedure
       .input(AgentsListInput)
       .output(AgentsListOutput)
-      .query(() => configuredAgentList(deps)),
+      .query(({ input }) => configuredAgentList(deps, !!input?.refresh)),
+    recheck: publicProcedure
+      .input(AgentId)
+      .output(AgentCheck)
+      .mutation(({ input }) => {
+        deps.sessionCommandSignal?.throwIfAborted();
+        return deps.readiness.recheck(input.agentId);
+      }),
   }),
 );
 
@@ -94,4 +102,5 @@ const ownedConfiguration = (deps: AgentsRouterDeps): ConfigurationDeps => ({
     deps.installations.mutateLaunch(agentId, operation),
   withAgentCheck: (agentId, operation) =>
     deps.installations.check(agentId, operation),
+  afterEnable: (agentId) => deps.readiness.recheckLater(agentId),
 });

@@ -4,7 +4,7 @@ import type { ComposerProps } from '../src/features/composer/components/composer
 export const composerLongAgentCatalog: AgentInfo[] = Array.from(
   { length: 40 },
   (_, index) => {
-    const agent = newSessionCatalogs.bothAvailable[0];
+    const agent = newSessionCatalogs.bothReady[0];
     if (!agent) throw new Error('Composer needs an available Agent mock.');
     return {
       ...agent,
@@ -15,9 +15,9 @@ export const composerLongAgentCatalog: AgentInfo[] = Array.from(
 );
 
 export const composerUnlistedEffortConfigurations =
-  newSessionCatalogs.bothAvailable.map(
+  newSessionCatalogs.bothReady.map(
     (agent): NonNullable<ComposerProps['configuration']> => ({
-      agents: newSessionCatalogs.bothAvailable,
+      agents: newSessionCatalogs.bothReady,
       agent: agent.agent,
       configOptions: recordedSessionOptions(agent.agent).map((option) =>
         option.category === 'thought_level' && option.type === 'select'
@@ -30,9 +30,9 @@ export const composerUnlistedEffortConfigurations =
   );
 
 export const composerUnavailableConfigurations =
-  newSessionCatalogs.bothUnavailable.map(
+  newSessionCatalogs.bothCantStart.map(
     (agent): NonNullable<ComposerProps['configuration']> => ({
-      agents: newSessionCatalogs.bothUnavailable,
+      agents: newSessionCatalogs.bothCantStart,
       agent: agent.agent,
       configOptions: recordedSessionOptions(agent.agent),
       onConfigChange: () => {},

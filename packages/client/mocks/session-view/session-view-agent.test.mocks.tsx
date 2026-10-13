@@ -49,7 +49,7 @@ async function openAgentRow(
 function unavailableAgent(agentIndex: 0 | 1): AgentInfo & {
   installStep: string;
 } {
-  const agent = newSessionCatalogs.bothUnavailable[agentIndex];
+  const agent = newSessionCatalogs.bothCantStart[agentIndex];
   if (!agent?.installStep)
     throw new Error('Recorded catalog needs two unavailable Agents.');
   return { ...agent, installStep: agent.installStep };
@@ -60,7 +60,7 @@ export function agentUnavailable(agentIndex: 0 | 1): Story {
   const agent = unavailableAgent(agentIndex);
   return {
     args: idleSessionWith({
-      agents: newSessionCatalogs.bothUnavailable,
+      agents: newSessionCatalogs.bothCantStart,
       agent: agent.agent,
       configOptions: recordedSessionOptions(agent.agent),
       onAgentRetry: fn(),
@@ -82,7 +82,7 @@ export function agentUnavailable(agentIndex: 0 | 1): Story {
 }
 
 function availableAgent(agentIndex: 0 | 1): AgentInfo {
-  const agent = newSessionCatalogs.bothAvailable[agentIndex];
+  const agent = newSessionCatalogs.bothReady[agentIndex];
   if (!agent) throw new Error('Recorded catalog needs two Agents.');
   return agent;
 }
