@@ -403,6 +403,18 @@ const sessionSetup = setup({
         }
       },
     ),
+    replaceAcp: fromPromise<OpenedAcpSession, SessionContext>(
+      async ({ input }) => {
+        const lease = await input.acpLifetime.replace(input);
+        return {
+          lease,
+          configOptions: readAcpConfiguration(
+            lease.response.configOptions,
+            input.acpConfigurationRejections,
+          ),
+        };
+      },
+    ),
     closeAcp: fromPromise<void, AcpOperationInput>(async ({ input }) => {
       await input.context.acpLifetime.close();
       await publishActiveTurnContent(input);
@@ -732,6 +744,13 @@ const sessionSetup = setup({
         kind: 'cancel',
       }),
     }),
+    rememberCancelTimeout: assign({
+      turnEnding: ({ context }): FeedTurnEnding => ({
+        ...context.turnEnding,
+        kind: 'cancel_timeout',
+      }),
+      acpTurnOutcome: { stopReason: 'cancelled' },
+    }),
     cancelAcpRequests: enqueueActions(({ context, enqueue }): void => {
       context.acpLifetime.cancelRequests();
       const pending = context.turnEnding.waitingPermissions?.toolCallIds ?? [];
@@ -835,6 +854,8 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    cancelTimedOut: ({ context }): boolean =>
+      context.turnEnding.kind === 'cancel_timeout',
     isRecoveryBlocked: ({ event }): boolean =>
       'error' in event && event.error instanceof RecoveryBlockedError,
     isReplayedHistory: ({ context, event }): boolean =>
@@ -945,6 +966,21 @@ const acpReleaseTransitions = [
   },
   { target: 'flushing', actions: cancelledTurn },
 ] as const;
+
+const resumedAcpSession = {
+  target: 'idle',
+  actions: [
+    {
+      type: 'rememberAcpLease',
+      params: ({
+        event,
+      }: {
+        event: { output: OpenedAcpSession };
+      }): OpenedAcpSession => event.output,
+    },
+    'storeRecoveredSession',
+  ],
+} as const;
 
 export const sessionMachine = sessionSetup.createMachine({
   id: 'session',
@@ -1366,14 +1402,29 @@ export const sessionMachine = sessionSetup.createMachine({
                     [acpElicitationEvent]: { actions: 'refuseAcpRequest' },
                     [acpRequestWithdrawnEvent]: { actions: 'forgetAcpRequest' },
                   },
-                  invoke: {
-                    src: 'cancelAcp',
-                    id: 'cancelAcp',
-                    input: ({ context }) => context,
-                    onError: {
-                      actions: {
-                        type: 'rememberFailure',
-                        params: ({ event }) => ({ error: event.error }),
+                  initial: 'sending',
+                  states: {
+                    sending: {
+                      invoke: {
+                        src: 'cancelAcp',
+                        id: 'cancelAcp',
+                        input: ({ context }) => context,
+                        onDone: { target: 'waiting' },
+                        onError: {
+                          target: 'waiting',
+                          actions: {
+                            type: 'rememberFailure',
+                            params: ({ event }) => ({ error: event.error }),
+                          },
+                        },
+                      },
+                    },
+                    waiting: {
+                      after: {
+                        cancelLimit: {
+                          target: '#session.open.acp.publishing',
+                          actions: 'rememberCancelTimeout',
+                        },
                       },
                     },
                   },
@@ -1401,6 +1452,11 @@ export const sessionMachine = sessionSetup.createMachine({
                   findFeed: () => self.getSnapshot().children.feed,
                 }),
                 onDone: [
+                  {
+                    guard: 'cancelTimedOut',
+                    target: 'replacing',
+                    actions: { type: 'endTurn', params: acpTurnOutcome },
+                  },
                   {
                     guard: 'lostConnectionWhilePublishing',
                     target: 'recovering',
@@ -1454,6 +1510,24 @@ export const sessionMachine = sessionSetup.createMachine({
                 },
               },
             },
+            replacing: {
+              on: { 'acp.failed': {} },
+              invoke: {
+                id: 'replaceAcp',
+                src: 'replaceAcp',
+                input: ({ context }): SessionContext => context,
+                onDone: resumedAcpSession,
+                onError: {
+                  target: 'retainingCleanup',
+                  actions: {
+                    type: 'rememberFailure',
+                    params: ({ event }): FailureParameters => ({
+                      error: event.error,
+                    }),
+                  },
+                },
+              },
+            },
             // The failed generation is released by its owner; the retry delay is a minimum, not a release proof.
             recovering: {
               always: {
@@ -1475,16 +1549,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 id: 'reopenAcp',
                 src: 'reopenAcp',
                 input: ({ context }): SessionContext => context,
-                onDone: {
-                  target: 'idle',
-                  actions: [
-                    {
-                      type: 'rememberAcpLease',
-                      params: ({ event }): OpenedAcpSession => event.output,
-                    },
-                    'storeRecoveredSession',
-                  ],
-                },
+                onDone: resumedAcpSession,
                 onError: [
                   {
                     guard: 'isRecoveryBlocked',

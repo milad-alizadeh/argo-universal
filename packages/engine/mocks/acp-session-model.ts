@@ -36,7 +36,11 @@ const canApplyLifecycleEvent = (
     'xstate.error.actor.configureAcp': 'configuring',
     'xstate.done.actor.commitPrompt': 'committing',
     'xstate.error.actor.commitPrompt': 'committing',
-    'xstate.error.actor.cancelAcp': { activeTurn: 'cancelling' },
+    'xstate.done.actor.cancelAcp': { activeTurn: { cancelling: 'sending' } },
+    'xstate.error.actor.cancelAcp': { activeTurn: { cancelling: 'sending' } },
+    'xstate.after.cancelLimit.session.open.acp.activeTurn.cancelling.waiting': {
+      activeTurn: { cancelling: 'waiting' },
+    },
     'xstate.done.actor.promptAcp': 'activeTurn',
     'xstate.error.actor.promptAcp': 'activeTurn',
     'xstate.done.actor.publishTurn': 'publishing',
@@ -49,6 +53,8 @@ const canApplyLifecycleEvent = (
     'xstate.after.agentRestartDelay.session.open.acp.recovering': 'recovering',
     'xstate.done.actor.reopenAcp': 'reopening',
     'xstate.error.actor.reopenAcp': 'reopening',
+    'xstate.done.actor.replaceAcp': 'replacing',
+    'xstate.error.actor.replaceAcp': 'replacing',
     'xstate.after.feedFlushLimit.session.open.acp.flushing': 'flushing',
   } as const;
   if (event.type in invoking) {
@@ -154,6 +160,14 @@ export const createAcpSessionModel = (
       error: new Error('Discard failed'),
     },
     { type: 'session.cancel' },
+    {
+      type: 'xstate.done.actor.cancelAcp',
+      actorId: 'cancelAcp',
+      output: undefined,
+    },
+    {
+      type: 'xstate.after.cancelLimit.session.open.acp.activeTurn.cancelling.waiting',
+    },
     {
       type: 'xstate.error.actor.cancelAcp',
       actorId: 'cancelAcp',
@@ -290,6 +304,16 @@ export const createAcpSessionModel = (
       type: 'xstate.done.actor.reopenAcp',
       actorId: 'reopenAcp',
       output: { lease, configOptions: initial.context.configOptions },
+    },
+    {
+      type: 'xstate.done.actor.replaceAcp',
+      actorId: 'replaceAcp',
+      output: { lease, configOptions: initial.context.configOptions },
+    },
+    {
+      type: 'xstate.error.actor.replaceAcp',
+      actorId: 'replaceAcp',
+      error: new Error('owned replacement failed'),
     },
     {
       type: 'xstate.error.actor.reopenAcp',
