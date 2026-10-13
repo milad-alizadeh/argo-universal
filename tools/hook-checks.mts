@@ -1,4 +1,4 @@
-// The checks tools/agent-hooks.mts runs; read docs/agents/hooks.md before changing them.
+// The checks tools/agent-hook-run.mts runs; read docs/agents/hooks.md before changing them.
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

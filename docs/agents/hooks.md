@@ -8,6 +8,7 @@ Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/set
 - **Before you finish:** when a JavaScript, TypeScript, JSON, JSONC, CSS or YAML file changed, the hook formats the changed files with oxfmt, runs oxlint with type-aware rules on the changed scripts, and runs `turbo run check-types --affected` if TypeScript changed. A failure blocks your stop once and shows the first lines of output: fix them. The formatter may have rewritten files, so read a file again before you edit it. A second stop always passes, so report anything you leave failing.
 - A finding in a folder that `tooling/oxlint/not-yet-cleared.json` lists is off for that folder; never add a folder or a rule to that list, fix the code.
 - Run `node tools/not-yet-cleared.mts prune` after clearing a folder or rule; it removes stale waivers and empty entries.
+- A Checkout without `node_modules`, such as an Argo Session worktree, has nothing to check with, so both hooks pass quietly there.
 - Hooks run no tests. Run the Vitest, Storybook or Playwright tests your change touches yourself, and `pnpm quality` before you hand back.
 
 ## Trust
@@ -19,6 +20,6 @@ Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/set
 ## Changing the hooks
 
 - `.claude/settings.json` and `.codex/hooks.json` hold the same hook body. Change both in one PR.
-- `tools/agent-hooks.mts` reads its input by shape and names no vendor; `tools/hook-checks.mts` runs the tools.
+- `tools/agent-hooks.mts` only checks that dependencies are installed; `tools/agent-hook-run.mts` reads its input by shape and names no vendor; `tools/hook-checks.mts` runs the tools.
 - Call binaries from `node_modules/.bin` under the repository root, which follows a worktree. Use neither `pnpm exec` nor `CLAUDE_PROJECT_DIR`, which stays on the main checkout.
 - Keep knip, Storybook, Vitest, Playwright, jscpd and `pnpm install` out of hooks: they are slow, and knip and Storybook rewrite the generated Storybook requires file.
