@@ -6,6 +6,7 @@ import { cn } from '#lib/generic/utils';
 import { keepOpen } from '../keep-open';
 import { SheetBody } from './bottom-sheet-body.web';
 import { useSwipeToClose } from './bottom-sheet-swipe.web';
+import type { BottomSheetProps } from './bottom-sheet.types';
 
 type SurfaceProps = {
   open: boolean;
@@ -13,7 +14,7 @@ type SurfaceProps = {
   onCloseAutoFocus?: (event: Event) => void;
   dismissible?: boolean;
   expandable?: boolean;
-  initialSize?: 'compact' | 'expanded';
+  initialSize?: BottomSheetProps['initialSize'];
   footer?: React.ReactNode;
   label?: string;
   // A hidden title for a sheet whose content has none of its own.

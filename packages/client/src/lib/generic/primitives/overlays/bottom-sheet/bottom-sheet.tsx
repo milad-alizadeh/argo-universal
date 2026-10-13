@@ -86,7 +86,7 @@ function useSheetDetents(
   props: Pick<BottomSheetProps, 'fit' | 'initialSize'>,
 ): ModifierConfig[] {
   const [selection, setSelection] = useState<PresentationDetent>(
-    props.initialSize === 'expanded' ? 'large' : { height: 320 },
+    initialDetent(props.initialSize),
   );
   return props.fit
     ? []
@@ -96,6 +96,13 @@ function useSheetDetents(
           onSelectionChange: setSelection,
         }),
       ];
+}
+
+function initialDetent(
+  size: BottomSheetProps['initialSize'],
+): PresentationDetent {
+  if (size === 'expanded') return 'large';
+  return size === 'medium' ? 'medium' : { height: 320 };
 }
 
 // The sheet's own fill matches the content's, so the strip under it in the safe area is not grey.

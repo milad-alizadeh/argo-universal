@@ -19,6 +19,6 @@ export interface BottomSheetProps {
   dismissible?: boolean;
   footer?: ReactNode;
   expandable?: boolean;
-  initialSize?: 'compact' | 'expanded';
+  initialSize?: 'compact' | 'medium' | 'expanded';
   children: ReactNode;
 }
