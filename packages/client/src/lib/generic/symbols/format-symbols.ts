@@ -9,5 +9,4 @@ export const formatSymbols = {
   'list-number': { sf: 'list.number', material: 'format_list_numbered' },
   quote: { sf: 'text.quote', material: 'format_quote' },
   strikethrough: { sf: 'strikethrough', material: 'format_strikethrough' },
-  underline: { sf: 'underline', material: 'format_underlined' },
 } as const satisfies Record<string, SymbolSource>;

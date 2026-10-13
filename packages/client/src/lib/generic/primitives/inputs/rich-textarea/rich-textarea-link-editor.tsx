@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { PopoverContent } from '../../overlays/popover/popover';
 import { type LinkFields, LinkForm } from './rich-textarea-link-form';
-import type { FieldPlacement } from './rich-textarea-placement';
 import { SelectionPopover } from './rich-textarea-selection-popover';
+import type { FieldPlacement } from './web/rich-textarea-placement';
 
 export interface LinkEditorProps {
   // The selection being linked; the editor is closed without one.

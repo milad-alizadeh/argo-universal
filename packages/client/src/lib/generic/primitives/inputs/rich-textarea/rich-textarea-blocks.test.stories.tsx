@@ -2,7 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import {
+  exampleLabel as label,
   RichTextareaExample,
+  shortcutModifier as modifier,
   shownText,
 } from '../../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../each-layout';
@@ -20,12 +22,6 @@ const meta = {
 } satisfies Meta<typeof RichTextareaExample>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-const label = 'Message';
-// Lexical binds its shortcuts to ⌘ on Apple platforms and Ctrl elsewhere.
-const modifier = /Mac|iPhone|iPad/.test(navigator.platform)
-  ? 'Meta'
-  : 'Control';
 
 /*
  * A block shortcut and the keys inside the block: the field sends markdown and does not submit.

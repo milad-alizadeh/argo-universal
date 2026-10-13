@@ -3,6 +3,7 @@ import { withDOM } from '@lexical/headless/dom';
 import { $generateNodesFromDOM } from '@lexical/html';
 import { $isLinkNode } from '@lexical/link';
 import {
+  $createLineBreakNode,
   $createParagraphNode,
   $createTextNode,
   $getRoot,
@@ -14,8 +15,8 @@ import {
   $exportMarkdown,
   $importMarkdown,
   richTextareaNodes,
-} from '../src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-markdown';
-import { registerMarkdownOnly } from '../src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-paste';
+} from '../src/lib/generic/primitives/inputs/rich-textarea/web/rich-textarea-markdown';
+import { registerMarkdownOnly } from '../src/lib/generic/primitives/inputs/rich-textarea/web/rich-textarea-paste';
 
 // The editor with the web drawing's nodes, without a DOM.
 function headlessEditor(): LexicalEditor {
@@ -78,13 +79,23 @@ export function linksIn(markdown: string): ShownLink[] {
   );
 }
 
+// One paragraph as typed: text where no shortcut fired, with ⇧Return's line breaks.
+function $appendTypedParagraph(text: string): void {
+  const [first = '', ...rest] = text.split('\n');
+  const paragraph = $createParagraphNode().append($createTextNode(first));
+  for (const line of rest)
+    paragraph.append($createLineBreakNode(), $createTextNode(line));
+  $getRoot().append(paragraph);
+}
+
 // Typed text that a shortcut did not turn into a block stays a plain paragraph.
 export function typedParagraph(text: string): string {
-  return filled(
-    () =>
-      $getRoot().append($createParagraphNode().append($createTextNode(text))),
-    $exportMarkdown,
-  );
+  return filled(() => $appendTypedParagraph(text), $exportMarkdown);
+}
+
+// Typed text kept as a draft, then restored into a new editor and kept again.
+export function typedThenRestored(text: string): string {
+  return roundTrip(typedParagraph(text));
 }
 
 const textFormats: TextFormatType[] = [

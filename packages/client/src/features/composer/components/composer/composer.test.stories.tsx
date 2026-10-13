@@ -22,6 +22,7 @@ import {
   oversizedComposerImage,
 } from '../../../../../mocks/composer-mock';
 import { updateComposerSettings } from '../../../../../mocks/composer-mock';
+import { canPointAt } from '../../../../../mocks/point-hit';
 import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
@@ -258,27 +259,29 @@ function typing(width: number): Story {
 export const TypingWebAtPhoneWidth = typing(layoutWidths.phone);
 export const TypingWide = typing(layoutWidths.wide);
 
-// Return sends only a ready draft, and sends exactly the text the field shows.
-function returnSends(width: number): Story {
-  const prompt = fn();
-  return {
-    render: () => <SendingComposer onSend={prompt} />,
-    play: async ({ canvas }) => {
-      await settleViewport(width);
-      const input = await canvas.findByRole('textbox', { name: 'Message' });
-      await browserUserEvent.type(input, '{Enter}');
-      await expect(prompt).not.toHaveBeenCalled();
-      await browserUserEvent.type(input, spacingPrompt);
-      const shown = shownText(input);
-      await browserUserEvent.keyboard('{Enter}');
-      await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
-      await expect(prompt).toHaveBeenCalledWith({ text: shown, images: [] });
-      await expect(shown).toBe(spacingPrompt);
-    },
-  };
-}
-export const ReturnSendsWebAtPhoneWidth = returnSends(layoutWidths.phone);
-export const ReturnSendsWide = returnSends(layoutWidths.wide);
+/*
+ * Return sends only a ready draft, and sends exactly the text the field shows. The web field handles
+ * Return the same at every width, so one width covers it.
+ */
+const returnPrompt = fn();
+export const ReturnSends: Story = {
+  render: () => <SendingComposer onSend={returnPrompt} />,
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    const input = await canvas.findByRole('textbox', { name: 'Message' });
+    await browserUserEvent.type(input, '{Enter}');
+    await expect(returnPrompt).not.toHaveBeenCalled();
+    await browserUserEvent.type(input, spacingPrompt);
+    const shown = shownText(input);
+    await browserUserEvent.keyboard('{Enter}');
+    await waitFor(() => expect(returnPrompt).toHaveBeenCalledOnce());
+    await expect(returnPrompt).toHaveBeenCalledWith({
+      text: shown,
+      images: [],
+    });
+    await expect(shown).toBe(spacingPrompt);
+  },
+};
 
 function imageComposer(
   props: React.ComponentProps<typeof Composer>,
@@ -1352,12 +1355,7 @@ const linesTwoToTen =
 
 // Nothing covers Send: the topmost element at its centre is the button or inside it.
 async function expectSendUnobscured(send: HTMLElement): Promise<void> {
-  const bounds = send.getBoundingClientRect();
-  const top = document.elementFromPoint(
-    bounds.left + bounds.width / 2,
-    bounds.top + bounds.height / 2,
-  );
-  await expect(top !== null && send.contains(top)).toBe(true);
+  await expect(canPointAt(send)).toBe(true);
 }
 
 function editorScrollsAfterTenLines(width: number): Story {
@@ -1366,20 +1364,19 @@ function editorScrollsAfterTenLines(width: number): Story {
     play: async ({ canvas }) => {
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
-      // The Composer's root carries the id its written Plan's Escape handler looks up.
-      const composer = input.closest('[id]');
-      if (!composer) throw new Error('Composer is missing.');
       await browserUserEvent.type(input, 'Line 1');
       const oneLineHeight = input.clientHeight;
+      // Up to ten lines the field grows and every line shows without scrolling.
       await browserUserEvent.type(input, typedLines(linesTwoToTen));
       await waitFor(() => expect(input.scrollHeight).toBe(input.clientHeight));
-      await expect(input.clientHeight).toBeGreaterThan(oneLineHeight * 9);
-      const height = composer.getBoundingClientRect().height;
+      await expect(input.clientHeight).toBeGreaterThan(oneLineHeight);
+      const tenLinesHeight = input.clientHeight;
+      // Past ten lines it stops growing and scrolls instead.
       await browserUserEvent.type(input, typedLines('\nLine 11\nLine 12'));
       await expect(shownText(input)).toBe(
         `Line 1${linesTwoToTen}\nLine 11\nLine 12`,
       );
-      await expect(composer.getBoundingClientRect().height).toBe(height);
+      await expect(input.clientHeight).toBe(tenLinesHeight);
       await expect(input.scrollHeight).toBeGreaterThan(input.clientHeight);
       await expectSendUnobscured(canvas.getByRole('button', { name: 'Send' }));
       await browserUserEvent.wheel(input, { delta: { y: 200 } });

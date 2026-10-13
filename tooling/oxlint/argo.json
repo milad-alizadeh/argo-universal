@@ -1817,23 +1817,11 @@
       "rules": { "argo/acp-sdk-zone": "error" }
     },
     {
-      // ADR-0023: Lexical stays in the RichTextarea web drawing, its markdown module and their tests, with the tests' headless editor.
+      // ADR-0023: Lexical stays in the RichTextarea web drawing: its view, the web/ folder and their tests, with the tests' headless editor.
       "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
       "excludeFiles": [
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-view.tsx",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-keys.ts",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-links.ts",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-link-plugins.tsx",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-markdown.ts",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-value.ts",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-blocks.ts",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-paste.ts",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-editing-plugins.tsx",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-link-editing.ts",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-placement.ts",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-formats.ts",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-format-bar-plugin.tsx",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-mouse-selection.ts",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/web/**",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*",
         "packages/client/mocks/rich-textarea-headless.ts"
       ],

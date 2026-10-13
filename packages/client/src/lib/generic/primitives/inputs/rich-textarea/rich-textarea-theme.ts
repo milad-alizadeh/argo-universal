@@ -4,10 +4,19 @@ import {
 } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
 
-const listClassName = 'my-1 pl-5 marker:text-muted-foreground';
+const listClassName = cn('my-1 pl-5', markdownBlockClassNames.domListMarker);
+const heading = markdownBlockClassNames.heading;
 
 // The Feed's block and link look in the editor's DOM; a list draws its own markers, in the Feed's marker colour.
 export const blockThemeClassNames = {
+  heading: {
+    h1: heading,
+    h2: heading,
+    h3: heading,
+    h4: heading,
+    h5: heading,
+    h6: heading,
+  },
   list: {
     ul: cn('list-disc', listClassName),
     ol: cn('list-decimal', listClassName),

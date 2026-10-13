@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { type Dispatch, useEffect, useReducer } from 'react';
 import { useTRPC } from '#features/connection';
 import type { ComposerDraft } from '../components/composer/composer';
-import { type DraftOwner, draftKey } from '../state/draft-key';
+import { type DraftKey, type DraftOwner, draftKey } from '../state/draft-key';
 import { draftPrompt } from '../state/draft-prompt';
 import {
   type AttachmentError,
@@ -13,7 +13,7 @@ import {
   toAttachmentError,
   toUploadForms,
 } from '../state/image-draft';
-import { keepDraft, loadKeptDraft } from '../state/kept-draft';
+import { keptDrafts } from '../state/kept-draft';
 import { pickImages } from './pick-images';
 
 export interface ImageDraft {
@@ -42,13 +42,13 @@ function useImageUpload(): ReturnType<
 
 // Empties the text when the draft's owner changes, then restores what this Device kept for the new owner.
 function useKeptDraft(
-  key: string | undefined,
+  key: DraftKey | undefined,
   dispatch: Dispatch<ImageDraftEvent>,
 ): void {
   useEffect(() => {
     if (!key) return;
     dispatch({ type: 'ownerChanged', key });
-    void loadKeptDraft(key).then((text) => {
+    void keptDrafts.load(key).then((text) => {
       dispatch({ type: 'restored', key, text });
     });
   }, [key, dispatch]);
@@ -85,13 +85,13 @@ export function useImageDraft(owner: DraftOwner | undefined): ImageDraft {
     draft: state.draft,
     changeDraft: (draft) => {
       dispatch({ type: 'changed', draft });
-      if (key) keepDraft(key, draft.text);
+      if (key) keptDrafts.keep(key, draft.text);
     },
     attachImages,
     uploadDraftAsPrompt,
     clearDraft: () => {
       dispatch({ type: 'cleared' });
-      if (key) keepDraft(key, '');
+      if (key) keptDrafts.keep(key, '');
     },
     uploading: imageUpload.isPending,
     attachmentError: toAttachmentError(state.selectionError, imageUpload.error),

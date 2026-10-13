@@ -14,6 +14,8 @@ export const iconButtonClasses = cva(
           'bg-primary active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
       },
       disabled: { true: 'opacity-[0.38]' },
+      // A toggle that is on, such as Bold in the format bar.
+      pressed: { true: 'bg-muted' },
       size: {
         sm: 'size-11 sm:size-7',
         md: 'size-11 sm:size-8',

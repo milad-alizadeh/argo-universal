@@ -8,7 +8,8 @@ import {
   type LexicalNode,
   type RangeSelection,
 } from 'lexical';
-import type { ReturnBlock } from './rich-textarea-return';
+import type { ReturnBlock } from '../rich-textarea-return';
+import { $closest } from './rich-textarea-selection';
 
 function $moveIntoCodeBlock(selection: RangeSelection): void {
   const text = selection.getTextContent();
@@ -34,6 +35,6 @@ function $blockKind(block: LexicalNode): ReturnBlock {
 // The block the caret is in, for the Return decision.
 export function $returnBlock(selection: RangeSelection): ReturnBlock {
   const caret = selection.anchor.getNode();
-  if ([caret, ...caret.getParents()].some($isListItemNode)) return 'list-item';
+  if ($closest(caret, $isListItemNode)) return 'list-item';
   return $blockKind(caret.getTopLevelElement() ?? caret);
 }

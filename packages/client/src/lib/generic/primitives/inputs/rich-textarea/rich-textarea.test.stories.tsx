@@ -62,6 +62,32 @@ export const TypedDoubleTildeStrikethrough = typedMark({
   typed: '~~Ship~~ it',
 });
 export const TypedInlineCode = typedMark({ typed: '`Ship` it' });
+// Lexical's other spellings work as typed and are sent in the Feed's spelling.
+export const TypedStarItalic = typedMark({
+  typed: '*Ship* it',
+  sent: '_Ship_ it',
+});
+export const TypedUnderscoreBold = typedMark({
+  typed: '__Ship__ it',
+  sent: '**Ship** it',
+});
+export const TypedStarBoldItalic = typedMark({
+  typed: '***Ship*** it',
+  sent: '**_Ship_** it',
+});
+
+export const TypedHeading: Story = {
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await userEvent.type(field, '## Plan');
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('## Plan'),
+    );
+    await expect(
+      canvas.getByRole('heading', { level: 2, name: 'Plan' }),
+    ).toBeVisible();
+  },
+};
 
 function shortcutMark({ keys, sent }: { keys: string; sent: string }): Story {
   return {

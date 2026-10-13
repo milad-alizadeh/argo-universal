@@ -1,9 +1,9 @@
 import { GlassView } from 'expo-glass-effect';
 import type * as React from 'react';
 import { useResolveClassNames } from 'uniwind';
-import { hasLiquidGlass } from '#lib/generic/native-header';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { cn } from '#lib/generic/utils';
+import { liquidGlassAvailable } from './liquid-glass-available';
 import { FallbackSurface } from './liquid-glass-fallback';
 import type { LiquidGlassProps } from './liquid-glass-props';
 
@@ -15,9 +15,9 @@ const shapeClassName = {
 const glassLayout = ({ className, shape }: LiquidGlassProps): string =>
   cn(className, shapeClassName[shape]);
 
-// iOS 26 and later draw the system's Liquid Glass in the App's light or dark; earlier iOS keeps the caller's surface.
+// Where the system draws Liquid Glass, it draws it in the App's light or dark; elsewhere the caller's surface shows.
 export function LiquidGlass(props: LiquidGlassProps): React.JSX.Element {
-  if (!hasLiquidGlass || props.glass === false)
+  if (!liquidGlassAvailable || props.glass === false)
     return <FallbackSurface {...props} />;
   return <SystemGlass {...props} />;
 }

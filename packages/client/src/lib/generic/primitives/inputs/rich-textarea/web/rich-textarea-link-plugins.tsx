@@ -4,14 +4,15 @@ import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
 import type { LexicalEditor } from 'lexical';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
+import { isLinkUrl } from '#lib/generic/link-url';
+import { LinkEditor, type LinkEditorProps } from '../rich-textarea-link-editor';
+import type { LinkFields } from '../rich-textarea-link-form';
 import {
   $saveLink,
   type LinkTarget,
   registerLinkEditor,
 } from './rich-textarea-link-editing';
-import { LinkEditor, type LinkEditorProps } from './rich-textarea-link-editor';
-import type { LinkFields } from './rich-textarea-link-form';
-import { isLinkUrl, urlLinkedOnSpace } from './rich-textarea-links';
+import { urlLinkedOnSpace } from './rich-textarea-links';
 import { placementInField } from './rich-textarea-placement';
 
 const urlMatchers = [urlLinkedOnSpace];

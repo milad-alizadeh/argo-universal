@@ -19,13 +19,21 @@ function shownMarkdown(initial: string): ShownMarkdown {
   };
 }
 
+type Update = Parameters<UpdateListener>[0];
+
+// An edit, not a caret move or a value drawn from outside; exporting the whole draft on every caret move is slow.
+function isEdit({ tags, dirtyElements, dirtyLeaves }: Update): boolean {
+  if (tags.has(HISTORY_MERGE_TAG)) return false;
+  return dirtyElements.size > 0 || dirtyLeaves.size > 0;
+}
+
 function sendChanges(
   shown: ShownMarkdown,
   onChangeText: (value: string) => void,
 ): UpdateListener {
-  return ({ editorState, tags }) => {
-    if (tags.has(HISTORY_MERGE_TAG)) return;
-    const markdown = editorState.read($exportMarkdown);
+  return (update) => {
+    if (!isEdit(update)) return;
+    const markdown = update.editorState.read($exportMarkdown);
     if (shown.changesTo(markdown)) onChangeText(markdown);
   };
 }
