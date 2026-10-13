@@ -72,6 +72,10 @@ export interface ComposerProps {
   error?: string;
 }
 
+// The phone's touch target comes from hitSlop, so the controls draw at their visible size and line up with the text.
+const composerIconButton =
+  'size-7 min-h-0 min-w-0 android:min-h-0 android:min-w-0';
+
 export function Composer({
   draft,
   planProposal,
@@ -161,6 +165,7 @@ export function Composer({
         <LiquidGlass
           shape="card"
           glass={!wide}
+          interactive
           className="w-full z-10"
           fallbackClassName="rounded-2xl bg-glass-card native:bg-background shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180"
         >
@@ -203,7 +208,7 @@ export function Composer({
               onSubmit={send}
             />
           </View>
-          <View className="flex-row items-center justify-between gap-2 pl-3.75 pr-2.5 pb-2.5">
+          <View className="flex-row items-center justify-between gap-2 pl-2 pr-2.5 pb-2.5">
             <View
               pointerEvents={configurationInactive ? 'none' : 'auto'}
               className={cn('min-w-0 flex-1 flex-row items-center gap-1')}
@@ -219,7 +224,7 @@ export function Composer({
                     iconRole="control"
                     hitSlop={8}
                     accessibilityLabel="Attach"
-                    className="size-7 sm:size-7 p-0"
+                    className={cn('p-0', composerIconButton)}
                     iconClassName="text-muted-foreground"
                   />
                 }
@@ -320,8 +325,10 @@ export function Composer({
                   sendState === 'stop' ? disabled : sendState !== 'ready'
                 }
                 onPress={sendState === 'stop' ? (): void => onStop?.() : send}
+                hitSlop={8}
                 className={cn(
-                  'size-7 sm:size-7 rounded-full',
+                  'rounded-full',
+                  composerIconButton,
                   sendState === 'blocked' && 'opacity-35',
                 )}
                 iconRole="control"
