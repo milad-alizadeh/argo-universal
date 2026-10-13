@@ -66,6 +66,7 @@ export const richTextareaTransformers: Transformer[] = [
  * is escaped, where a bracket or a final backslash would end it early.
  */
 const markdownCharacters = ['*', '_', '`', '~', '\\'];
+
 const linkTextCharacters = /[[\]]|\\(?=[!-/:-@[-`{-~]|$)/g;
 
 interface Swap {
@@ -75,6 +76,7 @@ interface Swap {
 
 function swapFor(text: string): Swap {
   const standIns = unusedCharacters(text, markdownCharacters.length);
+
   return {
     shield: replacer(markdownCharacters, standIns),
     unshield: replacer(standIns, markdownCharacters),
@@ -83,6 +85,7 @@ function swapFor(text: string): Swap {
 
 function $writtenText(node: LexicalNode): string {
   const text = node.getTextContent();
+
   return $isLinkNode(node.getParent())
     ? text.replaceAll(linkTextCharacters, '\\$&')
     : text;
@@ -108,6 +111,7 @@ export function $importMarkdown(markdown: string): void {
 function $everythingWritten(): string {
   const texts = $getRoot().getAllTextNodes();
   const urls = texts.map((text) => text.getParent()).filter($isLinkNode);
+
   return [
     ...texts.map((text) => text.getTextContent()),
     ...urls.map((link) => link.getURL()),
@@ -116,6 +120,7 @@ function $everythingWritten(): string {
 
 export function $exportMarkdown(): string {
   const swap = swapFor($everythingWritten());
+
   return swap.unshield(
     $convertToMarkdownString([
       ...richTextareaTransformers,

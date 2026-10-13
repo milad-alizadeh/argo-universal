@@ -27,7 +27,9 @@ type LoginInput = {
   closeTimeoutMs?: number;
   terminalSupported?: boolean;
 };
+
 const updateRejections = createRejectionCounter('ACP login updates');
+
 const rejectLoginUpdate = (notification: SessionNotification): undefined => {
   updateRejections.report(
     'Rejected login Session update',
@@ -60,6 +62,7 @@ export class AcpLoginConnection {
     input.callbacks.signal.addEventListener('abort', this.abort, {
       once: true,
     });
+
     if (input.callbacks.signal.aborted) this.abort();
   }
   public async initialize(): Promise<LoginAgentConnection> {
@@ -69,6 +72,7 @@ export class AcpLoginConnection {
       { elicitation: { url: {} }, terminalAuth: this.input.terminalSupported },
     );
     this.methods = this.offeredMethods();
+
     return {
       methods: this.methods,
       authenticate: (methodId) => this.authenticate(methodId),
@@ -78,11 +82,14 @@ export class AcpLoginConnection {
   }
   private offeredMethods(): readonly LoginAgentMethod[] {
     if (!this.initialization) return [];
+
     return loginMethods(this.initialization, this.input.terminalSupported);
   }
   private requireMethod(methodId: string): void {
     this.input.callbacks.signal.throwIfAborted();
+
     if (this.closing) throw new Error('Login connection is closed');
+
     if (!this.methods.some((method) => method.id === methodId))
       throw new Error('Authentication method is not supported');
   }
@@ -98,6 +105,7 @@ export class AcpLoginConnection {
   }
   private async authenticate(methodId: string): Promise<void> {
     this.requireMethod(methodId);
+
     try {
       await this.dispatchAuthenticate(methodId);
     } finally {
@@ -107,10 +115,12 @@ export class AcpLoginConnection {
   public checkReady(): Promise<LoginAgentOutcome> {
     if (!this.initialization)
       throw new Error('Agent initialization is unavailable');
+
     return this.status.check(this.initialization);
   }
   public close(): Promise<void> {
     this.closing ??= this.terminate();
+
     return this.closing;
   }
   private async terminate(): Promise<void> {

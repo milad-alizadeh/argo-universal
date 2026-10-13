@@ -38,6 +38,7 @@ function SectionButton({
   ...navigation
 }: DrawerNavigation & { section: Section }): React.JSX.Element {
   const count = sectionAttentionCount(section, navigation.attentionCount);
+
   return (
     <NavigationItem
       {...shellSections[section]}
@@ -72,6 +73,7 @@ function SectionButtons(navigation: DrawerNavigation): React.JSX.Element {
 // Plain translucent glass: over a still, soft glow a blur would cost a filter pass and show nothing.
 function DrawerGlass(navigation: DrawerNavigation): React.JSX.Element {
   const { top } = useSafeAreaInsets();
+
   return (
     <View
       className={cn('flex-1 bg-glass px-5 pb-8', contentEdgeShadow)}

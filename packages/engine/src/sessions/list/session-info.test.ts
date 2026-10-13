@@ -24,6 +24,7 @@ const stored = SessionRecord.parse({
   createdAt: 10,
   updatedAt: 20,
 });
+
 const idle: SessionInfoInput = {
   row: stored,
   turns: [],
@@ -34,6 +35,7 @@ const idle: SessionInfoInput = {
   liveHeaderRows: [],
   children: [],
 };
+
 const live = {
   activeTurnId: 'turn-1',
   activeTurnStartedAt: 50,
@@ -41,6 +43,7 @@ const live = {
   elicitationQueue: [],
   failure: null,
 };
+
 const turn: Turn = {
   id: 'turn-1',
   sessionId: 'session-1',
@@ -52,6 +55,7 @@ const turn: Turn = {
   usage: null,
   model: null,
 };
+
 const information = {
   sessionId: 'session-1',
   projectId: 'project-1',
@@ -367,6 +371,7 @@ const rules: { rule: string; input: SessionInfoInput; expected: unknown }[] = [
     },
   },
 ];
+
 it.each(rules)('$rule', ({ input, expected }): void => {
   const before = structuredClone(input);
   expect(toSessionInfo(input)).toEqual(expected);

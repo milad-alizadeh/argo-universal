@@ -4,6 +4,7 @@ import { useWide } from './use-wide';
 
 export function WideMock(): React.JSX.Element {
   const wide = useWide();
+
   return (
     <View>
       <Text>{wide ? 'Wide layout' : 'Phone layout'}</Text>

@@ -18,7 +18,9 @@ const meta = {
   ),
   args: { row: recordedEdit('agent-1') },
 } satisfies Meta<typeof EditRow>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const smallEdit: RecordedEdit = {
@@ -30,7 +32,9 @@ const smallEdit: RecordedEdit = {
   line: 'hello Argo',
   summary: false,
 };
+
 export const SmallEditPhone = editRow(layoutWidths.phone, smallEdit);
+
 export const SmallEditWide = editRow(layoutWidths.wide, smallEdit);
 
 const smallPatch: RecordedEdit = {
@@ -42,7 +46,9 @@ const smallPatch: RecordedEdit = {
   line: 'gamma',
   summary: true,
 };
+
 export const SmallPatchPhone = editRow(layoutWidths.phone, smallPatch);
+
 export const SmallPatchWide = editRow(layoutWidths.wide, smallPatch);
 
 const newFile: RecordedEdit = {
@@ -54,7 +60,9 @@ const newFile: RecordedEdit = {
   line: '# Todo',
   summary: false,
 };
+
 export const NewFilePhone = editRow(layoutWidths.phone, newFile);
+
 export const NewFileWide = editRow(layoutWidths.wide, newFile);
 
 const newFileFromPatch: RecordedEdit = {
@@ -66,10 +74,12 @@ const newFileFromPatch: RecordedEdit = {
   line: 'hello',
   summary: true,
 };
+
 export const NewFileFromPatchPhone = editRow(
   layoutWidths.phone,
   newFileFromPatch,
 );
+
 export const NewFileFromPatchWide = editRow(
   layoutWidths.wide,
   newFileFromPatch,
@@ -79,6 +89,7 @@ export const FailedEdit: Story = {
   args: { row: recordedEdit('agent-2', 'edit-failure') },
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
+
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       const feed = within(canvas.getByTestId('edit-feed'));

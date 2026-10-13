@@ -9,6 +9,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 const prompt = [{ type: 'text' as const, text: 'Fix the build' }];
+
 const worktreeInput = {
   ...emptySessionInput,
   checkout: { type: 'worktree' as const, baseBranch: 'main' },
@@ -18,16 +19,19 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
   'the public empty %s Session becomes readable without a Turn and awaits closure',
   async (agent) => {
     const host = await startAcpEngine({ steps: [] }, undefined, agent);
+
     const created = await host.caller.session.new({
       ...emptySessionInput,
       agent,
     });
+
     const feed = (
       await host.caller.feed.subscribe({
         sessionId: created.sessionId,
         after: null,
       })
     )[Symbol.asyncIterator]();
+
     const first = await feed.next();
     expect(first.value).toMatchObject({
       type: 'snapshot',
@@ -59,22 +63,28 @@ const startWorktreeSession = async (): Promise<{
   sessionId: string;
   worktree: string;
   readBranches: () => string;
-  readRow: () => unknown;
+  readRow: () => Pick<typeof session.$inferSelect, 'id'> | undefined;
 }> => {
   const openings: NewSessionRequest[] = [];
+
   const host = await startAcpEngine({
     steps: [],
     responses: { 'session/new': [{ requests: openings }] },
   });
+
   const { sessionId } = await host.caller.session.new(worktreeInput);
+
   const projectPath = host.database
     .select({ path: project.path })
     .from(project)
     .where(eq(project.id, emptySessionInput.projectId))
     .get()?.path;
+
   const worktree = openings[0]?.cwd;
+
   if (!projectPath || !worktree)
     throw new Error('The worktree Session did not open in a worktree');
+
   return {
     host,
     sessionId,
@@ -104,6 +114,7 @@ const startWorktreeSession = async (): Promise<{
 it('closing a Session no prompt reached deletes its row, worktree and argo branch', async () => {
   const { host, sessionId, worktree, readBranches, readRow } =
     await startWorktreeSession();
+
   const opened = { worktree: existsSync(worktree), branches: readBranches() };
 
   await host.caller.session.close({ sessionId });
@@ -124,6 +135,7 @@ it('closing a Session no prompt reached deletes its row, worktree and argo branc
 it('closing a prompted Session keeps its row, worktree and argo branch', async () => {
   const { host, sessionId, worktree, readBranches, readRow } =
     await startWorktreeSession();
+
   await host.caller.session.prompt({ sessionId, prompt });
   await waitForAcpSessionIdle(host, sessionId);
 

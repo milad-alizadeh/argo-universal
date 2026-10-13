@@ -12,28 +12,34 @@ import {
 // A removable launcher for the fixture program, so the saved executable can disappear.
 const writeLauncher = (): string => {
   const [entry] = customAgentDefinition.args;
+
   if (!entry) throw new Error('Missing scripted Agent program');
   const directory = mkdtempSync(join(tmpdir(), 'argo-custom-program-'));
   onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
   const launcher = join(directory, 'agent.mjs');
   writeFileSync(launcher, `await import('${pathToFileURL(entry).href}');`);
+
   return launcher;
 };
 
 it('lists an enabled custom Agent with availability from a fresh check, not from its saved record', async () => {
   const program = writeLauncher();
   const host = await startCustomAgentEngine();
+
   const registration = await host.caller.agents.registerCustom({
     ...customAgentDefinition,
     args: [program, ...customAgentDefinition.args.slice(1)],
   });
+
   if (registration.status !== 'ready') throw new Error(registration.failure);
+
   const listed = (): Promise<AgentInfo | undefined> =>
     host.caller.agents
       .list()
       .then((agents) =>
         agents.find(({ agent }) => agent === registration.agentId),
       );
+
   await expect(listed()).resolves.toMatchObject({
     label: 'Fixture ACP',
     availability: 'available',
@@ -52,9 +58,11 @@ it('lists an enabled custom Agent with availability from a fresh check, not from
 
 it('leaves a disabled custom Agent out of the list', async () => {
   const host = await startCustomAgentEngine();
+
   const registration = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registration.status !== 'ready') throw new Error(registration.failure);
   await host.caller.agents.setEnabled({
     agentId: registration.agentId,

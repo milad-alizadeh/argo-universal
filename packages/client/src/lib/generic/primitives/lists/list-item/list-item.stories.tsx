@@ -10,7 +10,9 @@ const meta = {
   component: ListItem,
   parameters: { screenPreview: true },
 } satisfies Meta<typeof ListItem>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

@@ -39,6 +39,7 @@ function initialGeometry({
   transitionKey,
 }: PanePlacement): PaneGeometry {
   const frameWidth = Math.max(width, contentWidth);
+
   return { width, offset, contentWidth, transitionKey, frameWidth };
 }
 
@@ -47,11 +48,13 @@ function heldPlacement(
   placement: PanePlacement,
 ): PaneGeometry {
   const { width, offset, transitionKey } = placement;
+
   const contentWidth = stableContentWidth(
     placement.contentWidth,
     width,
     held.contentWidth,
   );
+
   return { ...held, width, offset, contentWidth, transitionKey };
 }
 
@@ -61,15 +64,19 @@ function nextGeometry(
   placement: PanePlacement,
 ): PaneGeometry {
   const next = heldPlacement(held, placement);
+
   if (matches(held, next, frameKeys)) return next;
   const frameWidth = Math.max(next.width, held.width, next.contentWidth);
+
   return { ...next, frameWidth };
 }
 
 export function usePaneGeometry(placement: PanePlacement): PaneGeometry {
   const [held, setHeld] = useState(() => initialGeometry(placement));
   const next = nextGeometry(held, placement);
+
   if (matches(held, next, placementKeys)) return held;
   setHeld(next);
+
   return next;
 }

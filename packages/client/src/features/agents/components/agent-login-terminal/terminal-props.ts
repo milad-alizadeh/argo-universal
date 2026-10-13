@@ -3,6 +3,7 @@ import type {
   AgentLoginTerminalInput,
 } from '@repo/contracts';
 import type { TerminalAppearance } from './terminal-appearance';
+
 export type LoginTerminalProps = {
   appearance?: TerminalAppearance;
   enabled: boolean;

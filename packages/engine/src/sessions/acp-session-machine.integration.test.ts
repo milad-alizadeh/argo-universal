@@ -14,6 +14,7 @@ import { sessionActorId } from './session-system';
 
 const feedFlushDelayEvent =
   'xstate.after.feedFlushLimit.session.open.acp.flushing';
+
 const expectAcpState = (
   snapshot: AcpModelSnapshot,
   lease: AcpSessionLease,
@@ -23,16 +24,19 @@ const expectAcpState = (
     snapshot.matches({ open: { acp: 'opening' } })
   )
     expect(snapshot.context.activeTurnId).toBeNull();
+
   if (snapshot.matches({ open: { acp: 'idle' } })) {
     expect(snapshot.context.acpLease).toBe(lease);
     expect(snapshot.context.vendorSessionId).toBe(lease.sessionId);
     expect(snapshot.context.stored).toBe(true);
   }
+
   if (snapshot.matches({ open: { acp: 'retainingCleanup' } }))
     expect(
       snapshot.context.failure !== null ||
         snapshot.context.agentCrashes.length > 0,
     ).toBe(true);
+
   if (snapshot.matches({ open: { acp: 'replacing' } })) {
     expect(snapshot.context.activeTurnId).toBeNull();
     expect(snapshot.context.turnEnding.kind).toBe('cancel_timeout');
@@ -49,20 +53,25 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     async (entry) => {
       const host = await startAcpEngine({ steps: [] }, undefined, agentId);
       const created = await host.caller.session.new(sessionInput);
+
       const actor = findMachineActor(
         host.engine.system,
         sessionActorId(created.sessionId),
         sessionMachine,
       );
+
       if (!actor)
         throw new Error('The Session for the structural graph is missing');
+
       const { model, paths, lease } = createAcpSessionModel(
         actor.getSnapshot(),
         entry,
       );
+
       for (const path of paths)
         for (const step of path.steps) {
           expectAcpState(step.state, lease);
+
           if (step.event.type === 'session.storageFailing') {
             expect(
               step.state.matches({
@@ -71,6 +80,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
             ).toBe(true);
             expect(step.state.context.storageFailedTurn).toBe(true);
           }
+
           if (
             step.event.type === 'xstate.after.checkoutLimit.session.creating'
           ) {
@@ -80,9 +90,11 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
                 'Checkout creation exceeded checkoutLimit (10000 ms). Retry the Session.',
             });
           }
+
           if (step.event.type === feedFlushDelayEvent)
             expect(step.state.context.failure).not.toBeNull();
         }
+
       expect(
         unwalkedTransitions({
           models: [model],

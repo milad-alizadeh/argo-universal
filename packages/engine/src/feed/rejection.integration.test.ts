@@ -14,15 +14,19 @@ import {
   applyFeedChange,
   subscribe,
 } from '#mocks/feed-suite';
+
 it('rejects unreadable and missing stored rows without writing changes, then accepts the next Agent row', async () => {
   await startFeedTestHost();
   const updates = await subscribe({ epoch: 3, revision: 5 });
   await updates.next();
   let streamed = false;
+
   const firstChange = takeFeedChanges(updates, 1).then((events) => {
     streamed = true;
+
     return events;
   });
+
   const log = vi.spyOn(console, 'error').mockImplementation(() => {});
   onTestFinished(() => log.mockRestore());
   database.$client

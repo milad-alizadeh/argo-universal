@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { checkoutName, modelName } from './configuration-values';
+
 it.each([
   ['Model', 'Model'],
   ['Model (recommended)', 'Model'],
@@ -11,6 +12,7 @@ it.each([
 ])('displays model label %j as %j', (name, expected) => {
   expect(modelName({ value: 'model', name })).toBe(expected);
 });
+
 it('uses the Agent short name before its full model label', () => {
   expect(
     modelName({
@@ -20,9 +22,11 @@ it('uses the Agent short name before its full model label', () => {
     }),
   ).toBe('Short');
 });
+
 it('has no model label without a choice', () => {
   expect(modelName()).toBe('');
 });
+
 it.each([
   ['/work/project///', 'project'],
   ['C:\\work\\project\\', 'project'],
@@ -35,6 +39,7 @@ it.each([
     expected,
   );
 });
+
 it('labels a Local Checkout independently of its path', () => {
   expect(
     checkoutName({

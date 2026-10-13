@@ -15,10 +15,12 @@ export function requireLiveSessionActor(
     sessionActorId(sessionId),
     sessionMachine,
   );
+
   if (!sessionActor)
     throw new TRPCError({
       code: 'NOT_FOUND',
       message: `No Session ${sessionId}`,
     });
+
   return sessionActor;
 }

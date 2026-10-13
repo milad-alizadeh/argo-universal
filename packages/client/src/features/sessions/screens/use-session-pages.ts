@@ -12,10 +12,12 @@ import type { SessionsViewProps } from '../components/sessions-view/sessions-vie
 import type { QueryProgress } from '../state/sessions-load-state';
 
 type SessionsSearch = Pick<SessionsViewProps, 'archived' | 'query'>;
+
 type SessionPages = Pick<
   SessionsViewProps,
   'sessions' | 'loadMoreFailed' | 'isFetchingNextPage' | 'onLoadMore'
 > & { progress: QueryProgress };
+
 type SessionListQuery = UseInfiniteQueryResult<
   InfiniteData<
     inferRouterOutputs<AppRouter>['session']['list'],
@@ -29,6 +31,7 @@ function useSessionListQuery({
   query,
 }: SessionsSearch): SessionListQuery {
   const trpc = useTRPC();
+
   return useInfiniteQuery(
     trpc.session.list.infiniteQueryOptions(
       { archived, query: query || undefined },
@@ -69,6 +72,7 @@ function useLoadMore({
 // The Sessions matching a search, a page at a time.
 export function useSessionPages(search: SessionsSearch): SessionPages {
   const sessions = useSessionListQuery(search);
+
   return {
     sessions: useUniqueSessions(sessions.data),
     loadMoreFailed: sessions.isFetchNextPageError,

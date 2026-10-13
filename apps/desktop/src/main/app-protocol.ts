@@ -3,7 +3,9 @@ import { pathToFileURL } from 'node:url';
 import { net, protocol } from 'electron';
 
 const appScheme = 'app';
+
 export const appOrigin = `${appScheme}://app`;
+
 const temporaryRedirectStatus = 307;
 
 // The Expo web build inlines its style reset, and React Native Web inserts styles at runtime.
@@ -32,26 +34,33 @@ export function handleAppProtocol(exportDirectory: string): void {
   protocol.handle(appScheme, async (request): Promise<Response> => {
     const { pathname, search, hash } = new URL(request.url);
     const decodedPath = decodeURIComponent(pathname);
+
     // Expo Router reads the route from the URL, so /index.html must become /.
     if (decodedPath.endsWith('/index.html')) {
       const route = decodedPath.slice(0, -'index.html'.length);
+
       return Response.redirect(
         `${appOrigin}${route}${search}${hash}`,
         temporaryRedirectStatus,
       );
     }
+
     const filePath = path.join(exportDirectory, decodedPath);
     const relativePath = path.relative(exportDirectory, filePath);
+
     if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
       return new Response('Not found', { status: 404 });
     }
+
     const target =
       relativePath && path.extname(relativePath)
         ? filePath
         : path.join(exportDirectory, 'index.html');
+
     const response = await net.fetch(pathToFileURL(target).toString());
     const headers = new Headers(response.headers);
     headers.set('Content-Security-Policy', contentSecurityPolicy);
+
     return new Response(response.body, {
       status: response.status,
       headers,

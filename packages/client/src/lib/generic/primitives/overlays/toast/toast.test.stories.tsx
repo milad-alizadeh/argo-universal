@@ -10,7 +10,9 @@ const meta = {
   title: 'Tests/Toast',
   component: ErrorToastExample,
 } satisfies Meta<typeof ErrorToastExample>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ShowsTheFailureOnce: Story = {

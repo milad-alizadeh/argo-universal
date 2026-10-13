@@ -22,6 +22,7 @@ type HostedSheetProps = Pick<
 
 export function HostedSheetContent(props: HostedSheetProps): React.JSX.Element {
   const { width } = useWindowDimensions();
+
   return (
     <RNHostView
       matchContents={props.fit}
@@ -36,6 +37,7 @@ export function HostedSheetContent(props: HostedSheetProps): React.JSX.Element {
 
 export function SheetDragHandle(): React.JSX.Element {
   const { width } = useWindowDimensions();
+
   return (
     <ModalBottomSheet.DragHandle>
       <RNHostView matchContents modifiers={[fillMaxWidth()]}>

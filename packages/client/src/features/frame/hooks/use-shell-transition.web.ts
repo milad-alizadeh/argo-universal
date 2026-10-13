@@ -49,6 +49,7 @@ function useKeyChange<T>(
   useLayoutEffect(() => {
     const last = previous.current;
     previous.current = { value, transitionKey };
+
     if (last.transitionKey !== transitionKey) onChange(last.value);
   });
 }

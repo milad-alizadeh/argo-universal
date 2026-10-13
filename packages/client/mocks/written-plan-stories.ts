@@ -10,10 +10,12 @@ import type {
   WrittenPlanScenario,
   WrittenPlanStory,
 } from './written-plan-story-types';
+
 type DefaultArgs = Pick<
   ComponentProps<typeof Composer>,
   'draft' | 'onDraftChange' | 'onAttachImages' | 'onSend'
 >;
+
 function recordedWrittenPlan({
   agent,
   form,
@@ -23,10 +25,13 @@ function recordedWrittenPlan({
   const row = recordedAcpContent(agent).rows.find(
     (row) => row.sessionUpdate === 'plan_update' && row.plan.type === form,
   );
+
   if (!isRecordedWrittenPlan(row))
     throw new Error(`Recording needs ${form} Plan for ${agent}`);
+
   return row.plan;
 }
+
 export function openingWrittenPlan(
   scenario: WrittenPlanScenario,
   defaults: DefaultArgs,
@@ -39,6 +44,7 @@ export function openingWrittenPlan(
     play: (context) => opensWrittenPlan(scenario, context),
   };
 }
+
 export function readingLongWrittenPlan(
   { width, agent }: { width: number; agent: MockAgent },
   defaults: DefaultArgs,
@@ -53,12 +59,14 @@ export function readingLongWrittenPlan(
 }
 
 type RecordedRow = ReturnType<typeof recordedAcpContent>['rows'][number];
+
 type RecordedWrittenPlanRow = Extract<
   RecordedRow,
   { sessionUpdate: 'plan_update' }
 > & {
   plan: NonNullable<ComponentProps<typeof Composer>['writtenPlan']>;
 };
+
 function isRecordedWrittenPlan(
   row: RecordedRow | undefined,
 ): row is RecordedWrittenPlanRow {

@@ -9,6 +9,7 @@ import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
 
 const exampleAgentName = 'Example Agent';
+
 const exampleDescription = 'A compatible coding Agent';
 
 // Rows are links named "<name>, <description>, <status>".
@@ -41,6 +42,7 @@ const windowsDistribution = /(?:Binary|No distribution for \S+)/u;
 
 export async function browseAgents(page: Page): Promise<void> {
   const viewport = page.viewportSize();
+
   if (viewport && viewport.width < 600)
     await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();

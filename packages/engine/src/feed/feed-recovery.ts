@@ -20,11 +20,13 @@ type StoredFeedRow = Omit<
   payload: unknown;
   sourceRef: unknown;
 };
+
 type RecoveryRow = {
   row: StoredFeedRow;
   maxRevision: number;
   rejections: ReturnType<typeof createRejectionCounter>;
 };
+
 type RepairedRow = Pick<typeof feedRow.$inferInsert, 'state' | 'revision'> &
   Partial<Pick<typeof feedRow.$inferInsert, 'payload' | 'payloadVersion'>>;
 
@@ -40,15 +42,18 @@ const readRecoveryRow = (input: RecoveryRow): SessionUpdate | undefined => {
         expectedPayloadVersion: payloadVersion,
       },
     );
+
     return undefined;
   }
 };
+
 const recoveryFeed = (input: RecoveryRow, row: SessionUpdate): Feed => ({
   sessionId: row.sessionId,
   maxRevision: input.maxRevision,
   nextPosition: row.position + 1,
   rows: { [row.id]: row },
 });
+
 const settleReadableRow = (
   input: RecoveryRow,
   row: SessionUpdate,
@@ -56,13 +61,18 @@ const settleReadableRow = (
   const result = settleFeedTurn(recoveryFeed(input, row), row.turnId, {
     kind: 'engine_restart',
   });
+
   if ('rejection' in result) throw new Error(result.rejection);
   const settled = result.feed.rows[row.id];
+
   if (!settled) throw new Error(`Recovery lost Feed row ${row.id}`);
+
   return recoveryRowWrite(settled);
 };
+
 const recoveryRowWrite = (row: SessionUpdate): RepairedRow => {
   const written = toFeedRowWrite(row);
+
   return {
     state: written.state,
     revision: written.revision,
@@ -70,8 +80,10 @@ const recoveryRowWrite = (row: SessionUpdate): RepairedRow => {
     payloadVersion: written.payloadVersion,
   };
 };
+
 const repairRow = (input: RecoveryRow): RepairedRow => {
   const row = readRecoveryRow(input);
+
   return row
     ? settleReadableRow(input, row)
     : { state: 'settled', revision: nextFeedRevision(input.maxRevision) };
@@ -88,6 +100,7 @@ const writeRepairedRow = (
     .where(and(eq(feedRow.sessionId, row.sessionId), eq(feedRow.id, row.id)))
     .run();
 };
+
 const advanceRecoveredSession = (
   transaction: StorageTransaction,
   sessionId: string,
@@ -104,5 +117,6 @@ export const recoverStoredFeedRow = (
   const repaired = repairRow(input);
   writeRepairedRow(transaction, input.row, repaired);
   advanceRecoveredSession(transaction, input.row.sessionId, repaired.revision);
+
   return repaired.revision;
 };

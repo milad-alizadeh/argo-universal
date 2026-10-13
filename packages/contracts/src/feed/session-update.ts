@@ -14,9 +14,11 @@ import {
 } from './tool-call';
 
 export const SessionUpdateKind = z.enum(sessionUpdateKinds);
+
 export type SessionUpdateKind = z.infer<typeof SessionUpdateKind>;
 
 export const SessionUpdateState = z.enum(sessionUpdateStates);
+
 export type SessionUpdateState = z.infer<typeof SessionUpdateState>;
 
 // Fields every Feed row carries, from the `feed_row` table (ADR-0007).
@@ -49,6 +51,7 @@ export const UserMessage = z.strictObject({
   sessionUpdate: kind('user_message'),
   ...message,
 });
+
 export type UserMessage = z.infer<typeof UserMessage>;
 
 export const AgentMessage = z.strictObject({
@@ -56,6 +59,7 @@ export const AgentMessage = z.strictObject({
   sessionUpdate: kind('agent_message'),
   ...message,
 });
+
 export type AgentMessage = z.infer<typeof AgentMessage>;
 
 export const AgentThought = z.strictObject({
@@ -63,6 +67,7 @@ export const AgentThought = z.strictObject({
   sessionUpdate: kind('agent_thought'),
   ...message,
 });
+
 export type AgentThought = z.infer<typeof AgentThought>;
 
 export const ToolCallUpdate = z.strictObject({
@@ -96,6 +101,7 @@ export const ToolCallUpdate = z.strictObject({
     }),
   ),
 });
+
 export type ToolCallUpdate = z.infer<typeof ToolCallUpdate>;
 
 export const PlanUpdate = z.strictObject({
@@ -110,6 +116,7 @@ export const PlanUpdate = z.strictObject({
     }),
   ),
 });
+
 export type PlanUpdate = z.infer<typeof PlanUpdate>;
 
 export const knownCompactionStatuses = [
@@ -118,6 +125,7 @@ export const knownCompactionStatuses = [
   'failed',
   'cancelled',
 ] as const;
+
 const CompactionStatus = z.string();
 
 export const CompactionUpdate = z.strictObject({
@@ -129,9 +137,11 @@ export const CompactionUpdate = z.strictObject({
   error: z.string().optional(),
   _meta: noExtensionMeta,
 });
+
 export type CompactionUpdate = z.infer<typeof CompactionUpdate>;
 
 export const SubagentState = z.enum(['running', 'idle', 'requires_action']);
+
 export type SubagentState = z.infer<typeof SubagentState>;
 
 // ACP's `sessionId` and `state` clash with the envelope's, so both carry a `subagent` prefix.
@@ -143,9 +153,11 @@ export const SubagentUpdate = z.strictObject({
   subagentState: SubagentState.optional(),
   _meta: noExtensionMeta,
 });
+
 export type SubagentUpdate = z.infer<typeof SubagentUpdate>;
 
 export const knownNoticeSeverities = ['info', 'warning', 'error'] as const;
+
 const NoticeSeverity = z.string();
 
 export const Notice = z.strictObject({
@@ -166,6 +178,7 @@ export const Notice = z.strictObject({
     }),
   ),
 });
+
 export type Notice = z.infer<typeof Notice>;
 
 const TaskStatus = z.enum(['running', 'completed', 'failed', 'cancelled']);
@@ -179,6 +192,7 @@ export const TaskUpdate = z.strictObject({
   title: z.string(),
   _meta: noExtensionMeta,
 });
+
 export type TaskUpdate = z.infer<typeof TaskUpdate>;
 
 // One Feed row. An unknown `sessionUpdate` kind or an unknown key fails to parse.
@@ -193,4 +207,5 @@ export const SessionUpdate = z.discriminatedUnion('sessionUpdate', [
   Notice,
   TaskUpdate,
 ]);
+
 export type SessionUpdate = z.infer<typeof SessionUpdate>;

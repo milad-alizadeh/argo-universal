@@ -22,18 +22,24 @@ export function configurationEffortChoices(
   option: SelectConfiguration | undefined,
 ): SessionConfigSelectOption[] {
   const metadata = currentModelMetadata(model);
+
   if (!modelSupportsEffort(metadata)) return [];
+
   return offeredEffortChoices(option, metadata?.supportedEffortLevels);
 }
+
 function currentModelMetadata(
   model?: SelectConfiguration,
 ):
   | NonNullable<NonNullable<SessionConfigSelectOption['_meta']>['argo']>
   | undefined {
   const current = currentConfigurationChoice(model);
+
   if (!current) return undefined;
+
   return current._meta?.argo;
 }
+
 function offeredEffortChoices(
   option: SelectConfiguration | undefined,
   levels?: string[],

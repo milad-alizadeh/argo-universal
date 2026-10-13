@@ -21,15 +21,17 @@ export class AcpLoginWire {
   }
   public observe(stream: Stream): Stream {
     const writer = stream.writable.getWriter();
+
     return {
       readable: stream.readable,
       writable: new WritableStream<AnyMessage>({
         write: (message) => {
           this.retain(message);
+
           return writer.write(message);
         },
         close: () => writer.close(),
-        abort: (reason: unknown) => writer.abort(reason),
+        abort: (cause: unknown) => writer.abort(cause),
       }),
     };
   }

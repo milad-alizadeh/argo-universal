@@ -15,11 +15,13 @@ export const SessionAnswerPlanProposalInput = z.discriminatedUnion('decision', [
     feedback: z.string(),
   }),
 ]);
+
 export type SessionAnswerPlanProposalInput = z.infer<
   typeof SessionAnswerPlanProposalInput
 >;
 
 export const SessionAnswerPlanProposalOutput = z.strictObject({});
+
 export type SessionAnswerPlanProposalOutput = z.infer<
   typeof SessionAnswerPlanProposalOutput
 >;

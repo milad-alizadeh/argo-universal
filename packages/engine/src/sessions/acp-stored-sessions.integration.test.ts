@@ -2,6 +2,7 @@ import type {
   LoadSessionRequest,
   PromptRequest,
 } from '@agentclientprotocol/sdk';
+import type { SessionPromptOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { storedMessage } from '#mocks/feed';
@@ -9,6 +10,7 @@ import { FeedRowsJob } from '../feed';
 import { writeJobs } from '../storage';
 
 const nativeSessionId = 'native-thread-1';
+
 const storedHistory = [storedMessage(0), storedMessage(1)];
 
 const startEngineWithStoredSession = async (
@@ -25,6 +27,7 @@ const startEngineWithStoredSession = async (
       maxRevision: 2,
     }),
   ]);
+
   return host;
 };
 
@@ -33,10 +36,15 @@ const readStoredFeed = (
 ): ReturnType<typeof host.caller.feed.page> =>
   host.caller.feed.page({ sessionId: 'session-1', direction: 'tail' });
 
-const startEngineRefusingResume = (agentSessionCalls: {
+// The load and prompt requests the Agent received.
+interface AgentSessionCalls {
   loads: LoadSessionRequest[];
   prompts: PromptRequest[];
-}): ReturnType<typeof startEngineWithStoredSession> =>
+}
+
+const startEngineRefusingResume = (
+  agentSessionCalls: AgentSessionCalls,
+): ReturnType<typeof startEngineWithStoredSession> =>
   startEngineWithStoredSession({
     steps: [],
     responses: {
@@ -53,9 +61,10 @@ const startEngineRefusingResume = (agentSessionCalls: {
       'session/prompt': [{ requests: agentSessionCalls.prompts }],
     },
   });
+
 const promptStoredSession = (
   host: Awaited<ReturnType<typeof startAcpEngine>>,
-): Promise<unknown> =>
+): Promise<SessionPromptOutput> =>
   host.caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Continue' }],
@@ -68,10 +77,8 @@ it('refuses a prompt to an old Session the Agent cannot resume with the Agent re
 });
 
 it('keeps an unresumable old Session history as stored without loading or prompting an Agent session', async () => {
-  const agentSessionCalls: {
-    loads: LoadSessionRequest[];
-    prompts: PromptRequest[];
-  } = { loads: [], prompts: [] };
+  const agentSessionCalls: AgentSessionCalls = { loads: [], prompts: [] };
+
   const host = await startEngineRefusingResume(agentSessionCalls);
 
   await promptStoredSession(host).catch(() => {});

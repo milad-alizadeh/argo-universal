@@ -12,13 +12,19 @@ const meta = {
     onOpenProject: action('open Project'),
   },
 } satisfies Meta<typeof ProjectListView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
 export const Loading: Story = { args: { projects: { status: 'loading' } } };
+
 export const LoadError: Story = { args: { projects: { status: 'error' } } };
+
 export const NoProjects: Story = {
   args: { projects: { status: 'loaded', projects: [] } },
 };
+
 export const NoMatches: Story = { args: { initialSearch: 'nothing-here' } };

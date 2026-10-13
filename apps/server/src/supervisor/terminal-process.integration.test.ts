@@ -6,17 +6,21 @@ import { expect, it, vi, onTestFinished } from 'vitest';
 import { createActor, setup } from 'xstate';
 import { z } from 'zod';
 import { engineProcess } from './engine-process';
+
 const entry = fileURLToPath(
   new URL('../../mocks/terminal-engine.ts', import.meta.url),
 );
+
 const isAlive = (pid: number): boolean => {
   try {
     process.kill(pid, 0);
+
     return true;
   } catch {
     return false;
   }
 };
+
 it.each([
   'abrupt Engine exit',
   'Supervisor force-stop',
@@ -28,6 +32,7 @@ it.each([
     vi.stubEnv('ARGO_HOME', folder);
     vi.stubEnv('ARGO_FIXTURE_PIDFILE', join(folder, 'pids.json'));
     const events: string[] = [];
+
     const parent = setup({ actors: { engine: engineProcess } }).createMachine({
       invoke: {
         id: 'engine',
@@ -42,29 +47,37 @@ it.each([
         },
       },
     });
+
     const actor = createActor(parent).start();
     const owned: number[] = [];
     onTestFinished(async () => {
       actor.stop();
+
       for (const pid of owned) {
         try {
           process.kill(pid, 'SIGKILL');
         } catch {}
       }
+
       await rm(folder, { recursive: true, force: true });
       vi.unstubAllEnvs();
     });
     await expect
       .poll(() => events, { timeout: 20000 })
       .toContain('engine.ready');
+
     const pids = z
       .object({ engine: z.number(), terminal: z.number(), wrapper: z.number() })
       .parse(JSON.parse(await readFile(join(folder, 'pids.json'), 'utf8')));
+
     owned.push(pids.terminal, pids.wrapper);
+
     if (mode === 'stopped terminal wrapper')
       process.kill(pids.wrapper, 'SIGSTOP');
+
     if (mode !== 'Supervisor force-stop') process.kill(pids.engine, 'SIGKILL');
     const engine = actor.getSnapshot().children['engine'];
+
     if (!engine) throw new Error('Engine did not start');
     engine.send({ type: 'engine.stop' });
     await expect

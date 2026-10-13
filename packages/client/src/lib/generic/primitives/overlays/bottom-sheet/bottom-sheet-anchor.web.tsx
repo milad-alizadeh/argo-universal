@@ -5,6 +5,7 @@ export function BottomSheetAnchor(props: {
   children: ReactNode;
 }): ReactElement {
   const anchor = `--sheet-${useId().replaceAll(':', '')}`;
+
   return (
     <div style={{ width: '100%', anchorName: anchor }}>
       <BottomSheetAnchorContext.Provider value={anchor}>

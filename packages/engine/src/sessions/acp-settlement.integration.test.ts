@@ -28,6 +28,7 @@ const toolUpdates: SessionNotification['update'][] = [
   },
   { sessionUpdate: 'tool_call_update', toolCallId: 'broken', status: 'failed' },
 ];
+
 const expectedTools = [
   { toolCallId: 'waiting', status: 'cancelled', state: 'settled' },
   { toolCallId: 'running', status: 'cancelled', state: 'settled' },
@@ -36,10 +37,12 @@ const expectedTools = [
 ];
 
 type Ending = 'completion' | 'cancel' | 'agent_crash';
+
 const endingSteps = (ending: Ending): ScriptedStep[] =>
   ending === 'completion'
     ? []
     : [{ type: ending === 'cancel' ? 'wait-for-cancel' : 'hold' }];
+
 const finishTurn = async (
   host: Awaited<ReturnType<typeof startAcpEngine>>,
   sessionId: string,
@@ -53,6 +56,7 @@ const finishTurn = async (
           .length,
     )
     .toBe(5);
+
   if (ending === 'cancel') await host.caller.session.cancel({ sessionId });
   else requireScriptedProcessAt(host.agent.processes).disconnect();
 };
@@ -111,13 +115,16 @@ describe.each(appFixtureAgentIds)('%s Turn settlement', (agent) => {
         undefined,
         agent,
       );
+
       const created = await host.caller.session.new({
         ...emptySessionInput,
         agent,
       });
+
       const stream = (
         await host.caller.feed.subscribe({ ...created, after: null })
       )[Symbol.asyncIterator]();
+
       await stream.next();
       await host.caller.session.prompt({
         ...created,
@@ -125,10 +132,12 @@ describe.each(appFixtureAgentIds)('%s Turn settlement', (agent) => {
       });
       await finishTurn(host, created.sessionId, ending);
       const events = await readThrough(stream, isTurnComplete);
+
       const page = await host.caller.feed.page({
         ...created,
         direction: 'tail',
       });
+
       expect(
         page.rows.filter((row) => row.sessionUpdate === 'tool_call_update'),
       ).toMatchObject(expectedTools);

@@ -3,7 +3,9 @@ import {
   type ProcessGroupMember,
 } from '../../../lib/process-group-members';
 import { InstallCleanupError } from './cleanup-error';
+
 export type InstallerGroupMember = ProcessGroupMember;
+
 export const installerGroupMembers = (
   group: number,
 ): InstallerGroupMember[] => {

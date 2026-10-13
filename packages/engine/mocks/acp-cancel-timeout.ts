@@ -16,6 +16,7 @@ type IgnoredCancelOptions = {
   nextPromptGate?: { entered: { resolve: () => void }; waitFor: Promise<void> };
   autoExit?: boolean;
 };
+
 type IgnoredCancelEngine = {
   host: Awaited<ReturnType<typeof startAcpEngine>>;
   cancels: CancelNotification[];
@@ -25,6 +26,7 @@ type IgnoredCancelEngine = {
   cancelled: PromiseWithResolvers<CancelNotification>;
   finishSibling: PromiseWithResolvers<void>;
 };
+
 export const startIgnoredCancelEngine = async (
   agentId: string,
   options: IgnoredCancelOptions = {},
@@ -35,6 +37,7 @@ export const startIgnoredCancelEngine = async (
   const prompts: PromptRequest[] = [];
   const cancelled = Promise.withResolvers<CancelNotification>();
   const finishSibling = Promise.withResolvers<void>();
+
   const host = await startAcpEngine(
     {
       steps: [],
@@ -92,13 +95,16 @@ export const startIgnoredCancelEngine = async (
     undefined,
     agentId,
   );
+
   return { host, cancels, closes, resumes, prompts, cancelled, finishSibling };
 };
+
 export const waitForIgnoredCancelTool = async (
   host: IgnoredCancelEngine['host'],
   sessionId: string,
 ): Promise<void> => {
   const events = await host.caller.feed.subscribe({ sessionId, after: null });
+
   for await (const event of events)
     if (
       event.type === 'row.upsert' &&
@@ -120,20 +126,25 @@ export const observeCancelDeadline = async (
   rows: FeedPageOutput['rows'];
 }> => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
   try {
     await fixture.host.caller.session.cancel({ sessionId });
     await fixture.cancelled.promise;
     await vi.advanceTimersByTimeAsync(9_999);
+
     const before = {
       turns: readCancelTurns(fixture.host, sessionId),
       closes: [...fixture.closes],
       resumes: [...fixture.resumes],
     };
+
     await vi.advanceTimersByTimeAsync(1);
+
     const page = await fixture.host.caller.feed.page({
       sessionId,
       direction: 'tail',
     });
+
     return { before, rows: page.rows };
   } finally {
     vi.useRealTimers();

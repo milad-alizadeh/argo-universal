@@ -8,6 +8,7 @@ import { readThrough, isQueuedTool } from '#mocks/feed-stream-reading';
 it('partial ACP tools remain readable during storage failure and retry commits the newest complete row', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
   const completion = Promise.withResolvers<void>();
+
   const host = await startAcpEngine({
     steps: [],
     responses: {
@@ -38,10 +39,13 @@ it('partial ACP tools remain readable during storage failure and retry commits t
       ],
     },
   });
+
   const created = await host.caller.session.new(emptySessionInput);
+
   const events = (
     await host.caller.feed.subscribe({ ...created, after: null })
   )[Symbol.asyncIterator]();
+
   await events.next();
   host.database.$client.exec(
     "CREATE TRIGGER hold_acp_feed BEFORE INSERT ON feed_row WHEN NEW.session_update = 'tool_call_update' BEGIN SELECT RAISE(FAIL, 'storage pressure'); END",
@@ -50,6 +54,7 @@ it('partial ACP tools remain readable during storage failure and retry commits t
     ...created,
     prompt: [{ type: 'text', text: 'Read' }],
   });
+
   try {
     const event = (await readThrough(events, isQueuedTool)).at(-1);
     assert(event?.type === 'row.upsert');
@@ -83,6 +88,7 @@ it('partial ACP tools remain readable during storage failure and retry commits t
     host.database.$client.exec('DROP TRIGGER IF EXISTS hold_acp_feed');
     completion.resolve();
   }
+
   expect(
     host.database.$client
       .prepare(

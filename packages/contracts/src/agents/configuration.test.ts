@@ -59,6 +59,7 @@ it('rejects an environment variable named twice', () => {
     { name: 'MODE', value: 'a' },
     { name: 'MODE', value: 'b' },
   ];
+
   expect(CustomAgentDefinition.safeParse({ ...definition, env }).success).toBe(
     false,
   );

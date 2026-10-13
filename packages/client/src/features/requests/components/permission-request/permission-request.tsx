@@ -30,6 +30,7 @@ type BodyProps = PermissionRequestProps & { answers: PermissionAnswers };
 
 export function PermissionRequest(props: PermissionRequestProps): ReactNode {
   const answers = usePermissionAnswers(props);
+
   return (
     <RequestCard
       surface="tray"
@@ -56,6 +57,7 @@ function answering(answers: PermissionAnswers): Answering {
 // While denying, the footer holds Back and Deny in place of the options.
 function AnswerActions(answers: PermissionAnswers): ReactNode {
   if (answers.denying) return <DenialActions {...answers} />;
+
   return (
     <PermissionActions
       {...answers}

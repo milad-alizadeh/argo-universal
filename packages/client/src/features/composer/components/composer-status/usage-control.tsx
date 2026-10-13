@@ -14,11 +14,13 @@ import {
   unselectableTextClassName,
 } from './status-surface';
 import { StatusText } from './status-text';
+
 interface UsageProps {
   usage: NonNullable<ComposerStatusProps['usage']>;
   disabled: boolean;
   wide: boolean;
 }
+
 function UsageLimitValues({ limit }: { limit: UsageLimit }): JSX.Element {
   return (
     <View className="flex-row justify-between">
@@ -31,6 +33,7 @@ function UsageLimitValues({ limit }: { limit: UsageLimit }): JSX.Element {
     </View>
   );
 }
+
 function UsageLimitRow({ limit }: { limit: UsageLimit }): JSX.Element {
   return (
     <View className="px-4 py-3 gap-1.5">
@@ -42,6 +45,7 @@ function UsageLimitRow({ limit }: { limit: UsageLimit }): JSX.Element {
     </View>
   );
 }
+
 function UsageContent({ usage }: Pick<UsageProps, 'usage'>): JSX.Element {
   return (
     <View className="pt-1 wide:pt-3">
@@ -56,8 +60,10 @@ function UsageContent({ usage }: Pick<UsageProps, 'usage'>): JSX.Element {
     </View>
   );
 }
+
 function UsageTriggerContent({ usage, wide }: UsageProps): JSX.Element {
   const percentClass = cn(unselectableTextClassName, !wide && 'hidden');
+
   return (
     <>
       <Icon role="control" name="usage" className={mutedTextClassName} />
@@ -68,6 +74,7 @@ function UsageTriggerContent({ usage, wide }: UsageProps): JSX.Element {
     </>
   );
 }
+
 function createUsageTrigger(props: UsageProps): JSX.Element {
   return createStatusControlTrigger({
     ...props,
@@ -75,6 +82,7 @@ function createUsageTrigger(props: UsageProps): JSX.Element {
     children: <UsageTriggerContent {...props} />,
   });
 }
+
 export function UsageControl(props: UsageProps): JSX.Element {
   return (
     <ComposerPopover

@@ -12,13 +12,16 @@ import { useCustomAgentMutations } from '../hooks/use-custom-agents';
 function useRegisterAgent(): CustomAgentFormProps['onSubmit'] {
   const navigate = useNavigate();
   const { register } = useCustomAgentMutations();
+
   return async (definition) => {
     const result = await register(definition);
+
     if (result.status === 'ready')
       navigate(
         { to: 'settings-agent', agent: result.agentId },
         { replace: true },
       );
+
     return result;
   };
 }
@@ -39,6 +42,7 @@ export function CustomAgentNewScreen(): React.JSX.Element {
 
 function AddAgentForm(): React.JSX.Element {
   const navigate = useNavigate();
+
   return (
     <CustomAgentForm
       submitLabel="Add Agent"

@@ -22,6 +22,7 @@ it.each(fixtureAgents.map((adapter): string => adapter.agent))(
     const startup = Promise.withResolvers<void>();
     const began = Promise.withResolvers<NewSessionRequest>();
     const commands: PromptRequest[] = [];
+
     const host = await startEngineTestHost({
       database,
       runtimeDirectory: home,
@@ -36,8 +37,10 @@ it.each(fixtureAgents.map((adapter): string => adapter.agent))(
         agent,
       ),
     });
+
     database.update(session).set({ agent }).run();
     replaceHttpHost(host);
+
     const response = fetch(`http://127.0.0.1:${port}/trpc/session.prompt`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -46,6 +49,7 @@ it.each(fixtureAgents.map((adapter): string => adapter.agent))(
         prompt: [{ type: 'text', text: 'Too late' }],
       }),
     }).catch((): null => null);
+
     await began.promise;
     const closing = closeServer();
     startup.resolve();

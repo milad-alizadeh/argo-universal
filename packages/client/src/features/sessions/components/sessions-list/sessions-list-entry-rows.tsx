@@ -38,6 +38,7 @@ function useSessionRowContext({
     () => new Map(agents.map((agent) => [agent.agent, agent.logo])),
     [agents],
   );
+
   return useMemo(
     () => ({ agentLogos, selectedSessionId, onSelect }),
     [agentLogos, selectedSessionId, onSelect],
@@ -90,7 +91,9 @@ function renderEntry(
   headingContext: HeadingContext,
 ): React.JSX.Element {
   if (item.kind === 'empty') return <NoSessionsYet />;
+
   if (item.kind === 'session') return sessionRow(item, sessionContext);
+
   return projectHeading(item, headingContext);
 }
 
@@ -124,6 +127,7 @@ function useRenderItem(
 ): ListRows['renderItem'] {
   const sessionContext = useSessionRowContext(props);
   const headingContext = useHeadingContext(props, collapsedProjects);
+
   return useCallback(
     ({ item }: LegendListRenderItemProps<SessionsListEntry>) =>
       renderEntry(item, sessionContext, headingContext),
@@ -135,6 +139,7 @@ export function useListRows(props: SessionsListProps): ListRows {
   const collapsedProjects = useCollapsedProjects();
   const entries = useListEntries(props, collapsedProjects.collapsed);
   useAnimateReorder(entries);
+
   return {
     data: props.placeholder ? noEntries : entries,
     extraData: useExtraData(props, collapsedProjects.collapsed),

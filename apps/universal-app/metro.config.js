@@ -1,16 +1,19 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
 const path = require('node:path');
+
 // Metro-specific wrapper, not the generator's entry-swap one: Storybook renders in the (dev)/storybook route (ADR 0010).
 const {
   withStorybook,
 } = require('@storybook/react-native/metro/withStorybook');
 
 const { getDefaultConfig } = require('expo/metro-config');
+
 const { withUniwindConfig } = require('uniwind/metro');
 
 /** @import { MetroConfig } from 'expo/metro-config' */
 /** @type {MetroConfig} */
 const config = getDefaultConfig(__dirname);
+
 // Primitive aliases remain extensionless so Metro chooses each platform's drawing.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   const primitivePath = moduleName.startsWith('#primitives/')
@@ -20,6 +23,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
         moduleName.slice('#primitives/'.length),
       )
     : moduleName;
+
   return context.resolveRequest(context, primitivePath, platform);
 };
 

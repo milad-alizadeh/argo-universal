@@ -9,6 +9,7 @@ export type AcpLifetimeEvent =
   | { type: 'acp.update'; notification: SessionNotification; stale?: true }
   | { type: 'acp.failed'; error: unknown }
   | AcpRequestEvent;
+
 export const createLifetimeDestination = (
   requests: AcpSessionRequests,
   send: (event: AcpLifetimeEvent) => void,
@@ -20,6 +21,7 @@ export const createLifetimeDestination = (
   requestPermission: requests.requestPermission(send),
   createElicitation: requests.createElicitation(send),
 });
+
 export const reportFencedUpdate = (
   event: AcpLifetimeEvent,
   send: (event: AcpLifetimeEvent) => void,

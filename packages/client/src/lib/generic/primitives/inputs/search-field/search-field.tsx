@@ -33,6 +33,7 @@ export function SearchField(props: SearchFieldProps): React.JSX.Element {
   // A query left over from before, such as a restored screen, keeps the field open.
   const [open, setOpen] = useState(props.value !== '');
   const morph = { open, progress: useSearchProgress(open), geometry };
+
   return (
     <SearchRow
       {...props}
@@ -51,6 +52,7 @@ type RowProps = ControlsProps &
 
 function SearchRow(props: RowProps): React.JSX.Element {
   const style = useRowStyle();
+
   return (
     <View
       className="h-10 min-w-0 flex-1 flex-row items-center gap-1"
@@ -65,6 +67,7 @@ function SearchRow(props: RowProps): React.JSX.Element {
 
 function useRowStyle(): { height: number } | undefined {
   const { fontScale } = useWindowDimensions();
+
   return Platform.OS === 'web'
     ? undefined
     : { height: searchRowHeight * Math.max(1, fontScale) };
@@ -73,6 +76,7 @@ function useRowStyle(): { height: number } | undefined {
 function useGeometry(): [SearchFieldGeometry, LayoutHandler, LayoutHandler] {
   const [rowWidth, setRowWidth] = useState(0);
   const [triggerWidth, setTriggerWidth] = useState(0);
+
   return [
     { rowWidth, triggerWidth },
     ({ nativeEvent }) => setRowWidth(nativeEvent.layout.width),

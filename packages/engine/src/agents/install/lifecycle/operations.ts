@@ -17,6 +17,7 @@ import type { InstallBindings, OwnedInstall } from './operation-types';
 import { createInstallationReadiness } from './readiness';
 import { removeAgentInstallation } from './removal';
 import { settleAgentInstallation } from './settlement';
+
 export class AgentInstallations {
   private bindings: InstallBindings | undefined;
   private readonly active = new Map<string, OwnedInstall>();
@@ -33,6 +34,7 @@ export class AgentInstallations {
   private dependencies(): InstallBindings {
     if (!this.bindings)
       throw new Error('Agent installation is not initialized');
+
     return this.bindings;
   }
   public isBusy(agentId: string): boolean {
@@ -47,7 +49,9 @@ export class AgentInstallations {
   ): Promise<Result> {
     return this.configuration.afterCheck(agentId, () => {
       if (this.stopped) throw new Error('Engine is stopping');
+
       if (this.isReserved(agentId)) throw new Error('Agent is in use by setup');
+
       return this.configuration.run(agentId, operation);
     });
   }
@@ -67,6 +71,7 @@ export class AgentInstallations {
       throw new Error(
         'Agent is in use. Close its Sessions and finish setup first.',
       );
+
     return this.configure(agentId, operation);
   }
   public remove(agentId: string): Promise<void> {
@@ -92,8 +97,10 @@ export class AgentInstallations {
   public start(input: AgentInstallInput): AgentInstallOperation {
     if (this.stopped) throw new Error('Engine is stopping');
     const operation = startOperation(input);
+
     if (this.installationInUse(input.agentId)) return inUseOperation(operation);
     this.own(operation);
+
     return operation;
   }
   private async run(
@@ -106,6 +113,7 @@ export class AgentInstallations {
         owned,
         checking,
       );
+
       this.completed.set(owned.operation.agentId, completed);
     } finally {
       if (owned.released) this.active.delete(owned.operation.agentId);
@@ -113,7 +121,9 @@ export class AgentInstallations {
   }
   private operationFor(agentId: string): AgentInstallOperation | null {
     const owned = this.active.get(agentId);
+
     if (owned) return owned.operation;
+
     return this.completed.get(agentId) ?? null;
   }
   public async status(agentId: string): Promise<AgentInstallStatus> {
@@ -131,6 +141,7 @@ export class AgentInstallations {
     operationId: string;
   }): Promise<void> {
     const owned = this.active.get(input.agentId);
+
     if (!owned || owned.operation.operationId !== input.operationId)
       throw new Error('Installation is no longer active');
     abortInstallation(owned, 'Installation cancelled');
@@ -139,6 +150,7 @@ export class AgentInstallations {
   public async shutdown(): Promise<void> {
     this.stopped = true;
     const owned = [...this.active.values()];
+
     for (const operation of owned)
       abortInstallation(operation, 'Engine stopped');
     await Promise.all([

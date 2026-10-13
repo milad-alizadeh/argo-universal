@@ -36,6 +36,7 @@ class TerminalLoginConnection {
   }
   public async open(): Promise<LoginAgentConnection> {
     this.connection = await this.openProtocol();
+
     return {
       methods: this.connection.methods,
       authenticate: (methodId) => this.authenticate(methodId),
@@ -48,6 +49,7 @@ class TerminalLoginConnection {
   }
   private openProtocol(): Promise<LoginAgentConnection> {
     this.callbacks.signal.throwIfAborted();
+
     return createProtocolLoginAgentOpener({
       ...this.input,
       terminalSupported:
@@ -57,17 +59,21 @@ class TerminalLoginConnection {
   }
   private requireConnection(): LoginAgentConnection {
     if (!this.connection) throw new Error('Login connection is missing');
+
     return this.connection;
   }
   private async authenticate(methodId: string): Promise<void> {
     this.callbacks.signal.throwIfAborted();
+
     const method = this.requireConnection().methods.find(
       (entry) => entry.id === methodId,
     );
+
     if (!method) throw new Error('Authentication method is not supported');
     this.pending = method.terminal
       ? this.runTerminal(method.terminal)
       : this.requireConnection().authenticate(methodId);
+
     return this.pending;
   }
   private async runTerminal(
@@ -82,23 +88,26 @@ class TerminalLoginConnection {
   }
   private inputTerminal(input: AgentLoginTerminalInput): void {
     this.callbacks.signal.throwIfAborted();
+
     if (this.closing) throw new Error('Login is closed');
     this.terminal.input(input);
   }
   public close(): Promise<void> {
     this.lifetime.abort();
     this.closing ??= this.release();
+
     return this.closing;
   }
   private async release(): Promise<void> {
     this.originalCallbacks.signal.removeEventListener('abort', this.abort);
     await this.terminal.close();
-    await this.pending?.catch((error: unknown) =>
-      error instanceof ResourceCleanupError ? error.awaitCleanup() : undefined,
+    await this.pending?.catch((cause: unknown) =>
+      cause instanceof ResourceCleanupError ? cause.awaitCleanup() : undefined,
     );
     await this.connection?.close();
   }
 }
+
 const terminalLaunch = (
   subject: AgentLaunchSubject,
   terminal: NonNullable<LoginAgentConnection['methods'][number]['terminal']>,
@@ -107,11 +116,13 @@ const terminalLaunch = (
   args: [...subject.launch.args, ...terminal.args],
   env: { ...subject.launch.env, ...terminal.env },
 });
+
 export const createLoginAgentOpener =
   (input: AcpResourceInput = {}): OpenLoginAgent =>
   async (subject, callbacks) => {
     callbacks.signal.throwIfAborted();
     const connection = new TerminalLoginConnection(subject, callbacks, input);
+
     try {
       return await connection.open();
     } catch (error) {

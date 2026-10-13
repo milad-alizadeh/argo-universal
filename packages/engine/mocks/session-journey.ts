@@ -26,6 +26,7 @@ export const sessionConfiguration: Extract<
     ],
   },
 ];
+
 export const newSession: SessionNewInput = {
   projectId: 'project-1',
   agent: 'mock',
@@ -33,18 +34,22 @@ export const newSession: SessionNewInput = {
   configOptions: [{ configId: 'model', value: 'large' }],
   prompt: [{ type: 'text', text: 'Build it\nand test it' }],
 };
+
 type Observations = {
   prompts: PromptRequest[];
   resumes: ResumeSessionRequest[];
   openings: NewSessionRequest[];
   settings: SetSessionConfigOptionRequest[];
 };
+
 type SessionJourney = Awaited<ReturnType<typeof startAcpEngine>> &
   Observations & {
     git: (...arguments_: string[]) => string;
   };
+
 const configuredOptions = (value: string): SessionConfigOption[] =>
   sessionConfiguration.map((option) => ({ ...option, currentValue: value }));
+
 const appliedResponses = (
   settings: SetSessionConfigOptionRequest[],
   values: readonly string[],
@@ -55,6 +60,7 @@ const appliedResponses = (
       configOptions: configuredOptions(value),
     },
   }));
+
 const journeyScenario = (
   observed: Observations,
   values: readonly string[],
@@ -68,6 +74,7 @@ const journeyScenario = (
     'session/prompt': [{ requests: observed.prompts }],
   },
 });
+
 export const sessionJourneyGit =
   (directory: string): SessionJourney['git'] =>
   (...arguments_) =>
@@ -75,20 +82,25 @@ export const sessionJourneyGit =
       cwd: directory,
       encoding: 'utf8',
     }).trim();
+
 const createJourneyObservations = (): Observations => ({
   prompts: [],
   resumes: [],
   openings: [],
   settings: [],
 });
+
 export const startSessionJourney = async (
   values: readonly string[] = ['large'],
 ): Promise<SessionJourney> => {
   const observed = createJourneyObservations();
   const host = await startAcpEngine(journeyScenario(observed, values));
+
   const project = (await host.caller.projects.list()).find(
     ({ id }) => id === 'project-1',
   );
+
   if (!project) throw new Error('No Project');
+
   return { ...host, ...observed, git: sessionJourneyGit(project.path) };
 };

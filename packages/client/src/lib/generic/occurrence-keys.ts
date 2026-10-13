@@ -2,11 +2,14 @@
 function freeKey(base: string, used: Set<string>): string {
   let key = base;
   let count = 1;
+
   while (used.has(key)) {
     count += 1;
     key = `${base}#${count}`;
   }
+
   used.add(key);
+
   return key;
 }
 
@@ -16,5 +19,6 @@ export function withOccurrenceKeys<Item>(
   keyOf: (item: Item) => string,
 ): { item: Item; key: string }[] {
   const used = new Set<string>();
+
   return items.map((item) => ({ item, key: freeKey(keyOf(item), used) }));
 }

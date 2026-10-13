@@ -18,6 +18,7 @@ export function choosePickerOption<Value extends string>(
 ): void {
   if (props.disabled) return;
   const option = props.options.find((item) => item.value === next);
+
   if (option) commitChoice(props, option);
 }
 
@@ -34,6 +35,7 @@ export function pickerValue<Value extends string>(
 ): string {
   if (props.loading) return 'Loading…';
   const option = pickerOption(props);
+
   return option ? option.label : unchosenValue(props);
 }
 
@@ -41,6 +43,7 @@ function unchosenValue(
   props: Pick<PickerProps<string>, 'value' | 'placeholder'>,
 ): string {
   if (props.value !== undefined) return `${props.value} (unavailable)`;
+
   return props.placeholder ?? 'Choose…';
 }
 
@@ -48,6 +51,7 @@ export function pickerOptionsMessage(
   props: Pick<PickerProps<string>, 'loading' | 'error' | 'options'>,
 ): string | undefined {
   if (props.loading) return 'Loading options…';
+
   return props.error ?? emptyMessage(props.options.length);
 }
 

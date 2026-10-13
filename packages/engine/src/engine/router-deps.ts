@@ -47,6 +47,7 @@ const findLiveSession =
 // Where the Feed finds the live Session, its feed actor and the Writer.
 export function createFeedSources(input: FeedSourcesInput): FeedSources {
   const findSession = findLiveSession(input.sessions);
+
   return {
     ...input,
     findSession,
@@ -64,6 +65,7 @@ type EngineSupplied =
   | 'checkAgentLaunch'
   | 'agentLogins'
   | 'installations';
+
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
   Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>> & {
@@ -76,6 +78,7 @@ export function createAppRouterDeps(
 ): AppRouterDeps {
   const setup = createAgentSetup(input);
   bindInstallations(setup.installations, { ...input, ...setup });
+
   return {
     ...input,
     ...sources,
@@ -104,6 +107,7 @@ function createAgentSetup(
   input: AppRouterInput,
 ): Pick<AppRouterDeps, 'installations' | 'agentLogins' | 'createId'> {
   const installations = input.installations ?? createInstallations(input.home);
+
   return {
     installations,
     agentLogins: resolveAgentLogins(input, installations),
@@ -130,10 +134,12 @@ function sessionsUseAgent(
   agentId: string,
 ): boolean {
   const { acpResources, sessions: open } = sessions.getSnapshot().context;
+
   return (
     !!acpResources?.isAgentInUse(agentId) ||
     Object.values(open).some((session) => {
       const { agent } = session.getSnapshot().context;
+
       return !agent || agent === agentId;
     })
   );

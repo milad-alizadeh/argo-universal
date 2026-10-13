@@ -7,17 +7,20 @@ import {
 } from '#mocks/installation-storage';
 import { writeDatabaseJobAndWaitForCommit } from '../storage';
 import { AgentConfigurationSaveJob } from './agent-storage';
+
 it('reserves pending enablement until its real Writer retry commits', async () => {
   const host = await startInstallEngine();
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
   await waitForInstalledSelection(host);
   rejectInstallationWrites(host);
   let settled = false;
+
   const enablement = host.caller.agents
     .setEnabled({ agentId: host.agentId, enabled: false })
     .then(() => {
       settled = true;
     });
+
   await expect
     .poll(() => host.databaseWriter.getSnapshot().matches('waitingToRetry'), {
       timeout: 5000,
@@ -54,10 +57,12 @@ it('reserves a custom edit until its checked definition commits through Writer r
   );
   rejectInstallationWrites(host);
   const definition = { ...customAgentDefinition, name: 'Edited fixture' };
+
   const edited = host.caller.agents.editCustom({
     agentId: host.agentId,
     definition,
   });
+
   await expect
     .poll(() => host.databaseWriter.getSnapshot().matches('waitingToRetry'), {
       timeout: 5000,

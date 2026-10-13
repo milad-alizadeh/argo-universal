@@ -49,6 +49,7 @@ export function mergeNewestPage(
   page: FeedPageOutput,
 ): FeedState {
   const rows = keepNewerRevisions(heldPageRows(feed, page), page.rows);
+
   return {
     epoch: page.epoch,
     revision: newestRevision(feed, page),
@@ -76,8 +77,10 @@ export function mergeOlderPage(
   page: FeedPageOutput,
 ): FeedState {
   if (page.staleCursor) return mergeNewestPage(emptyFeed, page);
+
   if (page.epoch !== feed.epoch) return feed;
   const rows = keepNewerRevisions(feed.rows, page.rows);
+
   return {
     ...feed,
     rows,
@@ -93,7 +96,9 @@ export function applySubscriptionEvent(
 ): SubscriptionEventResult {
   if (event.type === 'reset')
     return { feed: { ...emptyFeed, epoch: event.epoch }, reset: true };
+
   if (event.type === 'row.upsert') return applyUpsert(feed, event);
+
   return applyHeldEvent(feed, event);
 }
 

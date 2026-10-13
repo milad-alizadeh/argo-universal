@@ -5,23 +5,29 @@ import { SqlJob } from '#mocks/storage-job';
 import { writerMachine } from './writer-machine';
 
 const writeEvent = 'writer.write';
+
 const setTitle = (title: string): SqlJob =>
   new SqlJob({ statement: `UPDATE session SET title = '${title}'` });
+
 const insertTurn = new SqlJob({
   statement:
     "INSERT INTO turn (id, session_id, status) VALUES ('turn-1', 'session-1', 'running')",
 });
+
 const startWriter = (): ReturnType<typeof openTestDatabase> & {
   writer: ReturnType<typeof createActor<typeof writerMachine>>;
 } => {
   const storage = openTestDatabase();
+
   const writer = createActor(writerMachine, {
     input: { database: storage.database, now: () => 1000, log: () => {} },
   }).start();
+
   onTestFinished(() => {
     writer.stop();
     storage.remove();
   });
+
   return { ...storage, writer };
 };
 
@@ -52,10 +58,12 @@ it('a failed prefix permanently rejects a receipt behind it while durable jobs s
     "CREATE TRIGGER reject_session BEFORE UPDATE ON session BEGIN SELECT RAISE(FAIL, 'storage unavailable'); END",
   );
   const committed = Promise.withResolvers<void>();
+
   const outcome = committed.promise.then(
     () => 'committed',
     () => 'rejected',
   );
+
   writer.send({
     type: writeEvent,
     job: setTitle('saved later'),

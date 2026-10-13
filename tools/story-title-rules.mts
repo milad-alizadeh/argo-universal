@@ -1,12 +1,15 @@
 // Where a story file sits decides the Storybook group its title starts with, so the sidebar keeps one tree.
 const clientSource = 'packages/client/src/';
+
 // The first title after `const meta` is the story file's title; a Variation's own titles come later.
 const metaTitle = /const meta\b[\s\S]*?\btitle: '([^']+)'/;
+
 const story = /\.stories\.tsx$/;
+
 const feature = /^features\/([^/]+)\//;
 
 // A feature's components group under its own name; frame draws the Shell.
-const featureGroups: Readonly<Record<string, string>> = { frame: 'Shell' };
+const featureGroups = new Map([['frame', 'Shell']]);
 
 const pascal = (name: string): string =>
   name
@@ -14,7 +17,8 @@ const pascal = (name: string): string =>
     .map((part): string => part.charAt(0).toUpperCase() + part.slice(1))
     .join('');
 
-const groupOf = (name: string): string => featureGroups[name] ?? pascal(name);
+const groupOf = (name: string): string =>
+  featureGroups.get(name) ?? pascal(name);
 
 // Only a view, a page or a file in `screens/` may draw a screen; ADR-0021 gives the custom Agent form the screen's stories.
 const screenStory =
@@ -67,11 +71,13 @@ interface Placement {
 const groupProblem = ({ file, title, groups }: Placement): string[] => {
   if (groups.some((group) => title.startsWith(group))) return [];
   const expected = groups.map(quoted).join(' or ');
+
   return [`${file}: title '${title}' must start with ${expected}`];
 };
 
 const titleProblem = (file: string, title: string): string[] => {
   const groups = allowedGroups(file.slice(clientSource.length));
+
   return groups.length === 0
     ? [`${file}: no story group belongs to this folder`]
     : groupProblem({ file, title, groups });
@@ -82,6 +88,7 @@ const isClientStory = (file: string): boolean =>
 
 const metaTitleProblem = (file: string, source: string): string[] => {
   const title = metaTitle.exec(source)?.[1];
+
   return title === undefined
     ? [`${file}: the story meta needs a literal title`]
     : titleProblem(file, title);

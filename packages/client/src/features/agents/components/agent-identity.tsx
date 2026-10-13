@@ -16,6 +16,7 @@ export function AgentIdentity(
   props: AgentIdentityProps,
 ): React.JSX.Element | null {
   if (!useWide()) return null;
+
   return (
     <FieldSection>
       <IdentityRow {...props} />

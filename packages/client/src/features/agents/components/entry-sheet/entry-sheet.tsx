@@ -16,6 +16,7 @@ export type EntrySheetField = {
   label: string;
   placeholder?: string;
 } & ReturnType<typeof touchedInput>;
+
 export type EntrySheetProps = {
   title: string;
   fields: readonly EntrySheetField[];
@@ -27,11 +28,14 @@ export type EntrySheetProps = {
   onRemove?: () => void;
   removeLabel: string;
 };
+
 type EntryInput = Pick<EntrySheetField, 'label' | 'placeholder'>;
+
 export const entryField = (
   input: EntryInput,
   field: TextField,
 ): EntrySheetField => ({ ...input, ...touchedInput(field) });
+
 // What an entry's form gives its sheet.
 export type EntrySheetEntry = Pick<
   EntrySheetProps,
@@ -41,6 +45,7 @@ export type EntrySheetEntry = Pick<
 // A phone edits one argument or variable at a time, with labelled fields, in a sheet that the backdrop closes until it holds input.
 export function EntrySheet(props: EntrySheetProps): React.JSX.Element {
   const onCloseAutoFocus = useEntryFocusReturn();
+
   return (
     <Dialog open onOpenChange={(open) => !open && props.onClose()}>
       <DialogContent
@@ -97,6 +102,7 @@ function EntrySheetActions(props: EntrySheetProps): React.JSX.Element {
 // The backdrop closes a phone sheet until it holds input, which then needs its own way out.
 function useShowsCancel(dirty: boolean): boolean {
   const wide = useWide();
+
   return wide || dirty;
 }
 

@@ -29,6 +29,7 @@ export function answered(
         answeredElsewhereMessage,
       );
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+
       // A loaded runner can draw the default viewport's card for a few frames after the resize.
       if (width === layoutWidths.phone) {
         await waitFor(() =>
@@ -47,17 +48,22 @@ export function answered(
           canvas.getByRole('button', { name: keepPlanningLabel }),
         ).toBeDisabled();
       }
+
       if (width === layoutWidths.phone) {
         await expandSheet(canvas, userEvent);
         await expect(args.onAnswer).not.toHaveBeenCalled();
+
         return;
       }
+
       await userEvent.click(
         canvas.getByRole('button', { name: expandPlanLabel }),
       );
+
       const dialog = await within(document.body).findByRole('dialog', {
         name: expandedPlanLabel,
       });
+
       await expect(
         within(dialog).getByText(answeredElsewhereMessage),
       ).toBeVisible();

@@ -47,7 +47,9 @@ export function toSessionSnapshot(
     elicitationQueue: [],
     configOptions: [],
   };
+
   let state: SessionSnapshot['state'] = 'idle';
+
   if (
     session?.matches({ open: { acp: { activeTurn: 'awaitingPermission' } } }) ||
     session?.matches({ open: { acp: { activeTurn: 'awaitingElicitation' } } })
@@ -61,6 +63,7 @@ export function toSessionSnapshot(
   ) {
     state = 'running';
   }
+
   return {
     agent: storedSession.agent,
     title: storedSession.title,

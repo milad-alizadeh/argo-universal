@@ -3,10 +3,13 @@ import type { ElicitationValues } from '../src/features/requests/components/elic
 import { elicitationRequest } from '../src/features/requests/components/request.mocks';
 
 const workQuestion = 'What should we work on next in Argo Universal?';
+
 const buildFeature = 'Build a feature';
+
 const workOptions = [buildFeature, 'Fix a bug', 'Explore an idea'].map(
   (label) => ({ const: label, title: label }),
 );
+
 export const questionsRequest: PendingElicitation = {
   ...elicitationRequest,
   message: workQuestion,
@@ -35,6 +38,7 @@ export const questionsRequest: PendingElicitation = {
     required: ['goal', 'work', 'priority'],
   },
 };
+
 export const questionsValues: ElicitationValues = {
   goal: buildFeature,
   work: [buildFeature, 'Explore an idea'],

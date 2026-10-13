@@ -46,6 +46,7 @@ export function useAgentCheck(
 function useAgentsInvalidation(): () => Promise<void> {
   const trpc = useTRPC();
   const cache = useQueryClient();
+
   return () => cache.invalidateQueries(trpc.agents.pathFilter());
 }
 
@@ -59,17 +60,21 @@ type CustomAgentMutations = {
 
 function useRegisterCustom(): CustomAgentMutations['register'] {
   const onSuccess = useAgentsInvalidation();
+
   const mutation = useMutation(
     useTRPC().agents.registerCustom.mutationOptions({ onSuccess }),
   );
+
   return (definition) => mutation.mutateAsync(definition);
 }
 
 function useEditCustom(): CustomAgentMutations['edit'] {
   const onSuccess = useAgentsInvalidation();
+
   const mutation = useMutation(
     useTRPC().agents.editCustom.mutationOptions({ onSuccess }),
   );
+
   return (agentId, definition) => mutation.mutateAsync({ agentId, definition });
 }
 

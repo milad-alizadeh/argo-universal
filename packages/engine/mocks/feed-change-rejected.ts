@@ -1,3 +1,4 @@
+import type { FeedChange } from '@repo/contracts';
 import { type Feed } from '../src/feed';
 import {
   message,
@@ -7,10 +8,11 @@ import {
   firstMessageRowId,
   messageTextField,
 } from './feed-change-inputs';
+
 interface Rejected {
   name: string;
   feed: Feed;
-  change: unknown;
+  change: FeedChange;
   rejection: RegExp;
 }
 
@@ -20,7 +22,18 @@ export const rejected: Rejected[] = [
     feed: feedWith(),
     change: {
       type: 'upsert',
-      update: { ...update(command()), status: 'stuck' },
+      update: update(
+        command({
+          content: [
+            {
+              type: 'terminal',
+              command: 'pnpm test',
+              output: 'ok\n',
+              exitStatus: { exitCode: 1.5 },
+            },
+          ],
+        }),
+      ),
     },
     rejection: /^row tool-1 does not match tool_call_update: /,
   },

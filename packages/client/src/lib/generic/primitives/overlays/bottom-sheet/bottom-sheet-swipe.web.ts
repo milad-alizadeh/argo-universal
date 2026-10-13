@@ -2,7 +2,9 @@ import { useEffect, type RefObject } from 'react';
 import type { View } from 'react-native';
 
 const dragDistance = 80;
+
 const settleTransition = 'transform 150ms ease-out';
+
 const fieldSelector = 'input, textarea, select, [contenteditable="true"]';
 
 type SheetDragOptions = {
@@ -24,14 +26,19 @@ export function useSwipeToClose(
 
 function listenForDrag(options: SheetDragOptions): () => void {
   let stopDrag: (() => void) | undefined;
+
   const start = (event: PointerEvent): void => {
     const sheet = options.sheet.current;
+
     if (!(sheet instanceof HTMLElement)) return;
+
     if (!startsDrag(event, sheet, !!options.onResize)) return;
     stopPreviousDrag(stopDrag);
     stopDrag = followPointer({ ...options, sheet, startY: event.clientY });
   };
+
   document.addEventListener('pointerdown', start);
+
   return () => {
     stopDrag?.();
     document.removeEventListener('pointerdown', start);
@@ -44,6 +51,7 @@ function startsDrag(
   expandable: boolean,
 ): boolean {
   if (!isMainPointer(event)) return false;
+
   return landsOnSheet(event.target, sheet, expandable);
 }
 
@@ -57,7 +65,9 @@ function landsOnSheet(
   expandable: boolean,
 ): boolean {
   if (!(target instanceof Element)) return false;
+
   if (!canDragFrom(target, sheet)) return false;
+
   return isGripDrag(target, expandable);
 }
 
@@ -80,16 +90,20 @@ type Drag = Omit<SheetDragOptions, 'sheet'> & {
 
 function followPointer(drag: Drag): () => void {
   const move = (event: PointerEvent): void => moveSheet(drag, event);
+
   const release = (event: PointerEvent): void => {
     stop();
     releaseDrag(drag, event);
   };
+
   drag.sheet.style.transition = '';
   const unlisten = listenToPointer(move, release);
+
   const stop = (): void => {
     unlisten();
     settleBack(drag.sheet);
   };
+
   return stop;
 }
 
@@ -104,6 +118,7 @@ function listenToPointer(
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
+
   return () => {
     window.removeEventListener('pointermove', move);
     window.removeEventListener('pointerup', release);
@@ -114,6 +129,7 @@ function listenToPointer(
 function releaseDrag(drag: Drag, event: PointerEvent): void {
   if (event.type !== 'pointerup') return;
   const distance = event.clientY - drag.startY;
+
   if (Math.abs(distance) < dragDistance) return;
   resizeOrClose(drag, distance);
 }
@@ -126,7 +142,9 @@ function settleBack(sheet: HTMLElement): void {
 function resizeOrClose(drag: Drag, distance: number): void {
   if (drag.onResize) {
     drag.onResize(distance < 0);
+
     return;
   }
+
   if (distance > 0) drag.onClose();
 }

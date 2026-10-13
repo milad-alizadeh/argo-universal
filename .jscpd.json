@@ -15,13 +15,15 @@
     "**/*.gen.*",
     "**/.rnstorybook/storybook.requires.ts",
     "**/uniwind-types.d.ts",
-    "packages/db/drizzle/**"
+    "packages/db/drizzle/**",
+    "tooling/oxlint/anti-slop/**"
   ],
   "reasons": {
     "ignore": {
       "node_modules": "Installed dependencies, not our source.",
       "*.stories.tsx": "Stories repeat the same render shape by design.",
       "tests, mocks, e2e, tools": "Not production logic; a new-clones-only gate for tests comes later.",
+      "tooling/oxlint/anti-slop": "Vendored upstream code; tooling/oxlint/anti-slop/UPSTREAM.md records its source.",
       "generated files": "Fix the generator, not the output: *.gen.*, storybook.requires.ts, uniwind-types.d.ts, packages/db/drizzle."
     },
     "baseline": "The one entry in .jscpd-baseline.json is the Claude and Codex converter row helpers; each adapter keeps its own, and a shared helper would be shallow."

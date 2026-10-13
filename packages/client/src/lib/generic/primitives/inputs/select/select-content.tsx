@@ -15,18 +15,22 @@ type ContentProps = React.ComponentProps<typeof SelectPrimitive.Content> & {
   className?: string;
   portalHost?: string;
 };
+
 const FullWindowOverlay =
   Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
+
 const animationProps = {
   className: 'z-50',
   entering: FadeIn.reduceMotion(ReduceMotion.System),
   exiting: FadeOut.reduceMotion(ReduceMotion.System),
   as: 'Pressable',
 } as const;
+
 const overlayProps = {
   style: Platform.select({ native: StyleSheet.absoluteFill }),
   asChild: Platform.OS !== 'web',
 };
+
 const scrollClassName = 'flex cursor-default items-center justify-center py-1';
 
 const scrollButtons = {
@@ -41,6 +45,7 @@ function ScrollButton({
 }): React.JSX.Element | null {
   if (Platform.OS !== 'web') return null;
   const { Component, icon } = scrollButtons[direction];
+
   return (
     <Component className={scrollClassName}>
       <Icon name={icon} role="body" />
@@ -65,11 +70,13 @@ function SelectViewport({
 
 function ContentBody(contentProps: ContentProps): React.JSX.Element {
   const { className, children, position = 'popper', ...props } = contentProps;
+
   const contentStyle = selectContentClassName({
     className,
     position,
     side: props.side,
   });
+
   return React.createElement(
     SelectPrimitive.Content,
     { ...props, className: contentStyle, position },

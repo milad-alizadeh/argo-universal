@@ -2,6 +2,7 @@ import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
 import type { IconName } from '../../symbols/icon-names';
 import type { ListSearchBarProps } from '../inputs/list-search-bar/list-search-bar';
+import type { FieldErrors } from './field-errors';
 
 export interface FieldGroupProps {
   children: ReactNode;
@@ -36,7 +37,7 @@ export interface FieldInputProps {
   // An example value shown while the field is empty, so it reads as a place to type.
   placeholder?: string;
   // Any error marks the field invalid; the section's footer, or Android's line under the field, says what is wrong.
-  errors?: readonly unknown[];
+  errors?: FieldErrors;
   // What to type, under the field on Android while it has no error; iOS and the web say it in the section's footer.
   hint?: string;
   // Code, such as a path or a command, draws in the mono face.
@@ -95,11 +96,13 @@ export interface ListItemProps {
 // The status's label, unless the value already says it.
 function distinctStatus(props: ListItemProps): string | undefined {
   const status = listItemStatus(props)?.label;
+
   return status === props.value ? undefined : status;
 }
 
 export function listItemName(props: ListItemProps): string {
   if (props.accessibilityLabel) return props.accessibilityLabel;
+
   return [props.title, props.subtitle?.text, props.value, distinctStatus(props)]
     .filter(Boolean)
     .join(', ');

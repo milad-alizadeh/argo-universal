@@ -29,7 +29,9 @@ function RoleExamples(): React.JSX.Element {
 const meta = {
   title: 'Design System/Primitives/Text',
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

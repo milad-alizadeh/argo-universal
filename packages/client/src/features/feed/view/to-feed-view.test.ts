@@ -11,6 +11,7 @@ it.each(workMocks)(
   'keeps the active Plan outside the Feed for $agent',
   ({ rows, snapshot }) => {
     const source = commandRow(rows);
+
     const first: PlanUpdate = {
       id: 'first-plan',
       sessionId: source.sessionId,
@@ -27,6 +28,7 @@ it.each(workMocks)(
         ],
       },
     };
+
     const latest: PlanUpdate = {
       ...first,
       id: 'latest-plan',
@@ -39,6 +41,7 @@ it.each(workMocks)(
         ],
       },
     };
+
     const proposal: PlanUpdate = {
       ...first,
       id: 'proposal',
@@ -49,6 +52,7 @@ it.each(workMocks)(
         content: '# Proposed work',
       },
     };
+
     expect(toFeedView([first, source, latest, proposal], snapshot)).toEqual({
       items: [{ type: 'tool_call', row: source }],
       plan: proposal.plan,
@@ -90,6 +94,7 @@ describe.each(workMocks)('command actions for $agent', ({ rows, snapshot }) => {
       status: 'in_progress',
       _meta: { argo: { commandActions: actions } },
     };
+
     expect(toFeedView([row], snapshot).items).toEqual([
       {
         type: 'group',

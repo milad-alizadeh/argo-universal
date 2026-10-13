@@ -15,6 +15,7 @@ const createProjectsReader = ({
   database,
 }: ProjectsDeps): (() => Promise<ProjectsListOutput>) => {
   const rejections = createRejectionCounter('projects');
+
   return () => readProjects(database, rejections);
 };
 

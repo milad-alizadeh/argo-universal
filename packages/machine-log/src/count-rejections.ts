@@ -1,16 +1,19 @@
 interface RejectionCounter {
-  report(detail: string, error?: unknown): void;
+  // `cause` is why the value was rejected, logged after the line.
+  report(detail: string, cause?: unknown): void;
   count(): number;
 }
 
 export function createRejectionCounter(label: string): RejectionCounter {
   let rejectedValues = 0;
+
   return {
-    report: (detail: string, error?: unknown): void => {
+    report: (detail: string, cause?: unknown): void => {
       rejectedValues = countRejection(rejectedValues);
       const line = `${label}: ${detail} #${rejectedValues}`;
-      if (error === undefined) console.error(line);
-      else console.error(line, error);
+
+      if (cause === undefined) console.error(line);
+      else console.error(line, cause);
     },
     count: (): number => rejectedValues,
   };

@@ -11,6 +11,7 @@ const isFolder = (item: DataTransferItem): boolean =>
 const droppedFiles = (transfer: DataTransfer): DroppedFiles => {
   const items = [...transfer.items].filter((item) => item.kind === 'file');
   const files = items.filter((item) => !isFolder(item));
+
   return {
     files: files.flatMap((item) => item.getAsFile() ?? []),
     folders: items.length - files.length,
@@ -20,6 +21,7 @@ const droppedFiles = (transfer: DataTransfer): DroppedFiles => {
 const allowDrop = (event: DragEvent): void => {
   if (!carriesFiles(event)) return;
   event.preventDefault();
+
   if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
 };
 
@@ -35,10 +37,12 @@ const dropOn =
 export function useFileDrop({ targetId, onDropFiles }: FileDropOptions): void {
   useEffect(() => {
     const target = document.getElementById(targetId);
+
     if (!target || !onDropFiles) return;
     const drop = dropOn(onDropFiles);
     target.addEventListener('dragover', allowDrop);
     target.addEventListener('drop', drop);
+
     return (): void => {
       target.removeEventListener('dragover', allowDrop);
       target.removeEventListener('drop', drop);

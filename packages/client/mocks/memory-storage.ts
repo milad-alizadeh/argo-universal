@@ -4,6 +4,7 @@ export function memoryStorage(): Pick<
   'getItem' | 'setItem' | 'removeItem' | 'clear'
 > {
   const values = new Map<string, string>();
+
   return {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value) && undefined,

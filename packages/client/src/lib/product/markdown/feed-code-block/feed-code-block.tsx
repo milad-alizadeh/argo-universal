@@ -33,6 +33,7 @@ function CodeBlockFrame({ children }: { children: ReactNode }): ReactElement {
 
 function SourceHeader(props: FeedCodeBlockProps): ReactElement {
   const copy = copyAction(props);
+
   return (
     <CodeBlockHeader
       title={headerTitle(props, props.language)}

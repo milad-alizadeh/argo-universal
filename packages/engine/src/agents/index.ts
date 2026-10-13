@@ -1,18 +1,24 @@
 export * from './acp';
+
 export {
   loginMachine,
   type LoginMachineInput,
   type LoginEvent,
 } from './login-machine';
+
 export { createAgentLogins } from './login';
+
 export { AgentLoginInUseError } from './login-error';
+
 export { reportsModelCallContext, promptUsageScope } from './usage-scope';
 
 export { type AgentsRouterDeps, createAgentsRouter } from './router';
+
 export {
   isAgentDisabled,
   readCustomDefinition,
 } from './configuration/configuration-sql';
+
 export type {
   AgentLaunch,
   AgentLaunchSubject,
@@ -27,7 +33,9 @@ export type {
   LoginTerminalProcess,
   LaunchLoginTerminal,
 } from './agent-launch';
+
 export { type FetchAgents } from './registry/fetch-agents';
+
 export { AgentCatalogReplaceJob } from './agent-storage';
 
 export {
@@ -36,8 +44,13 @@ export {
 } from './sync-supervisor-machine';
 
 export { AgentInstallations } from './install/lifecycle/operations';
+
 export type { InstallPorts } from './install/ports';
+
 export { readInstallSelection } from './install/selection/selection';
+
 export { resolveInstalledAgentLaunch } from './install/selection/launch';
+
 export { reconcileInterruptedInstallations } from './install/lifecycle/reconcile';
+
 export type { InstallToolInput } from './install/ports';

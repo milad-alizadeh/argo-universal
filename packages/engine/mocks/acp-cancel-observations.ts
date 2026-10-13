@@ -4,6 +4,8 @@ import type {
   SessionSnapshot,
   SessionUpdate,
 } from '@repo/contracts';
+import { turn } from '@repo/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { vi, type MockInstance } from 'vitest';
 import {
   playLateCancelUpdate,
@@ -15,12 +17,21 @@ import { closeStream, readThrough } from './feed-stream-reading';
 import { requireScriptedProcessAt } from './scripted-agent';
 
 type Host = Awaited<ReturnType<typeof startIgnoredCancelEngine>>['host'];
-export const readCancelTurns = (host: Host, sessionId: string): unknown =>
-  host.database.$client
-    .prepare(
-      'SELECT status, stop_reason FROM turn WHERE session_id = ? ORDER BY rowid',
-    )
-    .all(sessionId);
+
+export const readCancelTurns = (
+  host: Host,
+  sessionId: string,
+): {
+  status: (typeof turn.$inferSelect)['status'];
+  stop_reason: (typeof turn.$inferSelect)['stopReason'];
+}[] =>
+  host.database
+    .select({ status: turn.status, stop_reason: turn.stopReason })
+    .from(turn)
+    .where(eq(turn.sessionId, sessionId))
+    .orderBy(sql`rowid`)
+    .all();
+
 export const readCancelEnding = async (
   host: Host,
   sessionId: string,
@@ -30,6 +41,7 @@ export const readCancelEnding = async (
       row.sessionUpdate === 'tool_call_update' ||
       row.sessionUpdate === 'notice',
   );
+
 export const readCancelSibling = async (
   host: Host,
   sessionId?: string,
@@ -37,6 +49,7 @@ export const readCancelSibling = async (
   sessionId
     ? (await waitForAcpSnapshot(host, sessionId, () => true)).state
     : null;
+
 export const finishCancelSibling = async (
   host: Host,
   sessionId?: string,
@@ -50,6 +63,7 @@ type LateCancelObservation = {
   revisionBefore: number;
   revisionAfter: number;
 };
+
 const startLateObservation = async (
   host: Host,
   sessionId: string,
@@ -61,14 +75,17 @@ const startLateObservation = async (
   observed: Promise<FeedSubscribeOutput[]>;
 }> => {
   const page = await host.caller.feed.page({ sessionId, direction: 'tail' });
+
   const stream = (
     await host.caller.feed.subscribe({
       sessionId,
       after: { epoch: page.epoch, revision: page.maxRevision },
     })
   )[Symbol.asyncIterator]();
+
   await stream.next();
   const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
   const observed = readThrough(
     stream,
     (event) =>
@@ -79,8 +96,10 @@ const startLateObservation = async (
           option.currentValue === marker,
       ),
   );
+
   return { page, stream, errors, observed };
 };
+
 const rejectionLines = (calls: unknown[][], sessionId: string): string[] =>
   calls.flatMap(([line]) =>
     typeof line === 'string' &&
@@ -88,6 +107,7 @@ const rejectionLines = (calls: unknown[][], sessionId: string): string[] =>
       ? [line]
       : [],
   );
+
 export const observeLateCancelUpdate = async (
   host: Host,
   sessionId: string,
@@ -95,12 +115,14 @@ export const observeLateCancelUpdate = async (
 ): Promise<LateCancelObservation> => {
   const observation = await startLateObservation(host, sessionId, marker);
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
   try {
     await playLateCancelUpdate(
       requireScriptedProcessAt(host.agent.processes),
       marker,
     );
     const events = await observation.observed;
+
     return {
       changes: events.filter((event) => event.type.startsWith('row.')),
       diagnostics: rejectionLines(observation.errors.mock.calls, sessionId),
@@ -115,11 +137,13 @@ export const observeLateCancelUpdate = async (
     await closeStream(observation.stream);
   }
 };
+
 export const observeFencedCancelUpdate = async (
   host: Host,
   sessionId: string,
 ): Promise<string[]> => {
   const delivered = Promise.withResolvers<void>();
+
   const errors = vi.spyOn(console, 'error').mockImplementation((line) => {
     if (
       typeof line === 'string' &&
@@ -127,11 +151,13 @@ export const observeFencedCancelUpdate = async (
     )
       delivered.resolve();
   });
+
   try {
     await playCancelledToolUpdate(
       requireScriptedProcessAt(host.agent.processes),
     );
     await delivered.promise;
+
     return rejectionLines(errors.mock.calls, sessionId);
   } finally {
     errors.mockRestore();

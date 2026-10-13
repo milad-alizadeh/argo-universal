@@ -25,6 +25,7 @@ export function unwalkedTransitions<
 >({ models, paths, stateKey, eventKey }: Walk<TSnapshot, TEvent>): string[] {
   const key = (from: TSnapshot, event: TEvent, to: TSnapshot): string =>
     `${stateKey(from)} ${eventKey(event)} ${stateKey(to)}`;
+
   const edges = new Set(
     models.flatMap((model): string[] =>
       adjacencyMapToArray(model.getAdjacencyMap()).map(
@@ -32,20 +33,26 @@ export function unwalkedTransitions<
       ),
     ),
   );
+
   const walked = new Set(
     paths.flatMap((path): string[] =>
       path.steps.slice(1).map((step, index): string => {
         const from = path.steps[index];
+
         if (!from) throw new Error('A path step has no previous step.');
+
         return key(from.state, step.event, step.state);
       }),
     ),
   );
+
   if (edges.size === 0)
     throw new Error('The models have no transitions to walk.');
+
   if (paths.length >= maximumPathCount)
     throw new Error(
       `${paths.length} paths reach the cap of ${maximumPathCount}; split the model or filter its events.`,
     );
+
   return [...edges].filter((edge): boolean => !walked.has(edge));
 }

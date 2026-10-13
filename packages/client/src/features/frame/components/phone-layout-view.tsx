@@ -48,15 +48,19 @@ function useCloseOnSectionMount(
     if (shownSection.current === section) return;
     shownSection.current = section;
     const frame = requestAnimationFrame(() => setDrawerOpen(false));
+
     return (): void => cancelAnimationFrame(frame);
   }, [section, setDrawerOpen]);
 }
 
-function useDeferredClose(setDrawerOpen: SetDrawerOpen): {
+interface DeferredClose {
   deferClose: RefObject<boolean>;
   onDrawerOpenChange: (open: boolean) => void;
-} {
+}
+
+function useDeferredClose(setDrawerOpen: SetDrawerOpen): DeferredClose {
   const deferClose = useRef(false);
+
   return {
     deferClose,
     onDrawerOpenChange: (open) => {
@@ -82,6 +86,7 @@ function useSectionDrawer(pick: SectionPick): SectionDrawer {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { deferClose, onDrawerOpenChange } = useDeferredClose(setDrawerOpen);
   useCloseOnSectionMount(pick.section, setDrawerOpen);
+
   return {
     drawerOpen,
     onDrawerOpenChange,
@@ -96,6 +101,7 @@ export function PhoneLayoutView({
 }: PhoneLayoutViewProps): React.JSX.Element {
   const section = sectionOf(destination);
   const drawer = useSectionDrawer({ ...shell, section });
+
   return (
     <PhoneShell
       {...shell}

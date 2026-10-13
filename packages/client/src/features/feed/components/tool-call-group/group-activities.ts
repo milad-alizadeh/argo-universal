@@ -1,6 +1,7 @@
 import type { FeedActivity, FeedGroup } from '../../view/feed-view';
 
 type LiveToolCall = Extract<FeedGroup, { state: 'open' }>['live'];
+
 type FeedExploration = Extract<FeedActivity, { type: 'exploration' }>;
 
 export const activityKey = (activity: FeedActivity): string =>
@@ -18,6 +19,7 @@ function explorationWithout(
   liveId: string,
 ): FeedActivity[] {
   const remaining = activity.toolCalls.filter((row) => row.id !== liveId);
+
   return remaining.length ? [{ ...activity, toolCalls: remaining }] : [];
 }
 
@@ -30,13 +32,16 @@ function activityWithout(
 ): FeedActivity[] {
   if (activity.type === 'exploration')
     return explorationWithout(activity, liveId);
+
   return isLiveToolCall(activity, liveId) ? [] : [activity];
 }
 
 // The live Tool call is drawn in the group's title, so its activity leaves the list.
 export function visibleActivities(group: FeedGroup): FeedActivity[] {
   const live = liveToolCall(group);
+
   if (!live) return group.items;
+
   return group.items.flatMap((activity) =>
     activityWithout(activity, live.toolCall.id),
   );

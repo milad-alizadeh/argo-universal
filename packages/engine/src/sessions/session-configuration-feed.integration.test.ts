@@ -10,6 +10,7 @@ it('returns the chosen config value and delivers later Agent changes through the
     'small',
     'large',
   ]);
+
   const sessionId = 'session-1';
   await caller.session.setConfigOption({
     sessionId,
@@ -19,9 +20,11 @@ it('returns the chosen config value and delivers later Agent changes through the
   });
   const controller = new AbortController();
   onTestFinished(() => controller.abort());
+
   const updates = await createCaller({
     signal: controller.signal,
   }).feed.subscribe({ sessionId, after: null });
+
   const iterator = updates[Symbol.asyncIterator]();
   await iterator.next();
   expect(

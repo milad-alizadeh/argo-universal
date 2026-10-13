@@ -5,11 +5,13 @@ import { Text } from '#primitives/display/text/text';
 import { AgentChoices } from './agent-choices';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { ModelChoices } from './model-choices';
+
 interface PickerProps {
   configuration: ComposerConfigurationProps;
   page: 'agent' | 'model';
   close: () => void;
 }
+
 export function ConfigurationPage(props: PickerProps): React.JSX.Element {
   return (
     <View className="min-h-80 bg-sidebar">
@@ -18,6 +20,7 @@ export function ConfigurationPage(props: PickerProps): React.JSX.Element {
     </View>
   );
 }
+
 function ConfigurationPageHeader(props: PickerProps): React.JSX.Element {
   return (
     <View className="h-11 px-4 flex-row items-center">
@@ -29,6 +32,7 @@ function ConfigurationPageHeader(props: PickerProps): React.JSX.Element {
     </View>
   );
 }
+
 function ConfigurationBackButton({
   close,
 }: Pick<PickerProps, 'close'>): React.JSX.Element {
@@ -41,6 +45,7 @@ function ConfigurationBackButton({
     />
   );
 }
+
 function ConfigurationPageChoices({
   configuration,
   page,

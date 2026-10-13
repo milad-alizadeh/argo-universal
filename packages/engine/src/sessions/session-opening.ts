@@ -21,6 +21,7 @@ export function sendCheckedOpenSessionsCommand(
   openSessionsCommand: OpenSessionsCommand,
 ): void {
   const openSessionsSnapshot = openSessions.getSnapshot();
+
   if (!openSessionsSnapshot.can(openSessionsCommand))
     rejectOpenSessionsCommand(openSessions, openSessionsCommand.type);
   openSessions.send(openSessionsCommand);
@@ -35,11 +36,13 @@ export function requireOpenSessionActor(
     sessionActorId(sessionId),
     sessionMachine,
   );
+
   if (!sessionActor)
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: `Session ${sessionId} did not open`,
     });
+
   return sessionActor;
 }
 
@@ -51,6 +54,7 @@ function isInitialSessionStartup(
     'creating',
     { open: { acp: 'opening' } },
   ] as const;
+
   return (
     snapshot.context.agentCrashes.length === 0 &&
     initialStates.some((state): boolean => snapshot.matches(state))
@@ -70,6 +74,7 @@ async function waitForSessionReady(
           !sessionSnapshot.matches({ open: { acp: 'configuring' } }))),
     { timeout: Infinity },
   );
+
   return requireReadySession(sessionActor, commandType);
 }
 
@@ -78,9 +83,12 @@ function requireReadySession(
   commandType: SessionCommand['type'],
 ): SessionActorRef {
   const sessionSnapshot = sessionActor.getSnapshot();
+
   if (sessionSnapshot.status !== 'active') rejectClosedSession(sessionSnapshot);
+
   if (!isSessionReady(sessionSnapshot))
     rejectSessionCommand(sessionActor, commandType);
+
   return sessionActor;
 }
 
@@ -104,12 +112,15 @@ export async function openReadySession(
   commandType: SessionCommand['type'] = 'session.prompt',
 ): Promise<SessionActorRef> {
   validateSessionCommandAdmission(deps);
+
   const liveSession = findMachineActor(
     deps.sessions.system,
     sessionActorId(sessionId),
     sessionMachine,
   );
+
   if (liveSession) return waitForSessionReady(liveSession, commandType);
+
   return waitForSessionReady(openStoredSession(deps, sessionId), commandType);
 }
 
@@ -123,6 +134,7 @@ function openStoredSession(
     sessionId,
     agent: sessionRecord.agent,
   });
+
   return requireOpenSessionActor(deps.sessions, sessionId);
 }
 
@@ -131,10 +143,12 @@ function readWritableSession(
   sessionId: string,
 ): ReturnType<SessionRouterDeps['readSession']> {
   const sessionRecord = readSession(sessionId);
+
   if (sessionRecord.parentSessionId !== null)
     throw new TRPCError({
       code: 'CONFLICT',
       message: 'A Subagent is read-only',
     });
+
   return sessionRecord;
 }

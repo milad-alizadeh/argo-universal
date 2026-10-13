@@ -17,7 +17,9 @@ const meta = {
     onSelect: action('select Session'),
   },
 } satisfies Meta<typeof SessionRow>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const unreadLongTitleArchived = [

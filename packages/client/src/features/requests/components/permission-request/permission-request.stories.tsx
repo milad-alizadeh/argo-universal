@@ -46,12 +46,14 @@ const meta = {
     error: { control: 'text' },
   },
 } satisfies Meta<GalleryArgs>;
+
 export default meta;
 
 export const Overview = {
   name: 'PermissionRequest',
   render: function RequestGallery(args): React.JSX.Element {
     const request = <PermissionPreview {...galleryRequestProps(args)} />;
+
     return useWide() ? <WideGallery request={request} /> : request;
   },
 } satisfies StoryObj<GalleryArgs>;
@@ -63,6 +65,7 @@ function galleryRequestProps(args: GalleryArgs): PermissionRequestProps {
       permissionMocks.find((mock) => mock.agent === args.agent) ??
       permissionMock,
   });
+
   return permissionProps({
     ...args,
     request: selected.request,

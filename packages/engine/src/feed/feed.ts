@@ -5,6 +5,7 @@ import type { Observer, Subscription } from 'xstate';
 import { type FeedRowSources } from './feed-catch-up';
 import { readWrittenRow } from './feed-row';
 import { readQueuedFeedRow } from './feed-storage';
+
 export { streamFeed } from './feed-stream';
 
 type SnapshotEvent = Extract<
@@ -34,11 +35,13 @@ export function readFeedRow(
 ): SessionUpdate {
   feedResources.readSession(sessionId);
   const newest = findNewestRow(feedResources, { sessionId, id });
+
   if (!newest)
     throw new TRPCError({
       code: 'NOT_FOUND',
       message: `No row ${id} in Session ${sessionId}`,
     });
+
   return newest;
 }
 

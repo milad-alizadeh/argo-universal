@@ -66,6 +66,7 @@ function commandStatus(
   failed: boolean,
 ): string | undefined {
   if (failed) return failureStatus(facts);
+
   return facts.row.status === 'cancelled'
     ? stoppedStatus(facts.duration)
     : facts.duration;
@@ -86,6 +87,7 @@ export function commandState(input: CommandStateInput): CommandState {
   const failed = isFailed(facts);
   const status = commandStatus(facts, failed);
   const trailing = input.awaitingApproval ? undefined : status;
+
   return {
     disclosure: { failed, running: facts.running, trailing },
     footer: {
@@ -98,5 +100,6 @@ export function commandState(input: CommandStateInput): CommandState {
 
 export function commandCode({ command, output }: ToolCallTerminal): string {
   const shown = output.replaceAll('\r\n', '\n').replace(/\n$/, '');
+
   return shown ? `$ ${command}\n${shown}` : `$ ${command}`;
 }

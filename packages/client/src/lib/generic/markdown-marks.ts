@@ -5,6 +5,7 @@ export const markdownMarks = [
   'strikethrough',
   'code',
 ] as const;
+
 export type MarkdownMark = (typeof markdownMarks)[number];
 
 // How each mark looks.

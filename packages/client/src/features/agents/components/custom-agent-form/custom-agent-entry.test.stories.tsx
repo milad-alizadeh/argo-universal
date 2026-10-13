@@ -12,11 +12,17 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
 } satisfies Meta<typeof CustomAgentForm>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 type Play = Parameters<NonNullable<Story['play']>>[0];
+
 type Canvas = Play['canvas'];
+
 type UserEvent = Play['userEvent'];
+
 type Act = (editor: Canvas, userEvent: UserEvent) => Promise<void>;
 
 const nameError =
@@ -26,6 +32,7 @@ const leavesTheName: Act = async (editor, userEvent) => {
   await userEvent.click(editor.getByRole('textbox', { name: 'Name' }));
   await userEvent.tab();
 };
+
 const pressesSave: Act = (editor, userEvent) =>
   userEvent.click(editor.getByRole('button', { name: 'Save' }));
 
@@ -36,11 +43,13 @@ function showsTheNameErrorAfter(act: Act): Story {
       await userEvent.click(
         canvas.getByRole('link', { name: 'Add environment variable' }),
       );
+
       const editor = within(
         await within(document.body).findByRole('dialog', {
           name: 'Environment variable',
         }),
       );
+
       await expect(editor.queryByText(nameError)).toBeNull();
       await act(editor, userEvent);
       await expect(await editor.findByText(nameError)).toBeVisible();
@@ -50,5 +59,6 @@ function showsTheNameErrorAfter(act: Act): Story {
 
 export const ShowsAnErrorOnceItsFieldIsLeft: Story =
   showsTheNameErrorAfter(leavesTheName);
+
 export const ShowsEveryErrorWhenSaved: Story =
   showsTheNameErrorAfter(pressesSave);

@@ -11,6 +11,7 @@ import type { SliderProps } from './slider';
 
 export function Slider(props: SliderProps): React.JSX.Element {
   const modifiers = useSliderModifiers(props);
+
   return (
     <ControlHost matchContents={{ vertical: true }} style={{ width: '100%' }}>
       <UniversalSlider
@@ -41,6 +42,7 @@ function useSliderModifiers(
   props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
 ): React.ComponentProps<typeof UniversalSlider>['modifiers'] {
   const { tint } = useNativeTheme().colors;
+
   return [
     accessibilityLabel(props.accessibilityLabel),
     accessibilityValue(props.valueLabel),

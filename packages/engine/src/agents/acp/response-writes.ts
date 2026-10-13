@@ -3,15 +3,18 @@ import { createRejectionCounter } from '@repo/machine-log';
 import { trackReservationWork, type AcpReservation } from './reservations';
 
 type PendingWrite = ReturnType<typeof Promise.withResolvers<void>>;
+
 type WriteResult = { type: 'written' } | { type: 'failed'; error: unknown };
+
 const settleWrite = (pending: PendingWrite, result: WriteResult): void => {
   if (result.type === 'failed') pending.reject(result.error);
   else pending.resolve();
 };
+
 export class AcpResponseWrites {
   private readonly pending = new Map<JsonRpcId, PendingWrite>();
   private readonly rejections = createRejectionCounter('ACP callbacks');
-  public constructor(private readonly failed: (error: unknown) => void) {}
+  public constructor(private readonly failed: (cause: unknown) => void) {}
   public retainRequestResponseWrite(
     reservation: AcpReservation,
     requestId: JsonRpcId,
@@ -29,12 +32,13 @@ export class AcpResponseWrites {
   }
   public observeResponseWrites(protocolStream: Stream): Stream {
     const writer = protocolStream.writable.getWriter();
+
     return {
       readable: protocolStream.readable,
       writable: new WritableStream<AnyMessage>({
         write: (message) => this.write(writer, message),
         close: () => writer.close(),
-        abort: (reason: unknown) => writer.abort(reason),
+        abort: (cause: unknown) => writer.abort(cause),
       }),
     };
   }
@@ -54,6 +58,7 @@ export class AcpResponseWrites {
   private finish(message: AnyMessage, result: WriteResult): void {
     if ('method' in message) return;
     const pending = this.pending.get(message.id);
+
     if (!pending) return;
     this.pending.delete(message.id);
     settleWrite(pending, result);

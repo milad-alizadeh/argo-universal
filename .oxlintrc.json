@@ -17,8 +17,19 @@
     "**/*.gen.*",
     // Metro and `uniwind generate-artifacts` rewrite this file on every run.
     "**/uniwind-types.d.ts",
-    // Installed by the skills tool, not written in this repo.
+    // Installed by the skills tool and agent clients, not written in this repo.
+    ".agent/**",
     ".agents/**",
-    ".claude/**"
+    ".claude/**",
+    ".codex/**",
+    ".continue/**",
+    ".cursor/**",
+    ".gemini/**",
+    ".opencode/**",
+    ".pi/**",
+    ".roo/**",
+    ".windsurf/**",
+    // Vendored upstream code in upstream style; anti-slop/UPSTREAM.md says how to update it.
+    "tooling/oxlint/anti-slop/**"
   ]
 }

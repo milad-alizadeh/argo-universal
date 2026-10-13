@@ -14,6 +14,7 @@ type InstalledSession = {
   agent: AgentsCatalogOutput['agents'][number];
   created: SessionNewOutput;
 };
+
 async function openInstalledSession(): Promise<InstalledSession> {
   const project = await mkdtemp(join(tmpdir(), 'argo-installed-session-'));
   await initTestRepository(project);
@@ -22,19 +23,20 @@ async function openInstalledSession(): Promise<InstalledSession> {
     storage.remove();
     await rm(project, { recursive: true, force: true });
   });
+
   const host = await startEngineTestHost({
     database: storage.database,
     installationPorts,
-    fetchAgents: async () => ({
-      version: '1.0.0',
-      agents: [installEntry('npx')],
-    }),
+    fetchAgents: async () =>
+      JSON.stringify({ version: '1.0.0', agents: [installEntry('npx')] }),
   });
+
   await host.caller.agents.syncCatalog();
   await expect
     .poll(async () => (await host.caller.agents.catalog()).syncStatus)
     .toBe('idle');
   const agent = (await host.caller.agents.catalog()).agents[0];
+
   if (!agent) throw new Error('Catalog did not contain fixture');
   await host.caller.agents.install({ agentId: agent.id, version: '1.2.3' });
   await expect
@@ -44,6 +46,7 @@ async function openInstalledSession(): Promise<InstalledSession> {
           .operation?.status,
     )
     .toBe('installed');
+
   const created = await host.caller.session.new({
     projectId: 'project-1',
     agent: agent.id,
@@ -51,6 +54,7 @@ async function openInstalledSession(): Promise<InstalledSession> {
     configOptions: [],
     prompt: [],
   });
+
   return { host, agent, created };
 }
 

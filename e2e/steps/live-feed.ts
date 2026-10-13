@@ -4,7 +4,9 @@ import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 
 const feedScroll = 'feed-scroll';
+
 const commandTitle = 'Check greeting';
+
 const groupTitle = 'Ran 1 command, Edited 1 file';
 
 Given(

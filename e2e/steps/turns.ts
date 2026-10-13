@@ -10,6 +10,7 @@ const promptRowKinds = [
   'user_message',
   'agent_message',
 ];
+
 const expectSeparatePromptTurns = (rows: FeedRows): void => {
   expect(rows.map((row) => row.sessionUpdate)).toEqual(promptRowKinds);
   expect(rows.map((row) => row.state)).toEqual(
@@ -17,13 +18,16 @@ const expectSeparatePromptTurns = (rows: FeedRows): void => {
   );
   expect(rows[0]?.content).toEqual([{ type: 'text', text: 'First prompt' }]);
   expect(rows[2]?.content).toEqual([{ type: 'text', text: 'Second prompt' }]);
+
   const [firstPrompt, firstReply, secondPrompt, secondReply] = rows.map(
     (row) => row.turnId,
   );
+
   expect(firstPrompt).toBe(firstReply);
   expect(secondPrompt).toBe(secondReply);
   expect(firstPrompt).not.toBe(secondPrompt);
 };
+
 Then(
   'both submitted prompts have separate completed Turns',
   async ({ page, server }): Promise<void> => {

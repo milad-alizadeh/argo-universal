@@ -11,14 +11,18 @@ export interface CollapsedProjects {
 // Which Project headings are collapsed, and the toggle for one.
 export function useCollapsedProjects(): CollapsedProjects {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+
   const toggleProject = useCallback((id: string) => {
     setCollapsed((current) => {
       const next = new Set(current);
+
       if (next.has(id)) next.delete(id);
       else next.add(id);
+
       return next;
     });
   }, []);
+
   return { collapsed, toggleProject };
 }
 
@@ -30,6 +34,7 @@ export function useAnimateReorder(entries: SessionsListEntry[]): void {
     if (previousOrder.current !== entryOrder && Platform.OS !== 'web') {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     }
+
     previousOrder.current = entryOrder;
   }, [entryOrder]);
 }

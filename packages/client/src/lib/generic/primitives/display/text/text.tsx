@@ -50,6 +50,7 @@ function textClassName(
 
 function subscribeFontScale(onChange: () => void): () => void {
   const subscription = Dimensions.addEventListener('change', onChange);
+
   return () => subscription.remove();
 }
 
@@ -59,6 +60,7 @@ function useNativeTextKey(asChild?: boolean): number | undefined {
     () => PixelRatio.getFontScale(),
     () => 1,
   );
+
   return asChild || Platform.OS === 'web' ? undefined : fontScale;
 }
 
@@ -67,6 +69,7 @@ function Text(options: TextProps): ReactElement {
   const key = useNativeTextKey(asChild);
   const textClass = React.useContext(TextClassContext);
   const Component = asChild ? Slot : RNText;
+
   return React.createElement(Component, {
     key,
     className: textClassName({ role, className }, textClass),

@@ -26,6 +26,7 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
       const resumeGate = Promise.withResolvers<void>();
       const nextPromptEntered = Promise.withResolvers<void>();
       const nextPromptGate = Promise.withResolvers<void>();
+
       const fixture = await startIgnoredCancelEngine(agentId, {
         nextPromptGate: {
           entered: nextPromptEntered,
@@ -37,12 +38,15 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
           ],
         },
       });
+
       const { host, cancels, closes, resumes, prompts, finishSibling } =
         fixture;
+
       const sessionInput = { ...emptySessionInput, agent: agentId };
       const stuck = await host.caller.session.new(sessionInput);
       await host.caller.session.prompt({ ...stuck, prompt });
       await waitForIgnoredCancelTool(host, stuck.sessionId);
+
       const sibling = withSibling
         ? await host.caller.session.new({
             ...sessionInput,
@@ -50,6 +54,7 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
             prompt,
           })
         : null;
+
       const deadline = await observeCancelDeadline(fixture, stuck.sessionId);
       expect(deadline.before).toEqual({
         turns: [{ status: 'running', stop_reason: null }],
@@ -101,16 +106,19 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
         turns: [{ status: 'ended', stop_reason: 'cancelled' }],
       });
       const committed = await readCancelEnding(host, stuck.sessionId);
+
       for (const running of [false, true]) {
         if (running) {
           await host.caller.session.prompt({ ...stuck, prompt });
           await nextPromptEntered.promise;
         }
+
         const late = await observeLateCancelUpdate(
           host,
           stuck.sessionId,
           !running,
         );
+
         expect(late).toMatchObject({
           changes: [],
           diagnostics: Array.from({ length: running ? 1 : 2 }, () =>
@@ -122,6 +130,7 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
           committed,
         );
       }
+
       nextPromptGate.resolve();
       await waitForAcpSessionIdle(host, stuck.sessionId);
       const page = await host.caller.feed.page({ ...stuck, direction: 'tail' });

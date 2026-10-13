@@ -4,6 +4,7 @@ import { expect, it } from 'vitest';
 import clientPackage from '../package.json' with { type: 'json' };
 
 const packageRoot = join(import.meta.dirname, '..');
+
 const platformSuffix = /\.(?:ios|android|web|native)\.tsx?$/;
 
 const aliasFolders = Object.entries(clientPackage.imports).flatMap(
@@ -19,6 +20,7 @@ function fixedAliasFolder(
   target: string,
 ): { prefix: string; folder: string }[] {
   if (!/\.tsx?$/.test(target)) return [];
+
   return [
     {
       prefix: alias.slice(0, alias.indexOf('*')),
@@ -49,11 +51,15 @@ const forbiddenSpecifiers = new Set(
 
 function forbiddenImportsIn(file: string): string[] {
   const lines = readFileSync(join(packageRoot, file), 'utf8').split('\n');
+
   return lines.flatMap((line, index) =>
-    [...line.matchAll(/(['"])(#[^'"]+)\1/g)]
-      .map((match) => match[2] ?? '')
-      .filter((specifier) => forbiddenSpecifiers.has(specifier))
-      .map((specifier) => `packages/client/${file}:${index + 1} ${specifier}`),
+    [...line.matchAll(/(['"])(#[^'"]+)\1/g)].flatMap((match) => {
+      const specifier = match[2] ?? '';
+
+      return forbiddenSpecifiers.has(specifier)
+        ? [`packages/client/${file}:${index + 1} ${specifier}`]
+        : [];
+    }),
   );
 }
 

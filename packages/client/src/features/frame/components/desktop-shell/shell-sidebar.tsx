@@ -12,6 +12,7 @@ const listColumn = { paddingLeft: 8, paddingRight: 14 };
 
 function SidebarGlass({ layout }: { layout: ShellLayout }): React.JSX.Element {
   const { measures, shownListWidth, visibleListWidth } = layout;
+
   return (
     <GlassSurface
       width={measures.railWidth + shownListWidth}

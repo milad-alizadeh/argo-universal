@@ -2,18 +2,23 @@ import type { JSX } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { contextZone, fullPercent, smartZonePercent } from '../../state/status';
+
 export const successBackgroundClassName = 'bg-success';
+
 export const warningBackgroundClassName = 'bg-warning';
+
 interface MeterProps {
   percent: number;
   warning?: boolean;
   className?: string;
 }
+
 function MeterFill({ percent, warning }: MeterProps): JSX.Element {
   const zoneColor =
     contextZone(percent) === 'smart'
       ? successBackgroundClassName
       : warningBackgroundClassName;
+
   return (
     <View
       className={cn('h-full rounded-full bg-foreground', warning && zoneColor)}
@@ -21,8 +26,10 @@ function MeterFill({ percent, warning }: MeterProps): JSX.Element {
     />
   );
 }
+
 export function Meter(props: MeterProps): JSX.Element {
   const { percent, warning = false, className } = props;
+
   return (
     <View
       role="progressbar"

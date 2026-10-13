@@ -7,12 +7,14 @@ export const AgentAvailability = z.enum([
   'not_signed_in',
   'unavailable',
 ]);
+
 export type AgentAvailability = z.infer<typeof AgentAvailability>;
 
 // `refresh` probes every Agent again rather than answering from the last probe.
 export const AgentsListInput = z
   .strictObject({ refresh: z.boolean().optional() })
   .optional();
+
 export type AgentsListInput = z.infer<typeof AgentsListInput>;
 
 export const AgentInfo = z.strictObject({
@@ -24,7 +26,9 @@ export const AgentInfo = z.strictObject({
   availability: AgentAvailability,
   installStep: z.string().optional(),
 });
+
 export type AgentInfo = z.infer<typeof AgentInfo>;
 
 export const AgentsListOutput = z.array(AgentInfo);
+
 export type AgentsListOutput = z.infer<typeof AgentsListOutput>;

@@ -13,6 +13,7 @@ import { FieldSection as WebFieldSection } from './field-section-view.tsx';
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {
   if (useWide()) return <WebFieldSection {...props} />;
+
   // Increased prominence preserves title case; the header sets its own font.
   return (
     <Section
@@ -35,6 +36,7 @@ function SectionHeader({
 
 function HeaderText({ title }: { title: string }): React.JSX.Element {
   const headingModifiers = useSwiftUITextModifiers('heading');
+
   return (
     <Text
       modifiers={[
@@ -56,6 +58,7 @@ function SectionFooter({
   tone?: FieldSectionProps['footerTone'];
 }): React.JSX.Element | null {
   const modifiers = useFooterModifiers(tone);
+
   return text ? <Text modifiers={modifiers}>{text}</Text> : null;
 }
 
@@ -65,6 +68,7 @@ function useFooterModifiers(
 ): ReturnType<typeof useSwiftUITextModifiers> {
   const secondaryModifiers = useSwiftUITextModifiers('secondary');
   const { destructive } = useNativeTheme().colors;
+
   return tone === 'destructive' && destructive
     ? [...secondaryModifiers, foregroundStyle(destructive)]
     : secondaryModifiers;

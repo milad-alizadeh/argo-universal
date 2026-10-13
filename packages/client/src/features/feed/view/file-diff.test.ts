@@ -41,13 +41,16 @@ it.each([
   'projects the saved Git patch for $scenario/$path',
   ({ scenario, path, added, removed }) => {
     const response = changesMocks[scenario].diffs[path];
+
     if (!response) throw new Error(`Missing Git patch ${scenario}/${path}`);
     const { file, patch } = response;
+
     const [diff] = toFileDiffs({
       type: 'diff',
       changes: [{ operation: file.operation, path, oldPath: file.oldPath }],
       patch,
     });
+
     expect(diff).toMatchObject({ path, added, removed });
     expect(diff?.hunks).toHaveLength(expectedHunks(path));
   },

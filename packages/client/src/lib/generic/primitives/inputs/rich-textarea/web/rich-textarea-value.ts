@@ -10,10 +10,12 @@ interface ShownMarkdown {
 
 function shownMarkdown(initial: string): ShownMarkdown {
   let shown = initial;
+
   return {
     changesTo: (markdown) => {
       if (markdown === shown) return false;
       shown = markdown;
+
       return true;
     },
   };
@@ -24,6 +26,7 @@ type Update = Parameters<UpdateListener>[0];
 // An edit, not a caret move or a value drawn from outside; exporting the whole draft on every caret move is slow.
 function isEdit({ tags, dirtyElements, dirtyLeaves }: Update): boolean {
   if (tags.has(HISTORY_MERGE_TAG)) return false;
+
   return dirtyElements.size > 0 || dirtyLeaves.size > 0;
 }
 
@@ -34,6 +37,7 @@ function sendChanges(
   return (update) => {
     if (!isEdit(update)) return;
     const markdown = update.editorState.read($exportMarkdown);
+
     if (shown.changesTo(markdown)) onChangeText(markdown);
   };
 }

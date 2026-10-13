@@ -23,15 +23,21 @@ import {
 } from './new-session-view.mocks';
 
 const sendLabel = 'Send';
+
 const messageLabel = 'Message';
+
 const failedStartMessage = 'The Agent exited before it was ready.';
+
 const setupStepText = 'Run `claude login` on the Server, then check again.';
+
 const projectLabel = `Project: ${exampleProject.name}`;
 
 const meta = { ...newSessionViewTestMeta, title: 'Tests/NewSessionView' };
+
 export default meta;
 
 export const NarrowMainColumn = narrowMainColumn;
+
 export const CheckoutChoice = checkoutChoice;
 
 export const Ready: Story = {
@@ -44,9 +50,11 @@ export const Ready: Story = {
       await expect(
         canvas.queryByText(readyNewSession.serverName),
       ).not.toBeInTheDocument();
+
       const heading = canvas.queryByRole('heading', {
         name: 'What should we work on?',
       });
+
       await (wide ? expect(heading).toBeVisible() : expect(heading).toBeNull());
       // A phone shows the checkout among the rows; a wide window keeps it in the envelope.
       await expect(
@@ -67,6 +75,7 @@ export const Ready: Story = {
 };
 
 export const SendsTheFirstPrompt = sendsTheFirstPrompt;
+
 export const SendsWhileTheSessionOpens = sendsWhileTheSessionOpens;
 
 export const Reconnecting: Story = {

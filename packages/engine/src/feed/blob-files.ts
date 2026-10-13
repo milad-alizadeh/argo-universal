@@ -18,6 +18,7 @@ export async function writeBlobFile(
   bytes: Uint8Array,
 ): Promise<void> {
   const path = join(blobsFolder, blobId);
+
   if (await exists(path)) return;
   await mkdir(blobsFolder, { recursive: true });
   const partial = `${path}.${randomUUID()}.partial`;

@@ -59,6 +59,7 @@ export function applyFeedChange(
   const revision = nextFeedRevision(feed.maxRevision);
   const input = { feed, existing: feed.rows[id], revision, turnId };
   const candidate = prepareFeedCandidate(input, change);
+
   return 'rejection' in candidate
     ? candidate
     : acceptFeedCandidate(feed, id, candidate);

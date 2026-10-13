@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+
 export interface ComposerPopoverProps {
   trigger: ReactElement<{ disabled?: boolean | null; onPress?: () => void }>;
   label: string;

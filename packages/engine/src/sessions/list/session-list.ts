@@ -27,21 +27,36 @@ const cursorSchema = z.strictObject({
   activityAt: z.int(),
   sessionId: z.string(),
 });
+
 const pageSize = 50;
 
-export function createSessionList(options: {
-  database: Database;
-  sessions: OpenSessionsActorRef;
-}): {
+// The Session list procedures: a page, its live updates and the counts.
+interface SessionList {
   list: (input: SessionListInput) => Promise<SessionListOutput>;
   listUpdates: (
     signal: AbortSignal | undefined,
   ) => AsyncIterable<SessionListUpdate>;
   counts: (signal: AbortSignal | undefined) => AsyncIterable<SessionCounts>;
-} {
+}
+
+// One shared list actor: watchers select their changes from its rows.
+interface SessionListObserver {
+  watchSessionRows: <Value>(
+    signal: AbortSignal | undefined,
+    selectChanges: (rows: SessionListState) => Value[],
+  ) => AsyncGenerator<Value>;
+  readCachedRows: () => SessionListState;
+}
+
+export function createSessionList(options: {
+  database: Database;
+  sessions: OpenSessionsActorRef;
+}): SessionList {
   const { sessions } = options;
+
   const findWriterActor = (): WriterActorRef | undefined =>
     findMachineActor(sessions.system, databaseWriterId, writerMachine);
+
   const {
     readRows: readAllSessionRows,
     sessionIdsForChanges,
@@ -51,6 +66,7 @@ export function createSessionList(options: {
     sessions,
     writer: findWriterActor,
   });
+
   const { watchSessionRows, readCachedRows } = createSessionListObserver({
     sessions,
     writer: findWriterActor,
@@ -58,10 +74,12 @@ export function createSessionList(options: {
     sessionIdsForChanges,
     relatedSessionIds,
   });
+
   const listSessions = async (
     input: SessionListInput,
   ): Promise<SessionListOutput> => {
     let cursor: z.infer<typeof cursorSchema> | undefined;
+
     if (input.cursor !== undefined) {
       try {
         cursor = cursorSchema.parse(
@@ -74,6 +92,7 @@ export function createSessionList(options: {
         });
       }
     }
+
     const rows = readCachedRows()
       .map((row): typeof row.information => row.information)
       .filter(
@@ -92,13 +111,19 @@ export function createSessionList(options: {
       )
       .sort((first, second): number => {
         const activityOrder = second.activityAt - first.activityAt;
+
         if (activityOrder) return activityOrder;
+
         if (first.sessionId < second.sessionId) return 1;
+
         if (first.sessionId > second.sessionId) return -1;
+
         return 0;
       });
+
     const page = rows.slice(0, pageSize);
     const last = page.at(-1);
+
     return {
       sessions: page,
       nextCursor:
@@ -112,12 +137,14 @@ export function createSessionList(options: {
           : null,
     };
   };
+
   const countActiveSessions = (
     rows: ReturnType<typeof readAllSessionRows>,
   ): SessionCounts => {
     const active = rows.filter(
       (row): boolean => row.information.archivedAt === null,
     );
+
     return {
       attention: active.filter(
         (row): boolean =>
@@ -134,18 +161,21 @@ export function createSessionList(options: {
       signal,
     ): ReturnType<typeof watchSessionRows<SessionListUpdate>> => {
       let previous = new Map<string, string>();
+
       return watchSessionRows<SessionListUpdate>(
         signal,
         (state): SessionListUpdate[] => {
           const rows = state.map(
             (row): typeof row.information => row.information,
           );
+
           const next = new Map(
             rows.map((row): [string, string] => [
               row.sessionId,
               JSON.stringify(row),
             ]),
           );
+
           const changed: SessionListUpdate[] = rows
             .filter(
               (row): boolean =>
@@ -155,23 +185,28 @@ export function createSessionList(options: {
               type: 'changed',
               session: row,
             }));
+
           for (const sessionId of previous.keys())
             if (!next.has(sessionId))
               changed.push({ type: 'removed', sessionId });
           previous = next;
+
           return changed;
         },
       );
     },
     counts: (signal): ReturnType<typeof watchSessionRows<SessionCounts>> => {
       let previous = '';
+
       return watchSessionRows<SessionCounts>(
         signal,
         (rows): SessionCounts[] => {
           const counts = countActiveSessions(rows);
           const serialized = JSON.stringify(counts);
+
           if (serialized === previous) return [];
           previous = serialized;
+
           return [counts];
         },
       );
@@ -187,15 +222,10 @@ function createSessionListObserver({
   relatedSessionIds,
 }: Omit<SessionListMachineInput, 'writer'> & {
   writer: () => SessionListMachineInput['writer'];
-}): {
-  watchSessionRows: <Value>(
-    signal: AbortSignal | undefined,
-    selectChanges: (rows: SessionListState) => Value[],
-  ) => AsyncGenerator<Value>;
-  readCachedRows: () => SessionListState;
-} {
+}): SessionListObserver {
   let sharedActor: ActorRefFrom<typeof sessionListMachine> | undefined;
   let references = 0;
+
   const createSessionListActor = (): Actor<typeof sessionListMachine> =>
     createActor(sessionListMachine, {
       input: {
@@ -206,13 +236,18 @@ function createSessionListObserver({
         relatedSessionIds,
       },
     });
+
   const readCachedRows = (): SessionListState => {
     const actor = sharedActor ?? createSessionListActor().start();
+
     try {
       actor.send({ type: 'list.flush' });
       const snapshot = actor.getSnapshot();
+
       if (snapshot.status === 'error') throw snapshot.error;
+
       if (snapshot.matches('failed')) throw snapshot.context.failure;
+
       return snapshot.context.rows ?? [];
     } finally {
       if (!sharedActor) {
@@ -221,6 +256,7 @@ function createSessionListObserver({
       }
     }
   };
+
   async function* watchSessionRows<Value>(
     signal: AbortSignal | undefined,
     selectChanges: (rows: SessionListState) => Value[],
@@ -232,20 +268,26 @@ function createSessionListObserver({
     sharedActor ??= createSessionListActor();
     const actor = sharedActor;
     references += 1;
+
     const publishRowChanges = (rows: SessionListState): void => {
       for (const change of selectChanges(rows)) events.emit('change', change);
     };
+
     const rowsListener = actor.on('list.rows', ({ rows }): void => {
       publishRowChanges(rows);
     });
+
     const stream: AsyncIterable<Value[]> = on(events, 'change', {
       signal: controller.signal,
     });
+
     const completion = actor.subscribe({
       complete: (): void => controller.abort(),
       error: (error): void => controller.abort(error),
     });
+
     let attached = true;
+
     const releaseSubscription = (): void => {
       if (!attached) return;
       attached = false;
@@ -253,33 +295,43 @@ function createSessionListObserver({
       completion.unsubscribe();
       signal?.removeEventListener('abort', abortSubscription);
       references -= 1;
+
       if (references === 0) {
         actor.send({ type: 'list.stop' });
         actor.stop();
         sharedActor = undefined;
       }
     };
+
     const abortSubscription = (): void => {
       controller.abort();
       releaseSubscription();
     };
+
     signal?.addEventListener('abort', abortSubscription);
+
     try {
       if (first) actor.start();
       else {
         const rows = actor.getSnapshot().context.rows;
+
         if (rows) publishRowChanges(rows);
       }
+
       for await (const changes of stream) yield* changes;
     } catch (error) {
       const snapshot = actor.getSnapshot();
+
       if (snapshot.status === 'error') throw snapshot.error;
+
       if (snapshot.matches('failed')) throw snapshot.context.failure;
+
       if (!controller.signal.aborted) throw error;
     } finally {
       controller.abort();
       releaseSubscription();
     }
   }
+
   return { watchSessionRows, readCachedRows };
 }

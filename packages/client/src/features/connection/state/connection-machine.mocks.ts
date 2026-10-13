@@ -31,6 +31,7 @@ export const machine = connectionMachine.provide({
     watchConnectionState: fromCallback(({ sendBack }) => {
       const watching = { send: sendBack, live: true };
       harness.watcher = watching;
+
       return (): void => {
         watching.live = false;
       };
@@ -42,23 +43,26 @@ export const machine = connectionMachine.provide({
     },
   },
 });
+
 export type ConnectionSnapshot = SnapshotFrom<typeof machine>;
+
 export type ConnectionActor = Actor<typeof machine>;
+
 export type ConnectionClock = NonNullable<
   ActorOptions<typeof machine>['clock']
 >;
+
 // The machine reads neither while the watcher and refetch are mocks.
 export const input = createConnectionInput();
 
 export const startConnection = (clock?: ConnectionClock): ConnectionActor => {
-  const connection = createActor(machine, {
-    input,
-    ...(clock ? { clock } : {}),
-  });
+  const connection = createActor(machine, clock ? { input, clock } : { input });
+
   connection.on('connection.attemptAllowed', () => {
     harness.allowedAttempts += 1;
   });
   harness.started.push(connection);
+
   return connection.start();
 };
 
@@ -85,10 +89,12 @@ export const waitForAllowedAttempt = (connection: ConnectionActor): number => {
   const before = harness.allowedAttempts;
   connection.send({ type: 'connection.attemptRequested' });
   let waited = 0;
+
   while (harness.allowedAttempts === before) {
     if (waited >= 60_000) throw new Error('The attempt was never allowed');
     vi.advanceTimersByTime(100);
     waited += 100;
   }
+
   return waited;
 };

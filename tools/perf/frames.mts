@@ -9,12 +9,16 @@ import {
 } from './trace.mts';
 
 const frameBudget = 1000 / 60;
+
 const noFrames = { intervals: [], longTasks: 0 };
+
 const jitter = 2;
+
 type Metrics = Record<string, number>;
 
 async function metrics(session: CDPSession): Promise<Metrics> {
   const { metrics: values } = await session.send('Performance.getMetrics');
+
   return Object.fromEntries(
     values.map((metric) => [metric.name, metric.value]),
   );
@@ -22,6 +26,7 @@ async function metrics(session: CDPSession): Promise<Metrics> {
 
 const change = (before: Metrics, after: Metrics, name: string): number =>
   (after[name] ?? 0) - (before[name] ?? 0);
+
 const count = (states: Record<string, number>, state: string): number =>
   states[state] ?? 0;
 
@@ -33,6 +38,7 @@ type FrameSummary = Pick<
 function frameSummary({ intervals, longTasks }: Frames): FrameSummary {
   const sorted = intervals.toSorted((a, b) => a - b);
   const durationMs = intervals.reduce((sum, value) => sum + value, 0);
+
   return {
     durationMs,
     fps: (intervals.length * 1000) / Math.max(1, durationMs),
@@ -76,12 +82,15 @@ async function tracedFrames(
   action: Action,
 ): Promise<{ frames: Frames; events: TraceEvent[] }> {
   const frames: Frames[] = [];
+
   const run = async (): Promise<void> => {
     await page.evaluate(() => window.perf.startFrames());
     await action();
     frames.push(await page.evaluate(() => window.perf.stopFrames()));
   };
+
   const { events } = await trace(session, run, frameCategories);
+
   return { frames: frames[0] ?? noFrames, events };
 }
 
@@ -93,6 +102,7 @@ export async function measure(
 ): Promise<Sample> {
   const before = await metrics(session);
   const { frames, events } = await tracedFrames(page, session, action);
+
   return {
     ...frameSummary(frames),
     ...counters(before, await metrics(session)),

@@ -8,11 +8,13 @@ it.each(workMocks)(
   'keeps the Permission request at its Tool call for $agent',
   ({ rows, snapshot }) => {
     const recorded = readRow(rows);
+
     const row: ToolCallUpdate = {
       ...recorded,
       status: 'pending',
       state: 'open',
     };
+
     const pending = {
       ...snapshot,
       pendingPermission: {
@@ -22,6 +24,7 @@ it.each(workMocks)(
         options: permissionOptions,
       },
     };
+
     expect(toFeedView([row], pending).items).toEqual([
       {
         type: 'group',
@@ -32,6 +35,7 @@ it.each(workMocks)(
         items: [{ type: 'tool_call', row, awaitingApproval: true }],
       },
     ]);
+
     const answered: ToolCallUpdate = {
       ...recorded,
       _meta: {
@@ -41,6 +45,7 @@ it.each(workMocks)(
         },
       },
     };
+
     expect(toFeedView([answered], snapshot).items).toEqual([
       { type: 'tool_call', row: answered },
     ]);

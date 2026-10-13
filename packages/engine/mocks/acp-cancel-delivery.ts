@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import type { ScriptedProcess } from './scripted-agent';
+
 export const playCancelledToolUpdate = (
   process: ScriptedProcess,
 ): Promise<void> =>
@@ -16,11 +17,13 @@ export const playCancelledToolUpdate = (
     ],
     'owned-1',
   );
+
 export const playLateCancelUpdate = async (
   process: ScriptedProcess,
   marker: boolean,
 ): Promise<void> => {
   await playCancelledToolUpdate(process);
+
   if (marker)
     await process.play(
       [

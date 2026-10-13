@@ -18,6 +18,7 @@ const meta = {
 } satisfies Meta<typeof controlledPhoneLayout.component>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 interface AttentionCase {
@@ -31,11 +32,13 @@ const noAttention: AttentionCase = {
   label: '0 Sessions need attention',
   text: null,
 };
+
 const oneAttention: AttentionCase = {
   count: 1,
   label: '1 Session needs attention',
   text: '1',
 };
+
 const overflowAttention: AttentionCase = {
   count: 100,
   label: '100 Sessions need attention',
@@ -47,7 +50,9 @@ async function expectBadge(
   { label, text }: AttentionCase,
 ): Promise<void> {
   const badge = canvas.queryByLabelText(label);
+
   if (text === null) return expect(badge).toBeNull();
+
   return expect(badge).toHaveTextContent(text);
 }
 
@@ -93,22 +98,27 @@ export const NoAttentionPhone = attentionAndSectionStates(
   noAttention,
   layoutWidths.phone,
 );
+
 export const NoAttentionTablet = attentionAndSectionStates(
   noAttention,
   layoutWidths.tablet,
 );
+
 export const OneAttentionPhone = attentionAndSectionStates(
   oneAttention,
   layoutWidths.phone,
 );
+
 export const OneAttentionTablet = attentionAndSectionStates(
   oneAttention,
   layoutWidths.tablet,
 );
+
 export const OverflowAttentionPhone = attentionAndSectionStates(
   overflowAttention,
   layoutWidths.phone,
 );
+
 export const OverflowAttentionTablet = attentionAndSectionStates(
   overflowAttention,
   layoutWidths.tablet,

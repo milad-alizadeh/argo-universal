@@ -8,14 +8,17 @@ it('Engine owns shared empty Sessions across App disconnection and waits for obs
     autoExit: false,
     steps: [],
   });
+
   const first = await host.caller.session.new(emptySessionInput);
   const second = await host.caller.session.new(emptySessionInput);
+
   const feed = (
     await host.caller.feed.subscribe({
       sessionId: first.sessionId,
       after: null,
     })
   )[Symbol.asyncIterator]();
+
   expect((await feed.next()).value).toMatchObject({
     type: 'snapshot',
     snapshot: { state: 'idle', activeTurnId: null },
@@ -41,6 +44,7 @@ it('Engine owns shared empty Sessions across App disconnection and waits for obs
 
 it('a failed Session close reports failure and Engine shutdown waits for its process exit', async () => {
   const closes: object[] = [];
+
   const host = await startAcpEngine({
     autoExit: false,
     steps: [],
@@ -48,6 +52,7 @@ it('a failed Session close reports failure and Engine shutdown waits for its pro
       'session/close': [{ error: 'close refused', requests: closes }],
     },
   });
+
   const created = await host.caller.session.new(emptySessionInput);
   await expect(host.caller.session.close(created)).rejects.toThrow(
     'Internal error',

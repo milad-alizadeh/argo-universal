@@ -4,8 +4,10 @@ import { describe, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 
 const commitFailureMessage = 'could not be saved';
+
 const rejectFeedInsertion =
   "CREATE TRIGGER reject_feed BEFORE INSERT ON feed_row BEGIN SELECT RAISE(FAIL, 'prompt storage unavailable'); END";
+
 const restoreFeedWritesAndAwaitCommit = async (
   host: Awaited<ReturnType<typeof startAcpEngine>>,
 ): Promise<void> => {
@@ -25,6 +27,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   const sessionInput = { ...emptySessionInput, agent: agentId };
   it('initial prompted creation rejects a failed prompt commit and later retry never dispatches', async () => {
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -33,6 +36,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     host.database.$client.exec(rejectFeedInsertion);
     await expect(
       host.caller.session.new({
@@ -51,6 +55,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
 
   it('a Turn insert failure rejects the later prompt receipt without ACP work', async () => {
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -59,6 +64,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
     host.database.$client.exec(
       "CREATE TRIGGER reject_turn BEFORE INSERT ON turn BEGIN SELECT RAISE(FAIL, 'Turn unavailable'); END",
@@ -82,6 +88,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   it('a second submission cannot overtake an admitted running Turn', async () => {
     const completion = Promise.withResolvers<void>();
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -98,6 +105,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({
       ...created,
@@ -115,6 +123,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
 
   it('unsupported image prompts reject before success or Agent work', async () => {
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -130,6 +139,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
     await expect(
       host.caller.session.prompt({
@@ -153,6 +163,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
 
   it('a new explicit submission succeeds after a rejected commit and does not inherit its closure failure', async () => {
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -161,6 +172,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
     host.database.$client.exec(rejectFeedInsertion);
     await expect(

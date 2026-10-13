@@ -18,16 +18,19 @@ it('updates a cached parent when its stored Subagent Turn changes', async (): Pr
   onTestFinished(remove);
   insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
   insertEndedTurn(database, 'child-1');
+
   const { databaseWriter: writer, createCaller } = await startEngineTestHost({
     database,
     ...scriptedEngineInput(),
   });
+
   const { caller, controller } = watchEngineList(createCaller);
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
   expect((await updates.next()).value).toMatchObject({
     session: { subagents: { total: 1, running: 0 } },
   });
   vi.useFakeTimers();
+
   try {
     await vi.advanceTimersByTimeAsync(100);
     const running = updates.next();

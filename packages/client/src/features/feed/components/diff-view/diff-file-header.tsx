@@ -58,6 +58,7 @@ function FileBaseName({ name }: { name: string }): React.JSX.Element {
 
 function FilePath({ path }: { path: string }): React.JSX.Element {
   const slash = path.lastIndexOf('/');
+
   return (
     <View className="min-w-0 flex-1 flex-row items-center overflow-hidden">
       <FolderName folder={path.slice(0, slash + 1)} />
@@ -103,6 +104,7 @@ interface ChangeCountProps {
 
 function ChangeCount(props: ChangeCountProps): React.JSX.Element | null {
   if (props.count <= 0) return null;
+
   return (
     <Text
       selectable={false}
@@ -117,6 +119,7 @@ function ChangeCount(props: ChangeCountProps): React.JSX.Element | null {
 // The Inspector's file header: folder muted, file name strong, then copy and the change counts.
 export function FileHeader(props: FileHeaderProps): React.JSX.Element {
   const { file } = props;
+
   return (
     <View className="h-9 flex-row items-center gap-2 bg-muted pr-3 pl-2">
       <FileHeaderToggle {...props} />

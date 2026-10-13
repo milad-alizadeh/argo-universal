@@ -11,6 +11,7 @@ import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { completedSteps } from '../../state/status';
 import { chipClassName, unselectableTextClassName } from './status-surface';
+
 interface PlanTriggerProps {
   entries: PlanEntry[];
   disabled: boolean;
@@ -18,14 +19,17 @@ interface PlanTriggerProps {
   expanded: boolean;
   toggle: () => void;
 }
+
 interface PlanEntriesProps {
   entries: PlanEntry[];
   wide: boolean;
 }
+
 interface PlanMarkProps {
   entry: PlanEntry;
   wide: boolean;
 }
+
 function PlanProgressMark({ entry, wide }: PlanMarkProps): JSX.Element {
   return (
     <View
@@ -37,6 +41,7 @@ function PlanProgressMark({ entry, wide }: PlanMarkProps): JSX.Element {
     />
   );
 }
+
 function PlanProgressMarks({ entries, wide }: PlanEntriesProps): JSX.Element {
   return (
     <View className="flex-row gap-0.5">
@@ -48,15 +53,18 @@ function PlanProgressMarks({ entries, wide }: PlanEntriesProps): JSX.Element {
     </View>
   );
 }
+
 interface CurrentStepProps {
   entries: PlanEntry[];
   expanded: boolean;
 }
+
 function CurrentPlanStep({ entries, expanded }: CurrentStepProps): JSX.Element {
   const className = cn(
     'text-muted-foreground web:transition-transform web:duration-200',
     !expanded && 'rotate-180',
   );
+
   return (
     <>
       <CurrentStepLabel entries={entries} />
@@ -64,6 +72,7 @@ function CurrentPlanStep({ entries, expanded }: CurrentStepProps): JSX.Element {
     </>
   );
 }
+
 function PlanTriggerLabel({ entries, wide }: PlanEntriesProps): JSX.Element {
   return (
     <Text
@@ -75,6 +84,7 @@ function PlanTriggerLabel({ entries, wide }: PlanEntriesProps): JSX.Element {
     </Text>
   );
 }
+
 function PlanTriggerContent({
   entries,
   wide,
@@ -88,14 +98,17 @@ function PlanTriggerContent({
     </>
   );
 }
+
 export function createPlanTrigger(props: PlanTriggerProps): JSX.Element {
   const className = planTriggerClass(props);
+
   const pressableProps = {
     disabled: props.disabled,
     accessibilityLabel: 'Plan',
     ...planExpansionProps(props),
     className,
   };
+
   return (
     <Pressable {...pressableProps} role="button">
       <PlanTriggerContent {...props} />
@@ -109,6 +122,7 @@ const currentStepTextProps = {
   role: 'secondary',
   className: 'select-none flex-1 min-w-0 text-foreground',
 } as const;
+
 function CurrentStepLabel({ entries }: { entries: PlanEntry[] }): JSX.Element {
   return (
     <Text {...currentStepTextProps}>
@@ -116,6 +130,7 @@ function CurrentStepLabel({ entries }: { entries: PlanEntry[] }): JSX.Element {
     </Text>
   );
 }
+
 function planTriggerClass({
   wide,
   disabled,
@@ -128,16 +143,19 @@ function planTriggerClass({
     disabled,
   });
 }
+
 interface PlanExpansionProps {
   accessibilityState: { expanded: boolean | undefined };
   'aria-expanded': boolean | undefined;
   onPress: (() => void) | undefined;
 }
+
 function planExpansionProps(
   props: Pick<PlanTriggerProps, 'wide' | 'expanded' | 'toggle'>,
 ): PlanExpansionProps {
   const { wide, expanded, toggle } = props;
   const revealed = wide ? expanded : undefined;
+
   return {
     accessibilityState: { expanded: revealed },
     'aria-expanded': revealed,

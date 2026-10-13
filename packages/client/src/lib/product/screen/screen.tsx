@@ -38,6 +38,7 @@ export interface ScreenProps extends ViewProps {
 export function Screen(screenProps: ScreenProps): React.JSX.Element {
   const { safeArea, edges, style, ...props } = screenProps;
   const padding = useSafeAreaPadding({ safeArea, edges });
+
   return (
     <View
       {...props}
@@ -56,12 +57,14 @@ function useSafeAreaPadding({
   edges = allEdges,
 }: Pick<ScreenProps, 'safeArea' | 'edges'>): ViewStyle | false {
   const insets = useSafeAreaInsets();
+
   return safeArea !== false && edgePadding(insets, edges);
 }
 
 function edgePadding(insets: EdgeInsets, edges: readonly Edge[]): ViewStyle {
   const inset = (edge: Edge): number =>
     edges.includes(edge) ? insets[edge] : 0;
+
   return {
     paddingTop: inset('top'),
     paddingRight: inset('right'),

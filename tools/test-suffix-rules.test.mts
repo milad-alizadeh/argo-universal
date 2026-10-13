@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { suffixProblems } from './test-suffix-rules.mts';
 
 const unitFile = 'packages/engine/src/a.test.ts';
+
 const integrationFile = 'packages/engine/src/a.integration.test.ts';
+
 const touches = /touches real infrastructure/;
+
 const database = `import { openDatabase } from '@repo/db';`;
 
 const check = (file: string, files: Record<string, string>): string[] =>
@@ -28,6 +31,7 @@ describe('a *.test file', (): void => {
       'packages/engine/mocks/host.ts': `import { open } from './storage';`,
       'packages/engine/mocks/storage.ts': `import { rmSync } from 'node:fs';`,
     });
+
     expect(problems).toEqual([
       expect.stringMatching(/mocks\/storage\.ts imports node:fs/),
     ]);
@@ -38,6 +42,7 @@ describe('a *.test file', (): void => {
       [unitFile]: `import { wire } from '#mocks/wire';\nimport type { Database } from '@repo/db';`,
       'packages/engine/mocks/wire.ts': `export const wire = 1;`,
     });
+
     expect(problems).toEqual([]);
   });
 });

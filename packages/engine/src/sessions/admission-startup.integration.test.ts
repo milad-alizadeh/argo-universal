@@ -8,12 +8,14 @@ import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 
 const identities = fixtureAgents.map(({ agent }) => agent);
+
 const prompt = [{ type: 'text', text: 'Continue' }] as const;
 
 it.each(identities)(
   'rejects a %s prompt when initial startup enters recovery without waiting for a retry',
   async (agent) => {
     const initialization: InitializeRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -26,6 +28,7 @@ it.each(identities)(
       undefined,
       agent,
     );
+
     host.database.update(session).set({ agent }).run();
     await expect(
       host.caller.session.prompt({
@@ -46,6 +49,7 @@ it.each(identities)(
     const startup = Promise.withResolvers<void>();
     const began = Promise.withResolvers<InitializeRequest>();
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [{ type: 'wait-for-cancel' }],
@@ -57,15 +61,19 @@ it.each(identities)(
       undefined,
       agent,
     );
+
     host.database.update(session).set({ agent }).run();
+
     const first = host.caller.session.prompt({
       sessionId: 'session-1',
       prompt: [...prompt],
     });
+
     const second = host.caller.session.prompt({
       sessionId: 'session-1',
       prompt: [...prompt],
     });
+
     const outcomes = Promise.allSettled([first, second]);
     await began.promise;
     startup.resolve();
@@ -96,6 +104,7 @@ it.each(identities)(
     const startup = Promise.withResolvers<void>();
     const began = Promise.withResolvers<InitializeRequest>();
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -107,17 +116,25 @@ it.each(identities)(
       undefined,
       agent,
     );
+
     host.database.update(session).set({ agent }).run();
-    const rejection = host.caller.session
-      .prompt({ sessionId: 'session-1', prompt: [...prompt] })
-      .catch((error: unknown) => error);
+
+    const settled = Promise.allSettled([
+      host.caller.session.prompt({
+        sessionId: 'session-1',
+        prompt: [...prompt],
+      }),
+    ]);
+
     await began.promise;
     host.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
     startup.resolve();
-    expect(await rejection).toMatchObject({
-      code: 'CONFLICT',
-      message: 'The Engine is stopping',
-    });
+    expect(await settled).toMatchObject([
+      {
+        status: 'rejected',
+        reason: { code: 'CONFLICT', message: 'The Engine is stopping' },
+      },
+    ]);
     expect(requests).toEqual([]);
   },
 );

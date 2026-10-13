@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Text } from '#primitives/display/text/text';
 import { StandaloneField } from '#primitives/fields/field-input/standalone-field';
 import { Checkbox } from '#primitives/inputs/checkbox/checkbox';
+import type { FieldErrors } from '../../../../lib/generic/primitives/fields/field-errors';
 import { toggledChoice } from './elicitation-answers';
 import type { ElicitationFieldProps } from './elicitation-field';
 import { elicitationChoices } from './elicitation-property';
@@ -10,7 +11,7 @@ import { elicitationChoices } from './elicitation-property';
 type ChoicesProps = ElicitationFieldProps & {
   label: string;
   hint?: string;
-  errors?: readonly unknown[];
+  errors?: FieldErrors;
 };
 
 export function ElicitationChoices(props: ChoicesProps): ReactElement {
@@ -27,6 +28,7 @@ export function ElicitationChoices(props: ChoicesProps): ReactElement {
 
 function ChoiceGroup(props: ChoicesProps): ReactElement {
   const options = elicitationChoices(props.property) ?? [];
+
   return (
     <View role="group" accessibilityLabel={props.label} className="gap-2">
       {options.map((option) => (
@@ -41,6 +43,7 @@ function choiceProps(
   option: { const: string; title: string },
 ): ComponentProps<typeof Checkbox> {
   const values = Array.isArray(props.value) ? props.value : [];
+
   return {
     ...checkboxFieldProps(props),
     label: option.title,

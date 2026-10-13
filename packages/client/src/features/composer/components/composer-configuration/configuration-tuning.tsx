@@ -6,17 +6,24 @@ import { Switch } from '#primitives/inputs/switch/switch';
 import { ListItem } from '#primitives/lists/list-item/list-item';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
+
 interface TuningProps {
   configuration: ComposerConfigurationProps;
 }
+
 type EffortProps = TuningProps & { effort: ReturnType<typeof currentEffort> };
+
 type BooleanOption = Extract<SessionConfigOption, { type: 'boolean' }>;
+
 interface SwitchProps extends TuningProps {
   option: BooleanOption;
 }
+
 export function EffortControl(props: TuningProps): React.JSX.Element | null {
   const effort = currentEffort(props.configuration);
+
   if (!effort.option || !effort.selected) return null;
+
   return (
     <ListItem
       title="Effort"
@@ -25,9 +32,11 @@ export function EffortControl(props: TuningProps): React.JSX.Element | null {
     />
   );
 }
+
 function EffortSlider(props: EffortProps): React.JSX.Element {
   return <Slider {...effortSliderProps(props)} />;
 }
+
 function effortSliderProps({
   configuration,
   effort,
@@ -42,14 +51,17 @@ function effortSliderProps({
     onValueChange: (index) => selectEffort({ configuration, effort }, index),
   };
 }
+
 function selectEffort(
   { configuration, effort }: EffortProps,
   index: number,
 ): void {
   const choice = effort.choices[Math.round(index)];
+
   if (choice && effort.option)
     configuration.onConfigChange(effort.option.configId, choice.value);
 }
+
 export function SwitchOptions(props: TuningProps): React.JSX.Element {
   return (
     <>
@@ -59,6 +71,7 @@ export function SwitchOptions(props: TuningProps): React.JSX.Element {
     </>
   );
 }
+
 function ConfigurationSwitch(props: SwitchProps): React.JSX.Element {
   return Platform.OS === 'web' ? (
     <WebConfigurationSwitch {...props} />
@@ -66,6 +79,7 @@ function ConfigurationSwitch(props: SwitchProps): React.JSX.Element {
     <NativeConfigurationSwitch {...props} />
   );
 }
+
 function NativeConfigurationSwitch(props: SwitchProps): React.JSX.Element {
   return (
     <ListItem
@@ -74,6 +88,7 @@ function NativeConfigurationSwitch(props: SwitchProps): React.JSX.Element {
     />
   );
 }
+
 function NativeSwitchControl({
   configuration,
   option,
@@ -89,6 +104,7 @@ function NativeSwitchControl({
     />
   );
 }
+
 function WebConfigurationSwitch(props: SwitchProps): React.JSX.Element {
   return (
     <ListItem
@@ -97,6 +113,7 @@ function WebConfigurationSwitch(props: SwitchProps): React.JSX.Element {
     />
   );
 }
+
 function webSwitchRowProps({
   configuration,
   option,
@@ -111,6 +128,7 @@ function webSwitchRowProps({
       configuration.onConfigChange(option.configId, !option.currentValue),
   };
 }
+
 function DecorativeSwitch({
   option,
 }: {
@@ -126,6 +144,7 @@ function DecorativeSwitch({
     </View>
   );
 }
+
 function DecorativeSwitchControl({
   option,
 }: {
@@ -140,6 +159,7 @@ function DecorativeSwitchControl({
     />
   );
 }
+
 function ignoreDecorativeChange(): void {}
 
 function selectedEffortLabel(effort: ReturnType<typeof currentEffort>): string {

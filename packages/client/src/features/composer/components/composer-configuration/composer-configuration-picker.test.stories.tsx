@@ -8,7 +8,9 @@ import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { ComposerAgentModelControl } from './composer-configuration';
 
 const configuration = composerUnlistedEffortConfigurations[0];
+
 const agentModelLabel = 'Agent and model';
+
 if (!configuration) throw new Error('Recorded catalog needs a model picker.');
 
 const meta = {
@@ -21,7 +23,9 @@ const meta = {
     </View>
   ),
 } satisfies Meta<typeof ComposerAgentModelControl>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const EscapeReturnsToConfigure: Story = {
@@ -31,14 +35,18 @@ export const EscapeReturnsToConfigure: Story = {
     const overlay = within(document.body);
     const trigger = canvas.getByRole('button', { name: agentModelLabel });
     await userEvent.click(trigger);
+
     const configure = await overlay.findByRole('dialog', {
       name: agentModelLabel,
     });
+
     await expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
     const model = await within(configure).findByRole('button', {
       name: /^(Choose model|Model,)/,
     });
+
     await userEvent.click(model);
     const picker = await overlay.findByRole('dialog', { name: 'Select Model' });
     await expect(configure).toBeVisible();
@@ -57,9 +65,11 @@ export const HoverReplacesAdjacentPicker: Story = {
     const overlay = within(document.body);
     const trigger = canvas.getByRole('button', { name: agentModelLabel });
     await userEvent.hover(trigger);
+
     const configure = await overlay.findByRole('dialog', {
       name: agentModelLabel,
     });
+
     const agent = within(configure).getByRole('button', { name: /^Agent,/ });
     const model = within(configure).getByRole('button', { name: /^Model,/ });
     await userEvent.hover(agent);

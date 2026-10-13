@@ -21,11 +21,13 @@ export function ElicitationQuestionForm(
   },
 ): ReactElement {
   const model = useElicitationQuestions(props, props.questions);
+
   return <ElicitationQuestionBody model={model} />;
 }
 
 export function ElicitationQuestionBody({ model }: ModelProps): ReactElement {
   const wide = useContentWide();
+
   return (
     <RequestCard {...cardProps(model, wide)}>
       <View

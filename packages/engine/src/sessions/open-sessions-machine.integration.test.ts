@@ -17,10 +17,15 @@ import type { OpenSessionsInput } from './open-sessions-machine';
 import { sessionMachine } from './session-machine';
 
 const openSessionsModelMachine = createOpenSessionsModelMachine(false);
+
 const openSessionsGraphMachine = createOpenSessionsModelMachine(true);
+
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
+
 afterAll(remove);
+
 seedAgentFixtures(database, [{ agent: 'mock', label: 'mock', logo: '' }]);
+
 const input: OpenSessionsInput = {
   now: (): number => Date.now(),
   createId: randomUUID,
@@ -28,8 +33,10 @@ const input: OpenSessionsInput = {
   runtimeDirectory,
   acpResources: createAcpResources(),
 };
+
 // Two ids exercise duplicate opens, removal with another Session left, and the last Session stopping.
 type OpenSessionsEvent = EventFromLogic<typeof openSessionsModelMachine>;
+
 const events: OpenSessionsEvent[] = [
   ...['one', 'two'].flatMap((sessionId): OpenSessionsEvent[] => [
     {
@@ -80,12 +87,15 @@ const events: OpenSessionsEvent[] = [
     error: new Error('Unexpected actor failure'),
   },
 ];
+
 type OpenSessionsSnapshot = SnapshotFrom<typeof openSessionsModelMachine>;
+
 const key = (snapshot: OpenSessionsSnapshot): string =>
   JSON.stringify({
     value: snapshot.value,
     sessions: Object.keys(snapshot.context.sessions).sort(),
   });
+
 const model = new TestModel(openSessionsGraphMachine, {
   input,
   events,
@@ -104,10 +114,13 @@ const model = new TestModel(openSessionsGraphMachine, {
       via: event && `${previous && key(previous)} ${event.type}`,
     }),
 });
+
 const paths = model.getShortestPaths();
+
 let openSessions: ReturnType<
   typeof createActor<typeof openSessionsModelMachine>
 >;
+
 afterEach((): typeof openSessions => openSessions?.stop());
 
 it.each(
@@ -130,6 +143,7 @@ it.each(
             const fixture = events.find(
               (candidate): boolean => candidate === event,
             );
+
             if (!fixture) throw new Error('Unknown open Sessions model event');
             openSessions.send(fixture);
           },
@@ -140,6 +154,7 @@ it.each(
       '*': (expected): void => {
         expect(key(openSessions.getSnapshot())).toBe(key(expected));
         expect(openSessions.getSnapshot().status).toBe(expected.status);
+
         for (const sessionId of Object.keys(expected.context.sessions))
           expect(openSessions.system.get(`session:${sessionId}`)).toBeDefined();
       },
@@ -163,6 +178,7 @@ it('removes a failed Session while keeping another Session available', (): void 
   openSessions = createActor(openSessionsModelMachine, { input });
   openSessions.subscribe({ error: (error): number => errors.push(error) });
   openSessions.start();
+
   for (const sessionId of ['one', 'two'])
     openSessions.send({ type: 'sessions.open', sessionId, agent: 'mock' });
   openSessions.send({

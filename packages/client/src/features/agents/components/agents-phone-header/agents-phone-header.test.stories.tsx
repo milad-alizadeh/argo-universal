@@ -16,10 +16,13 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
 } satisfies Meta<typeof AgentListView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const searchLabel = 'Search Agents';
+
 const [firstName = '', secondName = '', thirdName = ''] = installedAgents.map(
   ({ name }) => name,
 );
@@ -58,6 +61,7 @@ export const PhoneSearchesInTheHeader: Story = {
     const labels = canvas
       .getAllByRole('button')
       .map((button) => button.getAttribute('aria-label'));
+
     await expect(labels.indexOf(searchLabel)).toBe(
       labels.indexOf('Add custom Agent') + 1,
     );

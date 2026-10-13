@@ -6,6 +6,7 @@ import {
   readInstallSelection,
   selectedLaunchDefinition,
 } from './install/selection/selection';
+
 it('persists and resolves a native npm bin replaced by package installation', async () => {
   const entry = installEntry('npx');
   const host = await startInstallEngine(entry, nativeInstallationPorts);
@@ -15,12 +16,15 @@ it('persists and resolves a native npm bin replaced by package installation', as
   });
   await waitForInstalledSelection(host);
   const selection = readInstallSelection(host.database, host.agentId);
+
   if (!selection) throw new Error('No installation was selected');
+
   const launch = await selectedLaunchDefinition(
     host.home,
     host.agentId,
     selection,
   );
+
   expect(launch.executable).toMatch(/native-agent$/);
   expect(launch.args).toEqual([]);
   expect(

@@ -2,6 +2,7 @@ import type {
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
+
 export function recordedFlat(
   option?: SessionConfigOption,
 ): SessionConfigSelectOption[] {
@@ -11,18 +12,22 @@ export function recordedFlat(
       )
     : [];
 }
+
 export function recordedLevels(
   choices: SessionConfigSelectOption[],
   currentValue?: string | boolean,
 ): string[] | undefined {
   const current = choices.find((entry) => entry.value === currentValue);
+
   return recordedMetadata(current)?.supportedEffortLevels;
 }
+
 export function recordedMetadata(
   choice?: SessionConfigSelectOption,
 ):
   | NonNullable<NonNullable<SessionConfigSelectOption['_meta']>['argo']>
   | undefined {
   if (!choice) return undefined;
+
   return choice._meta?.argo;
 }

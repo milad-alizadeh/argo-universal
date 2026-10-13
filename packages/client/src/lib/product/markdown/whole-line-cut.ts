@@ -10,6 +10,7 @@ const tolerance = 0.5;
 function lineBreaks({ y, height, lineHeight }: MeasuredLeaf): number[] {
   if (lineHeight === undefined) return [];
   const lines = Math.round(height / lineHeight);
+
   return Array.from(
     { length: lines - 1 },
     (_, line) => y + (line + 1) * lineHeight,
@@ -19,6 +20,7 @@ function lineBreaks({ y, height, lineHeight }: MeasuredLeaf): number[] {
 function isBetweenLines(leaf: MeasuredLeaf, cut: number): boolean {
   if (leaf.lineHeight === undefined) return false;
   const lines = (cut - leaf.y) / leaf.lineHeight;
+
   return Math.abs(lines - Math.round(lines)) * leaf.lineHeight < tolerance;
 }
 
@@ -39,5 +41,6 @@ export function wholeLineCut(
     .flatMap((leaf) => [leaf.y + leaf.height, ...lineBreaks(leaf)])
     .filter((cut) => cut > tolerance && cut <= limit + tolerance)
     .filter((cut) => leaves.every((leaf) => !splits(leaf, cut)));
+
   return cuts.length === 0 ? limit : Math.max(...cuts);
 }

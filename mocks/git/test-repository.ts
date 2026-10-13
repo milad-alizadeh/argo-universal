@@ -40,7 +40,9 @@ export async function initTestRepository(
   const git = gitIn(directory);
   await git('init', '-q', '--initial-branch=main');
   await commitWith(git, 'Initial');
+
   if (featureBranch) await addFeatureBranch(git);
+
   return git;
 }
 
@@ -54,6 +56,7 @@ export async function readSessionCheckouts(
   const branchList = ['--list', '--format=%(refname:short)', 'argo/*'];
   const branches = lines(await git('branch', ...branchList));
   const worktrees = lines(await git('worktree', 'list', '--porcelain'));
+
   return {
     branches,
     worktrees: worktrees.filter((line) => line.startsWith('worktree ')).length,

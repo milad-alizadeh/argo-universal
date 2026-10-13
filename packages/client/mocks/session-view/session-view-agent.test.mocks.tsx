@@ -39,10 +39,13 @@ async function openAgentRow(
   await userEvent.click(
     await overlay.findByRole('button', { name: /^Agent,/ }),
   );
+
   const row = await overlay.findByRole('button', {
     name: `Select ${agent.label}`,
   });
+
   await waitFor(() => expect(row).toBeVisible());
+
   return row;
 }
 
@@ -50,14 +53,17 @@ function unavailableAgent(agentIndex: 0 | 1): AgentInfo & {
   installStep: string;
 } {
   const agent = newSessionCatalogs.bothUnavailable[agentIndex];
+
   if (!agent?.installStep)
     throw new Error('Recorded catalog needs two unavailable Agents.');
+
   return { ...agent, installStep: agent.installStep };
 }
 
 // A started Session's Agent became unavailable: its row says why and Retry asks again.
 export function agentUnavailable(agentIndex: 0 | 1): Story {
   const agent = unavailableAgent(agentIndex);
+
   return {
     args: idleSessionWith({
       agents: newSessionCatalogs.bothUnavailable,
@@ -83,13 +89,16 @@ export function agentUnavailable(agentIndex: 0 | 1): Story {
 
 function availableAgent(agentIndex: 0 | 1): AgentInfo {
   const agent = newSessionCatalogs.bothAvailable[agentIndex];
+
   if (!agent) throw new Error('Recorded catalog needs two Agents.');
+
   return agent;
 }
 
 // The Session's own Agent shows in the Composer's picker, and a started Session keeps it.
 export function configuration(agentIndex: 0 | 1): Story {
   const agent = availableAgent(agentIndex);
+
   return {
     args: idleSessionWith({
       agent: agent.agent,

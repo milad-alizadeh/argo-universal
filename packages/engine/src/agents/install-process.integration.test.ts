@@ -4,26 +4,34 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { runInstallTool } from './install/processes/process';
+
 let directory: string;
+
 beforeEach(async () => {
   directory = await mkdtemp(join(tmpdir(), 'install-process-'));
 });
+
 afterEach(async () => {
   await rm(directory, { recursive: true, force: true });
 });
+
 const lifetimeScript = fileURLToPath(
   new URL('../../mocks/installation-lifetime.mjs', import.meta.url),
 );
+
 const isAlive = (pid: number): boolean => {
   try {
     process.kill(pid, 0);
+
     return true;
   } catch {
     return false;
   }
 };
+
 it('normal installer exit cleans descendants retaining its output pipes before completion', async () => {
   const controller = new AbortController();
+
   const script = `
     const {spawn} = require('node:child_process');
     const {writeFileSync} = require('node:fs');
@@ -34,12 +42,14 @@ it('normal installer exit cleans descendants retaining its output pipes before c
     child.unref();
     process.exit(0);
   `;
+
   const result = runInstallTool({
     executable: process.execPath,
     args: ['-e', script],
     cwd: directory,
     signal: controller.signal,
   });
+
   try {
     await result;
     expect(
@@ -50,24 +60,30 @@ it('normal installer exit cleans descendants retaining its output pipes before c
     await result.catch(() => {});
   }
 });
+
 it('cancellation settles after the real installer and its child exit', async () => {
   const controller = new AbortController();
+
   const result = runInstallTool({
     executable: process.execPath,
     args: [lifetimeScript],
     cwd: directory,
     signal: controller.signal,
-  }).catch((error: unknown) => error);
+  }).catch((cause: unknown) => cause);
+
   await expect
     .poll(async () => readFile(join(directory, 'ready'), 'utf8'))
     .toMatch(/^\d+,\d+$/);
+
   const pids = (await readFile(join(directory, 'ready'), 'utf8'))
     .split(',')
     .map(Number);
+
   controller.abort(new Error('cancelled'));
   expect(await result).toMatchObject({ message: 'cancelled' });
   expect(pids.map(isAlive)).toEqual([false, false]);
 });
+
 it('reports a missing runtime after the real spawn fails', async () => {
   await expect(
     runInstallTool({
@@ -78,6 +94,7 @@ it('reports a missing runtime after the real spawn fails', async () => {
     }),
   ).rejects.toThrow('required on the Server');
 });
+
 it('bounds binary decompression output before writing a managed archive', async () => {
   const outputFile = join(directory, 'archive');
   await expect(
@@ -92,6 +109,7 @@ it('bounds binary decompression output before writing a managed archive', async 
   ).rejects.toThrow('output exceeded its budget');
   await expect(readFile(outputFile)).rejects.toMatchObject({ code: 'ENOENT' });
 });
+
 it('preserves binary decompression bytes without UTF-8 conversion', async () => {
   const outputFile = join(directory, 'archive');
   await runInstallTool({
@@ -103,6 +121,7 @@ it('preserves binary decompression bytes without UTF-8 conversion', async () => 
   });
   expect(await readFile(outputFile)).toEqual(Buffer.from([0, 255, 128, 1]));
 });
+
 it.each([
   'No interpreter found; install Python on the Server',
   '\u001b[31mNo interpreter found; install Python on the Server\u001b[0m\u0000',

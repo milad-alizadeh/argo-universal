@@ -9,6 +9,7 @@ import { createScriptedAgentWire } from '#mocks/scripted-agent';
 import { createAgentClient } from './client';
 
 const permissionId = 'permission-one';
+
 const permissionMethod = 'session/request_permission';
 
 it('preserves request IDs when two permission responses settle in reverse order', async () => {
@@ -17,18 +18,22 @@ it('preserves request IDs when two permission responses settle in reverse order'
   const first = Promise.withResolvers<RequestPermissionResponse>();
   const second = Promise.withResolvers<RequestPermissionResponse>();
   const pending: ClientRequestContext<RequestPermissionRequest>[] = [];
+
   const connection = createAgentClient({
     stream: peer.stream,
     acceptSessionUpdate: () => {},
     requestPermission: (context) => {
       pending.push(context);
+
       if (pending.length === 2) arrived.resolve();
+
       return context.requestId === permissionId
         ? first.promise
         : second.promise;
     },
     createElicitation: () => ({ action: 'cancel' }),
   });
+
   await peer.send([
     {
       jsonrpc: '2.0',
@@ -72,9 +77,12 @@ it('preserves request IDs when two permission responses settle in reverse order'
 
 it('cancels the protocol request signal while retaining its connection', async () => {
   const peer = createScriptedAgentWire({ steps: [] });
+
   const pending =
     Promise.withResolvers<ClientRequestContext<RequestPermissionRequest>>();
+
   const answer = Promise.withResolvers<RequestPermissionResponse>();
+
   const connection = createAgentClient({
     stream: peer.stream,
     acceptSessionUpdate: () => {},
@@ -85,10 +93,12 @@ it('cancels the protocol request signal while retaining its connection', async (
         () => answer.resolve({ outcome: { outcome: 'cancelled' } }),
         { once: true },
       );
+
       return answer.promise;
     },
     createElicitation: () => ({ action: 'cancel' }),
   });
+
   await peer.send([
     {
       jsonrpc: '2.0',

@@ -23,8 +23,10 @@ it('a withdrawn opening closes its late identity exactly once while its sibling 
     Promise.withResolvers<NewSessionResponse>(),
     Promise.withResolvers<NewSessionResponse>(),
   ];
+
   const closed: { sessionId: string }[] = [];
   const requested: NewSessionRequest[] = [];
+
   const peer = createScriptedAgentProcess({
     steps: [],
     responses: {
@@ -35,19 +37,25 @@ it('a withdrawn opening closes its late identity exactly once while its sibling 
       'session/close': [{ result: {}, requests: closed }],
     },
   });
+
   const resources = createAcpResources(peer);
   const abort = new AbortController();
+
   const first = resources.open({
     ...createResourceOpening(),
     signal: abort.signal,
   });
-  const firstOutcome = first.catch((error: unknown): unknown => error);
+
+  const firstOutcome = first.catch((cause: unknown) => cause);
   const updates: ReturnType<typeof createResourceUpdate>[] = [];
+
   const second = resources.open(
     createResourceOpening(createResourceDestination(updates)),
   );
+
   await vi.waitFor(() => expect(requested).toHaveLength(2));
   abort.abort();
+
   for (const [index, result] of pending.entries())
     result.resolve({ sessionId: index === 0 ? 'withdrawn' : 'survivor' });
   const survivor = await second;
@@ -89,12 +97,15 @@ it.each(['session/load', 'session/resume'] as const)(
   'known %s identity routes notifications before opening completes',
   async (method) => {
     const result = Promise.withResolvers<ResumeSessionResponse>();
+
     const peer = createScriptedAgentProcess({
       steps: [],
       responses: { [method]: [{ result: result.promise }] },
     });
+
     const resources = createAcpResources(peer);
     const updates: ReturnType<typeof createResourceUpdate>[] = [];
+
     const opening = resources.open({
       ...createResourceOpening(createResourceDestination(updates)),
       opening: {
@@ -102,6 +113,7 @@ it.each(['session/load', 'session/resume'] as const)(
         params: { sessionId: 'known', cwd: '/checkout', mcpServers: [] },
       },
     });
+
     await vi.waitFor(() => expect(peer.processes).toHaveLength(1));
     await peer.processes[0]?.play(
       [{ type: 'update', update: createResourceUpdate('known').update }],
@@ -118,6 +130,7 @@ it.each(['session/load', 'session/resume'] as const)(
 it('withdrawal during shared initialize never dispatches the withdrawn session request', async () => {
   const initialization = Promise.withResolvers<typeof resourceInitialization>();
   const created: NewSessionRequest[] = [];
+
   const peer = createScriptedAgentProcess({
     steps: [],
     responses: {
@@ -125,13 +138,16 @@ it('withdrawal during shared initialize never dispatches the withdrawn session r
       'session/new': [{ requests: created }],
     },
   });
+
   const resources = createAcpResources(peer);
   const abort = new AbortController();
+
   const withdrawn = resources.open({
     ...createResourceOpening(),
     signal: abort.signal,
   });
-  const outcome = withdrawn.catch((error: unknown): unknown => error);
+
+  const outcome = withdrawn.catch((cause: unknown) => cause);
   const opening = resources.open(createResourceOpening());
   abort.abort();
   initialization.resolve(resourceInitialization);

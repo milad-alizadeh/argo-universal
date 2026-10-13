@@ -17,6 +17,7 @@ import {
   selectLastPhoneModel,
   selectLastAgent,
 } from './long-list-selections';
+
 export const LongListsScrollUnderFadesWide: Story = {
   args: { configuration: longListConfiguration() },
   render: renderArgs,
@@ -27,6 +28,7 @@ export const LongListsScrollUnderFadesWide: Story = {
     await context.userEvent.keyboard('{Escape}');
   },
 };
+
 async function openConfiguration(
   { canvas, userEvent }: PlayContext,
   width: number,
@@ -34,6 +36,7 @@ async function openConfiguration(
   await settleViewport(width);
   await userEvent.click(canvas.getByRole('button', { name: agentModelLabel }));
 }
+
 export const LongListsReachableInPhoneSheet: Story = {
   args: { configuration: longListConfiguration() },
   render: renderArgs,
@@ -47,15 +50,18 @@ export const LongListsReachableInPhoneSheet: Story = {
     await context.userEvent.keyboard('{Escape}');
   },
 };
+
 export const ShortListsHaveNoFadesWide: Story = {
   args: { configuration: shortConfiguration },
   play: async (context) => {
     await openConfiguration(context, layoutWidths.wide);
+
     for (const testId of [modelsScrollId, agentsScrollId])
       await assertShortList(context, testId);
     await context.userEvent.keyboard('{Escape}');
   },
 };
+
 async function assertShortList(
   { userEvent }: PlayContext,
   testId: string,

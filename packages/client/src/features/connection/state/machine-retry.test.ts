@@ -54,6 +54,7 @@ describe('connection retry delay', () => {
   it('starts the retry delay over after the Connection opens', () => {
     const connection = startConnection();
     loseOpenConnection();
+
     for (let attempt = 0; attempt < 4; attempt++)
       waitForAllowedAttempt(connection);
 

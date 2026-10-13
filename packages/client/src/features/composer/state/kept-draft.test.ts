@@ -5,11 +5,13 @@ import { draftKey } from './draft-key';
 import { keptDraftsOnDevice } from './kept-draft';
 
 const key = draftKey({ type: 'session', sessionId: 'session-1' });
+
 const lastDraft = 'Ship on Friday';
 
 function stubMemoryStorage(): ReturnType<typeof memoryStorage> {
   const storage = memoryStorage();
   vi.stubGlobal('window', { localStorage: storage });
+
   return storage;
 }
 

@@ -6,8 +6,11 @@ function tokenWidth(name: string): number {
   const token = getComputedStyle(document.documentElement).getPropertyValue(
     name,
   );
+
   const width = Number.parseFloat(token);
+
   if (Number.isNaN(width)) throw new Error(`The ${name} token is missing.`);
+
   return width;
 }
 
@@ -28,8 +31,10 @@ type LayoutAssertion = (wide: boolean) => Promise<void>;
 export async function eachLayout(assertion: LayoutAssertion): Promise<void> {
   if (!('__vitest_browser__' in globalThis)) {
     await assertion(false);
+
     return;
   }
+
   try {
     for (const wide of [false, true]) await eachMode(assertion, wide);
   } finally {
@@ -42,6 +47,7 @@ async function eachMode(
   wide: boolean,
 ): Promise<void> {
   await settleViewport(wide ? layoutWidths.wide : layoutWidths.phone);
+
   for (const mode of ['light', 'dark'] as const) {
     Uniwind.setTheme(mode);
     await assertion(wide);

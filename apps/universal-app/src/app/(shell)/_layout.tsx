@@ -36,6 +36,7 @@ export default function ShellLayout(): React.JSX.Element {
   const wide = useWide();
   const { page, shellChanged } = usePageBeforeShellChange(wide, destination);
   const Shell = wide ? WideShell : NarrowShell;
+
   return (
     <>
       <Shell destination={destination} />
@@ -64,6 +65,7 @@ function NarrowShell({
   destination: NavigationDestination;
 }): React.JSX.Element {
   const onboarding = useOnboardingShown(destination);
+
   return onboarding ? <OnboardingLayout /> : <PhoneSections />;
 }
 
@@ -84,13 +86,16 @@ function usePageBeforeShellChange(
   destination: NavigationDestination,
 ): ShellPage {
   const path = usePathname();
+
   const [shown, setShown] = useState(() =>
     firstShell(wide, { path, destination }),
   );
+
   if (shown.wide !== wide)
     setShown({ wide, page: shown.page, shellChanged: true });
   else if (shown.page.path !== path)
     setShown({ ...shown, page: { path, destination } });
+
   return shown;
 }
 
@@ -107,13 +112,17 @@ function ReopenPage({ page }: { page: ShownPage }): null {
     if (path === sectionTabs.sessions.href) return;
     const root = sectionRoot(path);
     router.replace(root);
+
     if (path === root) return;
+
     // The section's stack mounts on the next frame; a push before then would land without its root below.
     const frame = requestAnimationFrame((): void => {
       router.push(hrefFor(destination));
     });
+
     return (): void => cancelAnimationFrame(frame);
   }, [destination, path, router]);
+
   return null;
 }
 
@@ -122,6 +131,7 @@ function sectionRoot(path: string): (typeof sectionTabs)[Section]['href'] {
     ({ href }) =>
       href !== '/' && (path === href || path.startsWith(`${href}/`)),
   );
+
   return section?.href ?? sectionTabs.sessions.href;
 }
 
@@ -143,6 +153,7 @@ const sectionTriggers = Object.values(sectionTabs).map((tab) => (
 function PhoneSectionShell(): React.JSX.Element {
   const destination = useDestination();
   const { switchTab } = useTabTrigger({ name: sectionTabs.sessions.name });
+
   return (
     <PhoneLayout
       destination={destination}

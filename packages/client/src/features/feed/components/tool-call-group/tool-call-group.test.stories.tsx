@@ -21,16 +21,20 @@ const meta = {
     now: toolCallGroupMock.now,
   },
 } satisfies Meta<typeof ToolCallGroup>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function settled(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+
       const group = canvas.getByRole('button', {
         name: commandAndFileSummary,
       });
+
       await expect(group).toBeVisible();
       await expect(within(group).queryByText('0.3s')).not.toBeInTheDocument();
       await expect(
@@ -54,7 +58,9 @@ function settled(width: number): Story {
     },
   };
 }
+
 export const SettledPhone = settled(layoutWidths.phone);
+
 export const SettledWide = settled(layoutWidths.wide);
 
 function running(width: number): Story {
@@ -62,9 +68,11 @@ function running(width: number): Story {
     args: { group: toolCallGroupMock.running },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+
       const group = canvas.getByRole('button', {
         name: commandTitle,
       });
+
       await expect(group).toBeVisible();
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
       await expect(group).toHaveTextContent('short git status 23s');
@@ -90,7 +98,9 @@ function running(width: number): Story {
     },
   };
 }
+
 export const RunningPhone = running(layoutWidths.phone);
+
 export const RunningWide = running(layoutWidths.wide);
 
 export const OpenCompletedHistory: Story = {
@@ -120,12 +130,15 @@ function agentParity(width: number): Story {
     ),
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+
       const groups = canvas.getAllByRole('button', {
         name: commandAndFileSummary,
       });
+
       await expect(
         canvas.queryAllByRole('button', { name: /^Read / }),
       ).toHaveLength(0);
+
       for (const group of groups) await userEvent.click(group);
       await expect(
         canvas.getByRole('button', { name: readFileTitle }),
@@ -134,6 +147,7 @@ function agentParity(width: number): Story {
         canvas.getByRole('button', { name: 'Read /repo/app.txt' }),
       ).toBeVisible();
       await expect(canvas.queryByText('Explored')).not.toBeInTheDocument();
+
       for (const group of groups) await userEvent.click(group);
       await waitFor(() =>
         expect(
@@ -143,12 +157,19 @@ function agentParity(width: number): Story {
     },
   };
 }
+
 export const AgentParityPhone = agentParity(layoutWidths.phone);
+
 export const AgentParityWide = agentParity(layoutWidths.wide);
 
 export const SettledPhoneDark: Story = { ...SettledPhone, ...dark };
+
 export const SettledWideDark: Story = { ...SettledWide, ...dark };
+
 export const RunningPhoneDark: Story = { ...RunningPhone, ...dark };
+
 export const RunningWideDark: Story = { ...RunningWide, ...dark };
+
 export const AgentParityPhoneDark: Story = { ...AgentParityPhone, ...dark };
+
 export const AgentParityWideDark: Story = { ...AgentParityWide, ...dark };

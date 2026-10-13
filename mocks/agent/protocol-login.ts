@@ -11,6 +11,7 @@ const account: AuthStatusUpdateNotification = {
     account: { plan: 'plus' },
   },
 };
+
 const signedOut: AuthStatusUpdateNotification = {
   authStatus: { kind: 'none', label: 'Signed out' },
 };

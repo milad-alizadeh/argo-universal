@@ -10,11 +10,17 @@ import { type HttpServerOptions } from '../src/engine/http-server';
 import type { OpenSessionsActorRef } from '../src/sessions';
 
 export let home: string;
+
 export let port: number;
+
 export let database: Database;
+
 let sessions: OpenSessionsActorRef;
+
 let databaseWriter: HttpServerOptions['databaseWriter'];
+
 let removeDatabase: () => void;
+
 export let closeServer: () => Promise<void>;
 
 // Resolves with the HTTP status of the upgrade: 101 when the WebSocket opens.
@@ -46,10 +52,12 @@ export async function systemInfoStatus(
         response.resume();
       },
     );
+
     outgoing.once('error', reject);
     outgoing.end();
   });
 }
+
 function systemRequestOptions(headers: Record<string, string>): RequestOptions {
   return {
     host: '127.0.0.1',

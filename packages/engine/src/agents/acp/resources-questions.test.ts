@@ -19,21 +19,25 @@ it('unknown and withdrawn question ownership returns cancellation without consul
   const loaded = Promise.withResolvers<LoadSessionResponse>();
   const requestedLoad = Promise.withResolvers<LoadSessionRequest>();
   let questions = 0;
+
   const peer = createScriptedAgentProcess({
     steps: [],
     responses: {
       'session/load': [{ result: loaded.promise, received: requestedLoad }],
     },
   });
+
   const resources = createAcpResources(peer);
   const survivor = await resources.open(createResourceOpening());
   const abort = new AbortController();
+
   const opening = resources
     .open({
       ...createResourceOpening({
         ...createResourceDestination(),
         requestPermission: () => {
           questions += 1;
+
           return { outcome: { outcome: 'cancelled' } };
         },
       }),
@@ -47,10 +51,12 @@ it('unknown and withdrawn question ownership returns cancellation without consul
       },
       signal: abort.signal,
     })
-    .catch((error: unknown): unknown => error);
+    .catch((cause: unknown) => cause);
+
   await requestedLoad.promise;
   abort.abort();
   const process = requireScriptedProcessAt(peer.processes);
+
   for (const sessionId of ['unknown', 'withdrawn']) {
     const answers: RequestPermissionResponse[] = [];
     await process.play(
@@ -60,6 +66,7 @@ it('unknown and withdrawn question ownership returns cancellation without consul
     const response = answers[0];
     expect(response).toEqual({ outcome: { outcome: 'cancelled' } });
   }
+
   expect(questions).toBe(0);
   loaded.resolve({});
   expect(await opening).toMatchObject({ name: 'AbortError' });

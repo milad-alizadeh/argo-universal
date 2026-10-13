@@ -4,6 +4,7 @@ import { BlobRef } from '../feed/content-block';
 const bytesPerMebibyte = 1_048_576;
 
 export const maxBlobUploadMebibytes = 20;
+
 export const maxBlobUploadBytes = maxBlobUploadMebibytes * bytesPerMebibyte;
 
 // The image formats an Agent reads as pictures; the Server recognises these from their bytes, and any other file goes as a file.
@@ -13,6 +14,7 @@ const promptImageMimeTypes: ReadonlySet<string> = new Set([
   'image/gif',
   'image/webp',
 ]);
+
 export const isPromptImage = (mimeType: string): boolean =>
   promptImageMimeTypes.has(mimeType);
 
@@ -24,14 +26,18 @@ export const BlobUploadInput = z
   )
   .transform((form, context): Blob => {
     const file = form.get('file');
+
     if ([...form].length === 1 && file instanceof Blob) return file;
     context.addIssue({
       code: 'custom',
       message: 'Expected FormData with one file in the file field',
     });
+
     return z.NEVER;
   });
+
 export type BlobUploadInput = z.input<typeof BlobUploadInput>;
 
 export const BlobUploadOutput = BlobRef;
+
 export type BlobUploadOutput = z.infer<typeof BlobUploadOutput>;

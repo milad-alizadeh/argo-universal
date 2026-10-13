@@ -12,7 +12,9 @@ const meta = {
   component: FieldRow,
   parameters: { screenPreview: true },
 } satisfies Meta<typeof FieldRow>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

@@ -94,6 +94,7 @@ interface FillProps {
 
 function GradientStops({ edge, color }: FillProps): React.JSX.Element {
   const id = `${useId().replaceAll(':', '')}-${edge}`;
+
   return (
     <>
       <Defs>
@@ -129,6 +130,7 @@ export function ScrollFadeGradient(
   const { edge, className, style } = props;
   const { backgroundColor } = useResolveClassNames(className ?? 'bg-sidebar');
   const size = fadeSize(props);
+
   return (
     <Animated.View {...overlayProps(edge, size, style)}>
       <GradientFill edge={edge} color={backgroundColor} depth={size.depth} />

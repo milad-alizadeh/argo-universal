@@ -29,7 +29,9 @@ const engineRelocations: [string, string[]][] = [
 ];
 
 const client = (folder: string): string => `packages/client/src/${folder}/*`;
+
 const components = client('components');
+
 const screens = client('screens');
 
 // Spec 0011 #437: the client splits into feature folders and lib/{product,generic}.

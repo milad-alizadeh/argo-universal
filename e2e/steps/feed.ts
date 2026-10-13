@@ -14,11 +14,14 @@ const FeedPage = z.object({
     }),
   ),
 });
+
 export type FeedRows = z.infer<typeof FeedPage>['rows'];
 
 export function sessionId(page: Page): string {
   const id = new URL(page.url()).pathname.split('/').pop();
+
   if (!id) throw new Error('No Session id in the URL');
+
   return id;
 }
 

@@ -27,12 +27,19 @@ const restingDepth = (mode: ScrollFadeEdge, depth: number): number =>
   mode === 'always' ? depth : 0;
 
 // One edge's lengths: its depth while content lies past it, its depth with none, and its inset.
+interface EdgeLengths {
+  depth: string;
+  rest: string;
+  inset: string;
+}
+
 function edgeLengths(
   edge: ScrollFadeEdgeName,
   { edges, depth, inset }: ScrollFadeOptions,
-): { depth: string; rest: string; inset: string } {
+): EdgeLengths {
   const mode = edgeMode(edge, edges);
   const fadeDepth = shownDepth(mode, edgeDepth(edge, depth));
+
   return {
     depth: px(fadeDepth),
     rest: px(restingDepth(mode, fadeDepth)),
@@ -44,6 +51,7 @@ function edgeLengths(
 function fadeLengths(options: ScrollFadeOptions): FadeLengths {
   const top = edgeLengths('top', options);
   const bottom = edgeLengths('bottom', options);
+
   return {
     '--scroll-fade-top-depth': top.depth,
     '--scroll-fade-top-rest': top.rest,

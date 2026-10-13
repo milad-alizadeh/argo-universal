@@ -4,10 +4,12 @@ import { listBranches } from '@repo/git';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+
 const failedSessionId = 'opening-failed';
 
 it('failed ACP startup retains its unstored Checkout until process cleanup is observed', async () => {
   const newSessionRequested = Promise.withResolvers<NewSessionRequest>();
+
   const host = await startAcpEngine(
     {
       autoExit: false,
@@ -20,14 +22,17 @@ it('failed ACP startup retains its unstored Checkout until process cleanup is ob
     },
     () => failedSessionId,
   );
-  const openingResult = host.caller.session
-    .new({
+
+  const opening = Promise.allSettled([
+    host.caller.session.new({
       ...emptySessionInput,
       checkout: { type: 'worktree', baseBranch: 'main' },
-    })
-    .catch((error: unknown): unknown => error);
+    }),
+  ]);
+
   const checkout = (await newSessionRequested.promise).cwd;
   const process = requireScriptedProcessAt(host.agent.processes);
+
   try {
     await vi.waitFor(() => expect(process.terminations).toBe(1));
     expect(await listBranches(checkout)).toMatchObject({
@@ -35,7 +40,9 @@ it('failed ACP startup retains its unstored Checkout until process cleanup is ob
     });
     expect(existsSync(checkout)).toBe(true);
     process.exited.resolve();
-    expect(await openingResult).toBeInstanceOf(Error);
+    expect(await opening).toMatchObject([
+      { status: 'rejected', reason: expect.any(Error) },
+    ]);
     expect(existsSync(checkout)).toBe(false);
     expect(
       host.database.$client
@@ -44,6 +51,6 @@ it('failed ACP startup retains its unstored Checkout until process cleanup is ob
     ).toBeUndefined();
   } finally {
     process.exited.resolve();
-    await openingResult;
+    await opening;
   }
 });

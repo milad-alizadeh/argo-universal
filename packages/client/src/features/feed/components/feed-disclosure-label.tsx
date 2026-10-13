@@ -5,6 +5,7 @@ import { cn } from '#lib/generic/utils';
 import { ShimmerText } from './shimmer-text';
 
 export const foregroundTextClassName = 'text-foreground';
+
 const regexSpecialCharacters = /[.*+?^${}()|[\]\\]/g;
 
 export interface FeedDisclosureLabelProps {
@@ -20,8 +21,9 @@ export interface FeedDisclosureLabelProps {
 
 function pathPattern(paths: readonly string[]): string {
   return paths
-    .filter(Boolean)
-    .map((path) => path.replaceAll(regexSpecialCharacters, '\\$&'))
+    .flatMap((path) =>
+      path ? [path.replaceAll(regexSpecialCharacters, '\\$&')] : [],
+    )
     .join('|');
 }
 
@@ -41,11 +43,14 @@ function monoPart(
 
 function withMonoPaths(title: string, paths: readonly string[]): ReactNode[] {
   const pattern = pathPattern(paths);
+
   if (!pattern) return [title];
   let offset = 0;
+
   return title.split(new RegExp(`(${pattern})`)).map((part) => {
     const key = `${offset}`;
     offset += part.length;
+
     return monoPart(part, key, paths);
   });
 }
@@ -79,6 +84,7 @@ export function FeedDisclosureLabel(
   props: FeedDisclosureLabelProps,
 ): React.JSX.Element {
   const title = disclosureTitle(props.label, props.trailing);
+
   return props.running && !props.awaitingApproval ? (
     <ShimmerText
       text={title}

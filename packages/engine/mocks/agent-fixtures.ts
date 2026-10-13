@@ -10,6 +10,7 @@ export const seedAgentFixtures = (
   const insert = database.$client.prepare(
     'insert into agents (id, enabled, configuration) values (?, 1, ?) on conflict(id) do update set configuration = excluded.configuration',
   );
+
   for (const identity of identities)
     insert.run(
       identity.agent,

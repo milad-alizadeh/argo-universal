@@ -6,13 +6,19 @@ import { expect, it, onTestFinished, beforeEach, vi } from 'vitest';
 import { z } from 'zod';
 import { resourceLaunch } from '#mocks/acp-resource';
 import { launchLoginTerminal } from './terminal-process';
+
 const terminalStartupTimeout = 15_000;
+
 const ownerOnlyMode = 0o700;
+
 const permissionBits = 0o777;
+
 const executable = process.execPath;
+
 const script = fileURLToPath(
   new URL('../../../mocks/login-terminal.mjs', import.meta.url),
 );
+
 const launch = {
   ...resourceLaunch,
   executable,
@@ -20,6 +26,7 @@ const launch = {
   cwd: process.cwd(),
   env: { LOGIN_MODE: 'owned' },
 };
+
 beforeEach(async () => {
   const home = await mkdtemp(join(tmpdir(), 'argo-terminal-'));
   vi.stubEnv('ARGO_HOME', home);
@@ -28,14 +35,17 @@ beforeEach(async () => {
     vi.unstubAllEnvs();
   });
 });
+
 it(
   'provides a real PTY with captured environment, raw input and resize',
   { timeout: terminalStartupTimeout },
   async () => {
     let output = '';
+
     const child = await launchLoginTerminal(launch, (text) => {
       output += text;
     });
+
     onTestFinished(() => child.close());
     await expect
       .poll(() => output, { timeout: terminalStartupTimeout })
@@ -51,17 +61,20 @@ it(
     expect(await child.exited).toMatchObject({ exitCode: 0 });
   },
 );
+
 it(
   'observes terminal descendants close even when they ignore SIGTERM',
   { timeout: terminalStartupTimeout },
   async () => {
     let output = '';
+
     const child = await launchLoginTerminal(
       { ...launch, args: [script, 'descendant'] },
       (text) => {
         output += text;
       },
     );
+
     onTestFinished(() => child.close());
     await expect
       .poll(() => output, { timeout: terminalStartupTimeout })
@@ -71,6 +84,7 @@ it(
     expect(() => process.kill(pid, 0)).toThrow(/ESRCH/);
   },
 );
+
 it(
   'keeps terminal control private and removes its metadata after observed cleanup',
   async () => {
@@ -78,10 +92,13 @@ it(
     onTestFinished(() => child.close());
     const folder = join(process.env.ARGO_HOME ?? '', 'login-terminals');
     const [name] = await readdir(folder);
+
     if (!name) throw new Error('Terminal ownership record is missing');
+
     const record = z
       .strictObject({ pid: z.number(), token: z.string().uuid() })
       .parse(JSON.parse(await readFile(join(folder, name), 'utf8')));
+
     const controlFolder = join('/tmp', `argo-terminal-${record.token}`);
     expect((await stat(controlFolder)).mode & permissionBits).toBe(
       ownerOnlyMode,

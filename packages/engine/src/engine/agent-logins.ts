@@ -16,6 +16,7 @@ type LoginSources = {
   loginTimeoutMs?: number;
   loginCleanupTimeoutMs?: number;
 };
+
 export const createEngineAgentLogins = (
   input: LoginSources,
 ): ReturnType<typeof createAgentLogins> =>
@@ -37,16 +38,19 @@ type LoginLaunch = {
     ReturnType<NonNullable<ReturnType<typeof resolveInstalledAgentLaunch>>>
   >;
 };
+
 async function resolveLoginLaunch(
   sessions: OpenSessionsActorRef,
   agentId: string,
 ): Promise<LoginLaunch> {
   const resolve = loginLaunchResolver(sessions, agentId);
+
   const launch = await resolve({
     agent: agentId,
     projectId: '',
     projectPath: homedir(),
   });
+
   return { name: agentId, launch };
 }
 
@@ -63,7 +67,9 @@ function loginLaunchResolver(
   agentId: string,
 ): NonNullable<ReturnType<typeof resolveInstalledAgentLaunch>> {
   const source = sessions.getSnapshot().context;
+
   if (isAgentDisabled(source.database, agentId))
     throw new Error('Agent is disabled');
+
   return resolveInstalledAgentLaunch(source.database, source.runtimeDirectory);
 }

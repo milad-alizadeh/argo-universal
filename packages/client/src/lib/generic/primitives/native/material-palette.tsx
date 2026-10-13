@@ -11,10 +11,15 @@ import type { NativeColors } from '#lib/generic/native-theme';
 type RgbaHex = MaterialColors['primary'];
 
 const rgbMask = 0xffffff;
+
 const alphaShift = 24;
+
 const alphaMask = 0xff;
+
 const hexRadix = 16;
+
 const rgbDigits = 6;
+
 const alphaDigits = 2;
 
 // Gives Compose children Argo's Material roles in place of the Host's seeded palette.
@@ -23,10 +28,12 @@ export function MaterialPalette(props: {
   children: React.ReactNode;
 }): React.JSX.Element {
   const seeded = useMaterialColors();
+
   const palette = useMemo(
     () => argoPalette(seeded, props.colors),
     [seeded, props.colors],
   );
+
   return (
     <HostPaletteContext.Provider value={palette}>
       {props.children}
@@ -83,10 +90,13 @@ function role(color: string | undefined, fallback: RgbaHex): RgbaHex {
 
 function toRgbaHex(color: string | undefined): RgbaHex | undefined {
   const argb = color === undefined ? undefined : processColor(color);
+
   if (typeof argb !== 'number') return undefined;
   const rgb = (argb & rgbMask).toString(hexRadix).padStart(rgbDigits, '0');
+
   const alpha = ((argb >>> alphaShift) & alphaMask)
     .toString(hexRadix)
     .padStart(alphaDigits, '0');
+
   return `#${rgb}${alpha}`;
 }

@@ -15,6 +15,7 @@ const noticeAppearance = new Map<string, Appearance>([
   ['warning', { icon: 'warning', color: 'text-warning' }],
   ['error', { icon: 'failed', color: 'text-destructive' }],
 ]);
+
 const unrecognisedAppearance: Appearance = {
   icon: 'question',
   color: 'text-muted-foreground',
@@ -36,6 +37,7 @@ export interface NoticeMessageProps {
 
 function appearanceOf({ severity, icon }: NoticeMessageProps): Appearance {
   const appearance = noticeAppearance.get(severity) ?? unrecognisedAppearance;
+
   return { icon: icon ?? appearance.icon, color: appearance.color };
 }
 
@@ -64,6 +66,7 @@ function NoticeTitle({
   color: string;
 }): React.JSX.Element {
   if (live) return <ShimmerText text={title} className="type-body" />;
+
   return (
     <Text numberOfLines={1} className={color}>
       {title}
@@ -75,6 +78,7 @@ function NoticeDescription({
   description,
 }: Pick<NoticeMessageProps, 'description'>): React.JSX.Element | null {
   if (!description) return null;
+
   return <Text className="text-muted-foreground">{description}</Text>;
 }
 
@@ -82,6 +86,7 @@ function NoticeExcerpt({
   excerpt,
 }: Pick<NoticeMessageProps, 'excerpt'>): React.JSX.Element | null {
   if (!excerpt) return null;
+
   return (
     <Text
       selectable
@@ -96,6 +101,7 @@ function NoticeExcerpt({
 
 export function NoticeMessage(props: NoticeMessageProps): React.JSX.Element {
   const appearance = appearanceOf(props);
+
   return (
     <View {...noticeRowProps(props)}>
       <NoticeIcon {...appearance} />

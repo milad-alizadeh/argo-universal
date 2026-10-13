@@ -12,6 +12,7 @@ const AllowedOrigin = z.union([
 const headerExcerptLength = 100;
 
 type RequestHeaders = Record<'host', IncomingHttpHeaders['host']>;
+
 type UpgradeHeaders = RequestHeaders &
   Record<'origin', IncomingHttpHeaders['origin']>;
 
@@ -28,6 +29,7 @@ export function createRequestGuard(port: number): RequestGuard {
   const report = createReporter();
   const allowsHost = allowHeader(AllowedHost, 'Host', report);
   const allowsOrigin = allowHeader(AllowedOrigin, 'Origin', report);
+
   return {
     allowsRequest: (headers): boolean => allowsHost(headers.host),
     allowsUpgrade: (headers): boolean =>
@@ -39,6 +41,7 @@ export function createRequestGuard(port: number): RequestGuard {
 
 function createReporter(): RequestGuard['report'] {
   const rejections = createRejectionCounter('engine');
+
   return (subject, value): void => {
     rejections.report(
       `rejected ${subject} ${JSON.stringify(value?.slice(0, headerExcerptLength))}`,
@@ -54,6 +57,7 @@ function allowHeader(
   return (value): boolean => {
     if (schema.safeParse(value).success) return true;
     report(subject, value);
+
     return false;
   };
 }

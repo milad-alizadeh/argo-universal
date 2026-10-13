@@ -6,5 +6,6 @@ import { integer, type SQLiteIntegerBuilder } from 'drizzle-orm/sqlite-core';
  * The database stamps `createdAt` and `startedAt` on insert, and a trigger stamps `updatedAt` on update (migration `updated_at_triggers`).
  */
 const now = sql`(cast(unixepoch('subsec') * 1000 as integer))`;
+
 export const timestamp = (): HasDefault<NotNull<SQLiteIntegerBuilder>> =>
   integer().notNull().default(now);
