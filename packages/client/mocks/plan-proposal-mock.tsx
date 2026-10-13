@@ -49,25 +49,48 @@ export function PlanProposalPreview(
 ): React.JSX.Element {
   return (
     <View className="flex-1 min-h-0 flex-row">
-      <View className="hidden wide:flex w-56 bg-sidebar border-r border-border p-4">
-        <Text className="text-sm font-semibold">Sessions</Text>
-      </View>
-      <PlanProposalRegion
-        testID="plan-proposal-main-content"
-        className="relative flex-1 min-h-0 w-full bg-sidebar"
-      >
-        <View className="flex-1 min-h-0" />
-        <View className="items-center px-4 pb-4 wide:px-6">
-          {props.composer ? (
-            <RequestComposerPreview planProposal={props} />
-          ) : (
-            <PlanProposalCard {...props} />
-          )}
-        </View>
-      </PlanProposalRegion>
-      <View className="hidden wide:flex w-64 bg-sidebar border-l border-border p-4">
-        <Text className="text-sm font-semibold">Inspector</Text>
-      </View>
+      <PreviewSessions />
+      <PreviewProposal {...props} />
+      <PreviewInspector />
     </View>
+  );
+}
+
+function PreviewSessions(): React.JSX.Element {
+  return (
+    <View className="hidden wide:flex w-56 bg-sidebar border-r border-border p-4">
+      <Text className="text-sm font-semibold">Sessions</Text>
+    </View>
+  );
+}
+function PreviewInspector(): React.JSX.Element {
+  return (
+    <View className="hidden wide:flex w-64 bg-sidebar border-l border-border p-4">
+      <Text className="text-sm font-semibold">Inspector</Text>
+    </View>
+  );
+}
+function PreviewProposal(
+  props: PlanProposalCardProps & { composer?: boolean },
+): React.JSX.Element {
+  return (
+    <PlanProposalRegion
+      testID="plan-proposal-main-content"
+      className="relative flex-1 min-h-0 w-full bg-sidebar"
+    >
+      <View className="flex-1 min-h-0" />
+      <View className="items-center px-4 pb-4 wide:px-6">
+        <PreviewCard {...props} />
+      </View>
+    </PlanProposalRegion>
+  );
+}
+function PreviewCard(
+  props: PlanProposalCardProps & { composer?: boolean },
+): React.JSX.Element {
+  return props.composer ? (
+    <RequestComposerPreview planProposal={props} />
+  ) : (
+    <PlanProposalCard {...props} />
   );
 }

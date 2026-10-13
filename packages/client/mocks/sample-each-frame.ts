@@ -5,13 +5,21 @@ export function sampleEachFrame(
   frames: number,
 ): Promise<number[]> {
   return new Promise((resolve) => {
-    const samples: number[] = [];
-    const step = (): void => {
-      samples.push(measure());
-      if (samples.length < frames) requestAnimationFrame(step);
-      else resolve(samples);
-    };
     action();
-    requestAnimationFrame(step);
+    collectFrames(measure, frames, resolve);
   });
+}
+
+function collectFrames(
+  measure: () => number,
+  frames: number,
+  resolve: (samples: number[]) => void,
+): void {
+  const samples: number[] = [];
+  const step = (): void => {
+    samples.push(measure());
+    if (samples.length < frames) requestAnimationFrame(step);
+    else resolve(samples);
+  };
+  requestAnimationFrame(step);
 }

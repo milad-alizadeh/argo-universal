@@ -3,12 +3,12 @@ import { recordedSessionOptions } from '@repo/mocks/app';
 import { terminalPaths } from '@repo/vitest/model-paths';
 import type { SnapshotFrom } from 'xstate';
 import { type GraphEventFromLogic, getShortestPaths } from 'xstate/graph';
-import type { ConfigurationChange, SavedChoices } from '#features/composer';
 import {
   type EmptySessionEvent,
   type EmptySessionPorts,
   emptySessionMachine,
 } from '../src/features/sessions/state/empty-session-machine';
+import { nextChange } from './empty-session-choices';
 
 export type EmptySessionSnapshot = SnapshotFrom<typeof emptySessionMachine>;
 
@@ -28,15 +28,7 @@ export const prompt = [
 export const options: SessionConfigOption[] = recordedSessionOptions(agent);
 const failure = new Error('The Agent did not start');
 
-// Each saved choice the Session doesn't hold yet, in the order saved.
-export const nextChange = (
-  _options: SessionConfigOption[],
-  saved: SavedChoices,
-  applied: readonly string[],
-): ConfigurationChange | undefined =>
-  Object.entries(saved)
-    .map(([configId, value]) => ({ configId, value }))
-    .find(({ configId }) => !applied.includes(configId));
+export { nextChange } from './empty-session-choices';
 
 export const actorIds = ['open', 'close', 'setConfigOption', 'prompt'] as const;
 export type ActorId = (typeof actorIds)[number];
@@ -137,13 +129,19 @@ const machineEventChecks = new Map<string, Check>([
   ]),
 ]);
 
+function acceptsMachineEvent(
+  snapshot: EmptySessionSnapshot,
+  event: EmptySessionGraphEvent,
+): boolean {
+  return machineEventChecks.get(event.type)?.(snapshot) === true;
+}
 const filterEvents = (
   snapshot: EmptySessionSnapshot,
   event: EmptySessionGraphEvent,
 ): boolean => {
   if (snapshot.status !== 'active') return false;
   if (isPublicEvent(event)) return snapshot.can(event);
-  return machineEventChecks.get(event.type)?.(snapshot) === true;
+  return acceptsMachineEvent(snapshot, event);
 };
 
 export const graphOptions = {

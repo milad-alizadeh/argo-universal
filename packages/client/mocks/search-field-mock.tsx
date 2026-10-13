@@ -12,27 +12,40 @@ export function SearchFieldExample({
   initial?: string;
 }): React.JSX.Element {
   const [value, setValue] = useState(initial);
+  return <SearchRow value={value} onChangeText={setValue} />;
+}
+type SearchRowProps = Pick<
+  React.ComponentProps<typeof SearchField>,
+  'value' | 'onChangeText'
+>;
+function SearchRow(props: SearchRowProps): React.JSX.Element {
   return (
     <View className="w-full flex-row">
       <SearchField
         label="Search Agents"
-        value={value}
-        onChangeText={setValue}
-        title={
-          <Text role="title" numberOfLines={1}>
-            Agents
-          </Text>
-        }
-        actions={
-          <IconButton
-            icon="add"
-            size="sm"
-            variant="ghost"
-            iconClassName="text-muted-foreground"
-            accessibilityLabel="Add custom Agent"
-          />
-        }
+        {...props}
+        title={<AgentsTitle />}
+        actions={<AddAgent />}
       />
     </View>
+  );
+}
+
+function AgentsTitle(): React.JSX.Element {
+  return (
+    <Text role="title" numberOfLines={1}>
+      Agents
+    </Text>
+  );
+}
+function AddAgent(): React.JSX.Element {
+  return (
+    <IconButton
+      icon="add"
+      size="sm"
+      variant="ghost"
+      iconClassName="text-muted-foreground"
+      accessibilityLabel="Add custom Agent"
+    />
   );
 }
