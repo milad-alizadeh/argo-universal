@@ -9,6 +9,14 @@ const checkedAttribute = 'aria-checked';
 // Opening a Session starts the Agent process, which outlasts the default 5s under parallel load.
 const sessionOpenTimeout = { timeout: 15_000 };
 
+// The text a Message box shows, whether it draws a plain text area or a rich-text editor.
+export async function expectMessage(page: Page, text: string): Promise<void> {
+  const box = page.getByRole('textbox', { name: messageLabel });
+  const shown = (): Promise<string> =>
+    box.evaluate((e) => ('value' in e ? String(e.value) : e.innerText.trim()));
+  await expect.poll(shown).toBe(text);
+}
+
 export async function openNewSession(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/new$/);
@@ -84,9 +92,7 @@ export async function sendPrompt(page: Page, prompt: string): Promise<void> {
   await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/, sessionOpenTimeout);
-  await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
-    '',
-  );
+  await expectMessage(page, '');
 }
 
 When(
@@ -95,7 +101,6 @@ When(
     await sendPrompt(page, prompt);
   },
 );
-
 Then('Back returns to the Sessions list', async ({ page }): Promise<void> => {
   await page.goBack();
   await expect(page).toHaveURL(/\/$/);
@@ -126,9 +131,9 @@ Then('Fast mode remains enabled', async ({ page }): Promise<void> => {
 });
 
 Given(
-  'Agent {int} refuses to open a Session',
+  'Agent {int} refuses to open/reopen a Session',
   async ({ page, server }, ordinal: number): Promise<void> => {
-    // The refusal shows only when a Session opens, so the Agent is listed as available.
+    // The refusal shows only when a Session opens or reopens, so the Agent is listed as available.
     expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
       availability: 'available',
     });
@@ -156,8 +161,6 @@ Then(
 Then(
   'the Composer keeps the prompt {string}',
   async ({ page }, prompt: string): Promise<void> => {
-    await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
-      prompt,
-    );
+    await expectMessage(page, prompt);
   },
 );

@@ -12,6 +12,7 @@ import { PlanProposalRegion } from '#features/requests';
 import { PortalHost } from '#primitives/overlays/portal/portal';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { shortPlanProposal } from '../../../../../mocks/plan-proposal-mock';
+import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { DesktopShellFrame } from './desktop-shell-frame.mocks';
@@ -312,9 +313,9 @@ export const ComposerUsesAvailableWidth: Story = {
       await expect(control.left).toBeGreaterThanOrEqual(content.left);
       await expect(control.right).toBeLessThanOrEqual(content.right);
     }
-    await expect(canvas.getByRole('textbox', { name: 'Message' })).toHaveValue(
-      preservedDraft,
-    );
+    await expect(
+      shownText(canvas.getByRole('textbox', { name: 'Message' })),
+    ).toBe(preservedDraft);
     await userEvent.click(
       canvas.getByRole('button', { name: closeInspectorLabel }),
     );

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ComposerImage } from '../components/composer/composer';
+import { draftKey } from './draft-key';
 import {
   emptyImageDraft,
   imageDraftReducer,
@@ -20,6 +21,9 @@ const picked = (id: string): { image: ComposerImage; file: Blob } => ({
 });
 
 const draftText = 'Look at this';
+const keptText = 'Kept on this Device';
+const firstProject = draftKey({ type: 'new-session', projectId: 'project-1' });
+const secondProject = draftKey({ type: 'new-session', projectId: 'project-2' });
 
 const withText = imageDraftReducer(emptyImageDraft, {
   type: 'changed',
@@ -65,6 +69,66 @@ describe('imageDraftReducer', () => {
       draft: { text: draftText, images: [image('second')] },
     });
     expect([...next.files.keys()]).toEqual(['second']);
+  });
+
+  it('empties the text and the images when the draft changes owner', () => {
+    const attached = imageDraftReducer(withText, {
+      type: 'picked',
+      picked: [picked('first')],
+    });
+    const next = imageDraftReducer(attached, {
+      type: 'ownerChanged',
+      key: secondProject,
+    });
+    expect(next.draft).toEqual({ text: '', images: [] });
+    expect(next.files.size).toBe(0);
+  });
+
+  it('keeps what was typed when the kept text arrives after it', () => {
+    const owned = imageDraftReducer(emptyImageDraft, {
+      type: 'ownerChanged',
+      key: secondProject,
+    });
+    const typed = imageDraftReducer(owned, {
+      type: 'changed',
+      draft: { text: 'Typed first', images: [] },
+    });
+    const next = imageDraftReducer(typed, {
+      type: 'restored',
+      key: secondProject,
+      text: keptText,
+    });
+    expect(next.draft.text).toBe('Typed first');
+  });
+
+  it("restores the kept text of the draft's owner", () => {
+    const owned = imageDraftReducer(withText, {
+      type: 'ownerChanged',
+      key: secondProject,
+    });
+    const next = imageDraftReducer(owned, {
+      type: 'restored',
+      key: secondProject,
+      text: keptText,
+    });
+    expect(next.draft.text).toBe(keptText);
+  });
+
+  it('ignores kept text that arrives for an earlier owner', () => {
+    const first = imageDraftReducer(emptyImageDraft, {
+      type: 'ownerChanged',
+      key: firstProject,
+    });
+    const second = imageDraftReducer(first, {
+      type: 'ownerChanged',
+      key: secondProject,
+    });
+    const next = imageDraftReducer(second, {
+      type: 'restored',
+      key: firstProject,
+      text: 'Kept for the first Project',
+    });
+    expect(next.draft.text).toBe('');
   });
 
   it('empties the draft and its error once the prompt is sent', () => {

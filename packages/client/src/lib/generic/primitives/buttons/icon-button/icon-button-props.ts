@@ -22,4 +22,6 @@ export type IconButtonProps = ActionProps & {
   iconRole?: IconRole;
   iconClassName?: string;
   filled?: boolean;
+  // A toggle: true draws it on, false draws it off; leave it out for a plain button.
+  'aria-pressed'?: boolean;
 };
