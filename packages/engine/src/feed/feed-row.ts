@@ -3,7 +3,7 @@ import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, eq, getTableColumns, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import type { OutputBlob } from './acp/tool-output';
+export { outputBlobsOf, promptBlobIds } from './row-blobs';
 
 export type FeedRowWrite = Omit<
   typeof feedRow.$inferInsert,
@@ -19,64 +19,47 @@ export const storedFeedColumns = {
 // The shape version of `payload` in the rows this Server writes.
 export const payloadVersion = 1;
 
-// The blobs that the prompt rows among `rows` show, each once.
-export const promptBlobIds = (rows: readonly SessionUpdate[]): string[] => [
-  ...new Set(
-    rows.flatMap((row): string[] =>
-      row.sessionUpdate === 'user_message'
-        ? row.content.flatMap((block): string[] =>
-            'blob' in block && block.blob ? [block.blob.blobId] : [],
-          )
-        : [],
-    ),
-  ),
-];
-
-// The waiting whole outputs the rows still show; an output a later update replaced is not stored.
-export const outputBlobsOf = (
-  rows: readonly SessionUpdate[],
-  blobs: readonly OutputBlob[],
-): OutputBlob[] => {
-  const shown = new Set(
-    rows.flatMap((row): string[] =>
-      row.sessionUpdate === 'tool_call_update'
-        ? Object.values(row._meta?.argo?.fullOutput ?? {}).map(
-            (blob): string => blob.blobId,
-          )
-        : [],
-    ),
-  );
-  return [
-    ...new Map(
-      blobs
-        .filter((blob): boolean => shown.has(blob.blob.blobId))
-        .map((blob): [string, OutputBlob] => [blob.blob.blobId, blob]),
-    ).values(),
-  ];
-};
-
 // A row as the `feed_row` table stores it: the envelope in columns, the rest in `payload`.
-export function toFeedRowWrite(row: SessionUpdate): FeedRowWrite {
-  const {
-    id,
-    sessionId,
-    position,
-    revision,
-    turnId,
-    state,
-    sessionUpdate,
-    ...payload
-  } = row;
+function rowPayload(row: SessionUpdate): FeedRowWrite['payload'] {
+  const fields = new Set(['sessionId', ...Object.keys(rowEnvelope(row))]);
+  return Object.fromEntries(
+    Object.entries(row).filter(([key]) => !fields.has(key)),
+  );
+}
+
+type RowEnvelope = Pick<
+  SessionUpdate,
+  'id' | 'position' | 'revision' | 'turnId' | 'state' | 'sessionUpdate'
+>;
+
+function rowEnvelope(row: Pick<FeedRowWrite, keyof RowEnvelope>): RowEnvelope {
   return {
-    id,
-    position,
-    revision,
-    turnId,
-    state,
-    sessionUpdate,
-    payload,
-    payloadVersion,
+    id: row.id,
+    position: row.position,
+    revision: row.revision,
+    turnId: row.turnId ?? null,
+    state: row.state,
+    sessionUpdate: row.sessionUpdate,
   };
+}
+
+export function toFeedRowWrite(row: SessionUpdate): FeedRowWrite {
+  return { ...rowEnvelope(row), payload: rowPayload(row), payloadVersion };
+}
+
+function readSourceReference(sourceRef: unknown): void {
+  JSON.parse(z.string().nullish().parse(sourceRef) ?? 'null');
+}
+
+function readRowPayload(row: FeedRowWrite): Record<string, unknown> {
+  if (row.payloadVersion !== payloadVersion)
+    throw new Error(
+      `row ${row.id} has payload version ${row.payloadVersion}, not ${payloadVersion}`,
+    );
+  readSourceReference(row.sourceRef);
+  return z
+    .record(z.string(), z.unknown())
+    .parse(JSON.parse(z.string().parse(row.payload)));
 }
 
 // A stored row as a Session update, checked against its kind; a row from another payload version, or with envelope fields in its payload, fails.
@@ -84,23 +67,8 @@ export function hydrateStoredFeedRow(
   sessionId: string,
   row: FeedRowWrite,
 ): SessionUpdate {
-  if (row.payloadVersion !== payloadVersion)
-    throw new Error(
-      `row ${row.id} has payload version ${row.payloadVersion}, not ${payloadVersion}`,
-    );
-  JSON.parse(String(row.sourceRef ?? null));
-  const envelope = {
-    id: row.id,
-    sessionId,
-    position: row.position,
-    revision: row.revision,
-    turnId: row.turnId ?? null,
-    state: row.state,
-    sessionUpdate: row.sessionUpdate,
-  };
-  const payload = z
-    .record(z.string(), z.unknown())
-    .parse(JSON.parse(String(row.payload)));
+  const payload = readRowPayload(row);
+  const envelope = { ...rowEnvelope(row), sessionId };
   const clash = Object.keys(payload).find((key): boolean =>
     Object.hasOwn(envelope, key),
   );
@@ -109,17 +77,19 @@ export function hydrateStoredFeedRow(
 }
 
 // The newest version of a row the feed actor handed to the database writer, queued or stored.
+type WrittenRowRead = {
+  database: Database;
+  pending: SessionUpdate | undefined;
+  sessionId: string;
+  id: string;
+};
+
 export function readWrittenRow({
   database,
   pending,
   sessionId,
   id,
-}: {
-  database: Database;
-  pending: SessionUpdate | undefined;
-  sessionId: string;
-  id: string;
-}): SessionUpdate | undefined {
+}: WrittenRowRead): SessionUpdate | undefined {
   if (pending) return pending;
   const stored = database
     .select(storedFeedColumns)
@@ -134,9 +104,14 @@ export function newestRows(
   rows: Iterable<SessionUpdate>,
 ): Map<string, SessionUpdate> {
   const newest = new Map<string, SessionUpdate>();
-  for (const row of rows) {
-    const known = newest.get(row.id);
-    if (!known || row.revision >= known.revision) newest.set(row.id, row);
-  }
+  for (const row of rows) retainNewestRow(newest, row);
   return newest;
+}
+
+function retainNewestRow(
+  newest: Map<string, SessionUpdate>,
+  row: SessionUpdate,
+): void {
+  const known = newest.get(row.id);
+  if (!known || row.revision >= known.revision) newest.set(row.id, row);
 }

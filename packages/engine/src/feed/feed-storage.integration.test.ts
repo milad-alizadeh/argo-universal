@@ -1,10 +1,11 @@
-import type { AgentMessage, SessionUpdate } from '@repo/contracts';
+import type { SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { blob, blobRef, feedRow, session } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, expect, it, onTestFinished } from 'vitest';
 import { createActor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
+import { row } from '#mocks/feed-storage-input';
 import { writeJobs, writerMachine } from '../storage';
 import { hydrateStoredFeedRow, storedFeedColumns } from './feed-row';
 import { FeedRowsJob, readQueuedFeed } from './feed-storage';
@@ -12,18 +13,6 @@ import { FeedRowsJob, readQueuedFeed } from './feed-storage';
 let database: Database;
 let removeDatabase: () => void;
 
-const row = (overrides: Partial<AgentMessage> = {}): AgentMessage => ({
-  sessionId: 'session-1',
-  id: 'row-1',
-  position: 0,
-  sessionUpdate: 'agent_message',
-  revision: 1,
-  turnId: 'turn-1',
-  state: 'open',
-  messageId: 'message-1',
-  content: [],
-  ...overrides,
-});
 const feedRows = (
   rows: SessionUpdate[],
   maxRevision: number,

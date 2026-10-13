@@ -1,76 +1,23 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import type { SessionUpdate } from '@agentclientprotocol/sdk';
-import type { ToolCallUpdate } from '@repo/contracts';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
-import { expect, it, vi } from 'vitest';
-import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-
-const previewBytes = 64 * 1024;
-const largeText = (label: string): string =>
-  `${label}-head ${'x'.repeat(200_000)} ${label}-tail`;
-const output = largeText('output');
-const stdout = largeText('stdout');
-const input = largeText('input');
-const prompt = largeText('prompt');
-
-const startToolHost = (
-  update: Partial<Extract<SessionUpdate, { sessionUpdate: 'tool_call' }>>,
-): ReturnType<typeof startAcpEngine> =>
-  startAcpEngine(
-    feedScenario([
-      {
-        sessionUpdate: 'tool_call',
-        toolCallId: 'run-1',
-        title: 'Run',
-        kind: 'execute',
-        status: 'completed',
-        rawInput: { command: input },
-        ...update,
-      },
-    ]),
-  );
-
-const readToolRow = async (
-  host: Awaited<ReturnType<typeof startAcpEngine>>,
-): Promise<ToolCallUpdate> => {
-  const created = await host.caller.session.new({
-    ...emptySessionInput,
-    prompt: [{ type: 'text', text: prompt }],
-  });
-  await waitForAcpSessionIdle(host, created.sessionId);
-  // A row showing a Blob is stored once the Blob file is written.
-  const page = await vi.waitFor(async () => {
-    const tail = await host.caller.feed.page({ ...created, direction: 'tail' });
-    expect(tail.rows).toHaveLength(2);
-    return tail;
-  });
-  expect(page.rows[0]).toMatchObject({
-    sessionUpdate: 'user_message',
-    content: [{ type: 'text', text: prompt }],
-  });
-  const row = page.rows[1];
-  if (row?.sessionUpdate !== 'tool_call_update')
-    throw new Error('Tool row missing');
-  return row;
-};
-
-const readBlob = async (
-  host: Awaited<ReturnType<typeof startAcpEngine>>,
-  blobId: string | undefined,
-): Promise<unknown> =>
-  JSON.parse(await readFile(join(host.blobsFolder, blobId ?? ''), 'utf8'));
-
+import { assert, expect, it } from 'vitest';
+import { startAcpEngine } from '#mocks/acp-engine';
+import {
+  previewBytes,
+  output,
+  stdout,
+  input,
+  startToolHost,
+  readToolRow,
+  readPreview,
+  readBlob,
+} from '#mocks/feed-tool-output';
 it('large tool output keeps a 64 KB head and tail, marks the row truncated and stores the full output as Blobs', async () => {
   const host = await startToolHost({
     content: [{ type: 'content', content: { type: 'text', text: output } }],
     rawOutput: { stdout },
   });
   const row = await readToolRow(host);
-  const [block] = row.content;
-  const preview = block?.type === 'content' ? block.content : undefined;
-  const text = preview?.type === 'text' ? preview.text : '';
+  const text = readPreview(row);
   expect(text.startsWith('output-head')).toBe(true);
   expect(text.endsWith('output-tail')).toBe(true);
   expect(Buffer.byteLength(text)).toBeLessThanOrEqual(previewBytes + 8);
@@ -79,16 +26,21 @@ it('large tool output keeps a 64 KB head and tail, marks the row truncated and s
     /^\{"stdout":"stdout-head[^]*stdout-tail"\}$/,
   );
   expect(row.rawInput).toEqual({ command: input });
-  const meta = row._meta?.argo;
-  expect(meta?.truncated).toBe(true);
-  expect(meta?.fullOutput).toMatchObject({
+  assert(row._meta);
+  const meta = row._meta.argo;
+  assert(meta);
+  assert(meta.fullOutput);
+  assert(meta.fullOutput.content);
+  assert(meta.fullOutput.rawOutput);
+  expect(meta.truncated).toBe(true);
+  expect(meta.fullOutput).toMatchObject({
     content: { mime: 'application/json' },
     rawOutput: { mime: 'application/json' },
   });
-  expect(await readBlob(host, meta?.fullOutput?.content?.blobId)).toEqual([
+  expect(await readBlob(host, meta.fullOutput.content.blobId)).toEqual([
     { type: 'content', content: { type: 'text', text: output } },
   ]);
-  expect(await readBlob(host, meta?.fullOutput?.rawOutput?.blobId)).toEqual({
+  expect(await readBlob(host, meta.fullOutput.rawOutput.blobId)).toEqual({
     stdout,
   });
 });
@@ -103,8 +55,9 @@ it('tool output within 64 KB is stored whole without a truncation mark', async (
     content: [{ type: 'content', content: { type: 'text', text: 'Done' } }],
     rawOutput: { stdout: 'ok' },
   });
-  expect(row._meta?.argo?.truncated).toBeUndefined();
-  expect(row._meta?.argo?.fullOutput).toBeUndefined();
+  const { truncated, fullOutput } = row._meta?.argo ?? {};
+  expect(truncated).toBeUndefined();
+  expect(fullOutput).toBeUndefined();
 });
 
 it('a later update replaces only the output fields it supplies', async () => {
@@ -141,8 +94,12 @@ it('a later update replaces only the output fields it supplies', async () => {
     { type: 'content', content: { type: 'text', text: 'Done' } },
   ]);
   expect(String(row.rawOutput)).toMatch(/stdout-tail"\}$/);
-  expect(row._meta?.argo?.truncated).toBe(true);
-  expect(Object.keys(row._meta?.argo?.fullOutput ?? {})).toEqual(['rawOutput']);
+  assert(row._meta);
+  const meta = row._meta.argo;
+  assert(meta);
+  assert(meta.fullOutput);
+  expect(meta.truncated).toBe(true);
+  expect(Object.keys(meta.fullOutput)).toEqual(['rawOutput']);
 });
 
 it('a capped multibyte text keeps only whole characters', async () => {
@@ -151,9 +108,7 @@ it('a capped multibyte text keeps only whole characters', async () => {
     content: [{ type: 'content', content: { type: 'text', text: wide } }],
   });
   const row = await readToolRow(host);
-  const [block] = row.content;
-  const preview = block?.type === 'content' ? block.content : undefined;
-  const text = preview?.type === 'text' ? preview.text : '';
+  const text = readPreview(row);
   expect(text).not.toContain('�');
   expect(text.replaceAll('€', '')).toBe('\n…\n');
 });
