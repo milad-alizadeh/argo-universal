@@ -2,11 +2,7 @@ import { memo } from 'react';
 import { Text } from '#lib/generic/primitives/display/text/text';
 
 // The title at the top of a wide window's sidebar list, such as Sessions or Settings, under the window's own page title.
-export const ListTitle = memo(function ListTitle({
-  children,
-}: {
-  children: string;
-}) {
+export const ListTitle = memo(function ListTitle(props: { children: string }) {
   return (
     <Text
       semanticRole="heading"
@@ -14,7 +10,7 @@ export const ListTitle = memo(function ListTitle({
       role="heading"
       numberOfLines={1}
     >
-      {children}
+      {props.children}
     </Text>
   );
 });

@@ -58,36 +58,79 @@ function arc(share: number, total: number): number {
   return total === 0 ? 0 : (ringCircumference * share) / total;
 }
 
-function Ring({
-  checks,
-  state,
-}: {
+interface ChecksRingProps {
   checks: PullRequestChecksProps;
   state: ChecksState;
-}): React.JSX.Element {
-  if (state === 'passed')
-    return <Icon role="secondary" name="passed" className="text-success" />;
+}
+
+const ringArc = { ...ringCircle, transform: 'rotate(-90 7 7)' } as const;
+
+function dashes(length: number): string {
+  return `${Math.max(0, length - arcGap)} ${ringCircumference}`;
+}
+
+interface RingArcProps {
+  length: number;
+  strokeClassName: string;
+  strokeDashoffset?: number;
+}
+
+function RingArc({ length, ...circle }: RingArcProps): React.JSX.Element {
+  return (
+    <ThemedCircle {...ringArc} strokeDasharray={dashes(length)} {...circle} />
+  );
+}
+
+function SplitRing({ checks, state }: ChecksRingProps): React.JSX.Element {
   const passedArc = arc(checks.passed, checks.total);
-  const restArc = arc(checks.total - checks.passed, checks.total);
+  return (
+    <Svg width="100%" height="100%" viewBox="0 0 14 14">
+      <ThemedCircle {...ringCircle} strokeClassName="bg-border" />
+      <RingArc length={passedArc} strokeClassName="bg-success" />
+      <RingArc
+        length={arc(checks.total - checks.passed, checks.total)}
+        strokeDashoffset={-passedArc}
+        strokeClassName={stateTone[state].stroke}
+      />
+    </Svg>
+  );
+}
+
+function Ring(props: ChecksRingProps): React.JSX.Element {
+  if (props.state === 'passed')
+    return <Icon role="secondary" name="passed" className="text-success" />;
   return (
     <IconSlot role="secondary">
-      <Svg width="100%" height="100%" viewBox="0 0 14 14">
-        <ThemedCircle {...ringCircle} strokeClassName="bg-border" />
-        <ThemedCircle
-          {...ringCircle}
-          transform="rotate(-90 7 7)"
-          strokeDasharray={`${Math.max(0, passedArc - arcGap)} ${ringCircumference}`}
-          strokeClassName="bg-success"
-        />
-        <ThemedCircle
-          {...ringCircle}
-          transform="rotate(-90 7 7)"
-          strokeDasharray={`${Math.max(0, restArc - arcGap)} ${ringCircumference}`}
-          strokeDashoffset={-passedArc}
-          strokeClassName={stateTone[state].stroke}
-        />
-      </Svg>
+      <SplitRing {...props} />
     </IconSlot>
+  );
+}
+
+interface ChecksSummaryProps {
+  summary: string;
+  label: string;
+  state: ChecksState;
+}
+
+function describeChecks(checks: PullRequestChecksProps): ChecksSummaryProps {
+  const state = checksState(checks);
+  return {
+    summary: `Checks ${checks.passed}/${checks.total}`,
+    label: stateText(checks, state),
+    state,
+  };
+}
+
+function ChecksSummary(props: ChecksSummaryProps): React.JSX.Element {
+  return (
+    <>
+      <Text role="secondary" className="font-medium text-foreground">
+        {props.summary}
+      </Text>
+      <Text role="secondary" className={stateTone[props.state].text}>
+        {props.label}
+      </Text>
+    </>
   );
 }
 
@@ -95,22 +138,15 @@ function Ring({
 export function PullRequestChecks(
   checks: PullRequestChecksProps,
 ): React.JSX.Element {
-  const summary = `Checks ${checks.passed}/${checks.total}`;
-  const state = checksState(checks);
-  const label = stateText(checks, state);
+  const description = describeChecks(checks);
   return (
     <View
       accessible
-      accessibilityLabel={`${summary}, ${label}`}
+      accessibilityLabel={`${description.summary}, ${description.label}`}
       className="flex-row items-center gap-1"
     >
-      <Ring checks={checks} state={state} />
-      <Text role="secondary" className="font-medium text-foreground">
-        {summary}
-      </Text>
-      <Text role="secondary" className={stateTone[state].text}>
-        {label}
-      </Text>
+      <Ring checks={checks} state={description.state} />
+      <ChecksSummary {...description} />
     </View>
   );
 }

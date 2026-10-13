@@ -28,17 +28,25 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function unavailable(status: 'loading' | 'disconnected', width: number): Story {
+type Unavailable = 'loading' | 'disconnected';
+
+const serverPages = (width: number): string[] => [
+  'Projects',
+  'Agents',
+  'Accounts',
+  ...(width === layoutWidths.wide ? ['Devices'] : []),
+];
+const connectionNames: Record<Unavailable, string> = {
+  loading: 'Connection, Connecting…, connecting',
+  disconnected: 'Connection, Disconnected, server unavailable',
+};
+
+function unavailable(status: Unavailable, width: number): Story {
   return {
     args: { status },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      for (const title of [
-        'Projects',
-        'Agents',
-        'Accounts',
-        ...(width === layoutWidths.wide ? ['Devices'] : []),
-      ]) {
+      for (const title of serverPages(width)) {
         const row = canvas.getByRole('link', {
           name: new RegExp(`^${title}(?:,|$)`),
         });
@@ -50,10 +58,7 @@ function unavailable(status: 'loading' | 'disconnected', width: number): Story {
       await expect(onSelect).not.toHaveBeenCalled();
       await userEvent.tab();
       const connection = canvas.getByRole('link', {
-        name:
-          status === 'loading'
-            ? 'Connection, Connecting…, connecting'
-            : 'Connection, Disconnected, server unavailable',
+        name: connectionNames[status],
       });
       await expect(connection).toHaveFocus();
       await userEvent.keyboard('{Enter}');

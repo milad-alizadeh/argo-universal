@@ -24,11 +24,13 @@ export interface SettingsPageProps extends PageTitleRowProps {
 // The page's centred column, its side padding included. The padding fits the back button's hang (-left-8 in PageTitleRow), so the button stays inside the pane when the column meets the pane's edge.
 const settingsColumnMaxWidth = 848;
 
-function useSettingsColumn(): {
+interface SettingsColumn {
   maxWidth: number;
   paddingLeft: number;
   paddingRight: number;
-} {
+}
+
+function useSettingsColumn(): SettingsColumn {
   const padding = Number.parseFloat(String(useCSSVariable('--spacing-8')));
   return useMemo(
     () => ({
@@ -46,21 +48,42 @@ function useSettingsColumn(): {
  * A phone's native header already shows the title, so there the page is its content alone.
  */
 export function SettingsPage(props: SettingsPageProps): ReactNode {
-  const settingsColumn = useSettingsColumn();
   if (!useWide()) return props.children;
+  return <WideSettingsPage {...props} />;
+}
+
+function WideSettingsPage(props: SettingsPageProps): React.JSX.Element {
+  const settingsColumn = useSettingsColumn();
   return (
     <View className="mt-shell-inset flex-1">
-      <View
-        className="w-full self-center pt-[53px] pb-6"
-        style={settingsColumn}
-      >
-        <SettingsPageHeader {...props} />
-      </View>
-      <View className="min-h-0 flex-1">
-        <ScrollColumnContext value={settingsColumn}>
-          {props.children}
-        </ScrollColumnContext>
-      </View>
+      <SettingsPageTop {...props} column={settingsColumn} />
+      <SettingsPageBody column={settingsColumn}>
+        {props.children}
+      </SettingsPageBody>
+    </View>
+  );
+}
+
+function SettingsPageTop({
+  column,
+  ...props
+}: SettingsPageProps & { column: SettingsColumn }): React.JSX.Element {
+  return (
+    <View className="w-full self-center pt-[53px] pb-6" style={column}>
+      <SettingsPageHeader {...props} />
+    </View>
+  );
+}
+
+function SettingsPageBody(props: {
+  column: SettingsColumn;
+  children: ReactNode;
+}): React.JSX.Element {
+  return (
+    <View className="min-h-0 flex-1">
+      <ScrollColumnContext value={props.column}>
+        {props.children}
+      </ScrollColumnContext>
     </View>
   );
 }

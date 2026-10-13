@@ -1,6 +1,8 @@
 import type * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import type { BoxShadowValue, ColorValue, ViewStyle } from 'react-native';
 import Animated, {
+  type SharedValue,
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
@@ -28,37 +30,7 @@ export function BlinkingDot({
   className,
   testID,
 }: BlinkingDotProps): React.JSX.Element {
-  const { backgroundColor } = useResolveClassNames(colorClassName);
-  const opacity = useSharedValue(1);
-  useEffect(() => {
-    opacity.set(
-      blinking
-        ? withRepeat(
-            withTiming(dimmedOpacity, { duration: blinkMilliseconds }),
-            -1,
-            true,
-          )
-        : 1,
-    );
-    return (): void => cancelAnimation(opacity);
-  }, [blinking, opacity]);
-  const style = useAnimatedStyle(
-    () => ({
-      opacity: opacity.get(),
-      boxShadow: blinking
-        ? [
-            {
-              offsetX: 0,
-              offsetY: 0,
-              blurRadius: 4,
-              spreadDistance: 0,
-              color: backgroundColor,
-            },
-          ]
-        : [],
-    }),
-    [opacity, blinking, backgroundColor],
-  );
+  const style = useBlinkingStyle(colorClassName, blinking);
   return (
     <Animated.View
       testID={testID}
@@ -66,4 +38,45 @@ export function BlinkingDot({
       className={cn('rounded-full', colorClassName, className)}
     />
   );
+}
+
+function useBlinkingStyle(
+  colorClassName: string,
+  blinking: boolean,
+): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
+  const { backgroundColor } = useResolveClassNames(colorClassName);
+  const opacity = useBlinkingOpacity(blinking);
+  const boxShadow = useMemo(
+    () => glowShadow(backgroundColor, blinking),
+    [backgroundColor, blinking],
+  );
+  return useAnimatedStyle(
+    () => ({ opacity: opacity.get(), boxShadow }),
+    [opacity, boxShadow],
+  );
+}
+
+function useBlinkingOpacity(blinking: boolean): SharedValue<number> {
+  const opacity = useSharedValue(1);
+  useEffect(() => {
+    opacity.set(blinking ? blink() : 1);
+    return (): void => cancelAnimation(opacity);
+  }, [blinking, opacity]);
+  return opacity;
+}
+
+function blink(): number {
+  return withRepeat(
+    withTiming(dimmedOpacity, { duration: blinkMilliseconds }),
+    -1,
+    true,
+  );
+}
+
+function glowShadow(
+  color: ColorValue | undefined,
+  blinking: boolean,
+): BoxShadowValue[] {
+  if (!blinking) return [];
+  return [{ offsetX: 0, offsetY: 0, blurRadius: 4, spreadDistance: 0, color }];
 }

@@ -54,44 +54,6 @@
     { "files": ["packages/client/src/features/requests/components/plan-proposal-card/*"], "rules": { "complexity": "off", "jsx-a11y/no-autofocus": "off", "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-unused-vars": "off", "unicorn/prefer-ternary": "off" } },
     // max-lines-per-function
     { "files": ["packages/client/src/features/requests/components/request-card/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, max-params, max-statements
-    { "files": ["packages/client/src/features/sessions/components/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-params": "off", "max-statements": "off" } },
-    // max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/sessions/components/new-session-view/*"], "rules": { "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/features/sessions/components/project-heading/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/features/sessions/components/pull-request-indicator/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/sessions/components/session-row/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/sessions/components/session-view/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/features/sessions/components/sessions-filter-menu/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, max-statements
-    { "files": ["packages/client/src/features/sessions/components/sessions-list/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/features/sessions/components/sessions-loading/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/sessions/components/sessions-view/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/features/settings/components/placeholder-detail-view/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/settings/components/project-detail-view/*"], "rules": { "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/settings/components/project-list-view/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/settings/components/settings-list/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, sonarjs/no-nested-conditional, unicorn/prefer-string-replace-all
-    { "files": ["packages/client/src/lib/product/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "sonarjs/no-nested-conditional": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/lib/product/field-list/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/lib/product/screen/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function, unicorn/prefer-string-replace-all
-    { "files": ["packages/client/src/lib/product/scroll-fade/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "unicorn/prefer-string-replace-all": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/lib/product/status-indicator/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type
     { "files": ["packages/contracts/src/feed/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
     // max-lines, max-lines-per-function, typescript/explicit-function-return-type

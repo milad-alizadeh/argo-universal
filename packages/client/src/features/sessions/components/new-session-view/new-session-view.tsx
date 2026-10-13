@@ -8,21 +8,21 @@ import {
   type ComposerDraft,
   StartSessionIn,
 } from '#features/composer';
-import { Feed } from '#features/feed';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import {
   type ErrorToast,
   useErrorToast,
 } from '#lib/generic/primitives/overlays/toast/toast';
-import { useContentWide } from '#lib/product/content-layout';
 import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen/screen';
-import { SessionColumn, SessionLayout } from '#lib/product/session-layout';
+import { SessionLayout } from '#lib/product/session-layout';
 import type { StartingFeed } from '../../state/starting-feed';
 import {
   serverSilentMessage,
   sessionOpenFailedTitle,
 } from '../failure-messages';
+import { composerDraftProps } from './new-session-draft';
+import { NewSessionFeed } from './new-session-feed';
 
 export interface ReadyNewSessionViewProps {
   serverName: string;
@@ -68,10 +68,6 @@ const openFailed = (message: string): ErrorToast => ({
   message,
 });
 
-const emptyDraft: ComposerDraft = { text: '', attachments: [] };
-const ignoreDraft = (): void => {};
-const noOlderRows = (): void => {};
-
 // The header stays empty until the first prompt starts the Session and gives it a title.
 const newSessionTitle = null;
 
@@ -88,60 +84,13 @@ export function NewSessionView(props: NewSessionViewProps): React.JSX.Element {
   return <ReadyNewSessionView {...props} />;
 }
 
-// Wide, the question sits centred in the space a Session's Feed fills.
-function NewSessionHeading(): React.JSX.Element | null {
-  if (!useContentWide()) return null;
-  return (
-    <View className="flex-1 justify-center pb-10">
-      <SessionColumn className="px-4">
-        <Text role="title" semanticRole="heading" aria-level={1}>
-          What should we work on?
-        </Text>
-      </SessionColumn>
-    </View>
-  );
+function openFailure(props: ReadyNewSessionViewProps): ErrorToast | undefined {
+  return props.openError === undefined
+    ? undefined
+    : openFailed(props.openError);
 }
 
-// The sent prompt and Working while the Session starts, else the question.
-function NewSessionFeed({
-  starting,
-}: {
-  starting?: StartingFeed;
-}): React.JSX.Element {
-  if (!starting) return <NewSessionHeading />;
-  return (
-    <Feed
-      items={starting.items}
-      liveHeader={starting.liveHeader}
-      imageUrl={starting.imageUrl}
-      loadingOlder={false}
-      onStartReached={noOlderRows}
-    />
-  );
-}
-
-type ComposerDraftProps = Pick<
-  ComposerProps,
-  'draft' | 'onDraftChange' | 'sending' | 'disabled'
->;
-
-// Once the prompt shows in the Feed the Composer stands empty and still; the draft returns if the start fails.
-const composerDraftProps = (
-  props: ReadyNewSessionViewProps,
-): ComposerDraftProps =>
-  props.starting
-    ? { draft: emptyDraft, onDraftChange: ignoreDraft, disabled: true }
-    : {
-        draft: props.draft,
-        onDraftChange: props.onDraftChange,
-        sending: props.opening,
-      };
-
-// A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off.
-function StartSessionInRow(
-  props: ReadyNewSessionViewProps,
-): React.JSX.Element | null {
-  if (props.starting) return null;
+function NewSessionStartIn(props: ReadyNewSessionViewProps): React.JSX.Element {
   return (
     <View className="w-full items-center pb-2">
       <StartSessionIn
@@ -157,41 +106,57 @@ function StartSessionInRow(
   );
 }
 
+function SetupStepAlert({
+  setupStep,
+}: {
+  setupStep?: string;
+}): React.ReactNode {
+  if (setupStep === undefined) return null;
+  return (
+    <Text semanticRole="alert" className="w-full px-4 pb-2 text-destructive">
+      {setupStep}
+    </Text>
+  );
+}
+
+function PromptComposer(props: ReadyNewSessionViewProps): React.JSX.Element {
+  return (
+    <Composer
+      {...composerDraftProps(props)}
+      onAttachImages={props.onAttachImages}
+      onAttachFiles={props.onAttachFiles}
+      onDropFiles={props.onDropFiles}
+      onSend={props.onSend}
+      configuration={props.configuration}
+      placeholder="What should the Agent work on?"
+      sendable={props.canOpen}
+      error={props.attachmentError}
+    />
+  );
+}
+
+function NewSessionComposer(
+  props: ReadyNewSessionViewProps,
+): React.JSX.Element {
+  return (
+    <>
+      {/* A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off. */}
+      {!props.starting && <NewSessionStartIn {...props} />}
+      <SetupStepAlert setupStep={props.setupStep} />
+      <PromptComposer {...props} />
+    </>
+  );
+}
+
 function ReadyNewSessionView(
   props: ReadyNewSessionViewProps,
 ): React.JSX.Element {
-  const { configuration } = props;
-  useErrorToast(
-    props.openError === undefined ? undefined : openFailed(props.openError),
-  );
+  useErrorToast(openFailure(props));
   return (
     <SessionLayout
       header={<PageHeader title={newSessionTitle} />}
       feed={<NewSessionFeed starting={props.starting} />}
-      composer={
-        <>
-          <StartSessionInRow {...props} />
-          {props.setupStep !== undefined && (
-            <Text
-              semanticRole="alert"
-              className="w-full px-4 pb-2 text-destructive"
-            >
-              {props.setupStep}
-            </Text>
-          )}
-          <Composer
-            {...composerDraftProps(props)}
-            onAttachImages={props.onAttachImages}
-            onAttachFiles={props.onAttachFiles}
-            onDropFiles={props.onDropFiles}
-            onSend={props.onSend}
-            configuration={configuration}
-            placeholder="What should the Agent work on?"
-            sendable={props.canOpen}
-            error={props.attachmentError}
-          />
-        </>
-      }
+      composer={<NewSessionComposer {...props} />}
     />
   );
 }
