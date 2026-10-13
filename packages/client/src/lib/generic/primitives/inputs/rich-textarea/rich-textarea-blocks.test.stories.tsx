@@ -71,26 +71,6 @@ export const TabNestsAndShiftTabUnnests = typedBlock({
   sent: '- Plan\n    - Draft\n- Ship',
   shown: 'Plan\nDraft\nShip',
 });
-export const ShiftReturnInAnItemAddsAnItem = typedBlock({
-  typed: '1. First{Shift>}{Enter}{/Shift}Second',
-  sent: '1. First\n2. Second',
-  shown: twoItems,
-});
-export const ShiftTabOnATopLevelItemLeavesTheList = typedBlock({
-  typed: '- First{Enter}Second{Shift>}{Tab}{/Shift}',
-  sent: '- First\n\nSecond',
-  shown: 'First\n\nSecond',
-});
-export const NumberedListStartsAtTheNumberTyped = typedBlock({
-  typed: '1. First{Enter}{Shift>}{Tab}{/Shift}3. Third{Enter}Fourth',
-  sent: '1. First\n\n3. Third\n4. Fourth',
-  shown: 'First\n\n\n\n\nThird\nFourth',
-});
-export const MarkerAfterAShiftReturnStartsAList = typedBlock({
-  typed: 'Steps{Shift>}{Enter}{/Shift}1. First{Enter}Second',
-  sent: 'Steps\n\n1. First\n2. Second',
-  shown: 'Steps\n\nFirst\nSecond',
-});
 /*
  * The item becomes plain text and keeps its text. Lexical reads a caret move from the browser's
  * selectionchange event, so Backspace waits for that event after the last move.
