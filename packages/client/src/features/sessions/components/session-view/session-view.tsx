@@ -65,7 +65,8 @@ function OpenSessionView({
       header={<SessionHeader {...header} />}
       feed={<Feed {...feed} />}
       composer={
-        <View className="w-full max-w-[640px] self-center web:mx-auto items-center">
+        // As wide as the Feed: the SessionColumn around it sets the width.
+        <View className="w-full items-center">
           {elicitation && (
             <ElicitationSheet
               key={elicitation.request.requestId}
