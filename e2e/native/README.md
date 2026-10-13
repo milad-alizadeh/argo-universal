@@ -1,6 +1,6 @@
 # Native Configure regression
 
-This manual-run Maestro flow exercises the actual Android Storybook preview. It needs a rebuilt development client because the Expo UI patch adds `clearSemantics`. No Server or Agent runs: the preview receives the recorded configuration props.
+This manual Maestro flow exercises the actual Android Storybook preview. It needs a rebuilt development client because the Expo UI patch adds `clearSemantics`. No Server or Agent runs: the preview receives the recorded configuration props.
 
 1. Build and install the Android development client. Start Metro.
 2. Open the App's native Storybook. Select **Composer → ComposerConfiguration → Fast mode on**, then open Configure.
