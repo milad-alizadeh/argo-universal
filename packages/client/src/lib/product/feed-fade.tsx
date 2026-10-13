@@ -16,14 +16,14 @@ import { sessionSurface } from './session-column';
 const headerFadeDepth = 56;
 
 // iOS 26's glass header shades the Feed scrolled under it; every other header is solid, so the Feed fades out below it.
+const topFade = (wide: boolean): ScrollFadeEdge =>
+  wide || !hasLiquidGlass ? 'scrolled' : 'never';
+
 function feedFadeEdges(
   wide: boolean,
   glassComposer: boolean,
 ): PerEdge<ScrollFadeEdge> {
-  return {
-    top: wide || !hasLiquidGlass ? 'scrolled' : 'never',
-    bottom: glassComposer ? 'never' : 'always',
-  };
+  return { top: topFade(wide), bottom: glassComposer ? 'never' : 'always' };
 }
 
 function feedFadeDepth(wide: boolean, atEnd: boolean): PerEdge<number> {
