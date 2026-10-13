@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { fadedEdges } from '../../../../../mocks/scroll-fade';
 import { firstAndLastRowsReachable } from '../../../../../mocks/sessions-list/first-and-last-rows.test.mocks';
 import { insertSessionWithoutOverlap } from '../../../../../mocks/sessions-list/insert-session.test.mocks';
 import { memoizedRows } from '../../../../../mocks/sessions-list/memoized-rows.test.mocks';
@@ -100,19 +101,17 @@ export const ScrollFade: Story = {
     if ('__vitest_browser__' in globalThis) await settleViewport(390);
     const scroll = await canvas.findByTestId(sessionsScrollId);
     scroll.scrollTop = 0;
+    // The last rows always sink into the bottom edge; the top fades once rows scroll under it.
     await waitFor(() =>
-      expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
-    );
-    await waitFor(() =>
-      expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
+      expect(fadedEdges(scroll)).toEqual({ top: false, bottom: true }),
     );
     scroll.scrollTop = 200;
     await waitFor(() =>
-      expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
+      expect(fadedEdges(scroll)).toEqual({ top: true, bottom: true }),
     );
     scroll.scrollTop = scroll.scrollHeight;
     await waitFor(() =>
-      expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
+      expect(fadedEdges(scroll)).toEqual({ top: true, bottom: true }),
     );
   },
 };

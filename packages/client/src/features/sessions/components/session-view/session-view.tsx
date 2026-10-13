@@ -70,7 +70,8 @@ function QuestionSheet({
 function SessionComposer(props: OpenSessionViewProps): React.JSX.Element {
   const wide = useWide();
   return (
-    <View className="w-full max-w-[640px] self-center web:mx-auto items-center">
+    // As wide as the Feed: the SessionColumn around it sets the width.
+    <View className="w-full items-center">
       <QuestionSheet elicitation={props.elicitation} />
       <Composer
         {...composerUnderQuestion(props.composer, props.elicitation)}

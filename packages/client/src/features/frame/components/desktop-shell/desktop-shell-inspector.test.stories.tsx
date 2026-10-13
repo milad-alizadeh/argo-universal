@@ -1,6 +1,7 @@
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, screen, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
+import { fadedEdges } from '../../../../../mocks/scroll-fade';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
@@ -125,16 +126,11 @@ export const InspectorScrollKeepsHeaderReachable: ShellStory = {
       expect(inspector.scrollHeight).toBeGreaterThan(inspector.clientHeight),
     );
     inspector.scrollTop = 60;
+    await waitFor(() => expect(fadedEdges(inspector).top).toBe(true));
+    // The fade lies in the scroll view, under the header, so the header stays whole.
     const title = canvas.getByRole('heading', { name: 'Inspector' });
-    await waitFor(async () => {
-      const fade = inspector.parentElement?.querySelector(
-        ':scope > [data-testid="scroll-fade-top"]',
-      );
-      await expect(fade).toBeTruthy();
-      if (!fade) return;
-      await expect(fade.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-        title.getBoundingClientRect().bottom - 1,
-      );
-    });
+    await expect(inspector.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      title.getBoundingClientRect().bottom - 1,
+    );
   }),
 };
