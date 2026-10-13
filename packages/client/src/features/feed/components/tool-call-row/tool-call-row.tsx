@@ -2,9 +2,12 @@ import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#lib/generic/primitives/display/text/text';
-import { toolCallTitle, toolCallTitlePaths } from '../../view/tool-call-title';
-import { ToolCallDisclosure } from '../tool-call-disclosure';
+import {
+  ToolCallDisclosure,
+  toolCallDisclosureProps,
+} from '../tool-call-disclosure';
 import { toolCallIcon } from '../tool-call-icon';
+import { toolCallPath } from '../tool-call-meta';
 import { ToolOutput } from '../tool-output';
 
 export interface ToolCallRowProps {
@@ -14,35 +17,52 @@ export interface ToolCallRowProps {
   awaitingApproval?: boolean;
 }
 
-export function ToolCallRow({
+const settledLabels = new Map<ToolCallUpdate['status'], string>([
+  ['failed', 'Failed'],
+  ['cancelled', 'Stopped'],
+]);
+
+function SettledStatus({
+  status,
+}: {
+  status: ToolCallUpdate['status'];
+}): React.JSX.Element | null {
+  const label = settledLabels.get(status);
+  return label ? (
+    <View className="px-3 pb-2">
+      <Text className="text-muted-foreground">{label}</Text>
+    </View>
+  ) : null;
+}
+
+function ToolCallRowOutput({
   row,
-  initialOpen,
-  permissionMessage,
-  awaitingApproval = false,
-}: ToolCallRowProps): React.JSX.Element {
-  const path =
-    row._meta?.argo?.commandActions?.find((action) => action.path)?.path ??
-    row.locations?.[0]?.path;
+}: {
+  row: ToolCallUpdate;
+}): React.JSX.Element {
+  return (
+    <>
+      <ToolOutput
+        content={row.content}
+        language={toolCallPath(row)?.split('/').at(-1)}
+      />
+      <SettledStatus status={row.status} />
+    </>
+  );
+}
+
+export function ToolCallRow(props: ToolCallRowProps): React.JSX.Element {
+  const { row } = props;
   return (
     <ToolCallDisclosure
-      label={toolCallTitle(row, awaitingApproval)}
-      paths={toolCallTitlePaths(row, awaitingApproval)}
+      {...toolCallDisclosureProps(row, props.awaitingApproval)}
       icon={toolCallIcon(row)}
       running={isToolCallRunning(row)}
       failed={row.status === 'failed'}
-      initialOpen={initialOpen}
-      awaitingApproval={awaitingApproval}
-      permissionOutcome={row._meta?.argo?.permissionOutcome}
-      permissionMessage={permissionMessage}
+      initialOpen={props.initialOpen}
+      permissionMessage={props.permissionMessage}
     >
-      <ToolOutput content={row.content} language={path?.split('/').at(-1)} />
-      {(row.status === 'failed' || row.status === 'cancelled') && (
-        <View className="px-3 pb-2">
-          <Text className="text-muted-foreground">
-            {row.status === 'failed' ? 'Failed' : 'Stopped'}
-          </Text>
-        </View>
-      )}
+      <ToolCallRowOutput row={row} />
     </ToolCallDisclosure>
   );
 }

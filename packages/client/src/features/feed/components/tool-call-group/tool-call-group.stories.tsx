@@ -1,8 +1,30 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import { toolCallGroupMock } from '../tool-call.mocks';
-import { ToolCallGroup } from './tool-call-group';
+import { ToolCallGroup, type ToolCallGroupProps } from './tool-call-group';
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';
+
+const variations: (Omit<ToolCallGroupProps, 'renderActivity'> & {
+  label: string;
+})[] = [
+  {
+    label: 'Running group',
+    group: toolCallGroupMock.running,
+    now: toolCallGroupMock.now,
+  },
+  {
+    label: 'Parallel calls: earlier command still running',
+    group: toolCallGroupMock.parallel,
+    now: toolCallGroupMock.now,
+    initialOpen: true,
+  },
+  { label: 'Settled group', group: toolCallGroupMock.group },
+  {
+    label: 'Settled group, expanded',
+    group: toolCallGroupMock.group,
+    initialOpen: true,
+  },
+];
 
 const meta = {
   title: 'Feed/ToolCallGroup',
@@ -19,34 +41,11 @@ export const Overview: Story = {
   name: 'ToolCallGroup',
   render: () => (
     <Variations className="max-w-composer!">
-      <Variation label="Running group">
-        <ToolCallGroup
-          group={toolCallGroupMock.running}
-          now={toolCallGroupMock.now}
-          renderActivity={renderRecordedActivity}
-        />
-      </Variation>
-      <Variation label="Parallel calls: earlier command still running">
-        <ToolCallGroup
-          group={toolCallGroupMock.parallel}
-          now={toolCallGroupMock.now}
-          renderActivity={renderRecordedActivity}
-          initialOpen
-        />
-      </Variation>
-      <Variation label="Settled group">
-        <ToolCallGroup
-          group={toolCallGroupMock.group}
-          renderActivity={renderRecordedActivity}
-        />
-      </Variation>
-      <Variation label="Settled group, expanded">
-        <ToolCallGroup
-          group={toolCallGroupMock.group}
-          renderActivity={renderRecordedActivity}
-          initialOpen
-        />
-      </Variation>
+      {variations.map(({ label, ...props }) => (
+        <Variation key={label} label={label}>
+          <ToolCallGroup {...props} renderActivity={renderRecordedActivity} />
+        </Variation>
+      ))}
     </Variations>
   ),
 };

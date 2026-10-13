@@ -1,8 +1,49 @@
+import type { ToolCallUpdate } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { recordedEdit } from '../../../../../mocks/feed-edit-mock';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import { EditRow } from './edit-row';
+
+interface EditVariation {
+  label: string;
+  row: ToolCallUpdate;
+  testID?: string;
+}
+
+const variations: EditVariation[] = [
+  {
+    label: 'Small edit',
+    row: recordedEdit('agent-1'),
+    testID: 'edit-small-edit',
+  },
+  {
+    label: 'New file',
+    row: recordedEdit('agent-1', 'edit-and-command', 'add'),
+    testID: 'edit-new-file',
+  },
+  { label: 'Multiple files', row: recordedEdit('agent-2') },
+  {
+    label: 'Large diff and deleted file',
+    row: recordedEdit('agent-2', 'edit-states'),
+    testID: 'edit-large-and-deleted',
+  },
+  {
+    label: 'Failed edit',
+    row: recordedEdit('agent-2', 'edit-failure'),
+    testID: 'edit-failed-edit',
+  },
+];
+
+function EditVariationRow({ row, testID }: EditVariation): React.JSX.Element {
+  if (!testID) return <EditRow row={row} />;
+  return (
+    <View testID={testID}>
+      <EditRow row={row} />
+    </View>
+  );
+}
 
 const meta = {
   title: 'Feed/EditRow',
@@ -17,29 +58,11 @@ export const Overview: Story = {
   name: 'EditRow',
   render: () => (
     <Variations className="max-w-full">
-      <Variation label="Small edit">
-        <View testID="edit-small-edit">
-          <EditRow row={recordedEdit('agent-1')} />
-        </View>
-      </Variation>
-      <Variation label="New file">
-        <View testID="edit-new-file">
-          <EditRow row={recordedEdit('agent-1', 'edit-and-command', 'add')} />
-        </View>
-      </Variation>
-      <Variation label="Multiple files">
-        <EditRow row={recordedEdit('agent-2')} />
-      </Variation>
-      <Variation label="Large diff and deleted file">
-        <View testID="edit-large-and-deleted">
-          <EditRow row={recordedEdit('agent-2', 'edit-states')} />
-        </View>
-      </Variation>
-      <Variation label="Failed edit">
-        <View testID="edit-failed-edit">
-          <EditRow row={recordedEdit('agent-2', 'edit-failure')} />
-        </View>
-      </Variation>
+      {variations.map((variation) => (
+        <Variation key={variation.label} label={variation.label}>
+          <EditVariationRow {...variation} />
+        </Variation>
+      ))}
     </Variations>
   ),
 };
