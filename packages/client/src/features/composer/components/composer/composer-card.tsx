@@ -16,14 +16,16 @@ import { ComposerBottomTray } from './composer-trays';
 import type { ComposerDraft } from './composer-types';
 import { ComposerWarning } from './composer-warning';
 
+const cardGlass = {
+  shape: 'card',
+  interactive: true,
+  className: 'w-full z-10',
+  fallbackClassName:
+    'rounded-2xl bg-glass-card native:bg-background shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180',
+} as const;
 export function ComposerCard(layout: CardLayout): React.JSX.Element {
   return (
-    <LiquidGlass
-      shape="card"
-      glass={!layout.wide}
-      className="w-full z-10"
-      fallbackClassName="rounded-2xl bg-glass-card native:bg-background shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180"
-    >
+    <LiquidGlass {...cardGlass} glass={!layout.wide}>
       <ComposerAttachments {...layout} />
       <ComposerWarnings {...layout} />
       <ComposerText {...layout} />
@@ -99,7 +101,8 @@ function ComposerWarnings({
 }
 function ComposerText(layout: TextLayout): React.JSX.Element {
   return (
-    <View className="px-4 pt-3 pb-2">
+    // The card's layout lets touches through, so a press on its open space reaches the glass.
+    <View pointerEvents="box-none" className="px-4 pt-3 pb-2">
       <RichTextarea {...textInputProps(layout)} />
     </View>
   );
