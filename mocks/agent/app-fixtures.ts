@@ -30,13 +30,9 @@ export function createAppFixtureAdapter(
   identity: AgentIdentity,
   options: AppFixtureOptions = {},
 ): ReturnType<typeof createAgentMetadata> {
+  const probe = fixtureProbe(AppFixtureOptions.parse(options));
   return {
-    ...createAgentMetadata(
-      {
-        discovery: [{ result: fixtureProbe(AppFixtureOptions.parse(options)) }],
-      },
-      identity.agent,
-    ),
+    ...createAgentMetadata({ discovery: [{ result: probe }] }, identity.agent),
     agent: identity.agent,
     label: identity.label,
     logo: identity.logo,

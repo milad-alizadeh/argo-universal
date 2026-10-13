@@ -1,10 +1,9 @@
 import {
   agent,
   ndJsonStream,
-  type AgentApp,
   type AgentConnection,
 } from '@agentclientprotocol/sdk';
-import { initializeScriptedAgent } from './scripted-initialize.ts';
+import { serveScript, type Script } from './scripted-handlers.ts';
 import {
   ScriptedMethodPlayer,
   type ScriptedWire,
@@ -12,139 +11,81 @@ import {
 import { shareScriptedOutput } from './scripted-output.ts';
 import {
   runTurn,
-  scriptedInitialization,
   type ScriptedScenario,
   type ScriptedStep,
 } from './scripted-scenario.ts';
 import { ScriptedSessions } from './scripted-sessions.ts';
 
-type Script = {
-  scenario: ScriptedScenario;
-  sessions: ScriptedSessions;
-  player: ScriptedMethodPlayer;
-  nextId: () => string;
-};
-
-const serveOpenings = (
-  app: AgentApp,
-  { scenario, sessions, player, nextId }: Script,
-): AgentApp => {
-  const initialize = player.respond('initialize');
-  const newSession = player.respond('session/new');
-  const load = player.respond('session/load');
-  const resume = player.respond('session/resume');
-  return app
-    .onRequest('initialize', (context) =>
-      initializeScriptedAgent(
-        context,
-        initialize,
-        scenario.initialize ?? scriptedInitialization,
-      ),
-    )
-    .onRequest('session/new', (context) => {
-      const sessionId = nextId();
-      return newSession(context, {
-        sessionId,
-        configOptions: sessions.open(sessionId),
-      });
-    })
-    .onRequest('session/load', (context) =>
-      load(context, { configOptions: sessions.open(context.params.sessionId) }),
-    )
-    .onRequest('session/resume', (context) =>
-      resume(context, {
-        configOptions: sessions.open(context.params.sessionId),
+type ConnectedScript = { connection: AgentConnection; wire: ScriptedWire };
+class ScriptedAgent {
+  private readonly scenario: ScriptedScenario;
+  private readonly nextSessionId: () => string;
+  private connected: ConnectedScript | undefined;
+  private opened = 0;
+  public constructor(scenario: ScriptedScenario, nextSessionId: () => string) {
+    this.scenario = scenario;
+    this.nextSessionId = nextSessionId;
+  }
+  private nextId(): string {
+    return this.scenario.sessionIds?.[this.opened++] ?? this.nextSessionId();
+  }
+  private createScript(wire: ScriptedWire): Script {
+    const sessions = new ScriptedSessions(this.scenario.configOptions ?? []);
+    return {
+      scenario: this.scenario,
+      sessions,
+      player: new ScriptedMethodPlayer({
+        scenario: this.scenario,
+        sessions,
+        wire,
       }),
+      nextId: () => this.nextId(),
+    };
+  }
+  public connect(
+    output: WritableStream<Uint8Array>,
+    input: ReadableStream<Uint8Array>,
+  ): AgentConnection {
+    const shared = shareScriptedOutput(output);
+    const closed = Promise.withResolvers<void>();
+    const wire = { writeRaw: shared.writeRaw, closed: closed.promise };
+    const connection = serveScript(agent(), this.createScript(wire)).connect(
+      ndJsonStream(shared.stream, input),
     );
-};
-
-const serveCommands = (
-  app: AgentApp,
-  { scenario, sessions, player }: Script,
-): AgentApp => {
-  const close = player.respond('session/close');
-  const configure = player.respond('session/set_config_option');
-  return app
-    .onRequest('session/close', (context) => {
-      sessions.close(context.params.sessionId);
-      return close(context, {});
-    })
-    .onRequest('session/set_config_option', (context) =>
-      configure(context, {
-        configOptions: scenario.responses?.['session/set_config_option']
-          ? []
-          : sessions.configure(context.params),
-      }),
-    )
-    .onNotification('session/cancel', ({ params }) => {
-      scenario.notifications?.['session/cancel']?.requests?.push(params);
-      scenario.notifications?.['session/cancel']?.received?.resolve(params);
-      sessions.cancel(params.sessionId);
+    void connection.closed.then(() => closed.resolve());
+    this.connected = { connection, wire };
+    return connection;
+  }
+  private requireConnection(): ConnectedScript {
+    if (!this.connected) throw new Error('Scripted Agent is not connected');
+    return this.connected;
+  }
+  public async play(
+    steps: readonly ScriptedStep[],
+    sessionId: string,
+  ): Promise<void> {
+    const connected = this.requireConnection();
+    await runTurn(steps, {
+      sessionId,
+      client: connected.connection.client,
+      cancelled: new Promise(() => {}),
+      isCancelled: () => false,
+      ...connected.wire,
     });
-};
-
-const serveOtherMethods = (app: AgentApp, { player }: Script): AgentApp => {
-  const authenticate = player.respond('authenticate');
-  const mode = player.respond('session/set_mode');
-  return app
-    .onRequest('authenticate', (context) => authenticate(context, {}))
-    .onRequest('session/set_mode', (context) => mode(context, {}));
-};
+  }
+  public sendRaw(frame: string): Promise<void> {
+    return this.requireConnection().wire.writeRaw(frame);
+  }
+}
 
 export const createScriptedAgent = (
   scenario: ScriptedScenario,
   nextSessionId = (): string => `${process.pid}:${crypto.randomUUID()}`,
-): {
-  connect: (
-    output: WritableStream<Uint8Array>,
-    input: ReadableStream<Uint8Array>,
-  ) => AgentConnection;
-  play: (steps: readonly ScriptedStep[], sessionId: string) => Promise<void>;
-  sendRaw: (frame: string) => Promise<void>;
-} => {
-  let connected:
-    | { connection: AgentConnection; wire: ScriptedWire }
-    | undefined;
-  let opened = 0;
+): Pick<ScriptedAgent, 'connect' | 'play' | 'sendRaw'> => {
+  const scripted = new ScriptedAgent(scenario, nextSessionId);
   return {
-    connect: (output, input) => {
-      const shared = shareScriptedOutput(output);
-      const closed = Promise.withResolvers<void>();
-      const wire = { writeRaw: shared.writeRaw, closed: closed.promise };
-      const sessions = new ScriptedSessions(scenario.configOptions ?? []);
-      const script = {
-        scenario,
-        sessions,
-        player: new ScriptedMethodPlayer({ scenario, sessions, wire }),
-        nextId: (): string =>
-          scenario.sessionIds?.[opened++] ?? nextSessionId(),
-      };
-      const app = serveOtherMethods(
-        serveCommands(serveOpenings(agent(), script), script),
-        script,
-      );
-      const connection = app
-        .onRequest('session/prompt', (context) =>
-          script.player.dispatchPrompt(context),
-        )
-        .connect(ndJsonStream(shared.stream, input));
-      void connection.closed.then(() => closed.resolve());
-      connected = { connection, wire };
-      return connection;
-    },
-    play: async (steps, sessionId) => {
-      if (!connected) throw new Error('Scripted Agent is not connected');
-      await runTurn(steps, {
-        sessionId,
-        client: connected.connection.client,
-        cancelled: new Promise(() => {}),
-        isCancelled: () => false,
-        ...connected.wire,
-      });
-    },
-    sendRaw: (frame) => {
-      if (!connected) throw new Error('Scripted Agent is not connected');
-      return connected.wire.writeRaw(frame);
-    },
+    connect: (output, input) => scripted.connect(output, input),
+    play: (steps, sessionId) => scripted.play(steps, sessionId),
+    sendRaw: (frame) => scripted.sendRaw(frame),
   };
 };

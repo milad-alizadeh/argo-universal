@@ -2,25 +2,27 @@ import type { ScriptedStep } from './scripted-scenario.ts';
 
 const messageCount = 180;
 
+const historyTool = (index: number): ScriptedStep => ({
+  type: 'update',
+  update: {
+    sessionUpdate: 'tool_call',
+    toolCallId: `history-${index}`,
+    title: `Read history ${index}`,
+    kind: 'read',
+    status: 'completed',
+  },
+});
+const historyMessage = (index: number): ScriptedStep => ({
+  type: 'update',
+  update: {
+    sessionUpdate: 'agent_message_chunk',
+    messageId: `history-message-${index}`,
+    content: { type: 'text', text: `History message ${index}.` },
+  },
+});
 const historyPair = (index: number): ScriptedStep[] => [
-  {
-    type: 'update',
-    update: {
-      sessionUpdate: 'tool_call',
-      toolCallId: `history-${index}`,
-      title: `Read history ${index}`,
-      kind: 'read',
-      status: 'completed',
-    },
-  },
-  {
-    type: 'update',
-    update: {
-      sessionUpdate: 'agent_message_chunk',
-      messageId: `history-message-${index}`,
-      content: { type: 'text', text: `History message ${index}.` },
-    },
-  },
+  historyTool(index),
+  historyMessage(index),
 ];
 
 export const feedHistorySteps: ScriptedStep[] = [
