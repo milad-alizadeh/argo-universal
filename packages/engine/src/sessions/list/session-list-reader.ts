@@ -140,6 +140,8 @@ export function createSessionListReader(options: {
           children.map((child): string => child.id),
         );
         if (input.rejectedSessions.has(row.id)) return [];
+        // A Session appears once its first Turn starts; until then it is a New Session.
+        if (!latestTurnOf(turns, row.id)) return [];
         const result = readSessionInformation({
           ...input,
           sessions,

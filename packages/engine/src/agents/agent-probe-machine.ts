@@ -41,7 +41,6 @@ export const agentProbeMachine = setup({
       ): NonNullable<AgentProbeContext['probe']> => ({
         availability: 'unavailable' as const,
         installStep: `${context.adapter.label} did not start: ${params.reason}`,
-        configOptions: [],
       }),
     }),
   },

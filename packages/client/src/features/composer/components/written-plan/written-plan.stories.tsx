@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { type ReactElement, useState } from 'react';
 import { action } from 'storybook/actions';
-import { SessionColumn } from '#lib/product/session-layout';
+import { SessionColumn } from '#lib/product/session-column';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { longWrittenPlan } from '../../../../../mocks/feed-paper';
 import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.mocks';

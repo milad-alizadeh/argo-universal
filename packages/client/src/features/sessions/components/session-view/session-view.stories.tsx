@@ -12,12 +12,14 @@ import {
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { SessionView, type SessionViewProps } from './session-view';
 import {
+  pullRequestMocks,
+  withPullRequests,
+} from './session-view-pull-request.mocks';
+import {
   emptySession,
   idleSession,
   longSession,
-  pullRequestMocks,
   runningSession,
-  withPullRequests,
 } from './session-view.mocks';
 
 const meta = {

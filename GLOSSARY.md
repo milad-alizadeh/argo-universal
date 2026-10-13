@@ -62,6 +62,10 @@ _Avoid_: Harness, provider, vendor, model
 One conversation with one Agent, with an Argo id and the Agent's own session id.
 _Avoid_: Chat, thread, conversation
 
+**Empty Session**:
+A Session that New Session opened and no prompt has reached yet. It is not listed, and closing it discards it with its worktree and branch.
+_Avoid_: Draft Session, pending Session
+
 **Subagent**:
 A Session that another Session started to do delegated work.
 _Avoid_: Child agent, task agent

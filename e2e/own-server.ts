@@ -11,6 +11,11 @@ import { serverHttpUrl, serverUrlFor } from './server-port';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
+// The Agents append the ACP requests e2e steps check here, one JSON line each.
+export const requestLogName = 'agent-requests.jsonl';
+// initTestRepository makes the Server's one Project here.
+export const projectDirectoryName = 'project';
+
 const serverStartMilliseconds = 30_000;
 const serverPollMilliseconds = 200;
 
@@ -85,7 +90,7 @@ export async function startOwnServer(
   installationPath: string;
   stop: () => Promise<void>;
 }> {
-  const projectPath = path.join(directory, 'project');
+  const projectPath = path.join(directory, projectDirectoryName);
   const home = path.join(directory, 'server-home');
   const registryPath = path.join(directory, 'registry.json');
   const installationPath = path.join(directory, 'installation.json');
@@ -108,6 +113,7 @@ export async function startOwnServer(
         ARGO_E2E_AGENTS: JSON.stringify(agents),
         ARGO_E2E_REGISTRY_PATH: registryPath,
         ARGO_E2E_INSTALLATION_PATH: installationPath,
+        ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
         PATH: '/usr/bin:/bin',
       },
       stdio: ['ignore', 'pipe', 'pipe'],

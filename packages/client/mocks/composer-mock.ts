@@ -8,6 +8,7 @@ import {
   newSessionCatalogs,
   newSessionInputs,
   newSessionOptions,
+  recordedSessionOptions,
 } from '@repo/mocks/app';
 import {
   type ComposerAttachment,
@@ -102,7 +103,7 @@ export const composerUnlistedEffortConfigurations =
     (agent): NonNullable<ComposerProps['configuration']> => ({
       agents: newSessionCatalogs.bothAvailable,
       agent: agent.agent,
-      configOptions: agent.configOptions.map((option) =>
+      configOptions: recordedSessionOptions(agent.agent).map((option) =>
         option.category === 'thought_level' && option.type === 'select'
           ? { ...option, currentValue: 'unsupported' }
           : option,
@@ -117,7 +118,7 @@ export const composerUnavailableConfigurations =
     (agent): NonNullable<ComposerProps['configuration']> => ({
       agents: newSessionCatalogs.bothUnavailable,
       agent: agent.agent,
-      configOptions: agent.configOptions,
+      configOptions: recordedSessionOptions(agent.agent),
       onConfigChange: () => {},
       checkout: { branch: 'main', newWorktree: false },
     }),
@@ -133,7 +134,6 @@ export type ComposerMockProps = ComposerProps & {
 export function composerProps(props: ComposerMockProps): ComposerProps {
   const agent =
     props.initialAgent ?? newSessionCatalogs.bothAvailable[0]?.agent ?? '';
-  const catalog = newSessionOptions.find((entry) => entry.agent === agent);
   return {
     ...props,
     onAttachCamera: props.onAttachCamera ?? props.onAttachImages,
@@ -164,7 +164,10 @@ export function composerProps(props: ComposerMockProps): ComposerProps {
     configuration: props.configuration ?? {
       agents: newSessionCatalogs.bothAvailable,
       agent,
-      configOptions: catalog?.configOptions ?? [],
+      // A Session list Agent has no recorded empty Session, so it starts with no options.
+      configOptions:
+        newSessionOptions.find((entry) => entry.agent === agent)
+          ?.configOptions ?? [],
       turnRunning: props.running ?? false,
       onAgentChange: props.sessionStarted ? undefined : () => {},
       onConfigChange: () => {},
@@ -180,8 +183,13 @@ export function composerProps(props: ComposerMockProps): ComposerProps {
   };
 }
 
-const longModelAgent = newSessionCatalogs.bothAvailable[0];
-const longModelOption = longModelAgent?.configOptions.find(
+function firstAvailableAgent(): AgentInfo {
+  const agent = newSessionCatalogs.bothAvailable[0];
+  if (!agent) throw new Error('Recorded catalog needs an available Agent.');
+  return agent;
+}
+const longModelAgent = firstAvailableAgent();
+const longModelOption = recordedSessionOptions(longModelAgent.agent).find(
   (option) => option.category === 'model' && option.type === 'select',
 );
 const longModelTemplate =
@@ -190,7 +198,7 @@ const longModelTemplate =
         'groupId' in entry ? entry.options : [entry],
       )[0]
     : undefined;
-if (!longModelAgent || longModelOption?.type !== 'select' || !longModelTemplate)
+if (longModelOption?.type !== 'select' || !longModelTemplate)
   throw new Error('Recorded catalog needs an Agent with a model choice.');
 
 export const composerLongModelList = Array.from({ length: 24 }, (_, index) => ({
@@ -207,7 +215,7 @@ export const composerLongListConfiguration: NonNullable<
 > = {
   agents: [longModelAgent, ...composerLongAgentCatalog],
   agent: longModelAgent.agent,
-  configOptions: longModelAgent.configOptions.map((option) =>
+  configOptions: recordedSessionOptions(longModelAgent.agent).map((option) =>
     option.configId === longModelOption.configId && option.type === 'select'
       ? {
           ...option,
@@ -221,11 +229,6 @@ export const composerLongListConfiguration: NonNullable<
   checkout: { branch: 'main', newWorktree: false },
 };
 
-function firstAvailableAgent(): AgentInfo {
-  const agent = newSessionCatalogs.bothAvailable[0];
-  if (!agent) throw new Error('Recorded catalog needs an available Agent.');
-  return agent;
-}
 const fastModeAgent = firstAvailableAgent();
 // No adapter offers Fast mode yet, so this on/off option stands in until one is recorded.
 export function composerFastModeConfiguration(
@@ -235,7 +238,7 @@ export function composerFastModeConfiguration(
     agents: newSessionCatalogs.bothAvailable,
     agent: fastModeAgent.agent,
     configOptions: [
-      ...fastModeAgent.configOptions,
+      ...recordedSessionOptions(fastModeAgent.agent),
       {
         type: 'boolean',
         configId: 'fast',

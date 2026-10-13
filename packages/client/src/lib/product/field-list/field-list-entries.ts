@@ -27,15 +27,17 @@ const titleEntries = ({ section, key, gapAbove }: Placed): FieldListEntry[] =>
     ? [{ kind: 'title', key: `${key}:title`, title: section.title, gapAbove }]
     : [];
 
-const rowEntries = ({ section, key, gapAbove }: Placed): FieldListEntry[] =>
-  section.rows.map((row, index) => ({
+const rowEntries = ({ section, key, gapAbove }: Placed): FieldListEntry[] => {
+  const opensSection = gapAbove && !section.title;
+  return section.rows.map((row, index) => ({
     kind: 'row',
     key: `${key}:${row.key ?? index}`,
     row,
     first: index === 0,
     last: index === section.rows.length - 1,
-    gapAbove: gapAbove && index === 0 && !section.title,
+    gapAbove: opensSection && index === 0,
   }));
+};
 
 const footerEntries = ({ section, key }: Placed): FieldListEntry[] =>
   section.footer

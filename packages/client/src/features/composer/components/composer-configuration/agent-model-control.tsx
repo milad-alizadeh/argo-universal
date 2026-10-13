@@ -2,6 +2,7 @@ import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
 import type * as React from 'react';
 import { useContentWide } from '#lib/product/content-layout';
 import { Button } from '#primitives/buttons/button/button';
+import { Spinner } from '#primitives/display/spinner/spinner';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { AgentIcon } from './agent-icon';
 import { AgentModelMenu } from './agent-model-menu';
@@ -58,12 +59,18 @@ function agentModelTrigger(props: TriggerProps): React.JSX.Element {
   return (
     <Button
       {...agentModelButtonProps(props, current)}
-      leading={wide ? <AgentIcon agent={props.agent} /> : undefined}
+      leading={agentModelLeading(props)}
       trailing={
         <AgentModelTrailing configuration={props.configuration} wide={wide} />
       }
     />
   );
+}
+// A spinner while the Session opens; wide, the Agent's icon otherwise.
+function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
+  if (props.configuration.opening)
+    return <Spinner label="Opening the Session" />;
+  return props.wide ? <AgentIcon agent={props.agent} /> : undefined;
 }
 function agentModelButtonProps(
   props: TriggerProps,

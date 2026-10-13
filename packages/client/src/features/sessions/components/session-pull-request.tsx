@@ -40,6 +40,29 @@ function PullRequestIcon({
   );
 }
 
+interface SecondaryPairProps {
+  strong: string;
+  muted: string;
+}
+
+function SecondaryPair(props: SecondaryPairProps): React.JSX.Element {
+  return (
+    <>
+      <Text role="secondary" className="font-medium text-foreground">
+        {props.strong}
+      </Text>
+      <Text role="secondary" className="text-muted-foreground">
+        {props.muted}
+      </Text>
+    </>
+  );
+}
+
+const labelRow = {
+  accessible: true,
+  className: 'flex-row items-center gap-1',
+} as const;
+
 // "#45 Open": the PR's icon, number and state.
 export function SessionPullRequestLabel({
   number,
@@ -47,18 +70,9 @@ export function SessionPullRequestLabel({
 }: Pick<SessionPullRequest, 'number' | 'status'>): React.JSX.Element {
   const label = pullRequestStatusLabels[status];
   return (
-    <View
-      accessible
-      accessibilityLabel={`PR #${number}, ${label}`}
-      className="flex-row items-center gap-1"
-    >
+    <View {...labelRow} accessibilityLabel={`PR #${number}, ${label}`}>
       <PullRequestIcon status={status} />
-      <Text role="secondary" className="font-medium text-foreground">
-        #{number}
-      </Text>
-      <Text role="secondary" className="text-muted-foreground">
-        {label}
-      </Text>
+      <SecondaryPair strong={`#${number}`} muted={label} />
     </View>
   );
 }
@@ -69,32 +83,52 @@ export interface MorePullRequestsProps {
   onShow: (number: number) => void;
 }
 
+function PullRequestItemContent(
+  pullRequest: SessionPullRequest,
+): React.JSX.Element {
+  return (
+    <>
+      <PullRequestIcon status={pullRequest.status} />
+      <Text className="font-medium">#{pullRequest.number}</Text>
+      <Text numberOfLines={1} className="min-w-0 shrink">
+        {pullRequest.title}
+      </Text>
+    </>
+  );
+}
+
+function pullRequestItem(
+  pullRequest: SessionPullRequest,
+  { shown, onShow }: MorePullRequestsProps,
+): React.JSX.Element {
+  return (
+    <DropdownMenuItem
+      key={pullRequest.number}
+      accessibilityState={{ selected: pullRequest.number === shown }}
+      onPress={() => onShow(pullRequest.number)}
+    >
+      <PullRequestItemContent {...pullRequest} />
+    </DropdownMenuItem>
+  );
+}
+
+function pullRequestItems(props: MorePullRequestsProps): React.JSX.Element[] {
+  return props.pullRequests.map((pullRequest) =>
+    pullRequestItem(pullRequest, props),
+  );
+}
+
 // "+1 PR ⌄": the header shows one PR; this menu lists all of them and picks the one shown.
-export function MorePullRequests({
-  pullRequests,
-  shown,
-  onShow,
-}: MorePullRequestsProps): React.JSX.Element {
-  const more = pullRequests.length - 1;
+export function MorePullRequests(
+  props: MorePullRequestsProps,
+): React.JSX.Element {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <MenuButton label={`+${more} PR`} />
+        <MenuButton label={`+${props.pullRequests.length - 1} PR`} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        {pullRequests.map((pullRequest) => (
-          <DropdownMenuItem
-            key={pullRequest.number}
-            accessibilityState={{ selected: pullRequest.number === shown }}
-            onPress={() => onShow(pullRequest.number)}
-          >
-            <PullRequestIcon status={pullRequest.status} />
-            <Text className="font-medium">#{pullRequest.number}</Text>
-            <Text numberOfLines={1} className="min-w-0 shrink">
-              {pullRequest.title}
-            </Text>
-          </DropdownMenuItem>
-        ))}
+        {pullRequestItems(props)}
       </DropdownMenuContent>
     </DropdownMenu>
   );

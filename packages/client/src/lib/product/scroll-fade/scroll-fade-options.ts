@@ -6,7 +6,7 @@ export type ScrollFadeEdgeName = 'top' | 'bottom';
 // How an edge fades: as content scrolls past it, whatever the scroll position, or not at all.
 export type ScrollFadeEdge = 'scrolled' | 'always' | 'never';
 
-type PerEdge<T> = Partial<Record<ScrollFadeEdgeName, T>>;
+export type PerEdge<T> = Partial<Record<ScrollFadeEdgeName, T>>;
 
 export interface ScrollFadeOptions {
   // Each edge fades as content scrolls past it unless said otherwise.

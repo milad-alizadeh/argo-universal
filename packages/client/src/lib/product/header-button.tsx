@@ -24,49 +24,79 @@ export interface HeaderButtonProps extends Pick<
   dot?: 'attention' | 'filter';
 }
 
+interface HeaderButtonFit {
+  hitSlop: IconButtonProps['hitSlop'];
+  size: string;
+  dotPlace: string;
+}
+
+const headerButtonFits = {
+  // iOS 26 pads each item into a glass bubble, so a 24pt item matches the system search bubble.
+  glass: {
+    hitSlop: 10,
+    size: 'size-6 sm:size-6',
+    dotPlace: '-top-0.5 -right-0.5',
+  },
+  narrow: {
+    hitSlop: { left: 6, right: 6 },
+    size: 'h-11 sm:h-11 w-8 sm:w-8',
+    dotPlace: 'top-2.5 right-1',
+  },
+  slot: {
+    hitSlop: undefined,
+    size: 'h-11 sm:h-11 w-11 sm:w-11',
+    dotPlace: 'top-2.5 right-[9px]',
+  },
+} satisfies Record<string, HeaderButtonFit>;
+
+const dotColors = {
+  attention: 'bg-warning',
+  filter: 'bg-foreground',
+} satisfies Record<NonNullable<HeaderButtonProps['dot']>, string>;
+
+const pairedFit = narrowPairs ? headerButtonFits.narrow : headerButtonFits.slot;
+
+function headerButtonFit(paired: boolean): HeaderButtonFit {
+  if (hasLiquidGlass) return headerButtonFits.glass;
+  return paired ? pairedFit : headerButtonFits.slot;
+}
+
+function headerButtonClass(size: string): string {
+  return contentActionClass({
+    variant: 'ghost',
+    className: cn('rounded-full p-0', size),
+  });
+}
+
 // A plain icon button for a native header; the platform draws any chrome around it.
-export function HeaderButton({
-  icon,
-  accessibilityLabel,
-  paired = false,
-  dot,
-  ...props
-}: HeaderButtonProps): React.JSX.Element {
-  const pairNarrow = paired && narrowPairs;
-  const narrow = pairNarrow || hasLiquidGlass;
-  let hitSlop: IconButtonProps['hitSlop'];
-  if (hasLiquidGlass) hitSlop = 10;
-  else if (pairNarrow) hitSlop = { left: 6, right: 6 };
+export function HeaderButton(props: HeaderButtonProps): React.JSX.Element {
+  const { icon, paired = false, dot, ...pressableProps } = props;
+  const fit = headerButtonFit(paired);
   return (
     <Pressable
-      hitSlop={hitSlop}
-      accessibilityLabel={accessibilityLabel}
-      {...props}
+      hitSlop={fit.hitSlop}
+      {...pressableProps}
       role="button"
-      className={contentActionClass({
-        variant: 'ghost',
-        className: cn(
-          'rounded-full p-0',
-          // iOS 26 pads each item into a glass bubble, so a 24pt item matches the system search bubble.
-          hasLiquidGlass
-            ? 'size-6 sm:size-6'
-            : cn('h-11 sm:h-11', pairNarrow ? 'w-8 sm:w-8' : 'w-11 sm:w-11'),
-        ),
-      })}
+      className={headerButtonClass(fit.size)}
     >
       <Icon role="action" name={icon} className="text-foreground" />
-      {dot && (
-        <View
-          testID="header-button-dot"
-          className={cn(
-            'absolute size-[7px] rounded-full border-[1.5px] border-background',
-            dot === 'attention' ? 'bg-warning' : 'bg-foreground',
-            hasLiquidGlass
-              ? '-top-0.5 -right-0.5'
-              : cn('top-2.5', narrow ? 'right-1' : 'right-[9px]'),
-          )}
-        />
-      )}
+      {dot && <HeaderButtonDot color={dotColors[dot]} place={fit.dotPlace} />}
     </Pressable>
+  );
+}
+
+function HeaderButtonDot(props: {
+  color: string;
+  place: string;
+}): React.JSX.Element {
+  return (
+    <View
+      testID="header-button-dot"
+      className={cn(
+        'absolute size-[7px] rounded-full border-[1.5px] border-background',
+        props.color,
+        props.place,
+      )}
+    />
   );
 }

@@ -26,23 +26,48 @@ export const createEngineAgentLogins = (
     timeoutMs: input.loginTimeoutMs,
     cleanupTimeoutMs: input.loginCleanupTimeoutMs,
     openLoginAgent: createLoginAgentOpener(input.acp),
-    reserveAuthentication: (launch) => {
-      const resources = input.sessions.getSnapshot().context.acpResources;
-      if (!resources) throw new Error('ACP resources are unavailable');
-      return resources.reserveAuthentication(launch);
-    },
-    resolveLaunch: async (agentId) => {
-      const source = input.sessions.getSnapshot().context;
-      if (isAgentDisabled(source.database, agentId))
-        throw new Error('Agent is disabled');
-      const resolve = selectAgentLaunchResolver(source, agentId);
-      if (!resolve)
-        throw new Error('No ACP launch is configured for this Agent');
-      const launch = await resolve({
-        agent: agentId,
-        projectId: '',
-        projectPath: homedir(),
-      });
-      return { name: agentId, launch };
-    },
+    reserveAuthentication: (launch) =>
+      loginResources(input.sessions).reserveAuthentication(launch),
+    resolveLaunch: (agentId) => resolveLoginLaunch(input.sessions, agentId),
   });
+
+type LoginLaunch = {
+  name: string;
+  launch: Awaited<
+    ReturnType<NonNullable<ReturnType<typeof selectAgentLaunchResolver>>>
+  >;
+};
+async function resolveLoginLaunch(
+  sessions: OpenSessionsActorRef,
+  agentId: string,
+): Promise<LoginLaunch> {
+  const resolve = loginLaunchResolver(sessions, agentId);
+  const launch = await resolve({
+    agent: agentId,
+    projectId: '',
+    projectPath: homedir(),
+  });
+  return { name: agentId, launch };
+}
+
+function loginResources(
+  sessions: OpenSessionsActorRef,
+): NonNullable<
+  ReturnType<OpenSessionsActorRef['getSnapshot']>['context']['acpResources']
+> {
+  const resources = sessions.getSnapshot().context.acpResources;
+  if (!resources) throw new Error('ACP resources are unavailable');
+  return resources;
+}
+
+function loginLaunchResolver(
+  sessions: OpenSessionsActorRef,
+  agentId: string,
+): NonNullable<ReturnType<typeof selectAgentLaunchResolver>> {
+  const source = sessions.getSnapshot().context;
+  if (isAgentDisabled(source.database, agentId))
+    throw new Error('Agent is disabled');
+  const resolve = selectAgentLaunchResolver(source, agentId);
+  if (!resolve) throw new Error('No ACP launch is configured for this Agent');
+  return resolve;
+}

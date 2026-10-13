@@ -1,9 +1,14 @@
 import type { NavigationDestination } from '@repo/client';
+import { newSessionId } from '@repo/client/navigation';
 import { describe, expect, it } from 'vitest';
 import { destinationFor, hrefFor } from './routes';
 
 const sessionsRouteGroup = '(sessions)';
 const firstAgentId = 'first-agent';
+const newSessionInProject: NavigationDestination = {
+  to: 'new-session',
+  projectId: 'project-1',
+};
 
 const destinations: [
   NavigationDestination,
@@ -13,8 +18,13 @@ const destinations: [
   [{ to: 'sessions' }, ['(shell)', sessionsRouteGroup], {}],
   [
     { to: 'new-session' },
-    ['(shell)', sessionsRouteGroup, 'sessions', 'new'],
-    {},
+    ['(shell)', sessionsRouteGroup, 'sessions', '[id]'],
+    { id: newSessionId },
+  ],
+  [
+    newSessionInProject,
+    ['(shell)', sessionsRouteGroup, 'sessions', '[id]'],
+    { projectId: 'project-1', id: newSessionId },
   ],
   [
     { to: 'session', id: 'session-1' },
@@ -58,6 +68,10 @@ describe('hrefFor', () => {
     expect(hrefFor({ to: 'session', id: 'session-1' })).toEqual({
       pathname: '/sessions/[id]',
       params: { id: 'session-1' },
+    });
+    expect(hrefFor(newSessionInProject)).toEqual({
+      pathname: '/sessions/[id]',
+      params: { projectId: 'project-1', id: newSessionId },
     });
     expect(hrefFor({ to: 'settings-agent', agent: firstAgentId })).toEqual({
       pathname: '/settings/agents/[agent]',

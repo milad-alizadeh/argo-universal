@@ -1,12 +1,12 @@
 export type ClosureStep = 'discard' | 'flush' | 'close';
 
-type ClosureFacts = { stored: boolean; feedEnded: boolean };
+type ClosureFacts = { kept: boolean; feedEnded: boolean };
 
-// A Session never stored leaves no Checkout behind; a stored one flushes its Feed unless the Feed already ended.
+// A New Session no prompt reached leaves nothing behind; a kept one flushes its Feed unless the Feed already ended.
 export const nextClosureStep = ({
-  stored,
+  kept,
   feedEnded,
 }: ClosureFacts): ClosureStep => {
-  if (!stored) return 'discard';
+  if (!kept) return 'discard';
   return feedEnded ? 'close' : 'flush';
 };

@@ -22,6 +22,8 @@ export type NavigationDestination =
 interface NavigateOptions {
   // Swaps out the current page, so Back skips it.
   replace?: boolean;
+  // The shown page becomes the destination by changing its params: the same screen, no new page and no animation.
+  inPlace?: boolean;
 }
 
 export type Navigate = (

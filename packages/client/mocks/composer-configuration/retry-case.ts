@@ -1,5 +1,5 @@
 import type { AgentInfo } from '@repo/contracts';
-import { newSessionCatalogs } from '@repo/mocks/app';
+import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import { fn } from 'storybook/test';
 import type { Configuration } from './common';
 interface RetryCase {
@@ -38,7 +38,7 @@ export function retryConfiguration(scenario: RetryScenario): Configuration {
   return {
     agents: newSessionCatalogs.bothUnavailable,
     agent: recorded.agent.agent,
-    configOptions: recorded.agent.configOptions,
+    configOptions: recordedSessionOptions(recorded.agent.agent),
     onConfigChange: fn(),
     onAgentChange: session === 'new' ? onAgentChange : undefined,
     onAgentRetry,

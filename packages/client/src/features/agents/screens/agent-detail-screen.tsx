@@ -1,8 +1,4 @@
-import type {
-  AgentInfo,
-  AgentInstallation,
-  CustomAgentDefinition,
-} from '@repo/contracts';
+import type { AgentInstallation, CustomAgentDefinition } from '@repo/contracts';
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useTRPC } from '#features/connection';
@@ -20,7 +16,6 @@ import {
   useCustomAgentMutations,
   useCustomAgents,
 } from '../hooks/use-custom-agents';
-import { useSessionDefaults } from '../hooks/use-session-defaults';
 import { agentDetail } from '../state/agent-detail';
 import type {
   AgentDetail,
@@ -76,7 +71,6 @@ function CustomAgentPage(
 }
 
 function useAgentDetail(agent: string): {
-  info: AgentInfo | undefined;
   detail: AgentDetail | undefined;
   retry: () => void;
 } {
@@ -84,7 +78,7 @@ function useAgentDetail(agent: string): {
   const catalog = useQuery(useTRPC().agents.catalog.queryOptions());
   const info = agents.data?.find((entry) => entry.agent === agent);
   const registry = catalog.data?.agents.find(({ id }) => id === agent);
-  return { info, detail: agentDetail(info, registry), retry: agents.retry };
+  return { detail: agentDetail(info, registry), retry: agents.retry };
 }
 
 // A built-in or registry Agent: the Server's probe and the saved ACP Registry entry.
@@ -99,16 +93,13 @@ function AgentPage({ agent, onBack }: PageProps): React.JSX.Element {
   );
 }
 function useAgentPageView(props: AgentPageProps): AgentPageView {
-  const { info, detail, retry } = useAgentDetail(props.agent);
-  const { defaults, change } = useSessionDefaults(info);
+  const { detail, retry } = useAgentDetail(props.agent);
   const installation = useAgentInstallation(props.agent, detailVersion(detail));
   if (!detail) return undefined;
   return {
     ...props,
     agent: installedDetail(detail, installation),
     installation,
-    defaults,
-    onDefaultChange: change,
     onCheckAgain: retry,
   };
 }

@@ -14,51 +14,68 @@ export interface SessionsHeaderProps extends SessionsFilter {
   onNewSession: () => void;
 }
 
-// The wide window's Sessions list header row: the title, the filter, New Session, and Search last.
-export function SessionsHeader({
+const newSessionAppearance = {
+  variant: 'ghost',
+  size: 'md',
+  className: 'size-7 sm:size-7',
+  icon: 'new-session',
+  iconRole: 'action',
+  iconClassName: 'text-muted-foreground',
+} as const;
+
+function SessionsHeaderActions({
   onNewSession,
   ...filter
 }: SessionsHeaderProps): React.JSX.Element {
   return (
+    <>
+      <SessionsFilterMenu {...filter} />
+      <IconButton
+        {...newSessionAppearance}
+        accessibilityLabel="New Session"
+        onPress={onNewSession}
+      />
+    </>
+  );
+}
+
+// The wide window's Sessions list header row: the title, the filter, New Session, and Search last.
+export function SessionsHeader(props: SessionsHeaderProps): React.JSX.Element {
+  return (
     <SearchField
       label="Search Sessions"
-      value={filter.query}
-      onChangeText={filter.onQueryChange}
+      value={props.query}
+      onChangeText={props.onQueryChange}
       title={<ListTitle>Sessions</ListTitle>}
-      actions={
-        <>
-          <SessionsFilterMenu {...filter} />
-          <IconButton
-            variant="ghost"
-            size="md"
-            className="size-7 sm:size-7"
-            icon="new-session"
-            iconRole="action"
-            iconClassName="text-muted-foreground"
-            accessibilityLabel="New Session"
-            onPress={onNewSession}
-          />
-        </>
-      }
+      actions={<SessionsHeaderActions {...props} />}
     />
   );
+}
+
+type HeaderSearch = NonNullable<ScreenHeaderProps['search']>;
+
+function newSessionSearchAction(
+  onNewSession: () => void,
+): Pick<HeaderSearch, 'action'> {
+  if (!newSessionBesideSearch) return {};
+  return {
+    action: {
+      icon: 'new-session',
+      accessibilityLabel: 'New Session',
+      onPress: onNewSession,
+    },
+  };
 }
 
 // A phone's native header search; on iOS New Session is a header item, on Android its own round button.
 export function sessionsHeaderSearch(
   filter: SessionsFilter,
   onNewSession: () => void,
-): NonNullable<ScreenHeaderProps['search']> {
+): HeaderSearch {
   return {
     placeholder: 'Search Sessions',
     onChangeText: filter.onQueryChange,
-    ...(newSessionBesideSearch && {
-      action: {
-        icon: 'new-session',
-        accessibilityLabel: 'New Session',
-        onPress: onNewSession,
-      },
-    }),
+    ...newSessionSearchAction(onNewSession),
   };
 }
 
