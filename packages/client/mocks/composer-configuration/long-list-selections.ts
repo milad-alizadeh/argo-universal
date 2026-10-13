@@ -14,8 +14,8 @@ export async function selectLastDesktopModel(
   await openModelChoices(context);
   const models = await overlay.findByTestId(modelsScrollId);
   await assertModelMenuInsideWindow();
-  const lastModel = await expectScrollsUnderFades(models, findLastModel);
-  await selectLongModel(context, lastModel);
+  await expectScrollsUnderFades(models, findLastModel);
+  await selectLongModel(context, findLastModel);
 }
 function findLastModel(): Promise<HTMLElement> {
   return within(document.body).findByRole('button', {
@@ -40,28 +40,50 @@ async function assertModelMenuInsideWindow(): Promise<void> {
 }
 async function selectLongModel(
   { userEvent, args }: PlayContext,
-  lastModel: HTMLElement,
+  lastModel: () => Promise<HTMLElement>,
 ): Promise<void> {
-  await userEvent.click(lastModel);
-  await expect(args.configuration?.onConfigChange).toHaveBeenCalledWith(
-    expect.any(String),
-    lastLongModel.value,
+  await clickUntil({ userEvent, row: lastModel }, () =>
+    expect(args.configuration?.onConfigChange).toHaveBeenCalledWith(
+      expect.any(String),
+      lastLongModel.value,
+    ),
   );
 }
 export async function selectLastAgent({
   userEvent,
   args,
 }: PlayContext): Promise<void> {
+  await expectScrollsUnderFades(
+    await openAgentChoices(userEvent),
+    findLastAgent,
+  );
+  await clickUntil({ userEvent, row: findLastAgent }, () =>
+    expect(args.configuration?.onAgentChange).toHaveBeenCalledWith(
+      lastLongAgent.agent,
+    ),
+  );
+}
+// Clicks the row found fresh each try, as a virtualized list can swap the node under a click.
+async function clickUntil(
+  {
+    userEvent,
+    row,
+  }: Pick<PlayContext, 'userEvent'> & { row: () => Promise<HTMLElement> },
+  called: () => Promise<void>,
+): Promise<void> {
+  await waitFor(async () => {
+    await userEvent.click(await row());
+    await called();
+  });
+}
+async function openAgentChoices(
+  userEvent: PlayContext['userEvent'],
+): Promise<HTMLElement> {
   const overlay = within(document.body);
   await userEvent.click(
     await overlay.findByRole('button', { name: chooseAgentLabel }),
   );
-  const agents = await overlay.findByTestId(agentsScrollId);
-  const lastAgent = await expectScrollsUnderFades(agents, findLastAgent);
-  await userEvent.click(lastAgent);
-  await expect(args.configuration?.onAgentChange).toHaveBeenCalledWith(
-    lastLongAgent.agent,
-  );
+  return overlay.findByTestId(agentsScrollId);
 }
 function findLastAgent(): Promise<HTMLElement> {
   return within(document.body).findByRole('button', {
@@ -72,5 +94,5 @@ export async function selectLastPhoneModel(
   context: PlayContext,
 ): Promise<void> {
   await openModelChoices(context);
-  await selectLongModel(context, await lastVisible(lastLongModel.name));
+  await selectLongModel(context, () => lastVisible(lastLongModel.name));
 }

@@ -4,6 +4,7 @@ import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
 import { Given, When, Then } from './fixtures';
 import { chooseAgent, openNewSession } from './new-session';
+import { agentWork } from './timeouts';
 
 // The scripted Agent's own stdio process, entered as any other ACP program.
 const scriptedAgent = scriptedAgentCommand('reply');
@@ -70,9 +71,10 @@ When(
     await page.getByRole('link', { name: 'Edit', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).fill(name);
     await page.getByRole('button', { name: 'Save', exact: true }).click();
+    // Saving checks the program again before the page leaves editing.
     await expect(
       page.getByRole('link', { name: 'Edit', exact: true }),
-    ).toBeVisible();
+    ).toBeVisible(agentWork);
   },
 );
 

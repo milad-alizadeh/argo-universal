@@ -29,9 +29,8 @@ Then(
     });
     await expect(terminal).toBeVisible();
     await expect(terminal.getByRole('textbox')).toBeVisible();
-    await expect(
-      terminal.getByText('› Continue in your browser', { exact: true }),
-    ).toBeAttached();
+    // xterm draws each line in its rows and again in its accessibility tree.
+    await expect(terminal).toContainText('› Continue in your browser');
     await page.screenshot({
       path: test.info().outputPath('agent-terminal-login.png'),
     });
