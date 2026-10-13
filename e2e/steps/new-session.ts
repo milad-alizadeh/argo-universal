@@ -5,9 +5,15 @@ import { Given, When, Then } from './fixtures';
 
 export const agentModelLabel = 'Agent and model';
 export const messageLabel = 'Message';
-const checkedAttribute = 'aria-checked';
 // Opening a Session starts the Agent process, which outlasts the default 5s under parallel load.
-const sessionOpenTimeout = { timeout: 15_000 };
+export const sessionOpenTimeout = { timeout: 15_000 };
+
+// New Session's empty Session is open and holds this device's last choices once the Agent/model spinner goes.
+export async function waitForEmptySession(page: Page): Promise<void> {
+  await expect(
+    page.getByRole('progressbar', { name: 'Opening the Session' }),
+  ).toHaveCount(0, sessionOpenTimeout);
+}
 
 export async function openNewSession(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
@@ -53,6 +59,7 @@ async function startWithAgent(
   const { label } = await readAgent(page, httpUrl, ordinal);
   await openNewSession(page);
   await chooseAgent(page, label);
+  await waitForEmptySession(page);
 }
 
 Given(
@@ -105,24 +112,6 @@ Then('Back returns to the Sessions list', async ({ page }): Promise<void> => {
   await expect(page.getByText('No Sessions yet.', { exact: true })).toHaveCount(
     0,
   );
-});
-
-When('I enable Fast mode', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: agentModelLabel }).click();
-  await page.getByRole('switch', { name: 'Fast mode', exact: true }).click();
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: agentModelLabel }).click();
-  await expect(
-    page.getByRole('switch', { name: 'Fast mode', exact: true }),
-  ).toHaveAttribute(checkedAttribute, 'true');
-  await page.keyboard.press('Escape');
-});
-Then('Fast mode remains enabled', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: agentModelLabel }).click();
-  await expect(
-    page.getByRole('switch', { name: 'Fast mode', exact: true }),
-  ).toHaveAttribute(checkedAttribute, 'true');
-  await page.keyboard.press('Escape');
 });
 
 Given(

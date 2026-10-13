@@ -1,6 +1,8 @@
+import { appendFileSync } from 'node:fs';
 import { Writable } from 'node:stream';
 import { isScenarioName, scenarios } from './scenarios.ts';
 import { createScriptedAgent } from './scripted-agent.ts';
+import type { ScriptedResponses } from './scripted-responses.ts';
 import {
   scriptedInitialization,
   type ScriptedScenario,
@@ -9,7 +11,29 @@ import {
 // The scripted Agent over stdio; `node scripted-agent-process.ts <scenario>`.
 const name = process.argv[2];
 if (!isScenarioName(name)) throw new Error(`Unknown scenario: ${name}`);
-const selected: ScriptedScenario = scenarios[name];
+const scenario: ScriptedScenario = scenarios[name];
+const requestLog = process.env.ARGO_E2E_REQUEST_LOG;
+
+// App E2E reads which Sessions the Agent was asked to close.
+const loggedCloses = (log: string): ScriptedResponses => ({
+  ...scenario.responses,
+  'session/close': [
+    {
+      requests: {
+        push: (params): void => {
+          appendFileSync(
+            log,
+            `${JSON.stringify({ method: 'session/close', params })}\n`,
+          );
+        },
+      },
+    },
+  ],
+});
+const selected: ScriptedScenario =
+  requestLog && !scenario.responses?.['session/close']
+    ? { ...scenario, responses: loggedCloses(requestLog) }
+    : scenario;
 const initialization = selected.initialize ?? scriptedInitialization;
 createScriptedAgent({
   ...selected,
