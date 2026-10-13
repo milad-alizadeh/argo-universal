@@ -1,13 +1,15 @@
-import { type ChildProcess, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
+import type { ChildProcessByStdio } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { readServerAddress } from '@repo/engine/server-runtime';
+import type { Readable } from 'node:stream';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { findFreePort } from '@repo/mocks/network/free-port';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { engineBundlePath } from './engine-bundle';
 import { serverHttpUrl, serverUrlFor } from './server-port';
+import { hasExited, stderrTailLength, waitUntilReady } from './server-process';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
@@ -16,68 +18,18 @@ export const requestLogName = 'agent-requests.jsonl';
 // initTestRepository makes the Server's one Project here.
 export const projectDirectoryName = 'project';
 
-const serverStartMilliseconds = 30_000;
-const serverPollMilliseconds = 200;
+export { pollServer } from './server-process';
 
-// Poll until the Server starts or its startup deadline expires.
-export async function pollServer<T>(
-  check: () => Promise<T | undefined>,
-  timeoutMessage: (seconds: number) => string,
-): Promise<NonNullable<Awaited<T>> | (Awaited<T> & null)> {
-  const deadline = Date.now() + serverStartMilliseconds;
-  while (Date.now() < deadline) {
-    const result = await check();
-    if (result !== undefined) return result;
-    await new Promise((resolve): NodeJS.Timeout =>
-      setTimeout(resolve, serverPollMilliseconds),
-    );
-  }
-  throw new Error(timeoutMessage(serverStartMilliseconds / 1000));
-}
-
-const portTakenPattern = /EADDRINUSE/;
 const attempts = 3;
-const STDERR_TAIL_LENGTH = 2000;
+const portTakenPattern = /EADDRINUSE/;
 
-// Only the Server in this isolated home can satisfy readiness.
-async function waitUntilReady({
-  home,
-  port,
-  server,
-  portTaken,
-  stderrTail,
-}: {
-  home: string;
-  port: number;
-  server: ChildProcess;
-  portTaken: () => boolean;
-  stderrTail: () => string;
-}): Promise<boolean> {
-  return pollServer(
-    async (): Promise<boolean | undefined> => {
-      if (hasExited(server))
-        throw new Error(`${describeExit(server)}${withStderr(stderrTail())}`);
-      if (portTaken()) return false;
-      if (readServerAddress(home)?.port === port) return true;
-      return;
-    },
-    (seconds): string =>
-      `The Server did not start within ${seconds} s${withStderr(stderrTail())}`,
-  );
-}
-
-const hasExited = (server: ChildProcess): boolean =>
-  server.exitCode !== null || server.signalCode !== null;
-
-const describeExit = (server: ChildProcess): string =>
-  server.signalCode === null
-    ? `The Server exited with code ${server.exitCode}`
-    : `The Server exited with signal ${server.signalCode}`;
-
-const withStderr = (tail: string): string =>
-  tail === ''
-    ? ''
-    : `\nServer stderr (last ${STDERR_TAIL_LENGTH} characters):\n${tail}`;
+// What a test reads from its own Server's directory.
+export const serverFiles = (
+  directory: string,
+): { projectPath: string; requestLogPath: string } => ({
+  projectPath: path.join(directory, projectDirectoryName),
+  requestLogPath: path.join(directory, requestLogName),
+});
 
 // Starts a real Engine with shared external Agent fixtures in an isolated home.
 export async function startOwnServer(
@@ -89,6 +41,7 @@ export async function startOwnServer(
   registryPath: string;
   installationPath: string;
   stop: () => Promise<void>;
+  restart: (whileStopped: () => Promise<void>) => Promise<void>;
 }> {
   const projectPath = path.join(directory, projectDirectoryName);
   const home = path.join(directory, 'server-home');
@@ -103,21 +56,23 @@ export async function startOwnServer(
   await initTestRepository(projectPath, false);
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
-    const server = spawn(process.execPath, [engineBundlePath], {
-      cwd: serverDirectory,
-      env: {
-        ...process.env,
-        ARGO_HOME: home,
-        ARGO_SERVER_PORT: String(port),
-        ARGO_PROJECT_PATH: projectPath,
-        ARGO_E2E_AGENTS: JSON.stringify(agents),
-        ARGO_E2E_REGISTRY_PATH: registryPath,
-        ARGO_E2E_INSTALLATION_PATH: installationPath,
-        ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
-        PATH: '/usr/bin:/bin',
-      },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    const launch = (): ChildProcessByStdio<null, Readable, Readable> =>
+      spawn(process.execPath, [engineBundlePath], {
+        cwd: serverDirectory,
+        env: {
+          ...process.env,
+          ARGO_HOME: home,
+          ARGO_SERVER_PORT: String(port),
+          ARGO_PROJECT_PATH: projectPath,
+          ARGO_E2E_AGENTS: JSON.stringify(agents),
+          ARGO_E2E_REGISTRY_PATH: registryPath,
+          ARGO_E2E_INSTALLATION_PATH: installationPath,
+          ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
+          PATH: '/usr/bin:/bin',
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+    let server = launch();
     let portTaken = false;
     let stderrTail = '';
     for (const stream of [server.stdout, server.stderr]) {
@@ -126,7 +81,7 @@ export async function startOwnServer(
       });
     }
     server.stderr.on('data', (chunk: Buffer): void => {
-      stderrTail = (stderrTail + chunk.toString()).slice(-STDERR_TAIL_LENGTH);
+      stderrTail = (stderrTail + chunk.toString()).slice(-stderrTailLength);
     });
     const stop = async (): Promise<void> => {
       if (hasExited(server)) return;
@@ -152,6 +107,20 @@ export async function startOwnServer(
           registryPath,
           installationPath,
           stop,
+          restart: async (whileStopped): Promise<void> => {
+            await stop();
+            await whileStopped();
+            server = launch();
+            server.stdout.resume();
+            server.stderr.resume();
+            await waitUntilReady({
+              home,
+              port,
+              server,
+              portTaken: () => false,
+              stderrTail: () => '',
+            });
+          },
         };
       }
     } catch (error) {
