@@ -49,19 +49,18 @@ export function AddAgentChoice({
 }: Omit<AgentChoiceProps, 'agent'>): React.JSX.Element | null {
   const { onAddAgent } = configuration;
   if (!onAddAgent) return null;
-  return (
-    <ListItem
-      title="Add a new agent"
-      icon="add"
-      role="button"
-      disclosure={false}
-      onPress={() => {
-        onSelect();
-        onAddAgent();
-      }}
-    />
-  );
+  const add = (): void => {
+    onSelect();
+    onAddAgent();
+  };
+  return <ListItem {...addAgentRow} onPress={add} />;
 }
+const addAgentRow = {
+  title: 'Add a new agent',
+  icon: 'add',
+  role: 'button',
+  disclosure: false,
+} as const;
 function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
   const wide = useWide();
   return (

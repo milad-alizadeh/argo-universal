@@ -39,18 +39,23 @@ export function addNewAgent(width: number): Story {
     },
     args: { configuration: configuration(onAddAgent, onAgentChange) },
     render: renderArgs,
-    play: async (context) => {
-      await settleViewport(width);
-      await openAgentChoices(context);
-      const add = await assertAddRowLast();
-      await context.userEvent.click(add);
-      await waitFor(() => expect(onAddAgent).toHaveBeenCalledOnce());
-      await expect(
-        within(document.body).queryByRole('dialog', { name: agentModelLabel }),
-      ).not.toBeInTheDocument();
-      await expect(onAgentChange).not.toHaveBeenCalled();
-    },
+    play: (context) => addAgent(context, width, { onAddAgent, onAgentChange }),
   };
+}
+
+async function addAgent(
+  context: PlayContext,
+  width: number,
+  spies: { onAddAgent: () => void; onAgentChange: () => void },
+): Promise<void> {
+  await settleViewport(width);
+  await openAgentChoices(context);
+  await context.userEvent.click(await assertAddRowLast());
+  await waitFor(() => expect(spies.onAddAgent).toHaveBeenCalledOnce());
+  await expect(
+    within(document.body).queryByRole('dialog', { name: agentModelLabel }),
+  ).not.toBeInTheDocument();
+  await expect(spies.onAgentChange).not.toHaveBeenCalled();
 }
 
 async function openAgentChoices(context: PlayContext): Promise<void> {

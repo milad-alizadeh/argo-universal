@@ -77,15 +77,11 @@ function agentListRenderer(
 ): NonNullable<
   React.ComponentProps<typeof ScrollFadeList<AgentInfo>>['renderItem']
 > {
+  const lastIndex = props.configuration.onAddAgent
+    ? -1
+    : props.configuration.agents.length - 1;
   return ({ item, index }) => (
-    <AgentListRow
-      {...props}
-      agent={item}
-      last={
-        !props.configuration.onAddAgent &&
-        index === props.configuration.agents.length - 1
-      }
-    />
+    <AgentListRow {...props} agent={item} last={index === lastIndex} />
   );
 }
 function AgentListRow({

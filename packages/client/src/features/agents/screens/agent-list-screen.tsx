@@ -10,11 +10,16 @@ export function AgentListScreen({
 }: {
   filter?: 'not-installed';
 }): React.JSX.Element {
+  return <AgentList key={filter ?? 'all'} initialFilter={filter} />;
+}
+
+function AgentList(props: {
+  initialFilter?: 'not-installed';
+}): React.JSX.Element {
   const navigate = useNavigate();
   return (
     <AgentListView
-      key={filter ?? 'all'}
-      initialFilter={filter}
+      initialFilter={props.initialFilter}
       catalog={useAgentCatalog().load}
       installed={useInstalledAgents()}
       onAddCustomAgent={() => navigate({ to: 'settings-agent-new' })}
