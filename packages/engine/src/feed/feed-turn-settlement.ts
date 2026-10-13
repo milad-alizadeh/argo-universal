@@ -17,6 +17,7 @@ const settledFeedState = (
   result: SettledFeed,
   turnId: string,
 ): Partial<FeedContext> => ({
+  lastSettledTurnId: turnId,
   rows: result.feed.rows,
   maxRevision: result.feed.maxRevision,
   nextPosition: result.feed.nextPosition,

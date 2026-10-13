@@ -64,6 +64,7 @@ export interface FeedContext
       | 'storageFailing'
     > {
   activityAt: number;
+  lastSettledTurnId: string | null;
   // Rows changed since the last write, in the order they first changed.
   changedRowIds: string[];
   // Stream events waiting for the next batch.
@@ -230,6 +231,7 @@ export const feedMachine = setup({
   context: ({ input }): FeedContext => ({
     ...input,
     activityAt: input.activityAt ?? 0,
+    lastSettledTurnId: null,
     rows: {},
     changedRowIds: [],
     streamEvents: [],

@@ -1,4 +1,4 @@
-import { expect, it, onTestFinished, vi } from 'vitest';
+import { assert, expect, it, onTestFinished, vi } from 'vitest';
 import {
   afterRejectionRowId,
   thirdMessageRowId,
@@ -8,12 +8,20 @@ import {
 } from '#mocks/feed-inputs';
 import { takeFeedChanges } from '#mocks/feed-observations';
 import {
+  publicationCases,
+  publicationTurnId,
+  publicationLateUpdate,
+  nextTurnUpdate,
+} from '#mocks/feed-publication-inputs';
+import {
   database,
+  appliedFeed,
   startFeedTestHost,
   createFeedRouterCaller,
   applyFeedChange,
   subscribe,
 } from '#mocks/feed-suite';
+import { publishTurnContent, type FeedStreamEvent } from './index';
 
 it('rejects unreadable and missing stored rows without writing changes, then accepts the next Agent row', async () => {
   await startFeedTestHost();
@@ -68,3 +76,59 @@ it('rejects unreadable and missing stored rows without writing changes, then acc
     rows: [{ id: afterRejectionRowId, content: [{ text: 'Still working' }] }],
   });
 });
+
+it.each(publicationCases)(
+  'rejects same-Turn content after publication settlement of $label and accepts newer-Turn content',
+  async (scenario) => {
+    await startFeedTestHost();
+    assert(appliedFeed);
+
+    for (const event of scenario.initial) appliedFeed.send(event);
+
+    const published = publishTurnContent(appliedFeed, publicationTurnId);
+    const changes: FeedStreamEvent[] = [];
+
+    const subscription = appliedFeed.on('feed.batch', (batch) =>
+      changes.push(...batch.events),
+    );
+
+    onTestFinished(() => subscription.unsubscribe());
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    onTestFinished(() => log.mockRestore());
+    appliedFeed.send(publicationLateUpdate);
+    await published;
+    await vi.advanceTimersByTimeAsync(60);
+    expect(changes).toEqual([]);
+    expect(log.mock.calls).toEqual([
+      [expect.stringContaining('ACP update belongs to a settled Turn')],
+    ]);
+
+    const caller = createFeedRouterCaller();
+
+    const page = await caller.feed.page({
+      sessionId: 'session-1',
+      direction: 'tail',
+    });
+
+    expect(page.maxRevision).toBe(scenario.revision);
+    expect(
+      page.rows.filter((row) => row.sessionUpdate === 'tool_call_update'),
+    ).toMatchObject(scenario.tools);
+    appliedFeed.send(nextTurnUpdate);
+    await vi.advanceTimersByTimeAsync(60);
+    expect(changes).toMatchObject([
+      { type: 'row.upsert', row: { turnId: 'next-turn', status: 'completed' } },
+    ]);
+    expect(
+      (
+        await caller.feed.page({ sessionId: 'session-1', direction: 'tail' })
+      ).rows.at(-1),
+    ).toMatchObject({
+      turnId: 'next-turn',
+      revision: scenario.nextRevision,
+      state: 'settled',
+      status: 'completed',
+    });
+  },
+);
