@@ -1,5 +1,5 @@
 import type { NewSessionRequest } from '@agentclientprotocol/sdk';
-import type { AcpSessionOpening } from '../../acp';
+import type { AcpSessionOpening } from '../../agents';
 import type { SessionData } from '../session-data';
 
 const createNewSessionRequest = (session: SessionData): NewSessionRequest => ({

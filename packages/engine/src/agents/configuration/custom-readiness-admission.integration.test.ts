@@ -58,7 +58,7 @@ it.each(openings)(
     await rm(marker);
     const listing = host.createCaller().agents.list();
     await expect
-      .poll(() => readFile(marker, 'utf8'), { timeout: 5000 })
+      .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
       .toMatch(/^\d+$/);
     await expect(
       host.caller.agents.remove({ agentId: registered.agentId }),

@@ -8,11 +8,11 @@ import {
   type SnapshotFrom,
 } from 'xstate';
 import { TestModel } from 'xstate/graph';
+import { resourceLaunch } from '#mocks/acp-resource';
+import { seedAgentFixtures } from '#mocks/agent-fixtures';
 import { openTestDatabase } from '#mocks/database';
-import {
-  createOpenSessionsModelMachine,
-  openSessionsModelAdapter,
-} from '#mocks/open-sessions';
+import { createOpenSessionsModelMachine } from '#mocks/open-sessions';
+import { createAcpResources } from '../agents';
 import type { OpenSessionsInput } from './open-sessions-machine';
 import { sessionMachine } from './session-machine';
 
@@ -20,12 +20,13 @@ const openSessionsModelMachine = createOpenSessionsModelMachine(false);
 const openSessionsGraphMachine = createOpenSessionsModelMachine(true);
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
+seedAgentFixtures(database, [{ agent: 'mock', label: 'mock', logo: '' }]);
 const input: OpenSessionsInput = {
   now: (): number => Date.now(),
   createId: randomUUID,
   database,
   runtimeDirectory,
-  adapters: [openSessionsModelAdapter],
+  acpResources: createAcpResources(),
 };
 // Two ids exercise duplicate opens, removal with another Session left, and the last Session stopping.
 type OpenSessionsEvent = EventFromLogic<typeof openSessionsModelMachine>;
@@ -62,7 +63,11 @@ const events: OpenSessionsEvent[] = [
           kind: 'existing',
           database,
           runtimeDirectory,
-          adapter: openSessionsModelAdapter,
+          acp: {
+            resources: input.acpResources,
+            resolveLaunch: async () => resourceLaunch,
+            projectPath: () => '/project',
+          },
           sessionId,
         },
       }).getSnapshot(),
@@ -70,9 +75,9 @@ const events: OpenSessionsEvent[] = [
   ]),
   { type: 'sessions.stopAll' },
   {
-    type: 'xstate.error.actor.agentProbe:mock',
-    actorId: 'agentProbe:mock',
-    error: new Error('Probe failed'),
+    type: 'xstate.error.actor.unrelated:worker',
+    actorId: 'unrelated:worker',
+    error: new Error('Unexpected actor failure'),
   },
 ];
 type OpenSessionsSnapshot = SnapshotFrom<typeof openSessionsModelMachine>;
@@ -89,7 +94,7 @@ const model = new TestModel(openSessionsGraphMachine, {
     snapshot.status === 'active' &&
     snapshot.can(event) &&
     (!('actorId' in event) ||
-      event.actorId.startsWith('agentProbe:') ||
+      event.actorId === 'unrelated:worker' ||
       Object.values(snapshot.context.sessions).some(
         (session): boolean => session.id === event.actorId,
       )),

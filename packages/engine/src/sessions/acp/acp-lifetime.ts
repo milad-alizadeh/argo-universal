@@ -6,7 +6,7 @@ import type {
   AcpResources,
   AcpSessionDestination,
   AcpSessionLease,
-} from '../../acp';
+} from '../../agents';
 import type { ResolveAgentLaunch } from '../../agents';
 import type { SessionData } from '../session-data';
 import { selectSessionOpening } from './acp-session-opening';

@@ -1,7 +1,6 @@
-import { agentAdapters } from '@repo/agents';
-import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { z } from 'zod';
-import { createAgentMetadata } from './metadata';
+import identities from './identities.json' with { type: 'json' };
+import { type AgentIdentity } from './metadata';
 import { isScenarioName, type ScenarioName } from './scenarios';
 
 export const AppFixtureOptions = z.object({
@@ -13,41 +12,5 @@ export const AppFixtureOptions = z.object({
 export type AppFixtureOptions = z.input<typeof AppFixtureOptions>;
 export const AppFixtureAgents = z.record(z.string(), AppFixtureOptions);
 export type AppFixtureAgents = z.input<typeof AppFixtureAgents>;
-
-type AgentIdentity = Pick<AgentAdapter, 'agent' | 'label' | 'logo'>;
-
-function fixtureProbe(options: z.output<typeof AppFixtureOptions>): AgentProbe {
-  return {
-    availability: options.availability,
-    installStep:
-      options.availability === 'available'
-        ? undefined
-        : 'Set up this Agent to start a Session.',
-  };
-}
-
-export function createAppFixtureAdapter(
-  identity: AgentIdentity,
-  options: AppFixtureOptions = {},
-): ReturnType<typeof createAgentMetadata> {
-  const probe = fixtureProbe(AppFixtureOptions.parse(options));
-  return {
-    ...createAgentMetadata({ discovery: [{ result: probe }] }, identity.agent),
-    agent: identity.agent,
-    label: identity.label,
-    logo: identity.logo,
-  };
-}
-
-export function createAppFixtureAdapters(
-  identities: readonly AgentIdentity[],
-  options: AppFixtureAgents = {},
-): ReturnType<typeof createAgentMetadata>[] {
-  return identities.map((identity): ReturnType<typeof createAgentMetadata> =>
-    createAppFixtureAdapter(identity, options[identity.agent]),
-  );
-}
-
-export const appFixtureAgentIds = agentAdapters.map(
-  (adapter): string => adapter.agent,
-);
+export const fixtureAgents: AgentIdentity[] = identities;
+export const appFixtureAgentIds = fixtureAgents.map(({ agent }) => agent);

@@ -16,6 +16,7 @@ import {
   useRunningAction,
   useWatchedOperations,
   activeVersion,
+  activeAction,
   type ObservedOperation,
 } from './use-installation-operation';
 import { useCompletedRefresh } from './use-installation-refresh';
@@ -33,6 +34,7 @@ type InstallationControls = ObservedOperation & {
   statusAt: number;
   status?: AgentInstallStatus;
   watched: readonly string[];
+  refreshed: boolean;
 };
 function useInstallStatus(
   agentId: string,
@@ -66,12 +68,12 @@ const phaseInput = (controls: InstallationControls): InstallPhaseInput => ({
 function useObservedInstallation(
   install: StartInstall,
   status: UseQueryResult<AgentInstallStatus, ClientError>,
-): ObservedOperation & { watched: readonly string[] } {
+): ObservedOperation & { watched: readonly string[]; refreshed: boolean } {
   const { data, submittedAt } = install;
   const observed = useInstallationOperation(data, status, submittedAt);
   const watched = useWatchedOperations(observed.operation, data?.operationId);
-  useCompletedRefresh(observed.operation);
-  return { ...observed, watched };
+  const refreshed = useCompletedRefresh(observed.operation);
+  return { ...observed, watched, refreshed };
 }
 function useInstallationControls(agentId: string): InstallationControls {
   const status = useInstallStatus(agentId);
@@ -99,7 +101,7 @@ function useProgress(
   const phase = phaseInput(controls);
   const installing = installationRunning(phase);
   const ranAs = useRunningAction(action, installing);
-  const notice = installationNotice(phase);
+  const notice = controls.refreshed ? installationNotice(phase) : undefined;
   const status = controls.status;
   return { installing, notice: notice && { ...notice, action: ranAs }, status };
 }
@@ -110,7 +112,7 @@ function useAgentInstallationControls(
 ): AgentInstallPresentation {
   const controls = useInstallationControls(agentId);
   const { setConfirming, ...offer } = useConfirmationState({
-    action,
+    action: activeAction(controls.status, action),
     version: activeVersion(controls.operation, version),
   });
   const onInstall = useStart(startInput(controls, agentId, offer.version));

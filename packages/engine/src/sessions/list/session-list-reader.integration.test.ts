@@ -9,6 +9,7 @@ import {
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
+import { createAcpResources } from '../../agents';
 import { writerMachine } from '../../storage';
 import { openSessionsMachine } from '../open-sessions-machine';
 import {
@@ -54,7 +55,7 @@ it('reads one Session with a thousand Turns without fetching its history', (): v
       createId: randomUUID,
       database,
       runtimeDirectory: directory,
-      adapters: [],
+      acpResources: createAcpResources(),
     },
   });
   const read = createSessionListReader({
@@ -101,7 +102,7 @@ it('reads the existence of a running Subagent Turn without fetching its history'
       createId: randomUUID,
       database,
       runtimeDirectory: directory,
-      adapters: [],
+      acpResources: createAcpResources(),
     },
   });
   const reader = createSessionListReader({
@@ -162,7 +163,7 @@ it('excludes only the Subagent with a malformed latest Turn from its healthy par
       createId: randomUUID,
       database,
       runtimeDirectory: directory,
-      adapters: [],
+      acpResources: createAcpResources(),
     },
   });
   const reader = createSessionListReader({
@@ -204,7 +205,7 @@ it.each(['session-1', 'child-1'])(
         createId: randomUUID,
         database,
         runtimeDirectory: directory,
-        adapters: [],
+        acpResources: createAcpResources(),
       },
     });
     const reader = createSessionListReader({
@@ -289,7 +290,7 @@ it('rejects a malformed stored Session before a pending patch can replace its in
       createId: randomUUID,
       database,
       runtimeDirectory: directory,
-      adapters: [],
+      acpResources: createAcpResources(),
     },
   });
   const report = vi.spyOn(console, 'error').mockImplementation(() => {});

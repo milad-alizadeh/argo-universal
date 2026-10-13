@@ -1,6 +1,6 @@
 import { type Database } from '@repo/db';
 import { assign } from 'xstate';
-import { createAcpResources } from '../acp';
+import { createAcpResources } from '../agents';
 import { AgentInstallations } from '../agents';
 import { openSessionsId } from '../sessions';
 import { databaseWriterId } from '../storage';

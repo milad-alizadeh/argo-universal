@@ -1,10 +1,10 @@
 import { homedir } from 'node:os';
-import { createLoginAgentOpener, type AcpResourceInput } from '../acp';
+import { createLoginAgentOpener, type AcpResourceInput } from '../agents';
 import {
   createAgentLogins,
   type AgentInstallations,
   isAgentDisabled,
-  selectAgentLaunchResolver,
+  resolveInstalledAgentLaunch,
 } from '../agents';
 import type { OpenSessionsActorRef } from '../sessions';
 
@@ -34,7 +34,7 @@ export const createEngineAgentLogins = (
 type LoginLaunch = {
   name: string;
   launch: Awaited<
-    ReturnType<NonNullable<ReturnType<typeof selectAgentLaunchResolver>>>
+    ReturnType<NonNullable<ReturnType<typeof resolveInstalledAgentLaunch>>>
   >;
 };
 async function resolveLoginLaunch(
@@ -55,19 +55,15 @@ function loginResources(
 ): NonNullable<
   ReturnType<OpenSessionsActorRef['getSnapshot']>['context']['acpResources']
 > {
-  const resources = sessions.getSnapshot().context.acpResources;
-  if (!resources) throw new Error('ACP resources are unavailable');
-  return resources;
+  return sessions.getSnapshot().context.acpResources;
 }
 
 function loginLaunchResolver(
   sessions: OpenSessionsActorRef,
   agentId: string,
-): NonNullable<ReturnType<typeof selectAgentLaunchResolver>> {
+): NonNullable<ReturnType<typeof resolveInstalledAgentLaunch>> {
   const source = sessions.getSnapshot().context;
   if (isAgentDisabled(source.database, agentId))
     throw new Error('Agent is disabled');
-  const resolve = selectAgentLaunchResolver(source, agentId);
-  if (!resolve) throw new Error('No ACP launch is configured for this Agent');
-  return resolve;
+  return resolveInstalledAgentLaunch(source.database, source.runtimeDirectory);
 }

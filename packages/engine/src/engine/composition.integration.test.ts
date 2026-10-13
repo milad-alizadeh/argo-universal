@@ -1,5 +1,5 @@
-import { agentAdapters } from '@repo/agents';
 import { feedRow } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it, onTestFinished } from 'vitest';
 import { waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
@@ -9,7 +9,7 @@ import { scriptedEngineInput } from '#mocks/scripted-engine';
 const engineStopEvent = 'engine.stop';
 const waitForCancelStep = 'wait-for-cancel';
 
-it.each(agentAdapters)(
+it.each(fixtureAgents)(
   'serves live $agent Session procedures and drains their Feed before closing the database',
   async ({ agent }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });

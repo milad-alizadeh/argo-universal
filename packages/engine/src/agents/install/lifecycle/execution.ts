@@ -63,18 +63,33 @@ const saveSelection = (
     true,
   );
 };
+const discardSelection = (
+  input: InstallExecutionInput,
+  selection: InstallSelection,
+): Promise<void> =>
+  rm(selectedDirectory(input.home, input.operation.agentId, selection), {
+    recursive: true,
+    force: true,
+  });
+const materializeAfterReadiness = async (
+  input: MaterializationInput,
+  checking: Promise<unknown> | undefined,
+): Promise<InstallSelection> => {
+  await checking;
+  input.signal.throwIfAborted();
+  return materializeAgent(input);
+};
 export const executeAgentInstall = async (
   input: InstallExecutionInput,
+  checking?: Promise<unknown>,
 ): Promise<void> => {
-  const selection = await materializeAgent(prepareMaterialization(input));
+  const materialization = prepareMaterialization(input);
+  const selection = await materializeAfterReadiness(materialization, checking);
   try {
     input.signal.throwIfAborted();
     await saveSelection(input, selection);
   } catch (error) {
-    await rm(
-      selectedDirectory(input.home, input.operation.agentId, selection),
-      { recursive: true, force: true },
-    );
+    await discardSelection(input, selection);
     throw error;
   }
 };

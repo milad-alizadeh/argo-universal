@@ -2,13 +2,13 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { PromptRequest } from '@agentclientprotocol/sdk';
-import { agentAdapters } from '@repo/agents';
 import {
   type BlobRef,
   blobPath,
   type ContentBlock,
   type UploadedFileLink,
 } from '@repo/contracts';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { blobsFolderIn, uploadBlob } from '../blob';
@@ -34,7 +34,7 @@ const reference: ContentBlock = {
   size: 200,
   _meta: { acp: { attachment: 'reference' } },
 };
-it.each(agentAdapters.map(({ agent }) => agent))(
+it.each(fixtureAgents.map(({ agent }) => agent))(
   '%s sends complete text, context and references through shared ACP preparation',
   async (agent) => {
     const received = Promise.withResolvers<PromptRequest>();

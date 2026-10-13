@@ -1,15 +1,15 @@
 import { cpSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { agentAdapters } from '@repo/agents';
 import { type Database, migrationsFolder, openDatabase } from '@repo/db';
 import { agents, project } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it, onTestFinished } from 'vitest';
 import { insertSession } from '#mocks/database';
 import { readConfiguredAgents } from './configuration-sql';
 
 const configurationMigration = '20261010114515_agent_configuration';
-const [claudeId, codexId] = agentAdapters.map(({ agent }) => agent);
+const [claudeId, codexId] = fixtureAgents.map(({ agent }) => agent);
 const registryConfiguration = {
   source: 'registry',
   release: null,
@@ -39,7 +39,7 @@ const seedHistory = (database: Database): void => {
   database.$client.close();
 };
 
-it('bootstraps the native Agent configurations, adopting their catalog rows, without touching existing Sessions', () => {
+it('bootstraps the required Agent configurations, adopting their catalog rows, without touching existing Sessions', () => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-bootstrap-'));
   onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
   const file = join(directory, 'argo.db');

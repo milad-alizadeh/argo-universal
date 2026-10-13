@@ -1,5 +1,5 @@
-import { agentAdapters } from '@repo/agents';
 import { turn } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import {
   insertEndedTurn,
@@ -11,7 +11,7 @@ import { scriptedEngineInput } from '#mocks/scripted-engine';
 
 const rejectedSessionListLog = 'sessions: rejected list shape #1';
 
-it.each(agentAdapters.map(({ agent }): string => agent))(
+it.each(fixtureAgents.map(({ agent }): string => agent))(
   'drops only the Session with a malformed Turn for %s',
   async (agent): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });

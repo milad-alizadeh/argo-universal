@@ -3,7 +3,7 @@ import type {
   RequestPermissionResponse,
 } from '@agentclientprotocol/sdk';
 import type { PendingElicitation, PendingPermission } from '@repo/contracts';
-import type { AcpSessionDestination } from '../../acp';
+import type { AcpSessionDestination } from '../../agents';
 import {
   toPendingElicitation,
   toPendingPermission,

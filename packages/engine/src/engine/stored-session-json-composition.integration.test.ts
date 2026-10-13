@@ -1,5 +1,5 @@
-import { agentAdapters } from '@repo/agents';
 import { session, turn } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import {
@@ -26,7 +26,7 @@ type StoredColumnCases = [
   StoredColumnCase<typeof turn, typeof turn.error>,
 ];
 it.each(
-  agentAdapters.flatMap(({ agent }): StoredColumnCases => [
+  fixtureAgents.flatMap(({ agent }): StoredColumnCases => [
     {
       agent,
       table: session,

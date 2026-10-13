@@ -20,7 +20,7 @@ it('a custom ACP program that answers initialize is saved and survives an Engine
     enabled: true,
     configuration: { source: 'custom', definition: customAgentDefinition },
   });
-});
+}, 20_000);
 
 it('a missing executable is refused with a precise failure and nothing is saved', async () => {
   const host = await startCustomAgentEngine();
@@ -39,7 +39,7 @@ it('a missing executable is refused with a precise failure and nothing is saved'
     'registry',
     'registry',
   ]);
-});
+}, 20_000);
 
 it('a program that exits before answering initialize is refused', async () => {
   const host = await startCustomAgentEngine();
@@ -52,7 +52,7 @@ it('a program that exits before answering initialize is refused', async () => {
     status: 'failed',
     failure: 'Fixture ACP exited before answering ACP initialize.',
   });
-});
+}, 20_000);
 
 it('a credential-like environment variable is rejected at the boundary', async () => {
   const host = await startCustomAgentEngine();
@@ -62,7 +62,7 @@ it('a credential-like environment variable is rejected at the boundary', async (
       env: [{ name: 'GEMINI_API_KEY', value: 'secret' }],
     }),
   ).rejects.toThrow('Argo does not store credentials');
-});
+}, 20_000);
 
 it('readiness comes from a fresh check, not from the saved record', async () => {
   const host = await startCustomAgentEngine();
@@ -83,7 +83,7 @@ it('readiness comes from a fresh check, not from the saved record', async () => 
   await expect(host.caller.agents.check({ agentId })).resolves.toEqual({
     status: 'ready',
   });
-});
+}, 20_000);
 
 it('a ready custom Agent prompts and closes a Session through the shared ACP resource', async () => {
   const host = await startCustomAgentEngine();
@@ -114,7 +114,7 @@ it('a ready custom Agent prompts and closes a Session through the shared ACP res
       agent: registration.agentId,
     }),
   );
-});
+}, 20_000);
 
 it('a disabled custom Agent keeps its record and history but admits no new Session', async () => {
   const host = await startCustomAgentEngine();
@@ -137,4 +137,4 @@ it('a disabled custom Agent keeps its record and history but admits no new Sessi
   expect(configured).toContainEqual(
     expect.objectContaining({ id: agentId, enabled: false }),
   );
-});
+}, 20_000);

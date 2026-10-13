@@ -23,7 +23,7 @@ Steps can send updates, request Permission or Elicitation, wait for cancellation
 
 `createScriptedAgentProcess` in the Engine mocks exposes the Agent through the ACP process port. Tests can observe launch requests, termination and process exit. The wire controller delivers raw frames through the same Agent for malformed-frame and coalesced-frame schedules.
 
-`createAgentMetadata` supplies discovery facts for an Agent identity. Its discovery scenarios perform a handshake with the scripted Agent. Metadata cannot start a native Agent session.
+`createAgentMetadata` supplies identity fixture data. Test bootstraps seed saved command definitions; production code performs admission, resolution and ACP checks. There is no native fixture adapter.
 
 App fixtures retain registered identities, metadata and availability. Their options select a scenario. The Engine, App, tRPC, Session, Feed, Writer, SQLite and Git remain real.
 

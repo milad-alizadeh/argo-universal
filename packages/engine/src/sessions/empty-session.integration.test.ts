@@ -1,8 +1,8 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import type { NewSessionRequest } from '@agentclientprotocol/sdk';
-import { agentAdapters } from '@repo/agents';
 import { project, session } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { eq } from 'drizzle-orm';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
@@ -14,7 +14,7 @@ const worktreeInput = {
   checkout: { type: 'worktree' as const, baseBranch: 'main' },
 };
 
-it.each(agentAdapters.map(({ agent }) => agent))(
+it.each(fixtureAgents.map(({ agent }) => agent))(
   'the public empty %s Session becomes readable without a Turn and awaits closure',
   async (agent) => {
     const host = await startAcpEngine({ steps: [] }, undefined, agent);

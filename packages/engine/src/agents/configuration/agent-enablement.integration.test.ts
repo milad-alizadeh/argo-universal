@@ -1,16 +1,18 @@
-import { agentAdapters } from '@repo/agents';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import {
   customAgentDefinition,
   startCustomAgentEngine,
 } from '#mocks/custom-agent';
 
-const [nativeAdapter] = agentAdapters;
-if (!nativeAdapter) throw new Error('Engine needs a native Agent adapter');
+const admissionRefusal = 'cannot accept sessions.create';
+const [registryAgent] = fixtureAgents;
+if (!registryAgent)
+  throw new Error('The cutover test needs a registry identity');
 
-it('a disabled native Agent admits no new Session', async () => {
+it('a disabled configured Agent admits no new Session', async () => {
   const host = await startCustomAgentEngine();
-  const agentId = nativeAdapter.agent;
+  const agentId = registryAgent.agent;
   await host.caller.agents.setEnabled({ agentId, enabled: false });
   await expect(
     host.caller.session.new({
@@ -20,7 +22,33 @@ it('a disabled native Agent admits no new Session', async () => {
       configOptions: [],
       prompt: [],
     }),
-  ).rejects.toThrow('cannot accept sessions.create');
+  ).rejects.toThrow(admissionRefusal);
+});
+
+it('a registry identity with no installed release cannot fall back to a native Agent', async () => {
+  const host = await startCustomAgentEngine();
+  expect(
+    host.openSessions.getSnapshot().can({
+      type: 'sessions.create',
+      sessionId: 'uninstalled-session',
+      turnId: 'uninstalled-turn',
+      projectId: 'project-1',
+      projectPath: '/project',
+      agent: registryAgent.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [],
+    }),
+  ).toBe(false);
+  await expect(
+    host.caller.session.new({
+      projectId: 'project-1',
+      agent: registryAgent.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [],
+    }),
+  ).rejects.toThrow(admissionRefusal);
 });
 
 it('disablement refuses new admission while an owned Session keeps its lifetime admission', async () => {
@@ -42,7 +70,7 @@ it('disablement refuses new admission while an owned Session keeps its lifetime 
     enabled: false,
   });
   await expect(host.caller.session.new(input)).rejects.toThrow(
-    'cannot accept sessions.create',
+    admissionRefusal,
   );
   await host.caller.session.prompt({
     ...created,

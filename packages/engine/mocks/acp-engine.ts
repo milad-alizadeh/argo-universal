@@ -6,9 +6,8 @@ import { createAgentMetadata } from '@repo/mocks/agent';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { onTestFinished } from 'vitest';
-import type { AcpResourceInput } from '../src/acp';
+import type { AcpResourceInput } from '../src/agents';
 import type { EngineInput } from '../src/engine/machine';
-import { resourceLaunch } from './acp-resource';
 import { openTestDatabase } from './database';
 import { startEngineTestHost } from './engine';
 import { createScriptedAgentProcess } from './scripted-agent';
@@ -53,7 +52,7 @@ export const startAcpEngine = async (
     loginTimeoutMs: scenario.loginTimeoutMs,
     loginCleanupTimeoutMs: scenario.loginCleanupTimeoutMs,
     ...(scenario.fetchAgents ? { fetchAgents: scenario.fetchAgents } : {}),
-    adapters: [{ ...createAgentMetadata(), agent: agentId }],
+    fixtureAgents: [createAgentMetadata(agentId)],
     acp: {
       ...agent,
       launchProcess: scenario.launchProcess ?? agent.launchProcess,
@@ -61,12 +60,6 @@ export const startAcpEngine = async (
       closeTimeoutMs: scenario.closeTimeoutMs,
       releaseTimeoutMs: scenario.releaseTimeoutMs,
     },
-    resolveAgentLaunch: async (input) => ({
-      ...resourceLaunch,
-      agentId: input.agent,
-      projectId: input.projectId,
-      cwd: input.projectPath,
-    }),
   });
   onTestFinished(async () => {
     for (const process of agent.processes) process.exited.resolve();

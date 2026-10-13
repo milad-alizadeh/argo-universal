@@ -2,12 +2,12 @@ import type {
   InitializeRequest,
   PromptRequest,
 } from '@agentclientprotocol/sdk';
-import { agentAdapters } from '@repo/agents';
 import { session } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 
-const identities = agentAdapters.map(({ agent }) => agent);
+const identities = fixtureAgents.map(({ agent }) => agent);
 const prompt = [{ type: 'text', text: 'Continue' }] as const;
 
 it.each(identities)(

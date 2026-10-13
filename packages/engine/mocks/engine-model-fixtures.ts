@@ -51,7 +51,7 @@ export const input = {
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
   // No Agents, so the open Sessions machine never probes a real CLI.
-  adapters: [],
+  fixtureAgents: [],
 };
 export const openError = new Error('database is locked');
 export const recoveryError = new Error('repair failed');

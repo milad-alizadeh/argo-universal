@@ -8,7 +8,7 @@ export const jsonParseCast = defineRule({
     type: 'problem',
     messages: {
       jsonParseCast:
-        'Parse outside data with a Zod schema at the boundary; do not cast JSON.parse. Only packages/agents/<agent>/ narrows vendor types (ADR-0015, ADR-0016).',
+        'Parse outside data with a Zod schema at the boundary; do not cast JSON.parse. Reuse official ACP types (ADR-0015, ADR-0016).',
     },
   },
   create: (

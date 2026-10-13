@@ -7,7 +7,7 @@ import {
   type ActorRefFrom,
   type AnyActorRef,
 } from 'xstate';
-import { type AcpResources, type AcpResourceInput } from '../acp';
+import { type AcpResources, type AcpResourceInput } from '../agents';
 import {
   type FetchAgents,
   AgentInstallations,
@@ -58,7 +58,7 @@ export function openDatabaseOf(context: {
 
 export interface EngineInput extends Pick<
   OpenSessionsInput,
-  'adapters' | 'now' | 'createId' | 'resolveAgentLaunch'
+  'now' | 'createId'
 > {
   home: string;
   port: number;

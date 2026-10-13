@@ -83,3 +83,12 @@ export const activeVersion = (
   operation: AgentInstallOperation | undefined,
   offered: string,
 ): string => (operation?.status === 'installing' ? operation.version : offered);
+
+const updatingInstallation = (status: AgentInstallStatus): boolean =>
+  status.installation.status === 'installed' &&
+  status.operation?.status === 'installing';
+export const activeAction = (
+  status: AgentInstallStatus | undefined,
+  offered: InstallAction,
+): InstallAction =>
+  status && updatingInstallation(status) ? 'Update' : offered;

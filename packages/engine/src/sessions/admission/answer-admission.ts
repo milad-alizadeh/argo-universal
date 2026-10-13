@@ -1,4 +1,3 @@
-import type { AgentCapabilities } from '@repo/agents';
 import type { PendingPermission, PermissionOption } from '@repo/contracts';
 
 type PermissionAnswer = {
@@ -34,10 +33,3 @@ export const admitsPermissionAnswer = (
     chosenOption(request, answer.optionId) !== undefined
   );
 };
-
-// Only a rejection carries feedback, and only to an Agent that reads it.
-export const canDeliverFeedback = (
-  capabilities: Pick<AgentCapabilities, 'permissionFeedback'> | null,
-  option: PermissionOption,
-): boolean =>
-  option.kind.startsWith('reject') && capabilities?.permissionFeedback === true;

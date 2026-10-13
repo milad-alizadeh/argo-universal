@@ -1,5 +1,6 @@
 import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { isNotNull } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
@@ -97,6 +98,7 @@ it('notifies catalog subscribers about removed Agents after the replacement comm
   const previousIds = database
     .select({ id: agents.id })
     .from(agents)
+    .where(isNotNull(agents.registryId))
     .all()
     .map(({ id }) => id);
   const controller = new AbortController();
@@ -111,7 +113,11 @@ it('notifies catalog subscribers about removed Agents after the replacement comm
   expect(new Set((await notification).value)).toEqual(new Set(previousIds));
   expect((await caller.agents.catalog()).agents).toEqual([]);
   expect(
-    database.select({ present: agents.catalogPresent }).from(agents).all(),
+    database
+      .select({ present: agents.catalogPresent })
+      .from(agents)
+      .where(isNotNull(agents.registryId))
+      .all(),
   ).toEqual(previousIds.map(() => ({ present: false })));
   controller.abort();
 });

@@ -1,5 +1,5 @@
 import type { Database } from '@repo/db';
-import { releaseLoginTerminalGroups } from '../acp';
+import { releaseLoginTerminalGroups } from '../agents';
 import { reconcileInterruptedInstallations } from '../agents';
 import {
   attachmentsFolderIn,

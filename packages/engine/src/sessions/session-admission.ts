@@ -6,11 +6,7 @@ import type {
   SessionConfigOption,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import {
-  answeredRequest,
-  canDeliverFeedback,
-  chosenOption,
-} from './admission/answer-admission';
+import { answeredRequest, chosenOption } from './admission/answer-admission';
 import { isOfferedConfigChoice } from './admission/config-admission';
 import type { SessionActorRef } from './session-machine';
 
@@ -36,10 +32,7 @@ export function validatePermissionAnswer(
       code: 'BAD_REQUEST',
       message: 'The Agent did not offer that option',
     });
-  if (
-    answer.message &&
-    !canDeliverFeedback(context?.capabilities ?? null, option)
-  )
+  if (answer.message)
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: 'The Agent does not support Permission feedback',

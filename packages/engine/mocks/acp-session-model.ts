@@ -6,8 +6,8 @@ import {
   type StatePath,
   type AdjacencyMap,
 } from 'xstate/graph';
-import type { AcpSessionLease } from '../src/acp';
-import { RecoveryBlockedError } from '../src/acp';
+import type { AcpSessionLease } from '../src/agents';
+import { RecoveryBlockedError } from '../src/agents';
 import { sessionMachine } from '../src/sessions';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
@@ -18,6 +18,17 @@ const canApplyLifecycleEvent = (
   snapshot: AcpModelSnapshot,
   event: AcpModelEvent,
 ): boolean => {
+  const roots = {
+    'xstate.done.actor.createCheckout': 'creating',
+    'xstate.error.actor.createCheckout': 'creating',
+    'xstate.after.checkoutLimit.session.creating': 'creating',
+    'xstate.done.actor.loadSession': 'loading',
+    'xstate.error.actor.loadSession': 'loading',
+    'xstate.done.actor.discardSession': 'discarding',
+    'xstate.error.actor.discardSession': 'discarding',
+  } as const;
+  if (event.type in roots)
+    return snapshot.matches(Reflect.get(roots, event.type));
   const invoking = {
     'xstate.done.actor.openAcp': 'opening',
     'xstate.error.actor.openAcp': 'opening',
@@ -76,6 +87,7 @@ const walksAfterCrash = (
   event.type.startsWith('xstate.');
 export const createAcpSessionModel = (
   initial: AcpModelSnapshot,
+  entry: 'new' | 'existing' | 'opened' = 'opened',
 ): {
   paths: StatePath<AcpModelSnapshot, AcpModelEvent>[];
   model: {
@@ -85,14 +97,24 @@ export const createAcpSessionModel = (
 } => {
   const lease = initial.context.acpLease;
   if (!lease) throw new Error('The ACP structural model has no lease');
+  const input =
+    entry === 'existing'
+      ? { ...initial.context.input, kind: 'existing' as const }
+      : initial.context.input;
+  const data = {
+    ...initial.context,
+    input,
+    acpLease: null,
+    stored: entry === 'existing',
+  };
+  const entryStates = {
+    new: 'creating',
+    existing: 'loading',
+    opened: { open: { acp: 'opening' } },
+  } as const;
   const fromState = sessionMachine.resolveState({
-    value: { open: { acp: 'opening' } },
-    context: {
-      ...initial.context,
-      acpLease: null,
-      stored: false,
-      failure: null,
-    },
+    value: entryStates[entry],
+    context: { ...data, failure: null },
   });
   /*
    * Graph transitions resolve symbolic sends against these existing child identities;
@@ -100,6 +122,37 @@ export const createAcpSessionModel = (
    */
   Object.assign(fromState.children, initial.children);
   const events = [
+    {
+      type: 'xstate.done.actor.createCheckout',
+      actorId: 'createCheckout',
+      output: data,
+    },
+    {
+      type: 'xstate.error.actor.createCheckout',
+      actorId: 'createCheckout',
+      error: new Error('Checkout failed'),
+    },
+    { type: 'xstate.after.checkoutLimit.session.creating' },
+    {
+      type: 'xstate.done.actor.loadSession',
+      actorId: 'loadSession',
+      output: { ...data, kept: true },
+    },
+    {
+      type: 'xstate.error.actor.loadSession',
+      actorId: 'loadSession',
+      error: new Error('Session load failed'),
+    },
+    {
+      type: 'xstate.done.actor.discardSession',
+      actorId: 'discardSession',
+      output: undefined,
+    },
+    {
+      type: 'xstate.error.actor.discardSession',
+      actorId: 'discardSession',
+      error: new Error('Discard failed'),
+    },
     { type: 'session.cancel' },
     {
       type: 'xstate.error.actor.cancelAcp',

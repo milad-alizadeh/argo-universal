@@ -65,8 +65,20 @@ function withInstallation(
   saved: AgentInstallation | undefined,
 ): AgentDetail {
   if (saved?.status !== 'installed') return detail;
-  return { ...detail, version: saved.version };
+  return {
+    ...detail,
+    version: saved.version,
+    ...recoveredUpdate(detail, saved),
+  };
 }
+const recoveredUpdate = (
+  detail: AgentDetail,
+  saved: Extract<AgentInstallation, { status: 'installed' }>,
+): Partial<AgentDetail> => {
+  if (detail.status !== 'not-installed') return {};
+  if (detail.version === saved.version) return {};
+  return { status: 'update', availableVersion: detail.version };
+};
 
 const detailVersion = (detail?: AgentDetail): string =>
   detail ? availableVersion(detail) : '';

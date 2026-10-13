@@ -1,7 +1,7 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
 import type { ContentBlock } from '@repo/contracts';
 import type { Subscription } from 'xstate';
-import type { AcpSessionLease } from '../../acp';
+import type { AcpSessionLease } from '../../agents';
 import type { AttachmentStorage } from '../../blob';
 import { userMessageChange, type FeedActorRef } from '../../feed';
 import type { WriterCommit } from '../../storage';

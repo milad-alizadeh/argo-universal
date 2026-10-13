@@ -1,9 +1,9 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { agentAdapters } from '@repo/agents';
 import { type Database, openDatabase } from '@repo/db';
 import { agents, project, session, turn } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { notInArray } from 'drizzle-orm';
 import { onTestFinished, vi } from 'vitest';
 
@@ -111,7 +111,7 @@ export function countDatabaseReads(database: Database): {
   return { database, metrics };
 }
 
-// Agent rows other than the native Agent identities every database starts with.
+// Agent rows other than the required Agent identities every database starts with.
 export function readAddedAgentRows(
   database: Database,
 ): (typeof agents.$inferSelect)[] {
@@ -119,10 +119,10 @@ export function readAddedAgentRows(
     .select()
     .from(agents)
     .where(
-      notInArray(
-        agents.id,
-        agentAdapters.map(({ agent }) => agent),
-      ),
+      notInArray(agents.id, [
+        'mock',
+        ...fixtureAgents.map(({ agent }) => agent),
+      ]),
     )
     .all();
 }

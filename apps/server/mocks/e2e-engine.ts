@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { agentAdapters } from '@repo/agents';
+import { join } from 'node:path';
+import { openDatabase } from '@repo/db';
 import { composeEngine } from '@repo/engine/compose';
 import type { EngineMessage } from '@repo/engine/ipc';
 import {
@@ -10,7 +11,7 @@ import {
 import {
   AppFixtureAgents,
   AppFixtureOptions,
-  createAppFixtureAdapters,
+  fixtureAgents,
 } from '@repo/mocks/agent/app-fixtures';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { createInstallationPorts } from '@repo/mocks/registry/installation';
@@ -47,6 +48,34 @@ function publishAddress(message: EngineMessage): void {
   });
 }
 
+const seed = openDatabase(join(home, 'argo.db'));
+const save = seed.$client.prepare(
+  "update agents set configuration = ? where id = ? and json_extract(configuration, '$.source') = 'registry' and json_extract(configuration, '$.release') is null",
+);
+for (const identity of fixtureAgents) {
+  const fixture = AppFixtureOptions.parse(options[identity.agent] ?? {});
+  const configuration =
+    fixture.availability === 'not_installed'
+      ? { source: 'registry', release: null, overrides: { args: [], env: [] } }
+      : {
+          source: 'custom',
+          definition: {
+            name: identity.label,
+            ...scriptedAgentCommand(
+              fixture.availability === 'not_signed_in'
+                ? 'signed-out'
+                : fixture.scenario,
+            ),
+            env: Object.entries(agentEnvironment).map(([name, value]) => ({
+              name,
+              value,
+            })),
+          },
+        };
+  save.run(JSON.stringify(configuration), identity.agent);
+}
+seed.$client.close();
+
 const engine = composeEngine({
   home,
   port,
@@ -58,19 +87,6 @@ const engine = composeEngine({
   installationPorts: createInstallationPorts({
     packageName: 'example-agent',
     scenarioPath: z.string().parse(process.env.ARGO_E2E_INSTALLATION_PATH),
-  }),
-  adapters: createAppFixtureAdapters(agentAdapters, options),
-  // The production launcher runs each Agent's scripted scenario as a real stdio process.
-  resolveAgentLaunch: async (input) => ({
-    agentId: input.agent,
-    projectId: input.projectId,
-    ...scriptedAgentCommand(
-      AppFixtureOptions.parse(options[input.agent] ?? {}).scenario,
-    ),
-    version: '1',
-    cwd: input.projectPath,
-    env: agentEnvironment,
-    authContext: 'shared-fixture',
   }),
   fetchAgents: createFileAgentsFetcher(
     z.string().parse(process.env.ARGO_E2E_REGISTRY_PATH),

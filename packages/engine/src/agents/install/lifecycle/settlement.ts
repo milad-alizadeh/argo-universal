@@ -11,20 +11,25 @@ type InstallationInput = Omit<InstallExecutionInput, 'operation' | 'signal'>;
 const executeOwnedInstallation = (
   input: InstallationInput,
   owned: OwnedInstall,
+  checking: Promise<unknown> | undefined,
 ): Promise<void> =>
-  executeAgentInstall({
-    ...input,
-    signal: owned.controller.signal,
-    operation: owned.operation,
-  });
+  executeAgentInstall(
+    {
+      ...input,
+      signal: owned.controller.signal,
+      operation: owned.operation,
+    },
+    checking,
+  );
 
 export const settleAgentInstallation = async (
   input: InstallationInput,
   owned: OwnedInstall,
+  checking?: Promise<unknown>,
 ): Promise<AgentInstallOperation> => {
   const timeout = installationDeadline(owned.controller);
   try {
-    await executeOwnedInstallation(input, owned);
+    await executeOwnedInstallation(input, owned, checking);
     return installedOperation(owned);
   } catch (error) {
     return rememberInstallFailure(owned, error);

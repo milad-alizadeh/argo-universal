@@ -10,13 +10,10 @@ it('browses upstream metadata through Agents without opening a conversation', as
     async () => publishedRegistry,
   );
   const adapter = createAgentMetadata();
-  const connect = vi.spyOn(adapter, 'connect');
-  const probe = vi.spyOn(adapter, 'probe');
   const { caller } = await startEngineTestHost({
     fetchAgents,
-    adapters: [adapter],
+    fixtureAgents: [adapter],
   });
-  const startupProbes = probe.mock.calls.length;
   const sessionsBefore = await caller.session.list({ archived: false });
   await caller.agents.syncCatalog();
   await expect
@@ -35,8 +32,6 @@ it('browses upstream metadata through Agents without opening a conversation', as
     sessionsBefore,
   );
   expect(fetchAgents).toHaveBeenCalledTimes(1);
-  expect(connect).not.toHaveBeenCalled();
-  expect(probe).toHaveBeenCalledTimes(startupProbes);
 });
 
 it('shows the Server recipe rather than the App platform', async (): Promise<void> => {

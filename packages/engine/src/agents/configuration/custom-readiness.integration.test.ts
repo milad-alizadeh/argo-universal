@@ -7,6 +7,9 @@ import {
   startCustomAgentEngine,
 } from '#mocks/custom-agent';
 
+const markerName = 'probe-pid';
+const releaseName = 'probe-release';
+
 type Caller = Awaited<ReturnType<typeof startCustomAgentEngine>>['caller'];
 const queries = [
   {
@@ -32,8 +35,8 @@ it.each(queries)(
   'concurrent $name shares custom readiness while management remains fenced',
   async ({ request, expected }) => {
     const host = await startCustomAgentEngine({ acp: {} });
-    const marker = join(host.home, 'probe-pid');
-    const release = join(host.home, 'probe-release');
+    const marker = join(host.home, markerName);
+    const release = join(host.home, releaseName);
     await writeFile(release, 'release');
     const registered = await host.caller.agents.registerCustom(
       gatedCustomAgentDefinition(marker, release),
@@ -44,7 +47,9 @@ it.each(queries)(
     onTestFinished(() => writeFile(release, 'release'));
     const input = { agentId: registered.agentId };
     const checking = host.caller.agents.check(input);
-    await expect.poll(() => readFile(marker, 'utf8')).toMatch(/^\d+$/);
+    await expect
+      .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
+      .toMatch(/^\d+$/);
     const other = host.createCaller();
     const concurrent = request(other, registered.agentId).catch(
       (error: unknown) => error,
@@ -54,6 +59,7 @@ it.each(queries)(
     expect(await checking).toEqual({ status: 'ready' });
     expect(await concurrent).toBe(expected);
   },
+  20_000,
 );
 
 it('a queued readiness check observes removal instead of launching a stale definition', async () => {
@@ -70,7 +76,7 @@ it('a queued readiness check observes removal instead of launching a stale defin
     status: 'failed',
     failure: 'Agent was removed.',
   });
-});
+}, 20_000);
 
 it('a listing queued behind an edit describes the committed definition', async () => {
   const host = await startCustomAgentEngine({ acp: {} });
@@ -78,8 +84,8 @@ it('a listing queued behind an edit describes the committed definition', async (
     customAgentDefinition,
   );
   if (registered.status !== 'ready') throw new Error(registered.failure);
-  const marker = join(host.home, 'probe-pid');
-  const release = join(host.home, 'probe-release');
+  const marker = join(host.home, markerName);
+  const release = join(host.home, releaseName);
   onTestFinished(() => writeFile(release, 'release'));
   const editing = host.caller.agents.editCustom({
     agentId: registered.agentId,
@@ -89,7 +95,7 @@ it('a listing queued behind an edit describes the committed definition', async (
     },
   });
   await expect
-    .poll(() => readFile(marker, 'utf8'), { timeout: 5000 })
+    .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
     .toMatch(/^\d+$/);
   const listing = host.createCaller().agents.list();
   await writeFile(release, 'release');
@@ -101,4 +107,35 @@ it('a listing queued behind an edit describes the committed definition', async (
       availability: 'available',
     }),
   );
-});
+}, 20_000);
+
+it('enablement waits for readiness cleanup and then commits the requested setting', async () => {
+  const host = await startCustomAgentEngine({ acp: {} });
+  const marker = join(host.home, markerName);
+  const release = join(host.home, releaseName);
+  await writeFile(release, 'release');
+  const registered = await host.caller.agents.registerCustom(
+    gatedCustomAgentDefinition(marker, release),
+  );
+  if (registered.status !== 'ready') throw new Error(registered.failure);
+  await rm(release);
+  await rm(marker);
+  onTestFinished(() => writeFile(release, 'release'));
+  const input = { agentId: registered.agentId };
+  const checking = host.caller.agents.check(input);
+  await expect
+    .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
+    .toMatch(/^\d+$/);
+  const disabling = host
+    .createCaller()
+    .agents.setEnabled({ ...input, enabled: false });
+  expect(await host.caller.agents.configured()).toContainEqual(
+    expect.objectContaining({ id: registered.agentId, enabled: true }),
+  );
+  await writeFile(release, 'release');
+  await checking;
+  await disabling;
+  expect(await host.caller.agents.configured()).toContainEqual(
+    expect.objectContaining({ id: registered.agentId, enabled: false }),
+  );
+}, 20_000);

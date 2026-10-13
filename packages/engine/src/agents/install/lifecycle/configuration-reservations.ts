@@ -7,6 +7,16 @@ export class ConfigurationReservations {
   public has(agentId: string): boolean {
     return this.active.has(agentId) || this.checks.has(agentId);
   }
+  public pendingCheck(agentId: string): Promise<AgentCheck> | undefined {
+    return this.checks.get(agentId);
+  }
+  public afterCheck<Result>(
+    agentId: string,
+    operation: () => Promise<Result>,
+  ): Promise<Result> {
+    const checking = this.pendingCheck(agentId);
+    return checking ? checking.then(operation) : operation();
+  }
   public hasExclusive(agentId: string): boolean {
     return this.active.has(agentId);
   }
