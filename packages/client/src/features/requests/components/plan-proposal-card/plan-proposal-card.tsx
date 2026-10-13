@@ -8,9 +8,12 @@ import { PlanProposalExpansion } from '../plan-proposal-expansion/plan-proposal-
 import { RequestCard, type RequestState } from '../request-card/request-card';
 import { PlanProposalActions } from './plan-proposal-actions';
 import { PlanProposalBody } from './plan-proposal-body';
-import { usePlanProposal } from './use-plan-proposal';
+import {
+  type PlanProposalInteraction,
+  usePlanProposal,
+} from './use-plan-proposal';
 
-type PlanProposalAnswer =
+export type PlanProposalAnswer =
   | Omit<
       Extract<SessionAnswerPlanProposalInput, { decision: 'approve' }>,
       'sessionId'
@@ -49,32 +52,34 @@ function ProposalInteraction(props: PlanProposalCardProps): React.JSX.Element {
   );
 }
 
-function ProposalPanel(
-  props: PlanProposalCardProps & {
-    interaction: ReturnType<typeof usePlanProposal>;
-  },
-): React.JSX.Element {
-  const { interaction } = props;
+type PanelProps = PlanProposalCardProps & {
+  interaction: PlanProposalInteraction;
+};
+
+const panelChrome = {
+  surface: 'tray',
+  sheetLabel: 'Plan proposal',
+  testID: 'plan-proposal-card',
+  mutedStatus: true,
+  footerClassName: 'wide:justify-end',
+} as const;
+
+const expandedPanel = {
+  className:
+    'flex-1 min-h-0 max-w-none rounded-t-xl bg-sidebar/80 shadow-glass web:backdrop-blur-glass web:backdrop-saturate-110',
+  bodyClassName: 'flex-1 min-h-0',
+};
+
+function ProposalPanel(props: PanelProps): React.JSX.Element {
   return (
     <RequestCard
-      surface="tray"
+      {...panelChrome}
+      {...(props.interaction.expanded && expandedPanel)}
       state={props.state}
       error={props.error}
-      onEnter={interaction.submit}
-      onEscape={interaction.back}
-      sheetLabel="Plan proposal"
-      testID="plan-proposal-card"
-      mutedStatus
-      className={
-        interaction.expanded
-          ? 'flex-1 min-h-0 max-w-none rounded-t-xl bg-sidebar/80 shadow-glass web:backdrop-blur-glass web:backdrop-saturate-110'
-          : undefined
-      }
-      bodyClassName={interaction.expanded ? 'flex-1 min-h-0' : undefined}
-      footerClassName="wide:justify-end"
-      actions={
-        <PlanProposalActions interaction={interaction} state={props.state} />
-      }
+      onEnter={props.interaction.submit}
+      onEscape={props.interaction.back}
+      actions={<PlanProposalActions {...props} />}
     >
       <PlanProposalBody {...props} />
     </RequestCard>

@@ -1,7 +1,26 @@
 import { Uniwind } from 'uniwind';
 import { settleViewport } from './settle-viewport';
 
-export const layoutWidths = { phone: 390, wide: 1440 } as const;
+// Reads a width token from tooling/uniwind/theme.css off the page, so tests never copy it.
+function tokenWidth(name: string): number {
+  const token = getComputedStyle(document.documentElement).getPropertyValue(
+    name,
+  );
+  const width = Number.parseFloat(token);
+  if (Number.isNaN(width)) throw new Error(`The ${name} token is missing.`);
+  return width;
+}
+
+export function wideBreakpoint(): number {
+  return tokenWidth('--breakpoint-wide');
+}
+
+export function contentWideMin(): number {
+  return tokenWidth('--container-content-wide');
+}
+
+// Tablet sits between the phone and wide layouts, like an iPad in portrait.
+export const layoutWidths = { phone: 390, tablet: 1024, wide: 1440 } as const;
 
 type LayoutAssertion = (wide: boolean) => Promise<void>;
 

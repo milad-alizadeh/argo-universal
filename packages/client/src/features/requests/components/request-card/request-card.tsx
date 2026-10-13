@@ -60,18 +60,21 @@ function RequestContainer(
     <View
       nativeID={props.nativeID}
       testID={props.testID}
-      className={cn(
-        props.surface === 'tray'
-          ? 'w-full gap-3 px-3 pt-3 pb-3.5'
-          : cn(
-              'w-full max-w-composer',
-              props.appearance !== 'embedded' && cardClassName,
-            ),
-        props.className,
-      )}
+      className={cn(containerClassName(props), props.className)}
     >
       <RequestContents {...props} />
     </View>
+  );
+}
+
+function containerClassName({
+  surface,
+  appearance,
+}: Pick<RequestCardProps, 'surface' | 'appearance'>): string {
+  if (surface === 'tray') return 'w-full gap-3 px-3 pt-3 pb-3.5';
+  return cn(
+    'w-full max-w-composer',
+    appearance !== 'embedded' && cardClassName,
   );
 }
 
@@ -126,16 +129,26 @@ function RequestSheet(props: RequestCardProps): ReactNode {
       expandable
       initialSize={props.surface === 'tray' ? 'medium' : undefined}
       label={props.sheetLabel}
-      footer={
-        <ContentWidthProvider wide={false}>
-          <RequestFooter {...props} />
-        </ContentWidthProvider>
-      }
+      footer={<SheetFooter {...props} />}
     >
-      <ContentWidthProvider wide={false}>
-        <RequestBody {...props} />
-        <RequestError error={props.error} />
-      </ContentWidthProvider>
+      <SheetContents {...props} />
     </BottomSheet>
+  );
+}
+
+function SheetContents(props: RequestCardProps): ReactNode {
+  return (
+    <ContentWidthProvider wide={false}>
+      <RequestBody {...props} />
+      <RequestError error={props.error} />
+    </ContentWidthProvider>
+  );
+}
+
+function SheetFooter(props: RequestCardProps): ReactNode {
+  return (
+    <ContentWidthProvider wide={false}>
+      <RequestFooter {...props} />
+    </ContentWidthProvider>
   );
 }

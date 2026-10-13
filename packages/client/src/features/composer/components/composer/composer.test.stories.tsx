@@ -13,7 +13,10 @@ import { multiline } from '../../../../../mocks/composer/draft-editing.test.mock
 import { editorScrollsAfterTenLines } from '../../../../../mocks/composer/editor-scroll.test.mocks';
 import { expectAgentTextFits } from '../../../../../mocks/composer/empty-layout.test.mocks';
 import { shownText } from '../../../../../mocks/rich-textarea-example';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
+import {
+  layoutWidths,
+  wideBreakpoint,
+} from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
 export default meta;
@@ -45,7 +48,7 @@ export const Empty: Story = {
         canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
       ).not.toHaveTextContent('(recommended)');
       await expect(canvas.queryAllByTestId(agentIconId)).toHaveLength(
-        width < 720 ? 0 : 1,
+        width < wideBreakpoint() ? 0 : 1,
       );
       const model = canvas
         .getByRole('button', { name: agentModelLabel })

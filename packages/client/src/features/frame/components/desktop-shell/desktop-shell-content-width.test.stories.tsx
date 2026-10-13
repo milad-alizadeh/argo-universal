@@ -5,6 +5,7 @@ import { Composer } from '#features/composer';
 import { PlanProposalRegion } from '#features/requests';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { shortPlanProposal } from '../../../../../mocks/plan-proposal-mock';
+import { contentWideMin } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   pressInspectorButton,
@@ -26,8 +27,6 @@ const meta = {
   ...shellMeta,
 } satisfies Meta<typeof DesktopShellFrame>;
 export default meta;
-
-const contentWideMin = 480;
 
 type Canvas = ShellPlayContext['canvas'];
 
@@ -55,14 +54,16 @@ async function waitForSessionLabelGone(canvas: Canvas): Promise<void> {
 async function waitUntilWide(content: HTMLElement): Promise<void> {
   await waitFor(() =>
     expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(
-      contentWideMin,
+      contentWideMin(),
     ),
   );
 }
 
 async function waitUntilNarrow(content: HTMLElement): Promise<void> {
   await waitFor(() =>
-    expect(content.getBoundingClientRect().width).toBeLessThan(contentWideMin),
+    expect(content.getBoundingClientRect().width).toBeLessThan(
+      contentWideMin(),
+    ),
   );
 }
 

@@ -12,7 +12,6 @@ import {
   drawerSections,
   openNavigationLabel,
   pickDrawerSection,
-  tabletWidth,
   withPhoneLayout,
 } from './phone-layout-test.mocks';
 import { PhoneShellFrame } from './phone-shell-frame.mocks';
@@ -71,7 +70,7 @@ function menuOpensAndSelectionClosesDrawer(width: number): Story {
 export const MenuOpensAndSelectionClosesDrawerPhone =
   menuOpensAndSelectionClosesDrawer(layoutWidths.phone);
 export const MenuOpensAndSelectionClosesDrawerTablet =
-  menuOpensAndSelectionClosesDrawer(tabletWidth);
+  menuOpensAndSelectionClosesDrawer(layoutWidths.tablet);
 
 export const HeaderActionsReportCallbacks: Story = {
   render: () => <View testID="header-actions-root" />,

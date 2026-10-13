@@ -1,35 +1,20 @@
-import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ReactElement } from 'react';
-import { expect, fn, within } from 'storybook/test';
+import { expect } from 'storybook/test';
+import { boundedChoicesRequest } from '../../../../../mocks/elicitation-questions';
 import {
-  questionsRequest,
-  boundedChoicesRequest,
-} from '../../../../../mocks/elicitation-questions';
+  buildFeature,
+  customAnswer,
+  exploreIdea,
+  fixBug,
+  meta as questionTestMeta,
+  nextQuestion,
+  previousQuestion,
+  releaseReview,
+  type Story,
+} from '../../../../../mocks/requests/elicitation/elicitation-question-story.test.mocks';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import { RequestFrame } from '../../../../lib/product/request-frame';
-import { elicitationProps } from '../request.mocks';
-import { ElicitationForm } from './elicitation-form';
-import { ElicitationSheet } from './elicitation-sheet';
 
-const meta = {
-  title: 'Tests/ElicitationQuestions',
-  component: ElicitationForm,
-  args: { ...elicitationProps({ request: questionsRequest }), onAnswer: fn() },
-  render: (args): ReactElement => (
-    <RequestFrame>
-      <ElicitationForm {...args} />
-    </RequestFrame>
-  ),
-} satisfies Meta<typeof ElicitationForm>;
+const meta = { ...questionTestMeta, title: 'Tests/ElicitationQuestions' };
 export default meta;
-type Story = StoryObj<typeof meta>;
-const buildFeature = 'Build a feature';
-const previousQuestion = 'Previous question';
-const nextQuestion = 'Next question';
-const fixBug = 'Fix a bug';
-const exploreIdea = 'Explore an idea';
-const customAnswer = 'Custom answer';
-const releaseReview = 'Review the release';
 
 function answers(width: number): Story {
   return {
@@ -110,36 +95,6 @@ export const SkipAnsweredQuestion: Story = {
       action: 'accept',
       content: { work: [fixBug] },
     });
-  },
-};
-
-export const RetainAnswersAcrossSheetTransition: Story = {
-  render: (args): ReactElement => (
-    <RequestFrame>
-      <ElicitationSheet {...args} />
-    </RequestFrame>
-  ),
-  beforeEach: async (): Promise<void> => {
-    await settleViewport(1440);
-  },
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.type(
-      canvas.getByRole('textbox', { name: customAnswer }),
-      'Keep my answer',
-    );
-    await userEvent.click(canvas.getByRole('button', { name: nextQuestion }));
-    await userEvent.click(canvas.getByRole('checkbox', { name: buildFeature }));
-    await settleViewport(390);
-    const sheet = within(await within(document.body).findByRole('dialog'));
-    await expect(
-      sheet.getByRole('checkbox', { name: buildFeature }),
-    ).toBeChecked();
-    await userEvent.click(
-      sheet.getByRole('button', { name: previousQuestion }),
-    );
-    await expect(
-      sheet.getByRole('textbox', { name: customAnswer }),
-    ).toHaveValue('Keep my answer');
   },
 };
 

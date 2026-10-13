@@ -1,81 +1,114 @@
 import type {
-  ElicitationEnumOption,
+  ElicitationPropertySchema,
   PendingElicitation,
 } from '@repo/contracts';
 import type * as React from 'react';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import type { ElicitationAnswer } from './elicitation-form';
+import { elicitationChoices, propertyTitle } from './elicitation-property';
 
 export interface ElicitationOutcomeProps {
   request: PendingElicitation;
   answer: ElicitationAnswer;
 }
 
+type Property = ElicitationPropertySchema;
+type Entry = [string, Property];
+type AnswersProps = { properties: Entry[]; answer: ElicitationAnswer };
+type AnswerProps = { entry: Entry; content: ElicitationAnswer['content'] };
+type SummaryProps = { label: string; count: number };
+
+const outcomeLabels = {
+  accept: 'You answered',
+  cancel: 'You dismissed',
+  decline: 'You declined',
+} as const;
+const booleanTitles: [unknown, string][] = [
+  [true, 'Yes'],
+  [false, 'No'],
+];
+
 export function ElicitationOutcome({
   request,
   answer,
 }: ElicitationOutcomeProps): React.JSX.Element {
-  const label = {
-    accept: 'You answered',
-    cancel: 'You dismissed',
-    decline: 'You declined',
-  }[answer.action];
   const properties = Object.entries(request.requestedSchema.properties);
   return (
     <View className="w-full gap-2">
-      <View className="flex-row items-center gap-1.5">
-        <Icon
-          name="question"
-          role="body"
-          className="shrink-0 text-muted-foreground"
-        />
-        <Text role="body" className="text-muted-foreground">
-          {label}
-        </Text>
-        <Text role="body" className="text-muted-foreground">
-          {properties.length}{' '}
-          {properties.length === 1 ? 'question' : 'questions'}
-        </Text>
-      </View>
-      {answer.action === 'accept' && (
-        <View className="gap-3 pl-5.5">
-          {properties.map(([name, property]) => {
-            const value = answer.content?.[name];
-            let options: ElicitationEnumOption[] | undefined;
-            if (property.type === 'string') options = property.oneOf;
-            if (property.type === 'array' && 'anyOf' in property.items)
-              options = property.items.anyOf;
-            const answers =
-              value === undefined
-                ? ['Skipped']
-                : (Array.isArray(value) ? value : [value]).map((item) => {
-                    if (typeof item === 'boolean') return item ? 'Yes' : 'No';
-                    return (
-                      options?.find((option) => option.const === item)?.title ??
-                      String(item)
-                    );
-                  });
-            return (
-              <View key={name} className="gap-1">
-                <Text role="body">
-                  {property.description ?? property.title ?? name}
-                </Text>
-                {answers.map((text) => (
-                  <Text
-                    key={text}
-                    role="body"
-                    className="text-muted-foreground"
-                  >
-                    {text}
-                  </Text>
-                ))}
-              </View>
-            );
-          })}
-        </View>
-      )}
+      <OutcomeSummary
+        label={outcomeLabels[answer.action]}
+        count={properties.length}
+      />
+      <OutcomeAnswers properties={properties} answer={answer} />
     </View>
   );
+}
+
+function OutcomeSummary({ label, count }: SummaryProps): React.JSX.Element {
+  return (
+    <View className="flex-row items-center gap-1.5">
+      <Icon
+        name="question"
+        role="body"
+        className="shrink-0 text-muted-foreground"
+      />
+      <MutedText>{label}</MutedText>
+      <MutedText>
+        {count} {count === 1 ? 'question' : 'questions'}
+      </MutedText>
+    </View>
+  );
+}
+
+function MutedText({ children }: { children: ReactNode }): React.JSX.Element {
+  return (
+    <Text role="body" className="text-muted-foreground">
+      {children}
+    </Text>
+  );
+}
+
+function OutcomeAnswers({
+  properties,
+  answer,
+}: AnswersProps): React.JSX.Element | null {
+  if (answer.action !== 'accept') return null;
+  return (
+    <View className="gap-3 pl-5.5">
+      {properties.map((entry) => (
+        <OutcomeAnswer key={entry[0]} entry={entry} content={answer.content} />
+      ))}
+    </View>
+  );
+}
+
+function OutcomeAnswer({ entry, content }: AnswerProps): React.JSX.Element {
+  const [name, property] = entry;
+  return (
+    <View className="gap-1">
+      <Text role="body">{propertyTitle(name, property)}</Text>
+      {answerTexts(property, content?.[name]).map((text) => (
+        <MutedText key={text}>{text}</MutedText>
+      ))}
+    </View>
+  );
+}
+
+function answerTexts(property: Property, value: unknown): string[] {
+  if (value === undefined) return ['Skipped'];
+  const titles = answerTitles(property);
+  return [value]
+    .flat()
+    .map((item: unknown) => titles.get(item) ?? String(item));
+}
+
+function answerTitles(property: Property): Map<unknown, string> {
+  const options = elicitationChoices(property) ?? [];
+  return new Map([
+    ...booleanTitles,
+    ...options.map((option): [unknown, string] => [option.const, option.title]),
+  ]);
 }

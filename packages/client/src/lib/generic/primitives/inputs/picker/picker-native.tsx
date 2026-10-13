@@ -1,6 +1,7 @@
 import { createElement, useState } from 'react';
 import { View } from 'react-native';
-import { Host } from '../../native/host';
+import { useInListItem } from '../../lists/list-item/list-item-accessory';
+import { Host, type HostProps } from '../../native/host';
 import { PickerFooter, usePickerField } from './picker-field';
 import type { PickerProps } from './picker-props';
 
@@ -36,10 +37,16 @@ function PickerHost<Value extends string>(
   const { Control } = props;
   const presentation = usePresentation(props.onBlur);
   return (
-    <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
+    <Host {...useHostSize()}>
       <Control {...props} {...presentation} />
     </Host>
   );
+}
+
+// A row's trailing slot has no width to fill, so there the Picker takes its own; elsewhere it spans the field.
+function useHostSize(): Pick<HostProps, 'matchContents' | 'style'> {
+  if (useInListItem()) return { matchContents: true };
+  return { matchContents: { vertical: true }, style: { width: '100%' } };
 }
 
 function usePresentation(onBlur?: () => void): PickerPresentation {

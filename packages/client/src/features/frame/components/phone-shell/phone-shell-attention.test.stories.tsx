@@ -9,7 +9,6 @@ import {
   drawerSections,
   openNavigationLabel,
   pickDrawerSection,
-  tabletWidth,
   withPhoneLayout,
 } from './phone-layout-test.mocks';
 
@@ -96,7 +95,7 @@ export const NoAttentionPhone = attentionAndSectionStates(
 );
 export const NoAttentionTablet = attentionAndSectionStates(
   noAttention,
-  tabletWidth,
+  layoutWidths.tablet,
 );
 export const OneAttentionPhone = attentionAndSectionStates(
   oneAttention,
@@ -104,7 +103,7 @@ export const OneAttentionPhone = attentionAndSectionStates(
 );
 export const OneAttentionTablet = attentionAndSectionStates(
   oneAttention,
-  tabletWidth,
+  layoutWidths.tablet,
 );
 export const OverflowAttentionPhone = attentionAndSectionStates(
   overflowAttention,
@@ -112,5 +111,5 @@ export const OverflowAttentionPhone = attentionAndSectionStates(
 );
 export const OverflowAttentionTablet = attentionAndSectionStates(
   overflowAttention,
-  tabletWidth,
+  layoutWidths.tablet,
 );

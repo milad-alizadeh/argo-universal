@@ -11,7 +11,11 @@ import {
   fieldsRequest,
   fieldsValues,
 } from '../request.mocks';
-import { ElicitationForm } from './elicitation-form';
+import {
+  ElicitationForm,
+  type ElicitationAnswer,
+  type ElicitationFormProps,
+} from './elicitation-form';
 import { ElicitationOutcome } from './elicitation-outcome';
 
 type GalleryArgs = ComponentProps<typeof ElicitationForm> & {
@@ -44,73 +48,81 @@ export default meta;
 
 export const Overview = {
   name: 'ElicitationForm',
-  render: (args): React.JSX.Element => {
-    const selected = elicitationProps({
-      mock:
-        elicitationMocks.find((mock) => mock.agent === args.agent) ??
-        elicitationMock,
-    });
-    return (
-      <View className="w-full items-center py-4">
-        <Variations className="max-w-composer!">
-          <Variation label="Choice">
-            <ElicitationForm
-              {...elicitationProps({
-                ...args,
-                request: selected.request,
-                state:
-                  args.requestState === 'answered'
-                    ? {
-                        kind: 'answered',
-                        reason: 'Already answered on another device',
-                      }
-                    : { kind: args.requestState },
-              })}
-            />
-          </Variation>
-          <Variation label="Form fields and validation">
-            <ElicitationForm
-              {...elicitationProps({
-                request: fieldsRequest,
-                values: fieldsValues,
-                source: 'linear',
-              })}
-            />
-          </Variation>
-          <Variation label="Submitted form">
-            <ElicitationOutcome
-              request={elicitationRequest}
-              answer={
-                elicitationMock.answer.procedure === 'answerElicitation'
-                  ? elicitationMock.answer.input
-                  : { action: 'cancel' }
-              }
-            />
-          </Variation>
-          <Variation label="Dismissed form">
-            <ElicitationOutcome
-              request={elicitationRequest}
-              answer={{ action: 'cancel' }}
-            />
-          </Variation>
-          <Variation label="Declined form">
-            <ElicitationOutcome
-              request={elicitationRequest}
-              answer={{ action: 'decline' }}
-            />
-          </Variation>
-          <Variation label="Already answered">
-            <ElicitationForm
-              {...elicitationProps({
-                state: {
-                  kind: 'answered',
-                  reason: 'Already answered on another device',
-                },
-              })}
-            />
-          </Variation>
-        </Variations>
-      </View>
-    );
-  },
+  render: (args): React.JSX.Element => <ElicitationGallery {...args} />,
 } satisfies StoryObj<GalleryArgs>;
+
+const answeredState = {
+  kind: 'answered',
+  reason: 'Already answered on another device',
+} as const;
+const fieldsProps = elicitationProps({
+  request: fieldsRequest,
+  values: fieldsValues,
+  source: 'linear',
+});
+const outcomes: { label: string; answer: ElicitationAnswer }[] = [
+  {
+    label: 'Submitted form',
+    answer:
+      elicitationMock.answer.procedure === 'answerElicitation'
+        ? elicitationMock.answer.input
+        : { action: 'cancel' },
+  },
+  { label: 'Dismissed form', answer: { action: 'cancel' } },
+  { label: 'Declined form', answer: { action: 'decline' } },
+];
+
+function ElicitationGallery(args: GalleryArgs): React.JSX.Element {
+  return (
+    <View className="w-full items-center py-4">
+      <Variations className="max-w-composer!">
+        <FormVariations {...args} />
+        <OutcomeVariations />
+        <Variation label="Already answered">
+          <ElicitationForm {...elicitationProps({ state: answeredState })} />
+        </Variation>
+      </Variations>
+    </View>
+  );
+}
+
+function FormVariations(args: GalleryArgs): React.JSX.Element {
+  return (
+    <>
+      <Variation label="Choice">
+        <ElicitationForm {...choiceProps(args)} />
+      </Variation>
+      <Variation label="Form fields and validation">
+        <ElicitationForm {...fieldsProps} />
+      </Variation>
+    </>
+  );
+}
+
+function choiceProps(args: GalleryArgs): ElicitationFormProps {
+  const selected = elicitationProps({
+    mock:
+      elicitationMocks.find((mock) => mock.agent === args.agent) ??
+      elicitationMock,
+  });
+  return elicitationProps({
+    ...args,
+    request: selected.request,
+    state:
+      args.requestState === 'answered'
+        ? answeredState
+        : { kind: args.requestState },
+  });
+}
+
+function OutcomeVariations(): React.JSX.Element {
+  return (
+    <>
+      {outcomes.map(({ label, answer }) => (
+        <Variation key={label} label={label}>
+          <ElicitationOutcome request={elicitationRequest} answer={answer} />
+        </Variation>
+      ))}
+    </>
+  );
+}

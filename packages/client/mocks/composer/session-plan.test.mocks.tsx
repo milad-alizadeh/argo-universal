@@ -1,4 +1,5 @@
 import { expect, within, waitFor } from 'storybook/test';
+import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import type { PlayContext } from './composer-story-context.test.mocks';
 import {
   planTitle,
@@ -9,7 +10,7 @@ export async function expectSessionPath({
   canvas,
   width,
 }: SessionStep): Promise<void> {
-  await (width < 720
+  await (width < wideBreakpoint()
     ? expect(
         canvas.queryByText('session', { exact: true }),
       ).not.toBeInTheDocument()
@@ -20,7 +21,7 @@ export async function expectOpenedPlan({
   width,
 }: SessionStep): Promise<void> {
   const overlay = within(document.body);
-  if (width < 720)
+  if (width < wideBreakpoint())
     await waitFor(() => expect(overlay.getByRole('dialog')).toBeVisible());
   else {
     await expect(overlay.queryByRole('dialog')).not.toBeInTheDocument();
@@ -36,7 +37,7 @@ export async function closeRunningPlan({
   userEvent,
   width,
 }: SessionStep & Pick<PlayContext, 'userEvent'>): Promise<void> {
-  if (width < 720) await userEvent.keyboard('{Escape}');
+  if (width < wideBreakpoint()) await userEvent.keyboard('{Escape}');
   else {
     await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
     await waitFor(() =>
