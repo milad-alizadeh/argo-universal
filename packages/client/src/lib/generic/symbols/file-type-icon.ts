@@ -38,6 +38,7 @@ const fileIcons = new Map(
 function extensionOf(path: string): string {
   const filename = path.split('/').at(-1) ?? '';
   const dot = filename.lastIndexOf('.');
+
   return dot > 0 ? filename.slice(dot + 1).toLowerCase() : '';
 }
 

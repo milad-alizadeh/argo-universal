@@ -31,6 +31,7 @@ type ServerCounts = Pick<
 function useServerCounts(): ServerCounts {
   const agents = useInstalledAgents();
   const agentsKnown = useAgents().data !== undefined;
+
   return {
     projectCount: useProjects().data?.length,
     agentCount: agentsKnown ? agents.length : undefined,
@@ -57,5 +58,6 @@ function connectionStatus(
   connection: ReturnType<typeof useConnectionState>,
 ): React.ComponentProps<typeof SettingsList>['status'] {
   if (connection === 'open') return 'ready';
+
   return connection === 'connecting' ? 'loading' : 'disconnected';
 }

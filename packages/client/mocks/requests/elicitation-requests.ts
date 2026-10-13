@@ -19,6 +19,7 @@ export const fieldsRequest: PendingElicitation = {
     required: ['title'],
   },
 };
+
 export const fieldsValues: ElicitationValues = {
   title: 'Drafts vanish after a reconnect',
   team: 'Mobile',
@@ -51,6 +52,7 @@ export const emptyAnswersRequest: PendingElicitation = {
     required: ['options', 'choice'],
   },
 };
+
 export const dateFormatsRequest: PendingElicitation = {
   ...fieldsRequest,
   requestedSchema: {
@@ -61,10 +63,12 @@ export const dateFormatsRequest: PendingElicitation = {
     required: ['date', 'time'],
   },
 };
+
 export const dateFormatsValues: ElicitationValues = {
   date: '2026-02-30',
   time: '2026-10-06',
 };
+
 export const invalidSchemaRequest: PendingElicitation = {
   ...fieldsRequest,
   requestedSchema: {

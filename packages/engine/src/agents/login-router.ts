@@ -10,15 +10,19 @@ import {
 } from '@repo/contracts';
 import { mergeRouters, publicProcedure, router, routerFactory } from '../rpc';
 import type { AgentLogins } from './login';
+
 type LoginRouterDeps = {
   agentLogins: AgentLogins;
   sessionCommandSignal?: AbortSignal;
 };
+
 const mutation = (deps: LoginRouterDeps): typeof publicProcedure =>
   publicProcedure.use(({ next }) => {
     deps.sessionCommandSignal?.throwIfAborted();
+
     return next();
   });
+
 const createStartRouter = routerFactory((deps: LoginRouterDeps) =>
   router({
     startLogin: mutation(deps)
@@ -31,6 +35,7 @@ const createStartRouter = routerFactory((deps: LoginRouterDeps) =>
       .query(({ input }) => deps.agentLogins.read(input)),
   }),
 );
+
 const createChooseRouter = routerFactory((deps: LoginRouterDeps) =>
   router({
     loginTerminal: publicProcedure
@@ -46,6 +51,7 @@ const createChooseRouter = routerFactory((deps: LoginRouterDeps) =>
       .mutation(({ input }) => deps.agentLogins.choose(input)),
   }),
 );
+
 const createAnswerRouter = routerFactory((deps: LoginRouterDeps) =>
   router({
     answerLogin: mutation(deps)
@@ -58,6 +64,7 @@ const createAnswerRouter = routerFactory((deps: LoginRouterDeps) =>
       .mutation(({ input }) => deps.agentLogins.cancel(input)),
   }),
 );
+
 export const createLoginRouter = routerFactory((deps: LoginRouterDeps) =>
   mergeRouters(
     createStartRouter(deps),

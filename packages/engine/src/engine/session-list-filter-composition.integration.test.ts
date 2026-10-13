@@ -12,8 +12,10 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
     title: 'Earlier',
     activityAt: 1,
   });
+
   insertEndedTurn(database);
   onTestFinished(remove);
+
   for (let index = 0; index < 51; index += 1) {
     const id = `page-${String(index).padStart(2, '0')}`;
     insertSession(database, {
@@ -23,6 +25,7 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
     });
     insertEndedTurn(database, id);
   }
+
   insertSession(database, {
     id: 'archived',
     title: 'Archived title',
@@ -37,20 +40,24 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
     activityAt: 30,
   });
   insertEndedTurn(database, 'subagent');
+
   const { createCaller } = await startEngineTestHost({
     database,
     ...scriptedEngineInput(),
   });
+
   const caller = createCaller();
   const first = await caller.session.list({ archived: false, query: '%_' });
   expect(first.sessions).toHaveLength(50);
   expect(first.sessions[0]).toMatchObject({ sessionId: 'page-50' });
   expect(first.nextCursor).not.toBeNull();
+
   const second = await caller.session.list({
     archived: false,
     query: '%_',
     cursor: first.nextCursor ?? undefined,
   });
+
   expect(second.sessions.map((row): string => row.sessionId)).toEqual([
     'page-00',
   ]);

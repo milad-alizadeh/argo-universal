@@ -19,7 +19,9 @@ const meta = {
     await settleViewport(layoutWidths.wide);
   },
 } satisfies Meta<typeof RichTextareaExample>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const twoItems = 'First\nSecond';
@@ -29,6 +31,7 @@ interface TypedBlock {
   sent: string;
   shown: string;
 }
+
 function typedBlock({ typed, sent, shown }: TypedBlock): Story {
   return {
     play: async ({ canvas, args }) => {
@@ -42,21 +45,25 @@ function typedBlock({ typed, sent, shown }: TypedBlock): Story {
     },
   };
 }
+
 export const ShiftReturnInAnItemAddsAnItem = typedBlock({
   typed: '1. First{Shift>}{Enter}{/Shift}Second',
   sent: '1. First\n2. Second',
   shown: twoItems,
 });
+
 export const ShiftTabOnATopLevelItemLeavesTheList = typedBlock({
   typed: '- First{Enter}Second{Shift>}{Tab}{/Shift}',
   sent: '- First\n\nSecond',
   shown: 'First\n\nSecond',
 });
+
 export const NumberedListStartsAtTheNumberTyped = typedBlock({
   typed: '1. First{Enter}{Shift>}{Tab}{/Shift}3. Third{Enter}Fourth',
   sent: '1. First\n\n3. Third\n4. Fourth',
   shown: 'First\n\n\n\n\nThird\nFourth',
 });
+
 export const MarkerAfterAShiftReturnStartsAList = typedBlock({
   typed: 'Steps{Shift>}{Enter}{/Shift}1. First{Enter}Second',
   sent: 'Steps\n\n1. First\n2. Second',

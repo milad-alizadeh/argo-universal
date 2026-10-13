@@ -16,6 +16,7 @@ const meta = {
   ),
   args: { row: recordedEdit('agent-1') },
 } satisfies Meta<typeof EditRow>;
+
 export default meta;
 
 const deletedFile: RecordedEdit = {
@@ -27,7 +28,9 @@ const deletedFile: RecordedEdit = {
   line: 'first legacy line',
   summary: true,
 };
+
 export const DeletedFilePhone = editRow(layoutWidths.phone, deletedFile);
+
 export const DeletedFileWide = editRow(layoutWidths.wide, deletedFile);
 
 const largeDiff: RecordedEdit = {
@@ -39,5 +42,7 @@ const largeDiff: RecordedEdit = {
   line: 'old value 1',
   summary: true,
 };
+
 export const LargeDiffPhone = editRow(layoutWidths.phone, largeDiff);
+
 export const LargeDiffWide = editRow(layoutWidths.wide, largeDiff);

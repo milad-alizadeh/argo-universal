@@ -6,23 +6,29 @@ import { installEntry } from '#mocks/installation';
 
 it('refresh and catalog removal retain the offline launch until an explicit pinned update', async () => {
   let entry: ACPAgent = installEntry('npx');
+
   let entries = [entry],
     ports = createInstallationPorts();
+
   const host = await startEngineTestHost({
     installationPorts: {
       download: (url, signal) => ports.download(url, signal),
       runTool: (input) => ports.runTool(input),
     },
-    fetchAgents: async () => ({ version: '1.0.0', agents: entries }),
+    fetchAgents: async () =>
+      JSON.stringify({ version: '1.0.0', agents: entries }),
   });
+
   const sync = async (): Promise<void> => {
     await host.caller.agents.syncCatalog();
     await expect
       .poll(async () => (await host.caller.agents.catalog()).syncStatus)
       .toBe('idle');
   };
+
   await sync();
   const agentId = (await host.caller.agents.catalog()).agents[0]?.id;
+
   if (!agentId) throw new Error('Missing fixture Agent');
   await host.caller.agents.install({ agentId, version: '1.2.3' });
   await expect
@@ -52,14 +58,17 @@ it('refresh and catalog removal retain the offline launch until an explicit pinn
   expect((await host.caller.agents.catalog()).agents).toEqual([]);
   expect(await host.caller.agents.configured()).toEqual(configured);
   await host.stop();
+
   const restarted = await startEngineTestHost({
     home: host.home,
     installationPorts: {
       download: (url, signal) => ports.download(url, signal),
       runTool: (input) => ports.runTool(input),
     },
-    fetchAgents: async () => ({ version: '1.0.0', agents: [entry] }),
+    fetchAgents: async () =>
+      JSON.stringify({ version: '1.0.0', agents: [entry] }),
   });
+
   await expect(
     restarted.caller.agents.installStatus({ agentId }),
   ).resolves.toMatchObject({

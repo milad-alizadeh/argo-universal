@@ -62,6 +62,7 @@ function FileEditIcon({ file, nested }: FileEditProps): React.JSX.Element {
 
 function MoveTarget({ file }: FileEditProps): React.JSX.Element | null {
   if (!file.oldPath) return null;
+
   return (
     <>
       <Text selectable={false}>to</Text>
@@ -76,6 +77,7 @@ function LineCount(props: {
   children: ReactNode;
 }): React.JSX.Element | null {
   if (props.count <= 0) return null;
+
   return (
     <Text selectable={false} className={props.className}>
       {props.children}
@@ -98,6 +100,7 @@ function LineCounts({ file }: FileEditProps): React.JSX.Element {
 
 function FileEditSummary(props: FileEditLabelProps): React.JSX.Element {
   const { file } = props;
+
   return (
     <View className="min-w-0 shrink flex-row items-center gap-1">
       {!props.nested && <Text selectable={false}>{verbs[file.operation]}</Text>}
@@ -141,6 +144,7 @@ function FileEditToggle(
 
 export function FileEdit(props: FileEditProps): React.JSX.Element {
   const [open, setOpen] = useState(false);
+
   return (
     <Collapsible open={open}>
       <FileEditToggle {...props} open={open} onToggle={() => setOpen(!open)} />

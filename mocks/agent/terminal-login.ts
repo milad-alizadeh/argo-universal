@@ -1,15 +1,18 @@
 import type { AuthMethodTerminal } from '@agentclientprotocol/sdk';
 import { protocolLogin } from './protocol-login.ts';
+
 const terminalMethod: AuthMethodTerminal & { type: 'terminal' } = {
   type: 'terminal',
   id: 'interactive-subscription',
   name: 'Terminal sign-in',
   args: ['--interactive-login'],
 };
+
 export const terminalLogin = {
   ...protocolLogin,
   initialize: { ...protocolLogin.initialize, authMethods: [terminalMethod] },
 };
+
 export const runTerminalLoginMock = (): void => {
   process.stdin.setRawMode(true);
   process.stdout.write(

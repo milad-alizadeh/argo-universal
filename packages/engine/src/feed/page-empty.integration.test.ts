@@ -5,6 +5,7 @@ import {
   startFeedTestHost,
   createFeedRouterCaller,
 } from '#mocks/feed-suite';
+
 it('pages a Session with no rows', async (): Promise<void> => {
   await startFeedTestHost();
   insertSession(database, { id: 'session-2' });

@@ -14,13 +14,16 @@ import { useSwiftUITextModifiers } from '../../native/native-typography';
 import { optionalTint } from '../../native/swift-tint';
 import type { PickerProps } from './picker-props';
 import { pickerLabel, pickerValue } from './picker-selection';
+
 const rowHeight = 44;
+
 export function PickerLabel(
   props: Pick<PickerProps<string>, 'label' | 'invalid' | 'required'>,
 ): React.JSX.Element {
   const { foreground, destructive } = useNativeTheme().colors;
   const modifiers = useSwiftUITextModifiers('body', 'row');
   const color = (props.invalid ? destructive : foreground) ?? 'primary';
+
   return (
     <Text modifiers={[...modifiers, foregroundStyle(color)]}>
       {pickerLabel(props)}
@@ -39,6 +42,7 @@ export function PickerValue<Value extends string>(
 function usePickerValueModifiers(): ReturnType<typeof foregroundStyle>[] {
   const { mutedForeground } = useNativeTheme().colors;
   const modifiers = useSwiftUITextModifiers('body', 'row');
+
   return [...modifiers, foregroundStyle(mutedForeground ?? 'secondary')];
 }
 
@@ -46,6 +50,7 @@ export function usePickerModifiers<Value extends string>(
   props: PickerProps<Value>,
 ): ReturnType<typeof pickerStyle>[] {
   const colors = useNativeTheme().colors;
+
   return [
     frame({ minHeight: rowHeight }),
     accessibilityLabel(props.label),

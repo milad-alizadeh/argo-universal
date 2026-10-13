@@ -14,6 +14,7 @@ it('an explicit message identity patches its original Turn after settled persist
       content: { type: 'text', text: 'First 😀' },
     },
   ];
+
   const scenario = feedScenario(updates);
   const { host, sessionId } = await openAcpFeedSession(scenario);
   const first = await host.caller.feed.page({ sessionId, direction: 'tail' });
@@ -54,14 +55,17 @@ it('equal idless replies in successive Turns remain distinct messages', async ()
       content: { type: 'text', text: 'Equal' },
     },
   ]);
+
   await host.caller.session.prompt({
     sessionId,
     prompt: [{ type: 'text', text: 'Again' }],
   });
   await waitForAcpSessionIdle(host, sessionId);
+
   const messages = (
     await host.caller.feed.page({ sessionId, direction: 'tail' })
   ).rows.filter((row) => row.sessionUpdate === 'agent_message');
+
   expect(messages).toMatchObject([
     { position: 1, content: [{ text: 'Equal' }] },
     { position: 3, content: [{ text: 'Equal' }] },

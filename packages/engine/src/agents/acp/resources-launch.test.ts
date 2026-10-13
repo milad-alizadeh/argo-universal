@@ -10,9 +10,11 @@ it('equivalent reordered launches reuse one startup and ignore extra caller fiel
   const peer = createScriptedAgentProcess({
     steps: [],
   });
+
   const resources = createAcpResources(peer);
   const base = createResourceOpening();
   const launch = { ...base.launch, env: { '\u00c5': 'a', 'A\u030a': 'b' } };
+
   const reordered = {
     authContext: launch.authContext,
     cwd: launch.cwd,
@@ -24,6 +26,7 @@ it('equivalent reordered launches reuse one startup and ignore extra caller fiel
     projectId: launch.projectId,
     ignoredCallerField: 'ignored',
   };
+
   await Promise.all([
     resources.open({ ...base, launch }),
     resources.open({ ...base, launch: reordered }),
@@ -38,10 +41,12 @@ it('launch arguments and environment are captured before startup awaits', async 
   const base = createResourceOpening();
   const args = ['initial'];
   const env = { AUTH: 'initial' };
+
   const opening = resources.open({
     ...base,
     launch: { ...base.launch, args, env },
   });
+
   args.push('later');
   env.AUTH = 'later';
   await opening;

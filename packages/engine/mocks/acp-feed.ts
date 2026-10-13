@@ -5,17 +5,20 @@ import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 
 export type AcpFeedUpdates = SessionNotification['update'][];
+
 export const waitForAcpSnapshot = async (
   host: Pick<Awaited<ReturnType<typeof startAcpEngine>>, 'caller'>,
   sessionId: string,
   matches: (snapshot: SessionSnapshot) => boolean,
 ): Promise<SessionSnapshot> => {
   const events = await host.caller.feed.subscribe({ sessionId, after: null });
+
   for await (const event of events)
     if (event.type === 'snapshot' && matches(event.snapshot))
       return event.snapshot;
   throw new Error('The Feed closed before the expected Session snapshot');
 };
+
 export const waitForAcpSessionIdle = async (
   host: Pick<Awaited<ReturnType<typeof startAcpEngine>>, 'caller'>,
   sessionId: string,
@@ -26,6 +29,7 @@ export const waitForAcpSessionIdle = async (
     (snapshot) => snapshot.state === 'idle' && snapshot.activeTurnId === null,
   );
 };
+
 export const openAcpFeedSession = async (
   updates: AcpFeedUpdates | ScriptedScenario,
   agentId = 'mock',
@@ -38,11 +42,14 @@ export const openAcpFeedSession = async (
     undefined,
     agentId,
   );
+
   const created = await host.caller.session.new({
     ...emptySessionInput,
     agent: agentId,
     prompt: [{ type: 'text', text: 'Show the result' }],
   });
+
   await waitForAcpSessionIdle(host, created.sessionId);
+
   return { host, ...created };
 };

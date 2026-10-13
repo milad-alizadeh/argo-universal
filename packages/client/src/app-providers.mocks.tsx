@@ -19,6 +19,7 @@ export function ConnectionMock({
   strictMode,
 }: ConnectionMockProps): React.JSX.Element {
   const controls = useConnectionControls();
+
   return (
     <View>
       <ControlButtonsMock {...controls} />
@@ -38,6 +39,7 @@ interface ConnectionControls {
 function useConnectionControls(): ConnectionControls {
   const [mounted, setMounted] = useState(false);
   const [serverUrl, setServerUrl] = useState('ws://127.0.0.1:7337');
+
   return {
     mounted,
     serverUrl,
@@ -78,6 +80,7 @@ function ProvidersMock(props: ProvidersMockProps): React.JSX.Element | null {
       <ScreenMock />
     </AppProviders>
   ) : null;
+
   return props.strictMode === true ? (
     <StrictMode>{providers}</StrictMode>
   ) : (
@@ -87,6 +90,7 @@ function ProvidersMock(props: ProvidersMockProps): React.JSX.Element | null {
 
 function ConnectionReportMock(): React.JSX.Element {
   const current = useSyncExternalStore(subscribe, currentReport);
+
   return (
     <>
       <Text>{`Server: ${current.serverUrl}`}</Text>
@@ -105,12 +109,15 @@ function ScreenMock(): null {
   const client = useTRPCClient();
   useEffect(() => {
     recordScreenSubscription();
+
     const subscription = client.system.clock.subscribe(undefined, {
       onConnectionStateChange: ({ state }) => {
         recordScreenState(state);
       },
     });
+
     return (): void => subscription.unsubscribe();
   }, [client]);
+
   return null;
 }

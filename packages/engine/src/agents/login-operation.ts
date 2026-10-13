@@ -15,6 +15,7 @@ import {
   type LoginOutcome,
   type LoginMachineInput,
 } from './login-machine';
+import { loginProgress } from './login-progress';
 import { LoginResources, type LoginOperationDeps } from './login-resources';
 
 type LoginIdentity = {
@@ -22,6 +23,7 @@ type LoginIdentity = {
   agentId: string;
   ownerToken: string;
 };
+
 export class LoginOperation {
   private readonly actor: LoginActor;
   private readonly resources: LoginResources;
@@ -64,26 +66,32 @@ export class LoginOperation {
   public snapshot(token: string): AgentLoginSnapshot {
     const { operationId, agentId } = this.identity;
     const identity = { operationId, agentId };
+
     if (!this.isOwnedBy(token))
       return { ...identity, status: 'other-app', methods: [] };
-    return {
+
+    const snapshot: AgentLoginSnapshot = {
       ...identity,
       status: loginStatus(this.actor.getSnapshot()),
       methods: this.resources.methods(),
-      ...(this.isTerminalRunning() ? { terminal: true } : {}),
-      ...(this.browser.request() ? { request: this.browser.request() } : {}),
-      ...(this.failure ? { failure: this.failure } : {}),
+      ...loginProgress(this.isTerminalRunning(), this.browser.request()),
     };
+
+    if (this.failure) snapshot.failure = this.failure;
+
+    return snapshot;
   }
   public choose(methodId: string): void {
     if (!this.actor.getSnapshot().matches('choose-method'))
       throw new Error('Login is not choosing a method');
+
     if (!this.resources.methods().some((method) => method.id === methodId))
       throw new Error('Login method was not advertised');
     this.actor.send({ type: 'choose', methodId });
   }
   public readTerminal(cursor: number): AgentLoginTerminalFrame {
     if (!this.isTerminalRunning()) return { cursor, output: '', closed: true };
+
     return this.resources.readTerminal(cursor);
   }
   public inputTerminal(input: AgentLoginTerminalInput): void {
@@ -109,6 +117,7 @@ export class LoginOperation {
   public async shutdown(): Promise<void> {
     this.cancel();
     await this.completed.promise;
+
     if (this.actor.getSnapshot().matches('cleanup-failed'))
       throw new Error(this.failure ?? 'Login cleanup failed');
   }
@@ -128,11 +137,13 @@ export class LoginOperation {
   ): Promise<{ action: 'accept' | 'cancel' }> {
     if (!this.actor.getSnapshot().matches({ authenticating: 'waiting' }))
       return Promise.reject(new Error('Unexpected login request'));
+
     return this.browser.create(request, signal);
   }
   private async checkReady(): ReturnType<LoginResources['checkReady']> {
     const outcome = await this.resources.checkReady();
     this.failure = outcome.failure;
+
     return outcome;
   }
   private finish(outcome: LoginOutcome): void {
@@ -143,7 +154,7 @@ export class LoginOperation {
     this.resources.abortLogin();
     this.browser.cancel();
   }
-  private fail(error: unknown): void {
-    this.failure = error instanceof Error ? error.message : String(error);
+  private fail(cause: unknown): void {
+    this.failure = cause instanceof Error ? cause.message : String(cause);
   }
 }

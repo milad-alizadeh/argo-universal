@@ -29,6 +29,7 @@ const titleEntries = ({ section, key, gapAbove }: Placed): FieldListEntry[] =>
 
 const rowEntries = ({ section, key, gapAbove }: Placed): FieldListEntry[] => {
   const opensSection = gapAbove && !section.title;
+
   return section.rows.map((row, index) => ({
     kind: 'row',
     key: `${key}:${row.key ?? index}`,
@@ -61,6 +62,7 @@ function sectionEntries(
     key: section.title ?? `section-${index}`,
     gapAbove: index > 0,
   };
+
   return [...titleEntries(at), ...rowEntries(at), ...footerEntries(at)];
 }
 
@@ -69,6 +71,7 @@ export const fieldListEntries = (
 ): FieldListEntry[] => sections.flatMap(sectionEntries);
 
 export const fieldListEntryKey = (entry: FieldListEntry): string => entry.key;
+
 export const fieldListEntryKind = (
   entry: FieldListEntry,
 ): FieldListEntry['kind'] => entry.kind;

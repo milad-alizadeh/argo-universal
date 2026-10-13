@@ -10,12 +10,15 @@ import { type CustomCheck, checkConfiguredAgent } from './custom-check';
 const selectEnabledCustom = (agent: ConfiguredAgent): CustomCheck[] => {
   if (!isEnabledDefinition(agent)) return [];
   const definition = selectCustomDefinition(agent);
+
   return definition ? [{ agentId: agent.id, definition }] : [];
 };
+
 type CustomListDeps = Pick<
   ConfigurationDeps,
   'database' | 'checkAgentLaunch' | 'withAgentCheck'
 >;
+
 const describeCustomAgent = async (
   deps: CustomListDeps,
   agent: CustomCheck,
@@ -23,8 +26,10 @@ const describeCustomAgent = async (
   const check = await checkOwnedCustom(deps, agent);
   const configured = readConfiguredAgent(deps.database, agent.agentId);
   const current = configured && selectEnabledCustom(configured)[0];
+
   return current ? [customAgentInfo(current, check)] : [];
 };
+
 const customAgentInfo = (
   agent: CustomCheck,
   check: Awaited<ReturnType<typeof checkConfiguredAgent>>,
@@ -35,18 +40,22 @@ const customAgentInfo = (
   availability: checkedAvailability(check),
   installStep: checkedStep(check),
 });
+
 export const checkedStep = (
   check: Awaited<ReturnType<typeof checkConfiguredAgent>>,
 ): string | undefined => {
   if (check.status !== 'ready') return check.failure;
+
   return check.authentication
     ? 'Sign in from Agents to start a Session.'
     : undefined;
 };
+
 export const checkedAvailability = (
   check: Awaited<ReturnType<typeof checkConfiguredAgent>>,
 ): AgentInfo['availability'] => {
   if (check.status !== 'ready') return 'unavailable';
+
   return check.authentication ? 'not_signed_in' : 'available';
 };
 
@@ -75,9 +84,10 @@ const checkOwnedCustom = async (
     return failedCustomCheck(error);
   }
 };
+
 const failedCustomCheck = (
-  error: unknown,
+  cause: unknown,
 ): Awaited<ReturnType<typeof checkConfiguredAgent>> => ({
   status: 'failed',
-  failure: error instanceof Error ? error.message : 'Agent check failed',
+  failure: cause instanceof Error ? cause.message : 'Agent check failed',
 });

@@ -32,6 +32,7 @@ const tool: ToolCallUpdate = {
 it('reads a 500-row Turn with three bounded seeks after many settled Tool calls', (): void => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
+
   const previous = Array.from(
     { length: 500 },
     (
@@ -52,6 +53,7 @@ it('reads a 500-row Turn with three bounded seeks after many settled Tool calls'
       status: 'completed' as const,
     }),
   );
+
   const current: SessionUpdate[] = Array.from(
     { length: 500 },
     (_, index): AgentMessage => ({
@@ -66,6 +68,7 @@ it('reads a 500-row Turn with three bounded seeks after many settled Tool calls'
       content: [{ type: 'text', text: 'Progress' }],
     }),
   );
+
   current[50] = {
     id: 'thought-1',
     messageId: 'thought-1',
@@ -98,19 +101,23 @@ it('reads a 500-row Turn with three bounded seeks after many settled Tool calls'
     title: 'Retrying',
     _meta: { argo: { retry: { attempt: 2, maxAttempts: 5, delayMs: 1000 } } },
   };
+
   for (const row of [...previous, ...current]) {
     database
       .insert(feedRow)
       .values({ ...toFeedRowWrite(row), sessionId: 'session-1' })
       .run();
   }
+
   const counted = countDatabaseReads(database);
+
   const rows = createLiveHeaderRowsReader({ database: counted.database })({
     writer: undefined,
     sessionId: 'session-1',
     turnId: 'turn-1',
     rows: {},
   }).rows;
+
   expect(counted.metrics.rows).toBeLessThanOrEqual(4);
   expect(counted.metrics.queries).toBeLessThanOrEqual(3);
   expect(Object.keys(rows).sort()).toEqual([
@@ -124,6 +131,7 @@ it('reads a 500-row Turn with three bounded seeks after many settled Tool calls'
 it('keeps the earlier running Tool call after writer and memory overlays complete the newer one', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
+
   const newer = {
     ...tool,
     id: 'tool-2',
@@ -131,6 +139,7 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
     position: 2,
     revision: 2,
   };
+
   for (const row of [tool, newer])
     database
       .insert(feedRow)
@@ -139,9 +148,11 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
   database.$client
     .exec(`CREATE TRIGGER hold_header_write BEFORE INSERT ON feed_row
     BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
+
   const writer = createActor(writerMachine, {
     input: { now: (): number => Date.now(), database },
   }).start();
+
   onTestFinished((): void => {
     writer.stop();
   });
@@ -156,18 +167,21 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
   await waitFor(writer, (snapshot): boolean =>
     snapshot.matches('waitingToRetry'),
   );
+
   const completed = {
     ...newer,
     revision: 4,
     status: 'completed' as const,
     state: 'settled' as const,
   };
+
   const rows = createLiveHeaderRowsReader({ database })({
     writer,
     sessionId: 'session-1',
     turnId: 'turn-1',
     rows: { 'tool-2': completed },
   }).rows;
+
   expect(rows).toEqual({ 'tool-1': tool, 'tool-2': completed });
   expect(
     toLiveHeader(
@@ -189,6 +203,7 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
 it('excludes the newest thought when it belongs to an earlier Turn', (): void => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
+
   const thought: SessionUpdate = {
     id: 'previous-thought',
     messageId: 'previous-thought',
@@ -200,6 +215,7 @@ it('excludes the newest thought when it belongs to an earlier Turn', (): void =>
     sessionUpdate: 'agent_thought',
     content: [{ type: 'text', text: '**Old work**' }],
   };
+
   for (const row of [thought, { ...tool, revision: 2 }])
     database
       .insert(feedRow)
@@ -240,10 +256,13 @@ it('reads no stored rows without an active Turn', (): void => {
 it('reads only the newest malformed Tool call while retaining all running calls', (): void => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
+
   const reported = vi
     .spyOn(console, 'error')
     .mockImplementation((): void => {});
+
   onTestFinished((): void => reported.mockRestore());
+
   const malformed = Array.from(
     { length: 500 },
     (
@@ -264,7 +283,9 @@ it('reads only the newest malformed Tool call while retaining all running calls'
       payload: sql`'broken-json'`,
     }),
   );
+
   database.insert(feedRow).values(malformed).run();
+
   const current: SessionUpdate[] = [
     { ...tool, position: 500, revision: 501 },
     {
@@ -287,18 +308,21 @@ it('reads only the newest malformed Tool call while retaining all running calls'
       content: [{ type: 'text', text: 'Progress' }],
     },
   ];
+
   for (const row of current)
     database
       .insert(feedRow)
       .values({ ...toFeedRowWrite(row), sessionId: 'session-1' })
       .run();
   const counted = countDatabaseReads(database);
+
   const result = createLiveHeaderRowsReader({ database: counted.database })({
     writer: undefined,
     sessionId: 'session-1',
     turnId: 'turn-1',
     rows: {},
   });
+
   expect(counted.metrics.rows).toBeLessThanOrEqual(4);
   expect(counted.metrics.queries).toBeLessThanOrEqual(3);
   expect(Object.keys(result.rows).sort()).toEqual([

@@ -22,6 +22,7 @@ import {
 } from './field-list-entries';
 
 export type { FieldListSection } from './field-list-entries';
+
 export interface FieldListProps {
   sections: readonly FieldListSection[];
   // A phone's search above the sections; the native FieldGroup draws it, as a wide window searches from its title row.
@@ -31,6 +32,7 @@ export interface FieldListProps {
 
 // The Settings page's surface: the phone's page, or the shell behind a wide window's page.
 const fadeSurface = 'bg-sidebar';
+
 const rowHeightEstimate = 52;
 
 /*
@@ -42,6 +44,7 @@ export function FieldList(props: FieldListProps): React.JSX.Element {
     () => fieldListEntries(props.sections),
     [props.sections],
   );
+
   return (
     <ScrollFadeList
       {...listTestIdPropsFor(props.testID)}
@@ -70,19 +73,28 @@ function listTestIdPropsFor(
   return testID ? listTestIdProps(testID) : {};
 }
 
+type PaddingKey = keyof Pick<
+  ViewStyle,
+  | 'paddingInlineStart'
+  | 'paddingInlineEnd'
+  | 'paddingLeft'
+  | 'paddingRight'
+  | 'paddingHorizontal'
+>;
+
 // The web resolves a class to a CSS length such as "16px"; native resolves it to a number.
-const pixels = (length: unknown): number => {
+type ResolvedLength = ViewStyle['gap'] | Exclude<ViewStyle[PaddingKey], string>;
+
+const pixels = (length: ResolvedLength): number => {
   if (typeof length === 'number') return length;
+
   return typeof length === 'string' ? Number.parseFloat(length) : 0;
 };
 
-const isSet = (value: unknown): boolean =>
+const isSet = (value: ResolvedLength): boolean =>
   value !== undefined && value !== null;
 
-function firstLength<Style>(
-  style: Style,
-  keys: readonly (keyof Style)[],
-): number {
+function firstLength(style: ViewStyle, keys: readonly PaddingKey[]): number {
   return pixels(keys.map((key) => style[key]).find(isSet));
 }
 
@@ -91,6 +103,7 @@ const startPaddingKeys = [
   'paddingLeft',
   'paddingHorizontal',
 ] as const;
+
 const endPaddingKeys = [
   'paddingInlineEnd',
   'paddingRight',
@@ -100,6 +113,7 @@ const endPaddingKeys = [
 // FieldGroup's gutters, in the numbers Legend List lays its items out with.
 function useGroupPadding(): ViewStyle {
   const padding = useResolveClassNames(fieldGroupPadding);
+
   return {
     paddingLeft: firstLength(padding, startPaddingKeys),
     paddingRight: firstLength(padding, endPaddingKeys),
@@ -114,6 +128,7 @@ function useEntryRenderer(): (
   // The web resolves the gap class to rowGap; native resolves it to gap.
   const { rowGap, gap } = useResolveClassNames(fieldGroupGap);
   const sectionGap = pixels(rowGap ?? gap);
+
   return useCallback(
     ({ item }: LegendListRenderItemProps<FieldListEntry>) => (
       <View style={item.gapAbove ? { paddingTop: sectionGap } : undefined}>
@@ -128,8 +143,10 @@ function useEntryRenderer(): (
 function EntryContent({ entry }: { entry: FieldListEntry }): React.JSX.Element {
   if (entry.kind === 'title')
     return <FieldSection title={entry.title}>{null}</FieldSection>;
+
   if (entry.kind === 'footer')
     return <FieldSection footer={entry.footer}>{null}</FieldSection>;
+
   return <CardRow entry={entry} />;
 }
 

@@ -124,6 +124,7 @@ export function DesktopShellFrame(
   const shell = frameShellProps(props);
   const title = sectionTitle(shell.selectedSection);
   const panes = framePanes({ ...shell, title, inspector: props.inspector });
+
   return (
     <View className="flex-1">
       <DesktopShell {...shell} {...panes}>

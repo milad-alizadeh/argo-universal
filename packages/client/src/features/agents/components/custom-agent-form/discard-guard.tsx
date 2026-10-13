@@ -22,22 +22,26 @@ export function DiscardGuard({
   const dirty = useStore(form.store, (s) => s.isDirty && !s.isSubmitting);
   const { open, setOpen, proceed } = useHeldLeave(dirty);
   const props = { open, onOpenChange: setOpen, actions: answers(proceed) };
+
   return <Alert {...props} title="Discard changes?" message={unsavedMessage} />;
 }
 
 const unsavedMessage = 'Your changes have not been saved.';
 
-// The leave the guard is holding: asked about while open, let go by proceed.
-function useHeldLeave(active: boolean): {
+type HeldLeave = {
   open: boolean;
   setOpen: (open: boolean) => void;
   proceed: () => void;
-} {
+};
+
+// The leave the guard is holding: asked about while open, let go by proceed.
+function useHeldLeave(active: boolean): HeldLeave {
   const [open, setOpen] = useState(false);
   const held = useRef<() => void>(() => null);
   useLeaveGuard(active, (proceed) => {
     held.current = proceed;
     setOpen(true);
   });
+
   return { open, setOpen, proceed: () => held.current() };
 }

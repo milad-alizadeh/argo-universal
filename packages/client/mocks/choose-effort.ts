@@ -7,6 +7,7 @@ import { expect, waitFor } from 'storybook/test';
  * `levels` are the level names the slider offers, in order; an unset slider sits at the first stop.
  */
 const noSelection = 'No selection';
+
 const valueText = 'aria-valuetext';
 
 function moveTo(slider: HTMLElement, index: number): void {
@@ -25,18 +26,25 @@ export async function chooseEffort(
   const target = effortIndex(levels, name);
   const current = currentEffort(slider, levels);
   slider.focus();
+
   if (needsFirstStop(slider, current, target)) {
     moveTo(slider, current + 1);
     moveTo(slider, current);
+
     return;
   }
+
   await moveThroughLevels(slider, levels, { current, target });
 }
+
 function effortIndex(levels: string[], name: string): number {
   const target = levels.indexOf(name);
+
   if (target < 0) throw new Error(`The slider does not offer ${name}.`);
+
   return target;
 }
+
 function needsFirstStop(
   slider: HTMLElement,
   current: number,
@@ -44,12 +52,14 @@ function needsFirstStop(
 ): boolean {
   return current === target && slider.getAttribute(valueText) === noSelection;
 }
+
 async function moveThroughLevels(
   slider: HTMLElement,
   levels: string[],
   { current, target }: { current: number; target: number },
 ): Promise<void> {
   const direction = target > current ? 1 : -1;
+
   for (let moved = 1; moved <= Math.abs(target - current); moved += 1) {
     const index = current + direction * moved;
     moveTo(slider, index);

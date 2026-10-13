@@ -15,11 +15,13 @@ import {
 
 const isStaleCursor = (input: FeedPageInput, epoch: number): boolean =>
   input.epoch !== undefined && input.epoch !== epoch;
+
 const pageCursor = (
   input: FeedPageInput,
   epoch: number,
 ): number | undefined => {
   if (isStaleCursor(input, epoch)) return undefined;
+
   return input.direction === 'before' ? input.cursor : undefined;
 };
 
@@ -30,6 +32,7 @@ function readPageRows(
 ): FeedRowWrite[] {
   const before =
     cursor === undefined ? undefined : lt(feedRow.position, cursor);
+
   return database
     .select(storedFeedColumns)
     .from(feedRow)
@@ -53,6 +56,7 @@ function pageContent(
   input: FeedPageInput,
 ): Pick<FeedPageOutput, 'rows' | 'hasOlder' | 'startCursor'> {
   const rows = hydratePageRows(stored, input);
+
   return {
     rows,
     hasOlder: stored.length > input.limit,
@@ -67,6 +71,7 @@ export function readFeedPage(
   const { epoch, maxRevision } = readSession(input.sessionId);
   const cursor = pageCursor(input, epoch);
   const stored = readPageRows(database, input, cursor);
+
   return {
     epoch,
     maxRevision,

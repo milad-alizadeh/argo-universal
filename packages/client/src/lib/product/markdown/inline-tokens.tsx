@@ -88,6 +88,7 @@ function inlineToken(
   props: { key: string; codeClassName: string },
 ): React.JSX.Element {
   const Render = inlineTokens.get(token.type) ?? OtherInlineToken;
+
   return createElement(Render, { ...props, token });
 }
 

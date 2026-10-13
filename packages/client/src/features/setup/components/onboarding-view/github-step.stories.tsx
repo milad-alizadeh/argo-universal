@@ -27,7 +27,9 @@ function GitHubSteps(): React.JSX.Element {
 const meta = {
   title: 'Setup/GitHubStep',
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // The AccountRow chips and captions designed for Settings › Accounts in Paper.

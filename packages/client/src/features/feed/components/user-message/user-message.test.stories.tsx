@@ -30,14 +30,18 @@ const meta = {
     imageUrl: recordedImageUrl,
   },
 } satisfies Meta<typeof UserMessage>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const widths = [layoutWidths.phone, layoutWidths.wide];
 
 function first(elements: HTMLElement[], missing: string): HTMLElement {
   const [element] = elements;
+
   if (!element) throw new Error(missing);
+
   return element;
 }
 
@@ -45,20 +49,24 @@ export const InlineCode: Story = {
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleViewport(width);
+
       const codeElement = first(
         canvas.getAllByText('sleep 20 && echo done', { exact: true }),
         'Inline code is missing',
       );
+
       const prose = first(
         canvas.getAllByText(/^Run the shell command/),
         'Message prose is missing',
       );
+
       await expect(codeElement).toBeVisible();
       await expect(prose).toBeVisible();
       await expect(
         canvas.queryByRole('button', { name: 'Show more' }),
       ).toBeNull();
       const container = prose.closest('.w-full');
+
       if (!container) throw new Error('Expected the Feed row');
       await expect(prose.getBoundingClientRect().right).toBeLessThanOrEqual(
         container.getBoundingClientRect().right,
@@ -73,9 +81,11 @@ function opensImage(agent: MockAgent, width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await expect(within(document.body).queryByRole('dialog')).toBeNull();
+
       const thumbnail = canvas.getByRole('button', {
         name: 'Open image, 32×32',
       });
+
       const thumbnailWidth = thumbnail.getBoundingClientRect().width;
       await userEvent.click(thumbnail);
       const dialog = await within(document.body).findByRole('dialog');
@@ -89,18 +99,22 @@ function opensImage(agent: MockAgent, width: number): Story {
     },
   };
 }
+
 export const FirstAgentOpensImagePhone = opensImage(
   'agent-1',
   layoutWidths.phone,
 );
+
 export const FirstAgentOpensImageWide = opensImage(
   'agent-1',
   layoutWidths.wide,
 );
+
 export const SecondAgentOpensImagePhone = opensImage(
   'agent-2',
   layoutWidths.phone,
 );
+
 export const SecondAgentOpensImageWide = opensImage(
   'agent-2',
   layoutWidths.wide,
@@ -127,16 +141,23 @@ function showsMore(agent: MockAgent, width: number): Story {
     },
   };
 }
+
 // Between phone and wide, the prompt's fourth line ends inside a list rather than at a paragraph end.
 const narrowWidth = 600;
+
 export const FirstAgentShowMorePhone = showsMore('agent-1', layoutWidths.phone);
+
 export const FirstAgentShowMoreNarrow = showsMore('agent-1', narrowWidth);
+
 export const FirstAgentShowMoreWide = showsMore('agent-1', layoutWidths.wide);
+
 export const SecondAgentShowMorePhone = showsMore(
   'agent-2',
   layoutWidths.phone,
 );
+
 export const SecondAgentShowMoreNarrow = showsMore('agent-2', narrowWidth);
+
 export const SecondAgentShowMoreWide = showsMore('agent-2', layoutWidths.wide);
 
 // The same prompt fits on a wide screen, then clamps again to whole lines once the window narrows.

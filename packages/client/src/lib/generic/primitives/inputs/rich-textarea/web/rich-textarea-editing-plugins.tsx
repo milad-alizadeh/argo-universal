@@ -11,12 +11,14 @@ import { registerListTab } from './rich-textarea-tab';
 function MarkdownOnlyPlugin(): null {
   const [editor] = useLexicalComposerContext();
   useEffect(() => registerMarkdownOnly(editor), [editor]);
+
   return null;
 }
 
 function ListTabPlugin(): null {
   const [editor] = useLexicalComposerContext();
   useEffect(() => registerListTab(editor), [editor]);
+
   return null;
 }
 

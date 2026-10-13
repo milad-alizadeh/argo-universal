@@ -86,7 +86,9 @@ function buttonLabelColor(
   props: Pick<ButtonDataProps, 'role' | 'variant'> & { contentColor?: string },
 ): ModifierConfig[] {
   if (props.role === 'destructive') return destructiveLabelColor(props);
+
   if (props.contentColor === undefined) return [];
+
   return [foregroundStyle(props.contentColor)];
 }
 
@@ -105,7 +107,9 @@ function ButtonIcon(
   },
 ): ReactElement | null {
   if (props.loading) return <ButtonSpinner contentColor={props.contentColor} />;
+
   if (usesSystemRedIcon(props)) return <SystemRedIcon icon={props.icon} />;
+
   return <NativeButtonIcon {...props} HostView={RNHostView} />;
 }
 
@@ -124,6 +128,7 @@ function usesSystemRedIcon(
 function ButtonSpinner(props: { contentColor?: string }): ReactElement {
   const color =
     props.contentColor === undefined ? [] : [tint(props.contentColor)];
+
   return <ProgressView modifiers={[controlSize('small'), ...color]} />;
 }
 
@@ -131,7 +136,9 @@ type NativeIconProps = Pick<ButtonDataProps, 'icon'>;
 
 function SystemRedIcon({ icon }: NativeIconProps): ReactElement | null {
   const pixels = useIconPixels('control');
+
   if (!icon) return null;
+
   return (
     <RNHostView matchContents>
       <SymbolGlyph

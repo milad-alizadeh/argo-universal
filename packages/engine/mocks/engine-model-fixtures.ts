@@ -11,7 +11,9 @@ import type { HttpServer } from '../src/engine/http-server';
 import type { engineMachine as machine } from '../src/engine/machine';
 
 export const stopAllSessionsEvent = 'sessions.stopAll';
+
 export const drainWriterEvent = 'writer.drain';
+
 export const stopEngineEvent = 'engine.stop';
 
 // The Engine sends a heartbeat every second.
@@ -20,7 +22,7 @@ export const heartbeatIntervalMs = 1000;
 export interface PendingCall<TInput, TOutput> {
   input: TInput;
   resolve: (output: TOutput) => void;
-  reject: (error: unknown) => void;
+  reject: (cause: unknown) => void;
 }
 
 // A promise actor that records each call in `calls()` and settles only when an executor says so.
@@ -53,18 +55,24 @@ export const input = {
   // No Agents, so the open Sessions machine never probes a real CLI.
   fixtureAgents: [],
 };
+
 export const openError = new Error('database is locked');
+
 export const recoveryError = new Error('repair failed');
+
 export const listenError = Object.assign(new Error('listen EADDRINUSE'), {
   code: 'EADDRINUSE',
 });
+
 export const closeError = new Error('close failed');
+
 // Done and error events of invoked actors are not in the machine's event type, but the model drives them.
 export const sessionFailure = {
   type: 'xstate.error.actor.sessions',
   actorId: 'sessions',
   error: new Error('stop failed'),
 } satisfies EventFromLogic<typeof machine> & ErrorActorEvent<Error, 'sessions'>;
+
 export const writerFailure = {
   type: 'xstate.error.actor.databaseWriter',
   actorId: 'databaseWriter',

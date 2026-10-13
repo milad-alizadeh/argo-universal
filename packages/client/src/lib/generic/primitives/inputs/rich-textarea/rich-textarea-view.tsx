@@ -43,12 +43,14 @@ function KeyboardPlugin({
     () => onSubmit && registerReturnToSubmit(editor, onSubmit),
     [editor, onSubmit],
   );
+
   return null;
 }
 
 function EditablePlugin({ editable }: { editable: boolean }): null {
   const [editor] = useLexicalComposerContext();
   useEffect(() => editor.setEditable(editable), [editor, editable]);
+
   return null;
 }
 
@@ -57,6 +59,7 @@ function MarkdownValuePlugin({
   onChangeText,
 }: Pick<RichTextareaProps, 'value' | 'onChangeText'>): null {
   useMarkdownValue(value, onChangeText);
+
   return null;
 }
 

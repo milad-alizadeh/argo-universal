@@ -5,13 +5,16 @@ import { installationPorts, startInstallEngine } from '#mocks/installation';
 
 it('a failed replacement leaves the previous working selection usable', async () => {
   let fail = false;
+
   const host = await startInstallEngine(undefined, {
     ...installationPorts,
     runTool: async (input) => {
       if (fail) throw new Error('Node.js is required on the Server');
+
       return installationPorts.runTool(input);
     },
   });
+
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
   await expect
     .poll(

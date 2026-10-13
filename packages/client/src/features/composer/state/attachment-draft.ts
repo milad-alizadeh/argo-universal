@@ -49,6 +49,7 @@ function changeDraft(
 ): AttachmentDraftState {
   const kept = new Set(draft.attachments.map((attachment) => attachment.id));
   const files = new Map([...state.files].filter(([id]) => kept.has(id)));
+
   return { ...state, draft, files, awaitedKey: undefined };
 }
 
@@ -57,6 +58,7 @@ function restore(
   { key, text }: { key: DraftKey; text: string },
 ): AttachmentDraftState {
   if (key !== state.awaitedKey) return state;
+
   return { ...state, draft: { ...state.draft, text }, awaitedKey: undefined };
 }
 
@@ -68,6 +70,7 @@ function attach(
     ...state.draft.attachments,
     ...picked.map(({ attachment }) => attachment),
   ];
+
   return {
     ...state,
     draft: { ...state.draft, attachments },
@@ -93,6 +96,7 @@ type DraftTransition = (
   state: AttachmentDraftState,
   event: AttachmentDraftEvent,
 ) => AttachmentDraftState;
+
 const draftTransitions: Record<AttachmentDraftEvent['type'], DraftTransition> =
   {
     picked: (state, event) =>
@@ -135,9 +139,11 @@ export function toUploadForms(
 ): UploadForm[] {
   return sent.attachments.map(({ id, name }) => {
     const file = files.get(id);
+
     if (!file) throw new Error(`No file for the attached ${name}`);
     const form = new FormData();
     form.append('file', file, name);
+
     return { name, form };
   });
 }
@@ -148,10 +154,12 @@ export function toAttachmentError(
   upload: Error | null,
 ): AttachmentError {
   if (selection) return { kind: 'selection', message: selection };
+
   if (upload)
     return {
       kind: 'upload',
       message: `Couldn't upload the attachment. ${upload.message}`,
     };
+
   return undefined;
 }

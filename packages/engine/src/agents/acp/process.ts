@@ -6,10 +6,13 @@ import type { AcpProcess } from './resource-types';
 
 const createCapturedEnvironment = (launch: AgentLaunch): NodeJS.ProcessEnv => {
   const environment = { ...process.env, ...launch.env };
+
   for (const key of Object.keys(environment))
     if (!Object.hasOwn(launch.env, key)) delete environment[key];
+
   return environment;
 };
+
 const createProcessOutputStream = (
   child: ChildProcessWithoutNullStreams,
 ): ReadableStream<Uint8Array> => {
@@ -18,17 +21,21 @@ const createProcessOutputStream = (
       child.once('error', (error) => controller.error(error));
     },
   });
+
   void Readable.toWeb(child.stdout)
     .pipeTo(bridge.writable)
     .catch(() => {});
+
   return bridge.readable;
 };
+
 const observeChildClose = (
   child: ChildProcessWithoutNullStreams,
 ): Promise<void> =>
   new Promise((resolve) => {
     child.once('close', () => resolve());
   });
+
 const observeChildSpawn = (
   child: ChildProcessWithoutNullStreams,
 ): Promise<void> =>
@@ -36,21 +43,26 @@ const observeChildSpawn = (
     child.once('spawn', resolve);
     child.once('error', reject);
   });
+
 // One Agent frame may hold at most 32 MiB; a larger one fails the connection with the SDK's MessageTooLargeError.
 const agentFrameLimit = 33_554_432;
+
 const createAcpProtocolStream = (
   child: ChildProcessWithoutNullStreams,
 ): Stream =>
   ndJsonStream(Writable.toWeb(child.stdin), createProcessOutputStream(child), {
     maxMessageBytes: agentFrameLimit,
   });
+
 const isOwnedPid = (pid: number | undefined): boolean =>
   typeof pid === 'number' && Number.isInteger(pid) && pid > 0;
+
 const signalOwnedProcess = (child: ChildProcessWithoutNullStreams): void => {
   if (!isOwnedPid(child.pid))
     throw new Error('ACP child process has no valid owned process identity');
   child.kill('SIGTERM');
 };
+
 const terminateChild = async (
   child: ChildProcessWithoutNullStreams,
   spawned: Promise<void>,
@@ -62,6 +74,7 @@ const terminateChild = async (
   );
   await closed;
 };
+
 const ownAcpChildProcess = (
   child: ChildProcessWithoutNullStreams,
 ): AcpProcess => {
@@ -69,12 +82,14 @@ const ownAcpChildProcess = (
   const closed = observeChildClose(child);
   const spawned = observeChildSpawn(child);
   void spawned.catch(() => {});
+
   return {
     stream: createAcpProtocolStream(child),
     exited: closed,
     terminate: () => terminateChild(child, spawned, closed),
   };
 };
+
 export const launchAcpProcess = async (
   launch: AgentLaunch,
 ): Promise<AcpProcess> =>

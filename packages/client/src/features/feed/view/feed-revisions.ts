@@ -16,11 +16,13 @@ export function keepNewerRevisions(
 ): readonly SessionUpdate[] {
   const byId = new Map(held.map((row) => [row.id, row]));
   let changed = false;
+
   for (const row of incoming) {
     if (isAlreadyHeld(byId.get(row.id), row)) continue;
     byId.set(row.id, row);
     changed = true;
   }
+
   return orderedRevisions(byId, changed, held);
 }
 

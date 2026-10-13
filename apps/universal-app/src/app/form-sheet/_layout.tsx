@@ -9,6 +9,7 @@ export default function FormSheetLayout(): ReactElement {
   const pages = useSheetPageOptions();
   useSheetLifecycle();
   useSheetGestures();
+
   return (
     <Stack screenOptions={options}>
       <Stack.Screen name="index" options={pages.index} />
@@ -17,12 +18,15 @@ export default function FormSheetLayout(): ReactElement {
   );
 }
 
-function useSheetPageOptions(): {
+type SheetPageOptions = {
   index: { headerShown: boolean; title?: string };
   choice: { title?: string; headerBackTitle: string };
-} {
+};
+
+function useSheetPageOptions(): SheetPageOptions {
   const sheet = useFormSheetState();
   const title = sheet?.props.headerTitle;
+
   return {
     index: { headerShown: !!title, title },
     choice: { title: choiceTitle(sheet?.page), headerBackTitle: 'Back' },
@@ -37,6 +41,7 @@ function useSheetLifecycle(): void {
     () =>
       navigation.addListener('beforeRemove', (event) => {
         if (!commands) return;
+
         if (commands.canDismiss()) commands.closed();
         else event.preventDefault();
       }),

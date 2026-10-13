@@ -31,6 +31,7 @@ export function withLiveHeader(
   toolCall: ToolCallUpdate | undefined,
 ): FeedEntry[] {
   const shown = shownLiveHeader(drawnItems, liveHeader);
+
   return shown
     ? [...drawnItems, { type: 'live_header', liveHeader: shown, toolCall }]
     : drawnItems;
@@ -38,6 +39,7 @@ export function withLiveHeader(
 
 export function newestKeyOf(drawnItems: readonly FeedViewItem[]): string {
   const newestItem = drawnItems.at(-1);
+
   return newestItem ? feedItemKey(newestItem) : '';
 }
 
@@ -51,6 +53,7 @@ type RhythmKind = 'activity' | 'agentMessage' | 'other';
 
 function rhythmKind(entry: FeedEntry): RhythmKind {
   if (isActivity(entry)) return 'activity';
+
   return isAgentMessage(entry) ? 'agentMessage' : 'other';
 }
 
@@ -68,5 +71,6 @@ export function spaceBelowEntry(
 ): string {
   if (!next) return '';
   const kind = rhythmKind(entry);
+
   return kind === rhythmKind(next) ? spaceBetween[kind] : spaceBetween.other;
 }

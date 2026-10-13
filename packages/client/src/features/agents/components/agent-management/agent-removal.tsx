@@ -12,6 +12,7 @@ export interface AgentRemovalProps {
   onRemove?: () => void;
   busy?: boolean;
 }
+
 const removalMessage = ({ name, custom }: AgentRemovalProps): string =>
   custom
     ? 'Removes this Agent from your configured choices. Its external program and credentials stay untouched. Past Sessions keep their history.'
@@ -19,6 +20,7 @@ const removalMessage = ({ name, custom }: AgentRemovalProps): string =>
 
 export function AgentRemoval(props: AgentRemovalProps): React.JSX.Element {
   const [open, onOpenChange] = useState(false);
+
   return (
     <View className="items-stretch gap-2 wide:items-start">
       <RemovalButton {...props} onOpen={() => onOpenChange(true)} />
@@ -27,6 +29,7 @@ export function AgentRemoval(props: AgentRemovalProps): React.JSX.Element {
     </View>
   );
 }
+
 function RemovalDescription({
   custom,
 }: Pick<AgentRemovalProps, 'custom'>): React.JSX.Element {
@@ -38,10 +41,12 @@ function RemovalDescription({
     </Text>
   );
 }
+
 type RemovalConfirmationProps = AgentRemovalProps & {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
+
 function RemovalConfirmation(
   props: RemovalConfirmationProps,
 ): React.JSX.Element {
@@ -55,13 +60,16 @@ function RemovalConfirmation(
     />
   );
 }
+
 const removalActions = (
   props: AgentRemovalProps,
 ): React.ComponentProps<typeof Alert>['actions'] => [
   { label: 'Cancel', role: 'cancel' },
   { label: 'Remove', role: 'destructive', onPress: props.onRemove },
 ];
+
 type RemovalTriggerProps = AgentRemovalProps & { onOpen: () => void };
+
 const removalButtonPresentation = (
   props: RemovalTriggerProps,
   wide: boolean,
@@ -75,6 +83,7 @@ const removalButtonPresentation = (
   disabled: !props.onRemove || props.busy,
   loading: props.busy,
 });
+
 function RemovalButton(props: RemovalTriggerProps): React.JSX.Element {
   return <Button {...removalButtonPresentation(props, useWide())} />;
 }

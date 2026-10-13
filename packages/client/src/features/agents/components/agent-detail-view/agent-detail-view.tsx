@@ -27,6 +27,7 @@ export function AgentDetailView(
   props: AgentDetailViewProps,
 ): React.JSX.Element {
   useInstallToast(props.agent.name, props.installation);
+
   return (
     <View className="flex-1 bg-sidebar wide:bg-transparent">
       <PhoneTitle title={props.agent.name} />
@@ -43,7 +44,9 @@ function AgentStatusChip({
   agent,
 }: Pick<AgentDetailViewProps, 'agent'>): React.JSX.Element | null {
   const tone = statusTone(agent.status);
+
   if (!tone) return null;
+
   return (
     <Badge tone={tone}>
       <Text>{agentStatusLabels[agent.status]}</Text>
@@ -65,12 +68,15 @@ function DetailIdentity(props: AgentDetailViewProps): React.JSX.Element {
 const showsIdentityInstallation = (props: AgentDetailViewProps): boolean =>
   props.installation?.action !== 'Update' &&
   installationActive(props.installation);
+
 function IdentityTrailing(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
   if (showsIdentityInstallation(props)) return <AgentAction {...props} />;
+
   if (statusTone(props.agent.status))
     return <AgentStatusChip agent={props.agent} />;
+
   return <AgentAction {...props} />;
 }
 
@@ -97,7 +103,9 @@ function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
 // A phone's native header shows only the name, so Paper's hero opens the page: icon tile, chip, description, action.
 function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element | null {
   const { agent } = props;
+
   if (useWide()) return null;
+
   return (
     <FieldRow>
       <View className="items-center gap-3">
@@ -124,6 +132,7 @@ function PhoneDescription({
   description?: string;
 }): React.JSX.Element | null {
   if (!description) return null;
+
   return (
     <Text role="secondary" className="text-center">
       {description}

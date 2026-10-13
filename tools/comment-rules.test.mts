@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { commentProblems } from './comment-rules.mts';
 
 const nameTheRule = /Name the exact rule/;
+
 const refactor = /Refactor to meet the cap/;
 
 describe('suppressions', (): void => {

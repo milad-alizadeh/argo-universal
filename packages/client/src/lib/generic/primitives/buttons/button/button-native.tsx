@@ -13,17 +13,20 @@ export function createNativeButton(
 ): ComponentType<ButtonProps> {
   return withNarrowLayout(function Button(props: ButtonProps): ReactElement {
     if (props.appearance === 'content') return <ContentButton {...props} />;
+
     return <NativeButtonHost {...props} Drawing={NativeButton} />;
   });
 }
 
 type NativeDrawingProps = SystemButtonProps & { theme: ButtonTheme };
+
 type NativeHostProps = SystemButtonProps & {
   Drawing: ComponentType<NativeDrawingProps>;
 };
 
 function NativeButtonHost(props: NativeHostProps): ReactElement {
   const theme = useNativeButtonTheme(props);
+
   return (
     <Host {...nativeButtonLayout(props)}>
       <props.Drawing {...props} theme={theme} />
@@ -43,6 +46,7 @@ export function NativeButtonIcon({
   HostView,
 }: NativeButtonIconProps): ReactElement | null {
   if (!icon) return null;
+
   return (
     <HostView matchContents>
       <Icon name={icon} role="control" className={contentClass} />

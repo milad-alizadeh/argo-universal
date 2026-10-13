@@ -30,6 +30,8 @@ const inOrder = ({
 // The one error the Composer shows: a failed selection first, then the prompt, the upload and settings.
 export function toSendError(failures: SendFailures): string | undefined {
   const { attachment } = failures;
+
   if (attachment?.kind === 'selection') return attachment.message;
+
   return inOrder(failures).find((message) => message !== undefined);
 }

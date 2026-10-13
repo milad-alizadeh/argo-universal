@@ -12,6 +12,7 @@ export type DialogSheetProps = {
 // A native phone presents the dialog as the platform's bottom sheet, opened and closed by the dialog's root.
 export function DialogSheet(props: DialogSheetProps): React.JSX.Element {
   const { open, onOpenChange } = DialogPrimitive.useRootContext();
+
   return (
     <BottomSheet
       open={open}

@@ -51,6 +51,7 @@ function symbolGlyph(
 ): Pick<SymbolGlyphProps, 'sf' | 'material' | 'filled'> {
   const symbol: SymbolSource = iconSymbols[name];
   const sf = appleSymbol(symbol, filled);
+
   return {
     sf,
     material: symbol.material,
@@ -64,6 +65,7 @@ function useIconColor(className: string | undefined): string {
 
 export function Icon(props: IconProps): React.JSX.Element {
   const colorClassName = useIconColor(props.className);
+
   return (
     <TintedSymbol
       {...symbolGlyph(props.name, props.filled)}

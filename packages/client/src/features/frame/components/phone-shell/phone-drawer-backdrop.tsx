@@ -17,16 +17,19 @@ const percent = 100;
 
 type CSSValue = string | number | undefined;
 
-function useGlowColours(): {
+interface GlowColours {
   colours: Record<Glow['colour'], CSSValue>;
   surface: CSSValue;
-} {
+}
+
+function useGlowColours(): GlowColours {
   const [warm, graphite, sand, surface] = useCSSVariable([
     '--color-glow-warm',
     '--color-glow-graphite',
     '--color-glow-sand',
     '--color-sidebar',
   ]);
+
   return { colours: { warm, graphite, sand }, surface };
 }
 
@@ -46,7 +49,9 @@ function GlowStopMark({
   );
 }
 
-function glowCircle(glow: Glow): { cx: number; cy: number; r: number } {
+type GlowCircle = { cx: number; cy: number; r: number };
+
+function glowCircle(glow: Glow): GlowCircle {
   return {
     cx: glow.left + glow.size / 2,
     cy: glow.top + glow.size / 2,
@@ -89,6 +94,7 @@ function EdgeFadeGradient({
 
 function GlowDefs(): React.JSX.Element {
   const { colours, surface } = useGlowColours();
+
   return (
     <Defs>
       {glows.map((glow) => (

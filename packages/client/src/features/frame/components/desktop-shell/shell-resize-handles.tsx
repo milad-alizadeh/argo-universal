@@ -15,11 +15,14 @@ function resizeList(
 ): void {
   if (nextWidth < measures.listWidth / 2) {
     onSidebarShownChange(false);
+
     return;
   }
+
   setPreferredListWidth(
     Math.max(measures.listWidth, Math.min(listMaximum, listLimit, nextWidth)),
   );
+
   if (!sidebarShown) onSidebarShownChange(true);
 }
 
@@ -28,7 +31,9 @@ function snappedInspectorState(
   layout: ShellLayout,
 ): InspectorState | undefined {
   if (nextWidth < layout.measures.inspectorWidth / 2) return 'closed';
+
   if (nextWidth > layout.availableWidth - detailMinimum / 2) return 'expanded';
+
   return undefined;
 }
 
@@ -49,11 +54,15 @@ function resizeInspector(
   layout: ShellLayout,
 ): void {
   const snapped = snappedInspectorState(nextWidth, layout);
+
   if (snapped) {
     shell.onInspectorStateChange(snapped);
+
     return;
   }
+
   layout.setPreferredInspectorWidth(clampedInspectorWidth(nextWidth, layout));
+
   if (!isInspectorBeside(layout)) shell.onInspectorStateChange('open');
 }
 
@@ -90,7 +99,9 @@ function inspectorHandleProps({
 
 function ListResizeHandle(parts: ShellPartProps): React.JSX.Element | null {
   const { layout } = parts;
+
   if (layout.listLimit <= layout.measures.listWidth) return null;
+
   return (
     <View
       className="absolute top-0 bottom-shell-inset z-40"

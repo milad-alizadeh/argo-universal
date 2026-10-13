@@ -6,18 +6,17 @@ import {
   accessibilityLabel,
   accessibilityValue,
   buttonStyle,
-  contentShape,
   disabled,
   foregroundStyle,
   frame,
   padding,
-  shapes,
 } from '@expo/ui/swift-ui/modifiers';
 import { createElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { Host } from '../../native/host';
 import { useSwiftUITextModifiers } from '../../native/native-typography';
+import { rectangularHitArea } from '../../native/swift-outline-modifiers';
 import { createNativeCheckbox } from './checkbox-native';
 import type { CheckboxProps, CheckboxIndicatorProps } from './checkbox-props';
 import type { CheckboxState } from './checkbox-state';
@@ -25,10 +24,15 @@ import type { CheckboxState } from './checkbox-state';
 export type { CheckboxProps } from './checkbox-props';
 
 const rowHeight = 48;
+
 const optionHeight = 32;
+
 const optionInset = 12;
+
 const horizontalInset = 16;
+
 const verticalInset = 8;
+
 function rowModifiers(props: CheckboxProps): ReturnType<typeof frame>[] {
   return [
     frame({
@@ -39,7 +43,7 @@ function rowModifiers(props: CheckboxProps): ReturnType<typeof frame>[] {
       horizontal: props.appearance === 'option' ? optionInset : horizontalInset,
       vertical: verticalInset,
     }),
-    contentShape(shapes.rectangle()),
+    rectangularHitArea(),
   ];
 }
 
@@ -69,6 +73,7 @@ function buttonModifiers(props: ButtonProps): ReturnType<typeof buttonStyle>[] {
 
 function CheckboxRow(props: CheckboxProps): React.JSX.Element {
   const textModifiers = useOptionTextModifiers(props);
+
   return (
     <HStack modifiers={rowModifiers(props)}>
       <Text modifiers={textModifiers}>{props.label}</Text>
@@ -80,6 +85,7 @@ function CheckboxRow(props: CheckboxProps): React.JSX.Element {
 
 function CheckboxMark(): React.JSX.Element {
   const { colors } = useNativeTheme();
+
   return (
     <Group modifiers={[foregroundStyle(colors.tint ?? 'primary')]}>
       <NativeSymbol name="check" role="mark" />
@@ -100,6 +106,7 @@ function selectionTraits(
   props: CheckboxProps,
 ): ReturnType<typeof accessibilityAddTraits> {
   if (props.selection !== 'single') return accessibilityAddTraits(['isToggle']);
+
   return accessibilityAddTraits(
     props.value ? ['isButton', 'isSelected'] : ['isButton'],
   );
@@ -109,6 +116,7 @@ export function CheckboxIndicator(
   props: CheckboxIndicatorProps,
 ): React.JSX.Element | null {
   if (!props.value) return null;
+
   return (
     <Host matchContents>
       <CheckboxMark />

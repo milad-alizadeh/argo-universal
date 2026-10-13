@@ -20,6 +20,7 @@ interface MotionOptions {
   contentHeight: RefObject<number>;
   layoutSync: Pick<CollapsibleLayoutSync, 'grow' | 'onMotionChange'>;
 }
+
 interface FrameMotion {
   from: number;
   target: number;
@@ -30,56 +31,74 @@ interface FrameMotion {
   grow: (height: number) => void;
   onMotionChange: (moving: boolean) => void;
 }
+
 function advanceProgress(motion: FrameMotion, elapsed: number): number {
   const fraction = elapsedFraction(elapsed, motion.remainingDuration);
+
   const progress =
     motion.from + (motion.target - motion.from) * easeInOut(fraction);
+
   motion.grow(
     drawnHeight(motion.height, progress) -
       drawnHeight(motion.height, motion.latestProgress.current),
   );
   motion.latestProgress.current = progress;
   motion.setProgress(progress);
+
   return fraction;
 }
+
 function stopFrames(frame: number, moving: boolean, motion: FrameMotion): void {
   cancelAnimationFrame(frame);
+
   if (moving) motion.onMotionChange(false);
 }
+
 function runFrames(motion: FrameMotion): () => void {
   motion.onMotionChange(true);
   let moving = true;
   const startedAt = performance.now();
+
   let frame = requestAnimationFrame(function step(time): void {
     const fraction = advanceProgress(motion, time - startedAt);
+
     if (fraction < 1) frame = requestAnimationFrame(step);
     else {
       moving = false;
       motion.onMotionChange(false);
     }
   });
+
   return () => stopFrames(frame, moving, motion);
 }
+
 function beginMotion(
   motion: Omit<FrameMotion, 'remainingDuration'>,
 ): (() => void) | undefined {
   const remainingDuration =
     Math.abs(motion.target - motion.from) * durationFor(motion.height);
+
   if (!remainingDuration) return;
+
   return runFrames({ ...motion, remainingDuration });
 }
+
 function canAnimate(options: MotionEffectOptions): boolean {
   if (options.open && !options.measured) return false;
+
   return !options.reducedMotion;
 }
+
 function resolvedProgress(
   open: boolean,
   reducedMotion: boolean,
   animated: number,
 ): number {
   if (reducedMotion) return open ? 1 : 0;
+
   return animated;
 }
+
 export function useLayoutMotion(options: MotionOptions): number {
   const reducedMotion = useReducedMotion();
   const [animated, setProgress] = useState(options.open ? 1 : 0);
@@ -89,18 +108,22 @@ export function useLayoutMotion(options: MotionOptions): number {
     latestProgress.current = progress;
   }, [progress]);
   useMotionEffect({ ...options, reducedMotion, latestProgress, setProgress });
+
   return progress;
 }
+
 interface MotionEffectOptions extends MotionOptions {
   reducedMotion: boolean;
   latestProgress: RefObject<number>;
   setProgress: (progress: number) => void;
 }
+
 function startMotionEffect(
   options: MotionEffectOptions,
 ): (() => void) | undefined {
   if (!canAnimate(options)) return;
   const { latestProgress, setProgress, layoutSync } = options;
+
   return beginMotion({
     from: latestProgress.current,
     target: options.open ? 1 : 0,
@@ -111,15 +134,18 @@ function startMotionEffect(
     onMotionChange: layoutSync.onMotionChange,
   });
 }
+
 function useMotionControls(
   options: MotionEffectOptions,
 ): Pick<MotionEffectOptions, 'open' | 'measured' | 'reducedMotion'> {
   const { open, measured, reducedMotion } = options;
+
   return useMemo(
     () => ({ open, measured, reducedMotion }),
     [open, measured, reducedMotion],
   );
 }
+
 function useMotionReferences(
   options: MotionEffectOptions,
 ): Pick<
@@ -127,17 +153,21 @@ function useMotionReferences(
   'contentHeight' | 'latestProgress' | 'setProgress'
 > {
   const { contentHeight, latestProgress, setProgress } = options;
+
   return useMemo(
     () => ({ contentHeight, latestProgress, setProgress }),
     [contentHeight, latestProgress, setProgress],
   );
 }
+
 function useMotionCallbacks(
   options: MotionEffectOptions['layoutSync'],
 ): MotionEffectOptions['layoutSync'] {
   const { grow, onMotionChange } = options;
+
   return useMemo(() => ({ grow, onMotionChange }), [grow, onMotionChange]);
 }
+
 function useMotionEffect(options: MotionEffectOptions): void {
   const controls = useMotionControls(options);
   const references = useMotionReferences(options);

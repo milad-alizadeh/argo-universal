@@ -10,16 +10,19 @@ const scriptSchemes = ['javascript:', 'data:', 'vbscript:'];
  */
 export function isScriptUrl(url: string): boolean {
   const scheme = url.replaceAll(/[\s\p{Cc}]/gu, '').toLowerCase();
+
   return scriptSchemes.some((script) => scheme.startsWith(script));
 }
 
 function endsAt(point: PointType, url: string): boolean {
   const shown = point.getNode().getTextContent();
+
   return point.offset === shown.length && shown.endsWith(url);
 }
 
 function $caretEndsWith(url: string): boolean {
   const caret = $rangeSelection({ collapsed: true })?.anchor;
+
   return caret !== undefined && endsAt(caret, url);
 }
 
@@ -37,6 +40,8 @@ function $isBeingTyped(
 // A typed or pasted URL links once a space follows it, not while it is being typed.
 export const urlLinkedOnSpace: LinkMatcher = (text) => {
   const match = autoLinkUrlMatcher(text);
+
   if (!match || $isBeingTyped(match, text)) return null;
+
   return match;
 };

@@ -10,5 +10,6 @@ export function PhoneListSearch(
   props: ListSearchBarProps & { className?: string },
 ): React.JSX.Element | null {
   if (useWide()) return null;
+
   return <ListSearchBar {...props} />;
 }

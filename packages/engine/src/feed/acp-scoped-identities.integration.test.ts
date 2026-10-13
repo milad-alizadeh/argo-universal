@@ -25,27 +25,33 @@ const updates: AcpFeedUpdates = [
     status: 'completed',
   },
 ];
+
 it.each(['agent-1', 'agent-2'])(
   '%s scopes equal upstream identities by actual ACP Session and entity kind',
   async (agent) => {
     const host = await startAcpEngine(feedScenario(updates), undefined, agent);
+
     const first = await host.caller.session.new({
       ...emptySessionInput,
       agent,
       prompt: [{ type: 'text', text: 'First' }],
     });
+
     const second = await host.caller.session.new({
       ...emptySessionInput,
       agent,
       prompt: [{ type: 'text', text: 'Second' }],
     });
+
     await waitForAcpSessionIdle(host, first.sessionId);
     await waitForAcpSessionIdle(host, second.sessionId);
+
     const pages = await Promise.all(
       [first, second].map((session) =>
         host.caller.feed.page({ ...session, direction: 'tail' }),
       ),
     );
+
     expect(host.agent.processes).toHaveLength(1);
     expect(
       pages.map((page) => page.rows.map((row) => row.sessionUpdate)),

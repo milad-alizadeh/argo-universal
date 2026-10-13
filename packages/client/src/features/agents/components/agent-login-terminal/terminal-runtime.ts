@@ -4,13 +4,16 @@ import type { Terminal } from '@xterm/xterm';
 import { defaultTerminalAppearance } from './terminal-appearance';
 import { terminalInputChunks } from './terminal-input';
 import type { LoginTerminalProps } from './terminal-props';
+
 const pollInterval = 150;
+
 export type TerminalRuntimeInput = {
   terminal: Terminal;
   fit: FitAddon;
   props: () => LoginTerminalProps;
   control: (text: string) => string;
 };
+
 export class TerminalRuntime {
   private stopped = false;
   private blocked = false;
@@ -22,6 +25,7 @@ export class TerminalRuntime {
   public constructor(private readonly input: TerminalRuntimeInput) {
     this.observer = new ResizeObserver(() => this.resize());
     const element = input.terminal.element;
+
     if (element) this.observer.observe(element.parentElement ?? element);
     this.data = input.terminal.onData((text) => this.send(input.control(text)));
     this.resize();
@@ -29,6 +33,7 @@ export class TerminalRuntime {
   }
   public send(text: string): void {
     this.focus();
+
     for (const chunk of terminalInputChunks(text))
       this.enqueue({ type: 'write', text: chunk });
   }
@@ -67,12 +72,14 @@ export class TerminalRuntime {
   }
   private async poll(): Promise<void> {
     if (this.stopped) return;
+
     if (this.enabled()) await this.read();
     this.schedule();
   }
   private async read(): Promise<void> {
     try {
       const frame = await this.input.props().onRead(this.cursor);
+
       if (this.stopped) return;
       this.input.terminal.write(frame.output);
       this.cursor = frame.cursor;
@@ -94,6 +101,7 @@ export class TerminalRuntime {
     this.blocked = false;
     this.updateTheme();
     this.input.terminal.options.disableStdin = !this.enabled();
+
     if (this.enabled()) this.resize();
   }
   private updateTheme(): void {

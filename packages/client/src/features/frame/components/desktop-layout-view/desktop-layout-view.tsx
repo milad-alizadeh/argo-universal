@@ -51,6 +51,7 @@ interface LayoutShell {
 function useSectionProps(props: DesktopLayoutViewProps): SectionShellProps {
   const navigate = useNavigate();
   const section = sectionOf(props.destination);
+
   return {
     selectedSection: section,
     onSectionChange: (next) => navigate(sectionDestination(next)),
@@ -65,6 +66,7 @@ function useSidebarProps(): Pick<
   'sidebarShown' | 'onSidebarShownChange'
 > {
   const [sidebarShown, setSidebarShown] = useState(true);
+
   return { sidebarShown, onSidebarShownChange: setSidebarShown };
 }
 
@@ -73,6 +75,7 @@ function useInspectorControl(
   setInspectorState: (state: InspectorState) => void,
 ): InspectorControl {
   const inspectorOpen = inspectorState !== 'closed';
+
   return useMemo(
     () => ({
       open: inspectorOpen,
@@ -108,6 +111,7 @@ function changesInspectorProps(
 function useLayoutShell(props: DesktopLayoutViewProps): LayoutShell {
   const [inspectorState, setInspectorState] =
     useState<InspectorState>('closed');
+
   return {
     inspector: useInspectorControl(inspectorState, setInspectorState),
     shell: {
@@ -126,6 +130,7 @@ export function DesktopLayoutView(
   props: DesktopLayoutViewProps,
 ): React.JSX.Element {
   const { inspector, shell } = useLayoutShell(props);
+
   return (
     <InspectorProvider value={inspector}>
       <DesktopShell {...shell}>{props.children}</DesktopShell>

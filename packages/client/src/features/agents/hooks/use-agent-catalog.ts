@@ -25,13 +25,17 @@ export function useAgentCatalog(): CatalogSync {
   const catalogQuery = useTRPC().agents.catalog.queryOptions(undefined, {
     placeholderData: keepPreviousData,
   });
+
   const query = useQuery(catalogQuery);
   const refresh = useCatalogSync();
+
   const sync = applyCatalogSync(
     { catalog: query.data, error: messageOf(query.error) },
     { pending: refresh.isPending, error: messageOf(refresh.error) },
   );
+
   useRetryOnReturn(catalogFailed(sync) && !sync.refreshing, refresh.mutate);
+
   return sync;
 }
 
@@ -48,6 +52,7 @@ function useRetryOnFocus(failed: boolean, retry: () => void): void {
   const retryIfFailed = useEffectEvent(() => {
     if (failed) retry();
   });
+
   useEffect(
     () =>
       focusManager.subscribe((focused) => {
@@ -64,18 +69,22 @@ function useCatalogSync(): UseMutationResult<
 > {
   const trpc = useTRPC();
   const invalidate = useCatalogInvalidation();
+
   const sync = useMutation(
     trpc.agents.syncCatalog.mutationOptions({ onSettled: invalidate }),
   );
+
   useCatalogChanges(sync);
   const { mutate } = sync;
   useEffect(() => mutate(), [mutate]);
+
   return sync;
 }
 
 function useCatalogInvalidation(): () => void {
   const trpc = useTRPC();
   const cache = useQueryClient();
+
   return (): void => {
     void cache.invalidateQueries(trpc.agents.catalog.queryFilter());
   };
@@ -89,10 +98,12 @@ interface CatalogSyncReset {
 function useCatalogChanges(sync: CatalogSyncReset): void {
   const trpc = useTRPC();
   const invalidate = useCatalogInvalidation();
+
   const update = (): void => {
     if (sync.error) sync.reset();
     invalidate();
   };
+
   useSubscription(
     trpc.agents.catalogChanges.subscriptionOptions(undefined, {
       onStarted: update,

@@ -5,9 +5,11 @@ import type {
   ResumeSessionRequest,
 } from '@agentclientprotocol/sdk';
 import type { SessionSnapshot } from '@repo/contracts';
+import { turn } from '@repo/db/schema';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { acpPermission } from '@repo/mocks/agent/permission-scenario';
+import { eq } from 'drizzle-orm';
 import { describe, expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
@@ -23,8 +25,11 @@ const hasRestoredMode = (snapshot: SessionSnapshot): boolean =>
 
 describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   const sessionInput = { ...emptySessionInput, agent: agentId };
+
   type AcpHost = Awaited<ReturnType<typeof startAcpEngine>>;
+
   const recoveryTimeout = { timeout: 10_000 };
+
   const waitForGeneration = async (
     host: AcpHost,
     sessionId: string,
@@ -35,21 +40,28 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       .toBe(generation);
     await waitForAcpSessionIdle(host, sessionId);
   };
+
   const readClosureFailure = async (
     host: AcpHost,
     sessionId: string,
   ): Promise<string | null> => {
     const events = await host.caller.feed.subscribe({ sessionId, after: null });
+
     for await (const event of events)
       if (event.type === 'closed') return event.failure;
     throw new Error('The Feed ended without a closure result');
   };
-  const readTurn = (host: AcpHost, sessionId: string): unknown =>
-    host.database.$client
-      .prepare(
-        'SELECT stop_reason AS stopReason, error FROM turn WHERE session_id = ?',
-      )
-      .get(sessionId);
+
+  const readTurn = (
+    host: AcpHost,
+    sessionId: string,
+  ): Pick<typeof turn.$inferSelect, 'stopReason' | 'error'> | undefined =>
+    host.database
+      .select({ stopReason: turn.stopReason, error: turn.error })
+      .from(turn)
+      .where(eq(turn.sessionId, sessionId))
+      .get();
+
   const pageRows = async (
     host: AcpHost,
     sessionId: string,
@@ -60,11 +72,13 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     prompts: PromptRequest[];
     resumes: ResumeSessionRequest[];
   };
+
   // Breaks the connection while a Turn waits on its prompt, then waits for recovery.
   const interruptTurn = async (): Promise<
     Recorded & { host: AcpHost; sessionId: string }
   > => {
     const recorded: Recorded = { prompts: [], resumes: [] };
+
     const host = await startAcpEngine(
       {
         steps: [{ type: 'hold' }],
@@ -78,6 +92,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({
       ...created,
@@ -86,6 +101,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     await expect.poll(() => recorded.prompts).toHaveLength(1);
     requireScriptedProcessAt(host.agent.processes).disconnect();
     await waitForGeneration(host, created.sessionId, 2);
+
     return { ...recorded, host, sessionId: created.sessionId };
   };
 
@@ -96,7 +112,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       const { host, sessionId } = await interruptTurn();
       expect(readTurn(host, sessionId)).toEqual({
         stopReason: 'error',
-        error: expect.stringContaining('interrupted'),
+        error: expect.objectContaining({ code: 'interrupted' }),
       });
     },
   );
@@ -147,6 +163,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     async () => {
       const openings: NewSessionRequest[] = [];
       const prompts: PromptRequest[] = [];
+
       const host = await startAcpEngine(
         {
           steps: [],
@@ -162,6 +179,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         undefined,
         agentId,
       );
+
       const created = await host.caller.session.new({
         ...sessionInput,
         checkout: { type: 'worktree', baseBranch: 'main' },
@@ -170,6 +188,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           { configId: 'fast', value: true },
         ],
       });
+
       requireScriptedProcessAt(host.agent.processes).disconnect();
       await expect.poll(() => openings.length, recoveryTimeout).toBe(2);
       await expect
@@ -179,6 +198,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
               ...created,
               prompt: [{ type: 'text', text: 'First work' }],
             });
+
             return true;
           } catch {
             return false;
@@ -186,11 +206,13 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         }, recoveryTimeout)
         .toBe(true);
       await waitForAcpSessionIdle(host, created.sessionId);
+
       const snapshot = await waitForAcpSnapshot(
         host,
         created.sessionId,
         () => true,
       );
+
       expect({
         openings,
         prompts: prompts.map(({ sessionId }) => sessionId),
@@ -217,12 +239,15 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           ? { ...option, currentValue: 'plan' }
           : option,
       );
+
       const started = Promise.withResolvers<SetSessionConfigOptionRequest>();
       const finish = Promise.withResolvers<void>();
+
       const initial = createScriptedAgentProcess({
         steps: [],
         configOptions: selected,
       });
+
       const replacement = createScriptedAgentProcess({
         steps: [],
         configOptions: acpConfiguration,
@@ -245,6 +270,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           ],
         },
       });
+
       const ready = createScriptedAgentProcess({
         steps: [],
         configOptions: acpConfiguration,
@@ -262,20 +288,25 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           ],
         },
       });
+
       let launches = 0;
       const peers = [initial, replacement, ready];
+
       const host = await startAcpEngine(
         {
           steps: [],
           launchProcess: (launch) => {
             const peer = peers[Math.min(launches++, 2)];
+
             if (!peer) throw new Error('No scripted recovery Agent');
+
             return peer.launchProcess(launch);
           },
         },
         undefined,
         agentId,
       );
+
       const created = await host.caller.session.new(sessionInput);
       requireScriptedProcessAt(initial.processes).disconnect();
       await started.promise;
@@ -295,11 +326,13 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           recoveryTimeout,
         )
         .toEqual({ vendor_session_id: 'recovered-empty' });
+
       const snapshot = await waitForAcpSnapshot(
         host,
         created.sessionId,
         hasRestoredMode,
       );
+
       expect(snapshot.activeTurnId).toBeNull();
       expect(
         (await host.caller.feed.page({ ...created, direction: 'tail' })).rows,
@@ -319,6 +352,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     recoveryTimeout,
     async () => {
       const resumes: ResumeSessionRequest[] = [];
+
       const host = await startAcpEngine(
         {
           steps: [],
@@ -332,6 +366,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         undefined,
         agentId,
       );
+
       const created = await host.caller.session.new(sessionInput);
       await host.caller.session.prompt({
         ...created,
@@ -382,12 +417,15 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         undefined,
         agentId,
       );
+
       const created = await host.caller.session.new(sessionInput);
       requireScriptedProcessAt(host.agent.processes).disconnect();
+
       const replacement = await vi.waitFor(
         () => requireScriptedProcessAt(host.agent.processes, 1),
         recoveryTimeout,
       );
+
       await vi.waitFor(() => expect(replacement.terminations).toBe(1));
       replacement.exited.resolve();
       await expect
@@ -397,6 +435,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
               ...created,
               prompt: [{ type: 'text', text: 'Blocked work' }],
             });
+
             return 'accepted';
           } catch (error) {
             return String(error);
@@ -419,6 +458,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       const host = await startAcpEngine({ steps: [] }, undefined, agentId);
       const created = await host.caller.session.new(sessionInput);
       const closure = readClosureFailure(host, created.sessionId);
+
       for (const generation of [1, 2]) {
         requireScriptedProcessAt(
           host.agent.processes,
@@ -426,6 +466,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         ).disconnect();
         await waitForGeneration(host, created.sessionId, generation + 1);
       }
+
       requireScriptedProcessAt(host.agent.processes, 2).disconnect();
       expect({
         failure: await closure,
@@ -460,6 +501,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({
       ...created,
@@ -497,17 +539,21 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         undefined,
         agentId,
       );
+
       const created = await host.caller.session.new(sessionInput);
       await host.caller.session.prompt({
         ...created,
         prompt: [{ type: 'text', text: 'Read' }],
       });
+
       const pending = await waitForAcpSnapshot(
         host,
         created.sessionId,
         (snapshot) => snapshot.pendingPermission !== null,
       );
+
       const requestId = pending.pendingPermission?.requestId;
+
       if (requestId === undefined) throw new Error('No pending permission');
       requireScriptedProcessAt(host.agent.processes).disconnect();
       await waitForGeneration(host, created.sessionId, 2);
@@ -545,6 +591,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         stoppedAt,
         stoppedAt + 1,
       );
+
     for (const text of ['Continue', 'Again']) {
       await host.caller.session.prompt({
         ...created,
@@ -553,6 +600,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       await waitForAcpSessionIdle(host, created.sessionId);
       await host.caller.session.close(created);
     }
+
     expect(
       (await pageRows(host, created.sessionId)).filter(
         (row) => row.id === 'stopped-turn:interrupted',

@@ -8,5 +8,6 @@ export const nextClosureStep = ({
   feedEnded,
 }: ClosureFacts): ClosureStep => {
   if (!kept) return 'discard';
+
   return feedEnded ? 'close' : 'flush';
 };

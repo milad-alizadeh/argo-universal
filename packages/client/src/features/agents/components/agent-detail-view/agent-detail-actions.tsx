@@ -12,6 +12,7 @@ type ActionProps = Pick<
   'agent' | 'onInstall' | 'onUpdate' | 'installation'
 > &
   Pick<ButtonProps, 'fullWidth'>;
+
 interface ActionButton {
   label: string;
   onPress?: () => void;
@@ -29,7 +30,9 @@ export function AgentAction(props: ActionProps): React.JSX.Element | null {
   if (props.installation)
     return <InstallationAction {...props} installation={props.installation} />;
   const action = statusActions(props)[props.agent.status];
+
   if (!action) return null;
+
   return (
     <Button
       size="sm"
@@ -40,18 +43,21 @@ export function AgentAction(props: ActionProps): React.JSX.Element | null {
     />
   );
 }
+
 const showsInstallation = (
   props: ActionProps,
   installation: NonNullable<ActionProps['installation']>,
 ): boolean =>
   ['not-installed', 'update'].includes(props.agent.status) ||
   installationActive(installation);
+
 function InstallationAction(
   props: ActionProps & {
     installation: NonNullable<ActionProps['installation']>;
   },
 ): React.JSX.Element | null {
   if (!showsInstallation(props, props.installation)) return null;
+
   return (
     <AgentInstallControl
       agent={props.agent}
@@ -65,6 +71,7 @@ export function RemoveAgent(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
   if (props.agent.status === 'not-installed') return null;
+
   return (
     <AgentRemoval
       name={props.agent.name}

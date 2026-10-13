@@ -2,17 +2,22 @@ import { type FeedView, type FeedViewItem, feedItemKey } from './feed-view';
 import { sameItem } from './item-equality';
 
 type Collapsible = Extract<FeedViewItem, { type: 'group' | 'exploration' }>;
+
 const isCollapsible = (item: FeedViewItem): item is Collapsible =>
   item.type === 'group' || item.type === 'exploration';
+
 const itemKey = (item: FeedViewItem): string =>
   `${item.type}:${feedItemKey(item)}`;
+
 const toKeyedEntry = <Item extends FeedViewItem>(
   item: Item,
 ): readonly [string, Item] => [itemKey(item), item];
 
 function rowIds(item: FeedViewItem): string[] {
   if (item.type === 'group') return item.items.flatMap(rowIds);
+
   if (item.type === 'exploration') return item.toolCalls.map((row) => row.id);
+
   return [item.row.id];
 }
 
@@ -26,6 +31,7 @@ function nestedCollapsibles(item: FeedViewItem): Collapsible[] {
       item,
       ...item.items.filter((activity) => activity.type === 'exploration'),
     ];
+
   return item.type === 'exploration' ? [item] : [];
 }
 
@@ -43,6 +49,7 @@ function keepIfSame<Item extends FeedViewItem>(
   previous: Item | undefined,
 ): Item {
   if (previous && sameItem(previous, item)) return previous;
+
   return item;
 }
 
@@ -57,10 +64,13 @@ class ItemKeeper {
 
   private keepKey<Item extends FeedViewItem>(item: Item): Item {
     if (!isCollapsible(item)) return item;
+
     const keptId = rowIds(item).find((id) =>
       this.previousKeys.has(`${item.type}:${id}`),
     );
+
     const withKey = withKeptId(item, keptId);
+
     return withKey.type === 'group'
       ? {
           ...withKey,
@@ -72,7 +82,9 @@ class ItemKeeper {
   private keepItem(item: FeedViewItem): FeedViewItem {
     const previousItem = this.previousItems.get(itemKey(item));
     const kept = keepIfSame(item, previousItem);
+
     if (kept !== item) return kept;
+
     return this.keepGroupActivities(item, previousItem);
   }
 
@@ -81,7 +93,9 @@ class ItemKeeper {
     previous: FeedViewItem | undefined,
   ): FeedViewItem {
     if (item.type !== 'group') return item;
+
     if (!previous) return item;
+
     return this.keepActivities(item, previous);
   }
 
@@ -91,6 +105,7 @@ class ItemKeeper {
   ): FeedViewItem {
     if (previous.type !== 'group') return item;
     const previousActivities = new Map(previous.items.map(toKeyedEntry));
+
     return {
       ...item,
       items: item.items.map((activity) =>
@@ -109,5 +124,6 @@ export function keepUnchangedItems(
   next: FeedView,
 ): FeedView {
   if (!previous) return next;
+
   return { ...next, items: new ItemKeeper(previous).keep(next.items) };
 }

@@ -9,6 +9,7 @@ When(
   'a copied App window tries sign-in for {string}',
   async ({ page, server }, name: string): Promise<void> => {
     const copied = await copyAppWindow(page, server.httpUrl);
+
     try {
       await visitAgent(copied, name);
       await openProtocolSignIn(copied);
@@ -23,6 +24,7 @@ async function expectForeignLogin(page: Page): Promise<void> {
   const dialog = page.getByRole('dialog', {
     name: 'Sign-in already in progress',
   });
+
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Cancel' })).toHaveCount(0);
   await expect(
@@ -42,6 +44,7 @@ async function copyAppWindow(page: Page, httpUrl: string): Promise<Page> {
     serverUrlFor(Number(new URL(httpUrl).port)),
   );
   await copied.goto('/');
+
   return copied;
 }
 
@@ -54,6 +57,7 @@ When(
       copied.getByRole('button', { name: /^(Settings|Open navigation)$/ }),
     ).toBeVisible();
     await copied.reload();
+
     try {
       await visitAgent(copied, name);
       await openProtocolSignIn(copied);

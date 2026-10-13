@@ -10,8 +10,10 @@ const recordings = recordedFeedMocks
     const tool = mock.rows.find(
       (row) => row.sessionUpdate === 'tool_call_update',
     );
+
     if (tool?.sessionUpdate !== 'tool_call_update')
       throw new Error('Recorded catalog needs a Tool call for each Agent');
+
     return {
       agent: mock.agent,
       snapshot: mock.snapshot,
@@ -47,6 +49,7 @@ describe('findLiveToolCall', () => {
         type: 'tool_call',
         toolCallId: 'missing',
       });
+
       expect(findLiveToolCall(rows, live)).toBeUndefined();
     },
   );
@@ -61,6 +64,7 @@ describe('findLiveToolCall', () => {
 
   it('gives none before the snapshot arrives', () => {
     const [recording] = recordings;
+
     if (!recording) throw new Error('No recording');
     expect(findLiveToolCall(recording.rows, null)).toBeUndefined();
   });

@@ -24,6 +24,7 @@ function useLayoutProps(
     sectionOf(destination),
     detailDestination(destination),
   );
+
   return { list, listHeader: header, attentionCount: useAttentionCount() };
 }
 
@@ -33,6 +34,7 @@ function FullLayout({
   children,
 }: DesktopLayoutProps): React.JSX.Element {
   const layoutProps = useLayoutProps(destination);
+
   return (
     <DesktopLayoutView
       destination={destination}
@@ -46,5 +48,6 @@ function FullLayout({
 
 export function DesktopLayout(props: DesktopLayoutProps): React.JSX.Element {
   const onboarding = useOnboardingShown(props.destination);
+
   return onboarding ? <OnboardingLayout /> : <FullLayout {...props} />;
 }

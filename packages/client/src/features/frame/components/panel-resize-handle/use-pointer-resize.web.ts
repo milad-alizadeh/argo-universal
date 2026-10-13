@@ -64,6 +64,7 @@ export function usePointerResize(
   props: PointerResizeProps,
 ): PointerResizeHandlers {
   const drag: ResizeDrag = useRef(null);
+
   return {
     onPointerDown: (event) => startDrag(drag, event, props),
     onPointerMove: (event) => followDrag(drag, event, props),

@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { createCoalescedRefetch } from './coalesced-refetch';
 
-// A refetch that finishes only when the test releases it.
-function heldRefetch(): {
+interface HeldRefetch {
   refetch: () => Promise<void>;
   calls: () => number;
   release: () => Promise<void>;
-} {
+}
+
+// A refetch that finishes only when the test releases it.
+function heldRefetch(): HeldRefetch {
   let count = 0;
   let resolvers: (() => void)[] = [];
+
   return {
     refetch: () =>
       new Promise<void>((resolve) => {
@@ -19,6 +22,7 @@ function heldRefetch(): {
     release: async () => {
       const current = resolvers;
       resolvers = [];
+
       for (const resolve of current) resolve();
       await Promise.resolve();
       await Promise.resolve();
@@ -39,6 +43,7 @@ describe('createCoalescedRefetch', () => {
     const held = heldRefetch();
     const refetch = createCoalescedRefetch(held.refetch);
     refetch();
+
     for (let index = 0; index < 30; index++) refetch();
     expect(held.calls()).toBe(1);
     await held.release();

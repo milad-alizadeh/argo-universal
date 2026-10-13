@@ -9,6 +9,7 @@ import { toFeedView } from '../../view/to-feed-view';
 import type { Feed, FeedProps } from '../feed/feed';
 
 type FeedStory = StoryObj<typeof Feed>;
+
 export type FeedPlayContext = Parameters<NonNullable<FeedStory['play']>>[0];
 
 // The FeedContent stories' args: an empty Feed each story fills.
@@ -27,6 +28,7 @@ export function supportedContent(
   check: (context: FeedPlayContext) => Promise<void>,
 ): FeedStory {
   const { rows, snapshot } = recordedAcpContent(agent);
+
   return {
     args: { items: toFeedView(rows, snapshot).items },
     play: async (context) => {

@@ -10,16 +10,21 @@ import {
 } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { type ClientError, useTRPC } from '#features/connection';
+
 export type StartInstall = UseMutationResult<
   AgentInstallOperation,
   ClientError,
   AgentInstallInput
 >;
+
+type InstallStart = { install: StartInstall; failedAt: number };
+
 export function useStartInstall(
   status: UseQueryResult<AgentInstallStatus, ClientError>,
-): { install: StartInstall; failedAt: number } {
+): InstallStart {
   const trpc = useTRPC();
   const [failedAt, setFailedAt] = useState(0);
+
   const install = useMutation({
     ...trpc.agents.install.mutationOptions(),
     onSuccess: async () => {
@@ -27,8 +32,10 @@ export function useStartInstall(
     },
     onError: () => setFailedAt(Date.now()),
   });
+
   return { install, failedAt };
 }
+
 export type StartInput = AgentInstallInput & {
   install: StartInstall;
   // The operation the Server reported before this request, so a new one can be told apart.
@@ -36,6 +43,7 @@ export type StartInput = AgentInstallInput & {
   rememberPrevious: (operationId: string | undefined) => void;
   running: boolean;
 };
+
 const sendInstall = (input: StartInput, settled: () => void): void => {
   input.rememberPrevious(input.current);
   input.install.mutate(
@@ -43,9 +51,11 @@ const sendInstall = (input: StartInput, settled: () => void): void => {
     { onSettled: settled },
   );
 };
+
 // One request at a time: the ref holds off a second press before the pending state renders.
 export function useStart(input: StartInput): () => void {
   const requesting = useRef(false);
+
   return () => {
     if (input.running || requesting.current) return;
     requesting.current = true;

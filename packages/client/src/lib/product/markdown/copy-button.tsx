@@ -21,10 +21,13 @@ function useCopy(): [boolean, (value: string) => void] {
   useEffect(() => {
     if (!copied) return;
     const timeout = setTimeout(() => setCopied(false), copiedMilliseconds);
+
     return (): void => clearTimeout(timeout);
   }, [copied]);
+
   const copy = (value: string): void =>
     void setStringAsync(value).then(() => setCopied(true));
+
   return [copied, copy];
 }
 
@@ -50,6 +53,7 @@ function CopyIcon({ copied }: { copied: boolean }): React.JSX.Element {
 // Copies a value and shows a check for two seconds.
 export function CopyButton(props: CopyButtonProps): React.JSX.Element {
   const [copied, copy] = useCopy();
+
   return (
     <Pressable
       role="button"

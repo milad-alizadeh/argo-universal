@@ -16,7 +16,9 @@ type PageProps = {
 export function FormSheetRoot(props: PageProps): ReactElement | null {
   const sheet = useFormSheetState();
   const commands = useFormSheetCommands();
+
   if (!sheet || !commands) return null;
+
   return (
     <SheetNavigationProvider value={commands}>
       <SheetBody {...props} sheet={sheet.props} />
@@ -39,6 +41,7 @@ function SheetBody(props: PageProps & { sheet: FormSheetProps }): ReactElement {
 
 export function FormSheetChoices(props: PageProps): ReactElement | null {
   const page = useFormSheetState()?.page;
+
   return page ? (
     <View
       className="flex-1 bg-popover"

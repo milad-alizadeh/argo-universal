@@ -8,7 +8,9 @@ const meta = {
   component: ToolCallRow,
   args: { row: completedRead },
 } satisfies Meta<typeof ToolCallRow>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {

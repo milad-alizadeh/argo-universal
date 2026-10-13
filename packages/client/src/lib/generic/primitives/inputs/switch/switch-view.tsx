@@ -53,6 +53,7 @@ function thumbClass(props: Pick<SwitchProps, 'checked' | 'size'>): string {
 
 function thumbPosition(props: Pick<SwitchProps, 'checked' | 'size'>): string {
   if (!props.checked) return 'dark:bg-foreground translate-x-0';
+
   return cn(
     'dark:bg-primary-foreground',
     props.size === 'small' ? 'translate-x-2.5' : 'translate-x-3.5',

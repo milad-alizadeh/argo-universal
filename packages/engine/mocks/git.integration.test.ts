@@ -23,10 +23,17 @@ import { expect, it, onTestFinished } from 'vitest';
 
 const occupiedBranch = 'argo/occupied';
 
+// What the blocked-Checkout test must release when it finishes.
+interface CheckoutResources {
+  creation?: ReturnType<typeof createCheckout>;
+  hookWatcher?: FSWatcher;
+}
+
 it('reads the repository root and common directory from a nested path', async (): Promise<void> => {
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'repository-read-\n')),
   );
+
   onTestFinished((): void =>
     rmSync(directory, { recursive: true, force: true }),
   );
@@ -59,6 +66,7 @@ it('reads a linked worktree through its nested directory alias', async (): Promi
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'repository-worktree-')),
   );
+
   onTestFinished((): void =>
     rmSync(directory, { recursive: true, force: true }),
   );
@@ -81,11 +89,11 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'checkout-abort-')),
   );
+
   const controller = new AbortController();
-  const checkoutResources: {
-    creation?: ReturnType<typeof createCheckout>;
-    hookWatcher?: FSWatcher;
-  } = {};
+
+  const checkoutResources: CheckoutResources = {};
+
   onTestFinished(async (): Promise<void> => {
     checkoutResources.hookWatcher?.close();
     controller.abort();
@@ -93,6 +101,7 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
     rmSync(directory, { recursive: true, force: true });
   });
   const git = await initTestRepository(directory);
+
   const checkoutPath = join(
     directory,
     'runtime',
@@ -100,6 +109,7 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
     'project',
     'blocked',
   );
+
   const marker = join(directory, 'hook-started');
   const started = Promise.withResolvers<void>();
   checkoutResources.hookWatcher = watch(directory, (): void => {
@@ -117,6 +127,7 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
     ].join('\n'),
     { mode: 0o755 },
   );
+
   const creation = createCheckout(
     {
       projectPath: directory,
@@ -127,6 +138,7 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
     },
     controller.signal,
   );
+
   checkoutResources.creation = creation;
   void creation.catch(started.reject);
   await started.promise;
@@ -142,6 +154,7 @@ it('preserves an existing Session branch when Checkout creation fails', async ()
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'checkout-collision-')),
   );
+
   onTestFinished((): void =>
     rmSync(directory, { recursive: true, force: true }),
   );
@@ -170,10 +183,12 @@ it('preserves an existing worktree and branch when creation starts with an abort
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'checkout-existing-')),
   );
+
   onTestFinished((): void =>
     rmSync(directory, { recursive: true, force: true }),
   );
   const git = await initTestRepository(directory);
+
   const checkoutPath = join(
     directory,
     'runtime',
@@ -181,6 +196,7 @@ it('preserves an existing worktree and branch when creation starts with an abort
     'project',
     'occupied',
   );
+
   mkdirSync(join(directory, 'runtime', 'worktrees', 'project'), {
     recursive: true,
   });
@@ -215,10 +231,12 @@ it('refuses a normal discard of a dirty Checkout', async (): Promise<void> => {
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'checkout-dirty-')),
   );
+
   onTestFinished((): void =>
     rmSync(directory, { recursive: true, force: true }),
   );
   const git = await initTestRepository(directory);
+
   const checkout = await createCheckout(
     {
       projectPath: directory,
@@ -229,6 +247,7 @@ it('refuses a normal discard of a dirty Checkout', async (): Promise<void> => {
     },
     new AbortController().signal,
   );
+
   const file = join(checkout.path, 'untracked-file');
   writeFileSync(file, 'Keep this edit');
   await expect(

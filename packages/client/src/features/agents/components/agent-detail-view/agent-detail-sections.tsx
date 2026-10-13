@@ -13,6 +13,7 @@ const statusFooters: Partial<
 > = {
   unavailable: 'The Server could not start this Agent. Check again later.',
 };
+
 const signInFooter = 'Run this in a terminal on the Server, then check again.';
 
 // Where an installed Agent stands, when the chip alone does not say what to do.
@@ -20,12 +21,15 @@ export function AgentStatusSection(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
   const { status } = props.agent;
+
   if (status === 'sign-in') return <SignInSection {...props} />;
+
   return statusFooters[status] ? <StatusRow {...props} /> : null;
 }
 
 function StatusRow({ agent }: AgentProps): React.JSX.Element {
   const tone = statusTone(agent.status);
+
   return (
     <FieldSection title="Status" footer={statusFooters[agent.status]}>
       <ListItem
@@ -61,6 +65,7 @@ function SignInCommand({
   command?: string;
 }): React.JSX.Element | null {
   if (!command) return null;
+
   return (
     <ListItem
       title={command}
@@ -74,6 +79,7 @@ function SignInCommand({
 function SignInAction(props: AgentDetailViewProps): React.JSX.Element | null {
   if (props.onSignIn)
     return <ListItem title="Sign in" tone="accent" onPress={props.onSignIn} />;
+
   return <SignInCommand command={props.agent.signInCommand} />;
 }
 

@@ -11,7 +11,9 @@ const meta = {
   title: 'Design System/PageTitleRow',
   parameters: { screenPreview: true },
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const addAction = (
@@ -20,6 +22,7 @@ const addAction = (
 
 function SearchableTitle(): React.JSX.Element {
   const [query, setQuery] = useState('');
+
   return (
     <PageTitleRow
       title="Agents"

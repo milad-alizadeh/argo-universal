@@ -18,13 +18,17 @@ type CollapsibleProps = Omit<
   ComponentProps<typeof CollapsiblePrimitive.Root>,
   'asChild'
 >;
-function useOpenState(props: CollapsibleProps): {
+
+interface OpenState {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-} {
+}
+
+function useOpenState(props: CollapsibleProps): OpenState {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(
     props.defaultOpen ?? false,
   );
+
   return {
     open: props.open ?? uncontrolledOpen,
     onOpenChange: (nextOpen) => {
@@ -33,6 +37,7 @@ function useOpenState(props: CollapsibleProps): {
     },
   };
 }
+
 function rootProps({
   open: _open,
   defaultOpen: _defaultOpen,
@@ -41,9 +46,11 @@ function rootProps({
 }: CollapsibleProps): CollapsibleProps {
   return props;
 }
+
 function Collapsible(options: CollapsibleProps): ReactElement {
   const { children, ...props } = rootProps(options);
   const state = useOpenState(options);
+
   return (
     <OpenContext.Provider value={state.open}>
       <CollapsiblePrimitive.Root {...props} {...state}>
@@ -52,9 +59,12 @@ function Collapsible(options: CollapsibleProps): ReactElement {
     </OpenContext.Provider>
   );
 }
+
 const CollapsibleTrigger = CollapsiblePrimitive.Trigger;
+
 const webContentMotion =
   'overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up motion-reduce:animate-none';
+
 // The caller's padding sits inside the animated box, whose height then reaches zero; padding on the box itself would stop it short and then snap shut.
 function WebContent({
   className,
@@ -67,13 +77,18 @@ function WebContent({
     </CollapsiblePrimitive.Content>
   );
 }
+
 function CollapsibleContent(props: ContentProps): ReactElement {
   const layoutSync = useContext(CollapsibleLayoutSyncContext);
+
   if (layoutSync)
     return <LayoutSyncedContent {...props} layoutSync={layoutSync} />;
+
   if (Platform.OS === 'web') return <WebContent {...props} />;
+
   return <NativeContent {...props} />;
 }
+
 export {
   Collapsible,
   CollapsibleContent,

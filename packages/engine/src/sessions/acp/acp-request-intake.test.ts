@@ -9,7 +9,9 @@ import {
 } from './acp-request-intake';
 
 const allow = { optionId: 'allow', name: 'Allow', kind: 'allow_once' } as const;
+
 const deny = { optionId: 'deny', name: 'Deny', kind: 'reject_once' } as const;
+
 const form = {
   type: 'object',
   properties: { name: { type: 'string', title: 'Name' } },
@@ -57,6 +59,7 @@ describe('an ACP permission request', (): void => {
         toolCall: { toolCallId: 'tool-1' },
         options,
       });
+
       expect(intake).toEqual({ type: 'rejected', reason: expect.any(String) });
     },
   );
@@ -138,6 +141,7 @@ describe('an ACP elicitation request', (): void => {
         properties: { name: { type: 'date' } },
       },
     };
+
     expect(toPendingElicitation('request-1', params)).toEqual({
       type: 'rejected',
       reason: expect.any(String),

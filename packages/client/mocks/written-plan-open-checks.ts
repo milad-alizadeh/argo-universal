@@ -8,15 +8,19 @@ import {
   type WrittenPlanPlayContext,
   type WrittenPlanScenario,
 } from './written-plan-story-types';
+
 type Body = ReturnType<typeof within>;
+
 export async function openWrittenPlan(
   width: number,
   { canvas, userEvent }: WrittenPlanPlayContext,
 ): Promise<Body> {
   await settleViewport(width);
   await userEvent.click(canvas.getByRole('button', { name: 'Written plan' }));
+
   return within(document.body);
 }
+
 async function markdownPlan(body: Body): Promise<void> {
   await waitFor(() =>
     expect(
@@ -26,6 +30,7 @@ async function markdownPlan(body: Body): Promise<void> {
     ).toBeVisible(),
   );
 }
+
 async function filePlan(
   body: Body,
   userEvent: WrittenPlanPlayContext['userEvent'],
@@ -36,11 +41,13 @@ async function filePlan(
   ).toBeVisible();
   await copyPlanUri(body, userEvent);
 }
+
 async function copyPlanUri(
   body: Body,
   userEvent: WrittenPlanPlayContext['userEvent'],
 ): Promise<void> {
   const clipboard = spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+
   try {
     await userEvent.click(body.getByRole('button', { name: 'Copy URI' }));
     await waitFor(() =>
@@ -50,6 +57,7 @@ async function copyPlanUri(
     clipboard.mockRestore();
   }
 }
+
 async function readOnlyPlan(body: Body): Promise<void> {
   await expect(
     body.queryByRole('button', { name: 'Approve' }),
@@ -58,6 +66,7 @@ async function readOnlyPlan(body: Body): Promise<void> {
     body.queryByRole('button', { name: 'Keep planning' }),
   ).not.toBeInTheDocument();
 }
+
 async function followUpWhileReading(
   { canvas }: WrittenPlanPlayContext,
   body: Body,
@@ -73,6 +82,7 @@ async function followUpWhileReading(
     body.getByRole('region', { name: writtenPlanRegionName }),
   ).toBeVisible();
 }
+
 export async function closeWrittenPlan(
   context: WrittenPlanPlayContext,
   body: Body,
@@ -84,6 +94,7 @@ export async function closeWrittenPlan(
     ).not.toBeInTheDocument(),
   );
 }
+
 export async function opensWrittenPlan(
   scenario: WrittenPlanScenario,
   context: WrittenPlanPlayContext,
@@ -92,6 +103,7 @@ export async function opensWrittenPlan(
   await assertPhoneCloseControl(scenario.width, body);
   await readWrittenPlanForm(scenario, context, body);
   await readOnlyPlan(body);
+
   if (scenario.width === layoutWidths.wide)
     await followUpWhileReading(context, body);
   await closeWrittenPlan(context, body);
@@ -106,16 +118,19 @@ async function assertPhoneCloseControl(
     body.queryByRole('button', { name: 'Close written plan' }),
   ).not.toBeInTheDocument();
 }
+
 async function assertPhonePlanHeading(
   scenario: WrittenPlanScenario,
   body: Body,
 ): Promise<void> {
   if (scenario.width !== layoutWidths.phone) return;
+
   if (scenario.form !== 'markdown') return;
   await expect(
     body.getAllByRole('heading', { name: 'Read-only Plan' }),
   ).toHaveLength(1);
 }
+
 async function readWrittenPlanForm(
   scenario: WrittenPlanScenario,
   context: WrittenPlanPlayContext,

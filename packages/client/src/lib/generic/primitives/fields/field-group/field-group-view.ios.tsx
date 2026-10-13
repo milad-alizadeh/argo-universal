@@ -12,7 +12,9 @@ import { FieldGroup as WebFieldGroup } from './field-group-view.tsx';
 
 export function FieldGroup(props: FieldGroupProps): React.JSX.Element {
   const wide = useWide();
+
   if (wide) return <WebFieldGroup {...props} />;
+
   return (
     <FieldLayout value={props.variant ?? 'grouped'}>
       <Host style={{ flex: 1 }} matchContents={false}>
@@ -33,6 +35,7 @@ function PhoneFields({
         {children}
       </List>
     );
+
   return (
     <Form modifiers={[scrollContentBackground('hidden')]}>{children}</Form>
   );

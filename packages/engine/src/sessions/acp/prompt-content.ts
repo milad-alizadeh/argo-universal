@@ -12,12 +12,14 @@ type PromptContentInput = {
   capabilities: PromptCapabilities;
   storage: AttachmentStorage;
 };
+
 const readPromptImage = async (
   storage: AttachmentStorage,
   image: Extract<ContentBlock, { type: 'image' }>,
 ): Promise<AcpContentBlock> => {
   if (image.mimeType !== image.blob.mime)
     throw new Error('The attached image MIME type does not match its Blob');
+
   return {
     type: 'image',
     mimeType: image.mimeType,
@@ -25,6 +27,7 @@ const readPromptImage = async (
     _meta: promptMetadata(image._meta),
   };
 };
+
 const readSupportedImage = (
   input: Omit<PromptContentInput, 'content'>,
   image: Extract<ContentBlock, { type: 'image' }>,
@@ -33,8 +36,10 @@ const readSupportedImage = (
     return Promise.reject(
       new Error('This Agent does not support image prompts'),
     );
+
   return readPromptImage(input.storage, image);
 };
+
 const contextPrompt = (
   context: Extract<ContentBlock, { type: 'resource' }>,
   text: string,
@@ -47,6 +52,7 @@ const contextPrompt = (
     _meta: promptMetadata(context.resource._meta),
   },
 });
+
 const readSupportedContext = (
   capabilities: PromptCapabilities,
   context: Extract<ContentBlock, { type: 'resource' }>,
@@ -55,8 +61,10 @@ const readSupportedContext = (
     return Promise.reject(
       new Error('This Agent does not support this embedded context'),
     );
+
   return Promise.resolve(contextPrompt(context, context.resource.text));
 };
+
 const readTextOrReferencePrompt = (
   block: Exclude<ContentBlock, { type: 'image' | 'resource' }>,
 ): Promise<AcpContentBlock> => {
@@ -64,8 +72,10 @@ const readTextOrReferencePrompt = (
     return Promise.reject(
       new Error('Unsupported output placeholders cannot be sent as prompts'),
     );
+
   return Promise.resolve({ ...block, _meta: promptMetadata(block._meta) });
 };
+
 // An uploaded file goes to the Agent as the file itself; any other link or text as it is.
 const readOtherPrompt = (
   input: Omit<PromptContentInput, 'content'>,
@@ -74,6 +84,7 @@ const readOtherPrompt = (
   isUploadedFile(block)
     ? readUploadedFile(input, block)
     : readTextOrReferencePrompt(block);
+
 const convertPromptBlock = (
   input: Omit<PromptContentInput, 'content'>,
   block: ContentBlock,
@@ -87,6 +98,7 @@ const convertPromptBlock = (
       return readOtherPrompt(input, block);
   }
 };
+
 export const readAcpPromptContent = (
   input: PromptContentInput,
 ): Promise<AcpContentBlock[]> =>

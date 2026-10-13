@@ -2,7 +2,9 @@ import { ruleTester } from './rule-tester.ts';
 import { unitTestIo } from './unit-test-io.ts';
 
 const unitFilename = '/repo/example.test.ts';
+
 const integrationFilename = '/repo/example.integration.test.ts';
+
 const sources = [
   'node:fs',
   'node:fs/promises',
@@ -14,10 +16,13 @@ const sources = [
   '@repo/db',
   '@repo/git',
 ];
+
 const resourceImports = sources.map(
   (source): string => `import * as resource from '${source}';`,
 );
+
 const wallClockRead = 'const started = Date.now();';
+
 const ambientReads = [
   'const mode = process.env.MODE;',
   "const mode = process['env'].MODE;",
@@ -28,6 +33,7 @@ const ambientReads = [
   'const started = performance.now();',
   "const started = performance['now']();",
 ];
+
 const moduleForms = [
   "export { readFile } from 'node:fs';",
   "export * from 'node:fs/promises';",
@@ -37,18 +43,23 @@ const moduleForms = [
   "import * as resource from '@repo/db/client';",
   "import * as resource from '@repo/git/diff';",
 ];
+
 const forbidden = [...resourceImports, ...ambientReads, ...moduleForms];
+
 interface TestCase {
   code: string;
   filename: string;
 }
+
 interface RejectedCase extends TestCase {
   errors: { messageId: string }[];
 }
+
 const createIntegrationCase = (code: string): TestCase => ({
   code,
   filename: integrationFilename,
 });
+
 const createRejectedCase = (code: string): RejectedCase => ({
   code,
   filename: unitFilename,

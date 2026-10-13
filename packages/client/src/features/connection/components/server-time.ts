@@ -4,11 +4,13 @@ const clockTime = new Intl.DateTimeFormat(undefined, {
   second: '2-digit',
   hourCycle: 'h23',
 });
+
 const startTime = new Intl.DateTimeFormat(undefined, {
   hour: '2-digit',
   minute: '2-digit',
   hourCycle: 'h23',
 });
+
 const startDay = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
   month: 'short',
@@ -26,6 +28,7 @@ export function formatServerClock(clock?: string): string {
 export function formatServerStart(startedAt: string, clock?: string): string {
   const started = new Date(startedAt);
   const day = sameLocalDay(started, clock) ? 'Today' : startDay.format(started);
+
   return `${day} at ${startTime.format(started)}`;
 }
 

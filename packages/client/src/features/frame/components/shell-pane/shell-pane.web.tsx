@@ -109,22 +109,26 @@ function SlidingViewport({
   );
 }
 
-function usePane(props: ShellPaneProps): {
+interface PaneState {
   geometry: PaneGeometry;
   reflows: boolean;
   refs: PaneRefs;
-} {
+}
+
+function usePane(props: ShellPaneProps): PaneState {
   const geometry = usePaneGeometry(props);
   // Content that reflows with the pane needs real width; a transform would move it twice.
   const reflows = props.contentWidth === undefined;
   const animate = props.animate ?? true;
   const refs = usePaneMotion(geometry, { animate, reflows });
+
   return { geometry, reflows, refs };
 }
 
 function PaneViewport(props: ShellPaneProps): React.JSX.Element {
   const { geometry, reflows, refs } = usePane(props);
   const Viewport = reflows ? ReflowingViewport : SlidingViewport;
+
   return (
     <Viewport {...refs} testID={props.testID} geometry={geometry}>
       {props.children}

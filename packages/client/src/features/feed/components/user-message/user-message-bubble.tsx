@@ -36,6 +36,7 @@ const clipStyle = ({
 
 function ClampedMarkdown(props: ClampedMarkdownProps): React.JSX.Element {
   const { content, onContentLayout, registerLeaf } = props;
+
   return (
     <View className="overflow-hidden" style={clipStyle(props)}>
       <View ref={content} onLayout={onContentLayout}>
@@ -69,6 +70,7 @@ export function UserMessageBubble({ text }: BubbleProps): React.JSX.Element {
   const clamp = useWholeLineClamp(clampedLines);
   const clamped = !expanded && clamp.clipHeight !== undefined;
   useSyncLayoutWhenClampChanges(clamped);
+
   return (
     <View className={bubbleClassName}>
       <ClampedMarkdown text={text} clamped={clamped} {...clamp} />

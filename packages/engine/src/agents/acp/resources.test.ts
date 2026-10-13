@@ -13,6 +13,7 @@ import { createAcpResources } from './index';
 it('an owned empty session releases its process only after protocol closure', async () => {
   const close = Promise.withResolvers<void>();
   const requested: { sessionId: string }[] = [];
+
   const peer = createScriptedAgentProcess({
     steps: [],
     sessionIds: ['owned'],
@@ -20,6 +21,7 @@ it('an owned empty session releases its process only after protocol closure', as
       'session/close': [{ waitFor: close.promise, requests: requested }],
     },
   });
+
   const resources = createAcpResources(peer);
   const lease = await resources.open(createResourceOpening());
   expect(lease.sessionId).toBe('owned');
@@ -39,18 +41,23 @@ it('compatible openings share startup and route early updates by the proven iden
       'session/new': [{ steps: [{ type: 'hold' }] }],
     },
   });
+
   const resources = createAcpResources(peer);
   const firstUpdates: ReturnType<typeof createResourceUpdate>[] = [];
   const secondUpdates: ReturnType<typeof createResourceUpdate>[] = [];
+
   const first = resources.open(
     createResourceOpening(createResourceDestination(firstUpdates)),
   );
+
   const second = resources.open(
     createResourceOpening(createResourceDestination(secondUpdates)),
   );
+
   const process = await vi.waitFor(() =>
     requireScriptedProcessAt(peer.processes),
   );
+
   expect((await process.readRequest()).method).toBe('initialize');
   const firstRequest = await process.readRequest();
   const secondRequest = await process.readRequest();

@@ -32,6 +32,7 @@ export function NewSessionScreen({
 }: NewSessionScreenProps): React.JSX.Element {
   const { view, opened } = useNewSessionViewProps(projectId);
   const options = useOpenedOptions(opened);
+
   return (
     <>
       <OpenedSessionReader opened={opened} onRead={options.onRead} />
@@ -60,16 +61,21 @@ function useNewSessionWiring(projectId?: string): NewSessionWiring {
   const data = useNewSessionData(projectId);
   const attachmentDraft = useNewSessionDraft(data.choices.project);
   const sessionOpening = useSessionOpening(attachmentDraft, data, connected);
+
   return { data, connected, navigate, attachmentDraft, sessionOpening };
 }
 
-function useNewSessionViewProps(projectId?: string): {
+interface NewSessionScreenState {
   view: NewSessionViewProps;
   opened?: OpenedSession;
-} {
+}
+
+function useNewSessionViewProps(projectId?: string): NewSessionScreenState {
   const wiring = useNewSessionWiring(projectId);
   const view = toNewSessionViewProps(wiring);
+
   if (view.state !== 'ready') return { view };
   const agent = wiring.data.choices.agent?.agent;
+
   return { view, opened: openedSession(wiring.sessionOpening, agent) };
 }

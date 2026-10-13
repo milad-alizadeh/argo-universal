@@ -49,10 +49,12 @@ const createCatalogSyncRouter = routerFactory((deps: CatalogDeps) =>
   router({
     syncCatalog: publicProcedure.mutation(() => {
       deps.sessionCommandSignal?.throwIfAborted();
+
       return requestAgentCatalogSync(deps.syncSupervisor);
     }),
     catalogChanges: publicProcedure.subscription(({ signal }) => {
       if (!signal) throw new Error('Catalog subscription signal is missing');
+
       return watchCommittedCatalogChanges(deps, signal);
     }),
   }),
@@ -62,11 +64,14 @@ const configuredAgentList = async (
   deps: AgentsRouterDeps,
 ): Promise<AgentsListOutput> => {
   const configured = ownedConfiguration(deps);
+
   const installed = deps.home
     ? await listInstalledAgents(deps.database, deps.home, configured)
     : [];
+
   return [...installed, ...(await listCustomAgents(configured))];
 };
+
 const createListRouter = routerFactory((deps: AgentsRouterDeps) =>
   router({
     list: publicProcedure
@@ -86,6 +91,7 @@ export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
     createLoginRouter(deps),
   ),
 );
+
 const ownedConfiguration = (deps: AgentsRouterDeps): ConfigurationDeps => ({
   ...deps,
   withAgentSetup: (agentId, operation) =>

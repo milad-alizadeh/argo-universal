@@ -22,5 +22,6 @@ export function openDatabase(
   client.exec('PRAGMA journal_mode = WAL');
   const database = drizzle({ client });
   migrate(database, { migrationsFolder: migrations });
+
   return database;
 }

@@ -6,8 +6,6 @@ import {
 import {
   defaultMinSize,
   background,
-  clip,
-  Shapes,
   padding,
   fillMaxWidth,
   semantics,
@@ -24,7 +22,10 @@ import {
   indicatorSize,
 } from './checkbox-indicator.android';
 import { createNativeCheckbox } from './checkbox-native';
+
 export { CheckboxIndicator } from './checkbox-indicator.android';
+
+import { roundedClip } from '../../native/compose-corners';
 import type { CheckboxProps } from './checkbox-props';
 import type { CheckboxState } from './checkbox-state';
 
@@ -33,7 +34,9 @@ export type { CheckboxProps } from './checkbox-props';
 export const Checkbox = createNativeCheckbox(CheckboxRow);
 
 type RowProps = CheckboxProps & { state: CheckboxState };
+
 const rowGap = 12;
+
 const optionGap = 16;
 
 function CheckboxRow(props: RowProps): React.JSX.Element {
@@ -52,16 +55,23 @@ function CheckboxRow(props: RowProps): React.JSX.Element {
 }
 
 const rowRadius = 10;
+
 const rowHeight = 64;
+
 const rowInset = 16;
+
 const rowPadding = 8;
+
 const optionHeight = 48;
+
 const optionInset = 12;
+
 function useRowModifiers(props: RowProps): ReturnType<typeof semantics>[] {
   const { muted } = useNativeTheme().colors;
   const inset = props.appearance === 'option' ? optionInset : rowInset;
+
   return [
-    clip(Shapes.RoundedCorner(rowRadius)),
+    roundedClip(rowRadius),
     background(rowBackground(props, muted)),
     fillMaxWidth(),
     defaultMinSize({
@@ -71,6 +81,7 @@ function useRowModifiers(props: RowProps): ReturnType<typeof semantics>[] {
     ...rowToggle(props),
   ];
 }
+
 function rowBackground(props: RowProps, muted?: string): string {
   return props.appearance === 'option'
     ? 'transparent'
@@ -79,6 +90,7 @@ function rowBackground(props: RowProps, muted?: string): string {
 
 function rowToggle(props: RowProps): ReturnType<typeof toggleable>[] {
   if (props.disabled) return [];
+
   return [
     checkboxSemantics(props),
     props.selection === 'single'
@@ -97,7 +109,9 @@ function checkboxSemantics(props: RowProps): ReturnType<typeof semantics> {
 
 function CheckboxMark(props: RowProps): React.JSX.Element {
   const colors = useCheckboxColors({ ...props, invalid: props.state.invalid });
+
   if (props.selection === 'single') return <RadioMark {...props} />;
+
   return createElement(ComposeCheckbox, {
     value: props.value,
     modifiers: markModifiers(props),
@@ -112,6 +126,7 @@ function CheckboxLabel(
 ): React.JSX.Element {
   const style = useComposeTextStyle('body');
   const { colors } = useNativeTheme();
+
   return (
     <Text
       style={style}

@@ -8,6 +8,7 @@ export const promptUsageScope = (
   version: string | undefined,
 ): NonNullable<TurnUsage['scope']> => {
   if (reportsModelCallContext(name)) return 'model-call';
+
   return name === '@agentclientprotocol/claude-agent-acp' &&
     version === '0.88.0'
     ? 'turn'

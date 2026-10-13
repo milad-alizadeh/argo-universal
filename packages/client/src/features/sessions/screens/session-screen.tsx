@@ -74,12 +74,15 @@ function useSessionSurroundings(
 
 function useSessionViewProps(sessionId: string): SessionViewProps {
   const feed = useSessionFeed(sessionId);
+
   const commands = useSessionCommands({
     sessionId,
     resumeAfterCommand: feed.resumeAfterCommand,
     agent: feed.snapshot?.agent,
   });
+
   const surroundings = useSessionSurroundings(sessionId, feed);
   useRetryOpenOnReconnect(feed);
+
   return toSessionViewProps({ sessionId, feed, commands, ...surroundings });
 }

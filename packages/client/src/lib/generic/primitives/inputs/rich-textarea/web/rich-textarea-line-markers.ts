@@ -20,6 +20,7 @@ import {
 } from 'lexical';
 
 const orderedMarker = /^(\d{1,9})\.$/;
+
 const bulletMarker = /^[-*+]$/;
 
 interface LineMarker {
@@ -33,13 +34,16 @@ function markerType(
   marker: string,
 ): { type: ListType; start: number } | undefined {
   const ordered = orderedMarker.exec(marker);
+
   if (ordered) return { type: 'number', start: Number(ordered[1]) };
+
   return bulletMarker.test(marker) ? { type: 'bullet', start: 1 } : undefined;
 }
 
 function $collapsedAnchor(): PointType | undefined {
   const selection = $getSelection();
   const collapsed = $isRangeSelection(selection) && selection.isCollapsed();
+
   return collapsed ? selection.anchor : undefined;
 }
 
@@ -49,8 +53,10 @@ function isTextAtEnd(node: LexicalNode, offset: number): node is TextNode {
 
 function $textAtCaretEnd(): TextNode | undefined {
   const anchor = $collapsedAnchor();
+
   if (!anchor) return;
   const text = anchor.getNode();
+
   return isTextAtEnd(text, anchor.offset) ? text : undefined;
 }
 
@@ -60,6 +66,7 @@ function $textAtCaretEnd(): TextNode | undefined {
  */
 function $isLineStart(text: TextNode, type: ListType): boolean {
   const before = text.getPreviousSibling();
+
   return before === null ? type === 'number' : $isLineBreakNode(before);
 }
 
@@ -74,13 +81,16 @@ function $startsLine(
 function $markerOn(text: TextNode): LineMarker | undefined {
   const paragraph = text.getParent();
   const typed = markerType(text.getTextContent());
+
   if (!typed || !$startsLine(text, paragraph, typed.type)) return;
+
   return { text, paragraph, ...typed };
 }
 
 // A list marker the caret has just finished on a line that follows a ⇧Return line break.
 function $markerAtCaret(): LineMarker | undefined {
   const text = $textAtCaretEnd();
+
   return text && $markerOn(text);
 }
 
@@ -92,6 +102,7 @@ function $markerAtCaret(): LineMarker | undefined {
 // An emptied paragraph goes, unless it keeps this list apart from the list above, which would join it.
 function $removeSpentParagraph(paragraph: ParagraphNode): void {
   const apart = $isListNode(paragraph.getPreviousSibling());
+
   if (paragraph.isEmpty() && !apart) paragraph.remove();
 }
 
@@ -121,9 +132,11 @@ export function registerLineMarkers(editor: LexicalEditor): () => void {
     (event) => {
       if (!typedSpace(event)) return false;
       const marker = $markerAtCaret();
+
       if (!marker) return false;
       event.preventDefault();
       $startListFromLine(marker);
+
       return true;
     },
     COMMAND_PRIORITY_HIGH,

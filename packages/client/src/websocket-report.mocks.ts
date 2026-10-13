@@ -7,9 +7,13 @@ export interface ConnectionReport {
 }
 
 const sockets: WebSocketMock[] = [];
+
 const statesScreensSaw = new Set<string>();
+
 let screenSubscriptions = 0;
+
 const listeners = new Set<() => void>();
+
 let report = buildReport();
 
 export const currentReport = (): ConnectionReport => report;
@@ -26,6 +30,7 @@ export function recordScreenState(state: string): void {
 
 function buildReport(): ConnectionReport {
   const closed = sockets.filter((socket) => socket.isClosed()).length;
+
   return {
     serverUrl: sockets.at(-1)?.url ?? '',
     open: sockets.length - closed,
@@ -37,11 +42,13 @@ function buildReport(): ConnectionReport {
 
 function changed(): void {
   report = buildReport();
+
   for (const listener of listeners) listener();
 }
 
 export function subscribe(listener: () => void) {
   listeners.add(listener);
+
   return (): boolean => listeners.delete(listener);
 }
 
@@ -143,6 +150,7 @@ export function mockWebSocket(): () => void {
   statesScreensSaw.clear();
   changed();
   globalThis.WebSocket = WebSocketMock;
+
   return (): void => {
     globalThis.WebSocket = browserWebSocket;
   };

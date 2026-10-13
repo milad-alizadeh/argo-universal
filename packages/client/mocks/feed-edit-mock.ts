@@ -33,6 +33,7 @@ function recordedRows(
     (mock) => mock.agent === agent && mock.recording === recording,
   )?.rows;
 }
+
 function hasEdit(
   row: SessionUpdate,
   operation: DiffChange['operation'],
@@ -42,6 +43,7 @@ function hasEdit(
     row.content.some((block) => hasOperation(block, operation))
   );
 }
+
 function hasOperation(
   block: ToolCallContent,
   operation: DiffChange['operation'],
@@ -51,6 +53,7 @@ function hasOperation(
     block.changes.some((change) => change.operation === operation)
   );
 }
+
 function blockFiles(block: ToolCallContent): FileDiff[] {
   return block.type === 'diff' ? toFileDiffs(block) : [];
 }
@@ -60,14 +63,18 @@ type EditScenario = {
   recording: string;
   operation: DiffChange['operation'];
 };
+
 function requireEdit(scenario: EditScenario): ToolCallUpdate {
   const row = findEdit(scenario);
+
   if (!row)
     throw new Error(
       `No recorded edit ${scenario.agent}/${scenario.recording}/${scenario.operation}`,
     );
+
   return row;
 }
+
 function findEdit({
   agent,
   recording,
@@ -77,11 +84,14 @@ function findEdit({
     ?.filter((row) => row.sessionUpdate === 'tool_call_update')
     .find((row) => hasEdit(row, operation));
 }
+
 function requireFile({ agent, recording, operation }: EditScenario): FileDiff {
   const file = recordedEdit(agent, recording, operation)
     .content.flatMap(blockFiles)
     .find((file) => file.operation === operation);
+
   if (!file)
     throw new Error(`No recorded file ${agent}/${recording}/${operation}`);
+
   return file;
 }

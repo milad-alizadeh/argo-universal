@@ -6,6 +6,7 @@ type ValuedAttribute = ESTree.JSXAttribute & {
 };
 
 const iconComponents = new Set(['Icon', 'IconSpinner', 'IconSlot']);
+
 const pixelSizes = new Map([
   ['size', /./],
   ['className', /(?:^|[^-\w])size-/],

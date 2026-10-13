@@ -9,6 +9,7 @@ export type ElicitationAnswer = Pick<
   SessionAnswerElicitationInput,
   'action' | 'content'
 >;
+
 export interface ElicitationFormProps {
   request: PendingElicitation;
   initialValues?: ElicitationValues;

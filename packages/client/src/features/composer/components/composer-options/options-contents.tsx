@@ -8,20 +8,30 @@ import { configurationChoices } from '../../state/configuration-choices';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 
 type Option = SessionConfigOption;
+
 type Change = ComposerConfigurationProps['onConfigChange'];
+
 import { SettingSection } from './option-section';
+
 const maximumHeight = 320;
+
 const rowEstimate = 52;
+
 const sectionGap = 16;
+
 const screenFraction = 0.6;
+
 interface ContentsProps {
   options: Option[];
   onChange: Change;
 }
+
 export function OptionsContents(props: ContentsProps): React.JSX.Element {
   const Contents = Platform.OS === 'web' ? WebContents : NativeContents;
+
   return <Contents {...props} />;
 }
+
 function NativeContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-sidebar">
@@ -29,19 +39,23 @@ function NativeContents(props: ContentsProps): React.JSX.Element {
     </View>
   );
 }
+
 function optionSections({ options, onChange }: ContentsProps): React.ReactNode {
   return options.map((option) => (
     <SettingSection key={option.configId} option={option} onChange={onChange} />
   ));
 }
+
 function sectionRows(option: Option): number {
   return option.type === 'boolean'
     ? 1
     : configurationChoices(option).length + 1;
 }
+
 function WebContents(props: ContentsProps): React.JSX.Element {
   const { height } = useWindowDimensions();
   const listHeight = optionsHeight(props.options, height);
+
   return (
     <View className="wide:p-3 bg-sidebar">
       <View style={{ height: listHeight }}>
@@ -50,6 +64,7 @@ function WebContents(props: ContentsProps): React.JSX.Element {
     </View>
   );
 }
+
 function OptionsList({ options, onChange }: ContentsProps): React.JSX.Element {
   return (
     <LegendList
@@ -63,6 +78,7 @@ function OptionsList({ options, onChange }: ContentsProps): React.JSX.Element {
     />
   );
 }
+
 const listProps = {
   style: { flex: 1 },
   estimatedItemSize: 120,
@@ -71,11 +87,13 @@ const listProps = {
   nestedScrollEnabled: true,
   contentContainerStyle: { gap: 16 },
 } as const;
+
 function optionsHeight(options: Option[], height: number): number {
   const rows = options.reduce(
     (count, option) => count + sectionRows(option),
     0,
   );
+
   return Math.min(
     rows * rowEstimate + options.length * sectionGap,
     maximumHeight,

@@ -17,13 +17,16 @@ type UnaddressedPlanRead = {
   sessionId: string;
   acpSessionId: string;
 };
+
 const belongsToAcpSession = (row: PlanUpdate, acpSessionId: string): boolean =>
   row._meta?.argo?.unaddressedPlanAcpSessionId === acpSessionId;
+
 export const isUnaddressedPlan = (
   row: SessionUpdate,
   acpSessionId: string,
 ): row is PlanUpdate =>
   row.sessionUpdate === 'plan_update' && belongsToAcpSession(row, acpSessionId);
+
 export const selectUnaddressedPlanRow = (
   rows: Iterable<SessionUpdate>,
   acpSessionId: string,
@@ -31,6 +34,7 @@ export const selectUnaddressedPlanRow = (
   [...newestRows(rows).values()]
     .filter((row): row is PlanUpdate => isUnaddressedPlan(row, acpSessionId))
     .toSorted((first, second) => second.revision - first.revision)[0];
+
 const createUnaddressedPlanFilter = (
   input: UnaddressedPlanRead,
 ): SQL | undefined =>
@@ -42,10 +46,12 @@ const createUnaddressedPlanFilter = (
       input.acpSessionId,
     ),
   );
+
 const readStoredUnaddressedPlan = (
   input: UnaddressedPlanRead,
 ): PlanUpdate | undefined => {
   const stored = readUnaddressedPlanStorage(input);
+
   return stored
     ? selectUnaddressedPlanRow(
         [hydrateStoredFeedRow(input.sessionId, stored)],
@@ -53,6 +59,7 @@ const readStoredUnaddressedPlan = (
       )
     : undefined;
 };
+
 const readUnaddressedPlanStorage = (
   input: UnaddressedPlanRead,
 ): FeedRowWrite | undefined =>
@@ -63,11 +70,13 @@ const readUnaddressedPlanStorage = (
     .orderBy(desc(feedRow.revision))
     .limit(1)
     .get();
+
 export const readUnaddressedPlan = (
   input: UnaddressedPlanRead,
 ): PlanUpdate | undefined => {
   const stored = readStoredUnaddressedPlan(input);
   const queued = readQueuedFeed(input.writer, input.sessionId).rows;
+
   return selectUnaddressedPlanRow(
     [...(stored ? [stored] : []), ...queued],
     input.acpSessionId,

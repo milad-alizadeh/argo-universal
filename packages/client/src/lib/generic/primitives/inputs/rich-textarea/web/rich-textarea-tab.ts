@@ -14,6 +14,7 @@ import { $closest } from './rich-textarea-selection';
 
 function $caretItem(): ListItemNode | undefined {
   const selection = $getSelection();
+
   return $isRangeSelection(selection)
     ? $closest(selection.anchor.getNode(), $isListItemNode)
     : undefined;
@@ -21,14 +22,17 @@ function $caretItem(): ListItemNode | undefined {
 
 function $topLevelItem(): ListItemNode | undefined {
   const item = $caretItem();
+
   return item?.getParents().some($isListItemNode) ? undefined : item;
 }
 
 // A top-level item has nowhere to un-nest to, so ⇧Tab takes it out of the list.
 function $leaveList(): boolean {
   const selection = $getSelection();
+
   if (!$topLevelItem() || !$isRangeSelection(selection)) return false;
   $setBlocksType(selection, $createParagraphNode);
+
   return true;
 }
 
@@ -46,6 +50,7 @@ export function registerListTab(editor: LexicalEditor): () => void {
     (event) => {
       if (!$caretItem()) return false;
       event.preventDefault();
+
       return event.shiftKey
         ? $outdent(editor)
         : editor.dispatchCommand(INDENT_CONTENT_COMMAND);

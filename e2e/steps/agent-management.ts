@@ -2,7 +2,9 @@ import type { Page, Locator } from '@playwright/test';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
 import { When, Then, test } from './fixtures';
+
 const enablementLabel = 'Agent enabled';
+
 const removal = (page: Page): Locator => page.getByRole('dialog');
 
 When(
@@ -16,6 +18,7 @@ When(
       .click();
   },
 );
+
 Then(
   'removing {string} asks before changing the Server',
   async ({ page }, name: string): Promise<void> => {
@@ -26,12 +29,14 @@ Then(
     await captureManagement(page, 'agent-removal-confirmation.png');
   },
 );
+
 When('I cancel removing the Agent', async ({ page }): Promise<void> => {
   await removal(page)
     .getByRole('button', { name: 'Cancel', exact: true })
     .click();
   await expect(removal(page)).toBeHidden();
 });
+
 Then('the Agent remains installed', async ({ page }): Promise<void> => {
   await expect(
     page.getByRole('switch', { name: enablementLabel }),
@@ -40,11 +45,13 @@ Then('the Agent remains installed', async ({ page }): Promise<void> => {
     page.getByRole('button', { name: /^Remove Example Agent/ }),
   ).toBeVisible();
 });
+
 When('I confirm removing the Agent', async ({ page }): Promise<void> => {
   await removal(page)
     .getByRole('button', { name: 'Remove', exact: true })
     .click();
 });
+
 Then(
   'Example Agent is offered as not installed',
   async ({ page }): Promise<void> => {
@@ -53,6 +60,7 @@ Then(
     ).toBeVisible();
   },
 );
+
 Then(
   'the custom removal explains that the external program stays untouched',
   async ({ page }): Promise<void> => {
@@ -62,6 +70,7 @@ Then(
     await captureManagement(page, 'custom-agent-removal-confirmation.png');
   },
 );
+
 Then(
   '{string} is absent from the configured Agent choices',
   async ({ page }, name: string): Promise<void> => {
@@ -86,6 +95,7 @@ const connectAnotherApp = async (
   await browseAgents(page);
   await page.getByRole('link', { name: /^Example Agent,/ }).click();
 };
+
 async function observeManagement(first: Page, second: Page): Promise<void> {
   const enabled = second.getByRole('switch', { name: enablementLabel });
   await expect(enabled).toBeChecked();
@@ -97,6 +107,7 @@ async function observeManagement(first: Page, second: Page): Promise<void> {
     .click();
   await expectRemovedInstallation(second);
 }
+
 async function captureManagement(page: Page, name: string): Promise<void> {
   await removal(page).screenshot({
     path: test.info().outputPath(name.replace('.png', '-dialog.png')),
@@ -107,10 +118,12 @@ async function captureManagement(page: Page, name: string): Promise<void> {
     animations: 'disabled',
   });
 }
+
 When(
   'another App observes disablement and removal of Example Agent',
   async ({ page, app }): Promise<void> => {
     const second = await page.context().newPage();
+
     try {
       await connectAnotherApp(second, app.httpUrl);
       await observeManagement(page, second);

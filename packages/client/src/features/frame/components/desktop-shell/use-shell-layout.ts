@@ -54,9 +54,11 @@ function usePreferredWidths(measures: ShellMeasures): PreferredWidths {
   const [preferredListWidth, setPreferredListWidth] = useState(
     measures.listWidth,
   );
+
   const [preferredInspectorWidth, setPreferredInspectorWidth] = useState(
     measures.inspectorWidth,
   );
+
   return {
     preferredListWidth,
     preferredInspectorWidth,
@@ -68,6 +70,7 @@ function usePreferredWidths(measures: ShellMeasures): PreferredWidths {
 // The window's width until the shell measures itself: a pane first laid out at 0 wide pins the Feed's list to that width.
 function useWindowWidth(): WindowWidth {
   const [width, setWidth] = useState(useWindowDimensions().width);
+
   return {
     width,
     onLayout: ({ nativeEvent }) => setWidth(nativeEvent.layout.width),
@@ -76,6 +79,7 @@ function useWindowWidth(): WindowWidth {
 
 function useShellWidths(): PreferredWidths & { measures: ShellMeasures } {
   const measures = useShellMeasures();
+
   return { measures, ...usePreferredWidths(measures) };
 }
 
@@ -84,6 +88,7 @@ export function useShellLayout(shell: DesktopShellProps): ShellLayout {
   const windowWidth = useWindowWidth();
   const [resizing, setResizing] = useState(false);
   const geometry = shellGeometry({ ...shell, ...widths, ...windowWidth });
+
   return {
     ...geometry,
     ...widths,

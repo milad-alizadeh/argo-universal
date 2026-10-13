@@ -7,10 +7,12 @@ import type {
   InstallAction,
   ActionNotice,
 } from '../../state/agent-install-types';
+
 const doneVerbs: Record<InstallAction, string> = {
   Install: 'installed',
   Update: 'updated',
 };
+
 // Installation finishing says nothing about sign-in, so the toast never claims Ready.
 const doneToast = (
   name: string,
@@ -21,6 +23,7 @@ const doneToast = (
   title: `${name} ${doneVerbs[action]}`,
   message: `Version ${version}. Sign-in is checked separately.`,
 });
+
 const failedToast = (
   name: string,
   action: InstallAction,
@@ -30,12 +33,14 @@ const failedToast = (
   title: `Could not ${action.toLowerCase()} ${name}`,
   message: failure,
 });
+
 const noticeToast = (name: string, notice: ActionNotice): Toast => ({
   key: notice.key,
   ...(notice.result === 'installed'
     ? doneToast(name, notice.action, notice.version)
     : failedToast(name, notice.action, notice.failure)),
 });
+
 // One toast per finished installation, however often the page polls or re-renders.
 export function useInstallToast(
   name: string,

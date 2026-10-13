@@ -9,25 +9,25 @@ type ComposeTextStyle = NonNullable<
   ComponentProps<typeof ComposeText>['style']
 >;
 
-const fontWeights: Record<
-  string,
-  {
-    swift: NonNullable<Parameters<typeof font>[0]['weight']>;
-    compose: NonNullable<ComposeTextStyle['fontWeight']>;
-  }
-> = {
-  normal: { swift: 'regular', compose: 'normal' },
-  bold: { swift: 'bold', compose: 'bold' },
-  '100': { swift: 'ultraLight', compose: '100' },
-  '200': { swift: 'thin', compose: '200' },
-  '300': { swift: 'light', compose: '300' },
-  '400': { swift: 'regular', compose: '400' },
-  '500': { swift: 'medium', compose: '500' },
-  '600': { swift: 'semibold', compose: '600' },
-  '700': { swift: 'bold', compose: '700' },
-  '800': { swift: 'heavy', compose: '800' },
-  '900': { swift: 'black', compose: '900' },
-};
+interface NativeFontWeight {
+  swift: NonNullable<Parameters<typeof font>[0]['weight']>;
+  compose: NonNullable<ComposeTextStyle['fontWeight']>;
+}
+
+// React Native's font weights, by name and number, as SwiftUI and Compose name them.
+const fontWeights = new Map<string, NativeFontWeight>([
+  ['normal', { swift: 'regular', compose: 'normal' }],
+  ['bold', { swift: 'bold', compose: 'bold' }],
+  ['100', { swift: 'ultraLight', compose: '100' }],
+  ['200', { swift: 'thin', compose: '200' }],
+  ['300', { swift: 'light', compose: '300' }],
+  ['400', { swift: 'regular', compose: '400' }],
+  ['500', { swift: 'medium', compose: '500' }],
+  ['600', { swift: 'semibold', compose: '600' }],
+  ['700', { swift: 'bold', compose: '700' }],
+  ['800', { swift: 'heavy', compose: '800' }],
+  ['900', { swift: 'black', compose: '900' }],
+]);
 
 export function useSwiftUITextModifiers(
   role: TextRole,
@@ -35,6 +35,7 @@ export function useSwiftUITextModifiers(
 ): ReturnType<typeof font>[] {
   const style = useTextStyle(role);
   const { fontScale } = useWindowDimensions();
+
   return [
     ...swiftLeading(style.lineHeight, fontScale, alignment),
     font(swiftFont(style, fontScale)),
@@ -46,13 +47,14 @@ function swiftFont(
   fontScale: number,
 ): Parameters<typeof font>[0] {
   const face = swiftFontFace(style.fontFamily);
+
   return {
     ...face,
     size:
       face.family === undefined
         ? scaledValue(style.fontSize, fontScale)
         : style.fontSize,
-    weight: fontWeights[String(style.fontWeight)]?.swift,
+    weight: fontWeights.get(String(style.fontWeight))?.swift,
   };
 }
 
@@ -63,6 +65,7 @@ function swiftLeading(
 ): ReturnType<typeof lineHeight>[] {
   if (leading === undefined) return [];
   const value = leading * fontScale;
+
   return [
     alignment === 'row'
       ? createModifier('balancedLineHeight', { value })
@@ -79,11 +82,12 @@ function scaledValue(
 
 export function useComposeTextStyle(role: TextRole): ComposeTextStyle {
   const style = useTextStyle(role);
+
   return {
     fontFamily: composeFamily(style.fontFamily),
     fontSize: style.fontSize,
     lineHeight: style.lineHeight,
-    fontWeight: fontWeights[String(style.fontWeight)]?.compose,
+    fontWeight: fontWeights.get(String(style.fontWeight))?.compose,
     letterSpacing: style.letterSpacing,
   };
 }

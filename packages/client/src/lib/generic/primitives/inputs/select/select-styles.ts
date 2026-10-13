@@ -7,12 +7,14 @@ const triggerClassName = cn(
     web: 'focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-input/50 w-fit whitespace-nowrap type-body outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0',
   }),
 );
+
 const plainTriggerClassName = cn(
   'flex h-8 flex-row items-center gap-1.5 rounded-md pl-2',
   Platform.select({
     web: 'hover:bg-selected focus-visible:outline-2 focus-visible:outline-ring w-fit whitespace-nowrap outline-none disabled:cursor-not-allowed',
   }),
 );
+
 const itemClassName = cn(
   'active:bg-accent group relative flex w-full flex-row items-center gap-2 rounded-xl py-2 pl-2 pr-8 sm:py-1.5',
   Platform.select({
@@ -26,7 +28,9 @@ type TriggerStyle = {
   size?: 'default' | 'sm';
   variant?: SelectVariant;
 };
+
 export type SelectVariant = 'default' | 'plain';
+
 type ContentStyle = {
   className?: string;
   side?: 'top' | 'bottom';
@@ -35,17 +39,18 @@ type ContentStyle = {
 
 const disabledClassName = 'opacity-50';
 
-function triggerShapeClassName({
+function triggerFrameClassName({
   size,
   variant,
 }: Pick<TriggerStyle, 'size' | 'variant'>): string {
   if (variant === 'plain') return plainTriggerClassName;
+
   return cn(triggerClassName, size === 'sm' && 'h-8 py-2 sm:py-1.5');
 }
 
 export function selectTriggerClassName(style: TriggerStyle): string {
   return cn(
-    triggerShapeClassName(style),
+    triggerFrameClassName(style),
     style.disabled && disabledClassName,
     style.className,
   );
@@ -74,6 +79,7 @@ function translateClassName(side: ContentStyle['side']): string {
 
 function popperClassName({ position, side }: ContentStyle): string | undefined {
   if (position !== 'popper') return;
+
   return Platform.select({ web: translateClassName(side) });
 }
 

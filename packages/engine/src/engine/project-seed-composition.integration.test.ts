@@ -14,22 +14,27 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promi
   const directory = realpathSync(
     mkdtempSync(path.join(tmpdir(), 'argo-seed-')),
   );
+
   onTestFinished((): void =>
     rmSync(directory, { recursive: true, force: true }),
   );
   vi.stubEnv('ARGO_PROJECT_PATH', process.cwd());
+
   const { engine, createCaller } = await startEngineTestHost({
     ...scriptedEngineInput(),
     home: directory,
   });
+
   const caller = createCaller();
   const projects = await caller.projects.list();
   expect(projects).toHaveLength(1);
   // CI checks out a detached HEAD, which defaults to the main checkout.
   const { currentBranch } = await listBranches(process.cwd());
+
   const root = execFileSync('/usr/bin/git', ['rev-parse', '--show-toplevel'], {
     encoding: 'utf8',
   }).trim();
+
   expect(projects[0]).toMatchObject({
     name: path.basename(root),
     checkoutChoice:

@@ -13,6 +13,7 @@ export type AcpRequestIntake<Request> =
   | { type: 'presented'; request: Request }
   | { type: 'unsupported' }
   | { type: 'rejected'; reason: string };
+
 type FormElicitation = Extract<CreateElicitationRequest, { mode: 'form' }>;
 
 const parsed = <Request>(
@@ -69,6 +70,7 @@ export const toPendingElicitation = (
   params: CreateElicitationRequest,
 ): AcpRequestIntake<PendingElicitation> => {
   if (!isFormElicitation(params)) return refuseElicitation(params);
+
   return parsed(
     PendingElicitation.safeParse({
       requestId,

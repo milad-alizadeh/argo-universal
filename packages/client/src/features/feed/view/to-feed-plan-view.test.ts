@@ -4,6 +4,7 @@ import { recordedFeedMock } from '../../../lib/product/feed-message.mocks';
 import { toFeedView } from './to-feed-view';
 
 const snapshot = recordedFeedMock('agent-1', 'markdown-answer').snapshot;
+
 const oldPlan: PlanUpdate = {
   id: 'old-plan',
   sessionId: 'plan-session',
@@ -23,21 +24,25 @@ const current: PlanUpdate = {
   plan: { type: 'file', planId: 'current', uri: 'file:///project/plan.md' },
   _meta: { argo: { contentRevision: 2 } },
 };
+
 const removedOld: PlanUpdate = {
   ...oldPlan,
   revision: 4,
   _meta: { argo: { contentRevision: 1, removed: true } },
 };
+
 const removedCurrent = {
   ...current,
   revision: 5,
   _meta: { argo: { contentRevision: 2, removed: true } },
 };
+
 const replacedOld: PlanUpdate = {
   ...oldPlan,
   revision: 6,
   _meta: { argo: { contentRevision: 6, removed: false } },
 };
+
 it.each([
   {
     name: 'a later removal of an older Plan preserves the current read-only Plan',

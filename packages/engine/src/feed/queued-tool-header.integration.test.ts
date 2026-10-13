@@ -16,6 +16,7 @@ import {
   createFeedRouterCaller,
 } from '#mocks/feed-suite';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+
 it.each(fixtureAgents.map((adapter): string => adapter.agent))(
   'keeps %s queued Tool-call headers visible before persistence',
   async (agent): Promise<void> => {
@@ -45,6 +46,7 @@ it.each(fixtureAgents.map((adapter): string => adapter.agent))(
       (await createFeedRouterCaller().session.list({ archived: false }))
         .sessions,
     ).toMatchObject([{ sessionId: 'session-1', activity: queuedToolActivity }]);
+
     const updates = (
       await feedTestHost
         .createCaller({ signal: controller.signal })
@@ -53,6 +55,7 @@ it.each(fixtureAgents.map((adapter): string => adapter.agent))(
           after: { epoch: 3, revision: 6 },
         })
     )[Symbol.asyncIterator]();
+
     await takeFeedChanges(updates, 1);
     expect((await updates.next()).value).toMatchObject({
       type: 'snapshot',

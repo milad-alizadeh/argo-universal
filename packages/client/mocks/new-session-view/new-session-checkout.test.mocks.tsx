@@ -10,12 +10,14 @@ import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import type { Story } from './new-session-story.test.mocks';
 
 const pressedAttribute = 'aria-pressed';
+
 const newWorktreeLabel = 'New worktree';
 
 // The checkout follows the reader's choice, as the screen's state does.
 function ChoosingCheckout(): React.JSX.Element {
   const [newWorktree, setNewWorktree] = useState(true);
   const { configuration } = readyNewSession;
+
   return (
     <NewSessionView
       state="ready"

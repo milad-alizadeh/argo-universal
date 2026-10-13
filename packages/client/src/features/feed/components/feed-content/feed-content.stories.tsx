@@ -4,6 +4,7 @@ import { toFeedView } from '../../view/to-feed-view';
 import { Feed } from '../feed/feed';
 
 const { rows, snapshot } = recordedAcpContent('agent-1');
+
 const meta = {
   title: 'Feed/SupportedContent',
   component: Feed,
@@ -16,6 +17,9 @@ const meta = {
   },
   parameters: { screenPreview: true },
 } satisfies Meta<typeof Feed>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 export const SupportedContent: Story = { name: 'Supported content' };

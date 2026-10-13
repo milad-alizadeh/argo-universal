@@ -7,10 +7,12 @@ import { startSessionJourney, newSession } from '#mocks/session-journey';
 it('creates the Checkout, starts the Agent with the chosen options and runs the first Turn in one call', async (): Promise<void> => {
   const { caller, openings, database, prompts, settings } =
     await startSessionJourney();
+
   const { sessionId } = await caller.session.new({
     ...newSession,
     checkout: { type: 'worktree', baseBranch: 'feature' },
   });
+
   expect(settings).toEqual([
     { sessionId: 'owned-1', configId: 'model', value: 'large' },
   ]);

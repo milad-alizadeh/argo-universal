@@ -7,6 +7,7 @@ import {
 } from './common';
 import { lastLongModel, lastLongAgent } from './long-list-cases';
 import { expectScrollsUnderFades, lastVisible } from './scroll-reachability';
+
 export async function selectLastDesktopModel(
   context: PlayContext,
 ): Promise<void> {
@@ -17,16 +18,19 @@ export async function selectLastDesktopModel(
   await expectScrollsUnderFades(models, findLastModel);
   await selectLongModel(context, findLastModel);
 }
+
 function findLastModel(): Promise<HTMLElement> {
   return within(document.body).findByRole('button', {
     name: lastLongModel.name,
   });
 }
+
 async function openModelChoices({ userEvent }: PlayContext): Promise<void> {
   await userEvent.click(
     await within(document.body).findByRole('button', { name: /^Model,/ }),
   );
 }
+
 async function assertModelMenuInsideWindow(): Promise<void> {
   const overlay = within(document.body);
   await expect(
@@ -38,6 +42,7 @@ async function assertModelMenuInsideWindow(): Promise<void> {
     expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible(),
   );
 }
+
 async function selectLongModel(
   { userEvent, args }: PlayContext,
   lastModel: () => Promise<HTMLElement>,
@@ -49,6 +54,7 @@ async function selectLongModel(
     ),
   );
 }
+
 export async function selectLastAgent({
   userEvent,
   args,
@@ -63,6 +69,7 @@ export async function selectLastAgent({
     ),
   );
 }
+
 // Clicks the row found fresh each try, as a virtualized list can swap the node under a click.
 async function clickUntil(
   {
@@ -76,6 +83,7 @@ async function clickUntil(
     await called();
   });
 }
+
 async function openAgentChoices(
   userEvent: PlayContext['userEvent'],
 ): Promise<HTMLElement> {
@@ -83,13 +91,16 @@ async function openAgentChoices(
   await userEvent.click(
     await overlay.findByRole('button', { name: chooseAgentLabel }),
   );
+
   return overlay.findByTestId(agentsScrollId);
 }
+
 function findLastAgent(): Promise<HTMLElement> {
   return within(document.body).findByRole('button', {
     name: `Select ${lastLongAgent.label}`,
   });
 }
+
 export async function selectLastPhoneModel(
   context: PlayContext,
 ): Promise<void> {

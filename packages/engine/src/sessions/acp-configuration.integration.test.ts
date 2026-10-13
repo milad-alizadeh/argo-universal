@@ -18,10 +18,12 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
   '%s names an empty Session from its first prompt and keeps that title on later prompts',
   async (agent) => {
     const host = await startAcpEngine({ steps: [] }, undefined, agent);
+
     const created = await host.caller.session.new({
       ...emptySessionInput,
       agent,
     });
+
     await host.caller.session.prompt({
       ...created,
       prompt: [
@@ -53,6 +55,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
   async (agentId) => {
     const sessionInput = { ...emptySessionInput, agent: agentId };
     const openings: NewSessionRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -74,10 +77,13 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
+
     const feed = (
       await host.caller.feed.subscribe({ ...created, after: null })
     )[Symbol.asyncIterator]();
+
     const update = await feed.next();
     expect(update.value).toMatchObject({
       type: 'snapshot',
@@ -110,6 +116,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
   '%s applies Fast mode to the actual Session and reports its authoritative response',
   async (agent) => {
     const requests: SetSessionConfigOptionRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -133,16 +140,19 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agent,
     );
+
     const created = await host.caller.session.new({
       ...emptySessionInput,
       agent,
     });
+
     const applied = await host.caller.session.setConfigOption({
       ...created,
       configId: 'fast',
       type: 'boolean',
       value: true,
     });
+
     expect(requests).toEqual([
       {
         sessionId: configuredSessionId,
@@ -168,6 +178,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     const started = Promise.withResolvers<SetSessionConfigOptionRequest>();
     const finish = Promise.withResolvers<void>();
     const prompts: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -186,19 +197,24 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agentId,
     );
+
     const first = await host.caller.session.new(sessionInput);
     const sibling = await host.caller.session.new(sessionInput);
+
     const applied = host.caller.session.setConfigOption({
       ...first,
       configId: 'model',
       type: 'id',
       value: 'small',
     });
+
     await started.promise;
+
     const prompt = host.caller.session.prompt({
       ...first,
       prompt: [{ type: 'text', text: 'first' }],
     });
+
     await host.caller.session.prompt({
       ...sibling,
       prompt: [{ type: 'text', text: 'sibling' }],
@@ -222,6 +238,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
   'the full returned configuration replaces guessed model-dependent choices',
   async (agentId) => {
     const sessionInput = { ...emptySessionInput, agent: agentId };
+
     const returned: SessionConfigOption[] = [
       {
         id: 'model',
@@ -240,6 +257,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
         options: [{ value: 'low', name: 'Low' }],
       },
     ];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -254,13 +272,16 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
+
     const applied = await host.caller.session.setConfigOption({
       ...created,
       configId: 'model',
       type: 'id',
       value: 'small',
     });
+
     expect(applied.configOptions).toEqual([
       {
         configId: 'model',
@@ -286,6 +307,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
   'an upstream configuration rejection leaves the Session actual values unchanged',
   async (agentId) => {
     const sessionInput = { ...emptySessionInput, agent: agentId };
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -300,6 +322,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
     await expect(
       host.caller.session.setConfigOption({
@@ -309,9 +332,11 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
         value: 'small',
       }),
     ).rejects.toThrow('Model unavailable');
+
     const feed = (
       await host.caller.feed.subscribe({ ...created, after: null })
     )[Symbol.asyncIterator]();
+
     expect((await feed.next()).value).toMatchObject({
       type: 'snapshot',
       snapshot: {
@@ -333,6 +358,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     const sessionInput = { ...emptySessionInput, agent: agentId };
     const prompted = Promise.withResolvers<PromptRequest>();
     const commands: { sessionId: string }[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [{ type: 'wait-for-cancel' }],
@@ -354,18 +380,21 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({
       ...created,
       prompt: [{ type: 'text', text: 'Wait for cancellation' }],
     });
     await prompted.promise;
+
     const setting = host.caller.session.setConfigOption({
       ...created,
       configId: 'mode',
       type: 'id',
       value: 'plan',
     });
+
     await host.caller.session.cancel(created);
     await setting;
     expect(commands).toMatchObject([
@@ -381,6 +410,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
   async (agentId) => {
     const sessionInput = { ...emptySessionInput, agent: agentId };
     const commands: { sessionId: string }[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -394,6 +424,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agentId,
     );
+
     await host.caller.session.new({
       ...sessionInput,
       configOptions: [{ configId: 'mode', value: 'plan' }],
@@ -414,6 +445,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     const sessionInput = { ...emptySessionInput, agent: agentId };
     const started = Promise.withResolvers<SetSessionConfigOptionRequest>();
     const completion = Promise.withResolvers<void>();
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -428,20 +460,26 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
+
     const setting = host.caller.session.setConfigOption({
       ...created,
       configId: 'mode',
       type: 'id',
       value: 'plan',
     });
-    const rejection = setting.catch((error: unknown): unknown => error);
+
+    const settled = Promise.allSettled([setting]);
     await started.promise;
     await host.caller.session.close(created);
     completion.resolve();
-    expect(await rejection).toMatchObject({
-      message: 'Session closed before configuration completed',
-    });
+    expect(await settled).toMatchObject([
+      {
+        status: 'rejected',
+        reason: { message: 'Session closed before configuration completed' },
+      },
+    ]);
   },
 );
 
@@ -475,27 +513,33 @@ it.each(
       undefined,
       agent,
     );
+
     const first = await host.caller.session.new({
       ...emptySessionInput,
       agent,
     });
+
     const sibling = await host.caller.session.new({
       ...emptySessionInput,
       agent,
     });
+
     const applied = await host.caller.session.setConfigOption({
       ...first,
       configId,
       type: 'id',
       value,
     });
+
     expect(
       applied.configOptions.find((option) => option.configId === configId)
         ?.currentValue,
     ).toBe(value);
+
     const feed = (
       await host.caller.feed.subscribe({ ...sibling, after: null })
     )[Symbol.asyncIterator]();
+
     expect((await feed.next()).value).toMatchObject({
       type: 'snapshot',
       snapshot: {
@@ -518,6 +562,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     const started = Promise.withResolvers<SetSessionConfigOptionRequest>();
     const finish = Promise.withResolvers<void>();
     const requests: SetSessionConfigOptionRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -541,26 +586,34 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
+
     const model = host.caller.session.setConfigOption({
       ...created,
       configId: 'model',
       type: 'id',
       value: 'small',
     });
+
     await started.promise;
+
     const effort = host.caller.session.setConfigOption({
       ...created,
       configId: 'effort',
       type: 'id',
       value: 'low',
     });
-    const rejected = effort.catch((error: unknown): unknown => error);
+
+    const settled = Promise.allSettled([effort]);
     finish.resolve();
     await model;
-    expect(await rejected).toMatchObject({
-      message: expect.stringContaining('effort'),
-    });
+    expect(await settled).toMatchObject([
+      {
+        status: 'rejected',
+        reason: { message: expect.stringContaining('effort') },
+      },
+    ]);
     expect(requests.map((request) => request.configId)).toEqual(['model']);
   },
 );
@@ -569,6 +622,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
   'the lifetime subscription applies authoritative configuration updates to the actual Session',
   async (agentId) => {
     const sessionInput = { ...emptySessionInput, agent: agentId };
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -578,7 +632,9 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
+
     const updated: SessionConfigOption[] = [
       {
         id: 'fast-mode',
@@ -600,6 +656,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
         _meta: null,
       },
     ];
+
     await requireScriptedProcessAt(host.agent.processes).play(
       [
         {
@@ -612,9 +669,11 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       ],
       configuredSessionId,
     );
+
     const feed = (
       await host.caller.feed.subscribe({ ...created, after: null })
     )[Symbol.asyncIterator]();
+
     const expected = [
       {
         configId: 'fast-mode',
@@ -634,6 +693,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
         ],
       },
     ];
+
     await expect
       .poll(async () => (await feed.next()).value)
       .toMatchObject({
@@ -650,6 +710,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     const sessionInput = { ...emptySessionInput, agent: agentId };
     const report = vi.spyOn(console, 'error').mockImplementation(() => {});
     const closed: { sessionId: string }[] = [];
+
     try {
       const host = await startAcpEngine(
         {
@@ -677,6 +738,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
         undefined,
         agentId,
       );
+
       await expect(host.caller.session.new(sessionInput)).rejects.toThrow(
         'tone',
       );

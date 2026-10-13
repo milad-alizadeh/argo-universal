@@ -18,6 +18,7 @@ import { ListItemAccessory } from './list-item-accessory';
 import { hiddenFromAccessibility, StatusDot } from './status-dot';
 
 const detailGutter = 16;
+
 const detailBottom = 12;
 
 export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
@@ -43,7 +44,9 @@ function NativeRowDot(
   props: Pick<ListItemProps, 'needsAttention' | 'status'>,
 ): React.JSX.Element | null {
   const status = listItemStatus(props);
+
   if (!status) return null;
+
   return (
     <RNHostView matchContents>
       <StatusDot status={status} />
@@ -55,6 +58,7 @@ function NativeRowAccessory({
   accessory,
 }: Pick<ListItemProps, 'accessory'>): React.JSX.Element | null {
   if (!accessory) return null;
+
   return (
     <RNHostView matchContents>
       <ListItemAccessory>{accessory}</ListItemAccessory>
@@ -86,6 +90,7 @@ export function NativeRowGlyph({
   leading?: ReactElement;
 }): React.JSX.Element | null {
   if (leading) return <NativeRowImage image={leading} />;
+
   return icon ? <NativeRowIcon icon={icon} /> : null;
 }
 
@@ -94,6 +99,7 @@ export function NativeRowDetail({
 }: Pick<ListItemProps, 'detail'>): React.JSX.Element | null {
   if (!detail) return null;
   const control = <NativeControl>{detail}</NativeControl>;
+
   return Platform.OS === 'ios' ? (
     <SwiftUIDetail>{control}</SwiftUIDetail>
   ) : (

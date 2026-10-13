@@ -16,12 +16,14 @@ const screenOptions = {
 // iOS 26's transparent header lies over the top of the screen; every other header takes its own space.
 function useGlassHeaderCover(): number {
   const height = useHeaderHeight();
+
   return hasLiquidGlass ? height : 0;
 }
 
 // A phone section's native stack; its screens set their header through ScreenHeader.
 export function PhoneStack({ children }: PropsWithChildren): React.JSX.Element {
   const titleOptions = useHeaderTitleOptions();
+
   return (
     <ScreenHeaderProvider
       header={NativeScreenHeader}

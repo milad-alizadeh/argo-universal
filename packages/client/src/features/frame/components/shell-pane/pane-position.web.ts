@@ -32,6 +32,7 @@ function framePosition(
 ): PanePosition | undefined {
   if (!frame) return undefined;
   const width = Number.parseFloat(getComputedStyle(frame).width);
+
   return { width, offset: last.offset + translationOf(frame) };
 }
 
@@ -40,6 +41,7 @@ function slidePosition(
   { slide, viewport }: PaneElements,
 ): PanePosition | undefined {
   if (!slide) return undefined;
+
   return {
     width: last.contentWidth + translationOf(slide),
     offset: last.offset + translationOf(viewport),
@@ -54,6 +56,7 @@ function measuredPosition({
   const measured = reflows
     ? framePosition(last, panes)
     : slidePosition(last, panes);
+
   return measured ?? last;
 }
 
@@ -62,5 +65,6 @@ export function startingPosition(
   motion: readonly Animation[],
 ): PanePosition {
   const running = motion.some((animation) => animation.playState === 'running');
+
   return running ? measuredPosition(input) : input.last;
 }

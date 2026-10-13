@@ -11,13 +11,17 @@ const meta = {
   component: PortalHost,
   render: (): React.JSX.Element => <PortalPreview />,
 } satisfies Meta<typeof PortalHost>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 export const Overview: Story = { name: 'Portal' };
 
 function PortalPreview(): React.JSX.Element {
   const hostName = useId();
   const [open, setOpen] = useState(true);
+
   return (
     <PortalExample
       hostName={hostName}
@@ -31,6 +35,7 @@ type ExampleProps = { hostName: string; open: boolean; onToggle: () => void };
 
 function PortalExample(props: ExampleProps): React.JSX.Element {
   const portal = portalContent(props);
+
   return (
     <NamedHost hostName={props.hostName}>
       <Button {...buttonProps(props)} />
@@ -64,6 +69,7 @@ function buttonProps(props: ExampleProps): React.ComponentProps<typeof Button> {
 
 function portalContent(props: ExampleProps): React.ReactNode {
   if (!props.open) return null;
+
   return (
     <Portal name="preview" hostName={props.hostName}>
       <Text role="body">Expanded plan</Text>

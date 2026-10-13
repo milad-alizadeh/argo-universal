@@ -8,7 +8,9 @@ import {
 } from './onboarding';
 
 const signedIn: AgentStep = { status: 'done', agentName: 'Claude' };
+
 const noAgent: AgentStep = { status: 'not-found', checking: false };
+
 const connected: GitHubStep = { status: 'signed-in', login: 'octocat' };
 
 describe('stepMarks', () => {

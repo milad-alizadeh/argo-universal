@@ -21,11 +21,13 @@ const referenceTarget = (reference: Reference): ReferenceTarget =>
 
 function referenceName(reference: Reference): string {
   if (reference.type === 'resource_link') return reference.name;
+
   return resourceName(reference.resource.uri);
 }
 
 function isFolder(reference: Reference): boolean {
   const { uri, mimeType } = referenceTarget(reference);
+
   return mimeType === 'inode/directory' || uri.endsWith('/');
 }
 
@@ -62,6 +64,7 @@ export function ReferenceChips({
   references: Reference[];
 }): React.JSX.Element | null {
   if (references.length === 0) return null;
+
   return (
     <View className="max-w-full flex-row flex-wrap justify-end gap-1.5">
       {withOccurrenceKeys(references, referenceName).map(chip)}

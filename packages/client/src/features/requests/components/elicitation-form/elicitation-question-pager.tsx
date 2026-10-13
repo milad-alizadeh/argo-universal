@@ -9,6 +9,7 @@ import {
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 
 type ModelProps = { model: QuestionModel };
+
 type PagerProps = ModelProps & { direction: keyof typeof pages };
 
 const pages = {
@@ -25,10 +26,12 @@ const pages = {
     atEnd: (model: QuestionModel): boolean => model.last,
   },
 } as const;
+
 const pagerIconRole = Platform.OS === 'android' ? 'body' : 'secondary';
 
 export function QuestionPager({ model }: ModelProps): ReactElement {
   const wide = useContentWide();
+
   return (
     <View className="flex-row items-center shrink-0">
       <PagerButton model={model} direction="previous" />
@@ -40,6 +43,7 @@ export function QuestionPager({ model }: ModelProps): ReactElement {
 
 function PagerButton({ model, direction }: PagerProps): ReactElement {
   const wide = useContentWide();
+
   return (
     <IconButton
       {...pageProps({ model, direction })}
@@ -62,6 +66,7 @@ function pageProps({
   'icon' | 'accessibilityLabel' | 'disabled' | 'onPress'
 > {
   const page = pages[direction];
+
   return {
     icon: page.icon,
     accessibilityLabel: page.label,

@@ -19,6 +19,7 @@ export function RequestAction({
 }: RequestActionProps): ReactNode {
   // The window breakpoint, not the column, decides: actions stack only on a phone-wide window.
   const wide = useWide();
+
   return (
     <Button
       {...props}
@@ -45,5 +46,6 @@ function requestVariant(
   wide: boolean,
 ): 'default' | 'ghost' | 'outline' {
   if (primary) return 'default';
+
   return wide ? 'ghost' : 'outline';
 }

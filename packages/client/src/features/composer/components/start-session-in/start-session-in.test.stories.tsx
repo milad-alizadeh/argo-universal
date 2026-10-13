@@ -14,12 +14,16 @@ const [exampleProject, landingProject] = ((): [
   (typeof newSessionProjects)[number],
 ] => {
   const [first, second] = newSessionProjects;
+
   if (!first || !second)
     throw new Error('Recorded catalog needs two Projects.');
+
   return [first, second];
 })();
+
 // A search that only the second Project's name or folder matches.
 const landingSearch = landingProject.name.slice(0, 4).toLowerCase();
+
 if (
   [exampleProject.name, exampleProject.path].some((text) =>
     text.toLowerCase().includes(landingSearch),
@@ -32,6 +36,7 @@ if (
 // Swaps the chosen Project in, as New Session does when the reader picks one.
 function ChoosingProject(props: StartSessionInProps): React.JSX.Element {
   const [projectId, setProjectId] = useState(props.projectId);
+
   return (
     <View className="p-4">
       <StartSessionIn
@@ -63,7 +68,9 @@ const meta = {
     },
   },
 } satisfies Meta<typeof StartSessionIn>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function switchProject(width: number): Story {
@@ -104,7 +111,9 @@ function switchProject(width: number): Story {
     },
   };
 }
+
 export const SwitchProjectPhone = switchProject(layoutWidths.phone);
+
 export const SwitchProjectWide = switchProject(layoutWidths.wide);
 
 // On the Server's own computer the App does not name the host.

@@ -33,6 +33,7 @@ function PullRequestIcon({
   status,
 }: PullRequestIndicatorProps): React.JSX.Element {
   const appearance = pullRequestAppearance[status];
+
   return (
     <Icon
       role="secondary"

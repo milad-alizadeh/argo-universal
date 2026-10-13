@@ -7,6 +7,7 @@ function Example(
   props: Omit<CheckboxProps, 'onChange' | 'label'>,
 ): React.JSX.Element {
   const [value, setValue] = useState(props.value);
+
   return createElement(Checkbox, {
     ...props,
     value,
@@ -16,7 +17,9 @@ function Example(
 }
 
 const meta = { title: 'Design System/Primitives/Checkbox' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function unchecked(): React.JSX.Element {
@@ -26,6 +29,7 @@ function unchecked(): React.JSX.Element {
     </Variation>
   );
 }
+
 function checked(): React.JSX.Element {
   return (
     <Variation label="Checked">
@@ -33,6 +37,7 @@ function checked(): React.JSX.Element {
     </Variation>
   );
 }
+
 function disabled(): React.JSX.Element {
   return (
     <Variation label="Disabled">
@@ -40,6 +45,7 @@ function disabled(): React.JSX.Element {
     </Variation>
   );
 }
+
 function invalid(): React.JSX.Element {
   return (
     <Variation label="Invalid">

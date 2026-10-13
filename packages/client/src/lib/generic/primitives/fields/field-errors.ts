@@ -1,14 +1,11 @@
-export type FieldErrors = readonly unknown[];
+// A field's validation error: a plain message, or a Standard Schema issue carrying one.
+type FieldError = string | { readonly message: string } | undefined;
 
-const textOf = (value: unknown): string | undefined =>
-  typeof value === 'string' ? value : undefined;
-const objectMessage = (error: unknown): string | undefined =>
-  error instanceof Object && 'message' in error
-    ? textOf(error.message)
-    : undefined;
+export type FieldErrors = readonly FieldError[];
 
 // Standard Schema issues and plain strings both carry the message the person reads.
 export const errorMessage = (errors: FieldErrors): string | undefined => {
   const [error] = errors;
-  return typeof error === 'string' ? error : objectMessage(error);
+
+  return typeof error === 'string' ? error : error?.message;
 };

@@ -12,6 +12,7 @@ const projects = ['argo-universal', 'argo-server', 'example-app'];
 function Example({ initial = '' }: { initial?: string }): React.JSX.Element {
   const [value, setValue] = useState(initial);
   const matches = projects.filter((project) => project.includes(value));
+
   return (
     <View className="gap-2 rounded-2xl bg-popover p-4 wide:gap-1 wide:border wide:border-border wide:p-1 wide:shadow-card">
       <ComboboxSearch
@@ -40,7 +41,9 @@ function MatchList({ matches }: { matches: string[] }): React.JSX.Element {
 const meta = {
   title: 'Design System/Primitives/ComboboxSearch',
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

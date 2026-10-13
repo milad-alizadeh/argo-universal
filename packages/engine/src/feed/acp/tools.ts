@@ -3,6 +3,7 @@ import type { FeedUpdate, SessionUpdate } from '@repo/contracts';
 import type { AssembledContent } from './assembly';
 import { createAcpContentMetadata } from './content';
 import { createScopedFeedRowId } from './identity';
+import { assignPresentField } from './present-field';
 import {
   mapToolCallContent,
   collectUnsupportedToolContentReasons,
@@ -14,12 +15,15 @@ type ToolUpdate = Extract<
   SessionNotification['update'],
   { sessionUpdate: 'tool_call' | 'tool_call_update' }
 >;
+
 type ToolRow = Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }>;
+
 type ToolInput = {
   update: ToolUpdate;
   acpSessionId: string;
   findRow: (id: string) => SessionUpdate | undefined;
 };
+
 // The Feed row of an ACP Session's Tool call.
 export const acpToolCallRowId = (
   acpSessionId: string,
@@ -30,6 +34,7 @@ export const acpToolCallRowId = (
     kind: 'tool_call_update',
     upstreamId: toolCallId,
   });
+
 const createInitialToolRow = (id: string, toolCallId: string): ToolRow => ({
   id,
   toolCallId,
@@ -40,17 +45,16 @@ const createInitialToolRow = (id: string, toolCallId: string): ToolRow => ({
   status: 'pending',
   content: [],
 });
-const readSuppliedToolFields = (update: ToolUpdate): Record<string, unknown> =>
-  Object.fromEntries(
-    Object.entries({
-      title: update.title,
-      kind: update.kind,
-      status: update.status,
-      name: update.name,
-      rawInput: update.rawInput,
-      rawOutput: update.rawOutput,
-    }).filter(([, value]) => value != null),
-  );
+
+const assignSuppliedToolFields = (row: ToolRow, update: ToolUpdate): void => {
+  assignPresentField(row, 'title', update.title);
+  assignPresentField(row, 'kind', update.kind);
+  assignPresentField(row, 'status', update.status);
+  assignPresentField(row, 'name', update.name);
+  assignPresentField(row, 'rawInput', update.rawInput);
+  assignPresentField(row, 'rawOutput', update.rawOutput);
+};
+
 const replaceToolLocations = (
   existing: ToolRow,
   update: ToolUpdate,
@@ -59,6 +63,7 @@ const replaceToolLocations = (
     path: location.path,
     line: location.line ?? undefined,
   })) ?? existing.locations;
+
 const replaceToolMetadata = (
   existing: ToolRow,
   update: ToolUpdate,
@@ -66,16 +71,23 @@ const replaceToolMetadata = (
   ...existing._meta,
   ...createAcpContentMetadata(update._meta ?? existing._meta?.acp),
 });
+
 const mergeToolCallUpdate = (
   existing: ToolRow,
   update: ToolUpdate,
-): ToolRow => ({
-  ...existing,
-  ...readSuppliedToolFields(update),
-  locations: replaceToolLocations(existing, update),
-  content: update.content?.map(mapToolCallContent) ?? existing.content,
-  _meta: replaceToolMetadata(existing, update),
-});
+): ToolRow => {
+  const row: ToolRow = {
+    ...existing,
+    locations: replaceToolLocations(existing, update),
+    content: update.content?.map(mapToolCallContent) ?? existing.content,
+    _meta: replaceToolMetadata(existing, update),
+  };
+
+  assignSuppliedToolFields(row, update);
+
+  return row;
+};
+
 const setToolRowState = (tool: ToolRow): ToolRow => ({
   ...tool,
   state:
@@ -83,25 +95,31 @@ const setToolRowState = (tool: ToolRow): ToolRow => ({
       ? 'settled'
       : 'open',
 });
+
 const readOrCreateToolRow = (toolInput: ToolInput): ToolRow => {
   const id = acpToolCallRowId(
     toolInput.acpSessionId,
     toolInput.update.toolCallId,
   );
+
   const previous = toolInput.findRow(id);
+
   return previous?.sessionUpdate === 'tool_call_update'
     ? previous
     : createInitialToolRow(id, toolInput.update.toolCallId);
 };
+
 const assembleToolRow = (input: ToolInput): ToolRow =>
   setToolRowState(
     nameToolCall(mergeToolCallUpdate(readOrCreateToolRow(input), input.update)),
   );
+
 export const assembleToolCall = (input: ToolInput): AssembledContent => {
   const { row: update, blobs } = capToolOutput(
     assembleToolRow(input),
     input.update,
   );
+
   return {
     change: { type: 'upsert', update },
     blobs,

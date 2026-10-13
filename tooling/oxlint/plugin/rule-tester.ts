@@ -2,6 +2,7 @@ import { RuleTester } from 'oxlint/plugins-dev';
 import { describe, it } from 'vitest';
 
 RuleTester.describe = describe;
+
 RuleTester.it = it;
 
 // Every rule test parses TypeScript with JSX, as Argo's sources are.

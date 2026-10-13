@@ -8,8 +8,8 @@ import type { ConfigurationDeps } from '../../configuration/configuration-comman
 import { readConfiguredAgent } from '../../configuration/configuration-sql';
 import { agentInstallDirectory } from '../selection/selection';
 
-const missingDirectory = (error: unknown): boolean =>
-  error instanceof Error && 'code' in error && error.code === 'ENOENT';
+const missingDirectory = (cause: unknown): boolean =>
+  cause instanceof Error && 'code' in cause && cause.code === 'ENOENT';
 
 const readManagedRoot = async (home: string): Promise<Stats | undefined> => {
   try {
@@ -25,6 +25,7 @@ const removedConfiguration = (
 ): AgentConfiguration => {
   if (configuration.source === 'custom')
     return { ...configuration, removed: true };
+
   return { ...configuration, release: null, removed: true };
 };
 
@@ -34,7 +35,9 @@ export const removeAgentInstallation = async (input: {
   agentId: string;
 }): Promise<void> => {
   const agent = readConfiguredAgent(input.deps.database, input.agentId);
+
   if (!agent) throw new Error('Agent is not configured');
+
   if (agent.configuration.source === 'registry')
     await removeManagedFiles(input.home, input.agentId);
   await saveRemoval(input.deps, agent);

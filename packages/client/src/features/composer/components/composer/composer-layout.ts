@@ -15,14 +15,17 @@ export function useComposerLayout(
   const composerId = useId();
   useFileDrop({ targetId: composerId, onDropFiles: props.onDropFiles });
   const wide = useContentWide();
+
   const send = (): void => {
     if (sendState === 'ready') props.onSend(props.draft);
   };
+
   return Object.assign(
     { props, composerId, wide, sendState, send },
     useComposerControls(props),
   );
 }
+
 function composerActivity(
   props: ComposerProps,
 ): Pick<ComposerLayout, 'inactive' | 'configurationInactive' | 'oversized'> {
@@ -44,5 +47,6 @@ function useComposerControls(
   | 'oversized'
 > {
   const [controlsHeight, setControlsHeight] = useState(0);
+
   return { controlsHeight, setControlsHeight, ...composerActivity(props) };
 }

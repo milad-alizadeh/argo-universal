@@ -42,6 +42,7 @@ type GroupDisclosureProps = Pick<
 function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
   const live = liveToolCall(group);
   const running = group.state === 'open';
+
   return live
     ? {
         ...toolCallDisclosureProps(live.toolCall, live.awaitingApproval),
@@ -53,6 +54,7 @@ function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
 
 function useGroupTrailing(group: FeedGroup, now?: number): string | undefined {
   const duration = useToolCallDuration(liveToolCall(group)?.toolCall, now);
+
   return showsDuration(group) ? duration : undefined;
 }
 
@@ -60,6 +62,7 @@ function useGroupActivities(
   group: FeedGroup,
 ): Omit<GroupActivitiesProps, 'renderActivity'> {
   const items = visibleActivities(group);
+
   return { items, onLayout: useGrowthAbove(group.id, items.map(activityKey)) };
 }
 
@@ -80,6 +83,7 @@ function GroupActivities({
 export function ToolCallGroup(props: ToolCallGroupProps): React.JSX.Element {
   const trailing = useGroupTrailing(props.group, props.now);
   const activities = useGroupActivities(props.group);
+
   return (
     <ToolCallDisclosure
       {...groupDisclosureProps(props.group)}

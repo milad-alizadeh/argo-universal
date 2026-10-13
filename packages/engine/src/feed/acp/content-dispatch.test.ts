@@ -16,6 +16,7 @@ const input = (update: Update): ContentAssemblyInput => ({
 });
 
 const text = { type: 'text', text: 'Hello' } as const;
+
 const entry = {
   content: 'Write the test',
   priority: 'high',

@@ -13,18 +13,22 @@ import {
   mutedTextClassName,
 } from './status-surface';
 import { StatusText } from './status-text';
+
 interface WorkChipProps {
   label: string;
   icon: 'agent' | 'terminal';
   work?: ComposerWork;
   disabled: boolean;
 }
+
 interface WorkCountProps {
   label: string;
   work: ComposerWork;
 }
+
 function WorkCount({ label, work }: WorkCountProps): JSX.Element {
   const className = work.running ? 'text-success' : mutedTextClassName;
+
   return (
     <View className="flex-row items-center gap-1">
       <StatusText role="badge" className={className}>
@@ -36,10 +40,13 @@ function WorkCount({ label, work }: WorkCountProps): JSX.Element {
     </View>
   );
 }
+
 function WorkChip(props: WorkChipProps): JSX.Element | null {
   const { label, icon, work, disabled } = props;
+
   if (!work) return null;
   const pressableProps = workPressableProps({ label, work, disabled });
+
   return (
     <ChipSurface glass={label === 'Subagents'}>
       <Pressable {...pressableProps} role="button">
@@ -49,12 +56,16 @@ function WorkChip(props: WorkChipProps): JSX.Element | null {
     </ChipSurface>
   );
 }
+
 interface WorkChipsProps {
   status: ComposerStatusProps;
   disabled: boolean;
 }
+
 const subagentProps = { label: 'Subagents', icon: 'agent' } as const;
+
 const shellProps = { label: 'Shells', icon: 'terminal' } as const;
+
 export function WorkChips({ status, disabled }: WorkChipsProps): JSX.Element {
   return (
     <>
@@ -67,16 +78,19 @@ export function WorkChips({ status, disabled }: WorkChipsProps): JSX.Element {
     </>
   );
 }
+
 interface WorkPressableProps {
   disabled: boolean;
   accessibilityLabel: string;
   onPress: () => void;
   className: string;
 }
+
 function workPressableProps(
   props: WorkCountProps & { disabled: boolean },
 ): WorkPressableProps {
   const { label, work, disabled } = props;
+
   return {
     disabled,
     accessibilityLabel: `${label}: ${work.count}`,

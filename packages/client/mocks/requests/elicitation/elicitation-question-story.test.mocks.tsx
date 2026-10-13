@@ -15,12 +15,19 @@ export const meta = {
     </RequestFrame>
   ),
 } satisfies Meta<typeof ElicitationForm>;
+
 export type Story = StoryObj<typeof meta>;
 
 export const buildFeature = 'Build a feature';
+
 export const previousQuestion = 'Previous question';
+
 export const nextQuestion = 'Next question';
+
 export const fixBug = 'Fix a bug';
+
 export const exploreIdea = 'Explore an idea';
+
 export const customAnswer = 'Custom answer';
+
 export const releaseReview = 'Review the release';

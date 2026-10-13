@@ -68,6 +68,7 @@ const checkoutProps = (
 
 function configurationProps(open: OpenSession): ComposerConfigurationProps {
   const { snapshot, agents, navigate } = open;
+
   return {
     agents: agents.data ?? [],
     agent: snapshot.agent,
@@ -92,6 +93,7 @@ const draftProps = (commands: SessionCommands): DraftProps => ({
 // The Composer of an open Session: its draft, its commands and its configuration.
 export function sessionComposerProps(open: OpenSession): ComposerProps {
   const { commands, sessionId, snapshot, view } = open;
+
   return {
     ...draftProps(commands),
     onStop: () => commands.cancelTurn.mutate({ sessionId }),

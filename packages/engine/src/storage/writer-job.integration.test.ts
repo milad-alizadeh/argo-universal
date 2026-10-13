@@ -1,16 +1,20 @@
 import type { Database } from '@repo/db';
+import { session } from '@repo/db/schema';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { SqlJob } from '#mocks/storage-job';
 import { writeJobs } from './writer-job';
 
 let database: Database;
+
 let removeDatabase: () => void;
 
 const setTitle = (title: string): SqlJob =>
   new SqlJob({ statement: `UPDATE session SET title = '${title}'` });
-const selectTitle = (): unknown =>
-  database.$client.prepare('SELECT title FROM session').get();
+
+const selectTitle = ():
+  | Pick<typeof session.$inferSelect, 'title'>
+  | undefined => database.select({ title: session.title }).from(session).get();
 
 beforeEach((): void => {
   ({ database, remove: removeDatabase } = openTestDatabase());

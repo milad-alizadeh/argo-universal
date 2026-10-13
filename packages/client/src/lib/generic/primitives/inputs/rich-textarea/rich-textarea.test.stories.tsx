@@ -20,7 +20,9 @@ const meta = {
     await settleViewport(layoutWidths.wide);
   },
 } satisfies Meta<typeof RichTextareaExample>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // Lexical edits from real key events, so these stories type through the browser, not simulated events.
@@ -52,25 +54,33 @@ function typedMark({
     },
   };
 }
+
 export const TypedBold = typedMark({ typed: '**Ship** it' });
+
 export const TypedItalic = typedMark({ typed: '_Ship_ it' });
+
 export const TypedStrikethrough = typedMark({
   typed: '~Ship~ it',
   sent: '~~Ship~~ it',
 });
+
 export const TypedDoubleTildeStrikethrough = typedMark({
   typed: '~~Ship~~ it',
 });
+
 export const TypedInlineCode = typedMark({ typed: '`Ship` it' });
+
 // Lexical's other spellings work as typed and are sent in the Feed's spelling.
 export const TypedStarItalic = typedMark({
   typed: '*Ship* it',
   sent: '_Ship_ it',
 });
+
 export const TypedUnderscoreBold = typedMark({
   typed: '__Ship__ it',
   sent: '**Ship** it',
 });
+
 export const TypedStarBoldItalic = typedMark({
   typed: '***Ship*** it',
   sent: '**_Ship_** it',
@@ -102,12 +112,16 @@ function shortcutMark({ keys, sent }: { keys: string; sent: string }): Story {
     },
   };
 }
+
 export const ShortcutBold = shortcutMark({ keys: 'b', sent: '**Ship**' });
+
 export const ShortcutItalic = shortcutMark({ keys: 'i', sent: '_Ship_' });
+
 export const ShortcutStrikethrough = shortcutMark({
   keys: '{Shift>}x{/Shift}',
   sent: '~~Ship~~',
 });
+
 export const ShortcutInlineCode = shortcutMark({ keys: 'e', sent: '`Ship`' });
 
 export const ReturnSends: Story = {

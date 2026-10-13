@@ -12,6 +12,7 @@ const pills = [
 
 function Pills(): React.JSX.Element {
   const [selected, setSelected] = useState<string>('all');
+
   return (
     <View className="flex-row items-center gap-1">
       {pills.map(({ value, ...pill }) => (
@@ -27,7 +28,9 @@ function Pills(): React.JSX.Element {
 }
 
 const meta = { title: 'Design System/Primitives/FilterPill' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

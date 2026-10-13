@@ -4,7 +4,9 @@ import { findFreePort } from '../../mocks/network/free-port.ts';
 
 // Frame-rate runs against the production web export, the same build e2e serves.
 const repositoryRoot = path.resolve(import.meta.dirname, '../..');
+
 process.env.ARGO_PERF_WEB_PORT ??= String(await findFreePort());
+
 const webPort = process.env.ARGO_PERF_WEB_PORT;
 
 export default defineConfig({

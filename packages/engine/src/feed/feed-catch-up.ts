@@ -5,9 +5,11 @@ import {
   readUnsavedRows,
   type FeedRowSources,
 } from './feed-catch-up-rows';
+
 export type { FeedRowSources } from './feed-catch-up-rows';
 
 const catchUpPageRows = 200;
+
 const everyRow = -1;
 
 // What a subscriber missed after its sync point, a page at a time, up to the revision captured when it subscribed.
@@ -35,7 +37,9 @@ export class FeedCatchUp {
 
   public readNextPage(): readonly SessionUpdate[] {
     this.pagesRead += 1;
+
     if (this.pagesRead === 1) return this.firstPage;
+
     return this.readPage();
   }
 
@@ -46,6 +50,7 @@ export class FeedCatchUp {
   // Rows whose change up to the high-water mark a later page could no longer see, because they changed again past it.
   public readMovedRows(): SessionUpdate[] {
     if (this.fitsOnePage) return [];
+
     return readChangedRows(this.sources, this.sessionId, {
       stored: readStoredRows(this.sources.database, this.sessionId, {
         after: this.highWaterMark,
@@ -62,18 +67,23 @@ export class FeedCatchUp {
   // A page ends at its last stored row, so a stored row whose newer copy is not saved yet does not end the catch-up early.
   private readPage(): readonly SessionUpdate[] {
     let page: SessionUpdate[] = [];
+
     while (page.length === 0 && !this.isComplete()) {
       page = this.readStoredPage();
     }
+
     return page;
   }
   private readStoredPage(): SessionUpdate[] {
     const range = { after: this.cursor, through: this.highWaterMark };
+
     const stored = readStoredRows(this.sources.database, this.sessionId, {
       ...range,
       limit: catchUpPageRows,
     });
+
     this.cursor = this.pageEnd(stored);
+
     return readChangedRows(this.sources, this.sessionId, {
       stored,
       range: { ...range, through: this.cursor },
@@ -82,7 +92,9 @@ export class FeedCatchUp {
 
   private pageEnd(stored: SessionUpdate[]): number {
     const last = stored.at(-1);
+
     if (stored.length < catchUpPageRows || !last) return this.highWaterMark;
+
     return last.revision;
   }
 }

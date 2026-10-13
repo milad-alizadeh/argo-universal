@@ -8,11 +8,13 @@ import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 import { customAnswer, customValue } from './elicitation-answers';
 
 type ModelProps = { model: QuestionModel };
+
 type MarkProps = { selected: boolean; multiple: boolean };
 
 export function CustomAnswer({ model }: ModelProps): ReactElement {
   const custom = customAnswer(model);
   const wide = useContentWide();
+
   return (
     <View className={customRowClassName(wide, custom)}>
       <CustomMark selected={!!custom} multiple={model.question.multiple} />

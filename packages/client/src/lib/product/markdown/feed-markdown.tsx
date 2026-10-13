@@ -24,6 +24,7 @@ export const FeedMarkdown = memo(function FeedMarkdown({
   variant = 'feed',
 }: FeedMarkdownProps) {
   const tokens = useMemo(() => lexer(text), [text]);
+
   return (
     <MarkdownVariant.Provider value={variant}>
       <View className={blockGaps[variant]}>

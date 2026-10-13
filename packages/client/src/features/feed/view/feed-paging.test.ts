@@ -8,10 +8,12 @@ describe('mergeOlderPage', () => {
       emptyFeed,
       page(streamed.rows, 9, { limit: 1 }),
     );
+
     const older = {
       ...page(streamed.rows, 9, { before: feed.startCursor ?? 0 }),
       epoch: 4,
     };
+
     expect(mergeOlderPage(feed, older)).toBe(feed);
   });
 
@@ -20,6 +22,7 @@ describe('mergeOlderPage', () => {
       emptyFeed,
       page(streamed.rows, 9, { limit: 1 }),
     );
+
     const tail = { ...page(streamed.rows, 12), epoch: 2, staleCursor: true };
     expect(mergeOlderPage(feed, tail)).toEqual(
       mergeNewestPage(emptyFeed, tail),

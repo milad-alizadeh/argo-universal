@@ -1,7 +1,9 @@
 import type { ACPAgent } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { resolveInstallRecipe } from './install/materialization/recipe';
+
 const packageName = 'example-agent';
+
 const entry: ACPAgent = {
   id: packageName,
   name: 'Example Agent',
@@ -10,6 +12,7 @@ const entry: ACPAgent = {
   license_url: 'https://example.org/license',
   distribution: { npx: { package: packageName } },
 };
+
 it.each([
   {
     kind: 'npx',
@@ -40,6 +43,7 @@ it.each([
     ).toMatchObject({ package: fixture.pinned, version: fixture.version });
   },
 );
+
 it.each([
   { kind: 'npx', package: 'example-agent@1.2.3+build.1' },
   { kind: 'uvx', package: 'example-agent==1.2' },
@@ -56,6 +60,7 @@ it.each([
     }),
   ).toMatchObject({ package: fixture.package });
 });
+
 it.each([
   'example-agent@latest',
   'example-agent==1.2.*',
@@ -72,6 +77,7 @@ it.each([
     }),
   ).toThrow(/Registry package/);
 });
+
 it.each([
   'example-agent@latest',
   'example-agent@^1.2.3',

@@ -29,6 +29,7 @@ const settingsIndexOptions = {
 export default function SettingsLayout(): React.JSX.Element {
   // A wide window draws the list in the sidebar and one page beside it, so nothing stacks.
   if (useWide()) return <Slot />;
+
   return (
     <PhoneStack>
       <Stack.Screen name="index" options={settingsIndexOptions} />

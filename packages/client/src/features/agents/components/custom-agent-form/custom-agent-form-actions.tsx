@@ -41,6 +41,7 @@ function CancelButton({ disabled, onPress }: CancelProps): React.JSX.Element {
 
 function SubmitButton(props: ActionProps): React.JSX.Element {
   const canSubmit = useStore(props.form.store, (state) => state.canSubmit);
+
   return (
     <Button
       size="sm"

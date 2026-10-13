@@ -19,12 +19,14 @@ export type AcpSessionOpening =
   | { method: 'session/new'; params: NewSessionRequest }
   | { method: 'session/load'; params: LoadSessionRequest }
   | { method: 'session/resume'; params: ResumeSessionRequest };
+
 export type AcpSessionDestination = {
   update: (notification: SessionNotification) => undefined;
-  failed: (error: unknown) => void;
+  failed: (cause: unknown) => void;
   requestPermission: ClientRequestHandlersByMethod['session/request_permission'];
   createElicitation: ClientRequestHandlersByMethod['elicitation/create'];
 };
+
 export type AcpSessionLease = {
   agent: ClientContext;
   sessionId: SessionId;
@@ -33,23 +35,27 @@ export type AcpSessionLease = {
   close: () => Promise<void>;
   readonly released: Promise<void>;
 };
+
 export type AcpOpenInput = {
   launch: AgentLaunch;
   opening: AcpSessionOpening;
   destination: AcpSessionDestination;
   signal?: AbortSignal;
 };
+
 export type AcpProcess = {
   stream: Stream;
   exited: Promise<void>;
   terminate: () => Promise<void>;
 };
+
 export type AcpResourceInput = {
   launchLoginTerminal?: LaunchLoginTerminal;
   launchProcess?: (launch: AgentLaunch) => Promise<AcpProcess>;
   closeTimeoutMs?: number;
   releaseTimeoutMs?: number;
 };
+
 export type AcpResources = {
   isAgentInUse: (agentId: string) => boolean;
   open: (input: AcpOpenInput) => Promise<AcpSessionLease>;

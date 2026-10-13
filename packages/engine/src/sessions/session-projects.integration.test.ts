@@ -35,9 +35,11 @@ it('lists local branches with the current one, and null when HEAD is detached', 
 
 it('defaults the checkout choice to a worktree from the current branch, and the main checkout when HEAD is detached', async (): Promise<void> => {
   const { caller, git } = await startSessionJourney();
+
   const readCheckoutChoice = async (): Promise<
     { type: 'worktree'; baseBranch: string } | { type: 'main' } | undefined
   > => (await caller.projects.list())[0]?.checkoutChoice;
+
   expect(await readCheckoutChoice()).toEqual({
     type: 'worktree',
     baseBranch: 'main',

@@ -7,7 +7,9 @@ import {
 } from '#mocks/agent-login';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 import { createLoginAgentOpener } from './index';
+
 const loginInitialization = loginScenario().initialize;
+
 const methodId = 'opaque-subscription';
 
 it('reports the effective subscription after an initially logged-out Agent authenticates', async () => {
@@ -21,6 +23,7 @@ it('reports the effective subscription after an initially logged-out Agent authe
       authenticate: [{ steps: [loginStatusStep(reportedSubscription)] }],
     },
   });
+
   const login = await createLoginAgentOpener(peer)(
     { name: 'Agent', launch: resourceLaunch },
     {
@@ -28,6 +31,7 @@ it('reports the effective subscription after an initially logged-out Agent authe
       createElicitation: async () => ({ action: 'cancel' }),
     },
   );
+
   await login.authenticate(methodId);
   expect(await login.checkReady()).toEqual({ status: 'ready' });
   await login.close();
@@ -46,6 +50,7 @@ it.each(['api_key', 'gateway', 'external'] as const)(
         ],
       },
     });
+
     const login = await createLoginAgentOpener(peer)(
       { name: 'Agent', launch: resourceLaunch },
       {
@@ -53,6 +58,7 @@ it.each(['api_key', 'gateway', 'external'] as const)(
         createElicitation: async () => ({ action: 'cancel' }),
       },
     );
+
     await login.authenticate(methodId);
     expect(await login.checkReady()).toMatchObject({
       status: 'account-rejected',
@@ -88,6 +94,7 @@ it('does not reuse a prior verified account after rejecting an unknown effective
       ],
     },
   });
+
   const login = await createLoginAgentOpener(peer)(
     { name: 'Agent', launch: resourceLaunch },
     {
@@ -95,6 +102,7 @@ it('does not reuse a prior verified account after rejecting an unknown effective
       createElicitation: async () => ({ action: 'cancel' }),
     },
   );
+
   await login.authenticate(methodId);
   expect(await login.checkReady()).toMatchObject({
     status: 'account-rejected',

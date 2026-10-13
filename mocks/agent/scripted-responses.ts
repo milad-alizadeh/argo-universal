@@ -25,15 +25,17 @@ export type ScriptedResponse<Method extends AgentRequestMethod> = {
   steps?: readonly ScriptedStep[];
   waitFor?: Promise<void>;
   received?: { resolve: (params: AgentRequestParamsByMethod[Method]) => void };
-  requests?: { push: (params: AgentRequestParamsByMethod[Method]) => unknown };
+  requests?: { push: (params: AgentRequestParamsByMethod[Method]) => void };
 };
+
 export type ScriptedResponses = {
   [Method in AgentRequestMethod]?: readonly ScriptedResponse<Method>[];
 };
+
 export type ScriptedNotifications = {
   'session/cancel'?: {
     received?: { resolve: (params: CancelNotification) => void };
-    requests?: { push: (params: CancelNotification) => unknown };
+    requests?: { push: (params: CancelNotification) => void };
   };
 };
 
@@ -46,25 +48,32 @@ export const responseSequence = <Method extends AgentRequestMethod>(
 ) => ScriptedResponse<Method> | undefined) => {
   const positions =
     sequencePositions.get(responses) ?? new Map<string, number>();
+
   sequencePositions.set(responses, positions);
+
   return (params) => selectResponse({ responses, positions, params });
 };
+
 type ResponseSelection<Method extends AgentRequestMethod> = {
   responses: readonly ScriptedResponse<Method>[];
   positions: Map<string, number>;
   params: AgentRequestParamsByMethod[Method];
 };
+
 const selectResponse = <Method extends AgentRequestMethod>({
   responses,
   positions,
   params,
 }: ResponseSelection<Method>): ScriptedResponse<Method> | undefined => {
   const sessionId = 'sessionId' in params ? String(params['sessionId']) : '';
+
   const matched = responses.filter(
     (response) => !response.sessionId || response.sessionId === sessionId,
   );
+
   const position = positions.get(sessionId) ?? 0;
   positions.set(sessionId, position + 1);
+
   return matched[Math.min(position, matched.length - 1)];
 };
 
@@ -96,6 +105,7 @@ export const playResponse = async <Method extends AgentRequestMethod>(
   const selected = response ?? {};
   const { stopReason } = await runTurn(selected.steps ?? [], turn);
   await selected.waitFor;
+
   return finishResponse({ response, context, turn }, stopReason);
 };
 
@@ -104,6 +114,7 @@ const responseError = (
 ): RequestError => {
   if (typeof error === 'string')
     return RequestError.internalError(undefined, error);
+
   return new RequestError(error.code, error.message, error.data);
 };
 
@@ -115,29 +126,36 @@ const observeResponse = <Method extends AgentRequestMethod>(
   response.requests?.push(params);
   observeReceived(response, params);
 };
+
 type ResponsePlayback<Method extends AgentRequestMethod> = {
   response: ScriptedResponse<Method> | undefined;
   context: AgentRequestContext<AgentRequestParamsByMethod[Method]>;
   turn: ScriptedTurn;
 };
+
 type PlayedResponse<Method extends AgentRequestMethod> = {
   result: AgentRequestResponsesByMethod[Method] | undefined;
   stopReason: PromptResponse['stopReason'];
 };
+
 const finishResponse = async <Method extends AgentRequestMethod>(
   { response, context, turn }: ResponsePlayback<Method>,
   stopReason: PromptResponse['stopReason'],
 ): Promise<PlayedResponse<Method>> => {
   if (!response) return { result: undefined, stopReason };
   rejectResponseError(response);
+
   if ('rawResult' in response) return deliverRawResult(response, context, turn);
+
   return { result: await response.result, stopReason };
 };
+
 const rejectResponseError = <Method extends AgentRequestMethod>(
   response: Pick<ScriptedResponse<Method>, 'error'>,
 ): void => {
   if (response.error) throw responseError(response.error);
 };
+
 const observeReceived = <Method extends AgentRequestMethod>(
   response: Pick<ScriptedResponse<Method>, 'received'>,
   params: AgentRequestParamsByMethod[Method],

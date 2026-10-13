@@ -20,5 +20,6 @@ export function composeEngine({ report, ...input }: EnginePorts): EngineActor {
         },
       })
     : engineMachine;
+
   return createActor(machine, { input });
 }

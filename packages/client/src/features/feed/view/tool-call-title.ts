@@ -7,11 +7,13 @@ import {
 
 function actionPaths(action: CommandAction): string[] {
   if (!['read', 'search', 'list'].includes(action.type)) return [];
+
   return action.path ? [action.path] : [];
 }
 
 function readPath(row: ToolCallUpdate): string | undefined {
   if (row.kind !== 'read') return undefined;
+
   return firstLocation(row);
 }
 
@@ -20,16 +22,19 @@ export function toolCallTitlePaths(
   awaitingApproval = false,
 ): string[] {
   if (awaitingApproval) return [];
+
   return pathsFor(row);
 }
 
 function pathsFor(row: ToolCallUpdate): string[] {
   const actions = knownCommandActions(row);
+
   return actions.length ? actions.flatMap(actionPaths) : impliedReadPaths(row);
 }
 
 function impliedReadPaths(row: ToolCallUpdate): string[] {
   const path = readPath(row);
+
   return path ? [path] : [];
 }
 
@@ -57,12 +62,15 @@ function actionTitle(action: CommandAction, fallback: string): string {
 
 function hasDescription(row: ToolCallUpdate): boolean {
   const terminal = row.content.find((content) => content.type === 'terminal');
+
   return Boolean(row.title) && row.title !== terminal?.command;
 }
 
 function commandTitle(row: ToolCallUpdate): string {
   if (hasDescription(row)) return row.title;
+
   if (isToolCallRunning(row)) return 'Running command';
+
   return settledCommandTitle(row);
 }
 
@@ -72,6 +80,7 @@ function settledCommandTitle(row: ToolCallUpdate): string {
 
 function impliedToolTitle(row: ToolCallUpdate): string {
   const path = readPath(row);
+
   return path ? `Read ${path}` : commandTitle(row);
 }
 
@@ -80,11 +89,13 @@ export function toolCallTitle(
   awaitingApproval = false,
 ): string {
   if (awaitingApproval) return row.title;
+
   return titleFor(row);
 }
 
 function titleFor(row: ToolCallUpdate): string {
   const actions = knownCommandActions(row);
+
   return actions.length
     ? actions.map((action) => actionTitle(action, row.title)).join(', ')
     : impliedToolTitle(row);

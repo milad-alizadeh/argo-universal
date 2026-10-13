@@ -17,7 +17,9 @@ export function RowLeading(
   props: Pick<ListItemProps, 'icon' | 'loading' | 'leading'>,
 ): React.JSX.Element | null {
   const width = useIconPixels('row');
+
   if (props.loading) return <ProgressView modifiers={[frame({ width })]} />;
+
   return <NativeRowGlyph {...props} />;
 }
 
@@ -42,6 +44,7 @@ export function RowLabel(props: ListItemProps): React.JSX.Element {
 function RowTitleText(props: ListItemProps): React.JSX.Element {
   const bodyModifiers = useSwiftUITextModifiers(titleRole(props.code), 'row');
   const color = useTitleColor(props.tone);
+
   return <Text modifiers={[...bodyModifiers, color]}>{props.title}</Text>;
 }
 
@@ -50,6 +53,7 @@ function RowSubtitleText({
 }: Required<Pick<ListItemProps, 'subtitle'>>): React.JSX.Element {
   const secondaryModifiers = useSwiftUITextModifiers(subtitleRole(subtitle));
   const muted = useRowColor('secondary');
+
   return (
     <Text modifiers={[...secondaryModifiers, muted]}>{subtitle.text}</Text>
   );
@@ -60,6 +64,7 @@ function useTitleColor(
 ): ReturnType<typeof foregroundStyle> {
   const primary = useRowColor('primary');
   const toned = useToneColor(tone);
+
   return toned ? foregroundStyle(toned) : primary;
 }
 
@@ -68,5 +73,6 @@ export function useRowColor(
 ): ReturnType<typeof foregroundStyle> {
   const { foreground, mutedForeground } = useNativeTheme().colors;
   const color = role === 'primary' ? foreground : mutedForeground;
+
   return foregroundStyle(color ?? { type: 'hierarchical', style: role });
 }

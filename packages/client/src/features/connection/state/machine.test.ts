@@ -34,6 +34,7 @@ import {
 } from './connection-model.mocks';
 
 let connection: ConnectionActor;
+
 let modelClock: ModelClock;
 
 beforeEach(() => {
@@ -49,8 +50,9 @@ afterEach(() => {
 const isDown = (snapshot: ConnectionSnapshot): boolean =>
   ['reconnecting', 'offline'].includes(linkState(snapshot));
 
+// The path's first step starts the Connection; every other event has its own executor.
 const executors: Record<
-  string,
+  ConnectionGraphEvent['type'] | 'xstate.init',
   EventExecutor<ConnectionSnapshot, ConnectionGraphEvent>
 > = {
   'xstate.init': () => {
@@ -62,6 +64,7 @@ const executors: Record<
       refetches: harness.refetches,
       down: isDown(connection.getSnapshot()),
     };
+
     harness.watcher.send({ type: connectionOpenedEvent });
     expect(harness.refetches).toBe(before.refetches + (before.down ? 1 : 0));
   },
@@ -100,14 +103,12 @@ const executors: Record<
 };
 
 const walk = async (step: ConnectionPath['steps'][number]): Promise<void> => {
-  const execute = executors[step.event.type];
-  if (!execute) throw new Error(`No executor for ${step.event.type}`);
-  await execute(step);
+  await executors[step.event.type](step);
 };
 
-const observed = (
-  snapshot: ConnectionSnapshot,
-): { value: ConnectionSnapshot['value']; attempted: boolean } => ({
+type ObservedStep = { value: ConnectionSnapshot['value']; attempted: boolean };
+
+const observed = (snapshot: ConnectionSnapshot): ObservedStep => ({
   value: snapshot.value,
   attempted: snapshot.context.attempts > 0,
 });

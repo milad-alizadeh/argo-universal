@@ -4,6 +4,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 // Main passes the Server URL in additionalArguments; a sandboxed preload can read only process.argv.
 const serverUrlPrefix = '--server-url=';
+
 const serverUrl =
   process.argv
     .find((argument): boolean => argument.startsWith(serverUrlPrefix))

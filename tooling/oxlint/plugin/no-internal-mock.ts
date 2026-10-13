@@ -1,4 +1,4 @@
-import type { ESTree } from '@oxlint/plugins';
+import type { ESTree, Visitor } from '@oxlint/plugins';
 import { defineRule } from '@oxlint/plugins';
 import { isMember, stringValue } from './syntax.ts';
 
@@ -6,6 +6,7 @@ const mockCalls = [
   { object: 'vi', property: 'mock' },
   { object: 'vi', property: 'doMock' },
 ];
+
 const ownModule = /^(?:\.|@repo\/)/;
 
 const isMockCall = (node: ESTree.CallExpression): boolean =>
@@ -19,11 +20,10 @@ export const noInternalMock = defineRule({
         'Pass a fake through the port (machine.provide or a parameter) instead of vi.mock on an own module.',
     },
   },
-  create: (
-    context,
-  ): { CallExpression: (node: ESTree.CallExpression) => void } => ({
+  create: (context): Visitor => ({
     CallExpression: (node): void => {
       const path = stringValue(node.arguments[0]);
+
       if (isMockCall(node) && ownModule.test(path))
         context.report({ node, messageId: 'noInternalMock' });
     },

@@ -13,6 +13,7 @@ const meta = {
 } satisfies Meta<typeof ConnectionMock>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ClosesItsConnectionOnUnmount: Story = {

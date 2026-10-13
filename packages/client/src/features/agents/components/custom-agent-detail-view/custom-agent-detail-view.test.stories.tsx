@@ -19,7 +19,9 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof CustomAgentDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ShowsTheSavedLaunch: Story = {
@@ -30,6 +32,7 @@ export const ShowsTheSavedLaunch: Story = {
     await expect(
       canvas.getByText(customAgentDefinition.executable),
     ).toBeVisible();
+
     for (const argument of customAgentDefinition.args)
       await expect(canvas.getByText(argument)).toBeVisible();
     await expect(canvas.getByText(answered)).toBeVisible();

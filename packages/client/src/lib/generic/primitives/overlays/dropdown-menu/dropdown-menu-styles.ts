@@ -12,12 +12,14 @@ import {
 
 const itemClassName =
   'active:bg-accent group relative flex flex-row items-center gap-2 rounded-xl px-2 py-2 sm:py-1.5';
+
 type ItemStyle = {
   className?: string;
   inset?: boolean;
   variant?: 'default' | 'destructive';
   disabled?: boolean | null;
 };
+
 const destructiveItemClassName = cn(
   'active:bg-destructive/10 dark:active:bg-destructive/20',
   Platform.select({
@@ -50,6 +52,7 @@ export function dropdownItemTextClassName(
 
 const contentClassName =
   'bg-popover border-border min-w-[8rem] overflow-hidden rounded-2xl web:shadow-card border p-1 shadow-lg shadow-black/5';
+
 const contentWebClassName =
   'animate-in fade-in-0 zoom-in-95 max-h-(--radix-context-menu-content-available-height) origin-(--radix-context-menu-content-transform-origin) z-50 cursor-default';
 
@@ -78,6 +81,7 @@ export function dropdownOverlayStyle(
   const native = overlayStyle
     ? StyleSheet.flatten([StyleSheet.absoluteFill, overlayStyle])
     : StyleSheet.absoluteFill;
+
   return Platform.select({ web: overlayStyle, native });
 }
 

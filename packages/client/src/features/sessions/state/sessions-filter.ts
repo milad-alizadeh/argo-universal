@@ -11,6 +11,7 @@ export interface SessionsFilter {
 export function useSessionsFilter(): SessionsFilter {
   const [query, setQuery] = useState('');
   const [archived, setArchived] = useState(false);
+
   return {
     query,
     onQueryChange: setQuery,

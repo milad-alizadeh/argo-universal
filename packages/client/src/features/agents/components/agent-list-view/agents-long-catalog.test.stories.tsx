@@ -22,11 +22,15 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof AgentListView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const firstName = installedAgents[0]?.name;
+
 const lastLongAgent = longCatalog.agents.at(-1)?.entry.name;
+
 if (
   !firstName ||
   !lastLongAgent ||
@@ -51,9 +55,11 @@ export const MountsOnlyTheRowsInViewOfALongCatalog: Story = {
 export const ScrollsToTheLastAgentOfALongCatalog: Story = {
   play: async ({ canvas }) => {
     const list = await canvas.findByTestId(agentsCatalogTestId);
+
     const scrollToEnd = (): void => {
       list.scrollTop = list.scrollHeight;
     };
+
     await waitFor(
       async () => {
         scrollToEnd();

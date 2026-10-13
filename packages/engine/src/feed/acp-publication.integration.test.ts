@@ -51,10 +51,13 @@ it('all wire-earlier content precedes idle and text appends keep the actual bloc
       },
     ]),
   );
+
   const created = await host.caller.session.new(emptySessionInput);
+
   const stream = (
     await host.caller.feed.subscribe({ ...created, after: null })
   )[Symbol.asyncIterator]();
+
   await stream.next();
   await host.caller.session.prompt({
     ...created,
@@ -91,11 +94,14 @@ it('all wire-earlier content precedes idle and text appends keep the actual bloc
 it('owned unsolicited updates remain visible with a null Turn while idle', async () => {
   const host = await startAcpEngine();
   const created = await host.caller.session.new(emptySessionInput);
+
   const stream = (
     await host.caller.feed.subscribe({ ...created, after: null })
   )[Symbol.asyncIterator]();
+
   await stream.next();
   const process = host.agent.processes[0];
+
   if (!process) throw new Error('Process is missing');
   await process.play(
     feedScenario([

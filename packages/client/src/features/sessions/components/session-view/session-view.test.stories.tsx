@@ -24,6 +24,7 @@ import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { emptySession, idleSession, runningHeader } from './session-view.mocks';
 
 const meta = { ...sessionViewTestMeta, title: 'Tests/SessionView' };
+
 export default meta;
 
 export const RunningTurn: Story = {
@@ -32,6 +33,7 @@ export const RunningTurn: Story = {
       await expect(
         await canvas.findByRole('heading', { name: /^Think briefly first/ }),
       ).toBeVisible();
+
       if (wide) {
         await expect(canvas.getByText('Running')).toBeVisible();
         await expect(canvas.getByText('4m 12s')).toBeVisible();
@@ -42,6 +44,7 @@ export const RunningTurn: Story = {
         ).toBeVisible();
         await expect(canvas.queryByText('Running')).toBeNull();
       }
+
       await expect(canvas.getByRole('button', { name: 'More' })).toBeVisible();
       await expect(canvas.getByRole('status')).toHaveTextContent(
         runningHeader.text,
@@ -66,10 +69,12 @@ export const Idle: Story = {
           name: /^Without using any tools/,
         }),
       ).toBeVisible();
+
       if (wide) {
         await expect(canvas.getByText('Idle')).toBeVisible();
         await expect(canvas.queryByText(/^for /)).toBeNull();
       }
+
       await expect(canvas.queryByRole('status')).toBeNull();
       await expect(canvas.queryByRole('button', { name: 'Stop' })).toBeNull();
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeVisible();
@@ -93,7 +98,9 @@ export const HeaderFeedAndComposerShareOneLayout: Story = {
 };
 
 export const MergeWaitsForChecks = mergeWaitsForChecks;
+
 export const MergesWhenChecksPass = mergesWhenChecksPass;
+
 export const ListsEveryPullRequest = listsEveryPullRequest;
 
 export const EmptyFeed: Story = {
@@ -140,12 +147,15 @@ export const Opening: Story = {
 };
 
 export const FailedWithReason = failedWithReason;
+
 export const FailedWithoutReason = failedWithoutReason;
 
 export const AgentUnavailableFirstAgent = agentUnavailable(0);
+
 export const AgentUnavailableSecondAgent = agentUnavailable(1);
 
 export const ConfigurationFirstAgent = configuration(0);
+
 export const ConfigurationSecondAgent = configuration(1);
 
 export const FeedReflowsAfterThePaneCollapses =

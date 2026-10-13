@@ -12,6 +12,7 @@ export function PhoneSectionScreen({
   section,
 }: PhoneSectionScreenProps): React.JSX.Element {
   const { phoneHeader, list } = useSectionList(section);
+
   return (
     <PhoneSectionView section={section} header={phoneHeader} list={list} />
   );

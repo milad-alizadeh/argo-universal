@@ -20,7 +20,9 @@ const meta = {
     await settleViewport(layoutWidths.wide);
   },
 } satisfies Meta<typeof RichTextareaExample>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 /*
@@ -32,6 +34,7 @@ interface TypedBlock {
   sent: string;
   shown: string;
 }
+
 function typedBlock({ typed, sent, shown }: TypedBlock): Story {
   return {
     play: async ({ canvas, args }) => {
@@ -45,32 +48,39 @@ function typedBlock({ typed, sent, shown }: TypedBlock): Story {
     },
   };
 }
+
 const twoItems = 'First\nSecond';
+
 export const TypedBulletedList = typedBlock({
   typed: '- First{Enter}Second',
   sent: '- First\n- Second',
   shown: twoItems,
 });
+
 export const TypedStarBulletedList = typedBlock({
   typed: '* First{Enter}Second',
   sent: '* First\n* Second',
   shown: twoItems,
 });
+
 export const TypedNumberedList = typedBlock({
   typed: '1. First{Enter}Second',
   sent: '1. First\n2. Second',
   shown: twoItems,
 });
+
 export const ReturnOnAnEmptyItemLeavesTheList = typedBlock({
   typed: '- First{Enter}{Enter}After',
   sent: '- First\n\nAfter',
   shown: 'First\n\nAfter',
 });
+
 export const TabNestsAndShiftTabUnnests = typedBlock({
   typed: '- Plan{Enter}{Tab}Draft{Enter}{Shift>}{Tab}{/Shift}Ship',
   sent: '- Plan\n    - Draft\n- Ship',
   shown: 'Plan\nDraft\nShip',
 });
+
 /*
  * The item becomes plain text and keeps its text. Lexical reads a caret move from the browser's
  * selectionchange event, so Backspace waits for that event after the last move.
@@ -80,9 +90,11 @@ export const BackspaceAtAnItemStartLeavesTheList: Story = {
     const field = canvas.getByRole('textbox', { name: label });
     await userEvent.type(field, '- Plain');
     await userEvent.keyboard('{ArrowLeft}'.repeat(4));
+
     const caretMoved = new Promise((resolve) =>
       document.addEventListener('selectionchange', resolve, { once: true }),
     );
+
     await userEvent.keyboard('{ArrowLeft}');
     await caretMoved;
     await userEvent.keyboard('{Backspace}');
@@ -92,16 +104,19 @@ export const BackspaceAtAnItemStartLeavesTheList: Story = {
     await expect(canvas.queryByRole('list')).not.toBeInTheDocument();
   },
 };
+
 export const TypedQuote = typedBlock({
   typed: '> Keep it readable',
   sent: '> Keep it readable',
   shown: 'Keep it readable',
 });
+
 export const TypedCodeBlock = typedBlock({
   typed: '``` const a = 1;{Enter}const b = 2;',
   sent: '```\nconst a = 1;\nconst b = 2;\n```',
   shown: 'const a = 1;\nconst b = 2;',
 });
+
 export const ThreeReturnsLeaveTheCodeBlock = typedBlock({
   typed: '``` pnpm test{Enter}{Enter}{Enter}After',
   sent: '```\npnpm test\n```\n\nAfter',
@@ -123,6 +138,7 @@ function shortcutCodeBlock(selectFirst: boolean): Story {
     play: async ({ canvas, args }) => {
       const field = canvas.getByRole('textbox', { name: label });
       await userEvent.type(field, 'pnpm test');
+
       if (selectFirst)
         await userEvent.keyboard(`{${modifier}>}a{/${modifier}}`);
       await userEvent.keyboard(`{${modifier}>}{Shift>}c{/Shift}{/${modifier}}`);
@@ -135,5 +151,7 @@ function shortcutCodeBlock(selectFirst: boolean): Story {
     },
   };
 }
+
 export const ShortcutCodeBlock = shortcutCodeBlock(true);
+
 export const ShortcutCodeBlockAtTheCaret = shortcutCodeBlock(false);

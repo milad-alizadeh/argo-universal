@@ -10,10 +10,13 @@ import { ConfigurationChoice } from './configuration-choice';
 import { configurationIcon, choiceMetadata } from './configuration-values';
 import { isDangerous } from './configuration-values';
 import type { ModeContentsProps } from './mode-types';
+
 interface ModeChoiceProps extends ModeContentsProps {
   choice: SessionConfigSelectOption;
 }
+
 const destructiveTextClassName = 'text-destructive';
+
 export function ModeContents(props: ModeContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-sidebar">
@@ -27,6 +30,7 @@ export function ModeContents(props: ModeContentsProps): React.JSX.Element {
     </View>
   );
 }
+
 function ModeChoice(props: ModeChoiceProps): React.JSX.Element {
   return (
     <ConfigurationChoice
@@ -35,6 +39,7 @@ function ModeChoice(props: ModeChoiceProps): React.JSX.Element {
     />
   );
 }
+
 function modeChoiceProps({
   configuration,
   mode,
@@ -49,11 +54,13 @@ function modeChoiceProps({
     onPress: () => selectMode({ configuration, mode, close, choice }),
   };
 }
+
 function ModeChoiceIcon(
   props: Pick<ModeChoiceProps, 'choice'>,
 ): React.JSX.Element {
   return <Icon {...modeChoiceIconProps(props.choice)} />;
 }
+
 function modeChoiceIconProps(
   choice: SessionConfigSelectOption,
 ): React.ComponentProps<typeof Icon> {
@@ -66,6 +73,7 @@ function modeChoiceIconProps(
     ),
   };
 }
+
 function selectMode({
   configuration,
   mode,

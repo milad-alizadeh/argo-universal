@@ -90,6 +90,7 @@ function CommandOutput(
 
 function CommandDisclosure(props: CommandDisclosureProps): React.JSX.Element {
   const state = commandState(props);
+
   return (
     <ToolCallDisclosure
       {...toolCallDisclosureProps(props.row, props.awaitingApproval)}
@@ -105,9 +106,11 @@ function CommandDisclosure(props: CommandDisclosureProps): React.JSX.Element {
 
 export function CommandRow(props: CommandRowProps): React.JSX.Element | null {
   const duration = useToolCallDuration(props.row, props.now);
+
   const terminal = props.row.content.find(
     (content) => content.type === 'terminal',
   );
+
   return terminal ? (
     <CommandDisclosure {...props} terminal={terminal} duration={duration} />
   ) : null;
