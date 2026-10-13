@@ -40,25 +40,32 @@ function PickerRowContent<Value extends string>(
   const row = inListItem || props.appearance === 'row';
   return createElement(
     Row,
-    { verticalAlignment: 'center', modifiers: rowModifiers(row) },
-    <PickerRowLabels {...props} accessory={row} />,
+    { verticalAlignment: 'center', modifiers: rowModifiers(row, inListItem) },
+    <PickerRowLabels {...props} accessory={row} hug={inListItem} />,
   );
 }
 
 function PickerRowLabels<Value extends string>(
-  props: PickerProps<Value> & { accessory: boolean },
+  props: PickerProps<Value> & { accessory: boolean; hug: boolean },
 ): React.JSX.Element {
   return createElement(
     Column,
-    { modifiers: [weight(1)], verticalArrangement: { spacedBy: 4 } },
+    {
+      modifiers: props.hug ? [] : [weight(1)],
+      verticalArrangement: { spacedBy: 4 },
+    },
     !props.accessory && <PickerRowLabel {...props} />,
     <PickerRowValue {...props} />,
   );
 }
 
-function rowModifiers(accessory: boolean): ReturnType<typeof padding>[] {
+// A field row spans its form; in a ListItem's trailing slot it hugs its value, as its Host does.
+function rowModifiers(
+  accessory: boolean,
+  hug: boolean,
+): ReturnType<typeof padding>[] {
   return [
-    fillMaxWidth(),
+    ...(hug ? [] : [fillMaxWidth()]),
     defaultMinSize({ minHeight: accessory ? accessoryHeight : rowHeight }),
     padding(rowInset, rowPadding, rowInset, rowPadding),
   ];
