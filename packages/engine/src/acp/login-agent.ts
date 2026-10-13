@@ -9,24 +9,23 @@ import type {
   LoginAgentConnection,
   LoginAgentMethod,
   LoginAgentOutcome,
-  OpenLoginAgent,
 } from '../agents';
 import { ResourceCleanupError } from '../lib/resource-cleanup-error';
 import { AcpAuthenticationStatus } from './auth-status';
 import { createAgentClient } from './client';
 import { negotiateAcpInitialize } from './initialize';
-import { closeLoginProcess, loginCloseTimeoutMs } from './login-cleanup';
+import { closeLoginProcess } from './login-cleanup';
 import { loginElicitation } from './login-elicitation';
 import { loginMethods } from './login-methods';
 import { AcpLoginWire } from './login-wire';
-import { launchAcpProcess } from './process';
-import type { AcpProcess, AcpResourceInput } from './resource-types';
+import type { AcpProcess } from './resource-types';
 import { createAcpResponseReaders } from './response-readers';
 
 type LoginInput = {
   process: AcpProcess;
   callbacks: LoginAgentCallbacks;
-  closeTimeoutMs: number;
+  closeTimeoutMs?: number;
+  terminalSupported?: boolean;
 };
 const updateRejections = createRejectionCounter('ACP login updates');
 const rejectLoginUpdate = (notification: SessionNotification): undefined => {
@@ -36,13 +35,14 @@ const rejectLoginUpdate = (notification: SessionNotification): undefined => {
   );
 };
 
-class AcpLoginConnection {
+export class AcpLoginConnection {
   private readonly wire = new AcpLoginWire();
   private readonly status = new AcpAuthenticationStatus();
   private readonly readers = createAcpResponseReaders(
     createRejectionCounter('ACP login responses'),
   );
   private readonly connection: ClientConnection;
+  private methods: readonly LoginAgentMethod[] = [];
   private initialization: InitializeResponse | undefined;
   private closing: Promise<void> | undefined;
   private readonly abort = (): void => {
@@ -66,22 +66,24 @@ class AcpLoginConnection {
     this.initialization = await negotiateAcpInitialize(
       this.connection.agent,
       this.readers,
-      { url: {} },
+      { elicitation: { url: {} }, terminalAuth: this.input.terminalSupported },
     );
+    this.methods = this.offeredMethods();
     return {
-      methods: loginMethods(this.initialization),
+      methods: this.methods,
       authenticate: (methodId) => this.authenticate(methodId),
       checkReady: () => this.checkReady(),
       close: () => this.close(),
     };
   }
-  private offered(): readonly LoginAgentMethod[] {
-    return this.initialization ? loginMethods(this.initialization) : [];
+  private offeredMethods(): readonly LoginAgentMethod[] {
+    if (!this.initialization) return [];
+    return loginMethods(this.initialization, this.input.terminalSupported);
   }
   private requireMethod(methodId: string): void {
     this.input.callbacks.signal.throwIfAborted();
     if (this.closing) throw new Error('Login connection is closed');
-    if (!this.offered().some((method) => method.id === methodId))
+    if (!this.methods.some((method) => method.id === methodId))
       throw new Error('Authentication method is not supported');
   }
   private async dispatchAuthenticate(methodId: string): Promise<void> {
@@ -119,7 +121,7 @@ class AcpLoginConnection {
   }
 }
 
-const initializeOrClose = async (
+export const initializeOrClose = async (
   connection: AcpLoginConnection,
 ): Promise<LoginAgentConnection> => {
   try {
@@ -132,17 +134,3 @@ const initializeOrClose = async (
     throw error;
   }
 };
-export const createLoginAgentOpener =
-  (input: AcpResourceInput = {}): OpenLoginAgent =>
-  async (subject, callbacks) => {
-    callbacks.signal.throwIfAborted();
-    return initializeOrClose(
-      new AcpLoginConnection({
-        process: await (input.launchProcess ?? launchAcpProcess)(
-          subject.launch,
-        ),
-        callbacks,
-        closeTimeoutMs: input.closeTimeoutMs ?? loginCloseTimeoutMs,
-      }),
-    );
-  };

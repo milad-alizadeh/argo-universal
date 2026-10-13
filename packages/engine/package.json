@@ -22,6 +22,7 @@
     "ajv-formats": "catalog:",
     "drizzle-orm": "catalog:",
     "fflate": "catalog:",
+    "node-pty": "catalog:",
     "tar": "catalog:",
     "ws": "catalog:",
     "xstate": "catalog:",

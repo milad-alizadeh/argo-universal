@@ -302,6 +302,12 @@ catalogs:
     '@xstate/react':
       specifier: 6.1.0
       version: 6.1.0
+    '@xterm/addon-fit':
+      specifier: 0.11.0
+      version: 0.11.0
+    '@xterm/xterm':
+      specifier: 6.0.0
+      version: 6.0.0
     ajv:
       specifier: 8.20.0
       version: 8.20.0
@@ -401,6 +407,9 @@ catalogs:
     marked:
       specifier: 18.1.0
       version: 18.1.0
+    node-pty:
+      specifier: 1.1.0
+      version: 1.1.0
     oxfmt:
       specifier: 0.72.0
       version: 0.72.0
@@ -507,6 +516,7 @@ catalogs:
 patchedDependencies:
   '@expo/ui@57.0.22': c6abb4f6d4b115ddeffe329b3cc7405eb95551bc68e2e97f29d6af2ee34bdafa
   expo-symbols@57.0.3: 9c3b9701a16a729b6709e2b0b6787b8ffa592d54c505e0350c9fa79398fdc3e5
+  node-pty@1.1.0: 7d1011d673c499bcb613735c649b2e5ae78dc6430f35dd2d18f077fa6a7f5e01
   react-native@0.86.3: 48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1
   xstate@5.33.2: 515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759
 
@@ -887,6 +897,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1
+      node-pty:
+        specifier: 'catalog:'
+        version: 1.1.0(patch_hash=7d1011d673c499bcb613735c649b2e5ae78dc6430f35dd2d18f077fa6a7f5e01)
       playwright-bdd:
         specifier: 'catalog:'
         version: 9.2.1(@playwright/test@1.63.0)
@@ -1021,6 +1034,12 @@ importers:
       '@xstate/react':
         specifier: 'catalog:'
         version: 6.1.0(@types/react@19.2.18)(react@19.2.3)(xstate@5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759))
+      '@xterm/addon-fit':
+        specifier: 'catalog:'
+        version: 0.11.0
+      '@xterm/xterm':
+        specifier: 'catalog:'
+        version: 6.0.0
       ajv:
         specifier: 'catalog:'
         version: 8.20.0
@@ -1039,6 +1058,9 @@ importers:
       diff:
         specifier: 'catalog:'
         version: 9.0.0
+      expo:
+        specifier: 'catalog:'
+        version: 57.0.26(20d7116fd28de8d0bee1b55e844b7a77)
       expo-clipboard:
         specifier: 'catalog:'
         version: 57.0.2(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
@@ -1222,6 +1244,9 @@ importers:
       fflate:
         specifier: 'catalog:'
         version: 0.8.3
+      node-pty:
+        specifier: 'catalog:'
+        version: 1.1.0(patch_hash=7d1011d673c499bcb613735c649b2e5ae78dc6430f35dd2d18f077fa6a7f5e01)
       tar:
         specifier: 'catalog:'
         version: 7.5.22
@@ -5012,6 +5037,12 @@ packages:
       xstate:
         optional: true
 
+  '@xterm/addon-fit@0.11.0':
+    resolution: {integrity: sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g==}
+
+  '@xterm/xterm@6.0.0':
+    resolution: {integrity: sha512-TQwDdQGtwwDt+2cgKDLn0IRaSxYu1tSUjgKarSDkUM0ZNiSRXFpjxEsvc/Zgc5kq5omJ+V0a8/kIM2WD3sMOYg==}
+
   abbrev@4.0.0:
     resolution: {integrity: sha512-a1wflyaL0tHtJSmLSOVybYhy22vRih4eduhhrkcjgrWGnRfrZtovJ2FRjxuTtkkj47O/baf0R86QU5OuYpz8fA==}
     engines: {node: ^20.17.0 || >=22.9.0}
@@ -7450,6 +7481,9 @@ packages:
     resolution: {integrity: sha512-ymk4aIzxdPopw2giv8Fs1Ec6vybGkjmyxUwVqhkI4MCy2tVfXdkOGGWieWVjL0THgH+7a8lRdevyupoYj3Js/Q==}
     engines: {node: '>=22.12.0'}
 
+  node-addon-api@7.1.1:
+    resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
+
   node-api-version@0.2.1:
     resolution: {integrity: sha512-2xP/IGGMmmSQpI1+O/k72jF/ykvZ89JeuKX3TLJAYPDVLUalrshrLHkeVcCCZqG/eEa635cr8IBYzgnDvM2O8Q==}
 
@@ -7477,6 +7511,9 @@ packages:
   node-modules-regexp@1.0.0:
     resolution: {integrity: sha512-JMaRS9L4wSRIR+6PTVEikTrq/lMGEZR43a48ETeilY0Q0iMwVnccMFrUM1k+tNzmYuIU0Vh710bCUqHX+/+ctQ==}
     engines: {node: '>=0.10.0'}
+
+  node-pty@1.1.0:
+    resolution: {integrity: sha512-20JqtutY6JPXTUnL0ij1uad7Qe1baT46lyolh2sSENDd4sTzKZ4nmAFkeAARDKwmlLjPx6XKRlwRUxwjOy+lUg==}
 
   node-releases@2.0.57:
     resolution: {integrity: sha512-kQK9LGGFiHtrWiNhZtA7Qbw17AQz+dmsEKODRIVTXA9+e5MS/2gZEBhYJt13GrAz5/IOZKddH/0Z3TP/Zgo+yw==}
@@ -12695,6 +12732,10 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
+  '@xterm/addon-fit@0.11.0': {}
+
+  '@xterm/xterm@6.0.0': {}
+
   abbrev@4.0.0: {}
 
   abort-controller@3.0.0:
@@ -15352,6 +15393,8 @@ snapshots:
     dependencies:
       semver: 7.8.5
 
+  node-addon-api@7.1.1: {}
+
   node-api-version@0.2.1:
     dependencies:
       semver: 7.8.5
@@ -15378,6 +15421,10 @@ snapshots:
   node-int64@0.4.0: {}
 
   node-modules-regexp@1.0.0: {}
+
+  node-pty@1.1.0(patch_hash=7d1011d673c499bcb613735c649b2e5ae78dc6430f35dd2d18f077fa6a7f5e01):
+    dependencies:
+      node-addon-api: 7.1.1
 
   node-releases@2.0.57: {}
 

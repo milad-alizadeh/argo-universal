@@ -36,7 +36,7 @@ it('advertises URL Elicitation on the connection that presents login requests', 
   }
 });
 
-it('offers advertised protocol methods while omitting terminal authentication', async () => {
+it('prefers protocol sign-in when the Agent also offers terminal authentication', async () => {
   const peer = createScriptedAgentProcess({
     steps: [],
     initialize: {

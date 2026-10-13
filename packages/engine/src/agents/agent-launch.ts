@@ -1,4 +1,8 @@
-import type { AgentCheck } from '@repo/contracts';
+import type {
+  AgentLoginTerminalFrame,
+  AgentLoginTerminalInput,
+  AgentCheck,
+} from '@repo/contracts';
 
 // How the Engine starts one Agent program; the ACP module launches it.
 export type AgentLaunch = {
@@ -26,6 +30,7 @@ export type LoginAgentMethod = {
   id: string;
   name: string;
   description?: string;
+  terminal?: { args: readonly string[]; env: Readonly<Record<string, string>> };
 };
 export type LoginAgentRequest = { id: string; url: string; message: string };
 export type LoginAgentOutcome = {
@@ -33,6 +38,7 @@ export type LoginAgentOutcome = {
   failure?: string;
 };
 export type LoginAgentCallbacks = {
+  reserveTerminalAuthentication?: (launch: AgentLaunch) => void;
   createElicitation: (
     request: LoginAgentRequest,
     signal?: AbortSignal,
@@ -44,8 +50,22 @@ export type LoginAgentConnection = {
   authenticate: (methodId: string) => Promise<void>;
   checkReady: () => Promise<LoginAgentOutcome>;
   close: () => Promise<void>;
+  terminalActive?: () => boolean;
+  readTerminal?: (cursor: number) => AgentLoginTerminalFrame;
+  inputTerminal?: (input: AgentLoginTerminalInput) => void;
 };
 export type OpenLoginAgent = (
   subject: AgentLaunchSubject,
   callbacks: LoginAgentCallbacks,
 ) => Promise<LoginAgentConnection>;
+
+export type LoginTerminalProcess = {
+  exited: Promise<{ exitCode: number; signal?: number }>;
+  write: (input: string) => void;
+  resize: (cols: number, rows: number) => void;
+  close: () => Promise<void>;
+};
+export type LaunchLoginTerminal = (
+  launch: AgentLaunch,
+  output: (text: string) => void,
+) => Promise<LoginTerminalProcess>;

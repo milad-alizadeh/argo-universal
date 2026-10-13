@@ -1,0 +1,18 @@
+diff --git a/scripts/post-install.js b/scripts/post-install.js
+index 8dbac507ea9c64169ea500a0115816056c0bc309..d9391f3efe13ed5a9f3392cd42cd8e92756cd8dc 100644
+--- a/scripts/post-install.js
++++ b/scripts/post-install.js
+@@ -4,6 +4,13 @@ const fs = require('fs');
+ const os = require('os');
+ const path = require('path');
+ 
++if (os.platform() === 'darwin') {
++  for (const arch of ['arm64', 'x64']) {
++    const helper = path.join(__dirname, '..', 'prebuilds', `darwin-${arch}`, 'spawn-helper');
++    if (fs.existsSync(helper)) fs.chmodSync(helper, 0o755);
++  }
++}
++
+ const RELEASE_DIR = path.join(__dirname, '../build/Release');
+ const BUILD_FILES = [
+   path.join(RELEASE_DIR, 'conpty.node'),
