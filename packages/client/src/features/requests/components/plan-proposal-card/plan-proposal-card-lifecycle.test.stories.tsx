@@ -32,10 +32,10 @@ function submitting(width: number, index: number): Story {
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
       await settleViewport(width);
-      await expect(canvas.getByRole('status')).toHaveTextContent(sendingLabel);
-      await expect(
-        canvas.getByRole('button', { name: sendingLabel }),
-      ).toBeDisabled();
+      const sending = canvas.getByRole('button', { name: sendingLabel });
+      await expect(sending).toBeVisible();
+      await expect(sending).toHaveAttribute('aria-busy', 'true');
+      await expect(sending).toBeDisabled();
       await expect(
         canvas.getByRole('button', { name: keepPlanningLabel }),
       ).toBeDisabled();

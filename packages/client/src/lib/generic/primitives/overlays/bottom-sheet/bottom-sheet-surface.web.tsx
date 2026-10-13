@@ -36,7 +36,7 @@ type SurfaceProps = {
 export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
   const [expanded, setExpanded] = useState(props.initialSize === 'expanded');
   const { anchor, card, ref } = useSheetAnchor(props.size);
-  useHiddenWhileClosing(card, props.open || !props.hiddenWhileClosing);
+  useHiddenWhileClosing(card, isAccessible(props));
   const { onOpenChange } = DialogPrimitive.useRootContext();
   const close = useCallback(
     () => closeSheet(props.dismissible, onOpenChange),
@@ -84,9 +84,9 @@ function useHiddenWhileClosing(
 function SurfaceBody(props: {
   form: boolean;
   children: React.ReactNode;
-}): React.JSX.Element {
+}): React.ReactNode {
   const { tallest, onLayout } = useTallestHeight();
-  if (!props.form) return <>{props.children}</>;
+  if (!props.form) return props.children;
   return (
     <View style={{ minHeight: tallest }} className="shrink" onLayout={onLayout}>
       {props.children}
@@ -137,7 +137,7 @@ function sheetClass(
 ): string {
   return cn(
     'bottom-sheet max-h-[85dvh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
-    size === 'form' && 'bottom-sheet-form w-full touch-none',
+    formClass(size),
     anchored && 'bottom-sheet-anchored',
     expanded && 'h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)]',
   );
@@ -148,4 +148,14 @@ function closeSheet(
   onOpenChange: (open: boolean) => void,
 ): void {
   if (dismissible !== false) onOpenChange(false);
+}
+
+function isAccessible(
+  props: Pick<SurfaceProps, 'open' | 'hiddenWhileClosing'>,
+): boolean {
+  return props.open || !props.hiddenWhileClosing;
+}
+
+function formClass(size: SurfaceProps['size']): string | undefined {
+  return size === 'form' ? 'bottom-sheet-form w-full touch-none' : undefined;
 }
