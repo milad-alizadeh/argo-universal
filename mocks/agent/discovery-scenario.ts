@@ -21,29 +21,15 @@ export const playDiscovery = async (
   discovery: DiscoveryScenario,
   signal: AbortSignal,
 ): Promise<AgentProbe> => {
-  discovery.signals?.push(signal);
-  discovery.started?.resolve();
-  const scenario = discovery.scenario ?? {
-    steps: [],
-    responses: {
-      initialize: [
-        {
-          ...(discovery.waitFor ? { waitFor: discovery.waitFor } : {}),
-          ...(discovery.error
-            ? { error: { code: -32603, message: discovery.error } }
-            : {}),
-        },
-      ],
-    },
-  };
+  observeDiscovery(discovery, signal);
+  const scenario = discovery.scenario ?? initializationScenario(discovery);
   const { connection, close } = connectDiscovery(scenario);
   signal.addEventListener('abort', close, { once: true });
   try {
     await connection.agent.request('initialize', { protocolVersion: 1 });
     return (await discovery.result) ?? availableDiscovery;
   } finally {
-    signal.removeEventListener('abort', close);
-    close();
+    endDiscovery(signal, close);
   }
 };
 
@@ -59,9 +45,40 @@ const connectDiscovery = (
   const connection = client().connect(
     ndJsonStream(toAgent.writable, fromAgent.readable),
   );
-  const close = (): void => {
-    connection.close();
-    agent.close();
-  };
-  return { connection, close };
+  return { connection, close: () => closeDiscovery(connection, agent) };
+};
+
+const closeDiscovery = (
+  connection: ClientConnection,
+  agent: { close: () => void },
+): void => {
+  connection.close();
+  agent.close();
+};
+const observeDiscovery = (
+  discovery: DiscoveryScenario,
+  signal: AbortSignal,
+): void => {
+  discovery.signals?.push(signal);
+  discovery.started?.resolve();
+};
+const initializationScenario = (
+  discovery: DiscoveryScenario,
+): ScriptedScenario => ({
+  steps: [],
+  responses: {
+    initialize: [
+      {
+        ...(discovery.waitFor ? { waitFor: discovery.waitFor } : {}),
+        ...(discovery.error
+          ? { error: { code: -32603, message: discovery.error } }
+          : {}),
+      },
+    ],
+  },
+});
+
+const endDiscovery = (signal: AbortSignal, close: () => void): void => {
+  signal.removeEventListener('abort', close);
+  close();
 };

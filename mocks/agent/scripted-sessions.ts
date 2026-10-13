@@ -14,11 +14,36 @@ const selectConfigOption = (
   params: SetSessionConfigOptionRequest,
 ): SessionConfigOption => {
   if (option.id !== params.configId) return option;
-  if (option.type === 'boolean' && typeof params.value === 'boolean')
-    return { ...option, currentValue: params.value };
-  if (option.type === 'select' && typeof params.value === 'string')
-    return { ...option, currentValue: params.value };
+  return setConfigValue(option, params.value);
+};
+
+const setConfigValue = (
+  option: SessionConfigOption,
+  value: SetSessionConfigOptionRequest['value'],
+): SessionConfigOption => {
+  switch (option.type) {
+    case 'boolean':
+      return setBooleanValue(option, value);
+    case 'select':
+      return setSelectValue(option, value);
+  }
+};
+const wrongValue = (): never => {
   throw RequestError.invalidParams(undefined, 'Wrong configuration value type');
+};
+const setBooleanValue = (
+  option: Extract<SessionConfigOption, { type: 'boolean' }>,
+  value: SetSessionConfigOptionRequest['value'],
+): SessionConfigOption => {
+  if (typeof value !== 'boolean') return wrongValue();
+  return { ...option, currentValue: value };
+};
+const setSelectValue = (
+  option: Extract<SessionConfigOption, { type: 'select' }>,
+  value: SetSessionConfigOptionRequest['value'],
+): SessionConfigOption => {
+  if (typeof value !== 'string') return wrongValue();
+  return { ...option, currentValue: value };
 };
 
 // Node strips types but cannot transform parameter properties, so fields are assigned by hand.

@@ -36,6 +36,13 @@ const selected: ScriptedScenario =
     ? { ...scenario, responses: loggedCloses(requestLog) }
     : scenario;
 const initialization = selected.initialize ?? scriptedInitialization;
+const readStandardInput = (): ReadableStream<Uint8Array> =>
+  new ReadableStream({
+    start: (controller): void => {
+      process.stdin.on('data', (chunk: Buffer) => controller.enqueue(chunk));
+      process.stdin.on('end', () => controller.close());
+    },
+  });
 const connect = (): void => {
   createScriptedAgent({
     ...selected,
@@ -44,15 +51,7 @@ const connect = (): void => {
       ...initialization,
       _meta: { ...initialization._meta, environment: { ...process.env } },
     },
-  }).connect(
-    Writable.toWeb(process.stdout),
-    new ReadableStream<Uint8Array>({
-      start: (controller): void => {
-        process.stdin.on('data', (chunk: Buffer) => controller.enqueue(chunk));
-        process.stdin.on('end', () => controller.close());
-      },
-    }),
-  );
+  }).connect(Writable.toWeb(process.stdout), readStandardInput());
 };
 if (process.argv.includes('--interactive-login')) runTerminalLoginMock();
 else connect();
