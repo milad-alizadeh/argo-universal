@@ -5,7 +5,7 @@ import {
   selectable,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
+import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
 import { IconSlot } from '../../../symbols/icon';
 import { SelectedCheck } from '../../display/selected-check';
 
@@ -61,7 +61,7 @@ function ChoiceIndicator(props: { selected: boolean }): React.JSX.Element {
 }
 
 function choiceElementColors(
-  colors: ReturnType<typeof useNativeTheme>['colors'],
+  colors: NativeColors,
 ): React.ComponentProps<typeof DropdownMenuItem>['elementColors'] {
   return {
     textColor: colors.popoverForeground,

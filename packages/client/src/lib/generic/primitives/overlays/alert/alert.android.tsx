@@ -1,6 +1,6 @@
 import { AlertDialog, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
+import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '../../native/host';
 import {
   alertActionPress,
@@ -34,7 +34,7 @@ function OpenAlert(props: AlertProps): React.JSX.Element {
 }
 
 function alertColors(
-  colors: ReturnType<typeof useNativeTheme>['colors'],
+  colors: NativeColors,
 ): React.ComponentProps<typeof AlertDialog>['colors'] {
   return {
     containerColor: colors.popover,

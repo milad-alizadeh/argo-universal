@@ -1,17 +1,9 @@
 import type * as React from 'react';
 import { type RefObject, useRef } from 'react';
 import { Pressable, type TextInput, View } from 'react-native';
-import type { SharedValue } from 'react-native-reanimated';
 import { iconButtonClasses } from '../../buttons/icon-button/icon-button-styles';
-import type { SearchFieldGeometry } from './search-field-motion';
-import { Lens, OpenField } from './search-field-parts';
+import { Lens, type MorphState, OpenField } from './search-field-parts';
 import { QueryInput } from './search-field-query';
-
-interface Morph {
-  open: boolean;
-  progress: SharedValue<number>;
-  geometry: SearchFieldGeometry;
-}
 
 export type LayoutHandler = NonNullable<
   React.ComponentProps<typeof View>['onLayout']
@@ -21,7 +13,7 @@ export interface ControlsProps {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
-  morph: Morph;
+  morph: MorphState;
   setOpen: (open: boolean) => void;
   onTriggerLayout: LayoutHandler;
 }

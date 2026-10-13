@@ -13,7 +13,7 @@ import {
   useTextStyle,
 } from './search-field-motion';
 
-interface MorphState {
+export interface MorphState {
   open: boolean;
   progress: SharedValue<number>;
   geometry: SearchFieldGeometry;

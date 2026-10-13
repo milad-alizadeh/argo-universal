@@ -20,6 +20,7 @@ import { NativeRowDetail } from './native-row';
 
 const inset = 16;
 
+// SwiftUI caches separator tint on the row; replace it when Appearance changes.
 export function ListItem(props: ListItemProps): React.JSX.Element {
   const wide = useWide();
   const { colors } = useNativeTheme();
@@ -63,7 +64,6 @@ interface PressableRowProps {
   content: React.ReactElement;
 }
 
-// SwiftUI caches separator tint on the row; replace it when Appearance changes.
 function PressableRow({
   press,
   modifiers,
