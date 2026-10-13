@@ -3,8 +3,8 @@ import { View, type ViewProps } from 'react-native';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
+import { RequestStatus } from './request-status';
 export { RequestAction } from './request-action';
 
 export type RequestState =
@@ -128,42 +128,34 @@ function showActions(state: RequestState, wide: boolean): boolean {
   return state.kind !== 'answered' || wide;
 }
 
-type AnsweredStatusProps = {
-  reason: string;
-  muted?: boolean;
-};
-
-function RequestStatus({
-  state,
-  mutedStatus,
-}: Pick<RequestCardProps, 'state' | 'mutedStatus'>): ReactNode {
-  if (state.kind !== 'answered') return null;
-  return <AlreadyAnswered reason={state.reason} muted={mutedStatus} />;
-}
-
-function AlreadyAnswered(props: AnsweredStatusProps): ReactNode {
+function RequestFooter(props: FooterProps): ReactNode {
   return (
     <View
-      role="status"
-      className="min-w-0 flex-1 flex-row items-center gap-1.5 px-2"
+      className={cn(
+        'min-h-13 flex-row items-center gap-1 px-2 pt-3 pb-2',
+        props.footerClassName,
+      )}
     >
-      <Icon
-        name="info"
-        role="body"
-        className="shrink-0 text-muted-foreground"
-      />
-      <AnsweredText {...props} />
+      <RequestFooterContents {...props} />
     </View>
   );
 }
 
-function AnsweredText({ reason, muted }: AnsweredStatusProps): ReactNode {
+function RequestFooterContents(props: FooterProps): ReactNode {
+  const wide = useContentWide();
   return (
-    <Text
-      role="body"
-      className={cn('min-w-0 flex-1', muted && 'text-muted-foreground')}
-    >
-      {reason}
-    </Text>
+    <>
+      <RequestStatus state={props.state} mutedStatus={props.mutedStatus} />
+      {showActions(props.state, wide) && props.actions}
+    </>
   );
 }
+
+function showActions(state: RequestState, wide: boolean): boolean {
+  return state.kind !== 'answered' || wide;
+}
+
+type AnsweredStatusProps = {
+  reason: string;
+  muted?: boolean;
+};
