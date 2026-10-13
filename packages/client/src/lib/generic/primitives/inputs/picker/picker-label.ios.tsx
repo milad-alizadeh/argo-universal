@@ -32,18 +32,13 @@ export function PickerValue<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
   return (
-    <Text modifiers={usePickerValueModifiers(props)}>{pickerValue(props)}</Text>
+    <Text modifiers={usePickerValueModifiers()}>{pickerValue(props)}</Text>
   );
 }
 
-function usePickerValueModifiers(
-  props: Pick<PickerProps<string>, 'code'>,
-): ReturnType<typeof foregroundStyle>[] {
+function usePickerValueModifiers(): ReturnType<typeof foregroundStyle>[] {
   const { mutedForeground } = useNativeTheme().colors;
-  const modifiers = useSwiftUITextModifiers(
-    props.code ? 'code' : 'body',
-    'row',
-  );
+  const modifiers = useSwiftUITextModifiers('body', 'row');
   return [...modifiers, foregroundStyle(mutedForeground ?? 'secondary')];
 }
 
