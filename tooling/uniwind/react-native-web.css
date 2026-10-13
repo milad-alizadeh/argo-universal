@@ -79,6 +79,18 @@
   max-width: calc(var(--spacing) * 160);
   margin-inline: auto;
 }
+[role="dialog"]:has(> .bottom-sheet-anchored) {
+  inset: auto auto anchor(bottom, 0px) anchor(center, 50%);
+  width: min(
+    calc(var(--spacing) * 160),
+    anchor-size(width, calc(100vw - var(--spacing) * 8))
+  );
+  margin: 0;
+  translate: -50% 0;
+}
+.bottom-sheet-anchored {
+  border-radius: var(--radius-2xl);
+}
 [data-state]:has(> .bottom-sheet-overlay) {
   position: fixed;
   inset: 0;

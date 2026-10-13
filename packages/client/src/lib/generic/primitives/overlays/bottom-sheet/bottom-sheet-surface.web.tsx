@@ -1,10 +1,11 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '../../../utils';
 import { keepOpen } from '../keep-open';
 import { useSwipeToClose } from './bottom-sheet-swipe.web';
+import { sheetDialog, useSheetAnchor } from './use-sheet-anchor.web';
 
 type SurfaceProps = {
   open: boolean;
@@ -28,7 +29,8 @@ type SurfaceProps = {
  */
 export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
   const state = props.open ? 'open' : 'closed';
-  const card = useHiddenWhileClosing(props.open || !props.hiddenWhileClosing);
+  const { anchor, card, ref } = useSheetAnchor(props.size);
+  useHiddenWhileClosing(card, props.open || !props.hiddenWhileClosing);
   const { onOpenChange } = DialogPrimitive.useRootContext();
   const close = useCallback(() => {
     if (props.dismissible !== false) onOpenChange(false);
@@ -40,7 +42,10 @@ export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
         data-state={state}
         className="bottom-sheet-overlay absolute inset-0 bg-black/20"
       />
-      <DialogPrimitive.Content ref={card} {...sheetContentProps(props)}>
+      <DialogPrimitive.Content
+        ref={ref}
+        {...sheetContentProps(props, !!anchor)}
+      >
         {props.title}
         <SheetBody>{props.children}</SheetBody>
       </DialogPrimitive.Content>
@@ -50,15 +55,13 @@ export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
 
 // Radix draws the dialog element around the card, out of reach of props.
 function useHiddenWhileClosing(
+  card: React.RefObject<View | null>,
   accessible: boolean,
-): React.RefObject<View | null> {
-  const card = useRef<View>(null);
+): void {
   useLayoutEffect(() => {
-    const dialog =
-      card.current instanceof HTMLElement ? card.current.parentElement : null;
+    const dialog = sheetDialog(card.current);
     dialog?.setAttribute('aria-hidden', String(!accessible));
-  }, [accessible]);
-  return card;
+  }, [card, accessible]);
 }
 
 function SheetBody({
@@ -100,6 +103,7 @@ function sheetContentProps(
     SurfaceProps,
     'open' | 'onClosed' | 'dismissible' | 'onCloseAutoFocus' | 'size'
   >,
+  anchored: boolean,
 ): React.ComponentProps<typeof DialogPrimitive.Content> & {
   'data-state': string;
   'aria-describedby': undefined;
@@ -113,9 +117,14 @@ function sheetContentProps(
     },
     onEscapeKeyDown: keepOpen(props.dismissible),
     onInteractOutside: keepOpen(props.dismissible),
-    className: cn(
-      'bottom-sheet touch-none max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
-      props.size === 'form' && 'bottom-sheet-form w-full',
-    ),
+    className: sheetClass(props.size, anchored),
   };
+}
+
+function sheetClass(size: SurfaceProps['size'], anchored: boolean): string {
+  return cn(
+    'bottom-sheet touch-none max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
+    size === 'form' && 'bottom-sheet-form w-full',
+    anchored && 'bottom-sheet-anchored',
+  );
 }

@@ -23,6 +23,7 @@ import {
   SessionView,
   type SessionViewProps,
 } from '../components/session-view/session-view';
+import { useSessionElicitation } from '../hooks/use-session-elicitation';
 import { composerStatus } from '../state/composer-status';
 import { toSendError } from '../state/send-error';
 
@@ -74,6 +75,11 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
   const connected = useConnectionState() === 'open';
   const feed = useSessionFeed(sessionId);
   const agents = useAgents();
+  const elicitation = useSessionElicitation({
+    sessionId,
+    request: feed.snapshot?.pendingElicitation,
+    resumeAfterCommand: feed.resumeAfterCommand,
+  });
   const commands = useSessionCommands(
     sessionId,
     feed.resumeAfterCommand,
@@ -96,6 +102,7 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
   const turnRunning = snapshot.state !== 'idle';
   return {
     state: 'open',
+    elicitation,
     header: {
       title: snapshot.title,
       status: headerStatus[snapshot.state],

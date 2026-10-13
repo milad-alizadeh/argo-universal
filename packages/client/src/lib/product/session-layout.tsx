@@ -6,6 +6,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { cn } from '#lib/generic/utils';
+import { BottomSheetAnchor } from '#primitives/overlays/bottom-sheet/bottom-sheet-anchor';
 import { useWide } from '../generic/use-wide/use-wide';
 import {
   ComposerCover,
@@ -115,7 +116,7 @@ function OverlapComposerLayout({
           style={{ marginTop: -composerOverlap }}
         >
           <SessionColumn testID="composer-column" className="items-center">
-            {composer}
+            <BottomSheetAnchor>{composer}</BottomSheetAnchor>
           </SessionColumn>
         </View>
       </KeyboardAvoidingContent>
@@ -153,7 +154,7 @@ function GlassComposerLayout({
               // Measured without the home indicator's space, which follows the keyboard frame by frame.
               onLayout={onComposerLayout}
             >
-              {composer}
+              <BottomSheetAnchor>{composer}</BottomSheetAnchor>
             </SessionColumn>
           </Animated.View>
         </View>

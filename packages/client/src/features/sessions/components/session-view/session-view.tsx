@@ -1,6 +1,10 @@
 import type * as React from 'react';
 import { Composer, type ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
+import {
+  ElicitationSheet,
+  type ElicitationFormProps,
+} from '#features/requests';
 import { useErrorToast } from '#lib/generic/primitives/overlays/toast/toast';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
@@ -15,6 +19,7 @@ export interface OpenSessionViewProps {
   header: SessionHeaderProps;
   feed: FeedProps;
   composer: ComposerProps;
+  elicitation?: ElicitationFormProps;
 }
 
 export type SessionViewProps =
@@ -42,6 +47,7 @@ function OpenSessionView({
   header,
   feed,
   composer,
+  elicitation,
 }: OpenSessionViewProps): React.JSX.Element {
   const wide = useWide();
   const configuration = composer.configuration && {
@@ -57,7 +63,17 @@ function OpenSessionView({
     <SessionLayout
       header={<SessionHeader {...header} />}
       feed={<Feed {...feed} />}
-      composer={<Composer {...composer} configuration={configuration} />}
+      composer={
+        <>
+          <Composer {...composer} configuration={configuration} />
+          {elicitation && (
+            <ElicitationSheet
+              key={elicitation.request.requestId}
+              {...elicitation}
+            />
+          )}
+        </>
+      }
     />
   );
 }
