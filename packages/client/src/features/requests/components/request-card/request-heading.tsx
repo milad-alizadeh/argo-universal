@@ -36,7 +36,7 @@ export function RequestHeading({
         {hint && (
           <Text
             role="secondary"
-            className="pl-7.5 wide:pl-6.5 text-muted-foreground"
+            className="pl-7.5 wide:pl-6.5 text-muted-foreground ios:text-[15px]"
           >
             {hint}
           </Text>

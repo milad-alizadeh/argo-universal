@@ -163,7 +163,8 @@ function Prose({
       aria-level={headingLevel}
       className={cn(
         'font-sans',
-        variant === 'proposal' && 'min-w-0 max-w-full',
+        variant === 'proposal' &&
+          'min-w-0 max-w-full ios:text-[17px] ios:leading-[22px]',
         headingLevel !== undefined && markdownBlockClassNames.heading,
         variant === 'summary' && 'text-muted-foreground',
       )}
@@ -197,6 +198,7 @@ function List({
               role="body"
               className={cn(
                 'min-w-4 shrink-0 font-sans',
+                variant === 'proposal' && 'ios:text-[17px] ios:leading-[22px]',
                 variant !== 'proposal' && markdownBlockClassNames.listMarker,
               )}
             >

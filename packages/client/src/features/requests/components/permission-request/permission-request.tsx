@@ -77,7 +77,9 @@ export function PermissionRequest(
         <RequestHeading icon="hand" title={request.title} hint={reason} />
         {input && (
           <View className="min-h-13 rounded-xl android:rounded-2xl bg-secondary px-4 py-3.5 wide:min-h-11 wide:bg-card wide:px-3.5 wide:py-2 wide:shadow-xs">
-            <Text role="code">{input}</Text>
+            <Text role="code" className="ios:text-[15px]">
+              {input}
+            </Text>
           </View>
         )}
         {denying && !alreadyAnswered ? (
