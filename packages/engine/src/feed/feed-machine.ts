@@ -87,6 +87,7 @@ export type FeedEvent =
       acpSessionId: SessionNotification['sessionId'];
       update: SessionNotification['update'];
       turnId: string | null;
+      stale?: true;
     }
   | {
       type: 'feed.completeTurn';

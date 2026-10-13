@@ -1,6 +1,10 @@
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  observeFencedCancelUpdate,
+  readCancelEnding,
+} from '#mocks/acp-cancel-observations';
+import {
   startIgnoredCancelEngine,
   waitForIgnoredCancelTool,
 } from '#mocks/acp-cancel-timeout';
@@ -97,6 +101,15 @@ describe.each(appFixtureAgentIds)('%s ACP cancel cleanup', (agentId) => {
         await expect(
           host.caller.session.prompt({ ...stuck, prompt }),
         ).rejects.toThrow('cannot accept session.prompt');
+        const committed = await readCancelEnding(host, stuck.sessionId);
+        expect(await observeFencedCancelUpdate(host, stuck.sessionId)).toEqual([
+          expect.stringContaining(
+            stage === 'close' ? 'replaced Session lease' : 'settled Turn',
+          ),
+        ]);
+        expect(await readCancelEnding(host, stuck.sessionId)).toEqual(
+          committed,
+        );
         const process = requireScriptedProcessAt(host.agent.processes);
         let stopped = false;
 

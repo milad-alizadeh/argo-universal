@@ -8,6 +8,7 @@ import type { ResolveAgentLaunch } from '../../agents';
 import type { SessionData } from '../session-data';
 import {
   createLifetimeDestination,
+  reportFencedUpdate,
   type AcpLifetimeEvent,
 } from './acp-session-destination';
 import { selectSessionOpening } from './acp-session-opening';
@@ -26,7 +27,7 @@ const isWithdrawn = (cause: unknown): boolean =>
 
 type SendLifetimeEvent = (event: AcpLifetimeEvent) => void;
 
-// Each opening gets its own destination; a replaced generation's late callbacks are dropped.
+// Each opening owns a destination; fenced updates report rejection without changing content.
 export class AcpSessionLifetime {
   private readonly bound = Promise.withResolvers<SendLifetimeEvent>();
   private readonly controller = new AbortController();
@@ -57,7 +58,10 @@ export class AcpSessionLifetime {
     const generation = this.generation;
 
     return createLifetimeDestination(this.requests, (event) => {
-      if (this.attached && generation === this.generation) sendBack(event);
+      if (!this.attached) return;
+
+      if (generation === this.generation) return sendBack(event);
+      reportFencedUpdate(event, sendBack);
     });
   }
   public open(session: SessionData): Promise<AcpSessionLease> {

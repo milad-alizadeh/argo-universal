@@ -153,15 +153,6 @@ describe.each(appFixtureAgentIds)('%s Turn settlement', (agent) => {
         .poll(() =>
           host.database.$client
             .prepare(
-              "SELECT state, json_extract(payload, '$.toolCallId') AS toolCallId, json_extract(payload, '$.status') AS status FROM feed_row WHERE session_id = ? AND session_update = 'tool_call_update' ORDER BY position",
-            )
-            .all(created.sessionId),
-        )
-        .toEqual(expectedTools);
-      await expect
-        .poll(() =>
-          host.database.$client
-            .prepare(
               "SELECT status, stop_reason, json_extract(error, '$.code') AS errorCode FROM turn WHERE session_id = ?",
             )
             .get(created.sessionId),

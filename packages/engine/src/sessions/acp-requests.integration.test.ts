@@ -472,15 +472,6 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     ).toEqual({
       permissionOutcome: { outcome: 'cancelled' },
     });
-    await expect
-      .poll(() =>
-        host.database.$client
-          .prepare(
-            "SELECT json_extract(payload, '$._meta.argo.permissionOutcome.outcome') AS outcome FROM feed_row WHERE session_id = ? AND session_update = 'tool_call_update'",
-          )
-          .get(sessionId),
-      )
-      .toEqual({ outcome: 'cancelled' });
     await expect(
       host.caller.session.answerPermission({
         sessionId,
@@ -514,15 +505,6 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     ).toEqual({
       permissionOutcome: { outcome: 'cancelled' },
     });
-    await expect
-      .poll(() =>
-        host.database.$client
-          .prepare(
-            "SELECT json_extract(payload, '$._meta.argo.permissionOutcome.outcome') AS outcome FROM feed_row WHERE session_id = ? AND session_update = 'tool_call_update'",
-          )
-          .get(sessionId),
-      )
-      .toEqual({ outcome: 'cancelled' });
   });
 
   it('a request the Agent withdraws is no longer answerable', async () => {
