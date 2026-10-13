@@ -125,10 +125,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Electron brings its own Chromium; this installs only the system libraries and xvfb.
+      # The shared App fixture also initializes a Playwright browser context for Electron.
       - uses: ./.github/actions/setup
         with:
-          playwright: system-deps
+          playwright: chromium
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       # Electron 44 downloads its binary on first use; fetch it before the tests start their timers.

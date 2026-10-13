@@ -1,7 +1,6 @@
 import type { PermissionOption } from '@repo/contracts';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { RequestAction } from '../request-card/request-card';
 import type { PermissionChoices } from './permission-choices';
@@ -61,40 +60,25 @@ function WideActions({
   );
 }
 
-// Two options share a row; otherwise each group takes a full-width row, allow on top.
 function PhoneActions({
   choices,
   leads,
   ...props
 }: PermissionActionsProps): ReactNode {
-  const { allow, reject } = choices;
-  if (allow.length + reject.length > 2)
-    return (
-      <View className="flex-1 gap-2">
-        <OptionGroup
-          {...props}
-          options={allow}
-          lead={leads.allow}
-          menuLabel={allowMenuLabel}
-        />
-        <OptionGroup
-          {...props}
-          options={reject}
-          lead={leads.reject}
-          menuLabel={rejectMenuLabel}
-        />
-      </View>
-    );
   return (
-    <View className="flex-1 flex-row gap-1">
-      {[...reject, ...allow].map((option) => (
-        <OptionAction
-          {...props}
-          key={option.optionId}
-          option={option}
-          className={cn('flex-1', option !== props.main && 'bg-secondary')}
-        />
-      ))}
+    <View className="w-full gap-2">
+      <OptionGroup
+        {...props}
+        options={choices.allow}
+        lead={leads.allow}
+        menuLabel={allowMenuLabel}
+      />
+      <OptionGroup
+        {...props}
+        options={choices.reject}
+        lead={leads.reject}
+        menuLabel={rejectMenuLabel}
+      />
     </View>
   );
 }

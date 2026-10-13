@@ -10,21 +10,22 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
     <BottomSheetRoot {...props}>
       {props.trigger && <BottomSheetTrigger trigger={props.trigger} />}
       <BottomSheetSurface
+        label={props.label}
         open={props.open}
         onClosed={props.onClosed}
         dismissible={props.dismissible}
-        title={<SheetTitle label={props.label} />}
+        expandable={props.expandable}
+        initialSize={props.initialSize}
+        footer={props.footer}
+        size={props.size}
+        title={
+          <DialogPrimitive.Title className="sr-only">
+            {props.label}
+          </DialogPrimitive.Title>
+        }
       >
         {props.children}
       </BottomSheetSurface>
     </BottomSheetRoot>
-  );
-}
-
-function SheetTitle(props: Pick<BottomSheetProps, 'label'>): React.JSX.Element {
-  return (
-    <DialogPrimitive.Title className="sr-only">
-      {props.label}
-    </DialogPrimitive.Title>
   );
 }

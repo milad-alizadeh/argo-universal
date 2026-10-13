@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { expect, fn, within } from 'storybook/test';
 import { FieldGroup } from '../../fields/field-group/field-group';
 import { FieldSection } from '../../fields/field-section/field-section';
-import { SelectMenu } from '../../inputs/select-menu/select-menu';
+import { Picker } from '../../inputs/picker/picker';
 import { ListItem } from './list-item';
 
 const efforts = [
@@ -24,11 +24,11 @@ function EffortRow(): React.JSX.Element {
         <ListItem
           title="Effort"
           accessory={
-            <SelectMenu
-              accessibilityLabel="Effort"
+            <Picker
+              label="Effort"
               value={effort}
               options={efforts}
-              onValueChange={(next) => {
+              onChange={(next) => {
                 setEffort(next);
                 onEffortChange(next);
               }}
