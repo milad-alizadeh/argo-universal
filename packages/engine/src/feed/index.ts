@@ -37,3 +37,5 @@ export {
   type FeedTurnEnding,
   type SettledFeed,
 } from './turn-settlement';
+
+export { recoverStoredFeedRow } from './feed-recovery';
