@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
-import { ImageContent, TextContent } from '../feed/content-block';
+import {
+  BlobRef,
+  ImageContent,
+  ResourceLink,
+  TextContent,
+} from '../feed/content-block';
 
 // Where a Session runs (ADR-0008).
 export const CheckoutChoice = z.enum(['worktree', 'main']);
@@ -21,6 +26,9 @@ export const InitialConfigOption = z.strictObject({
 });
 export type InitialConfigOption = z.infer<typeof InitialConfigOption>;
 
+// A first prompt links only files uploaded from the device, not paths on the Server.
+const UploadedFileLink = ResourceLink.extend({ blob: BlobRef });
+
 // Creation can leave the real Session empty while its configuration is selected.
 export const SessionNewInput = z.strictObject({
   projectId: sessionColumns.shape.projectId,
@@ -28,7 +36,13 @@ export const SessionNewInput = z.strictObject({
   checkout: SessionCheckoutChoice,
   configOptions: z.array(InitialConfigOption),
   prompt: z
-    .array(z.discriminatedUnion('type', [TextContent, ImageContent]))
+    .array(
+      z.discriminatedUnion('type', [
+        TextContent,
+        ImageContent,
+        UploadedFileLink,
+      ]),
+    )
     .default([]),
 });
 export type SessionNewInput = z.infer<typeof SessionNewInput>;

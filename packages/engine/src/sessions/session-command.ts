@@ -1,3 +1,4 @@
+import type { ContentBlock } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { LocalSubmission } from './acp/submission';
 import type {
@@ -7,11 +8,22 @@ import type {
 import type { SessionRouterDeps } from './router-deps';
 import type { SessionActorRef, SessionCommand } from './session-machine';
 
+// A native adapter would drop every block but text, so the prompt is refused instead.
+export function requireTextOnlyPrompt(content: readonly ContentBlock[]): void {
+  if (content.every((block) => block.type === 'text')) return;
+  throw new TRPCError({
+    code: 'BAD_REQUEST',
+    message:
+      "This Agent can't receive attachments yet. Install it from Agents, then send again.",
+  });
+}
+
 export const submitSessionPrompt = (
   session: SessionActorRef,
   submission: LocalSubmission,
 ): Promise<void> => {
   if (!session.getSnapshot().context.acpLease) {
+    requireTextOnlyPrompt(submission.content);
     sendSessionCommand(session, { type: 'session.prompt', ...submission });
     return Promise.resolve();
   }

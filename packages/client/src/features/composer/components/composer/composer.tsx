@@ -1,7 +1,7 @@
 import { maxBlobUploadBytes, maxBlobUploadMebibytes } from '@repo/contracts';
 import type * as React from 'react';
 import { useId, useState } from 'react';
-import { Image, Platform, ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import {
   PlanProposalCard,
   type PlanProposalCardProps,
@@ -15,6 +15,11 @@ import { FieldGroup } from '#primitives/fields/field-group/field-group';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
 import { ListItem } from '#primitives/lists/list-item/list-item';
 import { Icon } from '../../../../lib/generic/symbols/icon';
+import { type DroppedFiles, useFileDrop } from '../../hooks/use-file-drop';
+import {
+  type ComposerAttachment,
+  ComposerAttachmentCard,
+} from '../composer-attachment-card/composer-attachment-card';
 import {
   ComposerAgentModelControl,
   ComposerCheckoutControl,
@@ -39,16 +44,11 @@ const maximumVisibleLines = 4;
 const lineHeight = 20;
 const maximumTextHeight = maximumVisibleLines * lineHeight;
 
-export interface ComposerImage {
-  id: string;
-  name: string;
-  uri: string;
-  bytes: number;
-}
+export type { ComposerAttachment };
 
 export interface ComposerDraft {
   text: string;
-  images: ComposerImage[];
+  attachments: ComposerAttachment[];
 }
 
 export interface ComposerProps {
@@ -59,6 +59,8 @@ export interface ComposerProps {
   onAttachImages: () => void;
   onAttachCamera?: () => void;
   onAttachFiles?: () => void;
+  // Files dragged onto the Composer, on the web and desktop.
+  onDropFiles?: (dropped: DroppedFiles) => void;
   onSelectSlashCommand?: () => void;
   onCreateGoal?: () => void;
   onSend: (draft: ComposerDraft) => void;
@@ -82,6 +84,7 @@ export function Composer({
   onAttachImages,
   onAttachCamera,
   onAttachFiles,
+  onDropFiles,
   onSelectSlashCommand,
   onCreateGoal,
   onSend,
@@ -95,6 +98,7 @@ export function Composer({
   error,
 }: ComposerProps): React.JSX.Element {
   const composerId = useId();
+  useFileDrop({ targetId: composerId, onDropFiles });
   const wide = useContentWide();
   const shownWrittenPlan = planProposal ? undefined : writtenPlan;
   const [textHeight, setTextHeight] = useState(
@@ -106,8 +110,8 @@ export function Composer({
     configuration.agents.every((agent) => agent.availability !== 'available'),
   );
   const configurationInactive = sending || (disabled && !canRecoverAgent);
-  const oversized = draft.images.filter(
-    (image) => image.bytes > maxBlobUploadBytes,
+  const oversized = draft.attachments.filter(
+    (attachment) => attachment.bytes > maxBlobUploadBytes,
   );
   const sendState = sendButtonState({
     stop: Boolean(configuration?.turnRunning && onStop),
@@ -117,7 +121,7 @@ export function Composer({
       sendable &&
       !configuration?.turnRunning &&
       oversized.length === 0 &&
-      (draft.text.trim().length > 0 || draft.images.length > 0),
+      (draft.text.trim().length > 0 || draft.attachments.length > 0),
   });
   const planControls = (
     <>
@@ -158,64 +162,32 @@ export function Composer({
         <PlanProposalCard {...planProposal} />
       ) : (
         <View className="w-full rounded-2xl bg-glass-card native:bg-background shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180 z-10">
-          {draft.images.length > 0 && (
+          {draft.attachments.length > 0 && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerClassName="gap-3 px-4 pt-3"
             >
-              {draft.images.map((image) => (
-                <View key={image.id} className="w-40 h-30 shrink-0">
-                  <View
-                    className={cn(
-                      'group relative w-40 h-30 overflow-hidden rounded-md border bg-muted',
-                      image.bytes > maxBlobUploadBytes
-                        ? 'border-destructive'
-                        : 'border-border',
-                    )}
-                  >
-                    <View
-                      role="img"
-                      accessibilityLabel={image.name}
-                      className="w-full h-full"
-                    >
-                      <Image
-                        source={{ uri: image.uri }}
-                        aria-hidden
-                        accessibilityElementsHidden
-                        resizeMode="cover"
-                        className="w-full h-full"
-                      />
-                    </View>
-                    <IconButton
-                      disabled={inactive}
-                      accessibilityLabel={`Remove ${image.name}`}
-                      icon="close"
-                      iconRole="secondary"
-                      variant="ghost"
-                      className={cn(
-                        'absolute right-0 top-0 size-8 sm:size-8 rounded-sm bg-background web:wide:opacity-0',
-                        inactive
-                          ? 'web:wide:group-hover:opacity-50'
-                          : 'web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100',
-                      )}
-                      onPress={() =>
-                        onDraftChange({
-                          ...draft,
-                          images: draft.images.filter(
-                            (attached) => attached.id !== image.id,
-                          ),
-                        })
-                      }
-                    />
-                  </View>
-                </View>
+              {draft.attachments.map((attachment) => (
+                <ComposerAttachmentCard
+                  key={attachment.id}
+                  attachment={attachment}
+                  disabled={inactive}
+                  onRemove={() =>
+                    onDraftChange({
+                      ...draft,
+                      attachments: draft.attachments.filter(
+                        (attached) => attached.id !== attachment.id,
+                      ),
+                    })
+                  }
+                />
               ))}
             </ScrollView>
           )}
           {oversized.length > 0 && (
             <ComposerWarning numberOfLines={1}>
-              {`Image exceeds ${maxBlobUploadMebibytes} MB.`}
+              {`Attachment exceeds ${maxBlobUploadMebibytes} MB.`}
             </ComposerWarning>
           )}
           {error && <ComposerWarning>{error}</ComposerWarning>}
@@ -261,7 +233,7 @@ export function Composer({
                     variant="ghost"
                     iconRole="control"
                     hitSlop={8}
-                    accessibilityLabel={wide ? 'Attach' : 'Attach images'}
+                    accessibilityLabel="Attach"
                     className="size-7 sm:size-7 p-0"
                     iconClassName="text-muted-foreground"
                   />
@@ -274,8 +246,8 @@ export function Composer({
                         {(wide
                           ? [
                               {
-                                label: 'Files and Folder',
-                                icon: 'folder' as const,
+                                label: 'Files',
+                                icon: 'attach' as const,
                                 onPress: onAttachFiles ?? onAttachImages,
                               },
                               {

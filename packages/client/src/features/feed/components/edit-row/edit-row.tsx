@@ -11,6 +11,7 @@ import {
   Text,
   TextClassContext,
 } from '#lib/generic/primitives/display/text/text';
+import { fileTypeIcon } from '#lib/generic/symbols/file-type-icon';
 import { cn } from '#lib/generic/utils';
 import {
   Pressable,
@@ -21,7 +22,6 @@ import { type FileDiff, toFileDiffs } from '../../view/file-diff';
 import { DiffView } from '../diff-view/diff-view';
 import { ToolOutput } from '../tool-output';
 import { FileName } from './file-name';
-import { fileTypeIcon } from './file-type-icon';
 
 export interface EditRowProps {
   row: ToolCallUpdate;

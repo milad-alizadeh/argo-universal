@@ -37,7 +37,7 @@ const meta = {
     );
   },
   args: {
-    draft: { text: '', images: [] },
+    draft: { text: '', attachments: [] },
     onDraftChange: fn(),
     onAttachImages: fn(),
     onSend: fn(),

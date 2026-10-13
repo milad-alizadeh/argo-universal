@@ -12,6 +12,9 @@ export const BlobRef = z.strictObject({
 });
 export type BlobRef = z.infer<typeof BlobRef>;
 
+// Where the Server serves a stored blob over HTTP, beside tRPC.
+export const blobPath = (blobId: string): string => `/blobs/${blobId}`;
+
 const AttachmentSource = z.enum(['upload', 'pasted']);
 
 const AttachmentMeta = createFeedMetadataSchema(
@@ -42,6 +45,8 @@ export const ResourceLink = z.strictObject({
   title: z.string().optional(),
   description: z.string().optional(),
   size: z.number().optional(),
+  // An uploaded file: its `uri` is the blob's path, and the Engine hands the Agent the file itself.
+  blob: BlobRef.optional(),
   _meta: AttachmentMeta,
 });
 export type ResourceLink = z.infer<typeof ResourceLink>;

@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type * as React from 'react';
 import { useAgents } from '#features/agents';
-import { type ComposerDraft, useImageDraft } from '#features/composer';
+import { type ComposerDraft, useAttachmentDraft } from '#features/composer';
 import {
   isRememberedConfiguration,
   rememberSessionConfiguration,
@@ -36,7 +36,7 @@ type SessionMutation<Name extends 'prompt' | 'cancel' | 'setConfigOption'> =
     >
   >;
 type SessionCommands = Omit<
-  ReturnType<typeof useImageDraft>,
+  ReturnType<typeof useAttachmentDraft>,
   'clearDraft' | 'uploadDraftAsPrompt'
 > & {
   promptSession: SessionMutation<'prompt'>;
@@ -114,6 +114,8 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
       draft: commands.draft,
       onDraftChange: commands.changeDraft,
       onAttachImages: () => void commands.attachImages(),
+      onAttachFiles: () => void commands.attachFiles(),
+      onDropFiles: (dropped) => void commands.attachDroppedFiles(dropped),
       onSend: (sent) => void commands.sendDraft(sent),
       onStop: () => cancelTurn.mutate({ sessionId }),
       sending:
@@ -161,7 +163,7 @@ function useSessionCommands(
 ): SessionCommands {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { clearDraft, uploadDraftAsPrompt, ...draft } = useImageDraft();
+  const { clearDraft, uploadDraftAsPrompt, ...draft } = useAttachmentDraft();
   const promptSession = useMutation(
     trpc.session.prompt.mutationOptions({
       onSuccess: () => {

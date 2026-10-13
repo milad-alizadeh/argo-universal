@@ -28,6 +28,12 @@ const createAcpSessionDependencies = (
   };
 };
 
+// False when the Agent runs on its native adapter, which sends only text.
+export const runsOverAcp = (
+  context: OpenSessionsInput,
+  agent: string,
+): boolean => createAcpSessionDependencies(context, agent) !== undefined;
+
 const createSessionCreationInput = (
   event: Extract<OpenSessionsCommand, { type: 'sessions.create' }>,
 ): Omit<NewSessionInput, 'database' | 'runtimeDirectory' | 'sessionId'> => ({

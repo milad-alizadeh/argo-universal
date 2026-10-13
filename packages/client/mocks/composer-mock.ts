@@ -10,7 +10,7 @@ import {
   newSessionOptions,
 } from '@repo/mocks/app';
 import {
-  type ComposerImage,
+  type ComposerAttachment,
   type ComposerProps,
 } from '../src/features/composer/components/composer/composer';
 import { redSquareDataUrl } from '../src/lib/product/feed-message.mocks';
@@ -28,7 +28,7 @@ export const composerLongAgentCatalog: AgentInfo[] = Array.from(
   },
 );
 
-export const composerImages: ComposerImage[] = newSessionInputs.flatMap(
+export const composerImages: ComposerAttachment[] = newSessionInputs.flatMap(
   ({ agent, prompt }) =>
     prompt.flatMap((block) =>
       block.type === 'image'
@@ -38,6 +38,7 @@ export const composerImages: ComposerImage[] = newSessionInputs.flatMap(
               name: 'screenshot.png',
               uri: redSquareDataUrl,
               bytes: block.blob.bytes,
+              mimeType: block.mimeType,
             },
           ]
         : [],
@@ -47,11 +48,31 @@ export const composerImages: ComposerImage[] = newSessionInputs.flatMap(
 const imageFromContract = composerImages[0];
 if (!imageFromContract)
   throw new Error('New Session contract mock needs an image.');
-export const oversizedComposerImage: ComposerImage = {
+export const oversizedComposerImage: ComposerAttachment = {
   ...imageFromContract,
   name: 'full-screen.png',
   bytes: 27 * 1024 * 1024,
 };
+
+// A text file shows its first lines; any other file shows its kind.
+export const composerFiles: ComposerAttachment[] = [
+  {
+    id: 'notes:file',
+    name: 'release-notes.md',
+    uri: 'file:///Users/me/release-notes.md',
+    bytes: 1_204,
+    mimeType: 'text/markdown',
+    preview:
+      '# Release notes\n\n- Attach any file to a prompt\n- Drop files on the Composer\n- Text files go to the Agent inline',
+  },
+  {
+    id: 'report:file',
+    name: 'quarterly-report.pdf',
+    uri: 'file:///Users/me/quarterly-report.pdf',
+    bytes: 482_113,
+    mimeType: 'application/pdf',
+  },
+];
 
 export const composerPlan: PlanEntry[] = [
   {

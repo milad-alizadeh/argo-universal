@@ -15,6 +15,7 @@ import { SessionColumn } from '#lib/product/session-layout';
 import { chooseEffort } from '../../../../../mocks/choose-effort';
 import {
   composerProps,
+  composerFiles,
   composerImages,
   composerLongAgentCatalog,
   composerPlan,
@@ -30,8 +31,6 @@ const missingAvailableAgentFailure =
   'Recorded catalog needs an available Agent.';
 const agentModelLabel = 'Agent and model';
 const newCheckoutLabel = 'New worktree';
-const attachImagesLabel = 'Attach images';
-const filesFolderLabel = 'Files and Folder';
 const agentIconId = 'composer-agent-icon';
 const spacingPrompt = 'Match the spacing.';
 const multilineSpacingPrompt =
@@ -154,7 +153,7 @@ const meta = {
     <Composer {...composerProps({ ...args })} />
   ),
   args: {
-    draft: { text: '', images: [] },
+    draft: { text: '', attachments: [] },
     onDraftChange: fn(),
     onAttachImages: fn(),
     onSend: fn(),
@@ -172,7 +171,10 @@ function SendingComposer({
 }: {
   onSend: (draft: ComposerDraft) => void;
 }): React.JSX.Element {
-  const [draft, setDraft] = useState<ComposerDraft>({ text: '', images: [] });
+  const [draft, setDraft] = useState<ComposerDraft>({
+    text: '',
+    attachments: [],
+  });
   return (
     <Composer
       {...composerProps({
@@ -181,7 +183,7 @@ function SendingComposer({
         onAttachImages: fn(),
         onSend: (sent) => {
           onSend(sent);
-          setDraft({ text: '', images: [] });
+          setDraft({ text: '', attachments: [] });
         },
       })}
     />
@@ -198,7 +200,7 @@ export const Empty: Story = {
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
       await expect(
         canvas.getByRole('button', {
-          name: width >= 720 ? 'Attach' : attachImagesLabel,
+          name: 'Attach',
         }),
       ).toBeEnabled();
       await expect(
@@ -243,7 +245,7 @@ function typing(width: number): Story {
       await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
       await expect(prompt).toHaveBeenCalledWith({
         text: spacingPrompt,
-        images: [],
+        attachments: [],
       });
       await waitFor(() => expect(input).toHaveValue(''));
     },
@@ -272,7 +274,7 @@ function withImages(width: number): Story {
       const root = createRoot(canvas.getByTestId('controlled-images'));
       const onDraftChange = fn();
       const props = composerProps({
-        draft: { text: '', images: composerImages.slice(0, 1) },
+        draft: { text: '', attachments: composerImages.slice(0, 1) },
         onDraftChange,
         onSend: fn(),
         onAttachImages: fn(),
@@ -290,10 +292,10 @@ function withImages(width: number): Story {
         );
         await expect(onDraftChange).toHaveBeenCalledWith({
           text: '',
-          images: [],
+          attachments: [],
         });
         root.render(
-          imageComposer({ ...props, draft: { text: '', images: [] } }),
+          imageComposer({ ...props, draft: { text: '', attachments: [] } }),
         );
         await waitFor(() =>
           expect(canvas.queryByRole('img')).not.toBeInTheDocument(),
@@ -309,6 +311,54 @@ function withImages(width: number): Story {
 }
 export const WithImagesPhone = withImages(layoutWidths.phone);
 export const WithImagesWide = withImages(layoutWidths.wide);
+
+export const WithFiles: Story = {
+  args: { draft: { text: '', attachments: composerFiles } },
+  play: async ({ canvas, userEvent, args }) => {
+    await expect(
+      await canvas.findByRole('img', { name: 'release-notes.md' }),
+    ).toHaveTextContent('# Release notes');
+    await expect(
+      canvas.getByRole('img', { name: 'quarterly-report.pdf' }),
+    ).toHaveTextContent('PDF');
+    await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Remove quarterly-report.pdf' }),
+    );
+    await expect(args.onDraftChange).toHaveBeenCalledWith({
+      text: '',
+      attachments: composerFiles.slice(0, 1),
+    });
+  },
+};
+
+const dragFiles = (type: 'dragover' | 'drop', files: File[]): DragEvent => {
+  const transfer = new DataTransfer();
+  for (const file of files) transfer.items.add(file);
+  return new DragEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    dataTransfer: transfer,
+  });
+};
+
+export const DropFiles: Story = {
+  args: { onDropFiles: fn() },
+  play: async ({ canvas, args }) => {
+    const message = await canvas.findByRole('textbox');
+    const file = new File(['# Notes'], 'notes.md', { type: 'text/markdown' });
+    const over = dragFiles('dragover', [file]);
+    message.dispatchEvent(over);
+    await expect(over.defaultPrevented).toBe(true);
+    const drop = dragFiles('drop', [file]);
+    message.dispatchEvent(drop);
+    await expect(drop.defaultPrevented).toBe(true);
+    await expect(args.onDropFiles).toHaveBeenCalledWith({
+      files: [file],
+      folders: 0,
+    });
+  },
+};
 
 function attachmentMenus(width: number): Story {
   return {
@@ -329,14 +379,14 @@ function attachmentMenus(width: number): Story {
               ['Files', args.onAttachFiles],
             ] as const)
           : ([
-              [filesFolderLabel, args.onAttachFiles],
+              ['Files', args.onAttachFiles],
               ['Slash Commands', args.onSelectSlashCommand],
               ['Goal', args.onCreateGoal],
             ] as const);
       for (const [label, callback] of choices) {
         await userEvent.click(
           canvas.getByRole('button', {
-            name: width >= 720 ? 'Attach' : attachImagesLabel,
+            name: 'Attach',
           }),
         );
         await expect(
@@ -366,20 +416,16 @@ export const AttachmentInNarrowContent: Story = {
   ),
   play: async ({ canvas, userEvent }): Promise<void> => {
     await settleViewport(layoutWidths.wide);
-    const attach = await canvas.findByRole('button', {
-      name: attachImagesLabel,
-    });
-    await expect(
-      canvas.queryByRole('button', { name: 'Attach' }),
-    ).not.toBeInTheDocument();
-    await userEvent.click(attach);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Attach' }),
+    );
     await waitFor(() =>
       expect(
         within(document.body).getByRole('button', { name: 'Photos' }),
       ).toBeVisible(),
     );
     await expect(
-      within(document.body).queryByRole('button', { name: filesFolderLabel }),
+      within(document.body).queryByRole('button', { name: 'Slash Commands' }),
     ).not.toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
   },
@@ -431,7 +477,7 @@ function multiline(width: number): Story {
       await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
       await expect(prompt).toHaveBeenCalledWith({
         text: multilineSpacingPrompt,
-        images: [],
+        attachments: [],
       });
       await waitFor(() => expect(input).toHaveValue(''));
     },
@@ -447,7 +493,7 @@ export const ImageTooLarge: Story = {
     const onDraftChange = fn();
     const draft = {
       text: 'Match these screenshots.',
-      images: [oversizedComposerImage],
+      attachments: [oversizedComposerImage],
     };
     const props = composerProps({
       draft,
@@ -460,7 +506,7 @@ export const ImageTooLarge: Story = {
       for (const width of [layoutWidths.phone, layoutWidths.wide]) {
         await settleViewport(width);
         await expect(await canvas.findByRole('alert')).toHaveTextContent(
-          'Image exceeds 20 MB.',
+          'Attachment exceeds 20 MB.',
         );
         await expect(
           canvas.getByRole('button', { name: 'Send' }),
@@ -472,10 +518,13 @@ export const ImageTooLarge: Story = {
       );
       await expect(onDraftChange).toHaveBeenCalledWith({
         text: draft.text,
-        images: [],
+        attachments: [],
       });
       root.render(
-        imageComposer({ ...props, draft: { text: draft.text, images: [] } }),
+        imageComposer({
+          ...props,
+          draft: { text: draft.text, attachments: [] },
+        }),
       );
       await waitFor(() =>
         expect(canvas.queryByRole('alert')).not.toBeInTheDocument(),
@@ -490,7 +539,7 @@ export const ImageTooLarge: Story = {
 
 function sending(width: number): Story {
   return {
-    args: { draft: { text: spacingPrompt, images: [] }, sending: true },
+    args: { draft: { text: spacingPrompt, attachments: [] }, sending: true },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(
@@ -501,7 +550,7 @@ function sending(width: number): Story {
       await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
       await expect(
         canvas.getByRole('button', {
-          name: width >= 720 ? 'Attach' : attachImagesLabel,
+          name: 'Attach',
         }),
       ).toBeDisabled();
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
@@ -521,7 +570,7 @@ function disabled(width: number): Story {
     args: {
       draft: {
         text: spacingPrompt,
-        images: composerImages.slice(0, 1),
+        attachments: composerImages.slice(0, 1),
       },
       disabled: true,
     },
@@ -531,7 +580,7 @@ function disabled(width: number): Story {
       await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
       await expect(
         canvas.getByRole('button', {
-          name: width >= 720 ? 'Attach' : attachImagesLabel,
+          name: 'Attach',
         }),
       ).toBeDisabled();
       await expect(
@@ -590,7 +639,7 @@ function ConfiguredComposer({
   return (
     <Composer
       {...composerProps({
-        draft: { text: '', images: [] },
+        draft: { text: '', attachments: [] },
         onDraftChange: fn(),
         onSend: fn(),
         onAttachImages: fn(),
@@ -922,7 +971,7 @@ function stopPrecedence(
     args: {
       draft: {
         text: 'A draft during a Turn.',
-        images: [oversizedComposerImage],
+        attachments: [oversizedComposerImage],
       },
       sending: true,
       disabled,
@@ -996,7 +1045,7 @@ export const RunningWithoutStop: Story = {
       {...composerProps({ ...args, sessionStarted: true, running: true })}
     />
   ),
-  args: { draft: { text: 'A draft during a Turn.', images: [] } },
+  args: { draft: { text: 'A draft during a Turn.', attachments: [] } },
   play: async ({ canvas, args }) => {
     await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
     await expect(
@@ -1140,7 +1189,7 @@ function responsiveLayout(width: number, agentIndex: number): Story {
       const card = input.parentElement?.parentElement;
       if (!card) throw new Error('Composer card is missing.');
       const attachButton = canvas.getByRole('button', {
-        name: width >= 720 ? 'Attach' : attachImagesLabel,
+        name: 'Attach',
       });
       await expect(attachButton).toBeVisible();
       const trigger = canvas.getByRole('button', { name: agentModelLabel });

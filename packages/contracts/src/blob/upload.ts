@@ -6,6 +6,16 @@ const bytesPerMebibyte = 1_048_576;
 export const maxBlobUploadMebibytes = 20;
 export const maxBlobUploadBytes = maxBlobUploadMebibytes * bytesPerMebibyte;
 
+// The image formats an Agent reads as pictures; the Server recognises these from their bytes, and any other file goes as a file.
+const promptImageMimeTypes: ReadonlySet<string> = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+]);
+export const isPromptImage = (mimeType: string): boolean =>
+  promptImageMimeTypes.has(mimeType);
+
 // One file in the `file` field; tRPC parses multipart input over HTTP.
 export const BlobUploadInput = z
   .custom<FormData>(

@@ -10,7 +10,7 @@ import {
 import { ComposerOptions } from './composer-options';
 
 const configuration = composerProps({
-  draft: { text: '', images: [] },
+  draft: { text: '', attachments: [] },
   onDraftChange: () => {},
   onSend: () => {},
   onAttachImages: () => {},

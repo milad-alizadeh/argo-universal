@@ -158,7 +158,7 @@ export const MainContentUsesAvailableWidth: Story = {
           <Composer
             {...composerProps({
               sessionStarted: true,
-              draft: { text: preservedDraft, images: [] },
+              draft: { text: preservedDraft, attachments: [] },
               onDraftChange: fn(),
               onAttachImages: fn(),
               onSend: fn(),
@@ -278,7 +278,7 @@ export const ComposerUsesAvailableWidth: Story = {
         <Composer
           {...composerProps({
             sessionStarted: true,
-            draft: { text: preservedDraft, images: [] },
+            draft: { text: preservedDraft, attachments: [] },
             onDraftChange: fn(),
             onAttachImages: fn(),
             onSend: fn(),

@@ -3,18 +3,16 @@ import type {
   PromptCapabilities,
 } from '@agentclientprotocol/sdk';
 import type { ContentBlock } from '@repo/contracts';
-import { readBlobBytes, type BlobStorage } from '../../blob';
+import { type AttachmentStorage, readBlobBytes } from '../../blob';
+import { promptMetadata, readUploadedFile } from './uploaded-file';
 
 type PromptContentInput = {
   content: ContentBlock[];
   capabilities: PromptCapabilities;
-  storage: BlobStorage;
+  storage: AttachmentStorage;
 };
-const promptMetadata = (
-  metadata: ContentBlock['_meta'],
-): AcpContentBlock['_meta'] => metadata?.acp;
 const readPromptImage = async (
-  storage: BlobStorage,
+  storage: AttachmentStorage,
   image: Extract<ContentBlock, { type: 'image' }>,
 ): Promise<AcpContentBlock> => {
   if (image.mimeType !== image.blob.mime)
@@ -67,6 +65,14 @@ const readTextOrReferencePrompt = (
     );
   return Promise.resolve({ ...block, _meta: promptMetadata(block._meta) });
 };
+// An uploaded file goes to the Agent as the file itself; any other link or text as it is.
+const readOtherPrompt = (
+  input: Omit<PromptContentInput, 'content'>,
+  block: Exclude<ContentBlock, { type: 'image' | 'resource' }>,
+): Promise<AcpContentBlock> =>
+  block.type === 'resource_link' && block.blob
+    ? readUploadedFile(input, { ...block, blob: block.blob })
+    : readTextOrReferencePrompt(block);
 const convertPromptBlock = (
   input: Omit<PromptContentInput, 'content'>,
   block: ContentBlock,
@@ -77,7 +83,7 @@ const convertPromptBlock = (
     case 'resource':
       return readSupportedContext(input.capabilities, block);
     default:
-      return readTextOrReferencePrompt(block);
+      return readOtherPrompt(input, block);
   }
 };
 export const readAcpPromptContent = (

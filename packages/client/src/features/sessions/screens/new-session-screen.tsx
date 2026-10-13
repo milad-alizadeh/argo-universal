@@ -9,7 +9,7 @@ import { useMemo, useState } from 'react';
 import { useAgents } from '#features/agents';
 import {
   type ComposerDraft,
-  useImageDraft,
+  useAttachmentDraft,
   useNewSessionConfiguration,
 } from '#features/composer';
 import { useConnectionState } from '#features/connection';
@@ -81,7 +81,7 @@ function useNewSessionViewProps(
   const connected = useConnectionState() === 'open';
   const data = useNewSessionData(projectId);
   const { serverInfo, projects, agents, choices, configuration } = data;
-  const imageDraft = useImageDraft();
+  const attachmentDraft = useAttachmentDraft();
   // The first prompt as sent, shown in the Feed until the Session opens; a failure clears it and keeps the draft.
   const [sent, setSent] = useState<{ draft: ComposerDraft; at: number }>();
   const newSession = useMutation(
@@ -102,7 +102,7 @@ function useNewSessionViewProps(
   async function sendFirstPrompt(sent: ComposerDraft): Promise<void> {
     newSession.reset();
     setSent({ draft: sent, at: Date.now() });
-    const prompt = await imageDraft.uploadDraftAsPrompt(sent);
+    const prompt = await attachmentDraft.uploadDraftAsPrompt(sent);
     const input =
       prompt?.length &&
       toNewSessionInput(choices, configuration.configOptions, prompt);
@@ -120,7 +120,7 @@ function useNewSessionViewProps(
     newSession.reset();
   };
   const { agent } = choices;
-  const opening = imageDraft.uploading || newSession.isPending;
+  const opening = attachmentDraft.uploading || newSession.isPending;
   return {
     state: 'ready',
     serverName: serverInfo.data.name,
@@ -146,9 +146,11 @@ function useNewSessionViewProps(
           data.setChosen((current) => ({ ...current, newWorktree })),
       },
     },
-    draft: imageDraft.draft,
-    onDraftChange: imageDraft.changeDraft,
-    onAttachImages: () => void imageDraft.attachImages(),
+    draft: attachmentDraft.draft,
+    onDraftChange: attachmentDraft.changeDraft,
+    onAttachImages: () => void attachmentDraft.attachImages(),
+    onAttachFiles: () => void attachmentDraft.attachFiles(),
+    onDropFiles: (dropped) => void attachmentDraft.attachDroppedFiles(dropped),
     onSend: (sent) => void sendFirstPrompt(sent),
     canOpen: canOpenSession({
       connected,
@@ -158,7 +160,7 @@ function useNewSessionViewProps(
     }),
     opening,
     starting,
-    attachmentError: imageDraft.attachmentError?.message,
+    attachmentError: attachmentDraft.attachmentError?.message,
     setupStep:
       agent && agent.availability !== 'available'
         ? agent.installStep

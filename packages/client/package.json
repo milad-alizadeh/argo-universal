@@ -49,6 +49,7 @@
     "diff": "catalog:",
     "expo-clipboard": "catalog:",
     "expo-crypto": "catalog:",
+    "expo-document-picker": "catalog:",
     "expo-file-system": "catalog:",
     "expo-haptics": "catalog:",
     "expo-image-picker": "catalog:",

@@ -1,0 +1,94 @@
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { expect } from '../fixtures';
+import { readFeed } from './feed';
+import { When, Then } from './fixtures';
+
+interface Attachment {
+  fileName: string;
+  mime: string;
+  menuItem: string;
+  // The prompt block the Feed stores for the uploaded file.
+  block: (blob: { blobId: string; mime: string; bytes: number }) => object;
+}
+
+// Images reach the Agent as pictures; any other file as the file itself.
+const attachments: Record<string, Attachment> = {
+  'red square image': {
+    fileName: 'red-square.png',
+    mime: 'image/png',
+    menuItem: 'Photos',
+    block: (blob) => ({ type: 'image', mimeType: blob.mime, blob }),
+  },
+  'release notes file': {
+    fileName: 'release-notes.md',
+    mime: 'text/markdown',
+    menuItem: 'Files',
+    block: (blob) => ({
+      type: 'resource_link',
+      name: 'release-notes.md',
+      uri: `/blobs/${blob.blobId}`,
+      blob: { blobId: blob.blobId },
+    }),
+  },
+};
+
+const attachmentNamed = (name: string): Attachment => {
+  const attachment = attachments[name];
+  if (!attachment) throw new Error(`No attachment named ${name}`);
+  return attachment;
+};
+
+const filePath = (attachment: Attachment): string =>
+  path.resolve(import.meta.dirname, '../../mocks/agent', attachment.fileName);
+
+async function storedFile(attachment: Attachment): Promise<{
+  bytes: Buffer;
+  blob: { blobId: string; mime: string; bytes: number };
+}> {
+  const bytes = await readFile(filePath(attachment));
+  const blobId = createHash('sha256').update(bytes).digest('hex');
+  return {
+    bytes,
+    blob: { blobId, mime: attachment.mime, bytes: bytes.byteLength },
+  };
+}
+
+When(
+  /^I attach the (red square image|release notes file)$/,
+  async ({ page }, name: string): Promise<void> => {
+    const attachment = attachmentNamed(name);
+    await page.getByRole('button', { name: 'Attach' }).click();
+    const chooser = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: attachment.menuItem }).click();
+    await (await chooser).setFiles(filePath(attachment));
+    await expect(
+      page.getByRole('img', { name: attachment.fileName }),
+    ).toBeVisible();
+  },
+);
+
+Then(
+  /^the Session Feed contains the prompt "([^"]+)" with the (red square image|release notes file)$/,
+  async ({ page, server }, text: string, name: string): Promise<void> => {
+    const attachment = attachmentNamed(name);
+    const { blob } = await storedFile(attachment);
+    const [prompt] = await readFeed(page, server.httpUrl);
+    expect(prompt).toMatchObject({
+      sessionUpdate: 'user_message',
+      content: [{ type: 'text', text }, attachment.block(blob)],
+    });
+  },
+);
+
+Then(
+  /^the Server preserves the attached (red square image|release notes file)$/,
+  async ({ page, server }, name: string): Promise<void> => {
+    const { bytes, blob } = await storedFile(attachmentNamed(name));
+    const stored = await page.request.get(
+      `${server.httpUrl}/blobs/${blob.blobId}`,
+    );
+    expect(Buffer.from(await stored.body())).toEqual(bytes);
+  },
+);
