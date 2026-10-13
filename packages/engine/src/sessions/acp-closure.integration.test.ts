@@ -10,7 +10,7 @@ import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const prompt = [{ type: 'text' as const, text: 'Start' }];
 
-it('a Session whose close timed out keeps its Checkout and refuses work until its shared process exit is observed', async () => {
+it('a prompted Session whose close timed out keeps its Checkout and refuses work until its shared process exit is observed', async () => {
   const openings: NewSessionRequest[] = [];
   const host = await startAcpEngine({
     steps: [],
@@ -29,6 +29,8 @@ it('a Session whose close timed out keeps its Checkout and refuses work until it
     checkout: { type: 'worktree', baseBranch: 'main' },
   });
   const sibling = await host.caller.session.new(emptySessionInput);
+  await host.caller.session.prompt({ ...stuck, prompt });
+  await waitForAcpSessionIdle(host, stuck.sessionId);
   await expect(host.caller.session.close(stuck)).rejects.toThrow(
     'ACP session close timed out; cleanup retained',
   );

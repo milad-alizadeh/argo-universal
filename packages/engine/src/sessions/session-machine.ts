@@ -97,10 +97,11 @@ import {
 import { validateConfigChoice } from './session-admission';
 import {
   createSessionCheckout,
-  discardSessionCheckout,
+  discardSession,
   loadSession,
   type NewSessionInput,
   type SessionData,
+  type SessionDiscard,
   type SessionInput,
   interruptionDisclosureId,
   toSessionInsert,
@@ -137,10 +138,6 @@ type CrashNoticeParameters = { description?: string } | undefined;
 type LoadSessionInput = {
   session: SessionInput;
   writer: WriterActorRef | undefined;
-};
-type DiscardCheckoutInput = {
-  session: NewSessionInput;
-  checkout: SessionData['checkout'];
 };
 type EndTurnParameters = {
   stopReason: StopReason;
@@ -454,9 +451,8 @@ const sessionSetup = setup({
       ({ input, signal }): Promise<SessionData> =>
         createSessionCheckout(input, signal),
     ),
-    discardCheckout: fromPromise<void, DiscardCheckoutInput>(
-      ({ input, signal }): Promise<void> =>
-        discardSessionCheckout(input.session, input.checkout, signal),
+    discardSession: fromPromise<void, SessionDiscard>(
+      ({ input, signal }): Promise<void> => discardSession(input, signal),
     ),
     loadSession: fromPromise<SessionData, LoadSessionInput>(
       ({ input }): Promise<SessionData> =>
@@ -741,7 +737,7 @@ const sessionSetup = setup({
     ),
     addDiscardFailure: assign(
       ({ context, event }): Pick<SessionContext, 'failure'> => ({
-        failure: `${context.failure}\nThe Checkout was not removed: ${String('error' in event ? event.error : event)}`,
+        failure: `${context.failure}\nThe Session was not discarded: ${String('error' in event ? event.error : event)}`,
       }),
     ),
     // An Agent that could not start may have been signed out or removed since its last probe.
@@ -806,6 +802,7 @@ const sessionSetup = setup({
         enqueue.assign({
           activeTurnId: params.turnId,
           activeTurnStartedAt: startedAt,
+          kept: true,
         });
         enqueue.sendTo(writer, {
           type: writeFeedEvent,
@@ -1280,7 +1277,7 @@ const discardsSession = { type: 'closesBy', params: 'discard' } as const;
 // An Agent that ends before its Session is stored discards the Session; a stored one recovers.
 const nativeFailed = [
   {
-    guard: discardsSession,
+    guard: 'isUnstored',
     target: drainingNativeTarget,
     actions: ['rememberStartFailure', 'refreshAgentProbe'],
   },
@@ -1339,6 +1336,7 @@ export const sessionMachine = sessionSetup.createMachine({
     maxRevision: 0,
     activityAt: 0,
     nextPosition: 0,
+    kept: false,
     undisclosedInterruptedTurnId: null,
     capabilities: null,
     activeTurnId: null,
@@ -1989,7 +1987,7 @@ export const sessionMachine = sessionSetup.createMachine({
               after: {
                 agentStartLimit: [
                   {
-                    guard: discardsSession,
+                    guard: 'isUnstored',
                     target: drainingNativeTarget,
                     actions: ['rememberStartLimit', 'refreshAgentProbe'],
                   },
@@ -2164,14 +2162,20 @@ export const sessionMachine = sessionSetup.createMachine({
         ],
       },
     },
-    // A new Session whose Agent never started leaves no worktree behind.
+    // A Session no prompt reached leaves no row or worktree behind.
     discarding: {
       invoke: {
-        id: 'discardCheckout',
-        src: 'discardCheckout',
-        input: ({ context }): DiscardCheckoutInput => ({
-          session: context.input as NewSessionInput,
-          checkout: context.checkout,
+        id: 'discardSession',
+        src: 'discardSession',
+        input: ({ context, self }): SessionDiscard => ({
+          input: context.input,
+          data: context,
+          stored: context.stored,
+          writer: findMachineActor(
+            self.system,
+            databaseWriterId,
+            writerMachine,
+          ),
         }),
         onDone: { target: 'closed' },
         onError: { target: 'closed', actions: 'addDiscardFailure' },

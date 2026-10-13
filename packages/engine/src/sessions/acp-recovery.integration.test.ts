@@ -254,6 +254,11 @@ it('a reopened Session resumes its Agent context without appending replayed hist
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
+  await host.caller.session.prompt({
+    ...created,
+    prompt: [{ type: 'text', text: 'Start' }],
+  });
+  await waitForAcpSessionIdle(host, created.sessionId);
   await host.caller.session.close(created);
   await host.caller.session.prompt({
     ...created,
@@ -308,11 +313,17 @@ it(
 it('reopening after an interrupted Turn discloses missing output once', async () => {
   const host = await startAcpEngine();
   const created = await host.caller.session.new(emptySessionInput);
+  await host.caller.session.prompt({
+    ...created,
+    prompt: [{ type: 'text', text: 'Start' }],
+  });
+  await waitForAcpSessionIdle(host, created.sessionId);
   await host.caller.session.close(created);
+  const stoppedAt = Date.now();
   host.database.$client
     .prepare(
       `INSERT INTO turn (id, session_id, status, stop_reason, error, started_at, ended_at)
-       VALUES ('stopped-turn', ?, 'ended', 'error', ?, 1, 2)`,
+       VALUES ('stopped-turn', ?, 'ended', 'error', ?, ?, ?)`,
     )
     .run(
       created.sessionId,
@@ -320,6 +331,8 @@ it('reopening after an interrupted Turn discloses missing output once', async ()
         code: 'interrupted',
         message: 'The Server stopped during the Turn',
       }),
+      stoppedAt,
+      stoppedAt + 1,
     );
   for (const text of ['Continue', 'Again']) {
     await host.caller.session.prompt({
