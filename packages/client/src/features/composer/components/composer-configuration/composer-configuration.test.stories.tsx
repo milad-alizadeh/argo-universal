@@ -45,17 +45,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const flat = (
+  option: SessionConfigOption | undefined,
+): SessionConfigSelectOption[] =>
+  option?.type === 'select'
+    ? option.options.flatMap((entry) =>
+        'groupId' in entry ? entry.options : [entry],
+      )
+    : [];
+
 const defaultEffortCases = composerUnlistedEffortConfigurations.map(
   (configuration, agentIndex) => {
     const recorded = newSessionOptions[agentIndex];
-    const flat = (
-      option: SessionConfigOption | undefined,
-    ): SessionConfigSelectOption[] =>
-      option?.type === 'select'
-        ? option.options.flatMap((entry) =>
-            'groupId' in entry ? entry.options : [entry],
-          )
-        : [];
     const model = recorded?.configOptions.find(
       (entry) => entry.category === 'model',
     );

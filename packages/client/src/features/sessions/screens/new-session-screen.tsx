@@ -1,4 +1,8 @@
-import type { ProjectInfo, SystemInfo } from '@repo/contracts';
+import type {
+  ProjectInfo,
+  SessionConfigOption,
+  SystemInfo,
+} from '@repo/contracts';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
@@ -15,7 +19,6 @@ import { useNavigate } from '#lib/product/navigation/context';
 import {
   NewSessionView,
   type NewSessionViewProps,
-  type ReadyNewSessionViewProps,
 } from '../components/new-session-view/new-session-view';
 import {
   type EmptySessionActor,
@@ -47,39 +50,74 @@ export function NewSessionScreen({
   projectId,
 }: NewSessionScreenProps): React.JSX.Element {
   const { view, opened } = useNewSessionViewProps(projectId);
-  if (view.state !== 'ready' || !opened) return <NewSessionView {...view} />;
-  return <OpenedNewSession key={opened.sessionId} {...opened} view={view} />;
+  const [read, setRead] = useState<ReadOptions>();
+  const options =
+    opened && read?.sessionId === opened.sessionId ? read : undefined;
+  const { change } = useSessionConfigChange(
+    opened?.sessionId ?? '',
+    opened?.agent,
+    ignoreChange,
+  );
+  return (
+    <>
+      {opened && (
+        <EmptySessionOptions
+          key={opened.sessionId}
+          {...opened}
+          onRead={setRead}
+        />
+      )}
+      <NewSessionView
+        {...withOpenedOptions(view, options?.configOptions, change)}
+      />
+    </>
+  );
+}
+
+interface ReadOptions {
+  sessionId: string;
+  configOptions: SessionConfigOption[];
 }
 
 const ignoreChange = (): void => {};
 
+// The open Session's options take the Composer's place, with changes going to that Session.
+const withOpenedOptions = (
+  view: NewSessionViewProps,
+  configOptions: SessionConfigOption[] | undefined,
+  change: (configId: string, value: string | boolean) => void,
+): NewSessionViewProps =>
+  view.state === 'ready' && configOptions
+    ? {
+        ...view,
+        configuration: {
+          ...view.configuration,
+          configOptions,
+          onConfigChange: change,
+        },
+      }
+    : view;
+
 // The open empty Session's options, read from its Feed; this device's last choices go to it once.
-function OpenedNewSession({
+function EmptySessionOptions({
   sessionId,
   agent,
   actor,
-  view,
+  onRead,
 }: OpenedSession & {
-  view: { state: 'ready' } & ReadyNewSessionViewProps;
-}): React.JSX.Element {
+  onRead: (options: ReadOptions) => void;
+}): null {
   const { snapshot } = useSessionFeed(sessionId);
   const saved = useQuery(savedChoicesQuery(agent));
   const configOptions = snapshot?.configOptions;
   useEffect(() => {
+    if (configOptions) onRead({ sessionId, configOptions });
+  }, [onRead, sessionId, configOptions]);
+  useEffect(() => {
     if (configOptions && saved.data)
       actor.send({ type: 'options.loaded', configOptions, saved: saved.data });
   }, [actor, configOptions, saved.data]);
-  const { change } = useSessionConfigChange(sessionId, agent, ignoreChange);
-  return (
-    <NewSessionView
-      {...view}
-      configuration={{
-        ...view.configuration,
-        configOptions: configOptions ?? [],
-        onConfigChange: change,
-      }}
-    />
-  );
+  return null;
 }
 
 interface NewSessionData {

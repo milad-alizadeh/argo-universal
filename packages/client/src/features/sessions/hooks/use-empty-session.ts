@@ -1,6 +1,6 @@
 import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
 import { useActorRef, useSelector } from '@xstate/react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { ActorRefFrom } from 'xstate';
 import {
   type ConfigurationChange,
@@ -116,15 +116,25 @@ function useCloseOnLeave(actor: EmptySessionActor): void {
   );
 }
 
-// The choices reach the machine on every change; a failed open tries again when the Connection reopens.
+// Each render builds the input anew; the machine hears of it only when its value changes.
 function useChoices(
   actor: EmptySessionActor,
   input: SessionNewInput | undefined,
   connected: boolean,
 ): void {
+  const latestInput = useRef(input);
   useEffect(() => {
-    actor.send({ type: 'choices.changed', input, connected });
-  }, [actor, input, connected]);
+    latestInput.current = input;
+  });
+  const choiceKey = JSON.stringify(input ?? null);
+  useEffect(() => {
+    const changed = { input: latestInput.current, connected };
+    actor.send({ type: 'choices.changed', ...changed });
+  }, [actor, choiceKey, connected]);
+}
+
+// A failed open tries again when the Connection reopens.
+function useRetryOnReconnect(actor: EmptySessionActor): void {
   const failed = useSelector(actor, (snapshot) => snapshot.matches('failed'));
   const retry = useCallback(() => actor.send({ type: 'retry' }), [actor]);
   useResubscribeOnReconnect({
@@ -154,6 +164,7 @@ export function useEmptySession(
   });
   useCloseOnLeave(actor);
   useChoices(actor, input, connected);
+  useRetryOnReconnect(actor);
   return toEmptySession(
     actor,
     useSelector(actor, (current) => current),

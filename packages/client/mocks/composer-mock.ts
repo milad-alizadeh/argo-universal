@@ -7,6 +7,7 @@ import {
   newSessionBranches,
   newSessionCatalogs,
   newSessionInputs,
+  newSessionOptions,
   recordedSessionOptions,
 } from '@repo/mocks/app';
 import {
@@ -142,7 +143,10 @@ export function composerProps(props: ComposerMockProps): ComposerProps {
     configuration: props.configuration ?? {
       agents: newSessionCatalogs.bothAvailable,
       agent,
-      configOptions: recordedSessionOptions(agent),
+      // A Session list Agent has no recorded empty Session, so it starts with no options.
+      configOptions:
+        newSessionOptions.find((entry) => entry.agent === agent)
+          ?.configOptions ?? [],
       turnRunning: props.running ?? false,
       onAgentChange: props.sessionStarted ? undefined : () => {},
       onConfigChange: () => {},
