@@ -29,31 +29,39 @@ function SearchableTitle(): React.JSX.Element {
   );
 }
 
+const variations = [
+  { label: 'Title', row: <PageTitleRow title="General" /> },
+  {
+    label: 'Drill-in, with a back button',
+    row: <PageTitleRow title="argo-universal" onBack={() => {}} />,
+  },
+  {
+    label: 'Icon and badge',
+    row: (
+      <PageTitleRow
+        title="Claude Code"
+        onBack={() => {}}
+        icon={<Icon name="sparkle" role="title" />}
+        badge={
+          <Badge tone="success">
+            <Text>Ready</Text>
+          </Badge>
+        }
+      />
+    ),
+  },
+  { label: 'Actions and search', row: <SearchableTitle /> },
+];
+
 export const Variations: Story = {
   name: 'PageTitleRow',
   render: () => (
     <VariationList className="p-6 pl-15">
-      <Variation label="Title">
-        <PageTitleRow title="General" />
-      </Variation>
-      <Variation label="Drill-in, with a back button">
-        <PageTitleRow title="argo-universal" onBack={() => {}} />
-      </Variation>
-      <Variation label="Icon and badge">
-        <PageTitleRow
-          title="Claude Code"
-          onBack={() => {}}
-          icon={<Icon name="sparkle" role="title" />}
-          badge={
-            <Badge tone="success">
-              <Text>Ready</Text>
-            </Badge>
-          }
-        />
-      </Variation>
-      <Variation label="Actions and search">
-        <SearchableTitle />
-      </Variation>
+      {variations.map(({ label, row }) => (
+        <Variation key={label} label={label}>
+          {row}
+        </Variation>
+      ))}
     </VariationList>
   ),
 };

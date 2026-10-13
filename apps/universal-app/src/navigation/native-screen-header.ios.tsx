@@ -3,40 +3,53 @@ import {
   hasLiquidGlass,
   type ScreenHeaderProps,
 } from '@repo/client';
-import { Stack } from 'expo-router';
+import { Stack, type NativeStackNavigationOptions } from 'expo-router';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { rightItems } from './header-right-items';
 import { headerSearchOptions } from './header-search-options';
+import { screenHeaderOptions } from './screen-header-options';
 
-type Action = NonNullable<NonNullable<ScreenHeaderProps['search']>['action']>;
+type Search = NonNullable<ScreenHeaderProps['search']>;
+type Action = NonNullable<Search['action']>;
+type SearchBarOptions = NativeStackNavigationOptions['headerSearchBarOptions'];
 
 // iOS draws the native search bar: iOS 26 docks it at the bottom, in the thumb's reach; earlier iOS stacks it below the header row, since an integrated bar there falls back to inline and squeezes the title. The search's action, such as New Session, is a header item on every iOS.
-export function NativeScreenHeader({
-  title,
-  left,
-  right = [],
-  search,
-}: ScreenHeaderProps): React.JSX.Element {
-  const action = search?.action ? [actionButton(search.action)] : [];
+export function NativeScreenHeader(
+  header: ScreenHeaderProps,
+): React.JSX.Element {
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title,
-          headerLeft: left ? () => left : undefined,
-          ...rightItems([...right, ...action]),
-          headerSearchBarOptions: search && {
-            ...headerSearchOptions(search),
-            placement: hasLiquidGlass ? 'integrated' : 'stacked',
-            // Before iOS 26 a focused bar hides the header row, but not our custom items in it, which pile up in its corner; the row stays.
-            hideNavigationBar: hasLiquidGlass,
-          },
-        }}
-      />
-      {search && hasLiquidGlass && <BottomSearch />}
+      <Stack.Screen options={headerOptions(header)} />
+      {header.search && hasLiquidGlass && <BottomSearch />}
     </>
+  );
+}
+
+function headerOptions({
+  right = [],
+  search,
+  ...header
+}: ScreenHeaderProps): NativeStackNavigationOptions {
+  return {
+    ...screenHeaderOptions(header),
+    ...rightItems([...right, ...searchAction(search)]),
+    headerSearchBarOptions: searchBarOptions(search),
+  };
+}
+
+function searchAction(search: Search | undefined): ReactElement[] {
+  return search?.action ? [actionButton(search.action)] : [];
+}
+
+function searchBarOptions(search: Search | undefined): SearchBarOptions {
+  return (
+    search && {
+      ...headerSearchOptions(search),
+      placement: hasLiquidGlass ? 'integrated' : 'stacked',
+      // Before iOS 26 a focused bar hides the header row, but not our custom items in it, which pile up in its corner; the row stays.
+      hideNavigationBar: hasLiquidGlass,
+    }
   );
 }
 

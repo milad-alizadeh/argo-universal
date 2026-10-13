@@ -30,22 +30,6 @@
     { "files": ["packages/engine/src/system/*"], "rules": { "complexity": "off", "sonarjs/no-os-command-from-path": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type, unicorn/consistent-function-scoping, vitest/expect-expect
     { "files": ["apps/server/src/supervisor/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "unicorn/consistent-function-scoping": "off", "vitest/expect-expect": "off" } },
-    // stylistic/multiline-comment-style, unicorn/prefer-string-replace-all
-    { "files": ["apps/storybook/*"], "rules": { "stylistic/multiline-comment-style": "off", "unicorn/prefer-string-replace-all": "off" } },
-    // max-lines-per-function, typescript/explicit-function-return-type, unicorn/prefer-string-replace-all
-    { "files": ["apps/storybook/.storybook/*"], "rules": { "max-lines-per-function": "off", "unicorn/prefer-string-replace-all": "off" } },
-    // typescript/no-require-imports
-    { "files": ["apps/universal-app/*"], "rules": { "typescript/no-require-imports": "off" } },
-    // stylistic/multiline-comment-style
-    { "files": ["apps/universal-app/src/*"], "rules": { "stylistic/multiline-comment-style": "off" } },
-    // max-lines-per-function, typescript/consistent-type-assertions, typescript/explicit-function-return-type
-    { "files": ["apps/universal-app/src/app/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function, typescript/explicit-function-return-type
-    { "files": ["apps/universal-app/src/app/(shell)/settings/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function, typescript/consistent-type-assertions
-    { "files": ["apps/universal-app/src/lib/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function, no-inline-comments, sonarjs/no-duplicate-string, sonarjs/no-unused-vars, stylistic/line-comment-position, typescript/consistent-type-assertions, typescript/explicit-function-return-type
-    { "files": ["apps/universal-app/src/navigation/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "sonarjs/no-unused-vars": "off" } },
     // complexity, max-lines-per-function, max-statements, sonarjs/no-redundant-jump, sonarjs/no-unused-vars, typescript/consistent-type-assertions, typescript/explicit-function-return-type
     { "files": ["e2e/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/no-redundant-jump": "off", "sonarjs/no-unused-vars": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/unbound-method, unicorn-js/prefer-switch, unicorn/no-useless-undefined, vitest/expect-expect, vitest/no-standalone-expect
@@ -54,8 +38,6 @@
     { "files": ["packages/agents/src/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "stylistic/multiline-comment-style": "off" } },
     // complexity, jsx-a11y/no-autofocus, jsx-a11y/role-has-required-aria-props, max-lines, max-lines-per-function, max-statements, react/set-state-in-effect, sonarjs/cognitive-complexity, sonarjs/no-duplicate-string, sonarjs/no-nested-conditional, stylistic/multiline-comment-style, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/no-floating-promises, typescript/unbound-method, unicorn-js/prefer-switch, unicorn/no-useless-undefined, unicorn/prefer-spread
     { "files": ["packages/client/mocks/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off" } },
-    // complexity, max-depth, max-lines-per-function
-    { "files": ["packages/client/src/*"], "rules": { "complexity": "off", "max-depth": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/super-linear-regex, unicorn/no-useless-undefined, unicorn/prefer-ternary
     { "files": ["packages/client/src/features/composer/components/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/super-linear-regex, unicorn/prefer-ternary
@@ -80,12 +62,6 @@
     { "files": ["packages/client/src/features/connection/components/connection-banner/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // max-lines-per-function
     { "files": ["packages/client/src/features/connection/components/connection-detail-view/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function, sonarjs/misplaced-loop-counter
-    { "files": ["packages/client/src/features/connection/screens/*"], "rules": { "complexity": "off" } },
-    // complexity, max-lines, max-lines-per-function, prefer-const, unicorn/consistent-function-scoping, vitest/expect-expect
-    { "files": ["packages/client/src/features/connection/state/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "prefer-const": "off", "unicorn/consistent-function-scoping": "off", "vitest/expect-expect": "off" } },
-    // max-lines-per-function, typescript/no-misused-promises, unicorn/consistent-function-scoping
-    { "files": ["packages/client/src/features/connection/trpc/*"], "rules": { "max-lines-per-function": "off", "typescript/no-misused-promises": "off", "unicorn/consistent-function-scoping": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/no-nested-template-literals, typescript/no-misused-promises, unicorn/no-useless-undefined, unicorn/prefer-spread, unicorn/prefer-string-replace-all
     { "files": ["packages/client/src/features/feed/components/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "max-statements": "off", "unicorn/prefer-spread": "off", "unicorn/prefer-string-replace-all": "off" } },
     // complexity
@@ -146,8 +122,6 @@
     { "files": ["packages/client/src/features/sessions/components/sessions-loading/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function
     { "files": ["packages/client/src/features/sessions/components/sessions-view/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, max-statements, typescript/no-misused-promises, unicorn/consistent-function-scoping, unicorn/prefer-ternary
-    { "files": ["packages/client/src/features/sessions/screens/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off" } },
     // max-lines-per-function
     { "files": ["packages/client/src/features/settings/components/placeholder-detail-view/*"], "rules": { "max-lines-per-function": "off" } },
     // max-lines, max-lines-per-function
@@ -156,12 +130,6 @@
     { "files": ["packages/client/src/features/settings/components/project-list-view/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function
     { "files": ["packages/client/src/features/settings/components/settings-list/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/page-title-row/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/use-wide/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // max-lines-per-function
     { "files": ["packages/client/src/lib/generic/primitives/buttons/button/*"], "rules": { "max-lines-per-function": "off" } },
     // max-lines-per-function
@@ -206,10 +174,6 @@
     { "files": ["packages/client/src/lib/generic/primitives/overlays/info-popover/*"], "rules": { "max-lines-per-function": "off" } },
     // max-lines-per-function
     { "files": ["packages/client/src/lib/generic/primitives/overlays/menu/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/symbols/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/symbols/symbol-glyph/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-nested-conditional, unicorn/prefer-string-replace-all
     { "files": ["packages/client/src/lib/product/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "sonarjs/no-nested-conditional": "off" } },
     // complexity, max-lines-per-function
@@ -226,8 +190,6 @@
     { "files": ["packages/client/src/lib/product/markdown/code-block-title/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function, unicorn/no-useless-undefined
     { "files": ["packages/client/src/lib/product/markdown/feed-code-block/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "unicorn/no-useless-undefined": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/lib/product/navigation/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type
     { "files": ["packages/contracts/src/feed/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
     // max-lines, max-lines-per-function, typescript/explicit-function-return-type

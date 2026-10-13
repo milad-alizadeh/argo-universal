@@ -1,6 +1,6 @@
 import { PortalHost } from '@rn-primitives/portal';
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import type { PropsWithChildren } from 'react';
 import { type ComponentType, useLayoutEffect } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -30,71 +30,96 @@ const initialMetrics = {
   insets: { top: 0, bottom: 0, left: 0, right: 0 },
 };
 
-function ReusablesPreview({
-  Story,
-  storyId,
-  mode,
-  standalone,
-  padding,
-  screen,
-}: {
+interface PreviewProps {
   Story: ComponentType;
   storyId: string;
   mode: 'light' | 'dark';
   standalone: boolean;
   padding: boolean;
   screen: boolean;
-}): React.JSX.Element {
+}
+
+type LayoutProps = Pick<PreviewProps, 'Story' | 'padding'>;
+
+function ReusablesPreview(props: PreviewProps): React.JSX.Element {
+  usePreviewTheme(props.mode, props.storyId);
+  return (
+    <PreviewProviders>
+      <PreviewLayout {...props} />
+      {props.standalone && <PortalHost />}
+      {props.standalone && <Toaster key={props.storyId} />}
+    </PreviewProviders>
+  );
+}
+
+function usePreviewTheme(mode: PreviewProps['mode'], storyId: string): void {
   useLayoutEffect(() => {
     Uniwind.setTheme(Platform.OS === 'web' ? mode : 'system');
   }, [mode]);
   // No toast outlives the story that showed it.
   useLayoutEffect(() => dismissToasts, [storyId]);
-  let preview: ReactNode;
-  if (screen) {
-    preview = (
-      <View className="flex-1 w-full min-h-0 bg-sidebar web:h-screen web:flex-none">
-        <Story />
-      </View>
-    );
-  } else if (Platform.OS === 'web') {
-    preview = (
-      <View
-        className={cn(
-          'min-h-full w-full items-center justify-center bg-sidebar',
-          padding && 'p-6',
-        )}
-      >
-        <Story />
-      </View>
-    );
-  } else {
-    preview = (
-      <ScrollView
-        className="flex-1 bg-sidebar"
-        contentContainerClassName={cn(
-          'grow items-center justify-center',
-          padding && 'p-6',
-        )}
-      >
-        <Story />
-      </ScrollView>
-    );
-  }
+}
+
+function PreviewProviders({ children }: PropsWithChildren): React.JSX.Element {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider initialMetrics={initialMetrics}>
         <KeyboardProvider>
           <BlobUrlContext.Provider value={recordedImageUrl}>
-            {preview}
-            {standalone && <PortalHost />}
-            {standalone && <Toaster key={storyId} />}
+            {children}
           </BlobUrlContext.Provider>
         </KeyboardProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
+
+function PreviewLayout({
+  Story,
+  padding,
+  screen,
+}: LayoutProps & Pick<PreviewProps, 'screen'>): React.JSX.Element {
+  if (screen) return <ScreenLayout Story={Story} padding={padding} />;
+  return <CentredLayout Story={Story} padding={padding} />;
+}
+
+function ScreenLayout({ Story }: LayoutProps): React.JSX.Element {
+  return (
+    <View className="flex-1 w-full min-h-0 bg-sidebar web:h-screen web:flex-none">
+      <Story />
+    </View>
+  );
+}
+
+function WebCentredLayout({ Story, padding }: LayoutProps): React.JSX.Element {
+  return (
+    <View
+      className={cn(
+        'min-h-full w-full items-center justify-center bg-sidebar',
+        padding && 'p-6',
+      )}
+    >
+      <Story />
+    </View>
+  );
+}
+
+function NativeCentredLayout(props: LayoutProps): React.JSX.Element {
+  return (
+    <ScrollView
+      className="flex-1 bg-sidebar"
+      contentContainerClassName={cn(
+        'grow items-center justify-center',
+        props.padding && 'p-6',
+      )}
+    >
+      <props.Story />
+    </ScrollView>
+  );
+}
+
+const CentredLayout =
+  Platform.OS === 'web' ? WebCentredLayout : NativeCentredLayout;
 
 export function withReusablesPreview(
   Story: ComponentType,
