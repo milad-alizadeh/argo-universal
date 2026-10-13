@@ -34,10 +34,18 @@ export function SplitButton<Value extends string>(
   props: SplitButtonProps<Value>,
 ): React.JSX.Element {
   const wide = useContentWide();
+  const [height, setHeight] = useState<number>();
   return (
-    <ButtonGroup className={props.className}>
+    <ButtonGroup
+      className={props.className}
+      onLayout={({ nativeEvent }) => setHeight(nativeEvent.layout.height)}
+    >
       {props.children}
-      {wide ? <ChoiceDropdown {...props} /> : <ChoiceSheet {...props} />}
+      {wide ? (
+        <ChoiceDropdown {...props} />
+      ) : (
+        <ChoiceSheet {...props} height={height} />
+      )}
     </ButtonGroup>
   );
 }
@@ -48,7 +56,10 @@ function chevron(
     menuLabel,
     primary,
     disabled,
-  }: Pick<SplitButtonProps<string>, 'menuLabel' | 'primary' | 'disabled'>,
+    height,
+  }: Pick<SplitButtonProps<string>, 'menuLabel' | 'primary' | 'disabled'> & {
+    height?: number;
+  },
   wide: boolean,
   className: string | undefined,
 ): React.JSX.Element {
@@ -61,6 +72,7 @@ function chevron(
         wide ? 'h-8 w-7 px-0 sm:h-8' : 'h-11 w-11 rounded-lg px-0 sm:h-11',
         className,
       )}
+      style={height === undefined ? undefined : { height }}
       icon={'chevron-down'}
       iconRole="secondary"
       iconClassName={
@@ -93,7 +105,7 @@ function ChoiceDropdown<Value extends string>(
 }
 
 function ChoiceSheet<Value extends string>(
-  props: ChoiceProps<Value>,
+  props: ChoiceProps<Value> & { height?: number },
 ): ReactNode {
   const { choices, value, onValueChange, disabled, menuLabel } = props;
   const [open, setOpen] = useState(false);

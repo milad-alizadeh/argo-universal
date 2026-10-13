@@ -46,7 +46,7 @@ export function WrittenPlan({
       className={contentActionClass({
         variant: 'ghost',
         className: cn(
-          'h-6 sm:h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer',
+          'min-h-6 sm:min-h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer',
           wide &&
             'h-8 sm:h-8 w-full justify-start pl-2 pr-1.5 rounded-none border-0 bg-transparent shadow-none',
         ),
