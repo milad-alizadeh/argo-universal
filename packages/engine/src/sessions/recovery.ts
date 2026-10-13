@@ -3,11 +3,7 @@ import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { createRejectionCounter } from '@repo/machine-log';
 import { and, eq, or, sql, type SQL } from 'drizzle-orm';
-import {
-  hydrateStoredFeedRow,
-  payloadVersion,
-  storedFeedColumns,
-} from '../feed';
+import { recoverStoredFeedRow, storedFeedColumns } from '../feed';
 
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
 export function recoverAfterRestart(database: Database): void {
@@ -49,39 +45,14 @@ export function recoverAfterRestart(database: Database): void {
     const revisions = new Map<string, number>();
     const rejections = createRejectionCounter('recovery');
     for (const { row, maxRevision } of rows) {
-      try {
-        hydrateStoredFeedRow(row.sessionId, row);
-      } catch (error) {
-        rejections.report(`rejected Feed shape (${row.sessionId}/${row.id})`, {
-          error,
-          payloadVersion: row.payloadVersion,
-          expectedPayloadVersion: payloadVersion,
-        });
-      }
-
-      const revision = (revisions.get(row.sessionId) ?? maxRevision) + 1;
-      revisions.set(row.sessionId, revision);
-      transaction
-        .update(feedRow)
-        .set({
-          state: 'settled',
-          revision,
-          payload: sql`case
-            when ${feedRow.sessionUpdate} = 'tool_call_update'
-              and ${runningStatus}
-            then json_set(${feedRow.payload}, '$.status', 'failed')
-            else ${feedRow.payload} end`,
-        })
-        .where(
-          and(eq(feedRow.sessionId, row.sessionId), eq(feedRow.id, row.id)),
-        )
-        .run();
+      revisions.set(
+        row.sessionId,
+        recoverStoredFeedRow(transaction, {
+          row,
+          maxRevision: revisions.get(row.sessionId) ?? maxRevision,
+          rejections,
+        }),
+      );
     }
-    for (const [sessionId, maxRevision] of revisions)
-      transaction
-        .update(session)
-        .set({ maxRevision, activityAt: Date.now() })
-        .where(eq(session.id, sessionId))
-        .run();
   });
 }
