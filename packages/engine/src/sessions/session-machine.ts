@@ -106,6 +106,10 @@ const writeFeedEvent = 'writer.write';
 const feedChangeEvent = 'feed.change';
 const configuringState = 'configuring';
 const acpUpdateEvent = 'acp.update';
+const staleAcpUpdate = {
+  guard: 'isStaleAcpUpdate',
+  actions: 'forwardAcpUpdate',
+} as const;
 
 type FeedChangeEvent = Extract<FeedEvent, { type: 'feed.change' }>;
 type SessionDataParameters = { data: SessionData };
@@ -497,6 +501,7 @@ const sessionSetup = setup({
           acpSessionId: event.notification.sessionId,
           update: event.notification.update,
           turnId: context.activeTurnId,
+          stale: event.stale,
         };
       },
     ),
@@ -656,6 +661,7 @@ const sessionSetup = setup({
         enqueue.assign({
           activeTurnId: null,
           activeTurnStartedAt: null,
+          lastEndedTurnId: context.activeTurnId ?? context.lastEndedTurnId,
           permissionQueue: [],
           elicitationQueue: [],
           storageFailedTurn: false,
@@ -854,6 +860,8 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    isStaleAcpUpdate: ({ event }): boolean =>
+      event.type === acpUpdateEvent && event.stale === true,
     cancelTimedOut: ({ context }): boolean =>
       context.turnEnding.kind === 'cancel_timeout',
     isRecoveryBlocked: ({ event }): boolean =>
@@ -997,6 +1005,7 @@ export const sessionMachine = sessionSetup.createMachine({
     activityAt: 0,
     nextPosition: 0,
     kept: false,
+    lastEndedTurnId: null,
     undisclosedInterruptedTurnId: null,
     activeTurnId: null,
     activeTurnStartedAt: null,
@@ -1079,6 +1088,7 @@ export const sessionMachine = sessionSetup.createMachine({
           maxRevision: context.maxRevision,
           activityAt: context.activityAt,
           nextPosition: context.nextPosition,
+          lastSettledTurnId: context.lastEndedTurnId,
           now: context.input.now,
           findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
             readWrittenRow({
@@ -1150,6 +1160,7 @@ export const sessionMachine = sessionSetup.createMachine({
             'session.close': { target: '.closing' },
             'acp.failed': { actions: 'rememberAcpFailure' },
             'acp.update': [
+              staleAcpUpdate,
               {
                 guard: ({ event }): boolean =>
                   event.notification.update.sessionUpdate ===
@@ -1207,7 +1218,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
               on: {
                 'session.close': { target: 'closing' },
-                'acp.update': { guard: 'isReplayedHistory' },
+                'acp.update': [staleAcpUpdate, { guard: 'isReplayedHistory' }],
               },
             },
             idle: {
@@ -1567,6 +1578,7 @@ export const sessionMachine = sessionSetup.createMachine({
               on: {
                 'acp.failed': {},
                 'acp.update': [
+                  staleAcpUpdate,
                   {
                     guard: ({ context, event }): boolean =>
                       !context.kept &&

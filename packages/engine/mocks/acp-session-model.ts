@@ -78,7 +78,7 @@ export function acpModelEventKey(event: AcpModelEvent): string {
   if ('error' in event && event.error instanceof RecoveryBlockedError)
     return `${event.type} blocked`;
   return event.type === updateEvent
-    ? `${event.type}:${event.notification.update.sessionUpdate}`
+    ? `${event.type}:${event.notification.update.sessionUpdate}${event.stale ? ':stale' : ''}`
     : event.type;
 }
 
@@ -246,6 +246,17 @@ export const createAcpSessionModel = (
         update: {
           sessionUpdate: 'agent_message_chunk',
           content: { type: 'text', text: 'Model reply' },
+        },
+      },
+    },
+    {
+      type: updateEvent,
+      stale: true,
+      notification: {
+        sessionId: lease.sessionId,
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          content: { type: 'text', text: 'Stale model reply' },
         },
       },
     },

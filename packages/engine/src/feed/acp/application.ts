@@ -16,6 +16,7 @@ import type {
   AssembledContent,
 } from './assembly';
 import { assembleContentChange } from './content-dispatch';
+import { settledUpdateRejection } from './update-admission';
 
 type ContentResult = FeedChangeResult & Omit<AssembledContent, 'change'>;
 const readExistingFeedRow = (
@@ -41,8 +42,17 @@ const applyContentChange = (
 ): ContentResult | undefined => {
   const assembled = assembleContentChange(input);
   if (!assembled) return undefined;
-  if ('rejection' in assembled) return assembled;
-  input.findRow(changedRowId(assembled.change));
+  return 'rejection' in assembled
+    ? assembled
+    : applyAssembledChange(input, assembled);
+};
+const applyAssembledChange = (
+  input: ContentAssemblyInput,
+  assembled: AssembledContent,
+): ContentResult => {
+  const previous = input.findRow(changedRowId(assembled.change));
+  const rejection = settledUpdateRejection(input, previous);
+  if (rejection) return { rejection };
   return {
     ...applyFeedChange(input.feed, assembled.change, input.turnId),
     streams: assembled.streams,
@@ -51,15 +61,18 @@ const applyContentChange = (
     unaddressedPlan: assembled.unaddressedPlan,
   };
 };
+const contentFailure = (error: unknown): { rejection: string } => ({
+  rejection: `could not apply ACP content: ${error instanceof Error ? error.message : String(error)}`,
+});
 const applyAcpContentUpdate = (
   input: AcpContentInput,
 ): ContentResult | undefined => {
   try {
+    if (input.stale)
+      return { rejection: 'ACP update arrived from a replaced Session lease' };
     return applyContentChange(createAssemblyInput(input));
   } catch (error) {
-    return {
-      rejection: `could not apply ACP content: ${error instanceof Error ? error.message : String(error)}`,
-    };
+    return contentFailure(error);
   }
 };
 
@@ -77,6 +90,7 @@ const createAcpContentInput = (
   findWrittenRow: context.findWrittenRow,
   findUnaddressedPlan: context.findUnaddressedPlan,
   unaddressedPlan: context.unaddressedPlan,
+  lastSettledTurnId: context.lastSettledTurnId,
 });
 const appendOutputBlobs = (
   context: FeedContext,

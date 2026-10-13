@@ -4,12 +4,16 @@ import type {
   PromptRequest,
   ResumeSessionRequest,
 } from '@agentclientprotocol/sdk';
+import type { FeedPageOutput } from '@repo/contracts';
 import type { ScriptedResponse } from '@repo/mocks/agent/scripted-responses';
+import { vi } from 'vitest';
+import { readCancelTurns } from './acp-cancel-observations';
 import { startAcpEngine } from './acp-engine';
 
 type IgnoredCancelOptions = {
   close?: Omit<ScriptedResponse<'session/close'>, 'requests'>;
   resume?: Omit<ScriptedResponse<'session/resume'>, 'requests'>;
+  nextPromptGate?: { entered: { resolve: () => void }; waitFor: Promise<void> };
   autoExit?: boolean;
 };
 type IgnoredCancelEngine = {
@@ -65,6 +69,9 @@ export const startIgnoredCancelEngine = async (
                   content: { type: 'text', text: 'Context retained' },
                 },
               },
+              ...(options.nextPromptGate
+                ? [{ type: 'gate' as const, ...options.nextPromptGate }]
+                : []),
             ],
             result: { stopReason: 'end_turn' },
           },
@@ -99,4 +106,36 @@ export const waitForIgnoredCancelTool = async (
     )
       return;
   throw new Error('The Feed ended before the Tool call');
+};
+
+export const observeCancelDeadline = async (
+  fixture: IgnoredCancelEngine,
+  sessionId: string,
+): Promise<{
+  before: {
+    turns: unknown;
+    closes: CloseSessionRequest[];
+    resumes: ResumeSessionRequest[];
+  };
+  rows: FeedPageOutput['rows'];
+}> => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  try {
+    await fixture.host.caller.session.cancel({ sessionId });
+    await fixture.cancelled.promise;
+    await vi.advanceTimersByTimeAsync(9_999);
+    const before = {
+      turns: readCancelTurns(fixture.host, sessionId),
+      closes: [...fixture.closes],
+      resumes: [...fixture.resumes],
+    };
+    await vi.advanceTimersByTimeAsync(1);
+    const page = await fixture.host.caller.feed.page({
+      sessionId,
+      direction: 'tail',
+    });
+    return { before, rows: page.rows };
+  } finally {
+    vi.useRealTimers();
+  }
 };

@@ -45,6 +45,7 @@ export interface FeedInput extends Pick<
   activityAt?: number;
   // One past the highest stored position.
   nextPosition: number;
+  lastSettledTurnId?: string | null;
   // A row that has left memory, as last handed to the database writer.
   findWrittenRow: (id: string) => SessionUpdate | undefined;
   findUnaddressedPlan?: (acpSessionId: string) => PlanUpdate | undefined;
@@ -64,6 +65,7 @@ export interface FeedContext
       | 'storageFailing'
     > {
   activityAt: number;
+  lastSettledTurnId: string | null;
   // Rows changed since the last write, in the order they first changed.
   changedRowIds: string[];
   // Stream events waiting for the next batch.
@@ -87,6 +89,7 @@ export type FeedEvent =
       acpSessionId: SessionNotification['sessionId'];
       update: SessionNotification['update'];
       turnId: string | null;
+      stale?: true;
     }
   | {
       type: 'feed.completeTurn';
@@ -217,6 +220,7 @@ export const feedMachine = setup({
   context: ({ input }): FeedContext => ({
     ...input,
     activityAt: input.activityAt ?? 0,
+    lastSettledTurnId: input.lastSettledTurnId ?? null,
     rows: {},
     changedRowIds: [],
     streamEvents: [],
