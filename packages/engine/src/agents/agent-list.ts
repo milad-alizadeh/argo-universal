@@ -1,11 +1,13 @@
 import type { AgentAdapter } from '@repo/agents';
 import type { AgentsListInput, AgentsListOutput } from '@repo/contracts';
+import type { Database } from '@repo/db';
 import { waitFor } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { AgentProbeActorRef } from './agent-probe-machine';
 import { agentProbeMachine } from './agent-probe-machine';
 import { agentProbeId } from './agent-probe-system';
+import { readConfiguredAgent } from './configuration/configuration-sql';
 
 function requireAgentProbe(
   actorSystem: OpenSessionsActorRef['system'],
@@ -35,18 +37,41 @@ async function readAgentAvailability(
   return { agent, label, logo, ...discovery.probe };
 }
 
-export function listAgents(
+const probedAgents = (
   openSessions: Pick<OpenSessionsActorRef, 'system' | 'getSnapshot'>,
-  availabilityRequest: AgentsListInput,
-): Promise<AgentsListOutput> {
-  const registeredAdapters = openSessions.getSnapshot().context.adapters;
-  return Promise.all(
-    registeredAdapters.map((adapter): Promise<AgentsListOutput[number]> =>
-      readAgentAvailability(
-        adapter,
-        openSessions.system,
-        availabilityRequest?.refresh,
+  request: AgentsListInput,
+): Promise<AgentsListOutput> =>
+  Promise.all(
+    openSessions
+      .getSnapshot()
+      .context.adapters.map((adapter) =>
+        readAgentAvailability(adapter, openSessions.system, request?.refresh),
       ),
-    ),
   );
+export async function listAgents(
+  openSessions: Pick<OpenSessionsActorRef, 'system' | 'getSnapshot'>,
+  request: AgentsListInput,
+): Promise<AgentsListOutput> {
+  const database = openSessions.getSnapshot().context.database;
+  return (await probedAgents(openSessions, request)).map((info) =>
+    configuredAvailability(info, database),
+  );
+}
+const unavailableInfo = (
+  info: AgentsListOutput[number],
+  removed: boolean,
+): AgentsListOutput[number] => ({
+  ...info,
+  availability: removed ? 'not_installed' : 'unavailable',
+  installStep: removed
+    ? 'Agent was removed. Install it again.'
+    : 'Agent is disabled. Enable it to start new Sessions.',
+});
+function configuredAvailability(
+  info: AgentsListOutput[number],
+  database: Database,
+): AgentsListOutput[number] {
+  const configured = readConfiguredAgent(database, info.agent);
+  if (configured?.configuration.removed) return unavailableInfo(info, true);
+  return configured?.enabled === false ? unavailableInfo(info, false) : info;
 }

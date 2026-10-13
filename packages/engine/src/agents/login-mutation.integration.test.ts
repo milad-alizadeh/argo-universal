@@ -27,7 +27,7 @@ it('refuses a custom Agent edit before probing or saving while its login owns th
       agentId: registration.agentId,
       definition: { ...customAgentDefinition, name: 'Changed name' },
     }),
-  ).rejects.toThrow('Agent login is in progress');
+  ).rejects.toThrow('in use');
   expect(host.agent.processes.length).toBe(processesBeforeEdit);
   expect(await host.caller.agents.configured()).toEqual(configured);
 });

@@ -5,19 +5,18 @@ import type {
 } from '@repo/contracts';
 import { defaultInstallPorts } from '../default-ports';
 import type { InstallPorts } from '../ports';
-import { InstallCleanupError } from '../processes/process';
 import { readInstallationStatus } from '../selection/status';
 import { ConfigurationReservations } from './configuration-reservations';
-import { executeAgentInstall } from './execution';
 import {
   abortInstallation,
-  failedOperation,
-  installedOperation,
   inUseOperation,
-  installationDeadline,
   startOperation,
+  createOwnedInstall,
 } from './operation-results';
 import type { InstallBindings, OwnedInstall } from './operation-types';
+import { createInstallationReadiness } from './readiness';
+import { removeAgentInstallation } from './removal';
+import { settleAgentInstallation } from './settlement';
 export class AgentInstallations {
   private bindings: InstallBindings | undefined;
   private readonly active = new Map<string, OwnedInstall>();
@@ -37,6 +36,9 @@ export class AgentInstallations {
     return this.bindings;
   }
   public isBusy(agentId: string): boolean {
+    return this.active.has(agentId) || this.configuration.hasExclusive(agentId);
+  }
+  private isReserved(agentId: string): boolean {
     return this.active.has(agentId) || this.configuration.has(agentId);
   }
   public configure<Result>(
@@ -44,19 +46,39 @@ export class AgentInstallations {
     operation: () => Promise<Result>,
   ): Promise<Result> {
     if (this.stopped) throw new Error('Engine is stopping');
-    if (this.isBusy(agentId)) throw new Error('Agent is in use by setup');
+    if (this.isReserved(agentId)) throw new Error('Agent is in use by setup');
     return this.configuration.run(agentId, operation);
   }
+  public check = createInstallationReadiness({
+    configuration: this.configuration,
+    installation: (agentId) => this.active.get(agentId)?.settled,
+    isStopped: () => this.stopped,
+  });
   private isInUse(agentId: string): boolean {
-    return this.isBusy(agentId) || this.dependencies().isInUse(agentId);
+    return this.isReserved(agentId) || this.dependencies().isInUse(agentId);
+  }
+  public mutateLaunch<Result>(
+    agentId: string,
+    operation: () => Promise<Result>,
+  ): Promise<Result> {
+    if (this.isInUse(agentId))
+      throw new Error(
+        'Agent is in use. Close its Sessions and finish setup first.',
+      );
+    return this.configure(agentId, operation);
+  }
+  public remove(agentId: string): Promise<void> {
+    return this.mutateLaunch(agentId, async () => {
+      await removeAgentInstallation({
+        home: this.home,
+        deps: this.dependencies(),
+        agentId,
+      });
+      this.completed.delete(agentId);
+    });
   }
   private own(operation: AgentInstallOperation): void {
-    const owned: OwnedInstall = {
-      operation,
-      controller: new AbortController(),
-      settled: Promise.resolve(),
-      released: true,
-    };
+    const owned = createOwnedInstall(operation);
     this.active.set(operation.agentId, owned);
     owned.settled = this.run(owned);
     void owned.settled.catch(() => {});
@@ -68,49 +90,21 @@ export class AgentInstallations {
     this.own(operation);
     return operation;
   }
-  private execute(owned: OwnedInstall): Promise<void> {
-    return executeAgentInstall({
-      home: this.home,
-      ports: this.ports,
-      deps: this.dependencies(),
-      signal: owned.controller.signal,
-      operation: owned.operation,
-    });
-  }
   private async run(owned: OwnedInstall): Promise<void> {
-    const timeout = installationDeadline(owned.controller);
     try {
-      await this.execute(owned);
-      this.complete(owned);
-    } catch (error) {
-      this.rememberFailure(owned, error);
+      this.completed.set(
+        owned.operation.agentId,
+        await settleAgentInstallation(
+          { home: this.home, ports: this.ports, deps: this.dependencies() },
+          owned,
+        ),
+      );
     } finally {
-      clearTimeout(timeout);
       this.release(owned);
     }
   }
-  private complete(owned: OwnedInstall): void {
-    this.completed.set(owned.operation.agentId, installedOperation(owned));
-  }
   private release(owned: OwnedInstall): void {
     if (owned.released) this.active.delete(owned.operation.agentId);
-  }
-  private rememberFailure(owned: OwnedInstall, error: unknown): void {
-    if (error instanceof InstallCleanupError)
-      return this.retainCleanup(owned, error);
-    this.completed.set(owned.operation.agentId, failedOperation(owned, error));
-  }
-  private retainCleanup(
-    owned: OwnedInstall,
-    error: InstallCleanupError,
-  ): never {
-    owned.released = false;
-    owned.operation = {
-      ...owned.operation,
-      status: 'failed',
-      failure: error.message,
-    };
-    throw error;
   }
   private operationFor(agentId: string): AgentInstallOperation | null {
     const owned = this.active.get(agentId);

@@ -16,6 +16,7 @@ import { AgentConfigurationSaveJob } from '../agent-storage';
 import type { AgentLogins } from '../login';
 import { readConfiguredAgent } from './configuration-sql';
 import { type CustomCheck, checkCustomDefinition } from './custom-check';
+export { checkConfiguredAgent } from './custom-check';
 
 export interface ConfigurationDeps {
   database: Database;
@@ -27,6 +28,11 @@ export interface ConfigurationDeps {
     agentId: string,
     operation: () => Promise<Result>,
   ) => Promise<Result>;
+  withAgentMutation?: ConfigurationDeps['withAgentSetup'];
+  withAgentCheck?: (
+    agentId: string,
+    operation: () => Promise<AgentCheck>,
+  ) => Promise<AgentCheck>;
 }
 type CustomSave = CustomCheck;
 type SavedAgent = Pick<ConfiguredAgent, 'id' | 'enabled'> & {
@@ -97,6 +103,8 @@ const saveCustomEdit = (
     const { enabled, configuration } = requireAgent(deps, agentId);
     if (configuration.source !== 'custom')
       throw new Error(`Agent ${agentId} is not a custom Agent`);
+    if (configuration.removed)
+      throw new Error('Agent was removed. Register it again.');
     return saveCheckedCustomAgent(deps, { agentId, definition, enabled });
   });
 
@@ -104,23 +112,11 @@ export const editCustomAgent = (
   deps: ConfigurationDeps,
   input: CustomAgentEditInput,
 ): Promise<AgentRegistration> =>
-  withSetup(deps, input.agentId, () => saveCustomEdit(deps, input));
-
-export const checkConfiguredAgent = (
-  deps: ConfigurationDeps,
-  agentId: string,
-): Promise<AgentCheck> => {
-  const { configuration } = requireAgent(deps, agentId);
-  if (configuration.source === 'registry')
-    return Promise.resolve({
-      status: 'failed',
-      failure: 'No release is installed.',
-    });
-  return checkCustomDefinition(deps.checkAgentLaunch, {
-    agentId,
-    definition: configuration.definition,
-  });
-};
+  (
+    deps.withAgentMutation ??
+    deps.withAgentSetup ??
+    ((_, operation) => operation())
+  )(input.agentId, () => saveCustomEdit(deps, input));
 
 const saveEnablement = (
   deps: ConfigurationDeps,
@@ -128,6 +124,8 @@ const saveEnablement = (
 ): Promise<void> =>
   runMutation(deps, agentId, async () => {
     const { configuration } = requireAgent(deps, agentId);
+    if (configuration.removed)
+      throw new Error('Agent was removed. Install or register it again.');
     return saveConfiguration(deps, { id: agentId, enabled, configuration });
   });
 

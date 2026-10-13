@@ -12,6 +12,7 @@ import {
 } from '@tanstack/react-query';
 import type { ClientError } from '#features/connection';
 import { useTRPC } from '#features/connection';
+import { useConfiguredAgents } from './use-configured-agents';
 
 export type CustomAgent = {
   id: string;
@@ -24,15 +25,12 @@ const toCustomAgent = ({
   enabled,
   configuration,
 }: ConfiguredAgent): CustomAgent[] =>
-  configuration.source === 'custom'
+  configuration.source === 'custom' && !configuration.removed
     ? [{ id, enabled, definition: configuration.definition }]
     : [];
 
 export function useCustomAgents(): UseQueryResult<CustomAgent[], ClientError> {
-  return useQuery({
-    ...useTRPC().agents.configured.queryOptions(),
-    select: (agents) => agents.flatMap(toCustomAgent),
-  });
+  return useConfiguredAgents((agents) => agents.flatMap(toCustomAgent));
 }
 
 // Readiness comes from a fresh ACP initialize on the Server each time it is asked.

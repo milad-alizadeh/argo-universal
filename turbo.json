@@ -34,6 +34,7 @@
     // Per-package Vitest runs so CI skips unchanged packages; the root vitest.config.ts stays for local runs (Turborepo Vitest guide).
     "test": {
       "dependsOn": ["transit"],
+      "env": ["VITEST_MAX_WORKERS"],
       "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": []
     },

@@ -1,7 +1,39 @@
+import type { AgentCheck } from '@repo/contracts';
+import { ResourceCleanupError } from '../../../lib/resource-cleanup-error';
+
 export class ConfigurationReservations {
   private readonly active = new Map<string, Promise<unknown>>();
+  private readonly checks = new Map<string, Promise<AgentCheck>>();
   public has(agentId: string): boolean {
+    return this.active.has(agentId) || this.checks.has(agentId);
+  }
+  public hasExclusive(agentId: string): boolean {
     return this.active.has(agentId);
+  }
+  public check(
+    agentId: string,
+    operation: () => Promise<AgentCheck>,
+  ): Promise<AgentCheck> {
+    const existing = this.checks.get(agentId);
+    if (existing) return existing;
+    const pending = this.inspect(agentId, operation).finally(() =>
+      this.checks.delete(agentId),
+    );
+    this.checks.set(agentId, pending);
+    return pending;
+  }
+  private async inspect(
+    agentId: string,
+    operation: () => Promise<AgentCheck>,
+  ): Promise<AgentCheck> {
+    while (this.active.has(agentId))
+      await Promise.allSettled([this.active.get(agentId)]);
+    try {
+      return await operation();
+    } catch (error) {
+      this.retainCleanup(agentId, error);
+      throw error;
+    }
   }
   public run<Result>(
     agentId: string,
@@ -10,9 +42,30 @@ export class ConfigurationReservations {
     const result = Promise.withResolvers<Result>();
     this.active.set(agentId, result.promise);
     void Promise.resolve().then(operation).then(result.resolve, result.reject);
-    return result.promise.finally(() => this.active.delete(agentId));
+    return result.promise
+      .catch((error: unknown) => {
+        this.retainCleanup(agentId, error);
+        throw error;
+      })
+      .finally(() => this.release(agentId, result.promise));
+  }
+  private release(agentId: string, promise: Promise<unknown>): void {
+    if (this.active.get(agentId) === promise) this.active.delete(agentId);
+  }
+  private retainCleanup(agentId: string, error: unknown): void {
+    if (!(error instanceof ResourceCleanupError)) return;
+    const cleanup = error.awaitCleanup();
+    this.active.set(agentId, cleanup);
+    void cleanup.then(
+      () => this.active.delete(agentId),
+      () => {},
+    );
   }
   public async wait(): Promise<void> {
-    await Promise.allSettled(this.active.values());
+    while (this.active.size > 0 || this.checks.size > 0)
+      await Promise.allSettled([
+        ...this.active.values(),
+        ...this.checks.values(),
+      ]);
   }
 }

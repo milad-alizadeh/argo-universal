@@ -38,6 +38,7 @@ class EngineAcpResources implements AcpResources {
   private readonly retired = new Set<AcpResourceEntry>();
   private readonly authentication = new Map<string, symbol>();
   private readonly contexts = new Map<AcpResourceEntry, string>();
+  private readonly agents = new Map<AcpResourceEntry, string>();
   private readonly checkoutReleases: CheckoutReleases;
   private stopped = false;
   public constructor(private readonly input: AcpResourceInput) {
@@ -61,12 +62,16 @@ class EngineAcpResources implements AcpResources {
       this.retireFailedGeneration(key, entry, checkouts),
     );
     this.entries.set(key, entry);
-    this.contexts.set(entry, authenticationContextKey(launch));
+    this.rememberLaunch(entry, launch);
     void entry
       .closed()
       .then(() => this.forget(key, entry))
       .catch(() => {});
     return entry;
+  }
+  private rememberLaunch(entry: AcpResourceEntry, launch: AgentLaunch): void {
+    this.contexts.set(entry, authenticationContextKey(launch));
+    this.agents.set(entry, launch.agentId);
   }
   private retireFailedGeneration(
     key: string,
@@ -82,7 +87,10 @@ class EngineAcpResources implements AcpResources {
     if (this.entries.get(key) === entry) this.entries.delete(key);
     this.retired.delete(entry);
     this.contexts.delete(entry);
+    this.agents.delete(entry);
   }
+  public isAgentInUse = (agentId: string): boolean =>
+    [...this.agents.values()].includes(agentId);
   public reserveAuthentication = (launch: AgentLaunch): (() => void) => {
     if (this.stopped) throw new Error('ACP resources are stopped');
     const key = authenticationContextKey(launch);

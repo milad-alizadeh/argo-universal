@@ -5,6 +5,7 @@ import type {
 export type InstallPhase = 'confirm' | AgentInstallOperation['status'];
 export interface AgentInstallSheetProps {
   name: string;
+  action?: 'Install' | 'Update';
   version: string;
   distribution: string;
   phase: Exclude<InstallPhase, 'failed' | 'cancelled'>;
@@ -15,6 +16,8 @@ export interface AgentInstallSheetProps {
   cancelling?: boolean;
 }
 export interface AgentInstallPresentation {
+  action?: 'Install' | 'Update';
+  version?: string;
   open: boolean;
   phase: InstallPhase;
   failure?: string;

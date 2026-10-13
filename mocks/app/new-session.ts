@@ -34,7 +34,8 @@ export const newSessionCatalogs = {
   bothUnavailable: agentsList.map(
     (
       agent,
-    ): Required<Omit<AgentsListOutput[number], 'availability'>> & {
+    ): Omit<AgentsListOutput[number], 'availability'> & {
+      installStep: string;
       availability: 'unavailable';
     } => ({
       ...agent,

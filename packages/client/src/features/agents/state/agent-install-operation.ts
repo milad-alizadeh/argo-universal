@@ -19,7 +19,8 @@ const interruptedOperation = (
   saved: AgentInstallOperation,
   status: AgentInstallStatus,
 ): AgentInstallOperation =>
-  status.installation.status === 'installed'
+  status.installation.status === 'installed' &&
+  status.installation.version === saved.version
     ? { ...saved, status: 'installed', version: status.installation.version }
     : {
         ...saved,
@@ -46,12 +47,25 @@ export const currentOperation = (
   status?: AgentInstallStatus,
   previousOperationId?: string,
 ): AgentInstallOperation | undefined => {
-  const latest = statusOperation(status);
+  const latest = latestOperation(status, previousOperationId);
   if (!saved) return latest;
-  if (!latest) return reconcileMissingOperation(saved, status);
+  if (!latest) return retainedOperation(saved, status);
   return selectKnownLatest(saved, latest, previousOperationId);
 };
 export const operationFailure = (
   operation: AgentInstallOperation | undefined,
 ): string | undefined =>
   operation?.status === 'failed' ? operation.failure : undefined;
+
+const latestOperation = (
+  status: AgentInstallStatus | undefined,
+  previous?: string,
+): AgentInstallOperation | undefined => {
+  const operation = statusOperation(status);
+  return operation?.operationId === previous ? undefined : operation;
+};
+const retainedOperation = (
+  saved: AgentInstallOperation,
+  status: AgentInstallStatus | undefined,
+): AgentInstallOperation =>
+  statusOperation(status) ? saved : reconcileMissingOperation(saved, status);

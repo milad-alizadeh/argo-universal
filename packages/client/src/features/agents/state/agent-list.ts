@@ -63,7 +63,9 @@ export function offeredAgents(
 export const customAgentDescription = 'Custom ACP program';
 
 const logoUri = (logo: string): string | undefined =>
-  logo ? `data:image/svg+xml,${encodeURIComponent(logo)}` : undefined;
+  logo.startsWith('<')
+    ? `data:image/svg+xml,${encodeURIComponent(logo)}`
+    : logo || undefined;
 
 const customRow = ({ id, name }: CustomAgentName): AgentRowEntry => ({
   id,
@@ -79,10 +81,16 @@ export function probedRow(info: AgentInfo, custom = false): AgentRowEntry {
     id: info.agent,
     name: info.label,
     icon: logoUri(info.logo),
-    status: availabilityStatus(info.availability),
-    ...(custom ? { custom, description: customAgentDescription } : {}),
+    status: hasPublishedUpdate(info)
+      ? 'update'
+      : availabilityStatus(info.availability),
+    ...customDescription(custom),
   };
 }
+const hasPublishedUpdate = (info: AgentInfo): boolean => {
+  if (!info.version || !info.availableVersion) return false;
+  return info.version !== info.availableVersion;
+};
 
 // The Server's Agents as probed; a custom Agent the probe has not reached yet reads as Unavailable.
 export function installedAgents(
@@ -96,3 +104,8 @@ export function installedAgents(
     ...custom.filter(({ id }) => !probed.has(id)).map(customRow),
   ];
 }
+
+const customDescription = (
+  custom: boolean,
+): Pick<AgentRowEntry, 'custom' | 'description'> =>
+  custom ? { custom, description: customAgentDescription } : {};

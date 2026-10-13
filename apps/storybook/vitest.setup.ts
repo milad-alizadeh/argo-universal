@@ -1,5 +1,9 @@
-import { beforeEach } from 'vitest';
-import { page, server } from 'vitest/browser';
+import { afterAll, beforeEach } from 'vitest';
+import { cdp, page, server } from 'vitest/browser';
+
+afterAll(async () => {
+  await cdp().send('HeapProfiler.collectGarbage');
+});
 
 // Play functions resize the page, so every story starts at the configured viewport.
 beforeEach(async ({ task, onTestFailed }) => {

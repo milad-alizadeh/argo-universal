@@ -89,10 +89,11 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Quality
-        run: pnpm quality
         env:
           # Each test runner uses the available cores; overlapping runners distort timing budgets.
           TURBO_CONCURRENCY: 1
+          VITEST_MAX_WORKERS: 1
+        run: pnpm quality
 
       # apps/storybook/vitest.setup.ts saves a failed story's screenshot in __screenshots__/failures beside its test file.
       - name: Upload the story failure screenshots

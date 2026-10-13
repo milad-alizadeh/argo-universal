@@ -21,13 +21,22 @@ const previousRegistry = (
   if (!previous) return { configuration: emptyConfiguration, enabled: true };
   if (previous.configuration.source !== 'registry')
     throw new Error('Agent is a custom registration');
-  return { configuration: previous.configuration, enabled: previous.enabled };
+  return {
+    configuration: previous.configuration,
+    enabled: installationEnabled(previous),
+  };
 };
+const installationEnabled = (agent: ConfiguredAgent): boolean =>
+  agent.configuration.removed ? true : agent.enabled;
 const selectionConfiguration = (
   previous: RegistryConfiguration,
   selection: InstallSelection,
 ): string =>
-  JSON.stringify({ ...previous, release: JSON.stringify(selection) });
+  JSON.stringify({
+    ...previous,
+    removed: undefined,
+    release: JSON.stringify(selection),
+  });
 type SavedInstallation = {
   id: string;
   enabled: boolean;
