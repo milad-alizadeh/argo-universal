@@ -27,6 +27,7 @@ import { connectionMachine } from './machine';
 const connectionLostEvent = 'connection.lost';
 const connectionOpenedEvent = 'connection.opened';
 const foregroundEvent = 'app.foreground';
+const retryEvent = 'connection.retry';
 const connectionAttemptEvent = 'connection.attemptRequested';
 const retryDelayEvent = 'xstate.after.retryDelay.connection.attempt.waiting';
 const offlineDelayEvent =
@@ -139,6 +140,7 @@ describe('connection model', (): void => {
     { type: connectionLostEvent, error: lostError },
     { type: connectionAttemptEvent },
     { type: foregroundEvent },
+    { type: retryEvent },
     { type: retryDelayEvent },
     { type: offlineDelayEvent },
   ] satisfies GraphEventFromLogic<typeof machine>[];
@@ -216,6 +218,14 @@ describe('connection model', (): void => {
       const before = allowedAttempts;
       connection.send({ type: foregroundEvent });
       expect(allowedAttempts).toBe(before + 1);
+    },
+    [retryEvent]: () => {
+      const before = allowedAttempts;
+      const waiting = attemptState(connection.getSnapshot()) === 'waiting';
+      connection.send({ type: retryEvent });
+      // Try again shows Reconnecting, and lets a waiting attempt go at once.
+      expect(linkState(connection.getSnapshot())).toBe('reconnecting');
+      expect(allowedAttempts).toBe(before + (waiting ? 1 : 0));
     },
     [retryDelayEvent]: (step) => {
       const before = allowedAttempts;
@@ -409,6 +419,27 @@ describe('connection', () => {
     expect(allowedAttempts).toBe(1);
     vi.advanceTimersByTime(retryDelayMs(0));
     expect(allowedAttempts).toBe(1);
+  });
+
+  it('Try again while offline allows a waiting attempt at once and shows Reconnecting', () => {
+    startConnection();
+    loseOpenConnection();
+    vi.advanceTimersByTime(offlineDelayMs);
+    requestAttempt();
+
+    connection.send({ type: retryEvent });
+
+    expect(allowedAttempts).toBe(1);
+    expect(linkState(connection.getSnapshot())).toBe('reconnecting');
+    vi.advanceTimersByTime(offlineDelayMs);
+    expect(linkState(connection.getSnapshot())).toBe('offline');
+  });
+
+  it('ignores Try again while the Connection is open', () => {
+    startConnection();
+    watcher.send({ type: connectionOpenedEvent });
+
+    expect(connection.getSnapshot().can({ type: retryEvent })).toBe(false);
   });
 
   it('ignores another loss while it reconnects, so the offline delay keeps running', () => {

@@ -25,7 +25,9 @@ type ConnectionEvent =
   | { type: 'connection.opened' }
   | { type: 'connection.lost'; error: unknown }
   | { type: 'connection.attemptRequested' }
-  | { type: 'app.foreground' };
+  | { type: 'app.foreground' }
+  // The person asked to try again now.
+  | { type: 'connection.retry' };
 
 export type ConnectionEmitted = { type: 'connection.attemptAllowed' };
 
@@ -122,6 +124,8 @@ export const connectionMachine = setup({
         },
         offline: {
           on: {
+            // Shows Reconnecting again, so the offline delay restarts.
+            'connection.retry': { target: 'reconnecting' },
             'connection.opened': {
               target: 'open',
               actions: ['resetAttempts', 'refetchAfterReconnect'],
@@ -149,6 +153,11 @@ export const connectionMachine = setup({
           on: {
             'app.foreground': {
               guard: 'isDown',
+              target: 'idle',
+              actions: 'allowAttempt',
+            },
+            'connection.retry': {
+              guard: stateIn({ link: 'offline' }),
               target: 'idle',
               actions: 'allowAttempt',
             },

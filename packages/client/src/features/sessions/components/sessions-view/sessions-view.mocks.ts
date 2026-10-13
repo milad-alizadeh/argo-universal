@@ -4,7 +4,6 @@ import type { SessionsViewProps } from './sessions-view';
 // The loaded list with nothing wrong, to be varied one prop at a time.
 export const loadedSessionsView = {
   loadState: 'ready',
-  connection: 'open',
   liveUpdatesStopped: false,
   loadMoreFailed: false,
   isFetchingNextPage: false,

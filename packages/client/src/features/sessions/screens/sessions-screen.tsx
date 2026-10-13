@@ -74,7 +74,6 @@ export function SessionsScreen({
         { failed: agents.isError, pending: agents.isPending },
         { failed: sessions.isLoadingError, pending: sessions.isPending },
       ])}
-      connection={connection}
       liveUpdatesStopped={liveUpdatesStopped(listUpdates.status, connection)}
       loadMoreFailed={sessions.isFetchNextPageError}
       isFetchingNextPage={sessions.isFetchingNextPage}

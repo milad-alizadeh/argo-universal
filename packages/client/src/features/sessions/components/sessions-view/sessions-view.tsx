@@ -3,7 +3,6 @@ import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { ConnectionBanner, type ConnectionState } from '#features/connection';
 import { PhoneListSearch } from '#lib/product/phone-list-search';
 import { Screen } from '#lib/product/screen/screen';
 import {
@@ -20,7 +19,6 @@ import { FloatingActionButton } from './floating-action-button';
 
 export interface SessionsViewProps {
   loadState: SessionsLoadState;
-  connection: ConnectionState;
   // The live stream failed while the Connection is open.
   liveUpdatesStopped: boolean;
   // Fetching the next page failed; the loaded rows stay.
@@ -74,7 +72,6 @@ export function SessionsView(props: SessionsViewProps): React.JSX.Element {
 
 function SessionsLayout({
   loadState,
-  connection,
   isFetchingNextPage,
   projects,
   agents,
@@ -90,7 +87,6 @@ function SessionsLayout({
   onLoadMore,
 }: SessionsViewProps): React.JSX.Element {
   const wide = useWide();
-  const listTop = <ConnectionBanner state={connection} />;
   // A failed first load keeps the loading rows: the toast says why, and the queries retry when the Connection reopens.
   const placeholder = loadState === 'ready' ? undefined : <SessionsLoading />;
 
@@ -121,7 +117,6 @@ function SessionsLayout({
                 leading="menu"
                 className="px-4 pt-2 pb-2"
               />
-              {listTop}
             </View>
           )
         }
@@ -150,7 +145,6 @@ function SessionsLayout({
       className="relative flex-1 bg-sidebar wide:bg-transparent"
       style={{ minHeight: 0 }}
     >
-      {wide && listTop}
       {sessionContent}
       {newSessionControl}
     </Screen>
