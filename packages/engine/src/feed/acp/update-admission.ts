@@ -21,8 +21,16 @@ export const settledUpdateRejection = (
 ): string | undefined => {
   if (preservesSessionScope(input, row)) return undefined;
 
-  return belongsToAnotherTurn(input, row) ? settledTurnReason : undefined;
+  return belongsToSettledTurn(input, row) ? settledTurnReason : undefined;
 };
+
+const belongsToSettledTurn = (
+  input: AcpContentInput,
+  row: SessionUpdate | undefined,
+): boolean => belongsToAnotherTurn(input, row) || matchesSettledTurn(input);
+
+const matchesSettledTurn = (input: AcpContentInput): boolean =>
+  input.turnId !== null && input.turnId === input.lastSettledTurnId;
 
 const preservesSessionScope = (
   input: AcpContentInput,
