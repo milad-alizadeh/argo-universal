@@ -13,6 +13,7 @@ const examples: {
   },
   { label: 'Read-only', props: { editable: false, placeholder: 'Email' } },
   { label: 'Invalid', props: { 'aria-invalid': true, placeholder: 'Email' } },
+  { label: 'Muted', props: { variant: 'muted', placeholder: 'https://' } },
   {
     label: 'Secure',
     props: { secureTextEntry: true, defaultValue: 'password' },

@@ -81,13 +81,17 @@ function useNewSessionViewProps(
   const connected = useConnectionState() === 'open';
   const data = useNewSessionData(projectId);
   const { serverInfo, projects, agents, choices, configuration } = data;
-  const attachmentDraft = useAttachmentDraft();
+  const attachmentDraft = useAttachmentDraft(
+    choices.project && { type: 'new-session', projectId: choices.project.id },
+  );
   // The first prompt as sent, shown in the Feed until the Session opens; a failure clears it and keeps the draft.
   const [sent, setSent] = useState<{ draft: ComposerDraft; at: number }>();
   const newSession = useMutation(
     trpc.session.new.mutationOptions({
-      onSuccess: ({ sessionId }) =>
-        navigate({ to: 'session', id: sessionId }, { replace: true }),
+      onSuccess: ({ sessionId }) => {
+        attachmentDraft.clearDraft();
+        navigate({ to: 'session', id: sessionId }, { replace: true });
+      },
       onError: () => {
         setSent(undefined);
         void agents.refetch();

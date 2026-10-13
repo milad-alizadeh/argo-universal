@@ -163,7 +163,10 @@ function useSessionCommands(
 ): SessionCommands {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { clearDraft, uploadDraftAsPrompt, ...draft } = useAttachmentDraft();
+  const { clearDraft, uploadDraftAsPrompt, ...draft } = useAttachmentDraft({
+    type: 'session',
+    sessionId,
+  });
   const promptSession = useMutation(
     trpc.session.prompt.mutationOptions({
       onSuccess: () => {

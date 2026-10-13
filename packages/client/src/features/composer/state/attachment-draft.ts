@@ -2,6 +2,7 @@ import type {
   ComposerAttachment,
   ComposerDraft,
 } from '../components/composer/composer';
+import type { DraftKey } from './draft-key';
 
 export interface PickedAttachment {
   attachment: ComposerAttachment;
@@ -13,6 +14,8 @@ export interface AttachmentDraftState {
   // The file behind each attachment, by its id in the draft.
   files: ReadonlyMap<string, Blob>;
   selectionError?: string;
+  // The owner whose kept text may still replace the empty draft; gone once the person edits it.
+  awaitedKey?: DraftKey;
 }
 
 export type AttachmentDraftEvent =
@@ -20,6 +23,8 @@ export type AttachmentDraftEvent =
   | { type: 'pickFailed' }
   | { type: 'folderDropped' }
   | { type: 'changed'; draft: ComposerDraft }
+  | { type: 'ownerChanged'; key: DraftKey }
+  | { type: 'restored'; key: DraftKey; text: string }
   | { type: 'cleared' };
 
 export type AttachmentError =
@@ -44,7 +49,15 @@ function changeDraft(
 ): AttachmentDraftState {
   const kept = new Set(draft.attachments.map((attachment) => attachment.id));
   const files = new Map([...state.files].filter(([id]) => kept.has(id)));
-  return { ...state, draft, files };
+  return { ...state, draft, files, awaitedKey: undefined };
+}
+
+function restore(
+  state: AttachmentDraftState,
+  { key, text }: { key: DraftKey; text: string },
+): AttachmentDraftState {
+  if (key !== state.awaitedKey) return state;
+  return { ...state, draft: { ...state.draft, text }, awaitedKey: undefined };
 }
 
 function attach(
@@ -57,10 +70,15 @@ function attach(
     ...state.draft.attachments,
     ...picked.map(({ attachment }) => attachment),
   ];
-  return { draft: { ...state.draft, attachments }, files };
+  return {
+    ...state,
+    draft: { ...state.draft, attachments },
+    files,
+    selectionError: undefined,
+  };
 }
 
-// A Composer draft with attachments: what each pick, drop, edit and send does to it.
+// A Composer draft with attachments: what each pick, drop, edit, send and change of owner does to it.
 export function attachmentDraftReducer(
   state: AttachmentDraftState,
   event: AttachmentDraftEvent,
@@ -74,6 +92,10 @@ export function attachmentDraftReducer(
       return { ...state, selectionError: folderRefusedMessage };
     case 'changed':
       return changeDraft(state, event.draft);
+    case 'ownerChanged':
+      return { ...emptyAttachmentDraft, awaitedKey: event.key };
+    case 'restored':
+      return restore(state, event);
     case 'cleared':
       return emptyAttachmentDraft;
   }

@@ -1,12 +1,13 @@
 import path from 'node:path';
 import type { ServerAddress } from '@repo/contracts';
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import { createActor } from 'xstate';
 import {
   appOrigin,
   handleAppProtocol,
   registerAppScheme,
 } from './app-protocol';
+import { applicationMenu } from './application-menu';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
 import { handleSymbolImages } from './symbol-images';
@@ -97,6 +98,9 @@ if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 let serverStarted = false;
 
 const start = (): void => {
+  Menu.setApplicationMenu(
+    Menu.buildFromTemplate(applicationMenu(process.platform)),
+  );
   if (!webDevelopmentUrl) handleAppProtocol(webExportDirectory);
   let url: string | null = null;
   server.on('server.ready', ({ address }): void => {

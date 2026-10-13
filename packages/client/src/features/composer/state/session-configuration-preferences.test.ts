@@ -7,6 +7,7 @@ import type {
 import { newSessionCatalogs } from '@repo/mocks/app';
 import { QueryClient } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { memoryStorage } from '../../../../mocks/memory-storage';
 import {
   draftConfiguration,
   rememberSessionConfiguration,
@@ -170,20 +171,6 @@ describe('draftConfiguration', () => {
     },
   );
 });
-
-// Browser storage, which AsyncStorage uses on the web, held in memory.
-function memoryStorage(): Pick<
-  Storage,
-  'getItem' | 'setItem' | 'removeItem' | 'clear'
-> {
-  const values = new Map<string, string>();
-  return {
-    getItem: (key) => values.get(key) ?? null,
-    setItem: (key, value) => values.set(key, value) && undefined,
-    removeItem: (key) => values.delete(key) && undefined,
-    clear: () => values.clear(),
-  };
-}
 
 // The Agent's options with a model, effort and mode the Session accepted.
 function accepted(

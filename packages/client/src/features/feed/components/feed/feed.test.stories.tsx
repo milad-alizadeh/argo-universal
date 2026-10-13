@@ -3,6 +3,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
+import {
+  canPointAt,
+  centreOf,
+  topmostAt,
+} from '../../../../../mocks/point-hit';
 import { sampleEachFrame } from '../../../../../mocks/sample-each-frame';
 import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
@@ -177,11 +182,7 @@ function markMiddleOfView(feedScroll: HTMLElement): {
   element: Element;
   top: number;
 } {
-  const view = feedScroll.getBoundingClientRect();
-  const element = document.elementFromPoint(
-    view.left + view.width / 2,
-    view.top + view.height / 2,
-  );
+  const element = topmostAt(centreOf(feedScroll.getBoundingClientRect()));
   if (!element) throw new Error('Nothing in view');
   const top = element.getBoundingClientRect().top;
   return { element, top };
@@ -219,11 +220,7 @@ function settledTopOf(findElement: () => HTMLElement): Promise<number> {
     async () => {
       await afterTwoFrames();
       const box = findElement().getBoundingClientRect();
-      const atCentre = document.elementFromPoint(
-        box.left + box.width / 2,
-        box.top + box.height / 2,
-      );
-      const settled = findElement().contains(atCentre) && box.top === lastTop;
+      const settled = canPointAt(findElement()) && box.top === lastTop;
       lastTop = box.top;
       if (!settled) throw new Error('The element is still moving');
       return box.top;
