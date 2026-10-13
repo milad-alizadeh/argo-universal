@@ -64,7 +64,7 @@ export function createdCheckoutIsReadOnly(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       const overlay = within(document.body);
       await settleViewport(width);
-      if (width < 720) {
+      if (width < 1100) {
         await expect(
           canvas.queryByText('created-worktree', { exact: true }),
         ).not.toBeInTheDocument();

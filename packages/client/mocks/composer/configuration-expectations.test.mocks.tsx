@@ -25,7 +25,7 @@ export async function expectHighEffort({
   await expect(
     canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
   ).toHaveTextContent(
-    width >= 720
+    width >= 1100
       ? (slider.getAttribute(valueTextAttribute) ?? '')
       : expectedModelLabel(model.name),
   );
@@ -75,7 +75,7 @@ export async function expectDangerousMode({
   await waitFor(() =>
     expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
   );
-  if (width >= 720)
+  if (width >= 1100)
     await expect(
       canvas.getByRole('button', { name: 'Mode' }),
     ).toHaveTextContent(dangerous.name);

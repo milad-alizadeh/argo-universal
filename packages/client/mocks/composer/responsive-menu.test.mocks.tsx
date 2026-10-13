@@ -24,7 +24,7 @@ export async function expectResponsiveFooter({
   card: Element;
   width: number;
 }): Promise<void> {
-  if (width < 720) {
+  if (width < 1100) {
     const subagents = canvas.getByRole('button', {
       name: subagentCountLabel,
     });
@@ -50,7 +50,7 @@ export async function browseResponsiveMenu({
   userEvent,
   width,
 }: Pick<PlayContext, 'userEvent'> & { width: number }): Promise<void> {
-  if (width < 720) {
+  if (width < 1100) {
     const chooseAgent = await within(document.body).findByRole('button', {
       name: chooseAgentLabel,
     });

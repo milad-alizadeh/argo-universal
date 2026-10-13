@@ -105,7 +105,7 @@ function conflict(width: number, mock?: RequestMock): Story {
       );
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
       await expect(canvas.getByRole('radio', { name: 'Blue' })).toBeDisabled();
-      await (width < 720
+      await (width < 1100
         ? expect(
             canvas.queryByRole('button', { name: 'Submit' }),
           ).not.toBeInTheDocument()

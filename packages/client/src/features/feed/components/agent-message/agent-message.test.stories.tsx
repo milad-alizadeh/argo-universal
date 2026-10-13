@@ -143,7 +143,7 @@ export const TableScrollsSideways: Story = {
         canvas.getByText('Property').parentElement,
       );
       const overflows = scroller.scrollWidth > scroller.clientWidth;
-      await expect(overflows).toBe(width < 720);
+      await expect(overflows).toBe(width < 1100);
     }
   },
 };

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { useContentWide } from '#lib/product/content-layout';
 import { RequestAction } from '../request-card/request-card';
 import type { PlanProposalCardProps } from './plan-proposal-card';
 import { answerable, type PlanProposalInteraction } from './use-plan-proposal';
@@ -11,9 +10,8 @@ interface ActionsProps {
 }
 
 export function PlanProposalActions(props: ActionsProps): ReactNode {
-  const wide = useContentWide();
   return (
-    <View className={wide ? 'flex-row gap-2' : 'w-full flex-col-reverse gap-2'}>
+    <View className="w-full flex-col-reverse gap-2 wide:w-auto wide:flex-row">
       <PlanningToggle {...props} />
       <AnswerAction {...props} />
     </View>

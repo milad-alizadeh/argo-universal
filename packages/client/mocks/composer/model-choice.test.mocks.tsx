@@ -19,7 +19,7 @@ export async function chooseModel({
       overlay.queryByRole('dialog', { name: 'Select Model' }),
     ).not.toBeInTheDocument(),
   );
-  if (width < 720)
+  if (width < 1100)
     await expect(
       await overlay.findByRole('button', { name: chooseModelLabel }),
     ).toBeVisible();

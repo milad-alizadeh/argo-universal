@@ -45,7 +45,7 @@ export const Empty: Story = {
         canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
       ).not.toHaveTextContent('(recommended)');
       await expect(canvas.queryAllByTestId(agentIconId)).toHaveLength(
-        width < 720 ? 0 : 1,
+        width < 1100 ? 0 : 1,
       );
       const model = canvas
         .getByRole('button', { name: agentModelLabel })

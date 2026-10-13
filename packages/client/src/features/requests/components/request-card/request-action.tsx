@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { useContentWide } from '#lib/product/content-layout';
 import { Button, type ButtonProps } from '#primitives/buttons/button/button';
+import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 export interface RequestActionProps {
   className?: string;
@@ -17,7 +17,8 @@ export function RequestAction({
   primary,
   ...props
 }: RequestActionProps): ReactNode {
-  const wide = useContentWide();
+  // The window breakpoint, not the column, decides: actions stack only on a phone-wide window.
+  const wide = useWide();
   return (
     <Button
       {...props}

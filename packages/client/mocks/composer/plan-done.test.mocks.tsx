@@ -20,7 +20,7 @@ export function planDone(width: number): Story {
       await settleViewport(width);
       const plan = canvas.getByRole('button', { name: 'Plan' });
       await expect(plan).toBeVisible();
-      if (width >= 720) {
+      if (width >= 1100) {
         await expect(plan).toHaveTextContent('Plan 3/3');
         await userEvent.click(plan);
         await waitFor(() => expect(canvas.getByText(planTitle)).toBeVisible());

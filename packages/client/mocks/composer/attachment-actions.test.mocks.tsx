@@ -71,7 +71,7 @@ export function attachmentMenus(width: number): Story {
       const overlay = within(document.body);
       await settleViewport(width);
       const choices =
-        width < 720
+        width < 1100
           ? ([
               ['Camera', args.onAttachCamera],
               ['Photos', args.onAttachImages],
@@ -104,5 +104,5 @@ export function attachmentMenus(width: number): Story {
 }
 
 function absentAttachmentChoice(width: number): string {
-  return width < 720 ? 'Goal' : 'Camera';
+  return width < 1100 ? 'Goal' : 'Camera';
 }

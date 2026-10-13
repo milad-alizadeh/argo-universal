@@ -86,7 +86,7 @@ function conflict(width: number, mock?: RequestMock): Story {
         'Already answered on another device',
       );
       const allowOnce = canvas.queryByRole('button', { name: allowOnceLabel });
-      await (width < 720
+      await (width < 1100
         ? expect(allowOnce).not.toBeInTheDocument()
         : expect(allowOnce).toBeDisabled());
       await expect(args.onAnswer).not.toHaveBeenCalled();

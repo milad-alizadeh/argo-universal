@@ -36,10 +36,10 @@ export function equalPlanSteps(width: number, agentIndex: number): Story {
       await settleViewport(width);
       const overlay = within(document.body);
       await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
-      if (width < 720)
+      if (width < 1100)
         await waitFor(() => expect(overlay.getByRole('dialog')).toBeVisible());
       const list = within(
-        width < 720
+        width < 1100
           ? overlay.getByRole('dialog')
           : canvas.getByTestId(planStepsId),
       );

@@ -90,7 +90,7 @@ function inspectorTakesTheDetailAreaAndRestoresIt(width: number): ShellStory {
   };
 }
 // A width between the phone and wide layouts.
-const tabletWidth = 720;
+const tabletWidth = 1100;
 export const InspectorTakesTheDetailAreaAndRestoresItTablet =
   inspectorTakesTheDetailAreaAndRestoresIt(tabletWidth);
 export const InspectorTakesTheDetailAreaAndRestoresItPhone =
