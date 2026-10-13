@@ -8,7 +8,7 @@ import { FieldSection } from '#primitives/fields/field-section/field-section';
 import { FieldRowEnd } from '../../../../lib/generic/primitives/fields/field-layout';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentChoice } from './agent-choice';
-import type { ComposerConfigurationProps } from './configuration-types';
+import type { ConfigurationChoicesProps } from './configuration-types';
 
 const maximumHeight = 320;
 const screenFraction = 0.6;
@@ -17,12 +17,7 @@ export function AgentChoices({
   configuration,
   onSelect,
   onContentHeightChange,
-}: {
-  configuration: ComposerConfigurationProps;
-  onSelect: () => void;
-  // A phone's sheet fits the choices.
-  onContentHeightChange?: (height: number) => void;
-}): React.JSX.Element {
+}: ConfigurationChoicesProps): React.JSX.Element {
   const wide = useWide();
   const { height } = useWindowDimensions();
   const { agents } = configuration;

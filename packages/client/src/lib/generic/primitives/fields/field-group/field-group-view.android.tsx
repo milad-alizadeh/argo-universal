@@ -2,7 +2,7 @@ import { Column } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, type ScrollViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWide } from '../../../use-wide/use-wide';
 import { ListSearchField } from '../../inputs/list-search-bar/list-search-bar';
@@ -16,43 +16,44 @@ const topPadding = 8;
 const sectionGap = 24;
 
 export function FieldGroup(props: FieldGroupProps): React.JSX.Element {
-  const overflows = useOverflow();
-  const insets = useSafeAreaInsets();
   if (useWide()) return <WebFieldGroup {...props} />;
   return (
     <FieldLayout value={props.variant ?? 'grouped'}>
-      {/*
-       * React Native scrolls, not Compose: a native sheet takes the drags of anything it cannot nest-scroll.
-       * The sheet picks its scrolling list when it resizes, so only a group that overflows claims it.
-       */}
-      <ScrollView
-        className="flex-1"
-        nestedScrollEnabled={overflows.value}
-        onLayout={(event) =>
-          overflows.setViewport(event.nativeEvent.layout.height)
-        }
-        onContentSizeChange={(_, height) => {
-          overflows.setContent(height);
-          props.onContentHeightChange?.(height - insets.bottom);
-        }}
-      >
-        {/* Viewport measurement would cap the rows at the screen's height and clip a longer list. */}
-        <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-          <SectionsColumn {...props} />
-        </Host>
-      </ScrollView>
+      <SectionsScroll {...props} />
     </FieldLayout>
   );
 }
 
-function useOverflow(): {
-  value: boolean;
-  setViewport: (height: number) => void;
-  setContent: (height: number) => void;
-} {
+// React Native scrolls, not Compose: a native sheet takes the drags of anything it cannot nest-scroll.
+function SectionsScroll(props: FieldGroupProps): React.JSX.Element {
+  const scroll = useOverflowScroll(props.onContentHeightChange);
+  return (
+    <ScrollView className="flex-1" {...scroll}>
+      {/* Viewport measurement would cap the rows at the screen's height and clip a longer list. */}
+      <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
+        <SectionsColumn {...props} />
+      </Host>
+    </ScrollView>
+  );
+}
+
+// Only a group that overflows nest-scrolls, as Android's sheet picks its scrolling list when it resizes.
+function useOverflowScroll(
+  onContentHeightChange: FieldGroupProps['onContentHeightChange'],
+): Pick<
+  ScrollViewProps,
+  'nestedScrollEnabled' | 'onLayout' | 'onContentSizeChange'
+> {
   const [viewport, setViewport] = useState(0);
   const [content, setContent] = useState(0);
-  return { value: content > viewport, setViewport, setContent };
+  return {
+    nestedScrollEnabled: content > viewport,
+    onLayout: (event) => setViewport(event.nativeEvent.layout.height),
+    onContentSizeChange: (_, height) => {
+      setContent(height);
+      onContentHeightChange?.(height);
+    },
+  };
 }
 
 // The sections in one Compose column, the search first when there is one.

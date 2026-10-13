@@ -10,7 +10,7 @@ export interface FieldGroupProps {
   fit?: boolean;
   // A phone's search above the sections, scrolling with them; only Android draws it, as iOS searches from its header.
   search?: ListSearchBarProps;
-  // The height of the sections, without the bottom safe area, so a native sheet can fit them; only Android reports it.
+  // The height of the sections, so a native sheet can fit them; only Android reports it.
   onContentHeightChange?: (height: number) => void;
 }
 

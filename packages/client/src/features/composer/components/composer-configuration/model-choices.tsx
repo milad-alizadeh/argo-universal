@@ -9,7 +9,10 @@ import { FieldRowEnd } from '../../../../lib/generic/primitives/fields/field-lay
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { configurationChoices } from '../../state/configuration-choices';
 import { ConfigurationChoice } from './configuration-choice';
-import type { ComposerConfigurationProps } from './configuration-types';
+import type {
+  ComposerConfigurationProps,
+  ConfigurationChoicesProps,
+} from './configuration-types';
 import { modelName, selection } from './configuration-values';
 const modelListMaxHeight = 320;
 
@@ -17,12 +20,7 @@ export function ModelChoices({
   configuration,
   onSelect,
   onContentHeightChange,
-}: {
-  configuration: ComposerConfigurationProps;
-  onSelect: () => void;
-  // A phone's sheet fits the choices.
-  onContentHeightChange?: (height: number) => void;
-}): React.JSX.Element | null {
+}: ConfigurationChoicesProps): React.JSX.Element | null {
   const wide = useWide() && Platform.OS === 'web';
   const model = selection(configuration, 'model');
   if (!model) return null;
