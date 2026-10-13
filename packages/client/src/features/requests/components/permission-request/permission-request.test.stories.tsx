@@ -12,6 +12,7 @@ import {
   meta as permissionTestMeta,
   type Story,
 } from '../../../../../mocks/requests/permission/permission-story-context.test.mocks';
+import { wideBreakpoint } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { permissionProps, permissionMocks } from '../request.mocks';
 
@@ -86,7 +87,7 @@ function conflict(width: number, mock?: RequestMock): Story {
         'Already answered on another device',
       );
       const allowOnce = canvas.queryByRole('button', { name: allowOnceLabel });
-      await (width < 1100
+      await (width < wideBreakpoint()
         ? expect(allowOnce).not.toBeInTheDocument()
         : expect(allowOnce).toBeDisabled());
       await expect(args.onAnswer).not.toHaveBeenCalled();

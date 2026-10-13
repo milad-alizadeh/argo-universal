@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
+import { wideBreakpoint } from '../each-layout';
 import { WideMock } from './use-wide.mocks';
 
 const wideBreakpointLabel = 'Wide breakpoint';
@@ -18,27 +19,27 @@ type Story = StoryObj<typeof meta>;
 // CI runners can take over a second to redraw after a resize.
 const layoutUpdate = { timeout: 3000 };
 
-export const UpdatesAt1100Pixels: Story = {
+export const UpdatesAtTheWideBreakpoint: Story = {
   play: async ({ canvas }) => {
-    await page.viewport(1099, 900);
+    await page.viewport(wideBreakpoint() - 1, 900);
     await expect(
       await canvas.findByText('Phone layout', {}, layoutUpdate),
     ).toBeVisible();
     await expect(canvas.getByText(wideBreakpointLabel)).not.toBeVisible();
 
-    await page.viewport(1100, 900);
+    await page.viewport(wideBreakpoint(), 900);
     await expect(
       await canvas.findByText('Wide layout', {}, layoutUpdate),
     ).toBeVisible();
     await expect(canvas.getByText(wideBreakpointLabel)).toBeVisible();
 
-    await page.viewport(1101, 900);
+    await page.viewport(wideBreakpoint() + 1, 900);
     await expect(
       await canvas.findByText('Wide layout', {}, layoutUpdate),
     ).toBeVisible();
     await expect(canvas.getByText(wideBreakpointLabel)).toBeVisible();
 
-    await page.viewport(1099, 900);
+    await page.viewport(wideBreakpoint() - 1, 900);
     await expect(
       await canvas.findByText('Phone layout', {}, layoutUpdate),
     ).toBeVisible();

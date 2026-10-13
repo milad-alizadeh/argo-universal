@@ -6,6 +6,7 @@ import {
   recordedValues,
   type Story,
 } from '../../../../../mocks/requests/elicitation/elicitation-form-story.test.mocks';
+import { wideBreakpoint } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   elicitationProps,
@@ -105,7 +106,7 @@ function conflict(width: number, mock?: RequestMock): Story {
       );
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
       await expect(canvas.getByRole('radio', { name: 'Blue' })).toBeDisabled();
-      await (width < 1100
+      await (width < wideBreakpoint()
         ? expect(
             canvas.queryByRole('button', { name: 'Submit' }),
           ).not.toBeInTheDocument()

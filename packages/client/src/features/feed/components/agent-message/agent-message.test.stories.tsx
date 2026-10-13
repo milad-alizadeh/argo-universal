@@ -3,7 +3,10 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
+import {
+  layoutWidths,
+  wideBreakpoint,
+} from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   recordedAgentMessage,
@@ -143,7 +146,7 @@ export const TableScrollsSideways: Story = {
         canvas.getByText('Property').parentElement,
       );
       const overflows = scroller.scrollWidth > scroller.clientWidth;
-      await expect(overflows).toBe(width < 1100);
+      await expect(overflows).toBe(width < wideBreakpoint());
     }
   },
 };

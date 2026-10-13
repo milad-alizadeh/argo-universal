@@ -1,5 +1,6 @@
 import { waitFor, expect, within } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
+import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps, composerPlanDone } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
@@ -20,7 +21,7 @@ export function planDone(width: number): Story {
       await settleViewport(width);
       const plan = canvas.getByRole('button', { name: 'Plan' });
       await expect(plan).toBeVisible();
-      if (width >= 1100) {
+      if (width >= wideBreakpoint()) {
         await expect(plan).toHaveTextContent('Plan 3/3');
         await userEvent.click(plan);
         await waitFor(() => expect(canvas.getByText(planTitle)).toBeVisible());

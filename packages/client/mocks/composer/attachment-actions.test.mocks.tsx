@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { fn, expect, waitFor, within } from 'storybook/test';
+import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps, composerImages } from '../composer-mock';
 import { type Story, imageComposer } from './composer-story-context.test.mocks';
@@ -71,7 +72,7 @@ export function attachmentMenus(width: number): Story {
       const overlay = within(document.body);
       await settleViewport(width);
       const choices =
-        width < 1100
+        width < wideBreakpoint()
           ? ([
               ['Camera', args.onAttachCamera],
               ['Photos', args.onAttachImages],
@@ -104,5 +105,5 @@ export function attachmentMenus(width: number): Story {
 }
 
 function absentAttachmentChoice(width: number): string {
-  return width < 1100 ? 'Goal' : 'Camera';
+  return width < wideBreakpoint() ? 'Goal' : 'Camera';
 }

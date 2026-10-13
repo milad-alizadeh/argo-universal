@@ -37,7 +37,7 @@ type Layout = keyof typeof layoutWidths;
 const dialogName = { name: 'Rename the Project' };
 
 // A phone raises a sheet that the backdrop, a swipe or Escape closes, so it has no close button; a wide window centres a dialog with one.
-const closeButtonsAt: Record<Layout, number> = { phone: 0, wide: 1 };
+const closeButtonsAt: Record<Layout, number> = { phone: 0, tablet: 0, wide: 1 };
 
 const body = within(document.body);
 const rename = { name: 'Rename' };

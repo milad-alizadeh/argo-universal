@@ -1,6 +1,7 @@
 import { type SessionConfigSelectOption } from '@repo/contracts';
 import { within, expect, waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
+import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import { chooseEffort } from '../choose-effort';
 import {
   type PickerCatalog,
@@ -25,7 +26,7 @@ export async function expectHighEffort({
   await expect(
     canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
   ).toHaveTextContent(
-    width >= 1100
+    width >= wideBreakpoint()
       ? (slider.getAttribute(valueTextAttribute) ?? '')
       : expectedModelLabel(model.name),
   );
@@ -75,7 +76,7 @@ export async function expectDangerousMode({
   await waitFor(() =>
     expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
   );
-  if (width >= 1100)
+  if (width >= wideBreakpoint())
     await expect(
       canvas.getByRole('button', { name: 'Mode' }),
     ).toHaveTextContent(dangerous.name);

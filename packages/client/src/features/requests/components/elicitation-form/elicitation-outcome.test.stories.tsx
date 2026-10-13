@@ -5,6 +5,7 @@ import {
   meta as elicitationTestMeta,
   type Story,
 } from '../../../../../mocks/requests/elicitation/elicitation-form-story.test.mocks';
+import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   elicitationProps,
@@ -91,17 +92,17 @@ if (!firstGalleryAgent || !secondGalleryAgent)
   throw new Error('Recorded gallery needs both Agents.');
 export const GalleryFirstAgentPhone: Story = galleryFixture(
   firstGalleryAgent,
-  390,
+  layoutWidths.phone,
 );
 export const GalleryFirstAgentWide: Story = galleryFixture(
   firstGalleryAgent,
-  1024,
+  layoutWidths.wide,
 );
 export const GallerySecondAgentPhone: Story = galleryFixture(
   secondGalleryAgent,
-  390,
+  layoutWidths.phone,
 );
 export const GallerySecondAgentWide: Story = galleryFixture(
   secondGalleryAgent,
-  1024,
+  layoutWidths.wide,
 );

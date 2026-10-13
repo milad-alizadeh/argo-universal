@@ -1,6 +1,7 @@
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, within, waitFor, expect } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
+import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerPlan, composerProps } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
@@ -36,10 +37,10 @@ export function equalPlanSteps(width: number, agentIndex: number): Story {
       await settleViewport(width);
       const overlay = within(document.body);
       await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
-      if (width < 1100)
+      if (width < wideBreakpoint())
         await waitFor(() => expect(overlay.getByRole('dialog')).toBeVisible());
       const list = within(
-        width < 1100
+        width < wideBreakpoint()
           ? overlay.getByRole('dialog')
           : canvas.getByTestId(planStepsId),
       );

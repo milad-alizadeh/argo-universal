@@ -1,7 +1,10 @@
 import { type AgentInfo } from '@repo/contracts';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
+import {
+  layoutWidths,
+  wideBreakpoint,
+} from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerPlan } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
@@ -64,7 +67,7 @@ export function createdCheckoutIsReadOnly(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       const overlay = within(document.body);
       await settleViewport(width);
-      if (width < 1100) {
+      if (width < wideBreakpoint()) {
         await expect(
           canvas.queryByText('created-worktree', { exact: true }),
         ).not.toBeInTheDocument();

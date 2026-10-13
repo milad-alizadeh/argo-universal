@@ -10,9 +10,6 @@ import { PhoneShell } from './phone-shell';
 
 export const openNavigationLabel = 'Open navigation';
 
-// A width between the phone and wide layouts.
-export const tabletWidth = 1024;
-
 export const drawerSections = [
   'sessions',
   'issues',

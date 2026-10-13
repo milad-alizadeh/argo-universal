@@ -10,6 +10,7 @@ import {
   meta as permissionTestMeta,
   type Story,
 } from '../../../../../mocks/requests/permission/permission-story-context.test.mocks';
+import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { RequestFrame } from '../../../../lib/product/request-frame';
 import { permissionProps, permissionMocks } from '../request.mocks';
@@ -36,7 +37,7 @@ const chosenNeverAllow = {
   kind: 'reject_always',
 } as const;
 export const FirstAgentAlwaysAllowPhone = chosenOptionFeed(
-  390,
+  layoutWidths.phone,
   0,
   chosenAlwaysAllow,
 );
@@ -46,7 +47,7 @@ export const FirstAgentAlwaysAllowWide = chosenOptionFeed(
   chosenAlwaysAllow,
 );
 export const SecondAgentAlwaysAllowPhone = chosenOptionFeed(
-  390,
+  layoutWidths.phone,
   1,
   chosenAlwaysAllow,
 );
@@ -105,17 +106,17 @@ if (!firstGalleryAgent || !secondGalleryAgent)
   throw new Error('Recorded gallery needs both Agents.');
 export const GalleryFirstAgentPhone: Story = galleryFixture(
   firstGalleryAgent,
-  390,
+  layoutWidths.phone,
 );
 export const GalleryFirstAgentWide: Story = galleryFixture(
   firstGalleryAgent,
-  1024,
+  layoutWidths.wide,
 );
 export const GallerySecondAgentPhone: Story = galleryFixture(
   secondGalleryAgent,
-  390,
+  layoutWidths.phone,
 );
 export const GallerySecondAgentWide: Story = galleryFixture(
   secondGalleryAgent,
-  1024,
+  layoutWidths.wide,
 );

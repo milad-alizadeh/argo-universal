@@ -1,7 +1,10 @@
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, screen, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
+import {
+  layoutWidths,
+  wideBreakpoint,
+} from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   detailContentId,
@@ -39,7 +42,9 @@ async function expectHidden(
   );
 }
 
-function inspectorTakesTheDetailAreaAndRestoresIt(width: number): ShellStory {
+function inspectorTakesTheDetailAreaAndRestoresIt(
+  width: () => number,
+): ShellStory {
   return {
     play: controlledPlay(async (context, controlled) => {
       const { canvas } = context;
@@ -70,7 +75,7 @@ function inspectorTakesTheDetailAreaAndRestoresIt(width: number): ShellStory {
       await expect(canvas.getByTestId(listContentId)).toBeVisible();
       await pressInspectorButton(context, controlled, 'open');
       await expect(canvas.getByTestId(detailContentId)).toBeVisible();
-      await settleViewport(width);
+      await settleViewport(width());
       await waitFor(() => expectHidden(context, detailId));
       await expect(canvas.getByTestId(inspectorContentId)).toBeVisible();
       await pressInspectorButton(context, controlled, 'open');
@@ -89,12 +94,11 @@ function inspectorTakesTheDetailAreaAndRestoresIt(width: number): ShellStory {
     }),
   };
 }
-// A width between the phone and wide layouts.
-const tabletWidth = 1100;
+// The narrowest wide window.
 export const InspectorTakesTheDetailAreaAndRestoresItTablet =
-  inspectorTakesTheDetailAreaAndRestoresIt(tabletWidth);
+  inspectorTakesTheDetailAreaAndRestoresIt(wideBreakpoint);
 export const InspectorTakesTheDetailAreaAndRestoresItPhone =
-  inspectorTakesTheDetailAreaAndRestoresIt(layoutWidths.phone);
+  inspectorTakesTheDetailAreaAndRestoresIt(() => layoutWidths.phone);
 
 export const HeaderMenuDoesNotOpenInspector: ShellStory = {
   play: controlledPlay(async (context) => {
