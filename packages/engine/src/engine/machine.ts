@@ -1,26 +1,30 @@
 import { type Database } from '@repo/db';
-import { writeLog } from '@repo/machine-log';
-import { assign, type InputFrom } from 'xstate';
+import { assign } from 'xstate';
 import { createAcpResources } from '../acp';
-import { AgentInstallations, type SyncSupervisorInput } from '../agents';
-import { blobsFolderIn } from '../blob';
-import { type OpenSessionsInput, openSessionsId } from '../sessions';
-import { databaseWriterId, writerMachine } from '../storage';
-import { type HttpServer, type HttpServerOptions } from './http-server';
+import { AgentInstallations } from '../agents';
+import { openSessionsId } from '../sessions';
+import { databaseWriterId } from '../storage';
+import type { OpenDatabaseInput } from './engine-database';
+import { type HttpServer } from './http-server';
 import type { EngineMessage } from './ipc';
 import {
+  recoveryInput,
+  writerInput,
+  syncInput,
+  sessionsInput,
+  serverInput,
+  cleanupInput,
+} from './lifecycle-inputs';
+import {
   engineSetup,
-  openDatabaseOf,
-  requireDatabaseWriter,
-  requireOpenSessions,
-  requireSyncSupervisor,
+  stoppingLog,
   type EngineContext,
   type EngineOutput,
   type EngineLogParameters,
-  type OpenDatabaseInput,
-  type RecoveryInput,
+  type CloseHttpServerInput,
 } from './lifecycle-setup-machine';
-import { stopping } from './stopping-machine';
+const finishingEngineTarget = '#engine.finishing';
+const closingAgentsTarget = 'closingAgents';
 export type { EngineInput } from './lifecycle-setup-machine';
 
 export const engineMachine = engineSetup.createMachine({
@@ -40,12 +44,7 @@ export const engineMachine = engineSetup.createMachine({
   on: {
     'engine.stop': {
       target: '.stopped',
-      actions: {
-        type: 'log',
-        params: ({ event }): EngineLogParameters => ({
-          line: `stopping: ${event.reason}`,
-        }),
-      },
+      actions: { type: 'log', params: stoppingLog },
     },
   },
   states: {
@@ -71,13 +70,7 @@ export const engineMachine = engineSetup.createMachine({
       invoke: {
         id: 'recoverAfterRestart',
         src: 'recoverAfterRestart',
-        input: ({ context }): RecoveryInput => {
-          return {
-            database: openDatabaseOf(context),
-            home: context.home,
-            blobsFolder: blobsFolderIn(context.home),
-          };
-        },
+        input: recoveryInput,
         onDone: { target: 'live' },
         onError: {
           target: 'failed',
@@ -94,52 +87,26 @@ export const engineMachine = engineSetup.createMachine({
           id: 'databaseWriter',
           systemId: databaseWriterId,
           src: 'databaseWriter',
-          input: ({ context }): InputFrom<typeof writerMachine> => ({
-            database: openDatabaseOf(context),
-            now: context.now,
-            log: (line: string): void =>
-              writeLog({ home: context.home, label: 'engine', line }),
-            blobsFolder: blobsFolderIn(context.home),
-          }),
+          input: writerInput,
         },
         {
           id: 'syncSupervisor',
           systemId: 'syncSupervisor',
           src: 'syncSupervisor',
-          input: ({ context, self }): SyncSupervisorInput => ({
-            database: openDatabaseOf(context),
-            writer: requireDatabaseWriter(self.system),
-            fetchAgents: context.fetchAgents,
-            now: context.now,
-          }),
+          input: syncInput,
         },
         {
           id: 'sessions',
           systemId: openSessionsId,
           src: 'sessions',
-          input: ({ context }): OpenSessionsInput => ({
-            database: openDatabaseOf(context),
-            runtimeDirectory: context.home,
-            adapters: context.adapters,
-            now: context.now,
-            createId: context.createId,
-            acpResources: context.acpResources,
-            resolveAgentLaunch: context.resolveAgentLaunch,
-            isAgentSetupBusy: (agentId) =>
-              context.installations.isBusy(agentId),
-          }),
+          input: sessionsInput,
         },
       ],
       initial: 'listening',
       on: {
         'engine.stop': {
           target: '.stopping',
-          actions: {
-            type: 'log',
-            params: ({ event }): EngineLogParameters => ({
-              line: `stopping: ${event.reason}`,
-            }),
-          },
+          actions: { type: 'log', params: stoppingLog },
         },
       },
       states: {
@@ -147,19 +114,7 @@ export const engineMachine = engineSetup.createMachine({
           invoke: {
             id: 'startHttpServer',
             src: 'startHttpServer',
-            input: ({ context, self }): HttpServerOptions => ({
-              createId: context.createId,
-              installations: context.installations,
-              sessions: requireOpenSessions(self.system),
-              databaseWriter: requireDatabaseWriter(self.system),
-              syncSupervisor: requireSyncSupervisor(self.system),
-              commandAdmission: context.commandAdmission,
-              acp: context.acp,
-              loginTimeoutMs: context.loginTimeoutMs,
-              loginCleanupTimeoutMs: context.loginCleanupTimeoutMs,
-              ...serverIdentity(context),
-              database: openDatabaseOf(context),
-            }),
+            input: serverInput,
             onDone: {
               target: 'running',
               actions: [
@@ -203,7 +158,118 @@ export const engineMachine = engineSetup.createMachine({
             },
           },
         },
-        stopping,
+        stopping: {
+          entry: ['closeCommandAdmission', 'stopSync'],
+          initial: 'closingHttp',
+          on: { 'engine.stop': {} },
+          states: {
+            closingHttp: {
+              invoke: {
+                id: 'closeHttpServer',
+                src: 'closeHttpServer',
+                input: ({ context }): CloseHttpServerInput => ({
+                  server: context.server,
+                }),
+                onDone: { target: 'stoppingSessions' },
+                onError: {
+                  target: 'stoppingSessions',
+                  actions: assign({
+                    failure: ({ event }): string =>
+                      `could not close: ${String(event.error)}`,
+                  }),
+                },
+              },
+              after: {
+                httpCloseLimit: {
+                  target: 'stoppingSessions',
+                  actions: {
+                    type: 'log',
+                    params: {
+                      line: 'HTTP close limit reached; stopping Sessions',
+                    },
+                  },
+                },
+              },
+            },
+            stoppingSessions: {
+              entry: 'stopSessions',
+              on: {
+                'xstate.done.actor.sessions': { target: closingAgentsTarget },
+                'xstate.error.actor.sessions': {
+                  target: closingAgentsTarget,
+                  actions: {
+                    type: 'log',
+                    params: ({ event }): EngineLogParameters => ({
+                      line: `could not stop Sessions: ${String(event.error)}`,
+                    }),
+                  },
+                },
+              },
+              after: {
+                sessionStopLimit: {
+                  target: closingAgentsTarget,
+                  actions: {
+                    type: 'log',
+                    params: {
+                      line: 'Session stop limit reached; closing Agent resources',
+                    },
+                  },
+                },
+              },
+            },
+            closingAgents: {
+              invoke: {
+                id: 'closeAcpResources',
+                src: 'closeAcpResources',
+                input: cleanupInput,
+                onDone: { target: 'drainingWriter' },
+                onError: {
+                  target: 'retainingAgentCleanup',
+                  actions: assign({
+                    failure: ({ event }): string =>
+                      `Agent cleanup remains unresolved: ${String(event.error)}`,
+                  }),
+                },
+              },
+            },
+            retainingAgentCleanup: {
+              entry: {
+                type: 'log',
+                params: ({ context }): EngineLogParameters => ({
+                  line: context.failure ?? 'Agent cleanup remains unresolved',
+                }),
+              },
+            },
+            drainingWriter: {
+              entry: 'drainWriter',
+              on: {
+                'xstate.done.actor.databaseWriter': {
+                  target: finishingEngineTarget,
+                },
+                'xstate.error.actor.databaseWriter': {
+                  target: finishingEngineTarget,
+                  actions: {
+                    type: 'log',
+                    params: ({ event }): EngineLogParameters => ({
+                      line: `could not drain the writer: ${String(event.error)}`,
+                    }),
+                  },
+                },
+              },
+              after: {
+                writerDrainLimit: {
+                  target: finishingEngineTarget,
+                  actions: {
+                    type: 'log',
+                    params: {
+                      line: 'Writer drain limit reached; closing the database',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     },
     finishing: {
@@ -230,14 +296,3 @@ export const engineMachine = engineSetup.createMachine({
     exitCode: context.failure === null ? 0 : 1,
   }),
 });
-
-function serverIdentity(
-  context: Pick<EngineContext, 'home' | 'port' | 'version' | 'startedAt'>,
-): Pick<HttpServerOptions, 'home' | 'port' | 'version' | 'startedAt'> {
-  return {
-    home: context.home,
-    port: context.port,
-    version: context.version,
-    startedAt: context.startedAt,
-  };
-}

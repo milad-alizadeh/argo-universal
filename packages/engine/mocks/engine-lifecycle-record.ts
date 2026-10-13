@@ -8,12 +8,10 @@ import {
   type EventObject,
   type PromiseActorLogic,
 } from 'xstate';
-import type { AcpResources } from '../src/acp';
-import type { AgentInstallations } from '../src/agents';
+import type { CloseAcpResourcesInput } from '../src/engine/agent-cleanup';
 import type { HttpServer, HttpServerOptions } from '../src/engine/http-server';
 import type { EngineMessage } from '../src/engine/ipc';
 import { engineMachine } from '../src/engine/machine';
-import type { OpenSessionsActorRef } from '../src/sessions';
 import { input } from './engine-lifecycle-input';
 export interface PendingCall<TInput, TOutput> {
   input: TInput;
@@ -42,14 +40,7 @@ export const record: {
   >[];
   startHttpServerCalls: PendingCall<HttpServerOptions, HttpServer>[];
   closeHttpServerCalls: PendingCall<{ server: HttpServer | null }, void>[];
-  closeResourceCalls: PendingCall<
-    {
-      resources: AcpResources;
-      installations: AgentInstallations;
-      sessions: OpenSessionsActorRef | undefined;
-    },
-    void
-  >[];
+  closeResourceCalls: PendingCall<CloseAcpResourcesInput, void>[];
   shutdownCommands: string[];
   logs: string[];
   processSignals: { send: (event: AnyEventObject) => void; live: boolean };
