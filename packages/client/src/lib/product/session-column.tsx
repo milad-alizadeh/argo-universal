@@ -9,7 +9,7 @@ export const sessionSurface = 'bg-sidebar';
 // The Session's one column: as wide as the Composer at most, centred in the pane with the pane's side padding. CSS centres it on every width change, so nothing in it depends on a width measured earlier.
 export function SessionColumn(props: ViewProps): React.JSX.Element {
   return (
-    <View className="w-full px-4 wide:px-6">
+    <View pointerEvents={props.pointerEvents} className="w-full px-4 wide:px-6">
       <View
         {...props}
         className={cn('w-full max-w-composer self-center', props.className)}
