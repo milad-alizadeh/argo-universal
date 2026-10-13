@@ -35,16 +35,24 @@ type Story = StoryObj<typeof meta>;
 
 const widths = [layoutWidths.phone, layoutWidths.wide];
 
+function first(elements: HTMLElement[], missing: string): HTMLElement {
+  const [element] = elements;
+  if (!element) throw new Error(missing);
+  return element;
+}
+
 export const InlineCode: Story = {
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleViewport(width);
-      const codeElement = canvas.getAllByText('sleep 20 && echo done', {
-        exact: true,
-      })[0];
-      if (!codeElement) throw new Error('Inline code is missing');
-      const prose = canvas.getAllByText(/^Run the shell command/)[0];
-      if (!prose) throw new Error('Message prose is missing');
+      const codeElement = first(
+        canvas.getAllByText('sleep 20 && echo done', { exact: true }),
+        'Inline code is missing',
+      );
+      const prose = first(
+        canvas.getAllByText(/^Run the shell command/),
+        'Message prose is missing',
+      );
       await expect(codeElement).toBeVisible();
       await expect(prose).toBeVisible();
       await expect(

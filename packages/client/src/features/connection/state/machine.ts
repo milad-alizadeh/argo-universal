@@ -33,6 +33,19 @@ const offlineDelayMs = 10_000;
 const retryDelayBaseMs = 500;
 const retryDelayCapMs = 30_000;
 
+const lostEvents = (error: unknown): ConnectionEvent[] =>
+  error ? [{ type: 'connection.lost', error }] : [];
+
+// tRPC's `pending` means the WebSocket opened; `connecting` with an error means it closed.
+const linkEvents = (state: {
+  state: string;
+  error?: unknown;
+}): ConnectionEvent[] => {
+  if (state.state === 'pending') return [{ type: 'connection.opened' }];
+  if (state.state === 'connecting') return lostEvents(state.error);
+  return [];
+};
+
 const isDown = and([
   not(stateIn({ link: 'connecting' })),
   not(stateIn({ link: 'open' })),
@@ -47,20 +60,13 @@ export const connectionMachine = setup({
     emitted: {} as ConnectionEmitted,
   },
   actors: {
-    // tRPC's `pending` means the WebSocket opened; `connecting` with an error means it closed.
     watchConnectionState: fromCallback<
       EventObject,
       { webSocketClient: TRPCWebSocketClient }
     >(({ input, sendBack }) => {
       const subscription = input.webSocketClient.connectionState.subscribe({
         next: (state) => {
-          if (state.state === 'pending')
-            sendBack({ type: 'connection.opened' } satisfies ConnectionEvent);
-          else if (state.state === 'connecting' && state.error)
-            sendBack({
-              type: 'connection.lost',
-              error: state.error,
-            } satisfies ConnectionEvent);
+          for (const event of linkEvents(state)) sendBack(event);
         },
       });
       return (): void => subscription.unsubscribe();

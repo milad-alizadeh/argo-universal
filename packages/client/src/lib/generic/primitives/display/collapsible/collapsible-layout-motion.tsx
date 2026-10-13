@@ -30,7 +30,8 @@ interface FrameMotion {
   grow: (height: number) => void;
   onMotionChange: (moving: boolean) => void;
 }
-function advanceProgress(motion: FrameMotion, fraction: number): void {
+function advanceProgress(motion: FrameMotion, elapsed: number): number {
+  const fraction = elapsedFraction(elapsed, motion.remainingDuration);
   const progress =
     motion.from + (motion.target - motion.from) * easeInOut(fraction);
   motion.grow(
@@ -39,6 +40,7 @@ function advanceProgress(motion: FrameMotion, fraction: number): void {
   );
   motion.latestProgress.current = progress;
   motion.setProgress(progress);
+  return fraction;
 }
 function stopFrames(frame: number, moving: boolean, motion: FrameMotion): void {
   cancelAnimationFrame(frame);
@@ -47,13 +49,9 @@ function stopFrames(frame: number, moving: boolean, motion: FrameMotion): void {
 function runFrames(motion: FrameMotion): () => void {
   motion.onMotionChange(true);
   let moving = true;
-  const startTime = performance.now();
+  const startedAt = performance.now();
   let frame = requestAnimationFrame(function step(time): void {
-    const fraction = elapsedFraction(
-      time - startTime,
-      motion.remainingDuration,
-    );
-    advanceProgress(motion, fraction);
+    const fraction = advanceProgress(motion, time - startedAt);
     if (fraction < 1) frame = requestAnimationFrame(step);
     else {
       moving = false;

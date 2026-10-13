@@ -35,10 +35,9 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
   },
 ];
 
-function AlertPreview(props: {
-  trigger: string;
-  alert: AlertContent;
-}): React.JSX.Element {
+type AlertPreviewProps = { trigger: string; alert: AlertContent };
+
+function AlertPreview(props: AlertPreviewProps): React.JSX.Element {
   const [open, setOpen] = useState(false);
   return (
     <View className="flex-row">

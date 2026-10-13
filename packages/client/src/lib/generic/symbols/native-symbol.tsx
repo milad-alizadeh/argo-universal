@@ -3,24 +3,26 @@ import type * as React from 'react';
 import { Icon, IconSlot } from './icon';
 import type { NativeSymbolProps } from './native-symbol-props';
 
+const hostedIconSlot = {
+  collapsable: false,
+  accessible: false,
+  accessibilityElementsHidden: true,
+  importantForAccessibility: 'no-hide-descendants',
+} as const;
+
+function mutedClassName(muted: boolean | undefined): string | undefined {
+  return muted === true ? 'text-muted-foreground' : undefined;
+}
+
 // An Argo icon inside a Compose tree, hosted as a React Native view; the row it sits in names it for screen readers.
 export function NativeSymbol({
-  muted = false,
+  muted,
   ...props
 }: NativeSymbolProps): React.JSX.Element {
   return (
     <RNHostView matchContents>
-      <IconSlot
-        role={props.role}
-        collapsable={false}
-        accessible={false}
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-      >
-        <Icon
-          {...props}
-          className={muted ? 'text-muted-foreground' : undefined}
-        />
+      <IconSlot role={props.role} {...hostedIconSlot}>
+        <Icon {...props} className={mutedClassName(muted)} />
       </IconSlot>
     </RNHostView>
   );

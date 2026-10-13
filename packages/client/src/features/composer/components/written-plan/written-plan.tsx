@@ -3,17 +3,14 @@ import { lexer, type Tokens } from 'marked';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
 import { PlanDocument } from '#lib/product/plan-document';
-import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-sheet/bottom-sheet';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon/icon';
+import { Text } from '#primitives/display/text/text';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
+import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
 import { resourceName } from '../../../../lib/product/markdown/resource-name';
 import { useWrittenPlanEscape } from '../../hooks/use-written-plan-escape';
 
@@ -48,7 +45,7 @@ export function WrittenPlan({
       className={contentActionClass({
         variant: 'ghost',
         className: cn(
-          'h-6 sm:h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer',
+          'min-h-6 sm:min-h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer',
           wide &&
             'h-8 sm:h-8 w-full justify-start pl-2 pr-1.5 rounded-none border-0 bg-transparent shadow-none',
         ),
@@ -83,17 +80,9 @@ export function WrittenPlan({
         onOpenChange={setOpen}
         trigger={trigger}
         label={title}
+        initialSize={plan.type === 'markdown' ? 'expanded' : 'compact'}
+        fit={plan.type === 'file'}
       >
-        <View className="flex-row items-center gap-1.5 px-4 py-2">
-          <Icon
-            role="control"
-            name="file-text"
-            className="text-muted-foreground"
-          />
-          <Text role={'heading'} className="min-w-0 flex-1">
-            {title}
-          </Text>
-        </View>
         <WrittenPlanContent plan={plan} title={title} layout="sheet" />
       </BottomSheet>
     );
@@ -117,7 +106,9 @@ function WrittenPlanContent({
   return (
     <View role="region" accessibilityLabel="Written plan content">
       {plan.type === 'markdown' ? (
-        <PlanDocument content={plan.content} layout={layout} />
+        <View className={layout === 'sheet' ? 'px-4' : undefined}>
+          <PlanDocument content={plan.content} layout={layout} />
+        </View>
       ) : (
         <View className="gap-2 px-4 pt-2 pb-4">
           <FeedCodeBlock resource={{ name: title, uri: plan.uri }} />

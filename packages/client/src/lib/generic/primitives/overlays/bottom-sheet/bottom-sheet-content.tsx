@@ -10,25 +10,54 @@ type SheetContentProps = Pick<
   | 'onOpenChange'
   | 'fit'
   | 'dismissible'
+  | 'footer'
   | 'contentScrolls'
   | 'surface'
->;
+> & {
+  viewportHeight?: number;
+  onContentHeightChange?: (height: number) => void;
+};
+
+const grabberInset = 32;
 
 export function BottomSheetContent(
   props: SheetContentProps,
 ): React.JSX.Element {
-  // On iOS the content starts below the grabber's zone, and the sheet's own safe area is its bottom edge.
   return (
-    <View className={cn(sheetClass(props))} {...sheetAccessibility(props)}>
-      {props.contentScrolls ? (
-        props.children
-      ) : (
-        <ScrollView keyboardShouldPersistTaps="handled">
-          {props.children}
-        </ScrollView>
-      )}
+    <View
+      style={{ height: props.viewportHeight }}
+      className={sheetClass(props)}
+      {...sheetAccessibility(props)}
+    >
+      <SheetBody {...props} />
+      {props.footer}
     </View>
   );
+}
+
+function SheetBody(props: SheetContentProps): React.ReactNode {
+  if (props.contentScrolls) return props.children;
+  return (
+    <ScrollView
+      className={cn('shrink min-h-0', { 'flex-1': !props.fit })}
+      {...scrollProps(props)}
+    >
+      {props.children}
+    </ScrollView>
+  );
+}
+
+function scrollProps(
+  props: SheetContentProps,
+): React.ComponentProps<typeof ScrollView> {
+  return {
+    keyboardShouldPersistTaps: 'handled',
+    automaticallyAdjustKeyboardInsets: !props.footer,
+    onContentSizeChange: (_width, height) =>
+      props.onContentHeightChange?.(height + grabberInset),
+    role: 'region',
+    accessibilityLabel: `${props.label ?? 'Sheet'} document`,
+  };
 }
 
 function sheetAccessibility(
@@ -44,10 +73,18 @@ function sheetAccessibility(
   };
 }
 
-function sheetClass(props: Pick<SheetContentProps, 'surface' | 'fit'>): string {
+function sheetClass(props: SheetContentProps): string {
   return cn(
     props.surface === 'sidebar' ? 'bg-sidebar' : 'bg-popover',
-    'ios:pt-8 pb-8 ios:pb-0',
-    !props.fit && 'flex-1',
+    'ios:pt-8 ios:pb-0 min-h-0',
+    fitSheetPadding(props.fit),
+    {
+      'pb-8': !props.footer,
+      'flex-1': !props.fit && props.viewportHeight === undefined,
+    },
   );
+}
+
+function fitSheetPadding(fit: boolean | undefined): string | undefined {
+  return fit ? 'android:pb-0' : undefined;
 }

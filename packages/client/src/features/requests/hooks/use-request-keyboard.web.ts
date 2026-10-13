@@ -37,7 +37,12 @@ function shortcutAction(
 function enterAction(
   options: RequestKeyboardOptions,
 ): (() => void) | undefined {
-  if (document.activeElement?.closest('[role="button"], a')) return undefined;
+  if (
+    document.activeElement?.closest(
+      '[role="button"], [role="radio"], [role="checkbox"], a',
+    )
+  )
+    return undefined;
   return options.onEnter;
 }
 

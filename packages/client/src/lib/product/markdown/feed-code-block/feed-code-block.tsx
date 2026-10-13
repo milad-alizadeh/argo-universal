@@ -1,27 +1,15 @@
-import type * as React from 'react';
-import type { ReactNode } from 'react';
-import { Platform, ScrollView, View } from 'react-native';
+import type { ReactElement, ReactNode } from 'react';
+import { Platform, View } from 'react-native';
 import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { CodeBlockHeader } from '../code-block-header';
-
-interface CodeBlockResource {
-  name: string;
-  uri: string;
-  description?: string;
-}
-
-type CodeBlockSource =
-  | { code: string; resource?: never; uri?: never; description?: never }
-  | {
-      code?: string;
-      resource: CodeBlockResource;
-      uri?: never;
-      description?: never;
-    }
-  // A resource with its URI as the header and its text, or else its description, as the body.
-  | { code?: string; uri: string; description?: string; resource?: never };
+import { CodeBlockBody } from './code-block-body';
+import {
+  type CodeBlockSource,
+  copyAction,
+  hasBody,
+  headerTitle,
+} from './code-block-source';
 
 export type FeedCodeBlockProps = {
   language?: string;
@@ -29,23 +17,7 @@ export type FeedCodeBlockProps = {
   textClassName?: string;
 } & CodeBlockSource;
 
-// Code and supplied resources share one header, Copy control and scrolling body.
-export function FeedCodeBlock({
-  code,
-  language,
-  footer,
-  resource,
-  uri,
-  description,
-  textClassName,
-}: FeedCodeBlockProps): React.JSX.Element {
-  const resourceUri = resource?.uri ?? uri;
-  let copy = { value: code ?? '', label: 'Copy code' };
-  if (resourceUri !== undefined)
-    copy =
-      code === undefined
-        ? { value: resourceUri, label: 'Copy URI' }
-        : { value: code, label: 'Copy resource text' };
+function CodeBlockFrame({ children }: { children: ReactNode }): ReactElement {
   return (
     <View
       className={cn(
@@ -54,36 +26,35 @@ export function FeedCodeBlock({
         markdownBlockClassNames.codeBlock,
       )}
     >
-      <CodeBlockHeader
-        title={resource?.name ?? uri ?? language ?? ''}
-        copyValue={copy.value}
-        copyLabel={copy.label}
-        resource={resource}
-        hasBody={code !== undefined || !!description}
-      />
-      {code === undefined && !!description && (
-        <Text role="body" className="px-3 py-2 text-foreground">
-          {description}
-        </Text>
-      )}
-      {code !== undefined && (
-        <ScrollView testID="code-scroll" className="max-h-75 wide:max-h-100">
-          <ScrollView
-            horizontal
-            className="grow-0 shrink-0"
-            contentContainerClassName="px-3 py-2"
-          >
-            <Text
-              selectable
-              role="code"
-              className={cn(markdownBlockClassNames.codeText, textClassName)}
-            >
-              {code}
-            </Text>
-          </ScrollView>
-        </ScrollView>
-      )}
-      {footer}
+      {children}
     </View>
+  );
+}
+
+function SourceHeader(props: FeedCodeBlockProps): ReactElement {
+  const copy = copyAction(props);
+  return (
+    <CodeBlockHeader
+      title={headerTitle(props, props.language)}
+      copyValue={copy.value}
+      copyLabel={copy.label}
+      resource={props.resource}
+      hasBody={hasBody(props)}
+    />
+  );
+}
+
+// Code and supplied resources share one header, Copy control and scrolling body.
+export function FeedCodeBlock(props: FeedCodeBlockProps): ReactElement {
+  return (
+    <CodeBlockFrame>
+      <SourceHeader {...props} />
+      <CodeBlockBody
+        code={props.code}
+        description={props.description}
+        textClassName={props.textClassName}
+      />
+      {props.footer}
+    </CodeBlockFrame>
   );
 }

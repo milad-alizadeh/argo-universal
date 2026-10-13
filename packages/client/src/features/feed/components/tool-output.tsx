@@ -59,13 +59,15 @@ function ToolContentBlock({
     return <FeedCodeBlock code={block.text} language={language ?? 'Output'} />;
   return <FeedContent content={[block]} />;
 }
+interface ToolOutputProps {
+  content: readonly ToolCallContent[];
+  language?: string;
+}
+
 export function ToolOutput({
   content,
   language,
-}: {
-  content: readonly ToolCallContent[];
-  language?: string;
-}): React.JSX.Element {
+}: ToolOutputProps): React.JSX.Element {
   return (
     <View className="gap-2">
       {withOccurrenceKeys(content, (block) => block.type).map(

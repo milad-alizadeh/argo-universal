@@ -6,7 +6,14 @@ import {
   longOutputCommand,
   runningCommand,
 } from '../tool-call.mocks';
-import { CommandRow } from './command-row';
+import { CommandRow, type CommandRowProps } from './command-row';
+
+const variations: (CommandRowProps & { label: string })[] = [
+  { label: 'Running', row: runningCommand, now: commandNow },
+  { label: 'Collapsed output', row: longOutputCommand },
+  { label: 'Expanded output', row: longOutputCommand, initialOpen: true },
+  { label: 'Failed command', row: failedCommand, initialOpen: true },
+];
 
 const meta = {
   title: 'Feed/CommandRow',
@@ -20,18 +27,11 @@ export const Overview: Story = {
   name: 'CommandRow',
   render: () => (
     <Variations className="max-w-composer!">
-      <Variation label="Running">
-        <CommandRow row={runningCommand} now={commandNow} />
-      </Variation>
-      <Variation label="Collapsed output">
-        <CommandRow row={longOutputCommand} />
-      </Variation>
-      <Variation label="Expanded output">
-        <CommandRow row={longOutputCommand} initialOpen />
-      </Variation>
-      <Variation label="Failed command">
-        <CommandRow row={failedCommand} initialOpen />
-      </Variation>
+      {variations.map(({ label, ...props }) => (
+        <Variation key={label} label={label}>
+          <CommandRow {...props} />
+        </Variation>
+      ))}
     </Variations>
   ),
 };

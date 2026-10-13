@@ -63,6 +63,15 @@ async function measureImage(url: string): Promise<SymbolImage> {
 }
 
 // A failed render draws nothing, as an unknown symbol does.
+function renderImage(
+  render: RenderSymbolImage,
+  request: SymbolImageRequest,
+): Promise<SymbolImage | null> {
+  return render(request)
+    .then((url) => (url ? measureImage(url) : null))
+    .catch(() => null);
+}
+
 function loadImage(
   render: RenderSymbolImage,
   request: SymbolImageRequest,
@@ -70,15 +79,25 @@ function loadImage(
   const key = symbolKey(request);
   const pending =
     pendingImages.get(key) ??
-    render(request)
-      .then((url) => (url ? measureImage(url) : null))
-      .catch(() => null)
-      .then((image) => {
-        loadedImages.set(key, image);
-        return image;
-      });
+    renderImage(render, request).then((image) => {
+      loadedImages.set(key, image);
+      return image;
+    });
   pendingImages.set(key, pending);
   return pending;
+}
+
+function deliverUntilCancelled<T>(
+  pending: Promise<T>,
+  deliver: (value: T) => void,
+): () => void {
+  let current = true;
+  void pending.then((value) => {
+    if (current) deliver(value);
+  });
+  return (): void => {
+    current = false;
+  };
 }
 
 // Undefined until the image arrives, so the caller can hold the icon's box empty meanwhile.
@@ -89,14 +108,10 @@ export function useSymbolImage(
   const { name, pointSize } = request;
   const key = symbolKey(request);
   const [image, setImage] = useState(() => loadedImages.get(key));
-  useEffect(() => {
-    let current = true;
-    void loadImage(render, { name, pointSize }).then((loaded) => {
-      if (current) setImage(loaded);
-    });
-    return (): void => {
-      current = false;
-    };
-  }, [render, name, pointSize]);
+  useEffect(
+    () =>
+      deliverUntilCancelled(loadImage(render, { name, pointSize }), setImage),
+    [render, name, pointSize],
+  );
   return loadedImages.has(key) ? loadedImages.get(key) : image;
 }

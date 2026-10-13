@@ -4,80 +4,11 @@ import type {
   UnsupportedContent,
 } from '@repo/contracts';
 import type * as React from 'react';
-import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import { Icon } from '../../../../lib/generic/symbols/icon';
-import { ShimmerText } from '../shimmer-text';
-
-const noticeAppearance = new Map<string, { icon: IconName; color: string }>([
-  ['info', { icon: 'info', color: 'text-muted-foreground' }],
-  ['warning', { icon: 'warning', color: 'text-warning' }],
-  ['error', { icon: 'failed', color: 'text-destructive' }],
-]);
-const unrecognisedAppearance = {
-  icon: 'question' as const,
-  color: 'text-muted-foreground',
-};
-
-interface NoticeMessageProps {
-  severity: string;
-  title: string;
-  description?: string;
-  excerpt?: string;
-  // Replaces the severity's icon, for status rows such as Compaction.
-  icon?: IconName;
-  // Shimmers the title while the work it names runs.
-  live?: boolean;
-}
-
-function NoticeMessage({
-  severity,
-  title,
-  description,
-  excerpt,
-  icon,
-  live = false,
-}: NoticeMessageProps): React.JSX.Element {
-  const appearance = noticeAppearance.get(severity) ?? unrecognisedAppearance;
-  return (
-    <View
-      role={severity === 'error' ? 'alert' : 'status'}
-      accessibilityLabel={`${severity}: ${title}`}
-      className="min-h-6 flex-row items-start gap-1.5 wide:min-h-5"
-    >
-      <View className="h-6 shrink-0 items-center justify-center wide:h-5">
-        <Icon
-          name={icon ?? appearance.icon}
-          role="body"
-          className={appearance.color}
-        />
-      </View>
-      <View className="min-w-0 flex-1 gap-0.5">
-        {live ? (
-          <ShimmerText text={title} className="type-body" />
-        ) : (
-          <Text numberOfLines={1} className={appearance.color}>
-            {title}
-          </Text>
-        )}
-        {!!description && (
-          <Text className="text-muted-foreground">{description}</Text>
-        )}
-        {!!excerpt && (
-          <Text
-            selectable
-            numberOfLines={1}
-            role="code"
-            className="text-muted-foreground"
-          >
-            {excerpt}
-          </Text>
-        )}
-      </View>
-    </View>
-  );
-}
+import {
+  isKnownSeverity,
+  NoticeMessage,
+  type NoticeMessageProps,
+} from './notice-message';
 
 const compactionNotices = new Map<string, NoticeMessageProps>([
   [
@@ -110,26 +41,26 @@ function compactionNotice(row: CompactionUpdate): NoticeMessageProps {
   return row.error ? { ...notice, description: row.error } : notice;
 }
 
+const noticeProps = (row: Notice): NoticeMessageProps => ({
+  severity: row.severity,
+  title: row.title,
+  description: row.description,
+  excerpt: isKnownSeverity(row.severity)
+    ? undefined
+    : `Unknown severity: ${row.severity}`,
+});
+
 // A Notice or a Compaction: one status row, never opened.
 export function FeedNotice({
   row,
 }: {
   row: Notice | CompactionUpdate;
 }): React.JSX.Element {
-  if (row.sessionUpdate === 'compaction_update')
-    return <NoticeMessage {...compactionNotice(row)} />;
-  return (
-    <NoticeMessage
-      severity={row.severity}
-      title={row.title}
-      description={row.description}
-      excerpt={
-        noticeAppearance.has(row.severity)
-          ? undefined
-          : `Unknown severity: ${row.severity}`
-      }
-    />
-  );
+  const props =
+    row.sessionUpdate === 'compaction_update'
+      ? compactionNotice(row)
+      : noticeProps(row);
+  return <NoticeMessage {...props} />;
 }
 
 export function UnsupportedFeedContent({

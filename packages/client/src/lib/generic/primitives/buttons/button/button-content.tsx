@@ -72,24 +72,28 @@ function ContentAdornment({
   return button.appearance === 'content' ? button[side] : undefined;
 }
 
+type ContentPopupProps = Pick<
+  ContentButtonProps,
+  'aria-haspopup' | 'aria-expanded' | 'aria-controls'
+>;
+
+function contentPopupProps(props: ContentButtonProps): ContentPopupProps {
+  return {
+    'aria-haspopup': props['aria-haspopup'],
+    'aria-expanded': props['aria-expanded'],
+    'aria-controls': props['aria-controls'],
+  };
+}
+
 function contentTriggerProps(
   props: ButtonProps,
-): Pick<
-  ContentButtonProps,
-  | 'id'
-  | 'aria-haspopup'
-  | 'aria-expanded'
-  | 'aria-controls'
-  | 'onHoverIn'
-  | 'onHoverOut'
-> {
+): Pick<ContentButtonProps, 'id' | 'onHoverIn' | 'onHoverOut'> &
+  ContentPopupProps {
   if (props.appearance !== 'content') return {};
   return {
     id: props.id,
     onHoverIn: props.onHoverIn,
     onHoverOut: props.onHoverOut,
-    'aria-haspopup': props['aria-haspopup'],
-    'aria-expanded': props['aria-expanded'],
-    'aria-controls': props['aria-controls'],
+    ...contentPopupProps(props),
   };
 }

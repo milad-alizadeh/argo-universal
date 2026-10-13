@@ -24,25 +24,41 @@ export function Alert(props: AlertProps): React.JSX.Element {
       <DialogPrimitive.Portal>
         <DialogOverlay>
           <DialogPrimitive.Content className={contentClassName}>
-            <View className="gap-2">
-              <DialogPrimitive.Title className="type-heading text-foreground">
-                {props.title}
-              </DialogPrimitive.Title>
-              {props.message ? (
-                <DialogPrimitive.Description className="type-secondary">
-                  {props.message}
-                </DialogPrimitive.Description>
-              ) : null}
-            </View>
-            <View className="flex-row justify-end gap-2">
-              {cancelFirst(props.actions).map((action) => (
-                <AlertButton key={action.label} action={action} {...props} />
-              ))}
-            </View>
+            <AlertHeading title={props.title} message={props.message} />
+            <AlertButtons {...props} />
           </DialogPrimitive.Content>
         </DialogOverlay>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  );
+}
+
+type AlertHeadingProps = Pick<AlertProps, 'title' | 'message'>;
+
+function AlertHeading(props: AlertHeadingProps): React.JSX.Element {
+  return (
+    <View className="gap-2">
+      <DialogPrimitive.Title className="type-heading text-foreground">
+        {props.title}
+      </DialogPrimitive.Title>
+      {props.message ? (
+        <DialogPrimitive.Description className="type-secondary">
+          {props.message}
+        </DialogPrimitive.Description>
+      ) : null}
+    </View>
+  );
+}
+
+function AlertButtons(
+  props: Pick<AlertProps, 'actions' | 'onOpenChange'>,
+): React.JSX.Element {
+  return (
+    <View className="flex-row justify-end gap-2">
+      {cancelFirst(props.actions).map((action) => (
+        <AlertButton key={action.label} action={action} {...props} />
+      ))}
+    </View>
   );
 }
 

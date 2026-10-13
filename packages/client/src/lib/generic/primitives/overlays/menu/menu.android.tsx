@@ -1,50 +1,57 @@
-import {
-  DropdownMenu,
-  DropdownMenuItem,
-  type DropdownMenuProps,
-  RNHostView,
-  Text,
-} from '@expo/ui/jetpack-compose';
-import { defaultMinSize, selectable } from '@expo/ui/jetpack-compose/modifiers';
+import { DropdownMenu, type DropdownMenuProps } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
-import { useNativeTheme } from '#lib/generic/native-theme';
-import { IconSlot } from '../../../symbols/icon';
-import { SelectedCheck } from '../../display/selected-check';
 import { Host } from '../../native/host';
 import { usePrimitiveColor } from '../../native/primitive-color';
+import { MenuChoice } from './menu-choice.android';
 import type { MenuProps } from './menu-props';
-
-const menuWidth = 280;
+import { MenuTrigger } from './menu-trigger.android';
 
 export function Menu<Value extends string>(
   props: MenuProps<Value>,
 ): React.JSX.Element {
-  const [open, setOpen] = useState(false);
-  if (props.disabled && open) setOpen(false);
-  function choose(value: Value): void {
-    setOpen(false);
-    props.onValueChange(value);
-  }
+  const { open, setOpen, choose } = useMenuState(props);
   return (
     <Host matchContents>
       <MenuPopup expanded={open} onDismissRequest={() => setOpen(false)}>
         <DropdownMenu.Trigger>
           <MenuTrigger {...props} onOpen={() => setOpen(true)} />
         </DropdownMenu.Trigger>
-        <DropdownMenu.Items>
-          {props.choices.map((choice) => (
-            <MenuChoice
-              key={choice.value}
-              label={choice.label}
-              selected={choice.value === props.value}
-              onChoose={() => choose(choice.value)}
-            />
-          ))}
-        </DropdownMenu.Items>
+        <MenuItems {...props} onChoose={choose} />
       </MenuPopup>
     </Host>
+  );
+}
+
+function useMenuState<Value extends string>(
+  props: MenuProps<Value>,
+): {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  choose: (value: Value) => void;
+} {
+  const [open, setOpen] = useState(false);
+  if (props.disabled && open) setOpen(false);
+  function choose(value: Value): void {
+    setOpen(false);
+    props.onValueChange(value);
+  }
+  return { open, setOpen, choose };
+}
+
+function MenuItems<Value extends string>(
+  props: MenuProps<Value> & { onChoose: (value: Value) => void },
+): React.JSX.Element {
+  return (
+    <DropdownMenu.Items>
+      {props.choices.map((choice) => (
+        <MenuChoice
+          key={choice.value}
+          {...choice}
+          {...choiceState(props, choice.value)}
+        />
+      ))}
+    </DropdownMenu.Items>
   );
 }
 
@@ -55,86 +62,12 @@ function MenuPopup(
   return <DropdownMenu {...props} color={popupColor} />;
 }
 
-function MenuTrigger<Value extends string>(
-  props: MenuProps<Value> & { onOpen: () => void },
-): React.JSX.Element {
-  const selected = props.choices.find((choice) => choice.value === props.value);
-  return (
-    <RNHostView matchContents>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={props.accessibilityLabel}
-        accessibilityValue={{ text: selected?.label ?? props.value }}
-        accessibilityState={{ disabled: props.disabled }}
-        disabled={props.disabled}
-        onPress={props.onOpen}
-      >
-        <View
-          pointerEvents="none"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        >
-          {props.trigger}
-        </View>
-      </Pressable>
-    </RNHostView>
-  );
-}
-
-function MenuChoice({
-  label,
-  selected,
-  onChoose,
-}: {
-  label: string;
-  selected: boolean;
-  onChoose: () => void;
-}): React.JSX.Element {
-  const { colors } = useNativeTheme();
-  return (
-    <DropdownMenuItem
-      modifiers={[
-        defaultMinSize({ minWidth: menuWidth }),
-        selectable(selected, onChoose, 'radioButton'),
-      ]}
-      elementColors={{
-        textColor: colors.popoverForeground,
-        disabledTextColor: colors.disabledContent,
-        leadingIconColor: colors.popoverForeground,
-        trailingIconColor: colors.popoverForeground,
-        disabledLeadingIconColor: colors.disabledContent,
-        disabledTrailingIconColor: colors.disabledContent,
-      }}
-      onClick={onChoose}
-    >
-      <DropdownMenuItem.Text>
-        <Text
-          color={colors.popoverForeground}
-          style={{ typography: 'bodyLarge' }}
-        >
-          {label}
-        </Text>
-      </DropdownMenuItem.Text>
-      <DropdownMenuItem.TrailingIcon>
-        <MenuIndicator selected={selected} />
-      </DropdownMenuItem.TrailingIcon>
-    </DropdownMenuItem>
-  );
-}
-
-function MenuIndicator({ selected }: { selected: boolean }): React.JSX.Element {
-  return (
-    <RNHostView matchContents>
-      <IconSlot
-        role="body"
-        accessible={false}
-        importantForAccessibility="no-hide-descendants"
-      >
-        {selected && (
-          // Material's check glyph is padded, so beside bodyLarge it takes the Body size, not the 14 mark.
-          <SelectedCheck role="body" className="text-popover-foreground" />
-        )}
-      </IconSlot>
-    </RNHostView>
-  );
+function choiceState<Value extends string>(
+  props: MenuProps<Value> & { onChoose: (value: Value) => void },
+  value: Value,
+): { selected: boolean; onChoose: () => void } {
+  return {
+    selected: value === props.value,
+    onChoose: () => props.onChoose(value),
+  };
 }
