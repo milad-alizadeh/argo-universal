@@ -41,6 +41,7 @@ interface InspectorGeometry {
 export interface ShellGeometry extends ListGeometry, InspectorGeometry {
   listHandleLeft: number;
   inspectorHandleLeft: number;
+  detailRight: number;
   transitionKey: string;
 }
 
@@ -138,6 +139,7 @@ export function shellGeometry(input: ShellGeometryInput): ShellGeometry {
     listHandleLeft:
       input.measures.inset + input.measures.railWidth + list.shownListWidth,
     inspectorHandleLeft: inspectorHandleLeft(input, inspector),
+    detailRight: list.usableWidth - inspector.inspectorTargetWidth,
     transitionKey: `${input.sidebarShown}:${input.inspectorState}:${inspector.inspectorExpanded}`,
   };
 }

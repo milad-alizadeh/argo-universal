@@ -1,12 +1,11 @@
 import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
-import { Badge } from '#lib/generic/primitives/display/badge/badge';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { IconButton } from '../../../../lib/generic/primitives/buttons/icon-button/icon-button';
-import { attentionBadge } from '../../state/attention-badge';
-import { type Section, shellSections } from '../shell-sections';
+import { sectionAttentionCount } from '../../state/attention-badge';
+import { AttentionBadge } from '../attention-badge/attention-badge';
+import { type Section, sectionOrder, shellSections } from '../shell-sections';
 
 interface DesktopRailProps {
   selectedSection: Section;
@@ -30,7 +29,6 @@ interface TileSelection {
   'aria-current'?: 'page';
 }
 
-const railSections = ['sessions', 'issues', 'atlas', 'settings'] as const;
 const tileClass = 'rounded-selection';
 
 function selectionProps(selected: boolean): TileSelection {
@@ -59,27 +57,11 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
   );
 }
 
-function SectionBadge(props: SectionButtonProps): React.JSX.Element | null {
-  const badge = attentionBadge(props.attentionCount);
-  if (!badge) return null;
-  return (
-    <Badge
-      pointerEvents="none"
-      className="absolute right-0.5 top-0.5 min-w-4 border-0 bg-warning px-1 py-0"
-      accessibilityLabel={badge.label}
-    >
-      <Text role="badge" className="text-warning-foreground">
-        {badge.text}
-      </Text>
-    </Badge>
-  );
-}
-
 const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
   return (
     <View>
       <SectionTile {...props} />
-      <SectionBadge {...props} />
+      <AttentionBadge count={props.attentionCount} placement="rail" />
     </View>
   );
 });
@@ -87,12 +69,12 @@ const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
 function RailSections(props: DesktopRailProps): React.JSX.Element {
   return (
     <View className="-mt-0.5 flex-1 gap-px">
-      {railSections.map((section) => (
+      {sectionOrder.map((section) => (
         <SectionButton
           key={section}
           section={section}
           selected={props.selectedSection === section}
-          attentionCount={section === 'sessions' ? props.attentionCount : 0}
+          attentionCount={sectionAttentionCount(section, props.attentionCount)}
           onSectionChange={props.onSectionChange}
         />
       ))}

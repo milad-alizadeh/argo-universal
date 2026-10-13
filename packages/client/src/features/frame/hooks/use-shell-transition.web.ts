@@ -1,10 +1,15 @@
 import { type RefObject, useLayoutEffect, useRef } from 'react';
+import {
+  cssTransition,
+  easingCurve,
+  motionDuration,
+} from '#lib/generic/motion';
 
 // The shell's one open and close motion.
-export const shellTiming = {
-  duration: 280,
-  easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-};
+const shellTiming = cssTransition(
+  motionDuration.shellPane,
+  easingCurve.decelerate,
+);
 
 export type ElementFrame = readonly [HTMLElement | null, Keyframe[]];
 

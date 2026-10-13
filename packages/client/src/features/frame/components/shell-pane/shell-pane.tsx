@@ -8,7 +8,8 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { bezierEasing, easingCurve, motionDuration } from '#lib/generic/motion';
+import { bezierEasing } from '#lib/generic/bezier-easing';
+import { easingCurve, motionDuration } from '#lib/generic/motion';
 import { useStableContentWidth } from './stable-content-width';
 
 export interface ShellPaneProps {

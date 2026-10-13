@@ -4,11 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { NavigationItem } from '../../../../lib/generic/primitives/lists/navigation-item/navigation-item';
-import {
-  type AttentionBadge,
-  attentionBadge,
-} from '../../state/attention-badge';
-import { type Section, shellSections } from '../shell-sections';
+import { sectionAttentionCount } from '../../state/attention-badge';
+import { drawerAttentionBadge } from '../attention-badge/attention-badge';
+import { type Section, sectionOrder, shellSections } from '../shell-sections';
 import { headerBarHeight } from './header-bar-height';
 import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
 import type { PhoneShellProps } from './phone-shell';
@@ -35,26 +33,16 @@ function selectSection(navigation: DrawerNavigation, section: Section): void {
   navigation.onDrawerOpenChange(false);
 }
 
-function sectionBadge(
-  section: Section,
-  attentionCount: number,
-): AttentionBadge | undefined {
-  return (
-    (section === 'sessions' && attentionBadge(attentionCount)) || undefined
-  );
-}
-
 function SectionButton({
   section,
   ...navigation
 }: DrawerNavigation & { section: Section }): React.JSX.Element {
-  const { title, icon } = shellSections[section];
+  const count = sectionAttentionCount(section, navigation.attentionCount);
   return (
     <NavigationItem
-      title={title}
-      icon={icon}
+      {...shellSections[section]}
       selected={navigation.selectedSection === section}
-      badge={sectionBadge(section, navigation.attentionCount)}
+      badge={drawerAttentionBadge(count)}
       onPress={() => selectSection(navigation, section)}
     />
   );
@@ -74,7 +62,7 @@ function DrawerTitle(): React.JSX.Element {
 function SectionButtons(navigation: DrawerNavigation): React.JSX.Element {
   return (
     <View className="flex-1 gap-1">
-      {(['sessions', 'issues', 'atlas', 'settings'] as const).map((section) => (
+      {sectionOrder.map((section) => (
         <SectionButton key={section} section={section} {...navigation} />
       ))}
     </View>

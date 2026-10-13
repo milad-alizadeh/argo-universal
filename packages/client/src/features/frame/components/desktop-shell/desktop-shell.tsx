@@ -42,7 +42,7 @@ function InspectorPanel({ shell, layout }: ShellPartProps): React.JSX.Element {
   return (
     <ShellPane
       testID="desktop-inspector"
-      offset={layout.usableWidth - layout.inspectorTargetWidth}
+      offset={layout.detailRight}
       width={layout.inspectorTargetWidth}
       hidden={!layout.inspectorOpen}
       {...layout.motion}
