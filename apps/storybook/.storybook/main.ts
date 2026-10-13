@@ -8,7 +8,7 @@ import { sfSymbolImages } from '../../../tools/sf-symbols/sf-symbol-images.mts';
 import {
   expoDeclarationImports,
   expoSymbolsWebImports,
-} from './expo-web-imports';
+} from './expo-web-imports.ts';
 
 function getAbsolutePath(value: string): string {
   return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
