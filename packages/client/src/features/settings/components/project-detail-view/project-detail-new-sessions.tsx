@@ -15,10 +15,7 @@ const newSessionsFooter =
 
 type ProjectProps = { project: ProjectInfo };
 type ChoiceProps = { choice: ProjectInfo['checkoutChoice'] };
-type PickerRowProps = Pick<
-  PickerProps<string>,
-  'label' | 'value' | 'options' | 'code'
->;
+type PickerRowProps = Pick<PickerProps<string>, 'label' | 'value' | 'options'>;
 
 // Where the Project's next Session starts, as the last New Session chose; the Server cannot change it from here yet.
 export function NewSessionsSection({
@@ -58,7 +55,6 @@ function BaseBranchRow({ choice }: ChoiceProps): React.JSX.Element | null {
       label="Base branch"
       value={choice.baseBranch}
       options={[{ value: choice.baseBranch, label: choice.baseBranch }]}
-      code
     />
   );
 }

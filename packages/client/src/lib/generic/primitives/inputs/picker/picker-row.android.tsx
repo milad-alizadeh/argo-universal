@@ -106,7 +106,7 @@ function PickerRowValue<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
   const { colors } = useNativeTheme();
-  const style = useComposeTextStyle(props.code ? 'code' : 'secondary');
+  const style = useComposeTextStyle('secondary');
   return createElement(
     Text,
     { style, color: rowValueColor(props, colors) },
