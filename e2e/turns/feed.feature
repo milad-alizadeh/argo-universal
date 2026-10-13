@@ -16,7 +16,7 @@ Feature: A Session's live Feed
     When I send the prompt "Run the checks"
     And the command is running in the Feed
     And the Engine restarts
-    Then the Feed keeps the prompt and catches up to the failed command
+    Then the Feed keeps the prompt and catches up to the stopped command
 
     Examples:
       | agent |
