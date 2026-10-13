@@ -1,13 +1,25 @@
 import type {
   PromptRequest,
+  NewSessionRequest,
+  SetSessionConfigOptionRequest,
   ResumeSessionRequest,
 } from '@agentclientprotocol/sdk';
+import type { SessionSnapshot } from '@repo/contracts';
+import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { acpPermission } from '@repo/mocks/agent/permission-scenario';
 import { describe, expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
-import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+import {
+  createScriptedAgentProcess,
+  requireScriptedProcessAt,
+} from '#mocks/scripted-agent';
+
+const hasRestoredMode = (snapshot: SessionSnapshot): boolean =>
+  snapshot.configOptions.some(
+    (option) => option.configId === 'mode' && option.currentValue === 'plan',
+  );
 
 describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   const sessionInput = { ...emptySessionInput, agent: agentId };
@@ -130,6 +142,179 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   );
 
   it(
+    'an Empty Session recreates its Agent session on the same Checkout with selected configuration',
+    recoveryTimeout,
+    async () => {
+      const openings: NewSessionRequest[] = [];
+      const prompts: PromptRequest[] = [];
+      const host = await startAcpEngine(
+        {
+          steps: [],
+          configOptions: acpConfiguration,
+          responses: {
+            'session/new': [{ requests: openings }],
+            'session/resume': [
+              { error: 'Empty Agent session is not persisted' },
+            ],
+            'session/prompt': [{ requests: prompts }],
+          },
+        },
+        undefined,
+        agentId,
+      );
+      const created = await host.caller.session.new({
+        ...sessionInput,
+        checkout: { type: 'worktree', baseBranch: 'main' },
+        configOptions: [
+          { configId: 'mode', value: 'plan' },
+          { configId: 'fast', value: true },
+        ],
+      });
+      requireScriptedProcessAt(host.agent.processes).disconnect();
+      await expect.poll(() => openings.length, recoveryTimeout).toBe(2);
+      await expect
+        .poll(async () => {
+          try {
+            await host.caller.session.prompt({
+              ...created,
+              prompt: [{ type: 'text', text: 'First work' }],
+            });
+            return true;
+          } catch {
+            return false;
+          }
+        }, recoveryTimeout)
+        .toBe(true);
+      await waitForAcpSessionIdle(host, created.sessionId);
+      const snapshot = await waitForAcpSnapshot(
+        host,
+        created.sessionId,
+        () => true,
+      );
+      expect({
+        openings,
+        prompts: prompts.map(({ sessionId }) => sessionId),
+        options: snapshot.configOptions,
+      }).toMatchObject({
+        openings: [{ cwd: expect.any(String) }, { cwd: openings[0]?.cwd }],
+        prompts: ['owned-2'],
+        options: [
+          { configId: 'model' },
+          { configId: 'effort' },
+          { configId: 'mode', currentValue: 'plan' },
+          { configId: 'fast', currentValue: true },
+        ],
+      });
+    },
+  );
+
+  it(
+    'an Empty Session retries failed configuration restoration without admitting work or losing its selected values',
+    recoveryTimeout,
+    async () => {
+      const selected = acpConfiguration.map((option) =>
+        option.id === 'mode' && option.type === 'select'
+          ? { ...option, currentValue: 'plan' }
+          : option,
+      );
+      const started = Promise.withResolvers<SetSessionConfigOptionRequest>();
+      const finish = Promise.withResolvers<void>();
+      const initial = createScriptedAgentProcess({
+        steps: [],
+        configOptions: selected,
+      });
+      const replacement = createScriptedAgentProcess({
+        steps: [],
+        configOptions: acpConfiguration,
+        responses: {
+          'session/set_config_option': [
+            {
+              received: started,
+              waitFor: finish.promise,
+              error: 'Restore failed',
+              steps: [
+                {
+                  type: 'update',
+                  update: {
+                    sessionUpdate: 'config_option_update',
+                    configOptions: acpConfiguration,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      });
+      const ready = createScriptedAgentProcess({
+        steps: [],
+        configOptions: acpConfiguration,
+        responses: {
+          'session/new': [
+            {
+              result: {
+                sessionId: 'recovered-empty',
+                configOptions: acpConfiguration,
+              },
+            },
+          ],
+          'session/set_config_option': [
+            { result: { configOptions: selected } },
+          ],
+        },
+      });
+      let launches = 0;
+      const peers = [initial, replacement, ready];
+      const host = await startAcpEngine(
+        {
+          steps: [],
+          launchProcess: (launch) => {
+            const peer = peers[Math.min(launches++, 2)];
+            if (!peer) throw new Error('No scripted recovery Agent');
+            return peer.launchProcess(launch);
+          },
+        },
+        undefined,
+        agentId,
+      );
+      const created = await host.caller.session.new(sessionInput);
+      requireScriptedProcessAt(initial.processes).disconnect();
+      await started.promise;
+      await expect(
+        host.caller.session.prompt({
+          ...created,
+          prompt: [{ type: 'text', text: 'Too early' }],
+        }),
+      ).rejects.toThrow('session.prompt');
+      finish.resolve();
+      await expect
+        .poll(
+          () =>
+            host.database.$client
+              .prepare('SELECT vendor_session_id FROM session WHERE id = ?')
+              .get(created.sessionId),
+          recoveryTimeout,
+        )
+        .toEqual({ vendor_session_id: 'recovered-empty' });
+      const snapshot = await waitForAcpSnapshot(
+        host,
+        created.sessionId,
+        hasRestoredMode,
+      );
+      expect(snapshot.activeTurnId).toBeNull();
+      expect(
+        (await host.caller.feed.page({ ...created, direction: 'tail' })).rows,
+      ).not.toContainEqual(
+        expect.objectContaining({ sessionUpdate: 'user_message' }),
+      );
+      expect(
+        host.database.$client
+          .prepare('SELECT COUNT(*) AS count FROM turn')
+          .get(),
+      ).toEqual({ count: 0 });
+    },
+  );
+
+  it(
     'a failed resume on the replacement retries within the crash budget',
     recoveryTimeout,
     async () => {
@@ -148,6 +333,11 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         agentId,
       );
       const created = await host.caller.session.new(sessionInput);
+      await host.caller.session.prompt({
+        ...created,
+        prompt: [{ type: 'text', text: 'Persist Agent context' }],
+      });
+      await waitForAcpSessionIdle(host, created.sessionId);
       requireScriptedProcessAt(host.agent.processes).disconnect();
       await expect.poll(() => resumes.length, recoveryTimeout).toBe(2);
       await waitForAcpSessionIdle(host, created.sessionId);

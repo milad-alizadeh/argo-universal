@@ -55,6 +55,7 @@ import type {
   AcpPromptRequest as PromptRequest,
   AcpPromptResponse as PromptResponse,
 } from './acp/prompt-types';
+import { restoreRecoveryConfiguration } from './acp/recovery-configuration';
 import { commitLocalPrompt, type LocalSubmission } from './acp/submission';
 import { acpContextUsage, acpTurnUsage } from './acp/usage';
 import {
@@ -391,13 +392,18 @@ const sessionSetup = setup({
     reopenAcp: fromPromise<OpenedAcpSession, SessionContext>(
       async ({ input }) => {
         const lease = await input.acpLifetime.reopen(input);
-        return {
-          lease,
-          configOptions: readAcpConfiguration(
-            lease.response.configOptions,
-            input.acpConfigurationRejections,
-          ),
-        };
+        try {
+          const configOptions = await restoreRecoveryConfiguration({
+            lease,
+            values: input.kept ? [] : input.configValues,
+            readers: input.acpResponseReaders,
+            rejections: input.acpConfigurationRejections,
+          });
+          return { lease, configOptions };
+        } catch (error) {
+          await lease.close();
+          throw error;
+        }
       },
     ),
     closeAcp: fromPromise<void, AcpOperationInput>(async ({ input }) => {
@@ -554,6 +560,16 @@ const sessionSetup = setup({
       (_, params: SessionDataParameters): SessionData => params.data,
     ),
     rememberFeedEnded: assign({ feedEnded: true }),
+    storeRecoveredSession: sendTo(writer, ({ context }) => ({
+      type: writeFeedEvent,
+      job: new SessionRowUpdateJob({
+        id: context.sessionId,
+        set: {
+          vendorSessionId: context.vendorSessionId,
+          configValues: context.configValues,
+        },
+      }),
+    })),
     rememberStorageFailure: assign({ storageFailedTurn: true }),
     rememberFailure: assign(
       (_, params: FailureParameters): Pick<SessionContext, 'failure'> => ({
@@ -1449,10 +1465,13 @@ export const sessionMachine = sessionSetup.createMachine({
                 input: ({ context }): SessionContext => context,
                 onDone: {
                   target: 'idle',
-                  actions: {
-                    type: 'rememberAcpLease',
-                    params: ({ event }): OpenedAcpSession => event.output,
-                  },
+                  actions: [
+                    {
+                      type: 'rememberAcpLease',
+                      params: ({ event }): OpenedAcpSession => event.output,
+                    },
+                    'storeRecoveredSession',
+                  ],
                 },
                 onError: [
                   {
@@ -1470,7 +1489,15 @@ export const sessionMachine = sessionSetup.createMachine({
               },
               on: {
                 'acp.failed': {},
-                'acp.update': { guard: 'isReplayedHistory' },
+                'acp.update': [
+                  {
+                    guard: ({ context, event }): boolean =>
+                      !context.kept &&
+                      event.notification.update.sessionUpdate ===
+                        'config_option_update',
+                  },
+                  { guard: 'isReplayedHistory' },
+                ],
               },
             },
             closing: {

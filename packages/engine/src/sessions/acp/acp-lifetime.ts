@@ -74,11 +74,13 @@ export class AcpSessionLifetime {
     this.opening ??= this.openOwned(session);
     return this.opening;
   }
-  // Recovery resumes the Session on a replacement connection; the failed lease is released by its owner.
+  // Empty Sessions have no persisted Agent context; the failed lease is released by its owner.
   public reopen(session: SessionData): Promise<AcpSessionLease> {
     this.requests.cancelAll();
     this.generation += 1;
-    this.opening = this.openOwned(session);
+    this.opening = this.openOwned(
+      session.kept ? session : { ...session, vendorSessionId: null },
+    );
     return this.opening;
   }
   private async openOwned(session: SessionData): Promise<AcpSessionLease> {
