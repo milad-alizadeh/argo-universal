@@ -72,9 +72,9 @@ export interface ComposerProps {
   error?: string;
 }
 
-// The phone's touch target comes from hitSlop, so the controls draw at their visible size and line up with the text.
+// A native touch target comes from hitSlop, so the controls draw at their visible size and line up with the text; the web ignores hitSlop and keeps its minimum.
 const composerIconButton =
-  'size-7 min-h-0 min-w-0 android:min-h-0 android:min-w-0';
+  'size-7 native:min-h-0 native:min-w-0 android:min-h-0 android:min-w-0';
 
 export function Composer({
   draft,
@@ -208,7 +208,7 @@ export function Composer({
               onSubmit={send}
             />
           </View>
-          <View className="flex-row items-center justify-between gap-2 pl-2 pr-2.5 pb-2.5">
+          <View className="flex-row items-center justify-between gap-2 pl-2 wide:pl-3.75 pr-2.5 pb-2.5">
             <View
               pointerEvents={configurationInactive ? 'none' : 'auto'}
               className={cn('min-w-0 flex-1 flex-row items-center gap-1')}
