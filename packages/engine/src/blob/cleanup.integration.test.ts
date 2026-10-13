@@ -11,6 +11,7 @@ import { blob, blobRef } from '@repo/db/schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { removeUnusedBlobs } from './blob';
+import { removeOrphanAttachments } from './blob-attachment';
 
 const newUnusedBlobId = 'new-unused';
 const day = 24 * 60 * 60 * 1000;
@@ -98,5 +99,23 @@ describe('removeUnusedBlobs', (): void => {
     await expect(
       removeUnusedBlobs({ database, blobsFolder, now }),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe('removeOrphanAttachments', (): void => {
+  it('keeps the named copy of a stored Blob and removes the copy of a deleted one', async (): Promise<void> => {
+    const attachmentsFolder = join(blobsFolder, '..', 'attachments');
+    database
+      .insert(blob)
+      .values({ id: 'kept', mime: 'text/plain', bytes: 1, createdAt: 0 })
+      .run();
+    for (const id of ['kept', 'deleted']) {
+      mkdirSync(join(attachmentsFolder, id), { recursive: true });
+      writeFileSync(join(attachmentsFolder, id, 'notes.md'), id);
+    }
+
+    await removeOrphanAttachments({ database, attachmentsFolder });
+
+    expect(readdirSync(attachmentsFolder)).toEqual(['kept']);
   });
 });

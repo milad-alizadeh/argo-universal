@@ -29,6 +29,7 @@
     "expo-clipboard": "catalog:",
     "expo-constants": "catalog:",
     "expo-dev-client": "catalog:",
+    "expo-document-picker": "catalog:",
     "expo-file-system": "catalog:",
     "expo-font": "catalog:",
     "expo-glass-effect": "catalog:",

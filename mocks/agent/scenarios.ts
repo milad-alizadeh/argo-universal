@@ -5,6 +5,7 @@ import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 
 export const sharedReply = 'The shared fixture completed this Turn.';
 export const imageReply = 'The dominant color is red.';
+export const fileReply = 'The release notes list one change.';
 
 const message = (text: string): ScriptedStep => ({
   type: 'update',
@@ -34,6 +35,7 @@ export const scenarios = {
   'protocol-login': { ...scenario([reply]), ...protocolLogin },
   'signed-out': { ...scenario([reply]), ...signedOutProtocolLogin },
   image: scenario([message(imageReply)]),
+  file: scenario([message(fileReply)]),
   'cancel-wait': scenario([{ type: 'wait-for-cancel' }]),
   'refuse-session': {
     ...scenario([reply]),

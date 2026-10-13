@@ -8,6 +8,7 @@ export {
 } from './components/agent-model-sheet-context';
 export {
   Composer,
+  type ComposerAttachment,
   type ComposerDraft,
   type ComposerProps,
 } from './components/composer/composer';
@@ -17,8 +18,8 @@ export {
   type ComposerConfigurationProps,
 } from './components/composer-configuration/composer-configuration';
 export { StartSessionIn } from './components/start-session-in/start-session-in';
-export { useImageDraft } from './hooks/use-image-draft';
-export type { AttachmentError } from './state/image-draft';
+export { useAttachmentDraft } from './hooks/use-attachment-draft';
+export type { AttachmentError } from './state/attachment-draft';
 export {
   isRememberedConfiguration,
   rememberSessionConfiguration,

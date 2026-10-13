@@ -29,7 +29,7 @@ const meta = {
     return <Composer {...args} draft={draft} onDraftChange={setDraft} />;
   },
   args: composerProps({
-    draft: { text: '', images: [] },
+    draft: { text: '', attachments: [] },
     onDraftChange: action('edit draft'),
     onAttachImages: action('attach images'),
     onSend: action('send'),
