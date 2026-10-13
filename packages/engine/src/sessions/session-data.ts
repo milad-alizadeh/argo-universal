@@ -14,7 +14,11 @@ import {
 } from '@repo/git';
 import { and, desc, eq, max } from 'drizzle-orm';
 import { z } from 'zod';
-import { readQueuedFeed, titleFromPrompt } from '../feed';
+import {
+  interruptionDisclosureId,
+  readQueuedFeed,
+  titleFromPrompt,
+} from '../feed';
 import { readProjectPath } from '../projects';
 import {
   type WriterActorRef,
@@ -56,9 +60,6 @@ export interface SessionData {
   // The latest Turn, when it was interrupted and its Feed does not yet say output may be missing.
   undisclosedInterruptedTurnId: string | null;
 }
-
-export const interruptionDisclosureId = (turnId: string): string =>
-  `${turnId}:interrupted`;
 
 // The Session row waits until its Agent is ready.
 export async function createSessionCheckout(
