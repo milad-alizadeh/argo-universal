@@ -4,7 +4,7 @@ The Prickles pack uses ESLint rules. oxlint runs them, mostly natively and the r
 
 - `.oxlintrc.json` extends three files in `tooling/oxlint/`. `prickles.json` is the pack as `@oxlint/migrate@1.87.0 --type-aware` writes it, with the pack's comments. `argo.json` adds Argo's rules: oxlint's correctness category, the existing lint rules, the import boundaries D1 to D11, the zod and tRPC blocks, ADR-0016's test and machine caps, and the `argo` JS plugin, which ports eight GritQL plugins and has RuleTester tests. `unicorn/consistent-function-scoping` and `import/no-nodejs-modules` replace the other two. Argo is stricter than the pack on T2: no `!` and no `as` other than `as const`. `not-yet-cleared.json` comes last.
 - `argo/static-imports` rejects runtime `import()` and inline TypeScript `import(...)` types in owned source. Dependencies use top-level static `import` or `import type` declarations (owner, 2026-10-10). Generated files retain their existing exclusions.
-- `not-yet-cleared.json` is how ADR-0016's folder-by-folder enforcement lands. Generated from a type-aware oxlint run, it turns off, for the files directly in one folder, only the rules that folder still breaks. Its historical waiver identities and rule sets only shrink; a cap never changes to fit the code. The approved ownership moves below preserve those identities through exact path relocations.
+- `not-yet-cleared.json` is how ADR-0016's folder-by-folder enforcement lands. Generated from a type-aware oxlint run, it turns off, for the files directly in a folder, only the rules that folder still breaks. Its historical waiver identities and rule sets only shrink; a cap never changes to fit the code. The approved ownership moves below preserve those identities through exact path relocations.
 - `pnpm quality` runs `oxfmt --check`, `oxlint --type-aware --deny-warnings`, then `node tools/not-yet-cleared.mts check`, which checks that historical waiver identities and rules only shrink against the merge base with `origin/main` and still have findings; type-aware rules run through oxlint-tsgolint. oxlint reports unused disable directives, and `tools/check-comments.mts` refuses a directive without exact rule names, or on a cap rule.
 - oxfmt uses the owner's style: two spaces, single quotes, 80 columns, imports in one sorted block. It formats JavaScript, TypeScript, JSON, JSONC, CSS and YAML, never Markdown, so the canon files stay verbatim.
 
@@ -33,17 +33,17 @@ The owner approved relocating existing Engine debt while separating `packages/en
 | `apps/server/src/services/sessions/*` | `packages/engine/src/services/sessions/*` |
 | `apps/server/src/services/system/*` | `packages/engine/src/services/system/*` |
 
-Each rule set stays identical or shrinks. Simultaneous old/new entries, duplicate historical identities, added rules and unlisted or broadened globs are rejected. No generic rename escape exists; Supervisor debt remains at its app path. Existing stale-rule check and prune still apply. Retained process bootstraps pass without these waivers. Relocated debt is not clearance or code reduction; remaining burn-down tickets still own it. Prickles rules, caps and comment restrictions stay unchanged.
+Each rule set stays identical or shrinks. Simultaneous old/new entries, duplicate historical identities, added rules and unlisted or broadened globs are rejected. No generic rename escape exists; Supervisor debt remains at its app path. The existing stale-rule check and prune still apply. Retained process bootstraps pass without these waivers. Relocated debt is not clearance or code reduction; the remaining burn-down tickets still own it. Prickles rules, caps and comment restrictions stay unchanged.
 
 ## App mocks ownership move
 
-Spec 0009 #347 moves the unchanged App mocks from `packages/api/mocks` to the existing shared mocks package at `mocks/app` (owner, 2026-10-09). The orchestrator approved preserving this exact historical waiver identity during the move:
+Spec 0009 #347 moves the unchanged App mocks from `packages/api/mocks` to the existing shared mocks package at `mocks/app` (owner, 2026-10-09). The orchestrator approved keeping this exact historical waiver identity during the move:
 
 | Original folder entry | Shared mocks folder entry |
 |---|---|
 | `packages/api/mocks/*` | `mocks/app/*` |
 
-Only the existing `complexity`, `max-lines` and `max-lines-per-function` rules remain waived. The original one-folder scope stays identical. The guard rejects duplicate aliases, added rules and broader or unlisted globs. Its existing stale-rule check and prune still apply.
+Only the existing `complexity`, `max-lines` and `max-lines-per-function` rules stay waived, with the same one-folder scope. The guard rejects duplicate aliases, added rules and broader or unlisted globs; its stale-rule check and prune still apply.
 
 ## Client feature folders
 
@@ -76,7 +76,7 @@ Spec 0011 #437 moves the client source, with behaviour unchanged, into `features
 | `lib/product/markdown/*` | `components/*` |
 | `lib/product/navigation/*` | `navigation/*` |
 
-This move changes the rules above in one way. One old folder may now split into several listed new folders, and those new folders may share its historical identity. That identity is no longer "duplicate" between them. Each new folder's rule set must stay a subset of the rules that its listed sources waived at the merge base. The src root keeps its own identity and also takes `trpc/*`'s, because the App providers move there; it gains `max-lines-per-function` from `trpc/*`. Once a new folder is in the baseline, it is compared with its own entry as well. The guard still rejects an old folder entry beside any of its new folders, added rules, and unlisted or broadened globs. Existing stale-rule check and prune still apply. Moved debt is not clearance; the burn-down tickets still own it.
+This move changes the rules above in one way: one old folder may split into several listed new folders that may share its historical identity, which no longer counts as "duplicate" between them. Each new folder's rule set must stay a subset of the rules its listed sources waived at the merge base. The src root keeps its own identity and also takes `trpc/*`'s, because the App providers move there; it gains `max-lines-per-function` from `trpc/*`. Once a new folder is in the baseline, it is also compared with its own entry. The guard still rejects an old folder entry beside any of its new folders, added rules, and unlisted or broadened globs. The stale-rule check and prune still apply. Moved debt is not clearance; the burn-down tickets still own it.
 
 ## Considered Options
 
@@ -108,7 +108,7 @@ The Sessions folder splits under the client-move rules above: `sessions/*` and `
 
 ## Component folders
 
-Spec 421 moves each component, with behaviour unchanged, into its own folder inside the folder that held it: its platform files, props, styles, stories, test stories, mocks and unit tests sit together. Primitives also group by kind under `lib/generic/primitives/` (`buttons`, `inputs`, `fields`, `overlays`, `lists`, `display`, `native`); `pressable` stays a folder beside them, because many groups use it. The owner approved these rows (#518, 2026-10-12). Each component folder keeps the historical waiver identity of the folder that held it, with only the rules its files still break. The folder that held it keeps the files that stay, so it and its component folders share that identity, as a split does under the client-move rules above. `tools/not-yet-cleared/component-relocations.mts` lists the exact folders; the rows below are under `packages/client/src/`:
+Spec 421 moves each component, with behaviour unchanged, into its own folder inside the folder that held it: its platform files, props, styles, stories, test stories, mocks and unit tests sit together. Primitives also group by kind under `lib/generic/primitives/` (`buttons`, `inputs`, `fields`, `overlays`, `lists`, `display`, `native`); `pressable` stays a folder beside them, because many groups use it. The owner approved these rows (#518, 2026-10-12). Each component folder keeps the historical waiver identity of the folder that held it, with only the rules its files still break; that folder keeps the files that stay, so it and its component folders share that identity, as a split does under the client-move rules above. `tools/not-yet-cleared/component-relocations.mts` lists the exact folders; the rows below are under `packages/client/src/`:
 
 | New folder entries | Original folder entry |
 |---|---|
