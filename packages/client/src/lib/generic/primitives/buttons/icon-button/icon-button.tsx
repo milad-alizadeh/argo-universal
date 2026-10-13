@@ -8,7 +8,7 @@ import { iconButtonClasses } from './icon-button-styles';
 
 type IconAppearance = Pick<
   IconButtonProps,
-  'icon' | 'iconRole' | 'iconClassName' | 'filled'
+  'icon' | 'iconRole' | 'iconClassName' | 'filled' | 'iconWeight'
 >;
 type IconControlProps = Omit<IconButtonProps, keyof IconAppearance>;
 type IconPresentation = Pick<IconControlProps, 'size' | 'variant' | 'loading'>;
@@ -32,9 +32,16 @@ function iconDrawing({
   iconRole = 'control',
   iconClassName,
   filled,
+  iconWeight,
   ...props
 }: IconButtonProps): IconDrawing {
-  return createIconDrawing(props, { icon, iconRole, iconClassName, filled });
+  return createIconDrawing(props, {
+    icon,
+    iconRole,
+    iconClassName,
+    filled,
+    iconWeight,
+  });
 }
 
 function createIconDrawing(
@@ -47,6 +54,7 @@ function createIconDrawing(
       icon: appearance.icon,
       role: appearance.iconRole ?? 'control',
       filled: appearance.filled,
+      weight: appearance.iconWeight,
       loading: props.loading,
       textClass: iconTextClass({ ...props, ...appearance }),
     },
@@ -69,6 +77,8 @@ function createIconPressable(
   return {
     ...pressable,
     ...buttonInteractionProps({ ...pressable, loading: presentation.loading }),
+    // Android fades each child on its own, so a dimmed filled disc would show through its glyph; iOS fades the whole button.
+    needsOffscreenAlphaCompositing: presentation.variant === 'filled',
     className: iconContainerClass({ ...pressable, ...presentation }),
   };
 }
