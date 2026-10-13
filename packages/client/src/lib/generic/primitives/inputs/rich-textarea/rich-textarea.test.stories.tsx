@@ -76,16 +76,15 @@ export const TypedStarBoldItalic = typedMark({
   sent: '**_Ship_** it',
 });
 
-export const TypedHeading: Story = {
+// `#` is reserved for references, so typing it makes no heading.
+export const HashStaysTextAndMakesNoHeading: Story = {
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
     await userEvent.type(field, '## Plan');
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('## Plan'),
     );
-    await expect(
-      canvas.getByRole('heading', { level: 2, name: 'Plan' }),
-    ).toBeVisible();
+    await expect(canvas.queryByRole('heading')).not.toBeInTheDocument();
   },
 };
 

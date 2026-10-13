@@ -9,7 +9,7 @@ import {
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 
-// Where a line ends in a list item or a heading: ⇧Return, ⇧Tab and a marker typed after a line break.
+// Where a line ends in a list item: ⇧Return, ⇧Tab and a marker typed after a line break.
 
 const meta = {
   title: 'Tests/RichTextareaLines',
@@ -61,14 +61,4 @@ export const MarkerAfterAShiftReturnStartsAList = typedBlock({
   typed: 'Steps{Shift>}{Enter}{/Shift}1. First{Enter}Second',
   sent: 'Steps\n\n1. First\n2. Second',
   shown: 'Steps\n\nFirst\nSecond',
-});
-export const ReturnInAHeadingStartsAParagraph = typedBlock({
-  typed: '# Hello{Enter}## World',
-  sent: '# Hello\n\n## World',
-  shown: 'Hello\nWorld',
-});
-export const ShiftReturnInAHeadingStartsAParagraph = typedBlock({
-  typed: '# Hello{Shift>}{Enter}{/Shift}plain',
-  sent: '# Hello\n\nplain',
-  shown: 'Hello\n\nplain',
 });

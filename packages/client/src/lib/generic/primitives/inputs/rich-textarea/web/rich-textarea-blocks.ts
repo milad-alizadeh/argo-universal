@@ -1,5 +1,6 @@
-import { $createCodeNode } from '@lexical/code';
+import { $createCodeNode, $isCodeNode } from '@lexical/code';
 import { $isListItemNode } from '@lexical/list';
+import { $isQuoteNode } from '@lexical/rich-text';
 import { $setBlocksType } from '@lexical/selection';
 import {
   $getSelection,
@@ -26,14 +27,9 @@ export function $wrapInCodeBlock(): void {
   else $moveIntoCodeBlock(selection);
 }
 
-const returnBlocks: Partial<Record<string, ReturnBlock>> = {
-  code: 'code-block',
-  heading: 'heading',
-  quote: 'quote',
-};
-
 function $blockKind(block: LexicalNode): ReturnBlock {
-  return returnBlocks[block.getType()] ?? 'paragraph';
+  if ($isCodeNode(block)) return 'code-block';
+  return $isQuoteNode(block) ? 'quote' : 'paragraph';
 }
 
 // The block the caret is in, for the Return decision.

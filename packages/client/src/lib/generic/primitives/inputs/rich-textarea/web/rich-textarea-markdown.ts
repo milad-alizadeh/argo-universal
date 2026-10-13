@@ -8,6 +8,7 @@ import {
   BOLD_STAR,
   BOLD_UNDERSCORE,
   ELEMENT_TRANSFORMERS,
+  HEADING,
   INLINE_CODE,
   ITALIC_STAR,
   ITALIC_UNDERSCORE,
@@ -123,3 +124,10 @@ export function $exportMarkdown(): string {
     ]),
   );
 }
+
+/*
+ * What typing turns into blocks: the same transformers, less `#` headings. `#` is reserved for Issue
+ * and pull request references, so it stays the text typed; a pasted heading still imports and exports.
+ */
+export const richTextareaShortcuts: Transformer[] =
+  richTextareaTransformers.filter((transformer) => transformer !== HEADING);
