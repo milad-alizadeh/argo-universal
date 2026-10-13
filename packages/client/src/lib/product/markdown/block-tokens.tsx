@@ -64,11 +64,14 @@ function listItems(
   );
 }
 
+const markerVariantClassNames: Record<MarkdownVariantName, string> = {
+  feed: markdownBlockClassNames.listMarker,
+  proposal: 'ios:text-[17px] ios:leading-[22px]',
+  summary: markdownBlockClassNames.listMarker,
+};
+
 function markerClassName(variant: MarkdownVariantName): string {
-  return cn(
-    'w-4 shrink-0 font-sans',
-    variant !== 'proposal' && markdownBlockClassNames.listMarker,
-  );
+  return cn('min-w-4 shrink-0 font-sans', markerVariantClassNames[variant]);
 }
 
 function ListMarker({ children }: { children: string }): ReactElement {
@@ -83,9 +86,9 @@ function ListMarker({ children }: { children: string }): ReactElement {
 
 function ListItem({ marker, tokens, caret }: ListItemProps): ReactElement {
   return (
-    <View className="flex-row gap-2">
+    <View className="flex-row w-full gap-2">
       <ListMarker>{marker}</ListMarker>
-      <View className="min-w-0 flex-1 gap-1">
+      <View className="w-0 min-w-0 flex-1 gap-1">
         <Blocks tokens={tokens} caret={caret} />
       </View>
     </View>

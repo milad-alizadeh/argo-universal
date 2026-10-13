@@ -1,13 +1,10 @@
-import * as DialogPrimitive from '@rn-primitives/dialog';
-import type * as React from 'react';
+import { cloneElement, type ReactElement } from 'react';
+import { useSheetOpenChange } from './bottom-sheet-root';
 import type { BottomSheetProps } from './bottom-sheet.types';
 
-export function BottomSheetTrigger({
-  trigger,
-}: Required<Pick<BottomSheetProps, 'trigger'>>): React.JSX.Element {
-  return (
-    <DialogPrimitive.Trigger asChild disabled={!!trigger.props.disabled}>
-      {trigger}
-    </DialogPrimitive.Trigger>
-  );
+export function BottomSheetTrigger(
+  props: Required<Pick<BottomSheetProps, 'trigger'>>,
+): ReactElement {
+  const onOpenChange = useSheetOpenChange();
+  return cloneElement(props.trigger, { onPress: () => onOpenChange(true) });
 }

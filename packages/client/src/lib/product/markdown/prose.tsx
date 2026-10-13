@@ -20,14 +20,20 @@ type ProseTextProps = Pick<
   'semanticRole' | 'aria-level' | 'className'
 >;
 
+const proseVariantClassNames: Record<MarkdownVariantName, string> = {
+  feed: '',
+  proposal: 'min-w-0 max-w-full ios:text-[17px] ios:leading-[22px]',
+  summary: 'text-muted-foreground',
+};
+
 function proseClassName(
   heading: boolean,
   variant: MarkdownVariantName,
 ): string {
   return cn(
     'font-sans',
+    proseVariantClassNames[variant],
     heading && markdownBlockClassNames.heading,
-    variant === 'summary' && 'text-muted-foreground',
   );
 }
 
