@@ -24,10 +24,7 @@ export function PickerTrigger<Value extends string>(
   return createElement(
     SelectTrigger,
     triggerProps(props),
-    <SelectValue
-      className={props.code ? 'type-code' : 'type-control'}
-      placeholder={pickerValue(props)}
-    />,
+    <SelectValue className="type-control" placeholder={pickerValue(props)} />,
   );
 }
 

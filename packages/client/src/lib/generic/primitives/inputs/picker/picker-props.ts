@@ -21,6 +21,5 @@ export type PickerProps<Value extends string> = {
   loading?: boolean;
   error?: string;
   appearance?: 'row' | 'field';
-  code?: boolean;
   onBlur?: () => void;
 };

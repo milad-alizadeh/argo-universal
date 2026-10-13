@@ -17,6 +17,13 @@ export function page(
 ): FeedPageOutput {
   const window = beforeRows(rows, before);
   const slice = window.slice(-limit);
+  return pageWindow(window, slice, maxRevision);
+}
+function pageWindow(
+  window: FeedState['rows'],
+  slice: FeedPageOutput['rows'],
+  maxRevision: number,
+): FeedPageOutput {
   return {
     epoch: 0,
     maxRevision,
@@ -25,6 +32,9 @@ export function page(
     startCursor: sliceCursor(slice),
     staleCursor: false,
   };
+}
+function sliceCursor(rows: FeedState['rows']): number | null {
+  return rows[0]?.position ?? null;
 }
 
 export const upsert = 'row.upsert' as const;
@@ -52,9 +62,6 @@ function beforeRows(
   return rows.filter((row) => before === undefined || row.position < before);
 }
 
-function sliceCursor(rows: FeedState['rows']): number | null {
-  return rows[0]?.position ?? null;
-}
 const streamedRecording = recordedFeedMocks.find(
   (mock) => mock.agent === 'agent-2' && mock.recording === 'markdown-answer',
 );
