@@ -11,6 +11,12 @@ export const processSignals = fromCallback(({ sendBack }): StopCallback => {
     (reason: StopReason): StopCallback =>
     (): void =>
       sendBack({ type: 'engine.stop', reason } satisfies EngineStop);
+  return listenForStop(stop);
+});
+
+function listenForStop(
+  stop: (reason: StopReason) => StopCallback,
+): StopCallback {
   const onSigint = stop('SIGINT');
   const onSigterm = stop('SIGTERM');
   const onDisconnect = stop('IPC channel closed');
@@ -22,4 +28,4 @@ export const processSignals = fromCallback(({ sendBack }): StopCallback => {
     process.off('SIGTERM', onSigterm);
     process.off('disconnect', onDisconnect);
   };
-});
+}

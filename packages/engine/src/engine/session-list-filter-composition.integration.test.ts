@@ -1,0 +1,60 @@
+import { expect, it, onTestFinished } from 'vitest';
+import { insertSession, openTestDatabase } from '#mocks/database';
+import { startEngineTestHost } from '#mocks/engine';
+import { scriptedEngineInput } from '#mocks/scripted-engine';
+
+it('lists only top-level Sessions, searches literal titles, filters archives and pages tied activity', async (): Promise<void> => {
+  const { database, remove } = openTestDatabase({
+    title: 'Earlier',
+    activityAt: 1,
+  });
+  onTestFinished(remove);
+  for (let index = 0; index < 51; index += 1)
+    insertSession(database, {
+      id: `page-${String(index).padStart(2, '0')}`,
+      title: 'Search %_ title',
+      activityAt: 10,
+    });
+  insertSession(database, {
+    id: 'archived',
+    title: 'Archived title',
+    archivedAt: 2,
+    activityAt: 20,
+  });
+  insertSession(database, {
+    id: 'subagent',
+    parentSessionId: 'session-1',
+    title: 'Search %_ title',
+    activityAt: 30,
+  });
+  const { createCaller } = await startEngineTestHost({
+    database,
+    ...scriptedEngineInput(),
+  });
+  const caller = createCaller();
+  const first = await caller.session.list({ archived: false, query: '%_' });
+  expect(first.sessions).toHaveLength(50);
+  expect(first.sessions[0]).toMatchObject({ sessionId: 'page-50' });
+  expect(first.nextCursor).not.toBeNull();
+  const second = await caller.session.list({
+    archived: false,
+    query: '%_',
+    cursor: first.nextCursor ?? undefined,
+  });
+  expect(second.sessions.map((row): string => row.sessionId)).toEqual([
+    'page-00',
+  ]);
+  expect(second.nextCursor).toBeNull();
+  expect(
+    (await caller.session.list({ archived: true })).sessions.map(
+      (row): string => row.sessionId,
+    ),
+  ).toEqual(['archived']);
+  expect(
+    (await caller.session.list({ archived: false, projectId: 'missing' }))
+      .sessions,
+  ).toEqual([]);
+  await expect(
+    caller.session.list({ archived: false, cursor: 'bad' }),
+  ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+});
