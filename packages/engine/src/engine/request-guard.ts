@@ -25,33 +25,35 @@ export interface RequestGuard {
 // Checks Host on every request and Origin on every tRPC call, so a website cannot reach the Server (ADR 0002).
 export function createRequestGuard(port: number): RequestGuard {
   const AllowedHost = z.enum([`127.0.0.1:${port}`, `localhost:${port}`]);
-  const rejections = createRejectionCounter('engine');
+  const report = createReporter();
+  const allowsHost = allowHeader(AllowedHost, 'Host', report);
+  const allowsOrigin = allowHeader(AllowedOrigin, 'Origin', report);
+  return {
+    allowsRequest: (headers): boolean => allowsHost(headers.host),
+    allowsUpgrade: (headers): boolean =>
+      allowsHost(headers.host) && allowsOrigin(headers.origin),
+    allowsOrigin,
+    report,
+  };
+}
 
-  // Logs and counts every rejected request, whichever check rejected it.
-  const report = (subject: string, value: string | undefined): void => {
+function createReporter(): RequestGuard['report'] {
+  const rejections = createRejectionCounter('engine');
+  return (subject, value): void => {
     rejections.report(
       `rejected ${subject} ${JSON.stringify(value?.slice(0, headerExcerptLength))}`,
     );
   };
+}
 
-  const allowsHost = (host: string | undefined): boolean => {
-    if (AllowedHost.safeParse(host).success) return true;
-    report('Host', host);
+function allowHeader(
+  schema: z.ZodType,
+  subject: string,
+  report: RequestGuard['report'],
+): RequestGuard['allowsOrigin'] {
+  return (value): boolean => {
+    if (schema.safeParse(value).success) return true;
+    report(subject, value);
     return false;
-  };
-
-  const allowsOrigin = (origin: string | undefined): boolean => {
-    if (AllowedOrigin.safeParse(origin).success) return true;
-    report('Origin', origin);
-    return false;
-  };
-
-  return {
-    allowsRequest: (headers: RequestHeaders): boolean =>
-      allowsHost(headers.host),
-    allowsUpgrade: (headers: UpgradeHeaders): boolean =>
-      allowsHost(headers.host) && allowsOrigin(headers.origin),
-    allowsOrigin,
-    report,
   };
 }

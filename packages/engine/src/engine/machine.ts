@@ -1,201 +1,28 @@
-import { join } from 'node:path';
-import { type Database, openDatabase } from '@repo/db';
+import type { Database } from '@repo/db';
 import { writeLog } from '@repo/machine-log';
-import {
-  assign,
-  fromPromise,
-  sendTo,
-  setup,
-  waitFor,
-  type ActorRefFrom,
-  type InputFrom,
-  type AnyActorRef,
-} from 'xstate';
-import {
-  createAcpResources,
-  releaseLoginTerminalGroups,
-  type AcpResources,
-  type AcpResourceInput,
-} from '../acp';
-import {
-  type FetchAgents,
-  AgentInstallations,
-  type InstallPorts,
-  reconcileInterruptedInstallations,
-  syncSupervisorMachine,
-  type SyncSupervisorInput,
-} from '../agents';
-import {
-  attachmentsFolderIn,
-  blobsFolderIn,
-  removeOrphanAttachments,
-  removeUnusedBlobs,
-} from '../blob';
-import { findMachineActor } from '../lib/machine-actor';
-import { seedProject } from '../projects';
-import {
-  type OpenSessionsInput,
-  recoverAfterRestart,
-  openSessionsMachine,
-  openSessionsId,
-  type OpenSessionsActorRef,
-} from '../sessions';
-import {
-  databaseWriterId,
-  type WriterActorRef,
-  writerMachine,
-} from '../storage';
-import {
-  type HttpServer,
-  type HttpServerOptions,
-  startHttpServer,
-} from './http-server';
+import { assign, type InputFrom } from 'xstate';
+import { createAcpResources } from '../acp';
+import { AgentInstallations, type SyncSupervisorInput } from '../agents';
+import { blobsFolderIn } from '../blob';
+import { type OpenSessionsInput, openSessionsId } from '../sessions';
+import { databaseWriterId, writerMachine } from '../storage';
+import type { HttpServer, HttpServerOptions } from './http-server';
 import type { EngineMessage } from './ipc';
-import { type EngineStop, processSignals } from './process-signals';
-
-const finishingEngineTarget = '#engine.finishing';
-
-type EngineLogParameters = { line: string };
-type EngineOutput = { exitCode: number };
-type OpenDatabaseInput = { home: string };
-type RecoveryInput = { database: Database; blobsFolder: string; home: string };
-type CloseHttpServerInput = { server: HttpServer | null };
-type SyncSupervisorActor = ActorRefFrom<typeof syncSupervisorMachine>;
-type CloseAcpResourcesInput = {
-  resources: AcpResources;
-  server?: HttpServer | null;
-  installations: AgentInstallations;
-  sessions: OpenSessionsActorRef | undefined;
-};
-const closingAgentsTarget = 'closingAgents';
-
-// `openingDatabase` sets the database before `recovering` and `live` run.
-function openDatabaseOf(context: { database: Database | null }): Database {
-  if (!context.database) throw new Error('The database is not open');
-  return context.database;
-}
-
-export interface EngineInput extends Pick<
-  OpenSessionsInput,
-  'adapters' | 'now' | 'createId' | 'resolveAgentLaunch'
-> {
-  home: string;
-  port: number;
-  version: string;
-  startedAt: string;
-  acp?: AcpResourceInput;
-  loginTimeoutMs?: number;
-  loginCleanupTimeoutMs?: number;
-  fetchAgents?: FetchAgents;
-  installationPorts?: InstallPorts;
-}
-
-interface EngineContext extends EngineInput {
-  database: Database | null;
-  server: HttpServer | null;
-  failure: string | null;
-  acpResources: AcpResources;
-  installations: AgentInstallations;
-  commandAdmission: AbortController;
-}
-
-type EngineEvent =
-  | EngineStop
-  | {
-      type: 'xstate.done.actor.sessions' | 'xstate.done.actor.databaseWriter';
-    }
-  | {
-      type: 'xstate.error.actor.sessions' | 'xstate.error.actor.databaseWriter';
-      error: unknown;
-    };
-
-export const engineMachine = setup({
-  types: {
-    input: {} as EngineInput,
-    context: {} as EngineContext,
-    events: {} as EngineEvent,
-    output: {} as EngineOutput,
-  },
-  actors: {
-    closeAcpResources: fromPromise<void, CloseAcpResourcesInput>(
-      async ({ input }): Promise<void> => {
-        await Promise.all([
-          input.server?.closeSetup(),
-          input.installations.shutdown(),
-        ]);
-        await input.resources.shutdown();
-        if (!input.sessions) return;
-        await waitFor(
-          input.sessions,
-          (snapshot) => snapshot.status !== 'active',
-          { timeout: Infinity },
-        );
-      },
-    ),
-    // `openDatabase` also runs the Drizzle migrations.
-    openDatabase: fromPromise<Database, OpenDatabaseInput>(
-      async ({ input }): Promise<Database> => {
-        const database = openDatabase(join(input.home, 'argo.db'));
-        try {
-          await seedProject(database);
-          return database;
-        } catch (error) {
-          database.$client.close();
-          throw error;
-        }
-      },
-    ),
-    recoverAfterRestart: fromPromise<void, RecoveryInput>(
-      async ({ input }): Promise<void> => {
-        recoverAfterRestart(input.database);
-        await reconcileInterruptedInstallations(input.home);
-        await releaseLoginTerminalGroups(input.home);
-        await removeUnusedBlobs(input);
-        await removeOrphanAttachments({
-          database: input.database,
-          attachmentsFolder: attachmentsFolderIn(input.home),
-        });
-      },
-    ),
-    syncSupervisor: syncSupervisorMachine,
-    databaseWriter: writerMachine,
-    sessions: openSessionsMachine,
-    startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
-      async ({ input, signal }): Promise<HttpServer> => {
-        const server = await startHttpServer(input);
-        if (signal.aborted) await server.close();
-        return server;
-      },
-    ),
-    closeHttpServer: fromPromise<void, CloseHttpServerInput>(
-      async ({ input }): Promise<void> => input.server?.close(),
-    ),
-    processSignals,
-  },
-  actions: {
-    stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
-    drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
-    stopSync: sendTo('syncSupervisor', { type: 'sync.stop' }),
-    closeCommandAdmission: ({ context }): void =>
-      context.commandAdmission.abort(),
-    sendToSupervisor: (_, message: EngineMessage): void => {
-      process.send?.(message);
-    },
-    log: ({ context }, params: EngineLogParameters): void => {
-      writeLog({ home: context.home, label: 'engine', line: params.line });
-    },
-    closeDatabase: ({ context }): void => {
-      context.database?.$client.close();
-    },
-  },
-  guards: { hasFailure: ({ context }): boolean => context.failure !== null },
-  delays: {
-    heartbeatInterval: 1000,
-    httpCloseLimit: 5000,
-    sessionStopLimit: 10000,
-    writerDrainLimit: 5000,
-  },
-}).createMachine({
+import {
+  engineSetup,
+  openDatabaseOf,
+  requireDatabaseWriter,
+  requireOpenSessions,
+  requireSyncSupervisor,
+  type EngineContext,
+  type EngineLogParameters,
+  type EngineOutput,
+  type OpenDatabaseInput,
+  type RecoveryInput,
+} from './setup.machine';
+import { stopping } from './stopping';
+export type { EngineInput } from './setup.machine';
+export const engineMachine = engineSetup.createMachine({
   id: 'engine',
   context: ({ input }): EngineContext => ({
     ...input,
@@ -329,10 +156,7 @@ export const engineMachine = setup({
               acp: context.acp,
               loginTimeoutMs: context.loginTimeoutMs,
               loginCleanupTimeoutMs: context.loginCleanupTimeoutMs,
-              home: context.home,
-              port: context.port,
-              version: context.version,
-              startedAt: context.startedAt,
+              ...serverAddress(context),
               database: openDatabaseOf(context),
             }),
             onDone: {
@@ -378,127 +202,7 @@ export const engineMachine = setup({
             },
           },
         },
-        stopping: {
-          entry: ['closeCommandAdmission', 'stopSync'],
-          initial: 'closingHttp',
-          on: { 'engine.stop': {} },
-          states: {
-            closingHttp: {
-              invoke: {
-                id: 'closeHttpServer',
-                src: 'closeHttpServer',
-                input: ({ context }): CloseHttpServerInput => ({
-                  server: context.server,
-                }),
-                onDone: { target: 'stoppingSessions' },
-                onError: {
-                  target: 'stoppingSessions',
-                  actions: assign({
-                    failure: ({ event }): string =>
-                      `could not close: ${String(event.error)}`,
-                  }),
-                },
-              },
-              after: {
-                httpCloseLimit: {
-                  target: 'stoppingSessions',
-                  actions: {
-                    type: 'log',
-                    params: {
-                      line: 'HTTP close limit reached; stopping Sessions',
-                    },
-                  },
-                },
-              },
-            },
-            stoppingSessions: {
-              entry: 'stopSessions',
-              on: {
-                'xstate.done.actor.sessions': { target: closingAgentsTarget },
-                'xstate.error.actor.sessions': {
-                  target: closingAgentsTarget,
-                  actions: {
-                    type: 'log',
-                    params: ({ event }): EngineLogParameters => ({
-                      line: `could not stop Sessions: ${String(event.error)}`,
-                    }),
-                  },
-                },
-              },
-              after: {
-                sessionStopLimit: {
-                  target: closingAgentsTarget,
-                  actions: {
-                    type: 'log',
-                    params: {
-                      line: 'Session stop limit reached; closing Agent resources',
-                    },
-                  },
-                },
-              },
-            },
-            closingAgents: {
-              invoke: {
-                id: 'closeAcpResources',
-                src: 'closeAcpResources',
-                input: ({ context, self }): CloseAcpResourcesInput => ({
-                  resources: context.acpResources,
-                  server: context.server,
-                  installations: context.installations,
-                  sessions: findMachineActor(
-                    self.system,
-                    openSessionsId,
-                    openSessionsMachine,
-                  ),
-                }),
-                onDone: { target: 'drainingWriter' },
-                onError: {
-                  target: 'retainingAgentCleanup',
-                  actions: assign({
-                    failure: ({ event }): string =>
-                      `Agent cleanup remains unresolved: ${String(event.error)}`,
-                  }),
-                },
-              },
-            },
-            retainingAgentCleanup: {
-              entry: {
-                type: 'log',
-                params: ({ context }): EngineLogParameters => ({
-                  line: context.failure ?? 'Agent cleanup remains unresolved',
-                }),
-              },
-            },
-            drainingWriter: {
-              entry: 'drainWriter',
-              on: {
-                'xstate.done.actor.databaseWriter': {
-                  target: finishingEngineTarget,
-                },
-                'xstate.error.actor.databaseWriter': {
-                  target: finishingEngineTarget,
-                  actions: {
-                    type: 'log',
-                    params: ({ event }): EngineLogParameters => ({
-                      line: `could not drain the writer: ${String(event.error)}`,
-                    }),
-                  },
-                },
-              },
-              after: {
-                writerDrainLimit: {
-                  target: finishingEngineTarget,
-                  actions: {
-                    type: 'log',
-                    params: {
-                      line: 'Writer drain limit reached; closing the database',
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
+        stopping,
       },
     },
     finishing: {
@@ -526,23 +230,9 @@ export const engineMachine = setup({
   }),
 });
 
-function requireOpenSessions(
-  system: AnyActorRef['system'],
-): OpenSessionsActorRef {
-  const actor = findMachineActor(system, openSessionsId, openSessionsMachine);
-  if (!actor) throw new Error('The open Sessions machine is not running');
-  return actor;
-}
-
-function requireDatabaseWriter(system: AnyActorRef['system']): WriterActorRef {
-  const actor = system.get(databaseWriterId);
-  if (!actor) throw new Error('Database Writer is not running');
-  return actor;
-}
-function requireSyncSupervisor(
-  system: AnyActorRef['system'],
-): SyncSupervisorActor {
-  const actor = system.get('syncSupervisor');
-  if (!actor) throw new Error('Sync supervisor is not running');
-  return actor;
+function serverAddress(
+  context: EngineContext,
+): Pick<HttpServerOptions, 'home' | 'port' | 'version' | 'startedAt'> {
+  const { home, port, version, startedAt } = context;
+  return { home, port, version, startedAt };
 }
