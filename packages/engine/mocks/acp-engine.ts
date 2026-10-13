@@ -29,7 +29,10 @@ export const startAcpEngine = async (
     > &
     Pick<
       AcpResourceInput,
-      'closeTimeoutMs' | 'releaseTimeoutMs' | 'launchLoginTerminal'
+      | 'closeTimeoutMs'
+      | 'releaseTimeoutMs'
+      | 'launchLoginTerminal'
+      | 'launchProcess'
     > = {
     steps: [],
   },
@@ -53,6 +56,7 @@ export const startAcpEngine = async (
     adapters: [{ ...createAgentMetadata(), agent: agentId }],
     acp: {
       ...agent,
+      launchProcess: scenario.launchProcess ?? agent.launchProcess,
       launchLoginTerminal: scenario.launchLoginTerminal,
       closeTimeoutMs: scenario.closeTimeoutMs,
       releaseTimeoutMs: scenario.releaseTimeoutMs,

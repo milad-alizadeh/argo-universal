@@ -5,6 +5,7 @@ import type {
   LoginAgentConnection,
   OpenLoginAgent,
 } from '../agents';
+import { ResourceCleanupError } from '../lib/resource-cleanup-error';
 import { LoginTerminal } from './login-terminal';
 import { createProtocolLoginAgentOpener } from './protocol-login-agent';
 import type { AcpResourceInput } from './resource-types';
@@ -92,7 +93,9 @@ class TerminalLoginConnection {
   private async release(): Promise<void> {
     this.originalCallbacks.signal.removeEventListener('abort', this.abort);
     await this.terminal.close();
-    await this.pending?.catch(() => {});
+    await this.pending?.catch((error: unknown) =>
+      error instanceof ResourceCleanupError ? error.awaitCleanup() : undefined,
+    );
     await this.connection?.close();
   }
 }

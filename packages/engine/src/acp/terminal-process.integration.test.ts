@@ -1,8 +1,14 @@
+import { mkdtemp, readdir, readFile, stat, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect, it, onTestFinished } from 'vitest';
+import { expect, it, onTestFinished, beforeEach, vi } from 'vitest';
+import { z } from 'zod';
 import { resourceLaunch } from '#mocks/acp-resource';
 import { launchLoginTerminal } from './terminal-process';
 const terminalStartupTimeout = 15_000;
+const ownerOnlyMode = 0o700;
+const permissionBits = 0o777;
 const executable = process.execPath;
 const script = fileURLToPath(
   new URL('../../mocks/login-terminal.mjs', import.meta.url),
@@ -14,6 +20,14 @@ const launch = {
   cwd: process.cwd(),
   env: { LOGIN_MODE: 'owned' },
 };
+beforeEach(async () => {
+  const home = await mkdtemp(join(tmpdir(), 'argo-terminal-'));
+  vi.stubEnv('ARGO_HOME', home);
+  onTestFinished(async () => {
+    await rm(home, { recursive: true, force: true });
+    vi.unstubAllEnvs();
+  });
+});
 it(
   'provides a real PTY with captured environment, raw input and resize',
   { timeout: terminalStartupTimeout },
@@ -56,4 +70,26 @@ it(
     await child.close();
     expect(() => process.kill(pid, 0)).toThrow(/ESRCH/);
   },
+);
+it(
+  'keeps terminal control private and removes its metadata after observed cleanup',
+  async () => {
+    const child = await launchLoginTerminal(launch, () => {});
+    onTestFinished(() => child.close());
+    const folder = join(process.env.ARGO_HOME ?? '', 'login-terminals');
+    const [name] = await readdir(folder);
+    if (!name) throw new Error('Terminal ownership record is missing');
+    const record = z
+      .strictObject({ pid: z.number(), token: z.string().uuid() })
+      .parse(JSON.parse(await readFile(join(folder, name), 'utf8')));
+    const controlFolder = join('/tmp', `argo-terminal-${record.token}`);
+    expect((await stat(controlFolder)).mode & permissionBits).toBe(
+      ownerOnlyMode,
+    );
+    expect(Object.keys(record)).toEqual(['pid', 'token']);
+    await child.close();
+    expect(await readdir(folder)).toEqual([]);
+    await expect(stat(controlFolder)).rejects.toMatchObject({ code: 'ENOENT' });
+  },
+  terminalStartupTimeout,
 );

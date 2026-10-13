@@ -2,6 +2,7 @@ import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { releaseInstallationProcessGroups } from '@repo/engine/installation-runtime';
 import { EngineMessage } from '@repo/engine/ipc';
+import { releaseLoginTerminalGroups } from '@repo/engine/login-terminal-runtime';
 import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { createRejectionCounter } from '@repo/machine-log';
 import { fromCallback } from 'xstate';
@@ -26,10 +27,12 @@ export interface EngineProcessInput {
 const killTimeoutMs = 25_000;
 const releaseEngineGroups = async (
   pid: number,
+  home: string,
 ): Promise<'released' | 'unresolved'> => {
   if ((await releaseProcessGroup(pid)) !== 'released') return 'unresolved';
   try {
-    await releaseInstallationProcessGroups(resolveRuntimeDirectory());
+    await releaseInstallationProcessGroups(home);
+    await releaseLoginTerminalGroups(home);
     return 'released';
   } catch {
     return 'unresolved';
@@ -39,6 +42,7 @@ const releaseEngineGroups = async (
 // Forks the Engine under tsx as the leader of its own process group, so the Engine and every Agent it launched can be released together; in watch mode Node restarts it on a file change and relays its IPC messages.
 export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
   ({ input, sendBack, receive }): (() => void) => {
+    const home = resolveRuntimeDirectory();
     const send = (event: EngineEvent): void => sendBack(event);
     const child = fork(input.entry ?? engineEntry, [], {
       detached: supportsProcessGroups,
@@ -72,7 +76,9 @@ export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
     });
     // Without a pid nothing was spawned, so no group exists.
     const release = async (): Promise<'released' | 'unresolved'> =>
-      child.pid === undefined ? 'released' : releaseEngineGroups(child.pid);
+      child.pid === undefined
+        ? 'released'
+        : releaseEngineGroups(child.pid, home);
     // Asks the Engine to stop, kills its group after the timeout, then proves the whole group is gone.
     const terminate = async (): Promise<'released' | 'unresolved'> => {
       if (!hasExited()) {

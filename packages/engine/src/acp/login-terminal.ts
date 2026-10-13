@@ -8,6 +8,7 @@ import type {
   LoginTerminalProcess,
   LaunchLoginTerminal,
 } from '../agents';
+import { ResourceCleanupError } from '../lib/resource-cleanup-error';
 
 export class LoginTerminal {
   private output = '';
@@ -44,7 +45,9 @@ export class LoginTerminal {
     else child.resize(input.cols, input.rows);
   }
   public async close(): Promise<void> {
-    await this.opening?.catch(() => {});
+    await this.opening?.catch((error: unknown) =>
+      error instanceof ResourceCleanupError ? error.awaitCleanup() : undefined,
+    );
     this.output = '';
     await this.closeChild();
   }
