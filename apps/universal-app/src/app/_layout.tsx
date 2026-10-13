@@ -1,5 +1,6 @@
 import {
   AppProviders,
+  FormSheetProvider,
   type LeaveGuard,
   type Navigate,
   type NativeSheets,
@@ -23,6 +24,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
+import { formSheetRoutes } from '@/navigation/form-sheet';
 import { hrefFor } from '@/navigation/routes';
 
 export {
@@ -120,12 +122,15 @@ export default function RootLayout(): React.JSX.Element {
                 leaveGuard={useLeaveGuard}
               >
                 <NativeSheetsProvider value={nativeSheets}>
-                  {/* Storybook stays outside the shell. */}
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="(shell)" />
-                    <Stack.Screen name="agent-model" options={sheetOptions} />
-                    <Stack.Screen name="(dev)/storybook" />
-                  </Stack>
+                  <FormSheetProvider routes={formSheetRoutes}>
+                    {/* Storybook stays outside the shell. */}
+                    <Stack screenOptions={{ headerShown: false }}>
+                      <Stack.Screen name="(shell)" />
+                      <Stack.Screen name="agent-model" options={sheetOptions} />
+                      <Stack.Screen name="form-sheet" options={sheetOptions} />
+                      <Stack.Screen name="(dev)/storybook" />
+                    </Stack>
+                  </FormSheetProvider>
                 </NativeSheetsProvider>
               </NavigationProvider>
               <PortalHost />

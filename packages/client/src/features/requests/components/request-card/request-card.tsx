@@ -3,8 +3,8 @@ import { View, type ViewProps } from 'react-native';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
+import { RequestStatus } from './request-status';
 export { RequestAction } from './request-action';
 
 export type RequestState =
@@ -13,6 +13,7 @@ export type RequestState =
   | { kind: 'answered'; reason: string };
 
 interface RequestCardProps extends Pick<ViewProps, 'className' | 'testID'> {
+  appearance?: 'card' | 'embedded';
   state: RequestState;
   error?: string;
   onEnter: () => void;
@@ -42,7 +43,11 @@ function RequestContainer(
     <View
       nativeID={props.nativeID}
       testID={props.testID}
-      className={cn(cardClassName, props.className)}
+      className={cn(
+        'w-full max-w-composer',
+        props.appearance !== 'embedded' && cardClassName,
+        props.className,
+      )}
     >
       <RequestContents {...props} />
     </View>
@@ -61,7 +66,7 @@ function RequestContents(props: RequestCardProps): ReactNode {
 }
 
 const cardClassName =
-  'w-full max-w-composer rounded-2xl bg-glass-card native:bg-background shadow-glass-card web:backdrop-blur-glass web:backdrop-saturate-180';
+  'rounded-2xl bg-glass-card native:bg-background shadow-glass-card web:backdrop-blur-glass web:backdrop-saturate-180';
 
 function RequestBody({
   state,
@@ -121,44 +126,4 @@ function RequestFooterContents(props: FooterProps): ReactNode {
 
 function showActions(state: RequestState, wide: boolean): boolean {
   return state.kind !== 'answered' || wide;
-}
-
-type AnsweredStatusProps = {
-  reason: string;
-  muted?: boolean;
-};
-
-function RequestStatus({
-  state,
-  mutedStatus,
-}: Pick<RequestCardProps, 'state' | 'mutedStatus'>): ReactNode {
-  if (state.kind !== 'answered') return null;
-  return <AlreadyAnswered reason={state.reason} muted={mutedStatus} />;
-}
-
-function AlreadyAnswered(props: AnsweredStatusProps): ReactNode {
-  return (
-    <View
-      role="status"
-      className="min-w-0 flex-1 flex-row items-center gap-1.5 px-2"
-    >
-      <Icon
-        name="info"
-        role="body"
-        className="shrink-0 text-muted-foreground"
-      />
-      <AnsweredText {...props} />
-    </View>
-  );
-}
-
-function AnsweredText({ reason, muted }: AnsweredStatusProps): ReactNode {
-  return (
-    <Text
-      role="body"
-      className={cn('min-w-0 flex-1', muted && 'text-muted-foreground')}
-    >
-      {reason}
-    </Text>
-  );
 }

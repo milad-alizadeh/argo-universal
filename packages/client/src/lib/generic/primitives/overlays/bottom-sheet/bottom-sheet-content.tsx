@@ -12,23 +12,34 @@ type SheetContentProps = Pick<
   | 'dismissible'
   | 'contentScrolls'
   | 'surface'
->;
+> & { onContentHeightChange?: (height: number) => void };
+
+const grabberInset = 32;
 
 export function BottomSheetContent(
   props: SheetContentProps,
 ): React.JSX.Element {
   // On iOS the content starts below the grabber's zone, and the sheet's own safe area is its bottom edge.
   return (
-    <View className={cn(sheetClass(props))} {...sheetAccessibility(props)}>
+    <View className={sheetClass(props)} {...sheetAccessibility(props)}>
       {props.contentScrolls ? (
         props.children
       ) : (
-        <ScrollView keyboardShouldPersistTaps="handled">
-          {props.children}
-        </ScrollView>
+        <ScrollView {...scrollProps(props)}>{props.children}</ScrollView>
       )}
     </View>
   );
+}
+
+function scrollProps(
+  props: Pick<SheetContentProps, 'onContentHeightChange'>,
+): React.ComponentProps<typeof ScrollView> {
+  return {
+    keyboardShouldPersistTaps: 'handled',
+    automaticallyAdjustKeyboardInsets: true,
+    onContentSizeChange: (_width, height): void =>
+      props.onContentHeightChange?.(height + grabberInset),
+  };
 }
 
 function sheetAccessibility(
@@ -49,5 +60,10 @@ function sheetClass(props: Pick<SheetContentProps, 'surface' | 'fit'>): string {
     props.surface === 'sidebar' ? 'bg-sidebar' : 'bg-popover',
     'ios:pt-8 pb-8 ios:pb-0',
     !props.fit && 'flex-1',
+    fitSheetPadding(props.fit),
   );
+}
+
+function fitSheetPadding(fit?: boolean): string | undefined {
+  return fit ? 'android:pb-0' : undefined;
 }

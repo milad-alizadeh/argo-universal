@@ -14,12 +14,17 @@ import type * as React from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '../../native/host';
+import { RoutedFormSheet } from '../form-sheet/form-sheet';
+import { useFormSheetCommands } from '../form-sheet/form-sheet-context';
 import { BottomSheetContent } from './bottom-sheet-content';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
 import type { BottomSheetProps } from './bottom-sheet.types';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
+  const commands = useFormSheetCommands();
+  if (commands && props.size === 'form')
+    return <RoutedFormSheet {...props} commands={commands} />;
   return (
     <BottomSheetRoot {...props}>
       <Host matchContents>

@@ -1,15 +1,16 @@
 import {
   ModalBottomSheet,
   type ModalBottomSheetRef,
-  RNHostView,
 } from '@expo/ui/jetpack-compose';
-import { fillMaxHeight } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Host } from '../../native/host';
 import { usePresentationClosed } from '../../native/native-only-animated-view/native-only-animated-view';
 import { useSheetColors } from './bottom-sheet-colors.android';
-import { BottomSheetContent } from './bottom-sheet-content';
+import {
+  HostedSheetContent,
+  SheetDragHandle,
+} from './bottom-sheet-hosted-content.android';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
 import type { BottomSheetProps } from './bottom-sheet.types';
@@ -35,6 +36,7 @@ function SheetPresentation(presentation: SheetProps): React.JSX.Element {
       <ModalBottomSheet
         {...sheet}
         ref={sheetRef}
+        initialFullyExpanded={props.size === 'form'}
         onDismissRequest={() => props.onOpenChange(false)}
         sheetGesturesEnabled={dismissible}
         properties={{
@@ -42,6 +44,7 @@ function SheetPresentation(presentation: SheetProps): React.JSX.Element {
           shouldDismissOnClickOutside: dismissible,
         }}
       >
+        {props.fit && <SheetDragHandle />}
         <HostedSheetContent {...props} />
       </ModalBottomSheet>
     </SheetHost>
@@ -116,32 +119,9 @@ type SheetProps = Pick<
   | 'dismissible'
   | 'contentScrolls'
   | 'surface'
+  | 'size'
+  | 'fit'
 > & { sheetRef: SheetRef };
-function HostedSheetContent(
-  props: Pick<
-    BottomSheetProps,
-    | 'onOpenChange'
-    | 'label'
-    | 'children'
-    | 'dismissible'
-    | 'contentScrolls'
-    | 'surface'
-  >,
-): React.JSX.Element {
-  return (
-    <RNHostView modifiers={[fillMaxHeight()]}>
-      <BottomSheetContent
-        label={props.label}
-        onOpenChange={props.onOpenChange}
-        dismissible={props.dismissible}
-        contentScrolls={props.contentScrolls}
-        surface={props.surface}
-      >
-        {props.children}
-      </BottomSheetContent>
-    </RNHostView>
-  );
-}
 
 function SheetHost({
   children,
