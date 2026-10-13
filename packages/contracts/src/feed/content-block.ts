@@ -90,6 +90,9 @@ export const isUploadedFile = (
 ): block is UploadedFileLink =>
   block.type === 'resource_link' && block.blob !== undefined;
 
+// Larger text files are linked, so one attachment cannot fill the Agent's context.
+export const inlineTextLimitBytes = 102_400;
+
 // Text an Agent can read inline, and the attachment card can preview: UTF-8 that decoded cleanly, with no NUL.
 export const isPlainText = (decoded: string): boolean =>
   !decoded.includes('\0') && !decoded.includes('\uFFFD');

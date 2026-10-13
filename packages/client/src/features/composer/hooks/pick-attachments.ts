@@ -1,4 +1,8 @@
-import { isPlainText, isPromptImage } from '@repo/contracts';
+import {
+  inlineTextLimitBytes,
+  isPlainText,
+  isPromptImage,
+} from '@repo/contracts';
 import { getDocumentAsync } from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import { launchImageLibraryAsync } from 'expo-image-picker';
@@ -13,18 +17,16 @@ interface ChosenFile {
   file: Blob;
 }
 
-// A file that reads as plain text shows its first lines, by the rule the Engine inlines it by.
-const previewBytes = 2048;
-// Cutting the file can split its last character.
-const splitLastCharacter = /\uFFFD$/u;
+// A file the Agent would read inline shows its first lines; Expo's native File can't slice, so it is read whole.
+const previewCharacters = 2048;
 
 let picked = 0;
 
 async function readPreview(chosen: ChosenFile): Promise<string | undefined> {
-  if (isPromptImage(chosen.mimeType)) return undefined;
-  const start = await chosen.file.slice(0, previewBytes).text();
-  const preview = start.replace(splitLastCharacter, '');
-  return isPlainText(preview) ? preview : undefined;
+  if (isPromptImage(chosen.mimeType) || chosen.bytes > inlineTextLimitBytes)
+    return undefined;
+  const text = await chosen.file.text();
+  return isPlainText(text) ? text.slice(0, previewCharacters) : undefined;
 }
 
 async function toPickedAttachment(

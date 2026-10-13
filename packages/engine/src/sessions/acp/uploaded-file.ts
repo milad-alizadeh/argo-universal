@@ -3,7 +3,12 @@ import type {
   ContentBlock as AcpContentBlock,
   PromptCapabilities,
 } from '@agentclientprotocol/sdk';
-import { blobPath, isPlainText, type UploadedFileLink } from '@repo/contracts';
+import {
+  blobPath,
+  inlineTextLimitBytes,
+  isPlainText,
+  type UploadedFileLink,
+} from '@repo/contracts';
 import {
   type AttachedFile,
   type AttachmentStorage,
@@ -11,8 +16,6 @@ import {
 } from '../../blob';
 import { promptMetadata } from './prompt-metadata';
 
-// Text files over 100 KiB are linked, so one attachment cannot fill the Agent's context.
-const inlineTextLimitBytes = 102_400;
 const plainText = (bytes: Buffer): string | undefined => {
   const decoded = bytes.toString('utf8');
   return isPlainText(decoded) ? decoded : undefined;
