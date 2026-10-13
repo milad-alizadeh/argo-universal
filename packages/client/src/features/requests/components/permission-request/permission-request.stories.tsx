@@ -1,17 +1,16 @@
-const answeredElsewhere = 'Already answered on another device';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { View } from 'react-native';
-import { toFeedView } from '#features/feed';
-import { FeedItem } from '#features/feed';
-import { PermissionOutcome } from '#features/feed';
-import { RequestComposerPreview } from '../../../../../mocks/request-composer';
+import {
+  answeredElsewhere,
+  galleryVariations,
+  PermissionPreview,
+} from '../../../../../mocks/requests/permission/permission-gallery';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { Variation, Variations } from '../../../../lib/generic/variations';
+import type { RequestState } from '../request-card/request-card';
 import {
-  agentOptionsProps,
-  agentOptionsWithAlwaysReject,
   permissionProps,
   permissionMock,
   permissionMocks,
@@ -27,13 +26,6 @@ type GalleryArgs = ComponentProps<typeof PermissionRequest> & {
     ComponentProps<typeof PermissionRequest>['state']
   >['kind'];
 };
-
-const deniedOutcome = {
-  outcome: 'selected',
-  optionId: 'reject_once',
-  name: 'Deny',
-  kind: 'reject_once',
-} as const;
 
 const meta = {
   title: 'Requests/PermissionRequest',
@@ -59,129 +51,43 @@ export default meta;
 export const Overview = {
   name: 'PermissionRequest',
   render: function RequestGallery(args): React.JSX.Element {
-    const selected = permissionProps({
-      mock:
-        permissionMocks.find((mock) => mock.agent === args.agent) ??
-        permissionMock,
-    });
-    if (!useWide())
-      return (
-        <PermissionPreview
-          {...permissionProps({
-            ...args,
-            request: selected.request,
-            input: selected.input,
-            state:
-              args.requestState === 'answered'
-                ? {
-                    kind: 'answered',
-                    reason: answeredElsewhere,
-                  }
-                : { kind: args.requestState },
-          })}
-        />
-      );
-    return (
-      <View className="w-full items-center py-4">
-        <Variations className="max-w-composer!">
-          <Variation label="Permission request">
-            <PermissionPreview
-              {...permissionProps({
-                ...args,
-                request: selected.request,
-                input: selected.input,
-                state:
-                  args.requestState === 'answered'
-                    ? {
-                        kind: 'answered',
-                        reason: answeredElsewhere,
-                      }
-                    : { kind: args.requestState },
-              })}
-            />
-          </Variation>
-          <Variation label="Agent options">
-            <PermissionPreview {...agentOptionsProps({})} />
-          </Variation>
-          <Variation label="Several reject options">
-            <PermissionPreview
-              {...agentOptionsProps({ options: agentOptionsWithAlwaysReject })}
-            />
-          </Variation>
-          <Variation label="Deny with a message">
-            <PermissionPreview
-              {...permissionProps({
-                feedback: true,
-                denialMessage:
-                  'Keep the cache. Run expo start --clear instead.',
-              })}
-            />
-          </Variation>
-          <Variation label="Already answered">
-            <PermissionPreview
-              {...permissionProps({
-                state: {
-                  kind: 'answered',
-                  reason: answeredElsewhere,
-                },
-              })}
-            />
-          </Variation>
-          <Variation label="Awaiting approval">
-            {toFeedView(
-              permissionMock.pending.rows,
-              permissionMock.pending.snapshot,
-            )
-              .items.filter((item) => item.type === 'group')
-              .map((item) => (
-                <FeedItem key={item.id} item={item} imageUrl={() => ''} />
-              ))}
-          </Variation>
-          <Variation label="Allowed once">
-            {toFeedView(
-              permissionMock.answered.rows,
-              permissionMock.answered.snapshot,
-            )
-              .items.filter((item) => item.type === 'group')
-              .map((item) => (
-                <FeedItem key={item.id} item={item} imageUrl={() => ''} />
-              ))}
-          </Variation>
-          <Variation label="Denied">
-            <PermissionOutcome outcome={deniedOutcome} />
-          </Variation>
-          <Variation label="Denied with a message">
-            <PermissionOutcome
-              outcome={deniedOutcome}
-              message="Don't force-push, open a new branch instead."
-            />
-          </Variation>
-          <Variation label="Chose another allow option">
-            <PermissionOutcome
-              outcome={{
-                outcome: 'selected',
-                optionId: 'allow-always',
-                name: 'Always Allow',
-                kind: 'allow_always',
-              }}
-            />
-          </Variation>
-          <Variation label="Chose another reject option">
-            <PermissionOutcome
-              outcome={{
-                outcome: 'selected',
-                optionId: 'reject-always',
-                name: 'Never allow',
-                kind: 'reject_always',
-              }}
-            />
-          </Variation>
-        </Variations>
-      </View>
-    );
+    const request = <PermissionPreview {...galleryRequestProps(args)} />;
+    return useWide() ? <WideGallery request={request} /> : request;
   },
 } satisfies StoryObj<GalleryArgs>;
 
-function PermissionPreview(props: PermissionRequestProps): React.JSX.Element {
-  return <RequestComposerPreview permissionRequest={props} />;
+// The request the controls drive, from the chosen Agent's recording.
+function galleryRequestProps(args: GalleryArgs): PermissionRequestProps {
+  const selected = permissionProps({
+    mock:
+      permissionMocks.find((mock) => mock.agent === args.agent) ??
+      permissionMock,
+  });
+  return permissionProps({
+    ...args,
+    request: selected.request,
+    input: selected.input,
+    state: answeredState(args.requestState),
+  });
+}
+
+function answeredState(kind: GalleryArgs['requestState']): RequestState {
+  return kind === 'answered'
+    ? { kind: 'answered', reason: answeredElsewhere }
+    : { kind };
+}
+
+function WideGallery({ request }: { request: ReactNode }): React.JSX.Element {
+  return (
+    <View className="w-full items-center py-4">
+      <Variations className="max-w-composer!">
+        <Variation label="Permission request">{request}</Variation>
+        {galleryVariations.map(({ label, preview }) => (
+          <Variation key={label} label={label}>
+            {preview}
+          </Variation>
+        ))}
+      </Variations>
+    </View>
+  );
 }

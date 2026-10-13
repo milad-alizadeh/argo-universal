@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useContentWide } from '#lib/product/content-layout';
-import { Button } from '#primitives/buttons/button/button';
+import { Button, type ButtonProps } from '#primitives/buttons/button/button';
 
 export interface RequestActionProps {
   className?: string;
@@ -12,22 +12,31 @@ export interface RequestActionProps {
   loading?: boolean;
 }
 
-export function RequestAction(props: RequestActionProps): ReactNode {
+export function RequestAction({
+  children,
+  primary,
+  ...props
+}: RequestActionProps): ReactNode {
   const wide = useContentWide();
   return (
     <Button
+      {...props}
+      {...requestLayout(primary, wide)}
       appearance="content"
-      label={props.children}
-      accessibilityLabel={props.accessibilityLabel}
-      variant={requestVariant(props.primary, wide)}
-      size={wide ? 'sm' : 'md'}
-      fullWidth={!wide}
-      disabled={props.disabled}
-      loading={props.loading}
-      onPress={props.onPress}
-      className={props.className}
+      label={children}
     />
   );
+}
+
+function requestLayout(
+  primary: boolean | undefined,
+  wide: boolean,
+): Pick<ButtonProps, 'variant' | 'size' | 'fullWidth'> {
+  return {
+    variant: requestVariant(primary, wide),
+    size: wide ? 'sm' : 'md',
+    fullWidth: !wide,
+  };
 }
 
 function requestVariant(
