@@ -46,16 +46,30 @@ function followPointer({ sheet, startY, onClose }: Drag): void {
     sheet.style.transform = `translateY(${travel(event)}px)`;
   };
   const release = (event: PointerEvent): void => {
-    window.removeEventListener('pointermove', move);
-    window.removeEventListener('pointerup', release);
-    window.removeEventListener('pointercancel', release);
+    stopFollowing(move, release);
     if (event.type === 'pointerup' && travel(event) >= closeDistance) onClose();
     else settleBack(sheet);
   };
   sheet.style.transition = '';
+  startFollowing(move, release);
+}
+
+function startFollowing(
+  move: (event: PointerEvent) => void,
+  release: (event: PointerEvent) => void,
+): void {
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
+}
+
+function stopFollowing(
+  move: (event: PointerEvent) => void,
+  release: (event: PointerEvent) => void,
+): void {
+  window.removeEventListener('pointermove', move);
+  window.removeEventListener('pointerup', release);
+  window.removeEventListener('pointercancel', release);
 }
 
 function settleBack(sheet: HTMLElement): void {

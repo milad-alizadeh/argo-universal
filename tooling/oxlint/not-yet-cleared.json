@@ -162,50 +162,6 @@
     { "files": ["packages/client/src/lib/generic/page-title-row/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function
     { "files": ["packages/client/src/lib/generic/use-wide/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/buttons/button/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/buttons/button-group/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/buttons/filter-pill/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/buttons/icon-button/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/buttons/menu-button/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/display/badge/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/display/collapsible/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/display/icon/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/fields/field-group/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/fields/field-input/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/fields/field-section/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/inputs/combobox-search/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/inputs/search-field/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/inputs/select/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/inputs/select-menu/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/inputs/slider/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/lists/list-item/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/native/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/overlays/alert/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/overlays/bottom-sheet/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/overlays/info-popover/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/overlays/menu/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function
     { "files": ["packages/client/src/lib/generic/symbols/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // max-lines-per-function

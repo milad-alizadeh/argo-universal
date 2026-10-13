@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { action } from 'storybook/actions';
 import { ListItem } from '../../lists/list-item/list-item';
 import { FieldGroup } from '../field-group/field-group';
@@ -15,29 +16,51 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {
-  render: () => (
+  render: () => <VariationsExample />,
+};
+
+function VariationsExample(): React.JSX.Element {
+  return (
     <FieldGroup>
-      <FieldSection
-        title="Server"
-        footer="Server unavailable. Open Connection to reconnect."
-      >
-        <ListItem
-          title="Projects"
-          icon="folder"
-          value="1"
-          disabled
-          onPress={onPress}
-        />
-        <ListItem
-          title="Connection"
-          icon="server"
-          value="Disconnected"
-          onPress={onPress}
-        />
-      </FieldSection>
+      <ServerSection />
       <FieldSection>
         <ListItem title="Name" value="Argo" />
       </FieldSection>
     </FieldGroup>
-  ),
-};
+  );
+}
+
+function ServerSection(): React.JSX.Element {
+  return (
+    <FieldSection
+      title="Server"
+      footer="Server unavailable. Open Connection to reconnect."
+    >
+      <ProjectsItem />
+      <ConnectionItem />
+    </FieldSection>
+  );
+}
+
+function ProjectsItem(): React.JSX.Element {
+  return (
+    <ListItem
+      title="Projects"
+      icon="folder"
+      value="1"
+      disabled
+      onPress={onPress}
+    />
+  );
+}
+
+function ConnectionItem(): React.JSX.Element {
+  return (
+    <ListItem
+      title="Connection"
+      icon="server"
+      value="Disconnected"
+      onPress={onPress}
+    />
+  );
+}

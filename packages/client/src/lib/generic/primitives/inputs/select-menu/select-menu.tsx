@@ -63,12 +63,17 @@ function SelectMenuValue<Value extends string>(
     />
   );
 }
+function useTriggerVariant(
+  requested: SelectVariant | undefined,
+): SelectVariant {
+  const inListItem = useInListItem();
+  // A ListItem's accessory is plain unless it asks otherwise.
+  return requested ?? (inListItem ? 'plain' : 'default');
+}
 function SelectMenuTrigger<Value extends string>(
   props: SelectMenuProps<Value>,
 ): ReactElement {
-  const inListItem = useInListItem();
-  // A ListItem's accessory is plain unless it asks otherwise.
-  const variant = props.variant ?? (inListItem ? 'plain' : 'default');
+  const variant = useTriggerVariant(props.variant);
   return (
     <SelectTrigger
       accessibilityLabel={props.accessibilityLabel}

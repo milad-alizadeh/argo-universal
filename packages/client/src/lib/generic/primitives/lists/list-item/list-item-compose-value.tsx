@@ -32,10 +32,18 @@ function RowValueGroup(
       verticalAlignment="center"
       modifiers={[weight(1)]}
     >
-      <Row horizontalArrangement={{ spacedBy: 8 }} verticalAlignment="center">
-        <NativeRowGlyph leading={props.valueLeading} />
-        <RowValue value={props.value} decorative={!!props.control} />
-      </Row>
+      <RowValueContent {...props} />
+    </Row>
+  );
+}
+
+function RowValueContent(
+  props: Pick<ListItemProps, 'value' | 'valueLeading' | 'control'>,
+): React.JSX.Element {
+  return (
+    <Row horizontalArrangement={{ spacedBy: 8 }} verticalAlignment="center">
+      <NativeRowGlyph leading={props.valueLeading} />
+      <RowValue value={props.value} decorative={!!props.control} />
     </Row>
   );
 }
@@ -43,21 +51,33 @@ function RowValueGroup(
 function valueWidth(value: string | undefined): ReturnType<typeof weight>[] {
   return value === undefined ? [] : [weight(1)];
 }
+interface RowValueProps extends Pick<ListItemProps, 'value'> {
+  decorative: boolean;
+}
+
 function RowValue({
   value,
   decorative,
-}: Pick<ListItemProps, 'value'> & {
+}: RowValueProps): React.JSX.Element | null {
+  if (value === undefined) return null;
+  return <RowValueText value={value} decorative={decorative} />;
+}
+
+interface RowValueTextProps {
+  value: string;
   decorative: boolean;
-}): React.JSX.Element | null {
+}
+
+function RowValueText(props: RowValueTextProps): React.JSX.Element {
   const style = useComposeTextStyle('body');
   const { mutedForeground } = useNativeTheme().colors;
-  return value === undefined ? null : (
+  return (
     <Text
       color={mutedForeground}
       style={{ ...style, textAlign: 'end' }}
-      modifiers={decorative ? [clearSemantics()] : []}
+      modifiers={props.decorative ? [clearSemantics()] : []}
     >
-      {value}
+      {props.value}
     </Text>
   );
 }

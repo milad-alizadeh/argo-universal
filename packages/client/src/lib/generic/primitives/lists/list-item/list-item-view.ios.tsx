@@ -26,32 +26,62 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
   const navigation = useNavigationFields();
   if (wide) return <WebListItem {...props} />;
   const modifiers = rowModifiers(props, colors, navigation);
-  const content = (
+  return (
+    <NativeRow key={colors.separator} item={props} modifiers={modifiers} />
+  );
+}
+
+interface NativeRowProps {
+  item: ListItemProps;
+  modifiers: RowModifiers;
+}
+
+function NativeRow({ item, modifiers }: NativeRowProps): React.JSX.Element {
+  const content = <RowStack {...item} />;
+  if (!item.onPress) return <HStack modifiers={modifiers}>{content}</HStack>;
+  return (
+    <PressableRow
+      press={item.onPress}
+      modifiers={modifiers}
+      content={content}
+    />
+  );
+}
+
+function RowStack(props: ListItemProps): React.JSX.Element {
+  return (
     <VStack spacing={0}>
       <RowContent {...props} />
       <NativeRowDetail detail={props.detail} />
     </VStack>
   );
-  if (!props.onPress)
-    return (
-      <HStack key={colors.separator} modifiers={modifiers}>
-        {content}
-      </HStack>
-    );
-  // SwiftUI caches separator tint on the row; replace it when Appearance changes.
+}
+
+interface PressableRowProps {
+  press: () => void;
+  modifiers: RowModifiers;
+  content: React.ReactElement;
+}
+
+// SwiftUI caches separator tint on the row; replace it when Appearance changes.
+function PressableRow({
+  press,
+  modifiers,
+  content,
+}: PressableRowProps): React.JSX.Element {
   return (
-    <Button
-      key={colors.separator}
-      onPress={props.onPress}
-      modifiers={[
-        buttonStyle('automatic'),
-        ...modifiers,
-        accessibilityAddTraits(['isButton']),
-      ]}
-    >
+    <Button onPress={press} modifiers={pressModifiers(modifiers)}>
       {content}
     </Button>
   );
+}
+
+function pressModifiers(modifiers: RowModifiers): RowModifiers {
+  return [
+    buttonStyle('automatic'),
+    ...modifiers,
+    accessibilityAddTraits(['isButton']),
+  ];
 }
 
 type RowColors = Pick<NativeColors, 'muted' | 'separator'>;

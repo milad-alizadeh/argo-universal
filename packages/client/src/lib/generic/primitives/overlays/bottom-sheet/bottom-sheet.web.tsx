@@ -13,14 +13,18 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
         open={props.open}
         onClosed={props.onClosed}
         dismissible={props.dismissible}
-        title={
-          <DialogPrimitive.Title className="sr-only">
-            {props.label}
-          </DialogPrimitive.Title>
-        }
+        title={<SheetTitle label={props.label} />}
       >
         {props.children}
       </BottomSheetSurface>
     </BottomSheetRoot>
+  );
+}
+
+function SheetTitle(props: Pick<BottomSheetProps, 'label'>): React.JSX.Element {
+  return (
+    <DialogPrimitive.Title className="sr-only">
+      {props.label}
+    </DialogPrimitive.Title>
   );
 }

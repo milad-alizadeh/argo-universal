@@ -61,13 +61,19 @@ export const Variations: Story = {
         </Variation>
       ))}
       <Variation label="Plain, inside a ListItem">
-        <FieldSection>
-          <ListItem
-            title="Effort"
-            accessory={<SelectMenuExample initialValue="medium" />}
-          />
-        </FieldSection>
+        <InListItemExample />
       </Variation>
     </VariationList>
   ),
 };
+
+function InListItemExample(): React.JSX.Element {
+  return (
+    <FieldSection>
+      <ListItem
+        title="Effort"
+        accessory={<SelectMenuExample initialValue="medium" />}
+      />
+    </FieldSection>
+  );
+}

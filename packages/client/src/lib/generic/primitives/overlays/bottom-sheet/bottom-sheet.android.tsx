@@ -1,15 +1,16 @@
 import {
   ModalBottomSheet,
   type ModalBottomSheetRef,
-  RNHostView,
 } from '@expo/ui/jetpack-compose';
-import { fillMaxHeight } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { Host } from '../../native/host';
 import { usePresentationClosed } from '../../native/native-only-animated-view/native-only-animated-view';
 import { useSheetColors } from './bottom-sheet-colors.android';
-import { BottomSheetContent } from './bottom-sheet-content';
+import {
+  HostedSheetContent,
+  SheetHost,
+  type HostedSheetProps,
+} from './bottom-sheet-hosted.android';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
 import type { BottomSheetProps } from './bottom-sheet.types';
@@ -27,25 +28,41 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
 }
 
 function SheetPresentation(presentation: SheetProps): React.JSX.Element {
-  const { sheetRef, ...props } = presentation;
-  const sheet = useSheetColors(props.surface);
-  const dismissible = props.dismissible !== false;
   return (
     <SheetHost>
-      <ModalBottomSheet
-        {...sheet}
-        ref={sheetRef}
-        onDismissRequest={() => props.onOpenChange(false)}
-        sheetGesturesEnabled={dismissible}
-        properties={{
-          shouldDismissOnBackPress: dismissible,
-          shouldDismissOnClickOutside: dismissible,
-        }}
-      >
-        <HostedSheetContent {...props} />
-      </ModalBottomSheet>
+      <SheetModal {...presentation} />
     </SheetHost>
   );
+}
+
+function SheetModal(presentation: SheetProps): React.JSX.Element {
+  const { sheetRef, ...props } = presentation;
+  const sheet = useSheetColors(props.surface);
+  return (
+    <ModalBottomSheet
+      {...sheet}
+      ref={sheetRef}
+      onDismissRequest={() => props.onOpenChange(false)}
+      {...dismissalProps(props.dismissible !== false)}
+    >
+      <HostedSheetContent {...props} />
+    </ModalBottomSheet>
+  );
+}
+
+function dismissalProps(
+  dismissible: boolean,
+): Pick<
+  React.ComponentProps<typeof ModalBottomSheet>,
+  'sheetGesturesEnabled' | 'properties'
+> {
+  return {
+    sheetGesturesEnabled: dismissible,
+    properties: {
+      shouldDismissOnBackPress: dismissible,
+      shouldDismissOnClickOutside: dismissible,
+    },
+  };
 }
 
 function useSheetDismissal(
@@ -108,49 +125,4 @@ function hideSheet(
   };
 }
 
-type SheetProps = Pick<
-  BottomSheetProps,
-  | 'onOpenChange'
-  | 'label'
-  | 'children'
-  | 'dismissible'
-  | 'contentScrolls'
-  | 'surface'
-> & { sheetRef: SheetRef };
-function HostedSheetContent(
-  props: Pick<
-    BottomSheetProps,
-    | 'onOpenChange'
-    | 'label'
-    | 'children'
-    | 'dismissible'
-    | 'contentScrolls'
-    | 'surface'
-  >,
-): React.JSX.Element {
-  return (
-    <RNHostView modifiers={[fillMaxHeight()]}>
-      <BottomSheetContent
-        label={props.label}
-        onOpenChange={props.onOpenChange}
-        dismissible={props.dismissible}
-        contentScrolls={props.contentScrolls}
-        surface={props.surface}
-      >
-        {props.children}
-      </BottomSheetContent>
-    </RNHostView>
-  );
-}
-
-function SheetHost({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <Host style={{ position: 'absolute' }} pointerEvents="none">
-      {children}
-    </Host>
-  );
-}
+type SheetProps = HostedSheetProps & { sheetRef: SheetRef };

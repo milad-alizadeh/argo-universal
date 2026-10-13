@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { View } from 'react-native';
+import { type TextInputProps, View } from 'react-native';
 import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
 import { Input } from '../../inputs/input/input';
@@ -19,42 +19,72 @@ export function FieldInput(props: FieldInputProps): React.JSX.Element {
         'web:focus-within:outline-2 web:focus-within:outline-ring web:focus-within:-outline-offset-2',
       )}
     >
-      <Text
-        aria-hidden
-        role="body"
-        className={cn(
-          'shrink-0',
-          props.disabled && 'text-muted-foreground',
-          isInvalid(props) && 'text-destructive',
-        )}
-      >
-        {props.label}
-      </Text>
+      <RowLabel {...props} />
       <RowInput {...props} />
     </View>
   );
 }
 
+function RowLabel(props: FieldInputProps): React.JSX.Element {
+  return (
+    <Text
+      aria-hidden
+      role="body"
+      className={cn(
+        'shrink-0',
+        props.disabled && 'text-muted-foreground',
+        isInvalid(props) && 'text-destructive',
+      )}
+    >
+      {props.label}
+    </Text>
+  );
+}
+
 function RowInput(props: FieldInputProps): React.JSX.Element {
+  const accessibility = useInputAccessibility(props);
   return (
     <Input
-      accessibilityLabel={props.label}
-      aria-invalid={isInvalid(props)}
-      aria-describedby={useFooterDescription({
-        invalid: isInvalid(props),
-        hint: props.hint,
-      })}
-      value={props.value}
-      placeholder={props.placeholder}
-      onChangeText={props.onChange}
-      onBlur={props.onBlur}
-      editable={!props.disabled}
-      autoCapitalize="none"
-      autoCorrect={false}
-      className={cn(
-        props.mono ? 'type-code' : 'type-body',
-        'h-6 flex-1 rounded-none border-0 bg-transparent px-0 py-0 shadow-none sm:h-6 focus-visible:ring-0 dark:bg-transparent',
-      )}
+      {...accessibility}
+      {...inputBehaviour(props)}
+      className={inputClasses(props.mono)}
     />
   );
 }
+
+type InputProps = TextInputProps;
+
+interface InputAccessibility {
+  accessibilityLabel: string;
+  'aria-invalid': boolean;
+  'aria-describedby': ReturnType<typeof useFooterDescription>;
+}
+
+function useInputAccessibility(props: FieldInputProps): InputAccessibility {
+  return {
+    accessibilityLabel: props.label,
+    'aria-invalid': isInvalid(props),
+    'aria-describedby': useFooterDescription({
+      invalid: isInvalid(props),
+      hint: props.hint,
+    }),
+  };
+}
+
+function inputBehaviour(props: FieldInputProps): InputProps {
+  return {
+    value: props.value,
+    placeholder: props.placeholder,
+    onChangeText: props.onChange,
+    onBlur: props.onBlur,
+    editable: !props.disabled,
+    autoCapitalize: 'none',
+    autoCorrect: false,
+  };
+}
+
+const inputClasses = (mono: FieldInputProps['mono']): string =>
+  cn(
+    mono ? 'type-code' : 'type-body',
+    'h-6 flex-1 rounded-none border-0 bg-transparent px-0 py-0 shadow-none sm:h-6 focus-visible:ring-0 dark:bg-transparent',
+  );

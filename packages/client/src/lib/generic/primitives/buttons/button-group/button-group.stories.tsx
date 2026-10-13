@@ -39,17 +39,16 @@ function SecondaryButtonsExample(): React.JSX.Element {
       <View className="flex-row">
         <ButtonGroup>
           {['Previous', 'Today', 'Next'].map((label) => (
-            <Button
-              key={label}
-              variant="secondary"
-              label={label}
-              appearance="content"
-            />
+            <SecondaryButton key={label} label={label} />
           ))}
         </ButtonGroup>
       </View>
     </Variation>
   );
+}
+
+function SecondaryButton({ label }: { label: string }): React.JSX.Element {
+  return <Button variant="secondary" label={label} appearance="content" />;
 }
 
 function AllowOptions(): React.JSX.Element {

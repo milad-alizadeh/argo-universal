@@ -8,22 +8,11 @@ import { useNavigationFields } from '../field-layout';
 import type { FieldSectionProps } from '../field-props';
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {
-  const navigation = useNavigationFields();
   const footerId = useId();
   return (
     <View className="gap-2 wide:gap-3">
       <SectionTitle title={props.title} />
-      <View
-        className={cn(
-          'overflow-hidden rounded-2xl',
-          // Wide, a navigation list's selected and hovered rows keep a 1px gap from their neighbours.
-          navigation && 'rounded-none bg-transparent wide:gap-px',
-        )}
-      >
-        <FooterProvider value={footerOf(props, footerId)}>
-          {props.children}
-        </FooterProvider>
-      </View>
+      <SectionRows {...props} footerId={footerId} />
       <SectionFooter
         id={footerId}
         text={props.footer}
@@ -32,6 +21,26 @@ export function FieldSection(props: FieldSectionProps): React.JSX.Element {
     </View>
   );
 }
+
+function SectionRows(
+  props: FieldSectionProps & { footerId: string },
+): React.JSX.Element {
+  const navigation = useNavigationFields();
+  return (
+    <View className={rowsClasses(navigation)}>
+      <FooterProvider value={footerOf(props, props.footerId)}>
+        {props.children}
+      </FooterProvider>
+    </View>
+  );
+}
+
+const rowsClasses = (navigation: boolean): string =>
+  cn(
+    'overflow-hidden rounded-2xl',
+    // Wide, a navigation list's selected and hovered rows keep a 1px gap from their neighbours.
+    navigation && 'rounded-none bg-transparent wide:gap-px',
+  );
 
 const footerOf = (
   props: FieldSectionProps,

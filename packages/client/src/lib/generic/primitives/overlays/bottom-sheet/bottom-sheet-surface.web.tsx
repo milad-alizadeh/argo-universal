@@ -25,24 +25,33 @@ type SurfaceProps = {
  * Both stay direct children of the portal, so each one finishes its exit animation before it unmounts.
  */
 export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
-  const state = props.open ? 'open' : 'closed';
   const card = useHiddenWhileClosing(props.open || !props.hiddenWhileClosing);
-  const { onOpenChange } = DialogPrimitive.useRootContext();
-  const close = useCallback(() => {
-    if (props.dismissible !== false) onOpenChange(false);
-  }, [onOpenChange, props.dismissible]);
+  const close = useCloseWhenDismissible(props.dismissible);
   useSwipeToClose(card, close);
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay
-        data-state={state}
-        className="bottom-sheet-overlay absolute inset-0 bg-black/20"
-      />
+      <SheetOverlay open={props.open} />
       <DialogPrimitive.Content ref={card} {...sheetContentProps(props)}>
         {props.title}
         <SheetBody>{props.children}</SheetBody>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
+  );
+}
+
+function useCloseWhenDismissible(dismissible: boolean | undefined): () => void {
+  const { onOpenChange } = DialogPrimitive.useRootContext();
+  return useCallback(() => {
+    if (dismissible !== false) onOpenChange(false);
+  }, [onOpenChange, dismissible]);
+}
+
+function SheetOverlay(props: Pick<SurfaceProps, 'open'>): React.JSX.Element {
+  return (
+    <DialogPrimitive.Overlay
+      data-state={props.open ? 'open' : 'closed'}
+      className="bottom-sheet-overlay absolute inset-0 bg-black/20"
+    />
   );
 }
 
@@ -93,15 +102,22 @@ function useTallestHeight(): {
   return { tallest, onLayout };
 }
 
-function sheetContentProps(
-  props: Pick<
-    SurfaceProps,
-    'open' | 'onClosed' | 'dismissible' | 'onCloseAutoFocus'
-  >,
-): React.ComponentProps<typeof DialogPrimitive.Content> & {
+type SheetContentSource = Pick<
+  SurfaceProps,
+  'open' | 'onClosed' | 'dismissible' | 'onCloseAutoFocus'
+>;
+
+type SheetContentAttributes = React.ComponentProps<
+  typeof DialogPrimitive.Content
+> & {
   'data-state': string;
   'aria-describedby': undefined;
-} {
+};
+
+const sheetClassName =
+  'bottom-sheet touch-none max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none';
+
+function sheetContentProps(props: SheetContentSource): SheetContentAttributes {
   return {
     'data-state': props.open ? 'open' : 'closed',
     'aria-describedby': undefined,
@@ -111,7 +127,6 @@ function sheetContentProps(
     },
     onEscapeKeyDown: keepOpen(props.dismissible),
     onInteractOutside: keepOpen(props.dismissible),
-    className:
-      'bottom-sheet touch-none max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
+    className: sheetClassName,
   };
 }

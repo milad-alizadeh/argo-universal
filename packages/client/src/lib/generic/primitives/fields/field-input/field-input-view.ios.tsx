@@ -34,20 +34,24 @@ export function FieldInput(props: FieldInputProps): React.JSX.Element {
 
 // A Settings form row: the label leading, the SwiftUI field taking the rest of the row with its text trailing.
 function FormRow(props: FieldInputProps): React.JSX.Element {
-  const { muted, separator } = useNativeTheme().colors;
+  const modifiers = useRowModifiers();
   return (
-    <LabeledContent
-      label={<RowLabel {...props} />}
-      modifiers={[
-        listRowBackground(muted ?? 'transparent'),
-        listRowSeparatorTint(separator),
-        listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
-        frame({ minHeight: rowHeight }),
-      ]}
-    >
+    <LabeledContent label={<RowLabel {...props} />} modifiers={modifiers}>
       <RowField {...props} />
     </LabeledContent>
   );
+}
+
+function useRowModifiers(): React.ComponentProps<
+  typeof LabeledContent
+>['modifiers'] {
+  const { muted, separator } = useNativeTheme().colors;
+  return [
+    listRowBackground(muted ?? 'transparent'),
+    listRowSeparatorTint(separator),
+    listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
+    frame({ minHeight: rowHeight }),
+  ];
 }
 
 function RowLabel(props: FieldInputProps): React.JSX.Element {
@@ -61,24 +65,31 @@ function RowLabel(props: FieldInputProps): React.JSX.Element {
 function RowField(props: FieldInputProps): React.JSX.Element {
   const text = useNativeState(props.value);
   useFollowedText(text, props.value);
-  const fieldModifiers = useSwiftUITextModifiers(
-    props.mono ? 'code' : 'body',
-    'row',
-  );
+  const modifiers = useFieldModifiers(props);
   return (
     <TextField
       text={text}
       placeholder={props.placeholder}
       onTextChange={props.onChange}
       onFocusChange={(focused) => focused || props.onBlur?.()}
-      modifiers={[
-        ...fieldModifiers,
-        multilineTextAlignment('trailing'),
-        disabled(!!props.disabled),
-        textInputAutocapitalization('never'),
-        autocorrectionDisabled(true),
-        accessibilityLabel(props.label),
-      ]}
+      modifiers={modifiers}
     />
   );
+}
+
+type FieldModifiers = React.ComponentProps<typeof TextField>['modifiers'];
+
+function useFieldModifiers(props: FieldInputProps): FieldModifiers {
+  const fieldModifiers = useSwiftUITextModifiers(
+    props.mono ? 'code' : 'body',
+    'row',
+  );
+  return [
+    ...fieldModifiers,
+    multilineTextAlignment('trailing'),
+    disabled(!!props.disabled),
+    textInputAutocapitalization('never'),
+    autocorrectionDisabled(true),
+    accessibilityLabel(props.label),
+  ];
 }

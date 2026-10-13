@@ -66,16 +66,19 @@ function rangeInteraction(
         props.onValueChange(Number(event.currentTarget.value));
     },
     onChange: (event) => props.onValueChange(Number(event.currentTarget.value)),
-    className: cn(
-      rangeClass,
-      webkitTrackClass,
-      webkitThumbClass,
-      webkitThumbStateClass,
-      mozClass,
-      props.value === undefined && unsetClass,
-    ),
+    className: rangeClasses(props.value === undefined),
   };
 }
+
+const rangeClasses = (unset: boolean): string =>
+  cn(
+    rangeClass,
+    webkitTrackClass,
+    webkitThumbClass,
+    webkitThumbStateClass,
+    mozClass,
+    unset && unsetClass,
+  );
 
 function progressStyle(
   props: SliderPosition,
