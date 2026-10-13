@@ -31,7 +31,7 @@ interface AgentLogoProps {
 
 // An Agent with no logo, such as a custom one, shows the Agent glyph; an empty SVG would throw.
 function AgentLogo({ agent, role }: AgentLogoProps): React.JSX.Element {
-  if (!agent.logo)
+  if (!agent.logo.trim())
     return <Icon name="agent" role={role} className="text-foreground" />;
   return <AgentSvg logo={agent.logo} />;
 }
