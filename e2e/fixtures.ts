@@ -11,12 +11,7 @@ import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
-import {
-  pollServer,
-  projectDirectoryName,
-  requestLogName,
-  startOwnServer,
-} from './own-server';
+import { pollServer, serverFiles, startOwnServer } from './own-server';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -56,6 +51,7 @@ type App = {
   installationPath: string;
   projectPath: string;
   requestLogPath: string;
+  restartEngine: (whileStopped: () => Promise<void>) => Promise<void>;
 };
 
 // Polls system.info, so a test never calls a Server that is still starting.
@@ -71,14 +67,6 @@ const waitForServer = (httpUrl: string): Promise<true> =>
   );
 
 const ownServerDirectory = 'own-server';
-
-// What a test reads from its own Server's directory.
-const serverFiles = (
-  directory: string,
-): { projectPath: string; requestLogPath: string } => ({
-  projectPath: path.join(directory, projectDirectoryName),
-  requestLogPath: path.join(directory, requestLogName),
-});
 
 export const test = base.extend<
   AppOptions & ServerOptions & { app: App; server: { httpUrl: string } }
@@ -106,6 +94,7 @@ export const test = base.extend<
           registryPath: server.registryPath,
           installationPath: server.installationPath,
           ...serverFiles(serverDirectory),
+          restartEngine: server.restart,
         });
       } finally {
         await server.stop();
@@ -145,6 +134,7 @@ export const test = base.extend<
         registryPath: fixtureServer.registryPath,
         installationPath: fixtureServer.installationPath,
         ...serverFiles(directory),
+        restartEngine: fixtureServer.restart,
       });
     } finally {
       // Close the App before gracefully stopping its fixture Engine.
