@@ -28,6 +28,7 @@ function SettledStatus({
   status: ToolCallUpdate['status'];
 }): React.JSX.Element | null {
   const label = settledLabels.get(status);
+
   return label ? (
     <View className="px-3 pb-2">
       <Text className="text-muted-foreground">{label}</Text>
@@ -53,6 +54,7 @@ function ToolCallRowOutput({
 
 export function ToolCallRow(props: ToolCallRowProps): React.JSX.Element {
   const { row } = props;
+
   return (
     <ToolCallDisclosure
       {...toolCallDisclosureProps(row, props.awaitingApproval)}

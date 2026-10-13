@@ -26,6 +26,7 @@ export function createLiveHeaderRowsReader({
   database: Database;
 }): LiveHeaderRowsReader {
   const rejections = createRejectionCounter('sessions');
+
   return ({
     writer,
     sessionId,
@@ -34,30 +35,36 @@ export function createLiveHeaderRowsReader({
   }): ReturnType<LiveHeaderRowsReader> => {
     if (turnId === null) return { rows: {}, rejected: false };
     const stored = readStoredHeaderRows({ database, sessionId, turnId });
+
     const queued = readQueuedFeed(writer, sessionId).rows.filter(
       (row): boolean => row.turnId === turnId,
     );
+
     let rejected = false;
+
     // A row still in Feed memory is newer than its stored copy, so the stored payload is not parsed again.
     const parsed = [
       ...new Map(
-        [...stored, ...queued]
-          .filter((row): boolean => !Object.hasOwn(rows, row.id))
-          .map((row): [string, FeedRowWrite | SessionUpdate] => [
-            `${row.id}/${row.revision}`,
-            row,
-          ]),
+        [...stored, ...queued].flatMap(
+          (row): [string, FeedRowWrite | SessionUpdate][] =>
+            Object.hasOwn(rows, row.id)
+              ? []
+              : [[`${row.id}/${row.revision}`, row]],
+        ),
       ).values(),
     ].flatMap((row): SessionUpdate[] => {
       if (!('payloadVersion' in row)) return [row];
+
       try {
         return [hydrateStoredFeedRow(sessionId, row)];
       } catch (error) {
         rejected = true;
         rejections.report('rejected live-header shape', error);
+
         return [];
       }
     });
+
     return {
       rows: Object.fromEntries(
         newestRows(
@@ -87,6 +94,7 @@ function readStoredHeaderRows({
     .orderBy(desc(feedRow.revision))
     .limit(1)
     .all();
+
   const thought = database
     .select(storedFeedColumns)
     .from(feedRow)
@@ -100,6 +108,7 @@ function readStoredHeaderRows({
     .limit(1)
     .all()
     .filter((row): boolean => row.turnId === turnId);
+
   const previousTool = database
     .select({ position: feedRow.position })
     .from(feedRow)
@@ -112,7 +121,9 @@ function readStoredHeaderRows({
     )
     .orderBy(desc(feedRow.position))
     .limit(1);
+
   const invalid = alias(feedRow, 'invalid_header_row');
+
   const newestInvalid = database
     .select({ position: invalid.position })
     .from(invalid)
@@ -127,6 +138,7 @@ function readStoredHeaderRows({
     )
     .orderBy(desc(invalid.position))
     .limit(1);
+
   const tools = database
     .select(storedFeedColumns)
     .from(feedRow)
@@ -147,5 +159,6 @@ function readStoredHeaderRows({
     )
     .orderBy(desc(feedRow.position))
     .all();
+
   return [...latest, ...thought, ...tools];
 }

@@ -13,6 +13,7 @@ const meta = {
     </View>
   ),
 } satisfies Meta<typeof SessionsLoading>;
+
 export default meta;
 
 export const Overview: StoryObj<typeof meta> = { name: 'SessionsLoading' };

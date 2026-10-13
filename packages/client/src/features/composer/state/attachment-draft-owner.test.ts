@@ -10,16 +10,19 @@ import {
   emptyAttachmentDraft,
   attachmentDraftReducer,
 } from './attachment-draft';
+
 describe('attachmentDraftReducer', () => {
   it('empties the text and the attachments when the draft changes owner', () => {
     const attached = attachmentDraftReducer(withText, {
       type: 'picked',
       picked: [picked('first')],
     });
+
     const next = attachmentDraftReducer(attached, {
       type: 'ownerChanged',
       key: secondProject,
     });
+
     expect(next.draft).toEqual({ text: '', attachments: [] });
     expect(next.files.size).toBe(0);
   });
@@ -29,15 +32,18 @@ describe('attachmentDraftReducer', () => {
       type: 'ownerChanged',
       key: secondProject,
     });
+
     const typed = attachmentDraftReducer(owned, {
       type: 'changed',
       draft: { text: 'Typed first', attachments: [] },
     });
+
     const next = attachmentDraftReducer(typed, {
       type: 'restored',
       key: secondProject,
       text: keptText,
     });
+
     expect(next.draft.text).toBe('Typed first');
   });
 
@@ -46,11 +52,13 @@ describe('attachmentDraftReducer', () => {
       type: 'ownerChanged',
       key: secondProject,
     });
+
     const next = attachmentDraftReducer(owned, {
       type: 'restored',
       key: secondProject,
       text: keptText,
     });
+
     expect(next.draft.text).toBe(keptText);
   });
 
@@ -59,15 +67,18 @@ describe('attachmentDraftReducer', () => {
       type: 'ownerChanged',
       key: firstProject,
     });
+
     const second = attachmentDraftReducer(first, {
       type: 'ownerChanged',
       key: secondProject,
     });
+
     const next = attachmentDraftReducer(second, {
       type: 'restored',
       key: firstProject,
       text: 'Kept for the first Project',
     });
+
     expect(next.draft.text).toBe('');
   });
 
@@ -89,6 +100,7 @@ describe('two drafts from the same start', () => {
       }),
       { type: 'picked', picked: [picked('first')] },
     );
+
     const second = attachmentDraftReducer(emptyAttachmentDraft, {
       type: 'changed',
       draft: { text: 'A different draft.', attachments: [] },

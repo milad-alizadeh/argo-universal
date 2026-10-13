@@ -11,6 +11,7 @@ import { dismissLogin, loginActions, loginStatus } from './login-actions';
 import { LoginButton } from './login-button';
 import { loginCopy } from './login-copy';
 import type { AgentLoginSheetProps } from './login-props';
+
 export type { AgentLoginSheetProps } from './login-props';
 
 export function AgentLoginSheet(
@@ -35,8 +36,10 @@ function LoginContent(props: AgentLoginSheetProps): React.JSX.Element {
     </DialogContent>
   );
 }
+
 const isTerminalLogin = (props: AgentLoginSheetProps): boolean =>
   props.snapshot?.terminal === true;
+
 const contentProps = (
   props: AgentLoginSheetProps,
 ): Omit<React.ComponentProps<typeof DialogContent>, 'children'> => ({
@@ -47,20 +50,27 @@ const contentProps = (
     ? 'gap-3 p-6 wide:w-[620px] wide:max-w-none wide:rounded-surface'
     : 'gap-3 p-6 wide:w-[380px] wide:rounded-surface',
 });
+
 const terminalHasCopy = (props: AgentLoginSheetProps): boolean =>
   isTerminalLogin(props) && !props.disconnected;
+
 function LoginMessage(props: AgentLoginSheetProps): React.JSX.Element | null {
   if (terminalHasCopy(props) && !props.failure) return null;
+
   return <Text>{sheetCopy(props).message}</Text>;
 }
+
 const terminalDisabled = (props: AgentLoginSheetProps): boolean =>
   !!(props.disconnected || props.failure || props.busy);
+
 function LoginTerminalContent(
   props: AgentLoginSheetProps,
 ): React.JSX.Element | null {
   if (!isTerminalLogin(props)) return null;
   const operationId = terminalIdentity(props);
+
   if (!props.terminal) return null;
+
   return (
     <AgentLoginTerminal
       key={operationId}
@@ -70,35 +80,37 @@ function LoginTerminalContent(
   );
 }
 
-function sheetCopy(props: AgentLoginSheetProps): {
-  title: string;
-  message: string;
-} {
+type SheetCopy = { title: string; message: string };
+
+function sheetCopy(props: AgentLoginSheetProps): SheetCopy {
   if (props.disconnected)
     return {
       title: 'Connection lost',
       message:
         'Reconnect to check this sign-in. Its outcome is unknown while the Server is unreachable.',
     };
+
   if (props.failure) return { title: 'Sign-in failed', message: props.failure };
+
   return connectedCopy(props);
 }
 
-function connectedCopy(props: AgentLoginSheetProps): {
-  title: string;
-  message: string;
-} {
+function connectedCopy(props: AgentLoginSheetProps): SheetCopy {
   const copy = loginCopy[loginStatus(props)];
+
   return {
     title: sheetTitle(props),
     message: agentMessage(props) ?? copy.message,
   };
 }
+
 const agentMessage = (props: AgentLoginSheetProps): string | undefined =>
   props.snapshot?.request?.message;
+
 function sheetTitle(props: AgentLoginSheetProps): string {
   if (isTerminalLogin(props) || loginStatus(props) === 'choose-method')
     return `Sign in to ${props.agentName}`;
+
   return loginCopy[loginStatus(props)].title;
 }
 
@@ -123,6 +135,7 @@ const actionVariant = (
   terminal: boolean,
 ): 'secondary' | 'default' => {
   if (terminal) return 'secondary';
+
   return index ? 'secondary' : 'default';
 };
 

@@ -1,6 +1,13 @@
 import path from 'node:path';
 import type { ServerAddress } from '@repo/contracts';
-import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  Menu,
+  type WindowOpenHandlerResponse,
+} from 'electron';
 import { createActor } from 'xstate';
 import {
   appOrigin,
@@ -14,23 +21,32 @@ import { handleSymbolImages } from './symbol-images';
 
 // The dev script sets the Expo web dev URL; without it the window loads the web export over app://.
 const webDevelopmentUrl = process.env.ARGO_EXPO_WEB_URL;
+
 const appDirectory = app.getAppPath();
+
 const serverDirectory = path.join(appDirectory, '../server');
+
 const webExportDirectory = path.join(appDirectory, '../universal-app/dist');
+
 // Node's URL gives origin 'null' for the app: scheme, so build the origin from its parts.
 const originOf = (url: string): string => {
   const { protocol, host } = new URL(url);
+
   return `${protocol}//${host}`;
 };
+
 const windowOrigin = webDevelopmentUrl
   ? originOf(webDevelopmentUrl)
   : appOrigin;
 
 // Tests give each launch its own app data, so launches neither share the single-instance lock nor touch the owner's.
 const userDataDirectory = process.env.ARGO_USER_DATA_DIRECTORY;
+
 if (userDataDirectory) app.setPath('userData', userDataDirectory);
+
 // Tests open the window hidden and keep the app out of the Dock, so a run never takes focus.
 const runsInBackground = process.env.ARGO_BACKGROUND === '1';
+
 if (runsInBackground && process.platform === 'darwin') {
   app.setActivationPolicy('accessory');
 }
@@ -42,6 +58,7 @@ const serverUrl = (address: ServerAddress): string =>
 
 // Makes sure a Supervisor runs; on quit it stops only one that it started.
 const home = resolveHome();
+
 const server = createActor(serverConnectionMachine, {
   input: { home, serverDirectory },
 });
@@ -75,9 +92,11 @@ const createWindow = (url: string): void => {
   mainWindow.webContents.on('will-navigate', (event, target): void => {
     if (originOf(target) !== windowOrigin) event.preventDefault();
   });
-  mainWindow.webContents.setWindowOpenHandler((): { action: 'deny' } => ({
-    action: 'deny',
-  }));
+  mainWindow.webContents.setWindowOpenHandler(
+    (): WindowOpenHandlerResponse => ({
+      action: 'deny',
+    }),
+  );
 
   void mainWindow.loadURL(webDevelopmentUrl ?? `${appOrigin}/`);
 };
@@ -86,7 +105,9 @@ for (const action of ['minimize', 'maximize', 'close'] as const) {
   ipcMain.on(`window:${action}`, (event): void => {
     if (event.senderFrame?.origin !== windowOrigin) return;
     const window = BrowserWindow.fromWebContents(event.sender);
+
     if (!window) return;
+
     if (action !== 'maximize') window[action]();
     else if (window.isMaximized()) window.unmaximize();
     else window.maximize();
@@ -101,10 +122,12 @@ const start = (): void => {
   Menu.setApplicationMenu(
     Menu.buildFromTemplate(applicationMenu(process.platform)),
   );
+
   if (!webDevelopmentUrl) handleAppProtocol(webExportDirectory);
   let url: string | null = null;
   server.on('server.ready', ({ address }): void => {
     url = serverUrl(address);
+
     if (BrowserWindow.getAllWindows().length === 0) createWindow(url);
   });
 
@@ -151,7 +174,9 @@ const start = (): void => {
 if (app.requestSingleInstanceLock()) {
   app.on('second-instance', (): void => {
     const window = BrowserWindow.getAllWindows()[0];
+
     if (!window) return;
+
     if (window.isMinimized()) window.restore();
     window.show();
     window.focus();
@@ -168,9 +193,11 @@ server.subscribe({
     app.quit();
   },
 });
+
 app.on('will-quit', (event): void => {
   if (!serverStarted || server.getSnapshot().status !== 'active') return;
   server.send({ type: 'app.quit' });
+
   // A reused Supervisor stops synchronously; prevent quit only while an owned one is stopping.
   if (server.getSnapshot().status === 'active') event.preventDefault();
 });

@@ -11,6 +11,7 @@ export function useNavigationFields(): boolean {
 // A wide window's sidebar keeps its page selected; a phone's navigation rows drill in instead.
 export function useSidebarFields(): boolean {
   const navigation = useNavigationFields();
+
   return useWide() && navigation;
 }
 
@@ -36,8 +37,10 @@ export interface RowHover {
   separatorHidden: boolean;
   onHover: (hovering: boolean) => void;
 }
+
 export const FieldRowHover = createContext<RowHover | undefined>(undefined);
 
 // A grouped list's gutters, and the space between its sections, on a phone and a wide window.
 export const fieldGroupPadding = 'px-4 pb-8 pt-4 wide:px-0 wide:pb-6 wide:pt-0';
+
 export const fieldGroupGap = 'gap-8 wide:gap-6';

@@ -3,7 +3,9 @@ import { defineRule } from '@oxlint/plugins';
 import { onModuleSources, stringValue } from './syntax.ts';
 
 const mocksPackage = /^@repo\/mocks(?:\/|$)/;
+
 const serverPackage = /^@repo\/server(?:\/|$)/;
+
 const enginePackage = /^@repo\/engine(?:\/|$)/;
 
 const isTypeOnlyDeclaration = (statement: ESTree.Node): boolean =>
@@ -24,8 +26,10 @@ const isAppRouterSpecifier = (
 ): boolean => {
   if (specifier.type === 'ImportSpecifier')
     return isAppRouterName(specifier.imported);
+
   if (specifier.type === 'ExportSpecifier')
     return isAppRouterName(specifier.local);
+
   return false;
 };
 
@@ -35,6 +39,7 @@ const namesOnlyAppRouter = (statement: ESTree.Node): boolean => {
     statement.type !== 'ExportNamedDeclaration'
   )
     return false;
+
   return statement.specifiers.every(isAppRouterSpecifier);
 };
 

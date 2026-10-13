@@ -19,6 +19,7 @@ import { largeSessions, sessionsListProps } from './sessions-list.mocks';
 const expandedAttribute = 'aria-expanded';
 
 const meta = { ...sessionsListMeta, title: 'Tests/SessionsList' };
+
 export default meta;
 
 export const MemoizedRows: Story = {
@@ -31,14 +32,18 @@ export const ProjectActions: Story = {
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,
     });
+
     await waitFor(() => expect(heading).toBeVisible());
     await userEvent.hover(heading);
+
     const settings = canvas.getByRole('button', {
       name: 'Project settings for Example Project',
     });
+
     const newSession = canvas.getByRole('button', {
       name: 'New Session in Example Project',
     });
+
     await expect(settings).toBeVisible();
     await expect(newSession).toBeVisible();
     await userEvent.click(settings);
@@ -56,18 +61,21 @@ export const ProjectActions: Story = {
     await expect(heading).toHaveAttribute(expandedAttribute, 'false');
   },
 };
+
 export const ProjectActionsDark: Story = {
   ...ProjectActions,
   globals: { mode: 'dark' },
 };
 
 export const InsertSessionWithoutOverlap = insertSessionWithoutOverlap;
+
 export const InsertSessionWithoutOverlapDark: Story = {
   ...InsertSessionWithoutOverlap,
   globals: { mode: 'dark' },
 };
 
 export const FirstAndLastRowsReachable = firstAndLastRowsReachable;
+
 export const FirstAndLastRowsReachableDark: Story = {
   ...FirstAndLastRowsReachable,
   globals: { mode: 'dark' },

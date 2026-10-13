@@ -9,12 +9,15 @@ import type { FeedActivity } from './feed-view';
 
 export function explorationActions(row: ToolCallUpdate): CommandAction[] {
   const actions = knownCommandActions(row);
+
   if (actions.length) return actions;
+
   return impliedExploration(row);
 }
 
 function impliedExploration(row: ToolCallUpdate): CommandAction[] {
   if (!['read', 'search'].includes(row.kind)) return [];
+
   return [
     {
       type: row.kind === 'read' ? 'read' : 'search',
@@ -53,6 +56,7 @@ export function needsGroupHeader(
   liveTitle: string | undefined,
 ): boolean {
   if (!toolCalls.length) return false;
+
   return activities.length !== 1 || hasGroupWork(toolCalls, liveTitle);
 }
 
@@ -76,6 +80,7 @@ function isExploration(row: ToolCallUpdate): boolean {
 
 function mayExplore(row: ToolCallUpdate, awaitingPermission: boolean): boolean {
   if (row.status === 'cancelled') return false;
+
   return !awaitingPermission && !hasPermissionOutcome(row);
 }
 
@@ -84,6 +89,7 @@ export function liveTitleFor(
   awaitingPermission: boolean,
 ): string {
   if (awaitingPermission) return 'Awaiting approval';
+
   return isUnansweredExploration(row) ? 'Exploring' : toolTitle(row);
 }
 

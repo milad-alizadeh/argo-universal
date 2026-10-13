@@ -55,10 +55,12 @@ export function applyFeedChange(
   turnId: string | null,
 ): FeedChangeResult {
   const id = changedRowId(change);
+
   const candidate = prepareFeedCandidate(
     { feed, existing: feed.rows[id], revision: feed.maxRevision + 1, turnId },
     change,
   );
+
   return 'rejection' in candidate
     ? candidate
     : acceptFeedCandidate(feed, id, candidate);

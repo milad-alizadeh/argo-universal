@@ -58,6 +58,7 @@ const pairedFit = narrowPairs ? headerButtonFits.narrow : headerButtonFits.slot;
 
 function headerButtonFit(paired: boolean): HeaderButtonFit {
   if (hasLiquidGlass) return headerButtonFits.glass;
+
   return paired ? pairedFit : headerButtonFits.slot;
 }
 
@@ -72,6 +73,7 @@ function headerButtonClass(size: string): string {
 export function HeaderButton(props: HeaderButtonProps): React.JSX.Element {
   const { icon, paired = false, dot, ...pressableProps } = props;
   const fit = headerButtonFit(paired);
+
   return (
     <Pressable
       hitSlop={fit.hitSlop}

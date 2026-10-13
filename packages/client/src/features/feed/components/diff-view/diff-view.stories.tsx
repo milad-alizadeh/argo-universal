@@ -28,8 +28,11 @@ const meta = {
   component: DiffView,
   args: { file: recordedFile('agent-1') },
 } satisfies Meta<typeof DiffView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 export const Overview: Story = {
   name: 'DiffView',
   render: () => (

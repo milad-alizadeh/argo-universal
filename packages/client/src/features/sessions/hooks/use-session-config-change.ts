@@ -10,6 +10,7 @@ import { type ClientError, useTRPC } from '#features/connection';
 
 type SetConfigOptionInput =
   inferRouterInputs<AppRouter>['session']['setConfigOption'];
+
 export type SetConfigOptionMutation = ReturnType<
   typeof useMutation<
     inferRouterOutputs<AppRouter>['session']['setConfigOption'],
@@ -38,6 +39,7 @@ const isRememberedChoice = (
   configId: string,
 ): boolean => {
   const changed = configOptions.find((option) => option.configId === configId);
+
   return changed !== undefined && isRememberedConfiguration(changed);
 };
 
@@ -50,8 +52,10 @@ function useConfigChanged(
   input: SetConfigOptionInput,
 ) => void {
   const queryClient = useQueryClient();
+
   return ({ configOptions }, { configId }) => {
     onChanged();
+
     if (agent && isRememberedChoice(configOptions, configId))
       rememberSessionConfiguration(queryClient, agent, configOptions);
   };
@@ -65,10 +69,13 @@ export function useSessionConfigChange(
 ): SessionConfigChange {
   const trpc = useTRPC();
   const onSuccess = useConfigChanged(agent, onChanged);
+
   const setConfigOption = useMutation(
     trpc.session.setConfigOption.mutationOptions({ onSuccess }),
   );
+
   const change = (configId: string, value: string | boolean): void =>
     setConfigOption.mutate(setConfigInput(sessionId, configId, value));
+
   return { setConfigOption, change };
 }

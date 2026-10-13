@@ -16,8 +16,10 @@ export function elicitationQuestions(
   request: PendingElicitation,
 ): ElicitationQuestion[] | undefined {
   const fields = Object.entries(request.requestedSchema.properties);
+
   if (!fields.length || !fields.every(([, field]) => questionProperty(field)))
     return;
+
   return fields.map(([name, field]) => ({
     name,
     title: propertyTitle(name, field),
@@ -33,6 +35,7 @@ const questionAttributes = new Set([
   'oneOf',
   'items',
 ]);
+
 function questionProperty(field: ElicitationPropertySchema): boolean {
   return (
     !!field.description &&
@@ -40,13 +43,17 @@ function questionProperty(field: ElicitationPropertySchema): boolean {
     questionChoicesField(field)
   );
 }
+
 function unconstrainedQuestion(field: ElicitationPropertySchema): boolean {
   return Object.keys(field).every((attribute) =>
     questionAttributes.has(attribute),
   );
 }
+
 function questionChoicesField(field: ElicitationPropertySchema): boolean {
   if (field.type === 'string') return field.oneOf !== undefined;
+
   if (field.type === 'array') return 'anyOf' in field.items;
+
   return false;
 }

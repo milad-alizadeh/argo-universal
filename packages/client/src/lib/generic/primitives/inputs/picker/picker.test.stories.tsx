@@ -10,11 +10,14 @@ const options = [
   { value: 'medium', label: 'Medium' },
   { value: 'high', label: 'High' },
 ] as const;
+
 type Effort = (typeof options)[number]['value'];
+
 const changed = fn<(value: Effort) => void>();
 
 function EffortPicker(): React.JSX.Element {
   const [value, setValue] = useState<Effort>();
+
   return (
     <Picker
       label="Effort"
@@ -36,7 +39,9 @@ const meta = {
     changed.mockClear();
   },
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const PointerSelection: Story = {

@@ -22,6 +22,7 @@ export function CardRow({
   store,
 }: CardRowProps): React.JSX.Element {
   const hover = useRowHover(store, index);
+
   return (
     <FieldRowHover value={hover}>
       <FieldRowCorners value={{ first: entry.first, last: entry.last }}>

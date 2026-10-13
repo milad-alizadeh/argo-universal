@@ -2,9 +2,13 @@ import type { ACPAgent } from '@repo/contracts';
 import { expect } from 'vitest';
 import type { InstallPorts } from '../src/agents';
 import { startEngineTestHost } from './engine';
+
 export { installationExecutable } from '@repo/mocks/registry/installation';
+
 import { createInstallationPorts } from '@repo/mocks/registry/installation';
+
 const fixturePackage = 'fixture-install';
+
 export const installEntry = (kind: 'binary' | 'npx' | 'uvx'): ACPAgent => ({
   id: fixturePackage,
   name: 'Fixture ACP',
@@ -30,7 +34,9 @@ export const installEntry = (kind: 'binary' | 'npx' | 'uvx'): ACPAgent => ({
           },
         },
 });
+
 export const installationPorts: InstallPorts = createInstallationPorts();
+
 export const startInstallEngine = async (
   entry = installEntry('npx'),
   ports = installationPorts,
@@ -39,15 +45,20 @@ export const startInstallEngine = async (
 > => {
   const host = await startEngineTestHost({
     installationPorts: ports,
-    fetchAgents: async () => ({ version: '1.0.0', agents: [entry] }),
+    fetchAgents: async () =>
+      JSON.stringify({ version: '1.0.0', agents: [entry] }),
   });
+
   await host.caller.agents.syncCatalog();
   await expect
     .poll(async () => (await host.caller.agents.catalog()).syncStatus)
     .toBe('idle');
+
   const agent = (await host.caller.agents.catalog()).agents.find(
     (row) => row.entry.id === entry.id,
   );
+
   if (!agent) throw new Error('Catalog did not contain installation fixture');
+
   return { ...host, agentId: agent.id };
 };

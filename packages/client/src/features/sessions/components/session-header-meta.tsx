@@ -32,7 +32,9 @@ function ElapsedTime({
   now,
 }: ElapsedTimeProps): React.JSX.Element | null {
   const clock = useClock(startedAt !== null, now);
+
   if (startedAt === null) return null;
+
   return (
     <Text role="secondary" className="text-muted-foreground">
       {formatElapsed(clock - startedAt)}
@@ -72,6 +74,7 @@ function ShownChecks({
   checks,
 }: Pick<SessionPullRequest, 'checks'>): React.JSX.Element | null {
   if (!checks) return null;
+
   return (
     <>
       <MetaGap />
@@ -90,6 +93,7 @@ function OtherPullRequests(
   props: ShownPullRequestProps & { shown: SessionPullRequest },
 ): React.JSX.Element | null {
   if (props.pullRequests.length <= 1) return null;
+
   return (
     <MorePullRequests
       pullRequests={props.pullRequests}
@@ -103,7 +107,9 @@ function PullRequestMeta(
   props: ShownPullRequestProps,
 ): React.JSX.Element | null {
   const { shown } = props;
+
   if (!shown) return null;
+
   return (
     <>
       <MetaGap />

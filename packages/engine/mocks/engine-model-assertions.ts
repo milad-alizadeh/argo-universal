@@ -8,6 +8,7 @@ import {
 import { expectListeningOptions } from './engine-model-listening';
 import { type EngineSnapshot } from './engine-model-logic';
 import * as model from './engine-model-state';
+
 export const expectModelState = (expected: EngineSnapshot): void => {
   const actual = model.engine.getSnapshot();
   expect(actual.value).toEqual(expected.value);
@@ -18,6 +19,7 @@ export const expectModelState = (expected: EngineSnapshot): void => {
   expect(actual.context.server).toBe(expected.context.server);
   expect(actual.context.failure).toBe(expected.context.failure);
 };
+
 // Final states close the database they opened, stop listening for signals, and exit with a code.
 export const expectExit = (
   snapshot: EngineSnapshot,
@@ -28,7 +30,28 @@ export const expectExit = (
   expect(model.databaseCloses).toBe(snapshot.context.database === null ? 0 : 1);
   expect(model.processSignals.live).toBe(false);
 };
-export const states: Record<string, (snapshot: EngineSnapshot) => void> = {
+
+interface HeartbeatMessage {
+  type: 'heartbeat';
+}
+
+type EngineStatePath =
+  | 'openingDatabase'
+  | 'recovering'
+  | 'live.listening'
+  | 'live.running'
+  | 'live.stopping.closingHttp'
+  | 'live.stopping.stoppingSessions'
+  | 'live.stopping.drainingWriter'
+  | 'live.stopping.closingAgents'
+  | 'live.stopping.retainingAgentCleanup'
+  | 'stopped'
+  | 'failed';
+
+export const states: Record<
+  EngineStatePath,
+  (snapshot: EngineSnapshot) => void
+> = {
   openingDatabase: (snapshot): void => {
     expectModelState(snapshot);
     expect(model.openDatabaseCalls).toEqual([
@@ -72,7 +95,7 @@ export const states: Record<string, (snapshot: EngineSnapshot) => void> = {
     expect(model.messages.slice(1)).toEqual(
       model.messages
         .slice(1)
-        .map((): { type: string } => ({ type: 'heartbeat' })),
+        .map((): HeartbeatMessage => ({ type: 'heartbeat' })),
     );
     expect(model.databaseCloses).toBe(0);
   },

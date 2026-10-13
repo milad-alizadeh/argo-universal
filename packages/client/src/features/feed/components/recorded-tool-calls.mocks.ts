@@ -5,7 +5,9 @@ import { toFeedView } from '../view/to-feed-view';
 import { argoMeta } from './tool-call-meta';
 
 export type RecordedFeedMock = (typeof recordedFeedMocks)[number];
+
 type RecordedRow = RecordedFeedMock['rows'][number];
+
 export type Exploration = Extract<FeedActivity, { type: 'exploration' }>;
 
 export function missingRecordedState(state: string): never {
@@ -17,6 +19,7 @@ export const required = <T>(value: T | undefined, state: string): T =>
 
 export function inCatalog<T>(value: T | undefined, need: string): T {
   if (value === undefined) throw new Error(`Recorded catalog needs ${need}`);
+
   return value;
 }
 

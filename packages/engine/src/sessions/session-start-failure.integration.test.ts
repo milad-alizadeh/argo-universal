@@ -10,6 +10,7 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
   'leaves no Session and no worktree when the Agent cannot start in the $type checkout',
   async (checkout): Promise<void> => {
     const { caller, database, git } = await startFailedSessionJourney();
+
     const readAgentAvailability = async (): Promise<
       | 'available'
       | 'not_installed'
@@ -20,6 +21,7 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
       (await caller.agents.list()).find(
         ({ agent }): boolean => agent === 'unavailable',
       )?.availability;
+
     expect(await readAgentAvailability()).toBe('available');
     await expect(
       caller.session.new({ ...newSession, agent: 'unavailable', checkout }),

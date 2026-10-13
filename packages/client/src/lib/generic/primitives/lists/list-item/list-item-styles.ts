@@ -36,6 +36,7 @@ function edgeClasses(
   place: RowPlace,
 ): string | undefined {
   if (navigation) return sidebarClasses(props);
+
   return place.endsSection === true
     ? undefined
     : separatorClasses(props, place);
@@ -112,6 +113,7 @@ function plainEmphasis(props: ListItemProps, navigation: boolean): string {
 // The last child's, outside a virtualised list, and the one above a hovered row.
 const hiddenSeparator = (place: RowPlace): string | undefined => {
   if (place.separatorHidden) return 'web:after:hidden';
+
   return place.endsSection === undefined ? 'web:last:after:hidden' : undefined;
 };
 

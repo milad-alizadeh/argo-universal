@@ -27,10 +27,14 @@ type WriterBatchInput = {
   blobsFolder?: string;
   jobs: WriterJob[];
 };
+
 type WriterLogParameters = { line: string };
+
 const writeEvent = 'writer.write';
+
 // Refusable jobs the Writer keeps queued by default; past the limit it refuses more, while other jobs still queue.
 const defaultRefusableJobLimit = 256;
+
 const storageFailingMessage = 'Storage is failing';
 
 export interface WriterInput {
@@ -106,6 +110,7 @@ const refuseOverBudget = [
 ] as const;
 
 export const writerMachine = setup({
+  // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as WriterInput,
     context: {} as WriterContext,
@@ -123,6 +128,7 @@ export const writerMachine = setup({
   actions: {
     announceAccepted: emit(({ event }): WriterJobsEvent => {
       assertEvent(event, writeEvent);
+
       return { type: 'writer.queued', jobs: [event.job] };
     }),
     announceWritten: emit(({ context }): WriterJobsEvent => ({
@@ -133,6 +139,7 @@ export const writerMachine = setup({
     enqueue: assign({
       pendingCommits: ({ context, event }): PendingWriterCommit[] => {
         assertEvent(event, writeEvent);
+
         return event.committed
           ? [
               ...context.pendingCommits,
@@ -142,6 +149,7 @@ export const writerMachine = setup({
       },
       queue: ({ context, event }): WriterContext['queue'] => {
         assertEvent(event, writeEvent);
+
         return [...context.queue, stampWriterJob(event.job, context.now())];
       },
     }),
@@ -180,6 +188,7 @@ export const writerMachine = setup({
     }),
     log: ({ context }, params: WriterLogParameters): void => {
       const line = `databaseWriter: ${params.line}`;
+
       if (context.log) context.log(line);
       else console.error(line);
     },
@@ -187,6 +196,7 @@ export const writerMachine = setup({
   guards: {
     isOverRefusableBudget: ({ context, event }): boolean => {
       assertEvent(event, writeEvent);
+
       return (
         event.job.refusable === true &&
         context.queue.filter((job): boolean => job.refusable === true).length >=

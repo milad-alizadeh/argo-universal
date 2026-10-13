@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn } from 'storybook/test';
 import TerminalRenderer from './terminal-renderer';
 import { readTerminalFrame } from './terminal.mocks';
+
 const meta = {
   title: 'Agents/AgentLoginTerminal',
   component: TerminalRenderer,
@@ -19,9 +20,13 @@ const meta = {
     onFailure: fn(),
   },
 } satisfies Meta<typeof TerminalRenderer>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 export const Desktop: Story = {};
+
 export const PhoneKeyboard: Story = {
   args: {
     compact: true,

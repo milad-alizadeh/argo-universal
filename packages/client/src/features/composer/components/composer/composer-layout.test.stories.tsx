@@ -9,22 +9,33 @@ import { workStatusCounts } from '../../../../../mocks/composer/work-status.test
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer } from './composer';
+
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+
 export default meta;
+
 export const ResponsiveLayoutPhone = responsiveLayout(layoutWidths.phone, 0);
+
 export const ResponsiveLayoutWide = responsiveLayout(layoutWidths.wide, 0);
+
 export const ResponsiveLayoutPhoneSecondAgent = responsiveLayout(
   layoutWidths.phone,
   1,
 );
+
 export const ResponsiveLayoutWideSecondAgent = responsiveLayout(
   layoutWidths.wide,
   1,
 );
+
 export const WorkSettledFirstAgent = workStatusCounts(0, false);
+
 export const WorkSettledSecondAgent = workStatusCounts(1, false);
+
 export const ShellsRunningFirstAgent = workStatusCounts(0, true);
+
 export const ShellsRunningSecondAgent = workStatusCounts(1, true);
+
 export const ResponsiveLayoutNarrowPhone: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />

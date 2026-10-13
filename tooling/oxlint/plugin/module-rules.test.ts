@@ -3,7 +3,9 @@ import { crossPackageImport } from './cross-package-import.ts';
 import { ruleTester } from './rule-tester.ts';
 
 const clientFile = '/repo/packages/client/src/screen.tsx';
+
 const crossPackage = [{ messageId: 'crossPackageImport' }];
+
 const apiValue = [{ messageId: 'apiTypeOnly' }];
 
 ruleTester.run('cross-package-import', crossPackageImport, {

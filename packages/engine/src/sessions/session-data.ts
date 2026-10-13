@@ -38,7 +38,9 @@ export type SessionInput = {
   runtimeDirectory: string;
   sessionId: string;
 } & (({ kind: 'new' } & SessionCreationInput) | { kind: 'existing' });
+
 export type NewSessionInput = Extract<SessionInput, { kind: 'new' }>;
+
 export interface SessionData {
   sessionId: string;
   projectId: string;
@@ -75,6 +77,7 @@ export async function createSessionCheckout(
     },
     signal,
   );
+
   return {
     sessionId: input.sessionId,
     projectId: input.projectId,
@@ -130,6 +133,7 @@ const ownedWorktreeProject = ({
 }: SessionDiscard): string | undefined => {
   if (input.kind === 'new')
     return input.checkout.type === 'worktree' ? input.projectPath : undefined;
+
   return isSessionBranch(data.checkout.branch, data.sessionId)
     ? readProjectPath(input.database, data.projectId)
     : undefined;
@@ -147,7 +151,9 @@ export async function discardSession(
       new SessionDeleteJob(discard.data.sessionId),
     );
   }
+
   const projectPath = ownedWorktreeProject(discard);
+
   if (projectPath)
     await discardCheckout(projectPath, discard.data.checkout, signal);
 }
@@ -165,6 +171,7 @@ const readLatestTurn = (
     .orderBy(desc(turn.startedAt))
     .limit(1)
     .get();
+
 const hasFeedRow = (
   database: Database,
   sessionId: string,
@@ -175,13 +182,16 @@ const hasFeedRow = (
     .from(feedRow)
     .where(and(eq(feedRow.sessionId, sessionId), eq(feedRow.id, id)))
     .get() !== undefined;
+
 const readUndisclosedInterruption = (
   database: Database,
   sessionId: string,
 ): string | null => {
   const latest = readLatestTurn(database, sessionId);
+
   if (TurnError.safeParse(latest?.error).data?.code !== 'interrupted')
     return null;
+
   return latest &&
     !hasFeedRow(database, sessionId, interruptionDisclosureId(latest.id))
     ? latest.id
@@ -197,18 +207,22 @@ export async function loadSession(
     .from(session)
     .where(eq(session.id, input.sessionId))
     .get();
+
   const pending = readQueuedSessionRows(writer).session(
     stored && SessionRecord.parse(decodeStoredSession(stored)),
     input.sessionId,
   );
+
   if (!pending) throw new Error(`No Session ${input.sessionId}`);
   const row = pending;
   const pendingFeed = readQueuedFeed(writer, input.sessionId);
+
   const position = input.database
     .select({ highest: max(feedRow.position) })
     .from(feedRow)
     .where(eq(feedRow.sessionId, input.sessionId))
     .get()?.highest;
+
   return {
     sessionId: row.id,
     projectId: row.projectId,

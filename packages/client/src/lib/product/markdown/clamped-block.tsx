@@ -13,6 +13,7 @@ export function ClampedBlock({
   children: ReactNode;
 }): React.JSX.Element {
   const block = useClampLeaf();
+
   return (
     <View ref={block} className="gap-2.5">
       {children}

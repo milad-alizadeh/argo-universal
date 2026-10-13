@@ -40,6 +40,7 @@ export function SessionRowListMock(
   props: SessionRowListMockProps,
 ): React.JSX.Element {
   const wide = useWide();
+
   return (
     <View testID="session-row-list" className={listClassName}>
       {props.sessions.map((session) => (

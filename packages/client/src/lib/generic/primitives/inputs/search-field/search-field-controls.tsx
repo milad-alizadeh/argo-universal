@@ -19,6 +19,7 @@ export interface ControlsProps {
 }
 
 type TriggerRef = RefObject<View | null>;
+
 type InputRef = RefObject<TextInput | null>;
 
 // Closing hands focus back to the search button, so the keyboard keeps its place.
@@ -27,6 +28,7 @@ export function SearchControls(props: ControlsProps): React.JSX.Element {
   const trigger = useRef<View>(null);
   const close = useCloseSearch(props, input, trigger);
   const open = useOpenSearch(props.setOpen, input);
+
   return (
     <>
       <SearchTrigger {...props} trigger={trigger} onOpen={open} />

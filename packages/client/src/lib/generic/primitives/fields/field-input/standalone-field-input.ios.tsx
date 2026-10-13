@@ -23,6 +23,7 @@ export function StandaloneFieldInput(
 
 function NativeRow(props: StandaloneFieldInputProps): ReactElement {
   const modifiers = useRowModifiers();
+
   return (
     <VStack modifiers={modifiers}>
       <FieldInput
@@ -34,10 +35,12 @@ function NativeRow(props: StandaloneFieldInputProps): ReactElement {
 }
 
 const rowRadius = 24;
+
 function useRowModifiers(): NonNullable<
   React.ComponentProps<typeof VStack>['modifiers']
 > {
   const { muted } = useNativeTheme().colors;
+
   return [
     padding({ horizontal: 16, vertical: 12 }),
     frame({ minHeight: 52, maxWidth: Infinity }),

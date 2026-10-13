@@ -8,6 +8,7 @@ interface AgentIconProps {
   agent?: AgentInfo;
   role?: IconRole;
 }
+
 export function AgentIcon({
   agent,
   role = 'control',

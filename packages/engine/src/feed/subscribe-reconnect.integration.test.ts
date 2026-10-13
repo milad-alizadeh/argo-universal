@@ -17,6 +17,7 @@ import {
   applyFeedChange,
   subscribe,
 } from '#mocks/feed-suite';
+
 it('reconnects across stored, queued and live revisions before retry commits', async (): Promise<void> => {
   await startFeedTestHost();
   database.$client

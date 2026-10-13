@@ -9,6 +9,7 @@ import {
 } from './feed-row';
 
 const message = storedMessage(0);
+
 const image = (blobId: string): ImageContent => ({
   type: 'image',
   mimeType: 'image/png',
@@ -38,6 +39,7 @@ describe('hydrateStoredFeedRow', (): void => {
   it('rejects a payload that carries an envelope field', (): void => {
     const row = toFeedRowWrite(message);
     const payload = row.payload;
+
     if (!payload || typeof payload !== 'object')
       throw new Error('Message payload is not an object');
     expect((): ReturnType<typeof hydrateStoredFeedRow> =>

@@ -11,11 +11,14 @@ const summaryOrder = [
   'web',
   'tool',
 ] as const;
+
 type Category = (typeof summaryOrder)[number];
+
 interface CountLabel {
   verb: string;
   noun: string;
 }
+
 const categoryLabels: Record<Category, CountLabel> = {
   command: { verb: 'Ran', noun: 'command' },
   read: { verb: 'Read', noun: 'file' },
@@ -46,6 +49,7 @@ function kindCount(
 
 function categoryCounts(toolCalls: ToolCallUpdate[]): Record<Category, number> {
   const actions = toolCalls.flatMap(explorationActions);
+
   return {
     command: toolCalls.filter(ranCommand).length,
     read: readFileCount(actions),
@@ -57,9 +61,11 @@ function categoryCounts(toolCalls: ToolCallUpdate[]): Record<Category, number> {
   };
 }
 
-function countedTitle(label: CountLabel, count: number): string {
-  if (!count) return '';
-  return `${label.verb} ${count} ${pluralNoun(label.noun, count)}`;
+// A category's part of the title, or none when it has no count.
+function countedTitles(label: CountLabel, count: number): string[] {
+  if (!count) return [];
+
+  return [`${label.verb} ${count} ${pluralNoun(label.noun, count)}`];
 }
 
 function pluralNoun(noun: string, count: number): string {
@@ -68,12 +74,12 @@ function pluralNoun(noun: string, count: number): string {
 
 export function groupTitle(toolCalls: ToolCallUpdate[]): string {
   const counts = categoryCounts(toolCalls);
+
   return (
     summaryOrder
-      .map((category) =>
-        countedTitle(categoryLabels[category], counts[category]),
+      .flatMap((category) =>
+        countedTitles(categoryLabels[category], counts[category]),
       )
-      .filter(Boolean)
       .join(', ') || 'Worked'
   );
 }

@@ -11,9 +11,11 @@ function readComputerName(): string {
       const name = execFileSync('scutil', ['--get', 'ComputerName'], {
         encoding: 'utf8',
       }).trim();
+
       if (name) return name;
     } catch {}
   }
+
   return hostname().replace(/\.local$/, '');
 }
 
@@ -21,6 +23,7 @@ let computerName: string | undefined;
 
 export const readSystemInfo = (systemMetadata: SystemDeps): SystemInfo => {
   computerName ??= readComputerName();
+
   return {
     version: systemMetadata.version,
     startedAt: systemMetadata.startedAt,

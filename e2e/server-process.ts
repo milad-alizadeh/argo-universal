@@ -2,6 +2,7 @@ import type { ChildProcess } from 'node:child_process';
 import { readServerAddress } from '@repo/engine/server-runtime';
 
 const serverStartMilliseconds = 30_000;
+
 const serverPollMilliseconds = 200;
 
 // Poll until the Server starts or its startup deadline expires.
@@ -10,13 +11,16 @@ export async function pollServer<T>(
   timeoutMessage: (seconds: number) => string,
 ): Promise<NonNullable<Awaited<T>> | (Awaited<T> & null)> {
   const deadline = Date.now() + serverStartMilliseconds;
+
   while (Date.now() < deadline) {
     const result = await check();
+
     if (result !== undefined) return result;
     await new Promise((resolve): NodeJS.Timeout =>
       setTimeout(resolve, serverPollMilliseconds),
     );
   }
+
   throw new Error(timeoutMessage(serverStartMilliseconds / 1000));
 }
 
@@ -40,8 +44,11 @@ export async function waitUntilReady({
     async (): Promise<boolean | undefined> => {
       if (hasExited(server))
         throw new Error(`${describeExit(server)}${withStderr(stderrTail())}`);
+
       if (portTaken()) return false;
+
       if (readServerAddress(home)?.port === port) return true;
+
       return;
     },
     (seconds): string =>

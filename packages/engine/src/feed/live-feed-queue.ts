@@ -15,6 +15,7 @@ export class LiveFeedQueue {
 
   public push(events: readonly LiveFeedEvent[]): void {
     for (const event of events) this.append(event);
+
     if (this.events.length > liveEventLimit) this.overflow();
   }
 
@@ -26,6 +27,7 @@ export class LiveFeedQueue {
   public takeOverflow(): boolean {
     const overflowed = this.overflowed;
     this.overflowed = false;
+
     return overflowed;
   }
 

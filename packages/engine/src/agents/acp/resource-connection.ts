@@ -25,8 +25,9 @@ type Ready = {
   connection: ClientConnection;
   initialization: InitializeResponse;
 };
+
 export class AcpResourceConnection {
-  private onResourceFailure: ((error: unknown) => void) | undefined;
+  private onResourceFailure: ((cause: unknown) => void) | undefined;
   private readonly writes = new AcpResponseWrites((error) =>
     this.onResourceFailure?.(error),
   );
@@ -56,6 +57,7 @@ export class AcpResourceConnection {
       rejectAuthStatus: () => this.status.invalidate(),
       ...createResourceResponders(this.routing, this.writes),
     });
+
     return {
       connection: this.connection,
       initialization: await this.negotiate(this.connection),
@@ -69,7 +71,7 @@ export class AcpResourceConnection {
     this.onResourceFailure?.(error);
   }
   public observeResourceFailures(
-    onResourceFailure: (error: unknown) => void,
+    onResourceFailure: (cause: unknown) => void,
   ): void {
     this.onResourceFailure = onResourceFailure;
     this.observeAcpConnectionClose(onResourceFailure);
@@ -79,7 +81,7 @@ export class AcpResourceConnection {
       .catch(onResourceFailure);
   }
   private observeAcpConnectionClose(
-    onResourceFailure: (error: unknown) => void,
+    onResourceFailure: (cause: unknown) => void,
   ): void {
     void this.startup
       .then(({ connection }) =>
@@ -97,12 +99,15 @@ export class AcpResourceConnection {
     const { connection, initialization } = await this.startup;
     await this.status.requireReady(initialization);
     beforeDispatch();
+
     const opened = await this.openSession(
       { connection, initialization },
       opening,
     );
+
     await this.status.requireReady(initialization);
     this.activateSubscription(initialization);
+
     return { agent: connection.agent, initialization, ...opened };
   }
   private activateSubscription(initialization: InitializeResponse): void {
@@ -130,6 +135,7 @@ export class AcpResourceConnection {
   }
   public shutdown(): Promise<void> {
     this.termination ??= this.terminate();
+
     return this.termination;
   }
   private async terminate(): Promise<void> {

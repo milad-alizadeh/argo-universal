@@ -17,17 +17,21 @@ interface AgentLogoProps {
 // An Agent's logo in the foreground colour; an Agent with none shows the Agent glyph, since an empty or non-SVG string would throw in SvgXml.
 export function AgentLogo(props: AgentLogoProps): React.JSX.Element {
   const logo = props.logo.trim();
+
   if (!logo)
     return <Icon name="agent" role={props.role} className="text-foreground" />;
+
   if (!logo.startsWith('<'))
     return (
       <RegistryIcon uri={logo} agentName={props.label} role={props.role} />
     );
+
   return <InlineLogo {...props} logo={logo} />;
 }
 
 function InlineLogo(props: AgentLogoProps): React.JSX.Element {
   const { color } = useResolveClassNames('text-foreground');
+
   return (
     <View testID={props.testID} className="h-full w-full">
       <SvgXml xml={props.logo} width="100%" height="100%" color={color} />

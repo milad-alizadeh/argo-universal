@@ -13,6 +13,7 @@ import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 
 const dimmedOpacity = 0.45;
+
 const blinkMilliseconds = 650;
 
 export interface BlinkingDotProps {
@@ -31,6 +32,7 @@ export function BlinkingDot({
   testID,
 }: BlinkingDotProps): React.JSX.Element {
   const style = useBlinkingStyle(colorClassName, blinking);
+
   return (
     <Animated.View
       testID={testID}
@@ -46,10 +48,12 @@ function useBlinkingStyle(
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   const { backgroundColor } = useResolveClassNames(colorClassName);
   const opacity = useBlinkingOpacity(blinking);
+
   const boxShadow = useMemo(
     () => glowShadow(backgroundColor, blinking),
     [backgroundColor, blinking],
   );
+
   return useAnimatedStyle(
     () => ({ opacity: opacity.get(), boxShadow }),
     [opacity, boxShadow],
@@ -60,8 +64,10 @@ function useBlinkingOpacity(blinking: boolean): SharedValue<number> {
   const opacity = useSharedValue(1);
   useEffect(() => {
     opacity.set(blinking ? blink() : 1);
+
     return (): void => cancelAnimation(opacity);
   }, [blinking, opacity]);
+
   return opacity;
 }
 
@@ -78,5 +84,6 @@ function glowShadow(
   blinking: boolean,
 ): BoxShadowValue[] {
   if (!blinking) return [];
+
   return [{ offsetX: 0, offsetY: 0, blurRadius: 4, spreadDistance: 0, color }];
 }

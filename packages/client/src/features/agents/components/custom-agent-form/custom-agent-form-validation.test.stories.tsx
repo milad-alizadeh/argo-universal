@@ -17,7 +17,9 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof CustomAgentForm>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // A check that has not answered yet: the Server is still running the program.
@@ -51,10 +53,15 @@ export const AnnouncesAnErrorWithItsField: Story = {
 
 // The page's back action, as the router offers it: held while the guard is active, else it just goes.
 type Blocked = Parameters<LeaveGuard>[1];
-const leaving: { blocked: Blocked | null } = { blocked: null };
+
+type HeldBack = { blocked: Blocked | null };
+
+const leaving: HeldBack = { blocked: null };
+
 const guarded: LeaveGuard = (active, onBlocked) => {
   leaving.blocked = active ? onBlocked : null;
 };
+
 const goBack = fn();
 
 export const AsksBeforeLeavingATouchedForm: Story = {

@@ -14,9 +14,12 @@ import {
   readOnlyAttribute,
   agentModelLabel,
 } from './composer-test-contract.test.mocks';
+
 export const inspectorOpenColumn = 688;
+
 export function multiline(width: number): Story {
   const prompt = fn();
+
   return {
     render: () => <SendingComposer onSend={prompt} />,
     play: async ({ canvas, userEvent }) => {
@@ -35,6 +38,7 @@ export function multiline(width: number): Story {
     },
   };
 }
+
 export function sending(width: number): Story {
   return {
     args: { draft: { text: spacingPrompt, attachments: [] }, sending: true },
@@ -62,6 +66,7 @@ export function sending(width: number): Story {
     },
   };
 }
+
 export function disabled(width: number): Story {
   return {
     args: {

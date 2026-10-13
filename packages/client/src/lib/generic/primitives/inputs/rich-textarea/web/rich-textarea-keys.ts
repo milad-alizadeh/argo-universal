@@ -41,10 +41,13 @@ function applyMarkShortcut(
   const shortcut = markShortcuts.find(({ key, modifiers }) =>
     isExactShortcutMatch(event, key, modifiers),
   );
+
   if (!shortcut) return false;
   event.preventDefault();
+
   if (shortcut.format)
     editor.dispatchCommand(FORMAT_TEXT_COMMAND, shortcut.format);
+
   return true;
 }
 
@@ -64,6 +67,7 @@ export function registerBlockShortcuts(editor: LexicalEditor): () => void {
       if (!isExactShortcutMatch(event, 'c', codeBlockModifiers)) return false;
       event.preventDefault();
       editor.update($wrapInCodeBlock);
+
       return true;
     },
     COMMAND_PRIORITY_HIGH,
@@ -78,6 +82,7 @@ function plainReturn(event: KeyboardEvent | null): event is KeyboardEvent {
 // Return sends from a paragraph or quote; Lexical's list and code nodes carry out the other actions.
 function $sendsOnReturn(event: KeyboardEvent | null): event is KeyboardEvent {
   const selection = $getSelection();
+
   return (
     plainReturn(event) &&
     $isRangeSelection(selection) &&
@@ -95,6 +100,7 @@ export function registerReturnToSubmit(
       if (!$sendsOnReturn(event)) return false;
       event.preventDefault();
       submit();
+
       return true;
     },
     COMMAND_PRIORITY_HIGH,

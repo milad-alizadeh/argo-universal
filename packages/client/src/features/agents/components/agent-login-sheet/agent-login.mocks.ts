@@ -1,9 +1,11 @@
 import type { AgentLoginSnapshot } from '@repo/contracts';
+
 const browserRequest = {
   id: 'request-42',
   url: 'https://example.com/sign-in',
   message: 'Sign in and enter code ABCD-EFGH',
 };
+
 export const loginSnapshot = (
   status: AgentLoginSnapshot['status'],
 ): AgentLoginSnapshot => ({

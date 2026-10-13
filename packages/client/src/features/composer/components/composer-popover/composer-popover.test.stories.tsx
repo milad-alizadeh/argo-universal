@@ -19,15 +19,18 @@ const meta = {
     </View>
   ),
 } satisfies Meta<typeof ComposerPopover>;
+
 export default meta;
 
 function transitions(width: number): StoryObj<typeof meta> {
   let closingFinished = false;
   let callbackDuringAnimation = false;
+
   const afterClose = fn(() => ({
     closingFinished,
     mounted: !!document.querySelector('[role="dialog"]'),
   }));
+
   return {
     args: {
       label: 'Session settings',
@@ -88,4 +91,5 @@ function transitions(width: number): StoryObj<typeof meta> {
 }
 
 export const SheetTransitions = transitions(layoutWidths.phone);
+
 export const PopoverTransitions = transitions(layoutWidths.wide);

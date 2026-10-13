@@ -11,6 +11,7 @@ import { useSheetHeight } from '@/navigation/use-sheet-height';
 
 export default function FormSheetIndex(): ReactElement {
   usePickerPageHeight();
+
   return (
     <>
       <FormSheetRoot
@@ -34,10 +35,12 @@ function usePickerPageHeight(): void {
 function SheetBackButton(): ReactElement | null {
   const title = useFormSheetState()?.props.headerTitle;
   const commands = useFormSheetCommands();
+
   const close = (): void => {
     commands?.closed();
     formSheetRoutes?.dismiss();
   };
+
   return title ? (
     <Stack.Toolbar placement="left">
       <Stack.Toolbar.Button icon="chevron.backward" onPress={close}>

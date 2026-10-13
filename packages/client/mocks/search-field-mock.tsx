@@ -12,12 +12,15 @@ export function SearchFieldExample({
   initial?: string;
 }): React.JSX.Element {
   const [value, setValue] = useState(initial);
+
   return <SearchRow value={value} onChangeText={setValue} />;
 }
+
 type SearchRowProps = Pick<
   React.ComponentProps<typeof SearchField>,
   'value' | 'onChangeText'
 >;
+
 function SearchRow(props: SearchRowProps): React.JSX.Element {
   return (
     <View className="w-full flex-row">
@@ -38,6 +41,7 @@ function AgentsTitle(): React.JSX.Element {
     </Text>
   );
 }
+
 function AddAgent(): React.JSX.Element {
   return (
     <IconButton

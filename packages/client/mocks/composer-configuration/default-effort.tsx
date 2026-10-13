@@ -21,10 +21,13 @@ import {
   defaultEffortCases,
   type DefaultEffortCase,
 } from './default-effort-cases';
+
 export function defaultEffort(width: number, agentIndex: number): Story {
   const recorded = defaultEffortCases[agentIndex];
+
   if (!recorded)
     throw new Error('Recorded catalog needs two Agents with effort.');
+
   return {
     args: { configuration: recorded.configuration },
     render: () => (
@@ -33,6 +36,7 @@ export function defaultEffort(width: number, agentIndex: number): Story {
     play: (context) => testDefaultEffort(context, { width, recorded }),
   };
 }
+
 async function testDefaultEffort(
   context: PlayContext,
   scenario: DefaultEffortScenario,
@@ -40,17 +44,21 @@ async function testDefaultEffort(
   const root = createRoot(
     context.canvas.getByTestId('controlled-configuration'),
   );
+
   const controlled = controlledConfiguration(root);
+
   try {
     await runDefaultEffort(context, scenario, controlled);
   } finally {
     root.unmount();
   }
 }
+
 interface ControlledConfiguration {
   render: (configuration: Configuration) => void;
   onConfigChange: Configuration['onConfigChange'];
 }
+
 async function runDefaultEffort(
   context: PlayContext,
   scenario: DefaultEffortScenario,
@@ -66,6 +74,7 @@ async function runDefaultEffort(
   controlled.render(committedDefaultEffort(scenario.recorded));
   await assertCommittedDefaultEffort(controls, scenario);
 }
+
 function renderControlledConfiguration(
   root: ReturnType<typeof createRoot>,
   configuration: Configuration,
@@ -81,6 +90,7 @@ function renderControlledConfiguration(
     </SafeAreaProvider>,
   );
 }
+
 async function openDefaultEffort(
   { canvas, userEvent }: PlayContext,
   width: number,
@@ -88,12 +98,16 @@ async function openDefaultEffort(
   await settleViewport(width);
   const trigger = await canvas.findByRole('button', { name: agentModelLabel });
   await userEvent.click(trigger);
+
   const slider = await within(document.body).findByRole('slider', {
     name: 'Effort',
   });
+
   await waitFor(() => expect(slider).toBeVisible());
+
   return { trigger, slider };
 }
+
 function committedDefaultEffort({
   configuration,
   configId,
@@ -106,6 +120,7 @@ function committedDefaultEffort({
     ),
   };
 }
+
 function committedOption(
   option: SessionConfigOption,
   recorded: Pick<DefaultEffortCase, 'configId' | 'selected'>,
@@ -119,7 +134,9 @@ function controlledConfiguration(
   root: ReturnType<typeof createRoot>,
 ): ControlledConfiguration {
   const onConfigChange = fn();
+
   const render = (configuration: Configuration): void =>
     renderControlledConfiguration(root, configuration, onConfigChange);
+
   return { render, onConfigChange };
 }

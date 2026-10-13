@@ -90,6 +90,7 @@ function scaledGlow(
   { layout, strength }: { layout: GlowLayout; strength: GlowStrength },
 ): Glow {
   const scale = layoutScale[layout];
+
   return {
     colour: source.colour,
     left: Math.round(source.left * scale),

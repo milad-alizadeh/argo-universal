@@ -13,15 +13,19 @@ import {
 } from './select-styles';
 
 const Select = SelectPrimitive.Root;
+
 const SelectGroup = SelectPrimitive.Group;
+
 type TriggerProps = React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   children?: React.ReactNode;
   size?: 'default' | 'sm';
   variant?: SelectVariant;
 };
+
 type ValueProps = React.ComponentProps<typeof SelectPrimitive.Value> & {
   className?: string;
 };
+
 type ItemProps = Omit<
   React.ComponentProps<typeof SelectPrimitive.Item>,
   'children'
@@ -29,6 +33,7 @@ type ItemProps = Omit<
 
 function SelectValue({ className, ...props }: ValueProps): React.JSX.Element {
   const { value } = SelectPrimitive.useRootContext();
+
   return (
     <SelectPrimitive.Value
       className={cn(
@@ -47,6 +52,7 @@ function chevronName(
   wide: boolean,
 ): IconName {
   if (variant !== 'plain') return 'chevron-down';
+
   return wide ? 'chevron-up-down' : 'chevron-right';
 }
 
@@ -65,12 +71,14 @@ function TriggerChevron({
 
 function SelectTrigger(triggerProps: TriggerProps): React.JSX.Element {
   const { className, children, size, variant, ...props } = triggerProps;
+
   const triggerStyle = selectTriggerClassName({
     className,
     size,
     variant,
     disabled: props.disabled,
   });
+
   return (
     <SelectPrimitive.Trigger className={triggerStyle} {...props}>
       {children}
@@ -112,6 +120,7 @@ function SelectItem({ className, ...props }: ItemProps): React.JSX.Element {
     </SelectPrimitive.Item>
   );
 }
+
 export {
   Select,
   SelectContent,

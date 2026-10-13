@@ -13,6 +13,7 @@ const connectSecondApp = async (page: Page, httpUrl: string): Promise<void> => {
     httpUrl.replace(/^http/, 'ws'),
   );
 };
+
 const releaseSuccessfulRetry = async (path: string): Promise<void> => {
   await writeFile(
     `${path}.next`,
@@ -20,6 +21,7 @@ const releaseSuccessfulRetry = async (path: string): Promise<void> => {
   );
   await rename(`${path}.next`, path);
 };
+
 const confirmInstall = async (page: Page): Promise<void> => {
   await page.getByRole('button', { name: 'Install', exact: true }).click();
   await page
@@ -27,6 +29,7 @@ const confirmInstall = async (page: Page): Promise<void> => {
     .getByRole('button', { name: 'Install', exact: true })
     .click();
 };
+
 async function retryInApp(page: Page, httpUrl: string): Promise<void> {
   await connectSecondApp(page, httpUrl);
   await page.goto('/');
@@ -35,6 +38,7 @@ async function retryInApp(page: Page, httpUrl: string): Promise<void> {
   await confirmInstall(page);
   await expect(toast(page, 'Example Agent installed')).toBeVisible();
 }
+
 // The installed Agent leaves the registry offer: no Install action and no registry source.
 const showsInstalled = async (page: Page): Promise<void> => {
   await expect(
@@ -44,11 +48,13 @@ const showsInstalled = async (page: Page): Promise<void> => {
     page.getByRole('group', { name: 'Source, ACP Registry' }),
   ).toHaveCount(0);
 };
+
 When(
   'another App retries and both Apps show the installed release',
   async ({ page, app }): Promise<void> => {
     await releaseSuccessfulRetry(app.installationPath);
     const second = await page.context().newPage();
+
     try {
       await retryInApp(second, app.httpUrl);
       await showsInstalled(second);

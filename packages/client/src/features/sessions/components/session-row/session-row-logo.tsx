@@ -32,8 +32,10 @@ function useLogoRotation(
   const logoRotation = useSharedValue(0);
   useEffect(() => {
     logoRotation.set(status === 'running' ? spinForever() : 0);
+
     return (): void => cancelAnimation(logoRotation);
   }, [status, logoRotation]);
+
   return useAnimatedStyle(
     () => ({ transform: [{ rotate: `${logoRotation.get()}deg` }] }),
     [logoRotation],
@@ -47,6 +49,7 @@ interface SessionLogoProps {
 
 export function SessionLogo(props: SessionLogoProps): React.JSX.Element {
   const logoStyle = useLogoRotation(props.status);
+
   return (
     <Animated.View style={[useIconBox('mark'), logoStyle]}>
       <AgentLogo

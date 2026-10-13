@@ -22,7 +22,9 @@ const meta = {
     </View>
   ),
 } satisfies Meta<SectionRootViewProps>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const WideShowsTheFirstPage: Story = {

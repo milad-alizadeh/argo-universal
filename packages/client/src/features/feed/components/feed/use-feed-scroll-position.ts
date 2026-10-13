@@ -17,8 +17,10 @@ function useOpensAtEnd(list: ListRef, lastIndex: number): number {
     const frame = requestAnimationFrame(
       () => void list.current?.scrollToEnd({ animated: false }),
     );
+
     return (): void => cancelAnimationFrame(frame);
   }, [list]);
+
   return initialIndex;
 }
 
@@ -34,6 +36,7 @@ function useRequestsOlderNearTop(
   const requestOlderIfNearTop = useEffectEvent(() => {
     if (list.current?.getState().isNearStart) onStartReached();
   });
+
   // Null before the first ask; the Feed always has an oldest row.
   const askedAtOldestKey = useRef<string | null | undefined>(null);
   useEffect(() => {
@@ -57,10 +60,13 @@ function useNewestKeyWhenLeftEnd(
   newestKey: string,
 ): string | null {
   const [leftEndAt, setLeftEndAt] = useState<string | null>(null);
+
   const onAtEndChange = useEffectEvent((atEnd: boolean) =>
     setLeftEndAt(atEnd ? null : newestKey),
   );
+
   useEffect(() => listenAtEnd(list, onAtEndChange), [list]);
+
   return leftEndAt;
 }
 
@@ -81,5 +87,6 @@ export function useFeedScrollPosition(
   const initialIndex = useOpensAtEnd(list, entries.length - 1);
   useRequestsOlderNearTop(list, keyOf(entries[0]), onStartReached);
   const newestKeyWhenLeftEnd = useNewestKeyWhenLeftEnd(list, newestKey);
+
   return { initialIndex, newestKeyWhenLeftEnd };
 }

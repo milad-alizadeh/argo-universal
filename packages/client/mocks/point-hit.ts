@@ -18,5 +18,6 @@ export function canPointAt(
   point: Point = centreOf(element.getBoundingClientRect()),
 ): boolean {
   const hit = topmostAt(point);
+
   return hit !== null && element.contains(hit);
 }

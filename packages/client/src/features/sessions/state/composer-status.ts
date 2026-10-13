@@ -7,6 +7,7 @@ const planEntries = (plan: Plan | null): PlanEntry[] | undefined =>
 const availableContext = (
   usage: ContextUsage | undefined,
 ): ContextUsage | undefined => (usage && usage.size > 0 ? usage : undefined);
+
 const measuredContext = (
   usage: ContextUsage | undefined,
 ): ContextUsage | undefined =>
@@ -20,5 +21,6 @@ export function composerStatus(
   const entries = planEntries(plan);
   const context = measuredContext(usage);
   const shown = entries !== undefined || context !== undefined;
+
   return shown ? { plan: entries, context } : undefined;
 }

@@ -15,6 +15,7 @@ export function recoverAfterRestart(database: Database): void {
     runningToolCallStatuses.map((status): SQL<unknown> => sql`${status}`),
     sql`, `,
   )}) else 0 end`;
+
   database.transaction((transaction): void => {
     transaction
       .update(turn)
@@ -48,6 +49,7 @@ export function recoverAfterRestart(database: Database): void {
 
     const revisions = new Map<string, number>();
     const rejections = createRejectionCounter('recovery');
+
     for (const { row, maxRevision } of rows) {
       try {
         hydrateStoredFeedRow(row.sessionId, row);
@@ -77,6 +79,7 @@ export function recoverAfterRestart(database: Database): void {
         )
         .run();
     }
+
     for (const [sessionId, maxRevision] of revisions)
       transaction
         .update(session)

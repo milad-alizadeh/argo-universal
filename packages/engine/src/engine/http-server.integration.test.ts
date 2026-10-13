@@ -19,9 +19,11 @@ it('answers feed.page from the database', async (): Promise<void> => {
   const input = encodeURIComponent(
     JSON.stringify({ sessionId: 'session-1', direction: 'tail' }),
   );
+
   const response = await fetch(
     `http://127.0.0.1:${port}/trpc/feed.page?input=${input}`,
   );
+
   expect(await response.json()).toMatchObject({
     result: { data: { epoch: 0, rows: [], startCursor: null } },
   });

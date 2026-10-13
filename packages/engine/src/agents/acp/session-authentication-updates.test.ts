@@ -33,12 +33,14 @@ const invalidationReports = [
     } as const,
   },
 ];
+
 it.each(invalidationReports)(
   'fences an active Session when $name billing replaces its verified subscription',
   async ({ step }) => {
     const prompts: object[] = [];
     const failed = Promise.withResolvers<void>();
     const failures: unknown[] = [];
+
     const peer = createScriptedAgentProcess({
       ...loginScenario(),
       responses: {
@@ -46,7 +48,9 @@ it.each(invalidationReports)(
         'session/prompt': [{ requests: prompts }],
       },
     });
+
     const resources = createAcpResources(peer);
+
     const lease = await resources.open(
       createResourceOpening({
         ...createResourceDestination(),
@@ -56,6 +60,7 @@ it.each(invalidationReports)(
         },
       }),
     );
+
     const child = requireScriptedProcessAt(peer.processes);
     await child.play([step], lease.sessionId);
     await failed.promise;

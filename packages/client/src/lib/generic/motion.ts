@@ -19,13 +19,19 @@ export const easingCurve = {
 
 export type CubicBezier = (typeof easingCurve)[keyof typeof easingCurve];
 
+interface CssTransition {
+  duration: number;
+  easing: string;
+}
+
 // A motion length and curve as the Web Animations API and CSS take them.
 export function cssTransition(
   duration: number,
   { x1, y1, x2, y2 }: CubicBezier,
-): { duration: number; easing: string } {
+): CssTransition {
   return { duration, easing: `cubic-bezier(${x1}, ${y1}, ${x2}, ${y2})` };
 }
 
 export const fullTurnDegrees = 360;
+
 export const quarterTurnDegrees = 90;

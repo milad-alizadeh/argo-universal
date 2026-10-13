@@ -30,6 +30,7 @@ export function ComposerToolbar(layout: ToolbarLayout): React.JSX.Element {
     </View>
   );
 }
+
 function ComposerLeftControls(layout: LeftControlsLayout): React.JSX.Element {
   return (
     <View
@@ -42,6 +43,7 @@ function ComposerLeftControls(layout: LeftControlsLayout): React.JSX.Element {
     </View>
   );
 }
+
 function ComposerAgentControl({
   props,
   configurationInactive,
@@ -53,16 +55,19 @@ function ComposerAgentControl({
     />
   ) : null;
 }
+
 function ComposerPhoneStatus({
   props,
   wide,
   inactive,
 }: PhoneStatusLayout): React.JSX.Element | null {
   if (wide) return null;
+
   return props.status ? (
     <ComposerStatusControls status={props.status} disabled={inactive} />
   ) : null;
 }
+
 function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
     <View pointerEvents="box-none" className="flex-row items-center gap-2.5">
@@ -71,14 +76,17 @@ function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
     </View>
   );
 }
+
 function ComposerConfigurationActions(
   layout: ConfigurationActionsLayout,
 ): React.JSX.Element | null {
   if (!layout.props.configuration) return null;
+
   const controls = {
     configuration: layout.props.configuration,
     disabled: layout.inactive,
   };
+
   return (
     <>
       <ComposerOptions {...controls} />
@@ -86,9 +94,11 @@ function ComposerConfigurationActions(
     </>
   );
 }
+
 function ComposerSendButton(layout: SendLayout): React.JSX.Element {
   return <IconButton {...sendButtonProps(layout)} />;
 }
+
 function sendButtonProps(
   layout: SendLayout,
 ): React.ComponentProps<typeof IconButton> {
@@ -103,10 +113,12 @@ function sendButtonProps(
     ),
   };
 }
+
 function sendButtonAction(
   layout: SendLayout,
 ): React.ComponentProps<typeof IconButton> {
   if (layout.sendState === 'stop') return stopButtonAction(layout);
+
   return {
     accessibilityLabel: 'Send',
     icon: 'arrow-up',

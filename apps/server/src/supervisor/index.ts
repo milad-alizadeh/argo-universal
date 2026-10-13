@@ -6,6 +6,7 @@ import { supervisorMachine } from './machine';
 
 export function startSupervisor(options: { watch: boolean }): void {
   const home = resolveRuntimeDirectory();
+
   const log = (line: string): void =>
     writeLog({ home, label: 'supervisor', line });
 
@@ -26,6 +27,7 @@ export function startSupervisor(options: { watch: boolean }): void {
         typeof snapshot.value === 'string'
           ? snapshot.value
           : JSON.stringify(snapshot.value);
+
       if (state === lastState) return;
       lastState = state;
       log(state);
@@ -45,6 +47,7 @@ export function startSupervisor(options: { watch: boolean }): void {
     log(`received ${signal}`);
     supervisor.send({ type: 'server.stop' });
   };
+
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
 

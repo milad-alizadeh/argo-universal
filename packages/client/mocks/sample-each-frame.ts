@@ -16,10 +16,13 @@ function collectFrames(
   resolve: (samples: number[]) => void,
 ): void {
   const samples: number[] = [];
+
   const step = (): void => {
     samples.push(measure());
+
     if (samples.length < frames) requestAnimationFrame(step);
     else resolve(samples);
   };
+
   requestAnimationFrame(step);
 }

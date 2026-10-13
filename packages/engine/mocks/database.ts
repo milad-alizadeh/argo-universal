@@ -1,17 +1,24 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { StatementSync } from 'node:sqlite';
 import { type Database, openDatabase } from '@repo/db';
 import { agents, project, session, turn } from '@repo/db/schema';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { notInArray } from 'drizzle-orm';
 import { onTestFinished, vi } from 'vitest';
 
+interface TestDatabase {
+  database: Database;
+  directory: string;
+  remove: () => void;
+}
+
 // A database in a new temp directory holding `project-1` and its Session `session-1`; `remove` closes and deletes it.
 export function openTestDatabase(
   sessionValues: Partial<typeof session.$inferInsert> = {},
   projectPath = '/project',
-): { database: Database; directory: string; remove: () => void } {
+): TestDatabase {
   const directory = mkdtempSync(join(tmpdir(), 'argo-server-'));
   const database = openDatabase(join(directory, 'argo.db'));
   database
@@ -19,6 +26,7 @@ export function openTestDatabase(
     .values({ id: 'project-1', path: projectPath, name: 'project' })
     .run();
   insertSession(database, sessionValues);
+
   return {
     database,
     directory,
@@ -65,50 +73,74 @@ export function insertEndedTurn(
     .run();
 }
 
-// Counts executed reads at the real SQLite query port without replacing their results.
-export function countDatabaseReads(database: Database): {
+interface ReadMetrics {
+  queries: number;
+  rows: number;
+  largestRead: number;
+  sessionReads: number;
+}
+
+interface CountedDatabase {
   database: Database;
-  metrics: {
-    queries: number;
-    rows: number;
-    largestRead: number;
-    sessionReads: number;
-  };
-} {
+  metrics: ReadMetrics;
+}
+
+// A read whose main table is `session`; joins and other tables do not count.
+const sessionRead = / from "session"(?: |$)/;
+
+// Counts executed reads at the real SQLite query port without replacing their results.
+export function countDatabaseReads(database: Database): CountedDatabase {
   const metrics = { queries: 0, rows: 0, largestRead: 0, sessionReads: 0 };
-  const chain = new Set(['select', 'from', 'where', 'orderBy', 'limit']);
-  const counted = <Value extends object>(
-    value: Value,
-    fromSession = false,
-  ): Value =>
-    new Proxy(value, {
-      get(target, property, receiver): ReturnType<typeof Reflect.get> {
-        const member = Reflect.get(target, property, receiver);
-        if (typeof member !== 'function') return member;
-        return (...arguments_: unknown[]): ReturnType<typeof Reflect.apply> => {
-          const result = Reflect.apply(member, target, arguments_);
-          if (property === 'all' || property === 'get') {
-            metrics.queries += 1;
-            if (fromSession) metrics.sessionReads += 1;
-            const rows = Array.isArray(result)
-              ? result.length
-              : Number(result !== undefined);
-            metrics.rows += rows;
-            metrics.largestRead = Math.max(metrics.largestRead, rows);
-          }
-          return chain.has(String(property))
-            ? counted(
-                result,
-                property === 'from' ? arguments_[0] === session : fromSession,
-              )
-            : result;
-        };
-      },
-    });
-  const select = counted(database).select.bind(database);
-  const observed = vi.spyOn(database, 'select').mockImplementation(select);
+  const client = database.$client;
+  const prepare = client.prepare.bind(client);
+
+  const observed = vi
+    .spyOn(client, 'prepare')
+    .mockImplementation((sql): StatementSync =>
+      sql.startsWith('select ')
+        ? countStatementReads(prepare(sql), metrics, sessionRead.test(sql))
+        : prepare(sql),
+    );
+
   onTestFinished((): void => observed.mockRestore());
+
   return { database, metrics };
+}
+
+function countStatementReads(
+  statement: StatementSync,
+  metrics: ReadMetrics,
+  fromSession: boolean,
+): StatementSync {
+  const all = statement.all.bind(statement);
+  const get = statement.get.bind(statement);
+
+  vi.spyOn(statement, 'all').mockImplementation((...parameters) => {
+    const rows = all(...parameters);
+    recordRead(metrics, rows.length, fromSession);
+
+    return rows;
+  });
+  vi.spyOn(statement, 'get').mockImplementation((...parameters) => {
+    const row = get(...parameters);
+    recordRead(metrics, Number(row !== undefined), fromSession);
+
+    return row;
+  });
+
+  return statement;
+}
+
+function recordRead(
+  metrics: ReadMetrics,
+  rows: number,
+  fromSession: boolean,
+): void {
+  metrics.queries += 1;
+
+  if (fromSession) metrics.sessionReads += 1;
+  metrics.rows += rows;
+  metrics.largestRead = Math.max(metrics.largestRead, rows);
 }
 
 // Agent rows other than the required Agent identities every database starts with.

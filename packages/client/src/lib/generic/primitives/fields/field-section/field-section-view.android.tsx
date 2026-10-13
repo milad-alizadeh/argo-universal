@@ -1,26 +1,26 @@
 import { Column, Text } from '@expo/ui/jetpack-compose';
-import {
-  clip,
-  fillMaxWidth,
-  padding,
-  Shapes,
-} from '@expo/ui/jetpack-compose/modifiers';
+import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useResolveClassNames } from 'uniwind';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
+import { roundedClip } from '../../native/compose-corners';
 import { useComposeTextStyle } from '../../native/native-typography';
 import { useNavigationFields } from '../field-layout';
 import type { FieldSectionProps } from '../field-props';
 import { FieldSection as WebFieldSection } from './field-section-view.tsx';
 
 const sectionRadius = 28;
+
 const gutter = 16;
+
 const captionPadding = 4;
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {
   const rows = useRowsLayout(props);
+
   if (useWide()) return <WebFieldSection {...props} />;
+
   return (
     <Column verticalArrangement={{ spacedBy: 8 }} modifiers={[fillMaxWidth()]}>
       <SectionCaption text={props.title} heading />
@@ -44,19 +44,22 @@ type RowsLayout = Pick<
 function useRowsLayout(props: FieldSectionProps): RowsLayout {
   const navigation = useNavigationFields();
   const { gap } = useResolveClassNames('gap-4');
+
   if (props.textFields)
     return {
       verticalArrangement: { spacedBy: typeof gap === 'number' ? gap : 0 },
       modifiers: [fillMaxWidth()],
     };
+
   return groupedLayout(navigation);
 }
 
 function groupedLayout(navigation: boolean): RowsLayout {
   if (navigation) return { modifiers: [fillMaxWidth()] };
+
   return {
     verticalArrangement: { spacedBy: 1 },
-    modifiers: [fillMaxWidth(), clip(Shapes.RoundedCorner(sectionRadius))],
+    modifiers: [fillMaxWidth(), roundedClip(sectionRadius)],
   };
 }
 
@@ -74,6 +77,7 @@ function CaptionText(
   props: CaptionProps & { text: string },
 ): React.JSX.Element {
   const captionStyle = useCaptionStyle(props);
+
   return (
     <Text
       {...captionStyle}
@@ -88,6 +92,7 @@ function useCaptionStyle(
   props: Pick<CaptionProps, 'heading' | 'tone'>,
 ): Pick<React.ComponentProps<typeof Text>, 'color' | 'style'> {
   const style = useComposeTextStyle(props.heading ? 'heading' : 'secondary');
+
   return { color: useCaptionColor(props.tone), style };
 }
 
@@ -96,5 +101,6 @@ function useCaptionColor(
   tone: FieldSectionProps['footerTone'],
 ): string | undefined {
   const { mutedForeground, destructive } = useNativeTheme().colors;
+
   return tone === 'destructive' ? destructive : mutedForeground;
 }

@@ -13,7 +13,9 @@ const meta = {
   args: { view: { state: 'loading' } },
   render: ({ view }): React.JSX.Element => <FirstSessionView {...view} />,
 } satisfies Meta<{ view: FirstSessionViewProps }>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Loading: Story = {};

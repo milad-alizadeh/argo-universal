@@ -10,10 +10,14 @@ const descendant = spawn(
   ['-e', 'setInterval(() => {}, 1000)'],
   { stdio: 'ignore' },
 );
+
 writeFileSync(
   process.env.ARGO_FIXTURE_PIDFILE ?? '',
   JSON.stringify({ engine: process.pid, descendant: descendant.pid }),
 );
+
 if (process.env.ARGO_FIXTURE_IGNORE_TERM) process.on('SIGTERM', () => {});
+
 process.send?.({ type: 'ready', port: 7337 });
+
 setInterval(() => {}, 1000);

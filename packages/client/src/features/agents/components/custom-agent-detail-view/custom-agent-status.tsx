@@ -12,6 +12,7 @@ import { sectionFooter } from '../form-field';
 
 // undefined while the Server runs a fresh ACP initialize; readiness is never read from the saved record.
 export type CustomAgentCheck = AgentCheck | undefined;
+
 type StatusProps = {
   check: CustomAgentCheck;
   onCheck: () => void;
@@ -24,7 +25,9 @@ export function ReadinessChip({
   check: CustomAgentCheck;
 }): React.JSX.Element {
   if (!check) return <CheckingChip />;
+
   if (check.status === 'ready') return <CheckedChip check={check} />;
+
   return <FailedChip />;
 }
 
@@ -33,12 +36,15 @@ const Chip = (props: { label: string; tone: BadgeTone }): React.JSX.Element => (
     <Text>{props.label}</Text>
   </Badge>
 );
+
 const CheckingChip = (): React.JSX.Element => (
   <Chip label="Checking" tone="muted" />
 );
+
 const ReadyChip = (): React.JSX.Element => (
   <Chip label="Ready" tone="success" />
 );
+
 const FailedChip = (): React.JSX.Element => (
   <Chip label="Check failed" tone="destructive" />
 );
@@ -50,6 +56,7 @@ const failureOf = (check: CustomAgentCheck): string | undefined =>
 export function ReadinessSection(props: StatusProps): React.JSX.Element {
   const { check, onCheck, onSignIn } = props;
   const failure = failureOf(check);
+
   return (
     <FieldSection title="Status" {...sectionFooter(failure)}>
       <StatusRow check={check} />
@@ -63,7 +70,9 @@ export function ReadinessSection(props: StatusProps): React.JSX.Element {
 
 function StatusRow({ check }: { check: CustomAgentCheck }): React.JSX.Element {
   if (!check) return <ListItem title="Running ACP initialize…" loading />;
+
   if (check.status === 'ready') return <CheckedRow check={check} />;
+
   return (
     <ListItem
       icon="warning"
@@ -74,19 +83,24 @@ function StatusRow({ check }: { check: CustomAgentCheck }): React.JSX.Element {
 }
 
 type Checked = Extract<AgentCheck, { status: 'ready' }>;
+
 const authenticationLabels = {
   required: 'Sign-in required',
   unverified: 'Account could not be verified',
 } as const;
+
 function CheckedChip({ check }: { check: Checked }): React.JSX.Element {
   if (!check.authentication) return <ReadyChip />;
+
   return (
     <Chip label={authenticationLabels[check.authentication]} tone="warning" />
   );
 }
+
 function CheckedRow({ check }: { check: Checked }): React.JSX.Element {
   if (!check.authentication)
     return <ListItem icon="check" title="Answered ACP initialize" />;
+
   return (
     <ListItem
       icon="warning"

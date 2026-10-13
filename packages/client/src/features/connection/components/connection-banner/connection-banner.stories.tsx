@@ -8,7 +8,9 @@ const meta = {
   title: 'Connection/ConnectionBanner',
   component: ConnectionBanner,
 } satisfies Meta<typeof ConnectionBanner>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // An open Connection shows no banner, so only the two down states appear; the shell floats the capsule over the page.

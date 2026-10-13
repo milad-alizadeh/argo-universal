@@ -20,6 +20,7 @@ export function useSheetAnchor(size: BottomSheetProps['size']): AnchoredCard {
   const card = useRef<View>(null);
   const name = useContext(BottomSheetAnchorContext);
   const anchor = useWide() && size === 'form' ? name : undefined;
+
   const ref = useCallback(
     (node: View | null) => {
       card.current = node;
@@ -27,12 +28,15 @@ export function useSheetAnchor(size: BottomSheetProps['size']): AnchoredCard {
     },
     [anchor],
   );
+
   return { anchor, card, ref };
 }
 
 function connectAnchor(node: View | null, anchor: string | undefined): void {
   const dialog = sheetDialog(node);
+
   if (!dialog) return;
+
   if (anchor) dialog.style.setProperty('position-anchor', anchor);
   else dialog.style.removeProperty('position-anchor');
 }

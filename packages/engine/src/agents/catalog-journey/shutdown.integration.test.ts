@@ -7,25 +7,34 @@ import { writeDatabaseJobAndWaitForCommit } from '../../storage';
 import type { FetchAgents } from '../index';
 
 const statusSql = 'SELECT status FROM sync_jobs';
+
 const rejection = "SELECT RAISE(ABORT, 'catalog rejected');";
-const finalStatus: Record<string, string> = {
+
+type CatalogOutcome = 'commit' | 'rollback';
+
+const finalStatus = {
   commit: 'idle',
   rollback: 'running',
-};
-const rejects = (outcome: string): boolean => outcome === 'rollback';
-const rejectionFor = (outcome: string): string =>
+} satisfies Record<CatalogOutcome, string>;
+
+const rejects = (outcome: CatalogOutcome): boolean => outcome === 'rollback';
+
+const rejectionFor = (outcome: CatalogOutcome): string =>
   rejects(outcome) ? rejection : '';
+
 afterEach(() => vi.useRealTimers());
 
-it.each(['commit', 'rollback'])(
+it.each<CatalogOutcome>(['commit', 'rollback'])(
   'drains an in-flight SQLite catalog %s before Engine closes the database',
   async (outcome) => {
     const stored = openTestDatabase();
     onTestFinished(stored.remove);
+
     const host = await startEngineTestHost({
       database: stored.database,
-      fetchAgents: async () => publishedRegistry,
+      fetchAgents: async () => JSON.stringify(publishedRegistry),
     });
+
     await host.caller.agents.syncCatalog();
     await expect
       .poll(async () => (await host.caller.agents.catalog()).syncStatus)
@@ -34,6 +43,7 @@ it.each(['commit', 'rollback'])(
     let stopped: Promise<void> | undefined;
     host.database.$client.function('request_catalog_shutdown', () => {
       stopped ??= host.stop();
+
       return 0;
     });
     host.database.$client.exec(
@@ -43,10 +53,12 @@ it.each(['commit', 'rollback'])(
     await expect.poll(() => stopped !== undefined).toBe(true);
     await stopped;
     expect(host.database.$client.isOpen).toBe(false);
+
     const after = before.map((row) => ({
       ...row,
       catalogSyncedAt: expect.any(Number),
     }));
+
     expect(readAddedAgentRows(stored.database)).toEqual(
       rejects(outcome) ? before : after,
     );
@@ -63,6 +75,7 @@ it('preserves admission committed during shutdown for the next Engine to resume'
   let stopped: Promise<void> | undefined;
   host.database.$client.function('stop_on_admission', () => {
     stopped = host.stop();
+
     return 0;
   });
   host.database.$client.exec(
@@ -78,10 +91,12 @@ it('preserves admission committed during shutdown for the next Engine to resume'
 it('drains retained Session writes while stopping an active catalog fetch', async () => {
   const stored = openTestDatabase();
   onTestFinished(stored.remove);
+
   const host = await startEngineTestHost({
     database: stored.database,
     fetchAgents: async () => new Promise(() => {}),
   });
+
   await host.caller.agents.syncCatalog();
   host.database.$client.exec(
     "CREATE TEMP TRIGGER reject_session BEFORE UPDATE ON session BEGIN SELECT RAISE(ABORT, 'storage busy'); END",
@@ -110,14 +125,16 @@ it('drains retained Session writes while stopping an active catalog fetch', asyn
 it.each(['timeout', 'shutdown'] as const)(
   'ignores a late Registry response after %s',
   async (reason) => {
-    const response = Promise.withResolvers<unknown>();
+    const response = Promise.withResolvers<string>();
     const fetchAgents = vi.fn<FetchAgents>(() => response.promise);
     const stored = openTestDatabase();
     onTestFinished(stored.remove);
+
     const host = await startEngineTestHost({
       fetchAgents,
       database: stored.database,
     });
+
     vi.useFakeTimers();
     await host.caller.agents.syncCatalog();
     await vi.advanceTimersByTimeAsync(0);
@@ -126,14 +143,17 @@ it.each(['timeout', 'shutdown'] as const)(
       : host.stop());
     expect(fetchAgents.mock.calls[0]?.[0].aborted).toBe(true);
     await host.stop();
-    response.resolve(publishedRegistry);
+    response.resolve(JSON.stringify(publishedRegistry));
     await vi.advanceTimersByTimeAsync(0);
     expect(readAddedAgentRows(stored.database)).toEqual([]);
   },
 );
 
 it('does not start a Registry read after Server shutdown admission closes', async () => {
-  const fetchAgents = vi.fn<FetchAgents>(async () => publishedRegistry);
+  const fetchAgents = vi.fn<FetchAgents>(async () =>
+    JSON.stringify(publishedRegistry),
+  );
+
   const { caller, stop } = await startEngineTestHost({ fetchAgents });
   await stop();
   await expect(caller.agents.syncCatalog()).rejects.toThrow('aborted');

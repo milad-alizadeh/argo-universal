@@ -9,9 +9,13 @@ import {
 } from './feed-state';
 
 const row = recordedFeedMocks[0]?.rows[0];
+
 if (!row) throw new Error('Recorded Feed needs a row');
+
 const oldest = { ...row, id: 'oldest', position: 0, revision: 1 };
+
 const newest = { ...row, id: 'newest', position: 1, revision: 2 };
+
 const tail: FeedPageOutput = {
   epoch: 1,
   maxRevision: 2,
@@ -20,6 +24,7 @@ const tail: FeedPageOutput = {
   startCursor: 1,
   staleCursor: false,
 };
+
 const older: FeedPageOutput = {
   ...tail,
   rows: [oldest],
@@ -29,11 +34,13 @@ const older: FeedPageOutput = {
 
 it('merges history without replacing a newer streamed row', () => {
   const liveRow = { ...newest, revision: 3, state: 'open' as const };
+
   const feed = applySubscriptionEvent(mergeNewestPage(emptyFeed, tail), {
     type: 'row.upsert',
     rev: 3,
     row: liveRow,
   }).feed;
+
   expect(mergeHistoryPages(feed, [tail, older])).toMatchObject({
     rows: [oldest, liveRow],
     revision: 3,
@@ -47,11 +54,13 @@ it('ignores history that finishes after a reset to a newer epoch', () => {
     type: 'reset',
     epoch: 2,
   }).feed;
+
   expect(mergeHistoryPages(reset, [tail, older])).toBe(reset);
 });
 
 it('discards earlier pages when a stale cursor returns a new epoch', () => {
   const replacement = { ...oldest, id: 'rebuilt', revision: 1 };
+
   const rebuilt = {
     ...older,
     epoch: 2,
@@ -59,6 +68,7 @@ it('discards earlier pages when a stale cursor returns a new epoch', () => {
     rows: [replacement],
     staleCursor: true,
   };
+
   expect(
     mergeHistoryPages(mergeNewestPage(emptyFeed, tail), [tail, rebuilt]),
   ).toEqual({
@@ -88,6 +98,7 @@ it('keeps older history available when live rows arrive before the reset tail', 
       row: { ...newest, revision: 3 },
     },
   ).feed;
+
   expect(mergeHistoryPages(live, [tail]).hasOlder).toBe(true);
 });
 

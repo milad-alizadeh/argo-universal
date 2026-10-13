@@ -13,15 +13,19 @@ import {
   applyFeedChange,
   subscribe,
 } from '#mocks/feed-suite';
+
 it('streams buffered Agent changes after 60 ms while SQL waits for the store timer', async () => {
   await startFeedTestHost();
   const updates = await subscribe({ epoch: 3, revision: 5 });
   await updates.next();
   let received = false;
+
   const next = takeFeedChanges(updates, 2).then((events) => {
     received = true;
+
     return events;
   });
+
   applyFeedChange(createOpenMessageChange('timed-row'));
   await vi.advanceTimersByTimeAsync(30);
   applyFeedChange(createTextAppendChange('timed-row', 'Hello'));

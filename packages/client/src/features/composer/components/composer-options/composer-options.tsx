@@ -5,7 +5,9 @@ import type { ComposerConfigurationProps } from '../composer-configuration/compo
 import { ComposerPopover } from '../composer-popover/composer-popover';
 
 type Option = SessionConfigOption;
+
 import { OptionsContents } from './options-contents';
+
 function optionsFor(configuration: ComposerConfigurationProps): Option[] {
   return configuration.configOptions.filter(
     (option) =>
@@ -18,12 +20,15 @@ interface OptionsProps {
   configuration: ComposerConfigurationProps;
   disabled: boolean;
 }
+
 export function ComposerOptions({
   configuration,
   disabled,
 }: OptionsProps): React.JSX.Element | null {
   const options = optionsFor(configuration);
+
   if (!options.length) return null;
+
   return (
     <OptionsPopover
       options={options}
@@ -32,6 +37,7 @@ export function ComposerOptions({
     />
   );
 }
+
 function OptionsPopover({
   options,
   configuration,
@@ -47,6 +53,7 @@ function OptionsPopover({
     </ComposerPopover>
   );
 }
+
 function OptionsTrigger({
   disabled,
 }: Pick<OptionsProps, 'disabled'>): React.JSX.Element {
@@ -61,6 +68,7 @@ function OptionsTrigger({
     />
   );
 }
+
 function contentsProps(
   options: Option[],
   configuration: ComposerConfigurationProps,

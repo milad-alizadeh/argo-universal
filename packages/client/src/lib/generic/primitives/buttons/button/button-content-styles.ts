@@ -36,7 +36,9 @@ const buttonClasses = cva(
  */
 const filledNative =
   'ios:min-h-12.5 ios:px-5 ios:border-0 ios:bg-secondary android:min-h-10 android:px-6';
+
 const textNative = 'android:min-h-10 android:px-3';
+
 const nativeClasses = cva('ios:rounded-full android:rounded-full', {
   variants: {
     variant: {
@@ -81,6 +83,7 @@ type ButtonClassProps = Pick<
 
 export function contentButtonClass(props: ButtonClassProps): string {
   const { className, fullWidth, ...variants } = props;
+
   return cn(
     buttonClasses({ ...variants, fullWidth: fullWidth === true }),
     nativeClasses({ variant: props.variant, disabled: props.disabled }),
@@ -91,8 +94,10 @@ export function contentButtonClass(props: ButtonClassProps): string {
 
 const destructiveOutline =
   'border border-border bg-background web:shadow-xs active:bg-destructive/10 web:hover:bg-destructive/10';
+
 const destructiveText =
   'bg-transparent active:bg-destructive/10 web:hover:bg-destructive/10';
+
 const destructiveClasses = {
   default:
     'bg-destructive ios:bg-destructive active:bg-destructive/90 web:hover:bg-destructive/90',
@@ -106,6 +111,7 @@ function destructiveButtonClass(
   props: Pick<ButtonProps, 'role' | 'variant'>,
 ): string | undefined {
   if (props.role !== 'destructive') return undefined;
+
   return destructiveClasses[props.variant ?? 'outline'];
 }
 
@@ -113,6 +119,7 @@ export function contentTextClass(
   props: Pick<ButtonProps, 'role' | 'variant'>,
 ): string {
   const filledDestructive = isFilledDestructive(props);
+
   return cn(
     textClasses({
       variant: props.variant,
@@ -130,6 +137,7 @@ export function contentActionClass(
   },
 ): string {
   const { className, native, ...variants } = props;
+
   return cn(
     buttonClasses(variants),
     'min-h-0 android:min-h-0 web:sm:min-h-0',

@@ -20,9 +20,11 @@ export const firstAndLastRowsReachable: Story = {
     // At a phone's size twelve Sessions overflow the list, so it can scroll.
     if ('__vitest_browser__' in globalThis) await settleViewport(390);
     const scroll = canvas.getByTestId(sessionsScrollId);
+
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,
     });
+
     await waitFor(async () => {
       await expect(
         heading.getBoundingClientRect().top -
@@ -35,9 +37,11 @@ export const firstAndLastRowsReachable: Story = {
       await expect(scroll.scrollTop).toBeGreaterThan(0);
     });
     scroll.scrollTop = scroll.scrollHeight;
+
     const last = await canvas.findByRole('button', {
       name: 'Large Session 11, Idle',
     });
+
     await waitFor(async () => {
       scroll.scrollTop = scroll.scrollHeight;
       const viewportBottom = scroll.getBoundingClientRect().bottom;

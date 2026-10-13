@@ -54,10 +54,12 @@ export async function startHttpServer(
 ): Promise<HttpServer> {
   const { blobsFolder, commandAdmission, agentLogins, appRouter } =
     prepareHttpServer(options);
+
   const guard = createRequestGuard(options.port);
   const server = createHttpListener(guard, blobsFolder, appRouter);
   await listenOnLoopback(server, options.port);
   const closeConnections = connectWebSockets(server, appRouter, guard);
+
   return {
     close: admitClose(commandAdmission, closeConnections),
     closeSetup: () => agentLogins.shutdown(),
@@ -71,11 +73,13 @@ function prepareHttpServer(
   const blobsFolder = blobsFolderIn(options.home);
   const commandAdmission = options.commandAdmission ?? new AbortController();
   const agentLogins = createEngineAgentLogins(options);
+
   const appRouter = createHttpRouter(options, {
     blobsFolder,
     commandAdmission,
     agentLogins,
   });
+
   return { blobsFolder, commandAdmission, agentLogins, appRouter };
 }
 

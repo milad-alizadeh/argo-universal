@@ -79,15 +79,18 @@ function rowHref(props: ListItemProps): string | undefined {
   return props.role ? undefined : (props.href ?? '#');
 }
 
+interface SwitchKeyboardProps {
+  tabIndex?: 0 | -1;
+  onKeyDown?: React.KeyboardEventHandler;
+}
+
 // React Native Web handles Space for buttons only; a switch row owns the same activation.
 function switchKeyboardProps(
   props: ListItemProps,
   press: () => void,
-): {
-  tabIndex?: 0 | -1;
-  onKeyDown?: React.KeyboardEventHandler;
-} {
+): SwitchKeyboardProps {
   if (props.role !== 'switch') return {};
+
   return {
     tabIndex: props.disabled ? -1 : 0,
     onKeyDown: switchKeyDown(props.disabled, press),
@@ -101,6 +104,7 @@ function switchKeyDown(
   return (event) => {
     if (!isSwitchSpace(event)) return;
     event.preventDefault();
+
     if (canActivateSwitch(disabled, event.repeat)) press();
   };
 }
@@ -108,6 +112,7 @@ function switchKeyDown(
 function isSwitchSpace(event: React.KeyboardEvent): boolean {
   return event.key === ' ' && event.target === event.currentTarget;
 }
+
 function canActivateSwitch(
   disabled: boolean | undefined,
   repeat: boolean,

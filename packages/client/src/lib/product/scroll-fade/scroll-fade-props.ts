@@ -35,7 +35,9 @@ function bothCallbacks(
   second: SizeChange | undefined,
 ): SizeChange | undefined {
   if (!first) return second;
+
   if (!second) return first;
+
   return (width, height) => {
     first(width, height);
     second(width, height);
@@ -70,6 +72,7 @@ export function useScrollFade<P extends ScrollFadeOptions & ScrollableProps>({
 }: P): ScrollFade<P> {
   const tracking = useScrollFadeTracking();
   const scroll = useScrollProps(props, tracking);
+
   return {
     frame: { edges, depth, inset, surfaceClassName, tracking },
     scroll: { scrollEventThrottle: 16, ...scroll },

@@ -18,6 +18,7 @@ export function NativeCheckbox({
   ...props
 }: NativeProps): React.JSX.Element {
   const state = useCheckboxState(props);
+
   return (
     <View className={nativeContainerClass(props)}>
       <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
@@ -42,6 +43,7 @@ function nativeContainerClass(props: CheckboxProps): string {
     props.appearance === 'option' && optionContainerClass(props),
   );
 }
+
 function optionContainerClass(props: CheckboxProps): string {
   return cn(
     'overflow-hidden rounded-lg android:rounded-[12px]',

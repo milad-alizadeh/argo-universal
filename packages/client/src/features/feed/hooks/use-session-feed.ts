@@ -22,6 +22,7 @@ import { useHeldFeedStart, useKeepHeldFeed } from './held-feed';
 import { useFeedHistory } from './use-feed-history';
 
 type FeedHistory = ReturnType<typeof useFeedHistory>;
+
 interface SessionFeed {
   loadingOlder: boolean;
   loadOlder: FeedHistory['loadOlder'];
@@ -47,23 +48,29 @@ export function useSessionFeed(sessionId: string): SessionFeed {
   const [feed, setFeed] = useState<FeedState>(start.feed);
   const history = useFeedHistory(sessionId, feed);
   const feedRef = useRef(feed);
+
   const replaceFeed = useCallback((next: FeedState) => {
     feedRef.current = next;
     setFeed(next);
   }, []);
+
   const closed = useRef(false);
   const [closureError, setClosureError] = useState<Error | null>(null);
+
   const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(
     start.snapshot,
   );
+
   // Pages advance the held revision without restarting live updates.
   const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(
     start.syncPoint,
   );
+
   useKeepHeldFeed(sessionId, { feed, snapshot });
   useEffect(() => {
     const pages = history.data?.pages;
     const first = pages?.[0];
+
     if (!pages || !first) return;
     replaceFeed(mergeHistoryPages(feedRef.current, pages));
     setSyncPoint(
@@ -79,6 +86,7 @@ export function useSessionFeed(sessionId: string): SessionFeed {
           ...trpc.feed.row.queryOptions({ sessionId, id }),
           ...uncached,
         });
+
         replaceFeed(
           applySubscriptionEvent(feedRef.current, {
             type: 'row.upsert',
@@ -94,6 +102,7 @@ export function useSessionFeed(sessionId: string): SessionFeed {
   );
 
   const { resetHistory } = history;
+
   const onLiveData = useCallback(
     (event: FeedSubscribeOutput): void => {
       if (event.type === 'closed') {
@@ -101,19 +110,26 @@ export function useSessionFeed(sessionId: string): SessionFeed {
         setClosureError(
           event.failure === null ? null : new Error(event.failure),
         );
+
         return;
       }
+
       if (event.type === 'snapshot') {
         setSnapshot(event.snapshot);
+
         return;
       }
+
       const result = applySubscriptionEvent(feedRef.current, event);
       replaceFeed(result.feed);
+
       if (result.missingRowId) void fetchWholeRow(result.missingRowId);
+
       if (result.reset) void resetHistory();
     },
     [replaceFeed, fetchWholeRow, resetHistory],
   );
+
   const liveChanges = useSubscription({
     ...trpc.feed.subscribe.subscriptionOptions({ sessionId, after: syncPoint }),
     enabled: syncPoint !== null,
@@ -121,11 +137,14 @@ export function useSessionFeed(sessionId: string): SessionFeed {
   });
 
   const reset = liveChanges.reset;
+
   const retryOpen = useCallback(() => {
     closed.current = false;
     setClosureError(null);
     const next = syncPointOf(feedRef.current);
+
     if (next === null) return;
+
     // A changed input resets useSubscription after it commits; the same input needs an explicit reset.
     if (syncPoint?.epoch === next.epoch && syncPoint.revision === next.revision)
       reset();
@@ -137,7 +156,9 @@ export function useSessionFeed(sessionId: string): SessionFeed {
     snapshot,
     view: snapshot ? toFeedView(feed.rows, snapshot) : null,
   }));
+
   let view = held.view;
+
   if (held.rows !== feed.rows || held.snapshot !== snapshot) {
     view = snapshot
       ? keepUnchangedItems(held.view, toFeedView(feed.rows, snapshot))

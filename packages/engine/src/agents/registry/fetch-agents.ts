@@ -1,11 +1,15 @@
-export type FetchAgents = (signal: AbortSignal) => Promise<unknown>;
+// Answers with the registry document's text; the registry reader parses it.
+export type FetchAgents = (signal: AbortSignal) => Promise<string>;
 
 const registryUrl =
   'https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json';
 
 const serverErrorStatus = 500;
+
 const requestTimeoutStatus = 408;
+
 const rateLimitedStatus = 429;
+
 const retryableClientStatuses = new Set([
   requestTimeoutStatus,
   rateLimitedStatus,
@@ -20,8 +24,10 @@ export class RegistryHttpError extends Error {
   }
 }
 
-export async function fetchAgents(signal: AbortSignal): Promise<unknown> {
+export async function fetchAgents(signal: AbortSignal): Promise<string> {
   const response = await fetch(registryUrl, { signal });
+
   if (!response.ok) throw new RegistryHttpError(response.status);
+
   return response.text();
 }

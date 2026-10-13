@@ -15,6 +15,7 @@ function FollowedLink({ href, children }: LinkProps): React.JSX.Element {
   const { color: underline } = useResolveClassNames(
     markdownLinkClassNames.viewColor,
   );
+
   return (
     <Span
       role="link"

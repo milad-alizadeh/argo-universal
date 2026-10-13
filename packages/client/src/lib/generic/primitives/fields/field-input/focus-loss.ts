@@ -6,9 +6,11 @@ export function blurOnFocusLoss(
   onBlur: () => void = () => {},
 ): (focused: boolean) => void {
   let entered = false;
+
   return (focused) => {
     const left = entered && !focused;
     entered = focused;
+
     if (left) onBlur();
   };
 }

@@ -16,6 +16,7 @@ export interface PhoneLayoutProps {
 // The phone's shell, with the live attention count; the drawing is `PhoneLayoutView`.
 export function PhoneLayout(props: PhoneLayoutProps): React.JSX.Element {
   const attentionCount = useAttentionCount();
+
   return (
     <PhoneLayoutView
       {...props}

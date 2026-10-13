@@ -12,7 +12,9 @@ const meta = {
   component: LiveHeader,
   args: { liveHeader: requestHeader, now: liveHeaderNow },
 } satisfies Meta<typeof LiveHeader>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {

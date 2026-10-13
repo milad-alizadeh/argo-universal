@@ -18,4 +18,5 @@ const guardNetwork = (): void => {
 };
 
 guardNetwork();
+
 beforeEach(guardNetwork);

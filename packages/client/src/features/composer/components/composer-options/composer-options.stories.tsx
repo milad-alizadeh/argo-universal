@@ -15,6 +15,7 @@ const configuration = composerProps({
   onSend: () => {},
   onAttachImages: () => {},
 }).configuration;
+
 if (!configuration) throw new Error('Composer settings need configuration.');
 
 function SettingsPreview({
@@ -24,13 +25,16 @@ function SettingsPreview({
   const [configOptions, setConfigOptions] = useState(
     configuration.configOptions,
   );
+
   const shown = previewConfiguration(
     configuration,
     configOptions,
     setConfigOptions,
   );
+
   return <SettingsLayout configuration={shown} disabled={disabled} />;
 }
+
 function SettingsLayout(
   props: React.ComponentProps<typeof ComposerOptions>,
 ): React.JSX.Element {
@@ -40,6 +44,7 @@ function SettingsLayout(
     </View>
   );
 }
+
 const meta = {
   title: 'Composer/ComposerOptions',
   component: ComposerOptions,
@@ -50,8 +55,11 @@ const meta = {
     configuration: { ...configuration, configOptions: composerSettingsOptions },
   },
 } satisfies Meta<typeof ComposerOptions>;
+
 export default meta;
+
 export const Overview: StoryObj<typeof meta> = { name: 'ComposerOptions' };
+
 function previewConfiguration(
   configuration: React.ComponentProps<typeof ComposerOptions>['configuration'],
   configOptions: typeof configuration.configOptions,

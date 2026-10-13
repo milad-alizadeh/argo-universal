@@ -1,16 +1,17 @@
 import type { AnyMessage, Stream } from '@agentclientprotocol/sdk';
 
-export const pauseAcpResponses = (
-  stream: Stream,
-): {
+interface PausedAcpResponses {
   stream: Stream;
   entered: Promise<void>;
   resume: () => void;
-  reject: (error: unknown) => void;
-} => {
+  reject: (cause: unknown) => void;
+}
+
+export const pauseAcpResponses = (stream: Stream): PausedAcpResponses => {
   const entered = Promise.withResolvers<void>();
   const resumed = Promise.withResolvers<void>();
   const writer = stream.writable.getWriter();
+
   return {
     entered: entered.promise,
     resume: () => resumed.resolve(),
@@ -23,10 +24,11 @@ export const pauseAcpResponses = (
             entered.resolve();
             await resumed.promise;
           }
+
           await writer.write(message);
         },
         close: () => writer.close(),
-        abort: (reason: unknown) => writer.abort(reason),
+        abort: (cause: unknown) => writer.abort(cause),
       }),
     },
   };

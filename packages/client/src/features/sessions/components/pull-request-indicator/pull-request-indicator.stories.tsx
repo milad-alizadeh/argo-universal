@@ -7,7 +7,9 @@ const meta = {
   component: PullRequestIndicator,
   args: { number: 44, status: 'merged' },
 } satisfies Meta<typeof PullRequestIndicator>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const statusVariations = [

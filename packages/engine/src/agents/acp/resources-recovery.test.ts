@@ -20,11 +20,13 @@ const resumeOpening = (
     params: { sessionId, cwd: '/checkout', mcpServers: [] },
   },
 });
+
 it('a failed process exiting late leaves its replacement shared', async () => {
   const peer = createScriptedAgentProcess({
     steps: [],
     autoExit: false,
   });
+
   const resources = createAcpResources(peer);
   await resources.open(createResourceOpening());
   const old = requireScriptedProcessAt(peer.processes);
@@ -42,6 +44,7 @@ it('shutdown waits for a failed process to exit', async () => {
     steps: [],
     autoExit: false,
   });
+
   const resources = createAcpResources(peer);
   await resources.open(createResourceOpening());
   const old = requireScriptedProcessAt(peer.processes);
@@ -62,10 +65,12 @@ it('concurrent recovery shares one replacement initialization', async () => {
   const old = requireScriptedProcessAt(peer.processes);
   old.disconnect();
   await vi.waitFor(() => expect(old.terminations).toBe(1));
+
   const recovered = await Promise.all([
     resources.open(resumeOpening(first.sessionId)),
     resources.open(resumeOpening(second.sessionId)),
   ]);
+
   expect(recovered.map((lease) => lease.sessionId)).toEqual([
     first.sessionId,
     second.sessionId,
@@ -75,11 +80,13 @@ it('concurrent recovery shares one replacement initialization', async () => {
 
 it('resuming in the affected Checkout waits for the old process to exit', async () => {
   const resumed: ResumeSessionRequest[] = [];
+
   const peer = createScriptedAgentProcess({
     steps: [],
     autoExit: false,
     responses: { 'session/resume': [{ result: {}, requests: resumed }] },
   });
+
   const resources = createAcpResources(peer);
   const lease = await resources.open(createResourceOpening());
   const old = requireScriptedProcessAt(peer.processes);
@@ -101,6 +108,7 @@ it('an old process that never exits blocks recovery with a concrete failure', as
     steps: [],
     autoExit: false,
   });
+
   const resources = createAcpResources({ ...peer, releaseTimeoutMs: 20 });
   const lease = await resources.open(createResourceOpening());
   const old = requireScriptedProcessAt(peer.processes);
@@ -108,9 +116,11 @@ it('an old process that never exits blocks recovery with a concrete failure', as
   await vi.waitFor(() => expect(old.terminations).toBe(1));
   const recovery = resources.open(resumeOpening(lease.sessionId));
   void recovery.catch(() => {});
+
   const replacement = await vi.waitFor(() =>
     requireScriptedProcessAt(peer.processes, 1),
   );
+
   await vi.waitFor(() => expect(replacement.terminations).toBe(1));
   replacement.exited.resolve();
   await expect(recovery).rejects.toThrow(

@@ -10,17 +10,21 @@ const requestId = 'question-one';
 
 it('retains exact protocol correlation for a form elicitation response', async () => {
   const peer = createScriptedAgentWire({ steps: [] });
+
   const incoming =
     Promise.withResolvers<ClientRequestContext<CreateElicitationRequest>>();
+
   const connection = createAgentClient({
     stream: peer.stream,
     acceptSessionUpdate: () => {},
     requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
     createElicitation: (context) => {
       incoming.resolve(context);
+
       return { action: 'accept', content: { choice: 'exact-offered-value' } };
     },
   });
+
   await peer.send([
     {
       jsonrpc: '2.0',

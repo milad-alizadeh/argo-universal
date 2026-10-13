@@ -5,6 +5,7 @@ import {
 import { cn } from '#lib/generic/utils';
 
 const listClassName = cn('my-1 pl-5', markdownBlockClassNames.domListMarker);
+
 const heading = markdownBlockClassNames.heading;
 
 // The Feed's block and link look in the editor's DOM; a list draws its own markers, in the Feed's marker colour.

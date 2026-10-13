@@ -13,13 +13,18 @@ import Animated, {
 import { IconSlot } from '../../../lib/generic/symbols/icon';
 
 const stepMilliseconds = 150;
+
 const fadeMilliseconds = 400;
+
 const fadeSteps = fadeMilliseconds / stepMilliseconds;
+
 const restingOpacity = 0.18;
 
 // Cell offsets in px along either axis.
 const near = 2;
+
 const middle = 6.3;
+
 const far = 10.6;
 
 // Cells clockwise round the edge from top left, then the centre.
@@ -51,6 +56,7 @@ function useCellStyle(
   return useAnimatedStyle(() => {
     if (still) return { opacity: 0.4 };
     const sinceLit = (step.get() - index + cells.length) % cells.length;
+
     return {
       opacity:
         sinceLit < fadeSteps
@@ -90,8 +96,10 @@ function useStep(reducedMotion: boolean): SharedValue<number> {
   const step = useSharedValue(0);
   useEffect(() => {
     if (!reducedMotion) step.set(cycle());
+
     return (): void => cancelAnimation(step);
   }, [reducedMotion, step]);
+
   return step;
 }
 
@@ -110,6 +118,7 @@ const cellElements = (motion: CellMotion): React.JSX.Element[] =>
 export function WorkingMark(): React.JSX.Element {
   const still = useReducedMotion();
   const motion = { step: useStep(still), still };
+
   return (
     <IconSlot role="control" testID="working-mark">
       {cellElements(motion)}

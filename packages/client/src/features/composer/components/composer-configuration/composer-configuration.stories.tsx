@@ -15,19 +15,23 @@ import {
 } from './composer-configuration';
 
 const configuration = composerUnlistedEffortConfigurations[0];
+
 if (!configuration)
   throw new Error('Recorded catalog needs an Agent with effort.');
+
 const meta = {
   title: 'Composer/ComposerConfiguration',
   component: ComposerAgentModelControl,
   args: { configuration, disabled: false },
 } satisfies Meta<typeof ComposerAgentModelControl>;
+
 export default meta;
 
 export const DefaultEffort: StoryObj<typeof meta> = {
   name: 'Default effort',
   render: function ConfigurationRender(args) {
     const configuration = useInteractiveConfiguration(args.configuration);
+
     return (
       <View className="p-4">
         <ComposerAgentModelControl {...args} configuration={configuration} />
@@ -37,8 +41,10 @@ export const DefaultEffort: StoryObj<typeof meta> = {
 };
 
 const unavailableConfiguration = composerUnavailableConfigurations[0];
+
 if (!unavailableConfiguration)
   throw new Error('Recorded catalog needs an unavailable Agent');
+
 export const UnavailableAgent: StoryObj<typeof meta> = {
   name: 'Agent unavailable',
   args: { configuration: unavailableConfiguration },
@@ -74,13 +80,16 @@ function useInteractiveConfiguration(
   const [configOptions, setConfigOptions] = useState(
     configuration.configOptions,
   );
+
   const onConfigChange = configurationChanged(setConfigOptions);
+
   return { ...configuration, configOptions, onConfigChange };
 }
 
 type SetConfigOptions = Dispatch<
   SetStateAction<ComposerConfigurationProps['configOptions']>
 >;
+
 function configurationChanged(
   setConfigOptions: SetConfigOptions,
 ): ComposerConfigurationProps['onConfigChange'] {

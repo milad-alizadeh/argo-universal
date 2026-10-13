@@ -17,12 +17,15 @@ interface AdornmentProps {
 
 export function ButtonAdornment(props: AdornmentProps): ReactElement | null {
   const color = usePrimitiveColor(props.textClass);
+
   if (!props.loading && !props.icon) return null;
+
   return <HiddenAdornment>{adornment(props, color)}</HiddenAdornment>;
 }
 
 function adornment(props: AdornmentProps, color?: string): ReactElement {
   if (props.loading) return <IconSpinner color={color} iconRole={props.role} />;
+
   return (
     <Icon
       name={props.icon ?? 'more'}

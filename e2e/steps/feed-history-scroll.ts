@@ -36,11 +36,14 @@ async function afterFrames(page: Page, frames: number): Promise<void> {
     (count) =>
       new Promise<void>((resolve) => {
         let left = count;
+
         const tick = (): void => {
           left -= 1;
+
           if (left > 0) requestAnimationFrame(tick);
           else resolve();
         };
+
         requestAnimationFrame(tick);
       }),
     frames,

@@ -19,12 +19,14 @@ import {
 export function ListItem(props: ListItemProps): React.JSX.Element {
   const rowProps = useRowProps(props);
   const item = useHoverLink(props);
+
   if (!props.onPress)
     return (
       <View {...rowProps} role="group">
         <ListItemBody {...props} />
       </View>
     );
+
   return (
     <PressableRow {...rowProps} item={item} press={props.onPress}>
       <ListItemBody {...props} />
@@ -43,7 +45,9 @@ function useRowPlace(): RowPlace {
 // A list's neighbours learn of this row's hover, beside the caller's own handlers.
 function useHoverLink(props: ListItemProps): ListItemProps {
   const hover = useContext(FieldRowHover);
+
   if (!hover) return props;
+
   return {
     ...props,
     onHoverIn: (event) => {
@@ -64,6 +68,7 @@ function useRowProps(props: ListItemProps): ReturnType<
   className: string;
 } {
   const navigation = useNavigationFields();
+
   return {
     accessibilityLabel: listItemName(props),
     ...selectionProps(props),
@@ -78,6 +83,7 @@ interface PressableRowProps extends React.ComponentProps<typeof View> {
 
 function PressableRow(props: PressableRowProps): React.JSX.Element {
   const { item, press, children, ...rowProps } = props;
+
   return (
     <Pressable
       {...linkProps(item)}

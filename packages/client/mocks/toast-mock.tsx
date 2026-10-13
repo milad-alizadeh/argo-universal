@@ -11,12 +11,14 @@ export const failedOpen = {
 
 function FailedOpen(): null {
   useErrorToast(failedOpen);
+
   return null;
 }
 
 // A failure that toasts as it starts, and a button that starts it again, for Toast stories.
 export function ErrorToastExample(): React.JSX.Element {
   const [attempt, setAttempt] = useState(0);
+
   return (
     <View className="items-start">
       <FailedOpen key={attempt} />

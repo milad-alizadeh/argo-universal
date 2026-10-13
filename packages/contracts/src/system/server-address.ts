@@ -7,4 +7,5 @@ export const ServerAddress = z.strictObject({
   version: z.string(),
   startedAt: z.iso.datetime(),
 });
+
 export type ServerAddress = z.infer<typeof ServerAddress>;

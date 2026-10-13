@@ -29,8 +29,10 @@ const messageFieldProps = {
 
 export function DenialActions(answers: PermissionAnswers): ReactNode {
   const layout = useContentWide() ? denialLayouts.wide : denialLayouts.phone;
+
   if (!answers.denial) return null;
   const action = { disabled: answers.inactive, className: layout.action };
+
   return (
     <View className={layout.row}>
       <RequestAction {...action} onPress={answers.back}>
@@ -45,6 +47,7 @@ export function DenialActions(answers: PermissionAnswers): ReactNode {
 
 export function DenialField(input: DenialInput): ReactNode {
   if (input.state.kind === 'answered') return null;
+
   return (
     <View className="gap-1.5 pt-1">
       <Text role="body">{denialQuestion}</Text>
@@ -58,6 +61,7 @@ export function DenialField(input: DenialInput): ReactNode {
 
 function DenialMessage(input: DenialInput): ReactNode {
   const { answers } = input;
+
   return (
     <Textarea
       {...messageFieldProps}

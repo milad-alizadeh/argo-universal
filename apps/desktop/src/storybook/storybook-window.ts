@@ -9,7 +9,9 @@ import { handleSymbolImages } from '../main/symbol-images';
  * written to the Storybook or web build.
  */
 const storybookUrl = process.env.ARGO_STORYBOOK_URL;
+
 if (!storybookUrl) throw new Error('ARGO_STORYBOOK_URL is not set');
+
 const { origin } = new URL(storybookUrl);
 
 const createWindow = (url: string): void => {
@@ -25,9 +27,12 @@ const createWindow = (url: string): void => {
       sandbox: true,
     },
   });
+
   void storybookWindow.loadURL(url);
 };
 
 handleSymbolImages(origin);
+
 void app.whenReady().then((): void => createWindow(storybookUrl));
+
 app.on('window-all-closed', (): void => app.quit());

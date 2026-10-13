@@ -3,6 +3,7 @@ import { feedRowColumns, sessionColumns } from '../columns';
 import { SessionUpdate } from './session-update';
 
 const maximumPageRows = 200;
+
 const defaultPageRows = 40;
 
 // Input of `feed.page`: `tail` reads the newest rows, `before` reads rows older than `cursor` (a position) from `epoch`.
@@ -13,6 +14,7 @@ export const FeedPageInput = z.strictObject({
   epoch: sessionColumns.shape.epoch.optional(),
   limit: z.int().min(1).max(maximumPageRows).default(defaultPageRows),
 });
+
 export type FeedPageInput = z.infer<typeof FeedPageInput>;
 
 // Output of `feed.page`. `staleCursor` is true when the input's `epoch` is not the Session's; the page is then the tail.
@@ -24,4 +26,5 @@ export const FeedPageOutput = z.strictObject({
   startCursor: feedRowColumns.shape.position.nullable(),
   staleCursor: z.boolean(),
 });
+
 export type FeedPageOutput = z.infer<typeof FeedPageOutput>;

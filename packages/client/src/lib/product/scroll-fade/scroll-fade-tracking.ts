@@ -20,15 +20,19 @@ function useAttach(
   );
 }
 
-function useContentHeight(): {
+interface ContentHeight {
   content: SharedValue<number>;
   onContentSizeChange: (width: number, height: number) => void;
-} {
+}
+
+function useContentHeight(): ContentHeight {
   const content = useSharedValue(0);
+
   const onContentSizeChange = useCallback(
     (_width: number, height: number) => content.set(height),
     [content],
   );
+
   return { content, onContentSizeChange };
 }
 
@@ -38,6 +42,7 @@ export function useScrollFadeTracking(): Required<ScrollFadeTracking> {
   const offset = useScrollOffset(scrollView);
   const viewport = useSharedValue(0);
   const { content, onContentSizeChange } = useContentHeight();
+
   return {
     attachScrollView: useAttach(scrollView),
     onContentSizeChange,

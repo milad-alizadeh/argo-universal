@@ -1,3 +1,4 @@
+import type { Subscription } from 'xstate';
 import type { WriterActorRef, WriterJob } from '../../storage';
 import { changedSessionIds, changedTurnIds } from '../session-storage';
 
@@ -12,13 +13,14 @@ const describeWriterChanges = (jobs: readonly WriterJob[]): WriterChange => ({
 export const onWriterChange = (
   writer: WriterActorRef,
   listener: (change: WriterChange) => void,
-): { unsubscribe: () => void } => {
+): Subscription => {
   const subscriptions = (['writer.queued', 'writer.committed'] as const).map(
     (type) =>
       writer.on(type, ({ jobs }): void =>
         listener(describeWriterChanges(jobs)),
       ),
   );
+
   return {
     unsubscribe: (): void => {
       for (const subscription of subscriptions) subscription.unsubscribe();

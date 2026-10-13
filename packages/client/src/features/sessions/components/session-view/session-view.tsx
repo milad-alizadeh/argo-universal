@@ -35,6 +35,7 @@ export type SessionViewProps =
 // A failed Session stays on its blank opening page: the toast says why, and the Session retries when the Connection reopens.
 function failureToast(props: SessionViewProps): ErrorToast | undefined {
   if (props.state !== 'failed') return undefined;
+
   return {
     title: sessionOpenFailedTitle,
     message: props.reason ?? serverSilentMessage,
@@ -44,7 +45,9 @@ function failureToast(props: SessionViewProps): ErrorToast | undefined {
 // One Session: its header, its Feed, and the Composer pinned below.
 export function SessionView(props: SessionViewProps): React.JSX.Element {
   useErrorToast(failureToast(props));
+
   if (props.state === 'open') return <OpenSessionView {...props} />;
+
   return <Screen edges={['bottom']} />;
 }
 
@@ -62,6 +65,7 @@ function QuestionSheet({
   elicitation,
 }: Pick<OpenSessionViewProps, 'elicitation'>): React.ReactNode {
   if (!elicitation) return null;
+
   return (
     <ElicitationSheet key={elicitation.request.requestId} {...elicitation} />
   );
@@ -69,6 +73,7 @@ function QuestionSheet({
 
 function SessionComposer(props: OpenSessionViewProps): React.JSX.Element {
   const wide = useWide();
+
   return (
     // As wide as the Feed: the SessionColumn around it sets the width.
     <View className="w-full items-center">
@@ -86,7 +91,9 @@ function composerConfiguration(
   wide: boolean,
 ): ComposerProps['configuration'] {
   const { configuration } = composer;
+
   if (!configuration) return configuration;
+
   return {
     ...configuration,
     // A phone draws no checkout row above the Composer.
@@ -102,6 +109,7 @@ function composerUnderQuestion(
   question?: ElicitationFormProps,
 ): ComposerProps {
   if (!question) return composer;
+
   return {
     ...composer,
     planProposal: undefined,

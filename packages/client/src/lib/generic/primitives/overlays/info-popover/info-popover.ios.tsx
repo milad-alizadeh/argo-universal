@@ -17,6 +17,7 @@ export function InfoPopover(props: InfoPopoverProps): React.JSX.Element {
   const { anchor, presentation } = useInfoPresentation(
     props.accessibilityLabel,
   );
+
   return (
     <Host matchContents>
       <Popover {...presentation}>
@@ -48,6 +49,7 @@ function PopoverText({
     padding({ all: 12 }),
     ...popoverColors(useNativeTheme().colors),
   ];
+
   return (
     <Popover.Content>
       <Text modifiers={modifiers}>{text}</Text>
@@ -59,6 +61,7 @@ function popoverColors(
   colors: NativeColors,
 ): ReturnType<typeof foregroundStyle>[] {
   const { popover, popoverForeground } = colors;
+
   return [
     ...(popoverForeground === undefined
       ? []
@@ -74,6 +77,7 @@ type InfoPresentation = {
 
 function useInfoPresentation(accessibilityLabel: string): InfoPresentation {
   const [open, setOpen] = useState(false);
+
   return {
     anchor: { accessibilityLabel, onPress: (): void => setOpen(true) },
     presentation: {

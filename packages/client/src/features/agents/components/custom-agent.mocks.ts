@@ -4,12 +4,14 @@ import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
 import type { CustomAgentDetailViewProps } from './custom-agent-detail-view/custom-agent-detail-view';
 
 export const customAgentId = 'custom-agent-1';
+
 export const customAgentDefinition: CustomAgentDefinition = {
   name: 'Example ACP',
   executable: '/opt/homebrew/bin/example-acp',
   args: ['--experimental-acp', '--model', 'example-pro'],
   env: [{ name: 'EXAMPLE_HOME', value: '/Users/example/.example' }],
 };
+
 export const customAgentFailure =
   '/opt/homebrew/bin/example-acp was not found.';
 
@@ -17,13 +19,16 @@ const registered: AgentRegistration = {
   status: 'ready',
   agentId: customAgentId,
 };
+
 const checkFailed: AgentRegistration = {
   status: 'failed',
   failure: customAgentFailure,
 };
+
 // Spies for the form's submit: the Server saves the Agent, or its check fails.
 export const registers = (): Mock<SubmitCustomAgent> =>
   fn<SubmitCustomAgent>(() => Promise.resolve(registered));
+
 export const failsItsCheck = (): Mock<SubmitCustomAgent> =>
   fn<SubmitCustomAgent>(() => Promise.resolve(checkFailed));
 

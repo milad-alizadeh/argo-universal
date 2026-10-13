@@ -17,12 +17,14 @@ import {
   type FeedSnapshot,
   type FeedMachineEvent,
 } from '#mocks/feed-model';
+
 const vertex = (of: FeedSnapshot | undefined): string | undefined =>
   of && JSON.stringify({ value: of.value, open: Object.keys(of.context.rows) });
 
 const previousValue = (
   snapshot: FeedSnapshot | undefined,
 ): string | undefined => JSON.stringify(snapshot?.value);
+
 // The message's place, and the state value; `via` names how a vertex was reached.
 const serializeWith =
   (
@@ -38,6 +40,7 @@ const serializeWith =
     previous: FeedSnapshot | undefined,
   ): string => {
     const key = vertex(snapshot);
+
     return JSON.stringify({
       key,
       via:
@@ -68,11 +71,13 @@ const modelOptions = {
   filterEvents: (snapshot: FeedSnapshot, event: FeedMachineEvent): boolean =>
     snapshot.status === 'active' && canGraphEvent(snapshot, event),
 };
+
 // A vertex for each transition, so shortest paths reach back edges too.
 const transitionOptions = {
   ...modelOptions,
   serializeState: serializeWith((): true => true),
 };
+
 // A vertex only for each self-transition keeps simple paths below 1,000.
 const orderingOptions = {
   ...modelOptions,
@@ -86,7 +91,9 @@ const orderingOptions = {
 const shortestPaths = terminalPaths(
   getShortestPaths(machine, transitionOptions),
 );
+
 const simplePaths = terminalPaths(getSimplePaths(machine, orderingOptions));
+
 describe('Feed structural graph', (): void => {
   it('walks every transition with symbolic stream and storage timer events', (): void => {
     expect(
@@ -107,7 +114,9 @@ describe('Feed structural graph', (): void => {
     const flushed = shortestPaths
       .flatMap((path) => path.steps)
       .filter((step) => step.state.status === 'done');
+
     expect(flushed.length).toBeGreaterThan(0);
+
     for (const { state } of flushed) {
       expect(state.matches('flushed')).toBe(true);
       expect(state.context.streamEvents).toEqual([]);

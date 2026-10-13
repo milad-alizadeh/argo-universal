@@ -14,25 +14,32 @@ const imageInitialization = {
     sessionCapabilities: { close: {} },
   },
 };
+
 it.each(['unavailable', 'corrupt'])(
   'an %s image rejects instead of dropping a block or returning success',
   async (failure) => {
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine({
       initialize: imageInitialization,
       steps: [],
       responses: { 'session/prompt': [{ requests }] },
     });
+
     const blobsFolder = blobsFolderIn(host.home);
+
     const blob = await uploadBlob(
       { databaseWriter: host.databaseWriter, blobsFolder },
       new Blob(['complete original bytes'], { type: 'image/png' }),
     );
+
     if (failure === 'corrupt')
       await writeFile(join(blobsFolder, blob.blobId), 'truncated');
     const created = await host.caller.session.new(emptySessionInput);
+
     const reference =
       failure === 'unavailable' ? { ...blob, blobId: '0'.repeat(64) } : blob;
+
     await expect(
       host.caller.session.prompt({
         ...created,
@@ -78,10 +85,12 @@ it('thoughts and messages keep separate identities while an Agent user echo adds
       },
     ],
   });
+
   const created = await host.caller.session.new({
     ...emptySessionInput,
     prompt: [{ type: 'text', text: 'Human prompt' }],
   });
+
   await waitForAcpSessionIdle(host, created.sessionId);
   const page = await host.caller.feed.page({ ...created, direction: 'tail' });
   expect(page.rows).toMatchObject([

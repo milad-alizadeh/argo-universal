@@ -18,15 +18,22 @@ const meta = {
     state: { kind: 'open' },
   },
 } satisfies Meta<typeof PlanProposalCard>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const needsProposal = 'Recorded catalog needs a Plan proposal.';
+
 const keepPlanningLabel = 'Keep planning';
+
 const sendingLabel = 'Sending…';
+
 function submitting(width: number, index: number): Story {
   const mock = planProposalMocks[index];
+
   if (!mock) throw new Error(needsProposal);
+
   return {
     args: { proposal: mock.proposal, state: { kind: 'submitting' } },
     play: async ({ userEvent, args }) => {
@@ -48,15 +55,20 @@ function submitting(width: number, index: number): Story {
 }
 
 export const FirstAgentSubmittingPhone = submitting(layoutWidths.phone, 0);
+
 export const FirstAgentSubmittingWide = submitting(layoutWidths.wide, 0);
+
 export const SecondAgentSubmittingPhone = submitting(layoutWidths.phone, 2);
+
 export const SecondAgentSubmittingWide = submitting(layoutWidths.wide, 2);
 
 const answerError = 'Could not send your answer. Try again.';
 
 function failedAnswer(width: number, index: number): Story {
   const mock = planProposalMocks[index];
+
   if (!mock) throw new Error(needsProposal);
+
   return {
     args: { proposal: mock.proposal, error: answerError },
     play: async ({ userEvent, args }) => {
@@ -80,6 +92,9 @@ function failedAnswer(width: number, index: number): Story {
 }
 
 export const FirstAgentErrorPhone = failedAnswer(layoutWidths.phone, 0);
+
 export const FirstAgentErrorWide = failedAnswer(layoutWidths.wide, 0);
+
 export const SecondAgentErrorPhone = failedAnswer(layoutWidths.phone, 2);
+
 export const SecondAgentErrorWide = failedAnswer(layoutWidths.wide, 2);

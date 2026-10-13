@@ -1,4 +1,3 @@
-import type { SessionConfigOption } from '@repo/contracts';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { type Actor, createActor } from 'xstate';
@@ -11,6 +10,7 @@ import {
   type EmptySessionGraphEvent,
   type EmptySessionSnapshot,
   failed,
+  failure,
   first,
   graphOptions,
   isPublicEvent,
@@ -28,22 +28,32 @@ import {
   emptySessionMachine,
 } from './empty-session-machine';
 
+// What each port call resolves with when its path's done event arrives.
+const portOutputs = {
+  open: { sessionId: 'session-1' },
+  close: {},
+  setConfigOption: options,
+  prompt: { messageId: 'message-1' },
+} satisfies { [Id in ActorId]: Awaited<ReturnType<EmptySessionPorts[Id]>> };
+
+type PortOutputs = typeof portOutputs;
+
 // Each port call waits for the path to settle it.
-interface Calls {
-  open?: PromiseWithResolvers<{ sessionId: string }>;
-  close?: PromiseWithResolvers<unknown>;
-  setConfigOption?: PromiseWithResolvers<SessionConfigOption[]>;
-  prompt?: PromiseWithResolvers<unknown>;
-}
+type Calls = { [Id in ActorId]?: PromiseWithResolvers<PortOutputs[Id]> };
+
 let calls: Calls;
+
 let handedOff: string[];
+
 const track = <Id extends ActorId>(
   id: Id,
   call: NonNullable<Calls[Id]>,
 ): NonNullable<Calls[Id]>['promise'] => {
   calls[id] = call;
+
   return call.promise;
 };
+
 const ports = (): EmptySessionPorts => ({
   open: () => track('open', Promise.withResolvers()),
   close: () => track('close', Promise.withResolvers()),
@@ -58,17 +68,27 @@ beforeEach(() => {
   calls = {};
   handedOff = [];
 });
+
 afterEach(() => {
   vi.useRealTimers();
 });
 
-const takeCall = (id: ActorId): NonNullable<Calls[ActorId]> => {
+const takeCall = <Id extends ActorId>(id: Id): NonNullable<Calls[Id]> => {
   const call = calls[id];
+
   if (!call) throw new Error(`${id} was not called`);
   calls[id] = undefined;
+
   return call;
 };
+
+// A path's done event resolves the port call with the output that event carries.
+const resolveCall = <Id extends ActorId>(id: Id): void => {
+  takeCall(id).resolve(portOutputs[id]);
+};
+
 type Delivery = (event: EmptySessionGraphEvent) => void;
+
 const deliveries = new Map<string, Delivery>([
   [
     delayDone,
@@ -83,14 +103,8 @@ const deliveries = new Map<string, Delivery>([
     },
   ],
   ...actorIds.flatMap((id): [string, Delivery][] => [
-    [
-      done(id),
-      (event): void => takeCall(id).resolve(Reflect.get(event, 'output')),
-    ],
-    [
-      failed(id),
-      (event): void => takeCall(id).reject(Reflect.get(event, 'error')),
-    ],
+    [done(id), (): void => resolveCall(id)],
+    [failed(id), (): void => takeCall(id).reject(failure)],
   ]),
 ]);
 
@@ -112,6 +126,7 @@ it.each(paths.map((path, index) => [index, path] as const))(
   'walks empty Session path %i',
   async (_, path) => {
     const actor = createActor(emptySessionMachine, { input: ports() }).start();
+
     try {
       for (const step of path.steps.slice(1)) {
         await deliver(actor, step.event);
@@ -143,14 +158,16 @@ it('empty Session paths cover every transition', () => {
 
 it('hands the prompted Session to the Session page once its Feed shows the prompt', async () => {
   const actor = createActor(emptySessionMachine, { input: ports() }).start();
+
   const sent: EmptySessionGraphEvent[] = [
     { type: 'choices.changed', input: first, connected: true },
     { type: 'send', prompt },
     { type: delayDone },
-    { type: done('open'), actorId: 'open', output: { sessionId: 'session-1' } },
+    { type: done('open'), actorId: 'open', output: portOutputs.open },
     { type: 'options.loaded', configOptions: options, saved: {} },
     { type: done('prompt'), actorId: 'prompt', output: undefined },
   ];
+
   for (const event of sent) await deliver(actor, event);
   const beforeFeed = [...handedOff];
   await deliver(actor, { type: 'feed.showsPrompt' });

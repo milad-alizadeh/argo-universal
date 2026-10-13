@@ -1,7 +1,10 @@
 import { expect, onTestFinished } from 'vitest';
 import type { startInstallEngine } from './installation';
+
 type Host = Awaited<ReturnType<typeof startInstallEngine>>;
+
 const removeRejection = 'DROP TRIGGER IF EXISTS reject_configuration';
+
 export const rejectInstallationWrites = (host: Host): void => {
   host.database.$client.exec(
     "CREATE TEMP TRIGGER reject_configuration BEFORE INSERT ON agents WHEN NEW.configuration IS NOT NULL BEGIN SELECT RAISE(ABORT, 'configuration storage failed'); END",
@@ -11,6 +14,7 @@ export const rejectInstallationWrites = (host: Host): void => {
       host.database.$client.exec(removeRejection);
   });
 };
+
 export const waitForInstalledSelection = async (host: Host): Promise<void> => {
   await expect
     .poll(

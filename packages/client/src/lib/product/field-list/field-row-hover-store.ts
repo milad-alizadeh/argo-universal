@@ -11,15 +11,20 @@ export interface HoverStore {
 export function createHoverStore(): HoverStore {
   let hovered: number | null = null;
   const listeners = new Set<() => void>();
+
   const set = (index: number | null): void => {
     if (hovered === index) return;
     hovered = index;
+
     for (const listener of listeners) listener();
   };
+
   const subscribe = (listener: () => void): (() => void) => {
     listeners.add(listener);
+
     return () => listeners.delete(listener);
   };
+
   return { get: () => hovered, set, subscribe };
 }
 
@@ -28,6 +33,7 @@ export function useRowHover(store: HoverStore, index: number): RowHover {
     store.subscribe,
     () => store.get() === index + 1,
   );
+
   const onHover = useCallback(
     (hovering: boolean) => {
       if (hovering) store.set(index);
@@ -35,5 +41,6 @@ export function useRowHover(store: HoverStore, index: number): RowHover {
     },
     [store, index],
   );
+
   return { separatorHidden: below, onHover };
 }

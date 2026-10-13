@@ -19,11 +19,13 @@ export interface NavigationRecorder {
 export function createNavigationRecorder(): NavigationRecorder {
   const destinations: NavigationDestination[] = [];
   const replacements: NavigationDestination[] = [];
+
   return {
     destinations,
     replacements,
     navigate: (destination, options) => {
       destinations.push(destination);
+
       if (options?.replace) replacements.push(destination);
     },
     reset: () => clearDestinations(destinations, replacements),
@@ -37,10 +39,12 @@ function clearDestinations(
   destinations.length = 0;
   replacements.length = 0;
 }
+
 interface NavigationMockProps {
   recorder?: NavigationRecorder;
   children: ReactNode;
 }
+
 interface StoryContext {
   id: string;
   parameters: {
@@ -55,6 +59,7 @@ export function withNavigationMocks(
 ): React.JSX.Element {
   if (!context.parameters.navigation && !context.parameters.screenPreview)
     return <Story />;
+
   return (
     <NavigationMocks key={context.id} recorder={context.parameters.navigation}>
       <Story />
@@ -67,6 +72,7 @@ function NavigationMocks({
   children,
 }: NavigationMockProps): React.JSX.Element {
   const [navigation] = useState(() => recorder ?? createNavigationRecorder());
+
   return (
     <NavigationProvider navigate={navigation.navigate}>
       <ScreenHeaderProvider header={ScreenHeaderMock}>

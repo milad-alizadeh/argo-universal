@@ -13,6 +13,7 @@ function appendRow(
   items: FeedViewItem[],
 ): void {
   if (row.sessionUpdate === 'plan_update') return;
+
   if (isGroupRow(row)) return group.add(row);
   items.push(...group.flush(), { type: 'row', row });
 }
@@ -24,11 +25,14 @@ export function toFeedView(
   const group = new OpenGroup(snapshot);
   const items: FeedViewItem[] = [];
   let previousTurnId: string | null | undefined;
+
   for (const row of rows) {
     if (startsNewTurn(row, previousTurnId)) items.push(...group.flush());
     previousTurnId = row.turnId;
     appendRow(row, group, items);
   }
+
   items.push(...group.flush());
+
   return { items, plan: selectActivePlan(rows) };
 }

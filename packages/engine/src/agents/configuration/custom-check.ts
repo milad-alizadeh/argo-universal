@@ -31,19 +31,24 @@ export const checkConfiguredAgent = (
   agentId: string,
 ): Promise<AgentCheck> => {
   const check = (): Promise<AgentCheck> => readConfiguredCheck(deps, agentId);
+
   return deps.withAgentCheck ? deps.withAgentCheck(agentId, check) : check();
 };
+
 const readConfiguredCheck = (
   deps: Pick<ConfigurationDeps, 'database' | 'checkAgentLaunch'>,
   agentId: string,
 ): Promise<AgentCheck> => {
   const agent = readConfiguredAgent(deps.database, agentId);
+
   if (!agent) throw new Error(`No configured Agent ${agentId}`);
+
   return checkSavedDefinition(deps.checkAgentLaunch, {
     agentId,
     configuration: agent.configuration,
   });
 };
+
 const checkSavedDefinition = (
   check: CheckAgentLaunch,
   {
@@ -52,8 +57,10 @@ const checkSavedDefinition = (
   }: { agentId: string; configuration: AgentConfiguration },
 ): Promise<AgentCheck> => {
   if (configuration.removed) return failedCheck('Agent was removed.');
+
   if (configuration.source === 'registry')
     return failedCheck('No release is installed.');
+
   return checkCustomDefinition(check, {
     agentId,
     definition: configuration.definition,

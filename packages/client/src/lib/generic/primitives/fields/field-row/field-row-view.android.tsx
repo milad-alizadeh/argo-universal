@@ -10,5 +10,6 @@ export function FieldRow({
   children: React.ReactNode;
 }): React.JSX.Element {
   const Row = useWide() ? WebFieldRow : HostedRow;
+
   return <Row>{children}</Row>;
 }

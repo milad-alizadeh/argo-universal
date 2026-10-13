@@ -61,6 +61,7 @@ function useSegmentProps<Value extends string>(
   props: SegmentProps<Value>,
 ): React.ComponentProps<typeof SegmentedButton> {
   const { colors } = useNativeTheme();
+
   return {
     selected: props.choice.value === props.value,
     onClick: () => props.onValueChange(props.choice.value),

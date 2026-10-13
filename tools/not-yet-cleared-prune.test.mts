@@ -13,6 +13,7 @@ import { evaluateWaivers } from './not-yet-cleared/evaluate.mts';
 it('prunes an entry already left empty', (): void => {
   const text =
     '{"overrides":[{"files":["packages/example/src/*"],"rules":{}}]}';
+
   expect(
     evaluateWaivers({ current: text, baseline: current, report }).pruned,
   ).toBe('{"overrides":[]}');
@@ -33,6 +34,7 @@ it('reports a stale rule and prunes its empty entry', (): void => {
     pruned: '{"overrides":[]}',
   });
 });
+
 it.each([
   {
     filename: 'packages/other/example.ts',
@@ -48,11 +50,13 @@ it.each([
   },
 ])('removes an empty entry with its comment: $absent', (finding): void => {
   const measured = JSON.stringify({ diagnostics: [finding] });
+
   const result = evaluateWaivers({
     current: commented,
     baseline: commented,
     report: measured,
   });
+
   expect(result.pruned).not.toContain(finding.absent);
   expect(result.pruned).toContain(finding.present);
   expect(
@@ -74,6 +78,7 @@ it('preserves comments and bytes when all waivers have findings', (): void => {
       { filename: 'packages/other/example.ts', code: depthCode },
     ],
   });
+
   expect(
     evaluateWaivers({
       current: commented,
@@ -86,6 +91,7 @@ it('preserves comments and bytes when all waivers have findings', (): void => {
 it('prunes only the stale rule in an entry', (): void => {
   const text =
     '{"overrides":[{"files":["packages/example/src/*"],"rules":{"complexity":"off", "max-depth":"off"}}]}';
+
   const result = evaluateWaivers({ current: text, baseline: text, report });
   expect(result.pruned).toBe(current);
 });
@@ -93,9 +99,11 @@ it('prunes only the stale rule in an entry', (): void => {
 it('keeps the spacing when pruning the first rule', (): void => {
   const text =
     '{ "overrides": [{ "files": ["packages/example/src/*"], "rules": { "complexity": "off", "max-depth": "off" } }] }';
+
   const measured = JSON.stringify({
     diagnostics: [{ filename: exampleFilename, code: depthCode }],
   });
+
   expect(
     evaluateWaivers({ current: text, baseline: text, report: measured }).pruned,
   ).toBe(

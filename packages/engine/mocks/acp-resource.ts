@@ -16,6 +16,7 @@ export const resourceLaunch: AgentLaunch = {
   env: {},
   authContext: 'subscription',
 };
+
 export const createResourceDestination = (
   updates: SessionNotification[] = [],
 ): AcpSessionDestination => ({
@@ -26,6 +27,7 @@ export const createResourceDestination = (
   requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
   createElicitation: () => ({ action: 'cancel' }),
 });
+
 export const createResourceOpening = (
   destination = createResourceDestination(),
 ): AcpOpenInput => ({
@@ -36,6 +38,7 @@ export const createResourceOpening = (
   },
   destination,
 });
+
 export const resourceInitialization = {
   protocolVersion: 1,
   agentCapabilities: {
@@ -44,6 +47,7 @@ export const resourceInitialization = {
     _meta: { authStatus: {} },
   },
 };
+
 export const createResourceUpdate = (
   sessionId: string,
 ): SessionNotification => ({
@@ -54,13 +58,16 @@ export const createResourceUpdate = (
   },
 });
 
-export const observeAcpRelease = (
-  lease: AcpSessionLease,
-): {
+interface AcpReleaseObservation {
   state: { settled: boolean };
   promise: Promise<void>;
-} => {
+}
+
+export const observeAcpRelease = (
+  lease: AcpSessionLease,
+): AcpReleaseObservation => {
   const state = { settled: false };
+
   return {
     state,
     promise: lease.released.then(() => {

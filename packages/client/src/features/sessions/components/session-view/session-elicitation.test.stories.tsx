@@ -17,16 +17,22 @@ const meta = {
   parameters: { screenPreview: true },
   render: Elicitation.render,
 } satisfies Meta<{ view: SessionViewProps }>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
 type Agent = (typeof elicitationMocks)[number]['agent'];
 
 export const ClaudeKeepsComposer: Story = anchoredSession('agent-1');
+
 export const CodexKeepsComposer: Story = anchoredSession('agent-2');
 
 function anchoredSession(agent: Agent): Story {
   const onAnswer = fn();
+
   return {
     args: { view: pendingSession(agent, onAnswer) },
     beforeEach: async (): Promise<void> => {
@@ -45,8 +51,10 @@ function pendingSession(
   onAnswer: ReturnType<typeof fn>,
 ): SessionViewProps {
   const mock = elicitationMocks.find((recording) => recording.agent === agent);
+
   if (!mock) throw new Error(`Recorded Elicitation needs ${agent}`);
   const session = agent === 'agent-1' ? runningSession : idleSession;
+
   return {
     state: 'open',
     ...session,
@@ -72,9 +80,11 @@ async function resizeAndDismiss({
     canvas.queryByRole('button', { name: /^Plan/ }),
   ).not.toBeInTheDocument();
   const page = within(document.body);
+
   const sheet = within(
     await page.findByRole('region', { name: 'Elicitation questions' }),
   );
+
   const title = await resizeAnswer(sheet, userEvent);
   await waitFor(() =>
     assertInputInSession(title, canvas.getByTestId('session-layout')),
@@ -95,6 +105,7 @@ async function resizeAnswer(
   await userEvent.type(title, 'Keep this answer while resizing');
   await settleViewport(1120);
   await expect(title).toHaveValue('Keep this answer while resizing');
+
   return title;
 }
 

@@ -7,7 +7,9 @@ import { NativeOnlyAnimatedView } from '#lib/generic/primitives/native/native-on
 import { cn } from '#lib/generic/utils';
 import { usePopoverDismissal } from './popover-dismissal';
 import { ControlledPopoverState, Popover } from './popover-root';
+
 type TriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>;
+
 function PopoverTrigger({ ref, ...props }: TriggerProps): React.JSX.Element {
   const { trigger, setRef } = useTriggerRef(ref);
   const open = React.useContext(ControlledPopoverState);
@@ -15,32 +17,42 @@ function PopoverTrigger({ ref, ...props }: TriggerProps): React.JSX.Element {
   React.useEffect(() => {
     if (open && !triggerPosition) openMeasuredTrigger(trigger.current);
   }, [open, triggerPosition, trigger]);
+
   return <PopoverPrimitive.Trigger {...props} ref={setRef} />;
 }
+
 function openMeasuredTrigger(
   trigger: PopoverPrimitive.TriggerRef | null,
 ): void {
   trigger?.open();
 }
-function useTriggerRef(ref: TriggerProps['ref']): {
+
+interface TriggerRefs {
   trigger: React.RefObject<PopoverPrimitive.TriggerRef | null>;
   setRef: React.RefCallback<PopoverPrimitive.TriggerRef>;
-} {
+}
+
+function useTriggerRef(ref: TriggerProps['ref']): TriggerRefs {
   const trigger = React.useRef<PopoverPrimitive.TriggerRef>(null);
+
   const setRef = React.useCallback(
     (node: PopoverPrimitive.TriggerRef | null) => {
       trigger.current = node;
+
       return forwardTriggerRef(ref, node);
     },
     [ref],
   );
+
   return { trigger, setRef };
 }
+
 function forwardTriggerRef(
   ref: TriggerProps['ref'],
   node: PopoverPrimitive.TriggerRef | null,
 ): void | (() => void) {
   if (typeof ref === 'function') return ref(node);
+
   if (ref) ref.current = node;
 }
 
@@ -51,12 +63,16 @@ export function PopoverHoverGroup({
 }): React.ReactNode {
   return children;
 }
+
 export function usePopoverClose(): () => void {
   const { onOpenChange } = PopoverPrimitive.useRootContext();
+
   return React.useCallback(() => onOpenChange(false), [onOpenChange]);
 }
+
 const FullWindowOverlay =
   Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
+
 type ContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
   portalHost?: string;
   onClosed?: () => void;
@@ -66,7 +82,9 @@ function PopoverContent(content: ContentProps): React.JSX.Element | null {
   const { portalHost, onClosed, ...props } = content;
   const { open } = PopoverPrimitive.useRootContext();
   const { mounted, style } = usePopoverDismissal(open, onClosed);
+
   if (!mounted) return null;
+
   return (
     <PopoverPrimitive.Portal hostName={portalHost} forceMount>
       <WindowPopover style={style}>

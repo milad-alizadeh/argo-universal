@@ -13,7 +13,9 @@ const meta = {
   component: AgentMessage,
   args: { row: recordedAgentMessage('agent-1', markdownAnswerId) },
 } satisfies Meta<typeof AgentMessage>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // Both Agents' recorded markdown answers, and one caught mid-stream.

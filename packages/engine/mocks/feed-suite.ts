@@ -17,6 +17,7 @@ import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { FeedRowsJob } from '../src/feed';
 import type { FeedActorRef } from '../src/feed/index';
 import { writeJobs } from '../src/storage';
+
 export let database: Database;
 
 export let runtimeDirectory: string;
@@ -41,6 +42,7 @@ export const startFeedTestHost = async (
     scenario,
     agent,
   });
+
   feedTestHost = moduleHost;
   scriptedAgent = moduleHost.agent;
   appliedFeed = moduleHost.feed;
@@ -89,8 +91,10 @@ const runningTurnId = (): string | null => {
   const turn = database.$client
     .prepare('SELECT id FROM turn WHERE session_id = ? AND status = ?')
     .get('session-1', 'running');
+
   return typeof turn?.id === 'string' ? turn.id : null;
 };
+
 const seedHistory = (): void => {
   writeJobs(database, [
     new FeedRowsJob({
@@ -100,6 +104,7 @@ const seedHistory = (): void => {
     }),
   ]);
 };
+
 beforeEach((): void => {
   vi.useFakeTimers();
   appliedFeed = undefined;
@@ -117,6 +122,7 @@ afterEach(async (): Promise<void> => {
   controller.abort();
   database.$client.exec('DROP TRIGGER IF EXISTS hold_feed_writes');
   appliedFeed?.send({ type: 'feed.flush' });
+
   if (vi.isFakeTimers()) await vi.advanceTimersByTimeAsync(0);
   vi.useRealTimers();
 });
@@ -124,6 +130,7 @@ afterEach(async (): Promise<void> => {
 export const setFeedTestHost = (host: typeof feedTestHost): void => {
   feedTestHost = host;
 };
+
 export const setScriptedAgent = (agent: typeof scriptedAgent): void => {
   scriptedAgent = agent;
 };

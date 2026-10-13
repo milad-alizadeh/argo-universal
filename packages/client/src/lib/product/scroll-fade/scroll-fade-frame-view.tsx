@@ -46,7 +46,9 @@ function hiddenPast(
   { offset, content, viewport }: ScrollFadeMetrics,
 ): number {
   'worklet';
+
   if (edge === 'top') return offset.get();
+
   return viewport.get() > 0 ? content.get() - offset.get() - viewport.get() : 0;
 }
 
@@ -57,8 +59,10 @@ function edgeOpacity(
   metrics: ScrollFadeMetrics | undefined,
 ): number {
   'worklet';
+
   if (mode !== 'scrolled' || !metrics) return 1;
   const hidden = hiddenPast(edge, metrics);
+
   return interpolate(hidden, [0, scrollFadeRamp], [0, 1], Extrapolation.CLAMP);
 }
 
@@ -85,10 +89,13 @@ function EdgeFade({
   options,
 }: EdgeFadeProps): React.JSX.Element | null {
   const mode = edgeMode(edge, options.edges);
+
   const style = useAnimatedStyle(() => ({
     opacity: edgeOpacity(edge, mode, metrics),
   }));
+
   if (mode === 'never') return null;
+
   return <ScrollFadeGradient {...gradientProps(edge, options)} style={style} />;
 }
 
@@ -113,6 +120,7 @@ export function ScrollFadeFrame(
   const { tracking, className, style, children, ...options } = props;
   const onLayout = measureViewport(tracking.metrics);
   const frameClassName = cn('relative', className);
+
   return (
     <View className={frameClassName} style={style} onLayout={onLayout}>
       <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>

@@ -1,17 +1,21 @@
 import type { LaunchLoginTerminal } from '../src/agents';
-export const createLoginTerminalMock = (): {
+
+interface LoginTerminalMock {
   launchLoginTerminal: LaunchLoginTerminal;
   exited: PromiseWithResolvers<{ exitCode: number }>;
   emit: (text: string) => void;
   writes: string[];
   sizes: [number, number][];
   closed: Promise<void>;
-} => {
+}
+
+export const createLoginTerminalMock = (): LoginTerminalMock => {
   const exited = Promise.withResolvers<{ exitCode: number }>();
   const closed = Promise.withResolvers<void>();
   let output: (text: string) => void = ignoreOutput;
   const writes: string[] = [];
   const sizes: [number, number][] = [];
+
   return {
     exited,
     writes,
@@ -20,6 +24,7 @@ export const createLoginTerminalMock = (): {
     emit: (text) => output(text),
     launchLoginTerminal: async (_, received) => {
       output = received;
+
       return {
         exited: exited.promise,
         write: (text) => writes.push(text),

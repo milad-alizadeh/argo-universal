@@ -16,15 +16,18 @@ interface MenuProps {
   configuration: ComposerConfigurationProps;
   onOpenPage?: (page: 'agent' | 'model') => void;
 }
+
 interface ContentsProps extends MenuProps {
   wide: boolean;
   openPage: (page: 'agent' | 'model') => void;
 }
+
 export function AgentModelMenu(props: MenuProps): React.JSX.Element {
   const wide = isDesktopMenu(useWide());
   const [page, setPage] = useState<'settings' | 'agent' | 'model'>('settings');
   const close = (): void => setPage('settings');
   const openPage = props.onOpenPage ?? setPage;
+
   return (
     <ConfigurationMenuPage
       {...props}
@@ -35,6 +38,7 @@ export function AgentModelMenu(props: MenuProps): React.JSX.Element {
     />
   );
 }
+
 function ConfigurationMenuPage(
   props: ContentsProps & {
     page: 'settings' | 'agent' | 'model';
@@ -43,11 +47,14 @@ function ConfigurationMenuPage(
 ): React.JSX.Element {
   if (props.page !== 'settings' && !props.wide)
     return <ConfigurationPage {...props} page={props.page} />;
+
   return <ConfigurationContents {...props} />;
 }
+
 function isDesktopMenu(wide: boolean): boolean {
   return wide && Platform.OS === 'web';
 }
+
 function ConfigurationContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-sidebar">
@@ -55,6 +62,7 @@ function ConfigurationContents(props: ContentsProps): React.JSX.Element {
     </View>
   );
 }
+
 function ConfigurationFields(props: ContentsProps): React.JSX.Element {
   return (
     <FieldGroup fit={Platform.OS === 'web' || props.wide}>
@@ -68,12 +76,14 @@ function ConfigurationFields(props: ContentsProps): React.JSX.Element {
     </FieldGroup>
   );
 }
+
 function hasTuning(configuration: ComposerConfigurationProps): boolean {
   return (
     switches(configuration).length > 0 ||
     !!currentEffort(configuration).selected
   );
 }
+
 function configurationNotice(
   configuration: ComposerConfigurationProps,
 ): string | undefined {
@@ -81,10 +91,12 @@ function configurationNotice(
     ? 'A Turn is running. Changes apply from the next Turn.'
     : undefined;
 }
+
 function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
   const notice = hasTuning(props.configuration)
     ? undefined
     : configurationNotice(props.configuration);
+
   return (
     <PopoverHoverGroup>
       <FieldSection footer={notice}>
@@ -93,11 +105,13 @@ function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
     </PopoverHoverGroup>
   );
 }
+
 function ConfigurationDrillRows(props: ContentsProps): React.JSX.Element {
   const drillProps = {
     configuration: props.configuration,
     onOpenPage: props.openPage,
   };
+
   return (
     <>
       <ConfigurationDrill {...drillProps} page="agent" />
@@ -105,10 +119,12 @@ function ConfigurationDrillRows(props: ContentsProps): React.JSX.Element {
     </>
   );
 }
+
 function ConfigurationTuning({
   configuration,
 }: Pick<MenuProps, 'configuration'>): React.JSX.Element | null {
   if (!hasTuning(configuration)) return null;
+
   return (
     <FieldSection footer={configurationNotice(configuration)}>
       <SwitchOptions configuration={configuration} />

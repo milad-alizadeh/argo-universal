@@ -12,13 +12,19 @@ import { composerProps } from '../composer-mock';
 import { planProposalMocks } from '../plan-proposal-mock';
 import { canPointAt } from '../point-hit';
 import { shownText } from '../rich-textarea-example';
+
 type Story = StoryObj<typeof Composer>;
+
 type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
 const permissionMocks = recordedRequestMocks.filter(
   (mock) => mock.recording === 'permission',
 );
+
 export const keptDraft = 'Keep this draft.';
+
 const addedText = ' Add details.';
+
 export function composerControls(canvas: PlayContext['canvas']): HTMLElement[] {
   return [
     canvas.getByRole('textbox', { name: 'Message' }),
@@ -27,36 +33,44 @@ export function composerControls(canvas: PlayContext['canvas']): HTMLElement[] {
     canvas.getByRole('button', { name: 'Stop' }),
   ];
 }
+
 export function preservesComposer(
   agentIndex: number,
   requestKind: 'plan' | 'permission',
 ): Story & { args: ComposerProps } {
   const permission = requiredFixture(permissionMocks[agentIndex]);
   const catalog = requiredFixture(newSessionCatalogs.bothAvailable[agentIndex]);
+
   const plan = requiredFixture(
     planProposalMocks.find((mock) => mock.agent === permission.agent),
   );
+
   const onAnswer = fn();
+
   const request = requiredFixture(
     permission.pending.snapshot.pendingPermission,
     'Recording needs a pending Permission.',
   );
+
   const permissionRequest = {
     request,
     state: { kind: 'open' },
     onAnswer,
     onDenialMessageChange: fn(),
   } satisfies NonNullable<ComposerProps['permissionRequest']>;
+
   const allow = requiredFixture(
     permissionRequest.request.options.find((option) =>
       option.kind.startsWith('allow'),
     ),
     'Recorded Permission needs an Allow option.',
   );
+
   const expectedAnswer =
     requestKind === 'plan'
       ? { planId: plan.proposal.planId, decision: 'approve' }
       : { optionId: allow.optionId };
+
   return {
     args: {
       ...composerProps({
@@ -83,13 +97,16 @@ export function preservesComposer(
       await settleViewport(layoutWidths.wide);
       const message = canvas.getByRole('textbox', { name: 'Message' });
       await expect(shownText(message)).toBe(keptDraft);
+
       for (const control of composerControls(canvas)) {
         await expect(control).toBeVisible();
         await waitFor(() => expect(canPointAt(control)).toBe(true));
       }
+
       const answer = canvas.getByRole('button', {
         name: requestKind === 'plan' ? 'Approve' : allow.name,
       });
+
       await browserUserEvent.click(message);
       await browserUserEvent.keyboard('{End}');
       await browserUserEvent.type(message, addedText);
@@ -111,5 +128,6 @@ function requiredFixture<T>(
   message = 'Recorded catalog needs both request kinds for each Agent.',
 ): T {
   if (!value) throw new Error(message);
+
   return value;
 }

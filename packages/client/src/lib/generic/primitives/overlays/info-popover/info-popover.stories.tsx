@@ -11,6 +11,7 @@ const meta = {
     text: 'More effort trades speed for deeper reasoning.',
   },
 } satisfies Meta<typeof InfoPopover>;
+
 export default meta;
 
 // Drawn as it sits in the phone Effort row: the "i" after the label, the level on the right.

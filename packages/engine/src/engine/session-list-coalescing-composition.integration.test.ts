@@ -22,6 +22,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
   const firstChange = first.next();
   const secondChange = second.next();
   const nextCounts = counts.next();
+
   for (let index = 1; index <= 50; index += 1)
     writer.send({
       type: writerWriteEvent,

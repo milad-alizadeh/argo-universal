@@ -21,10 +21,12 @@ function DrawerVeil(): React.JSX.Element {
   const progress = useDrawerProgress();
   // Resolved here: the Reanimated veil would not paint the class's colour.
   const card = useResolveClassNames('bg-sidebar');
+
   // Fades the screen into the card in step with the drawer, whether dragged, flung or tapped.
   const veilStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 1], [0, 1 - dimmedOpacity]),
   }));
+
   return (
     <Animated.View
       pointerEvents="none"
@@ -38,6 +40,7 @@ export function PhoneShellCard({
   children,
 }: PhoneShellCardProps): React.JSX.Element {
   const card = useResolveClassNames('bg-sidebar');
+
   // No scale: UIKit measures a stack's safe area through transforms, so a section mounted under a scaled card gets its header wrong.
   return (
     <View testID="phone-shell-card" className="flex-1" style={card}>
