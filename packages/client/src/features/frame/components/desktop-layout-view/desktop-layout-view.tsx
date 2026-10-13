@@ -28,6 +28,8 @@ export interface DesktopLayoutViewProps {
   // The open section's list, and the list's own part of the header row when it has one.
   list: ReactNode;
   listHeader?: ReactNode;
+  // Floats over the top of the detail pane.
+  banner?: ReactNode;
   children: ReactNode;
 }
 
@@ -114,6 +116,7 @@ function useLayoutShell(props: DesktopLayoutViewProps): LayoutShell {
       ...changesInspectorProps(inspectorState, setInspectorState),
       attentionCount: props.attentionCount,
       list: props.list,
+      banner: props.banner,
     },
   };
 }

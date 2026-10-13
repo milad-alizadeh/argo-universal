@@ -8,15 +8,14 @@ import {
   ModelChoices,
 } from './composer-configuration/composer-configuration';
 
-// The pages of the native Agent and model sheet; the app stacks them.
+interface AgentModelSheetSettingsProps {
+  onOpenPage: (page: 'agent' | 'model') => void;
+  onContentHeightChange: (height: number) => void;
+}
 export function AgentModelSheetSettings({
   onOpenPage,
   onContentHeightChange,
-}: {
-  onOpenPage: (page: 'agent' | 'model') => void;
-  // The sheet sizes itself to this page.
-  onContentHeightChange: (height: number) => void;
-}): React.JSX.Element | null {
+}: AgentModelSheetSettingsProps): React.JSX.Element | null {
   const configuration = useAgentModelConfiguration();
   useEffect(() => onContentHeightChange(0), [onContentHeightChange]);
   if (!configuration) return null;

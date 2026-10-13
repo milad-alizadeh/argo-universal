@@ -1,8 +1,9 @@
 import type * as React from 'react';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ContentLayout } from '#lib/product/content-layout';
 import { ShellBackdrop } from '../shell-backdrop/shell-backdrop';
-import { ShellPane } from '../shell-pane/shell-pane';
+import { ShellPane, type ShellPaneProps } from '../shell-pane/shell-pane';
 import type { DesktopShellProps } from './desktop-shell-props';
 import { ShellResizeHandles } from './shell-resize-handles';
 import { ShellSidebar } from './shell-sidebar';
@@ -22,15 +23,30 @@ function ShellBackground({ shell, layout }: ShellPartProps): React.JSX.Element {
   );
 }
 
+// Floats over the top of the detail and Inspector, so an expanded Inspector still shows it; touches outside the banner reach the page.
+function PaneBanner({ children }: { children: ReactNode }): React.JSX.Element {
+  return (
+    <View
+      pointerEvents="box-none"
+      className="absolute inset-x-0 top-3 items-center"
+    >
+      {children}
+    </View>
+  );
+}
+
+const detailPlacement = (
+  layout: ShellPartProps['layout'],
+): Omit<ShellPaneProps, 'testID' | 'children'> => ({
+  offset: layout.shownListWidth,
+  width: layout.detailWidth,
+  hidden: layout.inspectorExpanded,
+  ...layout.motion,
+});
+
 function DetailPane({ shell, layout }: ShellPartProps): React.JSX.Element {
   return (
-    <ShellPane
-      testID="desktop-detail"
-      offset={layout.shownListWidth}
-      width={layout.detailWidth}
-      hidden={layout.inspectorExpanded}
-      {...layout.motion}
-    >
+    <ShellPane testID="desktop-detail" {...detailPlacement(layout)}>
       <ContentLayout className="overflow-hidden">
         {shell.children}
       </ContentLayout>
@@ -57,6 +73,7 @@ function ShellContent(parts: ShellPartProps): React.JSX.Element {
     <View className="min-w-0 flex-1 flex-row">
       <DetailPane {...parts} />
       <InspectorPanel {...parts} />
+      <PaneBanner>{parts.shell.banner}</PaneBanner>
     </View>
   );
 }

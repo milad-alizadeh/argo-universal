@@ -36,8 +36,6 @@ export const LiveUpdatesStopped: Story = {
   args: { liveUpdatesStopped: true },
 };
 
-export const Offline: Story = { args: { connection: 'offline' } };
-
 export const NoMatchingSessions: Story = {
   args: { query: 'xyz', sessions: [] },
 };

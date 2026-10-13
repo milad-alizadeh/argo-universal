@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import type { ReactElement, ReactNode } from 'react';
-import { cloneElement, useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import { cloneElement, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
@@ -13,16 +13,13 @@ import {
 } from '#primitives/overlays/popover/popover';
 import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-sheet/bottom-sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-
-function PopoverPanel({
-  children,
-  disabled,
-  close,
-}: {
-  children: (close: (after?: () => void) => void) => ReactNode;
+import { useAfterClose } from '../../hooks/use-after-close';
+import type { ComposerPopoverProps } from './popover-types';
+type PanelProps = Pick<ComposerPopoverProps, 'children'> & {
   disabled?: boolean;
-  close: (after?: () => void) => void;
-}): ReactNode {
+  close: ReturnType<typeof useAfterClose>['close'];
+};
+function PopoverPanel({ children, disabled, close }: PanelProps): ReactNode {
   const dismiss = usePopoverClose();
   useEffect(() => {
     if (disabled) dismiss();
@@ -33,108 +30,117 @@ function PopoverPanel({
   });
 }
 
-export function ComposerPopover({
-  trigger,
-  label,
-  width = 320,
-  className,
-  onPresent,
-  listContent,
-  children,
-}: {
-  trigger: ReactElement<{ disabled?: boolean | null; onPress?: () => void }>;
-  label: string;
-  width?: number;
-  listContent?: boolean;
-  className?: string;
-  // Replaces the overlay, for a menu the app presents itself.
-  onPresent?: () => void;
-  // `after` runs once the overlay has left the screen, so it may present a system picker.
-  children: (close: (after?: () => void) => void) => ReactNode;
-}): React.JSX.Element {
+type OverlayProps = ComposerPopoverProps &
+  ReturnType<typeof useAfterClose> & {
+    open: boolean;
+    layout: ReturnType<typeof useResolveClassNames>;
+  };
+export function ComposerPopover(
+  props: ComposerPopoverProps,
+): React.JSX.Element {
   const wide = useWide();
-  const layout = useResolveClassNames(className ?? '');
+  const layout = useResolveClassNames(popoverClassName(props));
   const [open, setOpen] = useState(false);
-  const { close, closed, onOpenChange } = useAfterClose(setOpen);
-  if (trigger.props.disabled && open) setOpen(false);
-  if (onPresent)
-    return (
-      <View style={layout}>
-        {cloneElement(trigger, { onPress: onPresent })}
-      </View>
-    );
-  if (!wide)
-    return (
-      <BottomSheet
-        style={layout}
-        open={open}
-        onOpenChange={onOpenChange}
-        onClosed={closed}
-        trigger={trigger}
-        label={label}
-        surface="sidebar"
-        contentScrolls={listContent}
-      >
-        <View
-          className={
-            listContent && Platform.OS !== 'web'
-              ? 'flex-1 bg-sidebar'
-              : 'bg-sidebar'
-          }
-        >
-          <Text role="control" className="py-3 px-4 text-center">
-            {label === 'Agent and model' ? 'Configure' : label}
-          </Text>
-          {children(close)}
-        </View>
-      </BottomSheet>
-    );
+  const after = useAfterClose(setOpen);
+  closeDisabled(props, open, setOpen);
+  if (props.onPresent) return <PresentedPopover {...props} layout={layout} />;
+  const Overlay = wide ? WidePopover : CompactPopover;
+  return <Overlay {...props} {...after} open={open} layout={layout} />;
+}
+function WidePopover(props: OverlayProps): React.JSX.Element {
   return (
-    <Popover openOnHover style={layout} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild disabled={trigger.props.disabled}>
-        {trigger}
+    <Popover openOnHover style={props.layout} onOpenChange={props.onOpenChange}>
+      <PopoverTrigger asChild disabled={props.trigger.props.disabled}>
+        {props.trigger}
       </PopoverTrigger>
-      <PopoverContent
-        side="top"
-        align="start"
-        accessibilityLabel={label}
-        onClosed={closed}
-        style={{ width }}
-        className="composer-popover bg-sidebar rounded-surface border-0 dark:border dark:border-border p-0 overflow-hidden"
-      >
-        <PopoverPanel disabled={!!trigger.props.disabled} close={close}>
-          {children}
-        </PopoverPanel>
-      </PopoverContent>
+      <WideContent {...props} />
     </Popover>
   );
 }
+function WideContent(props: OverlayProps): React.JSX.Element {
+  return (
+    <PopoverContent
+      side="top"
+      align="start"
+      accessibilityLabel={props.label}
+      onClosed={props.closed}
+      style={{ width: popoverWidth(props) }}
+      className="composer-popover bg-sidebar rounded-surface border-0 dark:border dark:border-border p-0 overflow-hidden"
+    >
+      <PopoverPanel {...panelProps(props)} />
+    </PopoverContent>
+  );
+}
+function CompactPopover(props: OverlayProps): React.JSX.Element {
+  return (
+    <BottomSheet
+      {...sheetProps(props)}
+      surface="sidebar"
+      contentScrolls={props.listContent}
+    >
+      <CompactContent {...props} />
+    </BottomSheet>
+  );
+}
+function CompactContent(props: OverlayProps): React.JSX.Element {
+  const className = compactClassName(props);
+  return (
+    <View className={className}>
+      <Text role="control" className="py-3 px-4 text-center">
+        {props.label === 'Agent and model' ? 'Configure' : props.label}
+      </Text>
+      {props.children(props.close)}
+    </View>
+  );
+}
 
-function useAfterClose(setOpen: (open: boolean) => void): {
-  close: (after?: () => void) => void;
-  closed: () => void;
-  onOpenChange: (open: boolean) => void;
-} {
-  const afterClose = useRef<(() => void) | undefined>(undefined);
+function popoverClassName(props: ComposerPopoverProps): string {
+  return props.className ?? '';
+}
+function popoverWidth(props: ComposerPopoverProps): number {
+  const defaultWidth = 320;
+  return props.width ?? defaultWidth;
+}
+function closeDisabled(
+  props: ComposerPopoverProps,
+  open: boolean,
+  setOpen: (open: boolean) => void,
+): void {
+  if (props.trigger.props.disabled && open) setOpen(false);
+}
+function PresentedPopover(
+  props: ComposerPopoverProps & Pick<OverlayProps, 'layout'>,
+): React.JSX.Element {
+  return (
+    <View style={props.layout}>
+      {cloneElement(props.trigger, { onPress: props.onPresent })}
+    </View>
+  );
+}
+function panelProps(props: OverlayProps): PanelProps {
   return {
-    onOpenChange: useCallback(
-      (open: boolean): void => {
-        if (open) afterClose.current = undefined;
-        setOpen(open);
-      },
-      [setOpen],
-    ),
-    close: useCallback(
-      (after?: () => void): void => {
-        afterClose.current = after;
-        setOpen(false);
-      },
-      [setOpen],
-    ),
-    closed: useCallback((): void => {
-      const after = afterClose.current;
-      afterClose.current = undefined;
-      after?.();
-    }, []),
+    disabled: !!props.trigger.props.disabled,
+    close: props.close,
+    children: props.children,
   };
+}
+function sheetProps(
+  props: OverlayProps,
+): Pick<
+  React.ComponentProps<typeof BottomSheet>,
+  'style' | 'open' | 'onOpenChange' | 'onClosed' | 'trigger' | 'label'
+> {
+  return {
+    style: props.layout,
+    open: props.open,
+    onOpenChange: props.onOpenChange,
+    onClosed: props.closed,
+    trigger: props.trigger,
+    label: props.label,
+  };
+}
+function compactClassName(props: ComposerPopoverProps): string {
+  return props.listContent && Platform.OS !== 'web'
+    ? 'flex-1 bg-sidebar'
+    : 'bg-sidebar';
 }

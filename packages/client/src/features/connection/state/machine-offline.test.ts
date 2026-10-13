@@ -62,6 +62,29 @@ describe('connection offline delay', () => {
     expect(harness.allowedAttempts).toBe(5);
   });
 
+  it('Try again while offline allows a waiting attempt at once and shows Reconnecting', () => {
+    const connection = startConnection();
+    loseOpenConnection();
+    vi.advanceTimersByTime(offlineDelayMs);
+    connection.send({ type: 'connection.attemptRequested' });
+
+    connection.send({ type: 'connection.retry' });
+
+    expect(harness.allowedAttempts).toBe(1);
+    expect(linkState(connection.getSnapshot())).toBe('reconnecting');
+    vi.advanceTimersByTime(offlineDelayMs);
+    expect(linkState(connection.getSnapshot())).toBe('offline');
+  });
+
+  it('ignores Try again while the Connection is open', () => {
+    const connection = startConnection();
+    harness.watcher.send({ type: 'connection.opened' });
+
+    expect(connection.getSnapshot().can({ type: 'connection.retry' })).toBe(
+      false,
+    );
+  });
+
   it('ignores another loss while it reconnects, so the offline delay keeps running', () => {
     const connection = startConnection();
     loseOpenConnection();

@@ -5,8 +5,6 @@ import { FieldSection } from '#lib/generic/primitives/fields/field-section/field
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import { useErrorToast } from '#lib/generic/primitives/overlays/toast/toast';
 import { SettingsPage } from '#lib/product/settings-page';
-import type { ConnectionState } from '../../state/context';
-import { ConnectionBanner } from '../connection-banner/connection-banner';
 import { formatServerClock, formatServerStart } from '../server-time';
 
 export type ServerDetails =
@@ -25,15 +23,12 @@ type LoadedServer = Extract<ServerDetails, { status: 'loaded' }>;
 
 // The Server this App talks to: its details and live clock, or why they are missing.
 export function ConnectionDetailView({
-  connection,
   server,
 }: {
-  connection: ConnectionState;
   server: ServerDetails;
 }): React.JSX.Element {
   return (
     <View className="flex-1 bg-sidebar wide:bg-transparent">
-      <ConnectionBanner state={connection} />
       <SettingsPage
         title="Connection"
         caption="The Argo Server this App is talking to."

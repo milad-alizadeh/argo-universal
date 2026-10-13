@@ -43,14 +43,10 @@ function useSessionListLookups(): SessionListLookups {
   };
 }
 
-function useLiveUpdatesStatus(): Pick<
-  SessionsViewProps,
-  'connection' | 'liveUpdatesStopped'
-> {
+function useLiveUpdatesStatus(): Pick<SessionsViewProps, 'liveUpdatesStopped'> {
   const listUpdates = useSessionListUpdates();
   const connection = useConnectionState();
   return {
-    connection,
     liveUpdatesStopped: liveUpdatesStopped(listUpdates.status, connection),
   };
 }
