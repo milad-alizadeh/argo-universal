@@ -1,0 +1,27 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  // native/ holds the Maestro flows, which run by hand and never in these tasks (ADR 0011).
+  "tasks": {
+    "check-types": {
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md", "!native/**"]
+    },
+    "test:web": {
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md", "!native/**"]
+    },
+    "test:electron": {
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md", "!native/**"]
+    },
+    // check-types depends on this package's own transit, so native/ leaves it too.
+    "transit": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/README.md",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!**/*.test.mts",
+        "!native/**"
+      ]
+    }
+  }
+}

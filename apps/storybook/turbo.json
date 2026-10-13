@@ -6,6 +6,7 @@
     "test": {
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!**/README.md",
         "$TURBO_ROOT$/tools/sf-symbols/**",
         "$TURBO_ROOT$/apps/universal-app/public/**"
       ]
