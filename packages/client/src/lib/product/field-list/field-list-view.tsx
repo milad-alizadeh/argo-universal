@@ -37,26 +37,35 @@ const rowHeightEstimate = 52;
  * FieldGroup's sections as one virtualised list, so a long list mounts only the rows in view.
  * Each title, row and footer is an item; rows round the card's ends and draw separators between them.
  */
-export function FieldList({
-  sections,
-  testID,
-}: FieldListProps): React.JSX.Element {
-  const entries = useMemo(() => fieldListEntries(sections), [sections]);
-  const renderItem = useEntryRenderer();
+export function FieldList(props: FieldListProps): React.JSX.Element {
+  const entries = useMemo(
+    () => fieldListEntries(props.sections),
+    [props.sections],
+  );
   return (
     <ScrollFadeList
-      {...(testID ? listTestIdProps(testID) : {})}
-      surfaceClassName={fadeSurface}
-      // iOS's glass bars already fade the edges.
-      fade={Platform.OS !== 'ios'}
+      {...listTestIdPropsFor(props.testID)}
+      {...fieldListDefaults}
       contentContainerStyle={useGroupPadding()}
       data={entries}
-      keyExtractor={fieldListEntryKey}
-      getItemType={fieldListEntryKind}
-      estimatedItemSize={rowHeightEstimate}
-      renderItem={renderItem}
+      renderItem={useEntryRenderer()}
     />
   );
+}
+
+const fieldListDefaults = {
+  surfaceClassName: fadeSurface,
+  // iOS's glass bars already fade the edges.
+  fade: Platform.OS !== 'ios',
+  keyExtractor: fieldListEntryKey,
+  getItemType: fieldListEntryKind,
+  estimatedItemSize: rowHeightEstimate,
+};
+
+function listTestIdPropsFor(
+  testID: string | undefined,
+): Partial<ReturnType<typeof listTestIdProps>> {
+  return testID ? listTestIdProps(testID) : {};
 }
 
 // The web resolves a class to a CSS length such as "16px"; native resolves it to a number.
@@ -65,20 +74,33 @@ const pixels = (length: unknown): number => {
   return typeof length === 'string' ? Number.parseFloat(length) : 0;
 };
 
+const isSet = (value: unknown): boolean =>
+  value !== undefined && value !== null;
+
+function firstLength<Style>(
+  style: Style,
+  keys: readonly (keyof Style)[],
+): number {
+  return pixels(keys.map((key) => style[key]).find(isSet));
+}
+
+const startPaddingKeys = [
+  'paddingInlineStart',
+  'paddingLeft',
+  'paddingHorizontal',
+] as const;
+const endPaddingKeys = [
+  'paddingInlineEnd',
+  'paddingRight',
+  'paddingHorizontal',
+] as const;
+
 // FieldGroup's gutters, in the numbers Legend List lays its items out with.
 function useGroupPadding(): ViewStyle {
   const padding = useResolveClassNames(fieldGroupPadding);
   return {
-    paddingLeft: pixels(
-      padding.paddingInlineStart ??
-        padding.paddingLeft ??
-        padding.paddingHorizontal,
-    ),
-    paddingRight: pixels(
-      padding.paddingInlineEnd ??
-        padding.paddingRight ??
-        padding.paddingHorizontal,
-    ),
+    paddingLeft: firstLength(padding, startPaddingKeys),
+    paddingRight: firstLength(padding, endPaddingKeys),
     paddingTop: pixels(padding.paddingTop),
     paddingBottom: pixels(padding.paddingBottom),
   };
@@ -109,21 +131,21 @@ function EntryContent({ entry }: { entry: FieldListEntry }): React.JSX.Element {
   return <CardRow entry={entry} />;
 }
 
+type RowEntry = Extract<FieldListEntry, { kind: 'row' }>;
+
 // One row of the section's card: the first rounds its top, the last its bottom and drops its separator.
-function CardRow({
-  entry: { row, first, last },
-}: {
-  entry: Extract<FieldListEntry, { kind: 'row' }>;
-}): React.JSX.Element {
+function CardRow({ entry }: { entry: RowEntry }): React.JSX.Element {
   return (
-    <View
-      className={cn(
-        'overflow-hidden',
-        first && 'rounded-t-2xl',
-        last && 'rounded-b-2xl',
-      )}
-    >
-      <FieldRowEnd value={last}>{row}</FieldRowEnd>
+    <View className={cardRowClassName(entry)}>
+      <FieldRowEnd value={entry.last}>{entry.row}</FieldRowEnd>
     </View>
+  );
+}
+
+function cardRowClassName({ first, last }: RowEntry): string {
+  return cn(
+    'overflow-hidden',
+    first && 'rounded-t-2xl',
+    last && 'rounded-b-2xl',
   );
 }

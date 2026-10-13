@@ -3,7 +3,7 @@ import { FieldGroup } from '#lib/generic/primitives/fields/field-group/field-gro
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import { deviceRows, matchingRows, serverRows } from './settings-list-data';
+import { settingsRows } from './settings-list-data';
 import type { SettingsListProps } from './settings-list-props';
 import { SettingsRows } from './settings-list-rows';
 
@@ -11,20 +11,23 @@ export type { SettingsListProps } from './settings-list-props';
 
 // One list of the pages, without group headings, narrowed by the search: a grouped card on a phone, the sidebar in a wide window.
 export function SettingsList(props: SettingsListProps): React.JSX.Element {
-  const wide = useWide();
-  const rows = matchingRows(
-    [...serverRows(props, wide), ...deviceRows(props, wide)],
-    props.query,
-  );
   return (
-    <FieldGroup variant={wide ? 'navigation' : 'grouped'}>
+    <FieldGroup variant={useWide() ? 'navigation' : 'grouped'}>
       <FieldSection>
-        {rows.length > 0 ? (
-          <SettingsRows {...props} rows={rows} />
-        ) : (
-          <ListItem title="No settings match." />
-        )}
+        <MatchingRows {...props} />
       </FieldSection>
     </FieldGroup>
+  );
+}
+
+function MatchingRows(props: SettingsListProps): React.JSX.Element {
+  const rows = settingsRows(props, useWide());
+  if (rows.length === 0) return <ListItem title="No settings match." />;
+  return (
+    <SettingsRows
+      rows={rows}
+      selectedDestination={props.selectedDestination}
+      onSelect={props.onSelect}
+    />
   );
 }

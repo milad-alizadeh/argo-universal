@@ -5,7 +5,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { fn, expect, waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
-import { SessionColumn } from '#lib/product/session-layout';
+import { SessionColumn } from '#lib/product/session-column';
 import {
   Composer,
   type ComposerDraft,

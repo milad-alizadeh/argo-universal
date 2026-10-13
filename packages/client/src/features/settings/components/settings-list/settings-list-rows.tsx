@@ -3,41 +3,53 @@ import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import type { NavigationDestination } from '#lib/product/navigation/context';
 import { hrefFor } from '#lib/product/navigation/routes';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import type { SettingsRow } from './settings-list-data';
-import type { SettingsListProps } from './settings-list-props';
+import type { SettingsListProps, SettingsRow } from './settings-list-props';
 
-type RowsProps = Pick<SettingsListProps, 'selectedDestination' | 'onSelect'> & {
-  rows: SettingsRow[];
-};
+type Selection = Pick<SettingsListProps, 'selectedDestination' | 'onSelect'>;
+type RowsProps = Selection & { rows: SettingsRow[] };
 
-export function SettingsRows(props: RowsProps): React.JSX.Element {
-  const wide = useWide();
+export function SettingsRows({
+  rows,
+  ...selection
+}: RowsProps): React.JSX.Element {
   return (
     <>
-      {props.rows.map((row) => (
-        <ListItem
-          key={row.title}
-          {...row}
-          href={hrefFor(row.destination).pathname}
-          selected={
-            wide && selectedRow(row.destination, props.selectedDestination)
-          }
-          onPress={() => props.onSelect(row.destination)}
-        />
+      {rows.map((row) => (
+        <SettingsRowItem key={row.title} row={row} {...selection} />
       ))}
     </>
   );
 }
 
+function SettingsRowItem({
+  row,
+  selectedDestination,
+  onSelect,
+}: Selection & { row: SettingsRow }): React.JSX.Element {
+  const wide = useWide();
+  return (
+    <ListItem
+      {...row}
+      href={hrefFor(row.destination).pathname}
+      selected={wide && selectedRow(row.destination, selectedDestination)}
+      onPress={() => onSelect(row.destination)}
+    />
+  );
+}
+
+// A page's own pages keep its row selected.
+const childPages: Partial<
+  Record<NavigationDestination['to'], NavigationDestination['to'][]>
+> = {
+  'settings-projects': ['settings-project'],
+  'settings-agents': ['settings-agent', 'settings-agent-new'],
+};
+
 function selectedRow(
   destination: NavigationDestination,
   selected?: NavigationDestination,
 ): boolean {
-  if (destination.to === selected?.to) return true;
-  if (destination.to === 'settings-projects')
-    return selected?.to === 'settings-project';
-  return (
-    destination.to === 'settings-agents' &&
-    (selected?.to === 'settings-agent' || selected?.to === 'settings-agent-new')
-  );
+  if (selected === undefined) return false;
+  const pages = [destination.to, ...(childPages[destination.to] ?? [])];
+  return pages.includes(selected.to);
 }

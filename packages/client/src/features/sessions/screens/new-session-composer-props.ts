@@ -22,30 +22,22 @@ export const draftProps = ({
   onSend: (sent) => void sessionOpening.sendFirstPrompt(sent),
 });
 
-const isOpening = ({
-  attachmentDraft,
+const canOpen = ({
+  connected,
+  data,
   sessionOpening,
 }: NewSessionWiring): boolean =>
-  attachmentDraft.uploading || sessionOpening.newSession.isPending;
-
-const canOpen = (
-  { connected, data }: NewSessionWiring,
-  opening: boolean,
-): boolean =>
   canOpenSession({
     connected,
     choices: data.choices,
-    configReady: data.configuration.ready,
-    opening,
+    sending: sessionOpening.sending,
+    handedOff: sessionOpening.session.handedOff,
   });
 
 export const openingProps = (
   wiring: NewSessionWiring,
-): ReadyProps<'canOpen' | 'opening' | 'starting'> => {
-  const opening = isOpening(wiring);
-  return {
-    canOpen: canOpen(wiring, opening),
-    opening,
-    starting: wiring.sessionOpening.starting,
-  };
-};
+): ReadyProps<'canOpen' | 'opening' | 'starting'> => ({
+  canOpen: canOpen(wiring),
+  opening: wiring.sessionOpening.sending,
+  starting: wiring.sessionOpening.starting,
+});

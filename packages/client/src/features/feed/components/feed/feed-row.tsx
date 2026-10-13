@@ -3,7 +3,7 @@ import type { BlobRef } from '@repo/contracts';
 import type * as React from 'react';
 import { useMemo } from 'react';
 import { CollapsibleLayoutSyncContext } from '#lib/generic/primitives/display/collapsible/collapsible';
-import { SessionColumn } from '#lib/product/session-layout';
+import { SessionColumn } from '#lib/product/session-column';
 import { FeedItem } from '../feed-item';
 import { LiveHeader } from '../live-header/live-header';
 import { type FeedEntry, entryKey, spaceBelowEntry } from './feed-entry';

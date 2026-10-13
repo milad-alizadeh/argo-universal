@@ -3,7 +3,7 @@ import type { BlobRef } from '@repo/contracts';
 import type * as React from 'react';
 import { useRef } from 'react';
 import { View } from 'react-native';
-import { FeedFade } from '#lib/product/session-layout';
+import { FeedFade } from '#lib/product/feed-fade';
 import { FeedGrowthContext } from '../feed-growth-context';
 import type { FeedEntry } from './feed-entry';
 import { FeedOverlays } from './feed-overlays';

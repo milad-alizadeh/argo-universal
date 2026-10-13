@@ -31,39 +31,34 @@ export interface ScrollFadeFrameProps {
 }
 
 // Around a scroll view: native draws a gradient in the surface colour over each fading edge.
-export function ScrollFadeFrame({
-  edges,
-  depth,
-  inset,
-  surfaceClassName,
-  className,
-  style,
-  onLayout,
-  children,
-}: ScrollFadeFrameProps): React.JSX.Element {
+export function ScrollFadeFrame(
+  props: ScrollFadeFrameProps,
+): React.JSX.Element {
   return (
     <View
-      className={cn('relative', className)}
-      style={style}
-      onLayout={onLayout}
+      className={cn('relative', props.className)}
+      style={props.style}
+      onLayout={props.onLayout}
     >
-      {children}
-      {edges.top && (
-        <ScrollFade
-          edge="top"
-          className={surfaceClassName}
-          height={depth?.top}
-          inset={inset?.top}
-        />
-      )}
-      {edges.bottom && (
-        <ScrollFade
-          edge="bottom"
-          className={surfaceClassName}
-          height={depth?.bottom}
-          inset={inset?.bottom}
-        />
-      )}
+      {props.children}
+      {props.edges.top && <EdgeFade {...props} edge="top" />}
+      {props.edges.bottom && <EdgeFade {...props} edge="bottom" />}
     </View>
+  );
+}
+
+function EdgeFade({
+  edge,
+  surfaceClassName,
+  depth,
+  inset,
+}: ScrollFadeFrameProps & { edge: keyof ScrollFadeEdges }): React.JSX.Element {
+  return (
+    <ScrollFade
+      edge={edge}
+      className={surfaceClassName}
+      height={depth?.[edge]}
+      inset={inset?.[edge]}
+    />
   );
 }

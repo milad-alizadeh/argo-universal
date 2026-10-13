@@ -14,6 +14,29 @@ export interface SessionsFilterMenuProps {
   onArchivedChange: (archived: boolean) => void;
 }
 
+const wideFilterTrigger = (
+  <IconButton
+    variant="ghost"
+    className="size-7 sm:size-7"
+    icon={'filters'}
+    iconRole="action"
+    iconClassName={'text-muted-foreground'}
+    accessibilityLabel="Filter Sessions"
+    size="md"
+  />
+);
+
+function phoneFilterTrigger(archived: boolean): React.JSX.Element {
+  return (
+    <HeaderButton
+      icon="filters"
+      paired
+      dot={archived ? 'filter' : undefined}
+      accessibilityLabel="Filter Sessions"
+    />
+  );
+}
+
 // Active or Archived; on a phone the trigger is a native header item with a dot while Archived shows.
 export function SessionsFilterMenu({
   archived,
@@ -26,26 +49,7 @@ export function SessionsFilterMenu({
       value={archived ? 'archived' : 'active'}
       choices={sessionsFilterChoices}
       onValueChange={(value) => onArchivedChange(value === 'archived')}
-      trigger={
-        wide ? (
-          <IconButton
-            variant="ghost"
-            className="size-7 sm:size-7"
-            icon={'filters'}
-            iconRole="action"
-            iconClassName={'text-muted-foreground'}
-            accessibilityLabel="Filter Sessions"
-            size="md"
-          />
-        ) : (
-          <HeaderButton
-            icon="filters"
-            paired
-            dot={archived ? 'filter' : undefined}
-            accessibilityLabel="Filter Sessions"
-          />
-        )
-      }
+      trigger={wide ? wideFilterTrigger : phoneFilterTrigger(archived)}
     />
   );
 }

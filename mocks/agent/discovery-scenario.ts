@@ -15,10 +15,7 @@ export type DiscoveryScenario = {
   started?: { resolve: () => void };
   signals?: { push: (signal: AbortSignal) => unknown };
 };
-export const availableDiscovery: AgentProbe = {
-  availability: 'available',
-  configOptions: [],
-};
+export const availableDiscovery: AgentProbe = { availability: 'available' };
 
 export const playDiscovery = async (
   discovery: DiscoveryScenario,

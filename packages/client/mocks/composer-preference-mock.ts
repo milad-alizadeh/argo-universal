@@ -1,12 +1,14 @@
 import type {
-  AgentInfo,
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
-import { newSessionCatalogs } from '@repo/mocks/app';
+import { newSessionOptions } from '@repo/mocks/app';
 import { draftConfiguration } from '../src/features/composer/state/session-configuration-preferences';
-import { catalogCase } from './composer-preference-catalog-mock';
-export const catalogCases = newSessionCatalogs.bothAvailable.map(catalogCase);
+import {
+  catalogCase,
+  type RecordedSession,
+} from './composer-preference-catalog-mock';
+export const catalogCases = newSessionOptions.map(catalogCase);
 export const withoutEffortCases = catalogCases.flatMap(
   ({ withoutEffort, ...rest }) =>
     withoutEffort ? [{ ...rest, withoutEffort }] : [],
@@ -14,14 +16,17 @@ export const withoutEffortCases = catalogCases.flatMap(
 if (withoutEffortCases.length === 0)
   throw new Error('Recorded catalog needs a model without effort.');
 export const drafted = (
-  agent: AgentInfo,
+  agent: RecordedSession,
   saved: Parameters<typeof draftConfiguration>[1],
 ): { configId: string; value: string }[] =>
-  draftConfiguration(agent, saved).map((option) => ({
+  draftConfiguration(agent.configOptions, saved).map((option) => ({
     configId: option.configId,
     value: option.currentValue,
   }));
-export function restrictedEffort(agent: AgentInfo, level: string): AgentInfo {
+export function restrictedEffort(
+  agent: RecordedSession,
+  level: string,
+): RecordedSession {
   const restricted = structuredClone(agent);
   const models = restricted.configOptions.filter(isModel).flatMap(choicesOf);
   for (const choice of models) restrictChoice(choice, level);
@@ -48,7 +53,7 @@ function restrictChoice(
   if (metadata.supportsEffort) metadata.supportedEffortLevels = [level];
 }
 export function accepted(
-  agent: AgentInfo,
+  agent: RecordedSession,
   choices: Record<string, string>,
 ): SessionConfigOption[] {
   return agent.configOptions.map((option) => acceptedOption(option, choices));

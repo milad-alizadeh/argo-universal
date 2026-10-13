@@ -1,3 +1,4 @@
+import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
@@ -26,7 +27,7 @@ export function workStatusCounts(
       configuration: {
         agents: [catalog.agent],
         agent: catalog.agent.agent,
-        configOptions: catalog.agent.configOptions,
+        configOptions: recordedSessionOptions(catalog.agent.agent),
         onConfigChange: fn(),
         checkout: { branch: 'main', newWorktree: false },
       },

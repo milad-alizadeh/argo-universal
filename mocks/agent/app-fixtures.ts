@@ -1,8 +1,6 @@
 import { agentAdapters } from '@repo/agents';
 import type { AgentAdapter, AgentProbe } from '@repo/agents';
-import { SessionConfigOption as ArgoConfigOption } from '@repo/contracts';
 import { z } from 'zod';
-import { acpConfiguration } from './acp-configuration';
 import { createAgentMetadata } from './metadata';
 import { isScenarioName, type ScenarioName } from './scenarios';
 
@@ -16,10 +14,6 @@ export type AppFixtureOptions = z.input<typeof AppFixtureOptions>;
 export const AppFixtureAgents = z.record(z.string(), AppFixtureOptions);
 export type AppFixtureAgents = z.input<typeof AppFixtureAgents>;
 
-const appConfiguration = acpConfiguration.map(({ id, ...option }) =>
-  ArgoConfigOption.parse({ ...option, configId: id }),
-);
-
 type AgentIdentity = Pick<AgentAdapter, 'agent' | 'label' | 'logo'>;
 
 function fixtureProbe(options: z.output<typeof AppFixtureOptions>): AgentProbe {
@@ -29,7 +23,6 @@ function fixtureProbe(options: z.output<typeof AppFixtureOptions>): AgentProbe {
       options.availability === 'available'
         ? undefined
         : 'Set up this Agent to start a Session.',
-    configOptions: options.availability === 'available' ? appConfiguration : [],
   };
 }
 

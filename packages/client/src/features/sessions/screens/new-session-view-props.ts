@@ -19,12 +19,11 @@ import type { NewSessionData } from './use-new-session-data';
 type ConfigurationProps = ReadyNewSessionViewProps['configuration'];
 
 const rechoose = (
-  { data, sessionOpening }: NewSessionWiring,
+  { data }: NewSessionWiring,
   update: (current: ChosenSettings) => ChosenSettings,
-): void => {
-  data.setChosen(update);
-  sessionOpening.newSession.reset();
-};
+): void => data.setChosen(update);
+
+const ignoreConfigChange = (): void => {};
 
 const projectProps = (
   wiring: NewSessionWiring,
@@ -63,8 +62,9 @@ const configurationProps = (
 ): ConfigurationProps => ({
   agents,
   agent: wiring.data.choices.agent?.agent ?? '',
-  configOptions: wiring.data.configuration.configOptions,
-  onConfigChange: wiring.data.configuration.change,
+  configOptions: [],
+  onConfigChange: ignoreConfigChange,
+  opening: wiring.sessionOpening.session.opening,
   ...agentChoiceProps(wiring),
   checkout: checkoutProps(wiring.data),
 });
@@ -81,7 +81,7 @@ const noticeProps = ({
 > => ({
   attachmentError: attachmentDraft.attachmentError?.message,
   setupStep: setupStepOf(data.choices.agent),
-  openError: sessionOpening.newSession.error?.message,
+  openError: sessionOpening.session.context.error,
 });
 
 const readyProps = (

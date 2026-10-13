@@ -7,9 +7,20 @@ import {
   NewSessionView,
   type NewSessionViewProps,
 } from '../components/new-session-view/new-session-view';
+import {
+  type OpenedSession,
+  OpenedSessionReader,
+  useOpenedOptions,
+  withOpenedOptions,
+} from './empty-session-options';
 import { toNewSessionViewProps } from './new-session-view-props';
+import type { NewSessionWiring } from './new-session-wiring';
 import { useNewSessionData } from './use-new-session-data';
-import { type AttachmentDraft, useSessionOpening } from './use-session-opening';
+import {
+  type AttachmentDraft,
+  type SessionOpening,
+  useSessionOpening,
+} from './use-session-opening';
 
 export interface NewSessionScreenProps {
   // The Project whose heading + opened this page.
@@ -19,7 +30,14 @@ export interface NewSessionScreenProps {
 export function NewSessionScreen({
   projectId,
 }: NewSessionScreenProps): React.JSX.Element {
-  return <NewSessionView {...useNewSessionViewProps(projectId)} />;
+  const { view, opened } = useNewSessionViewProps(projectId);
+  const options = useOpenedOptions(opened);
+  return (
+    <>
+      <OpenedSessionReader opened={opened} onRead={options.onRead} />
+      <NewSessionView {...withOpenedOptions(view, options)} />
+    </>
+  );
 }
 
 const useNewSessionDraft = (
@@ -27,17 +45,31 @@ const useNewSessionDraft = (
 ): AttachmentDraft =>
   useAttachmentDraft(project && { type: 'new-session', projectId: project.id });
 
-function useNewSessionViewProps(projectId?: string): NewSessionViewProps {
+// The empty Session whose options the page reads, until it hands it on.
+const openedSession = (
+  { session }: SessionOpening,
+  agent: string | undefined,
+): OpenedSession | undefined =>
+  session.openSessionId && agent
+    ? { sessionId: session.openSessionId, agent, actor: session.actor }
+    : undefined;
+
+function useNewSessionWiring(projectId?: string): NewSessionWiring {
   const navigate = useNavigate();
   const connected = useConnectionState() === 'open';
   const data = useNewSessionData(projectId);
   const attachmentDraft = useNewSessionDraft(data.choices.project);
-  const sessionOpening = useSessionOpening(attachmentDraft, data);
-  return toNewSessionViewProps({
-    data,
-    connected,
-    navigate,
-    attachmentDraft,
-    sessionOpening,
-  });
+  const sessionOpening = useSessionOpening(attachmentDraft, data, connected);
+  return { data, connected, navigate, attachmentDraft, sessionOpening };
+}
+
+function useNewSessionViewProps(projectId?: string): {
+  view: NewSessionViewProps;
+  opened?: OpenedSession;
+} {
+  const wiring = useNewSessionWiring(projectId);
+  const view = toNewSessionViewProps(wiring);
+  if (view.state !== 'ready') return { view };
+  const agent = wiring.data.choices.agent?.agent;
+  return { view, opened: openedSession(wiring.sessionOpening, agent) };
 }
