@@ -313,6 +313,7 @@ export function Composer({
               <IconButton
                 accessibilityLabel={sendState === 'stop' ? 'Stop' : 'Send'}
                 icon={sendState === 'stop' ? 'cancelled' : 'arrow-up'}
+                variant="filled"
                 filled
                 loading={sendState === 'sending'}
                 disabled={
@@ -324,7 +325,6 @@ export function Composer({
                   sendState === 'blocked' && 'opacity-35',
                 )}
                 iconRole="control"
-                iconClassName="text-primary-foreground"
               />
             </View>
           </View>
