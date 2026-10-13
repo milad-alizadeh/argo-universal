@@ -22,7 +22,7 @@ export type Script = {
 
 const serveInitialization = (
   app: AgentApp,
-  { scenario, player }: Script,
+  { scenario, player }: Pick<Script, 'scenario' | 'player'>,
 ): AgentApp => {
   const initialize = player.respond('initialize');
   return app.onRequest('initialize', (context) =>
@@ -35,7 +35,7 @@ const serveInitialization = (
 };
 const serveNewSession = (
   app: AgentApp,
-  { sessions, player, nextId }: Script,
+  { sessions, player, nextId }: Pick<Script, 'sessions' | 'player' | 'nextId'>,
 ): AgentApp => {
   const newSession = player.respond('session/new');
   return app.onRequest('session/new', (context) => {
@@ -46,26 +46,38 @@ const serveNewSession = (
     });
   });
 };
-const serveLoad = (app: AgentApp, { sessions, player }: Script): AgentApp => {
+const serveLoad = (
+  app: AgentApp,
+  { sessions, player }: Pick<Script, 'sessions' | 'player'>,
+): AgentApp => {
   const load = player.respond('session/load');
   return app.onRequest('session/load', (context) =>
     load(context, { configOptions: sessions.open(context.params.sessionId) }),
   );
 };
-const serveResume = (app: AgentApp, { sessions, player }: Script): AgentApp => {
+const serveResume = (
+  app: AgentApp,
+  { sessions, player }: Pick<Script, 'sessions' | 'player'>,
+): AgentApp => {
   const resume = player.respond('session/resume');
   return app.onRequest('session/resume', (context) =>
     resume(context, { configOptions: sessions.open(context.params.sessionId) }),
   );
 };
-const serveClose = (app: AgentApp, { sessions, player }: Script): AgentApp => {
+const serveClose = (
+  app: AgentApp,
+  { sessions, player }: Pick<Script, 'sessions' | 'player'>,
+): AgentApp => {
   const close = player.respond('session/close');
   return app.onRequest('session/close', (context) => {
     sessions.close(context.params.sessionId);
     return close(context, {});
   });
 };
-const serveConfiguration = (app: AgentApp, script: Script): AgentApp => {
+const serveConfiguration = (
+  app: AgentApp,
+  script: Pick<Script, 'scenario' | 'sessions' | 'player'>,
+): AgentApp => {
   const configure = script.player.respond('session/set_config_option');
   return app.onRequest('session/set_config_option', (context) =>
     configure(context, {
@@ -74,7 +86,7 @@ const serveConfiguration = (app: AgentApp, script: Script): AgentApp => {
   );
 };
 const configurationResponse = (
-  { scenario, sessions }: Script,
+  { scenario, sessions }: Pick<Script, 'scenario' | 'sessions'>,
   params: SetSessionConfigOptionRequest,
 ): SessionConfigOption[] =>
   scenario.responses?.['session/set_config_option']
@@ -83,7 +95,7 @@ const configurationResponse = (
 
 const serveCancellation = (
   app: AgentApp,
-  { scenario, sessions }: Script,
+  { scenario, sessions }: Pick<Script, 'scenario' | 'sessions'>,
 ): AgentApp =>
   app.onNotification('session/cancel', ({ params }) => {
     const notification = scenario.notifications?.['session/cancel'];
@@ -91,7 +103,10 @@ const serveCancellation = (
     sessions.cancel(params.sessionId);
   });
 
-const serveOtherMethods = (app: AgentApp, { player }: Script): AgentApp => {
+const serveOtherMethods = (
+  app: AgentApp,
+  { player }: Pick<Script, 'player'>,
+): AgentApp => {
   const authenticate = player.respond('authenticate');
   const mode = player.respond('session/set_mode');
   return app
@@ -108,7 +123,10 @@ const observeCancellation = (
   receiveCancellation(notification, params);
 };
 const receiveCancellation = (
-  notification: NonNullable<ScriptedNotifications['session/cancel']>,
+  notification: Pick<
+    NonNullable<ScriptedNotifications['session/cancel']>,
+    'received'
+  >,
   params: CancelNotification,
 ): void => {
   notification.received?.resolve(params);

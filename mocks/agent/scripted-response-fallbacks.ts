@@ -32,13 +32,13 @@ export const requestScope = (
 ): Pick<ScriptedTurn, 'requestId'> =>
   requestId === undefined ? {} : { requestId };
 const responseResult = <Method extends AgentRequestMethod>(
-  response: ScriptedResponse<Method> | undefined,
+  response: Pick<ScriptedResponse<Method>, 'result'> | undefined,
   fallback: AgentRequestResponsesByMethod[Method],
 ):
   | AgentRequestResponsesByMethod[Method]
   | Promise<AgentRequestResponsesByMethod[Method]> =>
   response?.result ?? fallback;
 export const promptSteps = <Method extends AgentRequestMethod>(
-  response: ScriptedResponse<Method> | undefined,
+  response: Pick<ScriptedResponse<Method>, 'steps'> | undefined,
   steps: ScriptedScenario['steps'],
 ): ScriptedScenario['steps'] => response?.steps ?? steps;

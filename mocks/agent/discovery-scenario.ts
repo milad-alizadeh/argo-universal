@@ -56,14 +56,14 @@ const closeDiscovery = (
   agent.close();
 };
 const observeDiscovery = (
-  discovery: DiscoveryScenario,
+  discovery: Pick<DiscoveryScenario, 'signals' | 'started'>,
   signal: AbortSignal,
 ): void => {
   discovery.signals?.push(signal);
   discovery.started?.resolve();
 };
 const initializationScenario = (
-  discovery: DiscoveryScenario,
+  discovery: Pick<DiscoveryScenario, 'waitFor' | 'error'>,
 ): ScriptedScenario => ({
   steps: [],
   responses: {

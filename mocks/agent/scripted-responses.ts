@@ -108,7 +108,7 @@ const responseError = (
 };
 
 const observeResponse = <Method extends AgentRequestMethod>(
-  response: ScriptedResponse<Method> | undefined,
+  response: Pick<ScriptedResponse<Method>, 'requests' | 'received'> | undefined,
   params: AgentRequestParamsByMethod[Method],
 ): void => {
   if (!response) return;
@@ -134,12 +134,12 @@ const finishResponse = async <Method extends AgentRequestMethod>(
   return { result: await response.result, stopReason };
 };
 const rejectResponseError = <Method extends AgentRequestMethod>(
-  response: ScriptedResponse<Method>,
+  response: Pick<ScriptedResponse<Method>, 'error'>,
 ): void => {
   if (response.error) throw responseError(response.error);
 };
 const observeReceived = <Method extends AgentRequestMethod>(
-  response: ScriptedResponse<Method>,
+  response: Pick<ScriptedResponse<Method>, 'received'>,
   params: AgentRequestParamsByMethod[Method],
 ): void => {
   response.received?.resolve(params);
