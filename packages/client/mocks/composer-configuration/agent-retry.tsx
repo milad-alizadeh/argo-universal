@@ -14,7 +14,7 @@ import {
   type Configuration,
   type PlayContext,
 } from './common';
-import { assertUnavailableRows, assertRetryResults } from './retry-assertions';
+import { assertCantStartRows, assertRetryResults } from './retry-assertions';
 import {
   retryCase,
   retryConfiguration,
@@ -41,7 +41,7 @@ function RetryingConfiguration({
     </View>
   );
 }
-export function unavailableAgentRetry(
+export function cantStartAgentRecheck(
   width: number,
   agentIndex: number,
   session: 'new' | 'started',
@@ -63,7 +63,7 @@ async function testAgentRetry(
 ): Promise<void> {
   await settleViewport(scenario.width);
   await openAgentChoices(context);
-  const retry = await assertUnavailableRows(scenario);
+  const retry = await assertCantStartRows(scenario);
   await assertRetryRowsReachable(scenario.width);
   await context.userEvent.click(retry);
   await assertRetryResults(scenario);
@@ -88,7 +88,7 @@ async function assertRetryRowInsideMenu(
     .getByRole('button', { name: `Select ${label}` })
     .getBoundingClientRect();
   const action = overlay
-    .getByRole('button', { name: `Retry ${label}` })
+    .getByRole('button', { name: `Recheck ${label}` })
     .getBoundingClientRect();
   await expect(choice.top).toBeGreaterThanOrEqual(menu.top);
   await expect(action.bottom).toBeLessThanOrEqual(menu.bottom);

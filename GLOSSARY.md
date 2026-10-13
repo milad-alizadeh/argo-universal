@@ -106,6 +106,10 @@ _Avoid_: Vendor session, upstream session, Agent connection, process
 The public ACP Registry that lists the Agents that Argo can run; Argo's Agent catalog is synced from it.
 _Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), catalog (for the upstream list)
 
+**Readiness**:
+Whether an installed Agent can start a Session now, found by launching its saved launch and answering ACP initialize without creating an Agent session. Its status is one of Checking…, Ready, Sign-in needed, Account not supported, Not compatible, Can't start, Couldn't check or Not found, with a reason that never carries credentials.
+_Avoid_: Availability, Unavailable, health, probe result
+
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, or `error`.
 _Avoid_: Exit status, finish reason

@@ -54,6 +54,7 @@ const notInstalled = (agent: ConfiguredAgent): AgentInfo => ({
   logo: '',
   enabled: agent.enabled,
   status: 'not-installed',
+  reason: 'Install this Agent from Agents.',
 });
 const registryInfo = async (
   listing: Listing,

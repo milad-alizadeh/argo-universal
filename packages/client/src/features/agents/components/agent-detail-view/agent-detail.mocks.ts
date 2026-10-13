@@ -21,8 +21,6 @@ export const readyAgent: AgentDetail = {
   ],
 };
 
-export const signInCommand = 'example-agent login';
-
 // A ready Agent with a spy for every callback.
 export const agentDetailArgs = (): AgentDetailViewProps => ({
   agent: readyAgent,
@@ -30,7 +28,9 @@ export const agentDetailArgs = (): AgentDetailViewProps => ({
   onInstall: fn(),
   onUpdate: fn(),
   onRemove: fn(),
-  onCheckAgain: fn(),
+  onRecheck: fn(),
+  onSignIn: fn(),
+  onRepair: fn(),
 });
 
 export const registryAgent: AgentDetail = {

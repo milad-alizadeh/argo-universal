@@ -1,5 +1,5 @@
 import type { AgentInfo, AgentsCatalogOutput } from '@repo/contracts';
-import { type AgentRowEntry, availabilityStatus } from './agent-status';
+import type { AgentRowEntry } from './agent-status';
 
 type CatalogAgent = AgentsCatalogOutput['agents'][number];
 interface CustomAgentName {
@@ -72,7 +72,7 @@ const customRow = ({ id, name }: CustomAgentName): AgentRowEntry => ({
   name,
   description: customAgentDescription,
   custom: true,
-  status: 'unavailable',
+  status: 'checking',
 });
 
 // An Agent as the Server's probe reports it.
@@ -81,18 +81,28 @@ export function probedRow(info: AgentInfo, custom = false): AgentRowEntry {
     id: info.agent,
     name: info.label,
     icon: logoUri(info.logo),
-    status: hasPublishedUpdate(info)
-      ? 'update'
-      : availabilityStatus(info.availability),
+    ...readiness(info),
     ...customDescription(custom),
   };
 }
+// A newer release shows only once the installed one is Ready; any other status needs the user first.
+const readiness = (
+  info: AgentInfo,
+): Pick<AgentRowEntry, 'status' | 'reason' | 'disabled'> => ({
+  status: listedStatus(info),
+  ...reasonOf(info),
+  ...(info.enabled ? {} : { disabled: true }),
+});
+const listedStatus = (info: AgentInfo): AgentRowEntry['status'] =>
+  info.status === 'ready' && hasPublishedUpdate(info) ? 'update' : info.status;
+const reasonOf = ({ reason }: AgentInfo): Pick<AgentRowEntry, 'reason'> =>
+  reason === undefined ? {} : { reason };
 const hasPublishedUpdate = (info: AgentInfo): boolean => {
   if (!info.version || !info.availableVersion) return false;
   return info.version !== info.availableVersion;
 };
 
-// The Server's Agents as probed; a custom Agent the probe has not reached yet reads as Unavailable.
+// The Server's Agents as last checked; a custom Agent the list has not reached yet reads as Checking….
 export function installedAgents(
   agents: readonly AgentInfo[],
   custom: readonly CustomAgentName[],

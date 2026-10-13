@@ -3,11 +3,7 @@ import { expect, within } from 'storybook/test';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { AgentDetailView } from './agent-detail-view';
-import {
-  agentDetailArgs,
-  readyAgent,
-  signInCommand,
-} from './agent-detail.mocks';
+import { agentDetailArgs, readyAgent } from './agent-detail.mocks';
 
 const meta = {
   title: 'Tests/Screens/Settings/Agent',
@@ -79,24 +75,6 @@ export const OpensOnTheAgentsIdentityCard: Story = {
     });
     await expect(within(card).getByText('Update available')).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Update' })).toBeVisible();
-  },
-};
-
-export const SignsInAndChecksAgain: Story = {
-  args: { agent: { ...readyAgent, status: 'sign-in', signInCommand } },
-  play: async ({ args, canvas, userEvent }) => {
-    await expect(canvas.getByText('Sign-in needed')).toBeVisible();
-    await expect(
-      canvas.getByRole('group', { name: signInCommand }),
-    ).toBeVisible();
-    await expect(
-      canvas.getByRole('button', { name: 'Copy command' }),
-    ).toBeVisible();
-    await expect(
-      canvas.queryByRole('button', { name: 'Sign in' }),
-    ).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('link', { name: 'Check again' }));
-    await expect(args.onCheckAgain).toHaveBeenCalledOnce();
   },
 };
 

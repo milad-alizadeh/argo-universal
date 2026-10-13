@@ -29,13 +29,15 @@ export function AgentListItem({
   );
 }
 
-// The status reads as the row's value; Ready and Update available add a dot.
+// The status reads as the row's value with its dot, or a spinner while Checking…; a disabled Agent reads as Disabled with no dot.
 function statusProps({
   status,
+  disabled,
 }: AgentRowEntry): Pick<
   React.ComponentProps<typeof ListItem>,
   'value' | 'status'
 > {
+  if (disabled) return { value: 'Disabled' };
   const label = agentStatusLabels[status];
   const tone = statusTone(status);
   return { value: label, status: tone ? { tone, label } : undefined };

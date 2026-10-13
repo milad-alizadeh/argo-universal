@@ -61,7 +61,6 @@ function withProbe(
     ...fromRegistry,
     ...probed,
     icon: probed.icon ?? fromRegistry?.icon,
-    signInCommand: info.installStep,
     version: selectedVersion(info, fromRegistry),
     availableVersion: info.availableVersion,
   };

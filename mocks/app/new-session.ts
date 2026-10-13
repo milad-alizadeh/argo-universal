@@ -31,19 +31,21 @@ export function recordedSessionOptions(agent: string): SessionConfigOption[] {
 
 export const newSessionCatalogs = {
   bothReady: agentsList,
-  bothCantStart: agentsList.map(
-    (agent): AgentsListOutput[number] => ({
-      ...agent,
-      status: 'cant-start',
-      reason: "The Agent's CLI didn't start.",
-    }),
-  ),
+  bothCantStart: agentsList.map((agent): AgentsListOutput[number] => ({
+    ...agent,
+    status: 'cant-start',
+    reason: "The Agent's CLI didn't start.",
+  })),
   oneNotInstalled: agentsList.map((agent, index): AgentsListOutput[number] =>
     index === 0 ? { ...agent, status: 'not-installed' } : agent,
   ),
   oneSignInNeeded: agentsList.map((agent, index): AgentsListOutput[number] =>
     index === 1
-      ? { ...agent, status: 'sign-in-needed', reason: 'The Agent requires sign-in.' }
+      ? {
+          ...agent,
+          status: 'sign-in-needed',
+          reason: 'The Agent requires sign-in.',
+        }
       : agent,
   ),
 };

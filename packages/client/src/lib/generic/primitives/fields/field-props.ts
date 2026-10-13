@@ -76,8 +76,11 @@ export interface ListItemProps {
   disabled?: boolean;
   selected?: boolean;
   needsAttention?: boolean;
-  // A dot after the value. When the value already says the status, such as "Ready", the name says it once.
-  status?: { tone: 'success' | 'warning' | 'destructive'; label: string };
+  // A dot after the value, or a spinner while the status is still being found. When the value already says the status, such as "Ready", the name says it once.
+  status?: {
+    tone: 'success' | 'warning' | 'destructive' | 'pending';
+    label: string;
+  };
   // A spinner takes the icon's place while the row's subject is on its way.
   loading?: boolean;
   // The title is code, such as a command, and draws in the mono face.

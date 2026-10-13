@@ -5,7 +5,7 @@ import type { Configuration } from './common';
 interface RetryCase {
   agent: AgentInfo;
   other: AgentInfo;
-  installStep: string;
+  reason: string;
 }
 export interface RetryScenario {
   width: number;
@@ -20,18 +20,18 @@ export function retryCase(agentIndex: number): RetryCase {
     (entry) => entry.agent !== agent.agent,
   );
   if (!other) throw new Error(retryRequirements);
-  return { agent, other, installStep: retryReason(agent) };
+  return { agent, other, reason: retryReason(agent) };
 }
 const retryRequirements =
-  'Recorded catalog needs two unavailable Agents with a reason.';
+  'Recorded catalog needs two Agents that can’t start with a reason.';
 function retryAgent(agentIndex: number): AgentInfo {
   const agent = newSessionCatalogs.bothCantStart[agentIndex];
   if (!agent) throw new Error(retryRequirements);
   return agent;
 }
 function retryReason(agent: AgentInfo): string {
-  if (!agent.installStep) throw new Error(retryRequirements);
-  return agent.installStep;
+  if (!agent.reason) throw new Error(retryRequirements);
+  return agent.reason;
 }
 export function retryConfiguration(scenario: RetryScenario): Configuration {
   const { recorded, session, onAgentChange, onAgentRetry } = scenario;

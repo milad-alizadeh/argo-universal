@@ -14,8 +14,6 @@ export type AgentDetail = AgentRowEntry & {
   // How the Server installs it, such as "npm · needs Node.js", or why this Server cannot.
   distribution?: string;
   links?: readonly AgentLink[];
-  // The command that signs the Agent in, run where the Server runs.
-  signInCommand?: string;
 };
 
 export interface AgentDetailViewProps {
@@ -27,7 +25,9 @@ export interface AgentDetailViewProps {
   onUpdate?: () => void;
   onRemove?: () => void;
   management?: AgentManagement;
-  // Probes the Agent again, such as after signing in with the CLI.
-  onCheckAgain?: () => void;
+  // Checks the Agent's Readiness again, such as after signing in with the CLI.
+  onRecheck?: () => void;
   onSignIn?: () => void;
+  // Installs the same release again when its files are missing.
+  onRepair?: () => void;
 }

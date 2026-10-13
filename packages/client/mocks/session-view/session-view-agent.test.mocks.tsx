@@ -46,18 +46,18 @@ async function openAgentRow(
   return row;
 }
 
-function unavailableAgent(agentIndex: 0 | 1): AgentInfo & {
-  installStep: string;
+function cantStartAgent(agentIndex: 0 | 1): AgentInfo & {
+  reason: string;
 } {
   const agent = newSessionCatalogs.bothCantStart[agentIndex];
-  if (!agent?.installStep)
-    throw new Error('Recorded catalog needs two unavailable Agents.');
-  return { ...agent, installStep: agent.installStep };
+  if (!agent?.reason)
+    throw new Error('Recorded catalog needs two Agents that can’t start.');
+  return { ...agent, reason: agent.reason };
 }
 
-// A started Session's Agent became unavailable: its row says why and Retry asks again.
-export function agentUnavailable(agentIndex: 0 | 1): Story {
-  const agent = unavailableAgent(agentIndex);
+// A started Session's Agent can’t start: its row says why and Recheck asks again.
+export function agentCantStart(agentIndex: 0 | 1): Story {
+  const agent = cantStartAgent(agentIndex);
   return {
     args: idleSessionWith({
       agents: newSessionCatalogs.bothCantStart,
@@ -68,10 +68,10 @@ export function agentUnavailable(agentIndex: 0 | 1): Story {
     play: async (context) => {
       const row = await openAgentRow(context, agent);
       await expect(row).toBeDisabled();
-      await expect(row).toHaveTextContent(agent.installStep);
+      await expect(row).toHaveTextContent(agent.reason);
       await context.userEvent.click(
         within(document.body).getByRole('button', {
-          name: `Retry ${agent.label}`,
+          name: `Recheck ${agent.label}`,
         }),
       );
       await expect(

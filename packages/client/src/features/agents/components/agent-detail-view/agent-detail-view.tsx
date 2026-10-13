@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Badge } from '#lib/generic/primitives/display/badge/badge';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { FieldGroup } from '#lib/generic/primitives/fields/field-group/field-group';
 import { FieldRow } from '#lib/generic/primitives/fields/field-row/field-row';
@@ -8,13 +7,14 @@ import { SettingsPage } from '#lib/product/settings-page';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';
-import { agentStatusLabels, statusTone } from '../../state/agent-status';
+import { statusTone } from '../../state/agent-status';
 import { AgentIdentity } from '../agent-identity';
 import { useInstallToast } from '../agent-install-control/use-install-toast';
 import {
   AgentEnablement,
   AgentManagementFailure,
 } from '../agent-management/agent-management';
+import { AgentStatusChip } from '../agent-readiness/agent-readiness';
 import { PhoneTitle } from '../phone-title';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
@@ -38,19 +38,6 @@ export function AgentDetailView(
   );
 }
 
-// A registry Agent the Server has not installed shows no chip; its Install button says it all.
-function AgentStatusChip({
-  agent,
-}: Pick<AgentDetailViewProps, 'agent'>): React.JSX.Element | null {
-  const tone = statusTone(agent.status);
-  if (!tone) return null;
-  return (
-    <Badge tone={tone}>
-      <Text>{agentStatusLabels[agent.status]}</Text>
-    </Badge>
-  );
-}
-
 function DetailIdentity(props: AgentDetailViewProps): React.JSX.Element {
   return (
     <AgentIdentity
@@ -70,7 +57,7 @@ function IdentityTrailing(
 ): React.JSX.Element | null {
   if (showsIdentityInstallation(props)) return <AgentAction {...props} />;
   if (statusTone(props.agent.status))
-    return <AgentStatusChip agent={props.agent} />;
+    return <AgentStatusChip status={props.agent.status} />;
   return <AgentAction {...props} />;
 }
 
@@ -102,7 +89,7 @@ function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element | null {
     <FieldRow>
       <View className="items-center gap-3">
         <PhoneIconTile {...props} />
-        <AgentStatusChip agent={agent} />
+        <AgentStatusChip status={agent.status} />
         <PhoneDescription description={agent.description} />
         <AgentAction {...props} fullWidth="narrow" />
       </View>

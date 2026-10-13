@@ -45,7 +45,7 @@ const chooseAgent = (
   chosen: string | undefined,
 ): AgentInfo | undefined =>
   agents.find((entry) => entry.agent === chosen) ??
-  agents.find((entry) => entry.availability === 'available') ??
+  agents.find((entry) => entry.status === 'ready') ??
   agents[0];
 
 type Checkout = Pick<

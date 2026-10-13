@@ -29,7 +29,7 @@ export const composerUnlistedEffortConfigurations =
     }),
   );
 
-export const composerUnavailableConfigurations =
+export const composerCantStartConfigurations =
   newSessionCatalogs.bothCantStart.map(
     (agent): NonNullable<ComposerProps['configuration']> => ({
       agents: newSessionCatalogs.bothCantStart,

@@ -20,7 +20,7 @@ export {
 export {
   composerLongAgentCatalog,
   composerUnlistedEffortConfigurations,
-  composerUnavailableConfigurations,
+  composerCantStartConfigurations,
 } from './composer-agent-catalogs';
 export {
   composerLongModelList,

@@ -12,7 +12,7 @@ Given(
   async ({ page, server }, ordinal: string): Promise<void> => {
     expect(
       await readAgent(page, server.httpUrl, Number(ordinal)),
-    ).toMatchObject({ availability: 'available' });
+    ).toMatchObject({ status: 'ready' });
   },
 );
 

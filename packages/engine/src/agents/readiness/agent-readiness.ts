@@ -87,7 +87,7 @@ const checkAndSave = async (
 };
 
 // Shows the Agent as Checking… at once, then saves what the shared ACP check observed.
-export const recheckAgent = async (
+const recheckAgent = async (
   deps: ReadinessDeps,
   agentId: string,
 ): Promise<AgentCheck> => {
@@ -109,7 +109,7 @@ const runBounded = async (
 };
 
 // Every installed, enabled Agent is checked again; saved results are never trusted. Disabled Agents never run.
-export const recheckEveryAgent = async (deps: ReadinessDeps): Promise<void> => {
+const recheckEveryAgent = async (deps: ReadinessDeps): Promise<void> => {
   const agentIds = checkableAgents(deps.database);
   await save(deps, agentIds, pendingReadiness);
   await runBounded(agentIds, (agentId) => checkAndSave(deps, agentId));

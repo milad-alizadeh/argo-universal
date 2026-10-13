@@ -54,5 +54,4 @@ function heldChoiceCase(agent: HeldAgent): HeldChoiceCase {
     offered: range.offered,
   };
 }
-export const heldChoiceCases =
-  newSessionCatalogs.bothReady.map(heldChoiceCase);
+export const heldChoiceCases = newSessionCatalogs.bothReady.map(heldChoiceCase);
