@@ -1,10 +1,10 @@
 import type * as React from 'react';
-import { Icon } from '../../../symbols/icon';
-import { Badge } from '../../display/badge/badge';
-import { Text } from '../../display/text/text';
-import { FieldSection } from '../../fields/field-section/field-section';
-import { ListItem } from './list-item';
-import { onPress } from './list-item-story-action';
+import { Badge } from '../src/lib/generic/primitives/display/badge/badge';
+import { Text } from '../src/lib/generic/primitives/display/text/text';
+import { FieldSection } from '../src/lib/generic/primitives/fields/field-section/field-section';
+import { ListItem } from '../src/lib/generic/primitives/lists/list-item/list-item';
+import { Icon } from '../src/lib/generic/symbols/icon';
+import { onPress } from './list-item-press-mock';
 
 export function PlainRows(): React.JSX.Element {
   return (

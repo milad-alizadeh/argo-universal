@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Icon } from '../../../symbols/icon';
-import { IconExamples } from './icon-story-examples';
-import { SfAndMaterialTable } from './icon-story-sf-table';
+import { IconExamples } from './icon-examples.mocks';
+import { SfAndMaterialTable } from './sf-symbol-table.mocks';
 
 const meta = {
   title: 'Design System/Primitives/Icon',

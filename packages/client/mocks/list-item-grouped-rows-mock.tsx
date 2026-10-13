@@ -1,15 +1,15 @@
 import type * as React from 'react';
-import { SampleLogo } from '../../../../../../mocks/sample-logo';
-import { FieldGroup } from '../../fields/field-group/field-group';
-import { FieldSection } from '../../fields/field-section/field-section';
-import { ListItem } from './list-item';
-import { onPress } from './list-item-story-action';
+import { FieldGroup } from '../src/lib/generic/primitives/fields/field-group/field-group';
+import { FieldSection } from '../src/lib/generic/primitives/fields/field-section/field-section';
+import { ListItem } from '../src/lib/generic/primitives/lists/list-item/list-item';
 import {
   CodeRows,
   LargeRows,
   PlainRows,
   StateRows,
-} from './list-item-story-code-rows';
+} from './list-item-code-rows-mock';
+import { onPress } from './list-item-press-mock';
+import { SampleLogo } from './sample-logo';
 
 export function GroupedRows(): React.JSX.Element {
   return (
