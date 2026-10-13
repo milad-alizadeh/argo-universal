@@ -100,7 +100,7 @@ function ProjectSections({
     <FieldGroup>
       <FieldSection title="Folder">
         {otherDevice ? <ListItem title="Device" value={otherDevice} /> : null}
-        <ListItem icon="folder" title={homePath(project.path)} code />
+        <ListItem icon="folder" title={homePath(project.path)} />
       </FieldSection>
       <NewSessionsSection project={project} />
       <RemoveProject />
