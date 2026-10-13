@@ -28,7 +28,7 @@ Each external installer starts behind a Node launch gate. Its process group and 
 
 ```mermaid
 flowchart TD
-    App[App: approved Install Sheet and Alert] --> Router[Agents tRPC procedures]
+    App[App: installation confirmation and progress] --> Router[Agents tRPC procedures]
     Router --> Setup[Engine-owned Agent installation]
     Registry[Validated Registry cache] --> Setup
     Setup --> Tools[External download and package tools]

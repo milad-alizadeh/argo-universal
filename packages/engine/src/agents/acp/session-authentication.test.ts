@@ -80,3 +80,33 @@ it('rejects an advertised generic login method with no supported effective accou
   expect(requests).toEqual([]);
   await resources.shutdown();
 });
+
+it.each(['max', 'Claude Max'])(
+  'opens a Session for the reported %s subscription account',
+  async (plan) => {
+    const peer = createScriptedAgentProcess({
+      ...loginScenario(),
+      responses: {
+        initialize: [
+          {
+            steps: [
+              loginStatusStep({
+                kind: 'account',
+                label: 'Claude Max',
+                account: { plan },
+              }),
+            ],
+          },
+        ],
+      },
+    });
+    const resources = createAcpResources(peer);
+    try {
+      const lease = await resources.open(createResourceOpening());
+      expect(lease.sessionId).toBe('owned-1');
+      await lease.close();
+    } finally {
+      await resources.shutdown();
+    }
+  },
+);

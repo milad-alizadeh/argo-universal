@@ -142,7 +142,7 @@ class SessionSnapshotObserver implements Subscription {
   }
 
   private changed(): void {
-    if (this.hasStopped) return;
+    if (this.hasStopped || this.finishCurrent()) return;
     try {
       this.watchFeed();
       this.publish();
