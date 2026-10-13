@@ -12,32 +12,47 @@ interface Entry<Value> {
   eviction?: ReturnType<typeof setTimeout>;
 }
 
+interface Store<Value> {
+  entries: Map<string, Entry<Value>>;
+  graceMs: number;
+}
+
 export function createHeldCache<Value>(graceMs: number): HeldCache<Value> {
-  const entries = new Map<string, Entry<Value>>();
-  const entryOf = (key: string): Entry<Value> => {
-    const entry = entries.get(key) ?? { holders: 0 };
-    entries.set(key, entry);
-    return entry;
-  };
-  const evictLater = (key: string, entry: Entry<Value>): void => {
-    clearTimeout(entry.eviction);
-    entry.eviction = setTimeout(() => entries.delete(key), graceMs);
-  };
+  const store: Store<Value> = { entries: new Map(), graceMs };
   return {
-    read: (key) => entries.get(key)?.value,
-    write: (key, value) => {
-      const entry = entryOf(key);
-      entry.value = value;
-      if (entry.holders === 0) evictLater(key, entry);
-    },
-    hold: (key) => {
-      const entry = entryOf(key);
-      clearTimeout(entry.eviction);
-      entry.holders += 1;
-      return (): void => {
-        entry.holders -= 1;
-        if (entry.holders === 0) evictLater(key, entry);
-      };
-    },
+    read: (key) => store.entries.get(key)?.value,
+    write: (key, value) => write(store, key, value),
+    hold: (key) => hold(store, key),
+  };
+}
+
+function entryOf<Value>(store: Store<Value>, key: string): Entry<Value> {
+  const entry = store.entries.get(key) ?? { holders: 0 };
+  store.entries.set(key, entry);
+  return entry;
+}
+
+function evictLater<Value>(
+  store: Store<Value>,
+  key: string,
+  entry: Entry<Value>,
+): void {
+  clearTimeout(entry.eviction);
+  entry.eviction = setTimeout(() => store.entries.delete(key), store.graceMs);
+}
+
+function write<Value>(store: Store<Value>, key: string, value: Value): void {
+  const entry = entryOf(store, key);
+  entry.value = value;
+  if (entry.holders === 0) evictLater(store, key, entry);
+}
+
+function hold<Value>(store: Store<Value>, key: string): () => void {
+  const entry = entryOf(store, key);
+  clearTimeout(entry.eviction);
+  entry.holders += 1;
+  return (): void => {
+    entry.holders -= 1;
+    if (entry.holders === 0) evictLater(store, key, entry);
   };
 }
