@@ -17,6 +17,7 @@
     // Per-package Vitest runs so CI skips unchanged packages; the root vitest.config.ts stays for local runs (Turborepo Vitest guide).
     "test": {
       "dependsOn": ["transit"],
+      "env": ["VITEST_MAX_WORKERS"],
       "outputs": []
     },
     // @repo/e2e lists the Server, App, and Desktop as dependencies, so their sources and the web export feed this hash (Turborepo Playwright guide).

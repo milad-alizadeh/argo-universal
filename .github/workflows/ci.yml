@@ -39,6 +39,9 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Quality
+        env:
+          TURBO_CONCURRENCY: 1
+          VITEST_MAX_WORKERS: 1
         run: pnpm quality
 
       # apps/storybook/vitest.setup.ts saves a failed story's screenshot in __screenshots__/failures beside its test file.
