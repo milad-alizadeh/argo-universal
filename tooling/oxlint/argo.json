@@ -100,6 +100,11 @@
       "rules": { "no-console": "off" }
     },
     {
+      // Expo loads the Metro config as CommonJS, so it requires its wrappers.
+      "files": ["apps/universal-app/metro.config.js"],
+      "rules": { "typescript/no-require-imports": "off" }
+    },
+    {
       // ADR-0016 (1): one global cap for test files. A describe callback holds its cases, so a test function may run to the 150-line file cap with 30 statements.
       "files": ["**/*.test.*"],
       "rules": {

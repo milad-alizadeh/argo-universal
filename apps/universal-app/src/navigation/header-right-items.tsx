@@ -20,13 +20,12 @@ export function rightItems(right: readonly ReactElement[]): ScreenOptions {
   };
 }
 
-// Spaced items, so iOS 26 draws each in its own glass bubble.
-function separateItems(
-  elements: readonly ReactElement[],
-): (
+type HeaderRightItem =
   | { type: 'custom'; element: ReactElement; spacing?: never }
-  | { type: 'spacing'; spacing: number; index: number }
-)[] {
+  | { type: 'spacing'; spacing: number; index: number };
+
+// Spaced items, so iOS 26 draws each in its own glass bubble.
+function separateItems(elements: readonly ReactElement[]): HeaderRightItem[] {
   const items = elements.flatMap((element, index) => [
     ...(index > 0 ? [{ type: 'spacing' as const, spacing: 8 }] : []),
     { type: 'custom' as const, element },

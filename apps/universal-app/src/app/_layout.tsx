@@ -104,9 +104,6 @@ const navigate: Navigate = (destination, options) =>
     : router.navigate(hrefFor(destination));
 
 export default function RootLayout(): React.JSX.Element {
-  const { theme } = useUniwind();
-  const navigationTheme = useNavigationTheme();
-
   return (
     // The phone drawer's gestures need this root.
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -115,31 +112,47 @@ export default function RootLayout(): React.JSX.Element {
         <SymbolImagesProvider render={renderSymbolImage}>
           <AppProviders serverUrl={serverUrl}>
             <ForegroundSignal />
-            <ThemeProvider value={navigationTheme}>
-              <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-              <NavigationProvider
-                navigate={navigate}
-                leaveGuard={useLeaveGuard}
-              >
-                <NativeSheetsProvider value={nativeSheets}>
-                  <FormSheetProvider routes={formSheetRoutes}>
-                    {/* Storybook stays outside the shell. */}
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="(shell)" />
-                      <Stack.Screen name="agent-model" options={sheetOptions} />
-                      <Stack.Screen name="form-sheet" options={sheetOptions} />
-                      <Stack.Screen name="(dev)/storybook" />
-                    </Stack>
-                  </FormSheetProvider>
-                </NativeSheetsProvider>
-              </NavigationProvider>
-              <PortalHost />
-              <Toaster />
-            </ThemeProvider>
+            <ThemedApp />
           </AppProviders>
         </SymbolImagesProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
+  );
+}
+
+function ThemedApp(): React.JSX.Element {
+  const { theme } = useUniwind();
+  return (
+    <ThemeProvider value={useNavigationTheme()}>
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+      <RootNavigator />
+      <PortalHost />
+      <Toaster />
+    </ThemeProvider>
+  );
+}
+
+function RootNavigator(): React.JSX.Element {
+  return (
+    <NavigationProvider navigate={navigate} leaveGuard={useLeaveGuard}>
+      <NativeSheetsProvider value={nativeSheets}>
+        <FormSheetProvider routes={formSheetRoutes}>
+          <RootStack />
+        </FormSheetProvider>
+      </NativeSheetsProvider>
+    </NavigationProvider>
+  );
+}
+
+// Storybook stays outside the shell.
+function RootStack(): React.JSX.Element {
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(shell)" />
+      <Stack.Screen name="agent-model" options={sheetOptions} />
+      <Stack.Screen name="form-sheet" options={sheetOptions} />
+      <Stack.Screen name="(dev)/storybook" />
+    </Stack>
   );
 }
 

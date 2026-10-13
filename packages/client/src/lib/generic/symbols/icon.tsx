@@ -10,9 +10,13 @@ import {
 import { withUniwind } from 'uniwind';
 import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
+import { appleSymbol } from './apple-symbol';
 import { type IconName, iconSymbols } from './icon-names';
 import { type IconRole, useIconBox, useIconPixels } from './icon-role';
-import { SymbolGlyph } from './symbol-glyph/symbol-glyph';
+import {
+  SymbolGlyph,
+  type SymbolGlyphProps,
+} from './symbol-glyph/symbol-glyph';
 import type { SymbolSource } from './symbol-source';
 
 // Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
@@ -38,28 +42,35 @@ const TintedSymbol =
         },
       });
 
-export function Icon({
-  name,
-  role,
-  filled = false,
-  className,
-  testID = `icon-${name}`,
-}: IconProps): React.JSX.Element {
-  const textClass = useContext(TextClassContext);
+const glyphScale = Platform.OS === 'android' ? materialGlyphScale : 1;
+
+function symbolGlyph(
+  name: IconName,
+  filled: boolean | undefined,
+): Pick<SymbolGlyphProps, 'sf' | 'material' | 'filled'> {
   const symbol: SymbolSource = iconSymbols[name];
-  const colorClassName = cn('text-foreground', textClass, className);
-  const pixels = useIconPixels(role);
-  const sf = (filled && symbol.sfFilled) || symbol.sf;
+  const sf = appleSymbol(symbol, filled);
+  return {
+    sf,
+    material: symbol.material,
+    filled: sf !== symbol.sf || sf.endsWith('.fill'),
+  };
+}
+
+function useIconColor(className: string | undefined): string {
+  return cn('text-foreground', useContext(TextClassContext), className);
+}
+
+export function Icon(props: IconProps): React.JSX.Element {
+  const colorClassName = useIconColor(props.className);
   return (
     <TintedSymbol
+      {...symbolGlyph(props.name, props.filled)}
       className={colorClassName}
       colorClassName={colorClassName}
-      sf={sf}
-      material={symbol.material}
-      filled={sf !== symbol.sf || sf.endsWith('.fill')}
-      pixels={pixels}
-      glyphScale={Platform.OS === 'android' ? materialGlyphScale : 1}
-      testID={testID}
+      pixels={useIconPixels(props.role)}
+      glyphScale={glyphScale}
+      testID={props.testID ?? `icon-${props.name}`}
     />
   );
 }
