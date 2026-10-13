@@ -10,8 +10,8 @@ import type {
   ScriptedScenario,
   ScriptedStep,
 } from '@repo/mocks/agent/scripted-scenario';
-import type { AcpProcess } from '../src/acp';
 import type { AgentLaunch } from '../src/agents';
+import type { AcpProcess } from '../src/agents';
 
 type Observation = {
   messages: AnyMessage[];

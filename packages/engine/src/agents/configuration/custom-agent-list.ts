@@ -32,9 +32,18 @@ const customAgentInfo = (
   agent: agent.agentId,
   label: agent.definition.name,
   logo: '',
-  availability: customAvailability(check),
+  availability: checkedAvailability(check),
+  installStep: checkedStep(check),
 });
-const customAvailability = (
+export const checkedStep = (
+  check: Awaited<ReturnType<typeof checkConfiguredAgent>>,
+): string | undefined => {
+  if (check.status !== 'ready') return check.failure;
+  return check.authentication
+    ? 'Sign in from Agents to start a Session.'
+    : undefined;
+};
+export const checkedAvailability = (
   check: Awaited<ReturnType<typeof checkConfiguredAgent>>,
 ): AgentInfo['availability'] => {
   if (check.status !== 'ready') return 'unavailable';

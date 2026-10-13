@@ -15,6 +15,7 @@ import {
   getShortestPaths,
 } from 'xstate/graph';
 import { openTestDatabase } from '#mocks/database';
+import { createAcpResources } from '../../agents';
 import { openSessionsMachine } from '../open-sessions-machine';
 import { sessionListMachine } from './session-list-machine';
 
@@ -30,7 +31,7 @@ const sessions = createActor(openSessionsMachine, {
     createId: randomUUID,
     database,
     runtimeDirectory,
-    adapters: [],
+    acpResources: createAcpResources(),
   },
 });
 const input = {

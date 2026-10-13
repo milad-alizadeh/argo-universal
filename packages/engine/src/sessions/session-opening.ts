@@ -50,7 +50,6 @@ function isInitialSessionStartup(
     'loading',
     'creating',
     { open: { acp: 'opening' } },
-    { open: { live: 'starting' } },
   ] as const;
   return (
     snapshot.context.agentCrashes.length === 0 &&

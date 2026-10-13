@@ -4,9 +4,9 @@ import type {
   SetSessionConfigOptionRequest,
   SessionConfigOption,
 } from '@agentclientprotocol/sdk';
-import { agentAdapters } from '@repo/agents';
 import { session } from '@repo/db/schema';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
@@ -14,7 +14,7 @@ import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const configuredSessionId = 'configured-session';
 
-it.each(agentAdapters.map(({ agent }) => agent))(
+it.each(fixtureAgents.map(({ agent }) => agent))(
   '%s names an empty Session from its first prompt and keeps that title on later prompts',
   async (agent) => {
     const host = await startAcpEngine({ steps: [] }, undefined, agent);
@@ -98,7 +98,7 @@ it('an empty Session shows configuration returned for its actual Checkout before
   await feed.return?.();
 });
 
-it.each(agentAdapters.map(({ agent }) => agent))(
+it.each(fixtureAgents.map(({ agent }) => agent))(
   '%s applies Fast mode to the actual Session and reports its authoritative response',
   async (agent) => {
     const requests: SetSessionConfigOptionRequest[] = [];
@@ -388,7 +388,7 @@ it('explicit closure rejects a pending configuration instead of reporting false 
 });
 
 it.each(
-  agentAdapters.flatMap(({ agent }) => [
+  fixtureAgents.flatMap(({ agent }) => [
     { agent, configId: 'model', value: 'small' },
     { agent, configId: 'effort', value: 'low' },
     { agent, configId: 'mode', value: 'plan' },

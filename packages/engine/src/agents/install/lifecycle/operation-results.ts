@@ -6,7 +6,7 @@ import type { OwnedInstall } from './operation-types';
 const installTimeout = 300_000;
 const wasCancelled = (reason: unknown): boolean =>
   reason instanceof DOMException && reason.name === 'AbortError';
-export const failedOperation = (
+const failedOperation = (
   owned: OwnedInstall,
   error: unknown,
 ): AgentInstallOperation =>

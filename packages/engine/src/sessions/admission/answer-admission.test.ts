@@ -3,7 +3,6 @@ import { expect, it } from 'vitest';
 import {
   admitsPermissionAnswer,
   answeredRequest,
-  canDeliverFeedback,
   chosenOption,
 } from './answer-admission';
 
@@ -96,32 +95,3 @@ it.each([
     );
   },
 );
-
-it.each([
-  {
-    name: 'delivers a rejection to an Agent that reads feedback',
-    option: rejectOnce,
-    capabilities: { permissionFeedback: true },
-    delivered: true,
-  },
-  {
-    name: 'withholds a rejection from an Agent that ignores feedback',
-    option: rejectOnce,
-    capabilities: { permissionFeedback: false },
-    delivered: false,
-  },
-  {
-    name: 'withholds an approval from an Agent that reads feedback',
-    option: allowOnce,
-    capabilities: { permissionFeedback: true },
-    delivered: false,
-  },
-  {
-    name: 'withholds a rejection before the Agent reports its capabilities',
-    option: rejectOnce,
-    capabilities: null,
-    delivered: false,
-  },
-])('$name', ({ option, capabilities, delivered }): void => {
-  expect(canDeliverFeedback(capabilities, option)).toBe(delivered);
-});

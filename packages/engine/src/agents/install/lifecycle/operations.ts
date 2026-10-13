@@ -45,9 +45,11 @@ export class AgentInstallations {
     agentId: string,
     operation: () => Promise<Result>,
   ): Promise<Result> {
-    if (this.stopped) throw new Error('Engine is stopping');
-    if (this.isReserved(agentId)) throw new Error('Agent is in use by setup');
-    return this.configuration.run(agentId, operation);
+    return this.configuration.afterCheck(agentId, () => {
+      if (this.stopped) throw new Error('Engine is stopping');
+      if (this.isReserved(agentId)) throw new Error('Agent is in use by setup');
+      return this.configuration.run(agentId, operation);
+    });
   }
   public check = createInstallationReadiness({
     configuration: this.configuration,
@@ -78,33 +80,36 @@ export class AgentInstallations {
     });
   }
   private own(operation: AgentInstallOperation): void {
+    const checking = this.configuration.pendingCheck(operation.agentId);
     const owned = createOwnedInstall(operation);
     this.active.set(operation.agentId, owned);
-    owned.settled = this.run(owned);
+    owned.settled = this.run(owned, checking);
     void owned.settled.catch(() => {});
+  }
+  private installationInUse(agentId: string): boolean {
+    return this.isBusy(agentId) || this.dependencies().isInUse(agentId);
   }
   public start(input: AgentInstallInput): AgentInstallOperation {
     if (this.stopped) throw new Error('Engine is stopping');
     const operation = startOperation(input);
-    if (this.isInUse(input.agentId)) return inUseOperation(operation);
+    if (this.installationInUse(input.agentId)) return inUseOperation(operation);
     this.own(operation);
     return operation;
   }
-  private async run(owned: OwnedInstall): Promise<void> {
+  private async run(
+    owned: OwnedInstall,
+    checking: Promise<unknown> | undefined,
+  ): Promise<void> {
     try {
-      this.completed.set(
-        owned.operation.agentId,
-        await settleAgentInstallation(
-          { home: this.home, ports: this.ports, deps: this.dependencies() },
-          owned,
-        ),
+      const completed = await settleAgentInstallation(
+        { home: this.home, ports: this.ports, deps: this.dependencies() },
+        owned,
+        checking,
       );
+      this.completed.set(owned.operation.agentId, completed);
     } finally {
-      this.release(owned);
+      if (owned.released) this.active.delete(owned.operation.agentId);
     }
-  }
-  private release(owned: OwnedInstall): void {
-    if (owned.released) this.active.delete(owned.operation.agentId);
   }
   private operationFor(agentId: string): AgentInstallOperation | null {
     const owned = this.active.get(agentId);

@@ -1,4 +1,3 @@
-import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import type { Database } from '@repo/db';
 import {
   type ActorRefFrom,
@@ -8,9 +7,7 @@ import {
   type OutputFrom,
   setup,
 } from 'xstate';
-import type { AcpResources } from '../acp';
-import { agentProbeId, agentProbeMachine } from '../agents';
-import type { ResolveAgentLaunch } from '../agents';
+import type { AcpResources } from '../agents';
 import { admitsExistingSession, admitsNewSession } from './agent-admission';
 import { createSessionActorInput } from './session-actor-input';
 import type { SessionCreationInput } from './session-data';
@@ -25,14 +22,11 @@ export interface OpenSessionsInput {
   runtimeDirectory: string;
   now: () => number;
   createId: () => string;
-  adapters?: readonly AgentAdapter[];
-  acpResources?: AcpResources;
-  resolveAgentLaunch?: ResolveAgentLaunch;
+  acpResources: AcpResources;
   isAgentSetupBusy?: (agentId: string) => boolean;
 }
 
 interface OpenSessionsContext extends OpenSessionsInput {
-  adapters: readonly AgentAdapter[];
   sessions: Record<string, SessionActorRef>;
 }
 
@@ -68,17 +62,8 @@ export const openSessionsMachine = setup({
     context: {} as OpenSessionsContext,
     events: {} as OpenSessionsEvent,
   },
-  actors: { session: sessionMachine, agentProbe: agentProbeMachine },
+  actors: { session: sessionMachine },
   actions: {
-    // Each Agent is probed once at start, so the first `agents.list` rarely waits.
-    spawnAgentProbes: enqueueActions(({ context, enqueue }): void => {
-      for (const adapter of context.adapters)
-        enqueue.spawnChild('agentProbe', {
-          id: agentProbeId(adapter.agent),
-          systemId: agentProbeId(adapter.agent),
-          input: { adapter },
-        });
-    }),
     openSession: assign(
       ({ context, event, spawn }): Partial<OpenSessionsContext> => {
         assertEvent(event, [createSessionEvent, 'sessions.open']);
@@ -122,7 +107,8 @@ export const openSessionsMachine = setup({
       if (
         session &&
         snapshot.can({ type: closeSessionEvent }) &&
-        !snapshot.matches({ open: 'draining' })
+        !snapshot.matches({ open: { acp: 'closing' } }) &&
+        !snapshot.matches({ open: { acp: 'retainingCleanup' } })
       )
         enqueue.sendTo(session, { type: closeSessionEvent });
     }),
@@ -145,10 +131,8 @@ export const openSessionsMachine = setup({
   id: 'sessions',
   context: ({ input }): OpenSessionsContext => ({
     ...input,
-    adapters: input.adapters ?? agentAdapters,
     sessions: {},
   }),
-  entry: 'spawnAgentProbes',
   initial: 'running',
   on: {
     'xstate.done.actor.*': { actions: 'removeSession' },

@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
+import { openDatabase } from '@repo/db';
 import type { Database } from '@repo/db';
+import type { AgentIdentity } from '@repo/mocks/agent';
 import { findFreePort } from '@repo/mocks/network/free-port';
 import { onTestFinished } from 'vitest';
 import { waitFor, type ActorRefFrom } from 'xstate';
@@ -11,6 +13,7 @@ import { findMachineActor } from '../src/lib/machine-actor';
 import type { OpenSessionsActorRef } from '../src/sessions';
 import { openSessionsId, openSessionsMachine } from '../src/sessions';
 import { databaseWriterId, writerMachine } from '../src/storage';
+import { seedAgentFixtures } from './agent-fixtures';
 import { openTestDatabase } from './database';
 import { scriptedEngineInput } from './scripted-engine';
 
@@ -19,6 +22,7 @@ export { engineMachine } from '../src/engine/machine';
 export type { EngineMessage } from '../src/engine/ipc';
 
 type EngineTestOptions = Partial<EngineInput> & {
+  fixtureAgents?: readonly AgentIdentity[];
   database?: Database;
   runtimeDirectory?: string;
 };
@@ -53,6 +57,7 @@ export async function startEngineTestHost(
       : (options.runtimeDirectory ?? storage?.directory));
   if (!home) throw new Error('Engine test storage is missing');
   const port = options.port ?? (await findFreePort());
+  seedTestCommands(options, home, storage);
   const engine = composeEngine({
     version: '1.2.3',
     startedAt: '2026-10-03T00:00:00.000Z',
@@ -113,4 +118,20 @@ function registerEngineCleanup(
     storage?.remove();
   });
   return stop;
+}
+
+function seedTestCommands(
+  options: EngineTestOptions,
+  home: string,
+  storage: ReturnType<typeof openTestDatabase> | undefined,
+): void {
+  const seeded =
+    options.database ??
+    storage?.database ??
+    openDatabase(join(home, 'argo.db'));
+  seedAgentFixtures(
+    seeded,
+    options.fixtureAgents ?? [{ agent: 'mock', label: 'mock', logo: '' }],
+  );
+  if (!options.database && !storage) seeded.$client.close();
 }

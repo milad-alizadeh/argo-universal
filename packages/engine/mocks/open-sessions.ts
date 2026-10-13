@@ -1,4 +1,3 @@
-import { createAgentMetadata } from '@repo/mocks/agent';
 import {
   assertEvent,
   assign,
@@ -31,7 +30,6 @@ export const createOpenSessionsModelMachine = (
     actors: { session },
     actions: forGraph
       ? {
-          spawnAgentProbes: (): void => {},
           openSession: assign(({ context, event }): Partial<ModelContext> => {
             assertEvent(event, ['sessions.create', 'sessions.open']);
             if (context.sessions[event.sessionId]) return {};
@@ -46,5 +44,3 @@ export const createOpenSessionsModelMachine = (
         }
       : {},
   });
-
-export const openSessionsModelAdapter = createAgentMetadata();

@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "catalog:",
-    "@repo/agents": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/git": "workspace:*",
@@ -44,6 +43,6 @@
     "./ipc": "./src/engine/ipc.ts",
     "./server-runtime": "./src/server-runtime.ts",
     "./installation-runtime": "./src/agents/installation-runtime.ts",
-    "./login-terminal-runtime": "./src/acp/terminal-runtime.ts"
+    "./login-terminal-runtime": "./src/agents/acp/terminal-runtime.ts"
   }
 }

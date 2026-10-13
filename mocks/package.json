@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "catalog:",
-    "@repo/agents": "workspace:*",
     "@repo/contracts": "workspace:*",
     "zod": "catalog:"
   },

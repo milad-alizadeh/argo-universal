@@ -6,9 +6,7 @@ import { findMachineActor } from '../lib/machine-actor';
 import { readProjectPath } from '../projects';
 import { databaseWriterId, writerMachine } from '../storage';
 import type { SessionRouterDeps } from './router-deps';
-import { runsOverAcp } from './session-actor-input';
 import {
-  requireTextOnlyPrompt,
   submitSessionPrompt,
   validateSessionCommandAdmission,
 } from './session-command';
@@ -85,8 +83,6 @@ export async function createSession(
   >,
   newSession: SessionNewInput,
 ): Promise<SessionNewOutput> {
-  if (!runsOverAcp(deps.sessions.getSnapshot().context, newSession.agent))
-    requireTextOnlyPrompt(newSession.prompt);
   const projectPath = await requireCheckoutProjectPath(
     deps.database,
     newSession,

@@ -27,7 +27,7 @@ ruleTester.run('cross-package-import', crossPackageImport, {
     },
     { code: "require('../../packages/git/src');", errors: crossPackage },
     {
-      code: "import type { Event } from '../../../packages/agents/codex/types';",
+      code: "import type { AcpSessionLease } from '../../../packages/engine/src/agents/acp/resource-types';",
       errors: crossPackage,
     },
   ],

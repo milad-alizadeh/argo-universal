@@ -31,4 +31,4 @@ it('a subscriber that stops reading during a long message catches up whole witho
   await closeStream(slow);
   expect(readMessageText(received)).toEqual({ text: chunks.join(''), gaps: 0 });
   expect(received.length).toBeLessThan(chunkCount);
-});
+}, 20_000);

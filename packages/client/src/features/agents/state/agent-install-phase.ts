@@ -23,3 +23,19 @@ export const installationFailure = (
   input: InstallPhaseInput,
 ): string | undefined =>
   transportFailed(input) ? input.failure : operationFailure(input.operation);
+
+type OperationPresentation = Pick<InstallPhaseInput, 'operation'> & {
+  version: string;
+  dismissedOperationId?: string;
+};
+const hasCompletedPreviousRelease = (input: OperationPresentation): boolean =>
+  input.operation?.status === 'installed' &&
+  input.operation.version !== input.version;
+const hasDismissedOperation = (input: OperationPresentation): boolean =>
+  input.operation?.operationId === input.dismissedOperationId;
+export const visibleInstallOperation = (
+  input: OperationPresentation,
+): AgentInstallOperation | undefined =>
+  hasCompletedPreviousRelease(input) || hasDismissedOperation(input)
+    ? undefined
+    : input.operation;

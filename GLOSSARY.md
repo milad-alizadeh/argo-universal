@@ -98,10 +98,6 @@ _Avoid_: Mention, issue link, tag
 A stretch of Agent work started by a prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange
 
-**Agent adapter**:
-The plain functions that connect Argo to one Agent: start or resume its Agent session, and map its messages into Agent events.
-_Avoid_: Driver, provider, integration
-
 **Agent session**:
 The Agent's own live session behind a Session, identified by the Agent's session id.
 _Avoid_: Vendor session, upstream session, Agent connection, process

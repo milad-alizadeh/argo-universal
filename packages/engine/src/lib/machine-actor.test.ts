@@ -1,4 +1,3 @@
-import { createAgentMetadata } from '@repo/mocks/agent';
 import { describe, expect, it } from 'vitest';
 import {
   type AnyActorRef,
@@ -6,29 +5,32 @@ import {
   createMachine,
   fromTransition,
 } from 'xstate';
-import { agentProbeId, agentProbeMachine } from '../agents';
 import { findMachineActor } from './machine-actor';
 
-const adapter = createAgentMetadata();
+const machine = createMachine({
+  id: 'owned',
+  initial: 'ready',
+  states: { ready: {} },
+});
+const actorId = 'catalog-test';
 const find = (
   system: AnyActorRef['system'],
 ): ReturnType<typeof findMachineActor> =>
-  findMachineActor(system, agentProbeId(adapter.agent), agentProbeMachine);
+  findMachineActor(system, actorId, machine);
 
 describe('findMachineActor', (): void => {
-  it('finds a probe with supplied implementations', (): void => {
-    const probe = createActor(agentProbeMachine.provide({}), {
-      systemId: agentProbeId(adapter.agent),
-      input: { adapter },
+  it('finds a machine actor with supplied implementations', (): void => {
+    const actor = createActor(machine.provide({}), {
+      systemId: actorId,
     });
-    expect(find(probe.system)).toBe(probe);
+    expect(find(actor.system)).toBe(actor);
   });
 
-  it('rejects an unrelated actor registered under the probe id', (): void => {
+  it('rejects an unrelated actor registered under the machine actor id', (): void => {
     const unrelated = createActor(
       fromTransition((): null => null, null),
       {
-        systemId: agentProbeId(adapter.agent),
+        systemId: actorId,
       },
     );
     expect(find(unrelated.system)).toBeUndefined();
@@ -37,17 +39,17 @@ describe('findMachineActor', (): void => {
   it('rejects a different machine with the same machine id', (): void => {
     const unrelated = createActor(
       createMachine({
-        id: agentProbeMachine.id,
+        id: machine.id,
         initial: 'ready',
         states: { ready: {} },
       }),
-      { systemId: agentProbeId(adapter.agent) },
+      { systemId: actorId },
     );
     expect(find(unrelated.system)).toBeUndefined();
   });
 
-  it('reports an absent probe', (): void => {
-    const probe = createActor(agentProbeMachine, { input: { adapter } });
-    expect(find(probe.system)).toBeUndefined();
+  it('reports an absent machine actor', (): void => {
+    const actor = createActor(machine, {});
+    expect(find(actor.system)).toBeUndefined();
   });
 });

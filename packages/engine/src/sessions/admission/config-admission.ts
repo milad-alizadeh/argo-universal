@@ -1,4 +1,5 @@
-import type { AgentConfigValue } from '@repo/agents';
+import type { SessionSetConfigOptionInput } from '@repo/contracts';
+type AgentConfigValue = Pick<SessionSetConfigOptionInput, 'configId' | 'value'>;
 import type {
   SessionConfigOption,
   SessionConfigSelectOption,

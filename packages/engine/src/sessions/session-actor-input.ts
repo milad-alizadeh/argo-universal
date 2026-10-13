@@ -1,5 +1,4 @@
-import { agentAdapters, findAgentAdapter } from '@repo/agents';
-import { selectAgentLaunchResolver } from '../agents';
+import { resolveInstalledAgentLaunch } from '../agents';
 import { readProjectPath } from '../projects';
 import type { AcpSessionDependencies } from './acp/acp-lifetime';
 import type {
@@ -17,22 +16,14 @@ type SessionSource = { context: OpenSessionsInput; event: OpenSession };
 
 const createAcpSessionDependencies = (
   context: OpenSessionsInput,
-  agent: string,
-): AcpSessionDependencies | undefined => {
-  const resolveLaunch = selectAgentLaunchResolver(context, agent);
-  if (!context.acpResources || !resolveLaunch) return undefined;
-  return {
-    resources: context.acpResources,
-    resolveLaunch,
-    projectPath: (id) => readProjectPath(context.database, id),
-  };
-};
-
-// False when the Agent runs on its native adapter, which sends only text.
-export const runsOverAcp = (
-  context: OpenSessionsInput,
-  agent: string,
-): boolean => createAcpSessionDependencies(context, agent) !== undefined;
+): AcpSessionDependencies => ({
+  resources: context.acpResources,
+  resolveLaunch: resolveInstalledAgentLaunch(
+    context.database,
+    context.runtimeDirectory,
+  ),
+  projectPath: (id) => readProjectPath(context.database, id),
+});
 
 const createSessionCreationInput = (
   event: Extract<OpenSessionsCommand, { type: 'sessions.create' }>,
@@ -55,8 +46,7 @@ export const createSessionActorInput = ({
   runtimeDirectory: context.runtimeDirectory,
   now: context.now,
   createId: context.createId,
-  adapter: findAgentAdapter(event.agent, context.adapters ?? agentAdapters),
-  acp: createAcpSessionDependencies(context, event.agent),
+  acp: createAcpSessionDependencies(context),
   sessionId: event.sessionId,
   ...(event.type === 'sessions.create'
     ? createSessionCreationInput(event)

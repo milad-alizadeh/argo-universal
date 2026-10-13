@@ -7,7 +7,6 @@ import {
 import type { ActorRefFrom } from 'xstate';
 import { mergeRouters, publicProcedure, router, routerFactory } from '../rpc';
 import type { OpenSessionsActorRef } from '../sessions';
-import { listAgents } from './agent-list';
 import { watchCommittedCatalogChanges } from './catalog-changes';
 import { readAgentCatalog } from './catalog-sql';
 import type { ConfigurationDeps } from './configuration/configuration-commands';
@@ -16,7 +15,6 @@ import { listCustomAgents } from './configuration/custom-agent-list';
 import type { AgentInstallations } from './install/lifecycle/operations';
 import { createInstallRouter } from './install/router';
 import { listInstalledAgents } from './install/selection/list';
-import { readInstallSelection } from './install/selection/selection';
 import type { AgentLogins } from './login';
 import { createLoginRouter } from './login-router';
 import {
@@ -60,20 +58,21 @@ const createCatalogSyncRouter = routerFactory((deps: CatalogDeps) =>
   }),
 );
 
+const configuredAgentList = async (
+  deps: AgentsRouterDeps,
+): Promise<AgentsListOutput> => {
+  const configured = ownedConfiguration(deps);
+  const installed = deps.home
+    ? await listInstalledAgents(deps.database, deps.home, configured)
+    : [];
+  return [...installed, ...(await listCustomAgents(configured))];
+};
 const createListRouter = routerFactory((deps: AgentsRouterDeps) =>
   router({
     list: publicProcedure
       .input(AgentsListInput)
       .output(AgentsListOutput)
-      .query(async ({ input }): Promise<AgentsListOutput> => [
-        ...(await listAgents(deps.sessions, input)).filter(
-          (agent) => !readInstallSelection(deps.database, agent.agent),
-        ),
-        ...(deps.home
-          ? await listInstalledAgents(deps.database, deps.home)
-          : []),
-        ...(await listCustomAgents(ownedConfiguration(deps))),
-      ]),
+      .query(() => configuredAgentList(deps)),
   }),
 );
 

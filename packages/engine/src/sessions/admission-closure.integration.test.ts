@@ -2,12 +2,12 @@ import type {
   CloseSessionRequest,
   PromptRequest,
 } from '@agentclientprotocol/sdk';
-import { agentAdapters } from '@repo/agents';
 import { session } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it, onTestFinished } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 
-it.each(agentAdapters.map(({ agent }) => agent))(
+it.each(fixtureAgents.map(({ agent }) => agent))(
   'rejects a %s prompt while Agent closure remains pending',
   async (agent) => {
     const stopped = Promise.withResolvers<void>();

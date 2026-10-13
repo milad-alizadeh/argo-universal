@@ -1,5 +1,5 @@
-import { agentAdapters } from '@repo/agents';
 import { session } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import {
@@ -12,7 +12,7 @@ import { scriptedEngineInput } from '#mocks/scripted-engine';
 
 const rejectedSessionListLog = 'sessions: rejected list shape #1';
 
-it.each(agentAdapters.map(({ agent }): string => agent))(
+it.each(fixtureAgents.map(({ agent }): string => agent))(
   'drops only a malformed Session for %s',
   async (agent): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });

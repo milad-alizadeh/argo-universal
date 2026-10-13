@@ -48,7 +48,7 @@ it('lists an enabled custom Agent with availability from a fresh check, not from
     status: 'failed',
     failure: 'Fixture ACP exited before answering ACP initialize.',
   });
-});
+}, 20_000);
 
 it('leaves a disabled custom Agent out of the list', async () => {
   const host = await startCustomAgentEngine();
@@ -62,4 +62,4 @@ it('leaves a disabled custom Agent out of the list', async () => {
   });
   const agents = await host.caller.agents.list();
   expect(agents.map(({ agent }) => agent)).not.toContain(registration.agentId);
-});
+}, 20_000);

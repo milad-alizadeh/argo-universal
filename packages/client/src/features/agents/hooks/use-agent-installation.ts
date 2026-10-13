@@ -14,6 +14,7 @@ import { type ClientError, useTRPC } from '#features/connection';
 import {
   installationFailure,
   installationPhase,
+  visibleInstallOperation,
   type InstallPhaseInput,
 } from '../state/agent-install-phase';
 import type { AgentInstallPresentation } from '../state/agent-install-types';
@@ -37,11 +38,13 @@ type PresentationInput = Commands & {
   action: 'Install' | 'Update';
   open: boolean;
   setOpen: (value: boolean) => void;
+  acceptOffer: () => void;
   operation?: AgentInstallOperation;
   status?: AgentInstallStatus;
   agentId: string;
   version: string;
   previousOperationId?: string;
+  dismissedOperationId?: string;
   rememberPrevious: (operationId: string | undefined) => void;
 };
 const openIfInstalling = (
@@ -85,13 +88,14 @@ function useInstallStatus(
   });
 }
 const phaseInput = (input: PresentationInput): InstallPhaseInput => ({
-  operation: hasCompletedPreviousRelease(input) ? undefined : input.operation,
+  operation: visibleInstallOperation(input),
   previousOperationId: input.previousOperationId,
   pending: input.install.isPending,
   failure: input.install.error?.message,
 });
 const startInstall = (input: PresentationInput): void => {
   input.rememberPrevious(input.status?.operation?.operationId);
+  input.acceptOffer();
   input.setOpen(true);
   input.install.mutate({ agentId: input.agentId, version: input.version });
 };
@@ -137,11 +141,8 @@ export function useAgentInstallation(
   const sheet = useSheetState({
     action,
     version: activeVersion(controls.operation, version),
+    operationId: controls.operation?.operationId,
   });
   useReconnectedInstallation(controls.operation, sheet.setOpen);
   return presentation({ ...controls, ...sheet, agentId });
 }
-
-const hasCompletedPreviousRelease = (input: PresentationInput): boolean =>
-  input.operation?.status === 'installed' &&
-  input.operation.version !== input.version;

@@ -36,6 +36,9 @@ export const startFeedModuleTestHost = async ({
     agent: ReturnType<typeof scriptedEngineInput>['agent'];
   }
 > => {
+  database.$client
+    .prepare('UPDATE session SET agent = ? WHERE id = ?')
+    .run(agent, 'session-1');
   let identity = 0;
   const input = scriptedEngineInput(
     { ...scenario, sessionIds: ['vendor-1'] },

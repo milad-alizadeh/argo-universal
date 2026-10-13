@@ -2,8 +2,8 @@ import type {
   PromptRequest,
   NewSessionRequest,
 } from '@agentclientprotocol/sdk';
-import { agentAdapters } from '@repo/agents';
 import { session } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import {
@@ -15,7 +15,7 @@ import {
 } from '#mocks/engine-http';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
-it.each(agentAdapters.map((adapter): string => adapter.agent))(
+it.each(fixtureAgents.map((adapter): string => adapter.agent))(
   'does not send the waiting %s prompt after HTTP closure begins',
   async (agent): Promise<void> => {
     await closeServer();

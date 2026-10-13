@@ -1,6 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import type { Database } from '@repo/db';
-import { checkAgentLaunch } from '../acp';
+import {
+  createAgentChecker,
+  checkAgentLaunch,
+  type AcpResourceInput,
+} from '../agents';
 import { AgentInstallations, type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
 import type { FeedDeps } from '../feed';
@@ -62,7 +66,9 @@ type EngineSupplied =
   | 'installations';
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>>;
+  Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>> & {
+    acp?: AcpResourceInput;
+  };
 
 export function createAppRouterDeps(
   input: AppRouterInput,
@@ -74,7 +80,7 @@ export function createAppRouterDeps(
     ...input,
     ...sources,
     ...setup,
-    checkAgentLaunch,
+    checkAgentLaunch: createAgentChecker(input.acp?.launchProcess),
     readSession: createSessionReader(input.database),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };

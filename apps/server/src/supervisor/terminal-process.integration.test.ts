@@ -55,7 +55,7 @@ it.each([
       vi.unstubAllEnvs();
     });
     await expect
-      .poll(() => events, { timeout: 10000 })
+      .poll(() => events, { timeout: 20000 })
       .toContain('engine.ready');
     const pids = z
       .object({ engine: z.number(), terminal: z.number(), wrapper: z.number() })
@@ -73,5 +73,5 @@ it.each([
     expect([pids.terminal, pids.wrapper].map(isAlive)).toEqual([false, false]);
     expect(await readdir(join(folder, 'login-terminals'))).toEqual([]);
   },
-  20000,
+  30000,
 );

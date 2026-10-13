@@ -1,42 +1,31 @@
-import type { AgentInfo, ConfiguredAgent } from '@repo/contracts';
+import type { AgentInfo, ConfiguredAgent, AgentCheck } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { readAgentCatalog } from '../../catalog-sql';
+import type { ConfigurationDeps } from '../../configuration/configuration-commands';
 import { readConfiguredAgents } from '../../configuration/configuration-sql';
-import {
-  checkSelectedFiles,
-  readInstallSelection,
-  type InstallSelection,
-} from './selection';
+import * as readiness from '../../configuration/custom-agent-list';
+import { resolveInstalledAgentLaunch } from './launch';
+import * as installed from './selection';
+import { readInstallSelection } from './selection';
 type InstalledAgent = {
   home: string;
   agentId: string;
-  selection: InstallSelection;
-  availableVersion?: string;
+  selection: installed.InstallSelection;
   enabled: boolean;
 };
 const installationInfo = ({
   enabled,
-  ...input
-}: InstalledAgent): AgentInfo => ({
-  ...installationIdentity(input),
-  availability: 'unavailable',
-  installStep: enabled
-    ? 'Installed. Sign-in readiness has not been checked.'
-    : 'Agent is disabled. Enable it to start new Sessions.',
-});
-const installationIdentity = ({
   agentId,
   selection,
-  availableVersion,
-}: Omit<InstalledAgent, 'enabled'>): Pick<
-  AgentInfo,
-  'agent' | 'label' | 'logo' | 'version' | 'availableVersion'
-> => ({
+}: InstalledAgent): AgentInfo => ({
   agent: agentId,
   label: selection.entry.name,
   logo: selection.entry.icon ?? '',
   version: selection.entry.version,
-  availableVersion,
+  availability: 'unavailable',
+  installStep: enabled
+    ? 'Installed. Sign-in readiness has not been checked.'
+    : 'Agent is disabled. Enable it to start new Sessions.',
 });
 const missingInstallation = (info: AgentInfo): AgentInfo => ({
   ...info,
@@ -49,7 +38,11 @@ const verifyInstallationInfo = async (
 ): Promise<AgentInfo> => {
   const info = installationInfo(input);
   try {
-    await checkSelectedFiles(input.home, input.agentId, input.selection);
+    await installed.checkSelectedFiles(
+      input.home,
+      input.agentId,
+      input.selection,
+    );
     return info;
   } catch {
     return missingInstallation(info);
@@ -59,45 +52,93 @@ type InstallationQuery = {
   database: Database;
   home: string;
   agent: ConfiguredAgent;
-  availableVersion?: string;
+  deps: ConfigurationDeps;
+};
+const uninstalledInfo = (input: InstallationQuery): AgentInfo => ({
+  agent: input.agent.id,
+  label: input.agent.id,
+  logo: '',
+  availability: 'not_installed',
+  installStep: 'Install this Agent from Agents.',
+});
+const checkedInfo = (info: AgentInfo, result: AgentCheck): AgentInfo => ({
+  ...info,
+  availability: readiness.checkedAvailability(result),
+  installStep: readiness.checkedStep(result),
+});
+const checkInstallation = async (
+  input: InstallationQuery,
+  info: AgentInfo,
+): Promise<AgentCheck> => {
+  const launch = await resolveInstalledAgentLaunch(
+    input.database,
+    input.home,
+  )({ agent: info.agent, projectId: '', projectPath: input.home });
+  return input.deps.checkAgentLaunch({ name: info.label, launch });
+};
+const needsReadinessCheck = (
+  input: InstallationQuery,
+  info: AgentInfo,
+): boolean => input.agent.enabled && info.availability !== 'not_installed';
+const failedReadiness = (error: unknown): AgentCheck => ({
+  status: 'failed',
+  failure: String(error),
+});
+const refreshReadiness = async (
+  input: InstallationQuery,
+  info: AgentInfo,
+): Promise<AgentInfo> => {
+  if (!needsReadinessCheck(input, info)) return info;
+  const check = (): Promise<AgentCheck> => checkInstallation(input, info);
+  const checking = input.deps.withAgentCheck
+    ? input.deps.withAgentCheck(info.agent, check)
+    : check();
+  const result = await checking.catch(failedReadiness);
+  return checkedInfo(info, result);
 };
 const installedInfo = async (
   input: InstallationQuery,
 ): Promise<AgentInfo[]> => {
   const selection = readInstallSelection(input.database, input.agent.id);
-  if (!selection) return [];
-  return [
-    await verifyInstallationInfo({
-      ...input,
-      agentId: input.agent.id,
-      enabled: input.agent.enabled,
-      selection,
-    }),
-  ];
+  if (!selection) return [uninstalledInfo(input)];
+  const info = await verifyInstallationInfo({
+    ...input,
+    agentId: input.agent.id,
+    enabled: input.agent.enabled,
+    selection,
+  });
+  return [await refreshReadiness(input, info)];
 };
 const configuredRegistry = (database: Database): ConfiguredAgent[] =>
   readConfiguredAgents(database).filter(
     (agent) =>
       !agent.configuration.removed && agent.configuration.source === 'registry',
   );
-const availableVersions = (database: Database): Map<string, string> =>
-  new Map(
+const withAvailableVersions = (
+  database: Database,
+  agents: AgentInfo[],
+): AgentInfo[] => {
+  const catalog = new Map(
     readAgentCatalog(database).agents.map(({ id, entry }) => [
       id,
       entry.version,
     ]),
   );
+  return agents.map((info) => ({
+    ...info,
+    availableVersion: catalog.get(info.agent),
+  }));
+};
 export const listInstalledAgents = async (
   database: Database,
   home: string,
+  deps: ConfigurationDeps,
 ): Promise<AgentInfo[]> => {
-  const catalog = availableVersions(database);
-  const read = (agent: ConfiguredAgent): Promise<AgentInfo[]> =>
-    installedInfo({
-      database,
-      home,
-      agent,
-      availableVersion: catalog.get(agent.id),
-    });
-  return (await Promise.all(configuredRegistry(database).map(read))).flat();
+  const scope = { database, home, deps };
+  const listed = await Promise.all(
+    configuredRegistry(database).map((agent) =>
+      installedInfo({ ...scope, agent }),
+    ),
+  );
+  return withAvailableVersions(database, listed.flat());
 };

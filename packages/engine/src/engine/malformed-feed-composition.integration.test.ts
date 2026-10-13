@@ -1,6 +1,7 @@
-import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import type { SessionUpdate } from '@repo/contracts';
 import { feedRow, turn } from '@repo/db/schema';
+import type { AgentIdentity } from '@repo/mocks/agent';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import {
   insertEndedTurn,
@@ -11,7 +12,7 @@ import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
 type MalformedFeedCase = {
-  agent: AgentAdapter['agent'];
+  agent: AgentIdentity['agent'];
   kind: Extract<
     SessionUpdate['sessionUpdate'],
     'agent_message' | 'agent_thought' | 'plan_update'
@@ -19,7 +20,7 @@ type MalformedFeedCase = {
 };
 
 it.each(
-  agentAdapters.flatMap(({ agent }): MalformedFeedCase[] =>
+  fixtureAgents.flatMap(({ agent }): MalformedFeedCase[] =>
     (['agent_message', 'plan_update', 'agent_thought'] as const).map(
       (kind): MalformedFeedCase => ({ agent, kind }),
     ),

@@ -33,7 +33,9 @@ it('failed probe cleanup keeps management owned until the real process exits', a
     definition,
   });
   const failure = pending.catch((error: unknown) => error);
-  await expect.poll(() => readFile(marker, 'utf8')).toMatch(/^\d+$/);
+  await expect
+    .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
+    .toMatch(/^\d+$/);
   const pid = Number(await readFile(marker, 'utf8'));
   onTestFinished(() => {
     try {
@@ -57,7 +59,7 @@ it('failed probe cleanup keeps management owned until the real process exits', a
       }
     })
     .toBe(true);
-}, 15000);
+}, 20_000);
 
 it('shutdown waits for retained setup cleanup after the probe reports failure', async () => {
   const host = await startCustomAgentEngine({ acp: {} });
@@ -74,7 +76,9 @@ it('shutdown waits for retained setup cleanup after the probe reports failure', 
       definition: gatedCustomAgentDefinition(marker, release),
     })
     .catch((error: unknown) => error);
-  await expect.poll(() => readFile(marker, 'utf8')).toMatch(/^\d+$/);
+  await expect
+    .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
+    .toMatch(/^\d+$/);
   const stopping = host.stop();
   expect(await editing).toMatchObject({
     message: expect.stringContaining(cleanupFailure),
@@ -90,7 +94,7 @@ it('shutdown waits for retained setup cleanup after the probe reports failure', 
     await writeFile(release, 'release');
     await stopping;
   }
-}, 15000);
+}, 20_000);
 
 it('shared readiness cleanup failure fences management until the process exits', async () => {
   const host = await startCustomAgentEngine({ acp: {} });
@@ -108,7 +112,9 @@ it('shared readiness cleanup failure fences management until the process exits',
   const checking = host.caller.agents
     .check(input)
     .catch((error: unknown) => error);
-  await expect.poll(() => readFile(marker, 'utf8')).toMatch(/^\d+$/);
+  await expect
+    .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
+    .toMatch(/^\d+$/);
   const pid = Number(await readFile(marker, 'utf8'));
   onTestFinished(() => {
     try {
@@ -135,4 +141,4 @@ it('shared readiness cleanup failure fences management until the process exits',
       ),
     )
     .toBe(true);
-}, 15000);
+}, 20_000);

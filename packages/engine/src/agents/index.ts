@@ -1,14 +1,11 @@
+export * from './acp';
 export {
   loginMachine,
   type LoginMachineInput,
   type LoginEvent,
 } from './login-machine';
-export { agentProbeMachine } from './agent-probe-machine';
-export { createAgentLogins, AgentLogins, type AgentLoginsDeps } from './login';
+export { createAgentLogins } from './login';
 export { AgentLoginInUseError } from './login-error';
-export { agentProbeId } from './agent-probe-system';
-export { authenticationContextKey } from '../lib/authentication-context';
-export { selectAgentLaunchResolver } from './launch-resolver';
 export { reportsModelCallContext, promptUsageScope } from './usage-scope';
 
 export { type AgentsRouterDeps, createAgentsRouter } from './router';
@@ -16,8 +13,6 @@ export {
   isAgentDisabled,
   readCustomDefinition,
 } from './configuration/configuration-sql';
-export { resolveCustomAgentLaunch } from './configuration/custom-launch';
-export { ResourceCleanupError as LoginAgentCleanupError } from '../lib/resource-cleanup-error';
 export type {
   AgentLaunch,
   AgentLaunchSubject,
@@ -41,8 +36,6 @@ export {
 } from './sync-supervisor-machine';
 
 export { AgentInstallations } from './install/lifecycle/operations';
-export { runInstallTool } from './install/processes/process';
-export { releaseInstallationProcessGroups } from './install/processes/reconcile-processes';
 export type { InstallPorts } from './install/ports';
 export { readInstallSelection } from './install/selection/selection';
 export { resolveInstalledAgentLaunch } from './install/selection/launch';

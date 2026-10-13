@@ -60,14 +60,7 @@ export const syncInput = ({
 type SessionsSource = {
   context: Pick<
     EngineContext,
-    | 'database'
-    | 'home'
-    | 'adapters'
-    | 'now'
-    | 'createId'
-    | 'acpResources'
-    | 'resolveAgentLaunch'
-    | 'installations'
+    'database' | 'home' | 'now' | 'createId' | 'acpResources' | 'installations'
   >;
 };
 
@@ -76,11 +69,9 @@ export const sessionsInput = ({
 }: SessionsSource): OpenSessionsInput => ({
   database: openDatabaseOf(context),
   runtimeDirectory: context.home,
-  adapters: context.adapters,
   now: context.now,
   createId: context.createId,
   acpResources: context.acpResources,
-  resolveAgentLaunch: context.resolveAgentLaunch,
   isAgentSetupBusy: (agentId) => context.installations.isBusy(agentId),
 });
 

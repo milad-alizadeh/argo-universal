@@ -1,17 +1,3 @@
-import {
-  type AgentAdapter,
-  type AgentCapabilities,
-  type AgentCommand,
-  type AgentConfigValue,
-  type AgentEvent,
-  type AgentConnectInput,
-  type AgentMapping,
-  type VendorCommand,
-  type VendorSession,
-  acceptAgentEvent,
-  AgentReadyData,
-  describeError,
-} from '@repo/agents';
 import type {
   ContentBlock,
   ContextUsage,
@@ -40,10 +26,9 @@ import {
   type AnyActorRef,
   type InputFrom,
 } from 'xstate';
-import { RecoveryBlockedError } from '../acp';
-import type { AcpSessionLease } from '../acp';
-import { createAcpResponseReaders } from '../acp';
-import { agentProbeId, agentProbeMachine } from '../agents';
+import { RecoveryBlockedError } from '../agents';
+import type { AcpSessionLease } from '../agents';
+import { createAcpResponseReaders } from '../agents';
 import { attachmentsFolderIn, blobsFolderIn } from '../blob';
 import {
   acpToolCallRowId,
@@ -52,7 +37,6 @@ import {
   type FeedEvent,
   type FeedActorRef,
 } from '../feed';
-import { userMessageChange } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow, readUnaddressedPlan } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
@@ -86,14 +70,7 @@ import {
   crashBudgetFailure,
   exceedsCrashBudget,
 } from './closure/crash-budget';
-import {
-  chooseConfigValue,
-  currentModel,
-  holdConfigChoice,
-  keepHeldConfigChoices,
-  releaseHeldChoice,
-  toConfigValues,
-} from './configuration/config-choices';
+import { currentModel, toConfigValues } from './configuration/config-choices';
 import { validateConfigChoice } from './session-admission';
 import {
   createSessionCheckout,
@@ -113,19 +90,15 @@ import {
 } from './session-storage';
 
 const setConfigEvent = 'session.setConfigOption';
-const nativeFailedEvent = 'native.failed';
 const storageFailingEvent = 'session.storageFailing';
 const rejectedMessageEvent = 'agent.messageRejected';
 const closedSessionTarget = '#session.closed';
 const discardingSessionTarget = '#session.discarding';
-const drainingNativeTarget = '#session.open.draining';
 const acpPermissionEvent = 'acp.permissionRequested';
 const acpElicitationEvent = 'acp.elicitationRequested';
 const answerPermissionEvent = 'session.answerPermission';
 const acpRequestWithdrawnEvent = 'acp.requestWithdrawn';
 const answerElicitationEvent = 'session.answerElicitation';
-const answerPermissionCommand = 'agent.answerPermission';
-const answerElicitationCommand = 'agent.answerElicitation';
 const writeFeedEvent = 'writer.write';
 const feedChangeEvent = 'feed.change';
 const configuringState = 'configuring';
@@ -160,12 +133,10 @@ const publishActiveTurnContent = (input: AcpOperationInput): Promise<void> => {
   return publishTurnContent(feed, input.context.activeTurnId);
 };
 
-// The open Sessions machine passes the adapter for the Session's Agent.
 export type SessionMachineInput = SessionInput & {
-  adapter: AgentAdapter;
   now: () => number;
   createId: () => string;
-  acp?: AcpSessionDependencies;
+  acp: AcpSessionDependencies;
 };
 
 export type SessionCommand =
@@ -191,20 +162,12 @@ export type SessionCommand =
   | { type: 'session.cancel' }
   | { type: 'session.close' };
 
-type NativeFailure = { type: typeof nativeFailedEvent; error: unknown };
 type SessionEvent =
   | SessionCommand
-  | AgentEvent
   | AcpLifetimeEvent
-  | NativeFailure
-  | { type: typeof storageFailingEvent }
-  | { type: 'xstate.error.actor.vendorSession'; error: unknown };
-type NativeSessionInput = AgentConnectInput &
-  Pick<SessionMachineInput, 'adapter'> &
-  Pick<SessionContext, 'pendingNativeStops'>;
+  | { type: typeof storageFailingEvent };
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
-  capabilities: AgentCapabilities | null;
   activeTurnId: string | null;
   // When the running Turn started, in epoch milliseconds.
   activeTurnStartedAt: number | null;
@@ -212,11 +175,9 @@ export interface SessionContext extends SessionData {
   permissionQueue: PendingPermission[];
   elicitationQueue: PendingElicitation[];
   configOptions: SessionConfigOption[];
-  heldConfigValues: AgentConfigValue[];
   agentCrashes: number[];
   rejectedMessages: number;
   failure: string | null;
-  pendingNativeStops: Set<Promise<void>>;
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
   sessionInsertCommitted: Promise<'committed' | 'retrying' | 'failed'> | null;
@@ -238,7 +199,6 @@ export interface SessionContext extends SessionData {
 }
 
 const checkoutLimit = 10_000;
-const agentStartLimit = 10_000;
 
 const interruptedTurn = (message: string): EndTurnParameters => ({
   stopReason: 'error',
@@ -274,16 +234,14 @@ const writer = ({
 }): AnyActorRef =>
   findMachineActor(system, databaseWriterId, writerMachine) ?? self;
 
-// A native Tool call's row is named by its id; an ACP one's is scoped to its ACP session.
+// Permission outcomes use the ACP-scoped Tool call identity.
 const permissionOutcomeChange = (
   context: SessionContext,
   toolCallId: string,
   option: PendingPermission['options'][number] | null,
 ): FeedChange => ({
   type: 'patch',
-  id: context.acpLease
-    ? acpToolCallRowId(context.acpLease.sessionId, toolCallId)
-    : toolCallId,
+  id: acpToolCallRowId(context.acpLease?.sessionId ?? '', toolCallId),
   set: {
     _meta: {
       argo: {
@@ -462,129 +420,6 @@ const sessionSetup = setup({
         loadSession(input.session, input.writer),
     ),
     feed: feedMachine,
-    drainNative: fromPromise<void, SessionContext['pendingNativeStops']>(
-      async ({ input }): Promise<void> => {
-        await Promise.allSettled(input);
-      },
-    ),
-    vendorSession: fromCallback<
-      VendorCommand,
-      NativeSessionInput,
-      AgentEvent | NativeFailure
-    >(({ input: nativeSessionInput, receive, sendBack }): (() => void) => {
-      const nativeAbort = new AbortController();
-      let mappingState = nativeSessionInput.adapter.initialMappingState();
-      let bufferedEvents: AgentEvent[] | null = [];
-      let nativeStop: Promise<void> | undefined;
-      const reportNativeFailure = (error: unknown): void => {
-        if (!nativeAbort.signal.aborted)
-          sendBack({ type: nativeFailedEvent, error });
-      };
-      const sendAcceptedEvent = (event: AgentEvent): void => {
-        if (nativeAbort.signal.aborted) return;
-        const accepted = acceptAgentEvent(event);
-        if (bufferedEvents) bufferedEvents.push(accepted);
-        else sendBack(accepted);
-      };
-      const connection = nativeSessionInput.adapter
-        .connect(
-          {
-            sessionId: nativeSessionInput.sessionId,
-            cwd: nativeSessionInput.cwd,
-            vendorSessionId: nativeSessionInput.vendorSessionId,
-            configOptions: nativeSessionInput.configOptions,
-          },
-          {
-            event: sendAcceptedEvent,
-            failed: reportNativeFailure,
-            message: (message): void => {
-              if (nativeAbort.signal.aborted) return;
-              let mapped: AgentMapping<unknown>;
-              try {
-                mapped = nativeSessionInput.adapter.toAgentEvents(
-                  message,
-                  mappingState,
-                );
-              } catch (error) {
-                sendAcceptedEvent({
-                  type: rejectedMessageEvent,
-                  reason: describeError(error),
-                });
-                return;
-              }
-              mappingState = mapped.mappingState;
-              for (const event of mapped.events) sendAcceptedEvent(event);
-            },
-          },
-          nativeAbort.signal,
-        )
-        .then(
-          (session): VendorSession => {
-            if (nativeAbort.signal.aborted) return session;
-            const ready = AgentReadyData.safeParse(session.ready);
-            if (!ready.success) {
-              reportNativeFailure(ready.error);
-              return session;
-            }
-            sendBack({ type: 'agent.ready', ...ready.data });
-            const readyEvents = bufferedEvents;
-            bufferedEvents = null;
-            for (const event of readyEvents ?? [])
-              if (!nativeAbort.signal.aborted) sendBack(event);
-            return session;
-          },
-          (error: unknown): null => {
-            reportNativeFailure(error);
-            return null;
-          },
-        );
-      const stopNative = (): void => {
-        if (nativeStop) return;
-        nativeStop = connection.then((session): Promise<void> | undefined =>
-          session?.stop(),
-        );
-        nativeSessionInput.pendingNativeStops.add(nativeStop);
-        const settled = nativeStop;
-        void settled.then(
-          (): boolean => nativeSessionInput.pendingNativeStops.delete(settled),
-          (): boolean => nativeSessionInput.pendingNativeStops.delete(settled),
-        );
-        nativeAbort.abort();
-      };
-      const runCommand = async (command: VendorCommand): Promise<void> => {
-        try {
-          if (nativeAbort.signal.aborted) return;
-          const session = await connection;
-          if (!nativeAbort.signal.aborted) await session?.run(command);
-        } catch (error) {
-          reportNativeFailure(error);
-        }
-      };
-      let commandQueue = Promise.resolve();
-      let beforeTurnCommands = commandQueue;
-      receive((command): void => {
-        if (
-          command.type === 'agent.cancel' ||
-          command.type === answerPermissionCommand ||
-          command.type === answerElicitationCommand
-        ) {
-          void beforeTurnCommands.then((): Promise<void> =>
-            runCommand(command),
-          );
-          return;
-        }
-        if (
-          command.type === 'agent.prompt' ||
-          (command.type === 'agent.answerPlanProposal' &&
-            command.turnId !== undefined)
-        )
-          beforeTurnCommands = commandQueue;
-        commandQueue = commandQueue.then((): Promise<void> =>
-          runCommand(command),
-        );
-      });
-      return stopNative;
-    }),
   },
   actions: {
     queueAcpConfig: assign(({ context, event }) => {
@@ -725,57 +560,11 @@ const sessionSetup = setup({
         failure: String(params.error),
       }),
     ),
-    rememberStartLimit: assign({
-      failure: `Agent startup exceeded agentStartLimit (${agentStartLimit} ms). Retry the Session.`,
-    }),
-    rememberStartFailure: assign(
-      ({ event }): Pick<SessionContext, 'failure'> => {
-        if (
-          event.type === 'xstate.error.actor.vendorSession' ||
-          event.type === nativeFailedEvent
-        )
-          return { failure: describeError(event.error) };
-        return { failure: 'The Session closed before its Agent started' };
-      },
-    ),
     addDiscardFailure: assign(
       ({ context, event }): Pick<SessionContext, 'failure'> => ({
         failure: `${context.failure}\nThe Session was not discarded: ${String('error' in event ? event.error : event)}`,
       }),
     ),
-    // An Agent that could not start may have been signed out or removed since its last probe.
-    refreshAgentProbe: enqueueActions(({ context, system, enqueue }): void => {
-      const probe = findMachineActor(
-        system,
-        agentProbeId(context.input.adapter.agent),
-        agentProbeMachine,
-      );
-      if (probe) enqueue.sendTo(probe, { type: 'agentProbe.refresh' });
-    }),
-    rememberReady: enqueueActions(({ context, event, enqueue }): void => {
-      assertEvent(event, 'agent.ready');
-      if (context.stored)
-        enqueue.sendTo(writer, {
-          type: writeFeedEvent,
-          job: new SessionRowUpdateJob({
-            id: context.sessionId,
-            set: {
-              vendorSessionId: event.vendorSessionId,
-              failure: null,
-              configValues: toConfigValues(event.configOptions),
-            },
-          }),
-        });
-      enqueue.assign({
-        vendorSessionId: event.vendorSessionId,
-        capabilities: event.capabilities,
-        configOptions: keepHeldConfigChoices(
-          event.configOptions,
-          context.heldConfigValues,
-        ),
-        configValues: toConfigValues(event.configOptions),
-      });
-    }),
     // The Agent must be ready before the Session row is written.
     storeSession: enqueueActions(({ context, enqueue }): void => {
       if (context.input.kind !== 'new') return;
@@ -821,26 +610,6 @@ const sessionSetup = setup({
         });
       },
     ),
-    startTurn: enqueueActions(
-      ({ context, enqueue }, params: StartTurnParameters): void => {
-        for (const choice of context.heldConfigValues)
-          enqueue.sendTo('vendorSession', {
-            type: 'agent.setConfigOption',
-            ...choice,
-          } satisfies AgentCommand);
-        enqueue.assign({ heldConfigValues: [] });
-        enqueue.sendTo('feed', {
-          type: feedChangeEvent,
-          turnId: params.turnId,
-          change: userMessageChange(params.turnId, params.content),
-        });
-        enqueue.sendTo('vendorSession', {
-          type: 'agent.prompt',
-          turnId: params.turnId,
-          content: params.content,
-        } satisfies AgentCommand);
-      },
-    ),
     endTurn: enqueueActions(
       ({ context, enqueue }, ended: EndTurnParameters): void => {
         const params = context.storageFailedTurn ? storageFailedTurn : ended;
@@ -867,91 +636,19 @@ const sessionSetup = setup({
         });
       },
     ),
-    forwardFeed: sendTo(
-      'feed',
-      ({ context, event }): Extract<FeedEvent, { type: 'feed.change' }> => {
-        assertEvent(event, 'agent.feed');
-        return {
-          type: feedChangeEvent,
-          change: event.change,
-          turnId: context.activeTurnId,
-        };
-      },
-    ),
-    rememberUsage: assign(({ event }): Pick<SessionContext, 'usage'> => {
-      assertEvent(event, 'agent.usage');
-      return { usage: event.usage };
-    }),
-    // Stores the values too, so a Session resumed after a restart keeps its model and mode.
-    rememberConfig: enqueueActions(({ context, event, enqueue }): void => {
-      assertEvent(event, 'agent.configOptionsChanged');
-      const configValues = toConfigValues(event.configOptions);
-      if (context.stored)
-        enqueue.sendTo(writer, {
-          type: writeFeedEvent,
-          job: new SessionRowUpdateJob({
-            id: context.sessionId,
-            set: { configValues },
-          }),
-        });
-      enqueue.assign({
-        configOptions: keepHeldConfigChoices(
-          event.configOptions,
-          context.heldConfigValues,
-        ),
-        configValues,
-      });
-    }),
-    forwardConfig: enqueueActions(({ context, event, enqueue }): void => {
-      assertEvent(event, setConfigEvent);
-      enqueue.assign({
-        configOptions: chooseConfigValue(context.configOptions, event, false),
-        heldConfigValues: releaseHeldChoice(
-          context.heldConfigValues,
-          event.configId,
-        ),
-      });
-      enqueue.sendTo('vendorSession', {
-        ...event,
-        type: 'agent.setConfigOption',
-      } satisfies AgentCommand);
-    }),
-    holdConfig: assign(
-      ({
-        context,
-        event,
-      }): Pick<SessionContext, 'heldConfigValues' | 'configOptions'> => {
-        assertEvent(event, setConfigEvent);
-        const choice = { configId: event.configId, value: event.value };
-        return {
-          heldConfigValues: holdConfigChoice(context.heldConfigValues, choice),
-          configOptions: chooseConfigValue(context.configOptions, choice, true),
-        };
-      },
-    ),
     queuePermission: assign(
       ({ context, event }): Pick<SessionContext, 'permissionQueue'> => {
-        assertEvent(event, ['agent.permissionRequested', acpPermissionEvent]);
+        assertEvent(event, acpPermissionEvent);
         return {
-          permissionQueue: [
-            ...context.permissionQueue,
-            'requestId' in event.request
-              ? event.request
-              : { ...event.request, requestId: context.input.createId() },
-          ],
+          permissionQueue: [...context.permissionQueue, event.request],
         };
       },
     ),
     queueElicitation: assign(
       ({ context, event }): Pick<SessionContext, 'elicitationQueue'> => {
-        assertEvent(event, ['agent.elicitationRequested', acpElicitationEvent]);
+        assertEvent(event, acpElicitationEvent);
         return {
-          elicitationQueue: [
-            ...context.elicitationQueue,
-            'requestId' in event.request
-              ? event.request
-              : { ...event.request, requestId: context.input.createId() },
-          ],
+          elicitationQueue: [...context.elicitationQueue, event.request],
         };
       },
     ),
@@ -989,22 +686,6 @@ const sessionSetup = setup({
         };
       },
     ),
-    answerPermission: sendTo(
-      'vendorSession',
-      ({
-        context,
-        event,
-      }): Extract<AgentCommand, { type: typeof answerPermissionCommand }> => {
-        assertEvent(event, answerPermissionEvent);
-        const request = headPermission(context);
-        return {
-          type: answerPermissionCommand,
-          toolCallId: request.toolCallId,
-          optionId: event.optionId,
-          ...(event.message === undefined ? {} : { message: event.message }),
-        };
-      },
-    ),
     answerAcpPermission: ({ context, event }): void => {
       assertEvent(event, answerPermissionEvent);
       context.acpLifetime.answerPermission(event.requestId, event.optionId);
@@ -1022,19 +703,6 @@ const sessionSetup = setup({
       permissionQueue: ({ context }): SessionContext['permissionQueue'] =>
         context.permissionQueue.slice(1),
     }),
-    answerElicitation: sendTo(
-      'vendorSession',
-      ({
-        event,
-      }): Extract<AgentCommand, { type: typeof answerElicitationCommand }> => {
-        assertEvent(event, answerElicitationEvent);
-        return {
-          type: answerElicitationCommand,
-          action: event.action,
-          ...(event.content === undefined ? {} : { content: event.content }),
-        } satisfies AgentCommand;
-      },
-    ),
     removeElicitation: assign({
       elicitationQueue: ({ context }): SessionContext['elicitationQueue'] =>
         context.elicitationQueue.slice(1),
@@ -1048,31 +716,6 @@ const sessionSetup = setup({
         enqueue.sendTo('feed', change);
       enqueue.assign({ permissionQueue: [], elicitationQueue: [] });
     }),
-    cancelRequests: enqueueActions(({ context, enqueue }): void => {
-      for (const change of cancelledPermissions(
-        context,
-        context.permissionQueue,
-      ))
-        enqueue.sendTo('feed', change);
-      for (const request of context.permissionQueue)
-        enqueue.sendTo('vendorSession', {
-          type: answerPermissionCommand,
-          toolCallId: request.toolCallId,
-          optionId: null,
-        } satisfies AgentCommand);
-      const elicitationCancels = context.elicitationQueue.map(
-        (): AgentCommand => ({
-          type: answerElicitationCommand,
-          action: 'cancel',
-        }),
-      );
-      for (const command of elicitationCancels)
-        enqueue.sendTo('vendorSession', command);
-      enqueue.assign({ permissionQueue: [], elicitationQueue: [] });
-    }),
-    cancelAgent: sendTo('vendorSession', {
-      type: 'agent.cancel',
-    } satisfies AgentCommand),
     recordCrash: enqueueActions(
       ({ context, enqueue }, params: CrashNoticeParameters): void => {
         const now = context.input.now();
@@ -1187,9 +830,6 @@ const sessionSetup = setup({
         stateIn({ open: { acp: 'publishing' } }),
       ]),
     ]),
-    usesAcp: ({ context }): boolean =>
-      context.input.acp !== undefined ||
-      (context.input.kind === 'new' && context.input.prompt.length === 0),
     isNew: ({ context }): boolean => context.input.kind === 'new',
     isUnstored: ({ context }): boolean => !context.stored,
     closesBy: ({ context }, step: ClosureStep): boolean =>
@@ -1203,10 +843,7 @@ const sessionSetup = setup({
     isPendingElicitation: ({ context, event }): boolean =>
       event.type === answerElicitationEvent &&
       answeredRequest(context.elicitationQueue, event.requestId) !== undefined,
-    nativeAlreadyDrained: or([
-      stateIn({ open: 'flushing' }),
-      stateIn({ open: { acp: 'flushing' } }),
-    ]),
+    agentAlreadyDrained: stateIn({ open: { acp: 'flushing' } }),
     lostConnectionWhilePublishing: stateIn({
       open: { acp: { publishing: 'disconnected' } },
     }),
@@ -1215,7 +852,6 @@ const sessionSetup = setup({
   },
   delays: {
     checkoutLimit,
-    agentStartLimit,
     cancelLimit: 10_000,
     agentStopLimit: 5_000,
     agentRestartDelay: 1_000,
@@ -1252,17 +888,6 @@ const sessionEntryOutcome = {
   },
 } as const;
 
-// The prompt that `session.new` carried in; only a new Session is ever unstored.
-const firstTurn = ({
-  context,
-}: {
-  context: SessionContext;
-}): StartTurnParameters => {
-  if (context.input.kind !== 'new')
-    throw new Error('Only a new Session has a first Turn');
-  return { turnId: context.input.turnId, content: context.input.prompt };
-};
-
 const acpTurnOutcome = ({
   context,
 }: {
@@ -1276,35 +901,6 @@ const toPromptTurn = ({
 }): StartTurnParameters => ({ turnId: event.turnId, content: event.content });
 
 const discardsSession = { type: 'closesBy', params: 'discard' } as const;
-
-// An Agent that ends before its Session is stored discards the Session; a stored one recovers.
-const nativeFailed = [
-  {
-    guard: 'isUnstored',
-    target: drainingNativeTarget,
-    actions: ['rememberStartFailure', 'refreshAgentProbe'],
-  },
-  {
-    target: 'recovering',
-    actions: [
-      'recordCrash',
-      { type: 'endTurn', params: { stopReason: 'error' } },
-    ],
-  },
-] as const;
-
-const endedTurn = {
-  type: 'endTurn',
-  params: ({
-    event,
-  }: {
-    event: Extract<AgentEvent, { type: 'agent.turnEnded' }>;
-  }): EndTurnParameters => ({
-    stopReason: event.stopReason,
-    usage: event.usage,
-    error: event.error,
-  }),
-} as const;
 
 const cancelledTurn = {
   type: 'endTurn',
@@ -1341,18 +937,15 @@ export const sessionMachine = sessionSetup.createMachine({
     nextPosition: 0,
     kept: false,
     undisclosedInterruptedTurnId: null,
-    capabilities: null,
     activeTurnId: null,
     activeTurnStartedAt: null,
     usage: null,
     permissionQueue: [],
     elicitationQueue: [],
     configOptions: [],
-    heldConfigValues: [],
     agentCrashes: [],
     rejectedMessages: 0,
     failure: null,
-    pendingNativeStops: new Set(),
     stored: input.kind === 'existing',
     sessionInsertCommitted: null,
     acpLifetime: new AcpSessionLifetime(input.acp, input.createId),
@@ -1451,17 +1044,15 @@ export const sessionMachine = sessionSetup.createMachine({
             }),
         }),
         onDone: [
-          { guard: 'nativeAlreadyDrained', target: 'closed' },
+          { guard: 'agentAlreadyDrained', target: 'closed' },
           {
-            guard: 'usesAcp',
             target: '.acp.closing',
             actions: 'rememberFeedEnded',
           },
-          { target: 'stopping' },
         ],
         onError: [
           {
-            guard: 'nativeAlreadyDrained',
+            guard: 'agentAlreadyDrained',
             target: 'closed',
             actions: {
               type: 'rememberFailure',
@@ -1471,7 +1062,6 @@ export const sessionMachine = sessionSetup.createMachine({
             },
           },
           {
-            guard: 'usesAcp',
             target: '.acp.closing',
             actions: [
               'rememberFeedEnded',
@@ -1483,22 +1073,10 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             ],
           },
-          {
-            target: 'stopping',
-            actions: {
-              type: 'rememberFailure',
-              params: ({ event }): FailureParameters => ({
-                error: event.error,
-              }),
-            },
-          },
         ],
       },
-      initial: 'choosing',
+      initial: 'acp',
       states: {
-        choosing: {
-          always: [{ guard: 'usesAcp', target: 'acp' }, { target: 'live' }],
-        },
         acp: {
           invoke: {
             id: 'acpSubscription',
@@ -1956,213 +1534,6 @@ export const sessionMachine = sessionSetup.createMachine({
             },
           },
         },
-        live: {
-          invoke: {
-            id: 'vendorSession',
-            src: 'vendorSession',
-            input: ({ context }): NativeSessionInput => ({
-              adapter: context.input.adapter,
-              sessionId: context.sessionId,
-              cwd: context.checkout.path,
-              vendorSessionId: context.vendorSessionId,
-              configOptions: context.configValues,
-              pendingNativeStops: context.pendingNativeStops,
-            }),
-            onError: nativeFailed,
-          },
-          initial: 'starting',
-          on: {
-            'agent.feed': { actions: 'forwardFeed' },
-            [rejectedMessageEvent]: {
-              actions: [
-                'countRejectedMessage',
-                'messageRejectedNotice',
-                'logMessageRejected',
-              ],
-            },
-            'agent.usage': { actions: 'rememberUsage' },
-            'agent.configOptionsChanged': { actions: 'rememberConfig' },
-            [nativeFailedEvent]: nativeFailed,
-            'session.close': { target: '.closing' },
-          },
-          states: {
-            starting: {
-              after: {
-                agentStartLimit: [
-                  {
-                    guard: 'isUnstored',
-                    target: drainingNativeTarget,
-                    actions: ['rememberStartLimit', 'refreshAgentProbe'],
-                  },
-                  {
-                    target: '#session.open.recovering',
-                    actions: [
-                      'recordCrash',
-                      { type: 'endTurn', params: { stopReason: 'error' } },
-                    ],
-                  },
-                ],
-              },
-              on: {
-                'agent.ready': [
-                  {
-                    guard: 'isUnstored',
-                    target: 'running',
-                    actions: [
-                      'rememberReady',
-                      'storeSession',
-                      { type: 'persistTurn', params: firstTurn },
-                      { type: 'startTurn', params: firstTurn },
-                    ],
-                  },
-                  { target: 'idle', actions: 'rememberReady' },
-                ],
-                'session.close': {
-                  guard: discardsSession,
-                  target: drainingNativeTarget,
-                  actions: 'rememberStartFailure',
-                },
-              },
-            },
-            idle: {
-              on: {
-                'agent.turnStarted': {
-                  target: 'running',
-                  actions: {
-                    type: 'persistTurn',
-                    params: ({
-                      context,
-                    }): Pick<StartTurnParameters, 'turnId'> => ({
-                      turnId: context.input.createId(),
-                    }),
-                  },
-                },
-                'session.prompt': {
-                  target: 'running',
-                  actions: [
-                    { type: 'persistTurn', params: toPromptTurn },
-                    { type: 'startTurn', params: toPromptTurn },
-                  ],
-                },
-                [setConfigEvent]: { actions: 'forwardConfig' },
-              },
-            },
-            running: {
-              initial: 'working',
-              on: {
-                [setConfigEvent]: { actions: 'holdConfig' },
-                'agent.permissionRequested': {
-                  target: '.awaitingPermission',
-                  actions: 'queuePermission',
-                },
-                'agent.elicitationRequested': {
-                  target: '.awaitingElicitation',
-                  actions: 'queueElicitation',
-                },
-                [answerPermissionEvent]: {
-                  guard: 'isPermissionHead',
-                  target: '.working',
-                  actions: [
-                    'publishPermissionOutcome',
-                    'answerPermission',
-                    'removePermission',
-                  ],
-                },
-                [answerElicitationEvent]: {
-                  guard: 'isPendingElicitation',
-                  target: '.working',
-                  actions: ['answerElicitation', 'removeElicitation'],
-                },
-                'agent.turnEnded': { target: 'idle', actions: endedTurn },
-                'session.cancel': { target: 'cancelling' },
-                [storageFailingEvent]: {
-                  target: 'cancelling',
-                  actions: 'rememberStorageFailure',
-                },
-              },
-              states: {
-                working: {
-                  always: [
-                    { guard: 'hasPermission', target: 'awaitingPermission' },
-                    { guard: 'hasElicitation', target: 'awaitingElicitation' },
-                  ],
-                },
-                awaitingPermission: {},
-                awaitingElicitation: {},
-              },
-            },
-            cancelling: {
-              entry: ['cancelAgent', 'cancelRequests'],
-              on: {
-                [setConfigEvent]: { actions: 'holdConfig' },
-                'agent.turnEnded': { target: 'idle', actions: endedTurn },
-                [storageFailingEvent]: { actions: 'rememberStorageFailure' },
-              },
-              after: {
-                cancelLimit: {
-                  target: '#session.open.recovering',
-                  actions: ['cancelNotice', cancelledTurn],
-                },
-              },
-            },
-            closing: {
-              entry: ['cancelRequests', cancelledTurn],
-              always: drainingNativeTarget,
-            },
-          },
-        },
-        recovering: {
-          always: {
-            guard: 'tooManyCrashes',
-            target: 'draining',
-            actions: {
-              type: 'storeFailure',
-              params: { error: crashBudgetFailure },
-            },
-          },
-          after: { agentRestartDelay: 'live' },
-          on: { 'session.close': 'draining' },
-        },
-        draining: {
-          invoke: {
-            id: 'drainNative',
-            src: 'drainNative',
-            input: ({ context }): SessionContext['pendingNativeStops'] =>
-              context.pendingNativeStops,
-            onDone: [
-              { guard: discardsSession, target: discardingSessionTarget },
-              { target: 'flushing' },
-            ],
-          },
-          after: {
-            agentStopLimit: [
-              { guard: discardsSession, target: discardingSessionTarget },
-              { target: 'flushing' },
-            ],
-          },
-        },
-        flushing: {
-          entry: 'flushFeed',
-          after: { feedFlushLimit: closedSessionTarget },
-        },
-      },
-    },
-    stopping: {
-      invoke: {
-        id: 'drainNative',
-        src: 'drainNative',
-        input: ({ context }): SessionContext['pendingNativeStops'] =>
-          context.pendingNativeStops,
-        onDone: [
-          { guard: discardsSession, target: 'discarding' },
-          { target: 'closed' },
-        ],
-      },
-      after: {
-        agentStopLimit: [
-          { guard: discardsSession, target: 'discarding' },
-          { target: 'closed' },
-        ],
       },
     },
     // A Session no prompt reached leaves no row or worktree behind.

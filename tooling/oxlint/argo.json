@@ -137,7 +137,7 @@
     },
     {
       // Vendor names and vendor types belong in the adapter folders (ADR-0015).
-      "files": ["packages/agents/claude/**", "packages/agents/codex/**"],
+      "files": ["packages/engine/src/agents/assets/**"],
       "rules": { "argo/vendor-name": "off", "argo/json-parse-cast": "off" }
     },
     {
@@ -781,44 +781,10 @@
         ]
       }
     },
-    {
-      // D8: adapters stay plain functions on vendor types (ADR-0015).
-      "files": ["packages/agents/*/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "paths": [
-              {
-                "name": "xstate",
-                "message": "Adapters are plain functions; see ADR-0015."
-              },
-              {
-                "name": "zod",
-                "message": "Use vendor SDK or generated protocol types; the Feed validates adapter changes (ADR-0015)."
-              }
-            ],
-            "patterns": [
-              {
-                "group": ["zod/*"],
-                "message": "Use vendor SDK or generated protocol types (ADR-0015)."
-              },
-              {
-                "group": [
-                  "@repo/**",
-                  "!@repo/contracts",
-                  "!@repo/contracts/**"
-                ],
-                "message": "agents imports only contracts from the workspace."
-              }
-            ]
-          }
-        ]
-      }
-    },
+
     {
       // D7, after D8 so that it replaces D8 for the Agent machine in agents/src.
-      "files": ["packages/git/**", "packages/agents/src/**"],
+      "files": ["packages/git/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -830,18 +796,14 @@
                   "!@repo/contracts",
                   "!@repo/contracts/**"
                 ],
-                "message": "git and agents import only contracts from the workspace."
+                "message": "git imports only contracts from the workspace."
               }
             ]
           }
         ]
       }
     },
-    {
-      // The shared Agent vocabulary and machine depend one way, including type imports (Spec 0006).
-      "files": ["packages/agents/src/**"],
-      "rules": { "import/no-cycle": ["error", { "ignoreTypes": false }] }
-    },
+
     {
       // D9
       "files": ["apps/server/**", "packages/engine/**"],
@@ -871,114 +833,6 @@
       }
     },
     // Each Engine module has one block for its own files and one for its subfolders, since a relative path names a module by depth; a deeper folder needs its own block.
-    {
-      "files": ["packages/engine/src/acp/*"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": [
-                  "@repo/client",
-                  "@repo/client/**",
-                  "@repo/universal-app",
-                  "@repo/universal-app/**",
-                  "@repo/storybook",
-                  "@repo/storybook/**",
-                  "@repo/desktop",
-                  "@repo/desktop/**",
-                  "@repo/server",
-                  "@repo/server/**"
-                ],
-                "message": "The Engine and Supervisor never import client or an App."
-              },
-              {
-                "group": [
-                  "../blob",
-                  "../feed",
-                  "../projects",
-                  "../sessions",
-                  "../system",
-                  "../agents/**",
-                  "../blob/**",
-                  "../feed/**",
-                  "../projects/**",
-                  "../sessions/**",
-                  "../system/**"
-                ],
-                "message": "acp sits below the modules; it reads only the Agents launch types."
-              },
-              {
-                "group": ["../agents", "../agents/index", "../agents/index.ts"],
-                "allowTypeImports": true,
-                "message": "acp reads only the Agents launch types, never Agents code."
-              },
-              {
-                "group": ["**/engine/**"],
-                "message": "A module sits below the Engine composition, so it never imports engine/."
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "files": ["packages/engine/src/acp/*/*"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": [
-                  "@repo/client",
-                  "@repo/client/**",
-                  "@repo/universal-app",
-                  "@repo/universal-app/**",
-                  "@repo/storybook",
-                  "@repo/storybook/**",
-                  "@repo/desktop",
-                  "@repo/desktop/**",
-                  "@repo/server",
-                  "@repo/server/**"
-                ],
-                "message": "The Engine and Supervisor never import client or an App."
-              },
-              {
-                "group": [
-                  "../../blob",
-                  "../../feed",
-                  "../../projects",
-                  "../../sessions",
-                  "../../system",
-                  "../../agents/**",
-                  "../../blob/**",
-                  "../../feed/**",
-                  "../../projects/**",
-                  "../../sessions/**",
-                  "../../system/**"
-                ],
-                "message": "acp sits below the modules; it reads only the Agents launch types."
-              },
-              {
-                "group": [
-                  "../../agents",
-                  "../../agents/index",
-                  "../../agents/index.ts"
-                ],
-                "allowTypeImports": true,
-                "message": "acp reads only the Agents launch types, never Agents code."
-              },
-              {
-                "group": ["**/engine/**"],
-                "message": "A module sits below the Engine composition, so it never imports engine/."
-              }
-            ]
-          }
-        ]
-      }
-    },
     {
       "files": ["packages/engine/src/agents/*"],
       "rules": {
@@ -1696,7 +1550,7 @@
       "excludeFiles": [
         "packages/engine/src/rpc/**",
         "packages/engine/src/storage/**",
-        "packages/engine/src/acp/**",
+        "packages/engine/src/agents/acp/**",
         "packages/engine/src/agents/**",
         "packages/engine/src/blob/**",
         "packages/engine/src/feed/**",
@@ -1726,7 +1580,7 @@
               },
               {
                 "group": [
-                  "**/src/acp/**",
+                  "**/src/agents/acp/**",
                   "**/src/agents/**",
                   "**/src/blob/**",
                   "**/src/feed/**",
@@ -1812,7 +1666,7 @@
       // Spec 0011: the ACP SDK stays in acp/ and the two translators; tests and mocks script an Agent with it.
       "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
       "excludeFiles": [
-        "packages/engine/src/acp/**",
+        "packages/engine/src/agents/acp/**",
         "packages/engine/src/feed/acp/**",
         "packages/engine/src/sessions/acp/**",
         "**/*.test.*",
@@ -1841,13 +1695,13 @@
         "apps/server/src/supervisor/engine-process.ts",
         "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
-        "packages/engine/src/acp/process.ts",
+        "packages/engine/src/agents/acp/process.ts",
         "packages/engine/src/agents/install/processes/process.ts",
         "packages/engine/src/agents/install/processes/process-cleanup.ts",
         "packages/engine/src/agents/install/processes/process-wrapper.ts",
         "packages/engine/src/agents/install/processes/process-group.ts",
         "packages/engine/src/lib/process-group-members.ts",
-        "packages/engine/src/acp/terminal-wrapper.mjs",
+        "packages/engine/src/agents/acp/terminal-wrapper.mjs",
         "apps/desktop/src/main/server-process.ts",
         "apps/desktop/scripts/storybook-mac.mts"
       ],
@@ -1860,6 +1714,114 @@
         "packages/engine/src/**/*machine.ts"
       ],
       "rules": { "argo/machine-clock": "error" }
+    },
+    {
+      "files": ["packages/engine/src/agents/acp/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../../blob",
+                  "../../feed",
+                  "../../projects",
+                  "../../sessions",
+                  "../../system",
+                  "../../agents/**",
+                  "../../blob/**",
+                  "../../feed/**",
+                  "../../projects/**",
+                  "../../sessions/**",
+                  "../../system/**"
+                ],
+                "message": "ACP transport never imports Session or Feed implementations."
+              },
+              {
+                "group": ["..", "../index", "../index.ts"],
+                "allowTypeImports": true,
+                "message": "acp reads only the Agents launch types, never Agents code."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/agents/acp/*/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../../../blob",
+                  "../../../feed",
+                  "../../../projects",
+                  "../../../sessions",
+                  "../../../system",
+                  "../../../agents/**",
+                  "../../../blob/**",
+                  "../../../feed/**",
+                  "../../../projects/**",
+                  "../../../sessions/**",
+                  "../../../system/**"
+                ],
+                "message": "ACP transport never imports Session or Feed implementations."
+              },
+              {
+                "group": [
+                  "../../../agents",
+                  "../../../agents/index",
+                  "../../../agents/index.ts"
+                ],
+                "allowTypeImports": true,
+                "message": "acp reads only the Agents launch types, never Agents code."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

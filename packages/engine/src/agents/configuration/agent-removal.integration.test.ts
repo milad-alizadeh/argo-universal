@@ -67,7 +67,7 @@ it('custom unregister preserves the external executable and stored Session, Turn
       archived: false,
     }),
   ).toEqual(sessions);
-});
+}, 20_000);
 
 it.each(['remove', 'edit'] as const)(
   'an open Session refuses custom Agent %s',

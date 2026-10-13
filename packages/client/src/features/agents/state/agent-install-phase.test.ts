@@ -1,6 +1,10 @@
 import type { AgentInstallOperation } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { installationFailure, installationPhase } from './agent-install-phase';
+import {
+  installationFailure,
+  installationPhase,
+  visibleInstallOperation,
+} from './agent-install-phase';
 const disconnected = 'Network disconnected';
 const recovered: AgentInstallOperation = {
   agentId: 'example',
@@ -26,4 +30,20 @@ it('a failed request preserves its transport explanation until the Server report
   };
   expect(installationPhase(input)).toBe('failed');
   expect(installationFailure(input)).toBe(disconnected);
+});
+
+it('a dismissed completion opens a confirmation even before the next release offer refreshes', () => {
+  const operation = { ...recovered, status: 'installed' as const };
+  const input = {
+    operation,
+    dismissedOperationId: operation.operationId,
+    version: operation.version,
+  };
+  expect(visibleInstallOperation(input)).toBeUndefined();
+  expect(
+    installationPhase({
+      operation: visibleInstallOperation(input),
+      pending: false,
+    }),
+  ).toBe('confirm');
 });

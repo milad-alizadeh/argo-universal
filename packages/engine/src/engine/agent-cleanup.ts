@@ -1,5 +1,5 @@
 import { waitFor } from 'xstate';
-import type { AcpResources } from '../acp';
+import type { AcpResources } from '../agents';
 import type { AgentInstallations } from '../agents';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { HttpServer } from './http-server';

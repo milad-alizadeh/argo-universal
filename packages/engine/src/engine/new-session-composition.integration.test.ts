@@ -2,9 +2,9 @@ import { mkdirSync } from 'node:fs';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import { turn } from '@repo/db/schema';
-import { createAppFixtureAdapter } from '@repo/mocks/agent/app-fixtures';
+import type { AgentIdentity } from '@repo/mocks/agent';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { eq } from 'drizzle-orm';
@@ -13,7 +13,7 @@ import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { createScriptedAgentLauncher } from '#mocks/scripted-agent';
 
-async function startNewSessionEngine(identity: AgentAdapter): Promise<
+async function startNewSessionEngine(identity: AgentIdentity): Promise<
   Awaited<ReturnType<typeof startEngineTestHost>> & {
     project: string;
     database: ReturnType<typeof openTestDatabase>['database'];
@@ -30,45 +30,28 @@ async function startNewSessionEngine(identity: AgentAdapter): Promise<
     project,
     ...(await startEngineTestHost({
       database,
-      adapters: [createAppFixtureAdapter(identity)],
+      fixtureAgents: [identity],
       acp: {
         launchProcess: createScriptedAgentLauncher(() => scenarios.reply),
       },
-      resolveAgentLaunch: async (input) => ({
-        agentId: input.agent,
-        projectId: input.projectId,
-        executable: '/mock-agent',
-        version: '1',
-        args: [],
-        cwd: input.projectPath,
-        env: {},
-        authContext: 'shared-fixture',
-      }),
     })),
   };
 }
 
-function rejectUpstreamCall(): never {
-  throw new Error('App fixture contacted upstream');
-}
-
-it.each(agentAdapters)(
+it.each(fixtureAgents)(
   'creates a $agent Session and persists its initial prompt and completed Turn with shared fixtures without contacting upstream',
   async (identity): Promise<void> => {
-    const root = await startNewSessionEngine({
-      ...identity,
-      probe: rejectUpstreamCall,
-      connect: rejectUpstreamCall,
-    });
+    const root = await startNewSessionEngine(identity);
     const caller = root.createCaller();
-    expect(await caller.agents.list()).toMatchObject([
-      {
-        agent: identity.agent,
-        label: identity.label,
-        logo: identity.logo,
-        availability: 'available',
-      },
-    ]);
+    expect(await caller.agents.list()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          agent: identity.agent,
+          label: identity.label,
+          availability: 'available',
+        }),
+      ]),
+    );
     const { sessionId } = await caller.session.new({
       projectId: 'project-1',
       agent: identity.agent,

@@ -6,10 +6,6 @@
       // Metro selects platform modules by filename rather than by a literal import.
       "entry": ["src/**/*.@(android|ios|native|web).{ts,tsx}"]
     },
-    "packages/agents": {
-      // The protocol generator is also a supported manual regeneration command.
-      "entry": ["codex/generate-protocol.ts"]
-    },
     "apps/desktop": {
       // Knip has no Electron Forge plugin, so forge.config.mts and the Vite `build` entries it names by string are listed by hand.
       "entry": [

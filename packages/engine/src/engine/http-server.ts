@@ -1,7 +1,7 @@
 import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
-import { type AcpResourceInput } from '../acp';
+import { type AcpResourceInput } from '../agents';
 import type { AgentInstallations, syncSupervisorMachine } from '../agents';
 import { blobsFolderIn } from '../blob';
 import type { OpenSessionsActorRef } from '../sessions';

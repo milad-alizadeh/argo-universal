@@ -1,5 +1,5 @@
-import { agentAdapters } from '@repo/agents';
 import { feedRow, turn } from '@repo/db/schema';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import {
@@ -18,7 +18,7 @@ type FeedColumnCase = {
 };
 
 it.each(
-  agentAdapters.flatMap(({ agent }): FeedColumnCase[] =>
+  fixtureAgents.flatMap(({ agent }): FeedColumnCase[] =>
     (['agent_message', 'agent_thought', 'tool_call_update'] as const).flatMap(
       (kind): FeedColumnCase[] => [
         { agent, kind, column: feedRow.payload, field: 'payload' },

@@ -19,13 +19,10 @@ export function isSessionReady(
   session: SnapshotFrom<typeof sessionMachine>,
 ): boolean {
   return (
-    (session.matches({ open: 'acp' }) &&
-      !(['opening', 'closing', 'retainingCleanup', 'flushing'] as const).some(
-        (state) => session.matches({ open: { acp: state } }),
-      )) ||
-    (session.context.capabilities !== null &&
-      session.matches({ open: 'live' }) &&
-      !session.matches({ open: { live: 'starting' } }))
+    session.matches({ open: 'acp' }) &&
+    !(['opening', 'closing', 'retainingCleanup', 'flushing'] as const).some(
+      (state) => session.matches({ open: { acp: state } }),
+    )
   );
 }
 
@@ -52,15 +49,11 @@ export function toSessionSnapshot(
   };
   let state: SessionSnapshot['state'] = 'idle';
   if (
-    session?.matches({ open: { live: { running: 'awaitingPermission' } } }) ||
-    session?.matches({ open: { live: { running: 'awaitingElicitation' } } }) ||
     session?.matches({ open: { acp: { activeTurn: 'awaitingPermission' } } }) ||
     session?.matches({ open: { acp: { activeTurn: 'awaitingElicitation' } } })
   ) {
     state = 'requires_action';
   } else if (
-    session?.matches({ open: { live: { running: 'working' } } }) ||
-    session?.matches({ open: { live: 'cancelling' } }) ||
     session?.matches({ open: { acp: 'committing' } }) ||
     session?.matches({ open: { acp: 'activeTurn' } }) ||
     session?.matches({ open: { acp: 'publishing' } })

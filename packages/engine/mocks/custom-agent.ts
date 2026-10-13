@@ -44,5 +44,10 @@ export const startCustomAgentEngine = async (
     storage.remove();
     rmSync(directory, { recursive: true, force: true });
   });
-  return startEngineTestHost({ database: storage.database, ...options });
+  return startEngineTestHost({
+    database: storage.database,
+    fixtureAgents: [],
+    acp: {},
+    ...options,
+  });
 };

@@ -1,4 +1,4 @@
-import { agentAdapters } from '@repo/agents';
+import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it, vi } from 'vitest';
 import {
@@ -16,7 +16,7 @@ import {
   createFeedRouterCaller,
 } from '#mocks/feed-suite';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
-it.each(agentAdapters.map((adapter): string => adapter.agent))(
+it.each(fixtureAgents.map((adapter): string => adapter.agent))(
   'keeps %s queued Tool-call headers visible before persistence',
   async (agent): Promise<void> => {
     await startFeedTestHost({ steps: [{ type: waitForCancelStep }] }, agent);
