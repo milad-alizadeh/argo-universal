@@ -1,34 +1,37 @@
 import type * as React from 'react';
-import { Platform } from 'react-native';
+import { Platform, type TextStyle } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 
-export function FileName({
-  path,
-  className,
-}: {
+const fileNameClassName =
+  'select-none min-w-0 shrink web:underline web:decoration-ring web:underline-offset-2';
+
+function useNativeUnderline(): TextStyle | undefined {
+  const underlineColor = useCSSVariable('--color-ring');
+  return Platform.select({
+    native: {
+      textDecorationLine: 'underline',
+      textDecorationColor: String(underlineColor),
+    },
+  });
+}
+
+interface FileNameProps {
   path: string;
   className?: string;
-}): React.JSX.Element {
-  const underlineColor = useCSSVariable('--color-ring');
+}
+
+export function FileName(props: FileNameProps): React.JSX.Element {
   return (
     <Text
       selectable={false}
       numberOfLines={1}
-      style={Platform.select({
-        native: {
-          textDecorationLine: 'underline',
-          textDecorationColor: String(underlineColor),
-        },
-      })}
+      style={useNativeUnderline()}
       role="code"
-      className={cn(
-        'select-none min-w-0 shrink web:underline web:decoration-ring web:underline-offset-2',
-        className,
-      )}
+      className={cn(fileNameClassName, props.className)}
     >
-      {path.split('/').at(-1)}
+      {props.path.split('/').at(-1)}
     </Text>
   );
 }

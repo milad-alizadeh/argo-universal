@@ -1,6 +1,8 @@
 import type { ReactElement } from 'react';
 import { Platform, TextInput } from 'react-native';
+import { useNativeTheme } from '#lib/generic/native-theme';
 import { cn } from '#lib/generic/utils';
+import { usePrimitiveColor } from '../../native/primitive-color';
 
 type TextareaProps = React.ComponentProps<typeof TextInput> &
   React.RefAttributes<TextInput>;
@@ -27,18 +29,31 @@ function textareaInputProps({
 }
 
 function Textarea(options: TextareaProps): ReactElement {
-  const classes = textareaClassName(options);
+  const colors = useTextareaColors();
   const placeholderClassName = cn(
     'text-muted-foreground',
     options.placeholderClassName,
   );
   return (
     <TextInput
-      className={classes}
+      className={textareaClassName(options)}
+      {...colors}
       placeholderClassName={placeholderClassName}
       {...textareaInputProps(options)}
     />
   );
+}
+
+function useTextareaColors(): Pick<
+  TextareaProps,
+  'cursorColor' | 'selectionColor'
+> {
+  const { colors } = useNativeTheme();
+  const selection = usePrimitiveColor('bg-tint/20');
+  return {
+    cursorColor: colors.tint,
+    selectionColor: Platform.OS === 'ios' ? colors.tint : selection,
+  };
 }
 
 export { Textarea };

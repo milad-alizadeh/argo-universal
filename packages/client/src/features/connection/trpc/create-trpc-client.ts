@@ -14,12 +14,11 @@ export function serverHttpUrl(serverUrl: string, path: string): string {
   return url.toString();
 }
 
-// Every tRPC call goes over one WebSocket to the Server, except a call with a file, which goes over HTTP (ADR 0002).
-export function createTRPCClient(
+function createWebSocketClient(
   serverUrl: string,
-  beforeConnect: () => Promise<void> = async (): Promise<void> => {},
-): ServerClient {
-  const webSocketClient = trpc.createWSClient({
+  beforeConnect: () => Promise<void>,
+): ServerClient['webSocketClient'] {
+  return trpc.createWSClient({
     // `beforeConnect` waits out the retry delay, so the Connection machine can cut it short.
     url: async () => {
       await beforeConnect();
@@ -28,7 +27,13 @@ export function createTRPCClient(
     retryDelayMs: () => 0,
     keepAlive: { enabled: true, intervalMs: 5000, pongTimeoutMs: 1000 },
   });
-  const client = trpc.createTRPCClient<AppRouter>({
+}
+
+function createServerClient(
+  serverUrl: string,
+  webSocketClient: ServerClient['webSocketClient'],
+): ServerClient['client'] {
+  return trpc.createTRPCClient<AppRouter>({
     links: [
       trpc.splitLink({
         condition: (operation) => trpc.isNonJsonSerializable(operation.input),
@@ -37,6 +42,15 @@ export function createTRPCClient(
       }),
     ],
   });
+}
+
+// Every tRPC call goes over one WebSocket to the Server, except a call with a file, which goes over HTTP (ADR 0002).
+export function createTRPCClient(
+  serverUrl: string,
+  beforeConnect: () => Promise<void> = async (): Promise<void> => {},
+): ServerClient {
+  const webSocketClient = createWebSocketClient(serverUrl, beforeConnect);
+  const client = createServerClient(serverUrl, webSocketClient);
   return { client, webSocketClient, close: () => webSocketClient.close() };
 }
 

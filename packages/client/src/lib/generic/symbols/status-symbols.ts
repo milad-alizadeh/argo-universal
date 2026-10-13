@@ -2,7 +2,7 @@ import type { SymbolSource } from './symbol-source';
 
 // Outcomes and states a row or mark reports.
 export const statusSymbols = {
-  cancelled: { sf: 'stop', material: 'stop' },
+  cancelled: { sf: 'stop', sfFilled: 'stop.fill', material: 'stop' },
   error: { sf: 'exclamationmark.circle', material: 'error' },
   failed: {
     sf: 'xmark.circle',

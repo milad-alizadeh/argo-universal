@@ -41,3 +41,14 @@ export function ContentLayout({
     </View>
   );
 }
+
+export function ContentWidthProvider(props: {
+  wide: boolean;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <ContentWide.Provider value={props.wide}>
+      {props.children}
+    </ContentWide.Provider>
+  );
+}

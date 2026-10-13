@@ -7,6 +7,7 @@ import {
 } from '../src/features/requests/components/plan-proposal-card/plan-proposal-card';
 import { PlanProposalRegion } from '../src/features/requests/components/plan-proposal-region';
 import { Text } from '../src/lib/generic/primitives/display/text/text';
+import { RequestComposerPreview } from './request-composer';
 
 export const planProposalMocks = recordedRequestMocks.flatMap((mock) =>
   mock.answer.procedure === 'answerPlanProposal' &&
@@ -44,7 +45,7 @@ export const planProposalFeedback =
     ?.answer.feedback ?? '';
 
 export function PlanProposalPreview(
-  props: PlanProposalCardProps,
+  props: PlanProposalCardProps & { composer?: boolean },
 ): React.JSX.Element {
   return (
     <View className="flex-1 min-h-0 flex-row">
@@ -57,7 +58,11 @@ export function PlanProposalPreview(
       >
         <View className="flex-1 min-h-0" />
         <View className="items-center px-4 pb-4 wide:px-6">
-          <PlanProposalCard {...props} />
+          {props.composer ? (
+            <RequestComposerPreview planProposal={props} />
+          ) : (
+            <PlanProposalCard {...props} />
+          )}
         </View>
       </PlanProposalRegion>
       <View className="hidden wide:flex w-64 bg-sidebar border-l border-border p-4">

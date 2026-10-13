@@ -18,35 +18,32 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const variations = [
+  {
+    label: 'Text with inline code',
+    row: recordedUserMessage('agent-1', 'interrupt'),
+  },
+  {
+    label: 'With an image',
+    row: recordedUserMessage('agent-2', 'image-prompt'),
+  },
+  { label: 'Markdown', row: recordedPrompt('agent-1', 'markdown-prompt') },
+  {
+    label: 'Long text',
+    row: recordedUserMessage('agent-2', 'markdown-answer'),
+  },
+];
+
 // Recorded prompts: inline code, an image, markdown and a long prompt; longer than four lines clamps behind Show more.
 export const Overview: Story = {
   name: 'UserMessage',
   render: (args) => (
     <Variations>
-      <Variation label="Text with inline code">
-        <UserMessage
-          {...args}
-          row={recordedUserMessage('agent-1', 'interrupt')}
-        />
-      </Variation>
-      <Variation label="With an image">
-        <UserMessage
-          {...args}
-          row={recordedUserMessage('agent-2', 'image-prompt')}
-        />
-      </Variation>
-      <Variation label="Markdown">
-        <UserMessage
-          {...args}
-          row={recordedPrompt('agent-1', 'markdown-prompt')}
-        />
-      </Variation>
-      <Variation label="Long text">
-        <UserMessage
-          {...args}
-          row={recordedUserMessage('agent-2', 'markdown-answer')}
-        />
-      </Variation>
+      {variations.map(({ label, row }) => (
+        <Variation key={label} label={label}>
+          <UserMessage {...args} row={row} />
+        </Variation>
+      ))}
     </Variations>
   ),
 };

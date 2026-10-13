@@ -1,8 +1,10 @@
 import { maxBlobUploadBytes, maxBlobUploadMebibytes } from '@repo/contracts';
 import type * as React from 'react';
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import {
+  PermissionRequest,
+  type PermissionRequestProps,
   PlanProposalCard,
   type PlanProposalCardProps,
 } from '#features/requests';
@@ -50,6 +52,7 @@ export interface ComposerDraft {
 export interface ComposerProps {
   draft: ComposerDraft;
   planProposal?: PlanProposalCardProps;
+  permissionRequest?: PermissionRequestProps;
   writtenPlan?: WrittenPlanValue;
   onDraftChange: (draft: ComposerDraft) => void;
   onAttachImages: () => void;
@@ -79,6 +82,7 @@ const composerIconButton =
 export function Composer({
   draft,
   planProposal,
+  permissionRequest,
   writtenPlan,
   onDraftChange,
   onAttachImages,
@@ -98,9 +102,11 @@ export function Composer({
   error,
 }: ComposerProps): React.JSX.Element {
   const composerId = useId();
+  const [controlsHeight, setControlsHeight] = useState(0);
   useFileDrop({ targetId: composerId, onDropFiles });
   const wide = useContentWide();
-  const shownWrittenPlan = planProposal ? undefined : writtenPlan;
+  const shownWrittenPlan =
+    planProposal || permissionRequest ? undefined : writtenPlan;
   const inactive = sending || disabled;
   const canRecoverAgent = Boolean(
     configuration?.onAgentRetry &&
@@ -153,15 +159,33 @@ export function Composer({
         )}
       {wide &&
         !planProposal &&
+        !permissionRequest &&
         (!!shownWrittenPlan || !!status?.plan?.length) && (
           <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-2xl bg-glass-muted shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-180">
             {planControls}
           </View>
         )}
-      {planProposal ? (
-        <PlanProposalCard {...planProposal} />
-      ) : (
-        // Wide, the card sits between its glass trays and keeps Argo's own glass.
+      {(planProposal || permissionRequest) && (
+        <View
+          className={
+            wide
+              ? 'self-stretch -mb-3 pb-3 rounded-t-xl bg-sidebar/80 shadow-glass web:backdrop-blur-glass web:backdrop-saturate-110'
+              : undefined
+          }
+        >
+          {planProposal ? (
+            <PlanProposalCard {...planProposal} bottomInset={controlsHeight} />
+          ) : (
+            permissionRequest && <PermissionRequest {...permissionRequest} />
+          )}
+        </View>
+      )}
+      <View
+        className="w-full"
+        onLayout={({ nativeEvent }) =>
+          setControlsHeight(nativeEvent.layout.height)
+        }
+      >
         <LiquidGlass
           shape="card"
           glass={!wide}
@@ -343,31 +367,31 @@ export function Composer({
             </View>
           </View>
         </LiquidGlass>
-      )}
-      {wide && (configuration || status) && (
-        <View
-          className={cn(
-            'h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-2xl bg-glass-muted shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-180',
-          )}
-        >
-          <View className="flex-1 min-h-0 flex-row items-center pl-0.5 gap-1">
-            {status && (
-              <View>
-                <ComposerStatusControls status={status} disabled={inactive} />
-              </View>
+        {wide && (configuration || status) && (
+          <View
+            className={cn(
+              'h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-2xl bg-glass-muted shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-180',
             )}
-            <View className="flex-1" />
-            {configuration && (
-              <View>
-                <ComposerCheckoutControl
-                  checkout={configuration.checkout}
-                  disabled={inactive}
-                />
-              </View>
-            )}
+          >
+            <View className="flex-1 min-h-0 flex-row items-center pl-0.5 gap-1">
+              {status && (
+                <View>
+                  <ComposerStatusControls status={status} disabled={inactive} />
+                </View>
+              )}
+              <View className="flex-1" />
+              {configuration && (
+                <View>
+                  <ComposerCheckoutControl
+                    checkout={configuration.checkout}
+                    disabled={inactive}
+                  />
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-      )}
+        )}
+      </View>
     </View>
   );
 }

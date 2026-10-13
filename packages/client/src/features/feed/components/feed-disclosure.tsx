@@ -14,111 +14,97 @@ import {
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import { ShimmerText } from './shimmer-text';
+import {
+  FeedDisclosureLabel,
+  type FeedDisclosureLabelProps,
+  foregroundTextClassName,
+} from './feed-disclosure-label';
 
-const foregroundTextClassName = 'text-foreground';
-
-export interface FeedDisclosureProps {
-  label: string;
-  // Parts of the label to draw in mono.
-  paths?: readonly string[];
+export interface FeedDisclosureProps extends Omit<
+  FeedDisclosureLabelProps,
+  'hovered'
+> {
   icon: IconName;
-  running?: boolean;
   failed?: boolean;
   initialOpen?: boolean;
-  trailing?: string;
-  awaitingApproval?: boolean;
-  denied?: boolean;
   children: ReactNode;
 }
 
-function withMonoPaths(title: string, paths: readonly string[]): ReactNode[] {
-  const pattern = paths
-    .filter(Boolean)
-    .map((path) => path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    .join('|');
-  if (!pattern) return [title];
-  let offset = 0;
-  return title.split(new RegExp(`(${pattern})`)).map((part) => {
-    const key = `${offset}`;
-    offset += part.length;
-    return paths.includes(part) ? (
-      <Text key={key} role="code">
-        {part}
-      </Text>
-    ) : (
-      part
-    );
-  });
+type TriggerProps = Omit<FeedDisclosureProps, 'children'> & { open: boolean };
+
+function useHovered(): [
+  boolean,
+  { onHoverIn: () => void; onHoverOut: () => void },
+] {
+  const [hovered, setHovered] = useState(false);
+  return [
+    hovered,
+    { onHoverIn: () => setHovered(true), onHoverOut: () => setHovered(false) },
+  ];
+}
+
+function AwaitingApprovalBadge(): React.JSX.Element {
+  return (
+    <View className="rounded-sm border border-warning/20 bg-warning/10 px-1.5">
+      <Text className="text-warning">Awaiting approval</Text>
+    </View>
+  );
+}
+
+function FeedDisclosureIcon(
+  props: TriggerProps & { hovered: boolean },
+): React.JSX.Element {
+  return (
+    <Icon
+      name={props.icon}
+      role="body"
+      className={cn('shrink-0 text-muted-foreground', {
+        'text-destructive': props.failed,
+        [foregroundTextClassName]: props.hovered,
+      })}
+    />
+  );
+}
+
+function FeedDisclosureHeading(
+  props: TriggerProps & { hovered: boolean },
+): React.JSX.Element {
+  return (
+    <View className="min-w-0 shrink flex-row items-center gap-1">
+      <FeedDisclosureLabel {...props} />
+      {props.awaitingApproval && <AwaitingApprovalBadge />}
+      <DisclosureChevron
+        open={props.open}
+        className={props.hovered ? foregroundTextClassName : undefined}
+      />
+    </View>
+  );
+}
+
+function FeedDisclosureTrigger(props: TriggerProps): React.JSX.Element {
+  const [hovered, hoverHandlers] = useHovered();
+  return (
+    <TextClassContext.Provider value="select-none">
+      <CollapsibleTrigger
+        accessibilityLabel={props.label}
+        {...hoverHandlers}
+        className="min-h-5 max-w-full self-start flex-row items-center gap-1.5"
+      >
+        <FeedDisclosureIcon {...props} hovered={hovered} />
+        <FeedDisclosureHeading {...props} hovered={hovered} />
+      </CollapsibleTrigger>
+    </TextClassContext.Provider>
+  );
 }
 
 export function FeedDisclosure({
-  label,
-  paths = [],
-  icon,
-  running = false,
-  failed = false,
-  initialOpen = false,
-  trailing,
-  awaitingApproval = false,
-  denied = false,
   children,
+  ...props
 }: FeedDisclosureProps): React.JSX.Element {
-  const [open, setOpen] = useState(initialOpen);
-  const [hovered, setHovered] = useState(false);
-  const title = trailing ? `${label} ${trailing}` : label;
+  const [open, setOpen] = useState(props.initialOpen === true);
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="w-full">
-      <TextClassContext.Provider value="select-none">
-        <CollapsibleTrigger
-          accessibilityLabel={label}
-          onHoverIn={() => setHovered(true)}
-          onHoverOut={() => setHovered(false)}
-          className="min-h-5 max-w-full self-start flex-row items-center gap-1.5"
-        >
-          <Icon
-            name={icon}
-            role="body"
-            className={cn(
-              'shrink-0 text-muted-foreground',
-              failed && 'text-destructive',
-              hovered && foregroundTextClassName,
-            )}
-          />
-          <View className="min-w-0 shrink flex-row items-center gap-1">
-            {running && !awaitingApproval ? (
-              <ShimmerText
-                text={title}
-                emphasized={hovered}
-                className="min-w-0 shrink type-body"
-              />
-            ) : (
-              <Text
-                numberOfLines={1}
-                selectable={false}
-                role="body"
-                className={cn(
-                  'min-w-0 shrink text-muted-foreground',
-                  hovered && foregroundTextClassName,
-                  awaitingApproval && 'text-warning',
-                  denied && 'line-through',
-                )}
-              >
-                {withMonoPaths(title, paths)}
-              </Text>
-            )}
-            {awaitingApproval && (
-              <View className="rounded-sm border border-warning/20 bg-warning/10 px-1.5">
-                <Text className="text-warning">Awaiting approval</Text>
-              </View>
-            )}
-            <DisclosureChevron
-              open={open}
-              className={hovered ? foregroundTextClassName : undefined}
-            />
-          </View>
-        </CollapsibleTrigger>
-      </TextClassContext.Provider>
+      <FeedDisclosureTrigger {...props} open={open} />
       <CollapsibleContent className="pt-2">{children}</CollapsibleContent>
     </Collapsible>
   );

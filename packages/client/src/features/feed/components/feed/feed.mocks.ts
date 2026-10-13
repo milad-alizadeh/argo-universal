@@ -14,13 +14,18 @@ const oldestRecording = recordedFeedMock('agent-2', 'compaction');
 const arrivingRecording = recordedFeedMock('agent-2', 'command-outcomes');
 const snapshotRecording = recordedFeedMock('agent-1', 'edit-and-command');
 
-function firstTextOf(row: {
-  content: readonly { type: string; text?: string }[];
-}): string {
-  const [block] = row.content;
-  if (block?.type !== 'text' || block.text === undefined)
-    throw new Error('Recorded message has no text');
-  return block.text;
+interface RecordedBlock {
+  type: string;
+  text?: string;
+}
+
+const textOf = (block: RecordedBlock | undefined): string | undefined =>
+  block?.type === 'text' ? block.text : undefined;
+
+function firstTextOf(row: { content: readonly RecordedBlock[] }): string {
+  const text = textOf(row.content[0]);
+  if (text === undefined) throw new Error('Recorded message has no text');
+  return text;
 }
 
 // The Long Feed's first message, which only the oldest page holds.
