@@ -42,13 +42,13 @@ export const removeAgentInstallation = async (input: {
 
 const saveRemoval = (
   deps: ConfigurationDeps,
-  agent: { id: string; configuration: AgentConfiguration },
+  agent: { id: string; enabled: boolean; configuration: AgentConfiguration },
 ): Promise<void> =>
   writeDatabaseJobAndWaitForCommit(
     deps.databaseWriter,
     new AgentConfigurationSaveJob({
       id: agent.id,
-      enabled: false,
+      enabled: agent.enabled,
       configuration: JSON.stringify(removedConfiguration(agent.configuration)),
     }),
     true,

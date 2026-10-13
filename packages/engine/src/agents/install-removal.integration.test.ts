@@ -24,12 +24,35 @@ it('removal deletes managed files, retains the Agent identity and survives resta
   expect(await restarted.caller.agents.configured()).toContainEqual(
     expect.objectContaining({
       id: agentId,
-      enabled: false,
       configuration: expect.objectContaining({
         source: 'registry',
         release: null,
         removed: true,
       }),
+    }),
+  );
+});
+
+it('a disabled catalog id stays disabled through catalog sync, removal, reinstall and restart', async () => {
+  const host = await startInstallEngine();
+  const { agentId } = host;
+  await host.caller.agents.install({ agentId, version: '1.2.3' });
+  await waitForInstalledSelection(host);
+  await host.caller.agents.setEnabled({ agentId, enabled: false });
+  await host.caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await host.caller.agents.catalog()).syncStatus)
+    .toBe('idle');
+  await host.caller.agents.remove({ agentId });
+  await host.caller.agents.install({ agentId, version: '1.2.3' });
+  await waitForInstalledSelection(host);
+  await host.stop();
+  const restarted = await startEngineTestHost({ home: host.home });
+  expect(await restarted.caller.agents.configured()).toContainEqual(
+    expect.objectContaining({
+      id: agentId,
+      enabled: false,
+      configuration: expect.objectContaining({ release: expect.any(String) }),
     }),
   );
 });
