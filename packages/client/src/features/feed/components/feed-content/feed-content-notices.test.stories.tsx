@@ -14,6 +14,7 @@ const meta = {
   parameters: { screenPreview: true },
   args: feedContentArgs,
 } satisfies Meta<typeof Feed>;
+
 export default meta;
 
 const compactingLabel = 'Compacting context';
@@ -33,6 +34,7 @@ async function drawsCompaction({ canvas }: FeedPlayContext): Promise<void> {
   await expect(
     canvas.getByRole('status', { name: `info: ${compactingLabel}` }),
   ).toBeVisible();
+
   for (const text of [
     'Unknown compaction status: constructor',
     'Compaction could not finish',
@@ -57,56 +59,67 @@ export const NoticesFirstAgentPhone = supportedContent(
   'agent-1',
   drawsNotices,
 );
+
 export const NoticesFirstAgentWide = supportedContent(
   layoutWidths.wide,
   'agent-1',
   drawsNotices,
 );
+
 export const NoticesSecondAgentPhone = supportedContent(
   layoutWidths.phone,
   'agent-2',
   drawsNotices,
 );
+
 export const NoticesSecondAgentWide = supportedContent(
   layoutWidths.wide,
   'agent-2',
   drawsNotices,
 );
+
 export const CompactionFirstAgentPhone = supportedContent(
   layoutWidths.phone,
   'agent-1',
   drawsCompaction,
 );
+
 export const CompactionFirstAgentWide = supportedContent(
   layoutWidths.wide,
   'agent-1',
   drawsCompaction,
 );
+
 export const CompactionSecondAgentPhone = supportedContent(
   layoutWidths.phone,
   'agent-2',
   drawsCompaction,
 );
+
 export const CompactionSecondAgentWide = supportedContent(
   layoutWidths.wide,
   'agent-2',
   drawsCompaction,
 );
+
 export const ToolFirstAgentPhone = supportedContent(
   layoutWidths.phone,
   'agent-1',
   drawsToolContent,
 );
+
 export const ToolFirstAgentWide = supportedContent(
   layoutWidths.wide,
   'agent-1',
   drawsToolContent,
 );
+
 export const ToolSecondAgentPhone = supportedContent(
   layoutWidths.phone,
   'agent-2',
   drawsToolContent,
 );
+
 export const ToolSecondAgentWide = supportedContent(
   layoutWidths.wide,
   'agent-2',

@@ -7,24 +7,30 @@ import { StatusPlan } from './composer-plan';
 import { ContextControl } from './context-control';
 import { UsageControl } from './usage-control';
 import { WorkChips } from './work-chips';
+
 export type { ComposerStatusProps } from '../../state/status';
+
 interface StatusControlsProps {
   status: ComposerStatusProps;
   disabled: boolean;
 }
+
 export function ComposerPlan(props: {
   entries: PlanEntry[];
   disabled: boolean;
 }): JSX.Element {
   return <StatusPlan {...props} />;
 }
+
 export function ComposerStatusControls({
   status,
   disabled,
 }: StatusControlsProps): JSX.Element {
   const wide = useContentWide();
+
   return <StatusControlsRow status={status} disabled={disabled} wide={wide} />;
 }
+
 function StatusControlsRow({
   status,
   ...controlProps

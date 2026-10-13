@@ -5,7 +5,9 @@ import {
   planTitle,
   expandedAttribute,
 } from './composer-test-contract.test.mocks';
+
 type SessionStep = Pick<PlayContext, 'canvas'> & { width: number };
+
 export async function expectSessionPath({
   canvas,
   width,
@@ -16,11 +18,13 @@ export async function expectSessionPath({
       ).not.toBeInTheDocument()
     : expect(canvas.getByText('session', { exact: true })).toBeVisible());
 }
+
 export async function expectOpenedPlan({
   canvas,
   width,
 }: SessionStep): Promise<void> {
   const overlay = within(document.body);
+
   if (width < wideBreakpoint())
     await waitFor(() => expect(overlay.getByRole('dialog')).toBeVisible());
   else {
@@ -32,6 +36,7 @@ export async function expectOpenedPlan({
     );
   }
 }
+
 export async function closeRunningPlan({
   canvas,
   userEvent,

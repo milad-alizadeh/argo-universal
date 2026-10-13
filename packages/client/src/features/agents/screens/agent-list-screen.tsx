@@ -6,6 +6,7 @@ import { useInstalledAgents } from '../hooks/use-installed-agents';
 
 export function AgentListScreen(): React.JSX.Element {
   const navigate = useNavigate();
+
   return (
     <AgentListView
       catalog={useAgentCatalog().load}

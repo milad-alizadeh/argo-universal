@@ -24,6 +24,7 @@ export function chosenPermissionKind(
   outcome: Outcome | undefined,
 ): PermissionOptionKind | undefined {
   if (outcome?.outcome !== 'selected') return undefined;
+
   return selectedKind(outcome);
 }
 
@@ -84,8 +85,11 @@ export function PermissionOutcome({
   message,
 }: PermissionOutcomeProps): React.JSX.Element | null {
   const kind = chosenPermissionKind(outcome);
+
   if (!kind) return null;
   const label = outcomeLabels[kind](chosenName(outcome), message);
+
   if (!label) return null;
+
   return <OutcomeRow kind={kind} label={label} />;
 }

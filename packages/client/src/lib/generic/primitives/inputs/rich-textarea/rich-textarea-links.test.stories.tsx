@@ -19,11 +19,14 @@ const meta = {
     await settleViewport(layoutWidths.wide);
   },
 } satisfies Meta<typeof RichTextareaExample>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // The draft is "Read the spec" with "spec" selected from the keyboard.
 const draft = 'Read the spec';
+
 const url = 'https://argo.dev/spec';
 
 async function selectLastWord(field: HTMLElement): Promise<void> {
@@ -36,6 +39,7 @@ async function selectLastWord(field: HTMLElement): Promise<void> {
 async function openLinkEditor(field: HTMLElement): Promise<HTMLElement> {
   await selectLastWord(field);
   await userEvent.keyboard(`{${modifier}>}k{/${modifier}}`);
+
   return within(document.body).findByRole('dialog', { name: 'Edit link' });
 }
 
@@ -45,6 +49,7 @@ export const LinkEditorOpen: Story = {
     const editor = within(
       await openLinkEditor(canvas.getByRole('textbox', { name: label })),
     );
+
     await expect(editor.getByRole('textbox', { name: 'Text' })).toHaveValue(
       'spec',
     );
@@ -81,7 +86,9 @@ function linkEditorSaves(typedUrl: string): Story {
     },
   };
 }
+
 export const LinkEditorReturnSaves = linkEditorSaves(url);
+
 export const LinkEditorSavesARelativeLink = linkEditorSaves('#top');
 
 // A script URL would run when the link is followed, so the editor saves nothing.

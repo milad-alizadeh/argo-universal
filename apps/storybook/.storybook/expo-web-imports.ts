@@ -45,6 +45,7 @@ export const expoSymbolsWebImports = {
     const rewrite = expoSymbolsRewrites.find(({ file }) =>
       modulePathOf(id)?.endsWith(file),
     );
+
     if (rewrite)
       return { code: code.replace(rewrite.from, rewrite.to), map: null };
   },

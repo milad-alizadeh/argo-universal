@@ -8,9 +8,7 @@ import {
 } from '@expo/ui/jetpack-compose';
 import {
   type ModifierConfig,
-  Shapes,
   background,
-  clip,
   fillMaxWidth,
   height,
   padding,
@@ -23,14 +21,17 @@ import { useCSSVariable } from 'uniwind';
 import { useNativeTheme } from '../../../native-theme';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { useFollowedText } from '../../fields/field-input/field-input-text';
+import { roundedClip } from '../../native/compose-corners';
 import { Host } from '../../native/host';
 import { useComposeTextStyle } from '../../native/native-typography';
 import type { ListSearchBarProps } from './list-search-bar.tsx';
 
 // The space after the text, as before the icon.
 const inset = 16;
+
 // Material's search bar: a 56dp pill.
 const barHeight = 56;
+
 // The icon's slot, so in the list's 16dp gutter the text starts where the header's title does (measured on Android 15): 60dp in after ☰'s 44pt slot, 72dp in after Material's back button.
 const leadingSlot = { menu: 44, back: 56 } as const;
 
@@ -53,6 +54,7 @@ export function ListSearchBar({
 
 export function ListSearchField(props: ListSearchBarProps): React.JSX.Element {
   const textStyle = { ...useTypography(), color: useForeground() };
+
   return (
     <BasicTextField
       value={useSearchText(props.value)}
@@ -72,6 +74,7 @@ function useSearchText(
 ): ReturnType<typeof useNativeState<string>> {
   const text = useNativeState(value);
   useFollowedText(text, value);
+
   return text;
 }
 
@@ -95,6 +98,7 @@ function useTypography(): Pick<
 > {
   const { fontFamily, fontSize, lineHeight, fontWeight } =
     useComposeTextStyle('body');
+
   return { fontFamily, fontSize, lineHeight, fontWeight };
 }
 
@@ -117,6 +121,7 @@ function SearchIcon({
   leading,
 }: Pick<ListSearchBarProps, 'leading'>): React.JSX.Element {
   const slot = size(leadingSlot[leading], barHeight);
+
   return (
     <Box contentAlignment="center" modifiers={[slot]}>
       <NativeSymbol name="search" role="action" muted />
@@ -126,10 +131,11 @@ function SearchIcon({
 
 function usePillModifiers(): ModifierConfig[] {
   const fill = String(useCSSVariable('--color-selected'));
+
   return [
     fillMaxWidth(),
     height(barHeight),
-    clip(Shapes.RoundedCorner(barHeight / 2)),
+    roundedClip(barHeight / 2),
     background(fill),
   ];
 }
@@ -154,6 +160,7 @@ function SearchBarPlaceholder({
   placeholder,
 }: Pick<ListSearchBarProps, 'placeholder'>): React.JSX.Element {
   const { mutedForeground } = useNativeTheme().colors;
+
   return (
     <Text color={mutedForeground} style={useTypography()}>
       {placeholder}

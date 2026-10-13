@@ -15,6 +15,7 @@ export interface SeededServer {
 }
 
 const longSessionId = 'perf-long-feed';
+
 const titles = [
   'Fix flaky reconnect in the Connection machine',
   'Add search to the Sessions list',
@@ -25,8 +26,11 @@ const titles = [
   'Port the glass sidebar to Electron',
   'Investigate slow catch-up after sleep',
 ];
+
 const sessionCount = 240;
+
 const feedCopies = 14;
+
 const longSessionTitle = `${titles[0]} 0`;
 
 type SessionRow = typeof session.$inferSelect;
@@ -75,11 +79,13 @@ function write(
 async function seedDatabase(databasePath: string): Promise<number> {
   const database = openDatabase(databasePath);
   const template = database.select().from(session).limit(1).get();
+
   if (!template) throw new Error('The template Session is missing');
   const now = Date.now();
   const feed = await seededFeed(longSessionId, feedCopies, now);
   write(database, clones(template, feed.rows.length, now), feed);
   database.$client.close();
+
   return feed.rows.length;
 }
 
@@ -91,6 +97,7 @@ export async function startSeededServer(
   const databasePath = path.join(directory, 'server-home', 'argo.db');
   const feedRowCount = await seedDatabase(databasePath);
   const server = await startOwnServer(directory, {});
+
   return {
     serverUrl: server.serverUrl,
     longSessionTitle,

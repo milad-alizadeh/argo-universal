@@ -43,6 +43,7 @@ type LayoutProps = Pick<PreviewProps, 'Story' | 'padding'>;
 
 function ReusablesPreview(props: PreviewProps): React.JSX.Element {
   usePreviewTheme(props.mode, props.storyId);
+
   return (
     <PreviewProviders>
       <PreviewLayout {...props} />
@@ -80,6 +81,7 @@ function PreviewLayout({
   screen,
 }: LayoutProps & Pick<PreviewProps, 'screen'>): React.JSX.Element {
   if (screen) return <ScreenLayout Story={Story} padding={padding} />;
+
   return <CentredLayout Story={Story} padding={padding} />;
 }
 

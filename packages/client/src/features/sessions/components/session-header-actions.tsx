@@ -24,7 +24,9 @@ function ShownMergeButton(
   props: SessionHeaderActionsProps,
 ): React.JSX.Element | null {
   const { shown } = props;
+
   if (!shown) return null;
+
   return (
     <MergePrButton
       mergeable={shown.mergeable}
@@ -49,6 +51,7 @@ function inspectorToggle(
   inspector: ReturnType<typeof useInspector>,
 ): InspectorToggle {
   if (!inspector) return { 'aria-expanded': false };
+
   return { 'aria-expanded': inspector.open, onPress: inspector.toggle };
 }
 

@@ -10,9 +10,13 @@ type IconAppearance = Pick<
   IconButtonProps,
   'icon' | 'iconRole' | 'iconClassName' | 'filled' | 'iconWeight'
 >;
+
 type IconControlProps = Omit<IconButtonProps, keyof IconAppearance>;
+
 type IconPresentation = Pick<IconControlProps, 'size' | 'variant' | 'loading'>;
+
 type PressableInput = ComponentProps<typeof Pressable>;
+
 interface IconDrawing {
   pressable: PressableInput;
   adornment: ComponentProps<typeof ButtonAdornment>;
@@ -20,6 +24,7 @@ interface IconDrawing {
 
 export function IconButton(props: IconButtonProps): ReactElement {
   const drawing = iconDrawing(props);
+
   return (
     <Pressable {...drawing.pressable}>
       <ButtonAdornment {...drawing.adornment} />
@@ -36,6 +41,7 @@ function iconDrawing({
   ...props
 }: IconButtonProps): IconDrawing {
   const appearance = { icon, iconRole, iconClassName, filled, iconWeight };
+
   return createIconDrawing(props, appearance);
 }
 
@@ -94,6 +100,7 @@ function iconContainerClass(
   const { size, variant, className } = props;
   const disabled = !!props.disabled;
   const pressed = props['aria-pressed'] === true;
+
   return cn(iconButtonClasses({ size, variant, disabled, pressed }), className);
 }
 

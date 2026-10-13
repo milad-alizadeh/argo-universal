@@ -5,6 +5,7 @@ import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps, composerImages } from '../composer-mock';
 import { type Story, imageComposer } from './composer-story-context.test.mocks';
+
 export function withImages(width: number): Story {
   return {
     render: () => <View testID="controlled-images" />,
@@ -12,12 +13,14 @@ export function withImages(width: number): Story {
       await settleViewport(width);
       const root = createRoot(canvas.getByTestId('controlled-images'));
       const onDraftChange = fn();
+
       const props = composerProps({
         draft: { text: '', attachments: composerImages.slice(0, 1) },
         onDraftChange,
         onSend: fn(),
         onAttachImages: fn(),
       });
+
       try {
         root.render(imageComposer(props));
         await expect(
@@ -48,18 +51,22 @@ export function withImages(width: number): Story {
     },
   };
 }
+
 export const dragFiles = (
   type: 'dragover' | 'drop',
   files: File[],
 ): DragEvent => {
   const transfer = new DataTransfer();
+
   for (const file of files) transfer.items.add(file);
+
   return new DragEvent(type, {
     bubbles: true,
     cancelable: true,
     dataTransfer: transfer,
   });
 };
+
 export function attachmentMenus(width: number): Story {
   return {
     args: {
@@ -71,6 +78,7 @@ export function attachmentMenus(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       const overlay = within(document.body);
       await settleViewport(width);
+
       const choices =
         width < wideBreakpoint()
           ? ([
@@ -83,6 +91,7 @@ export function attachmentMenus(width: number): Story {
               ['Slash Commands', args.onSelectSlashCommand],
               ['Goal', args.onCreateGoal],
             ] as const);
+
       for (const [label, callback] of choices) {
         await userEvent.click(
           canvas.getByRole('button', {

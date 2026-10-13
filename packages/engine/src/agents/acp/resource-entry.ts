@@ -17,8 +17,11 @@ import type {
 import { AcpRouting } from './routing';
 
 const reservationLimit = 64;
+
 type RetireFailedGeneration = (checkouts: readonly string[]) => void;
+
 type ConfirmCheckoutRelease = () => Promise<void>;
+
 export class AcpResourceEntry {
   private readonly rejections = createRejectionCounter('ACP resources');
   private readonly reservations = new Set<AcpReservation>();
@@ -45,11 +48,12 @@ export class AcpResourceEntry {
   public closed(): Promise<void> {
     return this.cleanup.closed();
   }
-  private failGeneration(error: unknown): void {
+  private failGeneration(cause: unknown): void {
     const checkouts = [...this.reservations].map(
       (reservation) => reservation.input.opening.params.cwd,
     );
-    if (!this.cleanup.fail(error)) return;
+
+    if (!this.cleanup.fail(cause)) return;
     this.retireFailedGeneration(checkouts);
     void this.cleanup.shutdown().catch(() => {});
   }
@@ -59,8 +63,10 @@ export class AcpResourceEntry {
   ): Promise<AcpSessionLease> {
     this.requireAvailable();
     const reservation = this.reserve(input);
+
     try {
       await this.awaitCheckoutRelease(reservation, confirmCheckoutRelease);
+
       return await this.completeOpening(reservation);
     } catch (error) {
       await this.cleanup.abandon(reservation, error);
@@ -71,9 +77,9 @@ export class AcpResourceEntry {
     reservation: AcpReservation,
     confirmCheckoutRelease: ConfirmCheckoutRelease,
   ): Promise<void> {
-    await confirmCheckoutRelease().catch((error: unknown) => {
+    await confirmCheckoutRelease().catch((cause: unknown) => {
       reservation.withdrawn = true;
-      throw error;
+      throw cause;
     });
   }
   private requireAvailable(): void {
@@ -89,6 +95,7 @@ export class AcpResourceEntry {
       () => this.withdraw(reservation),
       (error) => this.cleanup.retire(reservation, error),
     );
+
     return reservation;
   }
   private async completeOpening(
@@ -100,8 +107,10 @@ export class AcpResourceEntry {
       reservation.dispatched = true;
       this.routing.markOpeningEligibleForUpdates(reservation);
     });
+
     if (reservation.sessionId === undefined)
       this.routing.bindSessionDestination(reservation, opened.sessionId);
+
     return this.handover(reservation, opened);
   }
   private async handover(
@@ -109,12 +118,15 @@ export class AcpResourceEntry {
     opened: Omit<AcpSessionLease, 'close' | 'released'>,
   ): Promise<AcpSessionLease> {
     reservation.stopWithdrawal();
+
     if (this.cleanup.retired) reservation.withdrawn = true;
     const close = (): Promise<void> => this.close(reservation);
+
     if (reservation.withdrawn) {
       await close();
       throw new DOMException('ACP opening was withdrawn', 'AbortError');
     }
+
     return { ...opened, close, released: reservation.released.promise };
   }
   private async withdraw(reservation: AcpReservation): Promise<void> {
@@ -123,16 +135,19 @@ export class AcpResourceEntry {
   }
   private close(reservation: AcpReservation): Promise<void> {
     reservation.closing ??= this.closeOwned(reservation);
+
     return reservation.closing;
   }
   private async closeOwned(reservation: AcpReservation): Promise<void> {
     if (!this.reservations.has(reservation)) return;
+
     try {
       await this.proveLocalClose(reservation);
     } catch (error) {
       this.cleanup.retainClose(reservation, error);
       throw error;
     }
+
     releaseOpening(reservation, this.reservations, this.routing);
     await this.cleanup.releaseIfIdle();
     reservation.released.resolve();

@@ -39,17 +39,21 @@ it('Plans replace whole content and retain removed history without resurrecting 
     },
     { sessionUpdate: 'plan_removed', planId: 'older' },
   ];
+
   const scenario = feedScenario(updates);
   const { host, sessionId } = await openAcpFeedSession(scenario);
   expect(
     (await host.caller.session.list({ archived: false })).sessions[0]?.plan,
   ).toEqual({ done: 1, total: 1 });
+
   const before = (await host.caller.feed.page({ sessionId, direction: 'tail' }))
     .rows;
+
   const current = before.find(
     (row) =>
       row.sessionUpdate === 'plan_update' && row.plan.planId === 'current',
   );
+
   assert(current);
   expect(current).toMatchObject({
     position: 2,
@@ -69,10 +73,12 @@ it('Plans replace whole content and retain removed history without resurrecting 
   expect(
     (await host.caller.session.list({ archived: false })).sessions[0]?.plan,
   ).toBeNull();
+
   const removed = await host.caller.feed.row({
     sessionId,
     id: current.id,
   });
+
   expect(removed).toMatchObject({
     position: 2,
     turnId: current.turnId,
@@ -92,6 +98,7 @@ it('an addressed Plan can replace markdown with a file reference without reading
       plan: { type: 'file', planId: 'design', uri: 'file:///missing/plan.md' },
     },
   ]);
+
   expect(
     (await host.caller.feed.page({ sessionId, direction: 'tail' })).rows,
   ).toMatchObject([

@@ -29,12 +29,15 @@ export function toSessionInfo(
 ): SessionListState[number] {
   const { row, live } = input;
   const latestTurn = latestTurnOf(input.turns, row.id);
+
   const running = live
     ? live.activeTurnId !== null
     : latestTurn?.status === 'running';
+
   const needsInput = Boolean(
     live?.permissionQueue[0] || live?.elicitationQueue[0],
   );
+
   const header = toLiveHeader(
     {
       activeTurnId:
@@ -47,6 +50,7 @@ export function toSessionInfo(
     },
     input.liveHeaderRows,
   );
+
   return {
     information: {
       sessionId: row.id,
@@ -127,7 +131,9 @@ function activityOf(input: {
 }): string {
   if (input.needsInput)
     return input.permission?.title ?? 'Waiting for your answer';
+
   if (input.running) return input.header?.text ?? 'Working';
+
   return (
     input.message?.content
       .filter((block): block is TextContent => block.type === 'text')

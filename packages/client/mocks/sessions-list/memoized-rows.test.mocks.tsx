@@ -8,12 +8,14 @@ import { renderingSessions } from '../../src/features/sessions/components/sessio
 import type { Story } from './sessions-list-story-context.test.mocks';
 
 const unchangedSessionLabel = 'Unchanged Session, Idle';
+
 const selectableSessionId = 'memo-selectable';
 
 export const memoizedRows: Story = {
   render: () => <View testID="controlled-list" />,
   play: async ({ canvas, userEvent, args }) => {
     const root = createRoot(canvas.getByTestId('controlled-list'));
+
     const render = (props: React.ComponentProps<typeof SessionsList>): void =>
       root.render(
         <SafeAreaProvider>
@@ -22,15 +24,20 @@ export const memoizedRows: Story = {
           </View>
         </SafeAreaProvider>,
       );
+
     const props = { ...args, sessions: renderingSessions };
+
     try {
       render(props);
+
       const unchanged = await canvas.findByRole('button', {
         name: unchangedSessionLabel,
       });
+
       const selectable = canvas.getByRole('button', {
         name: 'Selectable Session, Idle',
       });
+
       await userEvent.click(selectable);
       await expect(args.onSelect).toHaveBeenCalledWith(selectableSessionId);
       render({ ...props, selectedSessionId: selectableSessionId });

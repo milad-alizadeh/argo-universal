@@ -23,6 +23,7 @@ const meta = {
     </View>
   ),
 } satisfies Meta<SectionRootViewProps>;
+
 export default meta;
 
 export const Section: StoryObj<typeof meta> = {};

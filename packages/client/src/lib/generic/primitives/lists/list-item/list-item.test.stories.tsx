@@ -6,6 +6,7 @@ import { FieldSection } from '../../fields/field-section/field-section';
 import { ListItem } from './list-item';
 
 const onPress = fn<() => void>();
+
 const meta = {
   title: 'Tests/ListItem',
   component: ListItem,
@@ -41,7 +42,9 @@ const meta = {
     onPress.mockClear();
   },
 } satisfies Meta<typeof ListItem>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const KeyboardAndAccessibleNames: Story = {
@@ -49,6 +52,7 @@ export const KeyboardAndAccessibleNames: Story = {
     const projects = canvas.getByRole('link', {
       name: 'Projects, 1, needs attention',
     });
+
     await expect(canvas.getAllByRole('link')).toHaveLength(3);
     await expect(
       canvas.getByRole('group', { name: 'Version, 1.0' }),

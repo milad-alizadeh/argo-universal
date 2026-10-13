@@ -14,6 +14,7 @@ export interface HeaderResource {
 // Splits after the last slash, so the name stays whole while the folders ellipsize.
 function uriSplit(uri: string): number {
   const lastSlash = uri.lastIndexOf('/');
+
   return lastSlash >= 0 ? lastSlash + 1 : Math.ceil(uri.length / 2);
 }
 
@@ -34,6 +35,7 @@ function UriPart({
 
 function ResourceUri({ uri }: { uri: string }): React.JSX.Element {
   const split = uriSplit(uri);
+
   return (
     <View accessible accessibilityLabel={uri} className="min-w-0 flex-row">
       <UriPart className="min-w-0 shrink">{uri.slice(0, split)}</UriPart>

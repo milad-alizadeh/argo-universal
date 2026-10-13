@@ -1,4 +1,5 @@
 const variants = ['default', 'secondary', 'destructive', 'outline'] as const;
+
 const tones = ['muted', 'info', 'success', 'warning', 'destructive'] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -52,7 +53,9 @@ const meta = {
   title: 'Design System/Primitives/Badge',
   tags: ['third-party'],
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

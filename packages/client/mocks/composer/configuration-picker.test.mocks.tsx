@@ -19,10 +19,13 @@ import {
 } from './configuration-expectations.test.mocks';
 import { expectEffortControlsVisible } from './model-choice.test.mocks';
 import { pickerCatalogs } from './recorded-catalog.test.mocks';
+
 export function pickers(width: number, agentIndex: number): Story {
   const catalog = pickerCatalogs[agentIndex];
+
   if (!catalog)
     throw new Error(`Recorded catalog needs an Agent at index ${agentIndex}.`);
+
   return {
     parameters: { screenPreview: true },
     render: () => (
@@ -41,6 +44,7 @@ export function pickers(width: number, agentIndex: number): Story {
       ).toHaveAttribute(valueTextAttribute, catalog.currentEffort);
       await expectEffortControlsVisible();
       await expectHighEffort({ canvas, userEvent, width, catalog });
+
       for (const model of catalog.models)
         await expectEffortFollowsModel({ canvas, userEvent, width, model });
       await userEvent.keyboard('{Escape}');
@@ -48,6 +52,7 @@ export function pickers(width: number, agentIndex: number): Story {
     },
   };
 }
+
 export function ConfiguredComposer({
   agent,
 }: {
@@ -56,6 +61,7 @@ export function ConfiguredComposer({
   const [configOptions, setConfigOptions] = useState(
     recordedSessionOptions(agent.agent),
   );
+
   return (
     <Composer
       {...composerProps({

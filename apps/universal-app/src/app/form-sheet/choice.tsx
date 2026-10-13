@@ -8,5 +8,6 @@ export default function FormSheetChoice(): ReactElement {
   useEffect(() => {
     navigation.getParent()?.setOptions({ sheetAllowedDetents: [1] });
   }, [navigation]);
+
   return <FormSheetChoices headerInset={useSheetContentInset()} />;
 }

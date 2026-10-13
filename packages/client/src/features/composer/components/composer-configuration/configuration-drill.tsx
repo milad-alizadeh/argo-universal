@@ -21,18 +21,23 @@ interface DrillProps {
   page: 'agent' | 'model';
   onOpenPage: (page: 'agent' | 'model') => void;
 }
+
 interface PickerProps {
   configuration: ComposerConfigurationProps;
   page: 'agent' | 'model';
 }
+
 export function ConfigurationDrill(
   props: DrillProps,
 ): React.JSX.Element | null {
   const wide = isDesktopDrill(useWide());
+
   if (!hasDrillOption(props)) return null;
   const row = configurationDrillRow({ ...props, wide });
+
   return wide ? <ConfigurationDrillPopover {...props} row={row} /> : row;
 }
+
 function configurationDrillRow(
   props: DrillProps & { wide: boolean },
 ): React.JSX.Element {
@@ -44,21 +49,25 @@ function configurationDrillRow(
     />
   );
 }
+
 function drillRowContent(
   props: DrillProps & { wide: boolean },
 ): React.ComponentProps<typeof ListItem> {
   if (props.page === 'agent') return agentDrillContent(props);
+
   return {
     title: 'Model',
     value: modelName(selectedChoice(props.configuration, 'model')),
   };
 }
+
 function agentDrillContent(
   props: DrillProps & { wide: boolean },
 ): React.ComponentProps<typeof ListItem> {
   const agent = props.configuration.agents.find(
     (entry) => entry.agent === props.configuration.agent,
   );
+
   return {
     title: 'Agent',
     value: agent?.label,
@@ -67,6 +76,7 @@ function agentDrillContent(
     ),
   };
 }
+
 function ConfigurationDrillPopover({
   page,
   row,
@@ -81,6 +91,7 @@ function ConfigurationDrillPopover({
     </FieldRowEnd>
   );
 }
+
 const drillPopoverPlacement = {
   side: 'right',
   align: 'start',
@@ -90,6 +101,7 @@ const drillPopoverPlacement = {
   className:
     'bg-sidebar border-0 dark:border dark:border-border rounded-surface p-3 shadow-card',
 } as const;
+
 function ConfigurationDrillContent(props: PickerProps): React.JSX.Element {
   return (
     <PopoverContent
@@ -100,11 +112,14 @@ function ConfigurationDrillContent(props: PickerProps): React.JSX.Element {
     </PopoverContent>
   );
 }
+
 function pickerTitle(page: PickerProps['page']): string {
   return page === 'agent' ? 'Select Agent' : 'Select Model';
 }
+
 function ConfigurationPicker(props: PickerProps): React.JSX.Element {
   const close = usePopoverClose();
+
   return (
     <View className="gap-3">
       <Text role="heading" aria-level={2} className="px-4 pt-1">
@@ -114,6 +129,7 @@ function ConfigurationPicker(props: PickerProps): React.JSX.Element {
     </View>
   );
 }
+
 function ConfigurationPickerChoices({
   configuration,
   page,

@@ -36,21 +36,33 @@ import type { EngineCommand } from './engine-message';
 import { supervisorMachine } from './machine';
 
 const supervisorStartedAt = '2026-10-03T00:00:00.000Z';
+
 const readyEngineEvent = 'engine.ready';
+
 const engineExitedEvent = 'engine.exit';
+
 const stopServerEvent = 'server.stop';
+
 const heartbeatEngineEvent = 'engine.heartbeat';
+
 const engineStoppedEvent = 'engine.exited';
+
 const engineUnresolvedEvent = 'engine.unresolved';
+
 const readyDelayEvent = 'xstate.after.readyTimeout.supervisor.starting';
+
 const heartbeatDelayEvent = 'xstate.after.heartbeatTimeout.supervisor.running';
+
 const backoffDelayEvent =
   'xstate.after.backoff.supervisor.backingOff.delay.waiting';
 
 // Numbers written out so the model cannot grade itself.
 const readyTimeoutMs = 15_000;
+
 const heartbeatTimeoutMs = 5000;
+
 const maxCrashes = 10;
+
 const backoffMs = (crashes: number): number =>
   Math.min(500 * 2 ** (crashes - 1), 30_000);
 
@@ -63,6 +75,7 @@ interface MockEngine {
 }
 
 let engines: MockEngine[];
+
 let supervisor: Actor<typeof supervisorMachine>;
 
 // An Engine that exits when asked, unless the test drives `engine.exited` itself.
@@ -78,11 +91,14 @@ const createMockEngine = (options: {
         askedToStop: false,
         stopped: false,
       };
+
       engines.push(engine);
       receive((): void => {
         engine.askedToStop = true;
+
         if (options.exitsWhenAsked) engine.exit();
       });
+
       return (): void => {
         engine.stopped = true;
       };
@@ -91,6 +107,7 @@ const createMockEngine = (options: {
 
 const latestEngine = (): MockEngine =>
   engines.at(-1) ?? expect.unreachable('No engine was started');
+
 const liveEngines = (): number =>
   engines.filter((engine): boolean => !engine.stopped).length;
 
@@ -123,6 +140,7 @@ describe('supervisor model', (): void => {
       },
     },
   });
+
   type SupervisorSnapshot = SnapshotFrom<typeof machine>;
 
   const input = {
@@ -132,6 +150,7 @@ describe('supervisor model', (): void => {
     startedAt: supervisorStartedAt,
     watch: false,
   };
+
   const fixtures = [
     { type: readyEngineEvent, port: 7337 },
     { type: engineExitedEvent, code: 1 },
@@ -143,20 +162,26 @@ describe('supervisor model', (): void => {
     { type: heartbeatDelayEvent },
     { type: backoffDelayEvent },
   ] satisfies GraphEventFromLogic<typeof machine>[];
+
   type SupervisorEvent = (typeof fixtures)[number];
+
   const eventTypes = (node: DirectedGraphNode): string[] => [
     ...node.edges.map((edge): string => edge.label.text),
     ...node.children.flatMap(eventTypes),
   ];
+
   // The machine raises `xstate.done.state.*` itself, so the model must not send it.
-  const events = [...new Set(eventTypes(toDirectedGraph(machine)))]
-    .filter((type): boolean => !type.startsWith('xstate.done.state.'))
-    .map((type): SupervisorEvent => {
+  const events = [...new Set(eventTypes(toDirectedGraph(machine)))].flatMap(
+    (type): SupervisorEvent[] => {
+      if (type.startsWith('xstate.done.state.')) return [];
       const fixture = fixtures.find((event) => event.type === type);
+
       if (!fixture)
         throw new Error(`Missing Supervisor graph fixture for ${type}`);
-      return fixture;
-    });
+
+      return [fixture];
+    },
+  );
 
   const canGraphEvent = (
     snapshot: SupervisorSnapshot,
@@ -206,10 +231,8 @@ describe('supervisor model', (): void => {
     vi.advanceTimersByTime(1);
   };
 
-  const executors: Record<
-    string,
-    EventExecutor<SupervisorSnapshot, SupervisorEvent>
-  > = {
+  // Drives each graph event against the real Supervisor.
+  const eventExecutors = {
     'xstate.init': (): void => {
       supervisor = createActor(machine, { input }).start();
     },
@@ -236,30 +259,38 @@ describe('supervisor model', (): void => {
       crossDelay(backoffMs(supervisor.getSnapshot().context.crashTimes.length)),
   };
 
+  const executors = new Map<
+    string,
+    EventExecutor<SupervisorSnapshot, SupervisorEvent>
+  >(Object.entries(eventExecutors));
+
   const expectModelState = (expected: SupervisorSnapshot): void => {
     const actual = supervisor.getSnapshot();
     expect(actual.value).toEqual(expected.value);
     expect(actual.status).toBe(expected.status);
     expect(actual.context.crashTimes).toEqual(expected.context.crashTimes);
   };
+
   const ownAddress = {
     port: 7337,
     version: '1.2.3',
     startedAt: input.startedAt,
   };
-  const states: Record<string, (snapshot: SupervisorSnapshot) => void> = {
-    starting: (snapshot): void => {
+
+  const states = {
+    starting: (snapshot: SupervisorSnapshot): void => {
       expectModelState(snapshot);
       expect(liveEngines()).toBe(1);
+
       if (snapshot.context.port === null)
         expect(serverAddressWrites).toEqual([]);
     },
-    running: (snapshot): void => {
+    running: (snapshot: SupervisorSnapshot): void => {
       expectModelState(snapshot);
       expect(liveEngines()).toBe(1);
       expect(serverAddressWrites.at(-1)).toEqual(ownAddress);
     },
-    backingOff: (snapshot): void => {
+    backingOff: (snapshot: SupervisorSnapshot): void => {
       expectModelState(snapshot);
       expect(liveEngines()).toBe(
         snapshot.matches({ backingOff: { engine: 'exited' } }) ? 0 : 1,
@@ -268,19 +299,19 @@ describe('supervisor model', (): void => {
       expect(snapshot.context.crashTimes.length).toBeLessThan(maxCrashes);
       expect(serverAddressRemovals).toBe(0);
     },
-    failed: (snapshot): void => {
+    failed: (snapshot: SupervisorSnapshot): void => {
       expectModelState(snapshot);
       expect(snapshot.context.crashTimes).toHaveLength(maxCrashes);
       expect(liveEngines()).toBe(0);
       expect(serverAddressRemovals).toBe(1);
     },
-    stopping: (snapshot): void => {
+    stopping: (snapshot: SupervisorSnapshot): void => {
       expectModelState(snapshot);
       expect(liveEngines()).toBe(0);
       expect(serverAddressRemovals).toBe(1);
     },
     // Release could not be verified: no replacement Engine starts.
-    blocked: (snapshot): void => {
+    blocked: (snapshot: SupervisorSnapshot): void => {
       expectModelState(snapshot);
       expect(snapshot.status).toBe('done');
       expect(liveEngines()).toBe(0);
@@ -290,12 +321,14 @@ describe('supervisor model', (): void => {
   };
 
   const shortestPaths = terminalPaths(getShortestPaths(machine, options));
+
   const simplePaths = terminalPaths(
     getSimplePaths(machine, {
       ...options,
       stopWhen: (snapshot): boolean => snapshot.context.crashTimes.length >= 2,
     }),
   );
+
   const title = (
     path: StatePath<SupervisorSnapshot, SupervisorEvent>,
   ): string =>
@@ -321,10 +354,12 @@ describe('supervisor model', (): void => {
       ),
     )('%s', async (_, path): Promise<void> => {
       for (const step of path.steps) {
-        const execute = executors[step.event.type];
+        const execute = executors.get(step.event.type);
+
         if (!execute)
           throw new Error(`Missing Supervisor executor for ${step.event.type}`);
         await execute(step);
+
         for (const [key, assertState] of Object.entries(states)) {
           if (matchesState(key, step.state.value)) assertState(step.state);
         }
@@ -356,14 +391,17 @@ describe('supervisor', (): void => {
   let home: string;
 
   const serverJsonPath = (): string => join(home, 'server.json');
+
   const readServerJson = (): ReturnType<typeof JSON.parse> =>
     JSON.parse(readFileSync(serverJsonPath(), 'utf8'));
+
   const otherServerAddress = {
     pid: process.pid + 1,
     port: 7337,
     version: '1.2.3',
     startedAt: '2026-10-02T00:00:00.000Z',
   };
+
   const writeOtherServerJson = (): void =>
     writeFileSync(serverJsonPath(), JSON.stringify(otherServerAddress));
 
@@ -382,6 +420,7 @@ describe('supervisor', (): void => {
         },
       },
     ).start();
+
     return supervisor;
   };
 
@@ -393,16 +432,19 @@ describe('supervisor', (): void => {
     const before = engines.length;
     crashLatestEngine();
     let waited = 0;
+
     while (engines.length === before) {
       if (waited >= 60_000) throw new Error('The engine was not restarted');
       vi.advanceTimersByTime(100);
       waited += 100;
     }
+
     return waited;
   };
 
   const keepRunningFor = (milliseconds: number): void => {
     latestEngine().send({ type: readyEngineEvent, port: 7337 });
+
     for (let waited = 0; waited < milliseconds; waited += 1000) {
       vi.advanceTimersByTime(1000);
       latestEngine().send({ type: heartbeatEngineEvent });

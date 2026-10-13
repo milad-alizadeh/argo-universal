@@ -8,23 +8,28 @@ import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { SessionRowUpdateJob } from '../sessions';
 
 const writerWriteEvent = 'writer.write';
+
 const unwatchedTitle = 'Changed without watchers';
 
 it('initializes a fresh list after all watchers leave and unwatched data changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   insertEndedTurn(database);
   onTestFinished(remove);
+
   const { databaseWriter: writer, createCaller } = await startEngineTestHost({
     database,
     ...scriptedEngineInput(),
   });
+
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
   const watchedCaller = createCaller({ signal: controller.signal });
   const caller = createCaller();
+
   const updates = (await watchedCaller.session.listUpdates())[
     Symbol.asyncIterator
   ]();
+
   expect((await updates.next()).value).toMatchObject({
     type: 'changed',
     session: { title: '' },

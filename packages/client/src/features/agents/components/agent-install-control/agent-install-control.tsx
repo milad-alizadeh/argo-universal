@@ -6,14 +6,17 @@ import type {
   AgentInstallPresentation,
   InstallAction,
 } from '../../state/agent-install-types';
+
 type ControlProps = {
   agent: AgentDetail;
   installation: AgentInstallPresentation;
 };
+
 const progressLabels: Record<InstallAction, string> = {
   Install: 'Installing…',
   Update: 'Updating…',
 };
+
 // Install or Update asks first, then shows its progress in place until the Server settles it.
 export function AgentInstallControl(props: ControlProps): React.JSX.Element {
   return (
@@ -23,10 +26,12 @@ export function AgentInstallControl(props: ControlProps): React.JSX.Element {
     </>
   );
 }
+
 function InstallButton(
   installation: AgentInstallPresentation,
 ): React.JSX.Element {
   const { action, installing } = installation;
+
   return (
     <Button
       size="sm"
@@ -37,16 +42,21 @@ function InstallButton(
     />
   );
 }
+
 const distributionName = (agent: AgentDetail): string | undefined =>
   agent.distribution?.split(' · ')[0] || undefined;
+
 const releaseLine = (props: ControlProps): string =>
   [`Version ${props.installation.version}`, distributionName(props.agent)]
     .filter(Boolean)
     .join(' · ');
+
 const confirmationMessage = (props: ControlProps): string =>
   `${releaseLine(props)}. Installs on ${props.installation.server ?? 'the connected Server'}. Sign-in is checked separately.`;
+
 function InstallConfirmation(props: ControlProps): React.JSX.Element {
   const { installation, agent } = props;
+
   return (
     <Alert
       open={installation.confirming}

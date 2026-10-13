@@ -4,19 +4,28 @@ import { usePresentationClosed } from '../../native/native-only-animated-view/na
 
 export type SheetRef = React.RefObject<ModalBottomSheetRef | null>;
 
+// Whether the sheet is in the tree, kept there until its close animation ends.
+interface SheetPresence {
+  mounted: boolean;
+  sheetRef: SheetRef;
+}
+
 export function useSheetDismissal(
   open: boolean,
   onClosed?: () => void,
-): { mounted: boolean; sheetRef: SheetRef } {
+): SheetPresence {
   const sheetRef = useRef<ModalBottomSheetRef>(null);
   const [mounted, setMounted] = useState(open);
   const closing = useRef(false);
+
   if (open && !mounted) setMounted(true);
   useEffect(() => {
     const sheet = sheetRef.current;
+
     return dismissSheet({ open, mounted, closing, setMounted, sheet });
   }, [open, mounted]);
   usePresentationClosed(mounted, onClosed);
+
   return { mounted, sheetRef };
 }
 
@@ -30,16 +39,21 @@ type SheetDismissal = {
 
 function dismissSheet(state: SheetDismissal): (() => void) | undefined {
   if (!state.mounted) return;
+
   return dismissMountedSheet(state);
 }
 
 function dismissMountedSheet(state: SheetDismissal): (() => void) | undefined {
   if (!state.sheet) return;
+
   if (state.open) {
     reopenSheet(state.sheet, state.closing);
+
     return;
   }
+
   state.closing.current = true;
+
   return hideSheet(state.sheet, state.setMounted);
 }
 
@@ -59,6 +73,7 @@ function hideSheet(
   void sheet.hide().then(() => {
     if (!cancelled) setMounted(false);
   });
+
   return (): void => {
     cancelled = true;
   };

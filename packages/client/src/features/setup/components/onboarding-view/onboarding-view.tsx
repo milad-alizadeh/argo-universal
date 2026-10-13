@@ -40,6 +40,7 @@ function OnboardingHeader({
 
 function OnboardingSteps(props: OnboardingViewProps): React.JSX.Element {
   const marks = stepMarks(props.agent, props.github);
+
   return (
     <View>
       <AgentStepView {...props} mark={marks.agent} />

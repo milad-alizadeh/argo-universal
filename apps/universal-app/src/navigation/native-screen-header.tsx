@@ -27,6 +27,7 @@ function titleRow({
   search,
 }: ScreenHeaderProps): NativeStackNavigationOptions {
   if (!search) return rightItems(right);
+
   return {
     headerTitle: (): React.JSX.Element => (
       <HeaderSearchRow title={title} right={right} search={search} />

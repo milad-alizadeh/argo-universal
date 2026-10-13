@@ -36,6 +36,7 @@ export function SplitButton<Value extends string>(
   props: SplitButtonProps<Value>,
 ): React.JSX.Element {
   const [height, onLayout] = useGroupHeight();
+
   return (
     <ButtonGroup className={props.className} onLayout={onLayout}>
       {props.children}
@@ -54,6 +55,7 @@ function useGroupHeight(): [
   (event: LayoutChangeEvent) => void,
 ] {
   const [height, setHeight] = useState<number>();
+
   return [height, ({ nativeEvent }) => setHeight(nativeEvent.layout.height)];
 }
 

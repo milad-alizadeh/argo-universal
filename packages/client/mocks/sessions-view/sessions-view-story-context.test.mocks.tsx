@@ -8,6 +8,7 @@ import { useSessionsFilter } from '../../src/features/sessions/state/sessions-fi
 import { useWide } from '../../src/lib/generic/use-wide/use-wide';
 
 export const exampleProjectName = 'Example Project';
+
 export const noMatches = 'No matching Sessions';
 
 const spies = {
@@ -28,6 +29,7 @@ export const meta = {
   render: function WithHeader(args): React.JSX.Element {
     const wide = useWide();
     const filter = useSessionsFilter();
+
     return (
       <>
         {wide && (
@@ -41,4 +43,5 @@ export const meta = {
     for (const spy of Object.values(spies)) spy.mockClear();
   },
 } satisfies Meta<typeof SessionsView>;
+
 export type Story = StoryObj<typeof meta>;

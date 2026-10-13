@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { database, subscribe, setFeedTestHost } from '#mocks/feed-suite';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
+
 it.each(['prompt', 'agent', 'user'] as const)(
   'reads a stored %s title from the public Feed without opening the Session',
   async (titleSource) => {

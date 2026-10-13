@@ -10,6 +10,7 @@ export const BlobRef = z.strictObject({
   width: blobColumns.shape.width.unwrap().optional(),
   height: blobColumns.shape.height.unwrap().optional(),
 });
+
 export type BlobRef = z.infer<typeof BlobRef>;
 
 // Where the Server serves a stored blob over HTTP, beside tRPC.
@@ -20,6 +21,7 @@ const AttachmentSource = z.enum(['upload', 'pasted']);
 const AttachmentMeta = createFeedMetadataSchema(
   z.strictObject({ source: AttachmentSource.optional() }),
 );
+
 const noExtensionMeta = createFeedMetadataSchema(z.strictObject({}));
 
 export const TextContent = z.strictObject({
@@ -27,6 +29,7 @@ export const TextContent = z.strictObject({
   text: z.string(),
   _meta: noExtensionMeta,
 });
+
 export type TextContent = z.infer<typeof TextContent>;
 
 export const ImageContent = z.strictObject({
@@ -35,6 +38,7 @@ export const ImageContent = z.strictObject({
   blob: BlobRef,
   _meta: AttachmentMeta,
 });
+
 export type ImageContent = z.infer<typeof ImageContent>;
 
 export const ResourceLink = z.strictObject({
@@ -49,10 +53,12 @@ export const ResourceLink = z.strictObject({
   blob: BlobRef.optional(),
   _meta: AttachmentMeta,
 });
+
 export type ResourceLink = z.infer<typeof ResourceLink>;
 
 // A file uploaded from the device; a first prompt links only these, never paths on the Server.
 export const UploadedFileLink = ResourceLink.extend({ blob: BlobRef });
+
 export type UploadedFileLink = z.infer<typeof UploadedFileLink>;
 
 export const EmbeddedResource = z.strictObject({
@@ -65,6 +71,7 @@ export const EmbeddedResource = z.strictObject({
   }),
   _meta: AttachmentMeta,
 });
+
 export type EmbeddedResource = z.infer<typeof EmbeddedResource>;
 
 export const UnsupportedContent = z.strictObject({
@@ -74,6 +81,7 @@ export const UnsupportedContent = z.strictObject({
   reference: z.string().optional(),
   _meta: noExtensionMeta,
 });
+
 export type UnsupportedContent = z.infer<typeof UnsupportedContent>;
 
 export const ContentBlock = z.discriminatedUnion('type', [
@@ -83,6 +91,7 @@ export const ContentBlock = z.discriminatedUnion('type', [
   EmbeddedResource,
   UnsupportedContent,
 ]);
+
 export type ContentBlock = z.infer<typeof ContentBlock>;
 
 export const isUploadedFile = (

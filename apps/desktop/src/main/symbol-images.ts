@@ -17,15 +17,18 @@ function renderSymbolImage({
   pointSize,
 }: SymbolImageRequest): string | null {
   const image = nativeImage.createFromNamedImage(name, { pointSize });
+
   return image.isEmpty() ? null : image.toDataURL();
 }
 
 export function handleSymbolImages(windowOrigin: string): void {
-  ipcMain.handle('symbol:render', (event, input: unknown): string | null => {
+  ipcMain.handle('symbol:render', (event, input): string | null => {
     if (event.senderFrame?.origin !== windowOrigin) return null;
     const request = SymbolImageRequest.safeParse(input);
+
     if (request.success) return renderSymbolImage(request.data);
     reportUnrecognised('symbol image request', request.error);
+
     return null;
   });
 }

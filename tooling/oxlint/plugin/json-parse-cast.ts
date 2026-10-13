@@ -1,4 +1,4 @@
-import { type ESTree, defineRule } from '@oxlint/plugins';
+import { defineRule, type Visitor } from '@oxlint/plugins';
 import { isMember } from './syntax.ts';
 
 const jsonParse = { object: 'JSON', property: 'parse' };
@@ -11,11 +11,10 @@ export const jsonParseCast = defineRule({
         'Parse outside data with a Zod schema at the boundary; do not cast JSON.parse. Reuse official ACP types (ADR-0015, ADR-0016).',
     },
   },
-  create: (
-    context,
-  ): { TSAsExpression: (node: ESTree.TSAsExpression) => void } => ({
+  create: (context): Visitor => ({
     TSAsExpression: (node): void => {
       const value = node.expression;
+
       if (value.type === 'CallExpression' && isMember(value.callee, jsonParse))
         context.report({ node, messageId: 'jsonParseCast' });
     },

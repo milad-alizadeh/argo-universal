@@ -15,28 +15,40 @@ import {
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { ComposerAgentModelControl } from './composer-configuration';
 import { DefaultEffort } from './composer-configuration.stories';
+
 export const LongListsScrollUnderFadesWide = longListsWide;
+
 export const LongListsReachableInPhoneSheet = longListsPhone;
+
 export const ShortListsHaveNoFadesWide = shortListsWide;
+
 export const FastModeSwitchPhone = fastModePhone;
+
 export const FastModeSwitchWide = fastModeWide;
+
 export const FastModeOnMarksTrigger = fastModeMarker;
+
 const meta = {
   title: 'Tests/ComposerConfiguration',
   component: ComposerAgentModelControl,
   render: DefaultEffort.render,
   args: { disabled: false },
 } satisfies Meta<typeof ComposerAgentModelControl>;
+
 export default meta;
+
 export const DefaultEffortPhoneFirstAgent = defaultEffort(
   layoutWidths.phone,
   0,
 );
+
 export const DefaultEffortPhoneSecondAgent = defaultEffort(
   layoutWidths.phone,
   1,
 );
+
 export const DefaultEffortWideFirstAgent = defaultEffort(layoutWidths.wide, 0);
+
 export const DefaultEffortWideSecondAgent = defaultEffort(layoutWidths.wide, 1);
 
 export const UnavailableAgentRetryPhoneFirstAgent = unavailableAgentRetry(
@@ -44,36 +56,43 @@ export const UnavailableAgentRetryPhoneFirstAgent = unavailableAgentRetry(
   0,
   'new',
 );
+
 export const UnavailableAgentRetryPhoneSecondAgent = unavailableAgentRetry(
   layoutWidths.phone,
   1,
   'new',
 );
+
 export const UnavailableAgentRetryWideFirstAgent = unavailableAgentRetry(
   layoutWidths.wide,
   0,
   'new',
 );
+
 export const UnavailableAgentRetryWideSecondAgent = unavailableAgentRetry(
   layoutWidths.wide,
   1,
   'new',
 );
+
 export const StartedSessionAgentRetryPhoneFirstAgent = unavailableAgentRetry(
   layoutWidths.phone,
   0,
   'started',
 );
+
 export const StartedSessionAgentRetryPhoneSecondAgent = unavailableAgentRetry(
   layoutWidths.phone,
   1,
   'started',
 );
+
 export const StartedSessionAgentRetryWideFirstAgent = unavailableAgentRetry(
   layoutWidths.wide,
   0,
   'started',
 );
+
 export const StartedSessionAgentRetryWideSecondAgent = unavailableAgentRetry(
   layoutWidths.wide,
   1,
@@ -84,14 +103,17 @@ export const HeldConfigurationPhoneFirstAgent = heldConfiguration(
   layoutWidths.phone,
   0,
 );
+
 export const HeldConfigurationPhoneSecondAgent = heldConfiguration(
   layoutWidths.phone,
   1,
 );
+
 export const HeldConfigurationWideFirstAgent = heldConfiguration(
   layoutWidths.wide,
   0,
 );
+
 export const HeldConfigurationWideSecondAgent = heldConfiguration(
   layoutWidths.wide,
   1,

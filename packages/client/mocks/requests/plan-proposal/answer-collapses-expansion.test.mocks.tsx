@@ -26,6 +26,7 @@ export function answerCollapsesExpansion(width: number): Story {
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
       await settleViewport(width);
+
       if (width === layoutWidths.phone) {
         await expandSheet(canvas, userEvent);
         await userEvent.click(canvas.getByRole('button', { name: 'Approve' }));
@@ -33,8 +34,10 @@ export function answerCollapsesExpansion(width: number): Story {
           planId: args.proposal.planId,
           decision: 'approve',
         });
+
         return;
       }
+
       for (const decision of ['approve', 'keep_planning'])
         await answerInExpansion({ canvas, userEvent, decision });
       await expect(canvas.getByRole('textbox')).toHaveValue(
@@ -56,16 +59,20 @@ async function answerInExpansion({
 }): Promise<void> {
   const overlay = within(document.body);
   await userEvent.click(canvas.getByRole('button', { name: expandPlanLabel }));
+
   const dialog = await overlay.findByRole('dialog', {
     name: expandedPlanLabel,
   });
+
   const panel = within(dialog);
+
   if (decision === 'keep_planning') {
     await userEvent.click(
       panel.getByRole('button', { name: keepPlanningLabel }),
     );
     await userEvent.type(panel.getByRole('textbox'), planProposalFeedback);
   }
+
   await userEvent.click(
     panel.getByRole('button', {
       name: decision === 'approve' ? 'Approve' : keepPlanningLabel,

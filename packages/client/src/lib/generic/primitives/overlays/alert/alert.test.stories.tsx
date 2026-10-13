@@ -10,6 +10,7 @@ const onRemove = fn();
 
 function RemoveAgent(): React.JSX.Element {
   const [open, setOpen] = useState(false);
+
   return (
     <>
       <Button label="Remove Agent" onPress={() => setOpen(true)} />
@@ -34,12 +35,17 @@ const meta = {
     onRemove.mockClear();
   },
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 type Layout = keyof typeof layoutWidths;
 
 const body = within(document.body);
+
 const alertName = { name: 'Remove Example ACP?' };
+
 const trigger = { name: 'Remove Agent' };
 
 // An alert is the same centred dialog at every width: it has no sheet and no close button.
@@ -67,7 +73,9 @@ function answers(layout: Layout, answer: string, removes: boolean): Story {
 }
 
 export const RemovesOnPhone: Story = answers('phone', 'Remove', true);
+
 export const CancelsOnPhone: Story = answers('phone', 'Cancel', false);
+
 export const RemovesOnDesktop: Story = answers('wide', 'Remove', true);
 
 export const ClosesOnEscape: Story = {

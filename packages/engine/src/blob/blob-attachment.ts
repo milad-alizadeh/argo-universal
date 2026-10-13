@@ -19,6 +19,7 @@ const fallbackFileName = 'file';
 const safeFileName = (name: string): string => {
   const printable = name.split('').filter((character) => character >= ' ');
   const kept = basename(printable.join('').replaceAll('\\', '/'));
+
   return kept === '' || kept === '.' || kept === '..' ? fallbackFileName : kept;
 };
 
@@ -32,6 +33,7 @@ export const attachFile = async (
   const path = join(folder, safeFileName(name));
   await mkdir(folder, { recursive: true });
   await writeFile(path, bytes);
+
   return { path, bytes };
 };
 
@@ -47,12 +49,14 @@ export async function removeOrphanAttachments(options: {
       .all()
       .map(({ id }): string => id),
   );
+
   const folders = await readdir(options.attachmentsFolder).catch(
     (error: NodeJS.ErrnoException): string[] => {
       if (error.code === 'ENOENT') return [];
       throw error;
     },
   );
+
   for (const folder of folders.filter((name) => !stored.has(name)))
     await rm(join(options.attachmentsFolder, folder), {
       recursive: true,

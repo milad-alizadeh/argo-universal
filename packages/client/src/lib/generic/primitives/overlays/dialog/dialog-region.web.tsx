@@ -5,6 +5,7 @@ import { Portal } from '../portal/portal';
 import type { DialogRegionProps as RegionProps } from './dialog-region.types';
 
 const regionInset = 24;
+
 const regionClass =
   'absolute inset-6 z-50 [&>[role=dialog]]:flex [&>[role=dialog]]:flex-1 [&>[role=dialog]]:min-h-0 [&>[role=dialog]]:outline-none';
 

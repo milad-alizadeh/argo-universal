@@ -16,6 +16,7 @@ export const terminalPaths = <Path extends ModelPath>(
   const ranked = [...paths].sort(
     (left, right) => right.steps.length - left.steps.length,
   );
+
   return ranked.filter(
     (path, index) =>
       !ranked.slice(0, index).some((other) => isPrefixOf(path, other)),

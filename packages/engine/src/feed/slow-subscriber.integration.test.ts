@@ -6,6 +6,7 @@ import { readMessageText } from '#mocks/feed-message-observation';
 import { readThrough, isIdle, closeStream } from '#mocks/feed-stream-reading';
 
 const chunkCount = 5000;
+
 const chunks = Array.from({ length: chunkCount }, (_, index) => `${index},`);
 
 it('a subscriber that stops reading during a long message catches up whole without a gap', async () => {
@@ -17,10 +18,13 @@ it('a subscriber that stops reading during a long message catches up whole witho
       })),
     ),
   );
+
   const created = await host.caller.session.new(emptySessionInput);
+
   const slow = (await host.caller.feed.subscribe({ ...created, after: null }))[
     Symbol.asyncIterator
   ]();
+
   await slow.next();
   await host.caller.session.prompt({
     ...created,

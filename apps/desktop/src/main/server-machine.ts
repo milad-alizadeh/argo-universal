@@ -20,7 +20,9 @@ import {
 const failedConnectionTarget = '#serverConnection.failed';
 
 type ServerStateConfig = ReturnType<typeof serverSetup.createStateConfig>;
+
 type ReadingAddressState = Required<Pick<ServerStateConfig, 'invoke'>>;
+
 type WaitingForSupervisorExitState = Required<
   Pick<ServerStateConfig, 'entry' | 'initial' | 'after'>
 > & {
@@ -29,8 +31,11 @@ type WaitingForSupervisorExitState = Required<
     Pick<ServerStateConfig, 'after' | 'invoke'>
   >;
 };
+
 type RunningParameters = { running: boolean };
+
 type ServerLogParameters = { line: string };
+
 type AddressParameters = { address: ServerAddress | null };
 
 export type ServerInput = SupervisorPaths;
@@ -47,6 +52,7 @@ interface ServerContext extends ServerInput {
 type SupervisorReport =
   | { type: 'server.spawned'; pid: number; at: number }
   | { type: 'server.exited'; reason: string };
+
 type ServerEvent =
   | SupervisorReport
   | { type: 'server.retry' }
@@ -65,8 +71,11 @@ export interface CheckRunningInput {
 }
 
 const pollDelayMs = 200;
+
 const startLimitMs = 30_000;
+
 const stopLimitMs = 5000;
+
 const millisecondsPerSecond = 1000;
 
 const serverInput = ({ context }: { context: ServerContext }): ServerInput => ({
@@ -77,10 +86,12 @@ const serverInput = ({ context }: { context: ServerContext }): ServerInput => ({
 // Only states that the `ownsSupervisor` guard leads to call this.
 const requireOwnedPid = (context: ServerContext): number => {
   if (context.ownedPid === null) throw new Error('This app owns no Supervisor');
+
   return context.ownedPid;
 };
 
 const serverSetup = setup({
+  // SAFETY: XState v5 reads these empty objects only for their types and never at runtime (ADR-0016).
   types: {
     input: {} as ServerInput,
     context: {} as ServerContext,

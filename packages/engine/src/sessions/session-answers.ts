@@ -7,6 +7,7 @@ import type {
 import { findMachineActor } from '../lib/machine-actor';
 import type { SessionRouterDeps } from './router-deps';
 import {
+  acceptedElicitationContent,
   validateElicitationAnswer,
   validatePermissionAnswer,
 } from './session-admission';
@@ -24,6 +25,7 @@ const findAnsweredSession = (
   sessionId: string,
 ): SessionActorRef | undefined => {
   validateSessionCommandAdmission(deps);
+
   return findMachineActor(
     deps.sessions.system,
     sessionActorId(sessionId),
@@ -43,6 +45,7 @@ export const answerSessionPermission = (
     optionId: input.optionId,
     message: input.message,
   });
+
   return {};
 };
 
@@ -56,7 +59,8 @@ export const answerSessionElicitation = (
     type: 'session.answerElicitation',
     requestId: input.requestId,
     action: input.action,
-    content: input.content,
+    content: acceptedElicitationContent(sessionActor, input),
   });
+
   return {};
 };

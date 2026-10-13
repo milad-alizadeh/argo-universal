@@ -9,6 +9,7 @@ import {
 import type { ScreenHeaderProps } from './screen-header';
 
 type Search = NonNullable<ScreenHeaderProps['search']>;
+
 type HeaderSearchRowProps = Pick<ScreenHeaderProps, 'title' | 'right'> & {
   search: Search;
 };
@@ -37,10 +38,12 @@ function useSearchQuery(
   search: Search,
 ): Pick<SearchFieldProps, 'label' | 'value' | 'onChangeText'> {
   const [query, setQuery] = useState('');
+
   const onChangeText = (text: string): void => {
     setQuery(text);
     search.onChangeText(text);
   };
+
   return { label: search.placeholder, value: query, onChangeText };
 }
 

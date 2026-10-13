@@ -23,6 +23,7 @@ function ToolDiffOutput({ block }: { block: ToolCallDiff }): React.JSX.Element {
     </View>
   );
 }
+
 function ToolOutputBlock({
   block,
   language,
@@ -31,10 +32,13 @@ function ToolOutputBlock({
   language?: string;
 }): React.JSX.Element {
   if (block.type === 'diff') return <ToolDiffOutput block={block} />;
+
   if (block.type === 'terminal')
     return <FeedCodeBlock code={block.output} language="Output" />;
+
   return <ToolContentOrPlaceholder block={block} language={language} />;
 }
+
 function ToolContentOrPlaceholder({
   block,
   language,
@@ -48,6 +52,7 @@ function ToolContentOrPlaceholder({
     <UnsupportedFeedContent block={block} />
   );
 }
+
 function ToolContentBlock({
   block,
   language,
@@ -57,8 +62,10 @@ function ToolContentBlock({
 }): React.JSX.Element {
   if (block.type === 'text')
     return <FeedCodeBlock code={block.text} language={language ?? 'Output'} />;
+
   return <FeedContent content={[block]} />;
 }
+
 interface ToolOutputProps {
   content: readonly ToolCallContent[];
   language?: string;

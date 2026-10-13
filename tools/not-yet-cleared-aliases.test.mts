@@ -2,14 +2,20 @@ import { expect, it } from 'vitest';
 import { evaluateWaivers } from './not-yet-cleared/evaluate.mts';
 
 const oldFolder = 'apps/server/src/engine/*';
+
 const engineFolder = 'packages/engine/src/engine/*';
+
 const oldAppMocksFolder = 'packages/api/mocks/*';
+
 const appMocksFolder = 'mocks/app/*';
+
 const complexityCode = 'eslint(complexity)';
+
 const waiver = (glob: string): string =>
   JSON.stringify({
     overrides: [{ files: [glob], rules: { complexity: 'off' } }],
   });
+
 const report = JSON.stringify({
   diagnostics: [
     {
@@ -57,6 +63,7 @@ it.each([
   'accepts only the approved relocation of %s from %s',
   (folder, old): void => {
     const glob = `packages/engine/${folder}/*`;
+
     const measured = JSON.stringify({
       diagnostics: [
         {
@@ -65,6 +72,7 @@ it.each([
         },
       ],
     });
+
     expect(
       evaluateWaivers({
         current: waiver(glob),
@@ -89,6 +97,7 @@ it.each([
         rules: { complexity: 'off' },
       })),
     });
+
     expect(
       evaluateWaivers({ current, baseline: waiver(oldFolder), report })
         .problems,
@@ -124,6 +133,7 @@ it.each([
       },
     ],
   });
+
   expect(
     evaluateWaivers({ current, baseline: waiver(old), report }).problems,
   ).toContain(`${moved}: added rule max-depth`);
@@ -135,6 +145,7 @@ it('still prunes a relocated rule with no findings', (): void => {
     baseline: waiver(oldFolder),
     report: '{"diagnostics":[]}',
   });
+
   expect(result.problems).toContain(
     `${engineFolder}: stale rule complexity; run node tools/not-yet-cleared.mts prune`,
   );

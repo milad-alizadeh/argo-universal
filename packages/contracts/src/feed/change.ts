@@ -20,6 +20,7 @@ const withoutEnvelope = {
   revision: true,
   turnId: true,
 } as const;
+
 export const feedSetFields = Object.keys(withoutEnvelope).filter(
   (key): key is keyof typeof withoutEnvelope =>
     Object.hasOwn(withoutEnvelope, key),
@@ -37,6 +38,7 @@ export const FeedUpdate = z.discriminatedUnion('sessionUpdate', [
   Notice.omit(withoutEnvelope),
   TaskUpdate.omit(withoutEnvelope),
 ]);
+
 export type FeedUpdate = z.infer<typeof FeedUpdate>;
 
 // The whole row, new or replaced; `state: 'settled'` settles it.
@@ -44,6 +46,7 @@ export const FeedUpsert = z.strictObject({
   type: z.literal('upsert'),
   update: FeedUpdate,
 });
+
 export type FeedUpsert = z.infer<typeof FeedUpsert>;
 
 // Text added to the end of the string at `field`, a dotted path such as `content.0.text`.
@@ -53,63 +56,89 @@ export const FeedAppend = z.strictObject({
   field: z.string(),
   text: z.string(),
 });
+
 export type FeedAppend = z.infer<typeof FeedAppend>;
 
-// The value at a dotted path such as `content.0.text`, or undefined when the path leads nowhere.
-export function readFeedField(
-  value: unknown,
-  path: readonly string[],
-): unknown {
-  let current = value;
-  for (const key of path) {
-    if (Array.isArray(current) && /^\d+$/.test(key))
-      current = current[Number(key)];
-    else if (
-      current !== null &&
-      typeof current === 'object' &&
-      Object.hasOwn(current, key)
-    )
-      current = Reflect.get(current, key);
-    else return undefined;
-  }
-  return current;
+// A step on a dotted Feed path such as `content.0.text`: text ends it, a list or record leads on.
+const FeedRecord = z.record(z.string(), z.unknown());
+
+const FeedNode = z.union([z.string(), z.array(z.unknown()), FeedRecord]);
+
+type FeedRecord = z.infer<typeof FeedRecord>;
+
+type FeedNode = z.infer<typeof FeedNode>;
+
+type FeedBranch = Exclude<FeedNode, string>;
+
+function entryNode(branch: FeedBranch, key: string): FeedNode | undefined {
+  const entry = Array.isArray(branch) ? branch[Number(key)] : branch[key];
+
+  return FeedNode.safeParse(entry).data;
 }
 
-// A copy of `value` with `text` at a path that `readFeedField` resolved.
+// The text, list or record under `key`; undefined when the path leads nowhere.
+function childNode(
+  node: FeedNode | undefined,
+  key: string,
+): FeedNode | undefined {
+  if (typeof node !== 'object' || !Object.hasOwn(node, key)) return undefined;
+
+  return entryNode(node, key);
+}
+
+// The text, list or record at a dotted path; undefined when the path leads nowhere or ends at another value.
+export function readFeedField(
+  row: SessionUpdate,
+  path: readonly string[],
+): FeedNode | undefined {
+  let node: FeedNode | undefined = row;
+
+  for (const key of path) node = childNode(node, key);
+
+  return node;
+}
+
+function writeBranch(
+  branch: FeedBranch,
+  key: string,
+  value: FeedNode,
+): FeedBranch {
+  if (!Array.isArray(branch)) return { ...branch, [key]: value };
+  const copy = [...branch];
+  copy[Number(key)] = value;
+
+  return copy;
+}
+
+// A copy of `node` with `text` at a path that `readFeedField` resolved.
 function writeFeedField(
-  value: unknown,
+  node: FeedNode | undefined,
   [key, ...rest]: readonly string[],
   text: string,
-): unknown {
+): FeedNode {
   if (key === undefined) return text;
-  if (Array.isArray(value)) {
-    const copy = [...value];
-    copy[Number(key)] = writeFeedField(value[Number(key)], rest, text);
-    return copy;
-  }
-  if (value === null || typeof value !== 'object')
-    throw new TypeError('A resolved Feed path needs an object before its text');
-  return writeObjectField(value, [key, ...rest], text);
+
+  if (typeof node !== 'object')
+    throw new TypeError(
+      'A resolved Feed path needs a list or record before its text',
+    );
+
+  return writeBranch(
+    node,
+    key,
+    writeFeedField(childNode(node, key), rest, text),
+  );
 }
 
+// The top-level field of `row` that holds `field`, with `text` written at its path.
 export function writeFeedRowField(
-  value: SessionUpdate,
+  row: SessionUpdate,
   field: string,
   text: string,
-): Record<string, unknown> {
+): FeedRecord {
   const [key = '', ...rest] = field.split('.');
-  return writeObjectField(value, [key, ...rest], text);
-}
 
-function writeObjectField(
-  value: object,
-  [key, ...rest]: readonly [string, ...string[]],
-  text: string,
-): Record<string, unknown> {
-  return {
-    ...value,
-    [key]: writeFeedField(Reflect.get(value, key), rest, text),
-  };
+  return { [key]: writeFeedField(childNode(row, key), rest, text) };
 }
 
 // Top-level fields of a row to replace; `state: 'settled'` settles it.
@@ -118,6 +147,7 @@ export const FeedPatch = z.strictObject({
   id: feedRowColumns.shape.id,
   set: z.record(z.string(), z.unknown()),
 });
+
 export type FeedPatch = z.infer<typeof FeedPatch>;
 
 // One change an Agent makes to a Session's Feed.
@@ -126,4 +156,5 @@ export const FeedChange = z.discriminatedUnion('type', [
   FeedAppend,
   FeedPatch,
 ]);
+
 export type FeedChange = z.infer<typeof FeedChange>;

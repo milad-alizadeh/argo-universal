@@ -9,11 +9,14 @@ import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.moc
 import { Composer } from '../composer/composer';
 
 const recording = recordedAcpContent('agent-1');
+
 const fileRow = recording.rows.find(
   (row) => row.sessionUpdate === 'plan_update' && row.plan.type === 'file',
 );
+
 if (fileRow?.sessionUpdate !== 'plan_update' || fileRow.plan.type !== 'file')
   throw new Error('ACP recording needs a file Plan');
+
 const meta = {
   title: 'Composer/WrittenPlan',
   decorators: [
@@ -26,6 +29,7 @@ const meta = {
   component: Composer,
   render: function EditableComposer(args): ReactElement {
     const [draft, setDraft] = useState(args.draft);
+
     return <Composer {...args} draft={draft} onDraftChange={setDraft} />;
   },
   args: composerProps({
@@ -36,7 +40,11 @@ const meta = {
     writtenPlan: longWrittenPlan,
   }),
 } satisfies Meta<typeof Composer>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 export const Document: Story = {};
+
 export const UriOnly: Story = { args: { writtenPlan: fileRow.plan } };

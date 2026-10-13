@@ -25,12 +25,14 @@ function claim(claims: Claims, identities: string[], unmoved: boolean): void {
 
 function duplicateIdentities(entries: Entry[]): string[] {
   const claims: Claims = new Map();
+
   return entries.flatMap((entry): string[] => {
     const glob = entry.files[0];
     const unmoved = !relocatedFolders.has(glob);
     const identities = historicalFolders(glob);
     const clash = clashes(claims, identities, unmoved);
     claim(claims, identities, unmoved);
+
     return clash ? [`${glob}: duplicate historical waiver identity`] : [];
   });
 }
@@ -38,6 +40,7 @@ function duplicateIdentities(entries: Entry[]): string[] {
 // A folder's baseline is its own entry plus the entries of the folders it was moved from.
 function baselineSources(glob: string, baseline: Entry[]): Entry[] {
   const folders = new Set([glob, ...historicalFolders(glob)]);
+
   return baseline.filter((entry): boolean => folders.has(entry.files[0]));
 }
 
@@ -52,7 +55,9 @@ export function growthProblems(current: Entry[], baseline: Entry[]): string[] {
 
 function entryProblems(entry: Entry, sources: Entry[]): string[] {
   const glob = entry.files[0];
+
   if (sources.length === 0) return [`${glob}: added entry or changed glob`];
+
   return Object.keys(entry.rules)
     .filter(
       (rule): boolean =>

@@ -1,5 +1,7 @@
 import type { SessionSetConfigOptionInput } from '@repo/contracts';
+
 type AgentConfigValue = Pick<SessionSetConfigOptionInput, 'configId' | 'value'>;
+
 import type {
   SessionConfigOption,
   SessionConfigSelectOption,
@@ -29,6 +31,7 @@ export const isOfferedConfigChoice = (
   const option = configOptions.find(
     (candidate): boolean => candidate.configId === choice.configId,
   );
+
   return option !== undefined && offersValue(option, choice.value);
 };
 

@@ -114,6 +114,7 @@ const componentFolders: [string, string[]][] = [
   ['lib/product', ['field-list', 'screen', 'scroll-fade', 'status-indicator']],
   ['lib/product/markdown', ['code-block-title', 'feed-code-block']],
 ];
+
 export const componentRelocations = componentFolders.flatMap(
   ([parent, folders]): [string, string[]][] =>
     folders.map((folder): [string, string[]] => [

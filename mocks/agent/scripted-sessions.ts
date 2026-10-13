@@ -14,6 +14,7 @@ const selectConfigOption = (
   params: SetSessionConfigOptionRequest,
 ): SessionConfigOption => {
   if (option.id !== params.configId) return option;
+
   return setConfigValue(option, params.value);
 };
 
@@ -28,21 +29,26 @@ const setConfigValue = (
       return setSelectValue(option, value);
   }
 };
+
 const wrongValue = (): never => {
   throw RequestError.invalidParams(undefined, 'Wrong configuration value type');
 };
+
 const setBooleanValue = (
   option: Extract<SessionConfigOption, { type: 'boolean' }>,
   value: SetSessionConfigOptionRequest['value'],
 ): SessionConfigOption => {
   if (typeof value !== 'boolean') return wrongValue();
+
   return { ...option, currentValue: value };
 };
+
 const setSelectValue = (
   option: Extract<SessionConfigOption, { type: 'select' }>,
   value: SetSessionConfigOptionRequest['value'],
 ): SessionConfigOption => {
   if (typeof value !== 'string') return wrongValue();
+
   return { ...option, currentValue: value };
 };
 
@@ -61,7 +67,9 @@ export class ScriptedSessions {
     const configOptions = this.configurations.get(sessionId) ?? [
       ...this.initial,
     ];
+
     this.configurations.set(sessionId, configOptions);
+
     return configOptions;
   }
   public close(sessionId: string): void {
@@ -73,7 +81,9 @@ export class ScriptedSessions {
     const configOptions = this.open(params.sessionId).map((option) =>
       selectConfigOption(option, params),
     );
+
     this.configurations.set(params.sessionId, configOptions);
+
     return configOptions;
   }
   public startTurn(sessionId: string): ScriptedCancellation {
@@ -83,6 +93,7 @@ export class ScriptedSessions {
       cancelled = true;
     });
     this.cancellations.set(sessionId, cancellation);
+
     return { cancelled: cancellation.promise, isCancelled: () => cancelled };
   }
   public cancel(sessionId: string): void {

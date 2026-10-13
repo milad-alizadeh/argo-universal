@@ -8,8 +8,11 @@ const configOptionIcons = [
   'Sparkles',
   'WarningTriangle',
 ] as const;
+
 export type ConfigOptionIcon = (typeof configOptionIcons)[number];
+
 const knownIcons = new Set<string>(configOptionIcons);
+
 let unknownIcons = 0;
 
 // ACP extension fields are kept; Argo's known fields are checked at this boundary.
@@ -20,6 +23,7 @@ export const ConfigOptionMeta = z.looseObject({
         .string()
         .transform((icon): string => {
           if (!knownIcons.has(icon)) unknownIcons += 1;
+
           return icon;
         })
         .optional(),
@@ -44,6 +48,7 @@ export const SessionConfigSelectOption = z.strictObject({
   description: z.string().optional(),
   _meta: ConfigOptionMeta.optional(),
 });
+
 export type SessionConfigSelectOption = z.infer<
   typeof SessionConfigSelectOption
 >;
@@ -55,6 +60,7 @@ export const SessionConfigSelectGroup = z.strictObject({
   name: z.string(),
   options: z.array(SessionConfigSelectOption),
 });
+
 export type SessionConfigSelectGroup = z.infer<typeof SessionConfigSelectGroup>;
 
 const knownCategories = new Set([
@@ -63,6 +69,7 @@ const knownCategories = new Set([
   'model_config',
   'thought_level',
 ]);
+
 let unknownCategories = 0;
 
 // Unknown categories are kept for ACP extensions and counted on boundary validation.
@@ -72,14 +79,19 @@ export const SessionConfigOptionCategory = z
     if (!knownCategories.has(category)) {
       unknownCategories += 1;
     }
+
     return category;
   });
-export function getConfigOptionDiagnostics(): {
+
+type ConfigOptionDiagnostics = {
   unknownCategories: number;
   unknownIcons: number;
-} {
+};
+
+export function getConfigOptionDiagnostics(): ConfigOptionDiagnostics {
   return { unknownCategories, unknownIcons };
 }
+
 export type SessionConfigOptionCategory = z.infer<
   typeof SessionConfigOptionCategory
 >;
@@ -109,6 +121,7 @@ export const SessionConfigOption = z.discriminatedUnion('type', [
     currentValue: z.boolean(),
   }),
 ]);
+
 export type SessionConfigOption = z.infer<typeof SessionConfigOption>;
 
 // Input of `session.setConfigOption`, after ACP v2 `SetSessionConfigOptionRequest`.
@@ -126,6 +139,7 @@ export const SessionSetConfigOptionInput = z.discriminatedUnion('type', [
     value: z.boolean(),
   }),
 ]);
+
 export type SessionSetConfigOptionInput = z.infer<
   typeof SessionSetConfigOptionInput
 >;
@@ -133,6 +147,7 @@ export type SessionSetConfigOptionInput = z.infer<
 export const SessionSetConfigOptionOutput = z.strictObject({
   configOptions: z.array(SessionConfigOption),
 });
+
 export type SessionSetConfigOptionOutput = z.infer<
   typeof SessionSetConfigOptionOutput
 >;

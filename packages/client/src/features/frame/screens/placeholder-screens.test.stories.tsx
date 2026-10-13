@@ -8,7 +8,9 @@ const meta = {
   component: IssuesScreen,
   parameters: { screenPreview: true },
 } satisfies Meta<typeof IssuesScreen>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function placeholder(description: string): NonNullable<Story['play']> {
@@ -22,13 +24,17 @@ function placeholder(description: string): NonNullable<Story['play']> {
     }
   };
 }
+
 export const Issues: Story = {
   render: () => <IssuesScreen />,
   play: placeholder('Issues will appear here.'),
 };
+
 export const Atlas: Story = {
   render: () => <AtlasScreen />,
   play: placeholder('Atlas will appear here.'),
 };
+
 export const IssuesDark: Story = { ...Issues, globals: { mode: 'dark' } };
+
 export const AtlasDark: Story = { ...Atlas, globals: { mode: 'dark' } };

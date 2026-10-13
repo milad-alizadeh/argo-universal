@@ -6,9 +6,12 @@ import { createTRPCClient } from './create-trpc-client';
 const binaryMime = 'application/octet-stream';
 
 const serverStartedAt = '2026-10-03T00:00:00.000Z';
+
 const uploadedFileContent = 'file content';
+
 const uploadedBlobId =
   'e0ac3601005dfa1864f5392aabaf7d898b1b5bab854f1acb4491bcd806b76b0c';
+
 const systemInfo = {
   version: '1.2.3',
   startedAt: serverStartedAt,
@@ -16,7 +19,8 @@ const systemInfo = {
   name: expect.stringMatching(/\S/),
 };
 
-const closers: (() => unknown)[] = [];
+const closers: (() => Promise<void> | void)[] = [];
+
 afterEach(async () => {
   for (const close of closers.splice(0)) await close();
 });
@@ -34,6 +38,7 @@ async function startTransportTestServer(): Promise<{
     sockets.mockRestore();
     requests.mockRestore();
   });
+
   return {
     url: host.url.replace(/^http/, 'ws'),
     connections: (): number => sockets.mock.calls.length,
@@ -48,11 +53,14 @@ describe('createTRPCClient', () => {
     closers.push(close);
 
     const info = await client.system.info.query();
+
     const ticks = await new Promise<unknown[]>((resolve, reject) => {
       const received: unknown[] = [];
+
       const subscription = client.system.clock.subscribe(undefined, {
         onData: (tick) => {
           received.push(tick);
+
           if (received.length === 2) {
             subscription.unsubscribe();
             resolve(received);
@@ -64,6 +72,7 @@ describe('createTRPCClient', () => {
 
     expect(info).toEqual(systemInfo);
     expect(ticks).toHaveLength(2);
+
     for (const tick of ticks)
       expect(ClockTick.safeParse(tick).success).toBe(true);
     expect(server.connections()).toBe(1);

@@ -5,10 +5,12 @@ import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { useServerPaired } from '#lib/product/server-place';
 import { Icon } from '../../../../lib/generic/symbols/icon';
+
 interface ServerLocationProps {
   name: string;
   connected: boolean;
 }
+
 interface ServerLayout extends ServerLocationProps {
   wide: boolean;
   paired: boolean;
@@ -19,12 +21,14 @@ export function ServerLocation(
 ): React.JSX.Element | false {
   const wide = useContentWide();
   const paired = useServerPaired();
+
   return (
     (paired || !props.connected) && (
       <ServerDetails {...props} wide={wide} paired={paired} />
     )
   );
 }
+
 function ServerDetails(props: ServerLayout): React.JSX.Element {
   return (
     <View className={serverClassName(props.wide)}>
@@ -34,6 +38,7 @@ function ServerDetails(props: ServerLayout): React.JSX.Element {
     </View>
   );
 }
+
 function ServerName({
   name,
 }: Pick<ServerLocationProps, 'name'>): React.JSX.Element {
@@ -46,6 +51,7 @@ function ServerName({
     </>
   );
 }
+
 function ServerConnection({
   connected,
 }: Pick<ServerLocationProps, 'connected'>): React.JSX.Element {
@@ -67,6 +73,7 @@ function serverClassName(wide: boolean): string {
     wide ? 'h-7 px-1.5' : 'h-10 px-4',
   );
 }
+
 function ServerReconnecting({
   connected,
 }: Pick<ServerLocationProps, 'connected'>): React.JSX.Element | null {

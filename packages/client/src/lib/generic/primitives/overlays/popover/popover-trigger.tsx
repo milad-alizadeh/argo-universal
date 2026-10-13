@@ -13,6 +13,7 @@ export function PopoverTrigger({
 }: TriggerProps): JSX.Element {
   const Component = asChild ? Slot : Pressable;
   const behavior = useTriggerBehavior(props);
+
   return (
     <WebPopover.Trigger asChild disabled={props.disabled ?? undefined}>
       <Component {...props} {...behavior} role="button" />
@@ -25,6 +26,7 @@ function useTriggerBehavior(
 ): ComponentProps<typeof Pressable> {
   const { open, onOpenChange } = PopoverPrimitive.useRootContext();
   const hover = useContext(PopoverHover);
+
   return {
     ...hoverTrigger(hover, props.disabled),
     onPress: (event) => {
@@ -50,8 +52,10 @@ function press(
 ): void {
   if (!hover) {
     onOpenChange(!open);
+
     return;
   }
+
   const value = hover.isPointer() || !open;
   hover.promote();
   onOpenChange(value);
@@ -62,5 +66,6 @@ function hoverTrigger(
   disabled: TriggerProps['disabled'],
 ): ComponentProps<typeof Pressable> {
   if (disabled || !hover) return {};
+
   return { onHoverIn: hover.enter, onHoverOut: hover.leave };
 }

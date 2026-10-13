@@ -10,9 +10,12 @@ import { startingFeed } from '../../state/starting-feed';
 import type { ReadyNewSessionViewProps } from './new-session-view';
 
 const [firstAgent] = newSessionCatalogs.bothAvailable;
+
 const [firstProject] = newSessionProjects;
+
 if (!firstAgent || !firstProject)
   throw new Error('Recorded mocks need an Agent and a Project.');
+
 export const exampleProject = firstProject;
 
 // New Session ready for a first prompt on the first Project and Agent, in a new worktree.

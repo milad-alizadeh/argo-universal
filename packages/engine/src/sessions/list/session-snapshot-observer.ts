@@ -11,6 +11,7 @@ type SnapshotEvent = Extract<
   FeedSubscribeOutput,
   { type: 'snapshot' | 'closed' }
 >;
+
 type WatchOptions = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'> & {
   findSession: (sessionId: string) => SessionActorRef | undefined;
   sessions?: OpenSessionsActorRef;
@@ -36,7 +37,7 @@ class SessionSnapshotObserver implements Subscription {
   private feedThrottle: ReturnType<typeof setTimeout> | undefined;
   private feedDirty = false;
   private openSessionsListener: Subscription | undefined;
-  private registeredSessions: unknown;
+  private registeredSessions: Record<string, SessionActorRef> | undefined;
   private readonly reader: SessionSnapshotReader;
 
   public constructor(
@@ -52,6 +53,7 @@ class SessionSnapshotObserver implements Subscription {
     this.watchSession();
     this.watchOpenSessions();
     this.changed();
+
     return this;
   }
 
@@ -81,7 +83,7 @@ class SessionSnapshotObserver implements Subscription {
   }
 
   // The open Sessions change with every Session's every update; only its membership matters here.
-  private openSessionsChanged(sessions: unknown): void {
+  private openSessionsChanged(sessions: Record<string, SessionActorRef>): void {
     if (sessions === this.registeredSessions) return;
     this.registeredSessions = sessions;
     this.sessionChanged();
@@ -89,11 +91,13 @@ class SessionSnapshotObserver implements Subscription {
 
   private sessionChanged(): void {
     const session = this.options.findSession(this.sessionId);
+
     if (session !== this.session) {
       if (this.finishCurrent()) return;
       this.session = session;
       this.watchSession();
     }
+
     this.changed();
   }
 
@@ -109,9 +113,11 @@ class SessionSnapshotObserver implements Subscription {
     switch (snapshot.status) {
       case 'done':
         this.closed();
+
         return true;
       case 'error':
         this.reject(snapshot.error);
+
         return true;
       default:
         return false;
@@ -132,17 +138,19 @@ class SessionSnapshotObserver implements Subscription {
     { type: 'closed' }
   >['failure'] {
     const output = this.session ? this.session.getSnapshot().output : undefined;
+
     return output ? output.failure : null;
   }
 
-  private reject(error: unknown): void {
+  private reject(cause: unknown): void {
     if (this.hasStopped) return;
     this.hasStopped = true;
-    this.listener.error?.(error);
+    this.listener.error?.(cause);
   }
 
   private changed(): void {
     if (this.hasStopped || this.finishCurrent()) return;
+
     try {
       this.watchFeed();
       this.publish();
@@ -153,7 +161,9 @@ class SessionSnapshotObserver implements Subscription {
 
   private watchFeed(): void {
     const feed = this.options.findFeed(this.sessionId);
+
     if (!feed) return;
+
     if (feed === this.feed) return;
     this.unwatchFeed();
     this.feed = feed;
@@ -167,8 +177,10 @@ class SessionSnapshotObserver implements Subscription {
   private feedChanged(): void {
     if (this.feedThrottle) {
       this.feedDirty = true;
+
       return;
     }
+
     this.feedVersion += 1;
     this.feedThrottle = setTimeout(
       (): void => this.feedWindowEnded(),
@@ -179,6 +191,7 @@ class SessionSnapshotObserver implements Subscription {
 
   private feedWindowEnded(): void {
     this.feedThrottle = undefined;
+
     if (!this.feedDirty) return;
     this.feedDirty = false;
     this.feedChanged();
@@ -191,6 +204,7 @@ class SessionSnapshotObserver implements Subscription {
   // What a snapshot is read from; an unchanged source list skips the read.
   private readSources(): readonly unknown[] {
     const session = this.session?.getSnapshot();
+
     return [
       this.session,
       session?.status,
@@ -203,10 +217,13 @@ class SessionSnapshotObserver implements Subscription {
 
   private sourcesChanged(): boolean {
     const sources = this.readSources();
+
     const changed = sources.some(
       (source, index) => source !== this.sources[index],
     );
+
     this.sources = sources;
+
     return changed;
   }
 
@@ -214,9 +231,11 @@ class SessionSnapshotObserver implements Subscription {
     if (!this.sourcesChanged()) return;
     const result = this.reader.read(this.sessionId, this.session);
     const serialized = JSON.stringify(result.snapshot);
+
     if (serialized === this.serialized) return;
     this.serialized = serialized;
     this.publishSnapshot(result.snapshot);
+
     if (result.isClosed) this.closed();
   }
 

@@ -10,6 +10,7 @@ import {
 } from '@repo/mocks/app';
 import type { ComposerProps } from '../src/features/composer/components/composer/composer';
 import { composerPlan } from './composer-attachments';
+
 export {
   composerImages,
   oversizedComposerImage,
@@ -17,16 +18,19 @@ export {
   composerPlan,
   composerPlanDone,
 } from './composer-attachments';
+
 export {
   composerLongAgentCatalog,
   composerUnlistedEffortConfigurations,
   composerUnavailableConfigurations,
 } from './composer-agent-catalogs';
+
 export {
   composerLongModelList,
   composerLongListConfiguration,
   composerFastModeConfiguration,
 } from './composer-model-catalogs';
+
 export {
   composerSettingsOptions,
   composerLongSettingsOptions,
@@ -48,6 +52,7 @@ export function composerProps(props: ComposerMockProps): ComposerProps {
     configuration: props.configuration ?? defaultConfiguration(props),
   };
 }
+
 function usage(): NonNullable<NonNullable<ComposerProps['status']>['usage']> {
   return {
     limits: [
@@ -60,14 +65,15 @@ function usage(): NonNullable<NonNullable<ComposerProps['status']>['usage']> {
     ],
   };
 }
+
 function defaultStatus(
   props: Pick<ComposerMockProps, 'plan' | 'sessionStarted'>,
 ): ComposerProps['status'] {
-  return {
-    usage: usage(),
-    ...(props.sessionStarted ? sessionStatus(props) : {}),
-  };
+  const status = { usage: usage() };
+
+  return props.sessionStarted ? { ...status, ...sessionStatus(props) } : status;
 }
+
 function sessionStatus(
   props: Pick<ComposerMockProps, 'plan'>,
 ): ComposerProps['status'] {
@@ -78,10 +84,12 @@ function sessionStatus(
     context: { used: 34_000, size: 200_000, onCompact: () => {} },
   };
 }
+
 function defaultConfiguration(
   props: Pick<ComposerMockProps, 'initialAgent' | 'running' | 'sessionStarted'>,
 ): ComposerProps['configuration'] {
   const agent = props.initialAgent ?? availableAgent();
+
   return {
     agents: newSessionCatalogs.bothAvailable,
     agent,
@@ -90,10 +98,13 @@ function defaultConfiguration(
     checkout: checkout(props.sessionStarted),
   };
 }
+
 function availableAgent(): string {
   return newSessionCatalogs.bothAvailable[0]?.agent ?? '';
 }
+
 type Configuration = NonNullable<ComposerProps['configuration']>;
+
 function configurationControls(
   props: Pick<ComposerMockProps, 'running' | 'sessionStarted'>,
 ): Pick<Configuration, 'turnRunning' | 'onAgentChange' | 'onConfigChange'> {
@@ -103,17 +114,19 @@ function configurationControls(
     onConfigChange: (): void => {},
   };
 }
+
 function checkout(
   sessionStarted: boolean | undefined,
 ): Configuration['checkout'] {
-  return {
+  const worktree: Configuration['checkout'] = {
     branch: currentBranch(),
     newWorktree: true,
     onNewWorktreeChange: sessionStarted ? undefined : (): void => {},
-    ...(sessionStarted
-      ? { path: '/Developer/project/.worktrees/session' }
-      : {}),
   };
+
+  if (sessionStarted) worktree.path = '/Developer/project/.worktrees/session';
+
+  return worktree;
 }
 
 function cameraCallback(
@@ -121,12 +134,14 @@ function cameraCallback(
 ): ComposerProps['onAttachCamera'] {
   return props.onAttachCamera ?? props.onAttachImages;
 }
+
 function recordedOptions(agent: string): SessionConfigOption[] {
   return (
     newSessionOptions.find((entry) => entry.agent === agent)?.configOptions ??
     []
   );
 }
+
 function currentBranch(): string {
   return newSessionBranches.currentBranch ?? 'main';
 }

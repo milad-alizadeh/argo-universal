@@ -7,6 +7,7 @@ import {
 } from 'react';
 
 type TokenType = MarkedToken['type'];
+
 export type TokenOf<T extends TokenType> = Extract<MarkedToken, { type: T }>;
 
 export interface BlockTokenProps<T extends Token = Token> {
@@ -33,12 +34,15 @@ export function byType<T extends TokenType, P extends { token: Token }>(
     isToken(props.token, type)
       ? createElement(Render, { ...props, token: props.token })
       : null;
+
   Narrowed.displayName = Render.displayName ?? Render.name;
+
   return [type, Narrowed];
 }
 
 // Text marked would read as HTML or a link definition is drawn as it was written.
 export function literal(token: Token): Tokens.Text {
   const text = token.raw.trimEnd();
+
   return { type: 'text', raw: text, text };
 }

@@ -13,10 +13,12 @@ interface RegistryIconProps {
   agentName: string;
   role: IconRole;
 }
+
 type IconSource =
   | { kind: 'inline'; xml: string }
   | { kind: 'uri'; uri: string }
   | { kind: 'unavailable' };
+
 type ImageProps = Pick<
   XmlProps,
   'width' | 'height' | 'accessibilityRole' | 'accessibilityLabel'
@@ -28,6 +30,7 @@ export function RegistryIcon({
   role,
 }: RegistryIconProps): React.JSX.Element {
   if (!uri) return <UnavailableIcon agentName={agentName} role={role} />;
+
   return <LoadedImage uri={uri} agentName={agentName} role={role} />;
 }
 
@@ -37,7 +40,9 @@ type LoadedIconProps = Required<RegistryIconProps> & { uri: string };
 function WebRegistryImage(props: LoadedIconProps): React.JSX.Element {
   const [failed, setFailed] = useState(false);
   const pixels = useIconPixels(props.role);
+
   if (failed) return <UnavailableIcon {...props} />;
+
   return (
     <Image
       accessibilityLabel={`${props.agentName} icon`}
@@ -55,6 +60,7 @@ function RegistryImage({
 }: LoadedIconProps): React.JSX.Element {
   const source = useRegistrySource(uri);
   const props = imageProps(agentName, useIconPixels(role));
+
   return renderIcon(
     source,
     props,
@@ -80,6 +86,7 @@ function renderIcon(
   fallback: React.JSX.Element,
 ): React.JSX.Element {
   if (source.kind === 'unavailable') return fallback;
+
   return source.kind === 'inline' ? (
     <SvgXml {...props} xml={source.xml} />
   ) : (
@@ -90,11 +97,13 @@ function renderIcon(
 function decodeRegistryIconSource(iconUri: string): IconSource {
   try {
     const xml = decodeInlineSvgDataUri(iconUri);
+
     return xml === null
       ? { kind: 'uri', uri: iconUri }
       : { kind: 'inline', xml };
   } catch (error) {
     console.error('Registry icon decoding failed', error);
+
     return { kind: 'unavailable' };
   }
 }
@@ -102,8 +111,11 @@ function decodeRegistryIconSource(iconUri: string): IconSource {
 function decodeInlineSvgDataUri(iconUri: string): string | null {
   const comma = iconUri.indexOf(',');
   const header = iconUri.slice(0, comma).split(';');
+
   if (header[0] !== 'data:image/svg+xml') return null;
+
   if (header.includes('base64')) return null;
+
   return withViewBox(decodeURIComponent(iconUri.slice(comma + 1)));
 }
 
@@ -111,6 +123,7 @@ function decodeInlineSvgDataUri(iconUri: string): string | null {
 function withViewBox(xml: string): string {
   const [open] = /<svg\b[^>]*>/i.exec(xml) ?? [''];
   const viewBox = missingViewBox(open);
+
   return viewBox
     ? xml.replace(open, open.replace(/<svg\b/i, `<svg viewBox="${viewBox}"`))
     : xml;
@@ -118,10 +131,12 @@ function withViewBox(xml: string): string {
 
 function missingViewBox(open: string): string | undefined {
   if (/\bviewBox\s*=/i.test(open)) return undefined;
+
   const size = [
     numberAttribute(open, 'width'),
     numberAttribute(open, 'height'),
   ];
+
   return size.every(Boolean) ? `0 0 ${size.join(' ')}` : undefined;
 }
 

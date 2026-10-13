@@ -15,11 +15,14 @@ export async function query<Output>(
 ): Promise<Output> {
   const { page, httpUrl, procedure, output } = input;
   const encoded = encodeURIComponent(JSON.stringify(input.input));
+
   const response = await page.request.get(
     `${httpUrl}/trpc/${procedure}?input=${encoded}`,
     { maxRetries: 2 },
   );
+
   expect(response.ok()).toBe(true);
+
   return readOutput(response, output);
 }
 
@@ -38,10 +41,12 @@ async function readOutput<Output>(
     .object({ result: z.object({ data: output }) })
     .parse(await response.json()).result.data;
 }
+
 export async function mutateWithResult<Output>(
   input: QueryInput<Output>,
 ): Promise<Output> {
   const response = await requestMutation(input);
+
   return readOutput(response, input.output);
 }
 
@@ -50,6 +55,8 @@ async function requestMutation(input: MutationInput): Promise<APIResponse> {
     `${input.httpUrl}/trpc/${input.procedure}`,
     { data: input.input },
   );
+
   expect(response.ok()).toBe(true);
+
   return response;
 }

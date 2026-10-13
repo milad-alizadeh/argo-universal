@@ -37,6 +37,7 @@ const meta = {
 } satisfies Meta<DesktopShellFrameProps>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // Callbacks report rail and divider changes; controls set the displayed shell props.

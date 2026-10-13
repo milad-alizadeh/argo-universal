@@ -9,17 +9,21 @@ import { watchEngineList } from './list-observation';
 import { scriptedEngineInput } from './scripted-engine';
 
 type EngineHost = Awaited<ReturnType<typeof startEngineTestHost>>;
+
 type ListIterator = ReturnType<
   Awaited<
     ReturnType<EngineHost['caller']['session']['listUpdates']>
   >[typeof Symbol.asyncIterator]
 >;
+
 type CountsIterator = ReturnType<
   Awaited<
     ReturnType<EngineHost['caller']['session']['counts']>
   >[typeof Symbol.asyncIterator]
 >;
+
 type Watcher = ReturnType<typeof watchEngineList>;
+
 type ListReaders = {
   writer: EngineHost['databaseWriter'];
   counted: ReturnType<typeof countDatabaseReads>;
@@ -42,20 +46,24 @@ export async function startListReaders(): Promise<ListReaders> {
   const { database, remove } = openTestDatabase();
   insertEndedTurn(database);
   onTestFinished(remove);
+
   const host = await startEngineTestHost({
     database,
     ...scriptedEngineInput(),
   });
+
   const watchers = {
     firstWatcher: watchEngineList(host.createCaller),
     secondWatcher: watchEngineList(host.createCaller),
     countsWatcher: watchEngineList(host.createCaller),
     resumedWatcher: watchEngineList(host.createCaller),
   };
+
   vi.useFakeTimers();
   onTestFinished((): void => {
     vi.useRealTimers();
   });
+
   return subscribeReaders(host, watchers);
 }
 
@@ -65,6 +73,7 @@ async function subscribeReaders(
 ): Promise<ListReaders> {
   const { firstWatcher, secondWatcher, countsWatcher } = watchers;
   const counted = countDatabaseReads(host.database);
+
   return {
     ...watchers,
     writer: host.databaseWriter,

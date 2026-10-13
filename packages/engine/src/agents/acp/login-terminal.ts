@@ -26,7 +26,9 @@ export class LoginTerminal {
     this.finishing = true;
     await this.closeChild();
     signal.throwIfAborted();
+
     if (this.failure) throw this.failure;
+
     if (terminalFailed(result))
       throw new Error(
         'The sign-in terminal exited without completing sign-in.',
@@ -37,41 +39,49 @@ export class LoginTerminal {
   }
   public read(cursor: number): AgentLoginTerminalFrame {
     if (cursor > this.output.length) throw new Error('Invalid terminal cursor');
+
     return { cursor: this.output.length, output: this.output.slice(cursor) };
   }
   public input(input: AgentLoginTerminalInput): void {
     const child = this.requireChild();
+
     if (input.type === 'write') child.write(input.text);
     else child.resize(input.cols, input.rows);
   }
   public async close(): Promise<void> {
-    await this.opening?.catch((error: unknown) =>
-      error instanceof ResourceCleanupError ? error.awaitCleanup() : undefined,
+    await this.opening?.catch((cause: unknown) =>
+      cause instanceof ResourceCleanupError ? cause.awaitCleanup() : undefined,
     );
     this.output = '';
     await this.closeChild();
   }
   private async open(launch: AgentLaunch): Promise<void> {
     this.child = await this.launch(launch, (text) => this.append(text));
+
     if (this.failure) await this.closeChild();
   }
   private append(text: string): void {
     if (this.failure) return;
+
     if (this.output.length + text.length > loginTerminalOutputLimit) {
       this.failure = new Error(
         'The sign-in terminal exceeded its output limit.',
       );
       void this.closeChild().catch(() => {});
+
       return;
     }
+
     this.output += text;
   }
   private requireChild(): LoginTerminalProcess {
     if (!this.child) throw new Error('The sign-in terminal is not running');
+
     return this.child;
   }
   private async closeChild(): Promise<void> {
     const child = this.child;
+
     if (!child) return;
     await child.close();
     this.child = undefined;

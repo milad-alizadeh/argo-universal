@@ -16,17 +16,20 @@ const ContentWide = createContext<boolean | undefined>(undefined);
  */
 function useContentWideMin(): number {
   const token = useCSSVariable('--container-content-wide');
+
   return typeof token === 'number' ? token : Number.parseFloat(token ?? '');
 }
 
 export function useContentWide(): boolean {
   const contentWide = useContext(ContentWide);
   const windowWide = useWide();
+
   return contentWide ?? windowWide;
 }
 
 export function ContentLayout(props: ViewProps): React.JSX.Element {
   const [wide, measureWidth] = useContentWidth(props.onLayout);
+
   return (
     <View
       {...props}
@@ -43,10 +46,12 @@ function useContentWidth(
 ): [boolean | undefined, (event: LayoutChangeEvent) => void] {
   const [wide, setWide] = useState<boolean>();
   const contentWideMin = useContentWideMin();
+
   const measureWidth = (event: LayoutChangeEvent): void => {
     setWide(event.nativeEvent.layout.width >= contentWideMin);
     onLayout?.(event);
   };
+
   return [wide, measureWidth];
 }
 

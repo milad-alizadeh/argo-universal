@@ -21,6 +21,7 @@ const mapToolDiff = (
   ],
   _meta: createAcpContentMetadata(block._meta),
 });
+
 const createUnavailableTerminalContent = (
   block: Extract<AcpToolCallContent, { type: 'terminal' }>,
 ): ToolCallContent => ({
@@ -30,24 +31,31 @@ const createUnavailableTerminalContent = (
   ),
   _meta: createAcpContentMetadata(block._meta),
 });
+
 export const mapToolCallContent = (
   block: AcpToolCallContent,
 ): ToolCallContent => {
   if (block.type === 'diff') return mapToolDiff(block);
+
   if (block.type === 'terminal') return createUnavailableTerminalContent(block);
+
   return {
     type: 'content',
     content: mapSupportedContentBlock(block.content),
     _meta: createAcpContentMetadata(block._meta),
   };
 };
+
 const collectUnsupportedToolBlockReasons = (
   block: ToolCallContent,
 ): string[] => {
   if (block.type === 'unsupported') return [block.reason];
+
   if (block.type !== 'content') return [];
+
   return collectUnsupportedContentReasons([block.content]);
 };
+
 export const collectUnsupportedToolContentReasons = (
   content: ToolCallContent[],
 ): string[] => content.flatMap(collectUnsupportedToolBlockReasons);

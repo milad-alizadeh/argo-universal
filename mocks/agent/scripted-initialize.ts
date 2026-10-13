@@ -13,6 +13,7 @@ const subscriptionAccount: AuthStatusUpdateNotification = {
     account: { plan: 'plus' },
   },
 };
+
 export const initializeScriptedAgent = async (
   context: AgentRequestContext<InitializeRequest>,
   initialize: (
@@ -22,5 +23,6 @@ export const initializeScriptedAgent = async (
   initialization: NonNullable<ScriptedScenario['initialize']>,
 ): Promise<NonNullable<ScriptedScenario['initialize']>> => {
   await context.client.notify('_auth/status_update', subscriptionAccount);
+
   return initialize(context, initialization);
 };

@@ -11,7 +11,9 @@ const saved: AgentsCatalogOutput = {
   rejectedValues: 0,
   agents: [],
 };
+
 const stopping = 'The Server is stopping';
+
 const idle = { pending: false, error: null };
 
 describe('applyCatalogSync', () => {

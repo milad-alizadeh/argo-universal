@@ -11,6 +11,7 @@ import { hydrateStoredFeedRow, storedFeedColumns } from './feed-row';
 import { FeedRowsJob, readQueuedFeed } from './feed-storage';
 
 let database: Database;
+
 let removeDatabase: () => void;
 
 const feedRows = (
@@ -27,6 +28,7 @@ const selectRows = (): (typeof feedRow.$inferSelect)[] =>
     .where(eq(feedRow.sessionId, 'session-1'))
     .orderBy(feedRow.position)
     .all();
+
 const selectSession = (): typeof session.$inferSelect | undefined =>
   database.select().from(session).where(eq(session.id, 'session-1')).get();
 
@@ -109,9 +111,11 @@ it('records the blobs a job names that are stored, once per Session', (): void =
     .insert(blob)
     .values({ id: 'image-1', mime: 'image/png', bytes: 3 })
     .run();
+
   const prompt = [
     { ...row({ state: 'settled' }), sessionUpdate: 'user_message' as const },
   ];
+
   const blobIds = ['image-1', 'no-such-blob'];
 
   writeJobs(database, [
@@ -134,6 +138,7 @@ it('reads queued Feed rows exactly as their commit', async (): Promise<void> => 
   const writer = createActor(writerMachine, {
     input: { database, now: () => 12000 },
   }).start();
+
   onTestFinished(() => {
     writer.stop();
   });

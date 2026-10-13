@@ -124,6 +124,7 @@ const createAnswerRouter = routerFactory((deps: SessionRouterDeps) =>
 
 export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
   const sessionList = createSessionList(deps);
+
   return mergeRouters(
     createListRouter(sessionList),
     createListUpdatesRouter(sessionList),

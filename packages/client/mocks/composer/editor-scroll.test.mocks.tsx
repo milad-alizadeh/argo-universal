@@ -8,6 +8,7 @@ import {
 } from './composer-story-context.test.mocks';
 import { typedLines } from './composer-test-contract.test.mocks';
 import { linesTwoToTen, expectSendUnobscured } from './work-status.test.mocks';
+
 export function editorScrollsAfterTenLines(width: number): Story {
   return {
     render: () => <SendingComposer onSend={fn()} />,

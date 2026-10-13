@@ -14,9 +14,12 @@ import {
   expectResponsiveFooter,
   browseResponsiveMenu,
 } from './responsive-menu.test.mocks';
+
 export function responsiveLayout(width: number, agentIndex: number): Story {
   const catalog = pickerCatalogs[agentIndex];
+
   if (!catalog) throw new Error(missingAvailableAgentFailure);
+
   return {
     args: {
       configuration: {
@@ -38,9 +41,11 @@ export function responsiveLayout(width: number, agentIndex: number): Story {
       await settleViewport(width);
       const input = canvas.getByRole('textbox', { name: 'Message' });
       const card = composerCard(input);
+
       const attachButton = canvas.getByRole('button', {
         name: 'Attach',
       });
+
       await expect(attachButton).toBeVisible();
       const trigger = canvas.getByRole('button', { name: agentModelLabel });
       await expect(trigger).toBeVisible();

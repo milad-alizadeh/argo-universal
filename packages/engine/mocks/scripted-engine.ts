@@ -11,6 +11,7 @@ export const scriptedEngineInput = (
   fixtureAgents: AgentIdentity[];
 } => {
   const agent = createScriptedAgentProcess(scenario);
+
   return {
     agent,
     fixtureAgents: [createAgentMetadata(identity)],

@@ -21,13 +21,19 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof CustomAgentForm>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
+
 type UserEvent = Parameters<NonNullable<Story['play']>>[0]['userEvent'];
+
 type Layout = keyof typeof layoutWidths;
 
 const addAgent = { name: 'Add Agent' };
+
 const exampleName = 'Example ACP';
 
 async function openedEditor(name: string): Promise<Canvas> {
@@ -96,6 +102,7 @@ export const ShowsExamplesInEmptyFields: Story = {
 };
 
 export const RegistersOnPhone: Story = registersAt('phone');
+
 export const RegistersOnDesktop: Story = registersAt('wide');
 
 // The phone edits a variable in a sheet that the backdrop closes until it is touched: Save and Remove, no Cancel or close button.

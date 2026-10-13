@@ -1,5 +1,6 @@
 // The Session gives up on its Agent after this many crashes within the window.
 const crashWindowMs = 600_000;
+
 const maxCrashesInWindow = 3;
 
 export const crashBudgetFailure =

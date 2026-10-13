@@ -12,10 +12,12 @@ export interface ProjectListViewProps {
   // Where the search starts, for stories.
   initialSearch?: string;
 }
+
 export type SearchedProps = ProjectListViewProps & {
   search: string;
   onSearch: (search: string) => void;
 };
+
 export type LoadedProps = Omit<SearchedProps, 'projects'> & {
   projects: ProjectInfo[];
 };

@@ -21,6 +21,8 @@ function toastTitle({ title, message }: ErrorToast): string {
   return Platform.OS === 'android' && message ? `${title} ${message}` : title;
 }
 
+type ToastOptions = Parameters<typeof Burnt.toast>[0];
+
 const tonePresets = {
   success: { preset: 'done', haptic: 'success' },
   error: { preset: 'error', haptic: 'error' },
@@ -28,11 +30,13 @@ const tonePresets = {
 
 // iOS and Android draw a native toast; web draws it in the Toaster.
 function showToast(toast: Toast): void {
-  void Burnt.toast({
+  const options: ToastOptions = {
     ...tonePresets[toast.tone],
     title: toastTitle(toast),
-    ...(toast.message === undefined ? {} : { message: toast.message }),
-  });
+  };
+
+  if (toast.message !== undefined) options.message = toast.message;
+  void Burnt.toast(options);
 }
 
 // Clears every toast on screen.
@@ -42,6 +46,7 @@ export function dismissToasts(): void {
 
 const textKey = (toast: Toast): string =>
   `${toast.title}\n${toast.message ?? ''}`;
+
 const toastKey = (toast: Toast | undefined): string | null =>
   toast ? (toast.key ?? textKey(toast)) : null;
 
@@ -52,6 +57,7 @@ export function useToast(toast: Toast | undefined): void {
   useEffect(() => {
     if (key === shown.current) return;
     shown.current = key;
+
     if (toast) showToast(toast);
   }, [key, toast]);
 }

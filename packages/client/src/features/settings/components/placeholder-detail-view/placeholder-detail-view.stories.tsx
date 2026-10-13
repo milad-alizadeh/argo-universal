@@ -6,7 +6,9 @@ const meta = {
   component: PlaceholderDetailView,
   parameters: { screenPreview: true },
 } satisfies Meta<typeof PlaceholderDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Accounts: Story = {
@@ -16,18 +18,21 @@ export const Accounts: Story = {
     description: 'Accounts will appear here.',
   },
 };
+
 export const Devices: Story = {
   args: {
     title: 'Devices',
     description: 'Devices will appear here.',
   },
 };
+
 export const Appearance: Story = {
   args: {
     title: 'Appearance',
     description: 'Appearance will appear here.',
   },
 };
+
 export const Notifications: Story = {
   args: {
     title: 'Notifications',

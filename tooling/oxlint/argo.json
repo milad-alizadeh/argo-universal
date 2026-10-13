@@ -99,6 +99,20 @@
   },
   "overrides": [
     {
+      // `shape` is @expo/ui Compose's own prop name on Surface and Button; the rule allows member reads but not package prop keys.
+      "files": [
+        "packages/client/src/lib/generic/primitives/inputs/picker/picker-dialog.android.tsx",
+        "packages/client/src/lib/generic/primitives/inputs/picker/picker-row.android.tsx",
+        "packages/client/src/lib/generic/primitives/lists/list-item/list-item-view.android.tsx"
+      ],
+      "rules": { "anti-slop/no-shape-in-symbol-names": "off" }
+    },
+    {
+      // A Feed candidate is unparsed by design: a row assembled from a Feed patch, which acceptFeedCandidate parses with SessionUpdate before use.
+      "files": ["packages/engine/src/feed/feed-change-candidate.ts"],
+      "rules": { "anti-slop/no-unsafe-dictionary-type": "off" }
+    },
+    {
       // Tests, stories and mocks state their inputs and expectations as literals.
       "files": [
         "**/*.test.*",

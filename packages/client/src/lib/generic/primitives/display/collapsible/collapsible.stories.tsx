@@ -21,6 +21,7 @@ function CollapsibleExample({
 }: CollapsibleExampleProps): React.JSX.Element {
   const [open, setOpen] = useState(initialOpen);
   const props = { open, onOpenChange: setOpen, disabled };
+
   return (
     <Collapsible {...props} className="w-full gap-2">
       <RepositoriesHeader />
@@ -33,7 +34,9 @@ const meta = {
   title: 'Design System/Primitives/Collapsible',
   tags: ['third-party'],
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {
@@ -61,6 +64,7 @@ function RepositoriesHeader(): React.JSX.Element {
     </View>
   );
 }
+
 function RepositoryRow({ name }: { name: string }): React.JSX.Element {
   return (
     <View className="rounded-md border border-border px-4 py-2">

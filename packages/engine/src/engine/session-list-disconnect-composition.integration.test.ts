@@ -14,6 +14,7 @@ it('stops shared list reads with no subscribers and refreshes on reconnect', asy
     countsWatcher,
     resumedWatcher,
   } = await startListReaders();
+
   await first.next();
   await second.next();
   await counts.next();
@@ -33,9 +34,11 @@ it('stops shared list reads with no subscribers and refreshes on reconnect', asy
   expect(counted.metrics.sessionReads).toBe(0);
   expect(await second.next()).toMatchObject({ done: true });
   expect(await counts.next()).toMatchObject({ done: true });
+
   const resumed = (await resumedWatcher.caller.session.listUpdates())[
     Symbol.asyncIterator
   ]();
+
   expect((await resumed.next()).value).toMatchObject({
     type: 'changed',
     session: { title: 'No subscribers' },

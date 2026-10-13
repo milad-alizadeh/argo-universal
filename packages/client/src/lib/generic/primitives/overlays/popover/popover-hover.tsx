@@ -2,31 +2,39 @@ import * as PopoverPrimitive from '@rn-primitives/popover';
 import * as React from 'react';
 
 const closeGraceMs = 200;
+
 export interface Hover {
   enter: () => void;
   leave: () => void;
   promote: () => void;
   isPointer: () => boolean;
 }
+
 interface Timer {
   close: () => void;
   cancel: () => void;
   schedule: () => void;
 }
+
 type Intent = ReturnType<typeof useHoverIntent>;
+
 interface HoverIntent {
   isPointer: () => boolean;
   mark: () => void;
   promote: () => void;
 }
+
 type Root = ReturnType<typeof PopoverPrimitive.useRootContext>;
+
 interface HoverEnvironment {
   parent?: Hover;
   group?: Set<() => void>;
   timer: Timer;
   intent: Intent;
 }
+
 export const PopoverHover = React.createContext<Hover | undefined>(undefined);
+
 const HoverGroup = React.createContext<Set<() => void> | undefined>(undefined);
 
 export function PopoverHoverGroup({
@@ -35,6 +43,7 @@ export function PopoverHoverGroup({
   children: React.ReactNode;
 }): React.JSX.Element {
   const [members] = React.useState(() => new Set<() => void>());
+
   return <HoverGroup value={members}>{children}</HoverGroup>;
 }
 
@@ -46,6 +55,7 @@ export function HoverProvider({
   children: React.ReactNode;
 }): React.JSX.Element {
   const hover = useHover();
+
   return (
     <PopoverHover value={enabled ? hover : undefined}>{children}</PopoverHover>
   );
@@ -58,11 +68,13 @@ function useHover(): Hover {
   const intent = useHoverIntent();
   const timer = useHoverTimer(context.onOpenChange);
   React.useEffect(() => register(group, timer.close), [group, timer.close]);
+
   return hoverActions(context, { parent, group, intent, timer });
 }
 
 function useHoverIntent(): HoverIntent {
   const pointer = React.useRef(false);
+
   return {
     isPointer: () => pointer.current,
     mark: () => {
@@ -79,10 +91,12 @@ function useHoverTimer(onOpenChange: (open: boolean) => void): Timer {
   const cancel = React.useCallback(() => cancelPending(pending.current), []);
   const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
   React.useEffect(() => cancel, [cancel]);
+
   const schedule = (): void => {
     cancel();
     pending.current = setTimeout(close, closeGraceMs);
   };
+
   return { close, cancel, schedule };
 }
 
@@ -105,6 +119,7 @@ function hoverActions(context: Root, environment: HoverEnvironment): Hover {
 function enter(context: Root, environment: HoverEnvironment): void {
   environment.timer.cancel();
   environment.parent?.enter();
+
   if (!context.open) environment.intent.mark();
   closeSiblings(environment.group, environment.timer.close);
   context.onOpenChange(true);
@@ -130,6 +145,7 @@ function register(
   close: () => void,
 ): () => void {
   group?.add(close);
+
   return () => {
     group?.delete(close);
   };

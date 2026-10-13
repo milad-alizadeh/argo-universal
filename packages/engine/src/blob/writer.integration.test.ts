@@ -8,6 +8,7 @@ it('keeps Blob upload pending through a shared Writer retry and returns only com
   let attempts = 0;
   database.$client.function('count_rejected_write', () => {
     attempts += 1;
+
     return 0;
   });
   database.$client.exec(
@@ -25,10 +26,13 @@ it('keeps Blob upload pending through a shared Writer retry and returns only com
   const form = new FormData();
   form.set('file', new Blob(['attachment']), 'attachment.txt');
   let completed = false;
+
   const upload = caller.blob.upload(form).then((result) => {
     completed = true;
+
     return result;
   });
+
   await expect.poll(() => attempts, { timeout: 2000 }).toBeGreaterThan(1);
   expect(database.$client.prepare('SELECT id FROM blob').all()).toEqual([]);
   expect(completed).toBe(false);

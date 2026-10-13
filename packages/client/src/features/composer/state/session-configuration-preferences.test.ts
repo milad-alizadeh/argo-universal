@@ -8,6 +8,7 @@ import {
   restrictedEffort,
 } from '../../../../mocks/composer-preference-mock';
 import { nextRememberedChange } from './session-configuration-preferences';
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();

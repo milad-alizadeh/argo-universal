@@ -16,6 +16,7 @@ type SessionListSubscription = TRPCSubscriptionResult<
 function useSessionListRefetch(): () => void {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+
   return useMemo(
     () =>
       createCoalescedRefetch(() =>
@@ -31,13 +32,16 @@ function useSessionListRefetch(): () => void {
 export function useSessionListUpdates(): SessionListSubscription {
   const trpc = useTRPC();
   const refetch = useSessionListRefetch();
+
   const subscription = useSubscription(
     trpc.session.listUpdates.subscriptionOptions(undefined, {
       onStarted: refetch,
       onData: refetch,
     }),
   );
+
   useResubscribeOnReconnect(subscription);
   useResubscribeOnFocus(subscription);
+
   return subscription;
 }

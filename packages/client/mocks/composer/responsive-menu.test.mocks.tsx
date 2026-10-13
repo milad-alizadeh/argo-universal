@@ -12,11 +12,15 @@ import {
   expectHeldAgentList,
   expectWideAgentMenu,
 } from './work-status.test.mocks';
+
 export function composerCard(input: HTMLElement): Element {
   const card = input.parentElement?.parentElement;
+
   if (!card) throw new Error('Composer card is missing.');
+
   return card;
 }
+
 export async function expectResponsiveFooter({
   canvas,
   card,
@@ -29,6 +33,7 @@ export async function expectResponsiveFooter({
     const subagents = canvas.getByRole('button', {
       name: subagentCountLabel,
     });
+
     await expect(
       canvas.getByRole('button', { name: 'Shells: 1' }),
     ).toBeVisible();
@@ -47,6 +52,7 @@ export async function expectResponsiveFooter({
     await expectWideFooter({ canvas });
   }
 }
+
 export async function browseResponsiveMenu({
   userEvent,
   width,
@@ -55,6 +61,7 @@ export async function browseResponsiveMenu({
     const chooseAgent = await within(document.body).findByRole('button', {
       name: chooseAgentLabel,
     });
+
     await expect(chooseAgent).toBeEnabled();
     await userEvent.click(chooseAgent);
     await expectHeldAgentList();

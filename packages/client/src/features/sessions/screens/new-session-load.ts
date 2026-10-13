@@ -28,5 +28,6 @@ export const loadedNewSession = (
   data: NewSessionData,
 ): LoadedNewSession | undefined => {
   const server = loadedServer(data);
+
   return server && data.agents.data && { ...server, agents: data.agents.data };
 };

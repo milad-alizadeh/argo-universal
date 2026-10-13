@@ -14,12 +14,14 @@ import {
 export function ListItem(props: ListItemProps): React.JSX.Element {
   const rowProps = useRowProps(props);
   const content = <ListItemBody {...props} />;
+
   if (!props.onPress)
     return (
       <View {...rowProps} role="group">
         {content}
       </View>
     );
+
   return (
     <PressableRow {...rowProps} item={props} press={props.onPress}>
       {content}
@@ -34,6 +36,7 @@ function useRowProps(props: ListItemProps): ReturnType<
   className: string;
 } {
   const navigation = useNavigationFields();
+
   return {
     accessibilityLabel: listItemName(props),
     ...selectionProps(props),
@@ -48,6 +51,7 @@ interface PressableRowProps extends React.ComponentProps<typeof View> {
 
 function PressableRow(props: PressableRowProps): React.JSX.Element {
   const { item, press, children, ...rowProps } = props;
+
   return (
     <Pressable
       {...linkProps(item)}

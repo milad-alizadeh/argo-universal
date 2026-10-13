@@ -1,5 +1,6 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
+
 export interface StartSessionInProps {
   serverName: string;
   serverConnected: boolean;

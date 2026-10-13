@@ -28,6 +28,7 @@ export function permissionFeed(
   answered: boolean,
 ): Story {
   const mock = recordedMock(recording);
+
   return answered ? outcomeFeed(width, mock) : approvalFeed(width, mock);
 }
 
@@ -74,6 +75,7 @@ export function chosenOptionFeed(
 ): Story {
   const mock = recordedMock(recording);
   const rows = mock.answered.rows.map((row) => withChosenOption(row, option));
+
   return {
     render: feedGroups(rows, mock.answered.snapshot),
     play: async () => {
@@ -91,7 +93,9 @@ export function chosenOptionFeed(
 
 function recordedMock(recording: number): RequestMock {
   const mock = permissionMocks[recording];
+
   if (!mock) throw new Error('Permission coverage needs both #54 recordings.');
+
   return mock;
 }
 
@@ -102,6 +106,7 @@ function feedGroups(
   const groups = toFeedView(rows, snapshot).items.filter(
     (item) => item.type === 'group',
   );
+
   return () => (
     <RequestFrame>
       {groups.map((item) => (
@@ -117,8 +122,10 @@ function pendingToolCall({ pending }: RequestMock): ToolCallUpdate {
       row.sessionUpdate === 'tool_call_update' &&
       row.toolCallId === pending.snapshot.pendingPermission?.toolCallId,
   );
+
   if (row?.sessionUpdate !== 'tool_call_update')
     throw new Error('Recording needs the pending Tool call.');
+
   return row;
 }
 
@@ -127,6 +134,7 @@ function withChosenOption(
   option: ChosenOption,
 ): SessionUpdate {
   if (row.sessionUpdate !== 'tool_call_update') return row;
+
   return withOutcome(row, option);
 }
 
@@ -135,12 +143,15 @@ function withOutcome(
   option: ChosenOption,
 ): ToolCallUpdate {
   const argo = argoMeta(row);
+
   if (!argo?.permissionOutcome) return row;
+
   const permissionOutcome = {
     outcome: 'selected' as const,
     optionId: `${option.kind}-option`,
     ...option,
   };
+
   return {
     ...row,
     _meta: { ...row._meta, argo: { ...argo, permissionOutcome } },

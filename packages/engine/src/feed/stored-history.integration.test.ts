@@ -19,6 +19,7 @@ const insertStoredRow = (database: Database, row: SessionUpdate): void => {
     sessionUpdate,
     ...payload
   } = row;
+
   database.$client
     .prepare(
       `INSERT INTO feed_row (session_id, position, id, session_update, revision, turn_id, state, payload, payload_version)
@@ -41,17 +42,21 @@ const storeRecording = (
   rows: readonly SessionUpdate[],
 ): void => {
   const [first] = rows;
+
   if (!first) return;
   insertSession(database, {
     id: first.sessionId,
     maxRevision: Math.max(...rows.map((row): number => row.revision)),
   });
+
   for (const row of rows) insertStoredRow(database, row);
 };
 
 const readRecordedSessionId = (rows: readonly SessionUpdate[]): string => {
   const [first] = rows;
+
   if (!first) throw new Error('A recording without rows');
+
   return first.sessionId;
 };
 
@@ -60,6 +65,7 @@ let caller: Awaited<ReturnType<typeof startEngineTestHost>>['caller'];
 beforeEach(async (): Promise<void> => {
   const storage = openTestDatabase();
   onTestFinished(storage.remove);
+
   for (const { rows } of recordedFeedMocks)
     storeRecording(storage.database, rows);
   ({ caller } = await startEngineTestHost({ database: storage.database }));
@@ -87,13 +93,16 @@ it.each(recordedFeedMocks)(
         after: { epoch: 0, revision: 0 },
       })
     )[Symbol.asyncIterator]();
+
     const received: SessionUpdate[] = [];
 
     while (received.length < rows.length) {
       const { value } = await updates.next();
       assert(value);
+
       if (value.type === 'row.upsert') received.push(value.row);
     }
+
     await closeStream(updates);
 
     expect(received).toEqual(

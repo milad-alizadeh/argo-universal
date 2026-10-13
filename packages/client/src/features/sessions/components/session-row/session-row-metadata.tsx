@@ -35,12 +35,15 @@ function subagentsStatus({
   subagentsFailed,
 }: SessionRowMetadataProps): 'failed' | 'running' | undefined {
   if (subagentsFailed) return 'failed';
+
   return session.subagents.running > 0 ? 'running' : undefined;
 }
 
 function SubagentsStatus(props: SessionRowMetadataProps): React.ReactNode {
   const status = subagentsStatus(props);
+
   if (status === undefined) return null;
+
   return (
     <StatusIndicator
       testID="subagents-status"
@@ -56,6 +59,7 @@ function SubagentsStatus(props: SessionRowMetadataProps): React.ReactNode {
 
 function SubagentsCount(props: SessionRowMetadataProps): React.JSX.Element {
   const { subagents } = props.session;
+
   return (
     <View
       accessibilityLabel={`Subagents: ${subagents.total}, ${subagents.running} running`}
@@ -98,6 +102,7 @@ function planContent({
   session: { plan },
 }: SessionRowMetadataProps): React.JSX.Element | undefined {
   if (!plan || plan.total <= 0) return undefined;
+
   return <PlanProgress key="plan" plan={plan} />;
 }
 
@@ -105,6 +110,7 @@ function subagentsContent(
   props: SessionRowMetadataProps,
 ): React.JSX.Element | undefined {
   if (props.session.subagents.total <= 0) return undefined;
+
   return <SubagentsCount key="subagents" {...props} />;
 }
 
@@ -112,6 +118,7 @@ function archivedContent({
   session,
 }: SessionRowMetadataProps): React.JSX.Element | undefined {
   if (session.archivedAt === null) return undefined;
+
   return <ArchivedBadge key="archived" />;
 }
 
@@ -119,6 +126,7 @@ function issueContent({
   issue,
 }: SessionRowMetadataProps): React.JSX.Element | undefined {
   if (!issue) return undefined;
+
   return (
     <IndicatorSlot key="issue" testID="session-issue-slot">
       <IssueIndicator {...issue} />
@@ -130,6 +138,7 @@ function pullRequestContent({
   pullRequest,
 }: SessionRowMetadataProps): React.JSX.Element | undefined {
   if (!pullRequest) return undefined;
+
   return (
     <IndicatorSlot key="pull-request" testID="session-pull-request-slot">
       <PullRequestIndicator {...pullRequest} />
@@ -148,10 +157,14 @@ const metadataContents = [
 export function SessionRowMetadata(
   props: SessionRowMetadataProps,
 ): React.ReactNode {
-  const items = metadataContents
-    .map((content) => content(props))
-    .filter((item) => item !== undefined);
+  const items = metadataContents.flatMap((content) => {
+    const item = content(props);
+
+    return item === undefined ? [] : [item];
+  });
+
   if (items.length === 0) return null;
+
   return (
     <View className="min-h-5 flex-row flex-wrap items-center gap-x-3 gap-y-1 pt-1">
       {items}

@@ -75,7 +75,9 @@ export class FeedRowsJob implements WriterJob {
   // What the commit writes to its Session's row, as `advanceSession` does.
   public projectSession(current: SessionRecord): SessionRecord {
     const { maxRevision, activityAt, rows } = this.input;
+
     if (maxRevision <= current.maxRevision) return current;
+
     return {
       ...current,
       maxRevision,
@@ -128,5 +130,6 @@ function projectedPromptTitle(
   rows: SessionUpdate[],
 ): string {
   if (current.titleSource !== 'prompt') return current.title;
+
   return current.title === '' ? titleFromRows(rows) : current.title;
 }

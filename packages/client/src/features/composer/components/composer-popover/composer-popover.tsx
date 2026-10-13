@@ -15,15 +15,18 @@ import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useAfterClose } from '../../hooks/use-after-close';
 import type { ComposerPopoverProps } from './popover-types';
+
 type PanelProps = Pick<ComposerPopoverProps, 'children'> & {
   disabled?: boolean;
   close: ReturnType<typeof useAfterClose>['close'];
 };
+
 function PopoverPanel({ children, disabled, close }: PanelProps): ReactNode {
   const dismiss = usePopoverClose();
   useEffect(() => {
     if (disabled) dismiss();
   }, [disabled, dismiss]);
+
   return children((after) => {
     close(after);
     dismiss();
@@ -35,6 +38,7 @@ type OverlayProps = ComposerPopoverProps &
     open: boolean;
     layout: ReturnType<typeof useResolveClassNames>;
   };
+
 export function ComposerPopover(
   props: ComposerPopoverProps,
 ): React.JSX.Element {
@@ -43,10 +47,13 @@ export function ComposerPopover(
   const [open, setOpen] = useState(false);
   const after = useAfterClose(setOpen);
   closeDisabled(props, open, setOpen);
+
   if (props.onPresent) return <PresentedPopover {...props} layout={layout} />;
   const Overlay = wide ? WidePopover : CompactPopover;
+
   return <Overlay {...props} {...after} open={open} layout={layout} />;
 }
+
 function WidePopover(props: OverlayProps): React.JSX.Element {
   return (
     <Popover openOnHover style={props.layout} onOpenChange={props.onOpenChange}>
@@ -57,6 +64,7 @@ function WidePopover(props: OverlayProps): React.JSX.Element {
     </Popover>
   );
 }
+
 function WideContent(props: OverlayProps): React.JSX.Element {
   return (
     <PopoverContent
@@ -71,6 +79,7 @@ function WideContent(props: OverlayProps): React.JSX.Element {
     </PopoverContent>
   );
 }
+
 function CompactPopover(props: OverlayProps): React.JSX.Element {
   return (
     <BottomSheet
@@ -82,8 +91,10 @@ function CompactPopover(props: OverlayProps): React.JSX.Element {
     </BottomSheet>
   );
 }
+
 function CompactContent(props: OverlayProps): React.JSX.Element {
   const className = compactClassName(props);
+
   return (
     <View className={className}>
       <Text role="control" className="py-3 px-4 text-center">
@@ -97,10 +108,13 @@ function CompactContent(props: OverlayProps): React.JSX.Element {
 function popoverClassName(props: ComposerPopoverProps): string {
   return props.className ?? '';
 }
+
 function popoverWidth(props: ComposerPopoverProps): number {
   const defaultWidth = 320;
+
   return props.width ?? defaultWidth;
 }
+
 function closeDisabled(
   props: ComposerPopoverProps,
   open: boolean,
@@ -108,6 +122,7 @@ function closeDisabled(
 ): void {
   if (props.trigger.props.disabled && open) setOpen(false);
 }
+
 function PresentedPopover(
   props: ComposerPopoverProps & Pick<OverlayProps, 'layout'>,
 ): React.JSX.Element {
@@ -117,6 +132,7 @@ function PresentedPopover(
     </View>
   );
 }
+
 function panelProps(props: OverlayProps): PanelProps {
   return {
     disabled: !!props.trigger.props.disabled,
@@ -124,6 +140,7 @@ function panelProps(props: OverlayProps): PanelProps {
     children: props.children,
   };
 }
+
 function sheetProps(
   props: OverlayProps,
 ): Pick<
@@ -139,6 +156,7 @@ function sheetProps(
     label: props.label,
   };
 }
+
 function compactClassName(props: ComposerPopoverProps): string {
   return props.listContent && Platform.OS !== 'web'
     ? 'flex-1 bg-sidebar'

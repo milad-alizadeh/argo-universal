@@ -8,6 +8,7 @@ type CatalogChangeEvents = EventEmitter<{
   change: [string[]];
   error: [unknown];
 }>;
+
 type CatalogWatchInput = {
   database: Database;
   databaseWriter: WriterActorRef;
@@ -19,6 +20,7 @@ export async function* watchCommittedCatalogChanges(
 ): AsyncGenerator<string[]> {
   const events: CatalogChangeEvents = new EventEmitter();
   const subscription = subscribeCatalogCommitNotifications(input, events);
+
   try {
     yield* readCatalogChangeStream(events, signal);
   } finally {
@@ -52,6 +54,7 @@ async function* readCatalogChangeStream(
   signal: AbortSignal,
 ): AsyncGenerator<string[]> {
   const stream: AsyncIterable<string[][]> = on(events, 'change', { signal });
+
   try {
     for await (const changes of stream) yield* changes;
   } catch (error) {
@@ -61,7 +64,7 @@ async function* readCatalogChangeStream(
 
 function rethrowUncancelledCatalogStreamFailure(
   signal: AbortSignal,
-  error: unknown,
+  cause: unknown,
 ): void {
-  if (!signal.aborted) throw error;
+  if (!signal.aborted) throw cause;
 }

@@ -16,6 +16,7 @@ export type HostProps = Omit<
 // A native Host in Argo's Appearance. Seeding it with the tint also keeps Android off wallpaper colours.
 export function Host({ children, ...props }: HostProps): React.JSX.Element {
   const theme = useNativeTheme();
+
   return (
     <ExpoHost
       {...props}
@@ -32,6 +33,7 @@ function HostPalette(props: {
   children: React.ReactNode;
 }): React.ReactNode {
   if (Platform.OS !== 'android') return props.children;
+
   return (
     <MaterialPalette colors={props.colors}>{props.children}</MaterialPalette>
   );

@@ -17,6 +17,7 @@ export interface ACPAgentRegistry {
    */
   extensions?: [];
 }
+
 /**
  * Schema for ACP agent registry entries
  */
@@ -69,9 +70,11 @@ export interface ACPAgent {
   preview?: PreviewChannel;
   [k: string]: unknown;
 }
+
 export interface BinaryDistribution {
   [k: string]: BinaryTarget;
 }
+
 export interface BinaryTarget {
   /**
    * URL to download archive (.zip, .tar.gz, .tgz, .tar.bz2, .tbz2, or raw binary). Installer formats (.dmg, .pkg, .deb, .rpm) are not supported.
@@ -96,6 +99,7 @@ export interface BinaryTarget {
     [k: string]: string;
   };
 }
+
 export interface PackageDistribution {
   /**
    * Package name (with optional version)
@@ -112,6 +116,7 @@ export interface PackageDistribution {
     [k: string]: string;
   };
 }
+
 /**
  * Optional preview (unstable) release channel. Holds only the version and the artifact locations; all other metadata is shared with the stable entry.
  */

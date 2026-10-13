@@ -21,7 +21,9 @@ export type ElicitationFieldProps = {
 
 export function ElicitationField(props: ElicitationFieldProps): ReactElement {
   if (props.property.type === 'boolean') return <BooleanField {...props} />;
+
   if (elicitationChoices(props.property)) return <ChoiceField {...props} />;
+
   return <StandaloneFieldInput {...textProps(props)} />;
 }
 
@@ -68,11 +70,13 @@ function BooleanField(props: ElicitationFieldProps): ReactElement {
 function ChoiceField(props: ElicitationFieldProps): ReactElement {
   if (props.property.type === 'array')
     return <ElicitationChoices {...props} {...fieldProps(props)} />;
+
   return <PickerField {...props} />;
 }
 
 function PickerField(props: ElicitationFieldProps): ReactElement {
   const options = elicitationChoices(props.property) ?? [];
+
   return (
     <Picker
       required={props.required}

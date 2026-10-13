@@ -29,11 +29,13 @@ const agentAvailability = {
   Exclude<AgentAvailability, 'available'>,
   { label: string; button: string; action: 'setup' | 'retry'; reason: boolean }
 >;
+
 interface AgentChoiceProps {
   agent: AgentInfo;
   configuration: ComposerConfigurationProps;
   onSelect: () => void;
 }
+
 export function AgentChoice(props: AgentChoiceProps): React.JSX.Element {
   return (
     <>
@@ -42,8 +44,10 @@ export function AgentChoice(props: AgentChoiceProps): React.JSX.Element {
     </>
   );
 }
+
 function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
   const wide = useWide();
+
   return (
     <ListItem
       {...agentSelectionProps(props)}
@@ -53,11 +57,13 @@ function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
     />
   );
 }
+
 function agentSelectionProps(
   props: AgentChoiceProps,
 ): React.ComponentProps<typeof ListItem> {
   const { agent, configuration } = props;
   const selected = agent.agent === configuration.agent;
+
   return {
     ...agentRowContent(agent),
     disabled:
@@ -67,6 +73,7 @@ function agentSelectionProps(
     onPress: () => selectAgent(props),
   };
 }
+
 function agentRowContent(
   agent: AgentInfo,
 ): React.ComponentProps<typeof ListItem> {
@@ -78,12 +85,15 @@ function agentRowContent(
     subtitle: agentSubtitle(agent),
   };
 }
+
 function AgentAvailabilityAction(
   props: AgentChoiceProps,
 ): React.JSX.Element | null {
   if (props.agent.availability === 'available') return null;
   const action = agentAction(props.agent, props.configuration);
+
   if (!action) return null;
+
   return (
     <ListItem
       {...agentActionContent(props.agent)}
@@ -93,21 +103,25 @@ function AgentAvailabilityAction(
     />
   );
 }
+
 function agentActionContent(
   agent: AgentInfo,
 ): React.ComponentProps<typeof ListItem> {
   if (agent.availability === 'available') return { title: agent.label };
   const unavailable = agentAvailability[agent.availability];
+
   return {
     title: unavailable.button,
     accessibilityLabel: `${unavailable.action === 'retry' ? 'Retry' : 'Set up'} ${agent.label}`,
   };
 }
+
 function agentAction(
   agent: AgentInfo,
   configuration: ComposerConfigurationProps,
 ): (() => void) | undefined {
   if (agent.availability === 'unavailable') return configuration.onAgentRetry;
+
   return configuration.onAgentSetup
     ? () => configuration.onAgentSetup?.(agent.agent)
     : undefined;
@@ -116,6 +130,7 @@ function agentAction(
 function agentSubtitle(agent: AgentInfo): { text: string } | undefined {
   if (agent.availability === 'available') return undefined;
   const unavailable = agentAvailability[agent.availability];
+
   return {
     text: [unavailable.label, unavailable.reason && agent.installStep]
       .filter(Boolean)

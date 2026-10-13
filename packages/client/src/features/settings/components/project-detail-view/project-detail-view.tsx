@@ -25,10 +25,12 @@ export interface ProjectDetailViewProps {
   otherDevice?: string;
   onBack?: () => void;
 }
+
 type BodyProps = Pick<
   ProjectDetailViewProps,
   'project' | 'name' | 'otherDevice'
 >;
+
 type SectionsProps = Pick<ProjectDetailViewProps, 'otherDevice'> & {
   project: ProjectInfo;
 };
@@ -47,6 +49,7 @@ export function ProjectDetailView(
 
 function PhoneTitle({ title }: { title: string }): React.JSX.Element | null {
   if (useWide()) return null;
+
   return <ScreenHeader title={title} />;
 }
 
@@ -69,6 +72,7 @@ function ProjectBody({
 }: BodyProps): React.JSX.Element {
   if (project.status !== 'loaded')
     return <UnloadedProject status={project.status} name={name} />;
+
   return (
     <ProjectSections project={project.project} otherDevice={otherDevice} />
   );
@@ -89,6 +93,7 @@ function UnloadedProject(props: UnloadedProps): React.JSX.Element {
 function UnloadedRow({ status, name }: UnloadedProps): React.JSX.Element {
   if (status === 'loading')
     return <ListItem title="Loading the Project…" loading />;
+
   return <ListItem title={`The Server has no Project named ${name}.`} />;
 }
 

@@ -7,5 +7,6 @@ export function useFocusOnMount(): RefObject<TextInput | null> {
   useEffect(() => {
     field.current?.focus();
   }, []);
+
   return field;
 }

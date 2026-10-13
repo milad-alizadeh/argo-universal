@@ -9,7 +9,7 @@ import type { AgentRowEntry } from '../../state/agent-status';
 import type { CatalogLoad } from '../../state/catalog-sync';
 import { agentRows } from '../agent-list-item/agent-list-item';
 
-type LoadingSectionProps = {
+export type LoadingSectionProps = {
   installed: readonly AgentRowEntry[];
   // The Server's platform, once a catalog has named it.
   platform?: string;
@@ -36,6 +36,7 @@ export function catalogEmptySection(props: {
   search: string;
 }): FieldListSection {
   const empty = emptyText(props.search.trim());
+
   return {
     title: groupTitle(props.platform),
     footer: empty.footer,
@@ -53,10 +54,13 @@ const loadFailed: ErrorToast = {
   message: 'The Server didn’t respond. Check that it’s running.',
 };
 
-const refreshFailed = (error: string | null): ErrorToast => ({
-  title: 'Refresh failed · showing saved catalog',
-  ...(error ? { message: error } : {}),
-});
+function refreshFailed(error: string | null): ErrorToast {
+  const toast: ErrorToast = { title: 'Refresh failed · showing saved catalog' };
+
+  if (error) toast.message = error;
+
+  return toast;
+}
 
 const noSavedCatalog = (error: string | null): ErrorToast => ({
   title: 'Couldn’t load the registry',
@@ -68,11 +72,13 @@ function savedCatalogToast({
   error,
 }: AgentsCatalogOutput): ErrorToast | undefined {
   if (status === 'fresh') return undefined;
+
   return status === 'stale' ? refreshFailed(error) : noSavedCatalog(error);
 }
 
 function catalogToast(load: CatalogLoad): ErrorToast | undefined {
   if (load.status === 'loaded') return savedCatalogToast(load.catalog);
+
   return load.status === 'failed' ? loadFailed : undefined;
 }
 

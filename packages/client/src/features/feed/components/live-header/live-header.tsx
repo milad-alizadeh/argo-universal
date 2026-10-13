@@ -58,8 +58,10 @@ function useRetryRotation(): RotationStyle {
   const reducedMotion = useReducedMotion();
   useEffect(() => {
     if (!reducedMotion) rotation.set(spin());
+
     return (): void => cancelAnimation(rotation);
   }, [reducedMotion, rotation]);
+
   return useAnimatedStyle(
     () => ({ transform: [{ rotate: `${rotation.get()}deg` }] }),
     [rotation],
@@ -107,7 +109,9 @@ function useTitle(
   now: number | undefined,
 ): string {
   const clock = useClock(startedAt !== null, now);
+
   if (startedAt === null) return text;
+
   return `${text} ${formatElapsed(clock - startedAt)}`;
 }
 
@@ -120,6 +124,7 @@ function LiveTitle({
 }): React.JSX.Element {
   if (source.type !== 'request')
     return <ShimmerText text={title} className="min-w-0 shrink type-body" />;
+
   return (
     <Text numberOfLines={1} role="body" className="min-w-0 shrink text-warning">
       {title}
@@ -131,6 +136,7 @@ function LiveTitle({
 export function LiveHeader(props: LiveHeaderProps): React.JSX.Element {
   const { liveHeader } = props;
   const title = useTitle(liveHeader, props.now);
+
   return (
     <View role="status" accessibilityLabel={title} className={rowClassName}>
       <IconSlot role="body">

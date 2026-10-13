@@ -15,7 +15,9 @@ import {
 } from './agent-detail.mocks';
 
 const version = readyAgent.version;
+
 if (!version) throw new Error('Agent fixture needs a version');
+
 const meta = {
   title: 'Tests/Screens/Settings/Agent installation',
   component: AgentDetailView,
@@ -27,16 +29,21 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof AgentDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const installation = (
   args: AgentDetailViewProps,
 ): NonNullable<AgentDetailViewProps['installation']> => {
   if (!args.installation) throw new Error('Story needs an installation');
+
   return args.installation;
 };
+
 const busy = ['aria-disabled', 'true'] as const;
+
 const confirmation = async (name: string): Promise<HTMLElement> =>
   within(document.body).findByRole('dialog', { name });
 
@@ -50,7 +57,9 @@ const asks = (width: number): Story => ({
     await expect(installation(args).onInstall).not.toHaveBeenCalled();
   },
 });
+
 export const AsksBeforeInstalling = asks(layoutWidths.wide);
+
 export const AsksBeforeInstallingOnAPhone = asks(layoutWidths.phone);
 
 export const NamesTheReleaseAndTheServer: Story = {
@@ -78,6 +87,7 @@ export const CancelStartsNothing: Story = {
 // The page owns the confirmation, so answering closes it like the screen does.
 function ConfirmingAgentPage(args: AgentDetailViewProps): React.JSX.Element {
   const [confirming, setConfirming] = useState(true);
+
   return (
     <AgentDetailView
       {...args}
@@ -89,6 +99,7 @@ function ConfirmingAgentPage(args: AgentDetailViewProps): React.JSX.Element {
     />
   );
 }
+
 export const RepeatedPressesStartOneInstallation: Story = {
   render: (args) => <ConfirmingAgentPage {...args} />,
   play: async ({ args, userEvent }) => {
@@ -113,7 +124,9 @@ const inProgress = (width: number): Story => ({
     ).not.toBeInTheDocument();
   },
 });
+
 export const ShowsProgressInPlace = inProgress(layoutWidths.wide);
+
 export const ShowsProgressInPlaceOnAPhone = inProgress(layoutWidths.phone);
 
 export const ShowsAnUpdateInPlace: Story = {

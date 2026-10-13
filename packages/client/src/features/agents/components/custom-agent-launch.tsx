@@ -43,6 +43,7 @@ function ProgramValues({ definition }: DefinitionProps): React.JSX.Element {
 
 function ArgumentValues({ definition }: DefinitionProps): React.JSX.Element {
   const rows = keyedRows(definition.args);
+
   return (
     <FieldSection title="Arguments">
       {rows.length === 0 ? (
@@ -56,6 +57,7 @@ function ArgumentValues({ definition }: DefinitionProps): React.JSX.Element {
 
 function VariableValues({ definition }: DefinitionProps): React.JSX.Element {
   const rows = keyedRows(definition.env);
+
   return (
     <FieldSection title="Environment variables">
       {rows.length === 0 ? (

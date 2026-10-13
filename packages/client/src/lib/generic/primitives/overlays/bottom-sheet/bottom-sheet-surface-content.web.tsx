@@ -34,7 +34,9 @@ function SurfaceBody(props: {
   children: React.ReactNode;
 }): React.ReactNode {
   const { tallest, onLayout } = useTallestHeight();
+
   if (!props.form) return props.children;
+
   return (
     <View style={{ minHeight: tallest }} className="shrink" onLayout={onLayout}>
       {props.children}
@@ -42,14 +44,20 @@ function SurfaceBody(props: {
   );
 }
 
-function useTallestHeight(): {
+type LayoutHandler = React.ComponentProps<typeof View>['onLayout'];
+
+interface TallestHeight {
   tallest: number;
-  onLayout: React.ComponentProps<typeof View>['onLayout'];
-} {
+  onLayout: LayoutHandler;
+}
+
+function useTallestHeight(): TallestHeight {
   const [tallest, setTallest] = useState(0);
-  const onLayout: React.ComponentProps<typeof View>['onLayout'] = (event) => {
+
+  const onLayout: LayoutHandler = (event) => {
     const { height } = event.nativeEvent.layout;
     setTallest((previous) => Math.max(previous, height));
   };
+
   return { tallest, onLayout };
 }

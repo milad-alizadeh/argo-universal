@@ -28,7 +28,9 @@ const meta = {
     </>
   ),
 } satisfies Meta<typeof RichTextareaExample>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function tabbedOut({ keys, to }: { keys: string; to: string }): Story {
@@ -45,7 +47,9 @@ function tabbedOut({ keys, to }: { keys: string; to: string }): Story {
     },
   };
 }
+
 export const TabMovesFocusForward = tabbedOut({ keys: '{Tab}', to: 'Send' });
+
 export const ShiftTabMovesFocusBack = tabbedOut({
   keys: '{Shift>}{Tab}{/Shift}',
   to: 'Attach',

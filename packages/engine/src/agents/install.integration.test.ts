@@ -18,14 +18,18 @@ it('refuses unsupported installation without saving a successful selection', asy
       },
     },
   };
+
   const host = await startEngineTestHost({
-    fetchAgents: async () => ({ version: '1.0.0', agents: [entry] }),
+    fetchAgents: async () =>
+      JSON.stringify({ version: '1.0.0', agents: [entry] }),
   });
+
   await host.caller.agents.syncCatalog();
   await expect
     .poll(async () => (await host.caller.agents.catalog()).syncStatus)
     .toBe('idle');
   const agent = (await host.caller.agents.catalog()).agents[0];
+
   if (!agent) throw new Error('Catalog did not contain the fixture');
   await host.caller.agents.install({ agentId: agent.id, version: '1.2.3' });
   await expect

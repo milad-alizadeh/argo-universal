@@ -21,6 +21,7 @@ import { createSessionListReader } from './session-list-reader';
 import { onWriterChange, type WriterChange } from './writer-changes';
 
 const writeEvent = 'writer.write';
+
 const queuedTurnId = 'queued-turn';
 
 it('reads one Session with a thousand Turns without fetching its history', (): void => {
@@ -49,6 +50,7 @@ it('reads one Session with a thousand Turns without fetching its history', (): v
     )
     .run();
   const counted = countDatabaseReads(database);
+
   const sessions = createActor(openSessionsMachine, {
     input: {
       now: (): number => Date.now(),
@@ -58,11 +60,13 @@ it('reads one Session with a thousand Turns without fetching its history', (): v
       acpResources: createAcpResources(),
     },
   });
+
   const read = createSessionListReader({
     database: counted.database,
     sessions,
     writer: (): undefined => undefined,
   });
+
   expect(read.readRows(['session-1'])).toMatchObject([
     { information: { sessionId: 'session-1', status: 'idle' }, running: false },
   ]);
@@ -96,6 +100,7 @@ it('reads the existence of a running Subagent Turn without fetching its history'
     )
     .run();
   const counted = countDatabaseReads(database);
+
   const sessions = createActor(openSessionsMachine, {
     input: {
       now: (): number => Date.now(),
@@ -105,11 +110,13 @@ it('reads the existence of a running Subagent Turn without fetching its history'
       acpResources: createAcpResources(),
     },
   });
+
   const reader = createSessionListReader({
     database: counted.database,
     sessions,
     writer: (): undefined => undefined,
   });
+
   expect(reader.readRows(['session-1'])).toMatchObject([
     {
       information: {
@@ -125,9 +132,11 @@ it('reads the existence of a running Subagent Turn without fetching its history'
 it('excludes only the Subagent with a malformed latest Turn from its healthy parent', (): void => {
   const { database, directory, remove } = openTestDatabase();
   onTestFinished(remove);
+
   const report = vi
     .spyOn(console, 'error')
     .mockImplementation((): undefined => undefined);
+
   onTestFinished((): void => report.mockRestore());
   insertEndedTurn(database);
   insertSession(database, { id: 'bad-child', parentSessionId: 'session-1' });
@@ -157,6 +166,7 @@ it('excludes only the Subagent with a malformed latest Turn from its healthy par
     .set({ status: sql`'invalid'` })
     .where(eq(turn.id, 'bad-turn'))
     .run();
+
   const sessions = createActor(openSessionsMachine, {
     input: {
       now: (): number => Date.now(),
@@ -166,11 +176,13 @@ it('excludes only the Subagent with a malformed latest Turn from its healthy par
       acpResources: createAcpResources(),
     },
   });
+
   const reader = createSessionListReader({
     database,
     sessions,
     writer: (): undefined => undefined,
   });
+
   expect(reader.readRows(['session-1'])).toMatchObject([
     {
       information: {
@@ -193,12 +205,15 @@ it.each(['session-1', 'child-1'])(
     database.$client.exec(
       "CREATE TRIGGER reject_turn BEFORE INSERT ON turn BEGIN SELECT RAISE(ABORT, 'locked'); END",
     );
+
     const writer = createActor(writerMachine, {
       input: { database, now: () => 1000, log: () => {} },
     }).start();
+
     onTestFinished(() => {
       writer.stop();
     });
+
     const sessions = createActor(openSessionsMachine, {
       input: {
         now: () => 1000,
@@ -208,25 +223,32 @@ it.each(['session-1', 'child-1'])(
         acpResources: createAcpResources(),
       },
     });
+
     const reader = createSessionListReader({
       database,
       sessions,
       writer: () => writer,
     });
+
     reader.readRows();
+
     const observed: { ids: string[]; running: boolean; subagents: number }[] =
       [];
+
     const listener = onWriterChange(writer, (change: WriterChange) => {
       const ids = reader.relatedSessionIds(reader.sessionIdsForChanges(change));
+
       const parent = reader
         .readRows(ids)
         .find((row) => row.information.sessionId === 'session-1');
+
       observed.push({
         ids,
         running: parent?.running ?? false,
         subagents: parent?.information.subagents.running ?? 0,
       });
     });
+
     onTestFinished(() => listener.unsubscribe());
     writer.send({
       type: writeEvent,
@@ -256,10 +278,12 @@ it.each(['session-1', 'child-1'])(
         subagents: 0,
       },
     ]);
+
     const queuedTurn = database
       .select()
       .from(turn)
       .where(eq(turn.id, queuedTurnId));
+
     expect(queuedTurn.all()).toEqual([]);
     database.$client.exec('DROP TRIGGER reject_turn');
     writer.send({ type: 'writer.drain' });
@@ -278,12 +302,15 @@ it('rejects a malformed stored Session before a pending patch can replace its in
   database.$client.exec(
     "UPDATE session SET title_source = 'unrecognised'; CREATE TRIGGER reject_patch BEFORE UPDATE ON session BEGIN SELECT RAISE(ABORT, 'locked'); END",
   );
+
   const writer = createActor(writerMachine, {
     input: { database, now: () => 1000, log: () => {} },
   }).start();
+
   onTestFinished(() => {
     writer.stop();
   });
+
   const sessions = createActor(openSessionsMachine, {
     input: {
       now: () => 1000,
@@ -293,12 +320,15 @@ it('rejects a malformed stored Session before a pending patch can replace its in
       acpResources: createAcpResources(),
     },
   });
+
   const report = vi.spyOn(console, 'error').mockImplementation(() => {});
+
   const reader = createSessionListReader({
     database,
     sessions,
     writer: () => writer,
   });
+
   writer.send({
     type: writeEvent,
     job: new SessionRowUpdateJob({

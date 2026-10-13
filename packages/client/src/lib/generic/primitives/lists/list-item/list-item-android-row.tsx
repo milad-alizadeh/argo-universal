@@ -21,8 +21,11 @@ import { RowTrailing } from './list-item-compose-value';
 import { NativeRowGlyph } from './native-row';
 
 const rowHeight = 56;
+
 const gutter = 16;
+
 const verticalPadding = 8;
+
 const disabledOpacity = 0.5;
 
 type RowModifiers = NonNullable<React.ComponentProps<typeof Row>['modifiers']>;
@@ -66,6 +69,7 @@ function RowLeading(
 ): React.JSX.Element | null {
   const { primary } = useNativeTheme().colors;
   const pixels = useIconPixels('row');
+
   if (props.loading)
     return (
       <CircularProgressIndicator
@@ -74,6 +78,7 @@ function RowLeading(
         modifiers={[size(pixels, pixels)]}
       />
     );
+
   return <NativeRowGlyph {...props} />;
 }
 

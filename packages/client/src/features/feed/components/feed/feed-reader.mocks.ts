@@ -6,11 +6,14 @@ import {
 } from '../../../../../mocks/point-hit';
 
 export const feedScrollId = 'feed-scroll';
+
 export const earlierFeedLoadingLabel = 'Loading earlier';
+
 export const expandedAttribute = 'aria-expanded';
 
 // A loaded runner can take a few frames per scroll before the Feed answers.
 export const scrollAwayWait = { timeout: 15000, interval: 100 };
+
 const settleWait = { timeout: 5000 };
 
 export const scrolledToEnd = (feedScroll: HTMLElement): boolean =>
@@ -48,6 +51,7 @@ const withinSpan = (start: number, end: number, length: number): boolean =>
 
 export function fullyInViewport(element: Element): boolean {
   const box = element.getBoundingClientRect();
+
   return (
     box.height > 0 &&
     withinSpan(box.top, box.bottom, window.innerHeight) &&
@@ -63,8 +67,10 @@ interface ViewMark {
 // The element at the middle of the Feed's view, and where its top is now.
 export function markMiddleOfView(feedScroll: HTMLElement): ViewMark {
   const element = topmostAt(centreOf(feedScroll.getBoundingClientRect()));
+
   if (!element) throw new Error('Nothing in view');
   const top = element.getBoundingClientRect().top;
+
   return { element, top };
 }
 
@@ -82,12 +88,15 @@ export function markSettledMiddleOfView(
   feedScroll: HTMLElement,
 ): Promise<ViewMark> {
   let lastMark = markMiddleOfView(feedScroll);
+
   return waitFor(async () => {
     await afterTwoFrames();
     const mark = markMiddleOfView(feedScroll);
     const settled = sameMark(mark, lastMark);
     lastMark = mark;
+
     if (!settled) throw new Error('Rows in view are still measuring');
+
     return mark;
   }, settleWait);
 }
@@ -95,12 +104,15 @@ export function markSettledMiddleOfView(
 // Where an element's top settles once it shows at its centre, unclipped, and holds still for two frames.
 export function settledTopOf(findElement: () => HTMLElement): Promise<number> {
   let lastTop: number | undefined;
+
   return waitFor(async () => {
     await afterTwoFrames();
     const box = findElement().getBoundingClientRect();
     const settled = canPointAt(findElement()) && box.top === lastTop;
     lastTop = box.top;
+
     if (!settled) throw new Error('The element is still moving');
+
     return box.top;
   }, settleWait);
 }
@@ -108,12 +120,15 @@ export function settledTopOf(findElement: () => HTMLElement): Promise<number> {
 // Waits until an element, in view or not, holds still for two frames, as it does once the rows around it stop moving.
 export function restingTopOf(element: HTMLElement): Promise<number> {
   let lastTop: number | undefined;
+
   return waitFor(async () => {
     await afterTwoFrames();
     const { top } = element.getBoundingClientRect();
     const resting = top === lastTop;
     lastTop = top;
+
     if (!resting) throw new Error('The element is still moving');
+
     return top;
   }, settleWait);
 }

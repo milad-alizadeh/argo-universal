@@ -14,6 +14,7 @@ interface AgentIconProps {
   agent?: AgentInfo;
   role?: IconRole;
 }
+
 export function AgentIcon({
   agent,
   role = 'control',
@@ -24,6 +25,7 @@ export function AgentIcon({
     </IconSlot>
   ) : null;
 }
+
 function AgentLogo({ agent }: { agent: AgentInfo }): React.JSX.Element {
   return (
     <View testID="composer-agent-icon" className="h-full w-full">

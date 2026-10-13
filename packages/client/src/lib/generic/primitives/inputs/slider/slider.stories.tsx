@@ -10,11 +10,13 @@ type ExampleProps = Pick<
 > & { initialValue?: number };
 
 const speeds = { minimumValue: 0.5, maximumValue: 2, step: 0.5 };
+
 const efforts = { minimumValue: 0, maximumValue: 5, step: 1 };
 
 function SliderExample(props: ExampleProps): React.JSX.Element {
   const { initialValue, ...range } = props;
   const [value, setValue] = useState(initialValue);
+
   return (
     <View className="w-80">
       <Slider
@@ -48,7 +50,9 @@ const examples: { label: string; props: ExampleProps }[] = [
 const meta = {
   title: 'Design System/Primitives/Slider',
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

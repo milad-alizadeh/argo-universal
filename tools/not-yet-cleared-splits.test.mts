@@ -2,18 +2,26 @@ import { expect, it } from 'vitest';
 import { evaluateWaivers } from './not-yet-cleared/evaluate.mts';
 
 const components = 'packages/client/src/components/*';
+
 const feedComponents = 'packages/client/src/features/feed/components/*';
+
 const frameComponents = 'packages/client/src/features/frame/components/*';
+
 const oldLib = 'packages/client/src/lib/*';
+
 const oldNavigation = 'packages/client/src/navigation/*';
+
 const generic = 'packages/client/src/lib/generic/*';
+
 const complexityCode = 'eslint(complexity)';
+
 type Rules = Record<string, 'off'>;
 
 const waivers = (entries: [string, Rules][]): string =>
   JSON.stringify({
     overrides: entries.map(([glob, rules]) => ({ files: [glob], rules })),
   });
+
 const findings = (entries: [string, string][]): string =>
   JSON.stringify({
     diagnostics: entries.map(([glob, code]) => ({

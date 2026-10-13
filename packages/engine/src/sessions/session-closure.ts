@@ -11,6 +11,7 @@ import { requireLiveSessionActor } from './session-system';
 
 const isClosing = (actor: SessionActorRef): boolean => {
   const snapshot = actor.getSnapshot();
+
   return (
     snapshot.matches({ open: { acp: 'closing' } }) ||
     snapshot.matches({ open: { acp: 'retainingCleanup' } }) ||
@@ -24,7 +25,9 @@ export const closeSession = async (
 ): Promise<SessionCloseOutput> => {
   validateSessionCommandAdmission(deps);
   const actor = requireLiveSessionActor(deps.sessions.system, sessionId);
+
   if (!isClosing(actor)) sendSessionCommand(actor, { type: 'session.close' });
+
   const outcome = await waitFor(
     actor,
     (snapshot) =>
@@ -32,11 +35,13 @@ export const closeSession = async (
       snapshot.matches({ open: { acp: 'retainingCleanup' } }),
     { timeout: Infinity },
   );
+
   if (outcome.context.failure)
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: outcome.context.failure,
     });
+
   return {};
 };
 
@@ -48,5 +53,6 @@ export const cancelSession = (
   sendSessionCommand(requireLiveSessionActor(deps.sessions.system, sessionId), {
     type: 'session.cancel',
   });
+
   return {};
 };

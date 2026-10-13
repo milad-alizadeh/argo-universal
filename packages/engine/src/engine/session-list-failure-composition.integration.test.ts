@@ -55,10 +55,12 @@ it('uses the newest Turn for failures and excludes interrupted Turns from Failed
       },
     ])
     .run();
+
   const { createCaller } = await startEngineTestHost({
     database,
     ...scriptedEngineInput(),
   });
+
   const caller = createCaller();
   const rows = (await caller.session.list({ archived: false })).sessions;
   expect(

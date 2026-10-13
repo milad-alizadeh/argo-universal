@@ -18,6 +18,7 @@ function toProjectLoad(
 ): ProjectLoad {
   if (!projects) return { status: 'loading' };
   const project = projects.find((entry) => entry.name === name);
+
   return project ? { status: 'loaded', project } : { status: 'missing' };
 }
 
@@ -25,6 +26,7 @@ export function ProjectDetailScreen({
   name,
 }: ProjectDetailScreenProps): React.JSX.Element {
   const navigate = useNavigate();
+
   return (
     <ProjectDetailView
       name={name}

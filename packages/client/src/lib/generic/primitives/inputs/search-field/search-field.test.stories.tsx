@@ -10,7 +10,9 @@ const meta = {
   title: 'Tests/SearchField',
   component: SearchFieldExample,
 } satisfies Meta<typeof SearchFieldExample>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const PutsSearchLast: Story = {
@@ -47,9 +49,11 @@ function opensFocusesAndClears(width: number): Story {
     },
   };
 }
+
 export const OpensFocusesAndClearsPhone = opensFocusesAndClears(
   layoutWidths.phone,
 );
+
 export const OpensFocusesAndClearsWide = opensFocusesAndClears(
   layoutWidths.wide,
 );

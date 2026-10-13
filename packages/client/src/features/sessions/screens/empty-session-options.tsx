@@ -27,6 +27,7 @@ export interface OpenedOptions {
 }
 
 const noSession = { sessionId: '', agent: undefined };
+
 const ignoreChange = (): void => {};
 
 const readFor = (
@@ -42,6 +43,7 @@ export function useOpenedOptions(opened?: OpenedSession): OpenedOptions {
   const [read, setRead] = useState<ReadOptions>();
   const { sessionId, agent } = opened ?? noSession;
   const { change } = useSessionConfigChange(sessionId, agent, ignoreChange);
+
   return {
     configOptions: readFor(read, opened?.sessionId),
     change,
@@ -101,6 +103,7 @@ export function OpenedSessionReader({
   onRead: OpenedOptions['onRead'];
 }): React.JSX.Element | null {
   if (!opened) return null;
+
   return (
     <EmptySessionOptions key={opened.sessionId} {...opened} onRead={onRead} />
   );
@@ -116,5 +119,6 @@ function EmptySessionOptions(props: EmptySessionOptionsProps): null {
     if (configOptions) onRead({ sessionId, configOptions });
   }, [onRead, sessionId, configOptions]);
   useApplySavedChoices(props, configOptions);
+
   return null;
 }

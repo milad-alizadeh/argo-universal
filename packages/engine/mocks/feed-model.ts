@@ -2,8 +2,11 @@ import type { FeedChange } from '@repo/contracts';
 import type { SnapshotFrom } from 'xstate';
 import type { GraphEventFromLogic } from 'xstate/graph';
 import { feedMachine } from '../src/feed';
+
 export const acpUpdateEventType = 'feed.acpUpdate';
+
 export const modelAcpSessionId = 'model-session';
+
 export const firstMessageRowId = 'message-1#0';
 
 /*
@@ -11,7 +14,9 @@ export const firstMessageRowId = 'message-1#0';
  * tests exercise the actual stream timing, Writer, SQLite, and shutdown effects.
  */
 export const machine = feedMachine;
+
 export type FeedSnapshot = SnapshotFrom<typeof machine>;
+
 export const modelInput = {
   now: (): number => 1000,
   sessionId: 'session-1',
@@ -21,13 +26,15 @@ export const modelInput = {
   findWrittenRow: (): undefined => undefined,
 };
 
-export const change = (
-  feedChange: FeedChange,
-): {
+interface FeedChangeEvent {
   readonly type: 'feed.change';
   readonly change: FeedChange;
   readonly turnId: 'turn-1';
-} => ({ type: 'feed.change', change: feedChange, turnId: 'turn-1' }) as const;
+}
+
+export const change = (feedChange: FeedChange): FeedChangeEvent =>
+  ({ type: 'feed.change', change: feedChange, turnId: 'turn-1' }) as const;
+
 export const openMessage = change({
   type: 'upsert',
   update: {
@@ -38,19 +45,23 @@ export const openMessage = change({
     content: [{ type: 'text', text: '' }],
   },
 });
+
 export const appendText = change({
   type: 'append',
   id: firstMessageRowId,
   field: 'content.0.text',
   text: 'a',
 });
+
 export const settleMessage = change({
   type: 'patch',
   id: firstMessageRowId,
   set: { state: 'settled' },
 });
+
 export const streamBatchDelayEvent =
   'xstate.after.streamBatchDelay.feed.active.stream.batching';
+
 export const storeDelayEvent =
   'xstate.after.storeDelay.feed.active.store.dirty';
 
@@ -110,4 +121,5 @@ export const events = [
   { type: streamBatchDelayEvent },
   { type: storeDelayEvent },
 ] satisfies GraphEventFromLogic<typeof machine>[];
+
 export type FeedMachineEvent = (typeof events)[number];

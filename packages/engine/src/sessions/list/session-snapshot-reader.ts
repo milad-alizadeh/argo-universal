@@ -6,7 +6,9 @@ import { createLiveHeaderRowsReader } from './live-header-rows';
 import { toSessionSnapshot } from './session-snapshot';
 
 type SnapshotDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
+
 type SessionState = ReturnType<SessionActorRef['getSnapshot']> | null;
+
 type FeedState = Pick<SessionSnapshot, 'epoch' | 'maxRevision'> & {
   rows?: Record<string, SessionUpdate>;
 };
@@ -34,6 +36,7 @@ export class SessionSnapshotReader {
     const feed = this.feedContext(sessionId, stored);
     const rows = this.headerRows(sessionId, session, feed);
     const feedSnapshot = { context: { ...feed, rows } };
+
     return {
       snapshot: toSessionSnapshot(session, feedSnapshot, stored),
       isClosed: !actor && stored.parentSessionId === null,
@@ -42,6 +45,7 @@ export class SessionSnapshotReader {
 
   private feedContext(sessionId: string, stored: FeedState): FeedState {
     const actor = this.deps.findFeed(sessionId);
+
     return actor ? actor.getSnapshot().context : stored;
   }
 

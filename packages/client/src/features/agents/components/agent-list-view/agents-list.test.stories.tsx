@@ -18,16 +18,23 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof AgentListView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const firstAgent = catalog.agents[0];
+
 if (!firstAgent) throw new Error('Recorded catalog needs an Agent');
+
 const registryName = firstAgent.entry.name;
+
 const searchLabel = 'Search Agents';
+
 const [firstName = '', secondName = ''] = installedAgents.map(
   ({ name }) => name,
 );
+
 // A row reads its name, then its description when it has one, then its status.
 const withStatus = (name: string, status: string): RegExp =>
   new RegExp(`^${name}, (.+, )?${status}$`);

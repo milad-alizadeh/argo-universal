@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { type QueryProgress, sessionsLoadState } from './sessions-load-state';
 
 const loaded: QueryProgress = { failed: false, pending: false };
+
 const pending: QueryProgress = { failed: false, pending: true };
+
 const failed: QueryProgress = { failed: true, pending: false };
 
 describe('sessionsLoadState', () => {

@@ -39,6 +39,7 @@ type AlertPreviewProps = { trigger: string; alert: AlertContent };
 
 function AlertPreview(props: AlertPreviewProps): React.JSX.Element {
   const [open, setOpen] = useState(false);
+
   return (
     <View className="flex-row">
       <Button
@@ -52,7 +53,9 @@ function AlertPreview(props: AlertPreviewProps): React.JSX.Element {
 }
 
 const meta = { title: 'Design System/Primitives/Alert' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

@@ -8,6 +8,7 @@ import {
 import type { OwnedInstall } from './operation-types';
 
 type InstallationInput = Omit<InstallExecutionInput, 'operation' | 'signal'>;
+
 const executeOwnedInstallation = (
   input: InstallationInput,
   owned: OwnedInstall,
@@ -28,8 +29,10 @@ export const settleAgentInstallation = async (
   checking?: Promise<unknown>,
 ): Promise<AgentInstallOperation> => {
   const timeout = installationDeadline(owned.controller);
+
   try {
     await executeOwnedInstallation(input, owned, checking);
+
     return installedOperation(owned);
   } catch (error) {
     return rememberInstallFailure(owned, error);

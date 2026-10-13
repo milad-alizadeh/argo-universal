@@ -8,6 +8,7 @@ export function SegmentedControl<Value extends string>(
   props: SegmentedControlProps<Value>,
 ): React.JSX.Element {
   const { colorScheme } = useNativeTheme();
+
   return (
     <View role="group" accessibilityLabel={selectionLabel(props)}>
       <ExpoSegmentedControl {...controlProps(props)} appearance={colorScheme} />
@@ -19,6 +20,7 @@ function selectionLabel<Value extends string>(
   props: SegmentedControlProps<Value>,
 ): string {
   const selected = props.choices.find((choice) => choice.value === props.value);
+
   return `${props.accessibilityLabel}, ${selected?.label ?? props.value}`;
 }
 
@@ -45,5 +47,6 @@ function selectChoice<Value extends string>(
   index: number,
 ): void {
   const choice = props.choices[index];
+
   if (choice) props.onValueChange(choice.value);
 }

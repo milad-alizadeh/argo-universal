@@ -14,6 +14,7 @@ export type { CheckboxProps } from './checkbox-props';
 
 export function Checkbox(props: CheckboxProps): React.JSX.Element {
   const state = useCheckboxState(props);
+
   return (
     <View className="gap-2">
       {createElement(
@@ -98,14 +99,17 @@ function controlClass(props: CheckboxProps): string {
     props.disabled && 'opacity-50',
   );
 }
+
 function optionClass(props: CheckboxProps): string {
   return cn(
     'min-h-9 rounded-lg bg-transparent px-2.5 py-2',
     props.value && 'bg-foreground/4',
   );
 }
+
 function SelectedMark(props: CheckboxProps): React.JSX.Element | null {
   if (props.selection !== 'single' || !props.value) return null;
+
   return <Icon name="check" role="secondary" />;
 }
 

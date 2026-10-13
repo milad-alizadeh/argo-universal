@@ -23,6 +23,7 @@ import type { WriterJob, writeJobs } from './writer-job';
 import { writerMachine } from './writer-machine';
 
 const writeFeedEvent = 'writer.write';
+
 const drainWriterEvent = 'writer.drain';
 
 // A failed batch is tried again after 1 second.
@@ -32,17 +33,23 @@ interface WriteBatchCall {
   jobs: WriterJob[];
   settled: boolean;
   resolve: () => void;
-  reject: (error: unknown) => void;
+  reject: (cause: unknown) => void;
 }
 
 let writeBatchCalls: WriteBatchCall[];
+
 let logLines: string[];
+
 let sentJobs: WriterJob[];
+
 let refusedJobs: WriterJob[];
+
 let committedJobs: WriterJob[];
+
 let writer: Actor<typeof machine>;
 
 const mockDatabase = openDatabase(':memory:');
+
 const machine = writerMachine.provide({
   actors: {
     writeBatch: fromPromise<
@@ -64,6 +71,7 @@ const machine = writerMachine.provide({
               reject(error);
             },
           };
+
           writeBatchCalls.push(call);
         }),
     ),
@@ -74,6 +82,7 @@ const machine = writerMachine.provide({
     },
   },
 });
+
 type WriterSnapshot = SnapshotFrom<typeof machine>;
 
 // One queued refusable job spends the budget, so the model reaches a refusal.
@@ -82,15 +91,20 @@ const input = {
   database: mockDatabase,
   refusableJobLimit: 1,
 };
+
 const writeError = new Error('database is locked');
+
 const job = (index: number): WriterJob =>
   new SqlJob({ statement: `UPDATE turn SET ended_at = ${index}` });
+
 const refusableJob = (index: number): WriterJob =>
   new SqlJob({
     statement: `UPDATE session SET max_revision = ${index}`,
     refusable: true,
   });
+
 const isRefusable = (queued: WriterJob): boolean => queued.refusable === true;
+
 // Sends the next numbered job of the same kind and records it as sent or refused.
 const sendWrite = (refusable = false): void => {
   const index = sentJobs.length + refusedJobs.length + 1;
@@ -122,7 +136,15 @@ const events = [
   },
   { type: 'xstate.after.writeRetryDelay.databaseWriter.waitingToRetry' },
 ] satisfies GraphEventFromLogic<typeof machine>[];
+
 type WriterEvent = (typeof events)[number];
+
+type WriterStateName =
+  | 'idle'
+  | 'writing'
+  | 'waitingToRetry'
+  | 'draining'
+  | 'drained';
 
 const canGraphEvent = (
   snapshot: WriterSnapshot,
@@ -171,7 +193,10 @@ const settle = async (
   await vi.advanceTimersByTimeAsync(0);
 };
 
-const executors: Record<string, EventExecutor<WriterSnapshot, WriterEvent>> = {
+const executors: Record<
+  WriterEvent['type'] | 'xstate.init',
+  EventExecutor<WriterSnapshot, WriterEvent>
+> = {
   'xstate.init': (): void => {
     writer = createActor(machine, { input }).start();
   },
@@ -201,6 +226,7 @@ const expectModelState = (expected: WriterSnapshot): void => {
   // Queued jobs carry the clock value they were enqueued at.
   expect([...committedJobs, ...actual.context.queue]).toMatchObject(sentJobs);
 };
+
 // A running batch holds the oldest queued jobs, and no other batch runs.
 const expectBatchRunning = (snapshot: WriterSnapshot): void => {
   expectModelState(snapshot);
@@ -216,22 +242,29 @@ const expectBatchRunning = (snapshot: WriterSnapshot): void => {
     writeBatchCalls.slice(0, -1).every((call): boolean => call.settled),
   ).toBe(true);
 };
+
 const expectNoBatchRunning = (): void => {
   expect(writer.getSnapshot().context.batchSize).toBe(0);
   expect(writeBatchCalls.every((call): boolean => call.settled)).toBe(true);
 };
+
 const isWriteFailure = (line: string): boolean => line.startsWith('could not');
+
 const refusalLine =
   'Storage is failing: refusing jobs while 1 refusable jobs wait';
+
 // A Writer refuses refusable jobs only while its budget is spent, and logs at most once per refused job.
 const expectRefusals = (): void => {
   const { queue, refusing } = writer.getSnapshot().context;
   const refusals = logLines.filter((line): boolean => line === refusalLine);
   expect(refusals.length).toBeLessThanOrEqual(refusedJobs.length);
+
   if (refusing) expect(queue.some(isRefusable)).toBe(true);
+
   if (refusing) expect(refusals.length).toBeGreaterThan(0);
 };
-const states: Record<string, (snapshot: WriterSnapshot) => void> = {
+
+const states: Record<WriterStateName, (snapshot: WriterSnapshot) => void> = {
   idle: (snapshot): void => {
     expectModelState(snapshot);
     expectNoBatchRunning();
@@ -251,6 +284,7 @@ const states: Record<string, (snapshot: WriterSnapshot) => void> = {
     expectModelState(snapshot);
     expectNoBatchRunning();
     const lost = writer.getSnapshot().context.queue;
+
     if (lost.length > 0)
       expect(logLines.findLast(isWriteFailure)).toMatch(
         new RegExp(`^could not write while draining, lost ${lost.length} jobs`),
@@ -276,9 +310,13 @@ const budgetOptions = {
       refusing: snapshot.context.refusing,
     }),
 };
+
 const shortestPaths = terminalPaths(getShortestPaths(machine, budgetOptions));
+
 const simplePaths = terminalPaths(getSimplePaths(machine, options));
+
 mockDatabase.$client.close();
+
 const title = (path: StatePath<WriterSnapshot, WriterEvent>): string =>
   path.steps
     .map(({ event }): string =>
@@ -317,10 +355,12 @@ describe('database writer model', (): void => {
     )('%s', async (_, path): Promise<void> => {
       for (const step of path.steps) {
         const execute = executors[step.event.type];
+
         if (!execute)
           throw new Error(`No Writer executor for ${step.event.type}`);
         await execute(step);
         expectRefusals();
+
         for (const [key, assertState] of Object.entries(states)) {
           if (matchesState(key, step.state.value)) assertState(step.state);
         }
@@ -352,10 +392,12 @@ describe('database writer', (): void => {
 
   it('refuses refusable jobs past its budget, still queues other jobs, and accepts refusable jobs again after a commit', async (): Promise<void> => {
     sendWrite(true);
+
     const committed = {
       resolve: vi.fn<() => void>(),
-      reject: vi.fn<(error: unknown) => void>(),
+      reject: vi.fn<(cause: unknown) => void>(),
     };
+
     const refused = vi.fn<() => void>();
     writer.send({
       type: writeFeedEvent,
@@ -404,6 +446,7 @@ describe('database writer', (): void => {
       statement: 'UPDATE turn SET ended_at = 1',
       queuedAt: 1000,
     });
+
     expect(writeBatchCalls.map((call): WriterJob[] => call.jobs)).toEqual([
       [stamped],
       [stamped],
@@ -426,6 +469,7 @@ describe('database writer', (): void => {
   it('names at most 20 lost jobs when the drain fails', async (): Promise<void> => {
     sendWrite();
     writer.send({ type: drainWriterEvent });
+
     for (let index = 0; index < 30; index += 1) sendWrite();
     await settle((call): void => call.resolve());
     await settle((call): void => call.reject(writeError));

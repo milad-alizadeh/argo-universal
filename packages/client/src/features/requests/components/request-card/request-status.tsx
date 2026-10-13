@@ -15,6 +15,7 @@ export function RequestStatus({
   mutedStatus?: boolean;
 }): ReactNode {
   if (state.kind !== 'answered') return null;
+
   return <AlreadyAnswered reason={state.reason} muted={mutedStatus} />;
 }
 

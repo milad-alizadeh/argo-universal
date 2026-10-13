@@ -11,7 +11,9 @@ import {
 type ImageUrl = (blob: BlobRef) => string;
 
 export const FeedImageUrlContext = createContext<ImageUrl | null>(null);
+
 const openImageWidthFraction = 0.9;
+
 const openImageHeightFraction = 0.8;
 
 const isPasted = (image: ImageContent): boolean =>
@@ -19,6 +21,7 @@ const isPasted = (image: ImageContent): boolean =>
 
 function sizeLabel({ width, height }: BlobRef): string | undefined {
   if (!width || !height) return undefined;
+
   return `${width}×${height}`;
 }
 
@@ -27,27 +30,31 @@ const imageLabel = (image: ImageContent): string | undefined =>
 
 function aspectRatioOf({ width, height }: BlobRef): number {
   if (!width || !height) return 1;
+
   return width / height;
 }
 
 function useImageUrl(imageUrl: ImageUrl | undefined): ImageUrl {
   const feedImageUrl = useContext(FeedImageUrlContext);
   const loadImage = imageUrl ?? feedImageUrl;
+
   if (!loadImage)
     throw new Error('Feed images need the Server Blob URL resolver.');
+
   return loadImage;
 }
 
-function useOpenImageStyle(blob: BlobRef): {
-  width: number;
-  aspectRatio: number;
-} {
+type OpenImageSize = { width: number; aspectRatio: number };
+
+function useOpenImageStyle(blob: BlobRef): OpenImageSize {
   const window = useWindowDimensions();
   const aspectRatio = aspectRatioOf(blob);
+
   const width = Math.min(
     window.width * openImageWidthFraction,
     window.height * openImageHeightFraction * aspectRatio,
   );
+
   return { width, aspectRatio };
 }
 
@@ -58,6 +65,7 @@ interface ImageSourceProps {
 
 function FullImage({ image, uri }: ImageSourceProps): React.JSX.Element {
   const label = imageLabel(image) ?? 'Image';
+
   return (
     <>
       <DialogTitle className="sr-only">{label}</DialogTitle>
@@ -99,11 +107,13 @@ const thumbnailClassName =
 
 function thumbnailLabel(image: ImageContent): string {
   const label = imageLabel(image);
+
   return label ? `Open image, ${label}` : 'Open image';
 }
 
 function ImageThumbnail(props: ThumbnailProps): React.JSX.Element {
   const source = { uri: props.uri };
+
   return (
     <Pressable
       role="button"
@@ -127,6 +137,7 @@ export function FeedImage({
 }: FeedImageProps): React.JSX.Element {
   const uri = useImageUrl(imageUrl)(image.blob);
   const [open, setOpen] = useState(false);
+
   return (
     <>
       <ImageThumbnail image={image} uri={uri} onPress={() => setOpen(true)} />

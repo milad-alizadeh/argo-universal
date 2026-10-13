@@ -14,6 +14,7 @@ it.each(workMocks)(
     const source = recordedFeedMocks
       .flatMap((mock) => mock.rows)
       .find((row) => row.sessionUpdate === 'agent_thought');
+
     if (!source) throw new Error('Recording needs a thought');
     const thought = { ...source, state: 'open' as const };
     const row = commandRow(rows);
@@ -38,6 +39,7 @@ it.each(workMocks)(
   'combines reads across thoughts for $agent',
   ({ rows, snapshot }) => {
     const source = commandRow(rows);
+
     const first: ToolCallUpdate = {
       ...source,
       id: firstReadId,
@@ -47,6 +49,7 @@ it.each(workMocks)(
         },
       },
     };
+
     const second: ToolCallUpdate = {
       ...first,
       id: 'second-read',
@@ -56,9 +59,11 @@ it.each(workMocks)(
         },
       },
     };
+
     const thought = recordedFeedMocks
       .flatMap((mock) => mock.rows)
       .find((row) => row.sessionUpdate === 'agent_thought');
+
     if (!thought) throw new Error('Recording needs a thought');
     const view = toFeedView([first, thought, second], snapshot);
     expect(view.items).toEqual([

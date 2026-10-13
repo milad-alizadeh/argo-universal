@@ -4,11 +4,14 @@ export type CatalogLoad =
   | { status: 'loading' }
   | { status: 'failed'; message: string }
   | { status: 'loaded'; catalog: AgentsCatalogOutput };
+
 export type SavedCatalog = {
   catalog: AgentsCatalogOutput | undefined;
   error: string | null;
 };
+
 export type CatalogRefresh = { pending: boolean; error: string | null };
+
 export type CatalogSync = { load: CatalogLoad; refreshing: boolean };
 
 const syncingStatuses = new Set<AgentsCatalogOutput['syncStatus']>([
@@ -23,6 +26,7 @@ function withRefreshError(
 ): AgentsCatalogOutput {
   if (error === null) return catalog;
   const status = catalog.fetchedAt === null ? 'unavailable' : 'stale';
+
   return { ...catalog, status, error };
 }
 
@@ -35,7 +39,9 @@ function loadCatalog(
       status: 'loaded',
       catalog: withRefreshError(saved.catalog, refreshError),
     };
+
   if (saved.error !== null) return { status: 'failed', message: saved.error };
+
   return { status: 'loading' };
 }
 
@@ -46,6 +52,7 @@ export function applyCatalogSync(
   const syncing = saved.catalog
     ? syncingStatuses.has(saved.catalog.syncStatus)
     : false;
+
   return {
     load: loadCatalog(saved, refresh.error),
     refreshing: refresh.pending || syncing,
@@ -55,5 +62,6 @@ export function applyCatalogSync(
 // The catalog could not load, or its last sync failed and the list shows what the Server saved.
 export function catalogFailed({ load }: CatalogSync): boolean {
   if (load.status === 'loaded') return load.catalog.status !== 'fresh';
+
   return load.status === 'failed';
 }

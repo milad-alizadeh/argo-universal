@@ -1,4 +1,5 @@
 import type { SessionConfigOption } from '@repo/contracts';
+
 export const composerSettingsOptions: SessionConfigOption[] = [
   { configId: 'fast', name: 'Fast mode', type: 'boolean', currentValue: false },
   {
@@ -12,6 +13,7 @@ export const composerSettingsOptions: SessionConfigOption[] = [
     ],
   },
 ];
+
 export const composerLongSettingsOptions: SessionConfigOption[] = [
   ...composerSettingsOptions,
   {
@@ -35,14 +37,18 @@ export function updateComposerSettings(
     option.configId === configId ? updatedOption(option, value) : option,
   );
 }
+
 function updatedOption(
   option: SessionConfigOption,
   value: string | boolean,
 ): SessionConfigOption {
   if (option.type === 'boolean') return updatedBoolean(option, value);
+
   if (typeof value === 'string') return { ...option, currentValue: value };
+
   return option;
 }
+
 function updatedBoolean(
   option: Extract<SessionConfigOption, { type: 'boolean' }>,
   value: string | boolean,

@@ -9,7 +9,9 @@ import { choiceValue, selectedAnswers } from './elicitation-answers';
 import { CustomAnswer } from './elicitation-custom-answer';
 
 type ModelProps = { model: QuestionModel };
+
 type FrameProps = ModelProps & { children: ReactNode };
+
 type OptionProps = ModelProps & { option: ElicitationEnumOption };
 
 export function ElicitationQuestionOptions({
@@ -27,6 +29,7 @@ export function ElicitationQuestionOptions({
 
 function OptionsFrame({ model, children }: FrameProps): ReactElement {
   const wide = useContentWide();
+
   return (
     <View
       role={model.question.multiple ? 'group' : 'radiogroup'}

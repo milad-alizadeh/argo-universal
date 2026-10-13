@@ -14,7 +14,9 @@ import {
 } from './session-composer-props';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
+
 type OpenFeed = Pick<OpenSession, 'snapshot' | 'view'>;
+
 export type SessionViewSources = Omit<OpenSession, 'snapshot' | 'view'>;
 
 const headerStatus = {
@@ -26,8 +28,10 @@ const headerStatus = {
 // A failed first page refetches by itself when the Connection reopens or the window regains focus.
 function failedSession(feed: SessionFeed): SessionViewProps | undefined {
   if (feed.error) return { state: 'failed' };
+
   if (feed.openError)
     return { state: 'failed', reason: feed.openError.message };
+
   return undefined;
 }
 
@@ -65,6 +69,7 @@ export function toSessionViewProps(
   sources: SessionViewSources,
 ): SessionViewProps {
   const opened = openFeed(sources.feed);
+
   return (
     failedSession(sources.feed) ??
     (opened

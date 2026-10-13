@@ -10,6 +10,7 @@ export function useOnboardingShown(
   destination: NavigationDestination,
 ): boolean {
   const firstRun = useFirstRun();
+
   return firstRun && destination.to === 'sessions' && Platform.OS === 'web';
 }
 

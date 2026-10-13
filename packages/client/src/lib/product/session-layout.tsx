@@ -77,6 +77,7 @@ type SessionStageProps = Pick<SessionLayoutProps, 'feed' | 'composer'>;
 function GlassComposerStage(props: SessionStageProps): React.JSX.Element {
   const { bottom } = useSafeAreaInsets();
   const { cover, onComposerLayout } = useGlassCover(bottom);
+
   return (
     <View className="relative min-h-0 flex-1">
       <ComposerCover.Provider value={cover}>
@@ -96,6 +97,7 @@ interface GlassComposerProps extends Pick<ViewProps, 'onLayout' | 'children'> {
 // The Composer column is measured without the home indicator's space, which follows the keyboard frame by frame.
 function GlassComposer(props: GlassComposerProps): React.JSX.Element {
   const homeIndicatorSpace = useHomeIndicatorSpace(props.bottom);
+
   return (
     <Animated.View
       className="absolute bottom-0 left-0 right-0 z-10"
@@ -112,6 +114,7 @@ function useHomeIndicatorSpace(
   bottom: number,
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   const { progress } = useReanimatedKeyboardAnimation();
+
   return useAnimatedStyle(
     () => ({ paddingBottom: bottom * (1 - progress.get()) }),
     [bottom, progress],

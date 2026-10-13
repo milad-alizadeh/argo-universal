@@ -23,6 +23,7 @@ function readProjectIdentity(
     .from(project)
     .where(eq(project.path, repository.root))
     .get();
+
   return (
     existing?.id ??
     createHash('sha256').update(repository.commonDirectory).digest('hex')
@@ -46,6 +47,7 @@ async function readDefaultCheckoutChoice(
   projectPath: string,
 ): Promise<ProjectCheckoutChoice> {
   const { currentBranch } = await listBranches(projectPath);
+
   return currentBranch === null
     ? { type: 'main' }
     : { type: 'worktree', baseBranch: currentBranch };
@@ -60,6 +62,7 @@ export function readProjectPath(
     .from(project)
     .where(eq(project.id, projectId))
     .get();
+
   if (stored) return stored.path;
   throw new TRPCError({
     code: 'NOT_FOUND',
@@ -67,16 +70,17 @@ export function readProjectPath(
   });
 }
 
-const hostNames: Record<string, string> = {
-  'github.com': 'GitHub',
-  'gitlab.com': 'GitLab',
-  'bitbucket.org': 'Bitbucket',
-};
+const hostNames = new Map([
+  ['github.com', 'GitHub'],
+  ['gitlab.com', 'GitLab'],
+  ['bitbucket.org', 'Bitbucket'],
+]);
 
 // A failed remote read leaves this Project without one rather than failing the list.
 const readRemoteHost = (projectPath: string): Promise<string | null> =>
   readOriginHost(projectPath).then(
-    (host): string | null => (host === null ? null : (hostNames[host] ?? host)),
+    (host): string | null =>
+      host === null ? null : (hostNames.get(host) ?? host),
     (): null => null,
   );
 
@@ -87,7 +91,9 @@ const isFolder = (path: string): Promise<boolean> =>
   );
 
 type Rejections = Pick<ReturnType<typeof createRejectionCounter>, 'report'>;
+
 type StoredProject = typeof project.$inferSelect;
+
 // The stored choice stays unchecked until the Project's shape is parsed.
 type ProjectDetail = Pick<ProjectInfo, 'remoteHost' | 'folderExists'> & {
   checkoutChoice: NonNullable<StoredProject['checkoutChoice']>;
@@ -107,10 +113,12 @@ async function readProjectDetail({
   checkoutChoice,
 }: StoredProject): Promise<ProjectDetail> {
   if (!(await isFolder(path))) return missingFolderDetail(checkoutChoice);
+
   const [choice, remoteHost] = await Promise.all([
     Promise.resolve(checkoutChoice ?? readDefaultCheckoutChoice(path)),
     readRemoteHost(path),
   ]);
+
   return { checkoutChoice: choice, remoteHost, folderExists: true };
 }
 
@@ -120,10 +128,12 @@ async function readStoredProject(
 ): Promise<ProjectInfo> {
   const detail = await readProjectDetail(storedProject);
   const result = ProjectInfo.safeParse({ ...storedProject, ...detail });
+
   if (!result.success) {
     rejections.report('rejected shape', result.error);
     throw result.error;
   }
+
   return result.data;
 }
 

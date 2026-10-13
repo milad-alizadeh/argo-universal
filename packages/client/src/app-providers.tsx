@@ -22,7 +22,9 @@ export function AppProviders(
 ): React.JSX.Element | null {
   const [queryClient] = useState(() => new QueryClient());
   const connection = useConnection(props.serverUrl, queryClient);
+
   if (!connection) return null;
+
   return (
     <ConnectionProviders
       {...props}
@@ -62,6 +64,7 @@ function ServerProviders({
   children,
 }: ServerProvidersProps): React.JSX.Element {
   const blobUrl = useMemo(() => createServerBlobUrl(serverUrl), [serverUrl]);
+
   return (
     <ConnectionContext.Provider value={connection.connection}>
       <BlobUrlContext.Provider value={blobUrl}>
@@ -83,6 +86,7 @@ function useConnection(
     () => new ConnectionStore(serverUrl, queryClient),
     [serverUrl, queryClient],
   );
+
   return useSyncExternalStore(
     store.subscribe,
     store.getSnapshot,
@@ -106,6 +110,7 @@ class ConnectionStore {
     const connection = openConnection(this.serverUrl, this.queryClient);
     this.opened = connection;
     changed();
+
     return () => this.close(connection);
   };
 

@@ -54,6 +54,7 @@ const asChoice = ({
 // One control per group; a group with several options gets a chevron that picks which one it sends.
 export function PermissionActions(props: PermissionActionsProps): ReactNode {
   const layout = useContentWide() ? layouts.wide : layouts.phone;
+
   return (
     <View className={layout.className}>
       {layout.groups.map((group) => (
@@ -65,15 +66,19 @@ export function PermissionActions(props: PermissionActionsProps): ReactNode {
 
 function OptionGroup({ group, ...props }: GroupProps): ReactNode {
   const lead = props.leads[group];
+
   if (!lead) return null;
   const options = props.choices[group];
+
   if (options.length === 1) return <OptionAction {...props} option={lead} />;
   const menuLabel = menuLabels[group];
+
   return <OptionSplitButton {...{ ...props, options, lead, menuLabel }} />;
 }
 
 function OptionSplitButton(group: LedGroupProps): ReactNode {
   const wide = useContentWide();
+
   return (
     <SplitButton {...splitChoices(group)}>
       <OptionAction
@@ -107,6 +112,7 @@ function pickById(
   onPick: (option: PermissionOption) => void,
 ): void {
   const picked = options.find((option) => option.optionId === optionId);
+
   if (picked) onPick(picked);
 }
 

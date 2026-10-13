@@ -1,8 +1,11 @@
 import type { ReadEntry } from 'tar';
 import { installationPath } from './files';
+
 export const executableMode = 0o755;
+
 export const extractedLimit = 536_870_912,
   entryLimit = 10_000;
+
 export class ArchiveBudget {
   private size = 0;
   private entries = 0;
@@ -12,6 +15,7 @@ export class ArchiveBudget {
     installationPath(this.directory, name);
     this.size += size;
     this.entries += 1;
+
     if (this.size > extractedLimit || this.entries > entryLimit)
       throw new Error('Agent archive exceeds the extracted file budget');
   }

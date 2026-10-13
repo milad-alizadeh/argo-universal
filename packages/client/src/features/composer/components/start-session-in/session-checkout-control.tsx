@@ -4,6 +4,7 @@ import { CheckoutContents } from '../composer-configuration/composer-configurati
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { SessionControlDisclosure } from './session-control-disclosure';
 import type { StartSessionInProps } from './start-session-types';
+
 type CheckoutControlProps = Pick<StartSessionInProps, 'checkout' | 'disabled'>;
 
 export function SessionCheckoutControl(
@@ -19,9 +20,11 @@ export function SessionCheckoutControl(
     </ComposerPopover>
   );
 }
+
 function checkoutTrigger(props: CheckoutControlProps): React.JSX.Element {
   return <Button {...checkoutButtonProps(props)} />;
 }
+
 function checkoutButtonProps(
   props: CheckoutControlProps,
 ): React.ComponentProps<typeof Button> {
@@ -36,6 +39,7 @@ function checkoutButtonProps(
     trailing: <SessionControlDisclosure />,
   };
 }
+
 function checkoutButtonLabels(
   props: Pick<CheckoutControlProps, 'checkout'>,
 ): Pick<React.ComponentProps<typeof Button>, 'label' | 'icon'> {

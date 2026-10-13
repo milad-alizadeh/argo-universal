@@ -49,6 +49,7 @@ export function CodeBlockBody({
 }: CodeBlockBodyProps): React.JSX.Element | null {
   if (code !== undefined)
     return <CodeScroll code={code} textClassName={textClassName} />;
+
   return description ? (
     <Text role="body" className="px-3 py-2 text-foreground">
       {description}

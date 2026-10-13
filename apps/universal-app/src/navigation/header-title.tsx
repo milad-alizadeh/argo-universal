@@ -10,6 +10,7 @@ type HeaderTitleOptions = Pick<
 
 export function useHeaderTitleOptions(): HeaderTitleOptions {
   const headerTitleStyle = useTextStyle('nav-title');
+
   // CSS loads after the web style resolver's first snapshot; draw the role directly.
   return Platform.OS === 'web'
     ? { headerTitle: HeaderTitle }

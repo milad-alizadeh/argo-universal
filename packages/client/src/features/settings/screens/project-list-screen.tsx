@@ -11,12 +11,15 @@ function toProjectsLoad(
   projects: UseQueryResult<ProjectInfo[], unknown>,
 ): ProjectsLoad {
   if (projects.data) return { status: 'loaded', projects: projects.data };
+
   if (projects.isError) return { status: 'error' };
+
   return { status: 'loading' };
 }
 
 export function ProjectListScreen(): React.JSX.Element {
   const navigate = useNavigate();
+
   return (
     <ProjectListView
       caption={useServerPageCaption()}

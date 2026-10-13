@@ -19,9 +19,13 @@ const meta = {
     onClose: fn(),
   },
 } satisfies Meta<typeof AgentLoginSheet>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 const browserSnapshot = loginSnapshot('awaiting-browser');
+
 export const ChoosesExactAdvertisedMethod: Story = {
   play: async ({ args, userEvent }) => {
     const dialog = within(await within(document.body).findByRole('dialog'));
@@ -29,6 +33,7 @@ export const ChoosesExactAdvertisedMethod: Story = {
     await expect(args.onChoose).toHaveBeenCalledWith('device-code');
   },
 };
+
 export const OpeningBrowserDoesNotAnswer: Story = {
   args: { snapshot: browserSnapshot },
   play: async ({ args, userEvent }) => {
@@ -47,6 +52,7 @@ export const OpeningBrowserDoesNotAnswer: Story = {
     await expect(args.onAnswer).not.toHaveBeenCalled();
   },
 };
+
 export const AnswersExactRequest: Story = {
   args: { snapshot: browserSnapshot },
   play: async ({ args, userEvent }) => {
@@ -57,6 +63,7 @@ export const AnswersExactRequest: Story = {
     await expect(args.onAnswer).toHaveBeenCalledWith('request-42', 'accept');
   },
 };
+
 export const OtherAppCannotAct: Story = {
   args: { snapshot: loginSnapshot('other-app') },
   play: async () => {
@@ -80,6 +87,7 @@ export const CancelsSignInWithoutAccepting: Story = {
     await expect(args.onAnswer).not.toHaveBeenCalled();
   },
 };
+
 export const StartingCannotCancelBeforeAdmission: Story = {
   args: { snapshot: undefined, busy: true },
   play: async () => {
@@ -92,10 +100,12 @@ export const BackClosesUnsupportedSignIn: Story = {
   args: { snapshot: loginSnapshot('unsupported') },
   render: function UnsupportedSignIn(args) {
     const [open, setOpen] = useState(true);
+
     const close = (): void => {
       args.onClose();
       setOpen(false);
     };
+
     return open ? <AgentLoginSheet {...args} onClose={close} /> : <View />;
   },
   play: async ({ args, userEvent }) => {

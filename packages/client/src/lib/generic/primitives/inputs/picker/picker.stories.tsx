@@ -16,6 +16,7 @@ const options = [
   },
   { value: 'high', label: 'High' },
 ] as const;
+
 const longOptions = [
   ...options,
   {
@@ -34,6 +35,7 @@ type ExampleProps = Partial<Omit<PickerProps<string>, 'onChange' | 'label'>>;
 
 function PickerExample(props: ExampleProps): React.JSX.Element {
   const [value, setValue] = useState(props.value);
+
   return (
     <View className="w-full max-w-96">
       <Picker
@@ -66,7 +68,9 @@ const examples: { label: string; props: ExampleProps }[] = [
 ];
 
 const meta = { title: 'Design System/Primitives/Picker' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

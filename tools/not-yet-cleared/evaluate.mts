@@ -8,6 +8,7 @@ interface EntrySummary {
   findings: number;
   rules: number;
 }
+
 export interface Evaluation {
   problems: string[];
   entries: EntrySummary[];
@@ -42,6 +43,7 @@ function summarizeEntry(entry: Entry, findings: Finding[]): EntrySummary {
 export function evaluateWaivers(input: WaiverInput): Evaluation {
   const entries = readWaivers(input.current);
   const findings = readFindings(input.report);
+
   return {
     problems: [
       ...growthProblems(entries, readWaivers(input.baseline)),

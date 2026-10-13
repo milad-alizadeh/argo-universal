@@ -6,16 +6,23 @@ import {
 import { useCSSVariable, useUniwind } from 'uniwind';
 
 type NavigationColors = Theme['colors'];
+
 type NavigationColor = NavigationColors['text'];
 
-const colorOr = (value: unknown, fallback: NavigationColor): NavigationColor =>
-  typeof value === 'string' ? value : fallback;
+// What `useCSSVariable` reads: a string on web, a string or number on native.
+type CSSVariableValue = string | number | undefined;
+
+const colorOr = (
+  value: CSSVariableValue,
+  fallback: NavigationColor,
+): NavigationColor => (typeof value === 'string' ? value : fallback);
 
 function navigationColors(
-  values: readonly unknown[],
+  values: readonly CSSVariableValue[],
   baseline: NavigationColors,
 ): NavigationColors {
   const [background, border, card, notification, primary, text] = values;
+
   return {
     background: colorOr(background, baseline.background),
     border: colorOr(border, baseline.border),
@@ -29,6 +36,7 @@ function navigationColors(
 export function useNavigationTheme(): Theme {
   const { theme } = useUniwind();
   const baseline = theme === 'dark' ? DarkTheme : DefaultTheme;
+
   const values = useCSSVariable([
     // Screens and native headers sit on the App's one content surface.
     '--color-sidebar',
@@ -38,5 +46,6 @@ export function useNavigationTheme(): Theme {
     '--color-primary',
     '--color-foreground',
   ]);
+
   return { ...baseline, colors: navigationColors(values, baseline.colors) };
 }

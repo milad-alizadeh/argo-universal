@@ -1,10 +1,12 @@
 import { spawn } from 'node:child_process';
+
 if (process.argv[2] === 'descendant') {
   const child = spawn(
     process.execPath,
     ['-e', 'process.on("SIGTERM", () => {}); setInterval(() => {}, 1000)'],
     { stdio: 'ignore' },
   );
+
   process.stdout.write(`descendant:${child.pid}\n`);
   process.on('SIGTERM', () => {});
   setInterval(() => {}, 1000);
@@ -20,6 +22,7 @@ if (process.argv[2] === 'descendant') {
   );
   process.stdin.on('data', (input) => {
     process.stdout.write(`input:${input.toString('hex')}\n`);
+
     if (input.includes(13)) process.exit(0);
   });
 }

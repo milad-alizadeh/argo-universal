@@ -5,6 +5,7 @@ import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { PlaceholderDetailView } from './placeholder-detail-view';
 
 const description = 'Accounts will appear here.';
+
 const caption = 'What this App is talking to';
 
 const meta = {
@@ -17,7 +18,9 @@ const meta = {
     description,
   },
 } satisfies Meta<typeof PlaceholderDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // A wide window draws the page's own title and caption; a phone's native header names it instead.

@@ -14,12 +14,14 @@ import type { PlanProposalInteraction } from './use-plan-proposal';
 interface InteractionProps {
   interaction: PlanProposalInteraction;
 }
+
 type BodyProps = PlanProposalCardProps & InteractionProps;
 
 const feedbackQuestion = 'What should change in the plan?';
 
 export function PlanProposalBody(props: BodyProps): ReactNode {
   const wide = useWide();
+
   return (
     <View className={cn('gap-4 wide:gap-3', bodyLayout(props.interaction))}>
       <ProposalHeading interaction={props.interaction} wide={wide} />
@@ -78,6 +80,7 @@ function ProposalFeedback(props: BodyProps): ReactNode {
 
 function FeedbackField({ state, interaction }: BodyProps): ReactNode {
   const field = useFocusOnMount();
+
   return (
     <Textarea
       ref={field}
@@ -98,12 +101,15 @@ function ProposalDocument(props: BodyProps & { wide: boolean }): ReactNode {
         layout={props.interaction.expanded ? 'expanded' : 'proposal'}
       />
     );
+
   return <SheetDocument {...props} />;
 }
 
 function SheetDocument({ proposal, interaction }: BodyProps): ReactNode {
   const document = <SheetCard content={proposal.content} />;
+
   if (!interaction.planning) return document;
+
   return (
     <ScrollView
       className="max-h-20 grow-0"

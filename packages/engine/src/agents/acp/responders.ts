@@ -7,15 +7,19 @@ import type { AcpResponseWrites } from './response-writes';
 import type { AcpRouting } from './routing';
 
 const pendingRequestLimit = 32;
+
 type PermissionHandler =
   ClientRequestHandlersByMethod['session/request_permission'];
+
 type ElicitationHandler = ClientRequestHandlersByMethod['elicitation/create'];
+
 type ClientRequestHandlerFactory<Handler> = (
   findSessionReservation: (
     sessionId: string | undefined,
   ) => AcpReservation | undefined,
   responseWrites: AcpResponseWrites,
 ) => Handler;
+
 type RespondInput<Response> = {
   reservation: AcpReservation | undefined;
   signal: AbortSignal;
@@ -27,6 +31,7 @@ type RespondInput<Response> = {
     signal: AbortSignal,
   ) => Response | Promise<Response>;
 };
+
 const waitForCancelledResponse = <Value>(
   signal: AbortSignal,
   cancelledResponse: Value,
@@ -38,35 +43,45 @@ const waitForCancelledResponse = <Value>(
         once: true,
       });
   });
+
 const respond = <Response>(
   input: RespondInput<Response>,
 ): Promise<Response> => {
   const { reservation } = input;
+
   if (!reservation) return Promise.resolve(input.fallback);
+
   return respondOwned(reservation, input);
 };
+
 const respondOwned = <Response>(
   reservation: AcpReservation,
   input: RespondInput<Response>,
 ): Promise<Response> => {
   input.writes.retainRequestResponseWrite(reservation, input.requestId);
+
   if (reservation.pending.size > pendingRequestLimit)
     input.writes.reject(new Error('ACP pending request limit reached'));
+
   return reservation.withdrawn
     ? Promise.resolve(input.fallback)
     : startResponse(reservation, input);
 };
+
 const startResponse = <Response>(
   reservation: AcpReservation,
   input: RespondInput<Response>,
 ): Promise<Response> => {
   const signal = AbortSignal.any([input.signal, reservation.controller.signal]);
+
   const response = Promise.race([
     Promise.resolve(input.invoke(reservation, signal)),
     waitForCancelledResponse(signal, input.fallback),
   ]);
+
   return trackReservationWork(reservation, response);
 };
+
 const createPermissionResponder: ClientRequestHandlerFactory<
   PermissionHandler
 > = (findSessionReservation, responseWrites) => (context) =>
@@ -79,13 +94,16 @@ const createPermissionResponder: ClientRequestHandlerFactory<
     invoke: (reservation, signal) =>
       reservation.input.destination.requestPermission({ ...context, signal }),
   });
+
 const readElicitationSessionId = (
   request: Parameters<ElicitationHandler>[0]['params'],
 ): string | undefined => {
   if ('sessionId' in request && typeof request.sessionId === 'string')
     return request.sessionId;
+
   return undefined;
 };
+
 const createElicitationResponder: ClientRequestHandlerFactory<
   ElicitationHandler
 > = (findSessionReservation, responseWrites) => (context) =>
@@ -105,6 +123,7 @@ type ResourceResponders = {
   requestPermission: PermissionHandler;
   createElicitation: ElicitationHandler;
 };
+
 export const createResourceResponders = (
   routing: Pick<AcpRouting, 'findSessionReservation'>,
   writes: AcpResponseWrites,

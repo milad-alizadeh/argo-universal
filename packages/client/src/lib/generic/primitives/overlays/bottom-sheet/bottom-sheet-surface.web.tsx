@@ -20,6 +20,7 @@ import { sheetDialog, useSheetAnchor } from './use-sheet-anchor.web';
  */
 export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
   const { anchored, expanded, resize, ref } = useSheetSurface(props);
+
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay {...overlayProps(props.open)} />
@@ -48,6 +49,7 @@ function useSheetSurface(props: SurfaceProps): SheetSurface {
   const close = useCloseSheet(props.dismissible);
   const resize = props.expandable ? setExpanded : undefined;
   useSwipeToClose(card, close, resize);
+
   return { anchored: !!anchor, expanded, resize, ref };
 }
 
@@ -64,6 +66,7 @@ function useHiddenWhileClosing(
 
 function useCloseSheet(dismissible: boolean | undefined): () => void {
   const { onOpenChange } = DialogPrimitive.useRootContext();
+
   return useCallback(
     () => closeSheet(dismissible, onOpenChange),
     [onOpenChange, dismissible],
