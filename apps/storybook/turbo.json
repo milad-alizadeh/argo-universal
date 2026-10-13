@@ -5,7 +5,7 @@
     // .storybook/main.ts imports the SF Symbol plugin from tools/ and serves the App's fonts, neither of which is a package dependency.
     "test": {
       "inputs": [
-        "$TURBO_DEFAULT$",
+        "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/tools/sf-symbols/**",
         "$TURBO_ROOT$/apps/universal-app/public/**"
       ]
