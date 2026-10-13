@@ -128,15 +128,20 @@ function copyCode(width: number): Story {
 export const CopyCodePhone = copyCode(layoutWidths.phone);
 export const CopyCodeWide = copyCode(layoutWidths.wide);
 
+function horizontalScroller(element: HTMLElement | null): HTMLElement {
+  if (!element) throw new Error('Expected the table to scroll');
+  if (getComputedStyle(element).overflowX === 'auto') return element;
+  return horizontalScroller(element.parentElement);
+}
+
 export const TableScrollsSideways: Story = {
   args: { row: recordedAgentMessage('agent-2', markdownAnswerId) },
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleViewport(width);
-      let scroller = canvas.getByText('Property').parentElement;
-      while (scroller && getComputedStyle(scroller).overflowX !== 'auto')
-        scroller = scroller.parentElement;
-      if (!scroller) throw new Error('Expected the table to scroll');
+      const scroller = horizontalScroller(
+        canvas.getByText('Property').parentElement,
+      );
       const overflows = scroller.scrollWidth > scroller.clientWidth;
       await expect(overflows).toBe(width < 720);
     }

@@ -82,6 +82,7 @@ export function ComposerAgentModelControl({
       trigger={
         <Button
           appearance="content"
+          size="xs"
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Agent and model"

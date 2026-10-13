@@ -57,28 +57,50 @@ type ClipOnLayout = Pick<WholeLineClamp, 'onContentLayout' | 'clipHeight'>;
 type Leaves = React.RefObject<Set<ClampLeaf>>;
 type Content = React.RefObject<ContentView | null>;
 
+interface MeasuredContent {
+  leaves: Leaves;
+  content: Content;
+  height: number;
+}
+
+interface CutMeasure extends Omit<MeasuredContent, 'height'> {
+  passed: number | undefined;
+  onCut: (cut: number) => void;
+}
+
+// Starts measuring the cut and returns how to drop it once the content or limit changes again.
+function measureCut(measure: CutMeasure): (() => void) | undefined {
+  const { passed, onCut } = measure;
+  const view = measure.content.current;
+  if (passed === undefined || !view) return;
+  let latest = true;
+  void measuredCut(measure.leaves.current, view, passed).then((measured) => {
+    if (latest) onCut(measured ?? passed);
+  });
+  return (): void => {
+    latest = false;
+  };
+}
+
 // Measures the cut whenever the content or the limit changes; a cut measured for an earlier one is dropped.
 function useMeasuredCut(
   passed: number | undefined,
-  {
-    leaves,
-    content,
-    height,
-  }: { leaves: Leaves; content: Content; height: number },
+  { leaves, content, height }: MeasuredContent,
 ): number | undefined {
   const [cut, setCut] = useState<number>();
-  useEffect(() => {
-    const view = content.current;
-    if (passed === undefined || !view) return;
-    let latest = true;
-    void measuredCut(leaves.current, view, passed).then((measured) => {
-      if (latest) setCut(measured ?? passed);
-    });
-    return (): void => {
-      latest = false;
-    };
-  }, [passed, height, leaves, content]);
+  useEffect(
+    () => measureCut({ passed, leaves, content, onCut: setCut }),
+    [passed, height, leaves, content],
+  );
   return cut;
+}
+
+function useLayoutHeight(): [number, (event: LayoutChangeEvent) => void] {
+  const [height, setHeight] = useState(0);
+  const onLayout = useCallback((event: LayoutChangeEvent) => {
+    setHeight(event.nativeEvent.layout.height);
+  }, []);
+  return [height, onLayout];
 }
 
 // Content that runs past the limit draws in full until its cut is measured, then clips to it in one step.
@@ -87,10 +109,7 @@ function useClipOnLayout(
   leaves: Leaves,
   content: Content,
 ): ClipOnLayout {
-  const [height, setHeight] = useState(0);
-  const onContentLayout = useCallback((event: LayoutChangeEvent) => {
-    setHeight(event.nativeEvent.layout.height);
-  }, []);
+  const [height, onContentLayout] = useLayoutHeight();
   const passed = passedLimit(height, limit);
   const cut = useMeasuredCut(passed, { leaves, content, height });
   return {

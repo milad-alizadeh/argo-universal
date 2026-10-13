@@ -20,23 +20,24 @@ export const ScrollColumnContext = createContext<ScrollColumn | undefined>(
 const numericPadding = (value: ViewStyle['paddingLeft']): number =>
   typeof value === 'number' ? value : 0;
 
+function inColumn(column: ScrollColumn, own: StyleProp<ViewStyle>): ViewStyle {
+  const style = StyleSheet.flatten(own) ?? {};
+  return {
+    ...style,
+    width: '100%',
+    maxWidth: column.maxWidth,
+    // Auto margins centre it whether or not its scroll view lays it out as a flex item, as Legend List's web build does not.
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    paddingLeft: numericPadding(style.paddingLeft) + column.paddingLeft,
+    paddingRight: numericPadding(style.paddingRight) + column.paddingRight,
+  };
+}
+
 // A scroll view's content container style inside the pane's column: its own padding sits inside the column's.
 export function useScrollColumnStyle(
   own?: StyleProp<ViewStyle>,
 ): StyleProp<ViewStyle> {
   const column = use(ScrollColumnContext);
-  return useMemo(() => {
-    if (!column) return own;
-    const style = StyleSheet.flatten(own) ?? {};
-    return {
-      ...style,
-      width: '100%',
-      maxWidth: column.maxWidth,
-      // Auto margins centre it whether or not its scroll view lays it out as a flex item, as Legend List's web build does not.
-      marginLeft: 'auto',
-      marginRight: 'auto',
-      paddingLeft: numericPadding(style.paddingLeft) + column.paddingLeft,
-      paddingRight: numericPadding(style.paddingRight) + column.paddingRight,
-    };
-  }, [column, own]);
+  return useMemo(() => (column ? inColumn(column, own) : own), [column, own]);
 }

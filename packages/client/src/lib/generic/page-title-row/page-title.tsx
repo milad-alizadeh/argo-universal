@@ -19,16 +19,24 @@ export function PageTitle({
   return (
     <View className="flex-row items-center gap-2">
       {icon}
-      <Text
-        role="title"
-        semanticRole="heading"
-        aria-level={1}
-        numberOfLines={1}
-        className="min-w-0 shrink"
-      >
-        {title}
-      </Text>
+      <PageHeading title={title} />
       {badge}
     </View>
+  );
+}
+
+function PageHeading({
+  title,
+}: Pick<PageTitleProps, 'title'>): React.JSX.Element {
+  return (
+    <Text
+      role="title"
+      semanticRole="heading"
+      aria-level={1}
+      numberOfLines={1}
+      className="min-w-0 shrink"
+    >
+      {title}
+    </Text>
   );
 }

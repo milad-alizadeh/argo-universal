@@ -1,18 +1,20 @@
 import type * as React from 'react';
-import {
-  type ReactNode,
-  useCallback,
-  useContext,
-  useLayoutEffect,
-  useRef,
-} from 'react';
+import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';
 import type { FeedActivity, FeedGroup } from '../../view/feed-view';
-import { toolCallTitle, toolCallTitlePaths } from '../../view/tool-call-title';
-import { FeedGrowthContext } from '../feed-growth-context';
-import { ToolCallDisclosure } from '../tool-call-disclosure';
+import {
+  ToolCallDisclosure,
+  toolCallDisclosureProps,
+} from '../tool-call-disclosure';
 import { toolCallIcon } from '../tool-call-icon';
+import {
+  activityKey,
+  liveToolCall,
+  showsDuration,
+  visibleActivities,
+} from './group-activities';
+import { useGrowthAbove } from './use-growth-above';
 
 export interface ToolCallGroupProps {
   group: FeedGroup;
@@ -21,85 +23,70 @@ export interface ToolCallGroupProps {
   now?: number;
 }
 
-const activityKey = (activity: FeedActivity): string =>
-  activity.type === 'exploration' ? activity.id : activity.row.id;
+interface GroupActivitiesProps {
+  items: FeedActivity[];
+  onLayout: (event: LayoutChangeEvent) => void;
+  renderActivity: ToolCallGroupProps['renderActivity'];
+}
 
-// Reports to the Feed when an older page brings activities before those already drawn, and how tall they measure.
-function useGrowthAbove(
-  groupKey: string,
-  keys: readonly string[],
-): (event: LayoutChangeEvent) => void {
-  const feedGrowth = useContext(FeedGrowthContext);
-  const drawnKeys = useRef(keys);
-  const height = useRef<number | null>(null);
-  const grewAbove = useRef(false);
-  useLayoutEffect(() => {
-    const [previousFirst] = drawnKeys.current;
-    const previousFirstAt =
-      previousFirst === undefined ? -1 : keys.indexOf(previousFirst);
-    if (
-      previousFirstAt > 0 &&
-      keys.length - previousFirstAt === drawnKeys.current.length
-    ) {
-      grewAbove.current = true;
-      feedGrowth?.willGrowAbove(groupKey);
-    }
-    drawnKeys.current = keys;
-  });
-  return useCallback(
-    (event: LayoutChangeEvent) => {
-      const previousHeight = height.current;
-      height.current = event.nativeEvent.layout.height;
-      if (!grewAbove.current || previousHeight === null) return;
-      grewAbove.current = false;
-      feedGrowth?.grewAbove(groupKey, height.current - previousHeight);
-    },
-    [groupKey, feedGrowth],
+type GroupDisclosureProps = Pick<
+  React.ComponentProps<typeof ToolCallDisclosure>,
+  | 'label'
+  | 'paths'
+  | 'icon'
+  | 'running'
+  | 'awaitingApproval'
+  | 'permissionOutcome'
+>;
+
+function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
+  const live = liveToolCall(group);
+  const running = group.state === 'open';
+  return live
+    ? {
+        ...toolCallDisclosureProps(live.toolCall, live.awaitingApproval),
+        icon: toolCallIcon(live.toolCall),
+        running,
+      }
+    : { label: group.title, paths: [], icon: 'read' as const, running };
+}
+
+function useGroupTrailing(group: FeedGroup, now?: number): string | undefined {
+  const duration = useToolCallDuration(liveToolCall(group)?.toolCall, now);
+  return showsDuration(group) ? duration : undefined;
+}
+
+function useGroupActivities(
+  group: FeedGroup,
+): Omit<GroupActivitiesProps, 'renderActivity'> {
+  const items = visibleActivities(group);
+  return { items, onLayout: useGrowthAbove(group.id, items.map(activityKey)) };
+}
+
+function GroupActivities({
+  items,
+  onLayout,
+  renderActivity,
+}: GroupActivitiesProps): React.JSX.Element {
+  return (
+    <View className="gap-2 pb-1 wide:gap-1.5" onLayout={onLayout}>
+      {items.map((activity) => (
+        <View key={activityKey(activity)}>{renderActivity(activity)}</View>
+      ))}
+    </View>
   );
 }
 
-export function ToolCallGroup({
-  group,
-  renderActivity,
-  initialOpen,
-  now,
-}: ToolCallGroupProps): React.JSX.Element {
-  const live = group.state === 'open' ? group.live : undefined;
-  const duration = useToolCallDuration(live?.toolCall, now);
-  const running = group.state === 'open';
-  const items = group.items.flatMap<FeedActivity>((activity) => {
-    if (!live) return [activity];
-    if (activity.type === 'tool_call' && activity.row.id === live.toolCall.id)
-      return [];
-    if (activity.type === 'exploration') {
-      const remaining = activity.toolCalls.filter(
-        (row) => row.id !== live.toolCall.id,
-      );
-      return remaining.length ? [{ ...activity, toolCalls: remaining }] : [];
-    }
-    return [activity];
-  });
-  const onActivitiesLayout = useGrowthAbove(group.id, items.map(activityKey));
+export function ToolCallGroup(props: ToolCallGroupProps): React.JSX.Element {
+  const trailing = useGroupTrailing(props.group, props.now);
+  const activities = useGroupActivities(props.group);
   return (
     <ToolCallDisclosure
-      permissionOutcome={live?.toolCall._meta?.argo?.permissionOutcome}
-      label={
-        live ? toolCallTitle(live.toolCall, live.awaitingApproval) : group.title
-      }
-      paths={
-        live ? toolCallTitlePaths(live.toolCall, live.awaitingApproval) : []
-      }
-      icon={live ? toolCallIcon(live.toolCall) : 'read'}
-      running={running}
-      awaitingApproval={live?.awaitingApproval ?? false}
-      initialOpen={initialOpen}
-      trailing={running && !live?.awaitingApproval ? duration : undefined}
+      {...groupDisclosureProps(props.group)}
+      initialOpen={props.initialOpen}
+      trailing={trailing}
     >
-      <View className="gap-2 pb-1 wide:gap-1.5" onLayout={onActivitiesLayout}>
-        {items.map((activity) => (
-          <View key={activityKey(activity)}>{renderActivity(activity)}</View>
-        ))}
-      </View>
+      <GroupActivities {...activities} renderActivity={props.renderActivity} />
     </ToolCallDisclosure>
   );
 }

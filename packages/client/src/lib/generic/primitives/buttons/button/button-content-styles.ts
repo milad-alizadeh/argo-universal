@@ -41,7 +41,7 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
   variants: {
     variant: {
       default: `${filledNative} ios:bg-primary`,
-      outline: `${filledNative} android:bg-transparent`,
+      outline: `${filledNative} android:bg-transparent android:border-muted-foreground`,
       secondary: `${filledNative} android:border-0 android:bg-secondary`,
       ghost: textNative,
       link: textNative,
@@ -55,7 +55,7 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
 export const nativeLabelClass = 'ios:text-nav-action ios:font-medium';
 
 const textClasses = cva(
-  `type-control ${nativeLabelClass} web:pointer-events-none web:transition-colors`,
+  'type-control web:pointer-events-none web:transition-colors',
   {
     variants: {
       variant: {
@@ -112,13 +112,13 @@ function destructiveButtonClass(
 export function contentTextClass(
   props: Pick<ButtonProps, 'role' | 'variant'>,
 ): string {
-  const filledDestructive =
-    props.role === 'destructive' && isFilledVariant(props.variant);
+  const filledDestructive = isFilledDestructive(props);
   return cn(
     textClasses({
       variant: props.variant,
       destructive: props.role === 'destructive',
     }),
+    nativeLabelClass,
     filledDestructive && 'text-destructive-foreground',
   );
 }
@@ -140,4 +140,10 @@ export function contentActionClass(
 
 function isFilledVariant(variant: ButtonProps['variant']): boolean {
   return variant === 'default';
+}
+
+function isFilledDestructive(
+  props: Pick<ButtonProps, 'role' | 'variant'>,
+): boolean {
+  return props.role === 'destructive' && isFilledVariant(props.variant);
 }

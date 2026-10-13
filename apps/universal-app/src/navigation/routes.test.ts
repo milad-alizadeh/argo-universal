@@ -10,8 +10,11 @@ const newSessionInProject: NavigationDestination = {
   projectId: 'project-1',
 };
 
-// The route params beyond the destination's own fields.
-const destinations: [NavigationDestination, string[], object][] = [
+const destinations: [
+  NavigationDestination,
+  string[],
+  Record<string, string>,
+][] = [
   [{ to: 'sessions' }, ['(shell)', sessionsRouteGroup], {}],
   [
     { to: 'new-session' },
@@ -21,12 +24,12 @@ const destinations: [NavigationDestination, string[], object][] = [
   [
     newSessionInProject,
     ['(shell)', sessionsRouteGroup, 'sessions', '[id]'],
-    { id: newSessionId },
+    { projectId: 'project-1', id: newSessionId },
   ],
   [
     { to: 'session', id: 'session-1' },
     ['(shell)', sessionsRouteGroup, 'sessions', '[id]'],
-    {},
+    { id: 'session-1' },
   ],
   [{ to: 'issues' }, ['(shell)', 'issues', 'index'], {}],
   [{ to: 'atlas' }, ['(shell)', 'atlas', 'index'], {}],
@@ -49,13 +52,13 @@ const destinations: [NavigationDestination, string[], object][] = [
   [
     { to: 'settings-project', name: 'example project' },
     ['(shell)', 'settings', 'projects', '[name]'],
-    {},
+    { name: 'example project' },
   ],
   [{ to: 'settings-agent-new' }, ['(shell)', 'settings', 'agents', 'new'], {}],
   [
     { to: 'settings-agent', agent: firstAgentId },
     ['(shell)', 'settings', 'agents', '[agent]'],
-    {},
+    { agent: firstAgentId },
   ],
 ];
 
@@ -80,11 +83,8 @@ describe('hrefFor', () => {
 describe('destinationFor', () => {
   it.each(destinations)(
     'reads %o from its route',
-    (destination, segments, routeParams) => {
-      const { to: _to, ...params } = destination;
-      expect(destinationFor(segments, { ...params, ...routeParams })).toEqual(
-        destination,
-      );
+    (destination, segments, params) => {
+      expect(destinationFor(segments, params)).toEqual(destination);
     },
   );
 

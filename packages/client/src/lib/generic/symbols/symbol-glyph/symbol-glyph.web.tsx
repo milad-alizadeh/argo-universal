@@ -1,5 +1,6 @@
 import { type SFSymbol, SymbolView } from 'expo-symbols';
 import type * as React from 'react';
+import type { CSSProperties } from 'react';
 import { cn } from '../../utils';
 import {
   customSymbolBox,
@@ -25,51 +26,80 @@ const referenceShare = 0.88;
 // `circle` is this wide in 100-point type, the units of Argo's custom symbol paths.
 const referenceSymbolCustomUnits = 117;
 
-/*
- * The desktop app on macOS draws SF Symbols from the system and Argo's custom symbols from their paths; the browser
- * and other desktops draw Material Symbols.
- */
-export function SymbolGlyph({
-  sf,
-  material,
-  filled,
-  pixels,
-  colorClassName,
-  testID,
-}: SymbolGlyphProps): React.JSX.Element {
-  const render = useSymbolImageRenderer();
+const glyphBox = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  userSelect: 'none',
+  fontWeight: 'normal',
+  fontStyle: 'normal',
+  fontSynthesis: 'none',
+} as const;
+
+const maskBox = {
+  display: 'block',
+  flexShrink: 0,
+  backgroundColor: 'currentColor',
+} as const;
+
+interface SymbolBox {
+  width: number;
+  height: number;
+}
+
+function extentsOf(...boxes: SymbolBox[]): number[] {
+  return boxes.flatMap(({ width, height }) => [width, height]);
+}
+
+function fitScale(pixels: number, extents: number[]): number {
+  return (pixels * referenceShare) / Math.max(...extents);
+}
+
+export function SymbolGlyph(props: SymbolGlyphProps): React.JSX.Element {
   return (
     // data-icon lets a parent style the icons inside it, as `has-[>[data-icon]]` does on Button.
     <span
       data-icon
-      data-testid={testID}
+      data-testid={props.testID}
       aria-hidden
-      className={cn(colorClassName, '[&>div]:text-inherit!')}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        width: pixels,
-        height: pixels,
-        userSelect: 'none',
-        fontWeight: 'normal',
-        fontStyle: 'normal',
-        fontSynthesis: 'none',
-      }}
+      className={cn(props.colorClassName, '[&>div]:text-inherit!')}
+      style={{ ...glyphBox, width: props.pixels, height: props.pixels }}
     >
-      {render ? (
-        <AppleSymbolImage render={render} sf={sf} pixels={pixels} />
-      ) : (
-        <SymbolView
-          key={String(filled)}
-          name={{ web: material }}
-          size={pixels}
-          weight={symbolWeight(filled)}
-          tintColor="currentColor"
-        />
-      )}
+      <GlyphDrawing {...props} />
     </span>
+  );
+}
+
+/*
+ * The desktop app on macOS draws SF Symbols from the system and Argo's custom symbols from their paths; the browser
+ * and other desktops draw Material Symbols.
+ */
+function GlyphDrawing({
+  sf,
+  pixels,
+  ...props
+}: SymbolGlyphProps): React.JSX.Element {
+  const render = useSymbolImageRenderer();
+  if (render)
+    return <AppleSymbolImage render={render} sf={sf} pixels={pixels} />;
+  return <MaterialGlyph {...props} pixels={pixels} />;
+}
+
+type MaterialGlyphProps = Pick<
+  SymbolGlyphProps,
+  'material' | 'filled' | 'pixels'
+>;
+
+function MaterialGlyph(props: MaterialGlyphProps): React.JSX.Element {
+  return (
+    <SymbolView
+      key={String(props.filled)}
+      name={{ web: props.material }}
+      size={props.pixels}
+      weight={symbolWeight(props.filled)}
+      tintColor="currentColor"
+    />
   );
 }
 
@@ -85,20 +115,24 @@ function AppleSymbolImage({
   sf,
   pixels,
 }: AppleSymbolImageProps): React.JSX.Element {
-  if (isCustomSymbol(sf)) {
-    const { width, height } = customSymbolBox(sf);
-    const scale =
-      (pixels * referenceShare) /
-      Math.max(referenceSymbolCustomUnits, width, height);
-    return (
-      <SymbolMask
-        url={customSymbolImage(sf)}
-        width={width * scale}
-        height={height * scale}
-      />
-    );
-  }
+  if (isCustomSymbol(sf)) return <CustomSymbolImage sf={sf} pixels={pixels} />;
   return <MaskedSymbol render={render} sf={sf} pixels={pixels} />;
+}
+
+interface CustomSymbolImageProps extends Pick<SymbolGlyphProps, 'pixels'> {
+  sf: Parameters<typeof customSymbolBox>[0];
+}
+
+function CustomSymbolImage({
+  sf,
+  pixels,
+}: CustomSymbolImageProps): React.JSX.Element {
+  const box = customSymbolBox(sf);
+  const scale = fitScale(pixels, [
+    referenceSymbolCustomUnits,
+    ...extentsOf(box),
+  ]);
+  return <SymbolMask url={customSymbolImage(sf)} {...box} scale={scale} />;
 }
 
 interface MaskedSymbolProps extends Pick<SymbolGlyphProps, 'pixels'> {
@@ -107,54 +141,40 @@ interface MaskedSymbolProps extends Pick<SymbolGlyphProps, 'pixels'> {
 }
 
 // The system image is the mask and the text colour fills it, so the symbol follows colour like the other icons.
-function MaskedSymbol({
-  render,
-  sf,
-  pixels,
-}: MaskedSymbolProps): React.JSX.Element | null {
-  const pointSize = Math.round(pixels * globalThis.devicePixelRatio);
-  const image = useSymbolImage(render, { name: sf, pointSize });
-  const reference = useSymbolImage(render, {
+function MaskedSymbol(props: MaskedSymbolProps): React.JSX.Element | null {
+  const pointSize = Math.round(props.pixels * globalThis.devicePixelRatio);
+  const image = useSymbolImage(props.render, { name: props.sf, pointSize });
+  const reference = useSymbolImage(props.render, {
     name: referenceSymbol,
     pointSize,
   });
   if (!image || !reference) return null;
-  const scale =
-    (pixels * referenceShare) /
-    Math.max(reference.width, reference.height, image.width, image.height);
-  return (
-    <SymbolMask
-      url={image.url}
-      width={image.width * scale}
-      height={image.height * scale}
-    />
-  );
+  const scale = fitScale(props.pixels, extentsOf(reference, image));
+  return <SymbolMask {...image} scale={scale} />;
 }
 
-interface SymbolMaskProps {
+interface SymbolMaskProps extends SymbolBox {
   url: string;
-  width: number;
-  height: number;
+  scale: number;
 }
 
-// Centred in the icon's box.
-function SymbolMask({
+function maskStyle({
   url,
   width,
   height,
-}: SymbolMaskProps): React.JSX.Element {
+  scale,
+}: SymbolMaskProps): CSSProperties {
   const mask = `url("${url}") center / 100% 100% no-repeat`;
-  return (
-    <span
-      style={{
-        display: 'block',
-        flexShrink: 0,
-        width,
-        height,
-        backgroundColor: 'currentColor',
-        mask,
-        WebkitMask: mask,
-      }}
-    />
-  );
+  return {
+    ...maskBox,
+    width: width * scale,
+    height: height * scale,
+    mask,
+    WebkitMask: mask,
+  };
+}
+
+// Centred in the icon's box.
+function SymbolMask(props: SymbolMaskProps): React.JSX.Element {
+  return <span style={maskStyle(props)} />;
 }
