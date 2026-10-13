@@ -26,12 +26,12 @@ export const checkCustomDefinition = (
 export const checkConfiguredAgent = (
   deps: Pick<
     ConfigurationDeps,
-    'database' | 'checkAgentLaunch' | 'withAgentSetup'
+    'database' | 'checkAgentLaunch' | 'withAgentCheck'
   >,
   agentId: string,
 ): Promise<AgentCheck> => {
   const check = (): Promise<AgentCheck> => readConfiguredCheck(deps, agentId);
-  return deps.withAgentSetup ? deps.withAgentSetup(agentId, check) : check();
+  return deps.withAgentCheck ? deps.withAgentCheck(agentId, check) : check();
 };
 const readConfiguredCheck = (
   deps: Pick<ConfigurationDeps, 'database' | 'checkAgentLaunch'>,

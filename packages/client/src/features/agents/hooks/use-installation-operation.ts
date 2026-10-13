@@ -29,20 +29,23 @@ export function useInstallationOperation(
 type InstallationSheetState = {
   open: boolean;
   action: 'Install' | 'Update';
+  version: string;
   setOpen: (open: boolean) => void;
 };
+type InstallationOffer = Pick<InstallationSheetState, 'action' | 'version'>;
 export function useSheetState(
-  action: 'Install' | 'Update',
+  offer: InstallationOffer,
 ): InstallationSheetState {
-  const [sheet, setSheet] = useState({ open: false, action });
+  const [sheet, setSheet] = useState({ open: false, offer });
   const setOpen = (open: boolean): void =>
     setSheet((previous) => ({
       open,
-      action: previous.open ? previous.action : action,
+      offer: previous.open ? previous.offer : offer,
     }));
-  return {
-    open: sheet.open,
-    action: sheet.open ? sheet.action : action,
-    setOpen,
-  };
+  return { ...(sheet.open ? sheet.offer : offer), open: sheet.open, setOpen };
 }
+
+export const activeVersion = (
+  operation: AgentInstallOperation | undefined,
+  offered: string,
+): string => (operation?.status === 'installing' ? operation.version : offered);

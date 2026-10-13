@@ -1,4 +1,5 @@
 import type {
+  AgentCheck,
   AgentEnablementInput,
   AgentRegistration,
   ConfiguredAgent,
@@ -28,6 +29,10 @@ export interface ConfigurationDeps {
     operation: () => Promise<Result>,
   ) => Promise<Result>;
   withAgentMutation?: ConfigurationDeps['withAgentSetup'];
+  withAgentCheck?: (
+    agentId: string,
+    operation: () => Promise<AgentCheck>,
+  ) => Promise<AgentCheck>;
 }
 type CustomSave = CustomCheck;
 type SavedAgent = Pick<ConfiguredAgent, 'id' | 'enabled'> & {

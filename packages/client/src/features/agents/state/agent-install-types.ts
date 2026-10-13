@@ -17,6 +17,7 @@ export interface AgentInstallSheetProps {
 }
 export interface AgentInstallPresentation {
   action?: 'Install' | 'Update';
+  version?: string;
   open: boolean;
   phase: InstallPhase;
   failure?: string;

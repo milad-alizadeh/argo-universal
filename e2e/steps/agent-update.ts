@@ -76,6 +76,7 @@ Then(
         exact: true,
       })
       .click();
+    await expect(dialog).toBeHidden();
     await expect(versionRow(page, expected.version)).toBeVisible();
   },
 );

@@ -2,9 +2,10 @@ import type { AgentInfo, ConfiguredAgent } from '@repo/contracts';
 import type { ConfigurationDeps } from './configuration-commands';
 import {
   readConfiguredAgents,
+  readConfiguredAgent,
   selectCustomDefinition,
 } from './configuration-sql';
-import { type CustomCheck, checkCustomDefinition } from './custom-check';
+import { type CustomCheck, checkConfiguredAgent } from './custom-check';
 
 const selectEnabledCustom = (agent: ConfiguredAgent): CustomCheck[] => {
   if (!isEnabledDefinition(agent)) return [];
@@ -13,35 +14,45 @@ const selectEnabledCustom = (agent: ConfiguredAgent): CustomCheck[] => {
 };
 type CustomListDeps = Pick<
   ConfigurationDeps,
-  'database' | 'checkAgentLaunch' | 'withAgentSetup'
+  'database' | 'checkAgentLaunch' | 'withAgentCheck'
 >;
 const describeCustomAgent = async (
   deps: CustomListDeps,
   agent: CustomCheck,
-): Promise<AgentInfo> => {
+): Promise<AgentInfo[]> => {
   const check = await checkOwnedCustom(deps, agent);
-  return {
-    agent: agent.agentId,
-    label: agent.definition.name,
-    logo: '',
-    availability: customAvailability(check),
-    configOptions: [],
-  };
+  const configured = readConfiguredAgent(deps.database, agent.agentId);
+  const current = configured && selectEnabledCustom(configured)[0];
+  return current ? [customAgentInfo(current, check)] : [];
 };
+const customAgentInfo = (
+  agent: CustomCheck,
+  check: Awaited<ReturnType<typeof checkConfiguredAgent>>,
+): AgentInfo => ({
+  agent: agent.agentId,
+  label: agent.definition.name,
+  logo: '',
+  availability: customAvailability(check),
+  configOptions: [],
+});
 const customAvailability = (
-  check: Awaited<ReturnType<typeof checkCustomDefinition>>,
+  check: Awaited<ReturnType<typeof checkConfiguredAgent>>,
 ): AgentInfo['availability'] => {
   if (check.status !== 'ready') return 'unavailable';
   return check.authentication ? 'not_signed_in' : 'available';
 };
 
 // Each listing checks every enabled custom program afresh; readiness is never read from the record.
-export const listCustomAgents = (deps: CustomListDeps): Promise<AgentInfo[]> =>
-  Promise.all(
-    readConfiguredAgents(deps.database)
-      .flatMap(selectEnabledCustom)
-      .map((agent) => describeCustomAgent(deps, agent)),
-  );
+export const listCustomAgents = async (
+  deps: CustomListDeps,
+): Promise<AgentInfo[]> =>
+  (
+    await Promise.all(
+      readConfiguredAgents(deps.database)
+        .flatMap(selectEnabledCustom)
+        .map((agent) => describeCustomAgent(deps, agent)),
+    )
+  ).flat();
 
 const isEnabledDefinition = (agent: ConfiguredAgent): boolean =>
   agent.enabled && !agent.configuration.removed;
@@ -49,26 +60,16 @@ const isEnabledDefinition = (agent: ConfiguredAgent): boolean =>
 const checkOwnedCustom = async (
   deps: CustomListDeps,
   agent: CustomCheck,
-): Promise<Awaited<ReturnType<typeof checkCustomDefinition>>> => {
+): Promise<Awaited<ReturnType<typeof checkConfiguredAgent>>> => {
   try {
-    return await runOwnedCheck(deps, agent);
+    return await checkConfiguredAgent(deps, agent.agentId);
   } catch (error) {
     return failedCustomCheck(error);
   }
 };
-const runOwnedCheck = (
-  deps: CustomListDeps,
-  agent: CustomCheck,
-): ReturnType<typeof checkCustomDefinition> => {
-  const check = (): ReturnType<typeof checkCustomDefinition> =>
-    checkCustomDefinition(deps.checkAgentLaunch, agent);
-  return deps.withAgentSetup
-    ? deps.withAgentSetup(agent.agentId, check)
-    : check();
-};
 const failedCustomCheck = (
   error: unknown,
-): Awaited<ReturnType<typeof checkCustomDefinition>> => ({
+): Awaited<ReturnType<typeof checkConfiguredAgent>> => ({
   status: 'failed',
   failure: error instanceof Error ? error.message : 'Agent check failed',
 });

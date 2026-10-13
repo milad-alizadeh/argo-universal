@@ -426,7 +426,7 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
           createId: input.createId,
           home: input.home,
           port: 7337,
-          installations: snapshot.context.installations,
+          installations: engine.getSnapshot().context.installations,
           version: '1.2.3',
           startedAt: input.startedAt,
           database: mockDatabase,

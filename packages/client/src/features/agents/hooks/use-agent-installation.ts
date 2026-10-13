@@ -20,6 +20,7 @@ import type { AgentInstallPresentation } from '../state/agent-install-types';
 import {
   useInstallationOperation,
   useSheetState,
+  activeVersion,
   type ObservedOperation,
 } from './use-installation-operation';
 import { useCompletedRefresh } from './use-installation-refresh';
@@ -104,6 +105,7 @@ const cancelInstall = (input: PresentationInput): void => {
 };
 const presentation = (input: PresentationInput): AgentInstallPresentation => ({
   action: input.action,
+  version: input.version,
   open: input.open,
   onOpenChange: input.setOpen,
   phase: installationPhase(phaseInput(input)),
@@ -131,10 +133,13 @@ export function useAgentInstallation(
   version: string,
   action: 'Install' | 'Update' = 'Install',
 ): AgentInstallPresentation {
-  const sheet = useSheetState(action);
   const controls = useInstallationControls(agentId);
+  const sheet = useSheetState({
+    action,
+    version: activeVersion(controls.operation, version),
+  });
   useReconnectedInstallation(controls.operation, sheet.setOpen);
-  return presentation({ ...controls, ...sheet, agentId, version });
+  return presentation({ ...controls, ...sheet, agentId });
 }
 
 const hasCompletedPreviousRelease = (input: PresentationInput): boolean =>

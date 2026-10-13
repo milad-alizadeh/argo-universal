@@ -43,13 +43,20 @@ const validators = {
   onChange: CustomAgentDefinition,
 };
 
+const rejectedSubmission = (error: unknown): AgentRegistration => ({
+  status: 'failed',
+  failure: error instanceof Error ? error.message : 'Agent could not be saved.',
+});
+
 async function submitDefinition(
   value: CustomAgentDefinition,
   onSubmit: SubmitCustomAgent,
   setFailure: (failure: string | null) => void,
 ): Promise<AgentRegistration> {
   setFailure(null);
-  const result = await onSubmit(CustomAgentDefinition.parse(value));
+  const result = await onSubmit(CustomAgentDefinition.parse(value)).catch(
+    rejectedSubmission,
+  );
   if (result.status === 'failed') setFailure(result.failure);
   return result;
 }

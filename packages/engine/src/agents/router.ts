@@ -93,4 +93,6 @@ const ownedConfiguration = (deps: AgentsRouterDeps): ConfigurationDeps => ({
     deps.installations.configure(agentId, operation),
   withAgentMutation: (agentId, operation) =>
     deps.installations.mutateLaunch(agentId, operation),
+  withAgentCheck: (agentId, operation) =>
+    deps.installations.check(agentId, operation),
 });

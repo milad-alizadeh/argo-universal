@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { CustomAgentDefinition } from '@repo/contracts';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
@@ -14,6 +15,22 @@ export const customAgentDefinition: CustomAgentDefinition = {
   ...scriptedAgentCommand('reply'),
   env: [{ name: 'ARGO_348_PRESENT', value: 'fixture' }],
 };
+
+export const gatedCustomAgentDefinition = (
+  marker: string,
+  release: string,
+): CustomAgentDefinition => ({
+  ...customAgentDefinition,
+  args: [
+    '--import',
+    fileURLToPath(new URL('./probe-gate.mjs', import.meta.url)),
+    ...customAgentDefinition.args,
+  ],
+  env: [
+    { name: 'ARGO_PROBE_EXIT_MARKER', value: marker },
+    { name: 'ARGO_PROBE_RELEASE', value: release },
+  ],
+});
 
 // An Engine over a real Project repository and real ACP process launches, with no launch resolver stand-in.
 export const startCustomAgentEngine = async (

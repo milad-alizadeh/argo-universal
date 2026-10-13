@@ -7,18 +7,16 @@ import { defaultInstallPorts } from '../default-ports';
 import type { InstallPorts } from '../ports';
 import { readInstallationStatus } from '../selection/status';
 import { ConfigurationReservations } from './configuration-reservations';
-import { executeAgentInstall } from './execution';
 import {
   abortInstallation,
-  rememberInstallFailure,
-  installedOperation,
   inUseOperation,
-  installationDeadline,
   startOperation,
   createOwnedInstall,
 } from './operation-results';
 import type { InstallBindings, OwnedInstall } from './operation-types';
+import { createInstallationReadiness } from './readiness';
 import { removeAgentInstallation } from './removal';
+import { settleAgentInstallation } from './settlement';
 export class AgentInstallations {
   private bindings: InstallBindings | undefined;
   private readonly active = new Map<string, OwnedInstall>();
@@ -48,6 +46,11 @@ export class AgentInstallations {
     if (this.isBusy(agentId)) throw new Error('Agent is in use by setup');
     return this.configuration.run(agentId, operation);
   }
+  public check = createInstallationReadiness({
+    configuration: this.configuration,
+    installation: (agentId) => this.active.get(agentId)?.settled,
+    isStopped: () => this.stopped,
+  });
   private isInUse(agentId: string): boolean {
     return this.isBusy(agentId) || this.dependencies().isInUse(agentId);
   }
@@ -84,27 +87,16 @@ export class AgentInstallations {
     this.own(operation);
     return operation;
   }
-  private execute(owned: OwnedInstall): Promise<void> {
-    return executeAgentInstall({
-      home: this.home,
-      ports: this.ports,
-      deps: this.dependencies(),
-      signal: owned.controller.signal,
-      operation: owned.operation,
-    });
-  }
   private async run(owned: OwnedInstall): Promise<void> {
-    const timeout = installationDeadline(owned.controller);
     try {
-      await this.execute(owned);
-      this.completed.set(owned.operation.agentId, installedOperation(owned));
-    } catch (error) {
       this.completed.set(
         owned.operation.agentId,
-        rememberInstallFailure(owned, error),
+        await settleAgentInstallation(
+          { home: this.home, ports: this.ports, deps: this.dependencies() },
+          owned,
+        ),
       );
     } finally {
-      clearTimeout(timeout);
       this.release(owned);
     }
   }
