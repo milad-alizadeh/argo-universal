@@ -11,8 +11,16 @@ export function choiceValue(
   checked: boolean,
 ): string | string[] {
   if (!model.question.multiple) return choice;
-  const values = selectedAnswers(model).filter((answer) => answer !== choice);
-  return checked ? [...values, choice] : values;
+  return toggledChoice(selectedAnswers(model), choice, checked);
+}
+
+export function toggledChoice(
+  values: string[],
+  choice: string,
+  checked: boolean,
+): string[] {
+  const others = values.filter((value) => value !== choice);
+  return checked ? [...others, choice] : others;
 }
 
 export function customAnswer(model: QuestionModel): string {

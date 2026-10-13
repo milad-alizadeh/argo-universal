@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Text } from '#primitives/display/text/text';
 import { StandaloneField } from '#primitives/fields/field-input/standalone-field';
 import { Checkbox } from '#primitives/inputs/checkbox/checkbox';
+import { toggledChoice } from './elicitation-answers';
 import type { ElicitationFieldProps } from './elicitation-field';
 import { elicitationChoices } from './elicitation-property';
 
@@ -41,7 +42,7 @@ function choiceProps(
 ): ComponentProps<typeof Checkbox> {
   const values = Array.isArray(props.value) ? props.value : [];
   return {
-    ...sharedProps(props),
+    ...checkboxFieldProps(props),
     label: option.title,
     value: values.includes(option.const),
     onChange: (checked: boolean): void =>
@@ -49,7 +50,7 @@ function choiceProps(
   };
 }
 
-function sharedProps(
+function checkboxFieldProps(
   props: ChoicesProps,
 ): Pick<
   ComponentProps<typeof Checkbox>,
@@ -61,14 +62,4 @@ function sharedProps(
     hint: props.hint,
     onBlur: props.onBlur,
   };
-}
-
-function toggledChoice(
-  values: string[],
-  choice: string,
-  checked: boolean,
-): string[] {
-  return checked
-    ? [...values, choice]
-    : values.filter((value) => value !== choice);
 }
