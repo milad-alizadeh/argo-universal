@@ -56,26 +56,6 @@
     { "files": ["packages/client/mocks/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off" } },
     // complexity, max-depth, max-lines-per-function
     { "files": ["packages/client/src/*"], "rules": { "complexity": "off", "max-depth": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/super-linear-regex, unicorn/no-useless-undefined, unicorn/prefer-ternary
-    { "files": ["packages/client/src/features/composer/components/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/super-linear-regex, unicorn/prefer-ternary
-    { "files": ["packages/client/src/features/composer/components/composer/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/cognitive-complexity": "off", "sonarjs/super-linear-regex": "off", "unicorn/prefer-ternary": "off" } },
-    // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/super-linear-regex, unicorn/prefer-ternary
-    { "files": ["packages/client/src/features/composer/components/composer-configuration/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/super-linear-regex": "off", "unicorn/prefer-ternary": "off" } },
-    // complexity, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/composer/components/composer-options/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function, max-statements, unicorn/no-useless-undefined
-    { "files": ["packages/client/src/features/composer/components/composer-popover/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "unicorn/no-useless-undefined": "off" } },
-    // complexity, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/composer/components/composer-status/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/composer/components/start-session-in/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/composer/components/written-plan/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/features/composer/hooks/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function
-    { "files": ["packages/client/src/features/composer/state/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function
     { "files": ["packages/client/src/features/connection/components/connection-banner/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // max-lines-per-function
