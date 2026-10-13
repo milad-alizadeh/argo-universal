@@ -1,6 +1,7 @@
 import type { Page, WebSocketRoute } from '@playwright/test';
 import { z } from 'zod';
 import { expect } from '../fixtures';
+import { scrollToOldestHistoryMessage } from './feed-history-scroll';
 import { Given, When, Then } from './fixtures';
 
 interface HeldRefresh {
@@ -148,11 +149,7 @@ Then(
   'the oldest history message loads before the refresh finishes',
   async ({ page }) => {
     try {
-      await expect(
-        page
-          .getByTestId(feedScroll)
-          .getByText('History message 1.', { exact: true }),
-      ).toBeInViewport();
+      await scrollToOldestHistoryMessage(page);
     } finally {
       refreshes.get(page)?.release?.();
     }

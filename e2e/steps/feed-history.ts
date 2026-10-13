@@ -3,10 +3,13 @@ import { z } from 'zod';
 import { expect } from '../fixtures';
 import { readAgent } from './agents';
 import { sessionId } from './feed';
+import {
+  oldestHistoryMessage,
+  scrollToOldestHistoryMessage,
+} from './feed-history-scroll';
 import { Given, When, Then } from './fixtures';
 import { query } from './server-query';
 
-const firstMessage = 'History message 1.';
 const lastMessage = 'Latest history reply.';
 const feedScroll = 'feed-scroll';
 const FeedPage = z.object({
@@ -74,24 +77,20 @@ When('I reopen the stored long Feed', async ({ page, server }) => {
 Then('the Feed opens at its newest history message', async ({ page }) => {
   const feed = page.getByTestId(feedScroll);
   await expect(feed.getByText(lastMessage, { exact: true })).toBeInViewport();
-  await expect(feed.getByText(firstMessage, { exact: true })).toHaveCount(0);
+  await expect(
+    feed.getByText(oldestHistoryMessage, { exact: true }),
+  ).toHaveCount(0);
 });
 
 When('I scroll the Feed to its oldest message', async ({ page }) => {
-  const feed = page.getByTestId(feedScroll);
-  await expect
-    .poll(async () => {
-      await feed.evaluate((element) => {
-        element.scrollTop = 0;
-      });
-      return feed.getByText(firstMessage, { exact: true }).count();
-    })
-    .toBe(1);
+  await scrollToOldestHistoryMessage(page);
 });
 
 Then('the Feed shows its oldest history message', async ({ page }) => {
   await expect(
-    page.getByTestId(feedScroll).getByText(firstMessage, { exact: true }),
+    page
+      .getByTestId(feedScroll)
+      .getByText(oldestHistoryMessage, { exact: true }),
   ).toBeInViewport();
 });
 

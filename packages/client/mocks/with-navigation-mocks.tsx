@@ -26,13 +26,21 @@ export function createNavigationRecorder(): NavigationRecorder {
       destinations.push(destination);
       if (options?.replace) replacements.push(destination);
     },
-    reset: () => {
-      destinations.length = 0;
-      replacements.length = 0;
-    },
+    reset: () => clearDestinations(destinations, replacements),
   };
 }
 
+function clearDestinations(
+  destinations: NavigationDestination[],
+  replacements: NavigationDestination[],
+): void {
+  destinations.length = 0;
+  replacements.length = 0;
+}
+interface NavigationMockProps {
+  recorder?: NavigationRecorder;
+  children: ReactNode;
+}
 interface StoryContext {
   id: string;
   parameters: {
@@ -57,10 +65,7 @@ export function withNavigationMocks(
 function NavigationMocks({
   recorder,
   children,
-}: {
-  recorder?: NavigationRecorder;
-  children: ReactNode;
-}): React.JSX.Element {
+}: NavigationMockProps): React.JSX.Element {
   const [navigation] = useState(() => recorder ?? createNavigationRecorder());
   return (
     <NavigationProvider navigate={navigation.navigate}>

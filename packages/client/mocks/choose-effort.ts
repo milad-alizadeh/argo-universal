@@ -22,27 +22,43 @@ export async function chooseEffort(
   levels: string[],
   name: string,
 ): Promise<void> {
-  const target = levels.indexOf(name);
-  if (target < 0) throw new Error(`The slider does not offer ${name}.`);
-  const current = Math.max(
-    0,
-    levels.indexOf(slider.getAttribute(valueText) ?? ''),
-  );
-  // Focused like a keyboard user's slider, so a test can press on from here.
+  const target = effortIndex(levels, name);
+  const current = currentEffort(slider, levels);
   slider.focus();
-  // An unset slider cannot report a move onto its first stop, so step off it and back.
-  if (current === target && slider.getAttribute(valueText) === noSelection) {
+  if (needsFirstStop(slider, current, target)) {
     moveTo(slider, current + 1);
     moveTo(slider, current);
     return;
   }
+  await moveThroughLevels(slider, levels, { current, target });
+}
+function effortIndex(levels: string[], name: string): number {
+  const target = levels.indexOf(name);
+  if (target < 0) throw new Error(`The slider does not offer ${name}.`);
+  return target;
+}
+function needsFirstStop(
+  slider: HTMLElement,
+  current: number,
+  target: number,
+): boolean {
+  return current === target && slider.getAttribute(valueText) === noSelection;
+}
+async function moveThroughLevels(
+  slider: HTMLElement,
+  levels: string[],
+  { current, target }: { current: number; target: number },
+): Promise<void> {
   const direction = target > current ? 1 : -1;
   for (let moved = 1; moved <= Math.abs(target - current); moved += 1) {
     const index = current + direction * moved;
     moveTo(slider, index);
-    // The slider follows the Session, so wait for each level to land before the next move.
     await waitFor(() =>
       expect(slider).toHaveAttribute(valueText, levels[index]),
     );
   }
+}
+
+function currentEffort(slider: HTMLElement, levels: string[]): number {
+  return Math.max(0, levels.indexOf(slider.getAttribute(valueText) ?? ''));
 }

@@ -6,39 +6,38 @@ import {
   type ComposerDraft,
 } from '../src/features/composer';
 import { composerProps } from './composer-mock';
-
-export function RequestComposerPreview(
-  props: Pick<ComposerProps, 'permissionRequest' | 'planProposal'>,
-): ReactElement {
-  const [draft, setDraft] = useState<ComposerDraft>({
-    text: '',
-    attachments: [],
+const emptyDraft: ComposerDraft = { text: '', attachments: [] };
+type RequestProps = Pick<ComposerProps, 'permissionRequest' | 'planProposal'>;
+export function RequestComposerPreview(props: RequestProps): ReactElement {
+  const draft = useRequestDraft(props);
+  const permissionRequest = useDenialMessage(props.permissionRequest);
+  return <Composer {...draft} permissionRequest={permissionRequest} />;
+}
+function useRequestDraft(props: RequestProps): ComposerProps {
+  const [draft, setDraft] = useState<ComposerDraft>(emptyDraft);
+  return composerProps({
+    ...props,
+    draft,
+    onDraftChange: setDraft,
+    onAttachImages: () => {},
+    onSend: () => {},
+    onStop: () => {},
+    sessionStarted: true,
+    running: true,
   });
-  const [denialMessage, setDenialMessage] = useState(
-    props.permissionRequest?.denialMessage,
-  );
+}
+function useDenialMessage(
+  request: ComposerProps['permissionRequest'],
+): ComposerProps['permissionRequest'] {
+  const [denialMessage, setDenialMessage] = useState(request?.denialMessage);
   return (
-    <Composer
-      {...composerProps({
-        ...props,
-        draft,
-        onDraftChange: setDraft,
-        onAttachImages: () => {},
-        onSend: () => {},
-        onStop: () => {},
-        sessionStarted: true,
-        running: true,
-      })}
-      permissionRequest={
-        props.permissionRequest && {
-          ...props.permissionRequest,
-          denialMessage,
-          onDenialMessageChange: (message) => {
-            setDenialMessage(message);
-            props.permissionRequest?.onDenialMessageChange(message);
-          },
-        }
-      }
-    />
+    request && {
+      ...request,
+      denialMessage,
+      onDenialMessageChange: (message: string | undefined): void => {
+        setDenialMessage(message);
+        request.onDenialMessageChange(message);
+      },
+    }
   );
 }
