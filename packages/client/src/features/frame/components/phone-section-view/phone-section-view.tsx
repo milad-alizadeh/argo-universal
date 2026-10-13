@@ -16,19 +16,27 @@ export interface PhoneSectionViewProps {
   list: ReactNode;
 }
 
-// A phone section root: ☰, the section's title and its list's items in the native header, over the list.
-export function PhoneSectionView({
+function PhoneSectionHeader({
   section,
   header,
+}: Omit<PhoneSectionViewProps, 'list'>): React.JSX.Element {
+  return (
+    <ScreenHeader
+      title={shellSections[section].title}
+      left={<PhoneMenuButton />}
+      {...header}
+    />
+  );
+}
+
+// A phone section root: ☰, the section's title and its list's items in the native header, over the list.
+export function PhoneSectionView({
   list,
+  ...header
 }: PhoneSectionViewProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-sidebar">
-      <ScreenHeader
-        title={shellSections[section].title}
-        left={<PhoneMenuButton />}
-        {...header}
-      />
+      <PhoneSectionHeader {...header} />
       {list}
     </View>
   );
