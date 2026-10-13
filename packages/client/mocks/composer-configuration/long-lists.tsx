@@ -1,6 +1,7 @@
 import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
+import { fadedEdges } from '../scroll-fade';
 import {
   agentModelLabel,
   modelsScrollId,
@@ -52,10 +53,6 @@ export const ShortListsHaveNoFadesWide: Story = {
     await openConfiguration(context, layoutWidths.wide);
     for (const testId of [modelsScrollId, agentsScrollId])
       await assertShortList(context, testId);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const overlay = within(document.body);
-    await expect(overlay.queryByTestId('scroll-fade-top')).toBeNull();
-    await expect(overlay.queryByTestId('scroll-fade-bottom')).toBeNull();
     await context.userEvent.keyboard('{Escape}');
   },
 };
@@ -69,6 +66,7 @@ async function assertShortList(
   await waitFor(() =>
     expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight),
   );
+  await expect(fadedEdges(scroll)).toEqual({ top: false, bottom: false });
   await userEvent.keyboard('{Escape}');
 }
 

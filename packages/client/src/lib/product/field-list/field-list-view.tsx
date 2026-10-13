@@ -53,10 +53,12 @@ export function FieldList(props: FieldListProps): React.JSX.Element {
   );
 }
 
+// iOS's glass bars already fade the edges.
+const glassBarsFade = { top: 'never', bottom: 'never' } as const;
+
 const fieldListDefaults = {
   surfaceClassName: fadeSurface,
-  // iOS's glass bars already fade the edges.
-  fade: Platform.OS !== 'ios',
+  edges: Platform.OS === 'ios' ? glassBarsFade : undefined,
   keyExtractor: fieldListEntryKey,
   getItemType: fieldListEntryKind,
   estimatedItemSize: rowHeightEstimate,

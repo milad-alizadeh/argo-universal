@@ -68,23 +68,13 @@ export function createAppRouterDeps(
   input: AppRouterInput,
   sources: FeedSources = createFeedSources(input),
 ): AppRouterDeps {
-  const installations =
-    input.installations ?? new AgentInstallations(input.home ?? '');
-  const agentLogins =
-    input.agentLogins ??
-    createEngineAgentLogins({
-      sessions: input.sessions,
-      createId: input.createId ?? randomUUID,
-      installations,
-    });
-  bindInstallations(installations, { ...input, agentLogins });
+  const setup = createAgentSetup(input);
+  bindInstallations(setup.installations, { ...input, ...setup });
   return {
     ...input,
     ...sources,
-    createId: input.createId ?? randomUUID,
+    ...setup,
     checkAgentLaunch,
-    agentLogins,
-    installations,
     readSession: createSessionReader(input.database),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };
@@ -100,10 +90,47 @@ function bindInstallations(
     checkAgentLaunch,
     isInUse: (agentId) =>
       input.agentLogins.isBusy(agentId) ||
-      Object.values(input.sessions.getSnapshot().context.sessions).some(
-        (session) =>
-          !session.getSnapshot().context.agent ||
-          session.getSnapshot().context.agent === agentId,
-      ),
+      sessionsUseAgent(input.sessions, agentId),
   });
+}
+
+function createAgentSetup(
+  input: AppRouterInput,
+): Pick<AppRouterDeps, 'installations' | 'agentLogins' | 'createId'> {
+  const installations = input.installations ?? createInstallations(input.home);
+  return {
+    installations,
+    agentLogins: resolveAgentLogins(input, installations),
+    createId: input.createId ?? randomUUID,
+  };
+}
+
+function resolveAgentLogins(
+  input: AppRouterInput,
+  installations: AgentInstallations,
+): AppRouterDeps['agentLogins'] {
+  return (
+    input.agentLogins ??
+    createEngineAgentLogins({
+      sessions: input.sessions,
+      createId: input.createId ?? randomUUID,
+      installations,
+    })
+  );
+}
+
+function sessionsUseAgent(
+  sessions: OpenSessionsActorRef,
+  agentId: string,
+): boolean {
+  return Object.values(sessions.getSnapshot().context.sessions).some(
+    (session) => {
+      const { agent } = session.getSnapshot().context;
+      return !agent || agent === agentId;
+    },
+  );
+}
+
+function createInstallations(home: string | undefined): AgentInstallations {
+  return new AgentInstallations(home ?? '');
 }

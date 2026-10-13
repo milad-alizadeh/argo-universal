@@ -1,20 +1,10 @@
-import { LegendList } from '@legendapp/list/react-native';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import {
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  View,
-} from 'react-native';
+import { View } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { hasLiquidGlass } from '#lib/generic/native-header';
-import {
-  ScrollColumnContext,
-  useScrollColumnStyle,
-} from '#lib/generic/scroll-column';
 import { cn } from '#lib/generic/utils';
-import { useScrollFadeEdges } from '#lib/product/scroll-fade/scroll-fade';
-import { ScrollFadeFrame } from '#lib/product/scroll-fade/scroll-fade-frame';
+import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { useListRows } from './sessions-list-entry-rows';
@@ -58,9 +48,6 @@ const fillStyle = { minHeight: 0 };
 
 const listBehaviour = {
   ...listTestIdProps('sessions-scroll'),
-  style: { flex: 1 },
-  // On iOS it scrolls by the fade's top padding on mount, then snaps back.
-  maintainVisibleContentPosition: false,
   keyExtractor: entryKey,
   estimatedItemSize: 76,
   // Rows hold no state of their own, so scrolling reuses them instead of mounting new ones.
@@ -73,6 +60,12 @@ const listBehaviour = {
 // The page's colour, which a native list fades into; the web fades the rows themselves over the glass.
 const fadeSurface = 'bg-sidebar';
 
+// The top fades once content scrolls under the header, unless iOS's glass header shades it; the last rows always sink into the bottom edge.
+const sessionsFade = {
+  edges: { top: hasLiquidGlass ? 'never' : 'scrolled', bottom: 'always' },
+  surfaceClassName: fadeSurface,
+} as const;
+
 function surfaceClassName(scrolling: boolean): string {
   return cn(
     'relative flex-1 overflow-hidden bg-sidebar wide:bg-transparent web:select-none web:[&_*]:select-none!',
@@ -84,31 +77,15 @@ function surfaceClassName(scrolling: boolean): string {
 
 interface SessionsListSurfaceProps {
   scrolling: boolean;
-  fadeTop: boolean;
   children: ReactNode;
 }
-
-// The bottom fade stays, so the last rows always sink into the edge.
-function fadeEdges(fadeTop: boolean): { top: boolean; bottom: boolean } {
-  return { top: fadeTop && !hasLiquidGlass, bottom: true };
-}
-
-const fadeFrameLayout = {
-  surfaceClassName: fadeSurface,
-  className: 'flex-1',
-  style: fillStyle,
-};
 
 function SessionsListSurface(
   props: SessionsListSurfaceProps,
 ): React.JSX.Element {
   return (
     <View className={surfaceClassName(props.scrolling)} style={fillStyle}>
-      <ScrollFadeFrame edges={fadeEdges(props.fadeTop)} {...fadeFrameLayout}>
-        <ScrollColumnContext value={undefined}>
-          {props.children}
-        </ScrollColumnContext>
-      </ScrollFadeFrame>
+      {props.children}
     </View>
   );
 }
@@ -128,19 +105,16 @@ function listChrome(props: SessionsListProps): ListChrome {
 }
 
 interface SessionsLegendListProps extends SessionsListProps {
-  onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
-}
-
-function useListContentStyle(): ReturnType<typeof useScrollColumnStyle> {
-  return useScrollColumnStyle(useContentStyle(useWide()));
+  onScroll: () => void;
 }
 
 function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
-  const contentContainerStyle = useListContentStyle();
+  const contentContainerStyle = useContentStyle(useWide());
   const rows = useListRows(props);
   return (
-    <LegendList
+    <ScrollFadeList
       {...listBehaviour}
+      {...sessionsFade}
       contentContainerStyle={contentContainerStyle}
       onEndReached={props.onEndReached}
       onScroll={props.onScroll}
@@ -152,14 +126,9 @@ function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
 
 export function SessionsList(props: SessionsListProps): React.JSX.Element {
   const scrolling = useScrolling();
-  // The top fade shows once content has scrolled under the header.
-  const scrollFade = useScrollFadeEdges({ onScroll: scrolling.onScroll });
   return (
-    <SessionsListSurface
-      scrolling={scrolling.scrolling}
-      fadeTop={scrollFade.edges.top}
-    >
-      <SessionsLegendList {...props} onScroll={scrollFade.onScroll} />
+    <SessionsListSurface scrolling={scrolling.scrolling}>
+      <SessionsLegendList {...props} onScroll={scrolling.onScroll} />
     </SessionsListSurface>
   );
 }

@@ -3,7 +3,6 @@ import type { BlobRef } from '@repo/contracts';
 import type * as React from 'react';
 import { useRef } from 'react';
 import { View } from 'react-native';
-import { FeedFade } from '#lib/product/feed-fade';
 import { FeedGrowthContext } from '../feed-growth-context';
 import type { FeedEntry } from './feed-entry';
 import { FeedOverlays } from './feed-overlays';
@@ -23,22 +22,18 @@ export interface FeedListProps {
   now?: number;
 }
 
-interface FeedBodyProps extends FeedScrollProps {
-  atStart: boolean;
+interface FeedBodyProps extends Omit<FeedScrollProps, 'atEnd'> {
   newestKeyWhenLeftEnd: string | null;
 }
 
 function FeedBody({
-  atStart,
   newestKeyWhenLeftEnd,
   ...scroll
 }: FeedBodyProps): React.JSX.Element {
   const feedGrowth = useFeedGrowth(scroll.list);
   return (
     <FeedGrowthContext.Provider value={feedGrowth}>
-      <FeedFade atStart={atStart} atEnd={newestKeyWhenLeftEnd === null}>
-        <FeedScroll {...scroll} />
-      </FeedFade>
+      <FeedScroll {...scroll} atEnd={newestKeyWhenLeftEnd === null} />
     </FeedGrowthContext.Provider>
   );
 }

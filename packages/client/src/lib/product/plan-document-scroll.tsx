@@ -7,7 +7,7 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { ScrollFade } from './scroll-fade/scroll-fade-overlay';
+import { ScrollFadeGradient } from './scroll-fade/scroll-fade-gradient';
 
 export interface ScrolledPlanStyle {
   frame: string;
@@ -90,7 +90,7 @@ export function PlanBottomFade(props: {
   metrics: PlanScrollMetrics;
 }): React.JSX.Element | null {
   if (!overflows(props.metrics) || hiddenBelow(props.metrics) <= 1) return null;
-  return <ScrollFade edge="bottom" className="bg-card" height={40} />;
+  return <ScrollFadeGradient edge="bottom" className="bg-card" height={40} />;
 }
 
 function thumbPlacement({
