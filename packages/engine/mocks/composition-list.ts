@@ -23,7 +23,7 @@ export const startCountedList = async (
 };
 
 export const watchList = async (
-  host: EngineHost,
+  host: Pick<EngineHost, 'createCaller'>,
 ): Promise<{
   controller: AbortController;
   caller: EngineHost['caller'];

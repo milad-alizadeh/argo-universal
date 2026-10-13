@@ -64,7 +64,9 @@ export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
   Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>>;
 
-const installationSource = (input: AppRouterInput): AgentInstallations =>
+const installationSource = (
+  input: Pick<AppRouterInput, 'installations' | 'home'>,
+): AgentInstallations =>
   input.installations ?? new AgentInstallations(input.home ?? '');
 
 type AgentDependencies = Pick<
@@ -102,7 +104,10 @@ export function createAppRouterDeps(
 type InstallationSources = AppRouterInput &
   Pick<AppRouterDeps, 'agentLogins' | 'createId'>;
 
-const isAgentInUse = (input: InstallationSources, agentId: string): boolean =>
+const isAgentInUse = (
+  input: Pick<InstallationSources, 'agentLogins' | 'sessions'>,
+  agentId: string,
+): boolean =>
   input.agentLogins.isBusy(agentId) ||
   Object.values(input.sessions.getSnapshot().context.sessions).some(
     (session) =>

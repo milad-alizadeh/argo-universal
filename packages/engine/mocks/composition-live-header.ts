@@ -27,7 +27,7 @@ export async function startHeaderHost(agent: string): Promise<HeaderHost> {
 }
 
 async function openHeaderSubscription(
-  host: EngineHost,
+  host: Pick<EngineHost, 'createCaller'>,
 ): Promise<Pick<HeaderHost, 'caller' | 'controller' | 'subscription'>> {
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
@@ -61,7 +61,7 @@ function hasActivity(event: FeedSubscribeOutput, text: string): boolean {
 }
 
 export async function expectHeaderActivity(
-  host: HeaderHost,
+  host: Pick<HeaderHost, 'caller' | 'subscription'>,
   text: string,
 ): Promise<void> {
   await expect
@@ -75,7 +75,7 @@ export async function expectHeaderActivity(
 }
 
 async function storedRevision(
-  host: HeaderHost,
+  host: Pick<HeaderHost, 'caller'>,
   id: string,
 ): Promise<number | undefined> {
   const page = await host.caller.feed.page({
@@ -86,7 +86,7 @@ async function storedRevision(
 }
 
 export async function sendHeaderRow(
-  host: HeaderHost,
+  host: Pick<HeaderHost, 'caller' | 'database' | 'databaseWriter' | 'input'>,
   row: SessionUpdate,
 ): Promise<void> {
   const revision = await publishStoredHeaderRow(host, row);

@@ -5,7 +5,7 @@ import type { HeaderHost } from './composition-live-header';
 import { requireScriptedProcessAt } from './scripted-agent';
 import type { scriptedEngineInput } from './scripted-engine';
 
-function activeTurnId(host: HeaderHost): string {
+function activeTurnId(host: Pick<HeaderHost, 'database'>): string {
   const row = host.database.$client
     .prepare('SELECT id FROM turn WHERE session_id = ? AND status = ?')
     .get('session-1', 'running');
@@ -24,7 +24,7 @@ function headerWrite(row: SessionUpdate, revision: number): FeedRowsJob {
 }
 
 export async function publishStoredHeaderRow(
-  host: HeaderHost,
+  host: Pick<HeaderHost, 'caller' | 'database' | 'databaseWriter'>,
   row: SessionUpdate,
 ): Promise<number> {
   const revision = await nextRevision(host);
@@ -46,7 +46,7 @@ function configurationAt(revision: number): typeof acpConfiguration {
 }
 
 export async function notifyHeaderChange(
-  input: ReturnType<typeof scriptedEngineInput>,
+  input: Pick<ReturnType<typeof scriptedEngineInput>, 'agent'>,
   revision: number,
 ): Promise<void> {
   const update = {
@@ -59,7 +59,7 @@ export async function notifyHeaderChange(
   );
 }
 
-async function nextRevision(host: HeaderHost): Promise<number> {
+async function nextRevision(host: Pick<HeaderHost, 'caller'>): Promise<number> {
   const page = await host.caller.feed.page({
     sessionId: 'session-1',
     direction: 'tail',

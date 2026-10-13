@@ -17,7 +17,9 @@ const blobUrlPattern = /^\/blobs\/([^/?]*)(\?.*)?$/;
 const multipartHeaderBytes = 65_536;
 const maxBodySize = maxBlobUploadBytes + multipartHeaderBytes;
 
-function createTRPCResponse(options: RequestListenerOptions): RequestListener {
+type TRPCSources = Pick<RequestListenerOptions, 'router' | 'guard'>;
+
+function createTRPCResponse(options: TRPCSources): RequestListener {
   const handleTRPC = createHTTPHandler({
     router: options.router,
     basePath: '/trpc/',

@@ -8,6 +8,8 @@ import {
 import { closeSubscription } from '#mocks/composition-subscriptions';
 import { SessionRowUpdateJob } from '../sessions';
 
+const sessionId = 'session-1';
+
 it.each(agentAdapters)(
   'keeps publishing list changes and counts after one subscriber disconnects for $agent',
   async ({ agent }): Promise<void> => {
@@ -15,7 +17,7 @@ it.each(agentAdapters)(
     host.databaseWriter.send({
       type: 'writer.write',
       job: new SessionRowUpdateJob({
-        id: 'session-1',
+        id: sessionId,
         set: { maxRevision: 50 },
       }),
     });
@@ -36,7 +38,7 @@ it.each(agentAdapters)(
     host.databaseWriter.send({
       type: 'writer.write',
       job: new SessionRowUpdateJob({
-        id: 'session-1',
+        id: sessionId,
         set: { title: 'Survives one disconnect', seenRevision: 50 },
       }),
     });
@@ -71,7 +73,7 @@ it.each(agentAdapters)(
     host.databaseWriter.send({
       type: 'writer.write',
       job: new SessionRowUpdateJob({
-        id: 'session-1',
+        id: sessionId,
         set: { title: 'No subscribers' },
       }),
     });

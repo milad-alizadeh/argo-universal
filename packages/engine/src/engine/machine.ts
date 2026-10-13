@@ -232,7 +232,7 @@ export const engineMachine = engineSetup.createMachine({
 });
 
 function serverIdentity(
-  context: EngineContext,
+  context: Pick<EngineContext, 'home' | 'port' | 'version' | 'startedAt'>,
 ): Pick<HttpServerOptions, 'home' | 'port' | 'version' | 'startedAt'> {
   return {
     home: context.home,
