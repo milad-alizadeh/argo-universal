@@ -79,7 +79,9 @@ function StepBody(props: SetupStepProps): React.JSX.Element {
       <Text role="secondary" className="text-muted-foreground">
         {props.caption}
       </Text>
-      {props.footer}
+      {props.footer && (
+        <View className="items-start pt-0.5">{props.footer}</View>
+      )}
     </View>
   );
 }
