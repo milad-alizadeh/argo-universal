@@ -96,10 +96,12 @@ function Offline({
       >
         Can't reach {serverName ?? 'the Server'}
       </Text>
-      <View className="pr-1">
+      {/* The icon sits as far from the text as from the capsule's right edge: 8px each. */}
+      <View className="-ml-1 pr-1">
         <IconButton
           variant="ghost"
           icon="retry"
+          iconRole="action"
           accessibilityLabel="Try again"
           onPress={onRetry}
           hitSlop={8}
