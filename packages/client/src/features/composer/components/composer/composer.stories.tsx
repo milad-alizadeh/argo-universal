@@ -12,7 +12,7 @@ import {
   oversizedComposerImage,
 } from '../../../../../mocks/composer-mock';
 import { Variation, Variations } from '../../../../lib/generic/variations';
-import { imageSelectionFailureMessage } from '../../state/image-draft';
+import { attachmentSelectionFailureMessage } from '../../state/attachment-draft';
 import { Composer } from './composer';
 
 const spacingAndColoursPrompt = 'Match the spacing and colours.';
@@ -37,10 +37,11 @@ const meta = {
   },
   args: {
     initialAgent: firstAgent.agent,
-    draft: { text: '', images: [] },
+    draft: { text: '', attachments: [] },
     onDraftChange: action('edit draft'),
     onAttachImages: action('attach images'),
     onAttachFiles: action('attach files'),
+    onDropFiles: action('drop files'),
     onSelectSlashCommand: action('slash commands'),
     onCreateGoal: action('create goal'),
     onSend: action('send prompt'),
@@ -66,8 +67,8 @@ type Story = StoryObj<typeof meta>;
 
 export const ImageSelectionFailed: Story = {
   args: {
-    draft: { text: 'Build this screen using the brief.', images: [] },
-    error: imageSelectionFailureMessage,
+    draft: { text: 'Build this screen using the brief.', attachments: [] },
+    error: attachmentSelectionFailureMessage,
   },
   render: (args) => (
     <View className="w-full items-center p-4">
@@ -92,7 +93,7 @@ export const Overview: Story = {
               <Composer
                 {...composerProps({
                   ...args,
-                  draft: { text: spacingAndColoursPrompt, images: [] },
+                  draft: { text: spacingAndColoursPrompt, attachments: [] },
                 })}
               />
             </Variation>
@@ -102,7 +103,7 @@ export const Overview: Story = {
                   ...args,
                   draft: {
                     text: 'Match the spacing and colours.\nKeep the phone layout readable.\nUse the shared light and dark themes.',
-                    images: [],
+                    attachments: [],
                   },
                 })}
               />
@@ -113,7 +114,7 @@ export const Overview: Story = {
                   ...args,
                   draft: {
                     text: 'First line\nSecond line\nThird line\nFourth line\nFifth line\nSixth line',
-                    images: [],
+                    attachments: [],
                   },
                 })}
               />
@@ -124,18 +125,18 @@ export const Overview: Story = {
                   ...args,
                   draft: {
                     text: 'Match these screenshots.',
-                    images: composerImages,
+                    attachments: composerImages,
                   },
                 })}
               />
             </Variation>
-            <Variation label="Image too large">
+            <Variation label="Attachment too large">
               <Composer
                 {...composerProps({
                   ...args,
                   draft: {
                     text: 'Match these screenshots.',
-                    images: [oversizedComposerImage],
+                    attachments: [oversizedComposerImage],
                   },
                 })}
               />
@@ -144,7 +145,7 @@ export const Overview: Story = {
               <Composer
                 {...composerProps({
                   ...args,
-                  draft: { text: spacingAndColoursPrompt, images: [] },
+                  draft: { text: spacingAndColoursPrompt, attachments: [] },
                   sending: true,
                 })}
               />
@@ -153,7 +154,7 @@ export const Overview: Story = {
               <Composer
                 {...composerProps({
                   ...args,
-                  draft: { text: spacingAndColoursPrompt, images: [] },
+                  draft: { text: spacingAndColoursPrompt, attachments: [] },
                   disabled: true,
                 })}
               />

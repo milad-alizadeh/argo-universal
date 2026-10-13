@@ -37,16 +37,18 @@ export interface ReadyNewSessionViewProps {
   draft: ComposerDraft;
   onDraftChange: (draft: ComposerDraft) => void;
   onAttachImages: () => void;
+  onAttachFiles: () => void;
+  onDropFiles: NonNullable<ComposerProps['onDropFiles']>;
   onSend: (draft: ComposerDraft) => void;
   // False until every choice has settled and the Server is reachable; Send also waits for a prompt.
   canOpen: boolean;
-  // True while the draft's images upload and the Session opens.
+  // True while the draft's attachments upload and the Session opens.
   opening: boolean;
   // The sent first prompt and Working, drawn in the Feed while the Session opens.
   starting?: StartingFeed;
   // Why the chosen Agent can't start a Session, and how to set it up.
   setupStep?: string;
-  // An attached image that couldn't be selected or uploaded.
+  // An attachment that couldn't be selected or uploaded.
   attachmentError?: string;
   openError?: string;
 }
@@ -66,7 +68,7 @@ const openFailed = (message: string): ErrorToast => ({
   message,
 });
 
-const emptyDraft: ComposerDraft = { text: '', images: [] };
+const emptyDraft: ComposerDraft = { text: '', attachments: [] };
 const ignoreDraft = (): void => {};
 const noOlderRows = (): void => {};
 
@@ -170,6 +172,8 @@ function ReadyNewSessionView(
           <Composer
             {...composerDraftProps(props)}
             onAttachImages={props.onAttachImages}
+            onAttachFiles={props.onAttachFiles}
+            onDropFiles={props.onDropFiles}
             onSend={props.onSend}
             configuration={configuration}
             placeholder="What should the Agent work on?"

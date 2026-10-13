@@ -13,6 +13,7 @@ import {
 } from 'xstate';
 import {
   createAcpResources,
+  releaseLoginTerminalGroups,
   type AcpResources,
   type AcpResourceInput,
 } from '../acp';
@@ -24,7 +25,12 @@ import {
   syncSupervisorMachine,
   type SyncSupervisorInput,
 } from '../agents';
-import { blobsFolderIn, removeUnusedBlobs } from '../blob';
+import {
+  attachmentsFolderIn,
+  blobsFolderIn,
+  removeOrphanAttachments,
+  removeUnusedBlobs,
+} from '../blob';
 import { findMachineActor } from '../lib/machine-actor';
 import { seedProject } from '../projects';
 import {
@@ -143,7 +149,12 @@ export const engineMachine = setup({
       async ({ input }): Promise<void> => {
         recoverAfterRestart(input.database);
         await reconcileInterruptedInstallations(input.home);
+        await releaseLoginTerminalGroups(input.home);
         await removeUnusedBlobs(input);
+        await removeOrphanAttachments({
+          database: input.database,
+          attachmentsFolder: attachmentsFolderIn(input.home),
+        });
       },
     ),
     syncSupervisor: syncSupervisorMachine,

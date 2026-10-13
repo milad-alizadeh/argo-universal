@@ -11,6 +11,9 @@ packages:
 
 # Every shared dependency is pinned here; packages refer to it as "catalog:".
 catalog:
+  "@xterm/xterm": 6.0.0
+  "@xterm/addon-fit": 0.11.0
+  node-pty: 1.1.0
   "@agentclientprotocol/sdk": 1.7.0
   "@legendapp/list": 3.6.0
   "@radix-ui/react-popover": 1.1.23
@@ -48,6 +51,7 @@ catalog:
   "@rn-primitives/switch": 1.5.2
   "expo-file-system": ~57.0.7
   "expo-haptics": ~57.0.3
+  "expo-document-picker": ~57.0.3
   "expo-image-picker": ~57.0.20
   "expo-clipboard": ~57.0.2
   marked: 18.1.0
@@ -156,6 +160,7 @@ minimumReleaseAgeExclude:
 
 # drizzle-kit pulls esbuild; `drizzle-kit generate` works without its install script.
 allowBuilds:
+  node-pty: true
   esbuild: false
 
 # pnpm's default, written out: Electron Forge refuses to start unless node-linker is hoisted or a hoist pattern is set.
@@ -165,5 +170,6 @@ hoistPattern:
 patchedDependencies:
   "@expo/ui@57.0.22": patches/@expo__ui@57.0.22.patch
   expo-symbols@57.0.3: patches/expo-symbols@57.0.3.patch
+  node-pty@1.1.0: patches/node-pty@1.1.0.patch
   react-native@0.86.3: patches/react-native@0.86.3.patch
   xstate@5.33.2: patches/xstate@5.33.2.patch

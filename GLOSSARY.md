@@ -144,6 +144,10 @@ _Avoid_: Plan (for the document), exit-plan
 A plan document the Agent keeps without asking for approval, as Markdown text or only as a URI.
 _Avoid_: Plan (for the document), Plan proposal (when nothing is asked)
 
+**Attachment**:
+An image or file the user adds to a prompt from their device. The Server stores it as a Blob, and the Agent receives an image as a picture and any other file as the file itself.
+_Avoid_: Upload (in UI), Resource reference
+
 **Resource reference**:
 A resource the Agent names in its content by URI, with a name and optionally a description and embedded text. Argo shows it and does not open it.
 _Avoid_: Link, attachment

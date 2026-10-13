@@ -22,6 +22,7 @@
     "ajv-formats": "catalog:",
     "drizzle-orm": "catalog:",
     "fflate": "catalog:",
+    "node-pty": "catalog:",
     "tar": "catalog:",
     "ws": "catalog:",
     "xstate": "catalog:",
@@ -42,6 +43,7 @@
     "./mocks": "./mocks/engine.ts",
     "./ipc": "./src/engine/ipc.ts",
     "./server-runtime": "./src/server-runtime.ts",
-    "./installation-runtime": "./src/agents/installation-runtime.ts"
+    "./installation-runtime": "./src/agents/installation-runtime.ts",
+    "./login-terminal-runtime": "./src/acp/terminal-runtime.ts"
   }
 }

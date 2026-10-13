@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn } from 'storybook/test';
+import { readTerminalFrame } from '../agent-login-terminal/terminal.mocks';
 import { AgentLoginSheet } from './agent-login-sheet';
 import { loginSnapshot } from './agent-login.mocks';
 
@@ -20,6 +21,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const ChooseMethod: Story = {};
+export const Terminal: Story = {
+  args: {
+    snapshot: { ...loginSnapshot('authenticating'), terminal: true },
+    terminal: {
+      onRead: fn(readTerminalFrame),
+      onInput: fn(),
+      onFailure: fn(),
+    },
+  },
+};
 export const Starting: Story = {
   args: { snapshot: loginSnapshot('starting') },
 };

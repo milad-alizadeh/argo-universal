@@ -93,6 +93,7 @@ const config: StorybookConfig = {
           '@repo/client > @legendapp/list/react-native',
           '@repo/client > react-native-keyboard-controller',
           '@repo/client > expo-haptics',
+          '@repo/client > expo-document-picker',
           '@repo/client > expo-image-picker',
           '@repo/client > expo-symbols',
           '@repo/client > expo-symbols/androidWeights/extraLight',

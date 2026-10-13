@@ -1841,6 +1841,8 @@
         "packages/engine/src/agents/install/processes/process-cleanup.ts",
         "packages/engine/src/agents/install/processes/process-wrapper.ts",
         "packages/engine/src/agents/install/processes/process-group.ts",
+        "packages/engine/src/lib/process-group-members.ts",
+        "packages/engine/src/acp/terminal-wrapper.mjs",
         "apps/desktop/src/main/server-process.ts",
         "apps/desktop/scripts/storybook-mac.mts"
       ],

@@ -1,11 +1,11 @@
-import type {
-  BlobRef,
-  ContentBlock,
-  ImageContent,
-  LiveHeader,
-  UserMessage,
+import {
+  type BlobRef,
+  type ContentBlock,
+  isPromptImage,
+  type LiveHeader,
+  type UserMessage,
 } from '@repo/contracts';
-import type { ComposerDraft } from '#features/composer';
+import type { ComposerAttachment, ComposerDraft } from '#features/composer';
 import type { FeedViewItem } from '#features/feed';
 
 export interface StartingFeed {
@@ -16,17 +16,33 @@ export interface StartingFeed {
 
 const startingId = 'starting';
 
-// Each attached image as the device holds it; it draws from its local URI.
-const deviceImages = (sent: ComposerDraft): ImageContent[] =>
-  sent.images.map((image) => ({
-    type: 'image',
-    mimeType: 'image/*',
-    blob: { blobId: image.id, mime: 'image/*', bytes: image.bytes },
-  }));
+const deviceImage = (attachment: ComposerAttachment): ContentBlock => ({
+  type: 'image',
+  mimeType: attachment.mimeType,
+  blob: {
+    blobId: attachment.id,
+    mime: attachment.mimeType,
+    bytes: attachment.bytes,
+  },
+});
+
+const deviceFile = (attachment: ComposerAttachment): ContentBlock => ({
+  type: 'resource_link',
+  name: attachment.name,
+  uri: attachment.uri,
+  mimeType: attachment.mimeType,
+  size: attachment.bytes,
+});
+
+// Each attachment as the device holds it: an image draws from its local URI, a file shows its name.
+const deviceAttachment = (attachment: ComposerAttachment): ContentBlock =>
+  isPromptImage(attachment.mimeType)
+    ? deviceImage(attachment)
+    : deviceFile(attachment);
 
 const sentContent = (sent: ComposerDraft): ContentBlock[] => [
   ...(sent.text.trim() ? [{ type: 'text' as const, text: sent.text }] : []),
-  ...deviceImages(sent),
+  ...sent.attachments.map(deviceAttachment),
 ];
 
 // An App-only row: the stored one replaces it once the Session's Feed loads.
@@ -47,7 +63,7 @@ export function startingFeed(
   sent: ComposerDraft,
   sentAt: number,
 ): StartingFeed {
-  const uris = new Map(sent.images.map((image) => [image.id, image.uri]));
+  const uris = new Map(sent.attachments.map(({ id, uri }) => [id, uri]));
   return {
     items: [{ type: 'row', row: sentPrompt(sent) }],
     liveHeader: {

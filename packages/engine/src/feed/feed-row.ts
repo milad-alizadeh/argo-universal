@@ -25,7 +25,7 @@ export const promptBlobIds = (rows: readonly SessionUpdate[]): string[] => [
     rows.flatMap((row): string[] =>
       row.sessionUpdate === 'user_message'
         ? row.content.flatMap((block): string[] =>
-            block.type === 'image' ? [block.blob.blobId] : [],
+            'blob' in block && block.blob ? [block.blob.blobId] : [],
           )
         : [],
     ),

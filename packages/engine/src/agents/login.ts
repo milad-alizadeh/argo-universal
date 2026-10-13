@@ -1,4 +1,7 @@
 import type {
+  AgentLoginTerminalRead,
+  AgentLoginTerminalWrite,
+  AgentLoginTerminalFrame,
   AgentLoginAnswer,
   AgentLoginChoose,
   AgentLoginOperation,
@@ -65,6 +68,12 @@ export class AgentLogins {
     const operation = this.requireOwner(input);
     operation.respond(input);
     return operation.snapshot(input.ownerToken);
+  }
+  public readTerminal(input: AgentLoginTerminalRead): AgentLoginTerminalFrame {
+    return this.requireOwner(input).readTerminal(input.cursor);
+  }
+  public inputTerminal(input: AgentLoginTerminalWrite): void {
+    this.requireOwner(input).inputTerminal(input.input);
   }
   public cancel(input: AgentLoginOperation): AgentLoginSnapshot {
     const operation = this.requireOwner(input);

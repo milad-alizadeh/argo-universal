@@ -1,3 +1,8 @@
+import type {
+  AgentLoginTerminalInput,
+  AgentLoginTerminalFrame,
+} from '@repo/contracts';
+import { authenticationContextKey } from '../lib/authentication-context';
 import { ResourceCleanupError } from '../lib/resource-cleanup-error';
 import type {
   AgentLaunchSubject,
@@ -40,7 +45,8 @@ export class LoginResources {
   private readonly abort = new AbortController();
   private opening?: Promise<void>;
   private connection?: LoginAgentConnection;
-  private release?: () => void;
+  private readonly releases: (() => void)[] = [];
+  private baseAuthentication?: string;
   public constructor(
     private readonly agentId: string,
     private readonly deps: LoginOperationDeps,
@@ -54,6 +60,19 @@ export class LoginResources {
   public methods(): { id: string; name: string }[] {
     return this.connection?.methods.map(({ id, name }) => ({ id, name })) ?? [];
   }
+  public terminalActive(): boolean {
+    return this.connection?.terminalActive?.() ?? false;
+  }
+  public readTerminal(cursor: number): AgentLoginTerminalFrame {
+    const read = this.requireConnection().readTerminal;
+    if (!read) throw new Error('Login has no terminal');
+    return read(cursor);
+  }
+  public inputTerminal(input: AgentLoginTerminalInput): void {
+    const write = this.requireConnection().inputTerminal;
+    if (!write) throw new Error('Login has no terminal');
+    write(input);
+  }
   public abortLogin(): void {
     this.abort.abort();
   }
@@ -65,8 +84,7 @@ export class LoginResources {
   }
   public async close(): Promise<void> {
     await boundedCleanup(this.closeConnection(), this.deps.cleanupTimeoutMs);
-    this.release?.();
-    this.release = undefined;
+    for (const release of this.releases.splice(0)) release();
   }
   private requireConnection(): LoginAgentConnection {
     if (!this.connection) throw new Error('Login connection is missing');
@@ -75,11 +93,20 @@ export class LoginResources {
   private async acquire(): Promise<void> {
     const subject = await this.deps.resolveLaunch(this.agentId);
     if (this.abort.signal.aborted) return;
-    this.release = this.deps.reserveAuthentication(subject.launch);
+    this.releases.push(this.deps.reserveAuthentication(subject.launch));
+    this.baseAuthentication = authenticationContextKey(subject.launch);
     this.connection = await this.deps.openLoginAgent(subject, {
       signal: this.abort.signal,
       createElicitation: this.createElicitation,
+      reserveTerminalAuthentication: (launch) =>
+        this.reserveTerminalAuthentication(launch),
     });
+  }
+  private reserveTerminalAuthentication(
+    launch: AgentLaunchSubject['launch'],
+  ): void {
+    if (authenticationContextKey(launch) === this.baseAuthentication) return;
+    this.releases.push(this.deps.reserveAuthentication(launch));
   }
   private async closeConnection(): Promise<void> {
     await this.opening?.catch((error: unknown): Promise<void> | undefined =>
