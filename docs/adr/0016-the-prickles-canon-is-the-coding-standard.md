@@ -6,6 +6,9 @@ Where the canon cannot apply as written, these are the recorded applications (ow
 
 1. **Tests.** Test files get one documented global cap in the linter config, not a list of exempt files.
 2. **XState.** `setup({ types: {} as … })` has no cast-free form in XState v5. One override for `*machine.ts` files covers that cast and the file cap; it is T2's written-down exception.
+
+   Keep each machine's statechart together: states, transitions, guard references and timeout ordering stay readable in one file (owner, 2026-10-13). Extract invoked operations, action implementations and input construction where they improve clarity. Introduce child actors when they own a distinct lifecycle or responsibility. Do not split a statechart across files solely to satisfy lint limits. If meaningful extraction still exceeds the cap, raise the conflict for an owner decision about the global allowance; do not fragment the chart or silently change the limit.
+
 3. **Outside protocol payloads.** Upstream SDK types own method arguments and responses. SDK readers validate ACP traffic where their public API provides validation. Argo validates App input, database hydration and untyped extensions once, each at its boundary. Internal functions trust accepted typed values. The Feed validates the Argo row it assembles, not the ACP payload again.
 
    The public ACP SDK 1.7 validates inbound request and notification payloads and response envelopes, but not response bodies. The owner approved official schema readers for these unchecked bodies on 2026-10-09, under Spec 0009. Argo compiles the SDK's exported `schema/schema.json` definitions with Ajv2020 and validates each used response body once before domain use. These readers keep official response types, and Session still calls SDK methods directly. No transport decoder, schema copy, private SDK import or response cast supplies the missing validation.
