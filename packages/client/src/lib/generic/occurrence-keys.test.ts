@@ -17,6 +17,14 @@ describe('withOccurrenceKeys', () => {
     ).toEqual(['a', 'b', 'a#2', 'a#3']);
   });
 
+  it('skips a number another item already uses as its own key', () => {
+    expect(
+      withOccurrenceKeys(['a', 'a#2', 'a'], (item) => item).map(
+        ({ key }) => key,
+      ),
+    ).toEqual(['a', 'a#2', 'a#3']);
+  });
+
   it('keeps a key when an item is added after it', () => {
     const before = withOccurrenceKeys(['a', 'a'], (item) => item);
     const after = withOccurrenceKeys(['a', 'a', 'b'], (item) => item);
