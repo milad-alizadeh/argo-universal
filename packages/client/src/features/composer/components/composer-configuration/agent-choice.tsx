@@ -1,34 +1,13 @@
-import type { AgentAvailability, AgentInfo } from '@repo/contracts';
+import type { AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { ListItem } from '#primitives/lists/list-item/list-item';
+import { IconSlot, IconSpinner } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentIcon } from './agent-icon';
+import { agentStatusCopy, type AgentStatusCopy } from './agent-status-copy';
 import type { ComposerConfigurationProps } from './configuration-types';
 
-const agentAvailability = {
-  not_signed_in: {
-    label: 'Not signed in',
-    button: 'Sign in',
-    action: 'setup',
-    reason: false,
-  },
-  not_installed: {
-    label: 'Not installed',
-    button: 'Install',
-    action: 'setup',
-    reason: false,
-  },
-  unavailable: {
-    label: 'Unavailable',
-    button: 'Retry',
-    action: 'retry',
-    reason: true,
-  },
-} satisfies Record<
-  Exclude<AgentAvailability, 'available'>,
-  { label: string; button: string; action: 'setup' | 'retry'; reason: boolean }
->;
 interface AgentChoiceProps {
   agent: AgentInfo;
   configuration: ComposerConfigurationProps;
@@ -38,7 +17,7 @@ export function AgentChoice(props: AgentChoiceProps): React.JSX.Element {
   return (
     <>
       <AgentSelectionRow {...props} />
-      <AgentAvailabilityAction {...props} />
+      <AgentStatusAction {...props} />
     </>
   );
 }
@@ -72,6 +51,7 @@ function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
     />
   );
 }
+// Only a Ready Agent can be picked; a Checking… one dims with a spinner in the check's slot.
 function agentSelectionProps(
   props: AgentChoiceProps,
 ): React.ComponentProps<typeof ListItem> {
@@ -79,12 +59,23 @@ function agentSelectionProps(
   const selected = agent.agent === configuration.agent;
   return {
     ...agentRowContent(agent),
-    disabled:
-      !configuration.onAgentChange || agent.availability !== 'available',
+    disabled: !configuration.onAgentChange || agent.status !== 'ready',
     selected,
-    accessory: selected ? <SelectedCheck /> : undefined,
+    accessory: <SelectionAccessory agent={agent} selected={selected} />,
     onPress: () => selectAgent(props),
   };
+}
+function SelectionAccessory(props: {
+  agent: AgentInfo;
+  selected: boolean;
+}): React.JSX.Element | null {
+  if (props.agent.status === 'checking')
+    return (
+      <IconSlot role="mark">
+        <IconSpinner iconRole="mark" colorClassName="accent-muted-foreground" />
+      </IconSlot>
+    );
+  return props.selected ? <SelectedCheck /> : null;
 }
 function agentRowContent(
   agent: AgentInfo,
@@ -97,49 +88,44 @@ function agentRowContent(
     subtitle: agentSubtitle(agent),
   };
 }
-function AgentAvailabilityAction(
-  props: AgentChoiceProps,
-): React.JSX.Element | null {
-  if (props.agent.availability === 'available') return null;
-  const action = agentAction(props.agent, props.configuration);
+function AgentStatusAction(props: AgentChoiceProps): React.JSX.Element | null {
+  const action = statusAction(props);
   if (!action) return null;
   return (
     <ListItem
-      {...agentActionContent(props.agent)}
+      title={action.label}
+      accessibilityLabel={`${action.label} ${props.agent.label}`}
       role="button"
       tone="accent"
-      onPress={action}
+      onPress={action.onPress}
     />
   );
 }
-function agentActionContent(
-  agent: AgentInfo,
-): React.ComponentProps<typeof ListItem> {
-  if (agent.availability === 'available') return { title: agent.label };
-  const unavailable = agentAvailability[agent.availability];
-  return {
-    title: unavailable.button,
-    accessibilityLabel: `${unavailable.action === 'retry' ? 'Retry' : 'Set up'} ${agent.label}`,
-  };
+type StatusAction = { label: string; onPress: () => void };
+function statusAction(props: AgentChoiceProps): StatusAction | undefined {
+  const copy = agentStatusCopy(props.agent.status);
+  if (!copy?.button) return undefined;
+  return pressable(copy.button, agentAction(copy, props));
 }
+const pressable = (
+  label: string,
+  onPress: (() => void) | undefined,
+): StatusAction | undefined => (onPress ? { label, onPress } : undefined);
+// Recheck runs here; every other action opens the Agent's page.
 function agentAction(
-  agent: AgentInfo,
-  configuration: ComposerConfigurationProps,
+  copy: Pick<AgentStatusCopy, 'action'>,
+  { agent, configuration }: AgentChoiceProps,
 ): (() => void) | undefined {
-  if (agent.availability === 'unavailable') return configuration.onAgentRetry;
-  return configuration.onAgentSetup
-    ? () => configuration.onAgentSetup?.(agent.agent)
-    : undefined;
+  if (copy.action === 'recheck') return configuration.onAgentRetry;
+  const setup = configuration.onAgentSetup;
+  return setup ? () => setup(agent.agent) : undefined;
 }
 
 function agentSubtitle(agent: AgentInfo): { text: string } | undefined {
-  if (agent.availability === 'available') return undefined;
-  const unavailable = agentAvailability[agent.availability];
-  return {
-    text: [unavailable.label, unavailable.reason && agent.installStep]
-      .filter(Boolean)
-      .join(' · '),
-  };
+  const copy = agentStatusCopy(agent.status);
+  if (!copy) return undefined;
+  const reason = copy.showsReason ? agent.reason : undefined;
+  return { text: [copy.label, reason].filter(Boolean).join(' · ') };
 }
 
 function selectAgent({

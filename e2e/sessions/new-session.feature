@@ -136,9 +136,10 @@ Feature: New Session
     And New Session cannot send a prompt
 
     Examples:
-      | state         |
-      | not installed |
-      | not signed in |
+      | state          |
+      | not installed  |
+      | sign-in needed |
+      | can't start    |
 
   Scenario Outline: Agent <agent> requires setup because it is <state>
     Given a phone Frame
@@ -149,8 +150,8 @@ Feature: New Session
     Then the Settings show Agent <agent>
 
     Examples:
-      | agent | state         |
-      | 1     | not installed |
-      | 1     | not signed in |
-      | 2     | not installed |
-      | 2     | not signed in |
+      | agent | state          |
+      | 1     | not installed  |
+      | 1     | sign-in needed |
+      | 2     | not installed  |
+      | 2     | sign-in needed |

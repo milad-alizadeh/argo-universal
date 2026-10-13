@@ -69,6 +69,8 @@ export interface EngineInput extends Pick<
   loginCleanupTimeoutMs?: number;
   fetchAgents?: FetchAgents;
   installationPorts?: InstallPorts;
+  // Readiness checks at start, after install, sign-in and enablement; on unless a test counts processes.
+  automaticReadiness?: boolean;
 }
 
 export interface EngineContext extends EngineInput {

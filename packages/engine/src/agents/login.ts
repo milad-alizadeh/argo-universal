@@ -8,6 +8,7 @@ import type {
   AgentLoginSnapshot,
   AgentLoginStart,
 } from '@repo/contracts';
+import { evictFinishedLogins } from './login-eviction';
 import { LoginOperation } from './login-operation';
 import type { LoginOperationDeps } from './login-resources';
 
@@ -29,7 +30,12 @@ export class AgentLogins {
   private readonly latest = new Map<string, string>();
   private readonly mutations = new Map<string, Promise<unknown>>();
   private stopping = false;
+  private readonly finished = new Set<(agentId: string) => void>();
   public constructor(private readonly deps: AgentLoginsDeps) {}
+  // Called once a sign-in has finished and released its process, whatever its outcome.
+  public afterLogin(listener: (agentId: string) => void): void {
+    this.finished.add(listener);
+  }
   public start(input: AgentLoginStart): AgentLoginSnapshot {
     if (this.stopping) throw new Error('Engine is shutting down');
     this.requireNoMutation(input.agentId);
@@ -37,7 +43,7 @@ export class AgentLogins {
       throw new Error('Agent is in use by setup');
     const previous = this.current(input.agentId);
     if (previous?.blocksMutation()) return previous.snapshot(input.ownerToken);
-    this.evictFinished();
+    evictFinishedLogins(this.operations, this.latest, operationLimit);
     if (this.operations.size >= operationLimit)
       throw new Error('Too many Agent login operations');
     return this.create(input);
@@ -52,6 +58,7 @@ export class AgentLogins {
         cleanupTimeoutMs: this.deps.cleanupTimeoutMs ?? cleanupTimeout,
       },
     );
+    void operation.finished().then(() => this.notifyFinished(input.agentId));
     this.operations.set(operationId, operation);
     this.latest.set(input.agentId, operationId);
     return operation.snapshot(input.ownerToken);
@@ -110,13 +117,15 @@ export class AgentLogins {
       [...this.operations.values()].map((operation) => operation.shutdown()),
     );
     await Promise.allSettled(this.mutations.values());
-    const results = await closing;
-    const failed = results.filter((result) => result.status === 'rejected');
+    const failed = (await closing).flatMap((result) =>
+      result.status === 'rejected' ? [result.reason] : [],
+    );
     if (failed.length > 0)
-      throw new AggregateError(
-        failed.map((result) => result.reason),
-        'Agent login cleanup failed',
-      );
+      throw new AggregateError(failed, 'Agent login cleanup failed');
+  }
+  private notifyFinished(agentId: string): void {
+    if (this.stopping || this.isBusy(agentId)) return;
+    for (const listener of this.finished) listener(agentId);
   }
   private current(agentId: string): LoginOperation | undefined {
     const operationId = this.latest.get(agentId);
@@ -135,16 +144,6 @@ export class AgentLogins {
   }
   private requireNoMutation(agentId: string): void {
     if (this.mutations.has(agentId)) throw new Error('Agent is in use');
-  }
-  private evictFinished(): void {
-    for (const [id, operation] of this.operations) {
-      if (this.operations.size < operationLimit) return;
-      if (operation.blocksMutation()) continue;
-      this.operations.delete(id);
-      for (const [agentId, operationId] of this.latest) {
-        if (operationId === id) this.latest.delete(agentId);
-      }
-    }
   }
 }
 export const createAgentLogins = (deps: AgentLoginsDeps): AgentLogins =>

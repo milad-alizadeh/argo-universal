@@ -8,26 +8,32 @@ import type {
 } from '../state/agent-detail-types';
 import { useAgentInstallation } from './use-agent-installation';
 import { useAgentManagement } from './use-agent-management';
-import { useAgents } from './use-agents';
+import { useAgents, useRecheck } from './use-agents';
 type AgentPageProps = {
   agent: string;
   onBack: () => void;
   onSignIn: () => void;
 };
 type AgentPageView = AgentDetailViewProps | undefined;
-function useAgentDetail(agent: string): {
-  detail: AgentDetail | undefined;
-  retry: () => void;
-} {
+function useAgentDetail(agent: string): AgentDetail | undefined {
   const agents = useAgents();
   const catalog = useQuery(useTRPC().agents.catalog.queryOptions());
   const info = agents.data?.find((entry) => entry.agent === agent);
   const registry = catalog.data?.agents.find(({ id }) => id === agent);
-  return { detail: agentDetail(info, registry), retry: agents.retry };
+  return agentDetail(info, registry);
 }
+// Repair installs the release again through the same confirmation as Install.
+const repairOf = (
+  detail: AgentDetail,
+  installation: ReturnType<typeof useAgentInstallation>,
+): (() => void) | undefined =>
+  detail.status === 'not-found'
+    ? () => installation.onConfirmingChange(true)
+    : undefined;
 
 export function useAgentPageView(props: AgentPageProps): AgentPageView {
-  const { detail, retry } = useAgentDetail(props.agent);
+  const detail = useAgentDetail(props.agent);
+  const recheck = useRecheck(props.agent);
   const installation = useDetailInstallation(props.agent, detail);
   const management = useAgentManagement(props.agent, props.onBack);
   if (!detail) return undefined;
@@ -35,7 +41,8 @@ export function useAgentPageView(props: AgentPageProps): AgentPageView {
     ...props,
     agent: installedDetail(detail, installation),
     installation,
-    onCheckAgain: retry,
+    onRecheck: recheck.pending ? undefined : recheck.run,
+    onRepair: repairOf(detail, installation),
     ...managementCallbacks(management),
   };
 }

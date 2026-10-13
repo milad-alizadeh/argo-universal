@@ -23,7 +23,7 @@ describe('toSessionChoices', () => {
 
   it('starts on the first Agent when none is available', () => {
     const choices = toSessionChoices(
-      input({ agents: newSessionCatalogs.bothUnavailable }),
+      input({ agents: newSessionCatalogs.bothCantStart }),
     );
     expect(choices.agent?.agent).toBe(firstAgent.agent);
   });

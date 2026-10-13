@@ -40,4 +40,5 @@ const defaultAgentOptions = {
   acp: undefined,
   loginTimeoutMs: undefined,
   loginCleanupTimeoutMs: undefined,
+  automaticReadiness: true,
 };

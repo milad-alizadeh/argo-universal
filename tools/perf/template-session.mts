@@ -85,10 +85,10 @@ async function firstProjectId(httpUrl: string): Promise<string> {
   return projectId;
 }
 
-async function availableAgent(httpUrl: string): Promise<string> {
+async function readyAgent(httpUrl: string): Promise<string> {
   const agents = await query(httpUrl, procedures.agents);
-  const agent = agents.find((entry) => entry.availability === 'available');
-  if (!agent) throw new Error('The fixture Server has no available Agent');
+  const agent = agents.find((entry) => entry.status === 'ready');
+  if (!agent) throw new Error('The fixture Server has no Ready Agent');
   return agent.agent;
 }
 
@@ -103,7 +103,7 @@ async function settled(httpUrl: string): Promise<true | undefined> {
 async function startTemplateSession(httpUrl: string): Promise<void> {
   await mutate(httpUrl, procedures.newSession, {
     projectId: await firstProjectId(httpUrl),
-    agent: await availableAgent(httpUrl),
+    agent: await readyAgent(httpUrl),
     checkout: { type: 'main' },
     configOptions: [],
     prompt: [{ type: 'text', text: 'Template Session' }],

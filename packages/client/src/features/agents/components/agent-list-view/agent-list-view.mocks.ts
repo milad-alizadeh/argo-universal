@@ -77,7 +77,7 @@ export const installedAgents: AgentRowEntry[] = [
     description: 'Writes and reviews code',
     status: 'ready',
   },
-  { id: 'second-agent', name: 'Second Agent', status: 'sign-in' },
+  { id: 'second-agent', name: 'Second Agent', status: 'sign-in-needed' },
   {
     id: 'third-agent',
     name: 'Third Agent',

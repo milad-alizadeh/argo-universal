@@ -71,8 +71,9 @@ const configurationProps = (
   checkout: checkoutProps(wiring.data),
 });
 
+// What the last Readiness check observed about the chosen Agent, when it cannot start a Session.
 const setupStepOf = (agent: AgentInfo | undefined): string | undefined =>
-  agent && agent.availability !== 'available' ? agent.installStep : undefined;
+  agent && agent.status !== 'ready' ? agent.reason : undefined;
 
 const noticeProps = ({
   data,

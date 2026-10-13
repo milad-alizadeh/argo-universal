@@ -5,6 +5,14 @@ import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunchSubject, CheckAgentLaunch } from '..';
 import { ResourceCleanupError } from '../../lib/resource-cleanup-error';
 import { AcpAuthenticationStatus } from './auth-status';
+import {
+  answerTimeoutSeconds,
+  cantStart,
+  CheckTimeout,
+  describeError,
+  describeKnownFailure,
+  launchFailure,
+} from './check-failure';
 import { createAgentClient } from './client';
 import { negotiateAcpInitialize } from './initialize';
 import { closeLoginProcess } from './login-cleanup';
@@ -12,7 +20,6 @@ import { launchAcpProcess } from './process';
 import type { AcpProcess } from './resource-types';
 import { createAcpResponseReaders } from './response-readers';
 
-const answerTimeoutSeconds = 15;
 const exitGraceMs = 1000;
 const millisecondsPerSecond = 1000;
 
@@ -32,10 +39,6 @@ const createCheckingClient = (
     rejectAuthStatus: () => status.invalidate(),
   });
 };
-const authenticationState = (
-  status: 'authentication-required' | 'account-rejected',
-): 'required' | 'unverified' =>
-  status === 'authentication-required' ? 'required' : 'unverified';
 const checkAuthentication = async (
   initialization: InitializeResponse,
   status: AcpAuthenticationStatus,
@@ -43,8 +46,11 @@ const checkAuthentication = async (
   const result = await status.check(initialization);
   if (result.status === 'ready') return { status: 'ready' };
   return {
-    status: 'ready',
-    authentication: authenticationState(result.status),
+    status:
+      result.status === 'authentication-required'
+        ? 'sign-in-needed'
+        : 'account-not-supported',
+    reason: result.failure,
   };
 };
 const initialize = async (process: AcpProcess): Promise<AgentCheck> => {
@@ -58,21 +64,6 @@ const initialize = async (process: AcpProcess): Promise<AgentCheck> => {
     status,
   );
 };
-const spawnFailures = new Map<unknown, string>([
-  ['ENOENT', 'was not found.'],
-  ['EACCES', 'cannot be run.'],
-]);
-const readErrorCode = (error: unknown): unknown =>
-  error instanceof Error && 'code' in error ? error.code : null;
-const describeSpawnFailure = (
-  error: unknown,
-  { launch }: AgentLaunchSubject,
-): string | undefined => {
-  const failure = spawnFailures.get(readErrorCode(error));
-  return failure && `${launch.executable} ${failure}`;
-};
-const describeError = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
 const hasExited = async (process: AcpProcess): Promise<boolean> =>
   (await Promise.race([
     process.exited.then((): 'exited' => 'exited'),
@@ -82,33 +73,45 @@ const describeFailure = async (
   error: unknown,
   process: AcpProcess,
   subject: AgentLaunchSubject,
-): Promise<string> => {
-  const spawnFailure = describeSpawnFailure(error, subject);
-  if (spawnFailure) return spawnFailure;
-  if (await hasExited(process))
-    return `${subject.name} exited before answering ACP initialize.`;
-  return `${subject.name} failed ACP initialize: ${describeError(error)}`;
+): Promise<AgentCheck> => {
+  const known = describeKnownFailure(error, subject);
+  if (known) return known;
+  return cantStart(
+    (await hasExited(process))
+      ? `${subject.name} exited before answering ACP initialize.`
+      : `${subject.name} failed ACP initialize: ${describeError(error)}`,
+  );
 };
 const answerOrTimeout = async (process: AcpProcess): Promise<AgentCheck> => {
   const answer = await Promise.race([
     initialize(process),
     after(answerTimeoutSeconds * millisecondsPerSecond),
   ]);
-  if (answer === 'timeout')
-    throw new Error(`no answer within ${answerTimeoutSeconds} seconds`);
+  if (answer === 'timeout') throw new CheckTimeout();
   return answer;
 };
 
-// Starts the program, sends the shared ACP initialize and stops it; readiness is never read from storage.
+const launch = async (
+  launchProcess: typeof launchAcpProcess,
+  subject: AgentLaunchSubject,
+): Promise<AcpProcess | AgentCheck> => {
+  try {
+    return await launchProcess(subject.launch);
+  } catch (error) {
+    return launchFailure(error, subject);
+  }
+};
+
+// Starts the program, sends the shared ACP initialize and authentication check, and stops it; it opens no Session.
 export const createAgentChecker =
   (launchProcess = launchAcpProcess): CheckAgentLaunch =>
   async (subject): Promise<AgentCheck> => {
-    const process = await launchProcess(subject.launch);
+    const process = await launch(launchProcess, subject);
+    if ('status' in process) return process;
     try {
       return await answerOrTimeout(process);
     } catch (error) {
-      const failure = await describeFailure(error, process, subject);
-      return { status: 'failed', failure };
+      return await describeFailure(error, process, subject);
     } finally {
       await closeLoginProcess(process).catch((cause: unknown) => {
         throw new ResourceCleanupError(process.exited, cause);

@@ -1,34 +1,43 @@
 import type { Page } from '@playwright/test';
 import { z } from 'zod';
+import { expect } from '../fixtures';
 import { agentId } from './scenario-agents';
 import { query } from './server-query';
 
 const AgentsList = z.array(
   z.object({
-    availability: z.enum([
-      'available',
-      'not_installed',
-      'not_signed_in',
-      'unavailable',
-    ]),
+    status: z.string(),
     agent: z.string(),
     label: z.string(),
-    installStep: z.string().optional(),
+    reason: z.string().optional(),
   }),
 );
 export type ListedAgent = z.infer<typeof AgentsList>[number];
 
-export function readAgents(
-  page: Page,
-  httpUrl: string,
-): Promise<ListedAgent[]> {
-  return query({
+const listAgents = (page: Page, httpUrl: string): Promise<ListedAgent[]> =>
+  query({
     page,
     httpUrl,
     procedure: 'agents.list',
     input: {},
     output: AgentsList,
   });
+
+// The Agents once the Server's Readiness checks at start have settled.
+export async function readAgents(
+  page: Page,
+  httpUrl: string,
+): Promise<ListedAgent[]> {
+  await expect
+    .poll(
+      async () =>
+        (await listAgents(page, httpUrl)).some(
+          ({ status }) => status === 'checking',
+        ),
+      { timeout: 20_000 },
+    )
+    .toBe(false);
+  return listAgents(page, httpUrl);
 }
 
 export async function readAgent(

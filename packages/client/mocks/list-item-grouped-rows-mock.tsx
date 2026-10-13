@@ -29,7 +29,7 @@ function IconRows(): React.JSX.Element {
   return (
     <FieldSection title="With icons">
       <ProjectsRow />
-      <UnavailableAgentRow />
+      <CantStartAgentRow />
       <AppearanceRow />
     </FieldSection>
   );
@@ -53,20 +53,20 @@ function AppearanceRow(): React.JSX.Element {
       title="Appearance"
       icon="appearance"
       value="System"
-      status={{ tone: 'success', label: 'available' }}
+      status={{ tone: 'success', label: 'Ready' }}
       onPress={onPress}
     />
   );
 }
 
-function UnavailableAgentRow(): React.JSX.Element {
+function CantStartAgentRow(): React.JSX.Element {
   return (
     <ListItem
       title="Agents"
       icon="agent"
       value="2"
       disabled
-      status={{ tone: 'destructive', label: 'unavailable' }}
+      status={{ tone: 'destructive', label: 'Can’t start' }}
       onPress={onPress}
     />
   );

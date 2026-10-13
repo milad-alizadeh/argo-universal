@@ -74,7 +74,7 @@ function heldConfigurationArgs({
   onConfigChange,
 }: HeldScenario): Configuration {
   return {
-    agents: newSessionCatalogs.bothAvailable,
+    agents: newSessionCatalogs.bothReady,
     agent: recorded.agent.agent,
     configOptions: recordedSessionOptions(recorded.agent.agent),
     onConfigChange,

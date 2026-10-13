@@ -6,7 +6,6 @@ import {
   installationArgs,
   readyAgent,
   registryAgent,
-  signInCommand,
 } from './agent-detail.mocks';
 
 const meta = {
@@ -20,10 +19,67 @@ type Story = StoryObj<typeof meta>;
 
 export const Ready: Story = {};
 
-export const NotSignedIn: Story = {
+export const Checking: Story = {
+  args: { agent: { ...readyAgent, status: 'checking' } },
+};
+
+export const SignInNeeded: Story = {
   args: {
-    agent: { ...readyAgent, status: 'sign-in', signInCommand },
-    onSignIn: fn(),
+    agent: {
+      ...readyAgent,
+      status: 'sign-in-needed',
+      reason: 'The Agent requires sign-in.',
+    },
+  },
+};
+
+export const AccountNotSupported: Story = {
+  args: {
+    agent: {
+      ...readyAgent,
+      status: 'account-not-supported',
+      reason: 'The Agent did not report a compatible subscription account.',
+    },
+  },
+};
+
+export const NotCompatible: Story = {
+  args: {
+    agent: {
+      ...readyAgent,
+      status: 'not-compatible',
+      reason: `${readyAgent.name} does not support the ACP session/close capability Argo needs.`,
+    },
+  },
+};
+
+export const CantStart: Story = {
+  args: {
+    agent: {
+      ...readyAgent,
+      status: 'cant-start',
+      reason: `${readyAgent.name} exited before answering ACP initialize.`,
+    },
+  },
+};
+
+export const CouldntCheck: Story = {
+  args: {
+    agent: {
+      ...readyAgent,
+      status: 'couldnt-check',
+      reason: 'Readiness could not be determined.',
+    },
+  },
+};
+
+export const NotFound: Story = {
+  args: {
+    agent: {
+      ...readyAgent,
+      status: 'not-found',
+      reason: `The installed files of ${readyAgent.name} are missing. Repair installs them again.`,
+    },
   },
 };
 

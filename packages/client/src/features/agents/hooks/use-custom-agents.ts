@@ -1,5 +1,4 @@
 import type {
-  AgentCheck,
   AgentRegistration,
   ConfiguredAgent,
   CustomAgentDefinition,
@@ -7,7 +6,6 @@ import type {
 import {
   type UseQueryResult,
   useMutation,
-  useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
 import type { ClientError } from '#features/connection';
@@ -31,16 +29,6 @@ const toCustomAgent = ({
 
 export function useCustomAgents(): UseQueryResult<CustomAgent[], ClientError> {
   return useConfiguredAgents((agents) => agents.flatMap(toCustomAgent));
-}
-
-// Readiness comes from a fresh ACP initialize on the Server each time it is asked.
-export function useAgentCheck(
-  agentId: string,
-  enabled: boolean,
-): UseQueryResult<AgentCheck, ClientError> {
-  return useQuery(
-    useTRPC().agents.check.queryOptions({ agentId }, { staleTime: 0, enabled }),
-  );
 }
 
 function useAgentsInvalidation(): () => Promise<void> {

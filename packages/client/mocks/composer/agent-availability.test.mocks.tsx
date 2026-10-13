@@ -1,3 +1,4 @@
+import type { AgentStatus } from '@repo/contracts';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
@@ -10,14 +11,19 @@ import {
   chooseAgentLabel,
 } from './composer-test-contract.test.mocks';
 import { firstAgent } from './recorded-catalog.test.mocks';
-export function unavailableAgents(width: number): Story {
+// Each status's one action opens the Agent's page, named for what it fixes.
+const setupLabels: Partial<Record<AgentStatus, string>> = {
+  'not-installed': 'Install',
+  'sign-in-needed': 'Sign in',
+};
+export function agentsNeedingSetup(width: number): Story {
   return {
     args: {
       configuration: {
         agents: [
           ...newSessionCatalogs.oneNotInstalled,
-          ...newSessionCatalogs.oneNotSignedIn,
-        ].filter((entry) => entry.availability !== 'available'),
+          ...newSessionCatalogs.oneSignInNeeded,
+        ].filter((entry) => entry.status !== 'ready'),
         agent: firstAgent.agent,
         configOptions: recordedSessionOptions(firstAgent.agent),
         onConfigChange: fn(),
@@ -42,7 +48,9 @@ export function unavailableAgents(width: number): Story {
           await overlay.findByRole('button', { name: `Select ${agent.label}` }),
         ).toBeDisabled();
         await userEvent.click(
-          await overlay.findByRole('button', { name: `Set up ${agent.label}` }),
+          await overlay.findByRole('button', {
+            name: `${setupLabels[agent.status]} ${agent.label}`,
+          }),
         );
         await expect(setupCallback(args)).toHaveBeenLastCalledWith(agent.agent);
       }

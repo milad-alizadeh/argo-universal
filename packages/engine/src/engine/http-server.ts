@@ -32,6 +32,7 @@ export interface HttpServerOptions {
   acp?: AcpResourceInput;
   loginTimeoutMs?: number;
   loginCleanupTimeoutMs?: number;
+  automaticReadiness?: boolean;
 }
 
 export interface HttpServer {

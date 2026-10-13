@@ -30,34 +30,21 @@ export function recordedSessionOptions(agent: string): SessionConfigOption[] {
 }
 
 export const newSessionCatalogs = {
-  bothAvailable: agentsList,
-  bothUnavailable: agentsList.map(
-    (
-      agent,
-    ): Omit<AgentsListOutput[number], 'availability'> & {
-      installStep: string;
-      availability: 'unavailable';
-    } => ({
-      ...agent,
-      availability: 'unavailable' as const,
-      installStep: "CLI didn't start",
-    }),
-  ),
+  bothReady: agentsList,
+  bothCantStart: agentsList.map((agent): AgentsListOutput[number] => ({
+    ...agent,
+    status: 'cant-start',
+    reason: "The Agent's CLI didn't start.",
+  })),
   oneNotInstalled: agentsList.map((agent, index): AgentsListOutput[number] =>
-    index === 0
-      ? {
-          ...agent,
-          availability: 'not_installed' as const,
-          installStep: 'Install this Agent on the Server.',
-        }
-      : agent,
+    index === 0 ? { ...agent, status: 'not-installed' } : agent,
   ),
-  oneNotSignedIn: agentsList.map((agent, index): AgentsListOutput[number] =>
+  oneSignInNeeded: agentsList.map((agent, index): AgentsListOutput[number] =>
     index === 1
       ? {
           ...agent,
-          availability: 'not_signed_in' as const,
-          installStep: 'Sign in to this Agent on the Server.',
+          status: 'sign-in-needed',
+          reason: 'The Agent requires sign-in.',
         }
       : agent,
   ),

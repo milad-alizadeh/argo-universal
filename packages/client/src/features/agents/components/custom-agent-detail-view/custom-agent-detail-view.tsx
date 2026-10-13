@@ -15,19 +15,22 @@ import {
 } from '../agent-management/agent-management';
 import { AgentRemoval } from '../agent-management/agent-removal';
 import { AgentPlaceholder } from '../agent-placeholder';
+import { AgentStatusChip } from '../agent-readiness/agent-readiness';
 import { CustomAgentForm } from '../custom-agent-form/custom-agent-form';
 import { LaunchSections } from '../custom-agent-launch';
 import { PhoneTitle } from '../phone-title';
-import type { CustomAgentCheck } from './custom-agent-status';
-import { ReadinessChip, ReadinessSection } from './custom-agent-status';
+import {
+  type CustomAgentReadiness,
+  CustomReadinessSection,
+} from './custom-agent-status';
 
 export type CustomAgentDetailViewProps = {
   agentId: string;
   // Absent until the Server lists the Agent as custom; other Agents get a placeholder.
   definition: CustomAgentDefinition | undefined;
-  // Absent while the Server checks the program again.
-  check: CustomAgentCheck;
-  onCheck: () => void;
+  readiness: CustomAgentReadiness;
+  // Absent while a Recheck runs.
+  onRecheck?: () => void;
   onSave: SubmitCustomAgent;
   onBack?: () => void;
   onSignIn?: () => void;
@@ -68,13 +71,13 @@ function CustomAgentSettings(props: SettingsProps): React.JSX.Element {
 
 // The generic Agent glyph stands in for the logo a custom Agent lacks.
 function CustomAgentIdentity({
-  check,
-}: Pick<SettingsProps, 'check'>): React.JSX.Element {
+  readiness,
+}: Pick<SettingsProps, 'readiness'>): React.JSX.Element {
   return (
     <AgentIdentity
       logo={<Icon name="agent" role="title" className="text-foreground" />}
       description={customAgentDescription}
-      trailing={<ReadinessChip check={check} />}
+      trailing={<AgentStatusChip status={readiness.status} />}
     />
   );
 }
@@ -84,11 +87,12 @@ function CustomAgentContent(props: SettingsProps): React.JSX.Element {
   const [editing, onEditing] = useState(false);
   // A list rather than a fragment, so a native group still sees each section.
   const status = [
-    <CustomAgentIdentity key="identity" check={props.check} />,
-    <ReadinessSection
+    <CustomAgentIdentity key="identity" readiness={props.readiness} />,
+    <CustomReadinessSection
       key="status"
-      check={props.check}
-      onCheck={props.onCheck}
+      name={props.definition.name}
+      readiness={props.readiness}
+      onRecheck={props.onRecheck}
       onSignIn={props.onSignIn}
     />,
   ];

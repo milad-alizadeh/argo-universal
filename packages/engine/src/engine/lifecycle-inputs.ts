@@ -84,6 +84,7 @@ type ServerSource = {
     | 'acp'
     | 'loginTimeoutMs'
     | 'loginCleanupTimeoutMs'
+    | 'automaticReadiness'
     | 'home'
     | 'port'
     | 'version'
@@ -104,6 +105,7 @@ export const serverInput: ServerInput = ({ context, self }) => ({
   acp: context.acp,
   loginTimeoutMs: context.loginTimeoutMs,
   loginCleanupTimeoutMs: context.loginCleanupTimeoutMs,
+  automaticReadiness: context.automaticReadiness ?? true,
   ...serverIdentity(context),
   database: openDatabaseOf(context),
 });

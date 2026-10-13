@@ -17,7 +17,7 @@ export function phoneStatusControls(agent: Pick<AgentInfo, 'agent'>): Story {
   return {
     args: {
       configuration: {
-        agents: newSessionCatalogs.bothAvailable,
+        agents: newSessionCatalogs.bothReady,
         agent: agent.agent,
         configOptions: recordedSessionOptions(agent.agent),
         onConfigChange: fn(),
@@ -52,7 +52,7 @@ export function createdCheckoutIsReadOnly(width: number): Story {
   return {
     args: {
       configuration: {
-        agents: newSessionCatalogs.bothAvailable,
+        agents: newSessionCatalogs.bothReady,
         agent: firstAgent.agent,
         configOptions: recordedSessionOptions(firstAgent.agent),
         onConfigChange: fn(),

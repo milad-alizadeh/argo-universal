@@ -36,20 +36,20 @@ export const ShowsTheSavedLaunch: Story = {
   },
 };
 
-export const ShowsAFailedCheck: Story = {
-  args: { check: { status: 'failed', failure: customAgentFailure } },
+export const ShowsWhyItCantStart: Story = {
+  args: { readiness: { status: 'cant-start', reason: customAgentFailure } },
   play: async ({ canvas }) => {
     await expect(canvas.getByText(customAgentFailure)).toBeVisible();
     await expect(canvas.queryByText(answered)).toBeNull();
   },
 };
 
-// Readiness comes from a new check each time, never from the saved record.
-export const ChecksAgainAfterAFailure: Story = {
-  args: { check: { status: 'failed', failure: customAgentFailure } },
+// Recheck asks the Server for a new check of the saved launch.
+export const RechecksAfterItCantStart: Story = {
+  args: { readiness: { status: 'cant-start', reason: customAgentFailure } },
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('link', { name: 'Check again' }));
-    await expect(args.onCheck).toHaveBeenCalledOnce();
+    await userEvent.click(canvas.getByText('Recheck'));
+    await expect(args.onRecheck).toHaveBeenCalledOnce();
   },
 };
 
@@ -96,10 +96,15 @@ export const KeepsTheFormOpenWhenTheEditFailsItsCheck: Story = {
   },
 };
 
-export const AuthenticationRequiredIsNotReady: Story = {
-  args: { check: { status: 'ready', authentication: 'required' } },
+export const SignInNeededIsNotReady: Story = {
+  args: {
+    readiness: {
+      status: 'sign-in-needed',
+      reason: 'The Agent requires sign-in.',
+    },
+  },
   play: async ({ canvas }) => {
-    await expect(canvas.getAllByText('Sign-in required')).toHaveLength(2);
+    await expect(canvas.getByText('Sign-in needed')).toBeVisible();
     await expect(canvas.queryByText('Ready')).toBeNull();
     await expect(canvas.queryByText(answered)).toBeNull();
   },

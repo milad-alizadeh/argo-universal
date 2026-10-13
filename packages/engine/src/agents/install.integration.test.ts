@@ -61,22 +61,14 @@ it.each(['binary', 'npx', 'uvx'] as const)(
     await expect(
       host.caller.agents.installStatus({ agentId: host.agentId }),
     ).resolves.toMatchObject({
-      installation: {
-        status: 'installed',
-        version: '1.2.3',
-        readiness: 'not-checked',
-      },
+      installation: { status: 'installed', version: '1.2.3' },
     });
     await host.stop();
     const restarted = await startEngineTestHost({ home: host.home });
     await expect(
       restarted.caller.agents.installStatus({ agentId: host.agentId }),
     ).resolves.toEqual({
-      installation: {
-        status: 'installed',
-        version: '1.2.3',
-        readiness: 'not-checked',
-      },
+      installation: { status: 'installed', version: '1.2.3' },
       operation: null,
     });
   },

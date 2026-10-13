@@ -4,7 +4,7 @@ import { within } from 'storybook/test';
 import { waitFor } from 'storybook/test';
 import { expect } from 'storybook/test';
 import { composerLongAgentCatalog } from '../../../../../mocks/composer-mock';
-import { unavailableAgents } from '../../../../../mocks/composer/agent-availability.test.mocks';
+import { agentsNeedingSetup } from '../../../../../mocks/composer/agent-availability.test.mocks';
 import { phoneStatusControls } from '../../../../../mocks/composer/checkout-stories.test.mocks';
 import { createdCheckoutIsReadOnly } from '../../../../../mocks/composer/checkout-stories.test.mocks';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -90,5 +90,5 @@ export const ScrollableAgentCatalog: Story = {
     await userEvent.keyboard('{Escape}');
   },
 };
-export const UnavailableAgentsPhone = unavailableAgents(layoutWidths.phone);
-export const UnavailableAgentsWide = unavailableAgents(layoutWidths.wide);
+export const AgentsNeedingSetupPhone = agentsNeedingSetup(layoutWidths.phone);
+export const AgentsNeedingSetupWide = agentsNeedingSetup(layoutWidths.wide);

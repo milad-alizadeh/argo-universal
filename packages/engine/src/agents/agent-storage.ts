@@ -1,5 +1,5 @@
 import { agents, syncJobs } from '@repo/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../storage';
 
 export type AgentCatalogWriteRow = Pick<
@@ -25,6 +25,16 @@ type AgentConfiguration = Pick<
   typeof agents.$inferInsert,
   'id' | 'configuration' | 'enabled'
 >;
+// A check's saved result; null clears it, so the Agent shows Checking… again.
+export type SavedReadiness = Pick<
+  typeof agents.$inferInsert,
+  'readinessStatus' | 'readinessReason' | 'readinessCheckedAt'
+>;
+export const pendingReadiness: SavedReadiness = {
+  readinessStatus: null,
+  readinessReason: null,
+  readinessCheckedAt: null,
+};
 
 // A Registry row updates only its catalog columns, never the person's configuration.
 const catalogColumns = (
@@ -103,7 +113,10 @@ export class SyncJobUpdateJob implements WriterJob {
 }
 
 export class AgentConfigurationSaveJob implements WriterJob {
-  public constructor(private readonly agent: AgentConfiguration) {}
+  public constructor(
+    private readonly agent: AgentConfiguration,
+    private readonly readiness?: SavedReadiness,
+  ) {}
 
   public describe(): string {
     return `save Agent configuration ${this.agent.id}`;
@@ -112,14 +125,36 @@ export class AgentConfigurationSaveJob implements WriterJob {
   public commit(transaction: StorageTransaction): void {
     transaction
       .insert(agents)
-      .values(this.agent)
+      .values({ ...this.agent, ...this.readiness })
       .onConflictDoUpdate({
         target: agents.id,
         set: {
           configuration: this.agent.configuration,
           enabled: this.agent.enabled,
+          ...this.readiness,
         },
       })
+      .run();
+  }
+}
+
+// Saves Readiness on existing rows only; a removed Agent's row is never recreated.
+export class AgentReadinessSaveJob implements WriterJob {
+  public constructor(
+    private readonly agentIds: readonly string[],
+    private readonly readiness: SavedReadiness,
+  ) {}
+
+  public describe(): string {
+    return `save readiness of ${this.agentIds.length} Agents`;
+  }
+
+  public commit(transaction: StorageTransaction): void {
+    if (this.agentIds.length === 0) return;
+    transaction
+      .update(agents)
+      .set(this.readiness)
+      .where(inArray(agents.id, [...this.agentIds]))
       .run();
   }
 }
@@ -128,4 +163,5 @@ export class AgentConfigurationSaveJob implements WriterJob {
 export const changesAgentCatalog = (job: WriterJob): boolean =>
   job instanceof AgentCatalogReplaceJob ||
   job instanceof SyncJobUpdateJob ||
-  job instanceof AgentConfigurationSaveJob;
+  job instanceof AgentConfigurationSaveJob ||
+  job instanceof AgentReadinessSaveJob;

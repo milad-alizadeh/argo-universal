@@ -2,17 +2,16 @@ import { expect } from '../fixtures';
 import { readAgent, readAgents } from './agents';
 import { Given, When, Then } from './fixtures';
 import { messageLabel, openNewSession } from './new-session';
-import { availabilityValue, type Unavailable } from './scenario-agents';
+import { setupStatuses, type SetupState } from './scenario-agents';
 
 Given(
   'every Agent is {string}',
-  async ({ page, server }, state: Unavailable): Promise<void> => {
-    const expected = availabilityValue(state);
+  async ({ page, server }, state: SetupState): Promise<void> => {
     const agents = await readAgents(page, server.httpUrl);
     expect(
       agents.every(
         (agent): boolean =>
-          agent.availability === expected && Boolean(agent.installStep),
+          agent.status === setupStatuses[state] && Boolean(agent.reason),
       ),
     ).toBe(true);
   },
@@ -23,11 +22,11 @@ Given(
   async (
     { page, server },
     ordinal: number,
-    state: Unavailable,
+    state: SetupState,
   ): Promise<void> => {
     expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
-      availability: availabilityValue(state),
-      installStep: expect.any(String),
+      status: setupStatuses[state],
+      reason: expect.any(String),
     });
   },
 );
@@ -49,7 +48,7 @@ Then(
   "New Session shows the first Agent's setup step",
   async ({ page, server }): Promise<void> => {
     const [first] = await readAgents(page, server.httpUrl);
-    await expect(page.getByRole('alert')).toHaveText(first?.installStep ?? '');
+    await expect(page.getByRole('alert')).toHaveText(first?.reason ?? '');
   },
 );
 

@@ -98,15 +98,6 @@ export const ConfiguredAgent = z.strictObject({
 });
 export type ConfiguredAgent = z.infer<typeof ConfiguredAgent>;
 
-export const AgentCheck = z.discriminatedUnion('status', [
-  z.strictObject({
-    status: z.literal('ready'),
-    authentication: z.enum(['required', 'unverified']).optional(),
-  }),
-  z.strictObject({ status: z.literal('failed'), failure: z.string() }),
-]);
-export type AgentCheck = z.infer<typeof AgentCheck>;
-
 export const CustomAgentEditInput = AgentId.extend({
   definition: CustomAgentDefinition,
 });

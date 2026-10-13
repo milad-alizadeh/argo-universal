@@ -40,7 +40,6 @@ function useRefreshReadiness(snapshot: AgentLoginSnapshot | undefined): void {
       )
       .then((agents) => cache.setQueryData(trpc.agents.list.queryKey(), agents))
       .catch(() => {});
-    void cache.invalidateQueries(trpc.agents.check.pathFilter());
   }, [snapshot, cache, trpc]);
 }
 

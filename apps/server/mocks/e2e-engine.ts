@@ -54,24 +54,19 @@ const save = seed.$client.prepare(
 );
 for (const identity of fixtureAgents) {
   const fixture = AppFixtureOptions.parse(options[identity.agent] ?? {});
-  const configuration =
-    fixture.availability === 'not_installed'
-      ? { source: 'registry', release: null, overrides: { args: [], env: [] } }
-      : {
-          source: 'custom',
-          definition: {
-            name: identity.label,
-            ...scriptedAgentCommand(
-              fixture.availability === 'not_signed_in'
-                ? 'signed-out'
-                : fixture.scenario,
-            ),
-            env: Object.entries(agentEnvironment).map(([name, value]) => ({
-              name,
-              value,
-            })),
-          },
-        };
+  const configuration = fixture.installed
+    ? {
+        source: 'custom',
+        definition: {
+          name: identity.label,
+          ...scriptedAgentCommand(fixture.scenario),
+          env: Object.entries(agentEnvironment).map(([name, value]) => ({
+            name,
+            value,
+          })),
+        },
+      }
+    : { source: 'registry', release: null, overrides: { args: [], env: [] } };
   save.run(JSON.stringify(configuration), identity.agent);
 }
 seed.$client.close();

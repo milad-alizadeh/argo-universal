@@ -1,7 +1,5 @@
 import {
-  AgentCheck,
   AgentEnablementInput,
-  AgentId,
   AgentRegistration,
   ConfiguredAgent,
   CustomAgentDefinition,
@@ -15,7 +13,6 @@ import {
   routerFactory,
 } from '../../rpc';
 import {
-  checkConfiguredAgent,
   type ConfigurationDeps,
   editCustomAgent,
   registerCustomAgent,
@@ -28,10 +25,6 @@ const createConfigurationReadRouter = routerFactory((deps: ConfigurationDeps) =>
     configured: publicProcedure
       .output(z.array(ConfiguredAgent))
       .query(() => readConfiguredAgents(deps.database)),
-    check: publicProcedure
-      .input(AgentId)
-      .output(AgentCheck)
-      .query(({ input }) => checkConfiguredAgent(deps, input.agentId)),
   }),
 );
 

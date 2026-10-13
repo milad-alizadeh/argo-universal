@@ -16,7 +16,7 @@ type SettledChoices = SessionChoices & {
 const settled = (choices: SessionChoices): choices is SettledChoices =>
   [
     choices.project !== undefined,
-    choices.agent?.availability === 'available',
+    choices.agent?.status === 'ready',
     choices.baseBranchLoaded,
   ].every(Boolean);
 

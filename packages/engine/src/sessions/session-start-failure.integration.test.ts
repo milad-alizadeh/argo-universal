@@ -2,6 +2,7 @@ import { session } from '@repo/db/schema';
 import { expect, it } from 'vitest';
 import { newSession } from '#mocks/session-journey';
 import {
+  failingAgent,
   signInFailure,
   startFailedSessionJourney,
 } from '#mocks/session-start-failure';
@@ -10,19 +11,11 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
   'leaves no Session and no worktree when the Agent cannot start in the $type checkout',
   async (checkout): Promise<void> => {
     const { caller, database, git } = await startFailedSessionJourney();
-    const readAgentAvailability = async (): Promise<
-      | 'available'
-      | 'not_installed'
-      | 'not_signed_in'
-      | 'unavailable'
-      | undefined
-    > =>
-      (await caller.agents.list()).find(
-        ({ agent }): boolean => agent === 'unavailable',
-      )?.availability;
-    expect(await readAgentAvailability()).toBe('available');
+    expect(await caller.agents.recheck({ agentId: failingAgent })).toEqual({
+      status: 'ready',
+    });
     await expect(
-      caller.session.new({ ...newSession, agent: 'unavailable', checkout }),
+      caller.session.new({ ...newSession, agent: failingAgent, checkout }),
     ).rejects.toMatchObject({
       code: 'PRECONDITION_FAILED',
       message: expect.stringContaining(signInFailure),

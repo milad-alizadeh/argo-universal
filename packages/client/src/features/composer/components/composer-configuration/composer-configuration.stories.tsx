@@ -6,7 +6,7 @@ import {
   composerFastModeConfiguration,
   composerLongListConfiguration,
   composerUnlistedEffortConfigurations,
-  composerUnavailableConfigurations,
+  composerCantStartConfigurations,
 } from '../../../../../mocks/composer-mock';
 import { updateComposerSettings } from '../../../../../mocks/composer-mock';
 import {
@@ -36,12 +36,12 @@ export const DefaultEffort: StoryObj<typeof meta> = {
   },
 };
 
-const unavailableConfiguration = composerUnavailableConfigurations[0];
-if (!unavailableConfiguration)
-  throw new Error('Recorded catalog needs an unavailable Agent');
-export const UnavailableAgent: StoryObj<typeof meta> = {
-  name: 'Agent unavailable',
-  args: { configuration: unavailableConfiguration },
+const cantStartConfiguration = composerCantStartConfigurations[0];
+if (!cantStartConfiguration)
+  throw new Error('Recorded catalog needs an Agent that can’t start');
+export const CantStartAgent: StoryObj<typeof meta> = {
+  name: 'Agent can’t start',
+  args: { configuration: cantStartConfiguration },
   render: (args) => (
     <View className="p-4">
       <ComposerAgentModelControl
@@ -49,7 +49,7 @@ export const UnavailableAgent: StoryObj<typeof meta> = {
         configuration={{
           ...args.configuration,
           onAgentChange: action('Agent changed'),
-          onAgentRetry: action('retry Agent'),
+          onAgentRetry: action('recheck Agent'),
         }}
       />
     </View>
