@@ -1,7 +1,5 @@
 import { $isLinkNode, $toggleLink, formatUrl } from '@lexical/link';
 import {
-  $getSelection,
-  $isRangeSelection,
   $setSelection,
   COMMAND_PRIORITY_EDITOR,
   COMMAND_PRIORITY_HIGH,
@@ -14,9 +12,10 @@ import {
   mergeRegister,
   type RangeSelection,
 } from 'lexical';
-import type { LinkFields } from './rich-textarea-link-form';
+import type { LinkFields } from '../rich-textarea-link-form';
 import { isScriptUrl } from './rich-textarea-links';
 import { selectedRect } from './rich-textarea-placement';
+import { $closest, $rangeSelection } from './rich-textarea-selection';
 
 // The selected text the link editor edits, and where it shows it.
 export interface LinkTarget {
@@ -25,20 +24,12 @@ export interface LinkTarget {
   rect: DOMRect;
 }
 
-function $expandedSelection(): RangeSelection | undefined {
-  const selection = $getSelection();
-  return $isRangeSelection(selection) && !selection.isCollapsed()
-    ? selection
-    : undefined;
-}
-
 function $linkedUrl(selection: RangeSelection): string {
-  const node = selection.anchor.getNode();
-  return [node, ...node.getParents()].find($isLinkNode)?.getURL() ?? '';
+  return $closest(selection.anchor.getNode(), $isLinkNode)?.getURL() ?? '';
 }
 
 function $linkTarget(): LinkTarget | undefined {
-  const selection = $expandedSelection();
+  const selection = $rangeSelection({ collapsed: false });
   const rect = selectedRect();
   if (!selection || !rect) return undefined;
   const fields = {

@@ -2,29 +2,30 @@ import { CodeNode } from '@lexical/code';
 import { $isLinkNode, AutoLinkNode, LinkNode } from '@lexical/link';
 import { ListItemNode, ListNode } from '@lexical/list';
 import {
-  $convertFromMarkdownString,
   $convertToMarkdownString,
+  BOLD_ITALIC_STAR,
+  BOLD_ITALIC_UNDERSCORE,
   BOLD_STAR,
-  CODE,
+  BOLD_UNDERSCORE,
+  ELEMENT_TRANSFORMERS,
   INLINE_CODE,
+  ITALIC_STAR,
   ITALIC_UNDERSCORE,
-  LINK,
-  ORDERED_LIST,
-  QUOTE,
+  MULTILINE_ELEMENT_TRANSFORMERS,
   STRIKETHROUGH,
+  TEXT_MATCH_TRANSFORMERS,
   type TextFormatTransformer,
   type TextMatchTransformer,
   type Transformer,
-  UNORDERED_LIST,
 } from '@lexical/markdown';
-import { QuoteNode } from '@lexical/rich-text';
+import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { $getRoot, $isTextNode, type Klass, type LexicalNode } from 'lexical';
+import { $importLiteralMarkdown } from './rich-textarea-import';
+import { replacer, unusedCharacters } from './rich-textarea-stand-ins';
 
-/*
- * The nodes and markdown transformers the web editor uses, shared by its drawing and its tests.
- * Headings are left out: `# ` stays text.
- */
+// The nodes and markdown transformers the web editor uses, shared by its drawing and its tests.
 export const richTextareaNodes: Klass<LexicalNode>[] = [
+  HeadingNode,
   ListNode,
   ListItemNode,
   QuoteNode,
@@ -39,50 +40,37 @@ const SINGLE_TILDE_STRIKETHROUGH: TextFormatTransformer = {
   tag: '~',
 };
 
-// Export writes the first transformer of a format, so `~~` comes before `~`.
+/*
+ * Lexical's TRANSFORMERS preset, less `==` highlight, which the Feed cannot draw. Export writes the
+ * first transformer of a format, so `**`, `_` and `~~` come before the other spellings.
+ */
 export const richTextareaTransformers: Transformer[] = [
-  UNORDERED_LIST,
-  ORDERED_LIST,
-  QUOTE,
-  CODE,
+  ...ELEMENT_TRANSFORMERS,
+  ...MULTILINE_ELEMENT_TRANSFORMERS,
   INLINE_CODE,
+  BOLD_ITALIC_STAR,
+  BOLD_ITALIC_UNDERSCORE,
   BOLD_STAR,
+  BOLD_UNDERSCORE,
   ITALIC_UNDERSCORE,
+  ITALIC_STAR,
   STRIKETHROUGH,
   SINGLE_TILDE_STRIKETHROUGH,
-  LINK,
+  ...TEXT_MATCH_TRANSFORMERS,
 ];
 
 /*
  * Lexical backslash-escapes markdown characters in plain text on export, and has no option to stop.
  * The draft is sent exactly as shown (ADR-0012), so each export swaps those characters for stand-ins
- * the draft does not contain, lets Lexical format the text, and swaps them back.
+ * the draft does not contain, lets Lexical format the text, and swaps them back. Only a link's text
+ * is escaped, where a bracket or a final backslash would end it early.
  */
 const markdownCharacters = ['*', '_', '`', '~', '\\'];
-const firstStandIn = 0xfd_d0;
+const linkTextCharacters = /[[\]]|\\(?=[!-/:-@[-`{-~]|$)/g;
 
 interface Swap {
   shield: (text: string) => string;
   unshield: (markdown: string) => string;
-}
-
-function unusedCharacters(text: string, count: number): string[] {
-  const found: string[] = [];
-  let point = firstStandIn;
-  while (found.length < count) {
-    const character = String.fromCodePoint(point);
-    if (!text.includes(character)) found.push(character);
-    point += 1;
-  }
-  return found;
-}
-
-function replacer(from: string[], to: string[]): (value: string) => string {
-  return (value) =>
-    Array.from(value, (character) => {
-      const index = from.indexOf(character);
-      return index === -1 ? character : to[index];
-    }).join('');
 }
 
 function swapFor(text: string): Swap {
@@ -93,6 +81,13 @@ function swapFor(text: string): Swap {
   };
 }
 
+function $writtenText(node: LexicalNode): string {
+  const text = node.getTextContent();
+  return $isLinkNode(node.getParent())
+    ? text.replaceAll(linkTextCharacters, '\\$&')
+    : text;
+}
+
 function unescapedText({ shield }: Swap): TextMatchTransformer {
   return {
     type: 'text-match',
@@ -100,17 +95,17 @@ function unescapedText({ shield }: Swap): TextMatchTransformer {
     regExp: /$^/,
     export: (node, _exportChildren, exportFormat) =>
       $isTextNode(node) && !node.hasFormat('code')
-        ? exportFormat(node, shield(node.getTextContent()))
+        ? exportFormat(node, shield($writtenText(node)))
         : null,
   };
 }
 
 export function $importMarkdown(markdown: string): void {
-  $convertFromMarkdownString(markdown, richTextareaTransformers);
+  $importLiteralMarkdown(markdown, richTextareaTransformers);
 }
 
 // Everything an export writes: the text, and the URLs links write beside it.
-function $writtenText(): string {
+function $everythingWritten(): string {
   const texts = $getRoot().getAllTextNodes();
   const urls = texts.map((text) => text.getParent()).filter($isLinkNode);
   return [
@@ -120,7 +115,7 @@ function $writtenText(): string {
 }
 
 export function $exportMarkdown(): string {
-  const swap = swapFor($writtenText());
+  const swap = swapFor($everythingWritten());
   return swap.unshield(
     $convertToMarkdownString([
       ...richTextareaTransformers,

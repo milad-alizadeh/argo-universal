@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { Linking, ScrollView, Text as Span, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { isLinkUrl } from '#lib/generic/link-url';
 import {
   markdownBlockClassNames,
   markdownLinkClassNames,
@@ -30,8 +31,6 @@ export interface FeedMarkdownProps {
 
 const MarkdownVariant = createContext<FeedMarkdownProps['variant']>('feed');
 
-const inlineCodeClassName = markdownMarkClassNames.code;
-
 function Caret(): React.JSX.Element {
   return (
     <View
@@ -42,7 +41,7 @@ function Caret(): React.JSX.Element {
 }
 
 // Only a link resolves its underline colour, so plain text never pays for the style lookup.
-function Link({
+function FollowedLink({
   href,
   children,
 }: {
@@ -64,10 +63,31 @@ function Link({
   );
 }
 
+// A link Argo does not follow (only http, https and mailto) keeps its text and opens nothing.
+function Link({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}): React.JSX.Element {
+  return isLinkUrl(href) ? (
+    <FollowedLink href={href}>{children}</FollowedLink>
+  ) : (
+    <Span>{children}</Span>
+  );
+}
+
+// Text marked would read as HTML or a link definition is drawn as it was written.
+function literal(token: Token): Tokens.Text {
+  const text = token.raw.trimEnd();
+  return { type: 'text', raw: text, text };
+}
+
 // Inline spans are plain native Text so they inherit the size of the block around them.
 function InlineTokens({
   tokens,
-  codeClassName = inlineCodeClassName,
+  codeClassName = markdownMarkClassNames.code,
 }: {
   tokens: Token[] | undefined;
   codeClassName?: string;
@@ -143,11 +163,14 @@ function Prose({
       aria-level={headingLevel}
       className={cn(
         'font-sans',
-        headingLevel !== undefined && 'font-semibold',
+        headingLevel !== undefined && markdownBlockClassNames.heading,
         variant === 'summary' && 'text-muted-foreground',
       )}
     >
-      <InlineTokens tokens={tokens} codeClassName={inlineCodeClassName} />
+      <InlineTokens
+        tokens={tokens}
+        codeClassName={markdownMarkClassNames.code}
+      />
       {caret && <Caret />}
     </Text>
   );
@@ -207,7 +230,7 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
                   <Text className="font-sans font-semibold">
                     <InlineTokens
                       tokens={cell.tokens}
-                      codeClassName={inlineCodeClassName}
+                      codeClassName={markdownMarkClassNames.code}
                     />
                   </Text>
                 </View>
@@ -268,6 +291,16 @@ function Block({
       return <Prose tokens={token.tokens} caret={caret} />;
     case 'text':
       return <Prose tokens={token.tokens ?? [token]} caret={caret} />;
+    case 'html':
+    case 'def':
+      return <Prose tokens={[literal(token)]} caret={caret} />;
+    case 'hr':
+      return (
+        <View ref={block} className="gap-2.5">
+          <View role="separator" className="border-t border-border" />
+          {caret && <Caret />}
+        </View>
+      );
     case 'list':
       return isList(token) ? <List token={token} caret={caret} /> : null;
     case 'code':
@@ -302,9 +335,7 @@ function Blocks({
   tokens: Token[] | undefined;
   caret: boolean;
 }): ReactNode[] {
-  const blocks = (tokens ?? []).filter(
-    (token) => token.type !== 'space' && token.type !== 'hr',
-  );
+  const blocks = (tokens ?? []).filter((token) => token.type !== 'space');
   const nodes: ReactNode[] = withOccurrenceKeys(
     blocks,
     (token) => token.raw,

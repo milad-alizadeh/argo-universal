@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Popover, PopoverTrigger } from '../../overlays/popover/popover';
-import type { FieldPlacement } from './rich-textarea-placement';
+import type { FieldPlacement } from './web/rich-textarea-placement';
 
 interface SelectionPopoverProps {
   // Where the selection sits; the popover is closed without one.
@@ -16,9 +16,10 @@ const overField = 'pointer-events-none absolute inset-0';
 function SelectionAnchor({
   placement,
 }: Pick<SelectionPopoverProps, 'placement'>): React.JSX.Element {
+  // Only anchors the popover, so Tab skips it.
   return (
     <PopoverTrigger asChild>
-      <View className="absolute" style={placement} />
+      <View className="absolute" style={placement} tabIndex={-1} />
     </PopoverTrigger>
   );
 }

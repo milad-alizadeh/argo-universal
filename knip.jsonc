@@ -41,6 +41,7 @@
         "expo-clipboard",
         "expo-file-system",
         "expo-font",
+        "expo-glass-effect",
         "expo-haptics",
         "expo-image-picker",
         "react-native-svg",

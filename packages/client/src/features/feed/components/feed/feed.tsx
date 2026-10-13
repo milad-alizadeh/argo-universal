@@ -129,10 +129,15 @@ function FeedEnd(): React.JSX.Element {
   return <View style={{ height: endSpace }} />;
 }
 
-// Streaming rows grow at the end, so the Feed follows rows as they measure.
-const followEnd = { on: { dataChange: true, layout: true, itemLayout: true } };
+/*
+ * Streaming rows grow at the end, so the Feed follows rows as they measure. The end clearance is the
+ * footer, which grows with a glass Composer, so the Feed follows the footer too.
+ */
+const followEnd = {
+  on: { dataChange: true, layout: true, itemLayout: true, footerLayout: true },
+};
 // While a reader opens or closes a collapsible it holds still, so opening one at the end grows below instead of scrolling the page up.
-const holdEnd = { on: { dataChange: true, layout: true } };
+const holdEnd = { on: { dataChange: true, layout: true, footerLayout: true } };
 // Older rows paging in above keep the reader's place, and so do rows above that measure as the reader scrolls.
 const keepPosition = { data: true };
 

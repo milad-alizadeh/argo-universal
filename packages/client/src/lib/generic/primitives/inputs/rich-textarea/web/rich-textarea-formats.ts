@@ -15,21 +15,20 @@ import {
   type LexicalNode,
   type RangeSelection,
 } from 'lexical';
-import type {
-  BlockFormat,
-  Format,
-  MarkFormat,
-} from './rich-textarea-format-bar';
+import { type MarkdownMark, markdownMarks } from '#lib/generic/markdown-marks';
 import { OPEN_LINK_EDITOR_COMMAND } from './rich-textarea-link-editing';
+import { $closest } from './rich-textarea-selection';
 
-const markFormats: MarkFormat[] = ['bold', 'italic', 'strikethrough', 'code'];
+// What the format bar applies: a mark markdown writes, a link, or a block.
+export type BlockFormat = 'bullet' | 'number' | 'quote';
+export type Format = MarkdownMark | 'link' | BlockFormat;
 
-function isMarkFormat(format: Format): format is MarkFormat {
-  return markFormats.some((mark) => mark === format);
+function isMarkFormat(format: Format): format is MarkdownMark {
+  return markdownMarks.some((mark) => mark === format);
 }
 
 function $listFormat(node: LexicalNode): BlockFormat | undefined {
-  const list = [node, ...node.getParents()].find($isListNode);
+  const list = $closest(node, $isListNode);
   return list && (list.getListType() === 'number' ? 'number' : 'bullet');
 }
 
@@ -41,7 +40,7 @@ function $blockFormat(selection: RangeSelection): BlockFormat | undefined {
 
 // The marks and the block the selection already has, which the format bar shows pressed.
 export function $appliedFormats(selection: RangeSelection): Format[] {
-  const marks = markFormats.filter((mark) => selection.hasFormat(mark));
+  const marks = markdownMarks.filter((mark) => selection.hasFormat(mark));
   const block = $blockFormat(selection);
   return block ? [...marks, block] : marks;
 }

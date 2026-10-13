@@ -1,22 +1,23 @@
 import { LinkNode } from '@lexical/link';
 import { ListItemNode } from '@lexical/list';
-import { QuoteNode } from '@lexical/rich-text';
+import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import {
   $hasUpdateTag,
   type ElementNode,
-  IS_BOLD,
-  IS_CODE,
-  IS_ITALIC,
-  IS_STRIKETHROUGH,
   type LexicalEditor,
   PASTE_TAG,
   ParagraphNode,
+  TEXT_TYPE_TO_FORMAT,
   TextNode,
 } from 'lexical';
-import { isLinkUrl } from './rich-textarea-links';
+import { isLinkUrl } from '#lib/generic/link-url';
+import { markdownMarks as marks } from '#lib/generic/markdown-marks';
 
 // The marks markdown can write; underline, highlight, subscript, superscript and case changes cannot.
-const markdownMarks = IS_BOLD | IS_ITALIC | IS_STRIKETHROUGH | IS_CODE;
+const markdownMarks = marks.reduce(
+  (mask, mark) => mask | (TEXT_TYPE_TO_FORMAT[mark] ?? 0),
+  0,
+);
 const hasOtherMarks = (format: number): boolean =>
   (format & ~markdownMarks) !== 0;
 
@@ -107,14 +108,14 @@ function $plainLink(link: LinkNode): void {
 }
 
 /*
- * The field holds only what markdown can express. Lexical's HTML import already turns headings into
- * paragraphs and drops tables and images, since their nodes are not registered; this strips the
- * formatting it keeps.
+ * The field holds only what markdown can express. Lexical's HTML import already drops tables and
+ * images, since their nodes are not registered; this strips the formatting it keeps.
  */
 export function registerMarkdownOnly(editor: LexicalEditor): () => void {
   const unregister = [
     editor.registerNodeTransform(TextNode, $plainText),
     editor.registerNodeTransform(ParagraphNode, $plainUnindentedBlock),
+    editor.registerNodeTransform(HeadingNode, $plainUnindentedBlock),
     editor.registerNodeTransform(QuoteNode, $plainUnindentedBlock),
     editor.registerNodeTransform(ListItemNode, $plainBlock),
     editor.registerNodeTransform(LinkNode, $plainLink),

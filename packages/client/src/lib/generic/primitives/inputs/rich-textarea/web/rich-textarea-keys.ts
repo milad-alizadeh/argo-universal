@@ -11,8 +11,8 @@ import {
   type LexicalEditor,
   type TextFormatType,
 } from 'lexical';
+import { sendsOnReturn } from '../rich-textarea-return';
 import { $returnBlock, $wrapInCodeBlock } from './rich-textarea-blocks';
-import { sendsOnReturn } from './rich-textarea-return';
 
 const codeBlockModifiers = { ...CONTROL_OR_META, shiftKey: true };
 

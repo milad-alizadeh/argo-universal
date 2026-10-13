@@ -1,13 +1,12 @@
-import { $isListItemNode } from '@lexical/list';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
-import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import { richTextareaTransformers } from './rich-textarea-markdown';
 import { registerMarkdownOnly } from './rich-textarea-paste';
+import { registerListTab } from './rich-textarea-tab';
 
 function MarkdownOnlyPlugin(): null {
   const [editor] = useLexicalComposerContext();
@@ -15,8 +14,15 @@ function MarkdownOnlyPlugin(): null {
   return null;
 }
 
+function ListTabPlugin(): null {
+  const [editor] = useLexicalComposerContext();
+  useEffect(() => registerListTab(editor), [editor]);
+  return null;
+}
+
 /*
- * Typing, undo, and lists that nest with Tab; only list items indent, since markdown has no other indent.
+ * Typing, undo, and lists that nest with Tab; only list items indent, since markdown has no other indent,
+ * and Tab outside a list moves focus.
  * Pasted formatting markdown cannot write is stripped.
  */
 export function EditingPlugins(): React.JSX.Element {
@@ -24,7 +30,7 @@ export function EditingPlugins(): React.JSX.Element {
     <>
       <HistoryPlugin />
       <ListPlugin />
-      <TabIndentationPlugin $canIndent={$isListItemNode} />
+      <ListTabPlugin />
       <MarkdownShortcutPlugin transformers={richTextareaTransformers} />
       <MarkdownOnlyPlugin />
     </>

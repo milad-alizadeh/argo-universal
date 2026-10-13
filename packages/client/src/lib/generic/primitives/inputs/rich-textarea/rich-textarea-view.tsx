@@ -10,21 +10,24 @@ import type * as React from 'react';
 import { useEffect } from 'react';
 import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
-import { EditingPlugins } from './rich-textarea-editing-plugins';
-import { FormatBarPlugin } from './rich-textarea-format-bar-plugin';
-import {
-  registerBlockShortcuts,
-  registerMarkShortcuts,
-  registerReturnToSubmit,
-} from './rich-textarea-keys';
-import { LinkPlugins } from './rich-textarea-link-plugins';
-import { $importMarkdown, richTextareaNodes } from './rich-textarea-markdown';
 import {
   plainFieldClassName,
   type RichTextareaProps,
 } from './rich-textarea-props';
 import { blockThemeClassNames } from './rich-textarea-theme';
-import { useMarkdownValue } from './rich-textarea-value';
+import { EditingPlugins } from './web/rich-textarea-editing-plugins';
+import { FormatBarPlugin } from './web/rich-textarea-format-bar-plugin';
+import {
+  registerBlockShortcuts,
+  registerMarkShortcuts,
+  registerReturnToSubmit,
+} from './web/rich-textarea-keys';
+import { LinkPlugins } from './web/rich-textarea-link-plugins';
+import {
+  $importMarkdown,
+  richTextareaNodes,
+} from './web/rich-textarea-markdown';
+import { useMarkdownValue } from './web/rich-textarea-value';
 
 function KeyboardPlugin({
   onSubmit,

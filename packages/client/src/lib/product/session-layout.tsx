@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -13,6 +12,7 @@ import {
   composerFadeDepth,
   composerOverlap,
   useGlassComposer,
+  useGlassCover,
 } from './composer-cover';
 import { KeyboardAvoidingContent, Screen } from './screen/screen';
 import { ScrollFadeFrame } from './scroll-fade/scroll-fade-frame';
@@ -129,8 +129,8 @@ function GlassComposerLayout({
   feed,
   composer,
 }: SessionLayoutProps): React.JSX.Element {
-  const [cover, setCover] = useState(composerOverlap);
   const { bottom } = useSafeAreaInsets();
+  const { cover, onComposerLayout } = useGlassCover(bottom);
   const { progress } = useReanimatedKeyboardAnimation();
   const homeIndicatorSpace = useAnimatedStyle(
     () => ({ paddingBottom: bottom * (1 - progress.get()) }),
@@ -151,9 +151,7 @@ function GlassComposerLayout({
               testID="composer-column"
               className="items-center"
               // Measured without the home indicator's space, which follows the keyboard frame by frame.
-              onLayout={(event) =>
-                setCover(event.nativeEvent.layout.height + bottom)
-              }
+              onLayout={onComposerLayout}
             >
               {composer}
             </SessionColumn>

@@ -1,15 +1,11 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import type { IconName } from '../../../symbols/icon-names';
 import { IconButton } from '../../buttons/icon-button/icon-button';
 import { PopoverContent } from '../../overlays/popover/popover';
-import type { FieldPlacement } from './rich-textarea-placement';
 import { SelectionPopover } from './rich-textarea-selection-popover';
-
-export type MarkFormat = 'bold' | 'italic' | 'strikethrough' | 'code';
-export type BlockFormat = 'bullet' | 'number' | 'quote';
-export type Format = MarkFormat | 'link' | BlockFormat;
+import type { Format } from './web/rich-textarea-formats';
+import type { FieldPlacement } from './web/rich-textarea-placement';
 
 interface FormatButton {
   format: Format;
@@ -58,7 +54,6 @@ function FormatToggle(props: ToggleProps): React.JSX.Element {
       icon={props.button.icon}
       accessibilityLabel={props.button.label}
       aria-pressed={pressed}
-      className={cn(pressed && 'bg-muted')}
       onPress={() => props.onFormat(props.button.format)}
     />
   );

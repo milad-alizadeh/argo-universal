@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { canPointAt, centreOf } from '../../../../../mocks/point-hit';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
@@ -65,10 +66,7 @@ for (const { source } of [...drawn, link])
 // Whether a person can see and point at the element's first line, rather than it being hidden by the clamp.
 function isUncovered(element: HTMLElement): boolean {
   const firstLine = element.getClientRects()[0];
-  if (!firstLine) return false;
-  const { left, top, width, height } = firstLine;
-  const hit = document.elementFromPoint(left + width / 2, top + height / 2);
-  return hit !== null && element.contains(hit);
+  return firstLine !== undefined && canPointAt(element, centreOf(firstLine));
 }
 
 // The clamp hides the code block; expanded, every mark, list, quote, link and code block draws without its markers.

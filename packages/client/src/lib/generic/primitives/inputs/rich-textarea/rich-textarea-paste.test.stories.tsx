@@ -119,7 +119,7 @@ export const PastingCopiedHtmlKeepsMarkdownMarks: Story = {
     await userEvent.paste();
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith(
-        'Plan\n\n**Ship** today with [the plan](https://argo.dev/plan)',
+        '## Plan\n\n**Ship** today with [the plan](https://argo.dev/plan)',
       ),
     );
   },

@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { isLinkUrl } from '#lib/generic/link-url';
 import {
   linksIn,
   roundTrip,
   type ShownLink,
-} from '../../../../../../mocks/rich-textarea-headless';
-import { isLinkUrl, isScriptUrl } from './rich-textarea-links';
+} from '../../../../../../../mocks/rich-textarea-headless';
+import { isScriptUrl } from './rich-textarea-links';
+
+const scriptUrl = 'javascript:alert(1)';
+const argoUrl = 'https://argo.dev';
 
 describe('A pasted text links the selection', () => {
   it.each([
@@ -20,7 +24,7 @@ describe('A pasted text links the selection', () => {
     'github.com/argo/universal',
     'https://argo.dev and more',
     ' https://argo.dev',
-    'javascript:alert(1)',
+    scriptUrl,
     'file:///etc/hosts',
     '',
   ])('not when it is %j', (text) => {
@@ -30,7 +34,7 @@ describe('A pasted text links the selection', () => {
 
 describe('A link that would run a script', () => {
   it.each([
-    'javascript:alert(1)',
+    scriptUrl,
     'JavaScript:alert(1)',
     ' \tjava\nscript:alert(1)',
     'data:text/html,<script>alert(1)</script>',
@@ -40,7 +44,7 @@ describe('A link that would run a script', () => {
   });
 
   it.each([
-    'https://argo.dev',
+    argoUrl,
     '#top',
     './README.md',
     '/docs',
@@ -73,6 +77,14 @@ const linkDrafts: { name: string; markdown: string }[] = [
   {
     name: 'a link whose URL holds noncharacters the text does not',
     markdown: 'Keep [it](https://argo.dev/\uFDD0\uFDD1) as it is',
+  },
+  {
+    name: 'a link whose text holds brackets',
+    markdown: 'See [a\\]b \\[c](https://argo.dev/a)',
+  },
+  {
+    name: 'a link whose text ends in a backslash',
+    markdown: 'See [C:\\\\](https://argo.dev/a)',
   },
   { name: 'a bare URL', markdown: 'Logs: https://ci.argo.dev/runs/8812' },
   {
@@ -110,6 +122,16 @@ describe('Links in a draft', () => {
       name: 'a link inside a quote',
       markdown: '> See [the run](https://ci.argo.dev/runs/8812)',
       links: [{ text: 'the run', url: 'https://ci.argo.dev/runs/8812' }],
+    },
+    {
+      name: 'a link whose text holds a bracket',
+      markdown: '[a\\]b](https://argo.dev)',
+      links: [{ text: 'a]b', url: argoUrl }],
+    },
+    {
+      name: 'a link whose text ends in a backslash',
+      markdown: '[C:\\\\](https://argo.dev)',
+      links: [{ text: 'C:\\', url: argoUrl }],
     },
   ])('shows $name as a link', ({ markdown, links }) => {
     expect(linksIn(markdown)).toEqual(links);

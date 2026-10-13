@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   roundTrip,
   typedParagraph,
-} from '../../../../../../mocks/rich-textarea-headless';
+} from '../../../../../../../mocks/rich-textarea-headless';
 
 const unchanged: { name: string; markdown: string }[] = [
   { name: 'bold', markdown: 'Make it **bold** now' },
@@ -18,7 +18,7 @@ const unchanged: { name: string; markdown: string }[] = [
   { name: 'stars in plain text', markdown: '2 * 3 * 4' },
   { name: 'tildes in plain text', markdown: 'about ~ 5 or ~/projects' },
   { name: 'backslashes in plain text', markdown: 'C:\\Users\\argo and a\\b' },
-  { name: 'unmatched markers', markdown: '*not italic* and **open' },
+  { name: 'unmatched markers', markdown: '*open and **open' },
   { name: 'a line break', markdown: 'First line\nSecond line' },
   { name: 'two paragraphs', markdown: 'First paragraph\n\nSecond paragraph' },
   { name: 'an empty draft', markdown: '' },
@@ -63,6 +63,9 @@ const unchanged: { name: string; markdown: string }[] = [
     name: 'marks inside a list item',
     markdown: '- Keep **snake_case** _as is_',
   },
+  { name: 'a heading', markdown: '# Plan' },
+  { name: 'a third-level heading', markdown: '### Steps' },
+  { name: 'marks inside a heading', markdown: '## Rename **snake_case**' },
   { name: 'a quote', markdown: '> Keep the phone readable.' },
   { name: 'a quote over two lines', markdown: '> First line\n> Second line' },
   {
@@ -83,9 +86,11 @@ const unchanged: { name: string; markdown: string }[] = [
   },
 ];
 
-// Lexical escapes only `* _ ` ~ \` in text, so block markers typed as text are sent as typed.
-const typedBlockMarkers = [
+// Markers typed as text, where no shortcut fired, are sent as typed: export escapes nothing.
+const typedMarkers = [
   '# not a heading',
+  '*not italic*',
+  '__not bold__',
   '> not a quote',
   '- not a list',
   '+ not a list',
@@ -99,7 +104,7 @@ describe('RichTextarea markdown', () => {
     expect(roundTrip(markdown)).toBe(markdown);
   });
 
-  it.each(typedBlockMarkers)('exports the typed text %s as it is', (text) => {
+  it.each(typedMarkers)('exports the typed text %s as it is', (text) => {
     expect(typedParagraph(text)).toBe(text);
   });
 
@@ -111,7 +116,29 @@ describe('RichTextarea markdown', () => {
     expect(roundTrip('1. Plan\n3. Ship')).toBe('1. Plan\n2. Ship');
   });
 
-  it('writes a single-tilde strikethrough with two tildes', () => {
-    expect(roundTrip('Make it ~gone~ now')).toBe('Make it ~~gone~~ now');
+  // Lexical's other spellings of a mark are read, and written as the Feed's own.
+  it.each([
+    {
+      name: 'a single-tilde strikethrough',
+      markdown: 'Make it ~gone~ now',
+      sent: 'Make it ~~gone~~ now',
+    },
+    {
+      name: 'a star italic',
+      markdown: 'Make it *italic* now',
+      sent: 'Make it _italic_ now',
+    },
+    {
+      name: 'an underscore bold',
+      markdown: 'Make it __bold__ now',
+      sent: 'Make it **bold** now',
+    },
+    {
+      name: 'a star bold italic',
+      markdown: '***both*** marks',
+      sent: '**_both_** marks',
+    },
+  ])('writes $name in the Feed spelling', ({ markdown, sent }) => {
+    expect(roundTrip(markdown)).toBe(sent);
   });
 });

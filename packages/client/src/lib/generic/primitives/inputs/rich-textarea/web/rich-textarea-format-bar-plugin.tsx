@@ -1,30 +1,18 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import {
-  $getSelection,
-  $isRangeSelection,
-  type LexicalEditor,
-  mergeRegister,
-  type RangeSelection,
-} from 'lexical';
+import { type LexicalEditor, mergeRegister } from 'lexical';
 import type * as React from 'react';
 import { type RefObject, useEffect, useRef, useState } from 'react';
+import { FormatBar, type FormatBarProps } from '../rich-textarea-format-bar';
 import {
+  $appliedFormats,
+  applyFormat,
   type Format,
-  FormatBar,
-  type FormatBarProps,
-} from './rich-textarea-format-bar';
-import { $appliedFormats, applyFormat } from './rich-textarea-formats';
+} from './rich-textarea-formats';
 import { trackMouseSelection } from './rich-textarea-mouse-selection';
 import { placementInField, selectedRect } from './rich-textarea-placement';
+import { $rangeSelection } from './rich-textarea-selection';
 
 type ShownBar = FormatBarProps['shown'];
-
-function $selectedRange(): RangeSelection | undefined {
-  const selection = $getSelection();
-  return $isRangeSelection(selection) && !selection.isCollapsed()
-    ? selection
-    : undefined;
-}
 
 function shownPlacement(
   editor: LexicalEditor,
@@ -34,7 +22,7 @@ function shownPlacement(
 }
 
 function $shownBar(editor: LexicalEditor): ShownBar {
-  const selection = $selectedRange();
+  const selection = $rangeSelection({ collapsed: false });
   const placement = shownPlacement(editor);
   if (!selection || !placement) return undefined;
   return { placement, applied: $appliedFormats(selection) };

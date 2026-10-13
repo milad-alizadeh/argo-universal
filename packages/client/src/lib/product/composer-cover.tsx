@@ -1,5 +1,7 @@
-import { createContext, useContext } from 'react';
-import { hasLiquidGlass } from '#lib/generic/native-header';
+import { createContext, useContext, useState } from 'react';
+import type { LayoutChangeEvent } from 'react-native';
+import { useKeyboardState } from 'react-native-keyboard-controller';
+import { liquidGlassAvailable } from '#lib/generic/primitives/display/liquid-glass/liquid-glass';
 import { useContentWide } from './content-layout';
 
 // How far the Composer reaches up over the end of the Feed; the Feed's rows are hidden under it, so none shows through its glass.
@@ -14,10 +16,10 @@ const feedEndGap = 24;
 // How far the Composer covers the Feed's end: its overlap, or under iOS 26's glass Composer, the whole Composer area.
 export const ComposerCover = createContext(composerOverlap);
 
-// iOS 26 and later draw the phone Composer as Liquid Glass, and the Feed scrolls under it.
+// Where the system draws Liquid Glass, the phone Composer is glass, and the Feed scrolls under it.
 export function useGlassComposer(): boolean {
   const contentWide = useContentWide();
-  return hasLiquidGlass && !contentWide;
+  return liquidGlassAvailable && !contentWide;
 }
 
 export interface FeedEndClearance {
@@ -31,4 +33,22 @@ export function useFeedEndClearance(): FeedEndClearance {
   const cover = useContext(ComposerCover);
   const fadeDepth = useGlassComposer() ? 0 : composerFadeDepth.away;
   return { endSpace: cover + feedEndGap, overlayBottom: cover + fadeDepth };
+}
+
+export interface GlassCover {
+  cover: number;
+  onComposerLayout: (event: LayoutChangeEvent) => void;
+}
+
+// How far the glass Composer covers the Feed's end: the Composer, and below it the home indicator's space, which the open keyboard takes over.
+export function useGlassCover(bottom: number): GlassCover {
+  const [composerHeight, setComposerHeight] = useState<number>();
+  const keyboardOpen = useKeyboardState((state) => state.isVisible);
+  const below = keyboardOpen ? 0 : bottom;
+  return {
+    cover:
+      composerHeight === undefined ? composerOverlap : composerHeight + below,
+    onComposerLayout: (event) =>
+      setComposerHeight(event.nativeEvent.layout.height),
+  };
 }

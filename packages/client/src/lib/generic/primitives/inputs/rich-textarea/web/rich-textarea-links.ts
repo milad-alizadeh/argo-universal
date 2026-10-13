@@ -1,17 +1,6 @@
 import { autoLinkUrlMatcher, type LinkMatcher } from '@lexical/link';
-import {
-  $getSelection,
-  $isRangeSelection,
-  type PointType,
-  type RangeSelection,
-} from 'lexical';
-const linkProtocols = new Set(['http:', 'https:', 'mailto:']);
-
-// Whether pasted text is a whole URL, so pasting it over a selection links the selection.
-export function isLinkUrl(text: string): boolean {
-  if (/\s/.test(text) || !URL.canParse(text)) return false;
-  return linkProtocols.has(new URL(text).protocol);
-}
+import type { PointType } from 'lexical';
+import { $rangeSelection } from './rich-textarea-selection';
 
 const scriptSchemes = ['javascript:', 'data:', 'vbscript:'];
 
@@ -24,20 +13,13 @@ export function isScriptUrl(url: string): boolean {
   return scriptSchemes.some((script) => scheme.startsWith(script));
 }
 
-function $collapsedSelection(): RangeSelection | undefined {
-  const selection = $getSelection();
-  return $isRangeSelection(selection) && selection.isCollapsed()
-    ? selection
-    : undefined;
-}
-
 function endsAt(point: PointType, url: string): boolean {
   const shown = point.getNode().getTextContent();
   return point.offset === shown.length && shown.endsWith(url);
 }
 
 function $caretEndsWith(url: string): boolean {
-  const caret = $collapsedSelection()?.anchor;
+  const caret = $rangeSelection({ collapsed: true })?.anchor;
   return caret !== undefined && endsAt(caret, url);
 }
 

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
+import { lineViews } from '../../../../../mocks/line-views';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
@@ -97,38 +98,6 @@ export const SecondAgentOpensImageWide = opensImage(
   layoutWidths.wide,
 );
 
-type LineView = 'shown' | 'hidden' | 'cut';
-const trailingSpaceWidth = 6;
-
-function lineView(seenEdges: boolean[]): LineView {
-  if (seenEdges.every(Boolean)) return 'shown';
-  return seenEdges.some(Boolean) ? 'cut' : 'hidden';
-}
-
-// How a person sees each drawn line of text: whole, hidden, or cut through by the clamp.
-function lineViews(root: HTMLElement): LineView[] {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const views: LineView[] = [];
-  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    const owner = node.parentElement;
-    if (!owner || !node.textContent?.trim() || owner.closest('[role=button]'))
-      continue;
-    const range = document.createRange();
-    range.selectNodeContents(node);
-    for (const line of range.getClientRects()) {
-      // A wrapped line's trailing space hangs past the text edge, where nothing is drawn.
-      if (line.width < trailingSpaceWidth) continue;
-      const x = line.left + Math.min(4, line.width / 2);
-      const seen = [line.top + 1, line.bottom - 1].map((y) => {
-        const hit = document.elementFromPoint(x, y);
-        return hit !== null && owner.contains(hit);
-      });
-      views.push(lineView(seen));
-    }
-  }
-  return views;
-}
-
 // A long markdown prompt shows only whole lines above Show more, then every line once expanded.
 function showsMore(agent: MockAgent, width: number): Story {
   return {
@@ -161,3 +130,18 @@ export const SecondAgentShowMorePhone = showsMore(
 );
 export const SecondAgentShowMoreNarrow = showsMore('agent-2', narrowWidth);
 export const SecondAgentShowMoreWide = showsMore('agent-2', layoutWidths.wide);
+
+// The same prompt fits on a wide screen, then clamps again to whole lines once the window narrows.
+export const ClampsAgainWhenNarrowed: Story = {
+  args: { row: recordedUserMessage('agent-2', 'markdown-answer') },
+  play: async ({ canvas, canvasElement }) => {
+    await settleViewport(layoutWidths.wide);
+    await expect(
+      canvas.queryByRole('button', { name: 'Show more' }),
+    ).toBeNull();
+    await settleViewport(layoutWidths.phone);
+    await canvas.findByRole('button', { name: 'Show more' });
+    await waitFor(() => expect(lineViews(canvasElement)).not.toContain('cut'));
+    await expect(lineViews(canvasElement)).toContain('hidden');
+  },
+};
