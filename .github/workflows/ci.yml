@@ -40,6 +40,7 @@ jobs:
 
       - name: Quality
         env:
+          # Each test runner uses the available cores; overlapping runners distort timing budgets.
           TURBO_CONCURRENCY: 1
           VITEST_MAX_WORKERS: 1
         run: pnpm quality
