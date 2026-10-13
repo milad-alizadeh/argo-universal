@@ -1,6 +1,9 @@
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState } from 'react';
-import { InspectorProvider } from '#lib/product/inspector';
+import {
+  type InspectorControl,
+  InspectorProvider,
+} from '#lib/product/inspector';
 import { ListTitle } from '#lib/product/list-title';
 import {
   type NavigationDestination,
@@ -10,11 +13,12 @@ import {
   sectionDestination,
   sectionOf,
 } from '../../../../lib/product/navigation/sections';
-import {
-  DesktopShell,
-  type InspectorState,
-} from '../desktop-shell/desktop-shell';
-import { InspectorPane } from '../inspector-pane';
+import { DesktopShell } from '../desktop-shell/desktop-shell';
+import type {
+  DesktopShellProps,
+  InspectorState,
+} from '../desktop-shell/desktop-shell-props';
+import { InspectorPane, type InspectorPaneProps } from '../inspector-pane';
 import { shellSections } from '../shell-sections';
 
 export interface DesktopLayoutViewProps {
@@ -27,53 +31,101 @@ export interface DesktopLayoutViewProps {
   children: ReactNode;
 }
 
-// The wide window's shell: the open section's list in the sidebar, `children` in the detail pane with its own header, and the Session's changes in the Inspector.
-export function DesktopLayoutView({
-  destination,
-  attentionCount,
-  list,
-  listHeader,
-  children,
-}: DesktopLayoutViewProps): React.JSX.Element {
+type ShellInspectorProps = Pick<
+  DesktopShellProps,
+  'inspectorState' | 'onInspectorStateChange' | 'inspector'
+>;
+
+type SectionShellProps = Pick<
+  DesktopShellProps,
+  'selectedSection' | 'onSectionChange' | 'listHeader'
+>;
+
+interface LayoutShell {
+  inspector: InspectorControl;
+  shell: Omit<DesktopShellProps, 'children'>;
+}
+
+function useSectionProps(props: DesktopLayoutViewProps): SectionShellProps {
   const navigate = useNavigate();
+  const section = sectionOf(props.destination);
+  return {
+    selectedSection: section,
+    onSectionChange: (next) => navigate(sectionDestination(next)),
+    listHeader: props.listHeader ?? (
+      <ListTitle>{shellSections[section].title}</ListTitle>
+    ),
+  };
+}
+
+function useSidebarProps(): Pick<
+  DesktopShellProps,
+  'sidebarShown' | 'onSidebarShownChange'
+> {
   const [sidebarShown, setSidebarShown] = useState(true);
-  const [inspectorState, setInspectorState] =
-    useState<InspectorState>('closed');
-  const section = sectionOf(destination);
-  const { title } = shellSections[section];
+  return { sidebarShown, onSidebarShownChange: setSidebarShown };
+}
+
+function useInspectorControl(
+  inspectorState: InspectorState,
+  setInspectorState: (state: InspectorState) => void,
+): InspectorControl {
   const inspectorOpen = inspectorState !== 'closed';
-  const inspector = useMemo(
+  return useMemo(
     () => ({
       open: inspectorOpen,
       toggle: (): void => setInspectorState(inspectorOpen ? 'closed' : 'open'),
     }),
-    [inspectorOpen],
+    [inspectorOpen, setInspectorState],
   );
+}
 
+function ChangesInspector(
+  props: Pick<InspectorPaneProps, 'expanded' | 'onStateChange'>,
+): React.JSX.Element {
+  return (
+    <InspectorPane title="Changes" {...props}>
+      {null}
+    </InspectorPane>
+  );
+}
+
+function changesInspectorProps(
+  inspectorState: InspectorState,
+  setInspectorState: (state: InspectorState) => void,
+): ShellInspectorProps {
+  return {
+    inspectorState,
+    onInspectorStateChange: setInspectorState,
+    inspector: (expanded) => (
+      <ChangesInspector expanded={expanded} onStateChange={setInspectorState} />
+    ),
+  };
+}
+
+function useLayoutShell(props: DesktopLayoutViewProps): LayoutShell {
+  const [inspectorState, setInspectorState] =
+    useState<InspectorState>('closed');
+  return {
+    inspector: useInspectorControl(inspectorState, setInspectorState),
+    shell: {
+      ...useSectionProps(props),
+      ...useSidebarProps(),
+      ...changesInspectorProps(inspectorState, setInspectorState),
+      attentionCount: props.attentionCount,
+      list: props.list,
+    },
+  };
+}
+
+// The wide window's shell: the open section's list in the sidebar, `children` in the detail pane with its own header, and the Session's changes in the Inspector.
+export function DesktopLayoutView(
+  props: DesktopLayoutViewProps,
+): React.JSX.Element {
+  const { inspector, shell } = useLayoutShell(props);
   return (
     <InspectorProvider value={inspector}>
-      <DesktopShell
-        selectedSection={section}
-        attentionCount={attentionCount}
-        sidebarShown={sidebarShown}
-        onSidebarShownChange={setSidebarShown}
-        onSectionChange={(next) => navigate(sectionDestination(next))}
-        listHeader={listHeader ?? <ListTitle>{title}</ListTitle>}
-        list={list}
-        inspectorState={inspectorState}
-        onInspectorStateChange={setInspectorState}
-        inspector={(expanded) => (
-          <InspectorPane
-            title="Changes"
-            expanded={expanded}
-            onStateChange={setInspectorState}
-          >
-            {null}
-          </InspectorPane>
-        )}
-      >
-        {children}
-      </DesktopShell>
+      <DesktopShell {...shell}>{props.children}</DesktopShell>
     </InspectorProvider>
   );
 }

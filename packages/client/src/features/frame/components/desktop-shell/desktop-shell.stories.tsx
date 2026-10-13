@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
+import { sectionOrder } from '../shell-sections';
 import {
   DesktopShellFrame,
   type DesktopShellFrameProps,
@@ -14,7 +15,7 @@ const meta = {
   argTypes: {
     selectedSection: {
       control: 'select',
-      options: ['sessions', 'issues', 'atlas', 'settings'],
+      options: [...sectionOrder],
     },
     inspectorState: {
       control: 'select',
