@@ -9,13 +9,14 @@ import { closeSubscription } from '#mocks/composition-subscriptions';
 import { SessionRowUpdateJob } from '../sessions';
 
 const sessionId = 'session-1';
+const writerWriteEvent = 'writer.write';
 
 it.each(agentAdapters)(
   'keeps publishing list changes and counts after one subscriber disconnects for $agent',
   async ({ agent }): Promise<void> => {
     const { host, counted } = await startCountedList(agent);
     host.databaseWriter.send({
-      type: 'writer.write',
+      type: writerWriteEvent,
       job: new SessionRowUpdateJob({
         id: sessionId,
         set: { maxRevision: 50 },
@@ -36,7 +37,7 @@ it.each(agentAdapters)(
     counted.metrics.sessionReads = 0;
     const changes = Promise.all([second.updates.next(), counts.next()]);
     host.databaseWriter.send({
-      type: 'writer.write',
+      type: writerWriteEvent,
       job: new SessionRowUpdateJob({
         id: sessionId,
         set: { title: 'Survives one disconnect', seenRevision: 50 },
@@ -71,7 +72,7 @@ it.each(agentAdapters)(
     watched.controller.abort();
     counted.metrics.sessionReads = 0;
     host.databaseWriter.send({
-      type: 'writer.write',
+      type: writerWriteEvent,
       job: new SessionRowUpdateJob({
         id: sessionId,
         set: { title: 'No subscribers' },
