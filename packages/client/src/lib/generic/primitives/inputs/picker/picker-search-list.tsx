@@ -15,9 +15,11 @@ export function PickerSearchList<Value extends string>(
   props: SearchProps<Value>,
 ): React.JSX.Element {
   const [query, setQuery] = useState('');
+
   const options = props.options.filter((option) =>
     matchesQuery(option.label, query),
   );
+
   return createElement(
     View,
     { className: 'flex-1 gap-3 bg-popover px-4 pt-3' },
@@ -49,6 +51,7 @@ function SearchResults<Value extends string>(props: {
   options: readonly PickerOption<Value>[];
 }): React.JSX.Element {
   const message = pickerOptionsMessage(props.picker);
+
   return message ? (
     <SearchMessage message={message} failure={!!props.picker.error} />
   ) : (
@@ -109,6 +112,7 @@ function searchOptionState<Value extends string>(
   props: SearchProps<Value> & { option: PickerOption<Value> },
 ): React.ComponentProps<typeof Pressable> {
   const checked = props.option.value === props.value;
+
   return {
     'aria-checked': checked,
     accessibilityState: { checked, disabled: props.option.disabled },

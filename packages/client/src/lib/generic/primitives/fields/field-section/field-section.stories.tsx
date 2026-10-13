@@ -6,13 +6,16 @@ import { FieldGroup } from '../field-group/field-group';
 import { FieldSection } from './field-section';
 
 const onPress = action('open list item');
+
 const meta = {
   title: 'Design System/Primitives/FieldSection',
   args: { children: null },
   component: FieldSection,
   parameters: { screenPreview: true },
 } satisfies Meta<typeof FieldSection>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

@@ -23,6 +23,7 @@ function useLatestGesture({
   useLayoutEffect(() => {
     latest.current = { value, direction, onChange, onDragStateChange };
   }, [value, direction, onChange, onDragStateChange]);
+
   return latest;
 }
 
@@ -52,6 +53,7 @@ function useStablePanResponder(
   callbacks: PanResponderCallbacks,
 ): PanResponderInstance {
   const [responder] = useState(() => PanResponder.create(callbacks));
+
   return responder;
 }
 
@@ -61,6 +63,7 @@ export function useResizeResponder(
   const latest = useLatestGesture(props);
   const startingWidth = useRef(props.value);
   const release = (): void => releaseResize(latest);
+
   return useStablePanResponder({
     onStartShouldSetPanResponder: () => true,
     onPanResponderGrant: () => grantResize(latest, startingWidth),

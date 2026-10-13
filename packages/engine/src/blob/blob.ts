@@ -31,7 +31,9 @@ const unlessMissing =
 
 const hasBytesAt = (bytes: Buffer, offset: number, expected: Buffer): boolean =>
   bytes.subarray(offset, offset + expected.length).equals(expected);
+
 const webpFormatOffset = 8;
+
 const imageSignatures: [mime: string, matches: (bytes: Buffer) => boolean][] = [
   [
     'image/png',
@@ -82,6 +84,7 @@ export async function uploadBlob(
     }),
     true,
   );
+
   return { blobId, mime, bytes: bytes.length };
 }
 
@@ -92,6 +95,7 @@ export async function removeUnusedBlobs(options: {
 }): Promise<void> {
   const cutoff = (options.now ?? Date.now()) - unusedBlobAge;
   const { database } = options;
+
   const removed = database
     .delete(blob)
     .where(
@@ -107,8 +111,10 @@ export async function removeUnusedBlobs(options: {
     )
     .returning({ id: blob.id })
     .all();
+
   for (const { id } of removed)
     await rm(join(options.blobsFolder, id), { force: true });
+
   const stored = new Set(
     database
       .select({ id: blob.id })
@@ -116,12 +122,15 @@ export async function removeUnusedBlobs(options: {
       .all()
       .map(({ id }): string => id),
   );
+
   const names = await readdir(options.blobsFolder).catch(
     unlessMissing<string[]>([]),
   );
+
   for (const name of names) {
     if (stored.has(name)) continue;
     const path = join(options.blobsFolder, name);
+
     if ((await stat(path)).mtimeMs < cutoff) await rm(path, { force: true });
   }
 }

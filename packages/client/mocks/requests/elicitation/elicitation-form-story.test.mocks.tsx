@@ -21,26 +21,32 @@ export const meta: Meta<typeof ElicitationForm> = {
   ),
   args: { ...elicitationProps({}), onAnswer: fn() },
 };
+
 export type Story = StoryObj<typeof meta>;
 
 export function recordedAnswer(mock: RequestMock): ElicitationAnswer {
   const answer = mock.answer;
+
   if (answer.procedure !== 'answerElicitation')
     throw new Error('Recorded catalog needs an Elicitation answer.');
+
   return answer.input;
 }
 
+const stringAnswersNeeded =
+  'Recorded catalog needs string answers for the color form.';
+
 export function recordedValues(mock: RequestMock): ElicitationValues {
   const content = recordedAnswer(mock).content;
-  if (!content || !stringAnswers(content))
-    throw new Error(
-      'Recorded catalog needs string answers for the color form.',
-    );
-  return content;
+
+  if (!content) throw new Error(stringAnswersNeeded);
+  const answers = Object.entries(content);
+
+  if (!answers.every(isStringAnswer)) throw new Error(stringAnswersNeeded);
+
+  return Object.fromEntries(answers);
 }
 
-function stringAnswers(
-  content: Record<string, unknown>,
-): content is Record<string, string> {
-  return Object.values(content).every((value) => typeof value === 'string');
-}
+const isStringAnswer = (
+  answer: [string, unknown],
+): answer is [string, string] => typeof answer[1] === 'string';

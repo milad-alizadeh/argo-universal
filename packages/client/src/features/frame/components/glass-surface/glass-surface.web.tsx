@@ -28,6 +28,7 @@ function resizeAll(
   to: number,
 ): readonly ElementFrame[] {
   const keyframes = [{ width: `${from}px` }, { width: `${to}px` }];
+
   return panels.map((panel): ElementFrame => [panel, keyframes]);
 }
 
@@ -40,6 +41,7 @@ function useGlassMotion(props: GlassSurfaceProps): GlassRefs {
     animate: props.animate,
     frames: (from, to) => resizeAll([mask.current, edge.current], from, to),
   });
+
   return { mask, edge };
 }
 
@@ -70,6 +72,7 @@ function GlassEdge({ ref, width }: GlassLayerProps): React.JSX.Element {
 
 export function GlassSurface(props: GlassSurfaceProps): React.JSX.Element {
   const { mask, edge } = useGlassMotion(props);
+
   return (
     <>
       <GlassMask

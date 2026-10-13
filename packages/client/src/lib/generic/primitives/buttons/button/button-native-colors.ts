@@ -4,10 +4,15 @@ import type { ButtonDataProps, ButtonVariant } from './button-props';
 import { nativeButtonVariant } from './button-state';
 
 const destructiveClass = 'text-destructive';
+
 const primaryClass = 'text-primary';
+
 const foregroundClass = 'text-foreground';
+
 const transparentClass = 'text-transparent';
+
 const mutedFillClass = 'text-secondary';
+
 const buttonColorClasses: Record<
   ButtonVariant,
   { container: string; content: string }
@@ -40,6 +45,7 @@ type ThemeProps = Pick<ButtonDataProps, 'variant' | 'role'>;
 export function useNativeButtonTheme(props: ThemeProps): ButtonTheme {
   const { colors } = useNativeTheme();
   const classes = nativeColorClasses(props);
+
   return {
     primary: colors.tint,
     mutedFill: usePrimitiveColor(mutedFillClass),
@@ -54,6 +60,7 @@ function useNativeButtonColors(classes: {
 }): ButtonTheme['colors'] {
   const containerColor = usePrimitiveColor(classes.container);
   const contentColor = usePrimitiveColor(classes.content);
+
   // A disabled button keeps its colours; its Host fades the whole button instead.
   return {
     containerColor,
@@ -68,7 +75,9 @@ function nativeColorClasses(props: Pick<ButtonDataProps, 'variant' | 'role'>): {
   content: string;
 } {
   const variant = nativeButtonVariant(props);
+
   if (props.role === 'destructive') return destructiveColors[variant];
+
   return buttonColorClasses[variant];
 }
 

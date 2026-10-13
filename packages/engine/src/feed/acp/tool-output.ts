@@ -9,21 +9,37 @@ import type {
 } from '@repo/contracts';
 
 type ToolRow = Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }>;
+
 type ToolUpdate = Extract<
   SessionNotification['update'],
   { sessionUpdate: 'tool_call' | 'tool_call_update' }
 >;
+
 type ArgoToolMeta = NonNullable<NonNullable<ToolRow['_meta']>['argo']>;
+
 type FullOutput = NonNullable<ArgoToolMeta['fullOutput']>;
+
 type OutputField = keyof FullOutput;
+
 // The whole value of a capped output field, waiting to be stored as a Blob.
 export type OutputBlob = { blob: BlobRef; data: Buffer };
+
 type CappedField = { value: unknown; blob?: OutputBlob };
 
+// A tool row with its output previews, and the Blobs that hold the whole output.
+interface CappedToolOutput {
+  row: ToolRow;
+  blobs: OutputBlob[];
+}
+
 const previewBytes = 65_536;
+
 const sideBytes = 32_768;
+
 const cutMark = '\n…\n';
+
 const continuationMask = 0xc0;
+
 const continuationBits = 0x80;
 
 // A UTF-8 byte inside a character, never its first.
@@ -33,6 +49,7 @@ const isContinuationByte = (byte: number): boolean =>
 const toOutputBlob = (text: string): OutputBlob => {
   const data = Buffer.from(text);
   const blobId = createHash('sha256').update(data).digest('hex');
+
   return {
     blob: { blobId, mime: 'application/json', bytes: data.length },
     data,
@@ -42,10 +59,12 @@ const toOutputBlob = (text: string): OutputBlob => {
 // The first and last 32 KB of a text over 64 KB, cut on whole characters.
 const capText = (text: string): string | undefined => {
   const bytes = Buffer.from(text);
+
   if (bytes.length <= previewBytes) return undefined;
   const head = new StringDecoder('utf8').write(bytes.subarray(0, sideBytes));
   const tail = bytes.subarray(-sideBytes);
   const start = tail.findIndex((byte): boolean => !isContinuationByte(byte));
+
   return `${head}${cutMark}${tail.subarray(start).toString()}`;
 };
 
@@ -58,19 +77,22 @@ const withText = (
 
 const capBlock = (block: ToolCallContent): ToolCallContent => {
   if (block.type !== 'content' || block.content.type !== 'text') return block;
+
   return withText(block, block.content, capText(block.content.text));
 };
 
 const capContent = (content: ToolCallContent[]): CappedField => {
   const capped = content.map(capBlock);
+
   return capped.some((block, index): boolean => block !== content[index])
     ? { value: capped, blob: toOutputBlob(JSON.stringify(content)) }
     : { value: content };
 };
 
-const capRawOutput = (rawOutput: unknown): CappedField => {
+const capRawOutput = (rawOutput: ToolRow['rawOutput']): CappedField => {
   const text = JSON.stringify(rawOutput);
   const preview = capText(text);
+
   return preview === undefined
     ? { value: rawOutput }
     : { value: preview, blob: toOutputBlob(text) };
@@ -105,8 +127,10 @@ const withTruncation = (row: ToolRow, fullOutput: FullOutput): ToolRow => {
   const argo: ArgoToolMeta = { ...readArgo(row) };
   delete argo.truncated;
   delete argo.fullOutput;
+
   if (Object.keys(fullOutput).length > 0)
     Object.assign(argo, { truncated: true, fullOutput });
+
   return { ...row, _meta: { ...row._meta, argo } };
 };
 
@@ -114,6 +138,7 @@ const withTruncation = (row: ToolRow, fullOutput: FullOutput): ToolRow => {
 const markTruncation = (row: ToolRow, fullOutput: FullOutput): ToolRow => {
   if (readArgo(row).truncated !== true && Object.keys(fullOutput).length === 0)
     return row;
+
   return withTruncation(row, fullOutput);
 };
 
@@ -128,8 +153,9 @@ const readCappedValues = (
 export const capToolOutput = (
   row: ToolRow,
   update: ToolUpdate,
-): { row: ToolRow; blobs: OutputBlob[] } => {
+): CappedToolOutput => {
   const capped = capSuppliedFields(row, update);
+
   return {
     row: markTruncation(
       { ...row, ...readCappedValues(capped) },

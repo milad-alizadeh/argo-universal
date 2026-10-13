@@ -18,6 +18,7 @@ import type { BottomSheetProps } from './bottom-sheet.types';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const { mounted, sheetRef } = useSheetDismissal(props.open, props.onClosed);
+
   return (
     <BottomSheetRoot {...props}>
       {props.trigger && <BottomSheetTrigger trigger={props.trigger} />}
@@ -29,6 +30,7 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
 function SheetPresentation(presentation: SheetProps): React.JSX.Element {
   const { sheetRef, ...props } = presentation;
   const modalProps = useModalProps(props, sheetRef);
+
   return (
     <SheetHost>
       <ModalBottomSheet {...modalProps} ref={sheetRef}>
@@ -50,6 +52,7 @@ function useModalProps(
 ): ModalProps {
   const sheet = useSheetColors(props.surface);
   const dismissible = props.dismissible !== false;
+
   return {
     ...sheet,
     initialFullyExpanded: startsExpanded(props),
@@ -80,10 +83,12 @@ type SheetProps = Pick<
   | 'contentScrolls'
   | 'surface'
 > & { sheetRef: SheetRef };
+
 function HostedSheetContent(
   props: Omit<SheetProps, 'sheetRef'>,
 ): React.JSX.Element {
   if (props.fit) return <FittedSheetContent {...props} />;
+
   return (
     <SheetViewport fit={props.fit}>
       {(viewportHeight) => (
@@ -111,8 +116,10 @@ function dismissOrCollapse(
 ): void {
   if (props.dismissible === false) {
     void sheetRef.current?.partialExpand();
+
     return;
   }
+
   props.onOpenChange(false);
 }
 

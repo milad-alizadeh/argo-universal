@@ -13,8 +13,10 @@ import {
   expectOpenedPlan,
   closeRunningPlan,
 } from './session-plan.test.mocks';
+
 export function sessionControls(width: number): Story {
   const onCompact = fn();
+
   return {
     render: (args) => (
       <Composer
@@ -43,9 +45,11 @@ export function sessionControls(width: number): Story {
       ).not.toBeInTheDocument();
       await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
       await expectOpenedPlan({ canvas, width });
+
       const spinner = await overlay.findByRole('progressbar', {
         name: runningPlanStepLabel,
       });
+
       await expect(spinner).toBeVisible();
       await closeRunningPlan({ canvas, userEvent, width });
       await userEvent.click(

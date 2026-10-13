@@ -12,6 +12,7 @@ import {
 } from '../request.mocks';
 
 const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm' };
+
 export default meta;
 
 function validation(width: number): Story {
@@ -52,7 +53,9 @@ function validation(width: number): Story {
     },
   };
 }
+
 export const FieldsPhone = validation(390);
+
 export const FieldsWide = validation(1440);
 
 export const SubmitWithEnter: Story = {
@@ -82,9 +85,13 @@ function dismiss(width: number, action: 'cancel' | 'decline'): Story {
     },
   };
 }
+
 export const DismissPhone = dismiss(390, 'cancel');
+
 export const DismissWide = dismiss(1440, 'cancel');
+
 export const DeclinePhone = dismiss(390, 'decline');
+
 export const DeclineWide = dismiss(1440, 'decline');
 
 export const InvalidSchema: Story = {
@@ -117,5 +124,7 @@ function clearOptionalNumber(width: number): Story {
     },
   };
 }
+
 export const ClearOptionalNumberPhone = clearOptionalNumber(390);
+
 export const ClearOptionalNumberWide = clearOptionalNumber(1440);

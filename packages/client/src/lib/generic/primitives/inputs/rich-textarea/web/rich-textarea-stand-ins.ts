@@ -7,11 +7,14 @@ const firstStandIn = 0xfd_d0;
 export function unusedCharacters(text: string, count: number): string[] {
   const found: string[] = [];
   let point = firstStandIn;
+
   while (found.length < count) {
     const character = String.fromCodePoint(point);
+
     if (!text.includes(character)) found.push(character);
     point += 1;
   }
+
   return found;
 }
 
@@ -23,6 +26,7 @@ export function replacer(
   return (value) =>
     Array.from(value, (character) => {
       const index = from.indexOf(character);
+
       return index === -1 ? character : to[index];
     }).join('');
 }

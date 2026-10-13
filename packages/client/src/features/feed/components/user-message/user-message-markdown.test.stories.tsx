@@ -31,7 +31,9 @@ const meta = {
     imageUrl: recordedImageUrl,
   },
 } satisfies Meta<typeof UserMessage>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // Each markdown source in the recorded prompt and the text it draws once its markers are gone.
@@ -53,12 +55,15 @@ const drawn = [
     text: 'const text = draft.text;',
   },
 ] as const;
+
 const link = { source: '[ADR-0023](', name: 'ADR-0023' } as const;
+
 const codeLine = 'const text = draft.text;';
 
 const promptText = recordedPrompt('agent-1', markdownPrompt)
   .content.flatMap((block) => (block.type === 'text' ? [block.text] : []))
   .join('');
+
 for (const { source } of [...drawn, link])
   if (!promptText.includes(source))
     throw new Error(`Recorded catalog needs ${source} in the markdown prompt`);
@@ -66,6 +71,7 @@ for (const { source } of [...drawn, link])
 // Whether a person can see and point at the element's first line, rather than it being hidden by the clamp.
 function isUncovered(element: HTMLElement): boolean {
   const firstLine = element.getClientRects()[0];
+
   return firstLine !== undefined && canPointAt(element, centreOf(firstLine));
 }
 
@@ -80,17 +86,23 @@ function rendersMarkdown(agent: MockAgent, width: number): Story {
       await userEvent.click(
         await canvas.findByRole('button', { name: 'Show more' }),
       );
+
       for (const { text } of drawn) {
         const element = canvas.getByText(text, { exact: true });
         element.scrollIntoView({ block: 'center' });
         await waitFor(() => expect(isUncovered(element)).toBe(true));
       }
+
       await expect(canvas.getByRole('link', { name: link.name })).toBeVisible();
       await expect(canvas.queryByText(/\*\*|~~|```|^> /)).toBeNull();
     },
   };
 }
+
 export const FirstAgentPhone = rendersMarkdown('agent-1', layoutWidths.phone);
+
 export const FirstAgentWide = rendersMarkdown('agent-1', layoutWidths.wide);
+
 export const SecondAgentPhone = rendersMarkdown('agent-2', layoutWidths.phone);
+
 export const SecondAgentWide = rendersMarkdown('agent-2', layoutWidths.wide);

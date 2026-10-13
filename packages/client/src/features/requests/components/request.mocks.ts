@@ -11,6 +11,7 @@ import type {
   ElicitationValues,
 } from './elicitation-form/elicitation-form';
 import type { PermissionRequestProps } from './permission-request/permission-request';
+
 export {
   dateFormatsRequest,
   dateFormatsValues,
@@ -19,6 +20,7 @@ export {
   fieldsValues,
   invalidSchemaRequest,
 } from '../../../../mocks/requests/elicitation-requests';
+
 export {
   elicitationMock,
   elicitationMocks,
@@ -28,10 +30,12 @@ export {
 } from '../../../../mocks/requests/recorded-requests';
 
 type RecordedRow = RequestMock['pending']['rows'][number];
+
 type ToolCallUpdate = Extract<
   RecordedRow,
   { sessionUpdate: 'tool_call_update' }
 >;
+
 type PermissionPropsInput = Partial<PermissionRequestProps> & {
   mock?: RequestMock;
 };
@@ -46,13 +50,15 @@ function toolCallUpdate(
   );
 }
 
-function rawInputText(rawInput: unknown): string | undefined {
+// The Agent's raw input, as the JSON it sent.
+function rawInputText({ rawInput }: ToolCallUpdate): string | undefined {
   return rawInput === undefined ? undefined : JSON.stringify(rawInput, null, 2);
 }
 
 function recordedInput(row: ToolCallUpdate): string | undefined {
   const terminal = row.content.find((block) => block.type === 'terminal');
-  return terminal?.command ?? rawInputText(row.rawInput);
+
+  return terminal?.command ?? rawInputText(row);
 }
 
 function recordedReason(row: ToolCallUpdate): string | undefined {
@@ -63,6 +69,7 @@ type RecordedDetails = Pick<PermissionRequestProps, 'input' | 'reason'>;
 
 function recordedDetails(row: ToolCallUpdate | undefined): RecordedDetails {
   if (!row) return { input: undefined, reason: undefined };
+
   return { input: recordedInput(row), reason: recordedReason(row) };
 }
 
@@ -71,6 +78,7 @@ export function permissionProps({
   ...props
 }: PermissionPropsInput): PermissionRequestProps {
   const request = recordedPermission(mock);
+
   return {
     request,
     ...recordedDetails(toolCallUpdate(mock, request.toolCallId)),
@@ -106,6 +114,7 @@ export const agentOptions: PermissionOption[] = [
   { optionId: 'allow', name: 'Allow', kind: 'allow_once' },
   { optionId: 'reject', name: 'Reject', kind: 'reject_once' },
 ];
+
 export const agentOptionsWithAlwaysReject: PermissionOption[] = [
   ...agentOptions,
   { optionId: 'reject-always', name: 'Always Reject', kind: 'reject_always' },
@@ -118,5 +127,6 @@ export function agentOptionsProps({
   options?: PermissionOption[];
 }): PermissionRequestProps {
   const base = permissionProps(props);
+
   return { ...base, request: { ...base.request, options } };
 }

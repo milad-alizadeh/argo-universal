@@ -14,7 +14,9 @@ import { replacer, unusedCharacters } from './rich-textarea-stand-ins';
  * URL and text are unescaped once the stand-ins are swapped back.
  */
 const escape = /\\[!-/:-@[-`{-~]?/g;
+
 const unescape = /\\([!-/:-@[-`{-~])/g;
+
 const linkTextEscape = /\\([[\]\\])/g;
 
 interface Shielded {
@@ -29,12 +31,15 @@ function escapedCharacters(markdown: string): string[] {
 
 function shield(markdown: string, transformers: Transformer[]): Shielded {
   const escaped = escapedCharacters(markdown);
+
   const [blankLine = '', ...standIns] = unusedCharacters(
     markdown,
     escaped.length + 1,
   );
+
   const swap = replacer(escaped, standIns);
   const literal = markdown.replaceAll(escape, swap);
+
   return {
     markdown: markBlankLines(literal, { mark: blankLine, transformers }),
     unshield: replacer(standIns, escaped),
@@ -45,8 +50,10 @@ function shield(markdown: string, transformers: Transformer[]): Shielded {
 function $restoreText(text: TextNode, { unshield, blankLine }: Shielded): void {
   if (text.getTextContent() === blankLine) {
     text.remove();
+
     return;
   }
+
   const shown = unshield(text.getTextContent());
   const inLink = $isLinkNode(text.getParent());
   text.setTextContent(inLink ? shown.replaceAll(linkTextEscape, '$1') : shown);
@@ -58,10 +65,13 @@ function $restoreLink(link: LinkNode, { unshield }: Shielded): void {
 
 function $restore(shielded: Shielded): void {
   const texts = $getRoot().getAllTextNodes();
+
   const links = new Set(
     texts.map((text) => text.getParent()).filter($isLinkNode),
   );
+
   for (const text of texts) $restoreText(text, shielded);
+
   for (const link of links) $restoreLink(link, shielded);
 }
 

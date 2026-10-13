@@ -5,7 +5,9 @@ import { z } from 'zod';
 import packageJson from '../../package.json' with { type: 'json' };
 
 const highestPort = 65_535;
+
 const defaultPort = 7337;
+
 const port = z.coerce
   .number()
   .int()
@@ -14,6 +16,7 @@ const port = z.coerce
   .parse(process.env.ARGO_SERVER_PORT ?? defaultPort);
 
 const home = resolveRuntimeDirectory();
+
 const engine = composeEngine({
   home,
   now: Date.now,
@@ -22,6 +25,7 @@ const engine = composeEngine({
   version: packageJson.version,
   startedAt: new Date().toISOString(),
 });
+
 engine.subscribe({
   complete: (): never => {
     process.exit(engine.getSnapshot().output?.exitCode ?? 1);
@@ -31,4 +35,5 @@ engine.subscribe({
     process.exit(1);
   },
 });
+
 engine.start();

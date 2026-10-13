@@ -90,6 +90,7 @@ function SessionRowContent(props: SessionRowMetadataProps): React.JSX.Element {
 
 export const SessionRow = memo(function SessionRow(props: SessionRowProps) {
   const { session, logo, selected = false } = props;
+
   return (
     <Pressable {...sessionRowPressProps(props, selected)}>
       <TextClassContext.Provider value={undefined}>

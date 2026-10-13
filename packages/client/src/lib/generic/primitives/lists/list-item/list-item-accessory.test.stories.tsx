@@ -12,12 +12,14 @@ const efforts = [
   { value: 'medium', label: 'Medium' },
   { value: 'high', label: 'High' },
 ] as const;
+
 type Effort = (typeof efforts)[number]['value'];
 
 const onEffortChange = fn<(effort: Effort) => void>();
 
 function EffortRow(): React.JSX.Element {
   const [effort, setEffort] = useState<Effort>('medium');
+
   return (
     <FieldGroup>
       <FieldSection title="Preferences">
@@ -47,7 +49,9 @@ const meta = {
     onEffortChange.mockClear();
   },
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const AccessoryIsReachable: Story = {

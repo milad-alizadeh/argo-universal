@@ -12,15 +12,19 @@ import {
 } from './status-control-trigger';
 import { unselectableTextClassName } from './status-surface';
 import { StatusText } from './status-text';
+
 interface ContextProps {
   context: ComposerContext;
   disabled: boolean;
   wide: boolean;
 }
+
 type ContextTokenProps = Pick<ContextProps, 'context' | 'wide'>;
+
 function ContextTriggerTokens(props: ContextTokenProps): JSX.Element {
   const { context, wide } = props;
   const remainingClass = cn(unselectableTextClassName, !wide && 'hidden');
+
   return (
     <View className={cn('flex-row', !wide && 'hidden')}>
       <StatusText role="secondary" className="select-none">
@@ -33,6 +37,7 @@ function ContextTriggerTokens(props: ContextTokenProps): JSX.Element {
     </View>
   );
 }
+
 function createContextTrigger(props: ContextProps): JSX.Element {
   return createStatusControlTrigger({
     ...props,
@@ -46,11 +51,13 @@ function createContextTrigger(props: ContextProps): JSX.Element {
     ),
   });
 }
+
 export function ContextControl(props: ContextProps): JSX.Element {
   const contentProps = {
     context: props.context,
     percent: contextPercent(props.context),
   };
+
   return (
     <ComposerPopover
       label="Context window"

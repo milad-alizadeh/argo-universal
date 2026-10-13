@@ -10,11 +10,14 @@ const checkoutOptions = [
   { value: 'worktree', label: 'New worktree' },
   { value: 'main', label: 'Local' },
 ] as const;
+
 const newSessionsFooter =
   "A new worktree keeps each Session's files apart. The main checkout shares one folder. New worktrees branch from the base branch.";
 
 type ProjectProps = { project: ProjectInfo };
+
 type ChoiceProps = { choice: ProjectInfo['checkoutChoice'] };
+
 type PickerRowProps = Pick<PickerProps<string>, 'label' | 'value' | 'options'>;
 
 // Where the Project's next Session starts, as the last New Session chose; the Server cannot change it from here yet.
@@ -50,6 +53,7 @@ function StartInRow({ choice }: ChoiceProps): React.JSX.Element {
 
 function BaseBranchRow({ choice }: ChoiceProps): React.JSX.Element | null {
   if (choice.type !== 'worktree') return null;
+
   return (
     <PickerRow
       label="Base branch"

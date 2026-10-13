@@ -12,7 +12,9 @@ const meta = {
   component: RichTextareaExample,
   args: { onChangeText: fn() },
 } satisfies Meta<typeof RichTextareaExample>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const label = 'Message';
@@ -42,11 +44,13 @@ function shownBlock(initialValue: string, role: string, text: string): Story {
     },
   };
 }
+
 export const ShowsAQuote = shownBlock(
   '> Keep the phone readable.\n> Use both themes.',
   'blockquote',
   'Keep the phone readable.Use both themes.',
 );
+
 export const ShowsACodeBlock = shownBlock(
   '```ts\nconst snake_case = 2 * 3;\n```',
   'code',

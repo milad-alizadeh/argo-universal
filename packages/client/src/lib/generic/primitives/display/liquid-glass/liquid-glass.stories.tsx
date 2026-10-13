@@ -12,14 +12,14 @@ const examples: (Omit<LiquidGlassProps, 'children'> & {
   {
     label: 'Card',
     text: 'Message the Agent…',
-    shape: 'card',
+    corners: 'card',
     className: 'w-full',
     fallbackClassName: 'rounded-2xl bg-background shadow-glass',
   },
   {
     label: 'Capsule',
     text: '2 Subagents',
-    shape: 'capsule',
+    corners: 'capsule',
     interactive: true,
     className: 'h-6 justify-center self-start',
     fallbackClassName:
@@ -30,7 +30,9 @@ const examples: (Omit<LiquidGlassProps, 'children'> & {
 const meta = {
   title: 'Design System/Primitives/LiquidGlass',
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

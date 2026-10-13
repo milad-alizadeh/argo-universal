@@ -44,8 +44,11 @@ import type { EngineMessage } from './ipc';
 import { type EngineStop, processSignals } from './process-signals';
 
 export type EngineLogParameters = { line: string };
+
 export type EngineOutput = { exitCode: number };
+
 export type CloseHttpServerInput = { server: HttpServer | null };
+
 type SyncSupervisorActor = ActorRefFrom<typeof syncSupervisorMachine>;
 
 // `openingDatabase` sets the database before `recovering` and `live` run.
@@ -53,6 +56,7 @@ export function openDatabaseOf(context: {
   database: Database | null;
 }): Database {
   if (!context.database) throw new Error('The database is not open');
+
   return context.database;
 }
 
@@ -91,6 +95,7 @@ type EngineEvent =
     };
 
 export const engineSetup = setup({
+  // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as EngineInput,
     context: {} as EngineContext,
@@ -113,7 +118,9 @@ export const engineSetup = setup({
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
       async ({ input, signal }): Promise<HttpServer> => {
         const server = await startHttpServer(input);
+
         if (signal.aborted) await server.close();
+
         return server;
       },
     ),
@@ -151,7 +158,9 @@ export function requireOpenSessions(
   system: AnyActorRef['system'],
 ): OpenSessionsActorRef {
   const actor = findMachineActor(system, openSessionsId, openSessionsMachine);
+
   if (!actor) throw new Error('The open Sessions machine is not running');
+
   return actor;
 }
 
@@ -159,14 +168,19 @@ export function requireDatabaseWriter(
   system: AnyActorRef['system'],
 ): WriterActorRef {
   const actor = system.get(databaseWriterId);
+
   if (!actor) throw new Error('Database Writer is not running');
+
   return actor;
 }
+
 export function requireSyncSupervisor(
   system: AnyActorRef['system'],
 ): SyncSupervisorActor {
   const actor = system.get('syncSupervisor');
+
   if (!actor) throw new Error('Sync supervisor is not running');
+
   return actor;
 }
 

@@ -36,6 +36,7 @@ function filled<T>(
   editor = headlessEditor(),
 ): T {
   editor.update(fill, { discrete: true });
+
   return editor.getEditorState().read(read);
 }
 
@@ -48,12 +49,15 @@ export function roundTrip(markdown: string): string {
 export function roundTripWithPasteCleanUp(markdown: string): string {
   const editor = headlessEditor();
   const stopCleanUp = registerMarkdownOnly(editor);
+
   const exported = filled(
     () => $importMarkdown(markdown),
     $exportMarkdown,
     editor,
   );
+
   stopCleanUp();
+
   return exported;
 }
 
@@ -71,6 +75,7 @@ export function linksIn(markdown: string): ShownLink[] {
         .getAllTextNodes()
         .map((text) => text.getParent())
         .filter($isLinkNode);
+
       return [...new Set(links)].map((link) => ({
         text: link.getTextContent(),
         url: link.getURL(),
@@ -83,6 +88,7 @@ export function linksIn(markdown: string): ShownLink[] {
 function $appendTypedParagraph(text: string): void {
   const [first = '', ...rest] = text.split('\n');
   const paragraph = $createParagraphNode().append($createTextNode(first));
+
   for (const line of rest)
     paragraph.append($createLineBreakNode(), $createTextNode(line));
   $getRoot().append(paragraph);
@@ -132,6 +138,7 @@ export function marksAfterPasting(html: string): TextFormatType[][] {
     editor.update(() => $insertHtml(editor, document), { discrete: true });
   });
   stopCleanUp();
+
   return editor.getEditorState().read(() =>
     $getRoot()
       .getAllTextNodes()

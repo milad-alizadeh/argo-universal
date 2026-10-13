@@ -59,7 +59,9 @@ async function showsDraft(
 ): Promise<void> {
   await expectMessage(page, draft);
 }
+
 Then('the Message box shows {string}', showsDraft);
+
 Then('the Message box shows:', showsDraft);
 
 Then('no image is attached', async ({ page }): Promise<void> => {

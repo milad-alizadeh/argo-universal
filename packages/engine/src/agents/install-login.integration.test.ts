@@ -23,36 +23,41 @@ it('installed login and Session share the selected launch and setup admission', 
     storage.remove();
     await rm(directory, { recursive: true, force: true });
   });
+
   const agent = createScriptedAgentProcess({
     ...loginScenario(),
     responses: { initialize: [{ steps: [loginStatusStep(accountStatus)] }] },
   });
+
   const host = await startEngineTestHost({
     database: storage.database,
     acp: agent,
     installationPorts,
-    fetchAgents: async () => ({
-      version: '1.0.0',
-      agents: [installEntry('npx')],
-    }),
+    fetchAgents: async () =>
+      JSON.stringify({ version: '1.0.0', agents: [installEntry('npx')] }),
   });
+
   await host.caller.agents.syncCatalog();
   await expect
     .poll(async () => (await host.caller.agents.catalog()).syncStatus)
     .toBe('idle');
   const selected = (await host.caller.agents.catalog()).agents[0];
+
   if (!selected) throw new Error('Catalog did not contain fixture');
   const agentId = selected.id;
   await host.caller.agents.install({ agentId, version: '1.2.3' });
   await waitForInstalledSelection({ ...host, agentId });
+
   const started = await host.caller.agents.startLogin({
     agentId,
     ownerToken: loginOwner,
   });
+
   const operation = {
     operationId: started.operationId,
     ownerToken: loginOwner,
   };
+
   await expect
     .poll(async () => (await host.caller.agents.login(operation)).status)
     .toBe('choose-method');
@@ -69,6 +74,7 @@ it('installed login and Session share the selected launch and setup admission', 
   await expect
     .poll(async () => (await host.caller.agents.login(operation)).status)
     .toBe('cancelled');
+
   const created = await host.caller.session.new({
     projectId: 'project-1',
     agent: agentId,
@@ -76,6 +82,7 @@ it('installed login and Session share the selected launch and setup admission', 
     configOptions: [],
     prompt: [],
   });
+
   const sessionLaunch = agent.processes[1]?.launch;
   expect(sessionLaunch).toMatchObject({
     executable: loginLaunch?.executable,

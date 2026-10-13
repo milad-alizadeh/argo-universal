@@ -19,7 +19,9 @@ const openGroup: FeedViewItem = {
   state: 'open',
   items: [],
 };
+
 const settledGroup: FeedViewItem = { ...openGroup, state: 'settled' };
+
 const exploring: FeedViewItem = {
   type: 'exploration',
   id: 'exploring',

@@ -8,10 +8,13 @@ import { useAgentChanges } from './use-configured-agents';
 
 type AgentsQuery = UseQueryResult<AgentInfo[], TRPCClientErrorLike<AppRouter>>;
 
+type RetryProbe = { retry: () => void; retrying: boolean };
+
 // Asks the Server to look for its Agents again, and stores what it finds as the Agents list.
-function useRetryProbe(): { retry: () => void; retrying: boolean } {
+function useRetryProbe(): RetryProbe {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+
   const retryProbe = useMutation({
     mutationFn: () =>
       queryClient.fetchQuery(
@@ -20,15 +23,14 @@ function useRetryProbe(): { retry: () => void; retrying: boolean } {
     onSuccess: (data) =>
       queryClient.setQueryData(trpc.agents.list.queryKey(), data),
   });
+
   return { retry: () => retryProbe.mutate(), retrying: retryProbe.isPending };
 }
 
 // `retrying` while the Server looks for its Agents again.
-export function useAgents(): AgentsQuery & {
-  retry: () => void;
-  retrying: boolean;
-} {
+export function useAgents(): AgentsQuery & RetryProbe {
   useAgentChanges();
   const agents = useQuery(useTRPC().agents.list.queryOptions());
+
   return { ...agents, ...useRetryProbe() };
 }

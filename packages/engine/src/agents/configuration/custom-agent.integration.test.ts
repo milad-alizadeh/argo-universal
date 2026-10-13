@@ -8,9 +8,11 @@ import { startEngineTestHost } from '#mocks/engine';
 
 it('a custom ACP program that answers initialize is saved and survives an Engine restart', async () => {
   const host = await startCustomAgentEngine();
+
   const registration = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registration.status !== 'ready') throw new Error(registration.failure);
   await host.stop();
   const restarted = await startEngineTestHost({ home: host.home });
@@ -66,9 +68,11 @@ it('a credential-like environment variable is rejected at the boundary', async (
 
 it('readiness comes from a fresh check, not from the saved record', async () => {
   const host = await startCustomAgentEngine();
+
   const registration = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registration.status !== 'ready') throw new Error(registration.failure);
   const { agentId } = registration;
   await expect(host.caller.agents.check({ agentId })).resolves.toEqual({
@@ -87,10 +91,13 @@ it('readiness comes from a fresh check, not from the saved record', async () => 
 
 it('a ready custom Agent prompts and closes a Session through the shared ACP resource', async () => {
   const host = await startCustomAgentEngine();
+
   const registration = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registration.status !== 'ready') throw new Error(registration.failure);
+
   const created = await host.caller.session.new({
     projectId: 'project-1',
     agent: registration.agentId,
@@ -98,16 +105,19 @@ it('a ready custom Agent prompts and closes a Session through the shared ACP res
     configOptions: [],
     prompt: [],
   });
+
   await host.caller.session.prompt({
     ...created,
     prompt: [{ type: 'text', text: 'Fix the build' }],
   });
   await waitForAcpSessionIdle(host, created.sessionId);
   await host.caller.session.close(created);
+
   const { sessions } = await host.caller.session.list({
     projectId: 'project-1',
     archived: false,
   });
+
   expect(sessions).toContainEqual(
     expect.objectContaining({
       sessionId: created.sessionId,
@@ -118,9 +128,11 @@ it('a ready custom Agent prompts and closes a Session through the shared ACP res
 
 it('a disabled custom Agent keeps its record and history but admits no new Session', async () => {
   const host = await startCustomAgentEngine();
+
   const registration = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registration.status !== 'ready') throw new Error(registration.failure);
   const { agentId } = registration;
   await host.caller.agents.setEnabled({ agentId, enabled: false });

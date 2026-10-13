@@ -17,11 +17,13 @@ const incompatibleAccounts: AuthStatus[] = [
   { kind: 'account', label: 'Free account', account: { plan: 'free' } },
   { kind: 'account', label: 'Unreported plan' },
 ];
+
 it.each(incompatibleAccounts)(
   'refuses opening before session/new for effective $label billing',
   async (status) => {
     const requests: object[] = [];
     const scenario = loginScenario();
+
     const peer = createScriptedAgentProcess({
       ...scenario,
       responses: {
@@ -29,6 +31,7 @@ it.each(incompatibleAccounts)(
         'session/new': [{ requests }],
       },
     });
+
     const resources = createAcpResources(peer);
     await expect(resources.open(createResourceOpening())).rejects.toThrow(
       /requires sign-in|compatible subscription/,
@@ -37,8 +40,10 @@ it.each(incompatibleAccounts)(
     await resources.shutdown();
   },
 );
+
 it('refuses readiness when session/new changes the effective subscription to API key billing', async () => {
   const requests: object[] = [];
+
   const peer = createScriptedAgentProcess({
     ...loginScenario(),
     responses: {
@@ -51,6 +56,7 @@ it('refuses readiness when session/new changes the effective subscription to API
       ],
     },
   });
+
   const resources = createAcpResources(peer);
   await expect(resources.open(createResourceOpening())).rejects.toThrow(
     'compatible subscription',
@@ -64,6 +70,7 @@ it('refuses readiness when session/new changes the effective subscription to API
 
 it('rejects an advertised generic login method with no supported effective account report before session/new', async () => {
   const requests: object[] = [];
+
   const peer = createScriptedAgentProcess({
     steps: [],
     initialize: {
@@ -73,6 +80,7 @@ it('rejects an advertised generic login method with no supported effective accou
     },
     responses: { 'session/new': [{ requests }] },
   });
+
   const resources = createAcpResources(peer);
   await expect(resources.open(createResourceOpening())).rejects.toThrow(
     'compatible subscription',
@@ -100,7 +108,9 @@ it.each(['max', 'Claude Max'])(
         ],
       },
     });
+
     const resources = createAcpResources(peer);
+
     try {
       const lease = await resources.open(createResourceOpening());
       expect(lease.sessionId).toBe('owned-1');

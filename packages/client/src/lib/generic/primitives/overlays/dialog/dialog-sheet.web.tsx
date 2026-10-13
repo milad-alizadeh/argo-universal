@@ -6,6 +6,7 @@ import type { DialogSheetProps } from './dialog-sheet';
 // A narrow web window draws the dialog as a bottom sheet, named by its label or else by the dialog's own title.
 export function DialogSheet(props: DialogSheetProps): React.JSX.Element {
   const { open } = DialogPrimitive.useRootContext();
+
   return (
     <BottomSheetSurface
       open={open}

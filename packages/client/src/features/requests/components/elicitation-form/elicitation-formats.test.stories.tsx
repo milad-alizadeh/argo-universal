@@ -11,6 +11,7 @@ import {
 } from '../request.mocks';
 
 const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm' };
+
 export default meta;
 
 function emptyAnswers(width: number): Story {
@@ -30,7 +31,9 @@ function emptyAnswers(width: number): Story {
     },
   };
 }
+
 export const EmptyAnswersPhone = emptyAnswers(390);
+
 export const EmptyAnswersWide = emptyAnswers(1440);
 
 function dateFormats(width: number): Story {
@@ -59,5 +62,7 @@ function dateFormats(width: number): Story {
     },
   };
 }
+
 export const DateFormatsPhone = dateFormats(390);
+
 export const DateFormatsWide = dateFormats(1440);

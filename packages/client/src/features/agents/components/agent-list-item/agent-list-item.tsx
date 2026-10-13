@@ -38,6 +38,7 @@ function statusProps({
 > {
   const label = agentStatusLabels[status];
   const tone = statusTone(status);
+
   return { value: label, status: tone ? { tone, label } : undefined };
 }
 
@@ -56,6 +57,7 @@ function AgentGlyph({
 }: Pick<AgentListItemProps, 'agent'>): React.JSX.Element {
   if (agent.custom)
     return <Icon name="agent" role="row" className="text-foreground" />;
+
   // A registry Agent with no logo falls back to the glyph, so it takes the glyph's size.
   return (
     <RegistryIcon

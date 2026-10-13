@@ -3,6 +3,7 @@ import { expect, fn, within, waitFor } from 'storybook/test';
 import { userEvent as browserUser } from 'vitest/browser';
 import TerminalRenderer from './terminal-renderer';
 import { readTerminalFrame } from './terminal.mocks';
+
 const meta = {
   title: 'Tests/AgentLoginTerminal',
   component: TerminalRenderer,
@@ -16,8 +17,11 @@ const meta = {
     onFailure: fn(),
   },
 } satisfies Meta<typeof TerminalRenderer>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 export const DirectKeyboardInput: Story = {
   play: async ({ canvasElement, userEvent, args }) => {
     const canvas = within(canvasElement);
@@ -45,6 +49,7 @@ export const DirectKeyboardInput: Story = {
     });
   },
 };
+
 export const PhoneSpecialKeys: Story = {
   args: { compact: true, keyboardOpen: true, height: 120 },
   play: async ({ canvasElement, userEvent, args }) => {
@@ -73,6 +78,7 @@ export const PhoneSpecialKeys: Story = {
     );
   },
 };
+
 export const DisconnectedIgnoresInput: Story = {
   args: { enabled: false, compact: true, keyboardOpen: true },
   play: async ({ canvasElement, userEvent, args }) => {

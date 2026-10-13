@@ -23,8 +23,11 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
   const files = useMemo(() => diffFiles(row.content), [row.content]);
   const [expanded, setExpanded] = useState(false);
   const single = soleFile(files);
+
   if (row.status === 'failed') return <FailedEdit row={row} files={files} />;
+
   if (single) return <FileEdit file={single} />;
+
   return (
     <MultiFileEdit
       files={files}

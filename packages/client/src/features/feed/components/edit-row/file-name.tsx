@@ -9,6 +9,7 @@ const fileNameClassName =
 
 function useNativeUnderline(): TextStyle | undefined {
   const underlineColor = useCSSVariable('--color-ring');
+
   return Platform.select({
     native: {
       textDecorationLine: 'underline',

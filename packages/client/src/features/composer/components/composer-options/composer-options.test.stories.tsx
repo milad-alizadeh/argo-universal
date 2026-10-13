@@ -21,13 +21,17 @@ const meta = {
     </View>
   ),
 } satisfies Meta<typeof ComposerOptions>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function longSettings(width: number, agentIndex: number): Story {
   const agent = newSessionCatalogs.bothAvailable[agentIndex];
+
   if (!agent) throw new Error('Recorded settings need two Agents.');
   const onConfigChange = fn();
+
   return {
     args: {
       disabled: false,
@@ -51,9 +55,11 @@ function longSettings(width: number, agentIndex: number): Story {
         expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight),
       );
       scroll.scrollTop = scroll.scrollHeight;
+
       const last = await overlay.findByRole('button', {
         name: 'Profile: Profile 40',
       });
+
       await waitFor(async () => {
         scroll.scrollTop = scroll.scrollHeight;
         const item = last.getBoundingClientRect();
@@ -71,15 +77,21 @@ function longSettings(width: number, agentIndex: number): Story {
     },
   };
 }
+
 export const LongSettingsPhoneFirstAgent = longSettings(layoutWidths.phone, 0);
+
 export const LongSettingsPhoneSecondAgent = longSettings(layoutWidths.phone, 1);
+
 export const LongSettingsWideFirstAgent = longSettings(layoutWidths.wide, 0);
+
 export const LongSettingsWideSecondAgent = longSettings(layoutWidths.wide, 1);
 
 function keyboardSettings(width: number): Story {
   const onConfigChange = fn();
   const agent = newSessionCatalogs.bothAvailable[0];
+
   if (!agent) throw new Error('Recorded settings need an Agent.');
+
   return {
     args: {
       disabled: false,
@@ -111,5 +123,7 @@ function keyboardSettings(width: number): Story {
     },
   };
 }
+
 export const KeyboardSettingsPhone = keyboardSettings(layoutWidths.phone);
+
 export const KeyboardSettingsWide = keyboardSettings(layoutWidths.wide);

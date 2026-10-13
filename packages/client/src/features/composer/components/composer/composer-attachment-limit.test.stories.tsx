@@ -11,25 +11,32 @@ import { meta as composerTestMeta } from '../../../../../mocks/composer/composer
 import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
+
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+
 export default meta;
+
 export const ImageTooLarge: Story = {
   render: () => <View testID="controlled-images" />,
   play: async ({ canvas, userEvent }) => {
     const root = createRoot(canvas.getByTestId('controlled-images'));
     const onDraftChange = fn();
+
     const draft = {
       text: 'Match these screenshots.',
       attachments: [oversizedComposerImage],
     };
+
     const props = composerProps({
       draft,
       onDraftChange,
       onSend: fn(),
       onAttachImages: fn(),
     });
+
     try {
       root.render(imageComposer(props));
+
       for (const width of [layoutWidths.phone, layoutWidths.wide]) {
         await settleViewport(width);
         await expect(await canvas.findByRole('alert')).toHaveTextContent(
@@ -39,6 +46,7 @@ export const ImageTooLarge: Story = {
           canvas.getByRole('button', { name: 'Send' }),
         ).toBeDisabled();
       }
+
       await expect(canvas.getByRole('textbox')).toBeEnabled();
       await userEvent.click(
         canvas.getByRole('button', { name: 'Remove full-screen.png' }),

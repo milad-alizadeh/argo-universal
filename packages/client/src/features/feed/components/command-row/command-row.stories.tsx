@@ -20,7 +20,9 @@ const meta = {
   component: CommandRow,
   args: { row: longOutputCommand },
 } satisfies Meta<typeof CommandRow>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {

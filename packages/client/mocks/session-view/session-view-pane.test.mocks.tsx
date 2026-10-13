@@ -22,6 +22,7 @@ function SessionInPane({
   view: SessionViewProps;
 }): React.JSX.Element {
   const [width, setWidth] = useState<number>(paneWidths.wide);
+
   return (
     <View className="h-screen w-full">
       <View className="flex-row">

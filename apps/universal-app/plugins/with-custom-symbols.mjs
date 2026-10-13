@@ -8,10 +8,15 @@ import configPlugins from 'expo/config-plugins.js';
  * weight and size (ADR-0019).
  */
 const baselines = { S: 696, M: 1126, L: 1556 };
+
 const capHeight = 70.459;
+
 const glyphCentre = 1650;
+
 const marginAbove = 95.215;
+
 const marginBelow = 24.121;
+
 const guideStyle = 'fill:none;stroke:#27AAE1;stroke-width:0.5;';
 
 function horizontalGuide(id, y) {
@@ -21,11 +26,13 @@ function horizontalGuide(id, y) {
 function marginGuide(id, x) {
   const top = baselines.M - marginAbove;
   const bottom = baselines.M + marginBelow;
+
   return `  <line id="${id}" style="${guideStyle}" x1="${x}" x2="${x}" y1="${top}" y2="${bottom}"/>`;
 }
 
 function guides(viewBox) {
   const half = Number(viewBox.split(' ')[2]) / 2;
+
   return [
     ...Object.entries(baselines).flatMap(([size, y]) => [
       horizontalGuide(`Baseline-${size}`, y),
@@ -39,6 +46,7 @@ function guides(viewBox) {
 function template({ viewBox, d }) {
   const version = 'Template v.3.0';
   const glyph = `matrix(1 0 0 1 ${glyphCentre} ${baselines.M})`;
+
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="3300" height="2200">',
@@ -55,10 +63,12 @@ function template({ viewBox, d }) {
 function writeSymbolSet(catalog, name, symbol) {
   const folder = path.join(catalog, `${name}.symbolset`);
   const filename = `${name}.svg`;
+
   const contents = {
     info: { author: 'xcode', version: 1 },
     symbols: [{ filename, idiom: 'universal' }],
   };
+
   fs.mkdirSync(folder, { recursive: true });
   fs.writeFileSync(path.join(folder, filename), template(symbol));
   fs.writeFileSync(
@@ -69,14 +79,17 @@ function writeSymbolSet(catalog, name, symbol) {
 
 function writeSymbolSets(modConfig) {
   const { platformProjectRoot, projectName } = modConfig.modRequest;
+
   const catalog = path.join(
     platformProjectRoot,
     projectName,
     'Images.xcassets',
   );
+
   for (const [name, symbol] of Object.entries(symbols)) {
     writeSymbolSet(catalog, name, symbol);
   }
+
   return modConfig;
 }
 

@@ -10,6 +10,7 @@ import {
   setFeedTestHost,
 } from '#mocks/feed-suite';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
+
 it('reads a closed Session Feed without opening a Session', async (): Promise<void> => {
   vi.useRealTimers();
   const input = scriptedEngineInput();
@@ -20,6 +21,7 @@ it('reads a closed Session Feed without opening a Session', async (): Promise<vo
       ...input,
     }),
   );
+
   const events = await drainClosedFeed(
     (
       await feedTestHost
@@ -30,6 +32,7 @@ it('reads a closed Session Feed without opening a Session', async (): Promise<vo
         })
     )[Symbol.asyncIterator](),
   );
+
   expect(events.map((event): typeof event.type => event.type)).toEqual([
     upsertRowEvent,
     upsertRowEvent,

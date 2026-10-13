@@ -7,7 +7,9 @@ import { customAgentDefinition, customAgentId } from '../custom-agent.mocks';
 import { CustomAgentForm } from './custom-agent-form';
 
 const refusal = 'Agent is in use. Close its Sessions and finish setup first.';
+
 const edited = { ...customAgentDefinition, name: 'Renamed ACP' };
+
 const meta = {
   title: 'Tests/Screens/Settings/Add custom Agent/Refused edits',
   component: CustomAgentForm,
@@ -19,7 +21,9 @@ const meta = {
   },
   parameters: { screenPreview: true },
 } satisfies Meta<typeof CustomAgentForm>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function retriesRefusedEdit(layout: keyof typeof layoutWidths): Story {
@@ -52,4 +56,5 @@ function retriesRefusedEdit(layout: keyof typeof layoutWidths): Story {
 }
 
 export const RetriesARefusedEditOnPhone: Story = retriesRefusedEdit('phone');
+
 export const RetriesARefusedEditOnDesktop: Story = retriesRefusedEdit('wide');

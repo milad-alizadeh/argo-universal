@@ -147,6 +147,7 @@ export const activeSessions: SessionListOutput = {
   ),
   nextCursor: null,
 };
+
 export const archivedSessions: SessionListOutput = {
   sessions: [sessionRows.archived],
   nextCursor: null,

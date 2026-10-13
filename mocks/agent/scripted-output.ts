@@ -10,11 +10,12 @@ export const shareScriptedOutput = (
 ): SharedOutput => {
   const writer = output.getWriter();
   const encoder = new TextEncoder();
+
   return {
     stream: new WritableStream({
       write: (chunk) => writer.write(chunk),
       close: () => writer.close(),
-      abort: (reason: unknown) => writer.abort(reason),
+      abort: (reason) => writer.abort(reason),
     }),
     writeRaw: (frame) => writer.write(encoder.encode(`${frame}\n`)),
   };

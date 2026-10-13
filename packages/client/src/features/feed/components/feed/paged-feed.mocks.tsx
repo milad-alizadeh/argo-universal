@@ -24,9 +24,12 @@ export const feedArgs = {
 } satisfies FeedProps;
 
 let releaseOlderPage = (): void => {};
+
 // Sends the older page the Feed is waiting for.
 export const sendOlderPage = (): void => releaseOlderPage();
+
 let deliverRow = (_row: SessionUpdate): void => {};
+
 // Sends a new row to the end of the Feed, as a live change does.
 export const sendRow = (row: SessionUpdate): void => deliverRow(row);
 
@@ -75,6 +78,7 @@ function useDeliversRows(
 ): void {
   useEffect(() => {
     deliverRow = (row): void => setFeed(withArrivedRow(rows, row));
+
     return (): void => {
       deliverRow = (): void => {};
     };
@@ -110,6 +114,7 @@ async function loadOlderPage(load: OlderPageLoad): Promise<void> {
   if (!canLoadOlder(load.paging)) return;
   load.paging.inFlight = true;
   load.setLoadingOlder(true);
+
   if (load.holdOlderPages) await olderPageSent();
   prependOlderPage(load);
 }
@@ -119,8 +124,10 @@ function useOlderPages(
 ): Pick<FeedProps, 'loadingOlder' | 'onStartReached'> {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const paging = useRef({ start: newestPageStart(page.rows), inFlight: false });
+
   const onStartReached = (): void =>
     void loadOlderPage({ ...page, paging: paging.current, setLoadingOlder });
+
   return { loadingOlder, onStartReached };
 }
 
@@ -139,7 +146,9 @@ export function PagedFeed({
   const [feed, setFeed] = useState(() =>
     viewOf(null, rows, { start: newestPageStart(rows), arrived: [] }),
   );
+
   useDeliversRows(rows, setFeed);
   const older = useOlderPages({ rows, setFeed, holdOlderPages });
+
   return <Feed {...props} items={feed.view.items} {...older} />;
 }

@@ -45,6 +45,7 @@ const thought = recordedFeedMocks
     (row): row is Extract<SessionUpdate, { sessionUpdate: 'agent_thought' }> =>
       row.sessionUpdate === 'agent_thought',
   );
+
 if (!thought) throw new Error('Recording needs an Agent thought');
 
 export const liveHeaderMocks = recordedFeedMocks
@@ -56,7 +57,9 @@ export const liveHeaderMocks = recordedFeedMocks
       ): row is Extract<SessionUpdate, { sessionUpdate: 'tool_call_update' }> =>
         row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
     );
+
     if (!command) throw new Error('Recording needs a command');
+
     return {
       agent: mock.agent,
       recordedHeader:

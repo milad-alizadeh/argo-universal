@@ -16,6 +16,7 @@ const AgentsList = z.array(
     installStep: z.string().optional(),
   }),
 );
+
 export type ListedAgent = z.infer<typeof AgentsList>[number];
 
 export function readAgents(
@@ -37,9 +38,12 @@ export async function readAgent(
   ordinal: number,
 ): Promise<ListedAgent> {
   const id = agentId(ordinal);
+
   const found = (await readAgents(page, httpUrl)).find(
     (entry): boolean => entry.agent === id,
   );
+
   if (!found) throw new Error(`The Server has no Agent ${id}`);
+
   return found;
 }

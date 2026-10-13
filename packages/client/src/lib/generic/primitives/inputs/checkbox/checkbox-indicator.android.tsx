@@ -9,6 +9,7 @@ import { Host } from '../../native/host';
 import type { CheckboxIndicatorProps } from './checkbox-props';
 
 const optionMarkPixels = 18;
+
 function checkboxColors(
   colors: ReturnType<typeof useNativeTheme>['colors'],
   invalid: boolean,
@@ -28,6 +29,7 @@ function checkboxColors(
 export function RadioMark(props: CheckboxIndicatorProps): React.JSX.Element {
   const theme = useNativeTheme();
   const { colors } = theme;
+
   return createElement(RadioButton, {
     selected: props.value,
     modifiers: indicatorSize(props),
@@ -51,7 +53,9 @@ export function CheckboxIndicator(
 
 function IndicatorDrawing(props: CheckboxIndicatorProps): React.JSX.Element {
   const colors = useCheckboxColors(props);
+
   if (props.selection === 'single') return <RadioMark {...props} />;
+
   return (
     <ComposeCheckbox
       modifiers={indicatorSize(props)}
@@ -75,6 +79,7 @@ export function optionOutline(
   theme: ReturnType<typeof useNativeTheme>,
 ): string | undefined {
   if (props.appearance !== 'option') return undefined;
+
   return theme.colorScheme === 'light'
     ? '#49454f'
     : theme.colors.mutedForeground;
@@ -84,6 +89,7 @@ export function useCheckboxColors(
   props: CheckboxIndicatorProps,
 ): React.ComponentProps<typeof ComposeCheckbox>['colors'] {
   const theme = useNativeTheme();
+
   return checkboxColors(
     theme.colors,
     !!props.invalid,

@@ -24,6 +24,7 @@ const entering = new Keyframe({
   0: { opacity: 0, transform: [{ translateY: -slide }] },
   100: { opacity: 1, transform: [{ translateY: 0 }] },
 }).duration(motionDuration.enter);
+
 const exiting = new Keyframe({
   0: { opacity: 1, transform: [{ translateY: 0 }] },
   100: { opacity: 0, transform: [{ translateY: -slide }] },
@@ -36,6 +37,7 @@ export function ConnectionBanner({
   onRetry,
 }: ConnectionBannerProps): React.JSX.Element | null {
   if (state !== 'reconnecting' && state !== 'offline') return null;
+
   return (
     // Reanimated's web entering animation leaves the view absolutely placed, so only phones animate it.
     <NativeOnlyAnimatedView
@@ -44,7 +46,7 @@ export function ConnectionBanner({
       className="self-center"
     >
       <LiquidGlass
-        shape="capsule"
+        corners="capsule"
         className="h-9 self-center wide:h-8"
         fallbackClassName="rounded-full bg-card shadow-card dark:border dark:border-border"
       >

@@ -17,6 +17,7 @@ export function ListItemLeading({
   ...glyph
 }: LeadingProps): React.JSX.Element | null {
   if (loading) return <RowSpinner />;
+
   return <RowGlyph {...glyph} />;
 }
 
@@ -27,6 +28,7 @@ function RowGlyph({
   className,
 }: Omit<LeadingProps, 'loading'>): React.JSX.Element | null {
   if (leading) return <LeadingSlot size={size}>{leading}</LeadingSlot>;
+
   return icon ? <RowIcon icon={icon} className={className} /> : null;
 }
 
@@ -43,6 +45,7 @@ function LeadingSlot({
         {children}
       </View>
     );
+
   return <IconSlot role="row">{children}</IconSlot>;
 }
 

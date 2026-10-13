@@ -14,6 +14,8 @@ export function useStableContentWidth(
 ): number {
   const [lastWidth, setLastWidth] = useState(contentWidth ?? width);
   const stableWidth = stableContentWidth(contentWidth, width, lastWidth);
+
   if (lastWidth !== stableWidth) setLastWidth(stableWidth);
+
   return stableWidth;
 }

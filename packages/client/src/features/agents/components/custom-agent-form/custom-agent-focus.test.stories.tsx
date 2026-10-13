@@ -11,8 +11,11 @@ const meta = {
   args: { submitLabel: 'Add Agent', onSubmit: registers(), onCancel: fn() },
   parameters: { screenPreview: true },
 } satisfies Meta<typeof CustomAgentForm>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 type Layout = keyof typeof layoutWidths;
 
 function returnsFocusAt(layout: Layout, entry: string): Story {
@@ -22,6 +25,7 @@ function returnsFocusAt(layout: Layout, entry: string): Story {
       const trigger = canvas.getByRole('link', {
         name: `Add ${entry.toLowerCase()}`,
       });
+
       await userEvent.click(trigger);
       const body = within(document.body);
       await body.findByRole('dialog', { name: entry });
@@ -38,14 +42,17 @@ export const ArgumentReturnsFocusOnPhone: Story = returnsFocusAt(
   'phone',
   'Argument',
 );
+
 export const ArgumentReturnsFocusOnDesktop: Story = returnsFocusAt(
   'wide',
   'Argument',
 );
+
 export const VariableReturnsFocusOnPhone: Story = returnsFocusAt(
   'phone',
   'Environment variable',
 );
+
 export const VariableReturnsFocusOnDesktop: Story = returnsFocusAt(
   'wide',
   'Environment variable',

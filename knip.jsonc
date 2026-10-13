@@ -1,6 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignore": ["**/*.gen.*"],
+  // Vendored anti-slop keeps upstream's files whole, including the Effect rules Argo does not register.
+  "ignore": ["**/*.gen.*", "tooling/oxlint/anti-slop/**"],
   "workspaces": {
     "packages/client": {
       // Metro selects platform modules by filename rather than by a literal import.

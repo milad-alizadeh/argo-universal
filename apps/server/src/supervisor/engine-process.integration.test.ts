@@ -14,6 +14,7 @@ const entry = fileURLToPath(
 const isAlive = (pid: number): boolean => {
   try {
     process.kill(pid, 0);
+
     return true;
   } catch {
     return false;
@@ -21,13 +22,22 @@ const isAlive = (pid: number): boolean => {
 };
 
 let folder: string;
+
 let events: { type: string }[];
+
 let killTimeoutMs = 25_000;
-let supervisor: { stop: () => void } = { stop: (): void => {} };
+
+type StoppableActor = { stop: () => void };
+
+let supervisor: StoppableActor = { stop: (): void => {} };
+
 const stopEvent = { type: 'engine.stop' };
+
 const exitedType = 'engine.exited';
+
 // Forking a TypeScript Engine and waiting out a kill timeout takes longer than the default.
 const patience = { timeout: 10_000 };
+
 vi.setConfig({ testTimeout: 20_000 });
 
 // A parent that records what the Engine actor reports, as the Supervisor machine receives it.
@@ -52,10 +62,13 @@ async function startEngine(): Promise<{
     patience,
   );
   const engine = actor.getSnapshot().children['engine'];
+
   if (!engine) throw new Error('The Engine actor did not start');
+
   const pids = z
     .object({ engine: z.number(), descendant: z.number() })
     .parse(JSON.parse(readFileSync(join(folder, 'pids.json'), 'utf8')));
+
   return { engine, leader: pids.engine, descendant: pids.descendant };
 }
 

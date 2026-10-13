@@ -7,6 +7,7 @@ import {
   warningBackgroundClassName,
 } from './status-meter';
 import { StatusText } from './status-text';
+
 const zones = [
   {
     label: `Smart zone · below ${smartZonePercent}%`,
@@ -19,9 +20,11 @@ const zones = [
     color: warningBackgroundClassName,
   },
 ];
+
 interface ContextZoneProps {
   zone: (typeof zones)[number];
 }
+
 function ContextZoneCopy({ zone }: ContextZoneProps): JSX.Element {
   return (
     <View className="flex-1 gap-0.5">
@@ -34,6 +37,7 @@ function ContextZoneCopy({ zone }: ContextZoneProps): JSX.Element {
     </View>
   );
 }
+
 function ContextZoneRow({ zone }: ContextZoneProps): JSX.Element {
   return (
     <View className="flex-row gap-2">
@@ -42,6 +46,7 @@ function ContextZoneRow({ zone }: ContextZoneProps): JSX.Element {
     </View>
   );
 }
+
 export function ContextZones(): JSX.Element {
   return (
     <View className="px-0 pt-3 gap-2">

@@ -7,18 +7,21 @@ type InputProps = React.ComponentProps<typeof TextInput> &
     // `muted` is the compact borderless field inside a popover, such as the link editor's.
     variant?: 'default' | 'muted';
   };
+
 const variantClass = {
   default:
     'dark:bg-input/30 border-input bg-background h-10 border px-3 py-1 shadow-sm shadow-black/5 sm:h-9',
   muted:
     'h-8 sm:h-8 rounded-lg border-0 bg-muted dark:bg-muted px-2.5 py-0 shadow-none focus-visible:ring-1 focus-visible:ring-ring',
 };
+
 const disabledInputClass = cn(
   'opacity-50',
   Platform.select({
     web: 'disabled:pointer-events-none disabled:cursor-not-allowed',
   }),
 );
+
 const platformInputClass = Platform.select({
   web: cn(
     'rounded-lg',
@@ -28,6 +31,7 @@ const platformInputClass = Platform.select({
   ),
   native: 'placeholder:text-muted-foreground/50',
 });
+
 function inputClassName({
   className,
   editable,
@@ -50,6 +54,7 @@ function Input({
 }: InputProps): ReactElement {
   const { editable } = props;
   const look = inputClassName({ className, variant, editable });
+
   return <TextInput className={look} {...props} />;
 }
 

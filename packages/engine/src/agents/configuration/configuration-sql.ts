@@ -9,25 +9,33 @@ import { createRejectionCounter } from '@repo/machine-log';
 import { eq, isNotNull, type SQL } from 'drizzle-orm';
 
 const rejections = createRejectionCounter('Agent configurations');
+
 type AgentRow = Pick<
   typeof agents.$inferSelect,
   'id' | 'enabled' | 'configuration'
 >;
-const parseJson = (text: string): unknown => {
+
+const parseConfiguration = (text: string): AgentConfiguration | undefined => {
   try {
-    return JSON.parse(text);
+    const parsed = AgentConfiguration.safeParse(JSON.parse(text));
+
+    return parsed.success ? parsed.data : undefined;
   } catch {
     return undefined;
   }
 };
+
 const parseConfiguredAgent = (row: AgentRow): ConfiguredAgent[] => {
   if (row.configuration === null) return [];
-  const parsed = AgentConfiguration.safeParse(parseJson(row.configuration));
-  if (parsed.success)
-    return [{ id: row.id, enabled: row.enabled, configuration: parsed.data }];
+  const configuration = parseConfiguration(row.configuration);
+
+  if (configuration)
+    return [{ id: row.id, enabled: row.enabled, configuration }];
   rejections.report(`Stored configuration of Agent ${row.id} is malformed`);
+
   return [];
 };
+
 const readAgentRows = (database: Database, where: SQL): AgentRow[] =>
   database
     .select({
@@ -49,6 +57,7 @@ export const readConfiguredAgent = (
   agentId: string,
 ): ConfiguredAgent | undefined => {
   const [row] = readAgentRows(database, eq(agents.id, agentId));
+
   return row ? parseConfiguredAgent(row)[0] : undefined;
 };
 
@@ -63,6 +72,7 @@ export const readCustomDefinition = (
   agentId: string,
 ): CustomAgentDefinition | undefined => {
   const agent = readConfiguredAgent(database, agentId);
+
   return agent && !agent.configuration.removed
     ? selectCustomDefinition(agent)
     : undefined;

@@ -25,5 +25,6 @@ export function useServerPaired(): boolean {
 // A page caption for settings kept on a paired Server: "On Milad's Mac mini". None on the same computer.
 export function useServerCaption(name: string | undefined): string | undefined {
   const paired = useServerPaired();
+
   return paired && name ? `On ${name}` : undefined;
 }

@@ -40,6 +40,7 @@ function proseClassName(
 // A heading is prose that also announces its level.
 function useProseTextProps(headingLevel?: number): ProseTextProps {
   const heading = headingLevel !== undefined;
+
   return {
     semanticRole: heading ? 'heading' : undefined,
     'aria-level': headingLevel,
@@ -53,6 +54,7 @@ export function Prose({
   headingLevel,
 }: ProseProps): React.JSX.Element {
   const leaf = useClampLeaf(useLineHeight('body'));
+
   return (
     <Text ref={leaf} {...useProseTextProps(headingLevel)}>
       <InlineTokens tokens={tokens} />

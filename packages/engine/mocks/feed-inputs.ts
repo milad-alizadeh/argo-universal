@@ -1,4 +1,5 @@
 import type { FeedChange } from '@repo/contracts';
+
 export const afterRejectionRowId = 'after-rejection';
 
 export const storedBeforeStreamText = 'Stored first';

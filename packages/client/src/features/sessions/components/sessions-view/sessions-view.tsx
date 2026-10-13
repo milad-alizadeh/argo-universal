@@ -41,10 +41,12 @@ const loadFailed: ErrorToast = {
   title: "Couldn't load Sessions",
   message: serverSilentMessage,
 };
+
 const liveUpdatesFailed: ErrorToast = {
   title: 'Live updates stopped',
   message: 'The Sessions shown may be out of date.',
 };
+
 const loadMoreFailedToast: ErrorToast = {
   title: "Couldn't load more Sessions",
   message: 'Scroll to the end of the list to try again.',
@@ -70,6 +72,7 @@ function useSessionsErrorToasts(props: SessionsViewProps): void {
 // The Sessions list below the shell's header row: phone full screen, or the wide window's sidebar.
 export function SessionsView(props: SessionsViewProps): React.JSX.Element {
   useSessionsErrorToasts(props);
+
   return <SessionsLayout {...props} />;
 }
 
@@ -77,7 +80,9 @@ function SessionsContent(props: SessionsViewProps): React.JSX.Element {
   const wide = useWide();
   // A failed first load keeps the loading rows: the toast says why, and the queries retry when the Connection reopens.
   const loading = props.loadState !== 'ready';
+
   if (wide && loading) return <SessionsLoading />;
+
   return <SessionsListContent {...props} wide={wide} loading={loading} />;
 }
 
@@ -86,7 +91,9 @@ function NewSessionControl({
   onNewSession,
 }: Pick<SessionsViewProps, 'onNewSession'>): React.JSX.Element | null {
   const wide = useWide();
+
   if (wide || newSessionBesideSearch) return null;
+
   return (
     <View className="absolute bottom-[42px] right-5">
       <FloatingActionButton

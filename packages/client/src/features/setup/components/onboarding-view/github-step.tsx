@@ -109,6 +109,7 @@ const stepParts = (
 // Step 2: optional, so it never holds the primary button.
 export function GitHubStepView(props: GitHubStepViewProps): React.JSX.Element {
   const content = githubContent(props.github);
+
   return (
     <SetupStep
       number={2}

@@ -8,6 +8,7 @@ import {
   sendFormRequest,
   createUploadForm,
 } from '#mocks/engine-request';
+
 it.each([
   ['the desktop app', 'app://app'],
   ['Expo web on localhost', 'http://localhost:8081'],
@@ -19,6 +20,7 @@ it.each([
       createUploadForm(),
       origin,
     );
+
     expect(response.status).toBe(200);
     expect(response.headers['access-control-allow-origin']).toBe(origin);
   },
@@ -32,6 +34,7 @@ it.each(['https://evil.example', 'null'])(
       createUploadForm(),
       origin,
     );
+
     expect(response.status).toBe(403);
     expect(response.headers['access-control-allow-origin']).toBeUndefined();
     expect(console.error).toHaveBeenCalledExactlyOnceWith(
@@ -47,6 +50,7 @@ it.each([`/blobs/${blobId}`, infoRoute])(
       path,
       headers: { host: 'evil.example:7337' },
     });
+
     expect(response.status).toBe(403);
     expect(console.error).toHaveBeenCalledExactlyOnceWith(
       'engine: rejected Host "evil.example:7337" #1',
@@ -59,5 +63,6 @@ it('answers 403 to a Host that is not a plain host and port', async (): Promise<
     path: infoRoute,
     headers: { host: `evil.example@${host}` },
   });
+
   expect(response.status).toBe(403);
 });

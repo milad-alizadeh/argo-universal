@@ -12,6 +12,7 @@ import { Variation, Variations } from '../../../../lib/generic/variations';
 import { Composer } from './composer';
 
 const spacingAndColoursPrompt = 'Match the spacing and colours.';
+
 const variations: { label: string; props: Partial<ComposerMockProps> }[] = [
   { label: 'Empty', props: {} },
   {
@@ -76,14 +77,17 @@ const variations: { label: string; props: Partial<ComposerMockProps> }[] = [
   },
   { label: 'No Plan', props: { sessionStarted: true, plan: [] } },
 ];
+
 export function ComposerOverview(args: ComposerMockProps): React.JSX.Element {
   const overview = <ComposerVariations {...args} />;
+
   return Platform.OS === 'web' ? (
     overview
   ) : (
     <ScrollView style={{ flex: 1 }}>{overview}</ScrollView>
   );
 }
+
 function ComposerVariations(args: ComposerMockProps): React.JSX.Element {
   return (
     <View className="w-full items-center p-4">

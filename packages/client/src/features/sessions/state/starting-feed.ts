@@ -64,6 +64,7 @@ export function startingFeed(
   sentAt: number,
 ): StartingFeed {
   const uris = new Map(sent.attachments.map(({ id, uri }) => [id, uri]));
+
   return {
     items: [{ type: 'row', row: sentPrompt(sent) }],
     liveHeader: {

@@ -30,13 +30,16 @@ it('keeps exact browser ownership after the initiating App disconnects, then ope
     }),
   );
   const [frame] = await response;
+
   const admitted: { result: { data: AgentLoginSnapshot } } = JSON.parse(
     String(frame),
   );
+
   const operation: AgentLoginOperation = {
     operationId: admitted.result.data.operationId,
     ownerToken: loginOwner,
   };
+
   await expect
     .poll(async () => (await host.caller.agents.login(operation)).status)
     .toBe('choose-method');
@@ -106,10 +109,12 @@ const verifySessionAdmission = async (
   operation: AgentLoginOperation,
 ): Promise<void> => {
   const { sessionId } = await host.caller.session.new(emptySessionInput);
+
   const busy = await host.caller.agents.startLogin({
     agentId: loginAgentId,
     ownerToken: loginOwner,
   });
+
   await expect
     .poll(
       async () =>

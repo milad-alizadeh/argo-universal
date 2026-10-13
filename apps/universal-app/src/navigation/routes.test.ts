@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { destinationFor, hrefFor } from './routes';
 
 const sessionsRouteGroup = '(sessions)';
+
 const firstAgentId = 'first-agent';
+
 const newSessionInProject: NavigationDestination = {
   to: 'new-session',
   projectId: 'project-1',

@@ -10,6 +10,7 @@ export function LiveConnectionBanner(): React.JSX.Element | null {
   const state = useConnectionState();
   const trpc = useTRPC();
   const info = useQuery(trpc.system.info.queryOptions());
+
   return (
     <ConnectionBanner
       state={state}

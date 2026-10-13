@@ -9,12 +9,14 @@ it.each([
   'returns an SDK framing error for $label without another decoder',
   async ({ frame, code }) => {
     const peer = createScriptedAgentWire({ steps: [] });
+
     const connection = createAgentClient({
       stream: peer.stream,
       acceptSessionUpdate: () => {},
       requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
       createElicitation: () => ({ action: 'cancel' }),
     });
+
     await peer.sendRaw(frame);
     expect(await peer.receive()).toEqual(
       expect.objectContaining({

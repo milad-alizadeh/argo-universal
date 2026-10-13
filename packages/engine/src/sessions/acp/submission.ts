@@ -12,6 +12,7 @@ export type LocalSubmission = {
   content: ContentBlock[];
   committed?: WriterCommit;
 };
+
 export type PromptCommitInput = {
   submission: LocalSubmission;
   lease: AcpSessionLease;
@@ -27,11 +28,13 @@ const requirePromptAdmission = (
     throw new Error('Session Feed is unavailable');
   signal.throwIfAborted();
 };
-const rejectPromptStorage = (error: unknown): never => {
+
+const rejectPromptStorage = (cause: unknown): never => {
   throw new Error('The prompt could not be saved; no Agent work was started', {
-    cause: error,
+    cause,
   });
 };
+
 const stopWatchingCommitLifetime = (
   subscription: Subscription,
   signal: AbortSignal,
@@ -40,6 +43,7 @@ const stopWatchingCommitLifetime = (
   subscription.unsubscribe();
   signal.removeEventListener('abort', abort);
 };
+
 const watchCommitLifetime = (
   feed: FeedActorRef,
   committed: PromiseWithResolvers<void>,
@@ -47,13 +51,17 @@ const watchCommitLifetime = (
 ): (() => void) => {
   const abort = (): void =>
     committed.reject(new Error('Prompt admission ended before commit'));
+
   const subscription = feed.subscribe({
     complete: abort,
     error: committed.reject,
   });
+
   signal.addEventListener('abort', abort, { once: true });
+
   return () => stopWatchingCommitLifetime(subscription, signal, abort);
 };
+
 const enqueuePromptRow = (
   feed: FeedActorRef,
   submission: LocalSubmission,
@@ -66,6 +74,7 @@ const enqueuePromptRow = (
     committed,
   });
 };
+
 const enqueuePromptAndWaitForCommit = (
   input: PromptCommitInput,
   signal: AbortSignal,
@@ -73,8 +82,10 @@ const enqueuePromptAndWaitForCommit = (
   const committed = Promise.withResolvers<void>();
   const detach = watchCommitLifetime(input.feed, committed, signal);
   enqueuePromptRow(input.feed, input.submission, committed);
+
   return committed.promise.catch(rejectPromptStorage).finally(detach);
 };
+
 const readSupportedPromptBlocks = (
   input: PromptCommitInput,
 ): Promise<PromptRequest['prompt']> =>
@@ -84,6 +95,7 @@ const readSupportedPromptBlocks = (
       input.lease.initialization.agentCapabilities?.promptCapabilities ?? {},
     storage: input.storage,
   });
+
 export const commitLocalPrompt = async (
   input: PromptCommitInput,
   signal: AbortSignal,
@@ -92,5 +104,6 @@ export const commitLocalPrompt = async (
   requirePromptAdmission(input.feed, signal);
   await enqueuePromptAndWaitForCommit(input, signal);
   signal.throwIfAborted();
+
   return { sessionId: input.lease.sessionId, prompt };
 };

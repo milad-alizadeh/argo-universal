@@ -8,11 +8,13 @@ import { ContextZones } from './context-zones';
 import { Meter } from './status-meter';
 import { unselectableTextClassName } from './status-surface';
 import { StatusText } from './status-text';
+
 interface ContextContentProps {
   context: ComposerContext;
   percent: number;
   close: () => void;
 }
+
 function ContextHeading(): JSX.Element {
   return (
     <View className="px-0 gap-0.5">
@@ -26,8 +28,10 @@ function ContextHeading(): JSX.Element {
     </View>
   );
 }
+
 function ContextZoneLabel({ percent }: { percent: number }): JSX.Element {
   const smart = contextZone(percent) === 'smart';
+
   return (
     <StatusText
       role="secondary"
@@ -41,6 +45,7 @@ function ContextZoneLabel({ percent }: { percent: number }): JSX.Element {
     </StatusText>
   );
 }
+
 function ContextTokenValues({
   context,
 }: Pick<ContextContentProps, 'context'>): JSX.Element {
@@ -55,6 +60,7 @@ function ContextTokenValues({
     </>
   );
 }
+
 function ContextTotals({
   context,
   percent,
@@ -69,6 +75,7 @@ function ContextTotals({
     </View>
   );
 }
+
 const compactButtonProps = {
   variant: 'outline',
   className:
@@ -78,13 +85,17 @@ const compactButtonProps = {
   appearance: 'content',
   labelClassName: 'select-none type-control',
 } as const;
+
 type CompactContextProps = Pick<ContextContentProps, 'context' | 'close'>;
+
 function CompactContext(props: CompactContextProps): JSX.Element {
   const { context, close } = props;
+
   const compact = (): void => {
     context.onCompact?.();
     close();
   };
+
   return (
     <View className="px-0 gap-3 flex-row items-center">
       <StatusText role="secondary" className="select-none flex-1">
@@ -94,6 +105,7 @@ function CompactContext(props: CompactContextProps): JSX.Element {
     </View>
   );
 }
+
 export function ContextContent({
   context,
   percent,

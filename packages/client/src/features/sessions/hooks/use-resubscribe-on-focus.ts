@@ -9,6 +9,7 @@ export function useResubscribeOnFocus(subscription: {
   const resetIfStopped = useEffectEvent(() => {
     if (subscription.status === 'error') subscription.reset();
   });
+
   useEffect(
     () =>
       focusManager.subscribe((focused) => {

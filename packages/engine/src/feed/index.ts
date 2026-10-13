@@ -1,5 +1,7 @@
 export { userMessageChange, userMessageId } from './feed-change';
+
 export { type FeedActorRef, type FeedEvent, feedMachine } from './feed-machine';
+
 export {
   type FeedRowWrite,
   hydrateStoredFeedRow,
@@ -9,7 +11,9 @@ export {
   storedFeedColumns,
   toFeedRowWrite,
 } from './feed-row';
+
 export type { FeedDeps } from './feed';
+
 export {
   FeedRowsJob,
   projectQueuedFeedSession,
@@ -17,12 +21,17 @@ export {
   readQueuedFeed,
   readQueuedFeedRow,
 } from './feed-storage';
+
 export { writeBlobFile } from './blob-files';
+
 export { publishTurnContent } from './publication';
+
 export { acpToolCallRowId } from './acp/tools';
+
 export { readUnaddressedPlan } from './unaddressed-plan';
 
 export { createFeedRouter } from './router';
+
 export { titleFromPrompt } from './prompt-title';
 
 export type { Feed, FeedStreamEvent } from './feed-change';

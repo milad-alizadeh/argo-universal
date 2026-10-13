@@ -10,13 +10,18 @@ import { useState } from 'react';
 export type SubmitCustomAgent = (
   definition: CustomAgentDefinition,
 ) => Promise<AgentRegistration>;
+
 type CustomAgentFormInput = {
   initial?: CustomAgentDefinition;
   onSubmit: SubmitCustomAgent;
 };
+
 type Schema = typeof CustomAgentDefinition;
+
 type Sync = FormValidateOrFn<CustomAgentDefinition> | undefined;
+
 type Async = FormAsyncValidateOrFn<CustomAgentDefinition> | undefined;
+
 export type CustomAgentFormApi = ReactFormExtendedApi<
   CustomAgentDefinition,
   Schema,
@@ -38,14 +43,15 @@ const emptyCustomAgent: CustomAgentDefinition = {
   args: [],
   env: [],
 };
+
 const validators = {
   onMount: CustomAgentDefinition,
   onChange: CustomAgentDefinition,
 };
 
-const rejectedSubmission = (error: unknown): AgentRegistration => ({
+const rejectedSubmission = (cause: unknown): AgentRegistration => ({
   status: 'failed',
-  failure: error instanceof Error ? error.message : 'Agent could not be saved.',
+  failure: cause instanceof Error ? cause.message : 'Agent could not be saved.',
 });
 
 async function submitDefinition(
@@ -54,27 +60,35 @@ async function submitDefinition(
   setFailure: (failure: string | null) => void,
 ): Promise<AgentRegistration> {
   setFailure(null);
+
   const result = await onSubmit(CustomAgentDefinition.parse(value)).catch(
     rejectedSubmission,
   );
+
   if (result.status === 'failed') setFailure(result.failure);
+
   return result;
 }
+
+type CustomAgentForm = { form: CustomAgentFormApi; failure: string | null };
 
 // The contract schema validates the whole definition once; its issue paths mark each field.
 export function useCustomAgentForm({
   initial,
   onSubmit,
-}: CustomAgentFormInput): { form: CustomAgentFormApi; failure: string | null } {
+}: CustomAgentFormInput): CustomAgentForm {
   const [failure, setFailure] = useState<string | null>(null);
+
   const form = useForm({
     defaultValues: initial ?? emptyCustomAgent,
     validators,
     onSubmit: async ({ value, formApi }) => {
       const result = await submitDefinition(value, onSubmit, setFailure);
+
       // What was saved is the form's new starting point, so leaving it is not a loss.
       if (result.status === 'ready') formApi.reset(value);
     },
   });
+
   return { form, failure };
 }

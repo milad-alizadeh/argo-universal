@@ -3,12 +3,14 @@ import {
   defaultTerminalAppearance,
   type TerminalAppearance,
 } from './terminal-appearance';
+
 export type TerminalKeyProps = {
   appearance?: TerminalAppearance;
   send: (text: string) => void;
   control: boolean;
   toggleControl: () => void;
 };
+
 const keys = [
   { label: 'Esc', text: '\u001b' },
   { label: 'Tab', text: '\t' },
@@ -18,6 +20,7 @@ const keys = [
   { label: '↓', text: '\u001b[B' },
   { label: '→', text: '\u001b[C' },
 ];
+
 const keyStyle: CSSProperties = {
   flex: 1,
   minWidth: 0,
@@ -28,6 +31,7 @@ const keyStyle: CSSProperties = {
   color: '#171717',
   fontSize: 14,
 };
+
 export function TerminalKeys(props: TerminalKeyProps): React.JSX.Element {
   return (
     <div
@@ -41,12 +45,14 @@ export function TerminalKeys(props: TerminalKeyProps): React.JSX.Element {
     </div>
   );
 }
+
 type KeyProps = {
   appearance?: TerminalAppearance;
   label: string;
   press: () => void;
   pressed: boolean;
 };
+
 function Key(props: KeyProps): React.JSX.Element {
   return (
     <button
@@ -65,6 +71,7 @@ function Key(props: KeyProps): React.JSX.Element {
 
 const keepTerminalFocus = (event: { preventDefault: () => void }): void =>
   event.preventDefault();
+
 const touchPress =
   (press: () => void) =>
   (event: { preventDefault: () => void }): void => {
@@ -86,6 +93,7 @@ const keyDrawing = (
   appearance: TerminalAppearance | undefined,
 ): CSSProperties => {
   const colors = appearance ?? defaultTerminalAppearance;
+
   return {
     ...keyStyle,
     background: colors.background,

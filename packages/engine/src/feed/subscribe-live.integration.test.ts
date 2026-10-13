@@ -14,6 +14,7 @@ import {
   applyFeedChange,
   subscribe,
 } from '#mocks/feed-suite';
+
 it('with no sync point, sends the rows not yet stored, then live changes', async (): Promise<void> => {
   await startFeedTestHost();
   applyFeedChange(createOpenMessageChange(fifthMessageRowId, 'Hel'));

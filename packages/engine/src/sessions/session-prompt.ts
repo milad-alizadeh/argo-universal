@@ -18,5 +18,6 @@ export const promptSession = async (
   const turnId = deps.createId();
   validateSessionCommandAdmission(deps);
   await submitSessionPrompt(sessionActor, { turnId, content: prompt });
+
   return { messageId: userMessageId(turnId) };
 };

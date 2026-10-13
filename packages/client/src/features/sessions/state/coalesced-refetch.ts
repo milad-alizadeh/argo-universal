@@ -6,6 +6,7 @@ export function createCoalescedRefetch(
   refetch: () => Promise<void>,
 ): () => void {
   const state = { inFlight: false, trailing: false };
+
   return () => {
     if (state.inFlight) state.trailing = true;
     else void drain(state, refetch);
@@ -17,6 +18,7 @@ async function drain(
   refetch: () => Promise<void>,
 ): Promise<void> {
   state.inFlight = true;
+
   try {
     do {
       state.trailing = false;

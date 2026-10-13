@@ -9,16 +9,22 @@ import { PlanPopoverContent } from './plan-popover';
 import { PlanSteps } from './plan-steps';
 import { createPlanTrigger } from './plan-trigger';
 import { ChipSurface } from './status-surface';
+
 interface ComposerPlanProps {
   entries: PlanEntry[];
   disabled: boolean;
 }
+
+type PlanReveal = ReturnType<typeof usePlanReveal>;
+
 interface RevealedPlanProps {
   entries: PlanEntry[];
-  reveal: ReturnType<typeof usePlanReveal>;
+  reveal: PlanReveal;
 }
+
 function RevealedPlan({ entries, reveal }: RevealedPlanProps): JSX.Element {
   const revealProps = planRevealProps(reveal);
+
   return (
     <Animated.View
       testID="composer-plan-steps"
@@ -29,11 +35,14 @@ function RevealedPlan({ entries, reveal }: RevealedPlanProps): JSX.Element {
     </Animated.View>
   );
 }
+
 interface PhonePlanProps {
   entries: PlanEntry[];
   trigger: JSX.Element;
 }
+
 const phonePopoverProps = { label: 'Plan', width: 420, className: 'h-full' };
+
 function PhonePlan({ entries, trigger }: PhonePlanProps): JSX.Element {
   return (
     <ChipSurface>
@@ -43,18 +52,23 @@ function PhonePlan({ entries, trigger }: PhonePlanProps): JSX.Element {
     </ChipSurface>
   );
 }
+
 export function StatusPlan(props: ComposerPlanProps): JSX.Element {
   const wide = useContentWide();
   const reveal = usePlanReveal();
+
   const expansionProps = {
     wide,
     expanded: reveal.expanded,
     toggle: reveal.toggle,
   };
+
   const trigger = createPlanTrigger({ ...props, ...expansionProps });
   const layoutProps = { entries: props.entries, wide, reveal, trigger };
+
   return <PlanLayout {...layoutProps} />;
 }
+
 function PlanLayout(
   props: RevealedPlanProps & PhonePlanProps & { wide: boolean },
 ): JSX.Element {
@@ -65,15 +79,18 @@ function PlanLayout(
         <RevealedPlan entries={props.entries} reveal={props.reveal} />
       </View>
     );
+
   return <PhonePlan entries={props.entries} trigger={props.trigger} />;
 }
 
-function planRevealProps(reveal: ReturnType<typeof usePlanReveal>): {
+type PlanVisibility = {
   'aria-hidden': boolean;
   accessibilityElementsHidden: boolean;
   pointerEvents: 'auto' | 'none';
-  style: typeof reveal.style;
-} {
+  style: PlanReveal['style'];
+};
+
+function planRevealProps(reveal: PlanReveal): PlanVisibility {
   return {
     'aria-hidden': !reveal.expanded,
     accessibilityElementsHidden: !reveal.expanded,

@@ -14,6 +14,7 @@ interface NewSessionDraft {
 }
 
 const emptyDraft: ComposerDraft = { text: '', attachments: [] };
+
 const ignoreDraft = (): void => {};
 
 // Once the prompt shows in the Feed the Composer stands empty and still; the draft returns if the start fails.

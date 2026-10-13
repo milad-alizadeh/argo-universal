@@ -21,13 +21,17 @@ import {
   type MaterializationInput,
 } from './install/materialization/materialize';
 import { selectedLaunchDefinition } from './install/selection/selection';
+
 let home: string;
+
 beforeEach(async () => {
   home = await mkdtemp(join(tmpdir(), 'install-archives-'));
 });
+
 afterEach(async () => {
   await rm(home, { recursive: true, force: true });
 });
+
 const archiveBytes = async (extension: string): Promise<Buffer> => {
   const source = join(home, 'source');
   await mkdir(source);
@@ -41,8 +45,10 @@ const archiveBytes = async (extension: string): Promise<Buffer> => {
     },
     ['agent'],
   );
+
   return readFile(archive);
 };
+
 const archiveInput = (
   extension: string,
   bytes: Uint8Array,
@@ -64,23 +70,28 @@ const archiveInput = (
     download: async () => bytes,
     runTool: async (input) => {
       await writeFile(input.outputFile ?? join(input.cwd, '.archive'), bytes);
+
       return '';
     },
   },
 });
+
 it.each(['tar', 'tgz', 'tar.gz', 'tar.bz2', 'tbz2'])(
   'extracts the %s distribution into verified managed files',
   async (extension) => {
     const input = archiveInput(extension, await archiveBytes(extension));
     const selection = await materializeAgent(input);
+
     const launch = await selectedLaunchDefinition(
       home,
       input.agentId,
       selection,
     );
+
     expect(await readFile(launch.executable)).toEqual(installationExecutable);
   },
 );
+
 it('rejects tar symlinks before extraction can follow them outside staging', async () => {
   const source = join(home, 'source');
   await mkdir(source);

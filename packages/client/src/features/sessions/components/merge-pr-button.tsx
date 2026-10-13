@@ -88,6 +88,7 @@ function groupClassName(disabled: boolean): string {
 // "Merge PR" with a menu of merge methods on its chevron; dimmed until the PR can merge.
 export function MergePrButton(props: MergePrButtonProps): React.JSX.Element {
   const disabled = !props.mergeable || !props.onMerge;
+
   return (
     <ButtonGroup className={groupClassName(disabled)}>
       <Button

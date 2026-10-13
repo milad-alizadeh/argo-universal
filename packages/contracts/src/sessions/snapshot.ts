@@ -19,6 +19,7 @@ export const ContextUsage = z.strictObject({
     })
     .optional(),
 });
+
 export type ContextUsage = z.infer<typeof ContextUsage>;
 
 // ACP `PermissionOption`: the Agent names its own option ids.
@@ -27,6 +28,7 @@ export const PermissionOption = z.strictObject({
   name: z.string(),
   kind: PermissionOptionKind,
 });
+
 export type PermissionOption = z.infer<typeof PermissionOption>;
 
 export const permissionOptions: PermissionOption[] = [
@@ -49,6 +51,7 @@ export const PendingPermission = z.strictObject({
       'Offer each option id once',
     ),
 });
+
 export type PendingPermission = z.infer<typeof PendingPermission>;
 
 // ACP `EnumOption`.
@@ -57,6 +60,7 @@ export const ElicitationEnumOption = z.strictObject({
   title: z.string(),
   description: z.string().optional(),
 });
+
 export type ElicitationEnumOption = z.infer<typeof ElicitationEnumOption>;
 
 const propertyBase = {
@@ -111,6 +115,7 @@ export const ElicitationPropertySchema = z.discriminatedUnion('type', [
     default: z.array(z.string()).optional(),
   }),
 ]);
+
 export type ElicitationPropertySchema = z.infer<
   typeof ElicitationPropertySchema
 >;
@@ -123,6 +128,7 @@ export const ElicitationSchema = z.strictObject({
   properties: z.record(z.string(), ElicitationPropertySchema),
   required: z.array(z.string()).optional(),
 });
+
 export type ElicitationSchema = z.infer<typeof ElicitationSchema>;
 
 // An Elicitation, after ACP `elicitation/create` in form mode, scoped to this Session.
@@ -133,12 +139,14 @@ export const PendingElicitation = z.strictObject({
   requestedSchema: ElicitationSchema,
   toolCallId: z.string().optional(),
 });
+
 export type PendingElicitation = z.infer<typeof PendingElicitation>;
 
 export const PendingPlanProposal = z.strictObject({
   planId: z.string(),
   content: z.string(),
 });
+
 export type PendingPlanProposal = z.infer<typeof PendingPlanProposal>;
 
 // Which step of the live header order produced its text.
@@ -149,6 +157,7 @@ export const LiveHeaderSource = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('tool_call'), toolCallId: z.string() }),
   z.strictObject({ type: z.literal('working') }),
 ]);
+
 export type LiveHeaderSource = z.infer<typeof LiveHeaderSource>;
 
 // One line for what the Agent is doing; `startedAt` is the running Turn's start, null when no Turn runs.
@@ -157,6 +166,7 @@ export const LiveHeader = z.strictObject({
   source: LiveHeaderSource,
   startedAt: turnColumns.shape.startedAt.nullable(),
 });
+
 export type LiveHeader = z.infer<typeof LiveHeader>;
 
 // The live state of a Session that is not a Feed row. The Server holds it in memory, so only stored fields derive from columns (ADR 0013).
@@ -179,4 +189,5 @@ export const SessionSnapshot = z.strictObject({
   maxRevision: sessionColumns.shape.maxRevision,
   epoch: sessionColumns.shape.epoch,
 });
+
 export type SessionSnapshot = z.infer<typeof SessionSnapshot>;

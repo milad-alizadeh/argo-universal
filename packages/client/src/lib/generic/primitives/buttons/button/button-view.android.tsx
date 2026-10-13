@@ -36,6 +36,7 @@ function NativeControl(
   props: ButtonDataProps & { theme: ButtonTheme },
 ): ReactElement {
   const NativeButton = nativeButtons[nativeButtonVariant(props)];
+
   return (
     <NativeButton {...nativeControlProps(props)}>
       <ButtonLabel
@@ -84,6 +85,7 @@ function nativeModifiers(props: AccessibleButtonProps): ModifierConfig[] {
 
 function buttonDescription(props: AccessibleButtonProps): string {
   const label = props.accessibilityLabel ?? props.label;
+
   return props.loading ? `${label}, Loading` : label;
 }
 
@@ -112,11 +114,13 @@ type ButtonIconProps = Pick<ButtonDataProps, 'loading' | 'icon'> & {
 
 function ButtonIcon(props: ButtonIconProps): ReactElement | null {
   if (props.loading) return <LoadingIcon color={props.color} />;
+
   return <NativeButtonIcon {...props} HostView={RNHostView} />;
 }
 
 function LoadingIcon(props: { color?: string }): ReactElement {
   const pixels = useIconPixels('control');
+
   return (
     <CircularProgressIndicator
       color={props.color}

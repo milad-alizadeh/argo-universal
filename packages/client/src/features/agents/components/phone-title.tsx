@@ -9,5 +9,6 @@ export function PhoneTitle({
   title: string;
 }): React.JSX.Element | null {
   if (useWide()) return null;
+
   return <ScreenHeader title={title} />;
 }

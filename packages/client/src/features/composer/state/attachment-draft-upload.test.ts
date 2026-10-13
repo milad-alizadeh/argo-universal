@@ -10,19 +10,23 @@ import {
   toAttachmentError,
   toUploadForms,
 } from './attachment-draft';
+
 describe('toUploadForms', () => {
   it('names each upload after its attachment, in draft order', () => {
     const attached = attachmentDraftReducer(withText, {
       type: 'picked',
       picked: [picked('first'), picked('second')],
     });
+
     const forms = toUploadForms(
       { text: '', attachments: [image('second'), image('first')] },
       attached.files,
     );
+
     expect(
       forms.map(({ name, form }) => {
         const file = form.get('file');
+
         return [name, file instanceof File ? file.name : undefined];
       }),
     ).toEqual([

@@ -6,6 +6,7 @@ import {
   firstMessageRowId,
   messageTextField,
 } from './feed-change-inputs';
+
 export const accepted: Accepted[] = [
   {
     name: 'an upsert of a new row takes the next position and revision',

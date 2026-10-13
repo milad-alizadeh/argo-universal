@@ -4,14 +4,17 @@ import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { oversizedComposerImage } from '../composer-mock';
 import type { Story } from './composer-story-context.test.mocks';
 import { pickerCatalogs } from './recorded-catalog.test.mocks';
+
 export function stopPrecedence(
   width: number,
   agentIndex: number,
   disabled: boolean,
 ): Story {
   const catalog = pickerCatalogs[agentIndex];
+
   if (!catalog)
     throw new Error(`Recorded catalog needs an Agent at index ${agentIndex}.`);
+
   return {
     args: {
       draft: {
@@ -41,6 +44,7 @@ export function stopPrecedence(
       await expect(
         canvas.queryByRole('progressbar', { name: 'Sending' }),
       ).not.toBeInTheDocument();
+
       if (!disabled) await userEvent.click(stop);
       await expect(args.onStop).toHaveBeenCalledTimes(disabled ? 0 : 1);
       await expect(args.onSend).not.toHaveBeenCalled();

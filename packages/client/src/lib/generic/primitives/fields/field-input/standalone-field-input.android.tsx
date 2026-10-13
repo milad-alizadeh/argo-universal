@@ -25,6 +25,7 @@ export function StandaloneFieldInput(
 
 function NativeField(props: StandaloneFieldInputProps): ReactElement {
   const field = useFieldProps(props);
+
   return (
     <OutlinedTextField {...field}>
       <FieldLabel {...props} />
@@ -48,6 +49,7 @@ function FieldPlaceholder(
   props: StandaloneFieldInputProps,
 ): ReactElement | null {
   if (!props.placeholder) return null;
+
   return (
     <OutlinedTextField.Placeholder>
       <Text>{props.placeholder}</Text>
@@ -61,10 +63,12 @@ function useFieldProps(props: StandaloneFieldInputProps): FieldProps {
   const value = useNativeState(props.value);
   useFollowedText(value, props.value);
   const textStyle = useFieldTextStyle(props.mono);
+
   const onFocusChanged = useMemo(
     () => blurOnFocusLoss(props.onBlur),
     [props.onBlur],
   );
+
   return { value, textStyle, onFocusChanged, ...fieldBehaviour(props) };
 }
 
@@ -74,6 +78,7 @@ function useFieldTextStyle(
   const { fontFamily, fontSize, lineHeight, fontWeight } = useComposeTextStyle(
     mono ? 'code' : 'body',
   );
+
   return { fontFamily, fontSize, lineHeight, fontWeight };
 }
 

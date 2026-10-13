@@ -14,6 +14,7 @@ export function ScrollFadeView({
 }: ScrollFadeViewProps): React.JSX.Element {
   const { frame, scroll, attachScrollView } = useScrollFade(props);
   const frameClassName = cn('min-h-0 flex-1', className);
+
   return (
     <ScrollFadeFrame {...frame} className={frameClassName}>
       <ScrollView {...scroll} ref={attachScrollView} className="flex-1" />

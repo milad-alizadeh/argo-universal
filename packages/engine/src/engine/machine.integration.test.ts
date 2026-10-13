@@ -23,6 +23,7 @@ import { paths, title } from '#mocks/engine-model-paths';
 import * as model from '#mocks/engine-model-state';
 import { startModelEngine } from '#mocks/engine-model-state';
 import { executeStep } from '#mocks/engine-model-walk';
+
 const startRunningEngine = async (logic = machine): Promise<void> => {
   startModelEngine(logic);
   await settle((): void =>

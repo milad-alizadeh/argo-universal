@@ -20,6 +20,7 @@ export function StatusDot({
   status,
 }: Pick<ListItemProps, 'status'>): React.JSX.Element | null {
   if (!status) return null;
+
   return (
     <View
       {...hiddenFromAccessibility}

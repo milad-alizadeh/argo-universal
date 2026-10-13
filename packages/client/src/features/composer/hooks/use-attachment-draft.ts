@@ -37,22 +37,27 @@ function useAttachmentUpload(): ReturnType<
   typeof useMutation<BlobRef[], Error, FormData[]>
 > {
   const upload = useTRPC().blob.upload.mutationOptions().mutationFn;
+
   return useMutation({
     mutationFn: (forms: FormData[], context) => {
       if (!upload) throw new Error('Blob upload mutation function is missing');
+
       return Promise.all(forms.map((form) => upload(form, context)));
     },
   });
 }
 
 type DraftState = typeof emptyAttachmentDraft;
+
 type Upload = ReturnType<typeof useAttachmentUpload>;
+
 interface DraftActions {
   state: DraftState;
   dispatch: Dispatch<AttachmentDraftEvent>;
   upload: Upload;
   key: DraftKey | undefined;
 }
+
 export function useAttachmentDraft(
   owner: DraftOwner | undefined,
 ): AttachmentDraft {
@@ -60,11 +65,14 @@ export function useAttachmentDraft(
     attachmentDraftReducer,
     emptyAttachmentDraft,
   );
+
   const upload = useAttachmentUpload();
   const key = owner && draftKey(owner);
   useKeptDraft(key, dispatch);
+
   return attachmentDraftActions({ state, dispatch, upload, key });
 }
+
 function attachmentDraftActions(actions: DraftActions): AttachmentDraft {
   return {
     ...editActions(actions),
@@ -78,20 +86,26 @@ function attachmentDraftActions(actions: DraftActions): AttachmentDraft {
     ),
   };
 }
+
 type EditableDraft = Pick<DraftActions, 'dispatch' | 'key'>;
+
 type DraftChanges = Pick<AttachmentDraft, 'changeDraft' | 'clearDraft'>;
+
 function editActions({ dispatch, key }: EditableDraft): DraftChanges {
   return {
     changeDraft: (draft) => {
       dispatch({ type: 'changed', draft });
+
       if (key) keptDrafts.keep(key, draft.text);
     },
     clearDraft: () => {
       dispatch({ type: 'cleared' });
+
       if (key) keptDrafts.keep(key, '');
     },
   };
 }
+
 function pickActions(
   dispatch: Dispatch<AttachmentDraftEvent>,
 ): Pick<
@@ -104,6 +118,7 @@ function pickActions(
     attachDroppedFiles: (dropped) => attachDropped(dropped, dispatch),
   };
 }
+
 async function attach(
   pick: () => Promise<PickedAttachment[]>,
   dispatch: Dispatch<AttachmentDraftEvent>,
@@ -114,32 +129,39 @@ async function attach(
     dispatch({ type: 'pickFailed' });
   }
 }
+
 async function attachDropped(
   { files, folders }: DroppedFiles,
   dispatch: Dispatch<AttachmentDraftEvent>,
 ): Promise<void> {
   if (files.length > 0) await attach(() => droppedFiles(files), dispatch);
+
   if (folders > 0) dispatch({ type: 'folderDropped' });
 }
+
 async function uploadDraftAsPrompt(
   sent: ComposerDraft,
   { state, upload }: Pick<DraftActions, 'state' | 'upload'>,
 ): Promise<SessionNewInput['prompt'] | undefined> {
   upload.reset();
   const uploads = toUploadForms(sent, state.files);
+
   const blobs = uploads.length
     ? await upload
         .mutateAsync(uploads.map(({ form }) => form))
         .catch((): undefined => undefined)
     : [];
+
   return blobs && draftPrompt(sent.text, uploadedAttachments(uploads, blobs));
 }
+
 function uploadedAttachments(
   uploads: ReturnType<typeof toUploadForms>,
   blobs: BlobRef[],
 ): { name: string; blob: BlobRef }[] {
   return uploads.flatMap(({ name }, index) => {
     const blob = blobs[index];
+
     return blob ? [{ name, blob }] : [];
   });
 }

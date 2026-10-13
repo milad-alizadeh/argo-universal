@@ -17,7 +17,9 @@ type SessionMutation<Name extends 'prompt' | 'cancel'> = ReturnType<
     undefined
   >
 >;
+
 type AttachmentDraft = ReturnType<typeof useAttachmentDraft>;
+
 export type SessionCommands = Omit<
   AttachmentDraft,
   'clearDraft' | 'uploadDraftAsPrompt'
@@ -69,6 +71,7 @@ function useConfigCommands({
     agent,
     resumeAfterCommand,
   );
+
   return { setConfigOption, changeConfig: change };
 }
 
@@ -80,8 +83,10 @@ function useDraftCommands({
     type: 'session',
     sessionId,
   });
+
   const promptSession = usePromptSession({ clearDraft, resumeAfterCommand });
   const sendDraft = draftSender(sessionId, promptSession, uploadDraftAsPrompt);
+
   return { ...draft, promptSession, sendDraft };
 }
 
@@ -90,15 +95,18 @@ function usePromptSession({
   resumeAfterCommand,
 }: PromptFollowUp): SessionMutation<'prompt'> {
   const trpc = useTRPC();
+
   const onSuccess = (): void => {
     clearDraft();
     resumeAfterCommand();
   };
+
   return useMutation(trpc.session.prompt.mutationOptions({ onSuccess }));
 }
 
 function useCancelTurn(onSuccess: () => void): SessionMutation<'cancel'> {
   const trpc = useTRPC();
+
   return useMutation(trpc.session.cancel.mutationOptions({ onSuccess }));
 }
 
@@ -110,6 +118,7 @@ function draftSender(
   return async (sent) => {
     promptSession.reset();
     const prompt = await uploadDraftAsPrompt(sent);
+
     if (prompt?.length) promptSession.mutate({ sessionId, prompt });
   };
 }

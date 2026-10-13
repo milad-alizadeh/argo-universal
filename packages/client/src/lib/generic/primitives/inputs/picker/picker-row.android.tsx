@@ -1,4 +1,4 @@
-import { Column, Shape, Row, Surface, Text } from '@expo/ui/jetpack-compose';
+import { Column, Row, Surface, Text } from '@expo/ui/jetpack-compose';
 import {
   defaultMinSize,
   fillMaxWidth,
@@ -10,15 +10,21 @@ import { createElement } from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import { errorMessage } from '../../fields/field-errors';
 import { useInListItem } from '../../lists/list-item/list-item-accessory';
+import { roundedOutline } from '../../native/compose-corners';
 import { useComposeTextStyle } from '../../native/native-typography';
 import type { PickerProps } from './picker-props';
 import { pickerLabel, pickerValue } from './picker-selection';
 
 const rowHeight = 72;
+
 const accessoryHeight = 48;
+
 const rowInset = 16;
+
 const rowRadius = 10;
+
 const rowPadding = 12;
+
 type RowProps<Value extends string> = PickerProps<Value> & {
   onPress: () => void;
 };
@@ -38,6 +44,7 @@ function PickerRowContent<Value extends string>(
 ): React.JSX.Element {
   const inListItem = useInListItem();
   const row = inListItem || props.appearance === 'row';
+
   return createElement(
     Row,
     { verticalAlignment: 'center', modifiers: rowModifiers(row, inListItem) },
@@ -92,6 +99,7 @@ type LabelProps = Pick<
 function PickerRowLabel(props: LabelProps): React.JSX.Element {
   const { colors } = useNativeTheme();
   const style = useComposeTextStyle('body');
+
   return createElement(
     Text,
     {
@@ -107,6 +115,7 @@ function PickerRowValue<Value extends string>(
 ): React.JSX.Element {
   const { colors } = useNativeTheme();
   const style = useComposeTextStyle('secondary');
+
   return createElement(
     Text,
     { style, color: rowValueColor(props, colors) },
@@ -119,31 +128,20 @@ function rowValueColor(
   colors: ReturnType<typeof useNativeTheme>['colors'],
 ): string | undefined {
   if (props.disabled) return colors.disabledContent;
-  return props.invalid ? colors.destructive : colors.mutedForeground;
-}
 
-function rowShape(): NonNullable<
-  React.ComponentProps<typeof Surface>['shape']
-> {
-  return Shape.RoundedCorner({
-    cornerRadii: {
-      topStart: rowRadius,
-      topEnd: rowRadius,
-      bottomStart: rowRadius,
-      bottomEnd: rowRadius,
-    },
-  });
+  return props.invalid ? colors.destructive : colors.mutedForeground;
 }
 
 function useSurfaceProps<Value extends string>(
   props: RowProps<Value>,
 ): React.ComponentProps<typeof Surface> {
   const { colors } = useNativeTheme();
+
   return {
     enabled: !props.disabled,
     onClick: props.onPress,
     color: colors.muted,
-    shape: rowShape(),
+    shape: roundedOutline(rowRadius),
     modifiers: [semantics({ contentDescription: rowDescription(props) })],
   };
 }

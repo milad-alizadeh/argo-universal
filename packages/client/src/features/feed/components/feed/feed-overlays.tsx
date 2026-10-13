@@ -36,6 +36,7 @@ interface JumpToLatestProps {
 // Shown while the reader is away from the end; the dot marks rows that arrived since. It sits in the Composer's column, so it stays centred over the Composer.
 function JumpToLatest(props: JumpToLatestProps): React.JSX.Element {
   const { composerTop } = useFeedEndClearance();
+
   return (
     <Animated.View
       {...jumpToLatestMotion}
@@ -81,6 +82,7 @@ function LoadingEarlier(): React.JSX.Element {
 // Over the list, so keeping the reading position never scrolls it out of view.
 function LoadingEarlierOverlay(): React.JSX.Element {
   const headerCover = useHeaderCover();
+
   return (
     <View
       className="absolute top-4 self-center rounded-full bg-sidebar px-2 wide:top-6"
@@ -105,6 +107,7 @@ function JumpToLatestWhenAway({
   newestKeyWhenLeftEnd,
 }: JumpToLatestWhenAwayProps): React.JSX.Element | null {
   if (newestKeyWhenLeftEnd === null) return null;
+
   return (
     <JumpToLatest
       hasNewRows={newestKeyWhenLeftEnd !== newestKey}

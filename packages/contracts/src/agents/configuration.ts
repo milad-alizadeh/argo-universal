@@ -2,23 +2,33 @@ import { z } from 'zod';
 import { agentColumns } from '../columns';
 
 const maxValueLength = 4096;
+
 const maxEntries = 64;
+
 const maxNameLength = 64;
+
 const withoutNul = (value: string): boolean => !value.includes('\0');
+
 const isAbsolutePath = (value: string): boolean =>
   value.startsWith('/') || /^[A-Za-z]:\\/.test(value);
+
 const isCommandName = (value: string): boolean =>
   /^[A-Za-z0-9._+-]+$/.test(value);
+
 // Names that usually hold a credential; credentials stay with the Agent's own sign-in.
 const secretName =
   /TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|API_?KEY|ACCESS_?KEY|PRIVATE_?KEY|CREDENTIAL|AUTH|COOKIE/i;
+
 // A flag such as --api-key=… or --token carries a credential the same way.
 const isSecretFlag = (argument: string): boolean => {
   const flag = /^-{1,2}([\w-]+)/.exec(argument)?.[1];
+
   return flag !== undefined && secretName.test(flag.replaceAll('-', '_'));
 };
+
 const credentialMessage =
   'Argo does not store credentials. Sign in through the Agent instead.';
+
 const singleCommandMessage =
   'One path or command, without spaces. Put arguments below.';
 
@@ -51,6 +61,7 @@ export const EnvironmentVariable = z.strictObject({
     .max(maxValueLength)
     .refine(withoutNul, 'A value cannot contain a NUL character.'),
 });
+
 export type EnvironmentVariable = z.infer<typeof EnvironmentVariable>;
 
 const hasUniqueNames = (variables: readonly EnvironmentVariable[]): boolean =>
@@ -71,6 +82,7 @@ export const CustomAgentDefinition = z.strictObject({
   executable: AgentExecutable,
   ...AgentOverrides.shape,
 });
+
 export type CustomAgentDefinition = z.infer<typeof CustomAgentDefinition>;
 
 export const AgentConfiguration = z.discriminatedUnion('source', [
@@ -86,9 +98,11 @@ export const AgentConfiguration = z.discriminatedUnion('source', [
     definition: CustomAgentDefinition,
   }),
 ]);
+
 export type AgentConfiguration = z.infer<typeof AgentConfiguration>;
 
 export const AgentId = z.strictObject({ agentId: agentColumns.shape.id });
+
 export type AgentId = z.infer<typeof AgentId>;
 
 export const ConfiguredAgent = z.strictObject({
@@ -96,6 +110,7 @@ export const ConfiguredAgent = z.strictObject({
   enabled: agentColumns.shape.enabled,
   configuration: AgentConfiguration,
 });
+
 export type ConfiguredAgent = z.infer<typeof ConfiguredAgent>;
 
 export const AgentCheck = z.discriminatedUnion('status', [
@@ -105,11 +120,13 @@ export const AgentCheck = z.discriminatedUnion('status', [
   }),
   z.strictObject({ status: z.literal('failed'), failure: z.string() }),
 ]);
+
 export type AgentCheck = z.infer<typeof AgentCheck>;
 
 export const CustomAgentEditInput = AgentId.extend({
   definition: CustomAgentDefinition,
 });
+
 export type CustomAgentEditInput = z.infer<typeof CustomAgentEditInput>;
 
 export const AgentRegistration = z.discriminatedUnion('status', [
@@ -119,9 +136,11 @@ export const AgentRegistration = z.discriminatedUnion('status', [
   }),
   z.strictObject({ status: z.literal('failed'), failure: z.string() }),
 ]);
+
 export type AgentRegistration = z.infer<typeof AgentRegistration>;
 
 export const AgentEnablementInput = AgentId.extend({
   enabled: agentColumns.shape.enabled,
 });
+
 export type AgentEnablementInput = z.infer<typeof AgentEnablementInput>;

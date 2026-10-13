@@ -21,6 +21,7 @@ export class MovedRowDelivery {
     event: FeedStreamEvent,
   ): Generator<FeedStreamEvent | RowUpsert> {
     yield* this.releaseThrough(event.rev);
+
     if ((this.movedRevisions.get(changedRowId(event)) ?? 0) < event.rev)
       yield event;
   }

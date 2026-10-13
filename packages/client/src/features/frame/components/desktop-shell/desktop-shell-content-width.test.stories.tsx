@@ -26,6 +26,7 @@ const meta = {
   title: 'Tests/DesktopShell/Content width',
   ...shellMeta,
 } satisfies Meta<typeof DesktopShellFrame>;
+
 export default meta;
 
 type Canvas = ShellPlayContext['canvas'];
@@ -72,9 +73,11 @@ async function expectExpandedPlanInside(
   content: HTMLElement,
 ): Promise<void> {
   await userEvent.click(canvas.getByRole('button', { name: 'Expand plan' }));
+
   const dialog = await within(document.body).findByRole('dialog', {
     name: 'Expanded plan',
   });
+
   await expect(dialog.getBoundingClientRect().left).toBeGreaterThanOrEqual(
     content.getBoundingClientRect().left,
   );

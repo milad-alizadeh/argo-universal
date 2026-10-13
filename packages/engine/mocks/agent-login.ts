@@ -6,15 +6,21 @@ import type {
 import { resourceInitialization } from './acp-resource';
 
 export const loginOwner = 'da44be12-d5f4-4b4e-b5a8-602fd61f4c89';
+
 export const otherLoginOwner = '4460db08-9346-46c2-abfe-d57b65885a11';
+
 export const loginAgentId = 'mock';
+
 export const loginMethodId = 'opaque-subscription';
+
 export const loginRequestId = 'exact-device-request';
+
 export const accountStatus: AuthStatus = {
   kind: 'account',
   label: 'ChatGPT',
   account: { plan: 'plus' },
 };
+
 export const signedOutStatus: AuthStatus = {
   kind: 'none',
   label: 'Signed out',
@@ -22,6 +28,7 @@ export const signedOutStatus: AuthStatus = {
 
 export const loginStatusStep = (authStatus: AuthStatus): ScriptedStep => {
   const params: AuthStatusUpdateNotification = { authStatus };
+
   return {
     type: 'raw',
     frame: JSON.stringify({

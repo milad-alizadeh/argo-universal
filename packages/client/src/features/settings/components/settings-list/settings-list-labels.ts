@@ -35,5 +35,6 @@ export function countValue(
   count: number | undefined,
 ): string | undefined {
   if (count !== undefined) return serverValue(props, String(count));
+
   return props.status === 'disconnected' ? undefined : '…';
 }

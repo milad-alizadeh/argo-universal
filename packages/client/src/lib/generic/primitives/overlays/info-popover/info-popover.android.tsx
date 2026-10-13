@@ -13,6 +13,7 @@ import { InfoPopoverTrigger } from './info-popover-trigger';
 
 export function InfoPopover(props: InfoPopoverProps): React.JSX.Element {
   const tooltip = useRef<TooltipBoxRef>(null);
+
   return (
     <Host matchContents>
       <TooltipBox ref={tooltip} isPersistent>
@@ -30,6 +31,7 @@ function TooltipText({
   text,
 }: Pick<InfoPopoverProps, 'text'>): React.JSX.Element {
   const { popover, popoverForeground } = useNativeTheme().colors;
+
   return (
     <TooltipBox.RichTooltip
       containerColor={popover}

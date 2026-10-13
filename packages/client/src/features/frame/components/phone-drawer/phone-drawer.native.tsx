@@ -28,20 +28,24 @@ type DrawerLook = Pick<
 
 function moveDrawer(drawer: DrawerLayoutMethods | null, open: boolean): void {
   if (!drawer) return;
+
   if (open) drawer.openDrawer();
   else drawer.closeDrawer();
 }
 
 function reportSettle(toggle: DrawerToggle, settledOpen: boolean): void {
   if (settledOpen === toggle.open) return;
+
   if (settledOpen) toggle.onOpen();
   else toggle.onClose();
 }
 
-function useDrawerTarget(open: boolean): {
+interface DrawerTarget {
   drawerRef: DrawerRef;
   targetOpenRef: RefObject<boolean>;
-} {
+}
+
+function useDrawerTarget(open: boolean): DrawerTarget {
   const drawerRef = useRef<DrawerLayoutMethods>(null);
   const targetOpenRef = useRef(false);
   useEffect(() => {
@@ -49,18 +53,23 @@ function useDrawerTarget(open: boolean): {
     targetOpenRef.current = open;
     moveDrawer(drawerRef.current, open);
   }, [open]);
+
   return { drawerRef, targetOpenRef };
 }
 
-function useDrawerSync(toggle: DrawerToggle): {
+interface DrawerSync {
   drawerRef: DrawerRef;
   onDrawerSettle: (settledOpen: boolean) => void;
-} {
+}
+
+function useDrawerSync(toggle: DrawerToggle): DrawerSync {
   const { drawerRef, targetOpenRef } = useDrawerTarget(toggle.open);
+
   const onDrawerSettle = (settledOpen: boolean): void => {
     targetOpenRef.current = settledOpen;
     reportSettle(toggle, settledOpen);
   };
+
   return { drawerRef, onDrawerSettle };
 }
 
@@ -99,6 +108,7 @@ function provideProgress(
 
 function SyncedDrawerLayout(props: PhoneDrawerProps): React.JSX.Element {
   const { drawerRef, onDrawerSettle } = useDrawerSync(props);
+
   return (
     <ReanimatedDrawerLayout
       ref={drawerRef}

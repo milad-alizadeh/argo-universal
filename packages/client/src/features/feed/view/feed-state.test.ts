@@ -23,6 +23,7 @@ describe.each(recordedFeedMocks)('$agent $recording', (mock) => {
       mergeNewestPage(emptyFeed, page([], 0)),
       rowEvents(mock.stream),
     );
+
     expect(feed.rows).toEqual(mock.rows);
     expect(feed.revision).toBe(mock.snapshot.maxRevision);
   });
@@ -32,6 +33,7 @@ describe.each(recordedFeedMocks)('$agent $recording', (mock) => {
       emptyFeed,
       page(mock.rows, mock.snapshot.maxRevision, { limit: 1 }),
     );
+
     while (feed.hasOlder && feed.startCursor !== null)
       feed = mergeOlderPage(
         feed,
@@ -46,23 +48,29 @@ describe.each(recordedFeedMocks)('$agent $recording', (mock) => {
 
   it('keeps the same rows when a held row arrives again at its revision', () => {
     const [row] = mock.rows;
+
     if (!row) throw new Error('Recorded Feed needs a row');
+
     const feed = mergeNewestPage(
       emptyFeed,
       page(mock.rows, mock.snapshot.maxRevision),
     );
+
     const replayed = applySubscriptionEvent(feed, {
       type: upsert,
       rev: row.revision,
       row,
     });
+
     expect(replayed.feed.rows).toBe(feed.rows);
   });
 
   it('resumes live changes from the epoch and newest revision it holds', () => {
     const newest = mock.rows.at(-1);
+
     if (!newest) throw new Error('Recorded Feed needs a row');
     const revision = mock.snapshot.maxRevision + 1;
+
     const feed = applySubscriptionEvent(
       mergeNewestPage(emptyFeed, {
         ...page(mock.rows, mock.snapshot.maxRevision),
@@ -70,6 +78,7 @@ describe.each(recordedFeedMocks)('$agent $recording', (mock) => {
       }),
       { type: upsert, rev: revision, row: { ...newest, revision } },
     ).feed;
+
     expect(syncPointOf(feed)).toEqual({ epoch: 3, revision });
   });
 });
@@ -86,6 +95,7 @@ describe('applySubscriptionEvent', () => {
       ...append,
       off: append.off + 1,
     });
+
     expect(result.missingRowId).toBe(append.id);
     expect(result.feed.rows).toBe(beforeAppend.rows);
   });
@@ -107,13 +117,16 @@ describe('applySubscriptionEvent', () => {
 
   it('keeps a newer row when an older revision of it arrives', () => {
     const [row] = streamed.rows;
+
     if (!row) throw new Error('No row');
     const feed = mergeNewestPage(emptyFeed, page(streamed.rows, 9));
+
     const stale = applySubscriptionEvent(feed, {
       type: upsert,
       rev: row.revision - 1,
       row: { ...row, revision: row.revision - 1, state: 'open' },
     });
+
     expect(stale.feed.rows[0]).toBe(row);
   });
 
@@ -122,13 +135,17 @@ describe('applySubscriptionEvent', () => {
       emptyFeed,
       page(streamed.rows, streamed.snapshot.maxRevision, { limit: 1 }),
     );
+
     const [oldest] = streamed.rows;
+
     if (!oldest) throw new Error('No row');
+
     const result = applySubscriptionEvent(feed, {
       type: upsert,
       rev: streamed.snapshot.maxRevision + 1,
       row: { ...oldest, revision: streamed.snapshot.maxRevision + 1 },
     });
+
     expect(result.feed.rows).toEqual(feed.rows);
     expect(result.feed.revision).toBe(streamed.snapshot.maxRevision + 1);
   });
@@ -138,6 +155,7 @@ describe('applySubscriptionEvent', () => {
       mergeNewestPage(emptyFeed, page(streamed.rows, 9)),
       { type: 'reset', epoch: 1 },
     );
+
     expect(result.feed).toEqual({ ...emptyFeed, epoch: 1 });
     expect(result.reset).toBe(true);
   });

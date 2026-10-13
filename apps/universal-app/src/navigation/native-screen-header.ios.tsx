@@ -11,7 +11,9 @@ import { headerSearchOptions } from './header-search-options';
 import { screenHeaderOptions } from './screen-header-options';
 
 type Search = NonNullable<ScreenHeaderProps['search']>;
+
 type Action = NonNullable<Search['action']>;
+
 type SearchBarOptions = NativeStackNavigationOptions['headerSearchBarOptions'];
 
 // iOS draws the native search bar: iOS 26 docks it at the bottom, in the thumb's reach; earlier iOS stacks it below the header row, since an integrated bar there falls back to inline and squeezes the title. The search's action, such as New Session, is a header item on every iOS.

@@ -14,7 +14,9 @@ import { settleViewport } from '../../../settle-viewport';
 const animatedDetailId = 'animated-detail';
 
 const meta = { title: 'Tests/Collapsible' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function disclosure(width: number): Story {
@@ -49,17 +51,21 @@ function disclosure(width: number): Story {
     },
   };
 }
+
 export const DisclosurePhone = disclosure(layoutWidths.phone);
+
 export const DisclosureWide = disclosure(layoutWidths.wide);
 
 // Long enough for the close and the content leaving after it.
 const closingFrames = 40;
+
 // A row still for this many frames has come to rest.
 const restingFrames = 2;
 
 // Where the samples first hold still after they start to move.
 function firstRest(tops: readonly number[]): number {
   const moved = tops.findIndex((top) => top !== tops[0]);
+
   return tops.findIndex(
     (top, index) =>
       moved !== -1 &&
@@ -91,11 +97,13 @@ export const RowBelowRestsOnce: Story = {
     await settleViewport(layoutWidths.wide);
     const trigger = canvas.getByRole('button', { name: 'Toggle details' });
     const below = canvas.getByText('Next row');
+
     const tops = await sampleEachFrame(
       () => trigger.click(),
       () => below.getBoundingClientRect().top,
       closingFrames,
     );
+
     const rest = firstRest(tops);
     await expect(rest).toBeGreaterThan(0);
     await expect(tops.slice(rest)).toEqual(
@@ -105,10 +113,12 @@ export const RowBelowRestsOnce: Story = {
 };
 
 const dark = { globals: { mode: 'dark' } };
+
 export const DisclosurePhoneDark: Story = {
   ...DisclosurePhone,
   ...dark,
 };
+
 export const DisclosureWideDark: Story = {
   ...DisclosureWide,
   ...dark,

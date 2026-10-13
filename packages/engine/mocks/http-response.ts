@@ -1,9 +1,11 @@
 import type { IncomingMessage } from 'node:http';
+
 export interface HttpResponse {
   status: number;
   headers: Record<string, string | string[] | undefined>;
   body: string;
 }
+
 export function readHttpResponse(
   response: IncomingMessage,
 ): Promise<HttpResponse> {

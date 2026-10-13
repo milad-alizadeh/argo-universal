@@ -44,16 +44,19 @@ const meta = {
   }),
   render: (args): ReactElement => <InteractiveSheet {...args} />,
 } satisfies Meta<typeof ElicitationSheet>;
+
 export default meta;
 
 export const Overview: StoryObj<typeof meta> = { name: 'ElicitationSheet' };
 
 function InteractiveSheet(props: ElicitationFormProps): ReactElement {
   const [open, setOpen] = useState(true);
+
   const onAnswer: ElicitationFormProps['onAnswer'] = (answer) => {
     props.onAnswer(answer);
     setOpen(false);
   };
+
   return open ? (
     <ElicitationSheet {...props} onAnswer={onAnswer} />
   ) : (

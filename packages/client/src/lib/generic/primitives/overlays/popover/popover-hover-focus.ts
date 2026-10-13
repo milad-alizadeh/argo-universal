@@ -1,10 +1,12 @@
 import type * as WebPopover from '@radix-ui/react-popover';
 import type * as React from 'react';
 import type { Hover } from './popover-hover';
+
 type FocusProps = Pick<
   React.ComponentProps<typeof WebPopover.Content>,
   'onOpenAutoFocus' | 'onCloseAutoFocus'
 > & { onClosed?: () => void };
+
 export function hoverContentProps(
   hover: Hover | undefined,
   props: FocusProps,

@@ -9,16 +9,20 @@ import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ConfigurationChoice } from './configuration-choice';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { checkoutName } from './configuration-values';
+
 interface CheckoutProps {
   checkout: ComposerConfigurationProps['checkout'];
   disabled: boolean;
 }
+
 interface ContentsProps extends CheckoutProps {
   close: () => void;
 }
+
 interface ChoiceProps extends ContentsProps {
   newWorktree: boolean;
 }
+
 export function CheckoutContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-sidebar">
@@ -28,6 +32,7 @@ export function CheckoutContents(props: ContentsProps): React.JSX.Element {
     </View>
   );
 }
+
 function CheckoutChoices(props: ContentsProps): React.JSX.Element {
   return (
     <FieldSection>
@@ -41,12 +46,14 @@ function CheckoutChoices(props: ContentsProps): React.JSX.Element {
     </FieldSection>
   );
 }
+
 function CheckoutChoice(props: ChoiceProps): React.JSX.Element {
   const select = (): void => {
     if (props.disabled) return;
     props.checkout.onNewWorktreeChange?.(props.newWorktree);
     props.close();
   };
+
   return (
     <ConfigurationChoice
       label={props.newWorktree ? 'New worktree' : 'Local'}
@@ -56,11 +63,13 @@ function CheckoutChoice(props: ChoiceProps): React.JSX.Element {
     />
   );
 }
+
 export function ComposerCheckoutControl(
   props: CheckoutProps,
 ): React.JSX.Element {
   if (props.checkout.path || !props.checkout.onNewWorktreeChange)
     return <CheckoutLabel checkout={props.checkout} />;
+
   return (
     <ComposerPopover
       listContent
@@ -71,6 +80,7 @@ export function ComposerCheckoutControl(
     </ComposerPopover>
   );
 }
+
 function CheckoutLabel({
   checkout,
 }: Pick<CheckoutProps, 'checkout'>): React.JSX.Element {
@@ -81,6 +91,7 @@ function CheckoutLabel({
     </View>
   );
 }
+
 function CheckoutPath({
   checkout,
 }: Pick<CheckoutProps, 'checkout'>): React.JSX.Element {
@@ -95,6 +106,7 @@ function CheckoutPath({
     </Text>
   );
 }
+
 function CheckoutIcon({
   newWorktree,
 }: {
@@ -108,15 +120,18 @@ function CheckoutIcon({
     />
   );
 }
+
 function checkoutTrigger(props: CheckoutProps): React.JSX.Element {
   return (
     <Button {...checkoutButtonProps(props)} trailing={<CheckoutChevron />} />
   );
 }
+
 type CheckoutButtonProps = Extract<
   React.ComponentProps<typeof Button>,
   { appearance?: 'content' }
 >;
+
 function checkoutButtonProps({
   checkout,
   disabled,
@@ -132,6 +147,7 @@ function checkoutButtonProps({
     labelClassName: 'text-muted-foreground',
   };
 }
+
 function CheckoutChevron(): React.JSX.Element {
   return (
     <Icon

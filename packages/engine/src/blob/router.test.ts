@@ -8,18 +8,23 @@ it('accepts a file FormData mock and a BlobRef response', (): void => {
   const response = { blobId: 'image-1', mime: 'image/png', bytes: 3 };
   expect(BlobUploadOutput.parse(response)).toEqual(response);
 });
+
 it.each(['missing', 'text', 'extra'])(
   'rejects the %s file mock',
-  (invalidFileShape): void => {
+  (invalidUpload): void => {
     const uploadForm = new FormData();
-    if (invalidFileShape === 'text') uploadForm.set('file', 'plain text');
-    if (invalidFileShape === 'extra') {
+
+    if (invalidUpload === 'text') uploadForm.set('file', 'plain text');
+
+    if (invalidUpload === 'extra') {
       uploadForm.set('file', new Blob(['png']));
       uploadForm.append('extra', new Blob(['second']));
     }
+
     expect(BlobUploadInput.safeParse(uploadForm).success).toBe(false);
   },
 );
+
 it('rejects JSON in place of FormData', (): void => {
   expect(BlobUploadInput.safeParse({ file: 'image' }).success).toBe(false);
 });

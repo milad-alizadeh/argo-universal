@@ -41,7 +41,9 @@ function ProposalInteraction(props: PlanProposalCardProps): React.JSX.Element {
   const interaction = usePlanProposal(props);
   const wide = useWide();
   const panel = <ProposalPanel {...props} interaction={interaction} />;
+
   if (!wide || !interaction.expanded) return panel;
+
   return (
     <PlanProposalExpansion
       bottomInset={props.bottomInset}

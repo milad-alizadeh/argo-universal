@@ -1,4 +1,7 @@
-import type { InitializeResponse } from '@agentclientprotocol/sdk';
+import type {
+  InitializeResponse,
+  ParamsParser,
+} from '@agentclientprotocol/sdk';
 import type { AuthStatus, AuthStatusUpdateNotification } from '@repo/contracts';
 import schema from '@repo/contracts/auth-status-schema' with { type: 'json' };
 import { createRejectionCounter } from '@repo/machine-log';
@@ -9,13 +12,17 @@ import { reportsAuthStatus, subscriptionOutcome } from './subscription-status';
 const accepts = new Ajv({
   strict: false,
 }).compile<AuthStatusUpdateNotification>(schema);
+
 const rejections = createRejectionCounter('ACP authentication status');
+
 const accountReportTimeoutMs = 5000;
+
 export const authStatusNotification = '_auth/status_update';
+
 export const createAuthStatusReader = (
   reject: () => void = () => {},
-): { parse: (value: unknown) => AuthStatusUpdateNotification } => ({
-  parse: (value: unknown): AuthStatusUpdateNotification => {
+): ParamsParser<AuthStatusUpdateNotification> => ({
+  parse: (value): AuthStatusUpdateNotification => {
     if (accepts(value)) return value;
     reject();
     const error = new TypeError('Invalid ACP authentication status');
@@ -23,6 +30,7 @@ export const createAuthStatusReader = (
     throw error;
   },
 });
+
 export class AcpAuthenticationStatus {
   private current: AuthStatus | undefined;
   private activeFailure: ((error: Error) => void) | undefined;
@@ -36,12 +44,14 @@ export class AcpAuthenticationStatus {
     this.current = notification.authStatus;
     this.first.resolve();
     const outcome = subscriptionOutcome(this.current);
+
     if (outcome.status !== 'ready')
       this.failActiveSubscription(outcome.failure);
   }
   public guardActiveSubscription(failed: (error: Error) => void): void {
     this.activeFailure = failed;
     const outcome = subscriptionOutcome(this.current);
+
     if (outcome.status !== 'ready')
       this.failActiveSubscription(outcome.failure);
   }
@@ -55,12 +65,14 @@ export class AcpAuthenticationStatus {
   ): Promise<LoginAgentOutcome> {
     if (!reportsAuthStatus(initialization)) return subscriptionOutcome();
     await this.waitForFirst();
+
     return subscriptionOutcome(this.current);
   }
   private async waitForFirst(): Promise<void> {
     const expired = Promise.withResolvers<void>();
     const timeout = setTimeout(() => expired.resolve(), accountReportTimeoutMs);
     timeout.unref();
+
     try {
       await Promise.race([this.first.promise, expired.promise]);
     } finally {
@@ -69,6 +81,7 @@ export class AcpAuthenticationStatus {
   }
   public async requireReady(initialization: InitializeResponse): Promise<void> {
     const result = await this.check(initialization);
+
     if (result.status !== 'ready') throw new Error(result.failure);
   }
 }

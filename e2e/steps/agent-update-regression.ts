@@ -20,8 +20,10 @@ const versionThree: typeof publishedRegistry = {
       : entry,
   ),
 };
+
 const updating = (page: Page): Locator =>
   page.getByRole('button', { name: 'Updating…', exact: true });
+
 async function installer(path: string, released: boolean): Promise<void> {
   await writeFile(
     `${path}.next`,
@@ -29,6 +31,7 @@ async function installer(path: string, released: boolean): Promise<void> {
   );
   await rename(`${path}.next`, path);
 }
+
 When(
   'I explicitly update Example Agent while its installer is held',
   async ({ page, app }): Promise<void> => {
@@ -41,6 +44,7 @@ When(
     await expect(updating(page)).toBeDisabled();
   },
 );
+
 When(
   'another App refreshes the catalog to version three',
   async ({ page, app }): Promise<void> => {
@@ -54,10 +58,12 @@ When(
     });
   },
 );
+
 Then('the update stays in progress', async ({ page }): Promise<void> => {
   await expect(updating(page)).toBeDisabled();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
 When(
   /^the App (stays|reloads) during the accepted update$/,
   async ({ page }, recovery: string): Promise<void> => {
@@ -67,9 +73,11 @@ When(
     await page.getByRole('link', { name: /^Example Agent,/ }).click();
   },
 );
+
 When('the version two installer completes', async ({ app }): Promise<void> => {
   await installer(app.installationPath, true);
 });
+
 Then(
   'Example Agent offers the next explicit update',
   async ({ page }): Promise<void> => {

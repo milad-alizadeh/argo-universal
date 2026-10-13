@@ -5,6 +5,7 @@ import { startEngineTestHost } from '#mocks/engine';
 beforeEach((): void => {
   vi.useFakeTimers({ now: new Date('2026-10-03T12:00:00.000Z') });
 });
+
 afterEach((): void => {
   vi.useRealTimers();
 });
@@ -14,6 +15,7 @@ it('reports configured System metadata with the current process and computer nam
     version: '9.8.7',
     startedAt: '2026-10-09T00:00:00.000Z',
   });
+
   expect(await caller.system.info()).toEqual({
     version: '9.8.7',
     startedAt: '2026-10-09T00:00:00.000Z',
@@ -34,6 +36,7 @@ async function subscribeToClock(
   const { createCaller } = await startEngineTestHost();
   onTestFinished((): void => controller.abort());
   const caller = createCaller({ signal: controller.signal });
+
   return (await caller.system.clock())[Symbol.asyncIterator]();
 }
 

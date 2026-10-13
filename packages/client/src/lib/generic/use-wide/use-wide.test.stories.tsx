@@ -14,6 +14,7 @@ const meta = {
 } satisfies Meta<typeof WideMock>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // CI runners can take over a second to redraw after a resize.

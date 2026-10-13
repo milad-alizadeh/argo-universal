@@ -17,8 +17,10 @@ const compareEnvironmentKeys = (
   [right]: [string, string],
 ): number => {
   if (left === right) return 0;
+
   return left < right ? -1 : 1;
 };
+
 const captureLaunch = (launch: AgentLaunch): AgentLaunch => ({
   projectId: launch.projectId,
   agentId: launch.agentId,
@@ -31,8 +33,10 @@ const captureLaunch = (launch: AgentLaunch): AgentLaunch => ({
   ),
   authContext: launch.authContext,
 });
+
 const createLaunchReuseKey = (launch: AgentLaunch): string =>
   JSON.stringify(launch);
+
 class EngineAcpResources implements AcpResources {
   private readonly entries = new Map<string, AcpResourceEntry>();
   private readonly retired = new Set<AcpResourceEntry>();
@@ -48,8 +52,10 @@ class EngineAcpResources implements AcpResources {
     if (this.stopped)
       return Promise.reject(new Error('ACP resources are stopped'));
     const launch = captureLaunch(opening.launch);
+
     if (this.authentication.has(authenticationContextKey(launch)))
       return Promise.reject(new Error('Agent sign-in is in progress'));
+
     return this.getOrStartResource(launch).open({ ...opening, launch }, () =>
       this.checkoutReleases.confirm(opening.opening.params.cwd),
     );
@@ -57,16 +63,20 @@ class EngineAcpResources implements AcpResources {
   private getOrStartResource(launch: AgentLaunch): AcpResourceEntry {
     const key = createLaunchReuseKey(launch);
     const existing = this.entries.get(key);
+
     if (existing) return existing;
+
     const entry = new AcpResourceEntry(this.input, launch, (checkouts) =>
       this.retireFailedGeneration(key, entry, checkouts),
     );
+
     this.entries.set(key, entry);
     this.rememberLaunch(entry, launch);
     void entry
       .closed()
       .then(() => this.forget(key, entry))
       .catch(() => {});
+
     return entry;
   }
   private rememberLaunch(entry: AcpResourceEntry, launch: AgentLaunch): void {
@@ -94,9 +104,11 @@ class EngineAcpResources implements AcpResources {
   public reserveAuthentication = (launch: AgentLaunch): (() => void) => {
     if (this.stopped) throw new Error('ACP resources are stopped');
     const key = authenticationContextKey(launch);
+
     if (this.isAuthenticationContextInUse(key)) throw new ResourceInUseError();
     const reservation = Symbol();
     this.authentication.set(key, reservation);
+
     return (): void => {
       if (this.authentication.get(key) === reservation)
         this.authentication.delete(key);
@@ -116,6 +128,7 @@ class EngineAcpResources implements AcpResources {
     );
   }
 }
+
 export const createAcpResources = (
   input: AcpResourceInput = {},
 ): AcpResources => new EngineAcpResources(input);

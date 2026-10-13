@@ -2,21 +2,28 @@ import type { AgentInfo, SessionConfigOption } from '@repo/contracts';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import type { ComposerProps } from '../src/features/composer/components/composer/composer';
 import { composerLongAgentCatalog } from './composer-agent-catalogs';
+
 function firstAvailableAgent(): AgentInfo {
   const agent = newSessionCatalogs.bothAvailable[0];
+
   if (!agent) throw new Error('Recorded catalog needs an available Agent.');
+
   return agent;
 }
+
 const longModelAgent = firstAvailableAgent();
+
 const longModelOption = recordedSessionOptions(longModelAgent.agent).find(
   (option) => option.category === 'model' && option.type === 'select',
 );
+
 const longModelTemplate =
   longModelOption?.type === 'select'
     ? longModelOption.options.flatMap((entry) =>
         'groupId' in entry ? entry.options : [entry],
       )[0]
     : undefined;
+
 if (longModelOption?.type !== 'select' || !longModelTemplate)
   throw new Error('Recorded catalog needs an Agent with a model choice.');
 
@@ -49,6 +56,7 @@ export const composerLongListConfiguration: NonNullable<
 };
 
 const fastModeAgent = firstAvailableAgent();
+
 // No adapter offers Fast mode yet, so this on/off option stands in until one is recorded.
 export function composerFastModeConfiguration(
   on: boolean,

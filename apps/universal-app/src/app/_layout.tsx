@@ -125,6 +125,7 @@ export default function RootLayout(): React.JSX.Element {
 
 function ThemedApp(): React.JSX.Element {
   const { theme } = useUniwind();
+
   return (
     <ThemeProvider value={useNavigationTheme()}>
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
@@ -166,7 +167,9 @@ function ForegroundSignal(): null {
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') connection.send({ type: 'app.foreground' });
     });
+
     return (): void => subscription.remove();
   }, [connection]);
+
   return null;
 }

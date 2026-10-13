@@ -7,7 +7,9 @@ const meta = {
   component: Spinner,
   args: { label: 'Loading Sessions' },
 } satisfies Meta<typeof Spinner>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

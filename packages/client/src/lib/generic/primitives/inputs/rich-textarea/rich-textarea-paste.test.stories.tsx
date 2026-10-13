@@ -23,7 +23,9 @@ const meta = {
     await settleViewport(layoutWidths.wide);
   },
 } satisfies Meta<typeof RichTextareaExample>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // The paste event a browser fires with the source's clipboard, so each fixture reaches the editor as written.
@@ -31,6 +33,7 @@ function pasteEvent({ html, plain }: PastedHtml): ClipboardEvent {
   const clipboardData = new DataTransfer();
   clipboardData.setData('text/html', html);
   clipboardData.setData('text/plain', plain);
+
   return new ClipboardEvent('paste', {
     clipboardData,
     bubbles: true,
@@ -56,11 +59,17 @@ function pastedFrom(pasted: PastedHtml): Story {
     },
   };
 }
+
 export const PastedFromAWebPage = pastedFrom(pastedHtml.webPage);
+
 export const PastedFromGoogleDocs = pastedFrom(pastedHtml.googleDocs);
+
 export const PastedFromNotion = pastedFrom(pastedHtml.notion);
+
 export const PastedFromVsCode = pastedFrom(pastedHtml.vsCode);
+
 export const PastedScriptLinkIsPlainText = pastedFrom(pastedHtml.scriptLink);
+
 export const PastedFromWikipedia = pastedFrom(pastedHtml.wikipedia);
 
 // A pasted external link opens as Argo opens any link, not in the new tab its source page asked for.
@@ -88,9 +97,11 @@ function pastedStylingDropped(pasted: PastedHtml): Story {
     },
   };
 }
+
 export const StylingFromAWebPageIsDropped = pastedStylingDropped(
   pastedHtml.webPage,
 );
+
 export const StylingFromGoogleDocsIsDropped = pastedStylingDropped(
   pastedHtml.googleDocs,
 );
@@ -131,12 +142,14 @@ export const PastingCopiedHtmlKeepsMarkdownMarks: Story = {
  * command a browser's binding gives it; sending it on both would paste twice.
  */
 const cdpModifier = { Control: 2, Meta: 4, Shift: 8 } as const;
+
 const plainPasteKey = {
   key: 'V',
   code: 'KeyV',
   windowsVirtualKeyCode: 'V'.codePointAt(0),
   modifiers: cdpModifier[modifier] | cdpModifier.Shift,
 };
+
 async function pressPlainPaste(): Promise<void> {
   const session = cdp();
   await session.send('Input.dispatchKeyEvent', {

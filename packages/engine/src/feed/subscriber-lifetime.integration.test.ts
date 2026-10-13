@@ -12,6 +12,7 @@ import {
   applyFeedChange,
   subscribe,
 } from '#mocks/feed-suite';
+
 it('keeps a Subagent Feed stream open until its caller aborts', async (): Promise<void> => {
   await startFeedTestHost();
   insertSession(database, { id: 'subagent', parentSessionId: 'session-1' });
@@ -38,6 +39,7 @@ it('keeps another Feed subscriber live after a caller aborts', async (): Promise
   const pendingAbort = aborted.next();
   const continuingController = new AbortController();
   onTestFinished((): void => continuingController.abort());
+
   const continuing = (
     await createFeedModuleCaller(
       feedTestHost,
@@ -45,6 +47,7 @@ it('keeps another Feed subscriber live after a caller aborts', async (): Promise
       continuingController.signal,
     ).feed.subscribe({ sessionId: 'session-1', after: null })
   )[Symbol.asyncIterator]();
+
   await continuing.next();
   controller.abort();
   await pendingAbort;

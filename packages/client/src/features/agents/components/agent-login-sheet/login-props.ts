@@ -1,5 +1,6 @@
 import type { AgentLoginSnapshot } from '@repo/contracts';
 import type { LoginTerminalProps } from '../agent-login-terminal/terminal-props';
+
 export type AgentLoginSheetProps = {
   agentName: string;
   terminal?: Omit<LoginTerminalProps, 'enabled'>;

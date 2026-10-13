@@ -27,9 +27,11 @@ function canPreview(chosen: ChosenFile): boolean {
     !isPromptImage(chosen.mimeType) && chosen.bytes <= inlineTextLimitBytes
   );
 }
+
 async function readPreview(chosen: ChosenFile): Promise<string | undefined> {
   if (!canPreview(chosen)) return;
   const text = await chosen.file.text();
+
   return isPlainText(text) ? text.slice(0, previewCharacters) : undefined;
 }
 
@@ -37,11 +39,13 @@ async function toPickedAttachment(
   chosen: ChosenFile,
 ): Promise<PickedAttachment> {
   picked += 1;
+
   return {
     attachment: await attachmentDescription(chosen, picked),
     file: chosen.file,
   };
 }
+
 async function attachmentDescription(
   chosen: ChosenFile,
   occurrence: number,
@@ -71,12 +75,14 @@ function fromPicker<Asset extends PickerAsset>(
 ): Promise<PickedAttachment[]> {
   return Promise.all(assets.map((asset) => describePicked(asset, describe)));
 }
+
 function describePicked<Asset extends PickerAsset>(
   asset: Asset,
   describe: (asset: Asset, file: File | Blob) => Described,
 ): Promise<PickedAttachment> {
   const file = asset.file ?? new File(asset.uri);
   const { key, name, bytes } = describe(asset, file);
+
   return toPickedAttachment({
     key,
     name,
@@ -86,6 +92,7 @@ function describePicked<Asset extends PickerAsset>(
     file,
   });
 }
+
 function imageName(file: File | Blob): string {
   return 'name' in file ? file.name : 'Image';
 }
@@ -97,7 +104,9 @@ export async function pickImages(): Promise<PickedAttachment[]> {
     allowsMultipleSelection: true,
     quality: 1,
   });
+
   if (result.canceled) return [];
+
   return fromPicker(result.assets, (asset, file) => ({
     key: asset.assetId ?? asset.uri,
     name: asset.fileName ?? imageName(file),
@@ -107,7 +116,9 @@ export async function pickImages(): Promise<PickedAttachment[]> {
 
 export async function pickFiles(): Promise<PickedAttachment[]> {
   const result = await getDocumentAsync({ multiple: true, base64: false });
+
   if (result.canceled) return [];
+
   return fromPicker(result.assets, (asset) => ({
     key: asset.uri,
     name: asset.name,
@@ -120,6 +131,7 @@ export function droppedFiles(
 ): Promise<PickedAttachment[]> {
   return Promise.all(files.map(droppedAttachment));
 }
+
 function droppedAttachment(file: globalThis.File): Promise<PickedAttachment> {
   return toPickedAttachment({
     key: file.name,
@@ -130,6 +142,7 @@ function droppedAttachment(file: globalThis.File): Promise<PickedAttachment> {
     file,
   });
 }
+
 function pickerMime(asset: PickerAsset, file: File | Blob): string {
   return asset.mimeType ?? file.type;
 }

@@ -7,24 +7,32 @@ import {
   type SavedChoices,
   type RememberedOption,
 } from './configuration-preferences';
+
 let writes = Promise.resolve();
+
 type Category = (typeof categories)[number];
+
 function queryKey(agent: string): readonly string[] {
   return ['session-configuration-preferences', agent];
 }
+
 function storageKey(agent: string, category: Category): string {
   return `session-configuration:${agent}:${category}`;
 }
+
 async function load(agent: string): Promise<SavedChoices> {
   await writes;
+
   const values = await Promise.all(
     categories.map((category) =>
       AsyncStorage.getItem(storageKey(agent, category)),
     ),
   );
+
   return Object.fromEntries(
     categories.flatMap((category, index) => {
       const value = values[index];
+
       return value ? [[category, value]] : [];
     }),
   );
@@ -36,6 +44,7 @@ interface SavedChoicesQuery {
   queryFn: () => Promise<SavedChoices>;
   staleTime: number;
 }
+
 export function savedChoicesQuery(agent: string): SavedChoicesQuery {
   return {
     queryKey: queryKey(agent),
@@ -43,10 +52,13 @@ export function savedChoicesQuery(agent: string): SavedChoicesQuery {
     staleTime: Infinity,
   };
 }
-function loadFailed(error: unknown): SavedChoices {
-  console.error('Could not load Session configuration preferences', error);
+
+function loadFailed(cause: unknown): SavedChoices {
+  console.error('Could not load Session configuration preferences', cause);
+
   return {};
 }
+
 export function rememberSessionConfiguration(
   client: QueryClient,
   agent: string,
@@ -57,6 +69,7 @@ export function rememberSessionConfiguration(
   const entries = savedEntries(agent, selected);
   writes = writes.then(() => AsyncStorage.multiSet(entries)).catch(writeFailed);
 }
+
 function savedEntries(
   agent: string,
   selected: RememberedOption[],
@@ -66,9 +79,11 @@ function savedEntries(
     option.currentValue,
   ]);
 }
-function writeFailed(error: unknown): void {
-  console.error('Could not remember Session configuration', error);
+
+function writeFailed(cause: unknown): void {
+  console.error('Could not remember Session configuration', cause);
 }
+
 function cacheSavedChoices(
   client: QueryClient,
   agent: string,

@@ -45,6 +45,7 @@ const sessionSnapshotFields = SessionInfo.pick({
     checkout: true,
   }).shape,
 );
+
 type SessionSnapshotFields = Infer<typeof sessionSnapshotFields>;
 
 // A worktree Session runs on its own Session branch; any other branch is the main checkout.
@@ -64,6 +65,7 @@ export function createSessionReader(
   database: Database,
 ): (sessionId: string) => SessionSnapshotFields {
   const rejections = createRejectionCounter('sessions');
+
   return (sessionId: string): SessionSnapshotFields => {
     const stored = database
       .select({
@@ -80,16 +82,19 @@ export function createSessionReader(
       .from(session)
       .where(eq(session.id, sessionId))
       .get();
+
     if (!stored)
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: `No Session ${sessionId}`,
       });
     const { id, checkoutPath, checkoutBranch, ...otherColumns } = stored;
+
     const parsed = sessionSnapshotFields.safeParse({
       ...otherColumns,
       checkout: toSessionCheckout({ id, checkoutPath, checkoutBranch }),
     });
+
     if (!parsed.success) {
       rejections.report('rejected database row', parsed.error);
       throw new TRPCError({
@@ -97,6 +102,7 @@ export function createSessionReader(
         message: 'Unrecognised Session row',
       });
     }
+
     return parsed.data;
   };
 }

@@ -1,4 +1,5 @@
 import type { AgentMessage } from '@repo/contracts';
+
 export const row = (overrides: Partial<AgentMessage> = {}): AgentMessage => ({
   sessionId: 'session-1',
   id: 'row-1',

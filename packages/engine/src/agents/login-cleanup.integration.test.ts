@@ -15,15 +15,19 @@ it('times out a held authentication request and closes its finite process before
     ...loginScenario([{ type: 'hold' }]),
     loginTimeoutMs: 500,
   });
+
   const sessionsBefore = await host.caller.session.list({ archived: false });
+
   const started = await host.caller.agents.startLogin({
     agentId: loginAgentId,
     ownerToken: loginOwner,
   });
+
   const operation = {
     operationId: started.operationId,
     ownerToken: loginOwner,
   };
+
   await expect
     .poll(async () => (await host.caller.agents.login(operation)).status)
     .toBe(chooseMethod);
@@ -42,14 +46,17 @@ it('times out a held authentication request and closes its finite process before
 
 it('Engine shutdown cancels and observes the login process without creating a Session', async () => {
   const host = await startAcpEngine(loginScenario([{ type: 'hold' }]));
+
   const started = await host.caller.agents.startLogin({
     agentId: loginAgentId,
     ownerToken: loginOwner,
   });
+
   const operation = {
     operationId: started.operationId,
     ownerToken: loginOwner,
   };
+
   await expect
     .poll(async () => (await host.caller.agents.login(operation)).status)
     .toBe(chooseMethod);
@@ -71,14 +78,17 @@ it('Engine shutdown cancels and observes the login process without creating a Se
 
 it('concurrent Apps share a single owned login and cancellation awaits process exit', async () => {
   const host = await startAcpEngine({ ...loginScenario(), autoExit: false });
+
   const first = await host.caller.agents.startLogin({
     agentId: loginAgentId,
     ownerToken: loginOwner,
   });
+
   const second = await host.caller.agents.startLogin({
     agentId: loginAgentId,
     ownerToken: otherLoginOwner,
   });
+
   expect(second).toMatchObject({
     operationId: first.operationId,
     status: 'other-app',

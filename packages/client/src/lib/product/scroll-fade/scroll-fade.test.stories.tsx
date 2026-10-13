@@ -8,7 +8,9 @@ const meta = {
   title: 'Tests/ScrollFade',
   component: ScrollFadeView,
 } satisfies Meta<typeof ScrollFadeView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const FadesFollowScroll: Story = {

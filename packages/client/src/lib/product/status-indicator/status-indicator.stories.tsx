@@ -12,7 +12,9 @@ const meta = {
   component: StatusIndicator,
   args: { status: 'running' },
 } satisfies Meta<typeof StatusIndicator>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const storyStatuses = [

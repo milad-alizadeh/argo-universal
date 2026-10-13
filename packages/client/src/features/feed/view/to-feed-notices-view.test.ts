@@ -9,6 +9,7 @@ describe.each(workMocks)('Notice grouping for $agent', ({ rows, snapshot }) => {
     (severity) => {
       const first = commandRow(rows);
       const last = { ...first, id: 'last-command' };
+
       const notice: Notice = {
         id: 'notice',
         sessionId: first.sessionId,
@@ -20,6 +21,7 @@ describe.each(workMocks)('Notice grouping for $agent', ({ rows, snapshot }) => {
         severity,
         title: 'Session notice',
       };
+
       expect(toFeedView([first, notice, last], snapshot).items).toEqual([
         {
           type: 'group',
@@ -39,6 +41,7 @@ describe.each(workMocks)('Notice grouping for $agent', ({ rows, snapshot }) => {
   it('draws an error Notice on its own row between the commands', () => {
     const first = commandRow(rows);
     const last = { ...first, id: 'last-command' };
+
     const notice: Notice = {
       id: 'notice',
       sessionId: first.sessionId,
@@ -50,6 +53,7 @@ describe.each(workMocks)('Notice grouping for $agent', ({ rows, snapshot }) => {
       severity: 'error',
       title: 'Session notice',
     };
+
     expect(toFeedView([first, notice, last], snapshot).items).toEqual([
       { type: 'tool_call', row: first },
       { type: 'row', row: notice },

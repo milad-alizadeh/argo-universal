@@ -11,6 +11,7 @@ import {
 } from '#mocks/feed-change-inputs';
 import { rejected } from '#mocks/feed-change-rejected';
 import { applyFeedChange } from './feed-change';
+
 describe('applyFeedChange', (): void => {
   it.each(accepted)(
     '$name',
@@ -29,9 +30,7 @@ describe('applyFeedChange', (): void => {
   );
 
   it.each(rejected)('rejects $name', ({ feed, change, rejection }): void => {
-    expect(
-      Reflect.apply(applyFeedChange, undefined, [feed, change, 'turn-1']),
-    ).toEqual({
+    expect(applyFeedChange(feed, change, 'turn-1')).toEqual({
       rejection: expect.stringMatching(rejection),
     });
   });
@@ -59,8 +58,10 @@ describe('applyFeedChange', (): void => {
 
     let feed = feedWith();
     const revisions: number[] = [];
+
     for (const change of changes) {
       const result = applyFeedChange(feed, change, 'turn-1');
+
       if ('rejection' in result) throw new Error(result.rejection);
       feed = result.feed;
       revisions.push(result.streamEvent.rev);

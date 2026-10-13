@@ -3,6 +3,7 @@ import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer, type VerifyClientCallbackAsync } from 'ws';
 import type { RequestGuard } from './request-guard';
 import type { AppRouter } from './router';
+
 const forbiddenStatus = 403;
 
 export const listenOnLoopback = (server: Server, port: number): Promise<void> =>
@@ -26,6 +27,7 @@ export function connectWebSockets(
 ): () => Promise<void> {
   // Attached after listen: ws re-emits the server's 'error', so a failed listen would throw from it.
   const webSocketServer = createWebSocketServer(server, guard);
+
   const handler = applyWSSHandler({
     wss: webSocketServer,
     router,
@@ -40,6 +42,7 @@ type HttpConnections = {
   webSocketServer: WebSocketServer;
   server: Server;
 };
+
 function closeConnections({
   handler,
   webSocketServer,
@@ -48,6 +51,7 @@ function closeConnections({
   // server.close() waits for upgraded sockets, so the WebSocket clients go first.
   return async (): Promise<void> => {
     handler.broadcastReconnectNotification();
+
     for (const client of webSocketServer.clients) client.terminate();
     webSocketServer.close();
     const closed = closeServer(server);
@@ -62,9 +66,11 @@ export function admitClose(
   closeConnections: () => Promise<void>,
 ): () => Promise<void> {
   let closing: Promise<void> | undefined;
+
   return (): Promise<void> => {
     commandAdmission.abort();
     closing ??= closeConnections();
+
     return closing;
   };
 }

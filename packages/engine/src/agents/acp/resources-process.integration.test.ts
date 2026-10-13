@@ -13,17 +13,21 @@ const readProcessId = (sessionId: string): number =>
 it('a missing executable rejects opening and releases the production resource after child closure', async () => {
   const resources = createAcpResources();
   const failures: unknown[] = [];
+
   const base = createResourceOpening({
     ...createResourceDestination(),
     failed: (error) => {
       failures.push(error);
     },
   });
+
   const executable = `/missing-argo-agent-${crypto.randomUUID()}`;
+
   const input = {
     ...base,
     launch: { ...base.launch, executable, cwd: process.cwd() },
   };
+
   const opening = resources.open(input);
   void opening.catch(() => {});
   await vi.waitFor(() =>
@@ -48,6 +52,7 @@ it('the production launch port owns a real stdio process and observes its final 
   onTestFinished(() => resources.shutdown());
   vi.stubEnv('ARGO_AMBIENT_VALUE', 'ambient');
   vi.stubEnv('NODE_ENV', 'test');
+
   const lease = await resources.open({
     ...base,
     launch: {
@@ -57,6 +62,7 @@ it('the production launch port owns a real stdio process and observes its final 
       env: { ARGO_LAUNCH_VALUE: 'captured' },
     },
   });
+
   expect(lease.initialization.protocolVersion).toBe(1);
   // The OS may add its own variables; the Engine's own must not leak through.
   const environment = lease.initialization._meta?.['environment'];
@@ -77,15 +83,18 @@ it.each([1, 4, 8])(
     const resources = createAcpResources();
     onTestFinished(() => resources.shutdown());
     const base = createResourceOpening();
+
     const launch = {
       ...base.launch,
       ...scriptedAgentCommand('reply'),
       cwd: process.cwd(),
     };
+
     const updates = Array.from(
       { length: count },
       (): SessionNotification[] => [],
     );
+
     const leases = await Promise.all(
       updates.map((received) =>
         resources.open({
@@ -95,6 +104,7 @@ it.each([1, 4, 8])(
         }),
       ),
     );
+
     await Promise.all(
       leases.map((lease) =>
         lease.agent.request('session/prompt', {
@@ -104,6 +114,7 @@ it.each([1, 4, 8])(
       ),
     );
     const [last, ...others] = leases;
+
     if (!last) throw new Error('No Session opened');
     const agentProcess = readProcessId(last.sessionId);
     await Promise.all(others.map((lease) => lease.close()));

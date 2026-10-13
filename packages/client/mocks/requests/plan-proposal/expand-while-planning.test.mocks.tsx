@@ -20,17 +20,22 @@ export function expandWhilePlanning(width: number): Story {
         canvas.getByRole('button', { name: keepPlanningLabel }),
       );
       await userEvent.type(canvas.getByRole('textbox'), feedbackDraft);
+
       if (width === layoutWidths.phone) {
         await expandSheet(canvas, userEvent);
         await expect(canvas.getByRole('textbox')).toHaveValue(feedbackDraft);
+
         return;
       }
+
       await userEvent.click(
         canvas.getByRole('button', { name: expandPlanLabel }),
       );
+
       const dialog = await within(document.body).findByRole('dialog', {
         name: expandedPlanLabel,
       });
+
       await expect(within(dialog).getByRole('textbox')).toHaveValue(
         feedbackDraft,
       );

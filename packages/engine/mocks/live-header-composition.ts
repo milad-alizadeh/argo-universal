@@ -7,6 +7,7 @@ import { writeStoredHeader, storedHeaderRevision } from './live-header-storage';
 import { scriptedEngineInput } from './scripted-engine';
 
 type EngineHost = Awaited<ReturnType<typeof startEngineTestHost>>;
+
 export type LiveHeaderHost = {
   host: EngineHost;
   database: EngineHost['database'];
@@ -26,6 +27,7 @@ function createHeaderInput(
       { steps: [{ type: 'wait-for-cancel' as const }] },
     ],
   };
+
   return scriptedEngineInput({ steps: [], responses }, agent);
 }
 
@@ -33,12 +35,14 @@ function openHeaderDatabase(agent: string): EngineHost['database'] {
   const { database, remove } = openTestDatabase({ agent });
   insertEndedTurn(database);
   onTestFinished(remove);
+
   return database;
 }
 
 function createHeaderCaller(host: EngineHost): EngineHost['caller'] {
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
+
   return host.createCaller({ signal: controller.signal });
 }
 
@@ -51,6 +55,7 @@ export async function startLiveHeaderHost(
   const host = await startEngineTestHost({ database, ...input });
   const caller = createHeaderCaller(host);
   const connections = { database, host, input, caller, completed };
+
   return { ...connections, subscription: await promptHeaderSession(caller) };
 }
 
@@ -61,6 +66,7 @@ async function promptHeaderSession(
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Check tests' }],
   });
+
   return (await caller.feed.subscribe({ sessionId: 'session-1', after: null }))[
     Symbol.asyncIterator
   ]();
@@ -72,9 +78,11 @@ export async function readLiveHeader(
 ): Promise<string> {
   await expect.poll(() => currentActivity(context)).toBe(text);
   let actual;
+
   do {
     actual = await nextHeaderText(context.subscription);
   } while (actual !== text);
+
   return actual;
 }
 
@@ -82,7 +90,9 @@ async function nextHeaderText(
   subscription: LiveHeaderHost['subscription'],
 ): Promise<string | undefined> {
   const event = await nextHeaderEvent(subscription);
+
   if (event.type !== 'snapshot') return undefined;
+
   return event.snapshot.liveHeader?.text;
 }
 
@@ -104,7 +114,9 @@ async function nextHeaderEvent(
   subscription: LiveHeaderHost['subscription'],
 ): Promise<FeedSubscribeOutput> {
   const next = await subscription.next();
+
   if (next.done) throw new Error('Feed subscription ended');
+
   return next.value;
 }
 

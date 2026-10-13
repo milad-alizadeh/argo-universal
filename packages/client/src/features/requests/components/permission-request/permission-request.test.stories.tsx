@@ -17,33 +17,45 @@ import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { permissionProps, permissionMocks } from '../request.mocks';
 
 const meta = { ...permissionTestMeta, title: 'Tests/PermissionRequest' };
+
 export default meta;
 
 export const DenyPhone = denial(390);
+
 export const DenyWide = denial(1440);
 
 export const AllowPhone = allow(390);
+
 export const AllowWide = allow(1440);
+
 export const SecondAgentAllowPhone = allow(390, permissionMocks[1]);
+
 export const SecondAgentAllowWide = allow(1440, permissionMocks[1]);
 
 export const SubmittingPhone = submitting(390);
+
 export const SubmittingWide = submitting(1440);
+
 export const SecondAgentSubmittingPhone = submitting(390, permissionMocks[1]);
+
 export const SecondAgentSubmittingWide = submitting(1440, permissionMocks[1]);
 
 export const ResponseErrorPhone = responseError(390);
+
 export const ResponseErrorWide = responseError(1440);
+
 export const SecondAgentResponseErrorPhone = responseError(
   390,
   permissionMocks[1],
 );
+
 export const SecondAgentResponseErrorWide = responseError(
   1440,
   permissionMocks[1],
 );
 
 export const DenyWithoutMessagePhone = denyWithoutMessage(390);
+
 export const DenyWithoutMessageWide = denyWithoutMessage(1440);
 
 export const Keyboard: Story = {
@@ -95,7 +107,11 @@ function conflict(width: number, mock?: RequestMock): Story {
     },
   };
 }
+
 export const ConflictPhone = conflict(390);
+
 export const ConflictWide = conflict(1440);
+
 export const SecondAgentConflictPhone = conflict(390, permissionMocks[1]);
+
 export const SecondAgentConflictWide = conflict(1440, permissionMocks[1]);

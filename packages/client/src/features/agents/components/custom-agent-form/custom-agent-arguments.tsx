@@ -10,7 +10,9 @@ import {
 import { AddEntryRow, type FormPartProps } from './custom-agent-form-sections';
 
 type SectionProps = FormPartProps & { onEdit: (editing: Editing) => void };
+
 type FieldProps = SectionProps & { field: ArgumentsField };
+
 const argumentHint = 'Each argument is passed exactly as typed, in this order.';
 
 export function CustomAgentArguments(props: SectionProps): React.JSX.Element {

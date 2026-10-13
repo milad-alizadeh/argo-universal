@@ -30,26 +30,33 @@ const recordPrompt = async (
   text: string,
 ): Promise<UserMessage> => {
   const host = await startAcpEngine({ steps: [] }, undefined, agent);
+
   const created = await host.caller.session.new({
     ...emptySessionInput,
     agent,
     prompt: [{ type: 'text', text }],
   });
+
   await waitForAcpSessionIdle(host, created.sessionId);
+
   const page = await host.caller.feed.page({
     sessionId: created.sessionId,
     direction: 'tail',
     limit: 200,
   });
+
   const row = page.rows.find(
     (row): row is UserMessage => row.sessionUpdate === 'user_message',
   );
+
   if (!row) throw new Error(`No user message stored for ${agent}`);
+
   return row;
 };
 
 it('records the markdown prompt each Agent stores', async () => {
   const recordings = [];
+
   for (const agent of ['agent-1', 'agent-2'])
     recordings.push({
       agent,

@@ -1,6 +1,9 @@
 export const folder = 'packages/example/src/*';
+
 export const exampleFilename = 'packages/example/src/example.ts';
+
 export const complexityCode = 'eslint(complexity)';
+
 export const current = JSON.stringify({
   overrides: [{ files: [folder], rules: { complexity: 'off' } }],
 });

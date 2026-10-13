@@ -12,7 +12,9 @@ import { AgentCatalogReplaceJob, syncSupervisorMachine } from '../src/agents';
 import { writerMachine } from '../src/storage';
 
 type SupervisorSnapshot = SnapshotFrom<typeof syncSupervisorMachine>;
+
 const synchronized = 'xstate.done.actor.synchronize';
+
 const supervisorEvents = [
   {
     type: 'sync.request',
@@ -80,6 +82,7 @@ const supervisorEvents = [
   { type: 'xstate.after.fetchLimit.syncSupervisor.syncing' },
   { type: 'xstate.after.retryDelay.syncSupervisor.waiting' },
 ] satisfies GraphEventFromLogic<typeof syncSupervisorMachine>[];
+
 export type SupervisorModelEvent = (typeof supervisorEvents)[number];
 
 export function serializeCatalogSupervisorState(
@@ -104,10 +107,14 @@ export function serializeCatalogSupervisorEvent(
     : event.type;
 }
 
-export function createCatalogSupervisorModel(database: Database): {
+interface CatalogSupervisorModel {
   paths: StatePath<SupervisorSnapshot, SupervisorModelEvent>[];
   getAdjacencyMap(): AdjacencyMap<SupervisorSnapshot, SupervisorModelEvent>;
-} {
+}
+
+export function createCatalogSupervisorModel(
+  database: Database,
+): CatalogSupervisorModel {
   const options = {
     input: {
       database,
@@ -121,6 +128,7 @@ export function createCatalogSupervisorModel(database: Database): {
     filterEvents: canApplyCatalogSupervisorModelEvent,
     serializeState: serializeCatalogSupervisorPathState,
   };
+
   return {
     paths: terminalPaths(getShortestPaths(syncSupervisorMachine, options)),
     getAdjacencyMap: () => getAdjacencyMap(syncSupervisorMachine, options),
@@ -145,13 +153,20 @@ function canApplyCatalogSupervisorModelEvent(
   event: SupervisorModelEvent,
 ): boolean {
   if (snapshot.status !== 'active') return false;
+
   if (event.type === 'sync.request')
     return snapshot.context.admissions.length < 2 && snapshot.can(event);
+
   if (event.type.endsWith('schedule')) return snapshot.matches('scheduling');
+
   if (event.type.endsWith('start')) return snapshot.matches('starting');
+
   if (event.type.endsWith('synchronize') || event.type.includes('fetchLimit'))
     return snapshot.matches('syncing');
+
   if (event.type.endsWith('save')) return snapshot.matches('saving');
+
   if (event.type.includes('retryDelay')) return snapshot.matches('waiting');
+
   return event.type === 'sync.stop' && snapshot.can(event);
 }

@@ -6,6 +6,7 @@ import {
   createFeedRouterCaller,
   applyFeedChange,
 } from '#mocks/feed-suite';
+
 it('keeps the place of a stored row that a change brings back', async (): Promise<void> => {
   await startFeedTestHost();
   applyFeedChange({

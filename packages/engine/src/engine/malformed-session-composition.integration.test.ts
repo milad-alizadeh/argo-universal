@@ -18,14 +18,18 @@ it.each(fixtureAgents.map(({ agent }): string => agent))(
     const { database, remove } = openTestDatabase({ agent });
     insertEndedTurn(database);
     onTestFinished(remove);
+
     const reported = vi
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
+
     onTestFinished((): void => reported.mockRestore());
+
     const { createCaller } = await startEngineTestHost({
       database,
       ...scriptedEngineInput({ steps: [] }, agent),
     });
+
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
     insertEndedTurn(database, 'healthy');

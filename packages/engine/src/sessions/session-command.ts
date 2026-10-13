@@ -17,6 +17,7 @@ export const submitSessionPrompt = (
     ...submission,
     committed,
   });
+
   return committed.promise;
 };
 
@@ -25,6 +26,7 @@ export function sendSessionCommand(
   command: SessionCommand,
 ): void {
   const snapshot = session.getSnapshot();
+
   if (!snapshot.can(command)) rejectSessionCommand(session, command.type);
   session.send(command);
 }
@@ -47,6 +49,7 @@ export function validateSessionCommandAdmission(
 ): void {
   validateEngineCommandAdmission(deps.sessionCommandSignal);
   const openSessionsSnapshot = deps.sessions.getSnapshot();
+
   if (
     openSessionsSnapshot.status !== 'active' ||
     !openSessionsSnapshot.matches('running')

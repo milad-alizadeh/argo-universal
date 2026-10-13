@@ -11,6 +11,7 @@ type ModelProps = { model: QuestionModel };
 
 export function QuestionHeader({ model }: ModelProps): ReactElement {
   const wide = useContentWide();
+
   return (
     <View className={cn('flex-row items-start gap-2 px-4', wide && 'px-3.5')}>
       <View className={cn('min-w-0 flex-1 gap-0.5', wide && 'pt-1')}>
@@ -49,6 +50,7 @@ function QuestionIcon(): ReactElement {
 
 function QuestionProgress({ model }: ModelProps): ReactElement {
   const wide = useContentWide();
+
   return (
     <Text
       role="secondary"

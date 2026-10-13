@@ -2,11 +2,13 @@ import type { SessionListInput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { insertEndedTurn } from '#mocks/database';
+import { rejectedProcedureCode } from '#mocks/procedure-request';
 
 const pagingInputs: SessionListInput[] = [
   { archived: false },
   { archived: false, direction: 'forward' },
 ];
+
 it.each(pagingInputs)(
   'lists stored Sessions without starting their Agent: %j',
   async (input): Promise<void> => {
@@ -21,42 +23,62 @@ it.each(pagingInputs)(
 );
 
 it('rejects an unsupported Session paging direction', async (): Promise<void> => {
-  const { caller } = await startAcpEngine({ steps: [] });
-  await expect(
-    Reflect.apply(caller.session.list, undefined, [
-      { archived: false, direction: 'backward' },
-    ]),
-  ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+  const { url } = await startAcpEngine({ steps: [] });
+  expect(
+    await rejectedProcedureCode(url, {
+      path: 'session.list',
+      type: 'query',
+      input: JSON.stringify({ archived: false, direction: 'backward' }),
+    }),
+  ).toBe('BAD_REQUEST');
 });
+
+type SessionCaller = Awaited<ReturnType<typeof startAcpEngine>>['caller'];
 
 it.each([
   {
     procedure: 'rename',
-    input: { sessionId: 'session-1', title: 'New title' },
+    call: async (caller: SessionCaller): Promise<void> => {
+      await caller.session.rename({
+        sessionId: 'session-1',
+        title: 'New title',
+      });
+    },
     message: 'Session rename is not implemented yet',
   },
   {
     procedure: 'answerPlanProposal',
-    input: { sessionId: 'session-1', planId: 'plan', decision: 'approve' },
+    call: async (caller: SessionCaller): Promise<void> => {
+      await caller.session.answerPlanProposal({
+        sessionId: 'session-1',
+        planId: 'plan',
+        decision: 'approve',
+      });
+    },
     message: 'Plan proposal answers are not implemented yet',
   },
   {
     procedure: 'changes',
-    input: { sessionId: 'session-1' },
+    call: async (caller: SessionCaller): Promise<void> => {
+      await caller.session.changes({ sessionId: 'session-1' });
+    },
     message: 'This procedure is not implemented yet',
   },
   {
     procedure: 'diff',
-    input: { sessionId: 'session-1', path: 'file.ts' },
+    call: async (caller: SessionCaller): Promise<void> => {
+      await caller.session.diff({ sessionId: 'session-1', path: 'file.ts' });
+    },
     message: 'This procedure is not implemented yet',
   },
-] as const)(
+])(
   'preserves the unimplemented $procedure error',
-  async ({ procedure, input, message }): Promise<void> => {
+  async ({ call, message }): Promise<void> => {
     const { caller } = await startAcpEngine({ steps: [] });
-    await expect(
-      Reflect.apply(caller.session[procedure], undefined, [input]),
-    ).rejects.toMatchObject({ code: 'NOT_IMPLEMENTED', message });
+    await expect(call(caller)).rejects.toMatchObject({
+      code: 'NOT_IMPLEMENTED',
+      message,
+    });
   },
 );
 
@@ -67,9 +89,13 @@ it.each([
 ])(
   'rejects a malformed rename input before its handler: %j',
   async (input): Promise<void> => {
-    const { caller } = await startAcpEngine({ steps: [] });
-    await expect(
-      Reflect.apply(caller.session.rename, undefined, [input]),
-    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+    const { url } = await startAcpEngine({ steps: [] });
+    expect(
+      await rejectedProcedureCode(url, {
+        path: 'session.rename',
+        type: 'mutation',
+        input: JSON.stringify(input),
+      }),
+    ).toBe('BAD_REQUEST');
   },
 );

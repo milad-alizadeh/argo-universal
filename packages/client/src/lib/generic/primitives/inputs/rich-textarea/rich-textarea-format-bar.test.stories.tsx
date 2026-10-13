@@ -17,21 +17,31 @@ const meta = {
     await settleViewport(layoutWidths.wide);
   },
 } satisfies Meta<typeof RichTextareaExample>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const formatBar = { name: 'Format' };
+
 const bold = 'Bold';
+
 const italic = 'Italic';
+
 const strikethrough = 'Strikethrough';
+
 const code = 'Code';
+
 const bulletedList = 'Bulleted list';
+
 const numberedList = 'Numbered list';
+
 const quote = 'Quote';
 
 // A double click selects the word under the pointer, as a person selects with the mouse.
 async function selectWordWithMouse(word: HTMLElement): Promise<HTMLElement> {
   await userEvent.dblClick(word);
+
   return within(document.body).findByRole('toolbar', formatBar);
 }
 
@@ -68,9 +78,11 @@ export const KeyboardSelectionShowsNoBar: Story = {
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole('textbox', { name: label }));
     await userEvent.keyboard('{End}');
+
     const selected = new Promise((resolve) =>
       document.addEventListener('selectionchange', resolve, { once: true }),
     );
+
     await userEvent.keyboard('{Shift>}{Home}{/Shift}');
     await selected;
     await expect(shownBar()).not.toBeInTheDocument();
@@ -94,19 +106,29 @@ function appliedByButton(
     },
   };
 }
+
 export const BoldButton = appliedByButton(bold, '**Ship**');
+
 export const ItalicButton = appliedByButton(italic, '_Ship_');
+
 export const StrikethroughButton = appliedByButton(strikethrough, '~~Ship~~');
+
 export const CodeButton = appliedByButton(code, '`Ship`');
+
 export const BulletedListButton = appliedByButton(bulletedList, '- Ship');
+
 export const NumberedListButton = appliedByButton(numberedList, '1. Ship');
+
 export const QuoteButton = appliedByButton(quote, '> Ship');
+
 export const BoldButtonOnBoldText = appliedByButton(bold, 'Ship', '**Ship**');
+
 export const BulletedListButtonOnAList = appliedByButton(
   bulletedList,
   'Ship',
   '- Ship',
 );
+
 export const QuoteButtonOnAQuote = appliedByButton(quote, 'Ship', '> Ship');
 
 // The link editor takes over from the bar.
@@ -115,9 +137,11 @@ export const LinkButtonOpensTheLinkEditor: Story = {
   play: async ({ canvas }) => {
     const bar = within(await selectWordWithMouse(canvas.getByText('Ship')));
     await userEvent.click(bar.getByRole('button', { name: 'Link' }));
+
     const editor = within(
       await within(document.body).findByRole('dialog', { name: 'Edit link' }),
     );
+
     await expect(editor.getByRole('textbox', { name: 'Text' })).toHaveValue(
       'Ship',
     );
@@ -137,12 +161,17 @@ function pressedFor(initialValue: string, pressed: string[]): Story {
     },
   };
 }
+
 export const StackedMarksShowPressed = pressedFor('**_~~Ship~~_**', [
   bold,
   italic,
   strikethrough,
 ]);
+
 export const CodeShowsPressed = pressedFor('`Ship`', [code]);
+
 export const BulletedListShowsPressed = pressedFor('- Ship', [bulletedList]);
+
 export const NumberedListShowsPressed = pressedFor('1. Ship', [numberedList]);
+
 export const QuoteShowsPressed = pressedFor('> Ship', [quote]);

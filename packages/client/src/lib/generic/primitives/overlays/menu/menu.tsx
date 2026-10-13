@@ -30,6 +30,7 @@ export function Menu<Value extends string>(
   props: MenuProps<Value>,
 ): React.JSX.Element {
   const focus = useKeyboardFocus();
+
   return (
     <MenuPrimitive.Root>
       <MenuTrigger {...props} focus={focus} />
@@ -42,6 +43,7 @@ export function Menu<Value extends string>(
 
 function useKeyboardFocus(): KeyboardFocus {
   const [keyboardFocus, onKeyboardFocusChange] = useState(false);
+
   return { keyboardFocus, onKeyboardFocusChange };
 }
 
@@ -95,6 +97,7 @@ function selectChoice<Value extends string>(
 ): (next: string) => void {
   return (next) => {
     const selected = props.choices.find((choice) => choice.value === next);
+
     if (selected) props.onValueChange(selected.value);
   };
 }
@@ -106,6 +109,7 @@ type MenuRadioItemProps = {
 
 function MenuRadioItem(props: MenuRadioItemProps): React.JSX.Element {
   const { choice, focus } = props;
+
   return (
     <MenuPrimitive.RadioItem
       value={choice.value}
@@ -124,6 +128,7 @@ function radioKeyDown(
 ): NonNullable<RadioItemProps['onKeyDown']> {
   return (event) => {
     onKeyboardFocusChange(true);
+
     // The RN adapter selects on keydown; stop Radix's synthetic click selecting twice.
     if (event.key === 'Enter' || event.key === ' ') event.preventDefault();
   };

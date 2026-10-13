@@ -46,6 +46,7 @@ interface BlocksProps {
 
 function listMarker(list: Tokens.List, index: number): string {
   const start = typeof list.start === 'number' ? list.start : 1;
+
   return list.ordered ? `${start + index}.` : '•';
 }
 
@@ -54,6 +55,7 @@ function listItems(
   caret: boolean,
 ): (ListItemProps & { key: string })[] {
   const last = list.items.length - 1;
+
   return withOccurrenceKeys(list.items, (item) => item.raw).map(
     ({ item, key }, index) => ({
       key,
@@ -77,6 +79,7 @@ function markerClassName(variant: MarkdownVariantName): string {
 function ListMarker({ children }: { children: string }): ReactElement {
   const variant = useContext(MarkdownVariant);
   const leaf = useClampLeaf(useLineHeight('body'));
+
   return (
     <Text ref={leaf} role="body" className={markerClassName(variant)}>
       {children}
@@ -100,6 +103,7 @@ function ListToken({
   caret,
 }: BlockTokenProps<Tokens.List>): ReactElement {
   const variant = useContext(MarkdownVariant);
+
   return (
     <View className={listGaps[variant]}>
       {listItems(token, caret).map(({ key, ...item }) => (
@@ -142,8 +146,10 @@ function Block({ token, caret }: BlockTokenProps): ReactElement {
 
 export function Blocks({ tokens, caret }: BlocksProps): ReactNode[] {
   const blocks = tokens.filter((token) => token.type !== 'space');
+
   if (caret && blocks.length === 0) return [<Caret key="caret" />];
   const last = blocks.length - 1;
+
   return withOccurrenceKeys(blocks, (token) => token.raw).map(
     ({ item: token, key }, index) => (
       <Block key={key} token={token} caret={caret && index === last} />

@@ -10,24 +10,29 @@ import {
 } from './agent-status';
 
 const firstId = 'first-agent';
+
 const secondId = 'second-agent';
+
 const ready: AgentRowEntry = {
   id: firstId,
   name: 'First Agent',
   description: 'Writes code',
   status: 'ready',
 };
+
 const signIn: AgentRowEntry = {
   id: secondId,
   name: 'Second Agent',
   status: 'sign-in',
 };
+
 const goose: AgentRowEntry = {
   id: 'goose',
   name: 'goose',
   description: 'An open source agent',
   status: 'not-installed',
 };
+
 const agents = [ready, signIn, goose];
 
 describe('filterAgents', () => {
