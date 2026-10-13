@@ -2,6 +2,7 @@ import type * as React from 'react';
 import { useMemo, useState } from 'react';
 import { Image, Platform, View } from 'react-native';
 import { SvgUri, SvgXml, type XmlProps } from 'react-native-svg';
+import { useResolveClassNames } from 'uniwind';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import {
   type IconRole,
@@ -33,20 +34,29 @@ export function RegistryIcon({
 
 type LoadedIconProps = Required<RegistryIconProps> & { uri: string };
 
-// The browser draws the SVG itself: react-native-svg's web build hands the file's attributes, such as data-name, to DOM elements as unknown props.
+// The browser draws the SVG itself: react-native-svg's web build hands the file's attributes, such as data-name, to DOM elements as unknown props. An <img> cannot inherit the page's colour, so an inline SVG takes the foreground colour in its markup.
 function WebRegistryImage(props: LoadedIconProps): React.JSX.Element {
   const [failed, setFailed] = useState(false);
   const pixels = useIconPixels(props.role);
-  if (failed) return <UnavailableIcon {...props} />;
+  const source = useRegistrySource(props.uri);
+  if (failed || source.kind === 'unavailable')
+    return <UnavailableIcon {...props} />;
   return (
     <Image
       accessibilityLabel={`${props.agentName} icon`}
-      source={{ uri: props.uri }}
+      source={{ uri: webUri(source) }}
       style={{ width: pixels, height: pixels }}
       onError={() => setFailed(true)}
     />
   );
 }
+
+const webUri = (
+  source: Exclude<IconSource, { kind: 'unavailable' }>,
+): string =>
+  source.kind === 'inline'
+    ? `data:image/svg+xml,${encodeURIComponent(source.xml)}`
+    : source.uri;
 
 function RegistryImage({
   uri,
@@ -62,8 +72,11 @@ function RegistryImage({
   );
 }
 
-const useRegistrySource = (uri: string): IconSource =>
-  useMemo(() => decodeRegistryIconSource(uri), [uri]);
+// A vendored logo paints with currentColor, which would be black; it takes the foreground, so it reads on a dark surface.
+function useRegistrySource(uri: string): IconSource {
+  const { color } = useResolveClassNames('text-foreground');
+  return useMemo(() => decodeRegistryIconSource(uri, color), [uri, color]);
+}
 
 function imageProps(agentName: string, pixels: number): ImageProps {
   return {
@@ -87,9 +100,9 @@ function renderIcon(
   );
 }
 
-function decodeRegistryIconSource(iconUri: string): IconSource {
+function decodeRegistryIconSource(iconUri: string, color: unknown): IconSource {
   try {
-    const xml = decodeInlineSvgDataUri(iconUri);
+    const xml = decodeInlineSvgDataUri(iconUri, color);
     return xml === null
       ? { kind: 'uri', uri: iconUri }
       : { kind: 'inline', xml };
@@ -99,13 +112,21 @@ function decodeRegistryIconSource(iconUri: string): IconSource {
   }
 }
 
-function decodeInlineSvgDataUri(iconUri: string): string | null {
+function decodeInlineSvgDataUri(
+  iconUri: string,
+  color: unknown,
+): string | null {
   const comma = iconUri.indexOf(',');
   const header = iconUri.slice(0, comma).split(';');
   if (header[0] !== 'data:image/svg+xml') return null;
   if (header.includes('base64')) return null;
-  return withViewBox(decodeURIComponent(iconUri.slice(comma + 1)));
+  return withViewBox(
+    withColor(decodeURIComponent(iconUri.slice(comma + 1)), color),
+  );
 }
+
+const withColor = (xml: string, color: unknown): string =>
+  typeof color === 'string' ? xml.replaceAll(/currentColor/gi, color) : xml;
 
 // An SVG with a width and height but no viewBox draws at its own size in the corner of the box; a viewBox scales it to fill the box, centred.
 function withViewBox(xml: string): string {

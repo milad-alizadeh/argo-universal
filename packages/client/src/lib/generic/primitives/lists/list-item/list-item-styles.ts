@@ -11,7 +11,7 @@ export function rowClasses(
     'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted wide:min-h-11 web:select-none web:[&_*]:select-none',
     controlClasses(props),
     sizeClasses(props),
-    stateClasses(props),
+    stateClasses(props, navigation),
     showsSeparator(navigation, endsSection) &&
       separatorClasses(props, endsSection),
     navigation && sidebarClasses(props),
@@ -39,13 +39,19 @@ export const contentGap = (
   sidebar || size === 'large' ? undefined : 'wide:gap-2';
 
 // A loading row pads to Paper's 56, its spinner in a 20 slot; a pressable row shades on hover.
-function stateClasses(props: ListItemProps): string {
-  return cn(
-    props.loading && 'py-4',
-    props.onPress &&
-      'web:hover:bg-[var(--color-separator)] web:active:bg-[var(--color-separator)] web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2 web:before:absolute web:before:-top-px web:before:inset-x-0 web:before:h-px web:before:bg-inherit web:before:hidden web:hover:before:block web:active:before:block web:hover:after:bg-inherit web:active:after:bg-inherit',
-  );
+function stateClasses(props: ListItemProps, navigation: boolean): string {
+  return cn(props.loading && 'py-4', props.onPress && pressClasses(navigation));
 }
+
+const focusClasses =
+  'web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2';
+
+// A sidebar row has no separators to hide and keeps its own hover tint (none when selected), so it only takes the focus ring.
+const pressClasses = (navigation: boolean): string =>
+  navigation ? focusClasses : cn(focusClasses, hoverClasses);
+
+const hoverClasses =
+  'web:hover:bg-[var(--color-separator)] web:active:bg-[var(--color-separator)] web:before:absolute web:before:-top-px web:before:inset-x-0 web:before:h-px web:before:bg-inherit web:before:hidden web:hover:before:block web:active:before:block web:hover:after:bg-inherit web:active:after:bg-inherit';
 
 function sidebarClasses(props: ListItemProps): string {
   return cn(

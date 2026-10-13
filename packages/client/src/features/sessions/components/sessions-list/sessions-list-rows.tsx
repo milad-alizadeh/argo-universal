@@ -66,7 +66,7 @@ export const SessionListRow = memo(function SessionListRow(
     <View
       testID="session-row-surface"
       className={cn(
-        'overflow-hidden bg-sidebar wide:bg-transparent',
+        'overflow-hidden bg-sidebar wide:bg-transparent wide:pb-px',
         props.selected && 'bg-sidebar-accent wide:bg-transparent',
       )}
     >
