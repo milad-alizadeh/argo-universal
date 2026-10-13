@@ -2,7 +2,11 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text/text';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
-import { ElicitationField } from './elicitation-field';
+import {
+  ElicitationField,
+  type ElicitationFieldProps,
+} from './elicitation-field';
+import type { ElicitationValue } from './elicitation-schema';
 
 export function ElicitationHeading(props: {
   source?: string;
@@ -36,41 +40,56 @@ type FormFieldProps = {
   model: ElicitationModel;
   entry: ElicitationModel['schema']['fields'][number];
 };
+type FieldBinding = {
+  state: {
+    value: ElicitationValue | undefined;
+    meta: { errors: (string | undefined)[]; isTouched: boolean };
+  };
+  handleChange: (value: ElicitationValue) => void;
+  handleBlur: () => void;
+};
 
 function FormField({ model, entry }: FormFieldProps): ReactElement {
   const Field = model.form.Field;
   return (
     <Field name={entry.key}>
-      {(field) => (
-        <ElicitationField
-          name={entry.name}
-          property={entry.property}
-          required={entry.required}
-          value={field.state.value}
-          error={field.state.meta.errors[0]}
-          showError={
-            field.state.meta.isTouched ||
-            hasInitialValue(
-              model.props.initialValues,
-              entry.name,
-              entry.property.default !== undefined,
-            )
-          }
-          onChange={field.handleChange}
-          onBlur={field.handleBlur}
-          inactive={model.inactive}
-        />
-      )}
+      {(field) => <BoundField model={model} entry={entry} field={field} />}
     </Field>
   );
 }
 
-function hasInitialValue(
-  values: ElicitationModel['props']['initialValues'],
-  name: string,
-  hasDefault: boolean,
-): boolean {
-  return values?.[name] !== undefined || hasDefault;
+function BoundField(
+  props: FormFieldProps & { field: FieldBinding },
+): ReactElement {
+  const { model, entry, field } = props;
+  return (
+    <ElicitationField
+      name={entry.name}
+      property={entry.property}
+      required={entry.required}
+      {...bindingProps(field)}
+      showError={field.state.meta.isTouched || hasInitialValue(props)}
+      inactive={model.inactive}
+    />
+  );
+}
+
+function bindingProps(
+  field: FieldBinding,
+): Pick<ElicitationFieldProps, 'value' | 'error' | 'onChange' | 'onBlur'> {
+  return {
+    value: field.state.value,
+    error: field.state.meta.errors[0],
+    onChange: field.handleChange,
+    onBlur: field.handleBlur,
+  };
+}
+
+function hasInitialValue({ model, entry }: FormFieldProps): boolean {
+  return (
+    model.props.initialValues?.[entry.name] !== undefined ||
+    entry.property.default !== undefined
+  );
 }
 
 export function ElicitationValidation(props: {

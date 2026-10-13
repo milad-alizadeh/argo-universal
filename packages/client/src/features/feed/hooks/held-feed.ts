@@ -10,7 +10,7 @@ interface HeldFeed {
 }
 
 // Long enough for one screen to take over a Session from another, as New Session hands its Session to the Session page.
-const handOverGraceMs = 2_000;
+export const handOverGraceMs = 2_000;
 
 // One cache per App, so Storybook's and tests' separate Apps never share a Session.
 const heldFeeds = new WeakMap<QueryClient, HeldCache<HeldFeed>>();

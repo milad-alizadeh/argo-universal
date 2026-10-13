@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Page, APIResponse } from '@playwright/test';
 import { z } from 'zod';
 import { expect } from '../fixtures';
 
@@ -20,18 +20,36 @@ export async function query<Output>(
     { maxRetries: 2 },
   );
   expect(response.ok()).toBe(true);
-  return z
-    .object({ result: z.object({ data: output }) })
-    .parse(await response.json()).result.data;
+  return readOutput(response, output);
 }
 
 type MutationInput = Omit<QueryInput<unknown>, 'output'>;
 
 // Calls a mutation over HTTP, as another client of the Server would.
 export async function mutate(input: MutationInput): Promise<void> {
-  const { page, httpUrl, procedure } = input;
-  const response = await page.request.post(`${httpUrl}/trpc/${procedure}`, {
-    data: input.input,
-  });
+  await requestMutation(input);
+}
+
+async function readOutput<Output>(
+  response: APIResponse,
+  output: z.ZodType<Output>,
+): Promise<Output> {
+  return z
+    .object({ result: z.object({ data: output }) })
+    .parse(await response.json()).result.data;
+}
+export async function mutateWithResult<Output>(
+  input: QueryInput<Output>,
+): Promise<Output> {
+  const response = await requestMutation(input);
+  return readOutput(response, input.output);
+}
+
+async function requestMutation(input: MutationInput): Promise<APIResponse> {
+  const response = await input.page.request.post(
+    `${input.httpUrl}/trpc/${input.procedure}`,
+    { data: input.input },
+  );
   expect(response.ok()).toBe(true);
+  return response;
 }

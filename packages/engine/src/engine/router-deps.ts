@@ -123,11 +123,13 @@ function sessionsUseAgent(
   sessions: OpenSessionsActorRef,
   agentId: string,
 ): boolean {
-  return Object.values(sessions.getSnapshot().context.sessions).some(
-    (session) => {
+  const { acpResources, sessions: open } = sessions.getSnapshot().context;
+  return (
+    !!acpResources?.isAgentInUse(agentId) ||
+    Object.values(open).some((session) => {
       const { agent } = session.getSnapshot().context;
       return !agent || agent === agentId;
-    },
+    })
   );
 }
 

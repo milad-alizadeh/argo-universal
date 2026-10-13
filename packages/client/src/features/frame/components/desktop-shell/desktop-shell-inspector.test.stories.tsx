@@ -1,7 +1,11 @@
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, screen, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
+import { fadedEdges } from '../../../../../mocks/scroll-fade';
+import {
+  layoutWidths,
+  wideBreakpoint,
+} from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   detailContentId,
@@ -39,7 +43,9 @@ async function expectHidden(
   );
 }
 
-function inspectorTakesTheDetailAreaAndRestoresIt(width: number): ShellStory {
+function inspectorTakesTheDetailAreaAndRestoresIt(
+  width: () => number,
+): ShellStory {
   return {
     play: controlledPlay(async (context, controlled) => {
       const { canvas } = context;
@@ -70,7 +76,7 @@ function inspectorTakesTheDetailAreaAndRestoresIt(width: number): ShellStory {
       await expect(canvas.getByTestId(listContentId)).toBeVisible();
       await pressInspectorButton(context, controlled, 'open');
       await expect(canvas.getByTestId(detailContentId)).toBeVisible();
-      await settleViewport(width);
+      await settleViewport(width());
       await waitFor(() => expectHidden(context, detailId));
       await expect(canvas.getByTestId(inspectorContentId)).toBeVisible();
       await pressInspectorButton(context, controlled, 'open');
@@ -89,12 +95,11 @@ function inspectorTakesTheDetailAreaAndRestoresIt(width: number): ShellStory {
     }),
   };
 }
-// A width between the phone and wide layouts.
-const tabletWidth = 720;
+// The narrowest wide window.
 export const InspectorTakesTheDetailAreaAndRestoresItTablet =
-  inspectorTakesTheDetailAreaAndRestoresIt(tabletWidth);
+  inspectorTakesTheDetailAreaAndRestoresIt(wideBreakpoint);
 export const InspectorTakesTheDetailAreaAndRestoresItPhone =
-  inspectorTakesTheDetailAreaAndRestoresIt(layoutWidths.phone);
+  inspectorTakesTheDetailAreaAndRestoresIt(() => layoutWidths.phone);
 
 export const HeaderMenuDoesNotOpenInspector: ShellStory = {
   play: controlledPlay(async (context) => {
@@ -125,16 +130,11 @@ export const InspectorScrollKeepsHeaderReachable: ShellStory = {
       expect(inspector.scrollHeight).toBeGreaterThan(inspector.clientHeight),
     );
     inspector.scrollTop = 60;
+    await waitFor(() => expect(fadedEdges(inspector).top).toBe(true));
+    // The fade lies in the scroll view, under the header, so the header stays whole.
     const title = canvas.getByRole('heading', { name: 'Inspector' });
-    await waitFor(async () => {
-      const fade = inspector.parentElement?.querySelector(
-        ':scope > [data-testid="scroll-fade-top"]',
-      );
-      await expect(fade).toBeTruthy();
-      if (!fade) return;
-      await expect(fade.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-        title.getBoundingClientRect().bottom - 1,
-      );
-    });
+    await expect(inspector.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      title.getBoundingClientRect().bottom - 1,
+    );
   }),
 };

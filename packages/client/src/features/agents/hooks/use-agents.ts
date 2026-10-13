@@ -4,10 +4,12 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { TRPCClientErrorLike } from '@trpc/client';
 import { useTRPC } from '#features/connection';
+import { useAgentChanges } from './use-configured-agents';
 
 type AgentsQuery = UseQueryResult<AgentInfo[], TRPCClientErrorLike<AppRouter>>;
 
 export function useAgents(): AgentsQuery & { retry: () => void } {
+  useAgentChanges();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const agents = useQuery(trpc.agents.list.queryOptions());

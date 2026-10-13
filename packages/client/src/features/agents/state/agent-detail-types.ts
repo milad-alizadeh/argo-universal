@@ -1,4 +1,5 @@
 import type { AgentInstallPresentation } from './agent-install-types';
+import type { AgentManagement } from './agent-management-types';
 import type { AgentRowEntry } from './agent-status';
 
 interface AgentLink {
@@ -9,6 +10,7 @@ interface AgentLink {
 // What the detail page knows about an Agent: the Server's probe, the ACP Registry's entry, or both.
 export type AgentDetail = AgentRowEntry & {
   version?: string;
+  availableVersion?: string;
   // How the Server installs it, such as "npm · needs Node.js", or why this Server cannot.
   distribution?: string;
   links?: readonly AgentLink[];
@@ -24,6 +26,7 @@ export interface AgentDetailViewProps {
   installation?: AgentInstallPresentation;
   onUpdate?: () => void;
   onRemove?: () => void;
+  management?: AgentManagement;
   // Probes the Agent again, such as after signing in with the CLI.
   onCheckAgain?: () => void;
   onSignIn?: () => void;

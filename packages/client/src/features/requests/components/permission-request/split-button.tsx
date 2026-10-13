@@ -1,18 +1,14 @@
 import type * as React from 'react';
 import { type ReactElement, type ReactNode, useState } from 'react';
-import { View } from 'react-native';
+import type { LayoutChangeEvent } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { ButtonGroup } from '#primitives/buttons/button-group/button-group';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { SelectedCheck } from '#primitives/display/selected-check';
-import { Text } from '#primitives/display/text/text';
-import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
 import { Menu } from '#primitives/overlays/menu/menu';
-import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
-import { IconSlot } from '../../../../lib/generic/symbols/icon';
+import { chevron, chevronSizes } from './split-button-chevron';
+import { ChoiceSheet } from './split-button-sheet';
 
-interface SplitButtonChoice<Value extends string> {
+export interface SplitButtonChoice<Value extends string> {
   value: Value;
   label: string;
 }
@@ -29,19 +25,21 @@ export interface SplitButtonProps<Value extends string> {
   className?: string;
 }
 
+// ButtonGroup sets className on this child; the chevron takes it.
+export type ChoiceProps<Value extends string> = Omit<
+  SplitButtonProps<Value>,
+  'className'
+> & { className?: string };
+
 // A button with a chevron that picks what the button does; desktop opens a menu, phone a Sheet.
 export function SplitButton<Value extends string>(
   props: SplitButtonProps<Value>,
 ): React.JSX.Element {
-  const wide = useContentWide();
-  const [height, setHeight] = useState<number>();
+  const [height, onLayout] = useGroupHeight();
   return (
-    <ButtonGroup
-      className={props.className}
-      onLayout={({ nativeEvent }) => setHeight(nativeEvent.layout.height)}
-    >
+    <ButtonGroup className={props.className} onLayout={onLayout}>
       {props.children}
-      {wide ? (
+      {useContentWide() ? (
         <ChoiceDropdown {...props} />
       ) : (
         <ChoiceSheet {...props} height={height} />
@@ -50,44 +48,14 @@ export function SplitButton<Value extends string>(
   );
 }
 
-// A Button element, so the menu's asChild trigger can pass its press handlers to it.
-function chevron(
-  {
-    menuLabel,
-    primary,
-    disabled,
-    height,
-  }: Pick<SplitButtonProps<string>, 'menuLabel' | 'primary' | 'disabled'> & {
-    height?: number;
-  },
-  wide: boolean,
-  className: string | undefined,
-): React.JSX.Element {
-  return (
-    <IconButton
-      variant={primary ? 'filled' : 'ghost'}
-      accessibilityLabel={menuLabel}
-      disabled={disabled}
-      className={cn(
-        wide ? 'h-8 w-7 px-0 sm:h-8' : 'h-11 w-11 rounded-lg px-0 sm:h-11',
-        className,
-      )}
-      style={height === undefined ? undefined : { height }}
-      icon={'chevron-down'}
-      iconRole="secondary"
-      iconClassName={
-        primary ? 'text-primary-foreground' : 'text-muted-foreground'
-      }
-      size="md"
-    />
-  );
+// The group's laid-out height, which the phone chevron matches.
+function useGroupHeight(): [
+  number | undefined,
+  (event: LayoutChangeEvent) => void,
+] {
+  const [height, setHeight] = useState<number>();
+  return [height, ({ nativeEvent }) => setHeight(nativeEvent.layout.height)];
 }
-
-// ButtonGroup sets className on this child; the chevron takes it.
-type ChoiceProps<Value extends string> = Omit<
-  SplitButtonProps<Value>,
-  'className'
-> & { className?: string };
 
 function ChoiceDropdown<Value extends string>(
   props: ChoiceProps<Value>,
@@ -99,50 +67,7 @@ function ChoiceDropdown<Value extends string>(
       value={props.value}
       choices={props.choices}
       onValueChange={props.onValueChange}
-      trigger={chevron(props, true, props.className)}
+      trigger={chevron(props, cn(chevronSizes.wide, props.className))}
     />
-  );
-}
-
-function ChoiceSheet<Value extends string>(
-  props: ChoiceProps<Value> & { height?: number },
-): ReactNode {
-  const { choices, value, onValueChange, disabled, menuLabel } = props;
-  const [open, setOpen] = useState(false);
-  if (disabled && open) setOpen(false);
-  return (
-    <BottomSheet
-      open={open}
-      onOpenChange={setOpen}
-      label={menuLabel}
-      trigger={chevron(props, false, props.className)}
-    >
-      <View className="gap-0.5 p-1">
-        {choices.map((choice) => (
-          <Pressable
-            key={choice.value}
-            accessibilityState={{ selected: choice.value === value }}
-            aria-pressed={choice.value === value}
-            onPress={() => {
-              setOpen(false);
-              onValueChange(choice.value);
-            }}
-            role="button"
-            className={contentActionClass({
-              variant: 'ghost',
-              className:
-                'h-auto min-h-11 justify-between rounded-sm px-2 py-1.5 sm:h-auto',
-            })}
-          >
-            <Text role="body">{choice.label}</Text>
-            <IconSlot role="control">
-              {choice.value === value && (
-                <SelectedCheck className="text-foreground" />
-              )}
-            </IconSlot>
-          </Pressable>
-        ))}
-      </View>
-    </BottomSheet>
   );
 }

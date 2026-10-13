@@ -25,14 +25,13 @@ export function useGlassComposer(): boolean {
 export interface FeedEndClearance {
   // The space after the Feed's last row, so it rests above the Composer.
   endSpace: number;
-  // How far above the Feed's bottom edge anything laid over its end, such as Jump to latest, sits: clear of the Composer and the deepest fade.
-  overlayBottom: number;
+  // How far above the Feed's bottom edge the Composer's top lies, with its pills and trays, so anything laid over the Feed's end, such as Jump to latest, keeps one gap above it.
+  composerTop: number;
 }
 
 export function useFeedEndClearance(): FeedEndClearance {
   const cover = useContext(ComposerCover);
-  const fadeDepth = useGlassComposer() ? 0 : composerFadeDepth.away;
-  return { endSpace: cover + feedEndGap, overlayBottom: cover + fadeDepth };
+  return { endSpace: cover + feedEndGap, composerTop: cover };
 }
 
 export interface GlassCover {

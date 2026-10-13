@@ -3,7 +3,7 @@ import type {
   ElicitationPropertySchema,
   PendingElicitation,
 } from '@repo/contracts';
-import { elicitationChoices } from './elicitation-schema';
+import { elicitationChoices, propertyTitle } from './elicitation-property';
 
 export type ElicitationQuestion = {
   name: string;
@@ -20,7 +20,7 @@ export function elicitationQuestions(
     return;
   return fields.map(([name, field]) => ({
     name,
-    title: field.description ?? field.title ?? name,
+    title: propertyTitle(name, field),
     multiple: field.type === 'array',
     options: elicitationChoices(field) ?? [],
   }));

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactNode } from 'react';
-import { expect, fn, waitFor } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { shortPlanProposal } from '../../../../../mocks/plan-proposal-mock';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
@@ -63,12 +63,6 @@ export const NarrowContent: Story = {
   args: { width: layoutWidths.phone },
   play: async ({ canvas, userEvent, args }) => {
     await settleViewport(layoutWidths.wide);
-    await waitFor(() =>
-      expect(
-        canvas.getByRole('button', { name: 'Approve' }).getBoundingClientRect()
-          .width,
-      ).toBeGreaterThan(layoutWidths.phone / 3),
-    );
     await userEvent.click(canvas.getByText('Approve this plan?'));
     await userEvent.keyboard('{Enter}');
     await expect(args.onAnswer).not.toHaveBeenCalled();

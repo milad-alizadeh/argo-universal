@@ -1,4 +1,5 @@
 import { expect, within } from 'storybook/test';
+import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import type { PlayContext } from './composer-story-context.test.mocks';
 import {
   chooseAgentLabel,
@@ -24,7 +25,7 @@ export async function expectResponsiveFooter({
   card: Element;
   width: number;
 }): Promise<void> {
-  if (width < 720) {
+  if (width < wideBreakpoint()) {
     const subagents = canvas.getByRole('button', {
       name: subagentCountLabel,
     });
@@ -50,7 +51,7 @@ export async function browseResponsiveMenu({
   userEvent,
   width,
 }: Pick<PlayContext, 'userEvent'> & { width: number }): Promise<void> {
-  if (width < 720) {
+  if (width < wideBreakpoint()) {
     const chooseAgent = await within(document.body).findByRole('button', {
       name: chooseAgentLabel,
     });

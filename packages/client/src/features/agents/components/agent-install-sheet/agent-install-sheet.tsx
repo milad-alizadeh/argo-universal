@@ -10,13 +10,17 @@ import {
 } from '../../../../lib/generic/primitives/overlays/popover/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentInstallSheetProps } from '../../state/agent-install-types';
-const installTitle = ({ name, phase }: AgentInstallSheetProps): string =>
-  phase === 'installed' ? `${name} installed` : `Install ${name}?`;
+const completedVerb = (action: AgentInstallSheetProps['action']): string =>
+  action === 'Update' ? 'updated' : 'installed';
+const installTitle = (props: AgentInstallSheetProps): string =>
+  props.phase === 'installed'
+    ? `${props.name} ${completedVerb(props.action)}`
+    : `${props.action ?? 'Install'} ${props.name}?`;
 function InstallTrigger(props: AgentInstallSheetProps): React.JSX.Element {
   return (
     <Button
       size="sm"
-      label="Install"
+      label={props.action ?? 'Install'}
       fullWidth="narrow"
       loading={props.phase === 'installing'}
       onPress={() => props.onOpenChange(true)}
@@ -68,7 +72,7 @@ function installPopoverButton(
     <Button
       appearance="content"
       size="sm"
-      label="Install"
+      label={props.action ?? 'Install'}
       loading={props.phase === 'installing'}
     />
   );
@@ -120,7 +124,7 @@ function InstallAction(props: AgentInstallSheetProps): React.JSX.Element {
   return (
     <Button
       fullWidth="narrow"
-      label="Install"
+      label={props.action ?? 'Install'}
       loading={props.phase === 'installing'}
       onPress={props.onInstall}
     />

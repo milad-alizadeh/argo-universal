@@ -4,18 +4,14 @@ import type {
   SessionSnapshot,
   ToolCallUpdate,
 } from '@repo/contracts';
-import type { AppRouter } from '@repo/engine/router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { TRPCClientErrorLike } from '@trpc/client';
-import type { inferRouterOutputs } from '@trpc/server';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useTRPC } from '#features/connection';
+import { type ClientError, useTRPC } from '#features/connection';
+import { mergeHistoryPages } from '../view/feed-history';
 import {
   applySubscriptionEvent,
   type FeedState,
-  mergeNewestPage,
-  mergeOlderPage,
   syncPointOf,
 } from '../view/feed-state';
 import type { FeedView } from '../view/feed-view';
@@ -23,27 +19,22 @@ import { keepUnchangedItems } from '../view/keep-unchanged-items';
 import { findLiveToolCall } from '../view/live-tool-call';
 import { toFeedView } from '../view/to-feed-view';
 import { useHeldFeedStart, useKeepHeldFeed } from './held-feed';
+import { useFeedHistory } from './use-feed-history';
 
-type FeedPageQuery = ReturnType<
-  typeof useQuery<
-    inferRouterOutputs<AppRouter>['feed']['page'],
-    TRPCClientErrorLike<AppRouter>
-  >
->;
-interface SessionFeed extends ReturnType<typeof useOlderPages> {
+type FeedHistory = ReturnType<typeof useFeedHistory>;
+interface SessionFeed {
+  loadingOlder: boolean;
+  loadOlder: FeedHistory['loadOlder'];
   view: FeedView | null;
   liveToolCall: ToolCallUpdate | undefined;
   snapshot: SessionSnapshot | null;
   ready: boolean;
-  error: FeedPageQuery['error'];
-  retry: FeedPageQuery['refetch'];
-  openError: Error | TRPCClientErrorLike<AppRouter> | null;
+  error: FeedHistory['error'];
+  retry: FeedHistory['refetch'];
+  openError: Error | ClientError | null;
   retryOpen: () => void;
   resumeAfterCommand: () => void;
 }
-
-// Rows per page (ADR-0007 pages by position): long enough that paging rarely shows while reading back.
-const pageSize = 150;
 
 // A fetch the hook keeps in its own state, so the query cache never holds it.
 const uncached = { staleTime: 0, gcTime: 0 };
@@ -52,14 +43,9 @@ const uncached = { staleTime: 0, gcTime: 0 };
 export function useSessionFeed(sessionId: string): SessionFeed {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const newestPage = useQuery(
-    trpc.feed.page.queryOptions(
-      { sessionId, direction: 'tail', limit: pageSize },
-      { staleTime: Number.POSITIVE_INFINITY, gcTime: 0 },
-    ),
-  );
   const start = useHeldFeedStart(sessionId);
   const [feed, setFeed] = useState<FeedState>(start.feed);
+  const history = useFeedHistory(sessionId, feed);
   const feedRef = useRef(feed);
   const replaceFeed = useCallback((next: FeedState) => {
     feedRef.current = next;
@@ -75,23 +61,16 @@ export function useSessionFeed(sessionId: string): SessionFeed {
     start.syncPoint,
   );
   useKeepHeldFeed(sessionId, { feed, snapshot });
-  const { loadingOlder, loadOlder } = useOlderPages({
-    sessionId,
-    getFeed: useCallback(() => feedRef.current, []),
-    replaceFeed,
-  });
-
   useEffect(() => {
-    if (!newestPage.data) return;
-    replaceFeed(mergeNewestPage(feedRef.current, newestPage.data));
+    const pages = history.data?.pages;
+    const first = pages?.[0];
+    if (!pages || !first) return;
+    replaceFeed(mergeHistoryPages(feedRef.current, pages));
     setSyncPoint(
       (current) =>
-        current ?? {
-          epoch: newestPage.data.epoch,
-          revision: newestPage.data.maxRevision,
-        },
+        current ?? { epoch: first.epoch, revision: first.maxRevision },
     );
-  }, [newestPage.data, replaceFeed]);
+  }, [history.data, replaceFeed]);
 
   const fetchWholeRow = useCallback(
     async (id: string) => {
@@ -114,7 +93,7 @@ export function useSessionFeed(sessionId: string): SessionFeed {
     [queryClient, trpc, sessionId, replaceFeed],
   );
 
-  const { refetch } = newestPage;
+  const { resetHistory } = history;
   const onLiveData = useCallback(
     (event: FeedSubscribeOutput): void => {
       if (event.type === 'closed') {
@@ -131,9 +110,9 @@ export function useSessionFeed(sessionId: string): SessionFeed {
       const result = applySubscriptionEvent(feedRef.current, event);
       replaceFeed(result.feed);
       if (result.missingRowId) void fetchWholeRow(result.missingRowId);
-      if (result.reset) void refetch();
+      if (result.reset) void resetHistory();
     },
-    [replaceFeed, fetchWholeRow, refetch],
+    [replaceFeed, fetchWholeRow, resetHistory],
   );
   const liveChanges = useSubscription({
     ...trpc.feed.subscribe.subscriptionOptions({ sessionId, after: syncPoint }),
@@ -172,58 +151,15 @@ export function useSessionFeed(sessionId: string): SessionFeed {
     snapshot,
     // The first page and the snapshot have both arrived.
     ready: feed.epoch !== null && snapshot !== null,
-    error: newestPage.error,
-    retry: refetch,
+    error: history.isFetchNextPageError ? null : history.error,
+    retry: history.refetch,
     // The Server refused to open the Session, such as when its Agent failed.
     openError: closureError ?? liveChanges.error,
     retryOpen,
     resumeAfterCommand: () => {
       if (closed.current) retryOpen();
     },
-    loadingOlder,
-    loadOlder,
+    loadingOlder: history.isFetchingNextPage,
+    loadOlder: history.loadOlder,
   };
-}
-
-function useOlderPages({
-  sessionId,
-  getFeed,
-  replaceFeed,
-}: {
-  sessionId: string;
-  getFeed: () => FeedState;
-  replaceFeed: (next: FeedState) => void;
-}): { loadingOlder: boolean; loadOlder: () => Promise<void> } {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const [loadingOlder, setLoadingOlder] = useState(false);
-  const olderInFlight = useRef(false);
-  // Pages the rows before the oldest held one, one request at a time.
-  const loadOlder = useCallback(async () => {
-    const { hasOlder, startCursor, epoch } = getFeed();
-    if (olderInFlight.current || !hasOlder) return;
-    if (startCursor === null || epoch === null) return;
-    olderInFlight.current = true;
-    setLoadingOlder(true);
-    try {
-      const page = await queryClient.fetchQuery({
-        ...trpc.feed.page.queryOptions({
-          sessionId,
-          direction: 'before',
-          cursor: startCursor,
-          limit: pageSize,
-          epoch,
-        }),
-        ...uncached,
-      });
-      replaceFeed(mergeOlderPage(getFeed(), page));
-    } catch {
-      // The rows stay as they were; the reader asks again by scrolling back to the top.
-    } finally {
-      olderInFlight.current = false;
-      setLoadingOlder(false);
-    }
-  }, [queryClient, trpc, sessionId, replaceFeed, getFeed]);
-
-  return { loadingOlder, loadOlder };
 }

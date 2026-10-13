@@ -56,7 +56,7 @@ it('unaddressed Plans never adopt addressed rows or another actual ACP Session',
   expect(
     new Set([...firstPlans, ...siblingPlans].map((row) => row.id)).size,
   ).toBe(4);
-  expect(siblingPlans[1]?._meta?.argo?.unaddressedPlanAcpSessionId).toBe(
-    'owned-2',
-  );
+  expect(siblingPlans[1]).toMatchObject({
+    _meta: { argo: { unaddressedPlanAcpSessionId: 'owned-2' } },
+  });
 });

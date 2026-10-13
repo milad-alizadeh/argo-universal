@@ -9,6 +9,10 @@ import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { agentStatusLabels, statusTone } from '../../state/agent-status';
 import { AgentIdentity } from '../agent-identity';
+import {
+  AgentEnablement,
+  AgentManagementFailure,
+} from '../agent-management/agent-management';
 import { PhoneTitle } from '../phone-title';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
@@ -26,6 +30,7 @@ export function AgentDetailView(
       <SettingsPage title={props.agent.name} onBack={props.onBack}>
         <AgentSections {...props} />
       </SettingsPage>
+      <AgentManagementFailure management={props.management} />
     </View>
   );
 }
@@ -56,10 +61,12 @@ function DetailIdentity(props: AgentDetailViewProps): React.JSX.Element {
 // The card's one trailing slot: the status chip, or Install for a registry Agent, which has no chip.
 const hasInstallDialog = (props: AgentDetailViewProps): boolean =>
   props.installation?.open === true;
+const showsIdentityInstallation = (props: AgentDetailViewProps): boolean =>
+  props.installation?.action !== 'Update' && hasInstallDialog(props);
 function IdentityTrailing(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
-  if (hasInstallDialog(props)) return <AgentAction {...props} />;
+  if (showsIdentityInstallation(props)) return <AgentAction {...props} />;
   if (statusTone(props.agent.status))
     return <AgentStatusChip agent={props.agent} />;
   return <AgentAction {...props} />;
@@ -76,7 +83,8 @@ function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
       <DetailIdentity {...props} />
       <PhoneSummary {...props} />
       <AgentStatusSection {...props} />
-      <AboutSection agent={props.agent} />
+      <AgentEnablement management={props.management} />
+      <AboutSection {...props} />
       <FieldRow>
         <RemoveAgent {...props} />
       </FieldRow>

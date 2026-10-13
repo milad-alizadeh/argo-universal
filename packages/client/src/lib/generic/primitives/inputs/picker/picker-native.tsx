@@ -16,7 +16,6 @@ type Drawing = <Value extends string>(
 type NativePicker = <Value extends string>(
   props: PickerProps<Value>,
 ) => React.JSX.Element;
-type HostSizing = Pick<HostProps, 'matchContents' | 'style'>;
 
 export function createNativePicker(Control: Drawing): NativePicker {
   return function Picker<Value extends string>(
@@ -38,18 +37,14 @@ function PickerHost<Value extends string>(
   const { Control } = props;
   const presentation = usePresentation(props.onBlur);
   return (
-    <Host {...useHostSizing()}>
+    <Host {...useHostSize()}>
       <Control {...props} {...presentation} />
     </Host>
   );
 }
 
-/*
- * A field Picker spans its form. In a ListItem's trailing slot it sizes to its
- * value: the slot takes its content's measured width, so a full-width Picker
- * squeezed the row's title (Android) or its own value (iOS) to a sliver.
- */
-function useHostSizing(): HostSizing {
+// A row's trailing slot has no width to fill, so there the Picker takes its own; elsewhere it spans the field.
+function useHostSize(): Pick<HostProps, 'matchContents' | 'style'> {
   if (useInListItem()) return { matchContents: true };
   return { matchContents: { vertical: true }, style: { width: '100%' } };
 }

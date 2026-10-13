@@ -1,12 +1,10 @@
 import type * as React from 'react';
-import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
 import type { ButtonProps } from '../../../../lib/generic/primitives/buttons/button/button-props';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import type { AgentStatus } from '../../state/agent-status';
 import { AgentInstallControl } from '../agent-install-sheet/agent-install-control';
+import { AgentRemoval } from '../agent-management/agent-removal';
 
 type ActionProps = Pick<
   AgentDetailViewProps,
@@ -45,7 +43,7 @@ const showsInstallation = (
   props: ActionProps,
   installation: NonNullable<ActionProps['installation']>,
 ): boolean =>
-  props.agent.status === 'not-installed' ||
+  ['not-installed', 'update'].includes(props.agent.status) ||
   installation.phase === 'installing' ||
   installation.open;
 function InstallationAction(
@@ -68,26 +66,10 @@ export function RemoveAgent(
 ): React.JSX.Element | null {
   if (props.agent.status === 'not-installed') return null;
   return (
-    <View className="items-stretch gap-2 wide:items-start">
-      <RemoveButton {...props} />
-      <Text role="secondary" className="px-4 wide:px-0">
-        Uninstalls it from the Server. Past Sessions keep their history.
-      </Text>
-    </View>
-  );
-}
-
-function RemoveButton(props: AgentDetailViewProps): React.JSX.Element {
-  const { name } = props.agent;
-  return (
-    <Button
-      size="sm"
-      fullWidth="narrow"
-      label={useWide() ? `Remove ${name}` : `Remove ${name} Agent`}
-      variant="outline"
-      role="destructive"
-      onPress={props.onRemove}
-      disabled={!props.onRemove}
+    <AgentRemoval
+      name={props.agent.name}
+      onRemove={props.onRemove}
+      busy={props.management?.busy}
     />
   );
 }

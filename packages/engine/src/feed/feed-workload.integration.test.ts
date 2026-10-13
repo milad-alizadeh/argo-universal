@@ -1,9 +1,9 @@
 import { setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
-import type { FeedSubscribeOutput } from '@repo/contracts';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
-import { expect, it } from 'vitest';
+import { assert, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { readUntilIdle } from '#mocks/feed-workload-observation';
 
 // Published budgets for 8 Sessions each streaming a 200 KB Agent message (measured alone: ~2.3 MiB, p95 ~10 ms, worst 30–80 ms; beside the whole test run: p95 ~31 ms, worst ~109 ms).
 const retainedByteBudget = 8_388_608;
@@ -48,29 +48,6 @@ const sampleEventLoopDelay = (): { stop: () => number[] } => {
   };
 };
 
-const readUntilIdle = async (
-  events: AsyncIterable<FeedSubscribeOutput>,
-): Promise<number> => {
-  let appended = 0;
-  let running = false;
-  for await (const event of events) {
-    if (event.type === 'row.append') appended += event.text.length;
-    if (
-      event.type === 'row.upsert' &&
-      event.row.sessionUpdate === 'agent_message'
-    )
-      appended = event.row.content.reduce(
-        (length, block) =>
-          length + (block.type === 'text' ? block.text.length : 0),
-        0,
-      );
-    if (event.type !== 'snapshot') continue;
-    if (event.snapshot.state === 'running') running = true;
-    if (running && event.snapshot.state === 'idle') return appended;
-  }
-  return appended;
-};
-
 it('long Agent messages in several Sessions stay within the retained-byte and event-loop-delay budgets', async () => {
   const host = await startAcpEngine({
     steps: Array.from({ length: chunkCount / burstSize }, () => [
@@ -108,15 +85,17 @@ it('long Agent messages in several Sessions stay within the retained-byte and ev
   const appended = await reading;
   const delays = delay.stop();
   const retained = readRetainedBytes() - before;
-  const delayP95 = delays[Math.floor(delays.length * p95)] ?? 0;
-  const delayWorst = delays.at(-1) ?? 0;
+  const delayP95 = delays[Math.floor(delays.length * p95)];
+  assert(delayP95 !== undefined);
+  const delayWorst = delays.at(-1);
+  assert(delayWorst !== undefined);
+  const withinDelayBudget = delayP95 <= eventLoopDelayP95BudgetMs;
   expect(
     {
       appended,
       withinRetainedBudget: retained <= retainedByteBudget,
       withinDelayBudget:
-        delayP95 <= eventLoopDelayP95BudgetMs &&
-        delayWorst <= eventLoopDelayWorstBudgetMs,
+        withinDelayBudget && delayWorst <= eventLoopDelayWorstBudgetMs,
     },
     `retained ${retained} B, delay p95 ${delayP95} ms, worst ${delayWorst} ms`,
   ).toEqual({

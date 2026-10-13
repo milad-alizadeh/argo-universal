@@ -1,33 +1,24 @@
-import type { AgentInstallation, CustomAgentDefinition } from '@repo/contracts';
-import { useQuery } from '@tanstack/react-query';
+import type { CustomAgentDefinition } from '@repo/contracts';
 import type * as React from 'react';
-import { useTRPC } from '#features/connection';
 import { useNavigate } from '#lib/product/navigation/context';
 import { AgentDetailView } from '../components/agent-detail-view/agent-detail-view';
 import { AgentLoginSheet } from '../components/agent-login-sheet/agent-login-sheet';
 import { AgentPlaceholder } from '../components/agent-placeholder';
 import { CustomAgentDetailView } from '../components/custom-agent-detail-view/custom-agent-detail-view';
-import { useAgentInstallation } from '../hooks/use-agent-installation';
+import { useAgentPageView } from '../hooks/use-agent-detail';
 import { useAgentLogin } from '../hooks/use-agent-login';
-import { useAgents } from '../hooks/use-agents';
+import { useAgentManagement } from '../hooks/use-agent-management';
 import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
 import {
   useAgentCheck,
   useCustomAgentMutations,
   useCustomAgents,
 } from '../hooks/use-custom-agents';
-import { agentDetail } from '../state/agent-detail';
-import type {
-  AgentDetail,
-  AgentDetailViewProps,
-} from '../state/agent-detail-types';
 
 export interface AgentDetailScreenProps {
   agent: string;
 }
 type PageProps = AgentDetailScreenProps & { onBack: () => void };
-type AgentPageProps = PageProps & { onSignIn: () => void };
-type AgentPageView = AgentDetailViewProps | undefined;
 
 // Which page to draw waits for the custom Agents, so a custom Agent never shows the built-in page first.
 type CustomDefinition =
@@ -70,17 +61,6 @@ function CustomAgentPage(
   );
 }
 
-function useAgentDetail(agent: string): {
-  detail: AgentDetail | undefined;
-  retry: () => void;
-} {
-  const agents = useAgents();
-  const catalog = useQuery(useTRPC().agents.catalog.queryOptions());
-  const info = agents.data?.find((entry) => entry.agent === agent);
-  const registry = catalog.data?.agents.find(({ id }) => id === agent);
-  return { detail: agentDetail(info, registry), retry: agents.retry };
-}
-
 // A built-in or registry Agent: the Server's probe and the saved ACP Registry entry.
 function AgentPage({ agent, onBack }: PageProps): React.JSX.Element {
   const login = useAgentLogin(agent);
@@ -92,18 +72,6 @@ function AgentPage({ agent, onBack }: PageProps): React.JSX.Element {
     </LoginPage>
   );
 }
-function useAgentPageView(props: AgentPageProps): AgentPageView {
-  const { detail, retry } = useAgentDetail(props.agent);
-  const installation = useAgentInstallation(props.agent, detailVersion(detail));
-  if (!detail) return undefined;
-  return {
-    ...props,
-    agent: installedDetail(detail, installation),
-    installation,
-    onCheckAgain: retry,
-  };
-}
-
 type LoginPageProps = {
   name: string;
   login: ReturnType<typeof useAgentLogin>;
@@ -126,6 +94,7 @@ function useCustomView(
   props: PageProps & { definition: CustomAgentDefinition },
 ): React.ComponentProps<typeof CustomAgentDetailView> {
   const check = useAgentCheck(props.agent, true);
+  const management = useAgentManagement(props.agent, props.onBack);
   return {
     agentId: props.agent,
     definition: props.definition,
@@ -133,23 +102,11 @@ function useCustomView(
     onCheck: () => void check.refetch(),
     onSave: useSaveAgent(props.agent),
     onBack: props.onBack,
+    management: checkedManagement(management, check.isFetching),
   };
 }
-
-function installedDetail(
-  detail: AgentDetail,
-  installation: ReturnType<typeof useAgentInstallation>,
-): AgentDetail {
-  if (installation.phase === 'installing')
-    return { ...detail, status: 'not-installed' };
-  return withInstallation(detail, installation.status?.installation);
-}
-function withInstallation(
-  detail: AgentDetail,
-  saved: AgentInstallation | undefined,
-): AgentDetail {
-  if (saved?.status !== 'installed') return detail;
-  return { ...detail, status: 'unavailable', version: saved.version };
-}
-
-const detailVersion = (detail?: AgentDetail): string => detail?.version ?? '';
+const checkedManagement = (
+  management: React.ComponentProps<typeof CustomAgentDetailView>['management'],
+  checking: boolean,
+): React.ComponentProps<typeof CustomAgentDetailView>['management'] =>
+  management ? { ...management, busy: management.busy || checking } : undefined;

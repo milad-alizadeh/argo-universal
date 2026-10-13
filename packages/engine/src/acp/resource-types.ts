@@ -51,6 +51,7 @@ export type AcpResourceInput = {
   releaseTimeoutMs?: number;
 };
 export type AcpResources = {
+  isAgentInUse: (agentId: string) => boolean;
   open: (input: AcpOpenInput) => Promise<AcpSessionLease>;
   reserveAuthentication: (launch: AgentLaunch) => () => void;
   shutdown: () => Promise<void>;

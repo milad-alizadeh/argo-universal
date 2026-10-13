@@ -63,7 +63,9 @@ export const readCustomDefinition = (
   agentId: string,
 ): CustomAgentDefinition | undefined => {
   const agent = readConfiguredAgent(database, agentId);
-  return agent ? selectCustomDefinition(agent) : undefined;
+  return agent && !agent.configuration.removed
+    ? selectCustomDefinition(agent)
+    : undefined;
 };
 
 export const isAgentDisabled = (database: Database, agentId: string): boolean =>

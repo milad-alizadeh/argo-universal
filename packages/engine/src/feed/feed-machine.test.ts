@@ -1,126 +1,28 @@
-import type { FeedChange } from '@repo/contracts';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { terminalPaths } from '@repo/vitest/model-paths';
 import { describe, expect, it } from 'vitest';
-import { type SnapshotFrom } from 'xstate';
 import {
   type AdjacencyMap,
-  type GraphEventFromLogic,
   getShortestPaths,
   getSimplePaths,
   getAdjacencyMap,
 } from 'xstate/graph';
-import { feedMachine } from './feed-machine';
+import {
+  machine,
+  events,
+  acpUpdateEventType,
+  modelInput,
+  streamBatchDelayEvent,
+  storeDelayEvent,
+  type FeedSnapshot,
+  type FeedMachineEvent,
+} from '#mocks/feed-model';
+const vertex = (of: FeedSnapshot | undefined): string | undefined =>
+  of && JSON.stringify({ value: of.value, open: Object.keys(of.context.rows) });
 
-const acpUpdateEventType = 'feed.acpUpdate';
-const modelAcpSessionId = 'model-session';
-const firstMessageRowId = 'message-1#0';
-
-/*
- * Symbolic graph traversal proves transition coverage only. Engine integration
- * tests exercise the actual stream timing, Writer, SQLite, and shutdown effects.
- */
-const machine = feedMachine;
-type FeedSnapshot = SnapshotFrom<typeof machine>;
-const modelInput = {
-  now: (): number => 1000,
-  sessionId: 'session-1',
-  epoch: 2,
-  maxRevision: 0,
-  nextPosition: 0,
-  findWrittenRow: (): undefined => undefined,
-};
-
-const change = (
-  feedChange: FeedChange,
-): {
-  readonly type: 'feed.change';
-  readonly change: FeedChange;
-  readonly turnId: 'turn-1';
-} => ({ type: 'feed.change', change: feedChange, turnId: 'turn-1' }) as const;
-const openMessage = change({
-  type: 'upsert',
-  update: {
-    id: firstMessageRowId,
-    state: 'open',
-    sessionUpdate: 'agent_message',
-    messageId: 'message-1',
-    content: [{ type: 'text', text: '' }],
-  },
-});
-const appendText = change({
-  type: 'append',
-  id: firstMessageRowId,
-  field: 'content.0.text',
-  text: 'a',
-});
-const settleMessage = change({
-  type: 'patch',
-  id: firstMessageRowId,
-  set: { state: 'settled' },
-});
-const streamBatchDelayEvent =
-  'xstate.after.streamBatchDelay.feed.active.stream.batching';
-const storeDelayEvent = 'xstate.after.storeDelay.feed.active.store.dirty';
-
-// Done events of states are left out: the model would send them before the regions are done.
-const events = [
-  openMessage,
-  appendText,
-  settleMessage,
-  {
-    type: acpUpdateEventType,
-    acpSessionId: modelAcpSessionId,
-    turnId: 'turn-1',
-    update: {
-      sessionUpdate: 'agent_message_chunk',
-      messageId: 'model-message',
-      content: { type: 'text', text: 'model text' },
-    },
-  },
-  {
-    type: acpUpdateEventType,
-    acpSessionId: modelAcpSessionId,
-    turnId: 'turn-1',
-    update: {
-      sessionUpdate: 'tool_call_update',
-      toolCallId: 'model-tool',
-      status: 'completed',
-    },
-  },
-  {
-    type: acpUpdateEventType,
-    acpSessionId: modelAcpSessionId,
-    turnId: 'turn-1',
-    update: {
-      sessionUpdate: 'notice',
-      severity: 'info',
-      title: 'Model notice',
-    },
-  },
-  {
-    type: acpUpdateEventType,
-    acpSessionId: modelAcpSessionId,
-    turnId: 'turn-1',
-    update: {
-      sessionUpdate: 'compaction_update',
-      compactionId: 'model-compaction',
-      status: 'completed',
-    },
-  },
-  {
-    type: acpUpdateEventType,
-    acpSessionId: modelAcpSessionId,
-    turnId: 'turn-1',
-    update: { sessionUpdate: 'plan_removed', planId: 'unknown-plan' },
-  },
-  { type: 'feed.completeTurn', turnId: 'turn-1' },
-  { type: 'feed.flush' },
-  { type: streamBatchDelayEvent },
-  { type: storeDelayEvent },
-] satisfies GraphEventFromLogic<typeof machine>[];
-type FeedMachineEvent = (typeof events)[number];
-
+const previousValue = (
+  snapshot: FeedSnapshot | undefined,
+): string | undefined => JSON.stringify(snapshot?.value);
 // The message's place, and the state value; `via` names how a vertex was reached.
 const serializeWith =
   (
@@ -135,15 +37,12 @@ const serializeWith =
     event: FeedMachineEvent | undefined,
     previous: FeedSnapshot | undefined,
   ): string => {
-    const vertex = (of: FeedSnapshot | undefined): string | undefined =>
-      of &&
-      JSON.stringify({ value: of.value, open: Object.keys(of.context.rows) });
     const key = vertex(snapshot);
     return JSON.stringify({
       key,
       via:
         event && via(key === vertex(previous))
-          ? `${JSON.stringify(previous?.value)} ${JSON.stringify(event)}`
+          ? `${previousValue(previous)} ${JSON.stringify(event)}`
           : undefined,
     });
   };

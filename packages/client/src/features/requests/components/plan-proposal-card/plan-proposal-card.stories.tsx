@@ -1,4 +1,3 @@
-const answeredElsewhere = 'Already answered on another device';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ComponentProps } from 'react';
 import type * as React from 'react';
@@ -46,95 +45,103 @@ const meta = {
 export default meta;
 type Story = StoryObj<GalleryArgs>;
 
+const answeredElsewhere = 'Already answered on another device';
+
+type CardProps = ComponentProps<typeof PlanProposalCard>;
+
+interface GalleryVariation {
+  label: string;
+  testID?: string;
+  props: (args: GalleryArgs) => Partial<CardProps>;
+}
+
+const galleryVariations: GalleryVariation[] = [
+  {
+    label: 'Short Plan proposal',
+    testID: 'proposal-preview-short',
+    props: (args) => ({
+      proposal: agentProposal(args.agent),
+      state: requestState(args.requestState),
+    }),
+  },
+  {
+    label: 'Long Plan proposal',
+    testID: 'proposal-preview-long',
+    props: () => ({ proposal: longPlanProposal }),
+  },
+  { label: 'Sending answer', props: () => ({ state: { kind: 'submitting' } }) },
+  {
+    label: 'Answer failed',
+    props: () => ({
+      state: { kind: 'open' },
+      error: 'Could not send your answer. Try again.',
+    }),
+  },
+  {
+    label: 'Already answered',
+    testID: 'proposal-preview-answered',
+    props: () => ({ state: requestState('answered') }),
+  },
+];
+
 export const Overview: Story = {
   name: 'PlanProposalCard',
   render: function ProposalGallery(args): React.JSX.Element {
-    if (!useWide())
-      return (
-        <PlanProposalPreview
-          composer
-          {...args}
-          proposal={
-            args.planLength === 'long'
-              ? longPlanProposal
-              : (planProposalMocks.find((mock) => mock.agent === args.agent)
-                  ?.proposal ?? shortPlanProposal)
-          }
-          state={
-            args.requestState === 'answered'
-              ? {
-                  kind: 'answered',
-                  reason: answeredElsewhere,
-                }
-              : { kind: args.requestState }
-          }
-        />
-      );
-    return (
-      <ScrollView className="flex-1 min-h-0" contentContainerClassName="py-4">
-        <Variations className="max-w-none">
-          <Variation label="Short Plan proposal">
-            <View testID="proposal-preview-short" className="h-144">
-              <PlanProposalPreview
-                composer
-                {...args}
-                proposal={
-                  planProposalMocks.find((mock) => mock.agent === args.agent)
-                    ?.proposal ?? shortPlanProposal
-                }
-                state={
-                  args.requestState === 'answered'
-                    ? {
-                        kind: 'answered',
-                        reason: answeredElsewhere,
-                      }
-                    : { kind: args.requestState }
-                }
-              />
-            </View>
-          </Variation>
-          <Variation label="Long Plan proposal">
-            <View testID="proposal-preview-long" className="h-144">
-              <PlanProposalPreview
-                composer
-                {...args}
-                proposal={longPlanProposal}
-              />
-            </View>
-          </Variation>
-          <Variation label="Sending answer">
-            <View className="h-144">
-              <PlanProposalPreview
-                composer
-                {...args}
-                state={{ kind: 'submitting' }}
-              />
-            </View>
-          </Variation>
-          <Variation label="Answer failed">
-            <View className="h-144">
-              <PlanProposalPreview
-                composer
-                {...args}
-                state={{ kind: 'open' }}
-                error="Could not send your answer. Try again."
-              />
-            </View>
-          </Variation>
-          <Variation label="Already answered">
-            <View testID="proposal-preview-answered" className="h-144">
-              <PlanProposalPreview
-                composer
-                {...args}
-                state={{
-                  kind: 'answered',
-                  reason: answeredElsewhere,
-                }}
-              />
-            </View>
-          </Variation>
-        </Variations>
-      </ScrollView>
-    );
+    return useWide() ? <WideGallery {...args} /> : <PhoneGallery {...args} />;
   },
 };
+
+function PhoneGallery(args: GalleryArgs): React.JSX.Element {
+  return (
+    <PlanProposalPreview
+      composer
+      {...args}
+      proposal={
+        args.planLength === 'long'
+          ? longPlanProposal
+          : agentProposal(args.agent)
+      }
+      state={requestState(args.requestState)}
+    />
+  );
+}
+
+function WideGallery(args: GalleryArgs): React.JSX.Element {
+  return (
+    <ScrollView className="flex-1 min-h-0" contentContainerClassName="py-4">
+      <Variations className="max-w-none">
+        {galleryVariations.map((variation) => (
+          <GalleryEntry key={variation.label} args={args} {...variation} />
+        ))}
+      </Variations>
+    </ScrollView>
+  );
+}
+
+function GalleryEntry({
+  args,
+  label,
+  testID,
+  props,
+}: GalleryVariation & { args: GalleryArgs }): React.JSX.Element {
+  return (
+    <Variation label={label}>
+      <View testID={testID} className="h-144">
+        <PlanProposalPreview composer {...args} {...props(args)} />
+      </View>
+    </Variation>
+  );
+}
+
+function agentProposal(agent: GalleryArgs['agent']): CardProps['proposal'] {
+  return (
+    planProposalMocks.find((mock) => mock.agent === agent)?.proposal ??
+    shortPlanProposal
+  );
+}
+
+function requestState(kind: GalleryArgs['requestState']): CardProps['state'] {
+  return kind === 'answered'
+    ? { kind: 'answered', reason: answeredElsewhere }
+    : { kind };
+}

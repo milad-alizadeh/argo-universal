@@ -4,24 +4,44 @@
   // No cacheDir, so every worktree of a clone shares the main worktree's .turbo/cache (Turborepo caching guide).
   // .turbo/config.json from `turbo link` stays in the main worktree, so the team lives here for linked worktrees to reach the Remote Cache.
   "remoteCache": { "teamSlug": "miladalizadehs-projects" },
+  "futureFlags": {
+    // --affected selects a task only when a changed file matches its inputs, so a README edit selects nothing.
+    "affectedUsingTaskInputs": true
+  },
+  // No task reads a README, so every task leaves them out. Other Markdown stays in: mocks/agent/release-notes.md is an e2e fixture.
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      // The web export bundles no tests, so a test edit keeps the export and the e2e shards cached.
+      // Only build drops test stories: Storybook's tests read @repo/client's through transit.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*",
+        "!**/README.md",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!**/*.test.mts",
+        "!**/*.test.stories.tsx"
+      ],
       // Expo replaces Next.js (ADR 0001), so builds write dist/ instead of .next/.
       "outputs": ["dist/**"]
     },
+    // Through transit, type checks run in parallel and a dependency's test edit keeps its dependents cached (Turborepo TypeScript guide).
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"]
     },
     // Per-package Vitest runs so CI skips unchanged packages; the root vitest.config.ts stays for local runs (Turborepo Vitest guide).
     "test": {
       "dependsOn": ["transit"],
+      "env": ["VITEST_MAX_WORKERS"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": []
     },
     // @repo/e2e lists the Server, App, and Desktop as dependencies, so their sources and the web export feed this hash (Turborepo Playwright guide).
     "test:web": {
       "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       // A CI shard's blob report replays from the cache too, so the merged HTML report stays whole.
       "outputs": ["playwright-report/**", "blob-report/**"],
       "env": ["ARGO_E2E_SHARD"],
@@ -29,6 +49,7 @@
     },
     "test:electron": {
       "dependsOn": ["^build", "^package"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": ["playwright-report/**"],
       // xvfb-run hands Electron its display through XAUTHORITY.
       "passThroughEnv": ["PLAYWRIGHT_*", "XAUTHORITY"]
@@ -36,6 +57,14 @@
     // Electron Forge's package; e2e launches Electron from .vite/build, so the 300 MB out/ stays out of the shared cache.
     "package": {
       "dependsOn": ["^transit"],
+      // The package bundles no tests, so a test edit keeps it and the Electron e2e cached.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/README.md",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!**/*.test.mts"
+      ],
       "outputs": [".vite/build/**"]
     },
     // No package has this script; it only carries dependency hashes so a change in a dependency misses its dependents' test cache.
@@ -44,6 +73,7 @@
       "dependsOn": ["^transit"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!**/README.md",
         "!**/*.test.ts",
         "!**/*.test.tsx",
         "!**/*.test.mts"

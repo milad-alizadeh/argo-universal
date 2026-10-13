@@ -31,7 +31,7 @@ const expoSymbolsRewrites = [
     to: 'const PlatformColor = undefined;\nimport { Platform, Text, View }',
   },
   // A required font would become a module object; expo-font needs its URL.
-  ...['400Regular', '200ExtraLight'].map((weight) => ({
+  ...['400Regular', '300Light', '200ExtraLight'].map((weight) => ({
     file: `/@expo-google-fonts/material-symbols/${weight}/index.js`,
     from: `export const MaterialSymbols_${weight} = require('./MaterialSymbols_${weight}.ttf');`,
     to: `import font from './MaterialSymbols_${weight}.ttf?url';\nexport const MaterialSymbols_${weight} = font;`,

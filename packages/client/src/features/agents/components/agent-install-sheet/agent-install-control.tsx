@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { View } from 'react-native';
 import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
 import type { AgentDetail } from '../../state/agent-detail-types';
 import type { AgentInstallPresentation } from '../../state/agent-install-types';
@@ -14,26 +13,49 @@ const failedPhase = (
 ): phase is 'failed' | 'cancelled' =>
   phase === 'failed' || phase === 'cancelled';
 export function AgentInstallControl(props: ControlProps): React.JSX.Element {
+  const action = props.installation.action ?? agentAction(props.agent);
   if (failedPhase(props.installation.phase))
-    return <FailedInstallControl {...props} />;
-  return <InstallSheetControl {...props} phase={props.installation.phase} />;
+    return <FailedInstallControl {...props} action={action} />;
+  return (
+    <InstallSheetControl
+      {...props}
+      action={action}
+      phase={props.installation.phase}
+    />
+  );
 }
+const agentAction = (agent: AgentDetail): 'Install' | 'Update' =>
+  agent.status === 'update' ? 'Update' : 'Install';
 function FailedInstallControl({
   installation,
-}: ControlProps): React.JSX.Element {
+  action,
+}: Pick<ControlProps, 'installation'> & {
+  action: 'Install' | 'Update';
+}): React.JSX.Element {
   return (
     <>
-      <Button
-        size="sm"
-        label="Install"
-        fullWidth="narrow"
-        onPress={() => installation.onOpenChange(true)}
-      />
+      <FailedInstallButton installation={installation} action={action} />
       <AgentInstallAlert {...installation} />
     </>
   );
 }
+function FailedInstallButton({
+  installation,
+  action,
+}: Pick<ControlProps, 'installation'> & {
+  action: 'Install' | 'Update';
+}): React.JSX.Element {
+  return (
+    <Button
+      size="sm"
+      label={action}
+      fullWidth="narrow"
+      onPress={() => installation.onOpenChange(true)}
+    />
+  );
+}
 type SheetControlProps = ControlProps & {
+  action: 'Install' | 'Update';
   phase: 'confirm' | 'installing' | 'installed';
 };
 const distributionName = (agent: AgentDetail): string =>
@@ -42,21 +64,21 @@ const installMetadata = (
   agent: AgentDetail,
 ): { name: string; version: string; distribution: string } => ({
   name: agent.name,
-  version: agent.version ?? '',
+  version: agent.availableVersion ?? agent.version ?? '',
   distribution: distributionName(agent),
 });
 function InstallSheetControl({
   agent,
   installation,
   phase,
+  action,
 }: SheetControlProps): React.JSX.Element {
   return (
-    <View>
-      <AgentInstallSheet
-        {...installMetadata(agent)}
-        {...installation}
-        phase={phase}
-      />
-    </View>
+    <AgentInstallSheet
+      {...installMetadata(agent)}
+      {...installation}
+      action={action}
+      phase={phase}
+    />
   );
 }

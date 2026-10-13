@@ -1,107 +1,71 @@
 import type * as React from 'react';
-import type { ReactNode } from 'react';
-import { View, type ViewProps } from 'react-native';
+import { View } from 'react-native';
+import { ScrollColumnContext } from '#lib/generic/scroll-column';
 import { cn } from '#lib/generic/utils';
-import type {
-  ScrollFadeEdges,
-  ScrollFadeFrameProps,
-} from './scroll-fade-frame-view';
-import { scrollFadeDepth } from './scroll-fade-overlay';
-import { useScrollbarStrip } from './scroll-fade-scrollbar';
+import type { ScrollFadeFrameProps } from './scroll-fade-frame-view';
+import {
+  type ScrollFadeEdge,
+  type ScrollFadeEdgeName,
+  type ScrollFadeOptions,
+  edgeDepth,
+  edgeInset,
+  edgeMode,
+} from './scroll-fade-options';
 
-// The depths and insets the `scroll-fade-mask` class reads; registered as lengths in react-native-web.css, so a depth eases when an edge turns on or off.
-type MaskDepths = React.CSSProperties &
+type FadeLengths = React.CSSProperties &
   Record<
-    | '--scroll-fade-top'
-    | '--scroll-fade-bottom'
-    | '--scroll-fade-top-inset'
-    | '--scroll-fade-bottom-inset',
+    `--scroll-fade-${ScrollFadeEdgeName}-${'depth' | 'rest' | 'inset'}`,
     string
   >;
 
-type Edge = keyof ScrollFadeEdges;
-type EdgeLengths = ScrollFadeFrameProps['depth'];
+const px = (length: number): string => `${length}px`;
 
-interface EdgeFade {
-  edge: Edge;
-  on: boolean;
-  depth: number;
-  inset: number;
-}
+const shownDepth = (mode: ScrollFadeEdge, depth: number): number =>
+  mode === 'never' ? 0 : depth;
 
-const depthAt = (depth: EdgeLengths, edge: Edge): number =>
-  depth?.[edge] ?? scrollFadeDepth[edge];
+const restingDepth = (mode: ScrollFadeEdge, depth: number): number =>
+  mode === 'always' ? depth : 0;
 
-const insetAt = (inset: EdgeLengths, edge: Edge): number => inset?.[edge] ?? 0;
-
-function edgeFade(props: ScrollFadeFrameProps, edge: Edge): EdgeFade {
+// One edge's lengths: its depth while content lies past it, its depth with none, and its inset.
+function edgeLengths(
+  edge: ScrollFadeEdgeName,
+  { edges, depth, inset }: ScrollFadeOptions,
+): { depth: string; rest: string; inset: string } {
+  const mode = edgeMode(edge, edges);
+  const fadeDepth = shownDepth(mode, edgeDepth(edge, depth));
   return {
-    edge,
-    on: props.edges[edge],
-    depth: depthAt(props.depth, edge),
-    inset: insetAt(props.inset, edge),
+    depth: px(fadeDepth),
+    rest: px(restingDepth(mode, fadeDepth)),
+    inset: px(edgeInset(edge, inset)),
   };
 }
 
-const shownDepth = (fade: EdgeFade): number => (fade.on ? fade.depth : 0);
-
-function maskDepths(top: EdgeFade, bottom: EdgeFade): MaskDepths {
+// The lengths the `scroll-fade` class in react-native-web.css reads.
+function fadeLengths(options: ScrollFadeOptions): FadeLengths {
+  const top = edgeLengths('top', options);
+  const bottom = edgeLengths('bottom', options);
   return {
-    '--scroll-fade-top': `${shownDepth(top)}px`,
-    '--scroll-fade-bottom': `${shownDepth(bottom)}px`,
-    '--scroll-fade-top-inset': `${top.inset}px`,
-    '--scroll-fade-bottom-inset': `${bottom.inset}px`,
+    '--scroll-fade-top-depth': top.depth,
+    '--scroll-fade-top-rest': top.rest,
+    '--scroll-fade-top-inset': top.inset,
+    '--scroll-fade-bottom-depth': bottom.depth,
+    '--scroll-fade-bottom-rest': bottom.rest,
+    '--scroll-fade-bottom-inset': bottom.inset,
   };
 }
 
-const frameViewProps = (props: ScrollFadeFrameProps): ViewProps => ({
-  className: cn('relative', props.className),
-  style: props.style,
-  onLayout: props.onLayout,
-});
-
-// Around a scroll view: a mask fades its content itself to nothing at each fading edge, and hides it under an inset, but never its scrollbar, so whatever lies behind shows through unchanged.
-export function ScrollFadeFrame(
-  props: ScrollFadeFrameProps,
-): React.JSX.Element {
-  const top = edgeFade(props, 'top');
-  const bottom = edgeFade(props, 'bottom');
+// Around a scroll view: CSS fades its content itself at each edge as it scrolls, over whatever lies behind, with no JavaScript.
+export function ScrollFadeFrame({
+  className,
+  style,
+  children,
+  ...options
+}: ScrollFadeFrameProps): React.JSX.Element {
   return (
-    <View {...frameViewProps(props)}>
-      <FadeMask mask={maskDepths(top, bottom)}>
-        {props.children}
-        <FadingBand fade={top} />
-        <FadingBand fade={bottom} />
-      </FadeMask>
+    <View className={cn('relative', className)} style={style}>
+      <div className="scroll-fade" style={fadeLengths(options)}>
+        <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>
+      </div>
     </View>
-  );
-}
-
-function FadeMask(props: {
-  mask: MaskDepths;
-  children: ReactNode;
-}): React.JSX.Element {
-  const frame = useScrollbarStrip();
-  return (
-    <div
-      ref={frame}
-      className="scroll-fade-mask relative flex min-h-0 flex-auto flex-col"
-      style={props.mask}
-    >
-      {props.children}
-    </div>
-  );
-}
-
-// Marks the band the mask fades, where native draws its overlay; it paints nothing.
-function FadingBand({ fade }: { fade: EdgeFade }): React.JSX.Element | null {
-  if (!fade.on) return null;
-  return (
-    <div
-      aria-hidden
-      data-testid={`scroll-fade-${fade.edge}`}
-      className="pointer-events-none absolute inset-x-0"
-      style={{ height: fade.depth, [fade.edge]: fade.inset }}
-    />
   );
 }

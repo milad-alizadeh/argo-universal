@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
@@ -21,7 +22,7 @@ Given(
 When(
   'I open protocol sign-in for {string}',
   async ({ page }, name: string): Promise<void> => {
-    await page.getByRole('link', { name: 'Sign in', exact: true }).click();
+    await openProtocolSignIn(page);
     await expect(
       page.getByRole('dialog', { name: `Sign in to ${name}` }),
     ).toBeVisible();
@@ -70,3 +71,10 @@ Then(
     await expect(dialog).toBeHidden();
   },
 );
+
+export async function openProtocolSignIn(page: Page): Promise<void> {
+  await expect(
+    page.getByRole('group', { name: 'Answered ACP initialize', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: 'Sign in', exact: true }).click();
+}

@@ -68,20 +68,26 @@ function cardProps(
 function FormBody({ model }: { model: ElicitationModel }): ReactElement {
   return (
     <>
-      <View
-        pointerEvents={model.inactive ? 'none' : 'auto'}
-        className="gap-4 px-4 pt-4"
-      >
-        <ElicitationHeading
-          source={model.props.source}
-          message={model.props.request.message}
-        />
-        <ElicitationFields model={model} />
-      </View>
+      <FormContent model={model} />
       <ElicitationValidation
         answered={model.state.kind === 'answered'}
         labels={model.invalid}
       />
     </>
+  );
+}
+
+function FormContent({ model }: { model: ElicitationModel }): ReactElement {
+  return (
+    <View
+      pointerEvents={model.inactive ? 'none' : 'auto'}
+      className="gap-4 px-4 pt-4"
+    >
+      <ElicitationHeading
+        source={model.props.source}
+        message={model.props.request.message}
+      />
+      <ElicitationFields model={model} />
+    </View>
   );
 }

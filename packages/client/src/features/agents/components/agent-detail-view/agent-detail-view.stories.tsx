@@ -32,3 +32,25 @@ export const UpdateAvailable: Story = {
 export const FromTheRegistry: Story = {
   args: { agent: { ...readyAgent, status: 'not-installed' } },
 };
+export const Enabled: Story = {
+  args: {
+    management: {
+      enabled: true,
+      busy: false,
+      onEnabledChange: fn(),
+      onRemove: fn(),
+      onDismissFailure: fn(),
+    },
+  },
+};
+export const Disabled: Story = {
+  args: {
+    management: {
+      enabled: false,
+      busy: false,
+      onEnabledChange: fn(),
+      onRemove: fn(),
+      onDismissFailure: fn(),
+    },
+  },
+};

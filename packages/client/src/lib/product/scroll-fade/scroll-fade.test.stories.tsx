@@ -1,10 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { fadedEdges } from '../../../../mocks/scroll-fade';
 import { ScrollFadeView } from './scroll-fade';
 import { ScrollFadePreview } from './scroll-fade-preview.mocks';
-
-const bottomFadeId = 'scroll-fade-bottom';
-const topFadeId = 'scroll-fade-top';
 
 const meta = {
   title: 'Tests/ScrollFade',
@@ -18,19 +16,25 @@ export const FadesFollowScroll: Story = {
   play: async ({ canvas }) => {
     const scroll = await canvas.findByTestId('scroll-fade-scroll');
     // At rest only the bottom edge hides content.
-    await waitFor(() => expect(canvas.getByTestId(bottomFadeId)).toBeVisible());
-    await expect(canvas.queryByTestId(topFadeId)).toBeNull();
+    await waitFor(() =>
+      expect(fadedEdges(scroll)).toEqual({ top: false, bottom: true }),
+    );
     scroll.scrollTop = 120;
-    const top = await canvas.findByTestId(topFadeId);
-    const header = canvas.getByText('pnpm dev');
-    // The fade starts where the header ends, so content fades under it.
-    await expect(top.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-      header.getBoundingClientRect().bottom,
+    await waitFor(() =>
+      expect(fadedEdges(scroll)).toEqual({ top: true, bottom: true }),
+    );
+    // The faded content lies below the header, never over it.
+    await expect(scroll.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      canvas.getByText('pnpm dev').getBoundingClientRect().bottom,
     );
     scroll.scrollTop = scroll.scrollHeight;
-    await waitFor(() => expect(canvas.queryByTestId(bottomFadeId)).toBeNull());
+    await waitFor(() =>
+      expect(fadedEdges(scroll)).toEqual({ top: true, bottom: false }),
+    );
     scroll.scrollTop = 0;
-    await waitFor(() => expect(canvas.queryByTestId(topFadeId)).toBeNull());
+    await waitFor(() =>
+      expect(fadedEdges(scroll)).toEqual({ top: false, bottom: true }),
+    );
   },
 };
 
@@ -38,8 +42,8 @@ export const NoFadeWhenContentFits: Story = {
   render: () => <ScrollFadePreview lines={['Starting Metro Bundler']} />,
   play: async ({ canvas }) => {
     await canvas.findByText('Starting Metro Bundler');
+    const scroll = canvas.getByTestId('scroll-fade-scroll');
     await new Promise((resolve) => setTimeout(resolve, 100));
-    await expect(canvas.queryByTestId(topFadeId)).toBeNull();
-    await expect(canvas.queryByTestId(bottomFadeId)).toBeNull();
+    await expect(fadedEdges(scroll)).toEqual({ top: false, bottom: false });
   },
 };

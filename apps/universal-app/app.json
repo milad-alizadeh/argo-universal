@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
+      "supportsTablet": true,
       "bundleIdentifier": "dev.argo.app"
     },
     "android": {

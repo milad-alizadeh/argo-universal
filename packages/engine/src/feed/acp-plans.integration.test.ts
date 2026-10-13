@@ -1,5 +1,5 @@
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
-import { expect, it } from 'vitest';
+import { assert, expect, it } from 'vitest';
 import {
   openAcpFeedSession,
   waitForAcpSessionIdle,
@@ -50,6 +50,7 @@ it('Plans replace whole content and retain removed history without resurrecting 
     (row) =>
       row.sessionUpdate === 'plan_update' && row.plan.planId === 'current',
   );
+  assert(current);
   expect(current).toMatchObject({
     position: 2,
     plan: { type: 'items', entries: [{ content: 'Replacement' }] },
@@ -70,11 +71,11 @@ it('Plans replace whole content and retain removed history without resurrecting 
   ).toBeNull();
   const removed = await host.caller.feed.row({
     sessionId,
-    id: current?.id ?? 'missing-current-plan',
+    id: current.id,
   });
   expect(removed).toMatchObject({
     position: 2,
-    turnId: current?.turnId,
+    turnId: current.turnId,
     plan: { type: 'items', entries: [{ content: 'Replacement' }] },
     _meta: { argo: { removed: true, contentRevision: 4 } },
   });

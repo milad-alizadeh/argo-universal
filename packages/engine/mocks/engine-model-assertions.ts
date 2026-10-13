@@ -63,7 +63,7 @@ export const states: Record<string, (snapshot: EngineSnapshot) => void> = {
     ).toMatchObject({
       context: { now: input.now },
     });
-    expectListeningOptions(snapshot.context.installations);
+    expectListeningOptions(model.engine.getSnapshot().context.installations);
     expect(model.messages).toEqual([]);
   },
   'live.running': (snapshot): void => {

@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { serverUrlFor } from '../server-port';
 import { browseAgents } from './agent-catalog';
+import { openProtocolSignIn } from './agent-login';
 import { When } from './fixtures';
 
 When(
@@ -10,7 +11,7 @@ When(
     const copied = await copyAppWindow(page, server.httpUrl);
     try {
       await visitAgent(copied, name);
-      await openSignIn(copied);
+      await openProtocolSignIn(copied);
       await expectForeignLogin(copied);
     } finally {
       await copied.close();
@@ -55,7 +56,7 @@ When(
     await copied.reload();
     try {
       await visitAgent(copied, name);
-      await openSignIn(copied);
+      await openProtocolSignIn(copied);
       await expectForeignLogin(copied);
     } finally {
       await copied.close();
@@ -69,7 +70,7 @@ When(
     await page.evaluate("history.replaceState(null, '', '/')");
     await page.reload();
     await visitAgent(page, name);
-    await openSignIn(page);
+    await openProtocolSignIn(page);
   },
 );
 
@@ -77,7 +78,4 @@ async function visitAgent(page: Page, name: string): Promise<void> {
   await browseAgents(page);
   await page.getByRole('link', { name: new RegExp(`^${name},`) }).click();
   await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();
-}
-async function openSignIn(page: Page): Promise<void> {
-  await page.getByRole('link', { name: 'Sign in', exact: true }).click();
 }

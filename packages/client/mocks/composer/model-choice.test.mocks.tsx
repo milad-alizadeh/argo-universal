@@ -1,4 +1,5 @@
 import { expect, within, waitFor } from 'storybook/test';
+import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import type { PlayContext } from './composer-story-context.test.mocks';
 import { chooseModelLabel } from './composer-test-contract.test.mocks';
 export type PickerStep = Pick<PlayContext, 'canvas' | 'userEvent'> & {
@@ -19,7 +20,7 @@ export async function chooseModel({
       overlay.queryByRole('dialog', { name: 'Select Model' }),
     ).not.toBeInTheDocument(),
   );
-  if (width < 720)
+  if (width < wideBreakpoint())
     await expect(
       await overlay.findByRole('button', { name: chooseModelLabel }),
     ).toBeVisible();

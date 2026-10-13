@@ -61,6 +61,7 @@ When(
   async ({ page }, name: string): Promise<void> => {
     await page.getByRole('link', { name: /^Agents(?:,|$)/ }).click();
     await page.getByRole('link', { name: new RegExp(`^${name},`) }).click();
+    await expectCheckedAgent(page, name);
   },
 );
 

@@ -9,6 +9,11 @@ import {
 } from './feed-row';
 
 const message = storedMessage(0);
+const image = (blobId: string): ImageContent => ({
+  type: 'image',
+  mimeType: 'image/png',
+  blob: { blobId, mime: 'image/png', bytes: 3 },
+});
 
 describe('hydrateStoredFeedRow', (): void => {
   it('reads back the row toFeedRowWrite stores', (): void => {
@@ -46,11 +51,6 @@ describe('hydrateStoredFeedRow', (): void => {
 
 describe('promptBlobIds', (): void => {
   it('lists each blob a prompt shows once and skips other rows', (): void => {
-    const image = (blobId: string): ImageContent => ({
-      type: 'image' as const,
-      mimeType: 'image/png',
-      blob: { blobId, mime: 'image/png', bytes: 3 },
-    });
     const prompt = (id: string, blobIds: string[]): UserMessage => ({
       ...message,
       id,

@@ -3,6 +3,7 @@ import type { InitializeResponse } from '@agentclientprotocol/sdk';
 import type { AgentCheck } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunchSubject, CheckAgentLaunch } from '../agents';
+import { ResourceCleanupError } from '../lib/resource-cleanup-error';
 import { AcpAuthenticationStatus } from './auth-status';
 import { createAgentClient } from './client';
 import { negotiateAcpInitialize } from './initialize';
@@ -109,6 +110,8 @@ export const checkAgentLaunch: CheckAgentLaunch = async (
     const failure = await describeFailure(error, process, subject);
     return { status: 'failed', failure };
   } finally {
-    await closeLoginProcess(process);
+    await closeLoginProcess(process).catch((cause: unknown) => {
+      throw new ResourceCleanupError(process.exited, cause);
+    });
   }
 };

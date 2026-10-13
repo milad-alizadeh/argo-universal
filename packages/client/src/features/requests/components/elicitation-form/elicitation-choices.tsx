@@ -3,8 +3,9 @@ import { View } from 'react-native';
 import { Text } from '#primitives/display/text/text';
 import { StandaloneField } from '#primitives/fields/field-input/standalone-field';
 import { Checkbox } from '#primitives/inputs/checkbox/checkbox';
+import { toggledChoice } from './elicitation-answers';
 import type { ElicitationFieldProps } from './elicitation-field';
-import { elicitationChoices } from './elicitation-schema';
+import { elicitationChoices } from './elicitation-property';
 
 type ChoicesProps = ElicitationFieldProps & {
   label: string;
@@ -13,19 +14,25 @@ type ChoicesProps = ElicitationFieldProps & {
 };
 
 export function ElicitationChoices(props: ChoicesProps): ReactElement {
-  const options = elicitationChoices(props.property) ?? [];
   return (
     <StandaloneField errors={props.errors} hint={props.hint}>
       <Text role="body">
         {props.label}
         {props.required ? ' *' : ''}
       </Text>
-      <View role="group" accessibilityLabel={props.label} className="gap-2">
-        {options.map((option) => (
-          <Checkbox key={option.const} {...choiceProps(props, option)} />
-        ))}
-      </View>
+      <ChoiceGroup {...props} />
     </StandaloneField>
+  );
+}
+
+function ChoiceGroup(props: ChoicesProps): ReactElement {
+  const options = elicitationChoices(props.property) ?? [];
+  return (
+    <View role="group" accessibilityLabel={props.label} className="gap-2">
+      {options.map((option) => (
+        <Checkbox key={option.const} {...choiceProps(props, option)} />
+      ))}
+    </View>
   );
 }
 
@@ -35,17 +42,24 @@ function choiceProps(
 ): ComponentProps<typeof Checkbox> {
   const values = Array.isArray(props.value) ? props.value : [];
   return {
+    ...checkboxFieldProps(props),
     label: option.title,
     value: values.includes(option.const),
+    onChange: (checked: boolean): void =>
+      props.onChange(toggledChoice(values, option.const, checked)),
+  };
+}
+
+function checkboxFieldProps(
+  props: ChoicesProps,
+): Pick<
+  ComponentProps<typeof Checkbox>,
+  'disabled' | 'errors' | 'hint' | 'onBlur'
+> {
+  return {
     disabled: props.inactive,
     errors: props.errors,
     hint: props.hint,
     onBlur: props.onBlur,
-    onChange: (checked: boolean): void =>
-      props.onChange(
-        checked
-          ? [...values, option.const]
-          : values.filter((value) => value !== option.const),
-      ),
   };
 }
