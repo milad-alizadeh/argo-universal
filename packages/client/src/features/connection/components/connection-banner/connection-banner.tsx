@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Keyframe } from 'react-native-reanimated';
-import { Button } from '#lib/generic/primitives/buttons/button/button';
+import { IconButton } from '#lib/generic/primitives/buttons/icon-button/icon-button';
 import { LiquidGlass } from '#lib/generic/primitives/display/liquid-glass/liquid-glass';
 import { Spinner } from '#lib/generic/primitives/display/spinner/spinner';
 import { Text } from '#lib/generic/primitives/display/text/text';
@@ -97,13 +97,13 @@ function Offline({
         Can't reach {serverName ?? 'the Server'}
       </Text>
       <View className="pr-1">
-        <Button
-          appearance="content"
-          variant="secondary"
-          label="Try again"
+        <IconButton
+          variant="ghost"
+          icon="retry"
+          accessibilityLabel="Try again"
           onPress={onRetry}
-          className="h-7 min-h-0 rounded-full px-3 py-0 web:sm:min-h-0 ios:min-h-0 ios:px-3 android:min-h-0 android:px-3 wide:h-6 wide:px-2.5"
-          labelClassName="type-control"
+          hitSlop={8}
+          className="size-7 min-h-0 min-w-0 rounded-full android:min-h-0 android:min-w-0 sm:size-7"
         />
       </View>
     </>
