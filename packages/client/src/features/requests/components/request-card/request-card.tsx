@@ -116,7 +116,7 @@ function RequestSheet(props: RequestCardProps): ReactNode {
       onOpenChange={() => {}}
       dismissible={false}
       expandable
-      initialSize="medium"
+      initialSize={props.surface === 'tray' ? 'medium' : undefined}
       label={props.sheetLabel}
       footer={
         <ContentWidthProvider wide={false}>
