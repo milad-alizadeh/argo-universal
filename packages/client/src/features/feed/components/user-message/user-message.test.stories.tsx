@@ -2,11 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
+import { lineViews } from '../../../../../mocks/line-views';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   type MockAgent,
   recordedImageUrl,
+  recordedPrompt,
   recordedUserMessage,
 } from '../../../../lib/product/feed-message.mocks';
 import { UserMessage } from './user-message';
@@ -48,11 +50,10 @@ export const InlineCode: Story = {
       await expect(
         canvas.queryByRole('button', { name: 'Show more' }),
       ).toBeNull();
-      const bubble = prose.parentElement?.parentElement;
       const container = prose.closest('.w-full');
-      if (!bubble || !container) throw new Error('Expected the bubble');
-      await expect(bubble.getBoundingClientRect().width).toBeLessThanOrEqual(
-        container.getBoundingClientRect().width,
+      if (!container) throw new Error('Expected the Feed row');
+      await expect(prose.getBoundingClientRect().right).toBeLessThanOrEqual(
+        container.getBoundingClientRect().right,
       );
     }
   },
@@ -97,23 +98,50 @@ export const SecondAgentOpensImageWide = opensImage(
   layoutWidths.wide,
 );
 
-// The long prompt passes four lines on a phone and fits on a wide screen.
-export const ShowMore: Story = {
+// A long markdown prompt shows only whole lines above Show more, then every line once expanded.
+function showsMore(agent: MockAgent, width: number): Story {
+  return {
+    args: { row: recordedPrompt(agent, 'markdown-prompt') },
+    play: async ({ canvas, canvasElement, userEvent }) => {
+      await settleViewport(width);
+      const showMore = await canvas.findByRole('button', { name: 'Show more' });
+      await waitFor(() =>
+        expect(lineViews(canvasElement)).not.toContain('cut'),
+      );
+      await expect(lineViews(canvasElement)).toContain('hidden');
+      await userEvent.click(showMore);
+      await expect(
+        canvas.queryByRole('button', { name: 'Show more' }),
+      ).toBeNull();
+      await waitFor(() =>
+        expect(new Set(lineViews(canvasElement))).toEqual(new Set(['shown'])),
+      );
+    },
+  };
+}
+// Between phone and wide, the prompt's fourth line ends inside a list rather than at a paragraph end.
+const narrowWidth = 600;
+export const FirstAgentShowMorePhone = showsMore('agent-1', layoutWidths.phone);
+export const FirstAgentShowMoreNarrow = showsMore('agent-1', narrowWidth);
+export const FirstAgentShowMoreWide = showsMore('agent-1', layoutWidths.wide);
+export const SecondAgentShowMorePhone = showsMore(
+  'agent-2',
+  layoutWidths.phone,
+);
+export const SecondAgentShowMoreNarrow = showsMore('agent-2', narrowWidth);
+export const SecondAgentShowMoreWide = showsMore('agent-2', layoutWidths.wide);
+
+// The same prompt fits on a wide screen, then clamps again to whole lines once the window narrows.
+export const ClampsAgainWhenNarrowed: Story = {
   args: { row: recordedUserMessage('agent-2', 'markdown-answer') },
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas, canvasElement }) => {
     await settleViewport(layoutWidths.wide);
     await expect(
       canvas.queryByRole('button', { name: 'Show more' }),
     ).toBeNull();
     await settleViewport(layoutWidths.phone);
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Show more' }),
-    );
-    await expect(
-      canvas.queryByRole('button', { name: 'Show more' }),
-    ).toBeNull();
-    await expect(
-      canvas.getAllByText(/^Without using/)[0]?.getBoundingClientRect().height,
-    ).toBeGreaterThan(80);
+    await canvas.findByRole('button', { name: 'Show more' });
+    await waitFor(() => expect(lineViews(canvasElement)).not.toContain('cut'));
+    await expect(lineViews(canvasElement)).toContain('hidden');
   },
 };

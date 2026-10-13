@@ -1,16 +1,19 @@
 import type { BlobRef, SessionNewInput } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
-import { useReducer } from 'react';
+import { type Dispatch, useEffect, useReducer } from 'react';
 import { useTRPC } from '#features/connection';
 import type { ComposerDraft } from '../components/composer/composer';
+import { type DraftKey, type DraftOwner, draftKey } from '../state/draft-key';
 import { draftPrompt } from '../state/draft-prompt';
 import {
   type AttachmentError,
   emptyImageDraft,
+  type ImageDraftEvent,
   imageDraftReducer,
   toAttachmentError,
   toUploadForms,
 } from '../state/image-draft';
+import { keptDrafts } from '../state/kept-draft';
 import { pickImages } from './pick-images';
 
 export interface ImageDraft {
@@ -37,10 +40,26 @@ function useImageUpload(): ReturnType<
   });
 }
 
-// A Composer draft with attached images, and the prompt it sends once its images are uploaded.
-export function useImageDraft(): ImageDraft {
+// Empties the text when the draft's owner changes, then restores what this Device kept for the new owner.
+function useKeptDraft(
+  key: DraftKey | undefined,
+  dispatch: Dispatch<ImageDraftEvent>,
+): void {
+  useEffect(() => {
+    if (!key) return;
+    dispatch({ type: 'ownerChanged', key });
+    void keptDrafts.load(key).then((text) => {
+      dispatch({ type: 'restored', key, text });
+    });
+  }, [key, dispatch]);
+}
+
+// A Composer draft with attached images, and the prompt it sends once its images are uploaded. This Device keeps its text, not its images, per owner.
+export function useImageDraft(owner: DraftOwner | undefined): ImageDraft {
   const [state, dispatch] = useReducer(imageDraftReducer, emptyImageDraft);
   const imageUpload = useImageUpload();
+  const key = owner && draftKey(owner);
+  useKeptDraft(key, dispatch);
 
   async function attachImages(): Promise<void> {
     try {
@@ -64,10 +83,16 @@ export function useImageDraft(): ImageDraft {
 
   return {
     draft: state.draft,
-    changeDraft: (draft) => dispatch({ type: 'changed', draft }),
+    changeDraft: (draft) => {
+      dispatch({ type: 'changed', draft });
+      if (key) keptDrafts.keep(key, draft.text);
+    },
     attachImages,
     uploadDraftAsPrompt,
-    clearDraft: () => dispatch({ type: 'cleared' }),
+    clearDraft: () => {
+      dispatch({ type: 'cleared' });
+      if (key) keptDrafts.keep(key, '');
+    },
     uploading: imageUpload.isPending,
     attachmentError: toAttachmentError(state.selectionError, imageUpload.error),
   };

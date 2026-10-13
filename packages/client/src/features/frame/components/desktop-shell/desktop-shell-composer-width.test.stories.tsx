@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { Composer } from '#features/composer';
 import { composerProps } from '../../../../../mocks/composer-mock';
+import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { pressInspectorButton } from './desktop-shell-controls.mocks';
 import { DesktopShellFrame } from './desktop-shell-frame.mocks';
@@ -67,9 +68,9 @@ export const ComposerUsesAvailableWidth: ShellStory = {
       await expect(control.left).toBeGreaterThanOrEqual(content.left);
       await expect(control.right).toBeLessThanOrEqual(content.right);
     }
-    await expect(canvas.getByRole('textbox', { name: 'Message' })).toHaveValue(
-      preservedDraft,
-    );
+    await expect(
+      shownText(canvas.getByRole('textbox', { name: 'Message' })),
+    ).toBe(preservedDraft);
     await pressInspectorButton(context, controlled, 'closed');
     await waitFor(() => expect(mode).toBeVisible());
     await waitFor(() => expect(canvas.getByTestId(agentIconId)).toBeVisible());

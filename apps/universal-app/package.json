@@ -31,6 +31,7 @@
     "expo-dev-client": "catalog:",
     "expo-file-system": "catalog:",
     "expo-font": "catalog:",
+    "expo-glass-effect": "catalog:",
     "expo-haptics": "catalog:",
     "expo-image-picker": "catalog:",
     "expo-linking": "catalog:",

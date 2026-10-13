@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
+import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { CodeBlockHeader } from '../code-block-header';
@@ -49,7 +50,8 @@ export function FeedCodeBlock({
     <View
       className={cn(
         Platform.select({ web: 'code-block' }),
-        'cursor-auto overflow-hidden rounded-2xl border border-border bg-sidebar',
+        'cursor-auto overflow-hidden',
+        markdownBlockClassNames.codeBlock,
       )}
     >
       <CodeBlockHeader
@@ -74,7 +76,7 @@ export function FeedCodeBlock({
             <Text
               selectable
               role="code"
-              className={cn('text-foreground', textClassName)}
+              className={cn(markdownBlockClassNames.codeText, textClassName)}
             >
               {code}
             </Text>

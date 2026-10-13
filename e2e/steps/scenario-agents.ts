@@ -39,12 +39,14 @@ function configurationForStep(step: string): AppFixtureAgents {
   const unavailable =
     /^(?:Given|And) (?:Agent (\d+)|(?:every) Agent) is "([^"]+)"$/.exec(step);
   if (unavailable) return unavailableConfiguration(unavailable);
-  const refusing = /^(?:Given|And) Agent (\d+) refuses to open a Session$/.exec(
-    step,
-  );
-  if (refusing)
-    return { [agentId(Number(refusing[1]))]: { scenario: 'refuse-session' } };
-  return {};
+  const refusing =
+    /^(?:Given|And) Agent (\d+) refuses to (open|reopen) a Session$/.exec(step);
+  return refusing ? refusingConfiguration(refusing) : {};
+}
+
+function refusingConfiguration(match: RegExpExecArray): AppFixtureAgents {
+  const scenario = match[2] === 'open' ? 'refuse-session' : 'refuse-reopen';
+  return { [agentId(Number(match[1]))]: { scenario } };
 }
 
 // An Agent that is given an image prompt answers with the image scenario.

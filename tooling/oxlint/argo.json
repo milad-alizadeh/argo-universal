@@ -1817,6 +1817,17 @@
       "rules": { "argo/acp-sdk-zone": "error" }
     },
     {
+      // ADR-0023: Lexical stays in the RichTextarea web drawing: its view, the web/ folder and their tests, with the tests' headless editor.
+      "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
+      "excludeFiles": [
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-view.tsx",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/web/**",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*",
+        "packages/client/mocks/rich-textarea-headless.ts"
+      ],
+      "rules": { "argo/lexical-zone": "error" }
+    },
+    {
       // Process ownership stays at the launchers; all git work stays in packages/git (ADR-0008).
       "files": ["apps/**", "packages/engine/**"],
       "excludeFiles": [
