@@ -198,7 +198,8 @@ export function Composer({
             </ComposerWarning>
           )}
           {error && <ComposerWarning>{error}</ComposerWarning>}
-          <View className="px-4 pt-3 pb-2">
+          {/* The card's layout lets touches through, so a press on its open space reaches the glass. */}
+          <View pointerEvents="box-none" className="px-4 pt-3 pb-2">
             <RichTextarea
               accessibilityLabel="Message"
               placeholder={placeholder}
@@ -208,9 +209,12 @@ export function Composer({
               onSubmit={send}
             />
           </View>
-          <View className="flex-row items-center justify-between gap-2 pl-2 wide:pl-3.75 pr-2.5 pb-2.5">
+          <View
+            pointerEvents="box-none"
+            className="flex-row items-center justify-between gap-2 pl-2 wide:pl-3.75 pr-2.5 pb-2.5"
+          >
             <View
-              pointerEvents={configurationInactive ? 'none' : 'auto'}
+              pointerEvents={configurationInactive ? 'none' : 'box-none'}
               className={cn('min-w-0 flex-1 flex-row items-center gap-1')}
             >
               <ComposerPopover
@@ -302,7 +306,10 @@ export function Composer({
                 <ComposerStatusControls status={status} disabled={inactive} />
               )}
             </View>
-            <View className="flex-row items-center gap-2.5">
+            <View
+              pointerEvents="box-none"
+              className="flex-row items-center gap-2.5"
+            >
               {configuration && (
                 <ComposerOptions
                   configuration={configuration}
