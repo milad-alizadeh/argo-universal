@@ -114,32 +114,6 @@
     { "files": ["packages/client/src/features/feed/hooks/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off" } },
     // complexity, max-depth, max-lines, max-lines-per-function, max-nested-callbacks, max-statements, sonarjs/cognitive-complexity, sonarjs/no-nested-template-literals
     { "files": ["packages/client/src/features/feed/view/*"], "rules": { "complexity": "off", "max-depth": "off", "max-lines": "off", "max-lines-per-function": "off", "max-nested-callbacks": "off", "max-statements": "off", "sonarjs/cognitive-complexity": "off", "sonarjs/no-nested-template-literals": "off" } },
-    // complexity, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, unicorn/prefer-ternary
-    { "files": ["packages/client/src/features/frame/components/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/features/frame/components/desktop-layout-view/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, max-statements
-    { "files": ["packages/client/src/features/frame/components/desktop-shell/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/features/frame/components/glass-surface/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex, max-lines-per-function
-    { "files": ["packages/client/src/features/frame/components/panel-resize-handle/*"], "rules": { "complexity": "off", "jsx-a11y/no-noninteractive-element-interactions": "off", "jsx-a11y/no-noninteractive-tabindex": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/features/frame/components/phone-drawer/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/features/frame/components/phone-section-view/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, unicorn/prefer-ternary
-    { "files": ["packages/client/src/features/frame/components/phone-shell/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "unicorn/prefer-ternary": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/features/frame/components/phone-shell-card/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
-    { "files": ["packages/client/src/features/frame/components/shell-backdrop/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity
-    { "files": ["packages/client/src/features/frame/components/shell-pane/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/cognitive-complexity": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/features/frame/hooks/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
-    // complexity, max-lines-per-function
-    { "files": ["packages/client/src/features/frame/screens/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, jsx-a11y/no-autofocus, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/no-nested-conditional, sonarjs/no-unused-vars, unicorn/no-useless-undefined, unicorn/prefer-ternary
     { "files": ["packages/client/src/features/requests/components/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-nested-conditional": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/no-nested-conditional, unicorn/prefer-ternary

@@ -33,11 +33,11 @@ export function ElicitationQuestionBody({
   const wide = useContentWide();
   return (
     <RequestCard
+      appearance="embedded"
       state={props.state}
       error={props.error}
       onEnter={model.advance}
       onEscape={() => props.onAnswer({ action: 'cancel' })}
-      className="rounded-none bg-transparent native:bg-transparent shadow-none web:backdrop-blur-none"
       footerClassName={cn(
         'min-h-0 px-4 pt-4 pb-0 gap-2 flex-col items-stretch',
         wide && 'px-3 pt-3 pb-3.5 flex-row justify-end gap-1',

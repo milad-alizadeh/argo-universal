@@ -1,4 +1,4 @@
-import type { IconName } from '#lib/generic/symbols/icon-names';
+import type { IconName } from './icon-names';
 
 // Native symbol sets have no per-language file icons, so extensions group by kind of content.
 const extensionsByIcon: readonly (readonly [IconName, readonly string[]])[] = [

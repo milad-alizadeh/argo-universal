@@ -55,12 +55,11 @@ function cardProps(
   model: ElicitationModel,
 ): Omit<ComponentProps<typeof RequestCard>, 'children'> {
   return {
+    appearance: 'embedded',
     state: model.state,
     error: model.error,
     onEnter: (): void => model.answer('accept'),
     onEscape: (): void => model.answer('cancel'),
-    className:
-      'rounded-none bg-transparent native:bg-transparent shadow-none web:backdrop-blur-none',
     footerClassName: 'flex-col items-stretch gap-2 px-4 pb-4',
     actions: <ElicitationActions model={model} />,
   };

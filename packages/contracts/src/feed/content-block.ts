@@ -12,6 +12,9 @@ export const BlobRef = z.strictObject({
 });
 export type BlobRef = z.infer<typeof BlobRef>;
 
+// Where the Server serves a stored blob over HTTP, beside tRPC.
+export const blobPath = (blobId: string): string => `/blobs/${blobId}`;
+
 const AttachmentSource = z.enum(['upload', 'pasted']);
 
 const AttachmentMeta = createFeedMetadataSchema(
@@ -42,9 +45,15 @@ export const ResourceLink = z.strictObject({
   title: z.string().optional(),
   description: z.string().optional(),
   size: z.number().optional(),
+  // An uploaded file: its `uri` is the blob's path, and the Engine hands the Agent the file itself.
+  blob: BlobRef.optional(),
   _meta: AttachmentMeta,
 });
 export type ResourceLink = z.infer<typeof ResourceLink>;
+
+// A file uploaded from the device; a first prompt links only these, never paths on the Server.
+export const UploadedFileLink = ResourceLink.extend({ blob: BlobRef });
+export type UploadedFileLink = z.infer<typeof UploadedFileLink>;
 
 export const EmbeddedResource = z.strictObject({
   type: z.literal('resource'),
@@ -75,3 +84,15 @@ export const ContentBlock = z.discriminatedUnion('type', [
   UnsupportedContent,
 ]);
 export type ContentBlock = z.infer<typeof ContentBlock>;
+
+export const isUploadedFile = (
+  block: ContentBlock,
+): block is UploadedFileLink =>
+  block.type === 'resource_link' && block.blob !== undefined;
+
+// Larger text files are linked, so one attachment cannot fill the Agent's context.
+export const inlineTextLimitBytes = 102_400;
+
+// Text an Agent can read inline, and the attachment card can preview: UTF-8 that decoded cleanly, with no NUL.
+export const isPlainText = (decoded: string): boolean =>
+  !decoded.includes('\0') && !decoded.includes('\uFFFD');

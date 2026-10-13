@@ -1,5 +1,11 @@
 import type { AgentLoginSnapshot } from '@repo/contracts';
-import { assign, fromPromise, setup, type ActorRefFrom } from 'xstate';
+import {
+  assign,
+  fromPromise,
+  setup,
+  type SnapshotFrom,
+  type ActorRefFrom,
+} from 'xstate';
 import type { LoginAgentOutcome } from './agent-launch';
 import { AgentLoginInUseError } from './login-error';
 
@@ -31,8 +37,38 @@ type LoginContext = {
   methodId: string;
   outcome: LoginOutcome;
 };
+const finishedState = 'finished';
+const awaitingBrowserState = 'awaiting-browser';
+const cleanupFailedState = 'cleanup-failed';
 const authLoginOutcome = (status: LoginAgentOutcome['status']): LoginOutcome =>
   status === 'authentication-required' ? 'failed' : status;
+
+const loginFailureOutcome = (error: unknown): LoginOutcome =>
+  error instanceof AgentLoginInUseError ? 'in-use' : 'failed';
+
+const loginFailureTransition = {
+  target: 'closing',
+  actions: [
+    {
+      type: 'fail',
+      params: ({
+        event,
+      }: {
+        event: { error: unknown };
+      }): { error: unknown } => ({ error: event.error }),
+    },
+    {
+      type: 'rememberLoginOutcome',
+      params: ({
+        event,
+      }: {
+        event: { error: unknown };
+      }): { outcome: LoginOutcome } => ({
+        outcome: loginFailureOutcome(event.error),
+      }),
+    },
+  ],
+} as const;
 
 export const loginMachine = setup({
   types: {
@@ -100,26 +136,7 @@ export const loginMachine = setup({
             },
           },
         ],
-        onError: {
-          target: 'closing',
-          actions: [
-            {
-              type: 'fail',
-              params: ({ event }): { error: unknown } => ({
-                error: event.error,
-              }),
-            },
-            {
-              type: 'rememberLoginOutcome',
-              params: ({ event }): { outcome: LoginOutcome } => ({
-                outcome:
-                  event.error instanceof AgentLoginInUseError
-                    ? 'in-use'
-                    : 'failed',
-              }),
-            },
-          ],
-        },
+        onError: loginFailureTransition,
       },
     },
     'choose-method': {
@@ -140,17 +157,11 @@ export const loginMachine = setup({
         src: 'authenticate',
         input: ({ context }) => context,
         onDone: { target: 'checking' },
-        onError: {
-          target: 'closing',
-          actions: {
-            type: 'fail',
-            params: ({ event }): { error: unknown } => ({ error: event.error }),
-          },
-        },
+        onError: loginFailureTransition,
       },
       states: {
-        waiting: { on: { request: 'awaiting-browser' } },
-        'awaiting-browser': { on: { answer: 'waiting' } },
+        waiting: { on: { request: awaitingBrowserState } },
+        [awaitingBrowserState]: { on: { answer: 'waiting' } },
       },
     },
     checking: {
@@ -183,9 +194,9 @@ export const loginMachine = setup({
         id: 'close',
         src: 'close',
         input: ({ context }) => context.ports,
-        onDone: { target: 'finished' },
+        onDone: { target: finishedState },
         onError: {
-          target: 'cleanup-failed',
+          target: cleanupFailedState,
           actions: {
             type: 'fail',
             params: ({ event }): { error: unknown } => ({ error: event.error }),
@@ -193,8 +204,21 @@ export const loginMachine = setup({
         },
       },
     },
-    finished: { type: 'final' },
-    'cleanup-failed': { type: 'final' },
+    [finishedState]: { type: 'final' },
+    [cleanupFailedState]: { type: 'final' },
   },
 });
 export type LoginActor = ActorRefFrom<typeof loginMachine>;
+
+export const loginStatus = (
+  state: SnapshotFrom<typeof loginMachine>,
+): AgentLoginSnapshot['status'] => {
+  if (state.matches(finishedState)) return state.context.outcome;
+  if (state.matches({ authenticating: awaitingBrowserState }))
+    return awaitingBrowserState;
+  if (state.matches('authenticating')) return 'authenticating';
+  const value = state.value;
+  if (typeof value !== 'string' || value === finishedState)
+    throw new Error('Unexpected login state');
+  return value;
+};

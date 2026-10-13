@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Linking } from 'react-native';
 import { useConnectionState } from '#features/connection';
 import type { AgentLoginSheetProps } from '../components/agent-login-sheet/login-props';
 import type { OwnedLogin } from './login-operation';
 import { useLoginActions } from './use-login-actions';
+import { useLoginReconnect } from './use-login-reconnect';
 import { useLoginSnapshot } from './use-login-snapshot';
+import { useLoginTerminal } from './use-login-terminal';
 type Sheet = Omit<AgentLoginSheetProps, 'agentName'>;
 type AgentLogin = { start: () => void; sheet: Sheet | undefined };
 
@@ -31,16 +33,10 @@ type LoginSheetInput = {
 function useLoginSheet(input: LoginSheetInput): Sheet | undefined {
   const { operation, actions, opening, failure } = input;
   const query = useLoginSnapshot(operation, opening.open);
+  const terminal = useLoginTerminal(operation, failure.onError);
   const disconnected = useConnectionState() !== 'open';
-  const sheet = {
-    actions,
-    query,
-    disconnected,
-    ...opening,
-    failure: failure.message,
-    onError: failure.onError,
-  };
-  return opening.open ? sheetProps(sheet) : undefined;
+  const sheet = { ...opening, terminal, actions, query, disconnected };
+  return optionalSheet(opening.open, { ...sheet, ...failureProps(failure) });
 }
 
 type Opening = { open: boolean; start: () => void; close: () => void };
@@ -57,6 +53,7 @@ function useOpenLogin(
   return { open, start, close: () => setOpen(false) };
 }
 type SheetInput = Opening & {
+  terminal: ReturnType<typeof useLoginTerminal>;
   actions: ReturnType<typeof useLoginActions>;
   query: ReturnType<typeof useLoginSnapshot>;
   disconnected: boolean;
@@ -67,6 +64,7 @@ function sheetProps(input: SheetInput): Sheet {
   const { actions, query, disconnected, start, close, failure } = input;
   return {
     ...actions,
+    terminal: input.terminal,
     busy: actions.busy || isStarting(input),
     snapshot: query.data,
     failure: queryFailure(query) ?? failure,
@@ -89,9 +87,12 @@ type LoginFailure = {
 };
 function useLoginFailure(): LoginFailure {
   const [message, setMessage] = useState<string>();
+  const clear = useCallback((): void => setMessage(undefined), []);
+  useLoginReconnect(clear);
+
   return {
     message,
-    clear: () => setMessage(undefined),
+    clear,
     onError: (error) => setMessage(failureMessage(error)),
   };
 }
@@ -106,3 +107,13 @@ const isStarting = (input: SheetInput): boolean =>
 const queryFailure = (
   query: ReturnType<typeof useLoginSnapshot>,
 ): string | undefined => query.error?.message;
+
+const optionalSheet = (open: boolean, input: SheetInput): Sheet | undefined =>
+  open ? sheetProps(input) : undefined;
+
+const failureProps = (
+  failure: LoginFailure,
+): Pick<SheetInput, 'failure' | 'onError'> => ({
+  failure: failure.message,
+  onError: failure.onError,
+});

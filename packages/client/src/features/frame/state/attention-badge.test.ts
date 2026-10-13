@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attentionBadge } from './attention-badge';
+import { attentionBadge, sectionAttentionCount } from './attention-badge';
 
 describe('attentionBadge', () => {
   it.each([
@@ -10,5 +10,16 @@ describe('attentionBadge', () => {
     [100, { label: '100 Sessions need attention', text: '99+' }],
   ])('for %i attention shows %j', (count, expected) => {
     expect(attentionBadge(count)).toEqual(expected);
+  });
+});
+
+describe('sectionAttentionCount', () => {
+  it.each([
+    ['sessions', 4],
+    ['issues', 0],
+    ['atlas', 0],
+    ['settings', 0],
+  ] as const)('gives %s a count of %i', (section, expected) => {
+    expect(sectionAttentionCount(section, 4)).toBe(expected);
   });
 });

@@ -13,6 +13,7 @@ export type RequestState =
   | { kind: 'answered'; reason: string };
 
 interface RequestCardProps extends Pick<ViewProps, 'className' | 'testID'> {
+  appearance?: 'card' | 'embedded';
   state: RequestState;
   error?: string;
   onEnter: () => void;
@@ -42,7 +43,11 @@ function RequestContainer(
     <View
       nativeID={props.nativeID}
       testID={props.testID}
-      className={cn(cardClassName, props.className)}
+      className={cn(
+        'w-full max-w-composer',
+        props.appearance !== 'embedded' && cardClassName,
+        props.className,
+      )}
     >
       <RequestContents {...props} />
     </View>
@@ -61,7 +66,7 @@ function RequestContents(props: RequestCardProps): ReactNode {
 }
 
 const cardClassName =
-  'w-full max-w-composer rounded-2xl bg-glass-card native:bg-background shadow-glass-card web:backdrop-blur-glass web:backdrop-saturate-180';
+  'rounded-2xl bg-glass-card native:bg-background shadow-glass-card web:backdrop-blur-glass web:backdrop-saturate-180';
 
 function RequestBody({
   state,

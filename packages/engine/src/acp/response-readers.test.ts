@@ -26,3 +26,24 @@ it.each(Object.values(acpResponses))(
     expect(rejections.count()).toBe(1);
   },
 );
+
+it.each([
+  { name: 'arguments', additions: { args: ['--login', 42] } },
+  { name: 'environment', additions: { env: { CODEX_HOME: 42 } } },
+])(
+  'rejects and counts malformed terminal $name instead of treating the method as protocol authentication',
+  ({ additions }) => {
+    const rejections = createRejectionCounter('ACP terminal methods');
+    const readers = createAcpResponseReaders(rejections);
+    const response = {
+      protocolVersion: 1,
+      authMethods: [
+        { type: 'terminal', id: 'terminal', name: 'Terminal', ...additions },
+      ],
+    };
+    expect(() => readers.initialize.parse(response)).toThrow(
+      'Invalid ACP InitializeResponse',
+    );
+    expect(rejections.count()).toBe(1);
+  },
+);
