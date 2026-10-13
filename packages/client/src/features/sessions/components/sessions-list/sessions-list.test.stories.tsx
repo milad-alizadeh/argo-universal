@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor } from 'storybook/test';
+import { sampleEachFrame } from '../../../../../mocks/sample-each-frame';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   delayFooterLayout,
@@ -182,18 +183,13 @@ export const InsertSessionWithoutOverlap: Story = {
       );
     });
     const initialTop = existing.getBoundingClientRect().top;
-    const positions = [initialTop];
-    const movement = new Promise<void>((resolve) => {
-      const started = performance.now();
-      function sample(): void {
-        positions.push(existing.getBoundingClientRect().top);
-        if (performance.now() - started < 600) requestAnimationFrame(sample);
-        else resolve();
-      }
-      requestAnimationFrame(sample);
+    const trigger = canvas.getByRole('button', {
+      name: 'Insert Session fixture',
     });
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Insert Session fixture' }),
+    const positions = await sampleEachFrame(
+      () => trigger.click(),
+      () => existing.getBoundingClientRect().top,
+      40,
     );
     const inserted = await canvas.findByRole('button', {
       name: 'New Session 1, Idle',
@@ -205,7 +201,6 @@ export const InsertSessionWithoutOverlap: Story = {
         oldRectangle.top + 1,
       );
     });
-    await movement;
     const finalTop = existing.getBoundingClientRect().top;
     await expect(finalTop - initialTop).toBeGreaterThan(0);
     await expect(
