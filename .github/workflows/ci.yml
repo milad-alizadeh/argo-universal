@@ -126,7 +126,6 @@ jobs:
       - uses: actions/checkout@v7
 
       # The shared App fixture also initializes a Playwright browser context for Electron.
-      # Install its headless shell alongside Electron's system libraries and xvfb.
       - uses: ./.github/actions/setup
         with:
           playwright: chromium
