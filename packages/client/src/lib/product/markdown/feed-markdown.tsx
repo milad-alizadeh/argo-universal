@@ -163,6 +163,7 @@ function Prose({
       aria-level={headingLevel}
       className={cn(
         'font-sans',
+        variant === 'proposal' && 'min-w-0 max-w-full',
         headingLevel !== undefined && markdownBlockClassNames.heading,
         variant === 'summary' && 'text-muted-foreground',
       )}
@@ -190,18 +191,18 @@ function List({
     <View className={variant === 'proposal' ? 'gap-2' : 'gap-1'}>
       {withOccurrenceKeys(token.items, (item) => item.raw).map(
         ({ item, key }, index) => (
-          <View key={key} className="flex-row gap-2">
+          <View key={key} className="flex-row w-full gap-2">
             <Text
               ref={marker}
               role="body"
               className={cn(
-                'w-4 shrink-0 font-sans',
+                'min-w-4 shrink-0 font-sans',
                 variant !== 'proposal' && markdownBlockClassNames.listMarker,
               )}
             >
               {token.ordered ? `${start + index}.` : '•'}
             </Text>
-            <View className="min-w-0 flex-1 gap-1">
+            <View className="w-0 min-w-0 flex-1 gap-1">
               <Blocks
                 tokens={item.tokens}
                 caret={caret && index === token.items.length - 1}

@@ -17,7 +17,7 @@ export function RequestHeading({
 }): ReactNode {
   return (
     <View className="flex-row items-start gap-2 px-4 wide:px-3.5">
-      <View className="min-w-0 flex-1 gap-0.5">
+      <View className="w-0 min-w-0 flex-1 gap-0.5">
         <View className="flex-row items-start gap-2.5">
           <Icon
             name={icon}
