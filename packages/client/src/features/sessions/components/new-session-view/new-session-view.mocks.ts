@@ -51,3 +51,13 @@ export const startingNewSession: Partial<ReadyNewSessionViewProps> = {
   canOpen: false,
   starting: startingFeed(typedDraft, Date.now()),
 };
+
+// A first prompt typed while the Session opens and takes this device's last choices.
+export const openingNewSession: Partial<ReadyNewSessionViewProps> = {
+  draft: typedDraft,
+  configuration: {
+    ...readyNewSession.configuration,
+    configOptions: [],
+    opening: true,
+  },
+};

@@ -1,24 +1,27 @@
 import type { ProjectInfo, SystemInfo } from '@repo/contracts';
-import {
-  type UseQueryResult,
-  useMutation,
-  useQuery,
-} from '@tanstack/react-query';
+import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAgents } from '#features/agents';
 import {
   type ComposerDraft,
+  savedChoicesQuery,
   useImageDraft,
-  useNewSessionConfiguration,
 } from '#features/composer';
 import { useConnectionState } from '#features/connection';
 import { useTRPC } from '#features/connection';
+import { useSessionFeed } from '#features/feed';
 import { useNavigate } from '#lib/product/navigation/context';
 import {
   NewSessionView,
   type NewSessionViewProps,
+  type ReadyNewSessionViewProps,
 } from '../components/new-session-view/new-session-view';
+import {
+  type EmptySessionActor,
+  useEmptySession,
+} from '../hooks/use-empty-session';
+import { useSessionConfigChange } from '../hooks/use-session-config-change';
 import { canOpenSession, toNewSessionInput } from '../state/open-session';
 import {
   type ChosenSettings,
@@ -34,10 +37,49 @@ export interface NewSessionScreenProps {
   projectId?: string;
 }
 
+interface OpenedSession {
+  sessionId: string;
+  agent: string;
+  actor: EmptySessionActor;
+}
+
 export function NewSessionScreen({
   projectId,
 }: NewSessionScreenProps): React.JSX.Element {
-  return <NewSessionView {...useNewSessionViewProps(projectId)} />;
+  const { view, opened } = useNewSessionViewProps(projectId);
+  if (view.state !== 'ready' || !opened) return <NewSessionView {...view} />;
+  return <OpenedNewSession key={opened.sessionId} {...opened} view={view} />;
+}
+
+const ignoreChange = (): void => {};
+
+// The open empty Session's options, read from its Feed; this device's last choices go to it once.
+function OpenedNewSession({
+  sessionId,
+  agent,
+  actor,
+  view,
+}: OpenedSession & {
+  view: { state: 'ready' } & ReadyNewSessionViewProps;
+}): React.JSX.Element {
+  const { snapshot } = useSessionFeed(sessionId);
+  const saved = useQuery(savedChoicesQuery(agent));
+  const configOptions = snapshot?.configOptions;
+  useEffect(() => {
+    if (configOptions && saved.data)
+      actor.send({ type: 'options.loaded', configOptions, saved: saved.data });
+  }, [actor, configOptions, saved.data]);
+  const { change } = useSessionConfigChange(sessionId, agent, ignoreChange);
+  return (
+    <NewSessionView
+      {...view}
+      configuration={{
+        ...view.configuration,
+        configOptions: configOptions ?? [],
+        onConfigChange: change,
+      }}
+    />
+  );
 }
 
 interface NewSessionData {
@@ -46,7 +88,6 @@ interface NewSessionData {
   agents: ReturnType<typeof useAgents>;
   setChosen: React.Dispatch<React.SetStateAction<ChosenSettings>>;
   choices: SessionChoices;
-  configuration: ReturnType<typeof useNewSessionConfiguration>;
 }
 
 // The Server's Projects and Agents with the reader's choices over their defaults.
@@ -69,100 +110,100 @@ function useNewSessionData(projectId: string | undefined): NewSessionData {
     chosen,
     branches: branches.data,
   });
-  const configuration = useNewSessionConfiguration(choices.agent);
-  return { serverInfo, projects, agents, setChosen, choices, configuration };
+  return { serverInfo, projects, agents, setChosen, choices };
 }
 
-function useNewSessionViewProps(
-  projectId: string | undefined,
-): NewSessionViewProps {
-  const trpc = useTRPC();
+const ignoreConfigChange = (): void => {};
+
+function useNewSessionViewProps(projectId: string | undefined): {
+  view: NewSessionViewProps;
+  opened?: OpenedSession;
+} {
   const navigate = useNavigate();
   const connected = useConnectionState() === 'open';
   const data = useNewSessionData(projectId);
-  const { serverInfo, projects, agents, choices, configuration } = data;
+  const { serverInfo, projects, agents, choices } = data;
+  const session = useEmptySession(toNewSessionInput(choices), connected);
   const imageDraft = useImageDraft();
-  // The first prompt as sent, shown in the Feed until the Session opens; a failure clears it and keeps the draft.
+  // The first prompt as sent, shown in the Feed until the Session has it; a failure clears it and keeps the draft.
   const [sent, setSent] = useState<{ draft: ComposerDraft; at: number }>();
-  const newSession = useMutation(
-    trpc.session.new.mutationOptions({
-      onSuccess: ({ sessionId }) =>
-        navigate({ to: 'session', id: sessionId }, { replace: true }),
-      onError: () => {
-        setSent(undefined);
-        void agents.refetch();
-      },
-    }),
-  );
+  const waiting =
+    session.context.pendingPrompt !== undefined || session.handedOff;
+  const shownSent =
+    sent && (imageDraft.uploading || waiting) ? sent : undefined;
   const starting = useMemo(
-    () => sent && startingFeed(sent.draft, sent.at),
-    [sent],
+    () => shownSent && startingFeed(shownSent.draft, shownSent.at),
+    [shownSent],
   );
-  // Uploads the draft's images, then opens the Session with the draft as its first prompt; a failure keeps the draft.
-  async function sendFirstPrompt(sent: ComposerDraft): Promise<void> {
-    newSession.reset();
-    setSent({ draft: sent, at: Date.now() });
-    const prompt = await imageDraft.uploadDraftAsPrompt(sent);
-    const input =
-      prompt?.length &&
-      toNewSessionInput(choices, configuration.configOptions, prompt);
-    if (input) newSession.mutate(input);
+  // Uploads the draft's images, then queues the draft as the first prompt until the Session is ready.
+  async function sendFirstPrompt(draft: ComposerDraft): Promise<void> {
+    setSent({ draft, at: Date.now() });
+    const prompt = await imageDraft.uploadDraftAsPrompt(draft);
+    if (prompt?.length) session.actor.send({ type: 'send', prompt });
     else setSent(undefined);
   }
 
   if (serverInfo.isError || projects.isError || agents.isError)
-    return { state: 'load-failed' };
+    return { view: { state: 'load-failed' } };
   if (!serverInfo.data || !projects.data || !agents.data)
-    return { state: 'loading' };
+    return { view: { state: 'loading' } };
 
-  const choose = (next: Partial<ChosenSettings>): void => {
-    data.setChosen((current) => ({ ...current, ...next }));
-    newSession.reset();
-  };
   const { agent } = choices;
-  const opening = imageDraft.uploading || newSession.isPending;
+  const sending = imageDraft.uploading || waiting;
+  const opened =
+    session.openSessionId && agent
+      ? {
+          sessionId: session.openSessionId,
+          agent: agent.agent,
+          actor: session.actor,
+        }
+      : undefined;
   return {
-    state: 'ready',
-    serverName: serverInfo.data.name,
-    connected,
-    projects: projects.data,
-    projectId: choices.project?.id ?? '',
-    onProjectChange: (id) => {
-      data.setChosen((current) => chooseAnotherProject(current, id));
-      newSession.reset();
-    },
-    configuration: {
-      agents: agents.data,
-      agent: agent?.agent ?? '',
-      configOptions: configuration.configOptions,
-      onConfigChange: configuration.change,
-      onAgentChange: (next) => choose({ agent: next }),
-      onAgentSetup: (setup) => navigate({ to: 'settings-agent', agent: setup }),
-      onAgentRetry: agents.retry,
-      checkout: {
-        branch: choices.baseBranch,
-        newWorktree: choices.inNewWorktree,
-        onNewWorktreeChange: (newWorktree) =>
-          data.setChosen((current) => ({ ...current, newWorktree })),
-      },
-    },
-    draft: imageDraft.draft,
-    onDraftChange: imageDraft.changeDraft,
-    onAttachImages: () => void imageDraft.attachImages(),
-    onSend: (sent) => void sendFirstPrompt(sent),
-    canOpen: canOpenSession({
+    opened,
+    view: {
+      state: 'ready',
+      serverName: serverInfo.data.name,
       connected,
-      choices,
-      configReady: configuration.ready,
-      opening,
-    }),
-    opening,
-    starting,
-    attachmentError: imageDraft.attachmentError?.message,
-    setupStep:
-      agent && agent.availability !== 'available'
-        ? agent.installStep
-        : undefined,
-    openError: newSession.error?.message,
+      projects: projects.data,
+      projectId: choices.project?.id ?? '',
+      onProjectChange: (id) =>
+        data.setChosen((current) => chooseAnotherProject(current, id)),
+      configuration: {
+        agents: agents.data,
+        agent: agent?.agent ?? '',
+        configOptions: [],
+        onConfigChange: ignoreConfigChange,
+        opening: session.opening,
+        onAgentChange: (next) =>
+          data.setChosen((current) => ({ ...current, agent: next })),
+        onAgentSetup: (setup) =>
+          navigate({ to: 'settings-agent', agent: setup }),
+        onAgentRetry: agents.retry,
+        checkout: {
+          branch: choices.baseBranch,
+          newWorktree: choices.inNewWorktree,
+          onNewWorktreeChange: (newWorktree) =>
+            data.setChosen((current) => ({ ...current, newWorktree })),
+        },
+      },
+      draft: imageDraft.draft,
+      onDraftChange: imageDraft.changeDraft,
+      onAttachImages: () => void imageDraft.attachImages(),
+      onSend: (draft) => void sendFirstPrompt(draft),
+      canOpen: canOpenSession({
+        connected,
+        choices,
+        sending,
+        handedOff: session.handedOff,
+      }),
+      opening: sending,
+      starting,
+      attachmentError: imageDraft.attachmentError?.message,
+      setupStep:
+        agent && agent.availability !== 'available'
+          ? agent.installStep
+          : undefined,
+      openError: session.context.error,
+    },
   };
 }

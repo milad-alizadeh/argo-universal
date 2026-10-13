@@ -1,15 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {
-  AgentInfo,
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
-import {
-  type QueryClient,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { useState } from 'react';
+import type { QueryClient } from '@tanstack/react-query';
 import {
   configurationChoices,
   configurationEffortChoices,
@@ -17,14 +11,13 @@ import {
 
 const categories = ['model', 'thought_level', 'mode'] as const;
 type Category = (typeof categories)[number];
-type SavedChoices = Partial<Record<Category, string>>;
+export type SavedChoices = Partial<Record<Category, string>>;
 type SelectOption = Extract<SessionConfigOption, { type: 'select' }>;
 type RememberedOption = SelectOption & { category: Category };
 let writes = Promise.resolve();
-interface NewSessionConfiguration {
-  configOptions: SessionConfigOption[];
-  ready: boolean;
-  change: (configId: string, value: string | boolean) => void;
+export interface ConfigurationChange {
+  configId: string;
+  value: string;
 }
 
 function queryKey(agent: string): readonly string[] {
@@ -93,12 +86,12 @@ function withSavedChoice(
   ].find((candidate) => offered.some((choice) => choice.value === candidate));
   return value === undefined ? undefined : { ...option, currentValue: value };
 }
-// The model, effort and mode a new Session starts with: each saved choice the Agent still offers, else its default, else its first offered value.
+// The model, effort and mode a new Session starts with: each saved choice the Session still offers, else its default, else its first offered value.
 export function draftConfiguration(
-  agent: AgentInfo | undefined,
+  options: SessionConfigOption[],
   saved: SavedChoices,
 ): RememberedOption[] {
-  const defaults = orderedOptions(agent?.configOptions ?? []);
+  const defaults = orderedOptions(options);
   const defaultModel = defaults.find((option) => option.category === 'model');
   const model = defaultModel && withSavedChoice(defaultModel, saved);
   return defaults.flatMap(
@@ -138,47 +131,20 @@ export function rememberSessionConfiguration(
     });
 }
 
-export function useNewSessionConfiguration(
-  agent: AgentInfo | undefined,
-): NewSessionConfiguration {
-  const client = useQueryClient();
-  const id = agent?.agent ?? '';
-  const [switchValues, setSwitchValues] = useState<
-    Record<string, Record<string, boolean>>
-  >({});
-  const saved = useQuery({ ...savedChoicesQuery(id), enabled: !!agent });
-  const remembered = draftConfiguration(agent, saved.data ?? {});
-  const configOptions = (agent?.configOptions ?? []).flatMap((option) => {
-    if (isRememberedConfiguration(option))
-      return (
-        remembered.find((entry) => entry.configId === option.configId) ?? []
-      );
-    if (option.type === 'boolean')
-      return {
-        ...option,
-        currentValue:
-          switchValues[id]?.[option.configId] ?? option.currentValue,
-      };
-    return [];
-  });
-  return {
-    configOptions: saved.isSuccess ? configOptions : [],
-    ready: saved.isSuccess,
-    change: (configId: string, value: string | boolean): void => {
-      if (!saved.isSuccess) return;
-      if (typeof value === 'boolean') {
-        setSwitchValues((previous) => ({
-          ...previous,
-          [id]: { ...previous[id], [configId]: value },
-        }));
-        return;
-      }
-      const changed = configOptions.map((option) =>
-        option.type === 'select' && option.configId === configId
-          ? { ...option, currentValue: value }
-          : option,
-      );
-      rememberSessionConfiguration(client, id, changed);
-    },
-  };
+// The next saved choice to apply to a Session, model before effort before mode; each option is applied at most once.
+export function nextRememberedChange(
+  options: SessionConfigOption[],
+  saved: SavedChoices,
+  applied: readonly string[],
+): ConfigurationChange | undefined {
+  const current = orderedOptions(options);
+  return draftConfiguration(options, saved)
+    .filter(({ configId }) => !applied.includes(configId))
+    .map(({ configId, currentValue }) => ({ configId, value: currentValue }))
+    .find(({ configId, value }) =>
+      current.some(
+        (option) =>
+          option.configId === configId && option.currentValue !== value,
+      ),
+    );
 }

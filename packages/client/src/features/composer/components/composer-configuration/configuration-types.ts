@@ -9,6 +9,8 @@ export interface ComposerConfigurationProps {
   onAgentSetup?: (agent: string) => void;
   onAgentRetry?: () => void;
   turnRunning?: boolean;
+  // True while New Session's Session opens and takes this device's last choices.
+  opening?: boolean;
   checkout: {
     branch: string;
     newWorktree: boolean;

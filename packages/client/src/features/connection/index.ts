@@ -13,4 +13,9 @@ export {
   createServerBlobUrl,
   useBlobUrl,
 } from './trpc/blob-url';
-export { type ClientError, TRPCProvider, useTRPC } from './trpc/context';
+export {
+  type ClientError,
+  TRPCProvider,
+  useTRPC,
+  useTRPCClient,
+} from './trpc/context';

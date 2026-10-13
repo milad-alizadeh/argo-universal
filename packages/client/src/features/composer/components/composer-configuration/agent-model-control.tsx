@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { Platform, View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import { Button } from '#primitives/buttons/button/button';
+import { Spinner } from '#primitives/display/spinner/spinner';
 import { Text } from '#primitives/display/text/text';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { configurationChoices } from '../../state/configuration-choices';
@@ -22,6 +23,16 @@ import {
 } from './configuration-values';
 const agentModelMenuWidth = 320;
 const fastModeConfigId = 'fast';
+
+// A spinner while the Session opens; wide, the Agent's icon otherwise.
+const agentModelLeading = (
+  opening: boolean | undefined,
+  wide: boolean,
+  agent: React.ComponentProps<typeof AgentIcon>['agent'],
+): React.JSX.Element | undefined => {
+  if (opening) return <Spinner label="Opening the Session" />;
+  return wide ? <AgentIcon agent={agent} /> : undefined;
+};
 
 export function ComposerAgentModelControl({
   configuration,
@@ -78,7 +89,7 @@ export function ComposerAgentModelControl({
           labelNumberOfLines={1}
           className="h-7 sm:h-7 py-0 px-1.5 gap-1.5 shrink min-w-0"
           labelClassName="min-w-0 shrink"
-          leading={wide ? <AgentIcon agent={agent} /> : undefined}
+          leading={agentModelLeading(configuration.opening, wide, agent)}
           trailing={
             <View className="flex-row items-center gap-1.5">
               {wide &&

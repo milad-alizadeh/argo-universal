@@ -1,14 +1,10 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type * as React from 'react';
 import { useAgents } from '#features/agents';
 import { type ComposerDraft, useImageDraft } from '#features/composer';
-import {
-  isRememberedConfiguration,
-  rememberSessionConfiguration,
-} from '#features/composer';
 import {
   useConnectionState,
   useResubscribeOnReconnect,
@@ -23,25 +19,29 @@ import {
   SessionView,
   type SessionViewProps,
 } from '../components/session-view/session-view';
+import {
+  type SetConfigOptionMutation,
+  useSessionConfigChange,
+} from '../hooks/use-session-config-change';
 import { composerStatus } from '../state/composer-status';
 import { toSendError } from '../state/send-error';
 
-type SessionMutation<Name extends 'prompt' | 'cancel' | 'setConfigOption'> =
-  ReturnType<
-    typeof useMutation<
-      inferRouterOutputs<AppRouter>['session'][Name],
-      ClientError,
-      inferRouterInputs<AppRouter>['session'][Name],
-      undefined
-    >
-  >;
+type SessionMutation<Name extends 'prompt' | 'cancel'> = ReturnType<
+  typeof useMutation<
+    inferRouterOutputs<AppRouter>['session'][Name],
+    ClientError,
+    inferRouterInputs<AppRouter>['session'][Name],
+    undefined
+  >
+>;
 type SessionCommands = Omit<
   ReturnType<typeof useImageDraft>,
   'clearDraft' | 'uploadDraftAsPrompt'
 > & {
   promptSession: SessionMutation<'prompt'>;
   cancelTurn: SessionMutation<'cancel'>;
-  setConfigOption: SessionMutation<'setConfigOption'>;
+  setConfigOption: SetConfigOptionMutation;
+  changeConfig: (configId: string, value: string | boolean) => void;
   sendDraft: (sent: ComposerDraft) => Promise<void>;
 };
 
@@ -133,12 +133,7 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
         agents: agents.data ?? [],
         agent: snapshot.agent,
         configOptions: snapshot.configOptions,
-        onConfigChange: (configId, value) =>
-          setConfigOption.mutate(
-            typeof value === 'boolean'
-              ? { sessionId, configId, type: 'boolean', value }
-              : { sessionId, configId, type: 'id', value },
-          ),
+        onConfigChange: commands.changeConfig,
         onAgentSetup: (setup) =>
           navigate({ to: 'settings-agent', agent: setup }),
         onAgentRetry: agents.retry,
@@ -160,7 +155,6 @@ function useSessionCommands(
   agent: string | undefined,
 ): SessionCommands {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const { clearDraft, uploadDraftAsPrompt, ...draft } = useImageDraft();
   const promptSession = useMutation(
     trpc.session.prompt.mutationOptions({
@@ -173,23 +167,22 @@ function useSessionCommands(
   const cancelTurn = useMutation(
     trpc.session.cancel.mutationOptions({ onSuccess: resumeAfterCommand }),
   );
-  const setConfigOption = useMutation(
-    trpc.session.setConfigOption.mutationOptions({
-      onSuccess: ({ configOptions }, { configId }) => {
-        resumeAfterCommand();
-        if (!agent) return;
-        const changed = configOptions.find(
-          (option) => option.configId === configId,
-        );
-        if (changed && isRememberedConfiguration(changed))
-          rememberSessionConfiguration(queryClient, agent, configOptions);
-      },
-    }),
+  const { setConfigOption, change: changeConfig } = useSessionConfigChange(
+    sessionId,
+    agent,
+    resumeAfterCommand,
   );
   async function sendDraft(sent: ComposerDraft): Promise<void> {
     promptSession.reset();
     const prompt = await uploadDraftAsPrompt(sent);
     if (prompt?.length) promptSession.mutate({ sessionId, prompt });
   }
-  return { ...draft, promptSession, cancelTurn, setConfigOption, sendDraft };
+  return {
+    ...draft,
+    promptSession,
+    cancelTurn,
+    setConfigOption,
+    changeConfig,
+    sendDraft,
+  };
 }

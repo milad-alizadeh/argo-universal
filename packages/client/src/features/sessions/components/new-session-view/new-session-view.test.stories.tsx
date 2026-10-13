@@ -14,6 +14,7 @@ import {
 } from './new-session-view';
 import {
   exampleProject,
+  openingNewSession,
   readyNewSession,
   startingNewSession,
   typedDraft,
@@ -162,6 +163,23 @@ export const SendsTheFirstPrompt: Story = {
     );
     if (args.view.state !== 'ready') throw new Error('The view is not ready.');
     await expect(args.view.onSend).toHaveBeenCalledOnce();
+    await expect(args.view.onSend).toHaveBeenCalledWith(typedDraft);
+  },
+};
+
+export const SendsWhileTheSessionOpens: Story = {
+  args: readyArgs(openingNewSession),
+  play: async ({ args, canvas, userEvent }) => {
+    await eachLayout(async () => {
+      await expect(
+        await canvas.findByRole('progressbar', { name: 'Opening the Session' }),
+      ).toBeVisible();
+      await expect(
+        canvas.getByRole('button', { name: sendLabel }),
+      ).toBeEnabled();
+    });
+    await userEvent.click(canvas.getByRole('button', { name: sendLabel }));
+    if (args.view.state !== 'ready') throw new Error('The view is not ready.');
     await expect(args.view.onSend).toHaveBeenCalledWith(typedDraft);
   },
 };

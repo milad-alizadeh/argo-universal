@@ -20,9 +20,12 @@ export { StartSessionIn } from './components/start-session-in/start-session-in';
 export { useImageDraft } from './hooks/use-image-draft';
 export type { AttachmentError } from './state/image-draft';
 export {
+  type ConfigurationChange,
   isRememberedConfiguration,
+  nextRememberedChange,
   rememberSessionConfiguration,
-  useNewSessionConfiguration,
+  type SavedChoices,
+  savedChoicesQuery,
 } from './state/session-configuration-preferences';
 export {
   configurationChoices,
