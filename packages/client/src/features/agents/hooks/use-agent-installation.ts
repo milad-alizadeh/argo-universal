@@ -13,6 +13,7 @@ import type {
 import {
   useInstallationOperation,
   useConfirmationState,
+  useRunningAction,
   useWatchedOperations,
   activeVersion,
   type ObservedOperation,
@@ -90,16 +91,17 @@ const startInput = (
   rememberPrevious: controls.rememberPrevious,
   running: installationRunning(phaseInput(controls)),
 });
-const progress = (
+function useProgress(
   controls: InstallationControls,
-): Pick<AgentInstallPresentation, 'installing' | 'notice' | 'status'> => {
+  action: InstallAction,
+): Pick<AgentInstallPresentation, 'installing' | 'notice' | 'status'> {
   const phase = phaseInput(controls);
-  return {
-    installing: installationRunning(phase),
-    notice: installationNotice(phase),
-    status: controls.status,
-  };
-};
+  const installing = installationRunning(phase);
+  const ranAs = useRunningAction(action, installing);
+  const notice = installationNotice(phase);
+  const status = controls.status;
+  return { installing, notice: notice && { ...notice, action: ranAs }, status };
+}
 function useAgentInstallationControls(
   agentId: string,
   version: string,
@@ -111,7 +113,7 @@ function useAgentInstallationControls(
     version: activeVersion(controls.operation, version),
   });
   const onInstall = useStart(startInput(controls, agentId, offer.version));
-  const shown = { ...offer, ...progress(controls) };
+  const shown = { ...offer, ...useProgress(controls, offer.action) };
   return { ...shown, onConfirmingChange: setConfirming, onInstall };
 }
 export function useAgentInstallation(

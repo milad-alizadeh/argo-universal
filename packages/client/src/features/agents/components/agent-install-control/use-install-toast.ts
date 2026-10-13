@@ -5,7 +5,7 @@ import {
 import type {
   AgentInstallPresentation,
   InstallAction,
-  InstallNotice,
+  ActionNotice,
 } from '../../state/agent-install-types';
 const doneVerbs: Record<InstallAction, string> = {
   Install: 'installed',
@@ -30,15 +30,11 @@ const failedToast = (
   title: `Could not ${action.toLowerCase()} ${name}`,
   message: failure,
 });
-const noticeToast = (
-  name: string,
-  action: InstallAction,
-  notice: InstallNotice,
-): Toast => ({
+const noticeToast = (name: string, notice: ActionNotice): Toast => ({
   key: notice.key,
   ...(notice.result === 'installed'
-    ? doneToast(name, action, notice.version)
-    : failedToast(name, action, notice.failure)),
+    ? doneToast(name, notice.action, notice.version)
+    : failedToast(name, notice.action, notice.failure)),
 });
 // One toast per finished installation, however often the page polls or re-renders.
 export function useInstallToast(
@@ -46,5 +42,5 @@ export function useInstallToast(
   installation: AgentInstallPresentation | undefined,
 ): void {
   const notice = installation?.notice;
-  useToast(notice && noticeToast(name, installation.action, notice));
+  useToast(notice && noticeToast(name, notice));
 }

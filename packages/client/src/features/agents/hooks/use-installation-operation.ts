@@ -42,6 +42,17 @@ export function useWatchedOperations(
   return [requested, running].filter((id) => id !== undefined);
 }
 
+// The action the running operation started as, kept once it settles for its notice.
+export function useRunningAction(
+  action: InstallAction,
+  running: boolean,
+): InstallAction {
+  const [ran, setRan] = useState(action);
+  const ranAs = running ? action : ran;
+  if (ranAs !== ran) setRan(ranAs);
+  return ranAs;
+}
+
 type ConfirmationState = {
   confirming: boolean;
   action: InstallAction;

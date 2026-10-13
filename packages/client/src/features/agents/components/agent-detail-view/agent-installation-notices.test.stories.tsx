@@ -23,7 +23,12 @@ type Story = StoryObj<typeof meta>;
 export const ToastsTheInstalledRelease: Story = {
   args: {
     installation: installationArgs({
-      notice: { key: 'operation', result: 'installed', version },
+      notice: {
+        key: 'operation',
+        result: 'installed',
+        version,
+        action: 'Install',
+      },
     }),
   },
   play: async () => {
@@ -37,6 +42,26 @@ export const ToastsTheInstalledRelease: Story = {
   },
 };
 
+// Finishing an update refreshes the page, which offers Install again before the toast shows.
+export const ToastsTheUpdateItRan: Story = {
+  args: {
+    installation: installationArgs({
+      notice: {
+        key: 'operation',
+        result: 'installed',
+        version,
+        action: 'Update',
+      },
+    }),
+  },
+  play: async () => {
+    await expect(await findToast(`${readyAgent.name} updated`)).toBeVisible();
+    await expect(await allToasts(`${readyAgent.name} installed`)).toHaveLength(
+      0,
+    );
+  },
+};
+
 const failure = 'Node.js is required on the Server';
 const failed = (action: 'Install' | 'Update'): Story => ({
   args: {
@@ -44,7 +69,7 @@ const failed = (action: 'Install' | 'Update'): Story => ({
       action === 'Update' ? { ...readyAgent, status: 'update' } : registryAgent,
     installation: installationArgs({
       action,
-      notice: { key: 'operation', result: 'failed', failure },
+      notice: { key: 'operation', result: 'failed', failure, action },
     }),
   },
   play: async ({ canvas }) => {
