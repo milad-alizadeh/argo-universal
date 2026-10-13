@@ -10,15 +10,31 @@ type RouteHref = {
 // The route that draws each destination; a destination's fields are its route's params.
 type RouteParams = Record<string, string | string[] | undefined>;
 
+// The Session id New Session's URL carries; Session ids are UUIDs, so none is ever this.
+export const newSessionId = 'new';
+
+// One route draws New Session and the Session it becomes, so the first prompt keeps the same screen.
+const sessionOrNew = (params: RouteParams): NavigationDestination => {
+  const id = String(params.id);
+  return id === newSessionId ? newSession(params) : { to: 'session', id };
+};
+
+function newSession({ projectId }: RouteParams): NavigationDestination {
+  return {
+    to: 'new-session',
+    ...(typeof projectId === 'string' ? { projectId } : {}),
+  };
+}
+
 const routes = {
   sessions: { pathname: '/', destination: () => ({ to: 'sessions' }) },
   'new-session': {
-    pathname: '/sessions/new',
-    destination: () => ({ to: 'new-session' }),
+    pathname: `/sessions/${newSessionId}`,
+    destination: newSession,
   },
   session: {
     pathname: '/sessions/[id]',
-    destination: (params) => ({ to: 'session', id: String(params.id) }),
+    destination: sessionOrNew,
   },
   issues: { pathname: '/issues', destination: () => ({ to: 'issues' }) },
   atlas: { pathname: '/atlas', destination: () => ({ to: 'atlas' }) },

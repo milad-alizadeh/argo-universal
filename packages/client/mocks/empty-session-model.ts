@@ -41,12 +41,15 @@ export const nextChange = (
 export const actorIds = ['open', 'close', 'setConfigOption', 'prompt'] as const;
 export type ActorId = (typeof actorIds)[number];
 export const delayDone = 'xstate.after.choiceDebounce.emptySession.waiting';
+export const promptShowTimedOut =
+  'xstate.after.promptShowTimeout.emptySession.open.showingPrompt';
 export const done = (id: ActorId): `xstate.done.actor.${ActorId}` =>
   `xstate.done.actor.${id}`;
 export const failed = (id: ActorId): `xstate.error.actor.${ActorId}` =>
   `xstate.error.actor.${id}`;
 const choices = 'choices.changed';
 const loaded = 'options.loaded';
+const showsPrompt = 'feed.showsPrompt';
 
 const events = [
   { type: choices, input: first, connected: true },
@@ -56,7 +59,9 @@ const events = [
   { type: loaded, configOptions: options, saved: {} },
   { type: 'send', prompt },
   { type: 'retry' },
+  { type: showsPrompt },
   { type: delayDone },
+  { type: promptShowTimedOut },
   { type: done('open'), actorId: 'open', output: { sessionId: 'session-1' } },
   { type: done('close'), actorId: 'close', output: undefined },
   {
@@ -96,10 +101,17 @@ export const key = ({ value, context }: EmptySessionSnapshot): string =>
     applied: context.applied,
     saved: context.saved,
     pending: context.pendingPrompt !== undefined,
+    shown: context.promptShown,
     error: String(context.error),
   });
 
-const publicTypes = new Set<string>([choices, loaded, 'send', 'retry']);
+const publicTypes = new Set<string>([
+  choices,
+  loaded,
+  'send',
+  'retry',
+  showsPrompt,
+]);
 export const isPublicEvent = (
   event: EmptySessionGraphEvent,
 ): event is Extract<EmptySessionGraphEvent, EmptySessionEvent> =>
@@ -115,6 +127,10 @@ const runs: Record<ActorId, Check> = {
 };
 const machineEventChecks = new Map<string, Check>([
   [delayDone, (snapshot): boolean => snapshot.matches('waiting')],
+  [
+    promptShowTimedOut,
+    (snapshot): boolean => snapshot.matches({ open: 'showingPrompt' }),
+  ],
   ...actorIds.flatMap((id): [string, Check][] => [
     [done(id), runs[id]],
     [failed(id), runs[id]],

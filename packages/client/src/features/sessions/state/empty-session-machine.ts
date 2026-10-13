@@ -16,8 +16,13 @@ export type {
 
 const choicesChangedType = 'choices.changed';
 
+const toHandedOff = '#emptySession.handedOff';
+
 // Choices settle for this long before a Session opens for them.
 export const choiceDebounceMs = 300;
+
+// A Feed that never shows the prompt hands the Session on after this long anyway.
+export const promptShowTimeoutMs = 3_000;
 
 const choiceKey = (input: SessionNewInput | undefined): string | undefined =>
   input && JSON.stringify(input);
@@ -46,7 +51,10 @@ export const emptySessionMachine = setup({
     context: {} as EmptySessionContext,
     events: {} as EmptySessionEvent,
   },
-  delays: { choiceDebounce: choiceDebounceMs },
+  delays: {
+    choiceDebounce: choiceDebounceMs,
+    promptShowTimeout: promptShowTimeoutMs,
+  },
   actors: {
     open: fromPromise<{ sessionId: string }, EmptySessionContext>(
       ({ input, signal }) => {
@@ -82,6 +90,7 @@ export const emptySessionMachine = setup({
     stale: ({ context }) => choiceKey(context.input) !== context.openedKey,
     hasNextChange: ({ context }) => nextChange(context) !== undefined,
     hasPendingPrompt: ({ context }) => context.pendingPrompt !== undefined,
+    promptShown: ({ context }) => context.promptShown,
   },
   actions: {
     takeChoices: assign(({ event }) =>
@@ -103,7 +112,9 @@ export const emptySessionMachine = setup({
       configOptions: [],
       saved: {},
       applied: [],
+      promptShown: false,
     }),
+    showPrompt: assign({ promptShown: true }),
     handOff: ({ context }) => {
       if (context.sessionId) context.ports.handOff(context.sessionId);
     },
@@ -121,6 +132,7 @@ export const emptySessionMachine = setup({
     saved: {},
     applied: [],
     pendingPrompt: undefined,
+    promptShown: false,
     error: undefined,
   }),
   states: {
@@ -244,19 +256,31 @@ export const emptySessionMachine = setup({
           on: {
             'choices.changed': { actions: 'takeChoices' },
             send: { actions: [] },
+            'feed.showsPrompt': { actions: 'showPrompt' },
           },
           invoke: {
             id: 'prompt',
             src: 'prompt',
             input: ({ context }) => context,
-            onDone: { target: '#emptySession.handedOff' },
+            onDone: { target: 'showingPrompt' },
             onError: {
               target: 'ready',
               actions: assign({
                 pendingPrompt: undefined,
+                promptShown: false,
                 error: ({ event }) => errorMessage(event.error),
               }),
             },
+          },
+        },
+        // The Session page takes over once the Feed it starts from holds the prompt, so the prompt never drops out.
+        showingPrompt: {
+          always: { guard: 'promptShown', target: toHandedOff },
+          after: { promptShowTimeout: toHandedOff },
+          on: {
+            'choices.changed': { actions: 'takeChoices' },
+            send: { actions: [] },
+            'feed.showsPrompt': toHandedOff,
           },
         },
       },

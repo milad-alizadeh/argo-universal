@@ -1,16 +1,23 @@
 import type { NavigationDestination } from '@repo/client';
+import { newSessionId } from '@repo/client/navigation';
 import { describe, expect, it } from 'vitest';
 import { destinationFor, hrefFor } from './routes';
 
 const sessionsRouteGroup = '(sessions)';
 const firstAgentId = 'first-agent';
 
+// The route params beyond the destination's own fields.
 const destinations: [NavigationDestination, string[], object][] = [
   [{ to: 'sessions' }, ['(shell)', sessionsRouteGroup], {}],
   [
     { to: 'new-session' },
-    ['(shell)', sessionsRouteGroup, 'sessions', 'new'],
-    {},
+    ['(shell)', sessionsRouteGroup, 'sessions', '[id]'],
+    { id: newSessionId },
+  ],
+  [
+    { to: 'new-session', projectId: 'project-1' },
+    ['(shell)', sessionsRouteGroup, 'sessions', '[id]'],
+    { id: newSessionId },
   ],
   [
     { to: 'session', id: 'session-1' },
@@ -63,10 +70,15 @@ describe('hrefFor', () => {
 });
 
 describe('destinationFor', () => {
-  it.each(destinations)('reads %o from its route', (destination, segments) => {
-    const { to: _to, ...params } = destination;
-    expect(destinationFor(segments, params)).toEqual(destination);
-  });
+  it.each(destinations)(
+    'reads %o from its route',
+    (destination, segments, routeParams) => {
+      const { to: _to, ...params } = destination;
+      expect(destinationFor(segments, { ...params, ...routeParams })).toEqual(
+        destination,
+      );
+    },
+  );
 
   it('keeps only the params its route names', () => {
     expect(

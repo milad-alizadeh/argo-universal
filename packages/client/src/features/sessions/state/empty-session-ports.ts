@@ -16,6 +16,7 @@ export interface EmptySessionPorts {
     change: ConfigurationChange,
   ) => Promise<SessionConfigOption[]>;
   prompt: (sessionId: string, prompt: FirstPrompt) => Promise<unknown>;
+  // The screen becomes that Session's page in place: no new page, no animation.
   handOff: (sessionId: string) => void;
   // The next remembered choice the options don't hold yet, skipping those already applied.
   nextChange: (
@@ -39,6 +40,8 @@ export type EmptySessionEvent =
       saved: SavedChoices;
     }
   | { type: 'send'; prompt: FirstPrompt }
+  // The opened Session's Feed holds the first prompt, so the Session page can show it from its first frame.
+  | { type: 'feed.showsPrompt' }
   | { type: 'retry' };
 
 export interface EmptySessionContext {
@@ -53,5 +56,6 @@ export interface EmptySessionContext {
   // Each remembered choice is applied at most once.
   applied: string[];
   pendingPrompt: FirstPrompt | undefined;
+  promptShown: boolean;
   error: string | undefined;
 }

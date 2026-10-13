@@ -98,7 +98,7 @@ function useEmptySessionPorts(): EmptySessionPorts {
       setConfigOption(client, sessionId, change),
     prompt: (sessionId, prompt) =>
       client.session.prompt.mutate({ sessionId, prompt }),
-    handOff: (id) => navigate({ to: 'session', id }, { replace: true }),
+    handOff: (id) => navigate({ to: 'session', id }, { inPlace: true }),
     nextChange: nextRememberedChange,
   };
 }

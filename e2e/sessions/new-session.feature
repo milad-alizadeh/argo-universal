@@ -34,18 +34,21 @@ Feature: New Session
       | 1     |
       | 2     |
 
-  Scenario Outline: A text prompt starts a Session with Agent <agent>
-    Given a phone Frame
+  Scenario Outline: A text prompt turns New Session into its Session in place with Agent <agent> in a <frame> Frame
+    Given a <frame> Frame
     And a New Session with Agent <agent>
-    When I send the prompt "Fix the flaky login test"
-    Then the Session Feed contains the text prompt "Fix the flaky login test"
+    When I send the first prompt "Fix the flaky login test"
+    Then New Session became that Session in place with the prompt shown throughout
+    And the Session Feed contains the text prompt "Fix the flaky login test"
     And the Agent replies "The shared fixture completed this Turn."
     And Back returns to the Sessions list
 
     Examples:
-      | agent |
-      | 1     |
-      | 2     |
+      | agent | frame |
+      | 1     | phone |
+      | 2     | phone |
+      | 1     | wide  |
+      | 2     | wide  |
 
   Scenario Outline: Successive prompts share one ACP Session with Agent <agent>
     Given a phone Frame

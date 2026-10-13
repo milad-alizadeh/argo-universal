@@ -19,10 +19,12 @@ import {
   options,
   paths,
   prompt,
+  promptShowTimedOut,
 } from '../../../../mocks/empty-session-model';
 import {
   choiceDebounceMs,
   type EmptySessionPorts,
+  promptShowTimeoutMs,
   emptySessionMachine,
 } from './empty-session-machine';
 
@@ -72,6 +74,12 @@ const deliveries = new Map<string, Delivery>([
     delayDone,
     (): void => {
       vi.advanceTimersByTime(choiceDebounceMs);
+    },
+  ],
+  [
+    promptShowTimedOut,
+    (): void => {
+      vi.advanceTimersByTime(promptShowTimeoutMs);
     },
   ],
   ...actorIds.flatMap((id): [string, Delivery][] => [
@@ -133,7 +141,7 @@ it('empty Session paths cover every transition', () => {
   ).toEqual([]);
 });
 
-it('hands the prompted Session to the Session page', async () => {
+it('hands the prompted Session to the Session page once its Feed shows the prompt', async () => {
   const actor = createActor(emptySessionMachine, { input: ports() }).start();
   const sent: EmptySessionGraphEvent[] = [
     { type: 'choices.changed', input: first, connected: true },
@@ -144,8 +152,7 @@ it('hands the prompted Session to the Session page', async () => {
     { type: done('prompt'), actorId: 'prompt', output: undefined },
   ];
   for (const event of sent) await deliver(actor, event);
-  expect({ status: actor.getSnapshot().status, handedOff }).toEqual({
-    status: 'done',
-    handedOff: ['session-1'],
-  });
+  const beforeFeed = [...handedOff];
+  await deliver(actor, { type: 'feed.showsPrompt' });
+  expect([beforeFeed, handedOff]).toEqual([[], ['session-1']]);
 });

@@ -107,7 +107,8 @@ Then('Back returns to the Sessions list', async ({ page }): Promise<void> => {
   await page.goBack();
   await expect(page).toHaveURL(/\/$/);
   await expect(
-    page.getByRole('heading', { name: 'Sessions', level: 1, exact: true }),
+    // A phone shows the list as the page, a wide Frame in its sidebar.
+    page.getByRole('heading', { name: 'Sessions', exact: true }),
   ).toBeVisible();
   await expect(page.getByText('No Sessions yet.', { exact: true })).toHaveCount(
     0,

@@ -107,9 +107,14 @@ function EmptySessionOptions({
 }: OpenedSession & {
   onRead: (options: ReadOptions) => void;
 }): null {
-  const { snapshot } = useSessionFeed(sessionId);
+  const { snapshot, view } = useSessionFeed(sessionId);
   const saved = useQuery(savedChoicesQuery(agent));
   const configOptions = snapshot?.configOptions;
+  // An empty Session has no rows; its first is the prompt.
+  const showsPrompt = (view?.items.length ?? 0) > 0;
+  useEffect(() => {
+    if (showsPrompt) actor.send({ type: 'feed.showsPrompt' });
+  }, [actor, showsPrompt]);
   useEffect(() => {
     if (configOptions) onRead({ sessionId, configOptions });
   }, [onRead, sessionId, configOptions]);

@@ -23,7 +23,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
-import { hrefFor } from '@/navigation/routes';
+import { hrefFor, paramsOf } from '@/navigation/routes';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -97,9 +97,12 @@ const useLeaveGuard: LeaveGuard = (active, onBlocked) => {
 
 // Screens in @repo/client navigate through this.
 const navigate: Navigate = (destination, options) =>
-  options?.replace
-    ? router.replace(hrefFor(destination))
-    : router.navigate(hrefFor(destination));
+  options?.inPlace
+    ? router.setParams(paramsOf(destination))
+    : moveFor(options)(hrefFor(destination));
+
+const moveFor = (options: Parameters<Navigate>[1]): typeof router.navigate =>
+  options?.replace ? router.replace : router.navigate;
 
 export default function RootLayout(): React.JSX.Element {
   const { theme } = useUniwind();
