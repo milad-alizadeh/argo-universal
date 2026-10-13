@@ -8,18 +8,19 @@ import {
 import type { OwnedInstall } from './operation-types';
 
 type InstallationInput = Omit<InstallExecutionInput, 'operation' | 'signal'>;
-const executeOwnedInstallation = async (
+const executeOwnedInstallation = (
   input: InstallationInput,
   owned: OwnedInstall,
   checking: Promise<unknown> | undefined,
-): Promise<void> => {
-  await checking;
-  return executeAgentInstall({
-    ...input,
-    signal: owned.controller.signal,
-    operation: owned.operation,
-  });
-};
+): Promise<void> =>
+  executeAgentInstall(
+    {
+      ...input,
+      signal: owned.controller.signal,
+      operation: owned.operation,
+    },
+    checking,
+  );
 
 export const settleAgentInstallation = async (
   input: InstallationInput,

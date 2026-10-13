@@ -2,6 +2,7 @@ import { rename, writeFile } from 'node:fs/promises';
 import type { Locator, Page } from '@playwright/test';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
+import { browseAgents } from './agent-catalog';
 import { When, Then } from './fixtures';
 import { mutate } from './server-query';
 
@@ -57,6 +58,15 @@ Then('the update stays in progress', async ({ page }): Promise<void> => {
   await expect(updating(page)).toBeDisabled();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+When(
+  /^the App (stays|reloads) during the accepted update$/,
+  async ({ page }, recovery: string): Promise<void> => {
+    if (recovery === 'stays') return;
+    await page.goto('/');
+    await browseAgents(page);
+    await page.getByRole('link', { name: /^Example Agent,/ }).click();
+  },
+);
 When('the version two installer completes', async ({ app }): Promise<void> => {
   await installer(app.installationPath, true);
 });
