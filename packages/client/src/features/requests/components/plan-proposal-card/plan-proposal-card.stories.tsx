@@ -52,6 +52,7 @@ export const Overview: Story = {
     if (!useWide())
       return (
         <PlanProposalPreview
+          composer
           {...args}
           proposal={
             args.planLength === 'long'
@@ -75,6 +76,7 @@ export const Overview: Story = {
           <Variation label="Short Plan proposal">
             <View testID="proposal-preview-short" className="h-144">
               <PlanProposalPreview
+                composer
                 {...args}
                 proposal={
                   planProposalMocks.find((mock) => mock.agent === args.agent)
@@ -93,17 +95,26 @@ export const Overview: Story = {
           </Variation>
           <Variation label="Long Plan proposal">
             <View testID="proposal-preview-long" className="h-144">
-              <PlanProposalPreview {...args} proposal={longPlanProposal} />
+              <PlanProposalPreview
+                composer
+                {...args}
+                proposal={longPlanProposal}
+              />
             </View>
           </Variation>
           <Variation label="Sending answer">
             <View className="h-144">
-              <PlanProposalPreview {...args} state={{ kind: 'submitting' }} />
+              <PlanProposalPreview
+                composer
+                {...args}
+                state={{ kind: 'submitting' }}
+              />
             </View>
           </Variation>
           <Variation label="Answer failed">
             <View className="h-144">
               <PlanProposalPreview
+                composer
                 {...args}
                 state={{ kind: 'open' }}
                 error="Could not send your answer. Try again."
@@ -113,6 +124,7 @@ export const Overview: Story = {
           <Variation label="Already answered">
             <View testID="proposal-preview-answered" className="h-144">
               <PlanProposalPreview
+                composer
                 {...args}
                 state={{
                   kind: 'answered',

@@ -8,7 +8,6 @@ import { type ReactNode, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
 import { Textarea } from '#primitives/inputs/textarea/textarea';
 import {
@@ -16,6 +15,7 @@ import {
   RequestCard,
   type RequestState,
 } from '../request-card/request-card';
+import { RequestHeading } from '../request-card/request-heading';
 import { PermissionActions } from './permission-actions';
 import {
   type PermissionChoices,
@@ -50,6 +50,7 @@ export function PermissionRequest(
 
   return (
     <RequestCard
+      surface="tray"
       sheetLabel={request.title}
       state={state}
       error={error}
@@ -72,19 +73,10 @@ export function PermissionRequest(
         )
       }
     >
-      <View className="gap-2 px-4 pt-4 pb-1">
-        <View className="flex-row items-center gap-1.5">
-          <Icon
-            name="terminal"
-            role="body"
-            className="shrink-0 text-muted-foreground"
-          />
-          <Text role={'heading'} className="min-w-0 flex-1">
-            {request.title}
-          </Text>
-        </View>
+      <View className="gap-4 px-4 pt-1 wide:gap-3 wide:px-0 wide:pt-0">
+        <RequestHeading icon="hand" title={request.title} hint={reason} />
         {input && (
-          <View className="rounded-md bg-secondary px-3 py-2">
+          <View className="min-h-13 rounded-xl android:rounded-2xl bg-secondary px-4 py-3.5 wide:min-h-11 wide:bg-card wide:px-3.5 wide:py-2 wide:shadow-xs">
             <Text role="code">{input}</Text>
           </View>
         )}
@@ -96,9 +88,6 @@ export function PermissionRequest(
             onSubmit={answers.deny}
           />
         ) : null}
-        {(!denying || alreadyAnswered) && reason && (
-          <Text role="secondary">{reason}</Text>
-        )}
       </View>
     </RequestCard>
   );

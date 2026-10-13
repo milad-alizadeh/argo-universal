@@ -8,7 +8,7 @@ import type { RequestCardProps, RequestState } from './request-card';
 
 type FooterProps = Pick<
   RequestCardProps,
-  'state' | 'mutedStatus' | 'actions' | 'footerClassName'
+  'state' | 'mutedStatus' | 'actions' | 'footerClassName' | 'surface'
 >;
 
 export function RequestFooter(props: FooterProps): ReactNode {
@@ -16,6 +16,7 @@ export function RequestFooter(props: FooterProps): ReactNode {
     <View
       className={cn(
         'min-h-13 flex-col gap-2 px-2 pt-3 pb-2 wide:flex-row wide:items-center wide:gap-1',
+        props.surface === 'tray' && 'px-4 pb-4 wide:min-h-8 wide:p-0',
         props.footerClassName,
       )}
     >

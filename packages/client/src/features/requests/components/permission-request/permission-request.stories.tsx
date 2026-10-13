@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { toFeedView } from '#features/feed';
 import { FeedItem } from '#features/feed';
 import { PermissionOutcome } from '#features/feed';
+import { RequestComposerPreview } from '../../../../../mocks/request-composer';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import {
@@ -15,7 +16,10 @@ import {
   permissionMock,
   permissionMocks,
 } from '../request.mocks';
-import { PermissionRequest } from './permission-request';
+import {
+  PermissionRequest,
+  type PermissionRequestProps,
+} from './permission-request';
 
 type GalleryArgs = ComponentProps<typeof PermissionRequest> & {
   agent: (typeof permissionMock)['agent'];
@@ -62,7 +66,7 @@ export const Overview = {
     });
     if (!useWide())
       return (
-        <PermissionRequest
+        <PermissionPreview
           {...permissionProps({
             ...args,
             request: selected.request,
@@ -81,7 +85,7 @@ export const Overview = {
       <View className="w-full items-center py-4">
         <Variations className="max-w-composer!">
           <Variation label="Permission request">
-            <PermissionRequest
+            <PermissionPreview
               {...permissionProps({
                 ...args,
                 request: selected.request,
@@ -97,15 +101,15 @@ export const Overview = {
             />
           </Variation>
           <Variation label="Agent options">
-            <PermissionRequest {...agentOptionsProps({})} />
+            <PermissionPreview {...agentOptionsProps({})} />
           </Variation>
           <Variation label="Several reject options">
-            <PermissionRequest
+            <PermissionPreview
               {...agentOptionsProps({ options: agentOptionsWithAlwaysReject })}
             />
           </Variation>
           <Variation label="Deny with a message">
-            <PermissionRequest
+            <PermissionPreview
               {...permissionProps({
                 feedback: true,
                 denialMessage:
@@ -114,7 +118,7 @@ export const Overview = {
             />
           </Variation>
           <Variation label="Already answered">
-            <PermissionRequest
+            <PermissionPreview
               {...permissionProps({
                 state: {
                   kind: 'answered',
@@ -177,3 +181,7 @@ export const Overview = {
     );
   },
 } satisfies StoryObj<GalleryArgs>;
+
+function PermissionPreview(props: PermissionRequestProps): React.JSX.Element {
+  return <RequestComposerPreview permissionRequest={props} />;
+}

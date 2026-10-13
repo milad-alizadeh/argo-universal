@@ -6,4 +6,5 @@ export interface DialogRegionProps {
   description: string;
   onClose: () => void;
   children: ReactNode;
+  bottomInset?: number;
 }

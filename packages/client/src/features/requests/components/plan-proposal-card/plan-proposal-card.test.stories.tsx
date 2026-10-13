@@ -49,9 +49,7 @@ export const ShortPlan: Story = {
         await expect(
           within(document.body).getByRole('dialog', { name: 'Plan proposal' }),
         ).toBeVisible();
-        await expect(
-          canvas.queryByText(approvePlanQuestion),
-        ).not.toBeInTheDocument();
+        await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
         await expect(
           canvas.queryByRole('button', { name: expandPlanLabel }),
         ).not.toBeInTheDocument();

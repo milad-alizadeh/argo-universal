@@ -36,7 +36,6 @@ export type ContentButtonProps = Omit<ButtonDataProps, 'className' | 'style'> &
     'className' | 'style' | 'ref' | 'onHoverIn' | 'onHoverOut'
   > & {
     appearance: 'content';
-    drawing?: 'platform' | 'shared';
     labelClassName?: string;
     labelNumberOfLines?: number;
     leading?: ReactElement;

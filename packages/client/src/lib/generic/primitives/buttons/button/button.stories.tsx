@@ -8,10 +8,6 @@ const saveLabel = 'Save changes';
 const buttons: { state: string; props: ButtonProps }[] = [
   { state: 'Default', props: { label: saveLabel } },
   {
-    state: 'Shared request action',
-    props: { label: 'Allow once', appearance: 'content', drawing: 'shared' },
-  },
-  {
     state: 'Secondary',
     props: { label: saveLabel, variant: 'secondary' },
   },

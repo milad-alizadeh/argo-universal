@@ -32,6 +32,7 @@ export interface RequestCardProps extends Pick<
   footerClassName?: string;
   mutedStatus?: boolean;
   sheetLabel?: string;
+  surface?: 'card' | 'tray';
 }
 
 export function RequestCard(props: RequestCardProps): ReactNode {
@@ -54,7 +55,12 @@ function RequestContainer(
     <View
       nativeID={props.nativeID}
       testID={props.testID}
-      className={cn(cardClassName, props.className)}
+      className={cn(
+        props.surface === 'tray'
+          ? 'w-full gap-3 px-3 pt-3 pb-3.5'
+          : cardClassName,
+        props.className,
+      )}
     >
       <RequestContents {...props} />
     </View>

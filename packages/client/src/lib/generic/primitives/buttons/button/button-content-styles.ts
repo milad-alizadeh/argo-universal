@@ -1,6 +1,6 @@
 import { cva } from 'class-variance-authority';
 import { cn } from '#lib/generic/utils';
-import type { ButtonProps, ContentButtonProps } from './button-props';
+import type { ButtonProps } from './button-props';
 
 const buttonClasses = cva(
   'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none web:whitespace-nowrap web:outline-none web:transition-all web:focus-visible:border-ring web:focus-visible:ring-[3px] web:focus-visible:ring-ring/50 disabled:pointer-events-none',
@@ -41,7 +41,7 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
   variants: {
     variant: {
       default: `${filledNative} ios:bg-primary`,
-      outline: `${filledNative} android:bg-transparent`,
+      outline: `${filledNative} android:bg-transparent android:border-muted-foreground`,
       secondary: `${filledNative} android:border-0 android:bg-secondary`,
       ghost: textNative,
       link: textNative,
@@ -77,16 +77,13 @@ const textClasses = cva(
 type ButtonClassProps = Pick<
   ButtonProps,
   'variant' | 'size' | 'role' | 'disabled' | 'fullWidth' | 'className'
-> &
-  Pick<ContentButtonProps, 'drawing'>;
+>;
 
 export function contentButtonClass(props: ButtonClassProps): string {
-  const { className, fullWidth, drawing, ...variants } = props;
+  const { className, fullWidth, ...variants } = props;
   return cn(
     buttonClasses({ ...variants, fullWidth: fullWidth === true }),
-    drawing === 'shared'
-      ? 'ios:min-h-11 android:min-h-12'
-      : nativeClasses({ variant: props.variant, disabled: props.disabled }),
+    nativeClasses({ variant: props.variant, disabled: props.disabled }),
     destructiveButtonClass(props),
     className,
   );
@@ -113,8 +110,7 @@ function destructiveButtonClass(
 }
 
 export function contentTextClass(
-  props: Pick<ButtonProps, 'role' | 'variant'> &
-    Pick<ContentButtonProps, 'drawing'>,
+  props: Pick<ButtonProps, 'role' | 'variant'>,
 ): string {
   const filledDestructive = isFilledDestructive(props);
   return cn(
@@ -122,7 +118,7 @@ export function contentTextClass(
       variant: props.variant,
       destructive: props.role === 'destructive',
     }),
-    props.drawing !== 'shared' && nativeLabelClass,
+    nativeLabelClass,
     filledDestructive && 'text-destructive-foreground',
   );
 }

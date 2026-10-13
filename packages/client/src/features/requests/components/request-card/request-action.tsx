@@ -17,7 +17,6 @@ export function RequestAction(props: RequestActionProps): ReactNode {
   return (
     <Button
       appearance="content"
-      drawing="shared"
       label={props.children}
       accessibilityLabel={props.accessibilityLabel}
       variant={requestVariant(props.primary, wide)}
@@ -34,7 +33,7 @@ export function RequestAction(props: RequestActionProps): ReactNode {
 function requestVariant(
   primary: boolean | undefined,
   wide: boolean,
-): 'default' | 'ghost' | 'secondary' {
+): 'default' | 'ghost' | 'outline' {
   if (primary) return 'default';
-  return wide ? 'ghost' : 'secondary';
+  return wide ? 'ghost' : 'outline';
 }

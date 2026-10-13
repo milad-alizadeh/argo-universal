@@ -25,6 +25,7 @@ export interface PlanProposalCardProps {
   onAnswer: (answer: PlanProposalAnswer) => void;
   state: RequestState;
   error?: string;
+  bottomInset?: number;
 }
 
 export function PlanProposalCard(
@@ -39,7 +40,10 @@ function ProposalInteraction(props: PlanProposalCardProps): React.JSX.Element {
   const panel = <ProposalPanel {...props} interaction={interaction} />;
   if (!wide || !interaction.expanded) return panel;
   return (
-    <PlanProposalExpansion onCollapse={() => interaction.setExpanded(false)}>
+    <PlanProposalExpansion
+      bottomInset={props.bottomInset}
+      onCollapse={() => interaction.setExpanded(false)}
+    >
       {panel}
     </PlanProposalExpansion>
   );
@@ -53,6 +57,7 @@ function ProposalPanel(
   const { interaction } = props;
   return (
     <RequestCard
+      surface="tray"
       state={props.state}
       error={props.error}
       onEnter={interaction.submit}
@@ -60,7 +65,11 @@ function ProposalPanel(
       sheetLabel="Plan proposal"
       testID="plan-proposal-card"
       mutedStatus
-      className={interaction.expanded ? 'flex-1 min-h-0 max-w-none' : undefined}
+      className={
+        interaction.expanded
+          ? 'flex-1 min-h-0 max-w-none rounded-t-xl bg-sidebar/80 shadow-glass web:backdrop-blur-glass web:backdrop-saturate-110'
+          : undefined
+      }
       bodyClassName={interaction.expanded ? 'flex-1 min-h-0' : undefined}
       footerClassName="wide:justify-end"
       actions={

@@ -42,10 +42,7 @@ function submitting(width: number, index: number): Story {
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
       if (width === layoutWidths.wide)
         await expect(canvas.getByText('Approve this plan?')).toBeVisible();
-      else
-        await expect(
-          canvas.queryByText('Approve this plan?'),
-        ).not.toBeInTheDocument();
+      else await expect(canvas.getByText('Approve this plan?')).toBeVisible();
       await userEvent.keyboard('{Enter}');
       await expect(args.onAnswer).not.toHaveBeenCalled();
     },

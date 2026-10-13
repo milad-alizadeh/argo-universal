@@ -11,7 +11,7 @@ export function PlanDocument({
   layout,
 }: {
   content: string;
-  layout: 'proposal' | 'expanded' | 'tray' | 'sheet';
+  layout: 'proposal' | 'expanded' | 'tray' | 'sheet' | 'request-sheet';
 }): React.JSX.Element {
   const expanded = layout === 'expanded';
   const written = layout === 'tray' || layout === 'sheet';
@@ -22,14 +22,22 @@ export function PlanDocument({
   const thumbHeight =
     (viewportHeight * viewportHeight) / Math.max(1, contentHeight);
   const markdown = <FeedMarkdown text={content} variant="proposal" />;
-  if (layout === 'sheet') return <View className="pt-2 pb-4">{markdown}</View>;
+  if (layout === 'request-sheet' || layout === 'sheet')
+    return layout === 'sheet' ? (
+      <View className="pt-2 pb-4">{markdown}</View>
+    ) : (
+      markdown
+    );
   return (
     <View
       className={cn(
         'relative overflow-hidden',
         expanded
-          ? flexibleContentClassName
-          : cn('max-h-plan-proposal', !written && 'bg-secondary rounded-md'),
+          ? cn(flexibleContentClassName, 'bg-card rounded-xl shadow-xs')
+          : cn(
+              'max-h-plan-proposal',
+              !written && 'bg-card rounded-xl shadow-xs',
+            ),
       )}
     >
       <ScrollView
@@ -42,7 +50,7 @@ export function PlanDocument({
           expanded ? flexibleContentClassName : 'max-h-plan-proposal grow-0'
         }
         contentContainerClassName={
-          expanded || written ? 'px-4 pt-2 pb-4' : 'p-3'
+          expanded || written ? 'px-4 pt-2 pb-4' : 'px-3.5 py-3'
         }
         showsVerticalScrollIndicator={false}
         onContentSizeChange={(_, height) => setContentHeight(height)}
@@ -58,7 +66,7 @@ export function PlanDocument({
         !written &&
         overflow &&
         contentHeight - viewportHeight - offset > 1 && (
-          <ScrollFade edge="bottom" className="bg-secondary" height={40} />
+          <ScrollFade edge="bottom" className="bg-card" height={40} />
         )}
       {overflow && (
         <View
