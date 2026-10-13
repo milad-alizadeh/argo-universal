@@ -16,9 +16,12 @@ const modelListMaxHeight = 320;
 export function ModelChoices({
   configuration,
   onSelect,
+  onContentHeightChange,
 }: {
   configuration: ComposerConfigurationProps;
   onSelect: () => void;
+  // A phone's sheet fits the choices.
+  onContentHeightChange?: (height: number) => void;
 }): React.JSX.Element | null {
   const wide = useWide() && Platform.OS === 'web';
   const model = selection(configuration, 'model');
@@ -26,7 +29,10 @@ export function ModelChoices({
   if (wide)
     return <ModelList configuration={configuration} onSelect={onSelect} />;
   return (
-    <FieldGroup fit={Platform.OS === 'web'}>
+    <FieldGroup
+      fit={Platform.OS === 'web'}
+      onContentHeightChange={onContentHeightChange}
+    >
       <FieldSection>
         {configurationChoices(model).map((choice) => (
           <ModelChoice

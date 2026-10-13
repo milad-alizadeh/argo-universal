@@ -16,16 +16,19 @@ const screenFraction = 0.6;
 export function AgentChoices({
   configuration,
   onSelect,
+  onContentHeightChange,
 }: {
   configuration: ComposerConfigurationProps;
   onSelect: () => void;
+  // A phone's sheet fits the choices.
+  onContentHeightChange?: (height: number) => void;
 }): React.JSX.Element {
   const wide = useWide();
   const { height } = useWindowDimensions();
   const { agents } = configuration;
   if (Platform.OS !== 'web' && !wide)
     return (
-      <FieldGroup>
+      <FieldGroup onContentHeightChange={onContentHeightChange}>
         <FieldSection>
           {agents.map((agent) => (
             <AgentChoice

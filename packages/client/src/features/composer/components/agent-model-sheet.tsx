@@ -30,18 +30,25 @@ export function AgentModelSheetSettings({
 interface AgentModelSheetChoicesProps {
   page: 'agent' | 'model';
   onDone: () => void;
+  // The sheet sizes itself to this page.
+  onContentHeightChange: (height: number) => void;
 }
 
 export function AgentModelSheetChoices({
   page,
   onDone,
+  onContentHeightChange,
 }: AgentModelSheetChoicesProps): React.JSX.Element | null {
   const configuration = useAgentModelConfiguration();
   if (!configuration) return null;
   const Choices = page === 'agent' ? AgentChoices : ModelChoices;
   return (
     <View className="flex-1 bg-sidebar">
-      <Choices configuration={configuration} onSelect={onDone} />
+      <Choices
+        configuration={configuration}
+        onSelect={onDone}
+        onContentHeightChange={onContentHeightChange}
+      />
     </View>
   );
 }
