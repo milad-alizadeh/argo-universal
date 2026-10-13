@@ -1,0 +1,77 @@
+import { agentAdapters } from '@repo/agents';
+import { turn } from '@repo/db/schema';
+import { expect, it, onTestFinished } from 'vitest';
+import { insertSession, openTestDatabase } from '#mocks/database';
+import { startEngineTestHost } from '#mocks/engine';
+import { scriptedEngineInput } from '#mocks/scripted-engine';
+
+it.each(agentAdapters)(
+  'uses the newest Turn for failures and excludes interrupted Turns from Failed for $agent',
+  async ({ agent }): Promise<void> => {
+    const { database, remove } = openTestDatabase({ maxRevision: 2 });
+    onTestFinished(remove);
+    insertSession(database, { id: 'interrupted', maxRevision: 2 });
+    insertSession(database, { id: 'recovered', maxRevision: 2 });
+    insertSession(database, { id: 'gave-up', failure: 'Repeated crashes' });
+    database
+      .insert(turn)
+      .values([
+        {
+          id: 'failed',
+          sessionId: 'session-1',
+          status: 'ended',
+          stopReason: 'error',
+          startedAt: 1,
+        },
+        {
+          id: 'interrupted-turn',
+          sessionId: 'interrupted',
+          status: 'ended',
+          stopReason: 'error',
+          error: {
+            code: 'interrupted',
+            message: 'The Server stopped during the Turn',
+          },
+          startedAt: 1,
+        },
+        {
+          id: 'old-failure',
+          sessionId: 'recovered',
+          status: 'ended',
+          stopReason: 'error',
+          startedAt: 1,
+        },
+        {
+          id: 'new-success',
+          sessionId: 'recovered',
+          status: 'ended',
+          stopReason: 'end_turn',
+          startedAt: 2,
+        },
+      ])
+      .run();
+    const { createCaller } = await startEngineTestHost({
+      database,
+      ...scriptedEngineInput(undefined, agent),
+    });
+    const caller = createCaller();
+    const rows = (await caller.session.list({ archived: false })).sessions;
+    expect(
+      Object.fromEntries(
+        rows.map(
+          (
+            row,
+          ): [
+            string,
+            'failed' | 'idle' | 'needs_input' | 'running' | 'unread',
+          ] => [row.sessionId, row.status],
+        ),
+      ),
+    ).toEqual({
+      'session-1': 'failed',
+      interrupted: 'unread',
+      recovered: 'unread',
+      'gave-up': 'failed',
+    });
+  },
+);

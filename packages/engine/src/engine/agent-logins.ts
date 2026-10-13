@@ -16,6 +16,38 @@ type LoginSources = {
   loginTimeoutMs?: number;
   loginCleanupTimeoutMs?: number;
 };
+const authenticationReservation =
+  (
+    sessions: OpenSessionsActorRef,
+  ): Parameters<typeof createAgentLogins>[0]['reserveAuthentication'] =>
+  (launch) => {
+    const resources = sessions.getSnapshot().context.acpResources;
+    if (!resources) throw new Error('ACP resources are unavailable');
+    return resources.reserveAuthentication(launch);
+  };
+
+const loginProject = (): { projectId: string; projectPath: string } => ({
+  projectId: '',
+  projectPath: homedir(),
+});
+
+const loginLaunchResolver =
+  (
+    sessions: OpenSessionsActorRef,
+  ): Parameters<typeof createAgentLogins>[0]['resolveLaunch'] =>
+  async (agentId) => {
+    const source = sessions.getSnapshot().context;
+    if (isAgentDisabled(source.database, agentId))
+      throw new Error('Agent is disabled');
+    const resolve = selectAgentLaunchResolver(source, agentId);
+    if (!resolve) throw new Error('No ACP launch is configured for this Agent');
+    const launch = await resolve({
+      agent: agentId,
+      ...loginProject(),
+    });
+    return { name: agentId, launch };
+  };
+
 export const createEngineAgentLogins = (
   input: LoginSources,
 ): ReturnType<typeof createAgentLogins> =>
@@ -26,23 +58,6 @@ export const createEngineAgentLogins = (
     timeoutMs: input.loginTimeoutMs,
     cleanupTimeoutMs: input.loginCleanupTimeoutMs,
     openLoginAgent: createLoginAgentOpener(input.acp),
-    reserveAuthentication: (launch) => {
-      const resources = input.sessions.getSnapshot().context.acpResources;
-      if (!resources) throw new Error('ACP resources are unavailable');
-      return resources.reserveAuthentication(launch);
-    },
-    resolveLaunch: async (agentId) => {
-      const source = input.sessions.getSnapshot().context;
-      if (isAgentDisabled(source.database, agentId))
-        throw new Error('Agent is disabled');
-      const resolve = selectAgentLaunchResolver(source, agentId);
-      if (!resolve)
-        throw new Error('No ACP launch is configured for this Agent');
-      const launch = await resolve({
-        agent: agentId,
-        projectId: '',
-        projectPath: homedir(),
-      });
-      return { name: agentId, launch };
-    },
+    reserveAuthentication: authenticationReservation(input.sessions),
+    resolveLaunch: loginLaunchResolver(input.sessions),
   });

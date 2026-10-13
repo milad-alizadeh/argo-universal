@@ -7,10 +7,7 @@ export type EngineStop = { type: 'engine.stop'; reason: StopReason };
 
 // Turns SIGINT, SIGTERM and a closed IPC channel into `engine.stop`; a closed channel means nobody can restart or stop this Engine.
 export const processSignals = fromCallback(({ sendBack }): StopCallback => {
-  const stop =
-    (reason: StopReason): StopCallback =>
-    (): void =>
-      sendBack({ type: 'engine.stop', reason } satisfies EngineStop);
+  const stop = stopFor(sendBack);
   const onSigint = stop('SIGINT');
   const onSigterm = stop('SIGTERM');
   const onDisconnect = stop('IPC channel closed');
@@ -23,3 +20,11 @@ export const processSignals = fromCallback(({ sendBack }): StopCallback => {
     process.off('disconnect', onDisconnect);
   };
 });
+
+function stopFor(
+  sendBack: (event: EngineStop) => void,
+): (reason: StopReason) => StopCallback {
+  return (reason): StopCallback =>
+    (): void =>
+      sendBack({ type: 'engine.stop', reason });
+}

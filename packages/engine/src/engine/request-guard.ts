@@ -22,34 +22,36 @@ export interface RequestGuard {
   report: (subject: string, value: string | undefined) => void;
 }
 
-// Checks Host on every request and Origin on every tRPC call, so a website cannot reach the Server (ADR 0002).
-export function createRequestGuard(port: number): RequestGuard {
-  const AllowedHost = z.enum([`127.0.0.1:${port}`, `localhost:${port}`]);
+const createReporter = (): RequestGuard['report'] => {
   const rejections = createRejectionCounter('engine');
-
-  // Logs and counts every rejected request, whichever check rejected it.
-  const report = (subject: string, value: string | undefined): void => {
+  return (subject, value): void => {
     rejections.report(
       `rejected ${subject} ${JSON.stringify(value?.slice(0, headerExcerptLength))}`,
     );
   };
+};
 
-  const allowsHost = (host: string | undefined): boolean => {
-    if (AllowedHost.safeParse(host).success) return true;
-    report('Host', host);
+const allowsHeader =
+  (
+    schema: z.ZodType,
+    report: RequestGuard['report'],
+    subject: string,
+  ): ((value: string | undefined) => boolean) =>
+  (value): boolean => {
+    if (schema.safeParse(value).success) return true;
+    report(subject, value);
     return false;
   };
 
-  const allowsOrigin = (origin: string | undefined): boolean => {
-    if (AllowedOrigin.safeParse(origin).success) return true;
-    report('Origin', origin);
-    return false;
-  };
-
+// Checks Host on every request and Origin on every tRPC call (ADR 0002).
+export function createRequestGuard(port: number): RequestGuard {
+  const report = createReporter();
+  const hosts = z.enum([`127.0.0.1:${port}`, `localhost:${port}`]);
+  const allowsHost = allowsHeader(hosts, report, 'Host');
+  const allowsOrigin = allowsHeader(AllowedOrigin, report, 'Origin');
   return {
-    allowsRequest: (headers: RequestHeaders): boolean =>
-      allowsHost(headers.host),
-    allowsUpgrade: (headers: UpgradeHeaders): boolean =>
+    allowsRequest: (headers): boolean => allowsHost(headers.host),
+    allowsUpgrade: (headers): boolean =>
       allowsHost(headers.host) && allowsOrigin(headers.origin),
     allowsOrigin,
     report,
