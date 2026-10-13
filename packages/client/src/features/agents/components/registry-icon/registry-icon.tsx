@@ -6,6 +6,7 @@ import { useResolveClassNames } from 'uniwind';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import {
   type IconRole,
+  useIconBox,
   useIconPixels,
 } from '../../../../lib/generic/symbols/icon-role';
 
@@ -34,42 +35,32 @@ export function RegistryIcon({
 
 type LoadedIconProps = Required<RegistryIconProps> & { uri: string };
 
-// The browser draws the SVG itself: react-native-svg's web build hands the file's attributes, such as data-name, to DOM elements as unknown props. An <img> cannot inherit the page's colour, so an inline SVG takes the foreground colour in its markup.
+// The browser draws the SVG itself: react-native-svg's web build hands data-name and the like to DOM elements. The CDN's SVGs cannot be fetched (no CORS) and paint black, so dark mode inverts them, keeping hue.
 function WebRegistryImage(props: LoadedIconProps): React.JSX.Element {
   const [failed, setFailed] = useState(false);
-  const pixels = useIconPixels(props.role);
-  const source = useRegistrySource(props.uri);
-  if (failed || source.kind === 'unavailable')
-    return <UnavailableIcon {...props} />;
+  if (failed) return <UnavailableIcon {...props} />;
+  return <WebImage {...props} onError={() => setFailed(true)} />;
+}
+
+function WebImage(
+  props: LoadedIconProps & { onError: () => void },
+): React.JSX.Element {
   return (
-    <Image
-      accessibilityLabel={`${props.agentName} icon`}
-      source={{ uri: webUri(source) }}
-      style={{ width: pixels, height: pixels }}
-      onError={() => setFailed(true)}
-    />
+    <View className="dark:invert dark:hue-rotate-180">
+      <Image
+        accessibilityLabel={`${props.agentName} icon`}
+        source={{ uri: props.uri }}
+        style={useIconBox(props.role)}
+        onError={props.onError}
+      />
+    </View>
   );
 }
 
-const webUri = (
-  source: Exclude<IconSource, { kind: 'unavailable' }>,
-): string =>
-  source.kind === 'inline'
-    ? `data:image/svg+xml,${encodeURIComponent(source.xml)}`
-    : source.uri;
-
-function RegistryImage({
-  uri,
-  agentName,
-  role,
-}: LoadedIconProps): React.JSX.Element {
-  const source = useRegistrySource(uri);
-  const props = imageProps(agentName, useIconPixels(role));
-  return renderIcon(
-    source,
-    props,
-    <UnavailableIcon {...{ agentName, role }} />,
-  );
+function RegistryImage(props: LoadedIconProps): React.JSX.Element {
+  const source = useRegistrySource(props.uri);
+  const image = imageProps(props.agentName, useIconPixels(props.role));
+  return renderIcon(source, image, <UnavailableIcon {...props} />);
 }
 
 // A vendored logo paints with currentColor, which would be black; it takes the foreground, so it reads on a dark surface.

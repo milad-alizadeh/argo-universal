@@ -1,10 +1,14 @@
 import type * as React from 'react';
 import { useContext } from 'react';
 import { Pressable, View } from 'react-native';
-import { FieldRowEnd, useNavigationFields } from '../../fields/field-layout';
+import {
+  FieldRowCorners,
+  FieldRowEnd,
+  useNavigationFields,
+} from '../../fields/field-layout';
 import { type ListItemProps, listItemName } from '../../fields/field-props';
 import { ListItemBody } from './list-item-content';
-import { rowClasses } from './list-item-styles';
+import { type RowPlace, rowClasses } from './list-item-styles';
 import {
   interactionProps,
   linkProps,
@@ -27,6 +31,13 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
   );
 }
 
+function useRowPlace(): RowPlace {
+  return {
+    endsSection: useContext(FieldRowEnd),
+    corners: useContext(FieldRowCorners),
+  };
+}
+
 function useRowProps(props: ListItemProps): ReturnType<
   typeof selectionProps
 > & {
@@ -37,7 +48,7 @@ function useRowProps(props: ListItemProps): ReturnType<
   return {
     accessibilityLabel: listItemName(props),
     ...selectionProps(props),
-    className: rowClasses(props, navigation, useContext(FieldRowEnd)),
+    className: rowClasses(props, navigation, useRowPlace()),
   };
 }
 

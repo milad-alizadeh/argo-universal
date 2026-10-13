@@ -20,6 +20,15 @@ export function useSidebarFields(): boolean {
  */
 export const FieldRowEnd = createContext<boolean | undefined>(undefined);
 
+/*
+ * A card row's place in its card. Each row is in a container of its own, so the row rounds its own
+ * corners rather than being clipped by a wrapper, which would also clip the line that hides the
+ * separator above it on hover.
+ */
+export const FieldRowCorners = createContext<
+  { first: boolean; last: boolean } | undefined
+>(undefined);
+
 // A grouped list's gutters, and the space between its sections, on a phone and a wide window.
 export const fieldGroupPadding = 'px-4 pb-8 pt-4 wide:px-0 wide:pb-6 wide:pt-0';
 export const fieldGroupGap = 'gap-8 wide:gap-6';

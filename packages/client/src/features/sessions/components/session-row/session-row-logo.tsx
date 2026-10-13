@@ -10,10 +10,8 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { SvgXml } from 'react-native-svg';
-import { useResolveClassNames } from 'uniwind';
+import { AgentLogo } from '#features/agents';
 import { fullTurnDegrees } from '#lib/generic/motion';
-import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useIconBox } from '../../../../lib/generic/symbols/icon-role';
 
 const logoTurnMilliseconds = 3000;
@@ -51,23 +49,12 @@ export function SessionLogo(props: SessionLogoProps): React.JSX.Element {
   const logoStyle = useLogoRotation(props.status);
   return (
     <Animated.View style={[useIconBox('mark'), logoStyle]}>
-      <LogoMark logo={props.logo} />
+      <AgentLogo
+        logo={props.logo}
+        label="Agent"
+        role="mark"
+        testID="session-logo"
+      />
     </Animated.View>
-  );
-}
-
-// A custom Agent, or one missing from the list, has no logo; an empty SVG would throw, so it shows the Agent glyph.
-function LogoMark({ logo }: { logo: string }): React.JSX.Element {
-  const { color } = useResolveClassNames('text-foreground');
-  if (!logo.trim())
-    return <Icon name="agent" role="mark" className="text-foreground" />;
-  return (
-    <SvgXml
-      testID="session-logo"
-      xml={logo}
-      width="100%"
-      height="100%"
-      color={color}
-    />
   );
 }

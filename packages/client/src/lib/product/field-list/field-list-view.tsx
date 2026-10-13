@@ -6,12 +6,12 @@ import { useResolveClassNames } from 'uniwind';
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
 import { listTestIdProps } from '../../generic/list-test-id';
 import {
+  FieldRowCorners,
   FieldRowEnd,
   fieldGroupGap,
   fieldGroupPadding,
 } from '../../generic/primitives/fields/field-layout';
 import type { ListSearchBarProps } from '../../generic/primitives/inputs/list-search-bar/list-search-bar';
-import { cn } from '../../generic/utils';
 import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
 import {
   type FieldListEntry,
@@ -138,16 +138,8 @@ type RowEntry = Extract<FieldListEntry, { kind: 'row' }>;
 // One row of the section's card: the first rounds its top, the last its bottom and drops its separator.
 function CardRow({ entry }: { entry: RowEntry }): React.JSX.Element {
   return (
-    <View className={cardRowClassName(entry)}>
+    <FieldRowCorners value={{ first: entry.first, last: entry.last }}>
       <FieldRowEnd value={entry.last}>{entry.row}</FieldRowEnd>
-    </View>
-  );
-}
-
-function cardRowClassName({ first, last }: RowEntry): string {
-  return cn(
-    'overflow-hidden',
-    first && 'rounded-t-2xl',
-    last && 'rounded-b-2xl',
+    </FieldRowCorners>
   );
 }

@@ -1,22 +1,53 @@
 import { cn } from '../../../utils';
 import type { ListItemProps } from '../../fields/field-props';
 
-// endsSection: a virtualised list says whether the row ends its section; elsewhere the last child does.
+interface Corners {
+  first: boolean;
+  last: boolean;
+}
+
+// A virtualised list says whether the row ends its section, and a card's row where it sits in its card; elsewhere the last child ends it.
+export interface RowPlace {
+  endsSection?: boolean;
+  corners?: Corners;
+}
+
 export function rowClasses(
   props: ListItemProps,
   navigation: boolean,
-  endsSection?: boolean,
+  place: RowPlace = {},
 ): string {
   return cn(
     'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted wide:min-h-11 web:select-none web:[&_*]:select-none',
     controlClasses(props),
     sizeClasses(props),
-    stateClasses(props, navigation),
-    showsSeparator(navigation, endsSection) &&
-      separatorClasses(props, endsSection),
-    navigation && sidebarClasses(props),
+    stateClasses(props, navigation, place),
+    cornerClasses(place.corners),
+    edgeClasses(props, navigation, place),
   );
 }
+
+// A sidebar row has no separator, and neither has the row that ends its section.
+function edgeClasses(
+  props: ListItemProps,
+  navigation: boolean,
+  place: RowPlace,
+): string | undefined {
+  if (navigation) return sidebarClasses(props);
+  return place.endsSection === true
+    ? undefined
+    : separatorClasses(props, place.endsSection);
+}
+
+// A card's rows round their own corners: a wrapper's clip would also hide the line that covers the separator above on hover.
+const cornerClasses = (corners: Corners | undefined): string =>
+  cn(topCorners(corners), bottomCorners(corners));
+
+const topCorners = (corners: Corners | undefined): string | undefined =>
+  corners?.first ? 'rounded-t-2xl' : undefined;
+
+const bottomCorners = (corners: Corners | undefined): string | undefined =>
+  corners?.last ? 'rounded-b-2xl' : undefined;
 
 function controlClasses(
   props: Pick<ListItemProps, 'subtitle' | 'detail'>,
@@ -39,19 +70,35 @@ export const contentGap = (
   sidebar || size === 'large' ? undefined : 'wide:gap-2';
 
 // A loading row pads to Paper's 56, its spinner in a 20 slot; a pressable row shades on hover.
-function stateClasses(props: ListItemProps, navigation: boolean): string {
-  return cn(props.loading && 'py-4', props.onPress && pressClasses(navigation));
+function stateClasses(
+  props: ListItemProps,
+  navigation: boolean,
+  place: RowPlace,
+): string {
+  return cn(
+    props.loading && 'py-4',
+    props.onPress && pressClasses(navigation, place),
+  );
 }
 
 const focusClasses =
   'web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2';
 
 // A sidebar row has no separators to hide and keeps its own hover tint (none when selected), so it only takes the focus ring.
-const pressClasses = (navigation: boolean): string =>
-  navigation ? focusClasses : cn(focusClasses, hoverClasses);
+const pressClasses = (navigation: boolean, place: RowPlace): string =>
+  navigation
+    ? focusClasses
+    : cn(focusClasses, hoverClasses, separatorAbove(place));
+
+const separatorAbove = (place: RowPlace): string | undefined =>
+  place.corners?.first ? undefined : hoverSeparatorAbove;
 
 const hoverClasses =
-  'web:hover:bg-[var(--color-separator)] web:active:bg-[var(--color-separator)] web:before:absolute web:before:-top-px web:before:inset-x-0 web:before:h-px web:before:bg-inherit web:before:hidden web:hover:before:block web:active:before:block web:hover:after:bg-inherit web:active:after:bg-inherit';
+  'web:hover:bg-[var(--color-separator)] web:active:bg-[var(--color-separator)] web:hover:after:bg-inherit web:active:after:bg-inherit';
+
+// The line over the separator above; a card's first row has none, as it would stick out of the card.
+const hoverSeparatorAbove =
+  'web:before:absolute web:before:-top-px web:before:inset-x-0 web:before:h-px web:before:bg-inherit web:before:hidden web:hover:before:block web:active:before:block';
 
 function sidebarClasses(props: ListItemProps): string {
   return cn(
@@ -74,12 +121,6 @@ function plainEmphasis(props: ListItemProps, navigation: boolean): string {
     ? 'text-muted-foreground'
     : 'text-foreground';
 }
-
-// A sidebar row has none, and neither has the row that ends its section.
-const showsSeparator = (
-  navigation: boolean,
-  endsSection: boolean | undefined,
-): boolean => !navigation && endsSection !== true;
 
 // 1px on every web width: Chrome drops a 0.5px line on a phone-width page, even at 3x.
 function separatorClasses(
