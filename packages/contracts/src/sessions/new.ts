@@ -1,10 +1,9 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
 import {
-  BlobRef,
   ImageContent,
-  ResourceLink,
   TextContent,
+  UploadedFileLink,
 } from '../feed/content-block';
 
 // Where a Session runs (ADR-0008).
@@ -25,9 +24,6 @@ export const InitialConfigOption = z.strictObject({
   value: z.union([z.string(), z.boolean()]),
 });
 export type InitialConfigOption = z.infer<typeof InitialConfigOption>;
-
-// A first prompt links only files uploaded from the device, not paths on the Server.
-const UploadedFileLink = ResourceLink.extend({ blob: BlobRef });
 
 // Creation can leave the real Session empty while its configuration is selected.
 export const SessionNewInput = z.strictObject({

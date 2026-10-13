@@ -232,7 +232,7 @@ export function Composer({
                           ? [
                               {
                                 label: 'Files',
-                                icon: 'attach' as const,
+                                icon: 'folder' as const,
                                 onPress: onAttachFiles ?? onAttachImages,
                               },
                               {
@@ -265,7 +265,7 @@ export function Composer({
                                 ? [
                                     {
                                       label: 'Files',
-                                      icon: 'attach' as const,
+                                      icon: 'folder' as const,
                                       onPress: onAttachFiles,
                                     },
                                   ]

@@ -51,6 +51,10 @@ export const ResourceLink = z.strictObject({
 });
 export type ResourceLink = z.infer<typeof ResourceLink>;
 
+// A file uploaded from the device; a first prompt links only these, never paths on the Server.
+export const UploadedFileLink = ResourceLink.extend({ blob: BlobRef });
+export type UploadedFileLink = z.infer<typeof UploadedFileLink>;
+
 export const EmbeddedResource = z.strictObject({
   type: z.literal('resource'),
   resource: z.strictObject({
@@ -80,3 +84,12 @@ export const ContentBlock = z.discriminatedUnion('type', [
   UnsupportedContent,
 ]);
 export type ContentBlock = z.infer<typeof ContentBlock>;
+
+export const isUploadedFile = (
+  block: ContentBlock,
+): block is UploadedFileLink =>
+  block.type === 'resource_link' && block.blob !== undefined;
+
+// Text an Agent can read inline, and the attachment card can preview: UTF-8 that decoded cleanly, with no NUL.
+export const isPlainText = (decoded: string): boolean =>
+  !decoded.includes('\0') && !decoded.includes('\uFFFD');

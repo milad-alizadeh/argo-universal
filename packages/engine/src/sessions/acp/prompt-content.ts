@@ -2,9 +2,10 @@ import type {
   ContentBlock as AcpContentBlock,
   PromptCapabilities,
 } from '@agentclientprotocol/sdk';
-import type { ContentBlock } from '@repo/contracts';
+import { type ContentBlock, isUploadedFile } from '@repo/contracts';
 import { type AttachmentStorage, readBlobBytes } from '../../blob';
-import { promptMetadata, readUploadedFile } from './uploaded-file';
+import { promptMetadata } from './prompt-metadata';
+import { readUploadedFile } from './uploaded-file';
 
 type PromptContentInput = {
   content: ContentBlock[];
@@ -70,8 +71,8 @@ const readOtherPrompt = (
   input: Omit<PromptContentInput, 'content'>,
   block: Exclude<ContentBlock, { type: 'image' | 'resource' }>,
 ): Promise<AcpContentBlock> =>
-  block.type === 'resource_link' && block.blob
-    ? readUploadedFile(input, { ...block, blob: block.blob })
+  isUploadedFile(block)
+    ? readUploadedFile(input, block)
     : readTextOrReferencePrompt(block);
 const convertPromptBlock = (
   input: Omit<PromptContentInput, 'content'>,

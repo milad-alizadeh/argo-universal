@@ -1,3 +1,4 @@
+import { isPlainText, isPromptImage } from '@repo/contracts';
 import { getDocumentAsync } from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import { launchImageLibraryAsync } from 'expo-image-picker';
@@ -12,15 +13,18 @@ interface ChosenFile {
   file: Blob;
 }
 
-// Text files show their first lines on the attachment card.
+// A file that reads as plain text shows its first lines, by the rule the Engine inlines it by.
 const previewBytes = 2048;
-const textMimeTypes = /^text\/|^application\/(json|xml|x-yaml|yaml|toml)/;
+// Cutting the file can split its last character.
+const splitLastCharacter = /\uFFFD$/u;
 
 let picked = 0;
 
 async function readPreview(chosen: ChosenFile): Promise<string | undefined> {
-  if (!textMimeTypes.test(chosen.mimeType)) return undefined;
-  return chosen.file.slice(0, previewBytes).text();
+  if (isPromptImage(chosen.mimeType)) return undefined;
+  const start = await chosen.file.slice(0, previewBytes).text();
+  const preview = start.replace(splitLastCharacter, '');
+  return isPlainText(preview) ? preview : undefined;
 }
 
 async function toPickedAttachment(
@@ -86,7 +90,6 @@ export async function pickImages(): Promise<PickedAttachment[]> {
   }));
 }
 
-// Opens the system document picker, or the browser's file chooser, for any kind of file.
 export async function pickFiles(): Promise<PickedAttachment[]> {
   const result = await getDocumentAsync({ multiple: true, base64: false });
   if (result.canceled) return [];
@@ -97,7 +100,6 @@ export async function pickFiles(): Promise<PickedAttachment[]> {
   }));
 }
 
-// Files dropped on the Composer from the desktop or a browser.
 export function droppedFiles(
   files: readonly globalThis.File[],
 ): Promise<PickedAttachment[]> {

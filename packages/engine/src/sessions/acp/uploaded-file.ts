@@ -3,40 +3,30 @@ import type {
   ContentBlock as AcpContentBlock,
   PromptCapabilities,
 } from '@agentclientprotocol/sdk';
-import type { ContentBlock } from '@repo/contracts';
+import { blobPath, isPlainText, type UploadedFileLink } from '@repo/contracts';
 import {
   type AttachedFile,
   type AttachmentStorage,
   attachFile,
 } from '../../blob';
+import { promptMetadata } from './prompt-metadata';
 
-type ResourceLink = Extract<ContentBlock, { type: 'resource_link' }>;
-export type UploadedFile = ResourceLink & Required<Pick<ResourceLink, 'blob'>>;
 // Text files over 100 KiB are linked, so one attachment cannot fill the Agent's context.
 const inlineTextLimitBytes = 102_400;
-const utf8 = new TextDecoder('utf-8', { fatal: true });
-export const promptMetadata = (
-  metadata: ContentBlock['_meta'],
-): AcpContentBlock['_meta'] => metadata?.acp;
-const inlinable = (bytes: Buffer): boolean =>
-  bytes.length <= inlineTextLimitBytes && !bytes.includes(0);
-const decodeUtf8 = (bytes: Buffer): string | undefined => {
-  try {
-    return utf8.decode(bytes);
-  } catch {
-    return undefined;
-  }
+const plainText = (bytes: Buffer): string | undefined => {
+  const decoded = bytes.toString('utf8');
+  return isPlainText(decoded) ? decoded : undefined;
 };
-// The file's text when the Agent takes embedded context and the file is short UTF-8 text.
+// The file's text when the Agent takes embedded context and the file is short plain text.
 const inlineText = (
   attached: AttachedFile,
   capabilities: PromptCapabilities,
 ): string | undefined =>
-  capabilities.embeddedContext && inlinable(attached.bytes)
-    ? decodeUtf8(attached.bytes)
+  capabilities.embeddedContext && attached.bytes.length <= inlineTextLimitBytes
+    ? plainText(attached.bytes)
     : undefined;
 const embeddedFile = (
-  upload: UploadedFile,
+  upload: UploadedFileLink,
   uri: string,
   text: string,
 ): AcpContentBlock => ({
@@ -44,7 +34,7 @@ const embeddedFile = (
   resource: { uri, mimeType: upload.blob.mime, text },
   _meta: promptMetadata(upload._meta),
 });
-const linkedFile = (upload: UploadedFile, uri: string): AcpContentBlock => {
+const linkedFile = (upload: UploadedFileLink, uri: string): AcpContentBlock => {
   const { blob, ...link } = upload;
   return {
     ...link,
@@ -55,7 +45,7 @@ const linkedFile = (upload: UploadedFile, uri: string): AcpContentBlock => {
   };
 };
 const uploadedFilePrompt = (
-  upload: UploadedFile,
+  upload: UploadedFileLink,
   attached: AttachedFile,
   capabilities: PromptCapabilities,
 ): AcpContentBlock => {
@@ -65,12 +55,29 @@ const uploadedFilePrompt = (
     ? linkedFile(upload, uri)
     : embeddedFile(upload, uri, text);
 };
+const sameOrAbsent = <Value>(
+  value: Value | undefined,
+  stored: Value,
+): boolean => value === undefined || value === stored;
+// A link's own fields describe its Blob, as an image's MIME type must.
+const describesItsBlob = ({
+  uri,
+  mimeType,
+  size,
+  blob,
+}: UploadedFileLink): boolean =>
+  uri === blobPath(blob.blobId) &&
+  sameOrAbsent(mimeType, blob.mime) &&
+  sameOrAbsent(size, blob.bytes);
 export const readUploadedFile = async (
   input: { capabilities: PromptCapabilities; storage: AttachmentStorage },
-  upload: UploadedFile,
-): Promise<AcpContentBlock> =>
-  uploadedFilePrompt(
+  upload: UploadedFileLink,
+): Promise<AcpContentBlock> => {
+  if (!describesItsBlob(upload))
+    throw new Error('The attached file does not match its Blob');
+  return uploadedFilePrompt(
     upload,
     await attachFile(input.storage, upload.blob, upload.name),
     input.capabilities,
   );
+};

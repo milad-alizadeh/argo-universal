@@ -7,13 +7,14 @@ import {
   type BlobRef,
   blobPath,
   type ContentBlock,
-  type SessionNewInput,
+  type UploadedFileLink,
 } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { blobsFolderIn, uploadBlob } from '../blob';
 
 const markdown = 'text/markdown';
+const pdf = 'application/pdf';
 const context: ContentBlock = {
   type: 'resource',
   resource: {
@@ -133,10 +134,7 @@ const uploadFile = (
     },
     file,
   );
-const uploadedLink = (
-  blob: BlobRef,
-  name: string,
-): Extract<SessionNewInput['prompt'][number], { type: 'resource_link' }> => ({
+const uploadedLink = (blob: BlobRef, name: string): UploadedFileLink => ({
   type: 'resource_link',
   name,
   uri: blobPath(blob.blobId),
@@ -213,7 +211,7 @@ it('an uploaded binary file is linked to a copy holding its exact bytes', async 
   const bytes = new Uint8Array([37, 80, 68, 70, 0, 255, 1]);
   const { request, blob, host } = await promptWithUpload(
     true,
-    new File([bytes], 'spec.pdf', { type: 'application/pdf' }),
+    new File([bytes], 'spec.pdf', { type: pdf }),
   );
   expect({
     prompt: request.prompt,
@@ -226,7 +224,7 @@ it('an uploaded binary file is linked to a copy holding its exact bytes', async 
         type: 'resource_link',
         name: 'spec.pdf',
         uri: fileUri(host, blob, 'spec.pdf'),
-        mimeType: 'application/pdf',
+        mimeType: pdf,
         size: bytes.length,
       },
     ],
@@ -253,3 +251,54 @@ it('an uploaded file name cannot leave its attachment folder', async () => {
     { uri: fileUri(host, blob, 'escape.md') },
   ]);
 });
+
+it.each([
+  {
+    kind: 'longer than 100 KiB',
+    file: new File(['a'.repeat(102_401)], 'long.md', { type: markdown }),
+  },
+  {
+    kind: 'not UTF-8',
+    file: new File([new Uint8Array([99, 97, 102, 233])], 'latin.txt', {
+      type: 'text/plain',
+    }),
+  },
+])('an uploaded text file $kind is linked, not inlined', async ({ file }) => {
+  const { request, blob, host } = await promptWithUpload(true, file);
+  expect(request.prompt).toEqual([
+    {
+      type: 'resource_link',
+      name: file.name,
+      uri: fileUri(host, blob, file.name),
+      mimeType: file.type,
+      size: file.size,
+    },
+  ]);
+});
+
+it.each([
+  { field: 'uri', change: { uri: blobPath('b'.repeat(64)) } },
+  { field: 'mimeType', change: { mimeType: pdf } },
+  { field: 'size', change: { size: 1 } },
+])(
+  'an uploaded file whose $field does not match its Blob is refused before the Agent sees it',
+  async ({ change }) => {
+    const requests: PromptRequest[] = [];
+    const host = await startAcpEngine({
+      steps: [],
+      responses: { 'session/prompt': [{ requests }] },
+    });
+    const blob = await uploadFile(
+      host,
+      new File([notes], 'notes.md', { type: markdown }),
+    );
+    const created = await host.caller.session.new(emptySessionInput);
+    await expect(
+      host.caller.session.prompt({
+        ...created,
+        prompt: [{ ...uploadedLink(blob, 'notes.md'), ...change }],
+      }),
+    ).rejects.toThrow('does not match its Blob');
+    expect(requests).toEqual([]);
+  },
+);

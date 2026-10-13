@@ -106,7 +106,6 @@ export interface UploadForm {
   form: FormData;
 }
 
-// One upload form per attachment of the sent draft, in draft order.
 export function toUploadForms(
   sent: ComposerDraft,
   files: ReadonlyMap<string, Blob>,
