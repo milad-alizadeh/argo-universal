@@ -1,4 +1,4 @@
-import { newSessionCatalogs } from '@repo/mocks/app';
+import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -266,7 +266,7 @@ function agentUnavailable(agentIndex: 0 | 1): Story {
             ...configuration,
             agents: newSessionCatalogs.bothUnavailable,
             agent: agent.agent,
-            configOptions: agent.configOptions,
+            configOptions: recordedSessionOptions(agent.agent),
             onAgentRetry: fn(),
           },
         },
@@ -315,7 +315,7 @@ function configuration(agentIndex: 0 | 1): Story {
           configuration: {
             ...base,
             agent: agent.agent,
-            configOptions: agent.configOptions,
+            configOptions: recordedSessionOptions(agent.agent),
           },
         },
       },

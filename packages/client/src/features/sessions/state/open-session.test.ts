@@ -1,5 +1,9 @@
 import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
-import { newSessionBranches, newSessionCatalogs } from '@repo/mocks/app';
+import {
+  newSessionBranches,
+  newSessionCatalogs,
+  recordedSessionOptions,
+} from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { canOpenSession, toNewSessionInput } from './open-session';
 import { toSessionChoices } from './session-choices';
@@ -12,7 +16,7 @@ import {
   worktreeProject,
 } from './session-choices.mocks';
 
-const configuration: SessionConfigOption[] = firstAgent.configOptions;
+const configuration: SessionConfigOption[] = recordedSessionOptions(firstAgent.agent);
 const firstPrompt: SessionNewInput['prompt'] = [
   { type: 'text', text: 'Fix the flaky login test' },
 ];

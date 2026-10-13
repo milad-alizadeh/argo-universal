@@ -1,5 +1,5 @@
 import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
-import { newSessionCatalogs } from '@repo/mocks/app';
+import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import type * as React from 'react';
@@ -64,7 +64,7 @@ const pickerCatalogs = newSessionCatalogs.bothAvailable.map(
     const select = (
       category: string,
     ): { choices: SessionConfigSelectOption[]; current: string } => {
-      const option = agent.configOptions.find(
+      const option = recordedSessionOptions(agent.agent).find(
         (entry) => entry.category === category && entry.type === 'select',
       );
       if (option?.type !== 'select')
@@ -393,7 +393,7 @@ export const EnvelopeWithInspectorOpen: Story = {
     configuration: {
       agents: newSessionCatalogs.bothAvailable,
       agent: firstAgent.agent,
-      configOptions: firstAgent.configOptions,
+      configOptions: recordedSessionOptions(firstAgent.agent),
       onConfigChange: fn(),
       checkout: {
         branch: 'main',
@@ -586,7 +586,7 @@ function ConfiguredComposer({
 }: {
   agent: AgentInfo;
 }): React.JSX.Element {
-  const [configOptions, setConfigOptions] = useState(agent.configOptions);
+  const [configOptions, setConfigOptions] = useState(recordedSessionOptions(agent.agent));
   return (
     <Composer
       {...composerProps({
@@ -724,15 +724,13 @@ async function expectDangerousMode({
   await userEvent.keyboard('{Escape}');
 }
 
-function phoneStatusControls(
-  agent: Pick<AgentInfo, 'agent' | 'configOptions'>,
-): Story {
+function phoneStatusControls(agent: Pick<AgentInfo, 'agent'>): Story {
   return {
     args: {
       configuration: {
         agents: newSessionCatalogs.bothAvailable,
         agent: agent.agent,
-        configOptions: agent.configOptions,
+        configOptions: recordedSessionOptions(agent.agent),
         onConfigChange: fn(),
         checkout: {
           branch: 'main',
@@ -770,7 +768,7 @@ function createdCheckoutIsReadOnly(width: number): Story {
       configuration: {
         agents: newSessionCatalogs.bothAvailable,
         agent: firstAgent.agent,
-        configOptions: firstAgent.configOptions,
+        configOptions: recordedSessionOptions(firstAgent.agent),
         onConfigChange: fn(),
         checkout: {
           branch: 'main',
@@ -931,7 +929,7 @@ function stopPrecedence(
       configuration: {
         agents: newSessionCatalogs.bothAvailable,
         agent: catalog.agent.agent,
-        configOptions: catalog.agent.configOptions,
+        configOptions: recordedSessionOptions(catalog.agent.agent),
         onConfigChange: fn(),
         checkout: { branch: 'main', newWorktree: false },
         turnRunning: true,
@@ -1014,7 +1012,7 @@ export const ScrollableAgentCatalog: Story = {
     configuration: {
       agents: composerLongAgentCatalog,
       agent: 'development-agent-1',
-      configOptions: firstAgent.configOptions,
+      configOptions: recordedSessionOptions(firstAgent.agent),
       onConfigChange: fn(),
       onAgentChange: fn(),
       checkout: { branch: 'main', newWorktree: true },
@@ -1077,7 +1075,7 @@ function unavailableAgents(width: number): Story {
           ...newSessionCatalogs.oneNotSignedIn,
         ].filter((entry) => entry.availability !== 'available'),
         agent: firstAgent.agent,
-        configOptions: firstAgent.configOptions,
+        configOptions: recordedSessionOptions(firstAgent.agent),
         onConfigChange: fn(),
         onAgentChange: fn(),
         onAgentSetup: fn(),
@@ -1122,7 +1120,7 @@ function responsiveLayout(width: number, agentIndex: number): Story {
       configuration: {
         agents: [catalog.agent],
         agent: catalog.agent.agent,
-        configOptions: catalog.agent.configOptions,
+        configOptions: recordedSessionOptions(catalog.agent.agent),
         onConfigChange: fn(),
         checkout: {
           branch: 'main',
@@ -1225,7 +1223,7 @@ function workStatusCounts(agentIndex: number, shellsRunning: boolean): Story {
       configuration: {
         agents: [catalog.agent],
         agent: catalog.agent.agent,
-        configOptions: catalog.agent.configOptions,
+        configOptions: recordedSessionOptions(catalog.agent.agent),
         onConfigChange: fn(),
         checkout: { branch: 'main', newWorktree: false },
       },
@@ -1399,7 +1397,7 @@ function equalPlanSteps(width: number, agentIndex: number): Story {
       configuration: {
         agents: [catalog.agent],
         agent: catalog.agent.agent,
-        configOptions: catalog.agent.configOptions,
+        configOptions: recordedSessionOptions(catalog.agent.agent),
         onConfigChange: fn(),
         checkout: { branch: 'main', newWorktree: false },
       },

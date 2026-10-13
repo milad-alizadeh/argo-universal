@@ -2,6 +2,7 @@ import {
   newSessionCatalogs,
   newSessionProjects,
   serverInfo,
+  recordedSessionOptions,
 } from '@repo/mocks/app';
 import { fn } from 'storybook/test';
 import type { ComposerDraft } from '#features/composer';
@@ -24,7 +25,7 @@ export const readyNewSession: ReadyNewSessionViewProps = {
   configuration: {
     agents: newSessionCatalogs.bothAvailable,
     agent: firstAgent.agent,
-    configOptions: firstAgent.configOptions,
+    configOptions: recordedSessionOptions(firstAgent.agent),
     onConfigChange: fn(),
     onAgentChange: fn(),
     checkout: { branch: 'main', newWorktree: true, onNewWorktreeChange: fn() },

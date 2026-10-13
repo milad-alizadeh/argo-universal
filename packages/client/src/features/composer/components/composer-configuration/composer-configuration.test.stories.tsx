@@ -1,5 +1,12 @@
-import type { SessionConfigSelectOption } from '@repo/contracts';
-import { newSessionCatalogs } from '@repo/mocks/app';
+import type {
+  SessionConfigOption,
+  SessionConfigSelectOption,
+} from '@repo/contracts';
+import {
+  newSessionCatalogs,
+  newSessionOptions,
+  recordedSessionOptions,
+} from '@repo/mocks/app';
 import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
@@ -40,9 +47,9 @@ type Story = StoryObj<typeof meta>;
 
 const defaultEffortCases = composerUnlistedEffortConfigurations.map(
   (configuration, agentIndex) => {
-    const recorded = newSessionCatalogs.bothAvailable[agentIndex];
+    const recorded = newSessionOptions[agentIndex];
     const flat = (
-      option: NonNullable<typeof recorded>['configOptions'][number] | undefined,
+      option: SessionConfigOption | undefined,
     ): SessionConfigSelectOption[] =>
       option?.type === 'select'
         ? option.options.flatMap((entry) =>
@@ -437,7 +444,7 @@ function unavailableAgentRetry(
       configuration: {
         agents: newSessionCatalogs.bothUnavailable,
         agent: agent.agent,
-        configOptions: agent.configOptions,
+        configOptions: recordedSessionOptions(agent.agent),
         onConfigChange: fn(),
         onAgentChange: session === 'new' ? onAgentChange : undefined,
         onAgentRetry,
@@ -555,7 +562,7 @@ export const StartedSessionAgentRetryWideSecondAgent = unavailableAgentRetry(
 // Each recorded Agent's levels for a Turn-time change: the slider's steps to a level the narrower model lacks, and where effort then falls.
 const heldChoiceCases = newSessionCatalogs.bothAvailable.map((agent) => {
   const select = (category: string): SessionConfigSelectOption[] => {
-    const option = agent.configOptions.find(
+    const option = recordedSessionOptions(agent.agent).find(
       (entry) => entry.category === category && entry.type === 'select',
     );
     return option?.type === 'select'
@@ -564,10 +571,10 @@ const heldChoiceCases = newSessionCatalogs.bothAvailable.map((agent) => {
         )
       : [];
   };
-  const model = agent.configOptions.find(
+  const model = recordedSessionOptions(agent.agent).find(
     (option) => option.category === 'model',
   );
-  const effort = agent.configOptions.find(
+  const effort = recordedSessionOptions(agent.agent).find(
     (option) => option.category === 'thought_level',
   );
   const models = select('model');
@@ -664,7 +671,7 @@ function heldConfiguration(width: number, agentIndex: number): Story {
       configuration: {
         agents: newSessionCatalogs.bothAvailable,
         agent: agent.agent,
-        configOptions: agent.configOptions,
+        configOptions: recordedSessionOptions(agent.agent),
         onConfigChange,
         turnRunning: true,
         checkout: { branch: 'main', newWorktree: false },
