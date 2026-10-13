@@ -1,7 +1,11 @@
-import type { RequestListener } from 'node:http';
+import type {
+  IncomingMessage,
+  RequestListener,
+  ServerResponse,
+} from 'node:http';
 import { maxBlobUploadBytes } from '@repo/contracts';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
-import { createBlobResponse } from './blob-response';
+import { streamBlob } from './blob-response';
 import { answerError, httpStatus } from './http-response';
 import type { RequestGuard } from './request-guard';
 import type { AppRouter } from './router';
@@ -11,15 +15,39 @@ export interface RequestListenerOptions {
   blobsFolder: string;
   router: AppRouter;
 }
-
 const blobUrlPattern = /^\/blobs\/([^/?]*)(\?.*)?$/;
-// The largest upload plus 64 KiB for multipart headers.
+// The largest upload plus 64 KiB for multipart headers; tRPC stops reading a longer body.
 const multipartHeaderBytes = 65_536;
 const maxBodySize = maxBlobUploadBytes + multipartHeaderBytes;
 
-type TRPCSources = Pick<RequestListenerOptions, 'router' | 'guard'>;
+// Plain HTTP serves only GET /blobs/:id; every other request is a tRPC call at /trpc/ (ADR 0002).
+export function createRequestListener(
+  options: RequestListenerOptions,
+): RequestListener {
+  const handleTRPC = createGuardedTrpc(options);
+  return (request, response): void => {
+    if (!options.guard.allowsRequest({ host: request.headers.host }))
+      return answerError(response, httpStatus.forbidden, 'Forbidden');
+    dispatchRequest({ options, handleTRPC }, request, response);
+  };
+}
 
-function createTRPCResponse(options: TRPCSources): RequestListener {
+function dispatchRequest(
+  sources: { options: RequestListenerOptions; handleTRPC: RequestListener },
+  request: IncomingMessage,
+  response: ServerResponse,
+): void {
+  const blob = blobUrlPattern.exec(request.url ?? '');
+  if (blob)
+    return handleBlob(
+      { ...sources.options, id: matchedBlobId(blob) },
+      request,
+      response,
+    );
+  sources.handleTRPC(request, response);
+}
+
+function createGuardedTrpc(options: RequestListenerOptions): RequestListener {
   const handleTRPC = createHTTPHandler({
     router: options.router,
     basePath: '/trpc/',
@@ -29,27 +57,33 @@ function createTRPCResponse(options: TRPCSources): RequestListener {
     const { origin } = request.headers;
     if (!options.guard.allowsOrigin(origin))
       return answerError(response, httpStatus.forbidden, 'Forbidden');
-    // The web App or desktop App may read its cross-origin answer.
+    // A web App or desktop app on another origin may read the answer only with this header.
     if (origin) response.setHeader('access-control-allow-origin', origin);
-    // tRPC reads the body itself by its Content-Type.
     handleTRPC(request, response);
   };
 }
 
-const blobPath = (url = ''): RegExpExecArray | null => blobUrlPattern.exec(url);
-const blobMatchId = (match: RegExpExecArray): string => match[1] ?? '';
+function handleBlob(
+  options: RequestListenerOptions & { id: string },
+  request: IncomingMessage,
+  response: ServerResponse,
+): void {
+  if (request.method !== 'GET')
+    return answerError(response, httpStatus.methodNotAllowed, {
+      message: 'Method not allowed',
+      headers: { allow: 'GET' },
+    });
+  streamBlob(options, options.id, response).catch((error: unknown): void =>
+    reportBlobFailure(response, error),
+  );
+}
 
-// Plain HTTP serves GET /blobs/:id; other requests go to tRPC (ADR 0002).
-export function createRequestListener(
-  options: RequestListenerOptions,
-): RequestListener {
-  const handleBlob = createBlobResponse(options);
-  const handleTRPC = createTRPCResponse(options);
-  return (request, response): void => {
-    if (!options.guard.allowsRequest({ host: request.headers.host }))
-      return answerError(response, httpStatus.forbidden, 'Forbidden');
-    const blob = blobPath(request.url);
-    if (blob) return handleBlob(blobMatchId(blob), request, response);
-    handleTRPC(request, response);
-  };
+function matchedBlobId(match: RegExpExecArray): string {
+  return match[1] ?? '';
+}
+
+function reportBlobFailure(response: ServerResponse, error: unknown): void {
+  console.error(`engine: ${String(error)}`);
+  if (response.headersSent) response.destroy();
+  else answerError(response, httpStatus.internalError, 'Internal error');
 }

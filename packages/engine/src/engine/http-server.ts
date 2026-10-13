@@ -1,12 +1,19 @@
+import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
-import type { AcpResourceInput } from '../acp';
+import { type AcpResourceInput } from '../acp';
 import type { AgentInstallations, syncSupervisorMachine } from '../agents';
 import { blobsFolderIn } from '../blob';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { createEngineAgentLogins } from './agent-logins';
-import { startHttpTransport } from './http-transport';
+import {
+  admitClose,
+  connectWebSockets,
+  listenOnLoopback,
+} from './http-connections';
+import { createRequestGuard } from './request-guard';
+import { createRequestListener } from './request-listener';
 import { type AppRouter, createAppRouter } from './router';
 import { createAppRouterDeps } from './router-deps';
 
@@ -35,54 +42,61 @@ export interface HttpServer {
   closeSetup: () => Promise<void>;
 }
 
-function createServerRouter(
+type HttpSetup = {
+  blobsFolder: string;
+  commandAdmission: AbortController;
+  agentLogins: ReturnType<typeof createEngineAgentLogins>;
+};
+
+// Serves tRPC and blobs on loopback (ADR 0002); resolves once the port is bound.
+export async function startHttpServer(
   options: HttpServerOptions,
-  commandAdmission: AbortController,
-  agentLogins: ReturnType<typeof createEngineAgentLogins>,
+): Promise<HttpServer> {
+  const { blobsFolder, commandAdmission, agentLogins, appRouter } =
+    prepareHttpServer(options);
+  const guard = createRequestGuard(options.port);
+  const server = createHttpListener(guard, blobsFolder, appRouter);
+  await listenOnLoopback(server, options.port);
+  const closeConnections = connectWebSockets(server, appRouter, guard);
+  return {
+    close: admitClose(commandAdmission, closeConnections),
+    closeSetup: () => agentLogins.shutdown(),
+    createCaller: (callerOptions) => appRouter.createCaller({}, callerOptions),
+  };
+}
+
+function prepareHttpServer(
+  options: HttpServerOptions,
+): HttpSetup & { appRouter: AppRouter } {
+  const blobsFolder = blobsFolderIn(options.home);
+  const commandAdmission = options.commandAdmission ?? new AbortController();
+  const agentLogins = createEngineAgentLogins(options);
+  const appRouter = createHttpRouter(options, {
+    blobsFolder,
+    commandAdmission,
+    agentLogins,
+  });
+  return { blobsFolder, commandAdmission, agentLogins, appRouter };
+}
+
+function createHttpRouter(
+  options: HttpServerOptions,
+  setup: HttpSetup,
 ): AppRouter {
   return createAppRouter(
     createAppRouterDeps({
       ...options,
-      blobsFolder: blobsFolderIn(options.home),
-      sessionCommandSignal: commandAdmission.signal,
-      agentLogins,
+      blobsFolder: setup.blobsFolder,
+      sessionCommandSignal: setup.commandAdmission.signal,
+      agentLogins: setup.agentLogins,
     }),
   );
 }
 
-function serverInterface(
+function createHttpListener(
+  guard: ReturnType<typeof createRequestGuard>,
+  blobsFolder: string,
   router: AppRouter,
-  logins: ReturnType<typeof createEngineAgentLogins>,
-  close: () => Promise<void>,
-): HttpServer {
-  return {
-    close,
-    closeSetup: () => logins.shutdown(),
-    createCaller: (callerOptions) => router.createCaller({}, callerOptions),
-  };
-}
-
-const closeWithAdmission =
-  (
-    admission: AbortController,
-    close: HttpServer['close'],
-  ): HttpServer['close'] =>
-  (): Promise<void> => {
-    admission.abort();
-    return close();
-  };
-
-// Serves one tRPC router and blobs on loopback; resolves once the port is bound.
-export async function startHttpServer(
-  options: HttpServerOptions,
-): Promise<HttpServer> {
-  const admission = options.commandAdmission ?? new AbortController();
-  const logins = createEngineAgentLogins(options);
-  const router = createServerRouter(options, admission, logins);
-  const close = await startHttpTransport({
-    port: options.port,
-    blobsFolder: blobsFolderIn(options.home),
-    router,
-  });
-  return serverInterface(router, logins, closeWithAdmission(admission, close));
+): Server {
+  return createServer(createRequestListener({ guard, blobsFolder, router }));
 }

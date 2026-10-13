@@ -22,10 +22,10 @@ import {
   type EngineOutput,
   type EngineLogParameters,
   type CloseHttpServerInput,
-} from './lifecycle-setup-machine';
+} from './setup.machine';
 const finishingEngineTarget = '#engine.finishing';
 const closingAgentsTarget = 'closingAgents';
-export type { EngineInput } from './lifecycle-setup-machine';
+export type { EngineInput } from './setup.machine';
 
 export const engineMachine = engineSetup.createMachine({
   id: 'engine',

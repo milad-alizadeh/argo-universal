@@ -18,7 +18,7 @@ import {
   requireOpenSessions,
   requireSyncSupervisor,
   type EngineContext,
-} from './lifecycle-setup-machine';
+} from './setup.machine';
 
 export const recoveryInput = ({
   context,

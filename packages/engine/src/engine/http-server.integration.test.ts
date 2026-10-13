@@ -1,92 +1,40 @@
-import { randomUUID } from 'node:crypto';
-import type {
-  PromptRequest,
-  NewSessionRequest,
-} from '@agentclientprotocol/sdk';
-import { agentAdapters } from '@repo/agents';
-import { session } from '@repo/db/schema';
-import { expect, it, onTestFinished } from 'vitest';
-import { WebSocket } from 'ws';
-import { openTestDatabase } from '#mocks/database';
-import { startEngineTestHost } from '#mocks/engine';
-import { sendHttpRequest } from '#mocks/http-client';
-import { scriptedEngineInput } from '#mocks/scripted-engine';
-import { startHttpServer } from './http-server';
+import { expect, it } from 'vitest';
+import { port, upgradeStatus, systemInfoStatus } from '#mocks/engine-http';
 
-it('rejects a second server on the same port', async (): Promise<void> => {
-  const host = await startEngineTestHost();
-  await expect(
-    startHttpServer({
-      createId: randomUUID,
-      home: host.home,
-      port: Number(new URL(host.url).port),
-      version: '1.2.3',
-      startedAt: '2026-10-03T00:00:00.000Z',
-      database: host.database,
-      sessions: host.openSessions,
-      databaseWriter: host.databaseWriter,
-      syncSupervisor: host.engine.system.get('syncSupervisor'),
-    }),
-  ).rejects.toMatchObject({ code: 'EADDRINUSE' });
-  expect(
-    (await sendHttpRequest(host.url, { path: '/trpc/system.info' })).status,
-  ).toBe(200);
+it.each([
+  ['no Origin', {}],
+  ['the desktop app', { origin: 'app://app' }],
+  ['Expo web on localhost', { origin: 'http://localhost:8081' }],
+  ['a web App on 127.0.0.1', { origin: 'http://127.0.0.1:6006' }],
+])('accepts a WebSocket from %s', async (_name, headers): Promise<void> => {
+  expect(await upgradeStatus(headers)).toBe(101);
 });
 
-it('closes while a WebSocket client is connected', async (): Promise<void> => {
-  const host = await startEngineTestHost();
-  const socket = new WebSocket(host.url.replace('http:', 'ws:'));
-  await new Promise((resolve, reject): void => {
-    socket.once('open', resolve);
-    socket.once('error', reject);
-  });
-  const closed = new Promise((resolve): WebSocket =>
-    socket.once('close', resolve),
+it('accepts a WebSocket and HTTP on localhost', async (): Promise<void> => {
+  expect(await upgradeStatus({ host: `localhost:${port}` })).toBe(101);
+  expect(await systemInfoStatus({ host: `localhost:${port}` })).toBe(200);
+});
+
+it('answers feed.page from the database', async (): Promise<void> => {
+  const input = encodeURIComponent(
+    JSON.stringify({ sessionId: 'session-1', direction: 'tail' }),
   );
-  await host.stop();
-  await closed;
-  expect(socket.readyState).toBe(WebSocket.CLOSED);
+  const response = await fetch(
+    `http://127.0.0.1:${port}/trpc/feed.page?input=${input}`,
+  );
+  expect(await response.json()).toMatchObject({
+    result: { data: { epoch: 0, rows: [], startCursor: null } },
+  });
 });
 
-it.each(agentAdapters.map((adapter): string => adapter.agent))(
-  'does not send the waiting %s prompt after HTTP closure begins',
-  async (agent): Promise<void> => {
-    const stored = openTestDatabase();
-    onTestFinished(stored.remove);
-    const startup = Promise.withResolvers<void>();
-    const began = Promise.withResolvers<NewSessionRequest>();
-    const commands: PromptRequest[] = [];
-    const host = await startEngineTestHost({
-      database: stored.database,
-      ...scriptedEngineInput(
-        {
-          steps: [],
-          responses: {
-            'session/new': [{ received: began, waitFor: startup.promise }],
-            'session/prompt': [{ requests: commands }],
-          },
-        },
-        agent,
-      ),
-    });
-    stored.database.update(session).set({ agent }).run();
-
-    const response = fetch(`${host.url}/trpc/session.prompt`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'session-1',
-        prompt: [{ type: 'text', text: 'Too late' }],
-      }),
-    }).catch((): null => null);
-    await began.promise;
-    const closing = host.stop();
-    startup.resolve();
-    await closing;
-    await new Promise<void>((resolve): NodeJS.Immediate =>
-      setImmediate(resolve),
-    );
-    expect(commands).toEqual([]);
-    await response;
+it.each(['https://evil.example', 'http://localhost.evil.example', 'null'])(
+  'rejects a WebSocket from %s',
+  async (origin): Promise<void> => {
+    expect(await upgradeStatus({ origin })).toBe(403);
   },
 );
+
+it('rejects a WebSocket with another Host', async (): Promise<void> => {
+  expect(await upgradeStatus({ host: 'evil.example:7337' })).toBe(403);
+  expect(await upgradeStatus({ host: `127.0.0.1:${port + 1}` })).toBe(403);
+});

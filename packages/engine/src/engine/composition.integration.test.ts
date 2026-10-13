@@ -1,118 +1,75 @@
-import { mkdirSync } from 'node:fs';
-import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { type AgentAdapter, agentAdapters } from '@repo/agents';
-import { turn } from '@repo/db/schema';
-import { createAppFixtureAdapter } from '@repo/mocks/agent/app-fixtures';
-import { scenarios } from '@repo/mocks/agent/scenarios';
-import { initTestRepository } from '@repo/mocks/git/test-repository';
-import { eq } from 'drizzle-orm';
+import { agentAdapters } from '@repo/agents';
+import { feedRow } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
+import { waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
-import { createScriptedAgentLauncher } from '#mocks/scripted-agent';
+import { scriptedEngineInput } from '#mocks/scripted-engine';
 
-async function startNewSessionEngine(identity: AgentAdapter): Promise<
-  Awaited<ReturnType<typeof startEngineTestHost>> & {
-    project: string;
-    database: ReturnType<typeof openTestDatabase>['database'];
-  }
-> {
-  const root = realpathSync(mkdtempSync(path.join(tmpdir(), 'argo-fixture-')));
-  onTestFinished((): void => rmSync(root, { recursive: true, force: true }));
-  const project = path.join(root, 'project');
-  mkdirSync(project);
-  await initTestRepository(project);
-  const { database, remove } = openTestDatabase({}, project);
-  onTestFinished(remove);
-  return {
-    project,
-    ...(await startEngineTestHost({
-      database,
-      adapters: [createAppFixtureAdapter(identity)],
-      acp: {
-        launchProcess: createScriptedAgentLauncher(() => scenarios.reply),
-      },
-      resolveAgentLaunch: async (input) => ({
-        agentId: input.agent,
-        projectId: input.projectId,
-        executable: '/mock-agent',
-        version: '1',
-        args: [],
-        cwd: input.projectPath,
-        env: {},
-        authContext: 'shared-fixture',
-      }),
-    })),
-  };
-}
-
-function rejectUpstreamCall(): never {
-  throw new Error('App fixture contacted upstream');
-}
+const engineStopEvent = 'engine.stop';
+const waitForCancelStep = 'wait-for-cancel';
 
 it.each(agentAdapters)(
-  'creates a $agent Session and persists its initial prompt and completed Turn with shared fixtures without contacting upstream',
-  async (identity): Promise<void> => {
-    const root = await startNewSessionEngine({
-      ...identity,
-      probe: rejectUpstreamCall,
-      connect: rejectUpstreamCall,
-    });
-    const caller = root.createCaller();
-    expect(await caller.agents.list()).toMatchObject([
+  'serves live $agent Session procedures and drains their Feed before closing the database',
+  async ({ agent }): Promise<void> => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const input = scriptedEngineInput(
       {
-        agent: identity.agent,
-        label: identity.label,
-        logo: identity.logo,
-        availability: 'available',
-      },
-    ]);
-    const { sessionId } = await caller.session.new({
-      projectId: 'project-1',
-      agent: identity.agent,
-      checkout: { type: 'main' },
-      configOptions: [],
-      prompt: [{ type: 'text', text: 'Initial prompt' }],
-    });
-    await expect
-      .poll(async (): Promise<string | undefined> => {
-        const { rows } = await caller.feed.page({
-          sessionId,
-          direction: 'tail',
-        });
-        return rows.at(-1)?.sessionUpdate;
-      })
-      .toBe('agent_message');
-    const { rows } = await caller.feed.page({ sessionId, direction: 'tail' });
-    expect(rows).toEqual([
-      expect.objectContaining({
-        sessionUpdate: 'user_message',
-        content: [{ type: 'text', text: 'Initial prompt' }],
-      }),
-      expect.objectContaining({
-        sessionUpdate: 'agent_message',
-        state: 'settled',
-        content: [
-          { type: 'text', text: 'The shared fixture completed this Turn.' },
+        steps: [
+          {
+            type: 'update',
+            update: {
+              sessionUpdate: 'agent_message_chunk',
+              messageId: 'reply',
+              content: { type: 'text', text: 'Hello from the Agent' },
+            },
+          },
+          { type: waitForCancelStep },
         ],
-      }),
-    ]);
-    const turnIds = rows.map((row) => row.turnId);
-    expect(new Set(turnIds).size).toBe(1);
+      },
+      agent,
+    );
+    const {
+      engine,
+      createCaller,
+      database: engineDatabase,
+    } = await startEngineTestHost({ database, ...input });
+    const caller = createCaller();
+    const { messageId } = await caller.session.prompt({
+      sessionId: 'session-1',
+      prompt: [{ type: 'text', text: 'Hi' }],
+    });
     expect(
-      root.database
-        .select()
-        .from(turn)
-        .where(eq(turn.sessionId, sessionId))
+      await caller.feed.row({ sessionId: 'session-1', id: messageId }),
+    ).toMatchObject({ sessionUpdate: 'user_message' });
+    await expect
+      .poll(() =>
+        caller.feed.row({
+          sessionId: 'session-1',
+          id: '["agent_message","owned-1",["upstream","reply"]]',
+        }),
+      )
+      .toMatchObject({
+        content: [{ type: 'text', text: 'Hello from the Agent' }],
+      });
+    engine.send({ type: engineStopEvent, reason: 'SIGTERM' });
+    await waitFor(
+      engine,
+      (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
+        snapshot.status === 'done',
+    );
+    expect(engineDatabase.$client.isOpen).toBe(false);
+    expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
+    expect(
+      database
+        .select({ id: feedRow.id })
+        .from(feedRow)
+        .orderBy(feedRow.position)
         .all(),
     ).toEqual([
-      expect.objectContaining({
-        id: turnIds[0],
-        status: 'ended',
-        stopReason: 'end_turn',
-      }),
+      { id: messageId },
+      { id: '["agent_message","owned-1",["upstream","reply"]]' },
     ]);
   },
 );

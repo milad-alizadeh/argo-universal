@@ -64,64 +64,73 @@ export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
   Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>>;
 
-const installationSource = (
-  input: Pick<AppRouterInput, 'installations' | 'home'>,
-): AgentInstallations =>
-  input.installations ?? new AgentInstallations(input.home ?? '');
-
-type AgentDependencies = Pick<
-  AppRouterDeps,
-  'createId' | 'agentLogins' | 'installations' | 'checkAgentLaunch'
->;
-
-function createAgentDependencies(input: AppRouterInput): AgentDependencies {
-  const createId = input.createId ?? randomUUID;
-  const installations = installationSource(input);
-  const agentLogins =
-    input.agentLogins ??
-    createEngineAgentLogins({
-      sessions: input.sessions,
-      createId,
-      installations,
-    });
-  bindInstallations(installations, { ...input, createId, agentLogins });
-  return { createId, installations, agentLogins, checkAgentLaunch };
-}
-
 export function createAppRouterDeps(
   input: AppRouterInput,
   sources: FeedSources = createFeedSources(input),
 ): AppRouterDeps {
+  const setup = createAgentSetup(input);
+  bindInstallations(setup.installations, { ...input, ...setup });
   return {
     ...input,
     ...sources,
-    ...createAgentDependencies(input),
+    ...setup,
+    checkAgentLaunch,
     readSession: createSessionReader(input.database),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };
 }
 
-type InstallationSources = AppRouterInput &
-  Pick<AppRouterDeps, 'agentLogins' | 'createId'>;
-
-const isAgentInUse = (
-  input: Pick<InstallationSources, 'agentLogins' | 'sessions'>,
-  agentId: string,
-): boolean =>
-  input.agentLogins.isBusy(agentId) ||
-  Object.values(input.sessions.getSnapshot().context.sessions).some(
-    (session) =>
-      !session.getSnapshot().context.agent ||
-      session.getSnapshot().context.agent === agentId,
-  );
-
 function bindInstallations(
   installations: AgentInstallations,
-  input: InstallationSources,
+  input: AppRouterInput & Pick<AppRouterDeps, 'agentLogins'>,
 ): void {
   installations.bind({
     ...input,
+    createId: input.createId ?? randomUUID,
     checkAgentLaunch,
-    isInUse: (agentId) => isAgentInUse(input, agentId),
+    isInUse: (agentId) =>
+      input.agentLogins.isBusy(agentId) ||
+      sessionsUseAgent(input.sessions, agentId),
   });
+}
+
+function createAgentSetup(
+  input: AppRouterInput,
+): Pick<AppRouterDeps, 'installations' | 'agentLogins' | 'createId'> {
+  const installations = input.installations ?? createInstallations(input.home);
+  return {
+    installations,
+    agentLogins: resolveAgentLogins(input, installations),
+    createId: input.createId ?? randomUUID,
+  };
+}
+
+function resolveAgentLogins(
+  input: AppRouterInput,
+  installations: AgentInstallations,
+): AppRouterDeps['agentLogins'] {
+  return (
+    input.agentLogins ??
+    createEngineAgentLogins({
+      sessions: input.sessions,
+      createId: input.createId ?? randomUUID,
+      installations,
+    })
+  );
+}
+
+function sessionsUseAgent(
+  sessions: OpenSessionsActorRef,
+  agentId: string,
+): boolean {
+  return Object.values(sessions.getSnapshot().context.sessions).some(
+    (session) => {
+      const { agent } = session.getSnapshot().context;
+      return !agent || agent === agentId;
+    },
+  );
+}
+
+function createInstallations(home: string | undefined): AgentInstallations {
+  return new AgentInstallations(home ?? '');
 }

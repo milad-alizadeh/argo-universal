@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import type { NewSessionRequest } from '@agentclientprotocol/sdk';
+import { listBranches } from '@repo/git';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
@@ -25,10 +26,13 @@ it('failed ACP startup retains its unstored Checkout until process cleanup is ob
       checkout: { type: 'worktree', baseBranch: 'main' },
     })
     .catch((error: unknown): unknown => error);
-  const { cwd: checkout } = await newSessionRequested.promise;
+  const checkout = (await newSessionRequested.promise).cwd;
   const process = requireScriptedProcessAt(host.agent.processes);
   try {
     await vi.waitFor(() => expect(process.terminations).toBe(1));
+    expect(await listBranches(checkout)).toMatchObject({
+      currentBranch: `argo/${failedSessionId}`,
+    });
     expect(existsSync(checkout)).toBe(true);
     process.exited.resolve();
     expect(await openingResult).toBeInstanceOf(Error);

@@ -1,25 +1,5 @@
-import { createHash } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { beforeEach, expect, it, vi } from 'vitest';
-import { startEngineTestHost } from '#mocks/engine';
-import { sendHttpRequest as sendRequest } from '#mocks/http-client';
-
-const blobBytes = new TextEncoder().encode('blob content');
-const blobId = createHash('sha256').update(blobBytes).digest('hex');
-let url: string;
-const sendHttpRequest = (
-  options: Parameters<typeof sendRequest>[1],
-): ReturnType<typeof sendRequest> => sendRequest(url, options);
-
-beforeEach(async (): Promise<void> => {
-  const started = await startEngineTestHost();
-  mkdirSync(started.blobsFolder, { recursive: true });
-  writeFileSync(join(started.blobsFolder, blobId), blobBytes);
-  url = started.url;
-  vi.spyOn(console, 'error').mockImplementation((): void => {});
-});
-
+import { expect, it } from 'vitest';
+import { blobId, blobBytes, sendHttpRequest } from '#mocks/engine-request';
 it('streams a blob with its length', async (): Promise<void> => {
   const response = await sendHttpRequest({ path: `/blobs/${blobId}` });
   expect(response.status).toBe(200);
