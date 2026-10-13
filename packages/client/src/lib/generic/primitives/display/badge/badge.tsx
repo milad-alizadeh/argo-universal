@@ -53,10 +53,16 @@ const badgeTextVariants = cva('type-badge', {
 });
 
 // A tinted status chip, such as "Ready" in green beside an Agent's name.
-export type BadgeTone = 'muted' | 'success' | 'warning' | 'destructive';
+export type BadgeTone =
+  | 'muted'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'destructive';
 
 const badgeTones: Record<BadgeTone, { fill: string; text: string }> = {
   muted: { fill: 'bg-muted', text: 'text-muted-foreground' },
+  info: { fill: 'bg-info/10', text: 'text-info' },
   success: { fill: 'bg-success/10', text: 'text-success' },
   warning: { fill: 'bg-warning/10', text: 'text-warning' },
   destructive: { fill: 'bg-destructive/10', text: 'text-destructive' },

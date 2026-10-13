@@ -12,7 +12,13 @@ export {
   NativeSheetsProvider,
 } from '#features/composer';
 export { ConnectionDetailScreen, useConnection } from '#features/connection';
-export { DesktopLayout, PhoneLayout, SectionRootScreen } from '#features/frame';
+export {
+  DesktopLayout,
+  OnboardingLayout,
+  PhoneLayout,
+  SectionRootScreen,
+  useOnboardingShown,
+} from '#features/frame';
 export {
   AccountsScreen,
   AppearanceScreen,

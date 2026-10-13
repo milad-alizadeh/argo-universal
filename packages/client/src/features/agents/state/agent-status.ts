@@ -59,6 +59,12 @@ export const needsAction = ({
   status,
 }: Pick<AgentRowEntry, 'status'>): boolean => statusTone(status) === 'warning';
 
+// The Agent can start a Session now; a newer release can wait.
+export const runsSessions = ({
+  status,
+}: Pick<AgentRowEntry, 'status'>): boolean =>
+  status === 'ready' || status === 'update';
+
 const filters: Record<AgentsFilter, (agent: AgentRowEntry) => boolean> = {
   all: () => true,
   installed: isInstalled,

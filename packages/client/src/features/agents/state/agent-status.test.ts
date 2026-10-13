@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { platformName } from './agent-list';
 import {
   type AgentRowEntry,
+  type AgentStatus,
   type AgentsFilter,
   countAgents,
   filterAgents,
+  runsSessions,
 } from './agent-status';
 
 const firstId = 'first-agent';
@@ -47,6 +49,18 @@ describe('filterAgents', () => {
 describe('countAgents', () => {
   it('counts installed and not installed Agents', () => {
     expect(countAgents(agents)).toEqual({ installed: 2, notInstalled: 1 });
+  });
+});
+
+describe('runsSessions', () => {
+  it.each<[AgentStatus, boolean]>([
+    ['ready', true],
+    ['update', true],
+    ['sign-in', false],
+    ['unavailable', false],
+    [goose.status, false],
+  ])('a %s Agent runs Sessions: %s', (status, runs) => {
+    expect(runsSessions({ status })).toBe(runs);
   });
 });
 
