@@ -1,6 +1,7 @@
 import {
   $createListItemNode,
   $createListNode,
+  $isListNode,
   type ListType,
 } from '@lexical/list';
 import {
@@ -8,12 +9,13 @@ import {
   $isLineBreakNode,
   $isParagraphNode,
   $isRangeSelection,
-  $isRootOrShadowRoot,
   $isTextNode,
   COMMAND_PRIORITY_HIGH,
   KEY_DOWN_COMMAND,
   type LexicalEditor,
+  type LexicalNode,
   type ParagraphNode,
+  type PointType,
   type TextNode,
 } from 'lexical';
 
@@ -35,30 +37,64 @@ function markerType(
   return bulletMarker.test(marker) ? { type: 'bullet', start: 1 } : undefined;
 }
 
-// A list marker the caret has just finished on a line that follows a ⇧Return line break.
-function $markerAtCaret(): LineMarker | undefined {
+function $collapsedAnchor(): PointType | undefined {
   const selection = $getSelection();
-  if (!$isRangeSelection(selection) || !selection.isCollapsed()) return;
-  const text = selection.anchor.getNode();
-  if (!$isTextNode(text) || text.getFormat() !== 0) return;
-  const paragraph = text.getParent();
-  const typed = markerType(text.getTextContent());
-  if (
-    !$isParagraphNode(paragraph) ||
-    !$isRootOrShadowRoot(paragraph.getParent()) ||
-    !typed ||
-    selection.anchor.offset !== text.getTextContentSize() ||
-    !$isLineBreakNode(text.getPreviousSibling())
-  )
-    return;
-  return { text, paragraph, ...typed };
+  const collapsed = $isRangeSelection(selection) && selection.isCollapsed();
+  return collapsed ? selection.anchor : undefined;
+}
+
+function isTextAtEnd(node: LexicalNode, offset: number): node is TextNode {
+  return $isTextNode(node) && offset === node.getTextContentSize();
+}
+
+function $textAtCaretEnd(): TextNode | undefined {
+  const anchor = $collapsedAnchor();
+  if (!anchor) return;
+  const text = anchor.getNode();
+  return isTextAtEnd(text, anchor.offset) ? text : undefined;
 }
 
 /*
- * Markdown starts a list on any line, but Lexical's shortcut only watches the first line of a
- * paragraph. After a ⇧Return, typing `1. ` or `- ` starts a list from that line on, so a line is
- * no different from the first.
+ * Right after a ⇧Return line break, or first in its paragraph where only a number is ours: Lexical's
+ * own shortcut keeps the `*` and `-` a bullet is typed with.
  */
+function $isLineStart(text: TextNode, type: ListType): boolean {
+  const before = text.getPreviousSibling();
+  return before === null ? type === 'number' : $isLineBreakNode(before);
+}
+
+function $startsLine(
+  text: TextNode,
+  paragraph: LexicalNode | null,
+  type: ListType,
+): paragraph is ParagraphNode {
+  return $isParagraphNode(paragraph) && $isLineStart(text, type);
+}
+
+function $markerOn(text: TextNode): LineMarker | undefined {
+  const paragraph = text.getParent();
+  const typed = markerType(text.getTextContent());
+  if (!typed || !$startsLine(text, paragraph, typed.type)) return;
+  return { text, paragraph, ...typed };
+}
+
+// A list marker the caret has just finished on a line that follows a ⇧Return line break.
+function $markerAtCaret(): LineMarker | undefined {
+  const text = $textAtCaretEnd();
+  return text && $markerOn(text);
+}
+
+/*
+ * Typing `1. ` or `- ` starts a list from that line on, on the first line of a paragraph or after a
+ * ⇧Return. Lexical's own shortcut watches only the first line and joins the list above, which would
+ * renumber `3.` as `2.`; here the list is its own, starting at the number typed.
+ */
+// An emptied paragraph goes, unless it keeps this list apart from the list above, which would join it.
+function $removeSpentParagraph(paragraph: ParagraphNode): void {
+  const apart = $isListNode(paragraph.getPreviousSibling());
+  if (paragraph.isEmpty() && !apart) paragraph.remove();
+}
+
 function $startListFromLine({
   text,
   paragraph,
@@ -71,14 +107,19 @@ function $startListFromLine({
   text.getPreviousSibling()?.remove();
   text.remove();
   paragraph.insertAfter(list);
+  $removeSpentParagraph(paragraph);
   item.selectStart();
+}
+
+function typedSpace(event: KeyboardEvent): boolean {
+  return event.key === ' ' && !event.isComposing;
 }
 
 export function registerLineMarkers(editor: LexicalEditor): () => void {
   return editor.registerCommand(
     KEY_DOWN_COMMAND,
     (event) => {
-      if (event.key !== ' ' || event.isComposing) return false;
+      if (!typedSpace(event)) return false;
       const marker = $markerAtCaret();
       if (!marker) return false;
       event.preventDefault();

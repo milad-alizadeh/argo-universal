@@ -81,6 +81,11 @@ export const ShiftTabOnATopLevelItemLeavesTheList = typedBlock({
   sent: '- First\n\nSecond',
   shown: 'First\n\nSecond',
 });
+export const NumberedListStartsAtTheNumberTyped = typedBlock({
+  typed: '1. First{Enter}{Shift>}{Tab}{/Shift}3. Third{Enter}Fourth',
+  sent: '1. First\n\n3. Third\n4. Fourth',
+  shown: 'First\n\n\n\n\nThird\nFourth',
+});
 export const MarkerAfterAShiftReturnStartsAList = typedBlock({
   typed: 'Steps{Shift>}{Enter}{/Shift}1. First{Enter}Second',
   sent: 'Steps\n\n1. First\n2. Second',

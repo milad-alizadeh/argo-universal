@@ -102,6 +102,17 @@ export function registerReturnToSubmit(
   );
 }
 
+function shiftedReturn(event: KeyboardEvent | null): event is KeyboardEvent {
+  return event !== null && event.shiftKey && !event.isComposing;
+}
+
+function $inListItem(): boolean {
+  const selection = $getSelection();
+  return (
+    $isRangeSelection(selection) && $returnBlock(selection) === 'list-item'
+  );
+}
+
 /*
  * ⇧Return in a list item adds an item, as Return does, rather than a hanging line inside the item;
  * the line break would indent the next line and keep `2.` typed there from starting an item.
@@ -110,15 +121,9 @@ export function registerListLines(editor: LexicalEditor): () => void {
   return editor.registerCommand(
     KEY_ENTER_COMMAND,
     (event) => {
-      if (!event?.shiftKey || event.isComposing) return false;
-      const selection = $getSelection();
-      if (
-        !$isRangeSelection(selection) ||
-        $returnBlock(selection) !== 'list-item'
-      )
-        return false;
+      if (!shiftedReturn(event) || !$inListItem()) return false;
       event.preventDefault();
-      return editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined);
+      return editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND);
     },
     COMMAND_PRIORITY_HIGH,
   );
