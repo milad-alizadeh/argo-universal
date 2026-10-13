@@ -65,7 +65,7 @@ it.each(workMocks)(
       {
         type: 'group',
         id: firstReadId,
-        title: 'Read files',
+        title: 'Read 2 files',
         state: 'settled',
         items: [
           {

@@ -1,47 +1,79 @@
 import type { CommandAction, ToolCallUpdate } from '@repo/contracts';
-import { explorationActions, isEdit } from './grouping-rules';
+import { editedFileCount, readFileCount } from './group-file-counts';
+import { explorationActions } from './grouping-rules';
 
-const categoryTitles = {
-  command: 'Ran commands',
-  read: 'Read files',
-  edit: 'Edited files',
-  search: 'Searched',
-  list: 'Listed folders',
-  web: 'Searched the web',
-  tool: 'Called tools',
-};
-type Category = keyof typeof categoryTitles;
-const actionCategories: Partial<Record<CommandAction['type'], Category>> = {
-  read: 'read',
-  search: 'search',
-  list: 'list',
-};
-const otherToolCategories: Partial<Record<ToolCallUpdate['kind'], Category>> = {
-  fetch: 'web',
-  other: 'tool',
+const summaryOrder = [
+  'command',
+  'read',
+  'edit',
+  'search',
+  'list',
+  'web',
+  'tool',
+] as const;
+type Category = (typeof summaryOrder)[number];
+interface CountLabel {
+  verb: string;
+  noun: string;
+}
+const categoryLabels: Record<Category, CountLabel> = {
+  command: { verb: 'Ran', noun: 'command' },
+  read: { verb: 'Read', noun: 'file' },
+  edit: { verb: 'Edited', noun: 'file' },
+  search: { verb: 'Searched', noun: 'time' },
+  list: { verb: 'Listed', noun: 'folder' },
+  web: { verb: 'Searched the web', noun: 'time' },
+  tool: { verb: 'Called', noun: 'tool' },
 };
 
 function ranCommand(row: ToolCallUpdate): boolean {
   return row.kind === 'execute' && !explorationActions(row).length;
 }
 
-function toolCategory(row: ToolCallUpdate): Category | undefined {
-  if (isEdit(row)) return 'edit';
-  if (ranCommand(row)) return 'command';
-  return otherToolCategories[row.kind];
+function actionCount(
+  actions: CommandAction[],
+  type: CommandAction['type'],
+): number {
+  return actions.filter((action) => action.type === type).length;
+}
+
+function kindCount(
+  toolCalls: ToolCallUpdate[],
+  kind: ToolCallUpdate['kind'],
+): number {
+  return toolCalls.filter((row) => row.kind === kind).length;
+}
+
+function categoryCounts(toolCalls: ToolCallUpdate[]): Record<Category, number> {
+  const actions = toolCalls.flatMap(explorationActions);
+  return {
+    command: toolCalls.filter(ranCommand).length,
+    read: readFileCount(actions),
+    edit: editedFileCount(toolCalls),
+    search: actionCount(actions, 'search'),
+    list: actionCount(actions, 'list'),
+    web: kindCount(toolCalls, 'fetch'),
+    tool: kindCount(toolCalls, 'other'),
+  };
+}
+
+function countedTitle(label: CountLabel, count: number): string {
+  if (!count) return '';
+  return `${label.verb} ${count} ${pluralNoun(label.noun, count)}`;
+}
+
+function pluralNoun(noun: string, count: number): string {
+  return count === 1 ? noun : `${noun}s`;
 }
 
 export function groupTitle(toolCalls: ToolCallUpdate[]): string {
-  const categories = new Set<string | undefined>([
-    ...toolCalls.map(toolCategory),
-    ...toolCalls
-      .flatMap(explorationActions)
-      .map((action) => actionCategories[action.type]),
-  ]);
+  const counts = categoryCounts(toolCalls);
   return (
-    Object.entries(categoryTitles)
-      .filter(([category]) => categories.has(category))
-      .map(([, title]) => title)
+    summaryOrder
+      .map((category) =>
+        countedTitle(categoryLabels[category], counts[category]),
+      )
+      .filter(Boolean)
       .join(', ') || 'Worked'
   );
 }

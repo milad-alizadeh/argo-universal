@@ -103,7 +103,9 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
       canvas.getByRole('progressbar', { name: earlierFeedLoadingLabel }),
     ).toBeVisible();
     // The reader opens the group and reads one of its commands.
-    await userEvent.click(canvas.getByRole('button', { name: 'Ran commands' }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Ran 10 commands' }),
+    );
     const step = (): HTMLElement =>
       canvas.getByRole('button', { name: splitGroupStepInTail });
     const top = await settledTopOf(step);

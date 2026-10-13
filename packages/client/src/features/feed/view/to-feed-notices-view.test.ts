@@ -24,7 +24,7 @@ describe.each(workMocks)('Notice grouping for $agent', ({ rows, snapshot }) => {
         {
           type: 'group',
           id: first.id,
-          title: 'Ran commands',
+          title: 'Ran 2 commands',
           state: 'settled',
           items: [
             { type: 'tool_call', row: first },

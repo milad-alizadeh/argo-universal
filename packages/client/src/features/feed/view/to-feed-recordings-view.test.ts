@@ -58,7 +58,7 @@ it.each(workMocks)(
 it.each(workMocks)('groups recorded work for $agent', ({ rows, snapshot }) => {
   const view = toFeedView(rows, snapshot);
   expect(view.items.find((item) => item.type === 'group')).toMatchObject({
-    title: 'Ran commands, Read files, Edited files',
+    title: 'Ran 1 command, Read 1 file, Edited 2 files',
     state: 'settled',
     items: expect.arrayContaining([
       expect.objectContaining({ type: 'exploration', title: 'Explored' }),
@@ -81,7 +81,7 @@ it.each(workMocks)(
     };
     const view = toFeedView([...calls, secondCommand], snapshot);
     expect(view.items.find((item) => item.type === 'group')).toMatchObject({
-      title: 'Ran commands, Read files, Edited files',
+      title: 'Ran 2 commands, Read 1 file, Edited 2 files',
       state: 'settled',
     });
   },
