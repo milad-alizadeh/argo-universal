@@ -6,12 +6,13 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { motionDuration } from '#lib/generic/motion';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useHeaderCover } from '#lib/product/navigation/screen-header';
+import { SessionColumn } from '#lib/product/session-column';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import { ShimmerText } from '../shimmer-text';
 import { WorkingMark } from '../working-mark';
 
-// How far Jump to latest sits clear of the Feed's bottom fade.
-const jumpToLatestGap = 8;
+// How far Jump to latest sits above the Composer's top, on every device.
+const jumpToLatestGap = 12;
 
 const jumpToLatestClassName =
   'size-8 items-center justify-center rounded-full border border-border bg-card shadow-[0_1px_2px_#0000000f,0_4px_12px_-4px_#00000014] active:opacity-70';
@@ -20,23 +21,29 @@ const newRowsDot = (
   <View className="absolute -top-px -right-px size-[9px] rounded-full border-2 border-card bg-info" />
 );
 
+const jumpToLatestMotion = {
+  entering: FadeIn.duration(motionDuration.tooltipEnter),
+  exiting: FadeOut.duration(motionDuration.exit),
+  pointerEvents: 'box-none',
+  className: 'absolute inset-x-0',
+} as const;
+
 interface JumpToLatestProps {
   hasNewRows: boolean;
   onPress: () => void;
 }
 
-// Shown while the reader is away from the end; the dot marks rows that arrived since.
+// Shown while the reader is away from the end; the dot marks rows that arrived since. It sits in the Composer's column, so it stays centred over the Composer.
 function JumpToLatest(props: JumpToLatestProps): React.JSX.Element {
-  const { overlayBottom } = useFeedEndClearance();
+  const { composerTop } = useFeedEndClearance();
   return (
     <Animated.View
-      entering={FadeIn.duration(motionDuration.tooltipEnter)}
-      exiting={FadeOut.duration(motionDuration.exit)}
-      className="absolute self-center"
-      // Above the Composer and the Feed's bottom fade, so no row fades out behind it.
-      style={{ bottom: overlayBottom + jumpToLatestGap }}
+      {...jumpToLatestMotion}
+      style={{ bottom: composerTop + jumpToLatestGap }}
     >
-      <JumpToLatestButton {...props} />
+      <SessionColumn pointerEvents="box-none" className="items-center">
+        <JumpToLatestButton {...props} />
+      </SessionColumn>
     </Animated.View>
   );
 }
