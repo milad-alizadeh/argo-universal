@@ -1,4 +1,5 @@
 import type { Meta } from '@storybook/react-native-web-vite';
+import { addNewAgent } from '../../../../../mocks/composer-configuration/add-agent';
 import { unavailableAgentRetry } from '../../../../../mocks/composer-configuration/agent-retry';
 import { defaultEffort } from '../../../../../mocks/composer-configuration/default-effort';
 import {
@@ -38,6 +39,9 @@ export const DefaultEffortPhoneSecondAgent = defaultEffort(
 );
 export const DefaultEffortWideFirstAgent = defaultEffort(layoutWidths.wide, 0);
 export const DefaultEffortWideSecondAgent = defaultEffort(layoutWidths.wide, 1);
+
+export const AddNewAgentPhone = addNewAgent(layoutWidths.phone);
+export const AddNewAgentWide = addNewAgent(layoutWidths.wide);
 
 export const UnavailableAgentRetryPhoneFirstAgent = unavailableAgentRetry(
   layoutWidths.phone,

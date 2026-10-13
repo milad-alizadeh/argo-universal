@@ -7,7 +7,7 @@ import { FieldGroup } from '#primitives/fields/field-group/field-group';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
 import { FieldRowEnd } from '../../../../lib/generic/primitives/fields/field-layout';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import { AgentChoice } from './agent-choice';
+import { AddAgentChoice, AgentChoice } from './agent-choice';
 import type { ConfigurationChoicesProps as AgentChoicesProps } from './configuration-types';
 const maximumHeight = 320;
 const screenFraction = 0.6;
@@ -23,6 +23,7 @@ function NativeAgentChoices(props: AgentChoicesProps): React.JSX.Element {
         {props.configuration.agents.map((agent) => (
           <AgentChoice key={agent.agent} agent={agent} {...props} />
         ))}
+        <AddAgentChoice {...props} />
       </FieldSection>
     </FieldGroup>
   );
@@ -33,6 +34,9 @@ function AgentList(props: AgentChoicesProps): React.JSX.Element {
     <View className="px-4 wide:px-0">
       <FieldSection>
         <ScrollFadeList {...listProps} />
+        <FieldRowEnd value>
+          <AddAgentChoice {...props} />
+        </FieldRowEnd>
       </FieldSection>
     </View>
   );
@@ -77,7 +81,10 @@ function agentListRenderer(
     <AgentListRow
       {...props}
       agent={item}
-      last={index === props.configuration.agents.length - 1}
+      last={
+        !props.configuration.onAddAgent &&
+        index === props.configuration.agents.length - 1
+      }
     />
   );
 }

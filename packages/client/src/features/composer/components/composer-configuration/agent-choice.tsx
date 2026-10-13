@@ -42,6 +42,26 @@ export function AgentChoice(props: AgentChoiceProps): React.JSX.Element {
     </>
   );
 }
+// The picker's last row: it closes the picker and opens the Agents still to add.
+export function AddAgentChoice({
+  configuration,
+  onSelect,
+}: Omit<AgentChoiceProps, 'agent'>): React.JSX.Element | null {
+  const { onAddAgent } = configuration;
+  if (!onAddAgent) return null;
+  return (
+    <ListItem
+      title="Add a new agent"
+      icon="add"
+      role="button"
+      disclosure={false}
+      onPress={() => {
+        onSelect();
+        onAddAgent();
+      }}
+    />
+  );
+}
 function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
   const wide = useWide();
   return (

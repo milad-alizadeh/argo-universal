@@ -27,6 +27,13 @@ function newSession({ projectId }: RouteParams): NavigationDestination {
   };
 }
 
+function agentsList({ filter }: RouteParams): NavigationDestination {
+  return {
+    to: 'settings-agents',
+    ...(filter === 'not-installed' ? { filter } : {}),
+  };
+}
+
 const routes = {
   sessions: { pathname: '/', destination: () => ({ to: 'sessions' }) },
   'new-session': {
@@ -46,7 +53,7 @@ const routes = {
   },
   'settings-agents': {
     pathname: '/settings/agents',
-    destination: () => ({ to: 'settings-agents' }),
+    destination: agentsList,
   },
   'settings-accounts': {
     pathname: '/settings/accounts',

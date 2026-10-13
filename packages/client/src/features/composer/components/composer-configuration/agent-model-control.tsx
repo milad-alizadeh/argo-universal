@@ -49,9 +49,23 @@ function AgentModelPopover(
       onPresent={props.onPresent}
       trigger={agentModelTrigger(props)}
     >
-      {() => <AgentModelMenu configuration={props.configuration} />}
+      {(close) => (
+        <AgentModelMenu
+          configuration={leavingAfterClose(props.configuration, close)}
+        />
+      )}
     </ComposerPopover>
   );
+}
+// Add a new agent leaves the page, so the whole menu closes before it goes.
+function leavingAfterClose(
+  configuration: ComposerConfigurationProps,
+  close: (after?: () => void) => void,
+): ComposerConfigurationProps {
+  const { onAddAgent } = configuration;
+  return onAddAgent
+    ? { ...configuration, onAddAgent: () => close(onAddAgent) }
+    : configuration;
 }
 function agentModelTrigger(props: TriggerProps): React.JSX.Element {
   const wide = props.wide;

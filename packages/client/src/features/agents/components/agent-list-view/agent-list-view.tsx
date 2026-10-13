@@ -29,7 +29,7 @@ export type AgentListViewProps = {
   installed: AgentRowEntry[];
   onAddCustomAgent: () => void;
   onOpenAgent: (agentId: string) => void;
-  // Where the list starts, for stories.
+  // Where the list starts: Not installed from New Session's Add a new agent, or a story's state.
   initialSearch?: string;
   initialFilter?: AgentsFilter;
 };

@@ -9,7 +9,8 @@ export type NavigationDestination =
   | { to: 'atlas' }
   | { to: 'settings' }
   | { to: 'settings-projects' }
-  | { to: 'settings-agents' }
+  // The Agents list, opened on the Agents not yet installed from New Session's Add a new agent.
+  | { to: 'settings-agents'; filter?: 'not-installed' }
   | { to: 'settings-devices' }
   | { to: 'settings-appearance' }
   | { to: 'settings-notifications' }

@@ -75,7 +75,12 @@ function useInteractiveConfiguration(
     configuration.configOptions,
   );
   const onConfigChange = configurationChanged(setConfigOptions);
-  return { ...configuration, configOptions, onConfigChange };
+  return {
+    ...configuration,
+    configOptions,
+    onConfigChange,
+    onAddAgent: action('add a new agent'),
+  };
 }
 
 type SetConfigOptions = Dispatch<
