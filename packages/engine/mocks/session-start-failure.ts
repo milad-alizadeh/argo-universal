@@ -10,7 +10,7 @@ const failedStart: ScriptedScenario = {
     'session/new': [{ error: { code: -32000, message: signInFailure } }],
   },
 };
-type FailedJourney = Awaited<ReturnType<typeof startAcpEngine>> & {
+export type FailedJourney = Awaited<ReturnType<typeof startAcpEngine>> & {
   git: ReturnType<typeof sessionJourneyGit>;
 };
 export const startFailedSessionJourney = async (): Promise<FailedJourney> => {

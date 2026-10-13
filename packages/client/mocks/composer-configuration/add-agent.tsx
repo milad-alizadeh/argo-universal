@@ -3,11 +3,11 @@ import { expect, fn, waitFor, within } from 'storybook/test';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   agentModelLabel,
-  chooseAgentLabel,
   type Configuration,
   type PlayContext,
   renderArgs,
   type Story,
+  openAgentChoices,
 } from './common';
 
 const addAgentLabel = 'Add a new agent';
@@ -56,16 +56,6 @@ async function addAgent(
     within(document.body).queryByRole('dialog', { name: agentModelLabel }),
   ).not.toBeInTheDocument();
   await expect(spies.onAgentChange).not.toHaveBeenCalled();
-}
-
-async function openAgentChoices(context: PlayContext): Promise<void> {
-  const overlay = within(document.body);
-  await context.userEvent.click(
-    context.canvas.getByRole('button', { name: agentModelLabel }),
-  );
-  await context.userEvent.click(
-    await overlay.findByRole('button', { name: chooseAgentLabel }),
-  );
 }
 
 async function assertAddRowLast(): Promise<HTMLElement> {

@@ -41,19 +41,20 @@ Feature: New Session Agent picker
       | sign-in needed |
       | can't start    |
 
-  Scenario: New Session opens at once while an Agent is still being checked
+  Scenario: A Ready Agent can be picked while another Agent's check never answers
     Given a phone Frame
-    And Agent 2 is still being checked
+    And Agent 2's readiness check never answers
     When I open a New Session
-    Then the Agent picker shows Agent 2 checking and Agent 1 ready
+    Then I can pick Agent 1
 
   Scenario Outline: A stale Ready Agent that refuses a Session says why and leaves the picker in a <layout> Frame
     Given a <layout> Frame
     And Agent 2 refuses to open a Session
     When I open a New Session
     And I pick Agent 2
-    Then one toast says the Session couldn't open because "The Agent refused the Session."
+    Then a toast says the Session couldn't open because "The Agent refused the Session."
     And the Agent picker offers only Agent 1 and Add a new agent
+    And no second toast says the Session couldn't open
 
     Examples:
       | layout |

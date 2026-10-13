@@ -1,24 +1,39 @@
-import type { AgentInfo, ProjectInfo } from '@repo/contracts';
+import type { AgentInfo, ProjectInfo, SystemInfo } from '@repo/contracts';
 import { offeredAgents } from '../state/session-choices';
-import type { NewSessionData } from './use-new-session-data';
+
+interface Query<Data> {
+  data?: Data;
+  isError: boolean;
+}
+
+// The Server reads New Session draws from.
+export interface NewSessionQueries {
+  serverInfo: Query<SystemInfo>;
+  projects: Query<ProjectInfo[]>;
+  agents: Query<AgentInfo[]>;
+}
 
 export interface LoadedNewSession {
   serverName: string;
   projects: ProjectInfo[];
   agents: AgentInfo[];
+  // True until the saved Agents arrive; the picker fills then.
+  agentsLoading: boolean;
 }
 
 export const hasFailedToLoad = ({
   serverInfo,
   projects,
   agents,
-}: NewSessionData): boolean =>
+}: NewSessionQueries): boolean =>
   serverInfo.isError || projects.isError || agents.isError;
 
 const loadedServer = ({
   serverInfo,
   projects,
-}: NewSessionData): Omit<LoadedNewSession, 'agents'> | undefined =>
+}: NewSessionQueries):
+  | Pick<LoadedNewSession, 'serverName' | 'projects'>
+  | undefined =>
   serverInfo.data &&
   projects.data && {
     serverName: serverInfo.data.name,
@@ -27,8 +42,15 @@ const loadedServer = ({
 
 // Ready once the Server and its Projects load; the picker fills from the saved Agents when they arrive.
 export const loadedNewSession = (
-  data: NewSessionData,
+  queries: NewSessionQueries,
 ): LoadedNewSession | undefined => {
-  const server = loadedServer(data);
-  return server && { ...server, agents: offeredAgents(data.agents.data ?? []) };
+  const server = loadedServer(queries);
+  const agents = queries.agents.data;
+  return (
+    server && {
+      ...server,
+      agents: offeredAgents(agents ?? []),
+      agentsLoading: agents === undefined,
+    }
+  );
 };

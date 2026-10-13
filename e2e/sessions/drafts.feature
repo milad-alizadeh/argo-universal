@@ -53,5 +53,6 @@ Feature: Drafts kept on this Device
     When I open a New Session
     And I write the prompt "Fix the flaky login test"
     Then New Session says the Session couldn't open
+    And the Composer keeps the prompt "Fix the flaky login test"
     When I reload the App and open New Session
     Then the Message box shows "Fix the flaky login test"

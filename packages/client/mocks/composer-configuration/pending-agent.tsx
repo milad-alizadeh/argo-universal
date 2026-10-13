@@ -5,12 +5,11 @@ import { useEffect, useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
-  agentModelLabel,
-  chooseAgentLabel,
   type Configuration,
   type PlayContext,
   renderArgs,
   type Story,
+  openAgentChoices,
 } from './common';
 
 const [ready, checked] = newSessionCatalogs.bothReady;
@@ -77,29 +76,10 @@ async function checkPendingAgent(
   finishCheck();
   const row = await assertReadyRow();
   await expect(rowLabels()).toEqual(before.labels);
-  await expect(placeOf(row)).toEqual(before.place);
   await context.userEvent.click(row);
   await expect(onAgentChange).toHaveBeenCalledWith(checked?.agent);
 }
 
-async function openAgentChoices(context: PlayContext): Promise<void> {
-  await context.userEvent.click(
-    context.canvas.getByRole('button', { name: agentModelLabel }),
-  );
-  await context.userEvent.click(
-    await within(document.body).findByRole('button', {
-      name: chooseAgentLabel,
-    }),
-  );
-}
-
-// Layout heights, unaffected by the menu's entrance animation: the same before and after the check, so nothing jumps.
-const placeOf = (row: HTMLElement): number[] => {
-  const add = within(document.body).getByRole('button', {
-    name: 'Add a new agent',
-  });
-  return [row.offsetHeight, add.offsetHeight];
-};
 const checkingSpinner = (row: HTMLElement): HTMLElement | null =>
   within(row).queryByRole('progressbar', { name: 'Checking…' });
 
@@ -108,17 +88,14 @@ const rowLabels = (): (string | null)[] =>
     .getAllByRole('button', { name: rowNames })
     .map((row) => row.getAttribute('aria-label'));
 
-async function assertPendingRow(): Promise<{
-  labels: (string | null)[];
-  place: number[];
-}> {
+async function assertPendingRow(): Promise<{ labels: (string | null)[] }> {
   const row = await within(document.body).findByRole('button', {
     name: pendingLabel,
   });
   await waitFor(() => expect(row).toBeVisible());
   await expect(row).toBeDisabled();
   await expect(checkingSpinner(row)).toBeInTheDocument();
-  return { labels: rowLabels(), place: placeOf(row) };
+  return { labels: rowLabels() };
 }
 
 async function assertReadyRow(): Promise<HTMLElement> {

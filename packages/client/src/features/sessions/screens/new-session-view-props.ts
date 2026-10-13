@@ -82,10 +82,11 @@ const noticeProps = ({
 });
 
 const readyProps = (
-  { serverName, projects, agents }: LoadedNewSession,
+  { serverName, projects, agents, agentsLoading }: LoadedNewSession,
   wiring: NewSessionWiring,
 ): ReadyNewSessionViewProps => ({
   serverName,
+  agentsLoading,
   connected: wiring.connected,
   projects,
   ...projectProps(wiring),

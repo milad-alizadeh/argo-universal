@@ -2,20 +2,20 @@ import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
 import { closeAgentMenus } from './agent-menus';
-import { type ListedAgent, listAgents, readAgent, readAgents } from './agents';
+import { listAgents, readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
-import { agentModelLabel, messageLabel, openNewSession } from './new-session';
+import {
+  agentModelLabel,
+  chooseAgent,
+  openAgentChoices,
+  openNewSession,
+} from './new-session';
 import { agentId } from './scenario-agents';
 import { mutate } from './server-query';
 import { toast } from './toasts';
 
 const addAgentLabel = 'Add a new agent';
 const pickerRows = /^Select |^Add a new agent$/;
-
-async function openAgentChoices(page: Page): Promise<void> {
-  await page.getByRole('button', { name: agentModelLabel }).click();
-  await page.getByRole('button', { name: /^Agent,/ }).click();
-}
 
 // The picker's rows in order, read until the saved statuses settle.
 async function expectPickerRows(page: Page, rows: string[]): Promise<void> {
@@ -96,43 +96,23 @@ Then(
   },
 );
 
-// Its readiness check never answers, so the Agent stays Checking… until the check times out.
+// The fixture holds the Agent's readiness check; the picker's spinner for it is proven by the PendingAgent view stories.
 Given(
-  'Agent {int} is still being checked',
+  "Agent {int}'s readiness check never answers",
   async ({ page, server }, ordinal: number): Promise<void> => {
-    const id = agentId(ordinal);
     const listed = await listAgents(page, server.httpUrl);
-    expect(listed.find(({ agent }) => agent === id)?.status).toBe('checking');
+    expect(listed.map(({ agent }) => agent)).toContain(agentId(ordinal));
   },
 );
 
-const labelOf = (listed: ListedAgent[], ordinal: number): string =>
-  listed.find(({ agent }) => agent === agentId(ordinal))?.label ?? '';
-
+// Read as saved now: waiting for every check to finish would wait out the held one.
 Then(
-  'the Agent picker shows Agent {int} checking and Agent {int} ready',
-  async ({ page, server }, checking: number, ready: number): Promise<void> => {
+  'I can pick Agent {int}',
+  async ({ page, server }, ordinal: number): Promise<void> => {
     const listed = await listAgents(page, server.httpUrl);
-    await openAgentChoices(page);
-    const pending = page.getByRole('button', {
-      name: `Select ${labelOf(listed, checking)}`,
-    });
-    await expect(
-      pending.getByRole('progressbar', { name: 'Checking…' }),
-    ).toBeVisible();
-    await expect(pending).toBeDisabled();
-    await expect(
-      page.getByRole('button', { name: `Select ${labelOf(listed, ready)}` }),
-    ).toBeEnabled();
-  },
-);
-
-Given(
-  'every Agent refuses to open a Session',
-  async ({ page, server }): Promise<void> => {
-    // The refusal shows only when a Session opens, so every Agent is listed as Ready.
-    for (const { status } of await readAgents(page, server.httpUrl))
-      expect(status).toBe('ready');
+    const id = agentId(ordinal);
+    const label = listed.find(({ agent }) => agent === id)?.label ?? id;
+    await chooseAgent(page, label);
   },
 );
 
@@ -145,20 +125,23 @@ When(
   },
 );
 
-When(
-  'I write the prompt {string}',
-  async ({ page }, prompt: string): Promise<void> => {
-    await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
-  },
-);
-
 Then(
-  "one toast says the Session couldn't open because {string}",
+  "a toast says the Session couldn't open because {string}",
   async ({ page }, reason: string): Promise<void> => {
     await expect(toast(page, "Couldn't open the Session")).toBeVisible({
       timeout: 15_000,
     });
-    await expect(toast(page, reason, false)).toHaveCount(1);
+    await expect(toast(page, reason, false)).toBeVisible();
     await closeAgentMenus(page, agentModelLabel);
+  },
+);
+
+// Read after the picker has settled, so a repeated failure would have shown by now.
+Then(
+  "no second toast says the Session couldn't open",
+  async ({ page }): Promise<void> => {
+    expect(
+      await toast(page, "Couldn't open the Session").count(),
+    ).toBeLessThanOrEqual(1);
   },
 );

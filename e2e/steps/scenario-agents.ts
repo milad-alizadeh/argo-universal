@@ -41,24 +41,22 @@ function configurationForStep(step: string): AppFixtureAgents {
     /^(?:Given|And) (?:Agent (\d+)|(?:every) Agent) is "([^"]+)"$/.exec(step);
   if (needsSetup) return setupConfiguration(needsSetup);
   const refusing =
-    /^(?:Given|And) Agent (\d+) refuses to (open|reopen) a Session$/.exec(step);
-  if (refusing) return refusingConfiguration(refusing);
-  return otherConfiguration(step);
+    /^(?:Given|And) (?:Agent (\d+)|every Agent) refuses to (open|reopen) a Session$/.exec(
+      step,
+    );
+  return refusing ? refusingConfiguration(refusing) : heldConfiguration(step);
 }
 
-// Every Agent refuses its Session, or one Agent's readiness check never answers.
-function otherConfiguration(step: string): AppFixtureAgents {
-  if (/^(?:Given|And) every Agent refuses to open a Session$/.test(step))
-    return Object.fromEntries(
-      appFixtureAgentIds.map((id) => [id, { scenario: 'refuse-session' }]),
-    );
-  const held = /^(?:Given|And) Agent (\d+) is still being checked$/.exec(step);
+function heldConfiguration(step: string): AppFixtureAgents {
+  const held =
+    /^(?:Given|And) Agent (\d+)'s readiness check never answers$/.exec(step);
   return held ? { [agentId(Number(held[1]))]: { scenario: 'check-held' } } : {};
 }
 
 function refusingConfiguration(match: RegExpExecArray): AppFixtureAgents {
   const scenario = match[2] === 'open' ? 'refuse-session' : 'refuse-reopen';
-  return { [agentId(Number(match[1]))]: { scenario } };
+  const ids = match[1] ? [agentId(Number(match[1]))] : appFixtureAgentIds;
+  return Object.fromEntries(ids.map((id) => [id, { scenario }]));
 }
 
 const attachmentScenarios = [
