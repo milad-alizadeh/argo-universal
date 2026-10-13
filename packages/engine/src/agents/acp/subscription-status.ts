@@ -6,6 +6,8 @@ const subscriptionPlans = new Set([
   'go',
   'plus',
   'pro',
+  'max',
+  'Claude Max',
   'team',
   'business',
   'enterprise',

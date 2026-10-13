@@ -311,7 +311,7 @@ it('streams Session snapshots only when projected configuration changes', async 
   expect(await updates.next()).toMatchObject({ done: true });
 });
 
-it('keeps its Feed subscriber through resumed Agent output and three crashes before terminal closure', async () => {
+it('keeps its Feed subscriber through recreated and resumed Agent sessions and three crashes before terminal closure', async () => {
   const openings: NewSessionRequest[] = [];
   const resumes: ResumeSessionRequest[] = [];
   const host = await startAcpEngine({
@@ -384,11 +384,8 @@ it('keeps its Feed subscriber through resumed Agent output and three crashes bef
       }),
     }),
   ]);
-  expect(openings).toHaveLength(1);
-  expect(resumes.map((resume) => resume.sessionId)).toEqual([
-    'owned-1',
-    'owned-1',
-  ]);
+  expect(openings).toHaveLength(2);
+  expect(resumes.map((resume) => resume.sessionId)).toEqual(['owned-2']);
   expect(
     (
       await host.caller.feed.page({ ...created, direction: 'tail' })
