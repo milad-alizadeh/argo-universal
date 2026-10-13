@@ -4,6 +4,7 @@ import {
   COMMAND_PRIORITY_HIGH,
   CONTROL_OR_META,
   FORMAT_TEXT_COMMAND,
+  INSERT_PARAGRAPH_COMMAND,
   isExactShortcutMatch,
   KEY_DOWN_COMMAND,
   KEY_ENTER_COMMAND,
@@ -96,6 +97,28 @@ export function registerReturnToSubmit(
       event.preventDefault();
       submit();
       return true;
+    },
+    COMMAND_PRIORITY_HIGH,
+  );
+}
+
+/*
+ * ⇧Return in a list item adds an item, as Return does, rather than a hanging line inside the item;
+ * the line break would indent the next line and keep `2.` typed there from starting an item.
+ */
+export function registerListLines(editor: LexicalEditor): () => void {
+  return editor.registerCommand(
+    KEY_ENTER_COMMAND,
+    (event) => {
+      if (!event?.shiftKey || event.isComposing) return false;
+      const selection = $getSelection();
+      if (
+        !$isRangeSelection(selection) ||
+        $returnBlock(selection) !== 'list-item'
+      )
+        return false;
+      event.preventDefault();
+      return editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined);
     },
     COMMAND_PRIORITY_HIGH,
   );

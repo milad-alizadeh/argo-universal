@@ -19,9 +19,11 @@ import { EditingPlugins } from './web/rich-textarea-editing-plugins';
 import { FormatBarPlugin } from './web/rich-textarea-format-bar-plugin';
 import {
   registerBlockShortcuts,
+  registerListLines,
   registerMarkShortcuts,
   registerReturnToSubmit,
 } from './web/rich-textarea-keys';
+import { registerLineMarkers } from './web/rich-textarea-line-markers';
 import { LinkPlugins } from './web/rich-textarea-link-plugins';
 import {
   $importMarkdown,
@@ -35,6 +37,8 @@ function KeyboardPlugin({
   const [editor] = useLexicalComposerContext();
   useEffect(() => registerMarkShortcuts(editor), [editor]);
   useEffect(() => registerBlockShortcuts(editor), [editor]);
+  useEffect(() => registerListLines(editor), [editor]);
+  useEffect(() => registerLineMarkers(editor), [editor]);
   useEffect(
     () => onSubmit && registerReturnToSubmit(editor, onSubmit),
     [editor, onSubmit],
