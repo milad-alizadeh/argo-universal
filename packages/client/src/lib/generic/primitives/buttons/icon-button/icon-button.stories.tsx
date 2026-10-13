@@ -31,6 +31,24 @@ export const Variations: Story = {
           ))}
         </View>
       </Variation>
+      <Variation label="Pressed">
+        <View className="flex-row gap-0.5">
+          <IconButton
+            icon="bold"
+            variant="ghost"
+            size="sm"
+            accessibilityLabel="Bold"
+            aria-pressed
+          />
+          <IconButton
+            icon="italic"
+            variant="ghost"
+            size="sm"
+            accessibilityLabel="Italic"
+            aria-pressed={false}
+          />
+        </View>
+      </Variation>
       <Variation label="Disabled">
         <View className="flex-row">
           <IconButton icon="more" accessibilityLabel="More actions" disabled />

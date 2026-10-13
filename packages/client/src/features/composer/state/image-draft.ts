@@ -2,18 +2,23 @@ import type {
   ComposerDraft,
   ComposerImage,
 } from '../components/composer/composer';
+import type { DraftKey } from './draft-key';
 
 export interface ImageDraftState {
   draft: ComposerDraft;
   // The file behind each attached image, by its id in the draft.
   files: ReadonlyMap<string, Blob>;
   selectionError?: string;
+  // The owner whose kept text may still replace the empty draft; gone once the person edits it.
+  awaitedKey?: DraftKey;
 }
 
 export type ImageDraftEvent =
   | { type: 'picked'; picked: readonly { image: ComposerImage; file: Blob }[] }
   | { type: 'pickFailed' }
   | { type: 'changed'; draft: ComposerDraft }
+  | { type: 'ownerChanged'; key: DraftKey }
+  | { type: 'restored'; key: DraftKey; text: string }
   | { type: 'cleared' };
 
 export type AttachmentError =
@@ -35,7 +40,15 @@ function changeDraft(
 ): ImageDraftState {
   const kept = new Set(draft.images.map((image) => image.id));
   const files = new Map([...state.files].filter(([id]) => kept.has(id)));
-  return { ...state, draft, files };
+  return { ...state, draft, files, awaitedKey: undefined };
+}
+
+function restore(
+  state: ImageDraftState,
+  { key, text }: { key: DraftKey; text: string },
+): ImageDraftState {
+  if (key !== state.awaitedKey) return state;
+  return { ...state, draft: { ...state.draft, text }, awaitedKey: undefined };
 }
 
 function attach(
@@ -45,10 +58,15 @@ function attach(
   const files = new Map(state.files);
   for (const { image, file } of picked) files.set(image.id, file);
   const images = [...state.draft.images, ...picked.map(({ image }) => image)];
-  return { draft: { ...state.draft, images }, files };
+  return {
+    ...state,
+    draft: { ...state.draft, images },
+    files,
+    selectionError: undefined,
+  };
 }
 
-// A Composer draft with attached images: what each pick, edit and send does to it.
+// A Composer draft with attached images: what each pick, edit, send and change of owner does to it.
 export function imageDraftReducer(
   state: ImageDraftState,
   event: ImageDraftEvent,
@@ -60,6 +78,10 @@ export function imageDraftReducer(
       return { ...state, selectionError: imageSelectionFailureMessage };
     case 'changed':
       return changeDraft(state, event.draft);
+    case 'ownerChanged':
+      return { ...emptyImageDraft, awaitedKey: event.key };
+    case 'restored':
+      return restore(state, event);
     case 'cleared':
       return emptyImageDraft;
   }
