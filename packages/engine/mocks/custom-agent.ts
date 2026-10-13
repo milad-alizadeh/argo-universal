@@ -19,12 +19,13 @@ export const customAgentDefinition: CustomAgentDefinition = {
 export const gatedCustomAgentDefinition = (
   marker: string,
   release: string,
+  scenario: Parameters<typeof scriptedAgentCommand>[0] = 'reply',
 ): CustomAgentDefinition => ({
   ...customAgentDefinition,
   args: [
     '--import',
     fileURLToPath(new URL('./probe-gate.mjs', import.meta.url)),
-    ...customAgentDefinition.args,
+    ...scriptedAgentCommand(scenario).args,
   ],
   env: [
     { name: 'ARGO_PROBE_EXIT_MARKER', value: marker },

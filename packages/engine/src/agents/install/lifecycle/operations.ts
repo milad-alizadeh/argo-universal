@@ -36,6 +36,9 @@ export class AgentInstallations {
     return this.bindings;
   }
   public isBusy(agentId: string): boolean {
+    return this.active.has(agentId) || this.configuration.hasExclusive(agentId);
+  }
+  private isReserved(agentId: string): boolean {
     return this.active.has(agentId) || this.configuration.has(agentId);
   }
   public configure<Result>(
@@ -43,7 +46,7 @@ export class AgentInstallations {
     operation: () => Promise<Result>,
   ): Promise<Result> {
     if (this.stopped) throw new Error('Engine is stopping');
-    if (this.isBusy(agentId)) throw new Error('Agent is in use by setup');
+    if (this.isReserved(agentId)) throw new Error('Agent is in use by setup');
     return this.configuration.run(agentId, operation);
   }
   public check = createInstallationReadiness({
@@ -52,7 +55,7 @@ export class AgentInstallations {
     isStopped: () => this.stopped,
   });
   private isInUse(agentId: string): boolean {
-    return this.isBusy(agentId) || this.dependencies().isInUse(agentId);
+    return this.isReserved(agentId) || this.dependencies().isInUse(agentId);
   }
   public mutateLaunch<Result>(
     agentId: string,

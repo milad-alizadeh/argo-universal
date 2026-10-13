@@ -30,7 +30,9 @@ Then(
     await expect(terminal).toBeVisible();
     await expect(terminal.getByRole('textbox')).toBeVisible();
     await expect(
-      terminal.getByText('› Continue in your browser', { exact: true }),
+      terminal
+        .getByRole('list')
+        .getByText('› Continue in your browser', { exact: true }),
     ).toBeAttached();
     await page.screenshot({
       path: test.info().outputPath('agent-terminal-login.png'),

@@ -7,6 +7,9 @@ export class ConfigurationReservations {
   public has(agentId: string): boolean {
     return this.active.has(agentId) || this.checks.has(agentId);
   }
+  public hasExclusive(agentId: string): boolean {
+    return this.active.has(agentId);
+  }
   public check(
     agentId: string,
     operation: () => Promise<AgentCheck>,
@@ -25,7 +28,12 @@ export class ConfigurationReservations {
   ): Promise<AgentCheck> {
     while (this.active.has(agentId))
       await Promise.allSettled([this.active.get(agentId)]);
-    return this.run(agentId, operation);
+    try {
+      return await operation();
+    } catch (error) {
+      this.retainCleanup(agentId, error);
+      throw error;
+    }
   }
   public run<Result>(
     agentId: string,
