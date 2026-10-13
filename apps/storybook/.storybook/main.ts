@@ -20,7 +20,6 @@ const PREBUNDLED_DEPENDENCIES = [
   '@repo/client > @rn-primitives/dialog',
   '@repo/client > react-native > invariant',
   '@repo/client > @rn-primitives/collapsible',
-  '@repo/client > @rn-primitives/checkbox',
   '@repo/client > @rn-primitives/select',
   '@repo/client > @tanstack/react-form',
   '@repo/client > ajv',
@@ -38,6 +37,8 @@ const PREBUNDLED_DEPENDENCIES = [
   'storybook/actions',
 ];
 
+const PRIMITIVES_FOLDER = `${import.meta.dirname}/../../../packages/client/src/lib/generic/primitives`;
+
 const RESOLVED_EXTENSIONS = [
   '.web.tsx',
   '.web.ts',
@@ -49,6 +50,11 @@ const RESOLVED_EXTENSIONS = [
   '.tsx',
   '.json',
 ];
+
+const VITE_RESOLVE = {
+  alias: { '#primitives': PRIMITIVES_FOLDER },
+  extensions: RESOLVED_EXTENSIONS,
+};
 
 const vitePlugins = (): PluginOption[] => [
   expoDeclarationImports,
@@ -88,7 +94,7 @@ const config: StorybookConfig = {
           moduleTypes: { '.ts': 'ts' },
         },
       },
-      resolve: { extensions: RESOLVED_EXTENSIONS },
+      resolve: VITE_RESOLVE,
       plugins: vitePlugins(),
     });
   },

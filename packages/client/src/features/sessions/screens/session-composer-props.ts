@@ -6,6 +6,7 @@ import type {
 } from '#features/composer';
 import type { useBlobUrl } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
+import type { ElicitationFormProps } from '#features/requests';
 import type { useNavigate } from '#lib/product/navigation/context';
 import { composerStatus } from '../state/composer-status';
 import { toSendError } from '../state/send-error';
@@ -23,6 +24,7 @@ export interface OpenSession {
   navigate: ReturnType<typeof useNavigate>;
   imageUrl: ReturnType<typeof useBlobUrl>;
   connected: boolean;
+  elicitation: ElicitationFormProps | undefined;
 }
 
 type DraftProps = Pick<

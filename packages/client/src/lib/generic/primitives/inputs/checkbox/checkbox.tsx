@@ -1,68 +1,116 @@
-import * as CheckboxPrimitive from '@rn-primitives/checkbox';
-import type { ReactElement } from 'react';
-import { Platform } from 'react-native';
-import { Icon } from '#lib/generic/primitives/display/icon/icon';
-import { cn } from '#lib/generic/utils';
+import { createElement } from 'react';
+import { View } from 'react-native';
+import { cn } from '../../../utils';
+import { Icon } from '../../display/icon/icon';
+import { Text } from '../../display/text/text';
+import type { CheckboxProps, CheckboxIndicatorProps } from './checkbox-props';
+import {
+  CheckboxFooter,
+  type CheckboxState,
+  useCheckboxState,
+} from './checkbox-state';
 
-const DEFAULT_HIT_SLOP = 24;
+export type { CheckboxProps } from './checkbox-props';
 
-function checkboxClassName(props: CheckboxProps): string {
-  const { className, checkedClassName, checked, disabled } = props;
+export function Checkbox(props: CheckboxProps): React.JSX.Element {
+  const state = useCheckboxState(props);
+  return (
+    <View className="gap-2">
+      {createElement(
+        'button',
+        controlProps(props, state),
+        <CheckboxRow {...props} invalid={state.invalid} />,
+      )}
+      <CheckboxFooter {...state} />
+    </View>
+  );
+}
+
+function controlProps(
+  props: CheckboxProps,
+  state: CheckboxState,
+): React.ButtonHTMLAttributes<HTMLButtonElement> {
+  return {
+    ...checkboxSemantics(props, state),
+    disabled: props.disabled,
+    onClick: state.toggle,
+    onBlur: props.onBlur,
+    className: controlClass(props),
+  };
+}
+
+function checkboxSemantics(
+  props: CheckboxProps,
+  state: CheckboxState,
+): React.ButtonHTMLAttributes<HTMLButtonElement> {
+  return {
+    type: 'button',
+    role: props.selection === 'single' ? 'radio' : 'checkbox',
+    'aria-label': props.label,
+    'aria-disabled': !!props.disabled,
+    'aria-checked': props.value,
+    'aria-invalid': state.invalid,
+    'aria-describedby': state.descriptionId,
+  };
+}
+
+function CheckboxRow(props: CheckboxProps): React.JSX.Element {
+  return (
+    <View className="w-full flex-row items-center gap-2.5">
+      {props.selection !== 'single' && <CheckboxIndicator {...props} />}
+      <Text role="body" className="min-w-0 flex-1">
+        {props.label}
+      </Text>
+      <SelectedMark {...props} />
+    </View>
+  );
+}
+
+export function CheckboxIndicator(
+  props: CheckboxIndicatorProps,
+): React.JSX.Element {
+  return (
+    <View aria-hidden className={markClassName(props)}>
+      {props.value && (
+        <Icon
+          name="check"
+          role={props.appearance === 'option' ? 'secondary' : 'mark'}
+          className="text-primary-foreground"
+        />
+      )}
+    </View>
+  );
+}
+
+function markClassName(props: CheckboxIndicatorProps): string {
   return cn(
-    'border-input dark:bg-input/30 size-4 shrink-0 rounded-[4px] border shadow-sm shadow-black/5',
-    Platform.select({
-      web: 'focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive peer cursor-default outline-none transition-shadow focus-visible:ring-[3px] disabled:cursor-not-allowed',
-      native: 'overflow-hidden',
-    }),
-    checked && cn('border-primary', checkedClassName),
-    disabled && 'opacity-50',
-    className,
+    'size-4.5 shrink-0 items-center justify-center rounded-sm border-[1.5px] border-input',
+    optionMarkClass(props),
+    props.value && 'border-primary bg-primary',
+    props.invalid && 'border-destructive',
   );
 }
 
-type CheckboxProps = React.ComponentProps<typeof CheckboxPrimitive.Root> & {
-  checkedClassName?: string;
-  indicatorClassName?: string;
-  iconClassName?: string;
-};
-
-function checkboxRootProps({
-  className: _className,
-  checkedClassName: _checkedClassName,
-  indicatorClassName: _indicatorClassName,
-  iconClassName: _iconClassName,
-  ...props
-}: CheckboxProps): React.ComponentProps<typeof CheckboxPrimitive.Root> {
-  return props;
-}
-
-function Checkbox(options: CheckboxProps): ReactElement {
-  const props = checkboxRootProps(options);
-  return (
-    <CheckboxPrimitive.Root
-      className={checkboxClassName(options)}
-      hitSlop={DEFAULT_HIT_SLOP}
-      {...props}
-    >
-      <CheckboxIndicator {...options} />
-    </CheckboxPrimitive.Root>
+function controlClass(props: CheckboxProps): string {
+  return cn(
+    'flex min-h-13 w-full cursor-default justify-start items-center rounded-md border-0 bg-muted p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring',
+    props.appearance === 'option' && optionClass(props),
+    props.disabled && 'opacity-50',
   );
 }
-
-export { Checkbox };
-
-function CheckboxIndicator(props: CheckboxProps): ReactElement {
-  const indicatorClass = cn(
-    'bg-primary h-full w-full items-center justify-center',
-    props.indicatorClassName,
+function optionClass(props: CheckboxProps): string {
+  return cn(
+    'min-h-9 rounded-lg bg-transparent px-2.5 py-2',
+    props.value && 'bg-foreground/4',
   );
-  return (
-    <CheckboxPrimitive.Indicator className={indicatorClass}>
-      <Icon
-        role="mark"
-        name="check"
-        className={cn('text-primary-foreground', props.iconClassName)}
-      />
-    </CheckboxPrimitive.Indicator>
-  );
+}
+function SelectedMark(props: CheckboxProps): React.JSX.Element | null {
+  if (props.selection !== 'single' || !props.value) return null;
+  return <Icon name="check" role="secondary" />;
+}
+
+function optionMarkClass(props: CheckboxIndicatorProps): string | undefined {
+  return props.appearance === 'option'
+    ? 'size-4 rounded-xs border border-ring'
+    : undefined;
 }

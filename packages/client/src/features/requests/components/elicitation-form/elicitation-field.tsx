@@ -1,27 +1,15 @@
 import type { ElicitationPropertySchema } from '@repo/contracts';
-import type * as React from 'react';
-import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { Checkbox } from '#lib/generic/primitives/inputs/checkbox/checkbox';
-import { Input } from '#lib/generic/primitives/inputs/input/input';
-import { cn } from '#lib/generic/utils';
-import { SelectMenu } from '../../../../lib/generic/primitives/inputs/select-menu/select-menu';
+import type { ComponentProps, ReactElement } from 'react';
+import { StandaloneFieldInput } from '#primitives/fields/field-input/standalone-field-input';
+import { Checkbox } from '#primitives/inputs/checkbox/checkbox';
+import { Picker } from '#primitives/inputs/picker/picker';
+import { ElicitationChoices } from './elicitation-choices';
 import {
   type ElicitationValue,
   elicitationChoices,
 } from './elicitation-schema';
 
-export function ElicitationField({
-  name,
-  property,
-  required,
-  value,
-  error,
-  showError,
-  onChange,
-  onBlur,
-  inactive,
-}: {
+export type ElicitationFieldProps = {
   name: string;
   property: ElicitationPropertySchema;
   required: boolean;
@@ -31,146 +19,66 @@ export function ElicitationField({
   onChange: (value: ElicitationValue) => void;
   onBlur: () => void;
   inactive: boolean;
-}): React.JSX.Element {
-  const label = property.title ?? name;
-  let displayedValue = value;
-  if (displayedValue === undefined) {
-    displayedValue = '';
-    if (property.type === 'array') displayedValue = [];
-    if (property.type === 'boolean') displayedValue = false;
-  }
+};
+
+export function ElicitationField(props: ElicitationFieldProps): ReactElement {
+  if (props.property.type === 'boolean') return <BooleanField {...props} />;
+  if (elicitationChoices(props.property)) return <ChoiceField {...props} />;
+  return <StandaloneFieldInput {...textProps(props)} />;
+}
+
+function fieldProps(
+  props: ElicitationFieldProps,
+): Pick<
+  ComponentProps<typeof StandaloneFieldInput>,
+  'label' | 'disabled' | 'errors' | 'hint' | 'onBlur'
+> {
+  return {
+    label: props.property.title ?? props.name,
+    onBlur: props.onBlur,
+    disabled: props.inactive,
+    errors: props.showError && props.error ? [props.error] : [],
+    hint: props.property.description,
+  };
+}
+
+function textProps(
+  props: ElicitationFieldProps,
+): ComponentProps<typeof StandaloneFieldInput> {
+  return {
+    ...fieldProps(props),
+    required: props.required,
+    numeric:
+      props.property.type === 'number' || props.property.type === 'integer',
+    value: props.value === undefined ? '' : String(props.value),
+    onChange: props.onChange,
+  };
+}
+
+function BooleanField(props: ElicitationFieldProps): ReactElement {
   return (
-    <View className="gap-1.5">
-      {property.type !== 'boolean' && (
-        <View className="flex-row items-center gap-1">
-          <Text role="body">{label}</Text>
-          {required && <Text role="secondary">Required</Text>}
-        </View>
-      )}
-      <FieldControl
-        property={property}
-        value={displayedValue}
-        present={value !== undefined}
-        label={label}
-        required={required}
-        inactive={inactive}
-        invalid={showError && !!error}
-        change={onChange}
-        onBlur={onBlur}
-      />
-      {property.description && (
-        <Text
-          role="secondary"
-          className={cn(property.type === 'boolean' && 'pl-7')}
-        >
-          {property.description}
-        </Text>
-      )}
-      {showError && error && (
-        <Text
-          semanticRole="alert"
-          role="secondary"
-          className="text-destructive"
-        >
-          {error}
-        </Text>
-      )}
-    </View>
+    <Checkbox
+      {...fieldProps(props)}
+      value={props.value === true}
+      onChange={props.onChange}
+    />
   );
 }
-function FieldControl({
-  property,
-  value,
-  label,
-  inactive,
-  required,
-  present,
-  invalid,
-  change,
-  onBlur,
-}: {
-  property: ElicitationPropertySchema;
-  value: ElicitationValue;
-  label: string;
-  inactive: boolean;
-  required: boolean;
-  present: boolean;
-  invalid: boolean;
-  change: (value: ElicitationValue) => void;
-  onBlur: () => void;
-}): React.JSX.Element {
-  const options = elicitationChoices(property);
-  if (property.type === 'boolean')
-    return (
-      <View className="flex-row items-start gap-3">
-        <View className="h-5 justify-center">
-          <Checkbox
-            accessibilityLabel={label}
-            checked={value === true}
-            disabled={inactive}
-            onCheckedChange={change}
-          />
-        </View>
-        <Text role="body" className="min-w-0 flex-1">
-          {label}
-          {required ? ' · Required' : ''}
-        </Text>
-      </View>
-    );
-  if (options && property.type === 'string')
-    return (
-      <SelectMenu
-        accessibilityLabel={label}
-        value={typeof value === 'string' && present ? value : undefined}
-        options={options.map((option) => ({
-          value: option.const,
-          label: option.title,
-        }))}
-        onValueChange={change}
-        disabled={inactive}
-        invalid={invalid}
-      />
-    );
-  if (options && property.type === 'array')
-    return (
-      <View className="gap-3">
-        {options.map((option) => (
-          <View key={option.const} className="flex-row items-center gap-3">
-            <Checkbox
-              accessibilityLabel={option.title}
-              disabled={inactive}
-              checked={Array.isArray(value) && value.includes(option.const)}
-              onCheckedChange={(checked) =>
-                change(
-                  checked
-                    ? [...(Array.isArray(value) ? value : []), option.const]
-                    : (Array.isArray(value) ? value : []).filter(
-                        (item) => item !== option.const,
-                      ),
-                )
-              }
-            />
-            <Text role="body">{option.title}</Text>
-          </View>
-        ))}
-      </View>
-    );
+
+function ChoiceField(props: ElicitationFieldProps): ReactElement {
+  if (props.property.type === 'array')
+    return <ElicitationChoices {...props} {...fieldProps(props)} />;
+  const options = elicitationChoices(props.property) ?? [];
   return (
-    <Input
-      accessibilityLabel={label}
-      value={String(value)}
-      editable={!inactive}
-      onChangeText={change}
-      onBlur={onBlur}
-      keyboardType={
-        property.type === 'number' || property.type === 'integer'
-          ? 'numbers-and-punctuation'
-          : 'default'
-      }
-      className={cn(
-        'h-9 sm:h-9 bg-background dark:bg-background type-control',
-        invalid && 'border-destructive',
-      )}
+    <Picker
+      required={props.required}
+      {...fieldProps(props)}
+      value={typeof props.value === 'string' ? props.value : undefined}
+      options={options.map((option) => ({
+        value: option.const,
+        label: option.title,
+      }))}
+      onChange={props.onChange}
     />
   );
 }

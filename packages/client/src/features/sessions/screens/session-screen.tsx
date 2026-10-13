@@ -11,6 +11,7 @@ import {
   SessionView,
   type SessionViewProps,
 } from '../components/session-view/session-view';
+import { useSessionElicitation } from '../hooks/use-session-elicitation';
 import {
   type SessionViewSources,
   toSessionViewProps,
@@ -44,11 +45,26 @@ function useRetryOpenOnReconnect(feed: SessionFeed): void {
   });
 }
 
-function useSessionSurroundings(): Pick<
+function useFeedElicitation(
+  sessionId: string,
+  feed: SessionFeed,
+): SessionViewSources['elicitation'] {
+  return useSessionElicitation({
+    sessionId,
+    request: feed.snapshot?.pendingElicitation,
+    resumeAfterCommand: feed.resumeAfterCommand,
+  });
+}
+
+function useSessionSurroundings(
+  sessionId: string,
+  feed: SessionFeed,
+): Pick<
   SessionViewSources,
-  'agents' | 'navigate' | 'imageUrl' | 'connected'
+  'agents' | 'navigate' | 'imageUrl' | 'connected' | 'elicitation'
 > {
   return {
+    elicitation: useFeedElicitation(sessionId, feed),
     agents: useAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),
@@ -63,7 +79,7 @@ function useSessionViewProps(sessionId: string): SessionViewProps {
     resumeAfterCommand: feed.resumeAfterCommand,
     agent: feed.snapshot?.agent,
   });
-  const surroundings = useSessionSurroundings();
+  const surroundings = useSessionSurroundings(sessionId, feed);
   useRetryOpenOnReconnect(feed);
   return toSessionViewProps({ sessionId, feed, commands, ...surroundings });
 }

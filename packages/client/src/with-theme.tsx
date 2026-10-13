@@ -1,4 +1,3 @@
-import { PortalHost } from '@rn-primitives/portal';
 import type * as React from 'react';
 import type { PropsWithChildren } from 'react';
 import { type ComponentType, useLayoutEffect } from 'react';
@@ -7,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Uniwind } from 'uniwind';
+import { PortalHost } from '#primitives/overlays/portal/portal';
 import { BlobUrlContext } from './features/connection/trpc/blob-url';
 import {
   dismissToasts,

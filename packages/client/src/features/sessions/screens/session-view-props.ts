@@ -54,6 +54,7 @@ const sessionFeedProps = (open: OpenSession): FeedProps => ({
 });
 
 const openSessionProps = (open: OpenSession): OpenSessionViewProps => ({
+  elicitation: open.elicitation,
   header: sessionHeaderProps(open.snapshot),
   feed: sessionFeedProps(open),
   composer: sessionComposerProps(open),
