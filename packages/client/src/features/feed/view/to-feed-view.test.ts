@@ -1,570 +1,111 @@
 import type {
   CommandAction,
-  Notice,
   PlanUpdate,
-  SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
-import { permissionOptions } from '@repo/contracts';
-import { recordedFeedMocks } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
+import { workMocks, commandRow } from '../../../../mocks/feed-view.mocks';
 import { toFeedView } from './to-feed-view';
 
-const firstReadId = 'first-read';
-
-const workMocks = recordedFeedMocks.filter(
-  (mock) => mock.recording === 'edit-and-command',
+it.each(workMocks)(
+  'keeps the active Plan outside the Feed for $agent',
+  ({ rows, snapshot }) => {
+    const source = commandRow(rows);
+    const first: PlanUpdate = {
+      id: 'first-plan',
+      sessionId: source.sessionId,
+      turnId: source.turnId,
+      position: source.position,
+      revision: source.revision,
+      state: 'settled',
+      sessionUpdate: 'plan_update',
+      plan: {
+        type: 'items',
+        planId: 'checklist',
+        entries: [
+          { content: 'Read the spec', priority: 'high', status: 'pending' },
+        ],
+      },
+    };
+    const latest: PlanUpdate = {
+      ...first,
+      id: 'latest-plan',
+      revision: first.revision + 1,
+      plan: {
+        type: 'items',
+        planId: 'checklist',
+        entries: [
+          { content: 'Read the spec', priority: 'high', status: 'completed' },
+        ],
+      },
+    };
+    const proposal: PlanUpdate = {
+      ...first,
+      id: 'proposal',
+      revision: first.revision + 2,
+      plan: {
+        type: 'markdown',
+        planId: 'proposal',
+        content: '# Proposed work',
+      },
+    };
+    expect(toFeedView([first, source, latest, proposal], snapshot)).toEqual({
+      items: [{ type: 'tool_call', row: source }],
+      plan: proposal.plan,
+    });
+  },
 );
 
-const recordedItemTypes: Record<string, string[]> = {
-  'agent-1/edit-and-command': ['row', 'group', 'row'],
-  'agent-2/edit-and-command': ['row', 'row', 'group', 'row'],
-  'agent-1/interrupt': ['row', 'tool_call'],
-  'agent-2/interrupt': ['row', 'row', 'tool_call'],
-  'agent-1/compaction': ['row', 'row'],
-  'agent-2/compaction': ['row', 'row', 'row'],
-  'agent-1/image-prompt': ['row', 'thought', 'row'],
-  'agent-2/image-prompt': ['row', 'row'],
-  'agent-1/markdown-answer': ['row', 'thought', 'row'],
-  'agent-2/markdown-answer': ['row', 'thought', 'row'],
-  'agent-2/command-outcomes': ['row', 'row', 'group', 'row'],
-  'agent-2/edit-states': ['row', 'row', 'group', 'row'],
-  'agent-2/edit-failure': ['row', 'row', 'tool_call', 'row'],
-};
-
-function toolCalls(rows: SessionUpdate[]): ToolCallUpdate[] {
-  return rows.filter((row) => row.sessionUpdate === 'tool_call_update');
-}
-
-function commandRow(rows: SessionUpdate[]): ToolCallUpdate {
-  const row = toolCalls(rows).find(
-    (row) =>
-      row.kind === 'execute' &&
-      !row._meta?.argo?.commandActions?.some(
-        (action) => action.type === 'read',
-      ),
-  );
-  if (!row) throw new Error('Recording needs a command');
-  return row;
-}
-
-describe('toFeedView', () => {
-  it.each(workMocks)(
-    'keeps approval on the earlier parallel Tool call for $agent',
-    ({ rows, snapshot }) => {
-      const first: ToolCallUpdate = {
-        ...commandRow(rows),
-        position: 1,
+describe.each(workMocks)('command actions for $agent', ({ rows, snapshot }) => {
+  it.each<{
+    name: string;
+    actions: CommandAction[];
+  }>([
+    {
+      name: 'read',
+      actions: [{ type: 'read', command: 'opaque', path: 'a.ts' }],
+    },
+    {
+      name: 'search',
+      actions: [
+        { type: 'search', command: 'opaque', query: 'needle', path: 'src' },
+      ],
+    },
+    {
+      name: 'list',
+      actions: [{ type: 'list', command: 'opaque', path: 'src' }],
+    },
+    {
+      name: 'multiple actions',
+      actions: [
+        { type: 'read', command: 'opaque', path: 'a.ts' },
+        { type: 'search', command: 'opaque', query: 'needle' },
+        { type: 'list', command: 'opaque', path: 'src' },
+      ],
+    },
+  ])('explores with supplied $name metadata', ({ actions }) => {
+    const row: ToolCallUpdate = {
+      ...commandRow(rows),
+      state: 'open',
+      status: 'in_progress',
+      _meta: { argo: { commandActions: actions } },
+    };
+    expect(toFeedView([row], snapshot).items).toEqual([
+      {
+        type: 'group',
+        id: row.id,
+        title: 'Exploring',
         state: 'open',
-        status: 'pending',
-      };
-      const later: ToolCallUpdate = {
-        ...first,
-        id: 'later-running',
-        toolCallId: 'later-running',
-        position: 2,
-        status: 'in_progress',
-      };
-      const pending = {
-        ...snapshot,
-        pendingPermission: {
-          requestId: 'request-1',
-          toolCallId: first.toolCallId,
-          title: 'Allow command?',
-          options: permissionOptions,
-        },
-      };
-      expect(toFeedView([first, later], pending).items).toEqual([
-        {
-          type: 'group',
-          id: first.id,
-          title: 'Awaiting approval',
-          state: 'open',
-          live: { toolCall: first, awaitingApproval: true },
-          items: [
-            { type: 'tool_call', row: first, awaitingApproval: true },
-            { type: 'tool_call', row: later },
-          ],
-        },
-      ]);
-    },
-  );
-
-  it.each(workMocks)(
-    'names the earlier running parallel Tool call after the later call completes for $agent',
-    ({ rows, snapshot }) => {
-      const first: ToolCallUpdate = {
-        ...commandRow(rows),
-        position: 1,
-        state: 'open',
-        status: 'in_progress',
-      };
-      const later: ToolCallUpdate = {
-        ...first,
-        id: 'later-completed',
-        toolCallId: 'later-completed',
-        position: 2,
-        state: 'settled',
-        status: 'completed',
-      };
-      expect(toFeedView([first, later], snapshot).items).toEqual([
-        {
-          type: 'group',
-          id: first.id,
-          title: first.title,
-          state: 'open',
-          live: { toolCall: first, awaitingApproval: false },
-          items: [
-            { type: 'tool_call', row: first },
-            { type: 'tool_call', row: later },
-          ],
-        },
-      ]);
-    },
-  );
-  it.each(workMocks)(
-    'keeps a failed multi-file edit plain for $agent',
-    ({ rows, snapshot }) => {
-      const source = toolCalls(rows).find((row) => row.kind === 'edit');
-      if (!source) throw new Error('Recording needs an edit');
-      const row: ToolCallUpdate = {
-        ...source,
-        status: 'failed',
-        locations: [{ path: 'a.ts' }, { path: 'b.ts' }],
-      };
-      expect(toFeedView([row], snapshot).items).toEqual([
-        { type: 'tool_call', row },
-      ]);
-    },
-  );
-
-  it.each(recordedFeedMocks)(
-    'presents $agent/$recording without folding or changing rows',
-    (mock) => {
-      const original = structuredClone(mock);
-      const view = toFeedView(mock.rows, mock.snapshot);
-      expect(view.items.map((item) => item.type)).toEqual(
-        recordedItemTypes[`${mock.agent}/${mock.recording}`],
-      );
-      const presentedRows = view.items
-        .flatMap((item) => (item.type === 'group' ? item.items : [item]))
-        .flatMap((item) =>
-          item.type === 'exploration' ? item.toolCalls : [item.row],
-        )
-        .sort((first, second) => first.position - second.position);
-      expect(presentedRows).toEqual(mock.rows);
-      expect(mock).toEqual(original);
-    },
-  );
-
-  it.each(workMocks)(
-    'keeps unclassified shell text as a command for $agent',
-    ({ rows, snapshot }) => {
-      const source = commandRow(rows);
-      for (const commandActions of [
-        undefined,
-        [],
-        [
-          { type: 'read' as const, command: 'cat a.ts', path: 'a.ts' },
-          { type: 'unknown' as const, command: 'build' },
-        ],
-      ]) {
-        const row: ToolCallUpdate = {
-          ...source,
-          title: 'Read a.ts and list src',
-          content: [
-            { type: 'terminal', command: 'cat a.ts && ls src', output: '' },
-          ],
-          _meta: { argo: { commandActions } },
-        };
-        expect(toFeedView([row], snapshot).items).toEqual([
-          { type: 'tool_call', row },
-        ]);
-      }
-    },
-  );
-
-  it.each(workMocks)(
-    'uses Thinking for a streaming thought after a Tool call for $agent',
-    ({ rows, snapshot }) => {
-      const source = recordedFeedMocks
-        .flatMap((mock) => mock.rows)
-        .find((row) => row.sessionUpdate === 'agent_thought');
-      if (!source) throw new Error('Recording needs a thought');
-      const thought = { ...source, state: 'open' as const };
-      const row = commandRow(rows);
-      const view = toFeedView([row, thought], snapshot);
-      expect(view.items).toEqual([
-        {
-          type: 'group',
-          id: row.id,
-          title: 'Thinking',
-          state: 'open',
-          items: [
-            { type: 'tool_call', row },
-            { type: 'thought', row: thought },
-          ],
-        },
-      ]);
-      expect(view.items[0]).not.toHaveProperty('live');
-    },
-  );
-
-  describe.each(workMocks)(
-    'Notice grouping for $agent',
-    ({ rows, snapshot }) => {
-      it.each(['info', 'warning'] as const)(
-        'groups a %s Notice with the commands around it',
-        (severity) => {
-          const first = commandRow(rows);
-          const last = { ...first, id: 'last-command' };
-          const notice: Notice = {
-            id: 'notice',
-            sessionId: first.sessionId,
-            turnId: first.turnId,
-            position: first.position,
-            revision: first.revision,
-            state: 'settled',
-            sessionUpdate: 'notice',
-            severity,
-            title: 'Session notice',
-          };
-          expect(toFeedView([first, notice, last], snapshot).items).toEqual([
-            {
-              type: 'group',
-              id: first.id,
-              title: 'Ran 2 commands',
-              state: 'settled',
-              items: [
-                { type: 'tool_call', row: first },
-                { type: 'row', row: notice },
-                { type: 'tool_call', row: last },
-              ],
-            },
-          ]);
-        },
-      );
-
-      it('draws an error Notice on its own row between the commands', () => {
-        const first = commandRow(rows);
-        const last = { ...first, id: 'last-command' };
-        const notice: Notice = {
-          id: 'notice',
-          sessionId: first.sessionId,
-          turnId: first.turnId,
-          position: first.position,
-          revision: first.revision,
-          state: 'settled',
-          sessionUpdate: 'notice',
-          severity: 'error',
-          title: 'Session notice',
-        };
-        expect(toFeedView([first, notice, last], snapshot).items).toEqual([
-          { type: 'tool_call', row: first },
-          { type: 'row', row: notice },
-          { type: 'tool_call', row: last },
-        ]);
-      });
-    },
-  );
-
-  it.each(workMocks)(
-    'starts a new group for an Agent-started Turn for $agent',
-    ({ rows, snapshot }) => {
-      const first = commandRow(rows);
-      const next = { ...first, id: 'next-turn', turnId: 'turn-2' };
-      expect(toFeedView([first, next], snapshot).items).toEqual([
-        { type: 'tool_call', row: first },
-        { type: 'tool_call', row: next },
-      ]);
-    },
-  );
-
-  it.each(workMocks)(
-    'keeps the Permission request at its Tool call for $agent',
-    ({ rows, snapshot }) => {
-      const recorded = toolCalls(rows).find(
-        (row) =>
-          row.kind === 'read' ||
-          row._meta?.argo?.commandActions?.some(
-            (action) => action.type === 'read',
-          ),
-      );
-      if (!recorded) throw new Error('Recording needs a read');
-      const row: ToolCallUpdate = {
-        ...recorded,
-        status: 'pending',
-        state: 'open',
-      };
-      const pending = {
-        ...snapshot,
-        pendingPermission: {
-          requestId: 'request-1',
-          toolCallId: row.toolCallId,
-          title: 'Allow read?',
-          options: permissionOptions,
-        },
-      };
-      expect(toFeedView([row], pending).items).toEqual([
-        {
-          type: 'group',
-          id: row.id,
-          title: 'Awaiting approval',
-          state: 'open',
-          live: { toolCall: row, awaitingApproval: true },
-          items: [{ type: 'tool_call', row, awaitingApproval: true }],
-        },
-      ]);
-      const answered: ToolCallUpdate = {
-        ...recorded,
-        _meta: {
-          argo: {
-            ...recorded._meta?.argo,
-            permissionOutcome: { outcome: 'selected', optionId: 'allow_once' },
-          },
-        },
-      };
-      expect(toFeedView([answered], snapshot).items).toEqual([
-        { type: 'tool_call', row: answered },
-      ]);
-      expect(row.title).toBe(recorded.title);
-    },
-  );
-
-  it.each(workMocks)(
-    'keeps the active Plan outside the Feed for $agent',
-    ({ rows, snapshot }) => {
-      const source = commandRow(rows);
-      const first: PlanUpdate = {
-        id: 'first-plan',
-        sessionId: source.sessionId,
-        turnId: source.turnId,
-        position: source.position,
-        revision: source.revision,
-        state: 'settled',
-        sessionUpdate: 'plan_update',
-        plan: {
-          type: 'items',
-          planId: 'checklist',
-          entries: [
-            { content: 'Read the spec', priority: 'high', status: 'pending' },
-          ],
-        },
-      };
-      const latest: PlanUpdate = {
-        ...first,
-        id: 'latest-plan',
-        revision: first.revision + 1,
-        plan: {
-          type: 'items',
-          planId: 'checklist',
-          entries: [
-            { content: 'Read the spec', priority: 'high', status: 'completed' },
-          ],
-        },
-      };
-      const proposal: PlanUpdate = {
-        ...first,
-        id: 'proposal',
-        revision: first.revision + 2,
-        plan: {
-          type: 'markdown',
-          planId: 'proposal',
-          content: '# Proposed work',
-        },
-      };
-      expect(toFeedView([first, source, latest, proposal], snapshot)).toEqual({
-        items: [{ type: 'tool_call', row: source }],
-        plan: proposal.plan,
-      });
-    },
-  );
-
-  it.each(workMocks)(
-    'groups recorded work for $agent',
-    ({ rows, snapshot }) => {
-      const view = toFeedView(rows, snapshot);
-      expect(view.items.find((item) => item.type === 'group')).toMatchObject({
-        title: 'Ran 1 command, Read 1 file, Edited 2 files',
-        state: 'settled',
-        items: expect.arrayContaining([
-          expect.objectContaining({ type: 'exploration', title: 'Explored' }),
-          expect.objectContaining({ type: 'tool_call' }),
-        ]),
-      });
-      expect(view.plan).toBeNull();
-    },
-  );
-
-  it.each(workMocks)(
-    'summarizes commands and affected files by category for $agent',
-    ({ rows, snapshot }) => {
-      const calls = toolCalls(rows);
-      const command = commandRow(rows);
-      const secondCommand: ToolCallUpdate = {
-        ...command,
-        id: 'second-command',
-        toolCallId: 'second-command',
-        position: Math.max(...calls.map((row) => row.position)) + 1,
-      };
-      const view = toFeedView([...calls, secondCommand], snapshot);
-      expect(view.items.find((item) => item.type === 'group')).toMatchObject({
-        title: 'Ran 2 commands, Read 1 file, Edited 2 files',
-        state: 'settled',
-      });
-    },
-  );
-
-  it.each(workMocks)(
-    'keeps one finished command plain for $agent',
-    ({ rows, snapshot }) => {
-      const row = commandRow(rows);
-      expect(toFeedView([row], snapshot).items).toEqual([
-        { type: 'tool_call', row },
-      ]);
-    },
-  );
-
-  it.each(workMocks)(
-    'keeps one running command grouped for $agent',
-    ({ rows, snapshot }) => {
-      const row: ToolCallUpdate = {
-        ...commandRow(rows),
-        state: 'open',
-        status: 'in_progress',
-      };
-      expect(toFeedView([row], snapshot).items).toEqual([
-        {
-          type: 'group',
-          id: row.id,
-          title: row.title,
-          state: 'open',
-          live: { toolCall: row, awaitingApproval: false },
-          items: [{ type: 'tool_call', row }],
-        },
-      ]);
-    },
-  );
-
-  it.each(workMocks)(
-    'keeps failed exploration in its own row for $agent',
-    ({ rows, snapshot }) => {
-      const recorded = toolCalls(rows).find(
-        (row) =>
-          row.kind === 'read' ||
-          row._meta?.argo?.commandActions?.some(
-            (action) => action.type === 'read',
-          ),
-      );
-      if (!recorded) throw new Error('Recording needs a read');
-      const row: ToolCallUpdate = { ...recorded, status: 'failed' };
-      expect(toFeedView([row], snapshot).items).toEqual([
-        { type: 'tool_call', row },
-      ]);
-    },
-  );
-
-  it.each(workMocks)(
-    'combines reads across thoughts for $agent',
-    ({ rows, snapshot }) => {
-      const source = commandRow(rows);
-      const first: ToolCallUpdate = {
-        ...source,
-        id: firstReadId,
-        _meta: {
-          argo: {
-            commandActions: [{ type: 'read', command: 'read', path: 'a.ts' }],
-          },
-        },
-      };
-      const second: ToolCallUpdate = {
-        ...first,
-        id: 'second-read',
-        _meta: {
-          argo: {
-            commandActions: [{ type: 'read', command: 'read', path: 'b.ts' }],
-          },
-        },
-      };
-      const thought = recordedFeedMocks
-        .flatMap((mock) => mock.rows)
-        .find((row) => row.sessionUpdate === 'agent_thought');
-      if (!thought) throw new Error('Recording needs a thought');
-      const view = toFeedView([first, thought, second], snapshot);
-      expect(view.items).toEqual([
-        {
-          type: 'group',
-          id: firstReadId,
-          title: 'Read 2 files',
-          state: 'settled',
-          items: [
-            {
-              type: 'exploration',
-              id: firstReadId,
-              title: 'Explored',
-              toolCalls: [first, second],
-            },
-            { type: 'thought', row: thought },
-          ],
-        },
-      ]);
-    },
-  );
-
-  describe.each(workMocks)(
-    'command actions for $agent',
-    ({ rows, snapshot }) => {
-      it.each<{
-        name: string;
-        actions: CommandAction[];
-      }>([
-        {
-          name: 'read',
-          actions: [{ type: 'read', command: 'opaque', path: 'a.ts' }],
-        },
-        {
-          name: 'search',
-          actions: [
-            { type: 'search', command: 'opaque', query: 'needle', path: 'src' },
-          ],
-        },
-        {
-          name: 'list',
-          actions: [{ type: 'list', command: 'opaque', path: 'src' }],
-        },
-        {
-          name: 'multiple actions',
-          actions: [
-            { type: 'read', command: 'opaque', path: 'a.ts' },
-            { type: 'search', command: 'opaque', query: 'needle' },
-            { type: 'list', command: 'opaque', path: 'src' },
-          ],
-        },
-      ])('explores with supplied $name metadata', ({ actions }) => {
-        const row: ToolCallUpdate = {
-          ...commandRow(rows),
-          state: 'open',
-          status: 'in_progress',
-          _meta: { argo: { commandActions: actions } },
-        };
-        expect(toFeedView([row], snapshot).items).toEqual([
+        live: { toolCall: row, awaitingApproval: false },
+        items: [
           {
-            type: 'group',
+            type: 'exploration',
             id: row.id,
             title: 'Exploring',
-            state: 'open',
-            live: { toolCall: row, awaitingApproval: false },
-            items: [
-              {
-                type: 'exploration',
-                id: row.id,
-                title: 'Exploring',
-                toolCalls: [row],
-              },
-            ],
+            toolCalls: [row],
           },
-        ]);
-      });
-    },
-  );
+        ],
+      },
+    ]);
+  });
 });

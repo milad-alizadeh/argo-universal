@@ -1,5 +1,4 @@
 import type {
-  AgentInfo,
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
@@ -13,10 +12,9 @@ type Category = (typeof categories)[number];
 export type SavedChoices = Partial<Record<Category, string>>;
 type SelectOption = Extract<SessionConfigOption, { type: 'select' }>;
 export type RememberedOption = SelectOption & { category: Category };
-export interface NewSessionConfiguration {
-  configOptions: SessionConfigOption[];
-  ready: boolean;
-  change: (configId: string, value: string | boolean) => void;
+export interface ConfigurationChange {
+  configId: string;
+  value: string;
 }
 
 export function isRememberedConfiguration(
@@ -47,12 +45,12 @@ function withSavedChoice(
   ].find((candidate) => offered.some((choice) => choice.value === candidate));
   return value === undefined ? undefined : { ...option, currentValue: value };
 }
-// The model, effort and mode a new Session starts with: each saved choice the Agent still offers, else its default, else its first offered value.
+// The model, effort and mode a new Session starts with: each saved choice the Session still offers, else its default, else its first offered value.
 export function draftConfiguration(
-  agent: AgentInfo | undefined,
+  options: SessionConfigOption[],
   saved: SavedChoices,
 ): RememberedOption[] {
-  const defaults = agentOptions(agent);
+  const defaults = orderedOptions(options);
   const defaultModel = defaults.find((option) => option.category === 'model');
   const model = savedModel(defaultModel, saved);
   return defaults.flatMap(
@@ -61,9 +59,6 @@ export function draftConfiguration(
   );
 }
 
-function agentOptions(agent: AgentInfo | undefined): RememberedOption[] {
-  return orderedOptions(agent?.configOptions ?? []);
-}
 function savedModel(
   model: RememberedOption | undefined,
   saved: SavedChoices,
@@ -81,47 +76,23 @@ function offeredChoices(
     ? configurationEffortChoices(model, option)
     : configurationChoices(option);
 }
-export function newConfigurationOptions(
-  agent: AgentInfo | undefined,
-  remembered: RememberedOption[],
-  switches: Record<string, boolean> | undefined,
-): SessionConfigOption[] {
-  return (agent?.configOptions ?? []).flatMap((option) =>
-    draftOption(option, remembered, switches),
-  );
+// The next saved choice to apply to a Session, model before effort before mode; each option is applied at most once.
+export function nextRememberedChange(
+  options: SessionConfigOption[],
+  saved: SavedChoices,
+  applied: readonly string[],
+): ConfigurationChange | undefined {
+  const current = orderedOptions(options);
+  return draftConfiguration(options, saved)
+    .filter(({ configId }) => !applied.includes(configId))
+    .map(({ configId, currentValue }) => ({ configId, value: currentValue }))
+    .find((change) => differsFromSession(current, change));
 }
-function draftOption(
-  option: SessionConfigOption,
-  remembered: RememberedOption[],
-  switches: Record<string, boolean> | undefined,
-): SessionConfigOption[] {
-  if (isRememberedConfiguration(option))
-    return rememberedOption(option, remembered);
-  return option.type === 'boolean'
-    ? [{ ...option, currentValue: switchValue(option, switches) }]
-    : [];
-}
-function rememberedOption(
-  option: SessionConfigOption,
-  remembered: RememberedOption[],
-): RememberedOption[] {
-  const selected = remembered.find(
-    (entry) => entry.configId === option.configId,
-  );
-  return selected ? [selected] : [];
-}
-function switchValue(
-  option: Extract<SessionConfigOption, { type: 'boolean' }>,
-  switches: Record<string, boolean> | undefined,
+function differsFromSession(
+  current: RememberedOption[],
+  { configId, value }: ConfigurationChange,
 ): boolean {
-  return switches?.[option.configId] ?? option.currentValue;
-}
-export function changedSelection(
-  option: SessionConfigOption,
-  configId: string,
-  value: string,
-): SessionConfigOption {
-  return option.type === 'select' && option.configId === configId
-    ? { ...option, currentValue: value }
-    : option;
+  return current.some(
+    (option) => option.configId === configId && option.currentValue !== value,
+  );
 }

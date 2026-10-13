@@ -2,7 +2,11 @@ import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import type { SessionUpdate } from '@repo/contracts';
 import { feedRow, turn } from '@repo/db/schema';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  insertEndedTurn,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
@@ -24,6 +28,7 @@ it.each(
   'degrades only the Session with a malformed $kind row for $agent',
   async ({ agent, kind }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const reported = vi
       .spyOn(console, 'error')
@@ -35,6 +40,7 @@ it.each(
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
+    insertEndedTurn(database, 'healthy');
     database
       .insert(turn)
       .values({ id: 'running', sessionId: 'session-1', status: 'running' })

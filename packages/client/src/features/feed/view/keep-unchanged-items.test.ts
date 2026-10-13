@@ -1,6 +1,11 @@
 import type { SessionUpdate } from '@repo/contracts';
 import { recordedFeedMocks } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
+import {
+  requireGroup,
+  requireCollapsible,
+  changedActivity,
+} from '../../../../mocks/feed-items.mocks';
 import { keepUnchangedItems } from './keep-unchanged-items';
 import { toFeedView } from './to-feed-view';
 
@@ -55,15 +60,12 @@ describe('keepUnchangedItems', () => {
       const groupIndex = previous.items.findIndex(
         (item) => item.type === 'group',
       );
-      const group = previous.items[groupIndex];
-      if (group?.type !== 'group') throw new Error('Recording needs a group');
+      const group = requireGroup(previous.items[groupIndex]);
       const changedIndex = group.items.findIndex(
         (activity) =>
           activity.type === 'tool_call' || activity.type === 'exploration',
       );
-      const changed = group.items[changedIndex];
-      if (changed?.type !== 'tool_call' && changed?.type !== 'exploration')
-        throw new Error('Group needs a tool call');
+      const changed = changedActivity(group.items[changedIndex]);
       const changedId =
         changed.type === 'tool_call' ? changed.row.id : changed.id;
       const changedRows = bumpRevision(rows, changedId);
@@ -74,8 +76,7 @@ describe('keepUnchangedItems', () => {
       expect(keptObjects(previous.items, next.items)).toEqual(
         previous.items.map((_, index) => index !== groupIndex),
       );
-      const nextGroup = next.items[groupIndex];
-      if (nextGroup?.type !== 'group') throw new Error('Group expected');
+      const nextGroup = requireGroup(next.items[groupIndex]);
       expect(keptObjects(group.items, nextGroup.items)).toEqual(
         group.items.map((_, index) => index !== changedIndex),
       );
@@ -85,23 +86,17 @@ describe('keepUnchangedItems', () => {
   it.each(mocks)(
     "keeps a group's key when an older page brings its first rows for $agent",
     ({ rows, snapshot }) => {
-      const group = toFeedView(rows, snapshot).items.find(
-        (item) => item.type === 'group',
+      const group = requireGroup(
+        toFeedView(rows, snapshot).items.find((item) => item.type === 'group'),
       );
-      if (group?.type !== 'group') throw new Error('Recording needs a group');
       // The newer page starts at the group's second row.
       const start = rows.findIndex((row) => row.id === group.id) + 1;
       const previous = toFeedView(rows.slice(start), snapshot);
-      const [previousGroup] = previous.items;
-      if (
-        previousGroup?.type !== 'group' &&
-        previousGroup?.type !== 'exploration'
-      )
-        throw new Error('The newer page needs to start in the group');
+      const previousGroup = requireCollapsible(previous.items[0]);
       const next = keepUnchangedItems(previous, toFeedView(rows, snapshot));
-      expect(next.items.find((item) => item.type === 'group')?.id).toBe(
-        previousGroup.id,
-      );
+      expect(
+        requireGroup(next.items.find((item) => item.type === 'group')).id,
+      ).toBe(previousGroup.id);
     },
   );
 

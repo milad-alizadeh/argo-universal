@@ -1,7 +1,7 @@
 import { session } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished } from 'vitest';
-import { openTestDatabase } from '#mocks/database';
+import { insertEndedTurn, openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { finishSubscription } from '#mocks/list-observation';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
@@ -12,6 +12,7 @@ const unwatchedTitle = 'Changed without watchers';
 
 it('initializes a fresh list after all watchers leave and unwatched data changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
   const { databaseWriter: writer, createCaller } = await startEngineTestHost({
     database,

@@ -1,7 +1,12 @@
 import { onTestFinished, vi } from 'vitest';
-import { countDatabaseReads } from './database';
+import {
+  countDatabaseReads,
+  insertEndedTurn,
+  openTestDatabase,
+} from './database';
 import { startEngineTestHost } from './engine';
 import { watchEngineList } from './list-observation';
+import { scriptedEngineInput } from './scripted-engine';
 
 type EngineHost = Awaited<ReturnType<typeof startEngineTestHost>>;
 type ListIterator = ReturnType<
@@ -34,7 +39,13 @@ type ListWatchers = {
 };
 
 export async function startListReaders(): Promise<ListReaders> {
-  const host = await startEngineTestHost();
+  const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
+  onTestFinished(remove);
+  const host = await startEngineTestHost({
+    database,
+    ...scriptedEngineInput(),
+  });
   const watchers = {
     firstWatcher: watchEngineList(host.createCaller),
     secondWatcher: watchEngineList(host.createCaller),

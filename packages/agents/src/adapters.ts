@@ -18,10 +18,7 @@ const missingAdapter = (agent: string): AgentAdapter => ({
   agent,
   label: agent,
   logo: '',
-  probe: async (): Promise<AgentProbe> => ({
-    availability: 'unavailable',
-    configOptions: [],
-  }),
+  probe: async (): Promise<AgentProbe> => ({ availability: 'unavailable' }),
   connect: (): Promise<VendorSession> =>
     Promise.reject(new Error(`No Agent adapter for ${agent}.`)),
   initialMappingState: (): null => null,

@@ -1,107 +1,113 @@
 import { type FeedView, type FeedViewItem, feedItemKey } from './feed-view';
+import { sameItem } from './item-equality';
 
-const sameList = <Value>(
-  first: readonly Value[],
-  second: readonly Value[],
-  isSame: (first: Value, second: Value) => boolean = Object.is,
-): boolean => {
-  if (first.length !== second.length) return false;
-  const following = second.values();
-  return first.every((value) => {
-    const other = following.next();
-    return !other.done && isSame(value, other.value);
-  });
-};
+type Collapsible = Extract<FeedViewItem, { type: 'group' | 'exploration' }>;
+const isCollapsible = (item: FeedViewItem): item is Collapsible =>
+  item.type === 'group' || item.type === 'exploration';
+const itemKey = (item: FeedViewItem): string =>
+  `${item.type}:${feedItemKey(item)}`;
+const toKeyedEntry = <Item extends FeedViewItem>(
+  item: Item,
+): readonly [string, Item] => [itemKey(item), item];
 
-// Rows are compared by reference: the Feed state replaces a row only when it changes.
-function sameItem(first: FeedViewItem, second: FeedViewItem): boolean {
-  if (first === second) return true;
-  if (first.type === 'group' && second.type === 'group')
-    return (
-      first.id === second.id &&
-      first.title === second.title &&
-      first.state === second.state &&
-      sameList<FeedViewItem>(first.items, second.items, sameItem)
-    );
-  if (first.type === 'exploration' && second.type === 'exploration')
-    return (
-      first.id === second.id &&
-      first.title === second.title &&
-      sameList(first.toolCalls, second.toolCalls)
-    );
-  if ('row' in first && 'row' in second)
-    return first.type === second.type && first.row === second.row;
-  return false;
-}
-
-// The ids of the rows an item draws.
 function rowIds(item: FeedViewItem): string[] {
   if (item.type === 'group') return item.items.flatMap(rowIds);
   if (item.type === 'exploration') return item.toolCalls.map((row) => row.id);
   return [item.row.id];
 }
 
-// Groups and explorations, with the explorations inside groups.
-function collapsibles(items: readonly FeedViewItem[]): FeedViewItem[] {
-  return items.flatMap((item) => {
-    if (item.type === 'group')
-      return [item, ...item.items.filter(({ type }) => type === 'exploration')];
-    return item.type === 'exploration' ? [item] : [];
-  });
+function collapsibles(items: readonly FeedViewItem[]): Collapsible[] {
+  return items.flatMap(nestedCollapsibles);
 }
 
-// An older page can bring a group's first rows, so a group or exploration that holds a row its previous one was keyed by keeps that key.
-function keepKeys(
-  previous: FeedView,
-  items: readonly FeedViewItem[],
-): FeedViewItem[] {
-  const previousKeys = new Set(collapsibles(previous.items).map(itemKey));
-  const keepKey = <Item extends FeedViewItem>(item: Item): Item => {
-    if (item.type !== 'group' && item.type !== 'exploration') return item;
+function nestedCollapsibles(item: FeedViewItem): Collapsible[] {
+  if (item.type === 'group')
+    return [
+      item,
+      ...item.items.filter((activity) => activity.type === 'exploration'),
+    ];
+  return item.type === 'exploration' ? [item] : [];
+}
+
+function withKeptId<Item extends Collapsible>(
+  item: Item,
+  keptId: string | undefined,
+): Item {
+  return keptId === undefined || keptId === item.id
+    ? item
+    : { ...item, id: keptId };
+}
+
+function keepIfSame<Item extends FeedViewItem>(
+  item: Item,
+  previous: Item | undefined,
+): Item {
+  if (previous && sameItem(previous, item)) return previous;
+  return item;
+}
+
+class ItemKeeper {
+  private readonly previousKeys: Set<string>;
+  private readonly previousItems: Map<string, FeedViewItem>;
+
+  public constructor(previous: FeedView) {
+    this.previousKeys = new Set(collapsibles(previous.items).map(itemKey));
+    this.previousItems = new Map(previous.items.map(toKeyedEntry));
+  }
+
+  private keepKey<Item extends FeedViewItem>(item: Item): Item {
+    if (!isCollapsible(item)) return item;
     const keptId = rowIds(item).find((id) =>
-      previousKeys.has(`${item.type}:${id}`),
+      this.previousKeys.has(`${item.type}:${id}`),
     );
-    const withKey =
-      keptId === undefined || keptId === item.id
-        ? item
-        : { ...item, id: keptId };
+    const withKey = withKeptId(item, keptId);
     return withKey.type === 'group'
-      ? { ...withKey, items: withKey.items.map(keepKey) }
+      ? {
+          ...withKey,
+          items: withKey.items.map((activity) => this.keepKey(activity)),
+        }
       : withKey;
-  };
-  return items.map(keepKey);
+  }
+
+  private keepItem(item: FeedViewItem): FeedViewItem {
+    const previousItem = this.previousItems.get(itemKey(item));
+    const kept = keepIfSame(item, previousItem);
+    if (kept !== item) return kept;
+    return this.keepGroupActivities(item, previousItem);
+  }
+
+  private keepGroupActivities(
+    item: FeedViewItem,
+    previous: FeedViewItem | undefined,
+  ): FeedViewItem {
+    if (item.type !== 'group') return item;
+    if (!previous) return item;
+    return this.keepActivities(item, previous);
+  }
+
+  private keepActivities(
+    item: Extract<FeedViewItem, { type: 'group' }>,
+    previous: FeedViewItem,
+  ): FeedViewItem {
+    if (previous.type !== 'group') return item;
+    const previousActivities = new Map(previous.items.map(toKeyedEntry));
+    return {
+      ...item,
+      items: item.items.map((activity) =>
+        keepIfSame(activity, previousActivities.get(itemKey(activity))),
+      ),
+    };
+  }
+
+  public keep(items: readonly FeedViewItem[]): FeedViewItem[] {
+    return items.map((item) => this.keepItem(this.keepKey(item)));
+  }
 }
 
-// The new view with each unchanged item swapped for its previous object, so memoised rows skip their render.
 export function keepUnchangedItems(
   previous: FeedView | null,
   next: FeedView,
 ): FeedView {
   if (!previous) return next;
-  const nextItems = keepKeys(previous, next.items);
-  const previousItems = new Map(previous.items.map(toKeyedEntry));
-  const keepIfUnchanged = (item: FeedViewItem): FeedViewItem => {
-    const previousItem = previousItems.get(itemKey(item));
-    if (previousItem && sameItem(previousItem, item)) return previousItem;
-    if (item.type !== 'group' || previousItem?.type !== 'group') return item;
-    // A changed group still keeps its unchanged activities.
-    const previousActivities = new Map(previousItem.items.map(toKeyedEntry));
-    return {
-      ...item,
-      items: item.items.map((activity) => {
-        const previousActivity = previousActivities.get(itemKey(activity));
-        return previousActivity && sameItem(previousActivity, activity)
-          ? previousActivity
-          : activity;
-      }),
-    };
-  };
-  return { ...next, items: nextItems.map(keepIfUnchanged) };
+  return { ...next, items: new ItemKeeper(previous).keep(next.items) };
 }
-
-const itemKey = (item: FeedViewItem): string =>
-  `${item.type}:${feedItemKey(item)}`;
-
-const toKeyedEntry = <Item extends FeedViewItem>(
-  item: Item,
-): readonly [string, Item] => [itemKey(item), item];

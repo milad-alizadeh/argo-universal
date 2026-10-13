@@ -1,4 +1,3 @@
-import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
 import { newSessionBranches, newSessionCatalogs } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { canOpenSession, toNewSessionInput } from './open-session';
@@ -12,24 +11,14 @@ import {
   worktreeProject,
 } from './session-choices.mocks';
 
-const configuration: SessionConfigOption[] = firstAgent.configOptions;
-const firstPrompt: SessionNewInput['prompt'] = [
-  { type: 'text', text: 'Fix the flaky login test' },
-];
-
 describe('toNewSessionInput', () => {
-  it("sends the Project's defaults, the Agent, its configuration and the first prompt", () => {
-    expect(
-      toNewSessionInput(toSessionChoices(input()), configuration, firstPrompt),
-    ).toEqual({
+  it("opens an empty Session with the Project's defaults and the Agent", () => {
+    expect(toNewSessionInput(toSessionChoices(input()))).toEqual({
       projectId: worktreeProject.id,
       agent: firstAgent.agent,
       checkout: { type: 'worktree', baseBranch: projectBaseBranch },
-      configOptions: configuration.map(({ configId, currentValue }) => ({
-        configId,
-        value: currentValue,
-      })),
-      prompt: firstPrompt,
+      configOptions: [],
+      prompt: [],
     });
   });
 
@@ -40,18 +29,14 @@ describe('toNewSessionInput', () => {
         branches: newSessionBranches,
       }),
     );
-    expect(toNewSessionInput(choices, [], firstPrompt)?.checkout).toEqual({
+    expect(toNewSessionInput(choices)?.checkout).toEqual({
       type: 'main',
     });
   });
 
   it('sends nothing without a Project', () => {
     expect(
-      toNewSessionInput(
-        toSessionChoices(input({ projects: [] })),
-        [],
-        firstPrompt,
-      ),
+      toNewSessionInput(toSessionChoices(input({ projects: [] }))),
     ).toBeUndefined();
   });
 });
@@ -60,8 +45,8 @@ describe('canOpenSession', () => {
   const ready = {
     connected: true,
     choices: toSessionChoices(input()),
-    configReady: true,
-    opening: false,
+    sending: false,
+    handedOff: false,
   };
 
   it('opens a Session once everything is ready', () => {
@@ -71,10 +56,10 @@ describe('canOpenSession', () => {
   it.each([
     { case: 'while reconnecting', overrides: { connected: false } },
     {
-      case: 'while the configuration loads',
-      overrides: { configReady: false },
+      case: 'while the first prompt is on its way',
+      overrides: { sending: true },
     },
-    { case: 'while a Session opens', overrides: { opening: true } },
+    { case: 'once the Session has its prompt', overrides: { handedOff: true } },
     {
       case: "until a main Project's base branch loads",
       overrides: {

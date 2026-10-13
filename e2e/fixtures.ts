@@ -11,7 +11,12 @@ import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
-import { pollServer, startOwnServer } from './own-server';
+import {
+  pollServer,
+  projectDirectoryName,
+  requestLogName,
+  startOwnServer,
+} from './own-server';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -49,6 +54,8 @@ type App = {
   httpUrl: string;
   registryPath: string;
   installationPath: string;
+  projectPath: string;
+  requestLogPath: string;
 };
 
 // Polls system.info, so a test never calls a Server that is still starting.
@@ -62,6 +69,16 @@ const waitForServer = (httpUrl: string): Promise<true> =>
     },
     (seconds): string => `The Server did not answer within ${seconds} s`,
   );
+
+const ownServerDirectory = 'own-server';
+
+// What a test reads from its own Server's directory.
+const serverFiles = (
+  directory: string,
+): { projectPath: string; requestLogPath: string } => ({
+  projectPath: path.join(directory, projectDirectoryName),
+  requestLogPath: path.join(directory, requestLogName),
+});
 
 export const test = base.extend<
   AppOptions & ServerOptions & { app: App; server: { httpUrl: string } }
@@ -77,10 +94,8 @@ export const test = base.extend<
     // Starting each test's own Server takes seconds when several runs share the machine.
     test.slow();
     if (appTarget === 'web') {
-      const server = await startOwnServer(
-        testInfo.outputPath('own-server'),
-        mockAgents,
-      );
+      const serverDirectory = testInfo.outputPath(ownServerDirectory);
+      const server = await startOwnServer(serverDirectory, mockAgents);
       try {
         const page = await context.newPage();
         await pointAppAtServer(page, server.serverUrl);
@@ -90,6 +105,7 @@ export const test = base.extend<
           httpUrl: server.httpUrl,
           registryPath: server.registryPath,
           installationPath: server.installationPath,
+          ...serverFiles(serverDirectory),
         });
       } finally {
         await server.stop();
@@ -97,7 +113,7 @@ export const test = base.extend<
       return;
     }
 
-    const directory = testInfo.outputPath('own-server');
+    const directory = testInfo.outputPath(ownServerDirectory);
     const fixtureServer = await startOwnServer(directory, mockAgents);
     const home = path.join(directory, 'server-home');
     const {
@@ -128,6 +144,7 @@ export const test = base.extend<
         httpUrl,
         registryPath: fixtureServer.registryPath,
         installationPath: fixtureServer.installationPath,
+        ...serverFiles(directory),
       });
     } finally {
       // Close the App before gracefully stopping its fixture Engine.

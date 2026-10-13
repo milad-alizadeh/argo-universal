@@ -15,6 +15,7 @@ import {
 } from './new-session-view';
 import {
   exampleProject,
+  openingNewSession,
   readyNewSession,
   startingNewSession,
   typedDraft,
@@ -167,6 +168,23 @@ export const SendsTheFirstPrompt: Story = {
   },
 };
 
+export const SendsWhileTheSessionOpens: Story = {
+  args: readyArgs(openingNewSession),
+  play: async ({ args, canvas, userEvent }) => {
+    await eachLayout(async () => {
+      await expect(
+        await canvas.findByRole('progressbar', { name: 'Opening the Session' }),
+      ).toBeVisible();
+      await expect(
+        canvas.getByRole('button', { name: sendLabel }),
+      ).toBeEnabled();
+    });
+    await userEvent.click(canvas.getByRole('button', { name: sendLabel }));
+    if (args.view.state !== 'ready') throw new Error('The view is not ready.');
+    await expect(args.view.onSend).toHaveBeenCalledWith(typedDraft);
+  },
+};
+
 export const Reconnecting: Story = {
   args: readyArgs({ connected: false, canOpen: false, draft: typedDraft }),
   play: async ({ canvas }) =>
@@ -214,9 +232,10 @@ export const Starting: Story = {
       await expect(
         canvas.getByRole('button', { name: sendLabel }),
       ).toBeDisabled();
+      // A Session has no Project row, so it goes before the hand-off.
       await expect(
-        canvas.getByRole('button', { name: projectLabel }),
-      ).toBeDisabled();
+        canvas.queryByRole('button', { name: projectLabel }),
+      ).toBeNull();
     }),
 };
 

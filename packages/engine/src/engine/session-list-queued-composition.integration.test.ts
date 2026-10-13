@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import {
   countDatabaseReads,
+  insertEndedTurn,
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
@@ -16,8 +17,10 @@ const writerWriteEvent = 'writer.write';
 
 it('pages current queued activity before the list publication delay', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
   insertSession(database, { id: 'session-2', activityAt: 10 });
+  insertEndedTurn(database, 'session-2');
   const {
     databaseWriter: writer,
     createCaller,

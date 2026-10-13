@@ -1,5 +1,9 @@
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  insertEndedTurn,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { finishSubscription } from '#mocks/list-observation';
 import { watchEngineList } from '#mocks/list-observation';
@@ -10,8 +14,10 @@ const writerWriteEvent = 'writer.write';
 
 it('updates a cached parent when its stored Subagent Turn changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
   insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
+  insertEndedTurn(database, 'child-1');
   const { databaseWriter: writer, createCaller } = await startEngineTestHost({
     database,
     ...scriptedEngineInput(),

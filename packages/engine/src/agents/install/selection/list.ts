@@ -18,7 +18,6 @@ const installationInfo = ({
   agent: agentId,
   label: selection.entry.name,
   logo: selection.entry.icon ?? '',
-  configOptions: [],
   availability: 'unavailable',
   installStep: 'Installed. Sign-in readiness has not been checked.',
 });

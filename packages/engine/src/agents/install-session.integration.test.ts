@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { AgentsCatalogOutput, SessionNewOutput } from '@repo/contracts';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, onTestFinished } from 'vitest';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { installEntry, installationPorts } from '#mocks/installation';
@@ -55,6 +56,11 @@ async function openInstalledSession(): Promise<InstalledSession> {
 
 it('an installed Agent uses the common Session lifecycle', async () => {
   const { host, agent, created } = await openInstalledSession();
+  await host.caller.session.prompt({
+    ...created,
+    prompt: [{ type: 'text', text: 'Fix the build' }],
+  });
+  await waitForAcpSessionIdle(host, created.sessionId);
   await host.caller.session.close(created);
   expect(
     (

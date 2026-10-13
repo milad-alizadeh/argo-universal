@@ -1,6 +1,7 @@
 import { expect, it, onTestFinished, vi } from 'vitest';
 import {
   countDatabaseReads,
+  insertEndedTurn,
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
@@ -13,12 +14,21 @@ import { SessionRowUpdateJob } from '../sessions';
 const writerWriteEvent = 'writer.write';
 const changedAloneTitle = 'Changed alone';
 
+function seedCachedSessions(
+  database: Parameters<typeof insertEndedTurn>[0],
+): void {
+  insertEndedTurn(database);
+  Array.from({ length: 59 }, (_, index): void => {
+    const id = `session-${index + 2}`;
+    insertSession(database, { id });
+    insertEndedTurn(database, id);
+  });
+}
+
 it('reads only the changed Session and pages the shared cache', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
-  Array.from({ length: 59 }, (_, index): void => {
-    insertSession(database, { id: `session-${index + 2}` });
-  });
+  seedCachedSessions(database);
   const {
     databaseWriter: writer,
     createCaller,

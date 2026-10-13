@@ -2,11 +2,9 @@ import type * as React from 'react';
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import { CopyButton } from '#lib/product/markdown/copy-button';
-import { Picker } from '#primitives/inputs/picker/picker';
 import type {
   AgentDetail,
   AgentDetailViewProps,
-  SessionDefault,
 } from '../../state/agent-detail-types';
 import { agentStatusLabels, statusTone } from '../../state/agent-status';
 import { CheckAgainRow } from '../check-again-row';
@@ -71,70 +69,6 @@ function SignInCommand({
       accessory={
         <CopyButton value={command} label="Copy command" className="size-7" />
       }
-    />
-  );
-}
-
-const defaultsFooter =
-  'The model a new Session starts with. More effort thinks longer and uses more of your plan.';
-const modeFooter = 'Mode is what the Agent may do without asking you first.';
-// ADR-0022: each Device keeps its own New Sessions defaults.
-const deviceFooter =
-  'These choices apply to Sessions you start on this Device.';
-
-const footerFor = (defaults: readonly SessionDefault[]): string =>
-  [
-    defaultsFooter,
-    defaults.some(({ label }) => label === 'Mode') && modeFooter,
-    deviceFooter,
-  ]
-    .filter(Boolean)
-    .join(' ');
-type DefaultProps = Pick<AgentDetailViewProps, 'onDefaultChange'> & {
-  choice: SessionDefault;
-};
-
-const offeredDefaults = ({
-  agent,
-  defaults = [],
-}: AgentDetailViewProps): readonly SessionDefault[] =>
-  agent.status === 'sign-in' ? [] : defaults;
-
-// The model, effort and mode a new Session with this Agent starts with, as plain pickers; none until it is signed in.
-export function DefaultsSection(
-  props: AgentDetailViewProps,
-): React.JSX.Element | null {
-  const defaults = offeredDefaults(props);
-  if (!defaults.length) return null;
-  return (
-    <FieldSection title="New Sessions" footer={footerFor(defaults)}>
-      {defaults.map((choice) => (
-        <DefaultRow key={choice.id} choice={choice} {...props} />
-      ))}
-    </FieldSection>
-  );
-}
-
-function DefaultRow(props: DefaultProps): React.JSX.Element {
-  return (
-    <ListItem
-      title={props.choice.label}
-      accessory={<DefaultPicker {...props} />}
-    />
-  );
-}
-
-function DefaultPicker({
-  choice,
-  onDefaultChange,
-}: DefaultProps): React.JSX.Element {
-  return (
-    <Picker
-      appearance="row"
-      label={choice.label}
-      value={choice.value}
-      options={choice.options}
-      onChange={(value) => onDefaultChange?.(choice.id, value)}
     />
   );
 }

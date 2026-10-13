@@ -1,6 +1,6 @@
 import type { FeedSubscribeOutput, SessionUpdate } from '@repo/contracts';
 import { expect, onTestFinished } from 'vitest';
-import { openTestDatabase } from './database';
+import { insertEndedTurn, openTestDatabase } from './database';
 import { startEngineTestHost } from './engine';
 import { publishHeaderConfiguration } from './live-header-configuration';
 import { writeStoredHeader, storedHeaderRevision } from './live-header-storage';
@@ -31,6 +31,7 @@ function createHeaderInput(
 
 function openHeaderDatabase(agent: string): EngineHost['database'] {
   const { database, remove } = openTestDatabase({ agent });
+  insertEndedTurn(database);
   onTestFinished(remove);
   return database;
 }

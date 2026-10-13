@@ -9,10 +9,19 @@ export interface ComposerConfigurationProps {
   onAgentSetup?: (agent: string) => void;
   onAgentRetry?: () => void;
   turnRunning?: boolean;
+  // True while New Session's Session opens and takes this device's last choices.
+  opening?: boolean;
   checkout: {
     branch: string;
     newWorktree: boolean;
     onNewWorktreeChange?: (enabled: boolean) => void;
     path?: string;
   };
+}
+
+// A page of choices, such as the models; a phone's sheet fits it.
+export interface ConfigurationChoicesProps {
+  configuration: ComposerConfigurationProps;
+  onSelect: () => void;
+  onContentHeightChange?: (height: number) => void;
 }

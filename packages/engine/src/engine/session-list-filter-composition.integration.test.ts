@@ -1,5 +1,9 @@
 import { expect, it, onTestFinished } from 'vitest';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  insertEndedTurn,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
@@ -8,25 +12,31 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
     title: 'Earlier',
     activityAt: 1,
   });
+  insertEndedTurn(database);
   onTestFinished(remove);
-  for (let index = 0; index < 51; index += 1)
+  for (let index = 0; index < 51; index += 1) {
+    const id = `page-${String(index).padStart(2, '0')}`;
     insertSession(database, {
-      id: `page-${String(index).padStart(2, '0')}`,
+      id,
       title: 'Search %_ title',
       activityAt: 10,
     });
+    insertEndedTurn(database, id);
+  }
   insertSession(database, {
     id: 'archived',
     title: 'Archived title',
     archivedAt: 2,
     activityAt: 20,
   });
+  insertEndedTurn(database, 'archived');
   insertSession(database, {
     id: 'subagent',
     parentSessionId: 'session-1',
     title: 'Search %_ title',
     activityAt: 30,
   });
+  insertEndedTurn(database, 'subagent');
   const { createCaller } = await startEngineTestHost({
     database,
     ...scriptedEngineInput(),

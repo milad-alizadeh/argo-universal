@@ -1,5 +1,5 @@
 import { expect, it, onTestFinished } from 'vitest';
-import { openTestDatabase } from '#mocks/database';
+import { insertEndedTurn, openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { finishSubscription } from '#mocks/list-observation';
 import { nextListChange } from '#mocks/list-observation';
@@ -14,6 +14,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
     maxRevision: 1,
     title: 'Unread',
   });
+  insertEndedTurn(database);
   onTestFinished(remove);
   const { databaseWriter: writer, createCaller } = await startEngineTestHost({
     database,

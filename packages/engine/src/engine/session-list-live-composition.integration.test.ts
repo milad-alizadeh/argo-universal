@@ -1,7 +1,11 @@
 import type { SessionInfo } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
 import { expect, it, onTestFinished } from 'vitest';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  insertEndedTurn,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { finishSubscription } from '#mocks/list-observation';
 import { nextListChange } from '#mocks/list-observation';
@@ -12,15 +16,24 @@ import { TurnInsertJob } from '../sessions';
 
 const writerWriteEvent = 'writer.write';
 
-it('sends live list changes and attention/running counts through request and Turn transitions', async (): Promise<void> => {
-  const { database, remove } = openTestDatabase();
-  onTestFinished(remove);
+function seedListedSessions(
+  database: Parameters<typeof insertEndedTurn>[0],
+): void {
+  insertEndedTurn(database);
   insertSession(database, { id: 'archived', archivedAt: 1, maxRevision: 1 });
+  insertEndedTurn(database, 'archived');
   insertSession(database, {
     id: 'subagent',
     parentSessionId: 'session-1',
     maxRevision: 1,
   });
+  insertEndedTurn(database, 'subagent');
+}
+
+it('sends live list changes and attention/running counts through request and Turn transitions', async (): Promise<void> => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  seedListedSessions(database);
   const completed = Promise.withResolvers<void>();
   const input = scriptedEngineInput({
     steps: [],

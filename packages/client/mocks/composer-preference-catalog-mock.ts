@@ -1,11 +1,12 @@
 import type {
-  AgentInfo,
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
+import type { newSessionOptions } from '@repo/mocks/app';
+export type RecordedSession = (typeof newSessionOptions)[number];
 type SelectOption = Extract<SessionConfigOption, { type: 'select' }>;
 interface CatalogBasics {
-  agent: AgentInfo;
+  agent: RecordedSession;
   model: SelectOption;
   effort: SelectOption;
   mode: SelectOption;
@@ -20,7 +21,7 @@ interface CatalogCase extends CatalogBasics, EffortFacts {
   defaultMode: { configId: string; value: string };
   withoutEffort: SessionConfigSelectOption | undefined;
 }
-export function catalogCase(agent: AgentInfo): CatalogCase {
+export function catalogCase(agent: RecordedSession): CatalogCase {
   const model = select(agent, 'model');
   const effort = select(agent, 'thought_level');
   const mode = select(agent, 'mode');
@@ -32,14 +33,14 @@ export function catalogCase(agent: AgentInfo): CatalogCase {
     withoutEffort: choicesOf(model).find(noEffort),
   };
 }
-function select(agent: AgentInfo, category: string): SelectOption {
+function select(agent: RecordedSession, category: string): SelectOption {
   const option = agent.configOptions.find(
     (entry): entry is SelectOption =>
       entry.type === 'select' && entry.category === category,
   );
   if (!option)
     throw new Error(
-      `Recorded catalog needs ${category} options for ${agent.label}.`,
+      `Recorded Session needs ${category} options for ${agent.agent}.`,
     );
   return option;
 }
@@ -78,22 +79,22 @@ function fewerLevels(
 function needed<Value>(value: Value | undefined, label: string): Value {
   if (!value)
     throw new Error(
-      `Recorded catalog needs two modes, a default effort and models with differing effort levels for ${label}.`,
+      `Recorded Session needs two modes, a default effort and models with differing effort levels for ${label}.`,
     );
   return value;
 }
 function effortFacts(basics: CatalogBasics): EffortFacts {
   const { agent, model, effort } = basics;
   const models = choicesOf(model);
-  const defaultModel = defaultChoice(models, model, agent.label);
+  const defaultModel = defaultChoice(models, model, agent.agent);
   const narrower = narrowerChoice(models, defaultModel, basics);
   const unsupported = needed(
     levelsOf(defaultModel).find((level) => !levelsOf(narrower).includes(level)),
-    agent.label,
+    agent.agent,
   );
   const chosenEffort = needed(
     levelsOf(narrower).find((level) => level !== effort.currentValue),
-    agent.label,
+    agent.agent,
   );
   return { narrower, unsupported, chosenEffort };
 }
@@ -104,7 +105,7 @@ function modeFacts({
   return {
     otherMode: needed(
       choicesOf(mode).find((choice) => choice.value !== mode.currentValue),
-      agent.label,
+      agent.agent,
     ),
     defaultMode: { configId: mode.configId, value: mode.currentValue },
   };
@@ -126,6 +127,6 @@ function narrowerChoice(
 ): SessionConfigSelectOption {
   return needed(
     models.find((choice) => fewerLevels(choice, defaultModel, effort)),
-    agent.label,
+    agent.agent,
   );
 }

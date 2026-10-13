@@ -3,6 +3,7 @@ import {
   type FeedMock,
   newSessionCatalogs,
   recordedFeedMocks,
+  recordedSessionOptions,
 } from '@repo/mocks/app';
 import { fn } from 'storybook/test';
 import { findLiveToolCall, toFeedView } from '#features/feed';
@@ -69,7 +70,7 @@ function openSessionProps(
       configuration: {
         agents: newSessionCatalogs.bothAvailable,
         agent: catalogAgent.agent,
-        configOptions: catalogAgent.configOptions,
+        configOptions: recordedSessionOptions(catalogAgent.agent),
         onConfigChange: fn(),
         turnRunning: snapshot.state !== 'idle',
         checkout: {
