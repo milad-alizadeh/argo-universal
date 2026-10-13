@@ -1,162 +1,87 @@
-import type {
-  PendingElicitation,
-  SessionAnswerElicitationInput,
-} from '@repo/contracts';
-import { useForm, useStore } from '@tanstack/react-form';
-import type * as React from 'react';
-import { useMemo } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { Icon } from '../../../../lib/generic/symbols/icon';
 import {
-  RequestAction,
-  RequestCard,
-  type RequestState,
-} from '../request-card/request-card';
-import { ElicitationField } from './elicitation-field';
+  useElicitationForm,
+  type ElicitationModel,
+} from '../../hooks/use-elicitation-form';
+import { RequestCard } from '../request-card/request-card';
+import { ElicitationActions } from './elicitation-actions';
 import {
-  createElicitationSchema,
-  type ElicitationValues,
-} from './elicitation-schema';
+  ElicitationFields,
+  ElicitationHeading,
+  ElicitationValidation,
+} from './elicitation-form-body';
+import type { ElicitationFormProps } from './elicitation-form-props';
+import { ElicitationQuestionForm } from './elicitation-question-form';
+import { elicitationQuestions } from './elicitation-questions';
 
 export type { ElicitationValues } from './elicitation-schema';
-export type ElicitationAnswer = Pick<
-  SessionAnswerElicitationInput,
-  'action' | 'content'
->;
-export interface ElicitationFormProps {
-  request: PendingElicitation;
-  initialValues?: ElicitationValues;
-  onAnswer: (answer: ElicitationAnswer) => void;
-  source?: string;
-  state: RequestState;
-  error?: string;
-}
+export type {
+  ElicitationAnswer,
+  ElicitationFormProps,
+} from './elicitation-form-props';
 
-export function ElicitationForm(
-  props: ElicitationFormProps,
-): React.JSX.Element {
+export function ElicitationForm(props: ElicitationFormProps): ReactElement {
   return <RequestForm key={props.request.requestId} {...props} />;
 }
 
-function RequestForm({
-  request,
-  initialValues = {},
-  onAnswer,
-  source,
-  state,
-  error: responseError,
-}: ElicitationFormProps): React.JSX.Element {
-  const submitting = state.kind === 'submitting';
-  const alreadyAnswered = state.kind === 'answered';
-  const schema = useMemo(
-    () => createElicitationSchema(request.requestedSchema),
-    [request.requestedSchema],
+function RequestForm(props: ElicitationFormProps): ReactElement {
+  const questions = elicitationQuestions(props.request);
+  return questions ? (
+    <ElicitationQuestionForm {...props} questions={questions} />
+  ) : (
+    <FieldForm {...props} />
   );
-  const error = responseError ?? schema.error;
-  const form = useForm({
-    defaultValues: schema.defaultValues(initialValues),
-    validators: {
-      onMount: schema.validate,
-      onChange: schema.validate,
-      onSubmit: schema.validate,
-    },
-    onSubmit: ({ value }) =>
-      onAnswer({ action: 'accept', content: schema.content(value) }),
-  });
-  const fieldMetadata = useStore(form.store, (state) => state.fieldMeta);
-  const isValid = useStore(form.store, (state) => state.isValid);
-  const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
-  const inactive = submitting || isSubmitting || alreadyAnswered;
-  const invalid = schema.fields.filter(
-    ({ key }) => fieldMetadata[key]?.errors.length,
-  );
-  const answer = (action: ElicitationAnswer['action']): void => {
-    if (inactive) return;
-    if (action === 'accept') void form.handleSubmit();
-    else onAnswer({ action });
-  };
+}
+
+function FieldForm(props: ElicitationFormProps): ReactElement {
+  const model = useElicitationForm(props);
+  return <ElicitationFieldForm model={model} />;
+}
+
+export function ElicitationFieldForm({
+  model,
+}: {
+  model: ElicitationModel;
+}): ReactElement {
   return (
-    <RequestCard
-      state={
-        isSubmitting && state.kind === 'open' ? { kind: 'submitting' } : state
-      }
-      error={error}
-      onEnter={() => answer('accept')}
-      footerClassName="justify-between"
-      actions={
-        <>
-          <RequestAction disabled={inactive} onPress={() => answer('cancel')}>
-            Dismiss
-          </RequestAction>
-          <View className="flex-row gap-1">
-            <RequestAction
-              disabled={inactive}
-              onPress={() => answer('decline')}
-            >
-              Decline
-            </RequestAction>
-            <RequestAction
-              primary
-              disabled={inactive || !isValid}
-              onPress={() => answer('accept')}
-            >
-              {submitting || isSubmitting ? 'Sending…' : 'Submit'}
-            </RequestAction>
-          </View>
-        </>
-      }
-    >
-      <View pointerEvents={inactive ? 'none' : 'auto'}>
-        <View className="gap-1 px-4 pt-4 pb-1">
-          {source && (
-            <View className="flex-row items-center gap-1.5">
-              <Icon name="plug" role="body" className="text-muted-foreground" />
-              <Text role="secondary">{source} asks</Text>
-            </View>
-          )}
-          <Text role={'heading'}>{request.message}</Text>
-        </View>
-        <View className="gap-4 px-4 pt-3 pb-1">
-          {schema.fields.map(({ name, key, property, required }) => (
-            <form.Field key={key} name={key}>
-              {(field) => (
-                <ElicitationField
-                  name={name}
-                  property={property}
-                  required={required}
-                  value={field.state.value}
-                  error={field.state.meta.errors[0]}
-                  showError={
-                    field.state.meta.isTouched ||
-                    initialValues[name] !== undefined ||
-                    property.default !== undefined
-                  }
-                  onChange={field.handleChange}
-                  onBlur={field.handleBlur}
-                  inactive={inactive}
-                />
-              )}
-            </form.Field>
-          ))}
-        </View>
-      </View>
-      {!alreadyAnswered && invalid.length > 0 && (
-        <View role="alert" className="flex-row items-center gap-1.5 px-4 pt-3">
-          <Icon
-            name="error"
-            role="body"
-            className="shrink-0 text-destructive"
-          />
-          <Text role="secondary" className="min-w-0 flex-1 text-destructive">
-            Fix{' '}
-            {invalid
-              .map(({ name, property }) => property.title ?? name)
-              .join(', ')}{' '}
-            to submit
-          </Text>
-        </View>
-      )}
+    <RequestCard {...cardProps(model)}>
+      <FormBody model={model} />
     </RequestCard>
+  );
+}
+
+function cardProps(
+  model: ElicitationModel,
+): Omit<ComponentProps<typeof RequestCard>, 'children'> {
+  return {
+    appearance: 'embedded',
+    state: model.state,
+    error: model.error,
+    onEnter: (): void => model.answer('accept'),
+    onEscape: (): void => model.answer('cancel'),
+    footerClassName: 'flex-col items-stretch gap-2 px-4 pb-4',
+    actions: <ElicitationActions model={model} />,
+  };
+}
+
+function FormBody({ model }: { model: ElicitationModel }): ReactElement {
+  return (
+    <>
+      <View
+        pointerEvents={model.inactive ? 'none' : 'auto'}
+        className="gap-4 px-4 pt-4"
+      >
+        <ElicitationHeading
+          source={model.props.source}
+          message={model.props.request.message}
+        />
+        <ElicitationFields model={model} />
+      </View>
+      <ElicitationValidation
+        answered={model.state.kind === 'answered'}
+        labels={model.invalid}
+      />
+    </>
   );
 }

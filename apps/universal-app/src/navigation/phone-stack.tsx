@@ -2,7 +2,7 @@ import { hasLiquidGlass, ScreenHeaderProvider } from '@repo/client';
 import { Stack } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, PropsWithChildren } from 'react';
 import { useHeaderTitleOptions } from './header-title';
 import { NativeScreenHeader } from './native-screen-header';
 
@@ -20,11 +20,7 @@ function useGlassHeaderCover(): number {
 }
 
 // A phone section's native stack; its screens set their header through ScreenHeader.
-export function PhoneStack({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.JSX.Element {
+export function PhoneStack({ children }: PropsWithChildren): React.JSX.Element {
   const titleOptions = useHeaderTitleOptions();
   return (
     <ScreenHeaderProvider

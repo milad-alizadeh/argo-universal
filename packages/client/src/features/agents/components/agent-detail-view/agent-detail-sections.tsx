@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import { CopyButton } from '#lib/product/markdown/copy-button';
-import { SelectMenu } from '../../../../lib/generic/primitives/inputs/select-menu/select-menu';
+import { Picker } from '#primitives/inputs/picker/picker';
 import type {
   AgentDetail,
   AgentDetailViewProps,
@@ -129,12 +129,12 @@ function DefaultPicker({
   onDefaultChange,
 }: DefaultProps): React.JSX.Element {
   return (
-    <SelectMenu
-      variant="plain"
-      accessibilityLabel={choice.label}
+    <Picker
+      appearance="row"
+      label={choice.label}
       value={choice.value}
       options={choice.options}
-      onValueChange={(value) => onDefaultChange?.(choice.id, value)}
+      onChange={(value) => onDefaultChange?.(choice.id, value)}
     />
   );
 }

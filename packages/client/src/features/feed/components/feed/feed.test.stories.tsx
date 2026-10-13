@@ -1,233 +1,35 @@
-import type { SessionUpdate } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
-import {
-  canPointAt,
-  centreOf,
-  topmostAt,
-} from '../../../../../mocks/point-hit';
-import { sampleEachFrame } from '../../../../../mocks/sample-each-frame';
 import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import { recordedImageUrl } from '../../../../lib/product/feed-message.mocks';
-import type { FeedView } from '../../view/feed-view';
-import { keepUnchangedItems } from '../../view/keep-unchanged-items';
-import { toFeedView } from '../../view/to-feed-view';
-import { Feed, type FeedProps } from './feed';
+import { Feed } from './feed';
 import {
-  arrivingMessage,
-  arrivingRow,
+  earlierFeedLoadingLabel,
+  feedScrollId,
+  fullyInViewport,
+  markSettledMiddleOfView,
+  scrollAwayWait,
+  scrolledToEnd,
+  scrollToTop,
+  scrollUp,
+  settledTopOf,
+} from './feed-reader.mocks';
+import {
   longRows,
-  longSnapshot,
-  longTail,
   oldestMessage,
-  pageSize,
   splitGroupRows,
   splitGroupStepInTail,
 } from './feed.mocks';
-
-const feedScrollId = 'feed-scroll';
-const earlierFeedLoadingLabel = 'Loading earlier';
-
-let releaseOlderPage = (): void => {};
-// Sends the older page the Feed is waiting for.
-const sendOlderPage = (): void => releaseOlderPage();
-let deliverRow = (_row: SessionUpdate): void => {};
-// Sends a new row to the end of the Feed, as a live change does.
-const sendRow = (row: SessionUpdate): void => deliverRow(row);
-
-interface PagedFeedProps extends FeedProps {
-  rows: readonly SessionUpdate[];
-  // Each older page waits until the story sends it, so the story can mark the reader's place first.
-  holdOlderPages?: boolean;
-}
-
-interface HeldFeed {
-  start: number;
-  arrived: readonly SessionUpdate[];
-  view: FeedView;
-}
-
-// The held rows drawn again, keeping each unchanged item from the view before.
-function viewOf(
-  previous: FeedView | null,
-  rows: readonly SessionUpdate[],
-  held: Omit<HeldFeed, 'view'>,
-): HeldFeed {
-  return {
-    ...held,
-    view: keepUnchangedItems(
-      previous,
-      toFeedView([...rows.slice(held.start), ...held.arrived], longSnapshot),
-    ),
-  };
-}
-
-// Opens on the newest page and prepends an older one each time the reader nears the top, as the Session does.
-function PagedFeed({
-  rows,
-  holdOlderPages = false,
-  ...props
-}: PagedFeedProps): React.JSX.Element {
-  const [feed, setFeed] = useState(() =>
-    viewOf(null, rows, {
-      start: Math.max(0, rows.length - pageSize),
-      arrived: [],
-    }),
-  );
-  const [loadingOlder, setLoadingOlder] = useState(false);
-  const olderInFlight = useRef(false);
-  const start = useRef(feed.start);
-  useEffect(() => {
-    deliverRow = (row): void =>
-      setFeed((held) =>
-        viewOf(held.view, rows, {
-          start: held.start,
-          arrived: [...held.arrived, row],
-        }),
-      );
-    return (): void => {
-      deliverRow = (): void => {};
-    };
-  }, [rows]);
-  const loadOlder = async (): Promise<void> => {
-    if (olderInFlight.current || start.current === 0) return;
-    olderInFlight.current = true;
-    setLoadingOlder(true);
-    if (holdOlderPages)
-      await new Promise<void>((resolve) => {
-        releaseOlderPage = resolve;
-      });
-    start.current = Math.max(0, start.current - pageSize);
-    const nextStart = start.current;
-    setFeed((held) =>
-      viewOf(held.view, rows, { start: nextStart, arrived: held.arrived }),
-    );
-    olderInFlight.current = false;
-    setLoadingOlder(false);
-  };
-  return (
-    <Feed
-      {...props}
-      items={feed.view.items}
-      loadingOlder={loadingOlder}
-      onStartReached={() => void loadOlder()}
-    />
-  );
-}
+import { feedArgs, PagedFeed, sendOlderPage } from './paged-feed.mocks';
 
 const meta = {
   title: 'Tests/Feed',
   component: Feed,
   parameters: { screenPreview: true },
-  args: {
-    items: toFeedView(longTail, longSnapshot).items,
-    liveHeader: null,
-    loadingOlder: false,
-    onStartReached: (): void => {},
-    imageUrl: recordedImageUrl,
-  },
+  args: feedArgs,
 } satisfies Meta<typeof Feed>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-// A loaded runner can take a few frames per scroll before the Feed answers.
-const scrollAwayWait = { timeout: 15000, interval: 100 };
-
-const scrolledToEnd = (feedScroll: HTMLElement): boolean =>
-  feedScroll.scrollHeight - feedScroll.scrollTop - feedScroll.clientHeight < 2;
-
-// Scrolls up as a reader does on the web: the wheel turning up stops the Feed following the end, which setting scrollTop alone does not.
-function scrollUp(feedScroll: HTMLElement, distance: number): void {
-  feedScroll.dispatchEvent(new WheelEvent('wheel', { deltaY: -distance }));
-  feedScroll.scrollTop = Math.max(0, feedScroll.scrollTop - distance);
-  feedScroll.dispatchEvent(new Event('scroll'));
-}
-
-// Reads back a screen at a time to the top.
-const scrollToTop = (feedScroll: HTMLElement): Promise<void> =>
-  waitFor(async () => {
-    scrollUp(feedScroll, feedScroll.clientHeight);
-    await expect(feedScroll.scrollTop).toBe(0);
-  }, scrollAwayWait);
-
-// The reader scrolls up until the Feed stops following the end.
-const scrollAwayFromEnd = (
-  canvas: ReturnType<typeof within>,
-  feedScroll: HTMLElement,
-): Promise<void> =>
-  waitFor(async () => {
-    if (scrolledToEnd(feedScroll))
-      scrollUp(feedScroll, feedScroll.clientHeight);
-    await expect(
-      canvas.getByRole('button', { name: 'Jump to latest' }),
-    ).toBeVisible();
-  }, scrollAwayWait);
-
-function fullyInViewport(element: Element): boolean {
-  const box = element.getBoundingClientRect();
-  return (
-    box.height > 0 &&
-    box.top >= 0 &&
-    box.bottom <= window.innerHeight &&
-    box.left >= 0 &&
-    box.right <= window.innerWidth
-  );
-}
-
-// The element at the middle of the Feed's view, and where its top is now.
-function markMiddleOfView(feedScroll: HTMLElement): {
-  element: Element;
-  top: number;
-} {
-  const element = topmostAt(centreOf(feedScroll.getBoundingClientRect()));
-  if (!element) throw new Error('Nothing in view');
-  const top = element.getBoundingClientRect().top;
-  return { element, top };
-}
-
-// After two frames, the browser has sent its scroll and resize events and the Feed has answered them.
-const afterTwoFrames = (): Promise<void> =>
-  new Promise<void>((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-  );
-
-// Once rows in view stop measuring, the middle of the view holds the same element at the same place two frames apart.
-function markSettledMiddleOfView(
-  feedScroll: HTMLElement,
-): Promise<ReturnType<typeof markMiddleOfView>> {
-  let lastMark = markMiddleOfView(feedScroll);
-  return waitFor(
-    async () => {
-      await afterTwoFrames();
-      const mark = markMiddleOfView(feedScroll);
-      const settled =
-        mark.element === lastMark.element && mark.top === lastMark.top;
-      lastMark = mark;
-      if (!settled) throw new Error('Rows in view are still measuring');
-      return mark;
-    },
-    { timeout: 5000 },
-  );
-}
-
-// Where an element's top settles once it shows at its centre, unclipped, and holds still for two frames.
-function settledTopOf(findElement: () => HTMLElement): Promise<number> {
-  let lastTop: number | undefined;
-  return waitFor(
-    async () => {
-      await afterTwoFrames();
-      const box = findElement().getBoundingClientRect();
-      const settled = canPointAt(findElement()) && box.top === lastTop;
-      lastTop = box.top;
-      if (!settled) throw new Error('The element is still moving');
-      return box.top;
-    },
-    { timeout: 5000 },
-  );
-}
 
 export const LoadingEarlier: Story = {
   args: { loadingOlder: true },
@@ -313,169 +115,5 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
       await canvas.findByRole('button', { name: 'Ran 20 commands' }),
     ).toBeVisible();
     await expect(Math.abs((await settledTopOf(step)) - top)).toBeLessThan(2);
-  },
-};
-
-export const JumpsToLatest: Story = {
-  render: (args) => <PagedFeed {...args} rows={longRows} />,
-  play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
-    const scroll = await canvas.findByTestId(feedScrollId);
-    const feed = within(scroll);
-    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
-    await expect(
-      canvas.queryByRole('button', { name: /Jump to latest/ }),
-    ).toBeNull();
-    // The Feed settles at the end as it opens, so the reader scrolls up until it stays up.
-    await scrollAwayFromEnd(canvas, scroll);
-    // A row arriving while the reader is away leaves what they read where it was; rows above may still measure, so compare the screen, not scrollTop.
-    const marked = markMiddleOfView(scroll);
-    sendRow(arrivingRow);
-    const jumpToLatest = await canvas.findByRole('button', {
-      name: 'Jump to latest, new rows',
-    });
-    await expect(
-      Math.abs(marked.element.getBoundingClientRect().top - marked.top),
-    ).toBeLessThan(2);
-    jumpToLatest.click();
-    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
-    await expect(await feed.findByText(arrivingMessage)).toBeVisible();
-    await waitFor(() =>
-      expect(
-        canvas.queryByRole('button', { name: /Jump to latest/ }),
-      ).toBeNull(),
-    );
-  },
-};
-
-// Long enough for the slowest close and the frames after it.
-const closingFrames = 40;
-const expandedAttribute = 'aria-expanded';
-
-// Opens a closed row and waits until it reads as open.
-async function openRow(row: HTMLElement): Promise<void> {
-  row.click();
-  await waitFor(() => expect(row).toHaveAttribute(expandedAttribute, 'true'));
-}
-
-// Waits until an element, in view or not, holds still for two frames, as it does once the rows around it stop moving.
-function restingTopOf(element: HTMLElement): Promise<number> {
-  let lastTop: number | undefined;
-  return waitFor(
-    async () => {
-      await afterTwoFrames();
-      const { top } = element.getBoundingClientRect();
-      const resting = top === lastTop;
-      lastTop = top;
-      if (!resting) throw new Error('The element is still moving');
-      return top;
-    },
-    { timeout: 5000 },
-  );
-}
-
-// The reader follows what they opened down to the very end.
-const scrollToEnd = (feedScroll: HTMLElement): Promise<void> =>
-  waitFor(
-    async () => {
-      feedScroll.scrollTop = feedScroll.scrollHeight;
-      feedScroll.dispatchEvent(new Event('scroll'));
-      await afterTwoFrames();
-      await expect(scrolledToEnd(feedScroll)).toBe(true);
-    },
-    { timeout: 5000 },
-  );
-
-// At the end, closing a row draws the rows above down into its place, while the rows below it hold still on every frame.
-export const KeepsRowsBelowStillWhenRowClosesAtEnd: Story = {
-  play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
-    const scroll = await canvas.findByTestId(feedScrollId);
-    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
-    const closedRows = (): HTMLElement[] =>
-      within(scroll).getAllByRole('button', { expanded: false });
-    // The last group opens on its own rows: the reader opens one and reads on to the end, where the next one sits below it.
-    const lastGroup = closedRows().at(-1);
-    if (!lastGroup) throw new Error('No closed row at the end');
-    await openRow(lastGroup);
-    const inGroup = (row: HTMLElement | undefined): row is HTMLElement =>
-      row !== undefined &&
-      Boolean(
-        lastGroup.compareDocumentPosition(row) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-      );
-    const [trigger, below] = await waitFor(() => {
-      const rows = closedRows().slice(-2);
-      if (!rows.every(inGroup) || rows.length < 2)
-        throw new Error('The last group has not drawn two rows');
-      return rows;
-    });
-    if (!trigger || !below) throw new Error('No two rows in the last group');
-    await openRow(trigger);
-    await restingTopOf(below);
-    await scrollToEnd(scroll);
-    await settledTopOf(() => below);
-    const tops = await sampleEachFrame(
-      () => trigger.click(),
-      () => below.getBoundingClientRect().top,
-      closingFrames,
-    );
-    await expect(trigger).toHaveAttribute(expandedAttribute, 'false');
-    await expect(tops).toEqual(tops.map(() => tops[0]));
-  },
-};
-
-export const KeepsPlaceWhenRowOpens: Story = {
-  render: (args) => <PagedFeed {...args} rows={longRows} />,
-  play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
-    const scroll = await canvas.findByTestId(feedScrollId);
-    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
-    // Away from the end, opening a row grows the Feed below it and leaves the rows above where they were.
-    const closedRowInTopHalf = (): HTMLElement | undefined => {
-      const view = scroll.getBoundingClientRect();
-      return within(scroll)
-        .queryAllByRole('button', { expanded: false })
-        .find((button) => {
-          const { top } = button.getBoundingClientRect();
-          return top > view.top + 40 && top < view.top + view.height / 2;
-        });
-    };
-    await scrollAwayFromEnd(canvas, scroll);
-    // Reads back a third of a screen at a time until a closed row sits in the top half.
-    const trigger = await waitFor(
-      () => {
-        const found = closedRowInTopHalf();
-        if (found) return found;
-        scrollUp(scroll, scroll.clientHeight / 3);
-        throw new Error('No closed row in view');
-      },
-      { timeout: 5000, interval: 100 },
-    );
-    const triggerTop = trigger.getBoundingClientRect().top;
-    // The trigger's collapsible, which grows as it opens.
-    const collapsible = trigger.parentElement;
-    if (!collapsible) throw new Error('No collapsible around the row');
-    const heightBefore = collapsible.offsetHeight;
-    trigger.click();
-    await waitFor(() =>
-      expect(trigger).toHaveAttribute(expandedAttribute, 'true'),
-    );
-    // Once the row stops growing, the open has finished.
-    let lastHeight = heightBefore;
-    await waitFor(
-      async () => {
-        const height = collapsible.offsetHeight;
-        const stoppedGrowing = height > heightBefore && height === lastHeight;
-        lastHeight = height;
-        await expect(stoppedGrowing).toBe(true);
-      },
-      { timeout: 5000, interval: 250 },
-    );
-    // Legend rounds the scroll on each layout pass while the row grows, which leaves it at most a few pixels off.
-    await expect(
-      Math.abs(trigger.getBoundingClientRect().top - triggerTop),
-    ).toBeLessThanOrEqual(3);
-    await expect(scrolledToEnd(scroll)).toBe(false);
   },
 };

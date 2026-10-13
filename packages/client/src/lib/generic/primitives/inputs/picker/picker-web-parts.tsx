@@ -1,0 +1,100 @@
+import { createElement } from 'react';
+import { cn } from '../../../utils';
+import { Text } from '../../display/text/text';
+import {
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../select/select';
+import type { PickerField } from './picker-field';
+import type { PickerOption, PickerProps } from './picker-props';
+import { pickerOptionsMessage, pickerValue } from './picker-selection';
+
+type TriggerProps<Value extends string> = PickerProps<Value> &
+  PickerField & { row: boolean };
+type TriggerAttributes = React.ComponentProps<typeof SelectTrigger> & {
+  'aria-invalid': boolean;
+  'aria-describedby'?: string;
+};
+
+export function PickerTrigger<Value extends string>(
+  props: TriggerProps<Value>,
+): React.JSX.Element {
+  return createElement(
+    SelectTrigger,
+    triggerProps(props),
+    <SelectValue
+      className={props.code ? 'type-code' : 'type-control'}
+      placeholder={pickerValue(props)}
+    />,
+  );
+}
+
+function triggerProps<Value extends string>(
+  props: TriggerProps<Value>,
+): TriggerAttributes {
+  return {
+    accessibilityLabel: props.label,
+    disabled: props.disabled,
+    'aria-invalid': props.invalid,
+    'aria-describedby': props.descriptionId,
+    variant: props.row ? 'plain' : 'default',
+    className: triggerClassName(props),
+  };
+}
+
+function triggerClassName(props: { row: boolean; invalid: boolean }): string {
+  return cn(
+    !props.row &&
+      'h-9 sm:h-9 w-full! rounded-lg bg-background dark:bg-background',
+    props.invalid && 'border-destructive',
+  );
+}
+
+export function PickerContent<Value extends string>(
+  props: PickerProps<Value>,
+): React.JSX.Element {
+  const message = pickerOptionsMessage(props);
+  return createElement(
+    SelectContent,
+    {},
+    message ? (
+      <OptionsMessage message={message} failure={!!props.error} />
+    ) : (
+      <PickerOptions {...props} />
+    ),
+  );
+}
+
+function OptionsMessage(props: {
+  message: string;
+  failure: boolean;
+}): React.JSX.Element {
+  return (
+    <Text
+      role="secondary"
+      semanticRole={props.failure ? 'alert' : 'status'}
+      className="p-3"
+    >
+      {props.message}
+    </Text>
+  );
+}
+
+function PickerOptions<Value extends string>(
+  props: PickerProps<Value>,
+): React.JSX.Element {
+  return (
+    <>
+      {props.options.map((option) => (
+        <WebOption key={option.value} option={option} />
+      ))}
+    </>
+  );
+}
+
+function WebOption(props: { option: PickerOption<string> }): React.JSX.Element {
+  const { value, label, disabled } = props.option;
+  return <SelectItem value={value} label={label} disabled={disabled} />;
+}

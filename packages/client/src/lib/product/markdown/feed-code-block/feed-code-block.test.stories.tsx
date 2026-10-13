@@ -41,6 +41,17 @@ export const CodeBlockScrollsInsideTheBox: Story = {
   },
 };
 
+// Where `part` of the element's text is drawn.
+function textBounds(element: HTMLElement, part: string): DOMRect {
+  const node = element.firstChild;
+  if (!(node instanceof globalThis.Text)) throw new Error('Missing title text');
+  const start = node.data.indexOf(part);
+  const range = document.createRange();
+  range.setStart(node, start);
+  range.setEnd(node, start + part.length);
+  return range.getBoundingClientRect();
+}
+
 export const LongTitleKeepsFilenameVisible: Story = {
   args: { language: longCodeBlockTitle },
   render: (args) => (
@@ -55,14 +66,7 @@ export const LongTitleKeepsFilenameVisible: Story = {
       const title = canvas.getByTestId('code-block-title');
       await expect(title.textContent).toContain(longCodeBlockTitle);
       await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
-      const node = title.firstChild;
-      if (!(node instanceof globalThis.Text))
-        throw new Error('Missing title text');
-      const start = node.data.indexOf('useWide.ts');
-      const range = document.createRange();
-      range.setStart(node, start);
-      range.setEnd(node, start + 'useWide.ts'.length);
-      const filename = range.getBoundingClientRect();
+      const filename = textBounds(title, 'useWide.ts');
       const bounds = title.getBoundingClientRect();
       await expect(filename.left).toBeGreaterThanOrEqual(bounds.left - 1);
       await expect(filename.right).toBeLessThanOrEqual(bounds.right + 1);
@@ -101,7 +105,7 @@ export const CopyControlFollowsHoverAndFocusPhone =
 export const CopyControlFollowsHoverAndFocusWide =
   copyControlFollowsHoverAndFocus(layoutWidths.wide);
 
-function copiesResource(width: number, code: string | undefined): Story {
+function copiesResource(width: number, code?: string): Story {
   return {
     args: { uri: embeddedResource.uri, code },
     play: async ({ canvas, userEvent }) => {
@@ -129,14 +133,8 @@ function copiesResource(width: number, code: string | undefined): Story {
     },
   };
 }
-export const CopiesResourceUriPhone = copiesResource(
-  layoutWidths.phone,
-  undefined,
-);
-export const CopiesResourceUriWide = copiesResource(
-  layoutWidths.wide,
-  undefined,
-);
+export const CopiesResourceUriPhone = copiesResource(layoutWidths.phone);
+export const CopiesResourceUriWide = copiesResource(layoutWidths.wide);
 export const CopiesEmptyResourceTextPhone = copiesResource(
   layoutWidths.phone,
   '',

@@ -35,9 +35,12 @@ const fileIcons = new Map(
   ),
 );
 
-export function fileTypeIcon(path: string): IconName {
+function extensionOf(path: string): string {
   const filename = path.split('/').at(-1) ?? '';
   const dot = filename.lastIndexOf('.');
-  const extension = dot > 0 ? filename.slice(dot + 1).toLowerCase() : '';
-  return fileIcons.get(extension) ?? 'file';
+  return dot > 0 ? filename.slice(dot + 1).toLowerCase() : '';
+}
+
+export function fileTypeIcon(path: string): IconName {
+  return fileIcons.get(extensionOf(path)) ?? 'file';
 }

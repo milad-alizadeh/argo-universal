@@ -1,18 +1,15 @@
 import type * as React from 'react';
 import { type ReactElement, type ReactNode, useState } from 'react';
 import { View } from 'react-native';
-import { ButtonGroup } from '#lib/generic/primitives/buttons/button-group/button-group';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { IconButton } from '../../../../lib/generic/primitives/buttons/icon-button/icon-button';
-import { SelectedCheck } from '../../../../lib/generic/primitives/display/selected-check';
-import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-sheet/bottom-sheet';
-import { Menu } from '../../../../lib/generic/primitives/overlays/menu/menu';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
+import { ButtonGroup } from '#primitives/buttons/button-group/button-group';
+import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+import { SelectedCheck } from '#primitives/display/selected-check';
+import { Text } from '#primitives/display/text/text';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
+import { Menu } from '#primitives/overlays/menu/menu';
+import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
 import { IconSlot } from '../../../../lib/generic/symbols/icon';
 
 interface SplitButtonChoice<Value extends string> {
@@ -37,10 +34,18 @@ export function SplitButton<Value extends string>(
   props: SplitButtonProps<Value>,
 ): React.JSX.Element {
   const wide = useContentWide();
+  const [height, setHeight] = useState<number>();
   return (
-    <ButtonGroup className={props.className}>
+    <ButtonGroup
+      className={props.className}
+      onLayout={({ nativeEvent }) => setHeight(nativeEvent.layout.height)}
+    >
       {props.children}
-      {wide ? <ChoiceDropdown {...props} /> : <ChoiceSheet {...props} />}
+      {wide ? (
+        <ChoiceDropdown {...props} />
+      ) : (
+        <ChoiceSheet {...props} height={height} />
+      )}
     </ButtonGroup>
   );
 }
@@ -51,7 +56,10 @@ function chevron(
     menuLabel,
     primary,
     disabled,
-  }: Pick<SplitButtonProps<string>, 'menuLabel' | 'primary' | 'disabled'>,
+    height,
+  }: Pick<SplitButtonProps<string>, 'menuLabel' | 'primary' | 'disabled'> & {
+    height?: number;
+  },
   wide: boolean,
   className: string | undefined,
 ): React.JSX.Element {
@@ -64,6 +72,7 @@ function chevron(
         wide ? 'h-8 w-7 px-0 sm:h-8' : 'h-11 w-11 rounded-lg px-0 sm:h-11',
         className,
       )}
+      style={height === undefined ? undefined : { height }}
       icon={'chevron-down'}
       iconRole="secondary"
       iconClassName={
@@ -96,7 +105,7 @@ function ChoiceDropdown<Value extends string>(
 }
 
 function ChoiceSheet<Value extends string>(
-  props: ChoiceProps<Value>,
+  props: ChoiceProps<Value> & { height?: number },
 ): ReactNode {
   const { choices, value, onValueChange, disabled, menuLabel } = props;
   const [open, setOpen] = useState(false);

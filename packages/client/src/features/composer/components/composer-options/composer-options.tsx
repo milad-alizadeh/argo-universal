@@ -175,6 +175,7 @@ export function ComposerOptions({
       trigger={
         <Button
           appearance="content"
+          size="xs"
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Session settings"
