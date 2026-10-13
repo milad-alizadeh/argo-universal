@@ -1,75 +1,58 @@
 import type * as React from 'react';
-import { useRef } from 'react';
+import type { AriaAttributes, KeyboardEvent } from 'react';
+import { edgeClassName, keyboardStep } from './panel-resize-edge';
 import type { PanelResizeHandleProps } from './panel-resize-handle';
+import { usePointerResize } from './use-pointer-resize.web';
 
-// How far one arrow key or accessibility action moves the edge, in points.
-const keyboardStep = 16;
+function keyedWidth(
+  { value, minimum, maximum, direction }: PanelResizeHandleProps,
+  key: string,
+): number | undefined {
+  return new Map([
+    ['ArrowLeft', value - keyboardStep * direction],
+    ['ArrowRight', value + keyboardStep * direction],
+    ['Home', minimum],
+    ['End', maximum],
+  ]).get(key);
+}
 
-export function PanelResizeHandle({
+function resizeByKey(
+  props: PanelResizeHandleProps,
+  event: KeyboardEvent<HTMLDivElement>,
+): void {
+  const width = keyedWidth(props, event.key);
+  if (width === undefined) return;
+  event.preventDefault();
+  props.onChange(width);
+}
+
+function separatorAria({
   label,
-  value,
   minimum,
   maximum,
-  direction,
-  edge = 'right',
-  onChange,
-  onDragStateChange,
-}: PanelResizeHandleProps): React.JSX.Element {
-  const drag = useRef<{
-    pointer: number;
-    position: number;
-    width: number;
-  } | null>(null);
-  const resize = (width: number): void => onChange(width);
+  value,
+}: PanelResizeHandleProps): AriaAttributes {
+  return {
+    'aria-label': label,
+    'aria-orientation': 'vertical',
+    'aria-valuemin': minimum,
+    'aria-valuemax': maximum,
+    'aria-valuenow': Math.round(value),
+  };
+}
+
+export function PanelResizeHandle(
+  props: PanelResizeHandleProps,
+): React.JSX.Element {
+  const pointerResize = usePointerResize(props);
   return (
-    <hr
-      aria-label={label}
-      aria-orientation="vertical"
-      aria-valuemin={minimum}
-      aria-valuemax={maximum}
-      aria-valuenow={Math.round(value)}
+    <div
+      role="separator"
       tabIndex={0}
-      className={`m-0 h-auto border-0 absolute ${edge === 'left' ? '-left-1' : '-right-1'} bottom-0 top-shell-bar z-10 w-2 cursor-col-resize touch-none select-none outline-none focus-visible:bg-ring/30 hover:bg-border/40`}
-      onPointerDown={(event) => {
-        onDragStateChange?.(true);
-        drag.current = {
-          pointer: event.pointerId,
-          position: event.clientX,
-          width: value,
-        };
-        event.currentTarget.setPointerCapture(event.pointerId);
-        event.preventDefault();
-      }}
-      onPointerMove={(event) => {
-        if (drag.current?.pointer === event.pointerId)
-          resize(
-            drag.current.width +
-              (event.clientX - drag.current.position) * direction,
-          );
-      }}
-      onPointerUp={(event) => {
-        drag.current = null;
-        onDragStateChange?.(false);
-        if (event.currentTarget.hasPointerCapture(event.pointerId))
-          event.currentTarget.releasePointerCapture(event.pointerId);
-      }}
-      onLostPointerCapture={() => {
-        drag.current = null;
-        onDragStateChange?.(false);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-          event.preventDefault();
-          resize(
-            value +
-              (event.key === 'ArrowRight' ? keyboardStep : -keyboardStep) *
-                direction,
-          );
-        } else if (event.key === 'Home' || event.key === 'End') {
-          event.preventDefault();
-          resize(event.key === 'Home' ? minimum : maximum);
-        }
-      }}
+      className={`${edgeClassName(props.edge)} cursor-col-resize touch-none select-none outline-none focus-visible:bg-ring/30 hover:bg-border/40`}
+      {...separatorAria(props)}
+      {...pointerResize}
+      onKeyDown={(event) => resizeByKey(props, event)}
     />
   );
 }

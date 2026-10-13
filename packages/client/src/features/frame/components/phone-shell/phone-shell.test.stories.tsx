@@ -1,112 +1,36 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { expect, fn, waitFor, within } from 'storybook/test';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { NavigationProvider } from '#lib/product/navigation/context';
-import {
-  ScreenHeader,
-  ScreenHeaderProvider,
-} from '#lib/product/navigation/screen-header';
-import { PortalHost } from '#primitives/overlays/portal/portal';
+import { expect, fn, waitFor } from 'storybook/test';
+import { ScreenHeaderProvider } from '#lib/product/navigation/screen-header';
 import { ScreenHeaderMock } from '../../../../../mocks/screen-header-mock';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import { sectionDestination } from '../../../../lib/product/navigation/sections';
-import type { Section } from '../../../../lib/product/navigation/sections';
-import { PhoneLayoutView } from '../phone-layout-view';
-import { PhoneMenuButton } from '../phone-menu-button';
-import { shellSections } from '../shell-sections';
-import { PhoneShell } from './phone-shell';
+import {
+  controlledPhoneLayout,
+  drawerSections,
+  openNavigationLabel,
+  pickDrawerSection,
+  tabletWidth,
+  withPhoneLayout,
+} from './phone-layout-test.mocks';
 import { PhoneShellFrame } from './phone-shell-frame.mocks';
 
-const openNavigationLabel = 'Open navigation';
-
 const meta = {
+  ...controlledPhoneLayout,
   title: 'Tests/PhoneShell',
-  component: PhoneShell,
-  args: {
-    selectedSection: 'sessions',
-    attentionCount: 1,
-    drawerOpen: false,
-    onDrawerOpenChange: fn(),
-    onSectionChange: fn(),
-    children: null,
-  },
-  render: (): React.JSX.Element => (
-    <View testID="controlled-phone-layout" className="w-full" />
-  ),
-} satisfies Meta<typeof PhoneShell>;
-
-function mountPhoneLayout(
-  element: HTMLElement,
-  attention: number,
-): {
-  root: ReturnType<typeof createRoot>;
-  render: (section: Section) => Promise<void>;
-  onSectionChange: ReturnType<typeof fn>;
-} {
-  const root = createRoot(element);
-  const onSectionChange = fn();
-  const render = async (section: Section): Promise<void> => {
-    root.render(
-      <SafeAreaProvider>
-        <KeyboardProvider>
-          <NavigationProvider navigate={fn()}>
-            <ScreenHeaderProvider header={ScreenHeaderMock}>
-              <View style={{ height: 600 }} className="w-full">
-                <PhoneLayoutView
-                  destination={sectionDestination(section)}
-                  attentionCount={attention}
-                  onSectionChange={onSectionChange}
-                >
-                  <View testID="phone-shell-content" className="flex-1">
-                    <ScreenHeader
-                      title={shellSections[section].title}
-                      left={<PhoneMenuButton />}
-                    />
-                    <Text>{shellSections[section].title} content</Text>
-                  </View>
-                </PhoneLayoutView>
-              </View>
-              <PortalHost />
-            </ScreenHeaderProvider>
-          </NavigationProvider>
-        </KeyboardProvider>
-      </SafeAreaProvider>,
-    );
-    await within(element).findByRole('heading', {
-      name: shellSections[section].title,
-    });
-  };
-  return { root, render, onSectionChange };
-}
+} satisfies Meta<typeof controlledPhoneLayout.component>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-// A width between the phone and wide layouts.
-const tabletWidth = 1024;
 
 function menuOpensAndSelectionClosesDrawer(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      const controlled = mountPhoneLayout(
-        canvas.getByTestId('controlled-phone-layout'),
-        1,
-      );
-      try {
-        await controlled.render('sessions');
-        for (const section of [
-          'sessions',
-          'issues',
-          'atlas',
-          'settings',
-        ] satisfies Section[]) {
+      await withPhoneLayout({ canvas, attention: 1 }, async (layout) => {
+        for (const section of drawerSections) {
           await expect(
             canvas.queryByRole('button', { name: 'Sessions' }),
           ).toBeNull();
@@ -135,26 +59,12 @@ function menuOpensAndSelectionClosesDrawer(width: number): Story {
           await expect(
             canvas.getByLabelText('1 Session needs attention'),
           ).toBeVisible();
-          await userEvent.click(
-            canvas.getByRole('button', { name: shellSections[section].title }),
-          );
-          if (section !== 'sessions')
-            await expect(controlled.onSectionChange).toHaveBeenLastCalledWith(
-              section,
-            );
-          await controlled.render(section);
-          await expect(
-            await canvas.findByRole('heading', {
-              name: shellSections[section].title,
-            }),
-          ).toBeVisible();
+          await pickDrawerSection({ canvas, userEvent, layout, section });
           await expect(
             canvas.queryByRole('heading', { name: 'Argo' }),
           ).toBeNull();
         }
-      } finally {
-        controlled.root.unmount();
-      }
+      });
     },
   };
 }
@@ -162,83 +72,6 @@ export const MenuOpensAndSelectionClosesDrawerPhone =
   menuOpensAndSelectionClosesDrawer(layoutWidths.phone);
 export const MenuOpensAndSelectionClosesDrawerTablet =
   menuOpensAndSelectionClosesDrawer(tabletWidth);
-
-function attentionAndSectionStates(count: number, width: number): Story {
-  return {
-    args: { attentionCount: count },
-    play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
-      const controlled = mountPhoneLayout(
-        canvas.getByTestId('controlled-phone-layout'),
-        count,
-      );
-      try {
-        await controlled.render('sessions');
-        for (const section of [
-          'sessions',
-          'issues',
-          'atlas',
-          'settings',
-        ] satisfies Section[]) {
-          await userEvent.click(
-            canvas.getByRole('button', { name: openNavigationLabel }),
-          );
-          const badge = canvas.queryByLabelText(
-            `${count} ${count === 1 ? 'Session needs' : 'Sessions need'} attention`,
-          );
-          if (count === 0) await expect(badge).toBeNull();
-          else await expect(badge).toHaveTextContent(count > 99 ? '99+' : '1');
-          await userEvent.click(
-            canvas.getByRole('button', { name: shellSections[section].title }),
-          );
-          if (section !== 'sessions')
-            await expect(controlled.onSectionChange).toHaveBeenLastCalledWith(
-              section,
-            );
-          await controlled.render(section);
-          await expect(
-            await canvas.findByRole('heading', {
-              name: shellSections[section].title,
-            }),
-          ).toBeVisible();
-          await userEvent.click(
-            canvas.getByRole('button', { name: openNavigationLabel }),
-          );
-          await expect(
-            canvas.getByRole('button', { name: shellSections[section].title }),
-          ).toHaveAttribute('aria-pressed', 'true');
-          await userEvent.click(
-            canvas.getByRole('button', { name: 'Close navigation' }),
-          );
-          await expect(
-            canvas.queryByRole('heading', { name: 'Argo' }),
-          ).toBeNull();
-        }
-      } finally {
-        controlled.root.unmount();
-      }
-    },
-  };
-}
-
-export const NoAttentionPhone = attentionAndSectionStates(
-  0,
-  layoutWidths.phone,
-);
-export const NoAttentionTablet = attentionAndSectionStates(0, tabletWidth);
-export const OneAttentionPhone = attentionAndSectionStates(
-  1,
-  layoutWidths.phone,
-);
-export const OneAttentionTablet = attentionAndSectionStates(1, tabletWidth);
-export const OverflowAttentionPhone = attentionAndSectionStates(
-  100,
-  layoutWidths.phone,
-);
-export const OverflowAttentionTablet = attentionAndSectionStates(
-  100,
-  tabletWidth,
-);
 
 export const HeaderActionsReportCallbacks: Story = {
   render: () => <View testID="header-actions-root" />,

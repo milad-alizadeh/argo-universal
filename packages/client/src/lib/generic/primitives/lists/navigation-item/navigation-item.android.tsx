@@ -24,10 +24,7 @@ import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
 import { Host } from '../../native/host';
 import { useComposeTextStyle } from '../../native/native-typography';
-import {
-  NavigationItemBadge,
-  type NavigationItemProps,
-} from './navigation-item.tsx';
+import type { NavigationItemProps } from './navigation-item.tsx';
 
 // Material 3's navigation drawer item: a 56dp pill, tinted when selected.
 const itemHeight = 56;
@@ -131,9 +128,5 @@ function NativeBadge({
   badge,
 }: Pick<NavigationItemProps, 'badge'>): React.JSX.Element | null {
   if (!badge) return null;
-  return (
-    <RNHostView matchContents>
-      <NavigationItemBadge badge={badge} />
-    </RNHostView>
-  );
+  return <RNHostView matchContents>{badge.element}</RNHostView>;
 }

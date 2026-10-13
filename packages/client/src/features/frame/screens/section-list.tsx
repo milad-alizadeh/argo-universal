@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { ScrollView } from 'react-native';
 import {
@@ -33,49 +34,77 @@ function openSessionId(
   return destination?.to === 'session' ? destination.id : undefined;
 }
 
-// A section's list and its header row: full screen on a phone, and in the sidebar on a wide window.
-export function useSectionList(
-  section: Section,
+type SessionsFilter = ReturnType<typeof useSessionsFilter>;
+
+type SettingsSearch = [string, (query: string) => void];
+
+interface SessionsListSource {
+  sessionsFilter: SessionsFilter;
+  navigate: ReturnType<typeof useNavigate>;
+  selectedDestination?: NavigationDestination;
+}
+
+function sessionsScreen(
+  sessionsFilter: SessionsFilter,
+  selectedDestination?: NavigationDestination,
+): React.JSX.Element {
+  return (
+    <SessionsScreen
+      query={sessionsFilter.query}
+      onQueryChange={sessionsFilter.onQueryChange}
+      archived={sessionsFilter.archived}
+      selectedSessionId={openSessionId(selectedDestination)}
+    />
+  );
+}
+
+function sessionsList({
+  sessionsFilter,
+  navigate,
+  selectedDestination,
+}: SessionsListSource): SectionList {
+  const newSession = (): void => navigate({ to: 'new-session' });
+  return {
+    header: <SessionsHeader {...sessionsFilter} onNewSession={newSession} />,
+    phoneHeader: {
+      right: sessionsHeaderItems(sessionsFilter),
+      search: sessionsHeaderSearch(sessionsFilter, newSession),
+    },
+    list: sessionsScreen(sessionsFilter, selectedDestination),
+  };
+}
+
+function settingsSearchField([
+  settingsQuery,
+  setSettingsQuery,
+]: SettingsSearch): React.JSX.Element {
+  return (
+    <SearchField
+      label="Search Settings"
+      value={settingsQuery}
+      onChangeText={setSettingsQuery}
+      title={<ListTitle>Settings</ListTitle>}
+    />
+  );
+}
+
+function settingsList(
+  settingsSearch: SettingsSearch,
   selectedDestination?: NavigationDestination,
 ): SectionList {
-  const sessionsFilter = useSessionsFilter();
-  const [settingsQuery, setSettingsQuery] = useState('');
-  const navigate = useNavigate();
-  const newSession = (): void => navigate({ to: 'new-session' });
-  if (section === 'sessions')
-    return {
-      header: <SessionsHeader {...sessionsFilter} onNewSession={newSession} />,
-      phoneHeader: {
-        right: sessionsHeaderItems(sessionsFilter),
-        search: sessionsHeaderSearch(sessionsFilter, newSession),
-      },
-      list: (
-        <SessionsScreen
-          query={sessionsFilter.query}
-          onQueryChange={sessionsFilter.onQueryChange}
-          archived={sessionsFilter.archived}
-          selectedSessionId={openSessionId(selectedDestination)}
-        />
-      ),
-    };
-  if (section === 'settings')
-    return {
-      header: (
-        <SearchField
-          label="Search Settings"
-          value={settingsQuery}
-          onChangeText={setSettingsQuery}
-          title={<ListTitle>Settings</ListTitle>}
-        />
-      ),
-      list: (
-        <SettingsNavigationList
-          selectedDestination={selectedDestination}
-          query={settingsQuery}
-        />
-      ),
-    };
-  // Placeholders until each section's list screen is built.
+  return {
+    header: settingsSearchField(settingsSearch),
+    list: (
+      <SettingsNavigationList
+        selectedDestination={selectedDestination}
+        query={settingsSearch[0]}
+      />
+    ),
+  };
+}
+
+// Placeholders until each section's list screen is built.
+function placeholderList(section: Section): SectionList {
   return {
     list: (
       // Insets itself below a transparent header.
@@ -89,4 +118,19 @@ export function useSectionList(
       </ScrollView>
     ),
   };
+}
+
+// A section's list and its header row: full screen on a phone, and in the sidebar on a wide window.
+export function useSectionList(
+  section: Section,
+  selectedDestination?: NavigationDestination,
+): SectionList {
+  const sessionsFilter = useSessionsFilter();
+  const settingsSearch = useState('');
+  const navigate = useNavigate();
+  if (section === 'sessions')
+    return sessionsList({ sessionsFilter, navigate, selectedDestination });
+  if (section === 'settings')
+    return settingsList(settingsSearch, selectedDestination);
+  return placeholderList(section);
 }

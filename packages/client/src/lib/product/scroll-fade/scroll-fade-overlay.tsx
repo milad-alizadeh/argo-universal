@@ -8,7 +8,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
-import { bezierEasing, easingCurve, motionDuration } from '#lib/generic/motion';
+import { bezierEasing } from '#lib/generic/bezier-easing';
+import { easingCurve, motionDuration } from '#lib/generic/motion';
 
 export interface ScrollFadeProps {
   edge: 'top' | 'bottom';
