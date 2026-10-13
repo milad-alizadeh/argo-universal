@@ -83,7 +83,6 @@ const config: StorybookConfig = {
           '@repo/client > @rn-primitives/dialog',
           '@repo/client > react-native > invariant',
           '@repo/client > @rn-primitives/collapsible',
-          '@repo/client > @rn-primitives/checkbox',
           '@repo/client > @rn-primitives/select',
           '@repo/client > @tanstack/react-form',
           '@repo/client > ajv',
@@ -106,6 +105,9 @@ const config: StorybookConfig = {
         },
       },
       resolve: {
+        alias: {
+          '#primitives': `${import.meta.dirname}/../../../packages/client/src/lib/generic/primitives`,
+        },
         extensions: [
           '.web.tsx',
           '.web.ts',

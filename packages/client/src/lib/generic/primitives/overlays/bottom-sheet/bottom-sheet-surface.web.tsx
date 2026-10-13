@@ -1,12 +1,13 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { keepOpen } from '../keep-open';
 import { SheetBody } from './bottom-sheet-body.web';
 import { useSwipeToClose } from './bottom-sheet-swipe.web';
 import type { BottomSheetProps } from './bottom-sheet.types';
+import { sheetDialog, useSheetAnchor } from './use-sheet-anchor.web';
 
 type SurfaceProps = {
   open: boolean;
@@ -17,6 +18,7 @@ type SurfaceProps = {
   initialSize?: BottomSheetProps['initialSize'];
   footer?: React.ReactNode;
   label?: string;
+  size?: 'form';
   // A hidden title for a sheet whose content has none of its own.
   title?: React.ReactNode;
   /*
@@ -33,7 +35,8 @@ type SurfaceProps = {
  */
 export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
   const [expanded, setExpanded] = useState(props.initialSize === 'expanded');
-  const card = useHiddenWhileClosing(isAccessible(props));
+  const { anchor, card, ref } = useSheetAnchor(props.size);
+  useHiddenWhileClosing(card, props.open || !props.hiddenWhileClosing);
   const { onOpenChange } = DialogPrimitive.useRootContext();
   const close = useCallback(
     () => closeSheet(props.dismissible, onOpenChange),
@@ -48,18 +51,20 @@ export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
         className="bottom-sheet-overlay absolute inset-0 bg-black/20"
       />
       <DialogPrimitive.Content
-        ref={card}
-        {...sheetContentProps(props, expanded)}
+        ref={ref}
+        {...sheetContentProps(props, expanded, !!anchor)}
       >
         {props.title}
-        <SheetBody
-          label={props.label}
-          expanded={expanded}
-          onResize={resize}
-          footer={props.footer}
-        >
-          {props.children}
-        </SheetBody>
+        <SurfaceBody form={props.size === 'form'}>
+          <SheetBody
+            label={props.label}
+            expanded={expanded}
+            onResize={resize}
+            footer={props.footer}
+          >
+            {props.children}
+          </SheetBody>
+        </SurfaceBody>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   );
@@ -67,23 +72,47 @@ export function BottomSheetSurface(props: SurfaceProps): React.JSX.Element {
 
 // Radix draws the dialog element around the card, out of reach of props.
 function useHiddenWhileClosing(
+  card: React.RefObject<View | null>,
   accessible: boolean,
-): React.RefObject<View | null> {
-  const card = useRef<View>(null);
+): void {
   useLayoutEffect(() => {
-    const dialog =
-      card.current instanceof HTMLElement ? card.current.parentElement : null;
+    const dialog = sheetDialog(card.current);
     dialog?.setAttribute('aria-hidden', String(!accessible));
-  }, [accessible]);
-  return card;
+  }, [card, accessible]);
+}
+
+function SurfaceBody(props: {
+  form: boolean;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  const { tallest, onLayout } = useTallestHeight();
+  if (!props.form) return <>{props.children}</>;
+  return (
+    <View style={{ minHeight: tallest }} className="shrink" onLayout={onLayout}>
+      {props.children}
+    </View>
+  );
+}
+
+function useTallestHeight(): {
+  tallest: number;
+  onLayout: React.ComponentProps<typeof View>['onLayout'];
+} {
+  const [tallest, setTallest] = useState(0);
+  const onLayout: React.ComponentProps<typeof View>['onLayout'] = (event) => {
+    const { height } = event.nativeEvent.layout;
+    setTallest((previous) => Math.max(previous, height));
+  };
+  return { tallest, onLayout };
 }
 
 function sheetContentProps(
   props: Pick<
     SurfaceProps,
-    'open' | 'onClosed' | 'dismissible' | 'onCloseAutoFocus'
+    'open' | 'onClosed' | 'dismissible' | 'onCloseAutoFocus' | 'size'
   >,
   expanded: boolean,
+  anchored: boolean,
 ): React.ComponentProps<typeof DialogPrimitive.Content> & {
   'data-state': string;
   'aria-describedby': undefined;
@@ -97,11 +126,21 @@ function sheetContentProps(
     },
     onEscapeKeyDown: keepOpen(props.dismissible),
     onInteractOutside: keepOpen(props.dismissible),
-    className: cn(
-      'bottom-sheet max-h-[85dvh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
-      expanded && 'h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)]',
-    ),
+    className: sheetClass(props.size, expanded, anchored),
   };
+}
+
+function sheetClass(
+  size: SurfaceProps['size'],
+  expanded: boolean,
+  anchored: boolean,
+): string {
+  return cn(
+    'bottom-sheet max-h-[85dvh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
+    size === 'form' && 'bottom-sheet-form w-full touch-none',
+    anchored && 'bottom-sheet-anchored',
+    expanded && 'h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)]',
+  );
 }
 
 function closeSheet(
@@ -109,10 +148,4 @@ function closeSheet(
   onOpenChange: (open: boolean) => void,
 ): void {
   if (dismissible !== false) onOpenChange(false);
-}
-
-function isAccessible(
-  props: Pick<SurfaceProps, 'open' | 'hiddenWhileClosing'>,
-): boolean {
-  return props.open || !props.hiddenWhileClosing;
 }

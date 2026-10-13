@@ -12,6 +12,7 @@ export interface BottomSheetProps {
   label?: string;
   // The sheet rises only as tall as its content, as a dialog's does, instead of to fixed heights.
   fit?: boolean;
+  size?: 'form';
   // The child owns scrolling, as a native FieldGroup does.
   contentScrolls?: boolean;
   surface?: 'popover' | 'sidebar';

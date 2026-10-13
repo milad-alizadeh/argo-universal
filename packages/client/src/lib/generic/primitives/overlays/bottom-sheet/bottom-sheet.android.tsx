@@ -7,6 +7,10 @@ import {
   useSheetDismissal,
   type SheetRef,
 } from './bottom-sheet-dismissal.android';
+import {
+  HostedSheetContent as FittedSheetContent,
+  SheetDragHandle,
+} from './bottom-sheet-hosted-content.android';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
 import { SheetViewport } from './bottom-sheet-viewport.android';
@@ -31,7 +35,7 @@ function SheetPresentation(presentation: SheetProps): React.JSX.Element {
       <ModalBottomSheet
         {...sheet}
         ref={sheetRef}
-        initialFullyExpanded={props.initialSize === 'expanded'}
+        initialFullyExpanded={startsExpanded(props)}
         onDismissRequest={() => dismissOrCollapse(props, sheetRef)}
         sheetGesturesEnabled={dismissible || props.expandable === true}
         properties={{
@@ -39,6 +43,7 @@ function SheetPresentation(presentation: SheetProps): React.JSX.Element {
           shouldDismissOnClickOutside: dismissible,
         }}
       >
+        {props.fit && <SheetDragHandle />}
         <HostedSheetContent {...props} />
       </ModalBottomSheet>
     </SheetHost>
@@ -55,6 +60,7 @@ type SheetProps = Pick<
   | 'footer'
   | 'initialSize'
   | 'fit'
+  | 'size'
   | 'contentScrolls'
   | 'surface'
 > & { sheetRef: SheetRef };
@@ -69,10 +75,12 @@ function HostedSheetContent(
     | 'footer'
     | 'initialSize'
     | 'fit'
+    | 'size'
     | 'contentScrolls'
     | 'surface'
   >,
 ): React.JSX.Element {
+  if (props.fit) return <FittedSheetContent {...props} />;
   return (
     <SheetViewport fit={props.fit}>
       {(viewportHeight) => (
@@ -103,4 +111,10 @@ function dismissOrCollapse(
     return;
   }
   props.onOpenChange(false);
+}
+
+function startsExpanded(
+  props: Pick<BottomSheetProps, 'size' | 'initialSize'>,
+): boolean {
+  return props.size === 'form' || props.initialSize === 'expanded';
 }

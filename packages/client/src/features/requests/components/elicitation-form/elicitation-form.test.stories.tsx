@@ -46,14 +46,7 @@ function choice(width: number, mock: RequestMock = elicitationMock): Story {
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
-      await expect(canvas.getByRole('alert')).toHaveTextContent('Fix Color');
-      await expect(
-        canvas.getByRole('button', { name: 'Submit' }),
-      ).toBeDisabled();
-      await userEvent.click(canvas.getByRole('button', { name: /^Color/ }));
-      await userEvent.click(
-        await within(document.body).findByRole('option', { name: 'Blue' }),
-      );
+      await userEvent.click(canvas.getByRole('radio', { name: 'Blue' }));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
@@ -106,9 +99,7 @@ function responseError(
         'Could not send the answer. Try again.',
       );
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
-      await expect(
-        canvas.getByRole('button', { name: 'Decline' }),
-      ).toBeEnabled();
+      await expect(canvas.getByRole('button', { name: 'Skip' })).toBeEnabled();
     },
   };
 }
@@ -197,6 +188,7 @@ export const SubmitWithEnter: Story = {
 
 function dismiss(width: number, action: 'cancel' | 'decline'): Story {
   return {
+    args: { request: fieldsRequest },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await userEvent.click(
@@ -225,9 +217,7 @@ function conflict(width: number, mock?: RequestMock): Story {
         'Already answered on another device',
       );
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
-      await expect(
-        canvas.getByRole('button', { name: /^Color/ }),
-      ).toBeDisabled();
+      await expect(canvas.getByRole('radio', { name: 'Blue' })).toBeDisabled();
       if (width < 720)
         await expect(
           canvas.queryByRole('button', { name: 'Submit' }),

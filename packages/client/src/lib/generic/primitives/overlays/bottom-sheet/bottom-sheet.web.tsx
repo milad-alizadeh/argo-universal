@@ -17,6 +17,7 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
         expandable={props.expandable}
         initialSize={props.initialSize}
         footer={props.footer}
+        size={props.size}
         title={
           <DialogPrimitive.Title className="sr-only">
             {props.label}

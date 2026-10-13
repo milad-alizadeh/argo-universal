@@ -47,3 +47,13 @@ export { HeaderSearchRow } from './lib/product/navigation/header-search';
 export { AppProviders } from './app-providers';
 
 export { PortalHost } from '#primitives/overlays/portal/portal';
+export {
+  FormSheetProvider,
+  useFormSheetCommands,
+  useFormSheetState,
+} from './lib/generic/primitives/overlays/form-sheet/form-sheet-context';
+export {
+  FormSheetRoot,
+  FormSheetChoices,
+} from './lib/generic/primitives/overlays/form-sheet/form-sheet-page';
+export type { FormSheetRoutes } from './lib/generic/primitives/overlays/form-sheet/form-sheet-types';

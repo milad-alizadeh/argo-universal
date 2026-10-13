@@ -21,6 +21,7 @@ export interface RequestCardProps extends Pick<
   ViewProps,
   'className' | 'testID'
 > {
+  appearance?: 'card' | 'embedded';
   state: RequestState;
   error?: string;
   onEnter: () => void;
@@ -44,8 +45,12 @@ export function RequestCard(props: RequestCardProps): ReactNode {
     onEnter: props.onEnter,
     onEscape: props.onEscape,
   });
-  if (props.sheetLabel && !windowWide) return <RequestSheet {...props} />;
+  if (presentsSheet(props, windowWide)) return <RequestSheet {...props} />;
   return <RequestContainer {...props} nativeID={nativeID} />;
+}
+
+function presentsSheet(props: RequestCardProps, wide: boolean): boolean {
+  return !!props.sheetLabel && !wide && props.appearance !== 'embedded';
 }
 
 function RequestContainer(
@@ -58,7 +63,10 @@ function RequestContainer(
       className={cn(
         props.surface === 'tray'
           ? 'w-full gap-3 px-3 pt-3 pb-3.5'
-          : cardClassName,
+          : cn(
+              'w-full max-w-composer',
+              props.appearance !== 'embedded' && cardClassName,
+            ),
         props.className,
       )}
     >
@@ -79,7 +87,7 @@ function RequestContents(props: RequestCardProps): ReactNode {
 }
 
 const cardClassName =
-  'w-full max-w-composer rounded-surface bg-card shadow-card dark:border dark:border-border';
+  'rounded-2xl bg-glass-card native:bg-background shadow-glass-card web:backdrop-blur-glass web:backdrop-saturate-180';
 
 function RequestBody({
   state,

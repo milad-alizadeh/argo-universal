@@ -11,7 +11,6 @@ const { withUniwindConfig } = require('uniwind/metro');
 /** @import { MetroConfig } from 'expo/metro-config' */
 /** @type {MetroConfig} */
 const config = getDefaultConfig(__dirname);
-
 // Primitive aliases remain extensionless so Metro chooses each platform's drawing.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   const primitivePath = moduleName.startsWith('#primitives/')
