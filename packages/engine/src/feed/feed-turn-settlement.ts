@@ -25,7 +25,6 @@ const settledFeedState = (
     ...new Set([...context.changedRowIds, ...result.events.map(settledRowId)]),
   ],
   messageStreams: remainingMessageStreams(context, turnId),
-  lastSettledTurnId: turnId,
 });
 
 const remainingMessageStreams = (

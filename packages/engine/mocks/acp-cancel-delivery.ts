@@ -24,19 +24,6 @@ export const playLateCancelUpdate = async (
 ): Promise<void> => {
   await playCancelledToolUpdate(process);
 
-  if (marker)
-    await process.play(
-      [
-        {
-          type: 'update',
-          update: {
-            sessionUpdate: 'agent_message_chunk',
-            content: { type: 'text', text: 'Late unaddressed reply' },
-          },
-        },
-      ],
-      'owned-1',
-    );
   await vi.advanceTimersByTimeAsync(60);
   await process.play(
     [

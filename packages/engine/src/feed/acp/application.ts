@@ -108,7 +108,6 @@ const createAcpContentInput = (
   findWrittenRow: context.findWrittenRow,
   findUnaddressedPlan: context.findUnaddressedPlan,
   unaddressedPlan: context.unaddressedPlan,
-  lastSettledTurnId: context.lastSettledTurnId,
 });
 
 const appendOutputBlobs = (

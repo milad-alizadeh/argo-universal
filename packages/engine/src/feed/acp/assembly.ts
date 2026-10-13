@@ -9,7 +9,6 @@ export type AcpContentInput = {
   acpSessionId: SessionNotification['sessionId'];
   turnId: string | null;
   stale?: true;
-  lastSettledTurnId?: string | null;
   feed: Feed;
   streams: MessageStreams;
   findWrittenRow: (id: string) => SessionUpdate | undefined;

@@ -10,10 +10,6 @@ const sessionWideKinds = new Set([
 
 const settledTurnReason = 'ACP update belongs to a settled Turn';
 
-const hasSettledScope = (input: AcpContentInput): boolean =>
-  input.lastSettledTurnId != null &&
-  (input.turnId === null || input.turnId === input.lastSettledTurnId);
-
 const belongsToAnotherTurn = (
   input: AcpContentInput,
   row: SessionUpdate | undefined,
@@ -25,7 +21,7 @@ export const settledUpdateRejection = (
 ): string | undefined => {
   if (preservesSessionScope(input, row)) return undefined;
 
-  return shouldDropTurnContent(input, row) ? settledTurnReason : undefined;
+  return belongsToAnotherTurn(input, row) ? settledTurnReason : undefined;
 };
 
 const preservesSessionScope = (
@@ -36,8 +32,3 @@ const preservesSessionScope = (
 
 const isUnscopedRow = (row: SessionUpdate | undefined): boolean =>
   row !== undefined && row.turnId === null;
-
-const shouldDropTurnContent = (
-  input: AcpContentInput,
-  row: SessionUpdate | undefined,
-): boolean => belongsToAnotherTurn(input, row) || hasSettledScope(input);

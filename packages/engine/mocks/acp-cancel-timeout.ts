@@ -119,7 +119,7 @@ export const observeCancelDeadline = async (
   sessionId: string,
 ): Promise<{
   before: {
-    turns: unknown;
+    turns: ReturnType<typeof readCancelTurns>;
     closes: CloseSessionRequest[];
     resumes: ResumeSessionRequest[];
   };

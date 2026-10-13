@@ -121,9 +121,7 @@ describe.each(appFixtureAgentIds)('%s ACP cancel deadline', (agentId) => {
 
         expect(late).toMatchObject({
           changes: [],
-          diagnostics: Array.from({ length: running ? 1 : 2 }, () =>
-            expect.stringContaining('settled Turn'),
-          ),
+          diagnostics: [expect.stringContaining('settled Turn')],
         });
         expect(late.revisionAfter).toBe(late.revisionBefore);
         expect(await readCancelEnding(host, stuck.sessionId)).toEqual(

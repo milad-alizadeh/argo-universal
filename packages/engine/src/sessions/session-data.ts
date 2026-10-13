@@ -59,7 +59,6 @@ export interface SessionData {
   nextPosition: number;
   // Whether closing keeps the Session; a New Session no prompt reached is discarded instead.
   kept: boolean;
-  lastEndedTurnId: string | null;
   // The latest Turn, when it was interrupted and its Feed does not yet say output may be missing.
   undisclosedInterruptedTurnId: string | null;
 }
@@ -92,7 +91,6 @@ export async function createSessionCheckout(
     activityAt: Date.now(),
     nextPosition: 0,
     kept: false,
-    lastEndedTurnId: null,
     undisclosedInterruptedTurnId: null,
   };
 }
@@ -166,9 +164,9 @@ const storedConfigValues = z.array(InitialConfigOption);
 const readLatestTurn = (
   database: Database,
   sessionId: string,
-): { id: string; error: unknown; status: string } | undefined =>
+): { id: string; error: unknown } | undefined =>
   database
-    .select({ id: turn.id, error: turn.error, status: turn.status })
+    .select({ id: turn.id, error: turn.error })
     .from(turn)
     .where(eq(turn.sessionId, sessionId))
     .orderBy(desc(turn.startedAt))
@@ -189,8 +187,9 @@ const hasFeedRow = (
 const readUndisclosedInterruption = (
   database: Database,
   sessionId: string,
-  latest: ReturnType<typeof readLatestTurn>,
 ): string | null => {
+  const latest = readLatestTurn(database, sessionId);
+
   if (TurnError.safeParse(latest?.error).data?.code !== 'interrupted')
     return null;
 
@@ -218,7 +217,6 @@ export async function loadSession(
   if (!pending) throw new Error(`No Session ${input.sessionId}`);
   const row = pending;
   const pendingFeed = readQueuedFeed(writer, input.sessionId);
-  const latestTurn = readLatestTurn(input.database, input.sessionId);
 
   const position = input.database
     .select({ highest: max(feedRow.position) })
@@ -238,11 +236,9 @@ export async function loadSession(
     activityAt: row.activityAt,
     nextPosition: Math.max(position ?? -1, pendingFeed.highestPosition) + 1,
     kept: true,
-    lastEndedTurnId: latestTurn?.status === 'ended' ? latestTurn.id : null,
     undisclosedInterruptedTurnId: readUndisclosedInterruption(
       input.database,
       input.sessionId,
-      latestTurn,
     ),
   };
 }

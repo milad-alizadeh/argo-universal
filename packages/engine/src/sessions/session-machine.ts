@@ -730,7 +730,6 @@ const sessionSetup = setup({
         enqueue.assign({
           activeTurnId: null,
           activeTurnStartedAt: null,
-          lastEndedTurnId: context.activeTurnId ?? context.lastEndedTurnId,
           permissionQueue: [],
           elicitationQueue: [],
           storageFailedTurn: false,
@@ -1085,7 +1084,6 @@ export const sessionMachine = sessionSetup.createMachine({
     activityAt: 0,
     nextPosition: 0,
     kept: false,
-    lastEndedTurnId: null,
     undisclosedInterruptedTurnId: null,
     activeTurnId: null,
     activeTurnStartedAt: null,
@@ -1169,7 +1167,6 @@ export const sessionMachine = sessionSetup.createMachine({
           maxRevision: context.maxRevision,
           activityAt: context.activityAt,
           nextPosition: context.nextPosition,
-          lastSettledTurnId: context.lastEndedTurnId,
           now: context.input.now,
           findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
             readWrittenRow({
