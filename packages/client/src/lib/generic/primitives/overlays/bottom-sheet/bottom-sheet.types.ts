@@ -12,6 +12,9 @@ export interface BottomSheetProps {
   label?: string;
   // The sheet rises only as tall as its content, as a dialog's does, instead of to fixed heights.
   fit?: boolean;
+  // The child owns scrolling, as a native FieldGroup does.
+  contentScrolls?: boolean;
+  surface?: 'popover' | 'sidebar';
   // False while the content holds unsaved input: a swipe, the backdrop, Escape or Back leave the sheet open.
   dismissible?: boolean;
   footer?: ReactNode;

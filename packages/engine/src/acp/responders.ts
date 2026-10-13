@@ -4,6 +4,7 @@ import type {
 } from '@agentclientprotocol/sdk';
 import { trackReservationWork, type AcpReservation } from './reservations';
 import type { AcpResponseWrites } from './response-writes';
+import type { AcpRouting } from './routing';
 
 const pendingRequestLimit = 32;
 type PermissionHandler =
@@ -99,3 +100,21 @@ export const createElicitationResponder: ClientRequestHandlerFactory<
     invoke: (reservation, signal) =>
       reservation.input.destination.createElicitation({ ...context, signal }),
   });
+
+type ResourceResponders = {
+  requestPermission: PermissionHandler;
+  createElicitation: ElicitationHandler;
+};
+export const createResourceResponders = (
+  routing: Pick<AcpRouting, 'findSessionReservation'>,
+  writes: AcpResponseWrites,
+): ResourceResponders => ({
+  requestPermission: createPermissionResponder(
+    routing.findSessionReservation,
+    writes,
+  ),
+  createElicitation: createElicitationResponder(
+    routing.findSessionReservation,
+    writes,
+  ),
+});

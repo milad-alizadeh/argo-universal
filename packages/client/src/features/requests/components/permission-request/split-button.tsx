@@ -5,11 +5,12 @@ import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { ButtonGroup } from '#primitives/buttons/button-group/button-group';
 import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { Icon } from '#primitives/display/icon/icon';
+import { SelectedCheck } from '#primitives/display/selected-check';
 import { Text } from '#primitives/display/text/text';
 import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
 import { Menu } from '#primitives/overlays/menu/menu';
 import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
+import { IconSlot } from '../../../../lib/generic/symbols/icon';
 
 interface SplitButtonChoice<Value extends string> {
   value: Value;
@@ -61,7 +62,7 @@ function chevron(
         className,
       )}
       icon={'chevron-down'}
-      iconRole="inset"
+      iconRole="secondary"
       iconClassName={
         primary ? 'text-primary-foreground' : 'text-muted-foreground'
       }
@@ -122,11 +123,11 @@ function ChoiceSheet<Value extends string>(
             })}
           >
             <Text role="body">{choice.label}</Text>
-            <View className="size-4 items-center justify-center">
+            <IconSlot role="control">
               {choice.value === value && (
-                <Icon name="check" role="inset" className="text-foreground" />
+                <SelectedCheck className="text-foreground" />
               )}
-            </View>
+            </IconSlot>
           </Pressable>
         ))}
       </View>

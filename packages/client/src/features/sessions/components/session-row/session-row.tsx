@@ -101,7 +101,7 @@ export const SessionRow = memo(function SessionRow({
     >
       <TextClassContext.Provider value={undefined}>
         <View className="relative h-6 shrink-0 items-center justify-center wide:size-5">
-          <Animated.View style={[useIconBox('control'), logoStyle]}>
+          <Animated.View style={[useIconBox('mark'), logoStyle]}>
             <SvgXml
               testID="session-logo"
               xml={logo}

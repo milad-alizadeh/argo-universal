@@ -58,15 +58,17 @@ type SheetContentProps = Pick<
   | 'dismissible'
   | 'footer'
   | 'initialSize'
+  | 'contentScrolls'
+  | 'surface'
 >;
 
 function SheetContent(props: SheetContentProps): React.JSX.Element {
-  const { popover } = useNativeTheme().colors;
+  const colors = useNativeTheme().colors;
   const modifiers = [
     ...useSheetDetents(props),
     presentationDragIndicator('visible'),
     interactiveDismissDisabled(props.dismissible === false),
-    ...sheetFill(popover),
+    ...sheetFill(props.surface === 'sidebar' ? colors.sidebar : colors.popover),
   ];
   return (
     <Group modifiers={modifiers}>

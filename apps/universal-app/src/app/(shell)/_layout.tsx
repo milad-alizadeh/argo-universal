@@ -32,11 +32,12 @@ const sectionTabs = {
 export default function ShellLayout(): React.JSX.Element {
   const destination = useDestination();
   const wide = useWide();
-  const openPage = usePageBeforeShellChange(wide, destination);
+  const { page, shellChanged } = usePageBeforeShellChange(wide, destination);
   return (
     <>
       {wide ? <WideShell destination={destination} /> : <PhoneSections />}
-      <ReopenPage key={String(wide)} page={openPage} />
+      {/* The first shell opens on the URL itself; only a later shell has a page to reopen. */}
+      {shellChanged && <ReopenPage key={String(wide)} page={page} />}
     </>
   );
 }
@@ -58,18 +59,32 @@ interface ShownPage {
   destination: NavigationDestination;
 }
 
+interface ShellPage {
+  page: ShownPage;
+  // The width has crossed the breakpoint since the App opened.
+  shellChanged: boolean;
+}
+
 // The page the shown shell is on; across a width change it stays the one the previous shell showed.
 function usePageBeforeShellChange(
   wide: boolean,
   destination: NavigationDestination,
-): ShownPage {
+): ShellPage {
   const path = usePathname();
-  const [shown, setShown] = useState({ wide, page: { path, destination } });
-  if (shown.wide !== wide) setShown({ wide, page: shown.page });
+  const [shown, setShown] = useState(() =>
+    firstShell(wide, { path, destination }),
+  );
+  if (shown.wide !== wide)
+    setShown({ wide, page: shown.page, shellChanged: true });
   else if (shown.page.path !== path)
-    setShown({ wide, page: { path, destination } });
-  return shown.page;
+    setShown({ ...shown, page: { path, destination } });
+  return shown;
 }
+
+const firstShell = (
+  wide: boolean,
+  page: ShownPage,
+): ShellPage & { wide: boolean } => ({ wide, page, shellChanged: false });
 
 // Each shell mounts its own navigator on Sessions, so on mount it reopens the previous shell's page above its section's root.
 function ReopenPage({ page }: { page: ShownPage }): null {

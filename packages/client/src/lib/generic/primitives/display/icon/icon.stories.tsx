@@ -6,7 +6,7 @@ import {
 } from '#lib/generic/primitives/display/text/text';
 import { Icon } from '../../../symbols/icon';
 import { iconNames, iconSymbols } from '../../../symbols/icon-names';
-import { iconRoleNames } from '../../../symbols/icon-role';
+import { type IconRole, useIconPixels } from '../../../symbols/icon-role';
 import { SymbolImagesProvider } from '../../../symbols/symbol-images';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { IconButton } from '../../buttons/icon-button/icon-button';
@@ -21,6 +21,26 @@ const meta = {
 } satisfies Meta<typeof Icon>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+const roles: IconRole[] = [
+  'body',
+  'secondary',
+  'control',
+  'mark',
+  'row',
+  'action',
+  'nav',
+  'title',
+];
+
+function RoleSample({ role }: { role: IconRole }): React.JSX.Element {
+  return (
+    <View className="items-center gap-1">
+      <Icon name="add" role={role} />
+      <Text role="secondary">{`${role} ${useIconPixels(role)}`}</Text>
+    </View>
+  );
+}
 
 export const Variations: Story = {
   name: 'Icon',
@@ -58,13 +78,8 @@ export const Variations: Story = {
       </Variation>
       <Variation label="Roles: each steps to its phone size below the wide breakpoint">
         <View className="flex-row flex-wrap items-end gap-4">
-          {iconRoleNames.map((role) => (
-            <View key={role} className="items-center gap-1">
-              <Icon name="add" role={role} />
-              <Text className="text-xs leading-4 text-muted-foreground">
-                {role}
-              </Text>
-            </View>
+          {roles.map((role) => (
+            <RoleSample key={role} role={role} />
           ))}
         </View>
       </Variation>

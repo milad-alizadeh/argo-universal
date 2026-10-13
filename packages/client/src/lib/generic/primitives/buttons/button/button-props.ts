@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import type { Pressable } from 'react-native';
 import type { IconName } from '../../../symbols/icon-names';
 
@@ -31,10 +31,19 @@ export interface ButtonDataProps {
 
 export type SystemButtonProps = ButtonDataProps & { appearance?: 'system' };
 export type ContentButtonProps = Omit<ButtonDataProps, 'className' | 'style'> &
-  Pick<ComponentProps<typeof Pressable>, 'className' | 'style' | 'ref'> & {
+  Pick<
+    ComponentProps<typeof Pressable>,
+    'className' | 'style' | 'ref' | 'onHoverIn' | 'onHoverOut'
+  > & {
     appearance: 'content';
     drawing?: 'platform' | 'shared';
     labelClassName?: string;
     labelNumberOfLines?: number;
+    leading?: ReactElement;
+    trailing?: ReactElement;
+    id?: string;
+    'aria-haspopup'?: 'dialog';
+    'aria-expanded'?: boolean;
+    'aria-controls'?: string;
   };
 export type ButtonProps = SystemButtonProps | ContentButtonProps;

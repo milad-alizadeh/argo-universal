@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Icon, type IconRole, IconSpinner } from '../../../symbols/icon';
+import { Icon, IconSpinner } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
+import type { IconRole } from '../../../symbols/icon-role';
 import { usePrimitiveColor } from '../../native/primitive-color';
 
 interface AdornmentProps {

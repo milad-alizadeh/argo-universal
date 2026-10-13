@@ -57,6 +57,7 @@ type CloseHttpServerInput = { server: HttpServer | null };
 type SyncSupervisorActor = ActorRefFrom<typeof syncSupervisorMachine>;
 type CloseAcpResourcesInput = {
   resources: AcpResources;
+  server?: HttpServer | null;
   installations: AgentInstallations;
   sessions: OpenSessionsActorRef | undefined;
 };
@@ -77,6 +78,8 @@ export interface EngineInput extends Pick<
   version: string;
   startedAt: string;
   acp?: AcpResourceInput;
+  loginTimeoutMs?: number;
+  loginCleanupTimeoutMs?: number;
   fetchAgents?: FetchAgents;
   installationPorts?: InstallPorts;
 }
@@ -110,7 +113,10 @@ export const engineMachine = setup({
   actors: {
     closeAcpResources: fromPromise<void, CloseAcpResourcesInput>(
       async ({ input }): Promise<void> => {
-        await input.installations.shutdown();
+        await Promise.all([
+          input.server?.closeSetup(),
+          input.installations.shutdown(),
+        ]);
         await input.resources.shutdown();
         if (!input.sessions) return;
         await waitFor(
@@ -309,6 +315,9 @@ export const engineMachine = setup({
               databaseWriter: requireDatabaseWriter(self.system),
               syncSupervisor: requireSyncSupervisor(self.system),
               commandAdmission: context.commandAdmission,
+              acp: context.acp,
+              loginTimeoutMs: context.loginTimeoutMs,
+              loginCleanupTimeoutMs: context.loginCleanupTimeoutMs,
               home: context.home,
               port: context.port,
               version: context.version,
@@ -423,6 +432,7 @@ export const engineMachine = setup({
                 src: 'closeAcpResources',
                 input: ({ context, self }): CloseAcpResourcesInput => ({
                   resources: context.acpResources,
+                  server: context.server,
                   installations: context.installations,
                   sessions: findMachineActor(
                     self.system,

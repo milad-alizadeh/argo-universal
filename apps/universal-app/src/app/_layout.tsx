@@ -67,8 +67,6 @@ const nativeSheets: NativeSheets | undefined =
     ? undefined
     : {
         agentModel: () => router.push('/agent-model'),
-        content: () => router.push('/composer-sheet'),
-        close: () => router.dismiss(),
       };
 
 // iOS opens this tall until its first page has measured itself.
@@ -126,10 +124,6 @@ export default function RootLayout(): React.JSX.Element {
                   <Stack screenOptions={{ headerShown: false }}>
                     <Stack.Screen name="(shell)" />
                     <Stack.Screen name="agent-model" options={sheetOptions} />
-                    <Stack.Screen
-                      name="composer-sheet"
-                      options={sheetOptions}
-                    />
                     <Stack.Screen name="(dev)/storybook" />
                   </Stack>
                 </NativeSheetsProvider>

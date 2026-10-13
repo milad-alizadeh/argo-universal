@@ -41,7 +41,7 @@ When(
   async ({ page }): Promise<void> => {
     await openNewSession(page);
     await page.getByRole('button', { name: 'Agent and model' }).click();
-    await page.getByRole('button', { name: 'Choose Agent' }).click();
+    await page.getByRole('button', { name: /^Agent,/ }).click();
   },
 );
 

@@ -1,6 +1,6 @@
 import { fileSymbols } from './file-symbols';
-import type { NativeSymbol } from './native-symbol';
 import { statusSymbols } from './status-symbols';
+import type { SymbolSource } from './symbol-source';
 
 export const iconSymbols = {
   ...fileSymbols,
@@ -138,7 +138,7 @@ export const iconSymbols = {
   web: { sf: 'globe', material: 'language' },
   'zoom-in': { sf: 'plus.magnifyingglass', material: 'zoom_in' },
   'zoom-out': { sf: 'minus.magnifyingglass', material: 'zoom_out' },
-} as const satisfies Record<string, NativeSymbol>;
+} as const satisfies Record<string, SymbolSource>;
 
 export type IconName = keyof typeof iconSymbols;
 

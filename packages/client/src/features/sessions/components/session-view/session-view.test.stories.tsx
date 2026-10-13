@@ -278,12 +278,15 @@ function agentUnavailable(agentIndex: 0 | 1): Story {
         await canvas.findByRole('button', { name: 'Agent and model' }),
       );
       const overlay = within(document.body);
+      await userEvent.click(
+        await overlay.findByRole('button', { name: /^Agent,/ }),
+      );
       const row = await overlay.findByRole('button', {
         name: `Select ${agent.label}`,
       });
       await waitFor(() => expect(row).toBeVisible());
       await expect(row).toBeDisabled();
-      await expect(within(row).getByText(installStep)).toBeVisible();
+      await expect(row).toHaveTextContent(installStep);
       await userEvent.click(
         overlay.getByRole('button', { name: `Retry ${agent.label}` }),
       );
@@ -324,6 +327,9 @@ function configuration(agentIndex: 0 | 1): Story {
       });
       await userEvent.click(trigger);
       const overlay = within(document.body);
+      await userEvent.click(
+        await overlay.findByRole('button', { name: /^Agent,/ }),
+      );
       const current = await overlay.findByRole('button', {
         name: `Select ${agent.label}`,
       });

@@ -4,9 +4,11 @@ import { View } from 'react-native';
 import {
   Composer,
   type ComposerConfigurationProps,
+  type ComposerProps,
   type ComposerDraft,
   StartSessionIn,
 } from '#features/composer';
+import { Feed } from '#features/feed';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import {
   type ErrorToast,
@@ -16,6 +18,7 @@ import { useContentWide } from '#lib/product/content-layout';
 import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionColumn, SessionLayout } from '#lib/product/session-layout';
+import type { StartingFeed } from '../../state/starting-feed';
 import {
   serverSilentMessage,
   sessionOpenFailedTitle,
@@ -39,6 +42,8 @@ export interface ReadyNewSessionViewProps {
   canOpen: boolean;
   // True while the draft's images upload and the Session opens.
   opening: boolean;
+  // The sent first prompt and Working, drawn in the Feed while the Session opens.
+  starting?: StartingFeed;
   // Why the chosen Agent can't start a Session, and how to set it up.
   setupStep?: string;
   // An attached image that couldn't be selected or uploaded.
@@ -60,6 +65,10 @@ const openFailed = (message: string): ErrorToast => ({
   title: sessionOpenFailedTitle,
   message,
 });
+
+const emptyDraft: ComposerDraft = { text: '', images: [] };
+const ignoreDraft = (): void => {};
+const noOlderRows = (): void => {};
 
 // The header stays empty until the first prompt starts the Session and gives it a title.
 const newSessionTitle = null;
@@ -91,6 +100,41 @@ function NewSessionHeading(): React.JSX.Element | null {
   );
 }
 
+// The sent prompt and Working while the Session starts, else the question.
+function NewSessionFeed({
+  starting,
+}: {
+  starting?: StartingFeed;
+}): React.JSX.Element {
+  if (!starting) return <NewSessionHeading />;
+  return (
+    <Feed
+      items={starting.items}
+      liveHeader={starting.liveHeader}
+      imageUrl={starting.imageUrl}
+      loadingOlder={false}
+      onStartReached={noOlderRows}
+    />
+  );
+}
+
+type ComposerDraftProps = Pick<
+  ComposerProps,
+  'draft' | 'onDraftChange' | 'sending' | 'disabled'
+>;
+
+// Once the prompt shows in the Feed the Composer stands empty and still; the draft returns if the start fails.
+const composerDraftProps = (
+  props: ReadyNewSessionViewProps,
+): ComposerDraftProps =>
+  props.starting
+    ? { draft: emptyDraft, onDraftChange: ignoreDraft, disabled: true }
+    : {
+        draft: props.draft,
+        onDraftChange: props.onDraftChange,
+        sending: props.opening,
+      };
+
 function ReadyNewSessionView(
   props: ReadyNewSessionViewProps,
 ): React.JSX.Element {
@@ -101,7 +145,7 @@ function ReadyNewSessionView(
   return (
     <SessionLayout
       header={<PageHeader title={newSessionTitle} />}
-      feed={<NewSessionHeading />}
+      feed={<NewSessionFeed starting={props.starting} />}
       composer={
         <>
           <View className="w-full items-center pb-2">
@@ -124,13 +168,11 @@ function ReadyNewSessionView(
             </Text>
           )}
           <Composer
-            draft={props.draft}
-            onDraftChange={props.onDraftChange}
+            {...composerDraftProps(props)}
             onAttachImages={props.onAttachImages}
             onSend={props.onSend}
             configuration={configuration}
             placeholder="What should the Agent work on?"
-            sending={opening}
             sendable={props.canOpen}
             error={props.attachmentError}
           />

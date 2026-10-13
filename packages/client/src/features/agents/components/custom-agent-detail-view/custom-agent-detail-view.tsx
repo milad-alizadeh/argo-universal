@@ -24,6 +24,7 @@ export type CustomAgentDetailViewProps = {
   onCheck: () => void;
   onSave: SubmitCustomAgent;
   onBack?: () => void;
+  onSignIn?: () => void;
 };
 type SettingsProps = Omit<
   CustomAgentDetailViewProps,
@@ -80,6 +81,7 @@ function CustomAgentContent(props: SettingsProps): React.JSX.Element {
       key="status"
       check={props.check}
       onCheck={props.onCheck}
+      onSignIn={props.onSignIn}
     />,
   ];
   const content = { ...props, status, onEditing };

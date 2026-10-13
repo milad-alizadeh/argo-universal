@@ -21,9 +21,9 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { useNativeTheme } from '../../../native-theme';
+import { NativeSymbol } from '../../../symbols/native-symbol';
 import { useFollowedText } from '../../fields/field-input/field-input-text';
 import { Host } from '../../native/host';
-import { NativeIcon } from '../../native/native-icon';
 import { useComposeTextStyle } from '../../native/native-typography';
 import type { ListSearchBarProps } from './list-search-bar.tsx';
 
@@ -119,11 +119,7 @@ function SearchIcon({
   const slot = size(leadingSlot[leading], barHeight);
   return (
     <Box contentAlignment="center" modifiers={[slot]}>
-      <NativeIcon
-        name="search"
-        role="action"
-        className="text-muted-foreground"
-      />
+      <NativeSymbol name="search" role="action" muted />
     </Box>
   );
 }

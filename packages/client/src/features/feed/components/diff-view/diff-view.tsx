@@ -6,6 +6,7 @@ import {
   Collapsible,
   CollapsibleContent,
 } from '#lib/generic/primitives/display/collapsible/collapsible';
+import { DisclosureChevron } from '#lib/generic/primitives/display/disclosure-chevron/disclosure-chevron';
 import {
   Text,
   TextClassContext,
@@ -18,7 +19,6 @@ import {
   contentActionClass,
 } from '../../../../lib/generic/primitives/pressable/pressable';
 import type { DiffLine, FileDiff } from '../../view/file-diff';
-import { DisclosureCaret } from '../disclosure-caret';
 
 export interface DiffViewProps {
   file: FileDiff;
@@ -98,7 +98,7 @@ function FileHeader({
         })}
       >
         <TextClassContext.Provider value="select-none no-underline">
-          <DisclosureCaret open={open} />
+          <DisclosureChevron open={open} />
           <View className="min-w-0 flex-1 flex-row items-center overflow-hidden">
             <Text
               selectable={false}

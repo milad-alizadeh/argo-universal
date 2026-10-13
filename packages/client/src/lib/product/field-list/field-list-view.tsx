@@ -87,14 +87,16 @@ function useGroupPadding(): ViewStyle {
 function useEntryRenderer(): (
   props: LegendListRenderItemProps<FieldListEntry>,
 ) => React.JSX.Element {
-  const { rowGap } = useResolveClassNames(fieldGroupGap);
+  // The web resolves the gap class to rowGap; native resolves it to gap.
+  const { rowGap, gap } = useResolveClassNames(fieldGroupGap);
+  const sectionGap = pixels(rowGap ?? gap);
   return useCallback(
     ({ item }: LegendListRenderItemProps<FieldListEntry>) => (
-      <View style={item.gapAbove ? { paddingTop: pixels(rowGap) } : undefined}>
+      <View style={item.gapAbove ? { paddingTop: sectionGap } : undefined}>
         <EntryContent entry={item} />
       </View>
     ),
-    [rowGap],
+    [sectionGap],
   );
 }
 

@@ -6,6 +6,8 @@ import { Given, When, Then } from './fixtures';
 export const agentModelLabel = 'Agent and model';
 export const messageLabel = 'Message';
 const checkedAttribute = 'aria-checked';
+// Opening a Session starts the Agent process, which outlasts the default 5s under parallel load.
+const sessionOpenTimeout = { timeout: 15_000 };
 
 export async function openNewSession(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
@@ -18,16 +20,28 @@ export async function openNewSession(page: Page): Promise<void> {
 
 export async function chooseAgent(page: Page, label: string): Promise<void> {
   await page.getByRole('button', { name: agentModelLabel }).click();
-  await page.getByRole('button', { name: 'Choose Agent' }).click();
+  await page.getByRole('button', { name: /^Agent,/ }).click();
   await page.getByRole('button', { name: `Select ${label}` }).click();
+  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toHaveCount(
+    0,
+  );
   await page.keyboard.press('Escape');
   await expect(
     page.getByRole('button', { name: agentModelLabel }),
   ).toHaveAttribute('aria-expanded', 'false');
+  await expectAgentSelection(page, label);
+}
+
+async function expectAgentSelection(page: Page, label: string): Promise<void> {
   await page.getByRole('button', { name: agentModelLabel }).click();
+  await expect(page.getByRole('button', { name: /^Agent,/ })).toContainText(
+    label,
+  );
+  await page.getByRole('button', { name: /^Agent,/ }).click();
   await expect(
-    page.getByRole('button', { name: 'Choose Agent' }),
-  ).toContainText(label);
+    page.getByRole('button', { name: `Select ${label}` }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
 }
 
@@ -69,7 +83,7 @@ When(
 export async function sendPrompt(page: Page, prompt: string): Promise<void> {
   await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
-  await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/);
+  await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/, sessionOpenTimeout);
   await expect(page.getByRole('textbox', { name: messageLabel })).toHaveValue(
     '',
   );
@@ -134,7 +148,7 @@ Then(
   async ({ page }): Promise<void> => {
     await expect(
       page.getByRole('region', { name: /^Notifications/ }),
-    ).toContainText("Couldn't open the Session");
+    ).toContainText("Couldn't open the Session", sessionOpenTimeout);
     await expect(page).toHaveURL(/\/sessions\/new$/);
   },
 );

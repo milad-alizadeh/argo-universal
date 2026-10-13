@@ -10,6 +10,7 @@ import { useSwipeToClose } from './bottom-sheet-swipe.web';
 type SurfaceProps = {
   open: boolean;
   onClosed?: () => void;
+  onCloseAutoFocus?: (event: Event) => void;
   dismissible?: boolean;
   expandable?: boolean;
   initialSize?: 'compact' | 'expanded';
@@ -77,7 +78,10 @@ function useHiddenWhileClosing(
 }
 
 function sheetContentProps(
-  props: Pick<SurfaceProps, 'open' | 'onClosed' | 'dismissible'>,
+  props: Pick<
+    SurfaceProps,
+    'open' | 'onClosed' | 'dismissible' | 'onCloseAutoFocus'
+  >,
   expanded: boolean,
 ): React.ComponentProps<typeof DialogPrimitive.Content> & {
   'data-state': string;
@@ -86,7 +90,10 @@ function sheetContentProps(
   return {
     'data-state': props.open ? 'open' : 'closed',
     'aria-describedby': undefined,
-    onCloseAutoFocus: props.onClosed,
+    onCloseAutoFocus: (event) => {
+      props.onCloseAutoFocus?.(event);
+      props.onClosed?.();
+    },
     onEscapeKeyDown: keepOpen(props.dismissible),
     onInteractOutside: keepOpen(props.dismissible),
     className: cn(

@@ -50,7 +50,7 @@ function DropdownMenuItem(itemProps: ItemProps): React.JSX.Element {
 
 function RadioIndicator(): React.JSX.Element {
   return (
-    <IconSlot role="control" className="items-center justify-center">
+    <IconSlot role="control">
       <DropdownMenuPrimitive.ItemIndicator>
         <SelectedCheck className={indicatorClassName} />
       </DropdownMenuPrimitive.ItemIndicator>

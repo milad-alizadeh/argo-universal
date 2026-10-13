@@ -3,23 +3,10 @@ import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
 import { Given, When, Then } from './fixtures';
-import { agentModelLabel, openNewSession } from './new-session';
+import { chooseAgent, openNewSession } from './new-session';
 
 // The scripted Agent's own stdio process, entered as any other ACP program.
 const scriptedAgent = scriptedAgentCommand('reply');
-
-// The wide Frame lists every Agent beside its models; the pick shows as pressed when the picker opens again.
-async function chooseAgentBeside(page: Page, name: string): Promise<void> {
-  const picker = page.getByRole('button', { name: agentModelLabel });
-  const choice = page.getByRole('button', { name: `Select ${name}` });
-  await picker.click();
-  await choice.click();
-  await page.keyboard.press('Escape');
-  await expect(picker).toHaveAttribute('aria-expanded', 'false');
-  await picker.click();
-  await expect(choice).toHaveAttribute('aria-pressed', 'true');
-  await page.keyboard.press('Escape');
-}
 
 // The wide title row and the phone header both carry the + button.
 async function openAddCustomAgent(page: Page): Promise<void> {
@@ -101,6 +88,6 @@ When(
   async ({ page }, name: string): Promise<void> => {
     await page.getByRole('button', { name: 'Sessions', exact: true }).click();
     await openNewSession(page);
-    await chooseAgentBeside(page, name);
+    await chooseAgent(page, name);
   },
 );

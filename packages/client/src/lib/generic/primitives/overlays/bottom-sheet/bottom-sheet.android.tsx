@@ -4,9 +4,8 @@ import {
   fillMaxWidth,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { useResolveClassNames } from 'uniwind';
-import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '../../native/host';
+import { useSheetColors } from './bottom-sheet-colors.android';
 import { BottomSheetContent } from './bottom-sheet-content';
 import {
   useSheetDismissal,
@@ -29,7 +28,7 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
 
 function SheetPresentation(presentation: SheetProps): React.JSX.Element {
   const { sheetRef, ...props } = presentation;
-  const sheet = useSheetColors();
+  const sheet = useSheetColors(props.surface);
   const dismissible = props.dismissible !== false;
   return (
     <SheetHost>
@@ -50,19 +49,6 @@ function SheetPresentation(presentation: SheetProps): React.JSX.Element {
   );
 }
 
-function useSheetColors(): Pick<
-  React.ComponentProps<typeof ModalBottomSheet>,
-  'containerColor' | 'contentColor' | 'scrimColor'
-> {
-  const { popover, popoverForeground } = useNativeTheme().colors;
-  const scrim = useResolveClassNames('bg-black/20');
-  return {
-    containerColor: popover,
-    contentColor: popoverForeground,
-    scrimColor: scrim.backgroundColor,
-  };
-}
-
 type SheetProps = Pick<
   BottomSheetProps,
   | 'onOpenChange'
@@ -73,6 +59,8 @@ type SheetProps = Pick<
   | 'footer'
   | 'initialSize'
   | 'fit'
+  | 'contentScrolls'
+  | 'surface'
 > & { sheetRef: SheetRef };
 function HostedSheetContent(
   props: Pick<
@@ -85,6 +73,8 @@ function HostedSheetContent(
     | 'footer'
     | 'initialSize'
     | 'fit'
+    | 'contentScrolls'
+    | 'surface'
   >,
 ): React.JSX.Element {
   return (
@@ -99,6 +89,8 @@ function HostedSheetContent(
           onOpenChange={props.onOpenChange}
           dismissible={props.dismissible}
           footer={props.footer}
+          contentScrolls={props.contentScrolls}
+          surface={props.surface}
         >
           {props.children}
         </BottomSheetContent>

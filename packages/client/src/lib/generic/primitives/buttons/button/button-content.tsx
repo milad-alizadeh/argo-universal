@@ -11,8 +11,10 @@ export function ContentButton(props: ButtonProps): ReactElement {
   return (
     <TextClassContext.Provider value={textClass}>
       <Pressable {...contentPressableProps(props)}>
+        <ContentAdornment button={props} side="leading" />
         <ButtonAdornment {...props} role="control" textClass={textClass} />
         <ButtonText {...props} />
+        <ContentAdornment button={props} side="trailing" />
       </Pressable>
     </TextClassContext.Provider>
   );
@@ -41,6 +43,7 @@ function contentPressableProps(
 ): ComponentProps<typeof Pressable> {
   return {
     ...contentLayoutProps(props),
+    ...contentTriggerProps(props),
     ...buttonInteractionProps(props),
     onPress: props.onPress,
     accessibilityLabel: props.accessibilityLabel ?? props.label,
@@ -58,4 +61,36 @@ function contentLayoutProps(
 ): Pick<ComponentProps<typeof Pressable>, 'ref' | 'style'> {
   if (props.appearance !== 'content') return {};
   return { ref: props.ref, style: props.style };
+}
+
+function ContentAdornment({
+  button,
+  side,
+}: {
+  button: ButtonProps;
+  side: 'leading' | 'trailing';
+}): ReactElement | undefined {
+  return button.appearance === 'content' ? button[side] : undefined;
+}
+
+function contentTriggerProps(
+  props: ButtonProps,
+): Pick<
+  ContentButtonProps,
+  | 'id'
+  | 'aria-haspopup'
+  | 'aria-expanded'
+  | 'aria-controls'
+  | 'onHoverIn'
+  | 'onHoverOut'
+> {
+  if (props.appearance !== 'content') return {};
+  return {
+    id: props.id,
+    onHoverIn: props.onHoverIn,
+    onHoverOut: props.onHoverOut,
+    'aria-haspopup': props['aria-haspopup'],
+    'aria-expanded': props['aria-expanded'],
+    'aria-controls': props['aria-controls'],
+  };
 }

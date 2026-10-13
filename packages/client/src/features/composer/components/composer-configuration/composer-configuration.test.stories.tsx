@@ -26,7 +26,7 @@ const agentModelLabel = 'Agent and model';
 const modelsScrollId = 'composer-models-scroll';
 const agentsScrollId = 'composer-agents-scroll';
 const effortValue = 'aria-valuetext';
-const chooseAgentLabel = 'Choose Agent';
+const chooseAgentLabel = /^Agent,/;
 const heldNotice = 'A Turn is running. Changes apply from the next Turn.';
 
 const meta = {
@@ -120,22 +120,6 @@ function defaultEffort(width: number, agentIndex: number): Story {
         await waitFor(() =>
           expect(onConfigChange).toHaveBeenCalledWith(configId, selected.value),
         );
-        // The phone shows the description behind an info button; desktop shows it under Effort.
-        const description = 'More effort trades speed for deeper reasoning.';
-        if (width === layoutWidths.wide) {
-          await expect(
-            overlay.queryByRole('button', { name: 'About effort' }),
-          ).not.toBeInTheDocument();
-        } else {
-          await expect(
-            overlay.queryByText(description, { exact: true }),
-          ).not.toBeInTheDocument();
-          await userEvent.click(
-            overlay.getByRole('button', { name: 'About effort' }),
-          );
-        }
-        const tip = await overlay.findByText(description, { exact: true });
-        await waitFor(() => expect(tip).toBeVisible());
         render({
           ...configuration,
           configOptions: configuration.configOptions.map((option) =>
@@ -243,10 +227,14 @@ export const LongListsScrollUnderFadesWide: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: /^Model,/ }),
+    );
     const models = await overlay.findByTestId(modelsScrollId);
-    const agents = overlay.getByTestId(agentsScrollId);
     await expect(
-      overlay.getByRole('dialog').getBoundingClientRect().bottom,
+      overlay
+        .getByRole('dialog', { name: 'Select Model' })
+        .getBoundingClientRect().bottom,
     ).toBeLessThanOrEqual(window.innerHeight);
     await waitFor(() =>
       expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible(),
@@ -259,6 +247,10 @@ export const LongListsScrollUnderFadesWide: Story = {
       expect.any(String),
       lastLongModel.value,
     );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: chooseAgentLabel }),
+    );
+    const agents = await overlay.findByTestId(agentsScrollId);
     const lastAgent = await expectScrollsUnderFades(agents, () =>
       overlay.findByRole('button', { name: `Select ${lastLongAgent.label}` }),
     );
@@ -290,7 +282,7 @@ export const LongListsReachableInPhoneSheet: Story = {
     };
     await userEvent.click(trigger);
     await userEvent.click(
-      await overlay.findByRole('button', { name: 'Choose model' }),
+      await overlay.findByRole('button', { name: /^Model,/ }),
     );
     await userEvent.click(await lastVisible(lastLongModel.name));
     await expect(args.configuration?.onConfigChange).toHaveBeenCalledWith(
@@ -298,7 +290,7 @@ export const LongListsReachableInPhoneSheet: Story = {
       lastLongModel.value,
     );
     await userEvent.click(
-      await overlay.findByRole('button', { name: 'Choose Agent' }),
+      await overlay.findByRole('button', { name: chooseAgentLabel }),
     );
     const lastAgent = await expectScrollsUnderFades(
       await overlay.findByTestId(agentsScrollId),
@@ -323,10 +315,16 @@ export const ShortListsHaveNoFadesWide: Story = {
       canvas.getByRole('button', { name: agentModelLabel }),
     );
     for (const testId of [modelsScrollId, agentsScrollId]) {
+      await userEvent.click(
+        await overlay.findByRole('button', {
+          name: testId === modelsScrollId ? /^Model,/ : chooseAgentLabel,
+        }),
+      );
       const scroll = await overlay.findByTestId(testId);
       await waitFor(() =>
         expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight),
       );
+      await userEvent.keyboard('{Escape}');
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
     await expect(overlay.queryByTestId('scroll-fade-top')).toBeNull();
@@ -356,18 +354,6 @@ function fastMode(width: number): Story {
       const fast = await overlay.findByRole('switch', { name: 'Fast mode' });
       await waitFor(() => expect(fast).toBeVisible());
       await expect(fast).not.toBeChecked();
-      // The phone shows the description behind an info button; desktop shows it under the name.
-      const description = 'Quicker replies, at a higher cost';
-      if (width !== layoutWidths.wide) {
-        await expect(
-          overlay.queryByText(description, { exact: true }),
-        ).not.toBeInTheDocument();
-        await userEvent.click(
-          overlay.getByRole('button', { name: 'About fast mode' }),
-        );
-      }
-      const tip = await overlay.findByText(description, { exact: true });
-      await waitFor(() => expect(tip).toBeVisible());
       await expect(args.configuration?.onConfigChange).not.toHaveBeenCalled();
       // The whole row turns the option on, not just the switch.
       await userEvent.click(within(fast).getByText('Fast mode'));
@@ -376,6 +362,11 @@ function fastMode(width: number): Story {
         'fast',
         true,
       );
+      fast.focus();
+      await userEvent.tab();
+      await expect(
+        overlay.getByRole('slider', { name: 'Effort' }),
+      ).toHaveFocus();
       await userEvent.keyboard('{Escape}');
     },
   };
@@ -462,19 +453,16 @@ function unavailableAgentRetry(
       await userEvent.click(
         canvas.getByRole('button', { name: agentModelLabel }),
       );
-      if (width === layoutWidths.phone)
-        await userEvent.click(
-          await overlay.findByRole('button', { name: chooseAgentLabel }),
-        );
+      await userEvent.click(
+        await overlay.findByRole('button', { name: chooseAgentLabel }),
+      );
       const row = await overlay.findByRole('button', {
         name: `Select ${agent.label}`,
       });
       await waitFor(() => expect(row).toBeVisible());
       await expect(row).toBeDisabled();
-      await expect(
-        within(row).getByText('Unavailable', { exact: true }),
-      ).toBeVisible();
-      await expect(within(row).getByText(installStep)).toBeVisible();
+      await expect(row).toHaveTextContent('Unavailable');
+      await expect(row).toHaveTextContent(installStep);
       await expect(
         overlay.getByRole('button', { name: `Select ${other.label}` }),
       ).toBeDisabled();
@@ -697,10 +685,7 @@ function heldConfiguration(width: number, agentIndex: number): Story {
         selected.name,
       );
       await expect(onConfigChange.mock.calls).toEqual(effortSteps);
-      if (width === layoutWidths.phone)
-        await userEvent.click(
-          overlay.getByRole('button', { name: 'Choose model' }),
-        );
+      await userEvent.click(overlay.getByRole('button', { name: /^Model,/ }));
       await userEvent.click(
         await overlay.findByRole('button', { name: narrower.name }),
       );

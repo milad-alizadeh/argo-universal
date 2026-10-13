@@ -26,6 +26,7 @@
   "dependencies": {
     "@expo/ui": "catalog:",
     "@legendapp/list": "catalog:",
+    "@radix-ui/react-popover": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@repo/contracts": "workspace:*",
     "@rn-primitives/checkbox": "catalog:",
@@ -50,6 +51,7 @@
     "clsx": "catalog:",
     "diff": "catalog:",
     "expo-clipboard": "catalog:",
+    "expo-crypto": "catalog:",
     "expo-file-system": "catalog:",
     "expo-haptics": "catalog:",
     "expo-image-picker": "catalog:",
