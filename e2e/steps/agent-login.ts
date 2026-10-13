@@ -4,6 +4,7 @@ import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
 import { Given, When, Then, test } from './fixtures';
 import { mutate } from './server-query';
+import { agentWork } from './timeouts';
 
 Given(
   'a saved protocol sign-in Agent {string}',
@@ -63,7 +64,7 @@ Then(
   'the App reports the Agent is ready to use',
   async ({ page }): Promise<void> => {
     const dialog = page.getByRole('dialog', { name: 'Ready to use' });
-    await expect(dialog).toBeVisible();
+    await expect(dialog).toBeVisible(agentWork);
     await page.screenshot({
       path: test.info().outputPath('agent-login-ready.png'),
     });

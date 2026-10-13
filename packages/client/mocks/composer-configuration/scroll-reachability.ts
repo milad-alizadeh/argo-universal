@@ -11,7 +11,8 @@ export async function expectScrollsUnderFades(
   await waitFor(() =>
     expect(fadedEdges(scroll)).toEqual({ top: true, bottom: false }),
   );
-  return item;
+  // A virtualized list may recycle the row while it scrolls, so find it again once it settles.
+  return resolveLastRow(last);
 }
 
 async function expectRowInsideScroll(
