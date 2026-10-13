@@ -1,20 +1,27 @@
 import type { FeedActorRef } from './feed-machine';
+import type { FeedTurnEnding } from './turn-settlement';
 export type FeedPublication = Pick<
   PromiseWithResolvers<void>,
   'resolve' | 'reject'
 >;
-export const publishTurnContent = (
+const watchPublication = (
   feed: FeedActorRef,
-  turnId: string,
-): Promise<void> => {
-  if (feed.getSnapshot().status !== 'active')
-    return Promise.reject(new Error('Session Feed is unavailable'));
-  const published = Promise.withResolvers<void>();
-  const subscription = feed.subscribe({
+  published: FeedPublication,
+): ReturnType<FeedActorRef['subscribe']> =>
+  feed.subscribe({
     complete: () =>
       published.reject(new Error('Feed closed before Turn publication')),
     error: (error) => published.reject(error),
   });
-  feed.send({ type: 'feed.completeTurn', turnId, published });
+export const publishTurnContent = (
+  feed: FeedActorRef,
+  turnId: string,
+  ending?: FeedTurnEnding,
+): Promise<void> => {
+  if (feed.getSnapshot().status !== 'active')
+    return Promise.reject(new Error('Session Feed is unavailable'));
+  const published = Promise.withResolvers<void>();
+  const subscription = watchPublication(feed, published);
+  feed.send({ type: 'feed.completeTurn', turnId, ending, published });
   return published.promise.finally(() => subscription.unsubscribe());
 };

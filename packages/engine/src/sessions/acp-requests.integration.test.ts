@@ -383,6 +383,14 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     const finish = Promise.withResolvers<void>();
     const { host, sessionId } = await startSession(agent, [
       {
+        type: 'update',
+        update: {
+          sessionUpdate: 'tool_call',
+          toolCallId: 'tool-a',
+          title: editToolTitle,
+        },
+      },
+      {
         type: 'permission',
         request: {
           toolCall: { toolCallId: 'tool-a', title: editToolTitle },
@@ -399,6 +407,18 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     expect(
       (await waitForTurnEnd(host, sessionId)).pendingPermission,
     ).toBeNull();
+    expect(await readPermissionOutcome(host, sessionId, 'tool-a')).toEqual({
+      permissionOutcome: { outcome: 'cancelled' },
+    });
+    await expect
+      .poll(() =>
+        host.database.$client
+          .prepare(
+            "SELECT json_extract(payload, '$._meta.argo.permissionOutcome.outcome') AS outcome FROM feed_row WHERE session_id = ? AND session_update = 'tool_call_update'",
+          )
+          .get(sessionId),
+      )
+      .toEqual({ outcome: 'cancelled' });
     await expect(
       host.caller.session.answerPermission({
         sessionId,
@@ -411,12 +431,32 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
   it('closing the Session cancels its pending request', async () => {
     const responses: RequestPermissionResponse[] = [];
     const { host, sessionId } = await startSession(agent, [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'tool_call',
+          toolCallId: 'tool-a',
+          title: editToolTitle,
+        },
+      },
       ...permissionSteps(responses, ['tool-a']),
       { type: 'hold' },
     ]);
     await waitForPermission(host, sessionId);
     await host.caller.session.close({ sessionId });
     await vi.waitFor(() => expect(responses[0]).toEqual(cancelled));
+    expect(await readPermissionOutcome(host, sessionId, 'tool-a')).toEqual({
+      permissionOutcome: { outcome: 'cancelled' },
+    });
+    await expect
+      .poll(() =>
+        host.database.$client
+          .prepare(
+            "SELECT json_extract(payload, '$._meta.argo.permissionOutcome.outcome') AS outcome FROM feed_row WHERE session_id = ? AND session_update = 'tool_call_update'",
+          )
+          .get(sessionId),
+      )
+      .toEqual({ outcome: 'cancelled' });
   });
 
   it('a request the Agent withdraws is no longer answerable', async () => {

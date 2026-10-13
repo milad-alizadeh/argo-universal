@@ -37,6 +37,7 @@ import {
   readQueuedFeedRow,
   publishTurnContent,
   type FeedEvent,
+  type FeedTurnEnding,
   type FeedActorRef,
 } from '../feed';
 import { feedMachine } from '../feed';
@@ -109,7 +110,9 @@ const acpUpdateEvent = 'acp.update';
 type FeedChangeEvent = Extract<FeedEvent, { type: 'feed.change' }>;
 type SessionDataParameters = { data: SessionData };
 type FailureParameters = { error: unknown };
-type CrashNoticeParameters = { description?: string } | undefined;
+type CrashNoticeParameters =
+  | { description?: string; duringTurn?: boolean }
+  | undefined;
 type LoadSessionInput = {
   session: SessionInput;
   writer: WriterActorRef | undefined;
@@ -132,7 +135,11 @@ const publishActiveTurnContent = (input: AcpOperationInput): Promise<void> => {
   if (!input.context.activeTurnId) return Promise.resolve();
   const feed = input.findFeed();
   if (!feed || feed.getSnapshot().status !== 'active') return Promise.resolve();
-  return publishTurnContent(feed, input.context.activeTurnId);
+  return publishTurnContent(
+    feed,
+    input.context.activeTurnId,
+    input.context.turnEnding,
+  );
 };
 
 export type SessionMachineInput = SessionInput & {
@@ -190,6 +197,7 @@ export interface SessionContext extends SessionData {
   acpResponseReaders: ReturnType<typeof createAcpResponseReaders>;
   acpConfigurationRejections: ReturnType<typeof createRejectionCounter>;
   acpTurnOutcome: EndTurnParameters | null;
+  turnEnding: FeedTurnEnding;
   configQueue: Extract<SessionCommand, { type: typeof setConfigEvent }>[];
   applyingConfig: Extract<
     SessionCommand,
@@ -316,7 +324,11 @@ const sessionSetup = setup({
       const feed = input.findFeed();
       if (!feed || !input.context.activeTurnId)
         throw new Error('No finishing Turn Feed');
-      return publishTurnContent(feed, input.context.activeTurnId);
+      return publishTurnContent(
+        feed,
+        input.context.activeTurnId,
+        input.context.turnEnding,
+      );
     }),
     commitPrompt: fromPromise<PromptRequest, AcpOperationInput>(
       ({ input, signal }) => {
@@ -595,6 +607,7 @@ const sessionSetup = setup({
         enqueue.assign({
           activeTurnId: params.turnId,
           activeTurnStartedAt: startedAt,
+          turnEnding: { kind: 'completion' },
           kept: true,
         });
         enqueue.sendTo(writer, {
@@ -713,34 +726,55 @@ const sessionSetup = setup({
       elicitationQueue: ({ context }): SessionContext['elicitationQueue'] =>
         context.elicitationQueue.slice(1),
     }),
+    rememberCancellation: assign({
+      turnEnding: ({ context }): FeedTurnEnding => ({
+        ...context.turnEnding,
+        kind: 'cancel',
+      }),
+    }),
     cancelAcpRequests: enqueueActions(({ context, enqueue }): void => {
       context.acpLifetime.cancelRequests();
-      enqueue.sendTo(
-        'feed',
-        cancelledPermissions(context, context.permissionQueue),
-      );
-      enqueue.assign({ permissionQueue: [], elicitationQueue: [] });
+      const pending = context.turnEnding.waitingPermissions?.toolCallIds ?? [];
+      enqueue.assign({
+        turnEnding: {
+          ...context.turnEnding,
+          waitingPermissions: {
+            acpSessionId: context.acpLease?.sessionId ?? '',
+            toolCallIds: [
+              ...pending,
+              ...context.permissionQueue.map((request) => request.toolCallId),
+            ],
+          },
+        },
+        permissionQueue: [],
+        elicitationQueue: [],
+      });
     }),
     recordCrash: enqueueActions(
       ({ context, enqueue }, params: CrashNoticeParameters): void => {
         const now = context.input.now();
         const agentCrashes = addCrash(context.agentCrashes, now);
         enqueue.assign({ agentCrashes });
-        enqueue.sendTo('feed', {
-          type: turnEndingEvent,
-          turnId: context.activeTurnId,
-          ending: {
-            kind: 'agent_crash',
-            occurredAt: now,
-            crashCount: agentCrashes.length,
-            ...params,
-          },
-        });
+        const ending = {
+          kind: 'agent_crash' as const,
+          occurredAt: now,
+          crashCount: agentCrashes.length,
+          ...(params?.description === undefined
+            ? {}
+            : { description: params.description }),
+        };
+        if (params?.duringTurn)
+          enqueue.assign({ turnEnding: { ...context.turnEnding, ...ending } });
+        else
+          enqueue.sendTo('feed', {
+            type: turnEndingEvent,
+            turnId: context.activeTurnId,
+            ending,
+          });
       },
     ),
     discloseInterruption: enqueueActions(({ context, enqueue }): void => {
-      const turnId =
-        context.activeTurnId ?? context.undisclosedInterruptedTurnId;
+      const turnId = context.undisclosedInterruptedTurnId;
       if (!turnId) return;
       enqueue.sendTo('feed', {
         type: turnEndingEvent,
@@ -951,6 +985,7 @@ export const sessionMachine = sessionSetup.createMachine({
       `ACP configuration ${input.sessionId}`,
     ),
     acpTurnOutcome: null,
+    turnEnding: { kind: 'completion' },
     configQueue: [],
     applyingConfig: null,
     storageFailedTurn: false,
@@ -1272,11 +1307,13 @@ export const sessionMachine = sessionSetup.createMachine({
               on: {
                 'acp.failed': {
                   target: 'interrupting',
-                  actions: ['recordCrash', 'discloseInterruption'],
+                  actions: [
+                    { type: 'recordCrash', params: { duringTurn: true } },
+                  ],
                 },
                 'session.cancel': {
                   target: '.cancelling',
-                  actions: 'cancelAcpRequests',
+                  actions: ['rememberCancellation', 'cancelAcpRequests'],
                 },
                 [acpPermissionEvent]: {
                   target: '.awaitingPermission',

@@ -29,6 +29,7 @@ import {
   permissionsCancelledEvent,
   type TurnEndingEvent,
 } from './turn-ending';
+import type { FeedTurnEnding } from './turn-settlement';
 
 const feedChangeRejected = 'feed.changeRejected';
 
@@ -87,7 +88,12 @@ export type FeedEvent =
       update: SessionNotification['update'];
       turnId: string | null;
     }
-  | { type: 'feed.completeTurn'; turnId: string; published?: FeedPublication }
+  | {
+      type: 'feed.completeTurn';
+      turnId: string;
+      ending?: FeedTurnEnding;
+      published?: FeedPublication;
+    }
   | TurnEndingEvent
   | { type: 'feed.flush' };
 
