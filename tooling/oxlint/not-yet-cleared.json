@@ -217,8 +217,6 @@
     // max-lines-per-function
     { "files": ["packages/client/src/lib/generic/primitives/inputs/select/*"], "rules": { "max-lines-per-function": "off" } },
     // max-lines-per-function
-    { "files": ["packages/client/src/lib/generic/primitives/inputs/select-menu/*"], "rules": { "max-lines-per-function": "off" } },
-    // max-lines-per-function
     { "files": ["packages/client/src/lib/generic/primitives/inputs/slider/*"], "rules": { "max-lines-per-function": "off" } },
     // max-lines-per-function
     { "files": ["packages/client/src/lib/generic/primitives/lists/list-item/*"], "rules": { "max-lines-per-function": "off" } },

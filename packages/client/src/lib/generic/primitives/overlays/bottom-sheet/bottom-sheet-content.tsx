@@ -6,7 +6,9 @@ import type { BottomSheetProps } from './bottom-sheet.types';
 type SheetContentProps = Pick<
   BottomSheetProps,
   'children' | 'label' | 'onOpenChange' | 'fit' | 'dismissible'
->;
+> & { onContentHeightChange?: (height: number) => void };
+
+const grabberInset = 32;
 
 export function BottomSheetContent(
   props: SheetContentProps,
@@ -20,11 +22,20 @@ export function BottomSheetContent(
       )}
       {...sheetAccessibility(props)}
     >
-      <ScrollView keyboardShouldPersistTaps="handled">
-        {props.children}
-      </ScrollView>
+      <ScrollView {...scrollProps(props)}>{props.children}</ScrollView>
     </View>
   );
+}
+
+function scrollProps(
+  props: Pick<SheetContentProps, 'onContentHeightChange'>,
+): React.ComponentProps<typeof ScrollView> {
+  return {
+    keyboardShouldPersistTaps: 'handled',
+    automaticallyAdjustKeyboardInsets: true,
+    onContentSizeChange: (_width, height): void =>
+      props.onContentHeightChange?.(height + grabberInset),
+  };
 }
 
 function sheetAccessibility(

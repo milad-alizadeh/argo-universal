@@ -25,7 +25,6 @@
     "@legendapp/list": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@repo/contracts": "workspace:*",
-    "@rn-primitives/checkbox": "catalog:",
     "@rn-primitives/collapsible": "catalog:",
     "@rn-primitives/dialog": "catalog:",
     "@rn-primitives/dropdown-menu": "catalog:",

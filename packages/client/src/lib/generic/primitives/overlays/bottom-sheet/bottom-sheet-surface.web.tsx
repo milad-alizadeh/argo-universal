@@ -2,6 +2,7 @@ import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
+import { cn } from '../../../utils';
 import { keepOpen } from '../keep-open';
 import { useSwipeToClose } from './bottom-sheet-swipe.web';
 
@@ -9,6 +10,7 @@ type SurfaceProps = {
   open: boolean;
   onClosed?: () => void;
   dismissible?: boolean;
+  size?: 'form';
   // A hidden title for a sheet whose content has none of its own.
   title?: React.ReactNode;
   /*
@@ -93,7 +95,7 @@ function useTallestHeight(): {
 }
 
 function sheetContentProps(
-  props: Pick<SurfaceProps, 'open' | 'onClosed' | 'dismissible'>,
+  props: Pick<SurfaceProps, 'open' | 'onClosed' | 'dismissible' | 'size'>,
 ): React.ComponentProps<typeof DialogPrimitive.Content> & {
   'data-state': string;
   'aria-describedby': undefined;
@@ -104,7 +106,9 @@ function sheetContentProps(
     onCloseAutoFocus: props.onClosed,
     onEscapeKeyDown: keepOpen(props.dismissible),
     onInteractOutside: keepOpen(props.dismissible),
-    className:
+    className: cn(
       'bottom-sheet touch-none max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
+      props.size === 'form' && 'bottom-sheet-form w-full',
+    ),
   };
 }

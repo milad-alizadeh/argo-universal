@@ -73,6 +73,11 @@
   inset: auto 0 0;
   z-index: 50;
   animation-name: bottom-sheet-in;
+  outline: none;
+}
+[role="dialog"]:has(> .bottom-sheet-form) {
+  max-width: calc(var(--spacing) * 160);
+  margin-inline: auto;
 }
 [data-state]:has(> .bottom-sheet-overlay) {
   position: fixed;

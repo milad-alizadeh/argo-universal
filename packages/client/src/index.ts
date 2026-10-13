@@ -47,3 +47,14 @@ export { HeaderButton } from '#lib/product/header-button';
 export type { Section } from './lib/product/navigation/sections';
 export { HeaderSearchRow } from './lib/product/navigation/header-search';
 export { AppProviders } from './app-providers';
+
+export {
+  FormSheetProvider,
+  useFormSheetCommands,
+  useFormSheetState,
+} from './lib/generic/primitives/overlays/form-sheet/form-sheet-context';
+export {
+  FormSheetRoot,
+  FormSheetChoices,
+} from './lib/generic/primitives/overlays/form-sheet/form-sheet-page';
+export type { FormSheetRoutes } from './lib/generic/primitives/overlays/form-sheet/form-sheet-types';

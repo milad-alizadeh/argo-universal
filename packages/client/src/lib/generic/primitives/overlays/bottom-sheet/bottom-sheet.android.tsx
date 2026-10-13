@@ -36,6 +36,7 @@ function SheetPresentation(presentation: SheetProps): React.JSX.Element {
       <ModalBottomSheet
         {...sheet}
         ref={sheetRef}
+        initialFullyExpanded={props.size === 'form'}
         onDismissRequest={() => props.onOpenChange(false)}
         sheetGesturesEnabled={dismissible}
         properties={{
@@ -124,7 +125,7 @@ function useSheetColors(): Pick<
 
 type SheetProps = Pick<
   BottomSheetProps,
-  'onOpenChange' | 'label' | 'children' | 'dismissible'
+  'onOpenChange' | 'label' | 'children' | 'dismissible' | 'size'
 > & { sheetRef: SheetRef };
 function HostedSheetContent(
   props: Pick<
