@@ -232,9 +232,10 @@ export const Starting: Story = {
       await expect(
         canvas.getByRole('button', { name: sendLabel }),
       ).toBeDisabled();
+      // A Session has no Project row, so it goes before the hand-off.
       await expect(
-        canvas.getByRole('button', { name: projectLabel }),
-      ).toBeDisabled();
+        canvas.queryByRole('button', { name: projectLabel }),
+      ).toBeNull();
     }),
 };
 

@@ -170,7 +170,7 @@ function useNewSessionViewProps(projectId: string | undefined): {
   const attachmentDraft = useAttachmentDraft(
     choices.project && { type: 'new-session', projectId: choices.project.id },
   );
-  useClearDraftOnHandOff(session.handedOff, attachmentDraft.clearDraft);
+  useClearDraftOnHandOff(session.actor, attachmentDraft.clearDraft);
   // The first prompt as sent, shown in the Feed until the Session has it; a failure clears it and keeps the draft.
   const [sent, setSent] = useState<{ draft: ComposerDraft; at: number }>();
   const waiting =
@@ -257,13 +257,16 @@ function useNewSessionViewProps(projectId: string | undefined): {
   };
 }
 
-// The first prompt now belongs to the Session, so the Project's kept draft goes.
+// The first prompt now belongs to the Session, so the Project's kept draft goes. The page unmounts in the hand-off's own update, so this listens to the actor, not a render.
 function useClearDraftOnHandOff(
-  handedOff: boolean,
+  actor: EmptySessionActor,
   clearDraft: () => void,
 ): void {
   const clear = useEffectEvent(clearDraft);
   useEffect(() => {
-    if (handedOff) clear();
-  }, [handedOff]);
+    const subscription = actor.subscribe((snapshot) => {
+      if (snapshot.status === 'done') clear();
+    });
+    return (): void => subscription.unsubscribe();
+  }, [actor]);
 }
