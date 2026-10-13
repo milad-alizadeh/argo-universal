@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
+import { LiveConnectionBanner } from '#features/connection';
 import type { NavigationDestination } from '#lib/product/navigation/context';
 import { sectionOf } from '../../../lib/product/navigation/sections';
 import {
@@ -32,7 +33,11 @@ export function DesktopLayout({
 }: DesktopLayoutProps): React.JSX.Element {
   const layoutProps = useLayoutProps(destination);
   return (
-    <DesktopLayoutView destination={destination} {...layoutProps}>
+    <DesktopLayoutView
+      destination={destination}
+      {...layoutProps}
+      banner={<LiveConnectionBanner />}
+    >
       {children}
     </DesktopLayoutView>
   );
