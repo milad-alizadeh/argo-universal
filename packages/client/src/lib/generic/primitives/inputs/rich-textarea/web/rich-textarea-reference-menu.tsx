@@ -26,7 +26,7 @@ const rowClassName =
   'flex cursor-default items-center gap-2 rounded-xl p-2 outline-none';
 
 const numberClassName =
-  'w-9 shrink-0 text-start text-secondary text-muted-foreground';
+  'w-9 shrink-0 text-start type-secondary text-muted-foreground';
 
 const titleClassName =
   'min-w-0 flex-1 truncate text-start type-control text-foreground';
