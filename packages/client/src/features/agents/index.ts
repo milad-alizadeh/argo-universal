@@ -11,3 +11,5 @@ export { AgentDetailScreen } from './screens/agent-detail-screen';
 export { AgentListScreen } from './screens/agent-list-screen';
 
 export { CustomAgentNewScreen } from './screens/custom-agent-new-screen';
+
+export { AgentLogo } from './components/agent-logo/agent-logo';
