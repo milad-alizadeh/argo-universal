@@ -24,17 +24,26 @@ export interface PageTitleRowProps extends PageTitleProps {
 
 // A page's title row: an optional back button, the title, its actions and its search.
 export function PageTitleRow(props: PageTitleRowProps): React.JSX.Element {
-  if (props.search)
-    return (
-      <View className="flex-row items-center">
-        <HangingBack onBack={props.onBack} />
-        <SearchField
-          {...props.search}
-          title={<PageTitle {...props} />}
-          actions={props.actions}
-        />
-      </View>
-    );
+  if (props.search) return <SearchTitleRow {...props} search={props.search} />;
+  return <PlainTitleRow {...props} />;
+}
+
+function SearchTitleRow(
+  props: PageTitleRowProps & { search: PageTitleSearch },
+): React.JSX.Element {
+  return (
+    <View className="flex-row items-center">
+      <HangingBack onBack={props.onBack} />
+      <SearchField
+        {...props.search}
+        title={<PageTitle {...props} />}
+        actions={props.actions}
+      />
+    </View>
+  );
+}
+
+function PlainTitleRow(props: PageTitleRowProps): React.JSX.Element {
   return (
     // As tall as the search row, so the title sits at one height on every page.
     <View className="h-10 flex-row items-center gap-4">

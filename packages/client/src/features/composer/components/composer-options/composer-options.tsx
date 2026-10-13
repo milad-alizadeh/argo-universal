@@ -52,8 +52,7 @@ function OptionsTrigger({
 }: Pick<OptionsProps, 'disabled'>): React.JSX.Element {
   return (
     <Button
-      appearance="content"
-      variant="ghost"
+      {...optionsButtonAppearance}
       disabled={disabled}
       accessibilityLabel="Session settings"
       label="Settings"
@@ -68,3 +67,9 @@ function contentsProps(
 ): React.ComponentProps<typeof OptionsContents> {
   return { options, onChange: configuration.onConfigChange };
 }
+
+const optionsButtonAppearance = {
+  appearance: 'content',
+  size: 'xs',
+  variant: 'ghost',
+} as const;

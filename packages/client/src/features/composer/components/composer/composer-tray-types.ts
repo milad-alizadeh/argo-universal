@@ -1,6 +1,9 @@
 import type { ComposerLayout, ComposerProps } from './composer-types';
 export type WrittenPlanLayout = Pick<ComposerLayout, 'composerId'> & {
-  props: Pick<ComposerProps, 'planProposal' | 'writtenPlan'>;
+  props: Pick<
+    ComposerProps,
+    'planProposal' | 'permissionRequest' | 'writtenPlan'
+  >;
 };
 export type LivePlanLayout = Pick<ComposerLayout, 'inactive'> & {
   props: Pick<ComposerProps, 'status'>;

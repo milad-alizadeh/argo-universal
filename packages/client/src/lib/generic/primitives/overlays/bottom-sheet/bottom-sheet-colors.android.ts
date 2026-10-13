@@ -11,7 +11,7 @@ export function useSheetColors(
   'containerColor' | 'contentColor' | 'scrimColor'
 > {
   const { popover, popoverForeground, sidebar } = useNativeTheme().colors;
-  const scrim = useResolveClassNames('bg-black/20');
+  const scrim = useResolveClassNames('bg-black/32');
   return {
     containerColor: surface === 'sidebar' ? sidebar : popover,
     contentColor: popoverForeground,

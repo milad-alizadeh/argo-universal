@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { useContentWide } from '#lib/product/content-layout';
 import { useFileDrop } from '../../hooks/use-file-drop';
 import {
@@ -20,7 +20,7 @@ export function useComposerLayout(
   };
   return Object.assign(
     { props, composerId, wide, sendState, send },
-    composerActivity(props),
+    useComposerControls(props),
   );
 }
 function composerActivity(
@@ -31,4 +31,18 @@ function composerActivity(
     configurationInactive: isConfigurationInactive(props),
     oversized: hasOversizedAttachment(props),
   };
+}
+
+function useComposerControls(
+  props: ComposerProps,
+): Pick<
+  ComposerLayout,
+  | 'controlsHeight'
+  | 'setControlsHeight'
+  | 'inactive'
+  | 'configurationInactive'
+  | 'oversized'
+> {
+  const [controlsHeight, setControlsHeight] = useState(0);
+  return { controlsHeight, setControlsHeight, ...composerActivity(props) };
 }

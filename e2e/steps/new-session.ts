@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
+import { closeAgentMenus } from './agent-menus';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 
@@ -10,8 +11,12 @@ const checkedAttribute = 'aria-checked';
 const sessionOpenTimeout = { timeout: 15_000 };
 
 // The text a Message box shows, whether it draws a plain text area or a rich-text editor.
-export async function expectMessage(page: Page, text: string): Promise<void> {
-  const box = page.getByRole('textbox', { name: messageLabel });
+export async function expectMessage(
+  page: Page,
+  text: string,
+  includeHidden = false,
+): Promise<void> {
+  const box = page.getByRole('textbox', { name: messageLabel, includeHidden });
   const shown = (): Promise<string> =>
     box.evaluate((e) => ('value' in e ? String(e.value) : e.innerText.trim()));
   await expect.poll(shown).toBe(text);
@@ -30,13 +35,7 @@ export async function chooseAgent(page: Page, label: string): Promise<void> {
   await page.getByRole('button', { name: agentModelLabel }).click();
   await page.getByRole('button', { name: /^Agent,/ }).click();
   await page.getByRole('button', { name: `Select ${label}` }).click();
-  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toHaveCount(
-    0,
-  );
-  await page.keyboard.press('Escape');
-  await expect(
-    page.getByRole('button', { name: agentModelLabel }),
-  ).toHaveAttribute('aria-expanded', 'false');
+  await closeAgentMenus(page, agentModelLabel);
   await expectAgentSelection(page, label);
 }
 
@@ -49,8 +48,7 @@ async function expectAgentSelection(page: Page, label: string): Promise<void> {
   await expect(
     page.getByRole('button', { name: `Select ${label}` }),
   ).toHaveAttribute('aria-pressed', 'true');
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
+  await closeAgentMenus(page, agentModelLabel);
 }
 
 async function startWithAgent(
@@ -92,7 +90,7 @@ export async function sendPrompt(page: Page, prompt: string): Promise<void> {
   await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/, sessionOpenTimeout);
-  await expectMessage(page, '');
+  await expectMessage(page, '', true);
 }
 
 When(

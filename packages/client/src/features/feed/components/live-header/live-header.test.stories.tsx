@@ -19,6 +19,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+async function expectEveryStep(rows: HTMLElement[]): Promise<void> {
+  await expect(rows).toHaveLength(liveHeaderSteps.length);
+  for (const [index, { liveHeader }] of liveHeaderSteps.entries()) {
+    const { text } = liveHeader;
+    const elapsed = liveHeaderElapsed;
+    const row = rows[index];
+    if (!row) throw new Error('Live header row is missing');
+    await expect(row).toBeVisible();
+    await expect(row).toHaveAccessibleName(`${text} ${elapsed}`);
+    await expect(row).toHaveTextContent(`${text} ${elapsed}`);
+  }
+}
+
 export const EveryStep: Story = {
   render: () => (
     <>
@@ -35,17 +48,7 @@ export const EveryStep: Story = {
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
       await settleViewport(width);
-      const rows = canvas.getAllByRole('status');
-      await expect(rows).toHaveLength(liveHeaderSteps.length);
-      for (const [index, { liveHeader }] of liveHeaderSteps.entries()) {
-        const { text } = liveHeader;
-        const elapsed = liveHeaderElapsed;
-        const row = rows[index];
-        if (!row) throw new Error('Live header row is missing');
-        await expect(row).toBeVisible();
-        await expect(row).toHaveAccessibleName(`${text} ${elapsed}`);
-        await expect(row).toHaveTextContent(`${text} ${elapsed}`);
-      }
+      await expectEveryStep(canvas.getAllByRole('status'));
     }
   },
 };

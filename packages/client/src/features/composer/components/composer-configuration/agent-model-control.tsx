@@ -70,8 +70,7 @@ function agentModelButtonProps(
   current?: SessionConfigSelectOption,
 ): Extract<React.ComponentProps<typeof Button>, { appearance?: 'content' }> {
   return {
-    appearance: 'content',
-    variant: 'ghost',
+    ...agentModelButtonAppearance,
     disabled: props.disabled,
     accessibilityLabel: 'Agent and model',
     label: modelName(current) || agentLabel(props.agent),
@@ -80,6 +79,11 @@ function agentModelButtonProps(
     labelClassName: 'min-w-0 shrink',
   };
 }
+const agentModelButtonAppearance = {
+  appearance: 'content',
+  size: 'xs',
+  variant: 'ghost',
+} as const;
 function agentLabel(agent?: AgentInfo): string {
   return agent?.label || '';
 }

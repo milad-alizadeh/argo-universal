@@ -47,6 +47,7 @@ function modeTrigger(
 }
 const modeButtonAppearance = {
   appearance: 'content',
+  size: 'xs',
   variant: 'ghost',
   accessibilityLabel: 'Mode',
 } as const;

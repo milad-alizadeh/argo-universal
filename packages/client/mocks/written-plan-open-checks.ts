@@ -89,11 +89,40 @@ export async function opensWrittenPlan(
   context: WrittenPlanPlayContext,
 ): Promise<void> {
   const body = await openWrittenPlan(scenario.width, context);
-  await (scenario.form === 'markdown'
-    ? markdownPlan(body)
-    : filePlan(body, context.userEvent));
+  await assertPhoneCloseControl(scenario.width, body);
+  await readWrittenPlanForm(scenario, context, body);
   await readOnlyPlan(body);
   if (scenario.width === layoutWidths.wide)
     await followUpWhileReading(context, body);
   await closeWrittenPlan(context, body);
+}
+
+async function assertPhoneCloseControl(
+  width: number,
+  body: Body,
+): Promise<void> {
+  if (width !== layoutWidths.phone) return;
+  await expect(
+    body.queryByRole('button', { name: 'Close written plan' }),
+  ).not.toBeInTheDocument();
+}
+async function assertPhonePlanHeading(
+  scenario: WrittenPlanScenario,
+  body: Body,
+): Promise<void> {
+  if (scenario.width !== layoutWidths.phone) return;
+  if (scenario.form !== 'markdown') return;
+  await expect(
+    body.getAllByRole('heading', { name: 'Read-only Plan' }),
+  ).toHaveLength(1);
+}
+async function readWrittenPlanForm(
+  scenario: WrittenPlanScenario,
+  context: WrittenPlanPlayContext,
+  body: Body,
+): Promise<void> {
+  await (scenario.form === 'markdown'
+    ? markdownPlan(body)
+    : filePlan(body, context.userEvent));
+  await assertPhonePlanHeading(scenario, body);
 }

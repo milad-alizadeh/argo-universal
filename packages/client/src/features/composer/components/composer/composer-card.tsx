@@ -6,11 +6,13 @@ import { RichTextarea } from '#primitives/inputs/rich-textarea/rich-textarea';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {
   CardLayout,
+  ControlsLayout,
   AttachmentLayout,
   WarningLayout,
   TextLayout,
 } from './composer-card-types';
 import { ComposerToolbar } from './composer-toolbar';
+import { ComposerBottomTray } from './composer-trays';
 import type { ComposerDraft } from './composer-types';
 import { ComposerWarning } from './composer-warning';
 
@@ -115,4 +117,18 @@ function textInputProps({
     onChangeText: (text) => props.onDraftChange({ ...props.draft, text }),
     onSubmit: send,
   };
+}
+
+export function ComposerControls(layout: ControlsLayout): React.JSX.Element {
+  return (
+    <View
+      className="w-full"
+      onLayout={({ nativeEvent }) =>
+        layout.setControlsHeight(nativeEvent.layout.height)
+      }
+    >
+      <ComposerCard {...layout} />
+      <ComposerBottomTray {...layout} />
+    </View>
+  );
 }

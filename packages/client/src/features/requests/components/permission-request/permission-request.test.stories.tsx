@@ -41,7 +41,8 @@ type Story = StoryObj<typeof meta>;
 function denial(width: number): Story {
   return {
     args: { feedback: true, denialMessage: denialFeedback },
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(width);
       const input = canvas.getByRole('textbox', {
         name: 'What should the Agent do instead?',
@@ -67,7 +68,8 @@ function allow(width: number, mock?: RequestMock): Story {
       onAnswer: fn(),
       onDenialMessageChange: fn(),
     }),
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(width);
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
@@ -92,7 +94,8 @@ function submitting(width: number, mock?: RequestMock): Story {
       ...permissionProps({ mock, onAnswer: fn(), onDenialMessageChange: fn() }),
       state: { kind: 'submitting' },
     },
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(width);
       const sending = canvas.getByRole('button', { name: 'Sending…' });
       await expect(sending).toBeDisabled();
@@ -114,7 +117,8 @@ function responseError(width: number, mock?: RequestMock): Story {
       ...permissionProps({ mock, onAnswer: fn(), onDenialMessageChange: fn() }),
       error: 'Could not send the answer. Try again.',
     },
-    play: async ({ canvas }) => {
+    play: async () => {
+      const canvas = within(document.body);
       await settleViewport(width);
       await expect(canvas.getByRole('alert')).toHaveTextContent(
         'Could not send the answer. Try again.',
@@ -140,7 +144,8 @@ export const SecondAgentResponseErrorWide = responseError(
 function denyWithoutMessage(width: number): Story {
   return {
     args: { feedback: true, denialMessage: '' },
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
       await expect(args.onDenialMessageChange).toHaveBeenCalledWith(undefined);
@@ -158,7 +163,8 @@ export const DenyWithoutMessageWide = denyWithoutMessage(1440);
 
 export const Keyboard: Story = {
   args: { feedback: true, denialMessage: 'Use a new branch.' },
-  play: async ({ canvas, userEvent, args }) => {
+  play: async ({ userEvent, args }) => {
+    const canvas = within(document.body);
     await settleViewport(1440);
     await expect(canvas.getByRole('textbox')).toHaveFocus();
     await userEvent.keyboard('{Escape}');
@@ -174,7 +180,8 @@ export const Keyboard: Story = {
 
 export const OpensDenial: Story = {
   args: { feedback: true },
-  play: async ({ canvas, userEvent, args }) => {
+  play: async ({ userEvent, args }) => {
+    const canvas = within(document.body);
     await settleViewport(1440);
     await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
     await expect(args.onDenialMessageChange).toHaveBeenCalledWith('');
@@ -188,7 +195,8 @@ function conflict(width: number, mock?: RequestMock): Story {
       ...permissionProps({ mock, onAnswer: fn(), onDenialMessageChange: fn() }),
       state: { kind: 'answered', reason: 'Already answered on another device' },
     },
-    play: async ({ canvas, args }) => {
+    play: async ({ args }) => {
+      const canvas = within(document.body);
       await settleViewport(width);
       await expect(canvas.getByRole('status')).toHaveTextContent(
         'Already answered on another device',
@@ -230,7 +238,8 @@ function permissionFeed(
         ))}
       </RequestFrame>
     ),
-    play: async ({ canvas, userEvent }) => {
+    play: async ({ userEvent }) => {
+      const canvas = within(document.body);
       await settleViewport(width);
       if (answered) {
         await expect(canvas.getByText(allowedOnceAnswer)).toBeVisible();
@@ -307,7 +316,8 @@ function chosenOptionFeed(
         ))}
       </RequestFrame>
     ),
-    play: async ({ canvas }) => {
+    play: async () => {
+      const canvas = within(document.body);
       await settleViewport(width);
       await expect(
         canvas.getByText(`You chose ${option.name}`, { exact: true }),
@@ -366,7 +376,8 @@ export const StoredNativeOutcome: Story = {
       />
     </RequestFrame>
   ),
-  play: async ({ canvas }) => {
+  play: async () => {
+    const canvas = within(document.body);
     await settleViewport(1440);
     await expect(canvas.getByText(allowedOnceAnswer)).toBeVisible();
   },
@@ -376,7 +387,8 @@ function galleryFixture(mock: RequestMock, width: number): Story {
   const props = permissionProps({ mock });
   return {
     render: () => Gallery.render({ ...galleryMeta.args, agent: mock.agent }),
-    play: async ({ canvas }) => {
+    play: async () => {
+      const canvas = within(document.body);
       await settleViewport(width);
       await expect(
         canvas.getAllByText(props.request.title).length,
@@ -461,7 +473,8 @@ async function pickFromSheet(
 function allowMenuWide(mock?: RequestMock): Story {
   return {
     args: agentOptionsArgs(mock),
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(1440);
       await expect(
         canvas.queryByRole('button', { name: alwaysAllow }),
@@ -484,7 +497,8 @@ export const SecondAgentAllowMenuWide = allowMenuWide(permissionMocks[1]);
 function allowOnceLeads(mock?: RequestMock): Story {
   return {
     args: agentOptionsArgs(mock),
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(1440);
       await userEvent.click(canvas.getByText(args.request.title));
       await userEvent.keyboard('{Enter}');
@@ -500,7 +514,8 @@ export const SecondAgentAllowOnceLeads = allowOnceLeads(permissionMocks[1]);
 function enterSendsPicked(mock?: RequestMock): Story {
   return {
     args: agentOptionsArgs(mock),
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(1440);
       await userEvent.click(canvas.getByRole('button', { name: allowOptions }));
       await pickFromMenu(userEvent, alwaysAllow);
@@ -519,7 +534,8 @@ export const SecondAgentEnterSendsPicked = enterSendsPicked(permissionMocks[1]);
 function rejectMenuWide(mock?: RequestMock): Story {
   return {
     args: agentOptionsArgs(mock, agentOptionsWithAlwaysReject),
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(1440);
       await expect(
         canvas.queryByRole('button', { name: alwaysReject }),
@@ -543,7 +559,8 @@ export const SecondAgentRejectMenuWide = rejectMenuWide(permissionMocks[1]);
 function groupedPhone(mock?: RequestMock): Story {
   return {
     args: agentOptionsArgs(mock, agentOptionsWithAlwaysReject),
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(390);
       const buttons = canvas.getAllByRole('button');
       await expect(buttons).toHaveLength(4);
@@ -569,7 +586,8 @@ export const SecondAgentGroupedPhone = groupedPhone(permissionMocks[1]);
 function rejectWithoutFeedback(width: number, mock?: RequestMock): Story {
   return {
     args: agentOptionsArgs(mock),
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Reject' }));
       await expect(args.onDenialMessageChange).not.toHaveBeenCalled();

@@ -8,8 +8,8 @@ import { FieldSection } from '#lib/generic/primitives/fields/field-section/field
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
+import { Picker } from '#primitives/inputs/picker/picker';
 import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
-import { SelectMenu } from '../../../../lib/generic/primitives/inputs/select-menu/select-menu';
 import { Switch } from '../../../../lib/generic/primitives/inputs/switch/switch';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { homePath } from '../../state/home-path';
@@ -110,12 +110,12 @@ function NewSessionsSection({ project }: ProjectProps): React.JSX.Element {
       <ListItem
         title="Start in"
         accessory={
-          <SelectMenu
-            variant="plain"
-            accessibilityLabel="Start in"
+          <Picker
+            appearance="row"
+            label="Start in"
             value={choice.type}
             options={checkoutOptions}
-            onValueChange={ignoreChoice}
+            onChange={ignoreChoice}
             disabled
           />
         }
@@ -124,12 +124,12 @@ function NewSessionsSection({ project }: ProjectProps): React.JSX.Element {
         <ListItem
           title="Base branch"
           accessory={
-            <SelectMenu
-              variant="plain"
-              accessibilityLabel="Base branch"
+            <Picker
+              appearance="row"
+              label="Base branch"
               value={choice.baseBranch}
               options={[{ value: choice.baseBranch, label: choice.baseBranch }]}
-              onValueChange={ignoreChoice}
+              onChange={ignoreChoice}
               code
               disabled
             />

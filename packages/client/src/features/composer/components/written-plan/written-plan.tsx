@@ -2,10 +2,8 @@ import { lexer, type Tokens } from 'marked';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { useContentWide } from '#lib/product/content-layout';
-import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-sheet/bottom-sheet';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
 import { resourceName } from '../../../../lib/product/markdown/resource-name';
 import { useWrittenPlanEscape } from '../../hooks/use-written-plan-escape';
 import { WrittenPlanContent } from './written-plan-content';
@@ -53,23 +51,12 @@ function PlanTray(props: PlanPresentation): React.JSX.Element {
 function PlanSheet(props: PlanPresentation): React.JSX.Element {
   return (
     <BottomSheet {...planSheetProps(props)}>
-      <PlanHeading title={props.title} />
       <WrittenPlanContent
         plan={props.plan}
         title={props.title}
         layout="sheet"
       />
     </BottomSheet>
-  );
-}
-function PlanHeading({ title }: { title: string }): React.JSX.Element {
-  return (
-    <View className="flex-row items-center gap-1.5 px-4 py-2">
-      <Icon role="control" name="file-text" className="text-muted-foreground" />
-      <Text role={'heading'} className="min-w-0 flex-1">
-        {title}
-      </Text>
-    </View>
   );
 }
 function markdownTitle(content: string): string {
@@ -83,12 +70,14 @@ function planSheetProps(
   props: PlanPresentation,
 ): Pick<
   React.ComponentProps<typeof BottomSheet>,
-  'open' | 'onOpenChange' | 'trigger' | 'label'
+  'open' | 'onOpenChange' | 'trigger' | 'label' | 'initialSize' | 'fit'
 > {
   return {
     open: props.open,
     onOpenChange: props.setOpen,
     trigger: WrittenPlanTrigger(props),
     label: props.title,
+    initialSize: props.plan.type === 'markdown' ? 'expanded' : 'compact',
+    fit: props.plan.type === 'file',
   };
 }

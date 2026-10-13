@@ -9,15 +9,11 @@ afterEach(async () => {
   for (const close of closers.splice(0).reverse()) await close();
 });
 
-// A Server on `port`; 0 picks a free one. `stop` drops every Connection, as an Engine restart does.
+// A Server on `port`, or on a free one without it. `stop` drops every Connection, as an Engine restart does.
 async function startServer(
-  port = 0,
-  version = '1.2.3',
+  options: { port?: number; version?: string } = {},
 ): Promise<{ url: string; port: number; stop: () => Promise<void> }> {
-  const host = await startEngineTestHost({
-    ...(port ? { port } : {}),
-    version,
-  });
+  const host = await startEngineTestHost({ version: '1.2.3', ...options });
   const url = new URL(host.url);
   url.protocol = 'ws:';
   return { url: url.toString(), port: Number(url.port), stop: host.stop };
@@ -54,7 +50,7 @@ describe('openConnection', (): void => {
 
     await server.stop();
     await waitForConnectionLink(connection, 'reconnecting');
-    await startServer(server.port, '1.2.4');
+    await startServer({ port: server.port, version: '1.2.4' });
     await waitForConnectionLink(connection, 'open');
 
     await vi.waitFor(() =>
@@ -80,7 +76,7 @@ describe('openConnection', (): void => {
     await waitForConnectionLink(connection, 'reconnecting');
     expect(observer.getCurrentResult().data).toBeUndefined();
 
-    await startServer(stopped.port);
+    await startServer({ port: stopped.port });
     await waitForConnectionLink(connection, 'open');
     await vi.waitFor(() =>
       expect(observer.getCurrentResult().data?.version).toBe('1.2.3'),

@@ -17,33 +17,57 @@ export interface AppProvidersProps {
 type Connection = ReturnType<typeof openConnection>;
 
 // One QueryClient and one Connection for the App's lifetime; give it a new key to switch Servers.
-export function AppProviders({
-  serverUrl,
-  children,
-}: AppProvidersProps): React.JSX.Element | null {
+export function AppProviders(
+  props: AppProvidersProps,
+): React.JSX.Element | null {
   const [queryClient] = useState(() => new QueryClient());
-  const connectionStore = useMemo(
-    () => connectionSubscription(serverUrl, queryClient),
-    [serverUrl, queryClient],
-  );
-  const connection = useSyncExternalStore(
-    connectionStore.subscribe,
-    connectionStore.getSnapshot,
-    emptyConnection,
-  );
-  const blobUrl = useMemo(() => createServerBlobUrl(serverUrl), [serverUrl]);
-
+  const connection = useConnection(props.serverUrl, queryClient);
   if (!connection) return null;
   return (
+    <ConnectionProviders
+      {...props}
+      queryClient={queryClient}
+      connection={connection}
+    />
+  );
+}
+
+interface ServerProvidersProps extends AppProvidersProps {
+  connection: Connection;
+}
+
+interface ConnectionProvidersProps extends ServerProvidersProps {
+  queryClient: QueryClient;
+}
+
+function ConnectionProviders({
+  queryClient,
+  ...props
+}: ConnectionProvidersProps): React.JSX.Element {
+  return (
     <QueryClientProvider client={queryClient}>
-      <TRPCProvider trpcClient={connection.client} queryClient={queryClient}>
-        <ConnectionContext.Provider value={connection.connection}>
-          <BlobUrlContext.Provider value={blobUrl}>
-            {children}
-          </BlobUrlContext.Provider>
-        </ConnectionContext.Provider>
+      <TRPCProvider
+        trpcClient={props.connection.client}
+        queryClient={queryClient}
+      >
+        <ServerProviders {...props} />
       </TRPCProvider>
     </QueryClientProvider>
+  );
+}
+
+function ServerProviders({
+  serverUrl,
+  connection,
+  children,
+}: ServerProvidersProps): React.JSX.Element {
+  const blobUrl = useMemo(() => createServerBlobUrl(serverUrl), [serverUrl]);
+  return (
+    <ConnectionContext.Provider value={connection.connection}>
+      <BlobUrlContext.Provider value={blobUrl}>
+        {children}
+      </BlobUrlContext.Provider>
+    </ConnectionContext.Provider>
   );
 }
 
@@ -51,24 +75,42 @@ function emptyConnection(): null {
   return null;
 }
 
-function connectionSubscription(
+function useConnection(
   serverUrl: string,
   queryClient: QueryClient,
-): {
-  subscribe: (changed: () => void) => () => void;
-  getSnapshot: () => Connection | null;
-} {
-  let opened: Connection | null = null;
-  return {
-    getSnapshot: () => opened,
-    subscribe: (changed) => {
-      const connection = openConnection(serverUrl, queryClient);
-      opened = connection;
-      changed();
-      return () => {
-        opened = null;
-        void connection.close();
-      };
-    },
+): Connection | null {
+  const store = useMemo(
+    () => new ConnectionStore(serverUrl, queryClient),
+    [serverUrl, queryClient],
+  );
+  return useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    emptyConnection,
+  );
+}
+
+class ConnectionStore {
+  private opened: Connection | null = null;
+  private readonly serverUrl: string;
+  private readonly queryClient: QueryClient;
+
+  public constructor(serverUrl: string, queryClient: QueryClient) {
+    this.serverUrl = serverUrl;
+    this.queryClient = queryClient;
+  }
+
+  public readonly getSnapshot = (): Connection | null => this.opened;
+
+  public readonly subscribe = (changed: () => void): (() => void) => {
+    const connection = openConnection(this.serverUrl, this.queryClient);
+    this.opened = connection;
+    changed();
+    return () => this.close(connection);
   };
+
+  private close(connection: Connection): void {
+    this.opened = null;
+    void connection.close();
+  }
 }

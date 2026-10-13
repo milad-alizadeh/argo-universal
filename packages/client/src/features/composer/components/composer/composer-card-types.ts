@@ -13,3 +13,6 @@ export type CardLayout = ToolbarLayout &
   AttachmentLayout &
   TextLayout &
   WarningLayout;
+
+export type ControlsLayout = CardLayout &
+  Pick<ComposerLayout, 'setControlsHeight'>;

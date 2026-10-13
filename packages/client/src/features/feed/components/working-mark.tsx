@@ -35,20 +35,20 @@ const cells = [
   [middle, middle],
 ] as const;
 
-function Cell({
-  index,
-  left,
-  top,
-  step,
-  still,
-}: {
-  index: number;
-  left: number;
-  top: number;
+const cellSize = { width: 3.4, height: 3.4, borderRadius: 0.8 };
+
+type AnimatedStyle = ReturnType<typeof useAnimatedStyle<{ opacity: number }>>;
+
+interface CellMotion {
   step: SharedValue<number>;
   still: boolean;
-}): React.JSX.Element {
-  const style = useAnimatedStyle(() => {
+}
+
+function useCellStyle(
+  index: number,
+  { step, still }: CellMotion,
+): AnimatedStyle {
+  return useAnimatedStyle(() => {
     if (still) return { opacity: 0.4 };
     const sinceLit = (step.get() - index + cells.length) % cells.length;
     return {
@@ -58,44 +58,61 @@ function Cell({
           : restingOpacity,
     };
   }, [index, step, still]);
+}
+
+interface CellProps {
+  index: number;
+  left: number;
+  top: number;
+  motion: CellMotion;
+}
+
+function Cell({ index, left, top, motion }: CellProps): React.JSX.Element {
   return (
     <Animated.View
       testID="working-mark-cell"
-      style={[{ left, top, width: 3.4, height: 3.4, borderRadius: 0.8 }, style]}
+      style={[{ left, top, ...cellSize }, useCellStyle(index, motion)]}
       className="absolute bg-muted-foreground"
     />
   );
 }
 
-// Paper's Working mark: a 3×3 grid where one cell at a time lights and fades.
-export function WorkingMark(): React.JSX.Element {
+const cycle = (): number =>
+  withRepeat(
+    withTiming(cells.length, {
+      duration: cells.length * stepMilliseconds,
+      easing: Easing.linear,
+    }),
+    -1,
+  );
+
+function useStep(reducedMotion: boolean): SharedValue<number> {
   const step = useSharedValue(0);
-  const reducedMotion = useReducedMotion();
   useEffect(() => {
-    if (!reducedMotion)
-      step.set(
-        withRepeat(
-          withTiming(cells.length, {
-            duration: cells.length * stepMilliseconds,
-            easing: Easing.linear,
-          }),
-          -1,
-        ),
-      );
+    if (!reducedMotion) step.set(cycle());
     return (): void => cancelAnimation(step);
   }, [reducedMotion, step]);
+  return step;
+}
+
+const cellElements = (motion: CellMotion): React.JSX.Element[] =>
+  cells.map(([left, top], index) => (
+    <Cell
+      key={`${left}:${top}`}
+      index={index}
+      left={left}
+      top={top}
+      motion={motion}
+    />
+  ));
+
+// Paper's Working mark: a 3×3 grid where one cell at a time lights and fades.
+export function WorkingMark(): React.JSX.Element {
+  const still = useReducedMotion();
+  const motion = { step: useStep(still), still };
   return (
     <IconSlot role="control" testID="working-mark">
-      {cells.map(([left, top], index) => (
-        <Cell
-          key={`${left}:${top}`}
-          index={index}
-          left={left}
-          top={top}
-          step={step}
-          still={reducedMotion}
-        />
-      ))}
+      {cellElements(motion)}
     </IconSlot>
   );
 }

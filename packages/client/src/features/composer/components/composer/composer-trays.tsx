@@ -31,7 +31,9 @@ export function ComposerTopTray(
 function shownWrittenPlan({
   props,
 }: Pick<WrittenPlanLayout, 'props'>): ComposerProps['writtenPlan'] {
-  return props.planProposal ? undefined : props.writtenPlan;
+  return props.planProposal || props.permissionRequest
+    ? undefined
+    : props.writtenPlan;
 }
 function hasPlan(layout: Pick<PlanLayout, 'props'>): boolean {
   return Boolean(shownWrittenPlan(layout) || hasLivePlan(layout));
@@ -40,7 +42,7 @@ function hasPhoneTray(layout: Pick<PlanLayout, 'props'>): boolean {
   return hasPlan(layout) || hasWork(layout);
 }
 function ComposerWidePlan(layout: PlanLayout): React.JSX.Element | null {
-  if (layout.props.planProposal || !hasPlan(layout)) return null;
+  if (hasRequest(layout) || !hasPlan(layout)) return null;
   return (
     <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-2xl bg-glass-muted shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-180">
       <ComposerPlans {...layout} />
@@ -138,4 +140,8 @@ function hasWork({ props }: Pick<LivePlanLayout, 'props'>): boolean {
   return props.status
     ? Boolean(props.status.subagents || props.status.shells)
     : false;
+}
+
+function hasRequest({ props }: Pick<PlanLayout, 'props'>): boolean {
+  return Boolean(props.planProposal || props.permissionRequest);
 }

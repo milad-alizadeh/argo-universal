@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
 import { PlanDocument } from '#lib/product/plan-document';
+import { Text } from '#primitives/display/text/text';
 import type { WrittenPlanValue } from './written-plan-types';
 interface ContentProps {
   plan: WrittenPlanValue;
@@ -17,7 +17,7 @@ export function WrittenPlanContent({
   return (
     <View role="region" accessibilityLabel="Written plan content">
       {plan.type === 'markdown' ? (
-        <PlanDocument content={plan.content} layout={layout} />
+        <MarkdownPlanContent content={plan.content} layout={layout} />
       ) : (
         <PlanReference plan={plan} title={title} />
       )}
@@ -35,6 +35,18 @@ function PlanReference({ plan, title }: PlanReferenceProps): React.JSX.Element {
       <Text role="secondary">
         The Agent shared where the plan is, not its text.
       </Text>
+    </View>
+  );
+}
+
+type MarkdownContentProps = Pick<ContentProps, 'layout'> & { content: string };
+function MarkdownPlanContent({
+  content,
+  layout,
+}: MarkdownContentProps): React.JSX.Element {
+  return (
+    <View className={layout === 'sheet' ? 'px-4' : undefined}>
+      <PlanDocument content={content} layout={layout} />
     </View>
   );
 }

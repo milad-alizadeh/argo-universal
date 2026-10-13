@@ -8,8 +8,10 @@ const STORY_TEST_TIMEOUT_MS = 30_000;
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineProject({
   plugins: [
-    // The plugin will run tests for the stories defined in your Storybook config
-    // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
+    /*
+     * The plugin will run tests for the stories defined in your Storybook config
+     * See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
+     */
     storybookTest({
       configDir: `${import.meta.dirname}/.storybook`,
       storybookUrl: process.env.STORYBOOK_URL ?? 'http://localhost:6006',

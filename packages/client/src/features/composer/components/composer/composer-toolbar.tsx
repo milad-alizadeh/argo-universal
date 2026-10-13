@@ -91,7 +91,7 @@ function sendButtonProps(
 ): React.ComponentProps<typeof IconButton> {
   return {
     ...sendButtonAction(layout),
-    filled: true,
+    ...filledSendProps,
     loading: layout.sendState === 'sending',
     className: cn(
       'size-7 sm:size-7 rounded-full',
@@ -123,3 +123,5 @@ function stopButtonAction(
     onPress: (): void => layout.props.onStop?.(),
   };
 }
+
+const filledSendProps = { variant: 'filled', filled: true } as const;
