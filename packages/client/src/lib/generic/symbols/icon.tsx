@@ -28,6 +28,7 @@ export interface IconProps {
   // Selects the platform's filled variant where the icon has one.
   filled?: boolean;
   className?: string;
+  weight?: SymbolGlyphProps['weight'];
   testID?: string;
 }
 
@@ -70,6 +71,7 @@ export function Icon(props: IconProps): React.JSX.Element {
       colorClassName={colorClassName}
       pixels={useIconPixels(props.role)}
       glyphScale={glyphScale}
+      weight={props.weight}
       testID={props.testID ?? `icon-${props.name}`}
     />
   );

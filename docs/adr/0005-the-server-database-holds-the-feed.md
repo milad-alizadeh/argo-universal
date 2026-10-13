@@ -1,12 +1,12 @@
 # The Server database holds the Feed, and the vendor transcript is only a source
 
-The Server stores each Session update after it converts it from the vendor event, as a row. The `feed_row` table in SQLite is the one source of truth for what a user sees. Each row keeps a reference back to its vendor record, so the Server can rebuild rows while the vendor file exists. The Server does not store raw vendor events.
+The Server converts each vendor event to a Session update and stores it as a row. SQLite's `feed_row` table is the one source of truth for what a user sees. Each row references its vendor record, so the Server can rebuild rows while the vendor file exists. Raw vendor events are not stored.
 
-Images and large tool output go to content-addressed files at `~/.argo/blobs/<sha256>`. A row holds a blob reference `{blobId, mime, bytes, width?, height?}`, not a URL. The App builds the URL from the Server address. Tool output in a row is capped at 64 KB, with the head and the tail kept and a `truncated` flag. Tool input is never capped. Read models in SQLite follow Argo ADR-0048.
+Images and large tool output go to content-addressed files at `~/.argo/blobs/<sha256>`. A row holds a blob reference `{blobId, mime, bytes, width?, height?}`, not a URL; the App builds the URL from the Server address. Tool output in a row is capped at 64 KB, keeping the head and tail with a `truncated` flag. Tool input is never capped. SQLite read models follow Argo ADR-0048.
 
 Spec 0009 builds the cap for ACP tool rows (owner, 2026-10-10, #358). Text content and `rawOutput` over 64 KB each keep their first and last 32 KB, cut on whole characters and joined by a `\n…\n` mark; a capped `rawOutput` becomes that preview of its JSON. The whole value of each capped field is a JSON Blob, named in `_meta.argo.fullOutput.content` or `.rawOutput`, beside `_meta.argo.truncated`. A later update recaps only the fields it supplies, and the Writer stores a row only after its Blob files. User input, tool input and diff content are not capped. Other oversized content is not cut: each ACP frame is bounded at 32 MiB instead (ADR-0016). Showing the full output in the App is a later change.
 
-Claude deletes its transcripts after 30 days by default. After that, the Feed stays readable from our rows, but the Session cannot resume. A mirror of the transcript through the SDK `SessionStore` is deferred until we measure real Session sizes.
+Claude deletes its transcripts after 30 days by default; the Feed then stays readable from our rows, but the Session cannot resume. Mirroring the transcript through the SDK `SessionStore` is deferred until we measure real Session sizes.
 
 Under ACP (Spec 0009, #356), reading a Feed never opens the Agent. A Session from the native integration resumes with `session/resume` and its stored upstream id; Argo never loads or lists Agent sessions to rebuild one. When the Agent cannot resume it, the Session fails with the Agent's reason, its Feed stays readable from our rows, and no prompt is sent.
 

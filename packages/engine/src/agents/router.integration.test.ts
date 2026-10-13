@@ -1,7 +1,7 @@
 import type { AgentProbe } from '@repo/agents';
 import { createAgentMetadata } from '@repo/mocks/agent';
 import { expect, it, vi } from 'vitest';
-import { agentCatalog, availableAgentProbe } from '#mocks/agent-catalog';
+import { availableAgentProbe } from '#mocks/agent-catalog';
 import { startEngineTestHost } from '#mocks/engine';
 
 it('answers concurrent availability queries from one discovery result', async (): Promise<void> => {
@@ -51,7 +51,6 @@ it('refreshes every Agent before returning its current availability', async (): 
           result: {
             availability: 'not_signed_in',
             installStep: 'Sign in',
-            configOptions: [],
           },
         },
         { result: availableAgentProbe },
@@ -76,35 +75,8 @@ it('refreshes every Agent before returning its current availability', async (): 
   expect(discoverSecondAgent).toHaveBeenCalledTimes(2);
 });
 
-it('preserves Agent extension metadata in the public Agent catalog', async (): Promise<void> => {
-  const firstAgent = agentCatalog[0];
-  if (!firstAgent) throw new Error('Agent catalog is missing');
-  const { caller } = await startEngineTestHost({
-    adapters: [
-      {
-        ...createAgentMetadata(
-          {
-            discovery: [
-              {
-                result: {
-                  availability: 'available',
-                  configOptions: firstAgent.configOptions,
-                },
-              },
-            ],
-          },
-          'agent-one',
-        ),
-        label: 'First Agent',
-        logo: '<svg/>',
-      },
-    ],
-  });
-  expect(await caller.agents.list()).toEqual(agentCatalog);
-});
-
 it.each(['not_installed', 'not_signed_in'] as const)(
-  'returns the %s installation guidance and current options',
+  'returns the %s installation guidance',
   async (availability): Promise<void> => {
     const { caller } = await startEngineTestHost({
       adapters: [
@@ -114,7 +86,6 @@ it.each(['not_installed', 'not_signed_in'] as const)(
               result: {
                 availability,
                 installStep: 'Install or sign in',
-                configOptions: [],
               },
             },
           ],
@@ -122,7 +93,7 @@ it.each(['not_installed', 'not_signed_in'] as const)(
       ],
     });
     expect(await caller.agents.list()).toMatchObject([
-      { availability, installStep: 'Install or sign in', configOptions: [] },
+      { availability, installStep: 'Install or sign in' },
     ]);
   },
 );

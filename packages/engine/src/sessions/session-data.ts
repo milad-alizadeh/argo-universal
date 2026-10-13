@@ -6,13 +6,26 @@ import {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
-import { type Checkout, createCheckout, discardCheckout } from '@repo/git';
+import {
+  type Checkout,
+  createCheckout,
+  discardCheckout,
+  isSessionBranch,
+} from '@repo/git';
 import { and, desc, eq, max } from 'drizzle-orm';
 import { z } from 'zod';
 import { readQueuedFeed, titleFromPrompt } from '../feed';
-import type { WriterActorRef } from '../storage';
+import { readProjectPath } from '../projects';
+import {
+  type WriterActorRef,
+  writeDatabaseJobAndWaitForCommit,
+} from '../storage';
 import { decodeStoredSession, storedSessionColumns } from './session-record';
-import { readQueuedSessionRows, SessionInsertJob } from './session-storage';
+import {
+  readQueuedSessionRows,
+  SessionDeleteJob,
+  SessionInsertJob,
+} from './session-storage';
 
 // Prompted creation carries the first Turn's id.
 export type SessionCreationInput = SessionNewInput & {
@@ -38,6 +51,8 @@ export interface SessionData {
   maxRevision: number;
   activityAt: number;
   nextPosition: number;
+  // Whether closing keeps the Session; a New Session no prompt reached is discarded instead.
+  kept: boolean;
   // The latest Turn, when it was interrupted and its Feed does not yet say output may be missing.
   undisclosedInterruptedTurnId: string | null;
 }
@@ -71,6 +86,7 @@ export async function createSessionCheckout(
     maxRevision: 0,
     activityAt: Date.now(),
     nextPosition: 0,
+    kept: false,
     undisclosedInterruptedTurnId: null,
   };
 }
@@ -100,14 +116,40 @@ export function toSessionInsert(
   });
 }
 
-// Removes the worktree of a Session that never started; the main checkout stays.
-export async function discardSessionCheckout(
-  input: NewSessionInput,
-  checkout: Checkout,
+export interface SessionDiscard {
+  input: SessionInput;
+  data: Pick<SessionData, 'sessionId' | 'projectId' | 'checkout'>;
+  stored: boolean;
+  writer: WriterActorRef | undefined;
+}
+
+// The Project path of a worktree the Session created; undefined for the main checkout.
+const ownedWorktreeProject = ({
+  input,
+  data,
+}: SessionDiscard): string | undefined => {
+  if (input.kind === 'new')
+    return input.checkout.type === 'worktree' ? input.projectPath : undefined;
+  return isSessionBranch(data.checkout.branch, data.sessionId)
+    ? readProjectPath(input.database, data.projectId)
+    : undefined;
+};
+
+// Deletes the row of a Session no prompt reached, then removes the worktree it created; the main checkout stays.
+export async function discardSession(
+  discard: SessionDiscard,
   signal?: AbortSignal,
 ): Promise<void> {
-  if (input.checkout.type === 'worktree')
-    await discardCheckout(input.projectPath, checkout, signal);
+  if (discard.stored) {
+    if (!discard.writer) throw new Error('Database Writer is unavailable');
+    await writeDatabaseJobAndWaitForCommit(
+      discard.writer,
+      new SessionDeleteJob(discard.data.sessionId),
+    );
+  }
+  const projectPath = ownedWorktreeProject(discard);
+  if (projectPath)
+    await discardCheckout(projectPath, discard.data.checkout, signal);
 }
 
 const storedConfigValues = z.array(InitialConfigOption);
@@ -178,6 +220,7 @@ export async function loadSession(
     maxRevision: row.maxRevision,
     activityAt: row.activityAt,
     nextPosition: Math.max(position ?? -1, pendingFeed.highestPosition) + 1,
+    kept: true,
     undisclosedInterruptedTurnId: readUndisclosedInterruption(
       input.database,
       input.sessionId,

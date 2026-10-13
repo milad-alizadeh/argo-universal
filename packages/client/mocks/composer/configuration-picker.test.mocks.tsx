@@ -1,4 +1,5 @@
 import { type AgentInfo } from '@repo/contracts';
+import { recordedSessionOptions } from '@repo/mocks/app';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -52,7 +53,9 @@ export function ConfiguredComposer({
 }: {
   agent: AgentInfo;
 }): React.JSX.Element {
-  const [configOptions, setConfigOptions] = useState(agent.configOptions);
+  const [configOptions, setConfigOptions] = useState(
+    recordedSessionOptions(agent.agent),
+  );
   return (
     <Composer
       {...composerProps({

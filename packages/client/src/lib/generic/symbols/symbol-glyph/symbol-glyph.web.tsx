@@ -88,7 +88,7 @@ function GlyphDrawing({
 
 type MaterialGlyphProps = Pick<
   SymbolGlyphProps,
-  'material' | 'filled' | 'pixels'
+  'material' | 'filled' | 'pixels' | 'weight'
 >;
 
 function MaterialGlyph(props: MaterialGlyphProps): React.JSX.Element {
@@ -97,7 +97,7 @@ function MaterialGlyph(props: MaterialGlyphProps): React.JSX.Element {
       key={String(props.filled)}
       name={{ web: props.material }}
       size={props.pixels}
-      weight={symbolWeight(props.filled)}
+      weight={symbolWeight(props.filled, props.weight)}
       tintColor="currentColor"
     />
   );

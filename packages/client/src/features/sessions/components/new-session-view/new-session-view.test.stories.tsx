@@ -5,13 +5,16 @@ import {
   narrowMainColumn,
 } from '../../../../../mocks/new-session-view/new-session-checkout.test.mocks';
 import {
+  readyArgs,
+  sendsTheFirstPrompt,
+  sendsWhileTheSessionOpens,
+} from '../../../../../mocks/new-session-view/new-session-send.test.mocks';
+import {
   meta as newSessionViewTestMeta,
   type Story,
 } from '../../../../../mocks/new-session-view/new-session-story.test.mocks';
 import { shownText } from '../../../../../mocks/rich-textarea-example';
-import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import type { ReadyNewSessionViewProps } from './new-session-view';
+import { eachLayout } from '../../../../lib/generic/each-layout';
 import {
   exampleProject,
   readyNewSession,
@@ -63,22 +66,8 @@ export const Ready: Story = {
     }),
 };
 
-function readyArgs(changes: Partial<ReadyNewSessionViewProps>): Story['args'] {
-  return { view: { state: 'ready', ...readyNewSession, ...changes } };
-}
-
-export const SendsTheFirstPrompt: Story = {
-  args: readyArgs({ draft: typedDraft }),
-  play: async ({ args, canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
-    await userEvent.click(
-      await canvas.findByRole('button', { name: sendLabel }),
-    );
-    if (args.view.state !== 'ready') throw new Error('The view is not ready.');
-    await expect(args.view.onSend).toHaveBeenCalledOnce();
-    await expect(args.view.onSend).toHaveBeenCalledWith(typedDraft);
-  },
-};
+export const SendsTheFirstPrompt = sendsTheFirstPrompt;
+export const SendsWhileTheSessionOpens = sendsWhileTheSessionOpens;
 
 export const Reconnecting: Story = {
   args: readyArgs({ connected: false, canOpen: false, draft: typedDraft }),
@@ -127,9 +116,10 @@ export const Starting: Story = {
       await expect(
         canvas.getByRole('button', { name: sendLabel }),
       ).toBeDisabled();
+      // A Session has no Project row, so it goes before the hand-off.
       await expect(
-        canvas.getByRole('button', { name: projectLabel }),
-      ).toBeDisabled();
+        canvas.queryByRole('button', { name: projectLabel }),
+      ).toBeNull();
     }),
 };
 

@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import {
   customAgentDefinition,
   startCustomAgentEngine,
@@ -84,7 +85,7 @@ it('readiness comes from a fresh check, not from the saved record', async () => 
   });
 });
 
-it('a ready custom Agent opens and closes an empty Session through the shared ACP resource', async () => {
+it('a ready custom Agent prompts and closes a Session through the shared ACP resource', async () => {
   const host = await startCustomAgentEngine();
   const registration = await host.caller.agents.registerCustom(
     customAgentDefinition,
@@ -97,6 +98,11 @@ it('a ready custom Agent opens and closes an empty Session through the shared AC
     configOptions: [],
     prompt: [],
   });
+  await host.caller.session.prompt({
+    ...created,
+    prompt: [{ type: 'text', text: 'Fix the build' }],
+  });
+  await waitForAcpSessionIdle(host, created.sessionId);
   await host.caller.session.close(created);
   const { sessions } = await host.caller.session.list({
     projectId: 'project-1',

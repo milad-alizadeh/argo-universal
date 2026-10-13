@@ -20,6 +20,7 @@ import { waitFor } from 'xstate';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import {
   countDatabaseReads,
+  insertEndedTurn,
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
@@ -76,6 +77,7 @@ it.each(liveHeaderMocks)(
   'reads stored live-header rules through list and Feed snapshots for $agent',
   async ({ command, thought, retry, progress }): Promise<void> => {
     const { database, remove } = openTestDatabase();
+    insertEndedTurn(database);
     onTestFinished(remove);
     const completed = Promise.withResolvers<void>();
     const input = scriptedEngineInput({
@@ -259,6 +261,7 @@ it.each(liveHeaderMocks)(
 
 it('keeps the Feed subscription open after malformed stored activity', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
   const input = scriptedEngineInput({ steps: [{ type: waitForCancelStep }] });
   const host = await startEngineTestHost({ database, ...input });
@@ -381,6 +384,7 @@ it.each(
   'degrades only the Session with a malformed $kind row for $agent',
   async ({ agent, kind }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const reported = vi
       .spyOn(console, 'error')
@@ -392,6 +396,7 @@ it.each(
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
+    insertEndedTurn(database, 'healthy');
     database
       .insert(turn)
       .values({ id: 'running', sessionId: 'session-1', status: 'running' })
@@ -445,6 +450,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
   'drops only a malformed Session for %s',
   async (agent): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const reported = vi
       .spyOn(console, 'error')
@@ -456,6 +462,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
+    insertEndedTurn(database, 'healthy');
     database
       .update(session)
       .set({ titleSource: sql`'invalid'` })
@@ -476,6 +483,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
   'drops only the Session with a malformed Turn for %s',
   async (agent): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const reported = vi
       .spyOn(console, 'error')
@@ -487,6 +495,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
+    insertEndedTurn(database, 'healthy');
     database
       .insert(turn)
       .values({
@@ -509,6 +518,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
 
 it('serves live Session procedures and drains their Feed before closing the database', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
   const input = scriptedEngineInput({
     steps: [
@@ -571,25 +581,27 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
     title: 'Earlier',
     activityAt: 1,
   });
+  insertEndedTurn(database);
   onTestFinished(remove);
-  for (let index = 0; index < 51; index += 1)
-    insertSession(database, {
-      id: `page-${String(index).padStart(2, '0')}`,
-      title: 'Search %_ title',
-      activityAt: 10,
-    });
+  for (let index = 0; index < 51; index += 1) {
+    const id = `page-${String(index).padStart(2, '0')}`;
+    insertSession(database, { id, title: 'Search %_ title', activityAt: 10 });
+    insertEndedTurn(database, id);
+  }
   insertSession(database, {
     id: 'archived',
     title: 'Archived title',
     archivedAt: 2,
     activityAt: 20,
   });
+  insertEndedTurn(database, 'archived');
   insertSession(database, {
     id: 'subagent',
     parentSessionId: 'session-1',
     title: 'Search %_ title',
     activityAt: 30,
   });
+  insertEndedTurn(database, 'subagent');
   const { createCaller } = await startEngineTestHost({
     database,
     ...scriptedEngineInput(),
@@ -624,13 +636,16 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
 
 it('sends live list changes and attention/running counts through request and Turn transitions', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
   insertSession(database, { id: 'archived', archivedAt: 1, maxRevision: 1 });
+  insertEndedTurn(database, 'archived');
   insertSession(database, {
     id: 'subagent',
     parentSessionId: 'session-1',
     maxRevision: 1,
   });
+  insertEndedTurn(database, 'subagent');
   const completed = Promise.withResolvers<void>();
   const input = scriptedEngineInput({
     steps: [],
@@ -762,10 +777,14 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promi
 
 it('uses the newest Turn for failures and excludes interrupted Turns from Failed', async (): Promise<void> => {
   const { database, remove } = openTestDatabase({ maxRevision: 2 });
+  insertEndedTurn(database);
   onTestFinished(remove);
   insertSession(database, { id: 'interrupted', maxRevision: 2 });
+  insertEndedTurn(database, 'interrupted');
   insertSession(database, { id: 'recovered', maxRevision: 2 });
+  insertEndedTurn(database, 'recovered');
   insertSession(database, { id: 'gave-up', failure: 'Repeated crashes' });
+  insertEndedTurn(database, 'gave-up');
   database
     .insert(turn)
     .values([
@@ -833,6 +852,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
     maxRevision: 1,
     title: 'Unread',
   });
+  insertEndedTurn(database);
   onTestFinished(remove);
   const { engine, createCaller } = await startEngineTestHost({
     database,
@@ -880,6 +900,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
 
 it('shares one coalesced list read for three subscribers across fifty changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
   const {
     engine,
@@ -1003,9 +1024,12 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
 
 it('reads only the changed Session and pages the shared cache', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
-  for (let index = 2; index <= 60; index++)
+  for (let index = 2; index <= 60; index++) {
     insertSession(database, { id: `session-${index}` });
+    insertEndedTurn(database, `session-${index}`);
+  }
   const {
     engine,
     createCaller,
@@ -1068,6 +1092,7 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
 
 it('initializes a fresh list after all watchers leave and unwatched data changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
   const { engine, createCaller } = await startEngineTestHost({
     database,
@@ -1115,8 +1140,10 @@ it('initializes a fresh list after all watchers leave and unwatched data changes
 
 it('pages current queued activity before the list publication delay', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
   insertSession(database, { id: 'session-2', activityAt: 10 });
+  insertEndedTurn(database, 'session-2');
   const {
     engine,
     createCaller,
@@ -1183,8 +1210,10 @@ it('pages current queued activity before the list publication delay', async (): 
 
 it('updates a cached parent when its stored Subagent Turn changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
+  insertEndedTurn(database);
   onTestFinished(remove);
   insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
+  insertEndedTurn(database, 'child-1');
   const { engine, createCaller } = await startEngineTestHost({
     database,
     ...scriptedEngineInput(),
@@ -1271,6 +1300,7 @@ it.each(
   'drops only the Session with unreadable $field JSON for $agent',
   async ({ agent, table, column, id }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const reported = vi
       .spyOn(console, 'error')
@@ -1282,6 +1312,7 @@ it.each(
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
+    insertEndedTurn(database, 'healthy');
     database
       .insert(turn)
       .values({ id: 'bad-turn', sessionId: 'session-1', status: 'ended' })
@@ -1313,6 +1344,7 @@ it.each(
   'degrades only the Session with unreadable $kind $field JSON for $agent',
   async ({ agent, kind, column }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
+    insertEndedTurn(database);
     onTestFinished(remove);
     const reported = vi
       .spyOn(console, 'error')
@@ -1324,6 +1356,7 @@ it.each(
     });
     const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
+    insertEndedTurn(database, 'healthy');
     database
       .insert(turn)
       .values({ id: 'running', sessionId: 'session-1', status: 'running' })

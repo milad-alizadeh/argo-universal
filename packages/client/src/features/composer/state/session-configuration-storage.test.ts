@@ -19,7 +19,7 @@ afterEach(() => {
 
 describe('rememberSessionConfiguration', () => {
   it.each(catalogCases)(
-    'keeps the choice $agent.label accepted while an older read is still loading',
+    'keeps the choice $agent.agent accepted while an older read is still loading',
     async ({ agent, model, effort, narrower, chosenEffort, defaultMode }) => {
       vi.stubGlobal('window', { localStorage: memoryStorage() });
       const client = new QueryClient();
@@ -48,7 +48,7 @@ describe('rememberSessionConfiguration', () => {
   );
 
   it.each(catalogCases)(
-    'saves the choice $agent.label accepted for the next App start',
+    'saves the choice $agent.agent accepted for the next App start',
     async ({ agent, narrower, chosenEffort, otherMode }) => {
       vi.stubGlobal('window', { localStorage: memoryStorage() });
       rememberSessionConfiguration(

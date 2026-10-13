@@ -140,7 +140,8 @@ function NewSessionComposer(
 ): React.JSX.Element {
   return (
     <>
-      <NewSessionStartIn {...props} />
+      {/* A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off. */}
+      {!props.starting && <NewSessionStartIn {...props} />}
       <SetupStepAlert setupStep={props.setupStep} />
       <PromptComposer {...props} />
     </>

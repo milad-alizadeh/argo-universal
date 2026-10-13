@@ -29,7 +29,6 @@ it('shares one pending Agent discovery between concurrent refresh queries', asyn
   refreshed.resolve({
     availability: 'not_signed_in',
     installStep: signInAgain,
-    configOptions: [],
   });
   expect(await catalogs).toMatchObject([
     [{ availability: 'not_signed_in', installStep: signInAgain }],
@@ -56,7 +55,6 @@ it('reports failed Agent discovery through the public unavailable result', async
       logo: expect.stringContaining('<svg'),
       availability: 'unavailable',
       installStep: 'broken did not start: Spawn failed',
-      configOptions: [],
     },
   ]);
 });
@@ -83,7 +81,6 @@ it('aborts timed-out Agent discovery before returning an unavailable result', as
       logo: expect.stringContaining('<svg'),
       availability: 'unavailable',
       installStep: 'slow did not start: no answer within 20 seconds',
-      configOptions: [],
     },
   ]);
   expect(signals[0]?.aborted).toBe(true);

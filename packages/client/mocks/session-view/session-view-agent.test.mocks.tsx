@@ -1,5 +1,5 @@
 import type { AgentInfo } from '@repo/contracts';
-import { newSessionCatalogs } from '@repo/mocks/app';
+import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { idleSession } from '../../src/features/sessions/components/session-view/session-view.mocks';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
@@ -62,7 +62,7 @@ export function agentUnavailable(agentIndex: 0 | 1): Story {
     args: idleSessionWith({
       agents: newSessionCatalogs.bothUnavailable,
       agent: agent.agent,
-      configOptions: agent.configOptions,
+      configOptions: recordedSessionOptions(agent.agent),
       onAgentRetry: fn(),
     }),
     play: async (context) => {
@@ -93,7 +93,7 @@ export function configuration(agentIndex: 0 | 1): Story {
   return {
     args: idleSessionWith({
       agent: agent.agent,
-      configOptions: agent.configOptions,
+      configOptions: recordedSessionOptions(agent.agent),
     }),
     play: async (context) => {
       const current = await openAgentRow(context, agent);

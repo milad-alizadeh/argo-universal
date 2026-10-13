@@ -6,13 +6,13 @@
 
 `clearSemantics()` exposes Compose’s `clearAndSetSemantics {}` for decorative labels beside a native Switch or above a Slider. Apply it only to the label/header subtree: the native control retains its name, state and actions.
 
-Remove the corresponding changes when the pinned Expo UI release ships the documented `cornerRadius` prop and a modifier that clears decorative semantics. It requires rebuilding the Android development client.
+Remove the corresponding changes when the pinned Expo UI release ships the documented `cornerRadius` prop and a modifier that clears decorative semantics. Removal requires rebuilding the Android development client.
 
 ## expo-symbols@57.0.3
 
-`expo-symbols@57.0.3.patch` lets `SymbolView` on iOS fall back to `UIImage(named:)` when the name is not a system symbol, so it draws Argo's custom symbols from the app's asset catalog (ADR-0019). System symbols load exactly as before. The Android fallback renders its Material glyph without text scaling, so a 16dp icon stays inside its 16dp box at enlarged font settings; text labels still scale.
+`expo-symbols@57.0.3.patch` lets `SymbolView` on iOS fall back to `UIImage(named:)` when the name is not a system symbol, so it draws Argo's custom symbols from the app's asset catalog (ADR-0019). System symbols load exactly as before.
 
-It also disables font scaling on the internal Material font glyph. The icon's fixed-size box otherwise clips its enlarged glyph at Android's large text settings. Labels and values keep their normal font scaling.
+It also disables font scaling on the internal Material font glyph on Android, so a 16dp icon stays inside its 16dp box at enlarged font settings instead of being clipped. Labels and values keep their normal font scaling.
 
 Remove the corresponding changes when `expo-symbols` supports asset-catalog symbols and keeps font glyphs within their fixed-size boxes. When upgrading, check `ios/SymbolView.swift`, `src/SymbolView.tsx` and its published JavaScript.
 

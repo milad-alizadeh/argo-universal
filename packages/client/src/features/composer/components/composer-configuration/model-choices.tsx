@@ -9,12 +9,8 @@ import { FieldRowEnd } from '../../../../lib/generic/primitives/fields/field-lay
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { configurationChoices } from '../../state/configuration-choices';
 import { ConfigurationChoice } from './configuration-choice';
-import type { ComposerConfigurationProps } from './configuration-types';
+import type { ConfigurationChoicesProps as ModelChoicesProps } from './configuration-types';
 import { modelName, selection } from './configuration-values';
-interface ModelChoicesProps {
-  configuration: ComposerConfigurationProps;
-  onSelect: () => void;
-}
 interface ModelChoiceProps extends ModelChoicesProps {
   choice: SessionConfigSelectOption;
 }
@@ -39,7 +35,10 @@ function ModelChoicesLayout(
 function GroupedModelChoices(props: ModelChoicesProps): React.JSX.Element {
   const choices = configurationChoices(selection(props.configuration, 'model'));
   return (
-    <FieldGroup fit={Platform.OS === 'web'}>
+    <FieldGroup
+      fit={Platform.OS === 'web'}
+      onContentHeightChange={props.onContentHeightChange}
+    >
       <FieldSection>
         {choices.map((choice) => (
           <ModelChoice key={choice.value} choice={choice} {...props} />

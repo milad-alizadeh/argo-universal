@@ -36,7 +36,6 @@ type DraftProps = Pick<
   | 'onDropFiles'
   | 'onSend'
 >;
-type ConfigChange = Parameters<ComposerConfigurationProps['onConfigChange']>;
 
 const isTurnRunning = (snapshot: SessionSnapshot): boolean =>
   snapshot.state !== 'idle';
@@ -59,17 +58,6 @@ const sendError = (commands: SessionCommands): ComposerProps['error'] =>
     configuration: commands.setConfigOption.error,
   });
 
-function changeConfig(
-  { sessionId, commands }: OpenSession,
-  [configId, value]: ConfigChange,
-): void {
-  commands.setConfigOption.mutate(
-    typeof value === 'boolean'
-      ? { sessionId, configId, type: 'boolean', value }
-      : { sessionId, configId, type: 'id', value },
-  );
-}
-
 const checkoutProps = (
   checkout: SessionSnapshot['checkout'],
 ): ComposerConfigurationProps['checkout'] => ({
@@ -84,7 +72,7 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
     agents: agents.data ?? [],
     agent: snapshot.agent,
     configOptions: snapshot.configOptions,
-    onConfigChange: (...change) => changeConfig(open, change),
+    onConfigChange: open.commands.changeConfig,
     onAgentSetup: (setup) => navigate({ to: 'settings-agent', agent: setup }),
     onAgentRetry: agents.retry,
     turnRunning: isTurnRunning(snapshot),

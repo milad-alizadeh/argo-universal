@@ -294,6 +294,7 @@ export const createAcpSessionModel = (
         value: snapshot.value,
         failure: snapshot.context.failure !== null,
         stored: snapshot.context.stored,
+        kept: snapshot.context.kept,
         feedEnded: snapshot.context.feedEnded,
         via:
           event &&
