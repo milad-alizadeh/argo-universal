@@ -1,3 +1,4 @@
+import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn } from 'storybook/test';
 import { within } from 'storybook/test';
 import { waitFor } from 'storybook/test';
@@ -34,7 +35,7 @@ export const ScrollableAgentCatalog: Story = {
     configuration: {
       agents: composerLongAgentCatalog,
       agent: 'development-agent-1',
-      configOptions: firstAgent.configOptions,
+      configOptions: recordedSessionOptions(firstAgent.agent),
       onConfigChange: fn(),
       onAgentChange: fn(),
       checkout: { branch: 'main', newWorktree: true },

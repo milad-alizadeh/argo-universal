@@ -16,7 +16,7 @@ const refreshProbeEvent = 'agentProbe.refresh';
 
 afterEach((): VitestUtils => vi.useRealTimers());
 
-const available: AgentProbe = { availability: 'available', configOptions: [] };
+const available: AgentProbe = { availability: 'available' };
 const input = { adapter: createAgentMetadata() };
 let probeCall = Promise.withResolvers<AgentProbe>();
 const machine = agentProbeMachine.provide({

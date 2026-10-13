@@ -2,7 +2,7 @@ import type {
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
-import { newSessionCatalogs } from '@repo/mocks/app';
+import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import {
   recordedFlat,
   recordedLevels,
@@ -21,7 +21,7 @@ function selectChoices(
   category: string,
 ): SessionConfigSelectOption[] {
   return recordedFlat(
-    agent.configOptions.find(
+    recordedSessionOptions(agent.agent).find(
       (entry) => entry.category === category && entry.type === 'select',
     ),
   );
@@ -32,11 +32,10 @@ function recordedOptions(agent: HeldAgent): {
   models: SessionConfigSelectOption[];
   efforts: SessionConfigSelectOption[];
 } {
+  const options = recordedSessionOptions(agent.agent);
   return {
-    model: agent.configOptions.find((option) => option.category === 'model'),
-    effort: agent.configOptions.find(
-      (option) => option.category === 'thought_level',
-    ),
+    model: options.find((option) => option.category === 'model'),
+    effort: options.find((option) => option.category === 'thought_level'),
     models: selectChoices(agent, 'model'),
     efforts: selectChoices(agent, 'thought_level'),
   };

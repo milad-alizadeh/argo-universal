@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { agentAdapters } from '@repo/agents';
 import { type Database, openDatabase } from '@repo/db';
-import { agents, project, session } from '@repo/db/schema';
+import { agents, project, session, turn } from '@repo/db/schema';
 import { notInArray } from 'drizzle-orm';
 import { onTestFinished, vi } from 'vitest';
 
@@ -43,6 +43,24 @@ export function insertSession(
       checkoutPath: '/project',
       projectionVersion: 1,
       ...values,
+    })
+    .run();
+}
+
+// An ended first Turn of `session-1` unless `sessionId` names another; a Session is listed once a Turn started.
+export function insertEndedTurn(
+  database: Database,
+  sessionId = 'session-1',
+): void {
+  database
+    .insert(turn)
+    .values({
+      id: `${sessionId}-first-turn`,
+      sessionId,
+      status: 'ended',
+      startedAt: 0,
+      endedAt: 0,
+      stopReason: 'end_turn',
     })
     .run();
 }

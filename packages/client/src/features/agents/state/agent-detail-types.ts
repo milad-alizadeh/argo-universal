@@ -6,14 +6,6 @@ interface AgentLink {
   url: string;
 }
 
-// A choice new Sessions with this Agent start with, such as the model; this device remembers it.
-export interface SessionDefault {
-  id: string;
-  label: string;
-  value?: string;
-  options: readonly { value: string; label: string }[];
-}
-
 // What the detail page knows about an Agent: the Server's probe, the ACP Registry's entry, or both.
 export type AgentDetail = AgentRowEntry & {
   version?: string;
@@ -26,8 +18,6 @@ export type AgentDetail = AgentRowEntry & {
 
 export interface AgentDetailViewProps {
   agent: AgentDetail;
-  defaults?: readonly SessionDefault[];
-  onDefaultChange?: (id: string, value: string) => void;
   onBack?: () => void;
   // Each action shows disabled until the Server can do it.
   onInstall?: () => void;

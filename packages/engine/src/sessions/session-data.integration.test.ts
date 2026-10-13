@@ -14,7 +14,7 @@ import { FeedRowsJob } from '../feed';
 import { writeJobs, writerMachine } from '../storage';
 import {
   createSessionCheckout,
-  discardSessionCheckout,
+  discardSession,
   loadSession,
   titleFromPrompt,
   toSessionInsert,
@@ -111,8 +111,9 @@ it.each([
         sessionId: newSessionId,
         kind: 'existing',
       }),
-    ).toEqual({ ...created, vendorSessionId: 'vendor-1' });
+    ).toEqual({ ...created, vendorSessionId: 'vendor-1', kept: true });
     expect(created).toMatchObject({
+      kept: false,
       sessionId: newSessionId,
       vendorSessionId: null,
       epoch: 0,
@@ -142,7 +143,12 @@ it.each([
         ? directory
         : join(directory, '.argo/worktrees/project-1/new-session'),
     );
-    await discardSessionCheckout(input, created.checkout);
+    await discardSession({
+      input,
+      data: created,
+      stored: false,
+      writer: undefined,
+    });
     expect(existsSync(created.checkout.path)).toBe(checkout.type === 'main');
     expect(await git('branch', '--list', 'argo/*')).toBe('');
   },

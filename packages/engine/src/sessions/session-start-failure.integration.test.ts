@@ -1,3 +1,4 @@
+import { session } from '@repo/db/schema';
 import { expect, it } from 'vitest';
 import { newSession } from '#mocks/session-journey';
 import {
@@ -8,7 +9,7 @@ import {
 it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
   'leaves no Session and no worktree when the Agent cannot start in the $type checkout',
   async (checkout): Promise<void> => {
-    const { caller, git } = await startFailedSessionJourney();
+    const { caller, database, git } = await startFailedSessionJourney();
     const readAgentAvailability = async (): Promise<
       | 'available'
       | 'not_installed'
@@ -26,11 +27,9 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
       code: 'PRECONDITION_FAILED',
       message: expect.stringContaining(signInFailure),
     });
-    expect(
-      (await caller.session.list({ archived: false })).sessions.map(
-        (row): string => row.sessionId,
-      ),
-    ).toEqual(['session-1']);
+    expect(database.select({ id: session.id }).from(session).all()).toEqual([
+      { id: 'session-1' },
+    ]);
     expect(
       git('worktree', 'list', '--porcelain').match(/^worktree /gm),
     ).toHaveLength(1);

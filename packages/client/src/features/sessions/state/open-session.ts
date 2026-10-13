@@ -1,4 +1,4 @@
-import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
+import type { AgentInfo, ProjectInfo, SessionNewInput } from '@repo/contracts';
 import type { SessionChoices } from './session-choices';
 
 const checkoutInput = ({
@@ -7,51 +7,54 @@ const checkoutInput = ({
 }: SessionChoices): SessionNewInput['checkout'] =>
   inNewWorktree ? { type: 'worktree', baseBranch } : { type: 'main' };
 
-const configValues = (
-  configOptions: readonly SessionConfigOption[],
-): SessionNewInput['configOptions'] =>
-  configOptions.map(({ configId, currentValue }) => ({
-    configId,
-    value: currentValue,
-  }));
+type SettledChoices = SessionChoices & {
+  project: ProjectInfo;
+  agent: AgentInfo;
+};
 
-// The Session New Session opens with its configuration, then its first prompt.
+// A Project, an Agent ready to run and, for a main checkout, its base branch.
+const settled = (choices: SessionChoices): choices is SettledChoices =>
+  [
+    choices.project !== undefined,
+    choices.agent?.availability === 'available',
+    choices.baseBranchLoaded,
+  ].every(Boolean);
+
+// The empty Session New Session opens for its choices; its options and first prompt follow once it is open.
 export function toNewSessionInput(
   choices: SessionChoices,
-  configOptions: readonly SessionConfigOption[],
-  prompt: SessionNewInput['prompt'],
 ): SessionNewInput | undefined {
+  if (!settled(choices)) return undefined;
   const { project, agent } = choices;
-  if (!project || !agent) return undefined;
   return {
     projectId: project.id,
     agent: agent.agent,
     checkout: checkoutInput(choices),
-    configOptions: configValues(configOptions),
-    prompt,
+    configOptions: [],
+    prompt: [],
   };
 }
 
 export interface OpenSessionReadiness {
   connected: boolean;
   choices: SessionChoices;
-  configReady: boolean;
-  opening: boolean;
+  // True while the first prompt uploads or waits for the Session.
+  sending: boolean;
+  // True once the first prompt reached the Session.
+  handedOff: boolean;
 }
 
-// A New Session can open once the Server is reachable and every choice has settled.
+// The first prompt can be sent once the Server is reachable and every choice has settled; it waits for the Session to open.
 export function canOpenSession({
   connected,
   choices,
-  configReady,
-  opening,
+  sending,
+  handedOff,
 }: OpenSessionReadiness): boolean {
   return [
     connected,
-    choices.project !== undefined,
-    choices.agent?.availability === 'available',
-    choices.baseBranchLoaded,
-    configReady,
-    !opening,
+    toNewSessionInput(choices) !== undefined,
+    !sending,
+    !handedOff,
   ].every(Boolean);
 }
