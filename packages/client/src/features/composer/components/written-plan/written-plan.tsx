@@ -7,7 +7,6 @@ import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
 import { PlanDocument } from '#lib/product/plan-document';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
 import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
 import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
@@ -84,7 +83,6 @@ export function WrittenPlan({
         initialSize={plan.type === 'markdown' ? 'expanded' : 'compact'}
         fit={plan.type === 'file'}
       >
-        <WrittenPlanHeading title={title} onClose={() => setOpen(false)} />
         <WrittenPlanContent plan={plan} title={title} layout="sheet" />
       </BottomSheet>
     );
@@ -119,26 +117,6 @@ function WrittenPlanContent({
           </Text>
         </View>
       )}
-    </View>
-  );
-}
-
-function WrittenPlanHeading(props: {
-  title: string;
-  onClose: () => void;
-}): React.JSX.Element {
-  return (
-    <View className="flex-row items-center gap-1.5 px-4 py-2">
-      <Icon role="control" name="file-text" className="text-muted-foreground" />
-      <Text role={'heading'} className="min-w-0 flex-1">
-        {props.title}
-      </Text>
-      <IconButton
-        icon="collapse"
-        variant="default"
-        accessibilityLabel="Close written plan"
-        onPress={props.onClose}
-      />
     </View>
   );
 }

@@ -69,6 +69,10 @@ function opensWrittenPlan(
         canvas.getByRole('button', { name: 'Written plan' }),
       );
       const body = within(document.body);
+      if (width === layoutWidths.phone)
+        await expect(
+          body.queryByRole('button', { name: 'Close written plan' }),
+        ).not.toBeInTheDocument();
       if (form === 'markdown')
         await waitFor(() =>
           expect(
@@ -97,6 +101,10 @@ function opensWrittenPlan(
           clipboard.mockRestore();
         }
       }
+      if (form === 'markdown' && width === layoutWidths.phone)
+        await expect(
+          body.getAllByRole('heading', { name: 'Read-only Plan' }),
+        ).toHaveLength(1);
       await expect(
         body.queryByRole('button', { name: 'Approve' }),
       ).not.toBeInTheDocument();
@@ -115,11 +123,7 @@ function opensWrittenPlan(
           body.getByRole('region', { name: writtenPlanRegionName }),
         ).toBeVisible();
       }
-      await (width === layoutWidths.phone
-        ? userEvent.click(
-            body.getByRole('button', { name: 'Close written plan' }),
-          )
-        : userEvent.keyboard('{Escape}'));
+      await userEvent.keyboard('{Escape}');
       await waitFor(() =>
         expect(
           body.queryByRole('region', { name: writtenPlanRegionName }),
