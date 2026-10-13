@@ -21,66 +21,81 @@ const shimmerOpacity = {
   emphasized: { resting: 0.7, highlight: 0.3 },
 };
 
+const sweep = (characterCount: number): number =>
+  withRepeat(
+    withTiming(characterCount + bandHalfWidth, {
+      duration: sweepMilliseconds,
+      easing: Easing.linear,
+    }),
+    -1,
+  );
+
+function useSweepPosition(
+  characterCount: number,
+  reducedMotion: boolean,
+): SharedValue<number> {
+  const position = useSharedValue(-bandHalfWidth);
+  useEffect(() => {
+    position.set(-bandHalfWidth);
+    if (!reducedMotion) position.set(sweep(characterCount));
+    return (): void => cancelAnimation(position);
+  }, [characterCount, reducedMotion, position]);
+  return position;
+}
+
+interface ShimmerTextProps {
+  text: string;
+  className?: string;
+  emphasized?: boolean;
+}
+
 export function ShimmerText({
   text,
   className,
   emphasized = false,
-}: {
-  text: string;
-  className?: string;
-  emphasized?: boolean;
-}): React.JSX.Element {
-  const position = useSharedValue(-bandHalfWidth);
+}: ShimmerTextProps): React.JSX.Element {
   const reducedMotion = useReducedMotion();
-  const characters = Array.from(text);
-  useEffect(() => {
-    position.set(-bandHalfWidth);
-    if (!reducedMotion)
-      position.set(
-        withRepeat(
-          withTiming(characters.length + bandHalfWidth, {
-            duration: sweepMilliseconds,
-            easing: Easing.linear,
-          }),
-          -1,
-        ),
-      );
-    return (): void => cancelAnimation(position);
-  }, [characters.length, reducedMotion, position]);
+  const characters = Array.from(text, (character) => character);
+  const position = useSweepPosition(characters.length, reducedMotion);
   return (
     <Text numberOfLines={1} selectable={false} className={className}>
-      {reducedMotion
-        ? text
-        : withOccurrenceKeys(characters, (character) => character).map(
-            ({ item: character, key }, index) => (
-              <ShimmerCharacter
-                key={key}
-                character={character}
-                index={index}
-                position={position}
-                emphasized={emphasized}
-              />
-            ),
-          )}
+      {reducedMotion ? text : shimmered({ characters, position, emphasized })}
     </Text>
   );
 }
 
-function ShimmerCharacter({
-  character,
-  index,
-  position,
-  emphasized,
-}: {
-  character: string;
-  index: number;
+interface ShimmeredProps {
+  characters: string[];
   position: SharedValue<number>;
   emphasized: boolean;
-}): React.JSX.Element {
-  const { resting, highlight } = emphasized
-    ? shimmerOpacity.emphasized
-    : shimmerOpacity.plain;
-  const style = useAnimatedStyle(
+}
+
+function shimmered(props: ShimmeredProps): React.JSX.Element[] {
+  const { characters, position } = props;
+  const opacity = shimmerOpacity[props.emphasized ? 'emphasized' : 'plain'];
+  return withOccurrenceKeys(characters, (character) => character).map(
+    ({ item: character, key }, index) => (
+      <ShimmerCharacter
+        key={key}
+        character={character}
+        shimmer={{ index, position, opacity }}
+      />
+    ),
+  );
+}
+
+interface ShimmerStyleProps {
+  index: number;
+  position: SharedValue<number>;
+  opacity: { resting: number; highlight: number };
+}
+
+function useShimmerStyle(
+  props: ShimmerStyleProps,
+): ReturnType<typeof useAnimatedStyle<{ opacity: number }>> {
+  const { index, position } = props;
+  const { resting, highlight } = props.opacity;
+  return useAnimatedStyle(
     () => ({
       opacity:
         resting +
@@ -89,9 +104,18 @@ function ShimmerCharacter({
     }),
     [resting, highlight, index, position],
   );
+}
+
+interface ShimmerCharacterProps {
+  character: string;
+  shimmer: ShimmerStyleProps;
+}
+
+function ShimmerCharacter(props: ShimmerCharacterProps): React.JSX.Element {
+  const style = useShimmerStyle(props.shimmer);
   return (
     <Animated.Text accessible={false} selectable={false} style={style}>
-      {character}
+      {props.character}
     </Animated.Text>
   );
 }
