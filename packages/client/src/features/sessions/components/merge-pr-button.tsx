@@ -30,47 +30,73 @@ export interface MergePrButtonProps {
 // The group dims as one, so its buttons do not dim a second time.
 const undimmed = 'opacity-100';
 
-// "Merge PR" with a menu of merge methods on its chevron; dimmed until the PR can merge.
-export function MergePrButton({
-  mergeable,
-  onMerge,
-}: MergePrButtonProps): React.JSX.Element {
-  const disabled = !mergeable || !onMerge;
+interface MergeControlProps {
+  disabled: boolean;
+  onMerge?: (method: MergeMethod) => void;
+}
+
+const mergeDivider = (
+  <View className="h-7 w-px justify-center bg-primary">
+    <View className="h-3.5 bg-primary-foreground/25" />
+  </View>
+);
+
+function mergeMethodItem(
+  { method, label }: (typeof mergeMethods)[number],
+  onMerge: MergeControlProps['onMerge'],
+): React.JSX.Element {
   return (
-    <ButtonGroup
-      className={cn('rounded-md web:shadow-xs', disabled && 'opacity-35')}
-    >
+    <DropdownMenuItem key={method} onPress={() => onMerge?.(method)}>
+      <Text>{label}</Text>
+    </DropdownMenuItem>
+  );
+}
+
+const mergeOptionsAppearance = {
+  variant: 'filled',
+  size: 'sm',
+  icon: 'chevron-down',
+  accessibilityLabel: 'Merge options',
+  className: cn('rounded-l-none sm:w-6', undimmed),
+} as const;
+
+function MergeMethodsMenu(props: MergeControlProps): React.JSX.Element {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild disabled={props.disabled}>
+        <IconButton {...mergeOptionsAppearance} disabled={props.disabled} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {mergeMethods.map((choice) => mergeMethodItem(choice, props.onMerge))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+const mergeAppearance = {
+  appearance: 'content',
+  size: 'xs',
+  icon: 'merged',
+  label: 'Merge PR',
+  className: cn('web:shadow-none', undimmed),
+} as const;
+
+function groupClassName(disabled: boolean): string {
+  return cn('rounded-md web:shadow-xs', disabled && 'opacity-35');
+}
+
+// "Merge PR" with a menu of merge methods on its chevron; dimmed until the PR can merge.
+export function MergePrButton(props: MergePrButtonProps): React.JSX.Element {
+  const disabled = !props.mergeable || !props.onMerge;
+  return (
+    <ButtonGroup className={groupClassName(disabled)}>
       <Button
-        appearance="content"
-        size="xs"
-        icon="merged"
-        label="Merge PR"
+        {...mergeAppearance}
         disabled={disabled}
-        onPress={() => onMerge?.('squash')}
-        className={cn('web:shadow-none', undimmed)}
+        onPress={() => props.onMerge?.('squash')}
       />
-      <View className="h-7 w-px justify-center bg-primary">
-        <View className="h-3.5 bg-primary-foreground/25" />
-      </View>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild disabled={disabled}>
-          <IconButton
-            variant="filled"
-            size="sm"
-            icon="chevron-down"
-            accessibilityLabel="Merge options"
-            disabled={disabled}
-            className={cn('rounded-l-none sm:w-6', undimmed)}
-          />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {mergeMethods.map(({ method, label }) => (
-            <DropdownMenuItem key={method} onPress={() => onMerge?.(method)}>
-              <Text>{label}</Text>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {mergeDivider}
+      <MergeMethodsMenu disabled={disabled} onMerge={props.onMerge} />
     </ButtonGroup>
   );
 }

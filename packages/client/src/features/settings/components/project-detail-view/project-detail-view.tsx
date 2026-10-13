@@ -1,18 +1,15 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { FieldGroup } from '#lib/generic/primitives/fields/field-group/field-group';
-import { FieldRow } from '#lib/generic/primitives/fields/field-row/field-row';
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
-import { Picker } from '#primitives/inputs/picker/picker';
-import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
-import { Switch } from '../../../../lib/generic/primitives/inputs/switch/switch';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { homePath } from '../../state/home-path';
+import { NewSessionsSection } from './project-detail-new-sessions';
+import { RemoveProject } from './project-detail-remove';
 
 export type ProjectLoad =
   | { status: 'loading' }
@@ -28,8 +25,13 @@ export interface ProjectDetailViewProps {
   otherDevice?: string;
   onBack?: () => void;
 }
-type ProjectProps = { project: ProjectInfo };
-type SectionsProps = ProjectProps & Pick<ProjectDetailViewProps, 'otherDevice'>;
+type BodyProps = Pick<
+  ProjectDetailViewProps,
+  'project' | 'name' | 'otherDevice'
+>;
+type SectionsProps = Pick<ProjectDetailViewProps, 'otherDevice'> & {
+  project: ProjectInfo;
+};
 
 // One Project: its folder, where its new Sessions start, and Remove.
 export function ProjectDetailView(
@@ -38,13 +40,7 @@ export function ProjectDetailView(
   return (
     <View className="flex-1 bg-sidebar wide:bg-transparent">
       <PhoneTitle title={props.name} />
-      <SettingsPage
-        title={props.name}
-        caption={props.caption}
-        onBack={props.onBack}
-      >
-        <ProjectBody {...props} />
-      </SettingsPage>
+      <ProjectPage {...props} />
     </View>
   );
 }
@@ -54,29 +50,46 @@ function PhoneTitle({ title }: { title: string }): React.JSX.Element | null {
   return <ScreenHeader title={title} />;
 }
 
+function ProjectPage(props: ProjectDetailViewProps): React.JSX.Element {
+  return (
+    <SettingsPage
+      title={props.name}
+      caption={props.caption}
+      onBack={props.onBack}
+    >
+      <ProjectBody {...props} />
+    </SettingsPage>
+  );
+}
+
 function ProjectBody({
   project,
   name,
   otherDevice,
-}: Pick<
-  ProjectDetailViewProps,
-  'project' | 'name' | 'otherDevice'
->): React.JSX.Element {
-  if (project.status === 'loaded')
-    return (
-      <ProjectSections project={project.project} otherDevice={otherDevice} />
-    );
+}: BodyProps): React.JSX.Element {
+  if (project.status !== 'loaded')
+    return <UnloadedProject status={project.status} name={name} />;
+  return (
+    <ProjectSections project={project.project} otherDevice={otherDevice} />
+  );
+}
+
+type UnloadedProps = { status: 'loading' | 'missing'; name: string };
+
+function UnloadedProject(props: UnloadedProps): React.JSX.Element {
   return (
     <FieldGroup>
       <FieldSection>
-        {project.status === 'loading' ? (
-          <ListItem title="Loading the Project…" loading />
-        ) : (
-          <ListItem title={`The Server has no Project named ${name}.`} />
-        )}
+        <UnloadedRow {...props} />
       </FieldSection>
     </FieldGroup>
   );
+}
+
+function UnloadedRow({ status, name }: UnloadedProps): React.JSX.Element {
+  if (status === 'loading')
+    return <ListItem title="Loading the Project…" loading />;
+  return <ListItem title={`The Server has no Project named ${name}.`} />;
 }
 
 function ProjectSections({
@@ -92,91 +105,5 @@ function ProjectSections({
       <NewSessionsSection project={project} />
       <RemoveProject />
     </FieldGroup>
-  );
-}
-
-const checkoutOptions = [
-  { value: 'worktree', label: 'New worktree' },
-  { value: 'main', label: 'Local' },
-] as const;
-const newSessionsFooter =
-  "A new worktree keeps each Session's files apart. The main checkout shares one folder. New worktrees branch from the base branch.";
-
-// Where the Project's next Session starts, as the last New Session chose; the Server cannot change it from here yet.
-function NewSessionsSection({ project }: ProjectProps): React.JSX.Element {
-  const choice = project.checkoutChoice;
-  return (
-    <FieldSection title="New Sessions" footer={newSessionsFooter}>
-      <ListItem
-        title="Start in"
-        accessory={
-          <Picker
-            appearance="row"
-            label="Start in"
-            value={choice.type}
-            options={checkoutOptions}
-            onChange={ignoreChoice}
-            disabled
-          />
-        }
-      />
-      {choice.type === 'worktree' ? (
-        <ListItem
-          title="Base branch"
-          accessory={
-            <Picker
-              appearance="row"
-              label="Base branch"
-              value={choice.baseBranch}
-              options={[{ value: choice.baseBranch, label: choice.baseBranch }]}
-              onChange={ignoreChoice}
-              code
-              disabled
-            />
-          }
-        />
-      ) : null}
-      <ListItem
-        title="Delete the worktree on archive"
-        accessory={<ArchiveSwitch />}
-      />
-    </FieldSection>
-  );
-}
-
-function ignoreChoice(): void {}
-
-// Archiving keeps a Session's worktree today, and the Server has no setting to change that yet.
-function ArchiveSwitch(): React.JSX.Element {
-  return (
-    <Switch
-      accessibilityLabel="Delete the worktree on archive"
-      checked={false}
-      onCheckedChange={ignoreChoice}
-      disabled
-      aria-disabled
-    />
-  );
-}
-
-// A destructive button with no card around it, in a row the native list sizes, and what removing does: small on wide windows, full width on a phone. The Server cannot remove a Project yet.
-function RemoveProject(): React.JSX.Element {
-  return (
-    <FieldRow>
-      <View className="items-stretch gap-2 wide:items-start">
-        <Button
-          size="sm"
-          fullWidth="narrow"
-          variant="outline"
-          role="destructive"
-          label="Remove Project"
-          disabled
-        />
-        <Text role="secondary" className="px-4 wide:px-0">
-          Argo forgets this Project and archives its Sessions. The folder and
-          its files stay.
-        </Text>
-      </View>
-    </FieldRow>
   );
 }

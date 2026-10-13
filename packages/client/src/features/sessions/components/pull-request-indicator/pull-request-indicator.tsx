@@ -29,24 +29,43 @@ export interface PullRequestIndicatorProps {
   status: PullRequestStatus;
 }
 
-export function PullRequestIndicator({
-  number,
+function PullRequestIcon({
   status,
 }: PullRequestIndicatorProps): React.JSX.Element {
   const appearance = pullRequestAppearance[status];
   return (
+    <Icon
+      role="secondary"
+      name={appearance.icon}
+      className={cn('shrink-0', appearance.className)}
+    />
+  );
+}
+
+function PullRequestNumber({
+  number,
+  status,
+}: PullRequestIndicatorProps): React.JSX.Element {
+  return (
+    <Text
+      role="secondary"
+      className={cn(pullRequestAppearance[status].className)}
+    >
+      #{number}
+    </Text>
+  );
+}
+
+export function PullRequestIndicator(
+  props: PullRequestIndicatorProps,
+): React.JSX.Element {
+  return (
     <View
-      accessibilityLabel={`${status} PR #${number}`}
+      accessibilityLabel={`${props.status} PR #${props.number}`}
       className="flex-row items-center gap-1"
     >
-      <Icon
-        role="secondary"
-        name={appearance.icon}
-        className={cn('shrink-0', appearance.className)}
-      />
-      <Text role="secondary" className={cn(appearance.className)}>
-        #{number}
-      </Text>
+      <PullRequestIcon {...props} />
+      <PullRequestNumber {...props} />
     </View>
   );
 }

@@ -10,7 +10,6 @@ import {
   recordedFeedMock,
   recordedImageUrl,
 } from '../../../../lib/product/feed-message.mocks';
-import type { SessionPullRequest } from '../session-pull-request';
 import type { OpenSessionViewProps } from './session-view';
 
 // Each recording's Agent in the catalog: agent-1 is the first entry, agent-2 the second.
@@ -32,53 +31,92 @@ export const runningHeader = recordedHeader;
 // A clock four minutes and twelve seconds into the running Turn.
 const runningTurnNow = (runningHeader.startedAt ?? 0) + 252_000;
 
+function liveStartedAt({ liveHeader }: SessionSnapshot): number | null {
+  return liveHeader?.startedAt ?? null;
+}
+
+function recordedHeaderProps(
+  snapshot: SessionSnapshot,
+): OpenSessionViewProps['header'] {
+  return {
+    title: snapshot.title,
+    status: snapshot.state === 'idle' ? 'idle' : 'running',
+    startedAt: liveStartedAt(snapshot),
+    now: runningTurnNow,
+  };
+}
+
+function recordedFeedProps(
+  mock: FeedMock,
+  snapshot: SessionSnapshot,
+): OpenSessionViewProps['feed'] {
+  return {
+    items: toFeedView(mock.rows, snapshot).items,
+    liveHeader: snapshot.liveHeader,
+    liveToolCall: findLiveToolCall(mock.rows, snapshot),
+    loadingOlder: false,
+    onStartReached: fn(),
+    imageUrl: recordedImageUrl,
+    checkoutBranch: snapshot.checkout.branch ?? undefined,
+    now: runningTurnNow,
+  };
+}
+
+function recordedCheckout({
+  checkout,
+}: SessionSnapshot): RecordedConfiguration['checkout'] {
+  return {
+    branch: checkout.branch ?? '',
+    newWorktree: checkout.type === 'worktree',
+    path: checkout.path,
+  };
+}
+
+type RecordedConfiguration = NonNullable<
+  OpenSessionViewProps['composer']['configuration']
+>;
+
+function recordedConfiguration(
+  mock: FeedMock,
+  snapshot: SessionSnapshot,
+): RecordedConfiguration {
+  const catalogAgent = catalogAgentOf(mock);
+  return {
+    agents: newSessionCatalogs.bothAvailable,
+    agent: catalogAgent.agent,
+    configOptions: catalogAgent.configOptions,
+    onConfigChange: fn(),
+    turnRunning: snapshot.state !== 'idle',
+    checkout: recordedCheckout(snapshot),
+  };
+}
+
+function recordedComposerProps(
+  mock: FeedMock,
+  snapshot: SessionSnapshot,
+): OpenSessionViewProps['composer'] {
+  return {
+    draft: { text: '', attachments: [] },
+    onDraftChange: fn(),
+    onAttachImages: fn(),
+    onAttachFiles: fn(),
+    onDropFiles: fn(),
+    onSend: fn(),
+    onStop: fn(),
+    configuration: recordedConfiguration(mock, snapshot),
+  };
+}
+
 // An open Session's props from a recording, through the real Feed converter.
 function openSessionProps(
   mock: FeedMock,
   snapshotChanges: Partial<SessionSnapshot> = {},
 ): OpenSessionViewProps {
   const snapshot = { ...mock.snapshot, ...snapshotChanges };
-  const view = toFeedView(mock.rows, snapshot);
-  const { liveHeader } = snapshot;
-  const catalogAgent = catalogAgentOf(mock);
   return {
-    header: {
-      title: snapshot.title,
-      status: snapshot.state === 'idle' ? 'idle' : 'running',
-      startedAt: liveHeader?.startedAt ?? null,
-      now: runningTurnNow,
-    },
-    feed: {
-      items: view.items,
-      liveHeader,
-      liveToolCall: findLiveToolCall(mock.rows, snapshot),
-      loadingOlder: false,
-      onStartReached: fn(),
-      imageUrl: recordedImageUrl,
-      checkoutBranch: snapshot.checkout.branch ?? undefined,
-      now: runningTurnNow,
-    },
-    composer: {
-      draft: { text: '', attachments: [] },
-      onDraftChange: fn(),
-      onAttachImages: fn(),
-      onAttachFiles: fn(),
-      onDropFiles: fn(),
-      onSend: fn(),
-      onStop: fn(),
-      configuration: {
-        agents: newSessionCatalogs.bothAvailable,
-        agent: catalogAgent.agent,
-        configOptions: catalogAgent.configOptions,
-        onConfigChange: fn(),
-        turnRunning: snapshot.state !== 'idle',
-        checkout: {
-          branch: snapshot.checkout.branch ?? '',
-          newWorktree: snapshot.checkout.type === 'worktree',
-          path: snapshot.checkout.path,
-        },
-      },
-    },
+    header: recordedHeaderProps(snapshot),
+    feed: recordedFeedProps(mock, snapshot),
+    composer: recordedComposerProps(mock, snapshot),
   };
 }
 
@@ -111,44 +149,3 @@ export const longSession = openSessionProps({
     })),
   ),
 });
-
-// A Session's PR with its checks running, failing or passed.
-const sessionPullRequest = {
-  number: 45,
-  title: 'Build the Session layout from spec 0003',
-  status: 'open',
-  mergeable: false,
-} satisfies SessionPullRequest;
-
-export const pullRequestMocks = {
-  checksRunning: {
-    ...sessionPullRequest,
-    checks: { passed: 3, failing: 0, running: 2, total: 5 },
-  },
-  checksFailing: {
-    ...sessionPullRequest,
-    checks: { passed: 4, failing: 1, running: 0, total: 5 },
-  },
-  checksPassed: {
-    ...sessionPullRequest,
-    checks: { passed: 5, failing: 0, running: 0, total: 5 },
-    mergeable: true,
-  },
-  followUp: {
-    number: 46,
-    title: 'Wire the Inspector to the changed files',
-    status: 'draft',
-    mergeable: false,
-  },
-} satisfies Record<string, SessionPullRequest>;
-
-// The running Session with its PRs on the header.
-export function withPullRequests(
-  session: OpenSessionViewProps,
-  pullRequests: SessionPullRequest[],
-): OpenSessionViewProps {
-  return {
-    ...session,
-    header: { ...session.header, pullRequests, onMerge: fn() },
-  };
-}

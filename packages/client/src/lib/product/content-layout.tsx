@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { createContext, useContext, useState } from 'react';
-import { View, type ViewProps } from 'react-native';
+import { type LayoutChangeEvent, View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { useWide } from '../generic/use-wide/use-wide';
 
@@ -21,25 +21,28 @@ export function useContentWide(): boolean {
   return contentWide ?? windowWide;
 }
 
-export function ContentLayout({
-  children,
-  className,
-  onLayout,
-  ...props
-}: ViewProps): React.JSX.Element {
-  const [wide, setWide] = useState<boolean>();
+export function ContentLayout(props: ViewProps): React.JSX.Element {
+  const [wide, measureWidth] = useContentWidth(props.onLayout);
   return (
     <View
       {...props}
-      className={cn('flex-1 min-h-0 min-w-0', className)}
-      onLayout={(event) => {
-        setWide(event.nativeEvent.layout.width >= contentWideMin);
-        onLayout?.(event);
-      }}
+      className={cn('flex-1 min-h-0 min-w-0', props.className)}
+      onLayout={measureWidth}
     >
-      <ContentWide.Provider value={wide}>{children}</ContentWide.Provider>
+      <ContentWide.Provider value={wide}>{props.children}</ContentWide.Provider>
     </View>
   );
+}
+
+function useContentWidth(
+  onLayout: ViewProps['onLayout'],
+): [boolean | undefined, (event: LayoutChangeEvent) => void] {
+  const [wide, setWide] = useState<boolean>();
+  const measureWidth = (event: LayoutChangeEvent): void => {
+    setWide(event.nativeEvent.layout.width >= contentWideMin);
+    onLayout?.(event);
+  };
+  return [wide, measureWidth];
 }
 
 export function ContentWidthProvider(props: {

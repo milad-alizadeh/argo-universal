@@ -1,6 +1,6 @@
 import { projectsList, sessionRows } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
-import { listEntries } from './sessions-list-entries';
+import { listEntries, type ListEntriesInput } from './sessions-list-entries';
 
 const firstProjectEntryId = 'project:project-1';
 const secondProjectEntryId = 'project:project-2';
@@ -15,13 +15,18 @@ const newer = { ...sessionRows.needsInput, activityAt: 2000 };
 // Ties with `newer`, and its id sorts first.
 const tiedEarlierId = { ...sessionRows.failed, activityAt: 2000 };
 
-const entryIds = (...args: Parameters<typeof listEntries>): string[] =>
-  listEntries(...args).map((entry) => entry.id);
+const entryIds = (input: ListEntriesInput): string[] =>
+  listEntries(input).map((entry) => entry.id);
 
 describe('listEntries', () => {
   it("lists each Project's Sessions under its heading, newest activity first, ties by id", () => {
     expect(
-      entryIds(projects, [older, newer, tiedEarlierId], new Set(), false),
+      entryIds({
+        projects,
+        sessions: [older, newer, tiedEarlierId],
+        collapsed: new Set(),
+        hideEmptyProjects: false,
+      }),
     ).toEqual([
       firstProjectEntryId,
       tiedEarlierId.sessionId,
@@ -34,25 +39,34 @@ describe('listEntries', () => {
 
   it('shows only the heading of a collapsed Project', () => {
     expect(
-      entryIds(projects, [older], new Set([firstProjectEntryId]), false),
+      entryIds({
+        projects,
+        sessions: [older],
+        collapsed: new Set([firstProjectEntryId]),
+        hideEmptyProjects: false,
+      }),
     ).toEqual([firstProjectEntryId, secondProjectEntryId, 'empty:project-2']);
   });
 
   it('leaves out a Project with no Sessions when asked to', () => {
-    expect(entryIds(projects, [older], new Set(), true)).toEqual([
-      firstProjectEntryId,
-      older.sessionId,
-    ]);
+    expect(
+      entryIds({
+        projects,
+        sessions: [older],
+        collapsed: new Set(),
+        hideEmptyProjects: true,
+      }),
+    ).toEqual([firstProjectEntryId, older.sessionId]);
   });
 
   it('leaves out Sessions of a Project it does not list', () => {
     expect(
-      entryIds(
-        [otherProject],
-        [older, { ...newer, projectId: otherProject.id }],
-        new Set(),
-        false,
-      ),
+      entryIds({
+        projects: [otherProject],
+        sessions: [older, { ...newer, projectId: otherProject.id }],
+        collapsed: new Set(),
+        hideEmptyProjects: false,
+      }),
     ).toEqual([secondProjectEntryId, newer.sessionId]);
   });
 });

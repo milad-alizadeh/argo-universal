@@ -3,7 +3,8 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { Variation, Variations } from '../../../../lib/generic/variations';
-import { SessionsList, type SessionsListProps } from './sessions-list';
+import { SessionsList } from './sessions-list';
+import type { SessionsListProps } from './sessions-list-props';
 import {
   multipleProjects,
   sessionsListProps,
