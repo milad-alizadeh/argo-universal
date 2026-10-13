@@ -127,35 +127,3 @@ function RequestFooterContents(props: FooterProps): ReactNode {
 function showActions(state: RequestState, wide: boolean): boolean {
   return state.kind !== 'answered' || wide;
 }
-
-function RequestFooter(props: FooterProps): ReactNode {
-  return (
-    <View
-      className={cn(
-        'min-h-13 flex-row items-center gap-1 px-2 pt-3 pb-2',
-        props.footerClassName,
-      )}
-    >
-      <RequestFooterContents {...props} />
-    </View>
-  );
-}
-
-function RequestFooterContents(props: FooterProps): ReactNode {
-  const wide = useContentWide();
-  return (
-    <>
-      <RequestStatus state={props.state} mutedStatus={props.mutedStatus} />
-      {showActions(props.state, wide) && props.actions}
-    </>
-  );
-}
-
-function showActions(state: RequestState, wide: boolean): boolean {
-  return state.kind !== 'answered' || wide;
-}
-
-type AnsweredStatusProps = {
-  reason: string;
-  muted?: boolean;
-};
