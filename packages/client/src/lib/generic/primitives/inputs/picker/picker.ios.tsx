@@ -8,7 +8,7 @@ import { PickerSearchList } from './picker-search-list';
 const menuLimit = 7;
 type ControlProps<Value extends string> = PickerProps<Value> &
   PickerPresentation;
-export const Picker = createNativePicker({ Control: PickerControl });
+export const Picker = createNativePicker(PickerControl);
 
 function PickerControl<Value extends string>(
   props: ControlProps<Value>,
