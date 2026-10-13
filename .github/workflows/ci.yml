@@ -1,4 +1,4 @@
-# Quality and web e2e on every pull request and push to main; Electron e2e on main and release/*.
+# Quality and web e2e on every push, and on a pull request when its changes need them; Electron e2e on main and release/*.
 # The jobs run in parallel and the web e2e suite is split into shards, so a run takes as long as its slowest job.
 name: CI
 
@@ -18,8 +18,58 @@ permissions:
   contents: read
 
 jobs:
+  # Skips the jobs a pull request's changes cannot affect; pushes run them all.
+  changes:
+    name: Choose the jobs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      quality: ${{ steps.choose.outputs.quality }}
+      e2e-web: ${{ steps.choose.outputs.e2e-web }}
+    steps:
+      # The choice compares with the pull request's base commit; blob:none fetches the history without file contents.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      # The catalog's turbo alone, so the choice runs before any pnpm install; an unreadable pin fails here instead of installing the latest.
+      - name: Install turbo
+        run: |
+          version=$(sed -nE 's/^  turbo: ([0-9]+\.[0-9]+\.[0-9]+)$/\1/p' pnpm-workspace.yaml)
+          test -n "$version"
+          npm install --global "turbo@$version"
+
+      - name: Choose the jobs
+        id: choose
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          quality=true
+          e2e=true
+          if [ -n "$BASE" ]; then
+            files=$(git diff --name-only "$BASE...HEAD")
+            # turbo exits 0 when nothing is affected, 1 when something is and 2 on an error; an error counts as affected.
+            affected() { ! turbo query affected --base "$BASE" --head HEAD "$@" --exit-code > /dev/null; }
+
+            # Quality's tools never read Markdown, but a check can: mocks/agent/release-notes.md is an e2e fixture.
+            quality=false
+            if grep -qv '\.md$' <<< "$files" || affected --tasks check-types test; then quality=true; fi
+
+            # Turbo cannot see root files, .github/ or patches/. turbo.json gives every package a no-op test:web, so only @repo/e2e's counts.
+            outside=$(grep -E '^(\.github/|patches/|[^/]+$)' <<< "$files" | grep -v '\.md$' || true)
+            e2e=false
+            if [ -n "$outside" ] || affected --tasks test:web --packages @repo/e2e; then e2e=true; fi
+          fi
+
+          echo "quality=$quality" >> "$GITHUB_OUTPUT"
+          echo "e2e-web=$e2e" >> "$GITHUB_OUTPUT"
+          echo "Quality runs: $quality. Web e2e runs: $e2e."
+
   quality:
     name: Quality
+    needs: changes
+    if: ${{ needs.changes.outputs.quality == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -53,6 +103,8 @@ jobs:
 
   e2e-web:
     name: End-to-end tests (web ${{ matrix.shard }}/3)
+    needs: changes
+    if: ${{ needs.changes.outputs.e2e-web == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -86,7 +138,7 @@ jobs:
 
   e2e-web-report:
     name: Merge the web e2e report
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && needs.e2e-web.result != 'skipped' }}
     needs: e2e-web
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -153,10 +205,11 @@ jobs:
           retention-days: 30
 
   # Branch protection requires this one check, so splitting or renaming the jobs above never changes the required checks.
+  # A skipped job passes it; a failed choice fails it.
   ci:
     name: Quality and end-to-end tests
     if: ${{ always() }}
-    needs: [quality, e2e-web, e2e-electron]
+    needs: [changes, quality, e2e-web, e2e-electron]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
