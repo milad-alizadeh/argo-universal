@@ -6,7 +6,7 @@ Feature: Agent management review regressions
     When the registry offers Example Agent version two
     And I explicitly update Example Agent while its installer is held
     And another App refreshes the catalog to version three
-    Then the running update still names version two
+    Then the update stays in progress
     When the version two installer completes
     Then Example Agent settles with selected version two
     And Example Agent offers the next explicit update

@@ -4,11 +4,19 @@ import { InstallationScenario } from '@repo/mocks/registry/installation';
 import { z } from 'zod';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
-import { Given, When, Then } from './fixtures';
+import { Given, When, Then, test } from './fixtures';
 import { query } from './server-query';
+import { toast } from './toasts';
 
 const heading = (page: Page, name: string): Locator =>
   page.getByRole('heading', { name, exact: true });
+// Evidence for the PR: each state of the flow, as the user sees it.
+const capture = async (page: Page, name: string): Promise<void> => {
+  await page.screenshot({
+    path: test.info().outputPath(`${name}.png`),
+    animations: 'disabled',
+  });
+};
 const failureMessage = (failure: string): string =>
   failure === 'missing-runtime'
     ? 'Node.js is required on the Server'
@@ -40,30 +48,34 @@ Given(
     );
   },
 );
-When('I confirm installing Example Agent', async ({ page }): Promise<void> => {
+const openInstallation = async (page: Page): Promise<Locator> => {
   await browseAgents(page);
   await page.getByRole('link', { name: /^Example Agent,/ }).click();
   await page.getByRole('button', { name: 'Install', exact: true }).click();
-  await expect(page.getByRole('dialog')).toContainText(
-    'Install Example Agent?',
-  );
-  await page
+  return page.getByRole('dialog', { name: 'Install Example Agent?' });
+};
+When('I confirm installing Example Agent', async ({ page }): Promise<void> => {
+  const confirmation = await openInstallation(page);
+  await expect(confirmation).toContainText('Version 1.2.3');
+  await capture(page, 'agent-install-confirmation');
+  await confirmation
     .getByRole('button', { name: 'Install', exact: true })
-    .last()
+    .click();
+});
+When('I cancel installing Example Agent', async ({ page }): Promise<void> => {
+  const confirmation = await openInstallation(page);
+  await confirmation
+    .getByRole('button', { name: 'Cancel', exact: true })
     .click();
 });
 Then(
-  'the installation keeps its title and disables the loading Install button',
+  'the Install button shows the installation in progress',
   async ({ page }): Promise<void> => {
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(
-      page.getByRole('button', { name: 'Install', exact: true }).last(),
+      page.getByRole('button', { name: 'Installing…', exact: true }),
     ).toBeDisabled();
-    await expect(page.getByRole('dialog')).toContainText(
-      'Install Example Agent?',
-    );
-    await expect(
-      page.getByRole('button', { name: 'Cancel', exact: true }),
-    ).toBeVisible();
+    await capture(page, 'agent-install-in-progress');
   },
 );
 When(
@@ -78,36 +90,29 @@ When(
 Then(
   'Example Agent installation completes with readiness checked separately',
   async ({ page }): Promise<void> => {
-    await expect(page.getByRole('dialog')).toContainText(
-      'Example Agent installed',
-    );
+    await expect(toast(page, 'Example Agent installed')).toBeVisible();
     await expect(
-      page.getByText('Version 1.2.3 is installed.', { exact: false }),
+      toast(page, 'Version 1.2.3. Sign-in is checked separately.'),
     ).toBeVisible();
+    await expect(toast(page, 'Ready')).toHaveCount(0);
     await expect(
-      page.getByText(/Installation alone does not mean ready/),
-    ).toBeVisible();
-    await page.getByRole('button', { name: 'Done', exact: true }).click();
+      page.getByRole('button', { name: /^Install(ing…)?$/ }),
+    ).toHaveCount(0);
     await expect(heading(page, 'Example Agent')).toBeVisible();
+    await capture(page, 'agent-install-completed');
   },
 );
 Then(
   'the installation explains {word} and offers another attempt',
   async ({ page }, failure: string): Promise<void> => {
+    await expect(toast(page, 'Could not install Example Agent')).toBeVisible();
+    await expect(toast(page, failureMessage(failure), false)).toBeVisible();
     await expect(
-      page.getByRole('dialog', { name: 'Installation failed', exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByText(failureMessage(failure), { exact: false }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: 'Try again', exact: true }),
-    ).toBeVisible();
+      page.getByRole('button', { name: 'Install', exact: true }),
+    ).toBeEnabled();
+    await capture(page, 'agent-install-failed');
   },
 );
-When('I cancel the Agent installation', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
-});
 const installationStatus = z.object({
   installation: z.object({ status: z.string() }),
   operation: z.object({ status: z.string() }).nullable(),
@@ -125,18 +130,13 @@ const readInstallation = (
     },
     output: installationStatus,
   });
-Then(
-  'no new installation is activated',
-  async ({ page, server }): Promise<void> => {
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(
-      page.getByRole('button', { name: 'Install', exact: true }),
-    ).toBeVisible();
-    await expect
-      .poll(() => readInstallation(page, server.httpUrl))
-      .toEqual({
-        installation: { status: 'not-installed' },
-        operation: { status: 'cancelled' },
-      });
-  },
-);
+Then('no installation is started', async ({ page, server }): Promise<void> => {
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Install', exact: true }),
+  ).toBeEnabled();
+  await expect(readInstallation(page, server.httpUrl)).resolves.toEqual({
+    installation: { status: 'not-installed' },
+    operation: null,
+  });
+});

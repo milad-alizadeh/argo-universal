@@ -52,11 +52,6 @@ export const currentOperation = (
   if (!latest) return retainedOperation(saved, status);
   return selectKnownLatest(saved, latest, previousOperationId);
 };
-export const operationFailure = (
-  operation: AgentInstallOperation | undefined,
-): string | undefined =>
-  operation?.status === 'failed' ? operation.failure : undefined;
-
 const latestOperation = (
   status: AgentInstallStatus | undefined,
   previous?: string,
