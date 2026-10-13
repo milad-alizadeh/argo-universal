@@ -23,7 +23,7 @@ function ShellBackground({ shell, layout }: ShellPartProps): React.JSX.Element {
   );
 }
 
-// Floats over the top of the pane; touches outside the banner reach the page.
+// Floats over the top of the detail and Inspector, so an expanded Inspector still shows it; touches outside the banner reach the page.
 function PaneBanner({ children }: { children: ReactNode }): React.JSX.Element {
   return (
     <View
@@ -49,7 +49,6 @@ function DetailPane({ shell, layout }: ShellPartProps): React.JSX.Element {
     <ShellPane testID="desktop-detail" {...detailPlacement(layout)}>
       <ContentLayout className="overflow-hidden">
         {shell.children}
-        <PaneBanner>{shell.banner}</PaneBanner>
       </ContentLayout>
     </ShellPane>
   );
@@ -74,6 +73,7 @@ function ShellContent(parts: ShellPartProps): React.JSX.Element {
     <View className="min-w-0 flex-1 flex-row">
       <DetailPane {...parts} />
       <InspectorPanel {...parts} />
+      <PaneBanner>{parts.shell.banner}</PaneBanner>
     </View>
   );
 }
