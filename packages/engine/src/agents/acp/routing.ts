@@ -63,7 +63,10 @@ export class AcpRouting {
     this.rejectUnclaimableEarlyUpdates();
   }
   public release(reservation: AcpReservation): void {
-    if (reservation.sessionId !== undefined)
+    if (
+      reservation.sessionId !== undefined &&
+      this.destinations.get(reservation.sessionId) === reservation
+    )
       this.destinations.delete(reservation.sessionId);
     this.openings.delete(reservation);
     this.rejectUnclaimableEarlyUpdates();
