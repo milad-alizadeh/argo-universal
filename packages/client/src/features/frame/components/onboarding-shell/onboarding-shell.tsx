@@ -4,17 +4,17 @@ import { View } from 'react-native';
 import { ContentLayout } from '#lib/product/content-layout';
 import { PaneBanner, WindowDragStrip } from '../desktop-shell/shell-chrome';
 
-export interface FirstRunShellProps {
+export interface OnboardingShellProps {
   // The connection banner, as on the full shell.
   banner?: ReactNode;
   children: ReactNode;
 }
 
-// A Server with no Projects yet: Get started fills the window, with no rail or list until the first Project arrives.
-export function FirstRunShell({
+// A Server with no Projects yet: Onboarding fills the window, with no rail or list until the first Project arrives.
+export function OnboardingShell({
   banner,
   children,
-}: FirstRunShellProps): React.JSX.Element {
+}: OnboardingShellProps): React.JSX.Element {
   return (
     <View testID="desktop-shell" className="flex-1 overflow-hidden bg-sidebar">
       <WindowDragStrip />

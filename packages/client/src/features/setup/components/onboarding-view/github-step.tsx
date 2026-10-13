@@ -5,13 +5,13 @@ import {
 } from '#lib/generic/primitives/display/badge/badge';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
-import type { GitHubStep, StepMark } from '../../state/get-started';
-import type { GetStartedViewProps } from './get-started-props';
+import type { GitHubStep, StepMark } from '../../state/onboarding';
+import type { OnboardingViewProps } from './onboarding-props';
 import { SetupStep, type SetupStepProps } from './setup-step';
 
 // `onConnectGitHub` is unset until the App can sign in to GitHub.
 export type GitHubStepViewProps = Pick<
-  GetStartedViewProps,
+  OnboardingViewProps,
   'github' | 'onConnectGitHub'
 > & { mark: StepMark };
 

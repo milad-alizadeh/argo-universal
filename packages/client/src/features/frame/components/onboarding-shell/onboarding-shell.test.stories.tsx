@@ -9,29 +9,29 @@ import {
   railId,
   sessionListId,
 } from '../desktop-shell/desktop-shell-controls.mocks';
-import { FirstRunShell, type FirstRunShellProps } from './first-run-shell';
+import { OnboardingShell, type OnboardingShellProps } from './onboarding-shell';
 
 const meta = {
-  title: 'Tests/FirstRunShell',
-  component: FirstRunShell,
+  title: 'Tests/OnboardingShell',
+  component: OnboardingShell,
   args: { children: null },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: (args): React.JSX.Element => (
     // The story's own window, so the page can be measured against it.
     <View testID="window" className="h-[600px] w-full">
-      <FirstRunShell {...args}>
-        <Text>Get started</Text>
-      </FirstRunShell>
+      <OnboardingShell {...args}>
+        <Text>Onboarding</Text>
+      </OnboardingShell>
     </View>
   ),
-} satisfies Meta<FirstRunShellProps>;
+} satisfies Meta<OnboardingShellProps>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Get started fills the window; the rail and list wait for the first Project.
+// Onboarding fills the window; the rail and list wait for the first Project.
 export const PageFillsTheWindow: Story = {
   play: async ({ canvas }) => {
-    const page = canvas.getByText('Get started').getBoundingClientRect();
+    const page = canvas.getByText('Onboarding').getBoundingClientRect();
     const window = canvas.getByTestId('window').getBoundingClientRect();
     await expect(page.width).toBe(window.width);
   },

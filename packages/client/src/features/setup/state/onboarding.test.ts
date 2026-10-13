@@ -5,7 +5,7 @@ import {
   type GitHubStep,
   type StepMarks,
   stepMarks,
-} from './get-started';
+} from './onboarding';
 
 const signedIn: AgentStep = { status: 'done', agentName: 'Claude' };
 const noAgent: AgentStep = { status: 'not-found', checking: false };

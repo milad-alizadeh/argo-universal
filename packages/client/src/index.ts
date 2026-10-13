@@ -14,10 +14,10 @@ export {
 export { ConnectionDetailScreen, useConnection } from '#features/connection';
 export {
   DesktopLayout,
-  FirstRunLayout,
+  OnboardingLayout,
   PhoneLayout,
   SectionRootScreen,
-  useGetStartedShown,
+  useOnboardingShown,
 } from '#features/frame';
 export {
   AccountsScreen,

@@ -2,24 +2,24 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import { GetStartedView } from './get-started-view';
+import { OnboardingView } from './onboarding-view';
 import {
   agentName,
-  getStartedArgs,
+  onboardingArgs,
   githubButtons,
   githubSteps,
   serverName,
-} from './get-started-view.mocks';
+} from './onboarding-view.mocks';
 
 const addProject = 'Add Project';
 
 const meta = {
-  title: 'Tests/Screens/Setup/Get started',
-  component: GetStartedView,
+  title: 'Tests/Screens/Setup/Onboarding',
+  component: OnboardingView,
   parameters: { screenPreview: true },
-  args: getStartedArgs(),
+  args: onboardingArgs(),
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
-} satisfies Meta<typeof GetStartedView>;
+} satisfies Meta<typeof OnboardingView>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

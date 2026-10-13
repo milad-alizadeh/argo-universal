@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
-import type { StepMark } from '../../state/get-started';
-import type { GetStartedViewProps } from './get-started-props';
+import type { StepMark } from '../../state/onboarding';
+import type { OnboardingViewProps } from './onboarding-props';
 import { SetupStep } from './setup-step';
 
 // `onAddProject` is unset until the App can add a Project.
-export type ProjectStepViewProps = Pick<GetStartedViewProps, 'onAddProject'> & {
+export type ProjectStepViewProps = Pick<OnboardingViewProps, 'onAddProject'> & {
   mark: StepMark;
 };
 
@@ -26,7 +26,7 @@ function AddProjectButton(props: ProjectStepViewProps): React.JSX.Element {
   );
 }
 
-// Step 3: adding the first Project ends Get started, so it is never done here.
+// Step 3: adding the first Project ends Onboarding, so it is never done here.
 export function ProjectStepView(
   props: ProjectStepViewProps,
 ): React.JSX.Element {

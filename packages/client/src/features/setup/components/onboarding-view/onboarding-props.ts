@@ -1,6 +1,6 @@
-import type { AgentStep, GitHubStep } from '../../state/get-started';
+import type { AgentStep, GitHubStep } from '../../state/onboarding';
 
-export interface GetStartedViewProps {
+export interface OnboardingViewProps {
   // The Server Device's name, once the Server has said it.
   serverName?: string;
   agent: AgentStep;

@@ -1,10 +1,10 @@
 import {
   DesktopLayout,
-  FirstRunLayout,
+  OnboardingLayout,
   PhoneLayout,
   type NavigationDestination,
   type Section,
-  useGetStartedShown,
+  useOnboardingShown,
   useWide,
 } from '@repo/client';
 import { Slot, usePathname, useRouter } from 'expo-router';
@@ -63,8 +63,8 @@ function NarrowShell({
 }: {
   destination: NavigationDestination;
 }): React.JSX.Element {
-  const getStarted = useGetStartedShown(destination);
-  return getStarted ? <FirstRunLayout /> : <PhoneSections />;
+  const onboarding = useOnboardingShown(destination);
+  return onboarding ? <OnboardingLayout /> : <PhoneSections />;
 }
 
 interface ShownPage {

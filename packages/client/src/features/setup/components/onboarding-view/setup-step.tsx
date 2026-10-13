@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../../../lib/generic/symbols/icon';
-import type { StepMark } from '../../state/get-started';
+import type { StepMark } from '../../state/onboarding';
 
 const markClasses: Record<StepMark, string> = {
   done: 'bg-success',
@@ -84,7 +84,7 @@ function StepBody(props: SetupStepProps): React.JSX.Element {
   );
 }
 
-// One Get started step: its mark, what it is, and its action in a fixed slot so every step's buttons line up.
+// One Onboarding step: its mark, what it is, and its action in a fixed slot so every step's buttons line up.
 export function SetupStep(props: SetupStepProps): React.JSX.Element {
   return (
     <View className="flex-row items-start gap-3 py-4">

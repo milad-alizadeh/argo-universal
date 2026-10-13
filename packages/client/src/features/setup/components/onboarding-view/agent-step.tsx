@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
-import type { AgentStep, StepMark } from '../../state/get-started';
-import type { GetStartedViewProps } from './get-started-props';
+import type { AgentStep, StepMark } from '../../state/onboarding';
+import type { OnboardingViewProps } from './onboarding-props';
 import { SetupStep, type SetupStepProps } from './setup-step';
 
 export type AgentStepViewProps = Pick<
-  GetStartedViewProps,
+  OnboardingViewProps,
   'agent' | 'onChangeAgent' | 'onCheckAgentAgain'
 > & { mark: StepMark };
 

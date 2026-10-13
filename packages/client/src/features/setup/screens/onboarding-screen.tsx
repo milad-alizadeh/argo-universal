@@ -7,9 +7,9 @@ import {
   useErrorToast,
 } from '#lib/generic/primitives/overlays/toast/toast';
 import { useNavigate } from '#lib/product/navigation/context';
-import type { GetStartedViewProps } from '../components/get-started-view/get-started-props';
-import { GetStartedView } from '../components/get-started-view/get-started-view';
-import { type AgentStep, agentStep } from '../state/get-started';
+import type { OnboardingViewProps } from '../components/onboarding-view/onboarding-props';
+import { OnboardingView } from '../components/onboarding-view/onboarding-view';
+import { type AgentStep, agentStep } from '../state/onboarding';
 
 const agentsFailed: ErrorToast = {
   title: 'Couldn’t load your Agents',
@@ -39,7 +39,7 @@ const useServerName = (): string | undefined =>
   useQuery(useTRPC().system.info.queryOptions()).data?.name;
 
 function useSetupLinks(): Pick<
-  GetStartedViewProps,
+  OnboardingViewProps,
   'onChangeAgent' | 'onUseOnPhone'
 > {
   const navigate = useNavigate();
@@ -49,14 +49,14 @@ function useSetupLinks(): Pick<
   };
 }
 
-// Get started on the Server: GitHub sign-in and Add Project are not built yet, so the view shows them disabled; it draws once the Agents are known.
-export function GetStartedScreen(): React.JSX.Element | null {
+// Onboarding on the Server: GitHub sign-in and Add Project are not built yet, so the view shows them disabled; it draws once the Agents are known.
+export function OnboardingScreen(): React.JSX.Element | null {
   const links = useSetupLinks();
   const { step, checkAgain } = useAgentStep();
   const serverName = useServerName();
   if (!step) return null;
   return (
-    <GetStartedView
+    <OnboardingView
       serverName={serverName}
       agent={step}
       github={{ status: 'not-connected' }}

@@ -1,6 +1,6 @@
 import { fn } from 'storybook/test';
-import type { GitHubStep } from '../../state/get-started';
-import type { GetStartedViewProps } from './get-started-props';
+import type { GitHubStep } from '../../state/onboarding';
+import type { OnboardingViewProps } from './onboarding-props';
 
 export const serverName = 'Studio Mac mini';
 export const agentName = 'Claude';
@@ -14,8 +14,8 @@ export const githubSteps = {
   expired: { status: 'expired', login: githubLogin },
 } satisfies Record<string, GitHubStep>;
 
-// The designed Get started: an Agent and GitHub done, Add a Project next, and every action wired.
-export const getStartedArgs = (): GetStartedViewProps => ({
+// The designed Onboarding: an Agent and GitHub done, Add a Project next, and every action wired.
+export const onboardingArgs = (): OnboardingViewProps => ({
   serverName,
   agent: { status: 'done', agentName },
   github: githubSteps.signedIn,

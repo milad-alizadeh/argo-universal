@@ -1,17 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { GetStartedView } from './get-started-view';
-import { getStartedArgs, githubSteps } from './get-started-view.mocks';
+import { OnboardingView } from './onboarding-view';
+import { onboardingArgs, githubSteps } from './onboarding-view.mocks';
 
 const meta = {
-  title: 'Screens/Setup/Get started',
-  component: GetStartedView,
-  args: getStartedArgs(),
+  title: 'Screens/Setup/Onboarding',
+  component: OnboardingView,
+  args: onboardingArgs(),
   parameters: { screenPreview: true },
-} satisfies Meta<typeof GetStartedView>;
+} satisfies Meta<typeof OnboardingView>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const GetStarted: Story = {};
+export const Onboarding: Story = {};
 
 // Step 1 holds the primary action; Add Project waits with an outline button.
 export const NoAgentFound: Story = {

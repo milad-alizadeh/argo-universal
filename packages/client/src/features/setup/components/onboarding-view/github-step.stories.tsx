@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { fn } from 'storybook/test';
 import { Variation, Variations } from '../../../../lib/generic/variations';
-import { stepMarks } from '../../state/get-started';
-import { githubSteps } from './get-started-view.mocks';
+import { stepMarks } from '../../state/onboarding';
 import { GitHubStepView } from './github-step';
+import { githubSteps } from './onboarding-view.mocks';
 
 const agentDone = { status: 'done', agentName: 'Claude' } as const;
 

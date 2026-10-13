@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import type { GitHubStep } from '../../state/get-started';
+import type { GitHubStep } from '../../state/onboarding';
+import { GitHubStepView } from './github-step';
 import {
   githubButtons,
   githubLogin,
   githubSteps,
-} from './get-started-view.mocks';
-import { GitHubStepView } from './github-step';
+} from './onboarding-view.mocks';
 
 const meta = {
   title: 'Tests/Setup/GitHubStep',

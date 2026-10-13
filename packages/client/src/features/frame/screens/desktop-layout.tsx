@@ -9,7 +9,7 @@ import {
 } from '../components/desktop-layout-view/desktop-layout-view';
 import { useAttentionCount } from '../hooks/use-attention-count';
 import { detailDestination } from '../state/detail-destination';
-import { FirstRunLayout, useGetStartedShown } from './first-run-layout';
+import { OnboardingLayout, useOnboardingShown } from './onboarding-layout';
 import { useSectionList } from './section-list';
 
 export interface DesktopLayoutProps {
@@ -45,6 +45,6 @@ function FullLayout({
 }
 
 export function DesktopLayout(props: DesktopLayoutProps): React.JSX.Element {
-  const getStarted = useGetStartedShown(props.destination);
-  return getStarted ? <FirstRunLayout /> : <FullLayout {...props} />;
+  const onboarding = useOnboardingShown(props.destination);
+  return onboarding ? <OnboardingLayout /> : <FullLayout {...props} />;
 }
