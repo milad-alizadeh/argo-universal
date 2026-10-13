@@ -302,6 +302,46 @@
       }
     },
     {
+      // The same screen rules one folder deeper; relative feature imports gain one ../ (ADR-0016 item 9).
+      "files": ["packages/client/src/features/*/screens/*/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@trpc/client",
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
+              },
+              {
+                "name": "../../trpc/create-trpc-client",
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
+              },
+              {
+                "name": "../../trpc/context",
+                "importNames": ["useTRPCClient"],
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
+              }
+            ],
+            "patterns": [
+              {
+                "regex": "^#features/[^/]+/",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./\\.\\./[^.]",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "group": ["@repo/client", "@repo/client/**"],
+                "message": "Client modules never import the client barrel (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // Every feature's components and stories take props only: no tRPC, TanStack Query, the Connection's tRPC client or a data hook (ADR-0021). Data hooks are named `use-*-query` or listed here.
       "files": [
         "packages/client/src/features/*/components/**",

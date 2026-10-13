@@ -1,28 +1,19 @@
-import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
+import type { SessionNewInput } from '@repo/contracts';
 import { useActorRef, useSelector } from '@xstate/react';
 import { useCallback, useEffect, useRef } from 'react';
 import type { ActorRefFrom } from 'xstate';
-import {
-  type ConfigurationChange,
-  nextRememberedChange,
-} from '#features/composer';
 import { useResubscribeOnReconnect, useTRPCClient } from '#features/connection';
-import { useNavigate } from '#lib/product/navigation/context';
-import {
-  type EmptySessionContext,
-  type EmptySessionPorts,
-  emptySessionMachine,
-} from '../state/empty-session-machine';
+import { emptySessionMachine } from '../../state/empty-session-machine';
+import { closeQuietly, useEmptySessionPorts } from './empty-session-adapters';
 
 export type EmptySessionActor = ActorRefFrom<typeof emptySessionMachine>;
 
 type Snapshot = ReturnType<EmptySessionActor['getSnapshot']>;
 
-type Client = ReturnType<typeof useTRPCClient>;
-
 export interface EmptySession {
   actor: EmptySessionActor;
-  context: EmptySessionContext;
+  error: string | undefined;
+  pendingPrompt: boolean;
   // The open Session the page reads options from, until it hands it on.
   openSessionId: string | undefined;
   // True while the Session opens, reopens or takes this device's last choices.
@@ -58,56 +49,6 @@ const openSessionOf = (snapshot: Snapshot): string | undefined =>
   snapshot.matches('open') || snapshot.status === 'done'
     ? snapshot.context.sessionId
     : undefined;
-
-// Closing on the way out can fail with the Connection; nothing waits for it.
-const closeQuietly = (client: Client, sessionId: string): void => {
-  client.session.close.mutate({ sessionId }).catch(() => {});
-};
-
-// A Session that opens after the screen was left is closed at once.
-const openSession = async (
-  client: Client,
-  input: SessionNewInput,
-  signal: AbortSignal,
-): Promise<{ sessionId: string }> => {
-  const opened = await client.session.new.mutate(input);
-
-  if (signal.aborted) closeQuietly(client, opened.sessionId);
-
-  return opened;
-};
-
-const setConfigOption = async (
-  client: Client,
-  sessionId: string,
-  { configId, value }: ConfigurationChange,
-): Promise<SessionConfigOption[]> => {
-  const changed = await client.session.setConfigOption.mutate({
-    sessionId,
-    configId,
-    type: 'id',
-    value,
-  });
-
-  return changed.configOptions;
-};
-
-// The Server calls the machine makes.
-function useEmptySessionPorts(): EmptySessionPorts {
-  const client = useTRPCClient();
-  const navigate = useNavigate();
-
-  return {
-    open: (input, signal) => openSession(client, input, signal),
-    close: (sessionId) => client.session.close.mutate({ sessionId }),
-    setConfigOption: (sessionId, change) =>
-      setConfigOption(client, sessionId, change),
-    prompt: (sessionId, prompt) =>
-      client.session.prompt.mutate({ sessionId, prompt }),
-    handOff: (id) => navigate({ to: 'session', id }, { inPlace: true }),
-    nextChange: nextRememberedChange,
-  };
-}
 
 // StrictMode's rehearsal unmount comes before any Session opens; a reload or a lost Connection sends nothing.
 function useCloseOnLeave(actor: EmptySessionActor): void {
@@ -155,7 +96,8 @@ const toEmptySession = (
   snapshot: Snapshot,
 ): EmptySession => ({
   actor,
-  context: snapshot.context,
+  error: snapshot.context.error,
+  pendingPrompt: snapshot.context.pendingPrompt !== undefined,
   openSessionId: openSessionOf(snapshot),
   opening: isOpening(snapshot),
   handedOff: snapshot.status === 'done',
@@ -165,10 +107,10 @@ const toEmptySession = (
 export function useEmptySession(
   input: SessionNewInput | undefined,
   connected: boolean,
+  clearDraft: () => void,
 ): EmptySession {
-  const actor = useActorRef(emptySessionMachine, {
-    input: useEmptySessionPorts(),
-  });
+  const ports = useEmptySessionPorts(clearDraft);
+  const actor = useActorRef(emptySessionMachine, { input: ports });
 
   useCloseOnLeave(actor);
   useChoices(actor, input, connected);

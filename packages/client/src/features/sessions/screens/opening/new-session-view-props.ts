@@ -2,11 +2,11 @@ import type { AgentInfo } from '@repo/contracts';
 import type {
   NewSessionViewProps,
   ReadyNewSessionViewProps,
-} from '../components/new-session-view/new-session-view';
+} from '../../components/new-session-view/new-session-view';
 import {
   type ChosenSettings,
   chooseAnotherProject,
-} from '../state/session-choices';
+} from '../../state/session-choices';
 import { draftProps, openingProps } from './new-session-composer-props';
 import {
   hasFailedToLoad,
@@ -64,6 +64,7 @@ const configurationProps = (
   agent: wiring.data.choices.agent?.agent ?? '',
   configOptions: [],
   onConfigChange: ignoreConfigChange,
+  ...wiring.configuration,
   opening: wiring.sessionOpening.session.opening,
   ...agentChoiceProps(wiring),
   checkout: checkoutProps(wiring.data),
@@ -81,7 +82,7 @@ const noticeProps = ({
 > => ({
   attachmentError: attachmentDraft.attachmentError?.message,
   setupStep: setupStepOf(data.choices.agent),
-  openError: sessionOpening.session.context.error,
+  openError: sessionOpening.session.error,
 });
 
 const readyProps = (

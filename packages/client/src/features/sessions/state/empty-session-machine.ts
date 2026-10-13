@@ -1,6 +1,9 @@
 import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
 import { assign, fromPromise, setup } from 'xstate';
-import type { ConfigurationChange } from '#features/composer';
+import {
+  type ConfigurationChange,
+  nextRememberedChange,
+} from '#lib/product/session-configuration';
 import type {
   EmptySessionContext,
   EmptySessionEvent,
@@ -33,11 +36,7 @@ const errorMessage = (cause: unknown): string =>
 const nextChange = (
   context: EmptySessionContext,
 ): ConfigurationChange | undefined =>
-  context.ports.nextChange(
-    context.configOptions,
-    context.saved,
-    context.applied,
-  );
+  nextRememberedChange(context.configOptions, context.saved, context.applied);
 
 const appliedOnce = (context: EmptySessionContext): string[] => [
   ...context.applied,
@@ -119,6 +118,7 @@ export const emptySessionMachine = setup({
       promptShown: false,
     }),
     showPrompt: assign({ promptShown: true }),
+    clearDraft: ({ context }) => context.ports.clearDraft(),
     handOff: ({ context }) => {
       if (context.sessionId) context.ports.handOff(context.sessionId);
     },
@@ -321,6 +321,6 @@ export const emptySessionMachine = setup({
       },
     },
     // The first prompt reached the Session; it is the Session page's now.
-    handedOff: { type: 'final', entry: 'handOff' },
+    handedOff: { type: 'final', entry: ['clearDraft', 'handOff'] },
   },
 });
