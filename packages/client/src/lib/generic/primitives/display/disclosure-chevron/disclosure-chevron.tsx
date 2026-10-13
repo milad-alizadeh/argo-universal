@@ -8,40 +8,27 @@ import Animated, {
 } from 'react-native-reanimated';
 import { motionDuration, quarterTurnDegrees } from '../../../motion';
 import { Icon } from '../../../symbols/icon';
-import type { IconRole } from '../../../symbols/icon-role';
 import { cn } from '../../../utils';
 
 interface DisclosureChevronProps {
   // Turns the chevron down when its section is open; leave it out for a row that opens another page.
   open?: boolean;
   className?: string;
-  iconRole?: IconRole;
 }
 
 export function DisclosureChevron({
   open,
   className,
-  iconRole,
 }: DisclosureChevronProps): React.JSX.Element {
-  const chevron = <ChevronGlyph className={className} iconRole={iconRole} />;
-  return open === undefined ? (
-    chevron
-  ) : (
-    <Turning open={open}>{chevron}</Turning>
-  );
-}
-
-function ChevronGlyph({
-  className,
-  iconRole = 'body',
-}: Pick<DisclosureChevronProps, 'className' | 'iconRole'>): React.JSX.Element {
-  return (
+  const chevron = (
     <Icon
-      role={iconRole}
+      role="body"
       name="chevron-right"
       className={cn('text-muted-foreground', className)}
     />
   );
+  if (open === undefined) return chevron;
+  return <Turning open={open}>{chevron}</Turning>;
 }
 
 function Turning({

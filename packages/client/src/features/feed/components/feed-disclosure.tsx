@@ -112,13 +112,10 @@ export function FeedDisclosure({
                 <Text className="text-warning">Awaiting approval</Text>
               </View>
             )}
-            <View className="-ml-0.5 shrink-0">
-              <DisclosureChevron
-                open={open}
-                iconRole="secondary"
-                className={hovered ? foregroundTextClassName : undefined}
-              />
-            </View>
+            <DisclosureChevron
+              open={open}
+              className={hovered ? foregroundTextClassName : undefined}
+            />
           </View>
         </CollapsibleTrigger>
       </TextClassContext.Provider>
