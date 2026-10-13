@@ -1,12 +1,22 @@
 import type { SettingsListProps } from './settings-list-props';
 
+type ServerStatus = NonNullable<SettingsListProps['status']>;
+
+const connectionValues: Record<
+  ServerStatus,
+  (props: SettingsListProps, wide: boolean) => string
+> = {
+  loading: () => 'Connecting…',
+  disconnected: () => 'Disconnected',
+  ready: (props, wide) =>
+    props.connectionState ?? (wide ? 'This Mac' : 'Direct'),
+};
+
 export function connectionValue(
   props: SettingsListProps,
   wide: boolean,
 ): string {
-  if (props.status === 'loading') return 'Connecting…';
-  if (props.status === 'disconnected') return 'Disconnected';
-  return props.connectionState ?? (wide ? 'This Mac' : 'Direct');
+  return connectionValues[props.status ?? 'ready'](props, wide);
 }
 
 export function serverValue(

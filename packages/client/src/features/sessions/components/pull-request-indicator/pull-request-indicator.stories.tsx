@@ -10,19 +10,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const statusVariations = [
+  ['Open', 'open'],
+  ['Draft', 'draft'],
+  ['Merged', 'merged'],
+  ['Conflict', 'conflict'],
+  ['Closed', 'closed'],
+] as const;
+
 export const Overview: Story = {
   name: 'PullRequestIndicator',
   render: (args) => (
     <Variations>
-      {(
-        [
-          ['Open', 'open'],
-          ['Draft', 'draft'],
-          ['Merged', 'merged'],
-          ['Conflict', 'conflict'],
-          ['Closed', 'closed'],
-        ] as const
-      ).map(([label, status]) => (
+      {statusVariations.map(([label, status]) => (
         <Variation key={status} label={label}>
           <PullRequestIndicator {...args} status={status} />
         </Variation>

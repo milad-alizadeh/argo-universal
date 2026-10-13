@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { action } from 'storybook/actions';
-import { SessionColumn } from '#lib/product/session-layout';
+import { SessionColumn } from '#lib/product/session-column';
 import {
   composerProps,
   type ComposerMockProps,

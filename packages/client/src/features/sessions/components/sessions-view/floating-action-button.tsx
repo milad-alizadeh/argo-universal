@@ -8,6 +8,14 @@ export interface FloatingActionButtonProps {
   onPress: () => void;
 }
 
+const floatingAppearance = {
+  className: 'size-14 sm:size-14 rounded-full',
+  iconRole: 'action',
+  iconClassName: 'text-primary-foreground',
+  size: 'md',
+  variant: 'filled',
+} as const;
+
 // The phone's round primary action above the content.
 export function FloatingActionButton({
   accessibilityLabel,
@@ -18,12 +26,8 @@ export function FloatingActionButton({
     <IconButton
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
-      className="size-14 sm:size-14 rounded-full"
       icon={icon}
-      iconRole="action"
-      iconClassName={'text-primary-foreground'}
-      size="md"
-      variant="filled"
+      {...floatingAppearance}
     />
   );
 }

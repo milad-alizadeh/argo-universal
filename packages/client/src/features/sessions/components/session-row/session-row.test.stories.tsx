@@ -1,38 +1,21 @@
-import { agentsList, sessionRows } from '@repo/mocks/app';
-import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { sessionRows } from '@repo/mocks/app';
+import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
+import {
+  dark,
+  metadata,
+  meta as sessionRowTestMeta,
+  running,
+  statusParity,
+  type Story,
+} from '../../../../../mocks/session-row/session-row-story.test.mocks';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import { SessionRow } from './session-row';
 import { sessionRowMocks } from './session-row.mocks';
 
-const meta = {
-  title: 'Tests/SessionRow',
-  component: SessionRow,
-  args: {
-    session: sessionRows.running,
-    logo: agentsList[0]?.logo ?? '',
-    onSelect: fn(),
-  },
-} satisfies Meta<typeof SessionRow>;
+const meta = { ...sessionRowTestMeta, title: 'Tests/SessionRow' };
 export default meta;
-type Story = StoryObj<typeof meta>;
 
-function running(width: number): Story {
-  return {
-    play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
-      await expect(canvas.getByText('Running the tests')).toBeVisible();
-      const row = canvas.getByRole('button', {
-        name: 'Build the settings screen, Running',
-      });
-      await expect(args.onSelect).not.toHaveBeenCalled();
-      await userEvent.click(row);
-      await expect(args.onSelect).toHaveBeenCalledWith('session-running');
-    },
-  };
-}
 export const RunningPhone = running(layoutWidths.phone);
 export const RunningWide = running(layoutWidths.wide);
 
@@ -46,38 +29,6 @@ export const Archived: Story = {
   },
 };
 
-function metadata(width: number): Story {
-  return {
-    render: (args) => (
-      <>
-        {(['open', 'draft', 'merged', 'conflict', 'closed'] as const).map(
-          (status) => (
-            <SessionRow
-              {...args}
-              key={status}
-              session={{ ...args.session, title: `${status} metadata` }}
-              issue={{ number: 128 }}
-              pullRequest={{ number: 45, status }}
-            />
-          ),
-        )}
-      </>
-    ),
-    play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
-      for (const status of ['open', 'draft', 'merged', 'conflict', 'closed']) {
-        await expect(canvas.getByLabelText(`${status} PR #45`)).toBeVisible();
-      }
-      await expect(canvas.getAllByLabelText('Issue #128')).toHaveLength(5);
-      await expect(args.onSelect).not.toHaveBeenCalled();
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'open metadata, Running' }),
-      );
-      await expect(args.onSelect).toHaveBeenCalledWith(args.session.sessionId);
-      await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
-    },
-  };
-}
 export const MetadataPhone = metadata(layoutWidths.phone);
 export const MetadataWide = metadata(layoutWidths.wide);
 
@@ -102,54 +53,10 @@ export const PullRequestWithoutOtherMetadata: Story = {
 
 export const PullRequestWithoutOtherMetadataDark: Story = {
   ...PullRequestWithoutOtherMetadata,
-  globals: { mode: 'dark' },
+  ...dark,
 };
 
-const states = [
-  ['needsInput', 'Needs input'],
-  ['running', 'Running'],
-  ['failed', 'Failed'],
-  ['unread', 'Unread'],
-  ['idle', 'Idle'],
-] satisfies [keyof typeof sessionRows, string][];
-
-export const StatusParity: Story = {
-  render: (args) => (
-    <>
-      {agentsList.flatMap((agent) =>
-        states.map(([name]) => {
-          const session = sessionRows[name];
-          return (
-            <SessionRow
-              {...args}
-              key={`${agent.agent}:${name}`}
-              logo={agent.logo}
-              session={{
-                ...session,
-                title: `${agent.label}: ${session.title}`,
-              }}
-            />
-          );
-        }),
-      )}
-    </>
-  ),
-  play: async ({ canvas }) => {
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
-      for (const agent of agentsList) {
-        for (const [name, label] of states) {
-          const session = sessionRows[name];
-          await expect(
-            canvas.getByRole('button', {
-              name: `${agent.label}: ${session.title}, ${label}`,
-            }),
-          ).toBeVisible();
-        }
-      }
-    }
-  },
-};
+export const StatusParity = statusParity;
 
 export const PlanAndSubagents: Story = {
   args: {
@@ -227,44 +134,20 @@ function longTitleSelected(width: number): Story {
 export const LongTitleSelectedPhone = longTitleSelected(layoutWidths.phone);
 export const LongTitleSelectedWide = longTitleSelected(layoutWidths.wide);
 
-export const StatusParityDark: Story = {
-  ...StatusParity,
-  globals: { mode: 'dark' },
-};
-export const RunningPhoneDark: Story = {
-  ...RunningPhone,
-  globals: { mode: 'dark' },
-};
-export const RunningWideDark: Story = {
-  ...RunningWide,
-  globals: { mode: 'dark' },
-};
-export const PlanAndSubagentsDark: Story = {
-  ...PlanAndSubagents,
-  globals: { mode: 'dark' },
-};
-export const NoPlanOrSubagentsDark: Story = {
-  ...NoPlanOrSubagents,
-  globals: { mode: 'dark' },
-};
-export const FinishedSubagentsDark: Story = {
-  ...FinishedSubagents,
-  globals: { mode: 'dark' },
-};
+export const StatusParityDark: Story = { ...StatusParity, ...dark };
+export const RunningPhoneDark: Story = { ...RunningPhone, ...dark };
+export const RunningWideDark: Story = { ...RunningWide, ...dark };
+export const PlanAndSubagentsDark: Story = { ...PlanAndSubagents, ...dark };
+export const NoPlanOrSubagentsDark: Story = { ...NoPlanOrSubagents, ...dark };
+export const FinishedSubagentsDark: Story = { ...FinishedSubagents, ...dark };
 export const LongTitleSelectedPhoneDark: Story = {
   ...LongTitleSelectedPhone,
-  globals: { mode: 'dark' },
+  ...dark,
 };
 export const LongTitleSelectedWideDark: Story = {
   ...LongTitleSelectedWide,
-  globals: { mode: 'dark' },
+  ...dark,
 };
-export const ArchivedDark: Story = { ...Archived, globals: { mode: 'dark' } };
-export const MetadataPhoneDark: Story = {
-  ...MetadataPhone,
-  globals: { mode: 'dark' },
-};
-export const MetadataWideDark: Story = {
-  ...MetadataWide,
-  globals: { mode: 'dark' },
-};
+export const ArchivedDark: Story = { ...Archived, ...dark };
+export const MetadataPhoneDark: Story = { ...MetadataPhone, ...dark };
+export const MetadataWideDark: Story = { ...MetadataWide, ...dark };

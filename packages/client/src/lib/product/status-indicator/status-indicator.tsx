@@ -27,29 +27,55 @@ export interface StatusIndicatorProps {
   testID?: string;
 }
 
+const statusBlinks = {
+  needs_input: true,
+  running: true,
+  failed: false,
+  unread: false,
+  idle: false,
+} satisfies Record<SessionInfo['status'], boolean>;
+
+const sizeClassNames = {
+  default: 'size-2.5',
+  small: 'size-2',
+} satisfies Record<NonNullable<StatusIndicatorProps['size']>, string>;
+
 export function StatusIndicator({
-  status,
-  size = 'default',
-  className,
   testID = 'status-indicator',
+  ...props
 }: StatusIndicatorProps): React.JSX.Element {
-  const active = status === 'running' || status === 'needs_input';
   return (
     <View
       testID={`${testID}-container`}
-      accessibilityLabel={statusLabels[status]}
-      className={cn(
-        'shrink-0 rounded-full border-2 border-background bg-background',
-        size === 'small' ? 'size-2' : 'size-2.5',
-        className,
-      )}
+      accessibilityLabel={statusLabels[props.status]}
+      className={indicatorClassName(props)}
     >
-      <BlinkingDot
-        testID={testID}
-        colorClassName={statusColors[status]}
-        blinking={active}
-        className="size-full"
-      />
+      <StatusDot status={props.status} testID={testID} />
     </View>
+  );
+}
+
+function indicatorClassName({
+  size = 'default',
+  className,
+}: Omit<StatusIndicatorProps, 'testID'>): string {
+  return cn(
+    'shrink-0 rounded-full border-2 border-background bg-background',
+    sizeClassNames[size],
+    className,
+  );
+}
+
+function StatusDot(props: {
+  status: SessionInfo['status'];
+  testID: string;
+}): React.JSX.Element {
+  return (
+    <BlinkingDot
+      testID={props.testID}
+      colorClassName={statusColors[props.status]}
+      blinking={statusBlinks[props.status]}
+      className="size-full"
+    />
   );
 }
