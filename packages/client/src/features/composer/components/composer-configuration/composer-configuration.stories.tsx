@@ -56,6 +56,20 @@ export const CantStartAgent: StoryObj<typeof meta> = {
   ),
 };
 
+// A never-checked Agent: dimmed with a spinner until its saved Readiness arrives.
+export const CheckingAgent: StoryObj<typeof meta> = {
+  name: 'Agent still checking',
+  args: {
+    configuration: {
+      ...configuration,
+      agents: configuration.agents.map((agent, index) =>
+        index === 1 ? { ...agent, status: 'checking' } : agent,
+      ),
+    },
+  },
+  render: DefaultEffort.render,
+};
+
 export const LongLists: StoryObj<typeof meta> = {
   name: 'Long Agent and model lists',
   args: { configuration: composerLongListConfiguration },

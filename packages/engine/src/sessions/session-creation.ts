@@ -35,22 +35,23 @@ async function requireCheckoutProjectPath(
   return projectPath;
 }
 
+type AgentOpenFailure = Pick<SessionRouterDeps, 'afterAgentOpenFailure'>;
+
 async function waitForSessionStored(
+  deps: AgentOpenFailure,
   sessionActor: SessionActorRef,
 ): Promise<void> {
-  const sessionSnapshot = await waitFor(
+  const { context } = await waitFor(
     sessionActor,
     (sessionSnapshot): boolean =>
       sessionSnapshot.status !== 'active' || sessionSnapshot.context.stored,
     { timeout: Infinity },
   );
-  if (!sessionSnapshot.context.stored)
-    throw new TRPCError({
-      code: 'PRECONDITION_FAILED',
-      message:
-        sessionSnapshot.context.failure ??
-        `Session ${sessionSnapshot.context.sessionId} closed`,
-    });
+  if (context.stored) return;
+  const message = context.failure ?? `Session ${context.sessionId} closed`;
+  if (context.acpLifetime.agentFailed)
+    await deps.afterAgentOpenFailure?.(context.agent, message);
+  throw new TRPCError({ code: 'PRECONDITION_FAILED', message });
 }
 
 async function waitForSessionInsertCommitted(
@@ -79,7 +80,11 @@ async function waitForSessionInsertCommitted(
 export async function createSession(
   deps: Pick<
     SessionRouterDeps,
-    'database' | 'sessions' | 'createId' | 'sessionCommandSignal'
+    | 'database'
+    | 'sessions'
+    | 'createId'
+    | 'sessionCommandSignal'
+    | 'afterAgentOpenFailure'
   >,
   newSession: SessionNewInput,
 ): Promise<SessionNewOutput> {
@@ -96,7 +101,10 @@ export async function createSession(
     ...newSession,
     projectPath,
   });
-  await waitForSessionStored(requireOpenSessionActor(deps.sessions, sessionId));
+  await waitForSessionStored(
+    deps,
+    requireOpenSessionActor(deps.sessions, sessionId),
+  );
   await waitForSessionInsertCommitted(
     requireOpenSessionActor(deps.sessions, sessionId),
   );

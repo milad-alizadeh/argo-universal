@@ -13,6 +13,7 @@ import {
   LongListsReachableInPhoneSheet as longListsPhone,
   ShortListsHaveNoFadesWide as shortListsWide,
 } from '../../../../../mocks/composer-configuration/long-lists';
+import { pendingAgent } from '../../../../../mocks/composer-configuration/pending-agent';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { ComposerAgentModelControl } from './composer-configuration';
 import { DefaultEffort } from './composer-configuration.stories';
@@ -42,6 +43,8 @@ export const DefaultEffortWideSecondAgent = defaultEffort(layoutWidths.wide, 1);
 
 export const AddNewAgentPhone = addNewAgent(layoutWidths.phone);
 export const AddNewAgentWide = addNewAgent(layoutWidths.wide);
+export const PendingAgentPhone = pendingAgent(layoutWidths.phone);
+export const PendingAgentWide = pendingAgent(layoutWidths.wide);
 
 export const CantStartAgentRecheckPhoneFirstAgent = cantStartAgentRecheck(
   layoutWidths.phone,

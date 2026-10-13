@@ -45,15 +45,9 @@ const checkoutProps = ({
 
 const agentChoiceProps = (
   wiring: NewSessionWiring,
-): Pick<
-  ConfigurationProps,
-  'onAgentChange' | 'onAgentSetup' | 'onAgentRetry' | 'onAddAgent'
-> => ({
+): Pick<ConfigurationProps, 'onAgentChange' | 'onAddAgent'> => ({
   onAgentChange: (agent) =>
     rechoose(wiring, (current) => ({ ...current, agent })),
-  onAgentSetup: (setup) =>
-    wiring.navigate({ to: 'settings-agent', agent: setup }),
-  onAgentRetry: wiring.data.agents.retry,
   onAddAgent: () =>
     wiring.navigate({ to: 'settings-agents', filter: 'not-installed' }),
 });

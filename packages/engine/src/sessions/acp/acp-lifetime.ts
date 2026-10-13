@@ -47,6 +47,8 @@ export class AcpSessionLifetime {
   private closing: Promise<void> | undefined;
   private lease: AcpSessionLease | undefined;
   private attached = false;
+  // Set when the Agent could not open the Session: its launch, start or session/new failed.
+  public agentFailed = false;
   private readonly requests: AcpSessionRequests;
   public constructor(
     private readonly dependencies: AcpSessionDependencies | undefined,
@@ -71,7 +73,10 @@ export class AcpSessionLifetime {
     });
   }
   public open(session: SessionData): Promise<AcpSessionLease> {
-    this.opening ??= this.openOwned(session);
+    this.opening ??= this.openOwned(session).catch((error: unknown) => {
+      this.agentFailed = !isWithdrawn(error);
+      throw error;
+    });
     return this.opening;
   }
   // Empty Sessions have no persisted Agent context; the failed lease is released by its owner.

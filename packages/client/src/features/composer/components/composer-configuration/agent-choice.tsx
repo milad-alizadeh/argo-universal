@@ -51,7 +51,7 @@ function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
     />
   );
 }
-// Only a Ready Agent can be picked; a Checking… one dims with a spinner in the check's slot.
+// Only a Ready Agent can be picked; a Checking… one dims with a spinner in the check's slot and keeps its height.
 function agentSelectionProps(
   props: AgentChoiceProps,
 ): React.ComponentProps<typeof ListItem> {
@@ -65,17 +65,25 @@ function agentSelectionProps(
     onPress: () => selectAgent(props),
   };
 }
+const checkingLabel = 'Checking…';
 function SelectionAccessory(props: {
   agent: AgentInfo;
   selected: boolean;
-}): React.JSX.Element | null {
-  if (props.agent.status === 'checking')
-    return (
-      <IconSlot role="mark">
-        <IconSpinner iconRole="mark" colorClassName="accent-muted-foreground" />
-      </IconSlot>
-    );
-  return props.selected ? <SelectedCheck /> : null;
+}): React.JSX.Element {
+  if (props.agent.status === 'checking') return <CheckingSpinner />;
+  // An empty slot keeps every row the height of one with a check or spinner.
+  return props.selected ? <SelectedCheck /> : <IconSlot role="mark" />;
+}
+function CheckingSpinner(): React.JSX.Element {
+  return (
+    <IconSlot role="mark">
+      <IconSpinner
+        iconRole="mark"
+        colorClassName="accent-muted-foreground"
+        accessibilityLabel={checkingLabel}
+      />
+    </IconSlot>
+  );
 }
 function agentRowContent(
   agent: AgentInfo,

@@ -61,7 +61,8 @@ type EngineSupplied =
   | 'checkAgentLaunch'
   | 'agentLogins'
   | 'installations'
-  | 'readiness';
+  | 'readiness'
+  | 'afterAgentOpenFailure';
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
   Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>> & {
@@ -78,10 +79,20 @@ export function createAppRouterDeps(
     ...input,
     ...sources,
     ...setup,
-    ...wireAgentReadiness(input, setup),
+    ...wireReadiness(input, setup),
     readSession: createSessionReader(input.database),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };
+}
+
+// A Session that fails to open saves its Agent's new status, so the picker drops it.
+function wireReadiness(
+  input: AppRouterInput,
+  setup: Parameters<typeof wireAgentReadiness>[1],
+): ReturnType<typeof wireAgentReadiness> &
+  Pick<AppRouterDeps, 'afterAgentOpenFailure'> {
+  const wired = wireAgentReadiness(input, setup);
+  return { ...wired, afterAgentOpenFailure: wired.readiness.saveOpenFailure };
 }
 
 function createAgentSetup(

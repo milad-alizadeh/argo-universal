@@ -11,9 +11,9 @@ import {
 } from './common';
 
 const addAgentLabel = 'Add a new agent';
-const listed = newSessionCatalogs.bothAvailable;
+const listed = newSessionCatalogs.bothReady;
 const [first] = listed;
-if (!first) throw new Error('Recorded catalog needs an available Agent.');
+if (!first) throw new Error('Recorded catalog needs a Ready Agent.');
 
 const configuration = (
   onAddAgent: () => void,

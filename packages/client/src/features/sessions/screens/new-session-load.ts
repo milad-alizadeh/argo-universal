@@ -1,4 +1,5 @@
 import type { AgentInfo, ProjectInfo } from '@repo/contracts';
+import { offeredAgents } from '../state/session-choices';
 import type { NewSessionData } from './use-new-session-data';
 
 export interface LoadedNewSession {
@@ -24,9 +25,10 @@ const loadedServer = ({
     projects: projects.data,
   };
 
+// Ready once the Server and its Projects load; the picker fills from the saved Agents when they arrive.
 export const loadedNewSession = (
   data: NewSessionData,
 ): LoadedNewSession | undefined => {
   const server = loadedServer(data);
-  return server && data.agents.data && { ...server, agents: data.agents.data };
+  return server && { ...server, agents: offeredAgents(data.agents.data ?? []) };
 };

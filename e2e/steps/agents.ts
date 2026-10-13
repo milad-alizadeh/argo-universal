@@ -14,7 +14,11 @@ const AgentsList = z.array(
 );
 export type ListedAgent = z.infer<typeof AgentsList>[number];
 
-const listAgents = (page: Page, httpUrl: string): Promise<ListedAgent[]> =>
+// The Agents as saved now, without waiting for Readiness checks.
+export const listAgents = (
+  page: Page,
+  httpUrl: string,
+): Promise<ListedAgent[]> =>
   query({
     page,
     httpUrl,

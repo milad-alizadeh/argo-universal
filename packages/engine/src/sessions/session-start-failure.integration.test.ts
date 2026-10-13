@@ -36,3 +36,17 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
     });
   },
 );
+
+it('saves what a Ready Agent observed when its Session fails to open, so it leaves the picker', async (): Promise<void> => {
+  const { caller } = await startFailedSessionJourney();
+  await caller.agents.recheck({ agentId: failingAgent });
+  await expect(
+    caller.session.new({ ...newSession, agent: failingAgent }),
+  ).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
+  expect(
+    (await caller.agents.list()).find(({ agent }) => agent === failingAgent),
+  ).toMatchObject({
+    status: 'cant-start',
+    reason: expect.stringContaining(signInFailure),
+  });
+});

@@ -56,6 +56,11 @@ export const scenarios = {
     ...scenario([reply]),
     responses: { 'session/new': [{ error: 'The Agent refused the Session.' }] },
   },
+  // Never answers initialize, so its readiness check stays Checking… until it times out.
+  'check-held': {
+    ...scenario([reply]),
+    responses: { initialize: [{ waitFor: new Promise<void>(() => {}) }] },
+  },
   // Refuses only the first reopen, so the Session opens again afterwards.
   'refuse-reopen': {
     ...scenario([reply]),

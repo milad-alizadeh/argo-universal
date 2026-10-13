@@ -5,6 +5,7 @@ import {
   type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
 } from '../../storage';
+import { cantStart } from '../acp/check-failure';
 import type { CheckAgentLaunch } from '../agent-launch';
 import {
   AgentReadinessSaveJob,
@@ -115,8 +116,17 @@ const recheckEveryAgent = async (deps: ReadinessDeps): Promise<void> => {
   await runBounded(agentIds, (agentId) => checkAndSave(deps, agentId));
 };
 
+// A saved Ready that failed to open a Session: saved as Can't start with what the Session observed.
+export const saveOpenFailure = (
+  deps: ReadinessDeps,
+  agentId: string,
+  reason: string,
+): Promise<void> =>
+  save(deps, [agentId], savedCheck(deps, sanitized(cantStart(reason))));
+
 export type AgentReadiness = {
   recheck: (agentId: string) => Promise<AgentCheck>;
+  saveOpenFailure: (agentId: string, reason: string) => Promise<void>;
   recheckEvery: () => Promise<void>;
   // Background checks after install, sign-in, enablement and Server start; failures are already saved.
   recheckLater: (agentId: string) => void;
@@ -128,6 +138,7 @@ export const createAgentReadiness = (
   automatic = true,
 ): AgentReadiness => ({
   recheck: (agentId) => recheckAgent(deps, agentId),
+  saveOpenFailure: (agentId, reason) => saveOpenFailure(deps, agentId, reason),
   recheckEvery: () => recheckEveryAgent(deps),
   recheckLater: (agentId) => {
     if (automatic) void recheckAgent(deps, agentId).catch(() => {});

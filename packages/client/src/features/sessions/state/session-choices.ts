@@ -40,13 +40,25 @@ export const chooseProject = (
 ): ProjectInfo | undefined =>
   projects.find((entry) => entry.id === chosen) ?? projects[0];
 
+const offeredStatuses = new Set<AgentInfo['status']>(['ready', 'checking']);
+
+// The New Session picker offers enabled Agents that are Ready or not yet checked; every other status is a failure.
+export const offeredAgents = (agents: readonly AgentInfo[]): AgentInfo[] =>
+  agents.filter(
+    ({ enabled, status }) => enabled && offeredStatuses.has(status),
+  );
+
 const chooseAgent = (
-  agents: readonly AgentInfo[],
+  listed: readonly AgentInfo[],
   chosen: string | undefined,
-): AgentInfo | undefined =>
-  agents.find((entry) => entry.agent === chosen) ??
-  agents.find((entry) => entry.status === 'ready') ??
-  agents[0];
+): AgentInfo | undefined => {
+  const agents = offeredAgents(listed);
+  return (
+    agents.find((entry) => entry.agent === chosen) ??
+    agents.find((entry) => entry.status === 'ready') ??
+    agents[0]
+  );
+};
 
 type Checkout = Pick<
   SessionChoices,

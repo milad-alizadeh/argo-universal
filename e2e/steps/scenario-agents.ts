@@ -42,7 +42,18 @@ function configurationForStep(step: string): AppFixtureAgents {
   if (needsSetup) return setupConfiguration(needsSetup);
   const refusing =
     /^(?:Given|And) Agent (\d+) refuses to (open|reopen) a Session$/.exec(step);
-  return refusing ? refusingConfiguration(refusing) : {};
+  if (refusing) return refusingConfiguration(refusing);
+  return otherConfiguration(step);
+}
+
+// Every Agent refuses its Session, or one Agent's readiness check never answers.
+function otherConfiguration(step: string): AppFixtureAgents {
+  if (/^(?:Given|And) every Agent refuses to open a Session$/.test(step))
+    return Object.fromEntries(
+      appFixtureAgentIds.map((id) => [id, { scenario: 'refuse-session' }]),
+    );
+  const held = /^(?:Given|And) Agent (\d+) is still being checked$/.exec(step);
+  return held ? { [agentId(Number(held[1]))]: { scenario: 'check-held' } } : {};
 }
 
 function refusingConfiguration(match: RegExpExecArray): AppFixtureAgents {
