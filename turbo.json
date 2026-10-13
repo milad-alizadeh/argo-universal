@@ -6,15 +6,14 @@
   "remoteCache": { "teamSlug": "miladalizadehs-projects" },
   "futureFlags": {
     // --affected selects a task only when a changed file matches its inputs, so a README edit selects nothing.
-    "affectedUsingTaskInputs": true,
-    // actions/checkout leaves the pull request's base only as origin/<base>; without this, --affected selects everything.
-    "githubActionsRemoteBaseRefFallback": true
+    "affectedUsingTaskInputs": true
   },
   // No task reads a README, so every task leaves them out. Other Markdown stays in: mocks/agent/release-notes.md is an e2e fixture.
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       // The web export bundles no tests, so a test edit keeps the export and the e2e shards cached.
+      // Only build drops test stories: Storybook's tests read @repo/client's through transit.
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env*",
