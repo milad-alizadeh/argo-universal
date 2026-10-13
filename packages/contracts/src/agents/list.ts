@@ -20,6 +20,8 @@ export const AgentInfo = z.strictObject({
   agent: sessionColumns.shape.agent,
   label: z.string(),
   logo: z.string(),
+  version: z.string().optional(),
+  availableVersion: z.string().optional(),
   availability: AgentAvailability,
   installStep: z.string().optional(),
   configOptions: z.array(SessionConfigOption),

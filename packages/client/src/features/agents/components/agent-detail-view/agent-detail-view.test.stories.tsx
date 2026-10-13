@@ -47,24 +47,6 @@ export const LabelsTheNewSessionsDefaultsAsThisDevices: Story = {
   },
 };
 
-export const RemovesTheAgent: Story = {
-  play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: removeLabel }));
-    await expect(args.onRemove).toHaveBeenCalledOnce();
-  },
-};
-
-export const RemovesTheAgentOnAPhone: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
-  play: async ({ args, canvas, userEvent }) => {
-    await expect(canvas.getAllByText('Ready')[0]).toBeVisible();
-    await userEvent.click(
-      canvas.getByRole('button', { name: `${removeLabel} Agent` }),
-    );
-    await expect(args.onRemove).toHaveBeenCalledOnce();
-  },
-};
-
 export const InstallsARegistryAgent: Story = {
   args: { agent: { ...readyAgent, status: 'not-installed' } },
   play: async ({ args, canvas, userEvent }) => {
@@ -98,9 +80,7 @@ export const OpensOnTheAgentsIdentityCard: Story = {
       name: new RegExp(`^${readyAgent.description}`),
     });
     await expect(within(card).getByText('Update available')).toBeVisible();
-    await expect(
-      canvas.queryByRole('button', { name: 'Update' }),
-    ).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Update' })).toBeVisible();
   },
 };
 

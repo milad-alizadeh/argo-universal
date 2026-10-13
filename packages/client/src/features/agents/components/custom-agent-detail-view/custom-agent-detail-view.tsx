@@ -7,7 +7,13 @@ import { SettingsPage } from '#lib/product/settings-page';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import type { SubmitCustomAgent } from '../../hooks/use-custom-agent-form';
 import { customAgentDescription } from '../../state/agent-list';
+import type { AgentManagement } from '../../state/agent-management-types';
 import { AgentIdentity } from '../agent-identity';
+import {
+  AgentEnablement,
+  AgentManagementFailure,
+} from '../agent-management/agent-management';
+import { AgentRemoval } from '../agent-management/agent-removal';
 import { AgentPlaceholder } from '../agent-placeholder';
 import { CustomAgentForm } from '../custom-agent-form/custom-agent-form';
 import { LaunchSections } from '../custom-agent-launch';
@@ -25,6 +31,7 @@ export type CustomAgentDetailViewProps = {
   onSave: SubmitCustomAgent;
   onBack?: () => void;
   onSignIn?: () => void;
+  management?: AgentManagement;
 };
 type SettingsProps = Omit<
   CustomAgentDetailViewProps,
@@ -54,6 +61,7 @@ function CustomAgentSettings(props: SettingsProps): React.JSX.Element {
       <SettingsPage title={props.definition.name} onBack={props.onBack}>
         <CustomAgentContent {...props} />
       </SettingsPage>
+      <AgentManagementFailure management={props.management} />
     </View>
   );
 }
@@ -96,7 +104,21 @@ function LaunchView(props: ContentProps): React.JSX.Element {
         definition={props.definition}
         onEdit={() => props.onEditing(true)}
       />
+      <AgentEnablement management={props.management} />
+      <CustomRemoval {...props} />
     </FieldGroup>
+  );
+}
+
+function CustomRemoval(props: SettingsProps): React.JSX.Element | null {
+  if (!props.management) return null;
+  return (
+    <AgentRemoval
+      name={props.definition.name}
+      custom
+      onRemove={props.management.onRemove}
+      busy={props.management.busy}
+    />
   );
 }
 

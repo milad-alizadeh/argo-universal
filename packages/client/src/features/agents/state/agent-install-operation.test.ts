@@ -68,3 +68,12 @@ it('an unconfirmed status during a new request retains the accepted operation', 
   const saved = operation('pending-query');
   expect(currentOperation(saved)).toEqual(saved);
 });
+it('opening an update confirmation ignores the previous completed installation', () => {
+  const previous: AgentInstallOperation = {
+    ...operation('previous'),
+    status: 'installed',
+  };
+  expect(
+    currentOperation(undefined, status(previous), previous.operationId),
+  ).toBeUndefined();
+});

@@ -62,5 +62,11 @@ function withProbe(
     ...probed,
     icon: probed.icon ?? fromRegistry?.icon,
     signInCommand: info.installStep,
+    version: selectedVersion(info, fromRegistry),
+    availableVersion: info.availableVersion,
   };
 }
+const selectedVersion = (
+  info: AgentInfo,
+  registry?: AgentDetail,
+): string | undefined => info.version ?? registry?.version;

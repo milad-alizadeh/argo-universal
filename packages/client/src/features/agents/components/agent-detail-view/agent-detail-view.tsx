@@ -9,6 +9,10 @@ import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { agentStatusLabels, statusTone } from '../../state/agent-status';
 import { AgentIdentity } from '../agent-identity';
+import {
+  AgentEnablement,
+  AgentManagementFailure,
+} from '../agent-management/agent-management';
 import { PhoneTitle } from '../phone-title';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
@@ -30,6 +34,7 @@ export function AgentDetailView(
       <SettingsPage title={props.agent.name} onBack={props.onBack}>
         <AgentSections {...props} />
       </SettingsPage>
+      <AgentManagementFailure management={props.management} />
     </View>
   );
 }
@@ -80,8 +85,9 @@ function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
       <DetailIdentity {...props} />
       <PhoneSummary {...props} />
       <AgentStatusSection {...props} />
+      <AgentEnablement management={props.management} />
       <DefaultsSection {...props} />
-      <AboutSection agent={props.agent} />
+      <AboutSection {...props} />
       <FieldRow>
         <RemoveAgent {...props} />
       </FieldRow>

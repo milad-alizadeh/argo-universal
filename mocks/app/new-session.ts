@@ -37,9 +37,9 @@ export const newSessionCatalogs = {
   bothUnavailable: available.map(
     (
       agent,
-    ): Required<
-      Omit<AgentsListOutput[number], 'availability' | 'configOptions'>
-    > & { availability: 'unavailable'; configOptions: never[] } => ({
+    ): Omit<AgentsListOutput[number], 'availability' | 'configOptions'> & {
+      installStep: string;
+    } & { availability: 'unavailable'; configOptions: never[] } => ({
       ...agent,
       availability: 'unavailable' as const,
       installStep: "CLI didn't start",

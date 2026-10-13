@@ -4,17 +4,17 @@ import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import { CopyButton } from '#lib/product/markdown/copy-button';
 import { SelectMenu } from '../../../../lib/generic/primitives/inputs/select-menu/select-menu';
 import type {
-  AgentDetail,
   AgentDetailViewProps,
   SessionDefault,
 } from '../../state/agent-detail-types';
 import { agentStatusLabels, statusTone } from '../../state/agent-status';
 import { CheckAgainRow } from '../check-again-row';
-import { AgentLinks } from './agent-links';
 
-type AgentProps = { agent: AgentDetail };
+type AgentProps = Pick<AgentDetailViewProps, 'agent'>;
 
-const statusFooters: Partial<Record<AgentDetail['status'], string>> = {
+const statusFooters: Partial<
+  Record<AgentDetailViewProps['agent']['status'], string>
+> = {
   unavailable: 'The Server could not start this Agent. Check again later.',
 };
 const signInFooter = 'Run this in a terminal on the Server, then check again.';
@@ -139,36 +139,10 @@ function DefaultPicker({
   );
 }
 
-const hasAbout = ({ agent }: AgentProps): boolean =>
-  [agent.version, agent.distribution, agent.links?.length].some(Boolean);
-
-// A registry Agent not yet installed names where the page found it.
-const registrySource = (agent: AgentDetail): string | undefined =>
-  agent.status === 'not-installed' ? 'ACP Registry' : undefined;
-
-// Where the Agent comes from: its registry version, how the Server installs it, and its links.
-export function AboutSection({ agent }: AgentProps): React.JSX.Element | null {
-  if (!hasAbout({ agent })) return null;
-  return (
-    <FieldSection title="About">
-      <AboutRow title="Source" value={registrySource(agent)} />
-      <AboutRow title="Version" value={agent.version && `v${agent.version}`} />
-      <AboutRow title="Distribution" value={agent.distribution} />
-      <AgentLinks links={agent.links} />
-    </FieldSection>
-  );
-}
-
-function AboutRow(props: {
-  title: string;
-  value?: string;
-}): React.JSX.Element | null {
-  if (!props.value) return null;
-  return <ListItem title={props.title} value={props.value} />;
-}
-
 function SignInAction(props: AgentDetailViewProps): React.JSX.Element | null {
   if (props.onSignIn)
     return <ListItem title="Sign in" tone="accent" onPress={props.onSignIn} />;
   return <SignInCommand command={props.agent.signInCommand} />;
 }
+
+export { AboutSection } from './agent-about-section';

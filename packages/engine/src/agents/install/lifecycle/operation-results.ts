@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { AgentInstallInput, AgentInstallOperation } from '@repo/contracts';
+import { InstallCleanupError } from '../processes/process';
 import { installationFailure } from '../selection/status';
 import type { OwnedInstall } from './operation-types';
 const installTimeout = 300_000;
@@ -45,3 +46,26 @@ export const installedOperation = (
 
 export const abortInstallation = (owned: OwnedInstall, reason: string): void =>
   owned.controller.abort(new DOMException(reason, 'AbortError'));
+
+export const rememberInstallFailure = (
+  owned: OwnedInstall,
+  error: unknown,
+): AgentInstallOperation => {
+  if (!(error instanceof InstallCleanupError))
+    return failedOperation(owned, error);
+  owned.released = false;
+  owned.operation = {
+    ...owned.operation,
+    status: 'failed',
+    failure: error.message,
+  };
+  throw error;
+};
+export const createOwnedInstall = (
+  operation: AgentInstallOperation,
+): OwnedInstall => ({
+  operation,
+  controller: new AbortController(),
+  settled: Promise.resolve(),
+  released: true,
+});

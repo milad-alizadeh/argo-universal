@@ -5,6 +5,7 @@ import type { CustomAgentDefinition } from '@repo/contracts';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { onTestFinished } from 'vitest';
+import type { EngineInput } from '../src/engine/machine';
 import { openTestDatabase } from './database';
 import { startEngineTestHost } from './engine';
 
@@ -15,9 +16,9 @@ export const customAgentDefinition: CustomAgentDefinition = {
 };
 
 // An Engine over a real Project repository and real ACP process launches, with no launch resolver stand-in.
-export const startCustomAgentEngine = async (): Promise<
-  Awaited<ReturnType<typeof startEngineTestHost>>
-> => {
+export const startCustomAgentEngine = async (
+  options: Pick<Partial<EngineInput>, 'acp'> = {},
+): Promise<Awaited<ReturnType<typeof startEngineTestHost>>> => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-custom-agent-'));
   await initTestRepository(directory);
   const storage = openTestDatabase({}, directory);
@@ -25,5 +26,5 @@ export const startCustomAgentEngine = async (): Promise<
     storage.remove();
     rmSync(directory, { recursive: true, force: true });
   });
-  return startEngineTestHost({ database: storage.database });
+  return startEngineTestHost({ database: storage.database, ...options });
 };

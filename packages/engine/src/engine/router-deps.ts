@@ -100,6 +100,9 @@ function bindInstallations(
     checkAgentLaunch,
     isInUse: (agentId) =>
       input.agentLogins.isBusy(agentId) ||
+      !!input.sessions
+        .getSnapshot()
+        .context.acpResources?.isAgentInUse(agentId) ||
       Object.values(input.sessions.getSnapshot().context.sessions).some(
         (session) =>
           !session.getSnapshot().context.agent ||

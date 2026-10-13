@@ -32,6 +32,7 @@ type CancelInput = { agentId: string; operationId: string };
 type CancelInstall = UseMutationResult<void, ClientError, CancelInput>;
 type Commands = { install: StartInstall; cancel: CancelInstall };
 type PresentationInput = Commands & {
+  action: 'Install' | 'Update';
   open: boolean;
   setOpen: (value: boolean) => void;
   operation?: AgentInstallOperation;
@@ -101,8 +102,9 @@ const cancelInstall = (input: PresentationInput): void => {
   );
 };
 const presentation = (input: PresentationInput): AgentInstallPresentation => ({
+  action: input.action,
   open: input.open,
-  onOpenChange: input.setOpen,
+  onOpenChange: (open) => openInstallation(input, open),
   phase: installationPhase(phaseInput(input)),
   failure: installationFailure(phaseInput(input)),
   cancelling: input.cancel.isPending,
@@ -110,6 +112,13 @@ const presentation = (input: PresentationInput): AgentInstallPresentation => ({
   onInstall: () => startInstall(input),
   onCancel: () => cancelInstall(input),
 });
+const openInstallation = (input: PresentationInput, open: boolean): void => {
+  if (open && hasCompletedPreviousRelease(input)) {
+    input.rememberPrevious(previousOperationId(input));
+    input.install.reset();
+  }
+  input.setOpen(open);
+};
 type InstallationControls = Commands &
   ObservedOperation & { status?: AgentInstallStatus };
 function useInstallationControls(agentId: string): InstallationControls {
@@ -126,9 +135,16 @@ function useInstallationControls(agentId: string): InstallationControls {
 export function useAgentInstallation(
   agentId: string,
   version: string,
+  action: 'Install' | 'Update' = 'Install',
 ): AgentInstallPresentation {
   const [open, setOpen] = useState(false);
   const controls = useInstallationControls(agentId);
   useReconnectedInstallation(controls.operation, setOpen);
-  return presentation({ ...controls, open, setOpen, agentId, version });
+  return presentation({ ...controls, open, setOpen, agentId, version, action });
 }
+
+const hasCompletedPreviousRelease = (input: PresentationInput): boolean =>
+  input.operation?.status === 'installed' &&
+  input.operation.version !== input.version;
+const previousOperationId = (input: PresentationInput): string | undefined =>
+  input.operation?.operationId;

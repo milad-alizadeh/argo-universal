@@ -76,11 +76,13 @@ export type CustomAgentDefinition = z.infer<typeof CustomAgentDefinition>;
 export const AgentConfiguration = z.discriminatedUnion('source', [
   z.strictObject({
     source: z.literal('registry'),
+    removed: z.literal(true).optional(),
     release: z.string().nullable(),
     overrides: AgentOverrides,
   }),
   z.strictObject({
     source: z.literal('custom'),
+    removed: z.literal(true).optional(),
     definition: CustomAgentDefinition,
   }),
 ]);

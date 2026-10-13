@@ -72,18 +72,14 @@ const createListRouter = routerFactory((deps: AgentsRouterDeps) =>
         ...(deps.home
           ? await listInstalledAgents(deps.database, deps.home)
           : []),
-        ...(await listCustomAgents(deps)),
+        ...(await listCustomAgents(ownedConfiguration(deps))),
       ]),
   }),
 );
 
 export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
   mergeRouters(
-    createConfigurationRouter({
-      ...deps,
-      withAgentSetup: (agentId, operation) =>
-        deps.installations.configure(agentId, operation),
-    }),
+    createConfigurationRouter(ownedConfiguration(deps)),
     createInstallRouter(deps.installations),
     createCatalogRouter(deps),
     createCatalogSyncRouter(deps),
@@ -91,3 +87,10 @@ export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
     createLoginRouter(deps),
   ),
 );
+const ownedConfiguration = (deps: AgentsRouterDeps): ConfigurationDeps => ({
+  ...deps,
+  withAgentSetup: (agentId, operation) =>
+    deps.installations.configure(agentId, operation),
+  withAgentMutation: (agentId, operation) =>
+    deps.installations.mutateLaunch(agentId, operation),
+});
