@@ -167,6 +167,42 @@ export class SessionRowUpdateJob implements WriterJob {
   }
 }
 
+// Raises a Session's `seenRevision` and never lowers it, so an older view on another App cannot bring Unread back.
+export class SessionSeenJob implements WriterJob {
+  public constructor(
+    private readonly seen: { sessionId: string; revision: number },
+  ) {}
+
+  public describe(): string {
+    return `mark Session ${this.seen.sessionId} seen at revision ${this.seen.revision}`;
+  }
+
+  public commit(transaction: StorageTransaction): void {
+    transaction
+      .update(session)
+      .set({
+        seenRevision: sql`max(${session.seenRevision}, ${this.seen.revision})`,
+      })
+      .where(eq(session.id, this.seen.sessionId))
+      .run();
+  }
+
+  public project(
+    current: SessionRecord | undefined,
+    sessionId: string,
+  ): SessionRecord | undefined {
+    if (!current || this.seen.sessionId !== sessionId) return current;
+    return SessionRecord.parse({
+      ...current,
+      seenRevision: Math.max(current.seenRevision, this.seen.revision),
+    });
+  }
+
+  public changedSessionIds(): string[] {
+    return [this.seen.sessionId];
+  }
+}
+
 export class TurnInsertJob implements WriterJob {
   public constructor(
     private readonly insert: { turn: typeof turn.$inferInsert },
@@ -236,7 +272,11 @@ const projectSessionJob = (
   job: WriterJob,
   sessionId: string,
 ): SessionRecord | undefined => {
-  if (job instanceof SessionInsertJob || job instanceof SessionRowUpdateJob)
+  if (
+    job instanceof SessionInsertJob ||
+    job instanceof SessionRowUpdateJob ||
+    job instanceof SessionSeenJob
+  )
     return job.project(current, sessionId);
   return current?.id === sessionId
     ? projectQueuedFeedSession(job, current)
@@ -297,6 +337,7 @@ export const changedSessionIds = (job: WriterJob): string[] => {
   if (
     job instanceof SessionInsertJob ||
     job instanceof SessionRowUpdateJob ||
+    job instanceof SessionSeenJob ||
     job instanceof TurnInsertJob
   )
     return job.changedSessionIds();

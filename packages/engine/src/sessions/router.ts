@@ -11,6 +11,8 @@ import {
   SessionListInput,
   SessionListOutput,
   SessionListUpdate,
+  SessionMarkSeenInput,
+  SessionMarkSeenOutput,
   SessionNewInput,
   SessionNewOutput,
   SessionPromptInput,
@@ -35,6 +37,7 @@ import { cancelSession, closeSession } from './session-closure';
 import { configureSession } from './session-configuration';
 import { createSession } from './session-creation';
 import { promptSession } from './session-prompt';
+import { markSessionSeen } from './session-seen';
 import { unimplementedSessionRouter } from './unimplemented-router';
 
 type SessionList = ReturnType<typeof createSessionList>;
@@ -71,6 +74,15 @@ const createCountsRouter = routerFactory((sessionList: SessionList) =>
       }): AsyncGenerator<SessionCounts, void> {
         yield* sessionList.counts(signal);
       }),
+  }),
+);
+
+const createSeenRouter = routerFactory((deps: SessionRouterDeps) =>
+  router({
+    markSeen: publicProcedure
+      .input(SessionMarkSeenInput)
+      .output(SessionMarkSeenOutput)
+      .mutation(({ input }) => markSessionSeen(deps, input)),
   }),
 );
 
@@ -128,6 +140,7 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createListRouter(sessionList),
     createListUpdatesRouter(sessionList),
     createCountsRouter(sessionList),
+    createSeenRouter(deps),
     createStartRouter(deps),
     createStopRouter(deps),
     createConfigurationRouter(deps),
