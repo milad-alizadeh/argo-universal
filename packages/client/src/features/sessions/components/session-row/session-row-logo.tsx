@@ -59,7 +59,7 @@ export function SessionLogo(props: SessionLogoProps): React.JSX.Element {
 // A custom Agent, or one missing from the list, has no logo; an empty SVG would throw, so it shows the Agent glyph.
 function LogoMark({ logo }: { logo: string }): React.JSX.Element {
   const { color } = useResolveClassNames('text-foreground');
-  if (!logo)
+  if (!logo.trim())
     return <Icon name="agent" role="mark" className="text-foreground" />;
   return (
     <SvgXml
