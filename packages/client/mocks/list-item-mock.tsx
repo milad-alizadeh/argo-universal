@@ -11,28 +11,46 @@ export function SidebarRows(): React.JSX.Element {
   return (
     <FieldGroup variant="navigation">
       <FieldSection title="Sidebar">
-        <ListItem
-          title="Projects"
-          icon="folder"
-          value="1"
-          needsAttention
-          onPress={onPress}
-        />
-        <ListItem
-          title="Connection"
-          icon="connection"
-          value="This Mac"
-          status={{ tone: 'success', label: 'connected' }}
-          selected
-          onPress={onPress}
-        />
-        <ListItem
-          title="Appearance"
-          icon="appearance"
-          value="System"
-          onPress={onPress}
-        />
+        <ProjectRow />
+        <ConnectionRow />
+        <AppearanceRow />
       </FieldSection>
     </FieldGroup>
+  );
+}
+
+function ProjectRow(): React.JSX.Element {
+  return (
+    <ListItem
+      title="Projects"
+      icon="folder"
+      value="1"
+      needsAttention
+      onPress={onPress}
+    />
+  );
+}
+
+function ConnectionRow(): React.JSX.Element {
+  return (
+    <ListItem
+      title="Connection"
+      icon="connection"
+      value="This Mac"
+      status={{ tone: 'success', label: 'connected' }}
+      selected
+      onPress={onPress}
+    />
+  );
+}
+
+function AppearanceRow(): React.JSX.Element {
+  return (
+    <ListItem
+      title="Appearance"
+      icon="appearance"
+      value="System"
+      onPress={onPress}
+    />
   );
 }

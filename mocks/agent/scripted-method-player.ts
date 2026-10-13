@@ -3,9 +3,14 @@ import type {
   AgentRequestContext,
   AgentRequestParamsByMethod,
   AgentRequestResponsesByMethod,
-  PromptResponse,
   JsonRpcId,
 } from '@agentclientprotocol/sdk';
+import {
+  responseSessionId,
+  completeResponse,
+  requestScope,
+  promptSteps,
+} from './scripted-response-fallbacks.ts';
 import {
   playResponse,
   responseSequence,
@@ -22,6 +27,20 @@ const promptMethod = 'session/prompt';
 
 export type ScriptedWire = Pick<ScriptedTurn, 'writeRaw' | 'closed'>;
 
+type MethodContext<Method extends AgentRequestMethod> = AgentRequestContext<
+  AgentRequestParamsByMethod[Method]
+>;
+type MethodResponder<Method extends AgentRequestMethod> = (
+  context: MethodContext<Method>,
+  fallback: AgentRequestResponsesByMethod[Method],
+) => Promise<AgentRequestResponsesByMethod[Method]>;
+type MethodPlayback<Method extends AgentRequestMethod> = {
+  method: Method;
+  response: ScriptedResponse<Method> | undefined;
+  context: MethodContext<Method>;
+  fallback: AgentRequestResponsesByMethod[Method];
+};
+
 export class ScriptedMethodPlayer {
   private readonly scenario: ScriptedScenario;
   private readonly sessions: ScriptedSessions;
@@ -37,29 +56,37 @@ export class ScriptedMethodPlayer {
   }
   public respond<Method extends AgentRequestMethod>(
     method: Method,
-  ): (
-    context: AgentRequestContext<AgentRequestParamsByMethod[Method]>,
-    fallback: AgentRequestResponsesByMethod[Method],
-  ) => Promise<AgentRequestResponsesByMethod[Method]> {
+  ): MethodResponder<Method> {
     const next = responseSequence<Method>(this.scenario.responses?.[method]);
-    return async (context, fallback) => {
-      const selected = next(context.params);
-      const response =
-        method === promptMethod
-          ? { ...selected, steps: selected?.steps ?? this.scenario.steps }
-          : selected;
-      const sessionId = responseSessionId({
-        response,
-        params: context.params,
+    return (context, fallback) =>
+      this.playMethod({
+        method,
+        response: next(context.params),
+        context,
         fallback,
       });
-      const played = await playResponse(
-        response,
-        context,
-        this.turn(context, sessionId, method === promptMethod),
-      );
-      return played.result ?? completeResponse(fallback, played.stopReason);
-    };
+  }
+  private async playMethod<Method extends AgentRequestMethod>({
+    method,
+    response,
+    context,
+    fallback,
+  }: MethodPlayback<Method>): Promise<AgentRequestResponsesByMethod[Method]> {
+    const selected = this.methodResponse(method, response);
+    const sessionId = responseSessionId(selected, context.params, fallback);
+    const played = await playResponse(
+      selected,
+      context,
+      this.turn(context, sessionId, method === promptMethod),
+    );
+    return played.result ?? completeResponse(fallback, played.stopReason);
+  }
+  private methodResponse<Method extends AgentRequestMethod>(
+    method: Method,
+    response: ScriptedResponse<Method> | undefined,
+  ): ScriptedResponse<Method> | undefined {
+    if (method !== promptMethod) return response;
+    return { ...response, steps: promptSteps(response, this.scenario.steps) };
   }
   public turn(
     context: { client: ScriptedTurn['client']; requestId?: JsonRpcId },
@@ -69,9 +96,7 @@ export class ScriptedMethodPlayer {
     return {
       sessionId,
       client: context.client,
-      ...(context.requestId === undefined
-        ? {}
-        : { requestId: context.requestId }),
+      ...requestScope(context.requestId),
       ...(active
         ? this.sessions.startTurn(sessionId)
         : { cancelled: new Promise<void>(() => {}), isCancelled: () => false }),
@@ -98,22 +123,3 @@ export class ScriptedMethodPlayer {
     }
   }
 }
-
-const responseSessionId = <Method extends AgentRequestMethod>(input: {
-  response: ScriptedResponse<Method> | undefined;
-  params: AgentRequestParamsByMethod[Method];
-  fallback: AgentRequestResponsesByMethod[Method];
-}): string => {
-  const result = input.response?.result ?? input.fallback;
-  if ('sessionId' in result) return String(result.sessionId);
-  if ('sessionId' in input.params) return String(input.params['sessionId']);
-  return '';
-};
-
-const completeResponse = <Response extends object>(
-  fallback: Response,
-  stopReason: PromptResponse['stopReason'],
-): Response => {
-  if ('stopReason' in fallback) return { ...fallback, stopReason };
-  return fallback;
-};

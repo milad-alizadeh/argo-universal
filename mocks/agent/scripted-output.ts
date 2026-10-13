@@ -1,11 +1,13 @@
+type SharedOutput = {
+  stream: WritableStream<Uint8Array>;
+  writeRaw: ScriptedWire['writeRaw'];
+};
+
 import type { ScriptedWire } from './scripted-method-player.ts';
 
 export const shareScriptedOutput = (
   output: WritableStream<Uint8Array>,
-): {
-  stream: WritableStream<Uint8Array>;
-  writeRaw: ScriptedWire['writeRaw'];
-} => {
+): SharedOutput => {
   const writer = output.getWriter();
   const encoder = new TextEncoder();
   return {
