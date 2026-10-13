@@ -5,13 +5,14 @@ import {
 } from '@expo/ui/swift-ui';
 import {
   type ModifierConfig,
+  type PresentationDetent,
   interactiveDismissDisabled,
   presentationBackground,
   presentationDetents,
   presentationDragIndicator,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { useState } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '../../native/host';
 import { RoutedFormSheet } from '../form-sheet/form-sheet';
@@ -19,6 +20,7 @@ import { useFormSheetCommands } from '../form-sheet/form-sheet-context';
 import { BottomSheetContent } from './bottom-sheet-content';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
+import { SheetViewport } from './bottom-sheet-viewport';
 import type { BottomSheetProps } from './bottom-sheet.types';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
@@ -59,6 +61,8 @@ type SheetContentProps = Pick<
   | 'onOpenChange'
   | 'fit'
   | 'dismissible'
+  | 'footer'
+  | 'initialSize'
   | 'contentScrolls'
   | 'surface'
 >;
@@ -66,40 +70,49 @@ type SheetContentProps = Pick<
 function SheetContent(props: SheetContentProps): React.JSX.Element {
   const colors = useNativeTheme().colors;
   const modifiers = [
-    ...sheetDetents(props.fit),
+    ...useSheetDetents(props),
     presentationDragIndicator('visible'),
     interactiveDismissDisabled(props.dismissible === false),
     ...sheetFill(props.surface === 'sidebar' ? colors.sidebar : colors.popover),
   ];
   return (
     <Group modifiers={modifiers}>
-      <RNHostView matchContents={props.fit}>
-        <SheetWidth fit={props.fit}>
-          <BottomSheetContent {...props} />
-        </SheetWidth>
-      </RNHostView>
+      <SheetViewport fit={props.fit}>
+        {(viewportHeight) => (
+          <BottomSheetContent {...props} viewportHeight={viewportHeight} />
+        )}
+      </SheetViewport>
     </Group>
   );
 }
 
 // A fitted sheet takes its height from the content, so only a fixed one names detents.
-function sheetDetents(fit: boolean | undefined): ModifierConfig[] {
-  return fit ? [] : [presentationDetents([{ height: 320 }, 'medium', 'large'])];
+function useSheetDetents(
+  props: Pick<BottomSheetProps, 'fit' | 'initialSize'>,
+): ModifierConfig[] {
+  const [selection, setSelection] = useState<PresentationDetent>(
+    initialDetent(props.initialSize),
+  );
+  return props.fit
+    ? []
+    : [
+        presentationDetents([{ height: 320 }, 'medium', 'large'], {
+          selection,
+          onSelectionChange: setSelection,
+        }),
+      ];
+}
+
+function initialDetent(
+  size: BottomSheetProps['initialSize'],
+): PresentationDetent {
+  if (size === 'expanded') return 'large';
+  return size === 'medium' ? 'medium' : { height: 320 };
 }
 
 // The sheet's own fill matches the content's, so the strip under it in the safe area is not grey.
 function sheetFill(popover: string | undefined): ModifierConfig[] {
   return popover === undefined ? [] : [presentationBackground(popover)];
-}
-
-// A fitted sheet measures its content with no width to go by, so the content takes the screen's.
-function SheetWidth(props: {
-  fit: boolean | undefined;
-  children: React.ReactElement;
-}): React.JSX.Element {
-  const { width } = useWindowDimensions();
-  if (!props.fit) return props.children;
-  return <View style={{ width }}>{props.children}</View>;
 }
 
 function dismissPresentation(

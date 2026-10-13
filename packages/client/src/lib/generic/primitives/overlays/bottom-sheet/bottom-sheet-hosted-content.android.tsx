@@ -14,6 +14,7 @@ export function HostedSheetContent(
     | 'onOpenChange'
     | 'label'
     | 'children'
+    | 'footer'
     | 'dismissible'
     | 'contentScrolls'
     | 'surface'
@@ -29,6 +30,7 @@ export function HostedSheetContent(
       <View style={props.fit ? { width } : { flex: 1 }}>
         <BottomSheetContent
           fit={props.fit}
+          footer={props.footer}
           label={props.label}
           onOpenChange={props.onOpenChange}
           dismissible={props.dismissible}

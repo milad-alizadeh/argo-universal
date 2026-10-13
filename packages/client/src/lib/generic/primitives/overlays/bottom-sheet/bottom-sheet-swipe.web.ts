@@ -1,64 +1,120 @@
 import { useEffect, type RefObject } from 'react';
 import type { View } from 'react-native';
 
-// How far the sheet must travel down before letting go closes it, as on a phone's native sheet.
-const closeDistance = 80;
+const dragDistance = 80;
 const settleTransition = 'transform 150ms ease-out';
 const fieldSelector = 'input, textarea, select, [contenteditable="true"]';
 
-// The sheet follows a downward drag that starts on it, and closes when let go far enough down.
+type SheetDragOptions = {
+  sheet: RefObject<View | null>;
+  onClose: () => void;
+  onResize?: (expanded: boolean) => void;
+};
+
 export function useSwipeToClose(
   sheet: RefObject<View | null>,
   onClose: () => void,
+  onResize?: (expanded: boolean) => void,
 ): void {
-  useEffect(() => {
-    const startDrag = (press: PointerEvent): void => {
-      const element = sheet.current;
-      if (!(element instanceof HTMLElement) || !startsDrag(press, element))
-        return;
-      followPointer({ sheet: element, startY: press.clientY, onClose });
-    };
-    document.addEventListener('pointerdown', startDrag);
-    return (): void => document.removeEventListener('pointerdown', startDrag);
-  }, [sheet, onClose]);
+  useEffect(
+    () => listenForDrag({ sheet, onClose, onResize }),
+    [sheet, onClose, onResize],
+  );
 }
 
-// The press must be the main button, on the sheet, and not in a field, where a drag selects text.
-function startsDrag(press: PointerEvent, sheet: HTMLElement): boolean {
-  return press.button === 0 && landsOnSheet(press.target, sheet);
-}
-
-function landsOnSheet(target: EventTarget | null, sheet: HTMLElement): boolean {
-  if (!(target instanceof Node)) return false;
-  return sheet.contains(target) && !startsInField(target);
-}
-
-function startsInField(target: Node): boolean {
-  return target instanceof Element && target.closest(fieldSelector) !== null;
-}
-
-type Drag = { sheet: HTMLElement; startY: number; onClose: () => void };
-
-function followPointer({ sheet, startY, onClose }: Drag): void {
-  const travel = (event: PointerEvent): number =>
-    Math.max(0, event.clientY - startY);
-  const move = (event: PointerEvent): void => {
-    sheet.style.transform = `translateY(${travel(event)}px)`;
+function listenForDrag(options: SheetDragOptions): () => void {
+  let stopDrag: (() => void) | undefined;
+  const start = (event: PointerEvent): void => {
+    const sheet = options.sheet.current;
+    if (!(sheet instanceof HTMLElement)) return;
+    if (!startsDrag(event, sheet, !!options.onResize)) return;
+    stopPreviousDrag(stopDrag);
+    stopDrag = followPointer({ ...options, sheet, startY: event.clientY });
   };
-  const release = (event: PointerEvent): void => {
+  document.addEventListener('pointerdown', start);
+  return () => {
+    stopDrag?.();
+    document.removeEventListener('pointerdown', start);
+  };
+}
+
+function startsDrag(
+  event: PointerEvent,
+  sheet: HTMLElement,
+  expandable: boolean,
+): boolean {
+  if (!isMainPointer(event)) return false;
+  return landsOnSheet(event.target, sheet, expandable);
+}
+
+function isMainPointer(event: PointerEvent): boolean {
+  return event.button === 0 && event.target instanceof Element;
+}
+
+function landsOnSheet(
+  target: EventTarget | null,
+  sheet: HTMLElement,
+  expandable: boolean,
+): boolean {
+  if (!(target instanceof Element)) return false;
+  if (!canDragFrom(target, sheet)) return false;
+  return isGripDrag(target, expandable);
+}
+
+function canDragFrom(target: Element, sheet: HTMLElement): boolean {
+  return sheet.contains(target) && !target.closest(fieldSelector);
+}
+
+function isGripDrag(target: Element, expandable: boolean): boolean {
+  return !expandable || target.closest('[role="slider"]') !== null;
+}
+
+function stopPreviousDrag(stop: (() => void) | undefined): void {
+  stop?.();
+}
+
+type Drag = Omit<SheetDragOptions, 'sheet'> & {
+  sheet: HTMLElement;
+  startY: number;
+};
+
+function followPointer(drag: Drag): () => void {
+  const move = (event: PointerEvent): void => {
+    drag.sheet.style.transform = `translateY(${Math.max(0, event.clientY - drag.startY)}px)`;
+  };
+  const stop = (): void => {
     window.removeEventListener('pointermove', move);
     window.removeEventListener('pointerup', release);
     window.removeEventListener('pointercancel', release);
-    if (event.type === 'pointerup' && travel(event) >= closeDistance) onClose();
-    else settleBack(sheet);
+    settleBack(drag.sheet);
   };
-  sheet.style.transition = '';
+  const release = (event: PointerEvent): void => {
+    stop();
+    releaseDrag(drag, event);
+  };
+  drag.sheet.style.transition = '';
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
+  return stop;
+}
+
+function releaseDrag(drag: Drag, event: PointerEvent): void {
+  if (event.type !== 'pointerup') return;
+  const distance = event.clientY - drag.startY;
+  if (Math.abs(distance) < dragDistance) return;
+  resizeOrClose(drag, distance);
 }
 
 function settleBack(sheet: HTMLElement): void {
   sheet.style.transition = settleTransition;
   sheet.style.transform = '';
+}
+
+function resizeOrClose(drag: Drag, distance: number): void {
+  if (drag.onResize) {
+    drag.onResize(distance < 0);
+    return;
+  }
+  if (distance > 0) drag.onClose();
 }

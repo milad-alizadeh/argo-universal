@@ -71,6 +71,7 @@ function submitting(width: number, mock: RequestMock = elicitationMock): Story {
       await settleViewport(width);
       const sending = canvas.getByRole('button', { name: 'Sending…' });
       await expect(sending).toBeDisabled();
+      await expect(sending).toHaveAttribute('aria-busy', 'true');
       await userEvent.keyboard('{Enter}');
       await expect(args.onAnswer).not.toHaveBeenCalled();
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();

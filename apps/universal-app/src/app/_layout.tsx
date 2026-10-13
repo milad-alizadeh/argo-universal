@@ -1,5 +1,6 @@
 import {
   AppProviders,
+  PortalHost,
   FormSheetProvider,
   type LeaveGuard,
   type Navigate,
@@ -12,7 +13,6 @@ import {
   useConnection,
 } from '@repo/client';
 import '../../global.css';
-import { PortalHost } from '@rn-primitives/portal';
 import { registerDevMenuItems } from 'expo-dev-client';
 import { router, Stack, useNavigation } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';

@@ -6,12 +6,26 @@ import clientPackage from '../package.json' with { type: 'json' };
 const packageRoot = join(import.meta.dirname, '..');
 const platformSuffix = /\.(?:ios|android|web|native)\.tsx?$/;
 
-const aliasFolders = Object.entries(clientPackage.imports)
-  .filter(([alias]) => alias !== '#primitives/*')
-  .map(([alias, target]) => ({
-    prefix: alias.slice(0, alias.indexOf('*')),
-    folder: target.slice(0, target.indexOf('*')).replace(/^\.\//, ''),
-  }));
+const aliasFolders = Object.entries(clientPackage.imports).flatMap(
+  ([alias, target]) =>
+    fixedAliasFolder(
+      alias,
+      typeof target === 'string' ? target : target.default,
+    ),
+);
+
+function fixedAliasFolder(
+  alias: string,
+  target: string,
+): { prefix: string; folder: string }[] {
+  if (!/\.tsx?$/.test(target)) return [];
+  return [
+    {
+      prefix: alias.slice(0, alias.indexOf('*')),
+      folder: target.slice(0, target.indexOf('*')).replace(/^\.\//, ''),
+    },
+  ];
+}
 
 function listFiles(directory: string): string[] {
   return readdirSync(join(packageRoot, directory), { recursive: true })
@@ -33,7 +47,7 @@ const forbiddenSpecifiers = new Set(
   ),
 );
 
-it('keeps platform files outside the Metro primitive alias on relative paths', () => {
+it('keeps fixed-extension aliases away from platform drawings', () => {
   expect(platformFiles.length).toBeGreaterThan(0);
   expect(forbiddenSpecifiers.size).toBeGreaterThan(0);
 
@@ -52,6 +66,6 @@ it('keeps platform files outside the Metro primitive alias on relative paths', (
 
   expect(
     hits,
-    'Only the Metro primitive alias resolves platform files; other aliases select the base file.',
+    'Use relative paths or the extensionless #primitives alias for platform drawings.',
   ).toEqual([]);
 });

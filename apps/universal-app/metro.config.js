@@ -11,16 +11,16 @@ const { withUniwindConfig } = require('uniwind/metro');
 /** @import { MetroConfig } from 'expo/metro-config' */
 /** @type {MetroConfig} */
 const config = getDefaultConfig(__dirname);
-const primitivePrefix = '#primitives/';
-const primitiveDirectory = path.resolve(
-  __dirname,
-  '../../packages/client/src/lib/generic/primitives',
-);
+// Primitive aliases remain extensionless so Metro chooses each platform's drawing.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  const source = moduleName.startsWith(primitivePrefix)
-    ? path.join(primitiveDirectory, moduleName.slice(primitivePrefix.length))
+  const primitivePath = moduleName.startsWith('#primitives/')
+    ? path.resolve(
+        __dirname,
+        '../../packages/client/src/lib/generic/primitives',
+        moduleName.slice('#primitives/'.length),
+      )
     : moduleName;
-  return context.resolveRequest(context, source, platform);
+  return context.resolveRequest(context, primitivePath, platform);
 };
 
 // Production bundles stub Storybook out; configPath must be absolute for the stub to match.

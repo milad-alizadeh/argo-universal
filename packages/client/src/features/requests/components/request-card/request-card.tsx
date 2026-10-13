@@ -1,10 +1,15 @@
 import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
-import { useContentWide } from '#lib/product/content-layout';
+import {
+  ContentWidthProvider,
+  useContentWide,
+} from '#lib/product/content-layout';
+import { Text } from '#primitives/display/text/text';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
+import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
-import { RequestStatus } from './request-status';
+import { RequestFooter } from './request-footer';
 export { RequestAction } from './request-action';
 
 export type RequestState =
@@ -12,7 +17,10 @@ export type RequestState =
   | { kind: 'submitting' }
   | { kind: 'answered'; reason: string };
 
-interface RequestCardProps extends Pick<ViewProps, 'className' | 'testID'> {
+export interface RequestCardProps extends Pick<
+  ViewProps,
+  'className' | 'testID'
+> {
   appearance?: 'card' | 'embedded';
   state: RequestState;
   error?: string;
@@ -24,16 +32,25 @@ interface RequestCardProps extends Pick<ViewProps, 'className' | 'testID'> {
   bodyClassName?: string;
   footerClassName?: string;
   mutedStatus?: boolean;
+  sheetLabel?: string;
+  surface?: 'card' | 'tray';
 }
 
 export function RequestCard(props: RequestCardProps): ReactNode {
+  const wide = useContentWide();
+  const windowWide = useWide();
   const nativeID = useRequestKeyboard({
     inactive: props.state.kind !== 'open',
-    wide: useContentWide(),
+    wide,
     onEnter: props.onEnter,
     onEscape: props.onEscape,
   });
+  if (presentsSheet(props, windowWide)) return <RequestSheet {...props} />;
   return <RequestContainer {...props} nativeID={nativeID} />;
+}
+
+function presentsSheet(props: RequestCardProps, wide: boolean): boolean {
+  return !!props.sheetLabel && !wide && props.appearance !== 'embedded';
 }
 
 function RequestContainer(
@@ -44,8 +61,12 @@ function RequestContainer(
       nativeID={props.nativeID}
       testID={props.testID}
       className={cn(
-        'w-full max-w-composer',
-        props.appearance !== 'embedded' && cardClassName,
+        props.surface === 'tray'
+          ? 'w-full gap-3 px-3 pt-3 pb-3.5'
+          : cn(
+              'w-full max-w-composer',
+              props.appearance !== 'embedded' && cardClassName,
+            ),
         props.className,
       )}
     >
@@ -96,34 +117,25 @@ function RequestError({ error }: Pick<RequestCardProps, 'error'>): ReactNode {
   );
 }
 
-type FooterProps = Pick<
-  RequestCardProps,
-  'state' | 'mutedStatus' | 'actions' | 'footerClassName'
->;
-
-function RequestFooter(props: FooterProps): ReactNode {
+function RequestSheet(props: RequestCardProps): ReactNode {
   return (
-    <View
-      className={cn(
-        'min-h-13 flex-row items-center gap-1 px-2 pt-3 pb-2',
-        props.footerClassName,
-      )}
+    <BottomSheet
+      open
+      onOpenChange={() => {}}
+      dismissible={false}
+      expandable
+      initialSize={props.surface === 'tray' ? 'medium' : undefined}
+      label={props.sheetLabel}
+      footer={
+        <ContentWidthProvider wide={false}>
+          <RequestFooter {...props} />
+        </ContentWidthProvider>
+      }
     >
-      <RequestFooterContents {...props} />
-    </View>
+      <ContentWidthProvider wide={false}>
+        <RequestBody {...props} />
+        <RequestError error={props.error} />
+      </ContentWidthProvider>
+    </BottomSheet>
   );
-}
-
-function RequestFooterContents(props: FooterProps): ReactNode {
-  const wide = useContentWide();
-  return (
-    <>
-      <RequestStatus state={props.state} mutedStatus={props.mutedStatus} />
-      {showActions(props.state, wide) && props.actions}
-    </>
-  );
-}
-
-function showActions(state: RequestState, wide: boolean): boolean {
-  return state.kind !== 'answered' || wide;
 }

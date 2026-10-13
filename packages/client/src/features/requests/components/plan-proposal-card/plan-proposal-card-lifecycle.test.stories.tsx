@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import {
   planProposalMocks,
   shortPlanProposal,
@@ -29,12 +29,13 @@ function submitting(width: number, index: number): Story {
   if (!mock) throw new Error(needsProposal);
   return {
     args: { proposal: mock.proposal, state: { kind: 'submitting' } },
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(width);
-      await expect(canvas.getByRole('status')).toHaveTextContent(sendingLabel);
-      await expect(
-        canvas.getByRole('button', { name: sendingLabel }),
-      ).toBeDisabled();
+      const sending = canvas.getByRole('button', { name: sendingLabel });
+      await expect(sending).toBeVisible();
+      await expect(sending).toHaveAttribute('aria-busy', 'true');
+      await expect(sending).toBeDisabled();
       await expect(
         canvas.getByRole('button', { name: keepPlanningLabel }),
       ).toBeDisabled();
@@ -58,7 +59,8 @@ function failedAnswer(width: number, index: number): Story {
   if (!mock) throw new Error(needsProposal);
   return {
     args: { proposal: mock.proposal, error: answerError },
-    play: async ({ canvas, userEvent, args }) => {
+    play: async ({ userEvent, args }) => {
+      const canvas = within(document.body);
       await settleViewport(width);
       await expect(canvas.getByRole('alert')).toHaveTextContent(answerError);
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();

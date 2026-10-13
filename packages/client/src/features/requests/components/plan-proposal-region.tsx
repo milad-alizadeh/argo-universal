@@ -1,9 +1,9 @@
-import { PortalHost } from '@rn-primitives/portal';
 import type * as React from 'react';
 import { createContext, type ReactNode, useId } from 'react';
 import type { ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { ContentLayout } from '#lib/product/content-layout';
+import { PortalHost } from '#primitives/overlays/portal/portal';
 
 export const PlanProposalHost = createContext<string | undefined>(undefined);
 
