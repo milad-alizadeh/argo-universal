@@ -586,7 +586,9 @@ function ConfiguredComposer({
 }: {
   agent: AgentInfo;
 }): React.JSX.Element {
-  const [configOptions, setConfigOptions] = useState(recordedSessionOptions(agent.agent));
+  const [configOptions, setConfigOptions] = useState(
+    recordedSessionOptions(agent.agent),
+  );
   return (
     <Composer
       {...composerProps({
