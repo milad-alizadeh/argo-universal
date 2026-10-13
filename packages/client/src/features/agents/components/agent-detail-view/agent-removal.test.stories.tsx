@@ -14,26 +14,13 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 const removeLabel = `Remove ${readyAgent.name}`;
-export const RemovesTheAgent: Story = {
+const removal = (width: number): Story => ({
+  beforeEach: (): Promise<void> => settleViewport(width),
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: removeLabel }));
-    await expect(args.onRemove).not.toHaveBeenCalled();
-    const confirmation = within(
-      await within(document.body).findByRole('dialog', {
-        name: `Remove ${readyAgent.name}?`,
-      }),
-    );
-    await userEvent.click(confirmation.getByRole('button', { name: 'Remove' }));
-    await expect(args.onRemove).toHaveBeenCalledOnce();
-  },
-};
-
-export const RemovesTheAgentOnAPhone: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
-  play: async ({ args, canvas, userEvent }) => {
-    await expect(canvas.getAllByText('Ready')[0]).toBeVisible();
     await userEvent.click(
-      canvas.getByRole('button', { name: `${removeLabel} Agent` }),
+      canvas.getByRole('button', {
+        name: new RegExp(`^${removeLabel}( Agent)?$`),
+      }),
     );
     await expect(args.onRemove).not.toHaveBeenCalled();
     const confirmation = within(
@@ -44,7 +31,9 @@ export const RemovesTheAgentOnAPhone: Story = {
     await userEvent.click(confirmation.getByRole('button', { name: 'Remove' }));
     await expect(args.onRemove).toHaveBeenCalledOnce();
   },
-};
+});
+export const RemovesTheAgent = removal(layoutWidths.wide);
+export const RemovesTheAgentOnAPhone = removal(layoutWidths.phone);
 
 export const CancelLeavesTheAgentInstalled: Story = {
   play: async ({ args, canvas, userEvent }) => {

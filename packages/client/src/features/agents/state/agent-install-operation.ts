@@ -19,7 +19,8 @@ const interruptedOperation = (
   saved: AgentInstallOperation,
   status: AgentInstallStatus,
 ): AgentInstallOperation =>
-  status.installation.status === 'installed'
+  status.installation.status === 'installed' &&
+  status.installation.version === saved.version
     ? { ...saved, status: 'installed', version: status.installation.version }
     : {
         ...saved,

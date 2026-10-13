@@ -67,7 +67,7 @@ Then(
   async ({ page }, name: string): Promise<void> => {
     await expect(page).toHaveURL(/\/settings\/agents$/);
     await expect(
-      page.getByRole('link', { name: new RegExp(`^${name},`) }),
+      page.getByRole('link', { name: new RegExp(`^${name}, (?!back$)`) }),
     ).toHaveCount(0);
   },
 );
@@ -98,7 +98,14 @@ async function observeManagement(first: Page, second: Page): Promise<void> {
   await expectRemovedInstallation(second);
 }
 async function captureManagement(page: Page, name: string): Promise<void> {
-  await page.screenshot({ path: test.info().outputPath(name) });
+  await removal(page).screenshot({
+    path: test.info().outputPath(name.replace('.png', '-dialog.png')),
+    animations: 'disabled',
+  });
+  await page.screenshot({
+    path: test.info().outputPath(name),
+    animations: 'disabled',
+  });
 }
 When(
   'another App observes disablement and removal of Example Agent',

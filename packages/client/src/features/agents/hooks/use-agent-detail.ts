@@ -60,7 +60,7 @@ function installedDetail(
   detail: AgentDetail,
   installation: ReturnType<typeof useAgentInstallation>,
 ): AgentDetail {
-  if (installation.phase === 'installing')
+  if (initialInstalling(installation))
     return { ...detail, status: 'not-installed' };
   return withInstallation(detail, installation.status?.installation);
 }
@@ -89,3 +89,8 @@ function useDetailDefaults(
   const { defaults, change } = useSessionDefaults(info);
   return { defaults, onDefaultChange: change };
 }
+
+const initialInstalling = (
+  installation: ReturnType<typeof useAgentInstallation>,
+): boolean =>
+  installation.phase === 'installing' && installation.action !== 'Update';

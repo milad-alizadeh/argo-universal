@@ -1,6 +1,6 @@
 import type { AgentAvailability } from '@repo/contracts';
 
-// Where an Agent stands on this Server. Update available has no source yet: the Server reports no installed versions.
+// Where an Agent stands on this Server, including a newer catalog release.
 export type AgentStatus =
   | 'ready'
   | 'update'

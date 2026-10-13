@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { rename, writeFile } from 'node:fs/promises';
 import type { Page, Locator } from '@playwright/test';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
@@ -23,8 +23,14 @@ const updatedRegistry: typeof publishedRegistry = {
 When(
   'the registry offers Example Agent version two',
   async ({ page, app }): Promise<void> => {
-    await writeFile(app.registryPath, JSON.stringify(updatedRegistry));
+    await writeFile(
+      `${app.registryPath}.next`,
+      JSON.stringify(updatedRegistry),
+    );
+    await rename(`${app.registryPath}.next`, app.registryPath);
     await page.goBack();
+    await page.goBack();
+    await page.getByRole('link', { name: /^Agents(?:,|$)/ }).click();
     await page.getByRole('link', { name: /^Example Agent,/ }).click();
     await expect(
       page.getByRole('button', { name: 'Update', exact: true }),
@@ -37,6 +43,7 @@ Then(
     await expect(versionRow(page, '1.2.3')).toBeVisible();
     await page.screenshot({
       path: test.info().outputPath('agent-update-available.png'),
+      animations: 'disabled',
     });
   },
 );
@@ -52,6 +59,7 @@ When(
     await expect(dialog).toContainText('2.0.0');
     await page.screenshot({
       path: test.info().outputPath('agent-update-confirmation.png'),
+      animations: 'disabled',
     });
     await dialog.getByRole('button', { name: 'Update', exact: true }).click();
   },

@@ -9,7 +9,7 @@ import {
   useMutation,
   useQuery,
 } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { type ClientError, useTRPC } from '#features/connection';
 import {
   installationFailure,
@@ -19,6 +19,7 @@ import {
 import type { AgentInstallPresentation } from '../state/agent-install-types';
 import {
   useInstallationOperation,
+  useSheetState,
   type ObservedOperation,
 } from './use-installation-operation';
 import { useCompletedRefresh } from './use-installation-refresh';
@@ -83,7 +84,7 @@ function useInstallStatus(
   });
 }
 const phaseInput = (input: PresentationInput): InstallPhaseInput => ({
-  operation: input.operation,
+  operation: hasCompletedPreviousRelease(input) ? undefined : input.operation,
   previousOperationId: input.previousOperationId,
   pending: input.install.isPending,
   failure: input.install.error?.message,
@@ -104,7 +105,7 @@ const cancelInstall = (input: PresentationInput): void => {
 const presentation = (input: PresentationInput): AgentInstallPresentation => ({
   action: input.action,
   open: input.open,
-  onOpenChange: (open) => openInstallation(input, open),
+  onOpenChange: input.setOpen,
   phase: installationPhase(phaseInput(input)),
   failure: installationFailure(phaseInput(input)),
   cancelling: input.cancel.isPending,
@@ -112,13 +113,6 @@ const presentation = (input: PresentationInput): AgentInstallPresentation => ({
   onInstall: () => startInstall(input),
   onCancel: () => cancelInstall(input),
 });
-const openInstallation = (input: PresentationInput, open: boolean): void => {
-  if (open && hasCompletedPreviousRelease(input)) {
-    input.rememberPrevious(previousOperationId(input));
-    input.install.reset();
-  }
-  input.setOpen(open);
-};
 type InstallationControls = Commands &
   ObservedOperation & { status?: AgentInstallStatus };
 function useInstallationControls(agentId: string): InstallationControls {
@@ -137,14 +131,12 @@ export function useAgentInstallation(
   version: string,
   action: 'Install' | 'Update' = 'Install',
 ): AgentInstallPresentation {
-  const [open, setOpen] = useState(false);
+  const sheet = useSheetState(action);
   const controls = useInstallationControls(agentId);
-  useReconnectedInstallation(controls.operation, setOpen);
-  return presentation({ ...controls, open, setOpen, agentId, version, action });
+  useReconnectedInstallation(controls.operation, sheet.setOpen);
+  return presentation({ ...controls, ...sheet, agentId, version });
 }
 
 const hasCompletedPreviousRelease = (input: PresentationInput): boolean =>
   input.operation?.status === 'installed' &&
   input.operation.version !== input.version;
-const previousOperationId = (input: PresentationInput): string | undefined =>
-  input.operation?.operationId;

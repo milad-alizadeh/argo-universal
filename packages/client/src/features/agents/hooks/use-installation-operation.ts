@@ -25,3 +25,24 @@ export function useInstallationOperation(
     rememberPrevious,
   };
 }
+
+type InstallationSheetState = {
+  open: boolean;
+  action: 'Install' | 'Update';
+  setOpen: (open: boolean) => void;
+};
+export function useSheetState(
+  action: 'Install' | 'Update',
+): InstallationSheetState {
+  const [sheet, setSheet] = useState({ open: false, action });
+  const setOpen = (open: boolean): void =>
+    setSheet((previous) => ({
+      open,
+      action: previous.open ? previous.action : action,
+    }));
+  return {
+    open: sheet.open,
+    action: sheet.open ? sheet.action : action,
+    setOpen,
+  };
+}

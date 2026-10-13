@@ -55,6 +55,13 @@ const versionAccessory = (
   props: AgentDetailViewProps,
   wide: boolean,
 ): React.JSX.Element | undefined =>
-  wide && props.agent.status === 'update' ? (
-    <AgentAction {...props} />
-  ) : undefined;
+  wide && showsUpdate(props) ? <AgentAction {...props} /> : undefined;
+
+const showsUpdate = (props: AgentDetailViewProps): boolean =>
+  props.agent.status === 'update' || openUpdate(props.installation);
+const openUpdate = (
+  installation: AgentDetailViewProps['installation'],
+): boolean => {
+  if (!installation) return false;
+  return installation.action === 'Update' && installation.open;
+};

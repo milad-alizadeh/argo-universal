@@ -13,7 +13,7 @@ import {
 const contentClassName = cn(
   'bg-popover z-50 mx-auto flex w-full min-w-80 max-w-sm flex-col gap-4 rounded-2xl p-6',
   Platform.select({
-    web: 'shadow-card animate-in fade-in-0 zoom-in-95 web:max-w-[calc(100%-2rem)] duration-200',
+    web: 'w-96 rounded-surface shadow-card animate-in fade-in-0 zoom-in-95 web:max-w-[calc(100%-2rem)] duration-200',
   }),
 );
 

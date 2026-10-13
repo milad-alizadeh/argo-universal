@@ -32,15 +32,6 @@ it('custom unregister preserves the external executable and stored Session, Turn
         state: 'settled',
       }),
     );
-  await expect(
-    host.caller.agents.remove({ agentId: registration.agentId }),
-  ).rejects.toThrow('in use');
-  await expect(
-    host.caller.agents.editCustom({
-      agentId: registration.agentId,
-      definition: { ...customAgentDefinition, name: 'Changed' },
-    }),
-  ).rejects.toThrow('in use');
   await host.caller.session.close(created);
   const feed = await host.caller.feed.page({ ...created, direction: 'tail' });
   const sessions = await host.caller.session.list({
@@ -77,3 +68,30 @@ it('custom unregister preserves the external executable and stored Session, Turn
     }),
   ).toEqual(sessions);
 });
+
+it.each(['remove', 'edit'] as const)(
+  'an open Session refuses custom Agent %s',
+  async (mutation) => {
+    const host = await startCustomAgentEngine({ acp: {} });
+    const registration = await host.caller.agents.registerCustom(
+      customAgentDefinition,
+    );
+    if (registration.status !== 'ready') throw new Error(registration.failure);
+    await host.caller.session.new({
+      projectId: 'project-1',
+      agent: registration.agentId,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Keep my Session' }],
+    });
+    const input = { agentId: registration.agentId };
+    const command =
+      mutation === 'remove'
+        ? host.caller.agents.remove(input)
+        : host.caller.agents.editCustom({
+            ...input,
+            definition: customAgentDefinition,
+          });
+    await expect(command).rejects.toThrow('in use');
+  },
+);
