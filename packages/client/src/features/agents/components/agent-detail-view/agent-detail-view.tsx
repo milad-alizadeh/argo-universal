@@ -7,8 +7,10 @@ import { FieldRow } from '#lib/generic/primitives/fields/field-row/field-row';
 import { SettingsPage } from '#lib/product/settings-page';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
+import { installationActive } from '../../state/agent-install-phase';
 import { agentStatusLabels, statusTone } from '../../state/agent-status';
 import { AgentIdentity } from '../agent-identity';
+import { useInstallToast } from '../agent-install-control/use-install-toast';
 import {
   AgentEnablement,
   AgentManagementFailure,
@@ -24,6 +26,7 @@ export type { AgentDetailViewProps } from '../../state/agent-detail-types';
 export function AgentDetailView(
   props: AgentDetailViewProps,
 ): React.JSX.Element {
+  useInstallToast(props.agent.name, props.installation);
   return (
     <View className="flex-1 bg-sidebar wide:bg-transparent">
       <PhoneTitle title={props.agent.name} />
@@ -59,10 +62,9 @@ function DetailIdentity(props: AgentDetailViewProps): React.JSX.Element {
 }
 
 // The card's one trailing slot: the status chip, or Install for a registry Agent, which has no chip.
-const hasInstallDialog = (props: AgentDetailViewProps): boolean =>
-  props.installation?.open === true;
 const showsIdentityInstallation = (props: AgentDetailViewProps): boolean =>
-  props.installation?.action !== 'Update' && hasInstallDialog(props);
+  props.installation?.action !== 'Update' &&
+  installationActive(props.installation);
 function IdentityTrailing(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {

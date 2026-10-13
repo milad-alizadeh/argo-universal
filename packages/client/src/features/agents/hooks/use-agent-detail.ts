@@ -81,5 +81,4 @@ const managementCallbacks = (
 });
 const initialInstalling = (
   installation: ReturnType<typeof useAgentInstallation>,
-): boolean =>
-  installation.phase === 'installing' && installation.action !== 'Update';
+): boolean => installation.installing && installation.action !== 'Update';

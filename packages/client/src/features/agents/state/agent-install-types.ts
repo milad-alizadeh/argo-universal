@@ -1,29 +1,20 @@
-import type {
-  AgentInstallOperation,
-  AgentInstallStatus,
-} from '@repo/contracts';
-export type InstallPhase = 'confirm' | AgentInstallOperation['status'];
-export interface AgentInstallSheetProps {
-  name: string;
-  action?: 'Install' | 'Update';
-  version: string;
-  distribution: string;
-  phase: Exclude<InstallPhase, 'failed' | 'cancelled'>;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onInstall: () => void;
-  onCancel: () => void;
-  cancelling?: boolean;
-}
+import type { AgentInstallStatus } from '@repo/contracts';
+export type InstallAction = 'Install' | 'Update';
+// How an installation this page saw ended; the key tells a new outcome from a repeated one.
+export type InstallNotice =
+  | { key: string; result: 'installed'; version: string }
+  | { key: string; result: 'failed'; failure: string };
 export interface AgentInstallPresentation {
-  action?: 'Install' | 'Update';
-  version?: string;
-  open: boolean;
-  phase: InstallPhase;
-  failure?: string;
-  cancelling: boolean;
+  action: InstallAction;
+  version: string;
+  // The connected Server's name: where the Agent installs.
+  server?: string;
+  // The confirmation Alert is open.
+  confirming: boolean;
+  // A request or Server operation is running; the action shows its progress.
+  installing: boolean;
+  notice?: InstallNotice;
   status?: AgentInstallStatus;
-  onOpenChange: (open: boolean) => void;
+  onConfirmingChange: (open: boolean) => void;
   onInstall: () => void;
-  onCancel: () => void;
 }

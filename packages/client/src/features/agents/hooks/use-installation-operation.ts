@@ -6,6 +6,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { ClientError } from '#features/connection';
 import { currentOperation } from '../state/agent-install-operation';
+import type { InstallAction } from '../state/agent-install-types';
 export type ObservedOperation = {
   operation: AgentInstallOperation | undefined;
   previousOperationId?: string;
@@ -26,23 +27,40 @@ export function useInstallationOperation(
   };
 }
 
-type InstallationSheetState = {
-  open: boolean;
-  action: 'Install' | 'Update';
+const runningOperationId = (
+  operation: AgentInstallOperation | undefined,
+): string | undefined =>
+  operation?.status === 'installing' ? operation.operationId : undefined;
+// The operations this page started or saw running; one that settled before the page opened is old news.
+export function useWatchedOperations(
+  operation: AgentInstallOperation | undefined,
+  requested: string | undefined,
+): readonly string[] {
+  const [seen, setSeen] = useState<string>();
+  const running = runningOperationId(operation) ?? seen;
+  if (running !== seen) setSeen(running);
+  return [requested, running].filter((id) => id !== undefined);
+}
+
+type ConfirmationState = {
+  confirming: boolean;
+  action: InstallAction;
   version: string;
-  setOpen: (open: boolean) => void;
+  setConfirming: (open: boolean) => void;
 };
-type InstallationOffer = Pick<InstallationSheetState, 'action' | 'version'>;
-export function useSheetState(
+type InstallationOffer = Pick<ConfirmationState, 'action' | 'version'>;
+// An open confirmation keeps the offer it opened with, so a catalog refresh cannot change what OK installs.
+export function useConfirmationState(
   offer: InstallationOffer,
-): InstallationSheetState {
-  const [sheet, setSheet] = useState({ open: false, offer });
-  const setOpen = (open: boolean): void =>
-    setSheet((previous) => ({
-      open,
-      offer: previous.open ? previous.offer : offer,
+): ConfirmationState {
+  const [state, setState] = useState({ confirming: false, offer });
+  const setConfirming = (confirming: boolean): void =>
+    setState((previous) => ({
+      confirming,
+      offer: previous.confirming ? previous.offer : offer,
     }));
-  return { ...(sheet.open ? sheet.offer : offer), open: sheet.open, setOpen };
+  const shown = state.confirming ? state.offer : offer;
+  return { ...shown, confirming: state.confirming, setConfirming };
 }
 
 export const activeVersion = (
