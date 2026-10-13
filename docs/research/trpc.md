@@ -1,6 +1,6 @@
 # tRPC 11 with TanStack Query and WebSocket
 
-Checked on 2026-10-03 against tRPC 11.19.0. Source facts come from the published package source (the npm tarballs ship `src/`) and the matching `v11.19.0` tag on GitHub. Each claim marked "verified" was also compiled with `tsc --strict` (TypeScript 7.0.2) and run under Node 24.21.0 in a throwaway project.
+Checked on 2026-10-03 against tRPC 11.19.0. Source facts come from the published package source (the npm tarballs ship `src/`) and the `v11.19.0` tag on GitHub. "Verified" claims were also compiled with `tsc --strict` (TypeScript 7.0.2) and run under Node 24.21.0 in a throwaway project.
 
 ## Sources
 
@@ -54,7 +54,7 @@ All three `@trpc/*` packages are ESM-first with CJS fallbacks (`exports.import` 
 
 ## Install command
 
-From the tRPC docs [S2, S4, S7], split by workspace package to match spec section 4:
+From the tRPC docs [S2, S4, S7], split by workspace package per spec section 4:
 
 ```sh
 pnpm --filter @repo/api add @trpc/server zod
@@ -64,19 +64,17 @@ pnpm --filter @repo/client add @trpc/client @trpc/server @trpc/tanstack-react-qu
 pnpm --filter @repo/client add -D @repo/api@workspace:*
 ```
 
-In the repo these versions go into the pnpm catalog and packages use `catalog:` (spec section 2).
+In the repo these go into the pnpm catalog as `catalog:` (spec section 2).
 
 ## Generator command
 
-None. tRPC has no official project generator: the Quickstart installs packages by hand and names no CLI [S2]. On npm, `create-trpc-app` is an empty 1.0.0 package last changed in 2022, and `@trpc/upgrade` is a codemod for moving from v10 to v11, not a scaffold [S1]. `create-t3-app` is a third-party stack generator, not tRPC's. So every tRPC file in the scaffold is written by hand, which spec section 0 allows ("Write a file by hand only when no generator makes it").
+None: the Quickstart installs packages by hand and names no CLI [S2]. On npm, `create-trpc-app` is an empty 1.0.0 package last changed in 2022, and `@trpc/upgrade` is a v10-to-v11 codemod, not a scaffold [S1]. `create-t3-app` is a third-party stack generator. So every tRPC file in the scaffold is hand-written, which spec section 0 allows ("Write a file by hand only when no generator makes it").
 
 ## Recommended configuration
 
-Names in these snippets follow the repo rules (full words, one-line comments).
-
 ### Server: init and procedures (`packages/api`)
 
-Separate init, routers, and the server entry to avoid import cycles [S2]. `initTRPC` with no transformer means plain JSON on the wire [S2].
+Separate init, routers, and the server entry to avoid import cycles [S2]. No transformer means plain JSON on the wire [S2].
 
 ```ts
 // packages/api/src/trpc.ts
@@ -95,7 +93,7 @@ export const createCallerFactory = t.createCallerFactory;
 export const info = publicProcedure.output(SystemInfo).query(({ ctx }) => ctx.services.system.info());
 ```
 
-Subscriptions are `async function*` resolvers. The resolver gets `signal`, which aborts when the client stops the subscription or disconnects; tRPC calls `.return()` on the generator, so `try/finally` cleanup runs [S3]. On the WebSocket adapter the signal is a per-subscription `AbortController` aborted on `subscription.stop` or socket close [S19].
+Subscriptions are `async function*` resolvers. `signal` aborts when the client stops the subscription or disconnects; tRPC calls `.return()` on the generator, so `try/finally` cleanup runs [S3]. On the WebSocket adapter the signal is a per-subscription `AbortController` aborted on `subscription.stop` or socket close [S19].
 
 ```ts
 // packages/api/src/system/clock.ts
@@ -104,9 +102,9 @@ export const clock = publicProcedure.subscription(async function* ({ ctx, signal
 });
 ```
 
-`signal` is typed `AbortSignal | undefined` (`ProcedureResolverOptions.signal`, `procedureBuilder.ts` line 109 in 11.19.0), and a `createCaller` call without a `signal` option passes `undefined` [S9 source: `router.ts`]. Verified: spec section 4's `clock(signal: AbortSignal)` fails `tsc --strict` with "Argument of type 'AbortSignal | undefined' is not assignable". Either type the service as `clock(signal: AbortSignal | undefined)` or narrow in the procedure. See Gotchas.
+`signal` is typed `AbortSignal | undefined` (`ProcedureResolverOptions.signal`, `procedureBuilder.ts` line 109 in 11.19.0), and a `createCaller` call without a `signal` option passes `undefined` [S9 source: `router.ts`]. Verified: spec section 4's `clock(signal: AbortSignal)` fails `tsc --strict` with "Argument of type 'AbortSignal | undefined' is not assignable". Either type the service as `clock(signal: AbortSignal | undefined)` or narrow in the procedure. This is a small spec correction; ask the owner before changing the spec's signature.
 
-**Output validation of subscriptions.** `.output(schema)` runs the schema once on the whole return value [S23]. For a generator that value is an async iterable, so `.output(ClockTick)` on a subscription fails type checking ("No overload matches this call") and, if forced, fails at runtime with `Output validation failed` (verified). The docs give a `zAsyncIterable` helper that wraps the schema per yielded item [S3]. A trimmed version that compiles with Zod 4.6.5 (verified):
+**Output validation of subscriptions.** `.output(schema)` runs once on the whole return value [S23], here an async iterable, so `.output(ClockTick)` on a subscription fails type checking ("No overload matches this call") and, if forced, fails at runtime with `Output validation failed` (verified). Either call `ClockTick.parse()` inside the generator or use the docs' `zAsyncIterable` helper, which validates each yielded item [S3]. A trimmed version that compiles with Zod 4.6.5 (verified):
 
 ```ts
 const isAsyncIterable = (value: unknown): value is AsyncIterable<unknown> =>
@@ -127,13 +125,13 @@ export const clock = publicProcedure
   });
 ```
 
-The docs version also handles `tracked` envelopes and a `return` schema [S3]. Because `contracts` may import only `zod` (spec section 4), this helper belongs in `packages/api`, not `contracts`.
+The docs version also handles `tracked` envelopes and a `return` schema [S3]. `contracts` may import only `zod` (spec section 4), so this helper belongs in `packages/api`.
 
 **`tracked(id, data)`.** Yield `tracked(id, value)` and the client stores the id as `lastEventId`; on reconnect `wsLink` re-sends the subscription with `lastEventId` merged into the input [S3, S20]. The procedure's input must accept it, for example `z.object({ lastEventId: z.string().nullish() }).optional()` [S25]. The client then receives `{ id, data }`, not the bare value (verified: `{"id":"1","data":{"i":1}}`). `tracked('')` throws [S25]. The clock does not need `tracked`; `feed.subscribe` may.
 
 ### Server: HTTP and WebSocket on one port (`apps/server/src/worker`)
 
-The official example attaches `ws` to the HTTP server with `new WebSocketServer({ server })` [S13, S26]. Plain routes like `/health` stay in the `http` request handler [S11]. Verified on Node 24: `/health` over HTTP and tRPC over `ws://` on the same port.
+The official example attaches `ws` to the HTTP server with `new WebSocketServer({ server })` [S13, S26]; plain routes like `/health` stay in the `http` request handler [S11]. Verified on Node 24: `/health` over HTTP and tRPC over `ws://` on the same port.
 
 ```ts
 import http from 'node:http';
@@ -171,7 +169,7 @@ process.on('SIGTERM', () => {
 | `onError` | error hook | none |
 | `experimental_encoder` | custom wire encoding | `jsonEncoder` |
 
-`applyWSSHandler` returns `{ broadcastReconnectNotification }`, which sends `{ id: null, method: 'reconnect' }` to every open client [S19]. The client treats it as a close and reconnects with backoff, re-sending pending subscriptions [S20]. The docs pair it with `SIGTERM` [S4]. In this repo the worker is restarted by the supervisor, so call it in the worker's shutdown path.
+`applyWSSHandler` returns `{ broadcastReconnectNotification }`, which sends `{ id: null, method: 'reconnect' }` to every open client [S19]. The client treats it as a close and reconnects with backoff, re-sending pending subscriptions [S20]. The docs pair it with `SIGTERM` [S4]; here the supervisor restarts the worker, so call it in the worker's shutdown path.
 
 ### Client: WebSocket client and providers (`packages/client/src/trpc`)
 
@@ -216,7 +214,7 @@ export function AppProviders({ serverUrl, children }: { serverUrl: string; child
 }
 ```
 
-`TRPCProvider` takes `trpcClient` and `queryClient` but does not render a `QueryClientProvider`, so both are needed [S7, Context.tsx in S22's package]. `useTRPC()` throws outside `<TRPCProvider>` [same source].
+`TRPCProvider` takes `trpcClient` and `queryClient` but does not render a `QueryClientProvider`, so both are needed [S7, Context.tsx in S22's package]; `useTRPC()` throws outside `<TRPCProvider>` [same source]. The Storybook `withTrpcMocks` decorator must render both, with a `QueryClient` built with `retry: false` (spec section 8).
 
 `createWSClient` options (11.19.0) [S5, S21]:
 
@@ -335,9 +333,9 @@ const fixtures: Fixtures = {
 };
 ```
 
-`pending()` can return `new Promise(() => {})` for a query and an async generator that awaits forever for a subscription. `fails(message)` can throw `new Error(message)`; the link turns it into a `TRPCClientError`.
+`pending()` can return `new Promise(() => {})` for a query, or an async generator that awaits forever for a subscription. `fails(message)` can throw `new Error(message)`; the link turns it into a `TRPCClientError`.
 
-Do not use `unstable_localLink` for Storybook: it runs the real router and needs a server context, and it is still marked `unstable_` (`experimental_localLink` is a deprecated alias) [S14]. It is still the best reference for envelope shapes.
+Do not use `unstable_localLink` for Storybook: it runs the real router, needs a server context, and is still `unstable_` (`experimental_localLink` is a deprecated alias) [S14]. It remains the best reference for envelope shapes.
 
 ### Type helpers
 
@@ -345,7 +343,7 @@ Public type exports from `@trpc/server` [S1, `src/@trpc/server/index.ts`]: `infe
 
 - `inferProcedureInput` returns `void | Input` when the input may be undefined, so a no-input fixture can be `() => ...` [`procedure.ts` line 84].
 - `inferRouterOutputs` applies `Serialize<>` when there is no transformer, so it gives the JSON shape the client sees [S24]. For a subscription it is the serialized async iterable, not the yield type; use `inferSubscriptionOutput` or the client-side `inferOutput` for the yield.
-- There is no exported "procedure by dotted path" type. The `ProcedurePath`/`ProcedureAt` pair above walks `AppRouter['_def']['record']`, which is the same record `inferRouterInputs` uses [S24].
+- No exported type gives a procedure by dotted path. The `ProcedurePath`/`ProcedureAt` pair above walks `AppRouter['_def']['record']`, which is the same record `inferRouterInputs` uses [S24].
 
 ### Tests with `createCaller`
 
@@ -369,21 +367,19 @@ Verified: a subscription called through the caller resolves to an async iterable
 
 - `@trpc/client` and `@trpc/tanstack-react-query` peer-depend on `@trpc/server` at the exact same version (`11.19.0`, no range) [S1]. Put all three `@trpc/*` packages in the catalog at one version so `sherif` and pnpm agree; a mismatch gives a peer warning.
 - `packages/client` should list `@trpc/server` itself, as a peer target for `@trpc/client` and for the `@trpc/server/observable` import in the mock link [S1].
-- `packages/client` imports the router only as `import type { AppRouter } from '@repo/api'`, so no server code is bundled [S12]. Add `@repo/api` as `workspace:*` (a devDependency is enough for type-only use). Spec section 4 already allows this ("`api` (types only, `import type`)").
-- Because the type comes from `api` source, `tsc` in `packages/client` also checks the types `api` pulls in (`@trpc/server`, `zod`, `contracts`). Both packages must resolve the same `zod` and `@trpc/server` versions, which the catalog gives. tRPC requires TypeScript >=5.7.2 and strongly recommends `strict: true` [S2]; keep `strict` on in the shared base config.
+- `packages/client` imports the router only as `import type { AppRouter } from '@repo/api'`, so no server code is bundled [S12]. Add `@repo/api` as `workspace:*` (a devDependency suffices for type-only use); spec section 4 allows this ("`api` (types only, `import type`)").
+- Because the type comes from `api` source, `tsc` in `packages/client` also checks the types `api` pulls in (`@trpc/server`, `zod`, `contracts`). Both packages must resolve the same `zod` and `@trpc/server` versions, which the catalog ensures. tRPC requires TypeScript >=5.7.2 and strongly recommends `strict: true` [S2]; keep `strict` on in the shared base config.
 - `ws` and `@types/ws` belong only in `apps/server` (spec section 4 forbids Node APIs in `api` and `client`). `@trpc/server/adapters/ws` deliberately does not import `ws` at runtime [S19 comment, "Importing ws causes a build error"], so `packages/api` can stay free of `ws`.
 - `bufferutil` and `utf-8-validate` are optional peers of `ws`; skip them [S1, S26].
 
 ## Gotchas
 
-1. **`signal` can be `undefined`.** Spec section 4's `SystemService.clock(signal: AbortSignal)` plus `yield* ctx.services.system.clock(signal)` does not compile under `strict` (verified). Fix in the service type (`AbortSignal | undefined`) or in the procedure. This is a small spec correction; ask the owner before changing the spec's signature.
-2. **`.output()` on a subscription.** It validates the whole iterable, not each item: type error at compile time, `Output validation failed` at runtime (verified, [S23]). Use `zAsyncIterable` [S3] or `ClockTick.parse()` inside the generator.
-3. **Queries fail on disconnect; subscriptions resume.** When the socket closes, pending queries and mutations error at once with a `TRPCClientError`; subscriptions are kept and re-sent after reconnect [S20]. TanStack Query's retry covers queries; `useSubscription` shows `connecting` with the error meanwhile [S22].
-4. **Stale subscription input on reconnect.** The re-sent subscription uses its original input plus `lastEventId`; there is no hook to recompute it [S25]. Use `tracked()` for anything that must resume without gaps (relevant to `feed.subscribe` in milestone 1).
-5. **Listen before reading history.** In a subscription that sends history then live events, start listening before the history query, or events in between are lost [S25].
-6. **No transformer means JSON only.** `Date`, `Map`, and `undefined` inside arrays do not survive; `inferRouterOutputs` shows the serialized type [S24]. The contracts' `z.iso.datetime()` strings fit this.
-7. **Mock subscriptions must send `started`.** `useSubscription` stays `connecting` until a `started` envelope or a data item arrives; a `state: 'pending'` envelope alone does nothing [S22].
-8. **The ws keep-alive is text `PING`/`PONG`, not WebSocket ping frames.** Both sides answer the other's `PING` unless `dangerouslyDisablePong` is set [S19, `wsConnection.ts`]. Turning on keep-alive on both sides is safe.
-9. **tRPC recommends SSE over WebSocket for subscriptions** [S3, S25]. ADR-0002 already chose one WebSocket for every call and rejected two transports; nothing here contradicts that ADR, but expect the docs to steer toward `httpSubscriptionLink`.
-10. **`useTRPC()` needs both providers.** `TRPCProvider` does not include `QueryClientProvider` [S7]. The Storybook `withTrpcMocks` decorator must render both, with a `QueryClient` built with `retry: false` (spec section 8).
-11. **Cleartext on device.** React Native's docs say iOS ATS and Android API 28+ block cleartext `http://` by default [S28]; they do not say whether `ws://127.0.0.1` is affected. Check it in spike check 2 on the iOS simulator and Android emulator.
+1. **`signal` can be `undefined`**, and `.output()` on a subscription validates the whole iterable: see Server above.
+2. **Queries fail on disconnect; subscriptions resume.** When the socket closes, pending queries and mutations error at once with a `TRPCClientError`; subscriptions are kept and re-sent after reconnect [S20]. TanStack Query's retry covers queries; `useSubscription` shows `connecting` with the error meanwhile [S22].
+3. **Stale subscription input on reconnect.** The re-sent subscription uses its original input plus `lastEventId`; there is no hook to recompute it [S25]. Use `tracked()` for anything that must resume without gaps (relevant to `feed.subscribe` in milestone 1).
+4. **Listen before reading history.** In a subscription that sends history then live events, start listening before the history query, or events in between are lost [S25].
+5. **No transformer means JSON only.** `Date`, `Map`, and `undefined` inside arrays do not survive; `inferRouterOutputs` shows the serialized type [S24]. The contracts' `z.iso.datetime()` strings fit this.
+6. **Mock subscriptions must send `started`** (or data), or `useSubscription` stays `connecting`; see the status machine above [S22].
+7. **The ws keep-alive is text `PING`/`PONG`, not WebSocket ping frames.** Both sides answer the other's `PING` unless `dangerouslyDisablePong` is set [S19, `wsConnection.ts`]. Turning on keep-alive on both sides is safe.
+8. **tRPC recommends SSE over WebSocket for subscriptions** [S3, S25]. ADR-0002 already chose one WebSocket for every call and rejected two transports; nothing here contradicts that ADR, but expect the docs to steer toward `httpSubscriptionLink`.
+9. **Cleartext on device.** React Native's docs say iOS ATS and Android API 28+ block cleartext `http://` by default [S28]; they do not say whether `ws://127.0.0.1` is affected. Check it in spike check 2 on the iOS simulator and Android emulator.

@@ -56,7 +56,7 @@ From the app folder (here `apps/storybook`) [S2][S3]:
 npm create storybook@latest
 ```
 
-Run as an AI agent, use flags so nothing is asked (see the next section). For an existing Storybook, the addon alone installs with `npx storybook add @storybook/addon-vitest` [S4].
+As an AI agent, pass flags so nothing is asked (next section). For an existing Storybook, add only the addon with `npx storybook add @storybook/addon-vitest` [S4].
 
 ## Generator command and its prompts
 
@@ -74,7 +74,7 @@ Flags (from `create-storybook@10.6.1 --help`, matches [S3]):
 | `--agent` / `--no-agent` | Agent mode is on by default when an AI agent is detected. It sets `--yes` and logs AI setup instructions [S13]. |
 | `--disable-telemetry`, `--loglevel`, `--logfile` | |
 
-Prompts in the interactive flow, in order [S13][S2]:
+Interactive prompts, in order [S13][S2]:
 
 1. `Empty directory detected:` only when the folder has no project. Choose a framework or `Other`, which exits.
 2. `We've detected a React Native project. Install:` with `React Native` (device), `React Native Web` (web), `Both`. It is skipped when `--type` is given. With `--yes` and no `--type` the generator keeps the detected type `react_native` (on device), not web [S13].
@@ -84,14 +84,14 @@ Prompts in the interactive flow, in order [S13][S2]:
 6. `Would you like to install AI features (MCP addon and prompt suggestions)?` when the framework supports it.
 7. Playwright browser binaries are installed at the end (`press "c" to abort`).
 
-Command used in L1, which ran without a prompt:
+L1 command (no prompts):
 
 ```sh
 cd apps/storybook
 npm create storybook@latest -- --type react_native_web --features docs test --package-manager pnpm --no-dev --yes
 ```
 
-Files it wrote in L1 (TypeScript project; with no `typescript` dependency it writes `.js`/`.jsx` instead) [L1][S13]:
+Files written in L1 (TypeScript project; without a `typescript` dependency it writes `.js`/`.jsx`) [L1][S13]:
 
 - `.storybook/main.ts`: `stories: ['../stories/**/*.mdx', '../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)']`, `addons: ['@chromatic-com/storybook', '@storybook/addon-vitest', '@storybook/addon-docs']` (plus `@storybook/addon-a11y` when `a11y` is selected), `framework: '@storybook/react-native-web-vite'`.
 - `.storybook/preview.tsx`: `controls.matchers` only (plus `a11y: { test: 'todo' }` with `a11y`).
@@ -103,7 +103,7 @@ Files it wrote in L1 (TypeScript project; with no `typescript` dependency it wri
 
 ## Recommended configuration
 
-These snippets passed in L1: a play function in a `*.test.stories.tsx` file in a sibling package ran in Chromium, and `bg-red-500 p-4 text-white` gave `oklch(0.637 0.237 25.331)`, `16px`, and `rgb(255, 255, 255)`.
+Passed in L1: a play function in a `*.test.stories.tsx` file in a sibling package ran in Chromium, and `bg-red-500 p-4 text-white` gave `oklch(0.637 0.237 25.331)`, `16px`, and `rgb(255, 255, 255)`.
 
 ### `.storybook/main.ts`
 
@@ -134,9 +134,9 @@ const config: StorybookConfig = {
 export default config;
 ```
 
-- The framework already adds `vite-plugin-rnw` (with `@vitejs/plugin-react`) and `vite-tsconfig-paths` [S11]. Do not add `rnw()` again. The Uniwind Vite guide lists `rnw()` only for a plain Vite app [S15].
+- The framework already adds `vite-plugin-rnw` (with `@vitejs/plugin-react`) and `vite-tsconfig-paths` [S11]; do not add `rnw()` again. The Uniwind Vite guide lists `rnw()` only for a plain Vite app [S15].
 - `vite-plugin-rnw` aliases `react-native` to `react-native-web`, prefers `.web.*` files, and defines `__DEV__`, `process.env.NODE_ENV`, and `process.env.EXPO_OS = "web"` [S14].
-- Both `@tailwindcss/vite` and `uniwind/vite` are needed. With Uniwind alone the classes gave no style. With Tailwind alone the story file failed to import [L1]. Uniwind's docs say to use the `uniwind/vite` plugin in Storybook's Vite config [S15].
+- Both `@tailwindcss/vite` and `uniwind/vite` are needed: Uniwind alone gave no style; Tailwind alone made the story file fail to import [L1]. Uniwind's docs put `uniwind/vite` in Storybook's Vite config [S15].
 - `viteFinal` with `mergeConfig` is the documented hook [S9]. The Vitest plugin calls the same `viteFinal`, so the plugins apply to tests too [S12][L1].
 - Framework options [S1][S11]: `modulesToTranspile: string[]` (it always adds `react-native`, `@react-native`, `expo`, `@expo`), `pluginReactOptions` (the `@vitejs/plugin-react` options: `jsxRuntime`, `jsxImportSource`, `babel.plugins`, `babel.presets`, `include`, `exclude`), and `builder`. `pluginBabelOptions` is deprecated and ignored. The framework sets `babel.babelrc: false` and `babel.configFile: false`, so a `babel.config.js` in the project is not read [S11]. NativeWind needs `jsxImportSource: 'nativewind'` [S1]; Uniwind needs no Babel preset [S15].
 - Telemetry: set `core: { disableTelemetry: true }` or `STORYBOOK_DISABLE_TELEMETRY=1` [S10]. The Vitest plugin reads the same `core.disableTelemetry` [S12].
@@ -150,7 +150,7 @@ export default config;
 @source '../../packages/client/src';
 ```
 
-`@source` paths are relative to the CSS file. Files outside the folder of the CSS entry need `@source` [S16]. The first three lines follow the spec's `global.css` for the universal app.
+`@source` paths are relative to the CSS file; files outside the CSS entry's folder need `@source` [S16]. The first three lines follow the spec's `global.css` for the universal app.
 
 ### `.storybook/preview.tsx`
 
@@ -165,7 +165,7 @@ const preview: Preview = {
 export default preview;
 ```
 
-The mocking-providers pattern: a decorator in `preview` wraps every story, and reads per-story values from its second argument, `context.parameters` [S7]:
+Mocking providers: a decorator in `preview` wraps every story and reads per-story values from `context.parameters` [S7]:
 
 ```tsx
 const withProvider: Decorator = (Story, { parameters }) => (
@@ -200,7 +200,7 @@ export const Presses: StoryObj<typeof meta> = {
 
 ### `apps/storybook/vitest.config.ts`
 
-The generator wraps the project in `test.projects` [L1]. For one root `vitest.config.ts`, a flat project is simpler (see the monorepo section):
+The generator wraps the project in `test.projects` [L1]. With one root `vitest.config.ts`, a flat project is simpler (see the monorepo section):
 
 ```ts
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
@@ -227,9 +227,9 @@ Run: `vitest --project=storybook` [S4].
 
 ## pnpm + Turborepo monorepo specifics
 
-- Run the generator inside `apps/storybook`. With pnpm it installs from the workspace root (`Scope: all 2 workspace projects`) [L1].
+- Run the generator inside `apps/storybook`; pnpm installs from the workspace root (`Scope: all 2 workspace projects`) [L1].
 - `stories` globs resolve from the `.storybook` folder. From `apps/storybook/.storybook`, `../../packages/client/src/**` finds nothing (`No test files found`); `../../../packages/client/src/**` works [L1]. The spec's section 9 writes `../../packages/client/src/**/*.stories.tsx`, which is right only if read from `apps/storybook`.
-- `packages/client` must declare what its story files import: `react`, `react-native`, `storybook`, and `@storybook/react-native-web-vite` (as dev or peer dependencies). Without them, Vite's dependency scan fails with `storybook/test ... could not be resolved` under pnpm's isolated layout. The test still passed, but pre-bundling was skipped [L1].
+- `packages/client` must declare what its story files import: `react`, `react-native`, `storybook`, and `@storybook/react-native-web-vite` (as dev or peer dependencies). Otherwise Vite's dependency scan fails with `storybook/test ... could not be resolved` under pnpm's isolated layout; the test still passed, but pre-bundling was skipped [L1].
 - pnpm 10.3+ defaults `strictDepBuilds` to `true`, so an install that meets an unreviewed build script fails with `ERR_PNPM_IGNORED_BUILDS` [S19]. With pnpm 12.8.1 the generator's install failed on `esbuild` and only reported "non-blocking errors" [L1]. Fix in `pnpm-workspace.yaml` [S19]:
 
   ```yaml
@@ -238,19 +238,19 @@ Run: `vitest --project=storybook` [S4].
   ```
 
 - The generator writes `"latest"` for `vite`, `vitest`, `@vitest/browser-playwright`, `@vitest/coverage-v8`, `playwright`, and `@chromatic-com/storybook`, and `^10.6.1` for Storybook packages [L1]. Move each one to the pnpm catalog and use `catalog:`.
-- Root `vitest.config.ts` with projects: Vitest supports nested projects. A nested project's name is prefixed with the name of the config that declares it [S18]. A folder project's default name is the `name` in its `package.json` [S18]. So with the generated config and root `projects: ['apps/*']`, the project is `@repo/storybook (storybook)`, and `vitest --project=storybook` from the root fails with `No projects were found` [L1]. With the flat `defineProject` above, `vitest --run --project=storybook` works from the root and from `apps/storybook` [L1]. The root needs `vitest` installed.
+- Root `vitest.config.ts` with projects: Vitest supports nested projects. A nested project's name is prefixed with the declaring config's name, and a folder project's default name is its `package.json` `name` [S18]. So with the generated config and root `projects: ['apps/*']`, the project is `@repo/storybook (storybook)`, and `vitest --project=storybook` from the root fails with `No projects were found` [L1]. With the flat `defineProject` above, `vitest --run --project=storybook` works from the root and from `apps/storybook` [L1]. The root needs `vitest` installed.
 - Vitest 5 projects inherit the root config by default (`extends` is on since 5.0) [S18].
-- Uniwind's Vite plugin resolves `cssEntryFile` and `dtsFile` from `process.cwd()` [S17]. Running Vitest from the repo root with relative paths wrote `uniwind-types.d.ts` into the repo root, and a missing CSS file is read as empty without an error [S17][L1]. Use absolute paths, as in `main.ts` above.
+- Uniwind's Vite plugin resolves `cssEntryFile` and `dtsFile` from `process.cwd()` [S17]. With relative paths, running Vitest from the repo root wrote `uniwind-types.d.ts` there, and a missing CSS file reads as empty without an error [S17][L1]. Use absolute paths, as in `main.ts` above.
 - Turborepo: `storybook build` writes `storybook-static/` [S1]; give the build task that output. `storybook dev` is a long-running task; mark it `persistent` and uncached in `turbo.json`. Storybook's cache is `apps/storybook/node_modules/.cache/storybook/` [L1].
 - CI needs the Playwright Chromium binary; the generator installs it only on the machine that ran it [L1]. For CI resource errors the Vitest addon docs suggest `isolate: false` or `--shard` [S4].
 
 ## Gotchas
 
 - Always pass `--type react_native_web`. In a folder that has `react-native`, `--yes` (and agent mode, which sets `--yes`) picks on-device `react_native` [S13].
-- Agent mode turns on by itself when an AI agent runs the command. Pass `--no-agent` to get the plain flow, or expect AI setup instructions in the log [S13].
-- The spec's section 3 lists `.storybook/vitest.setup.ts`. Storybook 10.6 does not generate it and does not need it; the plugin adds the preview annotations [S12][L1]. Add a setup file only for custom code, and do not call `setProjectAnnotations` in it, or the plugin stops adding annotations itself [S12].
+- Agent mode turns on when an AI agent runs the command. Pass `--no-agent` for the plain flow, or expect AI setup instructions in the log [S13].
+- The spec's section 3 lists `.storybook/vitest.setup.ts`. Storybook 10.6 neither generates nor needs it; the plugin adds the preview annotations [S12][L1]. Add a setup file only for custom code, and do not call `setProjectAnnotations` in it, or the plugin stops adding annotations itself [S12].
 - `test` in `--features` also adds `@chromatic-com/storybook` [L1]. The spec does not mention it.
-- Under pnpm the generator printed `Could not resolve the postinstall hook of @chromatic-com/storybook` and the same for `@storybook/addon-docs`. Both addons were still registered in `main.ts`, and Storybook built and tested [L1].
+- Under pnpm the generator printed `Could not resolve the postinstall hook of @chromatic-com/storybook` and the same for `@storybook/addon-docs`. Both addons were still registered, and Storybook built and tested [L1].
 - On Vite 8, the generated `vitest.config.ts` warns that `__dirname` is not supported by `configLoader: 'native'`; use `import.meta.dirname` [L1]. Vite 8 also warns that `vite-tsconfig-paths` (added by the framework) can be replaced by `resolve.tsconfigPaths` [L1][S11]. Both are warnings only.
 - The Storybook Vite builder also merges a `vite.config.*` from the project root, if one exists [S9]. Keep the Uniwind plugins in one place (`viteFinal`) so they are not added twice.
 - MDX is stubbed during Vitest runs (`disableAddonDocs: true`) [S4].

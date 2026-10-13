@@ -1,11 +1,11 @@
 # Voice mode: where a hands-free voice UI lives, and what Argo should copy from Codex
 
-Researched 2026-10-05. The owner wants a fully hands-free voice assistant that drives Argo and that any Session can switch into. This note covers the UX/UI, not the audio pipeline.
+Researched 2026-10-05. Goal: a fully hands-free voice assistant that drives Argo and that any Session can switch into. UX/UI only, not the audio pipeline.
 
 ## Sources
 
 - **Codex App**: the webview bundle of the Codex IDE extension 26.908.40401 (`~/.cursor/extensions/openai.chatgpt-26.908.40401-darwin-arm64/webview/assets/`), which the ChatGPT desktop app shares. Citations name the file and the string id or symbol.
-- **Desktop shell**: `/Applications/ChatGPT.app` 26.928.31416, whose `package.json` names it `openai-codex-electron`. I extracted `app.asar`. Main process: `.vite/build/main-BbeJ4AAR.js`.
+- **Desktop shell**: `/Applications/ChatGPT.app` 26.928.31416, whose `package.json` names it `openai-codex-electron`; main process in the extracted `app.asar`: `.vite/build/main-BbeJ4AAR.js`.
 - **Codex CLI and core**: openai/codex `39e013c` (2026-10-05). Paths are under `codex-rs/`.
 - **Codex docs**: [ChatGPT Voice](https://learn.chatgpt.com/codex/features/voice.md), [Pets](https://learn.chatgpt.com/docs/pets.md), [Remote](https://learn.chatgpt.com/docs/remote.md).
 - **Other products and platforms**: vendor help centres, developer docs, and component source, linked inline. "(secondary)" marks a claim that only press coverage supports. help.openai.com and the Perplexity help centre returned 403 to fetches, so claims from them rest on search snippets of the official pages.
@@ -13,14 +13,14 @@ Researched 2026-10-05. The owner wants a fully hands-free voice assistant that d
 
 ## 1. Codex voice: what it is
 
-- **Product name.** It is called "ChatGPT Voice", powered by GPT-Live. It is in the ChatGPT desktop app on macOS and Windows, and in Remote on iOS once a desktop host is paired ([voice doc](https://learn.chatgpt.com/codex/features/voice.md)).
+- **Product name.** "ChatGPT Voice", powered by GPT-Live, in the ChatGPT desktop app on macOS and Windows, and in Remote on iOS once a desktop host is paired ([voice doc](https://learn.chatgpt.com/codex/features/voice.md)).
 - **One at a time.** "Only one voice chat can be active across the ChatGPT desktop app at a time" (same doc). Starting a second one fails with "Voice chat is already active or starting in another window" (`avatarOverlay.realtime.sessionAlreadyStarting`).
 - **Two layers.**
   - A realtime speech model is the "conversational surface". A normal Codex thread is the "backend" that does the work.
   - The realtime prompt says to treat the two as "one unified assistant" and to "Delegate all user requests to the backend" (`prompts/templates/realtime/backend_prompt.md`).
   - The backend is told that "Any response you produce will be consumed by the intermediary and may be summarized", and that routed user text "may be unpunctuated or contain recognition errors" (`prompts/templates/realtime/realtime_start.md`).
   - When voice ends, the thread gets "Realtime conversation ended… Resume normal chat behavior" (`realtime_end.md`).
-- **Transport.** It runs inside the Codex core, not the UI.
+- **Transport.** Runs inside the Codex core, not the UI.
   - App-server methods are experimental: `thread/realtime/start`, `appendAudio`, `appendText`, `appendSpeech`, `stop` and `listVoices`.
   - Notifications are `thread/realtime/started`, `itemAdded`, `transcript/delta`, `transcript/done`, `outputAudio/delta`, `sdp`, `error` and `closed` (`app-server-protocol/src/protocol/common.rs:1066-1103, 2028-2045`).
   - Transport is WebRTC by default, or WebSocket (`config/src/config_toml.rs` `RealtimeTransport`).
@@ -36,15 +36,15 @@ Researched 2026-10-05. The owner wants a fully hands-free voice assistant that d
 - **Pet overlay.** The floating pet or "Mini" controls have a voice icon. A chat started there is "outside a project" ([Pets](https://learn.chatgpt.com/docs/pets.md); `avatarOverlay.quickChatBar.startVoice`).
 - **First run.** An intro screen reads "Meet ChatGPT Voice", with three cards: "Explore, plan, and learn", "Work across projects" ("Start new tasks, coordinate work in progress… without micromanaging"), and "Work across your desktop" (`realtimeVoice.nux.*`). The user then grants the mic, picks a voice and reviews screen context ([voice doc](https://learn.chatgpt.com/codex/features/voice.md)).
 - **TUI.** `/voice` is described as "start or stop voice; use /voice settings to choose a voice" (`tui/src/slash_command.rs:138`). Without a thread it refuses with "No active thread is available." (snapshot `realtime_start__rejected_voice_start_no_active_thread`).
-- **Hardware.** A "Codex Micro" settings page maps a mic key to "Push to talk" ("Hold to dictate or double-tap to keep recording") or "Voice Chat" ("Tap to start a Voice Chat or toggle your microphone, then hold to end") (`settings.codexMicro.microphoneKey.*`). I could not confirm what product that is.
+- **Hardware.** A "Codex Micro" settings page maps a mic key to "Push to talk" ("Hold to dictate or double-tap to keep recording") or "Voice Chat" ("Tap to start a Voice Chat or toggle your microphone, then hold to end") (`settings.codexMicro.microphoneKey.*`). What product that is: unconfirmed.
 
 ## 3. Codex voice: the live surface
 
-There are two surfaces. The code calls them `main-thread` and `global-overlay` (`preferredPresentationSurface`, app-initial-a190b16fc630 `Tpn`; avatar-overlay-native-page).
+Two surfaces, `main-thread` and `global-overlay` (`preferredPresentationSurface`, app-initial-a190b16fc630 `Tpn`; avatar-overlay-native-page).
 
 **In the thread (`main-thread`)**
 
-- **Start.** A launch layer covers the thread and shows a pulsing dot. It morphs into an orb 112 px across, centred at the bottom of the thread above the composer.
+- **Start.** A launch layer covers the thread with a pulsing dot that morphs into an orb 112 px across, centred at the bottom of the thread above the composer.
   - The layout is `absolute inset-x-0 bottom-0 … max-w-[900px]`.
   - A screen-reader status announces "Starting voice chat" (realtime-voice-launch-surface `Ee`, `de`).
 - **Failure.** A full-pane card offers "Try again", "Send feedback" and "Back". A denied mic gets "Open system settings" (`realtimeVoice.launch.*`).
@@ -63,7 +63,7 @@ There are two surfaces. The code calls them `main-thread` and `global-overlay` (
 
 - **The window.**
   - In Electron it is an always-on-top, non-focusable window that does not resize. On macOS it has native glass and a non-activating panel bridge (main-BbeJ4AAR `avatarOverlay` window options).
-  - It floats over other apps: "a pet can float above other app windows" ([Pets](https://learn.chatgpt.com/docs/pets.md)).
+  - "a pet can float above other app windows" ([Pets](https://learn.chatgpt.com/docs/pets.md)).
   - Option+Space shows the controls on macOS, Windows+Alt+P on Windows.
 - **Controls.** Mute microphone, mute output, Stop voice chat, "Open voice chat", and "Resume voice chat" (`avatarOverlay.*`).
 - **Handoff animation.** The orb flies between the overlay and the thread when the user switches surfaces (realtime-voice-handoff-target `m`, `data-realtime-voice-handoff-target`).
@@ -83,7 +83,7 @@ There are two surfaces. The code calls them `main-thread` and `global-overlay` (
 - **Voice inside an existing task.** Voice "uses that task's conversation and selected model to carry out your requests" ([voice doc](https://learn.chatgpt.com/codex/features/voice.md)).
   - The fallback start instructions keep the task's role and permissions.
   - Every backend reply must begin with `[STATUS]` (progress) or `[COMPLETE]` (final result, question, or blocker). `[ANALYSIS]` is silent (app-initial-a190b16fc630 `FT`).
-  - These prefixes decide what the voice says aloud and when.
+  - The prefixes decide what the voice says aloud and when.
 - **New voice chat = coordinator.** The fallback developer instructions begin "You are coordinating a voice chat" and pick one of three modes (app-initial-a190b16fc630, `new_thread_developer_instructions` fallback):
   - **Converse here**: brainstorming, prioritising, clarifying.
   - **Quick check here**: for example, the current branch or a short status.
@@ -104,14 +104,14 @@ There are two surfaces. The code calls them `main-thread` and `global-overlay` (
   - The coordinator must "leave approval or user-input requests for the user" (coordinator instructions above).
   - Voice "follows the same permissions as the tasks it directs" ([voice doc](https://learn.chatgpt.com/codex/features/voice.md)).
   - The overlay draws the waiting request with buttons: "Allow", "Allow once", "Run once", "Deny", "Allow network", "Apply changes", "Implement plan", "Review command" (`avatarOverlay.waitingRequest.*`). The pet status becomes "Needs input".
-  - I found no code path that approves by voice. Whether the voice reads the request aloud is set by server-side prompts that I could not read.
+  - I found no code path that approves by voice. Whether the voice reads the request aloud is set by server-side prompts I could not read.
 - **Barge-in.** "You can interrupt ChatGPT during a response" ([voice doc](https://learn.chatgpt.com/codex/features/voice.md)). Core truncates the spoken item with `conversation.item.truncate` (`realtime_conversation.rs:2534`). The TUI shows `heard`.
 - **Ending.** The user taps End, or the model calls `end_realtime_voice_call`. Its prompt says "a request to stop work, stop speaking, or pause is not sufficient" to end (app-initial-a190b16fc630).
 - **Idle auto-close.** The call closes after a quiet period that grows from 5 s to 60 s over the first 5 minutes of the call. It is blocked while `active-orchestrator-work` runs, and only applies to start sources that Statsig marks eligible (app-initial-a190b16fc630 `x2`, `eyn`).
 - **Usage limit.** A warning reads "You're approaching your Codex usage limit, so this voice chat may end soon" (`composer.realtime.usageLimitApproaching`).
 - **Background.** On desktop the always-on-top overlay is the background surface. Remote on iOS supports voice. I found no first-party statement about a Live Activity, lock screen or CarPlay for Codex voice.
 - **Settings.** Voice choice: arbor, breeze, cove, ember, juniper, maple, sol, spruce, vale, each with a description (`settings.general.realtimeVoice.voice.*`). Hotkeys. Screen context ("Take a look at this" makes an appshot).
-  - Push-to-talk exists only for dictation, which is a separate feature with "Hold-to-dictate hotkey" and "Listening / Transcribing…" in a global overlay window (`globalDictation.*`).
+  - Push-to-talk exists only for dictation, a separate feature with "Hold-to-dictate hotkey" and "Listening / Transcribing…" in a global overlay window (`globalDictation.*`).
   - A notice suggests "Switch to Light for faster Voice replies" (`realtimeVoice.reasoningNotice.*`).
 
 ## 6. Other voice products
@@ -149,7 +149,7 @@ There are two surfaces. The code calls them `main-thread` and `global-overlay` (
 - **Copilot.** "Hey, Copilot" on Windows opens a floating voice UI at the bottom of the screen, with chimes. It ends with X or a few seconds of silence ([Windows blog](https://blogs.windows.com/windows-insider/2025/05/14/copilot-on-windows-hey-copilot-begins-rolling-out-to-windows-insiders/)).
 - **Perplexity.** On Android it is the default assistant, "a layer on top of your device" ([help](https://www.perplexity.ai/help-center/en/articles/10450852-how-to-use-the-perplexity-android-assistant)). On iOS it starts from the Action button ([help](https://www.perplexity.ai/help-center/en/articles/11132456-how-to-use-the-perplexity-voice-assistant-for-ios)).
 - **Meta AI.** A "Ready to talk" setting, a mic-in-use icon, and conversations that move between glasses and app ([Meta](https://about.fb.com/news/2025/04/introducing-meta-ai-app-new-way-access-ai-assistant/)).
-- **Grok.** Has voice with camera ([xAI](https://x.ai/news/grok-4)). Its controls are not documented.
+- **Grok.** Voice with camera ([xAI](https://x.ai/news/grok-4)); controls undocumented.
 
 **Embeddable agents**
 
@@ -188,11 +188,11 @@ There are two surfaces. The code calls them `main-thread` and `global-overlay` (
   - Presentations: compact, minimal, expanded.
   - Buttons via App Intents. They do not act in CarPlay.
   - The HIG names apps "that access the microphone to record live audio" as a fit for controls ([HIG](https://developer.apple.com/design/human-interface-guidelines/live-activities)).
-- **AudioRecordingIntent** (iOS 18). The app "must start a Live Activity when recording begins and keep it running, or recording stops" ([docs](https://developer.apple.com/documentation/appintents/audiorecordingintent)). A Live Activity is therefore required, not optional, for background voice started by an intent.
+- **AudioRecordingIntent** (iOS 18). The app "must start a Live Activity when recording begins and keep it running, or recording stops" ([docs](https://developer.apple.com/documentation/appintents/audiorecordingintent)). So background voice started by an intent requires a Live Activity.
 - **Background audio.** `playAndRecord` plus the `audio` background mode keeps the mic open while the phone is locked. The orange dot shows ([AVAudioSession](https://developer.apple.com/documentation/avfaudio/avaudiosession/category-swift.struct/playandrecord), [Apple Support](https://support.apple.com/en-us/108331)).
 - **Starting points.** `ControlWidget` (iOS 18) puts a start button in Control Center, on the Lock Screen, and on the Action button ([docs](https://developer.apple.com/documentation/swiftui/controlwidget)).
 - **AirPods mute.** The stem press mutes through `AVAudioApplication.setInputMuteStateChangeHandler` ([docs](https://developer.apple.com/documentation/avfaudio/avaudioapplication)).
-- **CallKit / LiveCommunicationKit.** Built for VoIP calls ([docs](https://developer.apple.com/documentation/livecommunicationkit)). Showing an AI session as a phone call is an App Review risk. I could not confirm a rule either way.
+- **CallKit / LiveCommunicationKit.** Built for VoIP calls ([docs](https://developer.apple.com/documentation/livecommunicationkit)). Showing an AI session as a phone call is an App Review risk; no rule confirmed either way.
 - **CarPlay.**
   - There is a "voice-based conversational apps" category, with the entitlement `com.apple.developer.carplay-voice-based-conversation`, iOS 26.4+ ([CarPlay](https://developer.apple.com/carplay/), [entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.carplay-voice-based-conversation)).
   - From iOS 27 the Voice Control template has a prompt, an animated state icon, and up to 2 action buttons ([WWDC26 212](https://developer.apple.com/videos/play/wwdc2026/212/)).
@@ -221,7 +221,7 @@ There are two surfaces. The code calls them `main-thread` and `global-overlay` (
 **Expo**
 
 - **Live Activities.** `expo-widgets` builds iOS widgets and Live Activities in a development build ([docs](https://docs.expo.dev/versions/latest/sdk/widgets/)).
-- **No first-party modules** for an Android foreground service, ControlWidget or AudioRecordingIntent. Argo would need its own native module.
+- **No first-party modules** for an Android foreground service, ControlWidget or AudioRecordingIntent; Argo would need its own native module.
 
 ## 8. Comparison
 
@@ -240,12 +240,12 @@ There are two surfaces. The code calls them `main-thread` and `global-overlay` (
 
 ## 9. Patterns
 
-- **P1, full-screen orb.** The old ChatGPT mode, now opt-in. It is clear while you look at it, but it hides the work, and coding output needs the screen.
+- **P1, full-screen orb.** The old ChatGPT mode, now opt-in. Clear while you look at it, but it hides the work, and coding output needs the screen.
 - **P2, voice inline in the thread.** Used by ChatGPT since 2025, Claude, the Codex `main-thread` surface and the Codex TUI. The composer turns into a voice bar, spoken turns land in the Feed, and visual output stays on screen.
 - **P3, floating pill or companion.** Codex pet overlay, Gemini pill/bubble, Wispr bar, Copilot bar. A small always-on-top object that summarises state and holds Mute/End/Open.
-- **P4, edge glow.** Siri. The whole screen signals "listening" without taking space. It cannot carry controls.
+- **P4, edge glow.** Siri. The whole screen signals "listening" without taking space, but carries no controls.
 - **P5, system surfaces.** Live Activity / Dynamic Island, the ongoing notification, CarPlay templates, Media Session. These are the only place hands-free UI can live when the App is not in the foreground. On iOS, AudioRecordingIntent requires one.
-- **P6, coordinator plus workers.** Codex alone does this. A voice thread delegates to worker threads and reports back with "Created / Sent to / Returned from / Update from" cards.
+- **P6, coordinator plus workers.** Codex only. A voice thread delegates to worker threads and reports back with "Created / Sent to / Returned from / Update from" cards.
 - **P7, speak the gist and show the detail.** Codex prompts and Claude ("not every result can be shown") agree: summarise aloud, and put diffs, tables and code on screen.
 - **P8, approvals by tap or undo.** No product approves a risky action by voice alone. Codex and Siri confirm on screen; Gemini offers undo afterwards.
 
@@ -253,10 +253,10 @@ There are two surfaces. The code calls them `main-thread` and `global-overlay` (
 
 **Scope of voice**
 
-- **A. Voice attached to one Session.** Voice becomes a mode of that Session's Turns: spoken input becomes the prompt and Agent messages are spoken back. This is simple and matches "any Session can turn into voice mode". It cannot start other Sessions or answer "what is blocked?".
-- **B. One app-wide Voice session that focuses one Session at a time.** This is Codex's model.
+- **A. Voice attached to one Session.** Voice becomes a mode of that Session's Turns: spoken input becomes the prompt and Agent messages are spoken back. Simple, and matches "any Session can turn into voice mode". It cannot start other Sessions or answer "what is blocked?".
+- **B. One app-wide Voice session that focuses one Session at a time.** Codex's model.
   - Started inside a Session, it is focused on that Session (A's behaviour).
-  - Started from anywhere else, it is a coordinator. It can list Sessions, start a Session in a Project, send a prompt, wait, switch focus ("talk to the test-fix Session", "take me back"), open screens, and end itself.
+  - Started anywhere else, it is a coordinator: it can list Sessions, start a Session in a Project, send a prompt, wait, switch focus ("talk to the test-fix Session", "take me back"), open screens, and end itself.
   - Only one exists at a time.
 - **C. One voice per Session.** Rejected: several mics and voices at once, and Codex already allows only one.
 
@@ -305,7 +305,7 @@ There are two surfaces. The code calls them `main-thread` and `global-overlay` (
   - Either way it conflicts with ADR 0004 and the vendor-name rule unless it sits behind an adapter.
 - **ADR 0012** (only human-typed text becomes a user message). A spoken prompt is not typed. Argo needs a rule, such as a `user_message` with `_meta.argo.spoken`, like the Codex TUI's spoken cell. Or the ADR needs an amendment.
 - **ADR 0001** (desktop has no UI of its own). An always-on-top panel or Tray menu is a second Electron surface. It can load an Expo web route, but a native Tray menu is desktop-only UI.
-- **ADR 0002** (Server owns machine work). This supports keeping the Voice session on the Server. Audio capture and playback must stay in the App.
+- **ADR 0002** (Server owns machine work). Supports keeping the Voice session on the Server. Audio capture and playback must stay in the App.
 - **ADR 0003** (XState for every lifecycle). The Voice session lifecycle needs its own machine with model-based tests: connecting, listening, thinking, speaking, muted, transferring, ending.
 - **ADR 0015** (one Agent machine). A coordinator Voice session is not an Agent. Keep it out of `agentMachine`, or model it as an adapter. Owner decision.
 
