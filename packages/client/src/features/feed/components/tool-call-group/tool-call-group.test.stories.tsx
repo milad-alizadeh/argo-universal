@@ -10,7 +10,7 @@ import {
 import { ToolCallGroup } from './tool-call-group';
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';
 
-const commandAndFileSummary = 'Ran 1 command, Read 1 file';
+const commandAndFileSummary = 'Ran commands, Read files';
 const readFileTitle = 'Read /project/hello.txt';
 const commandTitle = 'Show hello.txt and short git status';
 

@@ -301,16 +301,14 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
       canvas.getByRole('progressbar', { name: earlierFeedLoadingLabel }),
     ).toBeVisible();
     // The reader opens the group and reads one of its commands.
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Ran 10 commands' }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Ran commands' }));
     const step = (): HTMLElement =>
       canvas.getByRole('button', { name: splitGroupStepInTail });
     const top = await settledTopOf(step);
     sendOlderPage();
     // The group gains its first ten commands above, stays open, and the command being read stays where it was.
     await expect(
-      await canvas.findByRole('button', { name: 'Ran 20 commands' }),
+      await canvas.findByRole('button', { name: 'Step 1' }),
     ).toBeVisible();
     await expect(Math.abs((await settledTopOf(step)) - top)).toBeLessThan(2);
   },
