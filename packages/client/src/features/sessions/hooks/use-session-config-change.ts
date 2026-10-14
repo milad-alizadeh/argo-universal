@@ -11,7 +11,7 @@ type SetConfigOption = TRPC['session']['setConfigOption'];
 
 type SetConfigOptionInput = inferInput<SetConfigOption>;
 
-export type SetConfigOptionMutation = ServerMutation<SetConfigOption>;
+type SetConfigOptionMutation = ServerMutation<SetConfigOption>;
 
 export interface SessionConfigChange {
   setConfigOption: SetConfigOptionMutation;
