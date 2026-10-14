@@ -8,28 +8,11 @@ export interface SearchQueryProps {
 }
 
 // A search button, last in its row, that morphs into a field over the whole row.
-export type MorphSearchFieldProps = SearchQueryProps & {
-  variant?: 'morph';
+export type SearchFieldProps = SearchQueryProps & {
   // The row the open field replaces: the title, then other actions. Search always comes last.
   title: ReactNode;
   actions?: ReactNode;
 };
-
-// A phone list's search bar at its top. No platform draws it now: iOS searches from its header, Android from its app bar.
-export type DockedSearchQuery = SearchQueryProps & {
-  // What leads the header above the list, so the bar's text starts where the header's title does.
-  leading: 'menu' | 'back';
-};
-
-export type DockedSearchFieldProps = DockedSearchQuery & {
-  variant: 'docked';
-  className?: string;
-};
-
-// What the docked bar itself takes once the field has chosen it.
-export type DockedSearchBarProps = Omit<DockedSearchFieldProps, 'variant'>;
-
-export type SearchFieldProps = MorphSearchFieldProps | DockedSearchFieldProps;
 
 // The search an app bar opens: its label names it and is the open field's placeholder.
 export type AppBarSearchQuery = Pick<

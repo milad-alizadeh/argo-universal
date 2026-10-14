@@ -11,7 +11,7 @@ import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
 import { LoadedProjects } from './project-list-rows';
-import { listSearch, pageSearch, searchLabel } from './project-list-search';
+import { pageSearch, searchLabel } from './project-list-search';
 
 // The Server's Projects, found by name or folder; each opens its own page.
 export function ProjectListView(
@@ -80,7 +80,7 @@ function ProjectsBody(props: SearchedProps): React.JSX.Element {
 
   if (projects.status !== 'loaded')
     return (
-      <GroupedList search={listSearch(props)}>
+      <GroupedList>
         <GroupedListSection>
           <GroupedListItem label="Loading Projects…" loading />
         </GroupedListSection>

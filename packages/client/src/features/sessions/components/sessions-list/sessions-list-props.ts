@@ -16,8 +16,6 @@ export interface SessionsListProps {
   onEndReached: () => void;
   onNewSession?: (projectId: string) => void;
   onProjectSettings?: (projectName: string) => void;
-  // Scrolls with the rows, above the first Project.
-  header?: ReactElement;
   // Shown instead of the rows while Sessions load or fail to load.
   placeholder?: ReactElement;
 }

@@ -91,13 +91,11 @@ function SessionsListSurface(
 }
 
 interface ListChrome {
-  ListHeaderComponent?: React.ReactElement;
   ListEmptyComponent: React.ReactElement;
 }
 
 function listChrome(props: SessionsListProps): ListChrome {
   return {
-    ListHeaderComponent: props.header,
     ListEmptyComponent: props.placeholder ?? (
       <EmptySessionsList query={props.query} archived={props.archived} />
     ),
