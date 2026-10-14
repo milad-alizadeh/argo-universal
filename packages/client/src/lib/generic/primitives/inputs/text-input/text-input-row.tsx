@@ -1,11 +1,16 @@
 import type * as React from 'react';
 import { type TextInputProps, View } from 'react-native';
+import { Spinner } from '#primitives/display/spinner';
 import { Text } from '#primitives/display/text';
 import { useFooterDescription } from '#primitives/fields/field-description';
 import { rowClasses } from '#primitives/lists/grouped-list-item';
 import { cn } from '../../../utils';
 import { BareTextInput } from './text-input-bare';
-import { isInvalid, type TextFieldProps } from './text-input-props';
+import {
+  isInvalid,
+  type TextFieldProps,
+  textInputLoadingLabel,
+} from './text-input-props';
 
 // A section row: the label, then the field filling the rest; the row shows the focus ring.
 export function RowTextInput(props: TextFieldProps): React.JSX.Element {
@@ -18,6 +23,7 @@ export function RowTextInput(props: TextFieldProps): React.JSX.Element {
     >
       <RowLabel {...props} />
       <RowInput {...props} />
+      {props.loading && <Spinner accessibilityLabel={textInputLoadingLabel} />}
     </View>
   );
 }
@@ -56,6 +62,7 @@ type InputProps = TextInputProps;
 interface InputAccessibility {
   accessibilityLabel: string;
   'aria-invalid': boolean;
+  'aria-busy': boolean;
   'aria-describedby': ReturnType<typeof useFooterDescription>;
 }
 
@@ -63,6 +70,7 @@ function useInputAccessibility(props: TextFieldProps): InputAccessibility {
   return {
     accessibilityLabel: props.label,
     'aria-invalid': isInvalid(props),
+    'aria-busy': !!props.loading,
     'aria-describedby': useFooterDescription({
       invalid: isInvalid(props),
       hint: props.hint,

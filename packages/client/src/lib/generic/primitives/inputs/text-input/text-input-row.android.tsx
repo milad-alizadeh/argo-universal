@@ -8,6 +8,7 @@ import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
 import { blurOnFocusLoss } from './focus-loss';
+import { FilledFieldLoading } from './text-input-loading.android';
 import { isInvalid, type TextFieldProps } from './text-input-props';
 import { RowTextInput as WideRowTextInput } from './text-input-row.tsx';
 
@@ -76,13 +77,22 @@ function FieldSlots(props: TextFieldProps): React.JSX.Element {
       <TextField.Label>
         <Text>{props.label}</Text>
       </TextField.Label>
-      {props.placeholder ? (
-        <TextField.Placeholder>
-          <Text>{props.placeholder}</Text>
-        </TextField.Placeholder>
-      ) : null}
+      <FieldPlaceholder placeholder={props.placeholder} />
       <SupportingLine {...props} />
+      <FilledFieldLoading loading={props.loading} />
     </>
+  );
+}
+
+function FieldPlaceholder({
+  placeholder,
+}: Pick<TextFieldProps, 'placeholder'>): React.JSX.Element | null {
+  if (!placeholder) return null;
+
+  return (
+    <TextField.Placeholder>
+      <Text>{placeholder}</Text>
+    </TextField.Placeholder>
   );
 }
 

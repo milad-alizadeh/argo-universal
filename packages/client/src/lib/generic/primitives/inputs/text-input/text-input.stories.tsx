@@ -52,6 +52,7 @@ function RowSection(): React.JSX.Element {
     <GroupedListSection textFields title="Row" footer={pathHint}>
       <TypedRow label="Name" initial="Example ACP" />
       <TypedRow mono label="Executable" initial="example-acp" hint={pathHint} />
+      <TypedRow label="Model" initial="claude-opus" loading />
     </GroupedListSection>
   );
 }
@@ -92,6 +93,7 @@ const standaloneExamples: (Typed<StandaloneTextInputProps> & {
     errors: ['Enter a whole number from 1 to 8.'],
   },
   { example: 'Disabled', label: 'Title', initial: title, disabled: true },
+  { example: 'Loading', label: 'Name', initial: 'My Agent', loading: true },
 ];
 
 const bareExamples: {

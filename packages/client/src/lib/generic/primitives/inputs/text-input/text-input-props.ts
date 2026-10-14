@@ -20,7 +20,12 @@ export interface TextFieldProps {
   // Code, such as a path or a command, draws in the mono face.
   mono?: boolean;
   disabled?: boolean;
+  // A spinner trails the value while it is checked or fetched; the field still takes typing.
+  loading?: boolean;
 }
+
+// What a screen reader says for the field's spinner.
+export const textInputLoadingLabel = 'Loading';
 
 // A row inside a GroupedListSection: the label leading, the field taking the rest of the row.
 export type RowTextInputProps = TextFieldProps & { variant: 'row' };

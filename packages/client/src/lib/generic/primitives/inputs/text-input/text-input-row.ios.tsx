@@ -1,5 +1,7 @@
 import {
+  HStack,
   LabeledContent,
+  ProgressView,
   Text,
   TextField,
   useNativeState,
@@ -20,7 +22,11 @@ import { useFollowedText } from '#primitives/native/followed-text';
 import { useSwiftUITextModifiers } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
-import { isInvalid, type TextFieldProps } from './text-input-props';
+import {
+  isInvalid,
+  type TextFieldProps,
+  textInputLoadingLabel,
+} from './text-input-props';
 import { RowTextInput as WebRowTextInput } from './text-input-row.tsx';
 
 const rowHeight = 52;
@@ -39,8 +45,20 @@ function FormRow(props: TextFieldProps): React.JSX.Element {
 
   return (
     <LabeledContent label={<RowLabel {...props} />} modifiers={modifiers}>
-      <RowField {...props} />
+      <RowValue {...props} />
     </LabeledContent>
+  );
+}
+
+// The field, then the system spinner while the value is checked.
+function RowValue(props: TextFieldProps): React.JSX.Element {
+  if (!props.loading) return <RowField {...props} />;
+
+  return (
+    <HStack spacing={8}>
+      <RowField {...props} />
+      <ProgressView modifiers={[accessibilityLabel(textInputLoadingLabel)]} />
+    </HStack>
   );
 }
 

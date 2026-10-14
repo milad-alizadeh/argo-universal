@@ -1,10 +1,16 @@
 import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { View } from 'react-native';
+import { Spinner } from '#primitives/display/spinner';
 import { Text } from '#primitives/display/text';
 import { Field } from '#primitives/fields/field';
 import { useFooterDescription } from '#primitives/fields/field-description';
+import { cn } from '../../../utils';
 import { BareTextInput } from './text-input-bare';
-import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
+import {
+  isInvalid,
+  type StandaloneTextInputProps,
+  textInputLoadingLabel,
+} from './text-input-props';
 
 export function StandaloneTextInput(
   props: StandaloneTextInputProps,
@@ -25,7 +31,22 @@ function TextField(props: StandaloneTextInputProps): ReactElement {
   return (
     <View className="gap-1.5">
       <FieldLabel {...props} />
-      <BareTextInput {...inputProps(props)} aria-describedby={describedBy} />
+      <View className="justify-center">
+        <BareTextInput {...inputProps(props)} aria-describedby={describedBy} />
+        <FieldSpinner loading={props.loading} />
+      </View>
+    </View>
+  );
+}
+
+function FieldSpinner({
+  loading,
+}: Pick<StandaloneTextInputProps, 'loading'>): ReactElement | null {
+  if (!loading) return null;
+
+  return (
+    <View className="absolute right-3">
+      <Spinner accessibilityLabel={textInputLoadingLabel} />
     </View>
   );
 }
@@ -44,14 +65,23 @@ type InputProps = ComponentProps<typeof BareTextInput>;
 function inputProps(props: StandaloneTextInputProps): InputProps & {
   'aria-invalid': boolean;
   'aria-required'?: boolean;
+  'aria-busy': boolean;
 } {
   return {
     ...inputBehaviour(props),
     'aria-invalid': isInvalid(props),
     'aria-required': props.required,
-    className: 'rounded-lg type-control shadow-none dark:bg-background',
+    'aria-busy': !!props.loading,
+    className: inputClass(props.loading),
   };
 }
+
+// A loading field leaves room at its end for the spinner.
+const inputClass = (loading: boolean | undefined): string =>
+  cn(
+    'rounded-lg type-control shadow-none dark:bg-background',
+    loading && 'pr-9',
+  );
 
 function inputBehaviour(props: StandaloneTextInputProps): InputProps {
   return {

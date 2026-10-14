@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { useFollowedText } from '#primitives/native/followed-text';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { blurOnFocusLoss } from './focus-loss';
+import { OutlinedFieldLoading } from './text-input-loading.android';
 import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
 import { StandaloneNativeField } from './text-input-standalone-native';
 
@@ -29,6 +30,7 @@ function NativeField(props: StandaloneTextInputProps): ReactElement {
     <OutlinedTextField {...field}>
       <FieldLabel {...props} />
       <FieldPlaceholder {...props} />
+      <OutlinedFieldLoading loading={props.loading} />
     </OutlinedTextField>
   );
 }
