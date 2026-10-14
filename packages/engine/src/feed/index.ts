@@ -30,9 +30,10 @@ export {
   interruptionDisclosureId,
   turnEndingEvent,
   permissionsCancelledEvent,
+  permissionSelectedEvent,
 } from './turn-ending';
 
-export { acpToolCallRowId } from './acp/tools';
+export { messageRejectedEvent } from './rejected-message';
 
 export { readUnaddressedPlan } from './unaddressed-plan';
 
@@ -48,4 +49,4 @@ export {
   type SettledFeed,
 } from './turn-settlement';
 
-export { recoverStoredFeedRow } from './feed-recovery';
+export { advanceRecoveredSession, recoverStoredFeedRow } from './feed-recovery';

@@ -101,14 +101,6 @@ const writeRepairedRow = (
     .run();
 };
 
-const advanceRecoveredSession = (
-  transaction: StorageTransaction,
-  sessionId: string,
-  maxRevision: number,
-): void => {
-  new FeedRowsJob({ sessionId, rows: [], maxRevision }).commit(transaction);
-};
-
 // Startup lends its transaction; accepted rows use the live rule, rejected bytes remain untouched.
 export const recoverStoredFeedRow = (
   transaction: StorageTransaction,
@@ -116,7 +108,15 @@ export const recoverStoredFeedRow = (
 ): number => {
   const repaired = repairRow(input);
   writeRepairedRow(transaction, input.row, repaired);
-  advanceRecoveredSession(transaction, input.row.sessionId, repaired.revision);
 
   return repaired.revision;
+};
+
+// Startup calls this once per Session, after all of its rows are repaired.
+export const advanceRecoveredSession = (
+  transaction: StorageTransaction,
+  sessionId: string,
+  maxRevision: number,
+): void => {
+  new FeedRowsJob({ sessionId, rows: [], maxRevision }).commit(transaction);
 };

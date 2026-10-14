@@ -13,6 +13,7 @@ it('a Feed without an active Writer permanently rejects prompt admission', async
       maxRevision: 0,
       nextPosition: 0,
       now: Date.now,
+      createId: () => crypto.randomUUID(),
       findWrittenRow: () => {},
     },
   }).start();
