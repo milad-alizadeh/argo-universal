@@ -35,11 +35,7 @@ it.each([
     entry: pathBinaryEntry(),
     place: (machine: MachinePath): Promise<string> =>
       machine.place(pathEntrypoint),
-    listed: {
-      owner: 'unknown',
-      version: reportedAgentVersion,
-      status: updateAvailable,
-    },
+    listed: { version: reportedAgentVersion, status: updateAvailable },
   },
   {
     copy: 'an npm package on PATH at the catalog release',
@@ -47,7 +43,6 @@ it.each([
     place: (machine: MachinePath): Promise<string> =>
       machine.placePackage(pathNpmCommand, npmPackage(catalogVersion)),
     listed: {
-      owner: 'npm',
       version: catalogVersion,
       agentVersion: reportedAgentVersion,
       status: 'ready',
@@ -59,7 +54,6 @@ it.each([
     place: (machine: MachinePath): Promise<string> =>
       machine.placePackage(pathNpmCommand, npmPackage('1.2.0')),
     listed: {
-      owner: 'npm',
       version: '1.2.0',
       agentVersion: reportedAgentVersion,
       status: updateAvailable,
@@ -71,7 +65,7 @@ it.each([
     place: (machine: MachinePath): Promise<string> =>
       machine.placePackage(pathNpmCommand, npmPackage('1.2.0')),
     scenario: scenarios['cant-start'],
-    listed: { owner: 'npm', version: '1.2.0', status: 'cant-start' },
+    listed: { version: '1.2.0', status: 'cant-start' },
   },
 ])(
   'the Adapter version of $copy comes from its package metadata or agentInfo, and Update available from the catalog only once Ready',

@@ -1,7 +1,7 @@
 import { mkdir, symlink } from 'node:fs/promises';
 import path from 'node:path';
 import type { Locator, Page } from '@playwright/test';
-import { expect } from '../fixtures';
+import { type AppOptions, expect } from '../fixtures';
 import {
   entrypoint,
   pathAgentName,
@@ -63,20 +63,50 @@ When('I ask to update Path Agent', async ({ page }): Promise<void> => {
     .click();
 });
 
+// Read in the page; the e2e project has no DOM lib.
+const clipboardText = 'navigator.clipboard.readText()';
+
+// Electron's page writes to the real macOS clipboard, so it gets one that lives only in the page.
+const pageOnlyClipboard = `(() => {
+  let text = '';
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    value: {
+      writeText: async (value) => { text = value; },
+      readText: async () => text,
+    },
+  });
+})()`;
+
+// Headless Chromium keeps its clipboard inside the browser and reads it only once allowed.
+const isolateClipboard = async (
+  page: Page,
+  appTarget: AppOptions['appTarget'],
+): Promise<void> => {
+  if (appTarget === 'web') {
+    await page.context().grantPermissions(['clipboard-read']);
+
+    return;
+  }
+
+  await page.evaluate(pageOnlyClipboard);
+};
+
+// The story proves no install or update starts; this proves the user gets the command.
 Then(
-  'Argo shows the Homebrew command to run myself and runs nothing',
-  async ({ page }): Promise<void> => {
+  'Argo shows the Homebrew command to run myself',
+  async ({ page, appTarget }): Promise<void> => {
     const alert = page.getByRole('dialog', { name: updateTitle });
     await expect(
       alert.getByText(`brew upgrade ${entrypoint}`, { exact: true }),
     ).toBeVisible();
-    await expect(
-      alert.getByRole('button', { name: 'Copy command' }),
-    ).toBeVisible();
     await capture(page, 'update-it-yourself');
-    await alert.getByRole('button', { name: 'Close' }).click();
+    await isolateClipboard(page, appTarget);
+    await alert.getByRole('button', { name: 'Copy command' }).click();
     await expect(alert).toHaveCount(0);
-    await expect(page.getByText(/Updating|Installing/)).toHaveCount(0);
+    await expect
+      .poll(() => page.evaluate<string>(clipboardText))
+      .toBe(`brew upgrade ${entrypoint}`);
   },
 );
 

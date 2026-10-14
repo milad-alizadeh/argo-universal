@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { AgentDetailView } from './agent-detail-view';
@@ -83,26 +83,37 @@ const openUpdateAlert = async (
   return within(await body.findByRole('dialog', { name: updateYourself }));
 };
 
+const brewUpgrade = 'brew upgrade example-agent';
+
 // Update on an outside copy runs nothing: the Alert shows the owner's command to copy.
 export const UpdateShowsTheOwnersCommand: Story = {
   args: {
-    agent: outdated(homebrewCopy, 'brew upgrade example-agent'),
+    agent: outdated(homebrewCopy, brewUpgrade),
     installation: installationArgs({ action: 'Update' }),
   },
   play: async ({ args, canvas, userEvent }) => {
     const alert = await openUpdateAlert(canvas, userEvent);
-    await waitFor(() =>
-      expect(alert.getByText('brew upgrade example-agent')).toBeVisible(),
-    );
+    await waitFor(() => expect(alert.getByText(brewUpgrade)).toBeVisible());
     await expect(
       alert.getByText(
         `Homebrew installed ${name}, so Argo won’t update it. Run this on ${serverName}:`,
       ),
     ).toBeVisible();
-    await expect(
-      alert.getByRole('button', { name: 'Copy command' }),
-    ).toBeVisible();
-    await userEvent.click(alert.getByRole('button', { name: 'Close' }));
+
+    const clipboard = spyOn(
+      navigator.clipboard,
+      'writeText',
+    ).mockResolvedValue();
+
+    try {
+      await userEvent.click(
+        alert.getByRole('button', { name: 'Copy command' }),
+      );
+      await waitFor(() => expect(clipboard).toHaveBeenCalledWith(brewUpgrade));
+    } finally {
+      clipboard.mockRestore();
+    }
+
     await expect(args.installation?.onConfirmingChange).not.toHaveBeenCalled();
     await expect(args.installation?.onInstall).not.toHaveBeenCalled();
     await expect(args.onUpdate).not.toHaveBeenCalled();
