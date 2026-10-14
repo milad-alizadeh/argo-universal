@@ -1,5 +1,6 @@
 import { createAgentMetadata } from '@repo/mocks/agent';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { withNpmFixture } from '@repo/mocks/registry/port';
 import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 
@@ -11,7 +12,7 @@ it('browses upstream metadata through Agents without opening a conversation', as
   );
   const adapter = createAgentMetadata();
   const { caller } = await startEngineTestHost({
-    fetchAgents,
+    fetchAgents: withNpmFixture(fetchAgents),
     fixtureAgents: [adapter],
   });
   const sessionsBefore = await caller.session.list({ archived: false });
@@ -76,7 +77,9 @@ it('keeps literal substring search local, including percent, underscore and Unic
       { ...agent, id: 'plain', name: 'Plain' },
     ],
   }));
-  const { caller } = await startEngineTestHost({ fetchAgents });
+  const { caller } = await startEngineTestHost({
+    fetchAgents: withNpmFixture(fetchAgents),
+  });
   await caller.agents.syncCatalog();
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus)

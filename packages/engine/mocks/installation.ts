@@ -4,6 +4,7 @@ import type { InstallPorts } from '../src/agents';
 import { startEngineTestHost } from './engine';
 export { installationExecutable } from '@repo/mocks/registry/installation';
 import { createInstallationPorts } from '@repo/mocks/registry/installation';
+import { serveRegistry } from '@repo/mocks/registry/port';
 const fixturePackage = 'fixture-install';
 export const installEntry = (kind: 'binary' | 'npx' | 'uvx'): ACPAgent => ({
   id: fixturePackage,
@@ -47,6 +48,29 @@ export const pathBinaryEntry = (): ACPAgent => {
     },
   };
 };
+// An npx Registry entry whose package release the Registry fixture's npm metadata gives the command `pathNpmCommand`.
+export const pathNpmCommand = 'fixture-acp';
+export const pathNpmEntry = (): ACPAgent => ({
+  ...installEntry('npx'),
+  distribution: {
+    npx: { package: 'fixture-install@1.2.3', args: ['--acp'] },
+  },
+});
+// The Agents the Resolver finds on PATH, one per kind of name: a binary entrypoint and an npm command.
+export const pathAgents = [
+  {
+    kind: 'binary',
+    entry: pathBinaryEntry(),
+    command: pathEntrypoint,
+    args: ['acp'],
+  },
+  {
+    kind: 'npm',
+    entry: pathNpmEntry(),
+    command: pathNpmCommand,
+    args: ['--acp'],
+  },
+];
 export const installationPorts: InstallPorts = createInstallationPorts();
 export const startInstallEngine = async (
   entry = installEntry('npx'),
@@ -58,7 +82,9 @@ export const startInstallEngine = async (
   const host = await startEngineTestHost({
     ...options,
     installationPorts: ports,
-    fetchAgents: async () => ({ version: '1.0.0', agents: [entry] }),
+    fetchAgents:
+      options.fetchAgents ??
+      serveRegistry({ version: '1.0.0', agents: [entry] }),
   });
   await host.caller.agents.syncCatalog();
   await expect

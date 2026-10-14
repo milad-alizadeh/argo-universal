@@ -1,5 +1,6 @@
 import { syncJobs } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { withNpmFixture } from '@repo/mocks/registry/port';
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
@@ -12,10 +13,10 @@ it('accepts and coalesces repeated and concurrent requests before the upstream f
   const upstream = Promise.withResolvers<unknown>();
   let requests = 0;
   const host = await startEngineTestHost({
-    fetchAgents: async () => {
+    fetchAgents: withNpmFixture(async () => {
       requests += 1;
       return upstream.promise;
-    },
+    }),
   });
   const first = host.createCaller();
   expect(
@@ -107,7 +108,7 @@ it.each(['pending', 'running'] as const)(
     );
     const host = await startEngineTestHost({
       database: stored.database,
-      fetchAgents,
+      fetchAgents: withNpmFixture(fetchAgents),
     });
     await expect
       .poll(async () => (await host.caller.agents.catalog()).syncStatus)

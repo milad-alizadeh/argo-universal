@@ -5,12 +5,10 @@ import { AgentCatalogReplaceJob } from './agent-storage';
 import { prepareAgentCatalogRows } from './records';
 import { RegistryHttpError, type FetchAgents } from './registry/fetch-agents';
 import { readNpxCommandNames } from './registry/npm-command';
-import type { FetchNpmPackage } from './registry/npm-package';
 import type { RegistryReader } from './registry/registry-reader';
 
 export interface CatalogSyncInput {
   fetchAgents: FetchAgents;
-  fetchNpmPackage: FetchNpmPackage;
   database: Database;
   reader: RegistryReader;
   now(): number;

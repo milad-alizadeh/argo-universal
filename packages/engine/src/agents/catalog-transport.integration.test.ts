@@ -1,6 +1,7 @@
 import { once } from 'node:events';
 import { session } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { withNpmFixture } from '@repo/mocks/registry/port';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { openTestDatabase, readAddedAgentRows } from '#mocks/database';
@@ -15,7 +16,7 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
   );
   const first = await startEngineTestHost({
     home: stored.directory,
-    fetchAgents,
+    fetchAgents: withNpmFixture(fetchAgents),
   });
   const history = (await first.caller.session.list({ archived: false }))
     .sessions;
@@ -58,7 +59,7 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
   fetchAgents.mockRejectedValue(new Error('Registry is offline'));
   const restarted = await startEngineTestHost({
     home: stored.directory,
-    fetchAgents,
+    fetchAgents: withNpmFixture(fetchAgents),
   });
   await fetch(`${restarted.url}/trpc/agents.syncCatalog`, {
     method: 'POST',

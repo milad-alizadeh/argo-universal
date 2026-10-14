@@ -1,14 +1,10 @@
 import { z } from 'zod';
 
 export type NpmRelease = { name: string; version: string };
-// npm's metadata for one published package release.
-export type FetchNpmPackage = (
-  release: NpmRelease,
-  signal: AbortSignal,
-) => Promise<unknown>;
 
 const npmRegistry = 'https://registry.npmjs.org';
 
+// npm's metadata for one published package release.
 export async function fetchNpmPackage(
   { name, version }: NpmRelease,
   signal: AbortSignal,

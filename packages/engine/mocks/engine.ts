@@ -5,7 +5,7 @@ import { openDatabase } from '@repo/db';
 import type { Database } from '@repo/db';
 import type { AgentIdentity } from '@repo/mocks/agent';
 import { findFreePort } from '@repo/mocks/network/free-port';
-import { createNpmPackageFetcher } from '@repo/mocks/registry/port';
+import { serveRegistry } from '@repo/mocks/registry/port';
 import { onTestFinished } from 'vitest';
 import { waitFor, type ActorRefFrom } from 'xstate';
 import { composeEngine, type EngineActor } from '../src/engine/compose';
@@ -84,8 +84,7 @@ export async function startEngineTestHost(
     now: Date.now,
     createId: randomUUID,
     ...scriptedEngineInput(),
-    fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
-    fetchNpmPackage: createNpmPackageFetcher(),
+    fetchAgents: serveRegistry({ version: '1.0.0', agents: [] }),
     ...options,
     home,
     port,

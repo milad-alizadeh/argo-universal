@@ -65,7 +65,12 @@ export const malformedRegistry = {
 };
 
 // npm's answer for each npx package release in the fixtures: its `bin` names the command an npm install puts on PATH.
-export const npmPackages: Record<string, unknown> = {
+export type NpmPackageMetadata = {
+  name: string;
+  version: string;
+  bin?: string | Record<string, string>;
+};
+export const npmPackages: Record<string, NpmPackageMetadata> = {
   'example-agent@1.2.3': {
     name: 'example-agent',
     version: '1.2.3',

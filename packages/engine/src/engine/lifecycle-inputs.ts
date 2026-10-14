@@ -44,21 +44,16 @@ export const writerInput = ({
   blobsFolder: blobsFolderIn(context.home),
 });
 
-type SyncSource = Pick<
-  EngineContext,
-  'database' | 'fetchAgents' | 'fetchNpmPackage' | 'now'
->;
 export const syncInput = ({
   context,
   self,
 }: {
-  context: SyncSource;
+  context: Pick<EngineContext, 'database' | 'fetchAgents' | 'now'>;
   self: Pick<AnyActorRef, 'system'>;
 }): SyncSupervisorInput => ({
   database: openDatabaseOf(context),
   writer: requireDatabaseWriter(self.system),
   fetchAgents: context.fetchAgents,
-  fetchNpmPackage: context.fetchNpmPackage,
   now: context.now,
 });
 

@@ -3,11 +3,8 @@ import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
 import { isNotNull } from 'drizzle-orm';
 import { resolveInstallRecipe } from '../install/materialization/recipe';
-import {
-  type FetchNpmPackage,
-  type NpmRelease,
-  readNpmCommands,
-} from './npm-package';
+import type { FetchAgents } from './fetch-agents';
+import { type NpmRelease, readNpmCommands } from './npm-package';
 import { createRegistryReader } from './registry-reader';
 
 // One slow package must not hold up the catalog.
@@ -63,21 +60,39 @@ const remember = (
 
 type CommandNameInput = {
   database: Database;
-  fetchNpmPackage: FetchNpmPackage;
+  fetchAgents: FetchAgents;
   signal: AbortSignal;
 };
 const fetchCommand = async (
   input: CommandNameInput,
   release: NpmRelease,
 ): Promise<string | null> => {
-  const signal = AbortSignal.any([
-    input.signal,
-    AbortSignal.timeout(npmTimeoutMs),
-  ]);
-  const metadata = await input.fetchNpmPackage(release, signal);
-  const commands = readNpmCommands(metadata, release.name);
-  return commands.length > 0 ? JSON.stringify(commands) : null;
+  const metadata = await withinTimeLimit(input.signal, (signal) =>
+    Promise.race([input.fetchAgents(signal, release), rejectOnAbort(signal)]),
+  );
+  return storedCommands(readNpmCommands(metadata, release.name));
 };
+const withinTimeLimit = async <T>(
+  outer: AbortSignal,
+  read: (signal: AbortSignal) => Promise<T>,
+): Promise<T> => {
+  const limit = new AbortController();
+  const timer = setTimeout(() => limit.abort(), npmTimeoutMs);
+  try {
+    return await read(AbortSignal.any([outer, limit.signal]));
+  } finally {
+    clearTimeout(timer);
+  }
+};
+// A Registry answer that ignores the abort must not hold up the catalog.
+const rejectOnAbort = (signal: AbortSignal): Promise<never> =>
+  new Promise((_, reject) => {
+    signal.addEventListener('abort', () => reject(signal.reason), {
+      once: true,
+    });
+  });
+const storedCommands = (commands: readonly string[]): string | null =>
+  commands.length > 0 ? JSON.stringify(commands) : null;
 const commandFor = async (
   input: CommandNameInput & { saved: Map<string, string> },
   release: NpmRelease | undefined,

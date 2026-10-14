@@ -15,10 +15,7 @@ import {
 } from '@repo/mocks/agent/app-fixtures';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { createInstallationPorts } from '@repo/mocks/registry/installation';
-import {
-  createFileAgentsFetcher,
-  createNpmPackageFetcher,
-} from '@repo/mocks/registry/port';
+import { createFileAgentsFetcher } from '@repo/mocks/registry/port';
 import { z } from 'zod';
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -97,7 +94,6 @@ const engine = composeEngine({
   fetchAgents: createFileAgentsFetcher(
     z.string().parse(process.env.ARGO_E2E_REGISTRY_PATH),
   ),
-  fetchNpmPackage: createNpmPackageFetcher(),
 });
 
 function finish(exitCode: number): never {

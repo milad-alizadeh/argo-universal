@@ -29,7 +29,6 @@ export type {
   LaunchLoginTerminal,
 } from './agent-launch';
 export { type FetchAgents } from './registry/fetch-agents';
-export { type FetchNpmPackage } from './registry/npm-package';
 export { AgentCatalogReplaceJob } from './agent-storage';
 
 export {

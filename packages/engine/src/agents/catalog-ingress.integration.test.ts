@@ -1,4 +1,5 @@
 import { malformedRegistry } from '@repo/mocks/registry/catalog';
+import { withNpmFixture } from '@repo/mocks/registry/port';
 import {
   publishedRegistryResponse,
   rejectedRegistryValues,
@@ -19,7 +20,7 @@ it.each(
       .mockResolvedValueOnce(publishedRegistryResponse)
       .mockResolvedValue(value);
     const { caller, database } = await startEngineTestHost({
-      fetchAgents,
+      fetchAgents: withNpmFixture(fetchAgents),
     });
     await caller.agents.syncCatalog();
     await expect
