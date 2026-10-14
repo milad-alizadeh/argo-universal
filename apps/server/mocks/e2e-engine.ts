@@ -30,11 +30,13 @@ const heldCheckTimeoutMs = 10 * 60 * 1000;
 const holdsCheck = Object.values(options).some(
   ({ scenario }) => scenario === 'check-held',
 );
-const requestLog = process.env.ARGO_E2E_REQUEST_LOG;
-// The scripted Agents log the ACP requests e2e steps check.
-const agentEnvironment: Record<string, string> = requestLog
-  ? { ARGO_E2E_REQUEST_LOG: requestLog }
-  : {};
+// The scripted Agents log the ACP requests e2e steps check, and a held check waits for the release file.
+const agentEnvironment: Record<string, string> = Object.fromEntries(
+  ['ARGO_E2E_REQUEST_LOG', 'ARGO_E2E_HELD_CHECK_RELEASE'].flatMap((name) => {
+    const value = process.env[name];
+    return value ? [[name, value]] : [];
+  }),
+);
 const port = z.coerce
   .number()
   .int()
