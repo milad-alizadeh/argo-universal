@@ -8,7 +8,7 @@ export interface CatalogSyncInput {
   fetchAgents: FetchAgents;
   reader: RegistryReader;
   now(): number;
-  createId(): string;
+  createId: () => string;
   source: string;
   scope: string;
   rejectedValues: number;
