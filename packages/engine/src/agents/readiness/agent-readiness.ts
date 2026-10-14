@@ -12,6 +12,7 @@ import {
   pendingReadiness,
   type SavedReadiness,
 } from '../agent-storage';
+import { checkedReadiness } from '../configuration/custom-readiness';
 import { resolveInstalledAgentLaunch } from '../install/selection/launch';
 import { readinessOfFailure } from './readiness-failure';
 import { ReadinessSkipped } from './readiness-skipped';
@@ -97,19 +98,11 @@ const checkAndSave = async (
   agentId: string,
 ): Promise<AgentCheck> => {
   const result = sanitized(await checkOrFailure(deps, agentId));
-  await save(deps, [agentId], checkedReadiness(deps, result));
+  // A finished check also replaces the agentInfo version; other saves keep it.
+  await save(deps, [agentId], checkedReadiness(deps.now(), result));
 
   return result;
 };
-
-// A finished check also replaces the agentInfo version; other saves keep it.
-const checkedReadiness = (
-  deps: ReadinessDeps,
-  check: AgentCheck,
-): SavedReadiness => ({
-  ...savedCheck(deps, check),
-  readinessAgentVersion: check.agentVersion ?? null,
-});
 
 // Shows the Agent as Checking… at once, then saves what the shared ACP check observed.
 const recheckAgent = async (

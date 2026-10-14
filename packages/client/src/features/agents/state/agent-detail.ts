@@ -6,6 +6,7 @@ import type {
 } from '@repo/contracts';
 import type { AgentDetail } from './agent-detail-types';
 import { probedRow } from './agent-list';
+import { isInstalled } from './agent-status';
 
 type CatalogAgent = AgentsCatalogOutput['agents'][number];
 
@@ -127,10 +128,9 @@ const versionsOf = (
   info: AgentInfo,
   fromRegistry: AgentDetail | undefined,
 ): Pick<AgentDetail, 'version' | 'agentVersion' | 'availableVersion'> => ({
-  version:
-    info.status === 'not-installed'
-      ? catalogRelease(info, fromRegistry)
-      : info.version,
+  version: isInstalled(info)
+    ? info.version
+    : catalogRelease(info, fromRegistry),
   agentVersion: info.agentVersion,
   availableVersion: info.availableVersion,
 });

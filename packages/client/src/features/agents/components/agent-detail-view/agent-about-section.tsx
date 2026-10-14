@@ -7,6 +7,7 @@ import type {
   AgentDetailViewProps,
 } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';
+import { isInstalled } from '../../state/agent-status';
 import { AgentAction } from './agent-detail-actions';
 import { AgentLinks } from './agent-links';
 
@@ -79,16 +80,14 @@ const updateLine = (agent: ShownAgent): string =>
     ? `v${agent.version} → v${agent.availableVersion}`
     : installedLine(agent);
 
-const statusLines: Partial<
-  Record<ShownAgent['status'], (agent: ShownAgent) => string>
-> = {
-  'not-installed': (agent) => `v${agent.version}`,
-  'update-available': updateLine,
-};
+const installedLines = (agent: ShownAgent): string =>
+  agent.status === 'update-available'
+    ? updateLine(agent)
+    : installedLine(agent);
 
 // Paper: the catalog's release before install, from → to when an update is out, else the Adapter and the Agent.
 const versionLine = (agent: ShownAgent): string =>
-  (statusLines[agent.status] ?? installedLine)(agent);
+  isInstalled(agent) ? installedLines(agent) : `v${agent.version}`;
 
 const versionAccessory = (
   props: AgentDetailViewProps,
