@@ -107,7 +107,7 @@ The Agent's own live session behind a Session, identified by the Agent's session
 _Avoid_: Vendor session, upstream session, Agent connection, process
 
 **Registry**:
-The public ACP Registry that lists the Agents that Argo can run; Argo's Agent catalog is synced from it.
+The public ACP Registry that lists the Agents that Argo can run; Argo's Agent catalog is synced from it. As a boundary, the Registry is the catalog's outside sources: the ACP Registry, plus the npm package metadata that catalog sync reads for npm Agents.
 _Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), catalog (for the upstream list)
 
 **Readiness**:
