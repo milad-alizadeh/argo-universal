@@ -78,7 +78,7 @@ function SearchMessage(props: {
   failure: boolean;
 }): React.JSX.Element {
   return (
-    <Text semanticRole={props.failure ? 'alert' : 'status'}>
+    <Text accessibilityRole={props.failure ? 'alert' : 'status'}>
       {props.message}
     </Text>
   );

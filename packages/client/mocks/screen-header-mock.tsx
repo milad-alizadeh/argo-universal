@@ -36,7 +36,7 @@ function TitleText({
 }: Pick<ScreenHeaderProps, 'title'>): React.JSX.Element {
   return (
     <Text
-      semanticRole="heading"
+      accessibilityRole="heading"
       role="nav-title"
       aria-level={1}
       numberOfLines={1}

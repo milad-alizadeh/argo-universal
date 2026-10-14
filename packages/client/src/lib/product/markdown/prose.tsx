@@ -17,7 +17,7 @@ interface ProseProps {
 
 type ProseTextProps = Pick<
   ComponentProps<typeof Text>,
-  'semanticRole' | 'aria-level' | 'className'
+  'accessibilityRole' | 'aria-level' | 'className'
 >;
 
 const proseVariantClassNames: Record<MarkdownVariantName, string> = {
@@ -42,7 +42,7 @@ function useProseTextProps(headingLevel?: number): ProseTextProps {
   const heading = headingLevel !== undefined;
 
   return {
-    semanticRole: heading ? 'heading' : undefined,
+    accessibilityRole: heading ? 'heading' : undefined,
     'aria-level': headingLevel,
     className: proseClassName(heading, useContext(MarkdownVariant)),
   };

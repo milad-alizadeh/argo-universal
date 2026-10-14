@@ -21,7 +21,7 @@ function HeaderTitle({ children }: { children: string }): JSX.Element {
   return (
     <Text
       role="nav-title"
-      semanticRole="heading"
+      accessibilityRole="heading"
       aria-level={1}
       numberOfLines={1}
       className="font-sans"

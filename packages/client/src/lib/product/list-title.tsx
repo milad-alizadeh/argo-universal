@@ -5,7 +5,7 @@ import { Text } from '#primitives/display/text';
 export const ListTitle = memo(function ListTitle(props: { children: string }) {
   return (
     <Text
-      semanticRole="heading"
+      accessibilityRole="heading"
       aria-level={2}
       role="heading"
       numberOfLines={1}

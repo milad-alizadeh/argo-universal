@@ -9,6 +9,7 @@ import { Host } from '#primitives/native/host';
 import {
   alertActionPress,
   isDestructiveAlert,
+  type AlertAction,
   type AlertProps,
 } from './alert-props';
 
@@ -126,8 +127,12 @@ function actionRole(
 ): 'cancel' | 'destructive' | undefined {
   if (action.cancel) return explicitCancel ? undefined : 'cancel';
 
-  // SwiftUI names the danger tone's role `destructive`.
-  return action.tone === 'danger' ? 'destructive' : undefined;
+  return swiftRole(action.tone);
+}
+
+// SwiftUI names the danger tone's role `destructive`.
+function swiftRole(tone: AlertAction['tone']): 'destructive' | undefined {
+  return tone === 'danger' ? 'destructive' : undefined;
 }
 
 Alert satisfies React.ComponentType<AlertProps>;

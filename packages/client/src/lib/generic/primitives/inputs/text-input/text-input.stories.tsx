@@ -148,12 +148,7 @@ function TypedRow({
   const [value, setValue] = useState(initial);
 
   return (
-    <TextInput
-      {...props}
-      variant="row"
-      value={value}
-      onChangeText={setValue}
-    />
+    <TextInput {...props} variant="row" value={value} onChangeText={setValue} />
   );
 }
 

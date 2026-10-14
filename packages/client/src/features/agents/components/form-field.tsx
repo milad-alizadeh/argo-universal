@@ -26,9 +26,7 @@ export const sectionFooter = (
   error: string | undefined,
   hint?: string,
 ): Pick<GroupedListSectionProps, 'footer' | 'tone'> =>
-  error === undefined
-    ? { footer: hint }
-    : { footer: error, tone: 'danger' };
+  error === undefined ? { footer: hint } : { footer: error, tone: 'danger' };
 
 const hasErrors = (errors: FieldErrors = []): boolean => errors.length > 0;
 
@@ -69,7 +67,7 @@ export function FieldMessage({
   if (!error) return null;
 
   return (
-    <Text role="secondary" className="text-danger" semanticRole="alert">
+    <Text role="secondary" className="text-danger" accessibilityRole="alert">
       {error}
     </Text>
   );

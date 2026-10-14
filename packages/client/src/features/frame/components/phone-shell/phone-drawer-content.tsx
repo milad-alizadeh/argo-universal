@@ -3,7 +3,10 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
-import { DrawerItem } from '#primitives/lists/drawer-item';
+import {
+  DrawerItem,
+  type DrawerItemProps,
+} from '#primitives/lists/drawer-item';
 import { sectionAttentionCount } from '../../state/attention-badge';
 import { drawerAttentionBadge } from '../attention-badge/attention-badge';
 import { type Section, sectionOrder, shellSections } from '../shell-sections';
@@ -33,17 +36,23 @@ function selectSection(navigation: DrawerNavigation, section: Section): void {
   navigation.onDrawerOpenChange(false);
 }
 
+function sectionItem(
+  section: Section,
+): Pick<DrawerItemProps, 'label' | 'icon'> {
+  const { title, icon } = shellSections[section];
+
+  return { label: title, icon };
+}
+
 function SectionButton({
   section,
   ...navigation
 }: DrawerNavigation & { section: Section }): React.JSX.Element {
   const count = sectionAttentionCount(section, navigation.attentionCount);
-  const { title, icon } = shellSections[section];
 
   return (
     <DrawerItem
-      label={title}
-      icon={icon}
+      {...sectionItem(section)}
       selected={navigation.selectedSection === section}
       badge={drawerAttentionBadge(count)}
       onPress={() => selectSection(navigation, section)}
@@ -55,7 +64,7 @@ function SectionButton({
 function DrawerTitle(): React.JSX.Element {
   return (
     <View className="justify-center px-3" style={{ height: headerBarHeight }}>
-      <Text role="heading" semanticRole="heading" aria-level={2}>
+      <Text role="heading" accessibilityRole="heading" aria-level={2}>
         Argo
       </Text>
     </View>

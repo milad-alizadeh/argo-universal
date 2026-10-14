@@ -73,7 +73,7 @@ function OptionsMessage(props: {
   return (
     <Text
       role="secondary"
-      semanticRole={props.failure ? 'alert' : 'status'}
+      accessibilityRole={props.failure ? 'alert' : 'status'}
       className="p-3"
     >
       {props.message}

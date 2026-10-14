@@ -31,7 +31,7 @@ function PageHeading({
   return (
     <Text
       role="title"
-      semanticRole="heading"
+      accessibilityRole="heading"
       aria-level={1}
       numberOfLines={1}
       className="min-w-0 shrink"

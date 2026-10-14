@@ -11,7 +11,7 @@ import { Meter } from './status-meter';
 
 const planHeadingProps = {
   role: 'heading',
-  semanticRole: 'heading',
+  accessibilityRole: 'heading',
   'aria-level': 2,
 } as const;
 

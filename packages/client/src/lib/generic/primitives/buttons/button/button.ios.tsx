@@ -119,9 +119,7 @@ function ButtonIcon(
 function usesSystemRedIcon(
   props: Pick<ButtonDataProps, 'tone' | 'variant'>,
 ): boolean {
-  return (
-    props.tone === 'danger' && nativeButtonVariant(props) !== 'default'
-  );
+  return props.tone === 'danger' && nativeButtonVariant(props) !== 'default';
 }
 
 /*

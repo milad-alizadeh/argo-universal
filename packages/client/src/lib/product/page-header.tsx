@@ -57,7 +57,7 @@ function PageHeaderHeading(props: { title: string }): React.JSX.Element {
   return (
     <Text
       role="heading"
-      semanticRole="heading"
+      accessibilityRole="heading"
       aria-level={2}
       numberOfLines={1}
     >

@@ -69,8 +69,7 @@ const sizeClasses = ({ size }: GroupedListItemProps): string | undefined =>
 export const contentGap = (
   sidebar: boolean,
   size: GroupedListItemProps['size'],
-): string | undefined =>
-  sidebar || size === 'lg' ? undefined : 'wide:gap-2';
+): string | undefined => (sidebar || size === 'lg' ? undefined : 'wide:gap-2');
 
 // A loading row pads to Paper's 56, its spinner in a 20 slot; a pressable row shades on hover.
 function stateClasses(props: GroupedListItemProps, sidebar: boolean): string {

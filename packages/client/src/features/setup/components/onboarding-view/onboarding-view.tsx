@@ -28,7 +28,7 @@ function OnboardingHeader({
   return (
     <View className="gap-2">
       {serverName !== undefined && <ServerRunning name={serverName} />}
-      <Text role="title" semanticRole="heading" aria-level={1}>
+      <Text role="title" accessibilityRole="heading" aria-level={1}>
         Set up Argo
       </Text>
       <Text role="secondary" className="text-muted-foreground">

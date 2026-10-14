@@ -16,7 +16,9 @@ type AnchoredCard = {
   ref: RefCallback<View>;
 };
 
-export function useSheetAnchor(variant: BottomSheetProps['variant']): AnchoredCard {
+export function useSheetAnchor(
+  variant: BottomSheetProps['variant'],
+): AnchoredCard {
   const card = useRef<View>(null);
   const name = useContext(BottomSheetAnchorContext);
   const anchor = useWide() && variant === 'form' ? name : undefined;

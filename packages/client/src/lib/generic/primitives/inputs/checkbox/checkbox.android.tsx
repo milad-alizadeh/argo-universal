@@ -85,9 +85,7 @@ function useRowModifiers(props: RowProps): ReturnType<typeof semantics>[] {
 }
 
 function rowBackground(props: RowProps, muted?: string): string {
-  return props.variant === 'option'
-    ? 'transparent'
-    : (muted ?? 'transparent');
+  return props.variant === 'option' ? 'transparent' : (muted ?? 'transparent');
 }
 
 function rowToggle(props: RowProps): ReturnType<typeof toggleable>[] {

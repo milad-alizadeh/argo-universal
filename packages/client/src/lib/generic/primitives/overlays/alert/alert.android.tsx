@@ -98,8 +98,7 @@ function AlertButton(
 ): React.JSX.Element {
   const { colors } = useNativeTheme();
 
-  const color =
-    props.action.tone === 'danger' ? colors.danger : colors.primary;
+  const color = props.action.tone === 'danger' ? colors.danger : colors.primary;
 
   return (
     <TextButton

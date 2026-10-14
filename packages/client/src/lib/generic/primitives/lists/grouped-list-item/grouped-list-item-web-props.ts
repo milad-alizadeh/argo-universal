@@ -44,7 +44,8 @@ export function selectionProps(
   return {
     accessibilityState: { disabled: !!props.disabled, checked: props.checked },
     'aria-current': currentPage(props),
-    'aria-pressed': props.accessibilityRole === 'button' ? props.selected : undefined,
+    'aria-pressed':
+      props.accessibilityRole === 'button' ? props.selected : undefined,
     'aria-checked': props.checked,
   };
 }

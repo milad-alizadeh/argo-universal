@@ -50,9 +50,7 @@ const footerOf = (
   props: GroupedListSectionProps,
   id: string,
 ): SectionFooter | undefined =>
-  props.footer
-    ? { id, failure: props.tone === 'danger' }
-    : undefined;
+  props.footer ? { id, failure: props.tone === 'danger' } : undefined;
 
 type FooterProps = {
   id: string;
@@ -72,7 +70,7 @@ function FooterText(props: FooterProps & { text: string }): React.JSX.Element {
     <Text
       id={props.id}
       role="secondary"
-      semanticRole={failure ? 'alert' : undefined}
+      accessibilityRole={failure ? 'alert' : undefined}
       className={cn('px-4', failure && 'text-danger')}
     >
       {props.text}
@@ -86,7 +84,7 @@ function SectionTitle({ title }: { title?: string }): React.JSX.Element | null {
   return (
     <View className="justify-center px-4">
       <Text
-        semanticRole="heading"
+        accessibilityRole="heading"
         aria-level={2}
         role="heading"
         className="text-muted-foreground wide:font-medium wide:text-foreground"

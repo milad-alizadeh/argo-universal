@@ -53,6 +53,8 @@ function QuestionSheet(
 
 type SurfaceProps = ElicitationFormProps & { children: ReactNode };
 
+const formSheet = { open: true, fit: true, variant: 'form' } as const;
+
 function ElicitationSurface(props: SurfaceProps): ReactElement {
   const wide = useContentWide();
   const sheet = useSheetDismissal(props);
@@ -60,7 +62,7 @@ function ElicitationSurface(props: SurfaceProps): ReactElement {
   if (wide) return <ElicitationTray>{props.children}</ElicitationTray>;
 
   return (
-    <BottomSheet open fit variant="form" label={props.request.message} {...sheet}>
+    <BottomSheet {...formSheet} label={props.request.message} {...sheet}>
       {props.children}
     </BottomSheet>
   );

@@ -1,4 +1,5 @@
 import type { ActivityIndicatorProps, ViewProps } from 'react-native';
+import type { Tone } from '#primitives/display/text';
 import type { IconName } from '../../../symbols/icon-names';
 import type { IconRole } from '../../../symbols/icon-role';
 import type { SymbolGlyphProps } from '../../../symbols/symbol-glyph/symbol-glyph';
@@ -8,6 +9,7 @@ export interface IconProps {
   role: IconRole;
   // Selects the platform's filled variant where the icon has one.
   filled?: boolean;
+  tone?: Tone;
   className?: string;
   weight?: SymbolGlyphProps['weight'];
   testID?: string;

@@ -15,7 +15,7 @@ function NewSessionHeading(): React.JSX.Element | null {
   return (
     <View className="flex-1 justify-center pb-10">
       <SessionColumn className="px-4">
-        <Text role="title" semanticRole="heading" aria-level={1}>
+        <Text role="title" accessibilityRole="heading" aria-level={1}>
           What should we work on?
         </Text>
       </SessionColumn>

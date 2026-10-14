@@ -103,7 +103,7 @@ export function ElicitationValidation(props: {
 
   return (
     <Text
-      semanticRole="alert"
+      accessibilityRole="alert"
       role="secondary"
       className="px-4 pt-3 text-danger"
     >

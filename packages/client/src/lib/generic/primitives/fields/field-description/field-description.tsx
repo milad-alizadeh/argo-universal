@@ -71,7 +71,7 @@ function footerProps(props: FooterProps): ComponentProps<typeof Text> {
   return {
     id: props.footerId,
     role: 'secondary',
-    semanticRole: props.invalid ? 'alert' : undefined,
+    accessibilityRole: props.invalid ? 'alert' : undefined,
     className: props.invalid ? 'text-danger' : 'text-muted-foreground',
   };
 }

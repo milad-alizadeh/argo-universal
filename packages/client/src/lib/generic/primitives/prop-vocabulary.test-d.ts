@@ -1,3 +1,4 @@
+import type { ViewProps } from 'react-native';
 import { describe, expectTypeOf, it } from 'vitest';
 import type { ButtonProps } from '#primitives/buttons/button';
 import type { ButtonGroupProps } from '#primitives/buttons/button-group';
@@ -117,7 +118,7 @@ type OffVocabularyTones = {
 type OwnRoles = {
   [Name in keyof Primitives]: Exclude<
     Values<Primitives[Name], 'role'>,
-    TextRole | IconRole | NonNullable<import('react-native').ViewProps['role']>
+    TextRole | IconRole | NonNullable<ViewProps['role']>
   >;
 };
 
@@ -146,7 +147,9 @@ describe('the prop vocabulary', () => {
     expectTypeOf<Extract<Keys<DrawerItemProps>, 'title'>>().toBeNever();
     expectTypeOf<GroupedListItemProps['label']>().toEqualTypeOf<string>();
     expectTypeOf<DrawerItemProps['label']>().toEqualTypeOf<string>();
-    expectTypeOf<Extract<Keys<MenuProps>, 'options'>>().toEqualTypeOf<'options'>();
+    expectTypeOf<
+      Extract<Keys<MenuProps>, 'options'>
+    >().toEqualTypeOf<'options'>();
     expectTypeOf<
       Extract<Keys<SplitButtonProps>, 'options'>
     >().toEqualTypeOf<'options'>();

@@ -59,7 +59,7 @@ function InspectorTitle({ title }: { title: string }): React.JSX.Element {
   return (
     <Text
       role="body"
-      semanticRole="heading"
+      accessibilityRole="heading"
       aria-level={2}
       numberOfLines={1}
       className="min-w-0 flex-1 font-medium"

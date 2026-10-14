@@ -59,9 +59,7 @@ function AlertButtons(
 
 // The web reads left to right, so Cancel comes first and the answer sits at the trailing edge.
 function cancelFirst(actions: readonly AlertAction[]): AlertAction[] {
-  return [...actions].sort(
-    (a, b) => Number(!!b.cancel) - Number(!!a.cancel),
-  );
+  return [...actions].sort((a, b) => Number(!!b.cancel) - Number(!!a.cancel));
 }
 
 function AlertButton(

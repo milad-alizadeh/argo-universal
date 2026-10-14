@@ -53,7 +53,7 @@ function HeaderTitle({
   return (
     <Text
       role="nav-title"
-      semanticRole="heading"
+      accessibilityRole="heading"
       aria-level={1}
       numberOfLines={1}
     >
