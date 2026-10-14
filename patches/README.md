@@ -2,11 +2,13 @@
 
 ## @expo/ui@57.0.22
 
-`@expo__ui@57.0.22.patch` exposes DropdownMenu's `cornerRadius`, `borderWidth` and `borderColor` through its published types and Compose props, then passes them to Material's native menu shape and BorderStroke. Argo's Android Menu passes none of them. Android autolinking compiles `expo-ui` from source so the Kotlin patch applies instead of linking the precompiled AAR. Menus without the prop retain Material's default shape.
+`@expo__ui@57.0.22.patch` makes three changes to the Android Compose sources and published types. Android autolinking compiles `expo-ui` from source, so the Kotlin changes apply instead of linking the precompiled AAR. Removal requires rebuilding the Android development client.
 
-`clearSemantics()` exposes Compose’s `clearAndSetSemantics {}` for decorative labels beside a native Switch or above a Slider. Apply it only to the label/header subtree: the native control retains its name, state and actions.
+- `clearSemantics()` exposes Compose's `clearAndSetSemantics {}` for decorative labels beside a native Switch or above a Slider. Apply it only to the label/header subtree: the native control retains its name, state and actions.
+- `onWindowInsetsChanged` is a modifier that reports the larger of the keyboard and navigation-bar bottom inset, in dp, from the window that presents the view. Sheets use it to keep content clear of the keyboard.
+- `ModalBottomSheet` waits for the sheet's first visible state before expanding when `initialFullyExpanded` is set. Material opens the dialog before its anchors settle, so an immediate `expand()` raced and left the sheet partly expanded.
 
-Remove the corresponding changes when the pinned Expo UI release ships the documented `cornerRadius` prop and a modifier that clears decorative semantics. Removal requires rebuilding the Android development client.
+Remove the corresponding changes when the pinned Expo UI release ships a modifier that clears decorative semantics, a window-inset modifier, and an expand that waits for the sheet's anchors.
 
 ## expo-symbols@57.0.3
 
@@ -29,3 +31,9 @@ Remove this patch when the pinned React Native declarations include both roles. 
 Public payloads retain their required fields. Framework payloads use XState's own types. Delayed events use the native `xstate.after.*` descriptor format; model transition coverage verifies which descriptors are registered by each machine.
 
 Remove this patch when the pinned XState release provides these graph signatures. It changes no runtime files or dependency versions.
+
+## node-pty@1.1.0
+
+`node-pty@1.1.0.patch` makes `scripts/post-install.js` mark the prebuilt `spawn-helper` executable on macOS (arm64 and x64), so the Server can spawn terminal processes. Without it the helper keeps the mode it had in the package and spawning fails with a permissions error.
+
+Remove this patch when the pinned `node-pty` release ships `spawn-helper` as executable.
