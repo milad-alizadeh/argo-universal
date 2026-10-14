@@ -99,7 +99,7 @@ it('keeps exact browser ownership after the initiating App disconnects, then ope
     .poll(async () => (await host.caller.agents.login(operation)).status)
     .toBe('ready');
   expect(host.agent.processes[0]?.terminations).toBe(1);
-  await awaitSettledReadiness(host.caller, host.agent);
+  await awaitSettledReadiness(host.caller);
   await verifySessionAdmission(host, operation);
 });
 
