@@ -442,6 +442,14 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
 
     const { host, sessionId } = await startSession(agent, [
       {
+        type: 'update',
+        update: {
+          sessionUpdate: 'tool_call',
+          toolCallId: 'tool-a',
+          title: editToolTitle,
+        },
+      },
+      {
         type: 'permission',
         request: {
           toolCall: { toolCallId: 'tool-a', title: editToolTitle },
@@ -459,6 +467,11 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     expect(
       (await waitForTurnEnd(host, sessionId)).pendingPermission,
     ).toBeNull();
+    expect(
+      (await readToolCallUpdate(host, sessionId, 'tool-a'))?._meta?.argo,
+    ).toEqual({
+      permissionOutcome: { outcome: 'cancelled' },
+    });
     await expect(
       host.caller.session.answerPermission({
         sessionId,
@@ -472,6 +485,14 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     const responses: RequestPermissionResponse[] = [];
 
     const { host, sessionId } = await startSession(agent, [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'tool_call',
+          toolCallId: 'tool-a',
+          title: editToolTitle,
+        },
+      },
       ...permissionSteps(responses, ['tool-a']),
       { type: 'hold' },
     ]);
@@ -479,6 +500,11 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     await waitForPermission(host, sessionId);
     await host.caller.session.close({ sessionId });
     await vi.waitFor(() => expect(responses[0]).toEqual(cancelled));
+    expect(
+      (await readToolCallUpdate(host, sessionId, 'tool-a'))?._meta?.argo,
+    ).toEqual({
+      permissionOutcome: { outcome: 'cancelled' },
+    });
   });
 
   it('a request the Agent withdraws is no longer answerable', async () => {

@@ -2,6 +2,7 @@ import { SessionUpdate } from '@repo/contracts';
 import { z } from 'zod';
 import type { Feed, FeedChangeResult } from './feed-change';
 import type { FeedCandidate } from './feed-change-candidate';
+import { nextFeedRevision } from './feed-revision';
 
 type ToolCallRow = Extract<
   SessionUpdate,
@@ -61,7 +62,7 @@ const updatedFeed = (
   existing: SessionUpdate | undefined,
 ): Feed => ({
   ...feed,
-  maxRevision: feed.maxRevision + 1,
+  maxRevision: nextFeedRevision(feed.maxRevision),
   nextPosition: existing ? feed.nextPosition : feed.nextPosition + 1,
   rows: { ...feed.rows, [row.id]: row },
 });

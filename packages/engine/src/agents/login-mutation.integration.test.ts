@@ -33,6 +33,6 @@ it('refuses a custom Agent edit before probing or saving while its login owns th
       definition: { ...customAgentDefinition, name: 'Changed name' },
     }),
   ).rejects.toThrow('in use');
-  expect(host.agent.processes.length).toBe(processesBeforeEdit);
+  expect(host.agent.processes).toHaveLength(processesBeforeEdit);
   expect(await host.caller.agents.configured()).toEqual(configured);
 });

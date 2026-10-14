@@ -1,7 +1,11 @@
 import type { FeedChange } from '@repo/contracts';
 import type { SnapshotFrom } from 'xstate';
 import type { GraphEventFromLogic } from 'xstate/graph';
-import { feedMachine } from '../src/feed';
+import {
+  feedMachine,
+  turnEndingEvent,
+  permissionsCancelledEvent,
+} from '../src/feed';
 
 export const acpUpdateEventType = 'feed.acpUpdate';
 
@@ -117,6 +121,17 @@ export const events = [
     update: { sessionUpdate: 'plan_removed', planId: 'unknown-plan' },
   },
   { type: 'feed.completeTurn', turnId: 'turn-1' },
+  {
+    type: turnEndingEvent,
+    turnId: 'turn-1',
+    ending: { kind: 'interruption' },
+  },
+  {
+    type: permissionsCancelledEvent,
+    turnId: 'turn-1',
+    acpSessionId: modelAcpSessionId,
+    toolCallIds: ['model-tool'],
+  },
   { type: 'feed.flush' },
   { type: streamBatchDelayEvent },
   { type: storeDelayEvent },

@@ -1,7 +1,4 @@
-import type {
-  CreateElicitationResponse,
-  SessionNotification,
-} from '@agentclientprotocol/sdk';
+import type { CreateElicitationResponse } from '@agentclientprotocol/sdk';
 import type {
   AcpResources,
   AcpSessionDestination,
@@ -9,11 +6,15 @@ import type {
 } from '../../agents';
 import type { ResolveAgentLaunch } from '../../agents';
 import type { SessionData } from '../session-data';
-import { selectSessionOpening } from './acp-session-opening';
 import {
-  AcpSessionRequests,
-  type AcpRequestEvent,
-} from './acp-session-requests';
+  createLifetimeDestination,
+  reportFencedUpdate,
+  type AcpLifetimeEvent,
+} from './acp-session-destination';
+import { selectSessionOpening } from './acp-session-opening';
+import { AcpSessionRequests } from './acp-session-requests';
+
+export type { AcpLifetimeEvent } from './acp-session-destination';
 
 export type AcpSessionDependencies = {
   resources: AcpResources;
@@ -21,29 +22,12 @@ export type AcpSessionDependencies = {
   projectPath: (id: string) => string;
 };
 
-export type AcpLifetimeEvent =
-  | { type: 'acp.update'; notification: SessionNotification }
-  | { type: 'acp.failed'; error: unknown }
-  | AcpRequestEvent;
-
 const isWithdrawn = (cause: unknown): boolean =>
   cause instanceof Error && cause.name === 'AbortError';
 
 type SendLifetimeEvent = (event: AcpLifetimeEvent) => void;
 
-const createDestination = (
-  requests: AcpSessionRequests,
-  send: SendLifetimeEvent,
-): AcpSessionDestination => ({
-  update: (notification): undefined => {
-    send({ type: 'acp.update', notification });
-  },
-  failed: (error) => send({ type: 'acp.failed', error }),
-  requestPermission: requests.requestPermission(send),
-  createElicitation: requests.createElicitation(send),
-});
-
-// Each opening gets its own destination; a replaced generation's late callbacks are dropped.
+// Each opening owns a destination; fenced updates report rejection without changing content.
 export class AcpSessionLifetime {
   private readonly bound = Promise.withResolvers<SendLifetimeEvent>();
   private readonly controller = new AbortController();
@@ -73,8 +57,11 @@ export class AcpSessionLifetime {
   ): AcpSessionDestination {
     const generation = this.generation;
 
-    return createDestination(this.requests, (event) => {
-      if (this.attached && generation === this.generation) sendBack(event);
+    return createLifetimeDestination(this.requests, (event) => {
+      if (!this.attached) return;
+
+      if (generation === this.generation) return sendBack(event);
+      reportFencedUpdate(event, sendBack);
     });
   }
   public open(session: SessionData): Promise<AcpSessionLease> {
@@ -91,6 +78,28 @@ export class AcpSessionLifetime {
     );
 
     return this.opening;
+  }
+  public replace(session: SessionData): Promise<AcpSessionLease> {
+    const lease = this.lease;
+
+    if (!lease) throw new Error('No owned ACP Session to replace');
+    this.requests.cancelAll();
+    this.generation += 1;
+    this.opening = this.replaceOwned(session, lease);
+
+    return this.opening;
+  }
+  private async replaceOwned(
+    session: SessionData,
+    lease: AcpSessionLease,
+  ): Promise<AcpSessionLease> {
+    this.lease = await lease.replace({
+      opening: selectSessionOpening(session),
+      destination: this.createSessionDestination(await this.bound.promise),
+      signal: this.controller.signal,
+    });
+
+    return this.lease;
   }
   private async openOwned(session: SessionData): Promise<AcpSessionLease> {
     const dependencies = this.requireDependencies();

@@ -33,6 +33,7 @@ export type AcpSessionLease = {
   initialization: InitializeResponse;
   response: NewSessionResponse | LoadSessionResponse | ResumeSessionResponse;
   close: () => Promise<void>;
+  replace: (input: Omit<AcpOpenInput, 'launch'>) => Promise<AcpSessionLease>;
   readonly released: Promise<void>;
 };
 

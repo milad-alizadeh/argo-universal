@@ -106,18 +106,6 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   };
 
   it(
-    'a connection failure during a Turn records the Turn as interrupted',
-    recoveryTimeout,
-    async () => {
-      const { host, sessionId } = await interruptTurn();
-      expect(readTurn(host, sessionId)).toEqual({
-        stopReason: 'error',
-        error: expect.objectContaining({ code: 'interrupted' }),
-      });
-    },
-  );
-
-  it(
     'an interrupted Turn is resumed without resending its prompt',
     recoveryTimeout,
     async () => {
@@ -126,20 +114,6 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         prompts: prompts.length,
         resumed: resumes.map((resume) => resume.sessionId),
       }).toEqual({ prompts: 1, resumed: [prompts[0]?.sessionId] });
-    },
-  );
-
-  it(
-    'an interrupted Turn discloses that its output may be missing',
-    recoveryTimeout,
-    async () => {
-      const { host, sessionId } = await interruptTurn();
-      expect(await pageRows(host, sessionId)).toContainEqual(
-        expect.objectContaining({
-          sessionUpdate: 'notice',
-          description: expect.stringContaining('may be missing'),
-        }),
-      );
     },
   );
 

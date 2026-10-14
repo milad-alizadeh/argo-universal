@@ -95,7 +95,7 @@ export class AcpResourceConnection {
   public async open(
     opening: AcpSessionOpening,
     beforeDispatch: () => void,
-  ): Promise<Omit<AcpSessionLease, 'close' | 'released'>> {
+  ): Promise<Omit<AcpSessionLease, 'close' | 'replace' | 'released'>> {
     const { connection, initialization } = await this.startup;
     await this.status.requireReady(initialization);
     beforeDispatch();

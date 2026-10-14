@@ -16,6 +16,7 @@ import type {
   AssembledContent,
 } from './assembly';
 import { assembleContentChange } from './content-dispatch';
+import { settledUpdateRejection } from './update-admission';
 
 type ContentResult = FeedChangeResult & Omit<AssembledContent, 'change'>;
 
@@ -50,8 +51,19 @@ const applyContentChange = (
 
   if (!assembled) return undefined;
 
-  if ('rejection' in assembled) return assembled;
-  input.findRow(changedRowId(assembled.change));
+  return 'rejection' in assembled
+    ? assembled
+    : applyAssembledChange(input, assembled);
+};
+
+const applyAssembledChange = (
+  input: ContentAssemblyInput,
+  assembled: AssembledContent,
+): ContentResult => {
+  const previous = input.findRow(changedRowId(assembled.change));
+  const rejection = settledUpdateRejection(input, previous);
+
+  if (rejection) return { rejection };
 
   return {
     ...applyFeedChange(input.feed, assembled.change, input.turnId),
@@ -62,15 +74,22 @@ const applyContentChange = (
   };
 };
 
+const contentFailure = (
+  cause: unknown,
+): Extract<FeedChangeResult, { rejection: string }> => ({
+  rejection: `could not apply ACP content: ${cause instanceof Error ? cause.message : String(cause)}`,
+});
+
 const applyAcpContentUpdate = (
   input: AcpContentInput,
 ): ContentResult | undefined => {
   try {
+    if (input.stale)
+      return { rejection: 'ACP update arrived from a replaced Session lease' };
+
     return applyContentChange(createAssemblyInput(input));
-  } catch (error) {
-    return {
-      rejection: `could not apply ACP content: ${error instanceof Error ? error.message : String(error)}`,
-    };
+  } catch (cause) {
+    return contentFailure(cause);
   }
 };
 
@@ -89,6 +108,7 @@ const createAcpContentInput = (
   findWrittenRow: context.findWrittenRow,
   findUnaddressedPlan: context.findUnaddressedPlan,
   unaddressedPlan: context.unaddressedPlan,
+  lastSettledTurnId: context.lastSettledTurnId,
 });
 
 const appendOutputBlobs = (

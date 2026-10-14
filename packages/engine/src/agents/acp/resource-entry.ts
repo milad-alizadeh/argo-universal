@@ -3,12 +3,16 @@ import type { AgentLaunch } from '..';
 import {
   closeProtocolReservation,
   releaseOpening,
-  reserveOpening,
-  watchWithdrawal,
   type AcpReservation,
 } from './reservations';
 import { AcpResourceCleanup } from './resource-cleanup';
 import { AcpResourceConnection } from './resource-connection';
+import {
+  awaitCheckoutRelease,
+  handoverOwnedLease,
+  prepareLeaseReplacement,
+  reserveOwnedOpening,
+} from './resource-replacement';
 import type {
   AcpOpenInput,
   AcpResourceInput,
@@ -65,7 +69,7 @@ export class AcpResourceEntry {
     const reservation = this.reserve(input);
 
     try {
-      await this.awaitCheckoutRelease(reservation, confirmCheckoutRelease);
+      await awaitCheckoutRelease(reservation, confirmCheckoutRelease);
 
       return await this.completeOpening(reservation);
     } catch (error) {
@@ -73,30 +77,16 @@ export class AcpResourceEntry {
       throw error;
     }
   }
-  private async awaitCheckoutRelease(
-    reservation: AcpReservation,
-    confirmCheckoutRelease: ConfirmCheckoutRelease,
-  ): Promise<void> {
-    await confirmCheckoutRelease().catch((cause: unknown) => {
-      reservation.withdrawn = true;
-      throw cause;
-    });
-  }
   private requireAvailable(): void {
     if (this.cleanup.retired || this.reservations.size >= reservationLimit)
       throw new Error('ACP resource is unavailable');
   }
   private reserve(input: AcpOpenInput): AcpReservation {
-    const reservation = reserveOpening(input);
-    this.routing.reserve(reservation);
-    this.reservations.add(reservation);
-    watchWithdrawal(
-      reservation,
-      () => this.withdraw(reservation),
-      (error) => this.cleanup.retire(reservation, error),
-    );
-
-    return reservation;
+    return reserveOwnedOpening(input, {
+      reservations: this.reservations,
+      routing: this.routing,
+      cleanup: this.cleanup,
+    });
   }
   private async completeOpening(
     reservation: AcpReservation,
@@ -113,25 +103,29 @@ export class AcpResourceEntry {
 
     return this.handover(reservation, opened);
   }
-  private async handover(
+  private handover(
     reservation: AcpReservation,
-    opened: Omit<AcpSessionLease, 'close' | 'released'>,
+    opened: Omit<AcpSessionLease, 'close' | 'replace' | 'released'>,
   ): Promise<AcpSessionLease> {
-    reservation.stopWithdrawal();
-
-    if (this.cleanup.retired) reservation.withdrawn = true;
-    const close = (): Promise<void> => this.close(reservation);
-
-    if (reservation.withdrawn) {
-      await close();
-      throw new DOMException('ACP opening was withdrawn', 'AbortError');
-    }
-
-    return { ...opened, close, released: reservation.released.promise };
+    return handoverOwnedLease({
+      opened,
+      reservation,
+      cleanup: this.cleanup,
+      close: () => this.close(reservation),
+      replace: (input) => this.replace(reservation, input),
+    });
   }
-  private async withdraw(reservation: AcpReservation): Promise<void> {
-    reservation.withdrawn = true;
-    await this.cleanup.releaseIfIdle();
+  private replace(
+    previous: AcpReservation,
+    input: Omit<AcpOpenInput, 'launch'>,
+  ): Promise<AcpSessionLease> {
+    return prepareLeaseReplacement(previous, input, {
+      reservations: this.reservations,
+      routing: this.routing,
+      cleanup: this.cleanup,
+      close: (reservation) => this.close(reservation),
+      open: (reservation) => this.completeOpening(reservation),
+    });
   }
   private close(reservation: AcpReservation): Promise<void> {
     reservation.closing ??= this.closeOwned(reservation);

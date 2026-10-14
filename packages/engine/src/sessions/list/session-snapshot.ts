@@ -58,7 +58,8 @@ export function toSessionSnapshot(
   } else if (
     session?.matches({ open: { acp: 'committing' } }) ||
     session?.matches({ open: { acp: 'activeTurn' } }) ||
-    session?.matches({ open: { acp: 'publishing' } })
+    session?.matches({ open: { acp: 'publishing' } }) ||
+    session?.matches({ open: { acp: 'replacing' } })
   ) {
     state = 'running';
   }

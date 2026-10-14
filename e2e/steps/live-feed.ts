@@ -63,13 +63,13 @@ When('the Engine restarts', async ({ app, page }): Promise<void> => {
 });
 
 Then(
-  'the Feed keeps the prompt and catches up to the failed command',
+  'the Feed keeps the prompt and catches up to the stopped command',
   async ({ page }): Promise<void> => {
     const feed = page.getByTestId(feedScroll);
     await expect(feed.getByText('Run the checks', { exact: true })).toHaveCount(
       1,
     );
-    await openFailedCommand(feed);
+    await openStoppedCommand(feed);
     await expect(
       page.getByRole('button', { name: 'Send', exact: true }),
     ).toBeVisible();
@@ -79,13 +79,13 @@ Then(
   },
 );
 
-async function openFailedCommand(feed: Locator): Promise<void> {
+async function openStoppedCommand(feed: Locator): Promise<void> {
   await feed.getByRole('button', { name: groupTitle, exact: true }).click();
   await expect(
     feed.getByRole('button', { name: /greeting.txt/ }),
   ).toBeVisible();
   await feed.getByRole('button', { name: commandTitle, exact: true }).click();
-  await expect(feed.getByText('Failed', { exact: true })).toBeVisible();
+  await expect(feed.getByText('Stopped', { exact: true })).toBeVisible();
   await expect(
     feed.getByText('Greeting check passed', { exact: true }),
   ).toHaveCount(0);

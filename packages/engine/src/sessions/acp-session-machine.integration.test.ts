@@ -36,6 +36,14 @@ const expectAcpState = (
       snapshot.context.failure !== null ||
         snapshot.context.agentCrashes.length > 0,
     ).toBe(true);
+
+  if (snapshot.matches({ open: { acp: 'replacing' } })) {
+    expect(snapshot.context.activeTurnId).toBeNull();
+    expect(snapshot.context.turnEnding.kind).toBe('cancel_timeout');
+    expect(snapshot.context.acpTurnOutcome).toEqual({
+      stopReason: 'cancelled',
+    });
+  }
 };
 
 describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
