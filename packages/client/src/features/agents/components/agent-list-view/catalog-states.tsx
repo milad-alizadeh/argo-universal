@@ -1,6 +1,6 @@
 import type { AgentsCatalogOutput } from '@repo/contracts';
 import type { FieldListSection } from '#lib/product/field-list/field-list';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import type { AgentRowEntry } from '../../state/agent-status';
 import type { CatalogLoad } from '../../state/catalog-sync';
@@ -23,7 +23,11 @@ export const catalogLoadingSection = (
   title: groupTitle(props.platform),
   rows: [
     ...agentRows(props.installed, props.onOpenAgent),
-    <ListItem key="loading" title="Loading the Agent catalog…" loading />,
+    <GroupedListItem
+      key="loading"
+      title="Loading the Agent catalog…"
+      loading
+    />,
   ],
 });
 
@@ -37,7 +41,7 @@ export function catalogEmptySection(props: {
   return {
     title: groupTitle(props.platform),
     footer: empty.footer,
-    rows: [<ListItem key="empty" title={empty.title} />],
+    rows: [<GroupedListItem key="empty" title={empty.title} />],
   };
 }
 

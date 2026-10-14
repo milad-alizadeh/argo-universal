@@ -8,7 +8,7 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { createElement } from 'react';
 import { errorMessage } from '#primitives/fields/field-errors';
-import { useInListItem } from '#primitives/lists/list-item';
+import { useInGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { roundedOutline } from '#primitives/native/native-modifiers';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
@@ -42,13 +42,16 @@ export function AndroidPickerRow<Value extends string>(
 function PickerRowContent<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
-  const inListItem = useInListItem();
-  const row = inListItem || props.appearance === 'row';
+  const inGroupedListItem = useInGroupedListItem();
+  const row = inGroupedListItem || props.appearance === 'row';
 
   return createElement(
     Row,
-    { verticalAlignment: 'center', modifiers: rowModifiers(row, inListItem) },
-    <PickerRowLabels {...props} accessory={row} hug={inListItem} />,
+    {
+      verticalAlignment: 'center',
+      modifiers: rowModifiers(row, inGroupedListItem),
+    },
+    <PickerRowLabels {...props} accessory={row} hug={inGroupedListItem} />,
   );
 }
 
@@ -66,7 +69,7 @@ function PickerRowLabels<Value extends string>(
   );
 }
 
-// A field row spans its form; in a ListItem's trailing slot it hugs its value, as its Host does.
+// A field row spans its form; in a GroupedListItem's trailing slot it hugs its value, as its Host does.
 function rowModifiers(
   accessory: boolean,
   hug: boolean,

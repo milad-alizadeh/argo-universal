@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 export interface FieldListSection {
   title?: string;
   footer?: string;
-  // The section's rows, ListItems with keys of their own.
+  // The section's rows, GroupedListItems with keys of their own.
   rows: readonly ReactElement[];
 }
 

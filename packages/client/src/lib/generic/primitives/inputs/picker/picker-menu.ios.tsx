@@ -1,7 +1,7 @@
 import { Button, HStack, Menu, Picker, Spacer } from '@expo/ui/swift-ui';
 import { buttonStyle, pickerStyle, padding } from '@expo/ui/swift-ui/modifiers';
 import { createElement, Fragment } from 'react';
-import { useInListItem } from '#primitives/lists/list-item';
+import { useInGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import {
   PickerLabel,
@@ -29,7 +29,7 @@ export function NativeMenuPicker<Value extends string>(
 function MenuLabel<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
-  const row = useInListItem() || props.appearance === 'row';
+  const row = useInGroupedListItem() || props.appearance === 'row';
 
   return (
     <HStack modifiers={row ? [] : [padding({ horizontal: 16, vertical: 12 })]}>
@@ -101,8 +101,8 @@ function usePickerRowProps<Value extends string>(
 function PickerRowContent<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
-  const inListItem = useInListItem();
-  const row = inListItem || props.appearance === 'row';
+  const inGroupedListItem = useInGroupedListItem();
+  const row = inGroupedListItem || props.appearance === 'row';
 
   return createElement(
     Fragment,

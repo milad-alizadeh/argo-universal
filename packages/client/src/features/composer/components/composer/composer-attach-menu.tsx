@@ -2,9 +2,9 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { IconButton } from '#primitives/buttons/icon-button';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { AttachLayout } from './composer-toolbar-types';
 import type { ComposerProps } from './composer-types';
@@ -53,11 +53,11 @@ interface AttachMenuProps {
 function ComposerAttachChoices(menu: AttachMenuProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-sidebar">
-      <FieldGroup fit>
-        <FieldSection>
+      <GroupedList fit>
+        <GroupedListSection>
           <ComposerAttachItems {...menu} />
-        </FieldSection>
-      </FieldGroup>
+        </GroupedListSection>
+      </GroupedList>
     </View>
   );
 }
@@ -139,7 +139,7 @@ function ComposerAttachItem({
   close,
 }: AttachItemProps): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       title={item.label}
       icon={item.icon}
       role="button"

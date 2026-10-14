@@ -4,9 +4,9 @@ import {
   type FieldErrors,
   errorMessage,
 } from '#primitives/fields/field-errors';
-import { FieldSection } from '#primitives/fields/field-section';
 import { TextInput } from '#primitives/inputs/text-input';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import type { CustomAgentFormApi } from '../../hooks/use-custom-agent-form';
 import { sectionFooter, touchedInput } from '../form-field';
 
@@ -39,14 +39,14 @@ function useProgramError(form: CustomAgentFormApi): string | undefined {
 // The name and the program; the footer gives the program's hint until a field has an error. Android puts each under its field.
 export function ProgramSection(props: FormPartProps): React.JSX.Element {
   return (
-    <FieldSection
+    <GroupedListSection
       textFields
       title="Program"
       {...sectionFooter(useProgramError(props.form), executableHint)}
     >
       <NameField {...props} />
       <ExecutableField {...props} />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -87,5 +87,5 @@ export function AddEntryRow(props: {
   disabled: boolean;
   onPress: () => void;
 }): React.JSX.Element {
-  return <ListItem icon="add" tone="accent" {...props} />;
+  return <GroupedListItem icon="add" tone="accent" {...props} />;
 }

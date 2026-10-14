@@ -2,9 +2,9 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Text } from '#primitives/display/text';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 export interface PlaceholderDetailViewProps {
@@ -40,11 +40,11 @@ function PlaceholderNote(props: NoteProps): React.JSX.Element {
 
 function RowNote({ description }: NoteProps): React.JSX.Element {
   return (
-    <FieldGroup>
-      <FieldSection>
-        <ListItem title={description} />
-      </FieldSection>
-    </FieldGroup>
+    <GroupedList>
+      <GroupedListSection>
+        <GroupedListItem title={description} />
+      </GroupedListSection>
+    </GroupedList>
   );
 }
 

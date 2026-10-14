@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldGroupContent } from '#primitives/fields/field-group-content';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListContent } from '#primitives/lists/grouped-list-content';
 import {
   type CustomAgentFormApi,
   type SubmitCustomAgent,
@@ -94,14 +94,14 @@ function FormSections(props: SectionsProps): React.JSX.Element {
   const part = { form: props.form, disabled: props.disabled };
 
   return (
-    <FieldGroup>
+    <GroupedList>
       {props.leading}
       <ProgramSection {...part} />
       <CustomAgentArguments {...part} onEdit={props.onArgument} />
       <CustomAgentEnvironment {...part} onEdit={props.onVariable} />
       <CheckFailure failure={props.failure} />
       <FormActions {...props} />
-    </FieldGroup>
+    </GroupedList>
   );
 }
 
@@ -138,9 +138,9 @@ function CheckFailure({
   if (!failure) return null;
 
   return (
-    <FieldGroupContent>
+    <GroupedListContent>
       <FailureBox failure={failure} />
-    </FieldGroupContent>
+    </GroupedListContent>
   );
 }
 

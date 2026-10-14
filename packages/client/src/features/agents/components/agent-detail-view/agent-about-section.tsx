@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type {
   AgentDetail,
@@ -28,12 +28,12 @@ export function AboutSection(
   if (!hasAbout({ agent })) return null;
 
   return (
-    <FieldSection title="About">
+    <GroupedListSection title="About">
       <AboutRow title="Source" value={registrySource(agent)} />
       <VersionRow {...props} />
       <AboutRow title="Distribution" value={agent.distribution} />
       <AgentLinks links={agent.links} />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -43,7 +43,7 @@ function VersionRow(props: AgentDetailViewProps): React.JSX.Element | null {
   if (!props.agent.version) return null;
 
   return (
-    <ListItem
+    <GroupedListItem
       title="Version"
       value={`v${props.agent.version}`}
       accessory={versionAccessory(props, wide)}
@@ -57,7 +57,7 @@ function AboutRow(props: {
 }): React.JSX.Element | null {
   if (!props.value) return null;
 
-  return <ListItem title={props.title} value={props.value} />;
+  return <GroupedListItem title={props.title} value={props.value} />;
 }
 
 const versionAccessory = (

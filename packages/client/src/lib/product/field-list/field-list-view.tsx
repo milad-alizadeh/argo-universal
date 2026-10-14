@@ -3,12 +3,12 @@ import type * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, View, type ViewStyle } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import {
-  fieldGroupGap,
-  fieldGroupPadding,
-} from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
 import type { DockedSearchQuery } from '#primitives/inputs/search-field';
+import {
+  groupedListGap,
+  groupedListPadding,
+} from '#primitives/lists/grouped-list';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { listTestIdProps } from '../../generic/list-test-id';
 import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
 import { CardRow } from './card-row';
@@ -25,7 +25,7 @@ export type { FieldListSection } from './field-list-entries';
 
 export interface FieldListProps {
   sections: readonly FieldListSection[];
-  // A phone's search above the sections; the native FieldGroup draws it, as a wide window searches from its title row.
+  // A phone's search above the sections; the native GroupedList draws it, as a wide window searches from its title row.
   search?: DockedSearchQuery;
   testID?: string;
 }
@@ -36,7 +36,7 @@ const fadeSurface = 'bg-sidebar';
 const rowHeightEstimate = 52;
 
 /*
- * FieldGroup's sections as one virtualised list, so a long list mounts only the rows in view.
+ * GroupedList's sections as one virtualised list, so a long list mounts only the rows in view.
  * Each title, row and footer is an item; rows round the card's ends and draw separators between them.
  */
 export function FieldList(props: FieldListProps): React.JSX.Element {
@@ -110,9 +110,9 @@ const endPaddingKeys = [
   'paddingHorizontal',
 ] as const;
 
-// FieldGroup's gutters, in the numbers Legend List lays its items out with.
+// GroupedList's gutters, in the numbers Legend List lays its items out with.
 function useGroupPadding(): ViewStyle {
-  const padding = useResolveClassNames(fieldGroupPadding);
+  const padding = useResolveClassNames(groupedListPadding);
 
   return {
     paddingLeft: firstLength(padding, startPaddingKeys),
@@ -126,7 +126,7 @@ function useEntryRenderer(): (
   props: LegendListRenderItemProps<FieldListEntry>,
 ) => React.JSX.Element {
   // The web resolves the gap class to rowGap; native resolves it to gap.
-  const { rowGap, gap } = useResolveClassNames(fieldGroupGap);
+  const { rowGap, gap } = useResolveClassNames(groupedListGap);
   const sectionGap = pixels(rowGap ?? gap);
   const [store] = useState(createHoverStore);
 
@@ -140,7 +140,7 @@ function useEntryRenderer(): (
   );
 }
 
-// A title or footer is FieldSection's own, with an empty card where the rows would be.
+// A title or footer is GroupedListSection's own, with an empty card where the rows would be.
 function EntryContent(props: {
   entry: FieldListEntry;
   index: number;
@@ -149,10 +149,12 @@ function EntryContent(props: {
   const { entry } = props;
 
   if (entry.kind === 'title')
-    return <FieldSection title={entry.title}>{null}</FieldSection>;
+    return <GroupedListSection title={entry.title}>{null}</GroupedListSection>;
 
   if (entry.kind === 'footer')
-    return <FieldSection footer={entry.footer}>{null}</FieldSection>;
+    return (
+      <GroupedListSection footer={entry.footer}>{null}</GroupedListSection>
+    );
 
   return <CardRow entry={entry} index={props.index} store={props.store} />;
 }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Icon } from '#primitives/display/icon';
-import { FieldGroup } from '#primitives/fields/field-group';
+import { GroupedList } from '#primitives/lists/grouped-list';
 import type { SubmitCustomAgent } from '../../hooks/use-custom-agent-form';
 import { customAgentDescription } from '../../state/agent-list';
 import type { AgentManagement } from '../../state/agent-management-types';
@@ -104,7 +104,7 @@ function CustomAgentContent(props: SettingsProps): React.JSX.Element {
 
 function LaunchView(props: ContentProps): React.JSX.Element {
   return (
-    <FieldGroup>
+    <GroupedList>
       {props.status}
       <LaunchSections
         definition={props.definition}
@@ -112,7 +112,7 @@ function LaunchView(props: ContentProps): React.JSX.Element {
       />
       <AgentEnablement management={props.management} />
       <CustomRemoval {...props} />
-    </FieldGroup>
+    </GroupedList>
   );
 }
 

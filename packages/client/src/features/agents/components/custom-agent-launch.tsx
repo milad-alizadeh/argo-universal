@@ -1,8 +1,8 @@
 import type { CustomAgentDefinition } from '@repo/contracts';
 import type * as React from 'react';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
-import type { ListItemProps } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { keyedRows } from './keyed-rows';
 
 type DefinitionProps = { definition: CustomAgentDefinition };
@@ -23,21 +23,26 @@ export function LaunchSections(
 
 function EditSection({ onPress }: { onPress: () => void }): React.JSX.Element {
   return (
-    <FieldSection>
-      <ListItem icon="edit" tone="accent" title="Edit" onPress={onPress} />
-    </FieldSection>
+    <GroupedListSection>
+      <GroupedListItem
+        icon="edit"
+        tone="accent"
+        title="Edit"
+        onPress={onPress}
+      />
+    </GroupedListSection>
   );
 }
 
 function ProgramValues({ definition }: DefinitionProps): React.JSX.Element {
   return (
-    <FieldSection title="Program">
-      <ListItem title="Name" value={definition.name} />
-      <ListItem
+    <GroupedListSection title="Program">
+      <GroupedListItem title="Name" value={definition.name} />
+      <GroupedListItem
         title="Executable"
         subtitle={{ text: definition.executable, code: true }}
       />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -45,13 +50,15 @@ function ArgumentValues({ definition }: DefinitionProps): React.JSX.Element {
   const rows = keyedRows(definition.args);
 
   return (
-    <FieldSection title="Arguments">
+    <GroupedListSection title="Arguments">
       {rows.length === 0 ? (
         <None />
       ) : (
-        rows.map(({ key, value }) => <ListItem key={key} code title={value} />)
+        rows.map(({ key, value }) => (
+          <GroupedListItem key={key} code title={value} />
+        ))
       )}
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -59,13 +66,13 @@ function VariableValues({ definition }: DefinitionProps): React.JSX.Element {
   const rows = keyedRows(definition.env);
 
   return (
-    <FieldSection title="Environment variables">
+    <GroupedListSection title="Environment variables">
       {rows.length === 0 ? (
         <None />
       ) : (
         rows.map(({ key, value }) => <VariableRow key={key} variable={value} />)
       )}
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -76,9 +83,9 @@ export const VariableRow = ({
 }: {
   variable: CustomAgentDefinition['env'][number];
 } & Partial<
-  Pick<ListItemProps, 'onPress' | 'disabled'>
+  Pick<GroupedListItemProps, 'onPress' | 'disabled'>
 >): React.JSX.Element => (
-  <ListItem
+  <GroupedListItem
     code
     title={variable.name}
     subtitle={{ text: variable.value, code: true }}
@@ -86,4 +93,4 @@ export const VariableRow = ({
   />
 );
 
-const None = (): React.JSX.Element => <ListItem title="None" />;
+const None = (): React.JSX.Element => <GroupedListItem title="None" />;

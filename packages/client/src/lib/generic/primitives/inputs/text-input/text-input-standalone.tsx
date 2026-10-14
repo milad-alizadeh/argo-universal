@@ -1,8 +1,8 @@
 import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
+import { Field } from '#primitives/fields/field';
 import { useFooterDescription } from '#primitives/fields/field-description';
-import { StandaloneField } from '#primitives/fields/standalone-field';
 import { BareTextInput } from './text-input-bare';
 import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
 
@@ -10,9 +10,9 @@ export function StandaloneTextInput(
   props: StandaloneTextInputProps,
 ): ReactElement {
   return (
-    <StandaloneField {...props}>
+    <Field {...props}>
       <TextField {...props} />
-    </StandaloneField>
+    </Field>
   );
 }
 

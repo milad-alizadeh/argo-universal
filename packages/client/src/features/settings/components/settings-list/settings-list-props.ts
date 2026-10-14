@@ -2,7 +2,7 @@ import type {
   Navigate,
   NavigationDestination,
 } from '#lib/product/navigation/context';
-import type { ListItemProps } from '#primitives/lists/list-item';
+import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
 import type { IconName } from '../../../../lib/generic/symbols/icon-names';
 
 export interface SettingsListProps {
@@ -30,5 +30,5 @@ export interface SettingsRow {
   value?: string;
   needsAttention?: boolean;
   disabled?: boolean;
-  status?: ListItemProps['status'];
+  status?: GroupedListItemProps['status'];
 }

@@ -3,8 +3,8 @@ import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ConfigurationChoice } from './configuration-choice';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -26,16 +26,16 @@ interface ChoiceProps extends ContentsProps {
 export function CheckoutContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-sidebar">
-      <FieldGroup fit>
+      <GroupedList fit>
         <CheckoutChoices {...props} />
-      </FieldGroup>
+      </GroupedList>
     </View>
   );
 }
 
 function CheckoutChoices(props: ContentsProps): React.JSX.Element {
   return (
-    <FieldSection>
+    <GroupedListSection>
       {[false, true].map((newWorktree) => (
         <CheckoutChoice
           key={String(newWorktree)}
@@ -43,7 +43,7 @@ function CheckoutChoices(props: ContentsProps): React.JSX.Element {
           newWorktree={newWorktree}
         />
       ))}
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 

@@ -4,7 +4,7 @@ import {
   errorMessage,
   type FieldErrors,
 } from '#primitives/fields/field-errors';
-import { FieldSection } from '#primitives/fields/field-section';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { VariableRow } from '../custom-agent-launch';
 import { sectionFooter } from '../form-field';
 import { keyedRows } from '../keyed-rows';
@@ -41,14 +41,17 @@ const environmentFooter = ({
 // One row per variable; each opens its editor, and the last row adds one. A list error replaces the hint.
 function EnvironmentSection(props: FieldProps): React.JSX.Element {
   return (
-    <FieldSection title="Environment variables" {...environmentFooter(props)}>
+    <GroupedListSection
+      title="Environment variables"
+      {...environmentFooter(props)}
+    >
       <VariableRows {...props} />
       <AddEntryRow
         title="Add environment variable"
         disabled={props.disabled}
         onPress={() => props.onEdit(newVariable)}
       />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 

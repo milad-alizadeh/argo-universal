@@ -1,8 +1,8 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
+import { Field } from '#primitives/fields/field';
 import type { FieldErrors } from '#primitives/fields/field-errors';
-import { StandaloneField } from '#primitives/fields/standalone-field';
 import { Checkbox } from '#primitives/inputs/checkbox';
 import { toggledChoice } from './elicitation-answers';
 import type { ElicitationFieldProps } from './elicitation-field';
@@ -16,13 +16,13 @@ type ChoicesProps = ElicitationFieldProps & {
 
 export function ElicitationChoices(props: ChoicesProps): ReactElement {
   return (
-    <StandaloneField errors={props.errors} hint={props.hint}>
+    <Field errors={props.errors} hint={props.hint}>
       <Text role="body">
         {props.label}
         {props.required ? ' *' : ''}
       </Text>
       <ChoiceGroup {...props} />
-    </StandaloneField>
+    </Field>
   );
 }
 

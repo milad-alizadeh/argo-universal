@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { homePath } from '../../state/home-path';
 import { NewSessionsSection } from './project-detail-new-sessions';
@@ -82,19 +82,19 @@ type UnloadedProps = { status: 'loading' | 'missing'; name: string };
 
 function UnloadedProject(props: UnloadedProps): React.JSX.Element {
   return (
-    <FieldGroup>
-      <FieldSection>
+    <GroupedList>
+      <GroupedListSection>
         <UnloadedRow {...props} />
-      </FieldSection>
-    </FieldGroup>
+      </GroupedListSection>
+    </GroupedList>
   );
 }
 
 function UnloadedRow({ status, name }: UnloadedProps): React.JSX.Element {
   if (status === 'loading')
-    return <ListItem title="Loading the Project…" loading />;
+    return <GroupedListItem title="Loading the Project…" loading />;
 
-  return <ListItem title={`The Server has no Project named ${name}.`} />;
+  return <GroupedListItem title={`The Server has no Project named ${name}.`} />;
 }
 
 function ProjectSections({
@@ -102,13 +102,16 @@ function ProjectSections({
   otherDevice,
 }: SectionsProps): React.JSX.Element {
   return (
-    <FieldGroup>
-      <FieldSection title="Folder">
-        {otherDevice ? <ListItem title="Device" value={otherDevice} /> : null}
-        <ListItem icon="folder" title={homePath(project.path)} />
-      </FieldSection>
+    <GroupedList>
+      <GroupedListSection title="Folder">
+        {deviceRow(otherDevice)}
+        <GroupedListItem icon="folder" title={homePath(project.path)} />
+      </GroupedListSection>
       <NewSessionsSection project={project} />
       <RemoveProject />
-    </FieldGroup>
+    </GroupedList>
   );
 }
+
+const deviceRow = (device?: string): React.JSX.Element | null =>
+  device ? <GroupedListItem title="Device" value={device} /> : null;

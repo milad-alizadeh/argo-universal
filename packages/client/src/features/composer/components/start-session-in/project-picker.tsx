@@ -4,11 +4,11 @@ import { useState, type JSX } from 'react';
 import { Platform, View } from 'react-native';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
 import { ComboboxSearch } from '#primitives/inputs/combobox-search';
-import { ListItem } from '#primitives/lists/list-item';
-import { ListItemEnd } from '#primitives/lists/list-item';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListItemEnd } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 
 interface ProjectPickerProps {
   projects: ProjectInfo[];
@@ -44,17 +44,17 @@ function matches(project: ProjectInfo, query: string): boolean {
 function ProjectResults(props: ProjectPickerProps): JSX.Element {
   if (Platform.OS === 'web')
     return (
-      <FieldSection>
+      <GroupedListSection>
         <WebProjects {...props} />
-      </FieldSection>
+      </GroupedListSection>
     );
 
   return (
-    <FieldGroup fit>
-      <FieldSection>
+    <GroupedList fit>
+      <GroupedListSection>
         <PhoneProjects {...props} />
-      </FieldSection>
-    </FieldGroup>
+      </GroupedListSection>
+    </GroupedList>
   );
 }
 
@@ -72,24 +72,26 @@ function projectListProps(props: ProjectPickerProps): ProjectListProps {
     data: props.projects,
     keyExtractor: (project) => project.id,
     extraData: props.projectId,
-    ListEmptyComponent: <ListItem title="No Project matches." tone="muted" />,
+    ListEmptyComponent: noMatch,
     renderItem: ({ item, index }) => (
-      <ListItemEnd value={index === props.projects.length - 1}>
+      <GroupedListItemEnd value={index === props.projects.length - 1}>
         <ProjectChoice {...props} project={item} />
-      </ListItemEnd>
+      </GroupedListItemEnd>
     ),
   };
 }
 
+const noMatch = <GroupedListItem title="No Project matches." tone="muted" />;
+
 type ProjectChoiceProps = ProjectPickerProps & { project: ProjectInfo };
 
 function ProjectChoice(props: ProjectChoiceProps): JSX.Element {
-  return <ListItem {...projectChoiceProps(props)} />;
+  return <GroupedListItem {...projectChoiceProps(props)} />;
 }
 
 function projectChoiceProps(
   props: ProjectChoiceProps,
-): React.ComponentProps<typeof ListItem> {
+): React.ComponentProps<typeof GroupedListItem> {
   const { project, projectId, onSelect } = props;
   const selected = project.id === projectId;
 
@@ -110,9 +112,7 @@ function PhoneProjects(props: ProjectPickerProps): JSX.Element {
       {props.projects.map((project) => (
         <ProjectChoice key={project.id} {...props} project={project} />
       ))}
-      {props.projects.length === 0 && (
-        <ListItem title="No Project matches." tone="muted" />
-      )}
+      {props.projects.length === 0 && noMatch}
     </>
   );
 }

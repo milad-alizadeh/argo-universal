@@ -3,9 +3,12 @@ import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { configurationChoices } from '#lib/product/session-configuration';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { FieldSection } from '#primitives/fields/field-section';
 import { Switch } from '#primitives/inputs/switch';
-import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
+import {
+  GroupedListItem,
+  type GroupedListItemProps,
+} from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 
 type Option = SessionConfigOption;
@@ -43,7 +46,7 @@ function BooleanSetting(props: BooleanProps): React.JSX.Element {
 
 function NativeBoolean(props: BooleanProps): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       title={props.option.name}
       disclosure={false}
       control={<BooleanToggle {...props} />}
@@ -53,15 +56,15 @@ function NativeBoolean(props: BooleanProps): React.JSX.Element {
 
 function WebBoolean(props: BooleanProps): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       {...webSwitchRow(props)}
       accessory={<SwitchAccessory {...props} />}
     />
   );
 }
 
-// ListItem reports `checked` as the switch's aria-checked on the web.
-function webSwitchRow(props: BooleanProps): ListItemProps {
+// GroupedListItem reports `checked` as the switch's aria-checked on the web.
+function webSwitchRow(props: BooleanProps): GroupedListItemProps {
   return {
     title: props.option.name,
     role: 'switch',
@@ -90,9 +93,9 @@ export function SettingSection({
 }: SettingProps): React.JSX.Element {
   if (option.type === 'boolean')
     return (
-      <FieldSection>
+      <GroupedListSection>
         <BooleanSetting option={option} onChange={onChange} />
-      </FieldSection>
+      </GroupedListSection>
     );
 
   return <SelectSection option={option} onChange={onChange} />;
@@ -111,11 +114,11 @@ interface SelectChoiceProps extends SelectProps {
 
 function SelectSection(props: SelectProps): React.JSX.Element {
   return (
-    <FieldSection title={props.option.name}>
+    <GroupedListSection title={props.option.name}>
       {configurationChoices(props.option).map((choice) => (
         <SelectSetting key={choice.value} {...props} choice={choice} />
       ))}
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -127,7 +130,7 @@ function SelectSetting({
   const selected = option.currentValue === choice.value;
 
   return (
-    <ListItem
+    <GroupedListItem
       title={choice.name}
       accessibilityLabel={`${option.name}: ${choice.name}`}
       {...choiceInteractionProps(selected)}
@@ -139,7 +142,7 @@ function SelectSetting({
 function choiceInteractionProps(
   selected: boolean,
 ): Pick<
-  React.ComponentProps<typeof ListItem>,
+  React.ComponentProps<typeof GroupedListItem>,
   'role' | 'disclosure' | 'selected'
 > {
   return { role: 'button', disclosure: false, selected };
@@ -148,7 +151,7 @@ function choiceInteractionProps(
 function choiceActionProps(
   { option, choice, onChange }: SelectChoiceProps,
   selected: boolean,
-): Pick<React.ComponentProps<typeof ListItem>, 'onPress' | 'accessory'> {
+): Pick<React.ComponentProps<typeof GroupedListItem>, 'onPress' | 'accessory'> {
   return {
     onPress: () => onChange(option.configId, choice.value),
     accessory: selected ? <SelectedCheck /> : undefined,

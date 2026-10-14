@@ -4,9 +4,9 @@ import { View } from 'react-native';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
 import { IconButton } from '#primitives/buttons/icon-button';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
@@ -80,11 +80,11 @@ function ProjectsBody(props: SearchedProps): React.JSX.Element {
 
   if (projects.status !== 'loaded')
     return (
-      <FieldGroup search={listSearch(props)}>
-        <FieldSection>
-          <ListItem title="Loading Projects…" loading />
-        </FieldSection>
-      </FieldGroup>
+      <GroupedList search={listSearch(props)}>
+        <GroupedListSection>
+          <GroupedListItem title="Loading Projects…" loading />
+        </GroupedListSection>
+      </GroupedList>
     );
 
   return <LoadedProjects {...props} projects={projects.projects} />;

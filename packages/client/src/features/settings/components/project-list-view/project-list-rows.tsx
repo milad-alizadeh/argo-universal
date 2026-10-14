@@ -1,10 +1,10 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
-import type { ListItemProps } from '#primitives/lists/list-item';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { LoadedProps } from './project-list-props';
 import { listSearch } from './project-list-search';
@@ -25,9 +25,9 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
 
   return (
     <View className="flex-1 pt-2 wide:pt-0">
-      <FieldGroup search={listSearch(props)}>
+      <GroupedList search={listSearch(props)}>
         <ProjectRows {...props} found={found} searching={query !== ''} />
-      </FieldGroup>
+      </GroupedList>
     </View>
   );
 }
@@ -44,11 +44,11 @@ function ProjectRows(props: FoundProps): React.JSX.Element {
 
 function NoProjects({ searching }: { searching: boolean }): React.JSX.Element {
   return (
-    <FieldSection>
-      <ListItem
+    <GroupedListSection>
+      <GroupedListItem
         title={searching ? 'No Project matches.' : 'No Projects yet.'}
       />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -57,22 +57,22 @@ function FoundProjects({
   onOpenProject,
 }: FoundProps): React.JSX.Element {
   return (
-    <FieldSection title={countTitle(found.length)}>
+    <GroupedListSection title={countTitle(found.length)}>
       {found.map((project) => (
         <ProjectRow key={project.id} project={project} onOpen={onOpenProject} />
       ))}
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
 const folderNotFound = 'Folder not found';
 
-const missingFolder: ListItemProps['status'] = {
+const missingFolder: GroupedListItemProps['status'] = {
   tone: 'warning',
   label: folderNotFound,
 };
 
-type ProjectDetail = Pick<ListItemProps, 'value' | 'status'>;
+type ProjectDetail = Pick<GroupedListItemProps, 'value' | 'status'>;
 
 const missingFolderDetail = (wide: boolean): ProjectDetail => ({
   value: wide ? folderNotFound : undefined,
@@ -92,7 +92,7 @@ function ProjectRow(props: {
   onOpen: (name: string) => void;
 }): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       icon="folder"
       title={props.project.name}
       {...projectDetail(props.project, useWide())}

@@ -6,8 +6,8 @@ import {
   type FieldErrors,
   errorMessage,
 } from '#primitives/fields/field-errors';
-import type { FieldSectionProps } from '#primitives/fields/field-section';
 import { TextInput } from '#primitives/inputs/text-input';
+import type { GroupedListSectionProps } from '#primitives/lists/grouped-list-section';
 
 export type FormInputProps = {
   label: string;
@@ -25,7 +25,7 @@ export type FormInputProps = {
 export const sectionFooter = (
   error: string | undefined,
   hint?: string,
-): Pick<FieldSectionProps, 'footer' | 'footerTone'> =>
+): Pick<GroupedListSectionProps, 'footer' | 'footerTone'> =>
   error === undefined
     ? { footer: hint }
     : { footer: error, footerTone: 'destructive' };

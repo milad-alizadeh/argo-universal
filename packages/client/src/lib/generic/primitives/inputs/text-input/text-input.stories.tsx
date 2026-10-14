@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldGroupContent } from '#primitives/fields/field-group-content';
-import { FieldSection } from '#primitives/fields/field-section';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListContent } from '#primitives/lists/grouped-list-content';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { TextInput } from './text-input';
 import type {
@@ -34,25 +34,25 @@ const title = 'Drafts vanish after a reconnect';
 
 function VariationsExample(): React.JSX.Element {
   return (
-    <FieldGroup>
+    <GroupedList>
       <RowSection />
       <InvalidSection />
-      <FieldSection title="Row disabled">
+      <GroupedListSection title="Row disabled">
         <TypedRow label="Name" initial="Example ACP" disabled />
-      </FieldSection>
-      <FieldGroupContent>
+      </GroupedListSection>
+      <GroupedListContent>
         <OwnVariations />
-      </FieldGroupContent>
-    </FieldGroup>
+      </GroupedListContent>
+    </GroupedList>
   );
 }
 
 function RowSection(): React.JSX.Element {
   return (
-    <FieldSection textFields title="Row" footer={pathHint}>
+    <GroupedListSection textFields title="Row" footer={pathHint}>
       <TypedRow label="Name" initial="Example ACP" />
       <TypedRow mono label="Executable" initial="example-acp" hint={pathHint} />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -65,14 +65,14 @@ const invalidRow = {
 
 function InvalidSection(): React.JSX.Element {
   return (
-    <FieldSection
+    <GroupedListSection
       textFields
       title="Row invalid"
       footer={spaceError}
       footerTone="destructive"
     >
       <TypedRow {...invalidRow} />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 

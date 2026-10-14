@@ -2,8 +2,8 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '#primitives/display/text';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ConfigurationDrill } from './configuration-drill';
@@ -65,7 +65,7 @@ function ConfigurationContents(props: ContentsProps): React.JSX.Element {
 
 function ConfigurationFields(props: ContentsProps): React.JSX.Element {
   return (
-    <FieldGroup fit={Platform.OS === 'web' || props.wide}>
+    <GroupedList fit={Platform.OS === 'web' || props.wide}>
       {props.wide && (
         <Text role="heading" aria-level={2} className="px-4 pt-1">
           Configure
@@ -73,7 +73,7 @@ function ConfigurationFields(props: ContentsProps): React.JSX.Element {
       )}
       <ConfigurationDrills {...props} />
       <ConfigurationTuning configuration={props.configuration} />
-    </FieldGroup>
+    </GroupedList>
   );
 }
 
@@ -99,9 +99,9 @@ function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
 
   return (
     <PopoverHoverGroup>
-      <FieldSection footer={notice}>
+      <GroupedListSection footer={notice}>
         <ConfigurationDrillRows {...props} />
-      </FieldSection>
+      </GroupedListSection>
     </PopoverHoverGroup>
   );
 }
@@ -126,9 +126,9 @@ function ConfigurationTuning({
   if (!hasTuning(configuration)) return null;
 
   return (
-    <FieldSection footer={configurationNotice(configuration)}>
+    <GroupedListSection footer={configurationNotice(configuration)}>
       <SwitchOptions configuration={configuration} />
       <EffortControl configuration={configuration} />
-    </FieldSection>
+    </GroupedListSection>
   );
 }

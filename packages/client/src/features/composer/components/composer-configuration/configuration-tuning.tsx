@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { Slider } from '#primitives/inputs/slider';
 import { Switch } from '#primitives/inputs/switch';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
 
@@ -25,7 +25,7 @@ export function EffortControl(props: TuningProps): React.JSX.Element | null {
   if (!effort.option || !effort.selected) return null;
 
   return (
-    <ListItem
+    <GroupedListItem
       title="Effort"
       value={effort.selected.name}
       detail={<EffortSlider {...props} effort={effort} />}
@@ -82,7 +82,7 @@ function ConfigurationSwitch(props: SwitchProps): React.JSX.Element {
 
 function NativeConfigurationSwitch(props: SwitchProps): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       title={props.option.name}
       control={<NativeSwitchControl {...props} />}
     />
@@ -106,7 +106,7 @@ function NativeSwitchControl({
 
 function WebConfigurationSwitch(props: SwitchProps): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       {...webSwitchRowProps(props)}
       accessory={<DecorativeSwitch option={props.option} />}
     />
@@ -116,7 +116,7 @@ function WebConfigurationSwitch(props: SwitchProps): React.JSX.Element {
 function webSwitchRowProps({
   configuration,
   option,
-}: SwitchProps): React.ComponentProps<typeof ListItem> {
+}: SwitchProps): React.ComponentProps<typeof GroupedListItem> {
   return {
     title: option.name,
     role: 'switch',

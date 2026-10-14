@@ -9,8 +9,8 @@ const meta = (title: string): string =>
 describe('a story title', (): void => {
   it.each([
     [
-      `${src}/lib/generic/primitives/lists/list-item/list-item.stories.tsx`,
-      'Design System/Primitives/ListItem',
+      `${src}/lib/generic/primitives/lists/grouped-list-item/grouped-list-item.stories.tsx`,
+      'Design System/Primitives/GroupedListItem',
     ],
     [`${src}/lib/generic/symbols/icon.stories.tsx`, 'Design System/Icon'],
     [`${src}/lib/product/screen/screen.stories.tsx`, 'Shared/Screen'],
@@ -48,8 +48,8 @@ describe('a story title', (): void => {
 
   it.each([
     [
-      `${src}/lib/generic/primitives/fields/field-group-content/field-group-content.stories.tsx`,
-      'Primitives/FieldGroupContent',
+      `${src}/lib/generic/primitives/lists/grouped-list-content/grouped-list-content.stories.tsx`,
+      'Primitives/GroupedListContent',
       /'Design System\/Primitives\/'/,
     ],
     [

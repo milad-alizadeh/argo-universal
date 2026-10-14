@@ -1,7 +1,7 @@
 import type { AgentAvailability, AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentIcon } from './agent-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -49,7 +49,7 @@ function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
   const wide = useWide();
 
   return (
-    <ListItem
+    <GroupedListItem
       {...agentSelectionProps(props)}
       leading={
         <AgentIcon agent={props.agent} role={wide ? 'control' : 'row'} />
@@ -60,7 +60,7 @@ function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
 
 function agentSelectionProps(
   props: AgentChoiceProps,
-): React.ComponentProps<typeof ListItem> {
+): React.ComponentProps<typeof GroupedListItem> {
   const { agent, configuration } = props;
   const selected = agent.agent === configuration.agent;
 
@@ -76,7 +76,7 @@ function agentSelectionProps(
 
 function agentRowContent(
   agent: AgentInfo,
-): React.ComponentProps<typeof ListItem> {
+): React.ComponentProps<typeof GroupedListItem> {
   return {
     title: agent.label,
     accessibilityLabel: `Select ${agent.label}`,
@@ -95,7 +95,7 @@ function AgentAvailabilityAction(
   if (!action) return null;
 
   return (
-    <ListItem
+    <GroupedListItem
       {...agentActionContent(props.agent)}
       role="button"
       tone="accent"
@@ -106,7 +106,7 @@ function AgentAvailabilityAction(
 
 function agentActionContent(
   agent: AgentInfo,
-): React.ComponentProps<typeof ListItem> {
+): React.ComponentProps<typeof GroupedListItem> {
   if (agent.availability === 'available') return { title: agent.label };
   const unavailable = agentAvailability[agent.availability];
 

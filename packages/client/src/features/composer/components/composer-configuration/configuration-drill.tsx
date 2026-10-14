@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '#primitives/display/text';
-import { ListItem } from '#primitives/lists/list-item';
-import { ListItemEnd } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListItemEnd } from '#primitives/lists/grouped-list-item';
 import {
   Popover,
   PopoverContent,
@@ -42,7 +42,7 @@ function configurationDrillRow(
   props: DrillProps & { wide: boolean },
 ): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       {...drillRowContent(props)}
       role="button"
       onPress={() => props.onOpenPage(props.page)}
@@ -52,7 +52,7 @@ function configurationDrillRow(
 
 function drillRowContent(
   props: DrillProps & { wide: boolean },
-): React.ComponentProps<typeof ListItem> {
+): React.ComponentProps<typeof GroupedListItem> {
   if (props.page === 'agent') return agentDrillContent(props);
 
   return {
@@ -63,7 +63,7 @@ function drillRowContent(
 
 function agentDrillContent(
   props: DrillProps & { wide: boolean },
-): React.ComponentProps<typeof ListItem> {
+): React.ComponentProps<typeof GroupedListItem> {
   const agent = props.configuration.agents.find(
     (entry) => entry.agent === props.configuration.agent,
   );
@@ -83,12 +83,12 @@ function ConfigurationDrillPopover({
   configuration,
 }: PickerProps & { row: React.ReactElement }): React.JSX.Element {
   return (
-    <ListItemEnd value={page === 'model'}>
+    <GroupedListItemEnd value={page === 'model'}>
       <Popover openOnHover>
         <PopoverTrigger asChild>{row}</PopoverTrigger>
         <ConfigurationDrillContent configuration={configuration} page={page} />
       </Popover>
-    </ListItemEnd>
+    </GroupedListItemEnd>
   );
 }
 

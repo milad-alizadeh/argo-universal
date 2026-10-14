@@ -4,7 +4,7 @@ import type * as React from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { configurationChoices } from '#lib/product/session-configuration';
-import { FieldGroup } from '#primitives/fields/field-group';
+import { GroupedList } from '#primitives/lists/grouped-list';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 
 type Option = SessionConfigOption;
@@ -35,7 +35,7 @@ export function OptionsContents(props: ContentsProps): React.JSX.Element {
 function NativeContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-sidebar">
-      <FieldGroup>{optionSections(props)}</FieldGroup>
+      <GroupedList>{optionSections(props)}</GroupedList>
     </View>
   );
 }

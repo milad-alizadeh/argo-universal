@@ -1,5 +1,5 @@
 export {
   FieldLayout,
-  useNavigationFields,
-  useSidebarFields,
+  useSidebarList,
+  useWideSidebarList,
 } from './field-layout';

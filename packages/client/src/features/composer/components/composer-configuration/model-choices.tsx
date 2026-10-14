@@ -4,9 +4,9 @@ import { Platform } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import { configurationChoices } from '#lib/product/session-configuration';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItemEnd } from '#primitives/lists/list-item';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListItemEnd } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ConfigurationChoice } from './configuration-choice';
 import type { ConfigurationChoicesProps as ModelChoicesProps } from './configuration-types';
@@ -43,24 +43,24 @@ function GroupedModelChoices(props: ModelChoicesProps): React.JSX.Element {
   const choices = configurationChoices(selection(props.configuration, 'model'));
 
   return (
-    <FieldGroup
+    <GroupedList
       fit={Platform.OS === 'web'}
       onContentHeightChange={props.onContentHeightChange}
     >
-      <FieldSection>
+      <GroupedListSection>
         {choices.map((choice) => (
           <ModelChoice key={choice.value} choice={choice} {...props} />
         ))}
-      </FieldSection>
-    </FieldGroup>
+      </GroupedListSection>
+    </GroupedList>
   );
 }
 
 function ModelList(props: ModelChoicesProps): React.JSX.Element {
   return (
-    <FieldSection>
+    <GroupedListSection>
       <ScrollFadeList {...modelListProps(props)} />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -103,9 +103,9 @@ function ModelListRow(
   props: ModelChoiceProps & { last: boolean },
 ): React.JSX.Element {
   return (
-    <ListItemEnd value={props.last}>
+    <GroupedListItemEnd value={props.last}>
       <ModelChoice {...props} />
-    </ListItemEnd>
+    </GroupedListItemEnd>
   );
 }
 

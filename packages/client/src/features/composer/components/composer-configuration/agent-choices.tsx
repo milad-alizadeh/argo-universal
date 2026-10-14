@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItemEnd } from '#primitives/lists/list-item';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListItemEnd } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentChoice } from './agent-choice';
 import type { ConfigurationChoicesProps as AgentChoicesProps } from './configuration-types';
@@ -24,13 +24,13 @@ export function AgentChoices(props: AgentChoicesProps): React.JSX.Element {
 
 function NativeAgentChoices(props: AgentChoicesProps): React.JSX.Element {
   return (
-    <FieldGroup onContentHeightChange={props.onContentHeightChange}>
-      <FieldSection>
+    <GroupedList onContentHeightChange={props.onContentHeightChange}>
+      <GroupedListSection>
         {props.configuration.agents.map((agent) => (
           <AgentChoice key={agent.agent} agent={agent} {...props} />
         ))}
-      </FieldSection>
-    </FieldGroup>
+      </GroupedListSection>
+    </GroupedList>
   );
 }
 
@@ -39,9 +39,9 @@ function AgentList(props: AgentChoicesProps): React.JSX.Element {
 
   return (
     <View className="px-4 wide:px-0">
-      <FieldSection>
+      <GroupedListSection>
         <ScrollFadeList {...listProps} />
-      </FieldSection>
+      </GroupedListSection>
     </View>
   );
 }
@@ -103,10 +103,10 @@ function AgentListRow({
   ...props
 }: AgentChoicesProps & { agent: AgentInfo; last: boolean }): React.JSX.Element {
   return (
-    <ListItemEnd value={last}>
+    <GroupedListItemEnd value={last}>
       <View>
         <AgentChoice agent={agent} {...props} />
       </View>
-    </ListItemEnd>
+    </GroupedListItemEnd>
   );
 }

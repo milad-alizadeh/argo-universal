@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import type { ReactElement } from 'react';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../lib/generic/use-wide/use-wide';
 
 export interface AgentIdentityProps {
@@ -18,15 +18,15 @@ export function AgentIdentity(
   if (!useWide()) return null;
 
   return (
-    <FieldSection>
+    <GroupedListSection>
       <IdentityRow {...props} />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
 function IdentityRow(props: AgentIdentityProps): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       size="large"
       tone="muted"
       title={props.description}
