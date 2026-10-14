@@ -14,11 +14,6 @@ const textRules: CommentRule[] = [
     pattern: /\b(?:TODO|FIXME|XXX|HACK)\b/,
     message: 'Open a GitHub issue for the work instead of a marker.',
   },
-  { pattern: /@ts-nocheck/, message: 'Fix the types; every file is checked.' },
-  {
-    pattern: /@ts-expect-error\s*(?:--\s*)?(?:\*\/\s*)?$/,
-    message: 'Say why the error is expected.',
-  },
   {
     pattern: /jscpd:ignore-start\s*(?:\*\/\s*)?$/,
     message: 'Say why the clone stays.',

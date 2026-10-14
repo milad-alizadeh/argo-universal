@@ -3,6 +3,7 @@ import {
   readServerAddress,
   resolveRuntimeDirectory,
 } from '@repo/engine/server-runtime';
+import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
 
 // `pnpm dev` starts the Server, Expo, and desktop together; desktop waits for the other two.
@@ -21,7 +22,7 @@ const SystemInfoResponse = z.object({
   result: z.object({ data: z.object({ version: z.string() }) }),
 });
 
-let unrecognisedValues = 0;
+const rejections = createRejectionCounter('wait-for-dev-servers');
 
 const isRecognised = <Schema extends z.ZodType>(
   source: string,
@@ -31,11 +32,7 @@ const isRecognised = <Schema extends z.ZodType>(
   const result = schema.safeParse(value);
 
   if (result.success) return true;
-  unrecognisedValues += 1;
-  console.error(
-    `wait-for-dev-servers: unrecognised ${source} #${unrecognisedValues}`,
-    result.error.issues,
-  );
+  rejections.report(`unrecognised ${source}`, result.error.issues);
 
   return false;
 };

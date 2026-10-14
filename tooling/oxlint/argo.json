@@ -872,9 +872,10 @@
                 "group": [
                   "@repo/**",
                   "!@repo/contracts",
-                  "!@repo/contracts/**"
+                  "!@repo/contracts/**",
+                  "!@repo/machine-log"
                 ],
-                "message": "git imports only contracts from the workspace."
+                "message": "git imports only contracts and machine-log from the workspace."
               }
             ]
           }
@@ -1707,10 +1708,11 @@
                   "!@repo/contracts",
                   "!@repo/contracts/**",
                   "!@repo/engine/server-runtime",
+                  "!@repo/machine-log",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
                 ],
-                "message": "desktop imports only contracts and the Node-only Engine server-runtime subpath from the workspace."
+                "message": "desktop imports only contracts, machine-log and the Node-only Engine server-runtime subpath from the workspace."
               }
             ]
           }

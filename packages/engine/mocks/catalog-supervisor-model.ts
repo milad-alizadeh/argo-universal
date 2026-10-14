@@ -119,6 +119,7 @@ export function createCatalogSupervisorModel(
     input: {
       database,
       now: Date.now,
+      createId: (): string => 'catalog-model-id',
       writer: createActor(writerMachine, {
         input: { database, now: Date.now },
       }),
