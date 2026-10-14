@@ -4,6 +4,7 @@ import { CustomAgentDefinition } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
+import { jsonCodec } from '../../../lib/json-codec';
 import { readConfiguredAgent } from '../../configuration/configuration-sql';
 import { RegistryAgent } from '../../registry/registry-reader';
 import { checkInstallationFile } from '../materialization/files';
@@ -24,6 +25,8 @@ const SavedSelection = z.strictObject({
 
 export type InstallSelection = z.infer<typeof SavedSelection>;
 
+const StoredSelection = jsonCodec(SavedSelection);
+
 export const agentInstallDirectory = (home: string, agentId: string): string =>
   join(home, 'agents', createHash('sha256').update(agentId).digest('hex'));
 
@@ -35,7 +38,7 @@ export const selectedDirectory = (
 
 const parseSelection = (release: string): InstallSelection => {
   try {
-    return SavedSelection.parse(JSON.parse(release));
+    return StoredSelection.parse(release);
   } catch {
     rejections.report('Stored Agent installation is malformed');
     throw new Error('Stored Agent installation is malformed');

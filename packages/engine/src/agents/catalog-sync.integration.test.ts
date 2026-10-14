@@ -69,7 +69,7 @@ it('preserves saved local identity and custom rows across changed, removed and r
   expect(readAddedAgentRows(database)[1]).toEqual(custom);
 });
 
-it('gives new upstream entries distinct independent local identities', async (): Promise<void> => {
+it('gives new upstream entries distinct local identities from the Engine identity source', async (): Promise<void> => {
   const agent = publishedRegistry.agents[0];
 
   if (!agent) throw new Error('Registry mock needs an Agent');
@@ -79,8 +79,11 @@ it('gives new upstream entries distinct independent local identities', async ():
     agents: [agent, { ...agent, id: `${agent.id}-2` }],
   };
 
+  let identity = 0;
+
   const { caller } = await startEngineTestHost({
     fetchAgents: async (): Promise<string> => JSON.stringify(registry),
+    createId: (): string => `local-agent-${++identity}`,
   });
 
   await caller.agents.syncCatalog();
@@ -91,8 +94,8 @@ it('gives new upstream entries distinct independent local identities', async ():
   expect(catalog.agents).toHaveLength(2);
   const [first, second] = catalog.agents;
   expect(first?.entry.id).toBe(agent.id);
-  expect(first?.id).not.toBe(first?.entry.id);
-  expect(second?.id).not.toBe(second?.entry.id);
+  expect(first?.id).toMatch(/^local-agent-\d+$/);
+  expect(second?.id).toMatch(/^local-agent-\d+$/);
   expect(first?.id).not.toBe(second?.id);
 });
 

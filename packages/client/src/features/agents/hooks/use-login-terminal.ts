@@ -1,16 +1,17 @@
-import type { AgentLoginTerminalInput } from '@repo/contracts';
+import type {
+  AgentLoginOperation,
+  AgentLoginTerminalInput,
+} from '@repo/contracts';
 import { useTRPCClient } from '#features/connection';
 import type { LoginTerminalProps } from '../components/agent-login-terminal/terminal-props';
-import { loginIdentity, type OwnedLogin } from './login-operation';
 
 export function useLoginTerminal(
-  operation: OwnedLogin | undefined,
+  operation: AgentLoginOperation | undefined,
   onFailure: (error: { message: string }) => void,
 ): Omit<LoginTerminalProps, 'enabled'> {
   const client = useTRPCClient();
 
-  const identity = (): ReturnType<typeof loginIdentity> =>
-    requireIdentity(operation);
+  const identity = (): AgentLoginOperation => requireOperation(operation);
 
   return {
     onRead: (cursor) =>
@@ -21,10 +22,10 @@ export function useLoginTerminal(
   };
 }
 
-const requireIdentity = (
-  operation: OwnedLogin | undefined,
-): ReturnType<typeof loginIdentity> => {
+const requireOperation = (
+  operation: AgentLoginOperation | undefined,
+): AgentLoginOperation => {
   if (!operation) throw new Error('Sign-in has not started');
 
-  return loginIdentity(operation);
+  return operation;
 };

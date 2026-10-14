@@ -192,17 +192,6 @@
   }
 }
 
-@media (hover: hover) {
-  .code-block-copy {
-    opacity: 0;
-  }
-  .code-block:hover .code-block-copy,
-  .code-block-copy:focus-visible,
-  .code-block-copy.is-copied {
-    opacity: 1;
-  }
-}
-
 /* ScrollFadeFrame: a scroll view's content fades to nothing at each edge with
    content past it, over whatever lies behind. The scroll view's own scroll
    position drives each depth, so scrolling runs no JavaScript. The frame sets

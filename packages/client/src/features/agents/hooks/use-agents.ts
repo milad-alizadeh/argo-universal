@@ -4,7 +4,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { TRPCClientErrorLike } from '@trpc/client';
 import { useTRPC } from '#features/connection';
-import { useAgentChanges } from './use-configured-agents';
+import { useCatalogChanges } from './use-catalog-changes';
 
 type AgentsQuery = UseQueryResult<AgentInfo[], TRPCClientErrorLike<AppRouter>>;
 
@@ -29,8 +29,9 @@ function useRetryProbe(): RetryProbe {
 
 // `retrying` while the Server looks for its Agents again.
 export function useAgents(): AgentsQuery & RetryProbe {
-  useAgentChanges();
-  const agents = useQuery(useTRPC().agents.list.queryOptions());
+  const trpc = useTRPC();
+  useCatalogChanges({ filter: trpc.agents.pathFilter() });
+  const agents = useQuery(trpc.agents.list.queryOptions());
 
   return { ...agents, ...useRetryProbe() };
 }

@@ -1,11 +1,14 @@
 import { readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createRejectionCounter } from '@repo/machine-log';
+import { jsonCodec } from '../../../lib/json-codec';
 import { cleanInstallProcess, InstallCleanupError } from './process-cleanup';
 import { installerGroupMembers } from './process-group';
 import { InstallerGroupRecord, installerRecordPath } from './process-record';
 
 const rejections = createRejectionCounter('Installer ownership records');
+
+const StoredRecord = jsonCodec(InstallerGroupRecord);
 
 const missingFile = (cause: unknown): boolean =>
   cause instanceof Error && 'code' in cause && cause.code === 'ENOENT';
@@ -14,7 +17,7 @@ const readRecord = async (
   path: string,
 ): Promise<InstallerGroupRecord | undefined> => {
   try {
-    return InstallerGroupRecord.parse(JSON.parse(await readFile(path, 'utf8')));
+    return StoredRecord.parse(await readFile(path, 'utf8'));
   } catch (error) {
     if (missingFile(error)) return undefined;
     rejections.report('Installer ownership record cannot be read');

@@ -7,13 +7,21 @@ import schema from '@repo/contracts/auth-status-schema' with { type: 'json' };
 import { createRejectionCounter } from '@repo/machine-log';
 import { Ajv } from 'ajv';
 import type { LoginAgentOutcome } from '..';
+import { compileSchema } from './schema-reader';
 import { reportsAuthStatus, subscriptionOutcome } from './subscription-status';
 
-const accepts = new Ajv({
-  strict: false,
-}).compile<AuthStatusUpdateNotification>(schema);
+const compiled = compileSchema<AuthStatusUpdateNotification>(
+  new Ajv({ strict: false }),
+  schema,
+  {
+    rejected: 'Rejected authentication status',
+    invalid: (): string => 'Invalid ACP authentication status',
+  },
+);
 
-const rejections = createRejectionCounter('ACP authentication status');
+const reader = compiled.reader(
+  createRejectionCounter('ACP authentication status'),
+);
 
 const accountReportTimeoutMs = 5000;
 
@@ -23,11 +31,10 @@ export const createAuthStatusReader = (
   reject: () => void = () => {},
 ): ParamsParser<AuthStatusUpdateNotification> => ({
   parse: (value): AuthStatusUpdateNotification => {
-    if (accepts(value)) return value;
+    if (compiled.accepts(value)) return value;
     reject();
-    const error = new TypeError('Invalid ACP authentication status');
-    rejections.report('Rejected authentication status', error);
-    throw error;
+
+    return reader.parse(value);
   },
 });
 

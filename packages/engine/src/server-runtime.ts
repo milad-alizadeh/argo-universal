@@ -8,8 +8,11 @@ import {
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { ServerAddress } from '@repo/contracts';
+import { jsonCodec } from './lib/json-codec';
 
 const serverAddressFile = 'server.json';
+
+const StoredServerAddress = jsonCodec(ServerAddress);
 
 let unrecognisedAddresses = 0;
 
@@ -46,17 +49,7 @@ export function readServerAddress(home: string): ServerAddress | null {
 }
 
 function parseServerAddress(text: string): ServerAddress | null {
-  let json: unknown;
-
-  try {
-    json = JSON.parse(text);
-  } catch (error) {
-    reportUnrecognised(text, error);
-
-    return null;
-  }
-
-  const address = ServerAddress.safeParse(json);
+  const address = StoredServerAddress.safeParse(text);
 
   if (address.success) return address.data;
   reportUnrecognised(text, address.error);

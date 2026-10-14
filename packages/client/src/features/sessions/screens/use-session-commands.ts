@@ -1,21 +1,13 @@
-import type { AppRouter } from '@repo/engine/router';
 import { useMutation } from '@tanstack/react-query';
-import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import { type ComposerDraft, useAttachmentDraft } from '#features/composer';
-import type { ClientError } from '#features/connection';
-import { useTRPC } from '#features/connection';
+import { type ServerMutation, type TRPC, useTRPC } from '#features/connection';
 import {
   type SessionConfigChange,
   useSessionConfigChange,
 } from '../hooks/use-session-config-change';
 
-type SessionMutation<Name extends 'prompt' | 'cancel'> = ReturnType<
-  typeof useMutation<
-    inferRouterOutputs<AppRouter>['session'][Name],
-    ClientError,
-    inferRouterInputs<AppRouter>['session'][Name],
-    undefined
-  >
+type SessionMutation<Name extends 'prompt' | 'cancel'> = ServerMutation<
+  TRPC['session'][Name]
 >;
 
 type AttachmentDraft = ReturnType<typeof useAttachmentDraft>;

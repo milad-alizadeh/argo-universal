@@ -5,7 +5,6 @@ import {
 } from '@expo/ui/jetpack-compose';
 import {
   alpha,
-  clearSemantics,
   defaultMinSize,
   fillMaxWidth,
   padding,
@@ -55,9 +54,7 @@ function contentModifiers(props: ListItemProps): RowModifiers {
 
 function RowText(props: ListItemProps): React.JSX.Element {
   return (
-    <Column
-      modifiers={[weight(1), ...(props.control ? [clearSemantics()] : [])]}
-    >
+    <Column modifiers={[weight(1)]}>
       <RowTitle {...props} />
       <RowSubtitle subtitle={props.subtitle} />
     </Column>
@@ -83,8 +80,5 @@ function RowLeading(
 }
 
 function headerModifiers(props: ListItemProps): RowModifiers {
-  return [
-    alpha(props.disabled ? disabledOpacity : 1),
-    ...(props.detail ? [clearSemantics()] : []),
-  ];
+  return [alpha(props.disabled ? disabledOpacity : 1)];
 }
