@@ -56,7 +56,7 @@ export const scenarios = {
     ...scenario([reply]),
     responses: { 'session/new': [{ error: 'The Agent refused the Session.' }] },
   },
-  // Never answers initialize, so its readiness check stays Checking… until it times out.
+  // Never answers initialize, so its readiness check stays Checking…; the E2E Server lengthens the check timeout for it.
   'check-held': {
     ...scenario([reply]),
     responses: { initialize: [{ waitFor: new Promise<void>(() => {}) }] },

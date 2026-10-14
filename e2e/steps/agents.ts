@@ -7,6 +7,7 @@ import { query } from './server-query';
 const AgentsList = z.array(
   z.object({
     status: z.string(),
+    enabled: z.boolean(),
     agent: z.string(),
     label: z.string(),
     reason: z.string().optional(),
@@ -27,7 +28,7 @@ export const listAgents = (
     output: AgentsList,
   });
 
-// The Agents once the Server's Readiness checks at start have settled.
+// The Agents once the Server's Readiness checks at start have settled; a disabled Agent is never checked.
 export async function readAgents(
   page: Page,
   httpUrl: string,
@@ -36,7 +37,7 @@ export async function readAgents(
     .poll(
       async () =>
         (await listAgents(page, httpUrl)).some(
-          ({ status }) => status === 'checking',
+          ({ enabled, status }) => enabled && status === 'checking',
         ),
       { timeout: 20_000 },
     )

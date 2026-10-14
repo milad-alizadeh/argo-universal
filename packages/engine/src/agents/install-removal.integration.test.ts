@@ -35,7 +35,7 @@ it('removal deletes managed files, retains the Agent identity and survives resta
 });
 
 it.each([true, false])(
-  'an Agent saved with enabled %s keeps that choice through catalog sync, removal and reinstall',
+  'an Agent saved with enabled %s keeps that choice through catalog sync, removal, reinstall and restart',
   async (enabled) => {
     const host = await startInstallEngine();
     const { agentId } = host;
@@ -50,7 +50,6 @@ it.each([true, false])(
       .toBe('idle');
     await host.caller.agents.remove({ agentId });
     await host.caller.agents.install({ agentId, version: '1.2.3' });
-    // A disabled Agent is never checked, so only the installation is awaited.
     await expect
       .poll(
         async () =>
@@ -58,7 +57,10 @@ it.each([true, false])(
             ?.status,
       )
       .toBe('installed');
-    expect(await host.caller.agents.configured()).toContainEqual(
+    await awaitSettledReadiness(host.caller);
+    await host.stop();
+    const restarted = await startEngineTestHost({ home: host.home });
+    expect(await restarted.caller.agents.configured()).toContainEqual(
       expect.objectContaining({
         id: agentId,
         enabled,

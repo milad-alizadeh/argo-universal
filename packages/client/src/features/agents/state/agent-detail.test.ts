@@ -60,6 +60,17 @@ describe('installedAgents', () => {
       expect.objectContaining({ status: signInNeeded, disabled: true }),
     ]);
   });
+
+  it('reads a disabled Agent that was never checked as Disabled, never Checking…', () => {
+    const rows = installedAgents(
+      [
+        { ...probed, enabled: false, status: 'checking' },
+        { ...probed, agent: 'enabled', status: 'checking' },
+      ],
+      [],
+    );
+    expect(rows.map(({ status }) => status)).toEqual(['disabled', 'checking']);
+  });
 });
 
 describe('agentDetail', () => {
