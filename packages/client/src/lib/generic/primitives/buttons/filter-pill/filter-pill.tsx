@@ -4,7 +4,7 @@ import { Text } from '#primitives/display/text';
 import { cn } from '../../../utils';
 import { type FilterPillProps, filterPillText } from './filter-pill-props';
 
-// Desktop and web: Argo's own pill, on the selected fill when on.
+// Desktop and web: Argo's own pill, on the primary fill when on.
 export function FilterPill(props: FilterPillProps): React.JSX.Element {
   return (
     <Pressable
@@ -33,11 +33,15 @@ function pillProps(
 const pillClass = ({ value, disabled }: FilterPillProps): string =>
   cn(
     'h-7 flex-row items-center gap-1.5 rounded-full px-3',
-    value && 'bg-selected',
-    disabled ? 'opacity-50' : 'web:hover:bg-selected',
+    value ? 'bg-primary' : offHover(disabled),
+    disabled && 'opacity-50',
   );
 
+// An off pill shows the selected tint under the pointer, unless it is disabled.
+const offHover = (disabled?: boolean): string | undefined =>
+  disabled ? undefined : 'web:hover:bg-selected';
+
 const pillTextClass = (value: boolean): string =>
-  cn(!value && 'text-muted-foreground');
+  value ? 'text-primary-foreground' : 'text-muted-foreground';
 
 FilterPill satisfies React.ComponentType<FilterPillProps>;
