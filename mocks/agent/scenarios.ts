@@ -5,7 +5,6 @@ import {
   feedWorkSteps,
   unfinishedFeedWorkSteps,
 } from './feed-work-scenario.ts';
-import { untilHeldCheckReleased } from './held-check.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import { readinessScenarios } from './readiness-scenarios.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
@@ -57,14 +56,14 @@ export const scenarios = {
     ...scenario([reply]),
     responses: { 'session/new': [{ error: 'The Agent refused the Session.' }] },
   },
-  // Answers initialize only once the E2E Server stops, so its readiness check stays Checking… for the whole test; the E2E Server lengthens the check timeout for it.
+  // Never answers initialize, so its readiness check stays Checking…; the stdio process releases it once the E2E Server stops, and the E2E Server lengthens the check timeout for it.
   'check-held': {
     ...scenario([reply]),
     responses: {
       initialize: [
         {
           get waitFor(): Promise<void> {
-            return untilHeldCheckReleased();
+            return new Promise<void>(() => {});
           },
         },
       ],
