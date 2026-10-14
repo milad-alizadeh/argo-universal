@@ -32,7 +32,7 @@ const binaryAgent: AgentsCatalogOutput['agents'][number] = {
   },
 };
 
-const allTools = { node: true, uv: true, brew: true };
+const allTools = { node: true, uv: true };
 
 it.each([
   {
@@ -56,7 +56,7 @@ it.each([
   {
     name: 'a binary Agent with no tools at all',
     registry: binaryAgent,
-    missing: { node: false, uv: false, brew: false },
+    missing: { node: false, uv: false },
     status: notInstalled,
   },
   {

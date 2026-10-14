@@ -1,9 +1,7 @@
 import type * as React from 'react';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { agentStatusLabels, statusTone } from '../../state/agent-status';
-import { missingTool } from '../../state/missing-tool';
 import { readinessCopy } from '../../state/readiness-copy';
-import { MissingToolSection } from '../agent-missing-tool/missing-tool-section';
 import { ReadinessSection } from '../agent-readiness/agent-readiness';
 import { StatusSection } from '../agent-status-section/agent-status-section';
 import { AgentAction } from './agent-detail-actions';
@@ -12,9 +10,6 @@ import { AgentAction } from './agent-detail-actions';
 export function AgentStatusSection(
   props: AgentDetailViewProps,
 ): React.JSX.Element {
-  if (missingTool(props.agent.status))
-    return <MissingToolSection agent={props.agent} tool={props.tool} />;
-
   if (readinessCopy(props.agent)) return <AgentReadiness {...props} />;
 
   return <InstallationStatus {...props} />;

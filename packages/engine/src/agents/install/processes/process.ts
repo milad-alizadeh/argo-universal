@@ -115,10 +115,8 @@ class InstallProcess {
     return code === 0 ? undefined : this.installFailure();
   }
   private installFailure(): Error {
-    const subject = this.input.subject ?? 'the Agent';
-
     return new Error(
-      `${this.input.executable} failed to install ${subject}: ${cleanDiagnostic(this.diagnostic)}`,
+      `${this.input.executable} failed to install the Agent: ${cleanDiagnostic(this.diagnostic)}`,
     );
   }
   private async settleResult(code: number | null): Promise<void> {

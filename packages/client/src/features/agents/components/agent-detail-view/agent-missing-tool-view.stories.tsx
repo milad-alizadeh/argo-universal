@@ -3,11 +3,10 @@ import { AgentDetailView } from './agent-detail-view';
 import {
   agentDetailArgs,
   installationArgs,
-  registryAgent,
-  toolArgs,
+  needingTool,
 } from './agent-detail.mocks';
 
-// A registry Agent whose distribution needs a tool the Server lacks: Install waits for the tool.
+// A registry Agent whose distribution needs a tool the Server lacks: Install waits until Recheck finds it.
 const meta = {
   title: 'Screens/Settings/Agent missing tool',
   component: AgentDetailView,
@@ -19,38 +18,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const needsNode = { ...registryAgent, status: 'needs-node' } as const;
-
 export const NeedsNodeJs: Story = {
-  args: {
-    agent: needsNode,
-    installation: installationArgs(),
-    tool: toolArgs(),
-  },
+  args: { agent: needingTool('node'), installation: installationArgs() },
 };
 
-export const NeedsUvWithoutHomebrew: Story = {
-  args: {
-    agent: {
-      ...registryAgent,
-      status: 'needs-uv',
-      distribution: 'Python · needs uv',
-    },
-    installation: installationArgs(),
-    tool: toolArgs({ homebrew: false }),
-  },
-};
-
-export const ConfirmingNodeJsInstall: Story = {
-  args: {
-    agent: needsNode,
-    tool: toolArgs({ confirming: true }),
-  },
-};
-
-export const InstallingNodeJs: Story = {
-  args: {
-    agent: needsNode,
-    tool: toolArgs({ installing: true }),
-  },
+export const NeedsUv: Story = {
+  args: { agent: needingTool('uv'), installation: installationArgs() },
 };

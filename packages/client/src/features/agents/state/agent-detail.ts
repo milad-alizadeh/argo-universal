@@ -1,6 +1,7 @@
 import type {
   AgentInfo,
   AgentsCatalogOutput,
+  InstallationOwner,
   MachineTools,
   RegistrySupport,
 } from '@repo/contracts';
@@ -32,25 +33,34 @@ function registryLinks({ entry }: CatalogAgent): AgentDetail['links'] {
   return links.flatMap(({ label, url }) => (url ? [{ label, url }] : []));
 }
 
-type ToolNeed = { tool: keyof MachineTools; status: AgentDetail['status'] };
+type ToolNeed = {
+  tool: keyof MachineTools;
+  status: AgentDetail['status'];
+  // What the Server's look observed.
+  reason: string;
+};
 
 const toolNeeds: Partial<Record<CatalogAgent['support']['kind'], ToolNeed>> = {
-  npx: { tool: 'node', status: 'needs-node' },
-  uvx: { tool: 'uv', status: 'needs-uv' },
+  npx: { tool: 'node', status: 'needs-node', reason: 'npx isn’t on this Mac.' },
+  uvx: { tool: 'uv', status: 'needs-uv', reason: 'uvx isn’t on this Mac.' },
 };
 
 // Unknown until the Server has looked: a missing look never hides Install.
 const lacks = ({ tool }: ToolNeed, tools?: MachineTools): boolean =>
   tools?.[tool] === false;
 
+type NotInstalled = Pick<AgentDetail, 'status' | 'reason'>;
+
 // Install is offered only when the tool its distribution installs with is on the Server.
 const notInstalledStatus = (
   { support }: CatalogAgent,
   tools?: MachineTools,
-): AgentDetail['status'] => {
+): NotInstalled => {
   const need = toolNeeds[support.kind];
 
-  return need && lacks(need, tools) ? need.status : 'not-installed';
+  return need && lacks(need, tools)
+    ? { status: need.status, reason: need.reason }
+    : { status: 'not-installed' };
 };
 
 function registryDetail(
@@ -62,7 +72,7 @@ function registryDetail(
     name: registry.entry.name,
     description: registry.entry.description,
     icon: registry.entry.icon,
-    status: notInstalledStatus(registry, tools),
+    ...notInstalledStatus(registry, tools),
     version: registry.entry.version,
     distribution: distributionLabel(registry.support),
     links: registryLinks(registry),
@@ -84,14 +94,27 @@ export function agentDetail(
 
 const sourceLabels = {
   argo: 'Installed by Argo',
+  homebrew: 'Installed with Homebrew',
+  npm: 'Installed with npm',
   unknown: 'Found on this Mac',
-} as const;
+} as const satisfies Record<InstallationOwner, string>;
+
+type FoundCopy = Pick<
+  AgentDetail,
+  'source' | 'distribution' | 'owner' | 'path' | 'updateCommand'
+>;
 
 // Where an installed Agent was found replaces how the Server would install it.
-const foundSource = ({
-  owner,
-}: AgentInfo): Pick<AgentDetail, 'source' | 'distribution'> =>
-  owner ? { source: sourceLabels[owner], distribution: undefined } : {};
+const foundSource = ({ owner, path, updateCommand }: AgentInfo): FoundCopy =>
+  owner
+    ? {
+        source: sourceLabels[owner],
+        distribution: undefined,
+        owner,
+        path,
+        updateCommand,
+      }
+    : {};
 
 function withProbe(
   info: AgentInfo,
@@ -103,7 +126,7 @@ function withProbe(
     ...fromRegistry,
     ...probed,
     ...foundSource(info),
-    status: probedStatus(probed, fromRegistry),
+    ...probedStatus(probed, fromRegistry),
     icon: probed.icon ?? fromRegistry?.icon,
     ...versionsOf(info, fromRegistry),
   };
@@ -113,10 +136,10 @@ function withProbe(
 const probedStatus = (
   probed: AgentDetail,
   registry: AgentDetail | undefined,
-): AgentDetail['status'] =>
+): NotInstalled =>
   probed.status === 'not-installed' && registry
-    ? registry.status
-    : probed.status;
+    ? { status: registry.status, reason: registry.reason }
+    : { status: probed.status, reason: probed.reason };
 
 const catalogRelease = (
   info: AgentInfo,

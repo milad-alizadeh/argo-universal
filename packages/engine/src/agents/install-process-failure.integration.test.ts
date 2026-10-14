@@ -16,20 +16,13 @@ afterEach(async () => {
 
 const failingInstaller = "console.error('no bottle'); process.exit(1)";
 
-it.each([
-  ['an Agent', {}, 'the Agent'],
-  ['a tool', { subject: 'Node.js' }, 'Node.js'],
-])(
-  'a real installer that fails while installing %s names it, with its own reason',
-  async (_, subject, named) => {
-    await expect(
-      runInstallTool({
-        executable: process.execPath,
-        args: ['-e', failingInstaller],
-        cwd: directory,
-        signal: new AbortController().signal,
-        ...subject,
-      }),
-    ).rejects.toThrow(`failed to install ${named}: no bottle`);
-  },
-);
+it('a real installer that fails names the Agent, with its own reason', async () => {
+  await expect(
+    runInstallTool({
+      executable: process.execPath,
+      args: ['-e', failingInstaller],
+      cwd: directory,
+      signal: new AbortController().signal,
+    }),
+  ).rejects.toThrow('failed to install the Agent: no bottle');
+});

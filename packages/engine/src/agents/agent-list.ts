@@ -1,5 +1,6 @@
 import type { AgentInfo, ConfiguredAgent } from '@repo/contracts';
 import type { Database } from '@repo/db';
+import { withUpdateCommands } from './agent-update-commands';
 import { versionsOf, withAvailableVersions } from './agent-versions';
 import { readConfiguredAgents } from './configuration/configuration-sql';
 import { readSavedReadiness } from './readiness/readiness-sql';
@@ -67,10 +68,19 @@ const notInstalled = (agent: ConfiguredAgent): AgentInfo => ({
   reason: 'Install this Agent from Agents.',
 });
 
+type Found = Extract<InstallationObservation, { found: true }>;
+
+// A copy Argo did not install also names where it is, for the user to update it there.
+const foundCopy = ({
+  owner,
+  executable,
+}: Found): Pick<AgentInfo, 'owner' | 'path'> =>
+  owner === 'argo' ? { owner } : { owner, path: executable };
+
 const ownerOf = (
   observation: InstallationObservation,
-): Pick<AgentInfo, 'owner'> =>
-  observation.observed && observation.found ? { owner: observation.owner } : {};
+): Pick<AgentInfo, 'owner' | 'path'> =>
+  observation.observed && observation.found ? foundCopy(observation) : {};
 
 // Before the Resolver has looked once, only an Argo installation counts as installed.
 const isInstalled = (
@@ -141,6 +151,21 @@ const openListing = (database: Database, home: string): Listing => ({
   observed: readInstallationObservations(database),
 });
 
+const readListedAgents = (database: Database): ConfiguredAgent[] =>
+  readConfiguredAgents(database).filter(
+    ({ configuration }) => !configuration.removed,
+  );
+
+const withVersionsAndCommands = (
+  listing: Listing,
+  listed: AgentInfo[],
+): Promise<AgentInfo[]> =>
+  withUpdateCommands(
+    listing.database,
+    withAvailableVersions(listing.database, listed),
+    listing.observed,
+  );
+
 // Every configured Agent from its saved Readiness; listing launches no Agent (ADR-0002).
 export const listAgents = async (
   database: Database,
@@ -148,14 +173,11 @@ export const listAgents = async (
 ): Promise<AgentInfo[]> => {
   const listing = openListing(database, home);
 
-  const configured = readConfiguredAgents(database).filter(
-    ({ configuration }) => !configuration.removed,
-  );
-
-  return withAvailableVersions(
-    database,
-    await Promise.all(
-      registryFirst(configured).map((agent) => describe(listing, agent)),
+  const listed = await Promise.all(
+    registryFirst(readListedAgents(database)).map((agent) =>
+      describe(listing, agent),
     ),
   );
+
+  return withVersionsAndCommands(listing, listed);
 };
