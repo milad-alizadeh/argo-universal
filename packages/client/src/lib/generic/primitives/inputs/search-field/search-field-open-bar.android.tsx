@@ -2,7 +2,7 @@ import {
   BasicTextField,
   type BasicTextFieldProps,
   Box,
-  IconButton,
+  RNHostView,
   Row,
   Text,
   useNativeState,
@@ -10,17 +10,16 @@ import {
 import {
   fillMaxWidth,
   height,
-  semantics,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { IconButton } from '#primitives/buttons/icon-button';
 import { Host } from '#primitives/native/host';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
-import { NativeSymbol } from '../../../symbols/native-symbol';
 
 // Material's search view header: a 64dp row in place of the app bar.
 const barHeight = 64;
@@ -93,20 +92,23 @@ function useQuery(props: OpenSearchBarProps): Query {
   return { field: { value: text, onValueChange: change }, hasText, clear };
 }
 
-function BarButton(props: {
+// Argo's IconButton, hosted: a tap on a hosted icon never reaches a Compose button around it.
+function BarButton({
+  label,
+  ...props
+}: {
   icon: 'arrow-left' | 'close';
   label: string;
   onPress: () => void;
 }): React.JSX.Element {
   return (
-    <IconButton
-      onClick={props.onPress}
-      modifiers={[semantics({ contentDescription: props.label })]}
-    >
-      <NativeSymbol name={props.icon} role="action" />
-    </IconButton>
+    <RNHostView matchContents>
+      <IconButton {...props} {...barButton} accessibilityLabel={label} />
+    </RNHostView>
   );
 }
+
+const barButton = { variant: 'ghost', iconRole: 'action' } as const;
 
 const fieldOptions = {
   autoFocus: true,

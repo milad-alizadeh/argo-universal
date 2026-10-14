@@ -5,6 +5,7 @@ import {
   clickable,
   fillMaxWidth,
   height,
+  matchParentSize,
   semantics,
   size,
   weight,
@@ -74,13 +75,34 @@ function SearchBarPill({
   onOpen,
 }: PillProps): React.JSX.Element {
   return (
-    <Row verticalAlignment="center" modifiers={usePillModifiers(label, onOpen)}>
+    <Box modifiers={usePillModifiers()}>
+      <PillContent label={label} leading={leading} />
+      <Box modifiers={tapTarget(label, onOpen)} />
+    </Box>
+  );
+}
+
+function PillContent({
+  label,
+  leading,
+}: Pick<DockedSearchQuery, 'label' | 'leading'>): React.JSX.Element {
+  return (
+    <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
       <SearchIcon leading={leading} />
       <Box contentAlignment="centerStart" modifiers={[weight(1)]}>
         <SearchLabel label={label} />
       </Box>
     </Row>
   );
+}
+
+// Laid over the bar, so a tap on the hosted icon opens search too.
+function tapTarget(label: string, onOpen: () => void): ModifierConfig[] {
+  return [
+    matchParentSize(),
+    clickable(onOpen),
+    semantics({ contentDescription: label }),
+  ];
 }
 
 function SearchIcon({
@@ -96,7 +118,7 @@ function SearchIcon({
   );
 }
 
-function usePillModifiers(label: string, onOpen: () => void): ModifierConfig[] {
+function usePillModifiers(): ModifierConfig[] {
   const fill = String(useCSSVariable('--color-muted'));
 
   return [
@@ -104,8 +126,6 @@ function usePillModifiers(label: string, onOpen: () => void): ModifierConfig[] {
     height(barHeight),
     roundedClip(barHeight / 2),
     background(fill),
-    clickable(onOpen),
-    semantics({ contentDescription: label }),
   ];
 }
 
