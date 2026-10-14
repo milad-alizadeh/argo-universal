@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ZodError } from 'zod';
 import { allowlistProblems, readAllowlist } from './kit-styling-allowlist.mts';
 
 const row = 'packages/client/src/features/feed/row.tsx';
@@ -13,6 +14,25 @@ const allowlist = (files: string[]): string =>
 describe('the kit-styling allowlist', (): void => {
   it('reads the files it waives', (): void => {
     expect(readAllowlist(allowlist([row, card]))).toEqual([row, card]);
+  });
+
+  const waiver = { files: [row], rules: { 'argo/kit-styling': 'off' } };
+
+  it.each([
+    [
+      'waives another rule',
+      {
+        overrides: [
+          {
+            files: [row],
+            rules: { 'argo/kit-styling': 'off', 'argo/icon-role': 'off' },
+          },
+        ],
+      },
+    ],
+    ['has two overrides', { overrides: [waiver, waiver] }],
+  ])('rejects a list that %s', (_, list): void => {
+    expect(() => readAllowlist(JSON.stringify(list))).toThrow(ZodError);
   });
 
   it('accepts a list that shrank and still has findings', (): void => {

@@ -11,6 +11,7 @@ ruleTester.run('kit-styling', kitStyling, {
     'import { View } from \'react-native\'; <View className="flex-1" />;',
     "import { Thing } from './thing'; <Thing style={{ flex: 1 }} />;",
     `${button} <Button label="Save" contentClassName="gap-2" />;`,
+    'import { type Button } from \'#primitives/buttons/button\'; <Button className="x" />;',
     'import type { ButtonProps } from \'#primitives/buttons/button\'; <ButtonProps className="x" />;',
   ],
   invalid: [
