@@ -1,6 +1,6 @@
 import { expect, waitFor, within } from 'storybook/test';
 import type { RetryScenario } from './retry-case';
-export async function assertUnavailableRows({
+export async function assertCantStartRows({
   recorded,
 }: RetryScenario): Promise<HTMLElement> {
   const overlay = within(document.body);
@@ -9,15 +9,15 @@ export async function assertUnavailableRows({
   });
   await waitFor(() => expect(row).toBeVisible());
   await expect(row).toBeDisabled();
-  await expect(row).toHaveTextContent('Unavailable');
-  await expect(row).toHaveTextContent(recorded.installStep);
+  await expect(row).toHaveTextContent('Can’t start');
+  await expect(row).toHaveTextContent(recorded.reason);
   await assertOtherAgentDisabled(recorded.other.label);
   return assertRetryAction(recorded.agent.label);
 }
 async function assertRetryAction(label: string): Promise<HTMLElement> {
   const overlay = within(document.body);
-  const retry = overlay.getByRole('button', { name: `Retry ${label}` });
-  await expect(retry).toHaveTextContent('Retry');
+  const retry = overlay.getByRole('button', { name: `Recheck ${label}` });
+  await expect(retry).toHaveTextContent('Recheck');
   await expect(
     overlay.queryByText('Install', { exact: true }),
   ).not.toBeInTheDocument();
@@ -27,7 +27,7 @@ export async function assertRetryResults(
   scenario: RetryScenario,
 ): Promise<void> {
   await expect(scenario.onAgentRetry).toHaveBeenCalledOnce();
-  await assertUnavailableContentRemoved(scenario);
+  await assertCantStartContentRemoved(scenario);
   for (const label of [
     scenario.recorded.agent.label,
     scenario.recorded.other.label,
@@ -35,16 +35,14 @@ export async function assertRetryResults(
     await assertRetrySelection(label, scenario.session);
   await expect(scenario.onAgentChange).not.toHaveBeenCalled();
 }
-async function assertUnavailableContentRemoved({
+async function assertCantStartContentRemoved({
   recorded,
 }: RetryScenario): Promise<void> {
   const overlay = within(document.body);
-  await assertUnavailableGone();
+  await assertCantStartGone();
+  await expect(overlay.queryByText(recorded.reason)).not.toBeInTheDocument();
   await expect(
-    overlay.queryByText(recorded.installStep),
-  ).not.toBeInTheDocument();
-  await expect(
-    overlay.queryByRole('button', { name: `Retry ${recorded.agent.label}` }),
+    overlay.queryByRole('button', { name: `Recheck ${recorded.agent.label}` }),
   ).not.toBeInTheDocument();
 }
 async function assertRetrySelection(
@@ -65,10 +63,10 @@ async function assertOtherAgentDisabled(label: string): Promise<void> {
   ).toBeDisabled();
 }
 
-async function assertUnavailableGone(): Promise<void> {
+async function assertCantStartGone(): Promise<void> {
   await waitFor(() =>
     expect(
-      within(document.body).queryByText('Unavailable', { exact: true }),
+      within(document.body).queryByText('Can’t start', { exact: true }),
     ).not.toBeInTheDocument(),
   );
 }

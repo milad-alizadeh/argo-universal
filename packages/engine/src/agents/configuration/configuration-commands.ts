@@ -12,11 +12,18 @@ import {
   writeDatabaseJobAndWaitForCommit,
 } from '../../storage';
 import type { CheckAgentLaunch } from '../agent-launch';
-import { AgentConfigurationSaveJob } from '../agent-storage';
+import {
+  AgentConfigurationSaveJob,
+  type SavedReadiness,
+} from '../agent-storage';
 import type { AgentLogins } from '../login';
 import { readConfiguredAgent } from './configuration-sql';
 import { type CustomCheck, checkCustomDefinition } from './custom-check';
-export { checkConfiguredAgent } from './custom-check';
+import {
+  checkedReadiness,
+  isSavable,
+  rejectedDefinition,
+} from './custom-readiness';
 
 export interface ConfigurationDeps {
   database: Database;
@@ -33,6 +40,9 @@ export interface ConfigurationDeps {
     agentId: string,
     operation: () => Promise<AgentCheck>,
   ) => Promise<AgentCheck>;
+  // Checks an Agent again once it is enabled, since its saved Readiness is stale.
+  afterEnable?: (agentId: string) => void;
+  now?: () => number;
 }
 type CustomSave = CustomCheck;
 type SavedAgent = Pick<ConfiguredAgent, 'id' | 'enabled'> & {
@@ -45,13 +55,14 @@ const serializeConfiguration = ({
 const saveConfiguration = (
   deps: ConfigurationDeps,
   agent: SavedAgent,
+  readiness?: SavedReadiness,
 ): Promise<void> =>
   writeDatabaseJobAndWaitForCommit(
     deps.databaseWriter,
-    new AgentConfigurationSaveJob({
-      ...agent,
-      configuration: serializeConfiguration(agent),
-    }),
+    new AgentConfigurationSaveJob(
+      { ...agent, configuration: serializeConfiguration(agent) },
+      readiness,
+    ),
     true,
   );
 const withSetup = <Result>(
@@ -69,19 +80,17 @@ const requireAgent = (
   return agent;
 };
 
-// Saves only a definition whose program answered ACP initialize.
+// Saves only a definition whose program answered ACP initialize, together with that check's Readiness.
 const saveCheckedCustomAgent = async (
   deps: ConfigurationDeps,
   save: CustomSave & { enabled: boolean },
 ): Promise<AgentRegistration> => {
   const check = await checkCustomDefinition(deps.checkAgentLaunch, save);
-  if (check.status === 'failed') return check;
+  if (!isSavable(check)) return rejectedDefinition(check);
   const { agentId: id, enabled, definition } = save;
-  const configuration: SavedAgent['configuration'] = {
-    source: 'custom',
-    definition,
-  };
-  await saveConfiguration(deps, { id, enabled, configuration });
+  const configuration = { source: 'custom' as const, definition };
+  const readiness = checkedReadiness((deps.now ?? Date.now)(), check);
+  await saveConfiguration(deps, { id, enabled, configuration }, readiness);
   return { status: 'ready', agentId: id };
 };
 
@@ -129,11 +138,13 @@ const saveEnablement = (
     return saveConfiguration(deps, { id: agentId, enabled, configuration });
   });
 
-export const setAgentEnabled = (
+export const setAgentEnabled = async (
   deps: ConfigurationDeps,
   input: AgentEnablementInput,
-): Promise<void> =>
-  withSetup(deps, input.agentId, () => saveEnablement(deps, input));
+): Promise<void> => {
+  await withSetup(deps, input.agentId, () => saveEnablement(deps, input));
+  if (input.enabled) deps.afterEnable?.(input.agentId);
+};
 
 const runMutation = <T>(
   deps: ConfigurationDeps,

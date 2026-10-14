@@ -4,8 +4,8 @@ import {
 } from '@repo/mocks/agent/app-fixtures';
 import { z } from 'zod';
 
-const Availability = z.enum(['not installed', 'not signed in']);
-export type Unavailable = z.infer<typeof Availability>;
+const SetupState = z.enum(['not installed', 'sign-in needed', "can't start"]);
+export type SetupState = z.infer<typeof SetupState>;
 
 export function agentId(ordinal: number): string {
   const id = appFixtureAgentIds[ordinal - 1];
@@ -13,32 +13,33 @@ export function agentId(ordinal: number): string {
   return id;
 }
 
-export function availabilityValue(
-  state: Unavailable,
-): 'not_installed' | 'not_signed_in' {
-  return state === 'not installed' ? 'not_installed' : 'not_signed_in';
-}
+// The Readiness status the Server's own check reports for each state.
+export const setupStatuses: Record<SetupState, string> = {
+  'not installed': 'not-installed',
+  'sign-in needed': 'sign-in-needed',
+  "can't start": 'cant-start',
+};
+const setupFixtures: Record<SetupState, AppFixtureAgents[string]> = {
+  'not installed': { installed: false },
+  'sign-in needed': { scenario: 'signed-out' },
+  "can't start": { scenario: 'cant-start' },
+};
 
-function unavailableAgents(ordinal: string, state: string): AppFixtureAgents {
-  const availability = availabilityValue(Availability.parse(state));
+function agentsNeedingSetup(ordinal: string, state: string): AppFixtureAgents {
+  const fixture = setupFixtures[SetupState.parse(state)];
   const ids =
     ordinal === 'every' ? appFixtureAgentIds : [agentId(Number(ordinal))];
-  return Object.fromEntries(
-    ids.map((id): [string, { availability: typeof availability }] => [
-      id,
-      { availability },
-    ]),
-  );
+  return Object.fromEntries(ids.map((id) => [id, fixture]));
 }
 
-function unavailableConfiguration(match: RegExpExecArray): AppFixtureAgents {
-  return unavailableAgents(match[1] ?? 'every', match[2] ?? '');
+function setupConfiguration(match: RegExpExecArray): AppFixtureAgents {
+  return agentsNeedingSetup(match[1] ?? 'every', match[2] ?? '');
 }
 
 function configurationForStep(step: string): AppFixtureAgents {
-  const unavailable =
+  const needsSetup =
     /^(?:Given|And) (?:Agent (\d+)|(?:every) Agent) is "([^"]+)"$/.exec(step);
-  if (unavailable) return unavailableConfiguration(unavailable);
+  if (needsSetup) return setupConfiguration(needsSetup);
   const refusing =
     /^(?:Given|And) Agent (\d+) refuses to (open|reopen) a Session$/.exec(step);
   return refusing ? refusingConfiguration(refusing) : {};

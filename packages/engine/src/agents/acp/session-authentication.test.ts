@@ -62,25 +62,6 @@ it('refuses readiness when session/new changes the effective subscription to API
   await resources.shutdown();
 });
 
-it('rejects an advertised generic login method with no supported effective account report before session/new', async () => {
-  const requests: object[] = [];
-  const peer = createScriptedAgentProcess({
-    steps: [],
-    initialize: {
-      protocolVersion: 1,
-      agentCapabilities: { sessionCapabilities: { close: {} } },
-      authMethods: [{ id: 'opaque-unknown-billing', name: 'Sign in' }],
-    },
-    responses: { 'session/new': [{ requests }] },
-  });
-  const resources = createAcpResources(peer);
-  await expect(resources.open(createResourceOpening())).rejects.toThrow(
-    'compatible subscription',
-  );
-  expect(requests).toEqual([]);
-  await resources.shutdown();
-});
-
 it.each(['max', 'Claude Max'])(
   'opens a Session for the reported %s subscription account',
   async (plan) => {

@@ -3,20 +3,33 @@ import { startAcpEngine } from '#mocks/acp-engine';
 import { resourceInitialization } from '#mocks/acp-resource';
 import {
   loginScenario,
+  loginStatusStep,
+  signedOutStatus,
   loginAgentId,
   loginOwner,
   otherLoginOwner,
 } from '#mocks/agent-login';
+import { awaitSettledReadiness } from '#mocks/engine';
 import { createLoginTerminalMock } from '#mocks/login-terminal';
 const terminalScenario = (): ReturnType<typeof loginScenario> => ({
   ...loginScenario(),
   initialize: {
     ...resourceInitialization,
+    agentCapabilities: {
+      ...resourceInitialization.agentCapabilities,
+      _meta: { authStatus: {} },
+    },
     authMethods: [{ type: 'terminal', id: 'terminal', name: 'Terminal' }],
   },
 });
+// The Agent stays signed out however often it is checked.
+const signedOut = { steps: [loginStatusStep(signedOutStatus)] };
+const staysSignedOut = { initialize: [signedOut, signedOut, signedOut] };
 const startTerminal = async (
-  options: { loginTimeoutMs?: number } = {},
+  options: {
+    loginTimeoutMs?: number;
+    responses?: ReturnType<typeof loginScenario>['responses'];
+  } = {},
 ): Promise<{
   host: Awaited<ReturnType<typeof startAcpEngine>>;
   terminal: ReturnType<typeof createLoginTerminalMock>;
@@ -111,10 +124,16 @@ it.each([
   ).rejects.toThrow('not running');
 });
 it('fails nonzero terminal exit without treating it as account readiness', async () => {
-  const { host, terminal, identity } = await startTerminal();
+  const { host, terminal, identity } = await startTerminal({
+    responses: staysSignedOut,
+  });
   terminal.exited.resolve({ exitCode: 1 });
   await expect
     .poll(async () => (await host.caller.agents.login(identity)).status)
     .toBe('failed');
-  expect(host.agent.processes).toHaveLength(1);
+  await awaitSettledReadiness(host.caller);
+  const listed = await host.caller.agents.list();
+  expect(listed.find(({ agent }) => agent === loginAgentId)).toMatchObject({
+    status: 'sign-in-needed',
+  });
 });

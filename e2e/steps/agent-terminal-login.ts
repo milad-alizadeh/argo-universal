@@ -1,11 +1,13 @@
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
+import { awaitEmptySessionClosed, openedEmptySession } from './empty-session';
 import { Given, When, Then, test } from './fixtures';
 import { mutate } from './server-query';
 Given(
   'a saved terminal sign-in Agent {string}',
-  async ({ page, server }, name: string): Promise<void> => {
+  async ({ page, server, app }, name: string): Promise<void> => {
+    const opened = await openedEmptySession(page);
     await mutate({
       page,
       httpUrl: server.httpUrl,
@@ -14,6 +16,8 @@ Given(
     });
     await browseAgents(page);
     await page.getByRole('link', { name: new RegExp(`^${name},`) }).click();
+    // Sign-in is refused while a live Session shares the account.
+    if (opened) await awaitEmptySessionClosed(app.requestLogPath);
   },
 );
 When('I choose terminal sign-in', async ({ page }): Promise<void> => {

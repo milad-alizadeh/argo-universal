@@ -3,6 +3,7 @@ import { integer, snakeCase, text } from 'drizzle-orm/sqlite-core';
 /*
  * Stable local identity; sync owns only registry metadata/presence/timestamp.
  * `configuration` is the person's saved Agent as JSON, null while the row is catalog-only.
+ * Readiness is the last ACP check: a null status means no check has finished yet.
  */
 export const agents = snakeCase.table('agents', {
   id: text().primaryKey(),
@@ -13,4 +14,7 @@ export const agents = snakeCase.table('agents', {
   catalogSearchText: text().notNull().default(''),
   configuration: text(),
   enabled: integer({ mode: 'boolean' }).notNull().default(true),
+  readinessStatus: text(),
+  readinessReason: text(),
+  readinessCheckedAt: integer(),
 });

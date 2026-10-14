@@ -12,7 +12,7 @@ import { attachmentSelectionFailureMessage } from '../../state/attachment-draft'
 import { Composer } from './composer';
 import { ComposerOverview } from './composer-overview';
 
-const [firstAgent] = newSessionCatalogs.bothAvailable;
+const [firstAgent] = newSessionCatalogs.bothReady;
 if (!firstAgent) throw new Error('Recorded catalog needs an available Agent.');
 
 const meta = {
@@ -44,11 +44,11 @@ const meta = {
   argTypes: {
     initialAgent: {
       name: 'Agent',
-      options: newSessionCatalogs.bothAvailable.map((agent) => agent.agent),
+      options: newSessionCatalogs.bothReady.map((agent) => agent.agent),
       control: {
         type: 'select',
         labels: Object.fromEntries(
-          newSessionCatalogs.bothAvailable.map((agent) => [
+          newSessionCatalogs.bothReady.map((agent) => [
             agent.agent,
             agent.label,
           ]),

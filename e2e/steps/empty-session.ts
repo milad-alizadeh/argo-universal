@@ -5,11 +5,14 @@ import { z } from 'zod';
 import { expect } from '../fixtures';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
+import { wide } from './frame';
 import {
   agentModelLabel,
   chooseAgent,
+  messageLabel,
   waitForEmptySession,
 } from './new-session';
+import { agentWork } from './timeouts';
 
 const checkedAttribute = 'aria-checked';
 const LoggedRequest = z.object({ method: z.string() });
@@ -45,10 +48,28 @@ When(
   },
 );
 
-Then('the Agent closed the empty Session', async ({ app }): Promise<void> => {
+const isWide = (page: Page): boolean =>
+  (page.viewportSize()?.width ?? 0) >= wide.width;
+
+// A wide Frame shows New Session, whose Empty Session shares every fixture Agent's account; a phone Frame opens none.
+export const openedEmptySession = async (page: Page): Promise<boolean> => {
+  if (!isWide(page)) return false;
+  await expect(page.getByRole('textbox', { name: messageLabel })).toBeVisible();
+  await waitForEmptySession(page);
+  return true;
+};
+
+// The App closes that Empty Session once it leaves New Session.
+export const awaitEmptySessionClosed = async (
+  requestLogPath: string,
+): Promise<void> => {
   await expect
-    .poll(() => closeRequests(app.requestLogPath))
+    .poll(() => closeRequests(requestLogPath), agentWork)
     .toBeGreaterThanOrEqual(1);
+};
+
+Then('the Agent closed the empty Session', async ({ app }): Promise<void> => {
+  await awaitEmptySessionClosed(app.requestLogPath);
 });
 
 Then('the Agent closed no Session', async ({ app }): Promise<void> => {

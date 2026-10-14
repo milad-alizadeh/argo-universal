@@ -56,7 +56,7 @@ it('an accepted update keeps its release while readiness delays materialization'
   ports = createInstallationPorts({ version: '2.0.0' });
   await sync();
   holding = true;
-  const checking = host.caller.agents.list();
+  const checking = host.caller.agents.recheck({ agentId: target });
   await entered.promise;
   const accepted = await host.caller.agents.install({
     agentId: target,

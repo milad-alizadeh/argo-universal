@@ -20,7 +20,7 @@ const ready: AgentRowEntry = {
 const signIn: AgentRowEntry = {
   id: secondId,
   name: 'Second Agent',
-  status: 'sign-in',
+  status: 'sign-in-needed',
 };
 const goose: AgentRowEntry = {
   id: 'goose',
@@ -56,8 +56,13 @@ describe('runsSessions', () => {
   it.each<[AgentStatus, boolean]>([
     ['ready', true],
     ['update', true],
-    ['sign-in', false],
-    ['unavailable', false],
+    ['checking', false],
+    ['sign-in-needed', false],
+    ['account-not-supported', false],
+    ['not-compatible', false],
+    ['cant-start', false],
+    ['couldnt-check', false],
+    ['not-found', false],
     [goose.status, false],
   ])('a %s Agent runs Sessions: %s', (status, runs) => {
     expect(runsSessions({ status })).toBe(runs);

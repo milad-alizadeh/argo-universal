@@ -36,6 +36,10 @@ export {
 } from './sync-supervisor-machine';
 
 export { AgentInstallations } from './install/lifecycle/operations';
+export {
+  createAgentReadiness,
+  type AgentReadiness,
+} from './readiness/agent-readiness';
 export type { InstallPorts } from './install/ports';
 export { readInstallSelection } from './install/selection/selection';
 export { resolveInstalledAgentLaunch } from './install/selection/launch';

@@ -3,6 +3,7 @@ import { startAcpEngine } from './acp-engine';
 import { sessionJourneyGit } from './session-journey';
 
 export const signInFailure = 'Sign in first';
+export const failingAgent = 'refusing-agent';
 const failedStart: ScriptedScenario = {
   steps: [],
   responses: {
@@ -13,7 +14,7 @@ type FailedJourney = Awaited<ReturnType<typeof startAcpEngine>> & {
   git: ReturnType<typeof sessionJourneyGit>;
 };
 export const startFailedSessionJourney = async (): Promise<FailedJourney> => {
-  const host = await startAcpEngine(failedStart, undefined, 'unavailable');
+  const host = await startAcpEngine(failedStart, undefined, failingAgent);
   const project = (await host.caller.projects.list()).find(
     ({ id }) => id === 'project-1',
   );

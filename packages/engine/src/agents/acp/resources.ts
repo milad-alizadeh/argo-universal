@@ -40,6 +40,7 @@ class EngineAcpResources implements AcpResources {
   private readonly contexts = new Map<AcpResourceEntry, string>();
   private readonly agents = new Map<AcpResourceEntry, string>();
   private readonly checkoutReleases: CheckoutReleases;
+  private readonly signInListeners = new Set<(agentId: string) => void>();
   private stopped = false;
   public constructor(private readonly input: AcpResourceInput) {
     this.checkoutReleases = new CheckoutReleases(input.releaseTimeoutMs);
@@ -56,10 +57,13 @@ class EngineAcpResources implements AcpResources {
   };
   private getOrStartResource(launch: AgentLaunch): AcpResourceEntry {
     const key = createLaunchReuseKey(launch);
-    const existing = this.entries.get(key);
-    if (existing) return existing;
-    const entry = new AcpResourceEntry(this.input, launch, (checkouts) =>
-      this.retireFailedGeneration(key, entry, checkouts),
+    return this.entries.get(key) ?? this.startResource(key, launch);
+  }
+  private startResource(key: string, launch: AgentLaunch): AcpResourceEntry {
+    const entry = new AcpResourceEntry(
+      this.entryInput(launch.agentId),
+      launch,
+      (checkouts) => this.retireFailedGeneration(key, entry, checkouts),
     );
     this.entries.set(key, entry);
     this.rememberLaunch(entry, launch);
@@ -68,6 +72,12 @@ class EngineAcpResources implements AcpResources {
       .then(() => this.forget(key, entry))
       .catch(() => {});
     return entry;
+  }
+  private entryInput(agentId: string): AcpResourceInput {
+    return {
+      ...this.input,
+      onSignInRequired: (): void => this.reportSignInRequired(agentId),
+    };
   }
   private rememberLaunch(entry: AcpResourceEntry, launch: AgentLaunch): void {
     this.contexts.set(entry, authenticationContextKey(launch));
@@ -89,8 +99,24 @@ class EngineAcpResources implements AcpResources {
     this.contexts.delete(entry);
     this.agents.delete(entry);
   }
+  private reportSignInRequired(agentId: string): void {
+    for (const listener of this.signInListeners) listener(agentId);
+  }
+  public observeSignInRequired = (
+    listener: (agentId: string) => void,
+  ): void => {
+    this.signInListeners.add(listener);
+  };
   public isAgentInUse = (agentId: string): boolean =>
     [...this.agents.values()].includes(agentId);
+  // A sign-in waits for closing Sessions on the same account to exit; a live Session still makes it in use.
+  public settleAuthentication = async (launch: AgentLaunch): Promise<void> => {
+    const key = authenticationContextKey(launch);
+    const closing = [...this.contexts]
+      .filter(([entry, held]) => held === key && entry.isReleasing())
+      .map(([entry]) => entry.closed().catch(() => {}));
+    await Promise.all(closing);
+  };
   public reserveAuthentication = (launch: AgentLaunch): (() => void) => {
     if (this.stopped) throw new Error('ACP resources are stopped');
     const key = authenticationContextKey(launch);

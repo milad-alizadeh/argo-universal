@@ -11,7 +11,7 @@ import {
   type PickerCatalog,
   missingAvailableAgentFailure,
 } from './composer-test-contract.test.mocks';
-export const pickerCatalogs = newSessionCatalogs.bothAvailable.map(
+export const pickerCatalogs = newSessionCatalogs.bothReady.map(
   (agent): PickerCatalog => {
     const models = selection(agent, 'model');
     const modes = selection(agent, 'mode');

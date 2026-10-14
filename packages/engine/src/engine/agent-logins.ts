@@ -16,6 +16,17 @@ type LoginSources = {
   loginTimeoutMs?: number;
   loginCleanupTimeoutMs?: number;
 };
+const authenticationResources = (
+  sessions: OpenSessionsActorRef,
+): Pick<
+  Parameters<typeof createAgentLogins>[0],
+  'reserveAuthentication' | 'settleAuthentication'
+> => ({
+  reserveAuthentication: (launch) =>
+    loginResources(sessions).reserveAuthentication(launch),
+  settleAuthentication: (launch) =>
+    loginResources(sessions).settleAuthentication(launch),
+});
 export const createEngineAgentLogins = (
   input: LoginSources,
 ): ReturnType<typeof createAgentLogins> =>
@@ -26,8 +37,7 @@ export const createEngineAgentLogins = (
     timeoutMs: input.loginTimeoutMs,
     cleanupTimeoutMs: input.loginCleanupTimeoutMs,
     openLoginAgent: createLoginAgentOpener(input.acp),
-    reserveAuthentication: (launch) =>
-      loginResources(input.sessions).reserveAuthentication(launch),
+    ...authenticationResources(input.sessions),
     resolveLaunch: (agentId) => resolveLoginLaunch(input.sessions, agentId),
   });
 

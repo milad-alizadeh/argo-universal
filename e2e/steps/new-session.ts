@@ -121,9 +121,9 @@ Then('Back returns to the Sessions list', async ({ page }): Promise<void> => {
 Given(
   'Agent {int} refuses to open/reopen a Session',
   async ({ page, server }, ordinal: number): Promise<void> => {
-    // The refusal shows only when a Session opens or reopens, so the Agent is listed as available.
+    // The refusal shows only when a Session opens or reopens, so the Agent is listed as Ready.
     expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
-      availability: 'available',
+      status: 'ready',
     });
   },
 );

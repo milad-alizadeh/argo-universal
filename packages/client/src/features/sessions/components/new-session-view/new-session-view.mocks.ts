@@ -9,7 +9,7 @@ import type { ComposerDraft } from '#features/composer';
 import { startingFeed } from '../../state/starting-feed';
 import type { ReadyNewSessionViewProps } from './new-session-view';
 
-const [firstAgent] = newSessionCatalogs.bothAvailable;
+const [firstAgent] = newSessionCatalogs.bothReady;
 const [firstProject] = newSessionProjects;
 if (!firstAgent || !firstProject)
   throw new Error('Recorded mocks need an Agent and a Project.');
@@ -23,7 +23,7 @@ export const readyNewSession: ReadyNewSessionViewProps = {
   projectId: exampleProject.id,
   onProjectChange: fn(),
   configuration: {
-    agents: newSessionCatalogs.bothAvailable,
+    agents: newSessionCatalogs.bothReady,
     agent: firstAgent.agent,
     configOptions: recordedSessionOptions(firstAgent.agent),
     onConfigChange: fn(),

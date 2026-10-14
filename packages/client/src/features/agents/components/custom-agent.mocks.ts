@@ -31,7 +31,7 @@ export const failsItsCheck = (): Mock<SubmitCustomAgent> =>
 export const customAgentDetailArgs = (): CustomAgentDetailViewProps => ({
   agentId: customAgentId,
   definition: customAgentDefinition,
-  check: { status: 'ready' },
-  onCheck: fn(),
+  readiness: { status: 'ready' },
+  onRecheck: fn(),
   onSave: registers(),
 });

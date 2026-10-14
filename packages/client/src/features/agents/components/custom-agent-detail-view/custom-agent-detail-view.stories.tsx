@@ -17,19 +17,29 @@ type Story = StoryObj<typeof meta>;
 
 export const Ready: Story = {};
 
-export const Checking: Story = { args: { check: undefined } };
+export const Checking: Story = { args: { readiness: { status: 'checking' } } };
 
-export const CheckFailed: Story = {
-  args: { check: { status: 'failed', failure: customAgentFailure } },
+export const CantStart: Story = {
+  args: { readiness: { status: 'cant-start', reason: customAgentFailure } },
 };
 
 export const NotCustom: Story = {
   args: { agentId: 'example-agent', definition: undefined },
 };
 
-export const SignInRequired: Story = {
-  args: { check: { status: 'ready', authentication: 'required' } },
+export const SignInNeeded: Story = {
+  args: {
+    readiness: {
+      status: 'sign-in-needed',
+      reason: 'The Agent requires sign-in.',
+    },
+  },
 };
-export const AccountUnverified: Story = {
-  args: { check: { status: 'ready', authentication: 'unverified' } },
+export const AccountNotSupported: Story = {
+  args: {
+    readiness: {
+      status: 'account-not-supported',
+      reason: 'The Agent did not report a compatible subscription account.',
+    },
+  },
 };

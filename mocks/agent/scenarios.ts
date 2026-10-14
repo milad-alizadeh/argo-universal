@@ -6,6 +6,7 @@ import {
   unfinishedFeedWorkSteps,
 } from './feed-work-scenario.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
+import { readinessScenarios } from './readiness-scenarios.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { terminalLogin } from './terminal-login.ts';
 
@@ -47,6 +48,7 @@ export const scenarios = {
   'terminal-login': { ...scenario([reply]), ...terminalLogin },
   'protocol-login': { ...scenario([reply]), ...protocolLogin },
   'signed-out': { ...scenario([reply]), ...signedOutProtocolLogin },
+  ...readinessScenarios(scenario([reply])),
   image: scenario([message(imageReply)]),
   file: scenario([message(fileReply)]),
   'cancel-wait': scenario([{ type: 'wait-for-cancel' }]),

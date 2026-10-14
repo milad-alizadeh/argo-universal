@@ -98,3 +98,19 @@ export const watchWithdrawal = (
   reservation.stopWithdrawal = (): void =>
     reservation.input.signal?.removeEventListener('abort', listener);
 };
+
+export type ConfirmCheckoutRelease = () => Promise<void>;
+// A refused checkout release withdraws the opening before it reaches the Agent.
+export const awaitCheckoutRelease = async (
+  reservation: AcpReservation,
+  confirmCheckoutRelease: ConfirmCheckoutRelease,
+): Promise<void> => {
+  await confirmCheckoutRelease().catch((error: unknown) => {
+    reservation.withdrawn = true;
+    throw error;
+  });
+};
+export const isReleasingEvery = (
+  reservations: ReadonlySet<AcpReservation>,
+): boolean =>
+  [...reservations].every((owner) => owner.withdrawn || !!owner.closing);

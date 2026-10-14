@@ -19,6 +19,9 @@ export const emptySessionInput = {
   configOptions: [],
   prompt: [],
 };
+// Server start's Readiness check answers the first initialize; a scripted sequence lists it before a Session's.
+export const startupCheckAnswer = {};
+
 export const startAcpEngine = async (
   scenario: ScriptedScenario & { autoExit?: boolean } & Partial<
       Pick<

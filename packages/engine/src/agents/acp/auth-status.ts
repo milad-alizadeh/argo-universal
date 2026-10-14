@@ -53,7 +53,8 @@ export class AcpAuthenticationStatus {
   public async check(
     initialization: InitializeResponse,
   ): Promise<LoginAgentOutcome> {
-    if (!reportsAuthStatus(initialization)) return subscriptionOutcome();
+    // An Agent that does not report its account is Ready; an auth_required answer later marks it Sign-in needed.
+    if (!reportsAuthStatus(initialization)) return { status: 'ready' };
     await this.waitForFirst();
     return subscriptionOutcome(this.current);
   }

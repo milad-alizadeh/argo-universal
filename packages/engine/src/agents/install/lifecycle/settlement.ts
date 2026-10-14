@@ -5,22 +5,25 @@ import {
   installedOperation,
   rememberInstallFailure,
 } from './operation-results';
-import type { OwnedInstall } from './operation-types';
+import type { InstallBindings, OwnedInstall } from './operation-types';
 
-type InstallationInput = Omit<InstallExecutionInput, 'operation' | 'signal'>;
-const executeOwnedInstallation = (
+type InstallationInput = Omit<
+  InstallExecutionInput,
+  'operation' | 'signal' | 'deps'
+> & { deps: InstallBindings };
+// The new release is checked once this install releases its setup ownership.
+const executeOwnedInstallation = async (
   input: InstallationInput,
   owned: OwnedInstall,
   checking: Promise<unknown> | undefined,
-): Promise<void> =>
-  executeAgentInstall(
-    {
-      ...input,
-      signal: owned.controller.signal,
-      operation: owned.operation,
-    },
+): Promise<void> => {
+  const { signal } = owned.controller;
+  await executeAgentInstall(
+    { ...input, signal, operation: owned.operation },
     checking,
   );
+  input.deps.afterInstall(owned.operation.agentId);
+};
 
 export const settleAgentInstallation = async (
   input: InstallationInput,

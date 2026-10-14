@@ -14,7 +14,7 @@ function baseBranchOf(project: ProjectInfo): string {
 }
 
 const [firstProject, secondProject] = newSessionProjects;
-const [agentOne, agentTwo] = newSessionCatalogs.bothAvailable;
+const [agentOne, agentTwo] = newSessionCatalogs.bothReady;
 
 export const worktreeProject: ProjectInfo = required(
   firstProject,
@@ -36,7 +36,7 @@ export const input = (
   overrides: Partial<SessionChoiceInput> = {},
 ): SessionChoiceInput => ({
   projects: newSessionProjects,
-  agents: newSessionCatalogs.bothAvailable,
+  agents: newSessionCatalogs.bothReady,
   chosen: {},
   branches: undefined,
   ...overrides,

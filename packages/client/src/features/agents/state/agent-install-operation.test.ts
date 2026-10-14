@@ -58,7 +58,6 @@ it('a confirmed durable installation survives loss of volatile operation history
       installation: {
         status: 'installed',
         version: '1.2.3',
-        readiness: 'not-checked',
       },
       operation: null,
     }),
@@ -74,7 +73,6 @@ it('an interrupted update keeps the previous installation without reporting succ
       installation: {
         status: 'installed',
         version: '1.0.0',
-        readiness: 'not-checked',
       },
       operation: null,
     }),

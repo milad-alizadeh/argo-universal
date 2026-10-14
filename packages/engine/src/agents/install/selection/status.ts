@@ -11,11 +11,7 @@ const checkStatus = async (
   const selection = readInstallSelection(database, agentId);
   if (!selection) return { status: 'not-installed' };
   await checkSelectedFiles(home, agentId, selection);
-  return {
-    status: 'installed',
-    version: selection.entry.version,
-    readiness: 'not-checked',
-  };
+  return { status: 'installed', version: selection.entry.version };
 };
 export const readInstallationStatus = async (
   home: string,

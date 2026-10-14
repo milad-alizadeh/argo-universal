@@ -8,9 +8,9 @@ import { CustomAgentDetailView } from '../components/custom-agent-detail-view/cu
 import { useAgentPageView } from '../hooks/use-agent-detail';
 import { useAgentLogin } from '../hooks/use-agent-login';
 import { useAgentManagement } from '../hooks/use-agent-management';
+import { useAgents, useRecheck } from '../hooks/use-agents';
 import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
 import {
-  useAgentCheck,
   useCustomAgentMutations,
   useCustomAgents,
 } from '../hooks/use-custom-agents';
@@ -93,17 +93,33 @@ function LoginPage({
 function useCustomView(
   props: PageProps & { definition: CustomAgentDefinition },
 ): React.ComponentProps<typeof CustomAgentDetailView> {
-  const check = useAgentCheck(props.agent, true);
+  const { pending, ...readiness } = useCheckedReadiness(props.agent);
   const management = useAgentManagement(props.agent, props.onBack);
   return {
     agentId: props.agent,
     definition: props.definition,
-    check: check.isFetching ? undefined : check.data,
-    onCheck: () => void check.refetch(),
+    ...readiness,
     onSave: useSaveAgent(props.agent),
     onBack: props.onBack,
-    management: checkedManagement(management, check.isFetching),
+    management: checkedManagement(management, pending),
   };
+}
+type CustomViewProps = React.ComponentProps<typeof CustomAgentDetailView>;
+// A Recheck in flight reads as Checking… and cannot be asked for twice.
+function useCheckedReadiness(
+  agent: string,
+): Pick<CustomViewProps, 'readiness' | 'onRecheck'> & { pending: boolean } {
+  const saved = useSavedReadiness(agent);
+  const { pending, run } = useRecheck(agent);
+  if (pending) return { pending, readiness: { status: 'checking' } };
+  return { pending, readiness: saved, onRecheck: run };
+}
+// The Agent's saved Readiness from the Agents list; Checking… until the list has it.
+function useSavedReadiness(
+  agent: string,
+): React.ComponentProps<typeof CustomAgentDetailView>['readiness'] {
+  const info = useAgents().data?.find((entry) => entry.agent === agent);
+  return info ?? { status: 'checking' };
 }
 const checkedManagement = (
   management: React.ComponentProps<typeof CustomAgentDetailView>['management'],

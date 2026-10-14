@@ -15,6 +15,7 @@ export type LoginOperationDeps = {
   resolveLaunch: (agentId: string) => Promise<AgentLaunchSubject>;
   openLoginAgent: OpenLoginAgent;
   reserveAuthentication: (launch: AgentLaunchSubject['launch']) => () => void;
+  settleAuthentication: (launch: AgentLaunchSubject['launch']) => Promise<void>;
   timeoutMs: number;
   cleanupTimeoutMs: number;
 };
@@ -92,6 +93,7 @@ export class LoginResources {
   }
   private async acquire(): Promise<void> {
     const subject = await this.deps.resolveLaunch(this.agentId);
+    await this.deps.settleAuthentication(subject.launch);
     if (this.abort.signal.aborted) return;
     this.releases.push(this.deps.reserveAuthentication(subject.launch));
     this.baseAuthentication = authenticationContextKey(subject.launch);

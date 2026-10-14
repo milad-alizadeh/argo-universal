@@ -1,5 +1,5 @@
 import type { Meta } from '@storybook/react-native-web-vite';
-import { unavailableAgentRetry } from '../../../../../mocks/composer-configuration/agent-retry';
+import { cantStartAgentRecheck } from '../../../../../mocks/composer-configuration/agent-retry';
 import { defaultEffort } from '../../../../../mocks/composer-configuration/default-effort';
 import {
   FastModeSwitchPhone as fastModePhone,
@@ -39,42 +39,42 @@ export const DefaultEffortPhoneSecondAgent = defaultEffort(
 export const DefaultEffortWideFirstAgent = defaultEffort(layoutWidths.wide, 0);
 export const DefaultEffortWideSecondAgent = defaultEffort(layoutWidths.wide, 1);
 
-export const UnavailableAgentRetryPhoneFirstAgent = unavailableAgentRetry(
+export const CantStartAgentRecheckPhoneFirstAgent = cantStartAgentRecheck(
   layoutWidths.phone,
   0,
   'new',
 );
-export const UnavailableAgentRetryPhoneSecondAgent = unavailableAgentRetry(
+export const CantStartAgentRecheckPhoneSecondAgent = cantStartAgentRecheck(
   layoutWidths.phone,
   1,
   'new',
 );
-export const UnavailableAgentRetryWideFirstAgent = unavailableAgentRetry(
+export const CantStartAgentRecheckWideFirstAgent = cantStartAgentRecheck(
   layoutWidths.wide,
   0,
   'new',
 );
-export const UnavailableAgentRetryWideSecondAgent = unavailableAgentRetry(
+export const CantStartAgentRecheckWideSecondAgent = cantStartAgentRecheck(
   layoutWidths.wide,
   1,
   'new',
 );
-export const StartedSessionAgentRetryPhoneFirstAgent = unavailableAgentRetry(
+export const StartedSessionAgentRetryPhoneFirstAgent = cantStartAgentRecheck(
   layoutWidths.phone,
   0,
   'started',
 );
-export const StartedSessionAgentRetryPhoneSecondAgent = unavailableAgentRetry(
+export const StartedSessionAgentRetryPhoneSecondAgent = cantStartAgentRecheck(
   layoutWidths.phone,
   1,
   'started',
 );
-export const StartedSessionAgentRetryWideFirstAgent = unavailableAgentRetry(
+export const StartedSessionAgentRetryWideFirstAgent = cantStartAgentRecheck(
   layoutWidths.wide,
   0,
   'started',
 );
-export const StartedSessionAgentRetryWideSecondAgent = unavailableAgentRetry(
+export const StartedSessionAgentRetryWideSecondAgent = cantStartAgentRecheck(
   layoutWidths.wide,
   1,
   'started',

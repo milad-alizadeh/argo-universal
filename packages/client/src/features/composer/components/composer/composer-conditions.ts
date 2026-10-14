@@ -15,7 +15,7 @@ export function isConfigurationInactive(props: ComposerProps): boolean {
 function canRecoverAgent({ configuration }: ComposerProps): boolean {
   return Boolean(
     configuration?.onAgentRetry &&
-    configuration.agents.every((agent) => agent.availability !== 'available'),
+    configuration.agents.every((agent) => agent.status !== 'ready'),
   );
 }
 export function isSendReady(props: ComposerProps): boolean {

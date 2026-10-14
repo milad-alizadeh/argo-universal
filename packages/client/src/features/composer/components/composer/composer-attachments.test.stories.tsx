@@ -66,7 +66,7 @@ export const AttachmentInNarrowContent: Story = {
 export const EnvelopeWithInspectorOpen: Story = {
   args: {
     configuration: {
-      agents: newSessionCatalogs.bothAvailable,
+      agents: newSessionCatalogs.bothReady,
       agent: firstAgent.agent,
       configOptions: recordedSessionOptions(firstAgent.agent),
       onConfigChange: fn(),

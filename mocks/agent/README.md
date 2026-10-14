@@ -25,7 +25,7 @@ Steps can send updates, request Permission or Elicitation, wait for cancellation
 
 `createAgentMetadata` supplies identity fixture data. Test bootstraps seed saved command definitions; production code performs admission, resolution and ACP checks. There is no native fixture adapter.
 
-App fixtures retain registered identities, metadata and availability. Their options select a scenario. The Engine, App, tRPC, Session, Feed, Writer, SQLite and Git remain real.
+App fixtures retain registered identities and metadata. Their options say whether the Agent is installed and select a scenario; its Readiness comes from the Server’s own check. The Engine, App, tRPC, Session, Feed, Writer, SQLite and Git remain real.
 
 Structural machine tests use symbolic actor results to walk transitions. These graph tests do not replace public integration journeys.
 

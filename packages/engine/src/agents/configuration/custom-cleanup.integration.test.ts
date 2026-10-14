@@ -109,9 +109,7 @@ it('shared readiness cleanup failure fences management until the process exits',
   await rm(release);
   await rm(marker);
   const input = { agentId: registered.agentId };
-  const checking = host.caller.agents
-    .check(input)
-    .catch((error: unknown) => error);
+  const checking = host.caller.agents.recheck(input);
   await expect
     .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
     .toMatch(/^\d+$/);
@@ -121,16 +119,16 @@ it('shared readiness cleanup failure fences management until the process exits',
       process.kill(pid, 'SIGKILL');
     } catch {}
   });
-  const other = host
-    .createCaller()
-    .agents.check(input)
-    .catch((error: unknown) => error);
-  expect(await checking).toMatchObject({
-    message: expect.stringContaining(cleanupFailure),
-  });
-  expect(await other).toMatchObject({
-    message: expect.stringContaining(cleanupFailure),
-  });
+  const other = host.createCaller().agents.recheck(input);
+  const failed = {
+    status: 'cant-start',
+    reason: 'The Agent did not exit after its readiness check.',
+  };
+  expect(await checking).toEqual(failed);
+  expect(await other).toEqual(failed);
+  expect(await host.caller.agents.list()).toContainEqual(
+    expect.objectContaining({ agent: registered.agentId, ...failed }),
+  );
   await expect(host.caller.agents.remove(input)).rejects.toThrow('in use');
   process.kill(pid, 'SIGKILL');
   await expect

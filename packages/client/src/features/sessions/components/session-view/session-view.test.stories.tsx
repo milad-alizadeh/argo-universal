@@ -1,6 +1,6 @@
 import { expect, within } from 'storybook/test';
 import {
-  agentUnavailable,
+  agentCantStart,
   configuration,
 } from '../../../../../mocks/session-view/session-view-agent.test.mocks';
 import {
@@ -142,8 +142,8 @@ export const Opening: Story = {
 export const FailedWithReason = failedWithReason;
 export const FailedWithoutReason = failedWithoutReason;
 
-export const AgentUnavailableFirstAgent = agentUnavailable(0);
-export const AgentUnavailableSecondAgent = agentUnavailable(1);
+export const AgentCantStartFirstAgent = agentCantStart(0);
+export const AgentCantStartSecondAgent = agentCantStart(1);
 
 export const ConfigurationFirstAgent = configuration(0);
 export const ConfigurationSecondAgent = configuration(1);

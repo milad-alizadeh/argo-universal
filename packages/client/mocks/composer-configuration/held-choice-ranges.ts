@@ -8,7 +8,7 @@ import {
   recordedLevels,
   recordedMetadata,
 } from './recorded-choices';
-export type HeldAgent = (typeof newSessionCatalogs.bothAvailable)[number];
+export type HeldAgent = (typeof newSessionCatalogs.bothReady)[number];
 export interface HeldChoiceRange {
   model: SessionConfigOption | undefined;
   effort: SessionConfigOption | undefined;

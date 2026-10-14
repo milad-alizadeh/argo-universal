@@ -13,26 +13,25 @@ const releaseName = 'probe-release';
 type Caller = Awaited<ReturnType<typeof startCustomAgentEngine>>['caller'];
 const queries = [
   {
-    name: 'check',
+    name: 'Recheck shares',
     request: (caller: Caller, agentId: string): Promise<string> =>
-      caller.agents.check({ agentId }).then(({ status }) => status),
+      caller.agents.recheck({ agentId }).then(({ status }) => status),
     expected: 'ready',
   },
   {
-    name: 'list',
+    name: 'listing shows Checking… during',
     request: (caller: Caller, agentId: string): Promise<string | undefined> =>
       caller.agents
         .list()
         .then(
-          (agents) =>
-            agents.find((agent) => agent.agent === agentId)?.availability,
+          (agents) => agents.find((agent) => agent.agent === agentId)?.status,
         ),
-    expected: 'available',
+    expected: 'checking',
   },
 ];
 
 it.each(queries)(
-  'concurrent $name shares custom readiness while management remains fenced',
+  'a concurrent $name custom readiness while management remains fenced',
   async ({ request, expected }) => {
     const host = await startCustomAgentEngine({ acp: {} });
     const marker = join(host.home, markerName);
@@ -46,7 +45,7 @@ it.each(queries)(
     await rm(marker);
     onTestFinished(() => writeFile(release, 'release'));
     const input = { agentId: registered.agentId };
-    const checking = host.caller.agents.check(input);
+    const checking = host.caller.agents.recheck(input);
     await expect
       .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
       .toMatch(/^\d+$/);
@@ -70,15 +69,15 @@ it('a queued readiness check observes removal instead of launching a stale defin
   if (registered.status !== 'ready') throw new Error(registered.failure);
   const input = { agentId: registered.agentId };
   const removal = host.caller.agents.remove(input);
-  const checking = host.createCaller().agents.check(input);
+  const checking = host.createCaller().agents.recheck(input);
   await removal;
-  expect(await checking).toEqual({
-    status: 'failed',
-    failure: 'Agent was removed.',
-  });
+  await expect(checking).rejects.toThrow('Agent was removed.');
+  expect(await host.caller.agents.list()).not.toContainEqual(
+    expect.objectContaining({ agent: registered.agentId }),
+  );
 }, 20_000);
 
-it('a listing queued behind an edit describes the committed definition', async () => {
+it('a Recheck queued behind an edit checks the committed definition', async () => {
   const host = await startCustomAgentEngine({ acp: {} });
   const registered = await host.caller.agents.registerCustom(
     customAgentDefinition,
@@ -97,14 +96,17 @@ it('a listing queued behind an edit describes the committed definition', async (
   await expect
     .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
     .toMatch(/^\d+$/);
-  const listing = host.createCaller().agents.list();
+  const checking = host
+    .createCaller()
+    .agents.recheck({ agentId: registered.agentId });
   await writeFile(release, 'release');
   await editing;
-  expect(await listing).toContainEqual(
+  expect(await checking).toEqual({ status: 'ready' });
+  expect(await host.caller.agents.list()).toContainEqual(
     expect.objectContaining({
       agent: registered.agentId,
       label: 'Renamed custom Agent',
-      availability: 'available',
+      status: 'ready',
     }),
   );
 }, 20_000);
@@ -122,7 +124,7 @@ it('enablement waits for readiness cleanup and then commits the requested settin
   await rm(marker);
   onTestFinished(() => writeFile(release, 'release'));
   const input = { agentId: registered.agentId };
-  const checking = host.caller.agents.check(input);
+  const checking = host.caller.agents.recheck(input);
   await expect
     .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
     .toMatch(/^\d+$/);

@@ -14,8 +14,11 @@ it('saves a signed-out ACP program while reporting that its account still requir
   const registration = await host.caller.agents.registerCustom(definition);
   if (registration.status !== 'ready') throw new Error(registration.failure);
   expect(
-    await host.caller.agents.check({ agentId: registration.agentId }),
-  ).toEqual({ status: 'ready', authentication: 'required' });
+    await host.caller.agents.recheck({ agentId: registration.agentId }),
+  ).toEqual({
+    status: 'sign-in-needed',
+    reason: 'The Agent requires sign-in.',
+  });
   expect(await host.caller.agents.configured()).toContainEqual({
     id: registration.agentId,
     enabled: true,
@@ -24,7 +27,7 @@ it('saves a signed-out ACP program while reporting that its account still requir
   expect(await host.caller.agents.list()).toContainEqual(
     expect.objectContaining({
       agent: registration.agentId,
-      availability: 'not_signed_in',
+      status: 'sign-in-needed',
     }),
   );
 }, 20_000);
