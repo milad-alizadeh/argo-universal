@@ -1,15 +1,5 @@
 # Dependency declarations
 
-## @expo/ui@57.0.22
-
-`@expo__ui@57.0.22.patch` makes three changes to the Android Compose sources and published types. Android autolinking compiles `expo-ui` from source, so the Kotlin changes apply instead of linking the precompiled AAR. Removal requires rebuilding the Android development client.
-
-- `clearSemantics()` exposes Compose's `clearAndSetSemantics {}` for decorative labels beside a native Switch or above a Slider. Apply it only to the label/header subtree: the native control retains its name, state and actions.
-- `onWindowInsetsChanged` is a modifier that reports the larger of the keyboard and navigation-bar bottom inset, in dp, from the window that presents the view. Sheets use it to keep content clear of the keyboard.
-- `ModalBottomSheet` waits for the sheet's first visible state before expanding when `initialFullyExpanded` is set. Material opens the dialog before its anchors settle, so an immediate `expand()` raced and left the sheet partly expanded.
-
-Remove the corresponding changes when the pinned Expo UI release ships a modifier that clears decorative semantics, a window-inset modifier, and an expand that waits for the sheet's anchors.
-
 ## expo-symbols@57.0.3
 
 `expo-symbols@57.0.3.patch` lets `SymbolView` on iOS fall back to `UIImage(named:)` when the name is not a system symbol, so it draws Argo's custom symbols from the app's asset catalog (ADR-0019). System symbols load exactly as before.
