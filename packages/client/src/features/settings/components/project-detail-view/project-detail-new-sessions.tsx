@@ -39,7 +39,12 @@ function PickerRow(props: PickerRowProps): React.JSX.Element {
     <ListItem
       title={props.label}
       accessory={
-        <Picker appearance="row" {...props} onChange={ignoreChoice} disabled />
+        <Picker
+          appearance="row"
+          {...props}
+          onValueChange={ignoreChoice}
+          disabled
+        />
       }
     />
   );
@@ -79,10 +84,9 @@ function ArchiveSwitch(): React.JSX.Element {
   return (
     <Switch
       accessibilityLabel="Delete the worktree on archive"
-      checked={false}
-      onCheckedChange={ignoreChoice}
+      value={false}
+      onValueChange={ignoreChoice}
       disabled
-      aria-disabled
     />
   );
 }

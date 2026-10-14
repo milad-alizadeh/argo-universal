@@ -15,8 +15,8 @@ function Switch(props: SwitchProps): React.JSX.Element {
   return (
     <ControlHost matchContents>
       <ComposeSwitch
-        value={props.checked}
-        onCheckedChange={props.onCheckedChange}
+        value={props.value}
+        onCheckedChange={props.onValueChange}
         enabled={!props.disabled}
         colors={{ ...enabledColors(colors), ...disabledColors(colors) }}
         modifiers={switchSemantics(props.accessibilityLabel)}
@@ -56,5 +56,7 @@ function switchSemantics(
 ): ReturnType<typeof semantics>[] {
   return label ? [semantics({ contentDescription: label })] : [];
 }
+
+Switch satisfies React.ComponentType<SwitchProps>;
 
 export { Switch };

@@ -3,17 +3,19 @@ import type * as React from 'react';
 import { cn } from '#lib/generic/utils';
 import type { SwitchProps } from './switch-props';
 
-function Switch({
-  className,
-  size = 'default',
-  ...props
-}: SwitchProps): React.JSX.Element {
+function Switch(props: SwitchProps): React.JSX.Element {
+  const size = props.size ?? 'default';
+
   return (
     <SwitchPrimitives.Root
-      className={switchClass({ ...props, className, size })}
-      {...props}
+      className={switchClass({ ...props, size })}
+      checked={props.value}
+      onCheckedChange={props.onValueChange}
+      disabled={props.disabled}
+      accessibilityLabel={props.accessibilityLabel}
+      tabIndex={props.decorative ? -1 : undefined}
     >
-      <SwitchThumb checked={props.checked} size={size} />
+      <SwitchThumb value={props.value} size={size} />
     </SwitchPrimitives.Root>
   );
 }
@@ -26,20 +28,19 @@ function switchClass(props: SwitchProps): string {
       : 'h-5.5 w-9 p-0.5 border-0',
     'web:focus-visible:border-ring web:focus-visible:ring-ring/50 peer web:inline-flex web:outline-none web:transition-all web:focus-visible:ring-[3px] web:disabled:cursor-not-allowed',
     switchStateClass(props),
-    props.className,
   );
 }
 
 function switchStateClass(
-  props: Pick<SwitchProps, 'checked' | 'disabled'>,
+  props: Pick<SwitchProps, 'value' | 'disabled'>,
 ): string {
   return cn(
-    props.checked ? 'bg-primary' : 'bg-input dark:bg-[var(--color-separator)]',
+    props.value ? 'bg-primary' : 'bg-input dark:bg-[var(--color-separator)]',
     props.disabled && 'opacity-50',
   );
 }
 
-function thumbClass(props: Pick<SwitchProps, 'checked' | 'size'>): string {
+function thumbClass(props: Pick<SwitchProps, 'value' | 'size'>): string {
   return cn(
     'bg-background rounded-full transition-transform',
     props.size === 'small' ? 'size-3' : 'size-4.5 shadow-[0_1px_2px_#00000026]',
@@ -48,8 +49,8 @@ function thumbClass(props: Pick<SwitchProps, 'checked' | 'size'>): string {
   );
 }
 
-function thumbPosition(props: Pick<SwitchProps, 'checked' | 'size'>): string {
-  if (!props.checked) return 'dark:bg-foreground translate-x-0';
+function thumbPosition(props: Pick<SwitchProps, 'value' | 'size'>): string {
+  if (!props.value) return 'dark:bg-foreground translate-x-0';
 
   return cn(
     'dark:bg-primary-foreground',
@@ -57,10 +58,12 @@ function thumbPosition(props: Pick<SwitchProps, 'checked' | 'size'>): string {
   );
 }
 
+Switch satisfies React.ComponentType<SwitchProps>;
+
 export { Switch };
 
 function SwitchThumb(
-  props: Pick<SwitchProps, 'checked' | 'size'>,
+  props: Pick<SwitchProps, 'value' | 'size'>,
 ): React.JSX.Element {
   return <SwitchPrimitives.Thumb className={thumbClass(props)} />;
 }

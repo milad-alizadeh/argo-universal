@@ -31,7 +31,9 @@ const longOptions = [
   { value: 'automatic', label: 'Automatic' },
 ] as const;
 
-type ExampleProps = Partial<Omit<PickerProps<string>, 'onChange' | 'label'>>;
+type ExampleProps = Partial<
+  Omit<PickerProps<string>, 'onValueChange' | 'label'>
+>;
 
 function PickerExample(props: ExampleProps): React.JSX.Element {
   const [value, setValue] = useState(props.value);
@@ -43,7 +45,7 @@ function PickerExample(props: ExampleProps): React.JSX.Element {
         options={options}
         {...props}
         value={value}
-        onChange={setValue}
+        onValueChange={setValue}
       />
     </View>
   );
@@ -59,7 +61,10 @@ const examples: { label: string; props: ExampleProps }[] = [
   { label: 'Disabled', props: { value: 'medium', disabled: true } },
   { label: 'Loading options', props: { loading: true } },
   { label: 'No options', props: { options: [] } },
-  { label: 'Options unavailable', props: { error: 'Could not load options' } },
+  {
+    label: 'Options unavailable',
+    props: { loadError: 'Could not load options' },
+  },
   { label: 'Previous choice unavailable', props: { value: 'removed' } },
   {
     label: 'Searchable list, long labels and disabled option',

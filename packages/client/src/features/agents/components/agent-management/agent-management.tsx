@@ -37,9 +37,9 @@ function EnablementSwitch({
   return (
     <Switch
       accessibilityLabel="Agent enabled"
-      checked={management.enabled}
+      value={management.enabled}
       disabled={management.busy}
-      onCheckedChange={management.onEnabledChange}
+      onValueChange={management.onEnabledChange}
     />
   );
 }

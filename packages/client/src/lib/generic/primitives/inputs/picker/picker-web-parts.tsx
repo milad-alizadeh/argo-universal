@@ -59,7 +59,7 @@ export function PickerContent<Value extends string>(
     SelectContent,
     {},
     message ? (
-      <OptionsMessage message={message} failure={!!props.error} />
+      <OptionsMessage message={message} failure={!!props.loadError} />
     ) : (
       <PickerOptions {...props} />
     ),

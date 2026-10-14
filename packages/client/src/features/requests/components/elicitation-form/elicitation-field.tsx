@@ -63,7 +63,7 @@ function BooleanField(props: ElicitationFieldProps): ReactElement {
     <Checkbox
       {...fieldProps(props)}
       value={props.value === true}
-      onChange={props.onChange}
+      onValueChange={props.onChange}
     />
   );
 }
@@ -87,7 +87,7 @@ function PickerField(props: ElicitationFieldProps): ReactElement {
         value: option.const,
         label: option.title,
       }))}
-      onChange={props.onChange}
+      onValueChange={props.onChange}
     />
   );
 }

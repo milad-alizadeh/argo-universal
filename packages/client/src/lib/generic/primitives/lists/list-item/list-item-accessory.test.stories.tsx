@@ -30,7 +30,7 @@ function EffortRow(): React.JSX.Element {
               label="Effort"
               value={effort}
               options={efforts}
-              onChange={(next) => {
+              onValueChange={(next) => {
                 setEffort(next);
                 onEffortChange(next);
               }}

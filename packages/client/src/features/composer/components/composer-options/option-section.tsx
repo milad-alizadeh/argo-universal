@@ -28,9 +28,9 @@ function BooleanToggle({ option, onChange }: BooleanProps): React.JSX.Element {
   return (
     <Switch
       accessibilityLabel={option.name}
-      tabIndex={Platform.OS === 'web' ? -1 : undefined}
-      checked={option.currentValue}
-      onCheckedChange={(checked) => onChange(option.configId, checked)}
+      decorative={Platform.OS === 'web'}
+      value={option.currentValue}
+      onValueChange={(checked) => onChange(option.configId, checked)}
     />
   );
 }

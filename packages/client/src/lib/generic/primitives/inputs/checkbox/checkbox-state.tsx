@@ -16,9 +16,9 @@ export function useCheckboxState(props: CheckboxProps): CheckboxState {
 }
 
 function toggleCheckbox(
-  props: Pick<CheckboxProps, 'disabled' | 'value' | 'onChange' | 'onBlur'>,
+  props: Pick<CheckboxProps, 'disabled' | 'value' | 'onValueChange' | 'onBlur'>,
 ): void {
   if (props.disabled) return;
-  props.onChange(!props.value);
+  props.onValueChange(!props.value);
   props.onBlur?.();
 }

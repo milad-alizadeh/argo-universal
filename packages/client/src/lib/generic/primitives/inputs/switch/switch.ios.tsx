@@ -17,8 +17,8 @@ function Switch(props: SwitchProps): React.JSX.Element {
   return (
     <ControlHost matchContents>
       <Toggle
-        isOn={props.checked}
-        onIsOnChange={props.onCheckedChange}
+        isOn={props.value}
+        onIsOnChange={props.onValueChange}
         modifiers={modifiers}
       />
     </ControlHost>
@@ -45,5 +45,7 @@ function switchLabel(
 ): ReturnType<typeof accessibilityLabel>[] {
   return label ? [accessibilityLabel(label)] : [];
 }
+
+Switch satisfies React.ComponentType<SwitchProps>;
 
 export { Switch };

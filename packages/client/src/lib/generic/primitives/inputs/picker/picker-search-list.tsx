@@ -54,7 +54,7 @@ function SearchResults<Value extends string>(props: {
   const message = pickerOptionsMessage(props.picker);
 
   return message ? (
-    <SearchMessage message={message} failure={!!props.picker.error} />
+    <SearchMessage message={message} failure={!!props.picker.loadError} />
   ) : (
     <SearchChoices {...props} />
   );

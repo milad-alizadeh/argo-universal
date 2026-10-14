@@ -23,7 +23,7 @@ function EffortPicker(): React.JSX.Element {
       label="Effort"
       value={value}
       options={options}
-      onChange={(next) => {
+      onValueChange={(next) => {
         setValue(next);
         changed(next);
       }}
@@ -76,7 +76,7 @@ export const InvalidAnnouncement: Story = {
         label="Effort"
         options={options}
         errors={[{ message: 'Choose an effort' }]}
-        onChange={changed}
+        onValueChange={changed}
       />
     </FieldSection>
   ),
@@ -95,7 +95,7 @@ export const Disabled: Story = {
       options={options}
       value="medium"
       disabled
-      onChange={changed}
+      onValueChange={changed}
     />
   ),
   play: async ({ canvas, userEvent }) => {

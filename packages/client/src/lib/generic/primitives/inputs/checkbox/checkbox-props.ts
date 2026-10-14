@@ -5,7 +5,7 @@ export interface CheckboxProps {
   appearance?: 'option';
   selection?: 'single' | 'multiple';
   value: boolean;
-  onChange: (value: boolean) => void;
+  onValueChange: (value: boolean) => void;
   disabled?: boolean;
   invalid?: boolean;
   errors?: FieldErrors;

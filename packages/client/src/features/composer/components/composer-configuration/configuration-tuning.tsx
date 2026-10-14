@@ -96,9 +96,8 @@ function NativeSwitchControl({
   return (
     <Switch
       accessibilityLabel={option.name}
-      checked={option.currentValue}
-      aria-checked={option.currentValue}
-      onCheckedChange={(checked) =>
+      value={option.currentValue}
+      onValueChange={(checked) =>
         configuration.onConfigChange(option.configId, checked)
       }
     />
@@ -152,10 +151,9 @@ function DecorativeSwitchControl({
 }): React.JSX.Element {
   return (
     <Switch
-      tabIndex={-1}
-      checked={option.currentValue}
-      aria-checked={option.currentValue}
-      onCheckedChange={ignoreDecorativeChange}
+      decorative
+      value={option.currentValue}
+      onValueChange={ignoreDecorativeChange}
     />
   );
 }

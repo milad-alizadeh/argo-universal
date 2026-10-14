@@ -57,7 +57,7 @@ function QuestionOption({ model, option }: OptionProps): ReactElement {
       label={option.title}
       value={selectedAnswers(model).includes(option.const)}
       disabled={model.inactive}
-      onChange={(checked) =>
+      onValueChange={(checked) =>
         model.change(choiceValue(model, option.const, checked))
       }
     />

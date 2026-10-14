@@ -27,7 +27,7 @@ function commitChoice<Value extends string>(
   option: PickerOption<Value>,
 ): void {
   if (option.disabled) return;
-  props.onChange(option.value);
+  props.onValueChange(option.value);
 }
 
 export function pickerValue<Value extends string>(
@@ -48,11 +48,11 @@ function unchosenValue(
 }
 
 export function pickerOptionsMessage(
-  props: Pick<PickerProps<string>, 'loading' | 'error' | 'options'>,
+  props: Pick<PickerProps<string>, 'loading' | 'loadError' | 'options'>,
 ): string | undefined {
   if (props.loading) return 'Loading options…';
 
-  return props.error ?? emptyMessage(props.options.length);
+  return props.loadError ?? emptyMessage(props.options.length);
 }
 
 function emptyMessage(optionCount: number): string | undefined {

@@ -48,7 +48,7 @@ function choiceProps(
     ...checkboxFieldProps(props),
     label: option.title,
     value: values.includes(option.const),
-    onChange: (checked: boolean): void =>
+    onValueChange: (checked: boolean): void =>
       props.onChange(toggledChoice(values, option.const, checked)),
   };
 }
