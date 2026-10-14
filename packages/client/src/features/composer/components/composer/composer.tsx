@@ -1,6 +1,8 @@
+import { maxBlobUploadMebibytes } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { PermissionRequest, PlanProposalCard } from '#features/requests';
+import { useErrorToast } from '#lib/generic/primitives/overlays/toast/toast';
 import { ComposerControls } from './composer-card';
 import { sendButtonState } from './composer-conditions';
 import { useComposerLayout } from './composer-layout';
@@ -14,6 +16,7 @@ export type { ComposerAttachment } from '../composer-attachment-card/composer-at
 export function Composer(props: ComposerProps): React.JSX.Element {
   const sendState = sendButtonState(props);
   const layout = useComposerLayout(props, sendState);
+  useComposerToasts(props.error, layout.oversized);
 
   return (
     <View nativeID={layout.composerId} className="w-full items-center">
@@ -21,6 +24,18 @@ export function Composer(props: ComposerProps): React.JSX.Element {
       <ComposerRequest {...layout} />
       <ComposerControls {...layout} />
     </View>
+  );
+}
+
+function useComposerToasts(
+  error: string | undefined,
+  oversized: boolean,
+): void {
+  useErrorToast(error ? { title: error } : undefined);
+  useErrorToast(
+    oversized
+      ? { title: `Attachment exceeds ${maxBlobUploadMebibytes} MB.` }
+      : undefined,
   );
 }
 

@@ -25,7 +25,7 @@ type ToastOptions = Parameters<typeof Burnt.toast>[0];
 
 const tonePresets = {
   success: { preset: 'done', haptic: 'success' },
-  error: { preset: 'error', haptic: 'error' },
+  error: { preset: 'error', haptic: 'error', from: 'top' },
 } as const;
 
 // iOS and Android draw a native toast; web draws it in the Toaster.
