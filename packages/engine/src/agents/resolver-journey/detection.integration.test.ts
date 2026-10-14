@@ -2,6 +2,7 @@ import { realpath } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
+import { startEngineTestHost } from '#mocks/engine';
 import {
   listedAgent,
   pathBinaryEntry,
@@ -62,24 +63,53 @@ it("Argo's own copy wins over the same Agent on PATH", async () => {
   expect(relative(agentsFolder, launched)).not.toMatch(/^\.\./);
 }, 30_000);
 
-it('opening the Agents page after the last look went stale finds an Agent installed since', async () => {
-  let clock = Date.now();
-  const machine = await createMachinePath();
-  const host = await startInstallEngine(binaryEntry, undefined, {
+// After the first sync the Registry is unreachable, so no catalog commit triggers a look: only the stale look can find the Agent.
+const startWithOneCatalogSync = async (
+  now: () => number,
+): Promise<{
+  host: Awaited<ReturnType<typeof startEngineTestHost>>;
+  agentId: string;
+}> => {
+  let fetched = false;
+  const host = await startEngineTestHost({
     fixtureAgents: [],
     acp: createScriptedAgentProcess(scenarios.reply),
-    now: () => clock,
+    now,
+    fetchAgents: async () => {
+      if (fetched) throw new Error('The Registry is unreachable');
+      fetched = true;
+      return { version: '1.0.0', agents: [binaryEntry] };
+    },
   });
-  await machine.place(entrypoint);
+  await syncCatalogAndSettle(host);
+  const agentId = (await host.caller.agents.catalog()).agents.find(
+    ({ entry }) => entry.id === binaryEntry.id,
+  )?.id;
+  if (!agentId) throw new Error('Catalog did not contain the PATH fixture');
+  return { host, agentId };
+};
+const syncCatalogAndSettle = async (
+  host: Awaited<ReturnType<typeof startEngineTestHost>>,
+): Promise<void> => {
   await host.caller.agents.syncCatalog();
   await expect
     .poll(async () => (await host.caller.agents.catalog()).syncStatus)
-    .toBe('idle');
-  expect(await listedAgent(host.caller, host.agentId)).toBeUndefined();
-  clock += 11_000;
+    .not.toBe('syncing');
+};
+
+it('opening the Agents page finds an Agent installed since the last look only once that look is stale', async () => {
+  let clock = Date.now();
+  const machine = await createMachinePath();
+  const { host, agentId } = await startWithOneCatalogSync(() => clock);
+  await host.caller.agents.list({ refresh: true });
+  await machine.place(entrypoint);
+  clock += 9_000;
+  await syncCatalogAndSettle(host);
+  expect(await listedAgent(host.caller, agentId)).toBeUndefined();
+  clock += 2_000;
   await host.caller.agents.syncCatalog();
   await expect
-    .poll(() => listedAgent(host.caller, host.agentId))
+    .poll(() => listedAgent(host.caller, agentId))
     .toMatchObject({ status: 'ready', owner: 'unknown' });
 }, 30_000);
 

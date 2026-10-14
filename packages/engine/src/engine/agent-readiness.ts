@@ -19,11 +19,12 @@ const storageDeps = ({
   database,
   databaseWriter,
   home = '',
+  now = Date.now,
 }: AppRouterInput): ResolverDeps => ({
   database,
   databaseWriter,
   home,
-  now: Date.now,
+  now,
 });
 
 // Readiness checks the same saved launch a Session uses, under the installation's setup ownership.
