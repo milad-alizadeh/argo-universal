@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { IconSlot } from '#primitives/display/icon/icon';
-import { SelectedCheck } from '../../display/selected-check';
-import { Text } from '../../display/text/text';
+import { IconSlot } from '#primitives/display/icon';
+import { SelectedCheck } from '#primitives/display/selected-check';
+import { Text } from '#primitives/display/text';
 import type { ChoiceMenuProps } from './menu-props';
 
 export type KeyboardFocus = {

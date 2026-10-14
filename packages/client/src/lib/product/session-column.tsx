@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { BottomSheetAnchor } from '#primitives/overlays/bottom-sheet/bottom-sheet-anchor';
+import { BottomSheetAnchor } from '#primitives/overlays/bottom-sheet';
 
 // The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.
 export const sessionSurface = 'bg-sidebar';

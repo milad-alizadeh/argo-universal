@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { PopoverContent } from '#primitives/overlays/popover/popover';
+import { IconButton } from '#primitives/buttons/icon-button';
+import { PopoverContent } from '#primitives/overlays/popover';
 import type { IconName } from '../../../symbols/icon-names';
-import { IconButton } from '../../buttons/icon-button/icon-button';
 import { SelectionPopover } from './rich-textarea-selection-popover';
 import type { Format } from './web/rich-textarea-formats';
 import type { FieldPlacement } from './web/rich-textarea-placement';

@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button';
-import { Text } from '#primitives/display/text/text';
-import { FieldGroupContent } from '#primitives/fields/field-group-content/field-group-content';
+import { Button } from '#primitives/buttons/button';
+import { Text } from '#primitives/display/text';
+import { FieldGroupContent } from '#primitives/fields/field-group-content';
 
 // A destructive button with no card around it, in a row the native list sizes, and what removing does: small on wide windows, full width on a phone. The Server cannot remove a Project yet.
 export function RemoveProject(): React.JSX.Element {

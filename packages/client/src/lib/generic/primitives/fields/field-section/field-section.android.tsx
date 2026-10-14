@@ -2,11 +2,11 @@ import { Column, Text } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useResolveClassNames } from 'uniwind';
+import { useNavigationFields } from '#primitives/fields/field-layout';
+import { roundedClip } from '#primitives/native/native-modifiers';
+import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
-import { roundedClip } from '../../native/compose-corners';
-import { useComposeTextStyle } from '../../native/native-typography';
-import { useNavigationFields } from '../field-layout';
 import type { FieldSectionProps } from './field-section-props';
 import { FieldSection as WebFieldSection } from './field-section.tsx';
 

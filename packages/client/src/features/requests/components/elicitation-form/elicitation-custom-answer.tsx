@@ -2,8 +2,8 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { CheckboxIndicator } from '#primitives/inputs/checkbox/checkbox';
-import { TextInput } from '#primitives/inputs/text-input/text-input';
+import { CheckboxIndicator } from '#primitives/inputs/checkbox';
+import { TextInput } from '#primitives/inputs/text-input';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 import { customAnswer, customValue } from './elicitation-answers';
 

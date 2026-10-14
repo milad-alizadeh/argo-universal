@@ -5,8 +5,8 @@ import type {
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon/icon';
-import { Text } from '#primitives/display/text/text';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 import type { ElicitationAnswer } from './elicitation-form';
 import { elicitationChoices, propertyTitle } from './elicitation-property';
 

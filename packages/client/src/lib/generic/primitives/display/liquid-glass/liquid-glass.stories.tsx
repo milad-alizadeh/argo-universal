@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { Text } from '#primitives/display/text';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { Text } from '../text/text';
 import { LiquidGlass } from './liquid-glass';
 import type { LiquidGlassProps } from './liquid-glass-props';
 

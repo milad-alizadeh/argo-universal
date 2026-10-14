@@ -2,7 +2,7 @@ import { maxBlobUploadMebibytes } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { PermissionRequest, PlanProposalCard } from '#features/requests';
-import { useErrorToast } from '#primitives/overlays/toast/toast';
+import { useErrorToast } from '#primitives/overlays/toast';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
 import { useComposerLayout } from './composer-layout';

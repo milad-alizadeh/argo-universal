@@ -1,8 +1,8 @@
 import type * as React from 'react';
-import { Badge } from '#primitives/display/badge/badge';
-import { Icon } from '#primitives/display/icon/icon';
-import { Text } from '#primitives/display/text/text';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { Badge } from '#primitives/display/badge';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
+import { FieldSection } from '#primitives/fields/field-section';
 import { ListItem } from './list-item';
 import { onPress } from './list-item-press.mocks';
 

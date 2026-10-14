@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Keyframe } from 'react-native-reanimated';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { LiquidGlass } from '#primitives/display/liquid-glass/liquid-glass';
-import { Spinner } from '#primitives/display/spinner/spinner';
-import { Text } from '#primitives/display/text/text';
-import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view/native-only-animated-view';
+import { IconButton } from '#primitives/buttons/icon-button';
+import { LiquidGlass } from '#primitives/display/liquid-glass';
+import { Spinner } from '#primitives/display/spinner';
+import { Text } from '#primitives/display/text';
+import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
 import { motionDuration } from '../../../../lib/generic/motion';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { ConnectionState } from '../../state/context';

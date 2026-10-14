@@ -7,11 +7,11 @@ import {
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { createElement } from 'react';
+import { errorMessage } from '#primitives/fields/field-errors';
+import { useInListItem } from '#primitives/lists/list-item';
+import { roundedOutline } from '#primitives/native/native-modifiers';
+import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
-import { errorMessage } from '../../fields/field-errors';
-import { useInListItem } from '../../lists/list-item/list-item-accessory';
-import { roundedOutline } from '../../native/compose-corners';
-import { useComposeTextStyle } from '../../native/native-typography';
 import type { PickerProps } from './picker-props';
 import { pickerLabel, pickerValue } from './picker-selection';
 

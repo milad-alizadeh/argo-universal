@@ -6,8 +6,8 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
-import { IconSlot } from '#primitives/display/icon/icon';
-import { SelectedCheck } from '../../display/selected-check';
+import { IconSlot } from '#primitives/display/icon';
+import { SelectedCheck } from '#primitives/display/selected-check';
 
 const menuWidth = 280;
 

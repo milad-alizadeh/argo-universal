@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { Button } from '#primitives/buttons/button/button';
-import { SplitButton } from '#primitives/buttons/split-button/split-button';
-import type { MenuAction } from '#primitives/overlays/menu/menu';
+import { Button } from '#primitives/buttons/button';
+import { SplitButton } from '#primitives/buttons/split-button';
+import type { MenuAction } from '#primitives/overlays/menu';
 
 export type MergeMethod = 'squash' | 'merge' | 'rebase';
 

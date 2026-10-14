@@ -1,6 +1,6 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import { BottomSheet } from '../bottom-sheet/bottom-sheet';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet';
 import type { DialogSheetProps } from './dialog-sheet.types';
 
 // A native phone presents the dialog as the platform's bottom sheet, opened and closed by the dialog's root.

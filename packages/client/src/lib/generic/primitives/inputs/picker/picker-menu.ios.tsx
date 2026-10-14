@@ -1,8 +1,8 @@
 import { Button, HStack, Menu, Picker, Spacer } from '@expo/ui/swift-ui';
 import { buttonStyle, pickerStyle, padding } from '@expo/ui/swift-ui/modifiers';
 import { createElement, Fragment } from 'react';
+import { useInListItem } from '#primitives/lists/list-item';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { useInListItem } from '../../lists/list-item/list-item-accessory';
 import {
   PickerLabel,
   PickerValue,

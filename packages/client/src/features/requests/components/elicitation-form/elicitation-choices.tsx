@@ -1,9 +1,9 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import type { FieldErrors } from '#primitives/fields/field-errors';
 import { StandaloneField } from '#primitives/fields/standalone-field';
-import { Checkbox } from '#primitives/inputs/checkbox/checkbox';
+import { Checkbox } from '#primitives/inputs/checkbox';
 import { toggledChoice } from './elicitation-answers';
 import type { ElicitationFieldProps } from './elicitation-field';
 import { elicitationChoices } from './elicitation-property';

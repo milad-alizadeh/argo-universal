@@ -16,8 +16,8 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { Host } from '../../native/host';
-import { optionalTint } from '../../native/swift-tint';
+import { Host } from '#primitives/native/host';
+import { optionalTint } from '#primitives/native/native-modifiers';
 import {
   type ActionMenuProps,
   type ChoiceMenuProps,

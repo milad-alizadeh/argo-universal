@@ -2,7 +2,7 @@ import { useStore } from '@tanstack/react-form';
 import type * as React from 'react';
 import { useRef, useState } from 'react';
 import { useLeaveGuard } from '#lib/product/navigation/context';
-import { Alert, type AlertAction } from '#primitives/overlays/alert/alert';
+import { Alert, type AlertAction } from '#primitives/overlays/alert';
 import type { CustomAgentFormApi } from '../../hooks/use-custom-agent-form';
 
 const answers = (discard: () => void): AlertAction[] => [

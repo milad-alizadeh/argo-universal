@@ -2,7 +2,7 @@ import type { Text as ComposeText } from '@expo/ui/jetpack-compose';
 import { createModifier, font, lineHeight } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { type TextRole, useTextStyle } from '../display/text/text';
+import { type TextRole, useTextStyle } from '#primitives/display/text';
 import { swiftFontFace } from './swift-font-face';
 
 type ComposeTextStyle = NonNullable<

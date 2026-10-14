@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { Text } from '../display/text/text';
-import { Menu } from '../overlays/menu/menu';
+import { Text } from '#primitives/display/text';
+import { Menu } from '#primitives/overlays/menu';
 import { Pressable, contentActionClass } from './pressable';
 
 const meta = { title: 'Tests/Pressable' } satisfies Meta;

@@ -1,5 +1,5 @@
 import type { SettingsPageSearch } from '#lib/product/settings-page';
-import type { DockedSearchQuery } from '#primitives/inputs/search-field/search-field';
+import type { DockedSearchQuery } from '#primitives/inputs/search-field';
 import type { SearchedProps } from './project-list-props';
 
 export const searchLabel = 'Search Projects';

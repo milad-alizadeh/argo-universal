@@ -1,7 +1,7 @@
 import * as SelectPrimitive from '@rn-primitives/select';
 import * as React from 'react';
-import { Icon } from '#primitives/display/icon/icon';
-import { TextClassContext } from '#primitives/display/text/text';
+import { Icon } from '#primitives/display/icon';
+import { TextClassContext } from '#primitives/display/text';
 import {
   selectContentClassName,
   selectViewportClassName,

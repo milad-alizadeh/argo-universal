@@ -1,7 +1,7 @@
 import { Text } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
+import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
-import { useComposeTextStyle } from '../../native/native-typography';
 import type { ListItemProps } from './list-item-props';
 import { subtitleRole, titleRole, useToneColor } from './list-item-text';
 

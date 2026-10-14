@@ -1,6 +1,6 @@
 import { ModalBottomSheet } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { Host } from '../../native/host';
+import { Host } from '#primitives/native/host';
 import { useSheetColors } from './bottom-sheet-colors.android';
 import { BottomSheetContent } from './bottom-sheet-content';
 import {

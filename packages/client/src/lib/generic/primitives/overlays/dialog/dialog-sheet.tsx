@@ -1,6 +1,6 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import { BottomSheetSurface } from '../bottom-sheet/bottom-sheet-surface';
+import { BottomSheetSurface } from '#primitives/overlays/bottom-sheet';
 import type { DialogSheetProps } from './dialog-sheet.types';
 
 // A narrow web window draws the dialog as a bottom sheet, named by its label or else by the dialog's own title.

@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Host } from '../../native/host';
+import { Host } from '#primitives/native/host';
 import type { CheckboxProps } from './checkbox-props';
 import {
   CheckboxFooter,

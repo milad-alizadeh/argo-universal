@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
-import { useWide } from '../../use-wide/use-wide';
-import type { FieldGroupProps } from './field-group/field-group-props';
+import type { FieldGroupProps } from '#primitives/fields/field-group';
+import { useWide } from '../../../use-wide/use-wide';
 
 export const FieldLayout = createContext<FieldGroupProps['variant']>('grouped');
 

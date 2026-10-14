@@ -6,8 +6,8 @@ import {
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type { ComponentProps, ReactElement } from 'react';
 import { useMemo } from 'react';
-import { useFollowedText } from '../../native/followed-text';
-import { useComposeTextStyle } from '../../native/native-typography';
+import { useFollowedText } from '#primitives/native/followed-text';
+import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { blurOnFocusLoss } from './focus-loss';
 import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
 import { StandaloneNativeField } from './text-input-standalone-native';

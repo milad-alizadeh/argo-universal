@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
-import { Text, TextClassContext } from '../../display/text/text';
+import { Text, TextClassContext } from '#primitives/display/text';
 import { ButtonAdornment } from './button-adornment';
 import { contentButtonClass, contentTextClass } from './button-content-styles';
 import type { ButtonProps, ContentButtonProps } from './button-props';

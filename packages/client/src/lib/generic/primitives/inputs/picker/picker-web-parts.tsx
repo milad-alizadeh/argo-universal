@@ -1,7 +1,7 @@
 import { createElement } from 'react';
+import { Text } from '#primitives/display/text';
+import type { FieldDescription } from '#primitives/fields/field-description';
 import { cn } from '../../../utils';
-import { Text } from '../../display/text/text';
-import type { FieldDescription } from '../../fields/field-description';
 import type { PickerOption, PickerProps } from './picker-props';
 import {
   SelectContent,

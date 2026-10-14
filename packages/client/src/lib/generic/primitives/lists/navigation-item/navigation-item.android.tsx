@@ -17,12 +17,12 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { Icon, IconSlot } from '#primitives/display/icon/icon';
+import { Icon, IconSlot } from '#primitives/display/icon';
+import { Host } from '#primitives/native/host';
+import { roundedClip } from '#primitives/native/native-modifiers';
+import { useComposeTextStyle } from '#primitives/native/native-typography';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
-import { roundedClip } from '../../native/compose-corners';
-import { Host } from '../../native/host';
-import { useComposeTextStyle } from '../../native/native-typography';
 import type { NavigationItemProps } from './navigation-item.tsx';
 
 // Material 3's navigation drawer item: a 56dp pill, tinted when selected.

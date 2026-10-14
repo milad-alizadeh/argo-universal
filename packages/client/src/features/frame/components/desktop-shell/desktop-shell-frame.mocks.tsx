@@ -4,9 +4,9 @@ import { View } from 'react-native';
 import {
   IconButton,
   type IconButtonProps,
-} from '#primitives/buttons/icon-button/icon-button';
-import { Text } from '#primitives/display/text/text';
-import { Menu } from '#primitives/overlays/menu/menu';
+} from '#primitives/buttons/icon-button';
+import { Text } from '#primitives/display/text';
+import { Menu } from '#primitives/overlays/menu';
 import { ListTitle } from '../../../../lib/product/list-title';
 import type { Section } from '../../../../lib/product/navigation/sections';
 import { PageHeader } from '../../../../lib/product/page-header';

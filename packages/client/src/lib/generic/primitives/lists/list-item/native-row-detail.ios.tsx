@@ -1,7 +1,7 @@
 import { VStack } from '@expo/ui/swift-ui';
 import { padding } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { NativeControl } from '../../native/native-control';
+import { NativeControl } from '#primitives/native/native-control';
 import type { ListItemProps } from './list-item-props';
 
 const detailBottom = 12;

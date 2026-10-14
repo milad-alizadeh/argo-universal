@@ -6,7 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from '#primitives/overlays/dialog/dialog';
+} from '#primitives/overlays/dialog';
 
 type ImageUrl = (blob: BlobRef) => string;
 

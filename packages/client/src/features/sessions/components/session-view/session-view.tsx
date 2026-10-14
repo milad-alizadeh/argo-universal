@@ -8,10 +8,7 @@ import {
 } from '#features/requests';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
-import {
-  type ErrorToast,
-  useErrorToast,
-} from '#primitives/overlays/toast/toast';
+import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import {
   serverSilentMessage,

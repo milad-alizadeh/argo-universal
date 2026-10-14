@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { Text } from '#primitives/display/text';
+import { sampleEachFrame } from '../../../../../../mocks/sample-each-frame';
+import { layoutWidths } from '../../../each-layout';
+import { settleViewport } from '../../../settle-viewport';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '#primitives/display/collapsible/collapsible';
-import { Text } from '#primitives/display/text/text';
-import { sampleEachFrame } from '../../../../../../mocks/sample-each-frame';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+} from './collapsible';
 
 const animatedDetailId = 'animated-detail';
 

@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactElement } from 'react';
-import { Host } from './host';
+import { Host } from '#primitives/native/host';
 
 const NativeControlContext = createContext(false);
 

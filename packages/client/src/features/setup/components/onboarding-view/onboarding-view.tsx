@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import { stepMarks } from '../../state/onboarding';
 import { AgentStepView } from './agent-step';
 import { GitHubStepView } from './github-step';

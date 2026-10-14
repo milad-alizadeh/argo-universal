@@ -2,7 +2,7 @@ import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 
 interface PlanProps {
   plan: NonNullable<SessionInfo['plan']>;

@@ -1,7 +1,7 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type { ComponentProps, ReactElement } from 'react';
 import { useId } from 'react';
-import { Portal } from '../portal/portal';
+import { Portal } from '#primitives/overlays/portal';
 import type { DialogRegionProps as RegionProps } from './dialog-region.types';
 
 const regionInset = 24;

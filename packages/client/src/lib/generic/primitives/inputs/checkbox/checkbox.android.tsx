@@ -15,7 +15,7 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { createElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { useComposeTextStyle } from '../../native/native-typography';
+import { useComposeTextStyle } from '#primitives/native/native-typography';
 import {
   useCheckboxColors,
   RadioMark,
@@ -25,7 +25,7 @@ import { createNativeCheckbox } from './checkbox-native';
 
 export { CheckboxIndicator } from './checkbox-indicator.android';
 
-import { roundedClip } from '../../native/compose-corners';
+import { roundedClip } from '#primitives/native/native-modifiers';
 import type { CheckboxProps } from './checkbox-props';
 import type { CheckboxState } from './checkbox-state';
 

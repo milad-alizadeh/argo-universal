@@ -3,8 +3,8 @@ import { View } from 'react-native';
 import {
   FilterPill,
   type FilterPillProps,
-} from '#primitives/buttons/filter-pill/filter-pill';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+} from '#primitives/buttons/filter-pill';
+import { IconButton } from '#primitives/buttons/icon-button';
 import type { AgentCounts, AgentsFilter } from '../state/agent-status';
 
 export interface AgentsFilterProps {

@@ -52,7 +52,13 @@ const RESOLVED_EXTENSIONS = [
 ];
 
 const VITE_RESOLVE = {
-  alias: { '#primitives': PRIMITIVES_FOLDER },
+  // #primitives/<group>/<name> is that folder's index, as in @repo/client's imports map.
+  alias: [
+    {
+      find: /^#primitives\/(.+)$/,
+      replacement: `${PRIMITIVES_FOLDER}/$1/index.ts`,
+    },
+  ],
   extensions: RESOLVED_EXTENSIONS,
 };
 

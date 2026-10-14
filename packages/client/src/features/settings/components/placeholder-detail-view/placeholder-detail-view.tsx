@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
-import { Text } from '#primitives/display/text/text';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { Text } from '#primitives/display/text';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldSection } from '#primitives/fields/field-section';
+import { ListItem } from '#primitives/lists/list-item';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 export interface PlaceholderDetailViewProps {

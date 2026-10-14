@@ -1,9 +1,9 @@
 import type * as React from 'react';
-import { Icon } from '#primitives/display/icon/icon';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
+import { Pressable, contentActionClass } from '#primitives/pressable';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
-import { Text } from '../../display/text/text';
-import { Pressable, contentActionClass } from '../../pressable/pressable';
 
 export interface NavigationItemProps {
   title: string;

@@ -1,10 +1,10 @@
 import { Button, Column, Surface } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
+import { useNavigationFields } from '#primitives/fields/field-layout';
+import { roundedOutline } from '#primitives/native/native-modifiers';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
-import { useNavigationFields } from '../../fields/field-layout';
-import { roundedOutline } from '../../native/compose-corners';
 import { RowContent } from './list-item-android-row';
 import { type ListItemProps, listItemName } from './list-item-props';
 import * as Web from './list-item.tsx';

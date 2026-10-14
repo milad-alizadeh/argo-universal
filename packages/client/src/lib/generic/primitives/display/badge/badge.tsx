@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { TextClassContext } from '#primitives/display/text/text';
+import { TextClassContext } from '#primitives/display/text';
 
 const toneBox = 'h-5 border-transparent py-0';
 

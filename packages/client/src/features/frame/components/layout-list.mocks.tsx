@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { ScrollView } from 'react-native';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 
 // A stand-in for a section's connected list, which the screen passes in the app.
 export function LayoutListMock({ name }: { name: string }): React.JSX.Element {

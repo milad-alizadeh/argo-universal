@@ -6,9 +6,9 @@ import { useResolveClassNames } from 'uniwind';
 import {
   fieldGroupGap,
   fieldGroupPadding,
-} from '#primitives/fields/field-group/field-group-spacing';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import type { DockedSearchQuery } from '#primitives/inputs/search-field/search-field';
+} from '#primitives/fields/field-group';
+import { FieldSection } from '#primitives/fields/field-section';
+import type { DockedSearchQuery } from '#primitives/inputs/search-field';
 import { listTestIdProps } from '../../generic/list-test-id';
 import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
 import { CardRow } from './card-row';

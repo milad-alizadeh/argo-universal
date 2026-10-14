@@ -1,8 +1,8 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { ButtonAdornment } from '../button/button-adornment';
-import { buttonInteractionProps } from '../button/button-state';
+import { ButtonAdornment } from '#primitives/buttons/button';
+import { buttonInteractionProps } from '#primitives/buttons/button';
 import type { IconButtonProps } from './icon-button-props';
 import { iconButtonClasses } from './icon-button-styles';
 

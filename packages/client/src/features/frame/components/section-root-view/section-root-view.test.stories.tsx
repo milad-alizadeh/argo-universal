@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import {
   SectionRootView,
   type SectionRootViewProps,

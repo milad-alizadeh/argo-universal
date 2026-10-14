@@ -9,7 +9,7 @@ import {
   type SharedValue,
 } from 'react-native-reanimated';
 import { motionDuration } from '#lib/generic/motion';
-import { usePresentationClosed } from '#primitives/native/native-only-animated-view/native-only-animated-view';
+import { usePresentationClosed } from '#primitives/native/native-only-animated-view';
 
 // Whether the popover is in the tree, kept there until it has faded out.
 interface PopoverPresence {

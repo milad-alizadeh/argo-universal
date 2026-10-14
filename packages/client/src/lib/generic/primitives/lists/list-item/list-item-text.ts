@@ -1,5 +1,5 @@
+import type { TextRole } from '#primitives/display/text';
 import { useNativeTheme } from '../../../native-theme';
-import type { TextRole } from '../../display/text/text';
 import type { ListItemProps } from './list-item-props';
 
 // A code title or subtitle draws in the mono face.

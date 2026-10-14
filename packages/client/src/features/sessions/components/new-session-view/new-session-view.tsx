@@ -11,11 +11,8 @@ import {
 import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
-import { Text } from '#primitives/display/text/text';
-import {
-  type ErrorToast,
-  useErrorToast,
-} from '#primitives/overlays/toast/toast';
+import { Text } from '#primitives/display/text';
+import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import type { StartingFeed } from '../../state/starting-feed';
 import {
   serverSilentMessage,

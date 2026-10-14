@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { Text } from '#primitives/display/text';
+import { Pressable, contentActionClass } from '#primitives/pressable';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { Text } from '../../display/text/text';
-import { Pressable, contentActionClass } from '../../pressable/pressable';
 import { Menu, type MenuAction } from './menu';
 
 const choices = [

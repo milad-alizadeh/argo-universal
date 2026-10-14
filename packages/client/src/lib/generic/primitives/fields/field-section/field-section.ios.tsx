@@ -5,9 +5,9 @@ import {
   headerProminence,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
+import { useSwiftUITextModifiers } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
-import { useSwiftUITextModifiers } from '../../native/native-typography';
 import type { FieldSectionProps } from './field-section-props';
 import { FieldSection as WebFieldSection } from './field-section.tsx';
 

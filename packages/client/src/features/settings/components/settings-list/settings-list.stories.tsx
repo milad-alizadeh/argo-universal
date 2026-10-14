@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import type { NavigationDestination } from '#lib/product/navigation/context';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import { SettingsList, type SettingsListProps } from './settings-list';
 import { settingsListMocks } from './settings-list.mocks';
 

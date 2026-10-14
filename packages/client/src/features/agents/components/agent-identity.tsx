@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import type { ReactElement } from 'react';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { FieldSection } from '#primitives/fields/field-section';
+import { ListItem } from '#primitives/lists/list-item';
 import { useWide } from '../../../lib/generic/use-wide/use-wide';
 
 export interface AgentIdentityProps {

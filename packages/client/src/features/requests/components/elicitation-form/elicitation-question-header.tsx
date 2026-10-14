@@ -2,8 +2,8 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Icon } from '#primitives/display/icon/icon';
-import { Text } from '#primitives/display/text/text';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 import { QuestionPager } from './elicitation-question-pager';
 

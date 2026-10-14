@@ -1,7 +1,7 @@
 import { useRef, useEffect, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet';
 import { useElicitationForm } from '../../hooks/use-elicitation-form';
 import { useElicitationQuestions } from '../../hooks/use-elicitation-questions';
 import {

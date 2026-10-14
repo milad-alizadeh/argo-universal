@@ -1,9 +1,9 @@
 import type { SessionConfigOption } from '@repo/contracts';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import { Slider } from '#primitives/inputs/slider/slider';
-import { Switch } from '#primitives/inputs/switch/switch';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { Slider } from '#primitives/inputs/slider';
+import { Switch } from '#primitives/inputs/switch';
+import { ListItem } from '#primitives/lists/list-item';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
 

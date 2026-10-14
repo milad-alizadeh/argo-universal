@@ -10,7 +10,7 @@ import {
   ScreenHeader,
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import { ScreenHeaderMock } from '../../../../../mocks/screen-header-mock';
 import { sectionDestination } from '../../../../lib/product/navigation/sections';
 import type { Section } from '../../../../lib/product/navigation/sections';

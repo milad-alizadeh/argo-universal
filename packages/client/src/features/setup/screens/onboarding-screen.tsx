@@ -3,10 +3,7 @@ import type * as React from 'react';
 import { runsSessions, useAgents, useInstalledAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
 import { useNavigate } from '#lib/product/navigation/context';
-import {
-  type ErrorToast,
-  useErrorToast,
-} from '#primitives/overlays/toast/toast';
+import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { OnboardingView } from '../components/onboarding-view/onboarding-view';
 import { type AgentStep, agentStep } from '../state/onboarding';
 

@@ -4,7 +4,7 @@ import {
   FieldList,
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
-import type { DockedSearchQuery } from '#primitives/inputs/search-field/search-field';
+import type { DockedSearchQuery } from '#primitives/inputs/search-field';
 import {
   offeredAgents,
   platformName,

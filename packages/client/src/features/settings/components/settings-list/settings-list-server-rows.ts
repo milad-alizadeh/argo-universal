@@ -1,4 +1,4 @@
-import type { ListItemProps } from '#primitives/lists/list-item/list-item-props';
+import type { ListItemProps } from '#primitives/lists/list-item';
 import {
   connectionValue,
   countValue,

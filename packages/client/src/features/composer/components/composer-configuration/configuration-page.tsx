@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { Text } from '#primitives/display/text/text';
+import { IconButton } from '#primitives/buttons/icon-button';
+import { Text } from '#primitives/display/text';
 import { AgentChoices } from './agent-choices';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { ModelChoices } from './model-choices';

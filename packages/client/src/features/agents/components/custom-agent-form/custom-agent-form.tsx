@@ -3,10 +3,10 @@ import { useStore } from '@tanstack/react-form';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon/icon';
-import { Text } from '#primitives/display/text/text';
-import { FieldGroupContent } from '#primitives/fields/field-group-content/field-group-content';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldGroupContent } from '#primitives/fields/field-group-content';
 import {
   type CustomAgentFormApi,
   type SubmitCustomAgent,

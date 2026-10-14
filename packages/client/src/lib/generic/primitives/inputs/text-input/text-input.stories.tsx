@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
-import { FieldGroupContent } from '#primitives/fields/field-group-content/field-group-content';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldGroupContent } from '#primitives/fields/field-group-content';
+import { FieldSection } from '#primitives/fields/field-section';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { TextInput } from './text-input';
 import type {

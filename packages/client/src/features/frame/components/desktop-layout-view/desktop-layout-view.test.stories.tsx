@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { SessionHeader } from '#features/sessions';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import { createNavigationRecorder } from '../../../../../mocks/with-navigation-mocks';
 import { LayoutListMock } from '../layout-list.mocks';
 import {

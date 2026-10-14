@@ -7,8 +7,8 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { ControlHost } from '../../native/native-control';
-import { optionalTint } from '../../native/swift-tint';
+import { ControlHost } from '#primitives/native/native-control';
+import { optionalTint } from '#primitives/native/native-modifiers';
 import type { SwitchProps } from './switch-props';
 
 function Switch(props: SwitchProps): React.JSX.Element {

@@ -1,12 +1,12 @@
 import { createElement } from 'react';
 import { View } from 'react-native';
-import { Text } from '../../display/text/text';
+import { Text } from '#primitives/display/text';
 import {
   type FieldDescription,
   FieldDescriptionFooter,
   useFieldDescription,
-} from '../../fields/field-description';
-import { useInListItem } from '../../lists/list-item/list-item-accessory';
+} from '#primitives/fields/field-description';
+import { useInListItem } from '#primitives/lists/list-item';
 import type { PickerProps } from './picker-props';
 import { Select } from './picker-select';
 import {

@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { Text } from '#primitives/display/text/text';
-import { Textarea } from '#primitives/inputs/textarea/textarea';
+import { Text } from '#primitives/display/text';
+import { Textarea } from '#primitives/inputs/textarea';
 import { RequestAction } from '../request-card/request-card';
 import { useFocusOnMount } from '../use-focus-on-mount';
 import type {

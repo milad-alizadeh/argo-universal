@@ -7,8 +7,8 @@ import {
 } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Menu } from '#primitives/overlays/menu/menu';
-import { ButtonGroup } from '../button-group/button-group';
+import { ButtonGroup } from '#primitives/buttons/button-group';
+import { Menu } from '#primitives/overlays/menu';
 import { chevron } from './split-button-chevron';
 import type {
   SplitButtonProps,

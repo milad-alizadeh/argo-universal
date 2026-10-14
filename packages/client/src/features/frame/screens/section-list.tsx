@@ -15,8 +15,8 @@ import {
   useNavigate,
 } from '#lib/product/navigation/context';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
-import { Text } from '#primitives/display/text/text';
-import { SearchField } from '#primitives/inputs/search-field/search-field';
+import { Text } from '#primitives/display/text';
+import { SearchField } from '#primitives/inputs/search-field';
 import type { Section } from '../../../lib/product/navigation/sections';
 import { shellSections } from '../components/shell-sections';
 

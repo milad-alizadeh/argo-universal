@@ -15,8 +15,8 @@ import {
   $exportMarkdown,
   $importMarkdown,
   richTextareaNodes,
-} from '#primitives/inputs/rich-textarea/web/rich-textarea-markdown';
-import { registerMarkdownOnly } from '#primitives/inputs/rich-textarea/web/rich-textarea-paste';
+} from './rich-textarea-markdown';
+import { registerMarkdownOnly } from './rich-textarea-paste';
 
 // The editor with the web drawing's nodes, without a DOM.
 function headlessEditor(): LexicalEditor {

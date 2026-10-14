@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Feed } from '#features/feed';
 import { useContentWide } from '#lib/product/content-layout';
 import { SessionColumn } from '#lib/product/session-column';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import type { StartingFeed } from '../../state/starting-feed';
 
 const noOlderRows = (): void => {};

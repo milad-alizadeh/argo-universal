@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { Button } from '#primitives/buttons/button/button';
+import { Button } from '#primitives/buttons/button';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { SplitButton } from './split-button';
 

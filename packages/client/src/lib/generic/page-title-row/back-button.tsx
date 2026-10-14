@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+import { IconButton } from '#primitives/buttons/icon-button';
 
 export interface BackButtonProps {
   onBack: () => void;

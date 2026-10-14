@@ -212,7 +212,7 @@
       "rules": { "vitest/no-conditional-expect": "off" }
     },
     {
-      // Client code reaches a primitive only through #primitives/*, which stays extensionless so Metro picks the platform file (ADR-0020). Later client blocks repeat these patterns.
+      // Client code reaches a primitive only through its folder's index, #primitives/<group>/<name>, whose extensionless relative imports let Metro pick the platform file (ADR-0020). Later client blocks repeat these patterns.
       "files": ["packages/client/**"],
       "rules": {
         "no-restricted-imports": [
@@ -226,6 +226,10 @@
               {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               }
             ]
           }
@@ -247,6 +251,10 @@
               {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
                 "regex": "^#features/[^/]+/",
@@ -280,6 +288,10 @@
               {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
                 "regex": "^#features/[^/]+/",
@@ -330,6 +342,10 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+              },
+              {
                 "regex": "^#features/[^/]+/",
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
@@ -376,6 +392,10 @@
               {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
                 "regex": "^#features/[^/]+/",
@@ -500,6 +520,10 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+              },
+              {
                 "regex": "(^|/)use-[^/]*-query$",
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
@@ -622,6 +646,10 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+              },
+              {
                 "regex": "(^|/)use-[^/]*-query$",
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
@@ -664,6 +692,10 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+              },
+              {
                 "regex": "^\\.\\./(components|screens)(/|$)",
                 "message": "The Connection, its tRPC client and the Feed view never import components or screens (A2)."
               },
@@ -702,6 +734,59 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+              },
+              {
+                "regex": "^#(features|lib/product)/",
+                "message": "Generic code imports neither product nor local code (A2)."
+              },
+              {
+                "regex": "^(\\.\\./)+(features|product)(/|$)",
+                "message": "Generic code imports neither product nor local code (A2)."
+              },
+              {
+                "group": ["@repo/**", "!@repo/uniwind", "!@repo/uniwind/**"],
+                "message": "Generic code imports neither product nor local code (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // A primitive folder's files reach another primitive only through its index (#primitives/<group>/<name>), never relatively. Repeats the lib/generic patterns.
+      "files": [
+        "packages/client/src/lib/generic/primitives/*/*/*",
+        "packages/client/src/lib/generic/primitives/pressable/*"
+      ],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+              },
+              {
+                "regex": "^(\\.\\./)+(buttons|display|fields|inputs|lists|native|overlays|pressable)(/|$)",
+                "message": "Import another primitive through its folder's index, #primitives/<group>/<name>."
+              },
+              {
+                "regex": "^\\.\\./[a-z]",
+                "message": "Import another primitive through its folder's index, #primitives/<group>/<name>."
+              },
+              {
                 "regex": "^#(features|lib/product)/",
                 "message": "Generic code imports neither product nor local code (A2)."
               },
@@ -734,6 +819,10 @@
               {
                 "regex": "^\\.\\.?/(.*/)?primitives/",
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
                 "regex": "^#features/",
@@ -1849,13 +1938,12 @@
       "rules": { "argo/acp-sdk-zone": "error" }
     },
     {
-      // ADR-0023: Lexical stays in the RichTextarea web drawing: its view, the web/ folder and their tests, with the tests' headless editor.
+      // ADR-0023: Lexical stays in the RichTextarea web drawing: its view, the web/ folder (with the tests' headless editor) and their tests.
       "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
       "excludeFiles": [
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea.tsx",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/web/**",
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*",
-        "packages/client/mocks/rich-textarea-headless.ts"
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*"
       ],
       "rules": { "argo/lexical-zone": "error" }
     },

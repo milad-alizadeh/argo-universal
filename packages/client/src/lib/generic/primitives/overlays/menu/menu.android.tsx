@@ -1,8 +1,8 @@
 import { DropdownMenu, type DropdownMenuProps } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { useState } from 'react';
-import { Host } from '../../native/host';
-import { usePrimitiveColor } from '../../native/primitive-color';
+import { Host } from '#primitives/native/host';
+import { usePrimitiveColor } from '#primitives/native/primitive-color';
 import { MenuActionItem, MenuChoice } from './menu-choice.android';
 import {
   type ActionMenuProps,

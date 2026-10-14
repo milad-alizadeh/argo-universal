@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { Text } from '#primitives/display/text';
+import { useSidebarFields } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
-import { Text } from '../../display/text/text';
-import { useSidebarFields } from '../../fields/field-layout';
 import { ListItemAccessory } from './list-item-accessory';
 import { Disclosure } from './list-item-disclosure';
 import { ListItemLeading } from './list-item-leading';

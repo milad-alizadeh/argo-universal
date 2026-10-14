@@ -1,7 +1,7 @@
 import { AlertDialog, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
-import { Host } from '../../native/host';
+import { Host } from '#primitives/native/host';
 import {
   alertActionPress,
   type AlertAction,

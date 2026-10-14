@@ -4,7 +4,7 @@ import {
   ScreenHeader,
   type ScreenHeaderProps,
 } from '#lib/product/navigation/screen-header';
-import { Menu } from '#primitives/overlays/menu/menu';
+import { Menu } from '#primitives/overlays/menu';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentsFilter } from '../../state/agent-status';
 import {

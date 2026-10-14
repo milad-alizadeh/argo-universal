@@ -1,11 +1,11 @@
 import type { ElicitationPropertySchema } from '@repo/contracts';
 import type { ReactElement } from 'react';
-import { Checkbox } from '#primitives/inputs/checkbox/checkbox';
-import { Picker } from '#primitives/inputs/picker/picker';
+import { Checkbox } from '#primitives/inputs/checkbox';
+import { Picker } from '#primitives/inputs/picker';
 import {
   TextInput,
   type StandaloneTextInputProps,
-} from '#primitives/inputs/text-input/text-input';
+} from '#primitives/inputs/text-input';
 import { ElicitationChoices } from './elicitation-choices';
 import { elicitationChoices, numericProperty } from './elicitation-property';
 import type { ElicitationValue } from './elicitation-schema';

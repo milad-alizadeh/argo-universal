@@ -13,9 +13,9 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { createElement } from 'react';
 import { useWindowDimensions } from 'react-native';
+import { roundedOutline } from '#primitives/native/native-modifiers';
+import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
-import { roundedOutline } from '../../native/compose-corners';
-import { useComposeTextStyle } from '../../native/native-typography';
 import { DialogTitle, DialogCancel } from './picker-dialog-content.android';
 import { AndroidPickerOption } from './picker-option.android';
 import type { PickerProps } from './picker-props';

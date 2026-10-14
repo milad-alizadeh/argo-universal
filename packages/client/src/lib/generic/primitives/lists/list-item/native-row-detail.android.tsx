@@ -1,7 +1,7 @@
 import { Column } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { NativeControl } from '../../native/native-control';
+import { NativeControl } from '#primitives/native/native-control';
 import type { ListItemProps } from './list-item-props';
 
 const detailGutter = 16;

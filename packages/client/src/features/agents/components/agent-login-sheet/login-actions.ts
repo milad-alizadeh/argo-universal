@@ -1,5 +1,5 @@
 import type { AgentLoginSnapshot } from '@repo/contracts';
-import type { ButtonDataProps } from '#primitives/buttons/button/button-props';
+import type { ButtonDataProps } from '#primitives/buttons/button';
 import { ongoingLogin } from './login-copy';
 import type { AgentLoginSheetProps } from './login-props';
 

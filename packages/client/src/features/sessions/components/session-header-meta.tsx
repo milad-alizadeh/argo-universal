@@ -7,7 +7,7 @@ import {
   StatusIndicator,
   statusLabels,
 } from '#lib/product/status-indicator/status-indicator';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import { PullRequestChecks } from './pull-request-checks';
 import type {
   SessionHeaderProps,

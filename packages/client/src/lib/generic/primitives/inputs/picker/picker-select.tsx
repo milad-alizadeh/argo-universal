@@ -1,10 +1,10 @@
 import * as SelectPrimitive from '@rn-primitives/select';
 import type * as React from 'react';
 import { cn } from '#lib/generic/utils';
-import { Icon, IconSlot } from '#primitives/display/icon/icon';
+import { Icon, IconSlot } from '#primitives/display/icon';
+import { SelectedCheck } from '#primitives/display/selected-check';
 import type { IconName } from '../../../symbols/icon-names';
 import { useWide } from '../../../use-wide/use-wide';
-import { SelectedCheck } from '../../display/selected-check';
 import { SelectContent } from './picker-select-content';
 import {
   type SelectVariant,

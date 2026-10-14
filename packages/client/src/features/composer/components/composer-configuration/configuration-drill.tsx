@@ -1,14 +1,14 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import { Text } from '#primitives/display/text/text';
-import { ListItem } from '#primitives/lists/list-item/list-item';
-import { ListItemEnd } from '#primitives/lists/list-item/list-item-position';
+import { Text } from '#primitives/display/text';
+import { ListItem } from '#primitives/lists/list-item';
+import { ListItemEnd } from '#primitives/lists/list-item';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
   usePopoverClose,
-} from '#primitives/overlays/popover/popover';
+} from '#primitives/overlays/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentChoices } from './agent-choices';
 import { AgentIcon } from './agent-icon';

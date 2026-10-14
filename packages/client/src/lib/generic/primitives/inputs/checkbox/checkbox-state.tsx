@@ -1,10 +1,10 @@
 import {
   useFieldDescription,
   type FieldDescription,
-} from '../../fields/field-description';
+} from '#primitives/fields/field-description';
 import type { CheckboxProps } from './checkbox-props';
 
-export { FieldDescriptionFooter as CheckboxFooter } from '../../fields/field-description';
+export { FieldDescriptionFooter as CheckboxFooter } from '#primitives/fields/field-description';
 
 export type CheckboxState = FieldDescription & { toggle: () => void };
 

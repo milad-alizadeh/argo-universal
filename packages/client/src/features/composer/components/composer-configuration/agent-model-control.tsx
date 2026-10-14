@@ -1,8 +1,8 @@
 import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
 import type * as React from 'react';
 import { useContentWide } from '#lib/product/content-layout';
-import { Button } from '#primitives/buttons/button/button';
-import { Spinner } from '#primitives/display/spinner/spinner';
+import { Button } from '#primitives/buttons/button';
+import { Spinner } from '#primitives/display/spinner';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { AgentIcon } from './agent-icon';
 import { AgentModelMenu } from './agent-model-menu';

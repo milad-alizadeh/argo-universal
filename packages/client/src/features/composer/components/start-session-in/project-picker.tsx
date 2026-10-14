@@ -4,11 +4,11 @@ import { useState, type JSX } from 'react';
 import { Platform, View } from 'react-native';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ComboboxSearch } from '#primitives/inputs/combobox-search/combobox-search';
-import { ListItem } from '#primitives/lists/list-item/list-item';
-import { ListItemEnd } from '#primitives/lists/list-item/list-item-position';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldSection } from '#primitives/fields/field-section';
+import { ComboboxSearch } from '#primitives/inputs/combobox-search';
+import { ListItem } from '#primitives/lists/list-item';
+import { ListItemEnd } from '#primitives/lists/list-item';
 
 interface ProjectPickerProps {
   projects: ProjectInfo[];

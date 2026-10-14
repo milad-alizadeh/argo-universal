@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { ScrollView } from 'react-native';
+import { FieldLayout } from '#primitives/fields/field-layout';
 import {
   ScrollColumnContext,
   useScrollColumnStyle,
 } from '../../../scroll-column';
 import { cn } from '../../../utils';
-import { FieldLayout } from '../field-layout';
 import type { FieldGroupProps } from './field-group-props';
 import { fieldGroupGap, fieldGroupPadding } from './field-group-spacing';
 

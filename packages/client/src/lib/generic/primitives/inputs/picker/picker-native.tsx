@@ -3,9 +3,9 @@ import { View } from 'react-native';
 import {
   FieldDescriptionFooter,
   useFieldDescription,
-} from '../../fields/field-description';
-import { useInListItem } from '../../lists/list-item/list-item-accessory';
-import { Host, type HostProps } from '../../native/host';
+} from '#primitives/fields/field-description';
+import { useInListItem } from '#primitives/lists/list-item';
+import { Host, type HostProps } from '#primitives/native/host';
 import type { PickerProps } from './picker-props';
 
 export type PickerPresentation = {

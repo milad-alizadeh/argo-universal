@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import { PageHeader } from './page-header';
 
 interface PlaceholderProps {

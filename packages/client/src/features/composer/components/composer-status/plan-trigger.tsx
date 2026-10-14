@@ -3,9 +3,9 @@ import type { JSX } from 'react';
 import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/display/icon/icon';
-import { Text } from '#primitives/display/text/text';
-import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
+import { Pressable, contentActionClass } from '#primitives/pressable';
 import { completedSteps } from '../../state/status';
 import { chipClassName, unselectableTextClassName } from './status-surface';
 

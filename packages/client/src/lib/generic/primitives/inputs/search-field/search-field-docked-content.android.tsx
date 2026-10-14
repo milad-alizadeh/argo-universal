@@ -17,11 +17,11 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useCSSVariable } from 'uniwind';
+import { useFollowedText } from '#primitives/native/followed-text';
+import { roundedClip } from '#primitives/native/native-modifiers';
+import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { roundedClip } from '../../native/compose-corners';
-import { useFollowedText } from '../../native/followed-text';
-import { useComposeTextStyle } from '../../native/native-typography';
 import type { DockedSearchQuery } from './search-field-props';
 
 // The space after the text, as before the icon.

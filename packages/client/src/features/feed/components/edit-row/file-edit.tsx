@@ -6,11 +6,11 @@ import { cn } from '#lib/generic/utils';
 import {
   Collapsible,
   CollapsibleContent,
-} from '#primitives/display/collapsible/collapsible';
-import { DisclosureChevron } from '#primitives/display/disclosure-chevron/disclosure-chevron';
-import { Icon } from '#primitives/display/icon/icon';
-import { Text, TextClassContext } from '#primitives/display/text/text';
-import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
+} from '#primitives/display/collapsible';
+import { DisclosureChevron } from '#primitives/display/disclosure-chevron';
+import { Icon } from '#primitives/display/icon';
+import { Text, TextClassContext } from '#primitives/display/text';
+import { Pressable, contentActionClass } from '#primitives/pressable';
 import type { FileDiff } from '../../view/file-diff';
 import { DiffView } from '../diff-view/diff-view';
 import { FileName } from './file-name';

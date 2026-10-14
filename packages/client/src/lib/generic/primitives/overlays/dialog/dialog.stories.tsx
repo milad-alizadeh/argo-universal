@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button';
-import { Text } from '#primitives/display/text/text';
-import { TextInput } from '#primitives/inputs/text-input/text-input';
+import { Button } from '#primitives/buttons/button';
+import { Text } from '#primitives/display/text';
+import { TextInput } from '#primitives/inputs/text-input';
+import { Pressable, contentActionClass } from '#primitives/pressable';
 import {
   Dialog,
   DialogCancel,
@@ -12,8 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '#primitives/overlays/dialog/dialog';
-import { Pressable, contentActionClass } from '../../pressable/pressable';
+} from './dialog';
 
 function DialogPreview(): React.JSX.Element {
   return (

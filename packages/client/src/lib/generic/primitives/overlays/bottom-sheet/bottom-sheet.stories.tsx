@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button';
-import { Text } from '#primitives/display/text/text';
+import { Button } from '#primitives/buttons/button';
+import { Text } from '#primitives/display/text';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { BottomSheet } from './bottom-sheet';
 

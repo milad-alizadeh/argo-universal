@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   marksAfterPasting,
   roundTripWithPasteCleanUp,
-} from '../../../../../../../mocks/rich-textarea-headless';
+} from './rich-textarea-headless.mocks';
 
 // Lexical draws underline as a theme class, so only the editor's text nodes show it is gone.
 const pastedMarks = [

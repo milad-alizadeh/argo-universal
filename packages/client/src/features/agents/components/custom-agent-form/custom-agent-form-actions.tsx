@@ -1,8 +1,8 @@
 import { useStore } from '@tanstack/react-form';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button';
-import { FieldGroupContent } from '#primitives/fields/field-group-content/field-group-content';
+import { Button } from '#primitives/buttons/button';
+import { FieldGroupContent } from '#primitives/fields/field-group-content';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { FormPartProps } from './custom-agent-form-sections';
 

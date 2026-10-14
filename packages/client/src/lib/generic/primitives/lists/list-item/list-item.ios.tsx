@@ -9,9 +9,9 @@ import {
   listRowSeparatorTint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
+import { useNavigationFields } from '#primitives/fields/field-layout';
 import { type NativeColors, useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
-import { useNavigationFields } from '../../fields/field-layout';
 import { rowAccessibilityModifiers } from './list-item-accessibility';
 import type { ListItemProps } from './list-item-props';
 import { RowContent } from './list-item-row.ios';

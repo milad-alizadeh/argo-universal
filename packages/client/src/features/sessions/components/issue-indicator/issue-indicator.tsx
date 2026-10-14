@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon/icon';
-import { Text } from '#primitives/display/text/text';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 
 export interface IssueIndicatorProps {
   number: number;

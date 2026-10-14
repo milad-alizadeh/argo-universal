@@ -2,7 +2,7 @@ import { Switch as ComposeSwitch } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
-import { ControlHost } from '../../native/native-control';
+import { ControlHost } from '#primitives/native/native-control';
 import type { SwitchProps } from './switch-props';
 
 type SwitchColors = NonNullable<

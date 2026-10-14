@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { DockedSearchQuery } from '../../inputs/search-field/search-field-props';
+import type { DockedSearchQuery } from '#primitives/inputs/search-field';
 
 export interface FieldGroupProps {
   children: ReactNode;

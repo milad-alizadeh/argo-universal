@@ -1,10 +1,10 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
-import type { ListItemProps } from '#primitives/lists/list-item/list-item-props';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldSection } from '#primitives/fields/field-section';
+import { ListItem } from '#primitives/lists/list-item';
+import type { ListItemProps } from '#primitives/lists/list-item';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { LoadedProps } from './project-list-props';
 import { listSearch } from './project-list-search';

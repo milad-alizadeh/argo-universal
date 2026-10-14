@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import {
   PageTitleRow,
   type PageTitleRowProps,

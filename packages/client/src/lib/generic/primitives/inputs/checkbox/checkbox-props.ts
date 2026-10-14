@@ -1,4 +1,4 @@
-import type { FieldErrors } from '../../fields/field-errors';
+import type { FieldErrors } from '#primitives/fields/field-errors';
 
 export interface CheckboxProps {
   label: string;

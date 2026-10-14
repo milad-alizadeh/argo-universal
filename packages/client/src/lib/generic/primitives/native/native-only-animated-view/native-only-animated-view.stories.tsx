@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { FadeIn } from 'react-native-reanimated';
-import { Text } from '../../display/text/text';
+import { Text } from '#primitives/display/text';
 import { NativeOnlyAnimatedView } from './native-only-animated-view';
 
 function AnimationExample(): React.JSX.Element {

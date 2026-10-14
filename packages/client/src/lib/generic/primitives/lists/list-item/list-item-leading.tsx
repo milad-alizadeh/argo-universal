@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon, IconSlot, IconSpinner } from '#primitives/display/icon/icon';
+import { Icon, IconSlot, IconSpinner } from '#primitives/display/icon';
 import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
 

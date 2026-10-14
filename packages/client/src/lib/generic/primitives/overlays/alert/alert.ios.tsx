@@ -5,7 +5,7 @@ import {
   Text,
 } from '@expo/ui/swift-ui';
 import type * as React from 'react';
-import { Host } from '../../native/host';
+import { Host } from '#primitives/native/host';
 import {
   alertActionPress,
   isDestructiveAlert,

@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { Linking, Pressable, View } from 'react-native';
-import { Icon } from '#primitives/display/icon/icon';
-import { Text } from '#primitives/display/text/text';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
+import { ListItem } from '#primitives/lists/list-item';
 import type { AgentDetail } from '../../state/agent-detail-types';
 
 type AgentLink = NonNullable<AgentDetail['links']>[number];

@@ -1,10 +1,13 @@
 import type * as React from 'react';
 import { useId } from 'react';
 import { View } from 'react-native';
+import { Text } from '#primitives/display/text';
+import {
+  FooterProvider,
+  type SectionFooter,
+} from '#primitives/fields/field-description';
+import { useNavigationFields } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
-import { Text } from '../../display/text/text';
-import { FooterProvider, type SectionFooter } from '../field-footer';
-import { useNavigationFields } from '../field-layout';
 import type { FieldSectionProps } from './field-section-props';
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {

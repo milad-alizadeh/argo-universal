@@ -16,10 +16,10 @@ import {
   textInputAutocapitalization,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
+import { useFollowedText } from '#primitives/native/followed-text';
+import { useSwiftUITextModifiers } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
-import { useFollowedText } from '../../native/followed-text';
-import { useSwiftUITextModifiers } from '../../native/native-typography';
 import { isInvalid, type TextFieldProps } from './text-input-props';
 import { RowTextInput as WebRowTextInput } from './text-input-row.tsx';
 

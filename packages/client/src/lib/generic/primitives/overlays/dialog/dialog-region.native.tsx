@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { BottomSheet } from '../bottom-sheet/bottom-sheet';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet';
 import type { DialogRegionProps } from './dialog-region.types';
 
 // The region opens tall and its content owns scrolling, so actions at its foot stay in view.

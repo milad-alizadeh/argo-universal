@@ -2,8 +2,8 @@ import * as DialogPrimitive from '@rn-primitives/dialog';
 import * as React from 'react';
 import { Text } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/display/icon/icon';
-import { keepOpen } from '../bottom-sheet/keep-open';
+import { Icon } from '#primitives/display/icon';
+import { keepOpen } from '#primitives/overlays/bottom-sheet';
 
 // Only what both the centred dialog and the narrow window's sheet honour.
 export type ContentProps = {

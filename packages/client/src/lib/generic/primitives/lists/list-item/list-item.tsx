@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { useContext } from 'react';
 import { Pressable, View } from 'react-native';
-import { useNavigationFields } from '../../fields/field-layout';
+import { useNavigationFields } from '#primitives/fields/field-layout';
 import { ListItemBody } from './list-item-content';
 import {
   ListItemCorners,

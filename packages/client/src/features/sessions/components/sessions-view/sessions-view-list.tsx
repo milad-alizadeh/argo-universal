@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { SearchField } from '#primitives/inputs/search-field/search-field';
+import { SearchField } from '#primitives/inputs/search-field';
 import { SessionsList } from '../sessions-list/sessions-list';
 import type { SessionsListProps } from '../sessions-list/sessions-list-props';
 import { SessionsLoading } from '../sessions-loading/sessions-loading';

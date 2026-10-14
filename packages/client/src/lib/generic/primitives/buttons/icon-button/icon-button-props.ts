@@ -1,9 +1,9 @@
 import type { ComponentProps, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
-import type { IconProps } from '#primitives/display/icon/icon';
+import type { ButtonSize } from '#primitives/buttons/button';
+import type { IconProps } from '#primitives/display/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import type { IconRole } from '../../../symbols/icon-role';
-import type { ButtonSize } from '../button/button-props';
 
 type ActionProps = Omit<
   ComponentProps<typeof Pressable>,

@@ -10,7 +10,7 @@ import { View } from 'react-native';
 import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import { Caret } from './caret';
 import { useClampLeaf, useLineHeight } from './clamp-leaves';
 import {

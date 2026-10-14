@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button';
-import { Text } from '../../display/text/text';
-import { TextInput } from '../text-input/text-input';
+import { Button } from '#primitives/buttons/button';
+import { Text } from '#primitives/display/text';
+import { TextInput } from '#primitives/inputs/text-input';
 
 export interface LinkFields {
   text: string;

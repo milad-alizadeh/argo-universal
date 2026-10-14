@@ -4,7 +4,7 @@ import {
   linksIn,
   roundTrip,
   type ShownLink,
-} from '../../../../../../../mocks/rich-textarea-headless';
+} from './rich-textarea-headless.mocks';
 import { isScriptUrl } from './rich-textarea-links';
 
 const scriptUrl = 'javascript:alert(1)';

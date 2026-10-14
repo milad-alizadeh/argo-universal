@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { MenuAction } from '#primitives/overlays/menu/menu';
+import type { MenuAction } from '#primitives/overlays/menu';
 
 export interface SplitButtonChoice<Value extends string> {
   value: Value;

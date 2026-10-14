@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import {
   SearchField,
   type SearchFieldProps,
-} from '#primitives/inputs/search-field/search-field';
+} from '#primitives/inputs/search-field';
 import { BackButton } from './back-button';
 import { PageTitle, type PageTitleProps } from './page-title';
 

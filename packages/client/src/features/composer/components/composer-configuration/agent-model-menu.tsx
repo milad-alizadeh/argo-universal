@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { Platform, View } from 'react-native';
-import { Text } from '#primitives/display/text/text';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { PopoverHoverGroup } from '#primitives/overlays/popover/popover';
+import { Text } from '#primitives/display/text';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldSection } from '#primitives/fields/field-section';
+import { PopoverHoverGroup } from '#primitives/overlays/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ConfigurationDrill } from './configuration-drill';
 import { ConfigurationPage } from './configuration-page';

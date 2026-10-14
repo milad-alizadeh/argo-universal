@@ -6,9 +6,9 @@ import { codeBlockGroup } from '#lib/product/markdown/copy-button';
 import {
   Collapsible,
   CollapsibleContent,
-} from '#primitives/display/collapsible/collapsible';
-import { Text } from '#primitives/display/text/text';
-import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
+} from '#primitives/display/collapsible';
+import { Text } from '#primitives/display/text';
+import { Pressable, contentActionClass } from '#primitives/pressable';
 import type { FileDiff } from '../../view/file-diff';
 import { FileHeader, type FileHeaderProps } from './diff-file-header';
 import { DiffScroll } from './diff-hunks';

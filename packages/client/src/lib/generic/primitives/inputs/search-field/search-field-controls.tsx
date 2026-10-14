@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { type RefObject, useRef } from 'react';
 import { Pressable, type TextInput, View } from 'react-native';
-import { iconButtonClasses } from '../../buttons/icon-button/icon-button-styles';
+import { iconButtonClasses } from '#primitives/buttons/icon-button';
 import { Lens, type MorphState, OpenField } from './search-field-parts';
 import { QueryInput } from './search-field-query';
 

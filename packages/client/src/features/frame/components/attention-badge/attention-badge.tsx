@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import type { ViewProps } from 'react-native';
-import { Badge } from '#primitives/display/badge/badge';
-import { Text } from '#primitives/display/text/text';
+import { Badge } from '#primitives/display/badge';
+import { Text } from '#primitives/display/text';
 import {
   type AttentionBadge as Badged,
   attentionBadge,

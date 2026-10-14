@@ -1,6 +1,6 @@
 import * as MenuPrimitive from '@rn-primitives/dropdown-menu';
 import type * as React from 'react';
-import { Text, TextClassContext } from '../../display/text/text';
+import { Text, TextClassContext } from '#primitives/display/text';
 import type { ActionMenuProps, MenuAction } from './menu-props';
 import {
   actionContentClassName,

@@ -1,10 +1,10 @@
 import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
-import { IconSlot } from '#primitives/display/icon/icon';
+import { IconSlot } from '#primitives/display/icon';
+import { NativeControl } from '#primitives/native/native-control';
 import type { IconName } from '../../../symbols/icon-names';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { NativeControl } from '../../native/native-control';
 import { ListItemAccessory } from './list-item-accessory';
 import { type ListItemProps, listItemStatus } from './list-item-props';
 import { hiddenFromAccessibility, StatusDot } from './status-dot';

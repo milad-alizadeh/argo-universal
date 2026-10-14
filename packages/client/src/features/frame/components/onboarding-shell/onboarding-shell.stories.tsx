@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import { OnboardingShell, type OnboardingShellProps } from './onboarding-shell';
 
 const meta = {

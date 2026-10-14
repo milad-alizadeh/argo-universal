@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { Platform, TextInput } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { cn } from '#lib/generic/utils';
-import { usePrimitiveColor } from '../../native/primitive-color';
+import { usePrimitiveColor } from '#primitives/native/primitive-color';
 
 type TextareaProps = React.ComponentProps<typeof TextInput> &
   React.RefAttributes<TextInput>;

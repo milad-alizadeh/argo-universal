@@ -5,7 +5,7 @@ import { ScrollView, View } from 'react-native';
 import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import { ClampedBlock } from './clamped-block';
 import { InlineTokens } from './inline-tokens';
 import type { BlockTokenProps } from './markdown-tokens';

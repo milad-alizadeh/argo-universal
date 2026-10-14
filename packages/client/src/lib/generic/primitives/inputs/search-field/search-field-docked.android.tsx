@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { Host } from '#primitives/native/host';
 import { useWide } from '../../../use-wide/use-wide';
-import { Host } from '../../native/host';
 import { DockedSearchFieldContent } from './search-field-docked-content';
 import type { DockedSearchFieldProps } from './search-field-props';
 

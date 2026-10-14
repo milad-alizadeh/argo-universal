@@ -4,9 +4,9 @@ import {
   scrollContentBackground,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
+import { FieldLayout } from '#primitives/fields/field-layout';
+import { Host } from '#primitives/native/host';
 import { useWide } from '../../../use-wide/use-wide';
-import { Host } from '../../native/host';
-import { FieldLayout } from '../field-layout';
 import type { FieldGroupProps } from './field-group-props';
 import { FieldGroup as WebFieldGroup } from './field-group.tsx';
 

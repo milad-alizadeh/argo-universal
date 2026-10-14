@@ -1,8 +1,8 @@
 import { createElement } from 'react';
 import { View } from 'react-native';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 import { cn } from '../../../utils';
-import { Icon } from '../../display/icon/icon';
-import { Text } from '../../display/text/text';
 import type { CheckboxProps, CheckboxIndicatorProps } from './checkbox-props';
 import {
   CheckboxFooter,

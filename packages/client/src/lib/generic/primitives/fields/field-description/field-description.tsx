@@ -4,8 +4,11 @@ import {
   type ComponentProps,
   type ReactElement,
 } from 'react';
-import { Text } from '../display/text/text';
-import { errorMessage, type FieldErrors } from './field-errors';
+import { Text } from '#primitives/display/text';
+import {
+  errorMessage,
+  type FieldErrors,
+} from '#primitives/fields/field-errors';
 import { useFooterDescription } from './field-footer';
 
 export type DescribedField = {

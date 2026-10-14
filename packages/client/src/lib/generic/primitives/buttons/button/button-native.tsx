@@ -1,7 +1,7 @@
 import type { ComponentType, ReactElement } from 'react';
-import { Icon } from '#primitives/display/icon/icon';
+import { Icon } from '#primitives/display/icon';
+import { Host } from '#primitives/native/host';
 import type { IconName } from '../../../symbols/icon-names';
-import { Host } from '../../native/host';
 import { ContentButton } from './button-content';
 import { withNarrowLayout } from './button-layout';
 import { useNativeButtonTheme, type ButtonTheme } from './button-native-colors';

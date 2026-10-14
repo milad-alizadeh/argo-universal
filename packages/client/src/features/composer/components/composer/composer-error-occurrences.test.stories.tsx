@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
-import { dismissToasts } from '#primitives/overlays/toast/toast';
+import { dismissToasts } from '#primitives/overlays/toast';
 import {
   composerProps,
   oversizedComposerImage,

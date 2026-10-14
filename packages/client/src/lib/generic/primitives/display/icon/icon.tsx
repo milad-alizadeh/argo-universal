@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
-import { TextClassContext } from '#primitives/display/text/text';
+import { TextClassContext } from '#primitives/display/text';
 import { appleSymbol } from '../../../symbols/apple-symbol';
 import { type IconName, iconSymbols } from '../../../symbols/icon-names';
 import {

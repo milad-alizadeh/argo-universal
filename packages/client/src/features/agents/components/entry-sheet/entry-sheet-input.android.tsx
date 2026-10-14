@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { TextInput } from '#primitives/inputs/text-input/text-input';
+import { TextInput } from '#primitives/inputs/text-input';
 import { Host } from '#primitives/native/host';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { EntrySheetField } from './entry-sheet';

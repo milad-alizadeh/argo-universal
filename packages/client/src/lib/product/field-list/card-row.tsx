@@ -3,7 +3,7 @@ import {
   ListItemCorners,
   ListItemEnd,
   ListItemHover,
-} from '#primitives/lists/list-item/list-item-position';
+} from '#primitives/lists/list-item';
 import type { FieldListEntry } from './field-list-entries';
 import { type HoverStore, useRowHover } from './field-row-hover-store';
 

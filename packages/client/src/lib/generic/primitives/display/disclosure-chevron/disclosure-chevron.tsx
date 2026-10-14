@@ -6,7 +6,7 @@ import Animated, {
   useDerivedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Icon } from '#primitives/display/icon/icon';
+import { Icon } from '#primitives/display/icon';
 import { motionDuration, quarterTurnDegrees } from '../../../motion';
 import { cn } from '../../../utils';
 

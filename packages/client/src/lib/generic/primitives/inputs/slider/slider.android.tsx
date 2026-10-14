@@ -2,7 +2,7 @@ import { Slider as NativeSlider } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { ControlHost } from '../../native/native-control';
+import { ControlHost } from '#primitives/native/native-control';
 import type { SliderProps } from './slider-props';
 import { type SliderRange, sliderStopCount } from './slider-steps';
 

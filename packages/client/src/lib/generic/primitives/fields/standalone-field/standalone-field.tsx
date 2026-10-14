@@ -4,9 +4,12 @@ import {
   FieldDescriptionFooter,
   useFieldDescription,
   type FieldDescription,
-} from './field-description';
-import type { FieldErrors } from './field-errors';
-import { FooterProvider, type SectionFooter } from './field-footer';
+} from '#primitives/fields/field-description';
+import {
+  FooterProvider,
+  type SectionFooter,
+} from '#primitives/fields/field-description';
+import type { FieldErrors } from '#primitives/fields/field-errors';
 
 type FieldProps = {
   errors?: FieldErrors;

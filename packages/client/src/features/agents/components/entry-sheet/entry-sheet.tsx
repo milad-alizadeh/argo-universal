@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button';
+import { Button } from '#primitives/buttons/button';
 import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from '#primitives/overlays/dialog/dialog';
+} from '#primitives/overlays/dialog';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type TextField, touchedInput } from '../form-field';
 import { EntrySheetInput } from './entry-sheet-input';

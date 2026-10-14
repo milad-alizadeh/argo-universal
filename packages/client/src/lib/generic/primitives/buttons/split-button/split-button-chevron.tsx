@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { cn } from '#lib/generic/utils';
-import { IconButton } from '../icon-button/icon-button';
+import { IconButton } from '#primitives/buttons/icon-button';
 import type { SplitMenuProps } from './split-button-props';
 
 type ChevronProps = Pick<

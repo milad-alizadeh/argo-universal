@@ -1,8 +1,8 @@
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/display/icon/icon';
-import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
+import { Icon } from '#primitives/display/icon';
+import { Pressable, contentActionClass } from '#primitives/pressable';
 import type { ComposerStatusProps, ComposerWork } from '../../state/status';
 import {
   ChipSurface,

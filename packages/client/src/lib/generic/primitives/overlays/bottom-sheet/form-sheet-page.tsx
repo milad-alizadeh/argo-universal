@@ -1,12 +1,12 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { BottomSheetContent } from '../bottom-sheet/bottom-sheet-content';
 import {
   SheetNavigationProvider,
   useFormSheetCommands,
   useFormSheetState,
-} from './form-sheet-context';
-import type { FormSheetProps } from './form-sheet-types';
+} from '#primitives/overlays/form-sheet';
+import type { FormSheetProps } from '#primitives/overlays/form-sheet';
+import { BottomSheetContent } from './bottom-sheet-content';
 
 type PageProps = {
   headerInset?: number;

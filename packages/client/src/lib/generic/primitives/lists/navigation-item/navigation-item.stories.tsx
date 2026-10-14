@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Badge } from '#primitives/display/badge/badge';
-import { Text } from '#primitives/display/text/text';
+import { Badge } from '#primitives/display/badge';
+import { Text } from '#primitives/display/text';
 import type { IconName } from '../../../symbols/icon-names';
 import { NavigationItem } from './navigation-item';
 

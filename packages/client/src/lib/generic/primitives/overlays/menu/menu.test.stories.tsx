@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { Text } from '#primitives/display/text';
+import { Pressable, contentActionClass } from '#primitives/pressable';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
-import { Text } from '../../display/text/text';
-import { Pressable, contentActionClass } from '../../pressable/pressable';
 import { Menu } from './menu';
 
 const askLabel = 'Ask before changes';

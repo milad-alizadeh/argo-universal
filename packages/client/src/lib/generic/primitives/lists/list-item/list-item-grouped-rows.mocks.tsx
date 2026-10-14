@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldSection } from '#primitives/fields/field-section';
 import { ListItem } from './list-item';
 import {
   CodeRows,

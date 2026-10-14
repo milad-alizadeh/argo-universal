@@ -1,8 +1,8 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
-import { Text } from '../../display/text/text';
-import { useFooterDescription } from '../../fields/field-footer';
-import { StandaloneField } from '../../fields/standalone-field';
+import { Text } from '#primitives/display/text';
+import { useFooterDescription } from '#primitives/fields/field-description';
+import { StandaloneField } from '#primitives/fields/standalone-field';
 import { BareTextInput } from './text-input-bare';
 import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
 

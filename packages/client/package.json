@@ -11,11 +11,8 @@
   },
   "imports": {
     "#primitives/*": {
-      "types": [
-        "./src/lib/generic/primitives/*.tsx",
-        "./src/lib/generic/primitives/*.ts"
-      ],
-      "default": "./src/lib/generic/primitives/*"
+      "types": "./src/lib/generic/primitives/*/index.ts",
+      "default": "./src/lib/generic/primitives/*/index.ts"
     },
     "#features/*": "./src/features/*/index.ts",
     "#lib/generic/*": "./src/lib/generic/*.ts",

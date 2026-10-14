@@ -3,7 +3,7 @@ import * as PopoverPrimitive from '@rn-primitives/popover';
 import * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { TextClassContext } from '#primitives/display/text/text';
+import { TextClassContext } from '#primitives/display/text';
 import { HoverProvider, PopoverHover } from './popover-hover';
 import { hoverContentProps } from './popover-hover-focus';
 import { Popover as PopoverRoot } from './popover-root';

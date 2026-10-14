@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
+import { StandaloneField } from '#primitives/fields/standalone-field';
+import { Host } from '#primitives/native/host';
 import { useWide } from '../../../use-wide/use-wide';
-import { StandaloneField } from '../../fields/standalone-field';
-import { Host } from '../../native/host';
 import type { StandaloneTextInputProps } from './text-input-props';
 import { StandaloneTextInput as WebField } from './text-input-standalone.tsx';
 

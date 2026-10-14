@@ -1,6 +1,6 @@
 import type { JSX, ReactNode } from 'react';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 
 interface StatusTextProps {
   children: ReactNode;

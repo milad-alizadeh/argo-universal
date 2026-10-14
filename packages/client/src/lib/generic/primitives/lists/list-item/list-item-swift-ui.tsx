@@ -5,9 +5,9 @@ import {
   accessibilityHidden,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
+import { useSwiftUITextModifiers } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import { useIconPixels } from '../../../symbols/icon-role';
-import { useSwiftUITextModifiers } from '../../native/native-typography';
 import type { ListItemProps } from './list-item-props';
 import { subtitleRole, titleRole, useToneColor } from './list-item-text';
 import { NativeRowGlyph } from './native-row';

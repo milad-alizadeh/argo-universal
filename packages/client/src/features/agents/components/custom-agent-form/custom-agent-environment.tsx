@@ -4,7 +4,7 @@ import {
   errorMessage,
   type FieldErrors,
 } from '#primitives/fields/field-errors';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { FieldSection } from '#primitives/fields/field-section';
 import { VariableRow } from '../custom-agent-launch';
 import { sectionFooter } from '../form-field';
 import { keyedRows } from '../keyed-rows';
