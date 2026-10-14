@@ -61,7 +61,8 @@ type EngineSupplied =
   | 'checkAgentLaunch'
   | 'agentLogins'
   | 'installations'
-  | 'readiness';
+  | 'readiness'
+  | 'resolver';
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
   Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>> & {

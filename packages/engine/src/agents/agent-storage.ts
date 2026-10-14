@@ -1,3 +1,4 @@
+import { AgentConfiguration as SavedConfiguration } from '@repo/contracts';
 import { agents, syncJobs } from '@repo/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../storage';
@@ -159,9 +160,70 @@ export class AgentReadinessSaveJob implements WriterJob {
   }
 }
 
+export type InstallationObservationRow = Pick<
+  typeof agents.$inferInsert,
+  | 'installationLaunch'
+  | 'installationOwner'
+  | 'installationVersion'
+  | 'installationObservedAt'
+> & { id: string };
+
+const foundRegistryConfiguration = JSON.stringify({
+  source: 'registry',
+  release: null,
+  overrides: { args: [], env: [] },
+});
+
+// A found Agent becomes a configured one; a removed one found again comes back. Enabled is never touched.
+const configurationWhenFound = (current: string | null): string | null => {
+  if (current === null) return foundRegistryConfiguration;
+  const parsed = SavedConfiguration.safeParse(parseJson(current));
+  if (!parsed.success || parsed.data.source !== 'registry') return current;
+  if (!parsed.data.removed) return current;
+  return JSON.stringify({ ...parsed.data, removed: undefined });
+};
+const parseJson = (text: string): unknown => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+};
+
+// Saves what the Resolver found; reads the row inside the commit so an install that committed first is kept.
+export class InstallationObservationSaveJob implements WriterJob {
+  public constructor(
+    private readonly rows: readonly InstallationObservationRow[],
+  ) {}
+
+  public describe(): string {
+    return `save installation observations of ${this.rows.length} Agents`;
+  }
+
+  public commit(transaction: StorageTransaction): void {
+    for (const { id, ...observation } of this.rows) {
+      const current = transaction
+        .select({ configuration: agents.configuration })
+        .from(agents)
+        .where(eq(agents.id, id))
+        .get();
+      if (!current) continue;
+      const configuration = observation.installationLaunch
+        ? configurationWhenFound(current.configuration)
+        : current.configuration;
+      transaction
+        .update(agents)
+        .set({ ...observation, configuration })
+        .where(eq(agents.id, id))
+        .run();
+    }
+  }
+}
+
 // The jobs whose commit can change what the Agent catalog shows.
 export const changesAgentCatalog = (job: WriterJob): boolean =>
   job instanceof AgentCatalogReplaceJob ||
+  job instanceof InstallationObservationSaveJob ||
   job instanceof SyncJobUpdateJob ||
   job instanceof AgentConfigurationSaveJob ||
   job instanceof AgentReadinessSaveJob;

@@ -2,17 +2,22 @@ import type { AgentInfo, ConfiguredAgent } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { readAgentCatalog } from './catalog-sql';
 import { readConfiguredAgents } from './configuration/configuration-sql';
-import {
-  checkSelectedFiles,
-  readInstallSelection,
-} from './install/selection/selection';
 import { readSavedReadiness } from './readiness/readiness-sql';
-import { notFoundReason } from './readiness/readiness-target';
+import { missingReason } from './readiness/readiness-target';
+import {
+  readRegistrySource,
+  type RegistrySource,
+} from './resolver/installation';
+import {
+  type InstallationObservation,
+  readInstallationObservations,
+} from './resolver/observation-sql';
 
 type Listing = {
   database: Database;
   home: string;
   saved: ReturnType<typeof readSavedReadiness>;
+  observed: ReturnType<typeof readInstallationObservations>;
 };
 const savedStatus = (
   listing: Listing,
@@ -31,21 +36,18 @@ const customInfo = (
   ...savedStatus(listing, agent.id),
 });
 
-// A missing launch file is visible without launching anything; identity and Sessions stay.
-const installedStatus = async (
+// The Resolver's saved observation decides installed or Not found; a found copy shows its last Readiness.
+const installedStatus = (
   listing: Listing,
   agentId: string,
-  selection: NonNullable<ReturnType<typeof readInstallSelection>>,
-): Promise<Pick<AgentInfo, 'status' | 'reason'>> => {
-  try {
-    await checkSelectedFiles(listing.home, agentId, selection);
-    return savedStatus(listing, agentId);
-  } catch {
-    return {
-      status: 'not-found',
-      reason: notFoundReason(selection.entry.name),
-    };
-  }
+  source: RegistrySource,
+): Pick<AgentInfo, 'status' | 'reason'> => {
+  const observation = listing.observed(agentId);
+  if (observation.observed && !observation.found)
+    return { status: 'not-found', reason: missingReason(source) };
+  const saved = savedStatus(listing, agentId);
+  // Found again after it went missing: Checking… until its new check lands.
+  return saved.status === 'not-found' ? { status: 'checking' } : saved;
 };
 
 const notInstalled = (agent: ConfiguredAgent): AgentInfo => ({
@@ -56,18 +58,35 @@ const notInstalled = (agent: ConfiguredAgent): AgentInfo => ({
   status: 'not-installed',
   reason: 'Install this Agent from Agents.',
 });
-const registryInfo = async (
+const ownerOf = (
+  observation: InstallationObservation,
+): Pick<AgentInfo, 'owner'> =>
+  observation.observed && observation.found
+    ? { owner: observation.owner }
+    : {};
+// Before the Resolver has looked once, only an Argo installation counts as installed.
+const isInstalled = (
+  observation: InstallationObservation,
+  source: RegistrySource,
+): boolean => observation.observed || !!source.selection;
+const registryInfo = (
   listing: Listing,
   agent: ConfiguredAgent,
-): Promise<AgentInfo> => {
-  const selection = readInstallSelection(listing.database, agent.id);
-  if (!selection) return notInstalled(agent);
-  const { name, icon, version } = selection.entry;
-  const identity = { label: name, logo: icon ?? '', version };
-  const status = await installedStatus(listing, agent.id, selection);
-  return { agent: agent.id, enabled: agent.enabled, ...identity, ...status };
+): AgentInfo => {
+  const source = readRegistrySource(listing.database, agent.id);
+  const observation = listing.observed(agent.id);
+  if (!source || !isInstalled(observation, source)) return notInstalled(agent);
+  const { name, icon } = source.entry;
+  const version = source.selection?.entry.version;
+  const identity = { label: name, logo: icon ?? '', ...(version && { version }) };
+  return {
+    agent: agent.id,
+    enabled: agent.enabled,
+    ...identity,
+    ...ownerOf(observation),
+    ...installedStatus(listing, agent.id, source),
+  };
 };
-
 const describe = async (
   listing: Listing,
   agent: ConfiguredAgent,
@@ -101,7 +120,12 @@ export const listAgents = async (
   database: Database,
   home: string,
 ): Promise<AgentInfo[]> => {
-  const listing = { database, home, saved: readSavedReadiness(database) };
+  const listing = {
+    database,
+    home,
+    saved: readSavedReadiness(database),
+    observed: readInstallationObservations(database),
+  };
   const configured = readConfiguredAgents(database).filter(
     ({ configuration }) => !configuration.removed,
   );

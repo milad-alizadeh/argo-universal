@@ -34,6 +34,10 @@ export const AgentsListInput = z
   .optional();
 export type AgentsListInput = z.infer<typeof AgentsListInput>;
 
+// Who owns the copy the Resolver found, derived from its path: Argo's own folder, or anything else.
+export const InstallationOwner = z.enum(['argo', 'unknown']);
+export type InstallationOwner = z.infer<typeof InstallationOwner>;
+
 export const AgentInfo = z.strictObject({
   agent: sessionColumns.shape.agent,
   label: z.string(),
@@ -43,6 +47,8 @@ export const AgentInfo = z.strictObject({
   enabled: z.boolean(),
   status: AgentStatus,
   reason: z.string().optional(),
+  // Set while the Resolver last found a copy on this machine.
+  owner: InstallationOwner.optional(),
 });
 export type AgentInfo = z.infer<typeof AgentInfo>;
 

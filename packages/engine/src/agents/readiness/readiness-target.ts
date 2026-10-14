@@ -5,20 +5,25 @@ import {
   readConfiguredAgents,
 } from '../configuration/configuration-sql';
 import {
-  checkSelectedFiles,
-  readInstallSelection,
-} from '../install/selection/selection';
+  readRegistrySource,
+  type RegistrySource,
+  resolveRegistryInstallation,
+} from '../resolver/installation';
 import { ReadinessSkipped } from './readiness-skipped';
 
-type Selection = NonNullable<ReturnType<typeof readInstallSelection>>;
 export type ReadinessTarget = {
   agentId: string;
   name: string;
-  selection?: Selection;
+  registry?: RegistrySource;
 };
 
 export const notFoundReason = (name: string): string =>
   `The installed files of ${name} are missing. Repair installs them again.`;
+// A copy Argo did not install has no files of Argo's to restore; Repair installs Argo's own.
+export const notOnThisMacReason = (name: string): string =>
+  `${name} is no longer on this Mac. Repair installs it with Argo.`;
+export const missingReason = ({ entry, selection }: RegistrySource): string =>
+  selection ? notFoundReason(entry.name) : notOnThisMacReason(entry.name);
 
 const configured = (agent: ConfiguredAgent | undefined): ConfiguredAgent => {
   if (!agent || agent.configuration.removed)
@@ -34,12 +39,12 @@ const registryTarget = (
   database: Database,
   agentId: string,
 ): ReadinessTarget => {
-  const selection = readInstallSelection(database, agentId);
-  if (!selection) throw new ReadinessSkipped('Agent is not installed.');
-  return { agentId, name: selection.entry.name, selection };
+  const registry = readRegistrySource(database, agentId);
+  if (!registry) throw new ReadinessSkipped('Agent is not installed.');
+  return { agentId, name: registry.entry.name, registry };
 };
 
-// Only an installed, enabled Agent is ever checked; anything else is skipped, never launched.
+// Only a configured, enabled Agent is ever checked; anything else is skipped, never launched.
 export const readTarget = (
   database: Database,
   agentId: string,
@@ -59,19 +64,13 @@ export const checkableAgents = (database: Database): string[] =>
     }
   });
 
-// Missing launch files are Not found without launching anything; identity and Sessions stay.
+// Nothing the Resolver can find is Not found without launching anything; identity and Sessions stay.
 export const missingFiles = async (
   home: string,
   target: ReadinessTarget,
 ): Promise<AgentCheck | null> => {
-  const { agentId, name, selection } = target;
-  if (!selection) return null;
-  const notFound: AgentCheck = {
-    status: 'not-found',
-    reason: notFoundReason(name),
-  };
-  return checkSelectedFiles(home, agentId, selection).then(
-    () => null,
-    () => notFound,
-  );
+  const { agentId, registry } = target;
+  if (!registry) return null;
+  const found = await resolveRegistryInstallation(home, agentId, registry);
+  return found ? null : { status: 'not-found', reason: missingReason(registry) };
 };

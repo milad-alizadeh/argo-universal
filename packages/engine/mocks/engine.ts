@@ -15,6 +15,7 @@ import type { OpenSessionsActorRef } from '../src/sessions';
 import { openSessionsId, openSessionsMachine } from '../src/sessions';
 import { databaseWriterId, writerMachine } from '../src/storage';
 import { seedAgentFixtures } from './agent-fixtures';
+import { useTestMachinePath } from './machine-path';
 import { openTestDatabase } from './database';
 import { type ScriptedProcess } from './scripted-agent';
 import { scriptedEngineInput } from './scripted-engine';
@@ -72,6 +73,7 @@ function resolveTestStorage(options: EngineTestOptions): {
 export async function startEngineTestHost(
   options: EngineTestOptions = {},
 ): Promise<EngineTestHost> {
+  useTestMachinePath();
   const { storage, home } = resolveTestStorage(options);
   const port = options.port ?? (await findFreePort());
   seedTestCommands(options, home, storage);

@@ -1,0 +1,48 @@
+import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { delimiter, dirname, join } from 'node:path';
+import { onTestFinished, vi } from 'vitest';
+
+export type MachinePath = {
+  directory: string;
+  // Puts an executable with this file name on PATH, as an outside install would.
+  place: (name: string) => Promise<string>;
+  remove: (name: string) => Promise<void>;
+};
+
+// System tools and this Node only, so the developer's own Agents never count as installed.
+const systemDirectories = [
+  dirname(process.execPath),
+  '/usr/bin',
+  '/bin',
+  '/usr/sbin',
+  '/sbin',
+];
+let machineDirectory: string | undefined;
+
+// The PATH an Engine under test sees: the test's machine directory first, then system tools.
+export const useTestMachinePath = (): void => {
+  const directories = [machineDirectory ?? [], systemDirectories].flat();
+  vi.stubEnv('PATH', directories.join(delimiter));
+};
+
+// "The machine": a temporary directory put first on PATH for this test only.
+export const createMachinePath = async (): Promise<MachinePath> => {
+  const directory = await mkdtemp(join(tmpdir(), 'argo-path-'));
+  machineDirectory = directory;
+  useTestMachinePath();
+  onTestFinished(async () => {
+    machineDirectory = undefined;
+    await rm(directory, { recursive: true, force: true });
+  });
+  return {
+    directory,
+    place: async (name) => {
+      const file = join(directory, name);
+      await writeFile(file, '#!/bin/sh\nexit 0\n');
+      await chmod(file, 0o755);
+      return file;
+    },
+    remove: (name) => rm(join(directory, name), { force: true }),
+  };
+};

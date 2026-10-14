@@ -69,8 +69,8 @@ export class AgentInstallations {
       );
     return this.configure(agentId, operation);
   }
-  public remove(agentId: string): Promise<void> {
-    return this.mutateLaunch(agentId, async () => {
+  public async remove(agentId: string): Promise<void> {
+    await this.mutateLaunch(agentId, async () => {
       await removeAgentInstallation({
         home: this.home,
         deps: this.dependencies(),
@@ -78,6 +78,7 @@ export class AgentInstallations {
       });
       this.completed.delete(agentId);
     });
+    this.dependencies().afterRemove?.();
   }
   private own(operation: AgentInstallOperation): void {
     const checking = this.configuration.pendingCheck(operation.agentId);

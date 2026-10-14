@@ -79,15 +79,15 @@ it('missing launch files show Not found, and Repair installs the same release an
     recursive: true,
     force: true,
   });
+  expect(await host.caller.agents.recheck({ agentId: host.agentId })).toEqual({
+    status: 'not-found',
+    reason:
+      'The installed files of Fixture ACP are missing. Repair installs them again.',
+  });
   expect(await listed(host.caller, host.agentId)).toMatchObject({
     status: 'not-found',
     enabled: true,
     version: '1.2.3',
-    reason:
-      'The installed files of Fixture ACP are missing. Repair installs them again.',
-  });
-  expect(await host.caller.agents.recheck({ agentId: host.agentId })).toEqual({
-    status: 'not-found',
     reason:
       'The installed files of Fixture ACP are missing. Repair installs them again.',
   });

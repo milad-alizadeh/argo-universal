@@ -30,6 +30,23 @@ export const installEntry = (kind: 'binary' | 'npx' | 'uvx'): ACPAgent => ({
           },
         },
 });
+export const pathEntrypoint = 'fixture-acp-agent';
+// A binary Registry entry whose entrypoint has the same file name on every platform, so the Resolver can find it on PATH.
+export const pathBinaryEntry = (): ACPAgent => {
+  const entry = installEntry('binary');
+  const targets = Object.entries(entry.distribution.binary ?? {});
+  return {
+    ...entry,
+    distribution: {
+      binary: Object.fromEntries(
+        targets.map(([platform, target]) => [
+          platform,
+          { ...target, cmd: `./${pathEntrypoint}`, args: ['acp'] },
+        ]),
+      ),
+    },
+  };
+};
 export const installationPorts: InstallPorts = createInstallationPorts();
 export const startInstallEngine = async (
   entry = installEntry('npx'),

@@ -41,7 +41,12 @@ export {
   type AgentReadiness,
 } from './readiness/agent-readiness';
 export type { InstallPorts } from './install/ports';
+export {
+  createAgentResolver,
+  type AgentResolver,
+} from './resolver/agent-resolver';
 export { readInstallSelection } from './install/selection/selection';
+export { readInstallationObservation } from './resolver/observation-sql';
 export { resolveInstalledAgentLaunch } from './install/selection/launch';
 export { reconcileInterruptedInstallations } from './install/lifecycle/reconcile';
 export type { InstallToolInput } from './install/ports';
