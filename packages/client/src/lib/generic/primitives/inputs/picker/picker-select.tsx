@@ -5,16 +5,15 @@ import { Icon, IconSlot } from '#primitives/display/icon/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { useWide } from '../../../use-wide/use-wide';
 import { SelectedCheck } from '../../display/selected-check';
-import { SelectContent } from './select-content';
+import { SelectContent } from './picker-select-content';
 import {
   type SelectVariant,
   selectItemClassName,
   selectTriggerClassName,
-} from './select-styles';
+} from './picker-select-styles';
 
+// Picker's web drawing: the @rn-primitives Select, which runs on web only (ADR-0020).
 const Select = SelectPrimitive.Root;
-
-const SelectGroup = SelectPrimitive.Group;
 
 type TriggerProps = React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   children?: React.ReactNode;
@@ -87,18 +86,6 @@ function SelectTrigger(triggerProps: TriggerProps): React.JSX.Element {
   );
 }
 
-function SelectLabel({
-  className,
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Label>): React.JSX.Element {
-  return (
-    <SelectPrimitive.Label
-      className={cn('type-secondary px-2 py-2 sm:py-1.5', className)}
-      {...props}
-    />
-  );
-}
-
 function ItemIndicator(): React.JSX.Element {
   return (
     <IconSlot role="control" className="absolute right-2">
@@ -121,12 +108,4 @@ function SelectItem({ className, ...props }: ItemProps): React.JSX.Element {
   );
 }
 
-export {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-};
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };

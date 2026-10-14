@@ -9,7 +9,7 @@ import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-
 import {
   selectContentClassName,
   selectViewportClassName,
-} from './select-styles';
+} from './picker-select-styles';
 
 type ContentProps = React.ComponentProps<typeof SelectPrimitive.Content> & {
   className?: string;

@@ -7,8 +7,8 @@ import {
   useFieldDescription,
 } from '../../fields/field-description';
 import { useInListItem } from '../../lists/list-item/list-item-accessory';
-import { Select } from '../select/select';
 import type { PickerProps } from './picker-props';
+import { Select } from './picker-select';
 import {
   choosePickerOption,
   pickerLabel,

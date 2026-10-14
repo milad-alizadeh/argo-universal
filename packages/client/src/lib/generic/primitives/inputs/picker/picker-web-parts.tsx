@@ -2,13 +2,13 @@ import { createElement } from 'react';
 import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
 import type { FieldDescription } from '../../fields/field-description';
+import type { PickerOption, PickerProps } from './picker-props';
 import {
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../select/select';
-import type { PickerOption, PickerProps } from './picker-props';
+} from './picker-select';
 import { pickerOptionsMessage, pickerValue } from './picker-selection';
 
 type TriggerProps<Value extends string> = PickerProps<Value> &
