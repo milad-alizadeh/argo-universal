@@ -1,5 +1,7 @@
-import { $isListItemNode } from '@lexical/list';
+import { $isListItemNode, type ListItemNode } from '@lexical/list';
+import { $setBlocksType } from '@lexical/selection';
 import {
+  $createParagraphNode,
   $getSelection,
   $isRangeSelection,
   COMMAND_PRIORITY_EDITOR,
@@ -10,13 +12,32 @@ import {
 } from 'lexical';
 import { $closest } from './rich-textarea-selection';
 
-function $inListItem(): boolean {
+function $caretItem(): ListItemNode | undefined {
   const selection = $getSelection();
 
-  return (
-    $isRangeSelection(selection) &&
-    $closest(selection.anchor.getNode(), $isListItemNode) !== undefined
-  );
+  return $isRangeSelection(selection)
+    ? $closest(selection.anchor.getNode(), $isListItemNode)
+    : undefined;
+}
+
+function $topLevelItem(): ListItemNode | undefined {
+  const item = $caretItem();
+
+  return item?.getParents().some($isListItemNode) ? undefined : item;
+}
+
+// A top-level item has nowhere to un-nest to, so ⇧Tab takes it out of the list.
+function $leaveList(): boolean {
+  const selection = $getSelection();
+
+  if (!$topLevelItem() || !$isRangeSelection(selection)) return false;
+  $setBlocksType(selection, $createParagraphNode);
+
+  return true;
+}
+
+function $outdent(editor: LexicalEditor): boolean {
+  return $leaveList() || editor.dispatchCommand(OUTDENT_CONTENT_COMMAND);
 }
 
 /*
@@ -27,14 +48,12 @@ export function registerListTab(editor: LexicalEditor): () => void {
   return editor.registerCommand(
     KEY_TAB_COMMAND,
     (event) => {
-      if (!$inListItem()) return false;
+      if (!$caretItem()) return false;
       event.preventDefault();
 
-      const command = event.shiftKey
-        ? OUTDENT_CONTENT_COMMAND
-        : INDENT_CONTENT_COMMAND;
-
-      return editor.dispatchCommand(command);
+      return event.shiftKey
+        ? $outdent(editor)
+        : editor.dispatchCommand(INDENT_CONTENT_COMMAND);
     },
     COMMAND_PRIORITY_EDITOR,
   );

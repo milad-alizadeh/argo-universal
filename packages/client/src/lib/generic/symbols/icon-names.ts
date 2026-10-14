@@ -75,6 +75,7 @@ export const iconSymbols = {
     sfFilled: 'ticket.fill',
     material: 'confirmation_number',
   },
+  'issue-open': { sf: 'record.circle', material: 'adjust' },
   key: { sf: 'key', material: 'key_vertical' },
   maps: {
     sf: 'point.topleft.down.curvedto.point.bottomright.up',

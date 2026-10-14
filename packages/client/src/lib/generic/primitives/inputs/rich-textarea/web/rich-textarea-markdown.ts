@@ -8,6 +8,7 @@ import {
   BOLD_STAR,
   BOLD_UNDERSCORE,
   ELEMENT_TRANSFORMERS,
+  HEADING,
   INLINE_CODE,
   ITALIC_STAR,
   ITALIC_UNDERSCORE,
@@ -21,6 +22,7 @@ import {
 import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { $getRoot, $isTextNode, type Klass, type LexicalNode } from 'lexical';
 import { $importLiteralMarkdown } from './rich-textarea-import';
+import { ReferenceNode } from './rich-textarea-reference-node';
 import { replacer, unusedCharacters } from './rich-textarea-stand-ins';
 
 // The nodes and markdown transformers the web editor uses, shared by its drawing and its tests.
@@ -32,6 +34,7 @@ export const richTextareaNodes: Klass<LexicalNode>[] = [
   CodeNode,
   LinkNode,
   AutoLinkNode,
+  ReferenceNode,
 ];
 
 const SINGLE_TILDE_STRIKETHROUGH: TextFormatTransformer = {
@@ -128,3 +131,10 @@ export function $exportMarkdown(): string {
     ]),
   );
 }
+
+/*
+ * What typing turns into blocks: the same transformers, less `#` headings. `#` is reserved for Issue
+ * and pull request references, so it stays the text typed; a pasted heading still imports and exports.
+ */
+export const richTextareaShortcuts: Transformer[] =
+  richTextareaTransformers.filter((transformer) => transformer !== HEADING);
