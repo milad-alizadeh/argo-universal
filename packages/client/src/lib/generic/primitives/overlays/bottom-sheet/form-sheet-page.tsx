@@ -7,6 +7,7 @@ import {
   useFormSheetState,
 } from './form-sheet-context';
 import type { FormSheetProps } from './form-sheet-props';
+import { routedSheetList, SheetListProvider } from './sheet-list-context';
 
 type PageProps = {
   headerInset?: number;
@@ -21,7 +22,9 @@ export function FormSheetRoot(props: PageProps): ReactElement | null {
 
   return (
     <SheetNavigationProvider value={commands}>
-      <SheetBody {...props} sheet={sheet.props} />
+      <SheetListProvider value={routedSheetList}>
+        <SheetBody {...props} sheet={sheet.props} />
+      </SheetListProvider>
     </SheetNavigationProvider>
   );
 }
@@ -41,7 +44,9 @@ export function FormSheetChoices(props: PageProps): ReactElement | null {
 
   return page ? (
     <View className="flex-1 bg-card" style={{ paddingTop: props.headerInset }}>
-      {page.content}
+      <SheetListProvider value={routedSheetList}>
+        {page.content}
+      </SheetListProvider>
     </View>
   ) : null;
 }

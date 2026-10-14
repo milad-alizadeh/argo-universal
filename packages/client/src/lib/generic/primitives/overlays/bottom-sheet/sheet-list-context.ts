@@ -15,6 +15,9 @@ const SheetListContext = createContext<SheetList | undefined>(undefined);
 
 export const SheetListProvider = SheetListContext.Provider;
 
+// A routed sheet page: its lists show the sheet's surface but size nothing.
+export const routedSheetList: SheetList = {};
+
 // The phone sheet a native list sits in, if any: the list then lets the sheet's surface show.
 export function useSheetList(): SheetList | undefined {
   return useContext(SheetListContext);

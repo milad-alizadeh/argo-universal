@@ -1,7 +1,11 @@
 import type * as React from 'react';
 import { type ReactNode, useEffect, useMemo } from 'react';
 import { View } from 'react-native';
-import { SheetNavigationProvider } from '#primitives/overlays/bottom-sheet';
+import {
+  routedSheetList,
+  SheetListProvider,
+  SheetNavigationProvider,
+} from '#primitives/overlays/bottom-sheet';
 import { useAgentModelConfiguration } from './agent-model-sheet-context';
 import { AgentModelMenu } from './composer-configuration/composer-configuration';
 
@@ -29,9 +33,9 @@ export function AgentModelSheetSettings(
 
   return (
     <SheetNavigationProvider value={navigation}>
-      <View className="flex-1 bg-content">
+      <RoutedSheetSurface>
         <AgentModelMenu configuration={configuration} />
-      </View>
+      </RoutedSheetSurface>
     </SheetNavigationProvider>
   );
 }
@@ -79,5 +83,18 @@ export function AgentModelSheetPage(
 
   if (!page) return null;
 
-  return <View className="flex-1 bg-content">{page.content}</View>;
+  return <RoutedSheetSurface>{page.content}</RoutedSheetSurface>;
+}
+
+// A routed page of the sheet: its lists hide their own background over this surface.
+function RoutedSheetSurface({
+  children,
+}: {
+  children: ReactNode;
+}): React.JSX.Element {
+  return (
+    <View className="flex-1 bg-content">
+      <SheetListProvider value={routedSheetList}>{children}</SheetListProvider>
+    </View>
+  );
 }
