@@ -1,4 +1,5 @@
 import type { ChildProcess } from 'node:child_process';
+import { setTimeout as delay } from 'node:timers/promises';
 import { readServerAddress } from '@repo/engine/server-runtime';
 
 const serverStartMilliseconds = 30_000;
@@ -16,9 +17,7 @@ export async function pollServer<T>(
     const result = await check();
 
     if (result !== undefined) return result;
-    await new Promise((resolve): NodeJS.Timeout =>
-      setTimeout(resolve, serverPollMilliseconds),
-    );
+    await delay(serverPollMilliseconds);
   }
 
   throw new Error(timeoutMessage(serverStartMilliseconds / 1000));

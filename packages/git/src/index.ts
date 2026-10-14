@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, realpath } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
+import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
 
 const execute = promisify(execFile);
@@ -16,7 +17,7 @@ const run = (
   stderr: string;
 }> => execute('git', arguments_, { signal });
 
-let rejectedResponses = 0;
+const rejections = createRejectionCounter('git');
 
 const branchRefPrefix = 'refs/heads/';
 
@@ -31,10 +32,7 @@ const branchName = z
 
 // Reports and counts a git answer this module does not recognise, then throws.
 const rejectResponse = (what: string, detail?: string): never => {
-  rejectedResponses += 1;
-  console.error(
-    `git: rejected ${what} response (${rejectedResponses} rejected)${detail ? `: ${detail}` : ''}`,
-  );
+  rejections.report(`rejected ${what} response`, detail);
   throw new Error(`Unrecognised git ${what} response`);
 };
 
