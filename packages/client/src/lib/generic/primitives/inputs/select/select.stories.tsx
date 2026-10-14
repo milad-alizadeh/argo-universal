@@ -24,7 +24,11 @@ type SelectExampleProps = {
   variant?: 'default' | 'plain';
 };
 
-const triggerWidth = { default: 'w-[180px]', plain: undefined };
+// The web trigger fits its content (`web:w-fit`), so the web width is named too.
+const triggerWidth = {
+  default: 'w-[180px] web:w-[180px]',
+  plain: undefined,
+};
 
 function SelectExample({
   size,

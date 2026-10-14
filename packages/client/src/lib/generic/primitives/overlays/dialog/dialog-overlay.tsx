@@ -15,12 +15,8 @@ type OverlayProps = Omit<
 const FullWindowOverlay =
   Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
 
-const overlayClassName = cn(
-  'absolute bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/50 p-2',
-  Platform.select({
-    web: 'animate-in fade-in-0 fixed cursor-default [&>*]:cursor-auto',
-  }),
-);
+const overlayClassName =
+  'absolute bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/50 p-2 web:animate-in web:fade-in-0 web:fixed web:cursor-default web:[&>*]:cursor-auto';
 
 const entering = FadeIn.duration(motionDuration.enter).reduceMotion(
   ReduceMotion.System,

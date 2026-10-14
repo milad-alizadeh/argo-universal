@@ -1,35 +1,22 @@
 import { Slot } from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import type { ReactElement } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 
 const badgeVariants = cva(
-  cn(
-    'border-border group shrink-0 flex-row items-center justify-center gap-1 overflow-hidden rounded-full border px-2 py-0.5',
-    Platform.select({
-      web: 'focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive w-fit whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] [&>svg]:pointer-events-none',
-    }),
-  ),
+  'border-border group shrink-0 flex-row items-center justify-center gap-1 overflow-hidden rounded-full border px-2 py-0.5 web:focus-visible:border-ring web:focus-visible:ring-ring/50 web:aria-invalid:ring-destructive/20 web:dark:aria-invalid:ring-destructive/40 web:aria-invalid:border-destructive web:w-fit web:whitespace-nowrap web:transition-[color,box-shadow] web:focus-visible:ring-[3px] web:[&>svg]:pointer-events-none',
   {
     variants: {
       variant: {
-        default: cn(
-          'bg-primary border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-primary/90' }),
-        ),
-        secondary: cn(
-          'bg-secondary border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-secondary/90' }),
-        ),
-        destructive: cn(
-          'bg-destructive border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-destructive/90' }),
-        ),
-        outline: Platform.select({
-          web: '[a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
-        }),
+        default: 'bg-primary border-transparent web:[a&]:hover:bg-primary/90',
+        secondary:
+          'bg-secondary border-transparent web:[a&]:hover:bg-secondary/90',
+        destructive:
+          'bg-destructive border-transparent web:[a&]:hover:bg-destructive/90',
+        outline:
+          'web:[a&]:hover:bg-accent web:[a&]:hover:text-accent-foreground',
       },
     },
     defaultVariants: {

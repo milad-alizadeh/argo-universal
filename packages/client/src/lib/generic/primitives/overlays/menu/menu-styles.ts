@@ -1,4 +1,4 @@
 export const menuItemClassName =
-  'focus:bg-accent focus:text-accent-foreground cursor-default outline-none data-[disabled]:pointer-events-none';
+  'web:focus:bg-accent web:focus:text-accent-foreground web:cursor-default web:outline-none web:data-[disabled]:pointer-events-none';
 
 export const disabledMenuItemClassName = 'opacity-50';
