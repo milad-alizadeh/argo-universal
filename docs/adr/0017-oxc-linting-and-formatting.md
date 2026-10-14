@@ -120,7 +120,7 @@ Spec 421 moves each component, with behaviour unchanged, into its own folder ins
 | `features/sessions/components/<component>/*` for new-session-view, project-heading, pull-request-indicator, session-row, session-view, sessions-filter-menu, sessions-list, sessions-loading, sessions-view | `features/sessions/components/*` |
 | `features/settings/components/<component>/*` for placeholder-detail-view, project-detail-view, project-list-view, settings-list | `features/settings/components/*` |
 | `lib/generic/<component>/*` for page-title-row, use-wide | `lib/generic/*` |
-| `lib/generic/primitives/<folder>/*` for buttons/button, buttons/button-group, buttons/filter-pill, buttons/icon-button, display/badge, display/collapsible, display/icon, fields/field-group, fields/field-section, inputs/combobox-search, inputs/search-field, inputs/slider, inputs/text-input, lists/list-item, native, overlays/alert, overlays/bottom-sheet, overlays/menu | `lib/generic/primitives/*` |
+| `lib/generic/primitives/<folder>/*` for buttons/button, buttons/button-group, buttons/filter-pill, buttons/icon-button, display/badge, display/collapsible, display/icon, fields/field-group, fields/field-section, inputs/combobox-search, inputs/search-field, inputs/slider, inputs/text-input, lists/list-item, overlays/alert, overlays/bottom-sheet, overlays/menu | `lib/generic/primitives/*` |
 | `lib/generic/symbols/symbol-glyph/*` | `lib/generic/symbols/*` |
 | `lib/product/<component>/*` for field-list, screen, scroll-fade, status-indicator | `lib/product/*` |
 | `lib/product/markdown/<component>/*` for code-block-title, feed-code-block | `lib/product/markdown/*` |

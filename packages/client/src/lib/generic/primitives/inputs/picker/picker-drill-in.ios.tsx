@@ -13,8 +13,8 @@ import {
   presentationDetents,
 } from '@expo/ui/swift-ui/modifiers';
 import { useState } from 'react';
-import { RoutedFormSheet } from '#primitives/overlays/form-sheet';
-import { useFormSheetCommands } from '#primitives/overlays/form-sheet';
+import { RoutedFormSheet } from '#primitives/overlays/bottom-sheet';
+import { useFormSheetCommands } from '#primitives/overlays/bottom-sheet';
 import { useNativeTheme } from '../../../native-theme';
 import type { PickerProps } from './picker-props';
 import { PickerSearchList } from './picker-search-list';

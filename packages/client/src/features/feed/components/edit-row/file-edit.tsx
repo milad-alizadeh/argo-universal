@@ -3,6 +3,7 @@ import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { fileTypeIcon } from '#lib/generic/symbols/file-type-icon';
 import { cn } from '#lib/generic/utils';
+import { contentActionClass } from '#primitives/buttons/button';
 import {
   Collapsible,
   CollapsibleContent,
@@ -10,7 +11,7 @@ import {
 import { DisclosureChevron } from '#primitives/display/disclosure-chevron';
 import { Icon } from '#primitives/display/icon';
 import { Text, TextClassContext } from '#primitives/display/text';
-import { Pressable, contentActionClass } from '#primitives/pressable';
+import { Pressable } from '#primitives/pressable';
 import type { FileDiff } from '../../view/file-diff';
 import { DiffView } from '../diff-view/diff-view';
 import { FileName } from './file-name';

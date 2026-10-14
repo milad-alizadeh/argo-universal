@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { contentActionClass } from '#primitives/buttons/button';
 import { Text } from '#primitives/display/text';
 import { TextInput } from '#primitives/inputs/text-input';
-import { Pressable, contentActionClass } from '#primitives/pressable';
+import { Pressable } from '#primitives/pressable';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 function PopoverPreview(): React.JSX.Element {

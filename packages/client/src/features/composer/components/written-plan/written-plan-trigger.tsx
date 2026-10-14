@@ -1,8 +1,9 @@
 import type * as React from 'react';
 import { cn } from '#lib/generic/utils';
+import { contentActionClass } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
-import { Pressable, contentActionClass } from '#primitives/pressable';
+import { Pressable } from '#primitives/pressable';
 
 export interface WrittenPlanTriggerProps {
   open: boolean;

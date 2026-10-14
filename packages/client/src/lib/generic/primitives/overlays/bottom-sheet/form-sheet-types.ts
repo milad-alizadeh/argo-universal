@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { BottomSheetProps } from '#primitives/overlays/bottom-sheet';
+import type { BottomSheetProps } from './bottom-sheet.types';
 
 export type FormSheetProps = BottomSheetProps & { headerTitle?: string };
 

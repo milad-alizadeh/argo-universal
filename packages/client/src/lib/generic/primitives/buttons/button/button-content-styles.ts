@@ -54,7 +54,7 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
 });
 
 // iOS labels its buttons at the size of its header text buttons, in medium weight.
-export const nativeLabelClass = 'ios:text-nav-action ios:font-medium';
+const nativeLabelClass = 'ios:text-nav-action ios:font-medium';
 
 const textClasses = cva(
   'type-control web:pointer-events-none web:transition-colors',

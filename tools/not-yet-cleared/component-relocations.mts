@@ -100,7 +100,6 @@ const componentFolders: [string, string[]][] = [
       'inputs/slider',
       'inputs/text-input',
       'lists/list-item',
-      'native',
       'overlays/alert',
       'overlays/bottom-sheet',
       'overlays/menu',

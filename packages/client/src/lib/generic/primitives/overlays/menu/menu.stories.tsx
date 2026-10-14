@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { contentActionClass } from '#primitives/buttons/button';
 import { Text } from '#primitives/display/text';
-import { Pressable, contentActionClass } from '#primitives/pressable';
+import { Pressable } from '#primitives/pressable';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Menu, type MenuAction } from './menu';
 

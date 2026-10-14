@@ -1,10 +1,11 @@
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
+import { contentActionClass } from '#primitives/buttons/button';
 import { IconSlot } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { Text } from '#primitives/display/text';
 import { BottomSheet } from '#primitives/overlays/bottom-sheet';
-import { Pressable, contentActionClass } from '#primitives/pressable';
+import { Pressable } from '#primitives/pressable';
 import { chevron } from './split-button-chevron';
 import type { SplitMenuProps } from './split-button-props';
 

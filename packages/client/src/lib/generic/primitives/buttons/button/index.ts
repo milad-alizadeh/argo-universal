@@ -2,7 +2,7 @@ export { Button } from './button';
 
 export { ButtonAdornment } from './button-adornment';
 
-export { contentActionClass, nativeLabelClass } from './button-content-styles';
+export { contentActionClass } from './button-content-styles';
 
 export {
   type ButtonDataProps,

@@ -75,11 +75,7 @@ export {
   FormSheetProvider,
   useFormSheetCommands,
   useFormSheetState,
-} from '#primitives/overlays/form-sheet';
-
-export {
   FormSheetRoot,
   FormSheetChoices,
+  type FormSheetRoutes,
 } from '#primitives/overlays/bottom-sheet';
-
-export type { FormSheetRoutes } from '#primitives/overlays/form-sheet';

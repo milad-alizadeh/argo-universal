@@ -15,13 +15,13 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
-import { RoutedFormSheet } from '#primitives/overlays/form-sheet';
-import { useFormSheetCommands } from '#primitives/overlays/form-sheet';
 import { BottomSheetContent } from './bottom-sheet-content';
 import { BottomSheetRoot } from './bottom-sheet-root.native';
 import { BottomSheetTrigger } from './bottom-sheet-trigger.native';
 import { SheetViewport } from './bottom-sheet-viewport';
 import type { BottomSheetProps } from './bottom-sheet.types';
+import { RoutedFormSheet } from './form-sheet';
+import { useFormSheetCommands } from './form-sheet-context';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const commands = useFormSheetCommands();

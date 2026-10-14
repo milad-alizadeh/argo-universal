@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button';
+import { contentActionClass } from '#primitives/buttons/button';
 import { Text } from '#primitives/display/text';
 import { TextInput } from '#primitives/inputs/text-input';
-import { Pressable, contentActionClass } from '#primitives/pressable';
+import { Pressable } from '#primitives/pressable';
 import {
   Dialog,
   DialogCancel,

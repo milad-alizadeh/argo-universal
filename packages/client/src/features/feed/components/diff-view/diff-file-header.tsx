@@ -2,9 +2,10 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { CopyButton } from '#lib/product/markdown/copy-button';
+import { contentActionClass } from '#primitives/buttons/button';
 import { DisclosureChevron } from '#primitives/display/disclosure-chevron';
 import { Text, TextClassContext } from '#primitives/display/text';
-import { Pressable, contentActionClass } from '#primitives/pressable';
+import { Pressable } from '#primitives/pressable';
 import type { FileDiff } from '../../view/file-diff';
 
 export interface FileHeaderProps {

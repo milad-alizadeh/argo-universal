@@ -1,8 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { contentActionClass } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Text, TextClassContext } from '#primitives/display/text';
-import { Pressable, contentActionClass } from '#primitives/pressable';
+import { Pressable } from '#primitives/pressable';
 import type { InteractionEvents } from './project-heading';
 
 function FolderIcon({ collapsed }: { collapsed: boolean }): React.JSX.Element {

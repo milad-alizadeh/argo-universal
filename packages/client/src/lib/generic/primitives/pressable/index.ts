@@ -1,1 +1,1 @@
-export { Pressable, contentActionClass } from './pressable';
+export { Pressable } from './pressable';
