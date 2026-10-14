@@ -29,7 +29,8 @@ type Expected = {
   reason?: string;
   // The status names itself once, in the Status section.
   label: string;
-  footer?: string;
+  // The section's footer; null where the status says enough on its own.
+  footer: string | null;
   action?: { label: string; handler: Handler };
 };
 
@@ -59,15 +60,21 @@ const readiness = (expected: Expected): Story => ({
 });
 
 async function expectStatus(canvas: Canvas, expected: Expected): Promise<void> {
-  await expect(canvas.getByRole('heading', { name: 'Status' })).toBeVisible();
+  const heading = canvas.getByRole('heading', { name: 'Status' });
+  await expect(heading).toBeVisible();
   const labels = canvas.getAllByText(expected.label);
   await expect(labels).toHaveLength(1);
   await expect(labels[0]).toBeVisible();
   await expect(canvas.queryByText('Unavailable')).not.toBeInTheDocument();
-
-  if (expected.footer)
-    await expect(canvas.getByText(expected.footer)).toBeVisible();
+  // The section reads its title, the status, then the footer or nothing more.
+  await expect(sectionText(heading)).toBe(
+    `Status${expected.label}${expected.footer ?? ''}`,
+  );
 }
+
+// The Status heading's section: its title view, then the section around it.
+const sectionText = (heading: HTMLElement): string | null | undefined =>
+  heading.parentElement?.parentElement?.textContent;
 
 async function expectOnlyAction(
   canvas: Canvas,
@@ -79,17 +86,23 @@ async function expectOnlyAction(
     ).not.toBeInTheDocument();
 }
 
-export const ReadyHasNoAction = readiness({ status: 'ready', label: 'Ready' });
+export const ReadyHasNoAction = readiness({
+  status: 'ready',
+  label: 'Ready',
+  footer: null,
+});
 
 export const NotInstalledInstalls = readiness({
   status: 'not-installed',
   label: 'Not installed',
+  footer: null,
   action: { label: 'Install', handler: 'onInstall' },
 });
 
 export const UpdateAvailableUpdates = readiness({
   status: 'update-available',
   label: 'Update available',
+  footer: null,
   action: { label: 'Update', handler: 'onUpdate' },
 });
 

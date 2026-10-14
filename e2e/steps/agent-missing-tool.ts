@@ -4,6 +4,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { placeNode, placeTool } from '../server-tools';
 import { browseAgents } from './agent-catalog';
+import { shown } from './agent-readiness';
 import { Given, When, Then, test } from './fixtures';
 import { agentWork } from './timeouts';
 
@@ -39,18 +40,11 @@ When('I open {word} Agent', async ({ page }, name: string): Promise<void> => {
   await page.getByRole('link', { name: new RegExp(`^${name} Agent,`) }).click();
 });
 
-// The phone keeps the Agents list mounted under the Agent page, so only shown text counts.
-const shownStatus = (page: Page, tool: string): Locator =>
-  page
-    .getByText(`Needs ${tool}`, { exact: true })
-    .filter({ visible: true })
-    .first();
-
 const expectMissing = async (
   page: Page,
   tool: { name: string; runner: string },
 ): Promise<void> => {
-  await expect(shownStatus(page, tool.name)).toBeVisible(agentWork);
+  await expect(shown(page, `Needs ${tool.name}`)).toBeVisible(agentWork);
   await expect(
     page.getByText(`${tool.runner} isn’t on this Mac.`),
   ).toBeVisible();

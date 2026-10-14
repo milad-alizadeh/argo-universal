@@ -34,7 +34,6 @@ export const ShowsTheVersionAndDistribution: Story = {
     ).toBeVisible();
     await expect(canvas.getByRole('link', { name: 'GitHub' })).toBeVisible();
     await expect(canvas.getByRole('link', { name: 'Licence' })).toBeVisible();
-    await expect(canvas.getByText('Ready')).toBeVisible();
   },
 };
 
@@ -54,22 +53,13 @@ export const ShowsAnAgentFoundOnThisMac: Story = {
   },
 };
 
-export const ShowsTheReadyStatusOnAPhone: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
-  play: async ({ canvas }) => {
-    await expect(canvas.getAllByText('Ready')[0]).toBeVisible();
-  },
-};
-
-export const InstallsARegistryAgent: Story = {
+// Install itself is proven by the readiness stories; a registry Agent names its source and has nothing to remove.
+export const ShowsARegistryAgentsSourceWithoutRemove: Story = {
   args: { agent: { ...readyAgent, status: 'not-installed' } },
-  play: async ({ args, canvas, userEvent }) => {
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('group', { name: 'Source, ACP Registry' }),
     ).toBeVisible();
-    await expect(canvas.getByText('Not installed')).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Install' }));
-    await expect(args.onInstall).toHaveBeenCalledOnce();
     await expect(
       canvas.queryByRole('button', { name: removeLabel }),
     ).not.toBeInTheDocument();
@@ -85,7 +75,7 @@ export const UpdatesTheAgentOnAPhone: Story = {
   },
 };
 
-// The identity card says what the Agent is; its status and Update live in the Status section alone.
+// The identity card says what the Agent is; its status lives in the Status section alone.
 export const OpensOnTheAgentsIdentityCard: Story = {
   args: { agent: { ...readyAgent, status: 'update-available' } },
   play: async ({ canvas }) => {
@@ -97,10 +87,6 @@ export const OpensOnTheAgentsIdentityCard: Story = {
     await expect(
       within(card).queryByText('Update available'),
     ).not.toBeInTheDocument();
-    await expect(canvas.getAllByText('Update available')).toHaveLength(1);
-    await expect(
-      canvas.getAllByRole('button', { name: 'Update' }),
-    ).toHaveLength(1);
   },
 };
 
