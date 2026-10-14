@@ -115,7 +115,8 @@
     }
     @variant light {
       --color-foreground: var(--color-neutral-950);
-      --color-card: var(--color-white);
+      /* Neutral match of the iOS Settings grouped row. */
+      --color-card: #ffffff;
       --color-primary: var(--color-neutral-900);
       --color-primary-foreground: var(--color-neutral-50);
       /* Native controls: switch track, slider, checkmark and picker value. */
@@ -131,7 +132,8 @@
       --color-success: var(--color-green-600);
       --color-info: var(--color-blue-600);
       --color-warning: var(--color-amber-600);
-      --color-content: var(--color-neutral-50);
+      /* Neutral match of the iOS Settings grouped background. */
+      --color-content: #f2f2f2;
       /* Glass: the sidebar panel. */
       --color-glass: #ffffff80;
       /* A selected row or rail tile: a flat tint, no border or shadow. */
@@ -146,8 +148,8 @@
     }
     @variant dark {
       --color-foreground: hsl(0 0% 98%);
-      /* A step above the shell chrome, so content sits lighter than the drawer, as in light. */
-      --color-card: var(--color-neutral-900);
+      /* Neutral match of the iOS Settings grouped row. */
+      --color-card: #1c1c1c;
       --color-primary: hsl(0 0% 98%);
       --color-primary-foreground: hsl(0 0% 9%);
       --color-accent: var(--color-neutral-400);
@@ -161,7 +163,8 @@
       --color-success: oklch(72.3% 0.219 149.579);
       --color-info: oklch(70.7% 0.165 254.624);
       --color-warning: oklch(76.9% 0.188 70.08);
-      --color-content: oklch(20.5% 0 0);
+      /* Neutral match of the iOS Settings grouped background. */
+      --color-content: #000000;
       --color-glass: #17171780;
       --color-selected: #ffffff0f;
       --shadow-glass:
