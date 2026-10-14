@@ -4,11 +4,7 @@ import type {
   ProjectsBranchesOutput,
   SystemInfo,
 } from '@repo/contracts';
-import {
-  skipToken,
-  type UseQueryResult,
-  useQuery,
-} from '@tanstack/react-query';
+import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useState } from 'react';
 import { useAgents } from '#features/agents';
@@ -35,21 +31,20 @@ interface ListedChoices {
 
 type ChosenSessionChoices = Pick<NewSessionData, 'choices' | 'setChosen'>;
 
-// Branches are listed only for a Project whose Checkout choice is its main Checkout.
-const branchesInput = (
-  project: ProjectInfo | undefined,
-): { projectId: string } | typeof skipToken =>
-  project?.checkoutChoice.type === 'main'
-    ? { projectId: project.id }
-    : skipToken;
+const isMain = (project: ProjectInfo | undefined): boolean =>
+  project?.checkoutChoice.type === 'main';
 
 function useProjectBranches(
   project: ProjectInfo | undefined,
 ): ProjectsBranchesOutput | undefined {
   const trpc = useTRPC();
 
-  return useQuery(trpc.projects.branches.queryOptions(branchesInput(project)))
-    .data;
+  return useQuery(
+    trpc.projects.branches.queryOptions(
+      { projectId: project?.id ?? '' },
+      { enabled: isMain(project) },
+    ),
+  ).data;
 }
 
 function useSessionChoices(
