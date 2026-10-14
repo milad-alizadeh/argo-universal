@@ -45,7 +45,7 @@ export function AddAgentButton(props: {
   );
 }
 
-type PillChoice = Omit<FilterPillProps, 'selected' | 'onPress'> & {
+type PillChoice = Pick<FilterPillProps, 'label' | 'count'> & {
   value: AgentsFilter;
 };
 
@@ -61,7 +61,7 @@ const pillChoices = (counts: AgentCounts): PillChoice[] =>
     ...pillCounts(counts)[index],
   }));
 
-// A wide window's filters under the Agents title.
+// A wide window's filters under the Agents title; turning one off shows all again.
 export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-1">
@@ -69,8 +69,8 @@ export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
         <FilterPill
           key={value}
           {...pill}
-          selected={props.filter === value}
-          onPress={() => props.onFilter(value)}
+          value={props.filter === value}
+          onValueChange={(on) => props.onFilter(on ? value : 'all')}
         />
       ))}
     </View>

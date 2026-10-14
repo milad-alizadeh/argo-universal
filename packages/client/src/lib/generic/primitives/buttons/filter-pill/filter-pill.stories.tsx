@@ -19,10 +19,21 @@ function Pills(): React.JSX.Element {
         <FilterPill
           key={value}
           {...pill}
-          selected={selected === value}
-          onPress={() => setSelected(value)}
+          value={selected === value}
+          onValueChange={(on) => setSelected(on ? value : 'all')}
         />
       ))}
+    </View>
+  );
+}
+
+const noop = (): void => undefined;
+
+function DisabledPills(): React.JSX.Element {
+  return (
+    <View className="flex-row items-center gap-1">
+      <FilterPill label="Open" value={false} onValueChange={noop} disabled />
+      <FilterPill label="Done" value onValueChange={noop} disabled />
     </View>
   );
 }
@@ -39,6 +50,9 @@ export const Variations: Story = {
     <VariationList>
       <Variation label="Filters">
         <Pills />
+      </Variation>
+      <Variation label="Disabled">
+        <DisabledPills />
       </Variation>
     </VariationList>
   ),
