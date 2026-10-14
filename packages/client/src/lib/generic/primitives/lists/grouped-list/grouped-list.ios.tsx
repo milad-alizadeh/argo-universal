@@ -8,10 +8,7 @@ import {
 import type * as React from 'react';
 import { FieldLayout } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
-import {
-  type SheetList,
-  useSheetList,
-} from '#primitives/overlays/bottom-sheet';
+import { useSheetList } from '#primitives/overlays/bottom-sheet';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListProps } from './grouped-list-props';
 import { GroupedList as WebGroupedList } from './grouped-list.tsx';
@@ -61,7 +58,7 @@ function useSheetModifiers(): ModifierConfig[] {
 }
 
 function geometryListener(
-  sheet: SheetList | undefined,
+  sheet: ReturnType<typeof useSheetList>,
 ): Parameters<typeof useScrollGeometryChange>[0] {
   const onGeometry = sheet?.onGeometry;
 
