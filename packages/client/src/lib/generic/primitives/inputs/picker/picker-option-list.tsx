@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { createElement } from 'react';
 import { Platform, View } from 'react-native';
-import { listTestIdProps } from '#lib/generic/list-test-id';
 import { ScrollFadeList } from '#lib/generic/scroll-fade/index';
 import { PickerActionRow, PickerOptionRow } from './picker-option-row';
 import {
@@ -119,7 +118,8 @@ function optionListProps<Value extends string>(
   props: PickerOptionListProps<Value>,
 ): ListProps<Value> {
   return {
-    ...listTestIdProps(`picker-options-${props.label.toLowerCase()}`),
+    role: 'list',
+    'aria-label': props.label,
     ...listPresentation,
     data: listRows(props.options),
     keyExtractor: (row) => row.key,

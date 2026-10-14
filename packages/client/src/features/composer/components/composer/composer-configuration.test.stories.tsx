@@ -61,7 +61,7 @@ export const ScrollableAgentCatalog: Story = {
     await userEvent.click(
       await overlay.findByRole('button', { name: chooseAgentLabel }),
     );
-    const scroll = await overlay.findByTestId('picker-options-agent');
+    const scroll = await overlay.findByRole('list', { name: 'Agent' });
     await waitFor(async () => {
       await expect(scroll.clientHeight).toBeGreaterThan(100);
       await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);

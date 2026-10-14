@@ -4,8 +4,8 @@ import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { fadedEdges } from '../scroll-fade';
 import {
   agentModelLabel,
-  modelsScrollId,
-  agentsScrollId,
+  modelsList,
+  agentsList,
   chooseAgentLabel,
   renderArgs,
   type Story,
@@ -45,7 +45,7 @@ export const LongListsReachableInPhoneSheet: Story = {
     await selectLastPhoneModel(context);
     await selectLastAgent(context);
     await expect(
-      within(document.body).queryByTestId(modelsScrollId),
+      within(document.body).queryByRole('list', { name: modelsList }),
     ).not.toBeInTheDocument();
     await context.userEvent.keyboard('{Escape}');
   },
@@ -56,7 +56,7 @@ export const ShortListsHaveNoFadesWide: Story = {
   play: async (context) => {
     await openConfiguration(context, layoutWidths.wide);
 
-    for (const testId of [modelsScrollId, agentsScrollId])
+    for (const testId of [modelsList, agentsList])
       await assertShortList(context, testId);
     await context.userEvent.keyboard('{Escape}');
   },
@@ -68,7 +68,7 @@ async function assertShortList(
 ): Promise<void> {
   const overlay = within(document.body);
   await userEvent.click(await shortListTrigger(testId));
-  const scroll = await overlay.findByTestId(testId);
+  const scroll = await overlay.findByRole('list', { name: testId });
   await waitFor(() =>
     expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight),
   );
@@ -78,6 +78,6 @@ async function assertShortList(
 
 function shortListTrigger(testId: string): Promise<HTMLElement> {
   return within(document.body).findByRole('button', {
-    name: testId === modelsScrollId ? /^Model,/ : chooseAgentLabel,
+    name: testId === modelsList ? /^Model,/ : chooseAgentLabel,
   });
 }

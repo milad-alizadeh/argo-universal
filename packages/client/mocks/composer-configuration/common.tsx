@@ -11,9 +11,10 @@ export type Configuration = React.ComponentProps<
 
 export const agentModelLabel = 'Agent and model';
 
-export const modelsScrollId = 'picker-options-model';
+// The option lists, by the name their list role carries.
+export const modelsList = 'Model';
 
-export const agentsScrollId = 'picker-options-agent';
+export const agentsList = 'Agent';
 
 export const effortValue = 'aria-valuetext';
 

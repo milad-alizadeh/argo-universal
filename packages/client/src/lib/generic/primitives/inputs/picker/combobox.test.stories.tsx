@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { Combobox } from './combobox';
@@ -18,8 +18,6 @@ const projects = [
 
 type Project = (typeof projects)[number]['value'];
 
-const chosen = fn<(value: Project) => void>();
-
 const addProject = fn();
 
 type ExampleProps = Partial<ComboboxProps<Project>>;
@@ -33,6 +31,7 @@ function ProjectCombobox(props: ExampleProps): React.JSX.Element {
       options={projects}
       searchPlaceholder="Find a Project…"
       emptyLabel="No Project matches."
+      loadingLabel="Loading Projects…"
       footerAction={{
         label: 'Add a Project',
         icon: 'add',
@@ -40,10 +39,7 @@ function ProjectCombobox(props: ExampleProps): React.JSX.Element {
       }}
       {...props}
       value={value}
-      onValueChange={(next) => {
-        setValue(next);
-        chosen(next);
-      }}
+      onValueChange={setValue}
     />
   );
 }
@@ -52,7 +48,6 @@ const meta = {
   title: 'Tests/Combobox',
   render: (): React.JSX.Element => <ProjectCombobox />,
   beforeEach: (): void => {
-    chosen.mockClear();
     addProject.mockClear();
   },
 } satisfies Meta;
@@ -61,46 +56,52 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
 const overlay = (): ReturnType<typeof within> => within(document.body);
 
-async function openProjects(
-  canvas: ReturnType<typeof within>,
-  userEvent: Parameters<NonNullable<Story['play']>>[0]['userEvent'],
-): Promise<HTMLElement> {
-  await userEvent.click(
-    canvas.getByRole('button', { name: 'Project: argo-universal' }),
-  );
+// Opens the Combobox on a wide window and returns its search field.
+async function openProjects({
+  canvas,
+  userEvent,
+}: PlayContext): Promise<HTMLElement> {
+  await settleViewport(layoutWidths.wide);
+  await userEvent.click(canvas.getByRole('button', { name: /^Project:/ }));
 
   return overlay().findByRole('textbox', { name: 'Search Project' });
 }
 
-// Typing matches the supporting line too; one choice commits it and closes the list.
-function searchAndChoose(width: number): Story {
-  return {
-    play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
-      const search = await openProjects(canvas, userEvent);
-      await userEvent.type(search, 'handbook');
-      await expect(
-        overlay().queryByRole('button', { name: 'argo-universal' }),
-      ).not.toBeInTheDocument();
-      await userEvent.click(
-        overlay().getByRole('button', { name: 'docs-site' }),
-      );
-      await expect(chosen).toHaveBeenCalledOnce();
-      await expect(chosen).toHaveBeenCalledWith('docs');
-      await waitFor(() =>
-        expect(
-          overlay().queryByRole('textbox', { name: 'Search Project' }),
-        ).not.toBeInTheDocument(),
-      );
-      await expect(
-        canvas.getByRole('button', { name: 'Project: docs-site' }),
-      ).toBeVisible();
-    },
-  };
-}
+// Search, choose and close are covered by the Composer's Project tests; the supporting line is new.
+export const SearchMatchesSupportingLine: Story = {
+  play: async (context) => {
+    await context.userEvent.type(await openProjects(context), 'handbook');
+    await expect(
+      overlay().getByRole('button', { name: 'docs-site' }),
+    ).toBeVisible();
+  },
+};
 
-export const SearchAndChooseWide = searchAndChoose(layoutWidths.wide);
+export const NoMatchShowsEmptyLabel: Story = {
+  play: async (context) => {
+    await context.userEvent.type(await openProjects(context), 'landing');
+    await expect(overlay().getByText('No Project matches.')).toBeVisible();
+  },
+};
 
-export const SearchAndChoosePhone = searchAndChoose(layoutWidths.phone);
+export const LoadingShowsLoadingLabel: Story = {
+  render: () => <ProjectCombobox loading />,
+  play: async (context) => {
+    await openProjects(context);
+    await expect(overlay().getByText('Loading Projects…')).toBeVisible();
+  },
+};
+
+export const FooterActionRuns: Story = {
+  play: async (context) => {
+    await openProjects(context);
+    await context.userEvent.click(
+      overlay().getByRole('button', { name: 'Add a Project' }),
+    );
+    await expect(addProject).toHaveBeenCalledOnce();
+  },
+};

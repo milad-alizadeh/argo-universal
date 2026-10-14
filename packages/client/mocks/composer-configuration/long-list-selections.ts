@@ -1,7 +1,7 @@
 import { expect, waitFor, within } from 'storybook/test';
 import {
-  modelsScrollId,
-  agentsScrollId,
+  modelsList,
+  agentsList,
   chooseAgentLabel,
   type PlayContext,
 } from './common';
@@ -13,7 +13,7 @@ export async function selectLastDesktopModel(
 ): Promise<void> {
   const overlay = within(document.body);
   await openModelChoices(context);
-  const models = await overlay.findByTestId(modelsScrollId);
+  const models = await overlay.findByRole('list', { name: modelsList });
   await assertModelMenuInsideWindow();
   await expectScrollsUnderFades(models, findLastModel);
   await selectLongModel(context, findLastModel);
@@ -92,7 +92,7 @@ async function openAgentChoices(
     await overlay.findByRole('button', { name: chooseAgentLabel }),
   );
 
-  return overlay.findByTestId(agentsScrollId);
+  return overlay.findByRole('list', { name: agentsList });
 }
 
 function findLastAgent(): Promise<HTMLElement> {
@@ -106,7 +106,7 @@ export async function selectLastPhoneModel(
 ): Promise<void> {
   await openModelChoices(context);
   await expectScrollsUnderFades(
-    await within(document.body).findByTestId(modelsScrollId),
+    await within(document.body).findByRole('list', { name: modelsList }),
     findLastModel,
   );
   await selectLongModel(context, findLastModel);
