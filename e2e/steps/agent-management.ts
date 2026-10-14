@@ -55,8 +55,10 @@ When('I confirm removing the Agent', async ({ page }): Promise<void> => {
 Then(
   'Example Agent is offered as not installed',
   async ({ page }): Promise<void> => {
+    // The row shows no status; the Agent's page offers Install.
+    await page.getByRole('link', { name: /^Example Agent, (?!back$)/ }).click();
     await expect(
-      page.getByRole('link', { name: /^Example Agent,.*Not installed/ }),
+      page.getByRole('button', { name: 'Install', exact: true }),
     ).toBeVisible();
   },
 );
