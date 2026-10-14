@@ -30,6 +30,7 @@ export type PickerOptionListProps<Value extends string> = {
   // The row Enter would choose.
   activeValue?: Value;
   loading?: boolean;
+  loadingLabel?: string;
   loadError?: string;
   // Shown when there is no option to list.
   emptyLabel?: string;
@@ -88,7 +89,8 @@ function FooterAction(props: {
 function OptionsOrMessage<Value extends string>(
   props: PickerOptionListProps<Value>,
 ): React.JSX.Element {
-  if (props.loading) return <LoadingMessage label={props.label} />;
+  if (props.loading)
+    return <LoadingMessage label={props.label} message={props.loadingLabel} />;
   const message = optionsMessage(props);
 
   if (message !== undefined)

@@ -21,12 +21,15 @@ export function optionsMessage(props: MessageSource): string | undefined {
   return props.loadError ?? emptyMessage(props);
 }
 
-export function LoadingMessage(props: { label: string }): React.JSX.Element {
+export function LoadingMessage(props: {
+  label: string;
+  message?: string;
+}): React.JSX.Element {
   return (
     <View className="min-h-11 flex-row items-center gap-2 px-2">
       <Spinner accessibilityLabel={`Loading ${props.label}`} />
       <Text role="secondary" tone="muted" accessibilityRole="status">
-        Loading…
+        {props.message ?? 'Loading…'}
       </Text>
     </View>
   );

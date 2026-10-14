@@ -20,6 +20,7 @@ const projectSearch = {
   label: 'Project',
   searchPlaceholder: 'Find a Project…',
   emptyLabel: 'No Project matches.',
+  loadingLabel: 'Loading Projects…',
 };
 
 function projectComboboxProps(

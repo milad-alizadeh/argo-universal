@@ -70,7 +70,7 @@ function PageOptions<Value extends string>(props: {
 
 type TriggerProps = Partial<React.ComponentProps<typeof GroupedListItem>>;
 
-// The row; a popover trigger hands it the hover, press and ARIA props it opens with.
+// The row, its value as a subtitle; a popover trigger hands it the hover, press and ARIA props it opens with.
 function DrillRow<Value extends string>({
   trigger,
   ...props
@@ -79,7 +79,7 @@ function DrillRow<Value extends string>({
     <GroupedListItem
       {...trigger}
       label={props.label}
-      value={pickerValue(props)}
+      subtitle={{ text: pickerValue(props) }}
       accessibilityRole="button"
       disabled={props.disabled}
     />

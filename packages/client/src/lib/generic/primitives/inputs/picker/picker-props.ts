@@ -63,6 +63,8 @@ export type ComboboxProps<Value extends string> = Omit<
   filter?: (option: PickerOption<Value>, query: string) => boolean;
   // Shown in place of the options when none matches the query.
   emptyLabel?: string;
+  // Shown beside the spinner while the options load; by default "Loading…".
+  loadingLabel?: string;
   footerAction?: ComboboxFooterAction;
   // The control that opens it, such as a toolbar Button; by default a button naming the chosen option.
   trigger?: ReactElement<{ disabled?: boolean | null }>;

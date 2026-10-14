@@ -39,6 +39,7 @@ const projectSearch = {
   options: projects,
   searchPlaceholder: 'Find a Project…',
   emptyLabel: 'No Project matches.',
+  loadingLabel: 'Loading Projects…',
   footerAction: { label: 'Add a Project', icon: 'add', onPress: () => {} },
 } as const;
 
