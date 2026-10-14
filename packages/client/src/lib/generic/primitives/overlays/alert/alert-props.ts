@@ -1,11 +1,21 @@
-export interface AlertAction {
+interface AlertActionBase {
   label: string;
-  // A cancel action dismisses.
-  cancel?: boolean;
-  // The danger tone draws the action in red.
-  tone?: 'danger';
   onPress?: () => void;
 }
+
+// A cancel action dismisses. iOS drops the red of a cancel action, so cancel and danger never meet.
+interface CancelAlertAction extends AlertActionBase {
+  cancel: true;
+  tone?: never;
+}
+
+interface AnswerAlertAction extends AlertActionBase {
+  cancel?: false;
+  // The danger tone draws the action in red.
+  tone?: 'danger';
+}
+
+export type AlertAction = CancelAlertAction | AnswerAlertAction;
 
 /*
  * A short question with a few answers, drawn by the system: a SwiftUI alert or confirmation dialog on iOS,

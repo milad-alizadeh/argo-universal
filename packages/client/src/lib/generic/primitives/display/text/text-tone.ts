@@ -9,7 +9,7 @@ export type Tone =
   | 'danger'
   | 'done';
 
-export const toneText = {
+const toneText = {
   neutral: 'text-foreground',
   muted: 'text-muted-foreground',
   accent: 'text-accent',
@@ -19,3 +19,7 @@ export const toneText = {
   danger: 'text-danger',
   done: 'text-done',
 } as const satisfies Record<Tone, string>;
+
+// The colour class for a tone, or none when no tone is set.
+export const toneClass = (tone: Tone | undefined): string | undefined =>
+  tone && toneText[tone];

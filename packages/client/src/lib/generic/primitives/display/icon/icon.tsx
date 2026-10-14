@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
-import { TextClassContext, toneText } from '#primitives/display/text';
+import { TextClassContext, toneClass } from '#primitives/display/text';
 import { appleSymbol } from '../../../symbols/apple-symbol';
 import { type IconName, iconSymbols } from '../../../symbols/icon-names';
 import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
@@ -48,7 +48,7 @@ function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
   return cn(
     'text-foreground',
     useContext(TextClassContext),
-    props.tone && toneText[props.tone],
+    toneClass(props.tone),
     props.className,
   );
 }

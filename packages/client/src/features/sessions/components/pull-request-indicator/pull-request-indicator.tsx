@@ -34,12 +34,7 @@ function PullRequestIcon({
   const appearance = pullRequestAppearance[status];
 
   return (
-    <Icon
-      role="secondary"
-      name={appearance.icon}
-      tone={appearance.tone}
-      className="shrink-0"
-    />
+    <Icon role="secondary" name={appearance.icon} tone={appearance.tone} />
   );
 }
 

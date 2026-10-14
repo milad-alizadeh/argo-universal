@@ -1,3 +1,4 @@
+import { toneClass } from '#primitives/display/text';
 import { cn } from '../../../utils';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 
@@ -156,15 +157,5 @@ export function hasLeadingSlot(
 export function titleClasses(
   props: Pick<GroupedListItemProps, 'tone' | 'code'>,
 ): string {
-  return cn(
-    'min-w-0 flex-1',
-    props.code && 'type-code',
-    props.tone && toneText[props.tone],
-  );
+  return cn('min-w-0 flex-1', props.code && 'type-code', toneClass(props.tone));
 }
-
-const toneText = {
-  danger: 'text-danger',
-  accent: 'text-accent',
-  muted: 'text-muted-foreground',
-};
