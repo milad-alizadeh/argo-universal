@@ -7,12 +7,11 @@ import { ComposerAgentModelControl } from '../../src/features/composer/component
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
-  agentModelLabel,
   agentsScrollId,
-  chooseAgentLabel,
   type Story,
   type Configuration,
   type PlayContext,
+  openAgentChoices,
 } from './common';
 import { assertCantStartRows, assertRetryResults } from './retry-assertions';
 import {
@@ -110,13 +109,4 @@ function retryScenario(
 function clearRetryCallbacks(scenario: RetryScenario): void {
   scenario.onAgentChange.mockClear();
   scenario.onAgentRetry.mockClear();
-}
-async function openAgentChoices(context: PlayContext): Promise<void> {
-  const overlay = within(document.body);
-  await context.userEvent.click(
-    context.canvas.getByRole('button', { name: agentModelLabel }),
-  );
-  await context.userEvent.click(
-    await overlay.findByRole('button', { name: chooseAgentLabel }),
-  );
 }

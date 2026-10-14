@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { closeAgentMenus } from './agent-menus';
-import { readAgent } from './agents';
+import { readAgent, readAgents } from './agents';
 import { Given, When, Then } from './fixtures';
 
 export const agentModelLabel = 'Agent and model';
@@ -35,11 +35,20 @@ export async function openNewSession(page: Page): Promise<void> {
   await expect(page.getByRole('button', { name: /^Project: / })).toBeVisible();
   await expect(page.getByText('Reconnecting…')).toHaveCount(0);
   await expect(page.getByRole('textbox', { name: messageLabel })).toBeVisible();
+  // New Session opens before the saved Agents arrive; it stays busy until the Agent choice has filled.
+  await expect(page.getByTestId('new-session-composer')).not.toHaveAttribute(
+    'aria-busy',
+    'true',
+  );
+}
+
+export async function openAgentChoices(page: Page): Promise<void> {
+  await page.getByRole('button', { name: agentModelLabel }).click();
+  await page.getByRole('button', { name: /^Agent,/ }).click();
 }
 
 export async function chooseAgent(page: Page, label: string): Promise<void> {
-  await page.getByRole('button', { name: agentModelLabel }).click();
-  await page.getByRole('button', { name: /^Agent,/ }).click();
+  await openAgentChoices(page);
   await page.getByRole('button', { name: `Select ${label}` }).click();
   await closeAgentMenus(page, agentModelLabel);
   await expectAgentSelection(page, label);
@@ -119,12 +128,13 @@ Then('Back returns to the Sessions list', async ({ page }): Promise<void> => {
 });
 
 Given(
-  'Agent {int} refuses to open/reopen a Session',
-  async ({ page, server }, ordinal: number): Promise<void> => {
+  /^(?:Agent (\d+)|every Agent) refuses to (?:open|reopen) a Session$/,
+  async ({ page, server }, ordinal?: string): Promise<void> => {
     // The refusal shows only when a Session opens or reopens, so the Agent is listed as Ready.
-    expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
-      status: 'ready',
-    });
+    const refusing = ordinal
+      ? [await readAgent(page, server.httpUrl, Number(ordinal))]
+      : await readAgents(page, server.httpUrl);
+    for (const { status } of refusing) expect(status).toBe('ready');
   },
 );
 

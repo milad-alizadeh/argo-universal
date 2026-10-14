@@ -79,20 +79,6 @@ Feature: New Session
       | 1     | release notes file | Summarise these release notes.          | The release notes list one change. |
       | 2     | release notes file | Summarise these release notes.          | The release notes list one change. |
 
-  Scenario Outline: A refused Session keeps the first prompt with Agent <agent>
-    Given a phone Frame
-    And Agent <agent> refuses to open a Session
-    And a New Session with Agent <agent>
-    Then New Session says the Session couldn't open
-    When I try to send the prompt "Fix the flaky login test"
-    Then New Session says the Session couldn't open
-    And the Composer keeps the prompt "Fix the flaky login test"
-
-    Examples:
-      | agent |
-      | 1     |
-      | 2     |
-
   Scenario: Leaving New Session without sending discards its empty Session
     Given a phone Frame
     And a New Session with Agent 1
@@ -127,31 +113,3 @@ Feature: New Session
     When I choose the local Checkout
     And I send the prompt "Tidy the README"
     Then the next New Session remembers the local Checkout
-
-  Scenario Outline: New Session explains why every Agent is <state>
-    Given a phone Frame
-    And every Agent is "<state>"
-    When I open a New Session
-    Then New Session shows the first Agent's setup step
-    And New Session cannot send a prompt
-
-    Examples:
-      | state          |
-      | not installed  |
-      | sign-in needed |
-      | can't start    |
-
-  Scenario Outline: Agent <agent> requires setup because it is <state>
-    Given a phone Frame
-    And Agent <agent> is "<state>"
-    When I view the Agent choices in New Session
-    Then Agent <agent> shows "<state>" instead of accepting a prompt
-    When I set up Agent <agent>
-    Then the Settings show Agent <agent>
-
-    Examples:
-      | agent | state          |
-      | 1     | not installed  |
-      | 1     | sign-in needed |
-      | 2     | not installed  |
-      | 2     | sign-in needed |

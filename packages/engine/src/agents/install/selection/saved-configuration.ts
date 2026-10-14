@@ -23,11 +23,9 @@ const previousRegistry = (
     throw new Error('Agent is a custom registration');
   return {
     configuration: previous.configuration,
-    enabled: installationEnabled(previous),
+    enabled: previous.enabled,
   };
 };
-const installationEnabled = (agent: ConfiguredAgent): boolean =>
-  agent.configuration.removed ? true : agent.enabled;
 const selectionConfiguration = (
   previous: RegistryConfiguration,
   selection: InstallSelection,

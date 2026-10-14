@@ -40,13 +40,30 @@ export const chooseProject = (
 ): ProjectInfo | undefined =>
   projects.find((entry) => entry.id === chosen) ?? projects[0];
 
+// 'update-available' is not a status yet (#611 adds it); a usable Agent with an update stays offered once it is.
+const offeredStatuses: ReadonlySet<string> = new Set([
+  'ready',
+  'checking',
+  'update-available',
+]);
+
+// The New Session picker offers enabled Agents that are Ready, being checked or have an update; Sign-in needed, Account not supported and every failure stay out.
+export const offeredAgents = (agents: readonly AgentInfo[]): AgentInfo[] =>
+  agents.filter(
+    ({ enabled, status }) => enabled && offeredStatuses.has(status),
+  );
+
 const chooseAgent = (
-  agents: readonly AgentInfo[],
+  listed: readonly AgentInfo[],
   chosen: string | undefined,
-): AgentInfo | undefined =>
-  agents.find((entry) => entry.agent === chosen) ??
-  agents.find((entry) => entry.status === 'ready') ??
-  agents[0];
+): AgentInfo | undefined => {
+  const agents = offeredAgents(listed);
+  return (
+    agents.find((entry) => entry.agent === chosen) ??
+    agents.find((entry) => entry.status === 'ready') ??
+    agents[0]
+  );
+};
 
 type Checkout = Pick<
   SessionChoices,

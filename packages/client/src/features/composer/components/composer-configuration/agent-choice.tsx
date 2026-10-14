@@ -21,6 +21,25 @@ export function AgentChoice(props: AgentChoiceProps): React.JSX.Element {
     </>
   );
 }
+// The picker's last row: it closes the picker and opens the Agents still to add.
+export function AddAgentChoice({
+  configuration,
+  onSelect,
+}: Omit<AgentChoiceProps, 'agent'>): React.JSX.Element | null {
+  const { onAddAgent } = configuration;
+  if (!onAddAgent) return null;
+  const add = (): void => {
+    onSelect();
+    onAddAgent();
+  };
+  return <ListItem {...addAgentRow} onPress={add} />;
+}
+const addAgentRow = {
+  title: 'Add a new agent',
+  icon: 'add',
+  role: 'button',
+  disclosure: false,
+} as const;
 function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
   const wide = useWide();
   return (
@@ -32,7 +51,7 @@ function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
     />
   );
 }
-// Only a Ready Agent can be picked; a Checking… one dims with a spinner in the check's slot.
+// Only a Ready Agent can be picked; a Checking… one dims with a spinner in the check's slot and keeps its height.
 function agentSelectionProps(
   props: AgentChoiceProps,
 ): React.ComponentProps<typeof ListItem> {
@@ -46,17 +65,25 @@ function agentSelectionProps(
     onPress: () => selectAgent(props),
   };
 }
+const checkingLabel = 'Checking…';
 function SelectionAccessory(props: {
   agent: AgentInfo;
   selected: boolean;
-}): React.JSX.Element | null {
-  if (props.agent.status === 'checking')
-    return (
-      <IconSlot role="mark">
-        <IconSpinner iconRole="mark" colorClassName="accent-muted-foreground" />
-      </IconSlot>
-    );
-  return props.selected ? <SelectedCheck /> : null;
+}): React.JSX.Element {
+  if (props.agent.status === 'checking') return <CheckingSpinner />;
+  // An empty slot keeps every row the height of one with a check or spinner.
+  return props.selected ? <SelectedCheck /> : <IconSlot role="mark" />;
+}
+function CheckingSpinner(): React.JSX.Element {
+  return (
+    <IconSlot role="mark">
+      <IconSpinner
+        iconRole="mark"
+        colorClassName="accent-muted-foreground"
+        accessibilityLabel={checkingLabel}
+      />
+    </IconSlot>
+  );
 }
 function agentRowContent(
   agent: AgentInfo,

@@ -45,15 +45,11 @@ const checkoutProps = ({
 
 const agentChoiceProps = (
   wiring: NewSessionWiring,
-): Pick<
-  ConfigurationProps,
-  'onAgentChange' | 'onAgentSetup' | 'onAgentRetry'
-> => ({
+): Pick<ConfigurationProps, 'onAgentChange' | 'onAddAgent'> => ({
   onAgentChange: (agent) =>
     rechoose(wiring, (current) => ({ ...current, agent })),
-  onAgentSetup: (setup) =>
-    wiring.navigate({ to: 'settings-agent', agent: setup }),
-  onAgentRetry: wiring.data.agents.retry,
+  onAddAgent: () =>
+    wiring.navigate({ to: 'settings-agents', filter: 'not-installed' }),
 });
 
 const configurationProps = (
@@ -86,10 +82,11 @@ const noticeProps = ({
 });
 
 const readyProps = (
-  { serverName, projects, agents }: LoadedNewSession,
+  { serverName, projects, agents, agentsLoading }: LoadedNewSession,
   wiring: NewSessionWiring,
 ): ReadyNewSessionViewProps => ({
   serverName,
+  agentsLoading,
   connected: wiring.connected,
   projects,
   ...projectProps(wiring),

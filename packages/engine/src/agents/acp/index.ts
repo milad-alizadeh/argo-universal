@@ -13,3 +13,4 @@ export type {
   AcpResourceInput,
   AcpProcess,
 } from './resource-types';
+export { isAuthRequired } from './sign-in-required';

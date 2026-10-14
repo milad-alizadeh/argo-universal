@@ -10,7 +10,6 @@ export interface AgentStatusCopy {
 }
 
 const copies: Partial<Record<AgentStatus, AgentStatusCopy>> = {
-  checking: { label: 'Checking…' },
   'sign-in-needed': {
     label: 'Sign-in needed',
     button: 'Sign in',
@@ -41,7 +40,7 @@ const copies: Partial<Record<AgentStatus, AgentStatusCopy>> = {
   },
 };
 
-// What the picker says under an Agent that cannot start a Session yet, and its one action; Ready says nothing.
+// What the picker says under an Agent that cannot start a Session yet, and its one action; Ready and Checking… say nothing.
 export const agentStatusCopy = (
   status: AgentStatus,
 ): AgentStatusCopy | undefined => copies[status];

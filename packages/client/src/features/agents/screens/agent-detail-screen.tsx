@@ -14,6 +14,7 @@ import {
   useCustomAgentMutations,
   useCustomAgents,
 } from '../hooks/use-custom-agents';
+import { listedStatus } from '../state/agent-list';
 
 export interface AgentDetailScreenProps {
   agent: string;
@@ -119,7 +120,8 @@ function useSavedReadiness(
   agent: string,
 ): React.ComponentProps<typeof CustomAgentDetailView>['readiness'] {
   const info = useAgents().data?.find((entry) => entry.agent === agent);
-  return info ?? { status: 'checking' };
+  if (!info) return { status: 'checking' };
+  return { status: listedStatus(info), reason: info.reason };
 }
 const checkedManagement = (
   management: React.ComponentProps<typeof CustomAgentDetailView>['management'],

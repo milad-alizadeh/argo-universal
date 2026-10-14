@@ -174,7 +174,9 @@ async function settleStartupReadiness(
 const isChecking = async (
   caller: EngineConnections['caller'],
 ): Promise<boolean> =>
-  (await caller.agents.list()).some(({ status }) => status === 'checking');
+  (await caller.agents.list()).some(
+    ({ enabled, status }) => enabled && status === 'checking',
+  );
 
 function registerEngineCleanup(
   engine: EngineActor,

@@ -7,14 +7,16 @@ import { SettingsPage } from '#lib/product/settings-page';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';
-import { statusTone } from '../../state/agent-status';
 import { AgentIdentity } from '../agent-identity';
 import { useInstallToast } from '../agent-install-control/use-install-toast';
 import {
   AgentEnablement,
   AgentManagementFailure,
 } from '../agent-management/agent-management';
-import { AgentStatusChip } from '../agent-readiness/agent-readiness';
+import {
+  AgentStatusChip,
+  hasStatusChip,
+} from '../agent-readiness/agent-readiness';
 import { PhoneTitle } from '../phone-title';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
@@ -56,7 +58,7 @@ function IdentityTrailing(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
   if (showsIdentityInstallation(props)) return <AgentAction {...props} />;
-  if (statusTone(props.agent.status))
+  if (hasStatusChip(props.agent.status))
     return <AgentStatusChip status={props.agent.status} />;
   return <AgentAction {...props} />;
 }

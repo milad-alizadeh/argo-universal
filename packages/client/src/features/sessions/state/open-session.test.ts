@@ -6,7 +6,6 @@ import {
   firstAgent,
   input,
   mainProject,
-  notInstalled,
   projectBaseBranch,
   worktreeProject,
 } from './session-choices.mocks';
@@ -69,13 +68,18 @@ describe('canOpenSession', () => {
       },
     },
     {
-      case: 'for an Agent that needs setup',
+      case: 'while the only Agent is still being checked',
       overrides: {
         choices: toSessionChoices(
-          input({
-            agents: newSessionCatalogs.oneNotInstalled,
-            chosen: { agent: notInstalled.agent },
-          }),
+          input({ agents: [{ ...firstAgent, status: 'checking' }] }),
+        ),
+      },
+    },
+    {
+      case: 'without an Agent the picker offers',
+      overrides: {
+        choices: toSessionChoices(
+          input({ agents: newSessionCatalogs.bothCantStart }),
         ),
       },
     },

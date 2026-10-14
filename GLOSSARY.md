@@ -58,6 +58,10 @@ _Avoid_: Connection, account link
 A coding agent program that Argo drives, such as Claude or Codex.
 _Avoid_: Harness, provider, vendor, model
 
+**Enabled**:
+The user's choice to offer an Agent for new Sessions, kept per Registry catalog entry. Only the user changes it: finding, removing or reinstalling the Agent keeps it. A disabled Agent leaves the New Session picker and stays in Settings › Agents.
+_Avoid_: Active, available (for this choice)
+
 **Session**:
 One conversation with one Agent, with an Argo id and the Agent's own session id.
 _Avoid_: Chat, thread, conversation

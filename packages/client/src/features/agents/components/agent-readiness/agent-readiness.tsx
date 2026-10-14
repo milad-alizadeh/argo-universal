@@ -37,16 +37,25 @@ const badgeTones: Record<StatusTone, BadgeTone> = {
   pending: 'muted',
 };
 
-// The status as a chip beside the Agent's name; Not installed has none.
+const chipTone = (status: AgentStatus): BadgeTone | undefined => {
+  if (status === 'disabled') return 'muted';
+  const tone = statusTone(status);
+  return tone && badgeTones[tone];
+};
+// Whether the status draws a chip; Not installed has none.
+export const hasStatusChip = (status: AgentStatus): boolean =>
+  chipTone(status) !== undefined;
+
+// The status as a chip beside the Agent's name; Disabled is muted, with no spinner.
 export function AgentStatusChip({
   status,
 }: {
   status: AgentStatus;
 }): React.JSX.Element | null {
-  const tone = statusTone(status);
+  const tone = chipTone(status);
   if (!tone) return null;
   return (
-    <Badge tone={badgeTones[tone]}>
+    <Badge tone={tone}>
       <Text>{agentStatusLabels[status]}</Text>
     </Badge>
   );

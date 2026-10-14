@@ -3,7 +3,7 @@ import type { ClientContext } from '@agentclientprotocol/sdk';
 // ACP's auth_required error code.
 const authRequiredCode = -32000;
 
-const isAuthRequired = (error: unknown): boolean =>
+export const isAuthRequired = (error: unknown): boolean =>
   Reflect.get(Object(error), 'code') === authRequiredCode;
 
 const observedRequest =

@@ -1,14 +1,14 @@
-import type { AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
+import type { AgentRowEntry } from '../../state/agent-status';
 import {
   type ReadinessHandlers,
   ReadinessSection,
 } from '../agent-readiness/agent-readiness';
 
 // The Agent's saved Readiness as the Agents list reports it; Checking… until the first check lands.
-export type CustomAgentReadiness = Pick<AgentInfo, 'status' | 'reason'>;
+export type CustomAgentReadiness = Pick<AgentRowEntry, 'status' | 'reason'>;
 type StatusProps = ReadinessHandlers & {
   name: string;
   readiness: CustomAgentReadiness;

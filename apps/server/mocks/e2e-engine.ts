@@ -25,11 +25,18 @@ const version = packageJson.version;
 const options = AppFixtureAgents.parse(
   JSON.parse(process.env.ARGO_E2E_AGENTS ?? '{}'),
 );
-const requestLog = process.env.ARGO_E2E_REQUEST_LOG;
-// The scripted Agents log the ACP requests e2e steps check.
-const agentEnvironment: Record<string, string> = requestLog
-  ? { ARGO_E2E_REQUEST_LOG: requestLog }
-  : {};
+// A held readiness check stays Checking… for the whole test, however slow the machine, instead of timing out.
+const heldCheckTimeoutMs = 10 * 60 * 1000;
+const holdsCheck = Object.values(options).some(
+  ({ scenario }) => scenario === 'check-held',
+);
+// The scripted Agents log the ACP requests e2e steps check, and a held check waits for the release file.
+const agentEnvironment: Record<string, string> = Object.fromEntries(
+  ['ARGO_E2E_REQUEST_LOG', 'ARGO_E2E_HELD_CHECK_RELEASE'].flatMap((name) => {
+    const value = process.env[name];
+    return value ? [[name, value]] : [];
+  }),
+);
 const port = z.coerce
   .number()
   .int()
@@ -79,6 +86,7 @@ const engine = composeEngine({
   now: Date.now,
   createId: randomUUID,
   report: publishAddress,
+  ...(holdsCheck ? { acp: { checkTimeoutMs: heldCheckTimeoutMs } } : {}),
   installationPorts: createInstallationPorts({
     packageName: 'example-agent',
     scenarioPath: z.string().parse(process.env.ARGO_E2E_INSTALLATION_PATH),

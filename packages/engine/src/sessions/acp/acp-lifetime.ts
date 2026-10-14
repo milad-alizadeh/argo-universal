@@ -7,7 +7,7 @@ import type {
   AcpSessionDestination,
   AcpSessionLease,
 } from '../../agents';
-import type { ResolveAgentLaunch } from '../../agents';
+import { isAuthRequired, type ResolveAgentLaunch } from '../../agents';
 import type { SessionData } from '../session-data';
 import { selectSessionOpening } from './acp-session-opening';
 import {
@@ -47,6 +47,8 @@ export class AcpSessionLifetime {
   private closing: Promise<void> | undefined;
   private lease: AcpSessionLease | undefined;
   private attached = false;
+  // Set when the Agent could not open the Session: its launch, start or session/new failed.
+  public agentFailed = false;
   private readonly requests: AcpSessionRequests;
   public constructor(
     private readonly dependencies: AcpSessionDependencies | undefined,
@@ -71,7 +73,14 @@ export class AcpSessionLifetime {
     });
   }
   public open(session: SessionData): Promise<AcpSessionLease> {
-    this.opening ??= this.openOwned(session);
+    this.opening ??= this.openOwned(session).catch((error: unknown) => {
+      // Closing the Session withdraws its open, and whatever the Agent then reports is not its failure; auth_required is saved as Sign-in needed where it is observed.
+      this.agentFailed =
+        !isWithdrawn(error) &&
+        !this.controller.signal.aborted &&
+        !isAuthRequired(error);
+      throw error;
+    });
     return this.opening;
   }
   // Empty Sessions have no persisted Agent context; the failed lease is released by its owner.

@@ -78,6 +78,18 @@ export const OpensOnTheAgentsIdentityCard: Story = {
   },
 };
 
+export const ShowsADisabledAgentThatWasNeverCheckedAsDisabled: Story = {
+  args: { agent: { ...readyAgent, status: 'disabled' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Disabled')).toBeVisible();
+    await expect(canvas.queryByText('Checking…')).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('heading', { name: 'Status' }),
+    ).not.toBeInTheDocument();
+  },
+};
+
 export const DisablesActionsTheServerCannotDoYet: Story = {
   args: { onRemove: undefined, onInstall: undefined },
   play: async ({ canvas }) => {
