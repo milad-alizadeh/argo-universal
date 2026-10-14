@@ -9,7 +9,7 @@ import type { FieldErrors } from '#primitives/fields/field-errors';
 export interface TextFieldProps {
   label: string;
   value: string;
-  onChange: (value: string) => void;
+  onChangeText: (value: string) => void;
   onBlur?: () => void;
   // An example value shown while the field is empty, so it reads as a place to type.
   placeholder?: string;

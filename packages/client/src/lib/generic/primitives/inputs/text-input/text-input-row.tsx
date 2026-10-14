@@ -74,7 +74,7 @@ function inputBehaviour(props: TextFieldProps): InputProps {
   return {
     value: props.value,
     placeholder: props.placeholder,
-    onChangeText: props.onChange,
+    onChangeText: props.onChangeText,
     onBlur: props.onBlur,
     editable: !props.disabled,
     autoCapitalize: 'none',

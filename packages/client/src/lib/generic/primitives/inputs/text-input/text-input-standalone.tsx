@@ -58,7 +58,7 @@ function inputBehaviour(props: StandaloneTextInputProps): InputProps {
     appearance: 'bare',
     accessibilityLabel: props.label,
     value: props.value,
-    onChangeText: props.onChange,
+    onChangeText: props.onChangeText,
     onBlur: props.onBlur,
     placeholder: props.placeholder,
     editable: !props.disabled,

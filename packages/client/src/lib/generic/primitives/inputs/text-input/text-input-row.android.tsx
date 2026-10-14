@@ -46,7 +46,7 @@ function fieldBehaviour(
 ): ComposeFieldProps {
   return {
     value: text,
-    onValueChange: props.onChange,
+    onValueChange: props.onChangeText,
     onFocusChanged,
     enabled: !props.disabled,
     isError: isInvalid(props),

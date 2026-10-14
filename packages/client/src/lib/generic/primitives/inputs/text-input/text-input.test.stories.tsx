@@ -12,7 +12,7 @@ type Appearance = 'standalone' | 'row';
 
 type ExampleProps = {
   appearance: Appearance;
-  onChange: (value: string) => void;
+  onChangeText: (value: string) => void;
   errors?: string[];
   disabled?: boolean;
 };
@@ -25,9 +25,9 @@ function Example(props: ExampleProps): React.JSX.Element {
       {...props}
       label={label}
       value={value}
-      onChange={(next) => {
+      onChangeText={(next) => {
         setValue(next);
-        props.onChange(next);
+        props.onChangeText(next);
       }}
     />
   );
@@ -39,7 +39,7 @@ const meta = {
   beforeEach: async (): Promise<void> => {
     await settleViewport(1440);
   },
-  args: { appearance: 'standalone', onChange: fn() },
+  args: { appearance: 'standalone', onChangeText: fn() },
 } satisfies Meta<typeof Example>;
 
 export default meta;
@@ -54,7 +54,7 @@ function typesIn(appearance: Appearance): Story {
       await userEvent.type(field, 'acp');
       await expect(field).toHaveValue('acp');
       await expect(field).not.toBeInvalid();
-      await expect(args.onChange).toHaveBeenLastCalledWith('acp');
+      await expect(args.onChangeText).toHaveBeenLastCalledWith('acp');
     },
   };
 }
@@ -111,7 +111,7 @@ export const BareTypes: Story = {
         value={value}
         onChangeText={(next) => {
           setValue(next);
-          props.onChange(next);
+          props.onChangeText(next);
         }}
       />
     );
@@ -120,6 +120,6 @@ export const BareTypes: Story = {
     const field = canvas.getByRole('textbox', { name: label });
     await userEvent.type(field, 'acp');
     await expect(field).toHaveValue('acp');
-    await expect(args.onChange).toHaveBeenLastCalledWith('acp');
+    await expect(args.onChangeText).toHaveBeenLastCalledWith('acp');
   },
 };

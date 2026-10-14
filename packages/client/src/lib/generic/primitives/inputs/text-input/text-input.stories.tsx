@@ -76,7 +76,7 @@ function InvalidSection(): React.JSX.Element {
   );
 }
 
-type Typed<Props> = Omit<Props, 'value' | 'onChange' | 'appearance'> & {
+type Typed<Props> = Omit<Props, 'value' | 'onChangeText' | 'appearance'> & {
   initial: string;
 };
 
@@ -148,7 +148,12 @@ function TypedRow({
   const [value, setValue] = useState(initial);
 
   return (
-    <TextInput {...props} appearance="row" value={value} onChange={setValue} />
+    <TextInput
+      {...props}
+      appearance="row"
+      value={value}
+      onChangeText={setValue}
+    />
   );
 }
 
@@ -158,5 +163,5 @@ function TypedStandalone({
 }: Typed<StandaloneTextInputProps>): React.JSX.Element {
   const [value, setValue] = useState(initial);
 
-  return <TextInput {...props} value={value} onChange={setValue} />;
+  return <TextInput {...props} value={value} onChangeText={setValue} />;
 }

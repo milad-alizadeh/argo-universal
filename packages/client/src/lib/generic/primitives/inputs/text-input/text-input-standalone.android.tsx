@@ -83,7 +83,7 @@ function useFieldTextStyle(
 
 function fieldBehaviour(props: StandaloneTextInputProps): FieldProps {
   return {
-    onValueChange: props.onChange,
+    onValueChange: props.onChangeText,
     enabled: !props.disabled,
     isError: isInvalid(props),
     singleLine: true,

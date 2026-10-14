@@ -75,7 +75,7 @@ function RowField(props: TextFieldProps): React.JSX.Element {
     <TextField
       text={text}
       placeholder={props.placeholder}
-      onTextChange={props.onChange}
+      onTextChange={props.onChangeText}
       onFocusChange={(focused) => focused || props.onBlur?.()}
       modifiers={modifiers}
     />

@@ -12,7 +12,7 @@ import { TextInput } from '#primitives/inputs/text-input';
 export type FormInputProps = {
   label: string;
   value: string;
-  onChange: (value: string) => void;
+  onChangeText: (value: string) => void;
   onBlur?: () => void;
   placeholder?: string;
   errors?: FieldErrors;
@@ -50,7 +50,7 @@ export function FormInput(props: FormInputProps): React.JSX.Element {
       className={inputClass(props)}
       value={props.value}
       placeholder={props.placeholder}
-      onChangeText={props.onChange}
+      onChangeText={props.onChangeText}
       onBlur={props.onBlur}
       editable={!props.disabled}
       {...verbatimEntry}
@@ -90,12 +90,12 @@ export type TextField = {
   handleBlur: () => void;
 };
 
-type BoundInput = Pick<FormInputProps, 'value' | 'onChange' | 'onBlur'> &
+type BoundInput = Pick<FormInputProps, 'value' | 'onChangeText' | 'onBlur'> &
   Required<Pick<FormInputProps, 'errors'>>;
 
 const fieldInput = (field: TextField): BoundInput => ({
   value: field.state.value,
-  onChange: field.handleChange,
+  onChangeText: field.handleChange,
   onBlur: field.handleBlur,
   errors: field.state.meta.errors,
 });

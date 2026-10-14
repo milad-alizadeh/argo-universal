@@ -54,7 +54,7 @@ function textProps(props: ElicitationFieldProps): StandaloneTextInputProps {
     required: props.required,
     numeric: numericProperty(props.property),
     value: props.value === undefined ? '' : String(props.value),
-    onChange: props.onChange,
+    onChangeText: props.onChange,
   };
 }
 
