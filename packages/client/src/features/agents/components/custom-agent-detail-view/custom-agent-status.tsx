@@ -2,8 +2,8 @@ import type { AgentCheck } from '@repo/contracts';
 import type * as React from 'react';
 import { Badge, type BadgeTone } from '#primitives/display/badge';
 import { Text } from '#primitives/display/text';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { CheckAgainRow } from '../check-again-row';
 import { sectionFooter } from '../form-field';
 
@@ -55,23 +55,24 @@ export function ReadinessSection(props: StatusProps): React.JSX.Element {
   const failure = failureOf(check);
 
   return (
-    <FieldSection title="Status" {...sectionFooter(failure)}>
+    <GroupedListSection title="Status" {...sectionFooter(failure)}>
       <StatusRow check={check} />
       {onSignIn && (
-        <ListItem title="Sign in" tone="accent" onPress={onSignIn} />
+        <GroupedListItem title="Sign in" tone="accent" onPress={onSignIn} />
       )}
       {failure !== undefined && <CheckAgainRow onPress={onCheck} />}
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
 function StatusRow({ check }: { check: CustomAgentCheck }): React.JSX.Element {
-  if (!check) return <ListItem title="Running ACP initialize…" loading />;
+  if (!check)
+    return <GroupedListItem title="Running ACP initialize…" loading />;
 
   if (check.status === 'ready') return <CheckedRow check={check} />;
 
   return (
-    <ListItem
+    <GroupedListItem
       icon="warning"
       tone="destructive"
       title="Did not answer ACP initialize"
@@ -96,10 +97,10 @@ function CheckedChip({ check }: { check: Checked }): React.JSX.Element {
 
 function CheckedRow({ check }: { check: Checked }): React.JSX.Element {
   if (!check.authentication)
-    return <ListItem icon="check" title="Answered ACP initialize" />;
+    return <GroupedListItem icon="check" title="Answered ACP initialize" />;
 
   return (
-    <ListItem
+    <GroupedListItem
       icon="warning"
       title={authenticationLabels[check.authentication]}
       status={{ tone: 'warning', label: '' }}

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Picker } from './picker';
 import type { PickerProps } from './picker-props';
@@ -87,7 +87,7 @@ export const Variations: Story = {
           <PickerExample {...props} />
         </Variation>
       ))}
-      <Variation label="ListItem accessory">
+      <Variation label="GroupedListItem accessory">
         <AccessoryExample />
       </Variation>
     </VariationList>
@@ -96,11 +96,11 @@ export const Variations: Story = {
 
 function AccessoryExample(): React.JSX.Element {
   return (
-    <FieldSection>
-      <ListItem
+    <GroupedListSection>
+      <GroupedListItem
         title="Effort"
         accessory={<PickerExample value="medium" appearance="row" />}
       />
-    </FieldSection>
+    </GroupedListSection>
   );
 }

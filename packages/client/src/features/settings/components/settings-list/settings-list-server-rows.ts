@@ -1,4 +1,4 @@
-import type { ListItemProps } from '#primitives/lists/list-item';
+import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
 import {
   connectionValue,
   countValue,
@@ -57,7 +57,7 @@ export function accountsRow(props: SettingsListProps): SettingsRow {
 
 const connectionStatuses: Record<
   NonNullable<SettingsListProps['status']>,
-  ListItemProps['status']
+  GroupedListItemProps['status']
 > = {
   disconnected: { tone: 'destructive', label: 'server unavailable' },
   loading: { tone: 'warning', label: 'connecting' },

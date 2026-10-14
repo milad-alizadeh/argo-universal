@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { FieldSection } from '#primitives/fields/field-section';
 import { Switch } from '#primitives/inputs/switch';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { Alert } from '#primitives/overlays/alert';
 import type { AgentManagement } from '../../state/agent-management-types';
 
@@ -17,15 +17,15 @@ type EnabledProps = { management: AgentManagement };
 
 function EnablementSection({ management }: EnabledProps): React.JSX.Element {
   return (
-    <FieldSection
+    <GroupedListSection
       title="Availability"
       footer="Disabled Agents cannot start new Sessions. Open Sessions keep working."
     >
-      <ListItem
+      <GroupedListItem
         title="Enabled"
         accessory={<EnablementSwitch management={management} />}
       />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 

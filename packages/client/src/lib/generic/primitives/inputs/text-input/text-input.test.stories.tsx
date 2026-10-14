@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn } from 'storybook/test';
-import { FieldSection } from '#primitives/fields/field-section';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { settleViewport } from '../../../settle-viewport';
 import { TextInput } from './text-input';
 
@@ -82,9 +82,9 @@ function InSection(props: ExampleProps): React.JSX.Element {
   if (props.appearance === 'standalone') return <Example {...props} />;
 
   return (
-    <FieldSection footer={failure} footerTone="destructive" textFields>
+    <GroupedListSection footer={failure} footerTone="destructive" textFields>
       <Example {...props} />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 

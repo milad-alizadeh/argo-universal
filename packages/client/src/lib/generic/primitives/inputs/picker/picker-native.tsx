@@ -4,7 +4,7 @@ import {
   FieldDescriptionFooter,
   useFieldDescription,
 } from '#primitives/fields/field-description';
-import { useInListItem } from '#primitives/lists/list-item';
+import { useInGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { Host, type HostProps } from '#primitives/native/host';
 import type { PickerProps } from './picker-props';
 
@@ -52,7 +52,7 @@ function PickerHost<Value extends string>(
 
 // A row's trailing slot has no width to fill, so there the Picker takes its own; elsewhere it spans the field.
 function useHostSize(): Pick<HostProps, 'matchContents' | 'style'> {
-  if (useInListItem()) return { matchContents: true };
+  if (useInGroupedListItem()) return { matchContents: true };
 
   return { matchContents: { vertical: true }, style: { width: '100%' } };
 }

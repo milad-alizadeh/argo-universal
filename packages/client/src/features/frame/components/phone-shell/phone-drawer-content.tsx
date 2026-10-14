@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
-import { NavigationItem } from '#primitives/lists/navigation-item';
+import { DrawerItem } from '#primitives/lists/drawer-item';
 import { sectionAttentionCount } from '../../state/attention-badge';
 import { drawerAttentionBadge } from '../attention-badge/attention-badge';
 import { type Section, sectionOrder, shellSections } from '../shell-sections';
@@ -40,7 +40,7 @@ function SectionButton({
   const count = sectionAttentionCount(section, navigation.attentionCount);
 
   return (
-    <NavigationItem
+    <DrawerItem
       {...shellSections[section]}
       selected={navigation.selectedSection === section}
       badge={drawerAttentionBadge(count)}

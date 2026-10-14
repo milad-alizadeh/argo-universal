@@ -24,7 +24,7 @@ Expo UI's universal FieldGroup cannot be used or wrapped on Android:
 - It matches sections by component identity, so an Argo wrapper becomes a row inside an implicit section.
 - Its FieldSection puts every child inside a Compose ListItem's headline, so a nested ListItem draws a second ListItem inside the muted tile. That doubles the inset, makes rows taller and stops the ripple short of the tile.
 
-Argo's Android FieldGroup and FieldSection are Argo's own Compose compositions, adapted from Expo's: colours come from the theme bridge, the bottom inset from safe-area context, and each row is drawn from its props with `clickable` on the clipped tile. The same applies to the Picker, a two-line row that opens a radio dialog, and to menus.
+Argo's Android GroupedList and GroupedListSection are Argo's own Compose compositions, adapted from Expo's: colours come from the theme bridge, the bottom inset from safe-area context, and each row is drawn from its props with `clickable` on the clipped tile. The same applies to the Picker, a two-line row that opens a radio dialog, and to menus.
 
 ## Custom symbols in native rows
 

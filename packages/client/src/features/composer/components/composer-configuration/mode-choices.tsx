@@ -4,8 +4,8 @@ import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { configurationChoices } from '#lib/product/session-configuration';
 import { Icon } from '#primitives/display/icon';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { ConfigurationChoice } from './configuration-choice';
 import { configurationIcon, choiceMetadata } from './configuration-values';
 import { isDangerous } from './configuration-values';
@@ -20,13 +20,13 @@ const destructiveTextClassName = 'text-destructive';
 export function ModeContents(props: ModeContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-sidebar">
-      <FieldGroup fit>
-        <FieldSection>
+      <GroupedList fit>
+        <GroupedListSection>
           {configurationChoices(props.mode).map((choice) => (
             <ModeChoice key={choice.value} {...props} choice={choice} />
           ))}
-        </FieldSection>
-      </FieldGroup>
+        </GroupedListSection>
+      </GroupedList>
     </View>
   );
 }

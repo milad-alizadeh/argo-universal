@@ -3,8 +3,8 @@ import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Badge } from '#primitives/display/badge';
 import { Text } from '#primitives/display/text';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldGroupContent } from '#primitives/fields/field-group-content';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListContent } from '#primitives/lists/grouped-list-content';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';
@@ -87,16 +87,16 @@ function AgentIcon({ agent }: AgentDetailViewProps): React.JSX.Element {
 
 function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
   return (
-    <FieldGroup>
+    <GroupedList>
       <DetailIdentity {...props} />
       <PhoneSummary {...props} />
       <AgentStatusSection {...props} />
       <AgentEnablement management={props.management} />
       <AboutSection {...props} />
-      <FieldGroupContent>
+      <GroupedListContent>
         <RemoveAgent {...props} />
-      </FieldGroupContent>
-    </FieldGroup>
+      </GroupedListContent>
+    </GroupedList>
   );
 }
 
@@ -107,14 +107,14 @@ function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element | null {
   if (useWide()) return null;
 
   return (
-    <FieldGroupContent>
+    <GroupedListContent>
       <View className="items-center gap-3">
         <PhoneIconTile {...props} />
         <AgentStatusChip agent={agent} />
         <PhoneDescription description={agent.description} />
         <AgentAction {...props} fullWidth="narrow" />
       </View>
-    </FieldGroupContent>
+    </GroupedListContent>
   );
 }
 

@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
-import { FieldGroup } from '#primitives/fields/field-group';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useErrorToast } from '#primitives/overlays/toast';
 import { formatServerClock, formatServerStart } from '../server-time';
 
@@ -33,11 +33,11 @@ export function ConnectionDetailView({
         title="Connection"
         caption="The Argo Server this App is talking to."
       >
-        <FieldGroup>
-          <FieldSection title="Server">
+        <GroupedList>
+          <GroupedListSection title="Server">
             <ServerRows server={server} />
-          </FieldSection>
-        </FieldGroup>
+          </GroupedListSection>
+        </GroupedList>
       </SettingsPage>
     </View>
   );
@@ -55,7 +55,7 @@ function ServerRows({ server }: { server: ServerDetails }): React.JSX.Element {
   );
 
   if (server.status !== 'loaded') {
-    return <ListItem title="Connecting to the Server…" loading />;
+    return <GroupedListItem title="Connecting to the Server…" loading />;
   }
 
   return <LoadedRows server={server} />;
@@ -64,13 +64,13 @@ function ServerRows({ server }: { server: ServerDetails }): React.JSX.Element {
 function LoadedRows({ server }: { server: LoadedServer }): React.JSX.Element {
   return (
     <>
-      <ListItem title="Version" value={server.version} />
-      <ListItem
+      <GroupedListItem title="Version" value={server.version} />
+      <GroupedListItem
         title="Started"
         value={formatServerStart(server.startedAt, server.clock)}
       />
-      <ListItem title="PID" value={String(server.pid)} />
-      <ListItem title="Clock" value={formatServerClock(server.clock)} />
+      <GroupedListItem title="PID" value={String(server.pid)} />
+      <GroupedListItem title="Clock" value={formatServerClock(server.clock)} />
     </>
   );
 }

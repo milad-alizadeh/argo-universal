@@ -1,10 +1,10 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { FieldSection } from '#primitives/fields/field-section';
 import { Picker } from '#primitives/inputs/picker';
 import type { PickerProps } from '#primitives/inputs/picker';
 import { Switch } from '#primitives/inputs/switch';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 
 const checkoutOptions = [
   { value: 'worktree', label: 'New worktree' },
@@ -25,18 +25,18 @@ export function NewSessionsSection({
   project,
 }: ProjectProps): React.JSX.Element {
   return (
-    <FieldSection title="New Sessions" footer={newSessionsFooter}>
+    <GroupedListSection title="New Sessions" footer={newSessionsFooter}>
       <StartInRow choice={project.checkoutChoice} />
       <BaseBranchRow choice={project.checkoutChoice} />
       <ArchiveRow />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
 // A Picker the Server cannot change yet, in a row titled with its label.
 function PickerRow(props: PickerRowProps): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       title={props.label}
       accessory={
         <Picker
@@ -72,7 +72,7 @@ function ignoreChoice(): void {}
 
 function ArchiveRow(): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       title="Delete the worktree on archive"
       accessory={<ArchiveSwitch />}
     />

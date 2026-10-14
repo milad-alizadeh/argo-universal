@@ -22,10 +22,10 @@ export interface TextFieldProps {
   disabled?: boolean;
 }
 
-// A row inside a FieldSection: the label leading, the field taking the rest of the row.
+// A row inside a GroupedListSection: the label leading, the field taking the rest of the row.
 export type RowTextInputProps = TextFieldProps & { appearance: 'row' };
 
-// A field on its own, outside a FieldSection, with its label above it and its footer under it.
+// A field on its own, outside a GroupedListSection, with its label above it and its footer under it.
 export type StandaloneTextInputProps = TextFieldProps & {
   appearance?: 'standalone';
   required?: boolean;

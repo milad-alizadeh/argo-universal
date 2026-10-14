@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { CopyButton } from '#lib/product/markdown/copy-button';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { agentStatusLabels, statusTone } from '../../state/agent-status';
 import { CheckAgainRow } from '../check-again-row';
@@ -31,13 +31,13 @@ function StatusRow({ agent }: AgentProps): React.JSX.Element {
   const tone = statusTone(agent.status);
 
   return (
-    <FieldSection title="Status" footer={statusFooters[agent.status]}>
-      <ListItem
+    <GroupedListSection title="Status" footer={statusFooters[agent.status]}>
+      <GroupedListItem
         title="Status"
         value={agentStatusLabels[agent.status]}
         status={tone ? { tone, label: '' } : undefined}
       />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -48,14 +48,17 @@ function StatusRow({ agent }: AgentProps): React.JSX.Element {
  */
 function SignInSection(props: AgentDetailViewProps): React.JSX.Element {
   return (
-    <FieldSection
+    <GroupedListSection
       title="Status"
       footer={props.onSignIn ? undefined : signInFooter}
     >
-      <ListItem title="Not signed in" status={{ tone: 'warning', label: '' }} />
+      <GroupedListItem
+        title="Not signed in"
+        status={{ tone: 'warning', label: '' }}
+      />
       <SignInAction {...props} />
       <CheckAgainRow onPress={props.onCheckAgain} />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
@@ -67,7 +70,7 @@ function SignInCommand({
   if (!command) return null;
 
   return (
-    <ListItem
+    <GroupedListItem
       title={command}
       accessory={
         <CopyButton value={command} label="Copy command" className="size-7" />
@@ -78,7 +81,9 @@ function SignInCommand({
 
 function SignInAction(props: AgentDetailViewProps): React.JSX.Element | null {
   if (props.onSignIn)
-    return <ListItem title="Sign in" tone="accent" onPress={props.onSignIn} />;
+    return (
+      <GroupedListItem title="Sign in" tone="accent" onPress={props.onSignIn} />
+    );
 
   return <SignInCommand command={props.agent.signInCommand} />;
 }

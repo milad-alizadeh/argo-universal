@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 
 interface ChoiceProps {
   selected: boolean;
@@ -13,12 +13,12 @@ interface ChoiceProps {
 }
 
 export function ConfigurationChoice(props: ChoiceProps): React.JSX.Element {
-  return <ListItem {...choiceRowProps(props)} />;
+  return <GroupedListItem {...choiceRowProps(props)} />;
 }
 
 function choiceRowProps(
   props: ChoiceProps,
-): React.ComponentProps<typeof ListItem> {
+): React.ComponentProps<typeof GroupedListItem> {
   return {
     ...choiceContent(props),
     leading: props.leading,
@@ -33,7 +33,7 @@ function choiceRowProps(
 
 function choiceContent(
   props: ChoiceProps,
-): React.ComponentProps<typeof ListItem> {
+): React.ComponentProps<typeof GroupedListItem> {
   return {
     title: props.label,
     accessibilityLabel: props.accessibilityLabel ?? props.label,

@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import {
-  ListItemCorners,
-  ListItemEnd,
-  ListItemHover,
-} from '#primitives/lists/list-item';
+  GroupedListItemCorners,
+  GroupedListItemEnd,
+  GroupedListItemHover,
+} from '#primitives/lists/grouped-list-item';
 import type { FieldListEntry } from './field-list-entries';
 import { type HoverStore, useRowHover } from './field-row-hover-store';
 
@@ -24,10 +24,10 @@ export function CardRow({
   const hover = useRowHover(store, index);
 
   return (
-    <ListItemHover value={hover}>
-      <ListItemCorners value={{ first: entry.first, last: entry.last }}>
-        <ListItemEnd value={entry.last}>{entry.row}</ListItemEnd>
-      </ListItemCorners>
-    </ListItemHover>
+    <GroupedListItemHover value={hover}>
+      <GroupedListItemCorners value={{ first: entry.first, last: entry.last }}>
+        <GroupedListItemEnd value={entry.last}>{entry.row}</GroupedListItemEnd>
+      </GroupedListItemCorners>
+    </GroupedListItemHover>
   );
 }

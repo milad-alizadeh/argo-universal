@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import type { NavigationDestination } from '#lib/product/navigation/context';
 import { hrefFor } from '#lib/product/navigation/routes';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SettingsListProps, SettingsRow } from './settings-list-props';
 
@@ -30,7 +30,7 @@ function SettingsRowItem({
   const wide = useWide();
 
   return (
-    <ListItem
+    <GroupedListItem
       {...row}
       href={hrefFor(row.destination).pathname}
       selected={wide && selectedRow(row.destination, selectedDestination)}

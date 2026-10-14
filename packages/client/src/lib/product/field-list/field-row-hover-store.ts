@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react';
-import type { RowHover } from '#primitives/lists/list-item';
+import type { RowHover } from '#primitives/lists/grouped-list-item';
 
 type Shade = 'hovered' | 'pressed';
 

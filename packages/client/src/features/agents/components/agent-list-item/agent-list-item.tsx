@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { Icon } from '#primitives/display/icon';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import {
   type AgentRowEntry,
   agentStatusLabels,
@@ -19,7 +19,7 @@ export function AgentListItem({
   onOpen,
 }: AgentListItemProps): React.JSX.Element {
   return (
-    <ListItem
+    <GroupedListItem
       title={agent.name}
       subtitle={agent.description ? { text: agent.description } : undefined}
       leading={<AgentGlyph agent={agent} />}
@@ -33,7 +33,7 @@ export function AgentListItem({
 function statusProps({
   status,
 }: AgentRowEntry): Pick<
-  React.ComponentProps<typeof ListItem>,
+  React.ComponentProps<typeof GroupedListItem>,
   'value' | 'status'
 > {
   const label = agentStatusLabels[status];

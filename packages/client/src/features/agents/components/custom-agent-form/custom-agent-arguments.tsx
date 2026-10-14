@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { FieldSection } from '#primitives/fields/field-section';
-import { ListItem } from '#primitives/lists/list-item';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { keyedRows } from '../keyed-rows';
 import {
   type ArgumentsField,
@@ -26,20 +26,20 @@ export function CustomAgentArguments(props: SectionProps): React.JSX.Element {
 // One row per argument, in order; each opens its editor, and the last row adds one.
 function ArgumentsSection(props: FieldProps): React.JSX.Element {
   return (
-    <FieldSection title="Arguments" footer={argumentHint}>
+    <GroupedListSection title="Arguments" footer={argumentHint}>
       <ArgumentRows {...props} />
       <AddEntryRow
         title="Add argument"
         disabled={props.disabled}
         onPress={() => props.onEdit(newArgument)}
       />
-    </FieldSection>
+    </GroupedListSection>
   );
 }
 
 function ArgumentRows(props: FieldProps): React.JSX.Element[] {
   return keyedRows(props.field.state.value).map(({ key, index, value }) => (
-    <ListItem
+    <GroupedListItem
       key={key}
       code
       title={value}
