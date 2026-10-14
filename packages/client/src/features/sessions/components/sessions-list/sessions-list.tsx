@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { cn } from '#lib/generic/utils';
-import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
+import { ScrollFadeList } from '#lib/generic/scroll-fade/index';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { useListRows } from './sessions-list-entry-rows';

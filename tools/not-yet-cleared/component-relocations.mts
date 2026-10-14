@@ -82,7 +82,7 @@ const componentFolders: [string, string[]][] = [
       'settings-list',
     ],
   ],
-  ['lib/generic', ['page-title-row', 'use-wide']],
+  ['lib/generic', ['page-title-row', 'scroll-fade', 'use-wide']],
   [
     'lib/generic/primitives',
     [
@@ -93,7 +93,6 @@ const componentFolders: [string, string[]][] = [
       'display/badge',
       'display/collapsible',
       'display/icon',
-      'inputs/combobox-search',
       'inputs/search-field',
       'inputs/slider',
       'inputs/text-input',
@@ -106,7 +105,7 @@ const componentFolders: [string, string[]][] = [
     ],
   ],
   ['lib/generic/symbols', ['symbol-glyph']],
-  ['lib/product', ['field-list', 'screen', 'scroll-fade', 'status-indicator']],
+  ['lib/product', ['field-list', 'screen', 'status-indicator']],
   ['lib/product/markdown', ['code-block-title', 'feed-code-block']],
 ];
 

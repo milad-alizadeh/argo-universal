@@ -7,7 +7,7 @@ export {
 } from '#features/agents';
 
 export {
-  AgentModelSheetChoices,
+  AgentModelSheetPage,
   AgentModelSheetSettings,
   type NativeSheets,
   NativeSheetsProvider,

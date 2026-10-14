@@ -11,9 +11,9 @@ export type Configuration = React.ComponentProps<
 
 export const agentModelLabel = 'Agent and model';
 
-export const modelsScrollId = 'composer-models-scroll';
+export const modelsScrollId = 'picker-options-model';
 
-export const agentsScrollId = 'composer-agents-scroll';
+export const agentsScrollId = 'picker-options-agent';
 
 export const effortValue = 'aria-valuetext';
 

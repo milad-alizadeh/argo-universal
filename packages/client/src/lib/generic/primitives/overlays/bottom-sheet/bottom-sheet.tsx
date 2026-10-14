@@ -4,6 +4,7 @@ import type { BottomSheetProps } from './bottom-sheet-props';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetSurface } from './bottom-sheet-surface';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
+import { SheetPages } from './sheet-pages';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   return (
@@ -22,7 +23,7 @@ function SheetSurface(props: BottomSheetProps): React.JSX.Element {
       {...surfaceProps(props)}
       title={<SheetTitle label={props.label} />}
     >
-      {props.children}
+      <SheetPages open={props.open}>{props.children}</SheetPages>
     </BottomSheetSurface>
   );
 }

@@ -1,4 +1,4 @@
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { fadedEdges } from '../scroll-fade';
 
 export async function expectScrollsUnderFades(
@@ -26,20 +26,6 @@ async function expectRowInsideScroll(
   const viewport = scroll.getBoundingClientRect();
   await expect(box.top).toBeGreaterThanOrEqual(viewport.top);
   await expect(box.bottom).toBeLessThanOrEqual(viewport.bottom);
-}
-
-export async function lastVisible(name: string): Promise<HTMLElement> {
-  const row = await within(document.body).findByRole('button', { name });
-  row.scrollIntoView({ block: 'end' });
-  await waitFor(() => expectRowInsideWindow(row));
-
-  return row;
-}
-
-async function expectRowInsideWindow(row: HTMLElement): Promise<void> {
-  const box = row.getBoundingClientRect();
-  await expect(box.top).toBeGreaterThanOrEqual(0);
-  await expect(box.bottom).toBeLessThanOrEqual(window.innerHeight);
 }
 
 async function resolveLastRow(

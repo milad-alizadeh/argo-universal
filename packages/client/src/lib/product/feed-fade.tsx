@@ -9,7 +9,7 @@ import type {
   PerEdge,
   ScrollFadeEdge,
   ScrollFadeOptions,
-} from './scroll-fade/scroll-fade-options';
+} from '#lib/generic/scroll-fade/scroll-fade-options';
 import { sessionSurface } from './session-column';
 
 // How far the Feed fades out under the header: Paper's mask over the Feed column.

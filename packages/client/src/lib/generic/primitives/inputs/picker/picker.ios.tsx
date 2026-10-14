@@ -4,16 +4,17 @@ import { PickerDrillIn } from './picker-drill-in.ios';
 import { NativeMenuPicker, NativePickerRow } from './picker-menu.ios';
 import { createNativePicker, type PickerPresentation } from './picker-native';
 import type { PickerProps } from './picker-props';
-import { PickerSearchList } from './picker-search-list';
+import { PickerSearchPage } from './picker-search-page';
+import { withDrillRow } from './picker-with-drill-row';
 
 const menuLimit = 7;
 
 type ControlProps<Value extends string> = PickerProps<Value> &
   PickerPresentation;
 
-export const Picker = createNativePicker(PickerControl) satisfies ComponentType<
-  PickerProps<string>
->;
+export const Picker = withDrillRow(
+  createNativePicker(PickerControl),
+) satisfies ComponentType<PickerProps<string>>;
 
 function PickerControl<Value extends string>(
   props: ControlProps<Value>,
@@ -48,6 +49,6 @@ function sheetPress<Value extends string>(
   return (): void =>
     navigation.push({
       title: props.label,
-      content: <PickerSearchList {...props} onClose={navigation.back} />,
+      content: <PickerSearchPage {...props} onClose={navigation.back} />,
     });
 }

@@ -1,5 +1,5 @@
 export {
-  AgentModelSheetChoices,
+  AgentModelSheetPage,
   AgentModelSheetSettings,
 } from './components/agent-model-sheet';
 

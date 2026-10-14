@@ -10,7 +10,7 @@ import {
 } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { listTestIdProps } from '../../generic/list-test-id';
-import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
+import { ScrollFadeList } from '#lib/generic/scroll-fade/index';
 import { CardRow } from './card-row';
 import {
   type FieldListEntry,

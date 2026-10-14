@@ -49,7 +49,7 @@ function optionModifiers<Value extends string>(
     defaultMinSize({ minHeight: optionHeight }),
     padding(optionInset, optionPadding, optionInset, optionPadding),
     semantics({
-      contentDescription: [props.option.label, props.option.supportingText]
+      contentDescription: [props.option.label, props.option.supporting]
         .filter(Boolean)
         .join('. '),
     }),
@@ -115,8 +115,8 @@ function OptionLabel<Value extends string>(
     Column,
     { modifiers: [weight(1)] },
     <OptionText label={props.option.label} color={color} />,
-    props.option.supportingText && (
-      <SupportingText text={props.option.supportingText} />
+    props.option.supporting && (
+      <SupportingText text={props.option.supporting} />
     ),
   );
 }

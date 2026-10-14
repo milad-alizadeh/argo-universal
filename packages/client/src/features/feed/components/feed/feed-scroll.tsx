@@ -9,7 +9,7 @@ import { Platform, View } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useFeedFade } from '#lib/product/feed-fade';
-import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
+import { ScrollFadeList } from '#lib/generic/scroll-fade/index';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type FeedEntry, entryKey, entryType } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';

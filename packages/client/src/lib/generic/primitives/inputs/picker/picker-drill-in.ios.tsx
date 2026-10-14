@@ -17,7 +17,7 @@ import { RoutedFormSheet } from '#primitives/overlays/bottom-sheet';
 import { useFormSheetCommands } from '#primitives/overlays/bottom-sheet';
 import { useNativeTheme } from '../../../native-theme';
 import type { PickerProps } from './picker-props';
-import { PickerSearchList } from './picker-search-list';
+import { PickerSearchPage } from './picker-search-page';
 
 type DrillProps<Value extends string> = PickerProps<Value> & {
   open: boolean;
@@ -34,7 +34,7 @@ export function PickerDrillIn<Value extends string>(
   if (commands)
     return (
       <RoutedFormSheet {...routedProps(props)} commands={commands}>
-        <PickerSearchList {...props} />
+        <PickerSearchPage {...props} />
       </RoutedFormSheet>
     );
 
@@ -126,7 +126,7 @@ function PickerDestination<Value extends string>(
   return (
     <Group modifiers={destinationModifiers(props.label)}>
       <RNHostView>
-        <PickerSearchList {...props} />
+        <PickerSearchPage {...props} />
       </RNHostView>
     </Group>
   );

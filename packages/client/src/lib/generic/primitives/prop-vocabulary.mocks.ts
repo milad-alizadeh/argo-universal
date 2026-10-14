@@ -15,7 +15,6 @@ import type * as FieldKit from '#primitives/fields/field';
 import type * as FieldDescriptionKit from '#primitives/fields/field-description';
 import type * as FieldErrorsKit from '#primitives/fields/field-errors';
 import type * as CheckboxKit from '#primitives/inputs/checkbox';
-import type * as ComboboxSearchKit from '#primitives/inputs/combobox-search';
 import type * as PickerKit from '#primitives/inputs/picker';
 import type * as RichTextareaKit from '#primitives/inputs/rich-textarea';
 import type * as SearchFieldKit from '#primitives/inputs/search-field';
@@ -53,7 +52,8 @@ export type Primitives = {
   CheckboxProps: CheckboxKit.CheckboxProps;
   CollapsibleContentProps: CollapsibleKit.CollapsibleContentProps;
   CollapsibleProps: CollapsibleKit.CollapsibleProps;
-  ComboboxSearchProps: ComboboxSearchKit.ComboboxSearchProps;
+  ComboboxFooterAction: PickerKit.ComboboxFooterAction;
+  ComboboxProps: PickerKit.ComboboxProps<string>;
   DialogContentProps: DialogKit.DialogContentProps;
   DialogRegionProps: DialogKit.DialogRegionProps;
   DisclosureChevronProps: DisclosureChevronKit.DisclosureChevronProps;
@@ -77,6 +77,8 @@ export type Primitives = {
   LiquidGlassProps: LiquidGlassKit.LiquidGlassProps;
   MenuAction: MenuKit.MenuAction;
   MenuProps: MenuKit.MenuProps;
+  PickerOption: PickerKit.PickerOption<string>;
+  PickerOptionAction: PickerKit.PickerOptionAction;
   PickerProps: PickerKit.PickerProps<string>;
   PopoverContentProps: PopoverKit.PopoverContentProps;
   PopoverProps: PopoverKit.PopoverProps;

@@ -11,8 +11,7 @@ export default function AgentModelLayout(): React.JSX.Element {
         name="index"
         options={{ title: 'Configure', headerBackVisible: false }}
       />
-      <Stack.Screen name="agent" options={{ title: 'Select Agent' }} />
-      <Stack.Screen name="model" options={{ title: 'Select Model' }} />
+      <Stack.Screen name="choice" />
     </Stack>
   );
 }

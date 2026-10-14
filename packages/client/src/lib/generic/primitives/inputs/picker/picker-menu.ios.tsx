@@ -29,7 +29,7 @@ export function NativeMenuPicker<Value extends string>(
 function MenuLabel<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
-  const row = useInGroupedListItem() || props.variant === 'row';
+  const row = useInGroupedListItem();
 
   return (
     <HStack modifiers={row ? [] : [padding({ horizontal: 16, vertical: 12 })]}>
@@ -102,7 +102,7 @@ function PickerRowContent<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
   const inGroupedListItem = useInGroupedListItem();
-  const row = inGroupedListItem || props.variant === 'row';
+  const row = inGroupedListItem;
 
   return createElement(
     Fragment,

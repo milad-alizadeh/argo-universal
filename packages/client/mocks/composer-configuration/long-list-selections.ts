@@ -6,7 +6,7 @@ import {
   type PlayContext,
 } from './common';
 import { lastLongModel, lastLongAgent } from './long-list-cases';
-import { expectScrollsUnderFades, lastVisible } from './scroll-reachability';
+import { expectScrollsUnderFades } from './scroll-reachability';
 
 export async function selectLastDesktopModel(
   context: PlayContext,
@@ -105,5 +105,9 @@ export async function selectLastPhoneModel(
   context: PlayContext,
 ): Promise<void> {
   await openModelChoices(context);
-  await selectLongModel(context, () => lastVisible(lastLongModel.name));
+  await expectScrollsUnderFades(
+    await within(document.body).findByTestId(modelsScrollId),
+    findLastModel,
+  );
+  await selectLongModel(context, findLastModel);
 }

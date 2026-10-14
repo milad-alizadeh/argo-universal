@@ -3,7 +3,7 @@ import { ScrollFadeView } from './scroll-fade';
 import { ScrollFadePreview } from './scroll-fade-preview.mocks';
 
 const meta = {
-  title: 'Shared/ScrollFade',
+  title: 'Design System/ScrollFade',
   component: ScrollFadeView,
 } satisfies Meta<typeof ScrollFadeView>;
 

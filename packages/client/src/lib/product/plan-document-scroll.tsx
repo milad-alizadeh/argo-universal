@@ -7,7 +7,7 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { ScrollFadeGradient } from './scroll-fade/scroll-fade-gradient';
+import { ScrollFadeGradient } from '#lib/generic/scroll-fade/index';
 
 export interface ScrolledPlanStyle {
   frame: string;

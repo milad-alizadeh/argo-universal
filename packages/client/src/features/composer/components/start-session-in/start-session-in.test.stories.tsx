@@ -84,7 +84,7 @@ function switchProject(width: number): Story {
         }),
       );
       await userEvent.type(
-        await overlay.findByRole('textbox', { name: 'Find a Project' }),
+        await overlay.findByRole('textbox', { name: 'Search Project' }),
         landingSearch,
       );
       await expect(
@@ -105,7 +105,7 @@ function switchProject(width: number): Story {
       // One tap picks a Project and closes the picker.
       await waitFor(() =>
         expect(
-          overlay.queryByRole('textbox', { name: 'Find a Project' }),
+          overlay.queryByRole('textbox', { name: 'Search Project' }),
         ).not.toBeInTheDocument(),
       );
     },

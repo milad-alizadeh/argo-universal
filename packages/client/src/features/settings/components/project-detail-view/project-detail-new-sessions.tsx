@@ -40,7 +40,6 @@ function PickerRow(props: PickerRowProps): React.JSX.Element {
       label={props.label}
       accessory={
         <Picker
-          variant="row"
           {...props}
           onValueChange={ignoreChoice}
           disabled

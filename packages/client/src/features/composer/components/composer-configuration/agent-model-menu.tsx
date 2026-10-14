@@ -1,79 +1,48 @@
 import type * as React from 'react';
-import { useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '#primitives/display/text';
+import { Picker } from '#primitives/inputs/picker';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import { ConfigurationDrill } from './configuration-drill';
-import { ConfigurationPage } from './configuration-page';
+import { agentOptions, modelOptions } from './agent-model-options';
 import { EffortControl, SwitchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
-import { currentEffort, switches } from './configuration-values';
+import {
+  currentEffort,
+  selectedChoice,
+  selection,
+  switches,
+} from './configuration-values';
 
 interface MenuProps {
   configuration: ComposerConfigurationProps;
-  onOpenPage?: (page: 'agent' | 'model') => void;
 }
 
-interface ContentsProps extends MenuProps {
-  wide: boolean;
-  openPage: (page: 'agent' | 'model') => void;
-}
-
+// Configure: the Agent and model as drill rows, then the Agent's switches and effort.
 export function AgentModelMenu(props: MenuProps): React.JSX.Element {
-  const wide = isDesktopMenu(useWide());
-  const [page, setPage] = useState<'settings' | 'agent' | 'model'>('settings');
-  const close = (): void => setPage('settings');
-  const openPage = props.onOpenPage ?? setPage;
+  const wide = useWide();
 
-  return (
-    <ConfigurationMenuPage
-      {...props}
-      wide={wide}
-      page={page}
-      close={close}
-      openPage={openPage}
-    />
-  );
-}
-
-function ConfigurationMenuPage(
-  props: ContentsProps & {
-    page: 'settings' | 'agent' | 'model';
-    close: () => void;
-  },
-): React.JSX.Element {
-  if (props.page !== 'settings' && !props.wide)
-    return <ConfigurationPage {...props} page={props.page} />;
-
-  return <ConfigurationContents {...props} />;
-}
-
-function isDesktopMenu(wide: boolean): boolean {
-  return wide && Platform.OS === 'web';
-}
-
-function ConfigurationContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-content">
-      <ConfigurationFields {...props} />
+      <GroupedList fit={Platform.OS === 'web' || wide}>
+        <MenuHeading wide={wide} />
+        <AgentModelRows {...props} />
+        <ConfigurationTuning configuration={props.configuration} />
+      </GroupedList>
     </View>
   );
 }
 
-function ConfigurationFields(props: ContentsProps): React.JSX.Element {
+// A desktop popover names itself; a sheet's title does on a phone.
+function MenuHeading(props: { wide: boolean }): React.JSX.Element | null {
+  if (!props.wide || Platform.OS !== 'web') return null;
+
   return (
-    <GroupedList fit={Platform.OS === 'web' || props.wide}>
-      {props.wide && (
-        <Text role="heading" aria-level={2} className="px-4 pt-1">
-          Configure
-        </Text>
-      )}
-      <ConfigurationDrills {...props} />
-      <ConfigurationTuning configuration={props.configuration} />
-    </GroupedList>
+    <Text role="heading" aria-level={2} className="px-4 pt-1">
+      Configure
+    </Text>
   );
 }
 
@@ -92,37 +61,56 @@ function configurationNotice(
     : undefined;
 }
 
-function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
-  const notice = hasTuning(props.configuration)
+function AgentModelRows({ configuration }: MenuProps): React.JSX.Element {
+  const notice = hasTuning(configuration)
     ? undefined
-    : configurationNotice(props.configuration);
+    : configurationNotice(configuration);
 
   return (
     <PopoverHoverGroup>
       <GroupedListSection footer={notice}>
-        <ConfigurationDrillRows {...props} />
+        <AgentPicker configuration={configuration} />
+        <ModelPicker configuration={configuration} />
       </GroupedListSection>
     </PopoverHoverGroup>
   );
 }
 
-function ConfigurationDrillRows(props: ContentsProps): React.JSX.Element {
-  const drillProps = {
-    configuration: props.configuration,
-    onOpenPage: props.openPage,
-  };
+function AgentPicker({ configuration }: MenuProps): React.JSX.Element {
+  return (
+    <Picker
+      variant="row"
+      label="Agent"
+      value={configuration.agent}
+      options={agentOptions(configuration)}
+      onValueChange={(agent) => {
+        if (agent !== configuration.agent) configuration.onAgentChange?.(agent);
+      }}
+    />
+  );
+}
+
+function ModelPicker({ configuration }: MenuProps): React.JSX.Element | null {
+  const model = selection(configuration, 'model');
+
+  if (!model) return null;
 
   return (
-    <>
-      <ConfigurationDrill {...drillProps} page="agent" />
-      <ConfigurationDrill {...drillProps} page="model" />
-    </>
+    <Picker
+      variant="row"
+      label="Model"
+      value={selectedChoice(configuration, 'model')?.value}
+      options={modelOptions(configuration)}
+      onValueChange={(value) =>
+        configuration.onConfigChange(model.configId, value)
+      }
+    />
   );
 }
 
 function ConfigurationTuning({
   configuration,
-}: Pick<MenuProps, 'configuration'>): React.JSX.Element | null {
+}: MenuProps): React.JSX.Element | null {
   if (!hasTuning(configuration)) return null;
 
   return (
