@@ -1,17 +1,23 @@
 import type * as React from 'react';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
+import { agentStatusLabels, statusTone } from '../../state/agent-status';
 import { missingTool } from '../../state/missing-tool';
+import { readinessCopy } from '../../state/readiness-copy';
 import { MissingToolSection } from '../agent-missing-tool/missing-tool-section';
 import { ReadinessSection } from '../agent-readiness/agent-readiness';
+import { StatusSection } from '../agent-status-section/agent-status-section';
+import { AgentAction } from './agent-detail-actions';
 
-// Where an installed Agent stands, with the observed reason and its one action; Ready needs no section.
+// Where the Agent stands, with the observed reason and its one action; the page's only status.
 export function AgentStatusSection(
   props: AgentDetailViewProps,
-): React.JSX.Element | null {
+): React.JSX.Element {
   if (missingTool(props.agent.status))
     return <MissingToolSection agent={props.agent} tool={props.tool} />;
 
-  return <AgentReadiness {...props} />;
+  if (readinessCopy(props.agent)) return <AgentReadiness {...props} />;
+
+  return <InstallationStatus {...props} />;
 }
 
 function AgentReadiness(props: AgentDetailViewProps): React.JSX.Element | null {
@@ -25,6 +31,19 @@ function AgentReadiness(props: AgentDetailViewProps): React.JSX.Element | null {
       onRecheck={props.onRecheck}
       onSignIn={props.onSignIn}
       onRepair={props.onRepair}
+    />
+  );
+}
+
+// Ready, Update available, Not installed and Disabled: the status, then Install or Update when it needs one.
+function InstallationStatus(props: AgentDetailViewProps): React.JSX.Element {
+  const { status } = props.agent;
+
+  return (
+    <StatusSection
+      label={agentStatusLabels[status]}
+      tone={statusTone(status)}
+      action={<AgentAction {...props} fullWidth="narrow" />}
     />
   );
 }

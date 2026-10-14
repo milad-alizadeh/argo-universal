@@ -15,7 +15,6 @@ export const readinessActionLabels: Record<ReadinessAction, string> = {
 };
 
 export interface ReadinessCopy {
-  headline: string;
   action?: ReadinessAction;
   // The observed reason, or what the status means when the Server gave none.
   footer?: string;
@@ -27,41 +26,32 @@ type CopyInput = { name: string; status: AgentStatus; reason?: string };
 
 type CopyWriter = (input: CopyInput) => ReadinessCopy;
 
-const undetermined = 'Readiness could not be determined';
-
 const copies: Partial<Record<AgentStatus, CopyWriter>> = {
   checking: ({ name }) => ({
-    headline: 'Checking…',
     footer: `Argo is starting ${name} to see whether it is ready.`,
   }),
   'sign-in-needed': ({ reason }) => ({
-    headline: 'Not signed in',
     action: 'sign-in',
     footer: reason,
   }),
   'account-not-supported': ({ name, reason }) => ({
-    headline: `This account can’t use ${name}`,
     action: 'sign-in-again',
     footer: reason,
   }),
   'not-compatible': ({ reason }) => ({
-    headline: 'Not compatible',
     footer: reason,
   }),
   'cant-start': ({ reason }) => ({
-    headline: 'Can’t start',
     action: 'recheck',
     footer: reason,
     failure: true,
   }),
   // An indeterminate check is never a failure: the Agent may still work.
   'couldnt-check': ({ name }) => ({
-    headline: undetermined,
     action: 'recheck',
     footer: `The check did not finish. ${name} may still work.`,
   }),
   'not-found': ({ reason }) => ({
-    headline: 'Program missing',
     action: 'repair',
     footer: reason,
   }),

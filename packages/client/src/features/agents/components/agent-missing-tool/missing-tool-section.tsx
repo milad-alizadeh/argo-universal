@@ -1,11 +1,10 @@
 import type * as React from 'react';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import {
   Alert,
   type AlertAction,
 } from '../../../../lib/generic/primitives/overlays/alert/alert';
 import type { AgentDetail } from '../../state/agent-detail-types';
+import { agentStatusLabels } from '../../state/agent-status';
 import {
   homebrewCommand,
   missingTool,
@@ -14,7 +13,10 @@ import {
   type ToolFacts,
   type ToolInstallPresentation,
 } from '../../state/missing-tool';
-import { ToolDownloads } from './tool-downloads';
+import {
+  StatusButton,
+  StatusSection,
+} from '../agent-status-section/agent-status-section';
 
 type Facts = ToolFacts;
 
@@ -62,48 +64,48 @@ const statusFooter = ({ agent, tool, facts }: MissingProps): string =>
 
 function MissingToolStatus(props: MissingProps): React.JSX.Element {
   return (
-    <FieldSection title="Status" footer={statusFooter(props)}>
-      <ListItem
-        title={`${props.facts.name} not found`}
-        status={{ tone: 'warning', label: '' }}
-      />
-      <ToolAction facts={props.facts} tool={props.tool} />
-    </FieldSection>
-  );
-}
-
-// With Homebrew Argo installs the tool; without it, the download pages and Recheck.
-function ToolAction(props: {
-  facts: Facts;
-  tool?: ToolInstallPresentation;
-}): React.JSX.Element {
-  const homebrew = withHomebrew(props.tool);
-
-  if (homebrew) return <HomebrewAction facts={props.facts} tool={homebrew} />;
-
-  return <ToolDownloads facts={props.facts} tool={props.tool} />;
-}
-
-// Homebrew's progress shows in place of its action until it settles.
-function HomebrewAction({ facts, tool }: ToolProps): React.JSX.Element {
-  if (tool.installing) return <HomebrewProgress facts={facts} />;
-
-  return (
-    <ListItem
-      role="button"
-      tone="accent"
-      title={`Install ${facts.name} with Homebrew`}
-      onPress={() => tool.onConfirmingChange(true)}
+    <StatusSection
+      label={agentStatusLabels[props.agent.status]}
+      tone="warning"
+      footer={statusFooter(props)}
+      action={<ToolAction facts={props.facts} tool={props.tool} />}
     />
   );
 }
 
-function HomebrewProgress({ facts }: { facts: Facts }): React.JSX.Element {
+// With Homebrew Argo installs the tool; without it, Recheck once it is installed.
+function ToolAction(props: {
+  facts: Facts;
+  tool?: ToolInstallPresentation;
+}): React.JSX.Element | null {
+  const homebrew = withHomebrew(props.tool);
+
+  if (homebrew) return <HomebrewAction facts={props.facts} tool={homebrew} />;
+
+  return props.tool ? <ToolRecheck tool={props.tool} /> : null;
+}
+
+// Homebrew's progress shows on its button until it settles.
+function HomebrewAction({ facts, tool }: ToolProps): React.JSX.Element {
   return (
-    <ListItem
-      title={`Installing ${facts.name}…`}
-      status={{ tone: 'pending', label: '' }}
-      disabled
+    <StatusButton
+      label={`Install ${facts.name} with Homebrew`}
+      onPress={() => tool.onConfirmingChange(true)}
+      busy={tool.installing}
+    />
+  );
+}
+
+function ToolRecheck({
+  tool,
+}: {
+  tool: ToolInstallPresentation;
+}): React.JSX.Element {
+  return (
+    <StatusButton
+      label="Recheck"
+      onPress={tool.onRecheck}
+      busy={tool.rechecking}
     />
   );
 }

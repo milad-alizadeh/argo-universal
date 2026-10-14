@@ -18,101 +18,132 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-type Handler = 'onRecheck' | 'onSignIn' | 'onRepair';
+type Handler = 'onRecheck' | 'onSignIn' | 'onRepair' | 'onInstall' | 'onUpdate';
+
+type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 
 const { name } = readyAgent;
 
 type Expected = {
   status: AgentStatus;
-  reason: string;
-  chip: string;
-  headline: string;
-  footer: string;
+  reason?: string;
+  // The status names itself once, in the Status section.
+  label: string;
+  footer?: string;
   action?: { label: string; handler: Handler };
 };
 
-// Each status shows its chip, what the check observed and its one action, from the Server's reason.
+const actionLabels = [
+  'Recheck',
+  'Sign in',
+  'Sign in with another account',
+  'Repair',
+  'Install',
+  'Update',
+];
+
+// The Status section is one row naming the status; the footer says why, then its one call to action.
 const readiness = (expected: Expected): Story => ({
   args: {
     agent: { ...readyAgent, status: expected.status, reason: expected.reason },
   },
   play: async ({ args, canvas, userEvent }) => {
-    for (const text of [expected.chip, expected.headline])
-      await expect(canvas.getAllByText(text)[0]).toBeVisible();
-    await expect(canvas.getByText(expected.footer)).toBeVisible();
+    await expect(canvas.getByRole('heading', { name: 'Status' })).toBeVisible();
+    const labels = canvas.getAllByText(expected.label);
+    await expect(labels).toHaveLength(1);
+    await expect(labels[0]).toBeVisible();
+    if (expected.footer)
+      await expect(canvas.getByText(expected.footer)).toBeVisible();
     await expect(canvas.queryByText('Unavailable')).not.toBeInTheDocument();
+    await expectOnlyAction(canvas, expected.action?.label);
     const { action } = expected;
 
-    if (!action) return expectNoAction(canvas);
-    await userEvent.click(canvas.getByText(action.label));
+    if (!action) return;
+    await userEvent.click(canvas.getByRole('button', { name: action.label }));
     await expect(args[action.handler]).toHaveBeenCalledOnce();
   },
 });
 
-async function expectNoAction(
-  canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'],
+async function expectOnlyAction(
+  canvas: Canvas,
+  label: string | undefined,
 ): Promise<void> {
-  for (const label of ['Recheck', 'Sign in', 'Repair'])
-    await expect(canvas.queryByText(label)).not.toBeInTheDocument();
+  for (const other of actionLabels.filter((each) => each !== label))
+    await expect(
+      canvas.queryByRole('button', { name: other, exact: true }),
+    ).not.toBeInTheDocument();
 }
+
+export const ReadyHasNoAction = readiness({ status: 'ready', label: 'Ready' });
+
+export const NotInstalledInstalls = readiness({
+  status: 'not-installed',
+  label: 'Not installed',
+  action: { label: 'Install', handler: 'onInstall' },
+});
+
+export const UpdateAvailableUpdates = readiness({
+  status: 'update-available',
+  label: 'Update available',
+  action: { label: 'Update', handler: 'onUpdate' },
+});
 
 export const CheckingHasNoAction = readiness({
   status: 'checking',
+  label: 'Checking…',
   reason: '',
-  chip: 'Checking…',
-  headline: 'Checking…',
   footer: `Argo is starting ${name} to see whether it is ready.`,
 });
 
 export const SignInNeededSignsIn = readiness({
   status: 'sign-in-needed',
+  label: 'Sign-in needed',
   reason: 'The Agent requires sign-in.',
-  chip: 'Sign-in needed',
-  headline: 'Not signed in',
   footer: 'The Agent requires sign-in.',
   action: { label: 'Sign in', handler: 'onSignIn' },
 });
 
 export const AccountNotSupportedSignsInWithAnotherAccount = readiness({
   status: 'account-not-supported',
+  label: 'Account not supported',
   reason: 'The Agent did not report a compatible subscription account.',
-  chip: 'Account not supported',
-  headline: `This account can’t use ${name}`,
   footer: 'The Agent did not report a compatible subscription account.',
   action: { label: 'Sign in with another account', handler: 'onSignIn' },
 });
 
 export const NotCompatibleNamesTheCapability = readiness({
   status: 'not-compatible',
+  label: 'Not compatible',
   reason: `${name} does not support the ACP session/close capability Argo needs.`,
-  chip: 'Not compatible',
-  headline: 'Not compatible',
   footer: `${name} does not support the ACP session/close capability Argo needs.`,
 });
 
 export const CantStartShowsTheReasonAndRechecks = readiness({
   status: 'cant-start',
+  label: 'Can’t start',
   reason: `${name} exited before answering ACP initialize.`,
-  chip: 'Can’t start',
-  headline: 'Can’t start',
   footer: `${name} exited before answering ACP initialize.`,
   action: { label: 'Recheck', handler: 'onRecheck' },
 });
 
 export const CouldntCheckIsNotAFailure = readiness({
   status: 'couldnt-check',
+  label: 'Couldn’t check',
   reason: 'Readiness could not be determined.',
-  chip: 'Couldn’t check',
-  headline: 'Readiness could not be determined',
   footer: `The check did not finish. ${name} may still work.`,
   action: { label: 'Recheck', handler: 'onRecheck' },
 });
 
 export const NotFoundRepairs = readiness({
   status: 'not-found',
+  label: 'Not found',
   reason: `The installed files of ${name} are missing. Repair installs them again.`,
-  chip: 'Not found',
-  headline: 'Program missing',
   footer: `The installed files of ${name} are missing. Repair installs them again.`,
   action: { label: 'Repair', handler: 'onRepair' },
 });
+
+// A phone's summary carries no status either; the Status section still names it once.
+export const CantStartOnAPhone: Story = {
+  ...CantStartShowsTheReasonAndRechecks,
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
+};
