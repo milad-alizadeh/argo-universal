@@ -42,6 +42,11 @@ const startInstalled = async (
           .installation.status,
     )
     .toBe('installed');
+  // The check after install has saved its result, so a Recheck starts its own.
+  await expect.poll(() => agent.processes.length).toBe(1);
+  await expect
+    .poll(async () => (await listed(host))?.status, { timeout: 10_000 })
+    .not.toBe('checking');
 
   return { ...host, agent };
 };

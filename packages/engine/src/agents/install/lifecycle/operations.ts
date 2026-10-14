@@ -6,6 +6,7 @@ import type {
 import { defaultInstallPorts } from '../default-ports';
 import type { InstallPorts } from '../ports';
 import { readInstallationStatus } from '../selection/status';
+import { recheckIfFailed } from './cancelled-check';
 import { ConfigurationReservations } from './configuration-reservations';
 import {
   abortInstallation,
@@ -18,6 +19,8 @@ import { createInstallationReadiness } from './readiness';
 import { removeAgentInstallation } from './removal';
 import { settleAgentInstallation } from './settlement';
 import { ToolInstallations } from './tool-installation';
+
+const inUse = 'Agent is in use. Close its Sessions and finish setup first.';
 
 export class AgentInstallations {
   private bindings: InstallBindings | undefined;
@@ -64,19 +67,21 @@ export class AgentInstallations {
     installation: (agentId) => this.active.get(agentId)?.settled,
     isStopped: () => this.stopped,
   });
+  // A Readiness check is not a use: a change to the launch stops it instead.
   private isInUse(agentId: string): boolean {
-    return this.isReserved(agentId) || this.dependencies().isInUse(agentId);
+    return this.isBusy(agentId) || this.dependencies().isInUse(agentId);
   }
-  public mutateLaunch<Result>(
+  public async mutateLaunch<Result>(
     agentId: string,
     operation: () => Promise<Result>,
   ): Promise<Result> {
-    if (this.isInUse(agentId))
-      throw new Error(
-        'Agent is in use. Close its Sessions and finish setup first.',
-      );
+    if (this.isInUse(agentId)) throw new Error(inUse);
 
-    return this.configure(agentId, operation);
+    return recheckIfFailed(
+      await this.configuration.cancelCheck(agentId),
+      () => this.configure(agentId, operation),
+      () => this.dependencies().afterInstall(agentId),
+    );
   }
   public async remove(agentId: string): Promise<void> {
     await this.mutateLaunch(agentId, async () => {
@@ -90,27 +95,24 @@ export class AgentInstallations {
     this.dependencies().afterRemove?.();
   }
   private own(operation: AgentInstallOperation): void {
-    const checking = this.configuration.pendingCheck(operation.agentId);
+    const checking = this.configuration.cancelCheck(operation.agentId);
     const owned = createOwnedInstall(operation);
     this.active.set(operation.agentId, owned);
     owned.settled = this.run(owned, checking);
     void owned.settled.catch(() => {});
   }
-  private installationInUse(agentId: string): boolean {
-    return this.isBusy(agentId) || this.dependencies().isInUse(agentId);
-  }
   public start(input: AgentInstallInput): AgentInstallOperation {
     if (this.stopped) throw new Error('Engine is stopping');
     const operation = startOperation(input);
 
-    if (this.installationInUse(input.agentId)) return inUseOperation(operation);
+    if (this.isInUse(input.agentId)) return inUseOperation(operation);
     this.own(operation);
 
     return operation;
   }
   private async run(
     owned: OwnedInstall,
-    checking: Promise<unknown> | undefined,
+    checking: Promise<boolean>,
   ): Promise<void> {
     try {
       const completed = await settleAgentInstallation(

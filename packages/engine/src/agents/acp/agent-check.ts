@@ -93,21 +93,49 @@ const describeFailure = async (
   );
 };
 
+const whenCancelled = (signal?: AbortSignal): Promise<'cancelled'> =>
+  new Promise((resolve) =>
+    signal?.addEventListener('abort', () => resolve('cancelled'), {
+      once: true,
+    }),
+  );
+
 const answerOrTimeout = async (
   process: AcpProcess,
   timeoutMs: number,
+  signal?: AbortSignal,
 ): Promise<AgentCheck> => {
-  const answer = await Promise.race([initialize(process), after(timeoutMs)]);
+  const answer = await Promise.race([
+    initialize(process),
+    after(timeoutMs),
+    whenCancelled(signal),
+  ]);
 
   if (answer === 'timeout') throw new CheckTimeout(timeoutMs);
 
+  if (answer === 'cancelled')
+    throw new DOMException('Readiness check was cancelled', 'AbortError');
+
   return answer;
+};
+
+// A cancelled check reports no Readiness: its caller decides what follows.
+const describeUncancelled = (
+  cause: unknown,
+  process: AcpProcess,
+  subject: AgentLaunchSubject,
+): Promise<AgentCheck> => {
+  subject.signal?.throwIfAborted();
+
+  return describeFailure(cause, process, subject);
 };
 
 const launch = async (
   launchProcess: typeof launchAcpProcess,
   subject: AgentLaunchSubject,
 ): Promise<AcpProcess | AgentCheck> => {
+  subject.signal?.throwIfAborted();
+
   try {
     return await launchProcess(subject.launch);
   } catch (error) {
@@ -132,9 +160,9 @@ export const createAgentChecker =
     if ('status' in process) return process;
 
     try {
-      return await answerOrTimeout(process, timeoutMs);
+      return await answerOrTimeout(process, timeoutMs, subject.signal);
     } catch (error) {
-      return await describeFailure(error, process, subject);
+      return await describeUncancelled(error, process, subject);
     } finally {
       await stopChecked(process);
     }

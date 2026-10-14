@@ -53,7 +53,7 @@ const openings = [
 ];
 
 it.each(openings)(
-  'a running Recheck permits $name opening while replacement remains fenced',
+  'a running Recheck permits $name opening',
   async ({ open, scenario }) => {
     const host = await startCustomAgentEngine({ acp: {} });
     const marker = join(host.home, 'probe-pid');
@@ -76,9 +76,6 @@ it.each(openings)(
     await expect
       .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
       .toMatch(/^\d+$/);
-    await expect(
-      host.caller.agents.remove({ agentId: registered.agentId }),
-    ).rejects.toThrow('in use');
 
     try {
       expect(await open(host, registered.agentId)).toMatch(/^[\da-f-]{36}$/);

@@ -1,4 +1,5 @@
 import type { AgentInstallOperation } from '@repo/contracts';
+import { recheckIfFailed } from './cancelled-check';
 import { executeAgentInstall, type InstallExecutionInput } from './execution';
 import {
   installationDeadline,
@@ -12,24 +13,37 @@ type InstallationInput = Omit<
   'operation' | 'signal' | 'deps'
 > & { deps: InstallBindings };
 
+const installRelease = (
+  input: InstallationInput,
+  owned: OwnedInstall,
+  checking: Promise<boolean>,
+): Promise<void> =>
+  executeAgentInstall(
+    { ...input, signal: owned.controller.signal, operation: owned.operation },
+    checking,
+  );
+
 // The new release is checked once this install releases its setup ownership.
 const executeOwnedInstallation = async (
   input: InstallationInput,
   owned: OwnedInstall,
-  checking: Promise<unknown> | undefined,
+  checking: Promise<boolean>,
 ): Promise<void> => {
-  const { signal } = owned.controller;
-  await executeAgentInstall(
-    { ...input, signal, operation: owned.operation },
+  const checkAgain = (): void =>
+    input.deps.afterInstall(owned.operation.agentId);
+
+  await recheckIfFailed(
     checking,
+    () => installRelease(input, owned, checking),
+    checkAgain,
   );
-  input.deps.afterInstall(owned.operation.agentId);
+  checkAgain();
 };
 
 export const settleAgentInstallation = async (
   input: InstallationInput,
   owned: OwnedInstall,
-  checking?: Promise<unknown>,
+  checking: Promise<boolean>,
 ): Promise<AgentInstallOperation> => {
   const timeout = installationDeadline(owned.controller);
 
