@@ -1,5 +1,6 @@
 import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { withNpmFixture } from '@repo/mocks/registry/port';
 import { expect, it, vi } from 'vitest';
 import { readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
@@ -25,7 +26,7 @@ it('rolls back every changed/removed row and timestamp when a later insert fails
     .mockResolvedValue(JSON.stringify(changed));
 
   const { caller, database, createCaller } = await startEngineTestHost({
-    fetchAgents,
+    fetchAgents: withNpmFixture(fetchAgents),
   });
 
   await caller.agents.syncCatalog();

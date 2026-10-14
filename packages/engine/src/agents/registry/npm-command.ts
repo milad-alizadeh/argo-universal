@@ -8,7 +8,7 @@ import { type NpmRelease, readNpmCommands } from './npm-package';
 import { createRegistryReader } from './registry-reader';
 
 // One slow package must not hold up the catalog.
-const npmTimeoutMs = 5_000;
+export const npmTimeoutMs = 5_000;
 
 const reader = createRegistryReader();
 

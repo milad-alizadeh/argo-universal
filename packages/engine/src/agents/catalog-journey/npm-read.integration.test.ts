@@ -4,6 +4,7 @@ import { startEngineTestHost } from '#mocks/engine';
 import { listedAgent, pathNpmCommand, pathNpmEntry } from '#mocks/installation';
 import { createMachinePath } from '#mocks/machine-path';
 import type { FetchAgents } from '../index';
+import { npmTimeoutMs } from '../registry/npm-command';
 
 const npmEntry = pathNpmEntry();
 
@@ -28,7 +29,7 @@ const npmHeld = (): HeldNpm => {
   };
 };
 
-it('an npm read slower than 5 seconds is given up and the catalog sync commits without its command', async () => {
+it('an npm read slower than its time limit is given up and the catalog sync commits without its command', async () => {
   const machine = await createMachinePath();
   await machine.place(pathNpmCommand);
   const npm = npmHeld();
@@ -40,7 +41,7 @@ it('an npm read slower than 5 seconds is given up and the catalog sync commits w
 
   vi.useFakeTimers();
   await host.caller.agents.syncCatalog();
-  await vi.advanceTimersByTimeAsync(4_999);
+  await vi.advanceTimersByTimeAsync(npmTimeoutMs - 1);
   expect(npm.signals.map(({ aborted }) => aborted)).toEqual([false]);
   await vi.advanceTimersByTimeAsync(1);
   expect(npm.signals.map(({ aborted }) => aborted)).toEqual([true]);
