@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { Composer } from '#features/composer';
 import { composerProps } from '../../../../../mocks/composer-mock';
-import { shownText } from '../../../../../mocks/rich-textarea-example';
+import { shownText } from '../../../../../mocks/shown-text';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { pressInspectorButton } from './desktop-shell-controls.mocks';
 import { DesktopShellFrame } from './desktop-shell-frame.mocks';

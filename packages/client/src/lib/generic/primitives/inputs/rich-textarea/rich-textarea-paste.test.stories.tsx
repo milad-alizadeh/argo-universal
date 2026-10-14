@@ -3,16 +3,16 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { cdp, userEvent } from 'vitest/browser';
 import {
-  exampleLabel as label,
-  RichTextareaExample,
-  shortcutModifier as modifier,
-} from '../../../../../../mocks/rich-textarea-example';
-import {
   type PastedHtml,
   pastedHtml,
 } from '../../../../../../mocks/rich-textarea-paste-mock';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
+import {
+  exampleLabel as label,
+  RichTextareaExample,
+  shortcutModifier as modifier,
+} from './rich-textarea-example.mocks';
 
 // Pasting into the web drawing (Lexical): HTML keeps what markdown can express, ⌘⇧V pastes plain text.
 const meta = {

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { ErrorToastExample } from '../../../../../../mocks/toast-mock';
 import { Variation, Variations as VariationList } from '../../../variations';
+import { ErrorToastExample } from './toast-example.mocks';
 
 const meta = { title: 'Design System/Primitives/Toast' } satisfies Meta;
 

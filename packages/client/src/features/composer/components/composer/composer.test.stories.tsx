@@ -12,7 +12,7 @@ import { spacingPrompt } from '../../../../../mocks/composer/composer-test-contr
 import { multiline } from '../../../../../mocks/composer/draft-editing.test.mocks';
 import { editorScrollsAfterTenLines } from '../../../../../mocks/composer/editor-scroll.test.mocks';
 import { expectAgentTextFits } from '../../../../../mocks/composer/empty-layout.test.mocks';
-import { shownText } from '../../../../../mocks/rich-textarea-example';
+import { shownText } from '../../../../../mocks/shown-text';
 import {
   layoutWidths,
   wideBreakpoint,

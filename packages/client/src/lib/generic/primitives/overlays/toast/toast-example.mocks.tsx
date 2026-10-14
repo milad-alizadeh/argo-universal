@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button/button';
-import { useErrorToast } from '#primitives/overlays/toast/toast';
+import { useErrorToast } from './toast';
 
 export const failedOpen = {
   title: 'Could not open the Project',

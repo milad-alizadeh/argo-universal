@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { RichTextarea } from '#primitives/inputs/rich-textarea/rich-textarea';
-import type { ReferenceOption } from '#primitives/inputs/rich-textarea/rich-textarea-references';
+import { RichTextarea } from './rich-textarea';
+import type { ReferenceOption } from './rich-textarea-references';
 
 interface ExampleProps {
   initialValue?: string;
@@ -55,12 +55,4 @@ export function RichTextareaExample({
       {...props}
     />
   );
-}
-
-/*
- * The text a RichTextarea shows, line breaks included. On the web, Lexical holds an empty line open
- * with a <br>, which innerText reads as one trailing newline.
- */
-export function shownText(field: HTMLElement): string {
-  return field.innerText.replace(/\n$/, '');
 }

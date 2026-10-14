@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
+import { layoutWidths } from '../../../each-layout';
+import { settleViewport } from '../../../settle-viewport';
 import {
   exampleLabel as label,
   RichTextareaExample,
-} from '../../../../../../mocks/rich-textarea-example';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+} from './rich-textarea-example.mocks';
 
 // The format bar in the web drawing (Lexical), selected with the browser's own mouse and keys.
 const meta = {

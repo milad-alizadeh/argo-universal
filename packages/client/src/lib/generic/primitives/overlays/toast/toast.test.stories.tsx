@@ -1,10 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { allToasts, findToast } from '../../../../../../mocks/find-toast';
-import {
-  ErrorToastExample,
-  failedOpen,
-} from '../../../../../../mocks/toast-mock';
+import { ErrorToastExample, failedOpen } from './toast-example.mocks';
 
 const meta = {
   title: 'Tests/Toast',

@@ -9,6 +9,7 @@ import {
 } from '../../../../../mocks/session-view/session-view-failure.test.mocks';
 import {
   listsEveryPullRequest,
+  mergesByAnotherMethod,
   mergesWhenChecksPass,
   mergeWaitsForChecks,
 } from '../../../../../mocks/session-view/session-view-merge.test.mocks';
@@ -100,6 +101,8 @@ export const HeaderFeedAndComposerShareOneLayout: Story = {
 export const MergeWaitsForChecks = mergeWaitsForChecks;
 
 export const MergesWhenChecksPass = mergesWhenChecksPass;
+
+export const MergesByAnotherMethod = mergesByAnotherMethod;
 
 export const ListsEveryPullRequest = listsEveryPullRequest;
 

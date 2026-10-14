@@ -10,7 +10,7 @@ import {
   keptDraft,
 } from '../../../../../mocks/composer/request-composer.test.mocks';
 import { canPointAt } from '../../../../../mocks/point-hit';
-import { shownText } from '../../../../../mocks/rich-textarea-example';
+import { shownText } from '../../../../../mocks/shown-text';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer } from './composer';

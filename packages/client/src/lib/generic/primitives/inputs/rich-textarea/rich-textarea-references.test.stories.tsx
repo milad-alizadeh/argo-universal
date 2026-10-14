@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, screen, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
+import { layoutWidths } from '../../../each-layout';
+import { settleViewport } from '../../../settle-viewport';
 import {
   exampleLabel as label,
   RichTextareaExample,
-} from '../../../../../../mocks/rich-textarea-example';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+} from './rich-textarea-example.mocks';
 import { type ReferenceOption, shortTitle } from './rich-textarea-references';
 
 // `#` opens the Issues and pull requests to reference; a chosen one is written as `#123`.

@@ -1,7 +1,7 @@
 import { fn, waitFor, expect } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
-import { shownText } from '../rich-textarea-example';
+import { shownText } from '../shown-text';
 import {
   type Story,
   SendingComposer,

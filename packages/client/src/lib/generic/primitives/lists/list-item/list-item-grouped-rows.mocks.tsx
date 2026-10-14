@@ -1,15 +1,16 @@
 import type * as React from 'react';
+import { SelectedCheck } from '#primitives/display/selected-check';
 import { FieldGroup } from '#primitives/fields/field-group/field-group';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { ListItem } from './list-item';
 import {
   CodeRows,
   LargeRows,
   PlainRows,
   StateRows,
-} from './list-item-code-rows-mock';
-import { onPress } from './list-item-press-mock';
-import { SampleLogo } from './sample-logo';
+} from './list-item-code-rows.mocks';
+import { onPress } from './list-item-press.mocks';
+import { SampleLogo } from './sample-logo.mocks';
 
 export function GroupedRows(): React.JSX.Element {
   return (
@@ -21,6 +22,7 @@ export function GroupedRows(): React.JSX.Element {
       <CodeRows />
       <LargeRows />
       <StateRows />
+      <ChoiceRows />
     </FieldGroup>
   );
 }
@@ -132,5 +134,22 @@ function GooseRow(): React.JSX.Element {
       value="Not installed"
       onPress={onPress}
     />
+  );
+}
+
+// A choice list: the chosen row carries the SelectedCheck; a row that opens a page shows the DisclosureChevron.
+function ChoiceRows(): React.JSX.Element {
+  return (
+    <FieldSection title="Choices">
+      <ListItem
+        title="Ask"
+        selected
+        disclosure={false}
+        accessory={<SelectedCheck />}
+        onPress={onPress}
+      />
+      <ListItem title="Auto" disclosure={false} onPress={onPress} />
+      <ListItem title="More modes" onPress={onPress} />
+    </FieldSection>
   );
 }

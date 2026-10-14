@@ -13,7 +13,7 @@ import {
   meta as newSessionViewTestMeta,
   type Story,
 } from '../../../../../mocks/new-session-view/new-session-story.test.mocks';
-import { shownText } from '../../../../../mocks/rich-textarea-example';
+import { shownText } from '../../../../../mocks/shown-text';
 import { eachLayout } from '../../../../lib/generic/each-layout';
 import {
   exampleProject,

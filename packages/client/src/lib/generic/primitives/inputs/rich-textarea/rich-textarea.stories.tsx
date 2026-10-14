@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { RichTextareaExample } from '../../../../../../mocks/rich-textarea-example';
 import { Variation, Variations as VariationList } from '../../../variations';
+import { RichTextareaExample } from './rich-textarea-example.mocks';
 
 const longDraft = Array.from(
   { length: 14 },

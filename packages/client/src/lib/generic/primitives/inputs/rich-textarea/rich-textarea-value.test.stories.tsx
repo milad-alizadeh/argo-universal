@@ -3,15 +3,15 @@ import type * as React from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import { Button } from '#primitives/buttons/button/button';
-import {
-  exampleLabel as label,
-  examplePlaceholder,
-  shownText,
-  useExampleValue,
-} from '../../../../../../mocks/rich-textarea-example';
+import { shownText } from '../../../../../../mocks/shown-text';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { RichTextarea } from './rich-textarea';
+import {
+  exampleLabel as label,
+  examplePlaceholder,
+  useExampleValue,
+} from './rich-textarea-example.mocks';
 
 // A value from outside replaces the field's text, and the next edit is still sent, starting with its first key.
 

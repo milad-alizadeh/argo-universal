@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { action } from 'storybook/actions';
 import { FieldGroup } from '#primitives/fields/field-group/field-group';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { ListItem } from './list-item';
 
 const onPress = action('open list item');
 

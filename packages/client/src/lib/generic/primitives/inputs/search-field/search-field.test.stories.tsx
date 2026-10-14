@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { SearchFieldExample } from '../../../../../../mocks/search-field-mock';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { SearchField } from './search-field';
+import { SearchFieldExample } from './search-field-example.mocks';
 
 const label = 'Search Agents';
 

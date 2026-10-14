@@ -13,6 +13,8 @@ import { openProps, type Story } from './session-view-story.test.mocks';
 
 const mergeLabel = 'Merge PR';
 
+const optionsLabel = 'Merge options';
+
 // Checks still run: the header names the PR and its checks, and Merge PR waits.
 export const mergeWaitsForChecks: Story = {
   args: {
@@ -27,6 +29,9 @@ export const mergeWaitsForChecks: Story = {
     await expect(canvas.getByLabelText('Checks 3/5, 2 running')).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: mergeLabel }),
+    ).toBeDisabled();
+    await expect(
+      canvas.getByRole('button', { name: optionsLabel }),
     ).toBeDisabled();
   },
 };
@@ -49,6 +54,30 @@ export const mergesWhenChecksPass: Story = {
     await expect(openProps(args.view).header.onMerge).toHaveBeenCalledWith(
       45,
       'squash',
+    );
+  },
+};
+
+// The chevron's menu merges by another method.
+export const mergesByAnotherMethod: Story = {
+  args: mergesWhenChecksPass.args,
+  play: async ({ canvas, args, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await expect(
+      await canvas.findByLabelText('Checks 5/5, passed'),
+    ).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: optionsLabel }));
+
+    const rebase = await within(document.body).findByRole('menuitem', {
+      name: 'Rebase and merge',
+    });
+
+    // The menu fades in.
+    await waitFor(() => expect(rebase).toBeVisible());
+    await userEvent.click(rebase);
+    await expect(openProps(args.view).header.onMerge).toHaveBeenCalledWith(
+      45,
+      'rebase',
     );
   },
 };

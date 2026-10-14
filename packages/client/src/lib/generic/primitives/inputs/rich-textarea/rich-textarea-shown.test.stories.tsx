@@ -1,9 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import {
-  RichTextareaExample,
-  shownText,
-} from '../../../../../../mocks/rich-textarea-example';
+import { shownText } from '../../../../../../mocks/shown-text';
+import { RichTextareaExample } from './rich-textarea-example.mocks';
 
 // A draft that arrives from outside, drawn by the web drawing (Lexical) with its blocks.
 

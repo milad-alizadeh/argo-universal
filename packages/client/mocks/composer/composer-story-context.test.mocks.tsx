@@ -12,7 +12,7 @@ import {
 } from '../../src/features/composer/components/composer/composer';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps } from '../composer-mock';
-import { shownText } from '../rich-textarea-example';
+import { shownText } from '../shown-text';
 import { spacingPrompt } from './composer-test-contract.test.mocks';
 
 export const meta = {

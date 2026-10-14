@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button/button';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { IconButton } from '../icon-button/icon-button';
 import { ButtonGroup } from './button-group';
 
 const meta = {
@@ -17,24 +16,10 @@ export const Variations: Story = {
   name: 'ButtonGroup',
   render: () => (
     <VariationList>
-      <SplitButtonExample />
       <SecondaryButtonsExample />
     </VariationList>
   ),
 };
-
-function SplitButtonExample(): React.JSX.Element {
-  return (
-    <Variation label="Split button">
-      <View className="flex-row">
-        <ButtonGroup>
-          <Button label={'Allow'} appearance="content" />
-          <AllowOptions />
-        </ButtonGroup>
-      </View>
-    </Variation>
-  );
-}
 
 function SecondaryButtonsExample(): React.JSX.Element {
   return (
@@ -58,16 +43,4 @@ function secondaryButtons(labels: string[]): React.JSX.Element[] {
       appearance="content"
     />
   ));
-}
-
-function AllowOptions(): React.JSX.Element {
-  return (
-    <IconButton
-      accessibilityLabel="Allow options"
-      icon={'chevron-down'}
-      iconRole="secondary"
-      size="md"
-      variant="filled"
-    />
-  );
 }
