@@ -4,6 +4,7 @@ import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { hasDisclosure } from './grouped-list-item-styles';
+import { ChoiceRadio } from './native-choice-mark.android';
 import { NativeRowGlyph, NativeRowIcon, NativeRowStatus } from './native-row';
 
 const gutter = 16;
@@ -16,6 +17,7 @@ export function RowTrailing(props: GroupedListItemProps): React.JSX.Element {
     >
       <RowValueGroup {...props} />
       <NativeRowStatus {...props} />
+      {props.choice && <ChoiceRadio {...props} />}
       <RowDisclosure visible={hasDisclosure(props)} />
     </Row>
   );

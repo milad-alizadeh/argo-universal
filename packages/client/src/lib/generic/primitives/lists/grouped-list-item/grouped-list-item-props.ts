@@ -41,6 +41,11 @@ export interface GroupedListItemProps {
   href?: string;
   disabled?: boolean;
   selected?: boolean;
+  /*
+   * Phones only: the row is one choice of several, and the platform marks it, `selected` saying
+   * which: iOS a system checkmark on the chosen row, Android a Material RadioButton on every row.
+   */
+  choice?: boolean;
   needsAttention?: boolean;
   // A dot after the value. When the value already says the status, such as "Ready", the name says it once.
   status?: { tone: 'success' | 'warning' | 'danger'; label: string };

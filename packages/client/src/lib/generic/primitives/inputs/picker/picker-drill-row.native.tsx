@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { SelectedCheck } from '#primitives/display/selected-check';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
@@ -9,11 +8,8 @@ import {
   useLatestProps,
   useLiveProps,
 } from './picker-live-props';
-import type {
-  PickerOption,
-  PickerOptionAction,
-  PickerProps,
-} from './picker-props';
+import { NativeOptionRows } from './picker-native-options';
+import type { PickerProps } from './picker-props';
 import { choosePickerOption, pickerValue } from './picker-selection';
 
 type Navigation = NonNullable<ReturnType<typeof useSheetNavigation>>;
@@ -77,76 +73,19 @@ function DrillPage<Value extends string>(
   return (
     <GroupedList>
       <GroupedListSection footer={props.loadError}>
-        {props.options.map((option) => (
-          <DrillOption key={option.value} {...props} option={option} />
-        ))}
+        <NativeOptionRows
+          {...props}
+          onChoose={(option) => chooseOption(props, option.value)}
+        />
       </GroupedListSection>
     </GroupedList>
   );
 }
 
-function DrillOption<Value extends string>(
-  props: PageProps<Value> & { option: PickerOption<Value> },
-): React.JSX.Element {
-  return (
-    <>
-      <GroupedListItem {...optionRowProps(props)} />
-      <ActionRow action={props.option.action} />
-    </>
-  );
-}
-
-const choiceRow = { accessibilityRole: 'button', disclosure: false } as const;
-
-function optionRowProps<Value extends string>(
-  props: PageProps<Value> & { option: PickerOption<Value> },
-): React.ComponentProps<typeof GroupedListItem> {
-  const { option } = props;
-  const selected = option.value === props.value;
-
-  return {
-    ...optionContent(option),
-    ...choiceRow,
-    selected,
-    accessory: selected ? <SelectedCheck /> : undefined,
-    onPress: () => chooseOption(props, option),
-  };
-}
-
 function chooseOption<Value extends string>(
   props: PageProps<Value>,
-  option: PickerOption<Value>,
+  value: Value,
 ): void {
-  choosePickerOption(props, option.value);
+  choosePickerOption(props, value);
   props.onChosen();
-}
-
-function optionContent<Value extends string>(
-  option: PickerOption<Value>,
-): React.ComponentProps<typeof GroupedListItem> {
-  return {
-    label: option.label,
-    accessibilityLabel: option.accessibilityLabel,
-    subtitle: option.supporting ? { text: option.supporting } : undefined,
-    icon: option.icon,
-    disabled: option.disabled,
-  };
-}
-
-function ActionRow(props: {
-  action?: PickerOptionAction;
-}): React.JSX.Element | null {
-  const { action } = props;
-
-  if (!action) return null;
-
-  return (
-    <GroupedListItem
-      label={action.label}
-      accessibilityLabel={action.accessibilityLabel}
-      accessibilityRole="button"
-      tone="accent"
-      onPress={action.onPress}
-    />
-  );
 }

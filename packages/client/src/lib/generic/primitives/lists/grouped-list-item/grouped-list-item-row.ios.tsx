@@ -19,6 +19,7 @@ import {
   RowLeading,
   useRowColor,
 } from './grouped-list-item-swift-ui';
+import { ChoiceMark } from './native-choice-mark.ios';
 import { NativeRowImage, NativeRowStatus } from './native-row';
 
 const rowHeight = 44;
@@ -38,6 +39,7 @@ export function RowContent(props: GroupedListItemProps): React.JSX.Element {
     <HStack spacing={rowSpacing} modifiers={contentModifiers(props, iconSize)}>
       <RowLeading {...props} />
       <RowFields {...props} />
+      <ChoiceMark visible={!!props.choice && !!props.selected} />
       <DisclosureIndicator visible={hasDisclosure(props)} />
     </HStack>
   );

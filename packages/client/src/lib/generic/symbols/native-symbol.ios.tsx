@@ -1,6 +1,7 @@
 import { Image, type ImageProps } from '@expo/ui/swift-ui';
 import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
+import { useNativeTheme } from '../native-theme';
 import { appleSymbol } from './apple-symbol';
 import { type AppleSymbol, isCustomSymbol } from './custom-symbols';
 import { iconSymbols } from './icon-names';
@@ -8,6 +9,21 @@ import { useIconPixels } from './icon-role';
 import type { NativeSymbolProps } from './native-symbol-props';
 
 const mutedStyle = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
+
+type SymbolModifiers = ReturnType<typeof foregroundStyle>[] | undefined;
+
+const accentStyle = (color: string | undefined): SymbolModifiers =>
+  color ? [foregroundStyle(color)] : undefined;
+
+function useToneModifiers(
+  props: Pick<NativeSymbolProps, 'muted' | 'accent'>,
+): SymbolModifiers {
+  const { accent } = useNativeTheme().colors;
+
+  if (props.accent === true) return accentStyle(accent);
+
+  return props.muted === true ? [mutedStyle] : undefined;
+}
 
 function imageSource(
   sf: AppleSymbol,
@@ -20,13 +36,13 @@ export function NativeSymbol({
   name,
   role,
   filled,
-  muted,
+  ...tone
 }: NativeSymbolProps): React.JSX.Element {
   return (
     <Image
       {...imageSource(appleSymbol(iconSymbols[name], filled))}
       size={useIconPixels(role)}
-      modifiers={muted === true ? [mutedStyle] : undefined}
+      modifiers={useToneModifiers(tone)}
     />
   );
 }
