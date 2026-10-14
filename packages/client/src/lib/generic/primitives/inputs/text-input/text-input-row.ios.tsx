@@ -18,23 +18,23 @@ import {
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
+import { useFollowedText } from '../../native/followed-text';
 import { useSwiftUITextModifiers } from '../../native/native-typography';
-import type { FieldInputProps } from './field-input-props';
-import { useFollowedText } from './field-input-text';
-import { FieldInput as WebFieldInput, isInvalid } from './field-input.tsx';
+import { isInvalid, type TextFieldProps } from './text-input-props';
+import { RowTextInput as WebRowTextInput } from './text-input-row.tsx';
 
 const rowHeight = 52;
 
 const inset = 16;
 
-export function FieldInput(props: FieldInputProps): React.JSX.Element {
-  if (useWide()) return <WebFieldInput {...props} />;
+export function RowTextInput(props: TextFieldProps): React.JSX.Element {
+  if (useWide()) return <WebRowTextInput {...props} />;
 
   return <FormRow {...props} />;
 }
 
 // A Settings form row: the label leading, the SwiftUI field taking the rest of the row with its text trailing.
-function FormRow(props: FieldInputProps): React.JSX.Element {
+function FormRow(props: TextFieldProps): React.JSX.Element {
   const modifiers = useRowModifiers();
 
   return (
@@ -56,7 +56,7 @@ function useRowModifiers(): React.ComponentProps<
   ];
 }
 
-function RowLabel(props: FieldInputProps): React.JSX.Element {
+function RowLabel(props: TextFieldProps): React.JSX.Element {
   const bodyModifiers = useSwiftUITextModifiers('body', 'row');
   const { destructive } = useNativeTheme().colors;
 
@@ -66,7 +66,7 @@ function RowLabel(props: FieldInputProps): React.JSX.Element {
   return <Text modifiers={[...bodyModifiers, ...color]}>{props.label}</Text>;
 }
 
-function RowField(props: FieldInputProps): React.JSX.Element {
+function RowField(props: TextFieldProps): React.JSX.Element {
   const text = useNativeState(props.value);
   useFollowedText(text, props.value);
   const modifiers = useFieldModifiers(props);
@@ -84,7 +84,7 @@ function RowField(props: FieldInputProps): React.JSX.Element {
 
 type FieldModifiers = React.ComponentProps<typeof TextField>['modifiers'];
 
-function useFieldModifiers(props: FieldInputProps): FieldModifiers {
+function useFieldModifiers(props: TextFieldProps): FieldModifiers {
   const fieldModifiers = useSwiftUITextModifiers(
     props.mono ? 'code' : 'body',
     'row',

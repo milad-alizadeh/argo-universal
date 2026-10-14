@@ -4,11 +4,13 @@ import {
   FieldDescriptionFooter,
   useFieldDescription,
   type FieldDescription,
-} from '../field-description';
-import { FooterProvider, type SectionFooter } from '../field-footer';
-import type { FieldInputProps } from './field-input-props';
+} from './field-description';
+import type { FieldErrors } from './field-errors';
+import { FooterProvider, type SectionFooter } from './field-footer';
 
-type FieldProps = Pick<FieldInputProps, 'errors' | 'hint'> & {
+type FieldProps = {
+  errors?: FieldErrors;
+  hint?: string;
   children: ReactNode;
 };
 

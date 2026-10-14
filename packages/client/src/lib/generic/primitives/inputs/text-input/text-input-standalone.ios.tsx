@@ -7,12 +7,12 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '../../../native-theme';
-import { FieldInput } from './field-input.ios';
-import type { StandaloneFieldInputProps } from './standalone-field-input-props';
-import { StandaloneNativeField } from './standalone-native-field';
+import type { StandaloneTextInputProps } from './text-input-props';
+import { RowTextInput } from './text-input-row.ios';
+import { StandaloneNativeField } from './text-input-standalone-native';
 
-export function StandaloneFieldInput(
-  props: StandaloneFieldInputProps,
+export function StandaloneTextInput(
+  props: StandaloneTextInputProps,
 ): ReactElement {
   return (
     <StandaloneNativeField {...props}>
@@ -21,12 +21,12 @@ export function StandaloneFieldInput(
   );
 }
 
-function NativeRow(props: StandaloneFieldInputProps): ReactElement {
+function NativeRow(props: StandaloneTextInputProps): ReactElement {
   const modifiers = useRowModifiers();
 
   return (
     <VStack modifiers={modifiers}>
-      <FieldInput
+      <RowTextInput
         {...props}
         label={props.required ? `${props.label} *` : props.label}
       />

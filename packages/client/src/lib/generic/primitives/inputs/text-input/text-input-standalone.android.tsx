@@ -6,15 +6,14 @@ import {
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type { ComponentProps, ReactElement } from 'react';
 import { useMemo } from 'react';
+import { useFollowedText } from '../../native/followed-text';
 import { useComposeTextStyle } from '../../native/native-typography';
-import { useFollowedText } from './field-input-text';
-import { isInvalid } from './field-input.tsx';
 import { blurOnFocusLoss } from './focus-loss';
-import type { StandaloneFieldInputProps } from './standalone-field-input-props';
-import { StandaloneNativeField } from './standalone-native-field';
+import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
+import { StandaloneNativeField } from './text-input-standalone-native';
 
-export function StandaloneFieldInput(
-  props: StandaloneFieldInputProps,
+export function StandaloneTextInput(
+  props: StandaloneTextInputProps,
 ): ReactElement {
   return (
     <StandaloneNativeField {...props}>
@@ -23,7 +22,7 @@ export function StandaloneFieldInput(
   );
 }
 
-function NativeField(props: StandaloneFieldInputProps): ReactElement {
+function NativeField(props: StandaloneTextInputProps): ReactElement {
   const field = useFieldProps(props);
 
   return (
@@ -34,7 +33,7 @@ function NativeField(props: StandaloneFieldInputProps): ReactElement {
   );
 }
 
-function FieldLabel(props: StandaloneFieldInputProps): ReactElement {
+function FieldLabel(props: StandaloneTextInputProps): ReactElement {
   return (
     <OutlinedTextField.Label>
       <Text>
@@ -46,7 +45,7 @@ function FieldLabel(props: StandaloneFieldInputProps): ReactElement {
 }
 
 function FieldPlaceholder(
-  props: StandaloneFieldInputProps,
+  props: StandaloneTextInputProps,
 ): ReactElement | null {
   if (!props.placeholder) return null;
 
@@ -59,7 +58,7 @@ function FieldPlaceholder(
 
 type FieldProps = ComponentProps<typeof OutlinedTextField>;
 
-function useFieldProps(props: StandaloneFieldInputProps): FieldProps {
+function useFieldProps(props: StandaloneTextInputProps): FieldProps {
   const value = useNativeState(props.value);
   useFollowedText(value, props.value);
   const textStyle = useFieldTextStyle(props.mono);
@@ -73,7 +72,7 @@ function useFieldProps(props: StandaloneFieldInputProps): FieldProps {
 }
 
 function useFieldTextStyle(
-  mono: StandaloneFieldInputProps['mono'],
+  mono: StandaloneTextInputProps['mono'],
 ): FieldProps['textStyle'] {
   const { fontFamily, fontSize, lineHeight, fontWeight } = useComposeTextStyle(
     mono ? 'code' : 'body',
@@ -82,7 +81,7 @@ function useFieldTextStyle(
   return { fontFamily, fontSize, lineHeight, fontWeight };
 }
 
-function fieldBehaviour(props: StandaloneFieldInputProps): FieldProps {
+function fieldBehaviour(props: StandaloneTextInputProps): FieldProps {
   return {
     onValueChange: props.onChange,
     enabled: !props.disabled,

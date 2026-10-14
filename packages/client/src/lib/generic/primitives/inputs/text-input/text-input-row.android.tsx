@@ -4,21 +4,21 @@ import type * as React from 'react';
 import { useMemo } from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
+import { errorMessage } from '../../fields/field-errors';
+import { useFollowedText } from '../../native/followed-text';
 import { useComposeTextStyle } from '../../native/native-typography';
-import { errorMessage } from '../field-errors';
-import type { FieldInputProps } from './field-input-props';
-import { useFollowedText } from './field-input-text';
-import { FieldInput as WideFieldInput, isInvalid } from './field-input.tsx';
 import { blurOnFocusLoss } from './focus-loss';
+import { isInvalid, type TextFieldProps } from './text-input-props';
+import { RowTextInput as WideRowTextInput } from './text-input-row.tsx';
 
-export function FieldInput(props: FieldInputProps): React.JSX.Element {
-  const Field = useWide() ? WideFieldInput : FormField;
+export function RowTextInput(props: TextFieldProps): React.JSX.Element {
+  const Field = useWide() ? WideRowTextInput : FormField;
 
   return <Field {...props} />;
 }
 
 // A bare Material filled field on the muted fill, its label floating inside it and its hint or error under it.
-function FormField(props: FieldInputProps): React.JSX.Element {
+function FormField(props: TextFieldProps): React.JSX.Element {
   const text = useNativeState(props.value);
   useFollowedText(text, props.value);
   const onFocusChanged = useFocusLossHandler(props.onBlur);
@@ -31,19 +31,19 @@ function FormField(props: FieldInputProps): React.JSX.Element {
   );
 }
 
-type TextFieldProps = React.ComponentProps<typeof TextField>;
+type ComposeFieldProps = React.ComponentProps<typeof TextField>;
 
 function useFocusLossHandler(
-  onBlur: FieldInputProps['onBlur'],
+  onBlur: TextFieldProps['onBlur'],
 ): ReturnType<typeof blurOnFocusLoss> {
   return useMemo(() => blurOnFocusLoss(onBlur), [onBlur]);
 }
 
 function fieldBehaviour(
-  props: FieldInputProps,
-  text: TextFieldProps['value'],
-  onFocusChanged: TextFieldProps['onFocusChanged'],
-): TextFieldProps {
+  props: TextFieldProps,
+  text: ComposeFieldProps['value'],
+  onFocusChanged: ComposeFieldProps['onFocusChanged'],
+): ComposeFieldProps {
   return {
     value: text,
     onValueChange: props.onChange,
@@ -53,7 +53,7 @@ function fieldBehaviour(
   };
 }
 
-function useFieldAppearance(mono: FieldInputProps['mono']): TextFieldProps {
+function useFieldAppearance(mono: TextFieldProps['mono']): ComposeFieldProps {
   const { fontFamily, fontSize, lineHeight, fontWeight } = useComposeTextStyle(
     mono ? 'code' : 'body',
   );
@@ -70,7 +70,7 @@ function useFieldAppearance(mono: FieldInputProps['mono']): TextFieldProps {
 }
 
 // Compose slots draw only Compose views, so each string goes in a Compose Text.
-function FieldSlots(props: FieldInputProps): React.JSX.Element {
+function FieldSlots(props: TextFieldProps): React.JSX.Element {
   return (
     <>
       <TextField.Label>
@@ -87,10 +87,10 @@ function FieldSlots(props: FieldInputProps): React.JSX.Element {
 }
 
 // Material's supporting text: the error in its place when there is one, else the hint.
-const supportingLine = (props: FieldInputProps): string | undefined =>
+const supportingLine = (props: TextFieldProps): string | undefined =>
   errorMessage(props.errors ?? []) ?? props.hint;
 
-function SupportingLine(props: FieldInputProps): React.JSX.Element | null {
+function SupportingLine(props: TextFieldProps): React.JSX.Element | null {
   const line = supportingLine(props);
 
   if (!line) return null;

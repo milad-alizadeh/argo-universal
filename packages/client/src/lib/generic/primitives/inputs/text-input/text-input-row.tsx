@@ -2,16 +2,13 @@ import type * as React from 'react';
 import { type TextInputProps, View } from 'react-native';
 import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
-import { Input } from '../../inputs/input/input';
+import { useFooterDescription } from '../../fields/field-footer';
 import { rowClasses } from '../../lists/list-item/list-item-styles';
-import { useFooterDescription } from '../field-footer';
-import type { FieldInputProps } from './field-input-props';
-
-export const isInvalid = (props: Pick<FieldInputProps, 'errors'>): boolean =>
-  (props.errors?.length ?? 0) > 0;
+import { BareTextInput } from './text-input-bare';
+import { isInvalid, type TextFieldProps } from './text-input-props';
 
 // A section row: the label, then the field filling the rest; the row shows the focus ring.
-export function FieldInput(props: FieldInputProps): React.JSX.Element {
+export function RowTextInput(props: TextFieldProps): React.JSX.Element {
   return (
     <View
       className={cn(
@@ -25,7 +22,7 @@ export function FieldInput(props: FieldInputProps): React.JSX.Element {
   );
 }
 
-function RowLabel(props: FieldInputProps): React.JSX.Element {
+function RowLabel(props: TextFieldProps): React.JSX.Element {
   return (
     <Text
       aria-hidden
@@ -41,11 +38,12 @@ function RowLabel(props: FieldInputProps): React.JSX.Element {
   );
 }
 
-function RowInput(props: FieldInputProps): React.JSX.Element {
+function RowInput(props: TextFieldProps): React.JSX.Element {
   const accessibility = useInputAccessibility(props);
 
   return (
-    <Input
+    <BareTextInput
+      appearance="bare"
       {...accessibility}
       {...inputBehaviour(props)}
       className={inputClasses(props.mono)}
@@ -61,7 +59,7 @@ interface InputAccessibility {
   'aria-describedby': ReturnType<typeof useFooterDescription>;
 }
 
-function useInputAccessibility(props: FieldInputProps): InputAccessibility {
+function useInputAccessibility(props: TextFieldProps): InputAccessibility {
   return {
     accessibilityLabel: props.label,
     'aria-invalid': isInvalid(props),
@@ -72,7 +70,7 @@ function useInputAccessibility(props: FieldInputProps): InputAccessibility {
   };
 }
 
-function inputBehaviour(props: FieldInputProps): InputProps {
+function inputBehaviour(props: TextFieldProps): InputProps {
   return {
     value: props.value,
     placeholder: props.placeholder,
@@ -84,7 +82,7 @@ function inputBehaviour(props: FieldInputProps): InputProps {
   };
 }
 
-const inputClasses = (mono: FieldInputProps['mono']): string =>
+const inputClasses = (mono: TextFieldProps['mono']): string =>
   cn(
     mono ? 'type-code' : 'type-body',
     'h-6 flex-1 rounded-none web:rounded-none border-0 bg-transparent px-0 py-0 shadow-none sm:h-6 web:focus-visible:ring-0 dark:bg-transparent',

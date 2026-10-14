@@ -1,12 +1,9 @@
 import type { ReactElement } from 'react';
-import { TextInput } from 'react-native';
-import { cn } from '#lib/generic/utils';
+import { TextInput as NativeTextInput } from 'react-native';
+import { cn } from '../../../utils';
+import type { BareTextInputProps } from './text-input-props';
 
-type InputProps = React.ComponentProps<typeof TextInput> &
-  React.RefAttributes<TextInput> & {
-    // `muted` is the compact borderless field inside a popover, such as the link editor's.
-    variant?: 'default' | 'muted';
-  };
+type InputProps = Omit<BareTextInputProps, 'appearance'>;
 
 const variantClass = {
   default:
@@ -40,16 +37,16 @@ function inputClassName({
   );
 }
 
-function Input({
+// The bare box: the web field, and the plain React Native field on phones.
+export function BareTextInput({
+  appearance: _appearance,
   className,
   variant,
   placeholderClassName: _placeholderClassName,
   ...props
-}: InputProps): ReactElement {
+}: BareTextInputProps): ReactElement {
   const { editable } = props;
   const look = inputClassName({ className, variant, editable });
 
-  return <TextInput className={look} {...props} />;
+  return <NativeTextInput className={look} {...props} />;
 }
-
-export { Input };

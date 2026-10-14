@@ -1,14 +1,13 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '../../display/text/text';
-import { Input } from '../../inputs/input/input';
-import { useFooterDescription } from '../field-footer';
-import { isInvalid } from './field-input';
-import { StandaloneField } from './standalone-field';
-import type { StandaloneFieldInputProps } from './standalone-field-input-props';
+import { useFooterDescription } from '../../fields/field-footer';
+import { StandaloneField } from '../../fields/standalone-field';
+import { BareTextInput } from './text-input-bare';
+import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
 
-export function StandaloneFieldInput(
-  props: StandaloneFieldInputProps,
+export function StandaloneTextInput(
+  props: StandaloneTextInputProps,
 ): ReactElement {
   return (
     <StandaloneField {...props}>
@@ -17,7 +16,7 @@ export function StandaloneFieldInput(
   );
 }
 
-function TextField(props: StandaloneFieldInputProps): ReactElement {
+function TextField(props: StandaloneTextInputProps): ReactElement {
   const describedBy = useFooterDescription({
     invalid: isInvalid(props),
     hint: props.hint,
@@ -26,12 +25,12 @@ function TextField(props: StandaloneFieldInputProps): ReactElement {
   return (
     <View className="gap-1.5">
       <FieldLabel {...props} />
-      <Input {...inputProps(props)} aria-describedby={describedBy} />
+      <BareTextInput {...inputProps(props)} aria-describedby={describedBy} />
     </View>
   );
 }
 
-function FieldLabel(props: StandaloneFieldInputProps): ReactElement {
+function FieldLabel(props: StandaloneTextInputProps): ReactElement {
   return (
     <Text aria-hidden role="body">
       {props.label}
@@ -40,9 +39,9 @@ function FieldLabel(props: StandaloneFieldInputProps): ReactElement {
   );
 }
 
-type InputProps = ComponentProps<typeof Input>;
+type InputProps = ComponentProps<typeof BareTextInput>;
 
-function inputProps(props: StandaloneFieldInputProps): InputProps & {
+function inputProps(props: StandaloneTextInputProps): InputProps & {
   'aria-invalid': boolean;
   'aria-required'?: boolean;
 } {
@@ -54,8 +53,9 @@ function inputProps(props: StandaloneFieldInputProps): InputProps & {
   };
 }
 
-function inputBehaviour(props: StandaloneFieldInputProps): InputProps {
+function inputBehaviour(props: StandaloneTextInputProps): InputProps {
   return {
+    appearance: 'bare',
     accessibilityLabel: props.label,
     value: props.value,
     onChangeText: props.onChange,

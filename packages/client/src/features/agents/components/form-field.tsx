@@ -7,7 +7,7 @@ import {
   errorMessage,
 } from '#primitives/fields/field-errors';
 import type { FieldSectionProps } from '#primitives/fields/field-section/field-section-props';
-import { Input } from '#primitives/inputs/input/input';
+import { TextInput } from '#primitives/inputs/text-input/text-input';
 
 export type FormInputProps = {
   label: string;
@@ -35,12 +35,16 @@ const hasErrors = (errors: FieldErrors = []): boolean => errors.length > 0;
 const inputClass = ({ mono, className }: FormInputProps): string =>
   cn(mono ? 'type-code' : 'type-body', className);
 
-// Names, paths and values are typed exactly as the Agent reads them.
-const verbatimEntry = { autoCapitalize: 'none', autoCorrect: false } as const;
+// The bare box; names, paths and values are typed exactly as the Agent reads them.
+const verbatimEntry = {
+  appearance: 'bare',
+  autoCapitalize: 'none',
+  autoCorrect: false,
+} as const;
 
 export function FormInput(props: FormInputProps): React.JSX.Element {
   return (
-    <Input
+    <TextInput
       accessibilityLabel={props.label}
       aria-invalid={hasErrors(props.errors)}
       className={inputClass(props)}

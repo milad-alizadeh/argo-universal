@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button/button';
 import { Text } from '../../display/text/text';
-import { Input } from '../input/input';
+import { TextInput } from '../text-input/text-input';
 
 export interface LinkFields {
   text: string;
@@ -18,6 +18,7 @@ interface LinkFieldProps {
 }
 
 const urlInput = {
+  appearance: 'bare',
   autoCapitalize: 'none',
   autoCorrect: false,
   variant: 'muted',
@@ -29,7 +30,7 @@ function LinkField({ label, ...input }: LinkFieldProps): React.JSX.Element {
       <Text aria-hidden role="secondary" className="text-muted-foreground">
         {label}
       </Text>
-      <Input {...input} {...urlInput} accessibilityLabel={label} />
+      <TextInput {...input} {...urlInput} accessibilityLabel={label} />
     </View>
   );
 }
