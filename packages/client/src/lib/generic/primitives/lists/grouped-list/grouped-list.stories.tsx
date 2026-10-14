@@ -32,15 +32,15 @@ function VariationsExample(): React.JSX.Element {
 }
 
 const serverRows = [
-  { title: 'Projects', icon: 'folder', value: '1', needsAttention: true },
-  { title: 'Agents', icon: 'agent', value: '2' },
+  { label: 'Projects', icon: 'folder', value: '1', needsAttention: true },
+  { label: 'Agents', icon: 'agent', value: '2' },
 ] as const;
 
 function ServerSection(): React.JSX.Element {
   return (
     <GroupedListSection title="Server">
       {serverRows.map((row) => (
-        <GroupedListItem key={row.title} {...row} onPress={onPress} />
+        <GroupedListItem key={row.label} {...row} onPress={onPress} />
       ))}
     </GroupedListSection>
   );
@@ -50,7 +50,7 @@ function DeviceSection(): React.JSX.Element {
   return (
     <GroupedListSection title="This device">
       <GroupedListItem
-        title="Appearance"
+        label="Appearance"
         icon="appearance"
         value="System"
         onPress={onPress}

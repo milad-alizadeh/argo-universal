@@ -35,7 +35,7 @@ function projectTrigger(layout: StartSessionLayout): React.JSX.Element {
 }
 
 const projectButtonAppearance = {
-  appearance: 'content',
+  custom: true,
   variant: 'ghost',
   labelNumberOfLines: 1,
   icon: 'folder',

@@ -25,7 +25,7 @@ const searchRowHeight = 40;
  * which only Android draws. Pickers and sheets draw their own search, never this one.
  */
 export function SearchField(props: SearchFieldProps): React.JSX.Element | null {
-  if (props.appearance === 'docked') return <DockedSearchField {...props} />;
+  if (props.variant === 'docked') return <DockedSearchField {...props} />;
 
   return <MorphSearchField {...props} />;
 }

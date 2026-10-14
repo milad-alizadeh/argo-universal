@@ -30,7 +30,7 @@ function checkoutButtonProps(
 ): React.ComponentProps<typeof Button> {
   return {
     ...checkoutButtonLabels(props),
-    appearance: 'content',
+    custom: true,
     variant: 'ghost',
     disabled: props.disabled || !props.checkout.onNewWorktreeChange,
     accessibilityLabel: 'Checkout',

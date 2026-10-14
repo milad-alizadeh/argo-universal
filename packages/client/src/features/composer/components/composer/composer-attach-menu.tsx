@@ -140,9 +140,9 @@ function ComposerAttachItem({
 }: AttachItemProps): React.JSX.Element {
   return (
     <GroupedListItem
-      title={item.label}
+      label={item.label}
       icon={item.icon}
-      role="button"
+      accessibilityRole="button"
       disclosure={false}
       disabled={!item.onPress}
       onPress={() => close(item.onPress)}

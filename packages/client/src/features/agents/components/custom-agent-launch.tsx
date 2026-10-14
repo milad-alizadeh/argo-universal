@@ -27,7 +27,7 @@ function EditSection({ onPress }: { onPress: () => void }): React.JSX.Element {
       <GroupedListItem
         icon="edit"
         tone="accent"
-        title="Edit"
+        label="Edit"
         onPress={onPress}
       />
     </GroupedListSection>
@@ -37,9 +37,9 @@ function EditSection({ onPress }: { onPress: () => void }): React.JSX.Element {
 function ProgramValues({ definition }: DefinitionProps): React.JSX.Element {
   return (
     <GroupedListSection title="Program">
-      <GroupedListItem title="Name" value={definition.name} />
+      <GroupedListItem label="Name" value={definition.name} />
       <GroupedListItem
-        title="Executable"
+        label="Executable"
         subtitle={{ text: definition.executable, code: true }}
       />
     </GroupedListSection>
@@ -55,7 +55,7 @@ function ArgumentValues({ definition }: DefinitionProps): React.JSX.Element {
         <None />
       ) : (
         rows.map(({ key, value }) => (
-          <GroupedListItem key={key} code title={value} />
+          <GroupedListItem key={key} code label={value} />
         ))
       )}
     </GroupedListSection>
@@ -87,10 +87,10 @@ export const VariableRow = ({
 >): React.JSX.Element => (
   <GroupedListItem
     code
-    title={variable.name}
+    label={variable.name}
     subtitle={{ text: variable.value, code: true }}
     {...press}
   />
 );
 
-const None = (): React.JSX.Element => <GroupedListItem title="None" />;
+const None = (): React.JSX.Element => <GroupedListItem label="None" />;

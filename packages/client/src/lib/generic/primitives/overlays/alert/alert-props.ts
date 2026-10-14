@@ -1,7 +1,9 @@
 export interface AlertAction {
   label: string;
-  // A cancel action dismisses; a destructive one is drawn in red.
-  role?: 'cancel' | 'destructive';
+  // A cancel action dismisses.
+  cancel?: boolean;
+  // A destructive action is drawn in red.
+  tone?: 'danger';
   onPress?: () => void;
 }
 
@@ -29,5 +31,5 @@ export function alertActionPress(
 }
 
 export function isDestructiveAlert(actions: readonly AlertAction[]): boolean {
-  return actions.some((action) => action.role === 'destructive');
+  return actions.some((action) => action.tone === 'danger');
 }

@@ -9,10 +9,10 @@ const label = 'Executable';
 
 const failure = 'One path or command, without spaces.';
 
-type Appearance = 'standalone' | 'row';
+type Variant = 'standalone' | 'row';
 
 type ExampleProps = {
-  appearance: Appearance;
+  variant: Variant;
   onChangeText: (value: string) => void;
   errors?: string[];
   disabled?: boolean;
@@ -40,16 +40,16 @@ const meta = {
   beforeEach: async (): Promise<void> => {
     await settleViewport(1440);
   },
-  args: { appearance: 'standalone', onChangeText: fn() },
+  args: { variant: 'standalone', onChangeText: fn() },
 } satisfies Meta<typeof Example>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function typesIn(appearance: Appearance): Story {
+function typesIn(variant: Variant): Story {
   return {
-    args: { appearance },
+    args: { variant },
     play: async ({ canvas, userEvent, args }) => {
       const field = canvas.getByRole('textbox', { name: label });
       await userEvent.type(field, 'acp');
@@ -64,9 +64,9 @@ export const StandaloneTypes = typesIn('standalone');
 
 export const RowTypes = typesIn('row');
 
-function marksInvalidIn(appearance: Appearance): Story {
+function marksInvalidIn(variant: Variant): Story {
   return {
-    args: { appearance, errors: [failure] },
+    args: { variant, errors: [failure] },
     play: async ({ canvas }) => {
       await expect(canvas.getByRole('textbox', { name: label })).toBeInvalid();
     },
@@ -79,18 +79,18 @@ export const RowMarksInvalid = marksInvalidIn('row');
 
 // A row's error shows in its section's footer, which the field names as its description.
 function InSection(props: ExampleProps): React.JSX.Element {
-  if (props.appearance === 'standalone') return <Example {...props} />;
+  if (props.variant === 'standalone') return <Example {...props} />;
 
   return (
-    <GroupedListSection footer={failure} footerTone="destructive" textFields>
+    <GroupedListSection footer={failure} tone="danger" textFields>
       <Example {...props} />
     </GroupedListSection>
   );
 }
 
-function describesErrorIn(appearance: Appearance): Story {
+function describesErrorIn(variant: Variant): Story {
   return {
-    args: { appearance, errors: [failure] },
+    args: { variant, errors: [failure] },
     render: InSection,
     play: async ({ canvas }) => {
       await expect(
@@ -104,9 +104,9 @@ export const StandaloneDescribesError = describesErrorIn('standalone');
 
 export const RowDescribesError = describesErrorIn('row');
 
-function lockedIn(appearance: Appearance): Story {
+function lockedIn(variant: Variant): Story {
   return {
-    args: { appearance, disabled: true },
+    args: { variant, disabled: true },
     play: async ({ canvas }) => {
       await expect(
         canvas.getByRole('textbox', { name: label }),
@@ -125,7 +125,7 @@ export const BareTypes: Story = {
 
     return (
       <TextInput
-        appearance="bare"
+        variant="bare"
         accessibilityLabel={label}
         value={value}
         onChangeText={(next) => {

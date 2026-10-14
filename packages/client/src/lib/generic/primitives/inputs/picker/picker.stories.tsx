@@ -98,8 +98,8 @@ function AccessoryExample(): React.JSX.Element {
   return (
     <GroupedListSection>
       <GroupedListItem
-        title="Effort"
-        accessory={<PickerExample value="medium" appearance="row" />}
+        label="Effort"
+        accessory={<PickerExample value="medium" variant="row" />}
       />
     </GroupedListSection>
   );

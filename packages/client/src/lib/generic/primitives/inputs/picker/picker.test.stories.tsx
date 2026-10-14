@@ -71,7 +71,7 @@ export const KeyboardTypeahead: Story = {
 
 export const InvalidAnnouncement: Story = {
   render: () => (
-    <GroupedListSection footer="Choose an effort" footerTone="destructive">
+    <GroupedListSection footer="Choose an effort" tone="danger">
       <Picker
         label="Effort"
         options={options}

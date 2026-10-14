@@ -50,7 +50,7 @@ function MenuChoices<Value extends string>({
       value={props.value}
       onValueChange={selectChoice(props)}
     >
-      {props.choices.map((choice) => (
+      {props.options.map((choice) => (
         <MenuRadioItem key={choice.value} choice={choice} focus={focus} />
       ))}
     </MenuPrimitive.RadioGroup>
@@ -61,7 +61,7 @@ function selectChoice<Value extends string>(
   props: ChoiceMenuProps<Value>,
 ): (next: string) => void {
   return (next) => {
-    const selected = props.choices.find((choice) => choice.value === next);
+    const selected = props.options.find((choice) => choice.value === next);
 
     if (selected) props.onValueChange(selected.value);
   };

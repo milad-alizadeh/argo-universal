@@ -26,7 +26,7 @@ import { useFormSheetCommands } from './form-sheet-context';
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const commands = useFormSheetCommands();
 
-  if (commands && props.size === 'form')
+  if (commands && props.variant === 'form')
     return <RoutedFormSheet {...props} commands={commands} />;
 
   return (

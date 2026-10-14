@@ -140,7 +140,7 @@ function stopButtonAction(
 
 const filledSendProps = {
   variant: 'filled',
-  filled: true,
+  iconFilled: true,
   hitSlop: 8,
   iconRole: 'control',
   iconWeight: 'light',

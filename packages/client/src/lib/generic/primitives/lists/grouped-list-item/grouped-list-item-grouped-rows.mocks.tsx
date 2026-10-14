@@ -40,7 +40,7 @@ function IconRows(): React.JSX.Element {
 function ProjectsRow(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Projects"
+      label="Projects"
       icon="folder"
       value="1"
       needsAttention
@@ -52,7 +52,7 @@ function ProjectsRow(): React.JSX.Element {
 function AppearanceRow(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Appearance"
+      label="Appearance"
       icon="appearance"
       value="System"
       status={{ tone: 'success', label: 'available' }}
@@ -64,11 +64,11 @@ function AppearanceRow(): React.JSX.Element {
 function UnavailableAgentRow(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Agents"
+      label="Agents"
       icon="agent"
       value="2"
       disabled
-      status={{ tone: 'destructive', label: 'unavailable' }}
+      status={{ tone: 'danger', label: 'unavailable' }}
       onPress={onPress}
     />
   );
@@ -78,7 +78,7 @@ function ImageRows(): React.JSX.Element {
   return (
     <GroupedListSection title="With an image">
       <GroupedListItem
-        title="Example Agent"
+        label="Example Agent"
         leading={<SampleLogo />}
         value="1.0"
         onPress={onPress}
@@ -100,7 +100,7 @@ function DescriptionRows(): React.JSX.Element {
 function ClaudeAgentRow(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Claude Agent"
+      label="Claude Agent"
       subtitle={{ text: 'ACP wrapper for Anthropic’s Claude' }}
       icon="agent"
       value="Ready"
@@ -113,7 +113,7 @@ function ClaudeAgentRow(): React.JSX.Element {
 function CodexRow(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Codex"
+      label="Codex"
       subtitle={{ text: 'ACP adapter for OpenAI’s coding assistant' }}
       icon="agent"
       value="Update available"
@@ -126,7 +126,7 @@ function CodexRow(): React.JSX.Element {
 function GooseRow(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="goose"
+      label="goose"
       subtitle={{
         text: 'A local, extensible, open source AI agent that automates engineering tasks',
       }}
@@ -142,14 +142,14 @@ function ChoiceRows(): React.JSX.Element {
   return (
     <GroupedListSection title="Choices">
       <GroupedListItem
-        title="Ask"
+        label="Ask"
         selected
         disclosure={false}
         accessory={<SelectedCheck />}
         onPress={onPress}
       />
-      <GroupedListItem title="Auto" disclosure={false} onPress={onPress} />
-      <GroupedListItem title="More modes" onPress={onPress} />
+      <GroupedListItem label="Auto" disclosure={false} onPress={onPress} />
+      <GroupedListItem label="More modes" onPress={onPress} />
     </GroupedListSection>
   );
 }

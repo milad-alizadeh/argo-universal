@@ -55,7 +55,7 @@ function modeTrigger(
 }
 
 const modeButtonAppearance = {
-  appearance: 'content',
+  custom: true,
   size: 'xs',
   variant: 'ghost',
   accessibilityLabel: 'Mode',

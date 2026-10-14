@@ -122,7 +122,7 @@ function MenuPicker<Value extends string>(
       onSelectionChange={props.onValueChange}
       modifiers={[pickerStyle('inline')]}
     >
-      {props.choices.map((choice) => (
+      {props.options.map((choice) => (
         <PickerOption key={choice.value} {...choice} />
       ))}
     </Picker>

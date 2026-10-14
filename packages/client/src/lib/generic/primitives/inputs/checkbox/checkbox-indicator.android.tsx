@@ -69,7 +69,7 @@ function IndicatorDrawing(props: CheckboxIndicatorProps): React.JSX.Element {
 export function indicatorSize(
   props: CheckboxIndicatorProps,
 ): ReturnType<typeof size>[] {
-  return props.appearance === 'option'
+  return props.variant === 'option'
     ? [size(optionMarkPixels, optionMarkPixels)]
     : [];
 }
@@ -78,7 +78,7 @@ export function optionOutline(
   props: CheckboxIndicatorProps,
   theme: ReturnType<typeof useNativeTheme>,
 ): string | undefined {
-  if (props.appearance !== 'option') return undefined;
+  if (props.variant !== 'option') return undefined;
 
   return theme.colorScheme === 'light'
     ? '#49454f'

@@ -81,7 +81,7 @@ export const DockedDrawsNothingOnTheWeb: Story = {
     <>
       <View role="group" aria-label="Docked search">
         <SearchField
-          appearance="docked"
+          variant="docked"
           label={label}
           value="review"
           onChangeText={() => {}}

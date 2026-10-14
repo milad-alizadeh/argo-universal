@@ -60,7 +60,7 @@ function ElicitationSurface(props: SurfaceProps): ReactElement {
   if (wide) return <ElicitationTray>{props.children}</ElicitationTray>;
 
   return (
-    <BottomSheet open fit size="form" label={props.request.message} {...sheet}>
+    <BottomSheet open fit variant="form" label={props.request.message} {...sheet}>
       {props.children}
     </BottomSheet>
   );

@@ -22,7 +22,7 @@ export function SidebarRows(): React.JSX.Element {
 function ProjectRow(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Projects"
+      label="Projects"
       icon="folder"
       value="1"
       needsAttention
@@ -34,7 +34,7 @@ function ProjectRow(): React.JSX.Element {
 function ConnectionRow(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Connection"
+      label="Connection"
       icon="connection"
       value="This Mac"
       status={{ tone: 'success', label: 'connected' }}
@@ -47,7 +47,7 @@ function ConnectionRow(): React.JSX.Element {
 function AppearanceRow(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Appearance"
+      label="Appearance"
       icon="appearance"
       value="System"
       onPress={onPress}

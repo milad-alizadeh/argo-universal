@@ -38,7 +38,7 @@ function searchInputProps(
   onChangeText: (text: string) => void,
 ): React.ComponentProps<typeof TextInput> {
   return {
-    appearance: 'bare',
+    variant: 'bare',
     accessibilityLabel: `Search ${label}`,
     placeholder: 'Search',
     value,

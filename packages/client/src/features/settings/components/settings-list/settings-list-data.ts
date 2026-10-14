@@ -25,27 +25,27 @@ function deviceRows(props: SettingsListProps, wide: boolean): SettingsRow[] {
 }
 
 const appearanceRow = (props: SettingsListProps): SettingsRow => ({
-  title: 'Appearance',
+  label: 'Appearance',
   icon: 'appearance',
   destination: { to: 'settings-appearance' },
   value: props.appearanceState ?? 'System',
 });
 
 const notificationsRow = (props: SettingsListProps): SettingsRow => ({
-  title: 'Notifications',
+  label: 'Notifications',
   icon: 'notifications',
   destination: { to: 'settings-notifications' },
   value: props.notificationsState ?? 'On',
 });
 
-// The rows whose title holds the search, ignoring case.
+// The rows whose label holds the search, ignoring case.
 export function matchingRows(
   rows: readonly SettingsRow[],
   query = '',
 ): SettingsRow[] {
   const search = query.trim().toLowerCase();
 
-  return rows.filter(({ title }) => title.toLowerCase().includes(search));
+  return rows.filter(({ label }) => label.toLowerCase().includes(search));
 }
 
 export function settingsRows(

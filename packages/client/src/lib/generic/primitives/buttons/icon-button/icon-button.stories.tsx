@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { IconButton } from './icon-button';
 
-const sizes = ['sm', 'md', 'lg', 'xl', '2xl'] as const;
+const sizes = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
 
 const meta = { title: 'Design System/Primitives/IconButton' } satisfies Meta;
 
@@ -55,9 +55,9 @@ function FormatButton(props: {
     <IconButton
       icon={props.icon}
       variant="ghost"
-      size="sm"
+      size="xs"
       accessibilityLabel={props.label}
-      aria-pressed={props.pressed}
+      selected={props.pressed}
     />
   );
 }

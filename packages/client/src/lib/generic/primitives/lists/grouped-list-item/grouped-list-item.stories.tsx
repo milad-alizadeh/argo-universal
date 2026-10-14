@@ -6,7 +6,7 @@ import { SidebarRows } from './grouped-list-item-sidebar-rows.mocks';
 
 const meta = {
   title: 'Design System/Primitives/GroupedListItem',
-  args: { title: 'Name' },
+  args: { label: 'Name' },
   component: GroupedListItem,
   parameters: { screenPreview: true },
 } satisfies Meta<typeof GroupedListItem>;

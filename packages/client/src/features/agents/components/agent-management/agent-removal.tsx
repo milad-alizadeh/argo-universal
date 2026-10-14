@@ -64,8 +64,8 @@ function RemovalConfirmation(
 const removalActions = (
   props: AgentRemovalProps,
 ): React.ComponentProps<typeof Alert>['actions'] => [
-  { label: 'Cancel', role: 'cancel' },
-  { label: 'Remove', role: 'destructive', onPress: props.onRemove },
+  { label: 'Cancel', cancel: true },
+  { label: 'Remove', tone: 'danger', onPress: props.onRemove },
 ];
 
 type RemovalTriggerProps = AgentRemovalProps & { onOpen: () => void };
@@ -78,7 +78,7 @@ const removalButtonPresentation = (
   size: 'sm',
   fullWidth: 'narrow',
   variant: 'outline',
-  role: 'destructive',
+  tone: 'danger',
   onPress: props.onOpen,
   disabled: !props.onRemove || props.busy,
   loading: props.busy,

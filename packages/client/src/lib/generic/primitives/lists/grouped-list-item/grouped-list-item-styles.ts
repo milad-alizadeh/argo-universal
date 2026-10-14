@@ -63,14 +63,14 @@ function controlClasses(
 
 // A large row pads 16 all round at every width.
 const sizeClasses = ({ size }: GroupedListItemProps): string | undefined =>
-  size === 'large' ? 'py-4 wide:py-4' : undefined;
+  size === 'lg' ? 'py-4 wide:py-4' : undefined;
 
 // A wide window draws its rows' parts 8 apart, but a sidebar's and a large row's keep 12.
 export const contentGap = (
   sidebar: boolean,
   size: GroupedListItemProps['size'],
 ): string | undefined =>
-  sidebar || size === 'large' ? undefined : 'wide:gap-2';
+  sidebar || size === 'lg' ? undefined : 'wide:gap-2';
 
 // A loading row pads to Paper's 56, its spinner in a 20 slot; a pressable row shades on hover.
 function stateClasses(props: GroupedListItemProps, sidebar: boolean): string {
@@ -163,7 +163,7 @@ export function titleClasses(
 }
 
 const toneText = {
-  destructive: 'text-destructive',
+  danger: 'text-destructive',
   accent: 'text-tint',
   muted: 'text-muted-foreground',
 };

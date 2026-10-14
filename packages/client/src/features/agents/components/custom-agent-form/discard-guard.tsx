@@ -6,8 +6,8 @@ import { Alert, type AlertAction } from '#primitives/overlays/alert';
 import type { CustomAgentFormApi } from '../../hooks/use-custom-agent-form';
 
 const answers = (discard: () => void): AlertAction[] => [
-  { label: 'Keep editing', role: 'cancel' },
-  { label: 'Discard', role: 'destructive', onPress: discard },
+  { label: 'Keep editing', cancel: true },
+  { label: 'Discard', tone: 'danger', onPress: discard },
 ];
 
 // Leaving a form with unsaved changes asks first; checking the program is not a loss, as it ends in leaving.

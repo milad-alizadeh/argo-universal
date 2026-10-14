@@ -16,5 +16,5 @@ export function useToneColor(
 ): string | undefined {
   const { destructive, tint, mutedForeground } = useNativeTheme().colors;
 
-  return tone && { destructive, accent: tint, muted: mutedForeground }[tone];
+  return tone && { danger: destructive, accent: tint, muted: mutedForeground }[tone];
 }

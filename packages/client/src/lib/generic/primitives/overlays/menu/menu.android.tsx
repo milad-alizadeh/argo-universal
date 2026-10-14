@@ -85,7 +85,7 @@ function MenuItems<Value extends string>(
 ): React.JSX.Element {
   return (
     <DropdownMenu.Items>
-      {props.choices.map((choice) => (
+      {props.options.map((choice) => (
         <MenuChoice
           key={choice.value}
           {...choice}

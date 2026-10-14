@@ -19,7 +19,7 @@ import { nativeButtonVariant } from './button-state';
 
 type ModifierProps = Pick<
   ButtonDataProps,
-  | 'role'
+  | 'tone'
   | 'variant'
   | 'size'
   | 'disabled'
@@ -58,7 +58,7 @@ export function nativeModifiers(
 }
 
 function buttonStyleModifiers(
-  props: Pick<ButtonDataProps, 'role' | 'variant' | 'size'>,
+  props: Pick<ButtonDataProps, 'tone' | 'variant' | 'size'>,
 ): ModifierConfig[] {
   return [
     buttonStyle(buttonStyles[nativeButtonVariant(props)]),
@@ -91,7 +91,7 @@ function accessibilityState(
 }
 
 function buttonTint(
-  props: Pick<ButtonDataProps, 'role' | 'variant'>,
+  props: Pick<ButtonDataProps, 'tone' | 'variant'>,
   theme: ModifierTheme,
 ): ModifierConfig[] {
   const fill = buttonFill(props, theme);
@@ -100,7 +100,7 @@ function buttonTint(
 }
 
 function buttonFill(
-  props: Pick<ButtonDataProps, 'role' | 'variant'>,
+  props: Pick<ButtonDataProps, 'tone' | 'variant'>,
   theme: ModifierTheme,
 ): ColorValue | undefined {
   const variant = nativeButtonVariant(props);
@@ -109,14 +109,14 @@ function buttonFill(
 
   if (variant === 'outline') return theme.mutedFill;
 
-  return filledTint(props.role, theme);
+  return filledTint(props.tone, theme);
 }
 
 function filledTint(
-  role: ButtonDataProps['role'],
+  tone: ButtonDataProps['tone'],
   theme: ModifierTheme,
 ): ColorValue | undefined {
-  return role === 'destructive'
+  return tone === 'danger'
     ? PlatformColor('systemRed')
     : theme.colors.containerColor;
 }

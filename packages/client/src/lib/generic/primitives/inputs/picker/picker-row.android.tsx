@@ -43,7 +43,7 @@ function PickerRowContent<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
   const inGroupedListItem = useInGroupedListItem();
-  const row = inGroupedListItem || props.appearance === 'row';
+  const row = inGroupedListItem || props.variant === 'row';
 
   return createElement(
     Row,

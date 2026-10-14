@@ -23,10 +23,10 @@ function choiceRowProps(
     ...choiceContent(props),
     leading: props.leading,
     selected: props.selected,
-    role: 'button',
+    accessibilityRole: 'button',
     disclosure: false,
     onPress: props.onPress,
-    tone: props.dangerous ? 'destructive' : undefined,
+    tone: props.dangerous ? 'danger' : undefined,
     accessory: props.selected ? <SelectedCheck /> : undefined,
   };
 }
@@ -35,7 +35,7 @@ function choiceContent(
   props: ChoiceProps,
 ): React.ComponentProps<typeof GroupedListItem> {
   return {
-    title: props.label,
+    label: props.label,
     accessibilityLabel: props.accessibilityLabel ?? props.label,
     subtitle: props.description ? { text: props.description } : undefined,
   };

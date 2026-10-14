@@ -6,7 +6,7 @@ export function LoginButton(props: ButtonDataProps): React.JSX.Element {
   return (
     <Button
       {...props}
-      appearance="content"
+      custom
       className={
         props.variant === 'secondary'
           ? 'rounded-full border-0 bg-muted shadow-none'

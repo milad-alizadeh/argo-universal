@@ -35,7 +35,7 @@ export function AddAgentButton(props: {
   return (
     <IconButton
       variant="ghost"
-      size="sm"
+      size="xs"
       iconRole="action"
       iconClassName="text-muted-foreground"
       icon="add"

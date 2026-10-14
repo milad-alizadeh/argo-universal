@@ -46,7 +46,7 @@ function AddAgent(): React.JSX.Element {
   return (
     <IconButton
       icon="add"
-      size="sm"
+      size="xs"
       variant="ghost"
       iconClassName="text-muted-foreground"
       accessibilityLabel="Add custom Agent"

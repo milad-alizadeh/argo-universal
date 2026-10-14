@@ -37,10 +37,10 @@ export function NewSessionsSection({
 function PickerRow(props: PickerRowProps): React.JSX.Element {
   return (
     <GroupedListItem
-      title={props.label}
+      label={props.label}
       accessory={
         <Picker
-          appearance="row"
+          variant="row"
           {...props}
           onValueChange={ignoreChoice}
           disabled
@@ -73,7 +73,7 @@ function ignoreChoice(): void {}
 function ArchiveRow(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Delete the worktree on archive"
+      label="Delete the worktree on archive"
       accessory={<ArchiveSwitch />}
     />
   );

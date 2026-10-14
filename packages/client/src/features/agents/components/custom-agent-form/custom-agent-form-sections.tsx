@@ -55,7 +55,7 @@ function NameField({ form, disabled }: FormPartProps): React.JSX.Element {
     <form.Field name="name">
       {(field) => (
         <TextInput
-          appearance="row"
+          variant="row"
           label="Name"
           placeholder="Example Agent"
           {...touchedInput(field)}
@@ -71,7 +71,7 @@ function ExecutableField({ form, disabled }: FormPartProps): React.JSX.Element {
     <form.Field name="executable">
       {(field) => (
         <TextInput
-          appearance="row"
+          variant="row"
           {...executableInput}
           {...touchedInput(field)}
           disabled={disabled}
@@ -83,7 +83,7 @@ function ExecutableField({ form, disabled }: FormPartProps): React.JSX.Element {
 
 // The last row of a list section, which adds an entry in its editor.
 export function AddEntryRow(props: {
-  title: string;
+  label: string;
   disabled: boolean;
   onPress: () => void;
 }): React.JSX.Element {

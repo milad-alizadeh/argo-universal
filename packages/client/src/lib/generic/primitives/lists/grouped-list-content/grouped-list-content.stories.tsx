@@ -21,7 +21,7 @@ export const Variations: Story = {
   render: () => (
     <GroupedList>
       <GroupedListSection title="Program">
-        <GroupedListItem title="Name" value="Example ACP" />
+        <GroupedListItem label="Name" value="Example ACP" />
       </GroupedListSection>
       <GroupedListContent>
         <Button fullWidth="narrow" label="Save" onPress={action('save')} />

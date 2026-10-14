@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import {
   SplitButton,
-  type SplitButtonChoice,
+  type SplitButtonOption,
   type SplitMenuProps,
 } from '#primitives/buttons/split-button';
 import { RequestAction } from '../request-card/request-card';
@@ -46,7 +46,7 @@ const layouts = {
 const asChoice = ({
   optionId,
   name,
-}: PermissionOption): SplitButtonChoice<string> => ({
+}: PermissionOption): SplitButtonOption<string> => ({
   value: optionId,
   label: name,
 });
@@ -97,7 +97,7 @@ function splitChoices({
   ...props
 }: LedGroupProps): SplitMenuProps<string> {
   return {
-    choices: options.map(asChoice),
+    options: options.map(asChoice),
     value: lead.optionId,
     onValueChange: (optionId) => pickById(options, optionId, props.onPick),
     menuLabel: props.menuLabel,

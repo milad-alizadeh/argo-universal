@@ -43,7 +43,7 @@ function transitions(width: number): StoryObj<typeof meta> {
         <Button
           onPress={() => close(afterClose)}
           label={'Choose setting'}
-          appearance="content"
+          custom
         />
       ),
     },

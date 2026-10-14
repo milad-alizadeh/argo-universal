@@ -24,7 +24,7 @@ export function RequestAction({
     <Button
       {...props}
       {...requestLayout(primary, wide)}
-      appearance="content"
+      custom
       label={children}
     />
   );

@@ -47,7 +47,7 @@ function EnvironmentSection(props: FieldProps): React.JSX.Element {
     >
       <VariableRows {...props} />
       <AddEntryRow
-        title="Add environment variable"
+        label="Add environment variable"
         disabled={props.disabled}
         onPress={() => props.onEdit(newVariable)}
       />

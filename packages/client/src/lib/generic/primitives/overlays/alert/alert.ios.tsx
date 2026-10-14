@@ -123,8 +123,11 @@ function AlertActions(props: AlertActionsProps): React.JSX.Element {
 function actionRole(
   action: AlertProps['actions'][number],
   explicitCancel: boolean | undefined,
-): AlertProps['actions'][number]['role'] {
-  return explicitCancel && action.role === 'cancel' ? undefined : action.role;
+): 'cancel' | 'destructive' | undefined {
+  if (action.cancel) return explicitCancel ? undefined : 'cancel';
+
+  // SwiftUI names the danger tone's role `destructive`.
+  return action.tone === 'danger' ? 'destructive' : undefined;
 }
 
 Alert satisfies React.ComponentType<AlertProps>;

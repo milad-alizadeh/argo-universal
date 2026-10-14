@@ -28,7 +28,7 @@ export function GroupedListSection(
       <SectionCaption text={props.title} heading />
       <Column {...rows}>{props.children}</Column>
       {props.textFields ? null : (
-        <SectionCaption text={props.footer} tone={props.footerTone} />
+        <SectionCaption text={props.footer} tone={props.tone} />
       )}
     </Column>
   );
@@ -68,7 +68,7 @@ function groupedLayout(sidebar: boolean): RowsLayout {
 type CaptionProps = {
   text?: string;
   heading?: boolean;
-  tone?: GroupedListSectionProps['footerTone'];
+  tone?: GroupedListSectionProps['tone'];
 };
 
 function SectionCaption(props: CaptionProps): React.JSX.Element | null {
@@ -100,11 +100,11 @@ function useCaptionStyle(
 
 // A failure, such as a field's error, reads in the destructive colour.
 function useCaptionColor(
-  tone: GroupedListSectionProps['footerTone'],
+  tone: GroupedListSectionProps['tone'],
 ): string | undefined {
   const { mutedForeground, destructive } = useNativeTheme().colors;
 
-  return tone === 'destructive' ? destructive : mutedForeground;
+  return tone === 'danger' ? destructive : mutedForeground;
 }
 
 GroupedListSection satisfies React.ComponentType<GroupedListSectionProps>;

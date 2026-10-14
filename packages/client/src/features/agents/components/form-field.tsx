@@ -25,10 +25,10 @@ export type FormInputProps = {
 export const sectionFooter = (
   error: string | undefined,
   hint?: string,
-): Pick<GroupedListSectionProps, 'footer' | 'footerTone'> =>
+): Pick<GroupedListSectionProps, 'footer' | 'tone'> =>
   error === undefined
     ? { footer: hint }
-    : { footer: error, footerTone: 'destructive' };
+    : { footer: error, tone: 'danger' };
 
 const hasErrors = (errors: FieldErrors = []): boolean => errors.length > 0;
 
@@ -37,7 +37,7 @@ const inputClass = ({ mono, className }: FormInputProps): string =>
 
 // The bare box; names, paths and values are typed exactly as the Agent reads them.
 const verbatimEntry = {
-  appearance: 'bare',
+  variant: 'bare',
   autoCapitalize: 'none',
   autoCorrect: false,
 } as const;

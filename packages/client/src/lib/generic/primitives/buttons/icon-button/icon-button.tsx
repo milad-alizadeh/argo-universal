@@ -8,12 +8,15 @@ import { iconButtonClasses } from './icon-button-styles';
 
 type IconAppearance = Pick<
   IconButtonProps,
-  'icon' | 'iconRole' | 'iconClassName' | 'filled' | 'iconWeight'
+  'icon' | 'iconRole' | 'iconClassName' | 'iconFilled' | 'iconWeight'
 >;
 
 type IconControlProps = Omit<IconButtonProps, keyof IconAppearance | 'badge'>;
 
-type IconPresentation = Pick<IconControlProps, 'size' | 'variant' | 'loading'>;
+type IconPresentation = Pick<
+  IconControlProps,
+  'size' | 'variant' | 'loading' | 'selected'
+>;
 
 type PressableInput = ComponentProps<typeof Pressable>;
 
@@ -37,11 +40,11 @@ function iconDrawing({
   icon,
   iconRole,
   iconClassName,
-  filled,
+  iconFilled,
   iconWeight,
   ...props
 }: Omit<IconButtonProps, 'badge'>): IconDrawing {
-  const appearance = { icon, iconRole, iconClassName, filled, iconWeight };
+  const appearance = { icon, iconRole, iconClassName, iconFilled, iconWeight };
 
   return createIconDrawing(props, appearance);
 }
@@ -63,7 +66,7 @@ function iconAdornment(
   return {
     icon: appearance.icon,
     role: appearance.iconRole ?? 'control',
-    filled: appearance.filled,
+    filled: appearance.iconFilled,
     weight: appearance.iconWeight,
     loading: props.loading,
     textClass: iconTextClass({ ...props, ...appearance }),
@@ -74,9 +77,18 @@ function iconPressableProps({
   size,
   variant,
   loading,
+  selected,
   ...pressable
 }: IconControlProps): PressableInput {
-  return createIconPressable(pressable, { size, variant, loading });
+  return createIconPressable(
+    { ...pressable, ...pressedAttribute(selected) },
+    { size, variant, loading, selected },
+  );
+}
+
+// The web reads a toggle's state from aria-pressed, which React Native's own types leave out.
+function pressedAttribute(selected?: boolean): { 'aria-pressed'?: boolean } {
+  return selected === undefined ? {} : { 'aria-pressed': selected };
 }
 
 function createIconPressable(
@@ -95,12 +107,12 @@ function createIconPressable(
 function iconContainerClass(
   props: Pick<
     IconButtonProps,
-    'size' | 'variant' | 'disabled' | 'className' | 'aria-pressed'
+    'size' | 'variant' | 'disabled' | 'className' | 'selected'
   >,
 ): string {
   const { size, variant, className } = props;
   const disabled = !!props.disabled;
-  const pressed = props['aria-pressed'] === true;
+  const pressed = props.selected === true;
 
   return cn(iconButtonClasses({ size, variant, disabled, pressed }), className);
 }

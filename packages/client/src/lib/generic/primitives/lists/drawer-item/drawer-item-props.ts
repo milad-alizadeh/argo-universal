@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import type { IconName } from '../../../symbols/icon-names';
 
 export interface DrawerItemProps {
-  title: string;
+  label: string;
   icon: IconName;
   selected: boolean;
   // A count that needs attention, drawn by the caller, and what a screen reader says for it.

@@ -102,7 +102,7 @@ function ProfileField({
   return (
     <View className="grid gap-3">
       <Text>{label}</Text>
-      <TextInput appearance="bare" {...inputProps} />
+      <TextInput variant="bare" {...inputProps} />
     </View>
   );
 }

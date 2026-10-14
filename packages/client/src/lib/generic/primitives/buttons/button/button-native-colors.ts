@@ -40,7 +40,7 @@ export interface ButtonTheme {
   };
 }
 
-type ThemeProps = Pick<ButtonDataProps, 'variant' | 'role'>;
+type ThemeProps = Pick<ButtonDataProps, 'variant' | 'tone'>;
 
 export function useNativeButtonTheme(props: ThemeProps): ButtonTheme {
   const { colors } = useNativeTheme();
@@ -70,13 +70,13 @@ function useNativeButtonColors(classes: {
   };
 }
 
-function nativeColorClasses(props: Pick<ButtonDataProps, 'variant' | 'role'>): {
+function nativeColorClasses(props: Pick<ButtonDataProps, 'variant' | 'tone'>): {
   container: string;
   content: string;
 } {
   const variant = nativeButtonVariant(props);
 
-  if (props.role === 'destructive') return destructiveColors[variant];
+  if (props.tone === 'danger') return destructiveColors[variant];
 
   return buttonColorClasses[variant];
 }

@@ -11,7 +11,7 @@ const meta = {
   title: 'Tests/GroupedListItem',
   component: GroupedListItem,
   args: {
-    title: 'Projects',
+    label: 'Projects',
     value: '1',
     needsAttention: true,
     onPress,
@@ -21,16 +21,16 @@ const meta = {
     <GroupedList>
       <GroupedListSection title="Server">
         <GroupedListItem {...args} />
-        <GroupedListItem title="Version" value="1.0" />
+        <GroupedListItem label="Version" value="1.0" />
         <GroupedListItem
-          title="Agents"
+          label="Agents"
           value="2"
           disabled
           onPress={onPress}
           href="/settings/agents"
         />
         <GroupedListItem
-          title="Connection"
+          label="Connection"
           value="Direct"
           onPress={onPress}
           href="/settings/connection"
@@ -77,14 +77,14 @@ export const DescriptionAndStatus: Story = {
     <GroupedList>
       <GroupedListSection>
         <GroupedListItem
-          title="Codex"
+          label="Codex"
           subtitle={{ text: 'Coding assistant' }}
           value="Update available"
           status={{ tone: 'warning', label: 'Update available' }}
           onPress={onPress}
         />
         <GroupedListItem
-          title="goose"
+          label="goose"
           value="Not installed"
           onPress={onPress}
         />
@@ -108,13 +108,13 @@ export const SidebarSelection: Story = {
     <GroupedList variant="sidebar">
       <GroupedListSection>
         <GroupedListItem
-          title="Projects"
+          label="Projects"
           value="1"
           onPress={onPress}
           href="/settings/projects"
         />
         <GroupedListItem
-          title="Connection"
+          label="Connection"
           value="This Mac"
           selected
           onPress={onPress}

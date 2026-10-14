@@ -122,9 +122,9 @@ function RemoveEntry({
       fullWidth="narrow"
       onPress={onRemove}
       label={removeLabel}
-      {...destructiveAction}
+      {...dangerAction}
     />
   );
 }
 
-const destructiveAction = { role: 'destructive' } as const;
+const dangerAction = { tone: 'danger' } as const;

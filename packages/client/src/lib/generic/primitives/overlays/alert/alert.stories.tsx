@@ -16,8 +16,8 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       title: 'Remove Example ACP?',
       message: 'Sessions that use it keep their history.',
       actions: [
-        { label: 'Remove Agent', role: 'destructive' },
-        { label: 'Cancel', role: 'cancel' },
+        { label: 'Remove Agent', tone: 'danger' },
+        { label: 'Cancel', cancel: true },
       ],
     },
   },
@@ -28,7 +28,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       title: 'Discard your changes?',
       message: 'The Agent keeps its saved launch settings.',
       actions: [
-        { label: 'Keep editing', role: 'cancel' },
+        { label: 'Keep editing', cancel: true },
         { label: 'Discard' },
       ],
     },

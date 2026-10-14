@@ -40,7 +40,7 @@ export function createNativeCheckbox(
 function nativeContainerClass(props: CheckboxProps): string {
   return cn(
     'gap-2',
-    props.appearance === 'option' && optionContainerClass(props),
+    props.variant === 'option' && optionContainerClass(props),
   );
 }
 

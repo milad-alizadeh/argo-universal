@@ -60,7 +60,7 @@ function AlertButtons(
 // The web reads left to right, so Cancel comes first and the answer sits at the trailing edge.
 function cancelFirst(actions: readonly AlertAction[]): AlertAction[] {
   return [...actions].sort(
-    (a, b) => Number(b.role === 'cancel') - Number(a.role === 'cancel'),
+    (a, b) => Number(!!b.cancel) - Number(!!a.cancel),
   );
 }
 
@@ -72,8 +72,8 @@ function AlertButton(
   return (
     <Button
       label={action.label}
-      variant={action.role === 'cancel' ? 'outline' : 'default'}
-      role={action.role === 'destructive' ? 'destructive' : undefined}
+      variant={action.cancel ? 'outline' : 'default'}
+      tone={action.tone}
       onPress={alertActionPress(action, props.onOpenChange)}
     />
   );

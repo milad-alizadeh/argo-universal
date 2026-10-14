@@ -22,7 +22,7 @@ interface MenuBaseProps {
 // A single-choice menu: the chosen value carries a check.
 export interface ChoiceMenuProps<Value extends string> extends MenuBaseProps {
   value: Value;
-  choices: readonly { value: Value; label: string }[];
+  options: readonly { value: Value; label: string }[];
   onValueChange: (value: Value) => void;
   actions?: never;
 }
@@ -31,7 +31,7 @@ export interface ChoiceMenuProps<Value extends string> extends MenuBaseProps {
 export interface ActionMenuProps extends MenuBaseProps {
   actions: readonly MenuAction[];
   value?: never;
-  choices?: never;
+  options?: never;
   onValueChange?: never;
 }
 
@@ -55,7 +55,7 @@ export function menuValueLabel<Value extends string>(
 function chosenLabel<Value extends string>(
   props: ChoiceMenuProps<Value>,
 ): string {
-  const chosen = props.choices.find((choice) => choice.value === props.value);
+  const chosen = props.options.find((choice) => choice.value === props.value);
 
   return chosen?.label ?? props.value;
 }

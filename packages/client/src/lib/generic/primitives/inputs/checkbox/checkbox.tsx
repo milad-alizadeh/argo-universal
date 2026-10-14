@@ -75,7 +75,7 @@ export function CheckboxIndicator(
       {props.value && (
         <Icon
           name="check"
-          role={props.appearance === 'option' ? 'secondary' : 'mark'}
+          role={props.variant === 'option' ? 'secondary' : 'mark'}
           className="text-primary-foreground"
         />
       )}
@@ -95,7 +95,7 @@ function markClassName(props: CheckboxIndicatorProps): string {
 function controlClass(props: CheckboxProps): string {
   return cn(
     'flex min-h-13 w-full cursor-default justify-start items-center rounded-md border-0 bg-muted p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring',
-    props.appearance === 'option' && optionClass(props),
+    props.variant === 'option' && optionClass(props),
     props.disabled && 'opacity-50',
   );
 }
@@ -114,7 +114,7 @@ function SelectedMark(props: CheckboxProps): React.JSX.Element | null {
 }
 
 function optionMarkClass(props: CheckboxIndicatorProps): string | undefined {
-  return props.appearance === 'option'
+  return props.variant === 'option'
     ? 'size-4 rounded-xs border border-ring'
     : undefined;
 }

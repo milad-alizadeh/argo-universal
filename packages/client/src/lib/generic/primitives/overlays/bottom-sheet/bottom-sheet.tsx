@@ -38,7 +38,7 @@ function surfaceProps(
     expandable: props.expandable,
     initialSize: props.initialSize,
     footer: props.footer,
-    size: props.size,
+    variant: props.variant,
   };
 }
 

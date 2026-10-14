@@ -40,7 +40,7 @@ function secondaryButtons(labels: string[]): React.JSX.Element[] {
       key={label}
       variant="secondary"
       label={label}
-      appearance="content"
+      custom
     />
   ));
 }

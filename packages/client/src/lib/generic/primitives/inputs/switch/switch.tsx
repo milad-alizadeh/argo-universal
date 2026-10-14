@@ -4,7 +4,7 @@ import { cn } from '#lib/generic/utils';
 import type { SwitchProps } from './switch-props';
 
 function Switch(props: SwitchProps): React.JSX.Element {
-  const size = props.size ?? 'default';
+  const size = props.size ?? 'md';
 
   return (
     <SwitchPrimitives.Root
@@ -23,7 +23,7 @@ function Switch(props: SwitchProps): React.JSX.Element {
 function switchClass(props: SwitchProps): string {
   return cn(
     'flex shrink-0 flex-row items-center rounded-full border border-transparent shadow-sm shadow-black/5',
-    props.size === 'small'
+    props.size === 'sm'
       ? 'h-4 w-6.5 p-0.5 border-0'
       : 'h-5.5 w-9 p-0.5 border-0',
     'web:focus-visible:border-ring web:focus-visible:ring-ring/50 peer web:inline-flex web:outline-none web:transition-all web:focus-visible:ring-[3px] web:disabled:cursor-not-allowed',
@@ -43,7 +43,7 @@ function switchStateClass(
 function thumbClass(props: Pick<SwitchProps, 'value' | 'size'>): string {
   return cn(
     'bg-background rounded-full transition-transform',
-    props.size === 'small' ? 'size-3' : 'size-4.5 shadow-[0_1px_2px_#00000026]',
+    props.size === 'sm' ? 'size-3' : 'size-4.5 shadow-[0_1px_2px_#00000026]',
     'web:pointer-events-none web:block web:ring-0',
     thumbPosition(props),
   );
@@ -54,7 +54,7 @@ function thumbPosition(props: Pick<SwitchProps, 'value' | 'size'>): string {
 
   return cn(
     'dark:bg-primary-foreground',
-    props.size === 'small' ? 'translate-x-2.5' : 'translate-x-3.5',
+    props.size === 'sm' ? 'translate-x-2.5' : 'translate-x-3.5',
   );
 }
 

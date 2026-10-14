@@ -64,7 +64,7 @@ function InstallConfirmation(props: ControlProps): React.JSX.Element {
       title={`${installation.action} ${agent.name}?`}
       message={confirmationMessage(props)}
       actions={[
-        { label: 'Cancel', role: 'cancel' },
+        { label: 'Cancel', cancel: true },
         { label: installation.action, onPress: installation.onInstall },
       ]}
     />

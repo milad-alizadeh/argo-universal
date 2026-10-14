@@ -14,7 +14,7 @@ export function GroupedListSection(
   props: GroupedListSectionProps,
 ): React.JSX.Element {
   const footerId = useId();
-  const footer = { id: footerId, text: props.footer, tone: props.footerTone };
+  const footer = { id: footerId, text: props.footer, tone: props.tone };
 
   return (
     <View className="gap-2 wide:gap-3">
@@ -51,13 +51,13 @@ const footerOf = (
   id: string,
 ): SectionFooter | undefined =>
   props.footer
-    ? { id, failure: props.footerTone === 'destructive' }
+    ? { id, failure: props.tone === 'danger' }
     : undefined;
 
 type FooterProps = {
   id: string;
   text?: string;
-  tone?: GroupedListSectionProps['footerTone'];
+  tone?: GroupedListSectionProps['tone'];
 };
 
 function SectionFooter(props: FooterProps): React.JSX.Element | null {
@@ -66,7 +66,7 @@ function SectionFooter(props: FooterProps): React.JSX.Element | null {
 
 // A failure, such as a field's error, reads in the destructive colour and is announced.
 function FooterText(props: FooterProps & { text: string }): React.JSX.Element {
-  const failure = props.tone === 'destructive';
+  const failure = props.tone === 'danger';
 
   return (
     <Text

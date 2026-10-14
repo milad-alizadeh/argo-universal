@@ -39,7 +39,7 @@ function LeadingSlot({
 }: Pick<GroupedListItemProps, 'size'> & {
   children: React.ReactNode;
 }): React.JSX.Element {
-  if (size === 'large')
+  if (size === 'lg')
     return (
       <View className="size-10 shrink-0 items-center justify-center rounded-xl bg-background">
         {children}

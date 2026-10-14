@@ -81,7 +81,7 @@ function projectListProps(props: ProjectPickerProps): ProjectListProps {
   };
 }
 
-const noMatch = <GroupedListItem title="No Project matches." tone="muted" />;
+const noMatch = <GroupedListItem label="No Project matches." tone="muted" />;
 
 type ProjectChoiceProps = ProjectPickerProps & { project: ProjectInfo };
 
@@ -96,7 +96,7 @@ function projectChoiceProps(
   const selected = project.id === projectId;
 
   return {
-    title: project.name,
+    label: project.name,
     accessibilityLabel: project.name,
     subtitle: { text: project.path, code: true },
     ...projectChoiceAppearance,
@@ -145,6 +145,6 @@ const projectListAppearance = {
 
 const projectChoiceAppearance = {
   icon: 'folder',
-  role: 'button',
+  accessibilityRole: 'button',
   disclosure: false,
 } as const;

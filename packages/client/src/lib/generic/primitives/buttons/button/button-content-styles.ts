@@ -78,7 +78,7 @@ const textClasses = cva(
 
 type ButtonClassProps = Pick<
   ButtonProps,
-  'variant' | 'size' | 'role' | 'disabled' | 'fullWidth' | 'className'
+  'variant' | 'size' | 'tone' | 'disabled' | 'fullWidth' | 'className'
 >;
 
 export function contentButtonClass(props: ButtonClassProps): string {
@@ -87,7 +87,7 @@ export function contentButtonClass(props: ButtonClassProps): string {
   return cn(
     buttonClasses({ ...variants, fullWidth: fullWidth === true }),
     nativeClasses({ variant: props.variant, disabled: props.disabled }),
-    destructiveClasses({ role: props.role, variant: props.variant }),
+    destructiveClasses({ tone: props.tone, variant: props.variant }),
     className,
   );
 }
@@ -102,22 +102,22 @@ const destructiveText =
 const destructiveClasses = cva('', {
   variants: {
     variant: { default: '', outline: '', secondary: '', ghost: '', link: '' },
-    role: { destructive: '' },
+    tone: { danger: '' },
   },
   compoundVariants: [
     {
-      role: 'destructive',
+      tone: 'danger',
       variant: 'default',
       className:
         'bg-destructive ios:bg-destructive active:bg-destructive/90 web:hover:bg-destructive/90',
     },
     {
-      role: 'destructive',
+      tone: 'danger',
       variant: ['outline', 'secondary'],
       className: destructiveOutline,
     },
     {
-      role: 'destructive',
+      tone: 'danger',
       variant: ['ghost', 'link'],
       className: destructiveText,
     },
@@ -126,9 +126,9 @@ const destructiveClasses = cva('', {
 });
 
 export function contentTextClass(
-  props: Pick<ButtonProps, 'role' | 'variant'>,
+  props: Pick<ButtonProps, 'tone' | 'variant'>,
 ): string {
-  const destructive = props.role === 'destructive';
+  const destructive = props.tone === 'danger';
 
   return cn(
     textClasses({ variant: props.variant, destructive }),

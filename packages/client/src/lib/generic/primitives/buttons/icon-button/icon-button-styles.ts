@@ -18,13 +18,13 @@ export const iconButtonClasses = cva(
       // A toggle that is on, such as Bold in the format bar.
       pressed: { true: 'bg-muted' },
       size: {
-        sm: 'size-11 sm:size-7',
-        md: 'size-11 sm:size-8',
-        lg: 'size-11 sm:size-10',
-        xl: 'size-11 sm:size-11',
-        '2xl': 'size-12 sm:size-12',
+        xs: 'size-11 sm:size-7',
+        sm: 'size-11 sm:size-8',
+        md: 'size-11 sm:size-10',
+        lg: 'size-11 sm:size-11',
+        xl: 'size-12 sm:size-12',
       },
     },
-    defaultVariants: { size: 'md', variant: 'default' },
+    defaultVariants: { size: 'sm', variant: 'default' },
   },
 );

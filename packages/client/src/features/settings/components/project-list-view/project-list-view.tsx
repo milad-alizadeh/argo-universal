@@ -58,7 +58,7 @@ function AddProject(): React.JSX.Element {
   return (
     <IconButton
       variant="ghost"
-      size="sm"
+      size="xs"
       icon="add"
       iconRole="action"
       iconClassName="text-muted-foreground"
@@ -82,7 +82,7 @@ function ProjectsBody(props: SearchedProps): React.JSX.Element {
     return (
       <GroupedList search={listSearch(props)}>
         <GroupedListSection>
-          <GroupedListItem title="Loading Projects…" loading />
+          <GroupedListItem label="Loading Projects…" loading />
         </GroupedListSection>
       </GroupedList>
     );

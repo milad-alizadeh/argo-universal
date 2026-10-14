@@ -87,7 +87,7 @@ function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
 function agentModelButtonProps(
   props: TriggerProps,
   current?: SessionConfigSelectOption,
-): Extract<React.ComponentProps<typeof Button>, { appearance?: 'content' }> {
+): Extract<React.ComponentProps<typeof Button>, { custom: true }> {
   return {
     ...agentModelButtonAppearance,
     disabled: props.disabled,
@@ -100,7 +100,7 @@ function agentModelButtonProps(
 }
 
 const agentModelButtonAppearance = {
-  appearance: 'content',
+  custom: true,
   size: 'xs',
   variant: 'ghost',
 } as const;

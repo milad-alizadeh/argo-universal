@@ -72,7 +72,7 @@ function FilledIconButton(props: {
       aria-label={props.label}
       icon={props.icon}
       accessibilityLabel={props.label}
-      size="md"
+      size="sm"
       variant="filled"
     />
   );

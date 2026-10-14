@@ -22,7 +22,7 @@ const wideFilterTrigger = (
     iconRole="action"
     iconClassName={'text-muted-foreground'}
     accessibilityLabel="Filter Sessions"
-    size="md"
+    size="sm"
   />
 );
 
@@ -48,7 +48,7 @@ export function SessionsFilterMenu({
     <Menu
       accessibilityLabel="Filter Sessions"
       value={archived ? 'archived' : 'active'}
-      choices={sessionsFilterChoices}
+      options={sessionsFilterChoices}
       onValueChange={(value) => onArchivedChange(value === 'archived')}
       trigger={wide ? wideFilterTrigger : phoneFilterTrigger(archived)}
     />

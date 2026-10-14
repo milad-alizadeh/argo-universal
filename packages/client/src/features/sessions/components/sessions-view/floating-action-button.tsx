@@ -12,7 +12,7 @@ const floatingAppearance = {
   className: 'size-14 sm:size-14 rounded-full',
   iconRole: 'action',
   iconClassName: 'text-primary-foreground',
-  size: 'md',
+  size: 'sm',
   variant: 'filled',
 } as const;
 

@@ -11,14 +11,14 @@ import {
 
 // The Compose row's title in its tone's colour.
 export function RowTitle(
-  props: Pick<GroupedListItemProps, 'title' | 'tone' | 'code'>,
+  props: Pick<GroupedListItemProps, 'label' | 'tone' | 'code'>,
 ): React.JSX.Element {
   const style = useComposeTextStyle(titleRole(props.code));
   const { foreground } = useNativeTheme().colors;
 
   return (
     <Text color={useToneColor(props.tone) ?? foreground} style={style}>
-      {props.title}
+      {props.label}
     </Text>
   );
 }

@@ -20,8 +20,8 @@ function RemoveAgent(): React.JSX.Element {
         title="Remove Example ACP?"
         message="Sessions that use it keep their history."
         actions={[
-          { label: 'Remove', role: 'destructive', onPress: onRemove },
-          { label: 'Cancel', role: 'cancel' },
+          { label: 'Remove', tone: 'danger', onPress: onRemove },
+          { label: 'Cancel', cancel: true },
         ]}
       />
     </>

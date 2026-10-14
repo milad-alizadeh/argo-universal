@@ -22,7 +22,7 @@ function EnablementSection({ management }: EnabledProps): React.JSX.Element {
       footer="Disabled Agents cannot start new Sessions. Open Sessions keep working."
     >
       <GroupedListItem
-        title="Enabled"
+        label="Enabled"
         accessory={<EnablementSwitch management={management} />}
       />
     </GroupedListSection>
@@ -80,6 +80,6 @@ const failureActions = (
   management: AgentManagement,
   inUse: boolean,
 ): React.ComponentProps<typeof Alert>['actions'] => [
-  { label: 'Close', role: 'cancel' },
+  { label: 'Close', cancel: true },
   ...(inUse ? [] : [{ label: 'Try again', onPress: management.onRemove }]),
 ];

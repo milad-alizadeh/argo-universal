@@ -8,7 +8,7 @@ export type SheetResize = ((expanded: boolean) => void) | undefined;
 
 type SurfaceContentProps = Pick<
   SurfaceProps,
-  'size' | 'label' | 'footer' | 'children'
+  'variant' | 'label' | 'footer' | 'children'
 > & {
   expanded: boolean;
   resize: SheetResize;
@@ -16,7 +16,7 @@ type SurfaceContentProps = Pick<
 
 export function SurfaceContent(props: SurfaceContentProps): React.JSX.Element {
   return (
-    <SurfaceBody form={props.size === 'form'}>
+    <SurfaceBody form={props.variant === 'form'}>
       <SheetBody
         label={props.label}
         expanded={props.expanded}

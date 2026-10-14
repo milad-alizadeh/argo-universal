@@ -28,7 +28,7 @@ function mergeMethodActions(
 }
 
 const mergeAppearance = {
-  appearance: 'content',
+  custom: true,
   size: 'xs',
   icon: 'merged',
   label: 'Merge PR',

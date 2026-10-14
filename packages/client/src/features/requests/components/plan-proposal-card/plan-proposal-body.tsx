@@ -63,7 +63,7 @@ function ExpansionToggle({ interaction }: InteractionProps): ReactNode {
       onPress={() => interaction.setExpanded(!interaction.expanded)}
       icon={interaction.expanded ? 'collapse' : 'expand'}
       iconClassName="text-muted-foreground"
-      size="md"
+      size="sm"
     />
   );
 }

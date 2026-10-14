@@ -54,7 +54,7 @@ function AlertTitle(props: Pick<AlertProps, 'title'>): React.JSX.Element {
 }
 
 function AlertAnswers(props: AlertProps): React.JSX.Element {
-  const answers = props.actions.filter((action) => action.role !== 'cancel');
+  const answers = props.actions.filter((action) => !action.cancel);
 
   return (
     <AlertDialog.ConfirmButton>
@@ -82,7 +82,7 @@ function AlertMessage(props: {
 function AlertCancel(
   props: Pick<AlertProps, 'actions' | 'onOpenChange'>,
 ): React.JSX.Element | null {
-  const action = props.actions.find((candidate) => candidate.role === 'cancel');
+  const action = props.actions.find((candidate) => candidate.cancel);
 
   if (!action) return null;
 
@@ -99,7 +99,7 @@ function AlertButton(
   const { colors } = useNativeTheme();
 
   const color =
-    props.action.role === 'destructive' ? colors.destructive : colors.primary;
+    props.action.tone === 'danger' ? colors.destructive : colors.primary;
 
   return (
     <TextButton

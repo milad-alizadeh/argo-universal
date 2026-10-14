@@ -44,7 +44,7 @@ function NativeControl(
 
 type NativeControlProps = Pick<
   ButtonDataProps,
-  | 'role'
+  | 'tone'
   | 'variant'
   | 'size'
   | 'disabled'
@@ -59,7 +59,7 @@ function nativeControlProps(
   props: NativeControlProps,
 ): Omit<ComponentProps<typeof SwiftButton>, 'children'> {
   return {
-    role: props.role,
+    role: swiftRole(props.tone),
     onPress: readyPress(props),
     testID: props.testID,
     modifiers: nativeModifiers(props, props.theme),
@@ -68,7 +68,7 @@ function nativeControlProps(
 
 type ButtonLabelProps = Pick<
   ButtonDataProps,
-  'label' | 'icon' | 'loading' | 'fullWidth' | 'role' | 'variant'
+  'label' | 'icon' | 'loading' | 'fullWidth' | 'tone' | 'variant'
 > & { contentClass: string; contentColor?: string };
 
 function ButtonLabel(props: ButtonLabelProps): ReactElement {
@@ -86,9 +86,9 @@ function ButtonLabel(props: ButtonLabelProps): ReactElement {
 }
 
 function buttonLabelColor(
-  props: Pick<ButtonDataProps, 'role' | 'variant'> & { contentColor?: string },
+  props: Pick<ButtonDataProps, 'tone' | 'variant'> & { contentColor?: string },
 ): ModifierConfig[] {
-  if (props.role === 'destructive') return destructiveLabelColor(props);
+  if (props.tone === 'danger') return destructiveLabelColor(props);
 
   if (props.contentColor === undefined) return [];
 
@@ -96,7 +96,7 @@ function buttonLabelColor(
 }
 
 function destructiveLabelColor(
-  props: Pick<ButtonDataProps, 'role' | 'variant'>,
+  props: Pick<ButtonDataProps, 'tone' | 'variant'>,
 ): ModifierConfig[] {
   return nativeButtonVariant(props) === 'default'
     ? []
@@ -104,7 +104,7 @@ function destructiveLabelColor(
 }
 
 function ButtonIcon(
-  props: Pick<ButtonDataProps, 'loading' | 'icon' | 'role' | 'variant'> & {
+  props: Pick<ButtonDataProps, 'loading' | 'icon' | 'tone' | 'variant'> & {
     contentClass: string;
     contentColor?: string;
   },
@@ -117,10 +117,10 @@ function ButtonIcon(
 }
 
 function usesSystemRedIcon(
-  props: Pick<ButtonDataProps, 'role' | 'variant'>,
+  props: Pick<ButtonDataProps, 'tone' | 'variant'>,
 ): boolean {
   return (
-    props.role === 'destructive' && nativeButtonVariant(props) !== 'default'
+    props.tone === 'danger' && nativeButtonVariant(props) !== 'default'
   );
 }
 
@@ -161,3 +161,8 @@ const systemRedGlyph = {
 };
 
 export type { ButtonProps } from './button-props';
+
+// SwiftUI names the danger tone's role `destructive`.
+function swiftRole(tone: ButtonDataProps['tone']): 'destructive' | undefined {
+  return tone === 'danger' ? 'destructive' : undefined;
+}

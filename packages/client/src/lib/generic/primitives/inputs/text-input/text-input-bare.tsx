@@ -3,10 +3,10 @@ import { TextInput as NativeTextInput } from 'react-native';
 import { cn } from '../../../utils';
 import type { BareTextInputProps } from './text-input-props';
 
-type InputProps = Omit<BareTextInputProps, 'appearance'>;
+type InputProps = Omit<BareTextInputProps, 'variant'>;
 
-const variantClass = {
-  default:
+const toneClass = {
+  neutral:
     'dark:bg-input/30 border-input bg-background h-10 border px-3 py-1 shadow-sm shadow-black/5 sm:h-9',
   muted:
     'h-8 sm:h-8 rounded-lg border-0 bg-muted dark:bg-muted px-2.5 py-0 shadow-none web:focus-visible:ring-1 web:focus-visible:ring-ring',
@@ -26,27 +26,27 @@ const platformInputClass = cn(
 function inputClassName({
   className,
   editable,
-  variant = 'default',
+  tone = 'neutral',
 }: InputProps): string {
   return cn(
     'text-foreground flex w-full min-w-0 flex-row items-center rounded-md type-body',
     editable === false && disabledInputClass,
     platformInputClass,
-    variantClass[variant],
+    toneClass[tone],
     className,
   );
 }
 
 // The bare box: the web field, and the plain React Native field on phones.
 export function BareTextInput({
-  appearance: _appearance,
+  variant: _variant,
   className,
-  variant,
+  tone,
   placeholderClassName: _placeholderClassName,
   ...props
 }: BareTextInputProps): ReactElement {
   const { editable } = props;
-  const look = inputClassName({ className, variant, editable });
+  const look = inputClassName({ className, tone, editable });
 
   return <NativeTextInput className={look} {...props} />;
 }

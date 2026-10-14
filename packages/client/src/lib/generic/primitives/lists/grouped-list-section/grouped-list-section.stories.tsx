@@ -27,7 +27,7 @@ function VariationsExample(): React.JSX.Element {
     <GroupedList>
       <ServerSection />
       <GroupedListSection>
-        <GroupedListItem title="Name" value="Argo" />
+        <GroupedListItem label="Name" value="Argo" />
       </GroupedListSection>
     </GroupedList>
   );
@@ -48,7 +48,7 @@ function ServerSection(): React.JSX.Element {
 function ProjectsItem(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Projects"
+      label="Projects"
       icon="folder"
       value="1"
       disabled
@@ -60,7 +60,7 @@ function ProjectsItem(): React.JSX.Element {
 function ConnectionItem(): React.JSX.Element {
   return (
     <GroupedListItem
-      title="Connection"
+      label="Connection"
       icon="server"
       value="Disconnected"
       onPress={onPress}

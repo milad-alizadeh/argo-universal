@@ -27,7 +27,7 @@ function countedRow(
 
 export function projectsRow(props: SettingsListProps): SettingsRow {
   return countedRow(props, {
-    title: 'Projects',
+    label: 'Projects',
     icon: 'folder',
     destination: { to: 'settings-projects' },
     count: props.projectCount,
@@ -37,7 +37,7 @@ export function projectsRow(props: SettingsListProps): SettingsRow {
 
 export function agentsRow(props: SettingsListProps): SettingsRow {
   return countedRow(props, {
-    title: 'Agents',
+    label: 'Agents',
     icon: 'agent',
     destination: { to: 'settings-agents' },
     count: props.agentCount,
@@ -47,7 +47,7 @@ export function agentsRow(props: SettingsListProps): SettingsRow {
 
 export function accountsRow(props: SettingsListProps): SettingsRow {
   return {
-    title: 'Accounts',
+    label: 'Accounts',
     icon: 'key',
     destination: { to: 'settings-accounts' },
     value: serverValue(props, props.accountState),
@@ -59,7 +59,7 @@ const connectionStatuses: Record<
   NonNullable<SettingsListProps['status']>,
   GroupedListItemProps['status']
 > = {
-  disconnected: { tone: 'destructive', label: 'server unavailable' },
+  disconnected: { tone: 'danger', label: 'server unavailable' },
   loading: { tone: 'warning', label: 'connecting' },
   ready: { tone: 'success', label: 'available' },
 };
@@ -69,7 +69,7 @@ export function connectionRow(
   wide: boolean,
 ): SettingsRow {
   return {
-    title: 'Connection',
+    label: 'Connection',
     icon: 'server',
     destination: { to: 'settings-connection' },
     value: connectionValue(props, wide),
@@ -79,7 +79,7 @@ export function connectionRow(
 
 export function devicesRow(props: SettingsListProps): SettingsRow {
   return {
-    title: 'Devices',
+    label: 'Devices',
     icon: 'phone',
     destination: { to: 'settings-devices' },
     value: serverValue(props, props.deviceCount?.toString()),

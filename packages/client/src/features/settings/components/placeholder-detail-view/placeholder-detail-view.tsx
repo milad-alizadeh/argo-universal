@@ -42,7 +42,7 @@ function RowNote({ description }: NoteProps): React.JSX.Element {
   return (
     <GroupedList>
       <GroupedListSection>
-        <GroupedListItem title={description} />
+        <GroupedListItem label={description} />
       </GroupedListSection>
     </GroupedList>
   );

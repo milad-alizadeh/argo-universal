@@ -10,14 +10,14 @@ type ChevronProps = Pick<
 
 const chevronFits = {
   sm: {
-    size: 'md',
+    size: 'sm',
     iconRole: 'secondary',
     wide: 'h-8 w-7 px-0 sm:h-8',
     narrow: 'h-11 w-11 rounded-lg px-0 sm:h-11',
   },
   // The group dims as one, so the chevron does not dim a second time.
   xs: {
-    size: 'sm',
+    size: 'xs',
     iconRole: 'control',
     wide: 'sm:w-6 opacity-100',
     narrow: 'opacity-100',

@@ -37,7 +37,7 @@ function ShownMergeButton(
 
 const headerActionAppearance = {
   variant: 'ghost',
-  size: 'sm',
+  size: 'xs',
   iconRole: 'action',
   iconClassName: 'text-foreground',
 } as const;

@@ -38,10 +38,12 @@ function SectionButton({
   ...navigation
 }: DrawerNavigation & { section: Section }): React.JSX.Element {
   const count = sectionAttentionCount(section, navigation.attentionCount);
+  const { title, icon } = shellSections[section];
 
   return (
     <DrawerItem
-      {...shellSections[section]}
+      label={title}
+      icon={icon}
       selected={navigation.selectedSection === section}
       badge={drawerAttentionBadge(count)}
       onPress={() => selectSection(navigation, section)}

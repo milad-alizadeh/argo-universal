@@ -21,7 +21,7 @@ export function GroupedListSection(
     <Section
       modifiers={[headerProminence('increased')]}
       header={<SectionHeader title={props.title} />}
-      footer={<SectionFooter text={props.footer} tone={props.footerTone} />}
+      footer={<SectionFooter text={props.footer} tone={props.tone} />}
     >
       {props.children}
     </Section>
@@ -57,7 +57,7 @@ function SectionFooter({
   tone,
 }: {
   text?: string;
-  tone?: GroupedListSectionProps['footerTone'];
+  tone?: GroupedListSectionProps['tone'];
 }): React.JSX.Element | null {
   const modifiers = useFooterModifiers(tone);
 
@@ -66,12 +66,12 @@ function SectionFooter({
 
 // A failure, such as a field's error, reads in the destructive colour.
 function useFooterModifiers(
-  tone: GroupedListSectionProps['footerTone'],
+  tone: GroupedListSectionProps['tone'],
 ): ReturnType<typeof useSwiftUITextModifiers> {
   const secondaryModifiers = useSwiftUITextModifiers('secondary');
   const { destructive } = useNativeTheme().colors;
 
-  return tone === 'destructive' && destructive
+  return tone === 'danger' && destructive
     ? [...secondaryModifiers, foregroundStyle(destructive)]
     : secondaryModifiers;
 }

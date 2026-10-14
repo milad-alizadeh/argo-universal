@@ -25,7 +25,7 @@ export const catalogLoadingSection = (
     ...agentRows(props.installed, props.onOpenAgent),
     <GroupedListItem
       key="loading"
-      title="Loading the Agent catalog…"
+      label="Loading the Agent catalog…"
       loading
     />,
   ],
@@ -41,7 +41,7 @@ export function catalogEmptySection(props: {
   return {
     title: groupTitle(props.platform),
     footer: empty.footer,
-    rows: [<GroupedListItem key="empty" title={empty.title} />],
+    rows: [<GroupedListItem key="empty" label={empty.title} />],
   };
 }
 

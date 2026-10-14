@@ -44,7 +44,7 @@ function VersionRow(props: AgentDetailViewProps): React.JSX.Element | null {
 
   return (
     <GroupedListItem
-      title="Version"
+      label="Version"
       value={`v${props.agent.version}`}
       accessory={versionAccessory(props, wide)}
     />
@@ -57,7 +57,7 @@ function AboutRow(props: {
 }): React.JSX.Element | null {
   if (!props.value) return null;
 
-  return <GroupedListItem title={props.title} value={props.value} />;
+  return <GroupedListItem label={props.title} value={props.value} />;
 }
 
 const versionAccessory = (

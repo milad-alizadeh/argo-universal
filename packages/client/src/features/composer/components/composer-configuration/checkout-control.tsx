@@ -129,7 +129,7 @@ function checkoutTrigger(props: CheckoutProps): React.JSX.Element {
 
 type CheckoutButtonProps = Extract<
   React.ComponentProps<typeof Button>,
-  { appearance?: 'content' }
+  { custom: true }
 >;
 
 function checkoutButtonProps({
@@ -137,7 +137,7 @@ function checkoutButtonProps({
   disabled,
 }: CheckoutProps): CheckoutButtonProps {
   return {
-    appearance: 'content',
+    custom: true,
     variant: 'ghost',
     disabled,
     accessibilityLabel: 'Checkout',

@@ -55,7 +55,7 @@ function ServerRows({ server }: { server: ServerDetails }): React.JSX.Element {
   );
 
   if (server.status !== 'loaded') {
-    return <GroupedListItem title="Connecting to the Server…" loading />;
+    return <GroupedListItem label="Connecting to the Server…" loading />;
   }
 
   return <LoadedRows server={server} />;
@@ -64,13 +64,13 @@ function ServerRows({ server }: { server: ServerDetails }): React.JSX.Element {
 function LoadedRows({ server }: { server: LoadedServer }): React.JSX.Element {
   return (
     <>
-      <GroupedListItem title="Version" value={server.version} />
+      <GroupedListItem label="Version" value={server.version} />
       <GroupedListItem
-        title="Started"
+        label="Started"
         value={formatServerStart(server.startedAt, server.clock)}
       />
-      <GroupedListItem title="PID" value={String(server.pid)} />
-      <GroupedListItem title="Clock" value={formatServerClock(server.clock)} />
+      <GroupedListItem label="PID" value={String(server.pid)} />
+      <GroupedListItem label="Clock" value={formatServerClock(server.clock)} />
     </>
   );
 }

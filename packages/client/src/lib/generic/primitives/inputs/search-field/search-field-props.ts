@@ -9,7 +9,7 @@ export interface SearchQueryProps {
 
 // A search button, last in its row, that morphs into a field over the whole row.
 export type MorphSearchFieldProps = SearchQueryProps & {
-  appearance?: 'morph';
+  variant?: 'morph';
   // The row the open field replaces: the title, then other actions. Search always comes last.
   title: ReactNode;
   actions?: ReactNode;
@@ -22,11 +22,11 @@ export type DockedSearchQuery = SearchQueryProps & {
 };
 
 export type DockedSearchFieldProps = DockedSearchQuery & {
-  appearance: 'docked';
+  variant: 'docked';
   className?: string;
 };
 
 // What the docked bar itself takes once the field has chosen it.
-export type DockedSearchBarProps = Omit<DockedSearchFieldProps, 'appearance'>;
+export type DockedSearchBarProps = Omit<DockedSearchFieldProps, 'variant'>;
 
 export type SearchFieldProps = MorphSearchFieldProps | DockedSearchFieldProps;

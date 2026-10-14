@@ -49,7 +49,7 @@ function RowTitleText(props: GroupedListItemProps): React.JSX.Element {
   const bodyModifiers = useSwiftUITextModifiers(titleRole(props.code), 'row');
   const color = useTitleColor(props.tone);
 
-  return <Text modifiers={[...bodyModifiers, color]}>{props.title}</Text>;
+  return <Text modifiers={[...bodyModifiers, color]}>{props.label}</Text>;
 }
 
 function RowSubtitleText({

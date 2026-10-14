@@ -9,7 +9,7 @@ export type BadgeTone =
   | 'info'
   | 'success'
   | 'warning'
-  | 'destructive';
+  | 'danger';
 
 export type BadgeProps = React.ComponentProps<typeof View> &
   React.RefAttributes<View> & {
