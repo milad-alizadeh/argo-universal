@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import {
   exampleLabel as label,
+  examplePlaceholder,
   shownText,
+  useExampleValue,
 } from '../../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
@@ -28,7 +29,7 @@ function DraftField({
   onChangeText,
   onSubmit,
 }: DraftFieldProps): React.JSX.Element {
-  const [value, setValue] = useState(initialValue);
+  const { controlled, setValue } = useExampleValue(initialValue, onChangeText);
 
   const send = (): void => {
     onSubmit();
@@ -39,12 +40,8 @@ function DraftField({
     <>
       <RichTextarea
         accessibilityLabel={label}
-        placeholder="Message the Agent…"
-        value={value}
-        onChangeText={(changed) => {
-          setValue(changed);
-          onChangeText(changed);
-        }}
+        placeholder={examplePlaceholder}
+        {...controlled}
         onSubmit={send}
       />
       <Button label="Send" onPress={send} />
