@@ -90,7 +90,7 @@ function useDetailInstallation(
 }
 
 const detailAction = (detail?: AgentDetail): 'Install' | 'Update' =>
-  detail?.status === 'update' ? 'Update' : 'Install';
+  detail?.status === 'update-available' ? 'Update' : 'Install';
 
 function installedDetail(
   detail: AgentDetail,
@@ -123,7 +123,7 @@ const recoveredUpdate = (
 
   if (detail.version === saved.version) return {};
 
-  return { status: 'update', availableVersion: detail.version };
+  return { status: 'update-available', availableVersion: detail.version };
 };
 
 const detailVersion = (detail?: AgentDetail): string =>

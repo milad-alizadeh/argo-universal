@@ -22,6 +22,15 @@ const withoutAccountReport: ScriptedScenario['initialize'] = {
   },
 };
 
+// The version the `agent-info` scenario reports in ACP agentInfo, unlike any fixture package release.
+export const reportedAgentVersion = '0.47.0';
+
+// Reports its name and version in ACP agentInfo, as an Agent behind an adapter may.
+const withAgentInfo: ScriptedScenario['initialize'] = {
+  ...scriptedInitialization,
+  agentInfo: { name: 'fixture-agent', version: reportedAgentVersion },
+};
+
 // ACP's auth_required error, which an Agent returns for a request that needs sign-in.
 const authRequired = { code: -32000, message: 'Authentication required' };
 
@@ -36,6 +45,7 @@ type SignInName =
 
 type ReadinessName =
   | SignInName
+  | 'agent-info'
   | 'account-not-supported'
   | 'not-compatible'
   | 'cant-start';
@@ -61,11 +71,12 @@ const signInScenarios = (
   };
 };
 
-// Agents whose readiness check fails in each named way; `base` supplies the shared prompt steps.
+// Agents whose readiness check answers in each named way; `base` supplies the shared prompt steps.
 export const readinessScenarios = (
   base: ScriptedScenario,
 ): Record<ReadinessName, ScriptedScenario> => ({
   ...signInScenarios(base),
+  'agent-info': { ...base, initialize: withAgentInfo },
   'account-not-supported': { ...base, ...unsupportedAccountLogin },
   'not-compatible': { ...base, initialize: withoutSessionClose },
   'cant-start': {

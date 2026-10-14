@@ -5,8 +5,14 @@ import { expect } from '../fixtures';
 import { When, Then, test } from './fixtures';
 import { toast } from './toasts';
 
-const versionRow = (page: Page, version: string): Locator =>
-  page.getByRole('group', { name: `Version, v${version}`, exact: true });
+const versionRow = (page: Page, line: string | RegExp): Locator =>
+  page.getByRole('group', {
+    name: typeof line === 'string' ? `Version, ${line}` : line,
+    exact: typeof line === 'string',
+  });
+
+// Update available reads from → to; once Ready the row names the installed Adapter.
+const offered = 'v1.2.3 → v2.0.0';
 
 const updatedRegistry: typeof publishedRegistry = {
   ...publishedRegistry,
@@ -44,7 +50,7 @@ When(
 Then(
   'Example Agent still shows selected version one',
   async ({ page }): Promise<void> => {
-    await expect(versionRow(page, '1.2.3')).toBeVisible();
+    await expect(versionRow(page, offered)).toBeVisible();
     await page.screenshot({
       path: test.info().outputPath('agent-update-available.png'),
       animations: 'disabled',
@@ -80,6 +86,9 @@ Then(
   },
 );
 
-const updated = { title: 'Example Agent updated', version: '2.0.0' };
+const updated = {
+  title: 'Example Agent updated',
+  version: /^Version, Adapter 2\.0\.0(?: · |$)/,
+};
 
-const retained = { title: 'Could not update Example Agent', version: '1.2.3' };
+const retained = { title: 'Could not update Example Agent', version: offered };

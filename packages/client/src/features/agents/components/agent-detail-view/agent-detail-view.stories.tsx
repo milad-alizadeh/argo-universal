@@ -106,7 +106,18 @@ export const NotFound: Story = {
 };
 
 export const UpdateAvailable: Story = {
-  args: { agent: { ...readyAgent, status: 'update' } },
+  args: {
+    agent: {
+      ...readyAgent,
+      status: 'update-available',
+      version: '0.88.0',
+      availableVersion: '0.90.1',
+    },
+  },
+};
+
+export const AgentVersionDiffers: Story = {
+  args: { agent: { ...readyAgent, version: '0.9.2', agentVersion: '0.47.0' } },
 };
 
 export const FromTheRegistry: Story = {
@@ -129,7 +140,7 @@ export const Installing: Story = {
 
 export const Updating: Story = {
   args: {
-    agent: { ...readyAgent, status: 'update' },
+    agent: { ...readyAgent, status: 'update-available' },
     installation: installationArgs({ action: 'Update', installing: true }),
   },
 };

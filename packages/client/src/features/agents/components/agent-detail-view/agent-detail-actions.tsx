@@ -22,7 +22,7 @@ const statusActions = (
   handlers: ActionProps,
 ): Partial<Record<AgentStatus, ActionButton>> => ({
   'not-installed': { label: 'Install', onPress: handlers.onInstall },
-  update: { label: 'Update', onPress: handlers.onUpdate },
+  'update-available': { label: 'Update', onPress: handlers.onUpdate },
 });
 
 // Install or Update, whichever the Agent needs; without a handler the Server cannot do it yet.
@@ -48,7 +48,7 @@ const showsInstallation = (
   props: ActionProps,
   installation: NonNullable<ActionProps['installation']>,
 ): boolean =>
-  ['not-installed', 'update'].includes(props.agent.status) ||
+  ['not-installed', 'update-available'].includes(props.agent.status) ||
   installationActive(installation);
 
 function InstallationAction(

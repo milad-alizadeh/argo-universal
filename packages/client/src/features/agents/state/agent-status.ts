@@ -1,12 +1,7 @@
 import type { AgentStatus as ServerStatus } from '@repo/contracts';
 
-// Where an Agent stands on this Server: its saved Readiness, a newer catalog release, Disabled for a disabled Agent that was never checked, or the tool its install needs.
-export type AgentStatus =
-  | ServerStatus
-  | 'update'
-  | 'disabled'
-  | 'needs-node'
-  | 'needs-uv';
+// Where an Agent stands on this Server: its saved Readiness or Update available, Disabled for a disabled Agent that was never checked, or the tool its install needs.
+export type AgentStatus = ServerStatus | 'disabled' | 'needs-node' | 'needs-uv';
 
 export type StatusTone = 'success' | 'warning' | 'destructive' | 'pending';
 
@@ -30,7 +25,7 @@ export interface AgentRowEntry {
 export const agentStatusLabels: Record<AgentStatus, string> = {
   checking: 'Checking…',
   ready: 'Ready',
-  update: 'Update available',
+  'update-available': 'Update available',
   'sign-in-needed': 'Sign-in needed',
   'account-not-supported': 'Account not supported',
   'not-compatible': 'Not compatible',
@@ -47,7 +42,7 @@ export const agentStatusLabels: Record<AgentStatus, string> = {
 const statusTones: Record<AgentStatus, StatusTone | undefined> = {
   checking: 'pending',
   ready: 'success',
-  update: 'warning',
+  'update-available': 'warning',
   'sign-in-needed': 'warning',
   'account-not-supported': 'warning',
   'couldnt-check': 'warning',
@@ -84,7 +79,7 @@ export const needsAction = ({
 export const runsSessions = ({
   status,
 }: Pick<AgentRowEntry, 'status'>): boolean =>
-  status === 'ready' || status === 'update';
+  status === 'ready' || status === 'update-available';
 
 const filters: Record<AgentsFilter, (agent: AgentRowEntry) => boolean> = {
   all: () => true,

@@ -155,9 +155,10 @@ it('a failed update runs the readiness check it stopped again', async () => {
   await host.caller.agents.install({ agentId: host.agentId, version: '2.0.0' });
   await exitWhenStopped(host.agent, 0);
   await exitWhenStopped(host.agent, 1);
+  // The rerun check finds the kept copy Ready, and the catalog still offers 2.0.0.
   await expect
     .poll(() => listedAgent(host.caller, host.agentId), { timeout: 10_000 })
-    .toMatchObject({ version: '1.2.3', status: 'ready' });
+    .toMatchObject({ version: '1.2.3', status: 'update-available' });
   await expect(
     host.caller.agents.installStatus({ agentId: host.agentId }),
   ).resolves.toMatchObject({

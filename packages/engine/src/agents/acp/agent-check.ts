@@ -40,7 +40,7 @@ const createCheckingClient = (
   });
 };
 
-const checkAuthentication = async (
+const authenticationCheck = async (
   initialization: InitializeResponse,
   status: AcpAuthenticationStatus,
 ): Promise<AgentCheck> => {
@@ -55,6 +55,17 @@ const checkAuthentication = async (
         : 'account-not-supported',
     reason: result.failure,
   };
+};
+
+// Whatever the authentication outcome, the Agent answered initialize, so its agentInfo version is known.
+const checkAuthentication = async (
+  initialization: InitializeResponse,
+  status: AcpAuthenticationStatus,
+): Promise<AgentCheck> => {
+  const check = await authenticationCheck(initialization, status);
+  const agentVersion = initialization.agentInfo?.version;
+
+  return agentVersion ? { ...check, agentVersion } : check;
 };
 
 const initialize = async (process: AcpProcess): Promise<AgentCheck> => {

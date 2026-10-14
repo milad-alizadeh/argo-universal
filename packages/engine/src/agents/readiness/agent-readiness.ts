@@ -12,6 +12,7 @@ import {
   pendingReadiness,
   type SavedReadiness,
 } from '../agent-storage';
+import { checkedReadiness } from '../configuration/custom-readiness';
 import { resolveInstalledAgentLaunch } from '../install/selection/launch';
 import { readinessOfFailure } from './readiness-failure';
 import { ReadinessSkipped } from './readiness-skipped';
@@ -54,10 +55,8 @@ const runCheck = async (
   return deps.checkAgentLaunch({ name: target.name, launch, signal });
 };
 
-const sanitized = (check: AgentCheck): AgentCheck =>
-  check.reason === undefined
-    ? { status: check.status }
-    : { status: check.status, reason: sanitizeReason(check.reason) };
+const sanitized = ({ reason, ...check }: AgentCheck): AgentCheck =>
+  reason === undefined ? check : { ...check, reason: sanitizeReason(reason) };
 
 const save = (
   deps: ReadinessDeps,
@@ -99,7 +98,8 @@ const checkAndSave = async (
   agentId: string,
 ): Promise<AgentCheck> => {
   const result = sanitized(await checkOrFailure(deps, agentId));
-  await save(deps, [agentId], savedCheck(deps, result));
+  // A finished check also replaces the agentInfo version; other saves keep it.
+  await save(deps, [agentId], checkedReadiness(deps.now(), result));
 
   return result;
 };

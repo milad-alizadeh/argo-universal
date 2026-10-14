@@ -60,7 +60,7 @@ describe('countAgents', () => {
 describe('runsSessions', () => {
   it.each<[AgentStatus, boolean]>([
     ['ready', true],
-    ['update', true],
+    ['update-available', true],
     ['checking', false],
     ['sign-in-needed', false],
     ['account-not-supported', false],

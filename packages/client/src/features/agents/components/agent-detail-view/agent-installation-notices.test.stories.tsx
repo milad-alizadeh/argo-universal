@@ -71,7 +71,9 @@ const failure = 'Node.js is required on the Server';
 const failed = (action: 'Install' | 'Update'): Story => ({
   args: {
     agent:
-      action === 'Update' ? { ...readyAgent, status: 'update' } : registryAgent,
+      action === 'Update'
+        ? { ...readyAgent, status: 'update-available' }
+        : registryAgent,
     installation: installationArgs({
       action,
       notice: { key: 'operation', result: 'failed', failure, action },

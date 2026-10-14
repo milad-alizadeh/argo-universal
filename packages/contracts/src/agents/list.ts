@@ -14,18 +14,20 @@ export const AgentReadinessStatus = z.enum([
 
 export type AgentReadinessStatus = z.infer<typeof AgentReadinessStatus>;
 
-// One check's result; the reason is sanitized and never holds a credential.
+// One check's result; the reason is sanitized and never holds a credential. `agentVersion` is the version the Agent reported in ACP agentInfo.
 export const AgentCheck = z.strictObject({
   status: AgentReadinessStatus,
   reason: z.string().optional(),
+  agentVersion: z.string().optional(),
 });
 
 export type AgentCheck = z.infer<typeof AgentCheck>;
 
-// `checking` until a check has finished; `not-installed` when no release is selected.
+// `checking` until a check has finished; `not-installed` when no release is selected; `update-available` when a Ready copy's version differs from the catalog's.
 export const AgentStatus = z.enum([
   'checking',
   ...AgentReadinessStatus.options,
+  'update-available',
   'not-installed',
 ]);
 
@@ -47,7 +49,11 @@ export const AgentInfo = z.strictObject({
   agent: sessionColumns.shape.agent,
   label: z.string(),
   logo: z.string(),
+  // The Adapter: the version of the program Argo launches, from its installed package or else its ACP agentInfo.
   version: z.string().optional(),
+  // The Agent: the version its ACP agentInfo reported, only when it differs from the Adapter's.
+  agentVersion: z.string().optional(),
+  // The catalog's release.
   availableVersion: z.string().optional(),
   enabled: z.boolean(),
   status: AgentStatus,

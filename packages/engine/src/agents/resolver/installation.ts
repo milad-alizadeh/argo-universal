@@ -11,6 +11,7 @@ import {
   type InstallSelection,
 } from '../install/selection/selection';
 import { resolveRegistryServerPlatform } from '../records';
+import { installedPackageVersion, npmPackageName } from './package-version';
 import { findFirstOnPath } from './path-lookup';
 import type { RegistrySource } from './registry-source';
 
@@ -99,7 +100,12 @@ const targetDefinition = (
 
 type LaunchTarget = Pick<BinaryTarget, 'args' | 'env'>;
 
-type Searched = { target: LaunchTarget; names: readonly string[] };
+// `npmPackage` names the package whose command an npx entry is found by.
+type Searched = {
+  target: LaunchTarget;
+  names: readonly string[];
+  npmPackage?: string;
+};
 
 const binarySearch = (entry: ACPAgent): Searched | undefined => {
   const binary = pathTarget(entry);
@@ -117,7 +123,9 @@ const npxTarget = ({
 }: RegistrySource): Searched | undefined => {
   const npx = entry.distribution.npx;
 
-  return npx && commandNames ? { target: npx, names: commandNames } : undefined;
+  return npx && commandNames
+    ? { target: npx, names: commandNames, npmPackage: npmPackageName(entry) }
+    : undefined;
 };
 
 const pathInstallation = async (
@@ -129,18 +137,28 @@ const pathInstallation = async (
   if (!searched) return undefined;
   const file = await findFirstOnPath(searched.names);
 
-  return file
-    ? foundOnPath(home, source.entry, { target: searched.target, file })
-    : undefined;
+  return file ? foundOnPath(home, source.entry, { searched, file }) : undefined;
+};
+
+// An npm command's version is its package's; a binary's is known only once it answers ACP initialize.
+const pathVersion = async (
+  { npmPackage }: Searched,
+  file: string,
+): Promise<Pick<Installation, 'version'>> => {
+  const version =
+    npmPackage && (await installedPackageVersion(file, npmPackage));
+
+  return version ? { version } : {};
 };
 
 const foundOnPath = async (
   home: string,
   entry: ACPAgent,
-  { target, file }: { target: LaunchTarget; file: string },
+  { searched, file }: { searched: Searched; file: string },
 ): Promise<Installation> => ({
-  definition: targetDefinition(entry, target, file),
+  definition: targetDefinition(entry, searched.target, file),
   owner: await ownerOf(home, file),
+  ...(await pathVersion(searched, file)),
 });
 
 // Argo's own folder wins over PATH; nothing found is undefined.

@@ -45,20 +45,6 @@ describe('installedAgents', () => {
     ]);
   });
 
-  it('offers a newer release only once the Agent is Ready', () => {
-    const newer = { version: '1.0.0', availableVersion: '1.1.0' };
-
-    const rows = installedAgents(
-      [
-        { ...probed, ...newer, status: 'ready' },
-        { ...probed, ...newer, agent: 'second', status: 'cant-start' },
-      ],
-      [],
-    );
-
-    expect(rows.map(({ status }) => status)).toEqual(['update', 'cant-start']);
-  });
-
   it('marks a disabled Agent without changing its status', () => {
     const rows = installedAgents([{ ...probed, enabled: false }], []);
     expect(rows).toEqual([
@@ -96,8 +82,19 @@ describe('agentDetail', () => {
         status: signInNeeded,
         reason: signInReason,
         icon: iconAgent.entry.icon,
-        version: iconAgent.entry.version,
       }),
+    );
+  });
+
+  it("shows an installed Agent's own versions, never the catalog's release", () => {
+    expect(agentDetail(probed, iconAgent)?.version).toBeUndefined();
+    expect(
+      agentDetail(
+        { ...probed, version: '0.9.2', agentVersion: '0.47.0' },
+        iconAgent,
+      ),
+    ).toEqual(
+      expect.objectContaining({ version: '0.9.2', agentVersion: '0.47.0' }),
     );
   });
 

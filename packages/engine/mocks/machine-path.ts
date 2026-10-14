@@ -1,13 +1,24 @@
 import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
-import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  mkdir,
+  mkdtemp,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { onTestFinished, vi } from 'vitest';
+
+export type NpmPackage = { name: string; version: string };
 
 export type MachinePath = {
   directory: string;
   // Puts an executable with this file name on PATH, as an outside install would.
   place: (name: string) => Promise<string>;
+  // Installs an npm package's command the way `npm install -g` does: a PATH link into the package's own folder beside its package.json.
+  placePackage: (name: string, npmPackage: NpmPackage) => Promise<string>;
   remove: (name: string) => Promise<void>;
 };
 
@@ -42,26 +53,38 @@ export const stubTestMachinePath = (): void => {
   vi.stubEnv('PATH', directories.join(delimiter));
 };
 
-// "The machine": a temporary directory put first on PATH for this test only; `node: false` leaves Node.js off PATH.
+const writeExecutable = async (file: string): Promise<string> => {
+  await writeFile(file, '#!/bin/sh\nexit 0\n');
+  await chmod(file, 0o755);
+
+  return file;
+};
+
+// "The machine": a temporary bin directory put first on PATH for this test only, with npm's global packages beside it; `node: false` leaves Node.js off PATH.
 export const createMachinePath = async (
   options: { node?: boolean } = {},
 ): Promise<MachinePath> => {
-  const directory = await mkdtemp(join(tmpdir(), 'argo-path-'));
+  const root = await mkdtemp(join(tmpdir(), 'argo-path-'));
+  const directory = join(root, 'bin');
+  await mkdir(directory);
   machineDirectory = directory;
   withNode = options.node ?? true;
   stubTestMachinePath();
   onTestFinished(async () => {
     machineDirectory = undefined;
     withNode = true;
-    await rm(directory, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true });
   });
 
   return {
     directory,
-    place: async (name) => {
+    place: (name) => writeExecutable(join(directory, name)),
+    placePackage: async (name, npmPackage) => {
+      const folder = join(root, 'lib', 'node_modules', npmPackage.name);
+      await mkdir(join(folder, 'bin'), { recursive: true });
+      await writeFile(join(folder, 'package.json'), JSON.stringify(npmPackage));
       const file = join(directory, name);
-      await writeFile(file, '#!/bin/sh\nexit 0\n');
-      await chmod(file, 0o755);
+      await symlink(await writeExecutable(join(folder, 'bin', name)), file);
 
       return file;
     },

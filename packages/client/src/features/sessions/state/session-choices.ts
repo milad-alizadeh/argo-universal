@@ -40,7 +40,7 @@ export const chooseProject = (
 ): ProjectInfo | undefined =>
   projects.find((entry) => entry.id === chosen) ?? projects[0];
 
-// 'update-available' is not a status yet (#611 adds it); a usable Agent with an update stays offered once it is.
+// A Ready Agent with an update stays usable, so it is offered.
 const offeredStatuses: ReadonlySet<string> = new Set([
   'ready',
   'checking',

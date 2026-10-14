@@ -35,7 +35,7 @@ type AgentConfiguration = Pick<
 // A check's saved result; null clears it, so the Agent shows Checking… again.
 export type SavedReadiness = Pick<
   typeof agents.$inferInsert,
-  'readinessStatus' | 'readinessReason' | 'readinessCheckedAt'
+  Extract<keyof typeof agents.$inferInsert, `readiness${string}`>
 >;
 
 export const pendingReadiness: SavedReadiness = {

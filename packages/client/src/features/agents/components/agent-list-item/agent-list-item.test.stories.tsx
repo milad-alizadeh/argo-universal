@@ -101,7 +101,7 @@ export const MalformedUrlXml: Story = iconCase({
 
 // Install, Update and Sign in live on the Agent's page; a row only opens it, naming its description and status.
 export const NamesItsStatusAndCarriesNoAction: Story = {
-  args: { agent: { ...agent, status: 'update' } },
+  args: { agent: { ...agent, status: 'update-available' } },
   play: async ({ args, canvas, userEvent }) => {
     const row = canvas.getByRole('link', {
       name: `${agent.name}, ${agent.description}, Update available`,

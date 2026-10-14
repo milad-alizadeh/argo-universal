@@ -6,6 +6,7 @@ import type {
 } from '@repo/contracts';
 import type { AgentDetail } from './agent-detail-types';
 import { probedRow } from './agent-list';
+import { isInstalled } from './agent-status';
 
 type CatalogAgent = AgentsCatalogOutput['agents'][number];
 
@@ -104,8 +105,7 @@ function withProbe(
     ...foundSource(info),
     status: probedStatus(probed, fromRegistry),
     icon: probed.icon ?? fromRegistry?.icon,
-    version: selectedVersion(info, fromRegistry),
-    availableVersion: info.availableVersion,
+    ...versionsOf(info, fromRegistry),
   };
 }
 
@@ -118,7 +118,19 @@ const probedStatus = (
     ? registry.status
     : probed.status;
 
-const selectedVersion = (
+const catalogRelease = (
   info: AgentInfo,
-  registry?: AgentDetail,
-): string | undefined => info.version ?? registry?.version;
+  fromRegistry: AgentDetail | undefined,
+): string | undefined => info.availableVersion ?? fromRegistry?.version;
+
+// Before install the page offers the catalog's release; after, only the copy's own versions.
+const versionsOf = (
+  info: AgentInfo,
+  fromRegistry: AgentDetail | undefined,
+): Pick<AgentDetail, 'version' | 'agentVersion' | 'availableVersion'> => ({
+  version: isInstalled(info)
+    ? info.version
+    : catalogRelease(info, fromRegistry),
+  agentVersion: info.agentVersion,
+  availableVersion: info.availableVersion,
+});

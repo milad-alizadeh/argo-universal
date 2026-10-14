@@ -1,6 +1,6 @@
 import type { AgentInfo, ConfiguredAgent } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { readAgentCatalog } from './catalog-sql';
+import { versionsOf, withAvailableVersions } from './agent-versions';
 import { readConfiguredAgents } from './configuration/configuration-sql';
 import { readSavedReadiness } from './readiness/readiness-sql';
 import { missingReason } from './readiness/readiness-target';
@@ -23,7 +23,11 @@ type Listing = {
 const savedStatus = (
   listing: Listing,
   agentId: string,
-): Pick<AgentInfo, 'status' | 'reason'> => listing.saved(agentId);
+): Pick<AgentInfo, 'status' | 'reason'> => {
+  const { status, reason } = listing.saved(agentId);
+
+  return reason === undefined ? { status } : { status, reason };
+};
 
 const customInfo = (
   listing: Listing,
@@ -34,6 +38,7 @@ const customInfo = (
   label: name,
   logo: '',
   enabled: agent.enabled,
+  ...versionsOf(undefined, listing.saved(agent.id).agentVersion),
   ...savedStatus(listing, agent.id),
 });
 
@@ -73,15 +78,32 @@ const isInstalled = (
   source: RegistrySource,
 ): boolean => observation.observed || !!source.selection;
 
-// The version shown is Argo's installed release; a copy found elsewhere has none yet.
 const identityOf = (
   source: RegistrySource,
-): Pick<AgentInfo, 'label' | 'logo' | 'version'> => {
+): Pick<AgentInfo, 'label' | 'logo'> => {
   const { name, icon } = source.entry;
-  const version = source.selection?.entry.version;
 
-  return { label: name, logo: icon ?? '', ...(version && { version }) };
+  return { label: name, logo: icon ?? '' };
 };
+
+// The found copy's own version, or Argo's installed release before the Resolver has looked.
+const installedVersion = (
+  observation: InstallationObservation,
+  source: RegistrySource,
+): string | undefined =>
+  observation.observed && observation.found
+    ? observation.version
+    : source.selection?.entry.version;
+
+const installedVersions = (
+  listing: Listing,
+  agentId: string,
+  source: RegistrySource,
+): ReturnType<typeof versionsOf> =>
+  versionsOf(
+    installedVersion(listing.observed(agentId), source),
+    listing.saved(agentId).agentVersion,
+  );
 
 const registryInfo = (listing: Listing, agent: ConfiguredAgent): AgentInfo => {
   const source = readRegistrySource(listing.database, agent.id);
@@ -93,6 +115,7 @@ const registryInfo = (listing: Listing, agent: ConfiguredAgent): AgentInfo => {
     agent: agent.id,
     enabled: agent.enabled,
     ...identityOf(source),
+    ...installedVersions(listing, agent.id, source),
     ...ownerOf(observation),
     ...installedStatus(listing, agent.id, source),
   };
@@ -105,24 +128,6 @@ const describe = async (
   agent.configuration.source === 'custom'
     ? customInfo(listing, agent, agent.configuration.definition.name)
     : registryInfo(listing, agent);
-
-const withAvailableVersions = (
-  database: Database,
-  agents: AgentInfo[],
-): AgentInfo[] => {
-  const catalog = new Map(
-    readAgentCatalog(database).agents.map(({ id, entry }) => [
-      id,
-      entry.version,
-    ]),
-  );
-
-  return agents.map((info) => {
-    const availableVersion = catalog.get(info.agent);
-
-    return availableVersion ? { ...info, availableVersion } : info;
-  });
-};
 
 const registryFirst = (agents: ConfiguredAgent[]): ConfiguredAgent[] => [
   ...agents.filter(({ configuration }) => configuration.source === 'registry'),
