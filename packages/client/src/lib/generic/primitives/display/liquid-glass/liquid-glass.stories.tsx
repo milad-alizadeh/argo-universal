@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Text } from '../text/text';
-import { LiquidGlass } from './liquid-glass';
 import type { LiquidGlassProps } from './liquid-glass-props';
+import { LiquidGlass } from './liquid-glass-view';
 
 // The web and Android draw each fallback surface; the iOS preview draws Liquid Glass on iOS 26 and later.
 const examples: (Omit<LiquidGlassProps, 'children'> & {

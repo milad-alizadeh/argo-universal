@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { expect, fn, within } from 'storybook/test';
-import { FieldGroup } from '../../fields/field-group/field-group';
-import { FieldSection } from '../../fields/field-section/field-section';
+import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
 import { Picker } from '../../inputs/picker/picker';
-import { ListItem } from './list-item';
+import { ListItem } from './list-item-view';
 
 const efforts = [
   { value: 'low', label: 'Low' },

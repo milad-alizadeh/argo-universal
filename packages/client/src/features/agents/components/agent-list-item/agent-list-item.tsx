@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { Icon } from '#primitives/display/icon/icon';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 import {
   type AgentRowEntry,
   agentStatusLabels,

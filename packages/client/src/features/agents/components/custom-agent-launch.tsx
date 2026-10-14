@@ -1,8 +1,8 @@
 import type { CustomAgentDefinition } from '@repo/contracts';
 import type * as React from 'react';
 import type { ListItemProps } from '#primitives/fields/field-props';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 import { keyedRows } from './keyed-rows';
 
 type DefinitionProps = { definition: CustomAgentDefinition };

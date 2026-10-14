@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { FieldSection } from '../../fields/field-section/field-section';
-import { ListItem } from '../../lists/list-item/list-item';
 import { Picker } from './picker';
 import type { PickerProps } from './picker-props';
 

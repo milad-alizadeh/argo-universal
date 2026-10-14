@@ -1,6 +1,6 @@
 import type { AgentsCatalogOutput } from '@repo/contracts';
 import type { FieldListSection } from '#lib/product/field-list/field-list';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 import {
   type ErrorToast,
   useErrorToast,

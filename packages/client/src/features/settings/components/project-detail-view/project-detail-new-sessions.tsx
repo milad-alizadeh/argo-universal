@@ -1,10 +1,10 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
 import { Picker } from '#primitives/inputs/picker/picker';
 import type { PickerProps } from '#primitives/inputs/picker/picker-props';
-import { Switch } from '#primitives/inputs/switch/switch';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { Switch } from '#primitives/inputs/switch/switch-view';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 
 const checkoutOptions = [
   { value: 'worktree', label: 'New worktree' },

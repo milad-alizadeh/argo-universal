@@ -105,3 +105,5 @@ function fraction(
     (value - range.minimumValue) / (range.maximumValue - range.minimumValue)
   );
 }
+
+export type { SliderProps } from './slider-props';

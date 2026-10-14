@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { Button } from '#primitives/buttons/button/button-view';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { Button } from '../../buttons/button/button';
 import { Alert } from './alert';
 import type { AlertProps } from './alert-props';
 

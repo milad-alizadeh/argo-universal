@@ -1,7 +1,7 @@
 import type { AgentAvailability, AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentIcon } from './agent-icon';
 import type { ComposerConfigurationProps } from './configuration-types';

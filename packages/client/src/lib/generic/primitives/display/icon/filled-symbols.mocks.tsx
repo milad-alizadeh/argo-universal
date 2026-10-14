@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '../../buttons/button/button';
+import { Button } from '#primitives/buttons/button/button-view';
 import { Icon } from './icon';
 
 const symbolNames = [

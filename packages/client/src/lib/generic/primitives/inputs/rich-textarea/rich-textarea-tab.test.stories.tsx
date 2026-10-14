@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
+import { Button } from '#primitives/buttons/button/button-view';
 import {
   exampleLabel as label,
   RichTextareaExample,
@@ -9,7 +10,6 @@ import {
 } from '../../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
-import { Button } from '../../buttons/button/button';
 
 // Outside a list, Tab and ⇧Tab move focus to the field's neighbours and type nothing.
 

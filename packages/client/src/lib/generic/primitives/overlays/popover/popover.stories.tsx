@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Text } from '#primitives/display/text/text';
 import { Input } from '#primitives/inputs/input/input';
 import { Pressable, contentActionClass } from '../../pressable/pressable';
-import { Popover, PopoverContent, PopoverTrigger } from './popover';
+import { Popover, PopoverContent, PopoverTrigger } from './popover-view';
 
 function PopoverPreview(): React.JSX.Element {
   return (

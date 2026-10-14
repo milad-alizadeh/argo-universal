@@ -1,5 +1,8 @@
 import type { ReactElement } from 'react';
-import { Button, type ButtonProps } from '#primitives/buttons/button/button';
+import {
+  Button,
+  type ButtonProps,
+} from '#primitives/buttons/button/button-view';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 
 const refusals = {

@@ -4,9 +4,9 @@ import {
   type FieldErrors,
   errorMessage,
 } from '#primitives/fields/field-errors';
-import { FieldInput } from '#primitives/fields/field-input/field-input';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { FieldInput } from '#primitives/fields/field-input/field-input-view';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 import type { CustomAgentFormApi } from '../../hooks/use-custom-agent-form';
 import { sectionFooter, touchedInput } from '../form-field';
 

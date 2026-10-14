@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, within } from 'storybook/test';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
 import { settleViewport } from '../../../settle-viewport';
-import { FieldSection } from '../../fields/field-section/field-section';
 import { Picker } from './picker';
 
 const options = [

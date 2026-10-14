@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { Button } from './button';
+import { Button } from './button-view';
 
 const onPress = fn();
 

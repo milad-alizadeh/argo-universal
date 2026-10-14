@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
-import { Button } from '#primitives/buttons/button/button';
+import { Button } from '#primitives/buttons/button/button-view';
 import {
   elicitationProps,
   fieldsRequest,

@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 import {
   CodeRows,
   LargeRows,

@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 import { useErrorToast } from '#primitives/overlays/toast/toast';
 import { formatServerClock, formatServerStart } from '../server-time';
 

@@ -3,7 +3,7 @@ import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { ControlHost } from '../../native/native-control';
-import type { SliderProps } from './slider';
+import type { SliderProps } from './slider-props';
 import { type SliderRange, sliderStopCount } from './slider-steps';
 
 type NativeSliderProps = React.ComponentProps<typeof NativeSlider>;
@@ -59,3 +59,5 @@ function snapToStep(value: number, range: SliderRange): number {
 
   return range.minimumValue + stop * range.step;
 }
+
+export type { SliderProps } from './slider-props';

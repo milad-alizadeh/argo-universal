@@ -7,7 +7,7 @@ import {
   fieldGroupGap,
   fieldGroupPadding,
 } from '#primitives/fields/field-layout';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
 import type { ListSearchBarProps } from '#primitives/inputs/list-search-bar/list-search-bar';
 import { listTestIdProps } from '../../generic/list-test-id';
 import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';

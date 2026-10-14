@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { cn } from '#lib/generic/utils';
-import { Button } from '#primitives/buttons/button/button';
+import { Button } from '#primitives/buttons/button/button-view';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ProjectPicker } from './project-picker';
 import { SessionControlDisclosure } from './session-control-disclosure';

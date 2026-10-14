@@ -4,9 +4,9 @@ import { View } from 'react-native';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
 import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 import {
   type ErrorToast,
   useErrorToast,

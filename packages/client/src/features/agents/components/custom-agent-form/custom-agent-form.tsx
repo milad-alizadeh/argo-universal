@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldRow } from '#primitives/fields/field-row/field-row';
+import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
+import { FieldRow } from '#primitives/fields/field-row/field-row-view';
 import {
   type CustomAgentFormApi,
   type SubmitCustomAgent,

@@ -1,6 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Popover, PopoverTrigger } from '../../overlays/popover/popover';
+import {
+  Popover,
+  PopoverTrigger,
+} from '#primitives/overlays/popover/popover-view';
 import type { FieldPlacement } from './web/rich-textarea-placement';
 
 interface SelectionPopoverProps {

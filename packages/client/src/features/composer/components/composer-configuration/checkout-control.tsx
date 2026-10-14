@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button';
+import { Button } from '#primitives/buttons/button/button-view';
 import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ConfigurationChoice } from './configuration-choice';
 import type { ComposerConfigurationProps } from './configuration-types';

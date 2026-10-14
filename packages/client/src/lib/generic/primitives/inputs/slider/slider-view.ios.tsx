@@ -7,7 +7,7 @@ import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { ControlHost } from '../../native/native-control';
 import { optionalTint } from '../../native/swift-tint';
-import type { SliderProps } from './slider';
+import type { SliderProps } from './slider-props';
 
 export function Slider(props: SliderProps): React.JSX.Element {
   const modifiers = useSliderModifiers(props);
@@ -49,3 +49,5 @@ function useSliderModifiers(
     ...optionalTint(tint),
   ];
 }
+
+export type { SliderProps } from './slider-props';

@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { Switch } from '#primitives/inputs/switch/switch';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { FieldSection } from '#primitives/fields/field-section/field-section-view';
+import { Switch } from '#primitives/inputs/switch/switch-view';
+import { ListItem } from '#primitives/lists/list-item/list-item-view';
 import { Alert } from '#primitives/overlays/alert/alert';
 import type { AgentManagement } from '../../state/agent-management-types';
 

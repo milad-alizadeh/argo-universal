@@ -1,1 +1,1 @@
-export { Button as LoginButton } from '#primitives/buttons/button/button';
+export { Button as LoginButton } from '#primitives/buttons/button/button-view';

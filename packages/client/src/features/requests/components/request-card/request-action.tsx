@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
-import { Button, type ButtonProps } from '#primitives/buttons/button/button';
+import {
+  Button,
+  type ButtonProps,
+} from '#primitives/buttons/button/button-view';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 export interface RequestActionProps {

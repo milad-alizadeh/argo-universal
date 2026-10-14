@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button';
+import { Button } from '#primitives/buttons/button/button-view';
 import { Text } from '#primitives/display/text/text';
 import { Alert } from '#primitives/overlays/alert/alert';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';

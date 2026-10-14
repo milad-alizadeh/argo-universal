@@ -2,7 +2,7 @@ import type { SessionConfigSelectOption } from '@repo/contracts';
 import type * as React from 'react';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Button } from '#primitives/buttons/button/button';
+import { Button } from '#primitives/buttons/button/button-view';
 import { Icon } from '#primitives/display/icon/icon';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { ComposerConfigurationProps } from './configuration-types';
