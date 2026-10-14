@@ -43,7 +43,7 @@ function ComposerRequest(layout: ComposerLayout): React.JSX.Element | null {
     <View
       className={
         layout.wide
-          ? 'self-stretch -mb-3 pb-3 rounded-t-xl bg-sidebar/80 shadow-glass web:backdrop-blur-glass web:backdrop-saturate-110'
+          ? 'self-stretch -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-glass web:backdrop-blur-glass web:backdrop-saturate-110'
           : undefined
       }
     >

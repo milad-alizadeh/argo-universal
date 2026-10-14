@@ -7,9 +7,9 @@ type InputProps = Omit<BareTextInputProps, 'appearance'>;
 
 const variantClass = {
   default:
-    'dark:bg-input/30 border-input bg-background h-10 border px-3 py-1 shadow-sm shadow-black/5 sm:h-9',
+    'dark:bg-border/30 border-border bg-background h-10 border px-3 py-1 shadow-sm shadow-black/5 sm:h-9',
   muted:
-    'h-8 sm:h-8 rounded-lg border-0 bg-muted dark:bg-muted px-2.5 py-0 shadow-none web:focus-visible:ring-1 web:focus-visible:ring-ring',
+    'h-8 sm:h-8 rounded-lg border-0 bg-muted dark:bg-muted px-2.5 py-0 shadow-none web:focus-visible:ring-1 web:focus-visible:ring-focus',
 };
 
 const disabledInputClass =
@@ -18,7 +18,7 @@ const disabledInputClass =
 const platformInputClass = cn(
   'web:rounded-lg',
   'web:placeholder:text-muted-foreground web:selection:bg-primary web:selection:text-primary-foreground web:outline-none web:transition-[color,box-shadow]',
-  'web:focus-visible:border-ring web:focus-visible:ring-ring/50 web:focus-visible:ring-[3px]',
+  'web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:focus-visible:ring-[3px]',
   'web:aria-invalid:ring-destructive/20 web:dark:aria-invalid:ring-destructive/40 web:aria-invalid:border-destructive',
   'native:placeholder:text-muted-foreground/50',
 );

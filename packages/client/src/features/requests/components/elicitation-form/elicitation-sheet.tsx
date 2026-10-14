@@ -102,7 +102,7 @@ function ElicitationTray({ children }: { children: ReactNode }): ReactElement {
     <View
       role="region"
       aria-label="Elicitation questions"
-      className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-xl bg-sidebar/80 shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-110"
+      className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-110"
     >
       {children}
     </View>

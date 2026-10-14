@@ -25,7 +25,7 @@ export const Heading: Story = {
     const [collapsed, setCollapsed] = useState(args.collapsed);
 
     return (
-      <View className="w-full wide:w-shell-list bg-sidebar">
+      <View className="w-full wide:w-shell-list bg-content">
         <ProjectHeading
           {...args}
           collapsed={collapsed}

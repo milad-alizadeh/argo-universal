@@ -7,8 +7,8 @@ import type { TextareaProps } from './textarea-props';
 
 function textareaClassName({ className, disabled }: TextareaProps): string {
   return cn(
-    'text-foreground border-input dark:bg-input/30 flex min-h-16 w-full flex-row rounded-md border bg-transparent px-3 py-2 type-body shadow-sm shadow-black/5',
-    'web:rounded-lg web:placeholder:text-muted-foreground web:focus-visible:border-ring web:focus-visible:ring-ring/50 web:aria-invalid:ring-destructive/20 web:dark:aria-invalid:ring-destructive/40 web:aria-invalid:border-destructive web:field-sizing-content web:resize-y web:outline-none web:transition-[color,box-shadow] web:focus-visible:ring-[3px] web:disabled:cursor-not-allowed',
+    'text-foreground border-border dark:bg-border/30 flex min-h-16 w-full flex-row rounded-md border bg-transparent px-3 py-2 type-body shadow-sm shadow-black/5',
+    'web:rounded-lg web:placeholder:text-muted-foreground web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:aria-invalid:ring-destructive/20 web:dark:aria-invalid:ring-destructive/40 web:aria-invalid:border-destructive web:field-sizing-content web:resize-y web:outline-none web:transition-[color,box-shadow] web:focus-visible:ring-[3px] web:disabled:cursor-not-allowed',
     disabled === true && 'opacity-50',
     className,
   );
@@ -54,11 +54,11 @@ function useTextareaColors(): Pick<
   'cursorColor' | 'selectionColor'
 > {
   const { colors } = useNativeTheme();
-  const selection = usePrimitiveColor('bg-tint/20');
+  const selection = usePrimitiveColor('bg-accent/20');
 
   return {
-    cursorColor: colors.tint,
-    selectionColor: Platform.OS === 'ios' ? colors.tint : selection,
+    cursorColor: colors.accent,
+    selectionColor: Platform.OS === 'ios' ? colors.accent : selection,
   };
 }
 

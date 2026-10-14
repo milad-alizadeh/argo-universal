@@ -57,7 +57,7 @@ export function usePickerModifiers<Value extends string>(
     accessibilityValue(pickerValue(props)),
     accessibilityHint(pickerHint(props)),
     disabled(props.disabled),
-    ...optionalTint(props.invalid ? colors.destructive : colors.tint),
+    ...optionalTint(props.invalid ? colors.destructive : colors.accent),
   ];
 }
 

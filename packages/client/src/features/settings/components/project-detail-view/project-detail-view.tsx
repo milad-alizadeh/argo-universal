@@ -40,7 +40,7 @@ export function ProjectDetailView(
   props: ProjectDetailViewProps,
 ): React.JSX.Element {
   return (
-    <View className="flex-1 bg-sidebar wide:bg-transparent">
+    <View className="flex-1 bg-content wide:bg-transparent">
       <PhoneTitle title={props.name} />
       <ProjectPage {...props} />
     </View>

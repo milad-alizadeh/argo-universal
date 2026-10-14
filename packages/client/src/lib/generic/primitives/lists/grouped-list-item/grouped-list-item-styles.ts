@@ -78,7 +78,7 @@ function stateClasses(props: GroupedListItemProps, sidebar: boolean): string {
 }
 
 const focusClasses =
-  'web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2';
+  'web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2';
 
 // A sidebar row has no separators to hide and keeps its own hover tint (none when selected), so it only takes the focus ring.
 const pressClasses = (sidebar: boolean): string =>
@@ -86,7 +86,7 @@ const pressClasses = (sidebar: boolean): string =>
 
 // The hover shade's own line is out of flow, or it would add a gap's width to the row.
 const hoverClasses =
-  'web:hover:bg-[var(--color-separator)] web:active:bg-[var(--color-separator)] web:hover:after:absolute web:active:after:absolute web:hover:after:bg-inherit web:active:after:bg-inherit';
+  'web:hover:bg-border web:active:bg-border web:hover:after:absolute web:active:after:absolute web:hover:after:bg-inherit web:active:after:bg-inherit';
 
 function sidebarClasses(props: GroupedListItemProps): string {
   return cn(
@@ -102,7 +102,9 @@ export function rowEmphasis(
   props: GroupedListItemProps,
   sidebar: boolean,
 ): string {
-  return props.tone === 'accent' ? 'text-tint' : plainEmphasis(props, sidebar);
+  return props.tone === 'accent'
+    ? 'text-accent'
+    : plainEmphasis(props, sidebar);
 }
 
 function plainEmphasis(props: GroupedListItemProps, sidebar: boolean): string {
@@ -134,7 +136,7 @@ function separatorClasses(
   place: RowPlace,
 ): string {
   return cn(
-    'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-[var(--color-separator)]',
+    'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border',
     hiddenSeparator(place),
     // Inset to the text: the 16 gutter, the icon slot (24 phone, 20 wide) and the 12 gap.
     hasLeadingSlot(props) && 'web:after:left-13 wide:web:after:left-12',
@@ -164,6 +166,6 @@ export function titleClasses(
 
 const toneText = {
   destructive: 'text-destructive',
-  accent: 'text-tint',
+  accent: 'text-accent',
   muted: 'text-muted-foreground',
 };

@@ -42,10 +42,7 @@ export const Overview: Story = {
         <StatusIndicator {...args} size="small" />
       </Variation>
       <Variation label="On a selected surface">
-        <StatusIndicator
-          {...args}
-          className="border-sidebar-accent bg-sidebar-accent"
-        />
+        <StatusIndicator {...args} className="border-hover bg-hover" />
       </Variation>
     </Variations>
   ),

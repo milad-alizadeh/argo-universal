@@ -44,7 +44,7 @@ function SheetGrip(props: GripProps): ReactElement {
   return (
     <View
       ref={ref}
-      className="items-center py-3 web:touch-none web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring"
+      className="items-center py-3 web:touch-none web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus"
       {...gripAccessibility(props)}
     >
       <View className="w-9 h-1.25 rounded-full bg-muted-foreground/40" />

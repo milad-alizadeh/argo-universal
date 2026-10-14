@@ -47,10 +47,10 @@ function FormRow(props: TextFieldProps): React.JSX.Element {
 function useRowModifiers(): React.ComponentProps<
   typeof LabeledContent
 >['modifiers'] {
-  const { separator } = useNativeTheme().colors;
+  const { border } = useNativeTheme().colors;
 
   return [
-    listRowSeparatorTint(separator),
+    listRowSeparatorTint(border),
     listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
     frame({ minHeight: rowHeight }),
   ];

@@ -68,7 +68,7 @@ export function DesktopShell(shell: DesktopShellProps): React.JSX.Element {
   return (
     <View
       testID="desktop-shell"
-      className="flex-1 flex-row overflow-hidden bg-sidebar"
+      className="flex-1 flex-row overflow-hidden bg-content"
       onLayout={layout.onLayout}
     >
       <ShellBackground shell={shell} layout={layout} />

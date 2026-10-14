@@ -34,7 +34,7 @@ export function MenuChoiceContent<Value extends string>(
       align={props.align ?? 'end'}
       onKeyDown={() => props.focus.onKeyboardFocusChange(true)}
       onPointerMove={() => props.focus.onKeyboardFocusChange(false)}
-      className="w-65 overflow-hidden bg-popover rounded-2xl py-2 shadow-card dark:border dark:border-border"
+      className="w-65 overflow-hidden bg-card rounded-2xl py-2 shadow-card dark:border dark:border-border"
     >
       <MenuChoices {...props} />
     </MenuPrimitive.Content>
@@ -119,7 +119,7 @@ function MenuRadioContent(props: { label: string }): React.JSX.Element {
 function RadioLabel(props: { label: string }): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1">
-      <Text role="body" className="select-none text-popover-foreground">
+      <Text role="body" className="select-none text-card-foreground">
         {props.label}
       </Text>
     </View>
@@ -130,7 +130,7 @@ function RadioIndicator(): React.JSX.Element {
   return (
     <IconSlot role="control">
       <MenuPrimitive.ItemIndicator>
-        <SelectedCheck className="text-popover-foreground" />
+        <SelectedCheck className="text-card-foreground" />
       </MenuPrimitive.ItemIndicator>
     </IconSlot>
   );

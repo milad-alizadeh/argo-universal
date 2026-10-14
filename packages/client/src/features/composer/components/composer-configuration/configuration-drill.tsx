@@ -99,7 +99,7 @@ const drillPopoverPlacement = {
   alignOffset: -4,
   style: { width: 284 },
   className:
-    'bg-sidebar border-0 dark:border dark:border-border rounded-surface p-3 shadow-card',
+    'bg-content border-0 dark:border dark:border-border rounded-surface p-3 shadow-card',
 } as const;
 
 function ConfigurationDrillContent(props: PickerProps): React.JSX.Element {

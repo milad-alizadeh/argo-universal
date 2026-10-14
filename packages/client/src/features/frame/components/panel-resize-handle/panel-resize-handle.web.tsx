@@ -51,7 +51,7 @@ export function PanelResizeHandle(
     <div
       role="separator"
       tabIndex={0}
-      className={`${edgeClassName(props.edge)} cursor-col-resize touch-none select-none outline-none focus-visible:bg-ring/30 hover:bg-border/40`}
+      className={`${edgeClassName(props.edge)} cursor-col-resize touch-none select-none outline-none focus-visible:bg-focus/30 hover:bg-border/40`}
       {...separatorAria(props)}
       {...pointerResize}
       onKeyDown={(event) => resizeByKey(props, event)}

@@ -28,7 +28,7 @@ export function ConnectionDetailView({
   server: ServerDetails;
 }): React.JSX.Element {
   return (
-    <View className="flex-1 bg-sidebar wide:bg-transparent">
+    <View className="flex-1 bg-content wide:bg-transparent">
       <SettingsPage
         title="Connection"
         caption="The Argo Server this App is talking to."

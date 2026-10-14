@@ -41,12 +41,12 @@ function sliderRange(
 function useSliderModifiers(
   props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
 ): React.ComponentProps<typeof UniversalSlider>['modifiers'] {
-  const { tint } = useNativeTheme().colors;
+  const { accent } = useNativeTheme().colors;
 
   return [
     accessibilityLabel(props.accessibilityLabel),
     accessibilityValue(props.valueLabel),
-    ...optionalTint(tint),
+    ...optionalTint(accent),
   ];
 }
 

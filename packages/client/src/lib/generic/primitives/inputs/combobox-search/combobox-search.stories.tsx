@@ -14,7 +14,7 @@ function Example({ initial = '' }: { initial?: string }): React.JSX.Element {
   const matches = projects.filter((project) => project.includes(value));
 
   return (
-    <View className="gap-2 rounded-2xl bg-popover p-4 wide:gap-1 wide:border wide:border-border wide:p-1 wide:shadow-card">
+    <View className="gap-2 rounded-2xl bg-card p-4 wide:gap-1 wide:border wide:border-border wide:p-1 wide:shadow-card">
       <ComboboxSearch
         label="Find a Project"
         placeholder="Find a Project…"

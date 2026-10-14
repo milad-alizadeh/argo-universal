@@ -25,7 +25,7 @@ interface ChoiceProps extends ContentsProps {
 
 export function CheckoutContents(props: ContentsProps): React.JSX.Element {
   return (
-    <View className="native:flex-1 wide:p-3 bg-sidebar">
+    <View className="native:flex-1 wide:p-3 bg-content">
       <GroupedList fit>
         <CheckoutChoices {...props} />
       </GroupedList>

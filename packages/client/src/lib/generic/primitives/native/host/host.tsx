@@ -19,7 +19,7 @@ export function Host({ children, ...props }: HostProps): React.JSX.Element {
     <ExpoHost
       {...props}
       colorScheme={theme.colorScheme}
-      seedColor={theme.colors.tint}
+      seedColor={theme.colors.accent}
     >
       <HostPalette colors={theme.colors}>{children}</HostPalette>
     </ExpoHost>

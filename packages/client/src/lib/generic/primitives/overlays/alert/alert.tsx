@@ -10,7 +10,7 @@ import {
 } from './alert-props';
 
 const contentClassName =
-  'bg-popover z-50 mx-auto flex w-full min-w-80 max-w-sm flex-col gap-4 rounded-2xl p-6 web:w-96 web:rounded-surface web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200';
+  'bg-card z-50 mx-auto flex w-full min-w-80 max-w-sm flex-col gap-4 rounded-2xl p-6 web:w-96 web:rounded-surface web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200';
 
 // The web draws an alert as a centred dialog at every width, never as a sheet.
 export function Alert(props: AlertProps): React.JSX.Element {

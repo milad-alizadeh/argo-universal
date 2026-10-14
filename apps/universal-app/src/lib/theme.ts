@@ -39,9 +39,9 @@ export function useNavigationTheme(): Theme {
 
   const values = useCSSVariable([
     // Screens and native headers sit on the App's one content surface.
-    '--color-sidebar',
+    '--color-content',
     '--color-border',
-    '--color-sidebar',
+    '--color-content',
     '--color-destructive',
     '--color-primary',
     '--color-foreground',

@@ -52,7 +52,7 @@ function actionsVisible(wide: boolean, highlighted: boolean): boolean {
 function rowClassName(highlighted: boolean): string {
   return cn(
     'min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-md pr-1',
-    highlighted && 'bg-sidebar-accent',
+    highlighted && 'bg-hover',
   );
 }
 

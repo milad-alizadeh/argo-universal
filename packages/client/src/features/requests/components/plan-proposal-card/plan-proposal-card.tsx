@@ -68,7 +68,7 @@ const panelChrome = {
 
 const expandedPanel = {
   className:
-    'flex-1 min-h-0 max-w-none rounded-t-xl bg-sidebar/80 shadow-glass web:backdrop-blur-glass web:backdrop-saturate-110',
+    'flex-1 min-h-0 max-w-none rounded-t-xl bg-content/80 shadow-glass web:backdrop-blur-glass web:backdrop-saturate-110',
   bodyClassName: 'flex-1 min-h-0',
 };
 

@@ -39,8 +39,8 @@ function alertColors(
   colors: NativeColors,
 ): React.ComponentProps<typeof AlertDialog>['colors'] {
   return {
-    containerColor: colors.popover,
-    titleContentColor: colors.popoverForeground,
+    containerColor: colors.card,
+    titleContentColor: colors.cardForeground,
     textContentColor: colors.mutedForeground,
   };
 }

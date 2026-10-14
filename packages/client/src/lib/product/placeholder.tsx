@@ -10,7 +10,7 @@ interface PlaceholderProps {
 
 export function Placeholder(props: PlaceholderProps): React.JSX.Element {
   return (
-    <View className="flex-1 bg-sidebar">
+    <View className="flex-1 bg-content">
       <PageHeader title={props.title} />
       <View className="flex-1 items-center justify-center gap-2 px-gutter py-6">
         <Text semanticRole="heading" aria-level={1} role="title">

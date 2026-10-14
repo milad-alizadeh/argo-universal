@@ -24,7 +24,7 @@ const messageFieldProps = {
   submitBehavior: 'submit',
   returnKeyType: 'send',
   className:
-    'min-h-16 bg-background dark:bg-background type-control web:resize-none web:focus-visible:ring-ring/25',
+    'min-h-16 bg-background dark:bg-background type-control web:resize-none web:focus-visible:ring-focus/25',
 } as const;
 
 export function DenialActions(answers: PermissionAnswers): ReactNode {

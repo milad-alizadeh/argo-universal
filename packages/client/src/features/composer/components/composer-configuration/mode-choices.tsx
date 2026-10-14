@@ -19,7 +19,7 @@ const destructiveTextClassName = 'text-destructive';
 
 export function ModeContents(props: ModeContentsProps): React.JSX.Element {
   return (
-    <View className="native:flex-1 wide:p-3 bg-sidebar">
+    <View className="native:flex-1 wide:p-3 bg-content">
       <GroupedList fit>
         <GroupedListSection>
           {configurationChoices(props.mode).map((choice) => (

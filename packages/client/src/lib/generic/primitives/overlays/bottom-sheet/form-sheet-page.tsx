@@ -28,10 +28,7 @@ export function FormSheetRoot(props: PageProps): ReactElement | null {
 
 function SheetBody(props: PageProps & { sheet: FormSheetProps }): ReactElement {
   return props.sheet.headerTitle ? (
-    <View
-      className="flex-1 bg-popover"
-      style={{ paddingTop: props.headerInset }}
-    >
+    <View className="flex-1 bg-card" style={{ paddingTop: props.headerInset }}>
       {props.sheet.children}
     </View>
   ) : (
@@ -43,10 +40,7 @@ export function FormSheetChoices(props: PageProps): ReactElement | null {
   const page = useFormSheetState()?.page;
 
   return page ? (
-    <View
-      className="flex-1 bg-popover"
-      style={{ paddingTop: props.headerInset }}
-    >
+    <View className="flex-1 bg-card" style={{ paddingTop: props.headerInset }}>
       {page.content}
     </View>
   ) : null;

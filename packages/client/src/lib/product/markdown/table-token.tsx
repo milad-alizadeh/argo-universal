@@ -105,7 +105,7 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
       <Row
         cells={token.header}
         Cell={HeaderCell}
-        className="flex-row border-b border-border bg-sidebar"
+        className="flex-row border-b border-border bg-content"
       />
       <BodyRows rows={token.rows} />
     </TableFrame>

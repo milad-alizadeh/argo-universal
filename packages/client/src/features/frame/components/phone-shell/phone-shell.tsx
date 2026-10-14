@@ -99,7 +99,7 @@ function useShellDrawer({ layout, shell }: ShellDrawerSource): DrawerSetup {
   return {
     ...drawerToggle(shell),
     width,
-    surfaceStyle: useResolveClassNames('bg-sidebar'),
+    surfaceStyle: useResolveClassNames('bg-content'),
     layout,
     swipeEnabled: shell.swipeEnabled ?? true,
     renderDrawerContent: () => <PhoneDrawerContent {...shell} width={width} />,
@@ -143,7 +143,7 @@ export function PhoneShell(shell: PhoneShellProps): React.JSX.Element {
   return (
     <View
       testID="phone-shell"
-      className="flex-1 overflow-hidden bg-sidebar"
+      className="flex-1 overflow-hidden bg-content"
       onLayout={onLayout}
     >
       <PhoneDrawer {...drawer}>

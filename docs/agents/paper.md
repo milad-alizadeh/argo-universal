@@ -76,7 +76,7 @@ Each section uses these artboards on the pages listed in Design files, top-align
 - Text takes one of four roles from the "Components / Typography" master on the Global Components page: Title, Heading, Body, Secondary. Each role is a set of tokens, `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`; desktop text uses the `-wide` size and leading (`--text-body-wide`), phone text the plain ones. Text nodes reference role tokens, never a scale step such as `--text-sm`. In code they are the `type-title`, `type-heading`, `type-body` and `type-secondary` classes in `theme.css`. Buttons, inputs, chips, the native phone header and mono code keep their own styles.
 - Token values live only in `tooling/uniwind/theme.css`, with no second copy in the repository; each Paper file holds a copy. After a token change in `theme.css`, sync that token by hand in every canonical Paper file. Paper leads how things look; `theme.css` leads token values. A Paper token missing from `theme.css` or holding a different value is drift: report it and fix Paper.
 - Paper stores oklch with one decimal. When that rounding changes the colour, store the exact hex instead.
-- Colours come from the Tailwind palette only. Every semantic token (`--color-success`, `--color-sidebar`) aliases a palette token.
+- Colours come from the Tailwind palette only. Every semantic token (`--color-success`, `--color-content`) aliases a palette token.
 
 ## Icons
 

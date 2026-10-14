@@ -22,7 +22,7 @@ export function PickerSearchList<Value extends string>(
 
   return createElement(
     View,
-    { className: 'flex-1 gap-3 bg-popover px-4 pt-3' },
+    { className: 'flex-1 gap-3 bg-card px-4 pt-3' },
     <TextInput {...searchInputProps(props.label, query, setQuery)} />,
     <SearchResults picker={props} options={options} />,
   );

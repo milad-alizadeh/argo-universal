@@ -26,7 +26,7 @@ function switchClass(props: SwitchProps): string {
     props.size === 'small'
       ? 'h-4 w-6.5 p-0.5 border-0'
       : 'h-5.5 w-9 p-0.5 border-0',
-    'web:focus-visible:border-ring web:focus-visible:ring-ring/50 peer web:inline-flex web:outline-none web:transition-all web:focus-visible:ring-[3px] web:disabled:cursor-not-allowed',
+    'web:focus-visible:border-focus web:focus-visible:ring-focus/50 peer web:inline-flex web:outline-none web:transition-all web:focus-visible:ring-[3px] web:disabled:cursor-not-allowed',
     switchStateClass(props),
   );
 }
@@ -35,7 +35,7 @@ function switchStateClass(
   props: Pick<SwitchProps, 'value' | 'disabled'>,
 ): string {
   return cn(
-    props.value ? 'bg-primary' : 'bg-input dark:bg-[var(--color-separator)]',
+    props.value ? 'bg-primary' : 'bg-border',
     props.disabled && 'opacity-50',
   );
 }

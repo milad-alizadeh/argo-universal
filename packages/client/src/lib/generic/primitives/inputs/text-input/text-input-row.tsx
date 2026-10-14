@@ -13,7 +13,7 @@ export function RowTextInput(props: TextFieldProps): React.JSX.Element {
     <View
       className={cn(
         rowClasses({ title: props.label }, false),
-        'web:focus-within:outline-2 web:focus-within:outline-ring web:focus-within:-outline-offset-2',
+        'web:focus-within:outline-2 web:focus-within:outline-focus web:focus-within:-outline-offset-2',
       )}
     >
       <RowLabel {...props} />
