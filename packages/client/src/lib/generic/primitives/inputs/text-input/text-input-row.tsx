@@ -30,7 +30,7 @@ function RowLabel(props: TextFieldProps): React.JSX.Element {
       className={cn(
         'shrink-0',
         props.disabled && 'text-muted-foreground',
-        isInvalid(props) && 'text-destructive',
+        isInvalid(props) && 'text-danger',
       )}
     >
       {props.label}

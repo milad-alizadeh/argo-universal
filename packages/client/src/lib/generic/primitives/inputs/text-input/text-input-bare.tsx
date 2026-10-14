@@ -19,7 +19,7 @@ const platformInputClass = cn(
   'web:rounded-lg',
   'web:placeholder:text-muted-foreground web:selection:bg-primary web:selection:text-primary-foreground web:outline-none web:transition-[color,box-shadow]',
   'web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:focus-visible:ring-[3px]',
-  'web:aria-invalid:ring-destructive/20 web:dark:aria-invalid:ring-destructive/40 web:aria-invalid:border-destructive',
+  'web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40 web:aria-invalid:border-danger',
   'native:placeholder:text-muted-foreground/50',
 );
 

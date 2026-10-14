@@ -88,7 +88,7 @@ function markClassName(props: CheckboxIndicatorProps): string {
     'size-4.5 shrink-0 items-center justify-center rounded-sm border-[1.5px] border-border',
     optionMarkClass(props),
     props.value && 'border-primary bg-primary',
-    props.invalid && 'border-destructive',
+    props.invalid && 'border-danger',
   );
 }
 

@@ -60,7 +60,7 @@ function accentRoles(
     primary: role(colors.primary, seeded.primary),
     onPrimary: role(colors.primaryForeground, seeded.onPrimary),
     outline: role(colors.border, seeded.outline),
-    error: role(colors.destructive, seeded.error),
+    error: role(colors.danger, seeded.error),
   };
 }
 

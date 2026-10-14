@@ -3,7 +3,7 @@ import { useNativeTheme } from '../../../native-theme';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
 import { nativeButtonVariant } from './button-state';
 
-const destructiveClass = 'text-destructive';
+const destructiveClass = 'text-danger';
 
 const primaryClass = 'text-primary';
 
@@ -87,9 +87,9 @@ const destructiveColors: Record<
 > = {
   default: {
     container: destructiveClass,
-    content: 'text-destructive-foreground',
+    content: 'text-danger-foreground',
   },
-  secondary: { container: 'text-destructive/10', content: destructiveClass },
+  secondary: { container: 'text-danger/10', content: destructiveClass },
   outline: { container: transparentClass, content: destructiveClass },
   ghost: { container: transparentClass, content: destructiveClass },
   link: { container: transparentClass, content: destructiveClass },

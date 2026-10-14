@@ -42,7 +42,7 @@ export function useNavigationTheme(): Theme {
     '--color-content',
     '--color-border',
     '--color-content',
-    '--color-destructive',
+    '--color-danger',
     '--color-primary',
     '--color-foreground',
   ]);

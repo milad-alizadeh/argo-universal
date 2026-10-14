@@ -102,9 +102,9 @@ function useCaptionStyle(
 function useCaptionColor(
   tone: GroupedListSectionProps['footerTone'],
 ): string | undefined {
-  const { mutedForeground, destructive } = useNativeTheme().colors;
+  const { mutedForeground, danger } = useNativeTheme().colors;
 
-  return tone === 'destructive' ? destructive : mutedForeground;
+  return tone === 'destructive' ? danger : mutedForeground;
 }
 
 GroupedListSection satisfies React.ComponentType<GroupedListSectionProps>;

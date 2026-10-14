@@ -165,7 +165,7 @@ export function titleClasses(
 }
 
 const toneText = {
-  destructive: 'text-destructive',
+  destructive: 'text-danger',
   accent: 'text-accent',
   muted: 'text-muted-foreground',
 };

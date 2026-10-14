@@ -18,7 +18,7 @@ function checkboxColors(
   return {
     checkedColor: colors.accent,
     uncheckedColor: invalid
-      ? colors.destructive
+      ? colors.danger
       : (outline ?? colors.mutedForeground),
     checkmarkColor: colors.background,
     disabledCheckedColor: colors.disabledContent,

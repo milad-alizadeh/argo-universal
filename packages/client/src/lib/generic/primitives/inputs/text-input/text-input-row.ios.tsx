@@ -58,10 +58,9 @@ function useRowModifiers(): React.ComponentProps<
 
 function RowLabel(props: TextFieldProps): React.JSX.Element {
   const bodyModifiers = useSwiftUITextModifiers('body', 'row');
-  const { destructive } = useNativeTheme().colors;
+  const { danger } = useNativeTheme().colors;
 
-  const color =
-    isInvalid(props) && destructive ? [foregroundStyle(destructive)] : [];
+  const color = isInvalid(props) && danger ? [foregroundStyle(danger)] : [];
 
   return <Text modifiers={[...bodyModifiers, ...color]}>{props.label}</Text>;
 }

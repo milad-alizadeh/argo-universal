@@ -99,7 +99,7 @@ function AlertButton(
   const { colors } = useNativeTheme();
 
   const color =
-    props.action.role === 'destructive' ? colors.destructive : colors.primary;
+    props.action.role === 'destructive' ? colors.danger : colors.primary;
 
   return (
     <TextButton

@@ -105,7 +105,7 @@ export function ElicitationValidation(props: {
     <Text
       semanticRole="alert"
       role="secondary"
-      className="px-4 pt-3 text-destructive"
+      className="px-4 pt-3 text-danger"
     >
       Fix {props.labels.join(', ')} to submit
     </Text>

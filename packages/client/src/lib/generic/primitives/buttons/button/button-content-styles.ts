@@ -70,7 +70,7 @@ const textClasses = cva(
           'text-foreground group-active:text-hover-foreground ios:font-normal',
         link: 'text-primary web:underline-offset-4 group-active:underline web:group-hover:underline ios:font-normal',
       },
-      destructive: { true: 'text-destructive' },
+      destructive: { true: 'text-danger' },
     },
     defaultVariants: { variant: 'default' },
   },
@@ -93,10 +93,10 @@ export function contentButtonClass(props: ButtonClassProps): string {
 }
 
 const destructiveOutline =
-  'border border-border bg-background web:shadow-xs active:bg-destructive/10 web:hover:bg-destructive/10';
+  'border border-border bg-background web:shadow-xs active:bg-danger/10 web:hover:bg-danger/10';
 
 const destructiveText =
-  'bg-transparent active:bg-destructive/10 web:hover:bg-destructive/10';
+  'bg-transparent active:bg-danger/10 web:hover:bg-danger/10';
 
 // A destructive button without a variant draws as an outline.
 const destructiveClasses = cva('', {
@@ -109,7 +109,7 @@ const destructiveClasses = cva('', {
       role: 'destructive',
       variant: 'default',
       className:
-        'bg-destructive ios:bg-destructive active:bg-destructive/90 web:hover:bg-destructive/90',
+        'bg-danger ios:bg-danger active:bg-danger/90 web:hover:bg-danger/90',
     },
     {
       role: 'destructive',
@@ -133,7 +133,7 @@ export function contentTextClass(
   return cn(
     textClasses({ variant: props.variant, destructive }),
     nativeLabelClass,
-    destructive && props.variant === 'default' && 'text-destructive-foreground',
+    destructive && props.variant === 'default' && 'text-danger-foreground',
   );
 }
 

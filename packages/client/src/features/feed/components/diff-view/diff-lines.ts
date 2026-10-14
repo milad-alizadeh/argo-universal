@@ -17,8 +17,8 @@ export const lineStyles: Record<
     patchSign: '+',
   },
   removed: {
-    color: 'text-destructive',
-    background: 'bg-destructive/10',
+    color: 'text-danger',
+    background: 'bg-danger/10',
     sign: '−',
     patchSign: '-',
   },

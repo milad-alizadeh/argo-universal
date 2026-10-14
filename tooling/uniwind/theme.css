@@ -163,11 +163,12 @@
       /* A hovered or pressed row, item or button. */
       --color-hover: var(--color-neutral-100);
       --color-hover-foreground: var(--color-neutral-900);
-      --color-destructive: var(--color-red-500);
-      --color-destructive-foreground: var(--color-white);
+      --color-danger: var(--color-red-500);
+      --color-danger-foreground: var(--color-white);
       --color-border: var(--color-neutral-200);
       --color-focus: var(--color-neutral-400);
-      --color-merged: var(--color-violet-600);
+      /* Finished work: a merged pull request, a completed issue. */
+      --color-done: var(--color-violet-600);
       --color-success: var(--color-green-600);
       --color-info: var(--color-blue-600);
       --color-warning: var(--color-amber-600);
@@ -211,11 +212,11 @@
       --color-muted-foreground: hsl(0 0% 63.9%);
       --color-hover: hsl(0 0% 14.9%);
       --color-hover-foreground: hsl(0 0% 98%);
-      --color-destructive: var(--color-red-500);
-      --color-destructive-foreground: var(--color-white);
+      --color-danger: var(--color-red-500);
+      --color-danger-foreground: var(--color-white);
       --color-border: hsl(0 0% 14.9%);
       --color-focus: hsl(300 0% 45%);
-      --color-merged: oklch(70.2% 0.183 293.541);
+      --color-done: oklch(70.2% 0.183 293.541);
       --color-success: oklch(72.3% 0.219 149.579);
       --color-info: oklch(70.7% 0.165 254.624);
       --color-warning: oklch(76.9% 0.188 70.08);

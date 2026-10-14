@@ -57,7 +57,7 @@ function FeedDisclosureIcon(
       name={props.icon}
       role="body"
       className={cn('shrink-0 text-muted-foreground', {
-        'text-destructive': props.failed,
+        'text-danger': props.failed,
         [foregroundTextClassName]: props.hovered,
       })}
     />

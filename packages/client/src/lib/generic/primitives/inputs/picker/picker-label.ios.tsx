@@ -20,9 +20,9 @@ const rowHeight = 44;
 export function PickerLabel(
   props: Pick<PickerProps<string>, 'label' | 'invalid' | 'required'>,
 ): React.JSX.Element {
-  const { foreground, destructive } = useNativeTheme().colors;
+  const { foreground, danger } = useNativeTheme().colors;
   const modifiers = useSwiftUITextModifiers('body', 'row');
-  const color = (props.invalid ? destructive : foreground) ?? 'primary';
+  const color = (props.invalid ? danger : foreground) ?? 'primary';
 
   return (
     <Text modifiers={[...modifiers, foregroundStyle(color)]}>
@@ -57,7 +57,7 @@ export function usePickerModifiers<Value extends string>(
     accessibilityValue(pickerValue(props)),
     accessibilityHint(pickerHint(props)),
     disabled(props.disabled),
-    ...optionalTint(props.invalid ? colors.destructive : colors.accent),
+    ...optionalTint(props.invalid ? colors.danger : colors.accent),
   ];
 }
 

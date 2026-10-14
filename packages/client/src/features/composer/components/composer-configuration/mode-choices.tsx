@@ -15,7 +15,7 @@ interface ModeChoiceProps extends ModeContentsProps {
   choice: SessionConfigSelectOption;
 }
 
-const destructiveTextClassName = 'text-destructive';
+const destructiveTextClassName = 'text-danger';
 
 export function ModeContents(props: ModeContentsProps): React.JSX.Element {
   return (

@@ -69,10 +69,10 @@ function useFooterModifiers(
   tone: GroupedListSectionProps['footerTone'],
 ): ReturnType<typeof useSwiftUITextModifiers> {
   const secondaryModifiers = useSwiftUITextModifiers('secondary');
-  const { destructive } = useNativeTheme().colors;
+  const { danger } = useNativeTheme().colors;
 
-  return tone === 'destructive' && destructive
-    ? [...secondaryModifiers, foregroundStyle(destructive)]
+  return tone === 'destructive' && danger
+    ? [...secondaryModifiers, foregroundStyle(danger)]
     : secondaryModifiers;
 }
 

@@ -14,7 +14,7 @@ export const subtitleRole = (
 export function useToneColor(
   tone: GroupedListItemProps['tone'],
 ): string | undefined {
-  const { destructive, accent, mutedForeground } = useNativeTheme().colors;
+  const { danger, accent, mutedForeground } = useNativeTheme().colors;
 
-  return tone && { destructive, accent, muted: mutedForeground }[tone];
+  return tone && { destructive: danger, accent, muted: mutedForeground }[tone];
 }

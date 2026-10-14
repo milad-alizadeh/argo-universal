@@ -73,7 +73,7 @@ function FooterText(props: FooterProps & { text: string }): React.JSX.Element {
       id={props.id}
       role="secondary"
       semanticRole={failure ? 'alert' : undefined}
-      className={cn('px-4', failure && 'text-destructive')}
+      className={cn('px-4', failure && 'text-danger')}
     >
       {props.text}
     </Text>

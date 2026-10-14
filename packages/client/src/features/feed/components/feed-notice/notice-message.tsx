@@ -13,7 +13,7 @@ interface Appearance {
 const noticeAppearance = new Map<string, Appearance>([
   ['info', { icon: 'info', color: 'text-muted-foreground' }],
   ['warning', { icon: 'warning', color: 'text-warning' }],
-  ['error', { icon: 'failed', color: 'text-destructive' }],
+  ['error', { icon: 'failed', color: 'text-danger' }],
 ]);
 
 const unrecognisedAppearance: Appearance = {

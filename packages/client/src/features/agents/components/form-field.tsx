@@ -69,7 +69,7 @@ export function FieldMessage({
   if (!error) return null;
 
   return (
-    <Text role="secondary" className="text-destructive" semanticRole="alert">
+    <Text role="secondary" className="text-danger" semanticRole="alert">
       {error}
     </Text>
   );

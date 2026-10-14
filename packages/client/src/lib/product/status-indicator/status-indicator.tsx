@@ -15,7 +15,7 @@ export const statusLabels = {
 const statusColors = {
   needs_input: 'bg-warning',
   running: 'bg-success',
-  failed: 'bg-destructive',
+  failed: 'bg-danger',
   unread: 'bg-info',
   idle: 'bg-muted-foreground',
 } satisfies Record<SessionInfo['status'], string>;
