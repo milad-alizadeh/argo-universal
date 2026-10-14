@@ -1,13 +1,10 @@
 import type * as React from 'react';
 import { Icon } from '#primitives/display/icon';
-import type { IconRole } from '../../../symbols/icon-role';
+import type { SelectedCheckProps } from './selected-check-props';
 
 export function SelectedCheck({
   className,
   role = 'mark',
-}: {
-  className?: string;
-  role?: Extract<IconRole, 'mark' | 'body'>;
-}): React.JSX.Element {
+}: SelectedCheckProps): React.JSX.Element {
   return <Icon name="check" role={role} className={className} />;
 }

@@ -6,31 +6,21 @@ import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/display/text';
 import { HoverProvider, PopoverHover } from './popover-hover';
 import { hoverContentProps } from './popover-hover-focus';
+import type {
+  PopoverContentProps as ContentProps,
+  PopoverProps,
+} from './popover-props';
 import { Popover as PopoverRoot } from './popover-root';
 
 export { PopoverTrigger } from './popover-trigger';
 
 export { PopoverHoverGroup } from './popover-hover';
 
-type ContentProps = Omit<
-  React.ComponentProps<typeof PopoverPrimitive.Content>,
-  'side' | 'ref'
-> & {
-  ref?: React.Ref<HTMLDivElement>;
-  side?: 'top' | 'bottom' | 'left' | 'right';
-  alignOffset?: number;
-  portalHost?: string;
-  onClosed?: () => void;
-};
-
 export function Popover({
   openOnHover,
   children,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Root> & {
-  openOnHover?: boolean;
-  open?: boolean;
-}): React.JSX.Element {
+}: PopoverProps): React.JSX.Element {
   return (
     <PopoverRoot {...props}>
       <HoverProvider enabled={openOnHover}>{children}</HoverProvider>
@@ -54,7 +44,10 @@ function contentPlacement({
   return { align, sideOffset };
 }
 
-function PopoverBody({ ref, ...props }: ContentProps): React.JSX.Element {
+// A ref handed to the content still reaches Radix's element: the close transition waits on it.
+type BodyProps = ContentProps & { ref?: React.Ref<HTMLDivElement> };
+
+function PopoverBody({ ref, ...props }: BodyProps): React.JSX.Element {
   const { open } = PopoverPrimitive.useRootContext();
   const hover = React.useContext(PopoverHover);
 
@@ -70,7 +63,7 @@ function PopoverBody({ ref, ...props }: ContentProps): React.JSX.Element {
 }
 
 function webContentProps(
-  props: Omit<ContentProps, 'ref'>,
+  props: ContentProps,
 ): React.ComponentProps<typeof WebPopover.Content> {
   return {
     ...contentPlacement(props),
@@ -84,7 +77,7 @@ function webContentProps(
 }
 
 function PopoverSurface(
-  props: Omit<ContentProps, 'ref'> & { open: boolean },
+  props: ContentProps & { open: boolean },
 ): React.JSX.Element {
   return (
     <View
@@ -113,7 +106,7 @@ function PopoverContent({
 export { PopoverContent };
 
 function contentInteractions(
-  props: Omit<ContentProps, 'ref'>,
+  props: ContentProps,
 ): React.ComponentProps<typeof WebPopover.Content> {
   return {
     onOpenAutoFocus: props.onOpenAutoFocus,
@@ -122,3 +115,7 @@ function contentInteractions(
     onPointerDownOutside: props.onPointerDownOutside,
   };
 }
+
+Popover satisfies React.ComponentType<PopoverProps>;
+
+PopoverContent satisfies React.ComponentType<ContentProps>;

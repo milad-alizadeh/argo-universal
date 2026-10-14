@@ -3,7 +3,7 @@ import type {
   SheetCommands,
   SheetOwner,
   SheetPage,
-} from './form-sheet-types';
+} from './form-sheet-props';
 
 export function sheetCommands(owner: SheetOwner): SheetCommands {
   return {

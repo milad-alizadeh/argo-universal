@@ -39,3 +39,5 @@ function SystemGlass(props: LiquidGlassProps): React.JSX.Element {
     </GlassView>
   );
 }
+
+LiquidGlass satisfies React.ComponentType<LiquidGlassProps>;

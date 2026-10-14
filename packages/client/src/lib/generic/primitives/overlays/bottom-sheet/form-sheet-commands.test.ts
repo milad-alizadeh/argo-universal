@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { sheetCommands } from './form-sheet-commands';
-import type { FormSheetProps, SheetState } from './form-sheet-types';
+import type { FormSheetProps, SheetState } from './form-sheet-props';
 
 function sheetHarness(): ReturnType<typeof sheetCommands> {
   let current: SheetState | undefined;

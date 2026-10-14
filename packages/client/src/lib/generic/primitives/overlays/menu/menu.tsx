@@ -54,3 +54,5 @@ function MenuBody<Value extends string>({
 
   return <MenuChoiceContent {...props} focus={focus} />;
 }
+
+Menu satisfies React.ComponentType<MenuProps<string>>;

@@ -26,4 +26,7 @@ export type DockedSearchFieldProps = DockedSearchQuery & {
   className?: string;
 };
 
+// What the docked bar itself takes once the field has chosen it.
+export type DockedSearchBarProps = Omit<DockedSearchFieldProps, 'appearance'>;
+
 export type SearchFieldProps = MorphSearchFieldProps | DockedSearchFieldProps;

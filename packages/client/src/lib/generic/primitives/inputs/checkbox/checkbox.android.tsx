@@ -13,7 +13,7 @@ import {
   selectable,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
-import { createElement } from 'react';
+import { type ComponentType, createElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
 import {
@@ -31,7 +31,9 @@ import type { CheckboxState } from './checkbox-state';
 
 export type { CheckboxProps } from './checkbox-props';
 
-export const Checkbox = createNativeCheckbox(CheckboxRow);
+export const Checkbox = createNativeCheckbox(
+  CheckboxRow,
+) satisfies ComponentType<CheckboxProps>;
 
 type RowProps = CheckboxProps & { state: CheckboxState };
 

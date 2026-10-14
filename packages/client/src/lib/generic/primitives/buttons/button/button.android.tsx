@@ -15,11 +15,12 @@ import {
   testID,
   type ModifierConfig,
 } from '@expo/ui/jetpack-compose/modifiers';
-import type { ComponentProps, ReactElement } from 'react';
+import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { useIconPixels } from '../../../symbols/icon-role';
 import { createNativeButton, NativeButtonIcon } from './button-native';
 import type { ButtonTheme } from './button-native-colors';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
+import type { ButtonProps } from './button-props';
 import { nativeButtonVariant, readyPress } from './button-state';
 
 const nativeButtons = {
@@ -30,7 +31,9 @@ const nativeButtons = {
   link: TextButton,
 } satisfies Record<ButtonVariant, typeof ComposeButton>;
 
-export const Button = createNativeButton(NativeControl);
+export const Button = createNativeButton(
+  NativeControl,
+) satisfies ComponentType<ButtonProps>;
 
 function NativeControl(
   props: ButtonDataProps & { theme: ButtonTheme },

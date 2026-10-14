@@ -126,3 +126,5 @@ function actionRole(
 ): AlertProps['actions'][number]['role'] {
   return explicitCancel && action.role === 'cancel' ? undefined : action.role;
 }
+
+Alert satisfies React.ComponentType<AlertProps>;

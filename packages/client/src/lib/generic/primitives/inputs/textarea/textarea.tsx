@@ -3,15 +3,13 @@ import { Platform, TextInput } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { cn } from '#lib/generic/utils';
 import { usePrimitiveColor } from '#primitives/native/primitive-color';
+import type { TextareaProps } from './textarea-props';
 
-type TextareaProps = React.ComponentProps<typeof TextInput> &
-  React.RefAttributes<TextInput>;
-
-function textareaClassName({ className, editable }: TextareaProps): string {
+function textareaClassName({ className, disabled }: TextareaProps): string {
   return cn(
     'text-foreground border-input dark:bg-input/30 flex min-h-16 w-full flex-row rounded-md border bg-transparent px-3 py-2 type-body shadow-sm shadow-black/5',
     'web:rounded-lg web:placeholder:text-muted-foreground web:focus-visible:border-ring web:focus-visible:ring-ring/50 web:aria-invalid:ring-destructive/20 web:dark:aria-invalid:ring-destructive/40 web:aria-invalid:border-destructive web:field-sizing-content web:resize-y web:outline-none web:transition-[color,box-shadow] web:focus-visible:ring-[3px] web:disabled:cursor-not-allowed',
-    editable === false && 'opacity-50',
+    disabled === true && 'opacity-50',
     className,
   );
 }
@@ -21,9 +19,16 @@ function textareaInputProps({
   placeholderClassName: _placeholderClassName,
   multiline = true,
   numberOfLines = Platform.select({ web: 2, native: 8 }),
+  disabled,
   ...props
-}: TextareaProps): TextareaProps {
-  return { multiline, numberOfLines, textAlignVertical: 'top', ...props };
+}: TextareaProps): React.ComponentProps<typeof TextInput> {
+  const lines = { multiline, numberOfLines, textAlignVertical: 'top' } as const;
+
+  return { ...lines, editable: editableWhen(disabled), ...props };
+}
+
+function editableWhen(disabled: boolean | undefined): boolean | undefined {
+  return disabled === undefined ? undefined : !disabled;
 }
 
 function Textarea(options: TextareaProps): ReactElement {

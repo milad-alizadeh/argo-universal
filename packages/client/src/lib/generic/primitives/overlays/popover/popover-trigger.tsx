@@ -1,11 +1,15 @@
 import * as WebPopover from '@radix-ui/react-popover';
 import * as PopoverPrimitive from '@rn-primitives/popover';
 import { Slot } from '@rn-primitives/slot';
-import { useContext, type ComponentProps, type JSX } from 'react';
+import {
+  type ComponentProps,
+  type ComponentType,
+  type JSX,
+  useContext,
+} from 'react';
 import { Pressable, type GestureResponderEvent } from 'react-native';
 import { PopoverHover } from './popover-hover';
-
-type TriggerProps = ComponentProps<typeof PopoverPrimitive.Trigger>;
+import type { PopoverTriggerProps as TriggerProps } from './popover-props';
 
 export function PopoverTrigger({
   asChild,
@@ -69,3 +73,5 @@ function hoverTrigger(
 
   return { onHoverIn: hover.enter, onHoverOut: hover.leave };
 }
+
+PopoverTrigger satisfies ComponentType<TriggerProps>;

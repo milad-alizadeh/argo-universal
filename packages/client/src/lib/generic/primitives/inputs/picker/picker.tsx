@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { type ComponentType, createElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import {
@@ -76,3 +76,5 @@ function selectProps<Value extends string>(
     },
   };
 }
+
+Picker satisfies ComponentType<PickerProps<string>>;

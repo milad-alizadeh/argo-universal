@@ -4,7 +4,7 @@ import {
   useNativeState,
 } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import type { ComponentProps, ReactElement } from 'react';
+import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { useMemo } from 'react';
 import { useFollowedText } from '#primitives/native/followed-text';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
@@ -95,3 +95,5 @@ function fieldBehaviour(props: StandaloneTextInputProps): FieldProps {
     },
   };
 }
+
+StandaloneTextInput satisfies ComponentType<StandaloneTextInputProps>;

@@ -94,3 +94,5 @@ function useColumnModifiers(
 function sideGutterFor(variant: FieldGroupProps['variant']): number {
   return variant === 'navigation' ? 0 : gutter;
 }
+
+FieldGroup satisfies React.ComponentType<FieldGroupProps>;

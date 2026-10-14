@@ -1,6 +1,6 @@
-import type { ReactElement } from 'react';
+import type { ComponentType, ReactElement } from 'react';
 import { BottomSheet } from '#primitives/overlays/bottom-sheet';
-import type { DialogRegionProps } from './dialog-region.types';
+import type { DialogRegionProps } from './dialog-props';
 
 // The region opens tall and its content owns scrolling, so actions at its foot stay in view.
 export function DialogRegion(props: DialogRegionProps): ReactElement {
@@ -18,3 +18,5 @@ export function DialogRegion(props: DialogRegionProps): ReactElement {
     </BottomSheet>
   );
 }
+
+DialogRegion satisfies ComponentType<DialogRegionProps>;

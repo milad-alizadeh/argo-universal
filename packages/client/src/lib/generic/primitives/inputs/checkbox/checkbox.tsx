@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { type ComponentType, createElement } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
@@ -118,3 +118,7 @@ function optionMarkClass(props: CheckboxIndicatorProps): string | undefined {
     ? 'size-4 rounded-xs border border-ring'
     : undefined;
 }
+
+Checkbox satisfies ComponentType<CheckboxProps>;
+
+CheckboxIndicator satisfies ComponentType<CheckboxIndicatorProps>;

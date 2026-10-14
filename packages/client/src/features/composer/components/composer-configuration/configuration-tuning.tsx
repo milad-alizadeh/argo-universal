@@ -121,7 +121,6 @@ function webSwitchRowProps({
     title: option.name,
     role: 'switch',
     checked: option.currentValue,
-    'aria-checked': option.currentValue,
     disclosure: false,
     onPress: () =>
       configuration.onConfigChange(option.configId, !option.currentValue),

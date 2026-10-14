@@ -3,17 +3,8 @@ import { contentActionClass } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import { Pressable } from '#primitives/pressable';
-import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
-
-export interface NavigationItemProps {
-  title: string;
-  icon: IconName;
-  selected: boolean;
-  // A count that needs attention, drawn by the caller, and what a screen reader says for it.
-  badge?: { element: React.ReactElement; label: string };
-  onPress: () => void;
-}
+import type { NavigationItemProps } from './navigation-item-props';
 
 // A destination in a navigation drawer: an icon and a label, tinted and filled when it is the current one.
 export function NavigationItem(props: NavigationItemProps): React.JSX.Element {
@@ -63,3 +54,5 @@ function OptionalBadge({
 }: Pick<NavigationItemProps, 'badge'>): React.ReactElement | null {
   return badge?.element ?? null;
 }
+
+NavigationItem satisfies React.ComponentType<NavigationItemProps>;

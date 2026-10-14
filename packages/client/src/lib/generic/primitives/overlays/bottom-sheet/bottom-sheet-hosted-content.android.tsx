@@ -6,7 +6,7 @@ import {
 import type * as React from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { BottomSheetContent } from './bottom-sheet-content';
-import type { BottomSheetProps } from './bottom-sheet.types';
+import type { BottomSheetProps } from './bottom-sheet-props';
 
 type HostedSheetProps = Pick<
   BottomSheetProps,

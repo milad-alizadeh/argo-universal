@@ -79,7 +79,7 @@ function agentModelTrigger(props: TriggerProps): React.JSX.Element {
 // A spinner while the Session opens; wide, the Agent's icon otherwise.
 function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
   if (props.configuration.opening)
-    return <Spinner label="Opening the Session" />;
+    return <Spinner accessibilityLabel="Opening the Session" />;
 
   return props.wide ? <AgentIcon agent={props.agent} /> : undefined;
 }

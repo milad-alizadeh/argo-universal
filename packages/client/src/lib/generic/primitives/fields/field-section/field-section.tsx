@@ -97,3 +97,5 @@ function SectionTitle({ title }: { title?: string }): React.JSX.Element | null {
     </View>
   );
 }
+
+FieldSection satisfies React.ComponentType<FieldSectionProps>;

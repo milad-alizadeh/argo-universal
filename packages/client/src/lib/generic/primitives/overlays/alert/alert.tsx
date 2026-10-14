@@ -80,3 +80,5 @@ function AlertButton(
 }
 
 export type { AlertAction, AlertProps } from './alert-props';
+
+Alert satisfies React.ComponentType<AlertProps>;

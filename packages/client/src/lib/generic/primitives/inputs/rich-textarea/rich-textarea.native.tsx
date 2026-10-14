@@ -13,12 +13,12 @@ const lineHeight = 20;
 
 function plainFieldProps({
   onSubmit: _onSubmit,
-  editable = true,
+  disabled = false,
   ...field
 }: RichTextareaProps): TextInputProps {
   return {
     ...field,
-    editable,
+    editable: !disabled,
     placeholderTextColorClassName: 'accent-muted-foreground/70',
   };
 }
@@ -33,10 +33,12 @@ function RichTextarea(props: RichTextareaProps): React.JSX.Element {
       className={cn(
         'w-full text-foreground',
         plainFieldClassName,
-        props.editable === false && 'opacity-50',
+        props.disabled === true && 'opacity-50',
       )}
     />
   );
 }
 
 export { RichTextarea };
+
+RichTextarea satisfies React.ComponentType<RichTextareaProps>;

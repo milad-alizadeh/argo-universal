@@ -84,7 +84,7 @@ function rangeActions(
   return ranges.map((range) => ({
     label: range,
     selected: range === shown,
-    onSelect: () => show(range),
+    onPress: () => show(range),
   }));
 }
 

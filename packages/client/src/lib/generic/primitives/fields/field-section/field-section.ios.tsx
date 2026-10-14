@@ -73,3 +73,5 @@ function useFooterModifiers(
     ? [...secondaryModifiers, foregroundStyle(destructive)]
     : secondaryModifiers;
 }
+
+FieldSection satisfies React.ComponentType<FieldSectionProps>;

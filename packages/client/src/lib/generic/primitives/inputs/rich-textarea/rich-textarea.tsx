@@ -98,7 +98,7 @@ function editorConfig(value: string, editable: boolean): InitialConfigType {
 
 const noReferences: readonly ReferenceOption[] = [];
 
-type EditorParts = Omit<RichTextareaProps, 'editable' | 'references'> & {
+type EditorParts = Omit<RichTextareaProps, 'disabled' | 'references'> & {
   editable: boolean;
   references: readonly ReferenceOption[];
 };
@@ -118,10 +118,12 @@ function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
 
 // The web drawing: a Lexical editor that shows markdown as you type, growing to 10 lines, then scrolling.
 function RichTextarea({
-  editable = true,
+  disabled = false,
   references = noReferences,
   ...props
 }: RichTextareaProps): React.JSX.Element {
+  const editable = !disabled;
+
   return (
     <LexicalComposer initialConfig={editorConfig(props.value, editable)}>
       <ReferenceProviders references={references}>
@@ -132,3 +134,5 @@ function RichTextarea({
 }
 
 export { RichTextarea };
+
+RichTextarea satisfies React.ComponentType<RichTextareaProps>;

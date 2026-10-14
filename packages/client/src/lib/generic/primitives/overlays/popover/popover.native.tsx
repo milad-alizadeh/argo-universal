@@ -6,9 +6,12 @@ import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/display/text';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
 import { usePopoverDismissal } from './popover-dismissal';
+import type {
+  PopoverContentProps as ContentProps,
+  PopoverTriggerProps as TriggerProps,
+} from './popover-props';
+import type { PopoverProps } from './popover-props';
 import { ControlledPopoverState, Popover } from './popover-root';
-
-type TriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>;
 
 function PopoverTrigger({ ref, ...props }: TriggerProps): React.JSX.Element {
   const { trigger, setRef } = useTriggerRef(ref);
@@ -73,11 +76,6 @@ export function usePopoverClose(): () => void {
 const FullWindowOverlay =
   Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
 
-type ContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
-  portalHost?: string;
-  onClosed?: () => void;
-};
-
 function PopoverContent(content: ContentProps): React.JSX.Element | null {
   const { portalHost, onClosed, ...props } = content;
   const { open } = PopoverPrimitive.useRootContext();
@@ -110,7 +108,7 @@ function PopoverOverlay({
   );
 }
 
-type SurfaceProps = React.ComponentProps<typeof PopoverPrimitive.Content>;
+type SurfaceProps = Omit<ContentProps, 'portalHost' | 'onClosed'>;
 
 function PopoverSurface({
   children,
@@ -125,19 +123,32 @@ function PopoverSurface({
   );
 }
 
+type PrimitiveContentProps = React.ComponentProps<
+  typeof PopoverPrimitive.Content
+>;
+
 function surfaceProps({
   className,
   align = 'center',
   sideOffset = 4,
+  side,
   ...props
-}: SurfaceProps): SurfaceProps {
+}: SurfaceProps): PrimitiveContentProps {
+  const placement = { align, sideOffset, side: nativeSide(side) };
+
   return {
     forceMount: true,
-    align,
-    sideOffset,
+    ...placement,
     className: cn(surfaceClass, className),
     ...props,
   };
+}
+
+// The library opens anything but `top` below the trigger.
+function nativeSide(side: SurfaceProps['side']): PrimitiveContentProps['side'] {
+  if (side === undefined) return undefined;
+
+  return side === 'top' ? 'top' : 'bottom';
 }
 
 export { Popover, PopoverContent, PopoverTrigger };
@@ -160,3 +171,9 @@ const overlayProps = {
 
 const surfaceClass =
   'bg-popover border-border z-50 w-72 rounded-2xl border p-4 shadow-md shadow-black/5';
+
+Popover satisfies React.ComponentType<PopoverProps>;
+
+PopoverContent satisfies React.ComponentType<ContentProps>;
+
+PopoverTrigger satisfies React.ComponentType<TriggerProps>;

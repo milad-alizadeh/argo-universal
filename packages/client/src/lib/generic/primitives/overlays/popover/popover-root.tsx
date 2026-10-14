@@ -1,15 +1,13 @@
 import * as PopoverPrimitive from '@rn-primitives/popover';
 import type * as React from 'react';
 import { createContext, useEffect } from 'react';
+import type { PopoverProps } from './popover-props';
 
 export const ControlledPopoverState = createContext<boolean | undefined>(
   undefined,
 );
 
-type RootProps = React.ComponentProps<typeof PopoverPrimitive.Root> & {
-  open?: boolean;
-  openOnHover?: boolean;
-};
+type RootProps = PopoverProps;
 
 export function Popover({
   open,

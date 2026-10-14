@@ -4,7 +4,7 @@ export { BottomSheetAnchor } from './bottom-sheet-anchor';
 
 export { BottomSheetSurface } from './bottom-sheet-surface';
 
-export { type BottomSheetProps } from './bottom-sheet.types';
+export { type BottomSheetProps } from './bottom-sheet-props';
 
 export { RoutedFormSheet } from './form-sheet';
 
@@ -18,6 +18,6 @@ export {
 
 export { FormSheetChoices, FormSheetRoot } from './form-sheet-page';
 
-export { type FormSheetProps, type FormSheetRoutes } from './form-sheet-types';
+export { type FormSheetProps, type FormSheetRoutes } from './form-sheet-props';
 
 export { keepOpen } from './keep-open';

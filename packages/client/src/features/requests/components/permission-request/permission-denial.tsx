@@ -67,7 +67,7 @@ function DenialMessage(input: DenialInput): ReactNode {
       {...messageFieldProps}
       ref={useFocusOnMount()}
       value={input.denialMessage ?? ''}
-      editable={!answers.inactive}
+      disabled={answers.inactive}
       onChangeText={input.onDenialMessageChange}
       onSubmitEditing={Platform.OS === 'web' ? undefined : answers.deny}
     />

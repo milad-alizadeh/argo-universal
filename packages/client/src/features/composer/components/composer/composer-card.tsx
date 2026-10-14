@@ -108,7 +108,7 @@ function textInputProps({
     accessibilityLabel: 'Message',
     placeholder: props.placeholder ?? 'Message the Agent…',
     value: props.draft.text,
-    editable: !inactive,
+    disabled: inactive,
     onChangeText: (text) => props.onDraftChange({ ...props.draft, text }),
     onSubmit: send,
   };

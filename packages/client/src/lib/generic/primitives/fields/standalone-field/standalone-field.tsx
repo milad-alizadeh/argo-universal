@@ -1,4 +1,4 @@
-import { type ReactElement, type ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import {
   FieldDescriptionFooter,
@@ -9,15 +9,9 @@ import {
   FooterProvider,
   type SectionFooter,
 } from '#primitives/fields/field-description';
-import type { FieldErrors } from '#primitives/fields/field-errors';
+import type { StandaloneFieldProps } from './standalone-field-props';
 
-type FieldProps = {
-  errors?: FieldErrors;
-  hint?: string;
-  children: ReactNode;
-};
-
-export function StandaloneField(props: FieldProps): ReactElement {
+export function StandaloneField(props: StandaloneFieldProps): ReactElement {
   const description = useFieldDescription(props);
 
   return (

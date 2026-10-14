@@ -17,7 +17,7 @@ type SheetProps<Value extends string> = SplitMenuProps<Value> & {
 interface SheetRow {
   label: string;
   selected?: boolean;
-  onSelect: () => void;
+  onPress: () => void;
 }
 
 interface ChoiceSheetState {
@@ -82,7 +82,7 @@ function sheetRows<Value extends string>(
   return props.choices.map((choice) => ({
     label: choice.label,
     selected: choice.value === props.value,
-    onSelect: () => props.onValueChange(choice.value),
+    onPress: () => props.onValueChange(choice.value),
   }));
 }
 
@@ -112,7 +112,7 @@ function SheetChoice({ row, onRun }: SheetChoiceProps): ReactNode {
       {...sheetChoiceProps}
       accessibilityState={{ selected }}
       aria-pressed={selected}
-      onPress={() => onRun(row.onSelect)}
+      onPress={() => onRun(row.onPress)}
     >
       <ChoiceLabel label={row.label} selected={selected} />
     </Pressable>

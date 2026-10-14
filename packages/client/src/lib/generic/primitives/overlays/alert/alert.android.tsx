@@ -110,3 +110,5 @@ function AlertButton(
     </TextButton>
   );
 }
+
+Alert satisfies React.ComponentType<AlertProps>;

@@ -2,13 +2,7 @@ import type * as React from 'react';
 import { Pressable } from 'react-native';
 import { Text } from '#primitives/display/text';
 import { cn } from '../../../utils';
-
-export interface FilterPillProps {
-  label: string;
-  count?: number;
-  selected: boolean;
-  onPress: () => void;
-}
+import type { FilterPillProps } from './filter-pill-props';
 
 const pillName = ({ label, count }: FilterPillProps): string[] =>
   count === undefined ? [label] : [label, String(count)];

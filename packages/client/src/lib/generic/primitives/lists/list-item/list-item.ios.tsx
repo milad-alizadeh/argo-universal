@@ -117,3 +117,5 @@ function rowSurface(
 
   return [listRowSeparatorTint(separator)];
 }
+
+ListItem satisfies React.ComponentType<ListItemProps>;

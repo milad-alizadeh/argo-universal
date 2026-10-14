@@ -1,1 +1,3 @@
-export { FilterPill, type FilterPillProps } from './filter-pill';
+export { FilterPill } from './filter-pill';
+
+export { type FilterPillProps } from './filter-pill-props';

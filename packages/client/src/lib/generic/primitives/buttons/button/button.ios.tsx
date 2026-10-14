@@ -12,7 +12,7 @@ import {
   type ModifierConfig,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
-import type { ComponentProps, ReactElement } from 'react';
+import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { PlatformColor } from 'react-native';
 import { iconSymbols } from '../../../symbols/icon-names';
 import { useIconPixels } from '../../../symbols/icon-role';
@@ -21,9 +21,12 @@ import { nativeModifiers } from './button-ios-modifiers';
 import { createNativeButton, NativeButtonIcon } from './button-native';
 import type { ButtonTheme } from './button-native-colors';
 import type { ButtonDataProps } from './button-props';
+import type { ButtonProps } from './button-props';
 import { nativeButtonVariant, readyPress } from './button-state';
 
-export const Button = createNativeButton(NativeControl);
+export const Button = createNativeButton(
+  NativeControl,
+) satisfies ComponentType<ButtonProps>;
 
 function NativeControl(
   props: ButtonDataProps & { theme: ButtonTheme },

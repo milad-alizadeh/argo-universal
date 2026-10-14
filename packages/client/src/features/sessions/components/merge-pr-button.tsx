@@ -23,7 +23,7 @@ function mergeMethodActions(
 ): MenuAction[] {
   return mergeMethods.map(({ method, label }) => ({
     label,
-    onSelect: () => onMerge?.(method),
+    onPress: () => onMerge?.(method),
   }));
 }
 

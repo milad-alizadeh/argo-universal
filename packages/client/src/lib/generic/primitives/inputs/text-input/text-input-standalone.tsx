@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactElement } from 'react';
+import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import { useFooterDescription } from '#primitives/fields/field-description';
@@ -65,3 +65,5 @@ function inputBehaviour(props: StandaloneTextInputProps): InputProps {
     keyboardType: props.numeric ? 'numbers-and-punctuation' : 'default',
   };
 }
+
+StandaloneTextInput satisfies ComponentType<StandaloneTextInputProps>;

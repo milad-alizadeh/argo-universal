@@ -5,7 +5,7 @@ import {
   frame,
   padding,
 } from '@expo/ui/swift-ui/modifiers';
-import type { ReactElement } from 'react';
+import type { ComponentType, ReactElement } from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import type { StandaloneTextInputProps } from './text-input-props';
 import { RowTextInput } from './text-input-row.ios';
@@ -48,3 +48,5 @@ function useRowModifiers(): NonNullable<
     cornerRadius(rowRadius),
   ];
 }
+
+StandaloneTextInput satisfies ComponentType<StandaloneTextInputProps>;

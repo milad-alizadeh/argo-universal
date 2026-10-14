@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 // One action in a menu: choosing it runs it and closes the menu.
 export interface MenuAction {
   label: string;
-  onSelect: () => void;
+  onPress: () => void;
   // The action the trigger shows now, such as the PR a header lists: every menu marks it with a check.
   selected?: boolean;
   // Drawn in place of the label where the menu draws its own rows (web); the label still names the action on native menus.

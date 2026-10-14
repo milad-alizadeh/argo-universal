@@ -24,9 +24,9 @@ const mergeSplit = {
   primary: true,
   menuLabel: 'Merge options',
   actions: [
-    { label: 'Squash and merge', onSelect: fn() },
-    { label: 'Create a merge commit', onSelect: fn() },
-    { label: 'Rebase and merge', onSelect: fn() },
+    { label: 'Squash and merge', onPress: fn() },
+    { label: 'Create a merge commit', onPress: fn() },
+    { label: 'Rebase and merge', onPress: fn() },
   ],
 } as const;
 

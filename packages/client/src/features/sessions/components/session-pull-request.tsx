@@ -100,7 +100,7 @@ function pullRequestAction(
   return {
     label: `#${pullRequest.number} ${pullRequest.title}`,
     selected: pullRequest.number === shown,
-    onSelect: () => onShow(pullRequest.number),
+    onPress: () => onShow(pullRequest.number),
     content: <PullRequestItemContent {...pullRequest} />,
   };
 }

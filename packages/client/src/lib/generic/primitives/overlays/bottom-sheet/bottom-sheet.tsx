@@ -1,9 +1,9 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
+import type { BottomSheetProps } from './bottom-sheet-props';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetSurface } from './bottom-sheet-surface';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
-import type { BottomSheetProps } from './bottom-sheet.types';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   return (
@@ -49,3 +49,5 @@ function SheetTitle(props: { label?: string }): React.JSX.Element {
     </DialogPrimitive.Title>
   );
 }
+
+BottomSheet satisfies React.ComponentType<BottomSheetProps>;

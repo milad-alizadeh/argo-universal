@@ -1,1 +1,3 @@
-export { Menu, type MenuAction } from './menu';
+export { Menu } from './menu';
+
+export { type MenuAction, type MenuProps } from './menu-props';

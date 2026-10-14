@@ -23,7 +23,7 @@ function MergeActions(): React.JSX.Element {
       trigger="+2 more"
       actions={mergeActions.map(({ value, label }) => ({
         label,
-        onSelect: () => onMergeAction(value),
+        onPress: () => onMergeAction(value),
       }))}
     />
   );
@@ -104,7 +104,7 @@ function LongMenu(): React.JSX.Element {
           <Text>Branches</Text>
         </Pressable>
       }
-      actions={branches.map((branch) => ({ label: branch, onSelect: noop }))}
+      actions={branches.map((branch) => ({ label: branch, onPress: noop }))}
     />
   );
 }

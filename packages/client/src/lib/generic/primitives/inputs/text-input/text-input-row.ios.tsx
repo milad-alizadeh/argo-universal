@@ -99,3 +99,5 @@ function useFieldModifiers(props: TextFieldProps): FieldModifiers {
     accessibilityLabel(props.label),
   ];
 }
+
+RowTextInput satisfies React.ComponentType<TextFieldProps>;

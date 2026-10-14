@@ -107,3 +107,5 @@ function rowSemantics(props: ListItemProps): ReturnType<typeof semantics>[] {
 
   return [semantics({ contentDescription: rowName(props) })];
 }
+
+ListItem satisfies React.ComponentType<ListItemProps>;

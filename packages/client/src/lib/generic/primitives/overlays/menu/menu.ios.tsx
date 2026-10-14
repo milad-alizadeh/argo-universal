@@ -102,13 +102,13 @@ function MenuButtons(props: ActionMenuProps): React.JSX.Element {
 // An action that can be the selected one draws as a SwiftUI menu toggle: the system checkmark marks it.
 function MenuButton(action: MenuAction): React.JSX.Element {
   if (action.selected === undefined)
-    return <Button label={action.label} onPress={action.onSelect} />;
+    return <Button label={action.label} onPress={action.onPress} />;
 
   return (
     <Toggle
       label={action.label}
       isOn={action.selected}
-      onIsOnChange={action.onSelect}
+      onIsOnChange={action.onPress}
     />
   );
 }
@@ -135,3 +135,5 @@ function PickerOption(props: {
 }): React.JSX.Element {
   return <Text modifiers={[tag(props.value)]}>{props.label}</Text>;
 }
+
+Menu satisfies React.ComponentType<MenuProps<string>>;

@@ -73,7 +73,7 @@ function useBannerTextRole(): 'body' | 'secondary' {
 function Reconnecting(): React.JSX.Element {
   return (
     <>
-      <Spinner label="Reconnecting" />
+      <Spinner accessibilityLabel="Reconnecting" />
       <Text
         role={useBannerTextRole()}
         className="pr-3.5 text-foreground wide:pr-3"

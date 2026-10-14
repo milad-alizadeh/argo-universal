@@ -1,17 +1,14 @@
 import type { ReactElement } from 'react';
 import { ActivityIndicator, Platform } from 'react-native';
-
-export interface SpinnerProps {
-  label: string;
-}
+import type { SpinnerProps } from './spinner-props';
 
 const webSpinnerSize = 16;
 
-export function Spinner({ label }: SpinnerProps): ReactElement {
+export function Spinner({ accessibilityLabel }: SpinnerProps): ReactElement {
   return (
     <ActivityIndicator
       role="progressbar"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel}
       colorClassName="accent-muted-foreground"
       size={Platform.OS === 'web' ? webSpinnerSize : 'small'}
     />

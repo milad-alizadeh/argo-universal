@@ -16,10 +16,10 @@ import { useState } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
 import { BottomSheetContent } from './bottom-sheet-content';
+import type { BottomSheetProps } from './bottom-sheet-props';
 import { BottomSheetRoot } from './bottom-sheet-root.native';
 import { BottomSheetTrigger } from './bottom-sheet-trigger.native';
 import { SheetViewport } from './bottom-sheet-viewport';
-import type { BottomSheetProps } from './bottom-sheet.types';
 import { RoutedFormSheet } from './form-sheet';
 import { useFormSheetCommands } from './form-sheet-context';
 
@@ -129,3 +129,5 @@ function dismissPresentation(
   props.onOpenChange(false);
   props.onClosed?.();
 }
+
+BottomSheet satisfies React.ComponentType<BottomSheetProps>;

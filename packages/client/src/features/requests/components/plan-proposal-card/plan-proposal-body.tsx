@@ -87,7 +87,7 @@ function FeedbackField({ state, interaction }: BodyProps): ReactNode {
       accessibilityLabel={feedbackQuestion}
       placeholder="Tell the Agent what to change"
       value={interaction.feedback}
-      editable={state.kind === 'open'}
+      disabled={state.kind !== 'open'}
       onChangeText={interaction.setFeedback}
     />
   );

@@ -101,3 +101,5 @@ function SupportingLine(props: TextFieldProps): React.JSX.Element | null {
     </TextField.SupportingText>
   );
 }
+
+RowTextInput satisfies React.ComponentType<TextFieldProps>;

@@ -87,7 +87,7 @@ function framePanes(
   };
 }
 
-const exampleActions = [{ label: 'Example action', onSelect: (): void => {} }];
+const exampleActions = [{ label: 'Example action', onPress: (): void => {} }];
 
 function MoreActionsMenu(): React.JSX.Element {
   return (

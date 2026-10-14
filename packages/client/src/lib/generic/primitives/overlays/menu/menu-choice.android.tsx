@@ -36,7 +36,7 @@ export type MenuActionItemProps = {
   label: string;
   // Set when the action can be the one the trigger shows now; that one carries a leading check.
   selected?: boolean;
-  onSelect: () => void;
+  onPress: () => void;
 };
 
 // An action menu's row: its label, and a leading check on the selected action.
@@ -47,7 +47,7 @@ export function MenuActionItem(props: MenuActionItemProps): React.JSX.Element {
     <DropdownMenuItem
       modifiers={actionModifiers(props)}
       elementColors={choiceElementColors(colors)}
-      onClick={props.onSelect}
+      onClick={props.onPress}
     >
       <ActionCheck selected={props.selected} />
       <ChoiceLabel label={props.label} />
@@ -70,7 +70,7 @@ function actionModifiers(props: MenuActionItemProps): ModifierConfig[] {
 
   return props.selected === undefined
     ? [width]
-    : [width, selectable(props.selected, props.onSelect)];
+    : [width, selectable(props.selected, props.onPress)];
 }
 
 function choiceModifiers(props: MenuChoiceProps): ModifierConfig[] {

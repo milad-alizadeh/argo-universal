@@ -109,3 +109,5 @@ function usePressingLink(): Pick<
     onPressOut: () => hover.onPressing(false),
   };
 }
+
+ListItem satisfies React.ComponentType<ListItemProps>;

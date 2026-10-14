@@ -12,10 +12,10 @@ import {
   HostedSheetContent as FittedSheetContent,
   SheetDragHandle,
 } from './bottom-sheet-hosted-content.android';
+import type { BottomSheetProps } from './bottom-sheet-props';
 import { BottomSheetRoot } from './bottom-sheet-root.native';
 import { BottomSheetTrigger } from './bottom-sheet-trigger.native';
 import { SheetViewport } from './bottom-sheet-viewport.android';
-import type { BottomSheetProps } from './bottom-sheet.types';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const { mounted, sheetRef } = useSheetDismissal(props.open, props.onClosed);
@@ -163,3 +163,5 @@ function expandOnNextFrame(sheetRef: SheetRef, attempts: number): () => void {
     cancelAnimationFrame(pending.frame);
   };
 }
+
+BottomSheet satisfies React.ComponentType<BottomSheetProps>;

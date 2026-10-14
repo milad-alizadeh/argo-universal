@@ -1,15 +1,11 @@
 import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
-import { useState, type ReactElement, type ComponentProps } from 'react';
+import { useState, type ReactElement } from 'react';
 import { CollapsibleContent } from './collapsible-content';
 import {
   CollapsibleLayoutSyncContext,
   OpenContext,
 } from './collapsible-context';
-
-type CollapsibleProps = Omit<
-  ComponentProps<typeof CollapsiblePrimitive.Root>,
-  'asChild'
->;
+import type { CollapsibleProps } from './collapsible-props';
 
 interface OpenState {
   open: boolean;

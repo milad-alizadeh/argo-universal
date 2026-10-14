@@ -11,7 +11,7 @@ import {
   frame,
   padding,
 } from '@expo/ui/swift-ui/modifiers';
-import { createElement } from 'react';
+import { type ComponentType, createElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
 import { rectangularHitArea } from '#primitives/native/native-modifiers';
@@ -47,7 +47,9 @@ function rowModifiers(props: CheckboxProps): ReturnType<typeof frame>[] {
   ];
 }
 
-export const Checkbox = createNativeCheckbox(CheckboxButton);
+export const Checkbox = createNativeCheckbox(
+  CheckboxButton,
+) satisfies ComponentType<CheckboxProps>;
 
 type ButtonProps = CheckboxProps & { state: CheckboxState };
 
@@ -123,3 +125,5 @@ export function CheckboxIndicator(
     </Host>
   );
 }
+
+CheckboxIndicator satisfies ComponentType<CheckboxIndicatorProps>;

@@ -5,7 +5,7 @@ import {
   type ReactNode,
 } from 'react';
 import { View } from 'react-native';
-import type { BottomSheetProps } from './bottom-sheet.types';
+import type { BottomSheetProps } from './bottom-sheet-props';
 
 const SheetContext = createContext<(open: boolean) => void>(() => {});
 

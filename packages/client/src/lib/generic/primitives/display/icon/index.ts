@@ -1,1 +1,7 @@
-export { Icon, type IconProps, IconSlot, IconSpinner } from './icon';
+export { Icon, IconSlot, IconSpinner } from './icon';
+
+export {
+  type IconProps,
+  type IconSlotProps,
+  type IconSpinnerProps,
+} from './icon-props';

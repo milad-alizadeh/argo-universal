@@ -1,11 +1,9 @@
 import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
-import { useContext, type ReactElement } from 'react';
+import { type ComponentType, type ReactElement, useContext } from 'react';
 import { View } from 'react-native';
-import {
-  CollapsibleLayoutSyncContext,
-  type ContentProps,
-} from './collapsible-context';
+import { CollapsibleLayoutSyncContext } from './collapsible-context';
 import { LayoutSyncedContent } from './collapsible-layout-content';
+import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
 
 const webContentMotion =
   'overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up motion-reduce:animate-none';
@@ -32,3 +30,5 @@ export function CollapsibleContent(props: ContentProps): ReactElement {
 
   return <WebContent {...props} />;
 }
+
+CollapsibleContent satisfies ComponentType<ContentProps>;

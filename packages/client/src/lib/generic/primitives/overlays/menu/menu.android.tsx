@@ -73,7 +73,7 @@ function MenuActions(
         <MenuActionItem
           key={action.label}
           {...action}
-          onSelect={() => props.onRun(action.onSelect)}
+          onPress={() => props.onRun(action.onPress)}
         />
       ))}
     </DropdownMenu.Items>
@@ -118,3 +118,5 @@ function choiceState<Value extends string>(
     onChoose: () => props.onChoose(value),
   };
 }
+
+Menu satisfies React.ComponentType<MenuProps<string>>;

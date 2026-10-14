@@ -38,3 +38,5 @@ function PhoneFields({
 
   return <Form>{children}</Form>;
 }
+
+FieldGroup satisfies React.ComponentType<FieldGroupProps>;

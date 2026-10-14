@@ -104,3 +104,5 @@ function useCaptionColor(
 
   return tone === 'destructive' ? destructive : mutedForeground;
 }
+
+FieldSection satisfies React.ComponentType<FieldSectionProps>;

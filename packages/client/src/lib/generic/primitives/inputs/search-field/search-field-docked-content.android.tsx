@@ -166,3 +166,5 @@ function SearchBarPlaceholder({
     </Text>
   );
 }
+
+DockedSearchFieldContent satisfies React.ComponentType<DockedSearchQuery>;

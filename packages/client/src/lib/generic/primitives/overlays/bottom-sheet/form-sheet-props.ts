@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { BottomSheetProps } from './bottom-sheet.types';
+import type { BottomSheetProps } from './bottom-sheet-props';
 
 export type FormSheetProps = BottomSheetProps & { headerTitle?: string };
 

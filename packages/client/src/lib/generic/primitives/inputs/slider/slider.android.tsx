@@ -61,3 +61,5 @@ function snapToStep(value: number, range: SliderRange): number {
 }
 
 export type { SliderProps } from './slider-props';
+
+Slider satisfies React.ComponentType<SliderProps>;

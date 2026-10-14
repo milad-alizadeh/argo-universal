@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import { useSheetNavigation } from '#primitives/overlays/bottom-sheet';
 import { PickerDrillIn } from './picker-drill-in.ios';
 import { NativeMenuPicker, NativePickerRow } from './picker-menu.ios';
@@ -10,7 +11,9 @@ const menuLimit = 7;
 type ControlProps<Value extends string> = PickerProps<Value> &
   PickerPresentation;
 
-export const Picker = createNativePicker(PickerControl);
+export const Picker = createNativePicker(PickerControl) satisfies ComponentType<
+  PickerProps<string>
+>;
 
 function PickerControl<Value extends string>(
   props: ControlProps<Value>,

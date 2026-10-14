@@ -8,7 +8,7 @@ import {
 import type { View } from 'react-native';
 import { useWide } from '../../../use-wide/use-wide';
 import { BottomSheetAnchorContext } from './bottom-sheet-anchor-context';
-import type { BottomSheetProps } from './bottom-sheet.types';
+import type { BottomSheetProps } from './bottom-sheet-props';
 
 type AnchoredCard = {
   anchor: string | undefined;

@@ -51,3 +51,5 @@ function useSliderModifiers(
 }
 
 export type { SliderProps } from './slider-props';
+
+Slider satisfies React.ComponentType<SliderProps>;

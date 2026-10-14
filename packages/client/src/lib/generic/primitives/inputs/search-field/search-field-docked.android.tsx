@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Host } from '#primitives/native/host';
 import { useWide } from '../../../use-wide/use-wide';
 import { DockedSearchFieldContent } from './search-field-docked-content';
-import type { DockedSearchFieldProps } from './search-field-props';
+import type { DockedSearchBarProps } from './search-field-props';
 
 /*
  * A bare native text field drawn as Material's search bar at the top of a list, scrolling with it, in the theme's selection tint.
@@ -12,7 +12,7 @@ import type { DockedSearchFieldProps } from './search-field-props';
 export function DockedSearchField({
   className,
   ...props
-}: Omit<DockedSearchFieldProps, 'appearance'>): React.JSX.Element | null {
+}: DockedSearchBarProps): React.JSX.Element | null {
   if (useWide()) return null;
 
   return (
@@ -23,3 +23,5 @@ export function DockedSearchField({
     </View>
   );
 }
+
+DockedSearchField satisfies React.ComponentType<DockedSearchBarProps>;

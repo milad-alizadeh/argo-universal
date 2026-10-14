@@ -1,8 +1,8 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
-import type { ComponentProps, ReactElement } from 'react';
+import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { useId } from 'react';
 import { Portal } from '#primitives/overlays/portal';
-import type { DialogRegionProps as RegionProps } from './dialog-region.types';
+import type { DialogRegionProps as RegionProps } from './dialog-props';
 
 const regionInset = 24;
 
@@ -54,3 +54,5 @@ const regionContentProps = {
   onEscapeKeyDown: (event: { preventDefault: () => void }): void =>
     event.preventDefault(),
 };
+
+DialogRegion satisfies ComponentType<RegionProps>;

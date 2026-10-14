@@ -51,3 +51,5 @@ function groupClasses(
 function groupSpacing(fit: boolean | undefined): string {
   return fit ? 'gap-4 p-4 wide:p-0' : cn(fieldGroupGap, fieldGroupPadding);
 }
+
+FieldGroup satisfies React.ComponentType<FieldGroupProps>;

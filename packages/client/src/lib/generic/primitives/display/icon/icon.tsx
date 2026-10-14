@@ -1,40 +1,21 @@
 import type * as React from 'react';
 import { useContext } from 'react';
-import {
-  ActivityIndicator,
-  type ActivityIndicatorProps,
-  Platform,
-  View,
-  type ViewProps,
-} from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/display/text';
 import { appleSymbol } from '../../../symbols/apple-symbol';
 import { type IconName, iconSymbols } from '../../../symbols/icon-names';
-import {
-  type IconRole,
-  useIconBox,
-  useIconPixels,
-} from '../../../symbols/icon-role';
+import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
 import {
   SymbolGlyph,
   type SymbolGlyphProps,
 } from '../../../symbols/symbol-glyph/symbol-glyph';
 import type { SymbolSource } from '../../../symbols/symbol-source';
+import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
 
 // Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
 const materialGlyphScale = 1.125;
-
-export interface IconProps {
-  name: IconName;
-  role: IconRole;
-  // Selects the platform's filled variant where the icon has one.
-  filled?: boolean;
-  className?: string;
-  weight?: SymbolGlyphProps['weight'];
-  testID?: string;
-}
 
 // Web colours the glyph with CSS from `colorClassName`, so only native resolves the class to a tint, which costs a style lookup each render on web.
 const TintedSymbol =
@@ -83,22 +64,18 @@ export function Icon(props: IconProps): React.JSX.Element {
   );
 }
 
-// `role` stays the spinner's accessibility role, so its size takes `iconRole`.
 export function IconSpinner({
   iconRole,
   ...props
-}: Omit<ActivityIndicatorProps, 'size'> & {
-  iconRole: IconRole;
-}): React.JSX.Element {
+}: IconSpinnerProps): React.JSX.Element {
   return <ActivityIndicator {...props} size={useIconPixels(iconRole)} />;
 }
 
-// A box the size of an icon in that role, its content centred: a spinner, a status ring, or an icon hosted in a native tree.
 export function IconSlot({
   role,
   className,
   ...props
-}: Omit<ViewProps, 'role'> & { role: IconRole }): React.JSX.Element {
+}: IconSlotProps): React.JSX.Element {
   return (
     <View
       {...props}

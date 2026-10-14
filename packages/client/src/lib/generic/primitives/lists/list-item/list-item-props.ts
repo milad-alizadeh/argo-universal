@@ -18,13 +18,21 @@ export interface ListItemProps {
   // A control below the title and value, such as an effort slider.
   detail?: ReactElement;
   onPress?: () => void;
+  // Web only, as phones have no pointer to hover with.
   onHoverIn?: ComponentProps<typeof Pressable>['onHoverIn'];
   onHoverOut?: ComponentProps<typeof Pressable>['onHoverOut'];
+  /*
+   * Web only: the whole row acts as the button or switch, with `checked` its state. Phones put a
+   * native Switch in `control` instead, so the system control carries the state.
+   */
   role?: 'button' | 'switch';
   checked?: boolean;
-  'aria-checked'?: boolean;
   disclosure?: boolean;
   accessibilityLabel?: string;
+  /*
+   * Web only: the row as a popover's or dialog's trigger, and a link's address. Phone rows open
+   * sheets and push screens themselves, so nothing points at them.
+   */
   ref?: ComponentProps<typeof Pressable>['ref'];
   id?: string;
   'aria-haspopup'?: 'dialog';

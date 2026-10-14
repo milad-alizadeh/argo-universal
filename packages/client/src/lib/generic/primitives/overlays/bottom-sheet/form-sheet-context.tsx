@@ -12,7 +12,7 @@ import type {
   SheetCommands,
   SheetPage,
   SheetState,
-} from './form-sheet-types';
+} from './form-sheet-props';
 
 const CommandsContext = createContext<SheetCommands | undefined>(undefined);
 

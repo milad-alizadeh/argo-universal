@@ -23,7 +23,7 @@ import { roundedClip } from '#primitives/native/native-modifiers';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
-import type { NavigationItemProps } from './navigation-item.tsx';
+import type { NavigationItemProps } from './navigation-item-props';
 
 // Material 3's navigation drawer item: a 56dp pill, tinted when selected.
 const itemHeight = 56;
@@ -137,3 +137,5 @@ function NativeBadge({
 
   return <RNHostView matchContents>{badge.element}</RNHostView>;
 }
+
+NavigationItem satisfies React.ComponentType<NavigationItemProps>;

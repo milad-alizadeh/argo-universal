@@ -5,19 +5,14 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { View, type ViewProps } from 'react-native';
+import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import type { ButtonGroupProps } from './button-group-props';
 
 type Item = ReactElement<{ className?: string }>;
 
 function isItem(child: ReactNode): child is Item {
   return isValidElement(child);
-}
-
-interface ButtonGroupProps extends Pick<ViewProps, 'onLayout'> {
-  // Each child passes className on to its Button.
-  children: ReactNode;
-  className?: string;
 }
 
 function joinButton(item: Item, index: number, count: number): ReactElement {

@@ -1,5 +1,5 @@
 import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
-import { useContext, type ReactElement } from 'react';
+import { type ComponentType, type ReactElement, useContext } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import {
@@ -7,10 +7,10 @@ import {
   contentAccessibility,
   movingContentStyle,
   OpenContext,
-  type ContentProps,
 } from './collapsible-context';
 import { LayoutSyncedContent } from './collapsible-layout-content';
 import { useNativeContentMotion } from './collapsible-native-motion';
+import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
 
 type NativeMotion = ReturnType<typeof useNativeContentMotion>;
 
@@ -105,3 +105,5 @@ export function CollapsibleContent(props: ContentProps): ReactElement | null {
 
   return <NativeContent {...props} />;
 }
+
+CollapsibleContent satisfies ComponentType<ContentProps>;

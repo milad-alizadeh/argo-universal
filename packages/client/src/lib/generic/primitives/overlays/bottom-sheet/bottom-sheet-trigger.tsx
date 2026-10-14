@@ -1,6 +1,6 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import type { BottomSheetProps } from './bottom-sheet.types';
+import type { BottomSheetProps } from './bottom-sheet-props';
 
 export function BottomSheetTrigger({
   trigger,

@@ -13,7 +13,7 @@ type Story = StoryObj<typeof meta>;
 
 const accountActions = ['Profile', 'Billing', 'Settings'].map((label) => ({
   label,
-  onSelect: (): void => {},
+  onPress: (): void => {},
 }));
 
 function AccountMenu(): React.JSX.Element {

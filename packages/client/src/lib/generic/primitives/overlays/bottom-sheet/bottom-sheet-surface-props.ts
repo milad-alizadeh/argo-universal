@@ -1,7 +1,7 @@
 import type * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
 import { cn } from '#lib/generic/utils';
-import type { BottomSheetProps } from './bottom-sheet.types';
+import type { BottomSheetProps } from './bottom-sheet-props';
 import { keepOpen } from './keep-open';
 
 export type SurfaceProps = {

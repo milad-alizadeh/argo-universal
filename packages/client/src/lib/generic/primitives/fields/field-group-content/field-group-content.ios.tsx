@@ -6,10 +6,8 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useWide } from '../../../use-wide/use-wide';
-import {
-  FieldGroupContent as WebFieldGroupContent,
-  type FieldGroupContentProps,
-} from './field-group-content.tsx';
+import type { FieldGroupContentProps } from './field-group-content-props';
+import { FieldGroupContent as WebFieldGroupContent } from './field-group-content.tsx';
 import { HostedRow } from './hosted-row';
 
 const rowFrame = (height: number | undefined): ReturnType<typeof frame>[] => [
@@ -36,3 +34,5 @@ export function FieldGroupContent(
     </Section>
   );
 }
+
+FieldGroupContent satisfies React.ComponentType<FieldGroupContentProps>;

@@ -4,18 +4,7 @@ import { Text } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/display/icon';
 import { keepOpen } from '#primitives/overlays/bottom-sheet';
-
-// Only what both the centred dialog and the narrow window's sheet honour.
-export type ContentProps = {
-  className?: string;
-  // Names a dialog that has no DialogTitle of its own.
-  accessibilityLabel?: string;
-  // False while the content holds unsaved input: only its own actions close it.
-  dismissible?: boolean;
-  showClose?: boolean;
-  onCloseAutoFocus?: (event: Event) => void;
-  children: React.ReactNode;
-};
+import type { DialogContentProps as ContentProps } from './dialog-props';
 
 const contentClassName =
   'bg-background web:bg-popover border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-2xl border p-6 min-w-[360px] sm:max-w-lg web:border-0 web:dark:border web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200 native:shadow-lg native:shadow-black/5';

@@ -34,7 +34,7 @@ function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
       <MenuPrimitive.Item
         className={actionItemClassName}
         accessibilityState={selectedState(action)}
-        onPress={action.onSelect}
+        onPress={action.onPress}
         onKeyDown={stopSecondSelect}
       >
         {action.content ?? <Text>{action.label}</Text>}

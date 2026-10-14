@@ -6,7 +6,7 @@ import {
   useFormSheetCommands,
   useFormSheetState,
 } from './form-sheet-context';
-import type { FormSheetProps } from './form-sheet-types';
+import type { FormSheetProps } from './form-sheet-props';
 
 type PageProps = {
   headerInset?: number;

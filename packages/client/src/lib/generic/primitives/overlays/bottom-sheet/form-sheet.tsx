@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
-import type { FormSheetProps, SheetCommands } from './form-sheet-types';
+import type { FormSheetProps, SheetCommands } from './form-sheet-props';
 
 export function RoutedFormSheet(
   props: FormSheetProps & { commands: SheetCommands },

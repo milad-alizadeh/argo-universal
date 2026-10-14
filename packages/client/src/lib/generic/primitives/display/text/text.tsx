@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Dimensions, PixelRatio, Platform, Text as RNText } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/generic/utils';
+import type { TextProps, TextRole } from './text-props';
 
 const textRoles = {
   title: 'type-title',
@@ -15,9 +16,7 @@ const textRoles = {
   code: 'type-code',
   'nav-title': 'type-nav-title',
   'nav-action': 'type-nav-action',
-} as const;
-
-export type TextRole = keyof typeof textRoles;
+} as const satisfies Record<TextRole, string>;
 
 export function useTextStyle(
   role: TextRole,
@@ -26,14 +25,6 @@ export function useTextStyle(
 }
 
 const TextClassContext = React.createContext<string | undefined>(undefined);
-
-type TextProps = Omit<React.ComponentProps<typeof RNText>, 'role'> &
-  React.RefAttributes<RNText> & {
-    role?: keyof typeof textRoles;
-    semanticRole?: React.ComponentProps<typeof RNText>['role'];
-    'aria-level'?: number;
-    asChild?: boolean;
-  };
 
 function textClassName(
   { role, className }: Pick<TextProps, 'role' | 'className'>,

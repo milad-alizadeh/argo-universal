@@ -9,12 +9,7 @@ import Animated, {
 import { Icon } from '#primitives/display/icon';
 import { motionDuration, quarterTurnDegrees } from '../../../motion';
 import { cn } from '../../../utils';
-
-interface DisclosureChevronProps {
-  // Turns the chevron down when its section is open; leave it out for a row that opens another page.
-  open?: boolean;
-  className?: string;
-}
+import type { DisclosureChevronProps } from './disclosure-chevron-props';
 
 export function DisclosureChevron({
   open,

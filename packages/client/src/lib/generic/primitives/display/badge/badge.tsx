@@ -1,9 +1,10 @@
 import { Slot } from '@rn-primitives/slot';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/display/text';
+import type { BadgeProps } from './badge-props';
 
 const toneBox = 'h-5 border-transparent py-0';
 
@@ -44,13 +45,6 @@ const badgeTextVariants = cva('type-badge', {
   },
   defaultVariants: { variant: 'default' },
 });
-
-type BadgeVariants = VariantProps<typeof badgeVariants>;
-
-export type BadgeTone = NonNullable<BadgeVariants['tone']>;
-
-type BadgeProps = React.ComponentProps<typeof View> &
-  React.RefAttributes<View> & { asChild?: boolean } & BadgeVariants;
 
 function Badge(options: BadgeProps): ReactElement {
   const { className, variant, tone, asChild, ...props } = options;

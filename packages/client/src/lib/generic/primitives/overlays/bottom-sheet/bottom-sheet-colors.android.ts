@@ -2,7 +2,7 @@ import type { ModalBottomSheet } from '@expo/ui/jetpack-compose';
 import type { ComponentProps } from 'react';
 import { useResolveClassNames } from 'uniwind';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import type { BottomSheetProps } from './bottom-sheet.types';
+import type { BottomSheetProps } from './bottom-sheet-props';
 
 export function useSheetColors(
   surface: BottomSheetProps['surface'],
