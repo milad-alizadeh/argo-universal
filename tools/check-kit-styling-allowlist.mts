@@ -15,21 +15,18 @@ const reportSchema = z.object({
 });
 
 const git = (args: string[]): string =>
-  execFileSync('/usr/bin/git', args, {
-    cwd: root,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'ignore'],
-  });
+  execFileSync('git', args, { cwd: root, encoding: 'utf8' });
 
 // The list at the merge base with main, or undefined before it lands there.
 function baseline(): string[] | undefined {
   const base = git(['merge-base', 'HEAD', 'origin/main']).trim();
 
-  try {
-    return readAllowlist(git(['show', `${base}:${allowlistPath}`]));
-  } catch {
-    return undefined;
-  }
+  // ls-tree prints nothing for a path the commit lacks; any other git failure throws.
+  const onBase = git(['ls-tree', '--name-only', base, '--', allowlistPath]);
+
+  return onBase.trim() === ''
+    ? undefined
+    : readAllowlist(git(['show', `${base}:${allowlistPath}`]));
 }
 
 function flaggedFiles(): Set<string> {

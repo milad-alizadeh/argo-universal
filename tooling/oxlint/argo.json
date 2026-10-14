@@ -174,7 +174,7 @@
       "rules": { "argo/icon-role": "off" }
     },
     {
-      // Kit components take props, never className or style; only lib/generic styles them. kit-styling-allowlist.json holds the files not yet moved over.
+      // Kit components take props, never className, style or a *ClassName slot; only lib/generic styles them. kit-styling-allowlist.json holds the files not yet moved over.
       "files": ["packages/client/src/**"],
       "rules": { "argo/kit-styling": "error" }
     },

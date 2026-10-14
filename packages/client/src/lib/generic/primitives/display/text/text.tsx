@@ -5,7 +5,7 @@ import { Dimensions, PixelRatio, Platform, Text as RNText } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 import type { TextProps, TextRole } from './text-props';
-import { toneText } from './text-tone';
+import { toneClass } from './text-tone';
 
 const textRoles = {
   title: 'type-title',
@@ -39,10 +39,6 @@ function textClassName(
     toneClass(tone),
     className,
   );
-}
-
-function toneClass(tone: TextProps['tone']): string | undefined {
-  return tone && toneText[tone];
 }
 
 function subscribeFontScale(onChange: () => void): () => void {
