@@ -75,6 +75,7 @@ export const startFeedModuleTestHost = async ({
       maxRevision: count.count,
       nextPosition: count.count,
       now: Date.now,
+      createId: () => crypto.randomUUID(),
       findWrittenRow: (id) =>
         readWrittenRow({
           database: host.database,

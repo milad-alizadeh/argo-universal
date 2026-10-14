@@ -1,7 +1,6 @@
 import type {
   ContentBlock,
   ContextUsage,
-  FeedChange,
   PendingElicitation,
   PendingPermission,
   SessionConfigOption,
@@ -31,9 +30,10 @@ import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';
 import { attachmentsFolderIn, blobsFolderIn } from '../blob';
 import {
-  acpToolCallRowId,
+  messageRejectedEvent,
   turnEndingEvent,
   permissionsCancelledEvent,
+  permissionSelectedEvent,
   readQueuedFeedRow,
   publishTurnContent,
   type FeedEvent,
@@ -115,8 +115,6 @@ const answerElicitationEvent = 'session.answerElicitation';
 
 const writeFeedEvent = 'writer.write';
 
-const feedChangeEvent = 'feed.change';
-
 const configuringState = 'configuring';
 
 const acpUpdateEvent = 'acp.update';
@@ -125,8 +123,6 @@ const staleAcpUpdate = {
   guard: 'isStaleAcpUpdate',
   actions: 'forwardAcpUpdate',
 } as const;
-
-type FeedChangeEvent = Extract<FeedEvent, { type: 'feed.change' }>;
 
 type SessionDataParameters = { data: SessionData };
 
@@ -265,23 +261,6 @@ const writer = ({
   self: AnyActorRef;
 }): AnyActorRef =>
   findMachineActor(system, databaseWriterId, writerMachine) ?? self;
-
-// Permission outcomes use the ACP-scoped Tool call identity.
-const permissionOutcomeChange = (
-  context: SessionContext,
-  toolCallId: string,
-  option: PendingPermission['options'][number],
-): FeedChange => ({
-  type: 'patch',
-  id: acpToolCallRowId(context.acpLease?.sessionId ?? '', toolCallId),
-  set: {
-    _meta: {
-      argo: {
-        permissionOutcome: { outcome: 'selected', ...option },
-      },
-    },
-  },
-});
 
 const readConfigurationUpdate = (
   context: SessionContext,
@@ -792,9 +771,11 @@ const sessionSetup = setup({
         if (option === null) return cancelledPermissions(context, [request]);
 
         return {
-          type: feedChangeEvent,
+          type: permissionSelectedEvent,
           turnId: context.activeTurnId,
-          change: permissionOutcomeChange(context, request.toolCallId, option),
+          acpSessionId: context.acpLease?.sessionId ?? '',
+          toolCallId: request.toolCallId,
+          option,
         };
       },
     ),
@@ -903,39 +884,21 @@ const sessionSetup = setup({
       rejectedMessages: ({ context }): number =>
         countRejection(context.rejectedMessages),
     }),
-    messageRejectedNotice: sendTo(
-      'feed',
-      ({ context, event }): FeedChangeEvent => {
-        assertEvent(event, rejectedMessageEvent);
+    messageRejectedNotice: sendTo('feed', ({ context, event }): FeedEvent => {
+      assertEvent(event, rejectedMessageEvent);
 
-        return {
-          type: feedChangeEvent,
-          turnId: context.activeTurnId,
-          change: {
-            type: 'upsert',
-            update: {
-              id: context.input.createId(),
-              sessionUpdate: 'notice',
-              state: 'settled',
-              severity: 'warning',
-              title: 'The Agent sent an unrecognised message',
-              description: event.reason,
-            },
-          },
-        };
-      },
-    ),
+      return {
+        type: messageRejectedEvent,
+        turnId: context.activeTurnId,
+        reason: event.reason,
+      };
+    }),
     logMessageRejected: ({ context, event }): void => {
       assertEvent(event, rejectedMessageEvent);
       console.error(
         `session ${context.sessionId}: rejected an Agent message: ${event.reason}`,
       );
     },
-    cancelNotice: sendTo('feed', ({ context }): FeedEvent => ({
-      type: turnEndingEvent,
-      turnId: context.activeTurnId,
-      ending: { kind: 'cancel_timeout' },
-    })),
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
@@ -1168,6 +1131,7 @@ export const sessionMachine = sessionSetup.createMachine({
           activityAt: context.activityAt,
           nextPosition: context.nextPosition,
           now: context.input.now,
+          createId: context.input.createId,
           findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
             readWrittenRow({
               database: context.input.database,

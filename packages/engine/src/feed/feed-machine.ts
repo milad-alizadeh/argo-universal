@@ -23,11 +23,14 @@ import {
   type WriterJobParameters,
 } from './feed-write-request';
 import type { FeedPublication } from './publication';
+import { messageRejectedEvent } from './rejected-message';
 import {
-  endingFeedChanges,
-  turnEndingEvent,
+  permissionSelectedEvent,
   permissionsCancelledEvent,
-  type TurnEndingEvent,
+  sessionEventChanges,
+  sessionRowEvents,
+  turnEndingEvent,
+  type SessionRowEvent,
 } from './turn-ending';
 import type { FeedTurnEnding } from './turn-settlement';
 
@@ -42,6 +45,7 @@ export interface FeedInput extends Pick<
 > {
   sessionId: string;
   now: () => number;
+  createId: () => string;
   activityAt?: number;
   // One past the highest stored position.
   nextPosition: number;
@@ -61,6 +65,7 @@ export interface FeedContext
       | 'findWrittenRow'
       | 'findUnaddressedPlan'
       | 'now'
+      | 'createId'
       | 'storageFailing'
     > {
   activityAt: number;
@@ -96,7 +101,7 @@ export type FeedEvent =
       ending?: FeedTurnEnding;
       published?: FeedPublication;
     }
-  | TurnEndingEvent
+  | SessionRowEvent
   | { type: 'feed.flush' };
 
 // Raised after `feed.change` is applied, so each region reacts to it once.
@@ -146,10 +151,10 @@ export const feedMachine = setup({
     emitted: {} as FeedBatch,
   },
   actions: {
-    writeTurnEnding: enqueueActions(({ context, event, enqueue }): void => {
-      assertEvent(event, [turnEndingEvent, permissionsCancelledEvent]);
+    writeSessionRows: enqueueActions(({ context, event, enqueue }): void => {
+      assertEvent(event, sessionRowEvents);
 
-      for (const change of endingFeedChanges(context.sessionId, event))
+      for (const change of sessionEventChanges(context, event))
         enqueue.raise(change);
     }),
     applyAcpUpdate: enqueueActions(({ context, event, enqueue }): void => {
@@ -246,8 +251,10 @@ export const feedMachine = setup({
       on: {
         'feed.acpUpdate': { actions: 'applyAcpUpdate' },
         'feed.completeTurn': { actions: 'settleTurnRows' },
-        [turnEndingEvent]: { actions: 'writeTurnEnding' },
-        [permissionsCancelledEvent]: { actions: 'writeTurnEnding' },
+        [turnEndingEvent]: { actions: 'writeSessionRows' },
+        [permissionsCancelledEvent]: { actions: 'writeSessionRows' },
+        [permissionSelectedEvent]: { actions: 'writeSessionRows' },
+        [messageRejectedEvent]: { actions: 'writeSessionRows' },
         'feed.change': { actions: 'applyChange' },
         'feed.changeRejected': {
           actions: [
