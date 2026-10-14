@@ -16,19 +16,27 @@ import type { RegistryReader } from './registry/registry-reader';
 function createCatalogAgentRecord(
   agent: ACPAgent,
   syncedAt: number,
+  commandName: string | null,
 ): AgentCatalogWriteRow {
   return {
     id: randomUUID(),
     ...createCatalogOwnedFields(agent, syncedAt),
+    commandName,
   };
 }
 
+// `commandNames` holds each npx entry's command name by Registry id.
 export function prepareAgentCatalogRows(
   registry: ACPAgentRegistry,
   syncedAt: number,
+  commandNames: ReadonlyMap<string, string | null>,
 ): AgentCatalogWriteRow[] {
   return registry.agents.map((agent) =>
-    createCatalogAgentRecord(agent, syncedAt),
+    createCatalogAgentRecord(
+      agent,
+      syncedAt,
+      commandNames.get(agent.id) ?? null,
+    ),
   );
 }
 
@@ -99,7 +107,7 @@ function resolveRegistryServerArchitecture(): string {
 function createCatalogOwnedFields(
   agent: ACPAgent,
   syncedAt: number,
-): Omit<AgentCatalogWriteRow, 'id'> {
+): Omit<AgentCatalogWriteRow, 'id' | 'commandName'> {
   return {
     registryId: agent.id,
     registryMetadata: JSON.stringify(agent),

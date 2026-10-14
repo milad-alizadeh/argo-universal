@@ -10,6 +10,7 @@ import {
 import { type AcpResources, type AcpResourceInput } from '../agents';
 import {
   type FetchAgents,
+  type FetchNpmPackage,
   AgentInstallations,
   type InstallPorts,
   syncSupervisorMachine,
@@ -68,6 +69,7 @@ export interface EngineInput extends Pick<
   loginTimeoutMs?: number;
   loginCleanupTimeoutMs?: number;
   fetchAgents?: FetchAgents;
+  fetchNpmPackage?: FetchNpmPackage;
   installationPorts?: InstallPorts;
 }
 

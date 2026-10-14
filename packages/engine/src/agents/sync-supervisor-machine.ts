@@ -14,6 +14,7 @@ import {
   type CatalogSyncResult,
 } from './catalog-sync-machine';
 import { fetchAgents, type FetchAgents } from './registry/fetch-agents';
+import { fetchNpmPackage, type FetchNpmPackage } from './registry/npm-package';
 import {
   createRegistryReader,
   type RegistryReader,
@@ -21,11 +22,13 @@ import {
 
 export interface SyncSupervisorInput extends Pick<CatalogSyncInput, 'now'> {
   fetchAgents?: FetchAgents;
+  fetchNpmPackage?: FetchNpmPackage;
   database: Database;
   writer: WriterActorRef;
 }
 interface SyncContext extends SyncSupervisorInput {
   fetchAgents: FetchAgents;
+  fetchNpmPackage: FetchNpmPackage;
   reader: RegistryReader;
   admissions: WriterCommit[];
   result: CatalogSyncResult;
@@ -125,6 +128,7 @@ export const syncSupervisorMachine = setup({
   context: ({ input }) => ({
     ...input,
     fetchAgents: input.fetchAgents ?? fetchAgents,
+    fetchNpmPackage: input.fetchNpmPackage ?? fetchNpmPackage,
     reader: createRegistryReader(),
     admissions: [],
     result: { error: '', rejectedValues: 0, retryable: false },
