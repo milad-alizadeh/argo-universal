@@ -8,7 +8,7 @@ import {
   configurationChoices,
   currentConfigurationChoice,
   configurationEffortChoices,
-} from '../../state/configuration-choices';
+} from '#lib/product/session-configuration';
 import type { ComposerConfigurationProps } from './configuration-types';
 
 type SelectConfiguration = Extract<SessionConfigOption, { type: 'select' }>;

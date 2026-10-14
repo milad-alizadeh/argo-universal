@@ -2,6 +2,7 @@ import type { AttachmentError } from '#features/composer';
 
 interface Failure {
   message: string;
+  key?: string;
 }
 
 // What has failed in a Session's Composer since its last successful command.
@@ -14,24 +15,27 @@ export interface SendFailures {
 const reason = (
   prefix: string,
   failure: Failure | null | undefined,
-): string | undefined => (failure ? `${prefix} ${failure.message}` : undefined);
+): Failure | undefined =>
+  failure
+    ? { message: `${prefix} ${failure.message}`, key: failure.key }
+    : undefined;
 
 // The messages in the order the Composer prefers them.
 const inOrder = ({
   attachment,
   prompt,
   configuration,
-}: SendFailures): (string | undefined)[] => [
+}: SendFailures): (Failure | undefined)[] => [
   reason("Couldn't send.", prompt),
-  attachment?.message,
+  attachment,
   reason("Couldn't change settings.", configuration),
 ];
 
 // The one error the Composer shows: a failed selection first, then the prompt, the upload and settings.
-export function toSendError(failures: SendFailures): string | undefined {
+export function toSendError(failures: SendFailures): Failure | undefined {
   const { attachment } = failures;
 
-  if (attachment?.kind === 'selection') return attachment.message;
+  if (attachment?.kind === 'selection') return attachment;
 
   return inOrder(failures).find((message) => message !== undefined);
 }

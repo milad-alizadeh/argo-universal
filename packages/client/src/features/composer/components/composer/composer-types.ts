@@ -34,6 +34,7 @@ export interface ComposerProps {
   disabled?: boolean;
   sendable?: boolean;
   error?: string;
+  errorKey?: string;
 }
 
 export interface ComposerLayout {
@@ -44,7 +45,6 @@ export interface ComposerLayout {
   wide: boolean;
   inactive: boolean;
   configurationInactive: boolean;
-  oversized: boolean;
   sendState: 'stop' | 'sending' | 'ready' | 'blocked';
   send: () => void;
 }

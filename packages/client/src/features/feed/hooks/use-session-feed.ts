@@ -1,89 +1,73 @@
-import type {
-  FeedSubscribeOutput,
-  FeedSyncPoint,
-  SessionSnapshot,
-  ToolCallUpdate,
-} from '@repo/contracts';
+import type { FeedSubscribeOutput, SessionSnapshot } from '@repo/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { type ClientError, useTRPC } from '#features/connection';
+import { useTRPC } from '#features/connection';
 import { mergeHistoryPages } from '../view/feed-history';
 import {
   applySubscriptionEvent,
   type FeedState,
   syncPointOf,
 } from '../view/feed-state';
-import type { FeedView } from '../view/feed-view';
-import { keepUnchangedItems } from '../view/keep-unchanged-items';
 import { findLiveToolCall } from '../view/live-tool-call';
-import { toFeedView } from '../view/to-feed-view';
 import { useHeldFeedStart, useKeepHeldFeed } from './held-feed';
+import type { SessionFeed } from './session-feed';
 import { useFeedHistory } from './use-feed-history';
-
-type FeedHistory = ReturnType<typeof useFeedHistory>;
-
-interface SessionFeed {
-  loadingOlder: boolean;
-  loadOlder: FeedHistory['loadOlder'];
-  view: FeedView | null;
-  liveToolCall: ToolCallUpdate | undefined;
-  snapshot: SessionSnapshot | null;
-  ready: boolean;
-  error: FeedHistory['error'];
-  retry: FeedHistory['refetch'];
-  openError: Error | ClientError | null;
-  retryOpen: () => void;
-  resumeAfterCommand: () => void;
-}
+import { useFeedSyncPoint } from './use-feed-sync-point';
+import { useFeedView } from './use-feed-view';
 
 // A fetch the hook keeps in its own state, so the query cache never holds it.
 const uncached = { staleTime: 0, gcTime: 0 };
 
 // A Session's held Feed view, paging and live changes (ADR 0007).
-export function useSessionFeed(sessionId: string): SessionFeed {
+export function useSessionFeed(sessionId: string | undefined): SessionFeed {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const start = useHeldFeedStart(sessionId);
   const [feed, setFeed] = useState<FeedState>(start.feed);
   const history = useFeedHistory(sessionId, feed);
   const feedRef = useRef(feed);
+  const activeSession = useRef(sessionId);
 
-  const replaceFeed = useCallback((next: FeedState) => {
-    feedRef.current = next;
-    setFeed(next);
-  }, []);
+  const replaceFeed = useCallback(
+    (next: FeedState) => {
+      if (activeSession.current !== sessionId) return;
+      feedRef.current = next;
+      setFeed(next);
+    },
+    [sessionId],
+  );
 
   const closed = useRef(false);
+  useEffect(() => {
+    activeSession.current = sessionId;
+    feedRef.current = start.feed;
+    closed.current = false;
+  }, [sessionId, start.feed]);
   const [closureError, setClosureError] = useState<Error | null>(null);
 
   const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(
     start.snapshot,
   );
 
-  // Pages advance the held revision without restarting live updates.
-  const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(
+  const { syncPoint, setSyncPoint } = useFeedSyncPoint(
+    sessionId,
     start.syncPoint,
+    history.data?.pages[0],
   );
 
   useKeepHeldFeed(sessionId, { feed, snapshot });
   useEffect(() => {
     const pages = history.data?.pages;
-    const first = pages?.[0];
 
-    if (!pages || !first) return;
-    replaceFeed(mergeHistoryPages(feedRef.current, pages));
-    setSyncPoint(
-      (current) =>
-        current ?? { epoch: first.epoch, revision: first.maxRevision },
-    );
+    if (pages) replaceFeed(mergeHistoryPages(feedRef.current, pages));
   }, [history.data, replaceFeed]);
 
   const fetchWholeRow = useCallback(
     async (id: string) => {
       try {
         const row = await queryClient.fetchQuery({
-          ...trpc.feed.row.queryOptions({ sessionId, id }),
+          ...trpc.feed.row.queryOptions({ sessionId: sessionId ?? '', id }),
           ...uncached,
         });
 
@@ -105,6 +89,8 @@ export function useSessionFeed(sessionId: string): SessionFeed {
 
   const onLiveData = useCallback(
     (event: FeedSubscribeOutput): void => {
+      if (activeSession.current !== sessionId) return;
+
       if (event.type === 'closed') {
         closed.current = true;
         setClosureError(
@@ -127,12 +113,15 @@ export function useSessionFeed(sessionId: string): SessionFeed {
 
       if (result.reset) void resetHistory();
     },
-    [replaceFeed, fetchWholeRow, resetHistory],
+    [replaceFeed, fetchWholeRow, resetHistory, sessionId],
   );
 
   const liveChanges = useSubscription({
-    ...trpc.feed.subscribe.subscriptionOptions({ sessionId, after: syncPoint }),
-    enabled: syncPoint !== null,
+    ...trpc.feed.subscribe.subscriptionOptions({
+      sessionId: sessionId ?? '',
+      after: syncPoint,
+    }),
+    enabled: sessionId !== undefined && syncPoint !== null,
     onData: onLiveData,
   });
 
@@ -149,21 +138,18 @@ export function useSessionFeed(sessionId: string): SessionFeed {
     if (syncPoint?.epoch === next.epoch && syncPoint.revision === next.revision)
       reset();
     else setSyncPoint(next);
-  }, [syncPoint, reset]);
+  }, [syncPoint, reset, setSyncPoint]);
 
-  const [held, setHeld] = useState(() => ({
-    rows: feed.rows,
-    snapshot,
-    view: snapshot ? toFeedView(feed.rows, snapshot) : null,
-  }));
+  const view = useFeedView(sessionId, feed, snapshot);
 
-  let view = held.view;
+  const [shownSession, setShownSession] = useState(sessionId);
 
-  if (held.rows !== feed.rows || held.snapshot !== snapshot) {
-    view = snapshot
-      ? keepUnchangedItems(held.view, toFeedView(feed.rows, snapshot))
-      : null;
-    setHeld({ rows: feed.rows, snapshot, view });
+  // Session identity changes reset the held read before any view can show another Session's data.
+  if (shownSession !== sessionId) {
+    setShownSession(sessionId);
+    setFeed(start.feed);
+    setSnapshot(start.snapshot);
+    setClosureError(null);
   }
 
   return {

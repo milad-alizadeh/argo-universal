@@ -8,6 +8,7 @@ import { oversizedComposerImage } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { imageComposer } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
+import { findToast } from '../../../../../mocks/find-toast';
 import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
@@ -39,9 +40,10 @@ export const ImageTooLarge: Story = {
 
       for (const width of [layoutWidths.phone, layoutWidths.wide]) {
         await settleViewport(width);
-        await expect(await canvas.findByRole('alert')).toHaveTextContent(
-          'Attachment exceeds 20 MB.',
-        );
+        await expect(
+          await findToast('Attachment exceeds 20 MB.'),
+        ).toBeVisible();
+        await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
         await expect(
           canvas.getByRole('button', { name: 'Send' }),
         ).toBeDisabled();
@@ -62,7 +64,7 @@ export const ImageTooLarge: Story = {
         }),
       );
       await waitFor(() =>
-        expect(canvas.queryByRole('alert')).not.toBeInTheDocument(),
+        expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled(),
       );
       await expect(shownText(canvas.getByRole('textbox'))).toBe(draft.text);
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();

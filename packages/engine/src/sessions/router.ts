@@ -25,6 +25,7 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../rpc';
+import { createDiscoveryRouter } from './discovery-router';
 import { createSessionList } from './list/session-list';
 import type { SessionRouterDeps } from './router-deps';
 import {
@@ -127,6 +128,7 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
 
   return mergeRouters(
     createListRouter(sessionList),
+    createDiscoveryRouter(deps),
     createListUpdatesRouter(sessionList),
     createCountsRouter(sessionList),
     createStartRouter(deps),

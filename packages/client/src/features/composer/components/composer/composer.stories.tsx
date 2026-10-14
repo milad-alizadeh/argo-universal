@@ -1,9 +1,10 @@
 import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { Platform, View } from 'react-native';
+import { Platform } from 'react-native';
 import { action } from 'storybook/actions';
 import { SessionColumn } from '#lib/product/session-column';
+import { SessionLayout } from '#lib/product/session-layout';
 import {
   composerProps,
   type ComposerMockProps,
@@ -18,15 +19,12 @@ if (!firstAgent) throw new Error('Recorded catalog needs an available Agent.');
 
 const meta = {
   title: 'Composer/Composer',
-  decorators: [
-    (Story): React.JSX.Element => (
-      <SessionColumn>
-        <Story />
-      </SessionColumn>
-    ),
-  ],
   component: Composer,
-  render: (args): React.JSX.Element => <Composer {...composerProps(args)} />,
+  render: (args): React.JSX.Element => (
+    <SessionColumn>
+      <Composer {...composerProps(args)} />
+    </SessionColumn>
+  ),
   parameters: {
     previewPadding: false,
     screenPreview: Platform.OS !== 'web',
@@ -64,16 +62,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const ImageSelectionFailed: Story = {
+  parameters: { screenPreview: true },
   args: {
     draft: { text: 'Build this screen using the brief.', attachments: [] },
     error: attachmentSelectionFailureMessage,
   },
   render: (args) => (
-    <View className="w-full items-center p-4">
-      <View className="w-full max-w-composer">
-        <Composer {...composerProps({ ...args })} />
-      </View>
-    </View>
+    <SessionLayout
+      header={null}
+      feed={null}
+      composer={<Composer {...composerProps(args)} />}
+    />
   ),
 };
 

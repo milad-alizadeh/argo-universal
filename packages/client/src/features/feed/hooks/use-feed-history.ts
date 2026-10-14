@@ -27,7 +27,7 @@ const olderCursor = (page: FeedPageOutput): HistoryCursor | undefined =>
     : undefined;
 
 export function useFeedHistory(
-  sessionId: string,
+  sessionId: string | undefined,
   { epoch, startCursor }: HistoryWindow,
 ): FeedHistory {
   const trpc = useTRPC();
@@ -35,7 +35,7 @@ export function useFeedHistory(
   const queryClient = useQueryClient();
 
   const queryKey = trpc.feed.page.infiniteQueryKey({
-    sessionId,
+    sessionId: sessionId ?? '',
     limit: pageSize,
   });
 
@@ -43,9 +43,10 @@ export function useFeedHistory(
     queryKey,
     queryFn: ({ pageParam, signal }) =>
       client.feed.page.query(
-        { sessionId, limit: pageSize, ...pageParam },
+        { sessionId: sessionId ?? '', limit: pageSize, ...pageParam },
         { signal },
       ),
+    enabled: sessionId !== undefined,
     initialPageParam,
     getNextPageParam: olderCursor,
     staleTime: Infinity,
@@ -72,7 +73,7 @@ export function useFeedHistory(
     (): Promise<void> =>
       queryClient.resetQueries({
         queryKey: trpc.feed.page.infiniteQueryKey({
-          sessionId,
+          sessionId: sessionId ?? '',
           limit: pageSize,
         }),
         exact: true,

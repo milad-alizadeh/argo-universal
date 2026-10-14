@@ -1,9 +1,13 @@
 import type { Navigate } from '#lib/product/navigation/context';
-import type { ReadyNewSessionViewProps } from '../components/new-session-view/new-session-view';
+import type { ReadyNewSessionViewProps } from '../../components/new-session-view/new-session-view';
 import type { NewSessionData } from './use-new-session-data';
 import type { AttachmentDraft, SessionOpening } from './use-session-opening';
 
 export interface NewSessionWiring {
+  configuration?: Pick<
+    ReadyNewSessionViewProps['configuration'],
+    'configOptions' | 'onConfigChange'
+  >;
   data: NewSessionData;
   connected: boolean;
   navigate: Navigate;

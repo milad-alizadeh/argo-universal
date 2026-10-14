@@ -18,6 +18,7 @@ import {
   sessionActorId,
   sessionMachine,
 } from '../sessions';
+import { discoveryCacheId, discoveryCacheMachine } from '../sessions';
 import { databaseWriterId, writerMachine } from '../storage';
 import type { SystemDeps } from '../system';
 import { createEngineAgentLogins } from './agent-logins';
@@ -64,7 +65,8 @@ type EngineSupplied =
   | 'createId'
   | 'checkAgentLaunch'
   | 'agentLogins'
-  | 'installations';
+  | 'installations'
+  | 'discovery';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
@@ -105,11 +107,15 @@ function bindInstallations(
 
 function createAgentSetup(
   input: AppRouterInput,
-): Pick<AppRouterDeps, 'installations' | 'agentLogins' | 'createId'> {
+): Pick<
+  AppRouterDeps,
+  'installations' | 'agentLogins' | 'createId' | 'discovery'
+> {
   const installations = input.installations ?? createInstallations(input.home);
 
   return {
     installations,
+    discovery: requireDiscovery(input.sessions),
     agentLogins: resolveAgentLogins(input, installations),
     createId: input.createId ?? randomUUID,
   };
@@ -147,4 +153,18 @@ function sessionsUseAgent(
 
 function createInstallations(home: string | undefined): AgentInstallations {
   return new AgentInstallations(home ?? '');
+}
+
+function requireDiscovery(
+  sessions: OpenSessionsActorRef,
+): AppRouterDeps['discovery'] {
+  const discovery = findMachineActor(
+    sessions.system,
+    discoveryCacheId,
+    discoveryCacheMachine,
+  );
+
+  if (!discovery) throw new Error('Discovery is unavailable');
+
+  return discovery;
 }

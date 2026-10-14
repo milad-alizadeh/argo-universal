@@ -26,12 +26,8 @@ export interface EmptySessionPorts {
   ) => Promise<SessionPromptOutput>;
   // The screen becomes that Session's page in place: no new page, no animation.
   handOff: (sessionId: string) => void;
-  // The next remembered choice the options don't hold yet, skipping those already applied.
-  nextChange: (
-    options: SessionConfigOption[],
-    saved: SavedChoices,
-    applied: readonly string[],
-  ) => ConfigurationChange | undefined;
+  // Composer clears the kept Project draft before the Session page takes over.
+  clearDraft: () => void;
 }
 
 export type EmptySessionEvent =

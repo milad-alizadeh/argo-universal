@@ -6,7 +6,7 @@ import {
   orderedOptions,
   type SavedChoices,
   type RememberedOption,
-} from './configuration-preferences';
+} from '#lib/product/session-configuration';
 
 let writes = Promise.resolve();
 
