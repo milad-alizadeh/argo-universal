@@ -1,4 +1,4 @@
-import type { AgentInfo } from '@repo/contracts';
+import type { AgentInfo, AgentsCatalogOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { iconAgent } from '../components/registry-icons.mocks';
 import { agentDetail } from './agent-detail';
@@ -20,6 +20,18 @@ const uvAgent = {
   support: { kind: 'uvx', recipe: { package: 'python-agent==1.2.3' } },
 } as const;
 
+const binaryAgent: AgentsCatalogOutput['agents'][number] = {
+  ...iconAgent,
+  support: {
+    kind: 'binary',
+    recipe: {
+      archive: 'https://example.org/agent.tar.gz',
+      cmd: './agent',
+      args: ['--acp'],
+    },
+  },
+};
+
 const allTools = { node: true, uv: true, brew: true };
 
 it.each([
@@ -39,6 +51,12 @@ it.each([
     name: 'an npx Agent without uv',
     registry: iconAgent,
     missing: { uv: false },
+    status: notInstalled,
+  },
+  {
+    name: 'a binary Agent with no tools at all',
+    registry: binaryAgent,
+    missing: { node: false, uv: false, brew: false },
     status: notInstalled,
   },
   {

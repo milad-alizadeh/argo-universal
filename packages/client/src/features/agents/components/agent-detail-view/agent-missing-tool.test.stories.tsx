@@ -86,11 +86,14 @@ export const AlertShowsTheExactCommand: Story = {
   args: { tool: toolArgs({ confirming: true }) },
   play: async ({ args, userEvent }) => {
     const alert = await body.findByRole('dialog', { name: 'Install Node.js?' });
-    await expect(
-      within(alert).getByText(
-        `${name} runs with npx, which needs Node.js. Argo runs this with Homebrew on ${serverName}:`,
-      ),
-    ).toBeVisible();
+    // The Alert fades in; its text is visible once it has.
+    await waitFor(() =>
+      expect(
+        within(alert).getByText(
+          `${name} runs with npx, which needs Node.js. Argo runs this with Homebrew on ${serverName}:`,
+        ),
+      ).toBeVisible(),
+    );
     await expect(within(alert).getByText('brew install node')).toBeVisible();
     await userEvent.click(
       within(alert).getByRole('button', { name: 'Install' }),
@@ -109,30 +112,6 @@ export const ShowsHomebrewProgressInPlace: Story = {
     await expect(args.tool?.onConfirmingChange).not.toHaveBeenCalled();
   },
 };
-
-// Without Homebrew the one action is the official download page; Argo installs nothing itself.
-const needsUvWithoutHomebrew = (layout: Layout): Story => ({
-  args: { agent: needing('needs-uv'), tool: toolArgs({ homebrew: false }) },
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
-  play: async ({ canvas }) => {
-    await expect(canvas.getAllByText('Needs uv')[0]).toBeVisible();
-    await expect(canvas.getByText('uv not found')).toBeVisible();
-    await expect(
-      canvas.getByRole('link', { name: 'Download uv' }),
-    ).toBeVisible();
-    await expect(
-      canvas.getByText(
-        `${name} runs with uvx. Homebrew isn’t on ${serverName}, so install uv from astral.sh, then come back to this page.`,
-      ),
-    ).toBeVisible();
-    await expect(canvas.queryByText(/with Homebrew$/)).not.toBeInTheDocument();
-    await expectNoInstall(canvas);
-  },
-});
-
-export const NeedsUvLinksTheDownloadOnDesktop = needsUvWithoutHomebrew('wide');
-
-export const NeedsUvLinksTheDownloadOnPhone = needsUvWithoutHomebrew('phone');
 
 export const ToastsTheInstalledTool: Story = {
   args: {

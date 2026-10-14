@@ -1,17 +1,12 @@
-import { rm, writeFile } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
+import { placeTool } from '../server-tools';
 import { browseAgents } from './agent-catalog';
 import { Given, When, Then, test } from './fixtures';
 import { agentWork } from './timeouts';
 import { toast } from './toasts';
-
-const stub = '#!/bin/sh\nexit 0\n';
-
-const placeTool = async (toolsPath: string, file: string): Promise<void> => {
-  await writeFile(path.join(toolsPath, file), stub, { mode: 0o755 });
-};
 
 const removeTools = async (
   toolsPath: string,
@@ -89,11 +84,36 @@ Then(
 );
 
 Then(
-  'Python Agent needs uv and links its download page instead of Install',
+  'Example Agent shows Node.js installing in place',
+  async ({ page }): Promise<void> => {
+    await expect(page.getByText('Installing Node.js…')).toBeVisible();
+    await expect(homebrewButton(page)).toHaveCount(0);
+    await expect(installButton(page)).toHaveCount(0);
+  },
+);
+
+Then(
+  'one toast says Node.js could not be installed and Example Agent still offers Homebrew',
+  async ({ page }): Promise<void> => {
+    const failed = toast(page, 'Could not install Node.js');
+
+    await expect(failed).toBeVisible(agentWork);
+    await expect(failed).toHaveCount(1);
+    await expect(homebrewButton(page)).toBeVisible();
+    await expect(installButton(page)).toHaveCount(0);
+    await capture(page, 'homebrew-failed');
+  },
+);
+
+Then(
+  'Python Agent needs uv and links its download and Homebrew instead of Install',
   async ({ page }): Promise<void> => {
     await expect(page.getByRole('link', { name: 'Download uv' })).toBeVisible(
       agentWork,
     );
+    await expect(
+      page.getByRole('link', { name: 'Get Homebrew' }),
+    ).toHaveAttribute('href', 'https://brew.sh');
     await expect(
       page.getByRole('button', { name: /with Homebrew$/ }),
     ).toHaveCount(0);
@@ -110,3 +130,22 @@ Then('Python Agent offers Install', async ({ page }): Promise<void> => {
   await expect(installButton(page)).toBeVisible(agentWork);
   await expect(page.getByRole('link', { name: 'Download uv' })).toHaveCount(0);
 });
+
+When('I recheck the tools', async ({ page }): Promise<void> => {
+  await page.getByRole('button', { name: 'Recheck' }).click();
+});
+
+// The page reports itself hidden, then visible, as when the App goes to the background and returns; the e2e project has no DOM lib.
+const reportVisibility = (visibility: 'hidden' | 'visible'): string => `
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => '${visibility}' });
+  Object.defineProperty(document, 'hidden', { configurable: true, get: () => ${visibility === 'hidden'} });
+  document.dispatchEvent(new Event('visibilitychange'));
+`;
+
+When(
+  'the App goes to the background and comes back',
+  async ({ page }): Promise<void> => {
+    await page.evaluate(reportVisibility('hidden'));
+    await page.evaluate(reportVisibility('visible'));
+  },
+);

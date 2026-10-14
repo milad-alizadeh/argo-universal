@@ -93,8 +93,11 @@ async function brewInstall(
   options: InstallationMockOptions,
 ): Promise<string> {
   const bottle = bottleFor(input.args[1]);
+  const { toolsPath } = options;
+
+  if (!toolsPath) throw new Error('brew needs the toolsPath option');
   await awaitInstallerRelease(input, options.scenarioPath);
-  await bottle(options.toolsPath ?? input.cwd);
+  await bottle(toolsPath);
 
   return '';
 }

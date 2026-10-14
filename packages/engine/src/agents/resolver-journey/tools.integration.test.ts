@@ -2,21 +2,7 @@ import { join, relative } from 'node:path';
 import type { InstallTool, MachineTools } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { installationPorts } from '#mocks/installation';
-import { createMachinePath, type MachinePath } from '#mocks/machine-path';
-import type { InstallPorts, InstallToolInput } from '../../agents';
-
-type Omitted = 'node' | 'npm' | 'uv' | 'brew';
-
-// Puts every tool on PATH except the omitted one; Node.js itself comes from the test PATH unless omitted.
-const machineWithout = async (omitted?: Omitted): Promise<MachinePath> => {
-  const machine = await createMachinePath({ node: omitted !== 'node' });
-
-  for (const tool of ['npm', 'uv', 'brew'] as const)
-    if (tool !== omitted) await machine.place(tool);
-
-  return machine;
-};
+import { homebrewPorts, machineWithout, type Omitted } from '#mocks/homebrew';
 
 it.each<[Omitted, MachineTools]>([
   ['node', { node: false, uv: true, brew: true }],
@@ -40,25 +26,6 @@ it('a tool installed in a terminal is found by the next look, with no restart', 
   expect((await host.caller.agents.tools()).uv).toBe(true);
 });
 
-// Homebrew is the external installer: its fixture puts the tool's files on PATH, as `brew install` would.
-const homebrew = (
-  machine: MachinePath,
-  outcome: (input: InstallToolInput) => Promise<void>,
-): InstallPorts & { runs: InstallToolInput[] } => {
-  const runs: InstallToolInput[] = [];
-
-  return {
-    ...installationPorts,
-    runs,
-    runTool: async (input) => {
-      runs.push(input);
-      await outcome(input);
-
-      return '';
-    },
-  };
-};
-
 const installedFiles: Record<InstallTool, Omitted> = { node: 'npm', uv: 'uv' };
 
 it.each<InstallTool>(['node', 'uv'])(
@@ -66,7 +33,7 @@ it.each<InstallTool>(['node', 'uv'])(
   async (tool) => {
     const machine = await machineWithout(installedFiles[tool]);
 
-    const ports = homebrew(machine, async () => {
+    const ports = homebrewPorts(async () => {
       await machine.place(installedFiles[tool]);
     });
 
@@ -86,11 +53,9 @@ it.each<InstallTool>(['node', 'uv'])(
 );
 
 it('a failed Homebrew install reports its reason and the tool stays missing', async () => {
-  const machine = await machineWithout('npm');
+  await machineWithout('npm');
 
-  const ports = homebrew(machine, () =>
-    Promise.reject(new Error('brew failed to install Node.js: no bottle')),
-  );
+  const ports = homebrewPorts(() => Promise.reject(new Error('no bottle')));
 
   const host = await startEngineTestHost({ installationPorts: ports });
   await expect(
@@ -102,7 +67,7 @@ it('a failed Homebrew install reports its reason and the tool stays missing', as
 it('without Homebrew on PATH, Argo installs nothing', async () => {
   const machine = await machineWithout('brew');
   await machine.remove('uv');
-  const ports = homebrew(machine, async () => {});
+  const ports = homebrewPorts(async () => {});
   const host = await startEngineTestHost({ installationPorts: ports });
   await expect(host.caller.agents.installTool({ tool: 'uv' })).rejects.toThrow(
     'Homebrew',

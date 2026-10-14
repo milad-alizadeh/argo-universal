@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import type { ChildProcessByStdio } from 'node:child_process';
-import { mkdir, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
@@ -9,6 +9,7 @@ import { findFreePort } from '@repo/mocks/network/free-port';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { engineBundlePath } from './engine-bundle';
 import { serverHttpUrl, serverUrlFor } from './server-port';
+import { placeTools } from './server-tools';
 import { hasExited, stderrTailLength, waitUntilReady } from './server-process';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
@@ -45,17 +46,6 @@ export const serverFiles = (directory: string): ServerFiles => ({
   toolsPath: path.join(directory, toolsDirectoryName),
   requestLogPath: path.join(directory, requestLogName),
 });
-
-const toolStub = '#!/bin/sh\nexit 0\n';
-
-// The Server finds Node.js (the test's own), npm and uv, so npx and uvx Agents offer Install.
-async function placeTools(toolsPath: string): Promise<void> {
-  await mkdir(toolsPath, { recursive: true });
-  await symlink(process.execPath, path.join(toolsPath, 'node'));
-
-  for (const tool of ['npm', 'uv'])
-    await writeFile(path.join(toolsPath, tool), toolStub, { mode: 0o755 });
-}
 
 // Starts a real Engine with shared external Agent fixtures in an isolated home.
 export async function startOwnServer(

@@ -65,5 +65,7 @@ export const toolArgs = (
   installing: false,
   onConfirmingChange: fn(),
   onInstall: fn(),
+  rechecking: false,
+  onRecheck: fn(),
   ...overrides,
 });

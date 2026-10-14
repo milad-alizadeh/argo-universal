@@ -19,6 +19,10 @@ export interface ToolInstallPresentation {
   notice?: ToolNotice;
   onConfirmingChange: (open: boolean) => void;
   onInstall: () => void;
+  // Looking for the tools again is running.
+  rechecking: boolean;
+  // Looks for the tools again, as after installing one outside Argo.
+  onRecheck: () => void;
 }
 
 export interface ToolFacts {
@@ -30,6 +34,9 @@ export interface ToolFacts {
   // The official download page; Argo never runs Homebrew's own install script.
   url: string;
 }
+
+// Homebrew's own page; Argo never runs Homebrew's install script.
+export const homebrewUrl = 'https://brew.sh';
 
 const toolFacts: Record<InstallTool, ToolFacts> = {
   node: {
@@ -76,7 +83,7 @@ export const missingToolFooter = (
 ): string =>
   homebrew
     ? `${agent} runs with ${facts.runner}. Argo asks before it runs ${homebrewCommand(facts)} on ${serverName(server)}.`
-    : `${agent} runs with ${facts.runner}. Homebrew isn’t on ${serverName(server)}, so install ${facts.name} from ${facts.site}, then come back to this page.`;
+    : `${agent} runs with ${facts.runner}. Homebrew isn’t on ${serverName(server)}, so install ${facts.name} from ${facts.site}, then Recheck.`;
 
 export const missingToolAlertMessage = (
   facts: ToolFacts,

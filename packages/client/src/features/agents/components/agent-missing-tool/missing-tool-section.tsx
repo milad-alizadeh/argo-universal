@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { Linking } from 'react-native';
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import {
@@ -15,6 +14,7 @@ import {
   type ToolFacts,
   type ToolInstallPresentation,
 } from '../../state/missing-tool';
+import { ToolDownloads } from './tool-downloads';
 
 type Facts = ToolFacts;
 
@@ -47,7 +47,7 @@ function MissingTool(props: MissingProps): React.JSX.Element {
 
   return (
     <>
-      <MissingToolStatus {...props} homebrew={homebrew} />
+      <MissingToolStatus {...props} />
       {homebrew ? <HomebrewConfirmation {...props} tool={homebrew} /> : null}
     </>
   );
@@ -60,29 +60,28 @@ const statusFooter = ({ agent, tool, facts }: MissingProps): string =>
     server: tool?.server,
   });
 
-function MissingToolStatus(
-  props: MissingProps & { homebrew?: ToolInstallPresentation },
-): React.JSX.Element {
+function MissingToolStatus(props: MissingProps): React.JSX.Element {
   return (
     <FieldSection title="Status" footer={statusFooter(props)}>
       <ListItem
         title={`${props.facts.name} not found`}
         status={{ tone: 'warning', label: '' }}
       />
-      <ToolAction facts={props.facts} homebrew={props.homebrew} />
+      <ToolAction facts={props.facts} tool={props.tool} />
     </FieldSection>
   );
 }
 
-// With Homebrew Argo installs the tool; without it, the download page.
+// With Homebrew Argo installs the tool; without it, the download pages and Recheck.
 function ToolAction(props: {
   facts: Facts;
-  homebrew?: ToolInstallPresentation;
+  tool?: ToolInstallPresentation;
 }): React.JSX.Element {
-  if (props.homebrew)
-    return <HomebrewAction facts={props.facts} tool={props.homebrew} />;
+  const homebrew = withHomebrew(props.tool);
 
-  return <DownloadAction facts={props.facts} />;
+  if (homebrew) return <HomebrewAction facts={props.facts} tool={homebrew} />;
+
+  return <ToolDownloads facts={props.facts} tool={props.tool} />;
 }
 
 // Homebrew's progress shows in place of its action until it settles.
@@ -105,18 +104,6 @@ function HomebrewProgress({ facts }: { facts: Facts }): React.JSX.Element {
       title={`Installing ${facts.name}…`}
       status={{ tone: 'pending', label: '' }}
       disabled
-    />
-  );
-}
-
-// The official download page opens outside the App.
-function DownloadAction({ facts }: { facts: Facts }): React.JSX.Element {
-  return (
-    <ListItem
-      tone="accent"
-      title={`Download ${facts.name}`}
-      href={facts.url}
-      onPress={() => void Linking.openURL(facts.url)}
     />
   );
 }

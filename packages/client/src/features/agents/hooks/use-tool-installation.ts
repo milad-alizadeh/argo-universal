@@ -1,7 +1,9 @@
 import type { InstallTool, MachineTools } from '@repo/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import { useTRPC } from '#features/connection';
+import { onForeground } from '../../../lib/generic/app-foreground';
 import type { AgentStatus } from '../state/agent-status';
 import {
   missingTool,
@@ -9,13 +11,23 @@ import {
   type ToolNotice,
 } from '../state/missing-tool';
 
+type ToolsQuery = {
+  data?: MachineTools;
+  isFetching: boolean;
+  refetch: () => Promise<{ data?: MachineTools }>;
+};
+
 // The tools on the Server's PATH, looked for again whenever the page mounts or the window regains focus.
-export function useMachineTools(): MachineTools | undefined {
+function useToolsQuery(): ToolsQuery {
   return useQuery({
     ...useTRPC().agents.tools.queryOptions(),
     staleTime: 0,
     refetchOnWindowFocus: 'always',
-  }).data;
+  });
+}
+
+export function useMachineTools(): MachineTools | undefined {
+  return useToolsQuery().data;
 }
 
 type ToolMutation = {
@@ -75,11 +87,24 @@ const installer =
     if (tool) install.mutate({ tool });
   };
 
-// Where the tool would install, and whether Homebrew is there to do it.
-function useHomebrew(
-  server?: string,
-): Pick<ToolInstallPresentation, 'homebrew' | 'server'> {
-  return { homebrew: !!useMachineTools()?.brew, server };
+type ToolsLookup = Pick<
+  ToolInstallPresentation,
+  'homebrew' | 'server' | 'rechecking' | 'onRecheck'
+>;
+
+// Where the tool would install, whether Homebrew is there, and Recheck; the App coming back looks again too.
+function useToolsLookup(server?: string): ToolsLookup {
+  const tools = useToolsQuery();
+  const { refetch } = tools;
+
+  useEffect(() => onForeground(AppState, () => void refetch()), [refetch]);
+
+  return {
+    homebrew: !!tools.data?.brew,
+    server,
+    rechecking: tools.isFetching,
+    onRecheck: () => void refetch(),
+  };
 }
 
 const installState = (
@@ -94,12 +119,12 @@ export function useToolInstallation(
   status?: AgentStatus,
   server?: string,
 ): ToolInstallPresentation {
-  const homebrew = useHomebrew(server);
+  const lookup = useToolsLookup(server);
   const [confirming, onConfirmingChange] = useState(false);
   const install = useInstallTool();
 
   return {
-    ...homebrew,
+    ...lookup,
     ...installState(install),
     confirming,
     onConfirmingChange,
