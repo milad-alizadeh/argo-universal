@@ -2,9 +2,12 @@ import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button';
+import { Spinner } from '#primitives/display/spinner';
 import { DialogOverlay } from '#primitives/overlays/dialog';
 import {
   alertActionPress,
+  alertDismissal,
+  isAlertActionEnabled,
   type AlertAction,
   type AlertProps,
 } from './alert-props';
@@ -15,16 +18,41 @@ const contentClassName =
 // The web draws an alert as a centred dialog at every width, never as a sheet.
 export function Alert(props: AlertProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Root open={props.open} onOpenChange={props.onOpenChange}>
+    <DialogPrimitive.Root
+      open={props.open}
+      onOpenChange={alertDismissal(props)}
+    >
       <DialogPrimitive.Portal>
         <DialogOverlay>
-          <DialogPrimitive.Content className={contentClassName}>
-            <AlertHeading title={props.title} message={props.message} />
-            <AlertButtons {...props} />
-          </DialogPrimitive.Content>
+          <AlertCard {...props} />
         </DialogOverlay>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  );
+}
+
+function AlertCard(props: AlertProps): React.JSX.Element {
+  return (
+    <DialogPrimitive.Content className={contentClassName}>
+      <AlertHeading title={props.title} message={props.message} />
+      <AlertProgress actions={props.actions} />
+      <AlertButtons {...props} />
+    </DialogPrimitive.Content>
+  );
+}
+
+// The platform spinner under the message while an answer runs, named for that answer.
+function AlertProgress(
+  props: Pick<AlertProps, 'actions'>,
+): React.JSX.Element | null {
+  const running = props.actions.find((action) => action.loading);
+
+  if (!running) return null;
+
+  return (
+    <View className="min-h-6 items-start justify-center">
+      <Spinner accessibilityLabel={running.label} />
+    </View>
   );
 }
 
@@ -62,9 +90,11 @@ function cancelFirst(actions: readonly AlertAction[]): AlertAction[] {
   return [...actions].sort((a, b) => Number(!!b.cancel) - Number(!!a.cancel));
 }
 
-function AlertButton(
-  props: Pick<AlertProps, 'onOpenChange'> & { action: AlertAction },
-): React.JSX.Element {
+type AlertButtonProps = Pick<AlertProps, 'actions' | 'onOpenChange'> & {
+  action: AlertAction;
+};
+
+function AlertButton(props: AlertButtonProps): React.JSX.Element {
   const { action } = props;
 
   return (
@@ -72,6 +102,7 @@ function AlertButton(
       label={action.label}
       variant={action.cancel ? 'outline' : 'default'}
       tone={action.tone}
+      disabled={!isAlertActionEnabled(action, props.actions)}
       onPress={alertActionPress(action, props.onOpenChange)}
     />
   );

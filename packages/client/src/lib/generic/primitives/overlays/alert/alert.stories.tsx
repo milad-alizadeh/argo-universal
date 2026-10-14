@@ -1,22 +1,38 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Alert } from './alert';
 import type { AlertProps } from './alert-props';
 
+const removalTitle = 'Remove Example ACP?';
+
+const removeAgent = 'Remove Agent';
+
 type AlertContent = Omit<AlertProps, 'open' | 'onOpenChange'>;
 
 const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
   {
     state: 'Destructive confirmation',
-    trigger: 'Remove Agent',
+    trigger: removeAgent,
     alert: {
-      title: 'Remove Example ACP?',
+      title: removalTitle,
       message: 'Sessions that use it keep their history.',
       actions: [
-        { label: 'Remove Agent', tone: 'danger' },
+        { label: removeAgent, tone: 'danger' },
+        { label: 'Cancel', cancel: true },
+      ],
+    },
+  },
+  {
+    state: 'Disabled answer',
+    trigger: 'Remove in use Agent',
+    alert: {
+      title: removalTitle,
+      message: 'A running Session still uses it.',
+      actions: [
+        { label: removeAgent, tone: 'danger', disabled: true },
         { label: 'Cancel', cancel: true },
       ],
     },
@@ -32,21 +48,73 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
   },
 ];
 
-type AlertPreviewProps = { trigger: string; alert: AlertContent };
+type AlertPreviewProps = {
+  trigger: string;
+  alert: AlertContent;
+  // The alert's answer is running, so it stays up.
+  busy?: boolean;
+};
 
 function AlertPreview(props: AlertPreviewProps): React.JSX.Element {
   const [open, setOpen] = useState(false);
+  const show = (): void => setOpen(true);
 
   return (
     <View className="flex-row">
-      <Button
-        label={props.trigger}
-        variant="outline"
-        onPress={() => setOpen(true)}
+      <Button label={props.trigger} variant="outline" onPress={show} />
+      <Alert
+        {...props.alert}
+        open={open || !!props.busy}
+        onOpenChange={setOpen}
       />
-      <Alert {...props.alert} open={open} onOpenChange={setOpen} />
     </View>
   );
+}
+
+const removalTime = 2000;
+
+// Remove runs for a moment: the alert shows progress and takes no answer until it finishes.
+type Removal = { removing: boolean; remove: () => void };
+
+function useRemoval(): Removal {
+  const [removing, setRemoving] = useState(false);
+
+  useEffect(() => {
+    if (!removing) return;
+    const timer = setTimeout(() => setRemoving(false), removalTime);
+
+    return (): void => clearTimeout(timer);
+  }, [removing]);
+
+  return { removing, remove: () => setRemoving(true) };
+}
+
+function RunningAlertPreview(): React.JSX.Element {
+  const { removing, remove } = useRemoval();
+
+  return (
+    <AlertPreview
+      trigger={removeAgent}
+      alert={runningAlert(removing, remove)}
+      busy={removing}
+    />
+  );
+}
+
+function runningAlert(removing: boolean, remove: () => void): AlertContent {
+  return {
+    title: removalTitle,
+    message: 'Sessions that use it keep their history.',
+    actions: [
+      { label: 'Cancel', cancel: true },
+      {
+        label: removing ? 'Removing…' : removeAgent,
+        tone: 'danger',
+        loading: removing,
+        onPress: remove,
+      },
+    ],
+  };
 }
 
 const meta = { title: 'Design System/Primitives/Alert' } satisfies Meta;
@@ -64,6 +132,9 @@ export const Variations: Story = {
           <AlertPreview trigger={trigger} alert={alert} />
         </Variation>
       ))}
+      <Variation label="Running answer">
+        <RunningAlertPreview />
+      </Variation>
     </VariationList>
   ),
 };
