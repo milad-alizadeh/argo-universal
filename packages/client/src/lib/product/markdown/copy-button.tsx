@@ -1,9 +1,8 @@
 import { setStringAsync } from 'expo-clipboard';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Pressable } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/display/icon/icon';
+import { IconButton } from '#primitives/buttons/icon-button/icon-button';
 
 export interface CopyButtonProps {
   value: string;
@@ -41,21 +40,15 @@ function useCopy(): [boolean, (value: string) => void] {
   return [copied, copy];
 }
 
+// A bare glyph in a code block's header: no fill, border or touch minimum.
+const copyChrome =
+  'size-[22px] sm:size-[22px] rounded-sm border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 active:bg-transparent web:hover:bg-transparent';
+
 function buttonClassName(props: CopyButtonProps, copied: boolean): string {
   return cn(
-    'size-[22px] shrink-0 items-center justify-center rounded-sm',
+    copyChrome,
     props.revealOnHover && hoverRevealClassName(copied),
     props.className,
-  );
-}
-
-function CopyIcon({ copied }: { copied: boolean }): React.JSX.Element {
-  return (
-    <Icon
-      role="control"
-      name={copied ? 'check' : 'copy'}
-      className="text-muted-foreground"
-    />
   );
 }
 
@@ -64,13 +57,13 @@ export function CopyButton(props: CopyButtonProps): React.JSX.Element {
   const [copied, copy] = useCopy();
 
   return (
-    <Pressable
-      role="button"
-      aria-label={copied ? 'Copied' : props.label}
+    <IconButton
+      variant="ghost"
+      icon={copied ? 'check' : 'copy'}
+      iconClassName="text-muted-foreground"
+      accessibilityLabel={copied ? 'Copied' : props.label}
       onPress={() => copy(props.value)}
       className={buttonClassName(props, copied)}
-    >
-      <CopyIcon copied={copied} />
-    </Pressable>
+    />
   );
 }

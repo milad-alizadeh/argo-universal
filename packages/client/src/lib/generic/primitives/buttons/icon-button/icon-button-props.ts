@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
 import type { IconProps } from '#primitives/display/icon/icon';
 import type { IconName } from '../../../symbols/icon-names';
@@ -26,4 +26,6 @@ export type IconButtonProps = ActionProps & {
   iconWeight?: IconProps['weight'];
   // A toggle: true draws it on, false draws it off; leave it out for a plain button.
   'aria-pressed'?: boolean;
+  // Drawn over the icon, such as a header button's status dot; the caller places it.
+  badge?: ReactNode;
 };
