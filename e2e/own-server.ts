@@ -9,8 +9,8 @@ import { findFreePort } from '@repo/mocks/network/free-port';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { engineBundlePath } from './engine-bundle';
 import { serverHttpUrl, serverUrlFor } from './server-port';
-import { placeTools } from './server-tools';
 import { hasExited, stderrTailLength, waitUntilReady } from './server-process';
+import { placeTools } from './server-tools';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
