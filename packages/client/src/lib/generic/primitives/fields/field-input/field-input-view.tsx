@@ -87,5 +87,5 @@ function inputBehaviour(props: FieldInputProps): InputProps {
 const inputClasses = (mono: FieldInputProps['mono']): string =>
   cn(
     mono ? 'type-code' : 'type-body',
-    'h-6 flex-1 rounded-none border-0 bg-transparent px-0 py-0 shadow-none sm:h-6 focus-visible:ring-0 dark:bg-transparent',
+    'h-6 flex-1 rounded-none web:rounded-none border-0 bg-transparent px-0 py-0 shadow-none sm:h-6 web:focus-visible:ring-0 dark:bg-transparent',
   );

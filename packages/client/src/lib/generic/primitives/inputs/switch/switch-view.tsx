@@ -1,6 +1,5 @@
 import * as SwitchPrimitives from '@rn-primitives/switch';
 import type * as React from 'react';
-import { Platform } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import type { SwitchProps } from './switch-props';
 
@@ -25,9 +24,7 @@ function switchClass(props: SwitchProps): string {
     props.size === 'small'
       ? 'h-4 w-6.5 p-0.5 border-0'
       : 'h-5.5 w-9 p-0.5 border-0',
-    Platform.select({
-      web: 'focus-visible:border-ring focus-visible:ring-ring/50 peer inline-flex outline-none transition-all focus-visible:ring-[3px] disabled:cursor-not-allowed',
-    }),
+    'web:focus-visible:border-ring web:focus-visible:ring-ring/50 peer web:inline-flex web:outline-none web:transition-all web:focus-visible:ring-[3px] web:disabled:cursor-not-allowed',
     switchStateClass(props),
     props.className,
   );
@@ -46,7 +43,7 @@ function thumbClass(props: Pick<SwitchProps, 'checked' | 'size'>): string {
   return cn(
     'bg-background rounded-full transition-transform',
     props.size === 'small' ? 'size-3' : 'size-4.5 shadow-[0_1px_2px_#00000026]',
-    Platform.select({ web: 'pointer-events-none block ring-0' }),
+    'web:pointer-events-none web:block web:ring-0',
     thumbPosition(props),
   );
 }

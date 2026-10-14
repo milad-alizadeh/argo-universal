@@ -1,6 +1,6 @@
 import * as DropdownMenuPrimitive from '@rn-primitives/dropdown-menu';
 import * as React from 'react';
-import { Platform, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { IconSlot } from '../../../symbols/icon';
@@ -35,10 +35,7 @@ const DropdownMenuSub = DropdownMenuPrimitive.Sub;
 
 const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 
-const indicatorClassName = cn(
-  'text-foreground',
-  Platform.select({ web: 'pointer-events-none' }),
-);
+const indicatorClassName = 'text-foreground web:pointer-events-none';
 
 function DropdownMenuItem(itemProps: ItemProps): React.JSX.Element {
   const { className, inset, variant, ...props } = itemProps;
