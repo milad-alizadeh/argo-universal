@@ -1,19 +1,29 @@
 import { setStringAsync } from 'expo-clipboard';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Platform, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '../../generic/symbols/icon';
 
 export interface CopyButtonProps {
   value: string;
   label: string;
-  // On web, stay hidden until the surrounding code block is hovered.
+  // On web with a pointer that hovers, stay hidden until the surrounding `codeBlockGroup` is hovered.
   revealOnHover?: boolean;
   className?: string;
 }
 
 const copiedMilliseconds = 2000;
+
+// The code block a `revealOnHover` button shows over while it is hovered.
+export const codeBlockGroup = 'group/code-block';
+
+// Hidden where a pointer hovers, until the code block is hovered or the button has focus; shown while it reports a copy.
+const hoverRevealClassName = (copied: boolean): string =>
+  cn(
+    !copied && 'web:[@media(hover:hover)]:opacity-0',
+    'web:group-hover/code-block:opacity-100 web:focus-visible:opacity-100',
+  );
 
 // Copies a value and reports it as copied for two seconds.
 function useCopy(): [boolean, (value: string) => void] {
@@ -34,8 +44,7 @@ function useCopy(): [boolean, (value: string) => void] {
 function buttonClassName(props: CopyButtonProps, copied: boolean): string {
   return cn(
     'size-[22px] shrink-0 items-center justify-center rounded-sm',
-    props.revealOnHover &&
-      Platform.select({ web: cn('code-block-copy', copied && 'is-copied') }),
+    props.revealOnHover && hoverRevealClassName(copied),
     props.className,
   );
 }

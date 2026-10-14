@@ -1,8 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
 import { CodeBlockHeader } from '../code-block-header';
+import { codeBlockGroup } from '../copy-button';
 import { CodeBlockBody } from './code-block-body';
 import {
   type CodeBlockSource,
@@ -21,7 +22,7 @@ function CodeBlockFrame({ children }: { children: ReactNode }): ReactElement {
   return (
     <View
       className={cn(
-        Platform.select({ web: 'code-block' }),
+        codeBlockGroup,
         'cursor-auto overflow-hidden',
         markdownBlockClassNames.codeBlock,
       )}
