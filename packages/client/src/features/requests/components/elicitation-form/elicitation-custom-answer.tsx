@@ -41,7 +41,7 @@ const customInputLook = {
   placeholderTextColorClassName:
     'accent-muted-foreground ios:accent-[#8e8e93] android:accent-[#79747e] dark:ios:accent-muted-foreground dark:android:accent-muted-foreground',
   className:
-    'h-9 sm:h-9 flex-1 rounded-none border-0 bg-transparent dark:bg-transparent px-0 py-0 shadow-none focus-visible:ring-0 ios:text-[17px] ios:leading-[22px]',
+    'h-9 sm:h-9 flex-1 rounded-none border-0 bg-transparent dark:bg-transparent px-0 py-0 shadow-none focus-visible:ring-0 web:rounded-none web:focus-visible:ring-0 web:focus-visible:border-transparent ios:text-[17px] ios:leading-[22px]',
 } as const;
 
 function CustomInput({ model }: ModelProps): ReactElement {
