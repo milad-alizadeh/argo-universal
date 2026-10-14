@@ -1,5 +1,6 @@
 import type { AgentInfo, ConfiguredAgent } from '@repo/contracts';
 import type { Database } from '@repo/db';
+import { withUpdateCommands } from './agent-update-commands';
 import { versionsOf, withAvailableVersions } from './agent-versions';
 import { readConfiguredAgents } from './configuration/configuration-sql';
 import { readSavedReadiness } from './readiness/readiness-sql';
@@ -141,6 +142,21 @@ const openListing = (database: Database, home: string): Listing => ({
   observed: readInstallationObservations(database),
 });
 
+const readListedAgents = (database: Database): ConfiguredAgent[] =>
+  readConfiguredAgents(database).filter(
+    ({ configuration }) => !configuration.removed,
+  );
+
+const withVersionsAndCommands = (
+  listing: Listing,
+  listed: AgentInfo[],
+): Promise<AgentInfo[]> =>
+  withUpdateCommands(
+    listing.database,
+    withAvailableVersions(listing.database, listed),
+    listing.observed,
+  );
+
 // Every configured Agent from its saved Readiness; listing launches no Agent (ADR-0002).
 export const listAgents = async (
   database: Database,
@@ -148,14 +164,11 @@ export const listAgents = async (
 ): Promise<AgentInfo[]> => {
   const listing = openListing(database, home);
 
-  const configured = readConfiguredAgents(database).filter(
-    ({ configuration }) => !configuration.removed,
-  );
-
-  return withAvailableVersions(
-    database,
-    await Promise.all(
-      registryFirst(configured).map((agent) => describe(listing, agent)),
+  const listed = await Promise.all(
+    registryFirst(readListedAgents(database)).map((agent) =>
+      describe(listing, agent),
     ),
   );
+
+  return withVersionsAndCommands(listing, listed);
 };

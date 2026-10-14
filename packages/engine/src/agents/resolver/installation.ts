@@ -11,6 +11,7 @@ import {
   type InstallSelection,
 } from '../install/selection/selection';
 import { resolveRegistryServerPlatform } from '../records';
+import { homebrewFormula, outsideOwner } from './owner';
 import { installedPackageVersion, npmPackageName } from './package-version';
 import { findFirstOnPath } from './path-lookup';
 import type { RegistrySource } from './registry-source';
@@ -37,7 +38,7 @@ const ownerOf = async (
     realOrSame(file),
   ]);
 
-  return real.startsWith(folder + sep) ? 'argo' : 'unknown';
+  return real.startsWith(folder + sep) ? 'argo' : outsideOwner(real);
 };
 
 const argoInstallation = async (
@@ -140,16 +141,25 @@ const pathInstallation = async (
   return file ? foundOnPath(home, source.entry, { searched, file }) : undefined;
 };
 
-// An npm command's version is its package's; a binary's is known only once it answers ACP initialize.
+// An npm command's version is its package's, a Homebrew formula's is its Cellar folder's; any other binary's is known only once it answers ACP initialize.
 const pathVersion = async (
   { npmPackage }: Searched,
   file: string,
 ): Promise<Pick<Installation, 'version'>> => {
   const version =
-    npmPackage && (await installedPackageVersion(file, npmPackage));
+    (await packageVersion(file, npmPackage)) ?? (await formulaVersion(file));
 
   return version ? { version } : {};
 };
+
+const packageVersion = async (
+  file: string,
+  npmPackage?: string,
+): Promise<string | undefined> =>
+  npmPackage ? installedPackageVersion(file, npmPackage) : undefined;
+
+const formulaVersion = async (file: string): Promise<string | undefined> =>
+  homebrewFormula(await realOrSame(file))?.version;
 
 const foundOnPath = async (
   home: string,

@@ -40,8 +40,8 @@ export const AgentsListInput = z
 
 export type AgentsListInput = z.infer<typeof AgentsListInput>;
 
-// Who owns the copy the Resolver found, derived from its path: Argo's own folder, or anything else.
-export const InstallationOwner = z.enum(['argo', 'unknown']);
+// Who owns the copy the Resolver found, derived from where its file really is: Argo's own folder, a Homebrew Cellar, npm's global packages, or anything else.
+export const InstallationOwner = z.enum(['argo', 'homebrew', 'npm', 'unknown']);
 
 export type InstallationOwner = z.infer<typeof InstallationOwner>;
 
@@ -60,6 +60,8 @@ export const AgentInfo = z.strictObject({
   reason: z.string().optional(),
   // Set while the Resolver last found a copy on this machine.
   owner: InstallationOwner.optional(),
+  // For Update available on a copy Homebrew or npm owns: the command the user runs to update it. Argo never runs it.
+  updateCommand: z.string().optional(),
 });
 
 export type AgentInfo = z.infer<typeof AgentInfo>;
