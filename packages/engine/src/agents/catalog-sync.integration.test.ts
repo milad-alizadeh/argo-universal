@@ -1,5 +1,6 @@
 import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { withNpmFixture } from '@repo/mocks/registry/port';
 import { isNotNull } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { readAddedAgentRows } from '#mocks/database';
@@ -25,7 +26,7 @@ it('preserves saved local identity and custom rows across changed, removed and r
     );
 
   const { caller, database } = await startEngineTestHost({
-    fetchAgents,
+    fetchAgents: withNpmFixture(fetchAgents),
   });
 
   database
@@ -103,7 +104,7 @@ it('notifies catalog subscribers about removed Agents after the replacement comm
     .mockResolvedValue(JSON.stringify({ ...publishedRegistry, agents: [] }));
 
   const { caller, database, createCaller } = await startEngineTestHost({
-    fetchAgents,
+    fetchAgents: withNpmFixture(fetchAgents),
   });
 
   await caller.agents.syncCatalog();

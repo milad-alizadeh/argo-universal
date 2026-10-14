@@ -1,5 +1,10 @@
-// Answers with the registry document's text; the registry reader parses it.
-export type FetchAgents = (signal: AbortSignal) => Promise<string>;
+import { fetchNpmPackage, type NpmRelease } from './npm-package';
+
+// The Registry port answers with a document's text, which its reader parses: the ACP Registry's Agent list, or, given an npx entry's package release, npm's metadata for it.
+export type FetchAgents = (
+  signal: AbortSignal,
+  npmRelease?: NpmRelease,
+) => Promise<string>;
 
 const registryUrl =
   'https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json';
@@ -24,7 +29,12 @@ export class RegistryHttpError extends Error {
   }
 }
 
-export async function fetchAgents(signal: AbortSignal): Promise<string> {
+export async function fetchAgents(
+  signal: AbortSignal,
+  npmRelease?: NpmRelease,
+): Promise<string> {
+  if (npmRelease) return fetchNpmPackage(npmRelease, signal);
+
   const response = await fetch(registryUrl, { signal });
 
   if (!response.ok) throw new RegistryHttpError(response.status);
