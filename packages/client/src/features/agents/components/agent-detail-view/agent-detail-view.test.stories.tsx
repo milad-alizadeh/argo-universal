@@ -67,9 +67,7 @@ export const InstallsARegistryAgent: Story = {
     await expect(
       canvas.getByRole('group', { name: 'Source, ACP Registry' }),
     ).toBeVisible();
-    await expect(
-      canvas.queryByRole('heading', { name: 'Status' }),
-    ).not.toBeInTheDocument();
+    await expect(canvas.getByText('Not installed')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Install' }));
     await expect(args.onInstall).toHaveBeenCalledOnce();
     await expect(
@@ -87,6 +85,7 @@ export const UpdatesTheAgentOnAPhone: Story = {
   },
 };
 
+// The identity card says what the Agent is; its status and Update live in the Status section alone.
 export const OpensOnTheAgentsIdentityCard: Story = {
   args: { agent: { ...readyAgent, status: 'update-available' } },
   play: async ({ canvas }) => {
@@ -94,8 +93,14 @@ export const OpensOnTheAgentsIdentityCard: Story = {
       name: new RegExp(`^${readyAgent.description}`),
     });
 
-    await expect(within(card).getByText('Update available')).toBeVisible();
-    await expect(canvas.getByRole('button', { name: 'Update' })).toBeVisible();
+    await expect(card).toBeVisible();
+    await expect(
+      within(card).queryByText('Update available'),
+    ).not.toBeInTheDocument();
+    await expect(canvas.getAllByText('Update available')).toHaveLength(1);
+    await expect(
+      canvas.getAllByRole('button', { name: 'Update' }),
+    ).toHaveLength(1);
   },
 };
 
@@ -105,9 +110,6 @@ export const ShowsADisabledAgentThatWasNeverCheckedAsDisabled: Story = {
     await expect(canvas.getByText('Disabled')).toBeVisible();
     await expect(canvas.queryByText('Checking…')).not.toBeInTheDocument();
     await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
-    await expect(
-      canvas.queryByRole('heading', { name: 'Status' }),
-    ).not.toBeInTheDocument();
   },
 };
 

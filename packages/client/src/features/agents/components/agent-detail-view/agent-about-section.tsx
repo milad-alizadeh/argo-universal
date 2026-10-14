@@ -1,14 +1,11 @@
 import type * as React from 'react';
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
 import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type {
   AgentDetail,
   AgentDetailViewProps,
 } from '../../state/agent-detail-types';
-import { installationActive } from '../../state/agent-install-phase';
 import { isInstalled } from '../../state/agent-status';
-import { AgentAction } from './agent-detail-actions';
 import { AgentLinks } from './agent-links';
 
 type AgentProps = { agent: AgentDetail };
@@ -41,18 +38,11 @@ export function AboutSection(
   );
 }
 
+// Update lives in the Status section; the row only says from which version to which.
 function VersionRow(props: AgentDetailViewProps): React.JSX.Element | null {
-  const wide = useWide();
-
   if (!props.agent.version) return null;
 
-  return (
-    <ListItem
-      title="Version"
-      value={versionLine(props.agent)}
-      accessory={versionAccessory(props, wide)}
-    />
-  );
+  return <ListItem title="Version" value={versionLine(props.agent)} />;
 }
 
 function AboutRow(props: {
@@ -88,17 +78,3 @@ const installedLines = (agent: ShownAgent): string =>
 // Paper: the catalog's release before install, from → to when an update is out, else the Adapter and the Agent.
 const versionLine = (agent: ShownAgent): string =>
   isInstalled(agent) ? installedLines(agent) : `v${agent.version}`;
-
-const versionAccessory = (
-  props: AgentDetailViewProps,
-  wide: boolean,
-): React.JSX.Element | undefined =>
-  wide && showsUpdate(props) ? <AgentAction {...props} /> : undefined;
-
-const showsUpdate = (props: AgentDetailViewProps): boolean =>
-  props.agent.status === 'update-available' || openUpdate(props.installation);
-
-const openUpdate = (
-  installation: AgentDetailViewProps['installation'],
-): boolean =>
-  installation?.action === 'Update' && installationActive(installation);

@@ -34,7 +34,7 @@ const copies: Partial<Record<AgentStatus, CopyWriter>> = {
     action: 'sign-in',
     footer: reason,
   }),
-  'account-not-supported': ({ name, reason }) => ({
+  'account-not-supported': ({ reason }) => ({
     action: 'sign-in-again',
     footer: reason,
   }),

@@ -39,15 +39,24 @@ When('I open {word} Agent', async ({ page }, name: string): Promise<void> => {
   await page.getByRole('link', { name: new RegExp(`^${name} Agent,`) }).click();
 });
 
+// The phone keeps the Agents list mounted under the Agent page, so only shown text counts.
+const shownStatus = (page: Page, tool: string): Locator =>
+  page
+    .getByText(`Needs ${tool}`, { exact: true })
+    .filter({ visible: true })
+    .first();
+
 const expectMissing = async (
   page: Page,
   tool: { name: string; runner: string },
 ): Promise<void> => {
-  await expect(page.getByText(`${tool.name} not found`)).toBeVisible(agentWork);
+  await expect(shownStatus(page, tool.name)).toBeVisible(agentWork);
   await expect(
     page.getByText(`${tool.runner} isn’t on this Mac.`),
   ).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Recheck' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Recheck', exact: true }),
+  ).toBeVisible();
   await expect(page.getByText(/Homebrew|Download/)).toHaveCount(0);
   await expect(installButton(page)).toHaveCount(0);
 };
@@ -78,11 +87,13 @@ When('uv is installed outside Argo', async ({ app }): Promise<void> => {
 
 Then('the Agent offers Install', async ({ page }): Promise<void> => {
   await expect(installButton(page)).toBeVisible(agentWork);
-  await expect(page.getByText(/ not found$/)).toHaveCount(0);
+  await expect(
+    page.getByText(/^Needs (Node\.js|uv)$/).filter({ visible: true }),
+  ).toHaveCount(0);
 });
 
 When('I recheck the tools', async ({ page }): Promise<void> => {
-  await page.getByRole('link', { name: 'Recheck' }).click();
+  await page.getByRole('button', { name: 'Recheck', exact: true }).click();
 });
 
 // The page reports itself hidden, then visible, as when the App goes to the background and returns; the e2e project has no DOM lib.

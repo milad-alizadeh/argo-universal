@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import { Button } from '#lib/generic/primitives/buttons/button/button';
 import { FieldRow } from '#lib/generic/primitives/fields/field-row/field-row';
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
@@ -28,27 +29,36 @@ export function StatusSection(props: StatusSectionProps): React.JSX.Element {
         footer={props.footer}
         footerTone={props.failure ? 'destructive' : undefined}
       >
-        <ListItem
-          title={props.label}
-          status={props.tone ? { tone: props.tone, label: '' } : undefined}
-        />
+        <StatusRow {...props} />
       </FieldSection>
       <StatusActionRow action={props.action} />
     </>
   );
 }
 
+function StatusRow({ label, tone }: StatusSectionProps): React.JSX.Element {
+  return (
+    <ListItem title={label} status={tone ? { tone, label: '' } : undefined} />
+  );
+}
+
+// Small on wide windows, full width on a phone, like Remove below it.
 function StatusActionRow({
   action,
 }: Pick<StatusSectionProps, 'action'>): React.JSX.Element | null {
-  return action ? <FieldRow>{action}</FieldRow> : null;
+  if (!action) return null;
+
+  return (
+    <FieldRow>
+      <View className="items-stretch wide:items-start">{action}</View>
+    </FieldRow>
+  );
 }
 
 // The section's call to action: primary, full width on a phone; without a handler the page cannot act yet.
 export function StatusButton(props: {
   label: string;
   onPress?: () => void;
-  busy?: boolean;
 }): React.JSX.Element {
   return (
     <Button
@@ -56,8 +66,7 @@ export function StatusButton(props: {
       fullWidth="narrow"
       label={props.label}
       onPress={props.onPress}
-      disabled={!props.onPress || props.busy}
-      loading={props.busy}
+      disabled={!props.onPress}
     />
   );
 }

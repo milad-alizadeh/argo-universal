@@ -7,8 +7,8 @@ Feature: Agent Readiness
     And Agent 1 shows its "<state>" reason without any credential
 
     Examples:
-      | layout | state          | headline      | action  |
-      | wide   | sign-in needed | Not signed in | Sign in |
-      | phone  | sign-in needed | Not signed in | Sign in |
-      | wide   | can't start    | Can’t start   | Recheck |
-      | phone  | can't start    | Can’t start   | Recheck |
+      | layout | state          | headline       | action  |
+      | wide   | sign-in needed | Sign-in needed | Sign in |
+      | phone  | sign-in needed | Sign-in needed | Sign in |
+      | wide   | can't start    | Can’t start    | Recheck |
+      | phone  | can't start    | Can’t start    | Recheck |

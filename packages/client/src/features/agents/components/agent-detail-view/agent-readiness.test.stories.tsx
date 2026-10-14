@@ -48,13 +48,7 @@ const readiness = (expected: Expected): Story => ({
     agent: { ...readyAgent, status: expected.status, reason: expected.reason },
   },
   play: async ({ args, canvas, userEvent }) => {
-    await expect(canvas.getByRole('heading', { name: 'Status' })).toBeVisible();
-    const labels = canvas.getAllByText(expected.label);
-    await expect(labels).toHaveLength(1);
-    await expect(labels[0]).toBeVisible();
-    if (expected.footer)
-      await expect(canvas.getByText(expected.footer)).toBeVisible();
-    await expect(canvas.queryByText('Unavailable')).not.toBeInTheDocument();
+    await expectStatus(canvas, expected);
     await expectOnlyAction(canvas, expected.action?.label);
     const { action } = expected;
 
@@ -64,13 +58,24 @@ const readiness = (expected: Expected): Story => ({
   },
 });
 
+async function expectStatus(canvas: Canvas, expected: Expected): Promise<void> {
+  await expect(canvas.getByRole('heading', { name: 'Status' })).toBeVisible();
+  const labels = canvas.getAllByText(expected.label);
+  await expect(labels).toHaveLength(1);
+  await expect(labels[0]).toBeVisible();
+  await expect(canvas.queryByText('Unavailable')).not.toBeInTheDocument();
+
+  if (expected.footer)
+    await expect(canvas.getByText(expected.footer)).toBeVisible();
+}
+
 async function expectOnlyAction(
   canvas: Canvas,
   label: string | undefined,
 ): Promise<void> {
   for (const other of actionLabels.filter((each) => each !== label))
     await expect(
-      canvas.queryByRole('button', { name: other, exact: true }),
+      canvas.queryByRole('button', { name: other }),
     ).not.toBeInTheDocument();
 }
 

@@ -27,12 +27,13 @@ type Story = StoryObj<typeof meta>;
 
 type Layout = keyof typeof layoutWidths;
 
-// Install waits for the tool; the page says only what the Server observed, offers Recheck, and installs nothing itself.
+// Install waits for the tool; the Status row names it once, the footer says only what the Server observed, then Recheck, and Argo installs nothing itself.
 const needsNode = (layout: Layout): Story => ({
   beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
   play: async ({ args, canvas, userEvent }) => {
-    await expect(canvas.getAllByText('Needs Node.js')[0]).toBeVisible();
-    await expect(canvas.getByText('Node.js not found')).toBeVisible();
+    const status = canvas.getAllByText('Needs Node.js');
+    await expect(status).toHaveLength(1);
+    await expect(status[0]).toBeVisible();
     await expect(canvas.getByText('npx isn’t on this Mac.')).toBeVisible();
     await expect(
       canvas.queryByRole('button', { name: 'Install' }),
@@ -40,7 +41,7 @@ const needsNode = (layout: Layout): Story => ({
     await expect(
       canvas.queryByText(/Homebrew|Download/),
     ).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByText('Recheck'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Recheck' }));
     await expect(args.onRecheck).toHaveBeenCalledOnce();
   },
 });
@@ -52,7 +53,7 @@ export const NeedsNodeRechecksOnPhone = needsNode('phone');
 export const NeedsUvSaysUvxIsMissing: Story = {
   args: { agent: needingTool('uv') },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('uv not found')).toBeVisible();
+    await expect(canvas.getByText('Needs uv')).toBeVisible();
     await expect(canvas.getByText('uvx isn’t on this Mac.')).toBeVisible();
   },
 };

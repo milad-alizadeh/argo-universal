@@ -9,8 +9,7 @@ export interface AgentIdentityProps {
   description: string;
 }
 
-// A wide window's first card on an Agent page, under a header that names the Agent alone; a phone opens on its centred summary instead.
-// The status lives only in the Status section below it.
+// A wide window's first card on an Agent page, under a header that names the Agent alone; a phone opens on its centred summary instead. The status lives only in the Status section below it.
 export function AgentIdentity(
   props: AgentIdentityProps,
 ): React.JSX.Element | null {
