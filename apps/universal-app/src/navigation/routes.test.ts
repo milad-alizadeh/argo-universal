@@ -40,6 +40,11 @@ const destinations: [
     {},
   ],
   [{ to: 'settings-agents' }, ['(shell)', 'settings', 'agents', 'index'], {}],
+  [
+    { to: 'settings-agents', filter: 'not-installed' },
+    ['(shell)', 'settings', 'agents', 'index'],
+    { filter: 'not-installed' },
+  ],
   [{ to: 'settings-accounts' }, ['(shell)', 'settings', 'accounts'], {}],
   [{ to: 'settings-devices' }, ['(shell)', 'settings', 'devices'], {}],
   [{ to: 'settings-appearance' }, ['(shell)', 'settings', 'appearance'], {}],

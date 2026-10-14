@@ -4,17 +4,22 @@ import { sessionJourneyGit } from './session-journey';
 
 export const signInFailure = 'Sign in first';
 export const failingAgent = 'refusing-agent';
-const failedStart: ScriptedScenario = {
+// ACP's auth_required, and an ordinary internal error.
+export const authRequiredCode = -32000;
+export const internalErrorCode = -32603;
+const failedStart = (code: number): ScriptedScenario => ({
   steps: [],
   responses: {
-    'session/new': [{ error: { code: -32000, message: signInFailure } }],
+    'session/new': [{ error: { code, message: signInFailure } }],
   },
-};
-type FailedJourney = Awaited<ReturnType<typeof startAcpEngine>> & {
+});
+export type FailedJourney = Awaited<ReturnType<typeof startAcpEngine>> & {
   git: ReturnType<typeof sessionJourneyGit>;
 };
-export const startFailedSessionJourney = async (): Promise<FailedJourney> => {
-  const host = await startAcpEngine(failedStart, undefined, failingAgent);
+export const startFailedSessionJourney = async (
+  code = authRequiredCode,
+): Promise<FailedJourney> => {
+  const host = await startAcpEngine(failedStart(code), undefined, failingAgent);
   const project = (await host.caller.projects.list()).find(
     ({ id }) => id === 'project-1',
   );

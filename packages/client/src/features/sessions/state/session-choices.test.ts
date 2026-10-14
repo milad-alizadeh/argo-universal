@@ -1,6 +1,11 @@
+import type { AgentInfo, AgentStatus } from '@repo/contracts';
 import { newSessionCatalogs } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
-import { chooseAnotherProject, toSessionChoices } from './session-choices';
+import {
+  chooseAnotherProject,
+  offeredAgents,
+  toSessionChoices,
+} from './session-choices';
 import {
   firstAgent,
   input,
@@ -21,9 +26,19 @@ describe('toSessionChoices', () => {
     ]);
   });
 
-  it('starts on the first Agent when none is available', () => {
+  it('chooses no Agent when none is offered', () => {
     const choices = toSessionChoices(
       input({ agents: newSessionCatalogs.bothCantStart }),
+    );
+    expect(choices.agent).toBeUndefined();
+  });
+
+  it('leaves a chosen Agent that failed for the first Ready one', () => {
+    const choices = toSessionChoices(
+      input({
+        agents: [firstAgent, { ...secondAgent, status: 'cant-start' }],
+        chosen: { agent: secondAgent.agent },
+      }),
     );
     expect(choices.agent?.agent).toBe(firstAgent.agent);
   });
@@ -94,5 +109,37 @@ describe('chooseAnotherProject', () => {
       newWorktree: undefined,
     });
     expect(toSessionChoices(input({ chosen })).inNewWorktree).toBe(false);
+  });
+});
+
+const statuses: AgentStatus[] = [
+  'ready',
+  'checking',
+  'sign-in-needed',
+  'account-not-supported',
+  'not-compatible',
+  'cant-start',
+  'couldnt-check',
+  'not-found',
+  'not-installed',
+];
+const listed = (status: AgentStatus, enabled = true): AgentInfo => ({
+  ...firstAgent,
+  agent: `${status}${enabled ? '' : '-disabled'}`,
+  status,
+  enabled,
+});
+
+describe('offeredAgents', () => {
+  it('offers only enabled Agents that are Ready or not yet checked, in order', () => {
+    const agents = [
+      ...statuses.map((status) => listed(status)),
+      listed('ready', false),
+      listed('checking', false),
+    ];
+    expect(offeredAgents(agents).map(({ agent }) => agent)).toEqual([
+      'ready',
+      'checking',
+    ]);
   });
 });

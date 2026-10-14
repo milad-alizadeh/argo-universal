@@ -9,4 +9,6 @@ export interface SessionRouterDeps {
   readSession: ReturnType<typeof createSessionReader>;
   createId: () => string;
   sessionCommandSignal?: AbortSignal;
+  // Saves why an Agent failed to open a Session, so it leaves the New Session picker.
+  afterAgentOpenFailure?: (agentId: string, reason: string) => Promise<void>;
 }

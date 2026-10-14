@@ -26,10 +26,6 @@ export const mainProject: ProjectInfo = required(
 );
 export const firstAgent: AgentInfo = required(agentOne, 'two Agents');
 export const secondAgent: AgentInfo = required(agentTwo, 'two Agents');
-export const notInstalled: AgentInfo = required(
-  newSessionCatalogs.oneNotInstalled[0],
-  'an Agent that is not installed',
-);
 export const projectBaseBranch = baseBranchOf(worktreeProject);
 
 export const input = (

@@ -45,7 +45,7 @@ it('custom unregister preserves the external executable and stored Session, Turn
   expect(await host.caller.agents.configured()).toContainEqual(
     expect.objectContaining({
       id: registration.agentId,
-      enabled: false,
+      enabled: true,
       configuration: {
         source: 'custom',
         definition: customAgentDefinition,

@@ -8,6 +8,8 @@ export interface ComposerConfigurationProps {
   onAgentChange?: (agent: string) => void;
   onAgentSetup?: (agent: string) => void;
   onAgentRetry?: () => void;
+  // The picker's last row, which opens Settings › Agents on the Agents not yet installed.
+  onAddAgent?: () => void;
   turnRunning?: boolean;
   // True while New Session's Session opens and takes this device's last choices.
   opening?: boolean;

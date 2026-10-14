@@ -9,6 +9,13 @@ async function writeDraft(page: Page, draft: string): Promise<void> {
   await expectMessage(page, draft);
 }
 
+When(
+  'I write the prompt {string}',
+  async ({ page }, prompt: string): Promise<void> => {
+    await writeDraft(page, prompt);
+  },
+);
+
 Given(
   'the draft {string} in the Session {string}',
   async ({ page }, draft: string, title: string): Promise<void> => {

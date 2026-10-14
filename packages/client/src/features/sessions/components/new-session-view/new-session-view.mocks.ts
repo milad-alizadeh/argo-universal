@@ -38,6 +38,7 @@ export const readyNewSession: ReadyNewSessionViewProps = {
   onSend: fn(),
   canOpen: true,
   opening: false,
+  agentsLoading: false,
 };
 
 // A first prompt typed and ready to send.

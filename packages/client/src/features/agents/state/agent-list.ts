@@ -93,7 +93,12 @@ const readiness = (
   ...reasonOf(info),
   ...(info.enabled ? {} : { disabled: true }),
 });
-const listedStatus = (info: AgentInfo): AgentRowEntry['status'] =>
+// A disabled Agent is never checked, so with no saved Readiness it reads as Disabled, never Checking….
+export function listedStatus(info: AgentInfo): AgentRowEntry['status'] {
+  if (!info.enabled && info.status === 'checking') return 'disabled';
+  return checkedStatus(info);
+}
+const checkedStatus = (info: AgentInfo): AgentRowEntry['status'] =>
   info.status === 'ready' && hasPublishedUpdate(info) ? 'update' : info.status;
 const reasonOf = ({ reason }: AgentInfo): Pick<AgentRowEntry, 'reason'> =>
   reason === undefined ? {} : { reason };

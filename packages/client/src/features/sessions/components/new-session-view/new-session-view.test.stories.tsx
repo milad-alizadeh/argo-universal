@@ -1,5 +1,6 @@
 import { expect } from 'storybook/test';
 import { findToast } from '../../../../../mocks/find-toast';
+import { agentsLoading } from '../../../../../mocks/new-session-view/new-session-agents.test.mocks';
 import {
   checkoutChoice,
   narrowMainColumn,
@@ -82,6 +83,8 @@ export const Reconnecting: Story = {
       ).toBeDisabled();
     }),
 };
+
+export const AgentsLoading = agentsLoading;
 
 export const NeedsSetup: Story = {
   args: readyArgs({

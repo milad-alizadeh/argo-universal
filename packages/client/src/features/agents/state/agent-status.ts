@@ -1,7 +1,7 @@
 import type { AgentStatus as ServerStatus } from '@repo/contracts';
 
-// Where an Agent stands on this Server: its saved Readiness, or a newer catalog release.
-export type AgentStatus = ServerStatus | 'update';
+// Where an Agent stands on this Server: its saved Readiness, a newer catalog release, or Disabled for a disabled Agent that was never checked.
+export type AgentStatus = ServerStatus | 'update' | 'disabled';
 export type StatusTone = 'success' | 'warning' | 'destructive' | 'pending';
 export type AgentsFilter = 'all' | 'installed' | 'not-installed';
 
@@ -31,6 +31,7 @@ export const agentStatusLabels: Record<AgentStatus, string> = {
   'couldnt-check': 'Couldn’t check',
   'not-found': 'Not found',
   'not-installed': 'Not installed',
+  disabled: 'Disabled',
 };
 
 // Green when ready, amber when it needs you, red when it is broken, a spinner while it is checked.
@@ -45,6 +46,7 @@ const statusTones: Record<AgentStatus, StatusTone | undefined> = {
   'cant-start': 'destructive',
   'not-found': 'destructive',
   'not-installed': undefined,
+  disabled: undefined,
 };
 
 export const statusTone = (status: AgentStatus): StatusTone | undefined =>

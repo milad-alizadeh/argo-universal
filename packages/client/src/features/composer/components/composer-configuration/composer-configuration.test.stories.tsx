@@ -1,4 +1,5 @@
 import type { Meta } from '@storybook/react-native-web-vite';
+import { addNewAgent } from '../../../../../mocks/composer-configuration/add-agent';
 import { cantStartAgentRecheck } from '../../../../../mocks/composer-configuration/agent-retry';
 import { defaultEffort } from '../../../../../mocks/composer-configuration/default-effort';
 import {
@@ -12,6 +13,7 @@ import {
   LongListsReachableInPhoneSheet as longListsPhone,
   ShortListsHaveNoFadesWide as shortListsWide,
 } from '../../../../../mocks/composer-configuration/long-lists';
+import { pendingAgent } from '../../../../../mocks/composer-configuration/pending-agent';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { ComposerAgentModelControl } from './composer-configuration';
 import { DefaultEffort } from './composer-configuration.stories';
@@ -38,6 +40,11 @@ export const DefaultEffortPhoneSecondAgent = defaultEffort(
 );
 export const DefaultEffortWideFirstAgent = defaultEffort(layoutWidths.wide, 0);
 export const DefaultEffortWideSecondAgent = defaultEffort(layoutWidths.wide, 1);
+
+export const AddNewAgentPhone = addNewAgent(layoutWidths.phone);
+export const AddNewAgentWide = addNewAgent(layoutWidths.wide);
+export const PendingAgentPhone = pendingAgent(layoutWidths.phone);
+export const PendingAgentWide = pendingAgent(layoutWidths.wide);
 
 export const CantStartAgentRecheckPhoneFirstAgent = cantStartAgentRecheck(
   layoutWidths.phone,

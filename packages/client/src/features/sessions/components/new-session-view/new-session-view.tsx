@@ -1,6 +1,6 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 import {
   Composer,
   type ComposerConfigurationProps,
@@ -46,6 +46,8 @@ export interface ReadyNewSessionViewProps {
   opening: boolean;
   // The sent first prompt and Working, drawn in the Feed while the Session opens.
   starting?: StartingFeed;
+  // True until the saved Agents arrive: the page is usable, and the Agent picker fills when they do.
+  agentsLoading: boolean;
   // Why the chosen Agent can't start a Session, and how to set it up.
   setupStep?: string;
   // An attachment that couldn't be selected or uploaded.
@@ -139,14 +141,21 @@ function NewSessionComposer(
   props: ReadyNewSessionViewProps,
 ): React.JSX.Element {
   return (
-    <>
+    <View {...composerContent(props.agentsLoading)}>
       {/* A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off. */}
       {!props.starting && <NewSessionStartIn {...props} />}
       <SetupStepAlert setupStep={props.setupStep} />
       <PromptComposer {...props} />
-    </>
+    </View>
   );
 }
+
+// Busy while the Agent choice is still filling, so assistive technology knows it may change.
+const composerContent = (busy: boolean): ViewProps => ({
+  testID: 'new-session-composer',
+  'aria-busy': busy,
+  className: 'w-full items-center',
+});
 
 function ReadyNewSessionView(
   props: ReadyNewSessionViewProps,

@@ -1,6 +1,7 @@
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { within } from 'storybook/test';
 import { ComposerAgentModelControl } from '../../src/features/composer/components/composer-configuration/composer-configuration';
 export type Story = StoryObj<typeof ComposerAgentModelControl>;
 export type Configuration = React.ComponentProps<
@@ -26,3 +27,15 @@ export function renderArgs(
 }
 
 export type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
+// Opens the Agent and model menu, then its Agent choices.
+export async function openAgentChoices(context: PlayContext): Promise<void> {
+  await context.userEvent.click(
+    context.canvas.getByRole('button', { name: agentModelLabel }),
+  );
+  await context.userEvent.click(
+    await within(document.body).findByRole('button', {
+      name: chooseAgentLabel,
+    }),
+  );
+}

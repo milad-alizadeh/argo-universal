@@ -1,7 +1,7 @@
 import { access, readdir, rename, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { startEngineTestHost } from '#mocks/engine';
+import { awaitSettledReadiness, startEngineTestHost } from '#mocks/engine';
 import { installationPorts, startInstallEngine } from '#mocks/installation';
 import { waitForInstalledSelection } from '#mocks/installation-storage';
 
@@ -24,7 +24,7 @@ it('removal deletes managed files, retains the Agent identity and survives resta
   expect(await restarted.caller.agents.configured()).toContainEqual(
     expect.objectContaining({
       id: agentId,
-      enabled: false,
+      enabled: true,
       configuration: expect.objectContaining({
         source: 'registry',
         release: null,
@@ -33,6 +33,42 @@ it('removal deletes managed files, retains the Agent identity and survives resta
     }),
   );
 });
+
+it.each([true, false])(
+  'an Agent saved with enabled %s keeps that choice through catalog sync, removal, reinstall and restart',
+  async (enabled) => {
+    const host = await startInstallEngine();
+    const { agentId } = host;
+    await host.caller.agents.install({ agentId, version: '1.2.3' });
+    await waitForInstalledSelection(host);
+    await host.caller.agents.setEnabled({ agentId, enabled });
+    // Enabling rechecks the Agent, and removal waits for no check.
+    await awaitSettledReadiness(host.caller);
+    await host.caller.agents.syncCatalog();
+    await expect
+      .poll(async () => (await host.caller.agents.catalog()).syncStatus)
+      .toBe('idle');
+    await host.caller.agents.remove({ agentId });
+    await host.caller.agents.install({ agentId, version: '1.2.3' });
+    await expect
+      .poll(
+        async () =>
+          (await host.caller.agents.installStatus({ agentId })).operation
+            ?.status,
+      )
+      .toBe('installed');
+    await awaitSettledReadiness(host.caller);
+    await host.stop();
+    const restarted = await startEngineTestHost({ home: host.home });
+    expect(await restarted.caller.agents.configured()).toContainEqual(
+      expect.objectContaining({
+        id: agentId,
+        enabled,
+        configuration: expect.objectContaining({ release: expect.any(String) }),
+      }),
+    );
+  },
+);
 
 it('removal refuses a redirected managed root and leaves its selection and external files intact', async () => {
   const host = await startInstallEngine();

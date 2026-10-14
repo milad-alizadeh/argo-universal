@@ -7,6 +7,7 @@ import { query } from './server-query';
 const AgentsList = z.array(
   z.object({
     status: z.string(),
+    enabled: z.boolean(),
     agent: z.string(),
     label: z.string(),
     reason: z.string().optional(),
@@ -14,7 +15,11 @@ const AgentsList = z.array(
 );
 export type ListedAgent = z.infer<typeof AgentsList>[number];
 
-const listAgents = (page: Page, httpUrl: string): Promise<ListedAgent[]> =>
+// The Agents as saved now, without waiting for Readiness checks.
+export const listAgents = (
+  page: Page,
+  httpUrl: string,
+): Promise<ListedAgent[]> =>
   query({
     page,
     httpUrl,
@@ -23,7 +28,7 @@ const listAgents = (page: Page, httpUrl: string): Promise<ListedAgent[]> =>
     output: AgentsList,
   });
 
-// The Agents once the Server's Readiness checks at start have settled.
+// The Agents once the Server's Readiness checks at start have settled; a disabled Agent is never checked.
 export async function readAgents(
   page: Page,
   httpUrl: string,
@@ -32,7 +37,7 @@ export async function readAgents(
     .poll(
       async () =>
         (await listAgents(page, httpUrl)).some(
-          ({ status }) => status === 'checking',
+          ({ enabled, status }) => enabled && status === 'checking',
         ),
       { timeout: 20_000 },
     )

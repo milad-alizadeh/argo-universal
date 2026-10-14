@@ -49,9 +49,10 @@ Feature: Drafts kept on this Device
 
   Scenario: A first prompt whose Session failed to open is restored after a reload
     Given a phone Frame
-    And Agent 1 refuses to open a Session
-    And a New Session with Agent 1
-    When I try to send the prompt "Fix the flaky login test"
+    And every Agent refuses to open a Session
+    When I open a New Session
+    And I write the prompt "Fix the flaky login test"
     Then New Session says the Session couldn't open
+    And the Composer keeps the prompt "Fix the flaky login test"
     When I reload the App and open New Session
     Then the Message box shows "Fix the flaky login test"

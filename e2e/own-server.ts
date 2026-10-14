@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import type { ChildProcessByStdio } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
@@ -47,6 +47,7 @@ export async function startOwnServer(
   const home = path.join(directory, 'server-home');
   const registryPath = path.join(directory, 'registry.json');
   const installationPath = path.join(directory, 'installation.json');
+  const heldCheckRelease = path.join(directory, 'release-held-checks');
   await mkdir(directory, { recursive: true });
   await writeFile(registryPath, JSON.stringify(publishedRegistry));
   await writeFile(
@@ -68,6 +69,7 @@ export async function startOwnServer(
           ARGO_E2E_REGISTRY_PATH: registryPath,
           ARGO_E2E_INSTALLATION_PATH: installationPath,
           ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
+          ARGO_E2E_HELD_CHECK_RELEASE: heldCheckRelease,
           PATH: '/usr/bin:/bin',
         },
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -85,6 +87,8 @@ export async function startOwnServer(
     });
     const stop = async (): Promise<void> => {
       if (hasExited(server)) return;
+      // A held readiness check answers now, so the Server can stop.
+      await writeFile(heldCheckRelease, '');
       const exited = new Promise((resolve): typeof server =>
         server.once('exit', resolve),
       );
@@ -110,6 +114,7 @@ export async function startOwnServer(
           restart: async (whileStopped): Promise<void> => {
             await stop();
             await whileStopped();
+            await rm(heldCheckRelease, { force: true });
             server = launch();
             server.stdout.resume();
             server.stderr.resume();
