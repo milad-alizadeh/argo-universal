@@ -3,14 +3,19 @@ import { listRowBackground, listRowInsets } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useWide } from '../../../use-wide/use-wide';
 import { HostedRow } from '../field-group/field-group-row';
-import { FieldRow as WebFieldRow, type FieldRowProps } from './field-row.tsx';
+import {
+  FieldGroupContent as WebFieldGroupContent,
+  type FieldGroupContentProps,
+} from './field-group-content.tsx';
 
 /*
  * A SwiftUI Form sizes a plain React Native view as it likes, so the row hosts it and takes its height.
  * The row has its own section with no card behind it and no inset.
  */
-export function FieldRow(props: FieldRowProps): React.JSX.Element {
-  if (useWide()) return <WebFieldRow {...props} />;
+export function FieldGroupContent(
+  props: FieldGroupContentProps,
+): React.JSX.Element {
+  if (useWide()) return <WebFieldGroupContent {...props} />;
 
   return (
     <Section

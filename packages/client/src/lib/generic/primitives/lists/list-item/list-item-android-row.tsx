@@ -14,9 +14,9 @@ import {
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import { useIconPixels } from '../../../symbols/icon-role';
-import type { ListItemProps } from '../../fields/field-props';
 import { RowSubtitle, RowTitle } from './list-item-compose-text';
 import { RowTrailing } from './list-item-compose-value';
+import type { ListItemProps } from './list-item-props';
 import { NativeRowGlyph } from './native-row';
 
 const rowHeight = 56;

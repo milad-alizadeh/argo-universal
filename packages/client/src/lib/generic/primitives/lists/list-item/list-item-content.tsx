@@ -3,10 +3,10 @@ import { View } from 'react-native';
 import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
 import { useSidebarFields } from '../../fields/field-layout';
-import { type ListItemProps, listItemStatus } from '../../fields/field-props';
 import { ListItemAccessory } from './list-item-accessory';
 import { Disclosure } from './list-item-disclosure';
 import { ListItemLeading } from './list-item-leading';
+import { type ListItemProps, listItemStatus } from './list-item-props';
 import {
   contentGap,
   hasDisclosure,

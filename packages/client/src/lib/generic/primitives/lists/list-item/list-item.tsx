@@ -1,14 +1,14 @@
 import type * as React from 'react';
 import { useContext } from 'react';
 import { Pressable, View } from 'react-native';
-import {
-  FieldRowCorners,
-  FieldRowEnd,
-  FieldRowHover,
-  useNavigationFields,
-} from '../../fields/field-layout';
-import { type ListItemProps, listItemName } from '../../fields/field-props';
+import { useNavigationFields } from '../../fields/field-layout';
 import { ListItemBody } from './list-item-content';
+import {
+  ListItemCorners,
+  ListItemEnd,
+  ListItemHover,
+} from './list-item-position';
+import { type ListItemProps, listItemName } from './list-item-props';
 import { type RowPlace, rowClasses } from './list-item-styles';
 import {
   interactionProps,
@@ -36,15 +36,15 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
 
 function useRowPlace(): RowPlace {
   return {
-    endsSection: useContext(FieldRowEnd),
-    corners: useContext(FieldRowCorners),
-    separatorHidden: useContext(FieldRowHover)?.separatorHidden,
+    endsSection: useContext(ListItemEnd),
+    corners: useContext(ListItemCorners),
+    separatorHidden: useContext(ListItemHover)?.separatorHidden,
   };
 }
 
 // A list's neighbours learn of this row's hover and press, beside the caller's own handlers.
 function useHoverLink(props: ListItemProps): ListItemProps {
-  const hover = useContext(FieldRowHover);
+  const hover = useContext(ListItemHover);
 
   if (!hover) return props;
 
@@ -100,7 +100,7 @@ function usePressingLink(): Pick<
   React.ComponentProps<typeof Pressable>,
   'onPressIn' | 'onPressOut'
 > {
-  const hover = useContext(FieldRowHover);
+  const hover = useContext(ListItemHover);
 
   if (!hover) return {};
 

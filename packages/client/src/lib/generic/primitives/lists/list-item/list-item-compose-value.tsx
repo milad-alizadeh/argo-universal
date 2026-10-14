@@ -1,8 +1,8 @@
 import { Row, Text } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
-import type { ListItemProps } from '../../fields/field-props';
 import { useComposeTextStyle } from '../../native/native-typography';
+import type { ListItemProps } from './list-item-props';
 import { hasDisclosure } from './list-item-styles';
 import { NativeRowGlyph, NativeRowIcon, NativeRowStatus } from './native-row';
 

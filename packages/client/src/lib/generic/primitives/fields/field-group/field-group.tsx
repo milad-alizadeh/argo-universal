@@ -5,8 +5,9 @@ import {
   useScrollColumnStyle,
 } from '../../../scroll-column';
 import { cn } from '../../../utils';
-import { FieldLayout, fieldGroupGap, fieldGroupPadding } from '../field-layout';
-import type { FieldGroupProps } from '../field-props';
+import { FieldLayout } from '../field-layout';
+import type { FieldGroupProps } from './field-group-props';
+import { fieldGroupGap, fieldGroupPadding } from './field-group-spacing';
 
 export function FieldGroup({
   children,

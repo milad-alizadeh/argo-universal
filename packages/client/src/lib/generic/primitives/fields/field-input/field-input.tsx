@@ -5,7 +5,7 @@ import { Text } from '../../display/text/text';
 import { Input } from '../../inputs/input/input';
 import { rowClasses } from '../../lists/list-item/list-item-styles';
 import { useFooterDescription } from '../field-footer';
-import type { FieldInputProps } from '../field-props';
+import type { FieldInputProps } from './field-input-props';
 
 export const isInvalid = (props: Pick<FieldInputProps, 'errors'>): boolean =>
   (props.errors?.length ?? 0) > 0;

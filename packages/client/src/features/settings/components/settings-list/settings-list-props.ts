@@ -2,7 +2,7 @@ import type {
   Navigate,
   NavigationDestination,
 } from '#lib/product/navigation/context';
-import type { ListItemProps } from '#primitives/fields/field-props';
+import type { ListItemProps } from '#primitives/lists/list-item/list-item-props';
 import type { IconName } from '../../../../lib/generic/symbols/icon-names';
 
 export interface SettingsListProps {

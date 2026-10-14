@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
+import { FieldGroupContent } from '#primitives/fields/field-group-content/field-group-content';
 import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldRow } from '#primitives/fields/field-row/field-row';
 import {
   type CustomAgentFormApi,
   type SubmitCustomAgent,
@@ -138,9 +138,9 @@ function CheckFailure({
   if (!failure) return null;
 
   return (
-    <FieldRow>
+    <FieldGroupContent>
       <FailureBox failure={failure} />
-    </FieldRow>
+    </FieldGroupContent>
   );
 }
 

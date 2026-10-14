@@ -6,7 +6,7 @@ import {
   type FieldDescription,
 } from '../field-description';
 import { FooterProvider, type SectionFooter } from '../field-footer';
-import type { FieldInputProps } from '../field-props';
+import type { FieldInputProps } from './field-input-props';
 
 type FieldProps = Pick<FieldInputProps, 'errors' | 'hint'> & {
   children: ReactNode;

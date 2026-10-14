@@ -5,7 +5,7 @@ import {
   accessibilityAddTraits,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps } from 'react';
-import { listItemName, type ListItemProps } from '../../fields/field-props';
+import { listItemName, type ListItemProps } from './list-item-props';
 
 export function rowAccessibility(props: ListItemProps): 'contain' | 'ignore' {
   if (props.onPress) return 'ignore';

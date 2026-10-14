@@ -1,49 +1,6 @@
-import type { ComponentProps, ReactElement, ReactNode } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import type { Pressable } from 'react-native';
-import type { IconName } from '../../symbols/icon-names';
-import type { ListSearchBarProps } from '../inputs/list-search-bar/list-search-bar';
-import type { FieldErrors } from './field-errors';
-
-export interface FieldGroupProps {
-  children: ReactNode;
-  variant?: 'grouped' | 'navigation';
-  // A content-sized overlay uses compact groups rather than a full screen's scrolling column.
-  fit?: boolean;
-  // A phone's search above the sections, scrolling with them; only Android draws it, as iOS searches from its header.
-  search?: ListSearchBarProps;
-  // The height of the sections, so a native sheet can fit them; only Android reports it.
-  onContentHeightChange?: (height: number) => void;
-}
-
-export interface FieldSectionProps {
-  children: ReactNode;
-  title?: string;
-  footer?: string;
-  // The footer reads as a failure, such as a field's error standing in for its hint.
-  footerTone?: 'destructive';
-  /*
-   * The section holds FieldInputs. Android stacks them as bare Material fields, each with its
-   * hint or error under it, so it draws no card and no footer; iOS and the web keep both.
-   */
-  textFields?: boolean;
-}
-
-// A text field in a section row; on iOS and the web its hint and its error sit in the section's footer.
-export interface FieldInputProps {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  onBlur?: () => void;
-  // An example value shown while the field is empty, so it reads as a place to type.
-  placeholder?: string;
-  // Any error marks the field invalid; the section's footer, or Android's line under the field, says what is wrong.
-  errors?: FieldErrors;
-  // What to type, under the field on Android while it has no error; iOS and the web say it in the section's footer.
-  hint?: string;
-  // Code, such as a path or a command, draws in the mono face.
-  mono?: boolean;
-  disabled?: boolean;
-}
+import type { IconName } from '../../../symbols/icon-names';
 
 export interface ListItemProps {
   title: string;

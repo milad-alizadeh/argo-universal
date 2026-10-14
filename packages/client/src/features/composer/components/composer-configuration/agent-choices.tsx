@@ -4,8 +4,8 @@ import { Platform, View, useWindowDimensions } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldRowEnd } from '#primitives/fields/field-layout';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { ListItemEnd } from '#primitives/lists/list-item/list-item-position';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentChoice } from './agent-choice';
 import type { ConfigurationChoicesProps as AgentChoicesProps } from './configuration-types';
@@ -103,10 +103,10 @@ function AgentListRow({
   ...props
 }: AgentChoicesProps & { agent: AgentInfo; last: boolean }): React.JSX.Element {
   return (
-    <FieldRowEnd value={last}>
+    <ListItemEnd value={last}>
       <View>
         <AgentChoice agent={agent} {...props} />
       </View>
-    </FieldRowEnd>
+    </ListItemEnd>
   );
 }

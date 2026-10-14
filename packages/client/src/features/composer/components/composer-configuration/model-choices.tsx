@@ -5,8 +5,8 @@ import { listTestIdProps } from '#lib/generic/list-test-id';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import { configurationChoices } from '#lib/product/session-configuration';
 import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldRowEnd } from '#primitives/fields/field-layout';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { ListItemEnd } from '#primitives/lists/list-item/list-item-position';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ConfigurationChoice } from './configuration-choice';
 import type { ConfigurationChoicesProps as ModelChoicesProps } from './configuration-types';
@@ -103,9 +103,9 @@ function ModelListRow(
   props: ModelChoiceProps & { last: boolean },
 ): React.JSX.Element {
   return (
-    <FieldRowEnd value={props.last}>
+    <ListItemEnd value={props.last}>
       <ModelChoice {...props} />
-    </FieldRowEnd>
+    </ListItemEnd>
   );
 }
 

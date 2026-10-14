@@ -6,7 +6,7 @@ import {
   type FieldErrors,
   errorMessage,
 } from '#primitives/fields/field-errors';
-import type { FieldSectionProps } from '#primitives/fields/field-props';
+import type { FieldSectionProps } from '#primitives/fields/field-section/field-section-props';
 import { Input } from '#primitives/inputs/input/input';
 
 export type FormInputProps = {

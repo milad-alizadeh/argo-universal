@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '#primitives/display/text/text';
-import { FieldRowEnd } from '#primitives/fields/field-layout';
 import { ListItem } from '#primitives/lists/list-item/list-item';
+import { ListItemEnd } from '#primitives/lists/list-item/list-item-position';
 import {
   Popover,
   PopoverContent,
@@ -83,12 +83,12 @@ function ConfigurationDrillPopover({
   configuration,
 }: PickerProps & { row: React.ReactElement }): React.JSX.Element {
   return (
-    <FieldRowEnd value={page === 'model'}>
+    <ListItemEnd value={page === 'model'}>
       <Popover openOnHover>
         <PopoverTrigger asChild>{row}</PopoverTrigger>
         <ConfigurationDrillContent configuration={configuration} page={page} />
       </Popover>
-    </FieldRowEnd>
+    </ListItemEnd>
   );
 }
 

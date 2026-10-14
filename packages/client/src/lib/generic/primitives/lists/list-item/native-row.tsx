@@ -12,9 +12,9 @@ import { Platform } from 'react-native';
 import { IconSlot } from '#primitives/display/icon/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { type ListItemProps, listItemStatus } from '../../fields/field-props';
 import { NativeControl } from '../../native/native-control';
 import { ListItemAccessory } from './list-item-accessory';
+import { type ListItemProps, listItemStatus } from './list-item-props';
 import { hiddenFromAccessibility, StatusDot } from './status-dot';
 
 const detailGutter = 16;

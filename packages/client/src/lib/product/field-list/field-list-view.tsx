@@ -6,7 +6,7 @@ import { useResolveClassNames } from 'uniwind';
 import {
   fieldGroupGap,
   fieldGroupPadding,
-} from '#primitives/fields/field-layout';
+} from '#primitives/fields/field-group/field-group-spacing';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
 import type { ListSearchBarProps } from '#primitives/inputs/list-search-bar/list-search-bar';
 import { listTestIdProps } from '../../generic/list-test-id';

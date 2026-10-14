@@ -7,7 +7,7 @@ import { useWide } from '../../../use-wide/use-wide';
 import { roundedClip } from '../../native/compose-corners';
 import { useComposeTextStyle } from '../../native/native-typography';
 import { useNavigationFields } from '../field-layout';
-import type { FieldSectionProps } from '../field-props';
+import type { FieldSectionProps } from './field-section-props';
 import { FieldSection as WebFieldSection } from './field-section.tsx';
 
 const sectionRadius = 28;

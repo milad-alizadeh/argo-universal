@@ -5,7 +5,7 @@ import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
 import { FooterProvider, type SectionFooter } from '../field-footer';
 import { useNavigationFields } from '../field-layout';
-import type { FieldSectionProps } from '../field-props';
+import type { FieldSectionProps } from './field-section-props';
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {
   const footerId = useId();

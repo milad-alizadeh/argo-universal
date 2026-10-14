@@ -6,7 +6,7 @@ import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
 import { useComposeTextStyle } from '../../native/native-typography';
 import { errorMessage } from '../field-errors';
-import type { FieldInputProps } from '../field-props';
+import type { FieldInputProps } from './field-input-props';
 import { useFollowedText } from './field-input-text';
 import { FieldInput as WideFieldInput, isInvalid } from './field-input.tsx';
 import { blurOnFocusLoss } from './focus-loss';

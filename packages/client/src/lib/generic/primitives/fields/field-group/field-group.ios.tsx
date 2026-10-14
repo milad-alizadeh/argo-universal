@@ -7,7 +7,7 @@ import type * as React from 'react';
 import { useWide } from '../../../use-wide/use-wide';
 import { Host } from '../../native/host';
 import { FieldLayout } from '../field-layout';
-import type { FieldGroupProps } from '../field-props';
+import type { FieldGroupProps } from './field-group-props';
 import { FieldGroup as WebFieldGroup } from './field-group.tsx';
 
 export function FieldGroup(props: FieldGroupProps): React.JSX.Element {

@@ -4,9 +4,9 @@ import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
 import { useNavigationFields } from '../../fields/field-layout';
-import { type ListItemProps, listItemName } from '../../fields/field-props';
 import { roundedOutline } from '../../native/compose-corners';
 import { RowContent } from './list-item-android-row';
+import { type ListItemProps, listItemName } from './list-item-props';
 import * as Web from './list-item.tsx';
 import { NativeRowDetail } from './native-row';
 

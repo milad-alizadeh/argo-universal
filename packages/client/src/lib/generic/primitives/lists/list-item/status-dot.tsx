@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '../../../utils';
-import type { ListItemProps } from '../../fields/field-props';
+import type { ListItemProps } from './list-item-props';
 
 const tones = {
   success: 'bg-success',
