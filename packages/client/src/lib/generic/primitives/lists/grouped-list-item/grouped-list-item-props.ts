@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react';
 import type { Pressable } from 'react-native';
+import { badgeCountText } from '#primitives/display/badge';
 import type { IconName } from '../../../symbols/icon-names';
 
 export interface GroupedListItemProps {
@@ -42,6 +43,8 @@ export interface GroupedListItemProps {
   disabled?: boolean;
   selected?: boolean;
   needsAttention?: boolean;
+  // A count in the trailing lane, drawn as the platform's own badge; none at zero, and over 99 it shows 99+.
+  badge?: number;
   // A dot after the value. When the value already says the status, such as "Ready", the name says it once.
   status?: { tone: 'success' | 'warning' | 'danger'; label: string };
   // A spinner takes the icon's place while the row's subject is on its way.
@@ -68,7 +71,13 @@ function distinctStatus(props: GroupedListItemProps): string | undefined {
 export function groupedListItemName(props: GroupedListItemProps): string {
   if (props.accessibilityLabel) return props.accessibilityLabel;
 
-  return [props.label, props.subtitle?.text, props.value, distinctStatus(props)]
+  return [
+    props.label,
+    props.subtitle?.text,
+    props.value,
+    badgeCountText(props.badge),
+    distinctStatus(props),
+  ]
     .filter(Boolean)
     .join(', ');
 }

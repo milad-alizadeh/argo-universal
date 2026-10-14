@@ -7,8 +7,10 @@ import {
   DrawerItem,
   type DrawerItemProps,
 } from '#primitives/lists/drawer-item';
-import { sectionAttentionCount } from '../../state/attention-badge';
-import { drawerAttentionBadge } from '../attention-badge/attention-badge';
+import {
+  attentionBadge,
+  sectionAttentionCount,
+} from '../../state/attention-badge';
 import { type Section, sectionOrder, shellSections } from '../shell-sections';
 import { headerBarHeight } from './header-bar-height';
 import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
@@ -54,7 +56,8 @@ function SectionButton({
     <DrawerItem
       {...sectionItem(section)}
       selected={navigation.selectedSection === section}
-      badge={drawerAttentionBadge(count)}
+      badge={count}
+      badgeLabel={attentionBadge(count)?.label}
       onPress={() => selectSection(navigation, section)}
     />
   );

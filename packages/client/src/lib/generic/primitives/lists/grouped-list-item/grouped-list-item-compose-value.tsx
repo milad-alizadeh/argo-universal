@@ -1,5 +1,6 @@
-import { Row, Text } from '@expo/ui/jetpack-compose';
+import { Badge, Row, Text } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
+import { badgeCountText } from '#primitives/display/badge';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import type { GroupedListItemProps } from './grouped-list-item-props';
@@ -15,6 +16,7 @@ export function RowTrailing(props: GroupedListItemProps): React.JSX.Element {
       verticalAlignment="center"
     >
       <RowValueGroup {...props} />
+      <RowBadge badge={props.badge} />
       <NativeRowStatus {...props} />
       <RowDisclosure visible={hasDisclosure(props)} />
     </Row>
@@ -55,6 +57,20 @@ function RowValueText(props: { value: string }): React.JSX.Element {
     >
       {props.value}
     </Text>
+  );
+}
+
+function RowBadge({
+  badge,
+}: Pick<GroupedListItemProps, 'badge'>): React.JSX.Element | null {
+  const text = badgeCountText(badge);
+
+  if (text === undefined) return null;
+
+  return (
+    <Badge>
+      <Text>{text}</Text>
+    </Badge>
   );
 }
 

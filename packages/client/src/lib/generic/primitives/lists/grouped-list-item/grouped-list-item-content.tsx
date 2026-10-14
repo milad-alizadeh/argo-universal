@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { badgeCountText } from '#primitives/display/badge';
 import { Text } from '#primitives/display/text';
 import { useWideSidebarList } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
@@ -110,11 +111,21 @@ function GroupedListItemTrailing(props: TrailingProps): React.JSX.Element {
     <View className="max-w-[55%] flex-row items-center gap-2 wide:gap-3">
       {props.valueLeading}
       <RowValue value={props.value} className={valueColor} />
+      <RowBadge badge={props.badge} />
       <StatusDot status={groupedListItemStatus(props)} />
       <GroupedListItemAccessory>{props.accessory}</GroupedListItemAccessory>
       {props.control}
       <Disclosure visible={hasDisclosure(props) && !sidebar} />
     </View>
+  );
+}
+
+// A muted count in the trailing lane, as the content rows draw theirs.
+function RowBadge({
+  badge,
+}: Pick<GroupedListItemProps, 'badge'>): React.JSX.Element | null {
+  return (
+    <RowValue value={badgeCountText(badge)} className="text-muted-foreground" />
   );
 }
 

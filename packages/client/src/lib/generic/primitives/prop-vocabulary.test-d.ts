@@ -131,3 +131,12 @@ expectTypeOf<Primitives['IconButtonProps']['selected']>().toEqualTypeOf<
 expectTypeOf<
   Extract<keyof Primitives['IconButtonProps'], 'filled'>
 >().toBeNever();
+
+// A row's badge is a count the primitive draws, never a caller-drawn element.
+expectTypeOf<Primitives['DrawerItemProps']['badge']>().toEqualTypeOf<
+  number | undefined
+>();
+
+expectTypeOf<Primitives['GroupedListItemProps']['badge']>().toEqualTypeOf<
+  number | undefined
+>();

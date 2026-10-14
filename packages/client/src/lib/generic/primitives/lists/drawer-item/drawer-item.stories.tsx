@@ -2,8 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Badge } from '#primitives/display/badge';
-import { Text } from '#primitives/display/text';
 import type { IconName } from '../../../symbols/icon-names';
 import { DrawerItem } from './drawer-item';
 
@@ -25,15 +23,6 @@ const destinations: { title: string; icon: IconName }[] = [
   { title: 'Issues', icon: 'issue' },
   { title: 'Settings', icon: 'settings' },
 ];
-
-const attention = {
-  label: '2 need attention',
-  element: (
-    <Badge tone="danger">
-      <Text>2</Text>
-    </Badge>
-  ),
-};
 
 // A drawer's destinations: pressing one makes it the current one; Issues carries a count.
 function Drawer(): React.JSX.Element {
@@ -66,7 +55,8 @@ function Destination(props: DestinationProps): React.JSX.Element {
       label={title}
       icon={props.icon}
       selected={current === title}
-      badge={title === 'Issues' ? attention : undefined}
+      badge={title === 'Issues' ? 2 : undefined}
+      badgeLabel="2 need attention"
       onPress={() => onSelect(title)}
     />
   );

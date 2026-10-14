@@ -1,4 +1,5 @@
 import {
+  Badge,
   RNHostView,
   Row,
   Text,
@@ -23,6 +24,7 @@ import { roundedClip } from '#primitives/native/native-modifiers';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
+import { drawerBadge } from './drawer-item-badge';
 import type { DrawerItemProps } from './drawer-item-props';
 
 // Material 3's navigation drawer item: a 56dp pill, tinted when selected.
@@ -69,13 +71,12 @@ function usePillModifiers(selected: boolean): ModifierConfig[] {
   ];
 }
 
-function tabModifiers({
-  label,
-  selected,
-  badge,
-  onPress,
-}: DrawerItemProps): ModifierConfig[] {
-  const description = [label, badge?.label].filter(Boolean).join(', ');
+function tabModifiers(props: DrawerItemProps): ModifierConfig[] {
+  const { label, selected, onPress } = props;
+
+  const description = [label, drawerBadge(props)?.label]
+    .filter(Boolean)
+    .join(', ');
 
   return [
     selectable(selected, onPress, 'tab'),
@@ -130,12 +131,17 @@ function DrawerItemLabel({
   );
 }
 
-function NativeBadge({
-  badge,
-}: Pick<DrawerItemProps, 'badge'>): React.JSX.Element | null {
-  if (!badge) return null;
+// Material's own Badge, trailing; TalkBack reads its count with the row.
+function NativeBadge(
+  props: Pick<DrawerItemProps, 'badge'>,
+): React.JSX.Element | null {
+  const badge = drawerBadge(props);
 
-  return <RNHostView matchContents>{badge.element}</RNHostView>;
+  return badge ? (
+    <Badge>
+      <Text>{badge.text}</Text>
+    </Badge>
+  ) : null;
 }
 
 DrawerItem satisfies React.ComponentType<DrawerItemProps>;

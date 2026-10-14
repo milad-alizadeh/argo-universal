@@ -1,6 +1,7 @@
 import { Button, HStack, VStack } from '@expo/ui/swift-ui';
 import {
   accessibilityAddTraits,
+  badge,
   buttonStyle,
   disabled,
   listRowBackground,
@@ -9,6 +10,7 @@ import {
   listRowSeparatorTint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
+import { badgeCountText } from '#primitives/display/badge';
 import { useSidebarList } from '#primitives/fields/field-layout';
 import { type NativeColors, useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
@@ -104,6 +106,7 @@ function rowModifiers(
     listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
     ...rowAccessibilityModifiers(props),
     disabled(!!props.disabled),
+    badge(badgeCountText(props.badge)),
   ];
 }
 

@@ -31,6 +31,12 @@ function IconRows(): React.JSX.Element {
   return (
     <GroupedListSection title="With icons">
       <ProjectsRow />
+      <GroupedListItem
+        label="Issues"
+        icon="issue"
+        badge={3}
+        onPress={onPress}
+      />
       <UnavailableAgentRow />
       <AppearanceRow />
     </GroupedListSection>
