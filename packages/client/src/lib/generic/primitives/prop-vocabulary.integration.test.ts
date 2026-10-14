@@ -28,7 +28,7 @@ function exportedTypes(source: string): string[] {
   );
 }
 
-// The names prop-vocabulary-subjects.ts lists in Primitives or Aliases: the only two-space-indented keys there.
+// The names prop-vocabulary.mocks.ts lists in Primitives or Aliases: the only two-space-indented keys there.
 function coveredTypes(source: string): string[] {
   return [...source.matchAll(/^ {2}(\w+):/gm)].flatMap(
     ([, name]) => name ?? [],
@@ -41,7 +41,7 @@ it('checks every type the primitives export against the prop vocabulary', () => 
   );
 
   const covered = coveredTypes(
-    readFileSync(join(primitives, 'prop-vocabulary-subjects.ts'), 'utf8'),
+    readFileSync(join(primitives, 'prop-vocabulary.mocks.ts'), 'utf8'),
   );
 
   expect([...new Set(covered)].sort()).toEqual([...new Set(exported)].sort());

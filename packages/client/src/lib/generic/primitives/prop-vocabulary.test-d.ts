@@ -1,7 +1,7 @@
 import type { ViewProps } from 'react-native';
 import { expectTypeOf } from 'vitest';
 import type { IconRole } from '../symbols/icon-role';
-import type { Aliases, Primitives } from './prop-vocabulary-subjects';
+import type { Aliases, Primitives } from './prop-vocabulary.mocks';
 
 /*
  * The prop vocabulary of Spec 0015 (#724): one name per idea in every primitive, on web, iOS and Android.
@@ -72,6 +72,10 @@ expectTypeOf<OffScaleSizes>().toEqualTypeOf<Each<never>>();
 expectTypeOf<OffVocabularyTones>().toEqualTypeOf<Each<never>>();
 
 expectTypeOf<Aliases['Tone']>().toEqualTypeOf<Tone>();
+
+expectTypeOf<Aliases['BadgeTone']>().toExtend<Tone>();
+
+expectTypeOf<Aliases['ButtonSize']>().toExtend<Size>();
 
 expectTypeOf<
   NonNullable<Primitives['TextProps']['tone']>
