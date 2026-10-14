@@ -11,6 +11,7 @@ export { reportsModelCallContext, promptUsageScope } from './usage-scope';
 export { type AgentsRouterDeps, createAgentsRouter } from './router';
 export {
   isAgentDisabled,
+  readConfiguredAgent,
   readCustomDefinition,
 } from './configuration/configuration-sql';
 export type {
@@ -41,7 +42,13 @@ export {
   type AgentReadiness,
 } from './readiness/agent-readiness';
 export type { InstallPorts } from './install/ports';
+export {
+  checkNewlyFound,
+  createAgentResolver,
+  type ResolverDeps,
+} from './resolver/agent-resolver';
 export { readInstallSelection } from './install/selection/selection';
+export { readInstallationObservation } from './resolver/observation-sql';
 export { resolveInstalledAgentLaunch } from './install/selection/launch';
 export { reconcileInterruptedInstallations } from './install/lifecycle/reconcile';
 export type { InstallToolInput } from './install/ports';

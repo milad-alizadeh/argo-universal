@@ -16,6 +16,7 @@ import { openSessionsId, openSessionsMachine } from '../src/sessions';
 import { databaseWriterId, writerMachine } from '../src/storage';
 import { seedAgentFixtures } from './agent-fixtures';
 import { openTestDatabase } from './database';
+import { stubTestMachinePath } from './machine-path';
 import { type ScriptedProcess } from './scripted-agent';
 import { scriptedEngineInput } from './scripted-engine';
 
@@ -72,6 +73,7 @@ function resolveTestStorage(options: EngineTestOptions): {
 export async function startEngineTestHost(
   options: EngineTestOptions = {},
 ): Promise<EngineTestHost> {
+  stubTestMachinePath();
   const { storage, home } = resolveTestStorage(options);
   const port = options.port ?? (await findFreePort());
   seedTestCommands(options, home, storage);

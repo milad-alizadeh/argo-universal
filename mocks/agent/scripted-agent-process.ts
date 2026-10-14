@@ -1,5 +1,6 @@
 import { appendFileSync } from 'node:fs';
 import { Writable } from 'node:stream';
+import { releasingHeldCheck } from './held-check.ts';
 import { isScenarioName, scenarios } from './scenarios.ts';
 import { createScriptedAgent } from './scripted-agent.ts';
 import type { ScriptedResponses } from './scripted-responses.ts';
@@ -12,7 +13,7 @@ import { runTerminalLoginMock } from './terminal-login.ts';
 // The scripted Agent over stdio; `node scripted-agent-process.ts <scenario>`.
 const name = process.argv[2];
 if (!isScenarioName(name)) throw new Error(`Unknown scenario: ${name}`);
-const scenario: ScriptedScenario = scenarios[name];
+const scenario: ScriptedScenario = releasingHeldCheck(name, scenarios[name]);
 const requestLog = process.env.ARGO_E2E_REQUEST_LOG;
 
 // App E2E reads which Sessions the Agent was asked to close.

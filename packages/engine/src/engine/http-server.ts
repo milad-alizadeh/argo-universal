@@ -21,6 +21,8 @@ export interface HttpServerOptions {
   home: string;
   installations?: AgentInstallations;
   createId: () => string;
+  // The Engine clock; the Resolver dates its looks with it.
+  now?: () => number;
   port: number;
   version: string;
   startedAt: string;

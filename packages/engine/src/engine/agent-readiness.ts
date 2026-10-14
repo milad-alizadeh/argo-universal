@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import {
+  AgentCatalogReplaceJob,
+  checkNewlyFound,
+  createAgentResolver,
+  type ResolverDeps,
   type AgentInstallations,
   type AgentReadiness,
   createAgentChecker,
@@ -9,19 +13,35 @@ import type { OpenSessionsActorRef } from '../sessions';
 import type { AppRouterDeps, AppRouterInput } from './router-deps';
 
 type AgentSetup = Pick<AppRouterDeps, 'installations' | 'agentLogins'>;
-type Wired = Pick<AppRouterDeps, 'checkAgentLaunch' | 'readiness'>;
+type Wired = Pick<AppRouterDeps, 'checkAgentLaunch' | 'readiness' | 'resolver'>;
+
+const storageDeps = ({
+  database,
+  databaseWriter,
+  home = '',
+  now = Date.now,
+}: AppRouterInput): ResolverDeps => ({
+  database,
+  databaseWriter,
+  home,
+  now,
+});
 
 // Readiness checks the same saved launch a Session uses, under the installation's setup ownership.
 function createReadiness(
   input: AppRouterInput,
   installations: AgentInstallations,
   checkAgentLaunch: AppRouterDeps['checkAgentLaunch'],
-): AgentReadiness {
-  const { database, databaseWriter } = input;
-  const home = input.home ?? '';
-  const withAgentCheck = installations.check;
-  const deps = { database, databaseWriter, home, now: Date.now };
-  return createAgentReadiness({ ...deps, checkAgentLaunch, withAgentCheck });
+): Pick<Wired, 'readiness' | 'resolver'> {
+  const deps = storageDeps(input);
+  const resolver = createAgentResolver(deps);
+  const readiness = createAgentReadiness({
+    ...deps,
+    checkAgentLaunch,
+    withAgentCheck: installations.check,
+    resolve: resolver.resolveEvery,
+  });
+  return { readiness, resolver };
 }
 
 function sessionsUseAgent(
@@ -46,6 +66,20 @@ function bindInstallations(input: AppRouterInput & AgentSetup & Wired): void {
       input.agentLogins.isBusy(agentId) ||
       sessionsUseAgent(input.sessions, agentId),
     afterInstall: input.readiness.recheckLater,
+    afterRemove: () => {
+      void input.resolver.resolveEvery().catch(() => {});
+    },
+  });
+}
+
+// A catalog sync can name Agents already on this machine; each newly found one is checked.
+function resolveAfterCatalogSync(
+  input: AppRouterInput,
+  { readiness, resolver }: Pick<Wired, 'readiness' | 'resolver'>,
+): void {
+  input.databaseWriter.on('writer.committed', ({ jobs }) => {
+    if (!jobs.some((job) => job instanceof AgentCatalogReplaceJob)) return;
+    checkNewlyFound(resolver.resolveEvery(), readiness.recheckLater);
   });
 }
 
@@ -67,9 +101,12 @@ export function wireAgentReadiness(
 ): Wired {
   const { launchProcess, checkTimeoutMs } = input.acp ?? {};
   const checkAgentLaunch = createAgentChecker(launchProcess, checkTimeoutMs);
-  const { installations } = setup;
-  const readiness = createReadiness(input, installations, checkAgentLaunch);
-  bindInstallations({ ...input, ...setup, checkAgentLaunch, readiness });
-  recheckOnEvents(input, setup, readiness);
-  return { checkAgentLaunch, readiness };
+  const wired = {
+    checkAgentLaunch,
+    ...createReadiness(input, setup.installations, checkAgentLaunch),
+  };
+  bindInstallations({ ...input, ...setup, ...wired });
+  resolveAfterCatalogSync(input, wired);
+  recheckOnEvents(input, setup, wired.readiness);
+  return wired;
 }

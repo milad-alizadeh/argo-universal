@@ -24,6 +24,8 @@ export type ReadinessDeps = {
   home: string;
   now: () => number;
   checkAgentLaunch: CheckAgentLaunch;
+  // The Resolver looks again before every check, so a check uses what is on the machine now.
+  resolve: () => Promise<unknown>;
   // Setup ownership: waits for an install or edit, shares a running check and keeps cleanup failures owned.
   withAgentCheck: (
     agentId: string,
@@ -94,6 +96,7 @@ const recheckAgent = async (
 ): Promise<AgentCheck> => {
   readTarget(deps.database, agentId);
   await save(deps, [agentId], pendingReadiness);
+  await deps.resolve().catch(() => {});
   return checkAndSave(deps, agentId);
 };
 
@@ -109,10 +112,14 @@ const runBounded = async (
   await Promise.all(Array.from({ length: startConcurrency }, worker));
 };
 
-// Every installed, enabled Agent is checked again; saved results are never trusted. Disabled Agents never run.
+// Every installed, enabled Agent is checked again, with any the Resolver just found; saved results are never trusted. Disabled Agents never run.
 const recheckEveryAgent = async (deps: ReadinessDeps): Promise<void> => {
+  const known = checkableAgents(deps.database);
+  await save(deps, known, pendingReadiness);
+  await deps.resolve().catch(() => {});
   const agentIds = checkableAgents(deps.database);
-  await save(deps, agentIds, pendingReadiness);
+  const found = agentIds.filter((agentId) => !known.includes(agentId));
+  await save(deps, found, pendingReadiness);
   await runBounded(agentIds, (agentId) => checkAndSave(deps, agentId));
 };
 

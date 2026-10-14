@@ -52,6 +52,17 @@ export function agentDetail(
   return withProbe(info, fromRegistry);
 }
 
+const sourceLabels = {
+  argo: 'Installed by Argo',
+  unknown: 'Found on this Mac',
+} as const;
+
+// Where an installed Agent was found replaces how the Server would install it.
+const foundSource = ({
+  owner,
+}: AgentInfo): Pick<AgentDetail, 'source' | 'distribution'> =>
+  owner ? { source: sourceLabels[owner], distribution: undefined } : {};
+
 function withProbe(
   info: AgentInfo,
   fromRegistry: AgentDetail | undefined,
@@ -60,6 +71,7 @@ function withProbe(
   return {
     ...fromRegistry,
     ...probed,
+    ...foundSource(info),
     icon: probed.icon ?? fromRegistry?.icon,
     version: selectedVersion(info, fromRegistry),
     availableVersion: info.availableVersion,

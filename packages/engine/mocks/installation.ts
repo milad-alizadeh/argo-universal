@@ -1,4 +1,4 @@
-import type { ACPAgent } from '@repo/contracts';
+import type { ACPAgent, AgentInfo } from '@repo/contracts';
 import { expect } from 'vitest';
 import type { InstallPorts } from '../src/agents';
 import { startEngineTestHost } from './engine';
@@ -30,6 +30,23 @@ export const installEntry = (kind: 'binary' | 'npx' | 'uvx'): ACPAgent => ({
           },
         },
 });
+export const pathEntrypoint = 'fixture-acp-agent';
+// A binary Registry entry whose entrypoint has the same file name on every platform, so the Resolver can find it on PATH.
+export const pathBinaryEntry = (): ACPAgent => {
+  const entry = installEntry('binary');
+  const targets = Object.entries(entry.distribution.binary ?? {});
+  return {
+    ...entry,
+    distribution: {
+      binary: Object.fromEntries(
+        targets.map(([platform, target]) => [
+          platform,
+          { ...target, cmd: `./${pathEntrypoint}`, args: ['acp'] },
+        ]),
+      ),
+    },
+  };
+};
 export const installationPorts: InstallPorts = createInstallationPorts();
 export const startInstallEngine = async (
   entry = installEntry('npx'),
@@ -53,3 +70,11 @@ export const startInstallEngine = async (
   if (!agent) throw new Error('Catalog did not contain installation fixture');
   return { ...host, agentId: agent.id };
 };
+
+type Caller = Awaited<ReturnType<typeof startEngineTestHost>>['caller'];
+// The Agent's row as the Agents page lists it.
+export const listedAgent = async (
+  caller: Caller,
+  agentId: string,
+): Promise<AgentInfo | undefined> =>
+  (await caller.agents.list()).find(({ agent }) => agent === agentId);

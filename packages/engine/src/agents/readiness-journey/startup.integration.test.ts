@@ -1,5 +1,4 @@
 import { rm } from 'node:fs/promises';
-import type { AgentInfo } from '@repo/contracts';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
 import { customAgentDefinition } from '#mocks/custom-agent';
@@ -7,17 +6,11 @@ import { awaitSettledReadiness, startEngineTestHost } from '#mocks/engine';
 import {
   installationPorts,
   installEntry,
+  listedAgent as listed,
   startInstallEngine,
 } from '#mocks/installation';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 import { agentInstallDirectory } from '../install/selection/selection';
-
-type Caller = Awaited<ReturnType<typeof startInstallEngine>>['caller'];
-const listed = async (
-  caller: Caller,
-  agentId: string,
-): Promise<AgentInfo | undefined> =>
-  (await caller.agents.list()).find(({ agent }) => agent === agentId);
 
 type Installed = Awaited<ReturnType<typeof startInstallEngine>> & {
   checks: ReturnType<typeof createScriptedAgentProcess>;
@@ -79,15 +72,15 @@ it('missing launch files show Not found, and Repair installs the same release an
     recursive: true,
     force: true,
   });
+  expect(await host.caller.agents.recheck({ agentId: host.agentId })).toEqual({
+    status: 'not-found',
+    reason:
+      'The installed files of Fixture ACP are missing. Repair installs them again.',
+  });
   expect(await listed(host.caller, host.agentId)).toMatchObject({
     status: 'not-found',
     enabled: true,
     version: '1.2.3',
-    reason:
-      'The installed files of Fixture ACP are missing. Repair installs them again.',
-  });
-  expect(await host.caller.agents.recheck({ agentId: host.agentId })).toEqual({
-    status: 'not-found',
     reason:
       'The installed files of Fixture ACP are missing. Repair installs them again.',
   });

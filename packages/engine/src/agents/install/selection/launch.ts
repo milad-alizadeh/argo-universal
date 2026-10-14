@@ -6,16 +6,19 @@ import {
   createCustomAgentLaunch,
   resolveCustomAgentLaunch,
 } from '../../configuration/custom-launch';
+import { missingReason } from '../../readiness/readiness-target';
 import {
-  readInstallSelection,
-  selectedLaunchDefinition,
-  type InstallSelection,
-} from './selection';
+  type Installation,
+  readRegistrySource,
+  type RegistrySource,
+  resolveRegistryInstallation,
+} from '../../resolver/installation';
+import { selectedLaunchDefinition } from './selection';
 type InstalledLaunch = {
   database: Database;
   home: string;
   agentId: string;
-  selection: InstallSelection;
+  source: RegistrySource;
   project: { id: string; path: string };
 };
 const overrideLaunch = (
@@ -37,31 +40,52 @@ const launchForDefinition = (
   { agentId, project }: InstalledLaunch,
   definition: CustomAgentDefinition,
 ): AgentLaunch => createCustomAgentLaunch({ agentId, definition, project });
-const installedVersion = (selection: InstallSelection): string =>
-  selection.packageVersion ?? selection.entry.version;
+// A copy whose version the Resolver could not read still gets a stable reuse key.
+const unknownVersion = 'unknown';
+const requireInstallation = async (
+  input: InstalledLaunch,
+): Promise<Installation> => {
+  const found = await resolveRegistryInstallation(
+    input.home,
+    input.agentId,
+    input.source,
+  );
+  if (found) return found;
+  const { selection } = input.source;
+  // Argo's copy is gone and nothing is on PATH: report its own missing file.
+  if (selection)
+    await selectedLaunchDefinition(input.home, input.agentId, selection);
+  throw new Error(missingReason(input.source));
+};
+// Resolves again every time: a Session never trusts the saved Installation observation.
 const createInstalledLaunch = async (
   input: InstalledLaunch,
 ): Promise<AgentLaunch> => {
-  const definition = await selectedLaunchDefinition(
-    input.home,
-    input.agentId,
-    input.selection,
-  );
+  const { definition, version } = await requireInstallation(input);
   const launch = launchForDefinition(input, definition);
-  const version = installedVersion(input.selection);
   const configured = readConfiguredAgent(input.database, input.agentId);
-  return overrideLaunch({ ...launch, version }, configured);
+  return overrideLaunch(
+    { ...launch, version: version ?? unknownVersion },
+    configured,
+  );
 };
+const registrySourceOf = (
+  database: Database,
+  agentId: string,
+): RegistrySource | undefined =>
+  readConfiguredAgent(database, agentId)?.configuration.source === 'custom'
+    ? undefined
+    : readRegistrySource(database, agentId);
 const selectLaunch = (
   source: { database: Database; home: string },
   input: Parameters<ResolveAgentLaunch>[0],
 ): Promise<AgentLaunch> => {
-  const selection = readInstallSelection(source.database, input.agent);
-  if (!selection) return resolveCustomAgentLaunch(source.database)(input);
+  const registry = registrySourceOf(source.database, input.agent);
+  if (!registry) return resolveCustomAgentLaunch(source.database)(input);
   return createInstalledLaunch({
     ...source,
     agentId: input.agent,
-    selection,
+    source: registry,
     project: { id: input.projectId, path: input.projectPath },
   });
 };

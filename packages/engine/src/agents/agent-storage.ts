@@ -1,6 +1,7 @@
 import { agents, syncJobs } from '@repo/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../storage';
+import { InstallationObservationSaveJob } from './resolver/observation-storage';
 
 export type AgentCatalogWriteRow = Pick<
   typeof agents.$inferInsert,
@@ -162,6 +163,7 @@ export class AgentReadinessSaveJob implements WriterJob {
 // The jobs whose commit can change what the Agent catalog shows.
 export const changesAgentCatalog = (job: WriterJob): boolean =>
   job instanceof AgentCatalogReplaceJob ||
+  job instanceof InstallationObservationSaveJob ||
   job instanceof SyncJobUpdateJob ||
   job instanceof AgentConfigurationSaveJob ||
   job instanceof AgentReadinessSaveJob;

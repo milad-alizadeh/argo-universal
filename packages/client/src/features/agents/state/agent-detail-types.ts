@@ -13,6 +13,8 @@ export type AgentDetail = AgentRowEntry & {
   availableVersion?: string;
   // How the Server installs it, such as "npm · needs Node.js", or why this Server cannot.
   distribution?: string;
+  // Where the Resolver found an installed Agent: in Argo's folder or elsewhere on this Mac.
+  source?: 'Found on this Mac' | 'Installed by Argo';
   links?: readonly AgentLink[];
 };
 
