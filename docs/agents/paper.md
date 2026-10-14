@@ -52,7 +52,8 @@ Argo owns its primitives (ADR-0020), so Paper designs desktop, iOS and Android.
 - **Cards** have **Desktop | iOS | Android** columns. A single Phone column stays only where both phones match. Overlay cards have **Content | Popover | Sheet (iOS) | Sheet (Android)**.
 - **Mobile flows** get an iOS row. An Android row sits inside the same `Flow / <Name>` only where Android differs from iOS. Platform-only flows are allowed, in a shared order.
 - **Light only:** no dark frames, cards or flows. Dark mode is checked in the code, through the PR evidence.
-- **Native frames** use the platform's type scale and system text colours as literals, the way mono uses literal "SF Mono": SF Pro text styles on iOS, literal Roboto on Android. Everything else keeps Argo's tokens.
+- **Native frames** use the platform's type scale as literals (SF Pro text styles on iOS, Roboto on Android) but never literal colours: system text, tint, fill and outline colours map to Argo tokens (`foreground`, `muted-foreground`, `muted`, `border`, `danger`), so Android draws Material shapes in Argo colours and iOS uses Argo's neutral greys.
+- The only literal colours in Paper are copied OS chrome (macOS traffic lights, the iOS keyboard), board backdrops, shadows (Paper tokens cannot hold them; copy the `--shadow-*` values from `theme.css`) and data colours such as GitHub label tints. An alpha the token set lacks is written `color-mix(var(--token) N%, transparent)`.
 
 ## Page layout
 
