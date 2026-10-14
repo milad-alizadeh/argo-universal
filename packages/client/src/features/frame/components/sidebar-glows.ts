@@ -1,3 +1,5 @@
+import { useUniwind } from 'uniwind';
+
 // Paper's "SidebarBackdrop / Warm frost (contained)": three faint glows behind the glass, faded into the window surface at the right.
 export type GlowColour = 'warm' | 'graphite' | 'sand';
 
@@ -108,4 +110,18 @@ export function sidebarGlows(
     edgeFadeWidth: Math.round(desktopEdgeFadeWidth * layoutScale[layout]),
     glows: warmFrost.map((source) => scaledGlow(source, { layout, strength })),
   };
+}
+
+// Paper's oklch glow colours in sRGB, as React Native SVG and CSS both read them.
+const glowColours: Readonly<
+  Record<'light' | 'dark', Readonly<Record<GlowColour, string>>>
+> = {
+  light: { warm: '#c4aa8c', graphite: '#8c8c8c', sand: '#d6bea5' },
+  dark: { warm: '#605343', graphite: '#484848', sand: '#6d6154' },
+};
+
+export function useGlowColours(): Readonly<Record<GlowColour, string>> {
+  const { theme } = useUniwind();
+
+  return glowColours[theme === 'dark' ? 'dark' : 'light'];
 }

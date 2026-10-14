@@ -22,8 +22,7 @@ const placementProps = {
       'absolute right-0.5 top-0.5 min-w-4 border-0 bg-warning px-1 py-0',
   },
   drawer: {
-    className:
-      'h-phone-shell-badge min-w-phone-shell-badge border-0 bg-warning px-1.5',
+    className: 'h-[22px] min-w-[22px] border-0 bg-warning px-1.5',
   },
 } as const satisfies Record<Placement, ViewProps>;
 
@@ -36,7 +35,7 @@ function BadgeMark({
 }): React.JSX.Element {
   return (
     <Badge {...placementProps[placement]} accessibilityLabel={badge.label}>
-      <Text role="badge" className="text-warning-foreground">
+      <Text role="badge" className="text-white dark:text-neutral-950">
         {badge.text}
       </Text>
     </Badge>

@@ -49,7 +49,7 @@ function inputProps(props: StandaloneTextInputProps): InputProps & {
     ...inputBehaviour(props),
     'aria-invalid': isInvalid(props),
     'aria-required': props.required,
-    className: 'rounded-lg type-control shadow-none dark:bg-background',
+    className: 'rounded-lg type-control shadow-none dark:bg-card',
   };
 }
 

@@ -76,7 +76,7 @@ function surfaceRoles(
   colors: NativeColors,
 ): Pick<MaterialColors, SurfaceRoleName> {
   return {
-    surface: role(colors.background, seeded.surface),
+    surface: role(colors.card, seeded.surface),
     surfaceContainer: role(colors.muted, seeded.surfaceContainer),
     surfaceContainerHigh: role(colors.card, seeded.surfaceContainerHigh),
     onSurface: role(colors.foreground, seeded.onSurface),

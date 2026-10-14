@@ -20,7 +20,7 @@ function checkboxColors(
     uncheckedColor: invalid
       ? colors.danger
       : (outline ?? colors.mutedForeground),
-    checkmarkColor: colors.background,
+    checkmarkColor: colors.card,
     disabledCheckedColor: colors.disabledContent,
     disabledUncheckedColor: colors.disabledContent,
   };

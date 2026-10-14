@@ -7,7 +7,7 @@ type InputProps = Omit<BareTextInputProps, 'variant'>;
 
 const toneClass = {
   neutral:
-    'dark:bg-border/30 border-border bg-background h-10 border px-3 py-1 shadow-sm shadow-black/5 sm:h-9',
+    'dark:bg-border/30 border-border bg-card h-10 border px-3 py-1 shadow-sm shadow-black/5 sm:h-9',
   muted:
     'h-8 sm:h-8 rounded-lg border-0 bg-muted dark:bg-muted px-2.5 py-0 shadow-none web:focus-visible:ring-1 web:focus-visible:ring-focus',
 };

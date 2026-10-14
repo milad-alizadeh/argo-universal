@@ -27,7 +27,7 @@ function Switch(props: SwitchProps): React.JSX.Element {
 
 function enabledColors(colors: NativeColors): SwitchColors {
   return {
-    checkedThumbColor: colors.background,
+    checkedThumbColor: colors.card,
     checkedTrackColor: colors.accent,
     checkedBorderColor: colors.accent,
     checkedIconColor: colors.accent,
@@ -40,7 +40,7 @@ function enabledColors(colors: NativeColors): SwitchColors {
 
 function disabledColors(colors: NativeColors): SwitchColors {
   return {
-    disabledCheckedThumbColor: colors.background,
+    disabledCheckedThumbColor: colors.card,
     disabledCheckedTrackColor: colors.disabledContainer,
     disabledCheckedBorderColor: colors.disabledContainer,
     disabledCheckedIconColor: colors.disabledContent,

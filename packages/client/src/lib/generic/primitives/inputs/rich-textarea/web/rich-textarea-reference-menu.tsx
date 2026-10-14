@@ -62,7 +62,7 @@ function ReferenceRow(props: RowProps): React.JSX.Element {
     <button
       {...rowAttributes}
       {...{ 'aria-selected': selected }}
-      className={cn(rowClassName, selected && 'bg-hover')}
+      className={cn(rowClassName, selected && 'bg-muted')}
       onMouseEnter={onHover}
       onClick={onChoose}
     >

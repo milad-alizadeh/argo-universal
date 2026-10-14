@@ -10,11 +10,11 @@ const buttonClasses = cva(
         default:
           'bg-primary web:shadow-xs active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
         outline:
-          'border border-border bg-background active:bg-hover web:hover:bg-hover dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
+          'border border-border bg-card active:bg-muted web:hover:bg-muted dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
         secondary:
-          'border border-border bg-background active:bg-hover web:hover:bg-hover dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
+          'border border-border bg-card active:bg-muted web:hover:bg-muted dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
         ghost:
-          'active:bg-hover dark:active:bg-hover/50 web:hover:bg-hover web:dark:hover:bg-hover/50',
+          'active:bg-muted dark:active:bg-muted/50 web:hover:bg-muted web:dark:hover:bg-muted/50',
         link: '',
       },
       size: {
@@ -54,7 +54,7 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
 });
 
 // iOS labels its buttons at the size of its header text buttons, in medium weight.
-const nativeLabelClass = 'ios:text-nav-action ios:font-medium';
+const nativeLabelClass = 'ios:type-nav-action ios:font-medium';
 
 const textClasses = cva(
   'type-control web:pointer-events-none web:transition-colors',
@@ -62,12 +62,9 @@ const textClasses = cva(
     variants: {
       variant: {
         default: 'text-primary-foreground',
-        outline:
-          'text-foreground group-active:text-hover-foreground web:group-hover:text-hover-foreground',
-        secondary:
-          'text-foreground group-active:text-hover-foreground web:group-hover:text-hover-foreground',
-        ghost:
-          'text-foreground group-active:text-hover-foreground ios:font-normal',
+        outline: 'text-foreground',
+        secondary: 'text-foreground',
+        ghost: 'text-foreground ios:font-normal',
         link: 'text-primary web:underline-offset-4 group-active:underline web:group-hover:underline ios:font-normal',
       },
       destructive: { true: 'text-danger' },
@@ -93,7 +90,7 @@ export function contentButtonClass(props: ButtonClassProps): string {
 }
 
 const destructiveOutline =
-  'border border-border bg-background web:shadow-xs active:bg-danger/10 web:hover:bg-danger/10';
+  'border border-border bg-card web:shadow-xs active:bg-danger/10 web:hover:bg-danger/10';
 
 const destructiveText =
   'bg-transparent active:bg-danger/10 web:hover:bg-danger/10';
@@ -133,7 +130,7 @@ export function contentTextClass(
   return cn(
     textClasses({ variant: props.variant, destructive }),
     nativeLabelClass,
-    destructive && props.variant === 'default' && 'text-danger-foreground',
+    destructive && props.variant === 'default' && 'text-white',
   );
 }
 

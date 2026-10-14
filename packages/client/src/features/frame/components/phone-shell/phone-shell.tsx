@@ -6,7 +6,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCSSVariable, useResolveClassNames } from 'uniwind';
+import { useResolveClassNames } from 'uniwind';
 import {
   PhoneDrawer,
   type PhoneDrawerProps,
@@ -15,6 +15,11 @@ import { PhoneShellCard } from '../phone-shell-card/phone-shell-card';
 import type { Section } from '../shell-sections';
 import { headerBarHeight } from './header-bar-height';
 import { PhoneDrawerContent } from './phone-drawer-content';
+
+// The open drawer's width, and how much of the screen stays visible beside it.
+const drawerWidth = 300;
+
+const visibleScreenWidth = 64;
 
 const OpenDrawerContext = createContext<() => void>(() => {});
 
@@ -65,15 +70,7 @@ function useShellLayout(): MeasuredShell {
   };
 }
 
-function useDrawerWidth(layoutWidth: number): number {
-  const drawerWidth = Number.parseFloat(
-    String(useCSSVariable('--spacing-phone-drawer')),
-  );
-
-  const visibleScreenWidth = Number.parseFloat(
-    String(useCSSVariable('--spacing-phone-drawer-peek')),
-  );
-
+function drawerWidthFor(layoutWidth: number): number {
   return Math.min(drawerWidth, Math.max(0, layoutWidth - visibleScreenWidth));
 }
 
@@ -94,7 +91,7 @@ interface ShellDrawerSource {
 }
 
 function useShellDrawer({ layout, shell }: ShellDrawerSource): DrawerSetup {
-  const width = useDrawerWidth(layout.width);
+  const width = drawerWidthFor(layout.width);
 
   return {
     ...drawerToggle(shell),

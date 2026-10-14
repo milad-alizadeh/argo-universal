@@ -49,7 +49,7 @@ function ComposerWidePlan(layout: PlanLayout): React.JSX.Element | null {
   if (hasRequest(layout) || !hasPlan(layout)) return null;
 
   return (
-    <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-2xl bg-glass-muted shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-180">
+    <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-2xl bg-[#e5e5e5b3] dark:bg-[#262626b3] shadow-tray web:backdrop-blur-glass web:backdrop-saturate-180">
       <ComposerPlans {...layout} />
     </View>
   );
@@ -112,7 +112,7 @@ function ComposerWideStatus(
   if (!(layout.props.configuration || layout.props.status)) return null;
 
   return (
-    <View className="h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-2xl bg-glass-muted shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-180">
+    <View className="h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-2xl bg-[#e5e5e5b3] dark:bg-[#262626b3] shadow-tray web:backdrop-blur-glass web:backdrop-saturate-180">
       <View className="flex-1 min-h-0 flex-row items-center pl-0.5 gap-1">
         <ComposerTrayStatus {...layout} />
         <View className="flex-1" />

@@ -119,7 +119,7 @@ function MenuRadioContent(props: { label: string }): React.JSX.Element {
 function RadioLabel(props: { label: string }): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1">
-      <Text role="body" className="select-none text-card-foreground">
+      <Text role="body" className="select-none text-foreground">
         {props.label}
       </Text>
     </View>
@@ -130,7 +130,7 @@ function RadioIndicator(): React.JSX.Element {
   return (
     <IconSlot role="control">
       <MenuPrimitive.ItemIndicator>
-        <SelectedCheck className="text-card-foreground" />
+        <SelectedCheck className="text-foreground" />
       </MenuPrimitive.ItemIndicator>
     </IconSlot>
   );

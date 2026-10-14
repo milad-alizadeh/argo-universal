@@ -7,10 +7,10 @@ import { keepOpen } from '#primitives/overlays/bottom-sheet';
 import type { DialogContentProps as ContentProps } from './dialog-props';
 
 const contentClassName =
-  'bg-background web:bg-card border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-2xl border p-6 min-w-[360px] sm:max-w-lg web:border-0 web:dark:border web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200 native:shadow-lg native:shadow-black/5';
+  'bg-card border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-2xl border p-6 min-w-[360px] sm:max-w-lg web:border-0 web:dark:border web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200 native:shadow-overlay native:shadow-black/5';
 
 const closeClassName =
-  'absolute right-4 top-4 rounded opacity-70 active:opacity-100 web:ring-offset-background web:focus:ring-focus web:data-[state=open]:bg-hover web:transition-opacity web:hover:opacity-100 web:focus:outline-none web:focus:ring-2 web:focus:ring-offset-2';
+  'absolute right-4 top-4 rounded opacity-70 active:opacity-100 web:ring-offset-card web:focus:ring-focus web:data-[state=open]:bg-muted web:transition-opacity web:hover:opacity-100 web:focus:outline-none web:focus:ring-2 web:focus:ring-offset-2';
 
 function ContentClose(): React.JSX.Element {
   return (
@@ -18,7 +18,7 @@ function ContentClose(): React.JSX.Element {
       <Icon
         role="control"
         name="close"
-        className="text-hover-foreground web:pointer-events-none shrink-0"
+        className="text-foreground web:pointer-events-none shrink-0"
       />
       <Text className="sr-only">Close</Text>
     </DialogPrimitive.Close>
