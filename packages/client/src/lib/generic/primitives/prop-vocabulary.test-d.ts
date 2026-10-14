@@ -1,41 +1,12 @@
 import type { ViewProps } from 'react-native';
-import { describe, expectTypeOf, it } from 'vitest';
-import type { ButtonProps } from '#primitives/buttons/button';
-import type { ButtonGroupProps } from '#primitives/buttons/button-group';
-import type { FilterPillProps } from '#primitives/buttons/filter-pill';
-import type { IconButtonProps } from '#primitives/buttons/icon-button';
-import type { SplitButtonProps } from '#primitives/buttons/split-button';
-import type { BadgeProps } from '#primitives/display/badge';
-import type { DisclosureChevronProps } from '#primitives/display/disclosure-chevron';
-import type { IconProps } from '#primitives/display/icon';
-import type { LiquidGlassProps } from '#primitives/display/liquid-glass';
-import type { SelectedCheckProps } from '#primitives/display/selected-check';
-import type { SpinnerProps } from '#primitives/display/spinner';
-import type { TextProps, TextRole } from '#primitives/display/text';
-import type { FieldProps } from '#primitives/fields/field';
-import type { CheckboxProps } from '#primitives/inputs/checkbox';
-import type { ComboboxSearchProps } from '#primitives/inputs/combobox-search';
-import type { PickerProps } from '#primitives/inputs/picker';
-import type { RichTextareaProps } from '#primitives/inputs/rich-textarea';
-import type { SearchFieldProps } from '#primitives/inputs/search-field';
-import type { SliderProps } from '#primitives/inputs/slider';
-import type { SwitchProps } from '#primitives/inputs/switch';
-import type { TextInputProps } from '#primitives/inputs/text-input';
-import type { TextareaProps } from '#primitives/inputs/textarea';
-import type { DrawerItemProps } from '#primitives/lists/drawer-item';
-import type { GroupedListProps } from '#primitives/lists/grouped-list';
-import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
-import type { GroupedListSectionProps } from '#primitives/lists/grouped-list-section';
-import type { AlertAction, AlertProps } from '#primitives/overlays/alert';
-import type { BottomSheetProps } from '#primitives/overlays/bottom-sheet';
-import type { DialogContentProps } from '#primitives/overlays/dialog';
-import type { MenuAction, MenuProps } from '#primitives/overlays/menu';
-import type { PopoverProps } from '#primitives/overlays/popover';
+import { expectTypeOf } from 'vitest';
 import type { IconRole } from '../symbols/icon-role';
+import type { Aliases, Primitives } from './prop-vocabulary-subjects';
 
 /*
  * The prop vocabulary of Spec 0015 (#724): one name per idea in every primitive, on web, iOS and Android.
- * Each primitive keeps one props type, so checking that type checks all three drawings.
+ * Each primitive keeps one props type, so checking that type checks all three drawings. The compiler runs
+ * these checks; a failing one is a type error.
  */
 type Tone =
   | 'neutral'
@@ -66,40 +37,6 @@ type Values<Props, Key extends PropertyKey> = Props extends unknown
     : never
   : never;
 
-type Primitives = {
-  Alert: AlertProps;
-  Badge: BadgeProps;
-  BottomSheet: BottomSheetProps;
-  Button: ButtonProps;
-  ButtonGroup: ButtonGroupProps;
-  Checkbox: CheckboxProps;
-  ComboboxSearch: ComboboxSearchProps;
-  DialogContent: DialogContentProps;
-  DisclosureChevron: DisclosureChevronProps;
-  DrawerItem: DrawerItemProps;
-  Field: FieldProps;
-  FilterPill: FilterPillProps;
-  GroupedList: GroupedListProps;
-  GroupedListItem: GroupedListItemProps;
-  GroupedListSection: GroupedListSectionProps;
-  Icon: IconProps;
-  IconButton: IconButtonProps;
-  LiquidGlass: LiquidGlassProps;
-  Menu: MenuProps;
-  Picker: PickerProps<string>;
-  Popover: PopoverProps;
-  RichTextarea: RichTextareaProps;
-  SearchField: SearchFieldProps;
-  SelectedCheck: SelectedCheckProps;
-  Slider: SliderProps;
-  Spinner: SpinnerProps;
-  SplitButton: SplitButtonProps;
-  Switch: SwitchProps;
-  Text: TextProps;
-  TextInput: TextInputProps;
-  Textarea: TextareaProps;
-};
-
 type Each<Check> = { [Name in keyof Primitives]: Check };
 
 type RetiredNames = {
@@ -118,53 +55,75 @@ type OffVocabularyTones = {
 type OwnRoles = {
   [Name in keyof Primitives]: Exclude<
     Values<Primitives[Name], 'role'>,
-    TextRole | IconRole | NonNullable<ViewProps['role']>
+    Aliases['TextRole'] | IconRole | NonNullable<ViewProps['role']>
   >;
 };
 
-describe('the prop vocabulary', () => {
-  it('retires appearance, choices, semanticRole, footerTone and aria-pressed', () => {
-    expectTypeOf<RetiredNames>().toEqualTypeOf<Each<never>>();
-  });
+// A type is either checked as props or set aside as an alias, never both.
+expectTypeOf<Extract<keyof Primitives, keyof Aliases>>().toBeNever();
 
-  it('sizes every primitive on one xs–xl scale', () => {
-    expectTypeOf<OffScaleSizes>().toEqualTypeOf<Each<never>>();
-  });
+// appearance, choices, semanticRole, footerTone and aria-pressed are retired.
+expectTypeOf<RetiredNames>().toEqualTypeOf<Each<never>>();
 
-  it('draws colour meaning from one tone set', () => {
-    expectTypeOf<OffVocabularyTones>().toEqualTypeOf<Each<never>>();
-    expectTypeOf<Values<AlertAction, 'tone'>>().toEqualTypeOf<'danger'>();
-  });
+// Every primitive sizes on one xs–xl scale.
+expectTypeOf<OffScaleSizes>().toEqualTypeOf<Each<never>>();
 
-  it('keeps role for typography and icon placement', () => {
-    expectTypeOf<OwnRoles>().toEqualTypeOf<Each<never>>();
-    expectTypeOf<Extract<Keys<AlertAction>, 'role'>>().toBeNever();
-    expectTypeOf<Values<ButtonProps, 'tone'>>().toEqualTypeOf<'danger'>();
-  });
+// Colour meaning comes from one tone set, and Text and Icon draw all of it.
+expectTypeOf<OffVocabularyTones>().toEqualTypeOf<Each<never>>();
 
-  it('names rows and options the same way', () => {
-    expectTypeOf<Extract<Keys<GroupedListItemProps>, 'title'>>().toBeNever();
-    expectTypeOf<Extract<Keys<DrawerItemProps>, 'title'>>().toBeNever();
-    expectTypeOf<GroupedListItemProps['label']>().toEqualTypeOf<string>();
-    expectTypeOf<DrawerItemProps['label']>().toEqualTypeOf<string>();
-    expectTypeOf<
-      Extract<Keys<MenuProps>, 'options'>
-    >().toEqualTypeOf<'options'>();
-    expectTypeOf<
-      Extract<Keys<SplitButtonProps>, 'options'>
-    >().toEqualTypeOf<'options'>();
-    expectTypeOf<Extract<Keys<MenuAction>, 'role'>>().toBeNever();
-  });
+expectTypeOf<Aliases['Tone']>().toEqualTypeOf<Tone>();
 
-  it('marks a chosen IconButton as selected, its glyph fill apart from its variant', () => {
-    expectTypeOf<IconButtonProps['selected']>().toEqualTypeOf<
-      boolean | undefined
-    >();
-    expectTypeOf<Extract<keyof IconButtonProps, 'filled'>>().toBeNever();
-  });
+expectTypeOf<
+  NonNullable<Primitives['TextProps']['tone']>
+>().toEqualTypeOf<Tone>();
 
-  it('gives Text and Icon a tone', () => {
-    expectTypeOf<NonNullable<TextProps['tone']>>().toEqualTypeOf<Tone>();
-    expectTypeOf<NonNullable<IconProps['tone']>>().toEqualTypeOf<Tone>();
-  });
-});
+expectTypeOf<
+  NonNullable<Primitives['IconProps']['tone']>
+>().toEqualTypeOf<Tone>();
+
+expectTypeOf<
+  Values<Primitives['AlertAction'], 'tone'>
+>().toEqualTypeOf<'danger'>();
+
+expectTypeOf<
+  Values<Primitives['ButtonProps'], 'tone'>
+>().toEqualTypeOf<'danger'>();
+
+// `role` is for typography and icon placement only.
+expectTypeOf<OwnRoles>().toEqualTypeOf<Each<never>>();
+
+expectTypeOf<Extract<Keys<Primitives['AlertAction']>, 'role'>>().toBeNever();
+
+expectTypeOf<Extract<Keys<Primitives['MenuAction']>, 'role'>>().toBeNever();
+
+// Rows name themselves with `label`; menus offer `options`.
+expectTypeOf<
+  Extract<Keys<Primitives['GroupedListItemProps']>, 'title'>
+>().toBeNever();
+
+expectTypeOf<
+  Extract<Keys<Primitives['DrawerItemProps']>, 'title'>
+>().toBeNever();
+
+expectTypeOf<
+  Primitives['GroupedListItemProps']['label']
+>().toEqualTypeOf<string>();
+
+expectTypeOf<Primitives['DrawerItemProps']['label']>().toEqualTypeOf<string>();
+
+expectTypeOf<
+  Extract<Keys<Primitives['MenuProps']>, 'options'>
+>().toEqualTypeOf<'options'>();
+
+expectTypeOf<
+  Extract<Keys<Primitives['SplitButtonProps']>, 'options'>
+>().toEqualTypeOf<'options'>();
+
+// A chosen IconButton is `selected`; its glyph fill is apart from its variant.
+expectTypeOf<Primitives['IconButtonProps']['selected']>().toEqualTypeOf<
+  boolean | undefined
+>();
+
+expectTypeOf<
+  Extract<keyof Primitives['IconButtonProps'], 'filled'>
+>().toBeNever();
