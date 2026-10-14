@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import {
   AgentRecord,
   type ACPAgent,
@@ -16,9 +15,10 @@ import type { RegistryReader } from './registry/registry-reader';
 function createCatalogAgentRecord(
   agent: ACPAgent,
   syncedAt: number,
+  createId: () => string,
 ): AgentCatalogWriteRow {
   return {
-    id: randomUUID(),
+    id: createId(),
     ...createCatalogOwnedFields(agent, syncedAt),
   };
 }
@@ -26,9 +26,10 @@ function createCatalogAgentRecord(
 export function prepareAgentCatalogRows(
   registry: ACPAgentRegistry,
   syncedAt: number,
+  createId: () => string,
 ): AgentCatalogWriteRow[] {
   return registry.agents.map((agent) =>
-    createCatalogAgentRecord(agent, syncedAt),
+    createCatalogAgentRecord(agent, syncedAt, createId),
   );
 }
 

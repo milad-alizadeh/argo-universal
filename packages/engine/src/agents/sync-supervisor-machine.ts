@@ -19,7 +19,10 @@ import {
   type RegistryReader,
 } from './registry/registry-reader';
 
-export interface SyncSupervisorInput extends Pick<CatalogSyncInput, 'now'> {
+export interface SyncSupervisorInput extends Pick<
+  CatalogSyncInput,
+  'now' | 'createId'
+> {
   fetchAgents?: FetchAgents;
   database: Database;
   writer: WriterActorRef;
