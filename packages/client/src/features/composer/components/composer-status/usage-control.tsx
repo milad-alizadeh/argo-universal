@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon/icon';
 import type { ComposerStatusProps, UsageLimit } from '../../state/status';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import {

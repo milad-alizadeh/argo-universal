@@ -8,9 +8,9 @@ import {
   CollapsibleContent,
 } from '#primitives/display/collapsible/collapsible';
 import { DisclosureChevron } from '#primitives/display/disclosure-chevron/disclosure-chevron';
+import { Icon } from '#primitives/display/icon/icon';
 import { Text, TextClassContext } from '#primitives/display/text/text';
 import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
 import type { FileDiff } from '../../view/file-diff';
 import { DiffView } from '../diff-view/diff-view';
 import { FileName } from './file-name';

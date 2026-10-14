@@ -1,11 +1,11 @@
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import { IconSlot } from '#primitives/display/icon/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { Text } from '#primitives/display/text/text';
 import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
 import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
-import { IconSlot } from '../../../../lib/generic/symbols/icon';
 import type { ChoiceProps, SplitButtonChoice } from './split-button';
 import { chevron, chevronSizes } from './split-button-chevron';
 

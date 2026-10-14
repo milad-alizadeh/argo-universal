@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '../../generic/symbols/icon';
+import { Icon } from '#primitives/display/icon/icon';
 
 export interface CopyButtonProps {
   value: string;

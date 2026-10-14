@@ -6,8 +6,8 @@ import Animated, {
   useDerivedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { Icon } from '#primitives/display/icon/icon';
 import { motionDuration, quarterTurnDegrees } from '../../../motion';
-import { Icon } from '../../../symbols/icon';
 import { cn } from '../../../utils';
 
 interface DisclosureChevronProps {

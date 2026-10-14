@@ -4,9 +4,9 @@ import { Platform } from 'react-native';
 import { FadeIn, ReduceMotion } from 'react-native-reanimated';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
+import { Icon } from '#primitives/display/icon/icon';
 import { TextClassContext } from '#primitives/display/text/text';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view/native-only-animated-view';
-import { Icon } from '../../../symbols/icon';
 import {
   dropdownSubContentClassName,
   dropdownSubTriggerClassName,

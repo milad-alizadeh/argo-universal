@@ -1,5 +1,5 @@
 import type { ComponentType, ReactElement } from 'react';
-import { Icon } from '../../../symbols/icon';
+import { Icon } from '#primitives/display/icon/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { Host } from '../../native/host';
 import { ContentButton } from './button-content';

@@ -1,7 +1,7 @@
 import * as SelectPrimitive from '@rn-primitives/select';
 import type * as React from 'react';
 import { cn } from '#lib/generic/utils';
-import { Icon, IconSlot } from '../../../symbols/icon';
+import { Icon, IconSlot } from '#primitives/display/icon/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { useWide } from '../../../use-wide/use-wide';
 import { SelectedCheck } from '../../display/selected-check';

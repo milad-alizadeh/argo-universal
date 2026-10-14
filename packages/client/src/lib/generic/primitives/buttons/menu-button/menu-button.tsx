@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
-import { Icon } from '../../../symbols/icon';
+import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '../../display/text/text';
 
 // A menu's trigger passes its press handlers and ref through these props.

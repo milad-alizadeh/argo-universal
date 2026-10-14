@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Icon, IconSpinner } from '../../../symbols/icon';
-import type { IconProps } from '../../../symbols/icon';
+import { Icon, IconSpinner } from '#primitives/display/icon/icon';
+import type { IconProps } from '#primitives/display/icon/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import type { IconRole } from '../../../symbols/icon-role';
 import { usePrimitiveColor } from '../../native/primitive-color';

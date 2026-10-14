@@ -2,8 +2,8 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
-import { Icon } from '../../../../lib/generic/symbols/icon';
 import type { StepMark } from '../../state/onboarding';
 
 const markClasses: Record<StepMark, string> = {

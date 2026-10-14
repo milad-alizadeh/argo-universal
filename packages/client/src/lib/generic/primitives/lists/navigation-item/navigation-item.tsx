@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Icon } from '../../../symbols/icon';
+import { Icon } from '#primitives/display/icon/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';

@@ -1,7 +1,7 @@
 import { LegendList } from '@legendapp/list/react-native';
 import { createElement, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Icon } from '../../../symbols/icon';
+import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '../../display/text/text';
 import { Input } from '../input/input';
 import type { PickerOption, PickerProps } from './picker-props';

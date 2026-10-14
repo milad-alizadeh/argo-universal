@@ -1,9 +1,13 @@
 import { createElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '../../display/text/text';
+import {
+  type FieldDescription,
+  FieldDescriptionFooter,
+  useFieldDescription,
+} from '../../fields/field-description';
 import { useInListItem } from '../../lists/list-item/list-item-accessory';
 import { Select } from '../select/select';
-import { type PickerField, PickerFooter, usePickerField } from './picker-field';
 import type { PickerProps } from './picker-props';
 import {
   choosePickerOption,
@@ -15,7 +19,7 @@ import { PickerContent, PickerTrigger } from './picker-web-parts';
 export function Picker<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
-  const field = usePickerField(props);
+  const field = useFieldDescription(props);
   const inListItem = useInListItem();
   const row = props.appearance === 'row' || inListItem;
 
@@ -23,7 +27,7 @@ export function Picker<Value extends string>(
 }
 
 type FrameProps<Value extends string> = PickerProps<Value> &
-  PickerField & { row: boolean };
+  FieldDescription & { row: boolean };
 
 function PickerFrame<Value extends string>(
   props: FrameProps<Value>,
@@ -33,7 +37,7 @@ function PickerFrame<Value extends string>(
     { className: 'gap-2' },
     <PickerLabel {...props} />,
     <PickerControl {...props} />,
-    <PickerFooter {...props} />,
+    <FieldDescriptionFooter {...props} />,
   );
 }
 

@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Icon } from '../../symbols/icon';
+import { Icon } from '#primitives/display/icon/icon';
 import type { IconRole } from '../../symbols/icon-role';
 
 export function SelectedCheck({

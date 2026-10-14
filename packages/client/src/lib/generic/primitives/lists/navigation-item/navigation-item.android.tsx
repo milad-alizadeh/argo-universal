@@ -17,7 +17,7 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { Icon, IconSlot } from '../../../symbols/icon';
+import { Icon, IconSlot } from '#primitives/display/icon/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
 import { roundedClip } from '../../native/compose-corners';

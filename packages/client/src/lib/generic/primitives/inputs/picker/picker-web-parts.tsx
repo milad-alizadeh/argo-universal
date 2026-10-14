@@ -1,18 +1,18 @@
 import { createElement } from 'react';
 import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
+import type { FieldDescription } from '../../fields/field-description';
 import {
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '../select/select';
-import type { PickerField } from './picker-field';
 import type { PickerOption, PickerProps } from './picker-props';
 import { pickerOptionsMessage, pickerValue } from './picker-selection';
 
 type TriggerProps<Value extends string> = PickerProps<Value> &
-  PickerField & { row: boolean };
+  FieldDescription & { row: boolean };
 
 type TriggerAttributes = React.ComponentProps<typeof SelectTrigger> & {
   'aria-invalid': boolean;

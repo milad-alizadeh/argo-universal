@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { Badge } from '#primitives/display/badge/badge';
+import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
 import { ListItem } from '#primitives/lists/list-item/list-item';
-import { Icon } from '../src/lib/generic/symbols/icon';
 import { onPress } from './list-item-press-mock';
 
 export function PlainRows(): React.JSX.Element {

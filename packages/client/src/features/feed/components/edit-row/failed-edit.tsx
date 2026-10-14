@@ -1,8 +1,8 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
-import { Icon } from '../../../../lib/generic/symbols/icon';
 import type { FileDiff } from '../../view/file-diff';
 import { firstLocationPath } from '../tool-call-meta';
 import { FileName } from './file-name';

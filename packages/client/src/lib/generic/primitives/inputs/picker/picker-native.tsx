@@ -1,8 +1,11 @@
 import { createElement, useState } from 'react';
 import { View } from 'react-native';
+import {
+  FieldDescriptionFooter,
+  useFieldDescription,
+} from '../../fields/field-description';
 import { useInListItem } from '../../lists/list-item/list-item-accessory';
 import { Host, type HostProps } from '../../native/host';
-import { PickerFooter, usePickerField } from './picker-field';
 import type { PickerProps } from './picker-props';
 
 export type PickerPresentation = {
@@ -23,13 +26,13 @@ export function createNativePicker(Control: Drawing): NativePicker {
   return function Picker<Value extends string>(
     props: PickerProps<Value>,
   ): React.JSX.Element {
-    const field = usePickerField(props);
+    const field = useFieldDescription(props);
 
     return createElement(
       View,
       { className: 'gap-2' },
       <PickerHost {...props} invalid={field.invalid} Control={Control} />,
-      <PickerFooter {...field} />,
+      <FieldDescriptionFooter {...field} />,
     );
   };
 }

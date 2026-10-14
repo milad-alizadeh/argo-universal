@@ -1,11 +1,11 @@
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text/text';
-import { Icon } from '../../../symbols/icon';
 import { iconNames } from '../../../symbols/icon-names';
 import { type IconRole, useIconPixels } from '../../../symbols/icon-role';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { IconButton } from '../../buttons/icon-button/icon-button';
 import { FilledSymbols } from './filled-symbols.mocks';
+import { Icon } from './icon';
 
 type IconName = (typeof iconNames)[number];
 

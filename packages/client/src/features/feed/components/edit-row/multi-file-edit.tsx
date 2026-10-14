@@ -4,9 +4,9 @@ import {
   CollapsibleContent,
 } from '#primitives/display/collapsible/collapsible';
 import { DisclosureChevron } from '#primitives/display/disclosure-chevron/disclosure-chevron';
+import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
 import { Pressable } from '#primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
 import type { FileDiff } from '../../view/file-diff';
 import { editToggleClassName, FileEdit } from './file-edit';
 

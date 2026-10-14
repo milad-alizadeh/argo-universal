@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { IconSlot } from '../../../symbols/icon';
+import { IconSlot } from '#primitives/display/icon/icon';
 import { SelectedCheck } from '../../display/selected-check';
 import { Text } from '../../display/text/text';
 import type { MenuProps } from './menu-props';

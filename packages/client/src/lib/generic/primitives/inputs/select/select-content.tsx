@@ -3,9 +3,9 @@ import * as React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
+import { Icon } from '#primitives/display/icon/icon';
 import { TextClassContext } from '#primitives/display/text/text';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view/native-only-animated-view';
-import { Icon } from '../../../symbols/icon';
 import {
   selectContentClassName,
   selectViewportClassName,

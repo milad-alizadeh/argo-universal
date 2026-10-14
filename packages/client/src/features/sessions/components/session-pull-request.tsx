@@ -2,6 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { MenuButton } from '#primitives/buttons/menu-button/menu-button';
+import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
 import {
   DropdownMenu,
@@ -9,7 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#primitives/overlays/dropdown-menu/dropdown-menu';
-import { Icon } from '../../../lib/generic/symbols/icon';
 import type { PullRequestChecksProps } from './pull-request-checks';
 import {
   type PullRequestStatus,

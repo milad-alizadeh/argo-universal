@@ -4,8 +4,8 @@ import { hasLiquidGlass } from '#lib/generic/native-header';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import type { IconButtonProps } from '#primitives/buttons/icon-button/icon-button';
+import { Icon } from '#primitives/display/icon/icon';
 import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
-import { Icon } from '../generic/symbols/icon';
 import { narrowPairs } from './header-button-pairing';
 
 export interface HeaderButtonProps extends Pick<

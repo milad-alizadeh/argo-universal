@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react';
 import type { Pressable } from 'react-native';
-import type { IconProps } from '../../../symbols/icon';
+import type { IconProps } from '#primitives/display/icon/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import type { IconRole } from '../../../symbols/icon-role';
 import type { ButtonSize } from '../button/button-props';

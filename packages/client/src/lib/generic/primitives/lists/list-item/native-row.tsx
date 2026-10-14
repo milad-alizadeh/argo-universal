@@ -9,7 +9,7 @@ import { padding as swiftPadding } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
-import { IconSlot } from '../../../symbols/icon';
+import { IconSlot } from '#primitives/display/icon/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { type ListItemProps, listItemStatus } from '../../fields/field-props';

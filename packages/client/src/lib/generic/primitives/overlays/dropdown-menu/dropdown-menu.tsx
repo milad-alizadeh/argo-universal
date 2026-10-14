@@ -2,8 +2,8 @@ import * as DropdownMenuPrimitive from '@rn-primitives/dropdown-menu';
 import * as React from 'react';
 import { Text, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import { IconSlot } from '#primitives/display/icon/icon';
 import { TextClassContext } from '#primitives/display/text/text';
-import { IconSlot } from '../../../symbols/icon';
 import { SelectedCheck } from '../../display/selected-check';
 import { DropdownMenuContent } from './dropdown-menu-content';
 import {

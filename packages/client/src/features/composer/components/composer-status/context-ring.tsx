@@ -2,7 +2,7 @@ import type { JSX } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
-import { IconSlot } from '../../../../lib/generic/symbols/icon';
+import { IconSlot } from '#primitives/display/icon/icon';
 import { contextZone, fullPercent } from '../../state/status';
 import {
   successBackgroundClassName,

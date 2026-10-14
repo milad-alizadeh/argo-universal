@@ -100,7 +100,6 @@ const componentFolders: [string, string[]][] = [
       'inputs/combobox-search',
       'inputs/search-field',
       'inputs/select',
-      'inputs/select-menu',
       'inputs/slider',
       'lists/list-item',
       'native',

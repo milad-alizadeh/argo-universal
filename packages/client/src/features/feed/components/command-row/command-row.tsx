@@ -7,8 +7,8 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
+import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
-import { Icon } from '../../../../lib/generic/symbols/icon';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';
 import {
   ToolCallDisclosure,
