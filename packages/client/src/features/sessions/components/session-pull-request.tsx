@@ -1,15 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { MenuButton } from '#primitives/buttons/menu-button/menu-button';
 import { Icon } from '#primitives/display/icon/icon';
 import { Text } from '#primitives/display/text/text';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '#primitives/overlays/dropdown-menu/dropdown-menu';
+import { Menu, type MenuAction } from '#primitives/overlays/menu/menu';
 import type { PullRequestChecksProps } from './pull-request-checks';
 import {
   type PullRequestStatus,
@@ -99,24 +93,21 @@ function PullRequestItemContent(
   );
 }
 
-function pullRequestItem(
+function pullRequestAction(
   pullRequest: SessionPullRequest,
   { shown, onShow }: MorePullRequestsProps,
-): React.JSX.Element {
-  return (
-    <DropdownMenuItem
-      key={pullRequest.number}
-      accessibilityState={{ selected: pullRequest.number === shown }}
-      onPress={() => onShow(pullRequest.number)}
-    >
-      <PullRequestItemContent {...pullRequest} />
-    </DropdownMenuItem>
-  );
+): MenuAction {
+  return {
+    label: `#${pullRequest.number} ${pullRequest.title}`,
+    selected: pullRequest.number === shown,
+    onSelect: () => onShow(pullRequest.number),
+    content: <PullRequestItemContent {...pullRequest} />,
+  };
 }
 
-function pullRequestItems(props: MorePullRequestsProps): React.JSX.Element[] {
+function pullRequestActions(props: MorePullRequestsProps): MenuAction[] {
   return props.pullRequests.map((pullRequest) =>
-    pullRequestItem(pullRequest, props),
+    pullRequestAction(pullRequest, props),
   );
 }
 
@@ -124,14 +115,14 @@ function pullRequestItems(props: MorePullRequestsProps): React.JSX.Element[] {
 export function MorePullRequests(
   props: MorePullRequestsProps,
 ): React.JSX.Element {
+  const label = `+${props.pullRequests.length - 1} PR`;
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <MenuButton label={`+${props.pullRequests.length - 1} PR`} />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        {pullRequestItems(props)}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Menu
+      accessibilityLabel={label}
+      trigger={label}
+      align="start"
+      actions={pullRequestActions(props)}
+    />
   );
 }

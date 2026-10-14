@@ -1,4 +1,15 @@
-export const menuItemClassName =
-  'web:focus:bg-accent web:focus:text-accent-foreground web:cursor-default web:outline-none web:data-[disabled]:pointer-events-none';
+import { cn } from '#lib/generic/utils';
 
-export const disabledMenuItemClassName = 'opacity-50';
+// An action menu's web drawing, as the Session header's menus drew it before Menu took actions.
+export const actionContentClassName = cn(
+  'bg-popover border-border min-w-[8rem] overflow-hidden rounded-2xl web:shadow-card border p-1 shadow-lg shadow-black/5',
+  'web:animate-in web:fade-in-0 web:zoom-in-95 web:max-h-(--radix-dropdown-menu-content-available-height) web:overflow-y-auto web:origin-(--radix-dropdown-menu-content-transform-origin) web:z-50 web:cursor-default',
+);
+
+export const actionItemClassName = cn(
+  'active:bg-accent group relative flex flex-row items-center gap-2 rounded-xl px-2 py-2 sm:py-1.5',
+  'web:focus:bg-accent web:focus:text-accent-foreground web:cursor-default web:outline-none web:data-[disabled]:pointer-events-none',
+);
+
+export const actionItemTextClassName =
+  'select-none text-popover-foreground group-active:text-popover-foreground';

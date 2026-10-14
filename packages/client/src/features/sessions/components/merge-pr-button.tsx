@@ -4,13 +4,7 @@ import { cn } from '#lib/generic/utils';
 import { ButtonGroup } from '#primitives/buttons/button-group/button-group';
 import { Button } from '#primitives/buttons/button/button';
 import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { Text } from '#primitives/display/text/text';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '#primitives/overlays/dropdown-menu/dropdown-menu';
+import { Menu, type MenuAction } from '#primitives/overlays/menu/menu';
 
 export type MergeMethod = 'squash' | 'merge' | 'rebase';
 
@@ -41,15 +35,11 @@ const mergeDivider = (
   </View>
 );
 
-function mergeMethodItem(
+function mergeMethodAction(
   { method, label }: (typeof mergeMethods)[number],
   onMerge: MergeControlProps['onMerge'],
-): React.JSX.Element {
-  return (
-    <DropdownMenuItem key={method} onPress={() => onMerge?.(method)}>
-      <Text>{label}</Text>
-    </DropdownMenuItem>
-  );
+): MenuAction {
+  return { label, onSelect: () => onMerge?.(method) };
 }
 
 const mergeOptionsAppearance = {
@@ -62,14 +52,17 @@ const mergeOptionsAppearance = {
 
 function MergeMethodsMenu(props: MergeControlProps): React.JSX.Element {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild disabled={props.disabled}>
+    <Menu
+      accessibilityLabel={mergeOptionsAppearance.accessibilityLabel}
+      disabled={props.disabled}
+      align="end"
+      actions={mergeMethods.map((choice) =>
+        mergeMethodAction(choice, props.onMerge),
+      )}
+      trigger={
         <IconButton {...mergeOptionsAppearance} disabled={props.disabled} />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {mergeMethods.map((choice) => mergeMethodItem(choice, props.onMerge))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      }
+    />
   );
 }
 

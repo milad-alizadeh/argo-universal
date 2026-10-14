@@ -90,7 +90,6 @@ const componentFolders: [string, string[]][] = [
       'buttons/button-group',
       'buttons/filter-pill',
       'buttons/icon-button',
-      'buttons/menu-button',
       'display/badge',
       'display/collapsible',
       'display/icon',

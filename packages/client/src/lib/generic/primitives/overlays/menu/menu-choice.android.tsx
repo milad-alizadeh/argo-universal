@@ -32,6 +32,24 @@ export function MenuChoice(props: MenuChoiceProps): React.JSX.Element {
   );
 }
 
+// An action menu's row: its label alone, with no check.
+export function MenuActionItem(props: {
+  label: string;
+  onSelect: () => void;
+}): React.JSX.Element {
+  const { colors } = useNativeTheme();
+
+  return (
+    <DropdownMenuItem
+      modifiers={[defaultMinSize({ minWidth: menuWidth })]}
+      elementColors={choiceElementColors(colors)}
+      onClick={props.onSelect}
+    >
+      <ChoiceLabel label={props.label} />
+    </DropdownMenuItem>
+  );
+}
+
 function choiceModifiers(props: MenuChoiceProps): ModifierConfig[] {
   return [
     defaultMinSize({ minWidth: menuWidth }),
