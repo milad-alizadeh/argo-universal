@@ -17,6 +17,8 @@ type SheetContentProps = Pick<
 > & {
   viewportHeight?: number;
   onContentHeightChange?: (height: number) => void;
+  // The native sheet draws its stock background, so the content stays clear.
+  stockFill?: boolean;
 };
 
 const grabberInset = 32;
@@ -81,7 +83,7 @@ function sheetAccessibility(
 
 function sheetClass(props: SheetContentProps): string {
   return cn(
-    props.surface === 'sidebar' ? 'bg-content' : 'bg-card',
+    contentFill(props),
     'ios:pt-8 ios:pb-0 min-h-0',
     fitSheetPadding(props.fit),
     {
@@ -89,6 +91,14 @@ function sheetClass(props: SheetContentProps): string {
       'flex-1': !props.fit && props.viewportHeight === undefined,
     },
   );
+}
+
+function contentFill(
+  props: Pick<SheetContentProps, 'surface' | 'stockFill'>,
+): string | undefined {
+  if (props.stockFill) return undefined;
+
+  return props.surface === 'sidebar' ? 'bg-content' : 'bg-card';
 }
 
 function fitSheetPadding(fit: boolean | undefined): string | undefined {

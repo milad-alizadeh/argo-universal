@@ -7,13 +7,11 @@ import {
   type ModifierConfig,
   type PresentationDetent,
   interactiveDismissDisabled,
-  presentationBackground,
   presentationDetents,
   presentationDragIndicator,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
 import { BottomSheetContent } from './bottom-sheet-content';
 import type { BottomSheetProps } from './bottom-sheet-props';
@@ -74,7 +72,11 @@ function SheetContent(props: SheetContentProps): React.JSX.Element {
     <Group modifiers={useSheetModifiers(props)}>
       <SheetViewport fit={props.fit}>
         {(viewportHeight) => (
-          <BottomSheetContent {...props} viewportHeight={viewportHeight} />
+          <BottomSheetContent
+            {...props}
+            viewportHeight={viewportHeight}
+            stockFill
+          />
         )}
       </SheetViewport>
     </Group>
@@ -82,13 +84,10 @@ function SheetContent(props: SheetContentProps): React.JSX.Element {
 }
 
 function useSheetModifiers(props: SheetContentProps): ModifierConfig[] {
-  const colors = useNativeTheme().colors;
-
   return [
     ...useSheetDetents(props),
     presentationDragIndicator('visible'),
     interactiveDismissDisabled(props.dismissible === false),
-    ...sheetFill(props.surface === 'sidebar' ? colors.content : colors.card),
   ];
 }
 
@@ -116,11 +115,6 @@ function initialDetent(
   if (size === 'expanded') return 'large';
 
   return size === 'medium' ? 'medium' : { height: 320 };
-}
-
-// The sheet's own fill matches the content's, so the strip under it in the safe area is not grey.
-function sheetFill(popover: string | undefined): ModifierConfig[] {
-  return popover === undefined ? [] : [presentationBackground(popover)];
 }
 
 function dismissPresentation(
