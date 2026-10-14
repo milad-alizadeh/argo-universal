@@ -6,7 +6,7 @@ import { resolveInstallRecipe } from '../install/materialization/recipe';
 import {
   type FetchNpmPackage,
   type NpmRelease,
-  readNpmCommand,
+  readNpmCommands,
 } from './npm-package';
 import { createRegistryReader } from './registry-reader';
 
@@ -42,13 +42,13 @@ const savedRelease = (metadata: string | null): NpmRelease | undefined => {
 const releaseKey = ({ name, version }: NpmRelease): string =>
   `${name}@${version}`;
 
-// The command names already read, by the npm release they were read for.
+// The command names already read, as their stored JSON list, by the npm release they were read for.
 const savedCommandNames = (database: Database): Map<string, string> => {
   const saved = new Map<string, string>();
   const rows = database
-    .select({ metadata: agents.registryMetadata, command: agents.commandName })
+    .select({ metadata: agents.registryMetadata, command: agents.commandNames })
     .from(agents)
-    .where(isNotNull(agents.commandName))
+    .where(isNotNull(agents.commandNames))
     .all();
   for (const row of rows) remember(saved, row);
   return saved;
@@ -75,7 +75,8 @@ const fetchCommand = async (
     AbortSignal.timeout(npmTimeoutMs),
   ]);
   const metadata = await input.fetchNpmPackage(release, signal);
-  return readNpmCommand(metadata, release.name);
+  const commands = readNpmCommands(metadata, release.name);
+  return commands.length > 0 ? JSON.stringify(commands) : null;
 };
 const commandFor = async (
   input: CommandNameInput & { saved: Map<string, string> },
@@ -88,7 +89,7 @@ const commandFor = async (
   );
 };
 
-// Each npx entry's command name, by Registry id: npm is asked once per release; missing or ambiguous metadata is null and never fails the sync.
+// Each npx entry's command names as a JSON list, by Registry id: npm is asked once per release; missing or ambiguous metadata is null and never fails the sync.
 export async function readNpxCommandNames(
   input: CommandNameInput,
   entries: readonly ACPAgent[],

@@ -2,17 +2,18 @@ import type { ACPAgent } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 import {
   readInstallSelection,
   type InstallSelection,
 } from '../install/selection/selection';
 import { createRegistryReader } from '../registry/registry-reader';
 
-// `commandName` is what an npm install of the entry's npx package puts on PATH, as catalog sync read it.
+// `commandNames` are what an npm install of the entry's npx package puts on PATH for its command, as catalog sync read them.
 export type RegistrySource = {
   entry: ACPAgent;
   selection?: InstallSelection;
-  commandName?: string;
+  commandNames?: string[];
 };
 
 const reader = createRegistryReader();
@@ -24,10 +25,18 @@ const parseEntry = (metadata: string): ACPAgent | undefined => {
     return undefined;
   }
 };
-type CatalogRow = { entry?: ACPAgent; commandName?: string };
+const CommandNames = z.array(z.string()).min(1);
+const parseCommandNames = (saved: string): string[] | undefined => {
+  try {
+    return CommandNames.parse(JSON.parse(saved));
+  } catch {
+    return undefined;
+  }
+};
+type CatalogRow = { entry?: ACPAgent; commandNames?: string[] };
 const catalogRow = (database: Database, agentId: string): CatalogRow => {
   const row = database
-    .select({ metadata: agents.registryMetadata, command: agents.commandName })
+    .select({ metadata: agents.registryMetadata, command: agents.commandNames })
     .from(agents)
     .where(eq(agents.id, agentId))
     .get();
@@ -38,7 +47,8 @@ const savedCatalogRow = (row: {
   command: string | null;
 }): CatalogRow => ({
   entry: row.metadata === null ? undefined : parseEntry(row.metadata),
-  commandName: row.command ?? undefined,
+  commandNames:
+    row.command === null ? undefined : parseCommandNames(row.command),
 });
 
 // The Registry entry behind an Agent: its Argo installation's saved entry first, else its catalog row.
@@ -47,7 +57,7 @@ export const readRegistrySource = (
   agentId: string,
 ): RegistrySource | undefined => {
   const selection = readInstallSelection(database, agentId);
-  const { entry, commandName } = catalogRow(database, agentId);
-  if (selection) return { entry: selection.entry, selection, commandName };
-  return entry && { entry, commandName };
+  const { entry, commandNames } = catalogRow(database, agentId);
+  if (selection) return { entry: selection.entry, selection, commandNames };
+  return entry && { entry, commandNames };
 };

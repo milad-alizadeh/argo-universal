@@ -29,27 +29,27 @@ type Bin = z.infer<typeof NpmPackage>['bin'];
 // A bare file name, so a PATH lookup never leaves its directory.
 const commandPattern = /^\w[\w.-]*$/;
 const unscoped = (name: string): string => name.replace(/^@[^/]+\//, '');
-const onlyCommand = (commands: readonly string[]): string | undefined =>
-  commands.length === 1 ? commands[0] : undefined;
-// Of several commands, only the one named like the package, or the only one, is unambiguous.
-const namedCommand = (
-  commands: readonly string[],
+const onlyTarget = (targets: readonly string[]): string | undefined => {
+  const distinct = new Set(targets);
+  return distinct.size === 1 ? targets[0] : undefined;
+};
+// The command's file: the one named like the package, or the only file; several files are ambiguous.
+const commandFile = (
+  bin: Record<string, string>,
   name: string,
-): string | undefined =>
-  commands.includes(name) ? name : onlyCommand(commands);
+): string | undefined => bin[name] ?? onlyTarget(Object.values(bin));
+// Every bin name for one file is an alias of the same command.
+const aliasesOf = (bin: Record<string, string>, name: string): string[] => {
+  const file = commandFile(bin, name);
+  return Object.keys(bin).filter((command) => bin[command] === file);
+};
 // npm names a string `bin` after the package without its scope.
-const commandOf = (bin: Bin, name: string): string | undefined =>
-  typeof bin === 'string'
-    ? unscoped(name)
-    : namedCommand(Object.keys(bin), unscoped(name));
-const safeCommand = (command: string | undefined): string | null =>
-  command && commandPattern.test(command) ? command : null;
+const commandsOf = (bin: Bin, name: string): string[] =>
+  typeof bin === 'string' ? [unscoped(name)] : aliasesOf(bin, unscoped(name));
 
-// The command an npm install of this release puts on PATH; null when npm names none unambiguously.
-export const readNpmCommand = (
-  metadata: unknown,
-  name: string,
-): string | null => {
+// The names an npm install of this release puts on PATH for its command; empty when npm names none unambiguously.
+export const readNpmCommands = (metadata: unknown, name: string): string[] => {
   const parsed = NpmPackage.safeParse(metadata);
-  return parsed.success ? safeCommand(commandOf(parsed.data.bin, name)) : null;
+  const commands = parsed.success ? commandsOf(parsed.data.bin, name) : [];
+  return commands.filter((command) => commandPattern.test(command));
 };

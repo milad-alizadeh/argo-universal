@@ -26,3 +26,14 @@ export const findOnPath = async (name: string): Promise<string | undefined> => {
   }
   return undefined;
 };
+
+// The first executable file named by any of these names, in name order.
+export const findFirstOnPath = async (
+  names: readonly string[],
+): Promise<string | undefined> => {
+  for (const name of names) {
+    const file = await findOnPath(name);
+    if (file) return file;
+  }
+  return undefined;
+};

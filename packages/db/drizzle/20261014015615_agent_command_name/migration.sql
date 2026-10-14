@@ -1,1 +1,0 @@
-ALTER TABLE `agents` ADD `command_name` text;

@@ -1,7 +1,7 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "c65f80a3-f2ee-438b-b0ee-e6aab6823d56",
+  "id": "ecc82c87-46a1-429d-a786-e063b70b5049",
   "prevIds": [
     "6586b812-d121-4c0a-a7bb-d3710c470e4c"
   ],
@@ -104,7 +104,7 @@
       "autoincrement": false,
       "default": null,
       "generated": null,
-      "name": "command_name",
+      "name": "command_names",
       "entityType": "columns",
       "table": "agents"
     },

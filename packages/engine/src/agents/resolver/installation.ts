@@ -11,7 +11,7 @@ import {
   type InstallSelection,
 } from '../install/selection/selection';
 import { resolveRegistryServerPlatform } from '../records';
-import { findOnPath } from './path-lookup';
+import { findFirstOnPath } from './path-lookup';
 import type { RegistrySource } from './registry-source';
 export { readRegistrySource, type RegistrySource } from './registry-source';
 
@@ -87,19 +87,20 @@ const targetDefinition = (
 });
 
 type LaunchTarget = Pick<BinaryTarget, 'args' | 'env'>;
-// What PATH is searched for: a binary entrypoint name, else an npx entry's command name.
-const searchedTarget = (
-  source: RegistrySource,
-): { target: LaunchTarget; name: string } | undefined => {
-  const binary = pathTarget(source.entry);
-  return binary ?? npxTarget(source);
+type Searched = { target: LaunchTarget; names: readonly string[] };
+const binarySearch = (entry: ACPAgent): Searched | undefined => {
+  const binary = pathTarget(entry);
+  return binary && { target: binary.target, names: [binary.name] };
 };
+// What PATH is searched for: a binary entrypoint name, else any of an npx entry's command names.
+const searchedTarget = (source: RegistrySource): Searched | undefined =>
+  binarySearch(source.entry) ?? npxTarget(source);
 const npxTarget = ({
   entry,
-  commandName,
-}: RegistrySource): { target: LaunchTarget; name: string } | undefined => {
+  commandNames,
+}: RegistrySource): Searched | undefined => {
   const npx = entry.distribution.npx;
-  return npx && commandName ? { target: npx, name: commandName } : undefined;
+  return npx && commandNames ? { target: npx, names: commandNames } : undefined;
 };
 const pathInstallation = async (
   home: string,
@@ -107,7 +108,7 @@ const pathInstallation = async (
 ): Promise<Installation | undefined> => {
   const searched = searchedTarget(source);
   if (!searched) return undefined;
-  const file = await findOnPath(searched.name);
+  const file = await findFirstOnPath(searched.names);
   return file
     ? foundOnPath(home, source.entry, { target: searched.target, file })
     : undefined;

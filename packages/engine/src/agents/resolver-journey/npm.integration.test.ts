@@ -107,6 +107,35 @@ it.each([
   30_000,
 );
 
+// Several bin names for one file are aliases of one command, as Kilo's `kilo` and `kilocode`.
+const aliasedPackages = {
+  [`${packageName}@1.2.3`]: {
+    name: packageName,
+    version: '1.2.3',
+    bin: { 'fixture-acp': 'bin/agent.mjs', 'fixture-alias': 'bin/agent.mjs' },
+  },
+};
+it.each([command, 'fixture-alias'])(
+  'an npm Agent whose bin names are aliases of one file is found by %s on PATH',
+  async (placed) => {
+    const machine = await createMachinePath();
+    const file = await machine.place(placed);
+    const checks = createScriptedAgentProcess(scenarios.reply);
+    const host = await startInstallEngine(npmEntry, undefined, {
+      fixtureAgents: [],
+      acp: checks,
+      fetchNpmPackage: countedNpm(aliasedPackages).fetchNpmPackage,
+    });
+    await expect
+      .poll(() => listedAgent(host.caller, host.agentId))
+      .toMatchObject({ status: 'ready', owner: 'unknown' });
+    expect(checks.processes.map(({ launch }) => launch.executable)).toEqual([
+      file,
+    ]);
+  },
+  30_000,
+);
+
 it('Server start finds an npm Agent by its saved command name without asking npm', async () => {
   const machine = await createMachinePath();
   const first = await startInstallEngine(npmEntry, undefined, {
