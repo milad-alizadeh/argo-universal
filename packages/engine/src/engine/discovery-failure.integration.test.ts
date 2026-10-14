@@ -1,3 +1,4 @@
+import type { CloseSessionRequest } from '@agentclientprotocol/sdk';
 import { listBranches } from '@repo/git';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
@@ -9,7 +10,7 @@ const destination = { projectId: 'project-1', agent: 'mock' };
 it.each(discoveryFailures)(
   'a discovery $failure failure closes owned resources and leaves main Checkout and Session rows intact',
   async ({ scenario, expectedCloses, message }) => {
-    const closes: { sessionId: string }[] = [];
+    const closes: CloseSessionRequest[] = [];
 
     const host = await startAcpEngine({
       steps: [],
@@ -19,11 +20,21 @@ it.each(discoveryFailures)(
     const project = (await host.caller.projects.list())[0];
 
     if (!project) throw new Error('Missing Project');
+
+    const rows = host.database.$client
+      .prepare('SELECT count(*) AS count FROM session')
+      .get();
+
     await expect(
       host.caller.session.refreshDiscovery(destination),
     ).rejects.toThrow(message);
     expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(1);
     expect(closes).toEqual(expectedCloses);
+    expect(
+      host.database.$client
+        .prepare('SELECT count(*) AS count FROM session')
+        .get(),
+    ).toEqual(rows);
     expect(await listBranches(project.path)).toMatchObject({
       currentBranch: 'main',
     });

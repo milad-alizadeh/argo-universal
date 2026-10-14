@@ -1,5 +1,8 @@
 import { realpath } from 'node:fs/promises';
-import type { NewSessionRequest } from '@agentclientprotocol/sdk';
+import type {
+  NewSessionRequest,
+  CloseSessionRequest,
+} from '@agentclientprotocol/sdk';
 import { listBranches } from '@repo/git';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { readSessionCheckouts } from '@repo/mocks/git/test-repository';
@@ -11,7 +14,7 @@ const destination = { projectId: 'project-1', agent: 'mock' };
 
 it('Engine discovers configuration and opening Slash commands in the main Checkout and releases the Agent session without creating a Session or branch', async () => {
   const openings: NewSessionRequest[] = [];
-  const closes: { sessionId: string }[] = [];
+  const closes: CloseSessionRequest[] = [];
 
   const host = await startAcpEngine({
     steps: [],

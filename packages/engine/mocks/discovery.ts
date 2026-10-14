@@ -1,6 +1,7 @@
+import type { CloseSessionRequest } from '@agentclientprotocol/sdk';
 import type { ScriptedResponses } from '@repo/mocks/agent/scripted-responses';
 
-type CloseRequests = { sessionId: string }[];
+type CloseRequests = CloseSessionRequest[];
 
 type DiscoveryFailure = {
   failure: string;
