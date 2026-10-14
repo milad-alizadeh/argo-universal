@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { badgeCountText } from '#primitives/display/badge';
 import { Text } from '#primitives/display/text';
 import { useWideSidebarList } from '#primitives/fields/field-layout';
+import { badgeCountText } from '../../../badge-count';
 import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
 import { Disclosure } from './grouped-list-item-disclosure';

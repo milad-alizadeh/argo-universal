@@ -10,8 +10,8 @@ import {
   listRowSeparatorTint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { badgeCountText } from '#primitives/display/badge';
 import { useSidebarList } from '#primitives/fields/field-layout';
+import { badgeCountText } from '../../../badge-count';
 import { type NativeColors, useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
 import { rowAccessibilityModifiers } from './grouped-list-item-accessibility';

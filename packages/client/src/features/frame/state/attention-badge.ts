@@ -1,4 +1,4 @@
-import { badgeCountText } from '#primitives/display/badge';
+import { badgeCountText } from '#lib/generic/badge-count';
 import type { Section } from '../../../lib/product/navigation/sections';
 
 export interface AttentionBadge {

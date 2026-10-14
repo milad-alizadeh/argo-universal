@@ -1,4 +1,4 @@
-import { badgeCountText } from '#primitives/display/badge';
+import { badgeCountText } from '../../../badge-count';
 import type { DrawerItemProps } from './drawer-item-props';
 
 export interface DrawerBadge {

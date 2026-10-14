@@ -1,7 +1,7 @@
 import { Badge, Row, Text } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { badgeCountText } from '#primitives/display/badge';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
+import { badgeCountText } from '../../../badge-count';
 import { useNativeTheme } from '../../../native-theme';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { hasDisclosure } from './grouped-list-item-styles';

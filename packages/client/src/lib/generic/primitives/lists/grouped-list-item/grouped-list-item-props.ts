@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react';
 import type { Pressable } from 'react-native';
-import { badgeCountText } from '#primitives/display/badge';
+import { badgeCountText } from '../../../badge-count';
 import type { IconName } from '../../../symbols/icon-names';
 
 export interface GroupedListItemProps {
