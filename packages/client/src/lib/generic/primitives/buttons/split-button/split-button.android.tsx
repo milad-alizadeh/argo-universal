@@ -3,7 +3,6 @@ import {
   DropdownMenu,
   DropdownMenuItem,
   FilledTonalButton,
-  RNHostView,
   Row,
   Text,
 } from '@expo/ui/jetpack-compose';
@@ -14,9 +13,8 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
-import { Icon } from '#primitives/display/icon';
-import { SelectedCheck } from '#primitives/display/selected-check';
 import { Host } from '#primitives/native/host';
+import { ChevronIcon, ItemCheck } from './split-button-icons.android';
 import {
   type NativeSplit,
   type SplitMenuItem,
@@ -103,9 +101,7 @@ function ChevronHalf(
 
   return (
     <Half {...props} onClick={props.onOpen} modifiers={[label]}>
-      <RNHostView matchContents>
-        <Icon name="chevron-down" role="control" />
-      </RNHostView>
+      <ChevronIcon />
     </Half>
   );
 }
@@ -149,16 +145,6 @@ function itemModifiers(
   if (item.selected === undefined) return [];
 
   return [selectable(item.selected, press, 'radioButton')];
-}
-
-function ItemCheck(): React.JSX.Element {
-  return (
-    <DropdownMenuItem.TrailingIcon>
-      <RNHostView matchContents>
-        <SelectedCheck />
-      </RNHostView>
-    </DropdownMenuItem.TrailingIcon>
-  );
 }
 
 // A filled button beside a filled primary action; otherwise the tonal one.
