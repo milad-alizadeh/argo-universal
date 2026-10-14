@@ -3,6 +3,7 @@ import type { Page, Locator } from '@playwright/test';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
 import { When, Then, test } from './fixtures';
+import { agentWork } from './timeouts';
 import { toast } from './toasts';
 
 const versionRow = (page: Page, line: string | RegExp): Locator =>
@@ -82,7 +83,8 @@ Then(
     const expected = version === 'two' ? updated : retained;
     await expect(toast(page, expected.title)).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(versionRow(page, expected.version)).toBeVisible();
+    // The installed Adapter version is read by the readiness check that follows the update.
+    await expect(versionRow(page, expected.version)).toBeVisible(agentWork);
   },
 );
 
