@@ -8,7 +8,7 @@ import {
   fieldGroupPadding,
 } from '#primitives/fields/field-group/field-group-spacing';
 import { FieldSection } from '#primitives/fields/field-section/field-section';
-import type { ListSearchBarProps } from '#primitives/inputs/list-search-bar/list-search-bar';
+import type { DockedSearchQuery } from '#primitives/inputs/search-field/search-field';
 import { listTestIdProps } from '../../generic/list-test-id';
 import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
 import { CardRow } from './card-row';
@@ -26,7 +26,7 @@ export type { FieldListSection } from './field-list-entries';
 export interface FieldListProps {
   sections: readonly FieldListSection[];
   // A phone's search above the sections; the native FieldGroup draws it, as a wide window searches from its title row.
-  search?: ListSearchBarProps;
+  search?: DockedSearchQuery;
   testID?: string;
 }
 

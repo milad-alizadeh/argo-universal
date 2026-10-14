@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ListSearchBarProps } from '../../inputs/list-search-bar/list-search-bar';
+import type { DockedSearchQuery } from '../../inputs/search-field/search-field-props';
 
 export interface FieldGroupProps {
   children: ReactNode;
@@ -7,7 +7,7 @@ export interface FieldGroupProps {
   // A content-sized overlay uses compact groups rather than a full screen's scrolling column.
   fit?: boolean;
   // A phone's search above the sections, scrolling with them; only Android draws it, as iOS searches from its header.
-  search?: ListSearchBarProps;
+  search?: DockedSearchQuery;
   // The height of the sections, so a native sheet can fit them; only Android reports it.
   onContentHeightChange?: (height: number) => void;
 }

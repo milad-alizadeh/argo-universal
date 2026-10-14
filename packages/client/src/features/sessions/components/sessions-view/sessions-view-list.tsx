@@ -1,13 +1,14 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { PhoneListSearch } from '#lib/product/phone-list-search';
+import { SearchField } from '#primitives/inputs/search-field/search-field';
 import { SessionsList } from '../sessions-list/sessions-list';
 import type { SessionsListProps } from '../sessions-list/sessions-list-props';
 import { SessionsLoading } from '../sessions-loading/sessions-loading';
 import type { SessionsViewProps } from './sessions-view';
 
 const phoneSearchAppearance = {
-  placeholder: 'Search Sessions',
+  appearance: 'docked',
+  label: 'Search Sessions',
   leading: 'menu',
   className: 'px-4 pt-2 pb-2',
 } as const;
@@ -18,7 +19,7 @@ function PhoneSessionsSearch({
 }: Pick<SessionsViewProps, 'query' | 'onQueryChange'>): React.JSX.Element {
   return (
     <View className="-mx-2 -mt-5">
-      <PhoneListSearch
+      <SearchField
         {...phoneSearchAppearance}
         value={query}
         onChangeText={onQueryChange}

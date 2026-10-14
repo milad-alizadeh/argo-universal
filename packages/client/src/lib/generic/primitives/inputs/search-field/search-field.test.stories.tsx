@@ -3,6 +3,7 @@ import { expect, waitFor } from 'storybook/test';
 import { SearchFieldExample } from '../../../../../../mocks/search-field-mock';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
+import { SearchField } from './search-field';
 
 const label = 'Search Agents';
 
@@ -67,6 +68,23 @@ export const EscapeCloses: Story = {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(canvas.queryByRole('textbox')).toBeNull());
     await expect(canvas.getByRole('button', { name: label })).toHaveFocus();
+  },
+};
+
+// Only Android docks a search bar at the top of a list; the web searches from its title row.
+export const DockedDrawsNothingOnTheWeb: Story = {
+  render: () => (
+    <SearchField
+      appearance="docked"
+      label={label}
+      value="review"
+      onChangeText={() => {}}
+      leading="back"
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByRole('textbox')).toBeNull();
+    await expect(canvas.queryByRole('button')).toBeNull();
   },
 };
 

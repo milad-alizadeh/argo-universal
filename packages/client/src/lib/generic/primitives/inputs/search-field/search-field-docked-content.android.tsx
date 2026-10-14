@@ -16,15 +16,13 @@ import {
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { useNativeTheme } from '../../../native-theme';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { roundedClip } from '../../native/compose-corners';
 import { useFollowedText } from '../../native/followed-text';
-import { Host } from '../../native/host';
 import { useComposeTextStyle } from '../../native/native-typography';
-import type { ListSearchBarProps } from './list-search-bar.tsx';
+import type { DockedSearchQuery } from './search-field-props';
 
 // The space after the text, as before the icon.
 const inset = 16;
@@ -35,37 +33,41 @@ const barHeight = 56;
 // The icon's slot, so in the list's 16dp gutter the text starts where the header's title does (measured on Android 15): 60dp in after ☰'s 44pt slot, 72dp in after Material's back button.
 const leadingSlot = { menu: 44, back: 56 } as const;
 
-/*
- * A bare native text field drawn as Material's search bar at the top of a list, scrolling with it, in the theme's selection tint.
- * The class places it in the list's gutter.
- */
-export function ListSearchBar({
-  className,
-  ...props
-}: ListSearchBarProps & { className?: string }): React.JSX.Element {
-  return (
-    <View className={className}>
-      <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-        <ListSearchField {...props} />
-      </Host>
-    </View>
-  );
-}
-
-export function ListSearchField(props: ListSearchBarProps): React.JSX.Element {
-  const textStyle = { ...useTypography(), color: useForeground() };
-
+// A bare native text field drawn as Material's search bar, in the theme's selection tint, as Compose content.
+export function DockedSearchFieldContent(
+  props: DockedSearchQuery,
+): React.JSX.Element {
   return (
     <BasicTextField
-      value={useSearchText(props.value)}
-      onValueChange={props.onChangeText}
+      {...useSearchValue(props)}
       {...fieldOptions}
-      cursorColor={textStyle.color}
-      textStyle={textStyle}
+      {...useFieldText()}
     >
       <SearchBarDecoration {...props} />
     </BasicTextField>
   );
+}
+
+// The body text in the foreground colour, the cursor in the same colour.
+function useFieldText(): Pick<
+  BasicTextFieldProps,
+  'cursorColor' | 'textStyle'
+> {
+  const { foreground } = useNativeTheme().colors;
+
+  return {
+    cursorColor: foreground,
+    textStyle: { ...useTypography(), color: foreground },
+  };
+}
+
+function useSearchValue(
+  props: DockedSearchQuery,
+): Pick<BasicTextFieldProps, 'value' | 'onValueChange'> {
+  return {
+    value: useSearchText(props.value),
+    onValueChange: props.onChangeText,
+  };
 }
 
 // The field's own text, which follows the caller's value when it changes from outside, such as a cleared search.
@@ -88,9 +90,6 @@ const fieldOptions = {
   modifiers: [fillMaxWidth()],
 } satisfies Partial<BasicTextFieldProps>;
 
-const useForeground = (): string | undefined =>
-  useNativeTheme().colors.foreground;
-
 // The body text style, without the alignment a Compose text field does not take.
 function useTypography(): Pick<
   ReturnType<typeof useComposeTextStyle>,
@@ -104,14 +103,14 @@ function useTypography(): Pick<
 
 // Material's search bar: a pill in the selection tint, the icon in a slot that lines the text up with the title.
 function SearchBarDecoration({
-  placeholder,
+  label,
   leading,
-}: ListSearchBarProps): React.JSX.Element {
+}: DockedSearchQuery): React.JSX.Element {
   return (
     <BasicTextField.DecorationBox>
       <Row verticalAlignment="center" modifiers={usePillModifiers()}>
         <SearchIcon leading={leading} />
-        <SearchBarText placeholder={placeholder} />
+        <SearchBarText label={label} />
       </Row>
     </BasicTextField.DecorationBox>
   );
@@ -119,7 +118,7 @@ function SearchBarDecoration({
 
 function SearchIcon({
   leading,
-}: Pick<ListSearchBarProps, 'leading'>): React.JSX.Element {
+}: Pick<DockedSearchQuery, 'leading'>): React.JSX.Element {
   const slot = size(leadingSlot[leading], barHeight);
 
   return (
@@ -141,15 +140,15 @@ function usePillModifiers(): ModifierConfig[] {
 }
 
 function SearchBarText({
-  placeholder,
-}: Pick<ListSearchBarProps, 'placeholder'>): React.JSX.Element {
+  label,
+}: Pick<DockedSearchQuery, 'label'>): React.JSX.Element {
   return (
     <Box
       contentAlignment="centerStart"
       modifiers={[weight(1), padding(0, 0, inset, 0)]}
     >
       <BasicTextField.Placeholder>
-        <SearchBarPlaceholder placeholder={placeholder} />
+        <SearchBarPlaceholder label={label} />
       </BasicTextField.Placeholder>
       <BasicTextField.InnerTextField />
     </Box>
@@ -157,13 +156,13 @@ function SearchBarText({
 }
 
 function SearchBarPlaceholder({
-  placeholder,
-}: Pick<ListSearchBarProps, 'placeholder'>): React.JSX.Element {
+  label,
+}: Pick<DockedSearchQuery, 'label'>): React.JSX.Element {
   const { mutedForeground } = useNativeTheme().colors;
 
   return (
     <Text color={mutedForeground} style={useTypography()}>
-      {placeholder}
+      {label}
     </Text>
   );
 }

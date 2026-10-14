@@ -1,5 +1,5 @@
 import type { SettingsPageSearch } from '#lib/product/settings-page';
-import type { ListSearchBarProps } from '#primitives/inputs/list-search-bar/list-search-bar';
+import type { DockedSearchQuery } from '#primitives/inputs/search-field/search-field';
 import type { SearchedProps } from './project-list-props';
 
 export const searchLabel = 'Search Projects';
@@ -7,8 +7,8 @@ export const searchLabel = 'Search Projects';
 // The Projects page is pushed from Settings, so a back button leads its header.
 export const listSearch = (
   props: Pick<SearchedProps, 'search' | 'onSearch'>,
-): ListSearchBarProps => ({
-  placeholder: searchLabel,
+): DockedSearchQuery => ({
+  label: searchLabel,
   value: props.search,
   onChangeText: props.onSearch,
   leading: 'back',

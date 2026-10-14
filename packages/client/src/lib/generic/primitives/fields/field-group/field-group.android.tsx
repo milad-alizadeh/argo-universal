@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWide } from '../../../use-wide/use-wide';
-import { ListSearchField } from '../../inputs/list-search-bar/list-search-bar';
+import { DockedSearchFieldContent } from '../../inputs/search-field/search-field-docked-content';
 import { Host } from '../../native/host';
 import { FieldLayout } from '../field-layout';
 import type { FieldGroupProps } from './field-group-props';
@@ -72,7 +72,7 @@ function SectionsColumn(props: FieldGroupProps): React.JSX.Element {
       verticalArrangement={{ spacedBy: sectionGap }}
       modifiers={modifiers}
     >
-      {props.search && <ListSearchField {...props.search} />}
+      {props.search && <DockedSearchFieldContent {...props.search} />}
       {props.children}
     </Column>
   );
