@@ -103,6 +103,7 @@ export type Aliases = {
   BadgeTone: BadgeKit.BadgeTone;
   ButtonSize: ButtonKit.ButtonSize;
   FieldErrors: FieldErrorsKit.FieldErrors;
+  ShowHeaderSearch: SearchFieldKit.ShowHeaderSearch;
   TextRole: TextKit.TextRole;
   Tone: TextKit.Tone;
 };
