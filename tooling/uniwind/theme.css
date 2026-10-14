@@ -10,6 +10,8 @@
   --spacing-gutter: 20px;
   /* A list's inset, as its rows pad their content 10px more for the highlight. */
   --spacing-gutter-list: 10px;
+  /* Size classes: compact below medium, medium below wide (useSizeClass). */
+  --breakpoint-medium: 600px;
   --breakpoint-wide: 1100px;
   /* A content column this wide or wider draws the desktop Composer and cards. */
   --container-content-wide: 480px;
