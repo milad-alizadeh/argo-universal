@@ -6,7 +6,8 @@ import { cn } from '#lib/generic/utils';
 import { IconSlot } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { Text } from '#primitives/display/text';
-import type { ChoiceMenuProps } from './menu-props';
+import { MenuLoadingRow } from './menu-loading';
+import type { ChoiceMenuProps, MenuOption } from './menu-props';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
@@ -36,7 +37,7 @@ export function MenuChoiceContent<Value extends string>(
       onPointerMove={() => props.focus.onKeyboardFocusChange(false)}
       className="w-65 overflow-hidden bg-card rounded-2xl py-2 shadow-card dark:border dark:border-border"
     >
-      <MenuChoices {...props} />
+      {props.loading ? <MenuLoadingRow /> : <MenuChoices {...props} />}
     </MenuPrimitive.Content>
   );
 }
@@ -68,7 +69,7 @@ function selectChoice<Value extends string>(
 }
 
 type MenuRadioItemProps = {
-  choice: { value: string; label: string };
+  choice: MenuOption<string>;
   focus: KeyboardFocus;
 };
 
@@ -79,6 +80,7 @@ function MenuRadioItem(props: MenuRadioItemProps): React.JSX.Element {
     <MenuPrimitive.RadioItem
       value={choice.value}
       textValue={choice.label}
+      disabled={choice.disabled}
       onPointerMove={() => focus.onKeyboardFocusChange(false)}
       onKeyDown={radioKeyDown(focus.onKeyboardFocusChange)}
       className={radioItemClassName(focus.keyboardFocus)}
@@ -101,7 +103,7 @@ function radioKeyDown(
 
 function radioItemClassName(keyboardFocus: boolean): string {
   return cn(
-    'min-h-9 flex-row items-center gap-3 cursor-default rounded-none outline-0 px-4 py-1.5 hover:bg-muted focus:bg-muted active:bg-border',
+    'min-h-9 flex-row items-center gap-3 cursor-default rounded-none outline-0 px-4 py-1.5 hover:bg-muted focus:bg-muted active:bg-border web:data-[disabled]:opacity-50',
     keyboardFocus &&
       'focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2',
   );

@@ -3,7 +3,11 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { Host } from '#primitives/native/host';
 import { usePrimitiveColor } from '#primitives/native/primitive-color';
-import { MenuActionItem, MenuChoice } from './menu-choice.android';
+import {
+  MenuActionItem,
+  MenuChoice,
+  MenuLoadingItem,
+} from './menu-choice.android';
 import {
   type ActionMenuProps,
   type ChoiceMenuProps,
@@ -32,6 +36,8 @@ export function Menu<Value extends string>(
 function MenuRows<Value extends string>(
   props: MenuProps<Value> & { onRun: MenuState['run'] },
 ): React.JSX.Element {
+  if (props.loading) return <MenuLoading />;
+
   if (isActionMenu(props)) return <MenuActions {...props} />;
 
   return (
@@ -39,6 +45,14 @@ function MenuRows<Value extends string>(
       {...props}
       onChoose={(value) => props.onRun(() => props.onValueChange(value))}
     />
+  );
+}
+
+function MenuLoading(): React.JSX.Element {
+  return (
+    <DropdownMenu.Items>
+      <MenuLoadingItem />
+    </DropdownMenu.Items>
   );
 }
 

@@ -23,8 +23,10 @@ import {
   type ActionMenuProps,
   type ChoiceMenuProps,
   type MenuAction,
+  type MenuOption,
   type MenuProps,
   isActionMenu,
+  menuLoadingLabel,
   menuValueLabel,
 } from './menu-props';
 import { menuTriggerElement } from './menu-text-trigger';
@@ -62,15 +64,16 @@ function useMenuModifiers<Value extends string>(
   return [
     accessibilityLabel(props.accessibilityLabel),
     ...menuValue(props),
-    disabled(Boolean(props.disabled)),
+    disabled(Boolean(props.disabled || props.loading)),
     ...optionalTint(accent),
   ];
 }
 
+// UIMenu draws no progress row, so a loading menu stays shut and its trigger says what it waits for.
 function menuValue<Value extends string>(
   props: MenuProps<Value>,
 ): ModifierConfig[] {
-  const value = menuValueLabel(props);
+  const value = props.loading ? menuLoadingLabel : menuValueLabel(props);
 
   return value === undefined ? [] : [accessibilityValue(value)];
 }
@@ -101,14 +104,29 @@ function MenuButtons(props: ActionMenuProps): React.JSX.Element {
 
 // An action that can be the selected one draws as a SwiftUI menu toggle: the system checkmark marks it.
 function MenuButton(action: MenuAction): React.JSX.Element {
-  if (action.selected === undefined)
-    return <Button label={action.label} onPress={action.onPress} />;
+  const modifiers = [disabled(!!action.disabled)];
 
+  if (action.selected !== undefined)
+    return <MenuToggle {...action} selected={action.selected} />;
+
+  return (
+    <Button
+      label={action.label}
+      onPress={action.onPress}
+      modifiers={modifiers}
+    />
+  );
+}
+
+function MenuToggle(
+  action: MenuAction & { selected: boolean },
+): React.JSX.Element {
   return (
     <Toggle
       label={action.label}
       isOn={action.selected}
       onIsOnChange={action.onPress}
+      modifiers={[disabled(!!action.disabled)]}
     />
   );
 }
@@ -129,11 +147,12 @@ function MenuPicker<Value extends string>(
   );
 }
 
-function PickerOption(props: {
-  value: string;
-  label: string;
-}): React.JSX.Element {
-  return <Text modifiers={[tag(props.value)]}>{props.label}</Text>;
+function PickerOption(props: MenuOption<string>): React.JSX.Element {
+  return (
+    <Text modifiers={[tag(props.value), disabled(!!props.disabled)]}>
+      {props.label}
+    </Text>
+  );
 }
 
 Menu satisfies React.ComponentType<MenuProps<string>>;

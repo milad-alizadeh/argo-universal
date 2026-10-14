@@ -8,6 +8,15 @@ export interface MenuAction {
   selected?: boolean;
   // Drawn in place of the label where the menu draws its own rows (web); the label still names the action on native menus.
   content?: ReactNode;
+  // Shown but not chosen, such as an action the current state does not allow.
+  disabled?: boolean;
+}
+
+// One answer in a choice menu; a disabled one is shown but cannot be chosen.
+export interface MenuOption<Value extends string> {
+  value: Value;
+  label: string;
+  disabled?: boolean;
 }
 
 interface MenuBaseProps {
@@ -17,12 +26,17 @@ interface MenuBaseProps {
   disabled?: boolean;
   // Which edge of the trigger the web menu lines up with; native menus place themselves.
   align?: 'start' | 'end';
+  // The options are on their way: the menu opens to a progress row with nothing to choose.
+  loading?: boolean;
 }
+
+// What the progress row says while a menu's options load.
+export const menuLoadingLabel = 'Loading options…';
 
 // A single-choice menu: the chosen value carries a check.
 export interface ChoiceMenuProps<Value extends string> extends MenuBaseProps {
   value: Value;
-  options: readonly { value: Value; label: string }[];
+  options: readonly MenuOption<Value>[];
   onValueChange: (value: Value) => void;
   actions?: never;
 }

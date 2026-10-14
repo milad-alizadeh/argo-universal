@@ -10,26 +10,24 @@ import { Menu, type MenuAction } from './menu';
 const choices = [
   { value: 'default', label: 'Default' },
   { value: 'ask', label: 'Ask before changes' },
-  { value: 'full', label: 'Full access' },
+  { value: 'full', label: 'Full access', disabled: true },
 ] as const;
 
 type Permission = (typeof choices)[number]['value'];
 
-type PermissionsMenuProps = { disabled?: boolean };
+type PermissionsMenuProps = { disabled?: boolean; loading?: boolean };
 
-function PermissionsMenu({
-  disabled = false,
-}: PermissionsMenuProps): React.JSX.Element {
+function PermissionsMenu(props: PermissionsMenuProps): React.JSX.Element {
   const [value, setValue] = useState<Permission>('default');
 
   return (
     <Menu
+      {...props}
       accessibilityLabel="Permissions"
       value={value}
       options={choices}
       onValueChange={setValue}
-      disabled={disabled}
-      trigger={renderPermissionsTrigger(disabled, labelOf(value))}
+      trigger={renderPermissionsTrigger(!!props.disabled, labelOf(value))}
     />
   );
 }
@@ -96,17 +94,24 @@ type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {
   name: 'Menu',
-  render: () => (
-    <VariationList>
-      <Variation label="Permissions">
-        <PermissionsMenu />
-      </Variation>
-      <Variation label="Disabled">
-        <PermissionsMenu disabled />
-      </Variation>
-      <Variation label="Actions on a text trigger">
-        <RangeMenu />
-      </Variation>
-    </VariationList>
-  ),
+  render: () => <MenuVariations />,
 };
+
+const variations: { label: string; menu: React.JSX.Element }[] = [
+  { label: 'Permissions, one unavailable', menu: <PermissionsMenu /> },
+  { label: 'Disabled', menu: <PermissionsMenu disabled /> },
+  { label: 'Loading options', menu: <PermissionsMenu loading /> },
+  { label: 'Actions on a text trigger', menu: <RangeMenu /> },
+];
+
+function MenuVariations(): React.JSX.Element {
+  return (
+    <VariationList>
+      {variations.map(({ label, menu }) => (
+        <Variation key={label} label={label}>
+          {menu}
+        </Variation>
+      ))}
+    </VariationList>
+  );
+}

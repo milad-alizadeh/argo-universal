@@ -8,7 +8,7 @@ export const actionContentClassName = cn(
 
 export const actionItemClassName = cn(
   'active:bg-hover group relative flex flex-row items-center gap-2 rounded-xl px-2 py-2 sm:py-1.5',
-  'web:focus:bg-hover web:focus:text-hover-foreground web:cursor-default web:outline-none web:data-[disabled]:pointer-events-none',
+  'web:focus:bg-hover web:focus:text-hover-foreground web:cursor-default web:outline-none web:data-[disabled]:pointer-events-none web:data-[disabled]:opacity-50',
 );
 
 export const actionItemTextClassName =
