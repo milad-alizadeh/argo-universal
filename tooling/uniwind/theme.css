@@ -114,36 +114,43 @@
       --font-mono: monospace;
     }
     @variant light {
+      /* Every colour is a Tailwind palette shade: the nearest one, measured in OKLab. */
       --color-foreground: var(--color-neutral-950);
-      /* Neutral match of the iOS Settings grouped row. */
-      --color-card: #ffffff;
+      /* The iOS Settings grouped row (#ffffff). */
+      --color-card: var(--color-white);
       --color-primary: var(--color-neutral-900);
       --color-primary-foreground: var(--color-neutral-50);
       /* Native controls: switch track, slider, checkmark and picker value. */
       --color-accent: var(--color-neutral-900);
-      /* A muted fill, and a hovered or pressed row, item or button. */
-      --color-muted: var(--color-neutral-100);
+      /* A muted fill, and a hovered or pressed row, item or button: one step
+         darker than content, so it shows on content and on a card. */
+      --color-muted: var(--color-neutral-200);
       --color-muted-foreground: var(--color-neutral-500);
       --color-danger: var(--color-red-500);
-      --color-border: var(--color-neutral-200);
+      /* One step darker than muted, so a border shows on a muted fill. */
+      --color-border: var(--color-neutral-300);
       --color-focus: var(--color-neutral-400);
       /* Finished work: a merged pull request, a completed issue. */
       --color-done: var(--color-violet-600);
       --color-success: var(--color-green-600);
       --color-info: var(--color-blue-600);
       --color-warning: var(--color-amber-600);
-      /* Neutral match of the iOS Settings grouped background. */
-      --color-content: #f2f2f2;
+      /* The iOS Settings grouped background (#f2f2f2). */
+      --color-content: var(--color-neutral-100);
       /* Glass: the sidebar panel. */
-      --color-glass: #ffffff80;
+      --color-glass: color-mix(in oklab, var(--color-white) 50%, transparent);
       /* Tray: the inset envelope under a card on glass (the Composer trays). */
-      --color-tray: #e5e5e5b3;
-      /* The sidebar backdrop glows, in sRGB so React Native SVG can read them. */
-      --color-glow-warm: #c4aa8c;
-      --color-glow-graphite: #8c8c8c;
-      --color-glow-sand: #d6bea5;
+      --color-tray: color-mix(
+        in oklab,
+        var(--color-neutral-200) 70%,
+        transparent
+      );
+      /* The sidebar backdrop glows; Uniwind hands React Native SVG sRGB hex. */
+      --color-glow-warm: var(--color-olive-400);
+      --color-glow-graphite: var(--color-neutral-400);
+      --color-glow-sand: var(--color-taupe-300);
       /* A selected row or rail tile: a flat tint, no border or shadow. */
-      --color-selected: #0000000a;
+      --color-selected: color-mix(in oklab, var(--color-black) 4%, transparent);
       --shadow-glass:
         inset 0 1px 0 #fffffff2, inset 0 0 0 1px #ffffff99, 0 0 0 1px #0000000d,
         0 12px 32px #0000000f;
@@ -153,30 +160,38 @@
         0 16px 32px -16px #00000014;
     }
     @variant dark {
-      --color-foreground: hsl(0 0% 98%);
-      /* Neutral match of the iOS Settings grouped row. */
-      --color-card: #1c1c1c;
-      --color-primary: hsl(0 0% 98%);
-      --color-primary-foreground: hsl(0 0% 9%);
+      --color-foreground: var(--color-neutral-50);
+      /* The iOS Settings grouped row (#1c1c1c). */
+      --color-card: var(--color-neutral-900);
+      --color-primary: var(--color-neutral-50);
+      --color-primary-foreground: var(--color-neutral-900);
       --color-accent: var(--color-neutral-400);
-      --color-muted: hsl(0 0% 14.9%);
-      --color-muted-foreground: hsl(0 0% 63.9%);
+      --color-muted: var(--color-neutral-800);
+      --color-muted-foreground: var(--color-neutral-400);
       --color-danger: var(--color-red-500);
       /* One step lighter than muted, so a border shows on a muted fill. */
       --color-border: var(--color-neutral-700);
-      --color-focus: hsl(300 0% 45%);
-      --color-done: oklch(70.2% 0.183 293.541);
-      --color-success: oklch(72.3% 0.219 149.579);
-      --color-info: oklch(70.7% 0.165 254.624);
-      --color-warning: oklch(76.9% 0.188 70.08);
-      /* Neutral match of the iOS Settings grouped background. */
-      --color-content: #000000;
-      --color-glass: #17171780;
-      --color-tray: #262626b3;
-      --color-glow-warm: #605343;
-      --color-glow-graphite: #484848;
-      --color-glow-sand: #6d6154;
-      --color-selected: #ffffff0f;
+      --color-focus: var(--color-neutral-500);
+      --color-done: var(--color-violet-400);
+      --color-success: var(--color-green-500);
+      --color-info: var(--color-blue-400);
+      --color-warning: var(--color-amber-500);
+      /* The iOS Settings grouped background (#000000). */
+      --color-content: var(--color-black);
+      --color-glass: color-mix(
+        in oklab,
+        var(--color-neutral-900) 50%,
+        transparent
+      );
+      --color-tray: color-mix(
+        in oklab,
+        var(--color-neutral-800) 70%,
+        transparent
+      );
+      --color-glow-warm: var(--color-stone-600);
+      --color-glow-graphite: var(--color-neutral-700);
+      --color-glow-sand: var(--color-olive-600);
+      --color-selected: color-mix(in oklab, var(--color-white) 6%, transparent);
       --shadow-glass:
         inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
       --shadow-tray: 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
