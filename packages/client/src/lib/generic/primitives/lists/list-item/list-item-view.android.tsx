@@ -50,12 +50,25 @@ function PressableRow(props: PressableRowProps): React.JSX.Element {
       {...rowContainerProps(item)}
       enabled={!item.disabled}
       onClick={props.press}
-      colors={{ containerColor: color, disabledContainerColor: color }}
+      colors={useButtonColors(color)}
       contentPadding={noPadding}
     >
       <RowColumn {...item} />
     </Button>
   );
+}
+
+// The press ripple takes the content colour; left unset, Material falls back to onPrimary, a white ripple.
+function useButtonColors(
+  color: string | undefined,
+): React.ComponentProps<typeof Button>['colors'] {
+  const { foreground } = useNativeTheme().colors;
+
+  return {
+    containerColor: color,
+    contentColor: foreground,
+    disabledContainerColor: color,
+  };
 }
 
 function rowContainerProps(

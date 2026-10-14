@@ -1,5 +1,5 @@
 import { Row, Text } from '@expo/ui/jetpack-compose';
-import { clearSemantics, weight } from '@expo/ui/jetpack-compose/modifiers';
+import { clearSemantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import type { ListItemProps } from '../../fields/field-props';
@@ -14,7 +14,6 @@ export function RowTrailing(props: ListItemProps): React.JSX.Element {
     <Row
       horizontalArrangement={{ spacedBy: gutter }}
       verticalAlignment="center"
-      modifiers={valueWidth(props.value)}
     >
       <RowValueGroup {...props} />
       <NativeRowStatus {...props} />
@@ -29,29 +28,11 @@ function RowValueGroup(
   if (props.value === undefined) return null;
 
   return (
-    <Row
-      horizontalArrangement="end"
-      verticalAlignment="center"
-      modifiers={[weight(1)]}
-    >
-      <RowValueContent {...props} />
-    </Row>
-  );
-}
-
-function RowValueContent(
-  props: Pick<ListItemProps, 'value' | 'valueLeading' | 'control'>,
-): React.JSX.Element {
-  return (
     <Row horizontalArrangement={{ spacedBy: 8 }} verticalAlignment="center">
       <NativeRowGlyph leading={props.valueLeading} />
       <RowValue value={props.value} decorative={!!props.control} />
     </Row>
   );
-}
-
-function valueWidth(value: string | undefined): ReturnType<typeof weight>[] {
-  return value === undefined ? [] : [weight(1)];
 }
 
 interface RowValueProps extends Pick<ListItemProps, 'value'> {
@@ -79,6 +60,8 @@ function RowValueText(props: RowValueTextProps): React.JSX.Element {
   return (
     <Text
       color={mutedForeground}
+      maxLines={1}
+      overflow="ellipsis"
       style={{ ...style, textAlign: 'end' }}
       modifiers={props.decorative ? [clearSemantics()] : []}
     >

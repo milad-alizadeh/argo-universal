@@ -88,7 +88,7 @@ function pressModifiers(modifiers: RowModifiers): RowModifiers {
   ];
 }
 
-type RowColors = Pick<NativeColors, 'muted' | 'separator'>;
+type RowColors = Pick<NativeColors, 'separator'>;
 
 type RowModifiers = NonNullable<
   React.ComponentProps<typeof HStack>['modifiers']
@@ -107,16 +107,13 @@ function rowModifiers(
   ];
 }
 
-// A navigation row sits flat on the screen, without the card or its separators, like the sidebar's.
+// A navigation row sits flat on the screen, like the sidebar's; a grouped row keeps the system cell, which draws the press highlight.
 function rowSurface(
-  { muted, separator }: RowColors,
+  { separator }: RowColors,
   navigation: boolean,
 ): RowModifiers {
   if (navigation)
     return [listRowBackground('transparent'), listRowSeparator('hidden')];
 
-  return [
-    listRowBackground(muted ?? 'transparent'),
-    listRowSeparatorTint(separator),
-  ];
+  return [listRowSeparatorTint(separator)];
 }
