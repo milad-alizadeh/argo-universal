@@ -15,7 +15,7 @@ import {
 } from '#primitives/native/native-modifiers';
 import { type FilterPillProps, filterPillText } from './filter-pill-props';
 
-// iOS: SwiftUI's own button-style Toggle, a bordered capsule that fills in Argo's tint when on.
+// iOS: SwiftUI's own button-style Toggle, a bordered capsule; on, it is the prominent capsule in Argo's primary tint.
 export function FilterPill(props: FilterPillProps): React.JSX.Element {
   return (
     <ControlHost matchContents>
@@ -37,7 +37,7 @@ function usePillModifiers(
 
   return [
     toggleStyle('button'),
-    buttonStyle('bordered'),
+    buttonStyle(props.value ? 'borderedProminent' : 'bordered'),
     capsuleButtonBorder(),
     ...optionalTint(primary),
     disabled(!!props.disabled),

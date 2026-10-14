@@ -33,7 +33,7 @@ function IconRows(): React.JSX.Element {
       <ProjectsRow />
       <GroupedListItem
         label="Issues"
-        icon="issue"
+        icon="triage"
         badge={3}
         onPress={onPress}
       />

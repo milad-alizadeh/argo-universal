@@ -20,7 +20,7 @@ export const Variations: Story = {
   render: () => (
     <VariationList>
       <Variation label="Fits its content">
-        <ExampleSheet fit label="Merge options" />
+        <ExampleSheet fit label="Session options" />
       </Variation>
       <Variation label="Expandable">
         <ExampleSheet expandable initialSize="medium" label="Plan" />
@@ -32,18 +32,12 @@ export const Variations: Story = {
   ),
 };
 
-const choices = [
-  'Create a merge commit',
-  'Squash and merge',
-  'Rebase and merge',
-];
-
 type ExampleProps = Pick<
   React.ComponentProps<typeof BottomSheet>,
   'fit' | 'expandable' | 'initialSize' | 'footer'
 > & { label: string };
 
-// A button opens the sheet; the sheet lists a few lines of content.
+// A button opens the sheet; the sheet holds a heading, a line and one setting.
 function ExampleSheet(props: ExampleProps): React.JSX.Element {
   const [open, setOpen] = useState(false);
 
@@ -54,17 +48,30 @@ function ExampleSheet(props: ExampleProps): React.JSX.Element {
       onOpenChange={setOpen}
       trigger={<Button label={props.label} variant="outline" />}
     >
-      <Choices />
+      <SessionOptions />
     </BottomSheet>
   );
 }
 
-function Choices(): React.JSX.Element {
+function SessionOptions(): React.JSX.Element {
   return (
     <View className="gap-3 p-4">
-      {choices.map((choice) => (
-        <Text key={choice}>{choice}</Text>
-      ))}
+      <Text role="heading" aria-level={2}>
+        Session options
+      </Text>
+      <Text>Choose how this Session runs.</Text>
+      <ModeRow />
+    </View>
+  );
+}
+
+function ModeRow(): React.JSX.Element {
+  return (
+    <View className="flex-row justify-between">
+      <Text>Mode</Text>
+      <Text role="secondary" tone="muted">
+        Default
+      </Text>
     </View>
   );
 }

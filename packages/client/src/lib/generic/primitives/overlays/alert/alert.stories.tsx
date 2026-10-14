@@ -6,9 +6,14 @@ import { Variation, Variations as VariationList } from '../../../variations';
 import { Alert } from './alert';
 import type { AlertProps } from './alert-props';
 
-const removalTitle = 'Remove Example ACP?';
+const removalTitle = 'Remove Agent?';
+
+const removalMessage =
+  'Remove this Agent from Argo? Its installed files stay on this computer.';
 
 const removeAgent = 'Remove Agent';
+
+const remove = 'Remove';
 
 type AlertContent = Omit<AlertProps, 'open' | 'onOpenChange'>;
 
@@ -18,9 +23,9 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
     trigger: removeAgent,
     alert: {
       title: removalTitle,
-      message: 'Sessions that use it keep their history.',
+      message: removalMessage,
       actions: [
-        { label: removeAgent, tone: 'danger' },
+        { label: remove, tone: 'danger' },
         { label: 'Cancel', cancel: true },
       ],
     },
@@ -30,9 +35,9 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
     trigger: 'Remove in use Agent',
     alert: {
       title: removalTitle,
-      message: 'A running Session still uses it.',
+      message: removalMessage,
       actions: [
-        { label: removeAgent, tone: 'danger', disabled: true },
+        { label: remove, tone: 'danger', disabled: true },
         { label: 'Cancel', cancel: true },
       ],
     },
@@ -104,11 +109,11 @@ function RunningAlertPreview(): React.JSX.Element {
 function runningAlert(removing: boolean, remove: () => void): AlertContent {
   return {
     title: removalTitle,
-    message: 'Sessions that use it keep their history.',
+    message: removalMessage,
     actions: [
       { label: 'Cancel', cancel: true },
       {
-        label: removing ? 'Removing…' : removeAgent,
+        label: removing ? 'Removing…' : remove,
         tone: 'danger',
         loading: removing,
         onPress: remove,

@@ -20,7 +20,8 @@ export const Variations: Story = {
 
 const destinations: { title: string; icon: IconName }[] = [
   { title: 'Sessions', icon: 'sessions' },
-  { title: 'Issues', icon: 'issue' },
+  { title: 'Issues', icon: 'triage' },
+  { title: 'Atlas', icon: 'atlas' },
   { title: 'Settings', icon: 'settings' },
 ];
 
@@ -49,7 +50,7 @@ type DestinationProps = (typeof destinations)[number] & {
 
 // Only Issues has something waiting.
 const issuesBadge = (title: string): { badge?: number; badgeLabel?: string } =>
-  title === 'Issues' ? { badge: 2, badgeLabel: '2 need attention' } : {};
+  title === 'Issues' ? { badge: 3, badgeLabel: '3 need attention' } : {};
 
 function Destination(props: DestinationProps): React.JSX.Element {
   const { title, current, onSelect } = props;

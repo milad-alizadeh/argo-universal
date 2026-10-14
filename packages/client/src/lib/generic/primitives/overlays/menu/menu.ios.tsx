@@ -1,9 +1,7 @@
 import {
   Button,
   Menu as SwiftMenu,
-  Picker,
   RNHostView,
-  Text,
   Toggle,
 } from '@expo/ui/swift-ui';
 import {
@@ -11,8 +9,6 @@ import {
   accessibilityLabel,
   accessibilityValue,
   disabled,
-  pickerStyle,
-  tag,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -23,7 +19,6 @@ import {
   type ActionMenuProps,
   type ChoiceMenuProps,
   type MenuAction,
-  type MenuOption,
   type MenuProps,
   isActionMenu,
   menuLoadingLabel,
@@ -53,7 +48,7 @@ function MenuItems<Value extends string>(
 ): React.JSX.Element {
   if (isActionMenu(props)) return <MenuButtons {...props} />;
 
-  return <MenuPicker {...props} />;
+  return <MenuChoices {...props} />;
 }
 
 function useMenuModifiers<Value extends string>(
@@ -131,27 +126,25 @@ function MenuToggle(
   );
 }
 
-function MenuPicker<Value extends string>(
+// Each option is a menu toggle with the system checkmark: an inline Picker ignores .disabled on its rows.
+function MenuChoices<Value extends string>(
   props: ChoiceMenuProps<Value>,
 ): React.JSX.Element {
-  return (
-    <Picker
-      selection={props.value}
-      onSelectionChange={props.onValueChange}
-      modifiers={[pickerStyle('inline')]}
-    >
-      {props.options.map((choice) => (
-        <PickerOption key={choice.value} {...choice} />
-      ))}
-    </Picker>
-  );
+  return <>{props.options.map((choice) => choiceToggle(props, choice))}</>;
 }
 
-function PickerOption(props: MenuOption<string>): React.JSX.Element {
+function choiceToggle<Value extends string>(
+  props: ChoiceMenuProps<Value>,
+  choice: ChoiceMenuProps<Value>['options'][number],
+): React.JSX.Element {
   return (
-    <Text modifiers={[tag(props.value), disabled(!!props.disabled)]}>
-      {props.label}
-    </Text>
+    <MenuToggle
+      key={choice.value}
+      label={choice.label}
+      disabled={choice.disabled}
+      selected={choice.value === props.value}
+      onPress={() => props.onValueChange(choice.value)}
+    />
   );
 }
 

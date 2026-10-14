@@ -5,13 +5,14 @@ import { Variation, Variations as VariationList } from '../../../variations';
 import { FilterPill } from './filter-pill';
 
 const pills = [
-  { value: 'all', label: 'All' },
-  { value: 'installed', label: 'Installed', count: 4 },
-  { value: 'not-installed', label: 'Not installed', count: 2 },
+  { value: 'open', label: 'Open' },
+  { value: 'blocked', label: 'Blocked', count: 3 },
+  { value: 'closed', label: 'Closed', count: 2 },
 ] as const;
 
+// Open starts on, so the first pill shows the on state.
 function Pills(): React.JSX.Element {
-  const [selected, setSelected] = useState<string>('all');
+  const [selected, setSelected] = useState<string>('open');
 
   return (
     <View className="flex-row items-center gap-1">
@@ -20,7 +21,7 @@ function Pills(): React.JSX.Element {
           key={value}
           {...pill}
           value={selected === value}
-          onValueChange={(on) => setSelected(on ? value : 'all')}
+          onValueChange={(on) => setSelected(on ? value : 'open')}
         />
       ))}
     </View>

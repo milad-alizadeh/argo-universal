@@ -18,6 +18,7 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { useNativeTheme } from '#lib/generic/native-theme';
 import { Icon, IconSlot } from '#primitives/display/icon';
 import { Host } from '#primitives/native/host';
 import { roundedClip } from '#primitives/native/native-modifiers';
@@ -131,14 +132,18 @@ function DrawerItemLabel({
   );
 }
 
-// Material's own Badge, trailing; TalkBack reads its count with the row.
+// Material's own Badge, trailing, in Argo's danger colours; TalkBack reads its count with the row.
 function NativeBadge(
   props: Pick<DrawerItemProps, 'badge'>,
 ): React.JSX.Element | null {
+  const { colors } = useNativeTheme();
   const badge = drawerBadge(props);
 
   return badge ? (
-    <Badge>
+    <Badge
+      containerColor={colors.danger}
+      contentColor={colors.dangerForeground}
+    >
       <Text>{badge.text}</Text>
     </Badge>
   ) : null;

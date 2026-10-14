@@ -15,6 +15,7 @@ const colorTokens = [
   ['primaryForeground', '--color-primary-foreground'],
   ['border', '--color-border'],
   ['danger', '--color-danger'],
+  ['dangerForeground', '--color-danger-foreground'],
 ] as const;
 
 const tokenNames = colorTokens.map(([, name]) => name);

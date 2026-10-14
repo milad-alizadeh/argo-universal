@@ -38,7 +38,7 @@ export function MenuChoice(props: MenuChoiceProps): React.JSX.Element {
       enabled={!props.disabled}
       onClick={props.onChoose}
     >
-      <ChoiceLabel label={props.label} />
+      <ChoiceLabel label={props.label} disabled={props.disabled} />
       <ChoiceIndicator selected={props.selected} />
     </DropdownMenuItem>
   );
@@ -64,7 +64,7 @@ export function MenuActionItem(props: MenuActionItemProps): React.JSX.Element {
       onClick={props.onPress}
     >
       <ActionCheck selected={props.selected} />
-      <ChoiceLabel label={props.label} />
+      <ChoiceLabel label={props.label} disabled={props.disabled} />
     </DropdownMenuItem>
   );
 }
@@ -79,19 +79,19 @@ function ActionCheck(props: { selected?: boolean }): React.ReactNode {
   );
 }
 
-function actionModifiers(props: MenuActionItemProps): ModifierConfig[] {
-  const width = defaultMinSize({ minWidth: menuWidth });
+const rowWidth = defaultMinSize({ minWidth: menuWidth });
 
-  return props.selected === undefined
-    ? [width]
-    : [width, selectable(props.selected, props.onPress)];
+// selectable makes a row clickable on its own, so a disabled row leaves it off.
+function actionModifiers(props: MenuActionItemProps): ModifierConfig[] {
+  return props.selected === undefined || props.disabled
+    ? [rowWidth]
+    : [rowWidth, selectable(props.selected, props.onPress)];
 }
 
 function choiceModifiers(props: MenuChoiceProps): ModifierConfig[] {
-  return [
-    defaultMinSize({ minWidth: menuWidth }),
-    selectable(props.selected, props.onChoose, 'radioButton'),
-  ];
+  return props.disabled
+    ? [rowWidth]
+    : [rowWidth, selectable(props.selected, props.onChoose, 'radioButton')];
 }
 
 // The menu's only row while its options load: Material's circular indicator and what it waits for.
@@ -100,7 +100,7 @@ export function MenuLoadingItem(): React.JSX.Element {
 
   return (
     <DropdownMenuItem
-      modifiers={[defaultMinSize({ minWidth: menuWidth })]}
+      modifiers={[rowWidth]}
       elementColors={choiceElementColors(colors)}
       enabled={false}
     >
@@ -122,12 +122,17 @@ function LoadingIndicator(props: { color?: string }): React.JSX.Element {
   );
 }
 
-function ChoiceLabel(props: { label: string }): React.JSX.Element {
+// The label's own colour overrides the item's, so a disabled row says so here too.
+function ChoiceLabel(props: {
+  label: string;
+  disabled?: boolean;
+}): React.JSX.Element {
   const { colors } = useNativeTheme();
+  const color = props.disabled ? colors.disabledContent : colors.cardForeground;
 
   return (
     <DropdownMenuItem.Text>
-      <Text color={colors.cardForeground} style={{ typography: 'bodyLarge' }}>
+      <Text color={color} style={{ typography: 'bodyLarge' }}>
         {props.label}
       </Text>
     </DropdownMenuItem.Text>
