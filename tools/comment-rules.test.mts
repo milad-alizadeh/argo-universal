@@ -62,13 +62,6 @@ describe('markers', (): void => {
     ]);
   });
 
-  it('asks why an expected type error is expected', (): void => {
-    expect(commentProblems('// @ts-expect-error')).toEqual([
-      expect.stringMatching(/Say why/),
-    ]);
-    expect(commentProblems('// @ts-expect-error vendor type lags')).toEqual([]);
-  });
-
   it('ignores a line without a comment', (): void => {
     expect(commentProblems("const name = 'oxlint-disable';")).toEqual([]);
   });

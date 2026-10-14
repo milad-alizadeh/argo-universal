@@ -1,12 +1,9 @@
+import { createRejectionCounter } from '@repo/machine-log';
 import type { z } from 'zod';
 
-let unrecognisedValues = 0;
+const rejections = createRejectionCounter('desktop');
 
 // Outside data that fails its schema is rejected, then reported here with a running count.
 export function reportUnrecognised(source: string, error: z.ZodError): void {
-  unrecognisedValues += 1;
-  console.error(
-    `desktop: unrecognised ${source} #${unrecognisedValues}`,
-    error.issues,
-  );
+  rejections.report(`unrecognised ${source}`, error.issues);
 }

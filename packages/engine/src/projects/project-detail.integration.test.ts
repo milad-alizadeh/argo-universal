@@ -41,9 +41,7 @@ it('rejects, reports and counts an origin URL without a host, and still lists th
     expect.objectContaining({ id: 'project-1', remoteHost: null }),
   ]);
   expect(errors.mock.calls.map(([line]): string => String(line))).toEqual([
-    expect.stringMatching(
-      /^git: rejected remote URL response \(\d+ rejected\)$/,
-    ),
+    expect.stringMatching(/^git: rejected remote URL response #\d+$/),
   ]);
 });
 

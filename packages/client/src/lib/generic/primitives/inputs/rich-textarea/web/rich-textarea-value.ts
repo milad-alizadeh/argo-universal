@@ -1,6 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { HISTORY_MERGE_TAG, type UpdateListener } from 'lexical';
-import { useEffect, useState } from 'react';
+import { type EditorState, HISTORY_MERGE_TAG } from 'lexical';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { $exportMarkdown, $importMarkdown } from './rich-textarea-markdown';
 
 // The markdown the field last showed, so only a different value is imported or sent.
@@ -21,40 +21,49 @@ function shownMarkdown(initial: string): ShownMarkdown {
   };
 }
 
-type Update = Parameters<UpdateListener>[0];
-
-// An edit, not a caret move or a value drawn from outside; exporting the whole draft on every caret move is slow.
-function isEdit({ tags, dirtyElements, dirtyLeaves }: Update): boolean {
-  if (tags.has(HISTORY_MERGE_TAG)) return false;
-
-  return dirtyElements.size > 0 || dirtyLeaves.size > 0;
-}
-
-function sendChanges(
-  shown: ShownMarkdown,
-  onChangeText: (value: string) => void,
-): UpdateListener {
-  return (update) => {
-    if (!isEdit(update)) return;
-    const markdown = update.editorState.read($exportMarkdown);
-
-    if (shown.changesTo(markdown)) onChangeText(markdown);
-  };
-}
-
-// Lexical owns the text while you type; a new value from outside (a sent or restored draft) replaces it.
-export function useMarkdownValue(
-  value: string,
-  onChangeText: (value: string) => void,
-): void {
+// A new value from outside (a sent or restored draft) replaces the text; drawing it is not an edit.
+function useImportedValue(value: string, shown: ShownMarkdown): void {
   const [editor] = useLexicalComposerContext();
-  const [shown] = useState(() => shownMarkdown(value));
   useEffect(() => {
     if (shown.changesTo(value))
       editor.update(() => $importMarkdown(value), { tag: HISTORY_MERGE_TAG });
   }, [editor, shown, value]);
-  useEffect(
-    () => editor.registerUpdateListener(sendChanges(shown, onChangeText)),
-    [editor, shown, onChangeText],
+}
+
+// The newest onChangeText, read when an edit lands, so the handler need not change with it.
+function useLatest<T>(current: T): { readonly current: T } {
+  const latest = useRef(current);
+  useEffect(() => {
+    latest.current = current;
+  }, [current]);
+
+  return latest;
+}
+
+// An edit's markdown, sent when it differs. One identity for the field's life, so OnChangePlugin registers once.
+function useSentEdits(
+  shown: ShownMarkdown,
+  onChangeText: (value: string) => void,
+): (editorState: EditorState) => void {
+  const latestOnChangeText = useLatest(onChangeText);
+
+  return useCallback(
+    (editorState: EditorState) => {
+      const markdown = editorState.read($exportMarkdown);
+
+      if (shown.changesTo(markdown)) latestOnChangeText.current(markdown);
+    },
+    [shown, latestOnChangeText],
   );
+}
+
+// Lexical owns the text while you type; returns the edit handler for OnChangePlugin, which skips caret moves.
+export function useMarkdownValue(
+  value: string,
+  onChangeText: (value: string) => void,
+): (editorState: EditorState) => void {
+  const [shown] = useState(() => shownMarkdown(value));
+  useImportedValue(value, shown);
+
+  return useSentEdits(shown, onChangeText);
 }

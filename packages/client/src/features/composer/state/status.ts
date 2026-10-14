@@ -50,16 +50,3 @@ export function compactNumber(value: number): string {
     .format(value)
     .toLowerCase();
 }
-
-export function withPlanStepKeys(
-  entries: PlanEntry[],
-): { item: PlanEntry; key: string }[] {
-  const occurrences = new Map<string, number>();
-
-  return entries.map((entry) => {
-    const occurrence = occurrences.get(entry.content) ?? 0;
-    occurrences.set(entry.content, occurrence + 1);
-
-    return { item: entry, key: `${entry.content}#${occurrence}` };
-  });
-}

@@ -33,7 +33,7 @@ function newestFirst(
   sessionsByProject: Map<string, SessionInfo[]>,
   projectId: string,
 ): SessionInfo[] {
-  return (sessionsByProject.get(projectId) ?? []).sort(byNewestActivity);
+  return [...(sessionsByProject.get(projectId) ?? [])].sort(byNewestActivity);
 }
 
 function projectBody(
