@@ -17,6 +17,8 @@ const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 export const requestLogName = 'agent-requests.jsonl';
 // initTestRepository makes the Server's one Project here.
 export const projectDirectoryName = 'project';
+// The one directory on the Server's PATH besides system tools: an Agent installed outside Argo goes here.
+const machineDirectoryName = 'machine';
 
 export { pollServer } from './server-process';
 
@@ -26,8 +28,9 @@ const portTakenPattern = /EADDRINUSE/;
 // What a test reads from its own Server's directory.
 export const serverFiles = (
   directory: string,
-): { projectPath: string; requestLogPath: string } => ({
+): { projectPath: string; requestLogPath: string; machinePath: string } => ({
   projectPath: path.join(directory, projectDirectoryName),
+  machinePath: path.join(directory, machineDirectoryName),
   requestLogPath: path.join(directory, requestLogName),
 });
 
@@ -48,7 +51,8 @@ export async function startOwnServer(
   const registryPath = path.join(directory, 'registry.json');
   const installationPath = path.join(directory, 'installation.json');
   const heldCheckRelease = path.join(directory, 'release-held-checks');
-  await mkdir(directory, { recursive: true });
+  const machinePath = path.join(directory, machineDirectoryName);
+  await mkdir(machinePath, { recursive: true });
   await writeFile(registryPath, JSON.stringify(publishedRegistry));
   await writeFile(
     installationPath,
@@ -70,7 +74,7 @@ export async function startOwnServer(
           ARGO_E2E_INSTALLATION_PATH: installationPath,
           ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
           ARGO_E2E_HELD_CHECK_RELEASE: heldCheckRelease,
-          PATH: '/usr/bin:/bin',
+          PATH: [machinePath, '/usr/bin', '/bin'].join(path.delimiter),
         },
         stdio: ['ignore', 'pipe', 'pipe'],
       });

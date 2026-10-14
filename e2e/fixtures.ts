@@ -51,6 +51,8 @@ type App = {
   installationPath: string;
   projectPath: string;
   requestLogPath: string;
+  // Files here are on the Server's PATH, as Agents installed outside Argo are.
+  machinePath: string;
   restartEngine: (whileStopped: () => Promise<void>) => Promise<void>;
 };
 

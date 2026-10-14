@@ -110,6 +110,17 @@ const isUnchanged = (
   );
 };
 
+// Registering, installing or editing an Agent checks it already; only a copy found outside Argo needs a first check here.
+const needsFirstCheck = (
+  deps: ResolverDeps,
+  candidate: Candidate,
+  found: Installation | undefined,
+): boolean =>
+  found?.owner === 'unknown' &&
+  candidate.saved.installationLaunch === null &&
+  readConfiguredAgent(deps.database, candidate.id)?.configuration.source !==
+    'custom';
+
 type Scan = { rows: InstallationObservationRow[]; newlyFound: string[] };
 const scan = async (deps: ResolverDeps): Promise<Scan> => {
   const observedAt = deps.now();
@@ -120,7 +131,7 @@ const scan = async (deps: ResolverDeps): Promise<Scan> => {
     const row = observationRow(candidate.id, found, observedAt);
     if (isUnchanged(candidate, row)) continue;
     result.rows.push(row);
-    if (found && candidate.saved.installationLaunch === null)
+    if (needsFirstCheck(deps, candidate, found))
       result.newlyFound.push(candidate.id);
   }
   return result;
@@ -138,7 +149,7 @@ const resolveEvery = async (deps: ResolverDeps): Promise<string[]> => {
 };
 
 export type AgentResolver = {
-  // Saves an Installation observation for every catalog entry and custom Agent; returns the Agents found that were not before.
+  // Saves an Installation observation for every catalog entry and custom Agent; returns the Agents found outside Argo that were not before.
   resolveEvery: () => Promise<string[]>;
   // When the Agents page opens: looks again only when the last look is stale.
   resolveIfStale: () => Promise<string[]>;
