@@ -29,7 +29,7 @@ export type ReadinessDeps = {
   // Setup ownership: waits for an install or edit, shares a running check and keeps cleanup failures owned.
   withAgentCheck: (
     agentId: string,
-    operation: () => Promise<AgentCheck>,
+    operation: (signal: AbortSignal) => Promise<AgentCheck>,
   ) => Promise<AgentCheck>;
 };
 
@@ -39,6 +39,7 @@ const startConcurrency = 4;
 const runCheck = async (
   deps: ReadinessDeps,
   agentId: string,
+  signal: AbortSignal,
 ): Promise<AgentCheck> => {
   const target = readTarget(deps.database, agentId);
   const missing = await missingFiles(deps.home, target);
@@ -50,7 +51,7 @@ const runCheck = async (
     deps.home,
   )({ agent: agentId, projectId: '', projectPath: homedir() });
 
-  return deps.checkAgentLaunch({ name: target.name, launch });
+  return deps.checkAgentLaunch({ name: target.name, launch, signal });
 };
 
 const sanitized = (check: AgentCheck): AgentCheck =>
@@ -78,20 +79,26 @@ const savedCheck = (
   readinessCheckedAt: deps.now(),
 });
 
+const checkOrFailure = async (
+  deps: ReadinessDeps,
+  agentId: string,
+): Promise<AgentCheck> => {
+  try {
+    return await deps.withAgentCheck(agentId, (signal) =>
+      runCheck(deps, agentId, signal),
+    );
+  } catch (error) {
+    if (error instanceof ReadinessSkipped) throw error;
+
+    return readinessOfFailure(error);
+  }
+};
+
 const checkAndSave = async (
   deps: ReadinessDeps,
   agentId: string,
 ): Promise<AgentCheck> => {
-  let check: AgentCheck;
-
-  try {
-    check = await deps.withAgentCheck(agentId, () => runCheck(deps, agentId));
-  } catch (error) {
-    if (error instanceof ReadinessSkipped) throw error;
-    check = readinessOfFailure(error);
-  }
-
-  const result = sanitized(check);
+  const result = sanitized(await checkOrFailure(deps, agentId));
   await save(deps, [agentId], savedCheck(deps, result));
 
   return result;

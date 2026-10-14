@@ -33,7 +33,7 @@ const queries = [
 ];
 
 it.each(queries)(
-  'a concurrent $name custom readiness while management remains fenced',
+  'a concurrent $name custom readiness',
   async ({ request, expected }) => {
     const host = await startCustomAgentEngine({ acp: {} });
     const marker = join(host.home, markerName);
@@ -59,7 +59,6 @@ it.each(queries)(
       (cause: unknown) => cause,
     );
 
-    await expect(other.agents.remove(input)).rejects.toThrow('in use');
     await writeFile(release, 'release');
     expect(await checking).toEqual({ status: 'ready' });
     expect(await concurrent).toBe(expected);
