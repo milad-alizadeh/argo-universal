@@ -1,7 +1,12 @@
 import type { AgentStatus as ServerStatus } from '@repo/contracts';
 
-// Where an Agent stands on this Server: its saved Readiness, a newer catalog release, or Disabled for a disabled Agent that was never checked.
-export type AgentStatus = ServerStatus | 'update' | 'disabled';
+// Where an Agent stands on this Server: its saved Readiness, a newer catalog release, Disabled for a disabled Agent that was never checked, or the tool its install needs.
+export type AgentStatus =
+  | ServerStatus
+  | 'update'
+  | 'disabled'
+  | 'needs-node'
+  | 'needs-uv';
 export type StatusTone = 'success' | 'warning' | 'destructive' | 'pending';
 export type AgentsFilter = 'all' | 'installed' | 'not-installed';
 
@@ -31,6 +36,8 @@ export const agentStatusLabels: Record<AgentStatus, string> = {
   'couldnt-check': 'Couldn’t check',
   'not-found': 'Not found',
   'not-installed': 'Not installed',
+  'needs-node': 'Needs Node.js',
+  'needs-uv': 'Needs uv',
   disabled: 'Disabled',
 };
 
@@ -46,14 +53,23 @@ const statusTones: Record<AgentStatus, StatusTone | undefined> = {
   'cant-start': 'destructive',
   'not-found': 'destructive',
   'not-installed': undefined,
+  'needs-node': 'warning',
+  'needs-uv': 'warning',
   disabled: undefined,
 };
 
 export const statusTone = (status: AgentStatus): StatusTone | undefined =>
   statusTones[status];
 
-const isInstalled = ({ status }: Pick<AgentRowEntry, 'status'>): boolean =>
-  status !== 'not-installed';
+const notInstalledStatuses: ReadonlySet<AgentStatus> = new Set([
+  'not-installed',
+  'needs-node',
+  'needs-uv',
+]);
+// Needs Node.js and Needs uv are Agents not installed yet whose tool is missing.
+export const isInstalled = ({
+  status,
+}: Pick<AgentRowEntry, 'status'>): boolean => !notInstalledStatuses.has(status);
 
 // The user has to act before the Agent can run new Sessions; Checking… is never a failure.
 export const needsAction = ({

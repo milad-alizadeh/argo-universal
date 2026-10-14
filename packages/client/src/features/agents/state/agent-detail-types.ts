@@ -1,6 +1,7 @@
 import type { AgentInstallPresentation } from './agent-install-types';
 import type { AgentManagement } from './agent-management-types';
 import type { AgentRowEntry } from './agent-status';
+import type { ToolInstallPresentation } from './missing-tool';
 
 interface AgentLink {
   label: string;
@@ -24,6 +25,8 @@ export interface AgentDetailViewProps {
   // Each action shows disabled until the Server can do it.
   onInstall?: () => void;
   installation?: AgentInstallPresentation;
+  // Installing the tool a Needs Node.js or Needs uv Agent is missing.
+  tool?: ToolInstallPresentation;
   onUpdate?: () => void;
   onRemove?: () => void;
   management?: AgentManagement;

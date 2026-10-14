@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import type { ChildProcessByStdio } from 'node:child_process';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
@@ -19,6 +19,8 @@ export const requestLogName = 'agent-requests.jsonl';
 export const projectDirectoryName = 'project';
 // The one directory on the Server's PATH besides system tools: an Agent installed outside Argo goes here.
 const machineDirectoryName = 'machine';
+// Node.js, npm and uv, which npx and uvx Agents install with; a step removes one to show it missing.
+const toolsDirectoryName = 'tools';
 
 export { pollServer } from './server-process';
 
@@ -28,11 +30,26 @@ const portTakenPattern = /EADDRINUSE/;
 // What a test reads from its own Server's directory.
 export const serverFiles = (
   directory: string,
-): { projectPath: string; requestLogPath: string; machinePath: string } => ({
+): {
+  projectPath: string;
+  requestLogPath: string;
+  machinePath: string;
+  toolsPath: string;
+} => ({
   projectPath: path.join(directory, projectDirectoryName),
   machinePath: path.join(directory, machineDirectoryName),
+  toolsPath: path.join(directory, toolsDirectoryName),
   requestLogPath: path.join(directory, requestLogName),
 });
+
+const toolStub = '#!/bin/sh\nexit 0\n';
+// The Server finds Node.js (the test's own), npm and uv, so npx and uvx Agents offer Install.
+async function placeTools(toolsPath: string): Promise<void> {
+  await mkdir(toolsPath, { recursive: true });
+  await symlink(process.execPath, path.join(toolsPath, 'node'));
+  for (const tool of ['npm', 'uv'])
+    await writeFile(path.join(toolsPath, tool), toolStub, { mode: 0o755 });
+}
 
 // Starts a real Engine with shared external Agent fixtures in an isolated home.
 export async function startOwnServer(
@@ -52,7 +69,9 @@ export async function startOwnServer(
   const installationPath = path.join(directory, 'installation.json');
   const heldCheckRelease = path.join(directory, 'release-held-checks');
   const machinePath = path.join(directory, machineDirectoryName);
+  const toolsPath = path.join(directory, toolsDirectoryName);
   await mkdir(machinePath, { recursive: true });
+  await placeTools(toolsPath);
   await writeFile(registryPath, JSON.stringify(publishedRegistry));
   await writeFile(
     installationPath,
@@ -72,9 +91,12 @@ export async function startOwnServer(
           ARGO_E2E_AGENTS: JSON.stringify(agents),
           ARGO_E2E_REGISTRY_PATH: registryPath,
           ARGO_E2E_INSTALLATION_PATH: installationPath,
+          ARGO_E2E_TOOLS_PATH: toolsPath,
           ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
           ARGO_E2E_HELD_CHECK_RELEASE: heldCheckRelease,
-          PATH: [machinePath, '/usr/bin', '/bin'].join(path.delimiter),
+          PATH: [machinePath, toolsPath, '/usr/bin', '/bin'].join(
+            path.delimiter,
+          ),
         },
         stdio: ['ignore', 'pipe', 'pipe'],
       });

@@ -105,11 +105,13 @@ class InstallProcess {
   private exitFailure(code: number | null): Error | undefined {
     if (code === missingToolExitCode)
       return new Error(`${this.input.executable} is required on the Server`);
-    return code === 0
-      ? undefined
-      : new Error(
-          `${this.input.executable} failed to install the Agent: ${cleanDiagnostic(this.diagnostic)}`,
-        );
+    return code === 0 ? undefined : this.installFailure();
+  }
+  private installFailure(): Error {
+    const subject = this.input.subject ?? 'the Agent';
+    return new Error(
+      `${this.input.executable} failed to install ${subject}: ${cleanDiagnostic(this.diagnostic)}`,
+    );
   }
   private async settleResult(code: number | null): Promise<void> {
     if (this.input.signal.aborted) {

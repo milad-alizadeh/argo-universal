@@ -24,6 +24,7 @@ import {
   requestAgentCatalogSync,
   type syncSupervisorMachine,
 } from './sync-supervisor-machine';
+import { createToolsRouter } from './tools-router';
 
 type CatalogDeps = Pick<ConfigurationDeps, 'database' | 'databaseWriter'> & {
   syncSupervisor: ActorRefFrom<typeof syncSupervisorMachine>;
@@ -97,6 +98,7 @@ export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
   mergeRouters(
     createConfigurationRouter(ownedConfiguration(deps)),
     createInstallRouter(deps.installations),
+    createToolsRouter(deps),
     createCatalogRouter(deps),
     createCatalogSyncRouter(deps),
     createListRouter(deps),

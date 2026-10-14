@@ -53,6 +53,8 @@ type App = {
   requestLogPath: string;
   // Files here are on the Server's PATH, as Agents installed outside Argo are.
   machinePath: string;
+  // Node.js, npm and uv on the Server's PATH; Homebrew installs here too.
+  toolsPath: string;
   restartEngine: (whileStopped: () => Promise<void>) => Promise<void>;
 };
 

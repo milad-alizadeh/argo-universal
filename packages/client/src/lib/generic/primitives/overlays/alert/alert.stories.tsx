@@ -33,6 +33,17 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       ],
     },
   },
+  {
+    state: 'Question with a command',
+    trigger: 'Install Node.js',
+    alert: {
+      title: 'Install Node.js?',
+      message:
+        'Codex runs with npx, which needs Node.js. Argo runs this with Homebrew on Milad’s Mac mini:',
+      command: 'brew install node',
+      actions: [{ label: 'Cancel', role: 'cancel' }, { label: 'Install' }],
+    },
+  },
 ];
 
 type AlertPreviewProps = { trigger: string; alert: AlertContent };

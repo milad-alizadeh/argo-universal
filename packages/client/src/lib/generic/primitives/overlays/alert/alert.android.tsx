@@ -4,6 +4,7 @@ import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '../../native/host';
 import {
   alertActionPress,
+  alertText,
   type AlertAction,
   type AlertProps,
 } from './alert-props';
@@ -26,7 +27,7 @@ function OpenAlert(props: AlertProps): React.JSX.Element {
       colors={alertColors(colors)}
     >
       <AlertTitle title={props.title} />
-      <AlertMessage message={props.message} />
+      <AlertMessage message={alertText(props)} />
       <AlertAnswers {...props} />
       <AlertCancel actions={props.actions} onOpenChange={props.onOpenChange} />
     </AlertDialog>
