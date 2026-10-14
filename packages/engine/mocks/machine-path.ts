@@ -21,7 +21,7 @@ const systemDirectories = [
 let machineDirectory: string | undefined;
 
 // The PATH an Engine under test sees: the test's machine directory first, then system tools.
-export const useTestMachinePath = (): void => {
+export const stubTestMachinePath = (): void => {
   const directories = [machineDirectory ?? [], systemDirectories].flat();
   vi.stubEnv('PATH', directories.join(delimiter));
 };
@@ -30,7 +30,7 @@ export const useTestMachinePath = (): void => {
 export const createMachinePath = async (): Promise<MachinePath> => {
   const directory = await mkdtemp(join(tmpdir(), 'argo-path-'));
   machineDirectory = directory;
-  useTestMachinePath();
+  stubTestMachinePath();
   onTestFinished(async () => {
     machineDirectory = undefined;
     await rm(directory, { recursive: true, force: true });

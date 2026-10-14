@@ -61,28 +61,28 @@ const notInstalled = (agent: ConfiguredAgent): AgentInfo => ({
 const ownerOf = (
   observation: InstallationObservation,
 ): Pick<AgentInfo, 'owner'> =>
-  observation.observed && observation.found
-    ? { owner: observation.owner }
-    : {};
+  observation.observed && observation.found ? { owner: observation.owner } : {};
 // Before the Resolver has looked once, only an Argo installation counts as installed.
 const isInstalled = (
   observation: InstallationObservation,
   source: RegistrySource,
 ): boolean => observation.observed || !!source.selection;
-const registryInfo = (
-  listing: Listing,
-  agent: ConfiguredAgent,
-): AgentInfo => {
+// The version shown is Argo's installed release; a copy found elsewhere has none yet.
+const identityOf = (
+  source: RegistrySource,
+): Pick<AgentInfo, 'label' | 'logo' | 'version'> => {
+  const { name, icon } = source.entry;
+  const version = source.selection?.entry.version;
+  return { label: name, logo: icon ?? '', ...(version && { version }) };
+};
+const registryInfo = (listing: Listing, agent: ConfiguredAgent): AgentInfo => {
   const source = readRegistrySource(listing.database, agent.id);
   const observation = listing.observed(agent.id);
   if (!source || !isInstalled(observation, source)) return notInstalled(agent);
-  const { name, icon } = source.entry;
-  const version = source.selection?.entry.version;
-  const identity = { label: name, logo: icon ?? '', ...(version && { version }) };
   return {
     agent: agent.id,
     enabled: agent.enabled,
-    ...identity,
+    ...identityOf(source),
     ...ownerOf(observation),
     ...installedStatus(listing, agent.id, source),
   };
@@ -115,17 +115,19 @@ const registryFirst = (agents: ConfiguredAgent[]): ConfiguredAgent[] => [
   ...agents.filter(({ configuration }) => configuration.source === 'custom'),
 ];
 
+const openListing = (database: Database, home: string): Listing => ({
+  database,
+  home,
+  saved: readSavedReadiness(database),
+  observed: readInstallationObservations(database),
+});
+
 // Every configured Agent from its saved Readiness; listing launches no Agent (ADR-0002).
 export const listAgents = async (
   database: Database,
   home: string,
 ): Promise<AgentInfo[]> => {
-  const listing = {
-    database,
-    home,
-    saved: readSavedReadiness(database),
-    observed: readInstallationObservations(database),
-  };
+  const listing = openListing(database, home);
   const configured = readConfiguredAgents(database).filter(
     ({ configuration }) => !configuration.removed,
   );

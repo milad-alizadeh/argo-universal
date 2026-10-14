@@ -36,7 +36,11 @@ export const ShowsTheVersionAndDistribution: Story = {
 
 export const ShowsAnAgentFoundOnThisMac: Story = {
   args: {
-    agent: { ...readyAgent, source: 'Found on this Mac', distribution: undefined },
+    agent: {
+      ...readyAgent,
+      source: 'Found on this Mac',
+      distribution: undefined,
+    },
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Found on this Mac')).toBeVisible();

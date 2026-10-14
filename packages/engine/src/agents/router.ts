@@ -19,7 +19,7 @@ import { createInstallRouter } from './install/router';
 import type { AgentLogins } from './login';
 import { createLoginRouter } from './login-router';
 import type { AgentReadiness } from './readiness/agent-readiness';
-import type { AgentResolver } from './resolver/agent-resolver';
+import { type AgentResolver, checkNewlyFound } from './resolver/agent-resolver';
 import {
   requestAgentCatalogSync,
   type syncSupervisorMachine,
@@ -57,10 +57,10 @@ const createCatalogSyncRouter = routerFactory((deps: CatalogDeps) =>
     syncCatalog: publicProcedure.mutation(() => {
       deps.sessionCommandSignal?.throwIfAborted();
       // An Agents page visit also looks for Agents installed since the last stale look.
-      void deps.resolver
-        .resolveIfStale()
-        .then((found) => found.forEach(deps.readiness.recheckLater))
-        .catch(() => {});
+      checkNewlyFound(
+        deps.resolver.resolveIfStale(),
+        deps.readiness.recheckLater,
+      );
       return requestAgentCatalogSync(deps.syncSupervisor);
     }),
     catalogChanges: publicProcedure.subscription(({ signal }) => {

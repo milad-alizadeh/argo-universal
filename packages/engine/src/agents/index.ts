@@ -43,8 +43,9 @@ export {
 } from './readiness/agent-readiness';
 export type { InstallPorts } from './install/ports';
 export {
+  checkNewlyFound,
   createAgentResolver,
-  type AgentResolver,
+  type ResolverDeps,
 } from './resolver/agent-resolver';
 export { readInstallSelection } from './install/selection/selection';
 export { readInstallationObservation } from './resolver/observation-sql';

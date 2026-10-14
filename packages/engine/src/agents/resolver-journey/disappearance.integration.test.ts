@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { AgentInfo } from '@repo/contracts';
+import type { AgentInfo, SessionNewOutput } from '@repo/contracts';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, onTestFinished } from 'vitest';
@@ -12,14 +12,19 @@ import {
   pathEntrypoint as entrypoint,
   startInstallEngine,
 } from '#mocks/installation';
-import { createMachinePath } from '#mocks/machine-path';
+import { createMachinePath, type MachinePath } from '#mocks/machine-path';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 
 type Host = Awaited<ReturnType<typeof startInstallEngine>>;
 const listed = async (host: Host): Promise<AgentInfo | undefined> =>
   (await host.caller.agents.list()).find(({ agent }) => agent === host.agentId);
 
-const startWithProject = async () => {
+type Started = {
+  host: Host;
+  machine: MachinePath;
+  checks: ReturnType<typeof createScriptedAgentProcess>;
+};
+const startWithProject = async (): Promise<Started> => {
   const project = await mkdtemp(join(tmpdir(), 'argo-resolver-session-'));
   await initTestRepository(project);
   const storage = openTestDatabase({}, project);
@@ -28,7 +33,7 @@ const startWithProject = async () => {
     await rm(project, { recursive: true, force: true });
   });
   const machine = await createMachinePath();
-  const file = await machine.place(entrypoint);
+  await machine.place(entrypoint);
   const checks = createScriptedAgentProcess(scenarios.reply);
   const host = await startInstallEngine(pathBinaryEntry(), undefined, {
     database: storage.database,
@@ -36,9 +41,9 @@ const startWithProject = async () => {
     acp: checks,
   });
   await expect.poll(() => listed(host)).toMatchObject({ status: 'ready' });
-  return { host, machine, file, checks };
+  return { host, machine, checks };
 };
-const openSession = (host: Host) =>
+const openSession = (host: Host): Promise<SessionNewOutput> =>
   host.caller.session.new({
     projectId: 'project-1',
     agent: host.agentId,
@@ -62,7 +67,8 @@ it('an Agent that left PATH keeps its row, Enabled and Sessions, and shows Not f
     agent: host.agentId,
     enabled: true,
     status: 'not-found',
-    reason: 'Fixture ACP is no longer on this Mac. Repair installs it with Argo.',
+    reason:
+      'Fixture ACP is no longer on this Mac. Repair installs it with Argo.',
   });
   expect(
     (
@@ -96,7 +102,10 @@ it('opening a Session looks for the Agent again instead of trusting the last loo
 
 it('a disabled Agent found again stays disabled', async () => {
   const { host, machine } = await startWithProject();
-  await host.caller.agents.setEnabled({ agentId: host.agentId, enabled: false });
+  await host.caller.agents.setEnabled({
+    agentId: host.agentId,
+    enabled: false,
+  });
   await machine.remove(entrypoint);
   await host.caller.agents.list({ refresh: true });
   expect((await listed(host))?.owner).toBeUndefined();

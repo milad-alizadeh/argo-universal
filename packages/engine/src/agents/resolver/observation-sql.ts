@@ -25,13 +25,10 @@ const parseRow = (row: Row): InstallationObservation => {
   if (row.observedAt === null) return { observed: false };
   if (row.launch === null) return { observed: true, found: false };
   const owner = InstallationOwner.catch('unknown').parse(row.owner);
-  return {
-    observed: true,
-    found: true,
-    owner,
-    ...(row.version === null ? {} : { version: row.version }),
-  };
+  return { observed: true, found: true, owner, ...versionOf(row) };
 };
+const versionOf = ({ version }: Row): { version?: string } =>
+  version === null ? {} : { version };
 
 const observationColumns = {
   id: agents.id,
@@ -58,10 +55,7 @@ export const readInstallationObservation = (
 export const readInstallationObservations = (
   database: Database,
 ): ((agentId: string) => InstallationObservation) => {
-  const rows = database
-    .select(observationColumns)
-    .from(agents)
-    .all();
+  const rows = database.select(observationColumns).from(agents).all();
   const observations = new Map(rows.map((row) => [row.id, parseRow(row)]));
   return (agentId) => observations.get(agentId) ?? { observed: false };
 };

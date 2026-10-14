@@ -96,16 +96,18 @@ describe('agentDetail', () => {
   });
 
   it('names where an installed Agent was found instead of how the Server installs it', () => {
-    const outside = agentDetail({ ...probed, owner: 'unknown' }, iconAgent);
-    const argo = agentDetail({ ...probed, owner: 'argo' }, iconAgent);
-    expect([outside?.source, argo?.source]).toEqual([
-      'Found on this Mac',
-      'Installed by Argo',
-    ]);
-    expect([outside?.distribution, argo?.distribution]).toEqual([
-      undefined,
-      undefined,
-    ]);
+    expect(agentDetail({ ...probed, owner: 'unknown' }, iconAgent)).toEqual(
+      expect.objectContaining({
+        source: 'Found on this Mac',
+        distribution: undefined,
+      }),
+    );
+    expect(agentDetail({ ...probed, owner: 'argo' }, iconAgent)).toEqual(
+      expect.objectContaining({
+        source: 'Installed by Argo',
+        distribution: undefined,
+      }),
+    );
   });
 
   it('knows nothing about an Agent neither lists', () => {

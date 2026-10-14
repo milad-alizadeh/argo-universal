@@ -1,7 +1,7 @@
-import type { AgentInfo } from '@repo/contracts';
-import { scenarios } from '@repo/mocks/agent/scenarios';
 import { realpath } from 'node:fs/promises';
 import { join, sep } from 'node:path';
+import type { AgentInfo } from '@repo/contracts';
+import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
 import {
   pathBinaryEntry,
@@ -25,12 +25,14 @@ it('an Agent already on PATH is found after the catalog sync, enabled and checke
     fixtureAgents: [],
     acp: checks,
   });
-  await expect.poll(() => listed(host)).toMatchObject({
-    status: 'ready',
-    enabled: true,
-    label: 'Fixture ACP',
-    owner: 'unknown',
-  });
+  await expect
+    .poll(() => listed(host))
+    .toMatchObject({
+      status: 'ready',
+      enabled: true,
+      label: 'Fixture ACP',
+      owner: 'unknown',
+    });
   expect(checks.processes.map(({ launch }) => launch.executable)).toEqual([
     file,
   ]);
@@ -59,5 +61,7 @@ it("Argo's own copy wins over the same Agent on PATH", async () => {
   const launched = await realpath(
     checks.processes.at(-1)?.launch.executable ?? '',
   );
-  expect(launched.startsWith(await realpath(join(host.home, 'agents')) + sep)).toBe(true);
+  expect(
+    launched.startsWith((await realpath(join(host.home, 'agents'))) + sep),
+  ).toBe(true);
 }, 30_000);

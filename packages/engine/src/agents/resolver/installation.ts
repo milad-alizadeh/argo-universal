@@ -28,6 +28,13 @@ export type RegistrySource = { entry: ACPAgent; selection?: InstallSelection };
 
 const reader = createRegistryReader();
 
+const parseEntry = (metadata: string): ACPAgent | undefined => {
+  try {
+    return reader.parseAgent(metadata);
+  } catch {
+    return undefined;
+  }
+};
 const catalogEntry = (
   database: Database,
   agentId: string,
@@ -37,12 +44,7 @@ const catalogEntry = (
     .from(agents)
     .where(eq(agents.id, agentId))
     .get();
-  if (!row?.metadata) return undefined;
-  try {
-    return reader.parseAgent(row.metadata);
-  } catch {
-    return undefined;
-  }
+  return row?.metadata ? parseEntry(row.metadata) : undefined;
 };
 
 // The Registry entry behind an Agent: its Argo installation's saved entry first, else its catalog row.
@@ -96,24 +98,50 @@ const entrypointName = (entry: ACPAgent): string | undefined => {
   return names.size === 1 ? name : undefined;
 };
 
+type BinaryTarget = NonNullable<ACPAgent['distribution']['binary']>[string];
+// This platform's target, when its entrypoint has a name PATH can be searched by.
+const pathTarget = (
+  entry: ACPAgent,
+): { target: BinaryTarget; name: string } | undefined => {
+  const target = platformTarget(entry);
+  const name = entrypointName(entry);
+  return target && name ? { target, name } : undefined;
+};
+const platformTarget = (entry: ACPAgent): BinaryTarget | undefined =>
+  entry.distribution.binary?.[resolveRegistryServerPlatform()];
+const targetDefinition = (
+  entry: ACPAgent,
+  target: BinaryTarget,
+  executable: string,
+): CustomAgentDefinition => ({
+  name: entry.name,
+  executable,
+  args: target.args ?? [],
+  env: Object.entries(target.env ?? {}).map(([name, value]) => ({
+    name,
+    value,
+  })),
+});
+
 const pathInstallation = async (
   home: string,
   entry: ACPAgent,
 ): Promise<Installation | undefined> => {
-  const target = entry.distribution.binary?.[resolveRegistryServerPlatform()];
-  const name = entrypointName(entry);
-  if (!target || !name) return undefined;
-  const file = await findOnPath(name);
-  if (!file) return undefined;
-  const env = Object.entries(target.env ?? {}).map(([key, value]) => ({
-    name: key,
-    value,
-  }));
-  return {
-    definition: { name: entry.name, executable: file, args: target.args ?? [], env },
-    owner: await ownerOf(home, file),
-  };
+  const searched = pathTarget(entry);
+  if (!searched) return undefined;
+  const file = await findOnPath(searched.name);
+  return file
+    ? foundOnPath(home, entry, { target: searched.target, file })
+    : undefined;
 };
+const foundOnPath = async (
+  home: string,
+  entry: ACPAgent,
+  { target, file }: { target: BinaryTarget; file: string },
+): Promise<Installation> => ({
+  definition: targetDefinition(entry, target, file),
+  owner: await ownerOf(home, file),
+});
 
 // Argo's own folder wins over PATH; nothing found is undefined.
 export const resolveRegistryInstallation = async (

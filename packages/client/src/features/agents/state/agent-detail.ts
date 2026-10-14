@@ -57,19 +57,21 @@ const sourceLabels = {
   unknown: 'Found on this Mac',
 } as const;
 
+// Where an installed Agent was found replaces how the Server would install it.
+const foundSource = ({
+  owner,
+}: AgentInfo): Pick<AgentDetail, 'source' | 'distribution'> =>
+  owner ? { source: sourceLabels[owner], distribution: undefined } : {};
+
 function withProbe(
   info: AgentInfo,
   fromRegistry: AgentDetail | undefined,
 ): AgentDetail {
   const probed = probedRow(info);
-  const found = info.owner && {
-    source: sourceLabels[info.owner],
-    distribution: undefined,
-  };
   return {
     ...fromRegistry,
     ...probed,
-    ...found,
+    ...foundSource(info),
     icon: probed.icon ?? fromRegistry?.icon,
     version: selectedVersion(info, fromRegistry),
     availableVersion: info.availableVersion,

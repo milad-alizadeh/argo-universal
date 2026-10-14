@@ -12,12 +12,15 @@ const isExecutableFile = async (file: string): Promise<boolean> => {
   }
 };
 
-// The first executable file with this name on PATH, read when called so an install in a terminal counts.
-export const findOnPath = async (name: string): Promise<string | undefined> => {
-  const directories = (process.env.PATH ?? '')
+// PATH is read when called, so an install in a terminal counts.
+const pathDirectories = (): string[] =>
+  (process.env.PATH ?? '')
     .split(delimiter)
     .filter((directory) => isAbsolute(directory));
-  for (const directory of directories) {
+
+// The first executable file with this name on PATH.
+export const findOnPath = async (name: string): Promise<string | undefined> => {
+  for (const directory of pathDirectories()) {
     const file = join(directory, name);
     if (await isExecutableFile(file)) return file;
   }

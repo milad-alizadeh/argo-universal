@@ -17,10 +17,10 @@ export type ReadinessTarget = {
   registry?: RegistrySource;
 };
 
-export const notFoundReason = (name: string): string =>
+const notFoundReason = (name: string): string =>
   `The installed files of ${name} are missing. Repair installs them again.`;
 // A copy Argo did not install has no files of Argo's to restore; Repair installs Argo's own.
-export const notOnThisMacReason = (name: string): string =>
+const notOnThisMacReason = (name: string): string =>
   `${name} is no longer on this Mac. Repair installs it with Argo.`;
 export const missingReason = ({ entry, selection }: RegistrySource): string =>
   selection ? notFoundReason(entry.name) : notOnThisMacReason(entry.name);
@@ -72,5 +72,7 @@ export const missingFiles = async (
   const { agentId, registry } = target;
   if (!registry) return null;
   const found = await resolveRegistryInstallation(home, agentId, registry);
-  return found ? null : { status: 'not-found', reason: missingReason(registry) };
+  return found
+    ? null
+    : { status: 'not-found', reason: missingReason(registry) };
 };

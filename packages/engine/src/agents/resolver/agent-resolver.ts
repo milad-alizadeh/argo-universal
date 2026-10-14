@@ -1,22 +1,14 @@
-import { isAbsolute } from 'node:path';
-import type { CustomAgentDefinition } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { agents } from '@repo/db/schema';
 import {
   type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
 } from '../../storage';
+import { type Candidate, readCandidates, resolveCandidate } from './candidates';
+import type { Installation } from './installation';
 import {
   InstallationObservationSaveJob,
   type InstallationObservationRow,
-} from '../agent-storage';
-import { readConfiguredAgent } from '../configuration/configuration-sql';
-import {
-  type Installation,
-  readRegistrySource,
-  resolveRegistryInstallation,
-} from './installation';
-import { findOnPath } from './path-lookup';
+} from './observation-storage';
 
 export type ResolverDeps = {
   database: Database;
@@ -27,125 +19,93 @@ export type ResolverDeps = {
 // A look older than this is repeated when the Agents page opens.
 const staleAfterMs = 10_000;
 
-type Candidate = {
-  id: string;
-  catalogPresent: boolean;
-  configured: boolean;
-  saved: Omit<InstallationObservationRow, 'id'>;
+type FoundColumns = Omit<
+  InstallationObservationRow,
+  'id' | 'installationObservedAt'
+>;
+const nothingFound: FoundColumns = {
+  installationLaunch: null,
+  installationOwner: null,
+  installationVersion: null,
 };
-const readCandidates = (database: Database): Candidate[] =>
-  database
-    .select({
-      id: agents.id,
-      catalogPresent: agents.catalogPresent,
-      configuration: agents.configuration,
-      installationLaunch: agents.installationLaunch,
-      installationOwner: agents.installationOwner,
-      installationVersion: agents.installationVersion,
-      installationObservedAt: agents.installationObservedAt,
-    })
-    .from(agents)
-    .all()
-    .map(({ id, catalogPresent, configuration, ...saved }) => ({
-      id,
-      catalogPresent,
-      configured: configuration !== null,
-      saved,
-    }));
+const foundColumns = (found: Installation | undefined): FoundColumns =>
+  found
+    ? {
+        installationLaunch: JSON.stringify({
+          executable: found.definition.executable,
+          args: found.definition.args,
+        }),
+        installationOwner: found.owner,
+        installationVersion: found.version ?? null,
+      }
+    : nothingFound;
 
-const customInstallation = async (
-  definition: CustomAgentDefinition,
-): Promise<Installation | undefined> => {
-  const executable = isAbsolute(definition.executable)
-    ? definition.executable
-    : await findOnPath(definition.executable);
-  return executable
-    ? { definition: { ...definition, executable }, owner: 'unknown' }
-    : undefined;
-};
-
-// Looks in Argo's folder, then on PATH; a catalog-only row the catalog no longer lists is left alone.
-const resolveCandidate = async (
-  deps: ResolverDeps,
+const observedFields = [
+  'installationLaunch',
+  'installationOwner',
+  'installationVersion',
+] as const;
+// A never-observed row needs a first observation only once there is something to say.
+const isNothingNew = (
   candidate: Candidate,
-): Promise<Installation | undefined | null> => {
-  const agent = readConfiguredAgent(deps.database, candidate.id);
-  if (agent?.configuration.source === 'custom')
-    return customInstallation(agent.configuration.definition);
-  if (!candidate.configured && !candidate.catalogPresent) return null;
-  const source = readRegistrySource(deps.database, candidate.id);
-  if (!source) return null;
-  return resolveRegistryInstallation(deps.home, candidate.id, source);
-};
-
-const observationRow = (
-  id: string,
-  found: Installation | undefined,
-  observedAt: number,
-): InstallationObservationRow => ({
-  id,
-  installationLaunch: found
-    ? JSON.stringify({
-        executable: found.definition.executable,
-        args: found.definition.args,
-      })
-    : null,
-  installationOwner: found?.owner ?? null,
-  installationVersion: found?.version ?? null,
-  installationObservedAt: observedAt,
-});
-
+  next: InstallationObservationRow,
+): boolean => !candidate.configured && next.installationLaunch === null;
 // The time on a row is when its current observation was first made; an unchanged look writes nothing.
 const isUnchanged = (
   candidate: Candidate,
   next: InstallationObservationRow,
-): boolean => {
-  const { saved } = candidate;
-  if (saved.installationObservedAt === null)
-    return !candidate.configured && next.installationLaunch === null;
-  return (
-    saved.installationLaunch === next.installationLaunch &&
-    saved.installationOwner === next.installationOwner &&
-    saved.installationVersion === next.installationVersion
-  );
-};
+): boolean =>
+  candidate.saved.installationObservedAt === null
+    ? isNothingNew(candidate, next)
+    : observedFields.every((field) => candidate.saved[field] === next[field]);
 
-// Registering, installing or editing an Agent checks it already; only a copy found outside Argo needs a first check here.
-const needsFirstCheck = (
-  deps: ResolverDeps,
+const isNewOutsideCopy = (
   candidate: Candidate,
   found: Installation | undefined,
 ): boolean =>
-  found?.owner === 'unknown' &&
-  candidate.saved.installationLaunch === null &&
-  readConfiguredAgent(deps.database, candidate.id)?.configuration.source !==
-    'custom';
+  found?.owner === 'unknown' && candidate.saved.installationLaunch === null;
+// Registering, installing or editing an Agent checks it already; only a copy found outside Argo needs a first check here.
+const needsFirstCheck = (
+  candidate: Candidate,
+  found: Installation | undefined,
+): boolean => !candidate.custom && isNewOutsideCopy(candidate, found);
 
-type Scan = { rows: InstallationObservationRow[]; newlyFound: string[] };
-const scan = async (deps: ResolverDeps): Promise<Scan> => {
+type Look = { row: InstallationObservationRow; newlyFound: boolean };
+const lookAt = async (
+  deps: ResolverDeps,
+  candidate: Candidate,
+  observedAt: number,
+): Promise<Look | undefined> => {
+  const found = await resolveCandidate(deps, candidate);
+  if (found === null) return undefined;
+  const row = {
+    id: candidate.id,
+    installationObservedAt: observedAt,
+    ...foundColumns(found),
+  };
+  if (isUnchanged(candidate, row)) return undefined;
+  return { row, newlyFound: needsFirstCheck(candidate, found) };
+};
+
+const scan = async (deps: ResolverDeps): Promise<Look[]> => {
   const observedAt = deps.now();
-  const result: Scan = { rows: [], newlyFound: [] };
+  const looks: Look[] = [];
   for (const candidate of readCandidates(deps.database)) {
-    const found = await resolveCandidate(deps, candidate);
-    if (found === null) continue;
-    const row = observationRow(candidate.id, found, observedAt);
-    if (isUnchanged(candidate, row)) continue;
-    result.rows.push(row);
-    if (needsFirstCheck(deps, candidate, found))
-      result.newlyFound.push(candidate.id);
+    const look = await lookAt(deps, candidate, observedAt);
+    if (look) looks.push(look);
   }
-  return result;
+  return looks;
 };
 
 const resolveEvery = async (deps: ResolverDeps): Promise<string[]> => {
-  const { rows, newlyFound } = await scan(deps);
-  if (rows.length > 0)
+  const looks = await scan(deps);
+  if (looks.length > 0)
     await writeDatabaseJobAndWaitForCommit(
       deps.databaseWriter,
-      new InstallationObservationSaveJob(rows),
+      new InstallationObservationSaveJob(looks.map(({ row }) => row)),
       true,
     );
-  return newlyFound;
+  return looks.filter(({ newlyFound }) => newlyFound).map(({ row }) => row.id);
 };
 
 export type AgentResolver = {
@@ -155,24 +115,48 @@ export type AgentResolver = {
   resolveIfStale: () => Promise<string[]>;
 };
 
+type ResolverState = { queue: Promise<unknown>; lookedAt: number };
+const lookNow = (
+  deps: ResolverDeps,
+  state: ResolverState,
+): Promise<string[]> => {
+  state.lookedAt = deps.now();
+  return resolveEvery(deps);
+};
+
 // One scan at a time, so a later look always commits after an earlier one.
-export const createAgentResolver = (deps: ResolverDeps): AgentResolver => {
-  let queue: Promise<unknown> = Promise.resolve();
-  let lookedAt = -Infinity;
-  const serialized = (): Promise<string[]> => {
-    const look = (): Promise<string[]> => {
-      lookedAt = deps.now();
-      return resolveEvery(deps);
-    };
-    const next = queue.then(look, look);
-    queue = next.catch(() => {});
+const serializedLooks =
+  (deps: ResolverDeps, state: ResolverState): (() => Promise<string[]>) =>
+  () => {
+    const next = state.queue.then(
+      () => lookNow(deps, state),
+      () => lookNow(deps, state),
+    );
+    state.queue = next.catch(() => {});
     return next;
   };
+
+export const createAgentResolver = (deps: ResolverDeps): AgentResolver => {
+  const state: ResolverState = {
+    queue: Promise.resolve(),
+    lookedAt: -Infinity,
+  };
+  const serialized = serializedLooks(deps, state);
+  const isStale = (): boolean => deps.now() - state.lookedAt > staleAfterMs;
   return {
     resolveEvery: serialized,
-    resolveIfStale: () =>
-      deps.now() - lookedAt > staleAfterMs
-        ? serialized()
-        : Promise.resolve([]),
+    resolveIfStale: () => (isStale() ? serialized() : Promise.resolve([])),
   };
+};
+
+// Looks again in the background and checks each Agent found outside Argo for the first time.
+export const checkNewlyFound = (
+  look: Promise<string[]>,
+  recheckLater: (agentId: string) => void,
+): void => {
+  void look
+    .then((found) => {
+      for (const agentId of found) recheckLater(agentId);
+    })
+    .catch(() => {});
 };
