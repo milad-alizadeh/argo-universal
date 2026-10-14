@@ -6,10 +6,11 @@ Screens import every control from `#primitives` and nothing else (owner, 2026-10
 
 - **One API, up to three drawings.** A primitive has one TypeScript type shared by all its platform files. Screens never import `@expo/ui`, `@rn-primitives`, SwiftUI or Compose types.
 - **iOS** draws the SwiftUI control from `@expo/ui` inside a `Host` (`.ios.tsx`).
-- **Android** draws the Jetpack Compose control from `@expo/ui` in Material 3, or Argo's own Compose composition where Expo UI's control is the wrong pattern (`.android.tsx`).
+- **Android** draws the Jetpack Compose control from `@expo/ui` in Material 3, or Argo's own composition of Compose parts where Expo UI's control is the wrong pattern (`.android.tsx`). GroupedList and DrawerItem are such Argo compositions, not stock Compose components.
 - **Web and desktop** use Expo UI's universal drawing when it meets the approved Paper master's look, states and behaviour; otherwise they use Argo's own React Native Web views, styled with Uniwind (the plain `.tsx` file). This replaces the blanket exclusion of Expo UI's web drawing (owner, 2026-10-10, #419); screens still use Argo's shared primitive API.
-- **Data props, not children.** SwiftUI and Compose buttons cannot take Argo `Text` children, so native-drawn primitives take `label`, `value`, `options` and similar props, and no `className`.
-- **Argo draws its own content.** The Feed, Session rows, the Composer surface, request cards, code, badges, chips and icon buttons stay React Native views styled with Uniwind on every platform. Native drawing is for system controls inside system containers: grouped settings lists, the controls in them, menus, sheets, alerts and dialogs.
+- **Data props, not children.** SwiftUI and Compose buttons cannot take Argo `Text` children, so native-drawn primitives take `label`, `value`, `options` and similar props.
+- **No `className` or `style` on kit components** outside `lib/generic` (amended 2026-10-14, Spec 0015 #724). Layout and look come from props and the token roles of ADR-0025. An oxlint rule enforces it. This replaces the earlier split, where Argo-drawn primitives kept `className`.
+- **Argo draws its own content.** The Feed, Session rows, the Composer surface, request cards, code, badges, chips and icon buttons stay React Native views styled with Uniwind on every platform. The Feed, the Composer and request cards move onto kit components (Surface, Markdown, Code) over time; until then the lint rule allowlists their files. Native drawing is for system controls inside system containers: grouped settings lists, the controls in them, menus, sheets, alerts and dialogs.
 - **`@rn-primitives` stays only underneath web primitives** that need Radix keyboard, focus and collision handling (dialog, popover, dropdown-menu, portal, and select while it is needed). Only web primitive files and the portal host import it.
 
 ## When Expo UI's web drawing does not fit
