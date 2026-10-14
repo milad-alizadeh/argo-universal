@@ -14,6 +14,10 @@ function tokenWidth(name: string): number {
   return width;
 }
 
+export function mediumBreakpoint(): number {
+  return tokenWidth('--breakpoint-medium');
+}
+
 export function wideBreakpoint(): number {
   return tokenWidth('--breakpoint-wide');
 }
