@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/oxlint/configuration_schema.json",
-  // Files on main that still hold arbitrary Tailwind values or raw colours (argo/style-tokens, spec #724). Remove when tokenised.
+  // Files on main that still hold arbitrary Tailwind values, raw colours or Tailwind palette colours (argo/style-tokens, spec #724). Remove when tokenised.
   // It only shrinks: snap a file's values to the scale or a theme.css token, then delete its line. Never add a file.
   "overrides": [
     {
@@ -79,10 +79,12 @@
         "packages/client/src/features/sessions/components/sessions-view/sessions-view.tsx",
         // 1 arbitrary
         "packages/client/src/features/settings/components/settings-list/settings-list-status.test.stories.tsx",
-        // 1 arbitrary
+        // 1 arbitrary, 2 palette
         "packages/client/src/features/setup/components/onboarding-view/setup-step.tsx",
-        // 1 arbitrary
+        // 1 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/buttons/button/button-content-styles.ts",
+        // 1 palette
+        "packages/client/src/lib/generic/primitives/buttons/button/button-native-colors.ts",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/buttons/icon-button/icon-button-styles.ts",
         // 1 arbitrary
@@ -99,17 +101,17 @@
         "packages/client/src/lib/generic/primitives/inputs/checkbox/checkbox.tsx",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/inputs/combobox-search/combobox-search.stories.tsx",
-        // 9 arbitrary
+        // 9 arbitrary, 2 palette
         "packages/client/src/lib/generic/primitives/inputs/picker/picker-select-styles.ts",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea.tsx",
         // 27 arbitrary
         "packages/client/src/lib/generic/primitives/inputs/slider/slider.tsx",
-        // 1 arbitrary, 1 colour
+        // 1 arbitrary, 1 colour, 1 palette
         "packages/client/src/lib/generic/primitives/inputs/switch/switch.tsx",
-        // 2 arbitrary
+        // 2 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/inputs/text-input/text-input-bare.tsx",
-        // 2 arbitrary
+        // 2 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/inputs/textarea/textarea.tsx",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/lists/drawer-item/drawer-item.tsx",
@@ -119,14 +121,20 @@
         "packages/client/src/lib/generic/primitives/lists/grouped-list-item/grouped-list-item-styles.ts",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/overlays/alert/alert.tsx",
-        // 3 arbitrary
+        // 1 palette
+        "packages/client/src/lib/generic/primitives/overlays/bottom-sheet/bottom-sheet-colors.android.ts",
+        // 3 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/overlays/bottom-sheet/bottom-sheet-surface-props.ts",
-        // 2 arbitrary
+        // 2 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/overlays/dialog/dialog-body.tsx",
-        // 1 arbitrary
+        // 1 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/overlays/dialog/dialog-overlay.tsx",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/overlays/dialog/dialog.stories.tsx",
+        // 1 palette
+        "packages/client/src/lib/generic/primitives/overlays/menu/menu-styles.ts",
+        // 1 palette
+        "packages/client/src/lib/generic/primitives/overlays/popover/popover.native.tsx",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/overlays/toast/toaster.tsx",
         // 1 arbitrary

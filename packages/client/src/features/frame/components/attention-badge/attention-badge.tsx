@@ -35,7 +35,7 @@ function BadgeMark({
 }): React.JSX.Element {
   return (
     <Badge {...placementProps[placement]} accessibilityLabel={badge.label}>
-      <Text role="badge" className="text-white dark:text-neutral-950">
+      <Text role="badge" className="text-primary-foreground">
         {badge.text}
       </Text>
     </Badge>

@@ -5,6 +5,8 @@ const arbitraryValue = [{ messageId: 'arbitraryValue' }];
 
 const rawColour = [{ messageId: 'rawColour' }];
 
+const paletteColour = [{ messageId: 'paletteColour' }];
+
 ruleTester.run('style-tokens', styleTokens, {
   valid: [
     '<View className="h-5.5 min-w-5.5 bg-tray shadow-tray" />;',
@@ -15,6 +17,10 @@ ruleTester.run('style-tokens', styleTokens, {
     "const reference = '[spec]: https://argo.dev/spec';",
     "type('#412 ');",
     "useCSSVariable('--color-glow-warm');",
+    '<Text className="text-foreground dark:text-muted-foreground" />;',
+    "const surface = 'bg-card border-border bg-selected text-danger/10';",
+    "const plain = 'bg-transparent text-xs border-2 shadow-sm';",
+    "const prose = 'The text is white and the background black.';",
   ],
   invalid: [
     {
@@ -42,5 +48,20 @@ ruleTester.run('style-tokens', styleTokens, {
       errors: rawColour,
     },
     { code: 'const tint = `oklch(64% 0 0)`;', errors: rawColour },
+    { code: '<Text className="text-white" />;', errors: paletteColour },
+    { code: "const scrim = 'bg-black/50';", errors: paletteColour },
+    {
+      code: '<View className="bg-card dark:bg-neutral-900" />;',
+      errors: paletteColour,
+    },
+    {
+      code: "const edge = 'web:hover:border-red-500';",
+      errors: paletteColour,
+    },
+    {
+      code: "const shadow = 'shadow-sm shadow-black/5';",
+      errors: paletteColour,
+    },
+    { code: "usePrimitiveColor('!text-neutral-100');", errors: paletteColour },
   ],
 });

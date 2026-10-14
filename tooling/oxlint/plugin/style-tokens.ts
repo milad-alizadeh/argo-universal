@@ -1,7 +1,7 @@
 import type { Context, ESTree, Visitor } from '@oxlint/plugins';
 import { defineRule } from '@oxlint/plugins';
 
-type Problem = 'arbitraryValue' | 'rawColour';
+type Problem = 'arbitraryValue' | 'paletteColour' | 'rawColour';
 
 type TokenVisitor = {
   Literal: NonNullable<Visitor['Literal']>;
@@ -26,12 +26,104 @@ const colourPatterns = [hexColour, bracketedHex, colourFunction];
 const hasRawColour = (text: string): boolean =>
   colourPatterns.some((pattern): boolean => pattern.test(text));
 
-// What a piece of source text breaks, if anything.
-function styleProblem(text: string): Problem | undefined {
-  if (hasRawColour(text)) return 'rawColour';
+// Tailwind utilities that take a colour.
+const colourUtilities = new Set([
+  'bg',
+  'text',
+  'border',
+  'border-x',
+  'border-y',
+  'border-t',
+  'border-r',
+  'border-b',
+  'border-l',
+  'border-s',
+  'border-e',
+  'ring',
+  'ring-offset',
+  'inset-ring',
+  'outline',
+  'fill',
+  'stroke',
+  'divide',
+  'from',
+  'via',
+  'to',
+  'shadow',
+  'inset-shadow',
+  'drop-shadow',
+  'accent',
+  'caret',
+  'decoration',
+  'placeholder',
+]);
 
-  return arbitraryClass.test(text) ? 'arbitraryValue' : undefined;
+// Tailwind's palette hues; each takes a shade, `neutral-100`.
+const hues = new Set([
+  'slate',
+  'gray',
+  'zinc',
+  'neutral',
+  'stone',
+  'taupe',
+  'olive',
+  'mauve',
+  'mist',
+  'red',
+  'orange',
+  'amber',
+  'yellow',
+  'lime',
+  'green',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'rose',
+]);
+
+// A utility on white, black or a hue's shade: `bg-white`, `ring-offset-neutral-100`.
+const paletteName =
+  /^(?<utility>[a-z-]+?)-(?:white|black|(?<hue>[a-z]+)-\d{2,3})$/u;
+
+type PaletteParts = Record<string, string | undefined>;
+
+const isHue = (hue: string | undefined): boolean =>
+  hue === undefined || hues.has(hue);
+
+const isPaletteColour = (parts: PaletteParts): boolean =>
+  colourUtilities.has(parts.utility ?? '') && isHue(parts.hue);
+
+// A colour utility on a Tailwind palette shade rather than an Argo token: `text-white`, `dark:bg-neutral-900`, `!shadow-black/5`.
+function isPaletteClass(word: string): boolean {
+  const name = word
+    .slice(word.lastIndexOf(':') + 1)
+    .replaceAll(/^[!-]|!$|\/\d+$/gu, '');
+
+  const parts = paletteName.exec(name)?.groups;
+
+  return parts !== undefined && isPaletteColour(parts);
 }
+
+const hasPaletteClass = (text: string): boolean =>
+  text.split(/\s+/u).some(isPaletteClass);
+
+// Each problem and its test, the first match reported.
+const problemTests: [Problem, (text: string) => boolean][] = [
+  ['rawColour', hasRawColour],
+  ['paletteColour', hasPaletteClass],
+  ['arbitraryValue', (text): boolean => arbitraryClass.test(text)],
+];
+
+// What a piece of source text breaks, if anything.
+const styleProblem = (text: string): Problem | undefined =>
+  problemTests.find(([, test]): boolean => test(text))?.[0];
 
 const report = (context: Context, node: ESTree.Node, text: string): void => {
   const messageId = styleProblem(text);
@@ -45,6 +137,8 @@ export const styleTokens = defineRule({
     messages: {
       arbitraryValue:
         'No arbitrary Tailwind values: use a scale step (spacing, size, radius, type role) or a token in tooling/uniwind/theme.css.',
+      paletteColour:
+        'No Tailwind palette colours: use an Argo colour token from tooling/uniwind/theme.css (bg-card, text-foreground, border-border, …).',
       rawColour:
         'No raw colours: add or use a colour token in tooling/uniwind/theme.css and read it with a class or useCSSVariable.',
     },
