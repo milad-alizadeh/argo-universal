@@ -50,6 +50,8 @@ function Collapsible(options: CollapsibleProps): ReactElement {
 
 const CollapsibleTrigger = CollapsiblePrimitive.Trigger;
 
+export { CollapsibleHeader, useCollapsibleHovered } from './collapsible-header';
+
 export {
   Collapsible,
   CollapsibleContent,

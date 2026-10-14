@@ -4,8 +4,6 @@ import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import { ShimmerText } from './shimmer-text';
 
-export const foregroundTextClassName = 'text-foreground';
-
 const regexSpecialCharacters = /[.*+?^${}()|[\]\\]/g;
 
 export interface FeedDisclosureLabelProps {
@@ -58,9 +56,9 @@ function withMonoPaths(title: string, paths: readonly string[]): ReactNode[] {
 const disclosureTitle = (label: string, trailing?: string): string =>
   trailing ? `${label} ${trailing}` : label;
 
+// The colour comes from the Collapsible header, muted until hovered.
 const plainLabelClassName = (props: FeedDisclosureLabelProps): string =>
-  cn('min-w-0 shrink text-muted-foreground', {
-    [foregroundTextClassName]: props.hovered,
+  cn('min-w-0 shrink', {
     'text-warning': props.awaitingApproval,
     'line-through': props.denied,
   });
@@ -89,7 +87,7 @@ export function FeedDisclosureLabel(
     <ShimmerText
       text={title}
       emphasized={props.hovered}
-      className="min-w-0 shrink type-body"
+      className="min-w-0 shrink type-body text-foreground"
     />
   ) : (
     <PlainLabel {...props} title={title} />
