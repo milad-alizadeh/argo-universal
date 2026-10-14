@@ -1,9 +1,7 @@
 import { Host as ExpoHost, type UniversalHostProps } from '@expo/ui';
-import type { ComponentProps } from 'react';
 import type * as React from 'react';
-import { Platform } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { MaterialPalette } from './material-palette';
+import { HostPalette } from './host-palette';
 
 export type HostProps = Omit<
   UniversalHostProps,
@@ -25,16 +23,5 @@ export function Host({ children, ...props }: HostProps): React.JSX.Element {
     >
       <HostPalette colors={theme.colors}>{children}</HostPalette>
     </ExpoHost>
-  );
-}
-
-function HostPalette(props: {
-  colors: ComponentProps<typeof MaterialPalette>['colors'];
-  children: React.ReactNode;
-}): React.ReactNode {
-  if (Platform.OS !== 'android') return props.children;
-
-  return (
-    <MaterialPalette colors={props.colors}>{props.children}</MaterialPalette>
   );
 }

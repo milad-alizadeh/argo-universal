@@ -3,11 +3,13 @@ import { useContext, type ReactElement } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import {
+  CollapsibleLayoutSyncContext,
   contentAccessibility,
   movingContentStyle,
   OpenContext,
   type ContentProps,
 } from './collapsible-context';
+import { LayoutSyncedContent } from './collapsible-layout-content';
 import { useNativeContentMotion } from './collapsible-native-motion';
 
 type NativeMotion = ReturnType<typeof useNativeContentMotion>;
@@ -66,7 +68,7 @@ function NativeMeasuredContent({
   );
 }
 
-export function NativeContent({
+function NativeContent({
   children,
   className,
   forceMount,
@@ -92,4 +94,14 @@ function renderNativeContent(
       </NativeMeasuredContent>
     </NativeHeight>
   );
+}
+
+// A phone animates the content's measured height; a layout-synced list animates with its rows instead.
+export function CollapsibleContent(props: ContentProps): ReactElement | null {
+  const layoutSync = useContext(CollapsibleLayoutSyncContext);
+
+  if (layoutSync)
+    return <LayoutSyncedContent {...props} layoutSync={layoutSync} />;
+
+  return <NativeContent {...props} />;
 }

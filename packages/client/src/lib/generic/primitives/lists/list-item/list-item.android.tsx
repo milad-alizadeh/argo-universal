@@ -8,7 +8,7 @@ import { roundedOutline } from '../../native/compose-corners';
 import { RowContent } from './list-item-android-row';
 import { type ListItemProps, listItemName } from './list-item-props';
 import * as Web from './list-item.tsx';
-import { NativeRowDetail } from './native-row';
+import { NativeRowDetail } from './native-row-detail.android';
 
 const tileRadius = 4;
 

@@ -1,7 +1,10 @@
+import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useWide } from '../../../use-wide/use-wide';
-import { HostedRow } from '../field-group/field-group-row';
 import { FieldGroupContent as WebFieldGroupContent } from './field-group-content.tsx';
+import { HostedRow } from './hosted-row';
+
+const rowFrame = (): ReturnType<typeof fillMaxWidth>[] => [fillMaxWidth()];
 
 // A Compose column sizes a plain React Native view by its last layout, so the row hosts it and takes its height.
 export function FieldGroupContent({
@@ -9,7 +12,7 @@ export function FieldGroupContent({
 }: {
   children: React.ReactNode;
 }): React.JSX.Element {
-  const Row = useWide() ? WebFieldGroupContent : HostedRow;
+  if (useWide()) return <WebFieldGroupContent>{children}</WebFieldGroupContent>;
 
-  return <Row>{children}</Row>;
+  return <HostedRow frame={rowFrame}>{children}</HostedRow>;
 }

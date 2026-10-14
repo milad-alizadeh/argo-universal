@@ -16,7 +16,7 @@ import { rowAccessibilityModifiers } from './list-item-accessibility';
 import type { ListItemProps } from './list-item-props';
 import { RowContent } from './list-item-row.ios';
 import { ListItem as WebListItem } from './list-item.tsx';
-import { NativeRowDetail } from './native-row';
+import { NativeRowDetail } from './native-row-detail.ios';
 
 const inset = 16;
 

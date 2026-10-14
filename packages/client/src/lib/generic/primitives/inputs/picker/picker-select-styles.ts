@@ -73,7 +73,7 @@ function popperClassName({ position, side }: ContentStyle): string | undefined {
 export function selectContentClassName(props: ContentStyle): string {
   return cn(
     'bg-popover border-border relative z-50 min-w-[8rem] rounded-2xl web:shadow-card border shadow-md shadow-black/5',
-    'web:animate-in web:fade-in-0 web:zoom-in-95 web:origin-(--radix-select-content-transform-origin) web:max-h-52 web:overflow-y-auto web:overflow-x-hidden native:p-1',
+    'web:animate-in web:fade-in-0 web:zoom-in-95 web:origin-(--radix-select-content-transform-origin) web:max-h-52 web:overflow-y-auto web:overflow-x-hidden',
     slideClassName(props.side),
     popperClassName(props),
     props.className,

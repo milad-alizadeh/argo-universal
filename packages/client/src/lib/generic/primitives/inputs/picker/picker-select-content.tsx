@@ -1,11 +1,7 @@
 import * as SelectPrimitive from '@rn-primitives/select';
 import * as React from 'react';
-import { Platform, StyleSheet } from 'react-native';
-import { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
-import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
 import { Icon } from '#primitives/display/icon/icon';
 import { TextClassContext } from '#primitives/display/text/text';
-import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view/native-only-animated-view';
 import {
   selectContentClassName,
   selectViewportClassName,
@@ -14,21 +10,6 @@ import {
 type ContentProps = React.ComponentProps<typeof SelectPrimitive.Content> & {
   className?: string;
   portalHost?: string;
-};
-
-const FullWindowOverlay =
-  Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
-
-const animationProps = {
-  className: 'z-50',
-  entering: FadeIn.reduceMotion(ReduceMotion.System),
-  exiting: FadeOut.reduceMotion(ReduceMotion.System),
-  as: 'Pressable',
-} as const;
-
-const overlayProps = {
-  style: Platform.select({ native: StyleSheet.absoluteFill }),
-  asChild: Platform.OS !== 'web',
 };
 
 const scrollClassName = 'flex cursor-default items-center justify-center py-1';
@@ -42,8 +23,7 @@ function ScrollButton({
   direction,
 }: {
   direction: 'up' | 'down';
-}): React.JSX.Element | null {
-  if (Platform.OS !== 'web') return null;
+}): React.JSX.Element {
   const { Component, icon } = scrollButtons[direction];
 
   return (
@@ -84,17 +64,14 @@ function ContentBody(contentProps: ContentProps): React.JSX.Element {
   );
 }
 
+// The web's Select: phones draw Picker's native files instead.
 function ContentOverlay(props: ContentProps): React.JSX.Element {
   return (
-    <FullWindowOverlay>
-      <SelectPrimitive.Overlay {...overlayProps}>
-        <NativeOnlyAnimatedView {...animationProps}>
-          <TextClassContext.Provider value="text-popover-foreground">
-            <ContentBody {...props} />
-          </TextClassContext.Provider>
-        </NativeOnlyAnimatedView>
-      </SelectPrimitive.Overlay>
-    </FullWindowOverlay>
+    <SelectPrimitive.Overlay>
+      <TextClassContext.Provider value="text-popover-foreground">
+        <ContentBody {...props} />
+      </TextClassContext.Provider>
+    </SelectPrimitive.Overlay>
   );
 }
 

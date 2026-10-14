@@ -1,14 +1,23 @@
 import { RNHostView, Row } from '@expo/ui';
-import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import { frame } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
-import { type LayoutChangeEvent, Platform, View } from 'react-native';
+import { type LayoutChangeEvent, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 
 type ChildrenProps = { children: React.ReactNode };
 
-export function HostedRow({ children }: ChildrenProps): React.JSX.Element {
+type RowModifiers = React.ComponentProps<typeof Row>['modifiers'];
+
+type HostedRowProps = ChildrenProps & {
+  // The platform's frame for the row at the content's measured height.
+  frame: (height: number | undefined) => RowModifiers;
+};
+
+// A plain React Native view hosted in a native row, which takes the view's measured height.
+export function HostedRow({
+  children,
+  frame,
+}: HostedRowProps): React.JSX.Element {
   const minimumHeight = useResolveClassNames('h-11').height;
 
   const [height, setHeight] = useState(
@@ -16,18 +25,10 @@ export function HostedRow({ children }: ChildrenProps): React.JSX.Element {
   );
 
   return (
-    <Row style={{ height }} modifiers={rowModifiers(height)}>
+    <Row style={{ height }} modifiers={frame(height)}>
       <MeasuredRow onHeight={setHeight}>{children}</MeasuredRow>
     </Row>
   );
-}
-
-function rowModifiers(
-  height: number | undefined,
-): React.ComponentProps<typeof Row>['modifiers'] {
-  return Platform.OS === 'ios'
-    ? [frame({ height, maxWidth: Infinity })]
-    : [fillMaxWidth()];
 }
 
 type MeasuredRowProps = ChildrenProps & { onHeight: (height: number) => void };
