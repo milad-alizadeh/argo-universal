@@ -4,6 +4,7 @@ import type {
   AgentDetailViewProps,
 } from '../../state/agent-detail-types';
 import type { AgentInstallPresentation } from '../../state/agent-install-types';
+import type { ToolInstallPresentation } from '../../state/missing-tool';
 import { iconAgent } from '../registry-icons.mocks';
 
 export const readyAgent: AgentDetail = {
@@ -51,5 +52,20 @@ export const installationArgs = (
   installing: false,
   onConfirmingChange: fn(),
   onInstall: fn(),
+  ...overrides,
+});
+
+// Homebrew on the connected Server, idle, with spies; override its state per story.
+export const toolArgs = (
+  overrides: Partial<ToolInstallPresentation> = {},
+): ToolInstallPresentation => ({
+  homebrew: true,
+  server: serverName,
+  confirming: false,
+  installing: false,
+  onConfirmingChange: fn(),
+  onInstall: fn(),
+  rechecking: false,
+  onRecheck: fn(),
   ...overrides,
 });

@@ -8,6 +8,7 @@ import type * as React from 'react';
 import { Host } from '../../native/host';
 import {
   alertActionPress,
+  alertText,
   isDestructiveAlert,
   type AlertProps,
 } from './alert-props';
@@ -53,7 +54,7 @@ function PlainAlert(props: AlertProps): React.JSX.Element {
       <SwiftAlert.Actions>
         <AlertActions {...props} />
       </SwiftAlert.Actions>
-      <PlainAlertMessage message={props.message} />
+      <PlainAlertMessage message={alertText(props)} />
     </SwiftAlert>
   );
 }
@@ -79,7 +80,7 @@ function Confirmation(props: AlertProps): React.JSX.Element {
       <ConfirmationDialog.Actions>
         <AlertActions {...props} explicitCancel />
       </ConfirmationDialog.Actions>
-      <ConfirmationMessage message={props.message} />
+      <ConfirmationMessage message={alertText(props)} />
     </ConfirmationDialog>
   );
 }

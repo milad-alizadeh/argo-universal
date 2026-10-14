@@ -22,7 +22,12 @@ export type ResolveAgentLaunch = (input: {
   projectPath: string;
 }) => Promise<AgentLaunch>;
 
-export type AgentLaunchSubject = { name: string; launch: AgentLaunch };
+export type AgentLaunchSubject = {
+  name: string;
+  launch: AgentLaunch;
+  // Cancels a Readiness check; the program is still stopped before it settles.
+  signal?: AbortSignal;
+};
 
 // The port through which the ACP module checks that a program answers ACP initialize.
 export type CheckAgentLaunch = (

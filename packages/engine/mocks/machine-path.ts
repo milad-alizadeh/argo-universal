@@ -33,20 +33,23 @@ const createNodeDirectory = (): string => {
   return directory;
 };
 
-// System tools and this Node only, so the developer's own Agents never count as installed.
-const systemDirectories = [
-  createNodeDirectory(),
-  '/usr/bin',
-  '/bin',
-  '/usr/sbin',
-  '/sbin',
-];
+const nodeDirectory = createNodeDirectory();
+
+// System tools only, so the developer's own Agents and tools never count as installed.
+const systemDirectories = ['/usr/bin', '/bin', '/usr/sbin', '/sbin'];
 
 let machineDirectory: string | undefined;
 
-// The PATH an Engine under test sees: the test's machine directory first, then system tools.
+let withNode = true;
+
+// The PATH an Engine under test sees: the test's machine directory first, then this Node and system tools.
 export const stubTestMachinePath = (): void => {
-  const directories = [machineDirectory ?? [], systemDirectories].flat();
+  const directories = [
+    machineDirectory ?? [],
+    withNode ? nodeDirectory : [],
+    systemDirectories,
+  ].flat();
+
   vi.stubEnv('PATH', directories.join(delimiter));
 };
 
@@ -57,15 +60,19 @@ const writeExecutable = async (file: string): Promise<string> => {
   return file;
 };
 
-// "The machine": a temporary bin directory put first on PATH for this test only, with npm's global packages beside it.
-export const createMachinePath = async (): Promise<MachinePath> => {
+// "The machine": a temporary bin directory put first on PATH for this test only, with npm's global packages beside it; `node: false` leaves Node.js off PATH.
+export const createMachinePath = async (
+  options: { node?: boolean } = {},
+): Promise<MachinePath> => {
   const root = await mkdtemp(join(tmpdir(), 'argo-path-'));
   const directory = join(root, 'bin');
   await mkdir(directory);
   machineDirectory = directory;
+  withNode = options.node ?? true;
   stubTestMachinePath();
   onTestFinished(async () => {
     machineDirectory = undefined;
+    withNode = true;
     await rm(root, { recursive: true, force: true });
   });
 

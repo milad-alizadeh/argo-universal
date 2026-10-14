@@ -12,3 +12,5 @@ export type {
 } from './upstream/auth-status.gen';
 
 export * from './installation';
+
+export * from './tools';

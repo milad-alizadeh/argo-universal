@@ -1,6 +1,7 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
+import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { Button } from '../../buttons/button/button';
 import { DialogOverlay } from '../dialog/dialog-overlay';
@@ -25,6 +26,7 @@ export function Alert(props: AlertProps): React.JSX.Element {
         <DialogOverlay>
           <DialogPrimitive.Content className={contentClassName}>
             <AlertHeading title={props.title} message={props.message} />
+            <AlertCommand command={props.command} />
             <AlertButtons {...props} />
           </DialogPrimitive.Content>
         </DialogOverlay>
@@ -46,6 +48,18 @@ function AlertHeading(props: AlertHeadingProps): React.JSX.Element {
           {props.message}
         </DialogPrimitive.Description>
       ) : null}
+    </View>
+  );
+}
+
+function AlertCommand({
+  command,
+}: Pick<AlertProps, 'command'>): React.JSX.Element | null {
+  if (!command) return null;
+
+  return (
+    <View className="rounded-lg bg-muted px-3 py-2">
+      <Text role="code">{command}</Text>
     </View>
   );
 }

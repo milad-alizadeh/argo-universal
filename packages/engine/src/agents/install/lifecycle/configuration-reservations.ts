@@ -4,6 +4,7 @@ import { ResourceCleanupError } from '../../../lib/resource-cleanup-error';
 export class ConfigurationReservations {
   private readonly active = new Map<string, Promise<unknown>>();
   private readonly checks = new Map<string, Promise<AgentCheck>>();
+  private readonly cancels = new Map<string, AbortController>();
   public has(agentId: string): boolean {
     return this.active.has(agentId) || this.checks.has(agentId);
   }
@@ -23,19 +24,37 @@ export class ConfigurationReservations {
   }
   public check(
     agentId: string,
-    operation: () => Promise<AgentCheck>,
+    operation: (signal: AbortSignal) => Promise<AgentCheck>,
   ): Promise<AgentCheck> {
     const existing = this.checks.get(agentId);
 
     if (existing) return existing;
 
-    const pending = this.inspect(agentId, operation).finally(() =>
-      this.checks.delete(agentId),
-    );
+    const controller = new AbortController();
+
+    const pending = this.inspect(agentId, () =>
+      operation(controller.signal),
+    ).finally(() => this.forgetCheck(agentId));
 
     this.checks.set(agentId, pending);
+    this.cancels.set(agentId, controller);
 
     return pending;
+  }
+  private forgetCheck(agentId: string): void {
+    this.checks.delete(agentId);
+    this.cancels.delete(agentId);
+  }
+  // Stops a running Readiness check; it settles once its program has stopped.
+  public async cancelCheck(agentId: string): Promise<boolean> {
+    const pending = this.checks.get(agentId);
+
+    if (!pending) return false;
+
+    this.cancels.get(agentId)?.abort();
+    await Promise.allSettled([pending]);
+
+    return true;
   }
   private async inspect(
     agentId: string,
