@@ -1,0 +1,31 @@
+# Plugins run on the Server and draw Argo components
+
+Argo is plugin-based (owner, 2026-10-14, the #506 grilling; Spec 0016 #725). Core is Agents, Sessions and the Feed. Everything else, starting with the Issue tracker and then Atlas, is a Plugin. A Plugin is loaded the same way whether it ships with Argo or sits in the user's folder. The owner's rule is to copy proven plugin systems rather than invent new patterns. The research behind this ADR is in `docs/research/reports/`: "Plugin system patterns to copy", "Declarative plugin UI architecture", "Expo UI plugin feasibility" and "Runtime UI plugins for native apps".
+
+## Decision
+
+- **A Plugin is a folder.** It holds a `plugin.json` manifest and a built entry file. The manifest has `id`, `name`, `version`, `engines.argo` (a semver range, never `*`), `main`, `icon` (an Argo icon name, ADR-0019) and `contributes`: nav items, a settings schema and the Slots it fills. Copied from VS Code's `package.json`.
+- **One loader, two places.** The Server scans Argo's own `plugins/` folder (first-party) and `~/.argo/plugins/` with the same code. First-party Plugins are on by default and can be turned off but not uninstalled, as VS Code's built-in extensions can. The loader never imports workspace paths, so a packaged Argo loads Plugins unchanged. Installed Plugins load their built `main`; only dev Plugins are bundled by esbuild on load and hot-reloaded.
+- **Plugins run only on the Server.** This keeps ADR-0002. A plugin host child process runs each Plugin in its own worker thread with a heap cap, as Raycast v1 does. The host restarts itself up to 3 times in 5 minutes, flags a Plugin that does not answer within 3 seconds, and logs the Plugins running at each crash, copying VS Code's extension host rules. Plugins may use Node directly. Apps never run Plugin code.
+- **Lazy start.** The App draws everything in `contributes` without starting the Plugin. A Plugin starts the first time one of its pages, Slots or actions is used, as with VS Code's activation from contributions since 1.74.
+- **Plugins draw Argo components, not their own.** Plugins write React/JSX against Argo's UI kit. A reconciler in the worker turns it into Spec 0015's wire nodes (`{type, key, props, children, slots}`) and sends a snapshot, then revisioned patches, over the existing tRPC WebSocket. The App's registry draws the real kit component for each node on iOS, Android, web and desktop, so Plugins look native without styling. Function props become event ids. `className` and `style` are rejected. Unknown leaves are dropped, and an unknown container shows "Update Argo to see this". Copied from Raycast's reconciler and VS Code's data-only tree items. Plugin web views stay a later desktop/web escape hatch (Spec 0015, decision 2).
+- **Four places.** Plugins can add:
+  - nav items: Rail on desktop, drawer on phone, after Argo's core Sessions and Settings;
+  - pages: one catch-all route, a stack per Plugin on phone;
+  - Settings sections, drawn by the App from the manifest's schema, as VS Code's `contributes.configuration` and Raycast's preferences are;
+  - Slots in core pages. A Slot has a versioned id and a frozen, typed context, and is filled only by Plugins that declare it, as Grafana's extension points are. The first Slot is `argo/project/details/v1` with `{ projectId }`.
+- **Core never stores Plugin data.** Plugins point at Projects and Sessions by id. Each Plugin keeps its own data in a folder outside its Plugin folder, with a SQLite file created on first use that it may run Drizzle on. This follows Backstage's database per plugin. The Server never writes there and may attach it read-only for cross-queries. Secrets go to the Keychain, as with VS Code's SecretStorage and IntelliJ's PasswordSafe.
+- **The API is proposed until two Plugins use it.** Every Plugin API and every exposed kit component starts as proposed: only first-party Plugins may use it, and it may change. A piece becomes stable, and is never broken again, once the Issue tracker and Atlas both use it. This copies VS Code's proposed API.
+- **Plugins belong to a Server.** The App shows the Plugins of the Server it is connected to and stores nothing about them.
+- **The Issue tracker is one Plugin with Trackers inside.** GitHub Issues comes first, Linear later. Each Project chooses its Tracker in Project details, and the choice stays on the user's machine, as in IntelliJ's Issue Trackers plugin. The Tracker interface is internal to the Plugin. The GitHub Tracker uses the `gh` CLI's login behind that interface, so an Argo-owned GitHub sign-in can replace it later.
+- **Testing.** App E2E may replace `gh` with a fixture executable on `PATH`, a third external boundary beside ADR-0018's Agent and Registry. The Plugin side is always real: the plugin host, workers, loader and storage run in Engine journeys with fixture Plugin folders.
+
+## Considered options
+
+- **Plugin JavaScript in the App,** in a JS engine or a downloaded bundle. Rejected: app store rules forbid downloaded executable code on phones, and Plugins would need two runtimes.
+- **HTML web views for all Plugin UI.** Rejected for v1: Plugins would not look native on the phone. They stay a later desktop/web escape hatch.
+- **Plugin-drawn Settings sections.** Rejected: VS Code, Raycast and Obsidian all draw settings from a schema, and a schema keeps Settings consistent.
+- **Plugin tables in Argo's database.** Rejected: the plugin host is another process writing to the Feed's database, a bad migration could break core, and links between core and Plugin data become fuzzy.
+- **A process per Plugin.** Rejected for now: worker threads give crash isolation with one process to manage.
+- **Issues screens owned by core, with Plugins as data providers.** Rejected: the first Plugin must prove the format others will use.
+- **Exposing only a small, stable component catalog.** Rejected: the owner wants the whole kit available. Marking it proposed keeps the freedom to change it.

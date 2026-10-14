@@ -45,12 +45,30 @@ A Device whose App has access to a Server through Pairing. It is never that Serv
 _Avoid_: Remote Device, guest, client
 
 **Issue**:
-A work item in a Project's tracker, such as Linear or GitHub.
+A work item in a Project's Tracker, such as Linear or GitHub Issues.
 _Avoid_: Ticket, task
 
 **Integration**:
-A Project's link to an outside service, such as GitHub.
+A Project's link to an outside service, such as GitHub. A Project's chosen Tracker is an Integration.
 _Avoid_: Connection, account link
+
+## Plugins
+
+**Plugin**:
+A folder the Server loads that adds nav items, pages, Settings sections or Slot content to Argo. Argo's own Issue tracker and Atlas are Plugins.
+_Avoid_: Extension, add-on, mod
+
+**Plugin host**:
+The Server process that runs Plugin code, each Plugin in its own worker thread. Apps never run Plugin code.
+_Avoid_: Extension host, sandbox
+
+**Slot**:
+A named, versioned place in a core page that Plugins fill, such as Project details.
+_Avoid_: Contribution point, hook, outlet
+
+**Tracker**:
+A source of Issues inside the Issue tracker Plugin, such as GitHub Issues or Linear. Each Project chooses one.
+_Avoid_: Provider, backend, issue source
 
 ## Agents and Sessions
 
