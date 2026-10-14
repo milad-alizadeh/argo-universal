@@ -44,7 +44,7 @@ function triggerProps<Value extends string>(
 
 function triggerClassName(props: { row: boolean; invalid: boolean }): string {
   return cn(
-    !props.row && 'h-9 sm:h-9 w-full! rounded-lg bg-card',
+    !props.row && 'h-9 sm:h-9 w-full! rounded-control bg-card',
     props.invalid && 'border-danger',
   );
 }

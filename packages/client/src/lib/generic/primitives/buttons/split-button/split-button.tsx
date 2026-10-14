@@ -50,7 +50,7 @@ function groupClassName(props: GroupLook): string | undefined {
   if (props.size !== 'xs') return props.className;
 
   return cn(
-    'rounded-md web:shadow-xs',
+    'rounded-md web:rounded-control web:shadow-xs',
     props.disabled && 'opacity-35',
     props.className,
   );

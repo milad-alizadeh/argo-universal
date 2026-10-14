@@ -1,10 +1,10 @@
 import { cn } from '#lib/generic/utils';
 
 const triggerClassName =
-  'border-border dark:bg-border/30 dark:active:bg-border/50 bg-card flex h-10 flex-row items-center justify-between gap-2 rounded-md border px-3 py-2 shadow-sm shadow-black/5 sm:h-9 web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40 web:aria-invalid:border-danger web:dark:hover:bg-border/50 web:w-fit web:whitespace-nowrap web:type-body web:outline-none web:transition-[color,box-shadow] web:focus-visible:ring-3 web:disabled:cursor-not-allowed web:[&_svg]:pointer-events-none web:[&_svg]:shrink-0';
+  'border-border dark:bg-border/30 dark:active:bg-border/50 bg-card flex h-10 flex-row items-center justify-between gap-2 rounded-control border px-3 py-2 shadow-sm shadow-black/5 sm:h-9 web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40 web:aria-invalid:border-danger web:dark:hover:bg-border/50 web:w-fit web:whitespace-nowrap web:type-body web:outline-none web:transition-[color,box-shadow] web:focus-visible:ring-3 web:disabled:cursor-not-allowed web:[&_svg]:pointer-events-none web:[&_svg]:shrink-0';
 
 const plainTriggerClassName =
-  'flex h-8 flex-row items-center gap-1.5 rounded-md pl-2 web:hover:bg-selected web:focus-visible:outline-2 web:focus-visible:outline-focus web:w-fit web:whitespace-nowrap web:outline-none web:disabled:cursor-not-allowed';
+  'flex h-8 flex-row items-center gap-1.5 rounded-control pl-2 web:hover:bg-selected web:focus-visible:outline-2 web:focus-visible:outline-focus web:w-fit web:whitespace-nowrap web:outline-none web:disabled:cursor-not-allowed';
 
 const itemClassName =
   'active:bg-muted group relative flex w-full flex-row items-center gap-2 rounded-xl py-2 pl-2 pr-8 sm:py-1.5 web:focus:bg-muted web:*:[span]:last:flex web:*:[span]:last:items-center web:*:[span]:last:gap-2 web:cursor-default web:outline-none web:data-disabled:pointer-events-none web:[&_svg]:pointer-events-none';

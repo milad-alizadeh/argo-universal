@@ -83,6 +83,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  /* Buttons, inputs, the Picker trigger and SearchField on a wide window. Menu and popover rows take xl. */
+  --radius-control: var(--radius-lg);
   /* The glass sidebar, the Composer and every card, popover and menu. */
   --radius-2xl: calc(var(--radius) + 8px);
   --blur-glass: 28px;

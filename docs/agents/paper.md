@@ -69,8 +69,9 @@ Each section uses these artboards on the pages listed in Design files, top-align
 
 - Paper tokens use the Tailwind names in `tooling/uniwind/theme.css`. Fractional steps take an underscore: `--spacing-0_5`, `--leading-4_5`.
 - Icon dimensions come from the role table in `packages/client/src/lib/generic/symbols/icon-role.ts`: desktop frames use a role's wide size, phone frames its phone size. Paper records the resolved dimensions as literals. An icon slot uses the same size as its glyph.
-- Web card and popover surfaces, including menus, dialogs and sheets, use `--radius-sheet` (28px) and the shared `--shadow-card` shadow (owner, 2026-10-10). Web sheets round their top corners. Native surfaces keep their platform drawings.
-- Web inputs match the Android TextInput master at `--radius-lg` (10px) (owner, 2026-10-10). Web search fields are not styled as inputs: they use `--radius-2xl` (18px, the list card radius), a `--color-muted` fill, and no border or shadow (owner, 2026-10-12). The existing native ListSearch animation retains 6px through the `--radius-search` platform token value.
+- Web and desktop radii follow one rule (owner, 2026-10-14). Controls (Button, IconButton, SplitButton, TextInput, Textarea, the Picker trigger and SearchField) use `--radius-control` (the lg radius, 10px). Rows inside menus and popovers use `--radius-xl` (14px). Containers (cards, popovers, menus and the Composer) use `--radius-2xl` (18px). Pills (Pill, FilterPill, StatusDot) are fully rounded. Sheets use `--radius-sheet` (28px) and round their top corners. Phones keep their stock shapes.
+- Web card and popover surfaces share the `--shadow-card` shadow (owner, 2026-10-10). Native surfaces keep their platform drawings.
+- Web search fields have a `--color-muted` fill and no border or shadow (owner, 2026-10-12).
 - Web dialogs have no border in light mode. Dark web cards, popovers, menus, dialogs and sheets use a 1px `--color-border` edge and a black shadow, without a white glow (owner, 2026-10-10).
 - Feed code blocks, inline diffs and tables use `--radius-sheet` on web and have no shadow. Menu hover and focus use `--color-muted`; pressed uses `--color-border` without a border (owner, 2026-10-10).
 - Destructive hover and pressed states use a light red background, 10% of `--color-danger`, with danger text (owner, 2026-10-10).

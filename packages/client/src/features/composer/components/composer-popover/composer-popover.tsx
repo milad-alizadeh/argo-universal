@@ -73,7 +73,7 @@ function WideContent(props: OverlayProps): React.JSX.Element {
       accessibilityLabel={props.label}
       onClosed={props.closed}
       style={{ width: popoverWidth(props) }}
-      className="composer-popover bg-content rounded-sheet border-0 dark:border dark:border-border p-0 overflow-hidden"
+      className="composer-popover bg-content rounded-2xl border-0 dark:border dark:border-border p-0 overflow-hidden"
     >
       <PopoverPanel {...panelProps(props)} />
     </PopoverContent>

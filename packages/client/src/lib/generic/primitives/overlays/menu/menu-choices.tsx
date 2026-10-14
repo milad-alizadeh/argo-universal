@@ -34,7 +34,7 @@ export function MenuChoiceContent<Value extends string>(
       align={props.align ?? 'end'}
       onKeyDown={() => props.focus.onKeyboardFocusChange(true)}
       onPointerMove={() => props.focus.onKeyboardFocusChange(false)}
-      className="w-65 overflow-hidden bg-card rounded-2xl py-2 shadow-card dark:border dark:border-border"
+      className="w-65 overflow-hidden bg-card rounded-2xl p-1 shadow-card dark:border dark:border-border"
     >
       <MenuChoices {...props} />
     </MenuPrimitive.Content>
@@ -101,7 +101,7 @@ function radioKeyDown(
 
 function radioItemClassName(keyboardFocus: boolean): string {
   return cn(
-    'min-h-9 flex-row items-center gap-3 cursor-default rounded-none outline-0 px-4 py-1.5 hover:bg-muted focus:bg-muted active:bg-border',
+    'min-h-9 flex-row items-center gap-3 cursor-default rounded-xl outline-0 px-3 py-1.5 hover:bg-muted focus:bg-muted active:bg-border',
     keyboardFocus &&
       'focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2',
   );
