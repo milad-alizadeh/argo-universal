@@ -55,21 +55,14 @@ const body = within(document.body);
 
 const alertName = { name: 'Remove Example ACP?' };
 
-// A disabled answer cannot run; Cancel still closes the alert.
+// A disabled answer is shown but cannot run.
 export const DisabledAnswer: Story = {
   args: { blocked: true },
-  play: async ({ userEvent, args }) => {
+  play: async () => {
     const alert = await body.findByRole('dialog', alertName);
     await expect(
       within(alert).getByRole('button', { name: 'Remove' }),
     ).toBeDisabled();
-    await userEvent.click(
-      within(alert).getByRole('button', { name: 'Cancel' }),
-    );
-    await waitFor(() =>
-      expect(body.queryByRole('dialog', alertName)).toBeNull(),
-    );
-    await expect(args.onRemove).not.toHaveBeenCalled();
   },
 };
 

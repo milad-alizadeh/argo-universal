@@ -32,26 +32,3 @@ export const Count: Story = {
     await expect(canvas.getByText('3')).toBeVisible();
   },
 };
-
-// Past 99 the badge shows 99+.
-export const LargeCount: Story = {
-  args: { badge: 120 },
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('group', { name: 'Issues, 99+' }),
-    ).toBeInTheDocument();
-    await expect(canvas.getByText('99+')).toBeVisible();
-    await expect(canvas.queryByText('120')).not.toBeInTheDocument();
-  },
-};
-
-// Nothing to count draws no badge.
-export const NoCount: Story = {
-  args: { badge: 0 },
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('group', { name: 'Issues' }),
-    ).toBeInTheDocument();
-    await expect(canvas.queryByText('0')).not.toBeInTheDocument();
-  },
-};

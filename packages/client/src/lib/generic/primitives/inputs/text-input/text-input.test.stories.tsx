@@ -16,6 +16,7 @@ type ExampleProps = {
   onChangeText: (value: string) => void;
   errors?: string[];
   disabled?: boolean;
+  loading?: boolean;
 };
 
 function Example(props: ExampleProps): React.JSX.Element {
@@ -77,12 +78,12 @@ export const StandaloneMarksInvalid = marksInvalidIn('standalone');
 
 export const RowMarksInvalid = marksInvalidIn('row');
 
-// A row's error shows in its section's footer, which the field names as its description.
+// A row sits in a section; its error shows in the section's footer, which the field names as its description.
 function InSection(props: ExampleProps): React.JSX.Element {
   if (props.variant === 'standalone') return <Example {...props} />;
 
   return (
-    <GroupedListSection footer={failure} tone="danger" textFields>
+    <GroupedListSection footer={props.errors?.[0]} tone="danger" textFields>
       <Example {...props} />
     </GroupedListSection>
   );
@@ -118,6 +119,27 @@ function lockedIn(variant: Variant): Story {
 export const StandaloneDisabled = lockedIn('standalone');
 
 export const RowDisabled = lockedIn('row');
+
+// While its value is checked, the field says it is busy and shows a spinner, and still takes typing.
+function busyIn(variant: Variant): Story {
+  return {
+    args: { variant, loading: true },
+    render: InSection,
+    play: async ({ canvas, userEvent, args }) => {
+      const field = canvas.getByRole('textbox', { name: label });
+      await expect(field).toHaveAttribute('aria-busy', 'true');
+      await expect(
+        canvas.getByRole('progressbar', { name: 'Loading' }),
+      ).toBeVisible();
+      await userEvent.type(field, 'x');
+      await expect(args.onChangeText).toHaveBeenLastCalledWith('x');
+    },
+  };
+}
+
+export const StandaloneLoading = busyIn('standalone');
+
+export const RowLoading = busyIn('row');
 
 export const BareTypes: Story = {
   render: function Bare(props): React.JSX.Element {

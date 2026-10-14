@@ -47,6 +47,10 @@ type DestinationProps = (typeof destinations)[number] & {
   onSelect: (title: string) => void;
 };
 
+// Only Issues has something waiting.
+const issuesBadge = (title: string): { badge?: number; badgeLabel?: string } =>
+  title === 'Issues' ? { badge: 2, badgeLabel: '2 need attention' } : {};
+
 function Destination(props: DestinationProps): React.JSX.Element {
   const { title, current, onSelect } = props;
 
@@ -55,8 +59,7 @@ function Destination(props: DestinationProps): React.JSX.Element {
       label={title}
       icon={props.icon}
       selected={current === title}
-      badge={title === 'Issues' ? 2 : undefined}
-      badgeLabel="2 need attention"
+      {...issuesBadge(title)}
       onPress={() => onSelect(title)}
     />
   );

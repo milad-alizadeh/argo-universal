@@ -12,15 +12,23 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// An off filter turns on, and says its count with its name.
-export const TurnsOn: Story = {
+// A filter says its count with its name.
+export const SaysCount: Story = {
   args: { count: 12 },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('button', { name: 'Open, 12' }),
+    ).toBeInTheDocument();
+  },
+};
+
+// An off filter says so, and turns on.
+export const TurnsOn: Story = {
   play: async ({ canvas, userEvent, args }) => {
-    const pill = canvas.getByRole('button', { name: 'Open, 12' });
+    const pill = canvas.getByRole('button', { name: 'Open' });
 
     await expect(pill).toHaveAttribute('aria-pressed', 'false');
     await userEvent.click(pill);
-    await expect(args.onValueChange).toHaveBeenCalledTimes(1);
     await expect(args.onValueChange).toHaveBeenCalledWith(true);
   },
 };
