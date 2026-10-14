@@ -4,6 +4,7 @@ import {
   Picker,
   RNHostView,
   Text,
+  Toggle,
 } from '@expo/ui/swift-ui';
 import {
   type ModifierConfig,
@@ -21,6 +22,7 @@ import { optionalTint } from '#primitives/native/native-modifiers';
 import {
   type ActionMenuProps,
   type ChoiceMenuProps,
+  type MenuAction,
   type MenuProps,
   isActionMenu,
   menuValueLabel,
@@ -91,13 +93,23 @@ function MenuButtons(props: ActionMenuProps): React.JSX.Element {
   return (
     <>
       {props.actions.map((action) => (
-        <Button
-          key={action.label}
-          label={action.label}
-          onPress={action.onSelect}
-        />
+        <MenuButton key={action.label} {...action} />
       ))}
     </>
+  );
+}
+
+// An action that can be the selected one draws as a SwiftUI menu toggle: the system checkmark marks it.
+function MenuButton(action: MenuAction): React.JSX.Element {
+  if (action.selected === undefined)
+    return <Button label={action.label} onPress={action.onSelect} />;
+
+  return (
+    <Toggle
+      label={action.label}
+      isOn={action.selected}
+      onIsOnChange={action.onSelect}
+    />
   );
 }
 

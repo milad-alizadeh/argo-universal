@@ -32,22 +32,45 @@ export function MenuChoice(props: MenuChoiceProps): React.JSX.Element {
   );
 }
 
-// An action menu's row: its label alone, with no check.
-export function MenuActionItem(props: {
+export type MenuActionItemProps = {
   label: string;
+  // Set when the action can be the one the trigger shows now; that one carries a leading check.
+  selected?: boolean;
   onSelect: () => void;
-}): React.JSX.Element {
+};
+
+// An action menu's row: its label, and a leading check on the selected action.
+export function MenuActionItem(props: MenuActionItemProps): React.JSX.Element {
   const { colors } = useNativeTheme();
 
   return (
     <DropdownMenuItem
-      modifiers={[defaultMinSize({ minWidth: menuWidth })]}
+      modifiers={actionModifiers(props)}
       elementColors={choiceElementColors(colors)}
       onClick={props.onSelect}
     >
+      <ActionCheck selected={props.selected} />
       <ChoiceLabel label={props.label} />
     </DropdownMenuItem>
   );
+}
+
+function ActionCheck(props: { selected?: boolean }): React.ReactNode {
+  if (props.selected === undefined) return null;
+
+  return (
+    <DropdownMenuItem.LeadingIcon>
+      <MenuIndicator selected={props.selected} />
+    </DropdownMenuItem.LeadingIcon>
+  );
+}
+
+function actionModifiers(props: MenuActionItemProps): ModifierConfig[] {
+  const width = defaultMinSize({ minWidth: menuWidth });
+
+  return props.selected === undefined
+    ? [width]
+    : [width, selectable(props.selected, props.onSelect)];
 }
 
 function choiceModifiers(props: MenuChoiceProps): ModifierConfig[] {

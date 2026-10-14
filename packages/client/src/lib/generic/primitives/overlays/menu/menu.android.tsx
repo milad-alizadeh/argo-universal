@@ -72,7 +72,7 @@ function MenuActions(
       {props.actions.map((action) => (
         <MenuActionItem
           key={action.label}
-          label={action.label}
+          {...action}
           onSelect={() => props.onRun(action.onSelect)}
         />
       ))}

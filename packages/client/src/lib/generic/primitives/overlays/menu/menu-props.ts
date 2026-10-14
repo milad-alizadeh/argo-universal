@@ -4,7 +4,7 @@ import type { ReactElement, ReactNode } from 'react';
 export interface MenuAction {
   label: string;
   onSelect: () => void;
-  // The action the trigger shows now, such as the PR a header lists.
+  // The action the trigger shows now, such as the PR a header lists: every menu marks it with a check.
   selected?: boolean;
   // Drawn in place of the label where the menu draws its own rows (web); the label still names the action on native menus.
   content?: ReactNode;
