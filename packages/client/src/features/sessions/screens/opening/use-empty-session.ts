@@ -91,17 +91,27 @@ function useRetryOnReconnect(actor: EmptySessionActor): void {
   });
 }
 
-const toEmptySession = (
-  actor: EmptySessionActor,
-  snapshot: Snapshot,
-): EmptySession => ({
-  actor,
+type EmptySessionState = Omit<EmptySession, 'actor'>;
+
+const toEmptySessionState = (snapshot: Snapshot): EmptySessionState => ({
   error: snapshot.context.error,
   pendingPrompt: snapshot.context.pendingPrompt !== undefined,
   openSessionId: openSessionOf(snapshot),
   opening: isOpening(snapshot),
   handedOff: snapshot.status === 'done',
 });
+
+const stateFields = [
+  'error',
+  'pendingPrompt',
+  'openSessionId',
+  'opening',
+  'handedOff',
+] as const satisfies readonly (keyof EmptySessionState)[];
+
+// The page re-renders only when a field it shows changes, not on every snapshot.
+const sameState = (a: EmptySessionState, b: EmptySessionState): boolean =>
+  stateFields.every((field) => a[field] === b[field]);
 
 // New Session's real, empty Session for the current choices; leaving without sending closes it.
 export function useEmptySession(
@@ -115,9 +125,7 @@ export function useEmptySession(
   useCloseOnLeave(actor);
   useChoices(actor, input, connected);
   useRetryOnReconnect(actor);
+  const state = useSelector(actor, toEmptySessionState, sameState);
 
-  return toEmptySession(
-    actor,
-    useSelector(actor, (current) => current),
-  );
+  return { actor, ...state };
 }

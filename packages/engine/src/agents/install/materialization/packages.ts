@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { z } from 'zod';
+import { jsonCodec } from '../../../lib/json-codec';
 import type { InstallPorts, InstallToolInput } from '../ports';
 import { rejectInstallMetadata } from './metadata-rejections';
 import type { InstallRecipe } from './recipe';
@@ -20,6 +21,8 @@ const PackageMetadata = z.object({
   version: z.string(),
   bin: z.union([z.string(), z.record(z.string(), z.string())]),
 });
+
+const PackageJson = jsonCodec(PackageMetadata);
 
 const toolInput = (
   input: PackageInput,
@@ -62,8 +65,8 @@ const readPackageMetadata = async (
   directory: string,
 ): Promise<z.infer<typeof PackageMetadata>> => {
   try {
-    return PackageMetadata.parse(
-      JSON.parse(await readFile(join(directory, 'package.json'), 'utf8')),
+    return PackageJson.parse(
+      await readFile(join(directory, 'package.json'), 'utf8'),
     );
   } catch {
     throw rejectInstallMetadata(

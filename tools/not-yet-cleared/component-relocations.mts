@@ -106,7 +106,6 @@ const componentFolders: [string, string[]][] = [
       'native',
       'overlays/alert',
       'overlays/bottom-sheet',
-      'overlays/info-popover',
       'overlays/menu',
     ],
   ],

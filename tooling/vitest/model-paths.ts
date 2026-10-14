@@ -1,12 +1,12 @@
+import { isDeepStrictEqual } from 'node:util';
 import type { EventObject, Snapshot } from 'xstate';
 import type { StatePath } from 'xstate/graph';
 
 type ModelPath = StatePath<Snapshot<unknown>, EventObject>;
 
 const isPrefixOf = (path: ModelPath, other: ModelPath): boolean =>
-  path.steps.every(
-    (step, index) =>
-      JSON.stringify(step.event) === JSON.stringify(other.steps[index]?.event),
+  path.steps.every((step, index) =>
+    isDeepStrictEqual(step.event, other.steps[index]?.event),
   );
 
 // TestModel retains only paths that are not prefixes of another generated path.

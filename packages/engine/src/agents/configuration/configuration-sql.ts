@@ -7,6 +7,7 @@ import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
 import { createRejectionCounter } from '@repo/machine-log';
 import { eq, isNotNull, type SQL } from 'drizzle-orm';
+import { jsonCodec } from '../../lib/json-codec';
 
 const rejections = createRejectionCounter('Agent configurations');
 
@@ -15,19 +16,11 @@ type AgentRow = Pick<
   'id' | 'enabled' | 'configuration'
 >;
 
-const parseConfiguration = (text: string): AgentConfiguration | undefined => {
-  try {
-    const parsed = AgentConfiguration.safeParse(JSON.parse(text));
-
-    return parsed.success ? parsed.data : undefined;
-  } catch {
-    return undefined;
-  }
-};
+const StoredConfiguration = jsonCodec(AgentConfiguration);
 
 const parseConfiguredAgent = (row: AgentRow): ConfiguredAgent[] => {
   if (row.configuration === null) return [];
-  const configuration = parseConfiguration(row.configuration);
+  const configuration = StoredConfiguration.safeParse(row.configuration).data;
 
   if (configuration)
     return [{ id: row.id, enabled: row.enabled, configuration }];

@@ -279,8 +279,7 @@ it('rejects and reports a git response that has no working Checkout', async (): 
     }),
   ).rejects.toThrow('Unrecognised git worktree list response');
   expect(report).toHaveBeenCalledWith(
-    expect.stringContaining(
-      'git: rejected worktree list response (1 rejected)',
-    ),
+    'git: rejected worktree list response #1',
+    expect.any(String),
   );
 });
