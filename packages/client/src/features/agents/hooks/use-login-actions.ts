@@ -10,13 +10,12 @@ import {
   type UseMutationResult,
 } from '@tanstack/react-query';
 import { useTRPC, type ClientError } from '#features/connection';
-import { loginIdentity, type OwnedLogin } from './login-operation';
 import { loginOwner } from './login-owner';
 
 type Input = {
   agentId: string;
-  operation?: OwnedLogin;
-  setOperation: (operation: OwnedLogin) => void;
+  operation?: AgentLoginOperation;
+  setOperation: (operation: AgentLoginOperation) => void;
   onError: (error: { message: string }) => void;
   clearFailure: () => void;
 };
@@ -40,6 +39,7 @@ type LoginStart = { begin: () => Promise<void>; busy: boolean };
 
 function useStartLogin(input: Input): LoginStart {
   const mutation = useMutation(useTRPC().agents.startLogin.mutationOptions());
+  const store = useStoreSnapshot();
 
   const begin = async (): Promise<void> => {
     const ownerToken = await loginOwner();
@@ -49,26 +49,38 @@ function useStartLogin(input: Input): LoginStart {
       ownerToken,
     });
 
-    input.setOperation({ ownerToken, snapshot });
+    const operation = { operationId: snapshot.operationId, ownerToken };
+    store(operation, snapshot);
+    input.setOperation(operation);
   };
 
   return { begin, busy: mutation.isPending };
 }
 
+type StoreSnapshot = (
+  operation: AgentLoginOperation,
+  snapshot: AgentLoginSnapshot,
+) => void;
+
+// The query cache is the one home of a sign-in's snapshot; state keeps only its operation.
+function useStoreSnapshot(): StoreSnapshot {
+  const trpc = useTRPC();
+  const cache = useQueryClient();
+
+  return (operation, snapshot) => {
+    cache.setQueryData(trpc.agents.login.queryKey(operation), snapshot);
+  };
+}
+
 function useSnapshotUpdate(
   input: Input,
 ): (snapshot: AgentLoginSnapshot) => void {
-  const trpc = useTRPC();
-  const cache = useQueryClient();
+  const store = useStoreSnapshot();
 
   return (snapshot) => {
     input.clearFailure();
 
-    if (!input.operation) return;
-    const operation = { ...input.operation, snapshot };
-    input.setOperation(operation);
-    const key = trpc.agents.login.queryKey(loginIdentity(operation));
-    cache.setQueryData(key, snapshot);
+    if (input.operation) store(input.operation, snapshot);
   };
 }
 
@@ -103,16 +115,14 @@ function useLoginMutations(
 }
 
 type UpdateMutations = {
-  identity: () => ReturnType<typeof loginIdentity>;
+  identity: () => AgentLoginOperation;
   choose: {
-    mutate: (
-      input: ReturnType<typeof loginIdentity> & { methodId: string },
-    ) => void;
+    mutate: (input: AgentLoginOperation & { methodId: string }) => void;
     isPending: boolean;
   };
   answer: {
     mutate: (
-      input: ReturnType<typeof loginIdentity> & {
+      input: AgentLoginOperation & {
         requestId: string;
         action: 'accept' | 'cancel';
       },
@@ -120,7 +130,7 @@ type UpdateMutations = {
     isPending: boolean;
   };
   cancel: {
-    mutate: (input: ReturnType<typeof loginIdentity>) => void;
+    mutate: (input: AgentLoginOperation) => void;
     isPending: boolean;
   };
 };
@@ -140,7 +150,7 @@ function updateCallbacks({
   };
 }
 
-function requireOperation(input: Input): OwnedLogin {
+function requireOperation(input: Input): AgentLoginOperation {
   if (!input.operation) throw new Error('Sign-in has not started');
 
   return input.operation;
@@ -150,6 +160,6 @@ const anyPending = (mutations: readonly { isPending: boolean }[]): boolean =>
   mutations.some(({ isPending }) => isPending);
 
 const operationIdentity =
-  (input: Input): (() => ReturnType<typeof loginIdentity>) =>
+  (input: Input): (() => AgentLoginOperation) =>
   () =>
-    loginIdentity(requireOperation(input));
+    requireOperation(input);

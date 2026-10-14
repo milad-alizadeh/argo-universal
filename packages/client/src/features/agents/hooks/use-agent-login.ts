@@ -1,8 +1,8 @@
+import type { AgentLoginOperation } from '@repo/contracts';
 import { useCallback, useState } from 'react';
 import { Linking } from 'react-native';
 import { useConnectionState } from '#features/connection';
 import type { AgentLoginSheetProps } from '../components/agent-login-sheet/login-props';
-import type { OwnedLogin } from './login-operation';
 import { useLoginActions } from './use-login-actions';
 import { useLoginReconnect } from './use-login-reconnect';
 import { useLoginSnapshot } from './use-login-snapshot';
@@ -13,7 +13,7 @@ type Sheet = Omit<AgentLoginSheetProps, 'agentName'>;
 type AgentLogin = { start: () => void; sheet: Sheet | undefined };
 
 export function useAgentLogin(agentId: string): AgentLogin {
-  const [operation, setOperation] = useState<OwnedLogin>();
+  const [operation, setOperation] = useState<AgentLoginOperation>();
   const failure = useLoginFailure();
 
   const actions = useLoginActions({
@@ -31,7 +31,7 @@ export function useAgentLogin(agentId: string): AgentLogin {
 }
 
 type LoginSheetInput = {
-  operation: OwnedLogin | undefined;
+  operation: AgentLoginOperation | undefined;
   actions: ReturnType<typeof useLoginActions>;
   opening: Opening;
   failure: LoginFailure;
