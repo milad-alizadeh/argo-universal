@@ -1,4 +1,4 @@
-import type { ACPAgent } from '@repo/contracts';
+import type { ACPAgent, AgentInfo } from '@repo/contracts';
 import { expect } from 'vitest';
 import type { InstallPorts } from '../src/agents';
 import { startEngineTestHost } from './engine';
@@ -70,3 +70,11 @@ export const startInstallEngine = async (
   if (!agent) throw new Error('Catalog did not contain installation fixture');
   return { ...host, agentId: agent.id };
 };
+
+type Caller = Awaited<ReturnType<typeof startEngineTestHost>>['caller'];
+// The Agent's row as the Agents page lists it.
+export const listedAgent = async (
+  caller: Caller,
+  agentId: string,
+): Promise<AgentInfo | undefined> =>
+  (await caller.agents.list()).find(({ agent }) => agent === agentId);

@@ -1,5 +1,4 @@
 import { rm } from 'node:fs/promises';
-import type { AgentInfo } from '@repo/contracts';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
 import { customAgentDefinition } from '#mocks/custom-agent';
@@ -7,17 +6,11 @@ import { awaitSettledReadiness, startEngineTestHost } from '#mocks/engine';
 import {
   installationPorts,
   installEntry,
+  listedAgent as listed,
   startInstallEngine,
 } from '#mocks/installation';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 import { agentInstallDirectory } from '../install/selection/selection';
-
-type Caller = Awaited<ReturnType<typeof startInstallEngine>>['caller'];
-const listed = async (
-  caller: Caller,
-  agentId: string,
-): Promise<AgentInfo | undefined> =>
-  (await caller.agents.list()).find(({ agent }) => agent === agentId);
 
 type Installed = Awaited<ReturnType<typeof startInstallEngine>> & {
   checks: ReturnType<typeof createScriptedAgentProcess>;

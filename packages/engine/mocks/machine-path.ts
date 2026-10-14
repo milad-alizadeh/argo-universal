@@ -1,6 +1,7 @@
+import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
 import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { delimiter, dirname, join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { onTestFinished, vi } from 'vitest';
 
 export type MachinePath = {
@@ -10,9 +11,18 @@ export type MachinePath = {
   remove: (name: string) => Promise<void>;
 };
 
+// A private bin holding only this Node: Node's own directory also holds global npm CLIs, which must never count as installed.
+const createNodeDirectory = (): string => {
+  const directory = mkdtempSync(join(tmpdir(), 'argo-node-'));
+  symlinkSync(process.execPath, join(directory, 'node'));
+  process.once('exit', () =>
+    rmSync(directory, { recursive: true, force: true }),
+  );
+  return directory;
+};
 // System tools and this Node only, so the developer's own Agents never count as installed.
 const systemDirectories = [
-  dirname(process.execPath),
+  createNodeDirectory(),
   '/usr/bin',
   '/bin',
   '/usr/sbin',

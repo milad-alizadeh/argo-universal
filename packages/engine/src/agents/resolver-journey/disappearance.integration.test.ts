@@ -1,13 +1,14 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { AgentInfo, SessionNewOutput } from '@repo/contracts';
+import type { SessionNewOutput } from '@repo/contracts';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, onTestFinished } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { openTestDatabase } from '#mocks/database';
 import {
+  listedAgent,
   pathBinaryEntry,
   pathEntrypoint as entrypoint,
   startInstallEngine,
@@ -16,8 +17,8 @@ import { createMachinePath, type MachinePath } from '#mocks/machine-path';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 
 type Host = Awaited<ReturnType<typeof startInstallEngine>>;
-const listed = async (host: Host): Promise<AgentInfo | undefined> =>
-  (await host.caller.agents.list()).find(({ agent }) => agent === host.agentId);
+const listed = (host: Host): ReturnType<typeof listedAgent> =>
+  listedAgent(host.caller, host.agentId);
 
 type Started = {
   host: Host;
@@ -83,6 +84,10 @@ it('an Agent that left PATH keeps its row, Enabled and Sessions, and shows Not f
       sessionId: created.sessionId,
     }),
   );
+  await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
+  await expect
+    .poll(() => listed(host))
+    .toMatchObject({ status: 'ready', owner: 'argo', enabled: true });
 }, 30_000);
 
 it('opening a Session looks for the Agent again instead of trusting the last look', async () => {

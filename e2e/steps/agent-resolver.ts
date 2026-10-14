@@ -4,8 +4,7 @@ import type { Page } from '@playwright/test';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
-import { browseAgents } from './agent-catalog';
-import { Given, Then, When, test } from './fixtures';
+import { Given, Then, test } from './fixtures';
 import { agentWork } from './timeouts';
 
 const pathAgentName = 'Path Agent';
@@ -58,10 +57,6 @@ Given(
     await publishPathAgent(app.registryPath);
   },
 );
-
-When('I open the Agents page', async ({ page }): Promise<void> => {
-  await browseAgents(page);
-});
 
 Then(
   'Path Agent is Ready and Found on this Mac without an install',

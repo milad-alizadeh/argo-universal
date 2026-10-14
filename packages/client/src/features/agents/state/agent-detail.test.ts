@@ -95,20 +95,17 @@ describe('agentDetail', () => {
     );
   });
 
-  it('names where an installed Agent was found instead of how the Server installs it', () => {
-    expect(agentDetail({ ...probed, owner: 'unknown' }, iconAgent)).toEqual(
-      expect.objectContaining({
-        source: 'Found on this Mac',
-        distribution: undefined,
-      }),
-    );
-    expect(agentDetail({ ...probed, owner: 'argo' }, iconAgent)).toEqual(
-      expect.objectContaining({
-        source: 'Installed by Argo',
-        distribution: undefined,
-      }),
-    );
-  });
+  it.each([
+    ['unknown', 'Found on this Mac'],
+    ['argo', 'Installed by Argo'],
+  ] as const)(
+    'names where an installed Agent owned by %s was found instead of how the Server installs it',
+    (owner, source) => {
+      expect(agentDetail({ ...probed, owner }, iconAgent)).toEqual(
+        expect.objectContaining({ source, distribution: undefined }),
+      );
+    },
+  );
 
   it('knows nothing about an Agent neither lists', () => {
     expect(agentDetail()).toBeUndefined();
