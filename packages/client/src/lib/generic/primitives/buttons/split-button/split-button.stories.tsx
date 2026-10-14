@@ -97,3 +97,12 @@ export const Variations: Story = {
     </VariationList>
   ),
 };
+
+// The split on its own, nothing else on screen, for side-by-side captures against Paper.
+export const Choices: Story = {
+  render: () => (
+    <View className="flex-row">
+      <ScopeSplit />
+    </View>
+  ),
+};

@@ -4,8 +4,10 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
 
-// The chevron is drawn by React Native inside its stock button; it never takes the touch.
-export function ChevronIcon(): React.JSX.Element {
+// The chevron is drawn by React Native inside its stock button, in the button's content colour; it never takes the touch.
+export function ChevronIcon(props: { primary: boolean }): React.JSX.Element {
+  const tint = props.primary ? 'text-primary-foreground' : 'text-foreground';
+
   return (
     <RNHostView matchContents>
       <View
@@ -13,7 +15,7 @@ export function ChevronIcon(): React.JSX.Element {
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
-        <Icon name="chevron-down" role="control" />
+        <Icon name="chevron-down" role="control" className={tint} />
       </View>
     </RNHostView>
   );

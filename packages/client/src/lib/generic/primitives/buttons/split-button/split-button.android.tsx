@@ -1,25 +1,22 @@
 import {
   Button,
   DropdownMenu,
-  DropdownMenuItem,
   FilledTonalButton,
   Row,
   Text,
 } from '@expo/ui/jetpack-compose';
 import {
   type ModifierConfig,
-  selectable,
   semantics,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
+import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
-import { ChevronIcon, ItemCheck } from './split-button-icons.android';
-import {
-  type NativeSplit,
-  type SplitMenuItem,
-  nativeSplit,
-} from './split-button-items';
+import { halfColors } from './split-button-colors.android';
+import { ChevronIcon } from './split-button-icons.android';
+import { type NativeSplit, nativeSplit } from './split-button-items';
+import { MenuItems, type RunItem } from './split-button-menu.android';
 import type { SplitButtonProps } from './split-button-props';
 
 export type {
@@ -37,8 +34,7 @@ type HalfProps = Pick<NativeSplit, 'primary' | 'enabled'> & {
 interface SplitMenuState {
   open: boolean;
   setOpen: (open: boolean) => void;
-  // Closes the menu, then runs what the item does.
-  run: (press: () => void) => void;
+  run: RunItem;
 }
 
 type MenuHalfProps = NativeSplit & { menu: SplitMenuState };
@@ -67,9 +63,13 @@ function SplitRow(split: NativeSplit): React.JSX.Element {
   );
 }
 
+// The menu sits on the card surface, as Paper's popover does.
 function MenuHalf({ menu, ...split }: MenuHalfProps): React.JSX.Element {
+  const { colors } = useNativeTheme();
+
   return (
     <DropdownMenu
+      color={colors.card}
       expanded={menu.open}
       onDismissRequest={() => menu.setOpen(false)}
     >
@@ -81,19 +81,6 @@ function MenuHalf({ menu, ...split }: MenuHalfProps): React.JSX.Element {
   );
 }
 
-function MenuItems(props: {
-  items: SplitMenuItem[];
-  run: SplitMenuState['run'];
-}): React.JSX.Element {
-  return (
-    <DropdownMenu.Items>
-      {props.items.map((item) => (
-        <MenuItem key={item.label} item={item} run={props.run} />
-      ))}
-    </DropdownMenu.Items>
-  );
-}
-
 function ChevronHalf(
   props: NativeSplit & { onOpen: () => void },
 ): React.JSX.Element {
@@ -101,7 +88,7 @@ function ChevronHalf(
 
   return (
     <Half {...props} onClick={props.onOpen} modifiers={[label]}>
-      <ChevronIcon />
+      <ChevronIcon primary={props.primary} />
     </Half>
   );
 }
@@ -120,39 +107,14 @@ function useSplitMenu(enabled: boolean): SplitMenuState {
   return { open, setOpen, run };
 }
 
-// A stock menu item; a choice is selectable and the chosen one carries a check.
-function MenuItem(props: {
-  item: SplitMenuItem;
-  run: SplitMenuState['run'];
-}): React.JSX.Element {
-  const { item } = props;
-  const press = (): void => props.run(item.onPress);
-
-  return (
-    <DropdownMenuItem modifiers={itemModifiers(item, press)} onClick={press}>
-      <DropdownMenuItem.Text>
-        <Text>{item.label}</Text>
-      </DropdownMenuItem.Text>
-      {item.selected && <ItemCheck />}
-    </DropdownMenuItem>
-  );
-}
-
-function itemModifiers(
-  item: SplitMenuItem,
-  press: () => void,
-): ModifierConfig[] {
-  if (item.selected === undefined) return [];
-
-  return [selectable(item.selected, press, 'radioButton')];
-}
-
-// A filled button beside a filled primary action; otherwise the tonal one.
+// A filled button beside a filled primary action, otherwise the tonal one; both in Argo's colours.
 function Half(props: HalfProps): React.JSX.Element {
   const Stock = props.primary ? Button : FilledTonalButton;
+  const { colors } = useNativeTheme();
 
   return (
     <Stock
+      colors={halfColors(colors, props.primary)}
       enabled={props.enabled}
       onClick={props.onClick}
       modifiers={props.modifiers}
