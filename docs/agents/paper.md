@@ -41,6 +41,9 @@ The owner is the only approver. Each ticket's Paper is approved in its issue or 
 - A copy may change its text, hide items, and switch to a named state. Any other difference from its master is **drift**.
 - To change a component, edit its master first, then every copy, found by layer name, across the relevant files. Work inside out: a master nested in another master (Session row inside List column) is changed before the masters that hold it.
 - Column masters carry content only. The surface (background, border, radius, shadow) comes from the shell's Card and Sidebar plate, so copies cannot drift on it.
+- **The state matrix lives in the child only** (owner, 2026-10-14). A state belongs to the lowest component that owns it: that card holds every state × platform. A parent card shows one example, with one copy of the child in it, to show where the child sits; it never repeats the child's states. Only a difference in the parent's own layout gets its own small card with its own matrix. Example: `Components / AgentStatusSection` holds every Agent status; `Components / Agent page` holds one state.
+- Pages and cards are built from copies of the Foundations masters (Button, ListItem, FieldSection, Tag); nothing is hand-drawn where a master exists. A missing master is a design gap: report it.
+- When a decision supersedes a state, delete that state in every card and screen in the same pass; stale states are not kept for reference.
 
 ## Platforms
 

@@ -23,10 +23,19 @@ export function rowAccessibilityModifiers(
   if (props.control || props.detail) return [];
 
   return [
-    accessibilityElement(rowAccessibility(props)),
+    ...rowElement(props),
     accessibilityLabel(listItemName(props)),
     selectedTrait(props.selected),
   ];
+}
+
+// A pressable row's Button is already one element; wrapping it again drops the list's press highlight.
+function rowElement(
+  props: ListItemProps,
+): ReturnType<typeof accessibilityElement>[] {
+  if (props.onPress) return [];
+
+  return [accessibilityElement(rowAccessibility(props))];
 }
 
 function selectedTrait(
