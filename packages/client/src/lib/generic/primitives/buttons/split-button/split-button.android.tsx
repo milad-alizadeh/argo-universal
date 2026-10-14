@@ -13,9 +13,9 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
-import { halfColors } from './split-button-colors.android';
 import { ChevronIcon } from './split-button-icons.android';
 import { type NativeSplit, nativeSplit } from './split-button-items';
+import { type HalfSide, halfLook } from './split-button-look.android';
 import { MenuItems, type RunItem } from './split-button-menu.android';
 import type { SplitButtonProps } from './split-button-props';
 
@@ -26,6 +26,7 @@ export type {
 } from './split-button-props';
 
 type HalfProps = Pick<NativeSplit, 'primary' | 'enabled'> & {
+  side: HalfSide;
   onClick?: () => void;
   modifiers?: ModifierConfig[];
   children: React.ReactNode;
@@ -50,12 +51,13 @@ export function SplitButton<Value extends string>(
   );
 }
 
+// M3's split button keeps its halves 2dp apart.
 function SplitRow(split: NativeSplit): React.JSX.Element {
   const menu = useSplitMenu(split.enabled);
 
   return (
     <Row horizontalArrangement={{ spacedBy: 2 }}>
-      <Half {...split} onClick={split.acting.onPress}>
+      <Half {...split} side="leading" onClick={split.acting.onPress}>
         <Text>{split.acting.label}</Text>
       </Half>
       <MenuHalf {...split} menu={menu} />
@@ -87,8 +89,8 @@ function ChevronHalf(
   const label = semantics({ contentDescription: props.menuLabel });
 
   return (
-    <Half {...props} onClick={props.onOpen} modifiers={[label]}>
-      <ChevronIcon primary={props.primary} />
+    <Half {...props} side="trailing" onClick={props.onOpen} modifiers={[label]}>
+      <ChevronIcon />
     </Half>
   );
 }
@@ -107,19 +109,19 @@ function useSplitMenu(enabled: boolean): SplitMenuState {
   return { open, setOpen, run };
 }
 
-// A filled button beside a filled primary action, otherwise the tonal one; both in Argo's colours.
-function Half(props: HalfProps): React.JSX.Element {
-  const Stock = props.primary ? Button : FilledTonalButton;
+// A filled button beside a filled primary action, otherwise the tonal one; Argo's colours, the split's corners.
+function Half({
+  primary,
+  side,
+  children,
+  ...rest
+}: HalfProps): React.JSX.Element {
+  const Stock = primary ? Button : FilledTonalButton;
   const { colors } = useNativeTheme();
 
   return (
-    <Stock
-      colors={halfColors(colors, props.primary)}
-      enabled={props.enabled}
-      onClick={props.onClick}
-      modifiers={props.modifiers}
-    >
-      {props.children}
+    <Stock {...halfLook(colors, primary, side)} {...rest}>
+      {children}
     </Stock>
   );
 }

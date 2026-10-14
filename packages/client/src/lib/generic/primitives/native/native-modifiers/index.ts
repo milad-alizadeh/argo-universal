@@ -1,4 +1,8 @@
-export { roundedClip, roundedOutline } from './compose-corners';
+export {
+  roundedClip,
+  roundedOutline,
+  roundedSidesOutline,
+} from './compose-corners';
 
 export {
   capsuleButtonBorder,

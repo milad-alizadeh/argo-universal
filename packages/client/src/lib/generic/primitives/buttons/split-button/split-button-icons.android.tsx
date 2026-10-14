@@ -1,24 +1,11 @@
-import { DropdownMenuItem, RNHostView } from '@expo/ui/jetpack-compose';
+import { DropdownMenuItem, Icon, RNHostView } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
+import expandMore from '../../../symbols/assets/expand-more.xml';
 
-// The chevron is drawn by React Native inside its stock button, in the button's content colour; it never takes the touch.
-export function ChevronIcon(props: { primary: boolean }): React.JSX.Element {
-  const tint = props.primary ? 'text-primary-foreground' : 'text-foreground';
-
-  return (
-    <RNHostView matchContents>
-      <View
-        pointerEvents="none"
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-      >
-        <Icon name="chevron-down" role="control" className={tint} />
-      </View>
-    </RNHostView>
-  );
+// A native Compose icon at the control role's size, so the whole stock button takes the tap; it inherits the button's content colour.
+export function ChevronIcon(): React.JSX.Element {
+  return <Icon source={expandMore} />;
 }
 
 // The chosen item's trailing check.

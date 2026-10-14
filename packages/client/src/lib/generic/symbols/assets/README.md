@@ -5,3 +5,7 @@
 The font contains the 128 distinct Material names in `icon-names.ts`, `file-symbols.ts` and `status-symbols.ts`. The exact Google Fonts request is in `material-filled-source.txt`. To regenerate, fetch that CSS and download its TrueType `src` URL. Update the sorted `icon_names` query when the map gains an icon that needs a filled variant. Check every requested codepoint against Expo's `android/symbols.json` before replacing the asset.
 
 Metro imports the font as an asset ID; Vite imports its URL. `expo-symbols` passes either to `expo-font`.
+
+# Compose vector icons
+
+`expand-more.xml` is Material Symbols Outlined `expand_more` (the Material name for `chevron-down`) as an Android vector drawable, sized to the `control` icon role (16dp). The Android SplitButton draws it with `@expo/ui`'s Compose `Icon` inside its stock button, so the whole button takes the tap; an icon hosted from React Native would take the touch itself.

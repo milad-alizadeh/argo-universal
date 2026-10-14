@@ -16,12 +16,20 @@ export function roundedClip(radius: number): CornerClip {
 
 // A container outline with every corner at one radius.
 export function roundedOutline(radius: number): ContainerOutline {
+  return roundedSidesOutline(radius, radius);
+}
+
+// A container outline whose start corners and end corners take their own radius.
+export function roundedSidesOutline(
+  start: number,
+  end: number,
+): ContainerOutline {
   return Compose.Shape.RoundedCorner({
     cornerRadii: {
-      topStart: radius,
-      topEnd: radius,
-      bottomStart: radius,
-      bottomEnd: radius,
+      topStart: start,
+      bottomStart: start,
+      topEnd: end,
+      bottomEnd: end,
     },
   });
 }
