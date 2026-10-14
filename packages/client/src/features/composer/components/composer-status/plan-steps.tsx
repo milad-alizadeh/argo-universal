@@ -1,11 +1,12 @@
 import type { PlanEntry } from '@repo/contracts';
 import type { JSX } from 'react';
 import { ScrollView, View } from 'react-native';
+import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { Icon, IconSpinner } from '../../../../lib/generic/symbols/icon';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import { maximumPlanStepsHeight, withPlanStepKeys } from '../../state/status';
+import { maximumPlanStepsHeight } from '../../state/status';
 import { mutedTextClassName } from './status-surface';
 
 interface StepProps {
@@ -76,9 +77,11 @@ interface StepsListProps {
 function StepsList({ entries, wide }: StepsListProps): JSX.Element {
   return (
     <View className={wide ? 'px-1 pb-2' : 'pb-1'}>
-      {withPlanStepKeys(entries).map(({ item: entry, key }) => (
-        <PlanStep key={key} entry={entry} wide={wide} />
-      ))}
+      {withOccurrenceKeys(entries, (entry) => entry.content).map(
+        ({ item: entry, key }) => (
+          <PlanStep key={key} entry={entry} wide={wide} />
+        ),
+      )}
     </View>
   );
 }
