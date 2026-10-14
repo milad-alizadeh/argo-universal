@@ -93,3 +93,17 @@ it('opening a Session looks for the Agent again instead of trusting the last loo
     file,
   ]);
 }, 30_000);
+
+it('a disabled Agent found again stays disabled', async () => {
+  const { host, machine } = await startWithProject();
+  await host.caller.agents.setEnabled({ agentId: host.agentId, enabled: false });
+  await machine.remove(entrypoint);
+  await host.caller.agents.list({ refresh: true });
+  expect((await listed(host))?.owner).toBeUndefined();
+  await machine.place(entrypoint);
+  await host.caller.agents.list({ refresh: true });
+  expect(await listed(host)).toMatchObject({
+    enabled: false,
+    owner: 'unknown',
+  });
+}, 30_000);

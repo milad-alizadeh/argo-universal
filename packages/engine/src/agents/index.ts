@@ -11,6 +11,7 @@ export { reportsModelCallContext, promptUsageScope } from './usage-scope';
 export { type AgentsRouterDeps, createAgentsRouter } from './router';
 export {
   isAgentDisabled,
+  readConfiguredAgent,
   readCustomDefinition,
 } from './configuration/configuration-sql';
 export type {
