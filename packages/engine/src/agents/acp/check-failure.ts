@@ -2,8 +2,13 @@ import type { AgentCheck } from '@repo/contracts';
 import type { AgentLaunchSubject } from '..';
 import { MissingAcpCapabilityError } from './initialize';
 
-export const answerTimeoutSeconds = 15;
-export class CheckTimeout extends Error {}
+export const answerTimeoutMs = 15_000;
+const millisecondsPerSecond = 1000;
+export class CheckTimeout extends Error {
+  public constructor(public readonly milliseconds: number) {
+    super('ACP initialize timed out');
+  }
+}
 
 const spawnFailures = new Map<unknown, string>([
   ['ENOENT', 'was not found.'],
@@ -39,7 +44,7 @@ const failureReaders: readonly FailureReader[] = [
   (error, { name }) =>
     error instanceof CheckTimeout
       ? cantStart(
-          `${name} did not answer ACP initialize within ${answerTimeoutSeconds} seconds.`,
+          `${name} did not answer ACP initialize within ${error.milliseconds / millisecondsPerSecond} seconds.`,
         )
       : undefined,
   (error, subject) => {

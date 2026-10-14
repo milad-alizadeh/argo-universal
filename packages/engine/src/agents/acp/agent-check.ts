@@ -6,7 +6,7 @@ import type { AgentLaunchSubject, CheckAgentLaunch } from '..';
 import { ResourceCleanupError } from '../../lib/resource-cleanup-error';
 import { AcpAuthenticationStatus } from './auth-status';
 import {
-  answerTimeoutSeconds,
+  answerTimeoutMs,
   cantStart,
   CheckTimeout,
   describeError,
@@ -21,7 +21,6 @@ import type { AcpProcess } from './resource-types';
 import { createAcpResponseReaders } from './response-readers';
 
 const exitGraceMs = 1000;
-const millisecondsPerSecond = 1000;
 
 // An unreferenced timer, so a pending check never keeps the process alive.
 const after = (milliseconds: number): Promise<'timeout'> =>
@@ -82,12 +81,12 @@ const describeFailure = async (
       : `${subject.name} failed ACP initialize: ${describeError(error)}`,
   );
 };
-const answerOrTimeout = async (process: AcpProcess): Promise<AgentCheck> => {
-  const answer = await Promise.race([
-    initialize(process),
-    after(answerTimeoutSeconds * millisecondsPerSecond),
-  ]);
-  if (answer === 'timeout') throw new CheckTimeout();
+const answerOrTimeout = async (
+  process: AcpProcess,
+  timeoutMs: number,
+): Promise<AgentCheck> => {
+  const answer = await Promise.race([initialize(process), after(timeoutMs)]);
+  if (answer === 'timeout') throw new CheckTimeout(timeoutMs);
   return answer;
 };
 
@@ -102,20 +101,26 @@ const launch = async (
   }
 };
 
+const stopChecked = (process: AcpProcess): Promise<void> =>
+  closeLoginProcess(process).catch((cause: unknown) => {
+    throw new ResourceCleanupError(process.exited, cause);
+  });
+
 // Starts the program, sends the shared ACP initialize and authentication check, and stops it; it opens no Session.
 export const createAgentChecker =
-  (launchProcess = launchAcpProcess): CheckAgentLaunch =>
+  (
+    launchProcess = launchAcpProcess,
+    timeoutMs = answerTimeoutMs,
+  ): CheckAgentLaunch =>
   async (subject): Promise<AgentCheck> => {
     const process = await launch(launchProcess, subject);
     if ('status' in process) return process;
     try {
-      return await answerOrTimeout(process);
+      return await answerOrTimeout(process, timeoutMs);
     } catch (error) {
       return await describeFailure(error, process, subject);
     } finally {
-      await closeLoginProcess(process).catch((cause: unknown) => {
-        throw new ResourceCleanupError(process.exited, cause);
-      });
+      await stopChecked(process);
     }
   };
 

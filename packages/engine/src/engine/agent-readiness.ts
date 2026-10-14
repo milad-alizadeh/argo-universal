@@ -21,10 +21,7 @@ function createReadiness(
   const home = input.home ?? '';
   const withAgentCheck = installations.check;
   const deps = { database, databaseWriter, home, now: Date.now };
-  return createAgentReadiness(
-    { ...deps, checkAgentLaunch, withAgentCheck },
-    input.automaticReadiness ?? false,
-  );
+  return createAgentReadiness({ ...deps, checkAgentLaunch, withAgentCheck });
 }
 
 function sessionsUseAgent(
@@ -52,19 +49,27 @@ function bindInstallations(input: AppRouterInput & AgentSetup & Wired): void {
   });
 }
 
+function recheckOnEvents(
+  input: AppRouterInput,
+  setup: AgentSetup,
+  readiness: AgentReadiness,
+): void {
+  setup.agentLogins.afterLogin(readiness.recheckLater);
+  const { acpResources } = input.sessions.getSnapshot().context;
+  acpResources?.observeSignInRequired(readiness.signInRequired);
+  readiness.recheckEveryLater();
+}
+
 // Checks again after install, sign-in and enablement, and every Agent once at Server start.
 export function wireAgentReadiness(
   input: AppRouterInput,
   setup: AgentSetup,
 ): Wired {
-  const checkAgentLaunch = createAgentChecker(input.acp?.launchProcess);
-  const readiness = createReadiness(
-    input,
-    setup.installations,
-    checkAgentLaunch,
-  );
+  const { launchProcess, checkTimeoutMs } = input.acp ?? {};
+  const checkAgentLaunch = createAgentChecker(launchProcess, checkTimeoutMs);
+  const { installations } = setup;
+  const readiness = createReadiness(input, installations, checkAgentLaunch);
   bindInstallations({ ...input, ...setup, checkAgentLaunch, readiness });
-  setup.agentLogins.afterLogin(readiness.recheckLater);
-  readiness.recheckEveryLater();
+  recheckOnEvents(input, setup, readiness);
   return { checkAgentLaunch, readiness };
 }

@@ -8,7 +8,10 @@ A broken shared connection is that connection's failure, not one Session's. Engi
 
 Both subscription sign-in paths use ACP setup. Missing authenticated upstream compatibility and lifecycle checks remain explicit gates under #360 (owner, 2026-10-13). The empty Session lifecycle slice proves generic ownership, not authenticated upstream isolation, descendant cleanup, or process-count savings. Agents without independent ACP session closure fail the shared lifecycle capability check.
 
+Argo enforces the subscription rule only on what an Agent reports (owner, 2026-10-14, #605). An Agent that reports its account through ACP authentication status must report a subscription, or it is Account not supported. An Agent that reports no account, as OpenCode and Gemini CLI do, is Ready and opens Sessions; when it answers opening a Session or a prompt with ACP `auth_required`, Argo saves its Readiness as Sign-in needed and shows the error. Argo cannot prove such an Agent runs on a subscription, and refusing every Agent that stays silent would make most Registry Agents unusable.
+
 ## Considered Options
 
 - Argo-owned native adapters. Superseded by Spec 0009: public upstream adapters and the SDK own protocol behavior.
+- Refusing Agents that do not report their account. Rejected (#605): ACP has no standard account report, so it blocked Agents that sign in on their own, with no way for the user to fix it.
 - Off-the-shelf ACP adapters. Rejected earlier because paged history, Subagents and usage were incomplete; Spec 0009 accepts upstream protocol support and defines honest product outcomes for unavailable capabilities instead of maintaining another native strategy.

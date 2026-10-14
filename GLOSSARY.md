@@ -107,7 +107,7 @@ The public ACP Registry that lists the Agents that Argo can run; Argo's Agent ca
 _Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), catalog (for the upstream list)
 
 **Readiness**:
-Whether an installed Agent can start a Session now, found by launching its saved launch and answering ACP initialize without creating an Agent session. Its status is one of Checking…, Ready, Sign-in needed, Account not supported, Not compatible, Can't start, Couldn't check or Not found, with a reason that never carries credentials.
+Whether an installed Agent can start a Session now, found by launching its saved launch and answering ACP initialize without creating an Agent session. Its status is one of Checking…, Ready, Sign-in needed, Account not supported, Not compatible, Can't start, Couldn't check or Not found, with a reason that never carries credentials. An Agent that does not report its account is Ready until it asks for sign-in when a Session opens or a prompt runs, which makes it Sign-in needed; Account not supported means the Agent reported an account that is not a subscription.
 _Avoid_: Availability, Unavailable, health, probe result
 
 **Stop reason**:

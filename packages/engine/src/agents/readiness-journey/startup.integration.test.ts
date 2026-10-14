@@ -3,7 +3,7 @@ import type { AgentInfo } from '@repo/contracts';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
 import { customAgentDefinition } from '#mocks/custom-agent';
-import { startEngineTestHost } from '#mocks/engine';
+import { awaitSettledReadiness, startEngineTestHost } from '#mocks/engine';
 import {
   installationPorts,
   installEntry,
@@ -19,25 +19,25 @@ const listed = async (
 ): Promise<AgentInfo | undefined> =>
   (await caller.agents.list()).find(({ agent }) => agent === agentId);
 
-const installReady = async (): Promise<
-  Awaited<ReturnType<typeof startInstallEngine>>
-> => {
+type Installed = Awaited<ReturnType<typeof startInstallEngine>> & {
+  checks: ReturnType<typeof createScriptedAgentProcess>;
+};
+const installReady = async (): Promise<Installed> => {
+  const checks = createScriptedAgentProcess(scenarios.reply);
   const host = await startInstallEngine(
     installEntry('npx'),
     installationPorts,
-    {
-      fixtureAgents: [],
-      acp: createScriptedAgentProcess(scenarios.reply),
-    },
+    { fixtureAgents: [], acp: checks },
   );
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
   await expect
     .poll(async () => (await listed(host.caller, host.agentId))?.version)
     .toBe('1.2.3');
-  expect(await host.caller.agents.recheck({ agentId: host.agentId })).toEqual({
+  await awaitSettledReadiness(host.caller);
+  expect(await listed(host.caller, host.agentId)).toMatchObject({
     status: 'ready',
   });
-  return host;
+  return { ...host, checks };
 };
 
 it('Server start checks every installed, enabled Agent again and never launches a disabled one', async () => {
@@ -53,8 +53,8 @@ it('Server start checks every installed, enabled Agent again and never launches 
   const second = await startEngineTestHost({
     home: host.home,
     fixtureAgents: [],
-    automaticReadiness: true,
     acp: restarted,
+    keepStartupLaunches: true,
     installationPorts,
     fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
   });
@@ -88,13 +88,12 @@ it('missing launch files show Not found, and Repair installs the same release an
     reason:
       'The installed files of Fixture ACP are missing. Repair installs them again.',
   });
+  const launchedBefore = host.checks.processes.length;
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
   await expect
     .poll(async () => (await listed(host.caller, host.agentId))?.status)
-    .toBe('checking');
-  expect(await host.caller.agents.recheck({ agentId: host.agentId })).toEqual({
-    status: 'ready',
-  });
+    .toBe('ready');
+  expect(host.checks.processes.length).toBeGreaterThan(launchedBefore);
 }, 30_000);
 
 it('a Recheck never launches a disabled Agent', async () => {

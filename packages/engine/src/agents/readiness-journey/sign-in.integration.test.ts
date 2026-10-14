@@ -37,7 +37,6 @@ it('an installed Agent that needs sign-in is Ready once its sign-in finishes, th
     installEntry('npx'),
     installationPorts,
     {
-      automaticReadiness: true,
       fixtureAgents: [],
       acp: agent,
     },

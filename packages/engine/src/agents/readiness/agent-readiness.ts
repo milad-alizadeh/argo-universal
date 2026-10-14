@@ -115,24 +115,30 @@ const recheckEveryAgent = async (deps: ReadinessDeps): Promise<void> => {
   await runBounded(agentIds, (agentId) => checkAndSave(deps, agentId));
 };
 
+const signInNeeded: AgentCheck = {
+  status: 'sign-in-needed',
+  reason: 'The Agent requires sign-in.',
+};
+
 export type AgentReadiness = {
   recheck: (agentId: string) => Promise<AgentCheck>;
   recheckEvery: () => Promise<void>;
   // Background checks after install, sign-in, enablement and Server start; failures are already saved.
   recheckLater: (agentId: string) => void;
   recheckEveryLater: () => void;
+  // An Agent answered session/new or a prompt with auth_required.
+  signInRequired: (agentId: string) => void;
 };
-// `automatic` off leaves only explicit Rechecks, for tests that count Agent processes.
-export const createAgentReadiness = (
-  deps: ReadinessDeps,
-  automatic = true,
-): AgentReadiness => ({
+export const createAgentReadiness = (deps: ReadinessDeps): AgentReadiness => ({
   recheck: (agentId) => recheckAgent(deps, agentId),
   recheckEvery: () => recheckEveryAgent(deps),
   recheckLater: (agentId) => {
-    if (automatic) void recheckAgent(deps, agentId).catch(() => {});
+    void recheckAgent(deps, agentId).catch(() => {});
   },
   recheckEveryLater: () => {
-    if (automatic) void recheckEveryAgent(deps).catch(() => {});
+    void recheckEveryAgent(deps).catch(() => {});
+  },
+  signInRequired: (agentId) => {
+    void save(deps, [agentId], savedCheck(deps, signInNeeded)).catch(() => {});
   },
 });

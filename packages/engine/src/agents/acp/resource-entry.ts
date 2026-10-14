@@ -1,7 +1,10 @@
 import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunch } from '..';
 import {
+  awaitCheckoutRelease,
   closeProtocolReservation,
+  type ConfirmCheckoutRelease,
+  isReleasingEvery,
   releaseOpening,
   reserveOpening,
   watchWithdrawal,
@@ -18,7 +21,6 @@ import { AcpRouting } from './routing';
 
 const reservationLimit = 64;
 type RetireFailedGeneration = (checkouts: readonly string[]) => void;
-type ConfirmCheckoutRelease = () => Promise<void>;
 export class AcpResourceEntry {
   private readonly rejections = createRejectionCounter('ACP resources');
   private readonly reservations = new Set<AcpReservation>();
@@ -45,6 +47,10 @@ export class AcpResourceEntry {
   public closed(): Promise<void> {
     return this.cleanup.closed();
   }
+  // Every Session it carried is closing, so only its process exit is left.
+  public isReleasing(): boolean {
+    return this.cleanup.retired || isReleasingEvery(this.reservations);
+  }
   private failGeneration(error: unknown): void {
     const checkouts = [...this.reservations].map(
       (reservation) => reservation.input.opening.params.cwd,
@@ -60,21 +66,12 @@ export class AcpResourceEntry {
     this.requireAvailable();
     const reservation = this.reserve(input);
     try {
-      await this.awaitCheckoutRelease(reservation, confirmCheckoutRelease);
+      await awaitCheckoutRelease(reservation, confirmCheckoutRelease);
       return await this.completeOpening(reservation);
     } catch (error) {
       await this.cleanup.abandon(reservation, error);
       throw error;
     }
-  }
-  private async awaitCheckoutRelease(
-    reservation: AcpReservation,
-    confirmCheckoutRelease: ConfirmCheckoutRelease,
-  ): Promise<void> {
-    await confirmCheckoutRelease().catch((error: unknown) => {
-      reservation.withdrawn = true;
-      throw error;
-    });
   }
   private requireAvailable(): void {
     if (this.cleanup.retired || this.reservations.size >= reservationLimit)

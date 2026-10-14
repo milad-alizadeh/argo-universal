@@ -1,6 +1,7 @@
 import type { AgentInfo } from '@repo/contracts';
 import { type ScenarioName, scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
+import { awaitSettledReadiness } from '#mocks/engine';
 import {
   installationPorts,
   installEntry,
@@ -12,16 +13,21 @@ type Host = Awaited<ReturnType<typeof startInstallEngine>>;
 const listed = async (host: Host): Promise<AgentInfo | undefined> =>
   (await host.caller.agents.list()).find(({ agent }) => agent === host.agentId);
 
+type ScriptedAgent = ReturnType<typeof createScriptedAgentProcess>;
 const startInstalled = async (
-  scenario: ScenarioName,
-): Promise<Host & { agent: ReturnType<typeof createScriptedAgentProcess> }> => {
-  const agent = createScriptedAgentProcess(scenarios[scenario]);
+  scenario: ScenarioName | ScriptedAgent,
+  checkTimeoutMs?: number,
+): Promise<Host & { agent: ScriptedAgent }> => {
+  const agent =
+    typeof scenario === 'string'
+      ? createScriptedAgentProcess(scenarios[scenario])
+      : scenario;
   const host = await startInstallEngine(
     installEntry('npx'),
     installationPorts,
     {
       fixtureAgents: [],
-      acp: agent,
+      acp: { ...agent, checkTimeoutMs },
     },
   );
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
@@ -56,24 +62,47 @@ it.each([
     },
   },
 ] as const)(
-  'a Recheck of an installed Agent that answers $scenario saves $check.status with its reason',
+  'an installed Agent that answers $scenario is checked to $check.status with its reason, and a Recheck agrees',
   async ({ scenario, check }) => {
     const host = await startInstalled(scenario);
+    await awaitSettledReadiness(host.caller);
+    expect(await listed(host)).toMatchObject({ ...check, enabled: true });
     expect(await host.caller.agents.recheck({ agentId: host.agentId })).toEqual(
       check,
     );
     expect(await listed(host)).toMatchObject({ ...check, enabled: true });
-    expect(host.agent.processes).toHaveLength(1);
-    expect(host.agent.processes[0]?.terminations).toBe(1);
+    expect(
+      host.agent.processes.map(({ terminations }) => terminations),
+    ).toEqual(host.agent.processes.map(() => 1));
   },
   20_000,
 );
 
+const cantStart = 'cant-start';
 it('an Agent that fails ACP initialize shows Can’t start with a reason that holds no credential', async () => {
-  const host = await startInstalled('cant-start');
+  const host = await startInstalled(cantStart);
+  await awaitSettledReadiness(host.caller);
   const check = await host.caller.agents.recheck({ agentId: host.agentId });
-  expect(check.status).toBe('cant-start');
+  expect(check.status).toBe(cantStart);
   expect(check.reason).toContain('Fixture ACP failed ACP initialize');
   expect(check.reason).not.toContain('sk-fixture-secret');
   expect(await listed(host)).toMatchObject(check);
+}, 20_000);
+
+it('an Agent that never answers ACP initialize shows Can’t start once its check times out, and is stopped', async () => {
+  const silent = createScriptedAgentProcess({
+    steps: [],
+    // Installing answers once; every Readiness check after it waits forever.
+    responses: {
+      initialize: [{}, { waitFor: new Promise<void>(() => {}) }],
+    },
+  });
+  const host = await startInstalled(silent, 200);
+  const check = await host.caller.agents.recheck({ agentId: host.agentId });
+  expect(check).toEqual({
+    status: cantStart,
+    reason: 'Fixture ACP did not answer ACP initialize within 0.2 seconds.',
+  });
+  expect(await listed(host)).toMatchObject(check);
+  expect(silent.processes.at(-1)?.terminations).toBe(1);
 }, 20_000);

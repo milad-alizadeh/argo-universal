@@ -20,7 +20,7 @@ const writeLauncher = (): string => {
   return launcher;
 };
 
-it('lists a custom Agent from its saved Readiness until a Recheck observes the missing program', async () => {
+it('a Recheck shows Can’t start once a custom Agent’s program is missing', async () => {
   const program = writeLauncher();
   const host = await startCustomAgentEngine();
   const registration = await host.caller.agents.registerCustom({
@@ -40,7 +40,6 @@ it('lists a custom Agent from its saved Readiness until a Recheck observes the m
     status: 'ready',
   });
   rmSync(program);
-  await expect(listed()).resolves.toMatchObject({ status: 'ready' });
   const failed = {
     status: 'cant-start',
     reason: 'Fixture ACP exited before answering ACP initialize.',

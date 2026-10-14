@@ -88,3 +88,33 @@ it('blocks competing authentication and Session opening while keeping unrelated 
   await lease.close();
   await resources.shutdown();
 });
+
+it('lets sign-in wait for a closing Session to exit instead of refusing it', async () => {
+  const peer = createScriptedAgentProcess({ steps: [], autoExit: false });
+  const resources = createAcpResources(peer);
+  const lease = await resources.open(createResourceOpening());
+  const closing = lease.close();
+  await vi.waitFor(() => expect(peer.processes[0]?.terminations).toBe(1));
+  let settled = false;
+  const waiting = resources
+    .settleAuthentication(resourceLaunch)
+    .then(() => (settled = true));
+  await Promise.resolve();
+  expect(settled).toBe(false);
+  peer.processes[0]?.exited.resolve();
+  await Promise.all([closing, waiting]);
+  resources.reserveAuthentication(resourceLaunch)();
+  await resources.shutdown();
+});
+
+it('does not wait for a live Session, so sign-in still finds the account in use', async () => {
+  const peer = createScriptedAgentProcess({ steps: [] });
+  const resources = createAcpResources(peer);
+  const lease = await resources.open(createResourceOpening());
+  await resources.settleAuthentication(resourceLaunch);
+  expect(() => resources.reserveAuthentication(resourceLaunch)).toThrow(
+    'in use',
+  );
+  await lease.close();
+  await resources.shutdown();
+});

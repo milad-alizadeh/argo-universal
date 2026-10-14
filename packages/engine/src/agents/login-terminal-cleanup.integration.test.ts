@@ -19,15 +19,16 @@ it('retains login ownership when fresh ACP initialization cannot observe cleanup
     autoExit: false,
   });
   const terminal = createLoginTerminalMock();
+  // Server start's Readiness check launches first, then the sign-in, then every fresh initialization.
+  const startupCheck = createScriptedAgentProcess({ steps: [] });
+  const peers = [startupCheck, initial];
   let launches = 0;
   const host = await startAcpEngine({
     steps: [],
     closeTimeoutMs: 20,
     launchLoginTerminal: terminal.launchLoginTerminal,
     launchProcess: (launch) =>
-      ++launches === 1
-        ? initial.launchProcess(launch)
-        : fresh.launchProcess(launch),
+      (peers[launches++] ?? fresh).launchProcess(launch),
   });
   onTestFinished(() => {
     for (const child of fresh.processes) child.exited.resolve();
@@ -46,7 +47,7 @@ it('retains login ownership when fresh ACP initialization cannot observe cleanup
     ...identity,
     methodId: 'terminal',
   });
-  await expect.poll(() => launches).toBe(1);
+  await expect.poll(() => launches).toBe(2);
   terminal.exited.resolve({ exitCode: 0 });
   await expect
     .poll(async () => (await host.caller.agents.login(identity)).status)
