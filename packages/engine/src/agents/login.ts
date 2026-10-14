@@ -21,8 +21,11 @@ export type AgentLoginsDeps = Omit<
   timeoutMs?: number;
   cleanupTimeoutMs?: number;
 };
+
 const operationLimit = 64;
+
 const loginTimeout = 300_000;
+
 const cleanupTimeout = 15_000;
 
 export class AgentLogins {
@@ -39,17 +42,22 @@ export class AgentLogins {
   public start(input: AgentLoginStart): AgentLoginSnapshot {
     if (this.stopping) throw new Error('Engine is shutting down');
     this.requireNoMutation(input.agentId);
+
     if (this.deps.isAgentSetupBusy?.(input.agentId))
       throw new Error('Agent is in use by setup');
     const previous = this.current(input.agentId);
+
     if (previous?.blocksMutation()) return previous.snapshot(input.ownerToken);
     evictFinishedLogins(this.operations, this.latest, operationLimit);
+
     if (this.operations.size >= operationLimit)
       throw new Error('Too many Agent login operations');
+
     return this.create(input);
   }
   private create(input: AgentLoginStart): AgentLoginSnapshot {
     const operationId = this.deps.createId();
+
     const operation = new LoginOperation(
       { ...input, operationId },
       {
@@ -58,9 +66,11 @@ export class AgentLogins {
         cleanupTimeoutMs: this.deps.cleanupTimeoutMs ?? cleanupTimeout,
       },
     );
-    void operation.finished().then(() => this.notifyFinished(input.agentId));
+
+    void operation.finished.then(() => this.notifyFinished(input.agentId));
     this.operations.set(operationId, operation);
     this.latest.set(input.agentId, operationId);
+
     return operation.snapshot(input.ownerToken);
   }
   public read(input: AgentLoginOperation): AgentLoginSnapshot {
@@ -69,11 +79,13 @@ export class AgentLogins {
   public choose(input: AgentLoginChoose): AgentLoginSnapshot {
     const operation = this.requireOwner(input);
     operation.choose(input.methodId);
+
     return operation.snapshot(input.ownerToken);
   }
   public answer(input: AgentLoginAnswer): AgentLoginSnapshot {
     const operation = this.requireOwner(input);
     operation.respond(input);
+
     return operation.snapshot(input.ownerToken);
   }
   public readTerminal(input: AgentLoginTerminalRead): AgentLoginTerminalFrame {
@@ -85,6 +97,7 @@ export class AgentLogins {
   public cancel(input: AgentLoginOperation): AgentLoginSnapshot {
     const operation = this.requireOwner(input);
     operation.cancel();
+
     return operation.snapshot(input.ownerToken);
   }
   public isBusy(agentId: string): boolean {
@@ -95,6 +108,7 @@ export class AgentLogins {
   public requireMutable(agentId: string): void {
     if (this.stopping) throw new Error('Engine is shutting down');
     this.requireNoMutation(agentId);
+
     if (this.current(agentId)?.blocksMutation())
       throw new Error('Agent login is in progress or cleanup failed');
   }
@@ -105,6 +119,7 @@ export class AgentLogins {
     this.requireMutable(agentId);
     const pending = Promise.resolve().then(mutation);
     this.mutations.set(agentId, pending);
+
     try {
       return await pending;
     } finally {
@@ -113,38 +128,49 @@ export class AgentLogins {
   }
   public async shutdown(): Promise<void> {
     this.stopping = true;
+
     const closing = Promise.allSettled(
       [...this.operations.values()].map((operation) => operation.shutdown()),
     );
+
     await Promise.allSettled(this.mutations.values());
+
     const failed = (await closing).flatMap((result) =>
       result.status === 'rejected' ? [result.reason] : [],
     );
+
     if (failed.length > 0)
       throw new AggregateError(failed, 'Agent login cleanup failed');
   }
   private notifyFinished(agentId: string): void {
     if (this.stopping || this.isBusy(agentId)) return;
+
     for (const listener of this.finished) listener(agentId);
   }
   private current(agentId: string): LoginOperation | undefined {
     const operationId = this.latest.get(agentId);
+
     return operationId ? this.operations.get(operationId) : undefined;
   }
   private requireOperation(operationId: string): LoginOperation {
     const operation = this.operations.get(operationId);
+
     if (!operation) throw new Error('Agent login operation was not found');
+
     return operation;
   }
   private requireOwner(input: AgentLoginOperation): LoginOperation {
     const operation = this.requireOperation(input.operationId);
+
     if (!operation.isOwnedBy(input.ownerToken))
       throw new Error('Agent login belongs to another App');
+
     return operation;
   }
   private requireNoMutation(agentId: string): void {
     if (this.mutations.has(agentId)) throw new Error('Agent is in use');
   }
 }
+
 export const createAgentLogins = (deps: AgentLoginsDeps): AgentLogins =>
   new AgentLogins(deps);

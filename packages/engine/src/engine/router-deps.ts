@@ -44,6 +44,7 @@ const findLiveSession =
 // Where the Feed finds the live Session, its feed actor and the Writer.
 export function createFeedSources(input: FeedSourcesInput): FeedSources {
   const findSession = findLiveSession(input.sessions);
+
   return {
     ...input,
     findSession,
@@ -64,6 +65,7 @@ type EngineSupplied =
   | 'readiness'
   | 'resolver'
   | 'afterAgentOpenFailure';
+
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
   Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>> & {
@@ -76,6 +78,7 @@ export function createAppRouterDeps(
   sources: FeedSources = createFeedSources(input),
 ): AppRouterDeps {
   const setup = createAgentSetup(input);
+
   return {
     ...input,
     ...sources,
@@ -93,6 +96,7 @@ function wireReadiness(
 ): ReturnType<typeof wireAgentReadiness> &
   Pick<AppRouterDeps, 'afterAgentOpenFailure'> {
   const wired = wireAgentReadiness(input, setup);
+
   return { ...wired, afterAgentOpenFailure: wired.readiness.saveOpenFailure };
 }
 
@@ -100,6 +104,7 @@ function createAgentSetup(
   input: AppRouterInput,
 ): Pick<AppRouterDeps, 'installations' | 'agentLogins' | 'createId'> {
   const installations = input.installations ?? createInstallations(input.home);
+
   return {
     installations,
     agentLogins: resolveAgentLogins(input, installations),

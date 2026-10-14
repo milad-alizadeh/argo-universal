@@ -25,6 +25,7 @@ const meta = {
   title: 'Tests/DesktopShell/Divider resize',
   ...shellMeta,
 } satisfies Meta<typeof DesktopShellFrame>;
+
 export default meta;
 
 async function waitForWidth(
@@ -100,13 +101,17 @@ export const ExpandedInspectorKeepsBothDividerEdgesUsable: ShellStory = {
   args: { inspectorState: 'expanded' },
   play: controlledPlay(async ({ canvas, userEvent }) => {
     await page.viewport(1440, 844);
+
     const listWidth = (): number =>
       canvas.getByTestId(sessionListId).getBoundingClientRect().width;
+
     await waitFor(() => expect(listWidth()).toBeGreaterThan(0));
     const sidebar = canvas.getByRole('separator', { name: resizeSidebarLabel });
+
     const inspector = canvas.getByRole('separator', {
       name: resizeInspectorLabel,
     });
+
     const start = sidebar.getBoundingClientRect();
     const inspectorStart = inspector.getBoundingClientRect();
     await expect(document.elementFromPoint(start.x + 4, start.y + 100)).toBe(

@@ -219,6 +219,7 @@ describe.each(liveHeaderMocks)(
           },
         },
       };
+
       expect(headerText(running, [tool])).toBe('Reading spec.md');
       expect(
         headerText(running, [
@@ -260,6 +261,7 @@ describe.each(liveHeaderMocks)(
           },
         ],
       };
+
       const rows = [retry, command, newest];
       const original = structuredClone(rows);
       expect(headerText(running, rows)).toBe('Second title');

@@ -28,8 +28,9 @@ type Ready = {
   agent: ClientContext;
   initialization: InitializeResponse;
 };
+
 export class AcpResourceConnection {
-  private onResourceFailure: ((error: unknown) => void) | undefined;
+  private onResourceFailure: ((cause: unknown) => void) | undefined;
   private readonly writes = new AcpResponseWrites((error) =>
     this.onResourceFailure?.(error),
   );
@@ -59,12 +60,14 @@ export class AcpResourceConnection {
       rejectAuthStatus: () => this.status.invalidate(),
       ...createResourceResponders(this.routing, this.writes),
     });
+
     return this.ready(this.connection);
   }
   private async ready(connection: ClientConnection): Promise<Ready> {
     const agent = observeSignInRequired(connection.agent, () =>
       this.input.onSignInRequired?.(),
     );
+
     return {
       connection,
       agent,
@@ -79,7 +82,7 @@ export class AcpResourceConnection {
     this.onResourceFailure?.(error);
   }
   public observeResourceFailures(
-    onResourceFailure: (error: unknown) => void,
+    onResourceFailure: (cause: unknown) => void,
   ): void {
     this.onResourceFailure = onResourceFailure;
     this.observeAcpConnectionClose(onResourceFailure);
@@ -89,7 +92,7 @@ export class AcpResourceConnection {
       .catch(onResourceFailure);
   }
   private observeAcpConnectionClose(
-    onResourceFailure: (error: unknown) => void,
+    onResourceFailure: (cause: unknown) => void,
   ): void {
     void this.startup
       .then(({ connection }) =>
@@ -103,7 +106,7 @@ export class AcpResourceConnection {
   public async open(
     opening: AcpSessionOpening,
     beforeDispatch: () => void,
-  ): Promise<Omit<AcpSessionLease, 'close' | 'released'>> {
+  ): Promise<Omit<AcpSessionLease, 'close' | 'replace' | 'released'>> {
     const ready = await this.startup;
     const { agent, initialization } = ready;
     await this.status.requireReady(initialization);
@@ -111,6 +114,7 @@ export class AcpResourceConnection {
     const opened = await this.openSession(ready, opening);
     await this.status.requireReady(initialization);
     this.activateSubscription(initialization);
+
     return { agent, initialization, ...opened };
   }
   private activateSubscription(initialization: InitializeResponse): void {
@@ -138,6 +142,7 @@ export class AcpResourceConnection {
   }
   public shutdown(): Promise<void> {
     this.termination ??= this.terminate();
+
     return this.termination;
   }
   private async terminate(): Promise<void> {

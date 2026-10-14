@@ -24,6 +24,7 @@ export function SectionRootScreen({
   section,
 }: SectionRootScreenProps): React.JSX.Element {
   const RootPage = rootPages[section];
+
   return (
     <SectionRootView
       phone={<PhoneSectionScreen section={section} />}

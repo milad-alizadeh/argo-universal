@@ -16,6 +16,7 @@ const fruits = [
   { value: 'banana', label: 'Banana' },
   { value: 'blueberry', label: 'Blueberry' },
 ];
+
 type SelectExampleProps = {
   size?: 'default' | 'sm';
   disabled?: boolean;
@@ -32,6 +33,7 @@ function SelectExample({
   variant,
 }: SelectExampleProps): React.JSX.Element {
   const [value, setValue] = useState(initialValue);
+
   return (
     <Select value={value} onValueChange={setValue} disabled={disabled}>
       <FruitTrigger size={size} variant={variant} />
@@ -70,7 +72,9 @@ const meta = {
   title: 'Design System/Primitives/Select',
   tags: ['third-party'],
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

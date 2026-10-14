@@ -21,6 +21,7 @@ function resizeByKey(
   event: KeyboardEvent<HTMLDivElement>,
 ): void {
   const width = keyedWidth(props, event.key);
+
   if (width === undefined) return;
   event.preventDefault();
   props.onChange(width);
@@ -45,6 +46,7 @@ export function PanelResizeHandle(
   props: PanelResizeHandleProps,
 ): React.JSX.Element {
   const pointerResize = usePointerResize(props);
+
   return (
     <div
       role="separator"

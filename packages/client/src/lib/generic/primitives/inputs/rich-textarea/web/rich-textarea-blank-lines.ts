@@ -16,6 +16,7 @@ interface Reading {
 function blockStarts(transformers: Transformer[]): RegExp[] {
   return transformers.flatMap((transformer) => {
     if (transformer.type === 'element') return [transformer.regExp];
+
     return transformer.type === 'multiline-element'
       ? [transformer.regExpStart]
       : [];
@@ -35,14 +36,17 @@ function unfencedKind(
 ): LineKind {
   if (line.trim() === '') return 'blank';
   const startsBlock = starts.some((start) => start.test(line));
+
   return startsBlock ? 'other' : continuedKind(reading.previous);
 }
 
 // A line of three or more backticks, unless the same line also closes the code it opens.
 function opensOrClosesFence(line: string): boolean {
   const trimmed = line.trim();
+
   const singleLine =
     trimmed.length >= fenceMark.length * 2 && trimmed.endsWith(fenceMark);
+
   return trimmed.startsWith(fenceMark) && !singleLine;
 }
 
@@ -50,13 +54,16 @@ function readLine(line: string, reading: Reading, starts: RegExp[]): LineKind {
   const toggles = opensOrClosesFence(line);
   const fenced = reading.inFence || toggles;
   reading.inFence = reading.inFence !== toggles;
+
   return fenced ? 'other' : unfencedKind(line, reading, starts);
 }
 
 function lineKinds(lines: string[], starts: RegExp[]): LineKind[] {
   const reading: Reading = { inFence: false, previous: 'blank' };
+
   return lines.map((line) => {
     reading.previous = readLine(line, reading, starts);
+
     return reading.previous;
   });
 }
@@ -64,8 +71,10 @@ function lineKinds(lines: string[], starts: RegExp[]): LineKind[] {
 // The kind of the nearest line that is not blank, looking from each line in one direction.
 function nearestKinds(kinds: LineKind[]): LineKind[] {
   let nearest: LineKind = 'blank';
+
   return kinds.map((kind) => {
     if (kind !== 'blank') nearest = kind;
+
     return nearest;
   });
 }
@@ -73,6 +82,7 @@ function nearestKinds(kinds: LineKind[]): LineKind[] {
 function insideParagraph(kinds: LineKind[]): boolean[] {
   const before = nearestKinds(kinds);
   const after = nearestKinds(kinds.toReversed()).toReversed();
+
   return kinds.map(
     (kind, index) =>
       kind === 'blank' &&
@@ -87,5 +97,6 @@ export function markBlankLines(
 ): string {
   const lines = markdown.split('\n');
   const marked = insideParagraph(lineKinds(lines, blockStarts(transformers)));
+
   return lines.map((line, index) => (marked[index] ? mark : line)).join('\n');
 }

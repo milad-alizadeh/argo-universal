@@ -88,6 +88,7 @@ function TableFrame({ children }: { children: ReactNode }): React.JSX.Element {
 
 function BodyRows({ rows }: { rows: Cells[] }): React.JSX.Element[] {
   const last = rows.length - 1;
+
   return withOccurrenceKeys(rows, rowKey).map(({ item: row, key }, index) => (
     <Row
       key={key}

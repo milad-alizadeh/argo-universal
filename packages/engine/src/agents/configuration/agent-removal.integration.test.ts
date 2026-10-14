@@ -8,10 +8,13 @@ import { startEngineTestHost } from '#mocks/engine';
 
 it('custom unregister preserves the external executable and stored Session, Turn and Feed after restart', async () => {
   const host = await startCustomAgentEngine({ acp: {} });
+
   const registration = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registration.status !== 'ready') throw new Error(registration.failure);
+
   const input = {
     projectId: 'project-1',
     agent: registration.agentId,
@@ -19,6 +22,7 @@ it('custom unregister preserves the external executable and stored Session, Turn
     configOptions: [],
     prompt: [{ type: 'text' as const, text: 'Keep my history' }],
   };
+
   const created = await host.caller.session.new(input);
   await expect
     .poll(
@@ -34,10 +38,12 @@ it('custom unregister preserves the external executable and stored Session, Turn
     );
   await host.caller.session.close(created);
   const feed = await host.caller.feed.page({ ...created, direction: 'tail' });
+
   const sessions = await host.caller.session.list({
     projectId: 'project-1',
     archived: false,
   });
+
   await host.caller.agents.remove({ agentId: registration.agentId });
   await expect(
     access(customAgentDefinition.executable),
@@ -73,9 +79,11 @@ it.each(['remove', 'edit'] as const)(
   'an open Session refuses custom Agent %s',
   async (mutation) => {
     const host = await startCustomAgentEngine({ acp: {} });
+
     const registration = await host.caller.agents.registerCustom(
       customAgentDefinition,
     );
+
     if (registration.status !== 'ready') throw new Error(registration.failure);
     await host.caller.session.new({
       projectId: 'project-1',
@@ -85,6 +93,7 @@ it.each(['remove', 'edit'] as const)(
       prompt: [{ type: 'text', text: 'Keep my Session' }],
     });
     const input = { agentId: registration.agentId };
+
     const command =
       mutation === 'remove'
         ? host.caller.agents.remove(input)
@@ -92,6 +101,7 @@ it.each(['remove', 'edit'] as const)(
             ...input,
             definition: customAgentDefinition,
           });
+
     await expect(command).rejects.toThrow('in use');
   },
 );

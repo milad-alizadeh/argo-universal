@@ -2,12 +2,14 @@ import type {
   CancelNotification,
   PromptRequest,
 } from '@agentclientprotocol/sdk';
+import type { SessionPromptOutput } from '@repo/contracts';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 // More settled tool rows than the Writer keeps queued for the Feed.
 const toolCount = 300;
+
 const holdToolRows =
   "CREATE TRIGGER hold_tool_rows BEFORE INSERT ON feed_row WHEN NEW.session_update = 'tool_call_update' BEGIN SELECT RAISE(FAIL, 'storage failure'); END";
 
@@ -16,6 +18,7 @@ it('a Turn that outgrows the Writer while storage fails is cancelled, and prompt
   const cancels: CancelNotification[] = [];
   const cancelled = Promise.withResolvers<CancelNotification>();
   const prompts: PromptRequest[] = [];
+
   const host = await startAcpEngine({
     steps: [],
     notifications: {
@@ -42,13 +45,17 @@ it('a Turn that outgrows the Writer while storage fails is cancelled, and prompt
       ],
     },
   });
+
   const created = await host.caller.session.new(emptySessionInput);
-  const prompt = (text: string): Promise<unknown> =>
+
+  const prompt = (text: string): Promise<SessionPromptOutput> =>
     host.caller.session.prompt({
       ...created,
       prompt: [{ type: 'text', text }],
     });
+
   host.database.$client.exec(holdToolRows);
+
   try {
     await prompt('Read everything');
     await cancelled.promise;
@@ -59,6 +66,7 @@ it('a Turn that outgrows the Writer while storage fails is cancelled, and prompt
   } finally {
     host.database.$client.exec('DROP TRIGGER IF EXISTS hold_tool_rows');
   }
+
   await expect
     .poll(
       () =>

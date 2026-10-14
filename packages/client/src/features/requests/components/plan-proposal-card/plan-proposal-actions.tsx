@@ -47,5 +47,6 @@ function answerLabel(
   planning: boolean,
 ): string {
   if (state === 'submitting') return 'Sending…';
+
   return planning ? 'Keep planning' : 'Approve';
 }

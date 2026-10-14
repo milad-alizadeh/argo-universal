@@ -8,15 +8,19 @@ export type AcpContentInput = {
   update: SessionNotification['update'];
   acpSessionId: SessionNotification['sessionId'];
   turnId: string | null;
+  stale?: true;
+  lastSettledTurnId?: string | null;
   feed: Feed;
   streams: MessageStreams;
   findWrittenRow: (id: string) => SessionUpdate | undefined;
   findUnaddressedPlan?: (acpSessionId: string) => PlanUpdate | undefined;
   unaddressedPlan?: { acpSessionId: string; rowId: string };
 };
+
 export type ContentAssemblyInput = AcpContentInput & {
   findRow: AcpContentInput['findWrittenRow'];
 };
+
 export type AssembledContent = {
   change: FeedChange;
   streams?: MessageStreams;
@@ -25,6 +29,7 @@ export type AssembledContent = {
   // Whole output values the change cut to a preview.
   blobs?: OutputBlob[];
 };
+
 export type ContentAssemblyResult =
   | AssembledContent
   | { rejection: string }

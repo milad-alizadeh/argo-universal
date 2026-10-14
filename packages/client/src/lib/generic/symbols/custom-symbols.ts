@@ -10,18 +10,21 @@ type CustomSymbol = keyof typeof symbols;
 
 export type AppleSymbol = SFSymbol | CustomSymbol;
 
+interface SymbolBox {
+  width: number;
+  height: number;
+}
+
 export function isCustomSymbol(name: string): name is CustomSymbol {
   return Object.hasOwn(symbols, name);
 }
 
 // The symbol box in the paths' units, 100-point type, where the system `circle` symbol is 117 points wide.
-export function customSymbolBox(name: CustomSymbol): {
-  width: number;
-  height: number;
-} {
+export function customSymbolBox(name: CustomSymbol): SymbolBox {
   const [, , width = 0, height = 0] = symbols[name].viewBox
     .split(' ')
     .map(Number);
+
   return { width, height };
 }
 
@@ -29,5 +32,6 @@ export function customSymbolBox(name: CustomSymbol): {
 export function customSymbolImage(name: CustomSymbol): string {
   const { viewBox, d } = symbols[name];
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"><path d="${d}"/></svg>`;
+
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }

@@ -24,6 +24,7 @@ export interface ReadinessCopy {
 }
 
 type CopyInput = { name: string; status: AgentStatus; reason?: string };
+
 type CopyWriter = (input: CopyInput) => ReadinessCopy;
 
 const undetermined = 'Readiness could not be determined';

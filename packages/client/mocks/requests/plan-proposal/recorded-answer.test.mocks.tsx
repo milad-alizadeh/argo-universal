@@ -1,5 +1,6 @@
 import type { SessionAnswerPlanProposalInput } from '@repo/contracts';
 import { expect, within } from 'storybook/test';
+import type { PlanProposalAnswer } from '../../../src/features/requests/components/plan-proposal-card/plan-proposal-card';
 import { layoutWidths } from '../../../src/lib/generic/each-layout';
 import { settleViewport } from '../../../src/lib/generic/settle-viewport';
 import { planProposalMocks } from '../../plan-proposal-mock';
@@ -10,7 +11,9 @@ import {
 
 export function recordedAnswer(index: number): Story {
   const mock = planProposalMocks[index];
+
   if (!mock) throw new Error('Plan proposal recording is missing.');
+
   return {
     args: { proposal: mock.proposal },
     play: async ({ userEvent, args }) => {
@@ -19,6 +22,7 @@ export function recordedAnswer(index: number): Story {
       await expect(
         canvas.getByRole('button', { name: 'Approve' }),
       ).toBeVisible();
+
       if (mock.answer.decision === 'keep_planning') {
         await userEvent.click(
           canvas.getByRole('button', { name: keepPlanningLabel }),
@@ -37,10 +41,9 @@ export function recordedAnswer(index: number): Story {
 }
 
 // The card answers for its Session, so its answer carries every recorded field but the Session's.
-function withoutSession(
-  answer: SessionAnswerPlanProposalInput,
-): Record<string, unknown> {
-  return Object.fromEntries(
-    Object.entries(answer).filter(([field]) => field !== 'sessionId'),
-  );
+function withoutSession({
+  sessionId: _sessionId,
+  ...answer
+}: SessionAnswerPlanProposalInput): PlanProposalAnswer {
+  return answer;
 }

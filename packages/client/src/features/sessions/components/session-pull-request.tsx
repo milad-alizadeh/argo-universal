@@ -31,6 +31,7 @@ function PullRequestIcon({
   status,
 }: Pick<SessionPullRequest, 'status'>): React.JSX.Element {
   const appearance = pullRequestAppearance[status];
+
   return (
     <Icon
       name={appearance.icon}
@@ -69,6 +70,7 @@ export function SessionPullRequestLabel({
   status,
 }: Pick<SessionPullRequest, 'number' | 'status'>): React.JSX.Element {
   const label = pullRequestStatusLabels[status];
+
   return (
     <View {...labelRow} accessibilityLabel={`PR #${number}, ${label}`}>
       <PullRequestIcon status={status} />

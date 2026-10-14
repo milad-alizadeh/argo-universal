@@ -6,6 +6,7 @@ import { Given, When, Then } from './fixtures';
 import { query } from './server-query';
 
 const titlePrefix = 'Long list Session';
+
 const indexWidth = 3;
 
 const Projects = z.array(z.object({ id: z.string() }));
@@ -26,15 +27,24 @@ async function firstProjectId(page: Page, httpUrl: string): Promise<string> {
     input: {},
     output: Projects,
   });
+
   if (!project) throw new Error('The Server has no Project');
+
   return project.id;
 }
 
-function newSessionInput(session: {
+type SeededSession = { projectId: string; agent: string; title: string };
+
+// The body of a `session.new` call that starts on the main checkout.
+type SessionNewBody = {
   projectId: string;
   agent: string;
-  title: string;
-}): object {
+  checkout: { type: 'main' };
+  configOptions: [];
+  prompt: { type: 'text'; text: string }[];
+};
+
+function newSessionInput(session: SeededSession): SessionNewBody {
   return {
     projectId: session.projectId,
     agent: session.agent,
@@ -47,11 +57,12 @@ function newSessionInput(session: {
 async function startSession(
   page: Page,
   httpUrl: string,
-  session: { projectId: string; agent: string; title: string },
+  session: SeededSession,
 ): Promise<void> {
   const response = await page.request.post(`${httpUrl}/trpc/session.new`, {
     data: newSessionInput(session),
   });
+
   expect(response.ok()).toBe(true);
 }
 
@@ -62,6 +73,7 @@ async function seedSessions(
 ): Promise<void> {
   const projectId = await firstProjectId(page, httpUrl);
   const { agent } = await readAgent(page, httpUrl, 1);
+
   for (let index = 1; index <= count; index += 1)
     await startSession(page, httpUrl, {
       projectId,
@@ -89,6 +101,7 @@ When(
         await list.evaluate((element) => {
           element.scrollTop = element.scrollHeight;
         });
+
         return row(page, 1).count();
       })
       .toBe(1);

@@ -8,6 +8,7 @@ export type ButtonVariant =
   | 'secondary'
   | 'ghost'
   | 'link';
+
 // `xs` is the compact toolbar button of a desktop header.
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
@@ -30,6 +31,7 @@ export interface ButtonDataProps {
 }
 
 export type SystemButtonProps = ButtonDataProps & { appearance?: 'system' };
+
 export type ContentButtonProps = Omit<ButtonDataProps, 'className' | 'style'> &
   Pick<
     ComponentProps<typeof Pressable>,
@@ -45,4 +47,5 @@ export type ContentButtonProps = Omit<ButtonDataProps, 'className' | 'style'> &
     'aria-expanded'?: boolean;
     'aria-controls'?: string;
   };
+
 export type ButtonProps = SystemButtonProps | ContentButtonProps;

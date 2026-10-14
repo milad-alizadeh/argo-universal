@@ -13,6 +13,7 @@ import {
   newCheckoutLabel,
 } from './composer-test-contract.test.mocks';
 import { firstAgent } from './recorded-catalog.test.mocks';
+
 export function phoneStatusControls(agent: Pick<AgentInfo, 'agent'>): Story {
   return {
     args: {
@@ -48,6 +49,7 @@ export function phoneStatusControls(agent: Pick<AgentInfo, 'agent'>): Story {
     },
   };
 }
+
 export function createdCheckoutIsReadOnly(width: number): Story {
   return {
     args: {
@@ -67,6 +69,7 @@ export function createdCheckoutIsReadOnly(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       const overlay = within(document.body);
       await settleViewport(width);
+
       if (width < wideBreakpoint()) {
         await expect(
           canvas.queryByText('created-worktree', { exact: true }),
@@ -77,6 +80,7 @@ export function createdCheckoutIsReadOnly(width: number): Story {
         await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth);
         await userEvent.click(name);
       }
+
       await expect(
         canvas.queryByRole('button', { name: 'Checkout' }),
       ).not.toBeInTheDocument();

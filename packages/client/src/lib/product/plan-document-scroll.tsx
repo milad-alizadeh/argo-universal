@@ -40,6 +40,7 @@ export function usePlanScroll(): PlanScroll {
   const [contentHeight, setContentHeight] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [offset, setOffset] = useState(0);
+
   return {
     metrics: { contentHeight, viewportHeight, offset },
     handlers: {
@@ -90,15 +91,22 @@ export function PlanBottomFade(props: {
   metrics: PlanScrollMetrics;
 }): React.JSX.Element | null {
   if (!overflows(props.metrics) || hiddenBelow(props.metrics) <= 1) return null;
+
   return <ScrollFadeGradient edge="bottom" className="bg-card" height={40} />;
+}
+
+interface ThumbPlacement {
+  height: number;
+  top: number;
 }
 
 function thumbPlacement({
   contentHeight,
   viewportHeight,
   offset,
-}: PlanScrollMetrics): { height: number; top: number } {
+}: PlanScrollMetrics): ThumbPlacement {
   const height = (viewportHeight * viewportHeight) / Math.max(1, contentHeight);
+
   return {
     height,
     top:
@@ -110,6 +118,7 @@ export function PlanScrollThumb(props: {
   metrics: PlanScrollMetrics;
 }): React.JSX.Element | null {
   if (!overflows(props.metrics)) return null;
+
   return (
     <View
       pointerEvents="none"

@@ -7,7 +7,9 @@ import { cn } from '#lib/generic/utils';
 import { HoverProvider, PopoverHover } from './popover-hover';
 import { hoverContentProps } from './popover-hover-focus';
 import { Popover as PopoverRoot } from './popover-root';
+
 export { PopoverTrigger } from './popover-trigger';
+
 export { PopoverHoverGroup } from './popover-hover';
 
 type ContentProps = Omit<
@@ -20,6 +22,7 @@ type ContentProps = Omit<
   portalHost?: string;
   onClosed?: () => void;
 };
+
 export function Popover({
   openOnHover,
   children,
@@ -37,8 +40,10 @@ export function Popover({
 
 export function usePopoverClose(): () => void {
   const { onOpenChange } = PopoverPrimitive.useRootContext();
+
   return React.useCallback(() => onOpenChange(false), [onOpenChange]);
 }
+
 const contentClassName =
   'bg-popover border-border outline-hidden z-50 w-72 rounded-2xl border p-4 shadow-card popover-content cursor-auto';
 
@@ -52,6 +57,7 @@ function contentPlacement({
 function PopoverBody({ ref, ...props }: ContentProps): React.JSX.Element {
   const { open } = PopoverPrimitive.useRootContext();
   const hover = React.useContext(PopoverHover);
+
   return (
     <WebPopover.Content
       ref={ref}
@@ -103,6 +109,7 @@ function PopoverContent({
     </WebPopover.Portal>
   );
 }
+
 export { PopoverContent };
 
 function contentInteractions(

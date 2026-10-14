@@ -47,8 +47,10 @@ export class FeedDelivery {
   public *deliver(event: LiveFeedEvent): Generator<FeedSubscribeOutput> {
     if (event.type === 'snapshot') {
       yield event;
+
       return;
     }
+
     if (!this.catchUp.isPastHighWaterMark(event.rev)) return;
     yield* this.movedRows.deliver(event);
     this.delivered = event.rev;

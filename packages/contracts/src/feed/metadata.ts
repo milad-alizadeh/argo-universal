@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const acpMetadata = z.record(z.string(), z.unknown()).optional();
+
 export const createFeedMetadataSchema = <Extension extends z.ZodObject>(
   argoExtensionSchema: Extension,
 ): z.ZodOptional<

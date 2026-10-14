@@ -5,7 +5,9 @@ import { agentDetail } from './agent-detail';
 import { installedAgents } from './agent-list';
 
 const signInNeeded = 'sign-in-needed';
+
 const signInReason = 'The Agent requires sign-in.';
+
 const probed: AgentInfo = {
   agent: iconAgent.id,
   label: iconAgent.entry.name,
@@ -21,6 +23,7 @@ describe('installedAgents', () => {
       [{ ...probed, status: 'ready' }],
       [{ id: iconAgent.id, name: 'Mine' }],
     );
+
     expect(rows).toEqual([
       expect.objectContaining({ status: 'ready', custom: true }),
     ]);
@@ -44,6 +47,7 @@ describe('installedAgents', () => {
 
   it('offers a newer release only once the Agent is Ready', () => {
     const newer = { version: '1.0.0', availableVersion: '1.1.0' };
+
     const rows = installedAgents(
       [
         { ...probed, ...newer, status: 'ready' },
@@ -51,6 +55,7 @@ describe('installedAgents', () => {
       ],
       [],
     );
+
     expect(rows.map(({ status }) => status)).toEqual(['update', 'cant-start']);
   });
 
@@ -69,6 +74,7 @@ describe('installedAgents', () => {
       ],
       [],
     );
+
     expect(rows.map(({ status }) => status)).toEqual(['disabled', 'checking']);
   });
 });

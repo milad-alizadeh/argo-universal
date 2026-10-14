@@ -30,6 +30,7 @@ it.each(
   const authenticated = Promise.withResolvers<void>();
   const checked = Promise.withResolvers<LoginAgentOutcome>();
   const closed = Promise.withResolvers<void>();
+
   const actor = createActor(loginMachine, {
     input: {
       ...input,
@@ -39,6 +40,7 @@ it.each(
       close: () => closed.promise,
     },
   }).start();
+
   try {
     for (const step of path.steps) {
       await deliver({
@@ -55,6 +57,7 @@ it.each(
     actor.stop();
   }
 });
+
 const deliver = async ({
   event,
   actor,
@@ -98,9 +101,11 @@ const deliver = async ({
     default:
       actor.send(event);
   }
+
   await Promise.resolve();
   await Promise.resolve();
 };
+
 it('login lifecycle paths cover every transition', (): void => {
   expect(
     unwalkedTransitions({

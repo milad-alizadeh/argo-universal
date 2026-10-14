@@ -14,6 +14,7 @@ it('a check whose process would not exit is Can’t start', () => {
     Promise.resolve(),
     new Error('kill failed'),
   );
+
   expect(readinessOfFailure(failure)).toEqual({
     status: 'cant-start',
     reason: 'The Agent did not exit after its readiness check.',

@@ -18,4 +18,5 @@ export const createAppRouter = routerFactory((deps: AppRouterDeps) =>
     session: createSessionRouter(deps),
   }),
 );
+
 export type AppRouter = ReturnType<typeof createAppRouter>;

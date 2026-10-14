@@ -17,7 +17,9 @@ const meta = {
     onConnectGitHub: fn(),
   },
 } satisfies Meta<typeof GitHubStepView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const chips = ['Login found', 'Signing in…', 'Signed in', 'Sign-in expired'];
@@ -45,6 +47,7 @@ const githubState = (
     await expectOnly(Object.values(githubButtons), expected.button, (name) =>
       canvas.queryAllByRole('button', { name }),
     );
+
     if (expected.button === undefined) return;
     await userEvent.click(
       canvas.getByRole('button', { name: expected.button }),

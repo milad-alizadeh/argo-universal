@@ -28,6 +28,7 @@ export const admitsPermissionAnswer = (
   answer: PermissionAnswer,
 ): boolean => {
   const request = answeredRequest(permissionQueue, answer.requestId);
+
   return (
     request !== undefined &&
     chosenOption(request, answer.optionId) !== undefined

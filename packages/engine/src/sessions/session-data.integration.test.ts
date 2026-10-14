@@ -24,6 +24,7 @@ import { SessionRowUpdateJob } from './session-storage';
 const newSessionId = 'new-session';
 
 const cleanups: (() => void)[] = [];
+
 afterEach((): void => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
 });
@@ -47,15 +48,19 @@ it.each([
     const directory = realpathSync(
       mkdtempSync(join(tmpdir(), 'session-project-path-')),
     );
+
     cleanups.push((): void =>
       rmSync(directory, { recursive: true, force: true }),
     );
     await initTestRepository(directory);
+
     const { database, remove } = openTestDatabase(
       {},
       join(directory, 'stale-project-path'),
     );
+
     cleanups.push(remove);
+
     const created = await createSessionCheckout({
       ...newSession,
       database,
@@ -63,6 +68,7 @@ it.each([
       projectPath: directory,
       checkout,
     });
+
     expect(created.checkout.path).toBe(
       checkout.type === 'main'
         ? directory
@@ -80,16 +86,20 @@ it.each([
     const directory = realpathSync(
       mkdtempSync(join(tmpdir(), 'session-checkout-\n')),
     );
+
     cleanups.push((): void =>
       rmSync(directory, { recursive: true, force: true }),
     );
     const git = await initTestRepository(directory);
+
     const {
       database,
       directory: runtimeDirectory,
       remove,
     } = openTestDatabase({}, directory);
+
     cleanups.push(remove);
+
     const input = {
       ...newSession,
       database,
@@ -97,8 +107,10 @@ it.each([
       runtimeDirectory: join(directory, '.argo'),
       checkout,
     };
+
     const readStoredSession = (): typeof session.$inferSelect | undefined =>
       database.select().from(session).where(eq(session.id, newSessionId)).get();
+
     const created = await createSessionCheckout(input);
     expect(readStoredSession()).toBeUndefined();
     writeJobs(database, [
@@ -130,8 +142,10 @@ it.each([
     expect(
       database.select().from(project).where(eq(project.id, 'project-1')).get(),
     ).toMatchObject({ checkoutChoice: checkout });
+
     const checkoutGit = (...arguments_: string[]): Promise<string> =>
       git('-C', created.checkout.path, ...arguments_);
+
     expect(await checkoutGit('branch', '--show-current')).toBe(
       created.checkout.branch,
     );
@@ -191,9 +205,11 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
   database.$client
     .exec(`CREATE TRIGGER hold_session_write BEFORE UPDATE OF vendor_session_id ON session
     BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
+
   const writer = createActor(writerMachine, {
     input: { now: (): number => Date.now(), database },
   }).start();
+
   cleanups.push((): typeof writer => writer.stop());
   writer.send({
     type: 'writer.write',
@@ -244,11 +260,13 @@ it('rejects and reports a git response that has no working Checkout', async (): 
     rmSync(directory, { recursive: true, force: true }),
   );
   execFileSync('git', ['init', '--bare', directory]);
+
   const {
     database,
     directory: runtimeDirectory,
     remove,
   } = openTestDatabase({}, directory);
+
   cleanups.push(remove);
   const report = vi.spyOn(console, 'error').mockImplementation((): void => {});
   await expect(

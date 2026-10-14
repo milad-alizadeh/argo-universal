@@ -24,6 +24,7 @@ export type Installation = {
   owner: InstallationOwner;
   version?: string;
 };
+
 export type RegistrySource = { entry: ACPAgent; selection?: InstallSelection };
 
 const reader = createRegistryReader();
@@ -35,6 +36,7 @@ const parseEntry = (metadata: string): ACPAgent | undefined => {
     return undefined;
   }
 };
+
 const catalogEntry = (
   database: Database,
   agentId: string,
@@ -44,6 +46,7 @@ const catalogEntry = (
     .from(agents)
     .where(eq(agents.id, agentId))
     .get();
+
   return row?.metadata ? parseEntry(row.metadata) : undefined;
 };
 
@@ -53,13 +56,16 @@ export const readRegistrySource = (
   agentId: string,
 ): RegistrySource | undefined => {
   const selection = readInstallSelection(database, agentId);
+
   if (selection) return { entry: selection.entry, selection };
   const entry = catalogEntry(database, agentId);
+
   return entry && { entry };
 };
 
 const realOrSame = (path: string): Promise<string> =>
   realpath(path).catch(() => path);
+
 // Argo-managed is read from where the file really is, never stored.
 const ownerOf = async (
   home: string,
@@ -69,6 +75,7 @@ const ownerOf = async (
     realOrSame(join(home, 'agents')),
     realOrSame(file),
   ]);
+
   return real.startsWith(folder + sep) ? 'argo' : 'unknown';
 };
 
@@ -81,6 +88,7 @@ const argoInstallation = async (
     const file = await checkSelectedFiles(home, agentId, selection);
     const definition = await selectedLaunchDefinition(home, agentId, selection);
     const version = selection.packageVersion ?? selection.entry.version;
+
     return { definition, owner: await ownerOf(home, file), version };
   } catch {
     return undefined;
@@ -94,21 +102,27 @@ const entrypointName = (entry: ACPAgent): string | undefined => {
       basename(cmd).replace(/\.exe$/i, ''),
     ),
   );
+
   const [name] = names;
+
   return names.size === 1 ? name : undefined;
 };
 
 type BinaryTarget = NonNullable<ACPAgent['distribution']['binary']>[string];
+
 // This platform's target, when its entrypoint has a name PATH can be searched by.
 const pathTarget = (
   entry: ACPAgent,
 ): { target: BinaryTarget; name: string } | undefined => {
   const target = platformTarget(entry);
   const name = entrypointName(entry);
+
   return target && name ? { target, name } : undefined;
 };
+
 const platformTarget = (entry: ACPAgent): BinaryTarget | undefined =>
   entry.distribution.binary?.[resolveRegistryServerPlatform()];
+
 const targetDefinition = (
   entry: ACPAgent,
   target: BinaryTarget,
@@ -128,12 +142,15 @@ const pathInstallation = async (
   entry: ACPAgent,
 ): Promise<Installation | undefined> => {
   const searched = pathTarget(entry);
+
   if (!searched) return undefined;
   const file = await findOnPath(searched.name);
+
   return file
     ? foundOnPath(home, entry, { target: searched.target, file })
     : undefined;
 };
+
 const foundOnPath = async (
   home: string,
   entry: ACPAgent,

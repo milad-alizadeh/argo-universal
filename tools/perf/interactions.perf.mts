@@ -16,12 +16,17 @@ import { cpuRates, report, type Result, run, wanted } from './results.mts';
 import { type SeededServer, startSeededServer } from './seed.mts';
 
 const toggleSettleMilliseconds = 330;
+
 const drawerSettleMilliseconds = 600;
+
 const sidebarToggles = 6;
+
 const drawerCycles = 3;
+
 const openNavigation = 'Open navigation';
 
 const results: Result[] = [];
+
 let server: SeededServer;
 
 test.describe.configure({ mode: 'serial' });
@@ -65,10 +70,12 @@ const sidebar: Scenario = async (page) => {
   const session = await openLongSession(page);
   await page.getByTestId(feedScroll).waitFor();
   await page.waitForTimeout(1500);
+
   const once = async (): Promise<void> => {
     for (let index = 0; index < sidebarToggles; index += 1)
       await toggleSidebar(page, index);
   };
+
   return { session, once };
 };
 
@@ -77,6 +84,7 @@ const feed: Scenario = async (page) => {
   const session = await openLongSession(page);
   await page.getByTestId(feedScroll).waitFor();
   await loadWholeList(page, feedScroll, true);
+
   return { session, once: () => scrollDownAndUp(page, feedScroll) };
 };
 
@@ -86,9 +94,11 @@ const sessions: Scenario = async (page) => {
     serverUrl: server.serverUrl,
     viewport: desktop,
   });
+
   await page.getByTestId(sessionsScroll).waitFor();
   await loadWholeList(page, sessionsScroll, false);
   await jump(page, sessionsScroll, true);
+
   return { session, once: () => scrollDownAndUp(page, sessionsScroll) };
 };
 
@@ -105,16 +115,21 @@ const drawer: Scenario = async (page) => {
     serverUrl: server.serverUrl,
     viewport: phone,
   });
+
   await page.getByRole('button', { name: openNavigation }).waitFor();
   await page.waitForTimeout(1000);
+
   const once = async (): Promise<void> => {
     for (let index = 0; index < drawerCycles; index += 1)
       await cycleDrawer(page);
   };
+
   return { session, once };
 };
 
-const scenarios: Record<string, Scenario> = { sidebar, feed, sessions, drawer };
+const scenarios = new Map<string, Scenario>(
+  Object.entries({ sidebar, feed, sessions, drawer }),
+);
 
 // Warms the code paths and caches with a first pass, then measures.
 async function measureScenario(
@@ -122,15 +137,17 @@ async function measureScenario(
   interaction: string,
   cpu: number,
 ): Promise<Result> {
-  const scenario = scenarios[interaction];
+  const scenario = scenarios.get(interaction);
+
   if (!scenario) throw new Error(`No ${interaction} scenario`);
   const { session, once } = await scenario(page);
   await once();
+
   return run({ interaction, cpu, session, page, once });
 }
 
 for (const cpu of cpuRates)
-  for (const interaction of Object.keys(scenarios).filter(wanted))
+  for (const interaction of [...scenarios.keys()].filter(wanted))
     test(`${interaction} at ${cpu}x CPU`, async ({ page }) => {
       const result = await measureScenario(page, interaction, cpu);
       results.push(result);

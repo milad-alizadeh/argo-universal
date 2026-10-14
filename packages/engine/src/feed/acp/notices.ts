@@ -5,7 +5,9 @@ import { createAcpContentMetadata } from './content';
 import { createScopedFeedRowId } from './identity';
 
 type NoticeIdentity = { acpSessionId: string; localPosition: number };
+
 const noticeSeverities: ReadonlySet<string> = new Set(knownNoticeSeverities);
+
 const createNoticeRow = (
   notice: AcpNotice,
   identity: NoticeIdentity,
@@ -18,6 +20,7 @@ const createNoticeRow = (
   description: notice.description ?? undefined,
   _meta: createAcpContentMetadata(notice._meta),
 });
+
 export const createNoticeChange = (
   notice: AcpNotice,
   identity: NoticeIdentity,

@@ -22,6 +22,7 @@ const applyChoice = async (
       ...(typeof choice.value === 'boolean' && { type: 'boolean' }),
     }),
   );
+
   return readAcpConfiguration(response.configOptions, input.rejections);
 };
 
@@ -53,11 +54,14 @@ export const restoreRecoveryConfiguration = async (
     input.lease.response.configOptions,
     input.rejections,
   );
+
   for (const choice of input.values) {
     if (isSelected(options, choice)) continue;
     validateConfigChoice(options, choice);
     options = await applyChoice(input, choice);
   }
+
   requireSelected(options, input.values);
+
   return options;
 };

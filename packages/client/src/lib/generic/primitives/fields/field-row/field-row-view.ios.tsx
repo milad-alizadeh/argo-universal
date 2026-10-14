@@ -14,6 +14,7 @@ import {
  */
 export function FieldRow(props: FieldRowProps): React.JSX.Element {
   if (useWide()) return <WebFieldRow {...props} />;
+
   return (
     <Section
       modifiers={[

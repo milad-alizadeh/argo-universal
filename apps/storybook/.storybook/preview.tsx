@@ -21,6 +21,7 @@ declare global {
  * Stories run in the preview iframe, but Electron runs the preload only in the top frame, the same-origin manager.
  */
 const desktopBridge = globalThis.window?.argo ?? globalThis.window?.parent.argo;
+
 const renderSymbolImage = desktopBridge?.symbols?.render;
 
 const withDesktopSymbols: Decorator = (Story) => (

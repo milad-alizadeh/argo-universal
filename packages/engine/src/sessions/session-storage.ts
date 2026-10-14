@@ -1,6 +1,7 @@
 import { SessionRecord, Turn } from '@repo/contracts';
 import { project, session, turn } from '@repo/db/schema';
 import { eq, sql } from 'drizzle-orm';
+import type { SQLiteUpdateSetSource } from 'drizzle-orm/sqlite-core';
 import { projectQueuedFeedSession, queuedFeedSessionId } from '../feed';
 import {
   readQueuedJobs,
@@ -13,6 +14,7 @@ type SessionInsert = {
   session: typeof session.$inferInsert;
   checkoutChoice: NonNullable<typeof project.$inferInsert.checkoutChoice>;
 };
+
 type SessionRowChange = {
   id: string;
   activityAt?: number;
@@ -20,6 +22,7 @@ type SessionRowChange = {
     Omit<typeof session.$inferInsert, 'id' | 'projectId' | 'createdAt'>
   >;
 };
+
 type TurnChange = {
   id: string;
   set: Partial<Omit<typeof turn.$inferInsert, 'id' | 'sessionId'>>;
@@ -42,6 +45,7 @@ const sessionDefaults = {
   createdAt: 0,
   updatedAt: 0,
 };
+
 const turnDefaults = {
   startedAt: 0,
   endedAt: null,
@@ -50,6 +54,7 @@ const turnDefaults = {
   stopReason: null,
   model: null,
 };
+
 const presentId = (id: string | null | undefined): string[] => (id ? [id] : []);
 
 // Stores a new Session; borrows its Project's `checkout_choice` so the chosen checkout is remembered in the same commit.
@@ -62,6 +67,7 @@ export class SessionInsertJob implements WriterJob {
 
   public stamp(now: number): SessionInsertJob {
     const stored = this.insert.session;
+
     return new SessionInsertJob({
       ...this.insert,
       session: {
@@ -92,16 +98,19 @@ export class SessionInsertJob implements WriterJob {
 
   public changedSessionIds(): string[] {
     const stored = this.insert.session;
+
     return [stored.id, ...presentId(stored.parentSessionId)];
   }
 
   // The Session, when it or its parent is in scope; every queued Session without a scope.
   public sessionIdIn(scope: readonly string[] | undefined): string[] {
     const stored = this.insert.session;
+
     const inScope =
       !scope ||
       scope.includes(stored.id) ||
       presentId(stored.parentSessionId).some((id) => scope.includes(id));
+
     return inScope ? [stored.id] : [];
   }
 }
@@ -124,18 +133,11 @@ export class SessionRowUpdateJob implements WriterJob {
 
   public commit(transaction: StorageTransaction): void {
     const { id, set, activityAt } = this.change;
-    transaction
-      .update(session)
-      .set({
-        ...set,
-        ...(set.maxRevision === undefined
-          ? {}
-          : {
-              activityAt: sql`case when ${set.maxRevision} > ${session.maxRevision} then ${activityAt ?? Date.now()} else ${session.activityAt} end`,
-            }),
-      })
-      .where(eq(session.id, id))
-      .run();
+    const values: SQLiteUpdateSetSource<typeof session> = { ...set };
+
+    if (set.maxRevision !== undefined)
+      values.activityAt = sql`case when ${set.maxRevision} > ${session.maxRevision} then ${activityAt ?? Date.now()} else ${session.activityAt} end`;
+    transaction.update(session).set(values).where(eq(session.id, id)).run();
   }
 
   public project(
@@ -144,13 +146,13 @@ export class SessionRowUpdateJob implements WriterJob {
   ): SessionRecord | undefined {
     if (!current || this.change.id !== sessionId) return current;
     const { set } = this.change;
-    return SessionRecord.parse({
-      ...current,
-      ...set,
-      ...(set.maxRevision === undefined
-        ? {}
-        : { activityAt: this.revisionActivity(current, set.maxRevision) }),
-    });
+
+    const projected = { ...current, ...set };
+
+    if (set.maxRevision !== undefined)
+      projected.activityAt = this.revisionActivity(current, set.maxRevision);
+
+    return SessionRecord.parse(projected);
   }
 
   public changedSessionIds(): string[] {
@@ -202,6 +204,7 @@ export class TurnInsertJob implements WriterJob {
 
   public stamp(now: number): TurnInsertJob {
     const { turn: inserted } = this.insert;
+
     return new TurnInsertJob({
       turn: { ...inserted, startedAt: inserted.startedAt ?? now },
     });
@@ -246,6 +249,7 @@ export class TurnUpdateJob implements WriterJob {
 
   public project(turns: Map<string, Turn>): void {
     const row = turns.get(this.change.id);
+
     if (row)
       turns.set(this.change.id, Turn.parse({ ...row, ...this.change.set }));
   }
@@ -266,6 +270,7 @@ const projectSessionJob = (
     job instanceof SessionDeleteJob
   )
     return job.project(current, sessionId);
+
   return current?.id === sessionId
     ? projectQueuedFeedSession(job, current)
     : current;
@@ -297,9 +302,11 @@ class QueuedSessionRows {
 
   public turns(rows: readonly Turn[]): Turn[] {
     const turns = new Map(rows.map((row): [string, Turn] => [row.id, row]));
+
     for (const job of this.jobs)
       if (job instanceof TurnInsertJob || job instanceof TurnUpdateJob)
         job.project(turns);
+
     return [...turns.values()];
   }
 
@@ -311,6 +318,7 @@ class QueuedSessionRows {
     for (const job of this.jobs)
       if (job instanceof TurnInsertJob && job.sessionIdOf(turnId))
         return job.sessionIdOf(turnId);
+
     return undefined;
   }
 }
@@ -329,6 +337,7 @@ export const changedSessionIds = (job: WriterJob): string[] => {
     job instanceof TurnInsertJob
   )
     return job.changedSessionIds();
+
   return presentId(queuedFeedSessionId(job));
 };
 

@@ -8,6 +8,7 @@ import { ListItem } from '#primitives/lists/list-item/list-item';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { AttachLayout } from './composer-toolbar-types';
 import type { ComposerProps } from './composer-types';
+
 interface AttachChoice {
   label: string;
   icon: IconName;
@@ -25,9 +26,11 @@ export function ComposerAttachMenu(layout: AttachLayout): React.JSX.Element {
     </ComposerPopover>
   );
 }
+
 // A native touch target comes from hitSlop, so the controls draw at their visible size and line up with the text; the web ignores hitSlop and keeps its minimum.
 export const composerIconButton =
   'size-7 native:min-h-0 native:min-w-0 android:min-h-0 android:min-w-0';
+
 const attachTriggerProps = {
   icon: 'add',
   variant: 'ghost',
@@ -37,13 +40,16 @@ const attachTriggerProps = {
   className: `p-0 ${composerIconButton}`,
   iconClassName: 'text-muted-foreground',
 } as const;
+
 function attachTrigger(inactive: boolean): React.JSX.Element {
   return <IconButton {...attachTriggerProps} disabled={inactive} />;
 }
+
 interface AttachMenuProps {
   layout: AttachLayout;
   close: (action?: () => void) => void;
 }
+
 function ComposerAttachChoices(menu: AttachMenuProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-sidebar">
@@ -55,6 +61,7 @@ function ComposerAttachChoices(menu: AttachMenuProps): React.JSX.Element {
     </View>
   );
 }
+
 function ComposerAttachItems({
   layout,
   close,
@@ -62,6 +69,7 @@ function ComposerAttachItems({
   const choices = layout.wide
     ? wideChoices(layout.props)
     : phoneChoices(layout.props);
+
   return (
     <>
       {choices.map((item) => (
@@ -70,10 +78,12 @@ function ComposerAttachItems({
     </>
   );
 }
+
 type WideAttachChoices = Pick<
   AttachLayout['props'],
   'onAttachFiles' | 'onAttachImages' | 'onSelectSlashCommand' | 'onCreateGoal'
 >;
+
 function wideChoices(props: WideAttachChoices): AttachChoice[] {
   return [
     {
@@ -89,6 +99,7 @@ function wideChoices(props: WideAttachChoices): AttachChoice[] {
     { label: 'Goal', icon: 'goal', onPress: props.onCreateGoal },
   ];
 }
+
 function phoneChoices(
   props: Pick<
     AttachLayout['props'],
@@ -101,6 +112,7 @@ function phoneChoices(
     ...fileChoice(props),
   ];
 }
+
 function cameraChoice(
   props: Pick<ComposerProps, 'onAttachCamera'>,
 ): AttachChoice[] {
@@ -108,6 +120,7 @@ function cameraChoice(
     ? [{ label: 'Camera', icon: 'camera', onPress: props.onAttachCamera }]
     : [];
 }
+
 function fileChoice(
   props: Pick<ComposerProps, 'onAttachFiles'>,
 ): AttachChoice[] {
@@ -120,6 +133,7 @@ interface AttachItemProps {
   item: AttachChoice;
   close: AttachMenuProps['close'];
 }
+
 function ComposerAttachItem({
   item,
   close,

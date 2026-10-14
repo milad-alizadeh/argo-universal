@@ -5,6 +5,7 @@ import { PhoneStack } from '@/navigation/phone-stack';
 
 export default function IssuesLayout(): React.JSX.Element {
   if (useWide()) return <Slot />;
+
   return (
     <PhoneStack>
       <Stack.Screen name="index" options={{ title: 'Issues' }} />

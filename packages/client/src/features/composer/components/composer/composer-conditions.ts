@@ -6,30 +6,38 @@ export function hasOversizedAttachment(props: ComposerProps): boolean {
     (attachment) => attachment.bytes > maxBlobUploadBytes,
   );
 }
+
 export function isInactive(props: ComposerProps): boolean {
   return Boolean(props.sending || props.disabled);
 }
+
 export function isConfigurationInactive(props: ComposerProps): boolean {
   return Boolean(props.sending || (props.disabled && !canRecoverAgent(props)));
 }
+
 function canRecoverAgent({ configuration }: ComposerProps): boolean {
   return Boolean(
     configuration?.onAgentRetry &&
     configuration.agents.every((agent) => agent.status !== 'ready'),
   );
 }
+
 export function isSendReady(props: ComposerProps): boolean {
   return canSubmit(props) && hasDraftContent(props);
 }
+
 function canSubmit(props: ComposerProps): boolean {
   return editableForSend(props) && !hasOversizedAttachment(props);
 }
+
 function editableForSend(props: ComposerProps): boolean {
   return !isInactive(props) && isConnectionSendable(props);
 }
+
 function hasDraftContent({ draft }: ComposerProps): boolean {
   return draft.text.trim().length > 0 || draft.attachments.length > 0;
 }
+
 export function sendButtonState(
   props: ComposerProps,
 ): 'stop' | 'sending' | 'ready' | 'blocked' {
@@ -38,15 +46,18 @@ export function sendButtonState(
     ['sending', props.sending],
     ['ready', isSendReady(props)],
   ] as const;
+
   return candidates.find(([, active]) => active)?.[0] ?? 'blocked';
 }
 
 function isConnectionSendable(props: ComposerProps): boolean {
   return (props.sendable ?? true) && !isTurnRunning(props);
 }
+
 function isTurnRunning({ configuration }: ComposerProps): boolean {
   return Boolean(configuration?.turnRunning);
 }
+
 function hasStopAction(props: ComposerProps): boolean {
   return isTurnRunning(props) && Boolean(props.onStop);
 }

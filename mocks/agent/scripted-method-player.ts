@@ -30,10 +30,12 @@ export type ScriptedWire = Pick<ScriptedTurn, 'writeRaw' | 'closed'>;
 type MethodContext<Method extends AgentRequestMethod> = AgentRequestContext<
   AgentRequestParamsByMethod[Method]
 >;
+
 type MethodResponder<Method extends AgentRequestMethod> = (
   context: MethodContext<Method>,
   fallback: AgentRequestResponsesByMethod[Method],
 ) => Promise<AgentRequestResponsesByMethod[Method]>;
+
 type MethodPlayback<Method extends AgentRequestMethod> = {
   method: Method;
   response: ScriptedResponse<Method> | undefined;
@@ -58,6 +60,7 @@ export class ScriptedMethodPlayer {
     method: Method,
   ): MethodResponder<Method> {
     const next = responseSequence<Method>(this.scenario.responses?.[method]);
+
     return (context, fallback) =>
       this.playMethod({
         method,
@@ -74,11 +77,13 @@ export class ScriptedMethodPlayer {
   }: MethodPlayback<Method>): Promise<AgentRequestResponsesByMethod[Method]> {
     const selected = this.methodResponse(method, response);
     const sessionId = responseSessionId(selected, context.params, fallback);
+
     const played = await playResponse(
       selected,
       context,
       this.turn(context, sessionId, method === promptMethod),
     );
+
     return played.result ?? completeResponse(fallback, played.stopReason);
   }
   private methodResponse<Method extends AgentRequestMethod>(
@@ -86,6 +91,7 @@ export class ScriptedMethodPlayer {
     response: ScriptedResponse<Method> | undefined,
   ): ScriptedResponse<Method> | undefined {
     if (method !== promptMethod) return response;
+
     return { ...response, steps: promptSteps(response, this.scenario.steps) };
   }
   public turn(

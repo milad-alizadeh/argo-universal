@@ -2,6 +2,7 @@ import { defineRule, type Visitor } from '@oxlint/plugins';
 import { onModuleSources, stringValue } from './syntax.ts';
 
 const intoWorkspacePackage = /^(?:\.\.\/)+(?:packages|tooling|apps)\//;
+
 export const crossPackageImport = defineRule({
   meta: {
     type: 'problem',
@@ -13,6 +14,7 @@ export const crossPackageImport = defineRule({
   create: (context): Visitor =>
     onModuleSources((source): void => {
       const path = stringValue(source);
+
       if (intoWorkspacePackage.test(path))
         context.report({ node: source, messageId: 'crossPackageImport' });
     }),

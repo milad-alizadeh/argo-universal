@@ -32,6 +32,7 @@ interface HeadingInteraction {
 function useHeadingInteraction(): HeadingInteraction {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+
   return {
     highlighted: hovered || focused,
     events: {
@@ -79,6 +80,7 @@ function useHeadingState(): HeadingInteraction & {
   const wide = useWide();
   const interaction = useHeadingInteraction();
   const visible = actionsVisible(wide, interaction.highlighted);
+
   return { ...interaction, wide, visible };
 }
 
@@ -86,6 +88,7 @@ export const ProjectHeading = memo(function ProjectHeading(
   props: ProjectHeadingProps,
 ): React.JSX.Element {
   const { wide, visible, ...interaction } = useHeadingState();
+
   return (
     <HeadingRow {...interaction}>
       <ProjectToggle {...props} wide={wide} events={interaction.events} />

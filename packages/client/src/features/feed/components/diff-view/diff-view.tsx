@@ -52,6 +52,7 @@ function useDiffPreview(file: FileDiff, inline: boolean): DiffPreview {
   const [showAll, setShowAll] = useState(false);
   const lineCount = countLines(file.hunks);
   const limited = inline && !showAll && lineCount > previewLineCount;
+
   return {
     lineCount,
     limited,
@@ -64,11 +65,13 @@ function useDiffViewState(props: DiffViewProps): DiffViewState {
   const inline = props.inline === true;
   const [open, setOpen] = useState(true);
   const preview = useDiffPreview(props.file, inline);
+
   return { file: props.file, inline, open, onOpenChange: setOpen, preview };
 }
 
 function ShowAllLines(props: DiffPreview): React.JSX.Element | null {
   if (!props.limited) return null;
+
   return (
     <Pressable
       onPress={props.onShowAll}
@@ -117,6 +120,7 @@ function DiffFrame(
 // The same hunk rendering is used inline in the Feed and under a file header in the Inspector.
 export function DiffView(props: DiffViewProps): React.JSX.Element {
   const view = useDiffViewState(props);
+
   return (
     <DiffFrame {...view}>
       <DiffHeader {...view} />

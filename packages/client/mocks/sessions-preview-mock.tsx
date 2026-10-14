@@ -5,8 +5,10 @@ import {
   SessionsView,
   type SessionsViewProps,
 } from '../src/features/sessions/components/sessions-view/sessions-view';
+
 export function SessionsPreviewMock(args: SessionsViewProps): ReactElement {
   const props = usePreviewSessions(args);
+
   return (
     <View className="flex-1 w-full" style={{ minHeight: 0 }}>
       <PreviewHeader {...props} />
@@ -19,12 +21,15 @@ export function SessionsPreviewMock(args: SessionsViewProps): ReactElement {
     </View>
   );
 }
+
 type PreviewProps = SessionsViewProps &
   Pick<ComponentProps<typeof SessionsHeader>, 'onArchivedChange'>;
+
 function usePreviewSessions(args: SessionsViewProps): PreviewProps {
   const [query, setQuery] = useState(args.query);
   const [archived, setArchived] = useState(args.archived);
   const sessions = matchingSessions(args.sessions, query, archived);
+
   return {
     ...args,
     query,
@@ -34,6 +39,7 @@ function usePreviewSessions(args: SessionsViewProps): PreviewProps {
     onArchivedChange: setArchived,
   };
 }
+
 function PreviewHeader(
   props: ComponentProps<typeof SessionsHeader>,
 ): ReactElement {

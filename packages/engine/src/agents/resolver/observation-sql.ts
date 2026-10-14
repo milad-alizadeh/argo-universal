@@ -21,12 +21,16 @@ type Row = {
   version: string | null;
   observedAt: number | null;
 };
+
 const parseRow = (row: Row): InstallationObservation => {
   if (row.observedAt === null) return { observed: false };
+
   if (row.launch === null) return { observed: true, found: false };
   const owner = InstallationOwner.catch('unknown').parse(row.owner);
+
   return { observed: true, found: true, owner, ...versionOf(row) };
 };
+
 const versionOf = ({ version }: Row): { version?: string } =>
   version === null ? {} : { version };
 
@@ -38,17 +42,21 @@ const observationColumns = {
   observedAt: agents.installationObservedAt,
 };
 
+type InstallationFound = { found: boolean };
+
 // Whether the Resolver's last saved look found this Agent.
 export const readInstallationObservation = (
   database: Database,
   agentId: string,
-): { found: boolean } => {
+): InstallationFound => {
   const row = database
     .select(observationColumns)
     .from(agents)
     .where(eq(agents.id, agentId))
     .get();
+
   const observation = row ? parseRow(row) : { observed: false as const };
+
   return { found: observation.observed && observation.found };
 };
 
@@ -57,5 +65,6 @@ export const readInstallationObservations = (
 ): ((agentId: string) => InstallationObservation) => {
   const rows = database.select(observationColumns).from(agents).all();
   const observations = new Map(rows.map((row) => [row.id, parseRow(row)]));
+
   return (agentId) => observations.get(agentId) ?? { observed: false };
 };

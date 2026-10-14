@@ -26,6 +26,7 @@ function InsertingList({
   args: React.ComponentProps<typeof SessionsList>;
 }): React.JSX.Element {
   const [sessions, setSessions] = useState(largeSessions.slice(0, 12));
+
   return (
     <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
       <Pressable
@@ -46,9 +47,11 @@ export const insertSessionWithoutOverlap: Story = {
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,
     });
+
     const existing = canvas.getByRole('button', {
       name: 'Large Session 0, Idle',
     });
+
     await userEvent.hover(heading);
     await waitFor(async () => {
       const firstRow = existing.getBoundingClientRect();
@@ -58,17 +61,21 @@ export const insertSessionWithoutOverlap: Story = {
       );
     });
     const initialTop = existing.getBoundingClientRect().top;
+
     const trigger = canvas.getByRole('button', {
       name: 'Insert Session fixture',
     });
+
     const positions = await sampleEachFrame(
       () => trigger.click(),
       () => existing.getBoundingClientRect().top,
       40,
     );
+
     const inserted = await canvas.findByRole('button', {
       name: 'New Session 1, Idle',
     });
+
     await waitFor(async () => {
       const newRectangle = inserted.getBoundingClientRect();
       const oldRectangle = existing.getBoundingClientRect();

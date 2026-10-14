@@ -28,12 +28,20 @@ export const byRevision = (
   second: SessionUpdate,
 ): number => first.revision - second.revision;
 
+// Rows the database does not hold yet, and the highest revision among them.
+interface UnsavedRows {
+  rows: SessionUpdate[];
+  maxRevision: number;
+}
+
 const readMemoryRows = (
   sources: FeedRowSources,
   sessionId: string,
-): { rows: SessionUpdate[]; maxRevision: number } => {
+): UnsavedRows => {
   const feed = sources.findFeed(sessionId)?.getSnapshot().context;
+
   if (!feed) return { rows: [], maxRevision: 0 };
+
   return { rows: Object.values(feed.rows), maxRevision: feed.maxRevision };
 };
 
@@ -41,9 +49,10 @@ const readMemoryRows = (
 export const readUnsavedRows = (
   sources: FeedRowSources,
   sessionId: string,
-): { rows: SessionUpdate[]; maxRevision: number } => {
+): UnsavedRows => {
   const pending = readQueuedFeed(sources.findWriter(), sessionId);
   const feed = readMemoryRows(sources, sessionId);
+
   return {
     rows: [...pending.rows, ...feed.rows],
     maxRevision: Math.max(0, pending.maxRevision, feed.maxRevision),
@@ -73,6 +82,7 @@ export const readChangedRows = (
   const unsaved = readUnsavedRows(sources, sessionId).rows.filter(
     (row): boolean => row.revision > range.after,
   );
+
   return [...newestRows([...stored, ...unsaved]).values()]
     .filter((row): boolean => row.revision <= (range.through ?? Infinity))
     .sort(byRevision);

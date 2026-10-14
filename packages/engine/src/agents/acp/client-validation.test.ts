@@ -23,13 +23,16 @@ it.each([
   'keeps $label outside the typed Session ingress with one SDK diagnostic at most',
   async ({ method, params, diagnostics }) => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     const peer = createScriptedAgentWire({
       steps: [],
       responses: {
         'session/new': [{ steps: [{ type: 'hold' }] }],
       },
     });
+
     const accepted: SessionNotification[] = [];
+
     const connection = createAgentClient({
       stream: peer.stream,
       acceptSessionUpdate: (notification) => {
@@ -38,10 +41,12 @@ it.each([
       requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
       createElicitation: () => ({ action: 'cancel' }),
     });
+
     const barrier = connection.agent.request('session/new', {
       cwd: '/checkout',
       mcpServers: [],
     });
+
     const request = await peer.readRequest();
     await peer.send([
       { jsonrpc: '2.0', method, params },
@@ -89,15 +94,18 @@ it.each([
   async ({ method, params, code }) => {
     const peer = createScriptedAgentWire({ steps: [] });
     let permissionCalls = 0;
+
     const connection = createAgentClient({
       stream: peer.stream,
       acceptSessionUpdate: () => {},
       requestPermission: () => {
         permissionCalls += 1;
+
         return { outcome: { outcome: 'cancelled' } };
       },
       createElicitation: () => ({ action: 'cancel' }),
     });
+
     await peer.send([{ jsonrpc: '2.0', id: 'bad-request', method, params }]);
     expect({ response: await peer.receive(), permissionCalls }).toEqual({
       response: expect.objectContaining({
@@ -119,17 +127,20 @@ it('rejects a malformed response envelope for its pending prompt', async () => {
       'session/prompt': [{ steps: [{ type: 'hold' }] }],
     },
   });
+
   const connection = createAgentClient({
     stream: peer.stream,
     acceptSessionUpdate: () => {},
     requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
     createElicitation: () => ({ action: 'cancel' }),
   });
+
   const prompt = connection.agent.request('session/prompt', {
     sessionId: 'one',
     prompt: [{ type: 'text', text: 'Start' }],
   });
-  const rejection = prompt.catch((error: unknown) => error);
+
+  const rejection = prompt.catch((cause: unknown) => cause);
   const request = await peer.readRequest();
   await peer.sendRaw(
     JSON.stringify({

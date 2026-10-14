@@ -36,6 +36,7 @@ function feedFadeDepth(wide: boolean, atEnd: boolean): PerEdge<number> {
 // The Feed fades out above the Composer, and wide under the header too; every fade lies in the space it can be seen in. At its end, whether the reader is there.
 export function useFeedFade(atEnd: boolean): ScrollFadeOptions {
   const wide = useWide();
+
   return {
     edges: feedFadeEdges(wide, useGlassComposer()),
     depth: feedFadeDepth(wide, atEnd),

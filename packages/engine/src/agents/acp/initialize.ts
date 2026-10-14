@@ -7,14 +7,17 @@ import type {
 } from '@agentclientprotocol/sdk';
 import { sessionCapabilities } from './open-session';
 import type { createAcpResponseReaders } from './response-readers';
+
 type InitializeCapabilities = {
   elicitation?: Pick<ElicitationCapabilities, 'url'>;
   terminalAuth?: boolean;
 };
+
 const terminalCapability = (
   capabilities: InitializeCapabilities | undefined,
 ): Pick<ClientCapabilities, 'auth'> =>
   capabilities?.terminalAuth ? { auth: { terminal: true } } : {};
+
 const initializeRequest = (
   capabilities?: InitializeCapabilities,
 ): InitializeRequest => ({
@@ -26,12 +29,14 @@ const initializeRequest = (
     elicitation: { form: {}, ...capabilities?.elicitation },
   },
 });
+
 // The Agent answered but lacks an ACP capability Argo requires; the check reports it as Not compatible.
 export class MissingAcpCapabilityError extends Error {
   public constructor(public readonly capability: string) {
     super('Agent cannot close independent ACP sessions');
   }
 }
+
 export const negotiateAcpInitialize = async (
   agent: ClientContext,
   readers: ReturnType<typeof createAcpResponseReaders>,
@@ -40,7 +45,9 @@ export const negotiateAcpInitialize = async (
   const response = readers.initialize.parse(
     await agent.request<unknown>('initialize', initializeRequest(capabilities)),
   );
+
   if (!sessionCapabilities(response)?.close)
     throw new MissingAcpCapabilityError('session/close');
+
   return response;
 };

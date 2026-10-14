@@ -22,6 +22,7 @@ export function recordedImageUrl(blob: BlobRef): typeof redSquareDataUrl | '' {
   const recorded = recordedUserMessage('agent-1', 'image-prompt').content.some(
     (block) => block.type === 'image' && block.blob.blobId === blob.blobId,
   );
+
   return recorded ? redSquareDataUrl : '';
 }
 
@@ -32,7 +33,9 @@ export function recordedFeedMock(
   const mock = recordedFeedMocks.find(
     (mock) => mock.agent === agent && mock.recording === recording,
   );
+
   if (!mock) throw new Error(`No recorded Feed ${agent}/${recording}`);
+
   return mock;
 }
 
@@ -45,7 +48,9 @@ function recordedRow<Kind extends SessionUpdate['sessionUpdate']>(
     (row): row is Extract<SessionUpdate, { sessionUpdate: Kind }> =>
       row.sessionUpdate === kind,
   );
+
   if (!row) throw new Error(`No ${kind} in ${agent}/${recording}`);
+
   return row;
 }
 
@@ -62,7 +67,9 @@ export function recordedPrompt(
   const prompt = recordedUserMessages.find(
     (message) => message.agent === agent && message.recording === recording,
   );
+
   if (!prompt) throw new Error(`No recorded prompt ${agent}/${recording}`);
+
   return prompt.row;
 }
 
@@ -78,7 +85,9 @@ export function streamingAgentMessage(
   const entry = recordedStreamingMessages.find(
     (message) => message.agent === agent && message.recording === recording,
   );
+
   if (!entry)
     throw new Error(`No recorded streaming message ${agent}/${recording}`);
+
   return entry.row;
 }

@@ -7,7 +7,9 @@ const meta = {
   component: FeedMarkdown,
   args: { text: '' },
 } satisfies Meta<typeof FeedMarkdown>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // Text that looks like HTML or a link definition is drawn as written, not dropped.
@@ -19,11 +21,14 @@ function drawnAsWritten(text: string, shown: RegExp | string = text): Story {
     },
   };
 }
+
 export const HtmlLikeTextIsDrawn = drawnAsWritten('<div> wraps the row, why?');
+
 export const AComponentNameOnItsOwnLineIsDrawn = drawnAsWritten(
   '<Composer>\nholds the draft while it is typed',
   /^<Composer>\s+holds the draft while it is typed$/,
 );
+
 export const ALinkDefinitionIsDrawn = drawnAsWritten(
   '[spec]: https://argo.dev/spec',
 );
@@ -49,7 +54,11 @@ function linkFollowed(scheme: string, followed: boolean): Story {
     },
   };
 }
+
 export const AnHttpsLinkOpens = linkFollowed('https://argo.dev', true);
+
 export const AMailLinkOpens = linkFollowed('mailto:team@argo.dev', true);
+
 export const AScriptLinkIsText = linkFollowed('javascript:alert(1)', false);
+
 export const AFileLinkIsText = linkFollowed('file:///etc/hosts', false);

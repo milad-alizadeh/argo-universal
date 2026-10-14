@@ -10,8 +10,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { SvgXml } from 'react-native-svg';
-import { useResolveClassNames } from 'uniwind';
+import { AgentLogo } from '#features/agents';
 import { fullTurnDegrees } from '#lib/generic/motion';
 import { useIconBox } from '../../../../lib/generic/symbols/icon-role';
 
@@ -33,8 +32,10 @@ function useLogoRotation(
   const logoRotation = useSharedValue(0);
   useEffect(() => {
     logoRotation.set(status === 'running' ? spinForever() : 0);
+
     return (): void => cancelAnimation(logoRotation);
   }, [status, logoRotation]);
+
   return useAnimatedStyle(
     () => ({ transform: [{ rotate: `${logoRotation.get()}deg` }] }),
     [logoRotation],
@@ -47,16 +48,15 @@ interface SessionLogoProps {
 }
 
 export function SessionLogo(props: SessionLogoProps): React.JSX.Element {
-  const { color } = useResolveClassNames('text-foreground');
   const logoStyle = useLogoRotation(props.status);
+
   return (
     <Animated.View style={[useIconBox('mark'), logoStyle]}>
-      <SvgXml
+      <AgentLogo
+        logo={props.logo}
+        label="Agent"
+        role="mark"
         testID="session-logo"
-        xml={props.logo}
-        width="100%"
-        height="100%"
-        color={color}
       />
     </Animated.View>
   );

@@ -12,7 +12,9 @@ const machine = createMachine({
   initial: 'ready',
   states: { ready: {} },
 });
+
 const actorId = 'catalog-test';
+
 const find = (
   system: AnyActorRef['system'],
 ): ReturnType<typeof findMachineActor> =>
@@ -23,6 +25,7 @@ describe('findMachineActor', (): void => {
     const actor = createActor(machine.provide({}), {
       systemId: actorId,
     });
+
     expect(find(actor.system)).toBe(actor);
   });
 
@@ -33,6 +36,7 @@ describe('findMachineActor', (): void => {
         systemId: actorId,
       },
     );
+
     expect(find(unrelated.system)).toBeUndefined();
   });
 
@@ -45,6 +49,7 @@ describe('findMachineActor', (): void => {
       }),
       { systemId: actorId },
     );
+
     expect(find(unrelated.system)).toBeUndefined();
   });
 

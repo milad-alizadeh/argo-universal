@@ -17,12 +17,13 @@ import type { ComposerDraft } from './composer-types';
 import { ComposerWarning } from './composer-warning';
 
 const cardGlass = {
-  shape: 'card',
+  corners: 'card',
   interactive: true,
   className: 'w-full z-10',
   fallbackClassName:
     'rounded-2xl bg-glass-card native:bg-background shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180',
 } as const;
+
 export function ComposerCard(layout: CardLayout): React.JSX.Element {
   return (
     <LiquidGlass {...cardGlass} glass={!layout.wide}>
@@ -33,10 +34,12 @@ export function ComposerCard(layout: CardLayout): React.JSX.Element {
     </LiquidGlass>
   );
 }
+
 function ComposerAttachments(
   layout: AttachmentLayout,
 ): React.JSX.Element | null {
   if (layout.props.draft.attachments.length === 0) return null;
+
   return (
     <ScrollView
       horizontal
@@ -47,10 +50,12 @@ function ComposerAttachments(
     </ScrollView>
   );
 }
+
 interface AttachedItemProps {
   layout: AttachmentLayout;
   attachment: ComposerDraft['attachments'][number];
 }
+
 function ComposerAttachmentItems(layout: AttachmentLayout): React.JSX.Element {
   return (
     <>
@@ -64,12 +69,15 @@ function ComposerAttachmentItems(layout: AttachmentLayout): React.JSX.Element {
     </>
   );
 }
+
 function ComposerAttachedItem(item: AttachedItemProps): React.JSX.Element {
   const { layout, attachment } = item;
+
   const onRemove = (): void =>
     layout.props.onDraftChange(
       removeAttachment(layout.props.draft, attachment.id),
     );
+
   return (
     <ComposerAttachmentCard
       attachment={attachment}
@@ -78,12 +86,14 @@ function ComposerAttachedItem(item: AttachedItemProps): React.JSX.Element {
     />
   );
 }
+
 function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
   return {
     ...draft,
     attachments: draft.attachments.filter((attached) => attached.id !== id),
   };
 }
+
 function ComposerWarnings({
   props,
   oversized,
@@ -99,6 +109,7 @@ function ComposerWarnings({
     </>
   );
 }
+
 function ComposerText(layout: TextLayout): React.JSX.Element {
   return (
     // The card's layout lets touches through, so a press on its open space reaches the glass.
@@ -107,6 +118,7 @@ function ComposerText(layout: TextLayout): React.JSX.Element {
     </View>
   );
 }
+
 function textInputProps({
   props,
   inactive,

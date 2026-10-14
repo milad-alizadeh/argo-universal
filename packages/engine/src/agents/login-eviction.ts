@@ -8,8 +8,10 @@ export const evictFinishedLogins = (
 ): void => {
   for (const [id, operation] of operations) {
     if (operations.size < limit) return;
+
     if (operation.blocksMutation()) continue;
     operations.delete(id);
+
     for (const [agentId, operationId] of latest)
       if (operationId === id) latest.delete(agentId);
   }

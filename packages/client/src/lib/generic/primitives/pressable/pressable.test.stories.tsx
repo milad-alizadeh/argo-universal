@@ -3,7 +3,9 @@ import { expect, waitFor, within } from 'storybook/test';
 import { DropdownMenuPreview } from '../overlays/dropdown-menu/dropdown-menu-preview.mocks';
 
 const meta = { title: 'Tests/Pressable' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const MenuTrigger: Story = {

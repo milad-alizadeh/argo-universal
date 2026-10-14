@@ -11,12 +11,14 @@ const account: AuthStatusUpdateNotification = {
     account: { plan: 'plus' },
   },
 };
+
 const signedOut: AuthStatusUpdateNotification = {
   authStatus: { kind: 'none', label: 'Signed out' },
 };
-const authStatusStep = (
-  params: AuthStatusUpdateNotification,
-): { type: 'raw'; frame: string } => ({
+
+type RawStep = { type: 'raw'; frame: string };
+
+const authStatusStep = (params: AuthStatusUpdateNotification): RawStep => ({
   type: 'raw',
   frame: JSON.stringify({
     jsonrpc: '2.0',

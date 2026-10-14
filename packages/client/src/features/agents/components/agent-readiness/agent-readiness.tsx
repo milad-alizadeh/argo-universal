@@ -24,6 +24,7 @@ export type ReadinessHandlers = {
   onSignIn?: () => void;
   onRepair?: () => void;
 };
+
 export type AgentReadinessProps = ReadinessHandlers & {
   name: string;
   status: AgentStatus;
@@ -40,8 +41,10 @@ const badgeTones: Record<StatusTone, BadgeTone> = {
 const chipTone = (status: AgentStatus): BadgeTone | undefined => {
   if (status === 'disabled') return 'muted';
   const tone = statusTone(status);
+
   return tone && badgeTones[tone];
 };
+
 // Whether the status draws a chip; Not installed has none.
 export const hasStatusChip = (status: AgentStatus): boolean =>
   chipTone(status) !== undefined;
@@ -53,7 +56,9 @@ export function AgentStatusChip({
   status: AgentStatus;
 }): React.JSX.Element | null {
   const tone = chipTone(status);
+
   if (!tone) return null;
+
   return (
     <Badge tone={tone}>
       <Text>{agentStatusLabels[status]}</Text>
@@ -66,7 +71,9 @@ export function ReadinessSection(
   props: AgentReadinessProps,
 ): React.JSX.Element | null {
   const copy = readinessCopy(props);
+
   if (!copy) return null;
+
   return (
     <FieldSection title="Status" footer={copy.footer} {...footerTone(copy)}>
       <HeadlineRow copy={copy} status={props.status} />
@@ -74,6 +81,7 @@ export function ReadinessSection(
     </FieldSection>
   );
 }
+
 const footerTone = ({
   failure,
 }: ReadinessCopy): Pick<
@@ -87,9 +95,11 @@ function HeadlineRow(props: {
   status: AgentStatus;
 }): React.JSX.Element {
   const { headline, failure } = props.copy;
+
   if (failure)
     return <ListItem icon="warning" tone="destructive" title={headline} />;
   const tone = statusTone(props.status);
+
   return (
     <ListItem
       title={headline}
@@ -110,11 +120,14 @@ const handlerFor = (
   })[action];
 
 type ActionRowProps = ReadinessHandlers & { action?: ReadinessAction };
+
 // Drawn disabled while the page cannot act, such as during a Recheck; Checking… and Not compatible have none.
 function ReadinessActionRow(props: ActionRowProps): React.JSX.Element | null {
   const { action } = props;
+
   if (!action) return null;
   const onPress = handlerFor(action, props);
+
   return (
     <ListItem
       {...actionIcon(action)}
@@ -125,6 +138,7 @@ function ReadinessActionRow(props: ActionRowProps): React.JSX.Element | null {
     />
   );
 }
+
 const actionIcon = (
   action: ReadinessAction,
 ): Pick<React.ComponentProps<typeof ListItem>, 'icon'> =>

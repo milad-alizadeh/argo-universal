@@ -9,6 +9,7 @@ export function ConnectionDetailScreen(): React.JSX.Element {
   const trpc = useTRPC();
   const info = useQuery(trpc.system.info.queryOptions());
   const clock = useSubscription(trpc.system.clock.subscriptionOptions());
+
   return (
     <ConnectionDetailView server={toServerDetails(info, clock.data?.now)} />
   );

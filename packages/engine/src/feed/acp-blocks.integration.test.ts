@@ -3,6 +3,7 @@ import { openAcpFeedSession } from '#mocks/acp-feed';
 
 it('ordered message blocks append text at its actual index and visibly retain unsupported media', async () => {
   const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
   const { host, sessionId } = await openAcpFeedSession([
     {
       sessionUpdate: 'agent_message_chunk',
@@ -46,9 +47,11 @@ it('ordered message blocks append text at its actual index and visibly retain un
       },
     },
   ]);
+
   const message = (
     await host.caller.feed.page({ sessionId, direction: 'tail' })
   ).rows[1];
+
   expect(message).toMatchObject({
     sessionUpdate: 'agent_message',
     state: 'settled',

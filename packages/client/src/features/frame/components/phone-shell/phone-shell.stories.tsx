@@ -29,6 +29,7 @@ const meta = {
 } satisfies Meta<typeof PhoneShellFrame>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // Controls set the drawer and section; product controls report their callbacks.

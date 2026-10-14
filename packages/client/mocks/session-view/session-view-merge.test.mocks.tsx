@@ -72,9 +72,11 @@ export const listsEveryPullRequest: Story = {
     await expect(canvas.queryByLabelText('PR #46, Draft')).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: '+1 PR' }));
     const overlay = within(document.body);
+
     const listed = await overlay.findByRole('menuitem', {
       name: new RegExp(pullRequestMocks.checksFailing.title),
     });
+
     // The menu fades in.
     await waitFor(() => expect(listed).toBeVisible());
     await userEvent.click(

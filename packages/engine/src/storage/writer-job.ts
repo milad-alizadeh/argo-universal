@@ -41,7 +41,9 @@ export function describeLostJobs(jobs: readonly WriterJob[]): string {
   const named = jobs
     .slice(0, describedJobLimit)
     .map((job): string => job.describe());
+
   const rest = jobs.length - named.length;
+
   return [...named, ...(rest > 0 ? [`and ${rest} more`] : [])].join('\n');
 }
 

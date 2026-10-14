@@ -16,7 +16,9 @@ import { pollServer, serverFiles, startOwnServer } from './own-server';
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
+
 const desktopDirectory = path.join(repositoryRoot, 'apps/desktop');
+
 // Resolve Electron from the desktop app, so the launch does not depend on pnpm hoisting.
 const electronPath = z
   .string()
@@ -63,6 +65,7 @@ const waitForServer = (httpUrl: string): Promise<true> =>
       const response = await fetch(`${httpUrl}/trpc/system.info`).catch(
         (): null => null,
       );
+
       return response?.ok ? true : undefined;
     },
     (seconds): string => `The Server did not answer within ${seconds} s`,
@@ -83,9 +86,11 @@ export const test = base.extend<
   ): Promise<void> => {
     // Starting each test's own Server takes seconds when several runs share the machine.
     test.slow();
+
     if (appTarget === 'web') {
       const serverDirectory = testInfo.outputPath(ownServerDirectory);
       const server = await startOwnServer(serverDirectory, mockAgents);
+
       try {
         const page = await context.newPage();
         await pointAppAtServer(page, server.serverUrl);
@@ -101,18 +106,22 @@ export const test = base.extend<
       } finally {
         await server.stop();
       }
+
       return;
     }
 
     const directory = testInfo.outputPath(ownServerDirectory);
     const fixtureServer = await startOwnServer(directory, mockAgents);
     const home = path.join(directory, 'server-home');
+
     const {
       ARGO_EXPO_WEB_URL: _webDevelopmentUrl,
       ELECTRON_RUN_AS_NODE: _runAsNode,
       ...environment
     } = process.env;
+
     let electronApp: ElectronApplication | undefined;
+
     try {
       electronApp = await electron.launch({
         executablePath: electronPath,
@@ -146,8 +155,10 @@ export const test = base.extend<
         await fixtureServer.stop();
       }
     }
+
     // The supervisor removes server.json when it stops, so a file left behind names a Server still running.
     const leftoverPid = readServerAddress(home)?.pid ?? null;
+
     if (leftoverPid !== null) {
       process.kill(leftoverPid, 'SIGTERM');
       throw new Error(

@@ -28,7 +28,9 @@ const meta = {
     onSelect: action('select Settings page'),
   },
 } satisfies Meta<typeof SettingsList>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function SettingsHeading(): React.JSX.Element {
@@ -47,6 +49,7 @@ function useSelectedPage(
   const [selected, setSelected] = useState<NavigationDestination | undefined>(
     args.selectedDestination,
   );
+
   return {
     selectedDestination: selected,
     onSelect: (destination) => {
@@ -58,6 +61,7 @@ function useSelectedPage(
 
 function SettingsPreview(args: SettingsListProps): React.JSX.Element {
   const selection = useSelectedPage(args);
+
   return (
     <View className="w-full bg-sidebar wide:w-shell-list" style={{ flex: 1 }}>
       <SettingsHeading />

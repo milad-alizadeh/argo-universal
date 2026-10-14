@@ -5,18 +5,22 @@ import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { SessionRowUpdateJob } from '../../sessions';
 import { writeDatabaseJobAndWaitForCommit } from '../../storage';
+import type { FetchAgents } from '../registry/fetch-agents';
 
 afterEach(() => vi.useRealTimers());
 
 it('accepts and coalesces repeated and concurrent requests before the upstream fetch completes', async () => {
-  const upstream = Promise.withResolvers<unknown>();
+  const upstream = Promise.withResolvers<string>();
   let requests = 0;
+
   const host = await startEngineTestHost({
     fetchAgents: async () => {
       requests += 1;
+
       return upstream.promise;
     },
   });
+
   const first = host.createCaller();
   expect(
     await Promise.all([
@@ -35,7 +39,7 @@ it('accepts and coalesces repeated and concurrent requests before the upstream f
     agents: [],
   });
   expect(requests).toBe(1);
-  upstream.resolve(publishedRegistry);
+  upstream.resolve(JSON.stringify(publishedRegistry));
   await expect
     .poll(async () => (await host.caller.agents.catalog()).syncStatus)
     .toBe('idle');
@@ -52,8 +56,9 @@ it('accepts and coalesces repeated and concurrent requests before the upstream f
 
 it('keeps sync admission pending while Session writes retry, then commits both through the same Writer', async () => {
   const { caller, database, databaseWriter } = await startEngineTestHost({
-    fetchAgents: async () => publishedRegistry,
+    fetchAgents: async () => JSON.stringify(publishedRegistry),
   });
+
   vi.useFakeTimers();
   database.$client.exec(
     "CREATE TRIGGER reject_session BEFORE UPDATE ON session BEGIN SELECT RAISE(ABORT, 'Session write failed'); END",
@@ -68,9 +73,11 @@ it('keeps sync admission pending while Session writes retry, then commits both t
     ),
   ).rejects.toThrow('Failed query');
   let accepted = false;
+
   const admission = caller.agents.syncCatalog().then(() => {
     accepted = true;
   });
+
   await vi.advanceTimersByTimeAsync(0);
   expect(accepted).toBe(false);
   expect((await caller.agents.catalog()).agents).toEqual([]);
@@ -102,13 +109,16 @@ it.each(['pending', 'running'] as const)(
         requestedAt: 1,
       })
       .run();
-    const fetchAgents = vi.fn<() => Promise<unknown>>(
-      async () => publishedRegistry,
+
+    const fetchAgents = vi.fn<FetchAgents>(async () =>
+      JSON.stringify(publishedRegistry),
     );
+
     const host = await startEngineTestHost({
       database: stored.database,
       fetchAgents,
     });
+
     await expect
       .poll(async () => (await host.caller.agents.catalog()).syncStatus)
       .toBe('idle');

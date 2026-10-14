@@ -14,8 +14,11 @@ export const responseSessionId = <Method extends AgentRequestMethod>(
   fallback: AgentRequestResponsesByMethod[Method],
 ): string => {
   const result = responseResult(response, fallback);
+
   if ('sessionId' in result) return String(result.sessionId);
+
   if ('sessionId' in params) return String(params['sessionId']);
+
   return '';
 };
 
@@ -24,6 +27,7 @@ export const completeResponse = <Response extends object>(
   stopReason: PromptResponse['stopReason'],
 ): Response => {
   if ('stopReason' in fallback) return { ...fallback, stopReason };
+
   return fallback;
 };
 
@@ -31,6 +35,7 @@ export const requestScope = (
   requestId: JsonRpcId | undefined,
 ): Pick<ScriptedTurn, 'requestId'> =>
   requestId === undefined ? {} : { requestId };
+
 const responseResult = <Method extends AgentRequestMethod>(
   response: Pick<ScriptedResponse<Method>, 'result'> | undefined,
   fallback: AgentRequestResponsesByMethod[Method],
@@ -38,6 +43,7 @@ const responseResult = <Method extends AgentRequestMethod>(
   | AgentRequestResponsesByMethod[Method]
   | Promise<AgentRequestResponsesByMethod[Method]> =>
   response?.result ?? fallback;
+
 export const promptSteps = <Method extends AgentRequestMethod>(
   response: Pick<ScriptedResponse<Method>, 'steps'> | undefined,
   steps: ScriptedScenario['steps'],

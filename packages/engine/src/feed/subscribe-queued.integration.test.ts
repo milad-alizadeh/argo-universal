@@ -14,6 +14,7 @@ import {
   applyFeedChange,
   subscribe,
 } from '#mocks/feed-suite';
+
 it('catches up with rows the database writer still holds', async (): Promise<void> => {
   await startFeedTestHost();
   database.$client

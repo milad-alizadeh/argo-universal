@@ -16,9 +16,13 @@ export interface ElicitationOutcomeProps {
 }
 
 type Property = ElicitationPropertySchema;
+
 type Entry = [string, Property];
+
 type AnswersProps = { properties: Entry[]; answer: ElicitationAnswer };
+
 type AnswerProps = { entry: Entry; content: ElicitationAnswer['content'] };
+
 type SummaryProps = { label: string; count: number };
 
 const outcomeLabels = {
@@ -26,7 +30,13 @@ const outcomeLabels = {
   cancel: 'You dismissed',
   decline: 'You declined',
 } as const;
-const booleanTitles: [unknown, string][] = [
+
+// One recorded answer, as the form sends it: a value, or the values of a multi-select.
+type AnswerItem = string | number | boolean;
+
+type RecordedAnswer = AnswerItem | AnswerItem[];
+
+const booleanTitles: [AnswerItem, string][] = [
   [true, 'Yes'],
   [false, 'No'],
 ];
@@ -36,6 +46,7 @@ export function ElicitationOutcome({
   answer,
 }: ElicitationOutcomeProps): React.JSX.Element {
   const properties = Object.entries(request.requestedSchema.properties);
+
   return (
     <View className="w-full gap-2">
       <OutcomeSummary
@@ -76,6 +87,7 @@ function OutcomeAnswers({
   answer,
 }: AnswersProps): React.JSX.Element | null {
   if (answer.action !== 'accept') return null;
+
   return (
     <View className="gap-3 pl-5.5">
       {properties.map((entry) => (
@@ -87,28 +99,51 @@ function OutcomeAnswers({
 
 function OutcomeAnswer({ entry, content }: AnswerProps): React.JSX.Element {
   const [name, property] = entry;
+
   return (
     <View className="gap-1">
       <Text role="body">{propertyTitle(name, property)}</Text>
-      {answerTexts(property, content?.[name]).map((text) => (
+      {answerTexts(property, recordedAnswer(content, name)).map((text) => (
         <MutedText key={text}>{text}</MutedText>
       ))}
     </View>
   );
 }
 
-function answerTexts(property: Property, value: unknown): string[] {
+function answerTexts(
+  property: Property,
+  value: RecordedAnswer | undefined,
+): string[] {
   if (value === undefined) return ['Skipped'];
   const titles = answerTitles(property);
-  return [value]
-    .flat()
-    .map((item: unknown) => titles.get(item) ?? String(item));
+
+  return [value].flat().map((item) => titles.get(item) ?? String(item));
 }
 
-function answerTitles(property: Property): Map<unknown, string> {
+function answerTitles(property: Property): Map<AnswerItem, string> {
   const options = elicitationChoices(property) ?? [];
+
   return new Map([
     ...booleanTitles,
-    ...options.map((option): [unknown, string] => [option.const, option.title]),
+    ...options.map((option): [AnswerItem, string] => [
+      option.const,
+      option.title,
+    ]),
   ]);
 }
+
+// The Server keeps answers as it received them; anything else reads as skipped.
+function recordedAnswer(
+  content: AnswerProps['content'],
+  name: string,
+): RecordedAnswer | undefined {
+  const value = content?.[name];
+
+  return isRecordedAnswer(value) ? value : undefined;
+}
+
+const isRecordedAnswer = (value: unknown): value is RecordedAnswer =>
+  Array.isArray(value) ? value.every(isAnswerItem) : isAnswerItem(value);
+
+const isAnswerItem = (value: unknown): value is AnswerItem =>
+  ['string', 'number', 'boolean'].includes(typeof value);

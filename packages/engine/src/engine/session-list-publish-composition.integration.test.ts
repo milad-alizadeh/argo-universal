@@ -14,12 +14,15 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
     maxRevision: 1,
     title: 'Unread',
   });
+
   insertEndedTurn(database);
   onTestFinished(remove);
+
   const { databaseWriter: writer, createCaller } = await startEngineTestHost({
     database,
     ...scriptedEngineInput(),
   });
+
   const { caller, controller } = watchEngineList(createCaller);
   const counts = (await caller.session.counts())[Symbol.asyncIterator]();
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();

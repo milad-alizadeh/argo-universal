@@ -16,6 +16,7 @@ import {
 
 export function ElicitationSheet(props: ElicitationFormProps): ReactElement {
   const questions = elicitationQuestions(props.request);
+
   if (questions)
     return (
       <QuestionSheet
@@ -24,11 +25,13 @@ export function ElicitationSheet(props: ElicitationFormProps): ReactElement {
         questions={questions}
       />
     );
+
   return <FieldSheet key={props.request.requestId} {...props} />;
 }
 
 function FieldSheet(props: ElicitationFormProps): ReactElement {
   const model = useElicitationForm(props);
+
   return (
     <ElicitationSurface {...props}>
       <ElicitationFieldForm model={model} />
@@ -40,6 +43,7 @@ function QuestionSheet(
   props: ElicitationFormProps & { questions: ElicitationQuestion[] },
 ): ReactElement {
   const model = useElicitationQuestions(props, props.questions);
+
   return (
     <ElicitationSurface {...props}>
       <ElicitationQuestionBody model={model} />
@@ -52,7 +56,9 @@ type SurfaceProps = ElicitationFormProps & { children: ReactNode };
 function ElicitationSurface(props: SurfaceProps): ReactElement {
   const wide = useContentWide();
   const sheet = useSheetDismissal(props);
+
   if (wide) return <ElicitationTray>{props.children}</ElicitationTray>;
+
   return (
     <BottomSheet open fit size="form" label={props.request.message} {...sheet}>
       {props.children}
@@ -60,12 +66,15 @@ function ElicitationSurface(props: SurfaceProps): ReactElement {
   );
 }
 
-function useSheetDismissal(props: ElicitationFormProps): {
+type SheetDismissal = {
   dismissible: boolean;
   onOpenChange: (open: boolean) => void;
-} {
+};
+
+function useSheetDismissal(props: ElicitationFormProps): SheetDismissal {
   const dismissible = props.state.kind === 'open';
   const cancel = useCancelOnce(props);
+
   return {
     dismissible,
     onOpenChange: (open): void => {
@@ -80,6 +89,7 @@ function useCancelOnce(props: ElicitationFormProps): () => void {
   useEffect(() => {
     dismissed.current = false;
   }, [props.request.requestId, props.error]);
+
   return (): void => {
     if (dismissed.current) return;
     dismissed.current = true;

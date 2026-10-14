@@ -18,12 +18,16 @@ type Commands = {
   remove: UseMutationResult<void, ClientError, AgentId>;
   enable: UseMutationResult<void, ClientError, AgentEnablementInput>;
 };
+
 function useManagementMutations(onRemoved: () => void): Commands {
   const trpc = useTRPC(),
     cache = useQueryClient();
+
   const invalidate = (): Promise<void> =>
     cache.invalidateQueries(trpc.agents.pathFilter());
+
   const onSuccess = removalComplete(onRemoved, invalidate);
+
   return {
     remove: useMutation(trpc.agents.remove.mutationOptions({ onSuccess })),
     enable: useMutation(
@@ -31,20 +35,25 @@ function useManagementMutations(onRemoved: () => void): Commands {
     ),
   };
 }
+
 function presentation(
   agent: ConfiguredAgent | undefined,
   commands: Commands,
 ): AgentManagement | undefined {
   if (!agent) return undefined;
+
   if (agent.configuration.removed) return undefined;
+
   return managementPresentation(agent, commands);
 }
+
 const managementPresentation = (
   agent: ConfiguredAgent,
   commands: Commands,
 ): AgentManagement => {
   const { remove, enable } = commands,
     agentId = agent.id;
+
   return {
     enabled: agent.enabled,
     busy: remove.isPending || enable.isPending,
@@ -54,20 +63,25 @@ const managementPresentation = (
     onEnabledChange: (enabled) => enable.mutate({ agentId, enabled }),
   };
 };
+
 export function useAgentManagement(
   agentId: string,
   onRemoved: () => void,
 ): AgentManagement | undefined {
   const configured = useConfiguredAgents(),
     commands = useManagementMutations(onRemoved);
+
   const agent = configured.data?.find(({ id }) => id === agentId);
   useRemovedCustom(agent, onRemoved);
   useEnablementFailure(commands.enable.error);
+
   return presentation(agent, commands);
 }
+
 const removedCustom = (agent: ConfiguredAgent | undefined): boolean =>
   agent?.configuration.source === 'custom' &&
   agent.configuration.removed === true;
+
 function useRemovedCustom(
   agent: ConfiguredAgent | undefined,
   onRemoved: () => void,
@@ -85,6 +99,7 @@ function useEnablementFailure(error: ClientError | null): void {
       : undefined,
   );
 }
+
 const removalComplete =
   (
     onRemoved: () => void,

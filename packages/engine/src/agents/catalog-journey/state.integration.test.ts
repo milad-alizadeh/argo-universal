@@ -1,18 +1,21 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { afterEach, expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { RegistryHttpError } from '../registry/fetch-agents';
+import { RegistryHttpError, type FetchAgents } from '../registry/fetch-agents';
 
 const offlineMessage = 'Registry offline';
+
 afterEach(() => vi.useRealTimers());
 
 it('keeps the last completed error visible while a retry is pending', async () => {
-  const response = Promise.withResolvers<unknown>();
+  const response = Promise.withResolvers<string>();
+
   const fetchAgents = vi
-    .fn<() => Promise<unknown>>()
-    .mockResolvedValueOnce(publishedRegistry)
+    .fn<FetchAgents>()
+    .mockResolvedValueOnce(JSON.stringify(publishedRegistry))
     .mockRejectedValueOnce(new Error(offlineMessage))
     .mockImplementation(() => response.promise);
+
   const host = await startEngineTestHost({ fetchAgents });
   await host.caller.agents.syncCatalog();
   await expect
@@ -28,6 +31,7 @@ it('keeps the last completed error visible while a retry is pending', async () =
     error: offlineMessage,
   });
   const retry = host.caller.agents.syncCatalog();
+
   try {
     await vi.waitFor(() => expect(fetchAgents).toHaveBeenCalledTimes(3), {
       timeout: 2000,
@@ -38,9 +42,10 @@ it('keeps the last completed error visible while a retry is pending', async () =
       agents: accepted.agents,
     });
   } finally {
-    response.resolve(publishedRegistry);
+    response.resolve(JSON.stringify(publishedRegistry));
     await retry;
   }
+
   await expect
     .poll(async () => (await host.caller.agents.catalog()).syncStatus)
     .toBe('idle');
@@ -56,9 +61,10 @@ it.each([
 ])(
   'makes $attempts attempts after HTTP $status and exposes the failure from SQL',
   async ({ status, attempts }) => {
-    const fetchAgents = vi.fn<() => Promise<unknown>>(async () => {
+    const fetchAgents = vi.fn<FetchAgents>(async () => {
       throw new RegistryHttpError(status);
     });
+
     const host = await startEngineTestHost({ fetchAgents });
     vi.useFakeTimers();
     await host.caller.agents.syncCatalog();
@@ -77,12 +83,15 @@ it.each([
 
 it('records a successful empty catalog and retains that accepted result through a failed Refresh', async (): Promise<void> => {
   let offline = false;
+
   const { caller } = await startEngineTestHost({
     fetchAgents: async () => {
       if (offline) throw new Error('Registry is offline');
-      return { ...publishedRegistry, agents: [] };
+
+      return JSON.stringify({ ...publishedRegistry, agents: [] });
     },
   });
+
   await caller.agents.syncCatalog();
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus)

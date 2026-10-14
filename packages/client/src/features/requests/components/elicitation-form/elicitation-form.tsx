@@ -16,6 +16,7 @@ import { ElicitationQuestionForm } from './elicitation-question-form';
 import { elicitationQuestions } from './elicitation-questions';
 
 export type { ElicitationValues } from './elicitation-schema';
+
 export type {
   ElicitationAnswer,
   ElicitationFormProps,
@@ -27,6 +28,7 @@ export function ElicitationForm(props: ElicitationFormProps): ReactElement {
 
 function RequestForm(props: ElicitationFormProps): ReactElement {
   const questions = elicitationQuestions(props.request);
+
   return questions ? (
     <ElicitationQuestionForm {...props} questions={questions} />
   ) : (
@@ -36,6 +38,7 @@ function RequestForm(props: ElicitationFormProps): ReactElement {
 
 function FieldForm(props: ElicitationFormProps): ReactElement {
   const model = useElicitationForm(props);
+
   return <ElicitationFieldForm model={model} />;
 }
 

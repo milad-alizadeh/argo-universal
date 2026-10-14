@@ -29,8 +29,10 @@ export function DropdownMenuPreview(): React.JSX.Element {
     </DropdownMenu>
   );
 }
+
 function AccountMenu(): React.JSX.Element {
   const { top, bottom } = useSafeAreaInsets();
+
   return (
     <DropdownMenuContent
       insets={{ top, bottom, left: 4, right: 4 }}
@@ -44,12 +46,14 @@ function AccountMenu(): React.JSX.Element {
     </DropdownMenuContent>
   );
 }
+
 const accountItems = [
   { label: 'Profile', shortcut: '⇧⌘P' },
   { label: 'Billing', shortcut: '⌘B' },
   { label: 'Settings', shortcut: '⌘S' },
   { label: 'Keyboard shortcuts', shortcut: '⌘K' },
 ];
+
 function AccountItems(): React.JSX.Element {
   return (
     <>
@@ -60,6 +64,7 @@ function AccountItems(): React.JSX.Element {
     </>
   );
 }
+
 function TeamItems(): React.JSX.Element {
   return (
     <>
@@ -68,6 +73,7 @@ function TeamItems(): React.JSX.Element {
     </>
   );
 }
+
 function InviteMenu(): React.JSX.Element {
   return (
     <DropdownMenuSub>
@@ -78,6 +84,7 @@ function InviteMenu(): React.JSX.Element {
     </DropdownMenuSub>
   );
 }
+
 function InviteChoices(): React.JSX.Element {
   return (
     <DropdownMenuSubContent>
@@ -93,6 +100,7 @@ function InviteChoices(): React.JSX.Element {
     </DropdownMenuSubContent>
   );
 }
+
 function ExternalItems(): React.JSX.Element {
   return (
     <>

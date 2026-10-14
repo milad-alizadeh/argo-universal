@@ -6,12 +6,14 @@ import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 
 const identities = fixtureAgents.map(({ agent }) => agent);
+
 const prompt = [{ type: 'text', text: 'Continue' }] as const;
 
 it.each(identities)(
   'keeps the admitted %s Session eligible after an unsupported stored reparent',
   async (agent) => {
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [{ type: 'wait-for-cancel' }],
@@ -23,6 +25,7 @@ it.each(identities)(
       undefined,
       agent,
     );
+
     host.database.update(session).set({ agent }).run();
     await host.caller.session.setConfigOption({
       sessionId: 'session-1',
@@ -35,10 +38,12 @@ it.each(identities)(
       .set({ parentSessionId: 'session-1' })
       .where(eq(session.id, 'session-1'))
       .run();
+
     const acknowledgement = await host.caller.session.prompt({
       sessionId: 'session-1',
       prompt: [...prompt],
     });
+
     expect(acknowledgement.messageId).toEqual(expect.any(String));
     await expect
       .poll(() => requests)

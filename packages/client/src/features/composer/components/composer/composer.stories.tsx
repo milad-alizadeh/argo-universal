@@ -13,6 +13,7 @@ import { Composer } from './composer';
 import { ComposerOverview } from './composer-overview';
 
 const [firstAgent] = newSessionCatalogs.bothReady;
+
 if (!firstAgent) throw new Error('Recorded catalog needs an available Agent.');
 
 const meta = {
@@ -57,7 +58,9 @@ const meta = {
     },
   },
 } satisfies Meta<ComposerMockProps>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ImageSelectionFailed: Story = {

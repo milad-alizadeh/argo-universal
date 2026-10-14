@@ -10,6 +10,7 @@ export const SessionListInput = z.strictObject({
   cursor: z.string().optional(),
   direction: z.literal('forward').optional(),
 });
+
 export type SessionListInput = z.infer<typeof SessionListInput>;
 
 export const SessionStatus = z.enum([
@@ -19,6 +20,7 @@ export const SessionStatus = z.enum([
   'unread',
   'idle',
 ]);
+
 export type SessionStatus = z.infer<typeof SessionStatus>;
 
 const SessionTitleSource = sessionColumns.shape.titleSource;
@@ -28,6 +30,7 @@ export const SessionCheckout = z.strictObject({
   path: sessionColumns.shape.checkoutPath,
   branch: sessionColumns.shape.checkoutBranch,
 });
+
 export type SessionCheckout = z.infer<typeof SessionCheckout>;
 
 const SessionWorkCount = z.strictObject({
@@ -59,10 +62,12 @@ export const SessionInfo = z.strictObject({
   issue: z.null(),
   pullRequest: z.null(),
 });
+
 export type SessionInfo = z.infer<typeof SessionInfo>;
 
 export const SessionListOutput = z.strictObject({
   sessions: z.array(SessionInfo),
   nextCursor: z.string().nullable(),
 });
+
 export type SessionListOutput = z.infer<typeof SessionListOutput>;

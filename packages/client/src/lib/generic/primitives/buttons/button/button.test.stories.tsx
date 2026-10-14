@@ -3,9 +3,13 @@ import { expect, fn } from 'storybook/test';
 import { Button } from './button';
 
 const onPress = fn();
+
 const onActivate = fn();
+
 const meta = { title: 'Tests/Button' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Loading: Story = {

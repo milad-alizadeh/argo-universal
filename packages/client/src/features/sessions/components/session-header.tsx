@@ -24,9 +24,11 @@ function useShownPullRequest(
   pullRequests: SessionPullRequest[],
 ): ShownPullRequest {
   const [picked, setPicked] = useState<number>();
+
   const shown =
     pullRequests.find((pullRequest) => pullRequest.number === picked) ??
     pullRequests.at(0);
+
   return [shown, setPicked];
 }
 
@@ -68,7 +70,9 @@ export function SessionHeader(props: SessionHeaderProps): React.JSX.Element {
   const wide = useWide();
   const pullRequests = props.pullRequests ?? [];
   const shownPullRequest = useShownPullRequest(pullRequests);
+
   if (!wide) return <PhoneSessionHeader title={props.title} />;
+
   return (
     <WideSessionHeader
       {...props}

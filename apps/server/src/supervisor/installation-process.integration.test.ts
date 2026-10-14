@@ -7,13 +7,19 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createActor, setup } from 'xstate';
 import { z } from 'zod';
 import { engineProcess } from './engine-process';
+
 let folder: string;
+
 let events: string[];
+
 let fixtureGroup: number | undefined;
+
 let stop = (): void => {};
+
 const entry = fileURLToPath(
   new URL('../../mocks/installing-engine.ts', import.meta.url),
 );
+
 const recordPath = (): string =>
   join(
     folder,
@@ -22,6 +28,7 @@ const recordPath = (): string =>
     '.install-operation',
     '.installer-group.json',
   );
+
 const parent = setup({ actors: { engine: engineProcess } }).createMachine({
   invoke: {
     id: 'engine',
@@ -36,14 +43,17 @@ const parent = setup({ actors: { engine: engineProcess } }).createMachine({
     },
   },
 });
+
 const isAlive = (pid: number): boolean => {
   try {
     process.kill(pid, 0);
+
     return true;
   } catch {
     return false;
   }
 };
+
 beforeEach(async () => {
   folder = await mkdtemp(join(tmpdir(), 'argo-installer-supervisor-'));
   events = [];
@@ -51,17 +61,21 @@ beforeEach(async () => {
   vi.stubEnv('ARGO_HOME', folder);
   vi.stubEnv('ARGO_FIXTURE_PIDFILE', join(folder, 'pids.json'));
 });
+
 afterEach(async () => {
   stop();
+
   if (fixtureGroup) {
     try {
       process.kill(-fixtureGroup, 'SIGKILL');
     } catch {}
   }
+
   await releaseInstallationProcessGroups(folder);
   await rm(folder, { recursive: true, force: true });
   vi.unstubAllEnvs();
 });
+
 it.each([
   'abrupt Engine exit',
   'Supervisor force-stop',
@@ -76,9 +90,11 @@ it.each([
     stop = (): void => {
       actor.stop();
     };
+
     await expect
       .poll(() => events, { timeout: 10000 })
       .toContain('engine.ready');
+
     const pids = z
       .object({
         engine: z.number(),
@@ -86,15 +102,19 @@ it.each([
         descendant: z.number(),
       })
       .parse(JSON.parse(await readFile(join(folder, 'pids.json'), 'utf8')));
+
     fixtureGroup = z
       .object({ pid: z.number() })
       .parse(JSON.parse(await readFile(recordPath(), 'utf8'))).pid;
+
     if (mode === 'stopped installer wrapper') {
       process.kill(fixtureGroup, 'SIGSTOP');
       process.kill(pids.engine, 'SIGKILL');
     }
+
     if (mode === 'abrupt Engine exit') process.kill(pids.engine, 'SIGKILL');
     const engine = actor.getSnapshot().children['engine'];
+
     if (!engine) throw new Error('Engine did not start');
     engine.send({ type: 'engine.stop' });
     await expect

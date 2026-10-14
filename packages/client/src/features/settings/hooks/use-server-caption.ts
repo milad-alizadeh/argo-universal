@@ -6,5 +6,6 @@ import { useServerCaption } from '#lib/product/server-place';
 export function useServerPageCaption(): string | undefined {
   const trpc = useTRPC();
   const info = useQuery(trpc.system.info.queryOptions());
+
   return useServerCaption(info.data?.name);
 }

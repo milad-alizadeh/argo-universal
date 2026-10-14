@@ -14,6 +14,7 @@ import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps } from '../composer-mock';
 import { shownText } from '../rich-textarea-example';
 import { spacingPrompt } from './composer-test-contract.test.mocks';
+
 export const meta = {
   title: 'Tests/Composer',
   decorators: [
@@ -35,9 +36,13 @@ export const meta = {
     onSend: fn(),
   },
 } satisfies Meta<typeof Composer>;
+
 export type Story = StoryObj<typeof meta>;
+
 export type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
 export const dark = { globals: { mode: 'dark' } };
+
 export function SendingComposer({
   onSend,
 }: {
@@ -47,6 +52,7 @@ export function SendingComposer({
     text: '',
     attachments: [],
   });
+
   return (
     <Composer
       {...composerProps({
@@ -61,8 +67,10 @@ export function SendingComposer({
     />
   );
 }
+
 export function typing(width: number): Story {
   const prompt = fn();
+
   return {
     render: () => <SendingComposer onSend={prompt} />,
     play: async ({ canvas, userEvent }) => {
@@ -82,7 +90,9 @@ export function typing(width: number): Story {
     },
   };
 }
+
 export const returnPrompt = fn();
+
 export function imageComposer(
   props: React.ComponentProps<typeof Composer>,
 ): React.JSX.Element {

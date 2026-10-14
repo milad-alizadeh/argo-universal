@@ -38,6 +38,7 @@ function useProjectBranches(
   project: ProjectInfo | undefined,
 ): ProjectsBranchesOutput | undefined {
   const trpc = useTRPC();
+
   return useQuery(
     trpc.projects.branches.queryOptions(
       { projectId: project?.id ?? '' },
@@ -51,9 +52,11 @@ function useSessionChoices(
   projectId: string | undefined,
 ): ChosenSessionChoices {
   const [chosen, setChosen] = useState<ChosenSettings>({ projectId });
+
   const branches = useProjectBranches(
     chooseProject(listed.projects, chosen.projectId),
   );
+
   return {
     choices: toSessionChoices({ ...listed, chosen, branches }),
     setChosen,
@@ -68,9 +71,11 @@ export function useNewSessionData(
   const serverInfo = useQuery(trpc.system.info.queryOptions());
   const projects = useQuery(trpc.projects.list.queryOptions());
   const agents = useAgents();
+
   const { choices, setChosen } = useSessionChoices(
     { projects: projects.data ?? [], agents: agents.data ?? [] },
     projectId,
   );
+
   return { serverInfo, projects, agents, setChosen, choices };
 }

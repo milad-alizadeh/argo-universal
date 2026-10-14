@@ -10,15 +10,18 @@ import {
 } from '#mocks/installation-storage';
 import { readInstallSelection } from './index';
 import { selectedLaunchDefinition } from './install/selection/selection';
+
 it.each(['completion', 'cancellation'])(
   'retains installation ownership through Writer retry during %s',
   async (outcome) => {
     const host = await startInstallEngine();
     rejectInstallationWrites(host);
+
     const operation = await host.caller.agents.install({
       agentId: host.agentId,
       version: '1.2.3',
     });
+
     await expect
       .poll(() => host.databaseWriter.getSnapshot().matches('waitingToRetry'), {
         timeout: 5000,
@@ -38,6 +41,7 @@ it.each(['completion', 'cancellation'])(
       failure: expect.stringContaining('in use'),
     });
     let cancelled = false;
+
     const cancellation =
       outcome === 'cancellation'
         ? host.caller.agents
@@ -49,17 +53,21 @@ it.each(['completion', 'cancellation'])(
               cancelled = true;
             })
         : undefined;
+
     expect(cancelled).toBe(false);
     host.database.$client.exec('DROP TRIGGER reject_configuration');
     await cancellation;
     await waitForInstalledSelection(host);
     const selection = readInstallSelection(host.database, host.agentId);
+
     if (!selection) throw new Error('Expected committed selection');
+
     const launch = await selectedLaunchDefinition(
       host.home,
       host.agentId,
       selection,
     );
+
     expect(await readFile(launch.args[0] ?? launch.executable)).toEqual(
       installationExecutable,
     );

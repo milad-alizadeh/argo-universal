@@ -14,6 +14,7 @@ export const meta = {
     onSelect: fn(),
   },
 } satisfies Meta<typeof SessionRow>;
+
 export type Story = StoryObj<typeof meta>;
 
 export const dark = { globals: { mode: 'dark' } };
@@ -23,9 +24,11 @@ export function running(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(canvas.getByText('Running the tests')).toBeVisible();
+
       const row = canvas.getByRole('button', {
         name: 'Build the settings screen, Running',
       });
+
       await expect(args.onSelect).not.toHaveBeenCalled();
       await userEvent.click(row);
       await expect(args.onSelect).toHaveBeenCalledWith('session-running');
@@ -52,9 +55,11 @@ export function metadata(width: number): Story {
     ),
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
+
       for (const status of ['open', 'draft', 'merged', 'conflict', 'closed']) {
         await expect(canvas.getByLabelText(`${status} PR #45`)).toBeVisible();
       }
+
       await expect(canvas.getAllByLabelText('Issue #128')).toHaveLength(5);
       await expect(args.onSelect).not.toHaveBeenCalled();
       await userEvent.click(
@@ -86,6 +91,7 @@ export const statusParity: Story = {
       {agentsList.flatMap((agent) =>
         states.map(([name]) => {
           const session = sessionRows[name];
+
           return (
             <SessionRow
               {...args}
@@ -104,6 +110,7 @@ export const statusParity: Story = {
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
+
       for (const name of parityRowNames) {
         await expect(canvas.getByRole('button', { name })).toBeVisible();
       }

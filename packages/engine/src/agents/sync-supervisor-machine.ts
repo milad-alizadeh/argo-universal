@@ -24,6 +24,7 @@ export interface SyncSupervisorInput extends Pick<CatalogSyncInput, 'now'> {
   database: Database;
   writer: WriterActorRef;
 }
+
 interface SyncContext extends SyncSupervisorInput {
   fetchAgents: FetchAgents;
   reader: RegistryReader;
@@ -31,20 +32,28 @@ interface SyncContext extends SyncSupervisorInput {
   result: CatalogSyncResult;
   attempts: number;
 }
+
 type SyncEvent =
   | { type: 'sync.request'; admitted: WriterCommit }
   | { type: 'sync.stop' };
 
 const syncRequestEvent = 'sync.request';
+
 const maximumAttempts = 3;
+
 const initialRetryDelay = 1000;
+
 function canRetrySync(context: SyncContext): boolean {
   if ('job' in context.result) return false;
+
   return context.result.retryable && context.attempts < maximumAttempts;
 }
+
 function resultWrite(context: SyncContext): WriterJob {
   const result = context.result;
+
   if ('job' in result) return result.job;
+
   return new SyncJobUpdateJob({
     ...catalogSyncKey,
     set: {
@@ -57,6 +66,7 @@ function resultWrite(context: SyncContext): WriterJob {
 }
 
 export const syncSupervisorMachine = setup({
+  // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as SyncSupervisorInput,
     context: {} as SyncContext,
@@ -112,6 +122,7 @@ export const syncSupervisorMachine = setup({
     rejectAdmissions: ({ context, event }) => {
       const error =
         'error' in event ? event.error : new Error('Sync supervisor stopped');
+
       for (const admission of context.admissions) admission.reject(error);
     },
   },
@@ -243,5 +254,6 @@ export async function requestAgentCatalogSync(
   const admitted = Promise.withResolvers<void>();
   supervisor.send({ type: syncRequestEvent, admitted });
   await admitted.promise;
+
   return { accepted: true };
 }

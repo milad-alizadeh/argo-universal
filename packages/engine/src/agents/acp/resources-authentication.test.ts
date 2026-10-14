@@ -13,6 +13,7 @@ const alternativeLaunches = [
     version: '2',
   },
 ];
+
 it.each(alternativeLaunches)(
   'blocks $name from changing credentials used by a live Session',
   async (alternative) => {
@@ -33,11 +34,13 @@ it('blocks competing logins and new Sessions across installations sharing creden
   const peer = createScriptedAgentProcess({ steps: [] });
   const resources = createAcpResources(peer);
   const release = resources.reserveAuthentication(resourceLaunch);
+
   const alternative = {
     ...resourceLaunch,
     executable: '/versions/2/agent',
     version: '2',
   };
+
   expect(() => resources.reserveAuthentication(alternative)).toThrow('in use');
   await expect(
     resources.open({ ...createResourceOpening(), launch: alternative }),
@@ -74,10 +77,12 @@ it('blocks competing authentication and Session opening while keeping unrelated 
     'sign-in',
   );
   const opening = createResourceOpening();
+
   const unrelated = await resources.open({
     ...opening,
     launch: { ...opening.launch, authContext: 'separate-account' },
   });
+
   await unrelated.close();
   release();
   const current = resources.reserveAuthentication(resourceLaunch);
@@ -96,9 +101,11 @@ it('lets sign-in wait for a closing Session to exit instead of refusing it', asy
   const closing = lease.close();
   await vi.waitFor(() => expect(peer.processes[0]?.terminations).toBe(1));
   let settled = false;
+
   const waiting = resources
     .settleAuthentication(resourceLaunch)
     .then(() => (settled = true));
+
   await Promise.resolve();
   expect(settled).toBe(false);
   peer.processes[0]?.exited.resolve();

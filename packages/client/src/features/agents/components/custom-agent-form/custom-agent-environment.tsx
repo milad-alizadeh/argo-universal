@@ -1,7 +1,10 @@
 import type { EnvironmentVariable } from '@repo/contracts';
 import type * as React from 'react';
 import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
-import { errorMessage } from '../../../../lib/generic/primitives/fields/field-errors';
+import {
+  errorMessage,
+  type FieldErrors,
+} from '../../../../lib/generic/primitives/fields/field-errors';
 import { VariableRow } from '../custom-agent-launch';
 import { sectionFooter } from '../form-field';
 import { keyedRows } from '../keyed-rows';
@@ -9,14 +12,16 @@ import { AddEntryRow, type FormPartProps } from './custom-agent-form-sections';
 import { type Editing, newVariable } from './variable-sheet';
 
 type SectionProps = FormPartProps & { onEdit: (editing: Editing) => void };
+
 type FieldProps = SectionProps & {
   field: {
     state: {
       value: EnvironmentVariable[];
-      meta: { errors: readonly unknown[] };
+      meta: { errors: FieldErrors };
     };
   };
 };
+
 const environmentHint =
   'Stored on the Server in plain text. Not for API keys or other secrets; sign in through the Agent instead.';
 

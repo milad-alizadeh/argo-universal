@@ -34,6 +34,7 @@ async function measuredCut(
   const measured = await Promise.all(
     [...leaves].map((leaf) => measureLeaf(leaf, content)),
   );
+
   return wholeLineCut(measured.filter(isMeasured), limit);
 }
 
@@ -54,7 +55,9 @@ function passedLimit(
 }
 
 type ClipOnLayout = Pick<WholeLineClamp, 'onContentLayout' | 'clipHeight'>;
+
 type Leaves = React.RefObject<Set<ClampLeaf>>;
+
 type Content = React.RefObject<ContentView | null>;
 
 interface MeasuredContent {
@@ -72,11 +75,13 @@ interface CutMeasure extends Omit<MeasuredContent, 'height'> {
 function measureCut(measure: CutMeasure): (() => void) | undefined {
   const { passed, onCut } = measure;
   const view = measure.content.current;
+
   if (passed === undefined || !view) return;
   let latest = true;
   void measuredCut(measure.leaves.current, view, passed).then((measured) => {
     if (latest) onCut(measured ?? passed);
   });
+
   return (): void => {
     latest = false;
   };
@@ -92,14 +97,17 @@ function useMeasuredCut(
     () => measureCut({ passed, leaves, content, onCut: setCut }),
     [passed, height, leaves, content],
   );
+
   return cut;
 }
 
 function useLayoutHeight(): [number, (event: LayoutChangeEvent) => void] {
   const [height, setHeight] = useState(0);
+
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     setHeight(event.nativeEvent.layout.height);
   }, []);
+
   return [height, onLayout];
 }
 
@@ -112,6 +120,7 @@ function useClipOnLayout(
   const [height, onContentLayout] = useLayoutHeight();
   const passed = passedLimit(height, limit);
   const cut = useMeasuredCut(passed, { leaves, content, height });
+
   return {
     onContentLayout,
     clipHeight: passed === undefined ? undefined : cut,
@@ -124,12 +133,16 @@ export function useWholeLineClamp(lines: number): WholeLineClamp {
   const limit = lineHeight === undefined ? undefined : lineHeight * lines;
   const leaves = useRef(new Set<ClampLeaf>());
   const content = useRef<ContentView>(null);
+
   const registerLeaf = useCallback((leaf: ClampLeaf): (() => void) => {
     leaves.current.add(leaf);
+
     return () => {
       leaves.current.delete(leaf);
     };
   }, []);
+
   const clip = useClipOnLayout(limit, leaves, content);
+
   return { registerLeaf, content, ...clip };
 }

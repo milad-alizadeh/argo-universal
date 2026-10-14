@@ -21,12 +21,15 @@ const meta = {
     language: 'txt',
   },
 } satisfies Meta<typeof FeedCodeBlock>;
+
 export default meta;
+
 type Story = StoryObj<typeof FeedCodeBlock>;
 
 export const CodeBlockScrollsInsideTheBox: Story = {
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
+
     for (const width of [390, 1440]) {
       await settleViewport(width);
       const box = canvas.getByTestId(codeScrollId);
@@ -44,11 +47,13 @@ export const CodeBlockScrollsInsideTheBox: Story = {
 // Where `part` of the element's text is drawn.
 function textBounds(element: HTMLElement, part: string): DOMRect {
   const node = element.firstChild;
+
   if (!(node instanceof globalThis.Text)) throw new Error('Missing title text');
   const start = node.data.indexOf(part);
   const range = document.createRange();
   range.setStart(node, start);
   range.setEnd(node, start + part.length);
+
   return range.getBoundingClientRect();
 }
 
@@ -61,6 +66,7 @@ export const LongTitleKeepsFilenameVisible: Story = {
   ),
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
+
     for (const width of [390, 1440]) {
       await settleViewport(width);
       const title = canvas.getByTestId('code-block-title');
@@ -86,6 +92,7 @@ function copyControlFollowsHoverAndFocus(width: number): Story {
       await settleViewport(width);
       const copy = canvas.getByRole('button', { name: 'Copy code' });
       const box = canvas.getByTestId(codeScrollId).parentElement;
+
       if (!box) throw new Error('Missing code block');
       await page.elementLocator(box).unhover({ position: { x: 1, y: 1 } });
       await expect(copy).not.toBeVisible();
@@ -100,8 +107,10 @@ function copyControlFollowsHoverAndFocus(width: number): Story {
     },
   };
 }
+
 export const CopyControlFollowsHoverAndFocusPhone =
   copyControlFollowsHoverAndFocus(layoutWidths.phone);
+
 export const CopyControlFollowsHoverAndFocusWide =
   copyControlFollowsHoverAndFocus(layoutWidths.wide);
 
@@ -112,15 +121,19 @@ function copiesResource(width: number, code?: string): Story {
       await settleViewport(width);
       await expect(canvas.getByLabelText(embeddedResource.uri)).toBeVisible();
       await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
+
       const clipboard = spyOn(
         navigator.clipboard,
         'writeText',
       ).mockResolvedValue();
+
       try {
         await userEvent.tab();
+
         const copy = canvas.getByRole('button', {
           name: code === undefined ? 'Copy URI' : 'Copy resource text',
         });
+
         await expect(copy).toHaveFocus();
         await expect(copy).toBeVisible();
         await userEvent.keyboard('{Enter}');
@@ -133,12 +146,16 @@ function copiesResource(width: number, code?: string): Story {
     },
   };
 }
+
 export const CopiesResourceUriPhone = copiesResource(layoutWidths.phone);
+
 export const CopiesResourceUriWide = copiesResource(layoutWidths.wide);
+
 export const CopiesEmptyResourceTextPhone = copiesResource(
   layoutWidths.phone,
   '',
 );
+
 export const CopiesEmptyResourceTextWide = copiesResource(
   layoutWidths.wide,
   '',

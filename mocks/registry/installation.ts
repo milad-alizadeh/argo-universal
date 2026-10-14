@@ -6,6 +6,7 @@ import {
   installPackage,
   prepareEnvironment,
 } from './installation-packages';
+
 export { installationExecutable } from './installation-packages';
 
 export const InstallationScenario = z.object({
@@ -13,6 +14,7 @@ export const InstallationScenario = z.object({
   released: z.boolean(),
   version: z.string().optional(),
 });
+
 export type ToolInput = {
   executable: string;
   args: readonly string[];
@@ -20,18 +22,22 @@ export type ToolInput = {
   env?: Record<string, string>;
   signal: AbortSignal;
 };
+
 type InstallationMockOptions = {
   packageName?: string;
   scenarioPath?: string;
   version?: string;
 };
+
 const pollMilliseconds = 50;
+
 const readScenario = async (
   path?: string,
 ): Promise<z.infer<typeof InstallationScenario>> =>
   path
     ? InstallationScenario.parse(JSON.parse(await readFile(path, 'utf8')))
     : { outcome: 'success', released: true };
+
 async function awaitInstallerRelease(
   input: ToolInput,
   path?: string,
@@ -39,16 +45,20 @@ async function awaitInstallerRelease(
   while (!(await readScenario(path)).released)
     await setTimeout(pollMilliseconds, undefined, { signal: input.signal });
   input.signal.throwIfAborted();
+
   if ((await readScenario(path)).outcome === 'failure')
     throw new Error('Fixture package download failed');
 }
+
 const isInstall = (input: ToolInput): boolean =>
   input.executable === 'npm' ||
   (input.executable === 'uv' && input.args[0] === 'pip');
+
 const requireRuntime = async (path?: string): Promise<void> => {
   if ((await readScenario(path)).outcome === 'missing-runtime')
     throw new Error('Node.js is required on the Server');
 };
+
 async function runTool(
   input: ToolInput,
   options: InstallationMockOptions,
@@ -56,27 +66,34 @@ async function runTool(
   input.signal.throwIfAborted();
   await requireRuntime(options.scenarioPath);
   await prepareEnvironment(input);
+
   if (!isInstall(input)) return 'Runtime available';
   await awaitInstallerRelease(input, options.scenarioPath);
   await installSelectedPackage(input, options);
+
   return '';
 }
+
 const installationVersion = async (
   options: InstallationMockOptions,
 ): Promise<string> =>
   (await readScenario(options.scenarioPath)).version ??
   options.version ??
   '1.2.3';
+
+type InstallationPorts = {
+  runTool: (input: ToolInput) => Promise<string>;
+  download: (url: string, signal: AbortSignal) => Promise<Uint8Array>;
+};
+
 // Only the external package manager and download responses are replaced.
 export const createInstallationPorts = (
   options: InstallationMockOptions = {},
-): {
-  runTool: (input: ToolInput) => Promise<string>;
-  download: (url: string, signal: AbortSignal) => Promise<Uint8Array>;
-} => ({
+): InstallationPorts => ({
   runTool: (input) => runTool(input, options),
   download: async (_, signal) => {
     signal.throwIfAborted();
+
     return installationExecutable;
   },
 });

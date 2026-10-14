@@ -40,11 +40,11 @@ export const countLines = (hunks: readonly Hunk[]): number =>
 // The first `previewLineCount` lines when limited, else every line.
 export function previewHunks(hunks: readonly Hunk[], limited: boolean): Hunk[] {
   let remaining = limited ? previewLineCount : Number.POSITIVE_INFINITY;
-  return hunks
-    .map((hunk) => {
-      const lines = hunk.lines.slice(0, remaining);
-      remaining -= lines.length;
-      return { ...hunk, lines };
-    })
-    .filter((hunk) => hunk.lines.length > 0);
+
+  return hunks.flatMap((hunk) => {
+    const lines = hunk.lines.slice(0, remaining);
+    remaining -= lines.length;
+
+    return lines.length > 0 ? [{ ...hunk, lines }] : [];
+  });
 }

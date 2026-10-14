@@ -1,8 +1,9 @@
 export type WriterCommit = {
   resolve: () => void;
-  reject: (error: unknown, retrying?: boolean) => void;
+  reject: (cause: unknown, retrying?: boolean) => void;
   waitForRetry?: true;
 };
+
 export type PendingWriterCommit = { through: number; committed: WriterCommit };
 
 export const acknowledgeWrittenPrefix = (
@@ -11,19 +12,23 @@ export const acknowledgeWrittenPrefix = (
 ): PendingWriterCommit[] => {
   for (const entry of pendingCommits)
     if (entry.through <= writtenCount) entry.committed.resolve();
-  return pendingCommits
-    .filter((entry) => entry.through > writtenCount)
-    .map((entry) => ({ ...entry, through: entry.through - writtenCount }));
+
+  return pendingCommits.flatMap((entry) =>
+    entry.through > writtenCount
+      ? [{ ...entry, through: entry.through - writtenCount }]
+      : [],
+  );
 };
 
 export const rejectPendingCommits = (
   pendingCommits: PendingWriterCommit[],
-  error: unknown,
+  cause: unknown,
   retrying = false,
 ): PendingWriterCommit[] => {
   for (const entry of pendingCommits)
     if (!retrying || !entry.committed.waitForRetry)
-      entry.committed.reject(error, retrying);
+      entry.committed.reject(cause, retrying);
+
   return retrying
     ? pendingCommits.filter((entry) => entry.committed.waitForRetry)
     : [];

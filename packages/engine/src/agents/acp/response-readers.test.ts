@@ -35,12 +35,14 @@ it.each([
   ({ additions }) => {
     const rejections = createRejectionCounter('ACP terminal methods');
     const readers = createAcpResponseReaders(rejections);
+
     const response = {
       protocolVersion: 1,
       authMethods: [
         { type: 'terminal', id: 'terminal', name: 'Terminal', ...additions },
       ],
     };
+
     expect(() => readers.initialize.parse(response)).toThrow(
       'Invalid ACP InitializeResponse',
     );

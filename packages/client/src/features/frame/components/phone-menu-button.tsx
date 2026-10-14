@@ -10,6 +10,7 @@ import {
 export function PhoneMenuButton(): React.JSX.Element {
   const openDrawer = useOpenDrawer();
   const attentionCount = useShellAttentionCount();
+
   return (
     <HeaderButton
       icon="menu"

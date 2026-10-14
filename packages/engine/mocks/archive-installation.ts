@@ -5,17 +5,22 @@ import {
   installationPorts,
   startInstallEngine,
 } from './installation';
+
 const controlArchive = (name: string): Uint8Array =>
   zipSync({
     agent: installationExecutable,
     [name]: new TextEncoder().encode('{}'),
   });
+
 const zipEntry = (): ReturnType<typeof installEntry> => {
   const entry = installEntry('binary');
+
   for (const recipe of Object.values(entry.distribution?.binary ?? {}))
     recipe.archive += '.zip';
+
   return entry;
 };
+
 export const startArchiveInstallEngine = async (
   name: string,
 ): ReturnType<typeof startInstallEngine> => {
@@ -23,6 +28,8 @@ export const startArchiveInstallEngine = async (
     ...installationPorts,
     download: async () => controlArchive(name),
   });
+
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
+
   return host;
 };

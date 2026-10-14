@@ -18,7 +18,9 @@ const meta = {
   parameters: { screenPreview: true },
   args: feedArgs,
 } satisfies Meta<typeof Feed>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const JumpsToLatest: Story = {
@@ -36,9 +38,11 @@ export const JumpsToLatest: Story = {
     // A row arriving while the reader is away leaves what they read where it was; rows above may still measure, so compare the screen, not scrollTop.
     const marked = markMiddleOfView(scroll);
     sendRow(arrivingRow);
+
     const jumpToLatest = await canvas.findByRole('button', {
       name: 'Jump to latest, new rows',
     });
+
     await expect(
       Math.abs(marked.element.getBoundingClientRect().top - marked.top),
     ).toBeLessThan(2);

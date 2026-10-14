@@ -13,7 +13,9 @@ const capture = async (page: Page, name: string): Promise<void> => {
     animations: 'disabled',
   });
 };
+
 const exact = { exact: true };
+
 // The phone keeps the Agents list mounted under the Agent page, so only shown text counts.
 const shown = (page: Page, text: string): Locator =>
   page.getByText(text, exact).filter({ visible: true }).first();
@@ -61,6 +63,7 @@ const fixtureReasons = {
   'sign-in needed': /^The Agent requires sign-in\.$/,
   "can't start": /failed ACP initialize/,
 } satisfies Partial<Record<SetupState, RegExp>>;
+
 Then(
   'Agent {int} shows its {string} reason without any credential',
   async (
@@ -71,6 +74,7 @@ Then(
     const { reason = '' } = await readAgent(page, server.httpUrl, ordinal);
     expect(reason).toMatch(fixtureReasons[state]);
     await expect(shown(page, reason)).toBeVisible();
+
     for (const secret of ['sk-fixture-secret', 'Bearer'])
       await expect(page.getByText(secret)).toHaveCount(0);
   },

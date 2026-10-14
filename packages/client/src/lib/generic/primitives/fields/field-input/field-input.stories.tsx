@@ -12,7 +12,9 @@ const meta = {
   component: FieldInput,
   parameters: { screenPreview: true },
 } satisfies Meta<typeof FieldInput>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {
@@ -86,5 +88,6 @@ type TypedInputProps = Omit<
 
 function TypedInput({ initial, ...props }: TypedInputProps): React.JSX.Element {
   const [value, setValue] = useState(initial);
+
   return <FieldInput {...props} value={value} onChange={setValue} />;
 }

@@ -6,9 +6,7 @@ import {
 } from '@expo/ui/jetpack-compose';
 import {
   type ModifierConfig,
-  Shapes,
   background,
-  clip,
   fillMaxWidth,
   height,
   padding,
@@ -22,14 +20,18 @@ import { useCSSVariable } from 'uniwind';
 import { Icon, IconSlot } from '../../../symbols/icon';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
+import { roundedClip } from '../../native/compose-corners';
 import { Host } from '../../native/host';
 import { useComposeTextStyle } from '../../native/native-typography';
 import type { NavigationItemProps } from './navigation-item.tsx';
 
 // Material 3's navigation drawer item: a 56dp pill, tinted when selected.
 const itemHeight = 56;
+
 const startPadding = 16;
+
 const endPadding = 24;
+
 const iconGap = 12;
 
 export function NavigationItem(props: NavigationItemProps): React.JSX.Element {
@@ -58,10 +60,11 @@ function NavigationItemRow(props: NavigationItemProps): React.JSX.Element {
 function usePillModifiers(selected: boolean): ModifierConfig[] {
   // The theme's selection tint, as on every other selected row, in place of Material's secondary container.
   const highlight = String(useCSSVariable('--color-selected'));
+
   return [
     fillMaxWidth(),
     height(itemHeight),
-    clip(Shapes.RoundedCorner(itemHeight / 2)),
+    roundedClip(itemHeight / 2),
     background(selected ? highlight : 'transparent'),
   ];
 }
@@ -73,6 +76,7 @@ function tabModifiers({
   onPress,
 }: NavigationItemProps): ModifierConfig[] {
   const description = [title, badge?.label].filter(Boolean).join(', ');
+
   return [
     selectable(selected, onPress, 'tab'),
     semantics({ contentDescription: description }),
@@ -103,6 +107,7 @@ interface IconLayerProps {
 
 function IconLayer({ icon, filled, shown }: IconLayerProps): React.JSX.Element {
   const tone = filled ? 'text-foreground' : 'text-muted-foreground';
+
   return (
     <View className={cn('absolute', !shown && 'opacity-0')}>
       <Icon name={icon} role="nav" filled={filled} className={tone} />
@@ -117,6 +122,7 @@ function NavigationItemLabel({
   const colors = useMaterialColors();
   const color = selected ? colors.onSurface : colors.onSurfaceVariant;
   const style = useComposeTextStyle('control');
+
   return (
     <Text color={color} style={style} maxLines={1} modifiers={[weight(1)]}>
       {title}
@@ -128,5 +134,6 @@ function NativeBadge({
   badge,
 }: Pick<NavigationItemProps, 'badge'>): React.JSX.Element | null {
   if (!badge) return null;
+
   return <RNHostView matchContents>{badge.element}</RNHostView>;
 }

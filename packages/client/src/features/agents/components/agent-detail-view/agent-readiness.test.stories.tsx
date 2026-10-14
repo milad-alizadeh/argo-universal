@@ -13,11 +13,15 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof AgentDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 type Handler = 'onRecheck' | 'onSignIn' | 'onRepair';
 
 const { name } = readyAgent;
+
 type Expected = {
   status: AgentStatus;
   reason: string;
@@ -38,11 +42,13 @@ const readiness = (expected: Expected): Story => ({
     await expect(canvas.getByText(expected.footer)).toBeVisible();
     await expect(canvas.queryByText('Unavailable')).not.toBeInTheDocument();
     const { action } = expected;
+
     if (!action) return expectNoAction(canvas);
     await userEvent.click(canvas.getByText(action.label));
     await expect(args[action.handler]).toHaveBeenCalledOnce();
   },
 });
+
 async function expectNoAction(
   canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'],
 ): Promise<void> {

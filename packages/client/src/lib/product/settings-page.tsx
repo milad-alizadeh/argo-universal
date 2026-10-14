@@ -32,6 +32,7 @@ interface SettingsColumn {
 
 function useSettingsColumn(): SettingsColumn {
   const padding = Number.parseFloat(String(useCSSVariable('--spacing-8')));
+
   return useMemo(
     () => ({
       maxWidth: settingsColumnMaxWidth,
@@ -49,11 +50,13 @@ function useSettingsColumn(): SettingsColumn {
  */
 export function SettingsPage(props: SettingsPageProps): ReactNode {
   if (!useWide()) return props.children;
+
   return <WideSettingsPage {...props} />;
 }
 
 function WideSettingsPage(props: SettingsPageProps): React.JSX.Element {
   const settingsColumn = useSettingsColumn();
+
   return (
     <View className="mt-shell-inset flex-1">
       <SettingsPageTop {...props} column={settingsColumn} />

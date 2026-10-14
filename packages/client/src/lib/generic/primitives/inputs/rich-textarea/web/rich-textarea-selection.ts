@@ -12,6 +12,7 @@ export function $rangeSelection({
   collapsed: boolean;
 }): RangeSelection | undefined {
   const selection = $getSelection();
+
   return $isRangeSelection(selection) && selection.isCollapsed() === collapsed
     ? selection
     : undefined;

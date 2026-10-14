@@ -11,6 +11,7 @@ import { measureFindings } from './not-yet-cleared/measure.mts';
 import { growthProblems } from './not-yet-cleared/policy.mts';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
+
 const waiverPath = 'tooling/oxlint/not-yet-cleared.json';
 
 function baselineWaivers(): string {
@@ -22,6 +23,7 @@ function baselineWaivers(): string {
       encoding: 'utf8',
     },
   ).trim();
+
   return execFileSync('/usr/bin/git', ['show', `${base}:${waiverPath}`], {
     cwd: root,
     encoding: 'utf8',
@@ -37,14 +39,17 @@ function printEntries(result: Evaluation): void {
 
 function printSummary(result: Evaluation): void {
   printEntries(result);
+
   const findings = result.entries.reduce(
     (total, entry): number => total + entry.findings,
     0,
   );
+
   const rules = result.entries.reduce(
     (total, entry): number => total + entry.rules,
     0,
   );
+
   console.log(
     `not-yet-cleared: ${result.entries.length} entries, ${findings} findings, ${rules} waived rules`,
   );
@@ -52,19 +57,25 @@ function printSummary(result: Evaluation): void {
 
 function check(result: Evaluation): number {
   for (const problem of result.problems) console.error(problem);
+
   return result.problems.length > 0 ? 1 : 0;
 }
 
-function evaluateTree(): { current: string; result: Evaluation } {
+type TreeEvaluation = { current: string; result: Evaluation };
+
+function evaluateTree(): TreeEvaluation {
   const current = readFileSync(join(root, waiverPath), 'utf8');
   const baseline = baselineWaivers();
   const growth = growthProblems(readWaivers(current), readWaivers(baseline));
+
   if (growth.length > 0) throw new Error(growth.join('\n'));
+
   const result = evaluateWaivers({
     current,
     baseline,
     report: measureFindings(root),
   });
+
   return { current, result };
 }
 
@@ -76,6 +87,7 @@ function prune(current: string, result: Evaluation): number {
       ? 'Nothing to prune.'
       : `Pruned ${result.problems.length} stale rules.`,
   );
+
   return 0;
 }
 
@@ -90,6 +102,7 @@ function run(mode: string | undefined): number {
   assertMode(mode);
   const { current, result } = evaluateTree();
   printSummary(result);
+
   return mode === 'check' ? check(result) : prune(current, result);
 }
 

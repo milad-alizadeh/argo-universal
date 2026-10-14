@@ -18,14 +18,19 @@ import {
   selectedDirectory,
   selectedLaunchDefinition,
 } from './install/selection/selection';
+
 const fixturePackage = 'fixture-install';
+
 let home: string;
+
 beforeEach(async () => {
   home = await mkdtemp(join(tmpdir(), 'install-files-'));
 });
+
 afterEach(async () => {
   await rm(home, { recursive: true, force: true });
 });
+
 const inputFor = (
   recipe: InstallRecipe,
   bytes: Uint8Array = installationExecutable,
@@ -38,6 +43,7 @@ const inputFor = (
   signal: new AbortController().signal,
   ports: { ...createInstallationPorts(), download: async () => bytes },
 });
+
 const binaryRecipe = (
   archive = 'https://example.org/agent',
 ): Extract<InstallRecipe, { kind: 'binary' }> => ({
@@ -47,6 +53,7 @@ const binaryRecipe = (
   args: [],
   env: {},
 });
+
 it.each(['raw', 'zip'])(
   'publishes a verified %s executable from real files',
   async (format) => {
@@ -54,23 +61,28 @@ it.each(['raw', 'zip'])(
       format === 'zip'
         ? zipSync({ agent: installationExecutable })
         : installationExecutable;
+
     const input = inputFor(
       binaryRecipe(
         `https://example.org/agent${format === 'zip' ? '.zip' : ''}`,
       ),
       bytes,
     );
+
     const selection = await materializeAgent(input);
+
     const definition = await selectedLaunchDefinition(
       home,
       input.agentId,
       selection,
     );
+
     expect(await readFile(definition.executable)).toEqual(
       installationExecutable,
     );
   },
 );
+
 it.each(['../outside', '/outside', 'C:\\outside', 'folder/../../outside'])(
   'rejects archive launch path %s without publishing',
   async (cmd) => {
@@ -78,14 +90,17 @@ it.each(['../outside', '/outside', 'C:\\outside', 'folder/../../outside'])(
     await expect(materializeAgent(input)).rejects.toThrow('escapes');
   },
 );
+
 it('rejects a checksum mismatch before publishing any files', async () => {
   const input = inputFor({
     ...binaryRecipe(),
     kind: 'binary',
     sha256: '0'.repeat(64),
   });
+
   await expect(materializeAgent(input)).rejects.toThrow('integrity');
 });
+
 it('rejects ZIP traversal even when the selected launch entry is safe', async () => {
   const input = inputFor(
     binaryRecipe('https://example.org/agent.zip'),
@@ -94,8 +109,10 @@ it('rejects ZIP traversal even when the selected launch entry is safe', async ()
       '../outside': new Uint8Array([1]),
     }),
   );
+
   await expect(materializeAgent(input)).rejects.toThrow('escapes');
 });
+
 it.each(['npx', 'uvx'] as const)(
   'publishes the pinned %s package with a verified executable',
   async (kind) => {
@@ -108,17 +125,21 @@ it.each(['npx', 'uvx'] as const)(
       args: ['--acp'],
       env: {},
     };
+
     const input = inputFor(recipe);
     const selection = await materializeAgent(input);
+
     const definition = await selectedLaunchDefinition(
       home,
       input.agentId,
       selection,
     );
+
     const uvScript =
       process.platform === 'win32'
         ? 'Scripts/fixture-install.exe'
         : 'bin/fixture-install';
+
     expect(definition.executable).toBe(
       kind === 'npx'
         ? process.execPath
@@ -132,6 +153,7 @@ it.each(['npx', 'uvx'] as const)(
     );
   },
 );
+
 it.each(['npx', 'uvx'] as const)(
   'rejects %s installation metadata for a different release',
   async (kind) => {
@@ -144,6 +166,7 @@ it.each(['npx', 'uvx'] as const)(
       args: [],
       env: {},
     };
+
     await expect(materializeAgent(inputFor(recipe))).rejects.toThrow(/release/);
   },
 );

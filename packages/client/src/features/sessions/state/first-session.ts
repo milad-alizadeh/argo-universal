@@ -15,6 +15,8 @@ export function chooseFirstSession(
   chosen: FirstSessionChoice | undefined,
 ): FirstSessionChoice {
   if (chosen === null) return null;
+
   if (isListed(listedIds, chosen)) return chosen;
+
   return firstListed(listedIds);
 }

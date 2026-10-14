@@ -21,8 +21,10 @@ import { symbolWeight } from './symbol-weight';
  * shrinks to `circle`'s size, so wide ones such as the Sessions bubbles keep to the box.
  */
 const referenceSymbol = 'circle';
+
 // Leaves `circle`'s ink at three quarters of the box: 18 points on the rail, 12 beside Body text.
 const referenceShare = 0.88;
+
 // `circle` is this wide in 100-point type, the units of Argo's custom symbol paths.
 const referenceSymbolCustomUnits = 117;
 
@@ -81,8 +83,10 @@ function GlyphDrawing({
   ...props
 }: SymbolGlyphProps): React.JSX.Element {
   const render = useSymbolImageRenderer();
+
   if (render)
     return <AppleSymbolImage render={render} sf={sf} pixels={pixels} />;
+
   return <MaterialGlyph {...props} pixels={pixels} />;
 }
 
@@ -116,6 +120,7 @@ function AppleSymbolImage({
   pixels,
 }: AppleSymbolImageProps): React.JSX.Element {
   if (isCustomSymbol(sf)) return <CustomSymbolImage sf={sf} pixels={pixels} />;
+
   return <MaskedSymbol render={render} sf={sf} pixels={pixels} />;
 }
 
@@ -128,10 +133,12 @@ function CustomSymbolImage({
   pixels,
 }: CustomSymbolImageProps): React.JSX.Element {
   const box = customSymbolBox(sf);
+
   const scale = fitScale(pixels, [
     referenceSymbolCustomUnits,
     ...extentsOf(box),
   ]);
+
   return <SymbolMask url={customSymbolImage(sf)} {...box} scale={scale} />;
 }
 
@@ -144,12 +151,15 @@ interface MaskedSymbolProps extends Pick<SymbolGlyphProps, 'pixels'> {
 function MaskedSymbol(props: MaskedSymbolProps): React.JSX.Element | null {
   const pointSize = Math.round(props.pixels * globalThis.devicePixelRatio);
   const image = useSymbolImage(props.render, { name: props.sf, pointSize });
+
   const reference = useSymbolImage(props.render, {
     name: referenceSymbol,
     pointSize,
   });
+
   if (!image || !reference) return null;
   const scale = fitScale(props.pixels, extentsOf(reference, image));
+
   return <SymbolMask {...image} scale={scale} />;
 }
 
@@ -165,6 +175,7 @@ function maskStyle({
   scale,
 }: SymbolMaskProps): CSSProperties {
   const mask = `url("${url}") center / 100% 100% no-repeat`;
+
   return {
     ...maskBox,
     width: width * scale,

@@ -6,6 +6,7 @@ import { StandaloneFieldInput } from './standalone-field-input';
 const meta = {
   title: 'Design System/Primitives/StandaloneFieldInput',
 } satisfies Meta;
+
 export default meta;
 
 export const Variations: StoryObj<typeof meta> = {
@@ -20,6 +21,7 @@ function EditableField({
   initial: string;
 }): ReactElement {
   const [value, setValue] = useState(initial);
+
   return <StandaloneFieldInput {...props} value={value} onChange={setValue} />;
 }
 

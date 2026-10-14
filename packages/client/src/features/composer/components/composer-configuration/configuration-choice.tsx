@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { ListItem } from '#primitives/lists/list-item/list-item';
+
 interface ChoiceProps {
   selected: boolean;
   label: string;
@@ -10,9 +11,11 @@ interface ChoiceProps {
   leading?: React.ReactElement;
   accessibilityLabel?: string;
 }
+
 export function ConfigurationChoice(props: ChoiceProps): React.JSX.Element {
   return <ListItem {...choiceRowProps(props)} />;
 }
+
 function choiceRowProps(
   props: ChoiceProps,
 ): React.ComponentProps<typeof ListItem> {
@@ -27,6 +30,7 @@ function choiceRowProps(
     accessory: props.selected ? <SelectedCheck /> : undefined,
   };
 }
+
 function choiceContent(
   props: ChoiceProps,
 ): React.ComponentProps<typeof ListItem> {

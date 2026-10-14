@@ -5,12 +5,16 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { type LayoutChangeEvent, Platform, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+
 type ChildrenProps = { children: React.ReactNode };
+
 export function HostedRow({ children }: ChildrenProps): React.JSX.Element {
   const minimumHeight = useResolveClassNames('h-11').height;
+
   const [height, setHeight] = useState(
     typeof minimumHeight === 'number' ? minimumHeight : undefined,
   );
+
   return (
     <Row style={{ height }} modifiers={rowModifiers(height)}>
       <MeasuredRow onHeight={setHeight}>{children}</MeasuredRow>

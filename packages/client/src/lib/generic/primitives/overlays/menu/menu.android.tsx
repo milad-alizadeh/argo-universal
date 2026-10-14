@@ -11,6 +11,7 @@ export function Menu<Value extends string>(
   props: MenuProps<Value>,
 ): React.JSX.Element {
   const { open, setOpen, choose } = useMenuState(props);
+
   return (
     <Host matchContents>
       <MenuPopup expanded={open} onDismissRequest={() => setOpen(false)}>
@@ -23,19 +24,24 @@ export function Menu<Value extends string>(
   );
 }
 
-function useMenuState<Value extends string>(
-  props: MenuProps<Value>,
-): {
+interface MenuState<Value extends string> {
   open: boolean;
   setOpen: (open: boolean) => void;
   choose: (value: Value) => void;
-} {
+}
+
+function useMenuState<Value extends string>(
+  props: MenuProps<Value>,
+): MenuState<Value> {
   const [open, setOpen] = useState(false);
+
   if (props.disabled && open) setOpen(false);
+
   function choose(value: Value): void {
     setOpen(false);
     props.onValueChange(value);
   }
+
   return { open, setOpen, choose };
 }
 
@@ -59,13 +65,19 @@ function MenuPopup(
   props: Pick<DropdownMenuProps, 'expanded' | 'onDismissRequest' | 'children'>,
 ): React.JSX.Element {
   const popupColor = usePrimitiveColor('text-popover dark:text-neutral-900');
+
   return <DropdownMenu {...props} color={popupColor} />;
+}
+
+interface ChoiceState {
+  selected: boolean;
+  onChoose: () => void;
 }
 
 function choiceState<Value extends string>(
   props: MenuProps<Value> & { onChoose: (value: Value) => void },
   value: Value,
-): { selected: boolean; onChoose: () => void } {
+): ChoiceState {
   return {
     selected: value === props.value,
     onChoose: () => props.onChoose(value),

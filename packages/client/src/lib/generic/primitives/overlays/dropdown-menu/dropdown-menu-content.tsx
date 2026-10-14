@@ -17,8 +17,10 @@ type ContentProps = React.ComponentProps<
   overlayClassName?: string;
   portalHost?: string;
 };
+
 const FullWindowOverlay =
   Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
+
 const entering = FadeIn.reduceMotion(ReduceMotion.System);
 
 function ContentBody({
@@ -62,6 +64,7 @@ function AnimatedContentOverlay(
 ): React.JSX.Element {
   const { overlayClassName, overlayStyle, ...props } = contentProps;
   const overlayProps = contentOverlayProps({ overlayClassName, overlayStyle });
+
   return (
     <DropdownMenuPrimitive.Overlay {...overlayProps}>
       <NativeOnlyAnimatedView entering={entering} as="Pressable">

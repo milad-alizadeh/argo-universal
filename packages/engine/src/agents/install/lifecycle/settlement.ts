@@ -11,6 +11,7 @@ type InstallationInput = Omit<
   InstallExecutionInput,
   'operation' | 'signal' | 'deps'
 > & { deps: InstallBindings };
+
 // The new release is checked once this install releases its setup ownership.
 const executeOwnedInstallation = async (
   input: InstallationInput,
@@ -31,8 +32,10 @@ export const settleAgentInstallation = async (
   checking?: Promise<unknown>,
 ): Promise<AgentInstallOperation> => {
   const timeout = installationDeadline(owned.controller);
+
   try {
     await executeOwnedInstallation(input, owned, checking);
+
     return installedOperation(owned);
   } catch (error) {
     return rememberInstallFailure(owned, error);

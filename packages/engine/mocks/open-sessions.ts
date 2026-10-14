@@ -32,11 +32,14 @@ export const createOpenSessionsModelMachine = (
       ? {
           openSession: assign(({ context, event }): Partial<ModelContext> => {
             assertEvent(event, ['sessions.create', 'sessions.open']);
+
             if (context.sessions[event.sessionId]) return {};
+
             const actor = createActor(session, {
               id: `session:${event.sessionId}`,
               input: createSessionActorInput({ context, event }),
             });
+
             return {
               sessions: { ...context.sessions, [event.sessionId]: actor },
             };

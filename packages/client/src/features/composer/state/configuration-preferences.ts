@@ -8,10 +8,15 @@ import {
 } from './configuration-choices';
 
 export const categories = ['model', 'thought_level', 'mode'] as const;
+
 type Category = (typeof categories)[number];
+
 export type SavedChoices = Partial<Record<Category, string>>;
+
 type SelectOption = Extract<SessionConfigOption, { type: 'select' }>;
+
 export type RememberedOption = SelectOption & { category: Category };
+
 export interface ConfigurationChange {
   configId: string;
   value: string;
@@ -25,14 +30,17 @@ export function isRememberedConfiguration(
     categories.some((category) => category === option.category)
   );
 }
+
 export function orderedOptions(
   options: SessionConfigOption[],
 ): RememberedOption[] {
   const eligible = options.filter(isRememberedConfiguration);
+
   return categories.flatMap((category) =>
     eligible.filter((option) => option.category === category),
   );
 }
+
 function withSavedChoice(
   option: RememberedOption,
   saved: SavedChoices,
@@ -43,8 +51,10 @@ function withSavedChoice(
     option.currentValue,
     firstChoice(offered),
   ].find((candidate) => offered.some((choice) => choice.value === candidate));
+
   return value === undefined ? undefined : { ...option, currentValue: value };
 }
+
 // The model, effort and mode a new Session starts with: each saved choice the Session still offers, else its default, else its first offered value.
 export function draftConfiguration(
   options: SessionConfigOption[],
@@ -53,6 +63,7 @@ export function draftConfiguration(
   const defaults = orderedOptions(options);
   const defaultModel = defaults.find((option) => option.category === 'model');
   const model = savedModel(defaultModel, saved);
+
   return defaults.flatMap(
     (option) =>
       withSavedChoice(option, saved, offeredChoices(option, model)) ?? [],
@@ -65,9 +76,11 @@ function savedModel(
 ): RememberedOption | undefined {
   return model && withSavedChoice(model, saved);
 }
+
 function firstChoice(choices: SessionConfigSelectOption[]): string | undefined {
   return choices[0]?.value;
 }
+
 function offeredChoices(
   option: RememberedOption,
   model: RememberedOption | undefined,
@@ -76,6 +89,7 @@ function offeredChoices(
     ? configurationEffortChoices(model, option)
     : configurationChoices(option);
 }
+
 // The next saved choice to apply to a Session, model before effort before mode; each option is applied at most once.
 export function nextRememberedChange(
   options: SessionConfigOption[],
@@ -83,11 +97,13 @@ export function nextRememberedChange(
   applied: readonly string[],
 ): ConfigurationChange | undefined {
   const current = orderedOptions(options);
+
   return draftConfiguration(options, saved)
     .filter(({ configId }) => !applied.includes(configId))
     .map(({ configId, currentValue }) => ({ configId, value: currentValue }))
     .find((change) => differsFromSession(current, change));
 }
+
 function differsFromSession(
   current: RememberedOption[],
   { configId, value }: ConfigurationChange,

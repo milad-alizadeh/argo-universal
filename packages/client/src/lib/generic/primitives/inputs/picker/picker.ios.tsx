@@ -6,8 +6,10 @@ import type { PickerProps } from './picker-props';
 import { PickerSearchList } from './picker-search-list';
 
 const menuLimit = 7;
+
 type ControlProps<Value extends string> = PickerProps<Value> &
   PickerPresentation;
+
 export const Picker = createNativePicker(PickerControl);
 
 function PickerControl<Value extends string>(
@@ -15,6 +17,7 @@ function PickerControl<Value extends string>(
 ): React.JSX.Element {
   const navigation = useSheetNavigation();
   const onPress = sheetPress(props, navigation);
+
   return (
     <>
       <PickerRow {...props} onPress={onPress} />
@@ -38,6 +41,7 @@ function sheetPress<Value extends string>(
   navigation: ReturnType<typeof useSheetNavigation>,
 ): () => void {
   if (!navigation) return props.onPress;
+
   return (): void =>
     navigation.push({
       title: props.label,

@@ -14,12 +14,15 @@ export type ArgumentsField = {
   pushValue: (value: string) => void;
   removeValue: (index: number) => void;
 };
+
 export type Editing = { index: number | null; value: string };
+
 type SheetProps = {
   form: CustomAgentFormApi;
   editing: Editing;
   onEdit: (editing: Editing | null) => void;
 };
+
 export const newArgument: Editing = { index: null, value: '' };
 
 // The entry validates as the form does: on mount for Save, on change while typing.
@@ -46,7 +49,9 @@ function useArgumentEntry(props: SheetProps): EntrySheetEntry {
     defaultValues: { value: props.editing.value },
     onSubmit: ({ value }) => saveArgument(props, value.value),
   });
+
   const field = useField({ form: entry, name: 'value', validators });
+
   return {
     fields: [entryField(argumentInput, field)],
     onSave: () => void entry.handleSubmit(),
@@ -57,6 +62,7 @@ function useArgumentEntry(props: SheetProps): EntrySheetEntry {
 export function ArgumentSheet(props: SheetProps): React.JSX.Element {
   const { form, editing, onEdit } = props;
   const close = (): void => onEdit(null);
+
   return (
     <EntrySheet
       title="Argument"

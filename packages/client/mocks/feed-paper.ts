@@ -9,12 +9,16 @@ export const embeddedResource = {
 };
 
 const recording = recordedAcpContent('agent-1');
+
 const compaction = recording.rows.find(
   (row) => row.sessionUpdate === 'compaction_update',
 );
+
 const notice = recording.rows.find((row) => row.sessionUpdate === 'notice');
+
 if (!compaction || !notice)
   throw new Error('ACP recording needs Compaction and Notice rows');
+
 export const compactionStates = [
   { ...compaction, status: 'in_progress', summary: undefined },
   {
@@ -30,6 +34,7 @@ export const compactionStates = [
   },
   { ...compaction, status: 'cancelled', summary: undefined },
 ] satisfies CompactionUpdate[];
+
 export const noticeStates = [
   {
     ...notice,

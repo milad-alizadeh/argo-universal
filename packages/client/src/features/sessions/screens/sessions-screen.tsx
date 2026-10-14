@@ -36,6 +36,7 @@ function useSessionListLookups(): SessionListLookups {
   const trpc = useTRPC();
   const projects = useQuery(trpc.projects.list.queryOptions());
   const agents = useQuery(trpc.agents.list.queryOptions());
+
   return {
     projects: projects.data ?? [],
     agents: agents.data ?? [],
@@ -46,6 +47,7 @@ function useSessionListLookups(): SessionListLookups {
 function useLiveUpdatesStatus(): Pick<SessionsViewProps, 'liveUpdatesStopped'> {
   const listUpdates = useSessionListUpdates();
   const connection = useConnectionState();
+
   return {
     liveUpdatesStopped: liveUpdatesStopped(listUpdates.status, connection),
   };
@@ -56,6 +58,7 @@ function useSessionsNavigation(): Pick<
   'onSelect' | 'onNewSession' | 'onNewSessionInProject' | 'onProjectSettings'
 > {
   const navigate = useNavigate();
+
   return {
     onSelect: (id) => navigate({ to: 'session', id }),
     onNewSession: () => navigate({ to: 'new-session' }),
@@ -68,6 +71,7 @@ function useSessionsNavigation(): Pick<
 function useSessionsViewProps(props: SessionsScreenProps): SessionsViewProps {
   const { progress: lookupProgress, ...lookups } = useSessionListLookups();
   const { progress: pageProgress, ...pages } = useSessionPages(props);
+
   return {
     ...props,
     ...lookups,

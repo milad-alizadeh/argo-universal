@@ -30,6 +30,7 @@ function MenuLabel<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
   const row = useInListItem() || props.appearance === 'row';
+
   return (
     <HStack modifiers={row ? [] : [padding({ horizontal: 16, vertical: 12 })]}>
       <PickerRowContent {...props} />
@@ -63,6 +64,7 @@ function selectMenuChoice<Value extends string>(
   next: string,
 ): void {
   const value = selectedMenuValue(next);
+
   if (value !== undefined) choosePickerOption(props, value);
   props.onBlur?.();
 }
@@ -71,6 +73,7 @@ function menuSelection<Value extends string>(
   props: PickerProps<Value>,
 ): string {
   const option = pickerOption(props);
+
   return option ? menuTag(option.value) : 'placeholder';
 }
 
@@ -100,6 +103,7 @@ function PickerRowContent<Value extends string>(
 ): React.JSX.Element {
   const inListItem = useInListItem();
   const row = inListItem || props.appearance === 'row';
+
   return createElement(
     Fragment,
     {},

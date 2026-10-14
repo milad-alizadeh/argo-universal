@@ -27,6 +27,7 @@ const RequestState = z.strictObject({
   rows: z.array(SessionUpdate),
   snapshot: SessionSnapshot,
 });
+
 export const RequestMock = z.strictObject({
   agent: z.string(),
   recording: z.string(),
@@ -34,6 +35,7 @@ export const RequestMock = z.strictObject({
   answered: RequestState,
   answer: RequestAnswer,
 });
+
 export type RequestMock = z.infer<typeof RequestMock>;
 
 export const recordedRequestMocks = z.array(RequestMock).parse(recordings);

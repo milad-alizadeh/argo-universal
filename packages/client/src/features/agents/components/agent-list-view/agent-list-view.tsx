@@ -33,6 +33,7 @@ export type AgentListViewProps = {
   initialSearch?: string;
   initialFilter?: AgentsFilter;
 };
+
 type ListProps = AgentListViewProps & AgentsFilterProps & AgentsSearchProps;
 
 function useListState(
@@ -40,6 +41,7 @@ function useListState(
 ): AgentsFilterProps & AgentsSearchProps {
   const [search, onSearch] = useState(props.initialSearch ?? '');
   const [filter, onFilter] = useState(props.initialFilter ?? 'all');
+
   return {
     search,
     onSearch,
@@ -62,6 +64,7 @@ const listedAgents = ({
 export function AgentListView(props: AgentListViewProps): React.JSX.Element {
   const list: ListProps = { ...props, ...useListState(props) };
   useCatalogErrorToast(props.catalog);
+
   return (
     <View className="flex-1 min-h-0 bg-sidebar wide:bg-transparent">
       <AgentsPhoneHeader {...list} />

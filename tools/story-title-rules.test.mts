@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { storyTitleProblems } from './story-title-rules.mts';
 
 const src = 'packages/client/src';
+
 const meta = (title: string): string =>
   `const meta = {\n  title: '${title}',\n} satisfies Meta;`;
 

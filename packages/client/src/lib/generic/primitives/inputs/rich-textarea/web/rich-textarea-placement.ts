@@ -10,6 +10,7 @@ export interface FieldPlacement {
 
 export function selectedRect(): DOMRect | undefined {
   const selection = window.getSelection();
+
   return selection?.rangeCount
     ? selection.getRangeAt(0).getBoundingClientRect()
     : undefined;
@@ -20,8 +21,10 @@ export function placementInField(
   rect: DOMRect,
 ): FieldPlacement | undefined {
   const field = editor.getRootElement()?.getBoundingClientRect();
+
   if (!field) return undefined;
   const { width, height } = rect;
+
   return {
     left: rect.left - field.left,
     top: rect.top - field.top,

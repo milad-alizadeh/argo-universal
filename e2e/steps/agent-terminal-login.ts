@@ -4,6 +4,7 @@ import { browseAgents } from './agent-catalog';
 import { awaitEmptySessionClosed, openedEmptySession } from './empty-session';
 import { Given, When, Then, test } from './fixtures';
 import { mutate } from './server-query';
+
 Given(
   'a saved terminal sign-in Agent {string}',
   async ({ page, server, app }, name: string): Promise<void> => {
@@ -16,21 +17,25 @@ Given(
     });
     await browseAgents(page);
     await page.getByRole('link', { name: new RegExp(`^${name},`) }).click();
+
     // Sign-in is refused while a live Session shares the account.
     if (opened) await awaitEmptySessionClosed(app.requestLogPath);
   },
 );
+
 When('I choose terminal sign-in', async ({ page }): Promise<void> => {
   await page
     .getByRole('button', { name: 'Terminal sign-in', exact: true })
     .click();
 });
+
 Then(
   'the App shows an interactive sign-in terminal',
   async ({ page }): Promise<void> => {
     const terminal = page.getByRole('region', {
       name: 'Agent sign-in terminal',
     });
+
     await expect(terminal).toBeVisible();
     await expect(terminal.getByRole('textbox')).toBeVisible();
     await expect(
@@ -43,6 +48,7 @@ Then(
     });
   },
 );
+
 When(
   'I press Return in the sign-in terminal',
   async ({ page }): Promise<void> => {

@@ -7,6 +7,8 @@ export function SheetWidth(props: {
   children: React.ReactElement;
 }): React.JSX.Element {
   const { width } = useWindowDimensions();
+
   if (!props.fit) return props.children;
+
   return <View style={{ width }}>{props.children}</View>;
 }

@@ -16,10 +16,13 @@ import {
 import { eachLayout } from '../../../../lib/generic/each-layout';
 
 const retry = { name: 'Retry' };
+
 const loadFailure = "Couldn't load Sessions";
+
 const loadMoreFailure = "Couldn't load more Sessions";
 
 const meta = { ...sessionsViewMeta, title: 'Tests/SessionsView' };
+
 export default meta;
 
 export const LoadingKeepsNewSession: Story = {
@@ -55,6 +58,7 @@ export const LiveUpdatesStoppedShowsAToast: Story = {
   args: { liveUpdatesStopped: true },
   play: async ({ canvas }) => {
     const first = activeSessions.sessions[0];
+
     if (!first) throw new Error('Missing Session mock');
     await expect(await findToast('Live updates stopped')).toBeVisible();
     await expect((await canvas.findAllByText(first.title))[0]).toBeVisible();
@@ -89,6 +93,7 @@ export const NextPageFailureKeepsRows: Story = {
   args: { loadMoreFailed: true },
   play: async ({ canvas }) => {
     const first = activeSessions.sessions[0];
+
     if (!first) throw new Error('Missing Session mock');
     await expect(await findToast(loadMoreFailure)).toBeVisible();
     await expect((await canvas.findAllByText(first.title))[0]).toBeVisible();
@@ -101,8 +106,13 @@ export const NextPageFailureKeepsRows: Story = {
 export const NavigationCallbacks = navigationCallbacks;
 
 export const MatchingSearchPhone = matchingSearch(390);
+
 export const MatchingSearchWide = matchingSearch(1440);
+
 export const NoMatchingSearchPhone = noMatchingSearch(390);
+
 export const NoMatchingSearchWide = noMatchingSearch(1440);
+
 export const ClosingSearchPhone = closingSearch(390);
+
 export const ClosingSearchWide = closingSearch(1440);

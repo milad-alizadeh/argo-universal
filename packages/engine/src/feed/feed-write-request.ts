@@ -8,11 +8,14 @@ export type WriterJobParameters = Pick<
   Extract<WriterEvent, { type: 'writer.write' }>,
   'job' | 'committed' | 'refused'
 >;
+
 const changedRows = (context: FeedContext): SessionUpdate[] =>
   context.changedRowIds.flatMap((id) => {
     const row = context.rows[id];
+
     return row ? [row] : [];
   });
+
 // Every changed row with the newest revision, as one job for the database writer.
 export const createRowsWriteRequest = ({
   context,
@@ -22,12 +25,14 @@ export const createRowsWriteRequest = ({
   event: FeedEvent | FeedInternalEvent;
 }): WriterJobParameters => {
   const rows = changedRows(context);
+
   return {
     committed: 'committed' in event ? event.committed : undefined,
     refused: context.storageFailing,
     job: createRowsJob(context, rows),
   };
 };
+
 const createRowsJob = (
   context: FeedContext,
   rows: SessionUpdate[],

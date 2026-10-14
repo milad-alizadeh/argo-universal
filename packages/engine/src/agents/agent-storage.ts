@@ -12,25 +12,31 @@ export type AgentCatalogWriteRow = Pick<
   | 'catalogSyncedAt'
   | 'catalogSearchText'
 >;
+
 type SyncKey = { source: string; scope: string };
+
 type CatalogReplacement = SyncKey & {
   rows: readonly AgentCatalogWriteRow[];
   syncedAt: number;
   rejectedValues: number;
 };
+
 type SyncJobChange = SyncKey & {
   set: Pick<typeof syncJobs.$inferInsert, 'status'> &
     Partial<Omit<typeof syncJobs.$inferInsert, 'source' | 'scope'>>;
 };
+
 type AgentConfiguration = Pick<
   typeof agents.$inferInsert,
   'id' | 'configuration' | 'enabled'
 >;
+
 // A check's saved result; null clears it, so the Agent shows Checking… again.
 export type SavedReadiness = Pick<
   typeof agents.$inferInsert,
   'readinessStatus' | 'readinessReason' | 'readinessCheckedAt'
 >;
+
 export const pendingReadiness: SavedReadiness = {
   readinessStatus: null,
   readinessReason: null,
@@ -75,6 +81,7 @@ export class AgentCatalogReplaceJob implements WriterJob {
       })
       .where(eq(agents.catalogPresent, true))
       .run();
+
     for (const row of this.replacement.rows)
       upsertAgentCatalogRow(transaction, row);
     this.completeSyncJob(transaction);

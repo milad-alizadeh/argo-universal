@@ -7,7 +7,9 @@ const meta = {
   component: IssueIndicator,
   args: { number: 96 },
 } satisfies Meta<typeof IssueIndicator>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {

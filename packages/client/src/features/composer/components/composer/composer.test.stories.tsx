@@ -18,16 +18,23 @@ import {
   wideBreakpoint,
 } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
+
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+
 export default meta;
+
 export const MultilineWebAtPhoneWidth = multiline(layoutWidths.phone);
+
 export const MultilineWide = multiline(layoutWidths.wide);
+
 export const EditorScrollsAfterTenLinesPhone = editorScrollsAfterTenLines(
   layoutWidths.phone,
 );
+
 export const EditorScrollsAfterTenLinesWide = editorScrollsAfterTenLines(
   layoutWidths.wide,
 );
+
 export const Empty: Story = {
   play: async ({ canvas }) => {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
@@ -50,19 +57,25 @@ export const Empty: Story = {
       await expect(canvas.queryAllByTestId(agentIconId)).toHaveLength(
         width < wideBreakpoint() ? 0 : 1,
       );
+
       const model = canvas
         .getByRole('button', { name: agentModelLabel })
         .getBoundingClientRect();
+
       const mode = canvas
         .getByRole('button', { name: 'Mode' })
         .getBoundingClientRect();
+
       await expect(model.right).toBeLessThanOrEqual(mode.left);
       await expectAgentTextFits(canvas);
     }
   },
 };
+
 export const TypingWebAtPhoneWidth = typing(layoutWidths.phone);
+
 export const TypingWide = typing(layoutWidths.wide);
+
 export const ReturnSends: Story = {
   render: () => <SendingComposer onSend={returnPrompt} />,
   play: async ({ canvas }) => {

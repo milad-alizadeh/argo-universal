@@ -58,6 +58,7 @@ export function usePermissionAnswers(
   const { chosen, send } = useSend(props);
   const inactive = props.state.kind !== 'open';
   const denial = props.feedback ? picks.choices.reject[0] : undefined;
+
   return {
     ...picks,
     denial,
@@ -73,27 +74,32 @@ function usePickedLeads(request: PendingPermission): PickedLeads {
   const pickedIds = picked?.requestId === request.requestId ? picked.ids : [];
   const choices = permissionChoices(request.options);
   const leads = groupLeads(choices, pickedIds);
+
   const pick = (option: PermissionOption): void =>
     setPicked({
       requestId: request.requestId,
       ids: repick(choices, pickedIds, option),
     });
+
   return { choices, leads, pick, main: mainOption(leads) };
 }
 
+type Sending = { chosen: string | undefined; send: Send };
+
 // The option sent for this request, so its button reads Sending….
-function useSend({ request, state, onAnswer }: PermissionAnswersInput): {
-  chosen: string | undefined;
-  send: Send;
-} {
+function useSend(input: PermissionAnswersInput): Sending {
+  const { request, state, onAnswer } = input;
   const [sent, setSent] = useState<{ requestId: string; optionId: string }>();
+
   const send = (answer: PermissionAnswer): void => {
     if (state.kind !== 'open') return;
     setSent({ requestId: request.requestId, optionId: answer.optionId });
     onAnswer(answer);
   };
+
   const chosen =
     sent?.requestId === request.requestId ? sent.optionId : undefined;
+
   return { chosen, send };
 }
 
@@ -106,6 +112,7 @@ function denialFlow(input: DenialFlowInput): DenialFlow {
   const { denial, main } = input;
   const denying = denial !== undefined && input.denialMessage !== undefined;
   const { choose, deny, back } = denialCommands(input);
+
   return {
     denying,
     choose,
@@ -119,6 +126,7 @@ function denialFlow(input: DenialFlowInput): DenialFlow {
 // Choosing the denial opens the message field; Back closes it.
 function denialCommands(input: DenialFlowInput): DenialCommands {
   const { denial, send, onDenialMessageChange: setDenialMessage } = input;
+
   return {
     choose: (option) => {
       if (option === denial && !input.inactive) setDenialMessage('');
@@ -137,7 +145,11 @@ function denialAnswer(
   denialMessage: string | undefined,
 ): PermissionAnswer {
   const message = denialMessage?.trim();
-  return { optionId: denial.optionId, ...(message ? { message } : {}) };
+  const answer: PermissionAnswer = { optionId: denial.optionId };
+
+  if (message) answer.message = message;
+
+  return answer;
 }
 
 const sendingLabel =
@@ -154,9 +166,11 @@ function repick(
   option: PermissionOption,
 ): string[] {
   const group = choices.allow.includes(option) ? choices.allow : choices.reject;
+
   const others = pickedIds.filter(
     (id) => !group.some(({ optionId }) => optionId === id),
   );
+
   return [...others, option.optionId];
 }
 
@@ -164,12 +178,15 @@ function repick(
 function groupLeads(choices: PermissionChoices, pickedIds: string[]): Leads {
   const lead = (options: PermissionOption[]): PermissionOption | undefined =>
     options.find(({ optionId }) => pickedIds.includes(optionId)) ?? options[0];
+
   return { allow: lead(choices.allow), reject: lead(choices.reject) };
 }
 
 // The option Enter chooses: the allow group's lead when the Agent offers one.
 function mainOption({ allow, reject }: Leads): PermissionOption {
   const main = allow ?? reject;
+
   if (!main) throw new Error('A Permission request offers at least one option');
+
   return main;
 }

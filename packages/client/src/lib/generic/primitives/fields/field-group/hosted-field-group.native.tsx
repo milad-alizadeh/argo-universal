@@ -12,7 +12,9 @@ import { Host } from '../../native/host';
 import { HostedRow } from './field-group-row';
 
 const groupedFormTopInset = 35;
+
 type ChildrenProps = { children: React.ReactNode };
+
 type FieldSectionProps = ChildrenProps & {
   background: ReturnType<typeof useResolveClassNames>['backgroundColor'];
   sectionKey: React.Key | null;
@@ -22,6 +24,7 @@ function Group({
   children,
 }: React.ComponentProps<typeof View>): React.JSX.Element {
   const { height } = useWindowDimensions();
+
   return (
     <Host {...fieldHostProps(height)}>
       <FieldSections>{children}</FieldSections>
@@ -36,6 +39,7 @@ function fieldHostProps(height: number): React.ComponentProps<typeof Host> {
       useViewportSizeMeasurement: true,
       style: { width: '100%' },
     };
+
   return {
     matchContents: false,
     useViewportSizeMeasurement: false,
@@ -45,6 +49,7 @@ function fieldHostProps(height: number): React.ComponentProps<typeof Host> {
 
 function FieldSections({ children }: ChildrenProps): React.JSX.Element {
   const sections = useSections(children);
+
   return (
     <NativeFieldGroup
       style={{ backgroundColor: 'transparent' }}
@@ -57,6 +62,7 @@ function FieldSections({ children }: ChildrenProps): React.JSX.Element {
 
 function useSections(children: React.ReactNode): React.JSX.Element[] {
   const background = useResolveClassNames('bg-card/50').backgroundColor;
+
   return Children.toArray(children)
     .filter(isValidElement<React.ComponentProps<typeof View>>)
     .map((section) =>
@@ -70,6 +76,7 @@ function useSections(children: React.ReactNode): React.JSX.Element[] {
 
 function fieldSection(props: FieldSectionProps): React.JSX.Element {
   const { background, children, sectionKey } = props;
+
   return (
     <NativeFieldGroup.Section
       key={sectionKey}
@@ -102,4 +109,5 @@ function sectionModifiers(
 }
 
 const FieldGroup = Object.assign(Group, { Section: View });
+
 export { FieldGroup };

@@ -53,9 +53,11 @@ function ServerRows({ server }: { server: ServerDetails }): React.JSX.Element {
         }
       : undefined,
   );
+
   if (server.status !== 'loaded') {
     return <ListItem title="Connecting to the Server…" loading />;
   }
+
   return <LoadedRows server={server} />;
 }
 

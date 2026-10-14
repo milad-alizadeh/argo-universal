@@ -12,10 +12,13 @@ import {
   type WrittenPlanTriggerProps,
 } from './written-plan-trigger';
 import type { WrittenPlanProps, WrittenPlanValue } from './written-plan-types';
+
 export type { WrittenPlanValue } from './written-plan-types';
+
 interface PlanPresentation extends WrittenPlanTriggerProps {
   plan: WrittenPlanValue;
 }
+
 export function WrittenPlan({
   plan,
   composerId,
@@ -28,12 +31,16 @@ export function WrittenPlan({
     onCollapse: () => setOpen(false),
   });
   const props = { plan, wide, open, setOpen, title: writtenPlanTitle(plan) };
+
   return wide ? <PlanTray {...props} /> : <PlanSheet {...props} />;
 }
+
 function writtenPlanTitle(plan: WrittenPlanValue): string {
   if (plan.type === 'file') return resourceName(plan.uri);
+
   return markdownTitle(plan.content);
 }
+
 function PlanTray(props: PlanPresentation): React.JSX.Element {
   return (
     <View>
@@ -48,6 +55,7 @@ function PlanTray(props: PlanPresentation): React.JSX.Element {
     </View>
   );
 }
+
 function PlanSheet(props: PlanPresentation): React.JSX.Element {
   return (
     <BottomSheet {...planSheetProps(props)}>
@@ -59,6 +67,7 @@ function PlanSheet(props: PlanPresentation): React.JSX.Element {
     </BottomSheet>
   );
 }
+
 function markdownTitle(content: string): string {
   return (
     lexer(content).find(
@@ -66,6 +75,7 @@ function markdownTitle(content: string): string {
     )?.text ?? 'Written plan'
   );
 }
+
 function planSheetProps(
   props: PlanPresentation,
 ): Pick<

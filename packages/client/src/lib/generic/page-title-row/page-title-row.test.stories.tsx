@@ -3,8 +3,11 @@ import { expect, fn } from 'storybook/test';
 import { PageTitleRow } from './page-title-row';
 
 const meta = { title: 'Tests/PageTitleRow' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 const onBack = fn();
 
 export const PageHeading: Story = {

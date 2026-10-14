@@ -11,11 +11,14 @@ import { type HistoryWindow, needsOlderHistory } from '../view/feed-history';
 import { handOverGraceMs } from './held-feed';
 
 type HistoryCursor = Pick<FeedPageInput, 'direction' | 'cursor' | 'epoch'>;
+
 type FeedHistory = Pick<
   UseInfiniteQueryResult<InfiniteData<FeedPageOutput>>,
   'data' | 'error' | 'refetch' | 'isFetchNextPageError' | 'isFetchingNextPage'
 > & { loadOlder: () => Promise<void>; resetHistory: () => Promise<void> };
+
 const initialPageParam: HistoryCursor = { direction: 'tail' };
+
 const pageSize = 150;
 
 const olderCursor = (page: FeedPageOutput): HistoryCursor | undefined =>
@@ -30,10 +33,12 @@ export function useFeedHistory(
   const trpc = useTRPC();
   const client = useTRPCClient();
   const queryClient = useQueryClient();
+
   const queryKey = trpc.feed.page.infiniteQueryKey({
     sessionId,
     limit: pageSize,
   });
+
   const history = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam, signal }) =>
@@ -46,11 +51,14 @@ export function useFeedHistory(
     staleTime: Infinity,
     gcTime: handOverGraceMs,
   });
+
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = history;
+
   const loadOlder = useCallback(async (): Promise<void> => {
     if (!hasNextPage || isFetchingNextPage) return;
     const window = { epoch, startCursor };
     let result = await fetchNextPage();
+
     while (
       result.isSuccess &&
       result.hasNextPage &&
@@ -59,6 +67,7 @@ export function useFeedHistory(
       result = await fetchNextPage({ cancelRefetch: false });
     }
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, epoch, startCursor]);
+
   const resetHistory = useCallback(
     (): Promise<void> =>
       queryClient.resetQueries({
@@ -70,5 +79,6 @@ export function useFeedHistory(
       }),
     [queryClient, trpc, sessionId],
   );
+
   return { ...history, loadOlder, resetHistory };
 }

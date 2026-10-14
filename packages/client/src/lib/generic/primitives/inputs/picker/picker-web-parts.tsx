@@ -13,6 +13,7 @@ import { pickerOptionsMessage, pickerValue } from './picker-selection';
 
 type TriggerProps<Value extends string> = PickerProps<Value> &
   PickerField & { row: boolean };
+
 type TriggerAttributes = React.ComponentProps<typeof SelectTrigger> & {
   'aria-invalid': boolean;
   'aria-describedby'?: string;
@@ -53,6 +54,7 @@ export function PickerContent<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
   const message = pickerOptionsMessage(props);
+
   return createElement(
     SelectContent,
     {},
@@ -93,5 +95,6 @@ function PickerOptions<Value extends string>(
 
 function WebOption(props: { option: PickerOption<string> }): React.JSX.Element {
   const { value, label, disabled } = props.option;
+
   return <SelectItem value={value} label={label} disabled={disabled} />;
 }

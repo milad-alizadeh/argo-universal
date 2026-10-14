@@ -16,6 +16,7 @@ export type ContentProps = {
   onCloseAutoFocus?: (event: Event) => void;
   children: React.ReactNode;
 };
+
 const contentClassName = cn(
   'bg-background web:bg-popover border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-2xl border p-6 min-w-[360px] sm:max-w-lg',
   Platform.select({
@@ -23,6 +24,7 @@ const contentClassName = cn(
     native: 'shadow-lg shadow-black/5',
   }),
 );
+
 const closeClassName = cn(
   'absolute right-4 top-4 rounded opacity-70 active:opacity-100',
   Platform.select({

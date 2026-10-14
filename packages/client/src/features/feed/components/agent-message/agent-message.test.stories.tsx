@@ -15,6 +15,7 @@ import {
 import { AgentMessage } from './agent-message';
 
 const markdownAnswerId = 'markdown-answer';
+
 const streamingCaretId = 'streaming-caret';
 
 const meta = {
@@ -31,7 +32,9 @@ const meta = {
   ],
   args: { row: recordedAgentMessage('agent-1', markdownAnswerId) },
 } satisfies Meta<typeof AgentMessage>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const widths = [layoutWidths.phone, layoutWidths.wide];
@@ -44,9 +47,11 @@ function markdownPlay(heading: string, firstHeader: string) {
   }): Promise<void> => {
     for (const width of widths) {
       await settleViewport(width);
+
       for (const text of [heading, 'feed.rows', '1.', 'tsx', firstHeader]) {
         await expect(canvas.getAllByText(text)[0]).toBeVisible();
       }
+
       await expect(
         canvas.getByRole('link', { name: 'ADR 0007' }),
       ).toBeVisible();
@@ -99,10 +104,12 @@ function copyCode(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
       const copied: string[] = [];
+
       const clipboard = spyOn(
         navigator.clipboard,
         'writeText',
       ).mockImplementation(async (text: string) => void copied.push(text));
+
       try {
         await settleViewport(width);
         const copy = canvas.getByRole('button', { name: 'Copy code' });
@@ -128,12 +135,16 @@ function copyCode(width: number): Story {
     },
   };
 }
+
 export const CopyCodePhone = copyCode(layoutWidths.phone);
+
 export const CopyCodeWide = copyCode(layoutWidths.wide);
 
 function horizontalScroller(element: HTMLElement | null): HTMLElement {
   if (!element) throw new Error('Expected the table to scroll');
+
   if (getComputedStyle(element).overflowX === 'auto') return element;
+
   return horizontalScroller(element.parentElement);
 }
 
@@ -142,9 +153,11 @@ export const TableScrollsSideways: Story = {
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleViewport(width);
+
       const scroller = horizontalScroller(
         canvas.getByText('Property').parentElement,
       );
+
       const overflows = scroller.scrollWidth > scroller.clientWidth;
       await expect(overflows).toBe(width < wideBreakpoint());
     }

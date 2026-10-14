@@ -1,19 +1,24 @@
 import type { ClientContext } from '@agentclientprotocol/sdk';
+import { z } from 'zod';
 
 // ACP's auth_required error code.
 const authRequiredCode = -32000;
 
-export const isAuthRequired = (error: unknown): boolean =>
-  Reflect.get(Object(error), 'code') === authRequiredCode;
+const authRequiredError = z.object({ code: z.literal(authRequiredCode) });
+
+export const isAuthRequired = (cause: unknown): boolean =>
+  authRequiredError.safeParse(cause).success;
+
+type AgentRequest = ClientContext['request'];
 
 const observedRequest =
-  (agent: ClientContext, report: () => void) =>
-  async (...args: Parameters<ClientContext['request']>): Promise<unknown> => {
+  (request: AgentRequest, report: () => void) =>
+  async (...args: Parameters<AgentRequest>): ReturnType<AgentRequest> => {
     try {
-      return await agent.request(...args);
-    } catch (error) {
-      if (isAuthRequired(error)) report();
-      throw error;
+      return await request(...args);
+    } catch (cause) {
+      if (isAuthRequired(cause)) report();
+      throw cause;
     }
   };
 
@@ -21,13 +26,7 @@ const observedRequest =
 export const observeSignInRequired = (
   agent: ClientContext,
   report: () => void,
-): ClientContext => {
-  const request = observedRequest(agent, report);
-  return new Proxy(agent, {
-    get: (target, key) => {
-      if (key === 'request') return request;
-      const value: unknown = Reflect.get(target, key, target);
-      return typeof value === 'function' ? value.bind(target) : value;
-    },
+): ClientContext =>
+  Object.assign(agent, {
+    request: observedRequest(agent.request.bind(agent), report),
   });
-};

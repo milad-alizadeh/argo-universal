@@ -33,5 +33,6 @@ export function useIconBox(
   role: IconRole,
 ): Pick<ViewStyle, 'width' | 'height'> {
   const pixels = useIconPixels(role);
+
   return { width: pixels, height: pixels };
 }

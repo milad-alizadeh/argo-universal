@@ -17,6 +17,7 @@ import { StatusDot } from './status-dot';
 
 export function ListItemBody(props: ListItemProps): React.JSX.Element {
   if (!props.detail) return <ListItemContent {...props} />;
+
   return (
     <View className="flex-1">
       <View className="min-h-13 wide:min-h-11 flex-row items-center px-4 py-3">
@@ -30,6 +31,7 @@ export function ListItemBody(props: ListItemProps): React.JSX.Element {
 function ListItemContent(props: ListItemProps): React.JSX.Element {
   const sidebar = useSidebarFields();
   const emphasis = rowEmphasis(props, sidebar);
+
   // The row's name already carries its text; only an accessory, such as a picker, stays reachable.
   return (
     <View className={contentClasses(props, sidebar)}>
@@ -66,7 +68,9 @@ function ListItemTitle(props: ListItemProps): React.JSX.Element {
       {props.title}
     </Text>
   );
+
   if (!props.subtitle) return title;
+
   return (
     <View className="min-w-0 flex-1">
       {title}
@@ -94,6 +98,7 @@ type TrailingProps = ListItemProps & { emphasis: string };
 function ListItemTrailing(props: TrailingProps): React.JSX.Element {
   const sidebar = useSidebarFields();
   const valueColor = sidebar ? props.emphasis : 'text-muted-foreground';
+
   return (
     <View className="max-w-[55%] flex-row items-center gap-2 wide:gap-3">
       {props.valueLeading}
@@ -113,6 +118,7 @@ function RowValue({
   className: string;
 }): React.JSX.Element | null {
   if (value === undefined) return null;
+
   return (
     <Text aria-hidden role="body" className={cn('shrink', className)}>
       {value}

@@ -10,14 +10,18 @@ import {
 } from './agent-detail.mocks';
 
 const version = readyAgent.version;
+
 if (!version) throw new Error('Agent fixture needs a version');
+
 const meta = {
   title: 'Tests/Screens/Settings/Agent installation notices',
   component: AgentDetailView,
   args: { ...agentDetailArgs(), agent: registryAgent },
   parameters: { screenPreview: true },
 } satisfies Meta<typeof AgentDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ToastsTheInstalledRelease: Story = {
@@ -63,6 +67,7 @@ export const ToastsTheUpdateItRan: Story = {
 };
 
 const failure = 'Node.js is required on the Server';
+
 const failed = (action: 'Install' | 'Update'): Story => ({
   args: {
     agent:
@@ -80,5 +85,7 @@ const failed = (action: 'Install' | 'Update'): Story => ({
     ).not.toHaveAttribute('aria-disabled', 'true');
   },
 });
+
 export const ToastsTheFailureAndOffersInstallAgain = failed('Install');
+
 export const ToastsTheFailureAndOffersUpdateAgain = failed('Update');

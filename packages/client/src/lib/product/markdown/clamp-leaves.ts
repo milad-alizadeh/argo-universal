@@ -22,6 +22,7 @@ export const ClampLeaves = createContext<RegisterLeaf | undefined>(undefined);
 // The web resolves a line height as a pixel string, native as a number.
 export function useLineHeight(role: TextRole): number | undefined {
   const lineHeight = Number.parseFloat(String(useTextStyle(role).lineHeight));
+
   return Number.isFinite(lineHeight) ? lineHeight : undefined;
 }
 
@@ -29,6 +30,7 @@ export function useClampLeaf(
   lineHeight?: number,
 ): (node: MeasurableNode | null) => (() => void) | undefined {
   const register = useContext(ClampLeaves);
+
   return useCallback(
     (node: MeasurableNode | null) =>
       node && register ? register({ node, lineHeight }) : undefined,

@@ -15,6 +15,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
 
   it('a prompted Session whose close timed out keeps its Checkout and refuses work until its shared process exit is observed', async () => {
     const openings: NewSessionRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -31,10 +32,12 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const stuck = await host.caller.session.new({
       ...sessionInput,
       checkout: { type: 'worktree', baseBranch: 'main' },
     });
+
     const sibling = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({ ...stuck, prompt });
     await waitForAcpSessionIdle(host, stuck.sessionId);
@@ -44,10 +47,12 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     await host.caller.session.prompt({ ...sibling, prompt });
     await waitForAcpSessionIdle(host, sibling.sessionId);
     const process = requireScriptedProcessAt(host.agent.processes);
+
     const retained = {
       checkout: existsSync(openings[0]?.cwd ?? ''),
       terminations: process.terminations,
     };
+
     const siblingClosing = host.caller.session.close(sibling);
     await expect.poll(() => process.terminations).toBe(1);
     await expect(
@@ -59,6 +64,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       .poll(async () => {
         try {
           await host.caller.session.prompt({ ...stuck, prompt });
+
           return 'accepted';
         } catch (error) {
           return String(error);
@@ -70,6 +76,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
 
   it('Engine shutdown during a running Turn terminates its ACP process once and waits for its observed exit', async () => {
     const received = Promise.withResolvers<PromptRequest>();
+
     const host = await startAcpEngine(
       {
         autoExit: false,
@@ -81,14 +88,17 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const { sessionId } = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({ sessionId, prompt });
     await received.promise;
     const process = requireScriptedProcessAt(host.agent.processes);
     let stopped = false;
+
     const stopping = host.stop().then(() => {
       stopped = true;
     });
+
     await expect.poll(() => process.terminations).toBe(1);
     const beforeExit = { stopped };
     process.exited.resolve();

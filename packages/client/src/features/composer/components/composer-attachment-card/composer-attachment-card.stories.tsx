@@ -13,7 +13,9 @@ import {
 } from './composer-attachment-card';
 
 const [image] = composerImages;
+
 const [textFile, otherFile] = composerFiles;
+
 if (!image || !textFile || !otherFile)
   throw new Error(
     'Composer mocks need an image, a text file and another file.',
@@ -31,7 +33,9 @@ const meta = {
   component: ComposerAttachmentCard,
   args: { attachment: image, disabled: false, onRemove: action('remove') },
 } satisfies Meta<typeof ComposerAttachmentCard>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ComposerAttachmentCardStates: Story = {

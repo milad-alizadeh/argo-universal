@@ -14,7 +14,9 @@ const meta = {
   args: agentListArgs(),
   parameters: { screenPreview: true },
 } satisfies Meta<typeof AgentListView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {};

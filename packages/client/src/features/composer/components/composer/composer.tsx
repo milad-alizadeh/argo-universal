@@ -6,12 +6,15 @@ import { sendButtonState } from './composer-conditions';
 import { useComposerLayout } from './composer-layout';
 import { ComposerTopTray } from './composer-trays';
 import type { ComposerLayout, ComposerProps } from './composer-types';
+
 export type { ComposerDraft, ComposerProps } from './composer-types';
+
 export type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
 
 export function Composer(props: ComposerProps): React.JSX.Element {
   const sendState = sendButtonState(props);
   const layout = useComposerLayout(props, sendState);
+
   return (
     <View nativeID={layout.composerId} className="w-full items-center">
       <ComposerTopTray {...layout} />
@@ -20,8 +23,10 @@ export function Composer(props: ComposerProps): React.JSX.Element {
     </View>
   );
 }
+
 function ComposerRequest(layout: ComposerLayout): React.JSX.Element | null {
   if (!hasComposerRequest(layout)) return null;
+
   return (
     <View
       className={
@@ -34,6 +39,7 @@ function ComposerRequest(layout: ComposerLayout): React.JSX.Element | null {
     </View>
   );
 }
+
 function composerRequestContent({
   props,
   controlsHeight,
@@ -42,6 +48,7 @@ function composerRequestContent({
     return (
       <PlanProposalCard {...props.planProposal} bottomInset={controlsHeight} />
     );
+
   return props.permissionRequest ? (
     <PermissionRequest {...props.permissionRequest} />
   ) : null;

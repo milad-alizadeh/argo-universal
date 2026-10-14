@@ -5,11 +5,14 @@ import {
 import { z } from 'zod';
 
 const SetupState = z.enum(['not installed', 'sign-in needed', "can't start"]);
+
 export type SetupState = z.infer<typeof SetupState>;
 
 export function agentId(ordinal: number): string {
   const id = appFixtureAgentIds[ordinal - 1];
+
   if (!id) throw new Error(`No Agent at position ${ordinal}`);
+
   return id;
 }
 
@@ -19,6 +22,7 @@ export const setupStatuses: Record<SetupState, string> = {
   'sign-in needed': 'sign-in-needed',
   "can't start": 'cant-start',
 };
+
 const setupFixtures: Record<SetupState, AppFixtureAgents[string]> = {
   'not installed': { installed: false },
   'sign-in needed': { scenario: 'signed-out' },
@@ -27,8 +31,10 @@ const setupFixtures: Record<SetupState, AppFixtureAgents[string]> = {
 
 function agentsNeedingSetup(ordinal: string, state: string): AppFixtureAgents {
   const fixture = setupFixtures[SetupState.parse(state)];
+
   const ids =
     ordinal === 'every' ? appFixtureAgentIds : [agentId(Number(ordinal))];
+
   return Object.fromEntries(ids.map((id) => [id, fixture]));
 }
 
@@ -39,23 +45,28 @@ function setupConfiguration(match: RegExpExecArray): AppFixtureAgents {
 function configurationForStep(step: string): AppFixtureAgents {
   const needsSetup =
     /^(?:Given|And) (?:Agent (\d+)|(?:every) Agent) is "([^"]+)"$/.exec(step);
+
   if (needsSetup) return setupConfiguration(needsSetup);
+
   const refusing =
     /^(?:Given|And) (?:Agent (\d+)|every Agent) refuses to (open|reopen) a Session$/.exec(
       step,
     );
+
   return refusing ? refusingConfiguration(refusing) : heldConfiguration(step);
 }
 
 function heldConfiguration(step: string): AppFixtureAgents {
   const held =
     /^(?:Given|And) Agent (\d+)'s readiness check never answers$/.exec(step);
+
   return held ? { [agentId(Number(held[1]))]: { scenario: 'check-held' } } : {};
 }
 
 function refusingConfiguration(match: RegExpExecArray): AppFixtureAgents {
   const scenario = match[2] === 'open' ? 'refuse-session' : 'refuse-reopen';
   const ids = match[1] ? [agentId(Number(match[1]))] : appFixtureAgentIds;
+
   return Object.fromEntries(ids.map((id) => [id, { scenario }]));
 }
 
@@ -75,6 +86,7 @@ const chosenAgent = (steps: string[]): string | undefined => {
   const chosen = steps
     .map((step) => /^(?:Given|And) a New Session with Agent (\d+)$/.exec(step))
     .find((match) => match !== null);
+
   return chosen ? agentId(Number(chosen[1])) : undefined;
 };
 
@@ -82,6 +94,7 @@ const chosenAgent = (steps: string[]): string | undefined => {
 function attachmentConfiguration(steps: string[]): AppFixtureAgents {
   const scenario = attachedScenario(steps);
   const agent = chosenAgent(steps);
+
   return scenario && agent ? { [agent]: { scenario } } : {};
 }
 
@@ -102,6 +115,7 @@ function feedHistoryConfiguration(steps: string[]): AppFixtureAgents {
       /^(?:Given|And) Agent (\d+) supplies a long Feed history$/.exec(step),
     )
     .find((match) => match !== null);
+
   return chosen
     ? { [agentId(Number(chosen[1]))]: { scenario: 'feed-history' } }
     : {};
@@ -113,6 +127,7 @@ function elicitationConfiguration(steps: string[]): AppFixtureAgents {
       /^(?:Given|And) Agent (\d+) asks for an Elicitation$/.exec(step),
     )
     .find((match) => match !== null);
+
   return chosen
     ? { [agentId(Number(chosen[1]))]: { scenario: 'elicitation' } }
     : {};
@@ -120,10 +135,12 @@ function elicitationConfiguration(steps: string[]): AppFixtureAgents {
 
 const liveFeedStep =
   /^(?:Given|And) Agent (\d+) supplies (edits and commands|an unfinished command)$/;
+
 function liveFeedConfiguration(steps: string[]): AppFixtureAgents {
   const chosen = steps
     .map((step) => liveFeedStep.exec(step))
     .find((match) => match !== null);
+
   return chosen
     ? {
         [agentId(Number(chosen[1]))]: {

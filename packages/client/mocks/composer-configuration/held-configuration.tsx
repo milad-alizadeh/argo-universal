@@ -17,11 +17,14 @@ import {
 } from './common';
 import { assertHeldFallback, type HeldScenario } from './held-assertions';
 import { heldChoiceCases } from './held-cases';
+
 interface HeldProps {
   configuration: Configuration;
 }
+
 function HeldConfiguration({ configuration }: HeldProps): React.JSX.Element {
   const liveConfiguration = useHeldConfiguration(configuration);
+
   return (
     <View className="p-4">
       <ComposerAgentModelControl
@@ -31,19 +34,23 @@ function HeldConfiguration({ configuration }: HeldProps): React.JSX.Element {
     </View>
   );
 }
+
 function useHeldConfiguration(configuration: Configuration): Configuration {
   const [configOptions, setConfigOptions] = useState(
     recordedSessionOptions(configuration.agent),
   );
+
   return {
     ...configuration,
     configOptions,
     onConfigChange: heldConfigurationChanged(configuration, setConfigOptions),
   };
 }
+
 type SetConfigOptions = Dispatch<
   SetStateAction<Configuration['configOptions']>
 >;
+
 function heldConfigurationChanged(
   configuration: Configuration,
   setConfigOptions: SetConfigOptions,
@@ -55,11 +62,14 @@ function heldConfigurationChanged(
     );
   };
 }
+
 export function heldConfiguration(width: number, agentIndex: number): Story {
   const recorded = heldChoiceCases[agentIndex];
+
   if (!recorded) throw new Error('Recorded catalog needs two Agents.');
   const onConfigChange = fn();
   const scenario = { width, recorded, onConfigChange };
+
   return {
     beforeEach: () => {
       onConfigChange.mockClear();
@@ -69,6 +79,7 @@ export function heldConfiguration(width: number, agentIndex: number): Story {
     play: (context) => testHeldConfiguration(context, scenario),
   };
 }
+
 function heldConfigurationArgs({
   recorded,
   onConfigChange,
@@ -82,6 +93,7 @@ function heldConfigurationArgs({
     checkout: { branch: 'main', newWorktree: false },
   };
 }
+
 async function testHeldConfiguration(
   context: PlayContext,
   scenario: HeldScenario,
@@ -97,6 +109,7 @@ async function testHeldConfiguration(
   await assertHeldFallback(scenario, effortSteps);
   await context.userEvent.keyboard('{Escape}');
 }
+
 async function selectHeldEffort({
   recorded,
   onConfigChange,
@@ -105,22 +118,27 @@ async function selectHeldEffort({
     recorded.effort.configId,
     step.value,
   ]);
+
   await chooseHeldEffort(recorded);
   await expect(onConfigChange.mock.calls).toEqual(effortSteps);
+
   return effortSteps;
 }
+
 async function chooseHeldEffort(
   recorded: HeldScenario['recorded'],
 ): Promise<void> {
   const slider = await within(document.body).findByRole('slider', {
     name: 'Effort',
   });
+
   await chooseEffort(
     slider,
     recorded.offered.map((choice) => choice.name),
     recorded.selected.name,
   );
 }
+
 async function selectNarrowerModel(
   { userEvent }: PlayContext,
   { recorded }: HeldScenario,

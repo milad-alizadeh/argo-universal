@@ -38,7 +38,9 @@ export function BottomSheetContent(
 
 function SheetBody(props: SheetContentProps): React.ReactNode {
   const { bottom } = useSafeAreaInsets();
+
   if (props.contentScrolls) return props.children;
+
   return (
     <ScrollView
       className={cn('shrink min-h-0', { 'flex-1': !props.fit })}

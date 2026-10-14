@@ -8,7 +8,9 @@ export const renderStorybookSymbol: RenderSymbolImage = async ({
   const response = await fetch(
     `/__sf-symbol?name=${encodeURIComponent(name)}&pointSize=${pointSize}`,
   );
+
   if (response.status !== 200) return null;
+
   return readAsDataUrl(await response.blob());
 };
 

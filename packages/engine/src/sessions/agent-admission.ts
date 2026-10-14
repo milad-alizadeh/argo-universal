@@ -15,6 +15,7 @@ type AdmissionContext = {
 // A removed Agent takes no new Sessions even while its files are still found.
 const isFoundAgent = (database: Database, agent: string): boolean => {
   const configured = readConfiguredAgent(database, agent);
+
   return (
     configured !== undefined &&
     !configured.configuration.removed &&

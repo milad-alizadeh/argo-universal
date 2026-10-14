@@ -8,6 +8,7 @@ import {
 import { isScriptUrl } from './rich-textarea-links';
 
 const scriptUrl = 'javascript:alert(1)';
+
 const argoUrl = 'https://argo.dev';
 
 describe('A pasted text links the selection', () => {

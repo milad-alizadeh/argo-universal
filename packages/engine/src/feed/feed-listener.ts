@@ -5,6 +5,7 @@ import type { FeedActorRef } from './feed-machine';
 import { LiveFeedQueue, type LiveFeedEvent } from './live-feed-queue';
 
 export type ClosedFeed = Extract<FeedSubscribeOutput, { type: 'closed' }>;
+
 type SnapshotEvent = Extract<
   FeedSubscribeOutput,
   { type: 'snapshot' | 'closed' }
@@ -77,6 +78,7 @@ export class FeedListener {
 
   private receiveSnapshot(event: SnapshotEvent): void {
     this.watchBatches();
+
     if (event.type === 'closed') this.closed = event;
     else this.live.push([event]);
     this.wake?.();
@@ -84,6 +86,7 @@ export class FeedListener {
 
   private watchBatches(): void {
     const next = this.sources.findFeed(this.sessionId);
+
     if (!next || next === this.feed) return;
     this.batches.unsubscribe();
     this.feed = next;

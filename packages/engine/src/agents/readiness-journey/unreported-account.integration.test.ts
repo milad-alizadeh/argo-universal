@@ -4,8 +4,10 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
+
 const listed = async (host: Host): Promise<AgentInfo | undefined> =>
   (await host.caller.agents.list()).find(({ agent }) => agent === 'mock');
+
 const signInNeeded = {
   status: 'sign-in-needed',
   reason: 'The Agent requires sign-in.',

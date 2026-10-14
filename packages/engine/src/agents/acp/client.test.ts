@@ -5,9 +5,13 @@ import { createScriptedAgentWire } from '#mocks/scripted-agent';
 import { createAgentClient } from './client';
 
 const sessionId = 'session-one';
+
 const jsonrpc = '2.0';
+
 const promptMethod = 'session/prompt';
+
 const newSessionId = 'new-session';
+
 const updateMethod = 'session/update';
 
 it.each(acpUpdates)(
@@ -19,7 +23,9 @@ it.each(acpUpdates)(
         'session/prompt': [{ steps: [{ type: 'hold' }] }],
       },
     });
+
     const accepted: SessionNotification[] = [];
+
     const connection = createAgentClient({
       stream: peer.stream,
       acceptSessionUpdate: (notification) => {
@@ -28,6 +34,7 @@ it.each(acpUpdates)(
       requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
       createElicitation: () => ({ action: 'cancel' }),
     });
+
     const completion = connection.agent
       .request(promptMethod, {
         sessionId: sessionId,
@@ -35,8 +42,10 @@ it.each(acpUpdates)(
       })
       .then(() => {
         connection.close();
+
         return [...accepted];
       });
+
     const request = await peer.readRequest();
     await peer.send([
       {
@@ -60,8 +69,10 @@ it.each(acpUpdates)(
         'session/prompt': [{ steps: [{ type: 'hold' }] }],
       },
     });
+
     const accepted: { turn: number; notification: SessionNotification }[] = [];
     let turn = 1;
+
     const connection = createAgentClient({
       stream: peer.stream,
       acceptSessionUpdate: (notification) => {
@@ -70,6 +81,7 @@ it.each(acpUpdates)(
       requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
       createElicitation: () => ({ action: 'cancel' }),
     });
+
     const completion = connection.agent
       .request(promptMethod, {
         sessionId: sessionId,
@@ -77,11 +89,13 @@ it.each(acpUpdates)(
       })
       .then(() => {
         turn = 2;
+
         return connection.agent.request(promptMethod, {
           sessionId: sessionId,
           prompt: [{ type: 'text', text: 'Second' }],
         });
       });
+
     const first = await peer.readRequest();
     await peer.send([
       {
@@ -117,7 +131,9 @@ it('accepts notifications before the new Session response identifies its Session
       'session/new': [{ steps: [{ type: 'hold' }] }],
     },
   });
+
   const accepted: SessionNotification[] = [];
+
   const connection = createAgentClient({
     stream: peer.stream,
     acceptSessionUpdate: (notification) => {
@@ -126,9 +142,11 @@ it('accepts notifications before the new Session response identifies its Session
     requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
     createElicitation: () => ({ action: 'cancel' }),
   });
+
   const opening = connection.agent
     .request('session/new', { cwd: '/checkout/one', mcpServers: [] })
     .then(() => [...accepted]);
+
   const request = await peer.readRequest();
   await peer.send([
     {

@@ -12,6 +12,7 @@ export function MenuOptions<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
   const message = pickerOptionsMessage(props);
+
   return (
     <>
       <MenuPlaceholder {...props} />
@@ -28,6 +29,7 @@ function MenuPlaceholder<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element | null {
   if (pickerOption(props)) return null;
+
   return (
     <Text modifiers={[tag('placeholder'), disabled(true)]}>
       {pickerValue(props)}

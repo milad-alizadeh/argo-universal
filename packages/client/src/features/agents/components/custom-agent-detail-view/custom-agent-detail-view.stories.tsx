@@ -12,7 +12,9 @@ const meta = {
   args: { ...customAgentDetailArgs(), onSignIn: fn() },
   parameters: { screenPreview: true },
 } satisfies Meta<typeof CustomAgentDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Ready: Story = {};
@@ -35,6 +37,7 @@ export const SignInNeeded: Story = {
     },
   },
 };
+
 export const AccountNotSupported: Story = {
   args: {
     readiness: {

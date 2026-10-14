@@ -39,10 +39,13 @@ async function openAgentRow(
   await userEvent.click(
     await overlay.findByRole('button', { name: /^Agent,/ }),
   );
+
   const row = await overlay.findByRole('button', {
     name: `Select ${agent.label}`,
   });
+
   await waitFor(() => expect(row).toBeVisible());
+
   return row;
 }
 
@@ -50,14 +53,17 @@ function cantStartAgent(agentIndex: 0 | 1): AgentInfo & {
   reason: string;
 } {
   const agent = newSessionCatalogs.bothCantStart[agentIndex];
+
   if (!agent?.reason)
     throw new Error('Recorded catalog needs two Agents that can’t start.');
+
   return { ...agent, reason: agent.reason };
 }
 
 // A started Session's Agent can’t start: its row says why and Recheck asks again.
 export function agentCantStart(agentIndex: 0 | 1): Story {
   const agent = cantStartAgent(agentIndex);
+
   return {
     args: idleSessionWith({
       agents: newSessionCatalogs.bothCantStart,
@@ -83,13 +89,16 @@ export function agentCantStart(agentIndex: 0 | 1): Story {
 
 function availableAgent(agentIndex: 0 | 1): AgentInfo {
   const agent = newSessionCatalogs.bothReady[agentIndex];
+
   if (!agent) throw new Error('Recorded catalog needs two Agents.');
+
   return agent;
 }
 
 // The Session's own Agent shows in the Composer's picker, and a started Session keeps it.
 export function configuration(agentIndex: 0 | 1): Story {
   const agent = availableAgent(agentIndex);
+
   return {
     args: idleSessionWith({
       agent: agent.agent,

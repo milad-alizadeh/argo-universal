@@ -21,14 +21,21 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof AgentListView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const syncError = 'Registry is offline';
+
 const loadingRow = 'Loading the Agent catalog…';
+
 const firstAgent = catalog.agents[0];
+
 if (!firstAgent) throw new Error('Recorded catalog needs an Agent');
+
 const registryName = firstAgent.entry.name;
+
 const emptyLoad: CatalogLoad = { status: 'loaded', catalog: emptyCatalog };
 
 export const ShowsLoadingUntilTheCatalogArrives: Story = {
@@ -114,6 +121,7 @@ function toastsUnavailable(width: number): Story {
 export const NoSavedCatalogToastPhone: Story = toastsUnavailable(
   layoutWidths.phone,
 );
+
 export const NoSavedCatalogToastWide: Story = toastsUnavailable(
   layoutWidths.wide,
 );

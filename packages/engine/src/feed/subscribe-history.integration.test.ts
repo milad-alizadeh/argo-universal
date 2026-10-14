@@ -14,6 +14,7 @@ import {
   longHistoryPositions,
   storeLongHistory,
 } from '#mocks/feed-suite';
+
 it('catches up more rows than one page once each, in revision order, before live changes', async (): Promise<void> => {
   storeLongHistory();
   await startFeedTestHost();

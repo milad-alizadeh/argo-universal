@@ -12,6 +12,7 @@ it.each(newSessionInputs)(
   async (input): Promise<void> => {
     const received = Promise.withResolvers<PromptRequest>();
     const settings: SetSessionConfigOptionRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [{ type: 'wait-for-cancel' }],
@@ -48,6 +49,7 @@ it.each(newSessionInputs)(
       undefined,
       input.agent,
     );
+
     const image = await uploadBlob(
       {
         databaseWriter: host.databaseWriter,
@@ -57,15 +59,18 @@ it.each(newSessionInputs)(
         type: 'image/png',
       }),
     );
+
     const prompt = input.prompt.map((block) =>
       block.type === 'image' ? { ...block, blob: image } : block,
     );
+
     const { sessionId } = await host.caller.session.new({
       ...emptySessionInput,
       agent: input.agent,
       prompt,
       configOptions: [{ configId: 'fast', value: true }],
     });
+
     expect(settings).toEqual([
       { sessionId: 'owned-1', configId: 'fast', type: 'boolean', value: true },
     ]);

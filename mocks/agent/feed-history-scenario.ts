@@ -12,6 +12,7 @@ const historyTool = (index: number): ScriptedStep => ({
     status: 'completed',
   },
 });
+
 const historyMessage = (index: number): ScriptedStep => ({
   type: 'update',
   update: {
@@ -20,6 +21,7 @@ const historyMessage = (index: number): ScriptedStep => ({
     content: { type: 'text', text: `History message ${index}.` },
   },
 });
+
 const historyPair = (index: number): ScriptedStep[] => [
   historyTool(index),
   historyMessage(index),

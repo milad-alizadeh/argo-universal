@@ -34,6 +34,7 @@ export type CustomAgentFormProps = {
   // Sections the page shows above the form in the same group, such as the Agent's Status.
   leading?: React.ReactNode;
 };
+
 export const customAgentFormDescription =
   'Any program on the Server that speaks ACP over stdio. Argo runs it with exactly these arguments, without a shell.';
 
@@ -47,6 +48,7 @@ type Sheets = {
 function useEntrySheets(): Sheets {
   const [argument, onArgument] = useState<ArgumentEditing | null>(null);
   const [variable, onVariable] = useState<VariableEditing | null>(null);
+
   return { argument, onArgument, variable, onVariable };
 }
 
@@ -59,6 +61,7 @@ export function CustomAgentForm(
 ): React.JSX.Element {
   const state = useFormState(props);
   const sheets = useEntrySheets();
+
   return (
     <>
       <FormSections {...props} {...sheets} {...state} />
@@ -79,14 +82,17 @@ type FormState = {
 function useFormState(props: CustomAgentFormProps): FormState {
   const { form, failure } = useCustomAgentForm(props);
   const checking = useStore(form.store, (state) => state.isSubmitting);
+
   return { form, disabled: checking, failure: checking ? null : failure };
 }
 
 type SectionsProps = CustomAgentFormProps & Sheets & FormState;
+
 type EditorProps = Sheets & { form: CustomAgentFormApi };
 
 function FormSections(props: SectionsProps): React.JSX.Element {
   const part = { form: props.form, disabled: props.disabled };
+
   return (
     <FieldGroup>
       {props.leading}
@@ -102,6 +108,7 @@ function FormSections(props: SectionsProps): React.JSX.Element {
 // The editors open over the group, outside its native form.
 function ArgumentEditor(props: EditorProps): React.JSX.Element | null {
   if (!props.argument) return null;
+
   return (
     <ArgumentSheet
       form={props.form}
@@ -113,6 +120,7 @@ function ArgumentEditor(props: EditorProps): React.JSX.Element | null {
 
 function VariableEditor(props: EditorProps): React.JSX.Element | null {
   if (!props.variable) return null;
+
   return (
     <VariableSheet
       form={props.form}
@@ -128,6 +136,7 @@ function CheckFailure({
   failure: string | null;
 }): React.JSX.Element | null {
   if (!failure) return null;
+
   return (
     <FieldRow>
       <FailureBox failure={failure} />

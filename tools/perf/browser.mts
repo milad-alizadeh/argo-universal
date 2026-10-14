@@ -38,7 +38,9 @@ declare global {
 
 function perfElement(id: string): HTMLElement {
   const element = document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+
   if (!element) throw new Error(`No ${id}`);
+
   return element;
 }
 
@@ -46,6 +48,7 @@ function perfElement(id: string): HTMLElement {
 function perfJump(id: string, top: boolean): number {
   const element = perfElement(id);
   element.scrollTop = top ? 0 : element.scrollHeight;
+
   return element.scrollHeight;
 }
 
@@ -54,6 +57,7 @@ function perfFlickStep(flick: Flick, now: number): void {
   flick.previous = now;
   flick.elapsed += delta;
   flick.target.scrollTop += (flick.pixelsPerSecond * delta) / 1000;
+
   if (flick.elapsed < flick.duration)
     requestAnimationFrame((next) => perfFlickStep(flick, next));
   else flick.resolve();
@@ -67,6 +71,7 @@ function perfFlick(id: string, motion: Motion): Promise<void> {
     elapsed: 0,
     previous: Number.NaN,
   };
+
   return new Promise((resolve) => {
     requestAnimationFrame((now) => perfFlickStep({ ...start, resolve }, now));
   });
@@ -74,7 +79,9 @@ function perfFlick(id: string, motion: Motion): Promise<void> {
 
 function perfFrame(now: number): void {
   const state = window.perfFrames;
+
   if (!state.running) return;
+
   if (!Number.isNaN(state.previous)) state.intervals.push(now - state.previous);
   state.previous = now;
   requestAnimationFrame(perfFrame);
@@ -97,6 +104,7 @@ function perfStartFrames(): void {
 function perfStopFrames(): Frames {
   const state = window.perfFrames;
   state.running = false;
+
   return { intervals: state.intervals, longTasks: state.longTasks };
 }
 

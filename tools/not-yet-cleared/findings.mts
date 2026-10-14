@@ -6,6 +6,7 @@ const reportSchema = z.object({
     z.object({ filename: z.string().min(1), code: z.string().min(1) }),
   ),
 });
+
 export interface Finding {
   folder: string;
   rule: string;
@@ -33,6 +34,7 @@ export function countFindings(
   rule?: string,
 ): number {
   const folder = glob.slice(0, -2);
+
   return findings.filter(
     (finding): boolean =>
       finding.folder === folder &&

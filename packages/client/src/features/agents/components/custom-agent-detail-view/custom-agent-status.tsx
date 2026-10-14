@@ -9,6 +9,7 @@ import {
 
 // The Agent's saved Readiness as the Agents list reports it; Checking… until the first check lands.
 export type CustomAgentReadiness = Pick<AgentRowEntry, 'status' | 'reason'>;
+
 type StatusProps = ReadinessHandlers & {
   name: string;
   readiness: CustomAgentReadiness;
@@ -33,7 +34,9 @@ export function CustomReadinessSection(
   props: StatusProps,
 ): React.JSX.Element | null {
   const { readiness, ...handlers } = props;
+
   if (readiness.status === 'ready') return <AnsweredSection {...handlers} />;
+
   return (
     <ReadinessSection
       {...handlers}

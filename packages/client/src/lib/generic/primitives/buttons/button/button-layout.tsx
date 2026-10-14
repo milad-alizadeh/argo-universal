@@ -8,6 +8,7 @@ const narrowSizes: Record<ButtonSize, ButtonSize> = {
   md: 'md',
   lg: 'lg',
 };
+
 const narrowVariants: Record<ButtonVariant, ButtonVariant> = {
   default: 'default',
   outline: 'outline',
@@ -28,12 +29,14 @@ function narrowLayout(props: ButtonProps): ButtonProps {
 
 function useWidthLayout(props: ButtonProps): ButtonProps {
   if (useWide()) return { ...props, fullWidth: props.fullWidth === true };
+
   return phoneLayout(props);
 }
 
 // A phone has no small buttons; fullWidth "narrow" also fills the width.
 function phoneLayout(props: ButtonProps): ButtonProps {
   if (props.fullWidth === 'narrow') return narrowLayout(props);
+
   return { ...props, size: narrowSizes[props.size ?? 'md'] };
 }
 

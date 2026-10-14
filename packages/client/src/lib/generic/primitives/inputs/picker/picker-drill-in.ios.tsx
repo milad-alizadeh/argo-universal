@@ -23,18 +23,21 @@ type DrillProps<Value extends string> = PickerProps<Value> & {
   open: boolean;
   onClose: () => void;
 };
+
 const destination = 'picker-options';
 
 export function PickerDrillIn<Value extends string>(
   props: DrillProps<Value>,
 ): React.JSX.Element {
   const commands = useFormSheetCommands();
+
   if (commands)
     return (
       <RoutedFormSheet {...routedProps(props)} commands={commands}>
         <PickerSearchList {...props} />
       </RoutedFormSheet>
     );
+
   return <StandalonePickerSheet {...props} />;
 }
 
@@ -72,6 +75,7 @@ function PickerPage<Value extends string>(
 
 function usePageModifiers(): ReturnType<typeof presentationDetents>[] {
   const { popover } = useNativeTheme().colors;
+
   return [
     presentationDetents(['large']),
     presentationBackground(popover ?? 'clear'),
@@ -92,10 +96,12 @@ function usePickerPath(
   close: () => void,
 ): Omit<React.ComponentProps<typeof NavigationStack>, 'children'> {
   const [path, setPath] = useState([destination]);
+
   return {
     path,
     onPathChange: (next) => {
       setPath(next);
+
       if (next.length === 0) close();
     },
   };

@@ -18,6 +18,7 @@ const markdownMarks = marks.reduce(
   (mask, mark) => mask | (TEXT_TYPE_TO_FORMAT[mark] ?? 0),
   0,
 );
+
 const hasOtherMarks = (format: number): boolean =>
   (format & ~markdownMarks) !== 0;
 
@@ -71,7 +72,9 @@ const unindentedBlockStrips: Strip<ElementNode>[] = [
 ];
 
 const $plainText = (text: TextNode): void => $strip(text, textStrips);
+
 const $plainBlock = (block: ElementNode): void => $strip(block, blockStrips);
+
 const $plainUnindentedBlock = (block: ElementNode): void =>
   $strip(block, unindentedBlockStrips);
 
@@ -120,6 +123,7 @@ export function registerMarkdownOnly(editor: LexicalEditor): () => void {
     editor.registerNodeTransform(ListItemNode, $plainBlock),
     editor.registerNodeTransform(LinkNode, $plainLink),
   ];
+
   return () => {
     for (const stop of unregister) stop();
   };

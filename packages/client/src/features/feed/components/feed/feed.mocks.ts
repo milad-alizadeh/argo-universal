@@ -11,7 +11,9 @@ export const pageSize = 150;
 
 // Only the oldest page holds this recording, and only the arriving row holds the other, so their text marks each one.
 const oldestRecording = recordedFeedMock('agent-2', 'compaction');
+
 const arrivingRecording = recordedFeedMock('agent-2', 'command-outcomes');
+
 const snapshotRecording = recordedFeedMock('agent-1', 'edit-and-command');
 
 interface RecordedBlock {
@@ -24,7 +26,9 @@ const textOf = (block: RecordedBlock | undefined): string | undefined =>
 
 function firstTextOf(row: { content: readonly RecordedBlock[] }): string {
   const text = textOf(row.content[0]);
+
   if (text === undefined) throw new Error('Recorded message has no text');
+
   return text;
 }
 
@@ -35,12 +39,20 @@ export const oldestMessage = firstTextOf(
 
 // Each recording's rows as one more copy, with ids and positions after the copies before it.
 const rowsAsCopy = (mock: FeedMock, copy: number): FeedMock['rows'] =>
-  mock.rows.map((row): SessionUpdate => ({
+  mock.rows.map((row) => rowAsCopy(row, copy));
+
+function rowAsCopy(row: SessionUpdate, copy: number): SessionUpdate {
+  const copied = {
     ...row,
     id: `${copy}-${row.id}`,
     position: copy * 1000 + row.position,
-    ...('toolCallId' in row ? { toolCallId: `${copy}-${row.toolCallId}` } : {}),
-  }));
+  };
+
+  if ('toolCallId' in copied)
+    copied.toolCallId = `${copy}-${copied.toolCallId}`;
+
+  return copied;
+}
 
 // The oldest recording, then every other recording seven times over, so the Feed spans several pages.
 const repeatedRecordings = Array.from({ length: 7 }, () =>
@@ -48,6 +60,7 @@ const repeatedRecordings = Array.from({ length: 7 }, () =>
     (mock) => mock !== oldestRecording && mock !== arrivingRecording,
   ),
 ).flat();
+
 export const longRows: readonly SessionUpdate[] = [
   oldestRecording,
   ...repeatedRecordings,
@@ -65,11 +78,13 @@ export const longSnapshot: SessionSnapshot = {
 export const longTail = longRows.slice(-pageSize);
 
 const splitGroupSize = 20;
+
 const splitGroupRowsInTail = splitGroupSize / 2;
 
 // One Turn of numbered commands, which the Feed draws as one Tool call group.
 const { commandActions: _, ...commandArgo } =
   completedCommand._meta?.argo ?? {};
+
 const splitGroupSteps = Array.from(
   { length: splitGroupSize },
   (_unused, index): SessionUpdate => ({
@@ -88,16 +103,21 @@ export const splitGroupRows: readonly SessionUpdate[] = [
   ...splitGroupSteps,
   ...longRows.slice(-(pageSize - splitGroupRowsInTail)),
 ].map((row, index) => ({ ...row, position: index + 1 }));
+
 export const splitGroupStepInTail = `Step ${splitGroupSize - 2}`;
 
 // The row the Agent sends while the reader is scrolled up: its first message, since plain text matches exactly where the last one ends in `done`, which other recordings send too.
 const arrivingAgentMessage = arrivingRecording.rows.find(
   (row) => row.sessionUpdate === 'agent_message',
 );
+
 const lastLongRow = longRows.at(-1);
+
 if (arrivingAgentMessage?.sessionUpdate !== 'agent_message' || !lastLongRow)
   throw new Error('No arriving message recorded');
+
 export const arrivingMessage = firstTextOf(arrivingAgentMessage);
+
 export const arrivingRow: SessionUpdate = {
   ...arrivingAgentMessage,
   id: 'arriving-row',

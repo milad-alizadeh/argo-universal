@@ -1,4 +1,9 @@
-import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
+import type {
+  SessionCloseOutput,
+  SessionConfigOption,
+  SessionNewInput,
+  SessionPromptOutput,
+} from '@repo/contracts';
 import type { ConfigurationChange, SavedChoices } from '#features/composer';
 
 export type FirstPrompt = SessionNewInput['prompt'];
@@ -10,12 +15,15 @@ export interface EmptySessionPorts {
     input: SessionNewInput,
     signal: AbortSignal,
   ) => Promise<{ sessionId: string }>;
-  close: (sessionId: string) => Promise<unknown>;
+  close: (sessionId: string) => Promise<SessionCloseOutput>;
   setConfigOption: (
     sessionId: string,
     change: ConfigurationChange,
   ) => Promise<SessionConfigOption[]>;
-  prompt: (sessionId: string, prompt: FirstPrompt) => Promise<unknown>;
+  prompt: (
+    sessionId: string,
+    prompt: FirstPrompt,
+  ) => Promise<SessionPromptOutput>;
   // The screen becomes that Session's page in place: no new page, no animation.
   handOff: (sessionId: string) => void;
   // The next remembered choice the options don't hold yet, skipping those already applied.

@@ -15,12 +15,15 @@ interface ProjectPickerProps {
   projectId: string;
   onSelect: (projectId: string) => void;
 }
+
 const listMaximumHeight = 320;
+
 const rowEstimate = 60;
 
 export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
   const [query, setQuery] = useState('');
   const found = props.projects.filter((project) => matches(project, query));
+
   return (
     <View className="native:flex-1 px-4 pt-4 wide:p-3 bg-sidebar">
       <ProjectSearch query={query} onChange={setQuery} />
@@ -31,6 +34,7 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
 
 function matches(project: ProjectInfo, query: string): boolean {
   const search = query.trim().toLowerCase();
+
   return (
     project.name.toLowerCase().includes(search) ||
     project.path.toLowerCase().includes(search)
@@ -44,6 +48,7 @@ function ProjectResults(props: ProjectPickerProps): JSX.Element {
         <WebProjects {...props} />
       </FieldSection>
     );
+
   return (
     <FieldGroup fit>
       <FieldSection>
@@ -56,9 +61,11 @@ function ProjectResults(props: ProjectPickerProps): JSX.Element {
 function WebProjects(props: ProjectPickerProps): JSX.Element {
   return <ScrollFadeList {...projectListProps(props)} />;
 }
+
 type ProjectListProps = React.ComponentProps<
   typeof ScrollFadeList<ProjectInfo>
 >;
+
 function projectListProps(props: ProjectPickerProps): ProjectListProps {
   return {
     ...projectListAppearance,
@@ -73,15 +80,19 @@ function projectListProps(props: ProjectPickerProps): ProjectListProps {
     ),
   };
 }
+
 type ProjectChoiceProps = ProjectPickerProps & { project: ProjectInfo };
+
 function ProjectChoice(props: ProjectChoiceProps): JSX.Element {
   return <ListItem {...projectChoiceProps(props)} />;
 }
+
 function projectChoiceProps(
   props: ProjectChoiceProps,
 ): React.ComponentProps<typeof ListItem> {
   const { project, projectId, onSelect } = props;
   const selected = project.id === projectId;
+
   return {
     title: project.name,
     accessibilityLabel: project.name,
@@ -92,6 +103,7 @@ function projectChoiceProps(
     accessory: selected ? <SelectedCheck /> : undefined,
   };
 }
+
 function PhoneProjects(props: ProjectPickerProps): JSX.Element {
   return (
     <>
@@ -104,10 +116,12 @@ function PhoneProjects(props: ProjectPickerProps): JSX.Element {
     </>
   );
 }
+
 interface ProjectSearchProps {
   query: string;
   onChange: (query: string) => void;
 }
+
 function ProjectSearch({ query, onChange }: ProjectSearchProps): JSX.Element {
   return (
     <View className="py-1">
@@ -128,6 +142,7 @@ const projectListAppearance = {
   contentContainerStyle: {},
   estimatedItemSize: rowEstimate,
 };
+
 const projectChoiceAppearance = {
   icon: 'folder',
   role: 'button',

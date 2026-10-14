@@ -9,19 +9,24 @@ import type {
 import { useAgentInstallation } from './use-agent-installation';
 import { useAgentManagement } from './use-agent-management';
 import { useAgents, useRecheck } from './use-agents';
+
 type AgentPageProps = {
   agent: string;
   onBack: () => void;
   onSignIn: () => void;
 };
+
 type AgentPageView = AgentDetailViewProps | undefined;
+
 function useAgentDetail(agent: string): AgentDetail | undefined {
   const agents = useAgents();
   const catalog = useQuery(useTRPC().agents.catalog.queryOptions());
   const info = agents.data?.find((entry) => entry.agent === agent);
   const registry = catalog.data?.agents.find(({ id }) => id === agent);
+
   return agentDetail(info, registry);
 }
+
 // Repair installs the release again through the same confirmation as Install.
 const repairOf = (
   detail: AgentDetail,
@@ -36,7 +41,9 @@ export function useAgentPageView(props: AgentPageProps): AgentPageView {
   const recheck = useRecheck(props.agent);
   const installation = useDetailInstallation(props.agent, detail);
   const management = useAgentManagement(props.agent, props.onBack);
+
   if (!detail) return undefined;
+
   return {
     ...props,
     agent: installedDetail(detail, installation),
@@ -46,6 +53,7 @@ export function useAgentPageView(props: AgentPageProps): AgentPageView {
     ...managementCallbacks(management),
   };
 }
+
 function useDetailInstallation(
   agent: string,
   detail?: AgentDetail,
@@ -56,6 +64,7 @@ function useDetailInstallation(
     detailAction(detail),
   );
 }
+
 const detailAction = (detail?: AgentDetail): 'Install' | 'Update' =>
   detail?.status === 'update' ? 'Update' : 'Install';
 
@@ -65,30 +74,37 @@ function installedDetail(
 ): AgentDetail {
   if (initialInstalling(installation))
     return { ...detail, status: 'not-installed' };
+
   return withInstallation(detail, installation.status?.installation);
 }
+
 function withInstallation(
   detail: AgentDetail,
   saved: AgentInstallation | undefined,
 ): AgentDetail {
   if (saved?.status !== 'installed') return detail;
+
   return {
     ...detail,
     version: saved.version,
     ...recoveredUpdate(detail, saved),
   };
 }
+
 const recoveredUpdate = (
   detail: AgentDetail,
   saved: Extract<AgentInstallation, { status: 'installed' }>,
 ): Partial<AgentDetail> => {
   if (detail.status !== 'not-installed') return {};
+
   if (detail.version === saved.version) return {};
+
   return { status: 'update', availableVersion: detail.version };
 };
 
 const detailVersion = (detail?: AgentDetail): string =>
   detail ? availableVersion(detail) : '';
+
 const availableVersion = (detail: AgentDetail): string =>
   detail.availableVersion ?? detail.version ?? '';
 
@@ -98,6 +114,7 @@ const managementCallbacks = (
   management,
   onRemove: management?.onRemove,
 });
+
 const initialInstalling = (
   installation: ReturnType<typeof useAgentInstallation>,
 ): boolean => installation.installing && installation.action !== 'Update';

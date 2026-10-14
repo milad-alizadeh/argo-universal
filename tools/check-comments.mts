@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { commentProblems } from './comment-rules.mts';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
+
 // The checker and its tests spell out the comments it reports.
 const own = new Set(
   ['check-comments.mts', 'comment-rules.mts', 'comment-rules.test.mts'].map(
@@ -30,14 +31,18 @@ const fileProblems = (file: string): string[] =>
     );
 
 const requested = process.argv.slice(2);
+
 const files = (requested.length > 0 ? requested : trackedSources())
   .map((file): string => resolve(root, file))
   .filter((file): boolean => !/\.gen\./.test(file) && !own.has(file))
   .sort();
+
 const problems = files.flatMap(fileProblems);
 
 for (const problem of problems) console.error(problem);
+
 console.log(
   `check-comments: ${files.length} files, ${problems.length} problems`,
 );
+
 process.exit(problems.length > 0 ? 1 : 0);

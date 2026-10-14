@@ -16,12 +16,14 @@ import {
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 
 type Host = Awaited<ReturnType<typeof startInstallEngine>>;
+
 const listed = async (host: Host): Promise<AgentInfo | undefined> =>
   (await host.caller.agents.list()).find(({ agent }) => agent === host.agentId);
 
 it('an installed Agent that needs sign-in is Ready once its sign-in finishes, through its saved launch', async () => {
   const signedOut = { steps: [loginStatusStep(signedOutStatus)] };
   const scenario = loginScenario();
+
   const agent = createScriptedAgentProcess({
     ...scenario,
     responses: {
@@ -33,6 +35,7 @@ it('an installed Agent that needs sign-in is Ready once its sign-in finishes, th
       ],
     },
   });
+
   const host = await startInstallEngine(
     installEntry('npx'),
     installationPorts,
@@ -41,6 +44,7 @@ it('an installed Agent that needs sign-in is Ready once its sign-in finishes, th
       acp: agent,
     },
   );
+
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
   await expect
     .poll(() => listed(host))
@@ -48,14 +52,17 @@ it('an installed Agent that needs sign-in is Ready once its sign-in finishes, th
       status: 'sign-in-needed',
       reason: 'The Agent requires sign-in.',
     });
+
   const started = await host.caller.agents.startLogin({
     agentId: host.agentId,
     ownerToken: loginOwner,
   });
+
   const operation = {
     operationId: started.operationId,
     ownerToken: loginOwner,
   };
+
   await expect
     .poll(async () => (await host.caller.agents.login(operation)).status)
     .toBe('choose-method');
