@@ -16,7 +16,7 @@ Each role has a light and a dark value.
 | `accent` | Argo's colour (today `tint`) |
 | `primary` | Primary buttons |
 | `border` | The faint outer edge of a surface |
-| Tones | `success`, `info`, `warning`, `destructive`, `merged` |
+| Tones | `info`, `success`, `warning`, `danger` (today `destructive`), `done` (today `merged`): each names a meaning, never a feature. `danger` covers errors and destructive actions; `done` is finished work, such as a merged pull request or a completed issue |
 
 `chart-1` to `chart-5` are deleted. The `spacing-shell-*`, `spacing-session-*` and `spacing-plan-proposal` tokens are debt: each folds into the spacing scale or moves into its one component.
 
