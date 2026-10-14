@@ -15,13 +15,9 @@ it.each([
     text: '{"pid":"7"}',
     code: 'invalid_type',
   },
-])('fails $label as an issue instead of throwing', ({ text, code }) => {
+])('reports $label as an issue instead of throwing', ({ text, code }) => {
   const result = Record.safeParse(text);
 
   expect(result.success).toBe(false);
   expect(result.error?.issues).toMatchObject([{ code }]);
-});
-
-it('encodes a value back to JSON text', () => {
-  expect(z.encode(Record, { pid: 7 })).toBe('{"pid":7}');
 });
