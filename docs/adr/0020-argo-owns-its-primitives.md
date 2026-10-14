@@ -10,7 +10,7 @@ Screens import every control from `#primitives` and nothing else (owner, 2026-10
 - **Web and desktop** use Expo UI's universal drawing when it meets the approved Paper master's look, states and behaviour; otherwise they use Argo's own React Native Web views, styled with Uniwind (the plain `.tsx` file). This replaces the blanket exclusion of Expo UI's web drawing (owner, 2026-10-10, #419); screens still use Argo's shared primitive API.
 - **Data props, not children.** SwiftUI and Compose buttons cannot take Argo `Text` children, so native-drawn primitives take `label`, `value`, `options` and similar props.
 - **No `className`, `style` or `*ClassName` slot on kit components** outside `lib/generic` (amended 2026-10-14, Spec 0015 #724). Layout and look come from props and the token roles of ADR-0026. An oxlint rule enforces it, with a shrinking allowlist (ADR-0016, application 13). This replaces the earlier split, where Argo-drawn primitives kept `className`.
-- **Argo draws its own content.** The Feed, Session rows, the Composer surface, request cards, code, badges, chips and icon buttons stay React Native views styled with Uniwind on every platform. The Feed, the Composer and request cards move onto kit components (Surface, Markdown, Code) over time; until then the lint rule allowlists their files. Native drawing is for system controls inside system containers: grouped settings lists, the controls in them, menus, sheets, alerts and dialogs.
+- **Argo draws its own content.** The Feed, Session rows, the Composer surface, request cards, code, badges on content rows, Pills and icon buttons stay React Native views styled with Uniwind on every platform. The Feed, the Composer and request cards move onto kit components (Surface, Markdown, Code) over time; until then the lint rule allowlists their files. Native drawing is for system controls inside system containers: grouped settings lists, the controls in them, menus, sheets, alerts and dialogs.
 - **`@rn-primitives` stays only underneath web primitives** that need Radix keyboard, focus and collision handling (dialog, popover, dropdown-menu, portal, and select while it is needed). Only web primitive files and the portal host import it.
 
 ## When Expo UI's web drawing does not fit
@@ -30,6 +30,19 @@ Argo's Android GroupedList and GroupedListSection are Argo's own Compose composi
 ## Custom symbols in native rows
 
 This amends ADR-0019. SwiftUI `Image` draws only system symbols, so `custom.<name>` symbols such as `custom.robot` cannot render inside a native row. Native rows draw Argo's `Icon` inside an `RNHostView` sized to its contents, with leading list icons in the `row` role. Icon dimensions are encapsulated in the Icon component, and callers choose a role (owner correction, 2026-10-10; roles replaced named sizes, 2026-10-12, ADR-0019). Disclosure chevrons stay system-drawn. Android Paper frames use Material Symbols, as ADR-0019 sets.
+
+## Phone patterns (owner, 2026-10-14, after the Paper audit)
+
+The audit of the Foundations Paper file against stock `@expo/ui` 57 settled these:
+
+- **FilterPill is native on phones**: SwiftUI `Toggle` in the button style on iOS (Off is a grey capsule, On fills in Argo's accent), Material 3 `FilterChip` with Material's colours on Android. Web and desktop keep Argo's pill.
+- **Badges follow their row.** Native rows (grouped settings rows, the Android drawer) use the native badge: SwiftUI `.badge()`, Material 3 `Badge`. Argo-drawn rows (VirtualList rows, the iOS drawer, the rail) use Argo's badge. Counts only.
+- **Search is a header action.** iOS keeps the native stack's search bar, docked at the bottom on iOS 26. Android puts Material's search icon button last in the top app bar; tapping it swaps the app bar for a full-width search bar on the same screen (back, field, clear) built from stock Compose parts, and the list below filters in place. Back clears the query and restores the app bar. There is no new route and no bar inside the list (Material 3 Search, "search icon button" entry with full-screen focused search).
+- **Inspector**: a native bottom sheet in compact and medium windows (an iPad shows it as a centred form sheet), its own panel in wide windows. Neither platform has a native side sheet.
+- **Phone headers are single-line native headers.** Anything a design puts on a second line moves into the page content.
+- **Phones draw no focus rings or hover states**; the system draws focus and press feedback.
+- **The Feed's Collapsible stays Argo-drawn.** A native disclosure per Feed item would need a native host per item and would break LegendList's layout animation; native disclosure belongs only inside a native settings Form.
+- **CodeField is Argo-drawn** on every platform: drawn slots over one hidden text input, so paste and one-time-code autofill keep working.
 
 ## Considered options
 
