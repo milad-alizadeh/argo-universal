@@ -20,6 +20,8 @@ export {
 
 export {
   type ClientError,
+  type ServerMutation,
+  type TRPC,
   TRPCProvider,
   useTRPC,
   useTRPCClient,

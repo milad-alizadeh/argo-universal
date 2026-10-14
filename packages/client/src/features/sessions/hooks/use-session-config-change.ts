@@ -1,24 +1,17 @@
 import type { SessionConfigOption } from '@repo/contracts';
-import type { AppRouter } from '@repo/engine/router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
+import type { inferInput } from '@trpc/tanstack-react-query';
 import {
   isRememberedConfiguration,
   rememberSessionConfiguration,
 } from '#features/composer';
-import { type ClientError, useTRPC } from '#features/connection';
+import { type ServerMutation, type TRPC, useTRPC } from '#features/connection';
 
-type SetConfigOptionInput =
-  inferRouterInputs<AppRouter>['session']['setConfigOption'];
+type SetConfigOption = TRPC['session']['setConfigOption'];
 
-export type SetConfigOptionMutation = ReturnType<
-  typeof useMutation<
-    inferRouterOutputs<AppRouter>['session']['setConfigOption'],
-    ClientError,
-    SetConfigOptionInput,
-    undefined
-  >
->;
+type SetConfigOptionInput = inferInput<SetConfigOption>;
+
+export type SetConfigOptionMutation = ServerMutation<SetConfigOption>;
 
 export interface SessionConfigChange {
   setConfigOption: SetConfigOptionMutation;
