@@ -8,9 +8,13 @@ import { SplitButton } from './split-button';
 
 const menuLabel = 'Allow options';
 
+const allowOnce = 'Allow once';
+
+const alwaysAllow = 'Always allow';
+
 const scopes = [
-  { value: 'once', label: 'Allow once' },
-  { value: 'always', label: 'Always allow' },
+  { value: 'once', label: allowOnce },
+  { value: 'always', label: alwaysAllow },
 ] as const;
 
 type Scope = (typeof scopes)[number]['value'];
@@ -73,11 +77,11 @@ export const WideOpensMenu: Story = {
     await userEvent.click(canvas.getByRole('button', { name: menuLabel }));
 
     await expect(
-      await page.findByRole('menuitemradio', { name: 'Allow once' }),
+      await page.findByRole('menuitemradio', { name: allowOnce }),
     ).toHaveAttribute('aria-checked', 'true');
     await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
     await userEvent.click(
-      page.getByRole('menuitemradio', { name: 'Always allow' }),
+      page.getByRole('menuitemradio', { name: alwaysAllow }),
     );
     await expect(args.onValueChange).toHaveBeenCalledWith('always');
     await waitFor(() =>
@@ -98,12 +102,12 @@ export const NarrowOpensSheet: Story = {
     const sheet = within(await page.findByRole('dialog', { name: menuLabel }));
     await expect(page.queryByRole('menu')).not.toBeInTheDocument();
     await expect(
-      sheet.getByRole('button', { name: 'Allow once' }),
+      sheet.getByRole('button', { name: allowOnce }),
     ).toHaveAttribute('aria-pressed', 'true');
     await expect(
-      sheet.getByRole('button', { name: 'Always allow' }),
+      sheet.getByRole('button', { name: alwaysAllow }),
     ).toHaveAttribute('aria-pressed', 'false');
-    await userEvent.click(sheet.getByRole('button', { name: 'Always allow' }));
+    await userEvent.click(sheet.getByRole('button', { name: alwaysAllow }));
     await expect(args.onValueChange).toHaveBeenCalledWith('always');
     await waitFor(() =>
       expect(page.queryByRole('dialog')).not.toBeInTheDocument(),
@@ -145,6 +149,7 @@ export const NarrowActionsInSheet: StoryObj<typeof MergeSplit> = {
     const sheet = within(
       await page.findByRole('dialog', { name: 'Merge options' }),
     );
+
     await userEvent.click(
       sheet.getByRole('button', { name: 'Squash and merge' }),
     );
