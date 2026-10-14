@@ -1,0 +1,1 @@
+ALTER TABLE `agents` ADD `readiness_agent_version` text;

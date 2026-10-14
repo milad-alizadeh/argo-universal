@@ -118,6 +118,10 @@ _Avoid_: Availability, Unavailable, health, probe result
 The Engine part that looks for each catalog Agent and custom Agent on this Mac: first in Argo's own folder, then on `PATH` by a binary Agent's entrypoint file name or an npm Agent's command name, which catalog sync reads once from npm. It runs at Server start, after the first catalog sync, when the Agents page opens with a stale look, after an install, update, removal or Repair, on Check again, and again whenever a Session opens.
 _Avoid_: Detector, scanner, discovery
 
+**Adapter version**:
+The version of the installed copy Argo launches: its npm package's own version, or the version it reports in ACP `agentInfo` when it has no package. Its **Agent version** is the `agentInfo` version, shown beside it only when the two differ. When a Ready Agent's Adapter version differs from the catalog's release, whoever installed it, its status is Update available.
+_Avoid_: Selected version (for what is installed), latest version
+
 **Installation observation**:
 What the Resolver last saw for one Agent: the launch it found, whether Argo owns that copy (Installed by Argo) or not (Found on this Mac), and when it looked; or that it found nothing, which shows Not found. Ownership is read from where the file is, never stored as a choice.
 _Avoid_: Install record, detection result

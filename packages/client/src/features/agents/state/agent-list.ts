@@ -92,7 +92,6 @@ export function probedRow(info: AgentInfo, custom = false): AgentRowEntry {
   };
 }
 
-// A newer release shows only once the installed one is Ready; any other status needs the user first.
 type RowReadiness = Pick<AgentRowEntry, 'status' | 'reason' | 'disabled'>;
 
 const readiness = (info: AgentInfo): RowReadiness => {
@@ -107,20 +106,11 @@ const readiness = (info: AgentInfo): RowReadiness => {
 export function listedStatus(info: AgentInfo): AgentRowEntry['status'] {
   if (!info.enabled && info.status === 'checking') return 'disabled';
 
-  return checkedStatus(info);
+  return info.status;
 }
-
-const checkedStatus = (info: AgentInfo): AgentRowEntry['status'] =>
-  info.status === 'ready' && hasPublishedUpdate(info) ? 'update' : info.status;
 
 const reasonOf = ({ reason }: AgentInfo): Pick<AgentRowEntry, 'reason'> =>
   reason === undefined ? {} : { reason };
-
-const hasPublishedUpdate = (info: AgentInfo): boolean => {
-  if (!info.version || !info.availableVersion) return false;
-
-  return info.version !== info.availableVersion;
-};
 
 // The Server's Agents as last checked; a custom Agent the list has not reached yet reads as Checking….
 export function installedAgents(

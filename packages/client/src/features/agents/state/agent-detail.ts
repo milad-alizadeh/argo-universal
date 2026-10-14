@@ -77,12 +77,24 @@ function withProbe(
     ...probed,
     ...foundSource(info),
     icon: probed.icon ?? fromRegistry?.icon,
-    version: selectedVersion(info, fromRegistry),
-    availableVersion: info.availableVersion,
+    ...versionsOf(info, fromRegistry),
   };
 }
 
-const selectedVersion = (
+const catalogRelease = (
   info: AgentInfo,
-  registry?: AgentDetail,
-): string | undefined => info.version ?? registry?.version;
+  fromRegistry: AgentDetail | undefined,
+): string | undefined => info.availableVersion ?? fromRegistry?.version;
+
+// Before install the page offers the catalog's release; after, only the copy's own versions.
+const versionsOf = (
+  info: AgentInfo,
+  fromRegistry: AgentDetail | undefined,
+): Pick<AgentDetail, 'version' | 'agentVersion' | 'availableVersion'> => ({
+  version:
+    info.status === 'not-installed'
+      ? catalogRelease(info, fromRegistry)
+      : info.version,
+  agentVersion: info.agentVersion,
+  availableVersion: info.availableVersion,
+});

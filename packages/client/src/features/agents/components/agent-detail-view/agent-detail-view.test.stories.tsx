@@ -25,7 +25,9 @@ export const ShowsTheVersionAndDistribution: Story = {
       canvas.getByRole('heading', { name: readyAgent.name, level: 1 }),
     ).toBeVisible();
     await expect(
-      canvas.getByRole('group', { name: `Version, v${readyAgent.version}` }),
+      canvas.getByRole('group', {
+        name: `Version, Adapter ${readyAgent.version}`,
+      }),
     ).toBeVisible();
     await expect(
       canvas.getByRole('group', { name: 'Distribution, npm · needs Node.js' }),
@@ -77,7 +79,7 @@ export const InstallsARegistryAgent: Story = {
 };
 
 export const UpdatesTheAgentOnAPhone: Story = {
-  args: { agent: { ...readyAgent, status: 'update' } },
+  args: { agent: { ...readyAgent, status: 'update-available' } },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Update' }));
@@ -86,7 +88,7 @@ export const UpdatesTheAgentOnAPhone: Story = {
 };
 
 export const OpensOnTheAgentsIdentityCard: Story = {
-  args: { agent: { ...readyAgent, status: 'update' } },
+  args: { agent: { ...readyAgent, status: 'update-available' } },
   play: async ({ canvas }) => {
     const card = canvas.getByRole('group', {
       name: new RegExp(`^${readyAgent.description}`),

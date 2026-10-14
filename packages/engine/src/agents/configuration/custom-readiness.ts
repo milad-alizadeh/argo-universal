@@ -20,6 +20,7 @@ export const checkedReadiness = (
   readinessReason:
     check.reason === undefined ? null : sanitizeReason(check.reason),
   readinessCheckedAt: checkedAt,
+  readinessAgentVersion: check.agentVersion ?? null,
 });
 
 export const rejectedDefinition = (check: AgentCheck): AgentRegistration => ({

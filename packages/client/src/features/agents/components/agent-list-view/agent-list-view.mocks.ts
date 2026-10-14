@@ -70,7 +70,7 @@ export const failedSyncCatalog: AgentsCatalogOutput = {
   error: 'Registry is offline',
 };
 
-// Installed Agents in every state the list draws; Update available has no Server source yet.
+// Installed Agents in every state the list draws.
 export const installedAgents: AgentRowEntry[] = [
   {
     id: 'first-agent',
@@ -83,7 +83,7 @@ export const installedAgents: AgentRowEntry[] = [
     id: 'third-agent',
     name: 'Third Agent',
     description: 'Runs in the terminal',
-    status: 'update',
+    status: 'update-available',
   },
   {
     id: customAgentId,

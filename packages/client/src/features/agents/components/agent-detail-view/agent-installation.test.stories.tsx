@@ -131,7 +131,7 @@ export const ShowsProgressInPlaceOnAPhone = inProgress(layoutWidths.phone);
 
 export const ShowsAnUpdateInPlace: Story = {
   args: {
-    agent: { ...readyAgent, status: 'update' },
+    agent: { ...readyAgent, status: 'update-available' },
     installation: installationArgs({ action: 'Update', installing: true }),
   },
   play: async ({ canvas }) => {

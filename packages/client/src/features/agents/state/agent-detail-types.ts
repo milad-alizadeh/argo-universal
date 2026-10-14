@@ -9,7 +9,10 @@ interface AgentLink {
 
 // What the detail page knows about an Agent: the Server's probe, the ACP Registry's entry, or both.
 export type AgentDetail = AgentRowEntry & {
+  // The Adapter's version for an installed Agent, the catalog's release for one not installed.
   version?: string;
+  // What the Agent reported over ACP, only when it differs from the Adapter's.
+  agentVersion?: string;
   availableVersion?: string;
   // How the Server installs it, such as "npm · needs Node.js", or why this Server cannot.
   distribution?: string;

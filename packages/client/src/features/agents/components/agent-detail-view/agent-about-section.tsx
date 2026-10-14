@@ -48,7 +48,7 @@ function VersionRow(props: AgentDetailViewProps): React.JSX.Element | null {
   return (
     <ListItem
       title="Version"
-      value={`v${props.agent.version}`}
+      value={versionLine(props.agent)}
       accessory={versionAccessory(props, wide)}
     />
   );
@@ -63,6 +63,33 @@ function AboutRow(props: {
   return <ListItem title={props.title} value={props.value} />;
 }
 
+type ShownAgent = AgentDetailViewProps['agent'];
+
+// The Server sends an Agent version only when it differs from the Adapter's.
+const installedLine = (agent: ShownAgent): string =>
+  [
+    `Adapter ${agent.version}`,
+    agent.agentVersion && `${agent.name} ${agent.agentVersion}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+const updateLine = (agent: ShownAgent): string =>
+  agent.availableVersion
+    ? `v${agent.version} → v${agent.availableVersion}`
+    : installedLine(agent);
+
+const statusLines: Partial<
+  Record<ShownAgent['status'], (agent: ShownAgent) => string>
+> = {
+  'not-installed': (agent) => `v${agent.version}`,
+  'update-available': updateLine,
+};
+
+// Paper: the catalog's release before install, from → to when an update is out, else the Adapter and the Agent.
+const versionLine = (agent: ShownAgent): string =>
+  (statusLines[agent.status] ?? installedLine)(agent);
+
 const versionAccessory = (
   props: AgentDetailViewProps,
   wide: boolean,
@@ -70,7 +97,7 @@ const versionAccessory = (
   wide && showsUpdate(props) ? <AgentAction {...props} /> : undefined;
 
 const showsUpdate = (props: AgentDetailViewProps): boolean =>
-  props.agent.status === 'update' || openUpdate(props.installation);
+  props.agent.status === 'update-available' || openUpdate(props.installation);
 
 const openUpdate = (
   installation: AgentDetailViewProps['installation'],

@@ -53,10 +53,8 @@ const runCheck = async (
   return deps.checkAgentLaunch({ name: target.name, launch });
 };
 
-const sanitized = (check: AgentCheck): AgentCheck =>
-  check.reason === undefined
-    ? { status: check.status }
-    : { status: check.status, reason: sanitizeReason(check.reason) };
+const sanitized = ({ reason, ...check }: AgentCheck): AgentCheck =>
+  reason === undefined ? check : { ...check, reason: sanitizeReason(reason) };
 
 const save = (
   deps: ReadinessDeps,
@@ -92,10 +90,19 @@ const checkAndSave = async (
   }
 
   const result = sanitized(check);
-  await save(deps, [agentId], savedCheck(deps, result));
+  await save(deps, [agentId], checkedReadiness(deps, result));
 
   return result;
 };
+
+// A finished check also replaces the agentInfo version; other saves keep it.
+const checkedReadiness = (
+  deps: ReadinessDeps,
+  check: AgentCheck,
+): SavedReadiness => ({
+  ...savedCheck(deps, check),
+  readinessAgentVersion: check.agentVersion ?? null,
+});
 
 // Shows the Agent as Checking… at once, then saves what the shared ACP check observed.
 const recheckAgent = async (
