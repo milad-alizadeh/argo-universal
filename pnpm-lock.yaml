@@ -593,6 +593,9 @@ importers:
       '@repo/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@repo/machine-log':
+        specifier: workspace:*
+        version: link:../../packages/machine-log
       xstate:
         specifier: 'catalog:'
         version: 5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759)
@@ -1316,6 +1319,9 @@ importers:
 
   packages/git:
     dependencies:
+      '@repo/machine-log':
+        specifier: workspace:*
+        version: link:../machine-log
       zod:
         specifier: 'catalog:'
         version: 4.6.5
