@@ -1,12 +1,26 @@
 import type { NavigationDestination } from './context';
 
-type RouteHref = {
-  [Key in NavigationDestination['to']]: {
-    pathname: (typeof routes)[Key]['pathname'];
-    params: Omit<Extract<NavigationDestination, { to: Key }>, 'to'> &
-      (Key extends 'new-session' ? { id: typeof newSessionId } : unknown);
-  };
-}[NavigationDestination['to']];
+type NewSessionDestination = Extract<
+  NavigationDestination,
+  { to: 'new-session' }
+>;
+
+type AgentsDestination = Extract<
+  NavigationDestination,
+  { to: 'settings-agents' }
+>;
+
+// A destination's fields without `to`: they become its route's params.
+type DestinationFields<Destination> = Destination extends NavigationDestination
+  ? Omit<Destination, 'to'>
+  : never;
+
+interface RouteHref {
+  pathname: (typeof routes)[NavigationDestination['to']]['pathname'];
+  params:
+    | DestinationFields<NavigationDestination>
+    | (DestinationFields<NewSessionDestination> & { id: typeof newSessionId });
+}
 
 // The route that draws each destination; a destination's fields are its route's params.
 type RouteParams = Record<string, string | string[] | undefined>;
@@ -17,21 +31,24 @@ export const newSessionId = 'new';
 // One route draws New Session and the Session it becomes, so the first prompt keeps the same screen.
 const sessionOrNew = (params: RouteParams): NavigationDestination => {
   const id = String(params.id);
+
   return id === newSessionId ? newSession(params) : { to: 'session', id };
 };
 
 function newSession({ projectId }: RouteParams): NavigationDestination {
-  return {
-    to: 'new-session',
-    ...(typeof projectId === 'string' ? { projectId } : {}),
-  };
+  const destination: NewSessionDestination = { to: 'new-session' };
+
+  if (typeof projectId === 'string') destination.projectId = projectId;
+
+  return destination;
 }
 
 function agentsList({ filter }: RouteParams): NavigationDestination {
-  return {
-    to: 'settings-agents',
-    ...(filter === 'not-installed' ? { filter } : {}),
-  };
+  const destination: AgentsDestination = { to: 'settings-agents' };
+
+  if (filter === 'not-installed') destination.filter = filter;
+
+  return destination;
 }
 
 const routes = {
@@ -102,53 +119,20 @@ const routes = {
 >;
 
 export function hrefFor(destination: NavigationDestination): RouteHref {
-  if (destination.to === 'session') return sessionHref(destination);
   if (destination.to === 'new-session') return newSessionHref(destination);
-  return settingsOrStaticHref(destination);
-}
-
-function settingsOrStaticHref(
-  destination: Exclude<
-    NavigationDestination,
-    { to: 'session' | 'new-session' }
-  >,
-): RouteHref {
-  if (destination.to === 'settings-project') return projectHref(destination);
-  if (destination.to === 'settings-agent') return agentHref(destination);
   const { to, ...params } = destination;
-  return { pathname: routes[to].pathname, params };
-}
 
-function sessionHref(
-  destination: Extract<NavigationDestination, { to: 'session' }>,
-): RouteHref {
-  const { to, ...params } = destination;
   return { pathname: routes[to].pathname, params };
 }
 
 // New Session's URL is a Session's, with an id no Session has.
-function newSessionHref(
-  destination: Extract<NavigationDestination, { to: 'new-session' }>,
-): RouteHref {
+function newSessionHref(destination: NewSessionDestination): RouteHref {
   const { to, ...params } = destination;
+
   return {
     pathname: routes[to].pathname,
     params: { ...params, id: newSessionId },
   };
-}
-
-function projectHref(
-  destination: Extract<NavigationDestination, { to: 'settings-project' }>,
-): RouteHref {
-  const { to, ...params } = destination;
-  return { pathname: routes[to].pathname, params };
-}
-
-function agentHref(
-  destination: Extract<NavigationDestination, { to: 'settings-agent' }>,
-): RouteHref {
-  const { to, ...params } = destination;
-  return { pathname: routes[to].pathname, params };
 }
 
 // Reads the destination back from Expo Router's segments and params; any other route counts as the Sessions list.
@@ -157,8 +141,10 @@ export function destinationFor(
   params: Record<string, string | string[] | undefined>,
 ): NavigationDestination {
   const route = `/${segments.filter((segment) => !segment.startsWith('(') && segment !== 'index').join('/')}`;
+
   const matched = Object.values(routes).find(
     ({ pathname }) => pathname === route,
   );
+
   return matched?.destination(params) ?? { to: 'sessions' };
 }

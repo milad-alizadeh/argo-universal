@@ -14,9 +14,13 @@ const meta = {
   parameters: { screenPreview: true },
   args: feedContentArgs,
 } satisfies Meta<typeof Feed>;
+
 export default meta;
+
 const projectGuideTitle = 'Project guide';
+
 const embeddedName = 'result.txt';
+
 const embeddedText = 'Embedded result';
 
 async function copiesReference({
@@ -24,10 +28,12 @@ async function copiesReference({
   userEvent,
 }: FeedPlayContext): Promise<void> {
   const clipboard = spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+
   try {
     const [copyUri] = canvas.getAllByRole('button', {
       name: 'Copy URI',
     });
+
     if (!copyUri) throw new Error('Resource needs a Copy URI button');
     await userEvent.click(copyUri);
     await waitFor(() =>
@@ -57,6 +63,7 @@ async function opensReferences({
     canvas.getByRole('button', { name: projectGuideTitle }),
   );
   await userEvent.click(canvas.getByRole('button', { name: embeddedName }));
+
   for (const text of ['The current guide', embeddedText])
     await expect(canvas.getByText(text)).toBeVisible();
 }
@@ -86,16 +93,19 @@ export const ReferencesFirstAgentPhone = supportedContent(
   'agent-1',
   drawsReferences,
 );
+
 export const ReferencesFirstAgentWide = supportedContent(
   layoutWidths.wide,
   'agent-1',
   drawsReferences,
 );
+
 export const ReferencesSecondAgentPhone = supportedContent(
   layoutWidths.phone,
   'agent-2',
   drawsReferences,
 );
+
 export const ReferencesSecondAgentWide = supportedContent(
   layoutWidths.wide,
   'agent-2',

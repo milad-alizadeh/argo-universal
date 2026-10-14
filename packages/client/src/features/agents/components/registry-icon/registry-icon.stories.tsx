@@ -8,6 +8,7 @@ const meta = {
   args: { agentName: iconAgent.entry.name, uri: undefined, role: 'control' },
   argTypes: { uri: { control: 'text' } },
 } satisfies Meta<typeof RegistryIcon>;
+
 export default meta;
 
 export const Unavailable: StoryObj<typeof meta> = { name: 'RegistryIcon' };

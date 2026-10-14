@@ -32,38 +32,45 @@ import {
 } from './server-machine';
 
 const supervisorExitedEvent = 'server.exited';
+
 const retryServerEvent = 'server.retry';
 
 // Numbers written out so the model cannot grade itself.
 const pollDelayMs = 200;
+
 const startLimitMs = 30_000;
+
 const stopLimitMs = 5000;
 
 const spawnedAt = Date.parse('2026-10-03T09:30:00.000Z');
+
 const runningAddress: ServerAddress = {
   pid: 100,
   port: 7337,
   version: '1.0.0',
   startedAt: '2026-10-03T09:00:00.000Z',
 };
+
 const startedAddress: ServerAddress = {
   pid: 200,
   port: 7338,
   version: '1.0.0',
   startedAt: '2026-10-03T10:00:00.000Z',
 };
+
 // A server.json from before the spawn whose pid the OS gave to the new Supervisor.
 const staleAddress: ServerAddress = {
   ...startedAddress,
   port: 7339,
   startedAt: '2026-10-03T08:00:00.000Z',
 };
+
 const exitReason = 'The Supervisor exited while starting (1)';
 
 interface PendingCall<TInput, TOutput> {
   input: TInput;
   resolve: (output: TOutput) => void;
-  reject: (error: unknown) => void;
+  reject: (error: Error) => void;
 }
 
 interface SpawnCall {
@@ -83,11 +90,17 @@ const createPromiseMock = <TOutput, TInput>(
   );
 
 let readAddressCalls: PendingCall<ServerInput, ServerAddress | null>[];
+
 let checkRunningCalls: PendingCall<CheckRunningInput, boolean>[];
+
 let spawnCalls: SpawnCall[];
+
 let signalledPids: (number | null)[];
+
 let readyAddresses: ServerAddress[];
+
 let failures: (string | null)[];
+
 let server: Actor<typeof machine>;
 
 const machine = serverConnectionMachine.provide({
@@ -102,6 +115,7 @@ const machine = serverConnectionMachine.provide({
       ({ input }): (() => void) => {
         const call = { input, live: true };
         spawnCalls.push(call);
+
         return (): void => {
           call.live = false;
         };
@@ -115,7 +129,9 @@ const machine = serverConnectionMachine.provide({
     log: (): void => {},
   },
 });
+
 type ServerSnapshot = SnapshotFrom<typeof machine>;
+
 const input: ServerInput = { home: '/unused', serverDirectory: '/unused' };
 
 const startServerMachine = (): typeof server => {
@@ -127,6 +143,7 @@ const startServerMachine = (): typeof server => {
     failures.push(failure);
   });
   server.start();
+
   return server;
 };
 
@@ -140,6 +157,7 @@ const reportSpawned = (): void =>
     pid: startedAddress.pid,
     at: spawnedAt,
   });
+
 const reportExited = (): void =>
   latest(spawnCalls).input.parent.send({
     type: supervisorExitedEvent,
@@ -172,6 +190,7 @@ describe('server connection model', (): void => {
   const readAddressDoneEvent = 'xstate.done.actor.readAddress';
   const readAddressErrorEvent = 'xstate.error.actor.readAddress';
   const checkRunningDoneEvent = 'xstate.done.actor.checkRunning';
+
   // Done and error events of invoked actors are not in the machine's event type, but the model drives them.
   const fixtures = [
     ...[runningAddress, null, startedAddress, staleAddress].map(
@@ -210,22 +229,30 @@ describe('server connection model', (): void => {
     { type: 'xstate.after.stopLimit.serverConnection.retrying' },
     { type: 'xstate.after.stopLimit.serverConnection.stopping' },
   ] satisfies GraphEventFromLogic<typeof machine>[];
+
   type ServerEvent = (typeof fixtures)[number];
+
   const eventTypes = (node: DirectedGraphNode): string[] => [
     ...node.edges.map((edge): string => edge.label.text),
     ...node.children.flatMap(eventTypes),
   ];
+
   const types = [...new Set(eventTypes(toDirectedGraph(machine)))];
+
   const events = types.flatMap((type): ServerEvent[] => {
     const matching = fixtures.filter((event) => event.type === type);
+
     if (!matching.length)
       throw new Error(`Missing Server graph fixture for ${type}`);
+
     return matching;
   });
+
   const output = (
     event: ServerEvent,
   ): ServerAddress | null | boolean | undefined =>
     'output' in event ? event.output : undefined;
+
   const canGraphEvent = (
     snapshot: ServerSnapshot,
     event: ServerEvent,
@@ -266,19 +293,20 @@ describe('server connection model', (): void => {
   };
 
   // Never the address itself, only whose it is.
-  const vertex = (
-    snapshot: ServerSnapshot,
-  ): {
+  type Vertex = {
     value: ServerSnapshot['value'];
     address: number | null;
     ownedPid: ServerSnapshot['context']['ownedPid'];
     failure: boolean;
-  } => ({
+  };
+
+  const vertex = (snapshot: ServerSnapshot): Vertex => ({
     value: snapshot.value,
     address: snapshot.context.address?.pid ?? null,
     ownedPid: snapshot.context.ownedPid,
     failure: snapshot.context.failure !== null,
   });
+
   const options = {
     input,
     events,
@@ -299,6 +327,7 @@ describe('server connection model', (): void => {
         via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
       }),
   };
+
   // Without `via`: with it, the polling loops give thousands of simple paths.
   const simplePathOptions = {
     ...options,
@@ -313,48 +342,51 @@ describe('server connection model', (): void => {
     for (let timers = 0; timers < 5; timers++) {
       await vi.advanceTimersToNextTimerAsync();
       const actual = server.getSnapshot().value;
+
       if (JSON.stringify(actual) === JSON.stringify(state.value)) return;
     }
+
     expect.unreachable(`${JSON.stringify(state.value)} was never reached`);
   };
 
-  const executors: Record<
-    string,
-    EventExecutor<ServerSnapshot, ServerEvent>
-  > = {
-    'xstate.init': (): void => {
-      startServerMachine();
-    },
-    [readAddressDoneEvent]: ({ event }): Promise<void> => {
-      if (event.type !== readAddressDoneEvent)
-        throw new Error('Expected address result');
-      return settle((): void => latest(readAddressCalls).resolve(event.output));
-    },
-    [readAddressErrorEvent]: (): Promise<void> =>
-      settle((): void => latest(readAddressCalls).reject(readError)),
-    [checkRunningDoneEvent]: ({ event }): Promise<void> => {
-      if (event.type !== checkRunningDoneEvent)
-        throw new Error('Expected process result');
-      return settle((): void =>
-        latest(checkRunningCalls).resolve(event.output),
-      );
-    },
-    'server.spawned': reportSpawned,
-    'server.exited': reportExited,
-    'server.retry': (): void => server.send({ type: retryServerEvent }),
-    'app.quit': (): void => server.send({ type: 'app.quit' }),
-    ...Object.fromEntries(
-      types
-        .filter((type): boolean => type.startsWith('xstate.after.'))
-        .map((type): [string, EventExecutor<ServerSnapshot, ServerEvent>] => [
-          type,
-          fireDelay,
-        ]),
-    ),
-  };
+  const executors = new Map(
+    Object.entries({
+      'xstate.init': (): void => {
+        startServerMachine();
+      },
+      [readAddressDoneEvent]: ({ event }): Promise<void> => {
+        if (event.type !== readAddressDoneEvent)
+          throw new Error('Expected address result');
 
-  const states: Record<string, (snapshot: ServerSnapshot) => void> = {
-    '*': (snapshot): void => {
+        return settle((): void =>
+          latest(readAddressCalls).resolve(event.output),
+        );
+      },
+      [readAddressErrorEvent]: (): Promise<void> =>
+        settle((): void => latest(readAddressCalls).reject(readError)),
+      [checkRunningDoneEvent]: ({ event }): Promise<void> => {
+        if (event.type !== checkRunningDoneEvent)
+          throw new Error('Expected process result');
+
+        return settle((): void =>
+          latest(checkRunningCalls).resolve(event.output),
+        );
+      },
+      'server.spawned': reportSpawned,
+      'server.exited': reportExited,
+      'server.retry': (): void => server.send({ type: retryServerEvent }),
+      'app.quit': (): void => server.send({ type: 'app.quit' }),
+      ...Object.fromEntries(
+        types.flatMap(
+          (type): [string, EventExecutor<ServerSnapshot, ServerEvent>][] =>
+            type.startsWith('xstate.after.') ? [[type, fireDelay]] : [],
+        ),
+      ),
+    } satisfies Record<string, EventExecutor<ServerSnapshot, ServerEvent>>),
+  );
+
+  const states = {
+    '*': (snapshot: ServerSnapshot): void => {
       const actual = server.getSnapshot();
       expect(actual.value).toEqual(snapshot.value);
       expect(actual.status).toBe(snapshot.status);
@@ -370,12 +402,12 @@ describe('server connection model', (): void => {
         snapshot.matches('starting') ? 1 : 0,
       );
     },
-    ready: (snapshot): void => {
+    ready: (snapshot: ServerSnapshot): void => {
       // `ready` hands its address to the main process once, never a stale one.
       expect(readyAddresses).toEqual([snapshot.context.address]);
       expect(snapshot.context.address).not.toEqual(staleAddress);
     },
-    failed: (snapshot): void => {
+    failed: (snapshot: ServerSnapshot): void => {
       expect(snapshot.context.failure).not.toBeNull();
       expect(readyAddresses).toEqual([]);
     },
@@ -395,17 +427,22 @@ describe('server connection model', (): void => {
 
   const shortestPaths = terminalPaths(getShortestPaths(machine, options));
   const simplePaths = terminalPaths(getSimplePaths(machine, simplePathOptions));
+
   const title = (path: StatePath<ServerSnapshot, ServerEvent>): string =>
     path.steps
       .map(({ event }): string => {
         const name = event.type
           .replace(/^xstate\.after\.(\w+)\..*$/, 'after $1')
           .replace(/^xstate\.(done|error)\.actor\.(\w+)$/, '$2 $1');
+
         if (!('output' in event)) return name;
         const value = event.output;
+
         if (typeof value === 'boolean')
           return `${name} (${value ? 'running' : 'exited'})`;
+
         if (value === staleAddress) return `${name} (stale pid 200)`;
+
         return `${name} (${value === null ? 'none' : `pid ${value.pid}`})`;
       })
       .join(' → ');
@@ -421,11 +458,13 @@ describe('server connection model', (): void => {
       ),
     )('%s', async (_, path): Promise<void> => {
       for (const step of path.steps) {
-        const execute = executors[step.event.type];
+        const execute = executors.get(step.event.type);
+
         if (!execute)
           throw new Error(`Missing Server executor for ${step.event.type}`);
         await execute(step);
         states['*']?.(step.state);
+
         for (const [key, assertState] of Object.entries(states)) {
           if (key !== '*' && matchesState(key, step.state.value))
             assertState(step.state);

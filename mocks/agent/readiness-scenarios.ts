@@ -12,6 +12,7 @@ const withoutSessionClose: ScriptedScenario['initialize'] = {
     sessionCapabilities: { resume: {} },
   },
 };
+
 // Answers initialize without reporting its account, as OpenCode and Gemini CLI do.
 const withoutAccountReport: ScriptedScenario['initialize'] = {
   ...scriptedInitialization,
@@ -20,6 +21,7 @@ const withoutAccountReport: ScriptedScenario['initialize'] = {
     _meta: {},
   },
 };
+
 // ACP's auth_required error, which an Agent returns for a request that needs sign-in.
 const authRequired = { code: -32000, message: 'Authentication required' };
 
@@ -31,11 +33,13 @@ type SignInName =
   | 'unreported-account'
   | 'sign-in-on-session'
   | 'sign-in-on-prompt';
+
 type ReadinessName =
   | SignInName
   | 'account-not-supported'
   | 'not-compatible'
   | 'cant-start';
+
 const signInOn = (
   method: 'session/new' | 'session/prompt',
   unreported: ScriptedScenario,
@@ -49,6 +53,7 @@ const signInScenarios = (
   base: ScriptedScenario,
 ): Record<SignInName, ScriptedScenario> => {
   const unreported = { ...base, initialize: withoutAccountReport };
+
   return {
     'unreported-account': unreported,
     'sign-in-on-session': signInOn('session/new', unreported),

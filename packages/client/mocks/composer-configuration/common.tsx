@@ -3,15 +3,23 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { within } from 'storybook/test';
 import { ComposerAgentModelControl } from '../../src/features/composer/components/composer-configuration/composer-configuration';
+
 export type Story = StoryObj<typeof ComposerAgentModelControl>;
+
 export type Configuration = React.ComponentProps<
   typeof ComposerAgentModelControl
 >['configuration'];
+
 export const agentModelLabel = 'Agent and model';
+
 export const modelsScrollId = 'composer-models-scroll';
+
 export const agentsScrollId = 'composer-agents-scroll';
+
 export const effortValue = 'aria-valuetext';
+
 export const chooseAgentLabel = /^Agent,/;
+
 export const heldNotice =
   'A Turn is running. Changes apply from the next Turn.';
 

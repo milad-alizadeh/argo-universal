@@ -37,6 +37,7 @@ function ButtonGroup({
   onLayout,
 }: ButtonGroupProps): ReactElement {
   const items = Children.toArray(children).filter(isItem);
+
   return (
     <View className={cn('flex-row', className)} onLayout={onLayout}>
       {items.map((item, index) => joinButton(item, index, items.length))}

@@ -26,6 +26,7 @@ function sheetOptions(
     frame.windowHeight,
     Math.max(frame.minimumHeight, contentHeight + frame.headerHeight),
   );
+
   return Platform.OS === 'android'
     ? { contentStyle: { height: fittedHeight - frame.topInset } }
     : { sheetAllowedDetents: [fittedHeight / frame.windowHeight, 1] };
@@ -35,6 +36,7 @@ function useSheetFrame(minimumHeight: number): SheetFrame {
   const headerHeight = useHeaderHeight();
   const windowHeight = useWindowDimensions().height;
   const { top: topInset } = useSafeAreaInsets();
+
   return useMemo(
     () => ({ minimumHeight, windowHeight, headerHeight, topInset }),
     [minimumHeight, windowHeight, headerHeight, topInset],
@@ -49,6 +51,7 @@ export function useSheetHeight(minimumHeight = 0): FitSheet {
 function useFitSheet(minimumHeight: number): FitSheet {
   const navigation = useNavigation();
   const frame = useSheetFrame(minimumHeight);
+
   return useCallback(
     (contentHeight: number) => {
       navigation.getParent()?.setOptions(sheetOptions(contentHeight, frame));
@@ -65,6 +68,7 @@ function useRefitOnFocus(fit: FitSheet): FitSheet {
       if (lastContentHeight.current !== null) fit(lastContentHeight.current);
     }, [fit]),
   );
+
   return useCallback(
     (contentHeight: number) => {
       lastContentHeight.current = contentHeight;

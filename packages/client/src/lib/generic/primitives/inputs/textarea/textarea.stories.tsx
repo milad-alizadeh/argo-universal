@@ -19,7 +19,9 @@ const meta = {
   title: 'Design System/Primitives/Textarea',
   tags: ['third-party'],
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

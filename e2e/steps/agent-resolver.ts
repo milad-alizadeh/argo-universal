@@ -8,13 +8,17 @@ import { Given, Then, test } from './fixtures';
 import { agentWork } from './timeouts';
 
 const pathAgentName = 'Path Agent';
+
 const entrypoint = 'path-agent';
+
 const [template] = publishedRegistry.agents;
+
 // A binary Agent with one entrypoint name on every platform, so the Resolver can look for it on PATH.
 const target = {
   archive: 'https://example.org/path-agent.tar.gz',
   cmd: `./${entrypoint}`,
 };
+
 const pathAgent = {
   ...template,
   id: entrypoint,
@@ -32,6 +36,7 @@ const pathAgent = {
 const launcher = (): string => {
   const { executable, args } = scriptedAgentCommand('reply');
   const quoted = [executable, ...args].map((part) => `"${part}"`).join(' ');
+
   return `#!/bin/sh\nexec ${quoted} "$@"\n`;
 };
 
@@ -64,6 +69,7 @@ Then(
     const row = page.getByRole('link', {
       name: new RegExp(`^${pathAgentName},.*Ready$`),
     });
+
     await expect(row).toBeVisible(agentWork);
     await row.click();
     await expectFoundOnThisMac(page);
@@ -84,6 +90,7 @@ async function expectFoundOnThisMac(page: Page): Promise<void> {
   ).toHaveCount(0);
   await capture(page);
 }
+
 // Evidence for the PR: the Agent page of an Agent found outside Argo.
 const capture = (page: Page): Promise<Buffer> =>
   page.screenshot({

@@ -7,6 +7,8 @@ export function recordedAcpContent(
   const recording = recordedAcpContents.find(
     (recording) => recording.agent === agent,
   );
+
   if (!recording) throw new Error(`No ACP content recording for ${agent}`);
+
   return recording;
 }

@@ -13,6 +13,7 @@ import { RequestFrame } from '../../../../lib/product/request-frame';
 import { ElicitationSheet } from './elicitation-sheet';
 
 const meta = { ...questionTestMeta, title: 'Tests/ElicitationQuestions' };
+
 export default meta;
 
 export const RetainAnswersAcrossSheetTransition: Story = {

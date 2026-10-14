@@ -8,11 +8,13 @@ import { completedSteps, fullPercent } from '../../state/status';
 import { useNativeSheets } from '../agent-model-sheet-context';
 import { PlanSteps } from './plan-steps';
 import { Meter } from './status-meter';
+
 const planHeadingProps = {
   role: 'heading',
   semanticRole: 'heading',
   'aria-level': 2,
 } as const;
+
 function PlanHeading(): JSX.Element {
   return (
     <View className="flex-row items-center gap-2">
@@ -23,11 +25,14 @@ function PlanHeading(): JSX.Element {
     </View>
   );
 }
+
 interface PlanEntriesProps {
   entries: PlanEntry[];
 }
+
 function PlanCompletion({ entries }: PlanEntriesProps): JSX.Element {
   const done = completedSteps(entries);
+
   return (
     <View className="flex-row items-center gap-2">
       <PlanCompletionMeter done={done} total={entries.length} />
@@ -37,6 +42,7 @@ function PlanCompletion({ entries }: PlanEntriesProps): JSX.Element {
     </View>
   );
 }
+
 function PlanPopoverHeading({
   entries,
   windowWide,
@@ -51,9 +57,11 @@ function PlanPopoverHeading({
     </View>
   );
 }
+
 export function PlanPopoverContent({ entries }: PlanEntriesProps): JSX.Element {
   const windowWide = useWide();
   const nativeSheets = useNativeSheets();
+
   return (
     <View>
       {(windowWide || !nativeSheets) && (

@@ -22,6 +22,7 @@ async function requireCheckoutProjectPath(
   newSession: Pick<SessionNewInput, 'projectId' | 'checkout'>,
 ): Promise<string> {
   const projectPath = readProjectPath(database, newSession.projectId);
+
   if (
     newSession.checkout.type === 'worktree' &&
     !(await listBranches(projectPath)).branches.includes(
@@ -32,6 +33,7 @@ async function requireCheckoutProjectPath(
       code: 'BAD_REQUEST',
       message: `No local branch ${newSession.checkout.baseBranch}`,
     });
+
   return projectPath;
 }
 
@@ -47,8 +49,10 @@ async function waitForSessionStored(
       sessionSnapshot.status !== 'active' || sessionSnapshot.context.stored,
     { timeout: Infinity },
   );
+
   if (context.stored) return;
   const message = context.failure ?? `Session ${context.sessionId} closed`;
+
   if (context.acpLifetime.agentFailed)
     await deps.afterAgentOpenFailure?.(context.agent, message);
   throw new TRPCError({ code: 'PRECONDITION_FAILED', message });
@@ -62,11 +66,15 @@ async function waitForSessionInsertCommitted(
     databaseWriterId,
     writerMachine,
   );
+
   if (!databaseWriter || databaseWriter.getSnapshot().status !== 'active')
     throw new Error('Database Writer is unavailable');
+
   const { sessionId, sessionInsertCommitted } =
     sessionActor.getSnapshot().context;
+
   const outcome = await sessionInsertCommitted;
+
   if (outcome !== 'committed')
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
@@ -92,6 +100,7 @@ export async function createSession(
     deps.database,
     newSession,
   );
+
   validateSessionCommandAdmission(deps);
   const sessionId = deps.createId();
   sendCheckedOpenSessionsCommand(deps.sessions, {
@@ -115,13 +124,16 @@ export async function createSession(
   await submitInitialAcpPrompt(
     requireOpenSessionActor(deps.sessions, sessionId),
   );
+
   return { sessionId };
 }
 
 const submitInitialAcpPrompt = (session: SessionActorRef): Promise<void> => {
   const { input, acpLease } = session.getSnapshot().context;
+
   if (!acpLease || input.kind !== 'new' || input.prompt.length === 0)
     return Promise.resolve();
+
   return submitSessionPrompt(session, {
     turnId: input.turnId,
     content: input.prompt,
@@ -133,6 +145,7 @@ const applyInitialConfiguration = async (
   input: SessionNewInput,
 ): Promise<void> => {
   if (!session.getSnapshot().context.acpLease) return;
+
   for (const choice of input.configOptions)
     await applySessionConfig(session, {
       sessionId: session.getSnapshot().context.sessionId,

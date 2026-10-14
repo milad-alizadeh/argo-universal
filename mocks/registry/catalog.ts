@@ -59,6 +59,7 @@ export const publishedRegistry: ACPAgentRegistry = {
 };
 
 export const offlineRegistry = { offline: true };
+
 export const malformedRegistry = {
   version: '1.0.0',
   agents: [{ id: 'broken' }],
@@ -70,7 +71,8 @@ export type NpmPackageMetadata = {
   version: string;
   bin?: string | Record<string, string>;
 };
-export const npmPackages: Record<string, NpmPackageMetadata> = {
+
+export const npmPackages = {
   'example-agent@1.2.3': {
     name: 'example-agent',
     version: '1.2.3',
@@ -81,4 +83,4 @@ export const npmPackages: Record<string, NpmPackageMetadata> = {
     version: '1.2.3',
     bin: { 'fixture-acp': 'agent.mjs' },
   },
-};
+} satisfies Record<string, NpmPackageMetadata>;

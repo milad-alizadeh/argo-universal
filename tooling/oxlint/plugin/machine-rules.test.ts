@@ -3,6 +3,7 @@ import { machineClock } from './machine-clock.ts';
 import { ruleTester } from './rule-tester.ts';
 
 const childProcess = [{ messageId: 'childProcess' }];
+
 const clock = [{ messageId: 'machineClock' }];
 
 ruleTester.run('child-process', childProcessImport, {

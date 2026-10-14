@@ -3,8 +3,11 @@ import { expect, fn } from 'storybook/test';
 import { IconButton } from './icon-button';
 
 const meta = { title: 'Tests/IconButton' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 const onPress = fn();
 
 export const AccessibleName: Story = {

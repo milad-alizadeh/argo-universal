@@ -6,20 +6,25 @@ import { expect, it, onTestFinished, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { openTestDatabase, readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
+import type { FetchAgents } from './registry/fetch-agents';
 
 it('serves its SQLite last-good catalog over HTTP after the actual Engine restarts offline', async (): Promise<void> => {
   const stored = openTestDatabase();
   stored.database.$client.close();
   onTestFinished(stored.remove);
-  const fetchAgents = vi.fn<() => Promise<unknown>>(
-    async (): Promise<unknown> => publishedRegistry,
+
+  const fetchAgents = vi.fn<FetchAgents>(async (): Promise<string> =>
+    JSON.stringify(publishedRegistry),
   );
+
   const first = await startEngineTestHost({
     home: stored.directory,
     fetchAgents: withNpmFixture(fetchAgents),
   });
+
   const history = (await first.caller.session.list({ archived: false }))
     .sessions;
+
   const savedSessions = first.database.select().from(session).all();
   expect(fetchAgents).not.toHaveBeenCalled();
   const beforeSync = await fetch(`${first.url}/trpc/agents.catalog`);
@@ -57,10 +62,12 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
   await first.stop();
   expect(fetchAgents).toHaveBeenCalledTimes(1);
   fetchAgents.mockRejectedValue(new Error('Registry is offline'));
+
   const restarted = await startEngineTestHost({
     home: stored.directory,
     fetchAgents: withNpmFixture(fetchAgents),
   });
+
   await fetch(`${restarted.url}/trpc/agents.syncCatalog`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -105,10 +112,12 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
 }, 15_000);
 
 it('completes admitted sync after its WebSocket disconnects and serves the committed catalog over HTTP', async () => {
-  const upstream = Promise.withResolvers<unknown>();
+  const upstream = Promise.withResolvers<string>();
+
   const host = await startEngineTestHost({
     fetchAgents: async () => upstream.promise,
   });
+
   const socket = new WebSocket(host.url.replace('http:', 'ws:'));
   onTestFinished(() => socket.terminate());
   await once(socket, 'open');
@@ -127,10 +136,11 @@ it('completes admitted sync after its WebSocket disconnects and serves the commi
   const closed = once(socket, 'close');
   socket.close();
   await closed;
-  upstream.resolve(publishedRegistry);
+  upstream.resolve(JSON.stringify(publishedRegistry));
   await expect
     .poll(async () => {
       const response = await fetch(`${host.url}/trpc/agents.catalog`);
+
       return response.json();
     })
     .toMatchObject({

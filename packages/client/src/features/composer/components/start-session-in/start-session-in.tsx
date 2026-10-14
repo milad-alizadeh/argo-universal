@@ -5,10 +5,12 @@ import { ServerLocation } from './server-location';
 import { SessionCheckoutControl } from './session-checkout-control';
 import { SessionProjectControl } from './session-project-control';
 import type { StartSessionInProps } from './start-session-types';
+
 export type { StartSessionInProps } from './start-session-types';
 
 export function StartSessionIn(props: StartSessionInProps): React.JSX.Element {
   const wide = useContentWide();
+
   return (
     <View {...startLocationProps(wide)}>
       <ServerLocation

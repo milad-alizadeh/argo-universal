@@ -11,20 +11,25 @@ type OverlayProps = Omit<
   React.ComponentProps<typeof DialogPrimitive.Overlay>,
   'asChild'
 > & { children?: React.ReactNode; dismissible?: boolean };
+
 const FullWindowOverlay =
   Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
+
 const overlayClassName = cn(
   'absolute bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/50 p-2',
   Platform.select({
     web: 'animate-in fade-in-0 fixed cursor-default [&>*]:cursor-auto',
   }),
 );
+
 const entering = FadeIn.duration(motionDuration.enter).reduceMotion(
   ReduceMotion.System,
 );
+
 const exiting = FadeOut.duration(motionDuration.exit).reduceMotion(
   ReduceMotion.System,
 );
+
 const contentEntering = FadeIn.delay(motionDuration.enterDelay).reduceMotion(
   ReduceMotion.System,
 );
@@ -46,8 +51,10 @@ function useOverlayPress(
   dismissible: boolean | undefined,
 ): OverlayProps['onPress'] {
   const { onOpenChange } = DialogPrimitive.useRootContext();
+
   return (event): void => {
     onPress?.(event);
+
     if (closesDialog(event, dismissible)) onOpenChange(false);
   };
 }
@@ -71,6 +78,7 @@ function useOverlayProps({
   ...props
 }: OverlayProps): React.ComponentProps<typeof DialogPrimitive.Overlay> {
   const onOverlayPress = useOverlayPress(onPress, dismissible);
+
   return {
     ...props,
     className: cn(overlayClassName, className),
@@ -81,6 +89,7 @@ function useOverlayProps({
 
 function AnimatedDialogOverlay(props: OverlayProps): React.JSX.Element {
   const overlayProps = useOverlayProps(props);
+
   return (
     <DialogPrimitive.Overlay {...overlayProps}>
       <NativeOnlyAnimatedView {...animationProps}>

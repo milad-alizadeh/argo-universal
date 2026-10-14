@@ -16,15 +16,19 @@ const meta = {
   component: LiveHeader,
   args: { liveHeader: requestHeader, now: liveHeaderNow },
 } satisfies Meta<typeof LiveHeader>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 async function expectEveryStep(rows: HTMLElement[]): Promise<void> {
   await expect(rows).toHaveLength(liveHeaderSteps.length);
+
   for (const [index, { liveHeader }] of liveHeaderSteps.entries()) {
     const { text } = liveHeader;
     const elapsed = liveHeaderElapsed;
     const row = rows[index];
+
     if (!row) throw new Error('Live header row is missing');
     await expect(row).toBeVisible();
     await expect(row).toHaveAccessibleName(`${text} ${elapsed}`);
@@ -69,6 +73,7 @@ export const LongTextStaysWithinHeader: Story = {
     await page.viewport(390, 844);
     const row = canvas.getByRole('status');
     const container = row.parentElement;
+
     if (!container) throw new Error('Live header has no container.');
     await expect(row.scrollWidth).toBeLessThanOrEqual(container.clientWidth);
     await expect(row.getBoundingClientRect().right).toBeLessThanOrEqual(

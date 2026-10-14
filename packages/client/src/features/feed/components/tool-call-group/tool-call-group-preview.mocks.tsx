@@ -6,6 +6,7 @@ import { startedAt } from '../recorded-tool-calls.mocks';
 import { ToolCallRow } from '../tool-call-row/tool-call-row';
 
 type Exploration = Extract<FeedActivity, { type: 'exploration' }>;
+
 type ToolCallActivity = Extract<FeedActivity, { type: 'tool_call' }>;
 
 function RecordedExploration({
@@ -41,6 +42,7 @@ export function renderRecordedActivity(
 ): React.JSX.Element {
   if (activity.type === 'exploration')
     return <RecordedExploration activity={activity} />;
+
   if (activity.type === 'tool_call')
     return <RecordedCommand activity={activity} />;
   throw new Error('This recording needs only commands and exploration');

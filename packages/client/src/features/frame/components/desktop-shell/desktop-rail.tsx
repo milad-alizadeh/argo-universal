@@ -34,6 +34,7 @@ const tileClass = 'rounded-selection';
 function selectionProps(selected: boolean): TileSelection {
   if (!selected)
     return { iconClassName: 'text-foreground/72', className: tileClass };
+
   return {
     iconClassName: 'text-foreground',
     'aria-current': 'page',
@@ -43,6 +44,7 @@ function selectionProps(selected: boolean): TileSelection {
 
 function SectionTile(props: SectionButtonProps): React.JSX.Element {
   const { title, icon } = shellSections[props.section];
+
   return (
     <IconButton
       icon={icon}
@@ -84,6 +86,7 @@ function RailSections(props: DesktopRailProps): React.JSX.Element {
 
 function SidebarToggle(props: DesktopRailProps): React.JSX.Element {
   const { sidebarShown, onSidebarShownChange } = props;
+
   return (
     <IconButton
       icon="sidebar"
@@ -100,6 +103,7 @@ function SidebarToggle(props: DesktopRailProps): React.JSX.Element {
 
 function RailEdge(props: { sidebarShown: boolean }): React.JSX.Element | null {
   if (!props.sidebarShown) return null;
+
   return (
     <View
       pointerEvents="none"

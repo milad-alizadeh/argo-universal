@@ -7,6 +7,7 @@ it.each([{ archived: false }, { archived: false, direction: 'forward' }])(
     expect(SessionListInput.parse(pagingInput)).toEqual(pagingInput);
   },
 );
+
 it.each([{ direction: 'backward' }, { unexpected: true }])(
   'rejects unsupported paging mock fields %j',
   (pagingInput): void => {

@@ -20,6 +20,7 @@ const webPage: PastedHtml = {
 
 const googleDocsText =
   'font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-variant:normal;vertical-align:baseline;white-space:pre;white-space:pre-wrap;';
+
 const googleDocsLine =
   'dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;"';
 
@@ -41,6 +42,7 @@ console.log(answer);</code></pre><figure id="6e7f8091-a2b3-4c45-d6e7-f8091a2b3c4
 };
 
 const vsCodeLine = (spans: string): string => `<div>${spans}</div>`;
+
 const vsCodeSpan = (color: string, text: string): string =>
   `<span style="color: ${color};">${text}</span>`;
 

@@ -35,14 +35,17 @@ it('sends live list changes and attention/running counts through request and Tur
   onTestFinished(remove);
   seedListedSessions(database);
   const completed = Promise.withResolvers<void>();
+
   const input = scriptedEngineInput({
     steps: [],
     responses: { 'session/prompt': [{ waitFor: completed.promise }] },
   });
+
   const { databaseWriter: writer, createCaller } = await startEngineTestHost({
     database,
     ...input,
   });
+
   const { caller, controller } = watchEngineList(createCaller);
   const counts = (await caller.session.counts())[Symbol.asyncIterator]();
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
@@ -51,6 +54,7 @@ it('sends live list changes and attention/running counts through request and Tur
     type: 'changed',
     session: { sessionId: 'session-1', status: 'idle' },
   });
+
   for (const sessionId of ['archived', 'subagent'])
     writer.send({
       type: writerWriteEvent,
@@ -107,6 +111,7 @@ it('sends live list changes and attention/running counts through request and Tur
       activity: 'All done',
       activityAt: expect.any(Number),
     });
+
   const newest = await nextListChange(
     updates,
     (update): boolean =>
@@ -114,6 +119,7 @@ it('sends live list changes and attention/running counts through request and Tur
       update.session.status === 'unread' &&
       update.session.activity === 'All done',
   );
+
   expect(newest).toMatchObject({ session: { activity: 'All done' } });
   controller.abort();
   await finishSubscription(counts);

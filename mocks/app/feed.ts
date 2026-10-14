@@ -16,6 +16,7 @@ export const FeedMock = z.strictObject({
   // Each new live header the Server's producer gave while the Turns replayed.
   liveHeaders: z.array(LiveHeader),
 });
+
 export type FeedMock = z.infer<typeof FeedMock>;
 
 export const recordedFeedMocks = z.array(FeedMock).parse(recordings);

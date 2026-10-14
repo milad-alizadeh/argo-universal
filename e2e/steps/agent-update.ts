@@ -4,6 +4,7 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
 import { When, Then, test } from './fixtures';
 import { toast } from './toasts';
+
 const versionRow = (page: Page, version: string): Locator =>
   page.getByRole('group', { name: `Version, v${version}`, exact: true });
 
@@ -21,6 +22,7 @@ const updatedRegistry: typeof publishedRegistry = {
       : agent,
   ),
 };
+
 When(
   'the registry offers Example Agent version two',
   async ({ page, app }): Promise<void> => {
@@ -38,6 +40,7 @@ When(
     ).toBeVisible();
   },
 );
+
 Then(
   'Example Agent still shows selected version one',
   async ({ page }): Promise<void> => {
@@ -48,6 +51,7 @@ Then(
     });
   },
 );
+
 When(
   'I explicitly update Example Agent with installer {word}',
   async ({ page, app }, outcome: string): Promise<void> => {
@@ -65,6 +69,7 @@ When(
     await dialog.getByRole('button', { name: 'Update', exact: true }).click();
   },
 );
+
 Then(
   'Example Agent settles with selected version {word}',
   async ({ page }, version: string): Promise<void> => {
@@ -74,5 +79,7 @@ Then(
     await expect(versionRow(page, expected.version)).toBeVisible();
   },
 );
+
 const updated = { title: 'Example Agent updated', version: '2.0.0' };
+
 const retained = { title: 'Could not update Example Agent', version: '1.2.3' };

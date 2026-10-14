@@ -17,6 +17,7 @@ import galleryMeta, { Overview as Gallery } from './elicitation-form.stories';
 import { ElicitationOutcome } from './elicitation-outcome';
 
 const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm' };
+
 export default meta;
 
 export const AcceptedOutcome: Story = {
@@ -40,6 +41,7 @@ export const AcceptedOutcome: Story = {
     await expect(canvas.getByText('Mobile', { exact: true })).toBeVisible();
   },
 };
+
 export const DeclinedOutcome: Story = {
   render: () => (
     <ElicitationOutcome
@@ -51,6 +53,7 @@ export const DeclinedOutcome: Story = {
     await expect(canvas.getByText('You declined')).toBeVisible();
   },
 };
+
 export const DismissedOutcome: Story = {
   render: () => (
     <ElicitationOutcome request={fieldsRequest} answer={{ action: 'cancel' }} />
@@ -77,6 +80,7 @@ export const EmptyAcceptedOutcome: Story = {
 
 function galleryFixture(mock: RequestMock, width: number): Story {
   const props = elicitationProps({ mock });
+
   return {
     render: () => Gallery.render({ ...galleryMeta.args, agent: mock.agent }),
     play: async ({ canvas }) => {
@@ -87,21 +91,27 @@ function galleryFixture(mock: RequestMock, width: number): Story {
     },
   };
 }
+
 const [firstGalleryAgent, secondGalleryAgent] = elicitationMocks;
+
 if (!firstGalleryAgent || !secondGalleryAgent)
   throw new Error('Recorded gallery needs both Agents.');
+
 export const GalleryFirstAgentPhone: Story = galleryFixture(
   firstGalleryAgent,
   layoutWidths.phone,
 );
+
 export const GalleryFirstAgentWide: Story = galleryFixture(
   firstGalleryAgent,
   layoutWidths.wide,
 );
+
 export const GallerySecondAgentPhone: Story = galleryFixture(
   secondGalleryAgent,
   layoutWidths.phone,
 );
+
 export const GallerySecondAgentWide: Story = galleryFixture(
   secondGalleryAgent,
   layoutWidths.wide,

@@ -12,4 +12,5 @@ export const meta = {
   args: { view: { state: 'ready', ...readyNewSession } },
   render: ({ view }): React.JSX.Element => <NewSessionView {...view} />,
 } satisfies Meta<{ view: NewSessionViewProps }>;
+
 export type Story = StoryObj<typeof meta>;

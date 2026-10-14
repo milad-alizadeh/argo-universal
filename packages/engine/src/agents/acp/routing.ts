@@ -3,7 +3,9 @@ import type { createRejectionCounter } from '@repo/machine-log';
 import type { AcpReservation } from './reservations';
 
 const earlyUpdateLimit = 64;
+
 const earlyByteLimit = 262_144;
+
 type EarlyUpdate = {
   notification: SessionNotification;
   eligible: Set<AcpReservation>;
@@ -18,7 +20,7 @@ export class AcpRouting {
   private fenced = false;
   public constructor(
     private readonly rejections: ReturnType<typeof createRejectionCounter>,
-    private readonly failed: (error: unknown) => void,
+    private readonly failed: (cause: unknown) => void,
   ) {}
 
   public reserve(reservation: AcpReservation): void {
@@ -32,8 +34,10 @@ export class AcpRouting {
     sessionId: string | undefined,
   ): AcpReservation | undefined => {
     const destination = this.locateSessionReservation(sessionId);
+
     if (!destination)
       this.rejections.report('Unknown or unavailable ACP session destination');
+
     return destination;
   };
   private locateSessionReservation(
@@ -46,8 +50,10 @@ export class AcpRouting {
   public accept = (notification: SessionNotification): undefined => {
     if (this.fenced) return undefined;
     const destination = this.destinations.get(notification.sessionId);
+
     if (destination) this.deliver(destination, notification);
     else this.buffer(notification);
+
     return undefined;
   };
   public bindSessionDestination(
@@ -63,7 +69,10 @@ export class AcpRouting {
     this.rejectUnclaimableEarlyUpdates();
   }
   public release(reservation: AcpReservation): void {
-    if (reservation.sessionId !== undefined)
+    if (
+      reservation.sessionId !== undefined &&
+      this.destinations.get(reservation.sessionId) === reservation
+    )
       this.destinations.delete(reservation.sessionId);
     this.openings.delete(reservation);
     this.rejectUnclaimableEarlyUpdates();
@@ -83,9 +92,12 @@ export class AcpRouting {
   private buffer(notification: SessionNotification): void {
     if (this.openings.size === 0) {
       this.rejections.report('Unrecognised ACP session update');
+
       return;
     }
+
     const bytes = Buffer.byteLength(JSON.stringify(notification));
+
     if (this.isFull(bytes)) return this.overflow();
     this.buffered.push({
       notification,
@@ -112,6 +124,7 @@ export class AcpRouting {
         row.notification.sessionId === reservation.sessionId &&
         row.eligible.has(reservation),
     );
+
     for (const row of reservedUpdates)
       this.deliver(reservation, row.notification);
     this.remove(new Set(reservedUpdates));
@@ -123,6 +136,7 @@ export class AcpRouting {
           this.openings.has(reservation),
         ),
     );
+
     for (const row of unclaimableUpdates)
       this.rejections.report(
         `Unclaimed ACP early session update (${row.bytes} bytes)`,

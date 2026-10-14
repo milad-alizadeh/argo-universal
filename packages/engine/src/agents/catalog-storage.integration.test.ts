@@ -3,8 +3,10 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
 import { readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
+import type { FetchAgents } from './registry/fetch-agents';
 
 const [exampleAgent, pythonAgent] = publishedRegistry.agents;
+
 if (!exampleAgent || !pythonAgent)
   throw new Error('Registry mock needs package Agents');
 
@@ -16,27 +18,33 @@ it('rolls back every changed/removed row and timestamp when a later insert fails
       { ...pythonAgent, id: 'new-agent' },
     ],
   };
+
   const fetchAgents = vi
-    .fn<() => Promise<unknown>>()
-    .mockResolvedValueOnce(publishedRegistry)
-    .mockResolvedValue(changed);
+    .fn<FetchAgents>()
+    .mockResolvedValueOnce(JSON.stringify(publishedRegistry))
+    .mockResolvedValue(JSON.stringify(changed));
+
   const { caller, database, createCaller } = await startEngineTestHost({
     fetchAgents,
   });
+
   await caller.agents.syncCatalog();
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus)
     .toBe('idle');
   const before = readAddedAgentRows(database);
   const controller = new AbortController();
+
   const observer = createCaller({
     signal: controller.signal,
   });
+
   const changes = await observer.agents.catalogChanges();
   const notification = changes[Symbol.asyncIterator]().next();
   let failedWrites = 0;
   database.$client.function('count_rejected_catalog', () => {
     failedWrites += 1;
+
     return 0;
   });
   database.$client.exec(

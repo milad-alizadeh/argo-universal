@@ -11,25 +11,35 @@ import {
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 
 const meta = { ...planProposalTestMeta, title: 'Tests/PlanProposalCard' };
+
 export default meta;
 
 export const KeepPlanningPhone = keepPlanning(layoutWidths.phone);
+
 export const KeepPlanningWide = keepPlanning(layoutWidths.wide);
+
 export const KeepPlanningWithFeedbackPhone = keepPlanningWithFeedback(
   layoutWidths.phone,
 );
+
 export const KeepPlanningWithFeedbackWide = keepPlanningWithFeedback(
   layoutWidths.wide,
 );
+
 export const KeepPlanningPhoneDark: Story = { ...KeepPlanningPhone, ...dark };
+
 export const KeepPlanningWideDark: Story = { ...KeepPlanningWide, ...dark };
+
 export const KeepPlanningWithFeedbackPhoneDark: Story = {
   ...KeepPlanningWithFeedbackPhone,
   ...dark,
 };
+
 export const KeepPlanningWithFeedbackWideDark: Story = {
   ...KeepPlanningWithFeedbackWide,
   ...dark,
 };
+
 export const ExpandWhilePlanningPhone = expandWhilePlanning(layoutWidths.phone);
+
 export const ExpandWhilePlanningWide = expandWhilePlanning(layoutWidths.wide);

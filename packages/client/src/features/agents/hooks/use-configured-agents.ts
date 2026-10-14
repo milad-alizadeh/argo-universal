@@ -14,20 +14,25 @@ import {
 export function useAgentChanges(): void {
   const trpc = useTRPC(),
     cache = useQueryClient();
+
   const refresh = (): void => {
     void cache.invalidateQueries(trpc.agents.pathFilter());
   };
+
   const subscription = useSubscription(
     trpc.agents.catalogChanges.subscriptionOptions(undefined, {
       onStarted: refresh,
       onData: refresh,
     }),
   );
+
   useResubscribeOnReconnect(subscription);
 }
+
 export function useConfiguredAgents<Result = ConfiguredAgent[]>(
   select?: (agents: ConfiguredAgent[]) => Result,
 ): UseQueryResult<Result, ClientError> {
   useAgentChanges();
+
   return useQuery({ ...useTRPC().agents.configured.queryOptions(), select });
 }

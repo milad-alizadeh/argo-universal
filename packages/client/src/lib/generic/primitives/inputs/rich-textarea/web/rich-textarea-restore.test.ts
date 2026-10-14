@@ -27,6 +27,7 @@ describe('RichTextarea draft restore', () => {
   it('keeps a link URL with escaped parentheses', () => {
     const markdown =
       '[Lisp](https://en.wikipedia.org/wiki/Lisp_\\(language\\))';
+
     expect(roundTrip(markdown)).toBe(markdown);
   });
 });

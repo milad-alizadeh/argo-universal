@@ -3,18 +3,22 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { withNpmFixture } from '@repo/mocks/registry/port';
 import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import type { FetchAgents } from './registry/fetch-agents';
 
 const exampleSearch = 'example';
 
 it('browses upstream metadata through Agents without opening a conversation', async (): Promise<void> => {
-  const fetchAgents = vi.fn<() => Promise<unknown>>(
-    async () => publishedRegistry,
+  const fetchAgents = vi.fn<FetchAgents>(async () =>
+    JSON.stringify(publishedRegistry),
   );
+
   const adapter = createAgentMetadata();
+
   const { caller } = await startEngineTestHost({
     fetchAgents: withNpmFixture(fetchAgents),
     fixtureAgents: [adapter],
   });
+
   const sessionsBefore = await caller.session.list({ archived: false });
   await caller.agents.syncCatalog();
   await expect
@@ -37,8 +41,9 @@ it('browses upstream metadata through Agents without opening a conversation', as
 
 it('shows the Server recipe rather than the App platform', async (): Promise<void> => {
   const { caller } = await startEngineTestHost({
-    fetchAgents: async (): Promise<unknown> => publishedRegistry,
+    fetchAgents: async (): Promise<string> => JSON.stringify(publishedRegistry),
   });
+
   await caller.agents.syncCatalog();
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus, {
@@ -46,14 +51,17 @@ it('shows the Server recipe rather than the App platform', async (): Promise<voi
     })
     .not.toMatch(/pending|running/);
   const catalog = await caller.agents.catalog();
-  const expectedByHost: Record<string, readonly string[]> = {
-    'darwin:arm64': ['darwin-aarch64', 'binary', 'unsupported'],
-    'darwin:x64': ['darwin-x86_64', 'unsupported', 'unsupported'],
-    'linux:arm64': ['linux-aarch64', 'unsupported', 'unsupported'],
-    'linux:x64': ['linux-x86_64', 'unsupported', 'unsupported'],
-    'win32:x64': ['windows-x86_64', 'unsupported', 'binary'],
-  };
-  const expected = expectedByHost[`${process.platform}:${process.arch}`];
+
+  const expectedByHost = new Map([
+    ['darwin:arm64', ['darwin-aarch64', 'binary', 'unsupported']],
+    ['darwin:x64', ['darwin-x86_64', 'unsupported', 'unsupported']],
+    ['linux:arm64', ['linux-aarch64', 'unsupported', 'unsupported']],
+    ['linux:x64', ['linux-x86_64', 'unsupported', 'unsupported']],
+    ['win32:x64', ['windows-x86_64', 'unsupported', 'binary']],
+  ]);
+
+  const expected = expectedByHost.get(`${process.platform}:${process.arch}`);
+
   if (!expected)
     throw new Error('Catalog test needs an expectation for this host');
   expect(catalog.serverPlatform).toBe(expected[0]);
@@ -69,21 +77,28 @@ it('shows the Server recipe rather than the App platform', async (): Promise<voi
 
 it('keeps literal substring search local, including percent, underscore and Unicode lowercasing', async (): Promise<void> => {
   const agent = publishedRegistry.agents[0];
+
   if (!agent) throw new Error('Registry mock needs an Agent');
-  const fetchAgents = vi.fn<() => Promise<unknown>>(async () => ({
-    ...publishedRegistry,
-    agents: [
-      { ...agent, name: 'Éclair_100%' },
-      { ...agent, id: 'plain', name: 'Plain' },
-    ],
-  }));
+
+  const fetchAgents = vi.fn<FetchAgents>(async () =>
+    JSON.stringify({
+      ...publishedRegistry,
+      agents: [
+        { ...agent, name: 'Éclair_100%' },
+        { ...agent, id: 'plain', name: 'Plain' },
+      ],
+    }),
+  );
+
   const { caller } = await startEngineTestHost({
     fetchAgents: withNpmFixture(fetchAgents),
   });
+
   await caller.agents.syncCatalog();
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus)
     .toBe('idle');
+
   for (const search of ['éclair', '_', '%'])
     expect((await caller.agents.catalog({ search })).agents).toMatchObject([
       { entry: { name: 'Éclair_100%' } },

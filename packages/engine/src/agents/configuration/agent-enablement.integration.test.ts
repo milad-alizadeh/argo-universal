@@ -6,7 +6,9 @@ import {
 } from '#mocks/custom-agent';
 
 const admissionRefusal = 'cannot accept sessions.create';
+
 const [registryAgent] = fixtureAgents;
+
 if (!registryAgent)
   throw new Error('The cutover test needs a registry identity');
 
@@ -53,10 +55,13 @@ it('a registry identity with no installed release cannot fall back to a native A
 
 it('disablement refuses new admission while an owned Session keeps its lifetime admission', async () => {
   const host = await startCustomAgentEngine({ acp: {} });
+
   const registration = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registration.status !== 'ready') throw new Error(registration.failure);
+
   const input = {
     projectId: 'project-1',
     agent: registration.agentId,
@@ -64,6 +69,7 @@ it('disablement refuses new admission while an owned Session keeps its lifetime 
     configOptions: [],
     prompt: [],
   };
+
   const created = await host.caller.session.new(input);
   await host.caller.agents.setEnabled({
     agentId: registration.agentId,

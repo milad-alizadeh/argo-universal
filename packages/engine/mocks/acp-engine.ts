@@ -9,7 +9,7 @@ import { onTestFinished } from 'vitest';
 import type { AcpResourceInput } from '../src/agents';
 import type { EngineInput } from '../src/engine/machine';
 import { openTestDatabase } from './database';
-import { startEngineTestHost } from './engine';
+import { type EngineTestOptions, startEngineTestHost } from './engine';
 import { createScriptedAgentProcess } from './scripted-agent';
 
 export const emptySessionInput = {
@@ -19,6 +19,7 @@ export const emptySessionInput = {
   configOptions: [],
   prompt: [],
 };
+
 // Server start's Readiness check answers the first initialize; a scripted sequence lists it before a Session's.
 export const startupCheckAnswer = {};
 
@@ -49,12 +50,12 @@ export const startAcpEngine = async (
   await initTestRepository(directory);
   const storage = openTestDatabase({}, directory);
   const agent = createScriptedAgentProcess(scenario);
-  const host = await startEngineTestHost({
+
+  const options: EngineTestOptions = {
     database: storage.database,
     createId,
     loginTimeoutMs: scenario.loginTimeoutMs,
     loginCleanupTimeoutMs: scenario.loginCleanupTimeoutMs,
-    ...(scenario.fetchAgents ? { fetchAgents: scenario.fetchAgents } : {}),
     fixtureAgents: [createAgentMetadata(agentId)],
     acp: {
       ...agent,
@@ -63,12 +64,17 @@ export const startAcpEngine = async (
       closeTimeoutMs: scenario.closeTimeoutMs,
       releaseTimeoutMs: scenario.releaseTimeoutMs,
     },
-  });
+  };
+
+  if (scenario.fetchAgents) options.fetchAgents = scenario.fetchAgents;
+  const host = await startEngineTestHost(options);
+
   onTestFinished(async () => {
     for (const process of agent.processes) process.exited.resolve();
     await host.stop();
     storage.remove();
     rmSync(directory, { recursive: true, force: true });
   });
+
   return { ...host, agent };
 };

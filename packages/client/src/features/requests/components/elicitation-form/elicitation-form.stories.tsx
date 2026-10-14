@@ -44,6 +44,7 @@ const meta = {
     error: { control: 'text' },
   },
 } satisfies Meta<GalleryArgs>;
+
 export default meta;
 
 export const Overview = {
@@ -55,11 +56,13 @@ const answeredState = {
   kind: 'answered',
   reason: 'Already answered on another device',
 } as const;
+
 const fieldsProps = elicitationProps({
   request: fieldsRequest,
   values: fieldsValues,
   source: 'linear',
 });
+
 const outcomes: { label: string; answer: ElicitationAnswer }[] = [
   {
     label: 'Submitted form',
@@ -105,6 +108,7 @@ function choiceProps(args: GalleryArgs): ElicitationFormProps {
       elicitationMocks.find((mock) => mock.agent === args.agent) ??
       elicitationMock,
   });
+
   return elicitationProps({
     ...args,
     request: selected.request,

@@ -12,6 +12,7 @@ type QuestionFields = {
   inactive: boolean;
   value: ElicitationValues[string] | undefined;
 };
+
 export type QuestionModel = QuestionFields & {
   canAdvance: boolean;
   change: (value: string | string[]) => void;
@@ -19,10 +20,12 @@ export type QuestionModel = QuestionFields & {
   skip: () => void;
   navigate: (index: number) => void;
 };
+
 type Answers = {
   values: ElicitationValues;
   setValues: (values: ElicitationValues) => void;
 };
+
 type Page = { index: number; count: number; setIndex: (index: number) => void };
 
 export function useElicitationQuestions(
@@ -30,9 +33,11 @@ export function useElicitationQuestions(
   questions: ElicitationQuestion[],
 ): QuestionModel {
   const [index, setIndex] = useState(0);
+
   const [values, setValues] = useState<ElicitationValues>(
     props.initialValues ?? {},
   );
+
   return questionModel(
     questionFields(props, questions, { index, values }),
     { values, setValues },
@@ -46,6 +51,7 @@ function questionFields(
   state: { index: number; values: ElicitationValues },
 ): QuestionFields {
   const question = currentQuestion(questions, state.index);
+
   return {
     props,
     question,
@@ -81,11 +87,13 @@ function advance(
 
 function skip(fields: QuestionFields, answers: Answers, page: Page): void {
   if (fields.inactive) return;
+
   const remaining = Object.fromEntries(
     Object.entries(answers.values).filter(
       ([key]) => key !== fields.question.name,
     ),
   );
+
   answers.setValues(remaining);
   completePage(fields, remaining, page);
 }
@@ -98,6 +106,7 @@ function change(
   if (!fields.inactive)
     answers.setValues({ ...answers.values, [fields.question.name]: value });
 }
+
 function navigate(fields: QuestionFields, page: Page, index: number): void {
   if (!fields.inactive)
     page.setIndex(Math.max(0, Math.min(page.count - 1, index)));
@@ -108,7 +117,9 @@ function currentQuestion(
   index: number,
 ): ElicitationQuestion {
   const question = questions[index];
+
   if (!question) throw new Error('Question flow needs a question.');
+
   return question;
 }
 
@@ -127,11 +138,15 @@ function completePage(
   if (fields.last) fields.props.onAnswer({ action: 'accept', content: values });
   else page.setIndex(page.index + 1);
 }
+
 function hasAnswer(fields: QuestionFields): boolean {
   if (Array.isArray(fields.value)) return fields.value.length > 0;
+
   if (typeof fields.value !== 'string') return false;
+
   return hasTextAnswer(fields.question, fields.value);
 }
+
 function hasTextAnswer(question: ElicitationQuestion, value: string): boolean {
   return (
     !!value.trim() || question.options.some((option) => option.const === value)

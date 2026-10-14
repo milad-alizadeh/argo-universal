@@ -5,6 +5,7 @@ import { settleViewport } from '../../../settle-viewport';
 import { Checkbox } from './checkbox';
 
 const label = 'Notify team';
+
 const failure = 'Choose whether to notify the team';
 
 const meta = {
@@ -16,6 +17,7 @@ const meta = {
   args: { label, value: false, onChange: fn() },
   render: function Example(props): React.JSX.Element {
     const [value, setValue] = useState(props.value);
+
     return (
       <Checkbox
         {...props}
@@ -28,24 +30,30 @@ const meta = {
     );
   },
 } satisfies Meta<typeof Checkbox>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function checksWith(input: 'pointer' | 'keyboard'): Story {
   return {
     play: async ({ canvas, userEvent, args }) => {
       const checkbox = canvas.getByRole('checkbox', { name: label });
+
       if (input === 'pointer') await userEvent.click(checkbox);
       else {
         checkbox.focus();
         await userEvent.keyboard(' ');
       }
+
       await expect(checkbox).toBeChecked();
       await expect(args.onChange).toHaveBeenCalledWith(true);
     },
   };
 }
+
 export const PointerChecks = checksWith('pointer');
+
 export const SpaceChecks = checksWith('keyboard');
 
 export const Unchecks: Story = {

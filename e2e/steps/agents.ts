@@ -13,6 +13,7 @@ const AgentsList = z.array(
     reason: z.string().optional(),
   }),
 );
+
 export type ListedAgent = z.infer<typeof AgentsList>[number];
 
 // The Agents as saved now, without waiting for Readiness checks.
@@ -42,6 +43,7 @@ export async function readAgents(
       { timeout: 20_000 },
     )
     .toBe(false);
+
   return listAgents(page, httpUrl);
 }
 
@@ -51,9 +53,12 @@ export async function readAgent(
   ordinal: number,
 ): Promise<ListedAgent> {
   const id = agentId(ordinal);
+
   const found = (await readAgents(page, httpUrl)).find(
     (entry): boolean => entry.agent === id,
   );
+
   if (!found) throw new Error(`The Server has no Agent ${id}`);
+
   return found;
 }

@@ -12,12 +12,16 @@ export interface SessionStatusInput {
 
 export function deriveSessionStatus(input: SessionStatusInput): SessionStatus {
   if (input.needsInput) return 'needs_input';
+
   if (input.running) return 'running';
+
   if (
     input.failure !== null ||
     (input.latestTurnFailed && !input.latestTurnInterrupted)
   )
     return 'failed';
+
   if (input.maxRevision > input.seenRevision) return 'unread';
+
   return 'idle';
 }

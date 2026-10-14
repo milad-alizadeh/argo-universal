@@ -44,14 +44,18 @@ export interface ConfigurationDeps {
   afterEnable?: (agentId: string) => void;
   now?: () => number;
 }
+
 type CustomSave = CustomCheck;
+
 type SavedAgent = Pick<ConfiguredAgent, 'id' | 'enabled'> & {
   configuration: ConfiguredAgent['configuration'] | null;
 };
+
 const serializeConfiguration = ({
   configuration,
 }: SavedAgent): string | null =>
   configuration === null ? null : JSON.stringify(configuration);
+
 const saveConfiguration = (
   deps: ConfigurationDeps,
   agent: SavedAgent,
@@ -65,18 +69,22 @@ const saveConfiguration = (
     ),
     true,
   );
+
 const withSetup = <Result>(
   deps: ConfigurationDeps,
   agentId: string,
   operation: () => Promise<Result>,
 ): Promise<Result> =>
   deps.withAgentSetup ? deps.withAgentSetup(agentId, operation) : operation();
+
 const requireAgent = (
   deps: ConfigurationDeps,
   agentId: string,
 ): ConfiguredAgent => {
   const agent = readConfiguredAgent(deps.database, agentId);
+
   if (!agent) throw new Error(`No configured Agent ${agentId}`);
+
   return agent;
 };
 
@@ -86,11 +94,13 @@ const saveCheckedCustomAgent = async (
   save: CustomSave & { enabled: boolean },
 ): Promise<AgentRegistration> => {
   const check = await checkCustomDefinition(deps.checkAgentLaunch, save);
+
   if (!isSavable(check)) return rejectedDefinition(check);
   const { agentId: id, enabled, definition } = save;
   const configuration = { source: 'custom' as const, definition };
   const readiness = checkedReadiness((deps.now ?? Date.now)(), check);
   await saveConfiguration(deps, { id, enabled, configuration }, readiness);
+
   return { status: 'ready', agentId: id };
 };
 
@@ -99,6 +109,7 @@ export const registerCustomAgent = (
   definition: CustomAgentDefinition,
 ): Promise<AgentRegistration> => {
   const agentId = deps.createId();
+
   return withSetup(deps, agentId, () =>
     saveCheckedCustomAgent(deps, { agentId, definition, enabled: true }),
   );
@@ -110,10 +121,13 @@ const saveCustomEdit = (
 ): Promise<AgentRegistration> =>
   runMutation(deps, agentId, async () => {
     const { enabled, configuration } = requireAgent(deps, agentId);
+
     if (configuration.source !== 'custom')
       throw new Error(`Agent ${agentId} is not a custom Agent`);
+
     if (configuration.removed)
       throw new Error('Agent was removed. Register it again.');
+
     return saveCheckedCustomAgent(deps, { agentId, definition, enabled });
   });
 
@@ -133,8 +147,10 @@ const saveEnablement = (
 ): Promise<void> =>
   runMutation(deps, agentId, async () => {
     const { configuration } = requireAgent(deps, agentId);
+
     if (configuration.removed)
       throw new Error('Agent was removed. Install or register it again.');
+
     return saveConfiguration(deps, { id: agentId, enabled, configuration });
   });
 
@@ -143,6 +159,7 @@ export const setAgentEnabled = async (
   input: AgentEnablementInput,
 ): Promise<void> => {
   await withSetup(deps, input.agentId, () => saveEnablement(deps, input));
+
   if (input.enabled) deps.afterEnable?.(input.agentId);
 };
 

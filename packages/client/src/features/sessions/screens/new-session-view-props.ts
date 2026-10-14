@@ -102,6 +102,8 @@ export function toNewSessionViewProps(
 ): NewSessionViewProps {
   if (hasFailedToLoad(wiring.data)) return { state: 'load-failed' };
   const loaded = loadedNewSession(wiring.data);
+
   if (!loaded) return { state: 'loading' };
+
   return { state: 'ready', ...readyProps(loaded, wiring) };
 }

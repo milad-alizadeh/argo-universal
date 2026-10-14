@@ -14,6 +14,7 @@ import {
   applyFeedChange,
   subscribe,
 } from '#mocks/feed-suite';
+
 it('persists the latest open row when the store timer expires before its next stream batch', async () => {
   await startFeedTestHost();
   const updates = await subscribe({ epoch: 3, revision: 5 });
@@ -25,10 +26,13 @@ it('persists the latest open row when the store timer expires before its next st
     createTextAppendChange(overlappingTimersRowId, storedBeforeStreamText),
   );
   let streamed = false;
+
   const next = takeFeedChanges(updates, 1).then((events) => {
     streamed = true;
+
     return events;
   });
+
   await vi.advanceTimersByTimeAsync(50);
   expect(streamed).toBe(false);
   expect(

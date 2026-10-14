@@ -21,16 +21,20 @@ const meta = {
   component: CommandRow,
   args: { row: completedCommand },
 } satisfies Meta<typeof CommandRow>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function completed(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+
       const row = canvas.getByRole('button', {
         name: commandTitle,
       });
+
       await expect(row).toBeVisible();
       await expect(row).toHaveTextContent('short git status 0.3s');
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
@@ -61,7 +65,9 @@ function completed(width: number): Story {
     },
   };
 }
+
 export const CompletedPhone = completed(layoutWidths.phone);
+
 export const CompletedWide = completed(layoutWidths.wide);
 
 function outputDisclosure(width: number): Story {
@@ -97,7 +103,9 @@ function outputDisclosure(width: number): Story {
     },
   };
 }
+
 export const OutputDisclosurePhone = outputDisclosure(layoutWidths.phone);
+
 export const OutputDisclosureWide = outputDisclosure(layoutWidths.wide);
 
 function failed(width: number): Story {
@@ -116,18 +124,25 @@ function failed(width: number): Story {
     },
   };
 }
+
 export const FailedPhone = failed(layoutWidths.phone);
+
 export const FailedWide = failed(layoutWidths.wide);
 
 export const CompletedPhoneDark: Story = { ...CompletedPhone, ...dark };
+
 export const CompletedWideDark: Story = { ...CompletedWide, ...dark };
+
 export const OutputDisclosurePhoneDark: Story = {
   ...OutputDisclosurePhone,
   ...dark,
 };
+
 export const OutputDisclosureWideDark: Story = {
   ...OutputDisclosureWide,
   ...dark,
 };
+
 export const FailedPhoneDark: Story = { ...FailedPhone, ...dark };
+
 export const FailedWideDark: Story = { ...FailedWide, ...dark };

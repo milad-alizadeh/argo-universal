@@ -6,17 +6,23 @@ import { createMachinePath } from '#mocks/machine-path';
 import type { FetchAgents } from '../index';
 
 const npmEntry = pathNpmEntry();
+
 const registry = { version: '1.0.0', agents: [npmEntry] };
+
 afterEach(() => vi.useRealTimers());
 
 // npm never answers; the Registry answers at once.
-const npmHeld = (): { signals: AbortSignal[]; fetchAgents: FetchAgents } => {
+type HeldNpm = { signals: AbortSignal[]; fetchAgents: FetchAgents };
+
+const npmHeld = (): HeldNpm => {
   const signals: AbortSignal[] = [];
+
   return {
     signals,
     fetchAgents: async (signal, npmRelease) => {
-      if (!npmRelease) return registry;
+      if (!npmRelease) return JSON.stringify(registry);
       signals.push(signal);
+
       return new Promise(() => {});
     },
   };
@@ -26,10 +32,12 @@ it('an npm read slower than 5 seconds is given up and the catalog sync commits w
   const machine = await createMachinePath();
   await machine.place(pathNpmCommand);
   const npm = npmHeld();
+
   const host = await startEngineTestHost({
     fixtureAgents: [],
     fetchAgents: npm.fetchAgents,
   });
+
   vi.useFakeTimers();
   await host.caller.agents.syncCatalog();
   await vi.advanceTimersByTimeAsync(4_999);
@@ -41,6 +49,7 @@ it('an npm read slower than 5 seconds is given up and the catalog sync commits w
     .poll(async () => (await host.caller.agents.catalog()).syncStatus)
     .toBe('idle');
   const [listed] = (await host.caller.agents.catalog()).agents;
+
   if (!listed) throw new Error('The catalog sync did not commit');
   expect(listed.entry.id).toBe(npmEntry.id);
   await host.caller.agents.list({ refresh: true });
@@ -51,11 +60,13 @@ it('Server shutdown aborts a pending npm read and commits no catalog rows', asyn
   const stored = openTestDatabase();
   onTestFinished(stored.remove);
   const npm = npmHeld();
+
   const host = await startEngineTestHost({
     fixtureAgents: [],
     database: stored.database,
     fetchAgents: npm.fetchAgents,
   });
+
   await host.caller.agents.syncCatalog();
   await expect.poll(() => npm.signals.length).toBe(1);
   await host.stop();

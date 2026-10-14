@@ -13,6 +13,7 @@ function editMenu(isMac: boolean): MenuItemConstructorOptions {
   const macOnly: MenuItemConstructorOptions[] = isMac
     ? [{ type: 'separator' }, speechMenu]
     : [];
+
   return {
     role: 'editMenu',
     submenu: [
@@ -35,9 +36,11 @@ export function applicationMenu(
   platform: NodeJS.Platform,
 ): MenuItemConstructorOptions[] {
   const isMac = platform === 'darwin';
+
   const appMenu: MenuItemConstructorOptions[] = isMac
     ? [{ role: 'appMenu' }]
     : [];
+
   return [
     ...appMenu,
     { role: 'fileMenu' },

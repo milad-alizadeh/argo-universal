@@ -21,5 +21,6 @@ const sheetHeaderOptions = {
 export function useSheetHeaderOptions(): typeof sheetHeaderOptions &
   ReturnType<typeof useHeaderTitleOptions> {
   const titleOptions = useHeaderTitleOptions();
+
   return { ...sheetHeaderOptions, ...titleOptions };
 }

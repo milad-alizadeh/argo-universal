@@ -11,6 +11,7 @@ type NativeSliderProps = React.ComponentProps<typeof NativeSlider>;
 // Expo's universal Slider takes no colours on Android, so Argo keeps the Compose one to draw its tint.
 export function Slider(props: SliderProps): React.JSX.Element {
   const colors = useSliderColors();
+
   return (
     <ControlHost matchContents={{ vertical: true }} style={{ width: '100%' }}>
       <NativeSlider
@@ -31,6 +32,7 @@ function spokenName(
 
 function useSliderColors(): NativeSliderProps['colors'] {
   const { tint, muted, separator } = useNativeTheme().colors;
+
   return {
     thumbColor: tint,
     activeTrackColor: tint,
@@ -54,5 +56,6 @@ function sliderAttributes(props: SliderProps): NativeSliderProps {
 // Compose reports a stepped position as a float, so it is rounded onto the nearest stop.
 function snapToStep(value: number, range: SliderRange): number {
   const stop = Math.round((value - range.minimumValue) / range.step);
+
   return range.minimumValue + stop * range.step;
 }

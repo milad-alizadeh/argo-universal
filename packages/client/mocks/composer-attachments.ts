@@ -21,8 +21,10 @@ export const composerImages: ComposerAttachment[] = newSessionInputs.flatMap(
 );
 
 const imageFromContract = composerImages[0];
+
 if (!imageFromContract)
   throw new Error('New Session contract mock needs an image.');
+
 export const oversizedComposerImage: ComposerAttachment = {
   ...imageFromContract,
   name: 'full-screen.png',

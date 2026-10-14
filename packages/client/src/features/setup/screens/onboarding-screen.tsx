@@ -22,12 +22,15 @@ const loadedRows = <Row,>(
 ): Row[] | undefined =>
   agents.data !== undefined || agents.isError ? rows : undefined;
 
+type AgentStepState = { step?: AgentStep; checkAgain: () => void };
+
 // A failed load shows the toast and leaves step 1 on Check again.
-function useAgentStep(): { step?: AgentStep; checkAgain: () => void } {
+function useAgentStep(): AgentStepState {
   const agents = useAgents();
   const rows = useInstalledAgents();
   useErrorToast(agents.isError ? agentsFailed : undefined);
   const runners = loadedRows(agents, rows)?.filter(runsSessions);
+
   return {
     step: agentStep(runners, agents.retrying),
     checkAgain: agents.retry,
@@ -39,6 +42,7 @@ const useServerName = (): string | undefined =>
 
 function useChangeAgent(): () => void {
   const navigate = useNavigate();
+
   return () => navigate({ to: 'settings-agents' });
 }
 
@@ -47,7 +51,9 @@ export function OnboardingScreen(): React.JSX.Element | null {
   const onChangeAgent = useChangeAgent();
   const { step, checkAgain } = useAgentStep();
   const serverName = useServerName();
+
   if (!step) return null;
+
   return (
     <OnboardingView
       serverName={serverName}

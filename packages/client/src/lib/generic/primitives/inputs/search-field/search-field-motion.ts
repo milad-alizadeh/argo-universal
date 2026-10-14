@@ -13,20 +13,30 @@ import { quarterTurnDegrees } from '../../../motion';
 
 // Paper's SearchField motion: one spring opens, a firmer one closes so the field settles without a bounce.
 const spring = { mass: 1, stiffness: 360, reduceMotion: ReduceMotion.System };
+
 const openingDamping = 31;
+
 const closingDamping = 36;
 
 // Where the lens settles inside the open field: 12 of padding plus half the 16 glyph.
 const fieldLensCentre = 20;
+
 // The lens swells from 16 to 18 mid-flight, as if lifted while it travels.
 const lensLift = 0.125;
+
 const titleShift = 8;
+
 const closeStartScale = 0.6;
+
 // Where in the travel each part fades, from 0 closed to 1 open.
 const restGone = 0.4;
+
 const surfaceShown = 0.55;
+
 const textStarts = 0.5;
+
 const textShown = 0.75;
+
 const closeAppearing = 0.4;
 
 export interface SearchFieldGeometry {
@@ -44,6 +54,7 @@ export function useSearchProgress(open: boolean): SharedValue<number> {
     const damping = open ? openingDamping : closingDamping;
     progress.set(withSpring(open ? 1 : 0, { ...spring, damping }));
   }, [open, progress]);
+
   return progress;
 }
 
@@ -51,6 +62,7 @@ export function useSearchProgress(open: boolean): SharedValue<number> {
 export function useRestStyle(progress: SharedValue<number>): AnimatedStyle {
   return useAnimatedStyle(() => {
     const p = progress.get();
+
     return {
       opacity: interpolate(p, [0, restGone], [1, 0], Extrapolation.CLAMP),
       transform: [{ translateX: -titleShift * Math.min(p, 1) }],
@@ -64,8 +76,10 @@ export function useSurfaceStyle(
   geometry: SearchFieldGeometry,
 ): AnimatedStyle {
   const { rowWidth, triggerWidth } = geometry;
+
   return useAnimatedStyle(() => {
     const p = Math.min(progress.get(), 1);
+
     return {
       width: triggerWidth + (rowWidth - triggerWidth) * p,
       opacity: interpolate(p, [0, surfaceShown], [0, 1], Extrapolation.CLAMP),
@@ -79,8 +93,10 @@ export function useLensStyle(
   geometry: SearchFieldGeometry,
 ): AnimatedStyle {
   const restCentre = geometry.rowWidth - geometry.triggerWidth / 2;
+
   return useAnimatedStyle(() => {
     const p = Math.min(progress.get(), 1);
+
     return {
       transform: [
         { translateX: -(restCentre - fieldLensCentre) * p },
@@ -109,6 +125,7 @@ export function useTextStyle(progress: SharedValue<number>): AnimatedStyle {
 export function useCloseStyle(progress: SharedValue<number>): AnimatedStyle {
   return useAnimatedStyle(() => {
     const p = Math.min(progress.get(), 1);
+
     return {
       display: p > 0 ? 'flex' : 'none',
       opacity: interpolate(p, [closeAppearing, 1], [0, 1], Extrapolation.CLAMP),

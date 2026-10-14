@@ -8,4 +8,5 @@ export const SystemInfo = z.strictObject({
   // The Server computer's name, for "Start the Session in".
   name: z.string(),
 });
+
 export type SystemInfo = z.infer<typeof SystemInfo>;

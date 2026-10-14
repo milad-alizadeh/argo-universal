@@ -8,22 +8,29 @@ import {
 import { loadedNewSession, type NewSessionQueries } from './new-session-load';
 
 const serverName = 'Studio Mac';
+
 const serverInfo = {
   version: '1.0.0',
   startedAt: '2026-10-14T09:00:00.000Z',
   pid: 4321,
   name: serverName,
 };
-const loaded = <Data>(data: Data): { data: Data; isError: false } => ({
+
+type Loaded<Data> = { data: Data; isError: false };
+
+const loaded = <Data>(data: Data): Loaded<Data> => ({
   data,
   isError: false,
 });
+
 const loading = { data: undefined, isError: false };
+
 const queries = (agents: NewSessionQueries['agents']): NewSessionQueries => ({
   serverInfo: loaded(serverInfo),
   projects: loaded([mainProject]),
   agents,
 });
+
 const failedAgent: AgentInfo = {
   ...secondAgent,
   status: 'cant-start',

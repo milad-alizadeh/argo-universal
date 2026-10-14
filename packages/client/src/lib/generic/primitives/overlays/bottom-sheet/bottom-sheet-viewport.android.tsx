@@ -25,6 +25,7 @@ type VisibleArea = {
 export function SheetViewport(props: ViewportProps): React.JSX.Element {
   const { height, modifiers } = useVisibleContent();
   const hostModifiers = props.fit ? [fillMaxWidth()] : [fillMaxHeight()];
+
   return (
     <Box modifiers={props.fit ? [fillMaxWidth()] : modifiers}>
       <RNHostView matchContents={props.fit} modifiers={hostModifiers}>
@@ -41,6 +42,7 @@ function useVisibleContent(): VisibleArea {
   const [layout, setLayout] = useState<ContentLayout>();
   const [bottomInset, setBottomInset] = useState(0);
   const height = visibleHeight(layout, window.height, bottomInset);
+
   const modifiers = [
     fillMaxHeight(),
     onGloballyPositioned((next) =>
@@ -48,6 +50,7 @@ function useVisibleContent(): VisibleArea {
     ),
     onWindowInsetsChanged((insets) => setBottomInset(insets.bottom)),
   ];
+
   return { height, modifiers };
 }
 
@@ -57,6 +60,7 @@ function visibleHeight(
   bottomInset: number,
 ): number | undefined {
   if (!layout) return undefined;
+
   return Math.max(
     0,
     Math.min(layout.height, windowHeight - layout.y - bottomInset),

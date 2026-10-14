@@ -22,6 +22,7 @@ const numericPadding = (value: ViewStyle['paddingLeft']): number =>
 
 function inColumn(column: ScrollColumn, own: StyleProp<ViewStyle>): ViewStyle {
   const style = StyleSheet.flatten(own) ?? {};
+
   return {
     ...style,
     width: '100%',
@@ -39,5 +40,6 @@ export function useScrollColumnStyle(
   own?: StyleProp<ViewStyle>,
 ): StyleProp<ViewStyle> {
   const column = use(ScrollColumnContext);
+
   return useMemo(() => (column ? inColumn(column, own) : own), [column, own]);
 }

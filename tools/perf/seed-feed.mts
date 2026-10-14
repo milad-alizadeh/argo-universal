@@ -10,7 +10,9 @@ const rowSchema = z.looseObject({
   sessionUpdate: z.enum(sessionUpdateKinds),
   turnId: z.string().nullable(),
 });
+
 type RecordedRow = z.infer<typeof rowSchema>;
+
 const recordingsSchema = z.array(z.looseObject({ rows: z.array(rowSchema) }));
 
 // Fields the row's columns hold; the rest is its payload.
@@ -23,6 +25,7 @@ const columnFields = new Set([
   'state',
   'sessionUpdate',
 ]);
+
 const renamedIds = /"(id|toolCallId|messageId|turnId)":"([^"]+)"/gu;
 
 const recordingsPath = path.resolve(
@@ -35,6 +38,7 @@ async function recordings(): Promise<RecordedRow[][]> {
   const recorded = recordingsSchema.parse(
     JSON.parse(await readFile(recordingsPath, 'utf8')),
   );
+
   return recorded.map((recording) =>
     recording.rows.filter((row) => !JSON.stringify(row).includes('"blobId"')),
   );
@@ -51,7 +55,10 @@ const copyRow = (row: RecordedRow, prefix: string): RecordedRow =>
     ),
   );
 
-const payloadOf = (row: RecordedRow): Record<string, unknown> =>
+// A recorded row's fields that no column holds.
+type RecordedPayload = Omit<RecordedRow, 'id' | 'sessionUpdate' | 'turnId'>;
+
+const payloadOf = (row: RecordedRow): RecordedPayload =>
   Object.fromEntries(
     Object.entries(row).filter(([key]) => !columnFields.has(key)),
   );
@@ -110,6 +117,7 @@ export async function seededFeed(
   now: number,
 ): Promise<SeededFeed> {
   const copied = copiedRows(await recordings(), copies);
+
   return {
     turns: endedTurns(sessionId, copied, now),
     rows: copied.map((row, index) => settledRow(sessionId, row, index + 1)),

@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import { readNpmCommands } from './npm-package';
 
 const unscopedName = 'agent-acp';
+
 it.each([
   {
     case: 'a string bin, named after the package',
@@ -78,6 +79,10 @@ it.each([
 ])(
   'npm metadata with $case names $commands',
   ({ name, metadata, commands }) => {
-    expect(readNpmCommands(metadata, name)).toEqual(commands);
+    expect(readNpmCommands(JSON.stringify(metadata), name)).toEqual(commands);
   },
 );
+
+it('npm text that is not JSON names no command', () => {
+  expect(readNpmCommands('<html>Not Found</html>', unscopedName)).toEqual([]);
+});

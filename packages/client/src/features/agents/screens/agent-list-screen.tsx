@@ -17,6 +17,7 @@ function AgentList(props: {
   initialFilter?: 'not-installed';
 }): React.JSX.Element {
   const navigate = useNavigate();
+
   return (
     <AgentListView
       initialFilter={props.initialFilter}

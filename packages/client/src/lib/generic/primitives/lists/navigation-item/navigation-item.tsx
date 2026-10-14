@@ -17,6 +17,7 @@ export interface NavigationItemProps {
 // A destination in a navigation drawer: an icon and a label, tinted and filled when it is the current one.
 export function NavigationItem(props: NavigationItemProps): React.JSX.Element {
   const { title, selected, onPress } = props;
+
   return (
     <Pressable
       accessibilityLabel={title}
@@ -44,6 +45,7 @@ function NavigationItemContent(props: NavigationItemProps): React.JSX.Element {
   const { title, icon, selected, badge } = props;
   const muted = cn(!selected && 'text-muted-foreground');
   const label = cn('flex-1', selected && 'font-semibold');
+
   return (
     <>
       <Icon name={icon} role="nav" filled={selected} className={muted} />

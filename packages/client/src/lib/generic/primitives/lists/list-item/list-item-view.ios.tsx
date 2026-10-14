@@ -25,8 +25,10 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
   const wide = useWide();
   const { colors } = useNativeTheme();
   const navigation = useNavigationFields();
+
   if (wide) return <WebListItem {...props} />;
   const modifiers = rowModifiers(props, colors, navigation);
+
   return (
     <NativeRow key={colors.separator} item={props} modifiers={modifiers} />
   );
@@ -39,7 +41,9 @@ interface NativeRowProps {
 
 function NativeRow({ item, modifiers }: NativeRowProps): React.JSX.Element {
   const content = <RowStack {...item} />;
+
   if (!item.onPress) return <HStack modifiers={modifiers}>{content}</HStack>;
+
   return (
     <PressableRow
       press={item.onPress}
@@ -85,6 +89,7 @@ function pressModifiers(modifiers: RowModifiers): RowModifiers {
 }
 
 type RowColors = Pick<NativeColors, 'muted' | 'separator'>;
+
 type RowModifiers = NonNullable<
   React.ComponentProps<typeof HStack>['modifiers']
 >;
@@ -109,6 +114,7 @@ function rowSurface(
 ): RowModifiers {
   if (navigation)
     return [listRowBackground('transparent'), listRowSeparator('hidden')];
+
   return [
     listRowBackground(muted ?? 'transparent'),
     listRowSeparatorTint(separator),

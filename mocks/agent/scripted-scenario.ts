@@ -3,6 +3,7 @@ import {
   type PromptResponse,
 } from '@agentclientprotocol/sdk';
 import type { ScriptedStep, ScriptedTurn } from './scripted-types.ts';
+
 export type {
   ScriptedStep,
   ScriptedScenario,
@@ -28,5 +29,6 @@ export const runTurn = async (
   for (const step of steps) {
     await runStep(step, turn);
   }
+
   return { stopReason: turn.isCancelled() ? 'cancelled' : 'end_turn' };
 };

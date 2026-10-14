@@ -11,6 +11,7 @@ const materialWeight = (
   weight: SymbolWeight | undefined,
 ): NonNullable<Exclude<SymbolViewProps['weight'], string>>['android'] => {
   if (weight === 'light') return light;
+
   return filled
     ? { name: 'MaterialSymbols_200ExtraLight_Filled', font: filledFont }
     : extraLight;

@@ -12,13 +12,16 @@ export interface AgentsFilterProps {
   counts: AgentCounts;
   onFilter: (filter: AgentsFilter) => void;
 }
+
 export interface AgentsSearchProps {
   search: string;
   onSearch: (search: string) => void;
 }
 
 export const searchLabel = 'Search Agents';
+
 export const addCustomAgentLabel = 'Add custom Agent';
+
 export const agentsFilterChoices = [
   { value: 'all', label: 'All' },
   { value: 'installed', label: 'Installed' },

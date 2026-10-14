@@ -15,6 +15,7 @@ import {
 import { agentWork } from './timeouts';
 
 const checkedAttribute = 'aria-checked';
+
 const LoggedRequest = z.object({ method: z.string() });
 
 const argoBranches = async (projectPath: string): Promise<string[]> =>
@@ -31,6 +32,7 @@ const closeRequests = (requestLogPath: string): number =>
 
 // The empty Session's branch, read before the step that should close or keep it.
 const openedBranches = new WeakMap<Page, string[]>();
+
 const connections = new WeakMap<Page, WebSocketRoute[]>();
 
 When('the empty Session is open', async ({ page, app }): Promise<void> => {
@@ -56,6 +58,7 @@ export const openedEmptySession = async (page: Page): Promise<boolean> => {
   if (!isWide(page)) return false;
   await expect(page.getByRole('textbox', { name: messageLabel })).toBeVisible();
   await waitForEmptySession(page);
+
   return true;
 };
 
@@ -92,6 +95,7 @@ Then(
     await expect
       .poll(async () => {
         const branches = await argoBranches(app.projectPath);
+
         return {
           count: branches.length,
           previousKept: branches.some((branch) => previous.includes(branch)),
@@ -150,6 +154,7 @@ When('I enable Fast mode', async ({ page }): Promise<void> => {
   ).toHaveAttribute(checkedAttribute, 'true');
   await page.keyboard.press('Escape');
 });
+
 Then('Fast mode remains enabled', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: agentModelLabel }).click();
   await expect(

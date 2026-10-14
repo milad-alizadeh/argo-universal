@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { openDatabase } from '@repo/db';
-import { composeEngine } from '@repo/engine/compose';
+import { composeEngine, type EnginePorts } from '@repo/engine/compose';
 import type { EngineMessage } from '@repo/engine/ipc';
 import {
   removeServerAddress,
@@ -20,23 +20,31 @@ import { z } from 'zod';
 import packageJson from '../package.json' with { type: 'json' };
 
 const home = resolveRuntimeDirectory();
+
 const startedAt = new Date().toISOString();
+
 const version = packageJson.version;
+
 const options = AppFixtureAgents.parse(
   JSON.parse(process.env.ARGO_E2E_AGENTS ?? '{}'),
 );
+
 // A held readiness check stays Checking… for the whole test, however slow the machine, instead of timing out.
 const heldCheckTimeoutMs = 10 * 60 * 1000;
+
 const holdsCheck = Object.values(options).some(
   ({ scenario }) => scenario === 'check-held',
 );
+
 // The scripted Agents log the ACP requests e2e steps check, and a held check waits for the release file.
 const agentEnvironment: Record<string, string> = Object.fromEntries(
   ['ARGO_E2E_REQUEST_LOG', 'ARGO_E2E_HELD_CHECK_RELEASE'].flatMap((name) => {
     const value = process.env[name];
+
     return value ? [[name, value]] : [];
   }),
 );
+
 const port = z.coerce
   .number()
   .int()
@@ -56,11 +64,14 @@ function publishAddress(message: EngineMessage): void {
 }
 
 const seed = openDatabase(join(home, 'argo.db'));
+
 const save = seed.$client.prepare(
   "update agents set configuration = ? where id = ? and json_extract(configuration, '$.source') = 'registry' and json_extract(configuration, '$.release') is null",
 );
+
 for (const identity of fixtureAgents) {
   const fixture = AppFixtureOptions.parse(options[identity.agent] ?? {});
+
   const configuration = fixture.installed
     ? {
         source: 'custom',
@@ -74,11 +85,13 @@ for (const identity of fixtureAgents) {
         },
       }
     : { source: 'registry', release: null, overrides: { args: [], env: [] } };
+
   save.run(JSON.stringify(configuration), identity.agent);
 }
+
 seed.$client.close();
 
-const engine = composeEngine({
+const ports: EnginePorts = {
   home,
   port,
   version,
@@ -86,7 +99,6 @@ const engine = composeEngine({
   now: Date.now,
   createId: randomUUID,
   report: publishAddress,
-  ...(holdsCheck ? { acp: { checkTimeoutMs: heldCheckTimeoutMs } } : {}),
   installationPorts: createInstallationPorts({
     packageName: 'example-agent',
     scenarioPath: z.string().parse(process.env.ARGO_E2E_INSTALLATION_PATH),
@@ -94,7 +106,11 @@ const engine = composeEngine({
   fetchAgents: createFileAgentsFetcher(
     z.string().parse(process.env.ARGO_E2E_REGISTRY_PATH),
   ),
-});
+};
+
+if (holdsCheck) ports.acp = { checkTimeoutMs: heldCheckTimeoutMs };
+
+const engine = composeEngine(ports);
 
 function finish(exitCode: number): never {
   removeServerAddress(home, process.pid);
@@ -105,7 +121,9 @@ engine.subscribe({
   complete: (): never => finish(engine.getSnapshot().output?.exitCode ?? 1),
   error: (error): never => {
     console.error(error);
+
     return finish(1);
   },
 });
+
 engine.start();

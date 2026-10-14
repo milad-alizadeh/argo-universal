@@ -22,14 +22,17 @@ import { type ScriptedProcess } from './scripted-agent';
 import { scriptedEngineInput } from './scripted-engine';
 
 const readinessSettleMs = 15_000;
+
 const settlePollMs = 10;
 
 // A module's test drives the Engine through here: modules never import engine/.
 export { engineMachine } from '../src/engine/machine';
+
 export type { EngineMessage } from '../src/engine/ipc';
 
 type ScriptedLaunches = { processes?: ScriptedProcess[] } | undefined;
-type EngineTestOptions = Partial<EngineInput> & {
+
+export type EngineTestOptions = Partial<EngineInput> & {
   fixtureAgents?: readonly AgentIdentity[];
   database?: Database;
   runtimeDirectory?: string;
@@ -46,6 +49,7 @@ type EngineConnections = {
   createCaller: HttpServer['createCaller'];
   caller: ReturnType<HttpServer['createCaller']>;
 };
+
 type EngineTestHost = EngineConnections & {
   home: string;
   blobsFolder: string;
@@ -53,20 +57,25 @@ type EngineTestHost = EngineConnections & {
   stop: () => Promise<void>;
 };
 
-function resolveTestStorage(options: EngineTestOptions): {
+type TestStorage = {
   storage: ReturnType<typeof openTestDatabase> | undefined;
   home: string;
-} {
+};
+
+function resolveTestStorage(options: EngineTestOptions): TestStorage {
   const storage =
     options.database || options.home || options.runtimeDirectory
       ? undefined
       : openTestDatabase();
+
   const home =
     options.home ??
     (options.database
       ? dirname(options.database.$client.location() ?? '')
       : (options.runtimeDirectory ?? storage?.directory));
+
   if (!home) throw new Error('Engine test storage is missing');
+
   return { storage, home };
 }
 
@@ -78,6 +87,7 @@ export async function startEngineTestHost(
   const { storage, home } = resolveTestStorage(options);
   const port = options.port ?? (await findFreePort());
   seedTestCommands(options, home, storage);
+
   const engine = composeEngine({
     version: '1.2.3',
     startedAt: '2026-10-03T00:00:00.000Z',
@@ -89,10 +99,12 @@ export async function startEngineTestHost(
     home,
     port,
   }).start();
+
   const stop = registerEngineCleanup(engine, storage);
   await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
   const connections = readEngineTestHost(engine);
   await settleStartupReadiness(connections.caller, options);
+
   return {
     ...connections,
     home,
@@ -104,18 +116,22 @@ export async function startEngineTestHost(
 
 function readEngineTestHost(engine: EngineActor): EngineConnections {
   const { database, server } = engine.getSnapshot().context;
+
   const openSessions = findMachineActor(
     engine.system,
     openSessionsId,
     openSessionsMachine,
   );
+
   const databaseWriter = findMachineActor(
     engine.system,
     databaseWriterId,
     writerMachine,
   );
+
   if (!database || !server || !openSessions || !databaseWriter)
     throw new Error('Engine is not ready');
+
   return {
     engine,
     database,
@@ -131,11 +147,13 @@ const exitStoppedChecks = (launched: ScriptedLaunches): void => {
   for (const process of launched?.processes ?? [])
     if (process.terminations) process.exited.resolve();
 };
+
 // Every Server-start check must stop the program it launched.
 const requireStoppedChecks = (launched: ScriptedLaunches): void => {
   const leaked = (launched?.processes ?? []).filter(
     ({ terminations }) => terminations < 1,
   );
+
   if (leaked.length > 0)
     throw new Error(
       `${leaked.length} Server-start check left its Agent running`,
@@ -147,6 +165,7 @@ async function settle(
   whileChecking: () => void,
 ): Promise<void> {
   const deadline = performance.now() + readinessSettleMs;
+
   while (await isChecking(caller)) {
     if (performance.now() > deadline)
       throw new Error('Agent Readiness did not settle');
@@ -169,6 +188,7 @@ async function settleStartupReadiness(
   const launched = options.acp;
   await settle(caller, () => exitStoppedChecks(launched));
   requireStoppedChecks(launched);
+
   if (!options.keepStartupLaunches) launched?.processes?.splice(0);
 }
 
@@ -188,10 +208,12 @@ function registerEngineCleanup(
     engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
     await waitFor(engine, (snapshot) => snapshot.status === 'done');
   };
+
   onTestFinished(async () => {
     await stop();
     storage?.remove();
   });
+
   return stop;
 }
 
@@ -204,9 +226,11 @@ function seedTestCommands(
     options.database ??
     storage?.database ??
     openDatabase(join(home, 'argo.db'));
+
   seedAgentFixtures(
     seeded,
     options.fixtureAgents ?? [{ agent: 'mock', label: 'mock', logo: '' }],
   );
+
   if (!options.database && !storage) seeded.$client.close();
 }

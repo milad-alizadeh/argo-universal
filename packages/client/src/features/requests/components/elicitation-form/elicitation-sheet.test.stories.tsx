@@ -17,9 +17,13 @@ const meta = {
   },
   args: { ...elicitationProps({ mock: elicitationMock }), onAnswer: fn() },
 } satisfies Meta<typeof ElicitationSheet>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 const titleLabel = 'Title';
+
 const retainedDraft = 'Keep this draft';
 
 export const DismissWithEscape: Story = {
@@ -85,9 +89,11 @@ export const RetainFieldAnswersAcrossTrayTransition: Story = {
     await userEvent.clear(title);
     await userEvent.type(title, retainedDraft);
     await settleViewport(1440);
+
     const tray = within(
       await page.findByRole('region', { name: 'Elicitation questions' }),
     );
+
     await expect(tray.getByRole('textbox', { name: titleLabel })).toHaveValue(
       retainedDraft,
     );

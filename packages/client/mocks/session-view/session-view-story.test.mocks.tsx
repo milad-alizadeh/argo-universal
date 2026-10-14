@@ -18,11 +18,13 @@ export const meta = {
   args: { view: { state: 'open', ...runningSession } },
   render: ({ view }): React.JSX.Element => <SessionView {...view} />,
 } satisfies Meta<{ view: SessionViewProps }>;
+
 export type Story = StoryObj<typeof meta>;
 
 export function openProps(view: SessionViewProps): OpenSessionViewProps {
   if (view.state !== 'open')
     throw new Error('The story needs an open Session.');
+
   return view;
 }
 
@@ -30,6 +32,8 @@ export function idleConfiguration(): NonNullable<
   OpenSessionViewProps['composer']['configuration']
 > {
   const { configuration } = idleSession.composer;
+
   if (!configuration) throw new Error('Idle Session has no configuration.');
+
   return configuration;
 }

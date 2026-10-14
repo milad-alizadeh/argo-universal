@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { storedMessage as message } from '#mocks/feed';
 import { startFeedTestHost, createFeedRouterCaller } from '#mocks/feed-suite';
+
 it('reads the newest rows in position order', async (): Promise<void> => {
   await startFeedTestHost();
   expect(

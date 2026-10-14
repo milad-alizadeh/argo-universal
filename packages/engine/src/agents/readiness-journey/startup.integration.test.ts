@@ -15,13 +15,16 @@ import { agentInstallDirectory } from '../install/selection/selection';
 type Installed = Awaited<ReturnType<typeof startInstallEngine>> & {
   checks: ReturnType<typeof createScriptedAgentProcess>;
 };
+
 const installReady = async (): Promise<Installed> => {
   const checks = createScriptedAgentProcess(scenarios.reply);
+
   const host = await startInstallEngine(
     installEntry('npx'),
     installationPorts,
     { fixtureAgents: [], acp: checks },
   );
+
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
   await expect
     .poll(async () => (await listed(host.caller, host.agentId))?.version)
@@ -30,12 +33,14 @@ const installReady = async (): Promise<Installed> => {
   expect(await listed(host.caller, host.agentId)).toMatchObject({
     status: 'ready',
   });
+
   return { ...host, checks };
 };
 
 it('Server start checks every installed, enabled Agent again and never launches a disabled one', async () => {
   const host = await installReady();
   const custom = await host.caller.agents.registerCustom(customAgentDefinition);
+
   if (custom.status !== 'ready') throw new Error(custom.failure);
   await host.caller.agents.setEnabled({
     agentId: custom.agentId,
@@ -43,14 +48,16 @@ it('Server start checks every installed, enabled Agent again and never launches 
   });
   await host.stop();
   const restarted = createScriptedAgentProcess(scenarios['signed-out']);
+
   const second = await startEngineTestHost({
     home: host.home,
     fixtureAgents: [],
     acp: restarted,
     keepStartupLaunches: true,
     installationPorts,
-    fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
+    fetchAgents: async () => JSON.stringify({ version: '1.0.0', agents: [] }),
   });
+
   await expect
     .poll(() => listed(second.caller, host.agentId))
     .toMatchObject({ status: 'sign-in-needed', enabled: true });

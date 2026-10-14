@@ -18,8 +18,10 @@ const createNodeDirectory = (): string => {
   process.once('exit', () =>
     rmSync(directory, { recursive: true, force: true }),
   );
+
   return directory;
 };
+
 // System tools and this Node only, so the developer's own Agents never count as installed.
 const systemDirectories = [
   createNodeDirectory(),
@@ -28,6 +30,7 @@ const systemDirectories = [
   '/usr/sbin',
   '/sbin',
 ];
+
 let machineDirectory: string | undefined;
 
 // The PATH an Engine under test sees: the test's machine directory first, then system tools.
@@ -45,12 +48,14 @@ export const createMachinePath = async (): Promise<MachinePath> => {
     machineDirectory = undefined;
     await rm(directory, { recursive: true, force: true });
   });
+
   return {
     directory,
     place: async (name) => {
       const file = join(directory, name);
       await writeFile(file, '#!/bin/sh\nexit 0\n');
       await chmod(file, 0o755);
+
       return file;
     },
     remove: (name) => rm(join(directory, name), { force: true }),

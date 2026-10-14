@@ -52,11 +52,16 @@ interface ProjectToggleProps extends ProjectNameProps {
   events: InteractionEvents;
 }
 
-function toggleAccessibility({ name, collapsed }: ProjectNameProps): {
+interface ToggleAccessibility {
   accessibilityLabel: string;
   accessibilityState: { expanded: boolean };
   'aria-expanded': boolean;
-} {
+}
+
+function toggleAccessibility({
+  name,
+  collapsed,
+}: ProjectNameProps): ToggleAccessibility {
   return {
     accessibilityLabel: name,
     accessibilityState: { expanded: !collapsed },

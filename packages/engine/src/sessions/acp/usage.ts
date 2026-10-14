@@ -10,6 +10,7 @@ const contextScope = (
   initialization: InitializeResponse | undefined,
 ): ContextUsage['scope'] => {
   if (!initialization) return 'unverified';
+
   return agentContextScope(initialization.agentInfo);
 };
 
@@ -41,6 +42,7 @@ const tokenCounts = (
   cachedReadTokens: availableCount(usage.cachedReadTokens),
   cachedWriteTokens: availableCount(usage.cachedWriteTokens),
 });
+
 const reportedScope = (
   agent: InitializeResponse['agentInfo'],
 ): TurnUsage['scope'] => promptUsageScope(agent?.name, agent?.version);
@@ -50,6 +52,7 @@ export const acpTurnUsage = (
   agent: InitializeResponse['agentInfo'],
 ): TurnUsage | undefined => {
   if (usage == null) return undefined;
+
   return {
     scope: reportedScope(agent),
     ...tokenCounts(usage),

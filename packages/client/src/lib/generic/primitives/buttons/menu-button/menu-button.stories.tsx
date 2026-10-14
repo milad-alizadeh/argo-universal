@@ -15,6 +15,7 @@ const ranges = ['Today', 'This week', 'This month'];
 
 function RangeMenu(): React.JSX.Element {
   const [shown, setShown] = useState(ranges[0]);
+
   return (
     <View className="flex-row items-center gap-1.5">
       <Text role="secondary">{shown}</Text>
@@ -64,7 +65,9 @@ function RangeItem(props: {
 }
 
 const meta = { title: 'Design System/Primitives/MenuButton' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

@@ -43,6 +43,7 @@ function RowLabel(props: FieldInputProps): React.JSX.Element {
 
 function RowInput(props: FieldInputProps): React.JSX.Element {
   const accessibility = useInputAccessibility(props);
+
   return (
     <Input
       {...accessibility}

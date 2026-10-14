@@ -46,6 +46,7 @@ export const loadedNewSession = (
 ): LoadedNewSession | undefined => {
   const server = loadedServer(queries);
   const agents = queries.agents.data;
+
   return (
     server && {
       ...server,

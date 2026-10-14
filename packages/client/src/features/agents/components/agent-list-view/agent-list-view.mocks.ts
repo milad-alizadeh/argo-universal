@@ -6,6 +6,7 @@ import { customAgentDefinition, customAgentId } from '../custom-agent.mocks';
 import type { AgentListViewProps } from './agent-list-view';
 
 const [example, python, binary, windows] = publishedRegistry.agents;
+
 if (!example || !python || !binary || !windows)
   throw new Error('Registry mock needs four distribution examples');
 
@@ -104,7 +105,9 @@ export const agentListArgs = (): AgentListViewProps => ({
 export const emptyCatalog: AgentsCatalogOutput = { ...catalog, agents: [] };
 
 export const longCatalogSize = 200;
+
 type CatalogAgent = AgentsCatalogOutput['agents'][number];
+
 // A numbered copy without the mock's grey square logo, so its row shows the Agent glyph a missing logo gets.
 const numbered = (agent: CatalogAgent, number: number): CatalogAgent => ({
   ...agent,

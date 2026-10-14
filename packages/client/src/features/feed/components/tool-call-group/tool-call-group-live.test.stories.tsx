@@ -21,11 +21,14 @@ const meta = {
     now: toolCallGroupMock.now,
   },
 } satisfies Meta<typeof ToolCallGroup>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function parallelCalls(width: number, agentIndex: number): Story {
   const { recorded, expectedTitle, read } = parallelCase(agentIndex);
+
   return {
     args: { group: recorded.parallel, now: recorded.now },
     play: async ({ canvas, userEvent }) => {
@@ -44,15 +47,19 @@ function parallelCalls(width: number, agentIndex: number): Story {
     },
   };
 }
+
 export const ParallelCallsPhoneFirstAgent = parallelCalls(
   layoutWidths.phone,
   0,
 );
+
 export const ParallelCallsPhoneSecondAgent = parallelCalls(
   layoutWidths.phone,
   1,
 );
+
 export const ParallelCallsWideFirstAgent = parallelCalls(layoutWidths.wide, 0);
+
 export const ParallelCallsWideSecondAgent = parallelCalls(layoutWidths.wide, 1);
 
 function runningReadGroup(width: number): Story {
@@ -68,9 +75,11 @@ function runningReadGroup(width: number): Story {
     },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+
       const header = canvas.getByRole('button', {
         name: readFileTitle,
       });
+
       await expect(header).toHaveTextContent('Read /project/hello.txt 23s');
       await userEvent.click(header);
       await expect(
@@ -80,8 +89,11 @@ function runningReadGroup(width: number): Story {
     },
   };
 }
+
 export const RunningReadPhone = runningReadGroup(layoutWidths.phone);
+
 export const RunningReadWide = runningReadGroup(layoutWidths.wide);
 
 export const RunningReadPhoneDark: Story = { ...RunningReadPhone, ...dark };
+
 export const RunningReadWideDark: Story = { ...RunningReadWide, ...dark };

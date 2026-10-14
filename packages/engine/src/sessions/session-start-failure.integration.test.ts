@@ -100,12 +100,16 @@ it.each([
 // Closing a Session withdraws its open; that is not the Agent failing.
 it('keeps a Ready Agent Ready when its Session is closed while it opens', async (): Promise<void> => {
   const issued: string[] = [];
+
   const createId = (): string => {
     const id = randomUUID();
     issued.push(id);
+
     return id;
   };
+
   const began = Promise.withResolvers<NewSessionRequest>();
+
   const { caller } = await startAcpEngine(
     {
       steps: [],
@@ -115,14 +119,17 @@ it('keeps a Ready Agent Ready when its Session is closed while it opens', async 
     },
     createId,
   );
+
   await caller.agents.recheck({ agentId: newSession.agent });
   const sessionIdAt = issued.length;
   const opening = caller.session.new(newSession);
   void opening.catch(() => {});
   await began.promise;
+
   const closing = caller.session.close({
     sessionId: issued[sessionIdAt] ?? '',
   });
+
   const [opened] = await Promise.allSettled([opening, closing]);
   expect(opened.status).toBe('rejected');
   expect(

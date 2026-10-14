@@ -49,12 +49,14 @@ function mountPhoneLayout(
 ): PhoneLayoutMount & { root: Root } {
   const root = createRoot(element);
   const layout = { attentionCount: attention, onSectionChange: fn() };
+
   const render = async (section: Section): Promise<void> => {
     root.render(<ControlledPhoneLayout {...layout} section={section} />);
     await within(element).findByRole('heading', {
       name: shellSections[section].title,
     });
   };
+
   return { root, render, onSectionChange: layout.onSectionChange };
 }
 
@@ -66,6 +68,7 @@ export async function withPhoneLayout(
     canvas.getByTestId('controlled-phone-layout'),
     attention,
   );
+
   try {
     await controlled.render('sessions');
     await run(controlled);
@@ -83,6 +86,7 @@ export async function pickDrawerSection(pick: DrawerPick): Promise<void> {
   const { canvas, userEvent, layout, section } = pick;
   const { title } = shellSections[section];
   await userEvent.click(canvas.getByRole('button', { name: title }));
+
   if (section !== 'sessions')
     await expect(layout.onSectionChange).toHaveBeenLastCalledWith(section);
   await layout.render(section);

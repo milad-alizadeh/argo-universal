@@ -26,6 +26,7 @@ export function toNewSessionInput(
 ): SessionNewInput | undefined {
   if (!settled(choices)) return undefined;
   const { project, agent } = choices;
+
   return {
     projectId: project.id,
     agent: agent.agent,

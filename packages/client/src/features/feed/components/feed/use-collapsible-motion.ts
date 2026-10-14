@@ -16,10 +16,12 @@ type ListRef = RefObject<LegendListRef | null>;
 const followEnd = {
   on: { dataChange: true, layout: true, itemLayout: true, footerLayout: true },
 };
+
 // While a reader opens or closes a collapsible it holds still, so opening one at the end grows below instead of scrolling the page up.
 const holdEnd = { on: { dataChange: true, layout: true, footerLayout: true } };
 
 const oneMore = (count: number): number => count + 1;
+
 const oneFewer = (count: number): number => count - 1;
 
 // A frame later, once the list has the final size: Legend checks the end only on scroll, so check it first, or the stale answer follows to the end.
@@ -37,6 +39,7 @@ function useMovingCollapsibles(
   list: ListRef,
 ): [number, (started: boolean) => void] {
   const [moving, setMoving] = useState(0);
+
   const onMotionChange = useCallback(
     (started: boolean) => {
       if (started) setMoving(oneMore);
@@ -44,6 +47,7 @@ function useMovingCollapsibles(
     },
     [list],
   );
+
   return [moving, onMotionChange];
 }
 
@@ -54,6 +58,7 @@ function growItem(
 ): void {
   if (!ref) return;
   const size = ref.getState().sizes.get(itemKey);
+
   if (size === undefined) return;
   ref.setItemSize(itemKey, { height: size + height, width: 0 });
 }
@@ -66,12 +71,14 @@ export interface CollapsibleMotion {
 
 export function useCollapsibleMotion(list: ListRef): CollapsibleMotion {
   const [moving, onMotionChange] = useMovingCollapsibles(list);
+
   // Called in the same frame as the collapsible's own height, so React commits the row and the rows below together; Legend's measure lands a frame late on native.
   const onGrow = useCallback(
     (itemKey: string, height: number) =>
       growItem(list.current, itemKey, height),
     [list],
   );
+
   return {
     maintainScrollAtEnd: moving ? holdEnd : followEnd,
     onMotionChange,

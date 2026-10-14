@@ -1,5 +1,6 @@
 import type { InitializeResponse } from '@agentclientprotocol/sdk';
 import type { AuthStatus } from '@repo/contracts';
+import { z } from 'zod';
 import type { LoginAgentOutcome } from '..';
 
 const subscriptionPlans = new Set([
@@ -13,26 +14,30 @@ const subscriptionPlans = new Set([
   'enterprise',
   'edu',
 ]);
+
 const rejectedAccount: LoginAgentOutcome = {
   status: 'account-rejected',
   failure: 'The Agent did not report a compatible subscription account.',
 };
-const authCapability = (initialization: InitializeResponse): unknown => {
-  const capabilities = initialization.agentCapabilities;
-  if (!capabilities?._meta) return null;
-  return capabilities._meta.authStatus;
-};
+
+// An Agent advertises account status reports with an object at `_meta.authStatus`.
+const AuthStatusCapability = z.object({
+  agentCapabilities: z.object({
+    _meta: z.object({ authStatus: z.object({}) }),
+  }),
+});
+
 export const reportsAuthStatus = (
   initialization: InitializeResponse,
-): boolean => {
-  const capability = authCapability(initialization);
-  return typeof capability === 'object' && capability !== null;
-};
+): boolean => AuthStatusCapability.safeParse(initialization).success;
+
 const accountPlan = (status: AuthStatus): string => status.account?.plan ?? '';
+
 const accountOutcome = (status: AuthStatus): LoginAgentOutcome =>
   subscriptionPlans.has(accountPlan(status))
     ? { status: 'ready' }
     : rejectedAccount;
+
 const reportedOutcome = (status: AuthStatus): LoginAgentOutcome => {
   switch (status.kind) {
     case 'none':
@@ -46,5 +51,6 @@ const reportedOutcome = (status: AuthStatus): LoginAgentOutcome => {
       return rejectedAccount;
   }
 };
+
 export const subscriptionOutcome = (status?: AuthStatus): LoginAgentOutcome =>
   status ? reportedOutcome(status) : rejectedAccount;

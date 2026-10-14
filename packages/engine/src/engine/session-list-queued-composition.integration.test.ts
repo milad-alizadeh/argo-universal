@@ -21,6 +21,7 @@ it('pages current queued activity before the list publication delay', async (): 
   onTestFinished(remove);
   insertSession(database, { id: 'session-2', activityAt: 10 });
   insertEndedTurn(database, 'session-2');
+
   const {
     databaseWriter: writer,
     createCaller,
@@ -29,6 +30,7 @@ it('pages current queued activity before the list publication delay', async (): 
     database,
     ...scriptedEngineInput(),
   });
+
   engineDatabase.$client.exec(
     "CREATE TEMP TRIGGER pause_activity BEFORE UPDATE ON session BEGIN SELECT RAISE(FAIL, 'test write failure'); END",
   );
@@ -38,6 +40,7 @@ it('pages current queued activity before the list publication delay', async (): 
   await updates.next();
   await updates.next();
   vi.useFakeTimers();
+
   try {
     await vi.advanceTimersByTimeAsync(100);
     counted.metrics.sessionReads = 0;

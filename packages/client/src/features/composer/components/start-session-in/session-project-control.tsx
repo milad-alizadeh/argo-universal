@@ -19,17 +19,21 @@ export function SessionProjectControl(
     </ComposerPopover>
   );
 }
+
 function selectProject(
   { props }: StartSessionLayout,
   close: () => void,
   id: string,
 ): void {
   close();
+
   if (id !== props.projectId) props.onProjectChange(id);
 }
+
 function projectTrigger(layout: StartSessionLayout): React.JSX.Element {
   return <Button {...projectButtonProps(layout)} />;
 }
+
 const projectButtonAppearance = {
   appearance: 'content',
   variant: 'ghost',
@@ -38,11 +42,13 @@ const projectButtonAppearance = {
   labelClassName: 'shrink',
   trailing: <SessionControlDisclosure />,
 } as const;
+
 function projectButtonProps({
   props,
   wide,
 }: StartSessionLayout): React.ComponentProps<typeof Button> {
   const project = props.projects.find((entry) => entry.id === props.projectId);
+
   return {
     ...projectButtonLabels(project),
     ...projectButtonAppearance,
@@ -53,11 +59,15 @@ function projectButtonProps({
     ),
   };
 }
+
+type ProjectButtonLabels = { accessibilityLabel: string; label: string };
+
 function projectButtonLabels(
   project: StartSessionLayout['props']['projects'][number] | undefined,
-): { accessibilityLabel: string; label: string } {
+): ProjectButtonLabels {
   if (!project)
     return { accessibilityLabel: 'Project: None', label: 'Choose a Project' };
+
   return {
     accessibilityLabel: `Project: ${project.name}`,
     label: project.name,

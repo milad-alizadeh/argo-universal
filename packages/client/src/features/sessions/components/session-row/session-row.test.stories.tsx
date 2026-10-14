@@ -14,9 +14,11 @@ import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { sessionRowMocks } from './session-row.mocks';
 
 const meta = { ...sessionRowTestMeta, title: 'Tests/SessionRow' };
+
 export default meta;
 
 export const RunningPhone = running(layoutWidths.phone);
+
 export const RunningWide = running(layoutWidths.wide);
 
 export const Archived: Story = {
@@ -30,6 +32,7 @@ export const Archived: Story = {
 };
 
 export const MetadataPhone = metadata(layoutWidths.phone);
+
 export const MetadataWide = metadata(layoutWidths.wide);
 
 export const PullRequestWithoutOtherMetadata: Story = {
@@ -119,9 +122,11 @@ function longTitleSelected(width: number): Story {
     args: { session: sessionRows.longTitle, selected: true },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
+
       const row = canvas.getByRole('button', {
         name: `${sessionRows.longTitle.title}, Idle`,
       });
+
       await expect(row).toHaveAttribute('aria-pressed', 'true');
       const title = canvas.getByText(sessionRows.longTitle.title);
       await expect(title).toBeVisible();
@@ -131,23 +136,35 @@ function longTitleSelected(width: number): Story {
     },
   };
 }
+
 export const LongTitleSelectedPhone = longTitleSelected(layoutWidths.phone);
+
 export const LongTitleSelectedWide = longTitleSelected(layoutWidths.wide);
 
 export const StatusParityDark: Story = { ...StatusParity, ...dark };
+
 export const RunningPhoneDark: Story = { ...RunningPhone, ...dark };
+
 export const RunningWideDark: Story = { ...RunningWide, ...dark };
+
 export const PlanAndSubagentsDark: Story = { ...PlanAndSubagents, ...dark };
+
 export const NoPlanOrSubagentsDark: Story = { ...NoPlanOrSubagents, ...dark };
+
 export const FinishedSubagentsDark: Story = { ...FinishedSubagents, ...dark };
+
 export const LongTitleSelectedPhoneDark: Story = {
   ...LongTitleSelectedPhone,
   ...dark,
 };
+
 export const LongTitleSelectedWideDark: Story = {
   ...LongTitleSelectedWide,
   ...dark,
 };
+
 export const ArchivedDark: Story = { ...Archived, ...dark };
+
 export const MetadataPhoneDark: Story = { ...MetadataPhone, ...dark };
+
 export const MetadataWideDark: Story = { ...MetadataWide, ...dark };

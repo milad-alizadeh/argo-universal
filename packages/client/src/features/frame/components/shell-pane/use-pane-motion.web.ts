@@ -23,5 +23,6 @@ export function usePaneMotion(
   useLayoutEffect(() => {
     syncPaneMotion({ refs, previous, motion }, next, { animate, reflows });
   }, [refs, next, animate, reflows]);
+
   return refs;
 }

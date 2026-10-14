@@ -26,6 +26,7 @@ export type Candidate = {
 
 type CandidateRow = Omit<Candidate, 'configured' | 'custom' | 'saved'> &
   Candidate['saved'] & { configuration: string | null };
+
 const readRows = (database: Database): CandidateRow[] =>
   database
     .select({
@@ -45,6 +46,7 @@ const customDefinitionOf = (
   agentId: string,
 ): CustomAgentDefinition | undefined => {
   const agent = readConfiguredAgent(database, agentId);
+
   return agent && selectCustomDefinition(agent);
 };
 
@@ -63,6 +65,7 @@ const customInstallation = async (
   const executable = isAbsolute(definition.executable)
     ? definition.executable
     : await findOnPath(definition.executable);
+
   return executable
     ? { definition: { ...definition, executable }, owner: 'unknown' }
     : undefined;
@@ -84,6 +87,7 @@ export const resolveCandidate = async (
 ): Promise<Installation | undefined | null> => {
   if (candidate.custom) return customInstallation(candidate.custom);
   const source = registrySourceOf(deps.database, candidate);
+
   return source
     ? resolveRegistryInstallation(deps.home, candidate.id, source)
     : null;

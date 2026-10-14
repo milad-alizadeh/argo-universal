@@ -21,7 +21,9 @@ const meta = {
   // The list under a plain header row, as a shell draws it.
   render: (args): ReactElement => <SessionsPreviewMock {...args} />,
 } satisfies Meta<typeof SessionsView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = { name: 'SessionsScreen' };

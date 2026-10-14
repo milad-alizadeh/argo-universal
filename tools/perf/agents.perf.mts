@@ -16,14 +16,19 @@ import { cpuRates, report, type Result, run, wanted } from './results.mts';
 
 // The Agents page against a registry long enough that its list must virtualise.
 const agentCount = 200;
+
 const catalogScroll = 'agents-catalog';
+
 const settleMilliseconds = 1000;
 
 type Server = Awaited<ReturnType<typeof startOwnServer>>;
+
 type Registry = typeof publishedRegistry;
+
 type RegistryAgent = Registry['agents'][number];
 
 const results: Result[] = [];
+
 let server: Server;
 
 const numbered = (agent: RegistryAgent, number: number): RegistryAgent => ({
@@ -35,6 +40,7 @@ const numbered = (agent: RegistryAgent, number: number): RegistryAgent => ({
 // The published registry's Agents copied and numbered until it lists `agentCount`.
 const longRegistry = (): Registry => {
   const { agents } = publishedRegistry;
+
   return {
     ...publishedRegistry,
     agents: Array.from({ length: agentCount / agents.length }, (_, round) =>
@@ -69,11 +75,13 @@ async function openAgents(page: Page, viewport: Viewport): Promise<CDPSession> {
     serverUrl: server.serverUrl,
     viewport,
   });
+
   if (viewport.width < 600)
     await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('link', { name: /^Agents(?:,|$)/u }).click();
   await agentLink(page, 'Example Agent 1').waitFor();
+
   return session;
 }
 
@@ -85,10 +93,10 @@ async function warmList(page: Page): Promise<void> {
   await page.waitForTimeout(settleMilliseconds);
 }
 
-const viewports: Record<string, Viewport> = {
+const viewports = {
   agents: desktop,
   'agents-phone': phone,
-};
+} satisfies Record<string, Viewport>;
 
 for (const cpu of cpuRates)
   for (const [interaction, viewport] of Object.entries(viewports).filter(

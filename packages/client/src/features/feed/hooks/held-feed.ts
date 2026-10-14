@@ -18,6 +18,7 @@ const heldFeeds = new WeakMap<QueryClient, HeldCache<HeldFeed>>();
 const heldFeedsOf = (queryClient: QueryClient): HeldCache<HeldFeed> => {
   const cache = heldFeeds.get(queryClient) ?? createHeldCache(handOverGraceMs);
   heldFeeds.set(queryClient, cache);
+
   return cache;
 };
 
@@ -31,15 +32,19 @@ export interface HeldFeedStart {
 // A Session's Feed as the screen that held it last left it; a screen taking it over starts there instead of empty.
 export function useHeldFeedStart(sessionId: string): HeldFeedStart {
   const cache = heldFeedsOf(useQueryClient());
+
   const [start] = useState((): HeldFeedStart => {
     const held = cache.read(sessionId);
+
     return {
       feed: held?.feed ?? emptyFeed,
       snapshot: held?.snapshot ?? null,
       syncPoint: held ? syncPointOf(held.feed) : null,
     };
   });
+
   useEffect(() => cache.hold(sessionId), [cache, sessionId]);
+
   return start;
 }
 

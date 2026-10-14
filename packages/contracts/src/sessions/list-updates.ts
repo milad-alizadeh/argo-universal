@@ -10,4 +10,5 @@ export const SessionListUpdate = z.discriminatedUnion('type', [
     sessionId: sessionColumns.shape.id,
   }),
 ]);
+
 export type SessionListUpdate = z.infer<typeof SessionListUpdate>;

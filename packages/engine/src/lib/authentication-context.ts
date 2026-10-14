@@ -2,6 +2,7 @@ type AuthenticationContext = {
   authContext: string;
   env: Readonly<Record<string, string>>;
 };
+
 const accountEnvironment = [
   'HOME',
   'USERPROFILE',

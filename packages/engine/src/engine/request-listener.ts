@@ -15,9 +15,12 @@ export interface RequestListenerOptions {
   blobsFolder: string;
   router: AppRouter;
 }
+
 const blobUrlPattern = /^\/blobs\/([^/?]*)(\?.*)?$/;
+
 // The largest upload plus 64 KiB for multipart headers; tRPC stops reading a longer body.
 const multipartHeaderBytes = 65_536;
+
 const maxBodySize = maxBlobUploadBytes + multipartHeaderBytes;
 
 // Plain HTTP serves only GET /blobs/:id; every other request is a tRPC call at /trpc/ (ADR 0002).
@@ -25,6 +28,7 @@ export function createRequestListener(
   options: RequestListenerOptions,
 ): RequestListener {
   const handleTRPC = createGuardedTrpc(options);
+
   return (request, response): void => {
     if (!options.guard.allowsRequest({ host: request.headers.host }))
       return answerError(response, httpStatus.forbidden, 'Forbidden');
@@ -38,6 +42,7 @@ function dispatchRequest(
   response: ServerResponse,
 ): void {
   const blob = blobUrlPattern.exec(request.url ?? '');
+
   if (blob)
     return handleBlob(
       { ...sources.options, id: matchedBlobId(blob) },
@@ -53,10 +58,13 @@ function createGuardedTrpc(options: RequestListenerOptions): RequestListener {
     basePath: '/trpc/',
     maxBodySize,
   });
+
   return (request, response): void => {
     const { origin } = request.headers;
+
     if (!options.guard.allowsOrigin(origin))
       return answerError(response, httpStatus.forbidden, 'Forbidden');
+
     // A web App or desktop app on another origin may read the answer only with this header.
     if (origin) response.setHeader('access-control-allow-origin', origin);
     handleTRPC(request, response);
@@ -73,8 +81,8 @@ function handleBlob(
       message: 'Method not allowed',
       headers: { allow: 'GET' },
     });
-  streamBlob(options, options.id, response).catch((error: unknown): void =>
-    reportBlobFailure(response, error),
+  streamBlob(options, options.id, response).catch((cause: unknown): void =>
+    reportBlobFailure(response, cause),
   );
 }
 
@@ -82,8 +90,9 @@ function matchedBlobId(match: RegExpExecArray): string {
   return match[1] ?? '';
 }
 
-function reportBlobFailure(response: ServerResponse, error: unknown): void {
-  console.error(`engine: ${String(error)}`);
+function reportBlobFailure(response: ServerResponse, cause: unknown): void {
+  console.error(`engine: ${String(cause)}`);
+
   if (response.headersSent) response.destroy();
   else answerError(response, httpStatus.internalError, 'Internal error');
 }

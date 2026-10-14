@@ -14,7 +14,9 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { blobsFolderIn, uploadBlob } from '../blob';
 
 const markdown = 'text/markdown';
+
 const pdf = 'application/pdf';
+
 const context: ContentBlock = {
   type: 'resource',
   resource: {
@@ -24,6 +26,7 @@ const context: ContentBlock = {
   },
   _meta: { acp: { attachment: 'context' } },
 };
+
 const reference: ContentBlock = {
   type: 'resource_link',
   uri: 'file:///project/source.ts',
@@ -34,10 +37,12 @@ const reference: ContentBlock = {
   size: 200,
   _meta: { acp: { attachment: 'reference' } },
 };
+
 it.each(fixtureAgents.map(({ agent }) => agent))(
   '%s sends complete text, context and references through shared ACP preparation',
   async (agent) => {
     const received = Promise.withResolvers<PromptRequest>();
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -54,10 +59,12 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       undefined,
       agent,
     );
+
     const created = await host.caller.session.new({
       ...emptySessionInput,
       agent,
     });
+
     await host.caller.session.prompt({
       ...created,
       prompt: [
@@ -94,6 +101,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     ]);
   },
 );
+
 it.each([
   { prompt: context, reason: 'does not support this embedded context' },
   {
@@ -108,10 +116,12 @@ it.each([
   'rejects unsupported input without an ACP prompt or successful acknowledgement: $reason',
   async ({ prompt, reason }) => {
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine({
       steps: [],
       responses: { 'session/prompt': [{ requests }] },
     });
+
     const created = await host.caller.session.new(emptySessionInput);
     await expect(
       host.caller.session.prompt({
@@ -134,6 +144,7 @@ const uploadFile = (
     },
     file,
   );
+
 const uploadedLink = (blob: BlobRef, name: string): UploadedFileLink => ({
   type: 'resource_link',
   name,
@@ -142,8 +153,10 @@ const uploadedLink = (blob: BlobRef, name: string): UploadedFileLink => ({
   size: blob.bytes,
   blob,
 });
+
 const fileUri = (host: { home: string }, blob: BlobRef, name: string): string =>
   pathToFileURL(join(host.home, 'attachments', blob.blobId, name)).href;
+
 const promptWithUpload = async (
   embeddedContext: boolean,
   file: File,
@@ -153,6 +166,7 @@ const promptWithUpload = async (
   host: Awaited<ReturnType<typeof startAcpEngine>>;
 }> => {
   const received = Promise.withResolvers<PromptRequest>();
+
   const host = await startAcpEngine({
     steps: [],
     initialize: {
@@ -165,13 +179,16 @@ const promptWithUpload = async (
     },
     responses: { 'session/prompt': [{ received }] },
   });
+
   const blob = await uploadFile(host, file);
   await host.caller.session.new({
     ...emptySessionInput,
     prompt: [uploadedLink(blob, file.name)],
   });
+
   return { request: await received.promise, blob, host };
 };
+
 const notes = '# Notes\nEvery line reaches the Agent.\n';
 
 it('an uploaded text file reaches the Agent inline, named by a copy that keeps its file name', async () => {
@@ -179,6 +196,7 @@ it('an uploaded text file reaches the Agent inline, named by a copy that keeps i
     true,
     new File([notes], 'notes.md', { type: markdown }),
   );
+
   expect(request.prompt).toEqual([
     {
       type: 'resource',
@@ -196,6 +214,7 @@ it('an uploaded text file is linked when the Agent takes no embedded context', a
     false,
     new File([notes], 'notes.md', { type: markdown }),
   );
+
   expect(request.prompt).toEqual([
     {
       type: 'resource_link',
@@ -209,10 +228,12 @@ it('an uploaded text file is linked when the Agent takes no embedded context', a
 
 it('an uploaded binary file is linked to a copy holding its exact bytes', async () => {
   const bytes = new Uint8Array([37, 80, 68, 70, 0, 255, 1]);
+
   const { request, blob, host } = await promptWithUpload(
     true,
     new File([bytes], 'spec.pdf', { type: pdf }),
   );
+
   expect({
     prompt: request.prompt,
     copy: new Uint8Array(
@@ -237,6 +258,7 @@ it('an uploaded file keeps its Blob for the Session that sent it', async () => {
     true,
     new File([notes], 'notes.md', { type: markdown }),
   );
+
   expect(
     host.database.$client.prepare('SELECT blob_id FROM blob_ref').all(),
   ).toEqual([{ blob_id: blob.blobId }]);
@@ -247,6 +269,7 @@ it('an uploaded file name cannot leave its attachment folder', async () => {
     false,
     new File([notes], '../../escape.md', { type: markdown }),
   );
+
   expect(request.prompt).toMatchObject([
     { uri: fileUri(host, blob, 'escape.md') },
   ]);
@@ -284,14 +307,17 @@ it.each([
   'an uploaded file whose $field does not match its Blob is refused before the Agent sees it',
   async ({ change }) => {
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine({
       steps: [],
       responses: { 'session/prompt': [{ requests }] },
     });
+
     const blob = await uploadFile(
       host,
       new File([notes], 'notes.md', { type: markdown }),
     );
+
     const created = await host.caller.session.new(emptySessionInput);
     await expect(
       host.caller.session.prompt({

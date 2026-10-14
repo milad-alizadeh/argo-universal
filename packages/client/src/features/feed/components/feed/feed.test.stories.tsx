@@ -28,7 +28,9 @@ const meta = {
   parameters: { screenPreview: true },
   args: feedArgs,
 } satisfies Meta<typeof Feed>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const LoadingEarlier: Story = {
@@ -40,6 +42,7 @@ export const LoadingEarlier: Story = {
       const indicator = await canvas.findByRole('progressbar', {
         name: earlierFeedLoadingLabel,
       });
+
       await waitFor(() => expect(fullyInViewport(indicator)).toBe(true));
     });
   },
@@ -106,8 +109,10 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: 'Ran 10 commands' }),
     );
+
     const step = (): HTMLElement =>
       canvas.getByRole('button', { name: splitGroupStepInTail });
+
     const top = await settledTopOf(step);
     sendOlderPage();
     // The group gains its first ten commands above, stays open, and the command being read stays where it was.

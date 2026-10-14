@@ -64,6 +64,7 @@ function sessionsList({
   selectedDestination,
 }: SessionsListSource): SectionList {
   const newSession = (): void => navigate({ to: 'new-session' });
+
   return {
     header: <SessionsHeader {...sessionsFilter} onNewSession={newSession} />,
     phoneHeader: {
@@ -128,9 +129,12 @@ export function useSectionList(
   const sessionsFilter = useSessionsFilter();
   const settingsSearch = useState('');
   const navigate = useNavigate();
+
   if (section === 'sessions')
     return sessionsList({ sessionsFilter, navigate, selectedDestination });
+
   if (section === 'settings')
     return settingsList(settingsSearch, selectedDestination);
+
   return placeholderList(section);
 }

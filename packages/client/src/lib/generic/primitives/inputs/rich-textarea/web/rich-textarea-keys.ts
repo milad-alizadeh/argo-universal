@@ -4,6 +4,7 @@ import {
   COMMAND_PRIORITY_HIGH,
   CONTROL_OR_META,
   FORMAT_TEXT_COMMAND,
+  INSERT_PARAGRAPH_COMMAND,
   isExactShortcutMatch,
   KEY_DOWN_COMMAND,
   KEY_ENTER_COMMAND,
@@ -41,10 +42,13 @@ function applyMarkShortcut(
   const shortcut = markShortcuts.find(({ key, modifiers }) =>
     isExactShortcutMatch(event, key, modifiers),
   );
+
   if (!shortcut) return false;
   event.preventDefault();
+
   if (shortcut.format)
     editor.dispatchCommand(FORMAT_TEXT_COMMAND, shortcut.format);
+
   return true;
 }
 
@@ -64,6 +68,7 @@ export function registerBlockShortcuts(editor: LexicalEditor): () => void {
       if (!isExactShortcutMatch(event, 'c', codeBlockModifiers)) return false;
       event.preventDefault();
       editor.update($wrapInCodeBlock);
+
       return true;
     },
     COMMAND_PRIORITY_HIGH,
@@ -78,10 +83,18 @@ function plainReturn(event: KeyboardEvent | null): event is KeyboardEvent {
 // Return sends from a paragraph or quote; Lexical's list and code nodes carry out the other actions.
 function $sendsOnReturn(event: KeyboardEvent | null): event is KeyboardEvent {
   const selection = $getSelection();
+
   return (
     plainReturn(event) &&
     $isRangeSelection(selection) &&
     sendsOnReturn({ block: $returnBlock(selection) })
+  );
+}
+
+// The reference menu is open, so Return chooses a row instead of sending.
+function menuOpen(editor: LexicalEditor): boolean {
+  return (
+    editor.getRootElement()?.getAttribute('aria-controls') === 'typeahead-menu'
   );
 }
 
@@ -92,10 +105,40 @@ export function registerReturnToSubmit(
   return editor.registerCommand(
     KEY_ENTER_COMMAND,
     (event) => {
-      if (!$sendsOnReturn(event)) return false;
+      if (menuOpen(editor) || !$sendsOnReturn(event)) return false;
       event.preventDefault();
       submit();
+
       return true;
+    },
+    COMMAND_PRIORITY_HIGH,
+  );
+}
+
+function shiftedReturn(event: KeyboardEvent | null): event is KeyboardEvent {
+  return event !== null && event.shiftKey && !event.isComposing;
+}
+
+function $inListItem(): boolean {
+  const selection = $getSelection();
+
+  return (
+    $isRangeSelection(selection) && $returnBlock(selection) === 'list-item'
+  );
+}
+
+/*
+ * ⇧Return in a list item adds an item, as Return does, rather than a hanging line inside the item;
+ * the line break would indent the next line and keep `2.` typed there from starting an item.
+ */
+export function registerListLines(editor: LexicalEditor): () => void {
+  return editor.registerCommand(
+    KEY_ENTER_COMMAND,
+    (event) => {
+      if (!shiftedReturn(event) || !$inListItem()) return false;
+      event.preventDefault();
+
+      return editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND);
     },
     COMMAND_PRIORITY_HIGH,
   );

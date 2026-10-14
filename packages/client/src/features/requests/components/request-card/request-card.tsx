@@ -10,6 +10,7 @@ import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
 import { RequestFooter } from './request-footer';
+
 export { RequestAction } from './request-action';
 
 export type RequestState =
@@ -39,13 +40,16 @@ export interface RequestCardProps extends Pick<
 export function RequestCard(props: RequestCardProps): ReactNode {
   const wide = useContentWide();
   const windowWide = useWide();
+
   const nativeID = useRequestKeyboard({
     inactive: props.state.kind !== 'open',
     wide,
     onEnter: props.onEnter,
     onEscape: props.onEscape,
   });
+
   if (presentsSheet(props, windowWide)) return <RequestSheet {...props} />;
+
   return <RequestContainer {...props} nativeID={nativeID} />;
 }
 
@@ -72,6 +76,7 @@ function containerClassName({
   appearance,
 }: Pick<RequestCardProps, 'surface' | 'appearance'>): string {
   if (surface === 'tray') return 'w-full gap-3 px-3 pt-3 pb-3.5';
+
   return cn(
     'w-full max-w-composer',
     appearance !== 'embedded' && cardClassName,

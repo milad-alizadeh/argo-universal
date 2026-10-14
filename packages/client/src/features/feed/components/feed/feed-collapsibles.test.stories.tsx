@@ -24,7 +24,9 @@ const meta = {
   parameters: { screenPreview: true },
   args: feedArgs,
 } satisfies Meta<typeof Feed>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // Long enough for the slowest close and the frames after it.
@@ -40,13 +42,18 @@ async function lastTwoRowsIn(
     Boolean(
       group.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING,
     );
+
   const [trigger, below] = await waitFor(() => {
     const rows = closedRows().slice(-2);
+
     if (!rows.every(inGroup) || rows.length < 2)
       throw new Error('The last group has not drawn two rows');
+
     return rows;
   });
+
   if (!trigger || !below) throw new Error('No two rows in the last group');
+
   return [trigger, below];
 }
 
@@ -56,10 +63,13 @@ export const KeepsRowsBelowStillWhenRowClosesAtEnd: Story = {
     await settleViewport(layoutWidths.phone);
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+
     const closedRows = (): HTMLElement[] =>
       within(scroll).getAllByRole('button', { expanded: false });
+
     // The last group opens on its own rows: the reader opens one and reads on to the end, where the next one sits below it.
     const lastGroup = closedRows().at(-1);
+
     if (!lastGroup) throw new Error('No closed row at the end');
     await openRow(lastGroup);
     const [trigger, below] = await lastTwoRowsIn(lastGroup, closedRows);
@@ -67,11 +77,13 @@ export const KeepsRowsBelowStillWhenRowClosesAtEnd: Story = {
     await restingTopOf(below);
     await scrollToEnd(scroll);
     await settledTopOf(() => below);
+
     const tops = await sampleEachFrame(
       () => trigger.click(),
       () => below.getBoundingClientRect().top,
       closingFrames,
     );
+
     await expect(trigger).toHaveAttribute(expandedAttribute, 'false');
     await expect(tops).toEqual(tops.map(() => tops[0]));
   },
@@ -83,30 +95,38 @@ export const KeepsPlaceWhenRowOpens: Story = {
     await settleViewport(layoutWidths.phone);
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+
     // Away from the end, opening a row grows the Feed below it and leaves the rows above where they were.
     const closedRowInTopHalf = (): HTMLElement | undefined => {
       const view = scroll.getBoundingClientRect();
+
       return within(scroll)
         .queryAllByRole('button', { expanded: false })
         .find((button) => {
           const { top } = button.getBoundingClientRect();
+
           return top > view.top + 40 && top < view.top + view.height / 2;
         });
     };
+
     await scrollAwayFromEnd(canvas, scroll);
+
     // Reads back a third of a screen at a time until a closed row sits in the top half.
     const trigger = await waitFor(
       () => {
         const found = closedRowInTopHalf();
+
         if (found) return found;
         scrollUp(scroll, scroll.clientHeight / 3);
         throw new Error('No closed row in view');
       },
       { timeout: 5000, interval: 100 },
     );
+
     const triggerTop = trigger.getBoundingClientRect().top;
     // The trigger's collapsible, which grows as it opens.
     const collapsible = trigger.parentElement;
+
     if (!collapsible) throw new Error('No collapsible around the row');
     const heightBefore = collapsible.offsetHeight;
     trigger.click();

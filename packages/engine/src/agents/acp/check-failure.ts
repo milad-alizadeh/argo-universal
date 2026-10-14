@@ -1,70 +1,84 @@
 import type { AgentCheck } from '@repo/contracts';
+import { z } from 'zod';
 import type { AgentLaunchSubject } from '..';
 import { MissingAcpCapabilityError } from './initialize';
 
 export const answerTimeoutMs = 15_000;
+
 const millisecondsPerSecond = 1000;
+
 export class CheckTimeout extends Error {
   public constructor(public readonly milliseconds: number) {
     super('ACP initialize timed out');
   }
 }
 
-const spawnFailures = new Map<unknown, string>([
+const spawnFailures = new Map([
   ['ENOENT', 'was not found.'],
   ['EACCES', 'cannot be run.'],
 ]);
-const readErrorCode = (error: unknown): unknown =>
-  error instanceof Error && 'code' in error ? error.code : null;
+
+// Node spawn errors carry a string `code`; every other thrown value has none.
+const spawnErrorSchema = z.object({ code: z.string() });
+
 const describeSpawnFailure = (
-  error: unknown,
+  cause: unknown,
   { launch }: AgentLaunchSubject,
 ): string | undefined => {
-  const failure = spawnFailures.get(readErrorCode(error));
-  return failure && `${launch.executable} ${failure}`;
+  const spawnError = spawnErrorSchema.safeParse(cause);
+  const failure = spawnError.success && spawnFailures.get(spawnError.data.code);
+
+  return failure ? `${launch.executable} ${failure}` : undefined;
 };
-export const describeError = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+
+export const describeError = (cause: unknown): string =>
+  cause instanceof Error ? cause.message : String(cause);
+
 export const cantStart = (reason: string): AgentCheck => ({
   status: 'cant-start',
   reason,
 });
+
 type FailureReader = (
-  error: unknown,
+  cause: unknown,
   subject: AgentLaunchSubject,
 ) => AgentCheck | undefined;
+
 const failureReaders: readonly FailureReader[] = [
-  (error, { name }) =>
-    error instanceof MissingAcpCapabilityError
+  (cause, { name }) =>
+    cause instanceof MissingAcpCapabilityError
       ? {
           status: 'not-compatible',
-          reason: `${name} does not support the ACP ${error.capability} capability Argo needs.`,
+          reason: `${name} does not support the ACP ${cause.capability} capability Argo needs.`,
         }
       : undefined,
-  (error, { name }) =>
-    error instanceof CheckTimeout
+  (cause, { name }) =>
+    cause instanceof CheckTimeout
       ? cantStart(
-          `${name} did not answer ACP initialize within ${error.milliseconds / millisecondsPerSecond} seconds.`,
+          `${name} did not answer ACP initialize within ${cause.milliseconds / millisecondsPerSecond} seconds.`,
         )
       : undefined,
-  (error, subject) => {
-    const failure = describeSpawnFailure(error, subject);
+  (cause, subject) => {
+    const failure = describeSpawnFailure(cause, subject);
+
     return failure ? cantStart(failure) : undefined;
   },
 ];
+
 // The named failures a readiness check recognises; anything else is reported by the caller.
 export const describeKnownFailure = (
-  error: unknown,
+  cause: unknown,
   subject: AgentLaunchSubject,
 ): AgentCheck | undefined =>
   failureReaders
-    .map((read) => read(error, subject))
+    .map((read) => read(cause, subject))
     .find((check) => check !== undefined);
+
 export const launchFailure = (
-  error: unknown,
+  cause: unknown,
   subject: AgentLaunchSubject,
 ): AgentCheck =>
   cantStart(
-    describeSpawnFailure(error, subject) ??
-      `${subject.name} could not be started: ${describeError(error)}`,
+    describeSpawnFailure(cause, subject) ??
+      `${subject.name} could not be started: ${describeError(cause)}`,
   );

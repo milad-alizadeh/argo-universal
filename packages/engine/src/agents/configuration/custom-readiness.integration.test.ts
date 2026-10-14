@@ -8,9 +8,11 @@ import {
 } from '#mocks/custom-agent';
 
 const markerName = 'probe-pid';
+
 const releaseName = 'probe-release';
 
 type Caller = Awaited<ReturnType<typeof startCustomAgentEngine>>['caller'];
+
 const queries = [
   {
     name: 'Recheck shares',
@@ -37,9 +39,11 @@ it.each(queries)(
     const marker = join(host.home, markerName);
     const release = join(host.home, releaseName);
     await writeFile(release, 'release');
+
     const registered = await host.caller.agents.registerCustom(
       gatedCustomAgentDefinition(marker, release),
     );
+
     if (registered.status !== 'ready') throw new Error(registered.failure);
     await rm(release);
     await rm(marker);
@@ -50,9 +54,11 @@ it.each(queries)(
       .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
       .toMatch(/^\d+$/);
     const other = host.createCaller();
+
     const concurrent = request(other, registered.agentId).catch(
-      (error: unknown) => error,
+      (cause: unknown) => cause,
     );
+
     await expect(other.agents.remove(input)).rejects.toThrow('in use');
     await writeFile(release, 'release');
     expect(await checking).toEqual({ status: 'ready' });
@@ -63,9 +69,11 @@ it.each(queries)(
 
 it('a queued readiness check observes removal instead of launching a stale definition', async () => {
   const host = await startCustomAgentEngine({ acp: {} });
+
   const registered = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registered.status !== 'ready') throw new Error(registered.failure);
   const input = { agentId: registered.agentId };
   const removal = host.caller.agents.remove(input);
@@ -79,13 +87,16 @@ it('a queued readiness check observes removal instead of launching a stale defin
 
 it('a Recheck queued behind an edit checks the committed definition', async () => {
   const host = await startCustomAgentEngine({ acp: {} });
+
   const registered = await host.caller.agents.registerCustom(
     customAgentDefinition,
   );
+
   if (registered.status !== 'ready') throw new Error(registered.failure);
   const marker = join(host.home, markerName);
   const release = join(host.home, releaseName);
   onTestFinished(() => writeFile(release, 'release'));
+
   const editing = host.caller.agents.editCustom({
     agentId: registered.agentId,
     definition: {
@@ -93,12 +104,15 @@ it('a Recheck queued behind an edit checks the committed definition', async () =
       name: 'Renamed custom Agent',
     },
   });
+
   await expect
     .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
     .toMatch(/^\d+$/);
+
   const checking = host
     .createCaller()
     .agents.recheck({ agentId: registered.agentId });
+
   await writeFile(release, 'release');
   await editing;
   expect(await checking).toEqual({ status: 'ready' });
@@ -116,9 +130,11 @@ it('enablement waits for readiness cleanup and then commits the requested settin
   const marker = join(host.home, markerName);
   const release = join(host.home, releaseName);
   await writeFile(release, 'release');
+
   const registered = await host.caller.agents.registerCustom(
     gatedCustomAgentDefinition(marker, release),
   );
+
   if (registered.status !== 'ready') throw new Error(registered.failure);
   await rm(release);
   await rm(marker);
@@ -128,9 +144,11 @@ it('enablement waits for readiness cleanup and then commits the requested settin
   await expect
     .poll(() => readFile(marker, 'utf8'), { timeout: 10_000 })
     .toMatch(/^\d+$/);
+
   const disabling = host
     .createCaller()
     .agents.setEnabled({ ...input, enabled: false });
+
   expect(await host.caller.agents.configured()).toContainEqual(
     expect.objectContaining({ id: registered.agentId, enabled: true }),
   );

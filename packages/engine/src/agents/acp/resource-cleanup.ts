@@ -11,6 +11,7 @@ type CleanupInput = {
   routing: AcpRouting;
   reservations: Set<AcpReservation>;
 };
+
 export class AcpResourceCleanup {
   public retired = false;
   private broken = false;
@@ -20,24 +21,24 @@ export class AcpResourceCleanup {
   public closed(): Promise<void> {
     return this.released.promise;
   }
-  public retire(reservation: AcpReservation, error: unknown): void {
+  public retire(reservation: AcpReservation, cause: unknown): void {
     this.retired = true;
-    reservation.input.destination.failed(error);
+    reservation.input.destination.failed(cause);
   }
-  public retainClose(reservation: AcpReservation, error: unknown): void {
+  public retainClose(reservation: AcpReservation, cause: unknown): void {
     reservation.withdrawn = true;
-    this.retire(reservation, error);
-    void this.releaseIfIdle().catch((failure: unknown) =>
-      reservation.input.destination.failed(failure),
-    );
+    this.retire(reservation, cause);
+    void this.releaseIfIdle().catch(reservation.input.destination.failed);
   }
-  public fail(error: unknown): boolean {
+  public fail(cause: unknown): boolean {
     if (this.hasFailedOrStartedTermination()) return false;
     this.broken = true;
     this.retired = true;
     this.input.routing.fence();
+
     for (const reservation of this.input.reservations)
-      reservation.input.destination.failed(error);
+      reservation.input.destination.failed(cause);
+
     return true;
   }
   private hasFailedOrStartedTermination(): boolean {
@@ -53,16 +54,16 @@ export class AcpResourceCleanup {
   }
   public async abandon(
     reservation: AcpReservation,
-    error: unknown,
+    cause: unknown,
   ): Promise<void> {
     if (!this.input.reservations.has(reservation)) return;
+
     if (this.canReleaseUndispatched(reservation))
       return this.releaseUndispatched(reservation);
     reservation.withdrawn = true;
-    this.retire(reservation, error);
-    await this.releaseIfIdle().catch((failure: unknown) =>
-      this.retire(reservation, failure),
-    );
+    this.retire(reservation, cause);
+    await this.releaseIfIdle().catch(reservation.input.destination.failed);
+
     await reservation.released.promise;
   }
   private canReleaseUndispatched(reservation: AcpReservation): boolean {
@@ -77,6 +78,7 @@ export class AcpResourceCleanup {
   }
   public shutdown(): Promise<void> {
     this.termination ??= this.terminate();
+
     return this.termination;
   }
   private async terminate(): Promise<void> {
@@ -93,10 +95,12 @@ export class AcpResourceCleanup {
     await Promise.all(
       [...this.input.reservations].map(settleReservationAfterExit),
     );
+
     for (const reservation of this.input.reservations) {
       releaseOpening(reservation, this.input.reservations, this.input.routing);
       reservation.released.resolve();
     }
+
     this.input.routing.fence();
     this.released.resolve();
   }

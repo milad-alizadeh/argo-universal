@@ -11,9 +11,13 @@ import {
 } from './plan-document-scroll';
 
 const flexibleContentClassName = 'flex-1 min-h-0';
+
 const cardClassName = 'bg-card rounded-xl shadow-xs';
+
 const proposalScrollClassName = 'max-h-plan-proposal grow-0';
+
 const proposalLabel = 'Plan proposal document';
+
 const proposalTestID = 'plan-proposal-scroll';
 
 const scrolledPlanStyles = {
@@ -53,8 +57,11 @@ export function PlanDocument({
   layout,
 }: PlanDocumentProps): React.JSX.Element {
   const markdown = <FeedMarkdown text={content} variant="proposal" />;
+
   if (layout === 'request-sheet') return markdown;
+
   if (layout === 'sheet') return <View className="pt-2 pb-4">{markdown}</View>;
+
   return (
     <ScrolledPlan style={scrolledPlanStyles[layout]}>{markdown}</ScrolledPlan>
   );
@@ -65,6 +72,7 @@ function ScrolledPlan(props: {
   children: React.ReactNode;
 }): React.JSX.Element {
   const { metrics, handlers } = usePlanScroll();
+
   return (
     <View className={cn('relative overflow-hidden', props.style.frame)}>
       <PlanScrollView style={props.style} handlers={handlers}>

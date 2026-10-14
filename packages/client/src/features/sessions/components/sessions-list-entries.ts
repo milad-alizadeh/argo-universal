@@ -16,11 +16,13 @@ type ListedProject = ProjectsListOutput[number];
 
 function groupByProject(sessions: SessionInfo[]): Map<string, SessionInfo[]> {
   const sessionsByProject = new Map<string, SessionInfo[]>();
+
   for (const session of sessions) {
     const projectSessions = sessionsByProject.get(session.projectId) ?? [];
     projectSessions.push(session);
     sessionsByProject.set(session.projectId, projectSessions);
   }
+
   return sessionsByProject;
 }
 
@@ -40,6 +42,7 @@ function projectBody(
 ): SessionsListEntry[] {
   if (projectSessions.length === 0)
     return [{ kind: 'empty', id: `empty:${project.id}` }];
+
   return projectSessions.map((session) => ({
     kind: 'session',
     id: session.sessionId,
@@ -53,13 +56,16 @@ function projectEntries(
   collapsed: ReadonlySet<string>,
 ): SessionsListEntry[] {
   const headingId = `project:${project.id}`;
+
   const heading: SessionsListEntry = {
     kind: 'project',
     id: headingId,
     name: project.name,
     projectId: project.id,
   };
+
   if (collapsed.has(headingId)) return [heading];
+
   return [heading, ...projectBody(project, projectSessions)];
 }
 
@@ -71,9 +77,12 @@ export function listEntries({
   hideEmptyProjects,
 }: ListEntriesInput): SessionsListEntry[] {
   const sessionsByProject = groupByProject(sessions);
+
   return projects.flatMap((project) => {
     const projectSessions = newestFirst(sessionsByProject, project.id);
+
     if (hideEmptyProjects && projectSessions.length === 0) return [];
+
     return projectEntries(project, projectSessions, collapsed);
   });
 }

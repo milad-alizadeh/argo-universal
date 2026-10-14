@@ -16,16 +16,20 @@ export const applySessionConfig = (
   input: SessionSetConfigOptionInput,
 ): Promise<SessionSetConfigOptionOutput['configOptions']> => {
   validateConfigChoice(session.getSnapshot().context.configOptions, input);
+
   const applied =
     Promise.withResolvers<SessionSetConfigOptionOutput['configOptions']>();
+
   sendSessionCommand(session, {
     type: 'session.setConfigOption',
     configId: input.configId,
     value: input.value,
     applied,
   });
+
   return applied.promise;
 };
+
 export const configureSession = async (
   deps: Pick<
     SessionRouterDeps,
@@ -38,6 +42,8 @@ export const configureSession = async (
     input.sessionId,
     'session.setConfigOption',
   );
+
   validateSessionCommandAdmission(deps);
+
   return { configOptions: await applySessionConfig(session, input) };
 };

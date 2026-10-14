@@ -36,24 +36,39 @@ import { recoverAfterRestart } from './recovery';
 import { TurnInsertJob } from './session-storage';
 
 const runningTurnId = 'running-turn';
+
 const partialReply = 'Partial reply';
+
 const editedFilePath = '/project/file';
+
 const completedToolId = 'completed-tool';
+
+const failedToolId = 'failed-tool';
+
 const cancelledToolId = 'cancelled-tool';
+
 const invalidMessageId = 'invalid-message';
 
+const settledCompletedToolId = 'settled-completed-tool';
+
+const settledRunningToolId = 'settled-running-tool';
+
 let home: string;
+
 let engine: ActorRefFrom<typeof engineMachine>;
+
 let messages: EngineMessage[];
+
 let rowsAtReady: ReturnType<typeof readRows>[];
 
-const readRows = (
-  database: Database,
-): {
+// Every stored Turn, Feed row and Session.
+interface StoredRows {
   turns: (typeof turn.$inferSelect)[];
   rows: (typeof feedRow.$inferSelect)[];
   sessions: (typeof session.$inferSelect)[];
-} => ({
+}
+
+const readRows = (database: Database): StoredRows => ({
   turns: database.select().from(turn).orderBy(turn.id).all(),
   rows: database
     .select()
@@ -65,6 +80,7 @@ const readRows = (
 
 const readStoredRows = (): ReturnType<typeof readRows> => {
   const database = openDatabase(join(home, 'argo.db'));
+
   try {
     return readRows(database);
   } finally {
@@ -81,6 +97,7 @@ const startEngine = async (): Promise<
         log: (): void => {},
         sendToSupervisor: ({ context }, message): void => {
           messages.push(message);
+
           if (message.type === 'ready' && context.database)
             rowsAtReady.push(readRows(context.database));
         },
@@ -102,6 +119,7 @@ const startEngine = async (): Promise<
     (snapshot): boolean =>
       snapshot.context.server !== null || snapshot.status === 'done',
   );
+
   return engine.getSnapshot();
 };
 
@@ -136,6 +154,7 @@ const messageRow = (
 const fail = (message: string): never => {
   throw new Error(message);
 };
+
 const engineDatabase = (): Database =>
   engine.getSnapshot().context.database ?? fail('The Engine has no database');
 
@@ -268,7 +287,7 @@ describe('Engine restart recovery', (): void => {
           status: 'completed',
         }),
         toolRow({
-          id: 'failed-tool',
+          id: failedToolId,
           position: 4,
           revision: 10,
           status: 'failed',
@@ -287,10 +306,17 @@ describe('Engine restart recovery', (): void => {
           state: 'settled',
         }),
         toolRow({
-          id: 'settled-completed-tool',
+          id: settledCompletedToolId,
           position: 7,
           revision: 16,
           status: 'completed',
+          state: 'settled',
+        }),
+        toolRow({
+          id: settledRunningToolId,
+          position: 8,
+          revision: 18,
+          status: 'in_progress',
           state: 'settled',
         }),
       ],
@@ -345,13 +371,15 @@ describe('Engine restart recovery', (): void => {
         'pending-tool',
         'running-tool',
         completedToolId,
-        'failed-tool',
+        failedToolId,
         cancelledToolId,
         'settled-pending-tool',
       ].map((id, index): ReturnType<typeof expect.objectContaining> => {
-        let status = 'failed';
+        let status = 'cancelled';
+
         if (id === completedToolId) status = 'completed';
-        else if (id === cancelledToolId) status = 'cancelled';
+        else if (id === failedToolId) status = 'failed';
+
         return expect.objectContaining({
           id,
           state: 'settled',
@@ -363,9 +391,15 @@ describe('Engine restart recovery', (): void => {
         });
       }),
       expect.objectContaining({
-        id: 'settled-completed-tool',
+        id: settledCompletedToolId,
         state: 'settled',
         revision: 16,
+      }),
+      expect.objectContaining({
+        id: settledRunningToolId,
+        state: 'settled',
+        revision: 28,
+        payload: expect.objectContaining({ status: 'cancelled' }),
       }),
       expect.objectContaining({ id: 'message', state: 'settled', revision: 6 }),
     ]);
@@ -387,7 +421,7 @@ describe('Engine restart recovery', (): void => {
         }),
       ),
     ).toEqual([
-      { maxRevision: 27, epoch: 3 },
+      { maxRevision: 28, epoch: 3 },
       { maxRevision: 6, epoch: 3 },
     ]);
 
@@ -401,6 +435,7 @@ describe('Engine restart recovery', (): void => {
     const blobsFolder = join(home, 'blobs');
     mkdirSync(blobsFolder);
     const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+
     for (const [id, createdAt] of [
       ['old-unused', dayAgo - 60_000],
       ['old-used', dayAgo - 60_000],
@@ -412,6 +447,7 @@ describe('Engine restart recovery', (): void => {
         .values({ id, mime: 'image/png', bytes: 2, createdAt })
         .run();
     }
+
     database
       .insert(blobRef)
       .values({ blobId: 'old-used', sessionId: 'session-1' })
@@ -475,6 +511,17 @@ describe('Engine restart recovery', (): void => {
           ...messageRow(invalidMessageId, 1, 2),
           payload: { messageId: invalidMessageId, content: 'not an array' },
         },
+        {
+          ...toolRow({
+            id: 'other-turn-tool',
+            position: 2,
+            revision: 3,
+            status: 'in_progress',
+          }),
+          turnId: 'other-turn',
+        },
+        messageRow('later-message', 3, 4),
+        { ...messageRow('unscoped-message', 4, 5), turnId: null },
       ],
     });
     seedStoredFeedRows(database, {
@@ -493,9 +540,11 @@ describe('Engine restart recovery', (): void => {
         },
       ],
     });
+
     const reported = vi
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
+
     try {
       await interruptEngine();
       messages = [];
@@ -506,8 +555,10 @@ describe('Engine restart recovery', (): void => {
       expect(messages).toContainEqual(
         expect.objectContaining({ type: 'ready' }),
       );
+
       const repaired =
         rowsAtReady[0] ?? fail('The Engine did not report ready');
+
       expect(
         repaired.rows.map(
           ({
@@ -526,11 +577,19 @@ describe('Engine restart recovery', (): void => {
       ).toEqual([
         { id: 'valid-message', revision: 10, state: 'settled' },
         { id: invalidMessageId, revision: 11, state: 'settled' },
+        { id: 'other-turn-tool', revision: 12, state: 'settled' },
+        { id: 'later-message', revision: 13, state: 'settled' },
+        { id: 'unscoped-message', revision: 14, state: 'settled' },
         { id: 'future-payload', revision: 5, state: 'settled' },
       ]);
-      expect(repaired.rows[2]?.payload).toMatchObject({
-        status: 'failed',
-        rawInput: { path: editedFilePath },
+      expect(repaired.rows[1]?.payload).toEqual({
+        messageId: invalidMessageId,
+        content: 'not an array',
+      });
+      expect(repaired.rows[2]?.payload).toMatchObject({ status: 'cancelled' });
+      expect(repaired.rows[5]).toMatchObject({
+        payloadVersion: 2,
+        payload: { status: 'in_progress', rawInput: { path: editedFilePath } },
       });
       expect(repaired.turns[0]).toMatchObject({
         status: 'ended',
@@ -538,7 +597,7 @@ describe('Engine restart recovery', (): void => {
       });
       expect(
         repaired.sessions.map(({ maxRevision }): number => maxRevision),
-      ).toEqual([11, 5]);
+      ).toEqual([14, 5]);
       expect(reported).toHaveBeenCalledWith(
         'recovery: rejected Feed shape (session-1/invalid-message) #1',
         expect.anything(),
@@ -578,9 +637,11 @@ it.each(
   ({ state, column }): void => {
     const { database, remove } = openTestDatabase();
     onTestFinished(remove);
+
     const reported = vi
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
+
     onTestFinished((): void => reported.mockRestore());
     database
       .insert(feedRow)
@@ -605,6 +666,11 @@ it.each(
       state: 'settled',
       revision: 1,
     });
+    expect(repaired).toMatchObject(
+      column === feedRow.payload
+        ? { payload: 'broken-json' }
+        : { sourceRef: 'broken-json' },
+    );
     expect(reported).toHaveBeenCalledWith(
       'recovery: rejected Feed shape (session-1/bad-json) #1',
       expect.anything(),

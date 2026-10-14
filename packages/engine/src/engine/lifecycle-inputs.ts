@@ -95,6 +95,7 @@ type ServerSource = {
 };
 
 type ServerInput = (source: ServerSource) => HttpServerOptions;
+
 export const serverInput: ServerInput = ({ context, self }) => ({
   createId: context.createId,
   now: context.now,

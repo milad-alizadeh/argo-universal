@@ -11,8 +11,11 @@ interface ClickEvent {
 }
 
 export const alwaysAllow = 'Always Allow';
+
 export const alwaysAllowId = 'allow-always';
+
 const optionNames = agentOptions.map((option) => option.name);
+
 if (optionNames.join() !== 'Always Allow,Allow,Reject')
   throw new Error('Recorded catalog needs Always Allow, Allow and Reject.');
 

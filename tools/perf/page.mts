@@ -7,14 +7,20 @@ export interface Viewport {
 }
 
 export const desktop: Viewport = { width: 1440, height: 900 };
+
 export const phone: Viewport = { width: 390, height: 844 };
+
 export const feedScroll = 'feed-scroll';
+
 export const sessionsScroll = 'sessions-scroll';
 
 // A brisk wheel or trackpad flick.
 const scrollSpeed = 2400;
+
 const scrollMilliseconds = 2000;
+
 const pageInSettleMilliseconds = 400;
+
 const stableChecks = 4;
 
 // Loads the App against `serverUrl` at `viewport`, with the page helpers in place.
@@ -42,12 +48,14 @@ export interface Target {
 export async function openApp(page: Page, target: Target): Promise<CDPSession> {
   await load(page, target.serverUrl, target.viewport);
   const title = target.session;
+
   if (title !== undefined)
     await page
       .getByRole('button', { name: new RegExp(`^${title}, `, 'u') })
       .click();
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Performance.enable');
+
   return cdp;
 }
 
@@ -81,6 +89,7 @@ export async function loadWholeList(
   top: boolean,
 ): Promise<void> {
   const heights: number[] = [];
+
   while (
     new Set(heights.slice(-stableChecks)).size !== 1 ||
     heights.length < stableChecks

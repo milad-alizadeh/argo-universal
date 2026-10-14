@@ -19,6 +19,7 @@ export const preservedDraft = 'Keep my draft';
 export const narrowDesktopWidth = 1180;
 
 type ShellProps = React.ComponentProps<typeof DesktopShellFrame>;
+
 export type InspectorState = NonNullable<ShellProps['inspectorState']>;
 
 export const shellMeta = {
@@ -38,6 +39,7 @@ export const shellMeta = {
 } satisfies Meta<typeof DesktopShellFrame>;
 
 export type ShellStory = StoryObj<typeof shellMeta>;
+
 export type ShellPlayContext = Parameters<NonNullable<ShellStory['play']>>[0];
 
 export interface ControlledShell {
@@ -56,6 +58,7 @@ function CommittedShell({
   onCommit: () => void;
 }): React.ReactNode {
   useLayoutEffect(onCommit, [onCommit]);
+
   return children;
 }
 
@@ -96,11 +99,13 @@ function mountShell(
   const root = createRoot(element);
   const spies = shellSpies();
   let props = initial;
+
   const render = async (next: Partial<ShellProps>): Promise<void> => {
     props = { ...props, ...next };
     await commitShell(root, { ...props, ...spies });
     await new Promise(requestAnimationFrame);
   };
+
   return { root, render, ...spies };
 }
 
@@ -115,6 +120,7 @@ async function runControlled(
 ): Promise<void> {
   const element = context.canvas.getByTestId('controlled-shell');
   const controlled = mountShell(element, context.args);
+
   try {
     await controlled.render({});
     await context.canvas.findByTestId('desktop-shell');

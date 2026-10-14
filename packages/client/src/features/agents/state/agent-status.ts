@@ -2,7 +2,9 @@ import type { AgentStatus as ServerStatus } from '@repo/contracts';
 
 // Where an Agent stands on this Server: its saved Readiness, a newer catalog release, or Disabled for a disabled Agent that was never checked.
 export type AgentStatus = ServerStatus | 'update' | 'disabled';
+
 export type StatusTone = 'success' | 'warning' | 'destructive' | 'pending';
+
 export type AgentsFilter = 'all' | 'installed' | 'not-installed';
 
 // One Agent in the Agents list: installed on the Server or offered by the ACP Registry.

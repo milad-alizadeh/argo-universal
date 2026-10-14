@@ -42,7 +42,9 @@ const meta = {
     state: { control: false },
   },
 } satisfies Meta<GalleryArgs>;
+
 export default meta;
+
 type Story = StoryObj<GalleryArgs>;
 
 const answeredElsewhere = 'Already answered on another device';

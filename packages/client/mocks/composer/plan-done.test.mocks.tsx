@@ -5,6 +5,7 @@ import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps, composerPlanDone } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
 import { planTitle } from './composer-test-contract.test.mocks';
+
 export function planDone(width: number): Story {
   return {
     render: (args) => (
@@ -21,6 +22,7 @@ export function planDone(width: number): Story {
       await settleViewport(width);
       const plan = canvas.getByRole('button', { name: 'Plan' });
       await expect(plan).toBeVisible();
+
       if (width >= wideBreakpoint()) {
         await expect(plan).toHaveTextContent('Plan 3/3');
         await userEvent.click(plan);
@@ -35,6 +37,7 @@ export function planDone(width: number): Story {
         await expect(sheet.queryByText('3 of 3 done')).not.toBeInTheDocument();
         await expect(sheet.queryByRole('progressbar')).not.toBeInTheDocument();
       }
+
       await expect(
         overlay.queryByRole('progressbar', { name: /in progress$/ }),
       ).not.toBeInTheDocument();

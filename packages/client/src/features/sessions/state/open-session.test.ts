@@ -28,6 +28,7 @@ describe('toNewSessionInput', () => {
         branches: newSessionBranches,
       }),
     );
+
     expect(toNewSessionInput(choices)?.checkout).toEqual({
       type: 'main',
     });

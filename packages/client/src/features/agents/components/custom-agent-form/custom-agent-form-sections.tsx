@@ -11,8 +11,11 @@ import type { CustomAgentFormApi } from '../../hooks/use-custom-agent-form';
 import { sectionFooter, touchedInput } from '../form-field';
 
 export type FormPartProps = { form: CustomAgentFormApi; disabled: boolean };
+
 type FieldMeta = { isTouched: boolean; errors: FieldErrors } | undefined;
+
 const executableHint = "An absolute path, or a command on the Server's PATH.";
+
 const executableInput = {
   mono: true,
   label: 'Executable',

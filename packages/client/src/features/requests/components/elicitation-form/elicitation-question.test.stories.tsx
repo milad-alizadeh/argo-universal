@@ -14,6 +14,7 @@ import {
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 
 const meta = { ...questionTestMeta, title: 'Tests/ElicitationQuestions' };
+
 export default meta;
 
 function answers(width: number): Story {
@@ -76,7 +77,9 @@ function answers(width: number): Story {
     },
   };
 }
+
 export const AnswersWide = answers(1440);
+
 export const AnswersPhone = answers(390);
 
 export const SkipAnsweredQuestion: Story = {

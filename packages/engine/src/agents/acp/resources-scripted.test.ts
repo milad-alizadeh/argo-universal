@@ -1,4 +1,4 @@
-import type { SessionUpdate } from '@agentclientprotocol/sdk';
+import type { PromptResponse, SessionUpdate } from '@agentclientprotocol/sdk';
 import {
   imageReply,
   scenarios,
@@ -25,10 +25,12 @@ const recordingDestination = (played: Played): AcpSessionDestination => ({
   failed: () => {},
   requestPermission: ({ params: { toolCall } }) => {
     played.questions.push(`permission ${toolCall.toolCallId}`);
+
     return { outcome: { outcome: 'cancelled' } };
   },
   createElicitation: ({ params: { message } }) => {
     played.questions.push(`elicitation ${message}`);
+
     return { action: 'cancel' };
   },
 });
@@ -37,26 +39,32 @@ type Scripted = {
   resources: AcpResources;
   lease: AcpSessionLease;
   played: Played;
-  prompt: () => Promise<unknown>;
+  prompt: () => Promise<PromptResponse>;
   cancel: () => Promise<void>;
 };
 
 const openScripted = async (scenario: ScriptedScenario): Promise<Scripted> => {
   const played: Played = { updates: [], questions: [] };
+
   const resources = createAcpResources({
     launchProcess: createScriptedAgentLauncher(() => scenario),
   });
+
   onTestFinished(() => resources.shutdown());
+
   const lease = await resources.open(
     createResourceOpening(recordingDestination(played)),
   );
-  const prompt = (): Promise<unknown> =>
-    lease.agent.request('session/prompt', {
+
+  const prompt = (): Promise<PromptResponse> =>
+    lease.agent.request<PromptResponse>('session/prompt', {
       sessionId: lease.sessionId,
       prompt: [{ type: 'text', text: 'Start' }],
     });
+
   const cancel = (): Promise<void> =>
     lease.agent.notify('session/cancel', { sessionId: lease.sessionId });
+
   return { resources, lease, played, prompt, cancel };
 };
 
@@ -112,6 +120,7 @@ it('a fail step rejects the prompt with its message', async () => {
   const { prompt } = await openScripted({
     steps: [{ type: 'fail', message: 'The scripted Turn failed' }],
   });
+
   await expect(prompt()).rejects.toMatchObject({
     message: expect.stringContaining('The scripted Turn failed'),
   });
@@ -121,11 +130,14 @@ it('a hold step keeps the prompt open through cancellation until the connection 
   const { resources, lease, prompt, cancel } = await openScripted({
     steps: [{ type: 'hold' }],
   });
+
   let settled = false;
+
   const turn = prompt().then(
     () => (settled = true),
     () => (settled = true),
   );
+
   await cancel();
   await lease.agent.request('session/set_config_option', {
     sessionId: lease.sessionId,

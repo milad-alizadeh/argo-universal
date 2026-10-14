@@ -25,7 +25,9 @@ const parseEntry = (metadata: string): ACPAgent | undefined => {
     return undefined;
   }
 };
+
 const CommandNames = z.array(z.string()).min(1);
+
 const parseCommandNames = (saved: string): string[] | undefined => {
   try {
     return CommandNames.parse(JSON.parse(saved));
@@ -33,15 +35,19 @@ const parseCommandNames = (saved: string): string[] | undefined => {
     return undefined;
   }
 };
+
 type CatalogRow = { entry?: ACPAgent; commandNames?: string[] };
+
 const catalogRow = (database: Database, agentId: string): CatalogRow => {
   const row = database
     .select({ metadata: agents.registryMetadata, command: agents.commandNames })
     .from(agents)
     .where(eq(agents.id, agentId))
     .get();
+
   return row ? savedCatalogRow(row) : {};
 };
+
 const savedCatalogRow = (row: {
   metadata: string | null;
   command: string | null;
@@ -58,6 +64,8 @@ export const readRegistrySource = (
 ): RegistrySource | undefined => {
   const selection = readInstallSelection(database, agentId);
   const { entry, commandNames } = catalogRow(database, agentId);
+
   if (selection) return { entry: selection.entry, selection, commandNames };
+
   return entry && { entry, commandNames };
 };

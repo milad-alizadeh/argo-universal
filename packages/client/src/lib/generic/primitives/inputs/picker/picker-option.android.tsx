@@ -17,9 +17,13 @@ import { choosePickerOption } from './picker-selection';
 type OptionProps<Value extends string> = DialogProps<Value> & {
   option: PickerOption<Value>;
 };
+
 const optionHeight = 56;
+
 const optionGap = 16;
+
 const optionPadding = 12;
+
 const optionInset = 24;
 
 export function AndroidPickerOption<Value extends string>(
@@ -57,6 +61,7 @@ function optionSelection<Value extends string>(
   props: OptionProps<Value>,
 ): ReturnType<typeof selectable>[] {
   if (props.option.disabled) return [];
+
   return [
     selectable(
       props.option.value === props.value,
@@ -91,6 +96,7 @@ function useOptionMarkProps<Value extends string>(
 
 function useRadioColors(): React.ComponentProps<typeof RadioButton>['colors'] {
   const { colors } = useNativeTheme();
+
   return {
     selectedColor: colors.tint,
     unselectedColor: colors.mutedForeground,
@@ -104,6 +110,7 @@ function OptionLabel<Value extends string>(
 ): React.JSX.Element {
   const { colors } = useNativeTheme();
   const color = optionColor(props.option.disabled, colors);
+
   return createElement(
     Column,
     { modifiers: [weight(1)] },
@@ -134,6 +141,7 @@ function OptionText(props: {
 
 function SupportingText(props: { text: string }): React.JSX.Element {
   const { colors } = useNativeTheme();
+
   return (
     <Text
       style={useComposeTextStyle('secondary')}

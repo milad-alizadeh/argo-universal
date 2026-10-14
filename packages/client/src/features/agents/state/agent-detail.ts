@@ -26,6 +26,7 @@ function registryLinks({ entry }: CatalogAgent): AgentDetail['links'] {
     { label: 'Licence', url: entry.license_url },
     { label: 'Website', url: entry.website },
   ];
+
   return links.flatMap(({ label, url }) => (url ? [{ label, url }] : []));
 }
 
@@ -48,7 +49,9 @@ export function agentDetail(
   registry?: CatalogAgent,
 ): AgentDetail | undefined {
   const fromRegistry = registry && registryDetail(registry);
+
   if (!info) return fromRegistry;
+
   return withProbe(info, fromRegistry);
 }
 
@@ -68,6 +71,7 @@ function withProbe(
   fromRegistry: AgentDetail | undefined,
 ): AgentDetail {
   const probed = probedRow(info);
+
   return {
     ...fromRegistry,
     ...probed,
@@ -77,6 +81,7 @@ function withProbe(
     availableVersion: info.availableVersion,
   };
 }
+
 const selectedVersion = (
   info: AgentInfo,
   registry?: AgentDetail,

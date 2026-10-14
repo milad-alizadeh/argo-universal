@@ -9,21 +9,27 @@ import { insertSession } from '#mocks/database';
 import { readConfiguredAgents } from './configuration-sql';
 
 const configurationMigration = '20261010114515_agent_configuration';
+
 const [claudeId, codexId] = fixtureAgents.map(({ agent }) => agent);
+
 const registryConfiguration = {
   source: 'registry',
   release: null,
   overrides: { args: [], env: [] },
 };
+
 const copyMigrationsBefore = (directory: string): string => {
   const folder = join(directory, 'drizzle');
+
   for (const name of readdirSync(migrationsFolder))
     if (name < configurationMigration)
       cpSync(join(migrationsFolder, name), join(folder, name), {
         recursive: true,
       });
+
   return folder;
 };
+
 const seedHistory = (database: Database): void => {
   database
     .insert(project)

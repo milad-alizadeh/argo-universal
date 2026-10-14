@@ -31,8 +31,10 @@ export const sectionFooter = (
     : { footer: error, footerTone: 'destructive' };
 
 const hasErrors = (errors: FieldErrors = []): boolean => errors.length > 0;
+
 const inputClass = ({ mono, className }: FormInputProps): string =>
   cn(mono ? 'type-code' : 'type-body', className);
+
 // Names, paths and values are typed exactly as the Agent reads them.
 const verbatimEntry = { autoCapitalize: 'none', autoCorrect: false } as const;
 
@@ -59,7 +61,9 @@ export function FieldMessage({
   errors: FieldErrors;
 }): React.JSX.Element | null {
   const error = errorMessage(errors);
+
   if (!error) return null;
+
   return (
     <Text role="secondary" className="text-destructive" semanticRole="alert">
       {error}
@@ -81,6 +85,7 @@ export type TextField = {
   handleChange: (value: string) => void;
   handleBlur: () => void;
 };
+
 type BoundInput = Pick<FormInputProps, 'value' | 'onChange' | 'onBlur'> &
   Required<Pick<FormInputProps, 'errors'>>;
 

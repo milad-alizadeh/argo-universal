@@ -11,7 +11,9 @@ it('keeps a cancelled prompt observed until its final content and completion arr
       'session/new': [{ steps: [{ type: 'hold' }] }],
     },
   });
+
   const accepted: SessionNotification[] = [];
+
   const connection = createAgentClient({
     stream: peer.stream,
     acceptSessionUpdate: (notification) => {
@@ -20,16 +22,20 @@ it('keeps a cancelled prompt observed until its final content and completion arr
     requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
     createElicitation: () => ({ action: 'cancel' }),
   });
+
   const completion = connection.agent
     .request('session/prompt', {
       sessionId: 'one',
       prompt: [{ type: 'text', text: 'Start' }],
     })
     .then((result) => ({ result, accepted: [...accepted] }));
+
   const request = await peer.readRequest();
+
   const cancelled = connection.agent.notify('session/cancel', {
     sessionId: 'one',
   });
+
   const cancellation = await peer.receive();
   await cancelled;
   await peer.send([
@@ -77,15 +83,18 @@ it('rejects pending outgoing work when its ACP connection closes', async () => {
       'session/new': [{ steps: [{ type: 'hold' }] }],
     },
   });
+
   const connection = createAgentClient({
     stream: peer.stream,
     acceptSessionUpdate: () => {},
     requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
     createElicitation: () => ({ action: 'cancel' }),
   });
+
   const opening = connection.agent
     .request('session/new', { cwd: '/checkout', mcpServers: [] })
-    .catch((error: unknown) => error);
+    .catch((cause: unknown) => cause);
+
   await peer.readRequest();
   connection.close(new Error('ACP resource closed'));
   await connection.closed;

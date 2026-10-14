@@ -10,6 +10,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   it('prompted creation uses the owned ACP Session and returns local acknowledgement before completion', async () => {
     const completion = Promise.withResolvers<void>();
     const received = Promise.withResolvers<PromptRequest>();
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -26,10 +27,12 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new({
       ...sessionInput,
       prompt: [{ type: 'text', text: 'Create and prompt' }],
     });
+
     const request = await received.promise;
     completion.resolve();
     expect(request).toEqual({
@@ -45,6 +48,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
 
   it('a negotiated image prompt delivers every byte from the stored Blob', async () => {
     const received = Promise.withResolvers<PromptRequest>();
+
     const host = await startAcpEngine(
       {
         initialize: {
@@ -61,7 +65,9 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const bytes = new Uint8Array([137, 80, 78, 71, 1, 2, 3, 255]);
+
     const image = await uploadBlob(
       {
         databaseWriter: host.databaseWriter,
@@ -69,6 +75,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       },
       new Blob([bytes], { type: 'image/png' }),
     );
+
     const created = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({
       ...created,
@@ -90,6 +97,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   it('local acknowledgement follows durable Session, Turn and prompt before the Agent finishes', async () => {
     const completion = Promise.withResolvers<void>();
     const received = Promise.withResolvers<PromptRequest>();
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -100,11 +108,14 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
+
     const acknowledged = await host.caller.session.prompt({
       ...created,
       prompt: [{ type: 'text', text: 'Save this prompt' }],
     });
+
     const observed = {
       request: await received.promise,
       durable: [
@@ -119,6 +130,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           .get(created.sessionId),
       ],
     };
+
     completion.resolve();
     expect(acknowledged.messageId).toMatch(/:user$/);
     expect(observed).toEqual({
@@ -157,26 +169,33 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
+
     const feed = (
       await host.caller.feed.subscribe({ ...created, after: null })
     )[Symbol.asyncIterator]();
+
     await feed.next();
     await host.caller.session.prompt({
       ...created,
       prompt: [{ type: 'text', text: 'Reply' }],
     });
     const updates: FeedSubscribeOutput[] = [];
+
     while (true) {
       const next = await feed.next();
+
       if (next.done) throw new Error('Session closed before completion');
       updates.push(next.value);
+
       if (
         next.value.type === 'snapshot' &&
         next.value.snapshot.activeTurnId === null
       )
         break;
     }
+
     const page = await host.caller.feed.page({ ...created, direction: 'tail' });
     expect(
       page.rows.filter((row) => row.sessionUpdate === 'agent_message'),

@@ -39,6 +39,7 @@ function MessageImages({
 }: Pick<MessageParts, 'images'> &
   Pick<UserMessageProps, 'imageUrl'>): React.JSX.Element | null {
   if (images.length === 0) return null;
+
   return (
     <View className="max-w-full flex-row flex-wrap justify-end gap-1.5">
       {images.map((image) => (
@@ -54,6 +55,7 @@ export const UserMessage = memo(function UserMessage({
   imageUrl,
 }: UserMessageProps) {
   const { text, images, references } = messageParts(row.content);
+
   return (
     <View className="items-end gap-1.5">
       <ReferenceChips references={references} />

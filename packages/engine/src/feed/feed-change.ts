@@ -9,6 +9,7 @@ import type {
 } from '@repo/contracts';
 import { acceptFeedCandidate } from './feed-change-accept';
 import { prepareFeedCandidate } from './feed-change-candidate';
+import { nextFeedRevision } from './feed-revision';
 
 // The part of a Session's Feed that the Feed actor holds in memory.
 export interface Feed {
@@ -55,10 +56,10 @@ export function applyFeedChange(
   turnId: string | null,
 ): FeedChangeResult {
   const id = changedRowId(change);
-  const candidate = prepareFeedCandidate(
-    { feed, existing: feed.rows[id], revision: feed.maxRevision + 1, turnId },
-    change,
-  );
+  const revision = nextFeedRevision(feed.maxRevision);
+  const input = { feed, existing: feed.rows[id], revision, turnId };
+  const candidate = prepareFeedCandidate(input, change);
+
   return 'rejection' in candidate
     ? candidate
     : acceptFeedCandidate(feed, id, candidate);

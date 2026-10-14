@@ -39,7 +39,10 @@ import {
 } from '../session-storage';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 import { latestTurnOf, toSessionInfo } from './session-info';
-import type { SessionListState } from './session-list-machine';
+import type {
+  SessionListMachineInput,
+  SessionListState,
+} from './session-list-machine';
 import type { WriterChange } from './writer-changes';
 
 const storedTurnColumns = {
@@ -68,27 +71,33 @@ interface ListReadInput {
   rejectedSessions: Set<string>;
 }
 
+// Reads list rows and finds the Sessions a Writer change touches.
+type SessionListReader = Pick<
+  SessionListMachineInput,
+  'readRows' | 'sessionIdsForChanges' | 'relatedSessionIds'
+>;
+
 export function createSessionListReader(options: {
   database: Database;
   sessions: OpenSessionsActorRef;
   writer: () => WriterActorRef | undefined;
-}): {
-  readRows: (sessionIds?: readonly string[]) => SessionListState;
-  sessionIdsForChanges: (change: WriterChange) => string[];
-  relatedSessionIds: (sessionIds: readonly string[]) => string[];
-} {
+}): SessionListReader {
   const { database, sessions, writer } = options;
   const readLiveHeaderRows = createLiveHeaderRowsReader({ database });
   const rejections = createRejectionCounter('sessions');
+
   const validate = <Value>(read: () => Value): Value | undefined => {
     try {
       return read();
     } catch (error) {
       rejections.report('rejected list shape', error);
+
       return undefined;
     }
   };
+
   const parents = new Map<string, string | null>();
+
   const readRows = (sessionIds?: readonly string[]): SessionListState => {
     const input = {
       database,
@@ -97,17 +106,23 @@ export function createSessionListReader(options: {
       readLiveHeaderRows,
       rejectedSessions: new Set<string>(),
     };
+
     if (!sessionIds) parents.clear();
     const ids = sessionIds && new Set(sessionIds);
+
     if (ids)
       for (const id of ids) {
         const parent = parents.get(id);
+
         if (parent) ids.add(parent);
       }
+
     let rows = readListSessions(input, ids && [...ids]);
     const addedParents = new Set<string>();
+
     for (const row of rows) {
       parents.set(row.id, row.parentSessionId);
+
       if (
         ids?.has(row.id) &&
         row.parentSessionId &&
@@ -115,6 +130,7 @@ export function createSessionListReader(options: {
       )
         addedParents.add(row.parentSessionId);
     }
+
     if (addedParents.size) {
       for (const id of addedParents) ids?.add(id);
       rows = [
@@ -125,6 +141,7 @@ export function createSessionListReader(options: {
         ).values(),
       ];
     }
+
     return rows
       .filter(
         (row): boolean =>
@@ -134,14 +151,18 @@ export function createSessionListReader(options: {
         const children = rows.filter(
           (child): boolean => child.parentSessionId === row.id,
         );
+
         const turns = readListTurns(
           input,
           row.id,
           children.map((child): string => child.id),
         );
+
         if (input.rejectedSessions.has(row.id)) return [];
+
         // A Session appears once its first Turn starts; until then it is a New Session.
         if (!latestTurnOf(turns, row.id)) return [];
+
         const result = readSessionInformation({
           ...input,
           sessions,
@@ -151,9 +172,11 @@ export function createSessionListReader(options: {
           ),
           row,
         });
+
         return result ? [result] : [];
       });
   };
+
   const sessionIdsForChanges = (change: WriterChange): string[] => [
     ...new Set([
       ...change.sessionIds,
@@ -168,14 +191,19 @@ export function createSessionListReader(options: {
       ),
     ]),
   ];
+
   const relatedSessionIds = (sessionIds: readonly string[]): string[] => {
     const ids = new Set(sessionIds);
+
     for (const id of ids) {
       const parent = parents.get(id);
+
       if (parent) ids.add(parent);
     }
+
     return [...ids];
   };
+
   return { readRows, sessionIdsForChanges, relatedSessionIds };
 }
 
@@ -187,24 +215,30 @@ function readTurnSessionIds(input: {
   validate: ListReadInput['validate'];
 }): string[] {
   const pendingSessionId = input.projection.turnSessionId(input.turnId);
+
   if (pendingSessionId) return [pendingSessionId];
+
   const live = Object.values(
     input.sessions.getSnapshot().context.sessions,
   ).find(
     (actor): boolean =>
       actor.getSnapshot().context.activeTurnId === input.turnId,
   );
+
   if (live) return [live.getSnapshot().context.sessionId];
+
   const stored = input.database
     .select({ sessionId: turn.sessionId })
     .from(turn)
     .where(eq(turn.id, input.turnId))
     .get();
+
   const id =
     stored &&
     input.validate((): string =>
       SessionRecord.shape.id.parse(stored.sessionId),
     );
+
   return id ? [id] : [];
 }
 
@@ -213,6 +247,7 @@ function readListSessions(
   sessionIds?: readonly string[],
 ): SessionRecord[] {
   const projection = readQueuedSessionRows(input.writer);
+
   const stored = input.database
     .select(storedSessionColumns)
     .from(session)
@@ -225,18 +260,23 @@ function readListSessions(
         : undefined,
     )
     .all();
+
   const rows = new Map(
     stored.map((row): [string, typeof row] => [row.id, row]),
   );
+
   const ids = new Set([...rows.keys(), ...projection.sessionIds(sessionIds)]);
+
   return [...ids].flatMap((id): SessionRecord[] => {
     const row = input.validate((): ReturnType<typeof projection.session> => {
       const stored = rows.get(id);
+
       return projection.session(
         stored && SessionRecord.parse(decodeStoredSession(stored)),
         id,
       );
     });
+
     return row ? [row] : [];
   });
 }
@@ -249,18 +289,21 @@ function readListTurns(
   const projection = readQueuedSessionRows(input.writer);
   const updates = projection.changedTurnIds();
   const unchanged = updates.length ? notInArray(turn.id, updates) : undefined;
+
   const runningIds = readChildTurnIds({
     database: input.database,
     updates,
     children,
     running: true,
   });
+
   const latestIds = readChildTurnIds({
     database: input.database,
     updates,
     children,
     running: false,
   });
+
   const rows = [
     ...input.database
       .select(storedTurnColumns)
@@ -289,7 +332,9 @@ function readListTurns(
           .all()
       : []),
   ];
+
   const ids = new Set([sessionId, ...children]);
+
   const parseTurn = (
     row: typeof turn.$inferSelect | Turn,
     stored = false,
@@ -305,9 +350,12 @@ function readListTurns(
           : row,
       ),
     );
+
     if (!parsed) input.rejectedSessions.add(row.sessionId);
+
     return parsed ? [parsed] : [];
   };
+
   return projection
     .turns(rows.flatMap((row): Turn[] => parseTurn(row, true)))
     .filter((row): boolean => ids.has(row.sessionId))
@@ -321,6 +369,7 @@ function readChildTurnIds(input: {
   running: boolean;
 }): ChildTurnIdsQuery {
   const candidate = alias(turn, 'candidate_turn');
+
   const latest = input.database
     .select({ id: candidate.id })
     .from(candidate)
@@ -335,6 +384,7 @@ function readChildTurnIds(input: {
     )
     .orderBy(desc(candidate.startedAt), desc(candidate.id))
     .limit(1);
+
   return input.database
     .select({ id: sql<string>`(${latest})` })
     .from(session)
@@ -359,10 +409,12 @@ function readSessionInformation(
     rows,
     turns,
   } = input;
+
   const actor = sessions.getSnapshot().context.sessions[row.id];
   const live = actor?.getSnapshot();
   const feed = live?.children.feed;
   const feedContext = feed?.getSnapshot().context;
+
   const changes = [
     ...(['agent_message', 'plan_update'] as const).flatMap(
       (kind): (SessionUpdate | undefined)[] =>
@@ -388,22 +440,28 @@ function readSessionInformation(
     ...readQueuedFeed(writer, row.id).rows,
     ...Object.values(feedContext?.rows ?? {}),
   ];
+
   const rejected = changes.includes(undefined);
+
   const updates = [
     ...newestRows(
       changes.filter((row): row is SessionUpdate => row !== undefined),
     ).values(),
   ].sort((first, second): number => first.position - second.position);
+
   const latestTurn = latestTurnOf(turns, row.id);
+
   const activeTurnId =
     live?.context.activeTurnId ??
     (!live && latestTurn?.status === 'running' ? latestTurn.id : null);
+
   const header = readLiveHeaderRows({
     writer,
     sessionId: row.id,
     turnId: activeTurnId,
     rows: feedContext?.rows ?? {},
   });
+
   const result = toSessionInfo({
     row,
     turns,
@@ -419,11 +477,14 @@ function readSessionInformation(
     liveHeaderRows: Object.values(header.rows),
     children: rows.filter((child): boolean => child.parentSessionId === row.id),
   });
-  const information = validate((): SessionInfo =>
-    SessionInfo.parse({
-      ...result.information,
-      ...(rejected || header.rejected ? { activity: '', plan: null } : {}),
-    }),
-  );
+
+  // A rejected row or live header leaves the Session without its activity and Plan.
+  const listed =
+    rejected || header.rejected
+      ? { ...result.information, activity: '', plan: null }
+      : result.information;
+
+  const information = validate((): SessionInfo => SessionInfo.parse(listed));
+
   return information ? { information, running: result.running } : undefined;
 }

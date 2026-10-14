@@ -18,7 +18,9 @@ const meta = {
   },
   parameters: { screenPreview: true },
 } satisfies Meta<typeof EntrySheet>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const editor = (): Promise<HTMLElement> =>

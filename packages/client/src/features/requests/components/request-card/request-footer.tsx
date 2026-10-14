@@ -27,6 +27,7 @@ export function RequestFooter(props: FooterProps): ReactNode {
 
 function RequestFooterContents(props: FooterProps): ReactNode {
   const wide = useContentWide();
+
   return (
     <>
       <RequestStatus state={props.state} mutedStatus={props.mutedStatus} />

@@ -19,32 +19,43 @@ export type LoginOutcome = Extract<
   | 'unsupported'
   | 'account-rejected'
 >;
+
 export type LoginEvent =
   | { type: 'choose'; methodId: string }
   | { type: 'request' }
   | { type: 'answer' }
   | { type: 'finish'; outcome: LoginOutcome };
+
 export type LoginMachineInput = {
   open: () => Promise<boolean>;
   authenticate: (methodId: string) => Promise<void>;
   checkReady: () => Promise<LoginAgentOutcome>;
   close: () => Promise<void>;
   abort: () => void;
-  fail: (error: unknown) => void;
+  fail: (cause: unknown) => void;
 };
+
+type LoginFailureParams = { error: unknown };
+
+type LoginOutcomeParams = { outcome: LoginOutcome };
+
 type LoginContext = {
   ports: LoginMachineInput;
   methodId: string;
   outcome: LoginOutcome;
 };
+
 const finishedState = 'finished';
+
 const awaitingBrowserState = 'awaiting-browser';
+
 const cleanupFailedState = 'cleanup-failed';
+
 const authLoginOutcome = (status: LoginAgentOutcome['status']): LoginOutcome =>
   status === 'authentication-required' ? 'failed' : status;
 
-const loginFailureOutcome = (error: unknown): LoginOutcome =>
-  error instanceof AgentLoginInUseError ? 'in-use' : 'failed';
+const loginFailureOutcome = (cause: unknown): LoginOutcome =>
+  cause instanceof AgentLoginInUseError ? 'in-use' : 'failed';
 
 const loginFailureTransition = {
   target: 'closing',
@@ -55,7 +66,7 @@ const loginFailureTransition = {
         event,
       }: {
         event: { error: unknown };
-      }): { error: unknown } => ({ error: event.error }),
+      }): LoginFailureParams => ({ error: event.error }),
     },
     {
       type: 'rememberLoginOutcome',
@@ -63,7 +74,7 @@ const loginFailureTransition = {
         event,
       }: {
         event: { error: unknown };
-      }): { outcome: LoginOutcome } => ({
+      }): LoginOutcomeParams => ({
         outcome: loginFailureOutcome(event.error),
       }),
     },
@@ -71,6 +82,7 @@ const loginFailureTransition = {
 } as const;
 
 export const loginMachine = setup({
+  // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as LoginMachineInput,
     context: {} as LoginContext,
@@ -88,13 +100,12 @@ export const loginMachine = setup({
   },
   actions: {
     rememberLoginOutcome: assign({
-      outcome: (_, params: { outcome: LoginOutcome }): LoginOutcome =>
-        params.outcome,
+      outcome: (_, params: LoginOutcomeParams): LoginOutcome => params.outcome,
     }),
     rememberMethod: assign({
       methodId: (_, params: { methodId: string }): string => params.methodId,
     }),
-    fail: ({ context }, params: { error: unknown }): void =>
+    fail: ({ context }, params: LoginFailureParams): void =>
       context.ports.fail(params.error),
     abort: ({ context }): void => context.ports.abort(),
   },
@@ -111,7 +122,7 @@ export const loginMachine = setup({
       target: '.closing',
       actions: {
         type: 'rememberLoginOutcome',
-        params: ({ event }): { outcome: LoginOutcome } => ({
+        params: ({ event }): LoginOutcomeParams => ({
           outcome: event.outcome,
         }),
       },
@@ -173,7 +184,7 @@ export const loginMachine = setup({
           target: 'closing',
           actions: {
             type: 'rememberLoginOutcome',
-            params: ({ event }): { outcome: LoginOutcome } => ({
+            params: ({ event }): LoginOutcomeParams => ({
               outcome: authLoginOutcome(event.output.status),
             }),
           },
@@ -182,7 +193,7 @@ export const loginMachine = setup({
           target: 'closing',
           actions: {
             type: 'fail',
-            params: ({ event }): { error: unknown } => ({ error: event.error }),
+            params: ({ event }): LoginFailureParams => ({ error: event.error }),
           },
         },
       },
@@ -199,7 +210,7 @@ export const loginMachine = setup({
           target: cleanupFailedState,
           actions: {
             type: 'fail',
-            params: ({ event }): { error: unknown } => ({ error: event.error }),
+            params: ({ event }): LoginFailureParams => ({ error: event.error }),
           },
         },
       },
@@ -208,17 +219,22 @@ export const loginMachine = setup({
     [cleanupFailedState]: { type: 'final' },
   },
 });
+
 export type LoginActor = ActorRefFrom<typeof loginMachine>;
 
 export const loginStatus = (
   state: SnapshotFrom<typeof loginMachine>,
 ): AgentLoginSnapshot['status'] => {
   if (state.matches(finishedState)) return state.context.outcome;
+
   if (state.matches({ authenticating: awaitingBrowserState }))
     return awaitingBrowserState;
+
   if (state.matches('authenticating')) return 'authenticating';
   const value = state.value;
+
   if (typeof value !== 'string' || value === finishedState)
     throw new Error('Unexpected login state');
+
   return value;
 };

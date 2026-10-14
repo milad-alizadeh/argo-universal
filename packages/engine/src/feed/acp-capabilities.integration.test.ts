@@ -4,6 +4,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 
 it('Session connections advertise implemented extensions without URL Elicitation', async () => {
   const received = Promise.withResolvers<InitializeRequest>();
+
   const host = await startAcpEngine({
     steps: [],
     initialize: {
@@ -15,6 +16,7 @@ it('Session connections advertise implemented extensions without URL Elicitation
     },
     responses: { initialize: [{ received }] },
   });
+
   await host.caller.session.new(emptySessionInput);
   const initialization = await received.promise;
   expect(initialization).toMatchObject({

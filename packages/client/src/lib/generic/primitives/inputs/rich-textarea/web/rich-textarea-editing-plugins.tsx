@@ -4,19 +4,21 @@ import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import type * as React from 'react';
 import { useEffect } from 'react';
-import { richTextareaTransformers } from './rich-textarea-markdown';
+import { richTextareaShortcuts } from './rich-textarea-markdown';
 import { registerMarkdownOnly } from './rich-textarea-paste';
 import { registerListTab } from './rich-textarea-tab';
 
 function MarkdownOnlyPlugin(): null {
   const [editor] = useLexicalComposerContext();
   useEffect(() => registerMarkdownOnly(editor), [editor]);
+
   return null;
 }
 
 function ListTabPlugin(): null {
   const [editor] = useLexicalComposerContext();
   useEffect(() => registerListTab(editor), [editor]);
+
   return null;
 }
 
@@ -31,7 +33,7 @@ export function EditingPlugins(): React.JSX.Element {
       <HistoryPlugin />
       <ListPlugin />
       <ListTabPlugin />
-      <MarkdownShortcutPlugin transformers={richTextareaTransformers} />
+      <MarkdownShortcutPlugin transformers={richTextareaShortcuts} />
       <MarkdownOnlyPlugin />
     </>
   );

@@ -20,6 +20,7 @@ type ToolCallActivity = Extract<
   FeedActivity,
   { type: 'tool_call' | 'thought' }
 >;
+
 type ToolCall = Extract<FeedActivity, { type: 'tool_call' }>['row'];
 
 const hasContent = (row: ToolCall, type: string): boolean =>
@@ -33,6 +34,7 @@ const isEdit = (row: ToolCall): boolean =>
 
 function toolCallRow(row: ToolCall): React.JSX.Element {
   if (isCommand(row)) return <CommandRow row={row} />;
+
   return isEdit(row) ? <EditRow row={row} /> : <ToolCallRow row={row} />;
 }
 
@@ -51,6 +53,7 @@ const FeedActivityRow = memo(function FeedActivityRow({
     return activity.toolCalls.map((row) => (
       <ToolCallRow key={row.id} row={row} />
     ));
+
   return activity.type === 'row' ? (
     <FeedNotice row={activity.row} />
   ) : (
@@ -80,6 +83,7 @@ const drawnRows = new Set<string>([
 // Whether the Feed draws anything for an item yet.
 export function isDrawnFeedItem(item: FeedViewItem): boolean {
   if (item.type === 'row') return drawnRows.has(item.row.sessionUpdate);
+
   return drawnItemTypes[item.type];
 }
 
@@ -96,7 +100,9 @@ export const FeedItem = memo(function FeedItem({
 });
 
 type GroupLike = Extract<FeedViewItem, { type: 'group' | 'exploration' }>;
+
 type FeedRowItem = Extract<FeedViewItem, { type: 'row' }>['row'];
+
 type ImageUrl = FeedItemProps['imageUrl'];
 
 const isGroupLike = (item: FeedViewItem): item is GroupLike =>
@@ -132,6 +138,7 @@ function renderRow(
 ): React.JSX.Element | null {
   if (row.sessionUpdate === 'user_message')
     return <UserMessage row={row} imageUrl={imageUrl} />;
+
   return row.sessionUpdate === 'agent_message' ? (
     <AgentMessage row={row} />
   ) : (
@@ -144,6 +151,7 @@ function renderFeedItem(
   imageUrl: ImageUrl,
 ): React.JSX.Element | null {
   if (item.type === 'row') return renderRow(item.row, imageUrl);
+
   return isGroupLike(item) ? (
     <ToolCallGroup group={groupOf(item)} renderActivity={renderActivity} />
   ) : (

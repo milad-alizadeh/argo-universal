@@ -20,10 +20,12 @@ Given(
     await browseAgents(page);
     await page.getByRole('link', { name: new RegExp(`^${name},`) }).click();
     await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();
+
     // Sign-in is refused while a live Session shares the account.
     if (opened) await awaitEmptySessionClosed(app.requestLogPath);
   },
 );
+
 When(
   'I open protocol sign-in for {string}',
   async ({ page }, name: string): Promise<void> => {
@@ -33,6 +35,7 @@ When(
     ).toBeVisible();
   },
 );
+
 When(
   "I choose the Agent's subscription sign-in method",
   async ({ page }): Promise<void> => {
@@ -41,12 +44,14 @@ When(
       .click();
   },
 );
+
 Then(
   "the App shows the Agent's device code instructions",
   async ({ page }): Promise<void> => {
     const dialog = page.getByRole('dialog', {
       name: 'Continue in your browser',
     });
+
     await expect(
       dialog.getByText('Enter code ABCD-EFGH', { exact: true }),
     ).toBeVisible();
@@ -58,12 +63,14 @@ Then(
     });
   },
 );
+
 When(
   "I finish the Agent's browser sign-in",
   async ({ page }): Promise<void> => {
     await page.getByRole('button', { name: 'I’ve finished' }).click();
   },
 );
+
 Then(
   'the App reports the Agent is ready to use',
   async ({ page }): Promise<void> => {

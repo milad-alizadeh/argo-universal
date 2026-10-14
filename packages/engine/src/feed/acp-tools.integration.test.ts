@@ -4,7 +4,9 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 const toolCallId = 'read-1';
+
 const sourcePath = 'src/index.ts';
+
 const toolTitle = 'Read source';
 
 it('official tool updates retain creation fields when a partial update completes the call', async () => {
@@ -30,10 +32,12 @@ it('official tool updates retain creation fields when a partial update completes
       },
     ]),
   );
+
   const created = await host.caller.session.new({
     ...emptySessionInput,
     prompt: [{ type: 'text', text: toolTitle }],
   });
+
   await waitForAcpSessionIdle(host, created.sessionId);
   const page = await host.caller.feed.page({ ...created, direction: 'tail' });
   expect(page.rows).toMatchObject([

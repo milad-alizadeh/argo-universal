@@ -25,7 +25,9 @@ const meta = {
     </View>
   ),
 } satisfies Meta<OnboardingShellProps>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 // Onboarding fills the window; the rail and list wait for the first Project.

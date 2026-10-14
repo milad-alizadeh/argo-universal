@@ -124,7 +124,11 @@ _Avoid_: Install record, detection result
 
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, or `error`.
-_Avoid_: Exit status, finish reason
+_Avoid_: Exit status, finish reason, interrupted (as a Stop reason)
+
+**Settled**:
+A Session update that will not change again. Every Turn ending settles its Turn's Session updates, and a Tool call still running then is settled as cancelled.
+_Avoid_: Closed, finalised
 
 ## What a Session shows
 

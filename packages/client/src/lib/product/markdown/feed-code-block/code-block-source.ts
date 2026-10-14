@@ -33,7 +33,9 @@ function resourceCopy(code: string | undefined, uri: string): CopyAction {
 // A resource copies its text, or its URI when it has none; plain code copies the code.
 export function copyAction(source: CodeBlockSource): CopyAction {
   const uri = resourceUri(source);
+
   if (uri !== undefined) return resourceCopy(source.code, uri);
+
   return { value: source.code ?? '', label: 'Copy code' };
 }
 

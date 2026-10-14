@@ -21,7 +21,9 @@ export function StatusDot({
   status,
 }: Pick<ListItemProps, 'status'>): React.JSX.Element | null {
   if (!status) return null;
+
   if (status.tone === 'pending') return <StatusSpinner />;
+
   return (
     <View
       {...hiddenFromAccessibility}

@@ -17,6 +17,7 @@ const toolOutputIds = (
   meta: NonNullable<ToolCallUpdate['_meta']>['argo'],
 ): string[] =>
   Object.values(meta?.fullOutput ?? {}).map((blob): string => blob.blobId);
+
 const shownOutputIds = (rows: readonly SessionUpdate[]): Set<string> =>
   new Set(
     rows.flatMap((row): string[] =>
@@ -31,11 +32,12 @@ export const outputBlobsOf = (
   blobs: readonly OutputBlob[],
 ): OutputBlob[] => {
   const shown = shownOutputIds(rows);
+
   return [
     ...new Map(
-      blobs
-        .filter((blob): boolean => shown.has(blob.blob.blobId))
-        .map((blob): [string, OutputBlob] => [blob.blob.blobId, blob]),
+      blobs.flatMap((blob): [string, OutputBlob][] =>
+        shown.has(blob.blob.blobId) ? [[blob.blob.blobId, blob]] : [],
+      ),
     ).values(),
   ];
 };

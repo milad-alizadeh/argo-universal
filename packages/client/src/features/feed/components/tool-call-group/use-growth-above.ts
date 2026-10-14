@@ -13,16 +13,20 @@ function grewAboveDrawn(
   keys: readonly string[],
 ): boolean {
   const [previousFirst] = drawn;
+
   const previousFirstAt =
     previousFirst === undefined ? -1 : keys.indexOf(previousFirst);
+
   return previousFirstAt > 0 && keys.length - previousFirstAt === drawn.length;
 }
 
 // Records the keys now drawn; true when they added activities above the old first one.
 function markDrawn(marks: GrowthMarks, keys: readonly string[]): boolean {
   const grew = grewAboveDrawn(marks.drawnKeys, keys);
+
   if (grew) marks.grewAbove = true;
   marks.drawnKeys = keys;
+
   return grew;
 }
 
@@ -30,8 +34,10 @@ function markDrawn(marks: GrowthMarks, keys: readonly string[]): boolean {
 function measuredGrowth(marks: GrowthMarks, height: number): number | null {
   const previousHeight = marks.height;
   marks.height = height;
+
   if (!marks.grewAbove || previousHeight === null) return null;
   marks.grewAbove = false;
+
   return height - previousHeight;
 }
 
@@ -51,9 +57,11 @@ function useGrewAbove(
   marks: RefObject<GrowthMarks>,
 ): (event: LayoutChangeEvent) => void {
   const feedGrowth = useContext(FeedGrowthContext);
+
   return (event: LayoutChangeEvent) => {
     const height = event.nativeEvent.layout.height;
     const growth = measuredGrowth(marks.current, height);
+
     if (growth !== null) feedGrowth?.grewAbove(groupKey, growth);
   };
 }
@@ -68,6 +76,8 @@ export function useGrowthAbove(
     height: null,
     grewAbove: false,
   });
+
   useWillGrowAbove(groupKey, keys, marks);
+
   return useGrewAbove(groupKey, marks);
 }

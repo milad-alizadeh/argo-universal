@@ -33,11 +33,13 @@ const compactionNotices = new Map<string, NoticeMessageProps>([
 
 function compactionNotice(row: CompactionUpdate): NoticeMessageProps {
   const notice = compactionNotices.get(row.status);
+
   if (!notice)
     return {
       severity: 'unrecognised',
       title: `Unknown compaction status: ${row.status}`,
     };
+
   return row.error ? { ...notice, description: row.error } : notice;
 }
 
@@ -60,6 +62,7 @@ export function FeedNotice({
     row.sessionUpdate === 'compaction_update'
       ? compactionNotice(row)
       : noticeProps(row);
+
   return <NoticeMessage {...props} />;
 }
 

@@ -10,9 +10,11 @@ export type PickerPresentation = {
   onPress: () => void;
   onClose: () => void;
 };
+
 type Drawing = <Value extends string>(
   props: PickerProps<Value> & PickerPresentation,
 ) => React.JSX.Element;
+
 type NativePicker = <Value extends string>(
   props: PickerProps<Value>,
 ) => React.JSX.Element;
@@ -22,6 +24,7 @@ export function createNativePicker(Control: Drawing): NativePicker {
     props: PickerProps<Value>,
   ): React.JSX.Element {
     const field = usePickerField(props);
+
     return createElement(
       View,
       { className: 'gap-2' },
@@ -36,6 +39,7 @@ function PickerHost<Value extends string>(
 ): React.JSX.Element {
   const { Control } = props;
   const presentation = usePresentation(props.onBlur);
+
   return (
     <Host {...useHostSize()}>
       <Control {...props} {...presentation} />
@@ -46,11 +50,13 @@ function PickerHost<Value extends string>(
 // A row's trailing slot has no width to fill, so there the Picker takes its own; elsewhere it spans the field.
 function useHostSize(): Pick<HostProps, 'matchContents' | 'style'> {
   if (useInListItem()) return { matchContents: true };
+
   return { matchContents: { vertical: true }, style: { width: '100%' } };
 }
 
 function usePresentation(onBlur?: () => void): PickerPresentation {
   const [open, setOpen] = useState(false);
+
   return {
     open,
     onPress: (): void => setOpen(true),

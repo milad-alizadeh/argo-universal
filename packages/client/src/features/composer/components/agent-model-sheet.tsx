@@ -12,13 +12,16 @@ interface AgentModelSheetSettingsProps {
   onOpenPage: (page: 'agent' | 'model') => void;
   onContentHeightChange: (height: number) => void;
 }
+
 export function AgentModelSheetSettings({
   onOpenPage,
   onContentHeightChange,
 }: AgentModelSheetSettingsProps): React.JSX.Element | null {
   const configuration = useAgentModelConfiguration();
   useEffect(() => onContentHeightChange(0), [onContentHeightChange]);
+
   if (!configuration) return null;
+
   return (
     <View className="flex-1 bg-sidebar">
       <AgentModelMenu configuration={configuration} onOpenPage={onOpenPage} />
@@ -37,7 +40,9 @@ export function AgentModelSheetChoices(
   props: AgentModelSheetChoicesProps,
 ): React.JSX.Element | null {
   const configuration = useAgentModelConfiguration();
+
   if (!configuration) return null;
+
   return (
     <View className="flex-1 bg-sidebar">
       <PageChoices {...props} configuration={configuration} />
@@ -55,5 +60,6 @@ function PageChoices({
   ...choices
 }: PageChoicesProps): React.JSX.Element {
   const Choices = page === 'agent' ? AgentChoices : ModelChoices;
+
   return <Choices {...choices} onSelect={onDone} />;
 }

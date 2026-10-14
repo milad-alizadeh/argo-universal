@@ -12,7 +12,9 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof AgentDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const removeLabel = `Remove ${readyAgent.name}`;
@@ -89,6 +91,7 @@ export const OpensOnTheAgentsIdentityCard: Story = {
     const card = canvas.getByRole('group', {
       name: new RegExp(`^${readyAgent.description}`),
     });
+
     await expect(within(card).getByText('Update available')).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Update' })).toBeVisible();
   },

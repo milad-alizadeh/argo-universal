@@ -1,4 +1,5 @@
 export type AgentIdentity = { agent: string; label: string; logo: string };
+
 export const createAgentMetadata = (agent = 'mock'): AgentIdentity => ({
   agent,
   label: agent,

@@ -13,6 +13,7 @@ import { nextChange } from './empty-session-choices';
 export type EmptySessionSnapshot = SnapshotFrom<typeof emptySessionMachine>;
 
 const agent = 'agent-one';
+
 const inputFor = (projectId: string): SessionNewInput => ({
   projectId,
   agent,
@@ -20,27 +21,41 @@ const inputFor = (projectId: string): SessionNewInput => ({
   configOptions: [],
   prompt: [],
 });
+
 export const first = inputFor('project-a');
+
 const second = inputFor('project-b');
+
 export const prompt = [
   { type: 'text' as const, text: 'Fix the flaky login test' },
 ];
+
 export const options: SessionConfigOption[] = recordedSessionOptions(agent);
-const failure = new Error('The Agent did not start');
+
+// Every port call that fails on a path fails with this.
+export const failure = new Error('The Agent did not start');
 
 export { nextChange } from './empty-session-choices';
 
 export const actorIds = ['open', 'close', 'setConfigOption', 'prompt'] as const;
+
 export type ActorId = (typeof actorIds)[number];
+
 export const delayDone = 'xstate.after.choiceDebounce.emptySession.waiting';
+
 export const promptShowTimedOut =
   'xstate.after.promptShowTimeout.emptySession.open.showingPrompt';
+
 export const done = (id: ActorId): `xstate.done.actor.${ActorId}` =>
   `xstate.done.actor.${id}`;
+
 export const failed = (id: ActorId): `xstate.error.actor.${ActorId}` =>
   `xstate.error.actor.${id}`;
+
 const choices = 'choices.changed';
+
 const loaded = 'options.loaded';
+
 const showsPrompt = 'feed.showsPrompt';
 
 const events = [
@@ -64,13 +79,14 @@ const events = [
   { type: done('prompt'), actorId: 'prompt', output: undefined },
   ...actorIds.map((id) => ({ type: failed(id), actorId: id, error: failure })),
 ] satisfies GraphEventFromLogic<typeof emptySessionMachine>[];
+
 export type EmptySessionGraphEvent = (typeof events)[number];
 
 const graphPorts: EmptySessionPorts = {
   open: () => Promise.resolve({ sessionId: 'session-1' }),
-  close: () => Promise.resolve(),
+  close: () => Promise.resolve({}),
   setConfigOption: () => Promise.resolve(options),
-  prompt: () => Promise.resolve(),
+  prompt: () => Promise.resolve({ messageId: 'message-1' }),
   handOff: () => {},
   nextChange,
 };
@@ -79,6 +95,7 @@ const choiceNames = new Map([
   [JSON.stringify(first), 'first'],
   [JSON.stringify(second), 'second'],
 ]);
+
 const choiceName = (key: string | undefined): string =>
   choiceNames.get(key ?? '') ?? 'none';
 
@@ -104,12 +121,14 @@ const publicTypes = new Set<string>([
   'retry',
   showsPrompt,
 ]);
+
 export const isPublicEvent = (
   event: EmptySessionGraphEvent,
 ): event is Extract<EmptySessionGraphEvent, EmptySessionEvent> =>
   publicTypes.has(event.type);
 
 type Check = (snapshot: EmptySessionSnapshot) => boolean;
+
 const runs: Record<ActorId, Check> = {
   open: (snapshot) => snapshot.matches('opening'),
   close: (snapshot) => snapshot.matches('closing'),
@@ -117,6 +136,7 @@ const runs: Record<ActorId, Check> = {
     snapshot.matches({ open: { applyingRemembered: 'setting' } }),
   prompt: (snapshot) => snapshot.matches({ open: 'prompting' }),
 };
+
 const machineEventChecks = new Map<string, Check>([
   [delayDone, (snapshot): boolean => snapshot.matches('waiting')],
   [
@@ -135,12 +155,15 @@ function acceptsMachineEvent(
 ): boolean {
   return machineEventChecks.get(event.type)?.(snapshot) === true;
 }
+
 const filterEvents = (
   snapshot: EmptySessionSnapshot,
   event: EmptySessionGraphEvent,
 ): boolean => {
   if (snapshot.status !== 'active') return false;
+
   if (isPublicEvent(event)) return snapshot.can(event);
+
   return acceptsMachineEvent(snapshot, event);
 };
 
@@ -158,6 +181,7 @@ export const graphOptions = {
       via: event && `${previous && key(previous)} ${event.type}`,
     }),
 };
+
 export const paths = terminalPaths(
   getShortestPaths(emptySessionMachine, graphOptions),
 );

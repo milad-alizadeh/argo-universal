@@ -10,16 +10,20 @@ const meta = {
   component: ToolCallRow,
   args: { row: completedRead },
 } satisfies Meta<typeof ToolCallRow>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function readFile(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+
       const row = canvas.getByRole('button', {
         name: 'Read /project/hello.txt',
       });
+
       await expect(row).toBeVisible();
       await expect(canvas.queryByText('Explored')).not.toBeInTheDocument();
       await expect(
@@ -38,7 +42,9 @@ function readFile(width: number): Story {
     },
   };
 }
+
 export const ReadFilePhone = readFile(layoutWidths.phone);
+
 export const ReadFileWide = readFile(layoutWidths.wide);
 
 function agentParity(width: number): Story {
@@ -52,6 +58,7 @@ function agentParity(width: number): Story {
     ),
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+
       for (const [label, output] of [
         ['Read /project/hello.txt', /hello world/],
         ['Read /repo/app.txt', /alpha\nbeta/],
@@ -69,11 +76,17 @@ function agentParity(width: number): Story {
     },
   };
 }
+
 export const AgentParityPhone = agentParity(layoutWidths.phone);
+
 export const AgentParityWide = agentParity(layoutWidths.wide);
 
 const dark = { globals: { mode: 'dark' } };
+
 export const ReadFilePhoneDark: Story = { ...ReadFilePhone, ...dark };
+
 export const ReadFileWideDark: Story = { ...ReadFileWide, ...dark };
+
 export const AgentParityPhoneDark: Story = { ...AgentParityPhone, ...dark };
+
 export const AgentParityWideDark: Story = { ...AgentParityWide, ...dark };

@@ -24,11 +24,13 @@ function show(owner: SheetOwner, id: string, props: FormSheetProps): void {
 
 function update(owner: SheetOwner, id: string, props: FormSheetProps): void {
   const current = owner.read();
+
   if (current?.owner === id) owner.publish({ ...current, props });
 }
 
 function hide(owner: SheetOwner, id: string): void {
   const current = owner.read();
+
   if (!current || current.owner !== id) return;
   const props = current.props;
   owner.publish();
@@ -38,6 +40,7 @@ function hide(owner: SheetOwner, id: string): void {
 
 function push(owner: SheetOwner, page: SheetPage): void {
   const current = owner.read();
+
   if (!current) return;
   owner.publish({ ...current, page });
   owner.routes.push();
@@ -45,6 +48,7 @@ function push(owner: SheetOwner, page: SheetPage): void {
 
 function back(owner: SheetOwner): void {
   const current = owner.read();
+
   if (!current) return;
   owner.publish({ ...current, page: undefined });
   owner.routes.back();
@@ -52,6 +56,7 @@ function back(owner: SheetOwner): void {
 
 function closed(owner: SheetOwner): void {
   const current = owner.read();
+
   if (!current) return;
   owner.publish();
   current.props.onOpenChange(false);

@@ -4,10 +4,12 @@ import type {
 } from '@repo/contracts';
 
 type StringProperty = Extract<ElicitationPropertySchema, { type: 'string' }>;
+
 type ArrayItems = Extract<
   ElicitationPropertySchema,
   { type: 'array' }
 >['items'];
+
 export type NumericProperty = Extract<
   ElicitationPropertySchema,
   { type: 'number' | 'integer' }
@@ -22,6 +24,7 @@ export function elicitationChoices(
   property: ElicitationPropertySchema,
 ): ElicitationEnumOption[] | undefined {
   if (property.type === 'array') return itemChoices(property.items);
+
   return property.type === 'string' ? stringChoices(property) : undefined;
 }
 

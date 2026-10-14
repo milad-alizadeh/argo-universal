@@ -14,13 +14,17 @@ type AnswerMutation = UseMutationResult<
   ClientError,
   SessionAnswerElicitationInput
 >;
+
 type Answering = RefObject<string | null>;
+
 type Submit = (input: SessionAnswerElicitationInput) => void;
+
 type SessionElicitation = {
   sessionId: SessionAnswerElicitationInput['sessionId'];
   request: PendingElicitation | null | undefined;
   resumeAfterCommand: () => void;
 };
+
 type RequestProps = SessionElicitation & { request: PendingElicitation };
 
 export function useSessionElicitation(
@@ -28,12 +32,15 @@ export function useSessionElicitation(
 ): ElicitationFormProps | undefined {
   const mutation = useAnswerMutation(props.resumeAfterCommand);
   const submit = useSubmitAnswer(mutation);
+
   if (!props.request) return undefined;
+
   return requestProps({ ...props, request: props.request }, mutation, submit);
 }
 
 function useAnswerMutation(resume: () => void): AnswerMutation {
   const trpc = useTRPC();
+
   return useMutation(
     trpc.session.answerElicitation.mutationOptions({ onSettled: resume }),
   );
@@ -49,7 +56,9 @@ function requestProps(
   submit: Submit,
 ): ElicitationFormProps | undefined {
   const status = currentRequest(mutation, props.request.requestId);
+
   if (isResolved(status)) return undefined;
+
   return {
     request: props.request,
     state: answerState(status),
@@ -66,6 +75,7 @@ function requestAnswer(
     sessionId: props.sessionId,
     requestId: props.request.requestId,
   };
+
   return (answer) => submit({ ...identity, ...answer });
 }
 
@@ -74,12 +84,14 @@ function currentRequest(
   requestId: string,
 ): AnswerMutation | undefined {
   if (mutation.variables?.requestId !== requestId) return undefined;
+
   return mutation;
 }
 
 function useSubmitAnswer(mutation: AnswerMutation): Submit {
   const answering = useRef<string | null>(null);
   const mutate = mutation.mutate;
+
   return useCallback((input) => sendAnswer(input, mutate, answering), [mutate]);
 }
 
@@ -101,7 +113,9 @@ function answerState(
 
 function isResolved(status: AnswerMutation | undefined): boolean {
   if (!status) return false;
+
   if (status.isSuccess) return true;
+
   return isConflict(status.error);
 }
 

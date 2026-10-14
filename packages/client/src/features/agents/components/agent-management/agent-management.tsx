@@ -6,12 +6,15 @@ import { Alert } from '../../../../lib/generic/primitives/overlays/alert/alert';
 import type { AgentManagement } from '../../state/agent-management-types';
 
 type ManagementProps = { management?: AgentManagement };
+
 export function AgentEnablement({
   management,
 }: ManagementProps): React.JSX.Element | null {
   return management ? <EnablementSection management={management} /> : null;
 }
+
 type EnabledProps = { management: AgentManagement };
+
 function EnablementSection({ management }: EnabledProps): React.JSX.Element {
   return (
     <FieldSection
@@ -25,6 +28,7 @@ function EnablementSection({ management }: EnabledProps): React.JSX.Element {
     </FieldSection>
   );
 }
+
 function EnablementSwitch({
   management,
 }: {
@@ -39,6 +43,7 @@ function EnablementSwitch({
     />
   );
 }
+
 const failureContent = (
   management: AgentManagement,
 ): Pick<
@@ -46,16 +51,19 @@ const failureContent = (
   'title' | 'message' | 'actions'
 > => {
   const inUse = isInUseFailure(management.failure);
+
   return {
     title: inUse ? 'Agent is in use' : 'Removal failed',
     message: management.failure,
     actions: failureActions(management, inUse),
   };
 };
+
 export function AgentManagementFailure({
   management,
 }: ManagementProps): React.JSX.Element | null {
   if (!management) return null;
+
   return (
     <Alert
       open={!!management.failure}
@@ -67,6 +75,7 @@ export function AgentManagementFailure({
 
 const isInUseFailure = (failure?: string): boolean =>
   failure?.includes('in use') ?? false;
+
 const failureActions = (
   management: AgentManagement,
   inUse: boolean,

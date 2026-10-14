@@ -22,6 +22,7 @@ export async function startProjectTestHost(): Promise<
     rmSync(projectPath, { recursive: true, force: true });
   });
   vi.stubEnv('ARGO_PROJECT_PATH', projectPath);
+
   return {
     ...(await startEngineTestHost({ database })),
     projectPath,

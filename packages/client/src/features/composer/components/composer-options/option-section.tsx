@@ -9,16 +9,21 @@ import { configurationChoices } from '../../state/configuration-choices';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 
 type Option = SessionConfigOption;
+
 type Change = ComposerConfigurationProps['onConfigChange'];
+
 interface SettingProps {
   option: Option;
   onChange: Change;
 }
+
 type BooleanOption = Extract<Option, { type: 'boolean' }>;
+
 interface BooleanProps {
   option: BooleanOption;
   onChange: Change;
 }
+
 function BooleanToggle({ option, onChange }: BooleanProps): React.JSX.Element {
   return (
     <Switch
@@ -29,10 +34,13 @@ function BooleanToggle({ option, onChange }: BooleanProps): React.JSX.Element {
     />
   );
 }
+
 function BooleanSetting(props: BooleanProps): React.JSX.Element {
   const Setting = Platform.OS === 'web' ? WebBoolean : NativeBoolean;
+
   return <Setting {...props} />;
 }
+
 function NativeBoolean(props: BooleanProps): React.JSX.Element {
   return (
     <ListItem
@@ -42,6 +50,7 @@ function NativeBoolean(props: BooleanProps): React.JSX.Element {
     />
   );
 }
+
 function WebBoolean(props: BooleanProps): React.JSX.Element {
   return (
     <ListItem
@@ -57,6 +66,7 @@ function WebBoolean(props: BooleanProps): React.JSX.Element {
     />
   );
 }
+
 function SwitchAccessory(props: BooleanProps): React.JSX.Element {
   return (
     <View
@@ -68,6 +78,7 @@ function SwitchAccessory(props: BooleanProps): React.JSX.Element {
     </View>
   );
 }
+
 export function SettingSection({
   option,
   onChange,
@@ -78,16 +89,21 @@ export function SettingSection({
         <BooleanSetting option={option} onChange={onChange} />
       </FieldSection>
     );
+
   return <SelectSection option={option} onChange={onChange} />;
 }
+
 type SelectOption = Extract<Option, { type: 'select' }>;
+
 interface SelectProps {
   option: SelectOption;
   onChange: Change;
 }
+
 interface SelectChoiceProps extends SelectProps {
   choice: ReturnType<typeof configurationChoices>[number];
 }
+
 function SelectSection(props: SelectProps): React.JSX.Element {
   return (
     <FieldSection title={props.option.name}>
@@ -97,12 +113,14 @@ function SelectSection(props: SelectProps): React.JSX.Element {
     </FieldSection>
   );
 }
+
 function SelectSetting({
   option,
   choice,
   onChange,
 }: SelectChoiceProps): React.JSX.Element {
   const selected = option.currentValue === choice.value;
+
   return (
     <ListItem
       title={choice.name}
@@ -112,6 +130,7 @@ function SelectSetting({
     />
   );
 }
+
 function choiceInteractionProps(
   selected: boolean,
 ): Pick<
@@ -120,6 +139,7 @@ function choiceInteractionProps(
 > {
   return { role: 'button', disclosure: false, selected };
 }
+
 function choiceActionProps(
   { option, choice, onChange }: SelectChoiceProps,
   selected: boolean,

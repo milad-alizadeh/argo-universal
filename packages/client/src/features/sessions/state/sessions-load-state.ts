@@ -12,6 +12,8 @@ export function sessionsLoadState(
   queries: readonly QueryProgress[],
 ): SessionsLoadState {
   if (queries.some((query) => query.pending)) return 'loading';
+
   if (queries.some((query) => query.failed)) return 'error';
+
   return 'ready';
 }

@@ -13,6 +13,7 @@ import {
 import { resolveRegistryServerPlatform } from '../records';
 import { findFirstOnPath } from './path-lookup';
 import type { RegistrySource } from './registry-source';
+
 export { readRegistrySource, type RegistrySource } from './registry-source';
 
 // What the Resolver found for one Agent: the launch a Session would use, who owns it, and its version when known.
@@ -21,8 +22,10 @@ export type Installation = {
   owner: InstallationOwner;
   version?: string;
 };
+
 const realOrSame = (path: string): Promise<string> =>
   realpath(path).catch(() => path);
+
 // Argo-managed is read from where the file really is, never stored.
 const ownerOf = async (
   home: string,
@@ -32,6 +35,7 @@ const ownerOf = async (
     realOrSame(join(home, 'agents')),
     realOrSame(file),
   ]);
+
   return real.startsWith(folder + sep) ? 'argo' : 'unknown';
 };
 
@@ -44,6 +48,7 @@ const argoInstallation = async (
     const file = await checkSelectedFiles(home, agentId, selection);
     const definition = await selectedLaunchDefinition(home, agentId, selection);
     const version = selection.packageVersion ?? selection.entry.version;
+
     return { definition, owner: await ownerOf(home, file), version };
   } catch {
     return undefined;
@@ -57,21 +62,27 @@ const entrypointName = (entry: ACPAgent): string | undefined => {
       basename(cmd).replace(/\.exe$/i, ''),
     ),
   );
+
   const [name] = names;
+
   return names.size === 1 ? name : undefined;
 };
 
 type BinaryTarget = NonNullable<ACPAgent['distribution']['binary']>[string];
+
 // This platform's target, when its entrypoint has a name PATH can be searched by.
 const pathTarget = (
   entry: ACPAgent,
 ): { target: BinaryTarget; name: string } | undefined => {
   const target = platformTarget(entry);
   const name = entrypointName(entry);
+
   return target && name ? { target, name } : undefined;
 };
+
 const platformTarget = (entry: ACPAgent): BinaryTarget | undefined =>
   entry.distribution.binary?.[resolveRegistryServerPlatform()];
+
 const targetDefinition = (
   entry: ACPAgent,
   target: LaunchTarget,
@@ -87,32 +98,42 @@ const targetDefinition = (
 });
 
 type LaunchTarget = Pick<BinaryTarget, 'args' | 'env'>;
+
 type Searched = { target: LaunchTarget; names: readonly string[] };
+
 const binarySearch = (entry: ACPAgent): Searched | undefined => {
   const binary = pathTarget(entry);
+
   return binary && { target: binary.target, names: [binary.name] };
 };
+
 // What PATH is searched for: a binary entrypoint name, else any of an npx entry's command names.
 const searchedTarget = (source: RegistrySource): Searched | undefined =>
   binarySearch(source.entry) ?? npxTarget(source);
+
 const npxTarget = ({
   entry,
   commandNames,
 }: RegistrySource): Searched | undefined => {
   const npx = entry.distribution.npx;
+
   return npx && commandNames ? { target: npx, names: commandNames } : undefined;
 };
+
 const pathInstallation = async (
   home: string,
   source: RegistrySource,
 ): Promise<Installation | undefined> => {
   const searched = searchedTarget(source);
+
   if (!searched) return undefined;
   const file = await findFirstOnPath(searched.names);
+
   return file
     ? foundOnPath(home, source.entry, { target: searched.target, file })
     : undefined;
 };
+
 const foundOnPath = async (
   home: string,
   entry: ACPAgent,

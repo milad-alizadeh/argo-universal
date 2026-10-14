@@ -24,6 +24,7 @@ const popoverLook = {
 // The editor opens on the Link field, which ⌘K is pressed to fill.
 function focusLinkField(event: Event): void {
   event.preventDefault();
+
   if (!(event.target instanceof HTMLElement)) return;
   event.target.querySelector<HTMLElement>('input[aria-label="Link"]')?.focus();
 }
@@ -38,6 +39,7 @@ const focusField =
 
 function LinkPopover(props: LinkEditorProps): React.JSX.Element {
   const { target } = props;
+
   return (
     <PopoverContent
       {...popoverLook}

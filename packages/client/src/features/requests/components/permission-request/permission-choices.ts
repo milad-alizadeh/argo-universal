@@ -11,6 +11,7 @@ const leadWith = (
   kind: PermissionOptionKind,
 ): PermissionOption[] => {
   const lead = options.find((option) => option.kind === kind);
+
   return lead
     ? [lead, ...options.filter((option) => option !== lead)]
     : options;

@@ -7,22 +7,28 @@ import type { AppOptions, ServerOptions } from './fixtures';
 
 // CI splits the web suite across runners, as `ARGO_E2E_SHARD=1/3`; it is an env variable so turbo caches each shard apart.
 const ShardNumber = z.coerce.number().int().min(1);
+
 const parseShard = (
   value: string | undefined,
 ): { current: number; total: number } | null => {
   if (value === undefined) return null;
   const [current, total] = value.split('/');
+
   return {
     current: ShardNumber.parse(current),
     total: ShardNumber.parse(total),
   };
 };
+
 const shard = parseShard(process.env.ARGO_E2E_SHARD);
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
+
 // A free port per run, so runs in several worktrees never meet; workers inherit it from the runner, which loads this file first.
 process.env.ARGO_E2E_WEB_PORT ??= String(await findFreePort());
+
 const webPort = process.env.ARGO_E2E_WEB_PORT;
+
 const webUrl = `http://127.0.0.1:${webPort}`;
 
 export default defineConfig<AppOptions & ServerOptions>({

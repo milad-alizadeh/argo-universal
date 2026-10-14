@@ -8,21 +8,26 @@ export class RecoveryBlockedError extends Error {
     );
   }
 }
-const startDeadline = (
-  timeoutMs: number,
-): { expired: Promise<never>; clear: () => void } => {
+
+type ReleaseDeadline = { expired: Promise<never>; clear: () => void };
+
+const startDeadline = (timeoutMs: number): ReleaseDeadline => {
   const deadline = Promise.withResolvers<never>();
+
   const timer = setTimeout(
     () => deadline.reject(new Error(`No exit within ${timeoutMs} ms`)),
     timeoutMs,
   );
+
   return { expired: deadline.promise, clear: () => clearTimeout(timer) };
 };
+
 const confirmWithinDeadline = async (
   released: Promise<void>,
   timeoutMs: number,
 ): Promise<void> => {
   const deadline = startDeadline(timeoutMs);
+
   try {
     await Promise.race([released, deadline.expired]);
   } catch (error) {
@@ -42,12 +47,15 @@ export class CheckoutReleases {
   public retain(checkouts: readonly string[], released: Promise<void>): void {
     const confirmed = confirmWithinDeadline(released, this.timeoutMs);
     confirmed.catch(() => {});
+
     for (const checkout of checkouts) this.pending.set(checkout, confirmed);
   }
   public async confirm(checkout: string): Promise<void> {
     const confirmed = this.pending.get(checkout);
+
     if (!confirmed) return;
     await confirmed;
+
     if (this.pending.get(checkout) === confirmed) this.pending.delete(checkout);
   }
 }

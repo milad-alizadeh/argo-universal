@@ -35,6 +35,7 @@ function travelled(start: PanePosition, next: PaneGeometry): boolean {
 
 function shouldMove(input: PaneMotionInput, start: PanePosition): boolean {
   const { last, next } = input;
+
   return (
     last.transitionKey !== next.transitionKey &&
     travelled(start, next) &&
@@ -56,6 +57,7 @@ function reflowFrames(
 ): readonly ElementFrame[] {
   const [from, to] = shiftFrames(start.offset - next.offset);
   const fromWidth = { ...from, width: `${start.width}px` };
+
   return [[frame, [fromWidth, { ...to, width: `${next.width}px` }]]];
 }
 
@@ -64,6 +66,7 @@ function slideFrames(
   start: PanePosition,
 ): readonly ElementFrame[] {
   const translation = start.offset - next.offset;
+
   const content: ElementFrame = [
     panes.slide,
     [
@@ -71,7 +74,9 @@ function slideFrames(
       slideStyle(next.width, next.contentWidth),
     ],
   ];
+
   if (translation === 0) return [content];
+
   return [content, [panes.viewport, shiftFrames(translation)]];
 }
 
@@ -80,6 +85,7 @@ function paneFrames(
   start: PanePosition,
 ): readonly ElementFrame[] {
   const { frame } = input.panes;
+
   return input.reflows && frame
     ? reflowFrames(frame, start, input.next)
     : slideFrames(input, start);
@@ -91,6 +97,7 @@ function restartMotion(
 ): Animation[] {
   const start = startingPosition(input, motion);
   cancelMotion(motion);
+
   return shouldMove(input, start) ? playFrames(paneFrames(input, start)) : [];
 }
 
@@ -100,7 +107,9 @@ function readPanes({
   slideRef,
 }: PaneRefs): PaneElements | undefined {
   const viewport = viewportRef.current;
+
   if (!viewport) return undefined;
+
   return { viewport, frame: frameRef.current, slide: slideRef.current };
 }
 
@@ -110,6 +119,7 @@ export function syncPaneMotion(
   mode: PaneMode,
 ): void {
   const panes = readPanes(refs);
+
   if (!panes) return;
   const input = { ...mode, panes, last: previous.current, next };
   motion.current = restartMotion(input, motion.current);

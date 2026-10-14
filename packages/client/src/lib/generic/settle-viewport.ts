@@ -1,4 +1,5 @@
 import { page } from 'vitest/browser';
+
 const viewportHeight = 844;
 
 export async function settleViewport(width: number): Promise<void> {

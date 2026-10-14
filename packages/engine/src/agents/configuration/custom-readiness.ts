@@ -8,6 +8,7 @@ const savable = new Set<AgentCheck['status']>([
   'sign-in-needed',
   'account-not-supported',
 ]);
+
 export const isSavable = (check: AgentCheck): boolean =>
   savable.has(check.status);
 

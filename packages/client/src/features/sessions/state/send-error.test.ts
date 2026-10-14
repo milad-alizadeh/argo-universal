@@ -5,10 +5,12 @@ const selection = {
   kind: 'selection',
   message: "Couldn't select images.",
 } as const;
+
 const upload = {
   kind: 'upload',
   message: "Couldn't upload the image.",
 } as const;
+
 const failure = (message: string): Error => new Error(message);
 
 describe('toSendError', () => {

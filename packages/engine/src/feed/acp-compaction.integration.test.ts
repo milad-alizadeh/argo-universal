@@ -27,6 +27,7 @@ it('Compaction chunks remain live until completion and an omitted terminal summa
       status: 'completed',
     },
   ]);
+
   expect(
     (await host.caller.feed.page({ sessionId, direction: 'tail' })).rows,
   ).toMatchObject([
@@ -77,6 +78,7 @@ it('Compaction null and empty patches clear retained values while failure detail
       _meta: { scope: 'replacement' },
     },
   ]);
+
   expect(
     (await host.caller.feed.page({ sessionId, direction: 'tail' })).rows[1],
   ).toMatchObject({
@@ -91,6 +93,7 @@ it('Compaction null and empty patches clear retained values while failure detail
 
 it('SDK-valid future Notice severity and Compaction status remain explicit with one diagnostic each', async () => {
   const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
   const { host, sessionId } = await openAcpFeedSession([
     {
       sessionUpdate: 'notice',
@@ -110,6 +113,7 @@ it('SDK-valid future Notice severity and Compaction status remain explicit with 
       status: 'future-status',
     },
   ]);
+
   expect(
     (await host.caller.feed.page({ sessionId, direction: 'tail' })).rows,
   ).toMatchObject([

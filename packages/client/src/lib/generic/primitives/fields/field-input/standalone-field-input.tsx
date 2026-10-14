@@ -22,6 +22,7 @@ function TextField(props: StandaloneFieldInputProps): ReactElement {
     invalid: isInvalid(props),
     hint: props.hint,
   });
+
   return (
     <View className="gap-1.5">
       <FieldLabel {...props} />

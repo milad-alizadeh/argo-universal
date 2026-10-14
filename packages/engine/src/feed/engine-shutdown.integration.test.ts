@@ -12,9 +12,11 @@ import {
 } from '#mocks/feed-suite';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
+
 it('persists the final buffered ACP Feed row during real Engine shutdown', async (): Promise<void> => {
   vi.useRealTimers();
   const entered = Promise.withResolvers<PromptRequest>();
+
   const input = scriptedEngineInput({
     steps: [],
     responses: {
@@ -23,12 +25,14 @@ it('persists the final buffered ACP Feed row during real Engine shutdown', async
       ],
     },
   });
+
   setFeedTestHost(await startEngineTestHost({ database, ...input }));
   await feedTestHost.caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Start' }],
   });
   await entered.promise;
+
   const updates = (
     await feedTestHost
       .createCaller({ signal: controller.signal })
@@ -37,6 +41,7 @@ it('persists the final buffered ACP Feed row during real Engine shutdown', async
         after: { epoch: 3, revision: 5 },
       })
   )[Symbol.asyncIterator]();
+
   await updates.next();
   await requireScriptedProcessAt(input.agent.processes).play(
     feedScenario([

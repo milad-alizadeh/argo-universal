@@ -13,6 +13,7 @@ it.each(workMocks)(
       state: 'open',
       status: 'pending',
     };
+
     const later: ToolCallUpdate = {
       ...first,
       id: 'later-running',
@@ -20,6 +21,7 @@ it.each(workMocks)(
       position: 2,
       status: 'in_progress',
     };
+
     const pending = {
       ...snapshot,
       pendingPermission: {
@@ -29,6 +31,7 @@ it.each(workMocks)(
         options: permissionOptions,
       },
     };
+
     expect(toFeedView([first, later], pending).items).toEqual([
       {
         type: 'group',
@@ -54,6 +57,7 @@ it.each(workMocks)(
       state: 'open',
       status: 'in_progress',
     };
+
     const later: ToolCallUpdate = {
       ...first,
       id: 'later-completed',
@@ -62,6 +66,7 @@ it.each(workMocks)(
       state: 'settled',
       status: 'completed',
     };
+
     expect(toFeedView([first, later], snapshot).items).toEqual([
       {
         type: 'group',

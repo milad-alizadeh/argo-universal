@@ -18,8 +18,11 @@ import { firstAgent } from '../../../../../mocks/composer/recorded-catalog.test.
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer } from './composer';
+
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+
 export default meta;
+
 export const DropFiles: Story = {
   args: { onDropFiles: fn() },
   play: async ({ canvas, args }) => {
@@ -37,8 +40,11 @@ export const DropFiles: Story = {
     });
   },
 };
+
 export const AttachmentMenusPhone = attachmentMenus(layoutWidths.phone);
+
 export const AttachmentMenusWide = attachmentMenus(layoutWidths.wide);
+
 export const AttachmentInNarrowContent: Story = {
   render: (args): ReactElement => (
     <View style={{ width: layoutWidths.phone }}>
@@ -63,6 +69,7 @@ export const AttachmentInNarrowContent: Story = {
     await userEvent.keyboard('{Escape}');
   },
 };
+
 export const EnvelopeWithInspectorOpen: Story = {
   args: {
     configuration: {
@@ -91,8 +98,11 @@ export const EnvelopeWithInspectorOpen: Story = {
     ).toBeVisible();
   },
 };
+
 export const WithImagesPhone = withImages(layoutWidths.phone);
+
 export const WithImagesWide = withImages(layoutWidths.wide);
+
 export const WithFiles: Story = {
   args: { draft: { text: '', attachments: composerFiles } },
   play: async ({ canvas, userEvent, args }) => {

@@ -10,9 +10,11 @@ import { readHttpResponse, type HttpResponse } from './http-response';
 export const binaryMime = 'application/octet-stream';
 
 export const infoRoute = '/trpc/system.info';
+
 export const uploadRoute = '/trpc/blob.upload';
 
 export const blobBytes = new TextEncoder().encode('blob content');
+
 export const blobId = createHash('sha256').update(blobBytes).digest('hex');
 
 export const systemInfo = {
@@ -23,8 +25,11 @@ export const systemInfo = {
 };
 
 let home: string;
+
 let stopEngine: () => Promise<void>;
+
 let port: number;
+
 export let host: string;
 
 interface HttpRequest {
@@ -39,6 +44,7 @@ export const sendHttpRequest = (input: HttpRequest): Promise<HttpResponse> =>
     const outgoing = request(requestOptions(input), (response): void => {
       void readHttpResponse(response).then(resolve, reject);
     });
+
     outgoing.once('error', reject);
     outgoing.end(input.body);
   });
@@ -50,6 +56,7 @@ export async function sendFormRequest(
   origin?: string,
 ): Promise<HttpResponse> {
   const encoded = encodeForm(formData);
+
   return sendHttpRequest({
     path: requestPath,
     method: 'POST',
@@ -61,6 +68,7 @@ export async function sendFormRequest(
 export const createUploadForm = (): FormData => {
   const form = new FormData();
   form.set('file', new File(['file content'], 'notes.txt'));
+
   return form;
 };
 
@@ -81,14 +89,20 @@ afterEach(async (): Promise<void> => {
   rmSync(home, { recursive: true, force: true });
 });
 
-function uploadHeaders(
-  encoded: Request,
-  origin?: string,
-): Record<string, string> {
-  return {
+// A type alias, not an interface, so it fits the request's string header map.
+type UploadHeaders = {
+  'content-type': string;
+  origin?: string;
+};
+
+function uploadHeaders(encoded: Request, origin?: string): UploadHeaders {
+  const headers: UploadHeaders = {
     'content-type': encoded.headers.get('content-type') ?? '',
-    ...(origin ? { origin } : {}),
   };
+
+  if (origin) headers.origin = origin;
+
+  return headers;
 }
 
 function requestOptions({

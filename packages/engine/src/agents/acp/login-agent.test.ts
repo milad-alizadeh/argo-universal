@@ -11,7 +11,9 @@ import {
 import { createLoginAgentOpener } from './index';
 
 const methodId = 'opaque-subscription-id';
+
 const subject = { name: 'Generic Agent', launch: resourceLaunch };
+
 const callbacks = {
   signal: new AbortController().signal,
   createElicitation: async (): Promise<{ action: 'cancel' }> => ({
@@ -21,11 +23,14 @@ const callbacks = {
 
 it('advertises URL Elicitation on the connection that presents login requests', async () => {
   const received = Promise.withResolvers<InitializeRequest>();
+
   const peer = createScriptedAgentProcess({
     steps: [],
     responses: { initialize: [{ received }] },
   });
+
   const login = await createLoginAgentOpener(peer)(subject, callbacks);
+
   try {
     expect((await received.promise).clientCapabilities?.elicitation).toEqual({
       form: {},
@@ -47,6 +52,7 @@ it('prefers protocol sign-in when the Agent also offers terminal authentication'
       ],
     },
   });
+
   const login = await createLoginAgentOpener(peer)(subject, callbacks);
   expect(login.methods).toEqual([
     { id: 'subscription-remote', name: 'Device login' },
@@ -57,6 +63,7 @@ it('prefers protocol sign-in when the Agent also offers terminal authentication'
 it('authenticates only the exact advertised method identity without opening a Session', async () => {
   const requests: AuthenticateRequest[] = [];
   const openings: object[] = [];
+
   const peer = createScriptedAgentProcess({
     steps: [],
     initialize: {
@@ -68,6 +75,7 @@ it('authenticates only the exact advertised method identity without opening a Se
       'session/new': [{ requests: openings }],
     },
   });
+
   const login = await createLoginAgentOpener(peer)(subject, callbacks);
   await expect(login.authenticate('invented')).rejects.toThrow('not supported');
   await login.authenticate(methodId);

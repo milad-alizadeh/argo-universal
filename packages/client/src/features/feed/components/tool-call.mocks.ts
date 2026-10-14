@@ -64,6 +64,7 @@ export const commandNow = startedAt(runningCommand) + 23000;
 
 const firstCompletedRead = (exploration: Exploration): ToolCallUpdate => {
   const read = exploration.toolCalls[0];
+
   return inCatalog(
     read?.status === 'completed' ? read : undefined,
     'a completed read for parallel calls',
@@ -78,24 +79,31 @@ function parallelCalls(
   const read = firstCompletedRead(exploration);
   const earlier = { ...active, position: 0 };
   const later = { ...read, position: 1, turnId: earlier.turnId };
+
   const parallel = inCatalog(
     firstGroup([earlier, later], snapshot),
     'a parallel Tool call group',
   );
+
   return { parallel, earlier, later };
 }
+
+type RunningGroup = { active: ToolCallUpdate; running: FeedGroup };
 
 function runningGroup(
   rows: ToolCallUpdate[],
   mock: RecordedFeedMock,
-): { active: ToolCallUpdate; running: FeedGroup } {
+): RunningGroup {
   const command = required(rows.find(isCommand), 'a command');
+
   const active = required(
     runningRow(streamedRows([mock]), command.toolCallId),
     'a running command',
   );
+
   const live = rows.map((row) => (row.id === active.id ? active : row));
   const running = required(firstGroup(live, mock.snapshot), 'a running group');
+
   return { active, running };
 }
 
@@ -103,14 +111,18 @@ function groupMock(mock: RecordedFeedMock): ToolCallGroupMock {
   const rows = toolCallRows(mock.rows).filter((row) =>
     ['read', 'search', 'execute'].includes(row.kind),
   );
+
   const group = required(firstGroup(rows, mock.snapshot), 'a Tool call group');
   const { active, running } = runningGroup(rows, mock);
+
   const exploration = required(
     group.items.find((item) => item.type === 'exploration'),
     'exploration',
   );
+
   const parallel = parallelCalls(active, exploration, mock.snapshot);
   const now = startedAt(active) + 23000;
+
   return { agent: mock.agent, group, running, exploration, ...parallel, now };
 }
 
@@ -123,8 +135,10 @@ export const readMocks = toolCallGroupMocks.map(({ agent, exploration }) => ({
   agent,
   row: exploration.toolCalls[0] ?? missingRecordedState('a file read'),
 }));
+
 export const completedRead =
   readMocks[0]?.row ?? missingRecordedState('a file read');
+
 export const runningRead =
   runningRow(streamedRows(recordedFeedMocks), completedRead.toolCallId) ??
   missingRecordedState('a running file read');

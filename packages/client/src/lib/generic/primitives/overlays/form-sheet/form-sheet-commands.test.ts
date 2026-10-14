@@ -4,6 +4,7 @@ import type { FormSheetProps, SheetState } from './form-sheet-types';
 
 function sheetHarness(): ReturnType<typeof sheetCommands> {
   let current: SheetState | undefined;
+
   return sheetCommands({
     routes: {
       present: vi.fn<() => void>(),

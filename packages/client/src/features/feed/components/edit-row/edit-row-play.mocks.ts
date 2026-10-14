@@ -5,6 +5,7 @@ import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import type { EditRow } from './edit-row';
 
 type Story = StoryObj<typeof EditRow>;
+
 type Play = Parameters<NonNullable<Story['play']>>[0];
 
 interface EditPlay {
@@ -31,8 +32,10 @@ async function expectSummary(
 ): Promise<void> {
   if (!summary) {
     await expect(feed.queryByRole('button', { name: summaryName })).toBeNull();
+
     return;
   }
+
   const summaryButton = feed.getByRole('button', { name: summaryName });
   await expect(summaryButton).toHaveAttribute('aria-expanded', 'false');
   await userEvent.click(summaryButton);
@@ -49,6 +52,7 @@ async function expectInsideFeed(
   await waitFor(async () => {
     const right = feedRight(canvas);
     const summaries = feed.queryAllByRole('button', { name: summaryName });
+
     for (const element of [button, ...summaries])
       await expect(element.getBoundingClientRect().right).toBeLessThan(right);
   });

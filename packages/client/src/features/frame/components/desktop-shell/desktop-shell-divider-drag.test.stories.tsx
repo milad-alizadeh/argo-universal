@@ -31,6 +31,7 @@ const meta = {
   title: 'Tests/DesktopShell/Divider drag',
   ...shellMeta,
 } satisfies Meta<typeof DesktopShellFrame>;
+
 export default meta;
 
 type Canvas = ShellPlayContext['canvas'];

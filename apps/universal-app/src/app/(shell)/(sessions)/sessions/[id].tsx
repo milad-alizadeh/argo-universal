@@ -9,6 +9,8 @@ export default function SessionRoute(): React.JSX.Element {
     id: string;
     projectId?: string;
   }>();
+
   if (id === newSessionId) return <NewSessionScreen projectId={projectId} />;
+
   return <SessionScreen id={id} />;
 }

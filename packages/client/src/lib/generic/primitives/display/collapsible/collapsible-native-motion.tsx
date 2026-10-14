@@ -21,15 +21,18 @@ interface NativeMotion {
   height: SharedValue<number>;
   progress: SharedValue<number>;
 }
+
 interface NativeVisibility {
   open: boolean;
   forceMount?: boolean;
 }
+
 function openContent(motion: NativeMotion): void {
   motion.progress.set(
     withTiming(1, { duration, reduceMotion: ReduceMotion.System }),
   );
 }
+
 function closeContent(
   progress: SharedValue<number>,
   forceMount: boolean | undefined,
@@ -45,17 +48,21 @@ function closeContent(
     ),
   );
 }
+
 function animateNativeContent(
   options: NativeVisibility & NativeMotion & { unmount: () => void },
 ): () => void {
   if (!options.open)
     closeContent(options.progress, options.forceMount, options.unmount);
   else if (options.height.get() > 0) openContent(options);
+
   return () => cancelAnimation(options.progress);
 }
+
 function isInitiallyMounted(visibility: NativeVisibility): boolean {
   return visibility.open || !!visibility.forceMount;
 }
+
 function useLatestVisibility(
   visibility: NativeVisibility,
 ): RefObject<NativeVisibility> {
@@ -64,22 +71,33 @@ function useLatestVisibility(
   useLayoutEffect(() => {
     latest.current = { open, forceMount };
   }, [open, forceMount]);
+
   return latest;
 }
+
+interface NativeMount {
+  mounted: boolean;
+  unmount: () => void;
+}
+
 function useNativeMount(
   visibility: NativeVisibility,
   height: SharedValue<number>,
-): { mounted: boolean; unmount: () => void } {
+): NativeMount {
   const [mounted, setMounted] = useState(isInitiallyMounted(visibility));
   const latest = useLatestVisibility(visibility);
+
   if (visibility.open && !mounted) setMounted(true);
+
   const unmount = useCallback(() => {
     if (isInitiallyMounted(latest.current)) return;
     height.set(0);
     setMounted(false);
   }, [height, latest]);
+
   return { mounted, unmount };
 }
+
 function measureNativeContent(
   event: LayoutChangeEvent,
   motion: NativeMotion,
@@ -87,12 +105,15 @@ function measureNativeContent(
 ): void {
   const firstMeasurement = motion.height.get() === 0;
   motion.height.set(event.nativeEvent.layout.height);
+
   if (open && firstMeasurement) openContent(motion);
 }
+
 type NativeContentMotion = NativeMotion & {
   mounted: boolean;
   onLayout: (event: LayoutChangeEvent) => void;
 };
+
 export function useNativeContentMotion(
   visibility: NativeVisibility,
 ): NativeContentMotion {
@@ -104,8 +125,10 @@ export function useNativeContentMotion(
     () => animateNativeContent({ open, forceMount, height, progress, unmount }),
     [open, forceMount, height, progress, unmount],
   );
+
   return nativeMotionResult({ height, progress }, mounted, open);
 }
+
 function nativeMotionResult(
   motion: NativeMotion,
   mounted: boolean,
