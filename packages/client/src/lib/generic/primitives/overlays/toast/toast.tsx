@@ -7,13 +7,13 @@ import { Platform } from 'react-native';
 export interface ErrorToast {
   title: string;
   message?: string;
+  // Tells a new toast from a repeated one when the text alone cannot.
+  key?: string;
 }
 
 // A finished action reads as success; a failed load or action as error.
 export type Toast = ErrorToast & {
   tone: 'success' | 'error';
-  // Tells a new toast from a repeated one when the text alone cannot.
-  key?: string;
 };
 
 // Android's toast is a single line of text, so the message follows the title there.

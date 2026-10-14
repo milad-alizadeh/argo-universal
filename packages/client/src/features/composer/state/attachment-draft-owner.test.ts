@@ -18,13 +18,20 @@ describe('attachmentDraftReducer', () => {
       picked: [picked('first')],
     });
 
-    const next = attachmentDraftReducer(attached, {
+    const failed = attachmentDraftReducer(attached, {
+      type: 'pickFailed',
+      key: 'prior-owner-failure',
+    });
+
+    const next = attachmentDraftReducer(failed, {
       type: 'ownerChanged',
       key: secondProject,
     });
 
     expect(next.draft).toEqual({ text: '', attachments: [] });
     expect(next.files.size).toBe(0);
+    expect(next.selectionError).toBeUndefined();
+    expect(next.selectionErrorKey).toBeUndefined();
   });
 
   it('keeps what was typed when the kept text arrives after it', () => {
@@ -83,7 +90,11 @@ describe('attachmentDraftReducer', () => {
   });
 
   it('empties the draft and its error once the prompt is sent', () => {
-    const failed = attachmentDraftReducer(withText, { type: 'pickFailed' });
+    const failed = attachmentDraftReducer(withText, {
+      type: 'pickFailed',
+      key: 'pick-attempt',
+    });
+
     expect(attachmentDraftReducer(failed, { type: 'cleared' })).toEqual(
       emptyAttachmentDraft,
     );

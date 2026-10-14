@@ -78,9 +78,10 @@ const noticeProps = ({
   attachmentDraft,
   sessionOpening,
 }: NewSessionWiring): ReadyProps<
-  'attachmentError' | 'setupStep' | 'openError'
+  'attachmentError' | 'attachmentErrorKey' | 'setupStep' | 'openError'
 > => ({
   attachmentError: attachmentDraft.attachmentError?.message,
+  attachmentErrorKey: attachmentDraft.attachmentError?.key,
   setupStep: setupStepOf(data.choices.agent),
   openError: sessionOpening.session.error,
 });

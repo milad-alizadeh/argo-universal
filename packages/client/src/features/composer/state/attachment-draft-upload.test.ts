@@ -47,15 +47,18 @@ describe('toAttachmentError', () => {
     {
       case: 'a selection failure over an upload failure',
       selection: attachmentSelectionFailureMessage,
+      key: 'first-selection',
       upload: new Error('Server is down'),
       expected: {
         kind: 'selection',
         message: attachmentSelectionFailureMessage,
+        key: 'first-selection',
       },
     },
     {
       case: 'an upload failure with its reason',
       selection: undefined,
+      key: undefined,
       upload: new Error('Server is down'),
       expected: {
         kind: 'upload',
@@ -65,10 +68,11 @@ describe('toAttachmentError', () => {
     {
       case: 'nothing without a failure',
       selection: undefined,
+      key: undefined,
       upload: null,
       expected: undefined,
     },
-  ])('reports $case', ({ selection, upload, expected }) => {
-    expect(toAttachmentError(selection, upload)).toEqual(expected);
+  ])('reports $case', ({ selection, upload, key, expected }) => {
+    expect(toAttachmentError(selection, upload, key)).toEqual(expected);
   });
 });
