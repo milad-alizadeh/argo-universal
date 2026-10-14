@@ -1,10 +1,10 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
-import { Picker } from '#primitives/inputs/picker/picker';
-import type { PickerProps } from '../../../../lib/generic/primitives/inputs/picker/picker-props';
-import { Switch } from '../../../../lib/generic/primitives/inputs/switch/switch';
+import { FieldSection } from '#primitives/fields/field-section';
+import { Picker } from '#primitives/inputs/picker';
+import type { PickerProps } from '#primitives/inputs/picker';
+import { Switch } from '#primitives/inputs/switch';
+import { ListItem } from '#primitives/lists/list-item';
 
 const checkoutOptions = [
   { value: 'worktree', label: 'New worktree' },
@@ -39,7 +39,12 @@ function PickerRow(props: PickerRowProps): React.JSX.Element {
     <ListItem
       title={props.label}
       accessory={
-        <Picker appearance="row" {...props} onChange={ignoreChoice} disabled />
+        <Picker
+          appearance="row"
+          {...props}
+          onValueChange={ignoreChoice}
+          disabled
+        />
       }
     />
   );
@@ -79,10 +84,9 @@ function ArchiveSwitch(): React.JSX.Element {
   return (
     <Switch
       accessibilityLabel="Delete the worktree on archive"
-      checked={false}
-      onCheckedChange={ignoreChoice}
+      value={false}
+      onValueChange={ignoreChoice}
       disabled
-      aria-disabled
     />
   );
 }

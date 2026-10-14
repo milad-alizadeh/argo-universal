@@ -7,8 +7,9 @@ import {
   StatusIndicator,
   statusLabels,
 } from '#lib/product/status-indicator/status-indicator';
-import { Text, TextClassContext } from '#primitives/display/text/text';
-import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
+import { contentActionClass } from '#primitives/buttons/button';
+import { Text, TextClassContext } from '#primitives/display/text';
+import { Pressable } from '#primitives/pressable';
 import type { IssueIndicatorProps } from '../issue-indicator/issue-indicator';
 import type { PullRequestIndicatorProps } from '../pull-request-indicator/pull-request-indicator';
 import { SessionLogo } from './session-row-logo';

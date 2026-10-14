@@ -14,13 +14,14 @@ const { withUniwindConfig } = require('uniwind/metro');
 /** @type {MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-// Primitive aliases remain extensionless so Metro chooses each platform's drawing.
+// #primitives/<group>/<name> is that folder's index; its extensionless relative imports let Metro choose each platform's drawing.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   const primitivePath = moduleName.startsWith('#primitives/')
     ? path.resolve(
         __dirname,
         '../../packages/client/src/lib/generic/primitives',
         moduleName.slice('#primitives/'.length),
+        'index',
       )
     : moduleName;
 

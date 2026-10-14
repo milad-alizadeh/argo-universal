@@ -1,11 +1,11 @@
-const variants = ['default', 'secondary', 'destructive', 'outline'] as const;
+const variants = ['default', 'secondary'] as const;
 
 const tones = ['muted', 'info', 'success', 'warning', 'destructive'] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { Text } from '#primitives/display/text';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { Text } from '../text/text';
 import { Badge } from './badge';
 
 function VariantExamples(): React.JSX.Element {

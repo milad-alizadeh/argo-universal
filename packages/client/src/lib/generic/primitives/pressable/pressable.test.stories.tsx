@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { DropdownMenuPreview } from '../overlays/dropdown-menu/dropdown-menu-preview.mocks';
+import { contentActionClass } from '#primitives/buttons/button';
+import { Text } from '#primitives/display/text';
+import { Menu } from '#primitives/overlays/menu';
+import { Pressable } from './pressable';
 
 const meta = { title: 'Tests/Pressable' } satisfies Meta;
 
@@ -8,8 +11,31 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const accountActions = ['Profile', 'Billing', 'Settings'].map((label) => ({
+  label,
+  onPress: (): void => {},
+}));
+
+function AccountMenu(): React.JSX.Element {
+  return (
+    <Menu
+      accessibilityLabel="Open"
+      align="start"
+      actions={accountActions}
+      trigger={
+        <Pressable
+          role="button"
+          className={contentActionClass({ variant: 'outline' })}
+        >
+          <Text>Open</Text>
+        </Pressable>
+      }
+    />
+  );
+}
+
 export const MenuTrigger: Story = {
-  render: () => <DropdownMenuPreview />,
+  render: () => <AccountMenu />,
   play: async ({ canvas, canvasElement, userEvent }) => {
     const trigger = canvas.getByRole('button', { name: 'Open' });
     const body = within(canvasElement.ownerDocument.body);

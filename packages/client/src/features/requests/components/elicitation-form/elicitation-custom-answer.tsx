@@ -2,8 +2,8 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { CheckboxIndicator } from '#primitives/inputs/checkbox/checkbox';
-import { Input } from '#primitives/inputs/input/input';
+import { CheckboxIndicator } from '#primitives/inputs/checkbox';
+import { TextInput } from '#primitives/inputs/text-input';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 import { customAnswer, customValue } from './elicitation-answers';
 
@@ -36,18 +36,25 @@ function customRowClassName(wide: boolean, custom: string): string {
   );
 }
 
+const customInputLook = {
+  appearance: 'bare',
+  placeholderTextColorClassName:
+    'accent-muted-foreground ios:accent-[#8e8e93] android:accent-[#79747e] dark:ios:accent-muted-foreground dark:android:accent-muted-foreground',
+  className:
+    'h-9 sm:h-9 flex-1 rounded-none border-0 bg-transparent dark:bg-transparent px-0 py-0 shadow-none focus-visible:ring-0 web:rounded-none web:focus-visible:ring-0 web:focus-visible:border-transparent ios:text-[17px] ios:leading-[22px]',
+} as const;
+
 function CustomInput({ model }: ModelProps): ReactElement {
   return (
-    <Input
+    <TextInput
+      {...customInputLook}
       accessibilityLabel="Custom answer"
       value={customAnswer(model)}
       placeholder="Something else…"
-      placeholderTextColorClassName="accent-muted-foreground ios:accent-[#8e8e93] android:accent-[#79747e] dark:ios:accent-muted-foreground dark:android:accent-muted-foreground"
       editable={!model.inactive}
-      onChangeText={(text) => {
+      onChangeText={(text: string) => {
         model.change(customValue(model, text));
       }}
-      className="h-9 sm:h-9 flex-1 rounded-none border-0 bg-transparent dark:bg-transparent px-0 py-0 shadow-none focus-visible:ring-0 ios:text-[17px] ios:leading-[22px]"
     />
   );
 }

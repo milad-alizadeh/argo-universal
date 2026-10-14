@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { useServerPaired } from '#lib/product/server-place';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 
 interface ServerLocationProps {
   name: string;

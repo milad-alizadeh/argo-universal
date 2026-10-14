@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { PlanDocument } from '#lib/product/plan-document';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { Text } from '#primitives/display/text/text';
-import { Textarea } from '#primitives/inputs/textarea/textarea';
+import { IconButton } from '#primitives/buttons/icon-button';
+import { Text } from '#primitives/display/text';
+import { Textarea } from '#primitives/inputs/textarea';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { RequestHeading } from '../request-card/request-heading';
 import { useFocusOnMount } from '../use-focus-on-mount';
@@ -87,7 +87,7 @@ function FeedbackField({ state, interaction }: BodyProps): ReactNode {
       accessibilityLabel={feedbackQuestion}
       placeholder="Tell the Agent what to change"
       value={interaction.feedback}
-      editable={state.kind === 'open'}
+      disabled={state.kind !== 'open'}
       onChangeText={interaction.setFeedback}
     />
   );

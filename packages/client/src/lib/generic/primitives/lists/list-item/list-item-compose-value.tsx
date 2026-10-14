@@ -1,9 +1,8 @@
 import { Row, Text } from '@expo/ui/jetpack-compose';
-import { clearSemantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
+import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
-import type { ListItemProps } from '../../fields/field-props';
-import { useComposeTextStyle } from '../../native/native-typography';
+import type { ListItemProps } from './list-item-props';
 import { hasDisclosure } from './list-item-styles';
 import { NativeRowGlyph, NativeRowIcon, NativeRowStatus } from './native-row';
 
@@ -23,37 +22,27 @@ export function RowTrailing(props: ListItemProps): React.JSX.Element {
 }
 
 function RowValueGroup(
-  props: Pick<ListItemProps, 'value' | 'valueLeading' | 'control'>,
+  props: Pick<ListItemProps, 'value' | 'valueLeading'>,
 ): React.JSX.Element | null {
   if (props.value === undefined) return null;
 
   return (
     <Row horizontalArrangement={{ spacedBy: 8 }} verticalAlignment="center">
       <NativeRowGlyph leading={props.valueLeading} />
-      <RowValue value={props.value} decorative={!!props.control} />
+      <RowValue value={props.value} />
     </Row>
   );
 }
 
-interface RowValueProps extends Pick<ListItemProps, 'value'> {
-  decorative: boolean;
-}
-
 function RowValue({
   value,
-  decorative,
-}: RowValueProps): React.JSX.Element | null {
+}: Pick<ListItemProps, 'value'>): React.JSX.Element | null {
   if (value === undefined) return null;
 
-  return <RowValueText value={value} decorative={decorative} />;
+  return <RowValueText value={value} />;
 }
 
-interface RowValueTextProps {
-  value: string;
-  decorative: boolean;
-}
-
-function RowValueText(props: RowValueTextProps): React.JSX.Element {
+function RowValueText(props: { value: string }): React.JSX.Element {
   const style = useComposeTextStyle('body');
   const { mutedForeground } = useNativeTheme().colors;
 
@@ -63,7 +52,6 @@ function RowValueText(props: RowValueTextProps): React.JSX.Element {
       maxLines={1}
       overflow="ellipsis"
       style={{ ...style, textAlign: 'end' }}
-      modifiers={props.decorative ? [clearSemantics()] : []}
     >
       {props.value}
     </Text>

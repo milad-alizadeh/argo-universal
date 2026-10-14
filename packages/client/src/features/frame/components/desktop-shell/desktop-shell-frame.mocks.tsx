@@ -4,14 +4,9 @@ import { View } from 'react-native';
 import {
   IconButton,
   type IconButtonProps,
-} from '../../../../lib/generic/primitives/buttons/icon-button/icon-button';
-import { Text } from '../../../../lib/generic/primitives/display/text/text';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../../../../lib/generic/primitives/overlays/dropdown-menu/dropdown-menu';
+} from '#primitives/buttons/icon-button';
+import { Text } from '#primitives/display/text';
+import { Menu } from '#primitives/overlays/menu';
 import { ListTitle } from '../../../../lib/product/list-title';
 import type { Section } from '../../../../lib/product/navigation/sections';
 import { PageHeader } from '../../../../lib/product/page-header';
@@ -92,18 +87,15 @@ function framePanes(
   };
 }
 
+const exampleActions = [{ label: 'Example action', onPress: (): void => {} }];
+
 function MoreActionsMenu(): React.JSX.Element {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <IconButton {...moreActionsButton} />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem>
-          <Text>Example action</Text>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Menu
+      accessibilityLabel={moreActionsButton.accessibilityLabel}
+      trigger={<IconButton {...moreActionsButton} />}
+      actions={exampleActions}
+    />
   );
 }
 

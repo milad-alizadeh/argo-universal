@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Badge } from '#lib/generic/primitives/display/badge/badge';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { FieldGroup } from '#lib/generic/primitives/fields/field-group/field-group';
-import { FieldRow } from '#lib/generic/primitives/fields/field-row/field-row';
 import { SettingsPage } from '#lib/product/settings-page';
+import { Badge } from '#primitives/display/badge';
+import { Text } from '#primitives/display/text';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldGroupContent } from '#primitives/fields/field-group-content';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';
@@ -93,9 +93,9 @@ function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
       <AgentStatusSection {...props} />
       <AgentEnablement management={props.management} />
       <AboutSection {...props} />
-      <FieldRow>
+      <FieldGroupContent>
         <RemoveAgent {...props} />
-      </FieldRow>
+      </FieldGroupContent>
     </FieldGroup>
   );
 }
@@ -107,14 +107,14 @@ function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element | null {
   if (useWide()) return null;
 
   return (
-    <FieldRow>
+    <FieldGroupContent>
       <View className="items-center gap-3">
         <PhoneIconTile {...props} />
         <AgentStatusChip agent={agent} />
         <PhoneDescription description={agent.description} />
         <AgentAction {...props} fullWidth="narrow" />
       </View>
-    </FieldRow>
+    </FieldGroupContent>
   );
 }
 

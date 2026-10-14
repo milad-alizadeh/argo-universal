@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
+import { Text } from '#primitives/display/text';
 import { ShimmerText } from './shimmer-text';
 
 export const foregroundTextClassName = 'text-foreground';

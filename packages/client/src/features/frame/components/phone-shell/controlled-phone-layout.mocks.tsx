@@ -5,12 +5,12 @@ import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { fn, type Mock } from 'storybook/test';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { NavigationProvider } from '#lib/product/navigation/context';
 import {
   ScreenHeader,
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
+import { Text } from '#primitives/display/text';
 import { ScreenHeaderMock } from '../../../../../mocks/screen-header-mock';
 import { sectionDestination } from '../../../../lib/product/navigation/sections';
 import type { Section } from '../../../../lib/product/navigation/sections';

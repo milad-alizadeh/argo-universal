@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from '#lib/generic/primitives/overlays/dialog/dialog';
+} from '#primitives/overlays/dialog';
 import { AgentLoginTerminal } from '../agent-login-terminal/agent-login-terminal';
 import { dismissLogin, loginActions, loginStatus } from './login-actions';
 import { LoginButton } from './login-button';

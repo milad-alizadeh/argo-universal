@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
+import { Button } from '#primitives/buttons/button';
 import type { AgentStep, StepMark } from '../../state/onboarding';
 import type { OnboardingViewProps } from './onboarding-props';
 import { SetupStep, type SetupStepProps } from './setup-step';

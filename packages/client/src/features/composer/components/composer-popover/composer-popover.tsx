@@ -4,14 +4,14 @@ import { cloneElement, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
   usePopoverClose,
-} from '#primitives/overlays/popover/popover';
-import { BottomSheet } from '../../../../lib/generic/primitives/overlays/bottom-sheet/bottom-sheet';
+} from '#primitives/overlays/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useAfterClose } from '../../hooks/use-after-close';
 import type { ComposerPopoverProps } from './popover-types';

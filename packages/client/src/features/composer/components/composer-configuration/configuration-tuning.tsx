@@ -1,9 +1,9 @@
 import type { SessionConfigOption } from '@repo/contracts';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import { Slider } from '#primitives/inputs/slider/slider';
-import { Switch } from '#primitives/inputs/switch/switch';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { Slider } from '#primitives/inputs/slider';
+import { Switch } from '#primitives/inputs/switch';
+import { ListItem } from '#primitives/lists/list-item';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
 
@@ -96,9 +96,8 @@ function NativeSwitchControl({
   return (
     <Switch
       accessibilityLabel={option.name}
-      checked={option.currentValue}
-      aria-checked={option.currentValue}
-      onCheckedChange={(checked) =>
+      value={option.currentValue}
+      onValueChange={(checked) =>
         configuration.onConfigChange(option.configId, checked)
       }
     />
@@ -122,7 +121,6 @@ function webSwitchRowProps({
     title: option.name,
     role: 'switch',
     checked: option.currentValue,
-    'aria-checked': option.currentValue,
     disclosure: false,
     onPress: () =>
       configuration.onConfigChange(option.configId, !option.currentValue),
@@ -152,10 +150,9 @@ function DecorativeSwitchControl({
 }): React.JSX.Element {
   return (
     <Switch
-      tabIndex={-1}
-      checked={option.currentValue}
-      aria-checked={option.currentValue}
-      onCheckedChange={ignoreDecorativeChange}
+      decorative
+      value={option.currentValue}
+      onValueChange={ignoreDecorativeChange}
     />
   );
 }

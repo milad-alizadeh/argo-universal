@@ -1,6 +1,7 @@
 import { mkdir, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createRejectionCounter } from '@repo/machine-log';
+import { jsonCodec } from '../../lib/json-codec';
 import {
   OwnedProcessRecord,
   writeOwnedProcessRecord,
@@ -13,6 +14,8 @@ import {
 } from './terminal-process-group';
 
 const rejections = createRejectionCounter('Terminal ownership records');
+
+const StoredRecord = jsonCodec(OwnedProcessRecord);
 
 const folderName = 'login-terminals';
 
@@ -45,7 +48,7 @@ const readRecord = async (
   path: string,
 ): Promise<OwnedProcessRecord | undefined> => {
   try {
-    return OwnedProcessRecord.parse(JSON.parse(await readFile(path, 'utf8')));
+    return StoredRecord.parse(await readFile(path, 'utf8'));
   } catch (error) {
     if (missing(error)) return;
     rejections.report('Terminal ownership record cannot be read');

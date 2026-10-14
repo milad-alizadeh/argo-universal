@@ -1,7 +1,4 @@
-import {
-  type Toast,
-  useToast,
-} from '../../../../lib/generic/primitives/overlays/toast/toast';
+import { type Toast, useToast } from '#primitives/overlays/toast';
 import type {
   AgentInstallPresentation,
   InstallAction,

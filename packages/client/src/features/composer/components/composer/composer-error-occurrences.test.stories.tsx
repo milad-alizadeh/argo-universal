@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
-import { dismissToasts } from '#lib/generic/primitives/overlays/toast/toast';
+import { dismissToasts } from '#primitives/overlays/toast';
 import {
   composerProps,
   oversizedComposerImage,
@@ -12,7 +12,7 @@ import {
   type Story,
 } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { allToasts, findToast } from '../../../../../mocks/find-toast';
-import { shownText } from '../../../../../mocks/rich-textarea-example';
+import { shownText } from '../../../../../mocks/shown-text';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {

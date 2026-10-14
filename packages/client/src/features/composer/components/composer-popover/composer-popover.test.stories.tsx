@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { Button } from '#primitives/buttons/button';
+import { Text } from '#primitives/display/text';
+import { Pressable } from '#primitives/pressable';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
-import { Text } from '../../../../lib/generic/primitives/display/text/text';
-import { Pressable } from '../../../../lib/generic/primitives/pressable/pressable';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { ComposerPopover } from './composer-popover';
 

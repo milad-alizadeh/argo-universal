@@ -1,14 +1,14 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import { Text } from '#primitives/display/text/text';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { Text } from '#primitives/display/text';
+import { ListItem } from '#primitives/lists/list-item';
+import { ListItemEnd } from '#primitives/lists/list-item';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
   usePopoverClose,
-} from '#primitives/overlays/popover/popover';
-import { FieldRowEnd } from '../../../../lib/generic/primitives/fields/field-layout';
+} from '#primitives/overlays/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentChoices } from './agent-choices';
 import { AgentIcon } from './agent-icon';
@@ -83,12 +83,12 @@ function ConfigurationDrillPopover({
   configuration,
 }: PickerProps & { row: React.ReactElement }): React.JSX.Element {
   return (
-    <FieldRowEnd value={page === 'model'}>
+    <ListItemEnd value={page === 'model'}>
       <Popover openOnHover>
         <PopoverTrigger asChild>{row}</PopoverTrigger>
         <ConfigurationDrillContent configuration={configuration} page={page} />
       </Popover>
-    </FieldRowEnd>
+    </ListItemEnd>
   );
 }
 

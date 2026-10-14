@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import type { Pressable, View } from 'react-native';
-import type { ListItemProps } from '../../fields/field-props';
+import type { ListItemProps } from './list-item-props';
 import { isModifiedClick } from './web-row-link';
 
 export function interactionProps(

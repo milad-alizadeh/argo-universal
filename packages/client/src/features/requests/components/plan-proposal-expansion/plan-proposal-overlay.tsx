@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { type ReactNode, useContext } from 'react';
-import { DialogRegion } from '#primitives/overlays/dialog/dialog-region';
+import { DialogRegion } from '#primitives/overlays/dialog';
 import { PlanProposalHost } from '../plan-proposal-region';
 
 export interface PlanProposalExpansionProps {

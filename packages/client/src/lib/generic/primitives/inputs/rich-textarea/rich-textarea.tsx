@@ -1,1 +1,138 @@
-export { RichTextarea } from './rich-textarea-view';
+import {
+  type InitialConfigType,
+  LexicalComposer,
+} from '@lexical/react/LexicalComposer';
+import { ContentEditable } from '@lexical/react/LexicalContentEditable';
+import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
+import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
+import type * as React from 'react';
+import { markdownMarkClassNames } from '#lib/generic/markdown-marks';
+import { cn } from '#lib/generic/utils';
+import {
+  plainFieldClassName,
+  type ReferenceOption,
+  type RichTextareaProps,
+} from './rich-textarea-props';
+import { blockThemeClassNames } from './rich-textarea-theme';
+import { EditingPlugins } from './web/rich-textarea-editing-plugins';
+import {
+  EditablePlugin,
+  KeyboardPlugin,
+  MarkdownValuePlugin,
+} from './web/rich-textarea-field-plugins';
+import { FormatBarPlugin } from './web/rich-textarea-format-bar-plugin';
+import { LinkPlugins } from './web/rich-textarea-link-plugins';
+import {
+  $importMarkdown,
+  richTextareaNodes,
+} from './web/rich-textarea-markdown';
+import { ReferencePlugin } from './web/rich-textarea-reference-plugin';
+import { ReferenceProviders } from './web/rich-textarea-reference-token';
+
+function Placeholder({ text }: { text: string }): React.JSX.Element {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 truncate type-control text-muted-foreground/70">
+      {text}
+    </div>
+  );
+}
+
+type MessageFieldProps = Pick<
+  RichTextareaProps,
+  'accessibilityLabel' | 'placeholder'
+>;
+
+const editableClassName = cn(
+  plainFieldClassName,
+  'max-h-[10lh] overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
+);
+
+function MessageEditable({
+  accessibilityLabel,
+  placeholder = '',
+}: MessageFieldProps): React.JSX.Element {
+  return (
+    <ContentEditable
+      aria-label={accessibilityLabel}
+      aria-multiline
+      aria-placeholder={placeholder}
+      placeholder={<Placeholder text={placeholder} />}
+      className={editableClassName}
+    />
+  );
+}
+
+function MessageField({
+  editable,
+  ...props
+}: MessageFieldProps & { editable: boolean }): React.JSX.Element {
+  return (
+    <div className={cn('relative w-full', !editable && 'opacity-50')}>
+      <RichTextPlugin
+        contentEditable={<MessageEditable {...props} />}
+        ErrorBoundary={LexicalErrorBoundary}
+      />
+      <LinkPlugins />
+      <FormatBarPlugin />
+    </div>
+  );
+}
+
+const theme: InitialConfigType['theme'] = {
+  text: markdownMarkClassNames,
+  ...blockThemeClassNames,
+};
+
+function editorConfig(value: string, editable: boolean): InitialConfigType {
+  return {
+    namespace: 'RichTextarea',
+    nodes: richTextareaNodes,
+    theme,
+    editable,
+    editorState: () => $importMarkdown(value),
+    onError: (error) => {
+      throw error;
+    },
+  };
+}
+
+const noReferences: readonly ReferenceOption[] = [];
+
+type EditorParts = Omit<RichTextareaProps, 'disabled' | 'references'> & {
+  editable: boolean;
+  references: readonly ReferenceOption[];
+};
+
+function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
+  return (
+    <>
+      <MessageField {...props} />
+      <ReferencePlugin references={references} />
+      <EditingPlugins />
+      <KeyboardPlugin onSubmit={props.onSubmit} />
+      <EditablePlugin editable={props.editable} />
+      <MarkdownValuePlugin {...props} />
+    </>
+  );
+}
+
+// The web drawing: a Lexical editor that shows markdown as you type, growing to 10 lines, then scrolling.
+function RichTextarea({
+  disabled = false,
+  references = noReferences,
+  ...props
+}: RichTextareaProps): React.JSX.Element {
+  const editable = !disabled;
+
+  return (
+    <LexicalComposer initialConfig={editorConfig(props.value, editable)}>
+      <ReferenceProviders references={references}>
+        <EditorParts {...props} editable={editable} references={references} />
+      </ReferenceProviders>
+    </LexicalComposer>
+  );
+}
+
+export { RichTextarea };
+
+RichTextarea satisfies React.ComponentType<RichTextareaProps>;

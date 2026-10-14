@@ -9,7 +9,7 @@ import type { Story } from '../../../../../mocks/composer/composer-story-context
 import { imageComposer } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { findToast } from '../../../../../mocks/find-toast';
-import { shownText } from '../../../../../mocks/rich-textarea-example';
+import { shownText } from '../../../../../mocks/shown-text';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 

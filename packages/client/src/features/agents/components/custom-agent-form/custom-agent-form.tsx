@@ -3,10 +3,10 @@ import { useStore } from '@tanstack/react-form';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { FieldGroup } from '#lib/generic/primitives/fields/field-group/field-group';
-import { FieldRow } from '#lib/generic/primitives/fields/field-row/field-row';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldGroupContent } from '#primitives/fields/field-group-content';
 import {
   type CustomAgentFormApi,
   type SubmitCustomAgent,
@@ -138,9 +138,9 @@ function CheckFailure({
   if (!failure) return null;
 
   return (
-    <FieldRow>
+    <FieldGroupContent>
       <FailureBox failure={failure} />
-    </FieldRow>
+    </FieldGroupContent>
   );
 }
 

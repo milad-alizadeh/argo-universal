@@ -1,40 +1,31 @@
 import { Slot } from '@rn-primitives/slot';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import type { ReactElement } from 'react';
-import { Platform, View } from 'react-native';
-import { TextClassContext } from '#lib/generic/primitives/display/text/text';
+import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import { TextClassContext } from '#primitives/display/text';
+import type { BadgeProps } from './badge-props';
 
+const toneBox = 'h-5 border-transparent py-0';
+
+// A `tone` draws a tinted status chip, such as "Ready" in green beside an Agent's name, over the variant's fill.
 const badgeVariants = cva(
-  cn(
-    'border-border group shrink-0 flex-row items-center justify-center gap-1 overflow-hidden rounded-full border px-2 py-0.5',
-    Platform.select({
-      web: 'focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive w-fit whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] [&>svg]:pointer-events-none',
-    }),
-  ),
+  'border-border group shrink-0 flex-row items-center justify-center gap-1 overflow-hidden rounded-full border px-2 py-0.5 web:focus-visible:border-ring web:focus-visible:ring-ring/50 web:aria-invalid:ring-destructive/20 web:dark:aria-invalid:ring-destructive/40 web:aria-invalid:border-destructive web:w-fit web:whitespace-nowrap web:transition-[color,box-shadow] web:focus-visible:ring-[3px] web:[&>svg]:pointer-events-none',
   {
     variants: {
       variant: {
-        default: cn(
-          'bg-primary border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-primary/90' }),
-        ),
-        secondary: cn(
-          'bg-secondary border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-secondary/90' }),
-        ),
-        destructive: cn(
-          'bg-destructive border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-destructive/90' }),
-        ),
-        outline: Platform.select({
-          web: '[a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
-        }),
+        default: 'bg-primary border-transparent',
+        secondary: 'bg-secondary border-transparent',
+      },
+      tone: {
+        muted: `${toneBox} bg-muted`,
+        info: `${toneBox} bg-info/10`,
+        success: `${toneBox} bg-success/10`,
+        warning: `${toneBox} bg-warning/10`,
+        destructive: `${toneBox} bg-destructive/10`,
       },
     },
-    defaultVariants: {
-      variant: 'default',
-    },
+    defaultVariants: { variant: 'default' },
   },
 );
 
@@ -43,75 +34,29 @@ const badgeTextVariants = cva('type-badge', {
     variant: {
       default: 'text-primary-foreground',
       secondary: 'text-secondary-foreground',
-      destructive: 'text-destructive-foreground',
-      outline: 'text-foreground',
+    },
+    tone: {
+      muted: 'text-muted-foreground',
+      info: 'text-info',
+      success: 'text-success',
+      warning: 'text-warning',
+      destructive: 'text-destructive',
     },
   },
-  defaultVariants: {
-    variant: 'default',
-  },
+  defaultVariants: { variant: 'default' },
 });
-
-// A tinted status chip, such as "Ready" in green beside an Agent's name.
-export type BadgeTone =
-  | 'muted'
-  | 'info'
-  | 'success'
-  | 'warning'
-  | 'destructive';
-
-const badgeTones: Record<BadgeTone, { fill: string; text: string }> = {
-  muted: { fill: 'bg-muted', text: 'text-muted-foreground' },
-  info: { fill: 'bg-info/10', text: 'text-info' },
-  success: { fill: 'bg-success/10', text: 'text-success' },
-  warning: { fill: 'bg-warning/10', text: 'text-warning' },
-  destructive: { fill: 'bg-destructive/10', text: 'text-destructive' },
-};
-
-type BadgeProps = React.ComponentProps<typeof View> &
-  React.RefAttributes<View> & {
-    asChild?: boolean;
-    tone?: BadgeTone;
-  } & VariantProps<typeof badgeVariants>;
-
-// The classes for the badge's box and for the text inside it.
-interface BadgeClasses {
-  box: string;
-  text: string;
-}
-
-function toneClasses(
-  tone: BadgeTone,
-  className: BadgeProps['className'],
-): BadgeClasses {
-  return {
-    box: cn(
-      badgeVariants(),
-      'h-5 border-transparent py-0',
-      badgeTones[tone].fill,
-      className,
-    ),
-    text: cn('type-badge', badgeTones[tone].text),
-  };
-}
-
-function badgeClasses({ variant, tone, className }: BadgeProps): BadgeClasses {
-  if (tone) return toneClasses(tone, className);
-
-  return {
-    box: cn(badgeVariants({ variant }), className),
-    text: badgeTextVariants({ variant }),
-  };
-}
 
 function Badge(options: BadgeProps): ReactElement {
   const { className, variant, tone, asChild, ...props } = options;
   const Component = asChild ? Slot : View;
-  const classes = badgeClasses({ variant, tone, className });
+  const textClass = cn(badgeTextVariants({ variant, tone }));
 
   return (
-    <TextClassContext.Provider value={classes.text}>
-      <Component className={classes.box} {...props} />
+    <TextClassContext.Provider value={textClass}>
+      <Component
+        className={cn(badgeVariants({ variant, tone }), className)}
+        {...props}
+      />
     </TextClassContext.Provider>
   );
 }

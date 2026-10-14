@@ -1,11 +1,11 @@
-import type { FieldErrors } from '../../fields/field-errors';
+import type { FieldErrors } from '#primitives/fields/field-errors';
 
 export interface CheckboxProps {
   label: string;
   appearance?: 'option';
   selection?: 'single' | 'multiple';
   value: boolean;
-  onChange: (value: boolean) => void;
+  onValueChange: (value: boolean) => void;
   disabled?: boolean;
   invalid?: boolean;
   errors?: FieldErrors;

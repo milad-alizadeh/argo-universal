@@ -2,13 +2,11 @@ import type { PlanEntry } from '@repo/contracts';
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import {
-  Pressable,
-  contentActionClass,
-} from '#lib/generic/primitives/pressable/pressable';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { contentActionClass } from '#primitives/buttons/button';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
+import { Pressable } from '#primitives/pressable';
 import { completedSteps } from '../../state/status';
 import { chipClassName, unselectableTextClassName } from './status-surface';
 

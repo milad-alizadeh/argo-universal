@@ -14,8 +14,8 @@ function CheckedExample({
   disabled = false,
   size,
 }: CheckedExampleProps): React.JSX.Element {
-  const [checked, setChecked] = useState(initialChecked);
-  const switchProps = { size, checked, onCheckedChange: setChecked, disabled };
+  const [value, onValueChange] = useState(initialChecked);
+  const switchProps = { size, value, onValueChange, disabled };
 
   return (
     <Switch {...switchProps} accessibilityLabel="Accept terms and conditions" />

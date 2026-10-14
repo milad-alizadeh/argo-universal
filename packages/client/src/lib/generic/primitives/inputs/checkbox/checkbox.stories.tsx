@@ -4,14 +4,14 @@ import { Variation, Variations as VariationList } from '../../../variations';
 import { Checkbox, type CheckboxProps } from './checkbox';
 
 function Example(
-  props: Omit<CheckboxProps, 'onChange' | 'label'>,
+  props: Omit<CheckboxProps, 'onValueChange' | 'label'>,
 ): React.JSX.Element {
   const [value, setValue] = useState(props.value);
 
   return createElement(Checkbox, {
     ...props,
     value,
-    onChange: setValue,
+    onValueChange: setValue,
     label: 'Notify team',
   });
 }

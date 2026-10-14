@@ -2,11 +2,11 @@ import type * as React from 'react';
 import {
   Collapsible,
   CollapsibleContent,
-} from '#lib/generic/primitives/display/collapsible/collapsible';
-import { DisclosureChevron } from '#lib/generic/primitives/display/disclosure-chevron/disclosure-chevron';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { Pressable } from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+} from '#primitives/display/collapsible';
+import { DisclosureChevron } from '#primitives/display/disclosure-chevron';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
+import { Pressable } from '#primitives/pressable';
 import type { FileDiff } from '../../view/file-diff';
 import { editToggleClassName, FileEdit } from './file-edit';
 

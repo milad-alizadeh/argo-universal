@@ -1,9 +1,9 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text/text';
-import { StandaloneField } from '#primitives/fields/field-input/standalone-field';
-import { Checkbox } from '#primitives/inputs/checkbox/checkbox';
-import type { FieldErrors } from '../../../../lib/generic/primitives/fields/field-errors';
+import { Text } from '#primitives/display/text';
+import type { FieldErrors } from '#primitives/fields/field-errors';
+import { StandaloneField } from '#primitives/fields/standalone-field';
+import { Checkbox } from '#primitives/inputs/checkbox';
 import { toggledChoice } from './elicitation-answers';
 import type { ElicitationFieldProps } from './elicitation-field';
 import { elicitationChoices } from './elicitation-property';
@@ -48,7 +48,7 @@ function choiceProps(
     ...checkboxFieldProps(props),
     label: option.title,
     value: values.includes(option.const),
-    onChange: (checked: boolean): void =>
+    onValueChange: (checked: boolean): void =>
       props.onChange(toggledChoice(values, option.const, checked)),
   };
 }

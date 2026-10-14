@@ -7,7 +7,7 @@ import { motionDuration } from '#lib/generic/motion';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useHeaderCover } from '#lib/product/navigation/screen-header';
 import { SessionColumn } from '#lib/product/session-column';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon';
 import { ShimmerText } from '../shimmer-text';
 import { WorkingMark } from '../working-mark';
 

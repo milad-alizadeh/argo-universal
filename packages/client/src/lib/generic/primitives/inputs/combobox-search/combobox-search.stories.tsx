@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { Text } from '#primitives/display/text';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { Text } from '../../display/text/text';
 import { ComboboxSearch } from './combobox-search';
 
 const projects = ['argo-universal', 'argo-server', 'example-app'];

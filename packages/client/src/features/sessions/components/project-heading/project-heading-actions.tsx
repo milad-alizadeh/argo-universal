@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+import { IconButton } from '#primitives/buttons/icon-button';
 import type { InteractionEvents, ProjectHeadingProps } from './project-heading';
 
 const actionAppearance = {

@@ -2,7 +2,7 @@ import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import { layoutWidths } from '../src/lib/generic/each-layout';
 import { settleViewport } from '../src/lib/generic/settle-viewport';
-import { shownText } from './rich-textarea-example';
+import { shownText } from './shown-text';
 import {
   writtenPlanRegionName,
   type WrittenPlanPlayContext,

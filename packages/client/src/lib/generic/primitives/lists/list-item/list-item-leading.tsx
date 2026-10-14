@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon, IconSlot, IconSpinner } from '../../../symbols/icon';
+import { Icon, IconSlot, IconSpinner } from '#primitives/display/icon';
 import { cn } from '../../../utils';
-import type { ListItemProps } from '../../fields/field-props';
+import type { ListItemProps } from './list-item-props';
 
 type LeadingProps = Pick<
   ListItemProps,

@@ -3,9 +3,9 @@ import {
   RadioButton,
 } from '@expo/ui/jetpack-compose';
 import { size } from '@expo/ui/jetpack-compose/modifiers';
-import { createElement } from 'react';
+import { type ComponentType, createElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { Host } from '../../native/host';
+import { Host } from '#primitives/native/host';
 import type { CheckboxIndicatorProps } from './checkbox-props';
 
 const optionMarkPixels = 18;
@@ -96,3 +96,5 @@ export function useCheckboxColors(
     optionOutline(props, theme),
   );
 }
+
+CheckboxIndicator satisfies ComponentType<CheckboxIndicatorProps>;

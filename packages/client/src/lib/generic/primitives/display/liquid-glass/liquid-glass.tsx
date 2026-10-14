@@ -1,4 +1,2 @@
-// Through this file a caller gets the platform's drawing: the subpath import names one file, so it would skip the .ios variant.
-export { LiquidGlass } from './liquid-glass-view';
-
-export { liquidGlassAvailable } from './liquid-glass-available';
+// Android and the web have no Liquid Glass, so they draw the caller's surface.
+export { FallbackSurface as LiquidGlass } from './liquid-glass-fallback';

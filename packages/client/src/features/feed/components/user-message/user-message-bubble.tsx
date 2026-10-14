@@ -2,8 +2,8 @@ import { useSyncLayout } from '@legendapp/list/react-native';
 import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { FeedMarkdown } from '#lib/product/markdown/feed-markdown';
+import { Text } from '#primitives/display/text';
 import { ClampLeaves } from '../../../../lib/product/markdown/clamp-leaves';
 import {
   useWholeLineClamp,

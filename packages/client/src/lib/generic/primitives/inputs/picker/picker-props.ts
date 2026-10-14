@@ -1,4 +1,4 @@
-import type { FieldErrors } from '../../fields/field-errors';
+import type { FieldErrors } from '#primitives/fields/field-errors';
 
 export type PickerOption<Value extends string> = {
   value: Value;
@@ -12,14 +12,16 @@ export type PickerProps<Value extends string> = {
   required?: boolean;
   value?: Value;
   options: readonly PickerOption<Value>[];
-  onChange: (value: Value) => void;
+  onValueChange: (value: Value) => void;
   placeholder?: string;
   disabled?: boolean;
   invalid?: boolean;
+  /** Validation errors for the chosen value. */
   errors?: FieldErrors;
   hint?: string;
   loading?: boolean;
-  error?: string;
+  /** Why the options failed to load; shown in place of the option list. */
+  loadError?: string;
   appearance?: 'row' | 'field';
   onBlur?: () => void;
 };

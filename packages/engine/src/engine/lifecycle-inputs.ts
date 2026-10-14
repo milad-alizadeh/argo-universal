@@ -49,13 +49,14 @@ export const syncInput = ({
   context,
   self,
 }: {
-  context: Pick<EngineContext, 'database' | 'fetchAgents' | 'now'>;
+  context: Pick<EngineContext, 'database' | 'fetchAgents' | 'now' | 'createId'>;
   self: Pick<AnyActorRef, 'system'>;
 }): SyncSupervisorInput => ({
   database: openDatabaseOf(context),
   writer: requireDatabaseWriter(self.system),
   fetchAgents: context.fetchAgents,
   now: context.now,
+  createId: context.createId,
 });
 
 type SessionsSource = {

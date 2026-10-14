@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { Button } from '#primitives/buttons/button';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
-import { Button } from '../../buttons/button/button';
 import { Alert } from './alert';
 
 const onRemove = fn();

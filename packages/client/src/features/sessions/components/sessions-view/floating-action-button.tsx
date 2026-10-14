@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import type { IconName } from '#lib/generic/symbols/icon-names';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+import { IconButton } from '#primitives/buttons/icon-button';
 
 export interface FloatingActionButtonProps {
   accessibilityLabel: string;

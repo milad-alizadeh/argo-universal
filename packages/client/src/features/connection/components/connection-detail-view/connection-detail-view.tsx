@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { FieldGroup } from '#lib/generic/primitives/fields/field-group/field-group';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
-import { useErrorToast } from '#lib/generic/primitives/overlays/toast/toast';
 import { SettingsPage } from '#lib/product/settings-page';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldSection } from '#primitives/fields/field-section';
+import { ListItem } from '#primitives/lists/list-item';
+import { useErrorToast } from '#primitives/overlays/toast';
 import { formatServerClock, formatServerStart } from '../server-time';
 
 export type ServerDetails =

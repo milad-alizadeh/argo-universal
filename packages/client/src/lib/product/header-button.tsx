@@ -3,12 +3,10 @@ import { View } from 'react-native';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
-import type { IconButtonProps } from '../generic/primitives/buttons/icon-button/icon-button';
 import {
-  Pressable,
-  contentActionClass,
-} from '../generic/primitives/pressable/pressable';
-import { Icon } from '../generic/symbols/icon';
+  IconButton,
+  type IconButtonProps,
+} from '#primitives/buttons/icon-button';
 import { narrowPairs } from './header-button-pairing';
 
 export interface HeaderButtonProps extends Pick<
@@ -26,7 +24,10 @@ export interface HeaderButtonProps extends Pick<
 
 interface HeaderButtonFit {
   hitSlop: IconButtonProps['hitSlop'];
+  // A square that replaces IconButton's own size classes.
   size: string;
+  // A narrower item keeps the square's height; a style width overrides the class on every platform.
+  style?: { width: number };
   dotPlace: string;
 }
 
@@ -39,12 +40,13 @@ const headerButtonFits = {
   },
   narrow: {
     hitSlop: { left: 6, right: 6 },
-    size: 'h-11 sm:h-11 w-8 sm:w-8',
+    size: 'size-11 sm:size-11',
+    style: { width: 32 },
     dotPlace: 'top-2.5 right-1',
   },
   slot: {
     hitSlop: undefined,
-    size: 'h-11 sm:h-11 w-11 sm:w-11',
+    size: 'size-11 sm:size-11',
     dotPlace: 'top-2.5 right-[9px]',
   },
 } satisfies Record<string, HeaderButtonFit>;
@@ -62,29 +64,35 @@ function headerButtonFit(paired: boolean): HeaderButtonFit {
   return paired ? pairedFit : headerButtonFits.slot;
 }
 
-function headerButtonClass(size: string): string {
-  return contentActionClass({
-    variant: 'ghost',
-    className: cn('rounded-full p-0', size),
-  });
-}
+// The header fit replaces IconButton's touch minimum, border and focus outline with the header's own.
+const headerChrome =
+  'rounded-full p-0 border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 web:transition-all dark:active:bg-accent/50 web:dark:hover:bg-accent/50 web:focus-visible:outline-none web:focus-visible:ring-[3px] web:focus-visible:ring-ring/50';
 
 // A plain icon button for a native header; the platform draws any chrome around it.
 export function HeaderButton(props: HeaderButtonProps): React.JSX.Element {
-  const { icon, paired = false, dot, ...pressableProps } = props;
+  const { paired = false, dot, ...buttonProps } = props;
   const fit = headerButtonFit(paired);
 
   return (
-    <Pressable
+    <IconButton
       hitSlop={fit.hitSlop}
-      {...pressableProps}
-      role="button"
-      className={headerButtonClass(fit.size)}
-    >
-      <Icon role="action" name={icon} className="text-foreground" />
-      {dot && <HeaderButtonDot color={dotColors[dot]} place={fit.dotPlace} />}
-    </Pressable>
+      style={fit.style}
+      {...buttonProps}
+      variant="ghost"
+      iconRole="action"
+      className={cn(headerChrome, fit.size)}
+      badge={headerDot(dot, fit)}
+    />
   );
+}
+
+function headerDot(
+  dot: HeaderButtonProps['dot'],
+  fit: HeaderButtonFit,
+): React.JSX.Element | undefined {
+  if (!dot) return undefined;
+
+  return <HeaderButtonDot color={dotColors[dot]} place={fit.dotPlace} />;
 }
 
 function HeaderButtonDot(props: {

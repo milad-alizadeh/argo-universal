@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 
 // On web a path keeps left-to-right order inside the right-to-left box that ellipsizes its start.
 function isolatedTitle(title: string): string {

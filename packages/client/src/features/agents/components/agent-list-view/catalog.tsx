@@ -4,7 +4,7 @@ import {
   FieldList,
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
-import type { ListSearchBarProps } from '../../../../lib/generic/primitives/inputs/list-search-bar/list-search-bar';
+import type { DockedSearchQuery } from '#primitives/inputs/search-field';
 import {
   offeredAgents,
   platformName,
@@ -54,8 +54,8 @@ export function AgentCatalog(props: AgentCatalogProps): React.JSX.Element {
 }
 
 // The Agents page is pushed from Settings, so a back button leads its header.
-const catalogSearch = (props: AgentCatalogProps): ListSearchBarProps => ({
-  placeholder: searchLabel,
+const catalogSearch = (props: AgentCatalogProps): DockedSearchQuery => ({
+  label: searchLabel,
   value: props.search,
   onChangeText: props.onSearch,
   leading: 'back',

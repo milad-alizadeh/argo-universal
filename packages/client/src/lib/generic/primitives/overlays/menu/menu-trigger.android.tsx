@@ -1,7 +1,8 @@
 import { RNHostView } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { Pressable, View, type PressableProps } from 'react-native';
-import type { MenuProps } from './menu-props';
+import { type MenuProps, menuValueLabel } from './menu-props';
+import { menuTriggerElement } from './menu-text-trigger';
 
 export function MenuTrigger<Value extends string>(
   props: MenuProps<Value> & { onOpen: () => void },
@@ -13,7 +14,7 @@ export function MenuTrigger<Value extends string>(
         disabled={props.disabled}
         onPress={props.onOpen}
       >
-        <HiddenTrigger>{props.trigger}</HiddenTrigger>
+        <HiddenTrigger>{menuTriggerElement(props.trigger)}</HiddenTrigger>
       </Pressable>
     </RNHostView>
   );
@@ -30,14 +31,20 @@ type TriggerAccessibility = Pick<
 function triggerAccessibility<Value extends string>(
   props: MenuProps<Value>,
 ): TriggerAccessibility {
-  const selected = props.choices.find((choice) => choice.value === props.value);
-
   return {
     accessibilityRole: 'button',
     accessibilityLabel: props.accessibilityLabel,
-    accessibilityValue: { text: selected?.label ?? props.value },
+    accessibilityValue: triggerValue(props),
     accessibilityState: { disabled: props.disabled },
   };
+}
+
+function triggerValue<Value extends string>(
+  props: MenuProps<Value>,
+): PressableProps['accessibilityValue'] {
+  const text = menuValueLabel(props);
+
+  return text === undefined ? undefined : { text };
 }
 
 function HiddenTrigger(props: {

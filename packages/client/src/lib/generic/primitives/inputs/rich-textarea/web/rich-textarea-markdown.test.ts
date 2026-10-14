@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  roundTrip,
-  typedParagraph,
-} from '../../../../../../../mocks/rich-textarea-headless';
+import { roundTrip, typedParagraph } from './rich-textarea-headless.mocks';
 
 const unchanged: { name: string; markdown: string }[] = [
   { name: 'bold', markdown: 'Make it **bold** now' },

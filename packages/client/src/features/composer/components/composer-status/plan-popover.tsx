@@ -1,8 +1,8 @@
 import type { PlanEntry } from '@repo/contracts';
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { completedSteps, fullPercent } from '../../state/status';
 import { useNativeSheets } from '../agent-model-sheet-context';

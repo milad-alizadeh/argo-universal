@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { IconButton } from '#primitives/buttons/icon-button';
+import { Text } from '#primitives/display/text';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { IconButton } from '../../buttons/icon-button/icon-button';
-import { Text } from '../text/text';
 import {
   Collapsible,
   CollapsibleContent,

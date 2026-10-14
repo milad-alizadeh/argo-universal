@@ -1,4 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
+import type * as React from 'react';
 import { useEffect } from 'react';
 import type { RichTextareaProps } from '../rich-textarea-props';
 import {
@@ -36,8 +38,8 @@ export function EditablePlugin({ editable }: { editable: boolean }): null {
 export function MarkdownValuePlugin({
   value,
   onChangeText,
-}: Pick<RichTextareaProps, 'value' | 'onChangeText'>): null {
-  useMarkdownValue(value, onChangeText);
+}: Pick<RichTextareaProps, 'value' | 'onChangeText'>): React.JSX.Element {
+  const onChange = useMarkdownValue(value, onChangeText);
 
-  return null;
+  return <OnChangePlugin ignoreSelectionChange onChange={onChange} />;
 }

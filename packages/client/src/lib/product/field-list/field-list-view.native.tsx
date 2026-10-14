@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { FieldGroup } from '#lib/generic/primitives/fields/field-group/field-group';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldSection } from '#primitives/fields/field-section';
 import { useWide } from '../../generic/use-wide/use-wide';
 import {
   type FieldListProps,

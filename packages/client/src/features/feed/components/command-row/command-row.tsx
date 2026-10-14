@@ -5,10 +5,10 @@ import type {
 } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';
 import {
   ToolCallDisclosure,

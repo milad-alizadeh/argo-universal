@@ -11,3 +11,5 @@ export function FallbackSurface({
 }: LiquidGlassProps): React.JSX.Element {
   return <View className={cn(className, fallbackClassName)}>{children}</View>;
 }
+
+FallbackSurface satisfies React.ComponentType<LiquidGlassProps>;

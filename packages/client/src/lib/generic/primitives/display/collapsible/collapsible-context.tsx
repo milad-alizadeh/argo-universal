@@ -1,5 +1,4 @@
-import type * as CollapsiblePrimitive from '@rn-primitives/collapsible';
-import { createContext, type ComponentProps } from 'react';
+import { createContext } from 'react';
 import { Easing } from 'react-native-reanimated';
 
 export interface CollapsibleLayoutSync {
@@ -7,11 +6,6 @@ export interface CollapsibleLayoutSync {
   onMotionChange: (moving: boolean) => void;
   grow: (height: number) => void;
 }
-
-export type ContentProps = Omit<
-  ComponentProps<typeof CollapsiblePrimitive.Content>,
-  'asChild'
->;
 
 export const OpenContext = createContext(false);
 

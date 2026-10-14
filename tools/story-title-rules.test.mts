@@ -48,8 +48,8 @@ describe('a story title', (): void => {
 
   it.each([
     [
-      `${src}/lib/generic/primitives/fields/field-row/field-row.stories.tsx`,
-      'Primitives/FieldRow',
+      `${src}/lib/generic/primitives/fields/field-group-content/field-group-content.stories.tsx`,
+      'Primitives/FieldGroupContent',
       /'Design System\/Primitives\/'/,
     ],
     [

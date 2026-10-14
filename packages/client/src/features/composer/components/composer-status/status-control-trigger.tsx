@@ -1,9 +1,7 @@
 import type { JSX, ReactNode } from 'react';
-import {
-  Pressable,
-  contentActionClass,
-} from '#lib/generic/primitives/pressable/pressable';
 import { cn } from '#lib/generic/utils';
+import { contentActionClass } from '#primitives/buttons/button';
+import { Pressable } from '#primitives/pressable';
 import { StatusText } from './status-text';
 
 interface ControlTriggerProps {

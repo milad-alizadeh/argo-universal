@@ -1,22 +1,17 @@
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
+import { fileTypeIcon } from '#lib/generic/symbols/file-type-icon';
+import { cn } from '#lib/generic/utils';
+import { contentActionClass } from '#primitives/buttons/button';
 import {
   Collapsible,
   CollapsibleContent,
-} from '#lib/generic/primitives/display/collapsible/collapsible';
-import { DisclosureChevron } from '#lib/generic/primitives/display/disclosure-chevron/disclosure-chevron';
-import {
-  Text,
-  TextClassContext,
-} from '#lib/generic/primitives/display/text/text';
-import { fileTypeIcon } from '#lib/generic/symbols/file-type-icon';
-import { cn } from '#lib/generic/utils';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+} from '#primitives/display/collapsible';
+import { DisclosureChevron } from '#primitives/display/disclosure-chevron';
+import { Icon } from '#primitives/display/icon';
+import { Text, TextClassContext } from '#primitives/display/text';
+import { Pressable } from '#primitives/pressable';
 import type { FileDiff } from '../../view/file-diff';
 import { DiffView } from '../diff-view/diff-view';
 import { FileName } from './file-name';

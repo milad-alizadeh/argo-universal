@@ -8,14 +8,11 @@ import {
   type ComposerDraft,
   StartSessionIn,
 } from '#features/composer';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import {
-  type ErrorToast,
-  useErrorToast,
-} from '#lib/generic/primitives/overlays/toast/toast';
 import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
+import { Text } from '#primitives/display/text';
+import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import type { StartingFeed } from '../../state/starting-feed';
 import {
   serverSilentMessage,

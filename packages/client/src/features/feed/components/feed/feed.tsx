@@ -6,7 +6,7 @@ import type {
 import type * as React from 'react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import type { FeedViewItem } from '../../view/feed-view';
 import { isDrawnFeedItem } from '../feed-item';
 import { newestKeyOf, withLiveHeader } from './feed-entry';

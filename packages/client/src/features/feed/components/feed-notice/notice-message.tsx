@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 import { ShimmerText } from '../shimmer-text';
 
 interface Appearance {

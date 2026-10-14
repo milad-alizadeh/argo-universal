@@ -93,6 +93,25 @@ function LoadingExample(): React.JSX.Element {
   );
 }
 
+const filterDot = (
+  <View className="absolute top-1.5 right-1.5 size-[7px] rounded-full border-[1.5px] border-background bg-foreground" />
+);
+
+function BadgeExample(): React.JSX.Element {
+  return (
+    <Variation label="Badge">
+      <View className="flex-row">
+        <IconButton
+          icon="filters"
+          variant="ghost"
+          accessibilityLabel="Filters"
+          badge={filterDot}
+        />
+      </View>
+    </Variation>
+  );
+}
+
 function IconButtonExamples(): React.JSX.Element {
   return (
     <VariationList>
@@ -101,6 +120,7 @@ function IconButtonExamples(): React.JSX.Element {
       <PressedExample />
       <DisabledExample />
       <LoadingExample />
+      <BadgeExample />
     </VariationList>
   );
 }

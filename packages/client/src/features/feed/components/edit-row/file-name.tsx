@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { Platform, type TextStyle } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
+import { Text } from '#primitives/display/text';
 
 const fileNameClassName =
   'select-none min-w-0 shrink web:underline web:decoration-ring web:underline-offset-2';

@@ -2,8 +2,8 @@ import type * as React from 'react';
 import { Platform } from 'react-native';
 import { ListTitle } from '#lib/product/list-title';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { SearchField } from '#primitives/inputs/search-field/search-field';
+import { IconButton } from '#primitives/buttons/icon-button';
+import { SearchField } from '#primitives/inputs/search-field';
 import type { SessionsFilter } from '../state/sessions-filter';
 import { SessionsFilterMenu } from './sessions-filter-menu/sessions-filter-menu';
 

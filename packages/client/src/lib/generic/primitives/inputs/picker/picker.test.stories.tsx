@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, within } from 'storybook/test';
+import { FieldSection } from '#primitives/fields/field-section';
 import { settleViewport } from '../../../settle-viewport';
-import { FieldSection } from '../../fields/field-section/field-section';
 import { Picker } from './picker';
 
 const options = [
@@ -23,7 +23,7 @@ function EffortPicker(): React.JSX.Element {
       label="Effort"
       value={value}
       options={options}
-      onChange={(next) => {
+      onValueChange={(next) => {
         setValue(next);
         changed(next);
       }}
@@ -76,7 +76,7 @@ export const InvalidAnnouncement: Story = {
         label="Effort"
         options={options}
         errors={[{ message: 'Choose an effort' }]}
-        onChange={changed}
+        onValueChange={changed}
       />
     </FieldSection>
   ),
@@ -95,7 +95,7 @@ export const Disabled: Story = {
       options={options}
       value="medium"
       disabled
-      onChange={changed}
+      onValueChange={changed}
     />
   ),
   play: async ({ canvas, userEvent }) => {

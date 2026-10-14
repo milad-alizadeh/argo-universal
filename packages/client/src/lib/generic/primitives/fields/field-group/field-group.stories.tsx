@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
-import { ListItem } from '../../lists/list-item/list-item';
-import { FieldSection } from '../field-section/field-section';
+import { FieldSection } from '#primitives/fields/field-section';
+import { ListItem } from '#primitives/lists/list-item';
 import { FieldGroup } from './field-group';
 
 const onPress = action('open list item');

@@ -11,7 +11,7 @@ import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps } from '../composer-mock';
 import { planProposalMocks } from '../plan-proposal-mock';
 import { canPointAt } from '../point-hit';
-import { shownText } from '../rich-textarea-example';
+import { shownText } from '../shown-text';
 
 type Story = StoryObj<typeof Composer>;
 

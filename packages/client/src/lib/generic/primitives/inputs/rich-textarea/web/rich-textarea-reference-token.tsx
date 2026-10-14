@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { createContext, useContext } from 'react';
-import { Icon } from '../../../../symbols/icon';
+import { Icon } from '#primitives/display/icon';
 import { type ReferenceOption, shortTitle } from '../rich-textarea-references';
 import { ReferenceTokenContext } from './rich-textarea-reference-node';
 

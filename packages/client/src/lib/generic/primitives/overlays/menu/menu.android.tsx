@@ -1,16 +1,21 @@
 import { DropdownMenu, type DropdownMenuProps } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { useState } from 'react';
-import { Host } from '../../native/host';
-import { usePrimitiveColor } from '../../native/primitive-color';
-import { MenuChoice } from './menu-choice.android';
-import type { MenuProps } from './menu-props';
+import { Host } from '#primitives/native/host';
+import { usePrimitiveColor } from '#primitives/native/primitive-color';
+import { MenuActionItem, MenuChoice } from './menu-choice.android';
+import {
+  type ActionMenuProps,
+  type ChoiceMenuProps,
+  type MenuProps,
+  isActionMenu,
+} from './menu-props';
 import { MenuTrigger } from './menu-trigger.android';
 
 export function Menu<Value extends string>(
   props: MenuProps<Value>,
 ): React.JSX.Element {
-  const { open, setOpen, choose } = useMenuState(props);
+  const { open, setOpen, run } = useMenuState(props);
 
   return (
     <Host matchContents>
@@ -18,35 +23,65 @@ export function Menu<Value extends string>(
         <DropdownMenu.Trigger>
           <MenuTrigger {...props} onOpen={() => setOpen(true)} />
         </DropdownMenu.Trigger>
-        <MenuItems {...props} onChoose={choose} />
+        <MenuRows {...props} onRun={run} />
       </MenuPopup>
     </Host>
   );
 }
 
-interface MenuState<Value extends string> {
+function MenuRows<Value extends string>(
+  props: MenuProps<Value> & { onRun: MenuState['run'] },
+): React.JSX.Element {
+  if (isActionMenu(props)) return <MenuActions {...props} />;
+
+  return (
+    <MenuItems
+      {...props}
+      onChoose={(value) => props.onRun(() => props.onValueChange(value))}
+    />
+  );
+}
+
+interface MenuState {
   open: boolean;
   setOpen: (open: boolean) => void;
-  choose: (value: Value) => void;
+  // Closes the menu, then runs what the item does.
+  run: (select: () => void) => void;
 }
 
 function useMenuState<Value extends string>(
   props: MenuProps<Value>,
-): MenuState<Value> {
+): MenuState {
   const [open, setOpen] = useState(false);
 
   if (props.disabled && open) setOpen(false);
 
-  function choose(value: Value): void {
+  function run(select: () => void): void {
     setOpen(false);
-    props.onValueChange(value);
+    select();
   }
 
-  return { open, setOpen, choose };
+  return { open, setOpen, run };
+}
+
+function MenuActions(
+  props: ActionMenuProps & { onRun: MenuState['run'] },
+): React.JSX.Element {
+  return (
+    <DropdownMenu.Items>
+      {props.actions.map((action) => (
+        <MenuActionItem
+          key={action.label}
+          {...action}
+          onPress={() => props.onRun(action.onPress)}
+        />
+      ))}
+    </DropdownMenu.Items>
+  );
 }
 
 function MenuItems<Value extends string>(
-  props: MenuProps<Value> & { onChoose: (value: Value) => void },
+  props: ChoiceMenuProps<Value> & { onChoose: (value: Value) => void },
 ): React.JSX.Element {
   return (
     <DropdownMenu.Items>
@@ -75,7 +110,7 @@ interface ChoiceState {
 }
 
 function choiceState<Value extends string>(
-  props: MenuProps<Value> & { onChoose: (value: Value) => void },
+  props: ChoiceMenuProps<Value> & { onChoose: (value: Value) => void },
   value: Value,
 ): ChoiceState {
   return {
@@ -83,3 +118,5 @@ function choiceState<Value extends string>(
     onChoose: () => props.onChoose(value),
   };
 }
+
+Menu satisfies React.ComponentType<MenuProps<string>>;

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { type Database, migrationsFolder, openDatabase } from '@repo/db';
 import { agents, project } from '@repo/db/schema';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
-import { expect, it, onTestFinished } from 'vitest';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import { insertSession } from '#mocks/database';
 import { readConfiguredAgents } from './configuration-sql';
 
@@ -72,3 +72,35 @@ it('bootstraps the required Agent configurations, adopting their catalog rows, w
     { id: 'second-session', agent: codexId },
   ]);
 });
+
+it.each([
+  { label: 'malformed JSON', configuration: '{broken' },
+  { label: 'JSON of the wrong shape', configuration: '{"source":"elsewhere"}' },
+])(
+  'skips only the Agent whose stored configuration is $label',
+  ({ configuration }) => {
+    const directory = mkdtempSync(join(tmpdir(), 'argo-configuration-'));
+    onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
+    const database = openDatabase(join(directory, 'argo.db'));
+    onTestFinished(() => database.$client.close());
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    database
+      .insert(agents)
+      .values([
+        { id: 'damaged', configuration },
+        {
+          id: 'readable',
+          configuration: JSON.stringify(registryConfiguration),
+        },
+      ])
+      .run();
+    expect(
+      readConfiguredAgents(database).filter(({ id }) =>
+        ['damaged', 'readable'].includes(id),
+      ),
+    ).toEqual([
+      { id: 'readable', enabled: true, configuration: registryConfiguration },
+    ]);
+    expect(log).toHaveBeenCalledOnce();
+  },
+);

@@ -1,8 +1,11 @@
 import type { ElicitationPropertySchema } from '@repo/contracts';
-import type { ComponentProps, ReactElement } from 'react';
-import { StandaloneFieldInput } from '#primitives/fields/field-input/standalone-field-input';
-import { Checkbox } from '#primitives/inputs/checkbox/checkbox';
-import { Picker } from '#primitives/inputs/picker/picker';
+import type { ReactElement } from 'react';
+import { Checkbox } from '#primitives/inputs/checkbox';
+import { Picker } from '#primitives/inputs/picker';
+import {
+  TextInput,
+  type StandaloneTextInputProps,
+} from '#primitives/inputs/text-input';
 import { ElicitationChoices } from './elicitation-choices';
 import { elicitationChoices, numericProperty } from './elicitation-property';
 import type { ElicitationValue } from './elicitation-schema';
@@ -24,13 +27,13 @@ export function ElicitationField(props: ElicitationFieldProps): ReactElement {
 
   if (elicitationChoices(props.property)) return <ChoiceField {...props} />;
 
-  return <StandaloneFieldInput {...textProps(props)} />;
+  return <TextInput {...textProps(props)} />;
 }
 
 function fieldProps(
   props: ElicitationFieldProps,
 ): Pick<
-  ComponentProps<typeof StandaloneFieldInput>,
+  StandaloneTextInputProps,
   'label' | 'disabled' | 'errors' | 'hint' | 'onBlur'
 > {
   return {
@@ -45,15 +48,13 @@ function fieldProps(
 const shownErrors = (props: ElicitationFieldProps): string[] =>
   props.showError && props.error ? [props.error] : [];
 
-function textProps(
-  props: ElicitationFieldProps,
-): ComponentProps<typeof StandaloneFieldInput> {
+function textProps(props: ElicitationFieldProps): StandaloneTextInputProps {
   return {
     ...fieldProps(props),
     required: props.required,
     numeric: numericProperty(props.property),
     value: props.value === undefined ? '' : String(props.value),
-    onChange: props.onChange,
+    onChangeText: props.onChange,
   };
 }
 
@@ -62,7 +63,7 @@ function BooleanField(props: ElicitationFieldProps): ReactElement {
     <Checkbox
       {...fieldProps(props)}
       value={props.value === true}
-      onChange={props.onChange}
+      onValueChange={props.onChange}
     />
   );
 }
@@ -86,7 +87,7 @@ function PickerField(props: ElicitationFieldProps): ReactElement {
         value: option.const,
         label: option.title,
       }))}
-      onChange={props.onChange}
+      onValueChange={props.onChange}
     />
   );
 }

@@ -5,8 +5,8 @@ import {
   ContentWidthProvider,
   useContentWide,
 } from '#lib/product/content-layout';
-import { Text } from '#primitives/display/text/text';
-import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
+import { Text } from '#primitives/display/text';
+import { BottomSheet } from '#primitives/overlays/bottom-sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
 import { RequestFooter } from './request-footer';

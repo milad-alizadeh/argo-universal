@@ -1,8 +1,8 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { ButtonAdornment } from '../button/button-adornment';
-import { buttonInteractionProps } from '../button/button-state';
+import { ButtonAdornment } from '#primitives/buttons/button';
+import { buttonInteractionProps } from '#primitives/buttons/button';
 import type { IconButtonProps } from './icon-button-props';
 import { iconButtonClasses } from './icon-button-styles';
 
@@ -11,7 +11,7 @@ type IconAppearance = Pick<
   'icon' | 'iconRole' | 'iconClassName' | 'filled' | 'iconWeight'
 >;
 
-type IconControlProps = Omit<IconButtonProps, keyof IconAppearance>;
+type IconControlProps = Omit<IconButtonProps, keyof IconAppearance | 'badge'>;
 
 type IconPresentation = Pick<IconControlProps, 'size' | 'variant' | 'loading'>;
 
@@ -22,12 +22,13 @@ interface IconDrawing {
   adornment: ComponentProps<typeof ButtonAdornment>;
 }
 
-export function IconButton(props: IconButtonProps): ReactElement {
+export function IconButton({ badge, ...props }: IconButtonProps): ReactElement {
   const drawing = iconDrawing(props);
 
   return (
     <Pressable {...drawing.pressable}>
       <ButtonAdornment {...drawing.adornment} />
+      {badge}
     </Pressable>
   );
 }
@@ -39,7 +40,7 @@ function iconDrawing({
   filled,
   iconWeight,
   ...props
-}: IconButtonProps): IconDrawing {
+}: Omit<IconButtonProps, 'badge'>): IconDrawing {
   const appearance = { icon, iconRole, iconClassName, filled, iconWeight };
 
   return createIconDrawing(props, appearance);

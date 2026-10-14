@@ -10,7 +10,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { IconSlot } from '../../../lib/generic/symbols/icon';
+import { IconSlot } from '#primitives/display/icon';
 
 const stepMilliseconds = 150;
 

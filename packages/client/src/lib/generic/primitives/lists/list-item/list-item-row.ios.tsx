@@ -9,10 +9,10 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useWindowDimensions } from 'react-native';
+import { useSwiftUITextModifiers } from '#primitives/native/native-typography';
 import { useIconPixels } from '../../../symbols/icon-role';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import type { ListItemProps } from '../../fields/field-props';
-import { useSwiftUITextModifiers } from '../../native/native-typography';
+import type { ListItemProps } from './list-item-props';
 import { hasDisclosure, hasLeadingSlot } from './list-item-styles';
 import { RowLabel, RowLeading, useRowColor } from './list-item-swift-ui';
 import { NativeRowImage, NativeRowStatus } from './native-row';

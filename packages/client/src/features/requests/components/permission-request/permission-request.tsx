@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import {
   RequestCard,
   type RequestCardProps,

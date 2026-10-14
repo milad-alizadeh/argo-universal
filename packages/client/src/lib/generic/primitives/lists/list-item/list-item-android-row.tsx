@@ -5,7 +5,6 @@ import {
 } from '@expo/ui/jetpack-compose';
 import {
   alpha,
-  clearSemantics,
   defaultMinSize,
   fillMaxWidth,
   padding,
@@ -15,9 +14,9 @@ import {
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
 import { useIconPixels } from '../../../symbols/icon-role';
-import type { ListItemProps } from '../../fields/field-props';
 import { RowSubtitle, RowTitle } from './list-item-compose-text';
 import { RowTrailing } from './list-item-compose-value';
+import type { ListItemProps } from './list-item-props';
 import { NativeRowGlyph } from './native-row';
 
 const rowHeight = 56;
@@ -55,9 +54,7 @@ function contentModifiers(props: ListItemProps): RowModifiers {
 
 function RowText(props: ListItemProps): React.JSX.Element {
   return (
-    <Column
-      modifiers={[weight(1), ...(props.control ? [clearSemantics()] : [])]}
-    >
+    <Column modifiers={[weight(1)]}>
       <RowTitle {...props} />
       <RowSubtitle subtitle={props.subtitle} />
     </Column>
@@ -83,8 +80,5 @@ function RowLeading(
 }
 
 function headerModifiers(props: ListItemProps): RowModifiers {
-  return [
-    alpha(props.disabled ? disabledOpacity : 1),
-    ...(props.detail ? [clearSemantics()] : []),
-  ];
+  return [alpha(props.disabled ? disabledOpacity : 1)];
 }

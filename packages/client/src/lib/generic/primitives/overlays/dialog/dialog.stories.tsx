@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { Input } from '#lib/generic/primitives/inputs/input/input';
+import { Button } from '#primitives/buttons/button';
+import { contentActionClass } from '#primitives/buttons/button';
+import { Text } from '#primitives/display/text';
+import { TextInput } from '#primitives/inputs/text-input';
+import { Pressable } from '#primitives/pressable';
 import {
   Dialog,
   DialogCancel,
@@ -11,9 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '#lib/generic/primitives/overlays/dialog/dialog';
-import { Button } from '../../buttons/button/button';
-import { Pressable, contentActionClass } from '../../pressable/pressable';
+} from './dialog';
 
 function DialogPreview(): React.JSX.Element {
   return (
@@ -101,7 +102,7 @@ function ProfileField({
   return (
     <View className="grid gap-3">
       <Text>{label}</Text>
-      <Input {...inputProps} />
+      <TextInput appearance="bare" {...inputProps} />
     </View>
   );
 }

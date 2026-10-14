@@ -2,18 +2,17 @@ import type {
   PendingElicitation,
   SessionAnswerElicitationInput,
 } from '@repo/contracts';
-import type { AppRouter } from '@repo/engine/router';
-import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import type { inferRouterOutputs } from '@trpc/server';
+import { useMutation } from '@tanstack/react-query';
 import { useCallback, useRef, type RefObject } from 'react';
-import { useTRPC, type ClientError } from '#features/connection';
+import {
+  type ClientError,
+  type ServerMutation,
+  type TRPC,
+  useTRPC,
+} from '#features/connection';
 import type { ElicitationFormProps } from '#features/requests';
 
-type AnswerMutation = UseMutationResult<
-  inferRouterOutputs<AppRouter>['session']['answerElicitation'],
-  ClientError,
-  SessionAnswerElicitationInput
->;
+type AnswerMutation = ServerMutation<TRPC['session']['answerElicitation']>;
 
 type Answering = RefObject<string | null>;
 

@@ -8,10 +8,10 @@ import {
   frame,
   pickerStyle,
 } from '@expo/ui/swift-ui/modifiers';
+import { errorMessage } from '#primitives/fields/field-errors';
+import { optionalTint } from '#primitives/native/native-modifiers';
+import { useSwiftUITextModifiers } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
-import { errorMessage } from '../../fields/field-errors';
-import { useSwiftUITextModifiers } from '../../native/native-typography';
-import { optionalTint } from '../../native/swift-tint';
 import type { PickerProps } from './picker-props';
 import { pickerLabel, pickerValue } from './picker-selection';
 

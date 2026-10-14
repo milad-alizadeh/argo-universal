@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { FieldInput } from '../../../../lib/generic/primitives/fields/field-input/field-input';
-import { Host } from '../../../../lib/generic/primitives/native/host';
+import { TextInput } from '#primitives/inputs/text-input';
+import { Host } from '#primitives/native/host';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { EntrySheetField } from './entry-sheet';
 import { EntrySheetInput as WideEntrySheetInput } from './entry-sheet-input.tsx';
@@ -15,7 +15,7 @@ export function EntrySheetInput({
 
   return (
     <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-      <FieldInput mono {...field} />
+      <TextInput appearance="row" mono {...field} />
     </Host>
   );
 }

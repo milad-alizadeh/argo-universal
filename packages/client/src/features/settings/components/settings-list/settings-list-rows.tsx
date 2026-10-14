@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import type { NavigationDestination } from '#lib/product/navigation/context';
 import { hrefFor } from '#lib/product/navigation/routes';
+import { ListItem } from '#primitives/lists/list-item';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SettingsListProps, SettingsRow } from './settings-list-props';
 

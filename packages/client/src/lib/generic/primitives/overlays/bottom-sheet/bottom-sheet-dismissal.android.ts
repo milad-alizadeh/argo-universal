@@ -1,6 +1,6 @@
 import type { ModalBottomSheetRef } from '@expo/ui/jetpack-compose';
 import { useEffect, useRef, useState } from 'react';
-import { usePresentationClosed } from '../../native/native-only-animated-view/native-only-animated-view';
+import { usePresentationClosed } from '#primitives/native/native-only-animated-view';
 
 export type SheetRef = React.RefObject<ModalBottomSheetRef | null>;
 

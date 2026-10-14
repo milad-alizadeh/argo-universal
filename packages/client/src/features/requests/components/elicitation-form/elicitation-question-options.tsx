@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Checkbox } from '#primitives/inputs/checkbox/checkbox';
+import { Checkbox } from '#primitives/inputs/checkbox';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 import { choiceValue, selectedAnswers } from './elicitation-answers';
 import { CustomAnswer } from './elicitation-custom-answer';
@@ -57,7 +57,7 @@ function QuestionOption({ model, option }: OptionProps): ReactElement {
       label={option.title}
       value={selectedAnswers(model).includes(option.const)}
       disabled={model.inactive}
-      onChange={(checked) =>
+      onValueChange={(checked) =>
         model.change(choiceValue(model, option.const, checked))
       }
     />

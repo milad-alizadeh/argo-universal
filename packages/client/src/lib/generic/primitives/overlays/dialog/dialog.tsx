@@ -2,11 +2,12 @@ import * as DialogPrimitive from '@rn-primitives/dialog';
 import * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import { Button } from '#primitives/buttons/button';
+import type { ButtonDataProps } from '#primitives/buttons/button';
 import { useWide } from '../../../use-wide/use-wide';
-import { Button } from '../../buttons/button/button';
-import type { ButtonDataProps } from '../../buttons/button/button-props';
-import { type ContentProps, DialogBody } from './dialog-body';
+import { DialogBody } from './dialog-body';
 import { DialogOverlay } from './dialog-overlay';
+import type { DialogContentProps as ContentProps } from './dialog-props';
 import { DialogSheet } from './dialog-sheet';
 
 const Dialog = DialogPrimitive.Root;

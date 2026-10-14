@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { PortalHost } from '#primitives/overlays/portal/portal';
+import { PortalHost } from '#primitives/overlays/portal';
 import { ComposerAgentModelControl } from '../../src/features/composer/components/composer-configuration/composer-configuration';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {

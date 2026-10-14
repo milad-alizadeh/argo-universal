@@ -11,7 +11,7 @@ const examples: {
     label: 'Filled',
     props: { defaultValue: 'Hello from Argo.', placeholder: 'Message' },
   },
-  { label: 'Read-only', props: { editable: false, placeholder: 'Message' } },
+  { label: 'Read-only', props: { disabled: true, placeholder: 'Message' } },
   { label: 'Invalid', props: { 'aria-invalid': true, placeholder: 'Message' } },
 ];
 

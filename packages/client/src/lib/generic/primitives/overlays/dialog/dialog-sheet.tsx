@@ -1,27 +1,29 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import { BottomSheet } from '../bottom-sheet/bottom-sheet';
+import { BottomSheetSurface } from '#primitives/overlays/bottom-sheet';
+import type { DialogSheetProps } from './dialog-props';
 
-export type DialogSheetProps = {
-  label?: string;
-  dismissible?: boolean;
-  onCloseAutoFocus?: (event: Event) => void;
-  children: React.ReactNode;
-};
-
-// A native phone presents the dialog as the platform's bottom sheet, opened and closed by the dialog's root.
+// A narrow web window draws the dialog as a bottom sheet, named by its label or else by the dialog's own title.
 export function DialogSheet(props: DialogSheetProps): React.JSX.Element {
-  const { open, onOpenChange } = DialogPrimitive.useRootContext();
+  const { open } = DialogPrimitive.useRootContext();
 
   return (
-    <BottomSheet
+    <BottomSheetSurface
       open={open}
-      onOpenChange={onOpenChange}
-      label={props.label}
-      fit
+      hiddenWhileClosing
       dismissible={props.dismissible}
+      onCloseAutoFocus={props.onCloseAutoFocus}
+      title={props.label && <SheetLabel label={props.label} />}
     >
       {props.children}
-    </BottomSheet>
+    </BottomSheetSurface>
   );
 }
+
+function SheetLabel({ label }: { label: string }): React.JSX.Element {
+  return (
+    <DialogPrimitive.Title className="sr-only">{label}</DialogPrimitive.Title>
+  );
+}
+
+DialogSheet satisfies React.ComponentType<DialogSheetProps>;

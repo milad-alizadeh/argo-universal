@@ -1,19 +1,16 @@
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
+import type { IconName } from '#lib/generic/symbols/icon-names';
+import { cn } from '#lib/generic/utils';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '#lib/generic/primitives/display/collapsible/collapsible';
-import { DisclosureChevron } from '#lib/generic/primitives/display/disclosure-chevron/disclosure-chevron';
-import {
-  Text,
-  TextClassContext,
-} from '#lib/generic/primitives/display/text/text';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import { cn } from '#lib/generic/utils';
-import { Icon } from '../../../lib/generic/symbols/icon';
+} from '#primitives/display/collapsible';
+import { DisclosureChevron } from '#primitives/display/disclosure-chevron';
+import { Icon } from '#primitives/display/icon';
+import { Text, TextClassContext } from '#primitives/display/text';
 import {
   FeedDisclosureLabel,
   type FeedDisclosureLabelProps,

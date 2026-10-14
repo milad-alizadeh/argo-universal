@@ -1,7 +1,24 @@
-import type { SessionNotification } from '@agentclientprotocol/sdk';
+import type { ClientConnection, Stream } from '@agentclientprotocol/sdk';
 import { expect, it, vi } from 'vitest';
 import { createScriptedAgentWire } from '#mocks/scripted-agent';
 import { createAgentClient } from './client';
+
+const modeUpdate = {
+  sessionId: 'one',
+  update: { sessionUpdate: 'current_mode_update', currentModeId: 'plan' },
+};
+
+type ClientHandlers = Partial<Parameters<typeof createAgentClient>[0]>;
+
+// The real client with refusing handlers, overridden where a test observes one.
+const connect = (stream: Stream, handlers: ClientHandlers): ClientConnection =>
+  createAgentClient({
+    stream,
+    acceptSessionUpdate: () => {},
+    requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
+    createElicitation: () => ({ action: 'cancel' }),
+    ...handlers,
+  });
 
 it.each([
   {
@@ -14,6 +31,16 @@ it.each([
     diagnostics: ['Error handling notification'],
   },
   {
+    label: 'malformed authentication status',
+    method: '_auth/status_update',
+    params: { authStatus: 42 },
+    diagnostics: [
+      expect.stringMatching(/Rejected authentication status/),
+      'Error handling notification',
+    ],
+    authRejections: 1,
+  },
+  {
     label: 'unknown notification',
     method: 'future/update',
     params: { anything: 'allowed' },
@@ -21,8 +48,9 @@ it.each([
   },
 ])(
   'keeps $label outside the typed Session ingress with one SDK diagnostic at most',
-  async ({ method, params, diagnostics }) => {
+  async ({ method, params, diagnostics, authRejections = 0 }) => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const rejectAuthStatus = vi.fn<() => void>();
 
     const peer = createScriptedAgentWire({
       steps: [],
@@ -31,15 +59,14 @@ it.each([
       },
     });
 
-    const accepted: SessionNotification[] = [];
+    const accepted: object[] = [];
 
-    const connection = createAgentClient({
-      stream: peer.stream,
+    const connection = connect(peer.stream, {
       acceptSessionUpdate: (notification) => {
         accepted.push(notification);
       },
-      requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
-      createElicitation: () => ({ action: 'cancel' }),
+      acceptAuthStatus: (notification) => accepted.push(notification),
+      rejectAuthStatus,
     });
 
     const barrier = connection.agent.request('session/new', {
@@ -50,27 +77,15 @@ it.each([
     const request = await peer.readRequest();
     await peer.send([
       { jsonrpc: '2.0', method, params },
-      {
-        jsonrpc: '2.0',
-        method: 'session/update',
-        params: {
-          sessionId: 'one',
-          update: {
-            sessionUpdate: 'current_mode_update',
-            currentModeId: 'plan',
-          },
-        },
-      },
+      { jsonrpc: '2.0', method: 'session/update', params: modeUpdate },
       { jsonrpc: '2.0', id: request.id, result: { sessionId: 'one' } },
     ]);
     await barrier;
-    expect(accepted).toEqual([
-      {
-        sessionId: 'one',
-        update: { sessionUpdate: 'current_mode_update', currentModeId: 'plan' },
-      },
-    ]);
-    expect(log.mock.calls.map(([line]) => line)).toEqual(diagnostics);
+    expect(accepted).toEqual([modeUpdate]);
+    await expect
+      .poll(() => log.mock.calls.map(([line]) => line))
+      .toEqual(diagnostics);
+    expect(rejectAuthStatus).toHaveBeenCalledTimes(authRejections);
     connection.close();
     await connection.closed;
   },
@@ -95,15 +110,12 @@ it.each([
     const peer = createScriptedAgentWire({ steps: [] });
     let permissionCalls = 0;
 
-    const connection = createAgentClient({
-      stream: peer.stream,
-      acceptSessionUpdate: () => {},
+    const connection = connect(peer.stream, {
       requestPermission: () => {
         permissionCalls += 1;
 
         return { outcome: { outcome: 'cancelled' } };
       },
-      createElicitation: () => ({ action: 'cancel' }),
     });
 
     await peer.send([{ jsonrpc: '2.0', id: 'bad-request', method, params }]);
@@ -128,12 +140,7 @@ it('rejects a malformed response envelope for its pending prompt', async () => {
     },
   });
 
-  const connection = createAgentClient({
-    stream: peer.stream,
-    acceptSessionUpdate: () => {},
-    requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
-    createElicitation: () => ({ action: 'cancel' }),
-  });
+  const connection = connect(peer.stream, {});
 
   const prompt = connection.agent.request('session/prompt', {
     sessionId: 'one',

@@ -6,8 +6,8 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
-import { IconSlot } from '../../../symbols/icon';
-import { SelectedCheck } from '../../display/selected-check';
+import { IconSlot } from '#primitives/display/icon';
+import { SelectedCheck } from '#primitives/display/selected-check';
 
 const menuWidth = 280;
 
@@ -30,6 +30,47 @@ export function MenuChoice(props: MenuChoiceProps): React.JSX.Element {
       <ChoiceIndicator selected={props.selected} />
     </DropdownMenuItem>
   );
+}
+
+export type MenuActionItemProps = {
+  label: string;
+  // Set when the action can be the one the trigger shows now; that one carries a leading check.
+  selected?: boolean;
+  onPress: () => void;
+};
+
+// An action menu's row: its label, and a leading check on the selected action.
+export function MenuActionItem(props: MenuActionItemProps): React.JSX.Element {
+  const { colors } = useNativeTheme();
+
+  return (
+    <DropdownMenuItem
+      modifiers={actionModifiers(props)}
+      elementColors={choiceElementColors(colors)}
+      onClick={props.onPress}
+    >
+      <ActionCheck selected={props.selected} />
+      <ChoiceLabel label={props.label} />
+    </DropdownMenuItem>
+  );
+}
+
+function ActionCheck(props: { selected?: boolean }): React.ReactNode {
+  if (props.selected === undefined) return null;
+
+  return (
+    <DropdownMenuItem.LeadingIcon>
+      <MenuIndicator selected={props.selected} />
+    </DropdownMenuItem.LeadingIcon>
+  );
+}
+
+function actionModifiers(props: MenuActionItemProps): ModifierConfig[] {
+  const width = defaultMinSize({ minWidth: menuWidth });
+
+  return props.selected === undefined
+    ? [width]
+    : [width, selectable(props.selected, props.onPress)];
 }
 
 function choiceModifiers(props: MenuChoiceProps): ModifierConfig[] {

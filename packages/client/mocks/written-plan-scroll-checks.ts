@@ -1,7 +1,7 @@
 import { expect, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
 import { layoutWidths } from '../src/lib/generic/each-layout';
-import { shownText } from './rich-textarea-example';
+import { shownText } from './shown-text';
 import { closeWrittenPlan, openWrittenPlan } from './written-plan-open-checks';
 import {
   writtenPlanRegionName,

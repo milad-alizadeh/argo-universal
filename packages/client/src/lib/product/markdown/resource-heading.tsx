@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '../../generic/symbols/icon';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 import { resourceIcon } from './resource-name';
 
 export interface HeaderResource {

@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import {
   SearchField,
   type SearchFieldProps,
-} from '#lib/generic/primitives/inputs/search-field/search-field';
+} from '#primitives/inputs/search-field';
 import type { ScreenHeaderProps } from './screen-header';
 
 type Search = NonNullable<ScreenHeaderProps['search']>;

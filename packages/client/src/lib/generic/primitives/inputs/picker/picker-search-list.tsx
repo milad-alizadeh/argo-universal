@@ -1,9 +1,9 @@
 import { LegendList } from '@legendapp/list/react-native';
 import { createElement, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Icon } from '../../../symbols/icon';
-import { Text } from '../../display/text/text';
-import { Input } from '../input/input';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
+import { TextInput } from '#primitives/inputs/text-input';
 import type { PickerOption, PickerProps } from './picker-props';
 import { choosePickerOption, pickerOptionsMessage } from './picker-selection';
 
@@ -23,7 +23,7 @@ export function PickerSearchList<Value extends string>(
   return createElement(
     View,
     { className: 'flex-1 gap-3 bg-popover px-4 pt-3' },
-    <Input {...searchInputProps(props.label, query, setQuery)} />,
+    <TextInput {...searchInputProps(props.label, query, setQuery)} />,
     <SearchResults picker={props} options={options} />,
   );
 }
@@ -36,8 +36,9 @@ function searchInputProps(
   label: string,
   value: string,
   onChangeText: (text: string) => void,
-): React.ComponentProps<typeof Input> {
+): React.ComponentProps<typeof TextInput> {
   return {
+    appearance: 'bare',
     accessibilityLabel: `Search ${label}`,
     placeholder: 'Search',
     value,
@@ -53,7 +54,7 @@ function SearchResults<Value extends string>(props: {
   const message = pickerOptionsMessage(props.picker);
 
   return message ? (
-    <SearchMessage message={message} failure={!!props.picker.error} />
+    <SearchMessage message={message} failure={!!props.picker.loadError} />
   ) : (
     <SearchChoices {...props} />
   );

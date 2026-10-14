@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+import { IconButton } from '#primitives/buttons/icon-button';
 import {
   ComposerAgentModelControl,
   ComposerModeControl,

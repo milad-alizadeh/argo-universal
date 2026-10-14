@@ -1,12 +1,12 @@
 import { useStore } from '@tanstack/react-form';
 import type * as React from 'react';
-import { FieldInput } from '#lib/generic/primitives/fields/field-input/field-input';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import {
   type FieldErrors,
   errorMessage,
-} from '../../../../lib/generic/primitives/fields/field-errors';
+} from '#primitives/fields/field-errors';
+import { FieldSection } from '#primitives/fields/field-section';
+import { TextInput } from '#primitives/inputs/text-input';
+import { ListItem } from '#primitives/lists/list-item';
 import type { CustomAgentFormApi } from '../../hooks/use-custom-agent-form';
 import { sectionFooter, touchedInput } from '../form-field';
 
@@ -54,7 +54,8 @@ function NameField({ form, disabled }: FormPartProps): React.JSX.Element {
   return (
     <form.Field name="name">
       {(field) => (
-        <FieldInput
+        <TextInput
+          appearance="row"
           label="Name"
           placeholder="Example Agent"
           {...touchedInput(field)}
@@ -69,7 +70,8 @@ function ExecutableField({ form, disabled }: FormPartProps): React.JSX.Element {
   return (
     <form.Field name="executable">
       {(field) => (
-        <FieldInput
+        <TextInput
+          appearance="row"
           {...executableInput}
           {...touchedInput(field)}
           disabled={disabled}

@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
+import { shownText } from '../../../../../../mocks/shown-text';
+import { layoutWidths } from '../../../each-layout';
+import { settleViewport } from '../../../settle-viewport';
 import {
   exampleLabel as label,
   RichTextareaExample,
-  shownText,
-} from '../../../../../../mocks/rich-textarea-example';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+} from './rich-textarea-example.mocks';
 
 // Where a line ends in a list item: ⇧Return, ⇧Tab and a marker typed after a line break.
 

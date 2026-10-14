@@ -2,8 +2,8 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
+import { Text } from '#primitives/display/text';
 import type { DiffLine, FileDiff } from '../../view/file-diff';
 import { lineStyles } from './diff-lines';
 

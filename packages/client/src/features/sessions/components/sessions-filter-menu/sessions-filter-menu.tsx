@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { HeaderButton } from '#lib/product/header-button';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { Menu } from '../../../../lib/generic/primitives/overlays/menu/menu';
+import { IconButton } from '#primitives/buttons/icon-button';
+import { Menu } from '#primitives/overlays/menu';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 const sessionsFilterChoices = [

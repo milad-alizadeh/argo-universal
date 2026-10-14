@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon';
 import type { IconRole } from '../../../../lib/generic/symbols/icon-role';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 

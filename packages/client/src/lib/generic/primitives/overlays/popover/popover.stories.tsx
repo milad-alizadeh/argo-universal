@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { Input } from '#lib/generic/primitives/inputs/input/input';
-import { Pressable, contentActionClass } from '../../pressable/pressable';
+import { contentActionClass } from '#primitives/buttons/button';
+import { Text } from '#primitives/display/text';
+import { TextInput } from '#primitives/inputs/text-input';
+import { Pressable } from '#primitives/pressable';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 function PopoverPreview(): React.JSX.Element {
@@ -68,7 +69,7 @@ function DimensionField({
   return (
     <View className="flex-row items-center gap-4">
       <Text className="web:block w-24">{label}</Text>
-      <Input {...inputProps} className="flex-1 sm:h-8" />
+      <TextInput appearance="bare" {...inputProps} className="flex-1 sm:h-8" />
     </View>
   );
 }

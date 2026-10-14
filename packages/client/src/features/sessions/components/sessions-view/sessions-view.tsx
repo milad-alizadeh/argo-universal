@@ -3,10 +3,7 @@ import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Screen } from '#lib/product/screen/screen';
-import {
-  type ErrorToast,
-  useErrorToast,
-} from '#primitives/overlays/toast/toast';
+import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SessionsLoadState } from '../../state/sessions-load-state';
 import { serverSilentMessage } from '../failure-messages';

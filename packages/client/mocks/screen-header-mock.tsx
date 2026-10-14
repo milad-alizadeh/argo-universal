@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '../src/lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';
 import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';
 

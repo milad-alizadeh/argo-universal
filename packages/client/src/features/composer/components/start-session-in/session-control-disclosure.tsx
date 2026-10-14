@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Icon } from '../../../../lib/generic/symbols/icon';
+import { Icon } from '#primitives/display/icon';
 
 export function SessionControlDisclosure(): React.JSX.Element {
   return (

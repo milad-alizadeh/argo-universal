@@ -11,11 +11,11 @@ import {
   drawnHeight,
   movingContentStyle,
   OpenContext,
-  type ContentProps,
   type CollapsibleLayoutSync,
 } from './collapsible-context';
 import { useLayoutMotion } from './collapsible-layout-motion';
 import { useContentMeasurement } from './collapsible-measurement';
+import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
 
 type LayoutContentProps = ContentProps & { layoutSync: CollapsibleLayoutSync };
 

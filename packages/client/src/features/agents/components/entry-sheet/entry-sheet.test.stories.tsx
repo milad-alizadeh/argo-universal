@@ -9,7 +9,9 @@ const meta = {
   component: EntrySheet,
   args: {
     title: 'Argument',
-    fields: [{ label: 'Argument', value: '--acp', onChange: fn(), errors: [] }],
+    fields: [
+      { label: 'Argument', value: '--acp', onChangeText: fn(), errors: [] },
+    ],
     onSave: fn(),
     dirty: false,
     onClose: fn(),

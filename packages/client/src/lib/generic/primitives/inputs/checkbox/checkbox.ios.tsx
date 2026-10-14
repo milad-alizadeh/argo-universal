@@ -11,12 +11,12 @@ import {
   frame,
   padding,
 } from '@expo/ui/swift-ui/modifiers';
-import { createElement } from 'react';
+import { type ComponentType, createElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
+import { Host } from '#primitives/native/host';
+import { rectangularHitArea } from '#primitives/native/native-modifiers';
+import { useSwiftUITextModifiers } from '#primitives/native/native-typography';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { Host } from '../../native/host';
-import { useSwiftUITextModifiers } from '../../native/native-typography';
-import { rectangularHitArea } from '../../native/swift-outline-modifiers';
 import { createNativeCheckbox } from './checkbox-native';
 import type { CheckboxProps, CheckboxIndicatorProps } from './checkbox-props';
 import type { CheckboxState } from './checkbox-state';
@@ -47,7 +47,9 @@ function rowModifiers(props: CheckboxProps): ReturnType<typeof frame>[] {
   ];
 }
 
-export const Checkbox = createNativeCheckbox(CheckboxButton);
+export const Checkbox = createNativeCheckbox(
+  CheckboxButton,
+) satisfies ComponentType<CheckboxProps>;
 
 type ButtonProps = CheckboxProps & { state: CheckboxState };
 
@@ -123,3 +125,5 @@ export function CheckboxIndicator(
     </Host>
   );
 }
+
+CheckboxIndicator satisfies ComponentType<CheckboxIndicatorProps>;

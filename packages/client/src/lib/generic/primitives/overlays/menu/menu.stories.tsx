@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { View } from 'react-native';
+import { contentActionClass } from '#primitives/buttons/button';
+import { Text } from '#primitives/display/text';
+import { Pressable } from '#primitives/pressable';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { Text } from '../../display/text/text';
-import { Pressable, contentActionClass } from '../../pressable/pressable';
-import { Menu } from './menu';
+import { Menu, type MenuAction } from './menu';
 
 const choices = [
   { value: 'default', label: 'Default' },
@@ -54,6 +56,38 @@ function triggerClassName(): string {
   });
 }
 
+const ranges = ['Today', 'This week', 'This month'];
+
+const moreRanges = `+${ranges.length - 1} more`;
+
+// An action menu on the inline text trigger, beside the secondary text it changes.
+function RangeMenu(): React.JSX.Element {
+  const [shown, setShown] = useState(ranges[0]);
+
+  return (
+    <View className="flex-row items-center gap-1.5">
+      <Text role="secondary">{shown}</Text>
+      <Menu
+        accessibilityLabel={moreRanges}
+        trigger={moreRanges}
+        align="start"
+        actions={rangeActions(shown, setShown)}
+      />
+    </View>
+  );
+}
+
+function rangeActions(
+  shown: string | undefined,
+  show: (range: string) => void,
+): MenuAction[] {
+  return ranges.map((range) => ({
+    label: range,
+    selected: range === shown,
+    onPress: () => show(range),
+  }));
+}
+
 const meta = { title: 'Design System/Primitives/Menu' } satisfies Meta;
 
 export default meta;
@@ -69,6 +103,9 @@ export const Variations: Story = {
       </Variation>
       <Variation label="Disabled">
         <PermissionsMenu disabled />
+      </Variation>
+      <Variation label="Actions on a text trigger">
+        <RangeMenu />
       </Variation>
     </VariationList>
   ),

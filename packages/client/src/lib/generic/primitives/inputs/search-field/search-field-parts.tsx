@@ -2,8 +2,8 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import Animated, { type SharedValue } from 'react-native-reanimated';
-import { Icon } from '../../../symbols/icon';
-import { IconButton } from '../../buttons/icon-button/icon-button';
+import { IconButton } from '#primitives/buttons/icon-button';
+import { Icon } from '#primitives/display/icon';
 import {
   type SearchFieldGeometry,
   useCloseStyle,

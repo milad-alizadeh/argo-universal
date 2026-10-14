@@ -1,18 +1,18 @@
 import { createElement } from 'react';
+import { Text } from '#primitives/display/text';
+import type { FieldDescription } from '#primitives/fields/field-description';
 import { cn } from '../../../utils';
-import { Text } from '../../display/text/text';
+import type { PickerOption, PickerProps } from './picker-props';
 import {
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../select/select';
-import type { PickerField } from './picker-field';
-import type { PickerOption, PickerProps } from './picker-props';
+} from './picker-select';
 import { pickerOptionsMessage, pickerValue } from './picker-selection';
 
 type TriggerProps<Value extends string> = PickerProps<Value> &
-  PickerField & { row: boolean };
+  FieldDescription & { row: boolean };
 
 type TriggerAttributes = React.ComponentProps<typeof SelectTrigger> & {
   'aria-invalid': boolean;
@@ -59,7 +59,7 @@ export function PickerContent<Value extends string>(
     SelectContent,
     {},
     message ? (
-      <OptionsMessage message={message} failure={!!props.error} />
+      <OptionsMessage message={message} failure={!!props.loadError} />
     ) : (
       <PickerOptions {...props} />
     ),

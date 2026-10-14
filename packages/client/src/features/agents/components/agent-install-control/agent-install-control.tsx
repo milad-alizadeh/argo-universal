@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
-import { Alert } from '../../../../lib/generic/primitives/overlays/alert/alert';
+import { Button } from '#primitives/buttons/button';
+import { Alert } from '#primitives/overlays/alert';
 import type { AgentDetail } from '../../state/agent-detail-types';
 import type {
   AgentInstallPresentation,

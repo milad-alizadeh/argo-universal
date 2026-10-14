@@ -8,8 +8,8 @@ import {
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { createElement } from 'react';
+import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
-import { useComposeTextStyle } from '../../native/native-typography';
 import type { DialogProps } from './picker-dialog.android';
 import type { PickerOption } from './picker-props';
 import { choosePickerOption } from './picker-selection';

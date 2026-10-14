@@ -8,7 +8,7 @@ import {
   type ModifierConfig,
 } from '@expo/ui/swift-ui/modifiers';
 import { PlatformColor, type ColorValue } from 'react-native';
-import { capsuleButtonBorder } from '../../native/swift-outline-modifiers';
+import { capsuleButtonBorder } from '#primitives/native/native-modifiers';
 import type { ButtonTheme } from './button-native-colors';
 import type {
   ButtonDataProps,

@@ -1,5 +1,5 @@
+import { usePrimitiveColor } from '#primitives/native/primitive-color';
 import { useNativeTheme } from '../../../native-theme';
-import { usePrimitiveColor } from '../../native/primitive-color';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
 import { nativeButtonVariant } from './button-state';
 

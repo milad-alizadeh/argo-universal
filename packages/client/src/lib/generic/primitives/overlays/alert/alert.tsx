@@ -1,21 +1,16 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import { Platform, View } from 'react-native';
-import { cn } from '#lib/generic/utils';
-import { Button } from '../../buttons/button/button';
-import { DialogOverlay } from '../dialog/dialog-overlay';
+import { View } from 'react-native';
+import { Button } from '#primitives/buttons/button';
+import { DialogOverlay } from '#primitives/overlays/dialog';
 import {
   alertActionPress,
   type AlertAction,
   type AlertProps,
 } from './alert-props';
 
-const contentClassName = cn(
-  'bg-popover z-50 mx-auto flex w-full min-w-80 max-w-sm flex-col gap-4 rounded-2xl p-6',
-  Platform.select({
-    web: 'w-96 rounded-surface shadow-card animate-in fade-in-0 zoom-in-95 web:max-w-[calc(100%-2rem)] duration-200',
-  }),
-);
+const contentClassName =
+  'bg-popover z-50 mx-auto flex w-full min-w-80 max-w-sm flex-col gap-4 rounded-2xl p-6 web:w-96 web:rounded-surface web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200';
 
 // The web draws an alert as a centred dialog at every width, never as a sheet.
 export function Alert(props: AlertProps): React.JSX.Element {
@@ -85,3 +80,5 @@ function AlertButton(
 }
 
 export type { AlertAction, AlertProps } from './alert-props';
+
+Alert satisfies React.ComponentType<AlertProps>;

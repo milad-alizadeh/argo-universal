@@ -1,16 +1,11 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { Platform, View } from 'react-native';
-import { DisclosureChevron } from '#lib/generic/primitives/display/disclosure-chevron/disclosure-chevron';
-import {
-  Text,
-  TextClassContext,
-} from '#lib/generic/primitives/display/text/text';
 import { CopyButton } from '#lib/product/markdown/copy-button';
-import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
+import { contentActionClass } from '#primitives/buttons/button';
+import { DisclosureChevron } from '#primitives/display/disclosure-chevron';
+import { Text, TextClassContext } from '#primitives/display/text';
+import { Pressable } from '#primitives/pressable';
 import type { FileDiff } from '../../view/file-diff';
 
 export interface FileHeaderProps {

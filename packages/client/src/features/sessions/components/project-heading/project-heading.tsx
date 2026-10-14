@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { memo, useState } from 'react';
 import { Platform } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Pressable } from '#primitives/pressable/pressable';
+import { Pressable } from '#primitives/pressable';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ProjectActions } from './project-heading-actions';
 import { ProjectToggle } from './project-heading-toggle';

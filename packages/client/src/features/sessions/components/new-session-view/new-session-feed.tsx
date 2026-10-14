@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Feed } from '#features/feed';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { useContentWide } from '#lib/product/content-layout';
 import { SessionColumn } from '#lib/product/session-column';
+import { Text } from '#primitives/display/text';
 import type { StartingFeed } from '../../state/starting-feed';
 
 const noOlderRows = (): void => {};

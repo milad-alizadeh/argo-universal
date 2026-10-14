@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
+import { shownText } from '../../../../../../mocks/shown-text';
+import { layoutWidths } from '../../../each-layout';
+import { settleViewport } from '../../../settle-viewport';
 import {
   exampleLabel as label,
   RichTextareaExample,
   shortcutModifier as modifier,
-  shownText,
-} from '../../../../../../mocks/rich-textarea-example';
-import { layoutWidths } from '../../../each-layout';
-import { settleViewport } from '../../../settle-viewport';
+} from './rich-textarea-example.mocks';
 
 // These stories cover the web drawing (Lexical) only; the phone drawing is checked in the app.
 

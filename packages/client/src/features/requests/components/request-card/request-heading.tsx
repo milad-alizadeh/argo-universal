@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon/icon';
-import { Text } from '#primitives/display/text/text';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 import type { IconName } from '../../../../lib/generic/symbols/icon-names';
 
 interface RequestHeadingProps {

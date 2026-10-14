@@ -14,7 +14,7 @@ const meta = {
   beforeEach: async (): Promise<void> => {
     await settleViewport(1440);
   },
-  args: { label, value: false, onChange: fn() },
+  args: { label, value: false, onValueChange: fn() },
   render: function Example(props): React.JSX.Element {
     const [value, setValue] = useState(props.value);
 
@@ -22,9 +22,9 @@ const meta = {
       <Checkbox
         {...props}
         value={value}
-        onChange={(next) => {
+        onValueChange={(next) => {
           setValue(next);
-          props.onChange(next);
+          props.onValueChange(next);
         }}
       />
     );
@@ -47,7 +47,7 @@ function checksWith(input: 'pointer' | 'keyboard'): Story {
       }
 
       await expect(checkbox).toBeChecked();
-      await expect(args.onChange).toHaveBeenCalledWith(true);
+      await expect(args.onValueChange).toHaveBeenCalledWith(true);
     },
   };
 }
@@ -62,7 +62,7 @@ export const Unchecks: Story = {
     const checkbox = canvas.getByRole('checkbox', { name: label });
     await userEvent.click(checkbox);
     await expect(checkbox).not.toBeChecked();
-    await expect(args.onChange).toHaveBeenCalledWith(false);
+    await expect(args.onValueChange).toHaveBeenCalledWith(false);
   },
 };
 
@@ -73,7 +73,7 @@ export const Disabled: Story = {
     checkbox.click();
     await expect(checkbox).not.toBeChecked();
     await expect(checkbox).toHaveAttribute('aria-disabled', 'true');
-    await expect(args.onChange).not.toHaveBeenCalled();
+    await expect(args.onValueChange).not.toHaveBeenCalled();
   },
 };
 

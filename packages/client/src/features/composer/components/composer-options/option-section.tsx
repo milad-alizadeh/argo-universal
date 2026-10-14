@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { configurationChoices } from '#lib/product/session-configuration';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { Switch } from '#primitives/inputs/switch/switch';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { FieldSection } from '#primitives/fields/field-section';
+import { Switch } from '#primitives/inputs/switch';
+import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 
 type Option = SessionConfigOption;
@@ -28,9 +28,9 @@ function BooleanToggle({ option, onChange }: BooleanProps): React.JSX.Element {
   return (
     <Switch
       accessibilityLabel={option.name}
-      tabIndex={Platform.OS === 'web' ? -1 : undefined}
-      checked={option.currentValue}
-      onCheckedChange={(checked) => onChange(option.configId, checked)}
+      decorative={Platform.OS === 'web'}
+      value={option.currentValue}
+      onValueChange={(checked) => onChange(option.configId, checked)}
     />
   );
 }
@@ -54,17 +54,22 @@ function NativeBoolean(props: BooleanProps): React.JSX.Element {
 function WebBoolean(props: BooleanProps): React.JSX.Element {
   return (
     <ListItem
-      title={props.option.name}
-      role="switch"
-      checked={props.option.currentValue}
-      aria-checked={props.option.currentValue}
-      disclosure={false}
-      onPress={() =>
-        props.onChange(props.option.configId, !props.option.currentValue)
-      }
+      {...webSwitchRow(props)}
       accessory={<SwitchAccessory {...props} />}
     />
   );
+}
+
+// ListItem reports `checked` as the switch's aria-checked on the web.
+function webSwitchRow(props: BooleanProps): ListItemProps {
+  return {
+    title: props.option.name,
+    role: 'switch',
+    checked: props.option.currentValue,
+    disclosure: false,
+    onPress: () =>
+      props.onChange(props.option.configId, !props.option.currentValue),
+  };
 }
 
 function SwitchAccessory(props: BooleanProps): React.JSX.Element {

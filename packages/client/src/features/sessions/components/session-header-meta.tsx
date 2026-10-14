@@ -1,13 +1,13 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { formatElapsed } from '#lib/generic/format-elapsed';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { useClock } from '#lib/generic/use-clock';
 import { cn } from '#lib/generic/utils';
 import {
   StatusIndicator,
   statusLabels,
 } from '#lib/product/status-indicator/status-indicator';
+import { Text } from '#primitives/display/text';
 import { PullRequestChecks } from './pull-request-checks';
 import type {
   SessionHeaderProps,

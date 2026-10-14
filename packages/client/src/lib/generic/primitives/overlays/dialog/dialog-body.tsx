@@ -1,36 +1,16 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import * as React from 'react';
-import { Platform, Text } from 'react-native';
-import { Icon } from '#lib/generic/primitives/display/icon/icon';
+import { Text } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { keepOpen } from '../keep-open';
+import { Icon } from '#primitives/display/icon';
+import { keepOpen } from '#primitives/overlays/bottom-sheet';
+import type { DialogContentProps as ContentProps } from './dialog-props';
 
-// Only what both the centred dialog and the narrow window's sheet honour.
-export type ContentProps = {
-  className?: string;
-  // Names a dialog that has no DialogTitle of its own.
-  accessibilityLabel?: string;
-  // False while the content holds unsaved input: only its own actions close it.
-  dismissible?: boolean;
-  showClose?: boolean;
-  onCloseAutoFocus?: (event: Event) => void;
-  children: React.ReactNode;
-};
+const contentClassName =
+  'bg-background web:bg-popover border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-2xl border p-6 min-w-[360px] sm:max-w-lg web:border-0 web:dark:border web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200 native:shadow-lg native:shadow-black/5';
 
-const contentClassName = cn(
-  'bg-background web:bg-popover border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-2xl border p-6 min-w-[360px] sm:max-w-lg',
-  Platform.select({
-    web: 'border-0 dark:border shadow-card animate-in fade-in-0 zoom-in-95 web:max-w-[calc(100%-2rem)] duration-200',
-    native: 'shadow-lg shadow-black/5',
-  }),
-);
-
-const closeClassName = cn(
-  'absolute right-4 top-4 rounded opacity-70 active:opacity-100',
-  Platform.select({
-    web: 'ring-offset-background focus:ring-ring data-[state=open]:bg-accent transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2',
-  }),
-);
+const closeClassName =
+  'absolute right-4 top-4 rounded opacity-70 active:opacity-100 web:ring-offset-background web:focus:ring-ring web:data-[state=open]:bg-accent web:transition-opacity web:hover:opacity-100 web:focus:outline-none web:focus:ring-2 web:focus:ring-offset-2';
 
 function ContentClose(): React.JSX.Element {
   return (

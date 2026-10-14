@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  roundTrip,
-  typedThenRestored,
-} from '../../../../../../../mocks/rich-textarea-headless';
+import { roundTrip, typedThenRestored } from './rich-textarea-headless.mocks';
 
 // What a person typed, kept as a draft and restored, is kept again exactly as it was.
 const typed: { name: string; text: string }[] = [

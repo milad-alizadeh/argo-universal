@@ -1,18 +1,18 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { Input } from '#lib/generic/primitives/inputs/input/input';
 import { cn } from '#lib/generic/utils';
+import { Text } from '#primitives/display/text';
 import {
   type FieldErrors,
   errorMessage,
-} from '../../../lib/generic/primitives/fields/field-errors';
-import type { FieldSectionProps } from '../../../lib/generic/primitives/fields/field-props';
+} from '#primitives/fields/field-errors';
+import type { FieldSectionProps } from '#primitives/fields/field-section';
+import { TextInput } from '#primitives/inputs/text-input';
 
 export type FormInputProps = {
   label: string;
   value: string;
-  onChange: (value: string) => void;
+  onChangeText: (value: string) => void;
   onBlur?: () => void;
   placeholder?: string;
   errors?: FieldErrors;
@@ -35,18 +35,22 @@ const hasErrors = (errors: FieldErrors = []): boolean => errors.length > 0;
 const inputClass = ({ mono, className }: FormInputProps): string =>
   cn(mono ? 'type-code' : 'type-body', className);
 
-// Names, paths and values are typed exactly as the Agent reads them.
-const verbatimEntry = { autoCapitalize: 'none', autoCorrect: false } as const;
+// The bare box; names, paths and values are typed exactly as the Agent reads them.
+const verbatimEntry = {
+  appearance: 'bare',
+  autoCapitalize: 'none',
+  autoCorrect: false,
+} as const;
 
 export function FormInput(props: FormInputProps): React.JSX.Element {
   return (
-    <Input
+    <TextInput
       accessibilityLabel={props.label}
       aria-invalid={hasErrors(props.errors)}
       className={inputClass(props)}
       value={props.value}
       placeholder={props.placeholder}
-      onChangeText={props.onChange}
+      onChangeText={props.onChangeText}
       onBlur={props.onBlur}
       editable={!props.disabled}
       {...verbatimEntry}
@@ -86,12 +90,12 @@ export type TextField = {
   handleBlur: () => void;
 };
 
-type BoundInput = Pick<FormInputProps, 'value' | 'onChange' | 'onBlur'> &
+type BoundInput = Pick<FormInputProps, 'value' | 'onChangeText' | 'onBlur'> &
   Required<Pick<FormInputProps, 'errors'>>;
 
 const fieldInput = (field: TextField): BoundInput => ({
   value: field.state.value,
-  onChange: field.handleChange,
+  onChangeText: field.handleChange,
   onBlur: field.handleBlur,
   errors: field.state.meta.errors,
 });

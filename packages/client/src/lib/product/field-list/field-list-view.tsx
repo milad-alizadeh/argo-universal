@@ -3,13 +3,13 @@ import type * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, View, type ViewStyle } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
-import { listTestIdProps } from '../../generic/list-test-id';
 import {
   fieldGroupGap,
   fieldGroupPadding,
-} from '../../generic/primitives/fields/field-layout';
-import type { ListSearchBarProps } from '../../generic/primitives/inputs/list-search-bar/list-search-bar';
+} from '#primitives/fields/field-group';
+import { FieldSection } from '#primitives/fields/field-section';
+import type { DockedSearchQuery } from '#primitives/inputs/search-field';
+import { listTestIdProps } from '../../generic/list-test-id';
 import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
 import { CardRow } from './card-row';
 import {
@@ -26,7 +26,7 @@ export type { FieldListSection } from './field-list-entries';
 export interface FieldListProps {
   sections: readonly FieldListSection[];
   // A phone's search above the sections; the native FieldGroup draws it, as a wide window searches from its title row.
-  search?: ListSearchBarProps;
+  search?: DockedSearchQuery;
   testID?: string;
 }
 

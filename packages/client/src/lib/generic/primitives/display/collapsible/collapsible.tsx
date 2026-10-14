@@ -1,23 +1,11 @@
 import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
-import {
-  useContext,
-  useState,
-  type ReactElement,
-  type ComponentProps,
-} from 'react';
-import { Platform, View } from 'react-native';
+import { useState, type ReactElement } from 'react';
+import { CollapsibleContent } from './collapsible-content';
 import {
   CollapsibleLayoutSyncContext,
   OpenContext,
-  type ContentProps,
 } from './collapsible-context';
-import { LayoutSyncedContent } from './collapsible-layout-content';
-import { NativeContent } from './collapsible-native-content';
-
-type CollapsibleProps = Omit<
-  ComponentProps<typeof CollapsiblePrimitive.Root>,
-  'asChild'
->;
+import type { CollapsibleProps } from './collapsible-props';
 
 interface OpenState {
   open: boolean;
@@ -61,33 +49,6 @@ function Collapsible(options: CollapsibleProps): ReactElement {
 }
 
 const CollapsibleTrigger = CollapsiblePrimitive.Trigger;
-
-const webContentMotion =
-  'overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up motion-reduce:animate-none';
-
-// The caller's padding sits inside the animated box, whose height then reaches zero; padding on the box itself would stop it short and then snap shut.
-function WebContent({
-  className,
-  children,
-  ...props
-}: ContentProps): ReactElement {
-  return (
-    <CollapsiblePrimitive.Content {...props} className={webContentMotion}>
-      <View className={className}>{children}</View>
-    </CollapsiblePrimitive.Content>
-  );
-}
-
-function CollapsibleContent(props: ContentProps): ReactElement {
-  const layoutSync = useContext(CollapsibleLayoutSyncContext);
-
-  if (layoutSync)
-    return <LayoutSyncedContent {...props} layoutSync={layoutSync} />;
-
-  if (Platform.OS === 'web') return <WebContent {...props} />;
-
-  return <NativeContent {...props} />;
-}
 
 export {
   Collapsible,

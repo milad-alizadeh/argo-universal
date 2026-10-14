@@ -1,6 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { SessionConfigOption } from '@repo/contracts';
-import type { QueryClient } from '@tanstack/react-query';
+import {
+  type DataTag,
+  type QueryClient,
+  queryOptions,
+  type UnusedSkipTokenOptions,
+} from '@tanstack/react-query';
 import {
   categories,
   orderedOptions,
@@ -11,10 +16,6 @@ import {
 let writes = Promise.resolve();
 
 type Category = (typeof categories)[number];
-
-function queryKey(agent: string): readonly string[] {
-  return ['session-configuration-preferences', agent];
-}
 
 function storageKey(agent: string, category: Category): string {
   return `session-configuration:${agent}:${category}`;
@@ -39,18 +40,21 @@ async function load(agent: string): Promise<SavedChoices> {
 }
 
 // The choices this device saved for an Agent; a failed read starts from the Agent's defaults.
-interface SavedChoicesQuery {
-  queryKey: readonly string[];
-  queryFn: () => Promise<SavedChoices>;
-  staleTime: number;
-}
+type SavedChoicesKey = readonly ['session-configuration-preferences', string];
+
+type SavedChoicesQuery = UnusedSkipTokenOptions<
+  SavedChoices,
+  Error,
+  SavedChoices,
+  SavedChoicesKey
+> & { queryKey: DataTag<SavedChoicesKey, SavedChoices, Error> };
 
 export function savedChoicesQuery(agent: string): SavedChoicesQuery {
-  return {
-    queryKey: queryKey(agent),
+  return queryOptions({
+    queryKey: ['session-configuration-preferences', agent] as const,
     queryFn: () => load(agent).catch(loadFailed),
     staleTime: Infinity,
-  };
+  });
 }
 
 function loadFailed(cause: unknown): SavedChoices {
@@ -89,8 +93,9 @@ function cacheSavedChoices(
   agent: string,
   selected: RememberedOption[],
 ): void {
-  void client.cancelQueries({ queryKey: queryKey(agent), exact: true });
-  client.setQueryData<SavedChoices>(queryKey(agent), (previous) => ({
+  const { queryKey } = savedChoicesQuery(agent);
+  void client.cancelQueries({ queryKey, exact: true });
+  client.setQueryData(queryKey, (previous) => ({
     ...previous,
     ...Object.fromEntries(
       selected.map((option) => [option.category, option.currentValue]),

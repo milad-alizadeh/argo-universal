@@ -10,7 +10,7 @@ import type { SessionsListEntry } from '../sessions-list-entries';
 import { useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
 import { EmptySessionsList } from './sessions-list-rows';
-import { nativeOnlyListProps, useScrolling } from './sessions-list-scrolling';
+import { useScrolling } from './sessions-list-scrolling';
 
 /*
  * Wide, Paper's sidebar list: the first Project sits level with the rail's first tile.
@@ -54,7 +54,7 @@ const listBehaviour = {
   recycleItems: true,
   getItemType: entryKind,
   onEndReachedThreshold: 0.5,
-  ...nativeOnlyListProps,
+  contentInsetAdjustmentBehavior: 'automatic' as const,
 };
 
 // The page's colour, which a native list fades into; the web fades the rows themselves over the glass.

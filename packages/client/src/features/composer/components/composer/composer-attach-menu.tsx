@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
-import { IconButton } from '#primitives/buttons/icon-button/icon-button';
-import { FieldGroup } from '#primitives/fields/field-group/field-group';
-import { FieldSection } from '#primitives/fields/field-section/field-section';
-import { ListItem } from '#primitives/lists/list-item/list-item';
+import { IconButton } from '#primitives/buttons/icon-button';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { FieldSection } from '#primitives/fields/field-section';
+import { ListItem } from '#primitives/lists/list-item';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { AttachLayout } from './composer-toolbar-types';
 import type { ComposerProps } from './composer-types';

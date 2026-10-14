@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { Button } from '../../../../lib/generic/primitives/buttons/button/button';
-import type { ButtonDataProps } from '../../../../lib/generic/primitives/buttons/button/button-props';
+import { Button } from '#primitives/buttons/button';
+import type { ButtonDataProps } from '#primitives/buttons/button';
 
 export function LoginButton(props: ButtonDataProps): React.JSX.Element {
   return (

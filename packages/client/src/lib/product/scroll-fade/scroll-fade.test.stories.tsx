@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, waitFor } from 'storybook/test';
+import { View } from 'react-native';
+import { type MockInstance, expect, spyOn, waitFor } from 'storybook/test';
+import { Text } from '#primitives/display/text';
 import { fadedEdges } from '../../../../mocks/scroll-fade';
 import { ScrollFadeView } from './scroll-fade';
+import { ScrollFadeList } from './scroll-fade-list';
 import { ScrollFadePreview } from './scroll-fade-preview.mocks';
 
 const meta = {
@@ -47,5 +50,50 @@ export const NoFadeWhenContentFits: Story = {
     const scroll = canvas.getByTestId('scroll-fade-scroll');
     await new Promise((resolve) => setTimeout(resolve, 100));
     await expect(fadedEdges(scroll)).toEqual({ top: false, bottom: false });
+  },
+};
+
+// Scroll view props only native lists take; a web list that passes them to its DOM element makes React warn of unknown attributes.
+const nativeOnlyProps = {
+  keyboardShouldPersistTaps: 'handled',
+  keyboardDismissMode: 'on-drag',
+  nestedScrollEnabled: true,
+  contentInsetAdjustmentBehavior: 'automatic',
+} as const;
+
+const rows = ['First row', 'Second row', 'Third row'];
+
+const listFrame = { height: 200 };
+
+let consoleErrors: MockInstance<typeof console.error>;
+
+const nativeOnlyPropWarnings = (): unknown[] =>
+  consoleErrors.mock.calls
+    .flat()
+    .filter(
+      (part) =>
+        typeof part === 'string' &&
+        Object.keys(nativeOnlyProps).some((name) => part.includes(name)),
+    );
+
+export const ListKeepsNativeOnlyPropsOffTheWeb: Story = {
+  beforeEach: () => {
+    consoleErrors = spyOn(console, 'error');
+
+    return (): void => consoleErrors.mockRestore();
+  },
+  render: () => (
+    <View style={listFrame}>
+      <ScrollFadeList
+        {...nativeOnlyProps}
+        data={rows}
+        keyExtractor={(row) => row}
+        renderItem={({ item }) => <Text>{item}</Text>}
+      />
+    </View>
+  ),
+  play: async ({ canvas }) => {
+    await canvas.findByText('Third row');
+    await expect(nativeOnlyPropWarnings()).toEqual([]);
   },
 };

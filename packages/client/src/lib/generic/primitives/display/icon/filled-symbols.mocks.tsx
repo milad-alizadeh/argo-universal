@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Icon } from '../../../symbols/icon';
-import { Button } from '../../buttons/button/button';
+import { Button } from '#primitives/buttons/button';
+import { Icon } from './icon';
 
 const symbolNames = [
   'sessions',
