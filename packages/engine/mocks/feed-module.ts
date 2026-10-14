@@ -75,7 +75,7 @@ export const startFeedModuleTestHost = async ({
       maxRevision: count.count,
       nextPosition: count.count,
       now: Date.now,
-      createId: () => crypto.randomUUID(),
+      createId: () => `feed-fixture-${++identity}`,
       findWrittenRow: (id) =>
         readWrittenRow({
           database: host.database,

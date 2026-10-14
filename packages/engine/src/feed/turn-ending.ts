@@ -1,10 +1,5 @@
 import type { FeedChange, PendingPermission } from '@repo/contracts';
 import { acpToolCallRowId } from './acp/tools';
-import {
-  messageRejectedEvent,
-  messageRejectedNotice,
-  type MessageRejectedEvent,
-} from './rejected-message';
 
 export const turnEndingEvent = 'feed.turnEnding';
 
@@ -22,7 +17,7 @@ export type TurnEndingNotice =
   | { kind: 'interruption' }
   | { kind: 'cancel_timeout' };
 
-type TurnEndingEvent =
+export type TurnEndingEvent =
   | {
       type: typeof turnEndingEvent;
       turnId: string | null;
@@ -33,22 +28,19 @@ type TurnEndingEvent =
       turnId: string | null;
       acpSessionId: string;
       toolCallIds: readonly string[];
-    }
-  | {
-      type: typeof permissionSelectedEvent;
-      turnId: string | null;
-      acpSessionId: string;
-      toolCallId: string;
-      option: PendingPermission['options'][number];
     };
 
-type NoticeFields = { id: string; title: string; description?: string };
+type PermissionOption = PendingPermission['options'][number];
 
-type EndingFeedChange = {
-  type: 'feed.change';
+export type PermissionSelectedEvent = {
+  type: typeof permissionSelectedEvent;
   turnId: string | null;
-  change: FeedChange;
+  acpSessionId: string;
+  toolCallId: string;
+  option: PermissionOption;
 };
+
+type NoticeFields = { id: string; title: string; description?: string };
 
 export const interruptionDisclosureId = (turnId: string): string =>
   `${turnId}:interrupted`;
@@ -103,77 +95,41 @@ export const turnEndingNotice = (
   },
 });
 
+type PermissionOutcome =
+  | { outcome: 'cancelled' }
+  | ({ outcome: 'selected' } & PermissionOption);
+
+// Permission outcomes use the ACP-scoped Tool call identity.
+const permissionOutcomeChange = (
+  acpSessionId: string,
+  toolCallId: string,
+  permissionOutcome: PermissionOutcome,
+): FeedChange => ({
+  type: 'patch',
+  id: acpToolCallRowId(acpSessionId, toolCallId),
+  set: { _meta: { argo: { permissionOutcome } } },
+});
+
 export const cancelledPermissionOutcome = (
   acpSessionId: string,
   toolCallId: string,
-): FeedChange => ({
-  type: 'patch',
-  id: acpToolCallRowId(acpSessionId, toolCallId),
-  set: { _meta: { argo: { permissionOutcome: { outcome: 'cancelled' } } } },
-});
+): FeedChange =>
+  permissionOutcomeChange(acpSessionId, toolCallId, { outcome: 'cancelled' });
 
-// Permission outcomes use the ACP-scoped Tool call identity.
-const selectedPermissionOutcome = (
-  acpSessionId: string,
-  toolCallId: string,
-  option: PendingPermission['options'][number],
-): FeedChange => ({
-  type: 'patch',
-  id: acpToolCallRowId(acpSessionId, toolCallId),
-  set: {
-    _meta: { argo: { permissionOutcome: { outcome: 'selected', ...option } } },
-  },
-});
+export const selectedPermissionOutcome = (
+  event: PermissionSelectedEvent,
+): FeedChange =>
+  permissionOutcomeChange(event.acpSessionId, event.toolCallId, {
+    outcome: 'selected',
+    ...event.option,
+  });
 
-type PermissionEvent = Exclude<
-  TurnEndingEvent,
-  { type: typeof turnEndingEvent }
->;
-
-const permissionOutcomes = (event: PermissionEvent): FeedChange[] =>
-  event.type === permissionSelectedEvent
-    ? [
-        selectedPermissionOutcome(
-          event.acpSessionId,
-          event.toolCallId,
-          event.option,
-        ),
-      ]
+export const endingFeedChanges = (
+  sessionId: string,
+  event: TurnEndingEvent,
+): FeedChange[] =>
+  event.type === turnEndingEvent
+    ? [turnEndingNotice(sessionId, event.turnId, event.ending)]
     : event.toolCallIds.map((id) =>
         cancelledPermissionOutcome(event.acpSessionId, id),
       );
-
-// Events the Session sends for Feed to turn into rows.
-export type SessionRowEvent = TurnEndingEvent | MessageRejectedEvent;
-
-export const sessionRowEvents: readonly SessionRowEvent['type'][] = [
-  turnEndingEvent,
-  permissionsCancelledEvent,
-  permissionSelectedEvent,
-  messageRejectedEvent,
-];
-
-type RowSource = { sessionId: string; createId: () => string };
-
-const eventFeedChanges = (
-  feed: RowSource,
-  event: SessionRowEvent,
-): FeedChange[] => {
-  if (event.type === turnEndingEvent)
-    return [turnEndingNotice(feed.sessionId, event.turnId, event.ending)];
-
-  if (event.type === messageRejectedEvent)
-    return [messageRejectedNotice(feed.createId(), event.reason)];
-
-  return permissionOutcomes(event);
-};
-
-export const sessionEventChanges = (
-  feed: RowSource,
-  event: SessionRowEvent,
-): EndingFeedChange[] => {
-  const { turnId } = event;
-  const changes = eventFeedChanges(feed, event);
-
-  return changes.map((change) => ({ type: 'feed.change', turnId, change }));
-};

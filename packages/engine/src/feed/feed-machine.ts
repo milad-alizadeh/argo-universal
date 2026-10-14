@@ -23,15 +23,12 @@ import {
   type WriterJobParameters,
 } from './feed-write-request';
 import type { FeedPublication } from './publication';
-import { messageRejectedEvent } from './rejected-message';
 import {
-  permissionSelectedEvent,
-  permissionsCancelledEvent,
-  sessionEventChanges,
+  sessionRowChanges,
   sessionRowEvents,
-  turnEndingEvent,
+  sessionRowTransitions,
   type SessionRowEvent,
-} from './turn-ending';
+} from './session-rows';
 import type { FeedTurnEnding } from './turn-settlement';
 
 const feedChangeRejected = 'feed.changeRejected';
@@ -154,7 +151,7 @@ export const feedMachine = setup({
     writeSessionRows: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, sessionRowEvents);
 
-      for (const change of sessionEventChanges(context, event))
+      for (const change of sessionRowChanges(context, event))
         enqueue.raise(change);
     }),
     applyAcpUpdate: enqueueActions(({ context, event, enqueue }): void => {
@@ -251,10 +248,7 @@ export const feedMachine = setup({
       on: {
         'feed.acpUpdate': { actions: 'applyAcpUpdate' },
         'feed.completeTurn': { actions: 'settleTurnRows' },
-        [turnEndingEvent]: { actions: 'writeSessionRows' },
-        [permissionsCancelledEvent]: { actions: 'writeSessionRows' },
-        [permissionSelectedEvent]: { actions: 'writeSessionRows' },
-        [messageRejectedEvent]: { actions: 'writeSessionRows' },
+        ...sessionRowTransitions,
         'feed.change': { actions: 'applyChange' },
         'feed.changeRejected': {
           actions: [
