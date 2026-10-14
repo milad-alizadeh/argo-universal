@@ -4,8 +4,8 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Button } from '#lib/generic/primitives/buttons/button/button';
-import type { ButtonProps } from '#lib/generic/primitives/buttons/button/button-props';
 import { Text } from '#lib/generic/primitives/display/text/text';
+import type { ButtonProps } from '../../../../lib/generic/primitives/buttons/button/button-props';
 import {
   Alert,
   type AlertAction,

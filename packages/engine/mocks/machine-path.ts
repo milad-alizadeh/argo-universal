@@ -14,7 +14,7 @@ import { guardInsideRoot } from './inside-root';
 
 export type NpmPackage = { name: string; version: string };
 
-export type HomebrewFormula = { name: string; version: string };
+type HomebrewFormula = { name: string; version: string };
 
 export type MachinePath = {
   directory: string;
