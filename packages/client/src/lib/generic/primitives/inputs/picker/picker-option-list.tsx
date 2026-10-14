@@ -2,6 +2,7 @@ import type * as React from 'react';
 import { createElement } from 'react';
 import { Platform, View } from 'react-native';
 import { ScrollFadeList } from '#lib/generic/scroll-fade/index';
+import { cn } from '../../../utils';
 import { PickerActionRow, PickerOptionRow } from './picker-option-row';
 import {
   LoadingMessage,
@@ -62,11 +63,15 @@ export function PickerOptionList<Value extends string>(
 ): React.JSX.Element {
   return createElement(
     View,
-    { className: web ? 'gap-1' : 'flex-1 gap-1' },
+    { className: listClassName(props.wide) },
     <OptionsOrMessage {...props} />,
     <FooterAction action={props.footerAction} wide={props.wide} />,
   );
 }
+
+// A phone sheet's rows sit in from its edges, under the inset search.
+const listClassName = (wide: boolean): string =>
+  cn('gap-1', { 'flex-1': !web, 'px-4': !wide });
 
 function FooterAction(props: {
   action?: ComboboxFooterAction;

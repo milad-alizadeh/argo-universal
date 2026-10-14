@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useWide } from '../../../use-wide/use-wide';
+import { cn } from '../../../utils';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Combobox } from './combobox';
 import { ComboboxContent } from './combobox-content';
@@ -45,16 +46,20 @@ const projectSearch = {
 
 type ExampleProps = Partial<ComboboxProps<Project>> & { initialQuery?: string };
 
-// The options as the popover or sheet draws them, open, so each state shows at once.
+/*
+ * The options as the popover or sheet draws them, open, so each state shows at once. A phone's
+ * native list fills the height it is given, as a sheet's does, so the frame has one.
+ */
 function OpenExample(props: ExampleProps): React.JSX.Element {
   const [value, setValue] = useState<Project>('argo');
+  const wide = useWide();
 
   return (
-    <View className="w-full max-w-80 overflow-hidden rounded-surface shadow-card">
+    <View className={exampleFrame(wide)}>
       <ComboboxContent
         {...projectSearch}
         {...props}
-        wide={useWide()}
+        wide={wide}
         value={value}
         onChoose={setValue}
       />
@@ -62,10 +67,22 @@ function OpenExample(props: ExampleProps): React.JSX.Element {
   );
 }
 
-function TriggerExample(): React.JSX.Element {
+const exampleFrame = (wide: boolean): string =>
+  cn('w-full max-w-80 overflow-hidden rounded-surface shadow-card bg-card', {
+    'h-96': !wide,
+  });
+
+function TriggerExample(props: ExampleProps): React.JSX.Element {
   const [value, setValue] = useState<Project>('argo');
 
-  return <Combobox {...projectSearch} value={value} onValueChange={setValue} />;
+  return (
+    <Combobox
+      {...projectSearch}
+      {...props}
+      value={value}
+      onValueChange={setValue}
+    />
+  );
 }
 
 const meta = { title: 'Design System/Primitives/Combobox' } satisfies Meta;
@@ -81,17 +98,27 @@ const states: readonly { label: string; props: ExampleProps }[] = [
   { label: 'Loading', props: { loading: true } },
 ];
 
+// The trigger opens the popover or sheet itself, loading as when the Projects are still coming.
+const triggers: readonly { label: string; props: ExampleProps }[] = [
+  { label: 'Trigger', props: {} },
+  { label: 'Trigger, loading', props: { loading: true } },
+];
+
+function exampleVariation(
+  Example: (props: ExampleProps) => React.JSX.Element,
+): (state: { label: string; props: ExampleProps }) => React.JSX.Element {
+  return (state) => (
+    <Variation key={state.label} label={state.label}>
+      <Example {...state.props} />
+    </Variation>
+  );
+}
+
 function ComboboxVariations(): React.JSX.Element {
   return (
     <VariationList>
-      <Variation label="Trigger">
-        <TriggerExample />
-      </Variation>
-      {states.map((state) => (
-        <Variation key={state.label} label={state.label}>
-          <OpenExample {...state.props} />
-        </Variation>
-      ))}
+      {triggers.map(exampleVariation(TriggerExample))}
+      {states.map(exampleVariation(OpenExample))}
     </VariationList>
   );
 }

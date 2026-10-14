@@ -81,7 +81,8 @@ function sheetAccessibility(
 
 function sheetClass(props: SheetContentProps): string {
   return cn(
-    props.surface === 'sidebar' ? 'bg-content' : 'bg-card',
+    // iOS fills a card sheet itself, in Paper's translucent card.
+    props.surface === 'sidebar' ? 'bg-content' : 'bg-card ios:bg-transparent',
     'ios:pt-8 ios:pb-0 min-h-0',
     fitSheetPadding(props.fit),
     {

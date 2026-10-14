@@ -98,8 +98,7 @@ function searchProps<Value extends string>(
   const { active } = search;
 
   return {
-    label: `Search ${props.label}`,
-    placeholder: props.searchPlaceholder ?? 'Search',
+    ...searchField(props),
     value: search.query,
     onChangeText: search.setQuery,
     onSubmit: () => {
@@ -108,7 +107,20 @@ function searchProps<Value extends string>(
   };
 }
 
+function searchField<Value extends string>(
+  props: ComboboxContentProps<Value>,
+): Pick<
+  React.ComponentProps<typeof ComboboxSearch>,
+  'label' | 'phone' | 'placeholder'
+> {
+  return {
+    label: `Search ${props.label}`,
+    phone: !props.wide,
+    placeholder: props.searchPlaceholder ?? 'Search',
+  };
+}
+
 const contentClassName = (wide: boolean): string =>
-  cn('gap-2 bg-content', wide ? 'p-2' : 'px-4 pt-2 pb-4', {
+  cn('gap-2', wide ? 'bg-content p-2' : 'pt-2 pb-4', {
     'flex-1': Platform.OS !== 'web' && !wide,
   });

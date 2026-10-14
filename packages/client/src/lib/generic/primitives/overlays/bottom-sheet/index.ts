@@ -21,3 +21,5 @@ export { FormSheetChoices, FormSheetRoot } from './form-sheet-page';
 export { type FormSheetProps, type FormSheetRoutes } from './form-sheet-props';
 
 export { keepOpen } from './keep-open';
+
+export { type SheetList, useSheetList } from './sheet-list-context';

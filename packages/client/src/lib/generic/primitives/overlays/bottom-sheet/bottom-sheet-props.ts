@@ -15,6 +15,8 @@ export interface BottomSheetProps {
   variant?: 'form';
   // The child owns scrolling, as a native GroupedList does.
   contentScrolls?: boolean;
+  // The sheet rises to its native list's height, up to the large detent; only iOS sizes by it.
+  fitList?: boolean;
   surface?: 'popover' | 'sidebar';
   // False while the content holds unsaved input: a swipe, the backdrop, Escape or Back leave the sheet open.
   dismissible?: boolean;

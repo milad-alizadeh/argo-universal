@@ -63,12 +63,16 @@ const serverUrl =
 
 const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 
-// Phones present Composer menus as native sheets; the Agent and model one has its own stack.
+/*
+ * Phones present Composer menus as native sheets. On iOS the Agent and model one is a route with
+ * its own stack; Android shows it in the Composer's Material sheet, as the Combobox does.
+ */
 const nativeSheets: NativeSheets | undefined =
   Platform.OS === 'web'
     ? undefined
     : {
-        agentModel: () => router.push('/agent-model'),
+        agentModel:
+          Platform.OS === 'ios' ? () => router.push('/agent-model') : undefined,
       };
 
 // iOS opens this tall until its first page has measured itself.

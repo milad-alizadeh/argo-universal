@@ -3,8 +3,8 @@ import type { ComposerConfigurationProps } from './composer-configuration/compos
 
 // The app presents Composer menus as native sheet routes through these.
 export interface NativeSheets {
-  // The Agent and model menu, with its own stack of pages.
-  agentModel: () => void;
+  // The Agent and model menu, with its own stack of pages; absent where the Composer's own sheet shows it.
+  agentModel?: () => void;
 }
 
 const NativeSheetsContext = createContext<NativeSheets | undefined>(undefined);

@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Text } from '#primitives/display/text';
 import { SheetNavigationProvider } from './form-sheet-context';
@@ -51,7 +51,7 @@ function PushedPage(props: {
   back: () => void;
 }): React.JSX.Element {
   return (
-    <View className="bg-content">
+    <View className="bg-content native:flex-1">
       <PageHeader {...props} />
       {props.page.content}
     </View>
@@ -64,17 +64,23 @@ const backButton = {
   accessibilityLabel: 'Back',
 } as const;
 
+// Android titles a page beside its back button, in the heading role; elsewhere the title is centred.
+const android = Platform.OS === 'android';
+
+const pageTitle = {
+  role: android ? 'heading' : 'control',
+  className: 'flex-1 text-center android:text-left',
+} as const;
+
 function PageHeader(props: {
   page: SheetPage;
   back: () => void;
 }): React.JSX.Element {
   return (
-    <View className="h-11 flex-row items-center px-2">
+    <View className="h-11 flex-row items-center px-2 android:h-16 android:gap-2">
       <IconButton {...backButton} onPress={props.back} />
-      <Text role="control" className="flex-1 text-center">
-        {props.page.title}
-      </Text>
-      <View className="size-11" />
+      <Text {...pageTitle}>{props.page.title}</Text>
+      {!android && <View className="size-11" />}
     </View>
   );
 }

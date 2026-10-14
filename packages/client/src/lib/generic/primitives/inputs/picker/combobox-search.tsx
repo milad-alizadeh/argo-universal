@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { TextInput, View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
+import { cn } from '../../../utils';
 
 type ComboboxSearchProps = {
   // Names the field, such as "Search Project".
@@ -10,6 +11,8 @@ type ComboboxSearchProps = {
   onChangeText: (value: string) => void;
   // Enter chooses the active match.
   onSubmit: () => void;
+  // A phone sheet's field, inset from the sheet's edges as the options below run edge to edge.
+  phone?: boolean;
 };
 
 /*
@@ -18,12 +21,21 @@ type ComboboxSearchProps = {
  */
 export function ComboboxSearch(props: ComboboxSearchProps): React.JSX.Element {
   return (
-    <View className="h-10 flex-row items-center gap-2 rounded-xl bg-muted px-3">
+    <View className={fieldClassName(props.phone)}>
       <Icon name="search" role="control" tone="muted" />
       <TextInput {...searchInputProps(props)} />
     </View>
   );
 }
+
+// Paper's phone field: 40pt on iOS, Material's 48dp on Android, both in the container radius.
+const fieldClassName = (phone: boolean | undefined): string =>
+  cn(
+    'h-10 flex-row items-center gap-2 bg-muted px-3',
+    phone
+      ? 'mx-4 rounded-2xl android:h-12 android:gap-3 android:px-4'
+      : 'rounded-xl',
+  );
 
 const searchInputAppearance = {
   placeholderTextColorClassName: 'accent-muted-foreground',

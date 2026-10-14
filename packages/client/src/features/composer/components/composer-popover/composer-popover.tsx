@@ -97,13 +97,19 @@ function CompactContent(props: OverlayProps): React.JSX.Element {
 
   return (
     <View className={className}>
-      <Text role="control" className="py-3 px-4 text-center">
+      <Text {...sheetTitle}>
         {props.label === 'Agent and model' ? 'Configure' : props.label}
       </Text>
       {props.children(props.close)}
     </View>
   );
 }
+
+// Android titles its sheet at the left in the heading role, as Material does; elsewhere it is centred.
+const sheetTitle =
+  Platform.OS === 'android'
+    ? ({ role: 'heading', className: 'px-4 pt-2 pb-4' } as const)
+    : ({ role: 'control', className: 'py-3 px-4 text-center' } as const);
 
 function popoverClassName(props: ComposerPopoverProps): string {
   return props.className ?? '';

@@ -5,23 +5,25 @@ import {
 } from '@expo/ui/swift-ui';
 import {
   type ModifierConfig,
-  type PresentationDetent,
   interactiveDismissDisabled,
   presentationBackground,
-  presentationDetents,
   presentationDragIndicator,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { useState } from 'react';
+import type { ColorValue } from 'react-native';
+import { useResolveClassNames } from 'uniwind';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
 import { BottomSheetContent } from './bottom-sheet-content';
+import { useSheetDetents } from './bottom-sheet-detents';
 import type { BottomSheetProps } from './bottom-sheet-props';
 import { BottomSheetRoot } from './bottom-sheet-root.native';
 import { BottomSheetTrigger } from './bottom-sheet-trigger.native';
 import { SheetViewport } from './bottom-sheet-viewport';
 import { RoutedFormSheet } from './form-sheet';
 import { useFormSheetCommands } from './form-sheet-context';
+import { SheetListProvider } from './sheet-list-context';
+import { useSheetListFit } from './sheet-list-fit';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const commands = useFormSheetCommands();
@@ -62,6 +64,7 @@ type SheetContentProps = Pick<
   | 'label'
   | 'onOpenChange'
   | 'fit'
+  | 'fitList'
   | 'dismissible'
   | 'footer'
   | 'initialSize'
@@ -70,57 +73,42 @@ type SheetContentProps = Pick<
 >;
 
 function SheetContent(props: SheetContentProps): React.JSX.Element {
+  const fit = useSheetListFit(props.fitList);
+
   return (
-    <Group modifiers={useSheetModifiers(props)}>
+    <Group modifiers={useSheetModifiers(props, fit.height)}>
       <SheetViewport fit={props.fit}>
         {(viewportHeight) => (
-          <BottomSheetContent {...props} viewportHeight={viewportHeight} />
+          <SheetListProvider value={fit.list(viewportHeight)}>
+            <BottomSheetContent {...props} viewportHeight={viewportHeight} />
+          </SheetListProvider>
         )}
       </SheetViewport>
     </Group>
   );
 }
 
-function useSheetModifiers(props: SheetContentProps): ModifierConfig[] {
-  const colors = useNativeTheme().colors;
+function useSheetModifiers(
+  props: SheetContentProps,
+  listHeight: number | undefined,
+): ModifierConfig[] {
+  const { content } = useNativeTheme().colors;
+  const glass = useResolveClassNames('bg-card/80').backgroundColor;
 
   return [
-    ...useSheetDetents(props),
+    ...useSheetDetents(props, listHeight),
     presentationDragIndicator('visible'),
     interactiveDismissDisabled(props.dismissible === false),
-    ...sheetFill(props.surface === 'sidebar' ? colors.content : colors.card),
+    ...sheetFill(props.surface === 'sidebar' ? content : glass),
   ];
 }
 
-// A fitted sheet takes its height from the content, so only a fixed one names detents.
-function useSheetDetents(
-  props: Pick<BottomSheetProps, 'fit' | 'initialSize'>,
-): ModifierConfig[] {
-  const [selection, setSelection] = useState<PresentationDetent>(
-    initialDetent(props.initialSize),
-  );
-
-  return props.fit
-    ? []
-    : [
-        presentationDetents([{ height: 320 }, 'medium', 'large'], {
-          selection,
-          onSelectionChange: setSelection,
-        }),
-      ];
-}
-
-function initialDetent(
-  size: BottomSheetProps['initialSize'],
-): PresentationDetent {
-  if (size === 'expanded') return 'large';
-
-  return size === 'medium' ? 'medium' : { height: 320 };
-}
-
-// The sheet's own fill matches the content's, so the strip under it in the safe area is not grey.
-function sheetFill(popover: string | undefined): ModifierConfig[] {
-  return popover === undefined ? [] : [presentationBackground(popover)];
+/*
+ * The sheet's own fill, so the strip under the content in the safe area matches it. A card sheet
+ * is Paper's translucent card, which its content lets show through.
+ */
+function sheetFill(fill: ColorValue | undefined): ModifierConfig[] {
+  return typeof fill === 'string' ? [presentationBackground(fill)] : [];
 }
 
 function dismissPresentation(

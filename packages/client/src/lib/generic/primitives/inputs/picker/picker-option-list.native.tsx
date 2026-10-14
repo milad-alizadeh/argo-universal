@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { Platform } from 'react-native';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
@@ -9,6 +10,9 @@ import {
 } from './picker-option-list.tsx';
 import { optionsMessage } from './picker-options-message';
 
+// Android's options are plain Material rows on the sheet; iOS keeps the inset grouped Form.
+const listVariant = Platform.OS === 'android' ? 'sidebar' : undefined;
+
 // A phone draws the options with its own list rows; a wide window keeps the popover's flat rows.
 export function PickerOptionList<Value extends string>(
   props: PickerOptionListProps<Value>,
@@ -16,8 +20,9 @@ export function PickerOptionList<Value extends string>(
   if (props.wide) return <WebPickerOptionList {...props} />;
 
   return (
-    <GroupedList>
-      <GroupedListSection footer={sectionFooter(props)}>
+    <GroupedList variant={listVariant}>
+      <OptionsMessage {...props} />
+      <GroupedListSection>
         <OptionRows {...props} />
         <FooterAction {...props} />
       </GroupedListSection>
@@ -25,11 +30,15 @@ export function PickerOptionList<Value extends string>(
   );
 }
 
-// Why there is no option to list; a loading row says so itself.
-function sectionFooter<Value extends string>(
+// Why there is no option to list, as the first line above the action; a loading row says so itself.
+function OptionsMessage<Value extends string>(
   props: PickerOptionListProps<Value>,
-): string | undefined {
-  return props.loading ? undefined : optionsMessage(props);
+): React.JSX.Element | null {
+  const message = props.loading ? undefined : optionsMessage(props);
+
+  if (!message) return null;
+
+  return <GroupedListSection footer={message}>{null}</GroupedListSection>;
 }
 
 function OptionRows<Value extends string>(

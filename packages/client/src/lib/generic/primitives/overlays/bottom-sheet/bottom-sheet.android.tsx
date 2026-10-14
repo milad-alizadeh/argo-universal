@@ -16,6 +16,7 @@ import type { BottomSheetProps } from './bottom-sheet-props';
 import { BottomSheetRoot } from './bottom-sheet-root.native';
 import { BottomSheetTrigger } from './bottom-sheet-trigger.native';
 import { SheetViewport } from './bottom-sheet-viewport.android';
+import { SheetPages } from './sheet-pages';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const { mounted, sheetRef } = useSheetDismissal(props.open, props.onClosed);
@@ -72,6 +73,7 @@ function dismissProperties(dismissible: boolean): ModalProps['properties'] {
 
 type SheetProps = Pick<
   BottomSheetProps,
+  | 'open'
   | 'onOpenChange'
   | 'label'
   | 'children'
@@ -85,9 +87,13 @@ type SheetProps = Pick<
   | 'surface'
 > & { sheetRef: SheetRef };
 
+// A drill row in the sheet pushes its page in place of the content.
 function HostedSheetContent(
-  props: Omit<SheetProps, 'sheetRef'>,
+  sheet: Omit<SheetProps, 'sheetRef'>,
 ): React.JSX.Element {
+  const pages = <SheetPages open={sheet.open}>{sheet.children}</SheetPages>;
+  const props = { ...sheet, children: pages };
+
   if (props.fit) return <FittedSheetContent {...props} />;
 
   return (

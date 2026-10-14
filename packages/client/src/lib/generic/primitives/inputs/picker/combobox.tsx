@@ -86,9 +86,10 @@ function WideContent<Value extends string>(
   );
 }
 
+// Paper's sheet is the card surface, as tall as its options.
 const sheetPresentation = {
-  surface: 'sidebar',
   contentScrolls: true,
+  fitList: true,
   expandable: true,
 } as const;
 
