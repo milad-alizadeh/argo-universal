@@ -1,6 +1,5 @@
-import type { AgentLoginOperation, AgentLoginSnapshot } from '@repo/contracts';
+import type { AgentLoginSnapshot } from '@repo/contracts';
 import {
-  skipToken,
   useQuery,
   useQueryClient,
   type UseQueryResult,
@@ -8,8 +7,11 @@ import {
 import { useEffect } from 'react';
 import { useTRPC, type ClientError } from '#features/connection';
 import { ongoingLogin } from '../components/agent-login-sheet/login-copy';
+import { loginIdentity, type OwnedLogin } from './login-operation';
 
 const pollMs = 500;
+
+const noOperation = { operationId: '', ownerToken: '' };
 
 const statusOf = (
   snapshot: AgentLoginSnapshot | undefined,
@@ -18,17 +20,15 @@ const statusOf = (
 const interval = (snapshot: AgentLoginSnapshot | undefined): number | false =>
   ongoingLogin(statusOf(snapshot)) ? pollMs : false;
 
-// The sign-in's snapshot from the query cache, polled while the sheet is open and the sign-in is ongoing.
 export function useLoginSnapshot(
-  operation: AgentLoginOperation | undefined,
+  operation: OwnedLogin | undefined,
   open: boolean,
 ): UseQueryResult<AgentLoginSnapshot, ClientError> {
   const query = useQuery(
-    useTRPC().agents.login.queryOptions(operation ?? skipToken, {
-      enabled: open,
-      refetchInterval: (polled) => interval(polled.state.data),
-      staleTime: 0,
-    }),
+    useTRPC().agents.login.queryOptions(
+      queryIdentity(operation),
+      snapshotOptions(operation, open),
+    ),
   );
 
   useRefreshReadiness(query.data);
@@ -50,3 +50,31 @@ function useRefreshReadiness(snapshot: AgentLoginSnapshot | undefined): void {
     void cache.invalidateQueries(trpc.agents.check.pathFilter());
   }, [snapshot, cache, trpc]);
 }
+
+const queryIdentity = (
+  operation: OwnedLogin | undefined,
+): ReturnType<typeof loginIdentity> =>
+  operation ? loginIdentity(operation) : noOperation;
+
+function snapshotOptions(
+  operation: OwnedLogin | undefined,
+  open: boolean,
+): SnapshotOptions {
+  return {
+    enabled: open && !!operation,
+    initialData: operation?.snapshot,
+    refetchInterval: (query: {
+      state: { data: AgentLoginSnapshot | undefined };
+    }): number | false => interval(query.state.data),
+    staleTime: 0,
+  };
+}
+
+type SnapshotOptions = {
+  enabled: boolean;
+  initialData: AgentLoginSnapshot | undefined;
+  refetchInterval: (query: {
+    state: { data: AgentLoginSnapshot | undefined };
+  }) => number | false;
+  staleTime: number;
+};

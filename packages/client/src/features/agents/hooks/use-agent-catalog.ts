@@ -7,6 +7,7 @@ import {
   keepPreviousData,
   focusManager,
 } from '@tanstack/react-query';
+import { useSubscription } from '@trpc/tanstack-react-query';
 import { useEffect, useEffectEvent } from 'react';
 import type { ClientError } from '#features/connection';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
@@ -15,7 +16,6 @@ import {
   type CatalogSync,
   catalogFailed,
 } from '../state/catalog-sync';
-import { useCatalogChanges } from './use-catalog-changes';
 
 const messageOf = (error: ClientError | null): string | null =>
   error === null ? null : error.message;
@@ -74,7 +74,7 @@ function useCatalogSync(): UseMutationResult<
     trpc.agents.syncCatalog.mutationOptions({ onSettled: invalidate }),
   );
 
-  useSyncChanges(sync);
+  useCatalogChanges(sync);
   const { mutate } = sync;
   useEffect(() => mutate(), [mutate]);
 
@@ -95,12 +95,19 @@ interface CatalogSyncReset {
   reset: () => void;
 }
 
-// A catalog change clears a failed sync and refetches the catalog.
-function useSyncChanges(sync: CatalogSyncReset): void {
-  useCatalogChanges({
-    filter: useTRPC().agents.catalog.queryFilter(),
-    onChange: () => {
-      if (sync.error) sync.reset();
-    },
-  });
+function useCatalogChanges(sync: CatalogSyncReset): void {
+  const trpc = useTRPC();
+  const invalidate = useCatalogInvalidation();
+
+  const update = (): void => {
+    if (sync.error) sync.reset();
+    invalidate();
+  };
+
+  useSubscription(
+    trpc.agents.catalogChanges.subscriptionOptions(undefined, {
+      onStarted: update,
+      onData: update,
+    }),
+  );
 }
