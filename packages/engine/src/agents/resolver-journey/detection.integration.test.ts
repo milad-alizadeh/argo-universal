@@ -5,6 +5,7 @@ import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import {
   listedAgent,
+  pathAgents,
   pathBinaryEntry,
   pathEntrypoint,
   startInstallEngine,
@@ -16,33 +17,37 @@ const entrypoint = pathEntrypoint;
 
 const binaryEntry = pathBinaryEntry();
 
-it('an Agent already on PATH is found after the catalog sync, enabled and checked Ready, without a second install', async () => {
-  const machine = await createMachinePath();
-  const file = await machine.place(entrypoint);
-  const checks = createScriptedAgentProcess(scenarios.reply);
+it.each(pathAgents)(
+  'a $kind Agent already on PATH is found by its name after the catalog sync, enabled and checked Ready, without a second install',
+  async ({ entry, command, args }) => {
+    const machine = await createMachinePath();
+    const file = await machine.place(command);
+    const checks = createScriptedAgentProcess(scenarios.reply);
 
-  const host = await startInstallEngine(binaryEntry, undefined, {
-    fixtureAgents: [],
-    acp: checks,
-  });
-
-  await expect
-    .poll(() => listedAgent(host.caller, host.agentId))
-    .toMatchObject({
-      status: 'ready',
-      enabled: true,
-      label: 'Fixture ACP',
-      owner: 'unknown',
+    const host = await startInstallEngine(entry, undefined, {
+      fixtureAgents: [],
+      acp: checks,
     });
-  expect(checks.processes.map(({ launch }) => launch.executable)).toEqual([
-    file,
-  ]);
-  expect(checks.processes[0]?.launch.args).toEqual(['acp']);
-  expect(
-    (await host.caller.agents.installStatus({ agentId: host.agentId }))
-      .operation,
-  ).toBeNull();
-}, 30_000);
+
+    await expect
+      .poll(() => listedAgent(host.caller, host.agentId))
+      .toMatchObject({
+        status: 'ready',
+        enabled: true,
+        label: 'Fixture ACP',
+        owner: 'unknown',
+      });
+    expect(checks.processes.map(({ launch }) => launch.executable)).toEqual([
+      file,
+    ]);
+    expect(checks.processes[0]?.launch.args).toEqual(args);
+    expect(
+      (await host.caller.agents.installStatus({ agentId: host.agentId }))
+        .operation,
+    ).toBeNull();
+  },
+  30_000,
+);
 
 it("Argo's own copy wins over the same Agent on PATH", async () => {
   const machine = await createMachinePath();

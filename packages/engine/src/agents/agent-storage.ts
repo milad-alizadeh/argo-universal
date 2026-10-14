@@ -11,6 +11,7 @@ export type AgentCatalogWriteRow = Pick<
   | 'catalogPresent'
   | 'catalogSyncedAt'
   | 'catalogSearchText'
+  | 'commandNames'
 >;
 
 type SyncKey = { source: string; scope: string };
@@ -51,6 +52,7 @@ const catalogColumns = (
   catalogPresent: row.catalogPresent,
   catalogSyncedAt: row.catalogSyncedAt,
   catalogSearchText: row.catalogSearchText,
+  commandNames: row.commandNames,
 });
 
 const upsertAgentCatalogRow = (

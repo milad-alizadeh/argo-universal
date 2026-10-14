@@ -1,4 +1,5 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { withNpmFixture } from '@repo/mocks/registry/port';
 import { afterEach, expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { RegistryHttpError, type FetchAgents } from '../registry/fetch-agents';
@@ -16,7 +17,10 @@ it('keeps the last completed error visible while a retry is pending', async () =
     .mockRejectedValueOnce(new Error(offlineMessage))
     .mockImplementation(() => response.promise);
 
-  const host = await startEngineTestHost({ fetchAgents });
+  const host = await startEngineTestHost({
+    fetchAgents: withNpmFixture(fetchAgents),
+  });
+
   await host.caller.agents.syncCatalog();
   await expect
     .poll(async () => (await host.caller.agents.catalog()).syncStatus)

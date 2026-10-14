@@ -107,7 +107,7 @@ The Agent's own live session behind a Session, identified by the Agent's session
 _Avoid_: Vendor session, upstream session, Agent connection, process
 
 **Registry**:
-The public ACP Registry that lists the Agents that Argo can run; Argo's Agent catalog is synced from it.
+The public ACP Registry that lists the Agents that Argo can run; Argo's Agent catalog is synced from it. As a boundary, the Registry is the catalog's outside sources: the ACP Registry, plus the npm package metadata that catalog sync reads for npm Agents.
 _Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), catalog (for the upstream list)
 
 **Readiness**:
@@ -115,7 +115,7 @@ Whether an installed Agent can start a Session now, found by launching its saved
 _Avoid_: Availability, Unavailable, health, probe result
 
 **Resolver**:
-The Engine part that looks for each catalog Agent and custom Agent on this Mac: first in Argo's own folder, then on `PATH`. It runs at Server start, after the first catalog sync, when the Agents page opens with a stale look, after an install, update, removal or Repair, on Check again, and again whenever a Session opens.
+The Engine part that looks for each catalog Agent and custom Agent on this Mac: first in Argo's own folder, then on `PATH` by a binary Agent's entrypoint file name or an npm Agent's command name, which catalog sync reads once from npm. It runs at Server start, after the first catalog sync, when the Agents page opens with a stale look, after an install, update, removal or Repair, on Check again, and again whenever a Session opens.
 _Avoid_: Detector, scanner, discovery
 
 **Installation observation**:
