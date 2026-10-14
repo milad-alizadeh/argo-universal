@@ -30,7 +30,8 @@ type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 const versionRow = (canvas: Canvas): HTMLElement | null =>
   canvas.queryByRole('group', { name: /^Version, / });
 
-export const ShowsOnlyTheAdapterWhenTheAgentMatches: Story = {
+// The Engine omits the Agent version when it matches the Adapter (versions.integration.test.ts).
+export const ShowsOnlyTheAdapterWhenNoAgentVersionIsGiven: Story = {
   args: { agent: foundAgent },
   play: async ({ canvas }) => {
     await expect(

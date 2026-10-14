@@ -59,15 +59,23 @@ it.each([
       status: updateAvailable,
     },
   },
+  {
+    copy: 'an older npm package on PATH that cannot start, which keeps its own status',
+    entry: pathNpmEntry(),
+    place: (machine: MachinePath): Promise<string> =>
+      machine.placePackage(pathNpmCommand, npmPackage('1.2.0')),
+    scenario: scenarios['cant-start'],
+    listed: { version: '1.2.0', status: 'cant-start' },
+  },
 ])(
-  'the Adapter version of $copy comes from its package metadata or agentInfo, and Update available from the catalog',
-  async ({ entry, place, listed }) => {
+  'the Adapter version of $copy comes from its package metadata or agentInfo, and Update available from the catalog only once Ready',
+  async ({ entry, place, listed, scenario = scenarios['agent-info'] }) => {
     const machine = await createMachinePath();
     await place(machine);
 
     const host = await startInstallEngine(entry, undefined, {
       fixtureAgents: [],
-      acp: createScriptedAgentProcess(scenarios['agent-info']),
+      acp: createScriptedAgentProcess(scenario),
     });
 
     await expect
