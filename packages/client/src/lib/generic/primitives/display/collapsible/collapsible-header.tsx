@@ -1,5 +1,11 @@
 import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
-import { createContext, type ReactElement, useContext, useState } from 'react';
+import {
+  createContext,
+  type ReactElement,
+  type ReactNode,
+  useContext,
+  useState,
+} from 'react';
 import { View } from 'react-native';
 import { DisclosureChevron } from '#primitives/display/disclosure-chevron';
 import { Icon } from '#primitives/display/icon';
@@ -17,32 +23,43 @@ export function useCollapsibleHovered(): boolean {
 const headerColour = (hovered: boolean): string =>
   hovered ? 'text-foreground' : 'text-muted-foreground';
 
+// A box one Body line tall, so a glyph centres on the label's line instead of sitting on its baseline.
+function LineSlot({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <View className="h-6 shrink-0 items-center justify-center wide:h-5">
+      {children}
+    </View>
+  );
+}
+
+// No role: an explicit role's colour would override the header's muted colour; the default is Body.
 function HeaderLabel({ label }: { label: string }): ReactElement {
   return (
-    <Text
-      numberOfLines={1}
-      selectable={false}
-      role="body"
-      className="min-w-0 shrink"
-    >
+    <Text numberOfLines={1} selectable={false} className="min-w-0 shrink">
       {label}
     </Text>
+  );
+}
+
+function HeaderChevron({ hovered }: { hovered: boolean }): ReactElement {
+  return (
+    <LineSlot>
+      <DisclosureChevron
+        open={useContext(OpenContext)}
+        role="chevron"
+        className={headerColour(hovered)}
+      />
+    </LineSlot>
   );
 }
 
 function HeaderTitle(
   props: CollapsibleHeaderProps & { hovered: boolean },
 ): ReactElement {
-  const open = useContext(OpenContext);
-
   return (
     <View className="min-w-0 shrink flex-row items-center gap-1">
       {props.children ?? <HeaderLabel label={props.label} />}
-      <DisclosureChevron
-        open={open}
-        role="chevron"
-        className={headerColour(props.hovered)}
-      />
+      <HeaderChevron hovered={props.hovered} />
     </View>
   );
 }
@@ -56,12 +73,9 @@ function HeaderIcon(props: CollapsibleHeaderProps): ReactElement | null {
   if (!props.icon) return null;
 
   return (
-    <Icon
-      name={props.icon}
-      role="body"
-      tone={props.iconTone}
-      className="shrink-0"
-    />
+    <LineSlot>
+      <Icon name={props.icon} role="body" tone={props.iconTone} />
+    </LineSlot>
   );
 }
 
@@ -71,7 +85,7 @@ function HeaderTrigger(props: HeaderTriggerProps): ReactElement {
       accessibilityLabel={props.label}
       onHoverIn={() => props.onHoveredChange(true)}
       onHoverOut={() => props.onHoveredChange(false)}
-      className="min-h-5 max-w-full self-start flex-row items-center gap-1.5"
+      className="max-w-full self-start flex-row items-center gap-1.5"
     >
       <HeaderIcon {...props} />
       <HeaderTitle {...props} />
@@ -79,7 +93,7 @@ function HeaderTrigger(props: HeaderTriggerProps): ReactElement {
   );
 }
 
-// The disclosure's trigger: icon, label and a chevron after the label, muted until hovered; no fill and no padding.
+// The disclosure's trigger: icon, label and a chevron after the label on one centre line, muted until hovered; no fill and no padding.
 export function CollapsibleHeader(props: CollapsibleHeaderProps): ReactElement {
   const [hovered, setHovered] = useState(false);
 

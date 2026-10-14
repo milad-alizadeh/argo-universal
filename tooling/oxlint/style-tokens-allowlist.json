@@ -28,7 +28,6 @@
         // 1 arbitrary
         "packages/client/src/features/feed/components/diff-view/diff-file-header.tsx",
         // 1 arbitrary
-        "packages/client/src/features/feed/components/edit-row/file-edit.tsx",
         // 2 arbitrary
         "packages/client/src/features/feed/components/feed-image.tsx",
         // 1 arbitrary, 1 colour
