@@ -218,6 +218,12 @@
       "skillPath": "skills/setup-react-native-storybook/SKILL.md",
       "computedHash": "c991e2752c560169cd632c0b18a00518e3f57a4514e35d9f3ed905bd9bd1efbc"
     },
+    "show-me": {
+      "source": "humanlayer/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/show-me/skills/show-me/SKILL.md",
+      "computedHash": "43766f53afe7eb9feba0bb7716590c35cbb8d39d4a91eddef50e9566a6f6ae19"
+    },
     "subscriptions": {
       "source": "trpc/trpc",
       "sourceType": "github",
