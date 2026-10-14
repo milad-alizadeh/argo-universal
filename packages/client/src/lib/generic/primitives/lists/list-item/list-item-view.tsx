@@ -42,7 +42,7 @@ function useRowPlace(): RowPlace {
   };
 }
 
-// A list's neighbours learn of this row's hover, beside the caller's own handlers.
+// A list's neighbours learn of this row's hover and press, beside the caller's own handlers.
 function useHoverLink(props: ListItemProps): ListItemProps {
   const hover = useContext(FieldRowHover);
 
@@ -89,8 +89,23 @@ function PressableRow(props: PressableRowProps): React.JSX.Element {
       {...linkProps(item)}
       {...rowProps}
       {...interactionProps(item, press)}
+      {...usePressingLink()}
     >
       {children}
     </Pressable>
   );
+}
+
+function usePressingLink(): Pick<
+  React.ComponentProps<typeof Pressable>,
+  'onPressIn' | 'onPressOut'
+> {
+  const hover = useContext(FieldRowHover);
+
+  if (!hover) return {};
+
+  return {
+    onPressIn: () => hover.onPressing(true),
+    onPressOut: () => hover.onPressing(false),
+  };
 }

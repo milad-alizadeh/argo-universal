@@ -1,20 +1,22 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import type { RowHover } from '../../generic/primitives/fields/field-layout';
 
-// Which entry of a list is hovered, read by the row above it alone, so a hover redraws two rows.
+type Shade = 'hovered' | 'pressed';
+
+// Which entries of a list are hovered and pressed, read by the row above each alone, so a change redraws two rows.
 export interface HoverStore {
-  get: () => number | null;
-  set: (index: number | null) => void;
+  get: (shade: Shade) => number | null;
+  set: (shade: Shade, index: number | null) => void;
   subscribe: (listener: () => void) => () => void;
 }
 
 export function createHoverStore(): HoverStore {
-  let hovered: number | null = null;
+  const shaded: Record<Shade, number | null> = { hovered: null, pressed: null };
   const listeners = new Set<() => void>();
 
-  const set = (index: number | null): void => {
-    if (hovered === index) return;
-    hovered = index;
+  const set = (shade: Shade, index: number | null): void => {
+    if (shaded[shade] === index) return;
+    shaded[shade] = index;
 
     for (const listener of listeners) listener();
   };
@@ -25,22 +27,25 @@ export function createHoverStore(): HoverStore {
     return () => listeners.delete(listener);
   };
 
-  return { get: () => hovered, set, subscribe };
+  return { get: (shade) => shaded[shade], set, subscribe };
 }
 
 export function useRowHover(store: HoverStore, index: number): RowHover {
-  const below = useSyncExternalStore(
-    store.subscribe,
-    () => store.get() === index + 1,
+  const below = useSyncExternalStore(store.subscribe, () =>
+    [store.get('hovered'), store.get('pressed')].includes(index + 1),
   );
 
-  const onHover = useCallback(
-    (hovering: boolean) => {
-      if (hovering) store.set(index);
-      else if (store.get() === index) store.set(null);
+  const shade = useCallback(
+    (kind: Shade, on: boolean) => {
+      if (on) store.set(kind, index);
+      else if (store.get(kind) === index) store.set(kind, null);
     },
     [store, index],
   );
 
-  return { separatorHidden: below, onHover };
+  return {
+    separatorHidden: below,
+    onHover: useCallback((on: boolean) => shade('hovered', on), [shade]),
+    onPressing: useCallback((on: boolean) => shade('pressed', on), [shade]),
+  };
 }

@@ -10,7 +10,7 @@ interface Corners {
 export interface RowPlace {
   endsSection?: boolean;
   corners?: Corners;
-  // The row below is hovered, which draws its own shade over the line between them.
+  // The row below is hovered or pressed, and its shade meets the line between them.
   separatorHidden?: boolean;
 }
 
@@ -110,12 +110,22 @@ function plainEmphasis(props: ListItemProps, navigation: boolean): string {
     : 'text-foreground';
 }
 
-// The last child's, outside a virtualised list, and the one above a hovered row.
+/*
+ * The last child's, outside a virtualised list, and the one above a hovered or pressed row, whose
+ * shade would otherwise meet an inset line. Siblings hide it by CSS; a virtualised list's rows sit in
+ * containers of their own, so the list tells the row instead.
+ */
 const hiddenSeparator = (place: RowPlace): string | undefined => {
   if (place.separatorHidden) return 'web:after:hidden';
 
-  return place.endsSection === undefined ? 'web:last:after:hidden' : undefined;
+  return place.endsSection === undefined
+    ? cn('web:last:after:hidden', besideShadedRow)
+    : undefined;
 };
+
+// A pressable row is a link, a button or a switch; a static row is a group, and draws no shade.
+const besideShadedRow =
+  'web:[&:has(+:is(a,[role=button],[role=switch]):hover)]:after:hidden web:[&:has(+:is(a,[role=button],[role=switch]):active)]:after:hidden';
 
 // 1px on every web width: Chrome drops a 0.5px line on a phone-width page, even at 3x.
 function separatorClasses(props: ListItemProps, place: RowPlace): string {
