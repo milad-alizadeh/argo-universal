@@ -23,6 +23,7 @@ export function AgentsPhoneHeader(
   props: AgentsPhoneHeaderProps,
 ): React.JSX.Element | null {
   if (useWide()) return null;
+
   return (
     <ScreenHeader
       title="Agents"

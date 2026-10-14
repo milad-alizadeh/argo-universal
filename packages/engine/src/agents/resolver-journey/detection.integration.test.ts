@@ -13,16 +13,19 @@ import { createMachinePath } from '#mocks/machine-path';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 
 const entrypoint = pathEntrypoint;
+
 const binaryEntry = pathBinaryEntry();
 
 it('an Agent already on PATH is found after the catalog sync, enabled and checked Ready, without a second install', async () => {
   const machine = await createMachinePath();
   const file = await machine.place(entrypoint);
   const checks = createScriptedAgentProcess(scenarios.reply);
+
   const host = await startInstallEngine(binaryEntry, undefined, {
     fixtureAgents: [],
     acp: checks,
   });
+
   await expect
     .poll(() => listedAgent(host.caller, host.agentId))
     .toMatchObject({
@@ -45,10 +48,12 @@ it("Argo's own copy wins over the same Agent on PATH", async () => {
   const machine = await createMachinePath();
   await machine.place(entrypoint);
   const checks = createScriptedAgentProcess(scenarios.reply);
+
   const host = await startInstallEngine(binaryEntry, undefined, {
     fixtureAgents: [],
     acp: checks,
   });
+
   await expect
     .poll(() => listedAgent(host.caller, host.agentId))
     .toMatchObject({ status: 'ready', owner: 'unknown' });
@@ -56,9 +61,11 @@ it("Argo's own copy wins over the same Agent on PATH", async () => {
   await expect
     .poll(() => listedAgent(host.caller, host.agentId))
     .toMatchObject({ status: 'ready', owner: 'argo' });
+
   const launched = await realpath(
     checks.processes.at(-1)?.launch.executable ?? '',
   );
+
   const agentsFolder = await realpath(join(host.home, 'agents'));
   expect(relative(agentsFolder, launched)).not.toMatch(/^\.\./);
 }, 30_000);
@@ -71,6 +78,7 @@ const startWithOneCatalogSync = async (
   agentId: string;
 }> => {
   let fetched = false;
+
   const host = await startEngineTestHost({
     fixtureAgents: [],
     acp: createScriptedAgentProcess(scenarios.reply),
@@ -78,16 +86,22 @@ const startWithOneCatalogSync = async (
     fetchAgents: async () => {
       if (fetched) throw new Error('The Registry is unreachable');
       fetched = true;
-      return { version: '1.0.0', agents: [binaryEntry] };
+
+      return JSON.stringify({ version: '1.0.0', agents: [binaryEntry] });
     },
   });
+
   await syncCatalogAndSettle(host);
+
   const agentId = (await host.caller.agents.catalog()).agents.find(
     ({ entry }) => entry.id === binaryEntry.id,
   )?.id;
+
   if (!agentId) throw new Error('Catalog did not contain the PATH fixture');
+
   return { host, agentId };
 };
+
 const syncCatalogAndSettle = async (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
 ): Promise<void> => {
@@ -115,10 +129,12 @@ it('opening the Agents page finds an Agent installed since the last look only on
 
 it("removing Argo's copy finds the same Agent on PATH without a Recheck", async () => {
   const machine = await createMachinePath();
+
   const host = await startInstallEngine(binaryEntry, undefined, {
     fixtureAgents: [],
     acp: createScriptedAgentProcess(scenarios.reply),
   });
+
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
   await expect
     .poll(() => listedAgent(host.caller, host.agentId))

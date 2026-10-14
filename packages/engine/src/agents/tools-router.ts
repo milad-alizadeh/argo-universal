@@ -18,6 +18,7 @@ export const createToolsRouter = routerFactory((deps: ToolsDeps) =>
       .mutation(async ({ input }) => {
         deps.sessionCommandSignal?.throwIfAborted();
         await deps.installations.tools.install(input.tool);
+
         return lookForTools();
       }),
   }),

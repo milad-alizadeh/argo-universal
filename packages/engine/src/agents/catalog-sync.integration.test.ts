@@ -4,21 +4,30 @@ import { isNotNull } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { readAddedAgentRows } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
+import type { FetchAgents } from './registry/fetch-agents';
 
 const savedLocalId = 'saved-local-id';
 
 it('preserves saved local identity and custom rows across changed, removed and reappearing catalog entries', async (): Promise<void> => {
   const agent = publishedRegistry.agents[0];
+
   if (!agent) throw new Error('Registry mock needs an Agent');
   const changed = { ...agent, name: 'Updated Example', version: '2.0.0' };
+
   const fetchAgents = vi
-    .fn<() => Promise<unknown>>()
-    .mockResolvedValueOnce({ ...publishedRegistry, agents: [changed] })
-    .mockResolvedValueOnce({ ...publishedRegistry, agents: [] })
-    .mockResolvedValue({ ...publishedRegistry, agents: [agent] });
+    .fn<FetchAgents>()
+    .mockResolvedValueOnce(
+      JSON.stringify({ ...publishedRegistry, agents: [changed] }),
+    )
+    .mockResolvedValueOnce(JSON.stringify({ ...publishedRegistry, agents: [] }))
+    .mockResolvedValue(
+      JSON.stringify({ ...publishedRegistry, agents: [agent] }),
+    );
+
   const { caller, database } = await startEngineTestHost({
     fetchAgents,
   });
+
   database
     .insert(agents)
     .values([
@@ -62,14 +71,18 @@ it('preserves saved local identity and custom rows across changed, removed and r
 
 it('gives new upstream entries distinct independent local identities', async (): Promise<void> => {
   const agent = publishedRegistry.agents[0];
+
   if (!agent) throw new Error('Registry mock needs an Agent');
+
   const registry = {
     ...publishedRegistry,
     agents: [agent, { ...agent, id: `${agent.id}-2` }],
   };
+
   const { caller } = await startEngineTestHost({
-    fetchAgents: async (): Promise<unknown> => registry,
+    fetchAgents: async (): Promise<string> => JSON.stringify(registry),
   });
+
   await caller.agents.syncCatalog();
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus)
@@ -85,26 +98,32 @@ it('gives new upstream entries distinct independent local identities', async ():
 
 it('notifies catalog subscribers about removed Agents after the replacement commits', async (): Promise<void> => {
   const fetchAgents = vi
-    .fn<() => Promise<unknown>>()
-    .mockResolvedValueOnce(publishedRegistry)
-    .mockResolvedValue({ ...publishedRegistry, agents: [] });
+    .fn<FetchAgents>()
+    .mockResolvedValueOnce(JSON.stringify(publishedRegistry))
+    .mockResolvedValue(JSON.stringify({ ...publishedRegistry, agents: [] }));
+
   const { caller, database, createCaller } = await startEngineTestHost({
     fetchAgents,
   });
+
   await caller.agents.syncCatalog();
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus)
     .toBe('idle');
+
   const previousIds = database
     .select({ id: agents.id })
     .from(agents)
     .where(isNotNull(agents.registryId))
     .all()
     .map(({ id }) => id);
+
   const controller = new AbortController();
+
   const changes = await createCaller({
     signal: controller.signal,
   }).agents.catalogChanges();
+
   const notification = changes[Symbol.asyncIterator]().next();
   await caller.agents.syncCatalog();
   await expect

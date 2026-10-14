@@ -20,14 +20,21 @@ type ItemProps = React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
   inset?: boolean;
   variant?: 'default' | 'destructive';
 };
+
 type RadioProps = React.ComponentProps<
   typeof DropdownMenuPrimitive.RadioItem
 > & { children?: React.ReactNode };
+
 const DropdownMenu = DropdownMenuPrimitive.Root;
+
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
+
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
+
 const DropdownMenuSub = DropdownMenuPrimitive.Sub;
+
 const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
+
 const indicatorClassName = cn(
   'text-foreground',
   Platform.select({ web: 'pointer-events-none' }),
@@ -35,12 +42,14 @@ const indicatorClassName = cn(
 
 function DropdownMenuItem(itemProps: ItemProps): React.JSX.Element {
   const { className, inset, variant, ...props } = itemProps;
+
   const itemStyle = dropdownItemClassName({
     className,
     inset,
     variant,
     disabled: props.disabled,
   });
+
   return (
     <TextClassContext.Provider value={dropdownItemTextClassName(variant)}>
       <DropdownMenuPrimitive.Item className={itemStyle} {...props} />
@@ -60,10 +69,12 @@ function RadioIndicator(): React.JSX.Element {
 
 function RadioBody(radioProps: RadioProps): React.JSX.Element {
   const { className, children, ...props } = radioProps;
+
   const radioStyle = dropdownItemClassName({
     className,
     disabled: props.disabled,
   });
+
   return React.createElement(
     DropdownMenuPrimitive.RadioItem,
     { ...props, className: radioStyle },
@@ -93,6 +104,7 @@ function DropdownMenuLabel({
     inset && 'pl-8',
     className,
   );
+
   return <DropdownMenuPrimitive.Label className={labelStyle} {...props} />;
 }
 

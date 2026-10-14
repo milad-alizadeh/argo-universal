@@ -9,17 +9,21 @@ import {
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 
 type Host = Awaited<ReturnType<typeof startInstallEngine>>;
+
 const listed = async (host: Host): Promise<AgentInfo | undefined> =>
   (await host.caller.agents.list()).find(({ agent }) => agent === host.agentId);
 
 it('a newly installed Agent is listed Checking… until its readiness check answers Ready', async () => {
   const opened: unknown[] = [];
+
   const agent = createScriptedAgentProcess({
     ...scenarios.reply,
     responses: { 'session/new': [{ requests: opened }] },
   });
+
   const entered = Promise.withResolvers<void>();
   const release = Promise.withResolvers<void>();
+
   const host = await startInstallEngine(
     installEntry('npx'),
     installationPorts,
@@ -29,11 +33,13 @@ it('a newly installed Agent is listed Checking… until its readiness check answ
         launchProcess: async (launch) => {
           entered.resolve();
           await release.promise;
+
           return agent.launchProcess(launch);
         },
       },
     },
   );
+
   onTestFinished(() => release.resolve());
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
   await entered.promise;

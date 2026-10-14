@@ -50,6 +50,7 @@ describe('connection offline delay', () => {
   it('keeps a waiting attempt when it goes offline', () => {
     const connection = startConnection();
     loseOpenConnection();
+
     for (let attempt = 0; attempt < 4; attempt++)
       waitForAllowedAttempt(connection);
     // 7.5 seconds have passed; the next attempt waits 8 seconds.

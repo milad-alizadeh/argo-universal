@@ -6,6 +6,7 @@ import type { ListItemProps } from '../../fields/field-props';
 import { useComposeTextStyle } from '../../native/native-typography';
 import { hasDisclosure } from './list-item-styles';
 import { NativeRowGlyph, NativeRowIcon, NativeRowStatus } from './native-row';
+
 const gutter = 16;
 
 export function RowTrailing(props: ListItemProps): React.JSX.Element {
@@ -26,6 +27,7 @@ function RowValueGroup(
   props: Pick<ListItemProps, 'value' | 'valueLeading' | 'control'>,
 ): React.JSX.Element | null {
   if (props.value === undefined) return null;
+
   return (
     <Row
       horizontalArrangement="end"
@@ -51,6 +53,7 @@ function RowValueContent(
 function valueWidth(value: string | undefined): ReturnType<typeof weight>[] {
   return value === undefined ? [] : [weight(1)];
 }
+
 interface RowValueProps extends Pick<ListItemProps, 'value'> {
   decorative: boolean;
 }
@@ -60,6 +63,7 @@ function RowValue({
   decorative,
 }: RowValueProps): React.JSX.Element | null {
   if (value === undefined) return null;
+
   return <RowValueText value={value} decorative={decorative} />;
 }
 
@@ -71,6 +75,7 @@ interface RowValueTextProps {
 function RowValueText(props: RowValueTextProps): React.JSX.Element {
   const style = useComposeTextStyle('body');
   const { mutedForeground } = useNativeTheme().colors;
+
   return (
     <Text
       color={mutedForeground}
@@ -81,6 +86,7 @@ function RowValueText(props: RowValueTextProps): React.JSX.Element {
     </Text>
   );
 }
+
 function RowDisclosure({
   visible,
 }: {

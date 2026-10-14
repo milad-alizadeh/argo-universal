@@ -5,6 +5,7 @@ import { phone } from './frame';
 
 // The Server's own Project is the test repository it was started with, named after its folder.
 const projectName = 'project';
+
 // A Project row is named "<name>, <trailing detail>"; the test repository has no origin.
 const projectRow = `${projectName}, No remote`;
 

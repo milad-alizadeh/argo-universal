@@ -32,11 +32,13 @@ type ConnectionEvent =
 export type ConnectionEmitted = { type: 'connection.attemptAllowed' };
 
 const offlineDelayMs = 10_000;
+
 const retryDelayBaseMs = 500;
+
 const retryDelayCapMs = 30_000;
 
-const lostEvents = (error: unknown): ConnectionEvent[] =>
-  error ? [{ type: 'connection.lost', error }] : [];
+const lostEvents = (cause: unknown): ConnectionEvent[] =>
+  cause ? [{ type: 'connection.lost', error: cause }] : [];
 
 // tRPC's `pending` means the WebSocket opened; `connecting` with an error means it closed.
 const linkEvents = (state: {
@@ -44,7 +46,9 @@ const linkEvents = (state: {
   error?: unknown;
 }): ConnectionEvent[] => {
   if (state.state === 'pending') return [{ type: 'connection.opened' }];
+
   if (state.state === 'connecting') return lostEvents(state.error);
+
   return [];
 };
 
@@ -55,6 +59,7 @@ const isDown = and([
 
 // The App's Connection to the Server, and the timing of every attempt to open it.
 export const connectionMachine = setup({
+  // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as ConnectionInput,
     context: {} as ConnectionContext,
@@ -71,6 +76,7 @@ export const connectionMachine = setup({
           for (const event of linkEvents(state)) sendBack(event);
         },
       });
+
       return (): void => subscription.unsubscribe();
     }),
   },

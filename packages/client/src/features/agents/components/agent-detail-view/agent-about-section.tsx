@@ -9,7 +9,9 @@ import type {
 import { installationActive } from '../../state/agent-install-phase';
 import { AgentAction } from './agent-detail-actions';
 import { AgentLinks } from './agent-links';
+
 type AgentProps = { agent: AgentDetail };
+
 const hasAbout = ({ agent }: AgentProps): boolean =>
   [agent.version, agent.distribution, agent.source, agent.links?.length].some(
     Boolean,
@@ -24,7 +26,9 @@ export function AboutSection(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
   const { agent } = props;
+
   if (!hasAbout({ agent })) return null;
+
   return (
     <FieldSection title="About">
       <AboutRow title="Source" value={registrySource(agent)} />
@@ -35,9 +39,12 @@ export function AboutSection(
     </FieldSection>
   );
 }
+
 function VersionRow(props: AgentDetailViewProps): React.JSX.Element | null {
   const wide = useWide();
+
   if (!props.agent.version) return null;
+
   return (
     <ListItem
       title="Version"
@@ -52,6 +59,7 @@ function AboutRow(props: {
   value?: string;
 }): React.JSX.Element | null {
   if (!props.value) return null;
+
   return <ListItem title={props.title} value={props.value} />;
 }
 
@@ -63,6 +71,7 @@ const versionAccessory = (
 
 const showsUpdate = (props: AgentDetailViewProps): boolean =>
   props.agent.status === 'update' || openUpdate(props.installation);
+
 const openUpdate = (
   installation: AgentDetailViewProps['installation'],
 ): boolean =>

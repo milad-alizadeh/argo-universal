@@ -7,9 +7,13 @@ import type {
 } from './upstream/registry.gen';
 
 export type { ACPAgent, ACPAgentRegistry } from './upstream/registry.gen';
+
 export const AgentRecord = agentColumns;
+
 export type AgentRecord = z.infer<typeof AgentRecord>;
+
 export const SyncJobRecord = syncJobsColumns;
+
 export type SyncJobRecord = z.infer<typeof SyncJobRecord>;
 
 export const AgentsCatalogInput = z
@@ -17,6 +21,7 @@ export const AgentsCatalogInput = z
     search: z.string().optional(),
   })
   .optional();
+
 export type AgentsCatalogInput = z.infer<typeof AgentsCatalogInput>;
 
 export type RegistrySupport =

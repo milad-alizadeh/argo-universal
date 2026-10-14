@@ -18,20 +18,24 @@ const readChoice = (choice: AcpSelectOption): SessionConfigSelectOption => ({
   description: choice.description ?? undefined,
   _meta: readMetadata(choice._meta),
 });
+
 const readChoiceGroup = (group: AcpSelectGroup): SessionConfigSelectGroup => ({
   groupId: group.group,
   name: group.name,
   options: group.options.map(readChoice),
   _meta: readMetadata(group._meta),
 });
+
 const readMetadata = (
   metadata: AcpConfigOption['_meta'],
 ): SessionConfigOption['_meta'] =>
   metadata == null ? undefined : ConfigOptionMeta.parse(metadata);
+
 const readCategory = (
   category: AcpConfigOption['category'],
 ): SessionConfigOption['category'] =>
   category == null ? undefined : SessionConfigOptionCategory.parse(category);
+
 const readFields = (
   option: AcpConfigOption,
 ): Pick<
@@ -44,9 +48,11 @@ const readFields = (
   category: readCategory(option.category),
   _meta: readMetadata(option._meta),
 });
+
 const rejectMixedChoices = (): never => {
   throw new Error('Invalid mixed Session configuration choices');
 };
+
 // The SDK has checked ACP fields; only Argo's untyped metadata is decoded here.
 const readSelectChoices = (
   options: Extract<AcpConfigOption, { type: 'select' }>['options'],
@@ -56,8 +62,10 @@ const readSelectChoices = (
     : options.map((choice) =>
         readChoice('group' in choice ? rejectMixedChoices() : choice),
       );
+
 const readOption = (option: AcpConfigOption): SessionConfigOption => {
   const fields = readFields(option);
+
   return option.type === 'boolean'
     ? { ...fields, type: 'boolean', currentValue: option.currentValue }
     : {
@@ -67,6 +75,7 @@ const readOption = (option: AcpConfigOption): SessionConfigOption => {
         options: readSelectChoices(option.options),
       };
 };
+
 export const readAcpConfiguration = (
   options: AcpConfigOption[] | null | undefined,
   rejections: Pick<ReturnType<typeof createRejectionCounter>, 'report'>,

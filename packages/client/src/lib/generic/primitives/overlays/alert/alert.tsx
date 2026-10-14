@@ -56,6 +56,7 @@ function AlertCommand({
   command,
 }: Pick<AlertProps, 'command'>): React.JSX.Element | null {
   if (!command) return null;
+
   return (
     <View className="rounded-lg bg-muted px-3 py-2">
       <Text role="code">{command}</Text>
@@ -86,6 +87,7 @@ function AlertButton(
   props: Pick<AlertProps, 'onOpenChange'> & { action: AlertAction },
 ): React.JSX.Element {
   const { action } = props;
+
   return (
     <Button
       label={action.label}

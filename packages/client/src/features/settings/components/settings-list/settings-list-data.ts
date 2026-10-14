@@ -44,6 +44,7 @@ export function matchingRows(
   query = '',
 ): SettingsRow[] {
   const search = query.trim().toLowerCase();
+
   return rows.filter(({ title }) => title.toLowerCase().includes(search));
 }
 

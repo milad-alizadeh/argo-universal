@@ -11,6 +11,7 @@ const noOlderRows = (): void => {};
 // Wide, the question sits centred in the space a Session's Feed fills.
 function NewSessionHeading(): React.JSX.Element | null {
   if (!useContentWide()) return null;
+
   return (
     <View className="flex-1 justify-center pb-10">
       <SessionColumn className="px-4">
@@ -31,6 +32,7 @@ export function NewSessionFeed({
   starting,
 }: NewSessionFeedProps): React.JSX.Element {
   if (!starting) return <NewSessionHeading />;
+
   return (
     <Feed
       items={starting.items}

@@ -14,6 +14,7 @@ import {
 } from './agent-detail.mocks';
 
 const { name } = readyAgent;
+
 const needing = (status: AgentStatus): typeof readyAgent => ({
   ...readyAgent,
   status,
@@ -31,11 +32,17 @@ const meta = {
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof AgentDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 type Layout = keyof typeof layoutWidths;
+
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
+
 const body = within(document.body);
+
 const homebrewAction = 'Install Node.js with Homebrew';
 
 async function expectNoInstall(canvas: Canvas): Promise<void> {
@@ -62,7 +69,9 @@ const needsNodeWithHomebrew = (layout: Layout): Story => ({
     await expectNoInstall(canvas);
   },
 });
+
 export const NeedsNodeOffersHomebrewOnDesktop = needsNodeWithHomebrew('wide');
+
 export const NeedsNodeOffersHomebrewOnPhone = needsNodeWithHomebrew('phone');
 
 export const InstallWithHomebrewAsksFirst: Story = {
@@ -120,7 +129,9 @@ const needsUvWithoutHomebrew = (layout: Layout): Story => ({
     await expectNoInstall(canvas);
   },
 });
+
 export const NeedsUvLinksTheDownloadOnDesktop = needsUvWithoutHomebrew('wide');
+
 export const NeedsUvLinksTheDownloadOnPhone = needsUvWithoutHomebrew('phone');
 
 export const ToastsTheInstalledTool: Story = {

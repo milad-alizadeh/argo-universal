@@ -10,4 +10,5 @@ export const EngineMessage = z.discriminatedUnion('type', [
   }),
   z.strictObject({ type: z.literal('heartbeat') }),
 ]);
+
 export type EngineMessage = z.infer<typeof EngineMessage>;

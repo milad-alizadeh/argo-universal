@@ -10,6 +10,7 @@ export interface WrittenPlanTriggerProps {
   title: string;
   wide: boolean;
 }
+
 export function WrittenPlanTrigger(
   props: WrittenPlanTriggerProps,
 ): React.JSX.Element {
@@ -23,6 +24,7 @@ export function WrittenPlanTrigger(
     </Pressable>
   );
 }
+
 function triggerProps(
   props: WrittenPlanTriggerProps,
 ): React.ComponentProps<typeof Pressable> {
@@ -34,6 +36,7 @@ function triggerProps(
     className: writtenPlanTriggerClass(props.wide),
   };
 }
+
 function writtenPlanTriggerClass(wide: boolean): string {
   return contentActionClass({
     variant: 'ghost',
@@ -44,11 +47,13 @@ function writtenPlanTriggerClass(wide: boolean): string {
     ),
   });
 }
+
 const wideTitleTextProps = {
   numberOfLines: 1,
   role: 'secondary',
   className: 'min-w-0 flex-1 text-foreground',
 } as const;
+
 function WideTitle({
   title,
 }: Pick<WrittenPlanTriggerProps, 'title'>): React.JSX.Element {

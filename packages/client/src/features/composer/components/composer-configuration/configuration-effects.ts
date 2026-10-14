@@ -6,6 +6,7 @@ import {
 } from '../agent-model-sheet-context';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort } from './configuration-values';
+
 export function useCommitEffortFallback(
   configuration: ComposerConfigurationProps,
 ): void {
@@ -21,6 +22,7 @@ export function useCommitEffortFallback(
       onConfigChange.current(effortConfigId, fallbackValue);
   }, [effortConfigId, fallbackValue]);
 }
+
 export function useAgentModelSheet(
   configuration: ComposerConfigurationProps,
 ): (() => void) | undefined {
@@ -30,6 +32,7 @@ export function useAgentModelSheet(
   useEffect(() => {
     if (nativeSheet) publishAgentModelConfiguration(configuration);
   }, [nativeSheet, configuration]);
+
   return nativeSheet ? presentSheet : undefined;
 }
 
@@ -38,6 +41,7 @@ function fallbackEffortValue(
 ): string | undefined {
   return effort.fallback ? effort.selected?.value : undefined;
 }
+
 function hasNativeSheet(presentSheet?: () => void): boolean {
   return !!presentSheet && Platform.OS !== 'web';
 }

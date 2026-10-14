@@ -7,7 +7,9 @@ export type AgentStatus =
   | 'disabled'
   | 'needs-node'
   | 'needs-uv';
+
 export type StatusTone = 'success' | 'warning' | 'destructive' | 'pending';
+
 export type AgentsFilter = 'all' | 'installed' | 'not-installed';
 
 // One Agent in the Agents list: installed on the Server or offered by the ACP Registry.
@@ -66,6 +68,7 @@ const notInstalledStatuses: ReadonlySet<AgentStatus> = new Set([
   'needs-node',
   'needs-uv',
 ]);
+
 // Needs Node.js and Needs uv are Agents not installed yet whose tool is missing.
 export const isInstalled = ({
   status,

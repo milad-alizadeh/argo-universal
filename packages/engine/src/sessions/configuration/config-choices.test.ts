@@ -13,12 +13,14 @@ const model: SessionConfigOption = {
     { value: 'deep', name: 'Deep' },
   ],
 };
+
 const fastMode: SessionConfigOption = {
   configId: 'fast',
   name: 'Fast mode',
   type: 'boolean',
   currentValue: false,
 };
+
 const mode: SessionConfigOption = {
   configId: 'mode',
   name: 'Mode',

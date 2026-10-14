@@ -21,6 +21,7 @@ export async function closeAgentResources(
     input.installations.tools.shutdown(),
   ]);
   await input.resources.shutdown();
+
   if (!input.sessions) return;
   await waitFor(input.sessions, (snapshot) => snapshot.status !== 'active', {
     timeout: Infinity,

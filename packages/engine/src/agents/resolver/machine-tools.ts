@@ -11,5 +11,6 @@ export const lookForTools = async (): Promise<MachineTools> => {
     allOnPath(['uv']),
     allOnPath(['brew']),
   ]);
+
   return { node, uv, brew };
 };

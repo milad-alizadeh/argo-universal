@@ -17,6 +17,7 @@ import { createMachinePath, type MachinePath } from '#mocks/machine-path';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 
 type Host = Awaited<ReturnType<typeof startInstallEngine>>;
+
 const listed = (host: Host): ReturnType<typeof listedAgent> =>
   listedAgent(host.caller, host.agentId);
 
@@ -25,6 +26,7 @@ type Started = {
   machine: MachinePath;
   checks: ReturnType<typeof createScriptedAgentProcess>;
 };
+
 const startWithProject = async (): Promise<Started> => {
   const project = await mkdtemp(join(tmpdir(), 'argo-resolver-session-'));
   await initTestRepository(project);
@@ -36,14 +38,18 @@ const startWithProject = async (): Promise<Started> => {
   const machine = await createMachinePath();
   await machine.place(entrypoint);
   const checks = createScriptedAgentProcess(scenarios.reply);
+
   const host = await startInstallEngine(pathBinaryEntry(), undefined, {
     database: storage.database,
     fixtureAgents: [],
     acp: checks,
   });
+
   await expect.poll(() => listed(host)).toMatchObject({ status: 'ready' });
+
   return { host, machine, checks };
 };
+
 const openSession = (host: Host): Promise<SessionNewOutput> =>
   host.caller.session.new({
     projectId: 'project-1',

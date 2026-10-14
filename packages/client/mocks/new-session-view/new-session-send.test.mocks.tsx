@@ -24,6 +24,7 @@ export const sendsTheFirstPrompt: Story = {
     await userEvent.click(
       await canvas.findByRole('button', { name: sendLabel }),
     );
+
     if (args.view.state !== 'ready') throw new Error('The view is not ready.');
     await expect(args.view.onSend).toHaveBeenCalledOnce();
     await expect(args.view.onSend).toHaveBeenCalledWith(typedDraft);
@@ -42,6 +43,7 @@ export const sendsWhileTheSessionOpens: Story = {
       ).toBeEnabled();
     });
     await userEvent.click(canvas.getByRole('button', { name: sendLabel }));
+
     if (args.view.state !== 'ready') throw new Error('The view is not ready.');
     await expect(args.view.onSend).toHaveBeenCalledWith(typedDraft);
   },

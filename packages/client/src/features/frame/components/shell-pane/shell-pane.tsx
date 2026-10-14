@@ -62,6 +62,7 @@ function useAnimatedWidth(
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   const animatedWidth = useSharedValue(props.width);
   useWidthTransition(animatedWidth, props);
+
   return useAnimatedStyle<ViewStyle>(
     () => ({ width: animatedWidth.get() }),
     [animatedWidth],
@@ -80,6 +81,7 @@ function hiddenPaneProps(hidden: boolean): HiddenPaneProps {
 
 function PaneContent(props: PaneContentProps): React.JSX.Element {
   const width = useStableContentWidth(props.width, props.contentWidth);
+
   return (
     <View
       testID={`${props.testID}-content`}
@@ -93,6 +95,7 @@ function PaneContent(props: PaneContentProps): React.JSX.Element {
 
 export function ShellPane(props: ShellPaneProps): React.JSX.Element {
   const animatedStyle = useAnimatedWidth(props);
+
   return (
     <Animated.View
       testID={props.testID}

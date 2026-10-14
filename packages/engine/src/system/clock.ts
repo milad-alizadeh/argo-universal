@@ -10,6 +10,7 @@ const sleep = (
   new Promise<void>((resolve): void => {
     const timer = setTimeout(done, milliseconds);
     signal?.addEventListener('abort', done, { once: true });
+
     function done(): void {
       clearTimeout(timer);
       signal?.removeEventListener('abort', done);

@@ -8,6 +8,7 @@ import {
   BOLD_STAR,
   BOLD_UNDERSCORE,
   ELEMENT_TRANSFORMERS,
+  HEADING,
   INLINE_CODE,
   ITALIC_STAR,
   ITALIC_UNDERSCORE,
@@ -21,6 +22,7 @@ import {
 import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { $getRoot, $isTextNode, type Klass, type LexicalNode } from 'lexical';
 import { $importLiteralMarkdown } from './rich-textarea-import';
+import { ReferenceNode } from './rich-textarea-reference-node';
 import { replacer, unusedCharacters } from './rich-textarea-stand-ins';
 
 // The nodes and markdown transformers the web editor uses, shared by its drawing and its tests.
@@ -32,6 +34,7 @@ export const richTextareaNodes: Klass<LexicalNode>[] = [
   CodeNode,
   LinkNode,
   AutoLinkNode,
+  ReferenceNode,
 ];
 
 const SINGLE_TILDE_STRIKETHROUGH: TextFormatTransformer = {
@@ -66,6 +69,7 @@ export const richTextareaTransformers: Transformer[] = [
  * is escaped, where a bracket or a final backslash would end it early.
  */
 const markdownCharacters = ['*', '_', '`', '~', '\\'];
+
 const linkTextCharacters = /[[\]]|\\(?=[!-/:-@[-`{-~]|$)/g;
 
 interface Swap {
@@ -75,6 +79,7 @@ interface Swap {
 
 function swapFor(text: string): Swap {
   const standIns = unusedCharacters(text, markdownCharacters.length);
+
   return {
     shield: replacer(markdownCharacters, standIns),
     unshield: replacer(standIns, markdownCharacters),
@@ -83,6 +88,7 @@ function swapFor(text: string): Swap {
 
 function $writtenText(node: LexicalNode): string {
   const text = node.getTextContent();
+
   return $isLinkNode(node.getParent())
     ? text.replaceAll(linkTextCharacters, '\\$&')
     : text;
@@ -108,6 +114,7 @@ export function $importMarkdown(markdown: string): void {
 function $everythingWritten(): string {
   const texts = $getRoot().getAllTextNodes();
   const urls = texts.map((text) => text.getParent()).filter($isLinkNode);
+
   return [
     ...texts.map((text) => text.getTextContent()),
     ...urls.map((link) => link.getURL()),
@@ -116,6 +123,7 @@ function $everythingWritten(): string {
 
 export function $exportMarkdown(): string {
   const swap = swapFor($everythingWritten());
+
   return swap.unshield(
     $convertToMarkdownString([
       ...richTextareaTransformers,
@@ -123,3 +131,10 @@ export function $exportMarkdown(): string {
     ]),
   );
 }
+
+/*
+ * What typing turns into blocks: the same transformers, less `#` headings. `#` is reserved for Issue
+ * and pull request references, so it stays the text typed; a pasted heading still imports and exports.
+ */
+export const richTextareaShortcuts: Transformer[] =
+  richTextareaTransformers.filter((transformer) => transformer !== HEADING);

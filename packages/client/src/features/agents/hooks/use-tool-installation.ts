@@ -24,20 +24,27 @@ type ToolMutation = {
   variables?: { tool: InstallTool };
   error: { message: string } | null;
 };
+
 const failureOf = (install: ToolMutation): string =>
   install.error?.message ?? '';
+
 const noticeOf = (
   install: ToolMutation,
   tool: InstallTool,
 ): ToolNotice | undefined => {
   const key = `${tool}-${install.submittedAt}`;
+
   if (install.status === 'success') return { key, tool, result: 'installed' };
+
   if (install.status !== 'error') return undefined;
+
   return { key, tool, result: 'failed', failure: failureOf(install) };
 };
+
 // How the last Homebrew install ended, kept after the tool is found so its toast still shows.
 const toolNotice = (install: ToolMutation): ToolNotice | undefined => {
   const tool = install.variables?.tool;
+
   return tool ? noticeOf(install, tool) : undefined;
 };
 
@@ -45,10 +52,12 @@ type ToolInstall = ToolMutation & {
   isPending: boolean;
   mutate: (input: { tool: InstallTool }) => void;
 };
+
 // The tools Homebrew finds after installing replace the cached ones, so the page shows Install at once.
 function useInstallTool(): ToolInstall {
   const trpc = useTRPC();
   const cache = useQueryClient();
+
   return useMutation(
     trpc.agents.installTool.mutationOptions({
       onSuccess: (found) =>
@@ -59,6 +68,7 @@ function useInstallTool(): ToolInstall {
 
 const missingToolOf = (status?: AgentStatus): InstallTool | undefined =>
   status ? missingTool(status)?.tool : undefined;
+
 const installer =
   (install: ToolInstall, tool: InstallTool | undefined): (() => void) =>
   () => {
@@ -71,6 +81,7 @@ function useHomebrew(
 ): Pick<ToolInstallPresentation, 'homebrew' | 'server'> {
   return { homebrew: !!useMachineTools()?.brew, server };
 }
+
 const installState = (
   install: ToolInstall,
 ): Pick<ToolInstallPresentation, 'installing' | 'notice'> => ({
@@ -86,6 +97,7 @@ export function useToolInstallation(
   const homebrew = useHomebrew(server);
   const [confirming, onConfirmingChange] = useState(false);
   const install = useInstallTool();
+
   return {
     ...homebrew,
     ...installState(install),

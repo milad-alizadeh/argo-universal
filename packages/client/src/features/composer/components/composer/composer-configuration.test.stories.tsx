@@ -16,20 +16,31 @@ import { firstAgent } from '../../../../../mocks/composer/recorded-catalog.test.
 import { secondAgent } from '../../../../../mocks/composer/recorded-catalog.test.mocks';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
+
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
+
 export default meta;
+
 export const PickersPhoneFirstAgent = pickers(layoutWidths.phone, 0);
+
 export const PickersPhoneSecondAgent = pickers(layoutWidths.phone, 1);
+
 export const PickersWideFirstAgent = pickers(layoutWidths.wide, 0);
+
 export const PickersWideSecondAgent = pickers(layoutWidths.wide, 1);
+
 export const CheckoutPhone = phoneStatusControls(firstAgent);
+
 export const CheckoutPhoneSecondAgent = phoneStatusControls(secondAgent);
+
 export const CreatedCheckoutIsReadOnlyPhone = createdCheckoutIsReadOnly(
   layoutWidths.phone,
 );
+
 export const CreatedCheckoutIsReadOnlyWide = createdCheckoutIsReadOnly(
   layoutWidths.wide,
 );
+
 export const ScrollableAgentCatalog: Story = {
   args: {
     configuration: {
@@ -71,9 +82,11 @@ export const ScrollableAgentCatalog: Story = {
       window.innerHeight,
     );
     scroll.scrollTop = scroll.scrollHeight;
+
     const lastAgent = await overlay.findByRole('button', {
       name: 'Select Agent 40',
     });
+
     await waitFor(async () => {
       const item = lastAgent.getBoundingClientRect();
       const viewport = scroll.getBoundingClientRect();
@@ -90,5 +103,7 @@ export const ScrollableAgentCatalog: Story = {
     await userEvent.keyboard('{Escape}');
   },
 };
+
 export const AgentsNeedingSetupPhone = agentsNeedingSetup(layoutWidths.phone);
+
 export const AgentsNeedingSetupWide = agentsNeedingSetup(layoutWidths.wide);

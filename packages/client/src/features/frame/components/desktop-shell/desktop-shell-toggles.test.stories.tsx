@@ -20,6 +20,7 @@ const meta = {
   title: 'Tests/DesktopShell/Toggles',
   ...shellMeta,
 } satisfies Meta<typeof DesktopShellFrame>;
+
 export default meta;
 
 export const TogglesPreserveContent: ShellStory = {
@@ -27,6 +28,7 @@ export const TogglesPreserveContent: ShellStory = {
     const { canvas, userEvent } = context;
     await page.viewport(1440, 844);
     const content = canvas.getByTestId(detailContentId);
+
     for (const shown of [false, true]) {
       await toggleSidebar(context, controlled, shown);
       await expect(
@@ -34,7 +36,9 @@ export const TogglesPreserveContent: ShellStory = {
       ).toBeVisible();
       await expect(canvas.getByTestId(detailContentId)).toBe(content);
     }
+
     await controlled.render({ inspectorState: 'open' });
+
     for (const state of ['expanded', 'open', 'closed'] as const) {
       await userEvent.click(
         await canvas.findByRole('button', {
@@ -44,6 +48,7 @@ export const TogglesPreserveContent: ShellStory = {
       await acceptInspector(controlled, state);
       await expect(canvas.getByTestId(detailContentId)).toBe(content);
     }
+
     await expect(content).toBeVisible();
   }),
 };

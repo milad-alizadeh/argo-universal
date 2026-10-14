@@ -23,6 +23,13 @@ import {
   type WriterJobParameters,
 } from './feed-write-request';
 import type { FeedPublication } from './publication';
+import {
+  endingFeedChanges,
+  turnEndingEvent,
+  permissionsCancelledEvent,
+  type TurnEndingEvent,
+} from './turn-ending';
+import type { FeedTurnEnding } from './turn-settlement';
 
 const feedChangeRejected = 'feed.changeRejected';
 
@@ -57,6 +64,7 @@ export interface FeedContext
       | 'storageFailing'
     > {
   activityAt: number;
+  lastSettledTurnId: string | null;
   // Rows changed since the last write, in the order they first changed.
   changedRowIds: string[];
   // Stream events waiting for the next batch.
@@ -80,8 +88,15 @@ export type FeedEvent =
       acpSessionId: SessionNotification['sessionId'];
       update: SessionNotification['update'];
       turnId: string | null;
+      stale?: true;
     }
-  | { type: 'feed.completeTurn'; turnId: string; published?: FeedPublication }
+  | {
+      type: 'feed.completeTurn';
+      turnId: string;
+      ending?: FeedTurnEnding;
+      published?: FeedPublication;
+    }
+  | TurnEndingEvent
   | { type: 'feed.flush' };
 
 // Raised after `feed.change` is applied, so each region reacts to it once.
@@ -90,7 +105,9 @@ type FeedChangeApplied = {
   settled: boolean;
   committed?: WriterCommit;
 };
+
 type FeedChangeRejected = { type: 'feed.changeRejected'; reason: string };
+
 export type FeedInternalEvent =
   | FeedChangeApplied
   | FeedChangeRejected
@@ -113,6 +130,7 @@ const raiseFeedEvents = (
 ): void => {
   for (const event of events) raise(event);
 };
+
 const enqueueWriteRows = (
   enqueue: (action: (typeof writeRows)[number]) => void,
 ): void => {
@@ -120,6 +138,7 @@ const enqueueWriteRows = (
 };
 
 export const feedMachine = setup({
+  // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as FeedInput,
     context: {} as FeedContext,
@@ -127,10 +146,18 @@ export const feedMachine = setup({
     emitted: {} as FeedBatch,
   },
   actions: {
+    writeTurnEnding: enqueueActions(({ context, event, enqueue }): void => {
+      assertEvent(event, [turnEndingEvent, permissionsCancelledEvent]);
+
+      for (const change of endingFeedChanges(context.sessionId, event))
+        enqueue.raise(change);
+    }),
     applyAcpUpdate: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.acpUpdate');
       const result = prepareAcpFeedApplication(context, event);
+
       if (!result) return;
+
       if ('rejection' in result)
         return enqueue.raise({
           type: feedChangeRejected,
@@ -142,6 +169,7 @@ export const feedMachine = setup({
     settleTurnRows: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.completeTurn');
       const result = prepareTurnSettlement(context, event);
+
       if (result.state) enqueue.assign(result.state);
       raiseFeedEvents(result.events, (raised) => enqueue.raise(raised));
     }),
@@ -152,6 +180,7 @@ export const feedMachine = setup({
     applyChange: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.change');
       const result = prepareFeedApplication(context, event);
+
       if (result.state) enqueue.assign(result.state);
       raiseFeedEvents(result.events, (raised) => enqueue.raise(raised));
     }),
@@ -166,10 +195,13 @@ export const feedMachine = setup({
     clearBatch: assign({ streamEvents: [] }),
     sendToWriter: ({ system }, params: WriterJobParameters): void => {
       const writer = findMachineActor(system, databaseWriterId, writerMachine);
+
       if (!writer || writer.getSnapshot().status !== 'active') {
         rejectUnavailableWriter(params);
+
         return;
       }
+
       writer.send({ type: 'writer.write', ...params });
     },
     // Settled rows leave memory once written; open rows stay for their next change.
@@ -199,6 +231,7 @@ export const feedMachine = setup({
   context: ({ input }): FeedContext => ({
     ...input,
     activityAt: input.activityAt ?? 0,
+    lastSettledTurnId: null,
     rows: {},
     changedRowIds: [],
     streamEvents: [],
@@ -213,6 +246,8 @@ export const feedMachine = setup({
       on: {
         'feed.acpUpdate': { actions: 'applyAcpUpdate' },
         'feed.completeTurn': { actions: 'settleTurnRows' },
+        [turnEndingEvent]: { actions: 'writeTurnEnding' },
+        [permissionsCancelledEvent]: { actions: 'writeTurnEnding' },
         'feed.change': { actions: 'applyChange' },
         'feed.changeRejected': {
           actions: [
@@ -233,6 +268,7 @@ export const feedMachine = setup({
               enqueue('emitBatch');
               enqueue('clearBatch');
             }
+
             if (check('hasChangedRows'))
               enqueueWriteRows((action) => enqueue(action));
           }),

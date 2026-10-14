@@ -32,8 +32,11 @@ interface SupervisorContext extends SupervisorInput {
 type SupervisorEvent = EngineEvent | { type: 'server.stop' };
 
 const crashWindowMs = 600_000;
+
 const maxCrashesInWindow = 10;
+
 const backoffBaseMs = 500;
+
 const backoffCapMs = 30_000;
 
 // Remembers the port an Engine reports and publishes it in server.json.
@@ -48,6 +51,7 @@ const rememberEngine = [
 ] as const;
 
 export const supervisorMachine = setup({
+  // SAFETY: XState v5 reads these empty objects only for their types and never at runtime (ADR-0016).
   types: {
     input: {} as SupervisorInput,
     context: {} as SupervisorContext,
@@ -61,6 +65,7 @@ export const supervisorMachine = setup({
     recordCrash: assign({
       crashTimes: ({ context }): SupervisorContext['crashTimes'] => {
         const now = context.now();
+
         return [
           ...context.crashTimes.filter(
             (time): boolean => now - time < crashWindowMs,

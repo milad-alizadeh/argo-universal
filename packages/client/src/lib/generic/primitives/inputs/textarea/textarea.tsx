@@ -30,10 +30,12 @@ function textareaInputProps({
 
 function Textarea(options: TextareaProps): ReactElement {
   const colors = useTextareaColors();
+
   const placeholderClassName = cn(
     'text-muted-foreground',
     options.placeholderClassName,
   );
+
   return (
     <TextInput
       className={textareaClassName(options)}
@@ -50,6 +52,7 @@ function useTextareaColors(): Pick<
 > {
   const { colors } = useNativeTheme();
   const selection = usePrimitiveColor('bg-tint/20');
+
   return {
     cursorColor: colors.tint,
     selectionColor: Platform.OS === 'ios' ? colors.tint : selection,

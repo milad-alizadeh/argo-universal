@@ -11,6 +11,7 @@ import type {
   LoginAgentOutcome,
   OpenLoginAgent,
 } from './agent-launch';
+
 export type LoginOperationDeps = {
   resolveLaunch: (agentId: string) => Promise<AgentLaunchSubject>;
   openLoginAgent: OpenLoginAgent;
@@ -19,29 +20,39 @@ export type LoginOperationDeps = {
   timeoutMs: number;
   cleanupTimeoutMs: number;
 };
-const cleanupDeadline = (
-  milliseconds: number,
-): { expired: Promise<never>; timer: ReturnType<typeof setTimeout> } => {
+
+type CleanupDeadline = {
+  expired: Promise<never>;
+  timer: ReturnType<typeof setTimeout>;
+};
+
+const cleanupDeadline = (milliseconds: number): CleanupDeadline => {
   const expired = Promise.withResolvers<never>();
+
   const timer = setTimeout(
     (): void =>
       expired.reject(new Error('Login resources did not close in time')),
     milliseconds,
   );
+
   timer.unref();
+
   return { expired: expired.promise, timer };
 };
+
 const boundedCleanup = async (
   promise: Promise<void>,
   milliseconds: number,
 ): Promise<void> => {
   const { expired, timer } = cleanupDeadline(milliseconds);
+
   try {
     await Promise.race([promise, expired]);
   } finally {
     clearTimeout(timer);
   }
 };
+
 export class LoginResources {
   private readonly abort = new AbortController();
   private opening?: Promise<void>;
@@ -56,6 +67,7 @@ export class LoginResources {
   public async open(): Promise<boolean> {
     this.opening = this.acquire();
     await this.opening;
+
     return this.methods().length > 0;
   }
   public methods(): { id: string; name: string }[] {
@@ -66,11 +78,14 @@ export class LoginResources {
   }
   public readTerminal(cursor: number): AgentLoginTerminalFrame {
     const read = this.requireConnection().readTerminal;
+
     if (!read) throw new Error('Login has no terminal');
+
     return read(cursor);
   }
   public inputTerminal(input: AgentLoginTerminalInput): void {
     const write = this.requireConnection().inputTerminal;
+
     if (!write) throw new Error('Login has no terminal');
     write(input);
   }
@@ -85,15 +100,18 @@ export class LoginResources {
   }
   public async close(): Promise<void> {
     await boundedCleanup(this.closeConnection(), this.deps.cleanupTimeoutMs);
+
     for (const release of this.releases.splice(0)) release();
   }
   private requireConnection(): LoginAgentConnection {
     if (!this.connection) throw new Error('Login connection is missing');
+
     return this.connection;
   }
   private async acquire(): Promise<void> {
     const subject = await this.deps.resolveLaunch(this.agentId);
     await this.deps.settleAuthentication(subject.launch);
+
     if (this.abort.signal.aborted) return;
     this.releases.push(this.deps.reserveAuthentication(subject.launch));
     this.baseAuthentication = authenticationContextKey(subject.launch);
@@ -111,8 +129,8 @@ export class LoginResources {
     this.releases.push(this.deps.reserveAuthentication(launch));
   }
   private async closeConnection(): Promise<void> {
-    await this.opening?.catch((error: unknown): Promise<void> | undefined =>
-      error instanceof ResourceCleanupError ? error.awaitCleanup() : undefined,
+    await this.opening?.catch((cause: unknown): Promise<void> | undefined =>
+      cause instanceof ResourceCleanupError ? cause.awaitCleanup() : undefined,
     );
     await this.connection?.close();
   }

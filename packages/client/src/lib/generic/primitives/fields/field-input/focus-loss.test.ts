@@ -14,6 +14,7 @@ describe('a native field reporting its focus', () => {
   ])('blurs the form field $blurs times after $story', (row) => {
     const onBlur = vi.fn<() => void>();
     const report = blurOnFocusLoss(onBlur);
+
     for (const focused of row.changes) report(focused);
     expect(onBlur).toHaveBeenCalledTimes(row.blurs);
   });

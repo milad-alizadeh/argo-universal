@@ -13,11 +13,14 @@ function AnimationExample(): React.JSX.Element {
     </NativeOnlyAnimatedView>
   );
 }
+
 const meta = {
   title: 'Design System/Primitives/NativeOnlyAnimatedView',
   tags: ['third-party'],
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

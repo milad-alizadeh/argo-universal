@@ -13,12 +13,14 @@ import {
 import { ProjectListView } from './project-list-view';
 
 const folderNotFound = 'Folder not found';
+
 // Each row's trailing detail, from the fixture facts: a hosted origin, none, and a missing folder.
 const rowDetails = [
   { project: worktreeProject, detail: 'GitHub' },
   { project: localProject, detail: 'No remote' },
   { project: missingFolderProject, detail: folderNotFound },
 ];
+
 if (
   worktreeProject.remoteHost !== 'GitHub' ||
   localProject.remoteHost !== null ||
@@ -27,6 +29,7 @@ if (
   throw new Error(
     'Recorded Projects need one on GitHub, one without a remote and one whose folder is gone.',
   );
+
 const rowName = (project: (typeof settingsProjects)[number]): string =>
   `${project.name}, ${rowDetails.find((row) => row.project === project)?.detail}`;
 
@@ -40,7 +43,9 @@ const meta = {
   },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof ProjectListView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ListsAndOpensProjects: Story = {

@@ -13,13 +13,18 @@ import {
 } from './common';
 
 const [ready, checked] = newSessionCatalogs.bothReady;
+
 if (!ready || !checked) throw new Error('Recorded catalog needs two Agents.');
+
 const pending: AgentInfo = { ...checked, status: 'checking' };
+
 const pendingLabel = `Select ${checked.label}`;
+
 const rowNames = /^Select |^Add a new agent$/;
 
 // The play function finishes the Agent's check, as a saved Readiness arriving from the Server would.
 const checks = new EventTarget();
+
 const finishCheck = (): boolean => checks.dispatchEvent(new Event('ready'));
 
 function useCheckedAgents(configuration: Configuration): Configuration {
@@ -27,10 +32,13 @@ function useCheckedAgents(configuration: Configuration): Configuration {
   useEffect(() => {
     const finish = (): void => setAgents(newSessionCatalogs.bothReady);
     checks.addEventListener('ready', finish);
+
     return (): void => checks.removeEventListener('ready', finish);
   }, []);
+
   return { ...configuration, agents };
 }
+
 function CheckingConfiguration(props: {
   configuration: Configuration;
 }): React.JSX.Element {
@@ -53,6 +61,7 @@ const configuration = (onAgentChange: () => void): Configuration => ({
 // A never-checked Agent keeps its place with a spinner and can be picked once it is Ready.
 export function pendingAgent(width: number): Story {
   const onAgentChange = fn();
+
   return {
     beforeEach: () => {
       onAgentChange.mockClear();
@@ -92,9 +101,11 @@ async function assertPendingRow(): Promise<{ labels: (string | null)[] }> {
   const row = await within(document.body).findByRole('button', {
     name: pendingLabel,
   });
+
   await waitFor(() => expect(row).toBeVisible());
   await expect(row).toBeDisabled();
   await expect(checkingSpinner(row)).toBeInTheDocument();
+
   return { labels: rowLabels() };
 }
 
@@ -102,5 +113,6 @@ async function assertReadyRow(): Promise<HTMLElement> {
   const row = within(document.body).getByRole('button', { name: pendingLabel });
   await waitFor(() => expect(row).toBeEnabled());
   await expect(checkingSpinner(row)).not.toBeInTheDocument();
+
   return row;
 }

@@ -11,7 +11,9 @@ import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { terminalLogin } from './terminal-login.ts';
 
 export const sharedReply = 'The shared fixture completed this Turn.';
+
 export const imageReply = 'The dominant color is red.';
+
 export const fileReply = 'The release notes list one change.';
 
 const message = (text: string): ScriptedStep => ({
@@ -21,13 +23,18 @@ const message = (text: string): ScriptedStep => ({
     content: { type: 'text', text },
   },
 });
+
 const update = (value: SessionUpdate): ScriptedStep => ({
   type: 'update',
   update: value,
 });
+
 const reply = message(sharedReply);
+
 const editReadme = { toolCallId: 'edit-readme', title: 'Edit README.md' };
+
 const writePressureTools = 32;
+
 const refusedReopen = 'The Agent refused to reopen the Session.';
 
 // Every shared scenario opens its Sessions with the shared configuration.

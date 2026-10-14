@@ -1,12 +1,15 @@
 import { expect, waitFor, within, fn } from 'storybook/test';
 import { effortValue, heldNotice } from './common';
 import { heldChoiceCases } from './held-cases';
+
 type HeldCase = (typeof heldChoiceCases)[number];
+
 export interface HeldScenario {
   recorded: HeldCase;
   width: number;
   onConfigChange: ReturnType<typeof fn>;
 }
+
 export async function assertHeldFallback(
   { recorded, onConfigChange }: HeldScenario,
   effortSteps: string[][],
@@ -33,6 +36,7 @@ async function assertFallbackCalls(
     ]),
   );
 }
+
 async function assertFallbackValue(name: string): Promise<void> {
   await waitFor(() =>
     expect(

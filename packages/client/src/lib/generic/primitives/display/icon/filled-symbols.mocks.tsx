@@ -16,6 +16,7 @@ const symbolNames = [
 
 export function FilledSymbols(): React.JSX.Element {
   const [filled, setFilled] = useState(false);
+
   return (
     <View className="gap-3">
       <Button

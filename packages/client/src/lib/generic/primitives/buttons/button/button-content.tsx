@@ -8,6 +8,7 @@ import { buttonInteractionProps } from './button-state';
 
 export function ContentButton(props: ButtonProps): ReactElement {
   const textClass = contentTextClass(props);
+
   return (
     <TextClassContext.Provider value={textClass}>
       <Pressable {...contentPressableProps(props)}>
@@ -59,6 +60,7 @@ function contentLayoutProps(
   },
 ): Pick<ComponentProps<typeof Pressable>, 'ref' | 'style'> {
   if (props.appearance !== 'content') return {};
+
   return { ref: props.ref, style: props.style };
 }
 
@@ -90,6 +92,7 @@ function contentTriggerProps(
 ): Pick<ContentButtonProps, 'id' | 'onHoverIn' | 'onHoverOut'> &
   ContentPopupProps {
   if (props.appearance !== 'content') return {};
+
   return {
     id: props.id,
     onHoverIn: props.onHoverIn,

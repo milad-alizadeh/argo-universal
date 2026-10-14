@@ -49,6 +49,7 @@ export function AttentionBadge({
   placement,
 }: AttentionBadgeProps): React.JSX.Element | null {
   const badge = attentionBadge(count);
+
   return badge && <BadgeMark badge={badge} placement={placement} />;
 }
 
@@ -57,7 +58,9 @@ export function drawerAttentionBadge(
   count: number,
 ): { element: React.JSX.Element; label: string } | undefined {
   const badge = attentionBadge(count);
+
   if (!badge) return undefined;
+
   return {
     label: badge.label,
     element: <BadgeMark badge={badge} placement="drawer" />,

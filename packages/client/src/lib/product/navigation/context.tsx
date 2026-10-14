@@ -40,9 +40,11 @@ export type LeaveGuard = (
   active: boolean,
   onBlocked: (proceed: () => void) => void,
 ) => void;
+
 const noLeaveGuard: LeaveGuard = () => null;
 
 const NavigateContext = createContext<Navigate | null>(null);
+
 const LeaveGuardContext = createContext<LeaveGuard>(noLeaveGuard);
 
 export interface NavigationProviderProps {
@@ -68,7 +70,9 @@ export function NavigationProvider({
 
 export function useNavigate(): Navigate {
   const navigate = useContext(NavigateContext);
+
   if (!navigate) throw new Error('useNavigate needs NavigationProvider');
+
   return navigate;
 }
 

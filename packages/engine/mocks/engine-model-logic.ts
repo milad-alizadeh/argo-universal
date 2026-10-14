@@ -9,6 +9,7 @@ import {
   createPromiseMock,
 } from './engine-model-fixtures';
 import * as model from './engine-model-state';
+
 export const machineWithExternalMocks = engineMachine.provide({
   actors: {
     openDatabase: createPromiseMock(
@@ -31,6 +32,7 @@ export const machineWithExternalMocks = engineMachine.provide({
     processSignals: fromCallback(({ sendBack }): (() => void) => {
       const signals = { send: sendBack, live: true };
       model.recordSignals(signals);
+
       return (): void => {
         signals.live = false;
       };
@@ -45,6 +47,7 @@ export const machineWithExternalMocks = engineMachine.provide({
     },
   },
 });
+
 export const machine = machineWithExternalMocks.provide({
   actors: {
     closeAcpResources: createPromiseMock(() => model.closeResourceCalls),
@@ -55,4 +58,5 @@ export const machine = machineWithExternalMocks.provide({
     drainWriter: (): number => model.shutdownCommands.push(drainWriterEvent),
   },
 });
+
 export type EngineSnapshot = SnapshotFrom<typeof machine>;

@@ -12,21 +12,27 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Platform } from 'react-native';
+import { Platform, type ViewStyle } from 'react-native';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import type { ScrollFadeOptions } from './scroll-fade-options';
 import { useScrollFade } from './scroll-fade-props';
 
-const listDefaults = {
+interface ListDefaults {
+  style: ViewStyle;
+  maintainVisibleContentPosition: false;
+  recycleItems: false;
+  keyboardShouldPersistTaps?: 'handled';
+}
+
+const listDefaults: ListDefaults = {
   style: { position: 'absolute', inset: 0 },
   // Otherwise it shifts the scroll position as rows are measured.
   maintainVisibleContentPosition: false,
   recycleItems: false,
-  // Legend List's web build hands this to the scroll element as an unknown DOM attribute.
-  ...(Platform.OS === 'web'
-    ? {}
-    : { keyboardShouldPersistTaps: 'handled' as const }),
-} as const;
+};
+
+// Legend List's web build hands this to the scroll element as an unknown DOM attribute.
+if (Platform.OS !== 'web') listDefaults.keyboardShouldPersistTaps = 'handled';
 
 export type ScrollFadeListProps<T> = LegendListProps<T> &
   ScrollFadeOptions & {
@@ -45,6 +51,7 @@ function followContentLength(
   const update = (): void => report(list.getState().contentLength);
   update();
   const stops = sizeSignals.map((size) => list.getState().listen(size, update));
+
   return (): void => {
     for (const stop of stops) stop();
   };
@@ -58,8 +65,10 @@ function useContentLength(
   const [length, setLength] = useState<number>();
   useEffect(() => {
     if (!follow || !list.current) return;
+
     return followContentLength(list.current, setLength);
   }, [list, follow]);
+
   return length;
 }
 
@@ -74,7 +83,9 @@ function useFrameSize(
   maxHeight: number | undefined,
 ): FrameSize {
   const length = useContentLength(list, maxHeight !== undefined);
+
   if (maxHeight === undefined) return { className: 'min-h-0 flex-1' };
+
   return { style: { height: Math.min(length ?? maxHeight, maxHeight) } };
 }
 
@@ -107,6 +118,7 @@ export function ScrollFadeList<T>(
   const listRef = useBothRefs(list, ref);
   const scrollRef = useBothRefs(attachScrollView, refScrollView);
   const listProps = { ...listDefaults, ...scroll, refScrollView: scrollRef };
+
   return (
     <ScrollFadeFrame {...frame} {...useFrameSize(list, maxHeight)}>
       <LegendList {...listProps} ref={listRef} />

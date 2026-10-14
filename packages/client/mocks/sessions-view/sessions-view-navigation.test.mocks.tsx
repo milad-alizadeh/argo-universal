@@ -5,13 +5,17 @@ import {
   type Story,
 } from './sessions-view-story-context.test.mocks';
 
-function firstSessionAndProject(): {
+interface FirstSessionAndProject {
   running: NonNullable<(typeof activeSessions.sessions)[number]>;
   project: NonNullable<(typeof projectsList)[number]>;
-} {
+}
+
+function firstSessionAndProject(): FirstSessionAndProject {
   const running = activeSessions.sessions[0];
   const project = projectsList[0];
+
   if (!running || !project) throw new Error('Missing Session or Project mock');
+
   return { running, project };
 }
 
@@ -24,6 +28,7 @@ export const navigationCallbacks: Story = {
     const [row] = await canvas.findAllByRole('button', {
       name: new RegExp(`^${running.title}, `),
     });
+
     if (!row) throw new Error('Missing Session row');
     await userEvent.click(row);
     await expect(args.onSelect).toHaveBeenCalledWith(running.sessionId);

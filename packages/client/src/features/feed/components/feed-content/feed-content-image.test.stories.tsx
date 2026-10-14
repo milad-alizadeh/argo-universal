@@ -20,17 +20,21 @@ const meta = {
   parameters: { screenPreview: true },
   args: feedContentArgs,
 } satisfies Meta<typeof Feed>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function opensAgentImage(viewportWidth: number, agent: MockAgent): Story {
   const image = recordedUserMessage(agent, 'image-prompt').content.filter(
     (block) => block.type === 'image',
   );
+
   const row = {
     ...recordedAgentMessage(agent, 'markdown-answer'),
     content: image,
   };
+
   return {
     args: {
       items: toFeedView(
@@ -56,18 +60,22 @@ function opensAgentImage(viewportWidth: number, agent: MockAgent): Story {
     },
   };
 }
+
 export const ImageFirstAgentPhone = opensAgentImage(
   layoutWidths.phone,
   'agent-1',
 );
+
 export const ImageFirstAgentWide = opensAgentImage(
   layoutWidths.wide,
   'agent-1',
 );
+
 export const ImageSecondAgentPhone = opensAgentImage(
   layoutWidths.phone,
   'agent-2',
 );
+
 export const ImageSecondAgentWide = opensAgentImage(
   layoutWidths.wide,
   'agent-2',

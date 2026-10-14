@@ -18,6 +18,7 @@ export const PlanEntry = z.strictObject({
     z.strictObject({ activeForm: z.string().optional() }),
   ),
 });
+
 export type PlanEntry = z.infer<typeof PlanEntry>;
 
 // The Plan: the Agent's live checklist.
@@ -41,6 +42,7 @@ export const PlanMarkdown = z.strictObject({
     }),
   ),
 });
+
 export type PlanMarkdown = z.infer<typeof PlanMarkdown>;
 
 const PlanFile = z.strictObject({
@@ -55,4 +57,5 @@ export const Plan = z.discriminatedUnion('type', [
   PlanMarkdown,
   PlanFile,
 ]);
+
 export type Plan = z.infer<typeof Plan>;

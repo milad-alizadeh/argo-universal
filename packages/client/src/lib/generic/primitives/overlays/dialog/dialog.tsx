@@ -10,10 +10,13 @@ import { DialogOverlay } from './dialog-overlay';
 import { DialogSheet } from './dialog-sheet';
 
 const Dialog = DialogPrimitive.Root;
+
 const DialogTrigger = DialogPrimitive.Trigger;
+
 // A wide window centres the dialog; a narrow one, phone or web, raises the same content as a bottom sheet.
 function DialogContent(props: ContentProps): React.JSX.Element {
   if (useWide()) return <CentredDialog {...props} />;
+
   return (
     <DialogSheet
       label={props.accessibilityLabel}
@@ -64,6 +67,7 @@ function DialogCancel(
   props: Omit<ButtonDataProps, 'onPress' | 'variant' | 'fullWidth'>,
 ): React.JSX.Element {
   const { onOpenChange } = DialogPrimitive.useRootContext();
+
   return (
     <Button
       {...props}

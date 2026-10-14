@@ -15,9 +15,11 @@ export function keepPlanning(width: number): Story {
       await userEvent.click(
         canvas.getByRole('button', { name: keepPlanningLabel }),
       );
+
       const feedback = canvas.getByRole('textbox', {
         name: 'What should change in the plan?',
       });
+
       await expect(feedback).toHaveFocus();
       await expect(
         canvas.getByRole('button', { name: keepPlanningLabel }),
@@ -45,13 +47,16 @@ export function keepPlanningWithFeedback(width: number): Story {
       await userEvent.click(
         canvas.getByRole('button', { name: keepPlanningLabel }),
       );
+
       const feedback = canvas.getByRole('textbox', {
         name: 'What should change in the plan?',
       });
+
       await userEvent.type(feedback, planProposalFeedback);
       await expect(
         canvas.getByRole('button', { name: keepPlanningLabel }),
       ).toBeEnabled();
+
       if (width === layoutWidths.phone) {
         await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
         await expect(args.onAnswer).not.toHaveBeenCalled();

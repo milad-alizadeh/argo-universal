@@ -19,10 +19,12 @@ type TriggerProps = React.ComponentProps<
   iconClassName?: string;
   inset?: boolean;
 };
+
 const entering = FadeIn.reduceMotion(ReduceMotion.System);
 
 function subTriggerIcon(open: boolean): IconName {
   if (Platform.OS === 'web') return 'chevron-right';
+
   return open ? 'chevron-up' : 'chevron-down';
 }
 
@@ -45,6 +47,7 @@ function primitiveTriggerProps(
   triggerProps: Omit<OpenTriggerProps, 'iconClassName'>,
 ): React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> {
   const { className, inset, open, ...props } = triggerProps;
+
   return {
     ...props,
     className: dropdownSubTriggerClassName({ className, inset, open }),
@@ -53,6 +56,7 @@ function primitiveTriggerProps(
 
 function SubTriggerBody(subProps: OpenTriggerProps): React.JSX.Element {
   const { iconClassName, ...props } = subProps;
+
   return React.createElement(
     DropdownMenuPrimitive.SubTrigger,
     primitiveTriggerProps(props),
@@ -63,10 +67,12 @@ function SubTriggerBody(subProps: OpenTriggerProps): React.JSX.Element {
 
 export function DropdownMenuSubTrigger(props: TriggerProps): React.JSX.Element {
   const { open } = DropdownMenuPrimitive.useSubContext();
+
   const textStyle = cn(
     'select-none group-active:text-accent-foreground',
     open && 'text-accent-foreground',
   );
+
   return (
     <TextClassContext.Provider value={textStyle}>
       <SubTriggerBody {...props} open={open} />

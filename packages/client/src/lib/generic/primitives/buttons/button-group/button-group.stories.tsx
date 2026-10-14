@@ -8,7 +8,9 @@ import { ButtonGroup } from './button-group';
 const meta = {
   title: 'Design System/Primitives/ButtonGroup',
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {
@@ -33,6 +35,7 @@ function SplitButtonExample(): React.JSX.Element {
     </Variation>
   );
 }
+
 function SecondaryButtonsExample(): React.JSX.Element {
   return (
     <Variation label="Secondary">

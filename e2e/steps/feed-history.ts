@@ -12,7 +12,9 @@ import { query } from './server-query';
 import { agentWork } from './timeouts';
 
 const lastMessage = 'Latest history reply.';
+
 const feedScroll = 'feed-scroll';
+
 const FeedPage = z.object({
   hasOlder: z.boolean(),
   rows: z.array(
@@ -22,6 +24,7 @@ const FeedPage = z.object({
     }),
   ),
 });
+
 type FeedRow = z.infer<typeof FeedPage>['rows'][number];
 
 function hasText(row: FeedRow, text: string): boolean {
@@ -43,20 +46,25 @@ async function storedPage(
 
 async function historyIsStored(page: Page, httpUrl: string): Promise<boolean> {
   const feed = await storedPage(page, httpUrl);
+
   return feed.hasOlder && feed.rows.some((row) => hasText(row, lastMessage));
 }
 
 function endsTurn(row: FeedRow | undefined, turnId: string): boolean {
   if (!row) return false;
+
   return row.turnId === turnId && hasText(row, lastMessage);
 }
 
 async function nextTurnIsStored(page: Page, httpUrl: string): Promise<boolean> {
   const { rows } = await storedPage(page, httpUrl);
+
   const prompt = rows.find((row) =>
     hasText(row, 'Continue after paging history'),
   );
+
   if (!prompt?.turnId) return false;
+
   return endsTurn(rows.at(-1), prompt.turnId);
 }
 

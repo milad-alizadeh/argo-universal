@@ -6,7 +6,9 @@ import { IconButton } from './icon-button';
 const sizes = ['sm', 'md', 'lg', 'xl', '2xl'] as const;
 
 const meta = { title: 'Design System/Primitives/IconButton' } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function DefaultExample(): React.JSX.Element {

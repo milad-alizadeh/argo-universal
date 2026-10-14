@@ -10,6 +10,7 @@ import {
   pressedAttribute,
 } from './composer-test-contract.test.mocks';
 import { type PickerStep, chooseModel } from './model-choice.test.mocks';
+
 export async function expectHighEffort({
   canvas,
   userEvent,
@@ -35,6 +36,7 @@ export async function expectHighEffort({
     catalog.highEffort,
   );
 }
+
 export async function expectEffortFollowsModel({
   canvas,
   userEvent,
@@ -43,6 +45,7 @@ export async function expectEffortFollowsModel({
 }: PickerStep & { model: SessionConfigSelectOption }): Promise<void> {
   const overlay = within(document.body);
   await chooseModel({ userEvent, width, name: model.name });
+
   if (modelSupportsEffort(model))
     await expect(
       await overlay.findByRole('slider', { name: 'Effort' }),
@@ -58,6 +61,7 @@ export async function expectEffortFollowsModel({
     ).toBeInTheDocument();
   }
 }
+
 export async function expectDangerousMode({
   canvas,
   userEvent,
@@ -76,6 +80,7 @@ export async function expectDangerousMode({
   await waitFor(() =>
     expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
   );
+
   if (width >= wideBreakpoint())
     await expect(
       canvas.getByRole('button', { name: 'Mode' }),
@@ -95,12 +100,16 @@ const recordedModelLabels = new Map([
   ['GPT-6-Luna', 'GPT-6-Luna'],
   ['GPT-5.5', 'GPT-5.5'],
 ]);
+
 function expectedModelLabel(name: string): string {
   const label = recordedModelLabels.get(name);
+
   if (!label)
     throw new Error(`Recorded model needs an expected label: ${name}`);
+
   return label;
 }
+
 function modelSupportsEffort(model: SessionConfigSelectOption): boolean {
   return Boolean(model._meta?.argo?.supportsEffort);
 }

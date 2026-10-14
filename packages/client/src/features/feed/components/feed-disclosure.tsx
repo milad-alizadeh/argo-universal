@@ -37,6 +37,7 @@ function useHovered(): [
   { onHoverIn: () => void; onHoverOut: () => void },
 ] {
   const [hovered, setHovered] = useState(false);
+
   return [
     hovered,
     { onHoverIn: () => setHovered(true), onHoverOut: () => setHovered(false) },
@@ -83,6 +84,7 @@ function FeedDisclosureHeading(
 
 function FeedDisclosureTrigger(props: TriggerProps): React.JSX.Element {
   const [hovered, hoverHandlers] = useHovered();
+
   return (
     <TextClassContext.Provider value="select-none">
       <CollapsibleTrigger
@@ -102,6 +104,7 @@ export function FeedDisclosure({
   ...props
 }: FeedDisclosureProps): React.JSX.Element {
   const [open, setOpen] = useState(props.initialOpen === true);
+
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="w-full">
       <FeedDisclosureTrigger {...props} open={open} />

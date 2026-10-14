@@ -58,6 +58,7 @@ const chooseAgent = (
   chosen: string | undefined,
 ): AgentInfo | undefined => {
   const agents = offeredAgents(listed);
+
   return (
     agents.find((entry) => entry.agent === chosen) ??
     agents.find((entry) => entry.status === 'ready') ??
@@ -100,6 +101,7 @@ const checkoutOf = (
 // The reader's choices of where and how the Session runs, over the Project's and Agents' defaults.
 export function toSessionChoices(input: SessionChoiceInput): SessionChoices {
   const project = chooseProject(input.projects, input.chosen.projectId);
+
   return {
     project,
     agent: chooseAgent(input.agents, input.chosen.agent),

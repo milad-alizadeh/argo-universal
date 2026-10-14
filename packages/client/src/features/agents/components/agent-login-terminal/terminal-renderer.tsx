@@ -12,6 +12,7 @@ import { TerminalKeys } from './terminal-keys';
 import type { LoginTerminalProps } from './terminal-props';
 import { useDOMKeyboard } from './use-terminal-keyboard';
 import { useTerminalRenderer } from './use-terminal-renderer';
+
 type Props = LoginTerminalProps & {
   appearance?: TerminalAppearance;
   height: number;
@@ -19,6 +20,7 @@ type Props = LoginTerminalProps & {
   compact: boolean;
   dom?: DOMProps;
 };
+
 const containerStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -26,24 +28,30 @@ const containerStyle: CSSProperties = {
   width: '100%',
   minWidth: 0,
 };
+
 const viewportStyle: CSSProperties = {
   boxSizing: 'border-box',
   padding: 16,
   borderRadius: 10,
   overflow: 'hidden',
 };
+
 const fillStyle: CSSProperties = { height: '100%', width: '100%', minWidth: 0 };
+
 type TerminalContentProps = {
   panel: ViewportProps;
   controls: React.ComponentProps<typeof TerminalKeys>;
   showKeys: boolean;
 };
+
 export default function TerminalRenderer(props: Props): React.JSX.Element {
   return <TerminalContent {...useTerminalPanel(props)} />;
 }
+
 function useTerminalPanel(props: Props): TerminalContentProps {
   const { viewport, ...keys } = useTerminalRenderer(props);
   const accessory = useDOMKeyboard(props.compact, props.keyboardOpen);
+
   return {
     panel: {
       viewport,
@@ -54,6 +62,7 @@ function useTerminalPanel(props: Props): TerminalContentProps {
     showKeys: showAccessory(accessory, props.enabled),
   };
 }
+
 function TerminalContent({
   panel,
   controls,
@@ -72,6 +81,7 @@ type ViewportProps = {
   height: number;
   background: string;
 };
+
 function TerminalViewport({
   viewport,
   height,
@@ -90,6 +100,7 @@ function TerminalViewport({
 
 const showAccessory = (keyboard: boolean, enabled: boolean): boolean =>
   keyboard && enabled;
+
 const keyboardViewportHeight = (keyboard: boolean, height: number): number =>
   keyboard ? terminalKeyboardHeight : height;
 

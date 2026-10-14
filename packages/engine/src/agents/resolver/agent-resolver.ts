@@ -16,6 +16,7 @@ export type ResolverDeps = {
   home: string;
   now: () => number;
 };
+
 // A look older than this is repeated when the Agents page opens.
 const staleAfterMs = 10_000;
 
@@ -23,11 +24,13 @@ type FoundColumns = Omit<
   InstallationObservationRow,
   'id' | 'installationObservedAt'
 >;
+
 const nothingFound: FoundColumns = {
   installationLaunch: null,
   installationOwner: null,
   installationVersion: null,
 };
+
 const foundColumns = (found: Installation | undefined): FoundColumns =>
   found
     ? {
@@ -45,11 +48,13 @@ const observedFields = [
   'installationOwner',
   'installationVersion',
 ] as const;
+
 // A never-observed row needs a first observation only once there is something to say.
 const isNothingNew = (
   candidate: Candidate,
   next: InstallationObservationRow,
 ): boolean => !candidate.configured && next.installationLaunch === null;
+
 // The time on a row is when its current observation was first made; an unchanged look writes nothing.
 const isUnchanged = (
   candidate: Candidate,
@@ -64,6 +69,7 @@ const isNewOutsideCopy = (
   found: Installation | undefined,
 ): boolean =>
   found?.owner === 'unknown' && candidate.saved.installationLaunch === null;
+
 // Registering, installing or editing an Agent checks it already; only a copy found outside Argo needs a first check here.
 const needsFirstCheck = (
   candidate: Candidate,
@@ -71,40 +77,50 @@ const needsFirstCheck = (
 ): boolean => !candidate.custom && isNewOutsideCopy(candidate, found);
 
 type Look = { row: InstallationObservationRow; newlyFound: boolean };
+
 const lookAt = async (
   deps: ResolverDeps,
   candidate: Candidate,
   observedAt: number,
 ): Promise<Look | undefined> => {
   const found = await resolveCandidate(deps, candidate);
+
   if (found === null) return undefined;
+
   const row = {
     id: candidate.id,
     installationObservedAt: observedAt,
     ...foundColumns(found),
   };
+
   if (isUnchanged(candidate, row)) return undefined;
+
   return { row, newlyFound: needsFirstCheck(candidate, found) };
 };
 
 const scan = async (deps: ResolverDeps): Promise<Look[]> => {
   const observedAt = deps.now();
   const looks: Look[] = [];
+
   for (const candidate of readCandidates(deps.database)) {
     const look = await lookAt(deps, candidate, observedAt);
+
     if (look) looks.push(look);
   }
+
   return looks;
 };
 
 const resolveEvery = async (deps: ResolverDeps): Promise<string[]> => {
   const looks = await scan(deps);
+
   if (looks.length > 0)
     await writeDatabaseJobAndWaitForCommit(
       deps.databaseWriter,
       new InstallationObservationSaveJob(looks.map(({ row }) => row)),
       true,
     );
+
   return looks.filter(({ newlyFound }) => newlyFound).map(({ row }) => row.id);
 };
 
@@ -116,11 +132,13 @@ export type AgentResolver = {
 };
 
 type ResolverState = { queue: Promise<unknown>; lookedAt: number };
+
 const lookNow = (
   deps: ResolverDeps,
   state: ResolverState,
 ): Promise<string[]> => {
   state.lookedAt = deps.now();
+
   return resolveEvery(deps);
 };
 
@@ -132,7 +150,9 @@ const serializedLooks =
       () => lookNow(deps, state),
       () => lookNow(deps, state),
     );
+
     state.queue = next.catch(() => {});
+
     return next;
   };
 
@@ -141,8 +161,10 @@ export const createAgentResolver = (deps: ResolverDeps): AgentResolver => {
     queue: Promise.resolve(),
     lookedAt: -Infinity,
   };
+
   const serialized = serializedLooks(deps, state);
   const isStale = (): boolean => deps.now() - state.lookedAt > staleAfterMs;
+
   return {
     resolveEvery: serialized,
     resolveIfStale: () => (isStale() ? serialized() : Promise.resolve([])),

@@ -17,9 +17,13 @@ import {
 } from '../../state/missing-tool';
 
 type Facts = ToolFacts;
+
 type SectionProps = { agent: AgentDetail; tool?: ToolInstallPresentation };
+
 type MissingProps = SectionProps & { facts: Facts };
+
 type ToolProps = { facts: Facts; tool: ToolInstallPresentation };
+
 type ConfirmationProps = ToolProps & { agent: AgentDetail };
 
 // Needs Node.js or Needs uv: what is missing and how to get it, in place of Install.
@@ -27,7 +31,9 @@ export function MissingToolSection(
   props: SectionProps,
 ): React.JSX.Element | null {
   const facts = missingTool(props.agent.status);
+
   if (!facts) return null;
+
   return <MissingTool {...props} facts={facts} />;
 }
 
@@ -38,6 +44,7 @@ const withHomebrew = (
 
 function MissingTool(props: MissingProps): React.JSX.Element {
   const homebrew = withHomebrew(props.tool);
+
   return (
     <>
       <MissingToolStatus {...props} homebrew={homebrew} />
@@ -74,12 +81,14 @@ function ToolAction(props: {
 }): React.JSX.Element {
   if (props.homebrew)
     return <HomebrewAction facts={props.facts} tool={props.homebrew} />;
+
   return <DownloadAction facts={props.facts} />;
 }
 
 // Homebrew's progress shows in place of its action until it settles.
 function HomebrewAction({ facts, tool }: ToolProps): React.JSX.Element {
   if (tool.installing) return <HomebrewProgress facts={facts} />;
+
   return (
     <ListItem
       role="button"
@@ -129,6 +138,7 @@ const confirmationMessage = ({
 // The Alert shows the exact command before Homebrew runs.
 function HomebrewConfirmation(props: ConfirmationProps): React.JSX.Element {
   const { facts, tool } = props;
+
   return (
     <Alert
       open={tool.confirming}

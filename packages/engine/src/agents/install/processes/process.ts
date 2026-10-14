@@ -1,21 +1,24 @@
-import type { ChildProcess } from 'node:child_process';
+import type { ChildProcess, Serializable } from 'node:child_process';
 import type { InstallToolInput } from '../ports';
 import {
   cleanExitedInstallProcess,
   cleanInstallProcess,
   InstallCleanupError,
 } from './process-cleanup';
-import { readInstallerExitCode } from './process-message';
 import {
   InstallOutput,
   cleanDiagnostic,
   outputFailure,
 } from './process-output';
 import { removeInstallerRecord } from './process-record';
-import { spawnInstallWrapper } from './process-wrapper';
+import { readInstallerExitCode, spawnInstallWrapper } from './process-wrapper';
+
 export { InstallCleanupError } from './process-cleanup';
+
 const diagnosticLimit = 8192;
+
 const missingToolExitCode = 127;
+
 class InstallProcess {
   private readonly output: InstallOutput;
   private failure: Error | undefined;
@@ -32,6 +35,7 @@ class InstallProcess {
     this.attachOutput();
     this.attachLifecycle();
     input.signal.addEventListener('abort', this.abort, { once: true });
+
     if (input.signal.aborted) this.abort();
   }
   private attachLifecycle(): void {
@@ -59,6 +63,7 @@ class InstallProcess {
   }
   private acceptOutput(chunk: Buffer): void {
     if (this.failure) return;
+
     try {
       this.output.accept(chunk);
     } catch (error) {
@@ -74,7 +79,7 @@ class InstallProcess {
     this.cleanup ??= cleanExitedInstallProcess(this.child);
     this.observeCleanup();
   };
-  private completed = (message: unknown): void => {
+  private completed = (message: Serializable): void => {
     try {
       this.toolExitCode = readInstallerExitCode(message);
       this.exited();
@@ -84,7 +89,7 @@ class InstallProcess {
     }
   };
   private observeCleanup(): void {
-    void this.cleanup?.catch((error: unknown) => this.result.reject(error));
+    void this.cleanup?.catch(this.result.reject);
   }
   private async closed(code: number | null): Promise<void> {
     try {
@@ -100,15 +105,18 @@ class InstallProcess {
   }
   private failed(code: number | null): Error | undefined {
     if (this.failure) return this.failure;
+
     return this.exitFailure(code);
   }
   private exitFailure(code: number | null): Error | undefined {
     if (code === missingToolExitCode)
       return new Error(`${this.input.executable} is required on the Server`);
+
     return code === 0 ? undefined : this.installFailure();
   }
   private installFailure(): Error {
     const subject = this.input.subject ?? 'the Agent';
+
     return new Error(
       `${this.input.executable} failed to install ${subject}: ${cleanDiagnostic(this.diagnostic)}`,
     );
@@ -116,13 +124,17 @@ class InstallProcess {
   private async settleResult(code: number | null): Promise<void> {
     if (this.input.signal.aborted) {
       this.result.reject(this.input.signal.reason);
+
       return;
     }
+
     const failure = this.failed(code);
+
     if (failure) this.result.reject(failure);
     else this.result.resolve(await this.output.finish());
   }
 }
+
 const observeInstaller = async (
   input: InstallToolInput,
   operation: Promise<string>,
@@ -130,6 +142,7 @@ const observeInstaller = async (
   try {
     const result = await operation;
     await removeInstallerRecord(input.cwd);
+
     return result;
   } catch (error) {
     if (!(error instanceof InstallCleanupError))
@@ -137,14 +150,18 @@ const observeInstaller = async (
     throw error;
   }
 };
+
 export const runInstallTool = async (
   input: InstallToolInput,
 ): Promise<string> => {
   input.signal.throwIfAborted();
+
   if (process.platform === 'win32')
     throw new Error('Managed Agent installation is unsupported on Windows');
   const child = await spawnInstallWrapper(input);
   const operation = new InstallProcess(child, input).wait();
+
   if (!input.signal.aborted) child.send('launch');
+
   return observeInstaller(input, operation);
 };

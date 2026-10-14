@@ -13,6 +13,7 @@ import { materializeBinary } from './archive';
 import { checkInstallationFile } from './files';
 import { materializePackage } from './packages';
 import type { InstallRecipe } from './recipe';
+
 export type MaterializationInput = {
   home: string;
   agentId: string;
@@ -22,11 +23,14 @@ export type MaterializationInput = {
   signal: AbortSignal;
   ports: InstallPorts;
 };
+
 const rejections = createRejectionCounter('Registry launch definitions');
+
 const recipeEnvironment = (
   input: MaterializationInput,
 ): { name: string; value: string }[] =>
   Object.entries(input.recipe.env).map(([name, value]) => ({ name, value }));
+
 const validateLaunch = (input: MaterializationInput): void => {
   const result = CustomAgentDefinition.safeParse({
     name: input.entry.name,
@@ -34,12 +38,14 @@ const validateLaunch = (input: MaterializationInput): void => {
     args: input.recipe.args,
     env: recipeEnvironment(input),
   });
+
   if (result.success) return;
   rejections.report('Rejected unsafe registry launch definition');
   throw new Error(
     'Registry launch definition contains unsupported arguments or environment',
   );
 };
+
 const installBinaryFiles = async (
   input: MaterializationInput,
   directory: string,
@@ -47,6 +53,7 @@ const installBinaryFiles = async (
   if (input.recipe.kind !== 'binary')
     throw new Error('Expected a binary distribution');
   const bytes = await input.ports.download(input.recipe.archive, input.signal);
+
   return materializeBinary({
     directory,
     recipe: input.recipe,
@@ -55,12 +62,14 @@ const installBinaryFiles = async (
     signal: input.signal,
   });
 };
+
 const installFiles = (
   input: MaterializationInput,
   directory: string,
 ): Promise<string> => {
   if (input.recipe.kind === 'binary')
     return installBinaryFiles(input, directory);
+
   return materializePackage({
     directory,
     recipe: input.recipe,
@@ -68,7 +77,8 @@ const installFiles = (
     ports: input.ports,
   });
 };
-const createSelection = (
+
+const commonSelection = (
   input: MaterializationInput,
   executable: string,
 ): InstallSelection => ({
@@ -78,10 +88,24 @@ const createSelection = (
   kind: input.recipe.kind,
   args: [...input.recipe.args],
   env: input.recipe.env,
-  ...(input.recipe.kind === 'binary'
-    ? {}
-    : { package: input.recipe.package, packageVersion: input.recipe.version }),
 });
+
+const createSelection = (
+  input: MaterializationInput,
+  executable: string,
+): InstallSelection => {
+  const { recipe } = input;
+  const selection = commonSelection(input, executable);
+
+  if (recipe.kind === 'binary') return selection;
+
+  return {
+    ...selection,
+    package: recipe.package,
+    packageVersion: recipe.version,
+  };
+};
+
 const verifyMaterializedCommand = async (
   input: MaterializationInput,
   staging: string,
@@ -90,6 +114,7 @@ const verifyMaterializedCommand = async (
   const file = await checkInstallationFile(staging, executable);
   await installedCommand(createSelection(input, executable), file);
 };
+
 const publishMaterialization = async (
   input: MaterializationInput,
   staging: string,
@@ -101,13 +126,16 @@ const publishMaterialization = async (
     staging,
     join(agentInstallDirectory(input.home, input.agentId), input.operationId),
   );
+
   return createSelection(input, executable);
 };
+
 const materializeStaging = async (
   input: MaterializationInput,
   staging: string,
 ): Promise<InstallSelection> => {
   await mkdir(staging, { recursive: true });
+
   try {
     return await publishMaterialization(input, staging);
   } catch (error) {
@@ -116,12 +144,14 @@ const materializeStaging = async (
     throw error;
   }
 };
+
 export const materializeAgent = (
   input: MaterializationInput,
 ): Promise<InstallSelection> => {
   if (process.platform === 'win32')
     throw new Error('Managed Agent installation is unsupported on Windows');
   validateLaunch(input);
+
   return materializeStaging(
     input,
     join(

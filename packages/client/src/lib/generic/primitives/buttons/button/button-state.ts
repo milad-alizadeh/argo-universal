@@ -23,6 +23,18 @@ export function readyPress(
 // Paper and Material 3 draw a disabled button as the enabled one at this opacity, label colours kept.
 const disabledOpacity = 0.38;
 
+interface ButtonLayoutStyle {
+  width?: '100%';
+  opacity?: number;
+}
+
+// The Host props that place a native button.
+interface NativeButtonLayout {
+  matchContents: { vertical: boolean; horizontal: boolean };
+  ignoreSafeArea: 'all';
+  style: ButtonLayoutStyle;
+}
+
 /*
  * A button sits in the page's own layout, so a hosted one near the screen's edge keeps its place.
  * The Host fades a disabled button as one layer. Each native view would fade on its own, letting the fill
@@ -30,11 +42,7 @@ const disabledOpacity = 0.38;
  */
 export function nativeButtonLayout(
   props: Pick<ButtonDataProps, 'fullWidth' | 'disabled'>,
-): {
-  matchContents: { vertical: boolean; horizontal: boolean };
-  ignoreSafeArea: 'all';
-  style: { width?: '100%'; opacity?: number };
-} {
+): NativeButtonLayout {
   return {
     matchContents: { vertical: true, horizontal: props.fullWidth !== true },
     ignoreSafeArea: 'all',
@@ -42,14 +50,16 @@ export function nativeButtonLayout(
   };
 }
 
-function layoutStyle(props: Pick<ButtonDataProps, 'fullWidth' | 'disabled'>): {
-  width?: '100%';
-  opacity?: number;
-} {
-  return {
-    ...(props.fullWidth === true ? { width: '100%' } : {}),
-    ...(props.disabled ? { opacity: disabledOpacity } : {}),
-  };
+function layoutStyle(
+  props: Pick<ButtonDataProps, 'fullWidth' | 'disabled'>,
+): ButtonLayoutStyle {
+  const style: ButtonLayoutStyle = {};
+
+  if (props.fullWidth === true) style.width = '100%';
+
+  if (props.disabled) style.opacity = disabledOpacity;
+
+  return style;
 }
 
 interface InteractionProps {
@@ -67,6 +77,7 @@ export function buttonInteractionProps(
   props: InteractionProps,
 ): InteractionAttributes {
   const disabled = !!(props.disabled || props.loading);
+
   return {
     role: 'button',
     disabled,

@@ -28,7 +28,9 @@ const meta = {
   args: { view: { state: 'open', ...runningSession } },
   render: ({ view }): React.JSX.Element => <SessionView {...view} />,
 } satisfies Meta<{ view: SessionViewProps }>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = { name: 'SessionScreen' };
@@ -135,6 +137,7 @@ export const Elicitation: Story = {
 
 function ElicitationPreview(props: SessionViewProps): React.JSX.Element {
   if (!useWide()) return <InteractiveElicitation {...props} />;
+
   return (
     <DesktopShellFrame
       onSectionChange={fn()}
@@ -148,10 +151,13 @@ function ElicitationPreview(props: SessionViewProps): React.JSX.Element {
 
 function InteractiveElicitation(props: SessionViewProps): React.JSX.Element {
   const [answered, setAnswered] = useState(false);
+
   if (props.state !== 'open') return <SessionView {...props} />;
+
   const elicitation = answered
     ? undefined
     : closableElicitation(props.elicitation, () => setAnswered(true));
+
   return <SessionView {...props} elicitation={elicitation} />;
 }
 
@@ -160,6 +166,7 @@ function closableElicitation(
   close: () => void,
 ): ElicitationFormProps | undefined {
   if (!props) return;
+
   return {
     ...props,
     onAnswer: (answer): void => {

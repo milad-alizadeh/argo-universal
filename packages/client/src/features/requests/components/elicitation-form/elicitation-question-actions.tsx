@@ -13,6 +13,7 @@ export function QuestionActions({
 }): ReactElement {
   const wide = useContentWide();
   const [first, second] = actionOrder(model, wide);
+
   return (
     <>
       <Button {...first} />
@@ -27,6 +28,7 @@ function actionOrder(
 ): [ActionProps, ActionProps] {
   const submit = submitProps(model, wide);
   const skip = skipProps(model, wide);
+
   return wide ? [skip, submit] : [submit, skip];
 }
 
@@ -60,5 +62,6 @@ function skipProps(model: QuestionModel, wide: boolean): ActionProps {
 
 function actionLabel(model: QuestionModel): string {
   if (model.props.state.kind === 'submitting') return 'Sending…';
+
   return model.last ? 'Submit' : 'Next';
 }

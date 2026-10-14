@@ -15,6 +15,7 @@ import { mutate } from './server-query';
 import { toast } from './toasts';
 
 const addAgentLabel = 'Add a new agent';
+
 const pickerRows = /^Select |^Add a new agent$/;
 
 // The picker's rows in order, read until the saved statuses settle.
@@ -104,6 +105,7 @@ async function savedLabel(
 ): Promise<string> {
   const id = agentId(ordinal);
   const listed = await listAgents(page, httpUrl);
+
   return listed.find(({ agent }) => agent === id)?.label ?? id;
 }
 

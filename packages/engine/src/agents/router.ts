@@ -62,10 +62,12 @@ const createCatalogSyncRouter = routerFactory((deps: CatalogDeps) =>
         deps.resolver.resolveIfStale(),
         deps.readiness.recheckLater,
       );
+
       return requestAgentCatalogSync(deps.syncSupervisor);
     }),
     catalogChanges: publicProcedure.subscription(({ signal }) => {
       if (!signal) throw new Error('Catalog subscription signal is missing');
+
       return watchCommittedCatalogChanges(deps, signal);
     }),
   }),
@@ -76,8 +78,10 @@ const configuredAgentList = async (
   refresh: boolean,
 ): Promise<AgentsListOutput> => {
   if (refresh) await deps.readiness.recheckEvery();
+
   return listAgents(deps.database, deps.home ?? '');
 };
+
 const createListRouter = routerFactory((deps: AgentsRouterDeps) =>
   router({
     list: publicProcedure
@@ -89,6 +93,7 @@ const createListRouter = routerFactory((deps: AgentsRouterDeps) =>
       .output(AgentCheck)
       .mutation(({ input }) => {
         deps.sessionCommandSignal?.throwIfAborted();
+
         return deps.readiness.recheck(input.agentId);
       }),
   }),
@@ -105,6 +110,7 @@ export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
     createLoginRouter(deps),
   ),
 );
+
 const ownedConfiguration = (deps: AgentsRouterDeps): ConfigurationDeps => ({
   ...deps,
   withAgentSetup: (agentId, operation) =>

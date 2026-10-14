@@ -8,15 +8,18 @@ import { agentWork } from './timeouts';
 import { toast } from './toasts';
 
 const stub = '#!/bin/sh\nexit 0\n';
+
 const placeTool = async (toolsPath: string, file: string): Promise<void> => {
   await writeFile(path.join(toolsPath, file), stub, { mode: 0o755 });
 };
+
 const removeTools = async (
   toolsPath: string,
   files: readonly string[],
 ): Promise<void> => {
   for (const file of files) await rm(path.join(toolsPath, file));
 };
+
 // Evidence for the PR: each state of the flow, as the user sees it.
 const capture = async (page: Page, name: string): Promise<void> => {
   await page.screenshot({
@@ -24,8 +27,10 @@ const capture = async (page: Page, name: string): Promise<void> => {
     animations: 'disabled',
   });
 };
+
 const installButton = (page: Page): Locator =>
   page.getByRole('button', { name: 'Install', exact: true });
+
 const homebrewButton = (page: Page): Locator =>
   page.getByRole('button', { name: 'Install Node.js with Homebrew' });
 
@@ -36,6 +41,7 @@ Given(
     await placeTool(app.toolsPath, 'brew');
   },
 );
+
 Given(
   'uv is not on the Server, nor Homebrew',
   async ({ app }): Promise<void> => {

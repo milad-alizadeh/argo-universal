@@ -67,18 +67,21 @@ function useLinkFields({
 }: Pick<LinkFormProps, 'initial' | 'onSave'>): LinkFieldsState {
   const [fields, setFields] = useState(initial);
   const save = (): void => onSave(fields);
+
   const field = (label: string, key: keyof LinkFields): LinkFieldProps => ({
     label,
     value: fields[key],
     onChangeText: (value) => setFields({ ...fields, [key]: value }),
     onSubmitEditing: save,
   });
+
   return { field, save };
 }
 
 // The link editor's Text and Link fields, with Cancel and Save.
 export function LinkForm(props: LinkFormProps): React.JSX.Element {
   const { field, save } = useLinkFields(props);
+
   return (
     <>
       <LinkField {...field('Text', 'text')} />

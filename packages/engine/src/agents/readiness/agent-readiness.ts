@@ -25,13 +25,14 @@ export type ReadinessDeps = {
   now: () => number;
   checkAgentLaunch: CheckAgentLaunch;
   // The Resolver looks again before every check, so a check uses what is on the machine now.
-  resolve: () => Promise<unknown>;
+  resolve: () => Promise<readonly string[]>;
   // Setup ownership: waits for an install or edit, shares a running check and keeps cleanup failures owned.
   withAgentCheck: (
     agentId: string,
     operation: () => Promise<AgentCheck>,
   ) => Promise<AgentCheck>;
 };
+
 const startConcurrency = 4;
 
 // Runs inside setup ownership, so it reads the Agent as committed after any install or edit it waited for.
@@ -41,11 +42,14 @@ const runCheck = async (
 ): Promise<AgentCheck> => {
   const target = readTarget(deps.database, agentId);
   const missing = await missingFiles(deps.home, target);
+
   if (missing) return missing;
+
   const launch = await resolveInstalledAgentLaunch(
     deps.database,
     deps.home,
   )({ agent: agentId, projectId: '', projectPath: homedir() });
+
   return deps.checkAgentLaunch({ name: target.name, launch });
 };
 
@@ -64,6 +68,7 @@ const save = (
     new AgentReadinessSaveJob(agentIds, readiness),
     true,
   );
+
 const savedCheck = (
   deps: ReadinessDeps,
   check: AgentCheck,
@@ -78,14 +83,17 @@ const checkAndSave = async (
   agentId: string,
 ): Promise<AgentCheck> => {
   let check: AgentCheck;
+
   try {
     check = await deps.withAgentCheck(agentId, () => runCheck(deps, agentId));
   } catch (error) {
     if (error instanceof ReadinessSkipped) throw error;
     check = readinessOfFailure(error);
   }
+
   const result = sanitized(check);
   await save(deps, [agentId], savedCheck(deps, result));
+
   return result;
 };
 
@@ -97,18 +105,21 @@ const recheckAgent = async (
   readTarget(deps.database, agentId);
   await save(deps, [agentId], pendingReadiness);
   await deps.resolve().catch(() => {});
+
   return checkAndSave(deps, agentId);
 };
 
 const runBounded = async (
   agentIds: readonly string[],
-  check: (agentId: string) => Promise<unknown>,
+  check: (agentId: string) => Promise<AgentCheck>,
 ): Promise<void> => {
   const queue = [...agentIds];
+
   const worker = async (): Promise<void> => {
     for (let next = queue.shift(); next; next = queue.shift())
       await check(next).catch(() => {});
   };
+
   await Promise.all(Array.from({ length: startConcurrency }, worker));
 };
 
@@ -146,6 +157,7 @@ export type AgentReadiness = {
   // An Agent answered session/new or a prompt with auth_required.
   signInRequired: (agentId: string) => void;
 };
+
 export const createAgentReadiness = (deps: ReadinessDeps): AgentReadiness => ({
   recheck: (agentId) => recheckAgent(deps, agentId),
   saveOpenFailure: (agentId, reason) => saveOpenFailure(deps, agentId, reason),

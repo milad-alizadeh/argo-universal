@@ -23,8 +23,11 @@ const meta = {
   component: AgentListItem,
   args: { agent, onOpen: fn() },
 } satisfies Meta<typeof AgentListItem>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 interface IconCase {
   uri?: string;
   response?: string;
@@ -39,12 +42,14 @@ function iconCase(options: IconCase): Story {
     unavailable: false,
     ...options,
   };
+
   return {
     args: { agent: { ...agent, icon: uri } },
     beforeEach: (): (() => void) => {
       const port = spyOn(globalThis, 'fetch').mockResolvedValue(
         new Response(response, { status }),
       );
+
       return (): void => port.mockRestore();
     },
     play: async ({ canvas }): Promise<void> => {
@@ -64,23 +69,30 @@ export const EncodedWithoutNativeDecoding: Story = iconCase({
   uri: encodedIcon,
   response: encodedIcon.slice(encodedIcon.indexOf(',') + 1),
 });
+
 export const Base64: Story = iconCase({ uri: base64Icon });
+
 export const Url: Story = iconCase({ uri: 'https://example.org/icon.svg' });
+
 export const Missing: Story = iconCase({ unavailable: true });
+
 export const MalformedEncoding: Story = iconCase({
   uri: 'data:image/svg+xml,%GG',
   unavailable: true,
 });
+
 export const MalformedXml: Story = iconCase({
   uri: `data:image/svg+xml,${encodeURIComponent(malformedIconXml)}`,
   response: malformedIconXml,
   unavailable: true,
 });
+
 export const UnavailableUrl: Story = iconCase({
   uri: 'https://example.org/unavailable.svg',
   status: 503,
   unavailable: true,
 });
+
 export const MalformedUrlXml: Story = iconCase({
   uri: 'https://example.org/malformed.svg',
   response: malformedIconXml,
@@ -94,6 +106,7 @@ export const NamesItsStatusAndCarriesNoAction: Story = {
     const row = canvas.getByRole('link', {
       name: `${agent.name}, ${agent.description}, Update available`,
     });
+
     await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
     await userEvent.click(row);
     await expect(args.onOpen).toHaveBeenCalledWith(agent.id);

@@ -7,11 +7,14 @@ import { createMachinePath, type MachinePath } from '#mocks/machine-path';
 import type { InstallPorts, InstallToolInput } from '../../agents';
 
 type Omitted = 'node' | 'npm' | 'uv' | 'brew';
+
 // Puts every tool on PATH except the omitted one; Node.js itself comes from the test PATH unless omitted.
 const machineWithout = async (omitted?: Omitted): Promise<MachinePath> => {
   const machine = await createMachinePath({ node: omitted !== 'node' });
+
   for (const tool of ['npm', 'uv', 'brew'] as const)
     if (tool !== omitted) await machine.place(tool);
+
   return machine;
 };
 
@@ -43,25 +46,30 @@ const homebrew = (
   outcome: (input: InstallToolInput) => Promise<void>,
 ): InstallPorts & { runs: InstallToolInput[] } => {
   const runs: InstallToolInput[] = [];
+
   return {
     ...installationPorts,
     runs,
     runTool: async (input) => {
       runs.push(input);
       await outcome(input);
+
       return '';
     },
   };
 };
+
 const installedFiles: Record<InstallTool, Omitted> = { node: 'npm', uv: 'uv' };
 
 it.each<InstallTool>(['node', 'uv'])(
   'installing %s with Homebrew runs `brew install` through the installer port, then finds it',
   async (tool) => {
     const machine = await machineWithout(installedFiles[tool]);
+
     const ports = homebrew(machine, async () => {
       await machine.place(installedFiles[tool]);
     });
+
     const host = await startEngineTestHost({ installationPorts: ports });
     expect((await host.caller.agents.tools())[tool]).toBe(false);
     expect(await host.caller.agents.installTool({ tool })).toMatchObject({
@@ -79,9 +87,11 @@ it.each<InstallTool>(['node', 'uv'])(
 
 it('a failed Homebrew install reports its reason and the tool stays missing', async () => {
   const machine = await machineWithout('npm');
+
   const ports = homebrew(machine, () =>
     Promise.reject(new Error('brew failed to install Node.js: no bottle')),
   );
+
   const host = await startEngineTestHost({ installationPorts: ports });
   await expect(
     host.caller.agents.installTool({ tool: 'node' }),

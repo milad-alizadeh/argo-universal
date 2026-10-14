@@ -21,6 +21,7 @@ export function ProjectListView(
   props: ProjectListViewProps,
 ): React.JSX.Element {
   const [search, setSearch] = useState(props.initialSearch ?? '');
+
   return (
     <View className="flex-1 bg-sidebar wide:bg-transparent">
       <PhoneHeader onSearch={setSearch} />
@@ -33,6 +34,7 @@ function PhoneHeader({
   onSearch,
 }: Pick<SearchedProps, 'onSearch'>): React.JSX.Element | null {
   if (useWide()) return null;
+
   return (
     <ScreenHeader
       title="Projects"
@@ -78,6 +80,7 @@ const loadFailed: ErrorToast = {
 function ProjectsBody(props: SearchedProps): React.JSX.Element {
   const { projects } = props;
   useErrorToast(projects.status === 'error' ? loadFailed : undefined);
+
   if (projects.status !== 'loaded')
     return (
       <FieldGroup search={listSearch(props)}>
@@ -86,5 +89,6 @@ function ProjectsBody(props: SearchedProps): React.JSX.Element {
         </FieldSection>
       </FieldGroup>
     );
+
   return <LoadedProjects {...props} projects={projects.projects} />;
 }

@@ -30,11 +30,14 @@ type AlertActionsProps = Pick<AlertProps, 'actions' | 'onOpenChange'> & {
   explicitCancel?: boolean;
 };
 
-function alertPresentation(props: AlertProps): {
+// The props SwiftUI's alert presents itself from.
+interface AlertPresentation {
   title: string;
   isPresented: boolean;
   onIsPresentedChange: (open: boolean) => void;
-} {
+}
+
+function alertPresentation(props: AlertProps): AlertPresentation {
   return {
     title: props.title,
     isPresented: props.open,
@@ -60,6 +63,7 @@ function PlainAlertMessage(props: {
   message: AlertProps['message'];
 }): React.JSX.Element | null {
   if (!props.message) return null;
+
   return (
     <SwiftAlert.Message>
       <Text>{props.message}</Text>
@@ -85,6 +89,7 @@ function ConfirmationMessage(props: {
   message: AlertProps['message'];
 }): React.JSX.Element | null {
   if (!props.message) return null;
+
   return (
     <ConfirmationDialog.Message>
       <Text>{props.message}</Text>

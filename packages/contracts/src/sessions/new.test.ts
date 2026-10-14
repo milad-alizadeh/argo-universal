@@ -39,6 +39,7 @@ it('accepts a file uploaded from the device', (): void => {
     uri: '/blobs/blob-1',
     blob: { blobId: 'blob-1', mime: 'text/markdown', bytes: 7 },
   };
+
   expect(
     SessionNewInput.parse({ ...validNewSessionInput, prompt: [file] }).prompt,
   ).toEqual([file]);

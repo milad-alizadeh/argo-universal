@@ -5,30 +5,37 @@ import {
   installationRunning,
   type InstallPhaseInput,
 } from './agent-install-phase';
+
 const disconnected = 'Network disconnected';
+
 const recovered: AgentInstallOperation = {
   agentId: 'example',
   operationId: 'accepted',
   version: '1.2.3',
   status: 'installing',
 };
+
 const idle: InstallPhaseInput = {
   pending: false,
   failureConfirmed: true,
   watched: [],
 };
+
 const installed: AgentInstallOperation = { ...recovered, status: 'installed' };
+
 const failed: AgentInstallOperation = {
   ...recovered,
   status: 'failed',
   failure: 'Node.js is required on the Server',
 };
+
 const lostResponse = {
   ...idle,
   operation: recovered,
   failure: disconnected,
   requestId: 1,
 };
+
 describe('an accepted Server operation after a lost start response', () => {
   it('keeps the installation running', () => {
     expect(installationRunning(lostResponse)).toBe(true);
@@ -37,11 +44,13 @@ describe('an accepted Server operation after a lost start response', () => {
     expect(installationNotice(lostResponse)).toBeUndefined();
   });
 });
+
 describe('a failed request the Server reports no new work for', () => {
   const input = {
     ...lostResponse,
     previousOperationId: recovered.operationId,
   };
+
   it('stops the installation', () => {
     expect(installationRunning(input)).toBe(false);
   });
@@ -53,6 +62,7 @@ describe('a failed request the Server reports no new work for', () => {
     });
   });
 });
+
 describe('a failed request before the Server status confirms nothing started', () => {
   const input = {
     ...idle,
@@ -60,6 +70,7 @@ describe('a failed request before the Server status confirms nothing started', (
     failureConfirmed: false,
     requestId: 1,
   };
+
   it('keeps its progress', () => {
     expect(installationRunning(input)).toBe(true);
   });
@@ -67,6 +78,7 @@ describe('a failed request before the Server status confirms nothing started', (
     expect(installationNotice(input)).toBeUndefined();
   });
 });
+
 it('a recovered operation reports the outcome of the request whose response was lost', () => {
   expect(
     installationNotice({
@@ -77,6 +89,7 @@ it('a recovered operation reports the outcome of the request whose response was 
     }),
   ).toEqual({ key: 'accepted', result: 'installed', version: '1.2.3' });
 });
+
 describe('a pending request', () => {
   const input = { ...idle, pending: true, failure: disconnected };
   it('shows progress', () => {
@@ -86,6 +99,7 @@ describe('a pending request', () => {
     expect(installationNotice(input)).toBeUndefined();
   });
 });
+
 describe('a settled operation', () => {
   it.each([
     [
@@ -119,6 +133,7 @@ describe('a settled operation', () => {
       ...recovered,
       status: 'cancelled',
     };
+
     expect(
       installationNotice({
         ...idle,

@@ -4,4 +4,5 @@ import { z } from 'zod';
 export const ClockTick = z.strictObject({
   now: z.iso.datetime(),
 });
+
 export type ClockTick = z.infer<typeof ClockTick>;

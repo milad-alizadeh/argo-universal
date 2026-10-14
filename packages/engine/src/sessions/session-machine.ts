@@ -32,9 +32,12 @@ import { createAcpResponseReaders } from '../agents';
 import { attachmentsFolderIn, blobsFolderIn } from '../blob';
 import {
   acpToolCallRowId,
+  turnEndingEvent,
+  permissionsCancelledEvent,
   readQueuedFeedRow,
   publishTurnContent,
   type FeedEvent,
+  type FeedTurnEnding,
   type FeedActorRef,
 } from '../feed';
 import { feedMachine } from '../feed';
@@ -51,6 +54,7 @@ import {
   type AcpLifetimeEvent,
   type AcpSessionDependencies,
 } from './acp/acp-lifetime';
+import type { ElicitationAnswerContent } from './acp/elicitation-types';
 import type {
   AcpPromptRequest as PromptRequest,
   AcpPromptResponse as PromptResponse,
@@ -81,7 +85,6 @@ import {
   type SessionData,
   type SessionDiscard,
   type SessionInput,
-  interruptionDisclosureId,
   toSessionInsert,
 } from './session-data';
 import {
@@ -91,47 +94,82 @@ import {
 } from './session-storage';
 
 const setConfigEvent = 'session.setConfigOption';
+
 const storageFailingEvent = 'session.storageFailing';
+
 const rejectedMessageEvent = 'agent.messageRejected';
+
 const closedSessionTarget = '#session.closed';
+
 const discardingSessionTarget = '#session.discarding';
+
 const acpPermissionEvent = 'acp.permissionRequested';
+
 const acpElicitationEvent = 'acp.elicitationRequested';
+
 const answerPermissionEvent = 'session.answerPermission';
+
 const acpRequestWithdrawnEvent = 'acp.requestWithdrawn';
+
 const answerElicitationEvent = 'session.answerElicitation';
+
 const writeFeedEvent = 'writer.write';
+
 const feedChangeEvent = 'feed.change';
+
 const configuringState = 'configuring';
+
 const acpUpdateEvent = 'acp.update';
 
+const staleAcpUpdate = {
+  guard: 'isStaleAcpUpdate',
+  actions: 'forwardAcpUpdate',
+} as const;
+
 type FeedChangeEvent = Extract<FeedEvent, { type: 'feed.change' }>;
+
 type SessionDataParameters = { data: SessionData };
+
 type FailureParameters = { error: unknown };
-type CrashNoticeParameters = { description?: string } | undefined;
+
+type CrashNoticeParameters =
+  | { description?: string; duringTurn?: boolean }
+  | undefined;
+
 type LoadSessionInput = {
   session: SessionInput;
   writer: WriterActorRef | undefined;
 };
+
 type EndTurnParameters = {
   stopReason: StopReason;
   usage?: TurnUsage;
   error?: TurnError;
 };
+
 type StartTurnParameters = { turnId: string; content: ContentBlock[] };
+
 type OpenedAcpSession = {
   lease: AcpSessionLease;
   configOptions: SessionConfigOption[];
 };
+
 type AcpOperationInput = {
   context: SessionContext;
   findFeed: () => FeedActorRef | undefined;
 };
+
 const publishActiveTurnContent = (input: AcpOperationInput): Promise<void> => {
   if (!input.context.activeTurnId) return Promise.resolve();
   const feed = input.findFeed();
+
   if (!feed || feed.getSnapshot().status !== 'active') return Promise.resolve();
-  return publishTurnContent(feed, input.context.activeTurnId);
+
+  return publishTurnContent(
+    feed,
+    input.context.activeTurnId,
+    input.context.turnEnding,
+  );
 };
 
 export type SessionMachineInput = SessionInput & {
@@ -152,7 +190,7 @@ export type SessionCommand =
       type: 'session.answerElicitation';
       requestId: PendingElicitation['requestId'];
       action: 'accept' | 'decline' | 'cancel';
-      content?: Record<string, unknown>;
+      content?: ElicitationAnswerContent;
     }
   | {
       type: typeof setConfigEvent;
@@ -167,6 +205,7 @@ type SessionEvent =
   | SessionCommand
   | AcpLifetimeEvent
   | { type: typeof storageFailingEvent };
+
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
   activeTurnId: string | null;
@@ -189,6 +228,7 @@ export interface SessionContext extends SessionData {
   acpResponseReaders: ReturnType<typeof createAcpResponseReaders>;
   acpConfigurationRejections: ReturnType<typeof createRejectionCounter>;
   acpTurnOutcome: EndTurnParameters | null;
+  turnEnding: FeedTurnEnding;
   configQueue: Extract<SessionCommand, { type: typeof setConfigEvent }>[];
   applyingConfig: Extract<
     SessionCommand,
@@ -205,26 +245,17 @@ const interruptedTurn = (message: string): EndTurnParameters => ({
   stopReason: 'error',
   error: { code: 'interrupted', message },
 });
+
 const storageFailedTurn = interruptedTurn(
   'Storage is failing, so the Turn was cancelled',
 );
+
 const connectionLostDuringTurn = interruptedTurn(
   'The Agent connection failed during the Turn',
 );
+
 const connectionLostBeforePrompt =
   'The Agent connection failed before the prompt was sent';
-const interruptionDisclosure = (turnId: string): FeedChange => ({
-  type: 'upsert',
-  update: {
-    id: interruptionDisclosureId(turnId),
-    sessionUpdate: 'notice',
-    state: 'settled',
-    severity: 'warning',
-    title: 'Output may be missing',
-    description:
-      'The Turn was interrupted, so its output may be missing. Argo did not resend the prompt.',
-  },
-});
 
 const writer = ({
   system,
@@ -239,17 +270,14 @@ const writer = ({
 const permissionOutcomeChange = (
   context: SessionContext,
   toolCallId: string,
-  option: PendingPermission['options'][number] | null,
+  option: PendingPermission['options'][number],
 ): FeedChange => ({
   type: 'patch',
   id: acpToolCallRowId(context.acpLease?.sessionId ?? '', toolCallId),
   set: {
     _meta: {
       argo: {
-        permissionOutcome:
-          option === null
-            ? { outcome: 'cancelled' }
-            : { outcome: 'selected', ...option },
+        permissionOutcome: { outcome: 'selected', ...option },
       },
     },
   },
@@ -261,7 +289,9 @@ const readConfigurationUpdate = (
 ): SessionConfigOption[] | undefined => {
   assertEvent(event, acpUpdateEvent);
   const update = event.notification.update;
+
   if (update.sessionUpdate !== 'config_option_update') return undefined;
+
   try {
     return readAcpConfiguration(
       update.configOptions,
@@ -274,7 +304,9 @@ const readConfigurationUpdate = (
 
 const headPermission = (context: SessionContext): PendingPermission => {
   const request = context.permissionQueue[0];
+
   if (!request) throw new Error('No Permission request to answer');
+
   return request;
 };
 
@@ -282,17 +314,21 @@ const headPermission = (context: SessionContext): PendingPermission => {
 const cancelledPermissions = (
   context: SessionContext,
   requests: readonly PendingPermission[],
-): FeedChangeEvent[] =>
-  requests.map((request): FeedChangeEvent => ({
-    type: feedChangeEvent,
-    turnId: context.activeTurnId,
-    change: permissionOutcomeChange(context, request.toolCallId, null),
-  }));
+): Extract<FeedEvent, { type: 'feed.permissionsCancelled' }> => ({
+  type: permissionsCancelledEvent,
+  turnId: context.activeTurnId,
+  acpSessionId: context.acpLease?.sessionId ?? '',
+  toolCallIds: requests.map((request) => request.toolCallId),
+});
+
+// The Session's one child actor: its Feed, invoked under the id "feed".
+type SessionChildren = { feed: 'feed' };
 
 const sessionSetup = setup({
+  // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as SessionMachineInput,
-    children: {} as { feed: 'feed' },
+    children: {} as SessionChildren,
     context: {} as SessionContext,
     events: {} as SessionEvent,
     output: {} as Pick<SessionContext, 'failure'>,
@@ -300,6 +336,7 @@ const sessionSetup = setup({
   actors: {
     cancelAcp: fromPromise<void, SessionContext>(({ input }) => {
       if (!input.acpLease) throw new Error('No active ACP Session');
+
       return input.acpLease.agent.notify('session/cancel', {
         sessionId: input.acpLease.sessionId,
       });
@@ -307,10 +344,12 @@ const sessionSetup = setup({
     configureAcp: fromPromise<SessionConfigOption[], SessionContext>(
       async ({ input }) => {
         const { acpLease, applyingConfig } = input;
+
         if (!acpLease || !applyingConfig)
           throw new Error('No Session configuration operation');
         const { configId, value } = applyingConfig;
         validateConfigChoice(input.configOptions, applyingConfig);
+
         const response = input.acpResponseReaders[
           'session/set_config_option'
         ].parse(
@@ -321,6 +360,7 @@ const sessionSetup = setup({
             ...(typeof value === 'boolean' && { type: 'boolean' }),
           }),
         );
+
         return readAcpConfiguration(
           response.configOptions,
           input.acpConfigurationRejections,
@@ -329,9 +369,15 @@ const sessionSetup = setup({
     ),
     publishTurn: fromPromise<void, AcpOperationInput>(({ input }) => {
       const feed = input.findFeed();
+
       if (!feed || !input.context.activeTurnId)
         throw new Error('No finishing Turn Feed');
-      return publishTurnContent(feed, input.context.activeTurnId);
+
+      return publishTurnContent(
+        feed,
+        input.context.activeTurnId,
+        input.context.turnEnding,
+      );
     }),
     commitPrompt: fromPromise<PromptRequest, AcpOperationInput>(
       ({ input, signal }) => {
@@ -340,9 +386,12 @@ const sessionSetup = setup({
           acpLease,
           input: sessionInput,
         } = input.context;
+
         const feed = input.findFeed();
+
         if (!pendingSubmission || !acpLease || !feed)
           throw new Error('No Session submission destination');
+
         return commitLocalPrompt(
           {
             submission: pendingSubmission,
@@ -364,6 +413,7 @@ const sessionSetup = setup({
       async ({ input }) => {
         if (!input.acpLease || !input.acpPrompt)
           throw new Error('No admitted ACP prompt');
+
         return input.acpResponseReaders['session/prompt'].parse(
           await input.acpLease.agent.request<unknown>(
             'session/prompt',
@@ -380,6 +430,7 @@ const sessionSetup = setup({
     openAcp: fromPromise<OpenedAcpSession, SessionContext>(
       async ({ input }) => {
         const lease = await input.acpLifetime.open(input);
+
         return {
           lease,
           configOptions: readAcpConfiguration(
@@ -392,6 +443,7 @@ const sessionSetup = setup({
     reopenAcp: fromPromise<OpenedAcpSession, SessionContext>(
       async ({ input }) => {
         const lease = await input.acpLifetime.reopen(input);
+
         try {
           const configOptions = await restoreRecoveryConfiguration({
             lease,
@@ -399,11 +451,25 @@ const sessionSetup = setup({
             readers: input.acpResponseReaders,
             rejections: input.acpConfigurationRejections,
           });
+
           return { lease, configOptions };
         } catch (error) {
           await lease.close();
           throw error;
         }
+      },
+    ),
+    replaceAcp: fromPromise<OpenedAcpSession, SessionContext>(
+      async ({ input }) => {
+        const lease = await input.acpLifetime.replace(input);
+
+        return {
+          lease,
+          configOptions: readAcpConfiguration(
+            lease.response.configOptions,
+            input.acpConfigurationRejections,
+          ),
+        };
       },
     ),
     closeAcp: fromPromise<void, AcpOperationInput>(async ({ input }) => {
@@ -430,6 +496,7 @@ const sessionSetup = setup({
   actions: {
     queueAcpConfig: assign(({ context, event }) => {
       assertEvent(event, setConfigEvent);
+
       return { configQueue: [...context.configQueue, event] };
     }),
     takeAcpConfig: assign(({ context }) => ({
@@ -439,6 +506,7 @@ const sessionSetup = setup({
     applyAcpConfig: enqueueActions(
       ({ context, event, enqueue }, options?: SessionConfigOption[]) => {
         const nextOptions = options ?? readConfigurationUpdate(context, event);
+
         if (!nextOptions) return;
         const configValues = toConfigValues(nextOptions);
         enqueue.assign({
@@ -456,24 +524,30 @@ const sessionSetup = setup({
     ),
     acknowledgeAcpConfig: assign(({ context }) => {
       context.applyingConfig?.applied?.resolve(context.configOptions);
+
       return { applyingConfig: null };
     }),
     rejectAcpConfig: assign(({ context }, params: FailureParameters) => {
       context.applyingConfig?.applied?.reject(params.error);
+
       return { applyingConfig: null };
     }),
     rejectPendingAcpConfig: assign(({ context }) => {
       const error = new Error('Session closed before configuration completed');
       context.applyingConfig?.applied?.reject(error);
+
       for (const config of context.configQueue) config.applied?.reject(error);
+
       return { configQueue: [], applyingConfig: null };
     }),
     rememberAcpUsage: assign(
       ({ context, event }): Pick<SessionContext, 'usage'> => {
         assertEvent(event, acpUpdateEvent);
         const update = event.notification.update;
+
         if (update.sessionUpdate !== 'usage_update')
           return { usage: context.usage };
+
         return {
           usage: acpContextUsage(update, context.acpLease?.initialization),
         };
@@ -483,11 +557,13 @@ const sessionSetup = setup({
       'feed',
       ({ context, event }): Extract<FeedEvent, { type: 'feed.acpUpdate' }> => {
         assertEvent(event, acpUpdateEvent);
+
         return {
           type: 'feed.acpUpdate',
           acpSessionId: event.notification.sessionId,
           update: event.notification.update,
           turnId: context.activeTurnId,
+          stale: event.stale,
         };
       },
     ),
@@ -502,6 +578,7 @@ const sessionSetup = setup({
     rememberSubmission: assign(
       ({ event }): Pick<SessionContext, 'pendingSubmission'> => {
         assertEvent(event, 'session.prompt');
+
         return { pendingSubmission: event };
       },
     ),
@@ -511,6 +588,7 @@ const sessionSetup = setup({
         prompt: PromptRequest,
       ): Pick<SessionContext, 'acpPrompt' | 'pendingSubmission'> => {
         context.pendingSubmission?.committed?.resolve();
+
         return {
           acpPrompt: prompt,
           pendingSubmission: context.pendingSubmission && {
@@ -526,6 +604,7 @@ const sessionSetup = setup({
         params: FailureParameters,
       ): Pick<SessionContext, 'pendingSubmission'> => {
         context.pendingSubmission?.committed?.reject(params.error);
+
         return { pendingSubmission: null };
       },
     ),
@@ -554,6 +633,7 @@ const sessionSetup = setup({
     ),
     rememberAcpFailure: assign(({ event }): Pick<SessionContext, 'failure'> => {
       assertEvent(event, 'acp.failed');
+
       return { failure: String(event.error) };
     }),
     rememberSession: assign(
@@ -584,9 +664,11 @@ const sessionSetup = setup({
     // The Agent must be ready before the Session row is written.
     storeSession: enqueueActions(({ context, enqueue }): void => {
       if (context.input.kind !== 'new') return;
+
       const committed = Promise.withResolvers<
         'committed' | 'retrying' | 'failed'
       >();
+
       enqueue.assign({
         stored: true,
         sessionInsertCommitted: committed.promise,
@@ -596,7 +678,7 @@ const sessionSetup = setup({
         job: toSessionInsert(context.input, context),
         committed: {
           resolve: () => committed.resolve('committed'),
-          reject: (_error: unknown, retrying?: boolean) =>
+          reject: (cause: unknown, retrying?: boolean) =>
             committed.resolve(retrying ? 'retrying' : 'failed'),
         },
       });
@@ -610,6 +692,7 @@ const sessionSetup = setup({
         enqueue.assign({
           activeTurnId: params.turnId,
           activeTurnStartedAt: startedAt,
+          turnEnding: { kind: 'completion' },
           kept: true,
         });
         enqueue.sendTo(writer, {
@@ -629,6 +712,7 @@ const sessionSetup = setup({
     endTurn: enqueueActions(
       ({ context, enqueue }, ended: EndTurnParameters): void => {
         const params = context.storageFailedTurn ? storageFailedTurn : ended;
+
         if (context.activeTurnId)
           enqueue.sendTo(writer, {
             type: writeFeedEvent,
@@ -655,6 +739,7 @@ const sessionSetup = setup({
     queuePermission: assign(
       ({ context, event }): Pick<SessionContext, 'permissionQueue'> => {
         assertEvent(event, acpPermissionEvent);
+
         return {
           permissionQueue: [...context.permissionQueue, event.request],
         };
@@ -663,6 +748,7 @@ const sessionSetup = setup({
     queueElicitation: assign(
       ({ context, event }): Pick<SessionContext, 'elicitationQueue'> => {
         assertEvent(event, acpElicitationEvent);
+
         return {
           elicitationQueue: [...context.elicitationQueue, event.request],
         };
@@ -675,13 +761,19 @@ const sessionSetup = setup({
     // The Agent withdrew a request: its Tool call shows the cancellation.
     forgetAcpRequest: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, acpRequestWithdrawnEvent);
+
       const isOther = (request: { requestId: string }): boolean =>
         request.requestId !== event.requestId;
-      for (const change of cancelledPermissions(
-        context,
-        context.permissionQueue.filter((request): boolean => !isOther(request)),
-      ))
-        enqueue.sendTo('feed', change);
+
+      enqueue.sendTo(
+        'feed',
+        cancelledPermissions(
+          context,
+          context.permissionQueue.filter(
+            (request): boolean => !isOther(request),
+          ),
+        ),
+      );
       enqueue.assign({
         permissionQueue: context.permissionQueue.filter(isOther),
         elicitationQueue: context.elicitationQueue.filter(isOther),
@@ -689,12 +781,16 @@ const sessionSetup = setup({
     }),
     publishPermissionOutcome: sendTo(
       'feed',
-      ({ context, event }): FeedChangeEvent => {
+      ({ context, event }): FeedEvent => {
         assertEvent(event, answerPermissionEvent);
         const request = headPermission(context);
         const option = chosenOption(request, event.optionId);
+
         if (option === undefined)
           throw new Error('The Agent did not offer that option');
+
+        if (option === null) return cancelledPermissions(context, [request]);
+
         return {
           type: feedChangeEvent,
           turnId: context.activeTurnId,
@@ -723,45 +819,70 @@ const sessionSetup = setup({
       elicitationQueue: ({ context }): SessionContext['elicitationQueue'] =>
         context.elicitationQueue.slice(1),
     }),
+    rememberCancellation: assign({
+      turnEnding: ({ context }): FeedTurnEnding => ({
+        ...context.turnEnding,
+        kind: 'cancel',
+      }),
+    }),
+    rememberCancelTimeout: assign({
+      turnEnding: ({ context }): FeedTurnEnding => ({
+        ...context.turnEnding,
+        kind: 'cancel_timeout',
+      }),
+      acpTurnOutcome: { stopReason: 'cancelled' },
+    }),
     cancelAcpRequests: enqueueActions(({ context, enqueue }): void => {
       context.acpLifetime.cancelRequests();
-      for (const change of cancelledPermissions(
-        context,
-        context.permissionQueue,
-      ))
-        enqueue.sendTo('feed', change);
-      enqueue.assign({ permissionQueue: [], elicitationQueue: [] });
+      const pending = context.turnEnding.waitingPermissions?.toolCallIds ?? [];
+      enqueue.assign({
+        turnEnding: {
+          ...context.turnEnding,
+          waitingPermissions: {
+            acpSessionId: context.acpLease?.sessionId ?? '',
+            toolCallIds: [
+              ...pending,
+              ...context.permissionQueue.map((request) => request.toolCallId),
+            ],
+          },
+        },
+        permissionQueue: [],
+        elicitationQueue: [],
+      });
     }),
     recordCrash: enqueueActions(
       ({ context, enqueue }, params: CrashNoticeParameters): void => {
         const now = context.input.now();
         const agentCrashes = addCrash(context.agentCrashes, now);
         enqueue.assign({ agentCrashes });
-        enqueue.sendTo('feed', {
-          type: feedChangeEvent,
-          turnId: context.activeTurnId,
-          change: {
-            type: 'upsert',
-            update: {
-              id: `${context.sessionId}:crash:${now}:${agentCrashes.length}`,
-              sessionUpdate: 'notice',
-              state: 'settled',
-              severity: 'warning',
-              title: 'The Agent stopped unexpectedly',
-              ...params,
-            },
-          },
-        });
+
+        const ending: Extract<FeedTurnEnding, { kind: 'agent_crash' }> = {
+          kind: 'agent_crash' as const,
+          occurredAt: now,
+          crashCount: agentCrashes.length,
+        };
+
+        if (params?.description !== undefined)
+          ending.description = params.description;
+
+        if (params?.duringTurn)
+          enqueue.assign({ turnEnding: { ...context.turnEnding, ...ending } });
+        else
+          enqueue.sendTo('feed', {
+            type: turnEndingEvent,
+            turnId: context.activeTurnId,
+            ending,
+          });
       },
     ),
     discloseInterruption: enqueueActions(({ context, enqueue }): void => {
-      const turnId =
-        context.activeTurnId ?? context.undisclosedInterruptedTurnId;
+      const turnId = context.undisclosedInterruptedTurnId;
+
       if (!turnId) return;
       enqueue.sendTo('feed', {
-        type: feedChangeEvent,
+        type: turnEndingEvent,
         turnId,
-        change: interruptionDisclosure(turnId),
+        ending: { kind: 'interruption' },
       });
       enqueue.assign({ undisclosedInterruptedTurnId: null });
     }),
@@ -786,6 +907,7 @@ const sessionSetup = setup({
       'feed',
       ({ context, event }): FeedChangeEvent => {
         assertEvent(event, rejectedMessageEvent);
+
         return {
           type: feedChangeEvent,
           turnId: context.activeTurnId,
@@ -809,23 +931,18 @@ const sessionSetup = setup({
         `session ${context.sessionId}: rejected an Agent message: ${event.reason}`,
       );
     },
-    cancelNotice: sendTo('feed', ({ context }): FeedChangeEvent => ({
-      type: feedChangeEvent,
+    cancelNotice: sendTo('feed', ({ context }): FeedEvent => ({
+      type: turnEndingEvent,
       turnId: context.activeTurnId,
-      change: {
-        type: 'upsert',
-        update: {
-          id: `${context.activeTurnId}:cancel-timeout`,
-          sessionUpdate: 'notice',
-          state: 'settled',
-          severity: 'warning',
-          title: 'The Agent did not stop after cancellation',
-        },
-      },
+      ending: { kind: 'cancel_timeout' },
     })),
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    isStaleAcpUpdate: ({ event }): boolean =>
+      event.type === acpUpdateEvent && event.stale === true,
+    cancelTimedOut: ({ context }): boolean =>
+      context.turnEnding.kind === 'cancel_timeout',
     isRecoveryBlocked: ({ event }): boolean =>
       'error' in event && event.error instanceof RecoveryBlockedError,
     isReplayedHistory: ({ context, event }): boolean =>
@@ -937,6 +1054,21 @@ const acpReleaseTransitions = [
   { target: 'flushing', actions: cancelledTurn },
 ] as const;
 
+const resumedAcpSession = {
+  target: 'idle',
+  actions: [
+    {
+      type: 'rememberAcpLease',
+      params: ({
+        event,
+      }: {
+        event: { output: OpenedAcpSession };
+      }): OpenedAcpSession => event.output,
+    },
+    'storeRecoveredSession',
+  ],
+} as const;
+
 export const sessionMachine = sessionSetup.createMachine({
   id: 'session',
   context: ({ input }): SessionContext => ({
@@ -976,6 +1108,7 @@ export const sessionMachine = sessionSetup.createMachine({
       `ACP configuration ${input.sessionId}`,
     ),
     acpTurnOutcome: null,
+    turnEnding: { kind: 'completion' },
     configQueue: [],
     applyingConfig: null,
     storageFailedTurn: false,
@@ -1003,6 +1136,7 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'createCheckout',
         src: 'createCheckout',
+        // SAFETY: `creating` is entered only through the `isNew` guard, so the input's kind is 'new'.
         input: ({ context }): NewSessionInput =>
           context.input as NewSessionInput,
         ...sessionEntryOutcome,
@@ -1104,6 +1238,7 @@ export const sessionMachine = sessionSetup.createMachine({
             'session.close': { target: '.closing' },
             'acp.failed': { actions: 'rememberAcpFailure' },
             'acp.update': [
+              staleAcpUpdate,
               {
                 guard: ({ event }): boolean =>
                   event.notification.update.sessionUpdate ===
@@ -1161,7 +1296,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
               on: {
                 'session.close': { target: 'closing' },
-                'acp.update': { guard: 'isReplayedHistory' },
+                'acp.update': [staleAcpUpdate, { guard: 'isReplayedHistory' }],
               },
             },
             idle: {
@@ -1297,11 +1432,13 @@ export const sessionMachine = sessionSetup.createMachine({
               on: {
                 'acp.failed': {
                   target: 'interrupting',
-                  actions: ['recordCrash', 'discloseInterruption'],
+                  actions: [
+                    { type: 'recordCrash', params: { duringTurn: true } },
+                  ],
                 },
                 'session.cancel': {
                   target: '.cancelling',
-                  actions: 'cancelAcpRequests',
+                  actions: ['rememberCancellation', 'cancelAcpRequests'],
                 },
                 [acpPermissionEvent]: {
                   target: '.awaitingPermission',
@@ -1354,14 +1491,29 @@ export const sessionMachine = sessionSetup.createMachine({
                     [acpElicitationEvent]: { actions: 'refuseAcpRequest' },
                     [acpRequestWithdrawnEvent]: { actions: 'forgetAcpRequest' },
                   },
-                  invoke: {
-                    src: 'cancelAcp',
-                    id: 'cancelAcp',
-                    input: ({ context }) => context,
-                    onError: {
-                      actions: {
-                        type: 'rememberFailure',
-                        params: ({ event }) => ({ error: event.error }),
+                  initial: 'sending',
+                  states: {
+                    sending: {
+                      invoke: {
+                        src: 'cancelAcp',
+                        id: 'cancelAcp',
+                        input: ({ context }) => context,
+                        onDone: { target: 'waiting' },
+                        onError: {
+                          target: 'waiting',
+                          actions: {
+                            type: 'rememberFailure',
+                            params: ({ event }) => ({ error: event.error }),
+                          },
+                        },
+                      },
+                    },
+                    waiting: {
+                      after: {
+                        cancelLimit: {
+                          target: '#session.open.acp.publishing',
+                          actions: 'rememberCancelTimeout',
+                        },
                       },
                     },
                   },
@@ -1389,6 +1541,11 @@ export const sessionMachine = sessionSetup.createMachine({
                   findFeed: () => self.getSnapshot().children.feed,
                 }),
                 onDone: [
+                  {
+                    guard: 'cancelTimedOut',
+                    target: 'replacing',
+                    actions: { type: 'endTurn', params: acpTurnOutcome },
+                  },
                   {
                     guard: 'lostConnectionWhilePublishing',
                     target: 'recovering',
@@ -1442,6 +1599,24 @@ export const sessionMachine = sessionSetup.createMachine({
                 },
               },
             },
+            replacing: {
+              on: { 'acp.failed': {} },
+              invoke: {
+                id: 'replaceAcp',
+                src: 'replaceAcp',
+                input: ({ context }): SessionContext => context,
+                onDone: resumedAcpSession,
+                onError: {
+                  target: 'retainingCleanup',
+                  actions: {
+                    type: 'rememberFailure',
+                    params: ({ event }): FailureParameters => ({
+                      error: event.error,
+                    }),
+                  },
+                },
+              },
+            },
             // The failed generation is released by its owner; the retry delay is a minimum, not a release proof.
             recovering: {
               always: {
@@ -1463,16 +1638,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 id: 'reopenAcp',
                 src: 'reopenAcp',
                 input: ({ context }): SessionContext => context,
-                onDone: {
-                  target: 'idle',
-                  actions: [
-                    {
-                      type: 'rememberAcpLease',
-                      params: ({ event }): OpenedAcpSession => event.output,
-                    },
-                    'storeRecoveredSession',
-                  ],
-                },
+                onDone: resumedAcpSession,
                 onError: [
                   {
                     guard: 'isRecoveryBlocked',
@@ -1490,6 +1656,7 @@ export const sessionMachine = sessionSetup.createMachine({
               on: {
                 'acp.failed': {},
                 'acp.update': [
+                  staleAcpUpdate,
                   {
                     guard: ({ context, event }): boolean =>
                       !context.kept &&
@@ -1585,4 +1752,5 @@ export const sessionMachine = sessionSetup.createMachine({
     closed: { type: 'final' },
   },
 });
+
 export type SessionActorRef = ActorRefFrom<typeof sessionMachine>;

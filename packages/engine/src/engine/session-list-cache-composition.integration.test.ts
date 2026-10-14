@@ -12,6 +12,7 @@ import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { SessionRowUpdateJob } from '../sessions';
 
 const writerWriteEvent = 'writer.write';
+
 const changedAloneTitle = 'Changed alone';
 
 function seedCachedSessions(
@@ -29,6 +30,7 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   seedCachedSessions(database);
+
   const {
     databaseWriter: writer,
     createCaller,
@@ -37,12 +39,15 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
     database,
     ...scriptedEngineInput(),
   });
+
   const counted = countDatabaseReads(engineDatabase);
   const { caller } = watchEngineList(createCaller);
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
+
   for (let index = 0; index < 60; index++)
     expect((await updates.next()).value).toMatchObject({ type: 'changed' });
   vi.useFakeTimers();
+
   try {
     await vi.advanceTimersByTimeAsync(100);
     counted.metrics.queries = 0;
@@ -70,11 +75,14 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
       status: 'unread',
     });
     expect(page.sessions).toHaveLength(50);
+
     if (page.nextCursor === null) throw new Error('Expected next list page');
+
     const next = await caller.session.list({
       archived: false,
       cursor: page.nextCursor,
     });
+
     expect(next.sessions).toHaveLength(10);
     expect(next.nextCursor).toBeNull();
     expect(counted.metrics.queries).toBe(0);

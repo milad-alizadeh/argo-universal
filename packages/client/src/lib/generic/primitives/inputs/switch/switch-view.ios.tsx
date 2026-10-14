@@ -13,6 +13,7 @@ import type { SwitchProps } from './switch-props';
 
 function Switch(props: SwitchProps): React.JSX.Element {
   const modifiers = useSwitchModifiers(props);
+
   return (
     <ControlHost matchContents>
       <Toggle
@@ -29,6 +30,7 @@ function useSwitchModifiers(
   props: SwitchProps,
 ): React.ComponentProps<typeof Toggle>['modifiers'] {
   const { tint } = useNativeTheme().colors;
+
   return [
     toggleStyle('switch'),
     labelsHidden(),

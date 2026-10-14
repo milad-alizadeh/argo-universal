@@ -1,4 +1,7 @@
-import type { AgentRequestResponsesByMethod } from '@agentclientprotocol/sdk';
+import type {
+  AgentRequestResponsesByMethod,
+  ParamsParser,
+} from '@agentclientprotocol/sdk';
 import schema from '@agentclientprotocol/sdk/schema/schema.json' with { type: 'json' };
 import type { createRejectionCounter } from '@repo/machine-log';
 import addFormats from 'ajv-formats';
@@ -13,6 +16,7 @@ type RejectionReporter = Pick<
   ReturnType<typeof createRejectionCounter>,
   'report'
 >;
+
 type AcpResponses = Pick<
   AgentRequestResponsesByMethod,
   | 'initialize'
@@ -25,7 +29,13 @@ type AcpResponses = Pick<
   | 'session/set_config_option'
   | 'session/prompt'
 >;
-type ResponseReader<Response> = { parse: (value: unknown) => Response };
+
+// The SDK's object-form parser, which takes the raw JSON-RPC payload.
+type ResponseReader<Response> = Exclude<
+  ParamsParser<Response>,
+  (params: never) => Response
+>;
+
 type AcpResponseReaders = {
   [Kind in keyof AcpResponses]: ResponseReader<AcpResponses[Kind]>;
 };
@@ -39,13 +49,21 @@ const createUnsignedIntegerFormat = (
 });
 
 const uint16Bits = 16;
+
 const uint32Bits = 32;
+
 const uint64Bits = 64;
+
 const validator = new Ajv2020({ strict: false });
+
 addFormats(validator);
+
 validator.addFormat('uint16', createUnsignedIntegerFormat(uint16Bits));
+
 validator.addFormat('uint32', createUnsignedIntegerFormat(uint32Bits));
+
 validator.addFormat('uint64', createUnsignedIntegerFormat(uint64Bits));
+
 validator.addSchema(schema, 'acp-v1');
 
 const rejectResponse = (
@@ -62,12 +80,14 @@ type ResponseSchema<Response> = {
   name: keyof typeof schema.$defs;
   accepts: ValidateFunction<Response>;
 };
+
 const compileAcpResponseSchema = <Response>(
   schemaName: keyof typeof schema.$defs,
 ): ResponseSchema<Response> => ({
   name: schemaName,
   accepts: validator.compile<Response>({ $ref: `acp-v1#/$defs/${schemaName}` }),
 });
+
 const schemas = {
   initialize: {
     name: 'InitializeResponse',
@@ -98,12 +118,14 @@ const schemas = {
   prompt:
     compileAcpResponseSchema<AcpResponses['session/prompt']>('PromptResponse'),
 };
+
 const createAcpResponseReader = <Response>(
   { name: schemaName, accepts }: ResponseSchema<Response>,
   rejectionReporter: RejectionReporter,
 ): ResponseReader<Response> => ({
-  parse: (value: unknown): Response => {
+  parse: (value): Response => {
     if (accepts(value)) return value;
+
     return rejectResponse(
       schemaName,
       validator.errorsText(accepts.errors),
@@ -116,6 +138,7 @@ type SessionResponseReaders = Omit<
   AcpResponseReaders,
   'initialize' | 'authenticate'
 >;
+
 const createSessionResponseReaders = (
   rejectionReporter: RejectionReporter,
 ): SessionResponseReaders => ({
@@ -130,6 +153,7 @@ const createSessionResponseReaders = (
   ),
   'session/prompt': createAcpResponseReader(schemas.prompt, rejectionReporter),
 });
+
 export const createAcpResponseReaders = (
   rejectionReporter: RejectionReporter,
 ): AcpResponseReaders => ({

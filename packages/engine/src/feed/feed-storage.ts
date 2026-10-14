@@ -6,11 +6,13 @@ import {
 } from '../storage';
 import { newestRows } from './feed-row';
 import { FeedRowsJob, type QueuedFeedRows } from './feed-rows-job';
+
 export { FeedRowsJob } from './feed-rows-job';
 
 function queuedRows(job: WriterJob, sessionId: string): QueuedFeedRows[] {
   const queued =
     job instanceof FeedRowsJob ? job.queuedRows(sessionId) : undefined;
+
   return queued ? [queued] : [];
 }
 
@@ -24,7 +26,9 @@ export const readQueuedFeed = (
   const batches = readQueuedJobs(writer).flatMap((job) =>
     queuedRows(job, sessionId),
   );
+
   const rows = batches.flatMap((batch): SessionUpdate[] => batch.rows);
+
   return {
     rows: [...newestRows(rows).values()],
     maxRevision: Math.max(0, ...batches.map((batch) => batch.maxRevision)),

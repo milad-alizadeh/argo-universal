@@ -16,8 +16,10 @@ export function usePresentationClosed(
   useEffect(() => {
     if (mounted) {
       wasMounted.current = true;
+
       return;
     }
+
     if (!wasMounted.current) return;
     wasMounted.current = false;
     notifyClosed(onClosed);
@@ -34,7 +36,9 @@ type AnimatedViewProps =
 
 function NativeOnlyAnimatedView(props: AnimatedViewProps): React.ReactNode {
   if (Platform.OS === 'web') return props.children;
+
   if (props.as === 'Pressable') return <AnimatedPressable {...props} />;
+
   return <Animated.View {...props} />;
 }
 

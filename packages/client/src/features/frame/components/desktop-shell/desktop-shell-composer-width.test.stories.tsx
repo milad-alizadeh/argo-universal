@@ -19,6 +19,7 @@ const meta = {
   title: 'Tests/DesktopShell/Composer width',
   ...shellMeta,
 } satisfies Meta<typeof DesktopShellFrame>;
+
 export default meta;
 
 const agentIconId = 'composer-agent-icon';
@@ -58,16 +59,20 @@ export const ComposerUsesAvailableWidth: ShellStory = {
         canvas.queryByText('session', { exact: true }),
       ).not.toBeInTheDocument(),
     );
+
     const content = canvas
       .getByTestId('responsive-composer')
       .getBoundingClientRect();
+
     for (const name of ['Mode', 'Usage', 'Context window', 'Send']) {
       const control = canvas
         .getByRole('button', { name })
         .getBoundingClientRect();
+
       await expect(control.left).toBeGreaterThanOrEqual(content.left);
       await expect(control.right).toBeLessThanOrEqual(content.right);
     }
+
     await expect(
       shownText(canvas.getByRole('textbox', { name: 'Message' })),
     ).toBe(preservedDraft);

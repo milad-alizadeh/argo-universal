@@ -11,34 +11,43 @@ const operation = (operationId: string): AgentInstallOperation => ({
   operationId,
   status: 'installing',
 });
+
 const status = (value: AgentInstallOperation): AgentInstallStatus => ({
   installation: { status: 'not-installed' },
   operation: value,
 });
+
 it('another App retry replaces an observed failed operation', () => {
   const saved = operation('first');
+
   const failed: AgentInstallOperation = {
     ...saved,
     status: 'failed',
     failure: 'Interrupted',
   };
+
   expect(currentOperation(saved, status(failed))).toEqual(failed);
+
   const installed: AgentInstallOperation = {
     ...operation('second'),
     status: 'installed',
   };
+
   expect(currentOperation(saved, status(installed))).toEqual(installed);
 });
+
 it('a newly requested operation waits for status to advance beyond the previous operation', () => {
   const previous: AgentInstallOperation = {
     ...operation('previous'),
     status: 'installed',
   };
+
   const requested = operation('requested');
   expect(
     currentOperation(requested, status(previous), previous.operationId),
   ).toEqual(requested);
 });
+
 it('a confirmed missing operation after restart ends the interrupted loading state', () => {
   const saved = operation('interrupted');
   expect(
@@ -51,6 +60,7 @@ it('a confirmed missing operation after restart ends the interrupted loading sta
     failure: expect.stringContaining('interrupted'),
   });
 });
+
 it('a confirmed durable installation survives loss of volatile operation history', () => {
   const saved = operation('committed');
   expect(
@@ -63,10 +73,12 @@ it('a confirmed durable installation survives loss of volatile operation history
     }),
   ).toMatchObject({ status: 'installed', version: '1.2.3' });
 });
+
 it('an unconfirmed status during a new request retains the accepted operation', () => {
   const saved = operation('pending-query');
   expect(currentOperation(saved)).toEqual(saved);
 });
+
 it('an interrupted update keeps the previous installation without reporting success', () => {
   expect(
     currentOperation(operation('update'), {
@@ -81,11 +93,13 @@ it('an interrupted update keeps the previous installation without reporting succ
     failure: expect.stringContaining('interrupted'),
   });
 });
+
 it('opening an update confirmation ignores the previous completed installation', () => {
   const previous: AgentInstallOperation = {
     ...operation('previous'),
     status: 'installed',
   };
+
   expect(
     currentOperation(undefined, status(previous), previous.operationId),
   ).toBeUndefined();

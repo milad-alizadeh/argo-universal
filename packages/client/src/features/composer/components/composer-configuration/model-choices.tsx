@@ -11,18 +11,24 @@ import { configurationChoices } from '../../state/configuration-choices';
 import { ConfigurationChoice } from './configuration-choice';
 import type { ConfigurationChoicesProps as ModelChoicesProps } from './configuration-types';
 import { modelName, selection } from './configuration-values';
+
 interface ModelChoiceProps extends ModelChoicesProps {
   choice: SessionConfigSelectOption;
 }
+
 const modelListMaxHeight = 320;
+
 export function ModelChoices(
   props: ModelChoicesProps,
 ): React.JSX.Element | null {
   const wide = useWide();
   const model = selection(props.configuration, 'model');
+
   if (!model) return null;
+
   return <ModelChoicesLayout {...props} wide={wide} />;
 }
+
 function ModelChoicesLayout(
   props: ModelChoicesProps & { wide: boolean },
 ): React.JSX.Element {
@@ -32,8 +38,10 @@ function ModelChoicesLayout(
     <GroupedModelChoices {...props} />
   );
 }
+
 function GroupedModelChoices(props: ModelChoicesProps): React.JSX.Element {
   const choices = configurationChoices(selection(props.configuration, 'model'));
+
   return (
     <FieldGroup
       fit={Platform.OS === 'web'}
@@ -47,6 +55,7 @@ function GroupedModelChoices(props: ModelChoicesProps): React.JSX.Element {
     </FieldGroup>
   );
 }
+
 function ModelList(props: ModelChoicesProps): React.JSX.Element {
   return (
     <FieldSection>
@@ -54,6 +63,7 @@ function ModelList(props: ModelChoicesProps): React.JSX.Element {
     </FieldSection>
   );
 }
+
 const modelListPresentation = {
   ...listTestIdProps('composer-models-scroll'),
   surfaceClassName: 'bg-sidebar',
@@ -61,10 +71,12 @@ const modelListPresentation = {
   contentContainerStyle: {},
   estimatedItemSize: 60,
 };
+
 function modelListProps(
   props: ModelChoicesProps,
 ): React.ComponentProps<typeof ScrollFadeList<SessionConfigSelectOption>> {
   const choices = configurationChoices(selection(props.configuration, 'model'));
+
   return {
     ...modelListPresentation,
     data: choices,
@@ -73,6 +85,7 @@ function modelListProps(
     extraData: props.configuration,
   };
 }
+
 function modelListRenderer(
   props: ModelChoicesProps,
   count: number,
@@ -85,6 +98,7 @@ function modelListRenderer(
     <ModelListRow {...props} choice={item} last={index === count - 1} />
   );
 }
+
 function ModelListRow(
   props: ModelChoiceProps & { last: boolean },
 ): React.JSX.Element {
@@ -94,11 +108,15 @@ function ModelListRow(
     </FieldRowEnd>
   );
 }
+
 function ModelChoice(props: ModelChoiceProps): React.JSX.Element | null {
   const model = selection(props.configuration, 'model');
+
   if (!model) return null;
+
   return <ConfigurationChoice {...modelChoiceProps(props, model)} />;
 }
+
 function modelChoiceProps(
   { configuration, choice, onSelect }: ModelChoiceProps,
   model: NonNullable<ReturnType<typeof selection>>,

@@ -14,6 +14,7 @@ export function RoutedFormSheet(
     [owner, props.commands, props.open],
   );
   useEffect(() => props.commands.update(owner, props), [owner, props]);
+
   return null;
 }
 
@@ -22,5 +23,6 @@ function present(
   owner: string,
 ): () => void {
   if (props.open) props.commands.show(owner, props);
+
   return (): void => props.commands.hide(owner);
 }

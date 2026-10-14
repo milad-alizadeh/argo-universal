@@ -22,6 +22,7 @@ export function createElicitationAnswerSchema(
     boolean: z.boolean(),
     array: z.array(z.string()),
   };
+
   const fields = Object.fromEntries(
     Object.entries(schema.properties).map(
       ([name, property]): [
@@ -30,6 +31,7 @@ export function createElicitationAnswerSchema(
       ] => [name, types[property.type].optional()],
     ),
   );
+
   return z.strictObject(fields);
 }
 
@@ -39,11 +41,13 @@ export const SessionAnswerElicitationInput = z.strictObject({
   action: z.enum(['accept', 'decline', 'cancel']),
   content: z.record(z.string(), z.unknown()).optional(),
 });
+
 export type SessionAnswerElicitationInput = z.infer<
   typeof SessionAnswerElicitationInput
 >;
 
 export const SessionAnswerElicitationOutput = z.strictObject({});
+
 export type SessionAnswerElicitationOutput = z.infer<
   typeof SessionAnswerElicitationOutput
 >;

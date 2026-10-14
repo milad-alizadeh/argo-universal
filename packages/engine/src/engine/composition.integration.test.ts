@@ -7,6 +7,7 @@ import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
 const engineStopEvent = 'engine.stop';
+
 const waitForCancelStep = 'wait-for-cancel';
 
 it.each(fixtureAgents)(
@@ -14,6 +15,7 @@ it.each(fixtureAgents)(
   async ({ agent }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
     onTestFinished(remove);
+
     const input = scriptedEngineInput(
       {
         steps: [
@@ -30,16 +32,20 @@ it.each(fixtureAgents)(
       },
       agent,
     );
+
     const {
       engine,
       createCaller,
       database: engineDatabase,
     } = await startEngineTestHost({ database, ...input });
+
     const caller = createCaller();
+
     const { messageId } = await caller.session.prompt({
       sessionId: 'session-1',
       prompt: [{ type: 'text', text: 'Hi' }],
     });
+
     expect(
       await caller.feed.row({ sessionId: 'session-1', id: messageId }),
     ).toMatchObject({ sessionUpdate: 'user_message' });

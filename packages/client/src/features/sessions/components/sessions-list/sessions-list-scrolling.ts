@@ -10,11 +10,14 @@ export const nativeOnlyListProps: {
 // Scroll events stop for this long before the list counts as at rest.
 const scrollSettleMilliseconds = 150;
 
+type ListScrolling = { scrolling: boolean; onScroll: () => void };
+
 // Whether the web list is scrolling: it changes once when a scroll starts and once when it settles, never per frame.
-export function useScrolling(): { scrolling: boolean; onScroll: () => void } {
+export function useScrolling(): ListScrolling {
   const [scrolling, setScrolling] = useState(false);
   const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => (): void => clearTimeout(settle.current ?? 0), []);
+
   const onScroll = useCallback(() => {
     if (Platform.OS !== 'web') return;
     setScrolling(true);
@@ -24,5 +27,6 @@ export function useScrolling(): { scrolling: boolean; onScroll: () => void } {
       scrollSettleMilliseconds,
     );
   }, []);
+
   return { scrolling, onScroll };
 }

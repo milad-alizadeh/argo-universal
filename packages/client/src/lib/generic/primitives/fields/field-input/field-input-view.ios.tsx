@@ -25,16 +25,19 @@ import { useFollowedText } from './field-input-text';
 import { FieldInput as WebFieldInput, isInvalid } from './field-input-view.tsx';
 
 const rowHeight = 52;
+
 const inset = 16;
 
 export function FieldInput(props: FieldInputProps): React.JSX.Element {
   if (useWide()) return <WebFieldInput {...props} />;
+
   return <FormRow {...props} />;
 }
 
 // A Settings form row: the label leading, the SwiftUI field taking the rest of the row with its text trailing.
 function FormRow(props: FieldInputProps): React.JSX.Element {
   const modifiers = useRowModifiers();
+
   return (
     <LabeledContent label={<RowLabel {...props} />} modifiers={modifiers}>
       <RowField {...props} />
@@ -46,6 +49,7 @@ function useRowModifiers(): React.ComponentProps<
   typeof LabeledContent
 >['modifiers'] {
   const { muted, separator } = useNativeTheme().colors;
+
   return [
     listRowBackground(muted ?? 'transparent'),
     listRowSeparatorTint(separator),
@@ -57,8 +61,10 @@ function useRowModifiers(): React.ComponentProps<
 function RowLabel(props: FieldInputProps): React.JSX.Element {
   const bodyModifiers = useSwiftUITextModifiers('body', 'row');
   const { destructive } = useNativeTheme().colors;
+
   const color =
     isInvalid(props) && destructive ? [foregroundStyle(destructive)] : [];
+
   return <Text modifiers={[...bodyModifiers, ...color]}>{props.label}</Text>;
 }
 
@@ -66,6 +72,7 @@ function RowField(props: FieldInputProps): React.JSX.Element {
   const text = useNativeState(props.value);
   useFollowedText(text, props.value);
   const modifiers = useFieldModifiers(props);
+
   return (
     <TextField
       text={text}
@@ -84,6 +91,7 @@ function useFieldModifiers(props: FieldInputProps): FieldModifiers {
     props.mono ? 'code' : 'body',
     'row',
   );
+
   return [
     ...fieldModifiers,
     multilineTextAlignment('trailing'),

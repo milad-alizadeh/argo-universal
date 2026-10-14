@@ -20,12 +20,15 @@ import {
 } from '#mocks/feed-suite';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
+
 it('ends a closed Session Feed after draining its last rows', async (): Promise<void> => {
   vi.useRealTimers();
+
   const input = scriptedEngineInput({
     steps: [{ type: waitForCancelStep }],
     sessionIds: ['vendor-1'],
   });
+
   setScriptedAgent(input.agent);
   setFeedTestHost(
     await startEngineTestHost({
@@ -38,6 +41,7 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Start a Turn' }],
   });
+
   const updates = (
     await feedTestHost
       .createCaller({ signal: controller.signal })
@@ -46,6 +50,7 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
         after: { epoch: 3, revision: 5 },
       })
   )[Symbol.asyncIterator]();
+
   const first = await updates.next();
   expect(first.done).toBe(false);
   const process = requireScriptedProcessAt(scriptedAgent.processes);
@@ -69,14 +74,17 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
     }),
   );
   await closing;
+
   const heldRevision = Math.max(
     5,
     ...events.flatMap((event): number[] => ('rev' in event ? [event.rev] : [])),
   );
+
   await feedTestHost.caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Continue the Session' }],
   });
+
   const resumed = (
     await feedTestHost
       .createCaller({ signal: controller.signal })
@@ -85,8 +93,10 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
         after: { epoch: 3, revision: heldRevision },
       })
   )[Symbol.asyncIterator]();
+
   const resumedFirst = await resumed.next();
   expect(resumedFirst.done).toBe(false);
+
   if (!resumedFirst.value) throw new Error('No resumed Feed event');
   const nextEvents: FeedSubscribeOutput[] = [resumedFirst.value];
   await requireScriptedProcessAt(scriptedAgent.processes, 1).play(
@@ -106,9 +116,11 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
       row: expect.objectContaining({ messageId: 'next-row' }),
     }),
   );
+
   const nextRevisions = nextEvents.flatMap((event): number[] =>
     'rev' in event ? [event.rev] : [],
   );
+
   expect(nextRevisions.length).toBeGreaterThan(0);
   expect(Math.min(...nextRevisions)).toBeGreaterThan(heldRevision);
 });

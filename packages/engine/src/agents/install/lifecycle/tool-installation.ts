@@ -15,14 +15,16 @@ async function requireHomebrew(tool: InstallTool): Promise<void> {
       `Homebrew isn’t on this Server. Install ${toolNames[tool]} from its download page.`,
     );
 }
+
 const removeStaging = (cwd: string): Promise<void> =>
   rm(cwd, { recursive: true, force: true });
+
 // An installer that outlived its stop keeps its folder, so the next start releases it.
 const releaseUnlessOwned = async (
   cwd: string,
-  error: unknown,
+  ownershipKept: boolean,
 ): Promise<void> => {
-  if (!(error instanceof InstallCleanupError)) await removeStaging(cwd);
+  if (!ownershipKept) await removeStaging(cwd);
 };
 
 type Running = { controller: AbortController; done: Promise<void> };
@@ -40,12 +42,16 @@ export class ToolInstallations {
   public install(tool: InstallTool): Promise<void> {
     if (this.stopped) throw new Error('Engine is stopping');
     const current = this.running.get(tool);
+
     if (current) return current.done;
     const controller = new AbortController();
+
     const done = this.run(tool, controller.signal).finally(() =>
       this.running.delete(tool),
     );
+
     this.running.set(tool, { controller, done });
+
     return done;
   }
 
@@ -54,12 +60,14 @@ export class ToolInstallations {
     // A staging folder under Argo's Agents folder, so an interrupted installer is released at the next start.
     const cwd = join(this.home, 'agents', '.tools', `.install-${randomUUID()}`);
     await mkdir(cwd, { recursive: true });
+
     try {
       await this.brewInstall(tool, cwd, signal);
     } catch (error) {
-      await releaseUnlessOwned(cwd, error);
+      await releaseUnlessOwned(cwd, error instanceof InstallCleanupError);
       throw error;
     }
+
     await removeStaging(cwd);
   }
   private brewInstall(
@@ -79,6 +87,7 @@ export class ToolInstallations {
   public async shutdown(): Promise<void> {
     this.stopped = true;
     const running = [...this.running.values()];
+
     for (const { controller } of running)
       controller.abort(new Error('Engine stopped'));
     await Promise.all(running.map(({ done }) => done.catch(() => {})));

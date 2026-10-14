@@ -46,15 +46,19 @@ type ShellLayout = PhoneDrawerProps['layout'];
 
 type DrawerSetup = Omit<PhoneDrawerProps, 'children'>;
 
-function useShellLayout(): {
+interface MeasuredShell {
   layout: ShellLayout;
   onLayout: (event: LayoutChangeEvent) => void;
-} {
+}
+
+function useShellLayout(): MeasuredShell {
   const dimensions = useWindowDimensions();
+
   const [layout, setLayout] = useState({
     width: dimensions.width,
     height: dimensions.height,
   });
+
   return {
     layout,
     onLayout: ({ nativeEvent }) => setLayout(nativeEvent.layout),
@@ -65,9 +69,11 @@ function useDrawerWidth(layoutWidth: number): number {
   const drawerWidth = Number.parseFloat(
     String(useCSSVariable('--spacing-phone-drawer')),
   );
+
   const visibleScreenWidth = Number.parseFloat(
     String(useCSSVariable('--spacing-phone-drawer-peek')),
   );
+
   return Math.min(drawerWidth, Math.max(0, layoutWidth - visibleScreenWidth));
 }
 
@@ -89,6 +95,7 @@ interface ShellDrawerSource {
 
 function useShellDrawer({ layout, shell }: ShellDrawerSource): DrawerSetup {
   const width = useDrawerWidth(layout.width);
+
   return {
     ...drawerToggle(shell),
     width,
@@ -117,6 +124,7 @@ const bannerGap = 8;
 
 function ShellBanner({ children }: { children: ReactNode }): React.JSX.Element {
   const { top } = useSafeAreaInsets();
+
   return (
     <View
       pointerEvents="box-none"
@@ -131,6 +139,7 @@ function ShellBanner({ children }: { children: ReactNode }): React.JSX.Element {
 export function PhoneShell(shell: PhoneShellProps): React.JSX.Element {
   const { layout, onLayout } = useShellLayout();
   const drawer = useShellDrawer({ layout, shell });
+
   return (
     <View
       testID="phone-shell"

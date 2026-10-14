@@ -20,18 +20,24 @@ const foundRegistryConfiguration = JSON.stringify({
 // A found Agent becomes a configured one; a removed one found again comes back. Enabled is never touched.
 const configurationWhenFound = (current: string | null): string | null =>
   current === null ? foundRegistryConfiguration : revived(current);
+
 // Only a removed Registry Agent comes back; a removed custom Agent stays removed.
 const revived = (current: string): string => {
-  const parsed = SavedConfiguration.safeParse(parseJson(current));
-  return parsed.success && isRemovedRegistry(parsed.data)
-    ? JSON.stringify({ ...parsed.data, removed: undefined })
+  const configuration = parseConfiguration(current);
+
+  return configuration && isRemovedRegistry(configuration)
+    ? JSON.stringify({ ...configuration, removed: undefined })
     : current;
 };
+
 const isRemovedRegistry = (configuration: SavedConfiguration): boolean =>
   configuration.source === 'registry' && configuration.removed === true;
-const parseJson = (text: string): unknown => {
+
+const parseConfiguration = (text: string): SavedConfiguration | undefined => {
   try {
-    return JSON.parse(text);
+    const parsed = SavedConfiguration.safeParse(JSON.parse(text));
+
+    return parsed.success ? parsed.data : undefined;
   } catch {
     return undefined;
   }
@@ -53,10 +59,13 @@ const saveObservation = (
   { id, ...observation }: InstallationObservationRow,
 ): void => {
   const current = readConfiguration(transaction, id);
+
   if (current === undefined) return;
+
   const configuration = observation.installationLaunch
     ? configurationWhenFound(current)
     : current;
+
   transaction
     .update(agents)
     .set({ ...observation, configuration })

@@ -10,7 +10,9 @@ const meta = {
   component: ConnectionBanner,
   args: { state: 'reconnecting', serverName, onRetry: fn() },
 } satisfies Meta<typeof ConnectionBanner>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ReconnectingHasNoAction: Story = {

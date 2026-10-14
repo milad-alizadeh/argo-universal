@@ -9,6 +9,8 @@ import {
 
 const commandTitle = 'Run command';
 
+type StatusCase = { status: ToolCallStatus; running: boolean };
+
 const running: Record<ToolCallStatus, boolean> = {
   pending: true,
   in_progress: true,
@@ -16,18 +18,12 @@ const running: Record<ToolCallStatus, boolean> = {
   failed: false,
   cancelled: false,
 };
+
 it.each(
-  ToolCallStatus.options.map(
-    (
-      status,
-    ): {
-      status: 'cancelled' | 'completed' | 'failed' | 'in_progress' | 'pending';
-      running: boolean;
-    } => ({
-      status,
-      running: running[status],
-    }),
-  ),
+  ToolCallStatus.options.map((status): StatusCase => ({
+    status,
+    running: running[status],
+  })),
 )(
   'reports $status Tool calls as running=$running',
   ({ status, running }): void => {
@@ -45,6 +41,7 @@ it.each(
       status,
       content: [],
     });
+
     expect(isToolCallRunning(row)).toBe(running);
   },
 );
@@ -106,6 +103,7 @@ const actionCases: {
     expected: [],
   },
 ];
+
 it.each(actionCases)(
   'returns known command actions for $name',
   ({ actions, expected }): void => {
@@ -124,6 +122,7 @@ it.each(actionCases)(
       content: [],
       _meta: { argo: { commandActions: actions } },
     });
+
     expect(knownCommandActions(row)).toEqual(expected);
     expect(row._meta?.argo?.commandActions).toEqual(actions);
   },
@@ -144,5 +143,6 @@ it('returns no command actions when the Tool call has no extension metadata', ()
     status: 'completed',
     content: [],
   });
+
   expect(knownCommandActions(row)).toEqual([]);
 });

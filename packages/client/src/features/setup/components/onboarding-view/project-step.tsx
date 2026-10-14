@@ -14,6 +14,7 @@ const caption =
 
 function AddProjectButton(props: ProjectStepViewProps): React.JSX.Element {
   const next = props.mark === 'next';
+
   return (
     <Button
       label="Add Project"

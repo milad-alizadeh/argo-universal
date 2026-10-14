@@ -22,6 +22,7 @@ const strangerUpdate = JSON.stringify({
 
 it('an Agent frame for a Session Argo never opened is rejected, reported and counted while the owned Session keeps its own updates', async () => {
   const report = vi.spyOn(console, 'error').mockImplementation(() => {});
+
   const resources = createAcpResources({
     launchProcess: createScriptedAgentLauncher(() => ({
       steps: [
@@ -37,11 +38,14 @@ it('an Agent frame for a Session Argo never opened is rejected, reported and cou
       ],
     })),
   });
+
   onTestFinished(() => resources.shutdown());
   const received: SessionNotification[] = [];
+
   const lease = await resources.open(
     createResourceOpening(createResourceDestination(received)),
   );
+
   await lease.agent.request('session/prompt', {
     sessionId: lease.sessionId,
     prompt: [{ type: 'text', text: 'Start' }],

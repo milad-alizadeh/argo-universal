@@ -22,6 +22,7 @@ function useConfigureOptions(): React.ComponentProps<
 >['screenOptions'] {
   const options = useSheetHeaderOptions();
   const surface = useResolveClassNames('bg-sidebar');
+
   return {
     ...options,
     headerTransparent: false,

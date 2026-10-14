@@ -5,6 +5,7 @@ import { SettingsList } from '../../src/features/settings/components/settings-li
 import { createNavigationRecorder } from '../with-navigation-mocks';
 
 export const recorder = createNavigationRecorder();
+
 export const meta = {
   title: 'Tests/SettingsList',
   component: SettingsList,
@@ -23,5 +24,7 @@ export const meta = {
   parameters: { navigation: recorder },
   beforeEach: (): void => recorder.reset(),
 } satisfies Meta<typeof SettingsList>;
+
 export type Story = StoryObj<typeof meta>;
+
 export type PlayContext = Parameters<NonNullable<Story['play']>>[0];

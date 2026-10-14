@@ -15,27 +15,31 @@ const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
 // The Agents append the ACP requests e2e steps check here, one JSON line each.
 export const requestLogName = 'agent-requests.jsonl';
+
 // initTestRepository makes the Server's one Project here.
 export const projectDirectoryName = 'project';
+
 // The one directory on the Server's PATH besides system tools: an Agent installed outside Argo goes here.
 const machineDirectoryName = 'machine';
+
 // Node.js, npm and uv, which npx and uvx Agents install with; a step removes one to show it missing.
 const toolsDirectoryName = 'tools';
 
 export { pollServer } from './server-process';
 
 const attempts = 3;
+
 const portTakenPattern = /EADDRINUSE/;
 
 // What a test reads from its own Server's directory.
-export const serverFiles = (
-  directory: string,
-): {
+type ServerFiles = {
   projectPath: string;
   requestLogPath: string;
   machinePath: string;
   toolsPath: string;
-} => ({
+};
+
+export const serverFiles = (directory: string): ServerFiles => ({
   projectPath: path.join(directory, projectDirectoryName),
   machinePath: path.join(directory, machineDirectoryName),
   toolsPath: path.join(directory, toolsDirectoryName),
@@ -43,10 +47,12 @@ export const serverFiles = (
 });
 
 const toolStub = '#!/bin/sh\nexit 0\n';
+
 // The Server finds Node.js (the test's own), npm and uv, so npx and uvx Agents offer Install.
 async function placeTools(toolsPath: string): Promise<void> {
   await mkdir(toolsPath, { recursive: true });
   await symlink(process.execPath, path.join(toolsPath, 'node'));
+
   for (const tool of ['npm', 'uv'])
     await writeFile(path.join(toolsPath, tool), toolStub, { mode: 0o755 });
 }
@@ -78,8 +84,10 @@ export async function startOwnServer(
     JSON.stringify({ outcome: 'success', released: true }),
   );
   await initTestRepository(projectPath, false);
+
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
+
     const launch = (): ChildProcessByStdio<null, Readable, Readable> =>
       spawn(process.execPath, [engineBundlePath], {
         cwd: serverDirectory,
@@ -100,27 +108,34 @@ export async function startOwnServer(
         },
         stdio: ['ignore', 'pipe', 'pipe'],
       });
+
     let server = launch();
     let portTaken = false;
     let stderrTail = '';
+
     for (const stream of [server.stdout, server.stderr]) {
       stream.on('data', (chunk: Buffer): void => {
         if (portTakenPattern.test(chunk.toString())) portTaken = true;
       });
     }
+
     server.stderr.on('data', (chunk: Buffer): void => {
       stderrTail = (stderrTail + chunk.toString()).slice(-stderrTailLength);
     });
+
     const stop = async (): Promise<void> => {
       if (hasExited(server)) return;
       // A held readiness check answers now, so the Server can stop.
       await writeFile(heldCheckRelease, '');
+
       const exited = new Promise((resolve): typeof server =>
         server.once('exit', resolve),
       );
+
       server.kill('SIGTERM');
       await exited;
     };
+
     try {
       if (
         await waitUntilReady({
@@ -158,7 +173,9 @@ export async function startOwnServer(
       await stop();
       throw error;
     }
+
     await stop();
   }
+
   throw new Error(`Another process took the Server's port ${attempts} times`);
 }

@@ -18,8 +18,11 @@ export function findLiveToolCall(
   snapshot: SessionSnapshot | null,
 ): ToolCallUpdate | undefined {
   const source = liveSource(snapshot);
+
   if (!source) return undefined;
+
   if (source.type !== 'tool_call') return undefined;
+
   return rows.findLast((row): row is ToolCallUpdate =>
     matchesToolCall(row, source.toolCallId),
   );

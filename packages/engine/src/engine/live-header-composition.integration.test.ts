@@ -10,6 +10,7 @@ import {
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const checkingTestsStatus = 'Checking the tests';
+
 const retryingStatus = 'Retrying (2 of 5)';
 
 it.each(liveHeaderMocks)(
@@ -50,12 +51,14 @@ it.each(liveHeaderMocks)(
     const context = await startLiveHeaderHost(agent);
     await publishStoredHeader(context, { ...retry, revision: 2 });
     expect(await readLiveHeader(context, retryingStatus)).toBe(retryingStatus);
+
     const reconnect = (
       await context.caller.feed.subscribe({
         sessionId: 'session-1',
         after: null,
       })
     )[Symbol.asyncIterator]();
+
     expect((await reconnect.next()).value).toMatchObject({
       type: 'snapshot',
       snapshot: {

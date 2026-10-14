@@ -3,20 +3,24 @@ import type { AgentInstallInput, AgentInstallOperation } from '@repo/contracts';
 import { InstallCleanupError } from '../processes/process';
 import { installationFailure } from '../selection/status';
 import type { OwnedInstall } from './operation-types';
+
 const installTimeout = 300_000;
-const wasCancelled = (reason: unknown): boolean =>
-  reason instanceof DOMException && reason.name === 'AbortError';
+
+const wasCancelled = (cause: unknown): boolean =>
+  cause instanceof DOMException && cause.name === 'AbortError';
+
 const failedOperation = (
   owned: OwnedInstall,
-  error: unknown,
+  cause: unknown,
 ): AgentInstallOperation =>
   wasCancelled(owned.controller.signal.reason)
     ? { ...owned.operation, status: 'cancelled' }
     : {
         ...owned.operation,
         status: 'failed',
-        failure: installationFailure(error),
+        failure: installationFailure(cause),
       };
+
 export const startOperation = (
   input: AgentInstallInput,
 ): AgentInstallOperation => ({
@@ -24,6 +28,7 @@ export const startOperation = (
   operationId: randomUUID(),
   status: 'installing',
 });
+
 export const inUseOperation = (
   operation: AgentInstallOperation,
 ): AgentInstallOperation => ({
@@ -32,6 +37,7 @@ export const inUseOperation = (
   failure:
     'Agent is in use. Finish its setup or close its Sessions before installing',
 });
+
 export const installationDeadline = (
   controller: AbortController,
 ): ReturnType<typeof setTimeout> =>
@@ -49,18 +55,19 @@ export const abortInstallation = (owned: OwnedInstall, reason: string): void =>
 
 export const rememberInstallFailure = (
   owned: OwnedInstall,
-  error: unknown,
+  cause: unknown,
 ): AgentInstallOperation => {
-  if (!(error instanceof InstallCleanupError))
-    return failedOperation(owned, error);
+  if (!(cause instanceof InstallCleanupError))
+    return failedOperation(owned, cause);
   owned.released = false;
   owned.operation = {
     ...owned.operation,
     status: 'failed',
-    failure: error.message,
+    failure: cause.message,
   };
-  throw error;
+  throw cause;
 };
+
 export const createOwnedInstall = (
   operation: AgentInstallOperation,
 ): OwnedInstall => ({

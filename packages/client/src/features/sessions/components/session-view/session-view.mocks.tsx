@@ -1,4 +1,8 @@
-import type { AgentInfo, SessionSnapshot } from '@repo/contracts';
+import type {
+  AgentInfo,
+  SessionSnapshot,
+  SessionUpdate,
+} from '@repo/contracts';
 import {
   type FeedMock,
   newSessionCatalogs,
@@ -18,15 +22,20 @@ function catalogAgentOf(mock: FeedMock): AgentInfo {
   const agent = newSessionCatalogs.bothReady.at(
     mock.agent === 'agent-1' ? 0 : 1,
   );
+
   if (!agent) throw new Error(`No catalog Agent for ${mock.agent}`);
+
   return agent;
 }
 
 const editAndCommand = recordedFeedMock('agent-1', 'edit-and-command');
+
 const recordedHeader = editAndCommand.liveHeaders.findLast(
   (header) => header.startedAt !== null && header.source.type === 'tool_call',
 );
+
 if (!recordedHeader) throw new Error('No running live header recorded');
+
 export const runningHeader = recordedHeader;
 
 // A clock four minutes and twelve seconds into the running Turn.
@@ -82,6 +91,7 @@ function recordedConfiguration(
   snapshot: SessionSnapshot,
 ): RecordedConfiguration {
   const catalogAgent = catalogAgentOf(mock);
+
   return {
     agents: newSessionCatalogs.bothReady,
     agent: catalogAgent.agent,
@@ -114,6 +124,7 @@ function openSessionProps(
   snapshotChanges: Partial<SessionSnapshot> = {},
 ): OpenSessionViewProps {
   const snapshot = { ...mock.snapshot, ...snapshotChanges };
+
   return {
     header: recordedHeaderProps(snapshot),
     feed: recordedFeedProps(mock, snapshot),
@@ -140,13 +151,20 @@ export const emptySession = openSessionProps(
 export const longSession = openSessionProps({
   ...editAndCommand,
   rows: recordedFeedMocks.flatMap((mock, copy) =>
-    mock.rows.map((row) => ({
-      ...row,
-      id: `${copy}-${row.id}`,
-      position: copy * 1000 + row.position,
-      ...('toolCallId' in row
-        ? { toolCallId: `${copy}-${row.toolCallId}` }
-        : {}),
-    })),
+    mock.rows.map((row) => copiedRow(row, copy)),
   ),
 });
+
+// One recording's row as its `copy`th copy, with ids and positions after the copies before it.
+function copiedRow(row: SessionUpdate, copy: number): SessionUpdate {
+  const copied = {
+    ...row,
+    id: `${copy}-${row.id}`,
+    position: copy * 1000 + row.position,
+  };
+
+  if ('toolCallId' in copied)
+    copied.toolCallId = `${copy}-${copied.toolCallId}`;
+
+  return copied;
+}

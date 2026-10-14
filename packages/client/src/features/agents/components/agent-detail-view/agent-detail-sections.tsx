@@ -10,11 +10,13 @@ export function AgentStatusSection(
 ): React.JSX.Element | null {
   if (missingTool(props.agent.status))
     return <MissingToolSection agent={props.agent} tool={props.tool} />;
+
   return <AgentReadiness {...props} />;
 }
 
 function AgentReadiness(props: AgentDetailViewProps): React.JSX.Element | null {
   const { agent } = props;
+
   return (
     <ReadinessSection
       name={agent.name}

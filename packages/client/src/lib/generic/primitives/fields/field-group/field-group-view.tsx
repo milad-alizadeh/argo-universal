@@ -28,6 +28,7 @@ function GroupScroll(
   const { children, fit, variant } = props;
   // Wide, the group pads none of its own, so the pane's column is all its side padding.
   const columnStyle = useScrollColumnStyle();
+
   return (
     <ScrollView
       className={fit ? 'shrink' : 'flex-1'}

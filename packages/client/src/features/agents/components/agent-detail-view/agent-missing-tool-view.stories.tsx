@@ -14,7 +14,9 @@ const meta = {
   args: agentDetailArgs(),
   parameters: { screenPreview: true },
 } satisfies Meta<typeof AgentDetailView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const needsNode = { ...registryAgent, status: 'needs-node' } as const;
@@ -26,6 +28,7 @@ export const NeedsNodeJs: Story = {
     tool: toolArgs(),
   },
 };
+
 export const NeedsUvWithoutHomebrew: Story = {
   args: {
     agent: {
@@ -37,12 +40,14 @@ export const NeedsUvWithoutHomebrew: Story = {
     tool: toolArgs({ homebrew: false }),
   },
 };
+
 export const ConfirmingNodeJsInstall: Story = {
   args: {
     agent: needsNode,
     tool: toolArgs({ confirming: true }),
   },
 };
+
 export const InstallingNodeJs: Story = {
   args: {
     agent: needsNode,

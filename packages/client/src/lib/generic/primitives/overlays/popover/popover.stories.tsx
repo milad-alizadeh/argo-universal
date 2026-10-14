@@ -20,6 +20,7 @@ function PopoverPreview(): React.JSX.Element {
     </Popover>
   );
 }
+
 function DimensionContent(): React.JSX.Element {
   return (
     <PopoverContent className="w-80" side="top">
@@ -30,6 +31,7 @@ function DimensionContent(): React.JSX.Element {
     </PopoverContent>
   );
 }
+
 function DimensionHeading(): React.JSX.Element {
   return (
     <View className="gap-2">
@@ -38,12 +40,14 @@ function DimensionHeading(): React.JSX.Element {
     </View>
   );
 }
+
 const dimensions = [
   { id: 'width', label: 'Width', defaultValue: '100%' },
   { id: 'maxWidth', label: 'Max. width', defaultValue: '300px' },
   { id: 'height', label: 'Height', defaultValue: '25px' },
   { id: 'maxHeight', label: 'Max. height', defaultValue: 'none' },
 ];
+
 function DimensionFields(): React.JSX.Element {
   return (
     <View className="gap-2">
@@ -53,12 +57,14 @@ function DimensionFields(): React.JSX.Element {
     </View>
   );
 }
+
 function DimensionField({
   id,
   label,
   defaultValue,
 }: (typeof dimensions)[number]): React.JSX.Element {
   const inputProps = { id, accessibilityLabel: label, defaultValue };
+
   return (
     <View className="flex-row items-center gap-4">
       <Text className="web:block w-24">{label}</Text>
@@ -71,7 +77,9 @@ const meta = {
   title: 'Design System/Primitives/Popover',
   tags: ['third-party'],
 } satisfies Meta;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {

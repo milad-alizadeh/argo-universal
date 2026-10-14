@@ -1,7 +1,10 @@
 const redacted = '[redacted]';
+
 const maxLength = 300;
+
 const secretName =
   '[A-Za-z0-9_.-]*(?:token|secret|password|passwd|api[_-]?key|access[_-]?key|credential|session[_-]?key|cookie)[A-Za-z0-9_.-]*';
+
 const replacements: readonly [RegExp, string][] = [
   // eslint-disable-next-line no-control-regex -- terminal colour codes are what this removes
   [/\u001b\[[0-9;?]*[ -/]*[@-~]/g, ''],
@@ -30,6 +33,7 @@ export const sanitizeReason = (reason: string): string => {
   const cleaned = replacements
     .reduce((text, [pattern, value]) => text.replace(pattern, value), reason)
     .trim();
+
   return cleaned.length > maxLength
     ? `${cleaned.slice(0, maxLength - 1)}…`
     : cleaned;

@@ -12,6 +12,7 @@ export function findMachineActor<Machine extends AnyStateMachine>(
   machine: Machine,
 ): ActorRefFrom<Machine> | undefined {
   const actor: unknown = system.get(id);
+
   return isActorOf(actor, machine) ? actor : undefined;
 }
 

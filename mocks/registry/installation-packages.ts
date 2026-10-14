@@ -3,12 +3,17 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { scriptedAgentCommand } from '../agent/scripted-agent-launch';
 import type { ToolInput } from './installation';
+
 const executableMode = 0o755;
+
 const script = scriptedAgentCommand('reply').args[0];
+
 if (!script) throw new Error('Scripted Agent needs an entry point');
+
 export const installationExecutable = Buffer.from(
   `#!/usr/bin/env node\nprocess.argv[2] = 'reply';\nawait import(${JSON.stringify(pathToFileURL(script).href)});\n`,
 );
+
 async function installNpm(
   input: ToolInput,
   name: string,
@@ -24,8 +29,10 @@ async function installNpm(
     mode: executableMode,
   });
 }
+
 const uvBinDirectory = (cwd: string): string =>
   join(cwd, '.venv', process.platform === 'win32' ? 'Scripts' : 'bin');
+
 async function createUvEnvironment(input: ToolInput): Promise<void> {
   const directory = uvBinDirectory(input.cwd);
   await mkdir(directory, { recursive: true });
@@ -35,6 +42,7 @@ async function createUvEnvironment(input: ToolInput): Promise<void> {
     { mode: executableMode },
   );
 }
+
 const uvMetadataDirectory = (
   cwd: string,
   name: string,
@@ -47,6 +55,7 @@ const uvMetadataDirectory = (
     'site-packages',
     `${name}-${version}.dist-info`,
   );
+
 async function writeUvMetadata(
   cwd: string,
   name: string,
@@ -60,6 +69,7 @@ async function writeUvMetadata(
   );
   await writeUvEntryPoints(directory, name);
 }
+
 async function installUv(
   input: ToolInput,
   name: string,
@@ -75,10 +85,12 @@ async function installUv(
     { mode: executableMode },
   );
 }
+
 export const prepareEnvironment = async (input: ToolInput): Promise<void> => {
   if (input.executable === 'uv' && input.args[0] === 'venv')
     await createUvEnvironment(input);
 };
+
 export const installPackage = (
   input: ToolInput,
   name: string,

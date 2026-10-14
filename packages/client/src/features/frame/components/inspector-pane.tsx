@@ -20,10 +20,12 @@ type InspectorControlsProps = Pick<
 >;
 
 const controlIconClass = 'text-muted-foreground';
+
 const controlClass = 'size-7 p-0 sm:size-7';
 
 function ExpandButton(props: InspectorControlsProps): React.JSX.Element {
   const { expanded, onStateChange } = props;
+
   return (
     <IconButton
       variant="ghost"

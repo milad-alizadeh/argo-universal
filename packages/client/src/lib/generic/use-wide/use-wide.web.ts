@@ -9,6 +9,7 @@ function cssLength(breakpoint: string | number): string {
 
 function wideQuery(breakpoint: Breakpoint): MediaQueryList | undefined {
   if (typeof window === 'undefined' || breakpoint === undefined) return;
+
   return window.matchMedia(`(min-width: ${cssLength(breakpoint)})`);
 }
 
@@ -17,16 +18,19 @@ function subscribeToChanges(
   listener: () => void,
 ): () => void {
   mediaQuery?.addEventListener('change', listener);
+
   return (): void => mediaQuery?.removeEventListener('change', listener);
 }
 
 export function useWide(): boolean {
   const breakpoint = useCSSVariable('--breakpoint-wide');
   const mediaQuery = useMemo(() => wideQuery(breakpoint), [breakpoint]);
+
   const subscribe = useCallback(
     (listener: () => void) => subscribeToChanges(mediaQuery, listener),
     [mediaQuery],
   );
+
   return useSyncExternalStore(
     subscribe,
     () => mediaQuery?.matches ?? false,

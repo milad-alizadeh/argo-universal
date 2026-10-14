@@ -19,7 +19,9 @@ const summarySchema = z.object({
   partialFrames: z.number(),
   compositorDropped: z.number(),
 });
+
 type Summary = z.infer<typeof summarySchema>;
+
 // Every frame interval rides along for charts; medians leave it out.
 export type Sample = Summary & { intervals?: number[] };
 
@@ -37,9 +39,11 @@ const middle = (values: number[]): number =>
 export const median = (samples: readonly Sample[]): Sample =>
   summarySchema.parse(
     Object.fromEntries(
-      Object.keys(summarySchema.shape).map((key) => [
-        key,
-        middle(samples.map((sample) => Number(Reflect.get(sample, key)))),
-      ]),
+      summarySchema
+        .keyof()
+        .options.map((key) => [
+          key,
+          middle(samples.map((sample) => sample[key])),
+        ]),
     ),
   );

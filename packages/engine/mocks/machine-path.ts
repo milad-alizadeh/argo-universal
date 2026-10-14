@@ -18,12 +18,17 @@ const createNodeDirectory = (): string => {
   process.once('exit', () =>
     rmSync(directory, { recursive: true, force: true }),
   );
+
   return directory;
 };
+
 const nodeDirectory = createNodeDirectory();
+
 // System tools only, so the developer's own Agents and tools never count as installed.
 const systemDirectories = ['/usr/bin', '/bin', '/usr/sbin', '/sbin'];
+
 let machineDirectory: string | undefined;
+
 let withNode = true;
 
 // The PATH an Engine under test sees: the test's machine directory first, then this Node and system tools.
@@ -33,6 +38,7 @@ export const stubTestMachinePath = (): void => {
     withNode ? nodeDirectory : [],
     systemDirectories,
   ].flat();
+
   vi.stubEnv('PATH', directories.join(delimiter));
 };
 
@@ -49,12 +55,14 @@ export const createMachinePath = async (
     withNode = true;
     await rm(directory, { recursive: true, force: true });
   });
+
   return {
     directory,
     place: async (name) => {
       const file = join(directory, name);
       await writeFile(file, '#!/bin/sh\nexit 0\n');
       await chmod(file, 0o755);
+
       return file;
     },
     remove: (name) => rm(join(directory, name), { force: true }),

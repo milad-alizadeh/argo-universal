@@ -10,6 +10,7 @@ const unofferedChoices: SessionSetConfigOptionInput[] = [
   { sessionId: 'session-1', configId: 'fast', type: 'id', value: 'true' },
   { sessionId: 'session-1', configId: 'model', type: 'id', value: 'unknown' },
 ];
+
 it.each(unofferedChoices)(
   'rejects the unoffered $configId=$value choice',
   async (input) => {
@@ -17,6 +18,7 @@ it.each(unofferedChoices)(
       steps: [],
       configOptions: acpConfiguration,
     });
+
     await expect(
       host.caller.session.setConfigOption(input),
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
@@ -50,6 +52,7 @@ const questions: { name: string; step: ScriptedStep }[] = [
     },
   },
 ];
+
 it.each(questions)(
   'rejects a stale $name identity without consuming its current request',
   async ({ name, step }) => {
@@ -58,15 +61,18 @@ it.each(questions)(
       sessionId: 'session-1',
       prompt: [{ type: 'text', text: 'Start' }],
     });
+
     const snapshot = await waitForAcpSnapshot(host, 'session-1', (current) =>
       name === 'Permission'
         ? current.pendingPermission !== null
         : current.pendingElicitation !== null,
     );
+
     const pending =
       name === 'Permission'
         ? snapshot.pendingPermission
         : snapshot.pendingElicitation;
+
     const answer =
       name === 'Permission'
         ? host.caller.session.answerPermission({
@@ -80,6 +86,7 @@ it.each(questions)(
             action: 'accept',
             content: { count: 2 },
           });
+
     await expect(answer).rejects.toMatchObject({
       code: 'CONFLICT',
       message: 'already answered',

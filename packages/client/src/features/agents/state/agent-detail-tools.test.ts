@@ -4,7 +4,9 @@ import { iconAgent } from '../components/registry-icons.mocks';
 import { agentDetail } from './agent-detail';
 
 const notInstalled = 'not-installed';
+
 const signInNeeded = 'sign-in-needed';
+
 const probed: AgentInfo = {
   agent: iconAgent.id,
   label: iconAgent.entry.name,
@@ -17,7 +19,9 @@ const uvAgent = {
   ...iconAgent,
   support: { kind: 'uvx', recipe: { package: 'python-agent==1.2.3' } },
 } as const;
+
 const allTools = { node: true, uv: true, brew: true };
+
 it.each([
   {
     name: 'an npx Agent without Node.js',

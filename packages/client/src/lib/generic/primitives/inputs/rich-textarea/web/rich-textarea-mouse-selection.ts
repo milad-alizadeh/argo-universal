@@ -20,6 +20,7 @@ function listenOnField(
     detach(previous, listeners);
     attach(field, listeners);
   });
+
   return () => {
     unregister();
     detach(editor.getRootElement(), listeners);
@@ -27,6 +28,7 @@ function listenOnField(
 }
 
 type Follow = (isMouseSelection: boolean) => void;
+
 interface MouseListeners {
   field: FieldListeners;
   release: () => void;
@@ -38,15 +40,19 @@ interface MouseListeners {
  */
 function mouseSelectionListeners(onChange: Follow): MouseListeners {
   let pressing = false;
+
   const press = (): void => {
     pressing = true;
     onChange(false);
   };
+
   const release = (): void => {
     if (pressing) onChange(true);
     pressing = false;
   };
+
   const type = (): void => onChange(false);
+
   return { field: { pointerdown: press, keydown: type }, release };
 }
 
@@ -58,6 +64,7 @@ export function trackMouseSelection(
   const { field, release } = mouseSelectionListeners(onChange);
   document.addEventListener('pointerup', release);
   const stopListening = listenOnField(editor, field);
+
   return () => {
     stopListening();
     document.removeEventListener('pointerup', release);

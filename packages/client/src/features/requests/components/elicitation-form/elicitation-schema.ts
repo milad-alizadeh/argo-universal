@@ -13,7 +13,9 @@ type ElicitationField = {
   key: string;
   required: boolean;
 };
+
 type ElicitationContent = Record<string, ElicitationValue | number>;
+
 interface ElicitationSchema {
   fields: ElicitationField[];
   error: string | undefined;
@@ -23,11 +25,15 @@ interface ElicitationSchema {
     value: ElicitationFormValues;
   }) => { form?: string; fields: Record<string, string> } | undefined;
 }
+
 type CompiledSchema = { check?: ValidateFunction; error?: string };
 
 export type ElicitationValue = string | boolean | string[];
+
 export type ElicitationValues = Record<string, ElicitationValue>;
+
 type ElicitationFormValues = Record<string, ElicitationValue | undefined>;
+
 const validator = addFormats(new Ajv({ allErrors: true, strict: false }));
 
 export function createElicitationSchema(
@@ -36,6 +42,7 @@ export function createElicitationSchema(
   const fields = schemaFields(schema);
   const compiled = compileSchema(schema);
   const content = contentOf(fields);
+
   return {
     fields,
     error: compiled.error,
@@ -72,6 +79,7 @@ function contentOf(fields: ElicitationField[]): ElicitationSchema['content'] {
       fields.flatMap(
         ({ name, key, property }): [string, ElicitationValue | number][] => {
           const value = contentValue(property, values[key]);
+
           return value === undefined ? [] : [[name, value]];
         },
       ),
@@ -116,21 +124,28 @@ function validatorOf(
   content: ElicitationSchema['content'],
 ): ElicitationSchema['validate'] {
   const check = compiled.check;
+
   if (!check) return () => ({ form: compiled.error, fields: {} });
+
   return ({ value }) =>
     check(content(value))
       ? undefined
       : { fields: fieldErrors(fields, check.errors ?? []) };
 }
 
+// A field shows its first error: later entries win, so the errors go in last to first.
 function fieldErrors(
   fields: ElicitationField[],
   errors: readonly ErrorObject[],
 ): Record<string, string> {
-  const messages: Record<string, string> = {};
-  for (const [field, error] of erroredFields(fields, errors))
-    messages[field.key] ??= errorMessage(error, field.property);
-  return messages;
+  return Object.fromEntries(
+    erroredFields(fields, errors)
+      .reverse()
+      .map(([field, error]) => [
+        field.key,
+        errorMessage(error, field.property),
+      ]),
+  );
 }
 
 function erroredFields(
@@ -139,6 +154,7 @@ function erroredFields(
 ): [ElicitationField, ErrorObject][] {
   return errors.flatMap((error): [ElicitationField, ErrorObject][] => {
     const field = fields.find(({ name }) => name === errorProperty(error));
+
     return field ? [[field, error]] : [];
   });
 }

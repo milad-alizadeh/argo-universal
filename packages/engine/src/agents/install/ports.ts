@@ -9,6 +9,7 @@ export type InstallToolInput = {
   // What the tool installs, for its failure: the Agent unless it names a tool such as Node.js.
   subject?: string;
 };
+
 export type InstallPorts = {
   runTool: (input: InstallToolInput) => Promise<string>;
   download: (url: string, signal: AbortSignal) => Promise<Uint8Array>;

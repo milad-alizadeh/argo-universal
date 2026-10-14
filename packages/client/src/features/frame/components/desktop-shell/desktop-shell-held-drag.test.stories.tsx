@@ -29,6 +29,7 @@ const meta = {
   title: 'Tests/DesktopShell/Held drag',
   ...shellMeta,
 } satisfies Meta<typeof DesktopShellFrame>;
+
 export default meta;
 
 type Canvas = ShellPlayContext['canvas'];
@@ -77,9 +78,11 @@ export const OneHeldDragCanCloseAndReopenPanels: ShellStory = {
     ).toBeVisible();
     await userEvent.pointer({ keys: pointerRelease });
     await controlled.render({ inspectorState: 'open' });
+
     const inspector = canvas.getByRole('separator', {
       name: resizeInspectorLabel,
     });
+
     const inspectorStart = inspector.getBoundingClientRect();
     await pressAt(context, inspector, at(inspectorStart, 4));
     await holdAt(context, inspector, at(inspectorStart, -900));

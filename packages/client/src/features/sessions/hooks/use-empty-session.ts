@@ -15,7 +15,9 @@ import {
 } from '../state/empty-session-machine';
 
 export type EmptySessionActor = ActorRefFrom<typeof emptySessionMachine>;
+
 type Snapshot = ReturnType<EmptySessionActor['getSnapshot']>;
+
 type Client = ReturnType<typeof useTRPCClient>;
 
 export interface EmptySession {
@@ -69,7 +71,9 @@ const openSession = async (
   signal: AbortSignal,
 ): Promise<{ sessionId: string }> => {
   const opened = await client.session.new.mutate(input);
+
   if (signal.aborted) closeQuietly(client, opened.sessionId);
+
   return opened;
 };
 
@@ -84,6 +88,7 @@ const setConfigOption = async (
     type: 'id',
     value,
   });
+
   return changed.configOptions;
 };
 
@@ -91,6 +96,7 @@ const setConfigOption = async (
 function useEmptySessionPorts(): EmptySessionPorts {
   const client = useTRPCClient();
   const navigate = useNavigate();
+
   return {
     open: (input, signal) => openSession(client, input, signal),
     close: (sessionId) => client.session.close.mutate({ sessionId }),
@@ -109,6 +115,7 @@ function useCloseOnLeave(actor: EmptySessionActor): void {
   useEffect(
     () => (): void => {
       const last = actor.getSnapshot();
+
       if (ownsOpenSession(last) && last.context.sessionId)
         closeQuietly(client, last.context.sessionId);
     },
@@ -162,9 +169,11 @@ export function useEmptySession(
   const actor = useActorRef(emptySessionMachine, {
     input: useEmptySessionPorts(),
   });
+
   useCloseOnLeave(actor);
   useChoices(actor, input, connected);
   useRetryOnReconnect(actor);
+
   return toEmptySession(
     actor,
     useSelector(actor, (current) => current),

@@ -12,6 +12,7 @@ import {
   rememberSessionConfiguration,
   savedChoicesQuery,
 } from './session-configuration-preferences';
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -25,9 +26,11 @@ describe('rememberSessionConfiguration', () => {
       const client = new QueryClient();
       const query = savedChoicesQuery(agent.agent);
       const olderRead = Promise.withResolvers<string | null>();
+
       const read = vi
         .spyOn(AsyncStorage, 'getItem')
         .mockReturnValue(olderRead.promise);
+
       const loading = client.fetchQuery(query).catch(() => null);
       await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(3));
       rememberSessionConfiguration(

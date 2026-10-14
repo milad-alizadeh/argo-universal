@@ -17,12 +17,18 @@ import {
 } from './connection-machine.mocks';
 
 export const connectionLostEvent = 'connection.lost';
+
 export const connectionOpenedEvent = 'connection.opened';
+
 export const foregroundEvent = 'app.foreground';
+
 export const retryEvent = 'connection.retry';
+
 export const connectionAttemptEvent = 'connection.attemptRequested';
+
 export const retryDelayEvent =
   'xstate.after.retryDelay.connection.attempt.waiting';
+
 export const offlineDelayEvent =
   'xstate.after.offlineDelay.connection.link.reconnecting';
 
@@ -35,7 +41,9 @@ const fixtures = [
   { type: retryDelayEvent },
   { type: offlineDelayEvent },
 ] satisfies GraphEventFromLogic<typeof machine>[];
+
 export type ConnectionGraphEvent = (typeof fixtures)[number];
+
 export type ConnectionPath = StatePath<
   ConnectionSnapshot,
   ConnectionGraphEvent
@@ -62,7 +70,9 @@ const eventTypes = (node: DirectedGraphNode): string[] => [
 
 const fixtureFor = (type: string): ConnectionGraphEvent => {
   const fixture = fixtures.find((event) => event.type === type);
+
   if (!fixture) throw new Error(`No fixture for Connection event ${type}`);
+
   return fixture;
 };
 
@@ -98,6 +108,7 @@ const shortestPaths = [
     options,
   ),
 ];
+
 // Direct paths cover first-connect losses; simple paths cover later reconnect cycles.
 const simplePaths = terminalPaths(
   getSimplePaths(machine, {
@@ -110,10 +121,12 @@ const simplePaths = terminalPaths(
       ),
   }),
 );
+
 export const pathGroups = [
   ['shortest path', shortestPaths],
   ['simple path', simplePaths],
 ] as const;
+
 export const allPaths = [...shortestPaths, ...simplePaths];
 
 export const title = (path: ConnectionPath): string =>

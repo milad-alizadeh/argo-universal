@@ -6,23 +6,41 @@ import type {
 } from './desktop-shell-test.mocks';
 
 export const railId = 'desktop-rail';
+
 export const currentAttribute = 'aria-current';
+
 export const hideSidebarLabel = 'Hide sidebar';
+
 export const resizeInspectorLabel = 'Resize Inspector';
+
 export const showSidebarLabel = 'Show sidebar';
+
 export const closeInspectorLabel = 'Close Inspector';
+
 export const sessionListId = 'desktop-list';
+
 export const listContentId = 'list-content';
+
 export const detailContentId = 'detail-content';
+
 export const hiddenAttribute = 'aria-hidden';
+
 export const moreActionsLabel = 'More actions';
+
 export const inspectorId = 'desktop-inspector';
+
 export const inspectorContentId = 'inspector-content';
+
 export const expandInspectorLabel = 'Expand Inspector';
+
 export const detailId = 'desktop-detail';
+
 export const restoreInspectorLabel = 'Restore Inspector';
+
 export const resizeSidebarLabel = 'Resize sidebar';
+
 export const pointerPress = '[MouseLeft>]';
+
 export const pointerRelease = '[/MouseLeft]';
 
 export interface Point {

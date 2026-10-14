@@ -20,6 +20,7 @@ describe('toSessionChoices', () => {
     const choices = toSessionChoices(
       input({ agents: newSessionCatalogs.oneNotInstalled }),
     );
+
     expect([choices.project?.id, choices.agent?.agent]).toEqual([
       worktreeProject.id,
       secondAgent.agent,
@@ -30,6 +31,7 @@ describe('toSessionChoices', () => {
     const choices = toSessionChoices(
       input({ agents: newSessionCatalogs.bothCantStart }),
     );
+
     expect(choices.agent).toBeUndefined();
   });
 
@@ -40,6 +42,7 @@ describe('toSessionChoices', () => {
         chosen: { agent: secondAgent.agent },
       }),
     );
+
     expect(choices.agent?.agent).toBe(firstAgent.agent);
   });
 
@@ -47,6 +50,7 @@ describe('toSessionChoices', () => {
     const choices = toSessionChoices(
       input({ chosen: { projectId: mainProject.id } }),
     );
+
     expect(choices.project?.id).toBe(mainProject.id);
   });
 
@@ -54,6 +58,7 @@ describe('toSessionChoices', () => {
     const choices = toSessionChoices(
       input({ chosen: { projectId: 'deleted-project' } }),
     );
+
     expect(choices.project?.id).toBe(worktreeProject.id);
   });
 
@@ -61,6 +66,7 @@ describe('toSessionChoices', () => {
     const choices = toSessionChoices(
       input({ chosen: { agent: secondAgent.agent } }),
     );
+
     expect(choices.agent?.agent).toBe(secondAgent.agent);
   });
 
@@ -104,6 +110,7 @@ describe('chooseAnotherProject', () => {
       { projectId: worktreeProject.id, newWorktree: true },
       mainProject.id,
     );
+
     expect(chosen).toEqual({
       projectId: mainProject.id,
       newWorktree: undefined,
@@ -123,6 +130,7 @@ const statuses: AgentStatus[] = [
   'not-found',
   'not-installed',
 ];
+
 const listed = (status: AgentStatus, enabled = true): AgentInfo => ({
   ...firstAgent,
   agent: `${status}${enabled ? '' : '-disabled'}`,
@@ -137,6 +145,7 @@ describe('offeredAgents', () => {
       listed('ready', false),
       listed('checking', false),
     ];
+
     expect(offeredAgents(agents).map(({ agent }) => agent)).toEqual([
       'ready',
       'checking',

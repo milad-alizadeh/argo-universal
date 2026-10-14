@@ -7,6 +7,7 @@ it('keeps the Feed subscription open after malformed stored activity', async ():
   const context = await startLiveHeaderHost();
   const { database, caller, subscription } = context;
   const initial = (await subscription.next()).value;
+
   if (initial?.type !== 'snapshot')
     throw new Error('Expected initial snapshot');
   database
@@ -26,9 +27,11 @@ it('keeps the Feed subscription open after malformed stored activity', async ():
   database.$client
     .prepare('UPDATE session SET max_revision = 500 WHERE id = ?')
     .run('session-1');
+
   const reported = vi
     .spyOn(console, 'error')
     .mockImplementation((): void => {});
+
   onTestFinished((): void => reported.mockRestore());
   const next = subscription.next();
   await publishHeaderConfiguration(context, 'large');
@@ -68,12 +71,14 @@ it('keeps the Feed subscription open after malformed stored activity', async ():
       limit: 50,
     }),
   ).rejects.toThrow('Invalid input: expected array, received string');
+
   const catchUp = (
     await caller.feed.subscribe({
       sessionId: 'session-1',
       after: { epoch: initial.snapshot.epoch, revision: 0 },
     })
   )[Symbol.asyncIterator]();
+
   await expect(catchUp.next()).rejects.toThrow(
     'Invalid input: expected array, received string',
   );

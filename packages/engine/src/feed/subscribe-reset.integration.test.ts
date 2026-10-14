@@ -9,6 +9,7 @@ import {
   applyFeedChange,
   subscribe,
 } from '#mocks/feed-suite';
+
 it('resets a subscriber from another epoch, then sends the rows not yet stored', async (): Promise<void> => {
   await startFeedTestHost();
   applyFeedChange(createOpenMessageChange(fifthMessageRowId));

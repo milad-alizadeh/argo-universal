@@ -7,7 +7,9 @@ import {
 import { createElement } from 'react';
 
 const titleBottom = 16;
+
 const inset = 24;
+
 const footerHeight = 48;
 
 export function DialogTitle(props: { label: string }): React.JSX.Element {

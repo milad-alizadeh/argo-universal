@@ -38,6 +38,7 @@ function LineNumber(props: LineProps): React.JSX.Element {
 
 function LineSign({ line }: LineProps): React.JSX.Element {
   const style = lineStyles[line.kind];
+
   return (
     <Text role="code" className={cn('w-5 shrink-0 text-center', style.color)}>
       {style.sign}
@@ -47,6 +48,7 @@ function LineSign({ line }: LineProps): React.JSX.Element {
 
 function CodeLine(props: LineProps): React.JSX.Element {
   const { background } = lineStyles[props.line.kind];
+
   return (
     <View className={cn('h-5 flex-row items-center', background)}>
       <LineNumber {...props} />

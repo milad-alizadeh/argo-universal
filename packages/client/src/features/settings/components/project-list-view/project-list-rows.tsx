@@ -22,6 +22,7 @@ const matches = (project: ProjectInfo, search: string): boolean =>
 export function LoadedProjects(props: LoadedProps): React.JSX.Element {
   const query = props.search.trim().toLowerCase();
   const found = props.projects.filter((project) => matches(project, query));
+
   return (
     <View className="flex-1 pt-2 wide:pt-0">
       <FieldGroup search={listSearch(props)}>
@@ -37,6 +38,7 @@ const countTitle = (count: number): string =>
 function ProjectRows(props: FoundProps): React.JSX.Element {
   if (props.found.length === 0)
     return <NoProjects searching={props.searching} />;
+
   return <FoundProjects {...props} />;
 }
 
@@ -64,10 +66,12 @@ function FoundProjects({
 }
 
 const folderNotFound = 'Folder not found';
+
 const missingFolder: ListItemProps['status'] = {
   tone: 'warning',
   label: folderNotFound,
 };
+
 type ProjectDetail = Pick<ListItemProps, 'value' | 'status'>;
 
 const missingFolderDetail = (wide: boolean): ProjectDetail => ({
@@ -78,6 +82,7 @@ const missingFolderDetail = (wide: boolean): ProjectDetail => ({
 // Where the Project's remote is, or that its folder is gone: a phone shows only the dot, which the row's name still says.
 function projectDetail(project: ProjectInfo, wide: boolean): ProjectDetail {
   if (!project.folderExists) return missingFolderDetail(wide);
+
   return { value: project.remoteHost ?? 'No remote' };
 }
 

@@ -1,11 +1,14 @@
 import type { AgentInfo } from '@repo/contracts';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import type { ComposerProps } from '../src/features/composer/components/composer/composer';
+
 export const composerLongAgentCatalog: AgentInfo[] = Array.from(
   { length: 40 },
   (_, index) => {
     const agent = newSessionCatalogs.bothReady[0];
+
     if (!agent) throw new Error('Composer needs an available Agent mock.');
+
     return {
       ...agent,
       agent: `development-agent-${index + 1}`,

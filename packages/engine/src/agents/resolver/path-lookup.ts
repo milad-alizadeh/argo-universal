@@ -6,6 +6,7 @@ const isExecutableFile = async (file: string): Promise<boolean> => {
   try {
     if (!(await stat(file)).isFile()) return false;
     await access(file, constants.X_OK);
+
     return true;
   } catch {
     return false;
@@ -22,7 +23,9 @@ const pathDirectories = (): string[] =>
 export const findOnPath = async (name: string): Promise<string | undefined> => {
   for (const directory of pathDirectories()) {
     const file = join(directory, name);
+
     if (await isExecutableFile(file)) return file;
   }
+
   return undefined;
 };

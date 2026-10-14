@@ -12,6 +12,7 @@ import {
 // Material's AlertDialog shows while it is drawn, so a closed alert draws nothing.
 export function Alert(props: AlertProps): React.JSX.Element | null {
   if (!props.open) return null;
+
   return (
     <Host matchContents>
       <OpenAlert {...props} />
@@ -21,6 +22,7 @@ export function Alert(props: AlertProps): React.JSX.Element | null {
 
 function OpenAlert(props: AlertProps): React.JSX.Element {
   const { colors } = useNativeTheme();
+
   return (
     <AlertDialog
       onDismissRequest={() => props.onOpenChange(false)}
@@ -54,6 +56,7 @@ function AlertTitle(props: Pick<AlertProps, 'title'>): React.JSX.Element {
 
 function AlertAnswers(props: AlertProps): React.JSX.Element {
   const answers = props.actions.filter((action) => action.role !== 'cancel');
+
   return (
     <AlertDialog.ConfirmButton>
       <Row horizontalArrangement={{ spacedBy: 8 }}>
@@ -69,6 +72,7 @@ function AlertMessage(props: {
   message: string | undefined;
 }): React.JSX.Element | null {
   if (!props.message) return null;
+
   return (
     <AlertDialog.Text>
       <Text style={{ typography: 'bodyMedium' }}>{props.message}</Text>
@@ -80,7 +84,9 @@ function AlertCancel(
   props: Pick<AlertProps, 'actions' | 'onOpenChange'>,
 ): React.JSX.Element | null {
   const action = props.actions.find((candidate) => candidate.role === 'cancel');
+
   if (!action) return null;
+
   return (
     <AlertDialog.DismissButton>
       <AlertButton action={action} onOpenChange={props.onOpenChange} />
@@ -92,8 +98,10 @@ function AlertButton(
   props: Pick<AlertProps, 'onOpenChange'> & { action: AlertAction },
 ): React.JSX.Element {
   const { colors } = useNativeTheme();
+
   const color =
     props.action.role === 'destructive' ? colors.destructive : colors.primary;
+
   return (
     <TextButton
       onClick={alertActionPress(props.action, props.onOpenChange)}

@@ -25,7 +25,9 @@ export const newSessionOptions = z
 // The configuration a recorded empty Session of `agent` returned before its first prompt.
 export function recordedSessionOptions(agent: string): SessionConfigOption[] {
   const recorded = newSessionOptions.find((entry) => entry.agent === agent);
+
   if (!recorded) throw new Error(`No recorded Session options for ${agent}.`);
+
   return recorded.configOptions;
 }
 

@@ -77,12 +77,14 @@ const newSessionTitle = null;
 export function NewSessionView(props: NewSessionViewProps): React.JSX.Element {
   // A failed load stays blank: the toast says why, and the page retries when the Connection reopens.
   useErrorToast(props.state === 'load-failed' ? loadFailed : undefined);
+
   if (props.state !== 'ready')
     return (
       <Screen edges={['bottom']}>
         <PageHeader title={newSessionTitle} />
       </Screen>
     );
+
   return <ReadyNewSessionView {...props} />;
 }
 
@@ -114,6 +116,7 @@ function SetupStepAlert({
   setupStep?: string;
 }): React.ReactNode {
   if (setupStep === undefined) return null;
+
   return (
     <Text semanticRole="alert" className="w-full px-4 pb-2 text-destructive">
       {setupStep}
@@ -161,6 +164,7 @@ function ReadyNewSessionView(
   props: ReadyNewSessionViewProps,
 ): React.JSX.Element {
   useErrorToast(openFailure(props));
+
   return (
     <SessionLayout
       header={<PageHeader title={newSessionTitle} />}

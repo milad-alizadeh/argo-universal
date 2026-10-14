@@ -21,6 +21,7 @@ export interface PageHeaderProps {
  */
 export function PageHeader(props: PageHeaderProps): React.JSX.Element | null {
   if (!useWide()) return null;
+
   return (
     <View testID="page-header" className={pageHeaderClass(props.dragRegion)}>
       <SessionColumn className="flex-row items-start gap-3 pt-3.25">

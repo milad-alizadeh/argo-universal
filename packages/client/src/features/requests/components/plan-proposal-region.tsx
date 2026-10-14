@@ -14,6 +14,7 @@ export function PlanProposalRegion({
   ...props
 }: ViewProps & { children: ReactNode }): React.JSX.Element {
   const host = useId();
+
   return (
     <PlanProposalHost.Provider value={host}>
       <ContentLayout {...props} className={cn('relative', className)}>

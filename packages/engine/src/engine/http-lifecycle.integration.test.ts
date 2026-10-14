@@ -21,9 +21,11 @@ it('closes while a WebSocket client is connected', async (): Promise<void> => {
     socket.once('open', resolve);
     socket.once('error', reject);
   });
+
   const closed = new Promise((resolve): WebSocket =>
     socket.once('close', resolve),
   );
+
   await closeServer();
   await closed;
   expect(socket.readyState).toBe(WebSocket.CLOSED);

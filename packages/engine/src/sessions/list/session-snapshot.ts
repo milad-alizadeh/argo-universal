@@ -47,7 +47,9 @@ export function toSessionSnapshot(
     elicitationQueue: [],
     configOptions: [],
   };
+
   let state: SessionSnapshot['state'] = 'idle';
+
   if (
     session?.matches({ open: { acp: { activeTurn: 'awaitingPermission' } } }) ||
     session?.matches({ open: { acp: { activeTurn: 'awaitingElicitation' } } })
@@ -56,10 +58,12 @@ export function toSessionSnapshot(
   } else if (
     session?.matches({ open: { acp: 'committing' } }) ||
     session?.matches({ open: { acp: 'activeTurn' } }) ||
-    session?.matches({ open: { acp: 'publishing' } })
+    session?.matches({ open: { acp: 'publishing' } }) ||
+    session?.matches({ open: { acp: 'replacing' } })
   ) {
     state = 'running';
   }
+
   return {
     agent: storedSession.agent,
     title: storedSession.title,

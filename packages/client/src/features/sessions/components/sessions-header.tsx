@@ -58,6 +58,7 @@ function newSessionSearchAction(
   onNewSession: () => void,
 ): Pick<HeaderSearch, 'action'> {
   if (!newSessionBesideSearch) return {};
+
   return {
     action: {
       icon: 'new-session',

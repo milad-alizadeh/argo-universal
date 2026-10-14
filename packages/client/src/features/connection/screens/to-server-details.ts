@@ -19,5 +19,6 @@ export function toServerDetails(
 ): ServerDetails {
   if (info.isPending || !info.data) return unloadedDetails(info);
   const { version, startedAt, pid } = info.data;
+
   return { status: 'loaded', version, startedAt, pid, clock };
 }

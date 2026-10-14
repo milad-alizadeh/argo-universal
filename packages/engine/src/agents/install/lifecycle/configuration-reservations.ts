@@ -15,6 +15,7 @@ export class ConfigurationReservations {
     operation: () => Promise<Result>,
   ): Promise<Result> {
     const checking = this.pendingCheck(agentId);
+
     return checking ? checking.then(operation) : operation();
   }
   public hasExclusive(agentId: string): boolean {
@@ -25,11 +26,15 @@ export class ConfigurationReservations {
     operation: () => Promise<AgentCheck>,
   ): Promise<AgentCheck> {
     const existing = this.checks.get(agentId);
+
     if (existing) return existing;
+
     const pending = this.inspect(agentId, operation).finally(() =>
       this.checks.delete(agentId),
     );
+
     this.checks.set(agentId, pending);
+
     return pending;
   }
   private async inspect(
@@ -38,6 +43,7 @@ export class ConfigurationReservations {
   ): Promise<AgentCheck> {
     while (this.active.has(agentId))
       await Promise.allSettled([this.active.get(agentId)]);
+
     try {
       return await operation();
     } catch (error) {
@@ -52,19 +58,20 @@ export class ConfigurationReservations {
     const result = Promise.withResolvers<Result>();
     this.active.set(agentId, result.promise);
     void Promise.resolve().then(operation).then(result.resolve, result.reject);
+
     return result.promise
-      .catch((error: unknown) => {
-        this.retainCleanup(agentId, error);
-        throw error;
+      .catch((cause: unknown) => {
+        this.retainCleanup(agentId, cause);
+        throw cause;
       })
       .finally(() => this.release(agentId, result.promise));
   }
   private release(agentId: string, promise: Promise<unknown>): void {
     if (this.active.get(agentId) === promise) this.active.delete(agentId);
   }
-  private retainCleanup(agentId: string, error: unknown): void {
-    if (!(error instanceof ResourceCleanupError)) return;
-    const cleanup = error.awaitCleanup();
+  private retainCleanup(agentId: string, cause: unknown): void {
+    if (!(cause instanceof ResourceCleanupError)) return;
+    const cleanup = cause.awaitCleanup();
     this.active.set(agentId, cleanup);
     void cleanup.then(
       () => this.active.delete(agentId),

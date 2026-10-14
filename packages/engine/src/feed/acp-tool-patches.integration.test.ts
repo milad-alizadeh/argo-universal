@@ -41,6 +41,7 @@ it.each(['agent-1', 'agent-2'])(
       ],
       agentId,
     );
+
     const page = await host.caller.feed.page({ sessionId, direction: 'tail' });
     expect(page.rows).toMatchObject([
       { sessionUpdate: 'user_message' },
@@ -73,6 +74,7 @@ it('a first partial tool update shows supplied information without inventing a c
       rawOutput: { error: 'Missing' },
     },
   ]);
+
   expect(
     (await host.caller.feed.page({ sessionId, direction: 'tail' })).rows,
   ).toMatchObject([

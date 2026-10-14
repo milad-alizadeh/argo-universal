@@ -19,33 +19,41 @@ import {
   retryConfiguration,
   type RetryScenario,
 } from './retry-case';
+
 interface RetryProps {
   configuration: Configuration;
 }
+
 function useRetryingConfiguration(configuration: Configuration): Configuration {
   const [agents, setAgents] = useState(configuration.agents);
+
   const onAgentRetry = (): void => {
     configuration.onAgentRetry?.();
     setAgents(newSessionCatalogs.bothReady);
   };
+
   return { ...configuration, agents, onAgentRetry };
 }
+
 function RetryingConfiguration({
   configuration,
 }: RetryProps): React.JSX.Element {
   const retrying = useRetryingConfiguration(configuration);
+
   return (
     <View className="p-4">
       <ComposerAgentModelControl disabled={false} configuration={retrying} />
     </View>
   );
 }
+
 export function cantStartAgentRecheck(
   width: number,
   agentIndex: number,
   session: 'new' | 'started',
 ): Story {
   const scenario = retryScenario(width, agentIndex, session);
+
   return {
     beforeEach: () => clearRetryCallbacks(scenario),
     args: { configuration: retryConfiguration(scenario) },
@@ -68,27 +76,33 @@ async function testAgentRetry(
   await assertRetryResults(scenario);
   await context.userEvent.keyboard('{Escape}');
 }
+
 async function assertRetryRowsReachable(width: number): Promise<void> {
   if (width !== layoutWidths.wide) return;
   await waitFor(async () => {
     const menu = within(document.body)
       .getByTestId(agentsScrollId)
       .getBoundingClientRect();
+
     for (const unavailable of newSessionCatalogs.bothCantStart)
       await assertRetryRowInsideMenu(unavailable.label, menu);
   });
 }
+
 async function assertRetryRowInsideMenu(
   label: string,
   menu: DOMRect,
 ): Promise<void> {
   const overlay = within(document.body);
+
   const choice = overlay
     .getByRole('button', { name: `Select ${label}` })
     .getBoundingClientRect();
+
   const action = overlay
     .getByRole('button', { name: `Recheck ${label}` })
     .getBoundingClientRect();
+
   await expect(choice.top).toBeGreaterThanOrEqual(menu.top);
   await expect(action.bottom).toBeLessThanOrEqual(menu.bottom);
 }
@@ -106,6 +120,7 @@ function retryScenario(
     onAgentRetry: fn(),
   };
 }
+
 function clearRetryCallbacks(scenario: RetryScenario): void {
   scenario.onAgentChange.mockClear();
   scenario.onAgentRetry.mockClear();

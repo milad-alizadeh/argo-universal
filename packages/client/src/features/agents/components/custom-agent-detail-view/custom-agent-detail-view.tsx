@@ -36,12 +36,14 @@ export type CustomAgentDetailViewProps = {
   onSignIn?: () => void;
   management?: AgentManagement;
 };
+
 type SettingsProps = Omit<
   CustomAgentDetailViewProps,
   'agentId' | 'definition'
 > & {
   definition: CustomAgentDefinition;
 };
+
 // The page below its header: the Status, and the launch values or their form.
 type ContentProps = SettingsProps & {
   status: React.ReactNode;
@@ -54,6 +56,7 @@ export function CustomAgentDetailView({
   ...settings
 }: CustomAgentDetailViewProps): React.JSX.Element {
   if (!definition) return <AgentPlaceholder agent={agentId} />;
+
   return <CustomAgentSettings definition={definition} {...settings} />;
 }
 
@@ -85,6 +88,7 @@ function CustomAgentIdentity({
 // The identity card and the Status, then the launch values; Edit turns the values into the form, under the same Status.
 function CustomAgentContent(props: SettingsProps): React.JSX.Element {
   const [editing, onEditing] = useState(false);
+
   // A list rather than a fragment, so a native group still sees each section.
   const status = [
     <CustomAgentIdentity key="identity" readiness={props.readiness} />,
@@ -96,7 +100,9 @@ function CustomAgentContent(props: SettingsProps): React.JSX.Element {
       onSignIn={props.onSignIn}
     />,
   ];
+
   const content = { ...props, status, onEditing };
+
   return editing ? <LaunchForm {...content} /> : <LaunchView {...content} />;
 }
 
@@ -116,6 +122,7 @@ function LaunchView(props: ContentProps): React.JSX.Element {
 
 function CustomRemoval(props: SettingsProps): React.JSX.Element | null {
   if (!props.management) return null;
+
   return (
     <AgentRemoval
       name={props.definition.name}
@@ -136,12 +143,15 @@ const closeWhenSaved =
   }): SubmitCustomAgent =>
   async (edited) => {
     const result = await onSave(edited);
+
     if (result.status === 'ready') onClose();
+
     return result;
   };
 
 function LaunchForm(props: ContentProps): React.JSX.Element {
   const onClose = (): void => props.onEditing(false);
+
   return (
     <CustomAgentForm
       initial={props.definition}

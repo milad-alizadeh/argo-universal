@@ -10,6 +10,7 @@ import { evaluateWaivers } from './not-yet-cleared/evaluate.mts';
 it('counts only files directly in a folder', (): void => {
   const measured =
     '{"diagnostics":[{"filename":"packages/example/src/nested/example.ts","code":"eslint(complexity)"}]}';
+
   expect(
     evaluateWaivers({ current, baseline: current, report: measured }).entries[0]
       ?.findings,
@@ -22,9 +23,11 @@ it.each([
 ])('recognizes rule code %s', (code): void => {
   const text =
     '{"overrides":[{"files":["packages/example/src/*"],"rules":{"typescript/explicit-function-return-type":"off"}}]}';
+
   const measured = JSON.stringify({
     diagnostics: [{ filename: exampleFilename, code }],
   });
+
   expect(
     evaluateWaivers({ current: text, baseline: text, report: measured })
       .problems,
@@ -61,6 +64,7 @@ it.each([
       },
     ],
   });
+
   expect(
     evaluateWaivers({ current: changed, baseline: current, report }).problems,
   ).toContain(fixture.problem);

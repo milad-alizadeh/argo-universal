@@ -10,6 +10,7 @@ import { toast } from './toasts';
 
 const heading = (page: Page, name: string): Locator =>
   page.getByRole('heading', { name, exact: true });
+
 // Evidence for the PR: each state of the flow, as the user sees it.
 const capture = async (page: Page, name: string): Promise<void> => {
   await page.screenshot({
@@ -17,6 +18,7 @@ const capture = async (page: Page, name: string): Promise<void> => {
     animations: 'disabled',
   });
 };
+
 const failureMessage = (failure: string): string =>
   failure === 'missing-runtime'
     ? 'Node.js is required on the Server'
@@ -39,6 +41,7 @@ Given(
     });
   },
 );
+
 Given(
   'the external Agent installer reports {word}',
   async ({ app }, failure: string): Promise<void> => {
@@ -48,12 +51,15 @@ Given(
     );
   },
 );
+
 const openInstallation = async (page: Page): Promise<Locator> => {
   await browseAgents(page);
   await page.getByRole('link', { name: /^Example Agent,/ }).click();
   await page.getByRole('button', { name: 'Install', exact: true }).click();
+
   return page.getByRole('dialog', { name: 'Install Example Agent?' });
 };
+
 When('I confirm installing Example Agent', async ({ page }): Promise<void> => {
   const confirmation = await openInstallation(page);
   await expect(confirmation).toContainText('Version 1.2.3');
@@ -62,12 +68,14 @@ When('I confirm installing Example Agent', async ({ page }): Promise<void> => {
     .getByRole('button', { name: 'Install', exact: true })
     .click();
 });
+
 When('I cancel installing Example Agent', async ({ page }): Promise<void> => {
   const confirmation = await openInstallation(page);
   await confirmation
     .getByRole('button', { name: 'Cancel', exact: true })
     .click();
 });
+
 Then(
   'the Install button shows the installation in progress',
   async ({ page }): Promise<void> => {
@@ -78,6 +86,7 @@ Then(
     await capture(page, 'agent-install-in-progress');
   },
 );
+
 When(
   'the external Agent installer completes',
   async ({ app }): Promise<void> => {
@@ -87,6 +96,7 @@ When(
     });
   },
 );
+
 Then(
   'Example Agent installation completes with readiness checked separately',
   async ({ page }): Promise<void> => {
@@ -102,6 +112,7 @@ Then(
     await capture(page, 'agent-install-completed');
   },
 );
+
 Then(
   'the installation explains {word} and offers another attempt',
   async ({ page }, failure: string): Promise<void> => {
@@ -113,10 +124,12 @@ Then(
     await capture(page, 'agent-install-failed');
   },
 );
+
 const installationStatus = z.object({
   installation: z.object({ status: z.string() }),
   operation: z.object({ status: z.string() }).nullable(),
 });
+
 const readInstallation = (
   page: Page,
   httpUrl: string,
@@ -130,6 +143,7 @@ const readInstallation = (
     },
     output: installationStatus,
   });
+
 Then('no installation is started', async ({ page, server }): Promise<void> => {
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(

@@ -13,6 +13,7 @@ import type { OpenSessionsActorRef } from '../sessions';
 import type { AppRouterDeps, AppRouterInput } from './router-deps';
 
 type AgentSetup = Pick<AppRouterDeps, 'installations' | 'agentLogins'>;
+
 type Wired = Pick<AppRouterDeps, 'checkAgentLaunch' | 'readiness' | 'resolver'>;
 
 const storageDeps = ({
@@ -35,12 +36,14 @@ function createReadiness(
 ): Pick<Wired, 'readiness' | 'resolver'> {
   const deps = storageDeps(input);
   const resolver = createAgentResolver(deps);
+
   const readiness = createAgentReadiness({
     ...deps,
     checkAgentLaunch,
     withAgentCheck: installations.check,
     resolve: resolver.resolveEvery,
   });
+
   return { readiness, resolver };
 }
 
@@ -49,10 +52,12 @@ function sessionsUseAgent(
   agentId: string,
 ): boolean {
   const { acpResources, sessions: open } = sessions.getSnapshot().context;
+
   return (
     !!acpResources?.isAgentInUse(agentId) ||
     Object.values(open).some((session) => {
       const { agent } = session.getSnapshot().context;
+
       return !agent || agent === agentId;
     })
   );
@@ -101,12 +106,15 @@ export function wireAgentReadiness(
 ): Wired {
   const { launchProcess, checkTimeoutMs } = input.acp ?? {};
   const checkAgentLaunch = createAgentChecker(launchProcess, checkTimeoutMs);
+
   const wired = {
     checkAgentLaunch,
     ...createReadiness(input, setup.installations, checkAgentLaunch),
   };
+
   bindInstallations({ ...input, ...setup, ...wired });
   resolveAfterCatalogSync(input, wired);
   recheckOnEvents(input, setup, wired.readiness);
+
   return wired;
 }

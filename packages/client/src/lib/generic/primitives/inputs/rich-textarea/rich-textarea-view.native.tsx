@@ -8,6 +8,7 @@ import {
 
 // The phone drawing: a plain native text area that grows to 6 lines, then scrolls (no numberOfLines).
 const maximumVisibleLines = 6;
+
 const lineHeight = 20;
 
 function plainFieldProps({

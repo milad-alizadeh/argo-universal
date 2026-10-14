@@ -16,7 +16,9 @@ import { FeedImage } from '../feed-image';
 import { UnsupportedFeedContent } from '../feed-notice/feed-notice';
 
 type TextVariant = FeedMarkdownProps['variant'];
+
 type ResourceLinkBlock = Extract<ContentBlock, { type: 'resource_link' }>;
+
 type NonTextBlock = Exclude<ContentBlock, { type: 'text' | 'resource_link' }>;
 
 interface ResourceReferenceProps {
@@ -55,10 +57,13 @@ function FeedNonTextContent({
 }): React.JSX.Element {
   if (block.type === 'resource') {
     const { uri, text } = block.resource;
+
     return <ResourceReference name={resourceName(uri)} uri={uri} text={text} />;
   }
+
   if (block.type === 'unsupported')
     return <UnsupportedFeedContent block={block} />;
+
   return <FeedImage image={block} />;
 }
 
@@ -83,6 +88,7 @@ function FeedContentBlock({
   ...drawing
 }: FeedContentBlockProps): React.JSX.Element {
   if (block.type === 'text') return markdown(block.text, drawing);
+
   return block.type === 'resource_link' ? (
     resourceLink(block)
   ) : (

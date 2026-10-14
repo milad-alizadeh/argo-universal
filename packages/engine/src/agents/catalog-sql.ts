@@ -16,10 +16,12 @@ import {
 } from './registry/registry-reader';
 
 export const catalogSyncKey = { source: 'agent-catalog', scope: 'default' };
+
 export type CatalogSqlReadInput = {
   database: Database;
   reader: RegistryReader;
 };
+
 export function readCatalogSyncJob(
   input: CatalogSqlReadInput,
 ): SyncJobRecord | undefined {
@@ -28,16 +30,21 @@ export function readCatalogSyncJob(
     .from(syncJobs)
     .where(catalogJobPredicate)
     .get();
+
   if (!row) return undefined;
   const result = SyncJobRecord.safeParse(row);
+
   if (!result.success)
     return input.reader.reject('Stored sync job is malformed', result.error);
+
   return result.data;
 }
+
 const catalogJobPredicate = and(
   eq(syncJobs.source, catalogSyncKey.source),
   eq(syncJobs.scope, catalogSyncKey.scope),
 );
+
 function lastSavedCatalogTime(database: Database): number | null {
   return (
     database
@@ -46,17 +53,20 @@ function lastSavedCatalogTime(database: Database): number | null {
       .get()?.at ?? null
   );
 }
+
 const emptyJob = {
   fetchedAt: null,
   error: null,
   rejectedValues: 0,
   status: 'idle' as const,
 };
+
 function readCatalogSqlState(
   input: CatalogSqlReadInput,
 ): Omit<AgentsCatalogOutput, 'agents'> {
   const job = readCatalogSyncJob(input) ?? emptyJob;
   const fetchedAt = job.fetchedAt ?? lastSavedCatalogTime(input.database);
+
   return {
     fetchedAt,
     serverPlatform: resolveRegistryServerPlatform(),
@@ -66,6 +76,7 @@ function readCatalogSqlState(
     syncStatus: job.status,
   };
 }
+
 export function readLatestCatalogChangeIds(database: Database): string[] {
   return database
     .select({ id: agents.id })
@@ -80,6 +91,7 @@ function deriveCatalogStatus(
   error: string | null,
 ): AgentsCatalogOutput['status'] {
   if (fetchedAt === null) return 'unavailable';
+
   return error ? 'stale' : 'fresh';
 }
 
@@ -88,8 +100,10 @@ export function readAgentCatalog(
   request?: AgentsCatalogInput,
 ): AgentsCatalogOutput {
   const reader = createRegistryReader();
+
   try {
     const entries = readCatalogAgentRecords(database, reader, request);
+
     return {
       agents: entries,
       ...readCatalogSqlState({ database, reader }),
@@ -101,7 +115,7 @@ export function readAgentCatalog(
 
 function unavailableCatalog(
   reader: RegistryReader,
-  error: unknown,
+  cause: unknown,
 ): AgentsCatalogOutput {
   return {
     agents: [],
@@ -109,7 +123,7 @@ function unavailableCatalog(
     status: 'unavailable',
     syncStatus: 'failed',
     fetchedAt: null,
-    error: String(error),
+    error: String(cause),
     rejectedValues: reader.count(),
   };
 }

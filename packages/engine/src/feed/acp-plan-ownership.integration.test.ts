@@ -11,8 +11,10 @@ it('unaddressed Plans never adopt addressed rows or another actual ACP Session',
   const updates: AcpFeedUpdates = [{ sessionUpdate: 'plan', entries: [] }];
   const scenario = feedScenario(updates);
   const { host, sessionId } = await openAcpFeedSession(scenario);
+
   const first = (await host.caller.feed.page({ sessionId, direction: 'tail' }))
     .rows[1];
+
   if (!first) throw new Error('Unaddressed Plan is missing');
   scenario.steps = feedScenario([
     {
@@ -32,17 +34,22 @@ it('unaddressed Plans never adopt addressed rows or another actual ACP Session',
     prompt: [{ type: 'text', text: 'Both Plans' }],
   });
   await waitForAcpSessionIdle(host, sessionId);
+
   const sibling = await host.caller.session.new({
     ...emptySessionInput,
     prompt: [{ type: 'text', text: 'Sibling Plans' }],
   });
+
   await waitForAcpSessionIdle(host, sibling.sessionId);
+
   const firstPlans = (
     await host.caller.feed.page({ sessionId, direction: 'tail' })
   ).rows.filter((row) => row.sessionUpdate === 'plan_update');
+
   const siblingPlans = (
     await host.caller.feed.page({ ...sibling, direction: 'tail' })
   ).rows.filter((row) => row.sessionUpdate === 'plan_update');
+
   expect(firstPlans).toMatchObject([
     {
       id: first.id,

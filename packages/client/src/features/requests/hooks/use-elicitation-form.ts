@@ -13,10 +13,15 @@ import type {
 import { createElicitationSchema } from '../components/elicitation-form/elicitation-schema';
 
 type Schema = ReturnType<typeof createElicitationSchema>;
+
 type Values = ReturnType<Schema['defaultValues']>;
+
 type Validate = Schema['validate'];
+
 type Sync = FormValidateOrFn<Values> | undefined;
+
 type Async = FormAsyncValidateOrFn<Values> | undefined;
+
 type Form = ReactFormExtendedApi<
   Values,
   Validate,
@@ -31,7 +36,9 @@ type Form = ReactFormExtendedApi<
   Async,
   unknown
 >;
+
 type Fields = { schema: Schema; form: Form };
+
 type Status = {
   isValid: boolean;
   submitting: boolean;
@@ -39,6 +46,7 @@ type Status = {
   invalid: string[];
   state: ElicitationFormProps['state'];
 };
+
 export type ElicitationModel = Fields &
   Status & {
     props: ElicitationFormProps;
@@ -51,7 +59,9 @@ function useElicitationFields(props: ElicitationFormProps): Fields {
     () => createElicitationSchema(props.request.requestedSchema),
     [props.request.requestedSchema],
   );
+
   const form = useForm(formOptions(schema, props));
+
   return { schema, form };
 }
 
@@ -74,9 +84,11 @@ function formOptions(
 function useValidation(fields: Fields): Pick<Status, 'isValid' | 'invalid'> {
   const metadata = useStore(fields.form.store, (state) => state.fieldMeta);
   const isValid = useStore(fields.form.store, (state) => state.isValid);
+
   const invalid = fields.schema.fields
     .filter(({ key }) => metadata[key]?.errors.length)
     .map(({ name, property }) => property.title ?? name);
+
   return { isValid, invalid };
 }
 
@@ -88,7 +100,9 @@ function useActivity(
     fields.form.store,
     (state) => state.isSubmitting,
   );
+
   const submitting = props.state.kind === 'submitting' || isSubmitting;
+
   return {
     submitting,
     inactive: submitting || props.state.kind === 'answered',
@@ -107,6 +121,7 @@ export function useElicitationForm(
   props: ElicitationFormProps,
 ): ElicitationModel {
   const fields = useElicitationFields(props);
+
   const model = {
     ...fields,
     ...useValidation(fields),
@@ -114,6 +129,7 @@ export function useElicitationForm(
     props,
     error: props.error ?? fields.schema.error,
   };
+
   return { ...model, answer: (action): void => answerRequest(model, action) };
 }
 
@@ -122,6 +138,7 @@ function answerRequest(
   action: ElicitationAnswer['action'],
 ): void {
   if (model.inactive) return;
+
   if (action === 'accept') void model.form.handleSubmit();
   else model.props.onAnswer({ action });
 }

@@ -8,6 +8,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   const sessionInput = { ...emptySessionInput, agent: agentId };
   it('one lifetime receives successive Turns and idle text without inventing human provenance', async () => {
     const requests: PromptRequest[] = [];
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -30,7 +31,9 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
+
     for (const text of ['First', 'Second']) {
       await host.caller.session.prompt({
         ...created,
@@ -38,11 +41,15 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       });
       await waitForAcpSessionIdle(host, created.sessionId);
     }
+
     const process = host.agent.processes[0];
+
     if (!process) throw new Error('ACP peer is missing');
+
     const events = (
       await host.caller.feed.subscribe({ ...created, after: null })
     )[Symbol.asyncIterator]();
+
     await events.next();
     await process.play(
       [
@@ -57,6 +64,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       'owned-1',
     );
     let idleRowId: string | undefined;
+
     for await (const event of {
       [Symbol.asyncIterator]: (): typeof events => events,
     })
@@ -64,6 +72,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         idleRowId = event.row.id;
         break;
       }
+
     if (!idleRowId) throw new Error('Idle output is missing');
     const page = await host.caller.feed.page({ ...created, direction: 'tail' });
     expect(
@@ -113,6 +122,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
 
   it('closing a running Turn retains its association until final accepted text is published', async () => {
     const received = Promise.withResolvers<PromptRequest>();
+
     const host = await startAcpEngine(
       {
         steps: [{ type: 'hold' }],
@@ -137,6 +147,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({
       ...created,
@@ -164,6 +175,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
 
   it('failed close keeps the Turn until observed process release, then publishes its accepted text', async () => {
     const received = Promise.withResolvers<PromptRequest>();
+
     const host = await startAcpEngine(
       {
         autoExit: false,
@@ -192,6 +204,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       undefined,
       agentId,
     );
+
     const created = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({
       ...created,
@@ -202,6 +215,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       'Internal error',
     );
     const process = host.agent.processes[0];
+
     if (!process) throw new Error('Owned lifetime is missing');
     expect(
       host.database.$client.prepare('SELECT status FROM turn').get(),

@@ -7,6 +7,7 @@ import type { ComposerAttachment } from '../composer-attachment-card/composer-at
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 import type { ComposerStatusProps } from '../composer-status/composer-status';
 import type { WrittenPlanValue } from '../written-plan/written-plan';
+
 export interface ComposerDraft {
   text: string;
   attachments: ComposerAttachment[];

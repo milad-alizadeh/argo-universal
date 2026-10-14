@@ -13,10 +13,13 @@ it('unaddressed Plans reuse their local identity through successive Turns and cl
       entries: [{ content: 'First', priority: 'high', status: 'pending' }],
     },
   ];
+
   const scenario = feedScenario(updates);
   const { host, sessionId } = await openAcpFeedSession(scenario);
+
   const first = (await host.caller.feed.page({ sessionId, direction: 'tail' }))
     .rows[1];
+
   scenario.steps = feedScenario([
     {
       sessionUpdate: 'plan',
@@ -36,9 +39,11 @@ it('unaddressed Plans reuse their local identity through successive Turns and cl
     prompt: [{ type: 'text', text: 'Resume this Session' }],
   });
   await waitForAcpSessionIdle(host, sessionId);
+
   const plans = (
     await host.caller.feed.page({ sessionId, direction: 'tail' })
   ).rows.filter((row) => row.sessionUpdate === 'plan_update');
+
   expect(plans).toMatchObject([
     {
       id: first?.id,

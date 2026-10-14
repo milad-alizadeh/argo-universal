@@ -25,13 +25,19 @@ export interface ComposerAttachmentCardProps {
 
 const cardClass =
   'group relative w-40 h-30 shrink-0 overflow-hidden rounded-md border bg-background';
+
 const previewClass = 'h-22.5 overflow-hidden';
+
 const linesClass =
   'p-2 font-mono text-[5px] leading-[7px] text-muted-foreground';
+
 const kindClass = 'items-center justify-center gap-1 bg-muted';
+
 const mutedClass = 'text-muted-foreground';
+
 const removeClass =
   'absolute right-0 top-0 size-8 sm:size-8 rounded-sm bg-background web:wide:opacity-0';
+
 const removeHoverClass = (disabled: boolean): string =>
   disabled
     ? 'web:wide:group-hover:opacity-50'
@@ -39,6 +45,7 @@ const removeHoverClass = (disabled: boolean): string =>
 
 const extensionOf = (name: string): string => {
   const dot = name.lastIndexOf('.');
+
   return dot > 0 ? name.slice(dot + 1).toUpperCase() : '';
 };
 
@@ -52,9 +59,11 @@ export function ComposerAttachmentCard(
   props: ComposerAttachmentCardProps,
 ): React.JSX.Element {
   const { attachment } = props;
+
   const Preview = isPromptImage(attachment.mimeType)
     ? ImagePreview
     : FilePreview;
+
   return (
     <View className={cn(cardClass, cardBorder(attachment))}>
       <Preview attachment={attachment} />

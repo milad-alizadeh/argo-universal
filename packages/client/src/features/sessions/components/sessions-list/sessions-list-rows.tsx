@@ -30,7 +30,9 @@ function emptyListTitle({
   | 'No archived Sessions'
   | 'No Projects yet' {
   if (query) return 'No matching Sessions';
+
   if (archived) return 'No archived Sessions';
+
   return 'No Projects yet';
 }
 
@@ -39,6 +41,7 @@ function NoMatchingSession({
   archived,
 }: EmptySessionsListProps): React.JSX.Element | null {
   if (!query) return null;
+
   return (
     <Text role="secondary" className="text-center">
       No {archived ? 'Archived' : 'Active'} Session has "{query}" in its title.
@@ -66,7 +69,7 @@ export const SessionListRow = memo(function SessionListRow(
     <View
       testID="session-row-surface"
       className={cn(
-        'overflow-hidden bg-sidebar wide:bg-transparent',
+        'overflow-hidden bg-sidebar wide:bg-transparent wide:pb-px',
         props.selected && 'bg-sidebar-accent wide:bg-transparent',
       )}
     >
@@ -90,6 +93,7 @@ function useProjectAction(
   argument: string,
 ): (() => void) | undefined {
   const run = useCallback(() => action?.(argument), [action, argument]);
+
   return action ? run : undefined;
 }
 
@@ -101,6 +105,7 @@ type HeadingActions = Pick<
 function useHeadingActions(props: ProjectListHeadingProps): HeadingActions {
   const { id, onToggle } = props;
   const toggle = useCallback(() => onToggle(id), [id, onToggle]);
+
   return {
     onToggle: toggle,
     onAdd: useProjectAction(props.onNewSession, props.projectId),
@@ -112,6 +117,7 @@ export const ProjectListHeading = memo(function ProjectListHeading(
   props: ProjectListHeadingProps,
 ) {
   const actions = useHeadingActions(props);
+
   return (
     <ProjectHeading
       name={props.name}

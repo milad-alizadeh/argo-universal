@@ -31,6 +31,7 @@ function triggerAccessibility<Value extends string>(
   props: MenuProps<Value>,
 ): TriggerAccessibility {
   const selected = props.choices.find((choice) => choice.value === props.value);
+
   return {
     accessibilityRole: 'button',
     accessibilityLabel: props.accessibilityLabel,

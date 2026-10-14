@@ -29,6 +29,7 @@ import {
 } from './session-storage';
 
 let database: Database;
+
 let removeDatabase: () => void;
 
 const reply: AgentMessage = {
@@ -42,36 +43,46 @@ const reply: AgentMessage = {
   messageId: 'message-1',
   content: [{ type: 'text', text: 'Complete' }],
 };
+
 const runningTurn = {
   id: 'turn-1',
   sessionId: 'session-1',
   status: 'running' as const,
 };
+
 const sessionData = SessionRecord.omit({ createdAt: true, updatedAt: true });
 
 const selectSession = (
   id = 'session-1',
 ): typeof session.$inferSelect | undefined =>
   database.select().from(session).where(eq(session.id, id)).get();
+
 const selectTurn = (): typeof turn.$inferSelect | undefined =>
   database.select().from(turn).where(eq(turn.id, 'turn-1')).get();
 
-const submitWrites = (
-  jobs: readonly WriterJob[],
-): { writer: WriterActorRef; committed: Promise<void> } => {
+// A started Writer, and the commit of the last job sent to it.
+interface SubmittedWrites {
+  writer: WriterActorRef;
+  committed: Promise<void>;
+}
+
+const submitWrites = (jobs: readonly WriterJob[]): SubmittedWrites => {
   const writer = createActor(writerMachine, {
     input: { database, now: () => 12000 },
   }).start();
+
   onTestFinished(() => {
     writer.stop();
   });
   const committed = Promise.withResolvers<void>();
+
   for (const [index, job] of jobs.entries())
     writer.send({
       type: 'writer.write',
       job,
       committed: index === jobs.length - 1 ? committed : undefined,
     });
+
   return { writer, committed: committed.promise };
 };
 
@@ -160,6 +171,7 @@ it('reads a queued Session row update exactly as its commit', async (): Promise<
   onTestFinished(() => clock.mockRestore());
   const before = SessionRecord.parse(selectSession());
   const original = structuredClone(before);
+
   const { writer, committed } = submitWrites([
     new SessionRowUpdateJob({
       id: 'session-1',
@@ -172,6 +184,7 @@ it('reads a queued Session row update exactly as its commit', async (): Promise<
       },
     }),
   ]);
+
   const queued = readQueuedSessionRows(writer).session(before, 'session-1');
   await committed;
   expect(sessionData.parse(queued)).toEqual(sessionData.parse(selectSession()));
@@ -193,6 +206,7 @@ it('reads a queued Session insert exactly as its commit', async (): Promise<void
       },
     }),
   ]);
+
   const queued = readQueuedSessionRows(writer).session(undefined, 'session-2');
   await committed;
   expect(sessionData.parse(queued)).toEqual(
@@ -204,6 +218,7 @@ it('reads a queued Turn insert exactly as its commit', async (): Promise<void> =
   const { writer, committed } = submitWrites([
     new TurnInsertJob({ turn: { ...runningTurn, startedAt: 12000 } }),
   ]);
+
   const queued = readQueuedSessionRows(writer).turns([]);
   await committed;
   expect(queued).toEqual([Turn.parse(selectTurn())]);
@@ -216,6 +231,7 @@ it('reads a queued Turn update exactly as its commit', async (): Promise<void> =
     .run();
   const before = Turn.parse(selectTurn());
   const original = structuredClone(before);
+
   const { writer, committed } = submitWrites([
     new TurnUpdateJob({
       id: 'turn-1',
@@ -227,6 +243,7 @@ it('reads a queued Turn update exactly as its commit', async (): Promise<void> =
       },
     }),
   ]);
+
   const queued = readQueuedSessionRows(writer).turns([before]);
   await committed;
   expect(queued).toEqual([Turn.parse(selectTurn())]);
@@ -235,6 +252,7 @@ it('reads a queued Turn update exactly as its commit', async (): Promise<void> =
 
 it('reads the Session revision of queued Feed rows exactly as their commit', async (): Promise<void> => {
   const before = SessionRecord.parse(selectSession());
+
   const { writer, committed } = submitWrites([
     new FeedRowsJob({
       sessionId: 'session-1',
@@ -243,6 +261,7 @@ it('reads the Session revision of queued Feed rows exactly as their commit', asy
       activityAt: 100,
     }),
   ]);
+
   const queued = readQueuedSessionRows(writer).session(before, 'session-1');
   await committed;
   expect(sessionData.parse(queued)).toEqual(sessionData.parse(selectSession()));
@@ -295,12 +314,14 @@ it.each([
     const { writer, committed } = submitWrites([job]);
     const clock = vi.spyOn(Date, 'now').mockReturnValue(20000);
     onTestFinished(() => clock.mockRestore());
+
     const readTimes = (): typeof expected => ({
       activityAt:
         readQueuedSessionRows(writer).session(before, 'session-1')
           ?.activityAt ?? 0,
       startedAt: readQueuedSessionRows(writer).turns([])[0]?.startedAt ?? null,
     });
+
     expect(readTimes()).toEqual(expected);
     clock.mockReturnValue(30000);
     expect(readTimes()).toEqual(expected);

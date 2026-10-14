@@ -53,7 +53,9 @@ export const toolFactsOf = (tool: InstallTool): ToolFacts => toolFacts[tool];
 // The tool an Agent's status says is missing, if any.
 export const missingTool = (status: AgentStatus): ToolFacts | undefined => {
   if (status === 'needs-node') return toolFacts.node;
+
   if (status === 'needs-uv') return toolFacts.uv;
+
   return undefined;
 };
 

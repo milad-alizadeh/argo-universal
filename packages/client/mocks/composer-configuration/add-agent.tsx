@@ -11,8 +11,11 @@ import {
 } from './common';
 
 const addAgentLabel = 'Add a new agent';
+
 const listed = newSessionCatalogs.bothReady;
+
 const [first] = listed;
+
 if (!first) throw new Error('Recorded catalog needs a Ready Agent.');
 
 const configuration = (
@@ -32,6 +35,7 @@ const configuration = (
 export function addNewAgent(width: number): Story {
   const onAddAgent = fn();
   const onAgentChange = fn();
+
   return {
     beforeEach: () => {
       onAddAgent.mockClear();
@@ -62,12 +66,15 @@ async function assertAddRowLast(): Promise<HTMLElement> {
   const overlay = within(document.body);
   const add = await overlay.findByRole('button', { name: addAgentLabel });
   await waitFor(() => expect(add).toBeVisible());
+
   const rows = overlay.getAllByRole('button', {
     name: /^Select |^Add a new agent$/,
   });
+
   await expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual([
     ...listed.map(({ label }) => `Select ${label}`),
     addAgentLabel,
   ]);
+
   return add;
 }

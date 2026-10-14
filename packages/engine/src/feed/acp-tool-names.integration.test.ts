@@ -1,4 +1,5 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
+import type { FeedRowOutput } from '@repo/contracts';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
@@ -11,7 +12,7 @@ type ToolCall = Extract<
 
 const storedToolRow = async (
   update: Omit<ToolCall, 'sessionUpdate' | 'toolCallId' | 'status'>,
-): Promise<unknown> => {
+): Promise<FeedRowOutput | undefined> => {
   const host = await startAcpEngine(
     feedScenario([
       {
@@ -22,12 +23,15 @@ const storedToolRow = async (
       },
     ]),
   );
+
   const created = await host.caller.session.new({
     ...emptySessionInput,
     prompt: [{ type: 'text', text: 'Go' }],
   });
+
   await waitForAcpSessionIdle(host, created.sessionId);
   const page = await host.caller.feed.page({ ...created, direction: 'tail' });
+
   return page.rows.find((row) => row.sessionUpdate === 'tool_call_update');
 };
 

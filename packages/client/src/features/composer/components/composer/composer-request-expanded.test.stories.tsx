@@ -14,6 +14,7 @@ import { shownText } from '../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { Composer } from './composer';
+
 const meta = {
   title: 'Tests/Composer/Requests',
   component: Composer,
@@ -29,11 +30,15 @@ const meta = {
   ],
   render: function EditableComposer(args): React.JSX.Element {
     const [draft, setDraft] = useState(args.draft);
+
     return <Composer {...args} draft={draft} onDraftChange={setDraft} />;
   },
 } satisfies Meta<typeof Composer>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
+
 function expandedPlanKeepsComposer(agentIndex: number): Story {
   return {
     args: preservesComposer(agentIndex, 'plan').args,
@@ -45,9 +50,11 @@ function expandedPlanKeepsComposer(agentIndex: number): Story {
       await userEvent.click(
         canvas.getByRole('button', { name: 'Expand plan' }),
       );
+
       const dialog = await within(document.body).findByRole('dialog', {
         name: 'Expanded plan',
       });
+
       for (const control of controls) {
         await expect(control).toBeVisible();
         await waitFor(() =>
@@ -59,6 +66,7 @@ function expandedPlanKeepsComposer(agentIndex: number): Story {
           control.getBoundingClientRect().bottom,
         ).toBeLessThanOrEqual(window.innerHeight);
       }
+
       await userEvent.click(
         within(dialog).getByRole('button', { name: 'Collapse plan' }),
       );
@@ -74,5 +82,7 @@ function expandedPlanKeepsComposer(agentIndex: number): Story {
     },
   };
 }
+
 export const ClaudeExpandedPlanKeepsComposer = expandedPlanKeepsComposer(0);
+
 export const CodexExpandedPlanKeepsComposer = expandedPlanKeepsComposer(1);

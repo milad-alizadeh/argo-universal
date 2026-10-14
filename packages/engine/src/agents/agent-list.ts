@@ -19,6 +19,7 @@ type Listing = {
   saved: ReturnType<typeof readSavedReadiness>;
   observed: ReturnType<typeof readInstallationObservations>;
 };
+
 const savedStatus = (
   listing: Listing,
   agentId: string,
@@ -43,9 +44,11 @@ const installedStatus = (
   source: RegistrySource,
 ): Pick<AgentInfo, 'status' | 'reason'> => {
   const observation = listing.observed(agentId);
+
   if (observation.observed && !observation.found)
     return { status: 'not-found', reason: missingReason(source) };
   const saved = savedStatus(listing, agentId);
+
   // Found again after it went missing: Checking… until its new check lands.
   return saved.status === 'not-found' ? { status: 'checking' } : saved;
 };
@@ -58,27 +61,34 @@ const notInstalled = (agent: ConfiguredAgent): AgentInfo => ({
   status: 'not-installed',
   reason: 'Install this Agent from Agents.',
 });
+
 const ownerOf = (
   observation: InstallationObservation,
 ): Pick<AgentInfo, 'owner'> =>
   observation.observed && observation.found ? { owner: observation.owner } : {};
+
 // Before the Resolver has looked once, only an Argo installation counts as installed.
 const isInstalled = (
   observation: InstallationObservation,
   source: RegistrySource,
 ): boolean => observation.observed || !!source.selection;
+
 // The version shown is Argo's installed release; a copy found elsewhere has none yet.
 const identityOf = (
   source: RegistrySource,
 ): Pick<AgentInfo, 'label' | 'logo' | 'version'> => {
   const { name, icon } = source.entry;
   const version = source.selection?.entry.version;
+
   return { label: name, logo: icon ?? '', ...(version && { version }) };
 };
+
 const registryInfo = (listing: Listing, agent: ConfiguredAgent): AgentInfo => {
   const source = readRegistrySource(listing.database, agent.id);
   const observation = listing.observed(agent.id);
+
   if (!source || !isInstalled(observation, source)) return notInstalled(agent);
+
   return {
     agent: agent.id,
     enabled: agent.enabled,
@@ -87,6 +97,7 @@ const registryInfo = (listing: Listing, agent: ConfiguredAgent): AgentInfo => {
     ...installedStatus(listing, agent.id, source),
   };
 };
+
 const describe = async (
   listing: Listing,
   agent: ConfiguredAgent,
@@ -105,11 +116,14 @@ const withAvailableVersions = (
       entry.version,
     ]),
   );
+
   return agents.map((info) => {
     const availableVersion = catalog.get(info.agent);
+
     return availableVersion ? { ...info, availableVersion } : info;
   });
 };
+
 const registryFirst = (agents: ConfiguredAgent[]): ConfiguredAgent[] => [
   ...agents.filter(({ configuration }) => configuration.source === 'registry'),
   ...agents.filter(({ configuration }) => configuration.source === 'custom'),
@@ -128,9 +142,11 @@ export const listAgents = async (
   home: string,
 ): Promise<AgentInfo[]> => {
   const listing = openListing(database, home);
+
   const configured = readConfiguredAgents(database).filter(
     ({ configuration }) => !configuration.removed,
   );
+
   return withAvailableVersions(
     database,
     await Promise.all(

@@ -11,6 +11,7 @@ export function RowTitle(
 ): React.JSX.Element {
   const style = useComposeTextStyle(titleRole(props.code));
   const { foreground } = useNativeTheme().colors;
+
   return (
     <Text color={useToneColor(props.tone) ?? foreground} style={style}>
       {props.title}
@@ -24,7 +25,9 @@ export function RowSubtitle({
 }: Pick<ListItemProps, 'subtitle'>): React.JSX.Element | null {
   const style = useComposeTextStyle(subtitleRole(subtitle));
   const { mutedForeground } = useNativeTheme().colors;
+
   if (!subtitle) return null;
+
   return (
     <Text color={mutedForeground} style={style}>
       {subtitle.text}

@@ -9,6 +9,7 @@ import { listItemName, type ListItemProps } from '../../fields/field-props';
 
 export function rowAccessibility(props: ListItemProps): 'contain' | 'ignore' {
   if (props.onPress) return 'ignore';
+
   return hasControls(props) ? 'contain' : 'ignore';
 }
 
@@ -20,6 +21,7 @@ export function rowAccessibilityModifiers(
   props: ListItemProps,
 ): NonNullable<ComponentProps<typeof HStack>['modifiers']> {
   if (props.control || props.detail) return [];
+
   return [
     accessibilityElement(rowAccessibility(props)),
     accessibilityLabel(listItemName(props)),

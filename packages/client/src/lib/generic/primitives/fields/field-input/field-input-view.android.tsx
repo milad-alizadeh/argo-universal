@@ -16,6 +16,7 @@ import { blurOnFocusLoss } from './focus-loss';
 
 export function FieldInput(props: FieldInputProps): React.JSX.Element {
   const Field = useWide() ? WideFieldInput : FormField;
+
   return <Field {...props} />;
 }
 
@@ -25,6 +26,7 @@ function FormField(props: FieldInputProps): React.JSX.Element {
   useFollowedText(text, props.value);
   const onFocusChanged = useFocusLossHandler(props.onBlur);
   const appearance = useFieldAppearance(props.mono);
+
   return (
     <TextField {...fieldBehaviour(props, text, onFocusChanged)} {...appearance}>
       <FieldSlots {...props} />
@@ -58,7 +60,9 @@ function useFieldAppearance(mono: FieldInputProps['mono']): TextFieldProps {
   const { fontFamily, fontSize, lineHeight, fontWeight } = useComposeTextStyle(
     mono ? 'code' : 'body',
   );
+
   const { muted } = useNativeTheme().colors;
+
   return {
     singleLine: true,
     textStyle: { fontFamily, fontSize, lineHeight, fontWeight },
@@ -91,7 +95,9 @@ const supportingLine = (props: FieldInputProps): string | undefined =>
 
 function SupportingLine(props: FieldInputProps): React.JSX.Element | null {
   const line = supportingLine(props);
+
   if (!line) return null;
+
   return (
     <TextField.SupportingText>
       <Text>{line}</Text>

@@ -8,6 +8,7 @@ import {
   type Story,
   type PlayContext,
 } from './common';
+
 // Fast mode is a switch in the menu, and the trigger carries a bolt while it is on.
 function fastMode(width: number): Story {
   return {
@@ -21,6 +22,7 @@ function fastMode(width: number): Story {
     play: (context) => testFastMode(context, width),
   };
 }
+
 async function testFastMode(
   context: PlayContext,
   width: number,
@@ -35,14 +37,17 @@ async function testFastMode(
   await turnFastModeOn(context, fast);
   await assertFastModeTabOrder(context, fast);
 }
+
 async function assertFastModeOff({ args }: PlayContext): Promise<HTMLElement> {
   const overlay = within(document.body);
   const fast = await overlay.findByRole('switch', { name: 'Fast mode' });
   await waitFor(() => expect(fast).toBeVisible());
   await expect(fast).not.toBeChecked();
   await expect(args.configuration?.onConfigChange).not.toHaveBeenCalled();
+
   return fast;
 }
+
 async function turnFastModeOn(
   { userEvent, args }: PlayContext,
   fast: HTMLElement,
@@ -54,6 +59,7 @@ async function turnFastModeOn(
     true,
   );
 }
+
 async function assertFastModeTabOrder(
   { userEvent }: PlayContext,
   fast: HTMLElement,
@@ -65,7 +71,9 @@ async function assertFastModeTabOrder(
   ).toHaveFocus();
   await userEvent.keyboard('{Escape}');
 }
+
 export const FastModeSwitchPhone = fastMode(layoutWidths.phone);
+
 export const FastModeSwitchWide = fastMode(layoutWidths.wide);
 
 export const FastModeOnMarksTrigger: Story = {

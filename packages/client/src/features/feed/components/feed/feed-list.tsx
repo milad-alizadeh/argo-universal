@@ -31,6 +31,7 @@ function FeedBody({
   ...scroll
 }: FeedBodyProps): React.JSX.Element {
   const feedGrowth = useFeedGrowth(scroll.list);
+
   return (
     <FeedGrowthContext.Provider value={feedGrowth}>
       <FeedScroll {...scroll} atEnd={newestKeyWhenLeftEnd === null} />
@@ -41,6 +42,7 @@ function FeedBody({
 export function FeedList(props: FeedListProps): React.JSX.Element {
   const list = useRef<LegendListRef>(null);
   const shared = { list, ...props, ...useFeedScrollPosition(list, props) };
+
   return (
     <View style={fillShrinkable}>
       <FeedBody {...shared} />

@@ -2,8 +2,8 @@ import type { AgentCheck } from '@repo/contracts';
 import { ResourceCleanupError } from '../../lib/resource-cleanup-error';
 
 // A check that threw instead of answering: a process that would not exit is a startup failure; anything else is unknown.
-export const readinessOfFailure = (error: unknown): AgentCheck =>
-  error instanceof ResourceCleanupError
+export const readinessOfFailure = (cause: unknown): AgentCheck =>
+  cause instanceof ResourceCleanupError
     ? {
         status: 'cant-start',
         reason: 'The Agent did not exit after its readiness check.',

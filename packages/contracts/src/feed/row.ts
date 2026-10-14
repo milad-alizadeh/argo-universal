@@ -7,7 +7,9 @@ export const FeedRowInput = z.strictObject({
   sessionId: feedRowColumns.shape.sessionId,
   id: feedRowColumns.shape.id,
 });
+
 export type FeedRowInput = z.infer<typeof FeedRowInput>;
 
 export const FeedRowOutput = SessionUpdate;
+
 export type FeedRowOutput = z.infer<typeof FeedRowOutput>;

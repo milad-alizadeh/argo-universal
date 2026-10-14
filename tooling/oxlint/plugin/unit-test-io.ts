@@ -3,8 +3,10 @@ import { defineRule } from '@oxlint/plugins';
 import { onModuleSources, stringValue } from './syntax.ts';
 
 const unitTest = /(?<!\.integration)\.test\.(?:ts|tsx|mts)$/;
+
 const nodeResources =
   /^(?:node:)?(?:fs(?:\/promises)?|sqlite|child_process|net|https?)$/;
+
 const workspaceResources = /^@repo\/(?:db|git)(?:\/|$)/;
 
 const isResource = (source: string): boolean =>
@@ -12,6 +14,7 @@ const isResource = (source: string): boolean =>
 
 const readMemberName = (node: ESTree.MemberExpression): string => {
   if (node.computed) return stringValue(node.property);
+
   return node.property.type === 'Identifier' ? node.property.name : '';
 };
 
@@ -49,6 +52,7 @@ export const unitTestIo = defineRule({
   },
   create: (context): Visitor => {
     if (!unitTest.test(context.filename)) return {};
+
     return {
       ...onModuleSources((source): void => {
         if (isResource(stringValue(source)))

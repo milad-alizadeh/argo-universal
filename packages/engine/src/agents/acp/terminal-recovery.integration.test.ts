@@ -8,10 +8,13 @@ import { z } from 'zod';
 import { resourceLaunch } from '#mocks/acp-resource';
 import { startEngineTestHost } from '#mocks/engine';
 import { launchLoginTerminal } from './terminal-process';
+
 const terminalFolder = 'login-terminals';
+
 const script = fileURLToPath(
   new URL('../../../mocks/login-terminal.mjs', import.meta.url),
 );
+
 const startTerminal = async (): Promise<{
   home: string;
   path: string;
@@ -23,6 +26,7 @@ const startTerminal = async (): Promise<{
     await rm(home, { recursive: true, force: true });
     vi.unstubAllEnvs();
   });
+
   const child = await launchLoginTerminal(
     {
       ...resourceLaunch,
@@ -32,15 +36,20 @@ const startTerminal = async (): Promise<{
     },
     () => {},
   );
+
   onTestFinished(() => child.close());
   const [name] = await readdir(join(home, terminalFolder));
+
   if (!name) throw new Error('Terminal ownership record is missing');
   const path = join(home, terminalFolder, name);
+
   const record = z
     .object({ pid: z.number(), token: z.string() })
     .parse(JSON.parse(await readFile(path, 'utf8')));
+
   return { home, path, record };
 };
+
 it('Engine startup releases an interrupted terminal group before accepting commands', async () => {
   const { home, record } = await startTerminal();
   process.kill(record.pid, 'SIGSTOP');
@@ -51,6 +60,7 @@ it('Engine startup releases an interrupted terminal group before accepting comma
   expect(() => process.kill(record.pid, 0)).toThrow(/ESRCH/);
   expect(await readdir(join(home, terminalFolder))).toEqual([]);
 }, 15000);
+
 it('Engine startup retains an unmatched terminal record without signaling its process', async () => {
   const { home, path, record } = await startTerminal();
   await writeFile(path, JSON.stringify({ ...record, token: randomUUID() }));

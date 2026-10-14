@@ -25,6 +25,7 @@ const exitGraceMs = 1000;
 // An unreferenced timer, so a pending check never keeps the process alive.
 const after = (milliseconds: number): Promise<'timeout'> =>
   sleep(milliseconds, 'timeout' as const, { ref: false });
+
 const createCheckingClient = (
   process: AcpProcess,
   status: AcpAuthenticationStatus,
@@ -38,12 +39,15 @@ const createCheckingClient = (
     rejectAuthStatus: () => status.invalidate(),
   });
 };
+
 const checkAuthentication = async (
   initialization: InitializeResponse,
   status: AcpAuthenticationStatus,
 ): Promise<AgentCheck> => {
   const result = await status.check(initialization);
+
   if (result.status === 'ready') return { status: 'ready' };
+
   return {
     status:
       result.status === 'authentication-required'
@@ -52,41 +56,51 @@ const checkAuthentication = async (
     reason: result.failure,
   };
 };
+
 const initialize = async (process: AcpProcess): Promise<AgentCheck> => {
   const status = new AcpAuthenticationStatus();
   const connection = createCheckingClient(process, status);
+
   const readers = createAcpResponseReaders(
     createRejectionCounter('ACP initialize check'),
   );
+
   return checkAuthentication(
     await negotiateAcpInitialize(connection.agent, readers),
     status,
   );
 };
+
 const hasExited = async (process: AcpProcess): Promise<boolean> =>
   (await Promise.race([
     process.exited.then((): 'exited' => 'exited'),
     after(exitGraceMs),
   ])) === 'exited';
+
 const describeFailure = async (
-  error: unknown,
+  cause: unknown,
   process: AcpProcess,
   subject: AgentLaunchSubject,
 ): Promise<AgentCheck> => {
-  const known = describeKnownFailure(error, subject);
+  const known = describeKnownFailure(cause, subject);
+
   if (known) return known;
+
   return cantStart(
     (await hasExited(process))
       ? `${subject.name} exited before answering ACP initialize.`
-      : `${subject.name} failed ACP initialize: ${describeError(error)}`,
+      : `${subject.name} failed ACP initialize: ${describeError(cause)}`,
   );
 };
+
 const answerOrTimeout = async (
   process: AcpProcess,
   timeoutMs: number,
 ): Promise<AgentCheck> => {
   const answer = await Promise.race([initialize(process), after(timeoutMs)]);
+
   if (answer === 'timeout') throw new CheckTimeout(timeoutMs);
+
   return answer;
 };
 
@@ -114,7 +128,9 @@ export const createAgentChecker =
   ): CheckAgentLaunch =>
   async (subject): Promise<AgentCheck> => {
     const process = await launch(launchProcess, subject);
+
     if ('status' in process) return process;
+
     try {
       return await answerOrTimeout(process, timeoutMs);
     } catch (error) {

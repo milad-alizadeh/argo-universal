@@ -17,6 +17,7 @@ const phonePages = [
   'Connection',
   'Appearance',
 ];
+
 const widePages = [
   'Projects',
   'Agents',
@@ -50,6 +51,7 @@ async function clickEveryWidthsPages({
     const row = canvas.getByRole('link', {
       name: new RegExp(`^${name}(?:,|$)`),
     });
+
     await (name === 'Connection'
       ? expect(row).toHaveAccessibleName(/, available$/)
       : expect(row).not.toHaveAccessibleName(/, available$/));
@@ -86,6 +88,7 @@ export function allPagesNavigate(width: number): Story {
         { to: 'settings-connection' },
         { to: 'settings-appearance' },
       ]);
+
       if (width === layoutWidths.phone) return;
       await clickWidePages({ canvas, userEvent });
     },

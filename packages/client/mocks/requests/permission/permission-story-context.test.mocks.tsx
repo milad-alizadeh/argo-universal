@@ -5,10 +5,15 @@ import { permissionProps } from '../../../src/features/requests/components/reque
 import { RequestFrame } from '../../../src/lib/product/request-frame';
 
 export const allowOnceLabel = 'Allow once';
+
 export const allowedOnceAnswer = 'You allowed this once';
+
 export const allowOptions = 'Allow options';
+
 export const rejectOptions = 'Reject options';
+
 export const alwaysReject = 'Always Reject';
+
 export const denialFeedback = 'Keep the cache.';
 
 export const meta: Meta<typeof PermissionRequest> = {
@@ -22,4 +27,5 @@ export const meta: Meta<typeof PermissionRequest> = {
   ),
   args: { ...permissionProps({}), onAnswer: fn(), onDenialMessageChange: fn() },
 };
+
 export type Story = StoryObj<typeof meta>;

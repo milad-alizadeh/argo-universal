@@ -1,6 +1,7 @@
 import type { NavigationDestination } from '@repo/client';
 import { hrefFor as destinationHref } from '@repo/client/navigation';
-import type { Href } from 'expo-router';
+import type { Href, router } from 'expo-router';
+
 export { destinationFor } from '@repo/client/navigation';
 
 export function hrefFor(destination: NavigationDestination): Href {
@@ -10,10 +11,11 @@ export function hrefFor(destination: NavigationDestination): Href {
 // New Session's Project is the one param a screen changed in place could keep showing.
 const leftBehind = { projectId: undefined };
 
+type ScreenParams = Parameters<typeof router.setParams>[0];
+
 // The params a destination sets on the screen already showing its route, clearing any it leaves out.
-export function paramsOf(
-  destination: NavigationDestination,
-): Record<string, string | undefined> {
+export function paramsOf(destination: NavigationDestination): ScreenParams {
   const { params } = destinationHref(destination);
+
   return { ...leftBehind, ...params };
 }

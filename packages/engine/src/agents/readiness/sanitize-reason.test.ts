@@ -31,6 +31,7 @@ it('a reason drops terminal control sequences and stays one short line', () => {
   const reason = sanitizeReason(
     `\u001b[31mfailed\u001b[0m\n\tat line 1\n${'x'.repeat(600)}`,
   );
+
   expect(reason.startsWith('failed at line 1 x')).toBe(true);
   expect(reason.length).toBeLessThanOrEqual(300);
   expect(reason.split('').every((char) => char >= ' ')).toBe(true);

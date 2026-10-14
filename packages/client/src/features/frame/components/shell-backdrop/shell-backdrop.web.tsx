@@ -29,6 +29,7 @@ function glowImage({ colour, stops }: Glow): string {
     ({ alpha, at }) =>
       `color-mix(in oklab, var(--color-glow-${colour}) ${alpha}%, transparent) ${at}%`,
   );
+
   return `radial-gradient(circle farthest-corner at 50% 50% in oklab, ${colours.join(', ')})`;
 }
 
@@ -63,6 +64,7 @@ function EdgeFade({ backdrop }: { backdrop: Backdrop }): React.JSX.Element {
 
 function BackdropLayer({ ref, ...layer }: LayerProps): React.JSX.Element {
   const backdrop = backdrops[layer.state];
+
   return (
     <div
       ref={ref}
@@ -88,10 +90,15 @@ function crossFade(
   ];
 }
 
-function useBackdropMotion({ sidebarShown, ...timing }: ShellBackdropProps): {
+interface BackdropLayers {
   expanded: LayerRef;
   collapsed: LayerRef;
-} {
+}
+
+function useBackdropMotion({
+  sidebarShown,
+  ...timing
+}: ShellBackdropProps): BackdropLayers {
   const expanded = useRef<HTMLDivElement>(null);
   const collapsed = useRef<HTMLDivElement>(null);
   useShellTransition({
@@ -100,6 +107,7 @@ function useBackdropMotion({ sidebarShown, ...timing }: ShellBackdropProps): {
     frames: (from, to) =>
       crossFade([expanded.current, collapsed.current], from, to),
   });
+
   return { expanded, collapsed };
 }
 
@@ -107,6 +115,7 @@ function useBackdropMotion({ sidebarShown, ...timing }: ShellBackdropProps): {
 export function ShellBackdrop(props: ShellBackdropProps): React.JSX.Element {
   const { expanded, collapsed } = useBackdropMotion(props);
   const shown = props.sidebarShown;
+
   return (
     <div
       aria-hidden

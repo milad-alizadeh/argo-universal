@@ -35,6 +35,7 @@ const ScreenHeaderContext =
   createContext<ComponentType<ScreenHeaderProps> | null>(null);
 
 const noCover = (): number => 0;
+
 const HeaderCoverContext = createContext<() => number>(noCover);
 
 export interface ScreenHeaderProviderProps {
@@ -69,5 +70,6 @@ export function ScreenHeader(
   props: ScreenHeaderProps,
 ): React.JSX.Element | null {
   const Header = useContext(ScreenHeaderContext);
+
   return Header ? createElement(Header, props) : null;
 }

@@ -11,11 +11,13 @@ import {
   chooseAgentLabel,
 } from './composer-test-contract.test.mocks';
 import { firstAgent } from './recorded-catalog.test.mocks';
+
 // Each status's one action opens the Agent's page, named for what it fixes.
 const setupLabels: Partial<Record<AgentStatus, string>> = {
   'not-installed': 'Install',
   'sign-in-needed': 'Sign in',
 };
+
 export function agentsNeedingSetup(width: number): Story {
   return {
     args: {
@@ -43,6 +45,7 @@ export function agentsNeedingSetup(width: number): Story {
       );
       const agents = configuredAgents(args);
       await expect(agents).toHaveLength(2);
+
       for (const agent of agents) {
         await expect(
           await overlay.findByRole('button', { name: `Select ${agent.label}` }),
@@ -54,21 +57,25 @@ export function agentsNeedingSetup(width: number): Story {
         );
         await expect(setupCallback(args)).toHaveBeenLastCalledWith(agent.agent);
       }
+
       await expect(changeCallback(args)).not.toHaveBeenCalled();
       await userEvent.keyboard('{Escape}');
     },
   };
 }
+
 function configuredAgents(
   args: PlayContext['args'],
 ): NonNullable<PlayContext['args']['configuration']>['agents'] {
   return args.configuration?.agents ?? [];
 }
+
 function setupCallback(
   args: PlayContext['args'],
 ): NonNullable<PlayContext['args']['configuration']>['onAgentSetup'] {
   return args.configuration?.onAgentSetup;
 }
+
 function changeCallback(
   args: PlayContext['args'],
 ): NonNullable<PlayContext['args']['configuration']>['onAgentChange'] {

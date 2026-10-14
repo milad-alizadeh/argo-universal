@@ -20,7 +20,9 @@ const meta = {
   args: onboardingArgs(),
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof OnboardingView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 const noAgent = { status: 'not-found', checking: false } as const;

@@ -8,8 +8,13 @@ export const AppFixtureOptions = z.object({
   installed: z.boolean().default(true),
   scenario: z.custom<ScenarioName>(isScenarioName).default('reply'),
 });
+
 export type AppFixtureOptions = z.input<typeof AppFixtureOptions>;
+
 export const AppFixtureAgents = z.record(z.string(), AppFixtureOptions);
+
 export type AppFixtureAgents = z.input<typeof AppFixtureAgents>;
+
 export const fixtureAgents: AgentIdentity[] = identities;
+
 export const appFixtureAgentIds = fixtureAgents.map(({ agent }) => agent);

@@ -3,6 +3,7 @@ import { expect } from '../fixtures';
 import { Given } from './fixtures';
 
 export const phone = { width: 390, height: 844 };
+
 export const wide = { width: 1280, height: 800 };
 
 export async function openConnection(page: Page): Promise<void> {

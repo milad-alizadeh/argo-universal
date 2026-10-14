@@ -64,6 +64,7 @@ function ShellContent(parts: ShellPartProps): React.JSX.Element {
 // The wide window: a floating glass panel holds the rail and the open section's list over a faint warm glow; the detail and a flush Inspector sit on the window surface.
 export function DesktopShell(shell: DesktopShellProps): React.JSX.Element {
   const layout = useShellLayout(shell);
+
   return (
     <View
       testID="desktop-shell"

@@ -10,10 +10,12 @@ import {
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 
 type Host = Awaited<ReturnType<typeof startInstallEngine>>;
+
 const listed = async (host: Host): Promise<AgentInfo | undefined> =>
   (await host.caller.agents.list()).find(({ agent }) => agent === host.agentId);
 
 type ScriptedAgent = ReturnType<typeof createScriptedAgentProcess>;
+
 const startInstalled = async (
   scenario: ScenarioName | ScriptedAgent,
   checkTimeoutMs?: number,
@@ -22,6 +24,7 @@ const startInstalled = async (
     typeof scenario === 'string'
       ? createScriptedAgentProcess(scenarios[scenario])
       : scenario;
+
   const host = await startInstallEngine(
     installEntry('npx'),
     installationPorts,
@@ -30,6 +33,7 @@ const startInstalled = async (
       acp: { ...agent, checkTimeoutMs },
     },
   );
+
   await host.caller.agents.install({ agentId: host.agentId, version: '1.2.3' });
   await expect
     .poll(
@@ -38,6 +42,7 @@ const startInstalled = async (
           .installation.status,
     )
     .toBe('installed');
+
   return { ...host, agent };
 };
 
@@ -79,6 +84,7 @@ it.each([
 );
 
 const cantStart = 'cant-start';
+
 it('an Agent that fails ACP initialize shows Can’t start with a reason that holds no credential', async () => {
   const host = await startInstalled(cantStart);
   await awaitSettledReadiness(host.caller);
@@ -97,6 +103,7 @@ it('an Agent that never answers ACP initialize shows Can’t start once its chec
       initialize: [{}, { waitFor: new Promise<void>(() => {}) }],
     },
   });
+
   const host = await startInstalled(silent, 200);
   const check = await host.caller.agents.recheck({ agentId: host.agentId });
   expect(check).toEqual({

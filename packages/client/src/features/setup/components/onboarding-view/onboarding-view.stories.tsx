@@ -8,7 +8,9 @@ const meta = {
   args: onboardingArgs(),
   parameters: { screenPreview: true },
 } satisfies Meta<typeof OnboardingView>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const Onboarding: Story = {};

@@ -43,6 +43,7 @@ export function SessionsFilterMenu({
   onArchivedChange,
 }: SessionsFilterMenuProps): React.JSX.Element {
   const wide = useWide();
+
   return (
     <Menu
       accessibilityLabel="Filter Sessions"

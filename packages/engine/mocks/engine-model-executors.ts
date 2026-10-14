@@ -17,6 +17,7 @@ import {
 import { machine, type EngineSnapshot } from './engine-model-logic';
 import * as model from './engine-model-state';
 import { startModelEngine } from './engine-model-state';
+
 export const latest = <TCall>(calls: TCall[]): NonNullable<TCall> =>
   calls.at(-1) ?? expect.unreachable('The actor was not invoked');
 
@@ -27,7 +28,7 @@ export const settle = async (settleCall: () => void): Promise<void> => {
 };
 
 export const executors: Record<
-  string,
+  EngineEvent['type'] | 'xstate.init',
   EventExecutor<EngineSnapshot, EngineEvent>
 > = {
   'xstate.init': (): void => {

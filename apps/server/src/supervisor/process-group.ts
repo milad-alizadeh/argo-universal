@@ -13,13 +13,17 @@ export interface GroupPort {
 }
 
 const releaseDeadlineMs = 5000;
+
 const releasePollMs = 25;
 
 // Only POSIX process groups are supported; the Engine leads its group, so its pid is the group id.
 export const supportsProcessGroups = process.platform !== 'win32';
 
-const errorCode = (error: unknown): unknown =>
-  error instanceof Error && 'code' in error ? error.code : undefined;
+const goneGroupCodes = new Set<unknown>(['ESRCH', 'EPERM']);
+
+// The group is already gone, or holds only zombies, which a kill cannot reach.
+const isGoneGroupError = (error: unknown): error is NodeJS.ErrnoException =>
+  error instanceof Error && 'code' in error && goneGroupCodes.has(error.code);
 
 // Signalling a zombie fails with EPERM on macOS, so liveness comes from member states, not from `kill(-group, 0)`.
 const operatingSystem: GroupPort = {
@@ -27,8 +31,7 @@ const operatingSystem: GroupPort = {
     try {
       process.kill(-group, 'SIGKILL');
     } catch (error) {
-      if (errorCode(error) !== 'ESRCH' && errorCode(error) !== 'EPERM')
-        throw error;
+      if (!isGoneGroupError(error)) throw error;
     }
   },
   hasLiveMember: (group): boolean => {
@@ -40,8 +43,10 @@ const operatingSystem: GroupPort = {
           encoding: 'utf8',
         },
       );
+
       return table.split('\n').some((line): boolean => {
         const [pgid, state] = line.trim().split(/\s+/);
+
         return Number(pgid) === group && !state?.startsWith('Z');
       });
     } catch {
@@ -59,17 +64,23 @@ export async function releaseProcessGroup(
   options: { deadlineMs?: number; port?: GroupPort } = {},
 ): Promise<GroupRelease> {
   const port = options.port ?? operatingSystem;
+
   if (!supportsProcessGroups) return 'unresolved';
+
   if (!port.hasLiveMember(group)) return 'released';
+
   try {
     port.kill(group);
   } catch {
     return 'unresolved';
   }
+
   const deadline = Date.now() + (options.deadlineMs ?? releaseDeadlineMs);
+
   while (Date.now() < deadline) {
     if (!port.hasLiveMember(group)) return 'released';
     await sleep(releasePollMs);
   }
+
   return port.hasLiveMember(group) ? 'unresolved' : 'released';
 }

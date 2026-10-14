@@ -15,6 +15,7 @@ import {
 } from './engine-model-fixtures';
 import { machine } from './engine-model-logic';
 import * as model from './engine-model-state';
+
 export const fixtures = [
   {
     type: 'xstate.done.actor.openDatabase',
@@ -78,16 +79,22 @@ export const fixtures = [
   { type: 'xstate.after.writerDrainLimit.engine.live.stopping.drainingWriter' },
   { type: 'xstate.after.heartbeatInterval.engine.live.running' },
 ] satisfies GraphEventFromLogic<typeof machine>[];
+
 export type EngineEvent = (typeof fixtures)[number];
+
 export const eventTypes = (node: DirectedGraphNode): string[] => [
   ...node.edges.map((edge): string => edge.label.text),
   ...node.children.flatMap(eventTypes),
 ];
+
 // The machine raises `xstate.done.state.*` itself, so the model must not send it.
-export const events = [...new Set(eventTypes(toDirectedGraph(machine)))]
-  .filter((type): boolean => !type.startsWith('xstate.done.state.'))
-  .map((type): EngineEvent => {
-    const fixture = fixtures.find((event) => event.type === type);
-    if (!fixture) throw new Error(`Missing Engine graph fixture for ${type}`);
-    return fixture;
-  });
+export const events = [
+  ...new Set(eventTypes(toDirectedGraph(machine))),
+].flatMap((type): EngineEvent[] => {
+  if (type.startsWith('xstate.done.state.')) return [];
+  const fixture = fixtures.find((event) => event.type === type);
+
+  if (!fixture) throw new Error(`Missing Engine graph fixture for ${type}`);
+
+  return [fixture];
+});

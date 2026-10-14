@@ -6,6 +6,7 @@ export interface SliderRange {
 
 export function sliderStops(range: SliderRange): number[] {
   const length = sliderStopCount(range);
+
   return Array.from(
     { length },
     (_, index) => range.minimumValue + index * range.step,

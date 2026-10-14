@@ -16,17 +16,21 @@ const installedToast = (facts: Facts, agent: string): Omit<Toast, 'key'> => ({
   title: `${facts.name} installed`,
   message: `You can install ${agent} now.`,
 });
+
 const failedToast = (facts: Facts, failure: string): Omit<Toast, 'key'> => ({
   tone: 'error',
   title: `Could not install ${facts.name}`,
   message: failure,
 });
+
 const toolToast = (agent: string, notice: ToolNotice): Toast => {
   const facts = toolFactsOf(notice.tool);
+
   const outcome =
     notice.result === 'installed'
       ? installedToast(facts, agent)
       : failedToast(facts, notice.failure);
+
   return { key: notice.key, ...outcome };
 };
 
