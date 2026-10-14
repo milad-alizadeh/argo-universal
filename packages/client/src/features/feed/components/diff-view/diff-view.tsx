@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
-import { Platform } from 'react-native';
 import {
   Collapsible,
   CollapsibleContent,
@@ -8,6 +7,7 @@ import {
 import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { CodeBlockHeader } from '#lib/product/markdown/code-block-header';
+import { codeBlockGroup } from '#lib/product/markdown/copy-button';
 import {
   Pressable,
   contentActionClass,
@@ -99,7 +99,7 @@ function DiffHeader(props: DiffViewState): React.JSX.Element {
 const diffClassName = (inline: boolean): string =>
   cn(
     'min-w-0',
-    Platform.select({ web: 'code-block' }),
+    codeBlockGroup,
     inline && 'overflow-hidden rounded-2xl border border-border',
   );
 
