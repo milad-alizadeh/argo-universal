@@ -1,10 +1,12 @@
 import type { AgentLoginOperation } from '@repo/contracts';
 import { useCallback, useState } from 'react';
 import { Linking } from 'react-native';
-import { useConnectionState } from '#features/connection';
+import {
+  useConnectionState,
+  useResubscribeOnReconnect,
+} from '#features/connection';
 import type { AgentLoginSheetProps } from '../components/agent-login-sheet/login-props';
 import { useLoginActions } from './use-login-actions';
-import { useLoginReconnect } from './use-login-reconnect';
 import { useLoginSnapshot } from './use-login-snapshot';
 import { useLoginTerminal } from './use-login-terminal';
 
@@ -104,7 +106,11 @@ type LoginFailure = {
 function useLoginFailure(): LoginFailure {
   const [message, setMessage] = useState<string>();
   const clear = useCallback((): void => setMessage(undefined), []);
-  useLoginReconnect(clear);
+  // A failure clears when the Connection reopens.
+  useResubscribeOnReconnect({
+    status: message === undefined ? 'idle' : 'error',
+    reset: clear,
+  });
 
   return {
     message,
