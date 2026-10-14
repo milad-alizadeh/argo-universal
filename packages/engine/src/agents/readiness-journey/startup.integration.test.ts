@@ -67,6 +67,9 @@ it('Server start checks every installed, enabled Agent again and never launches 
   expect(restarted.processes.map(({ launch }) => launch.agentId)).toEqual([
     host.agentId,
   ]);
+  expect(
+    restarted.processes.every(({ terminations }) => terminations === 1),
+  ).toBe(true);
   await second.stop();
 }, 30_000);
 

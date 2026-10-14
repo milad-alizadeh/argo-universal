@@ -128,29 +128,44 @@ const exitStoppedChecks = (launched: ScriptedLaunches): void => {
   for (const process of launched?.processes ?? [])
     if (process.terminations) process.exited.resolve();
 };
+// Every Server-start check must stop the program it launched.
+const requireStoppedChecks = (launched: ScriptedLaunches): void => {
+  const leaked = (launched?.processes ?? []).filter(
+    ({ terminations }) => terminations < 1,
+  );
+  if (leaked.length > 0)
+    throw new Error(
+      `${leaked.length} Server-start check left its Agent running`,
+    );
+};
 
-// Waits through the public list until no Agent is Checking…, as an App would see it.
-export async function awaitSettledReadiness(
+async function settle(
   caller: EngineConnections['caller'],
-  launched?: ScriptedLaunches,
+  whileChecking: () => void,
 ): Promise<void> {
   const deadline = performance.now() + readinessSettleMs;
   while (await isChecking(caller)) {
     if (performance.now() > deadline)
       throw new Error('Agent Readiness did not settle');
-    exitStoppedChecks(launched);
+    whileChecking();
     // Real time: a test's fake clock must not move while the Engine checks.
     await delay(settlePollMs);
   }
 }
 
-// Server start checks every Agent; a test begins once that settles, with only its own launches recorded.
+// Waits through the public list until no Agent is Checking…, as an App would see it.
+export const awaitSettledReadiness = (
+  caller: EngineConnections['caller'],
+): Promise<void> => settle(caller, () => {});
+
+// Server start checks every Agent; a test begins once that settles and every check stopped its Agent, with only its own launches recorded.
 async function settleStartupReadiness(
   caller: EngineConnections['caller'],
   options: EngineTestOptions,
 ): Promise<void> {
   const launched = options.acp;
-  await awaitSettledReadiness(caller, launched);
+  await settle(caller, () => exitStoppedChecks(launched));
+  requireStoppedChecks(launched);
   if (!options.keepStartupLaunches) launched?.processes?.splice(0);
 }
 
