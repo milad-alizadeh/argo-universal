@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 export interface SearchQueryProps {
   // Names the search and shows as the placeholder, such as "Search Agents".
@@ -15,7 +15,7 @@ export type MorphSearchFieldProps = SearchQueryProps & {
   actions?: ReactNode;
 };
 
-// A phone list's search bar at its top, scrolling with it; only Android draws it, and tapping it opens full-screen search.
+// A phone list's search bar at its top. No platform draws it now: iOS searches from its header, Android from its app bar.
 export type DockedSearchQuery = SearchQueryProps & {
   // What leads the header above the list, so the bar's text starts where the header's title does.
   leading: 'menu' | 'back';
@@ -30,3 +30,16 @@ export type DockedSearchFieldProps = DockedSearchQuery & {
 export type DockedSearchBarProps = Omit<DockedSearchFieldProps, 'variant'>;
 
 export type SearchFieldProps = MorphSearchFieldProps | DockedSearchFieldProps;
+
+// The search an app bar opens: its label names it and is the open field's placeholder.
+export type AppBarSearchQuery = Pick<
+  SearchQueryProps,
+  'label' | 'onChangeText'
+>;
+
+export interface AppBarSearch {
+  open: boolean;
+  openSearch: () => void;
+  // The open search, drawn in the app bar's place; null while closed.
+  bar: ReactElement | null;
+}

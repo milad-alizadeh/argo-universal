@@ -3,7 +3,6 @@ import { Stack } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import type { ComponentProps, PropsWithChildren } from 'react';
-import { headerSearchLayout } from './header-search-layout';
 import { useHeaderTitleOptions } from './header-title';
 import { NativeScreenHeader } from './native-screen-header';
 
@@ -32,12 +31,7 @@ export function PhoneStack({ children }: PropsWithChildren): React.JSX.Element {
       header={NativeScreenHeader}
       useHeaderCover={useGlassHeaderCover}
     >
-      <Stack
-        screenOptions={useScreenOptions()}
-        screenLayout={headerSearchLayout}
-      >
-        {children}
-      </Stack>
+      <Stack screenOptions={useScreenOptions()}>{children}</Stack>
     </ScreenHeaderProvider>
   );
 }

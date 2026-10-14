@@ -63,10 +63,7 @@ export {
 
 export { HeaderButton } from '#lib/product/header-button';
 
-export {
-  HeaderSearchSlotProvider,
-  type ShowHeaderSearch,
-} from '#primitives/inputs/search-field';
+export { useAppBarSearch } from '#primitives/inputs/search-field';
 
 export type { Section } from './lib/product/navigation/sections';
 

@@ -24,7 +24,7 @@ import { useNativeTheme } from '../../../native-theme';
 // Material's search view header: a 64dp row in place of the app bar.
 const barHeight = 64;
 
-export interface OpenSearchBarProps {
+interface OpenSearchBarProps {
   label: string;
   // The query when search opened; the bar owns its text from then on.
   initialValue: string;
@@ -46,9 +46,7 @@ export function OpenSearchHeader(props: OpenSearchBarProps): React.JSX.Element {
 }
 
 // Back, the focused field, and Clear once there is a query, as Compose content.
-export function OpenSearchBarContent(
-  props: OpenSearchBarProps,
-): React.JSX.Element {
+function OpenSearchBarContent(props: OpenSearchBarProps): React.JSX.Element {
   const query = useQuery(props);
 
   return (
@@ -158,8 +156,8 @@ function useFieldText(): Pick<
   };
 }
 
-// The label in muted body text: the placeholder of the open field and of the bar at rest.
-export function SearchLabel({ label }: { label: string }): React.JSX.Element {
+// The label in muted body text: the open field's placeholder.
+function SearchLabel({ label }: { label: string }): React.JSX.Element {
   const { mutedForeground } = useNativeTheme().colors;
 
   return (
