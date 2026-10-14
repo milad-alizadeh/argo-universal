@@ -11,14 +11,13 @@ import {
 import { useWide } from '../../../use-wide/use-wide';
 import {
   type LiveProps,
+  type SheetNavigation,
   useLatestProps,
   useLiveProps,
 } from './picker-live-props';
 import { PickerOptionList } from './picker-option-list';
 import type { PickerProps } from './picker-props';
 import { choosePickerOption, pickerValue } from './picker-selection';
-
-type Navigation = NonNullable<ReturnType<typeof useSheetNavigation>>;
 
 /*
  * A Picker drawn as a drill row in a menu or sheet. A wide window opens the options beside the row
@@ -46,7 +45,7 @@ const drillTitle = (props: Pick<PickerProps<string>, 'label'>): string =>
 
 function pushOptions<Value extends string>(
   live: LiveProps<PickerProps<Value>>,
-  navigation: Navigation,
+  navigation: SheetNavigation,
 ): void {
   navigation.push({
     title: drillTitle(live.get()),

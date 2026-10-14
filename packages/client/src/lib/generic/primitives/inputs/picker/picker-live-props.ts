@@ -1,4 +1,10 @@
 import { useLayoutEffect, useState, useSyncExternalStore } from 'react';
+import type { useSheetNavigation } from '#primitives/overlays/bottom-sheet';
+
+// The sheet a drill row pushes its page onto.
+export type SheetNavigation = NonNullable<
+  ReturnType<typeof useSheetNavigation>
+>;
 
 /*
  * A drill row's latest props, for the page it pushed: the page lives outside the row's tree, so it

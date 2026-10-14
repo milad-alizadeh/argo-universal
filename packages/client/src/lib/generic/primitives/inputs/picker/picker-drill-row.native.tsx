@@ -5,14 +5,13 @@ import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useSheetNavigation } from '#primitives/overlays/bottom-sheet';
 import {
   type LiveProps,
+  type SheetNavigation,
   useLatestProps,
   useLiveProps,
 } from './picker-live-props';
 import { NativeOptionRows } from './picker-native-options';
 import type { PickerProps } from './picker-props';
 import { choosePickerOption, pickerValue } from './picker-selection';
-
-type Navigation = NonNullable<ReturnType<typeof useSheetNavigation>>;
 
 /*
  * A Picker drawn as a drill row in a phone sheet: pressing it pushes the options as a page of the
@@ -45,7 +44,7 @@ function DrillRow<Value extends string>(
 
 function pushOptions<Value extends string>(
   live: LiveProps<PickerProps<Value>>,
-  navigation: Navigation,
+  navigation: SheetNavigation,
 ): void {
   navigation.push({
     title: `Select ${live.get().label}`,

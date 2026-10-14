@@ -1,6 +1,6 @@
 import { RadioButton } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { useNativeTheme } from '../../../native-theme';
+import { useRadioColors } from '../../../radio-colors';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 
 // A choice row's Material RadioButton; the row takes the press, so the button only shows the state.
@@ -14,15 +14,4 @@ export function ChoiceRadio(
       colors={useRadioColors()}
     />
   );
-}
-
-function useRadioColors(): React.ComponentProps<typeof RadioButton>['colors'] {
-  const { colors } = useNativeTheme();
-
-  return {
-    selectedColor: colors.accent,
-    unselectedColor: colors.mutedForeground,
-    disabledSelectedColor: colors.disabledContent,
-    disabledUnselectedColor: colors.disabledContent,
-  };
 }

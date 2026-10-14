@@ -10,6 +10,7 @@ import {
 import { createElement } from 'react';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
+import { useRadioColors } from '../../../radio-colors';
 import type { DialogProps } from './picker-dialog.android';
 import type { PickerOption } from './picker-props';
 import { choosePickerOption } from './picker-selection';
@@ -91,17 +92,6 @@ function useOptionMarkProps<Value extends string>(
     enabled: !props.option.disabled,
     onClick: props.option.disabled ? () => commitOption(props) : undefined,
     colors: useRadioColors(),
-  };
-}
-
-function useRadioColors(): React.ComponentProps<typeof RadioButton>['colors'] {
-  const { colors } = useNativeTheme();
-
-  return {
-    selectedColor: colors.accent,
-    unselectedColor: colors.mutedForeground,
-    disabledSelectedColor: colors.disabledContent,
-    disabledUnselectedColor: colors.disabledContent,
   };
 }
 
