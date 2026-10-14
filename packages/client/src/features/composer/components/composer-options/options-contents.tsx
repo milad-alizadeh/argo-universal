@@ -83,8 +83,6 @@ const listProps = {
   style: { flex: 1 },
   estimatedItemSize: 120,
   recycleItems: false,
-  keyboardShouldPersistTaps: 'handled',
-  nestedScrollEnabled: true,
   contentContainerStyle: { gap: 16 },
 } as const;
 

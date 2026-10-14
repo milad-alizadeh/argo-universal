@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
-// Legend List's web build hands unknown props to its DOM element.
-export const nativeOnlyListProps: {
-  contentInsetAdjustmentBehavior?: 'automatic';
-} =
-  Platform.OS === 'web' ? {} : { contentInsetAdjustmentBehavior: 'automatic' };
-
 // Scroll events stop for this long before the list counts as at rest.
 const scrollSettleMilliseconds = 150;
 

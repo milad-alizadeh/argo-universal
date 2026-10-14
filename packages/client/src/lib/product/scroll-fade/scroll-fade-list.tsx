@@ -12,27 +12,42 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Platform, type ViewStyle } from 'react-native';
+import { Platform } from 'react-native';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import type { ScrollFadeOptions } from './scroll-fade-options';
-import { useScrollFade } from './scroll-fade-props';
+import { type ScrollFade, useScrollFade } from './scroll-fade-props';
 
-interface ListDefaults {
-  style: ViewStyle;
-  maintainVisibleContentPosition: false;
-  recycleItems: false;
-  keyboardShouldPersistTaps?: 'handled';
-}
-
-const listDefaults: ListDefaults = {
+const listDefaults = {
   style: { position: 'absolute', inset: 0 },
   // Otherwise it shifts the scroll position as rows are measured.
   maintainVisibleContentPosition: false,
   recycleItems: false,
-};
+  keyboardShouldPersistTaps: 'handled',
+} as const;
 
-// Legend List's web build hands this to the scroll element as an unknown DOM attribute.
-if (Platform.OS !== 'web') listDefaults.keyboardShouldPersistTaps = 'handled';
+// Props only native scroll views take: Legend List's web build hands them to its scroll element, where React warns of unknown attributes.
+interface NativeOnlyListProps {
+  keyboardShouldPersistTaps?: unknown;
+  keyboardDismissMode?: unknown;
+  nestedScrollEnabled?: unknown;
+  contentInsetAdjustmentBehavior?: unknown;
+}
+
+type WebListProps<P> = Omit<P, keyof NativeOnlyListProps>;
+
+function webListProps<P extends NativeOnlyListProps>({
+  keyboardShouldPersistTaps: _taps,
+  keyboardDismissMode: _dismiss,
+  nestedScrollEnabled: _nested,
+  contentInsetAdjustmentBehavior: _inset,
+  ...props
+}: P): WebListProps<P> {
+  return props;
+}
+
+const platformListProps = <P extends NativeOnlyListProps>(
+  props: P,
+): P | WebListProps<P> => (Platform.OS === 'web' ? webListProps(props) : props);
 
 export type ScrollFadeListProps<T> = LegendListProps<T> &
   ScrollFadeOptions & {
@@ -108,20 +123,42 @@ function useBothRefs<T>(
   );
 }
 
-// A Legend List whose content fades under each edge that hides more of it.
-export function ScrollFadeList<T>(
-  props: ScrollFadeListProps<T>,
-): React.JSX.Element {
-  const { ref, maxHeight, refScrollView, ...rest } = props;
-  const list = useRef<LegendListRef>(null);
-  const { frame, scroll, attachScrollView } = useScrollFade(rest);
-  const listRef = useBothRefs(list, ref);
+interface FadingList<T> {
+  frame: ScrollFade<object>['frame'];
+  list: LegendListProps<T>;
+}
+
+// The frame's props and the list's own, wired so the fade follows the scroll.
+function useFadingList<T>({
+  refScrollView,
+  ...props
+}: Omit<ScrollFadeListProps<T>, 'ref' | 'maxHeight'>): FadingList<T> {
+  const { frame, scroll, attachScrollView } = useScrollFade(props);
   const scrollRef = useBothRefs(attachScrollView, refScrollView);
-  const listProps = { ...listDefaults, ...scroll, refScrollView: scrollRef };
+
+  return {
+    frame,
+    list: platformListProps({
+      ...listDefaults,
+      ...scroll,
+      refScrollView: scrollRef,
+    }),
+  };
+}
+
+// A Legend List whose content fades under each edge that hides more of it.
+export function ScrollFadeList<T>({
+  ref,
+  maxHeight,
+  ...props
+}: ScrollFadeListProps<T>): React.JSX.Element {
+  const list = useRef<LegendListRef>(null);
+  const listRef = useBothRefs(list, ref);
+  const fading = useFadingList(props);
 
   return (
-    <ScrollFadeFrame {...frame} {...useFrameSize(list, maxHeight)}>
-      <LegendList {...listProps} ref={listRef} />
+    <ScrollFadeFrame {...fading.frame} {...useFrameSize(list, maxHeight)}>
+      <LegendList {...fading.list} ref={listRef} />
     </ScrollFadeFrame>
   );
 }
