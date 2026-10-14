@@ -1,11 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn } from 'storybook/test';
+import { layoutWidths } from '../../../each-layout';
+import { settleViewport } from '../../../settle-viewport';
 import { FieldGroup } from '../../fields/field-group/field-group';
 import { FieldSection } from '../../fields/field-section/field-section';
 import { ListItem } from './list-item';
 
 const onPress = fn<() => void>();
+
+const updateAvailable = 'Update available';
 
 const meta = {
   title: 'Tests/ListItem',
@@ -79,8 +83,8 @@ export const DescriptionAndStatus: Story = {
         <ListItem
           title="Codex"
           subtitle={{ text: 'Coding assistant' }}
-          value="Update available"
-          status={{ tone: 'warning', label: 'Update available' }}
+          value={updateAvailable}
+          status={{ tone: 'warning', label: updateAvailable }}
           onPress={onPress}
         />
         <ListItem title="goose" value="Not installed" onPress={onPress} />
@@ -126,5 +130,28 @@ export const SidebarSelection: Story = {
     await expect(
       canvas.getByRole('link', { name: 'Projects, 1' }),
     ).not.toHaveAttribute('aria-current');
+  },
+};
+
+// A value that only says the status is the dot alone on a phone, and the row's name still says it; a value with no dot is its only sign, so it stays.
+export const StatusValueIsTheDotOnPhone: Story = {
+  render: DescriptionAndStatus.render,
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('link', {
+        name: 'Codex, Coding assistant, Update available',
+      }),
+    ).toBeVisible();
+    await expect(canvas.getByText(updateAvailable)).not.toBeVisible();
+    await expect(canvas.getByText('Not installed')).toBeVisible();
+  },
+};
+
+export const StatusValueKeepsItsLabelOnDesktop: Story = {
+  render: DescriptionAndStatus.render,
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(updateAvailable)).toBeVisible();
   },
 };
