@@ -14,7 +14,7 @@ import {
   chooseProject,
   type SessionChoices,
   toSessionChoices,
-} from '../state/session-choices';
+} from '../../state/session-choices';
 
 export interface NewSessionData {
   serverInfo: UseQueryResult<SystemInfo, unknown>;

@@ -4,6 +4,7 @@ import { type SendFailures, toSendError } from './send-error';
 const selection = {
   kind: 'selection',
   message: "Couldn't select images.",
+  key: 'selection-attempt',
 } as const;
 
 const upload = {
@@ -14,12 +15,18 @@ const upload = {
 const failure = (message: string): Error => new Error(message);
 
 describe('toSendError', () => {
-  it.each<{ case: string; failures: SendFailures; expected?: string }>([
+  it.each<{
+    case: string;
+    failures: SendFailures;
+    expected?: string;
+    expectedKey?: string;
+  }>([
     { case: 'nothing without a failure', failures: {} },
     {
       case: 'a failed image selection before a failed prompt',
       failures: { attachment: selection, prompt: failure('Agent is busy') },
       expected: "Couldn't select images.",
+      expectedKey: 'selection-attempt',
     },
     {
       case: 'a failed prompt before a failed upload',
@@ -31,7 +38,8 @@ describe('toSendError', () => {
       failures: { attachment: upload, configuration: failure('Refused') },
       expected: "Couldn't upload the image.",
     },
-  ])('shows $case', ({ failures, expected }) => {
-    expect(toSendError(failures)).toBe(expected);
+  ])('shows $case', ({ failures, expected, expectedKey }) => {
+    expect(toSendError(failures)?.message).toBe(expected);
+    expect(toSendError(failures)?.key).toBe(expectedKey);
   });
 });

@@ -52,6 +52,7 @@ export interface ReadyNewSessionViewProps {
   setupStep?: string;
   // An attachment that couldn't be selected or uploaded.
   attachmentError?: string;
+  attachmentErrorKey?: string;
   openError?: string;
 }
 
@@ -125,20 +126,23 @@ function SetupStepAlert({
 }
 
 function PromptComposer(props: ReadyNewSessionViewProps): React.JSX.Element {
-  return (
-    <Composer
-      {...composerDraftProps(props)}
-      onAttachImages={props.onAttachImages}
-      onAttachFiles={props.onAttachFiles}
-      onDropFiles={props.onDropFiles}
-      onSend={props.onSend}
-      configuration={props.configuration}
-      placeholder="What should the Agent work on?"
-      sendable={props.canOpen}
-      error={props.attachmentError}
-    />
-  );
+  return <Composer {...promptComposerProps(props)} />;
 }
+
+const promptComposerProps = (
+  props: ReadyNewSessionViewProps,
+): ComposerProps => ({
+  ...composerDraftProps(props),
+  onAttachImages: props.onAttachImages,
+  onAttachFiles: props.onAttachFiles,
+  onDropFiles: props.onDropFiles,
+  onSend: props.onSend,
+  configuration: props.configuration,
+  placeholder: 'What should the Agent work on?',
+  sendable: props.canOpen,
+  error: props.attachmentError,
+  errorKey: props.attachmentErrorKey,
+});
 
 function NewSessionComposer(
   props: ReadyNewSessionViewProps,

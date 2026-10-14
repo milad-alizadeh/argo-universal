@@ -4,7 +4,7 @@ export {
   isRememberedConfiguration,
   nextRememberedChange,
   type SavedChoices,
-} from './configuration-preferences';
+} from '#lib/product/session-configuration';
 
 export {
   savedChoicesQuery,

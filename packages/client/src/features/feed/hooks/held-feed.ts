@@ -1,6 +1,6 @@
 import type { FeedSyncPoint, SessionSnapshot } from '@repo/contracts';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { createHeldCache, type HeldCache } from '#lib/generic/held-cache';
 import { emptyFeed, type FeedState, syncPointOf } from '../view/feed-state';
 
@@ -30,31 +30,35 @@ export interface HeldFeedStart {
 }
 
 // A Session's Feed as the screen that held it last left it; a screen taking it over starts there instead of empty.
-export function useHeldFeedStart(sessionId: string): HeldFeedStart {
+export function useHeldFeedStart(sessionId: string | undefined): HeldFeedStart {
   const cache = heldFeedsOf(useQueryClient());
 
-  const [start] = useState((): HeldFeedStart => {
-    const held = cache.read(sessionId);
+  const start = useMemo((): HeldFeedStart => {
+    const held = sessionId ? cache.read(sessionId) : undefined;
 
     return {
       feed: held?.feed ?? emptyFeed,
       snapshot: held?.snapshot ?? null,
       syncPoint: held ? syncPointOf(held.feed) : null,
     };
-  });
+  }, [cache, sessionId]);
 
-  useEffect(() => cache.hold(sessionId), [cache, sessionId]);
+  useEffect(
+    () => (sessionId ? cache.hold(sessionId) : undefined),
+    [cache, sessionId],
+  );
 
   return start;
 }
 
 // Keeps the Feed as this screen shows it, for the next screen to start from.
 export function useKeepHeldFeed(
-  sessionId: string,
+  sessionId: string | undefined,
   { feed, snapshot }: HeldFeed,
 ): void {
   const cache = heldFeedsOf(useQueryClient());
   useEffect(() => {
-    if (feed.epoch !== null) cache.write(sessionId, { feed, snapshot });
+    if (sessionId && feed.epoch !== null)
+      cache.write(sessionId, { feed, snapshot });
   }, [cache, sessionId, feed, snapshot]);
 }

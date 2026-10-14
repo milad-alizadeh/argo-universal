@@ -1,4 +1,3 @@
-import { maxBlobUploadMebibytes } from '@repo/contracts';
 import type * as React from 'react';
 import { View, ScrollView } from 'react-native';
 import { LiquidGlass } from '#lib/generic/primitives/display/liquid-glass/liquid-glass';
@@ -8,13 +7,11 @@ import type {
   CardLayout,
   ControlsLayout,
   AttachmentLayout,
-  WarningLayout,
   TextLayout,
 } from './composer-card-types';
 import { ComposerToolbar } from './composer-toolbar';
 import { ComposerBottomTray } from './composer-trays';
 import type { ComposerDraft } from './composer-types';
-import { ComposerWarning } from './composer-warning';
 
 const cardGlass = {
   corners: 'card',
@@ -28,7 +25,6 @@ export function ComposerCard(layout: CardLayout): React.JSX.Element {
   return (
     <LiquidGlass {...cardGlass} glass={!layout.wide}>
       <ComposerAttachments {...layout} />
-      <ComposerWarnings {...layout} />
       <ComposerText {...layout} />
       <ComposerToolbar {...layout} />
     </LiquidGlass>
@@ -92,22 +88,6 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
     ...draft,
     attachments: draft.attachments.filter((attached) => attached.id !== id),
   };
-}
-
-function ComposerWarnings({
-  props,
-  oversized,
-}: WarningLayout): React.JSX.Element {
-  return (
-    <>
-      {oversized && (
-        <ComposerWarning
-          numberOfLines={1}
-        >{`Attachment exceeds ${maxBlobUploadMebibytes} MB.`}</ComposerWarning>
-      )}
-      {props.error && <ComposerWarning>{props.error}</ComposerWarning>}
-    </>
-  );
 }
 
 function ComposerText(layout: TextLayout): React.JSX.Element {

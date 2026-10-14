@@ -3,6 +3,7 @@ import type { AnyActorRef, InputFrom } from 'xstate';
 import type { SyncSupervisorInput } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { findMachineActor } from '../lib/machine-actor';
+import { discoveryCacheId } from '../sessions';
 import {
   openSessionsId,
   openSessionsMachine,
@@ -134,3 +135,10 @@ function serverIdentity(
     startedAt: context.startedAt,
   };
 }
+
+export const discoveryInvocation = {
+  id: discoveryCacheId,
+  systemId: discoveryCacheId,
+  src: 'discovery' as const,
+  input: sessionsInput,
+};

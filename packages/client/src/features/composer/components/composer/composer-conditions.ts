@@ -2,9 +2,13 @@ import { maxBlobUploadBytes } from '@repo/contracts';
 import type { ComposerProps } from './composer-types';
 
 export function hasOversizedAttachment(props: ComposerProps): boolean {
-  return props.draft.attachments.some(
-    (attachment) => attachment.bytes > maxBlobUploadBytes,
-  );
+  return oversizedAttachmentIds(props).length > 0;
+}
+
+export function oversizedAttachmentIds(props: ComposerProps): string[] {
+  return props.draft.attachments
+    .filter((attachment) => attachment.bytes > maxBlobUploadBytes)
+    .map((attachment) => attachment.id);
 }
 
 export function isInactive(props: ComposerProps): boolean {

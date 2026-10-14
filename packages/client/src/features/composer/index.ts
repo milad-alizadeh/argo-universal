@@ -39,4 +39,4 @@ export {
 export {
   configurationChoices,
   configurationEffortChoices,
-} from './state/configuration-choices';
+} from '#lib/product/session-configuration';

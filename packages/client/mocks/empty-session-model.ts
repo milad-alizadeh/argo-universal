@@ -8,7 +8,6 @@ import {
   type EmptySessionPorts,
   emptySessionMachine,
 } from '../src/features/sessions/state/empty-session-machine';
-import { nextChange } from './empty-session-choices';
 
 export type EmptySessionSnapshot = SnapshotFrom<typeof emptySessionMachine>;
 
@@ -35,8 +34,6 @@ export const options: SessionConfigOption[] = recordedSessionOptions(agent);
 // Every port call that fails on a path fails with this.
 export const failure = new Error('The Agent did not start');
 
-export { nextChange } from './empty-session-choices';
-
 export const actorIds = ['open', 'close', 'setConfigOption', 'prompt'] as const;
 
 export type ActorId = (typeof actorIds)[number];
@@ -62,7 +59,7 @@ const events = [
   { type: choices, input: first, connected: true },
   { type: choices, input: second, connected: true },
   { type: choices, input: first, connected: false },
-  { type: loaded, configOptions: options, saved: { model: 'm' } },
+  { type: loaded, configOptions: options, saved: { model: 'haiku' } },
   { type: loaded, configOptions: options, saved: {} },
   { type: 'send', prompt },
   { type: 'retry' },
@@ -88,7 +85,7 @@ const graphPorts: EmptySessionPorts = {
   setConfigOption: () => Promise.resolve(options),
   prompt: () => Promise.resolve({ messageId: 'message-1' }),
   handOff: () => {},
-  nextChange,
+  clearDraft: () => {},
 };
 
 const choiceNames = new Map([

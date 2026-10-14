@@ -4,7 +4,7 @@ import {
   firstAgent,
   mainProject,
   secondAgent,
-} from '../state/session-choices.mocks';
+} from '../../state/session-choices.mocks';
 import { loadedNewSession, type NewSessionQueries } from './new-session-load';
 
 const serverName = 'Studio Mac';

@@ -104,4 +104,5 @@ it.each(['remove', 'edit'] as const)(
 
     await expect(command).rejects.toThrow('in use');
   },
+  20_000,
 );

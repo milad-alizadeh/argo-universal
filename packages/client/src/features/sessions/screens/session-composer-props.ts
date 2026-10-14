@@ -51,12 +51,17 @@ const isSending = (open: OpenSession): boolean =>
 const writtenPlan = (plan: Plan | null): ComposerProps['writtenPlan'] =>
   plan && plan.type !== 'items' ? plan : undefined;
 
-const sendError = (commands: SessionCommands): ComposerProps['error'] =>
-  toSendError({
+const sendError = (
+  commands: SessionCommands,
+): Pick<ComposerProps, 'error' | 'errorKey'> => {
+  const failure = toSendError({
     attachment: commands.attachmentError,
     prompt: commands.promptSession.error,
     configuration: commands.setConfigOption.error,
   });
+
+  return { error: failure?.message, errorKey: failure?.key };
+};
 
 const checkoutProps = (
   checkout: SessionSnapshot['checkout'],
@@ -99,7 +104,7 @@ export function sessionComposerProps(open: OpenSession): ComposerProps {
     onStop: () => commands.cancelTurn.mutate({ sessionId }),
     sending: isSending(open),
     sendable: open.connected,
-    error: sendError(commands),
+    ...sendError(commands),
     writtenPlan: writtenPlan(view.plan),
     status: composerStatus(view.plan, snapshot.usage ?? undefined),
     configuration: configurationProps(open),
