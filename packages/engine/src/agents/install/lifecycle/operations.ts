@@ -17,6 +17,7 @@ import type { InstallBindings, OwnedInstall } from './operation-types';
 import { createInstallationReadiness } from './readiness';
 import { removeAgentInstallation } from './removal';
 import { settleAgentInstallation } from './settlement';
+import { ToolInstallations } from './tool-installation';
 
 export class AgentInstallations {
   private bindings: InstallBindings | undefined;
@@ -24,10 +25,13 @@ export class AgentInstallations {
   private readonly completed = new Map<string, AgentInstallOperation>();
   private stopped = false;
   private readonly configuration = new ConfigurationReservations();
+  public readonly tools: ToolInstallations;
   public constructor(
     private readonly home: string,
     private readonly ports: InstallPorts = defaultInstallPorts,
-  ) {}
+  ) {
+    this.tools = new ToolInstallations(home, ports);
+  }
   public bind(bindings: InstallBindings): void {
     this.bindings = bindings;
   }
@@ -123,17 +127,13 @@ export class AgentInstallations {
   private operationFor(agentId: string): AgentInstallOperation | null {
     const owned = this.active.get(agentId);
 
-    if (owned) return owned.operation;
-
-    return this.completed.get(agentId) ?? null;
+    return owned ? owned.operation : (this.completed.get(agentId) ?? null);
   }
   public async status(agentId: string): Promise<AgentInstallStatus> {
+    const { database } = this.dependencies();
+
     return {
-      installation: await readInstallationStatus(
-        this.home,
-        this.dependencies().database,
-        agentId,
-      ),
+      installation: await readInstallationStatus(this.home, database, agentId),
       operation: this.operationFor(agentId),
     };
   }

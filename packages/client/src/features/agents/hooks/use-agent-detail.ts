@@ -9,6 +9,7 @@ import type {
 import { useAgentInstallation } from './use-agent-installation';
 import { useAgentManagement } from './use-agent-management';
 import { useAgents, useRecheck } from './use-agents';
+import { useMachineTools, useToolInstallation } from './use-tool-installation';
 
 type AgentPageProps = {
   agent: string;
@@ -19,12 +20,13 @@ type AgentPageProps = {
 type AgentPageView = AgentDetailViewProps | undefined;
 
 function useAgentDetail(agent: string): AgentDetail | undefined {
+  const tools = useMachineTools();
   const agents = useAgents();
   const catalog = useQuery(useTRPC().agents.catalog.queryOptions());
   const info = agents.data?.find((entry) => entry.agent === agent);
   const registry = catalog.data?.agents.find(({ id }) => id === agent);
 
-  return agentDetail(info, registry);
+  return agentDetail(info, registry, tools);
 }
 
 // Repair installs the release again through the same confirmation as Install.
@@ -39,7 +41,7 @@ const repairOf = (
 export function useAgentPageView(props: AgentPageProps): AgentPageView {
   const detail = useAgentDetail(props.agent);
   const recheck = useRecheck(props.agent);
-  const installation = useDetailInstallation(props.agent, detail);
+  const { installation, tool } = useDetailInstallations(props.agent, detail);
   const management = useAgentManagement(props.agent, props.onBack);
 
   if (!detail) return undefined;
@@ -48,10 +50,32 @@ export function useAgentPageView(props: AgentPageProps): AgentPageView {
     ...props,
     agent: installedDetail(detail, installation),
     installation,
-    onRecheck: recheck.pending ? undefined : recheck.run,
-    onRepair: repairOf(detail, installation),
+    tool,
+    ...repairActions(detail, installation, recheck),
     ...managementCallbacks(management),
   };
+}
+
+const repairActions = (
+  detail: AgentDetail,
+  installation: ReturnType<typeof useAgentInstallation>,
+  recheck: ReturnType<typeof useRecheck>,
+): Pick<AgentDetailViewProps, 'onRecheck' | 'onRepair'> => ({
+  onRecheck: recheck.pending ? undefined : recheck.run,
+  onRepair: repairOf(detail, installation),
+});
+
+// Install, or the tool Install needs first.
+function useDetailInstallations(
+  agent: string,
+  detail?: AgentDetail,
+): Pick<AgentDetailViewProps, 'installation' | 'tool'> & {
+  installation: ReturnType<typeof useAgentInstallation>;
+} {
+  const installation = useDetailInstallation(agent, detail);
+  const tool = useToolInstallation(detail?.status, installation.server);
+
+  return { installation, tool };
 }
 
 function useDetailInstallation(

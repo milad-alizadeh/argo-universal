@@ -10,6 +10,7 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { engineBundlePath } from './engine-bundle';
 import { serverHttpUrl, serverUrlFor } from './server-port';
 import { hasExited, stderrTailLength, waitUntilReady } from './server-process';
+import { placeTools } from './server-tools';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
@@ -22,6 +23,9 @@ export const projectDirectoryName = 'project';
 // The one directory on the Server's PATH besides system tools: an Agent installed outside Argo goes here.
 const machineDirectoryName = 'machine';
 
+// Node.js, npm and uv, which npx and uvx Agents install with; a step removes one to show it missing.
+const toolsDirectoryName = 'tools';
+
 export { pollServer } from './server-process';
 
 const attempts = 3;
@@ -33,11 +37,13 @@ type ServerFiles = {
   projectPath: string;
   requestLogPath: string;
   machinePath: string;
+  toolsPath: string;
 };
 
 export const serverFiles = (directory: string): ServerFiles => ({
   projectPath: path.join(directory, projectDirectoryName),
   machinePath: path.join(directory, machineDirectoryName),
+  toolsPath: path.join(directory, toolsDirectoryName),
   requestLogPath: path.join(directory, requestLogName),
 });
 
@@ -59,7 +65,9 @@ export async function startOwnServer(
   const installationPath = path.join(directory, 'installation.json');
   const heldCheckRelease = path.join(directory, 'release-held-checks');
   const machinePath = path.join(directory, machineDirectoryName);
+  const toolsPath = path.join(directory, toolsDirectoryName);
   await mkdir(machinePath, { recursive: true });
+  await placeTools(toolsPath);
   await writeFile(registryPath, JSON.stringify(publishedRegistry));
   await writeFile(
     installationPath,
@@ -81,9 +89,12 @@ export async function startOwnServer(
           ARGO_E2E_AGENTS: JSON.stringify(agents),
           ARGO_E2E_REGISTRY_PATH: registryPath,
           ARGO_E2E_INSTALLATION_PATH: installationPath,
+          ARGO_E2E_TOOLS_PATH: toolsPath,
           ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
           ARGO_E2E_HELD_CHECK_RELEASE: heldCheckRelease,
-          PATH: [machinePath, '/usr/bin', '/bin'].join(path.delimiter),
+          PATH: [machinePath, toolsPath, '/usr/bin', '/bin'].join(
+            path.delimiter,
+          ),
         },
         stdio: ['ignore', 'pipe', 'pipe'],
       });

@@ -14,7 +14,17 @@ export interface AlertProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   message?: string;
+  // The exact command an answer runs, shown on its own line beneath the message.
+  command?: string;
   actions: readonly AlertAction[];
+}
+
+// Native alerts draw one text, so the command follows the message there.
+export function alertText({
+  message,
+  command,
+}: Pick<AlertProps, 'message' | 'command'>): string | undefined {
+  return [message, command].filter(Boolean).join('\n\n') || undefined;
 }
 
 // Every answer closes the alert before it runs, so the action may open something else.

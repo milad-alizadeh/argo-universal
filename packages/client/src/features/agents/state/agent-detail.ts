@@ -1,6 +1,7 @@
 import type {
   AgentInfo,
   AgentsCatalogOutput,
+  MachineTools,
   RegistrySupport,
 } from '@repo/contracts';
 import type { AgentDetail } from './agent-detail-types';
@@ -30,13 +31,37 @@ function registryLinks({ entry }: CatalogAgent): AgentDetail['links'] {
   return links.flatMap(({ label, url }) => (url ? [{ label, url }] : []));
 }
 
-function registryDetail(registry: CatalogAgent): AgentDetail {
+type ToolNeed = { tool: keyof MachineTools; status: AgentDetail['status'] };
+
+const toolNeeds: Partial<Record<CatalogAgent['support']['kind'], ToolNeed>> = {
+  npx: { tool: 'node', status: 'needs-node' },
+  uvx: { tool: 'uv', status: 'needs-uv' },
+};
+
+// Unknown until the Server has looked: a missing look never hides Install.
+const lacks = ({ tool }: ToolNeed, tools?: MachineTools): boolean =>
+  tools?.[tool] === false;
+
+// Install is offered only when the tool its distribution installs with is on the Server.
+const notInstalledStatus = (
+  { support }: CatalogAgent,
+  tools?: MachineTools,
+): AgentDetail['status'] => {
+  const need = toolNeeds[support.kind];
+
+  return need && lacks(need, tools) ? need.status : 'not-installed';
+};
+
+function registryDetail(
+  registry: CatalogAgent,
+  tools?: MachineTools,
+): AgentDetail {
   return {
     id: registry.id,
     name: registry.entry.name,
     description: registry.entry.description,
     icon: registry.entry.icon,
-    status: 'not-installed',
+    status: notInstalledStatus(registry, tools),
     version: registry.entry.version,
     distribution: distributionLabel(registry.support),
     links: registryLinks(registry),
@@ -47,8 +72,9 @@ function registryDetail(registry: CatalogAgent): AgentDetail {
 export function agentDetail(
   info?: AgentInfo,
   registry?: CatalogAgent,
+  tools?: MachineTools,
 ): AgentDetail | undefined {
-  const fromRegistry = registry && registryDetail(registry);
+  const fromRegistry = registry && registryDetail(registry, tools);
 
   if (!info) return fromRegistry;
 
@@ -76,11 +102,21 @@ function withProbe(
     ...fromRegistry,
     ...probed,
     ...foundSource(info),
+    status: probedStatus(probed, fromRegistry),
     icon: probed.icon ?? fromRegistry?.icon,
     version: selectedVersion(info, fromRegistry),
     availableVersion: info.availableVersion,
   };
 }
+
+// A configured Agent with nothing installed still needs the tool its install uses.
+const probedStatus = (
+  probed: AgentDetail,
+  registry: AgentDetail | undefined,
+): AgentDetail['status'] =>
+  probed.status === 'not-installed' && registry
+    ? registry.status
+    : probed.status;
 
 const selectedVersion = (
   info: AgentInfo,

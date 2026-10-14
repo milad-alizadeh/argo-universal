@@ -3,7 +3,7 @@ import { Button } from '../../../../lib/generic/primitives/buttons/button/button
 import type { ButtonProps } from '../../../../lib/generic/primitives/buttons/button/button-props';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';
-import type { AgentStatus } from '../../state/agent-status';
+import { type AgentStatus, isInstalled } from '../../state/agent-status';
 import { AgentInstallControl } from '../agent-install-control/agent-install-control';
 import { AgentRemoval } from '../agent-management/agent-removal';
 
@@ -70,7 +70,7 @@ function InstallationAction(
 export function RemoveAgent(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
-  if (props.agent.status === 'not-installed') return null;
+  if (!isInstalled(props.agent)) return null;
 
   return (
     <AgentRemoval
