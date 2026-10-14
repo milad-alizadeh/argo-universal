@@ -71,20 +71,34 @@ export const EscapeCloses: Story = {
   },
 };
 
-// Only Android docks a search bar at the top of a list; the web searches from its title row.
+/*
+ * Only Android docks a search bar at the top of a list; the web searches from its title row.
+ * The title-row field beside it, with the same query, shows the queries would find a drawn field.
+ */
 export const DockedDrawsNothingOnTheWeb: Story = {
   render: () => (
-    <SearchField
-      appearance="docked"
-      label={label}
-      value="review"
-      onChangeText={() => {}}
-      leading="back"
-    />
+    <>
+      <SearchField
+        appearance="docked"
+        label={label}
+        value="review"
+        onChangeText={() => {}}
+        leading="back"
+      />
+      <SearchField
+        title="Projects"
+        label="Search Projects"
+        value=""
+        onChangeText={() => {}}
+      />
+    </>
   ),
   play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('button', { name: 'Search Projects' }),
+    ).toBeVisible();
     await expect(canvas.queryByRole('textbox')).toBeNull();
-    await expect(canvas.queryByRole('button')).toBeNull();
+    await expect(canvas.queryByRole('button', { name: label })).toBeNull();
   },
 };
 

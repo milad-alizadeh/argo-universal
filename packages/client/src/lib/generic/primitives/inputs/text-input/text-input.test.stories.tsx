@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn } from 'storybook/test';
+import { FieldSection } from '#primitives/fields/field-section';
 import { settleViewport } from '../../../settle-viewport';
 import { TextInput } from './text-input';
 
@@ -76,14 +77,32 @@ export const StandaloneMarksInvalid = marksInvalidIn('standalone');
 
 export const RowMarksInvalid = marksInvalidIn('row');
 
-export const StandaloneDescribesError: Story = {
-  args: { errors: [failure] },
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('textbox', { name: label }),
-    ).toHaveAccessibleDescription(failure);
-  },
-};
+// A row's error shows in its section's footer, which the field names as its description.
+function InSection(props: ExampleProps): React.JSX.Element {
+  if (props.appearance === 'standalone') return <Example {...props} />;
+
+  return (
+    <FieldSection footer={failure} footerTone="destructive" textFields>
+      <Example {...props} />
+    </FieldSection>
+  );
+}
+
+function describesErrorIn(appearance: Appearance): Story {
+  return {
+    args: { appearance, errors: [failure] },
+    render: InSection,
+    play: async ({ canvas }) => {
+      await expect(
+        canvas.getByRole('textbox', { name: label }),
+      ).toHaveAccessibleDescription(failure);
+    },
+  };
+}
+
+export const StandaloneDescribesError = describesErrorIn('standalone');
+
+export const RowDescribesError = describesErrorIn('row');
 
 function lockedIn(appearance: Appearance): Story {
   return {
