@@ -9,9 +9,9 @@ const pullRequest = 'pull-request';
 export const pullRequestAppearance = {
   open: { icon: pullRequest, className: 'text-success' },
   draft: { icon: pullRequest, className: 'text-muted-foreground' },
-  merged: { icon: 'merged', className: 'text-merged' },
+  merged: { icon: 'merged', className: 'text-done' },
   conflict: { icon: pullRequest, className: 'text-warning' },
-  closed: { icon: pullRequest, className: 'text-destructive' },
+  closed: { icon: pullRequest, className: 'text-danger' },
 } as const;
 
 export const pullRequestStatusLabels = {

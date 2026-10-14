@@ -98,13 +98,13 @@ function useCaptionStyle(
   return { color: useCaptionColor(props.tone), style };
 }
 
-// A failure, such as a field's error, reads in the destructive colour.
+// A failure, such as a field's error, reads in the danger colour.
 function useCaptionColor(
   tone: GroupedListSectionProps['tone'],
 ): string | undefined {
-  const { mutedForeground, destructive } = useNativeTheme().colors;
+  const { mutedForeground, danger } = useNativeTheme().colors;
 
-  return tone === 'danger' ? destructive : mutedForeground;
+  return tone === 'danger' ? danger : mutedForeground;
 }
 
 GroupedListSection satisfies React.ComponentType<GroupedListSectionProps>;

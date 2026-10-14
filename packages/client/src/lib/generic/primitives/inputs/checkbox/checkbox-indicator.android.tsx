@@ -16,9 +16,9 @@ function checkboxColors(
   outline?: string,
 ): React.ComponentProps<typeof ComposeCheckbox>['colors'] {
   return {
-    checkedColor: colors.tint,
+    checkedColor: colors.accent,
     uncheckedColor: invalid
-      ? colors.destructive
+      ? colors.danger
       : (outline ?? colors.mutedForeground),
     checkmarkColor: colors.background,
     disabledCheckedColor: colors.disabledContent,
@@ -35,7 +35,7 @@ export function RadioMark(props: CheckboxIndicatorProps): React.JSX.Element {
     modifiers: indicatorSize(props),
     enabled: !props.disabled,
     colors: {
-      selectedColor: colors.tint,
+      selectedColor: colors.accent,
       unselectedColor: optionOutline(props, theme) ?? colors.mutedForeground,
     },
   });

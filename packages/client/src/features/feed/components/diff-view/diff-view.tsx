@@ -40,7 +40,7 @@ interface DiffViewState extends FileHeaderProps {
 const showAllClassName = contentActionClass({
   variant: 'link',
   className:
-    'h-6 sm:h-6 justify-start rounded-none border-t border-border bg-sidebar px-3 py-0',
+    'h-6 sm:h-6 justify-start rounded-none border-t border-border bg-content px-3 py-0',
 });
 
 const showAllTextClassName =

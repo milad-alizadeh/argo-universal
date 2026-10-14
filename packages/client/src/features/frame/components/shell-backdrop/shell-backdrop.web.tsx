@@ -56,7 +56,7 @@ function EdgeFade({ backdrop }: { backdrop: Backdrop }): React.JSX.Element {
         left: backdrop.width - backdrop.edgeFadeWidth,
         width: backdrop.edgeFadeWidth,
         backgroundImage:
-          'linear-gradient(90deg in oklab, transparent, var(--color-sidebar))',
+          'linear-gradient(90deg in oklab, transparent, var(--color-content))',
       }}
     />
   );

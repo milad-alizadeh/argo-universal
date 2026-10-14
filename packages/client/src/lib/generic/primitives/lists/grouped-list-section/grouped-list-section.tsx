@@ -64,7 +64,7 @@ function SectionFooter(props: FooterProps): React.JSX.Element | null {
   return props.text ? <FooterText {...props} text={props.text} /> : null;
 }
 
-// A failure, such as a field's error, reads in the destructive colour and is announced.
+// A failure, such as a field's error, reads in the danger colour and is announced.
 function FooterText(props: FooterProps & { text: string }): React.JSX.Element {
   const failure = props.tone === 'danger';
 
@@ -73,7 +73,7 @@ function FooterText(props: FooterProps & { text: string }): React.JSX.Element {
       id={props.id}
       role="secondary"
       semanticRole={failure ? 'alert' : undefined}
-      className={cn('px-4', failure && 'text-destructive')}
+      className={cn('px-4', failure && 'text-danger')}
     >
       {props.text}
     </Text>

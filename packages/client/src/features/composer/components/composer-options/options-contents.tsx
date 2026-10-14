@@ -34,7 +34,7 @@ export function OptionsContents(props: ContentsProps): React.JSX.Element {
 
 function NativeContents(props: ContentsProps): React.JSX.Element {
   return (
-    <View className="flex-1 bg-sidebar">
+    <View className="flex-1 bg-content">
       <GroupedList>{optionSections(props)}</GroupedList>
     </View>
   );
@@ -57,7 +57,7 @@ function WebContents(props: ContentsProps): React.JSX.Element {
   const listHeight = optionsHeight(props.options, height);
 
   return (
-    <View className="wide:p-3 bg-sidebar">
+    <View className="wide:p-3 bg-content">
       <View style={{ height: listHeight }}>
         <OptionsList {...props} />
       </View>

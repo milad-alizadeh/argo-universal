@@ -62,7 +62,7 @@ function ReferenceRow(props: RowProps): React.JSX.Element {
     <button
       {...rowAttributes}
       {...{ 'aria-selected': selected }}
-      className={cn(rowClassName, selected && 'bg-accent')}
+      className={cn(rowClassName, selected && 'bg-hover')}
       onMouseEnter={onHover}
       onClick={onChoose}
     >
@@ -96,7 +96,7 @@ function ReferenceMenu(props: MenuProps): React.JSX.Element {
     <div
       role="group"
       aria-label="Issues and pull requests"
-      className="absolute bottom-full left-0 mb-7 flex w-100 flex-col gap-0.5 overflow-clip rounded-2xl border border-border bg-popover p-1 shadow-card"
+      className="absolute bottom-full left-0 mb-7 flex w-100 flex-col gap-0.5 overflow-clip rounded-2xl border border-border bg-card p-1 shadow-card"
     >
       <div className="px-2 pt-1.5 pb-1 text-badge font-medium text-muted-foreground">
         Issues and pull requests

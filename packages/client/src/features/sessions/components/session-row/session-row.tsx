@@ -33,8 +33,8 @@ function sessionRowClass(selected: boolean): string {
   return contentActionClass({
     variant: 'ghost',
     className: cn(
-      'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:gap-3 wide:px-4 wide:py-2 wide:rounded-selection bg-sidebar wide:bg-transparent dark:active:bg-accent web:dark:hover:bg-accent',
-      selected && 'bg-sidebar-accent wide:bg-selected',
+      'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:gap-3 wide:px-4 wide:py-2 wide:rounded-selection bg-content wide:bg-transparent dark:active:bg-hover web:dark:hover:bg-hover',
+      selected && 'bg-hover wide:bg-selected',
     ),
   });
 }

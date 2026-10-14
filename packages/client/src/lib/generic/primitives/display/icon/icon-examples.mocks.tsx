@@ -30,7 +30,7 @@ const colorClasses = [
   'text-foreground',
   'text-muted-foreground',
   'text-primary',
-  'text-destructive',
+  'text-danger',
 ];
 
 function RoleSample({ role }: { role: IconRole }): React.JSX.Element {

@@ -15,11 +15,11 @@ interface ModeChoiceProps extends ModeContentsProps {
   choice: SessionConfigSelectOption;
 }
 
-const destructiveTextClassName = 'text-destructive';
+const destructiveTextClassName = 'text-danger';
 
 export function ModeContents(props: ModeContentsProps): React.JSX.Element {
   return (
-    <View className="native:flex-1 wide:p-3 bg-sidebar">
+    <View className="native:flex-1 wide:p-3 bg-content">
       <GroupedList fit>
         <GroupedListSection>
           {configurationChoices(props.mode).map((choice) => (

@@ -63,7 +63,7 @@ function SettingsPreview(args: SettingsListProps): React.JSX.Element {
   const selection = useSelectedPage(args);
 
   return (
-    <View className="w-full bg-sidebar wide:w-shell-list" style={{ flex: 1 }}>
+    <View className="w-full bg-content wide:w-shell-list" style={{ flex: 1 }}>
       <SettingsHeading />
       <SettingsList {...args} {...selection} />
     </View>

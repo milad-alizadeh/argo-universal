@@ -16,7 +16,7 @@ const rootConfigSchema = z.looseObject({ extends: z.array(z.string()) });
 
 const waiverConfig = 'tooling/oxlint/not-yet-cleared.json';
 
-function measuringConfig(root: string): string {
+function measuringConfig(root: string, dropped: string): string {
   const config = parseJsonc(
     rootConfigSchema,
     readFileSync(join(root, '.oxlintrc.json'), 'utf8'),
@@ -25,9 +25,7 @@ function measuringConfig(root: string): string {
   return JSON.stringify({
     ...config,
     extends: config.extends
-      .filter(
-        (path): boolean => resolve(root, path) !== join(root, waiverConfig),
-      )
+      .filter((path): boolean => resolve(root, path) !== join(root, dropped))
       .map((path): string => resolve(root, path)),
   });
 }
@@ -53,13 +51,14 @@ function runOxlint(root: string, config: string): string {
   return result.stdout;
 }
 
-export function measureFindings(root: string): string {
+// Lints the tree without one extended config, by default the not-yet-cleared waivers.
+export function measureFindings(root: string, dropped = waiverConfig): string {
   const directory = mkdtempSync(join(tmpdir(), 'not-yet-cleared-'));
   const config = join(directory, 'oxlint.json');
   const link = join(root, `.oxlintrc-not-yet-cleared-${randomUUID()}.json`);
 
   try {
-    writeFileSync(config, measuringConfig(root));
+    writeFileSync(config, measuringConfig(root, dropped));
     // Oxlint resolves override globs against the config path, even when extends are absolute.
     symlinkSync(config, link);
 

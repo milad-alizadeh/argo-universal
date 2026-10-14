@@ -54,8 +54,8 @@ function OnboardingSteps(props: OnboardingViewProps): React.JSX.Element {
 export function OnboardingView(props: OnboardingViewProps): React.JSX.Element {
   return (
     <ScrollFadeView
-      className="bg-sidebar"
-      surfaceClassName="bg-sidebar"
+      className="bg-content"
+      surfaceClassName="bg-content"
       contentContainerClassName="grow items-center justify-center px-gutter py-12"
     >
       <View className="w-full max-w-130 gap-6">

@@ -6,7 +6,7 @@ import type { GroupedListItemProps } from './grouped-list-item-props';
 const tones = {
   success: 'bg-success',
   warning: 'bg-warning',
-  danger: 'bg-destructive',
+  danger: 'bg-danger',
 } as const;
 
 export const hiddenFromAccessibility = {

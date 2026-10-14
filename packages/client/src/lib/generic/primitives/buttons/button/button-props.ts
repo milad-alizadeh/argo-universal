@@ -19,7 +19,7 @@ export interface ButtonDataProps {
   style?: never;
   icon?: IconName;
   variant?: ButtonVariant;
-  // A destructive button draws in red.
+  // The danger tone draws the button in red.
   tone?: 'danger';
   size?: ButtonSize;
   // "narrow" fills a narrow window and stays compact on a wide one.

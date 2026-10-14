@@ -20,7 +20,7 @@ export function ProjectListView(
   const [search, setSearch] = useState(props.initialSearch ?? '');
 
   return (
-    <View className="flex-1 bg-sidebar wide:bg-transparent">
+    <View className="flex-1 bg-content wide:bg-transparent">
       <PhoneHeader onSearch={setSearch} />
       <ProjectsPage {...props} search={search} onSearch={setSearch} />
     </View>

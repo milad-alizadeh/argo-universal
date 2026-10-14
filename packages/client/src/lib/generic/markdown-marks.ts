@@ -25,13 +25,13 @@ export const markdownBlockClassNames = {
   quote: 'border-l-2 border-border pl-3',
   listMarker: 'text-muted-foreground',
   domListMarker: 'marker:text-muted-foreground',
-  codeBlock: 'rounded-2xl border border-border bg-sidebar',
+  codeBlock: 'rounded-2xl border border-border bg-content',
   codeText: 'type-code text-foreground',
 } as const;
 
 // A link underlines in the ring colour: a DOM element takes it as a class, a React Native view resolves it.
 export const markdownLinkClassNames = {
   underline: 'underline underline-offset-2',
-  domColor: 'decoration-ring',
-  viewColor: 'text-ring',
+  domColor: 'decoration-focus',
+  viewColor: 'text-focus',
 } as const;

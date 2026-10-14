@@ -2,7 +2,7 @@ export interface AlertAction {
   label: string;
   // A cancel action dismisses.
   cancel?: boolean;
-  // A destructive action is drawn in red.
+  // The danger tone draws the action in red.
   tone?: 'danger';
   onPress?: () => void;
 }

@@ -29,7 +29,7 @@ export function AgentDetailView(
   useInstallToast(props.agent.name, props.installation);
 
   return (
-    <View className="flex-1 bg-sidebar wide:bg-transparent">
+    <View className="flex-1 bg-content wide:bg-transparent">
       <PhoneTitle title={props.agent.name} />
       <SettingsPage title={props.agent.name} onBack={props.onBack}>
         <AgentSections {...props} />

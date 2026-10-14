@@ -74,11 +74,11 @@ function PickerPage<Value extends string>(
 }
 
 function usePageModifiers(): ReturnType<typeof presentationDetents>[] {
-  const { popover } = useNativeTheme().colors;
+  const { card } = useNativeTheme().colors;
 
   return [
     presentationDetents(['large']),
-    presentationBackground(popover ?? 'clear'),
+    presentationBackground(card ?? 'clear'),
   ];
 }
 

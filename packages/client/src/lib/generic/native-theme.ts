@@ -3,19 +3,18 @@ import { useCSSVariable, useUniwind } from 'uniwind';
 import { usePrimitiveColor } from '#primitives/native/primitive-color';
 
 const colorTokens = [
-  ['tint', '--color-tint'],
+  ['accent', '--color-accent'],
   ['background', '--color-background'],
   ['foreground', '--color-foreground'],
   ['muted', '--color-muted'],
   ['mutedForeground', '--color-muted-foreground'],
-  ['popover', '--color-popover'],
-  ['sidebar', '--color-sidebar'],
-  ['popoverForeground', '--color-popover-foreground'],
+  ['card', '--color-card'],
+  ['content', '--color-content'],
+  ['cardForeground', '--color-card-foreground'],
   ['primary', '--color-primary'],
   ['primaryForeground', '--color-primary-foreground'],
   ['border', '--color-border'],
-  ['separator', '--color-separator'],
-  ['destructive', '--color-destructive'],
+  ['danger', '--color-danger'],
 ] as const;
 
 const tokenNames = colorTokens.map(([, name]) => name);

@@ -88,7 +88,7 @@ function useSheetModifiers(props: SheetContentProps): ModifierConfig[] {
     ...useSheetDetents(props),
     presentationDragIndicator('visible'),
     interactiveDismissDisabled(props.dismissible === false),
-    ...sheetFill(props.surface === 'sidebar' ? colors.sidebar : colors.popover),
+    ...sheetFill(props.surface === 'sidebar' ? colors.content : colors.card),
   ];
 }
 

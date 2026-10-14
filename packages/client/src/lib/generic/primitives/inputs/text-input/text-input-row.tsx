@@ -13,7 +13,7 @@ export function RowTextInput(props: TextFieldProps): React.JSX.Element {
     <View
       className={cn(
         rowClasses({ label: props.label }, false),
-        'web:focus-within:outline-2 web:focus-within:outline-ring web:focus-within:-outline-offset-2',
+        'web:focus-within:outline-2 web:focus-within:outline-focus web:focus-within:-outline-offset-2',
       )}
     >
       <RowLabel {...props} />
@@ -30,7 +30,7 @@ function RowLabel(props: TextFieldProps): React.JSX.Element {
       className={cn(
         'shrink-0',
         props.disabled && 'text-muted-foreground',
-        isInvalid(props) && 'text-destructive',
+        isInvalid(props) && 'text-danger',
       )}
     >
       {props.label}

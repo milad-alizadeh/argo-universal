@@ -132,7 +132,7 @@ function rowValueColor(
 ): string | undefined {
   if (props.disabled) return colors.disabledContent;
 
-  return props.invalid ? colors.destructive : colors.mutedForeground;
+  return props.invalid ? colors.danger : colors.mutedForeground;
 }
 
 function useSurfaceProps<Value extends string>(

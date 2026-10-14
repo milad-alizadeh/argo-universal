@@ -3,18 +3,18 @@ import { cn } from '#lib/generic/utils';
 import type { ButtonProps } from './button-props';
 
 const buttonClasses = cva(
-  'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none web:whitespace-nowrap web:outline-none web:transition-all web:focus-visible:border-ring web:focus-visible:ring-[3px] web:focus-visible:ring-ring/50 disabled:pointer-events-none',
+  'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none web:whitespace-nowrap web:outline-none web:transition-all web:focus-visible:border-focus web:focus-visible:ring-[3px] web:focus-visible:ring-focus/50 disabled:pointer-events-none',
   {
     variants: {
       variant: {
         default:
           'bg-primary web:shadow-xs active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
         outline:
-          'border border-border bg-background active:bg-accent web:hover:bg-accent dark:border-input dark:bg-input/30 dark:active:bg-input/50 web:dark:hover:bg-input/50',
+          'border border-border bg-background active:bg-hover web:hover:bg-hover dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
         secondary:
-          'border border-border bg-background active:bg-accent web:hover:bg-accent dark:border-input dark:bg-input/30 dark:active:bg-input/50 web:dark:hover:bg-input/50',
+          'border border-border bg-background active:bg-hover web:hover:bg-hover dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
         ghost:
-          'active:bg-accent dark:active:bg-accent/50 web:hover:bg-accent web:dark:hover:bg-accent/50',
+          'active:bg-hover dark:active:bg-hover/50 web:hover:bg-hover web:dark:hover:bg-hover/50',
         link: '',
       },
       size: {
@@ -35,7 +35,7 @@ const buttonClasses = cva(
  * large control size on iOS, Material 3's height and padding on Android, and the whole button faded when disabled.
  */
 const filledNative =
-  'ios:min-h-12.5 ios:px-5 ios:border-0 ios:bg-secondary android:min-h-10 android:px-6';
+  'ios:min-h-12.5 ios:px-5 ios:border-0 ios:bg-muted android:min-h-10 android:px-6';
 
 const textNative = 'android:min-h-10 android:px-3';
 
@@ -44,7 +44,7 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
     variant: {
       default: `${filledNative} ios:bg-primary`,
       outline: `${filledNative} android:bg-transparent android:border-muted-foreground`,
-      secondary: `${filledNative} android:border-0 android:bg-secondary`,
+      secondary: `${filledNative} android:border-0 android:bg-muted`,
       ghost: textNative,
       link: textNative,
     },
@@ -63,14 +63,14 @@ const textClasses = cva(
       variant: {
         default: 'text-primary-foreground',
         outline:
-          'text-foreground group-active:text-accent-foreground web:group-hover:text-accent-foreground',
+          'text-foreground group-active:text-hover-foreground web:group-hover:text-hover-foreground',
         secondary:
-          'text-foreground group-active:text-accent-foreground web:group-hover:text-accent-foreground',
+          'text-foreground group-active:text-hover-foreground web:group-hover:text-hover-foreground',
         ghost:
-          'text-foreground group-active:text-accent-foreground ios:font-normal',
+          'text-foreground group-active:text-hover-foreground ios:font-normal',
         link: 'text-primary web:underline-offset-4 group-active:underline web:group-hover:underline ios:font-normal',
       },
-      destructive: { true: 'text-destructive' },
+      destructive: { true: 'text-danger' },
     },
     defaultVariants: { variant: 'default' },
   },
@@ -93,10 +93,10 @@ export function contentButtonClass(props: ButtonClassProps): string {
 }
 
 const destructiveOutline =
-  'border border-border bg-background web:shadow-xs active:bg-destructive/10 web:hover:bg-destructive/10';
+  'border border-border bg-background web:shadow-xs active:bg-danger/10 web:hover:bg-danger/10';
 
 const destructiveText =
-  'bg-transparent active:bg-destructive/10 web:hover:bg-destructive/10';
+  'bg-transparent active:bg-danger/10 web:hover:bg-danger/10';
 
 // A destructive button without a variant draws as an outline.
 const destructiveClasses = cva('', {
@@ -109,7 +109,7 @@ const destructiveClasses = cva('', {
       tone: 'danger',
       variant: 'default',
       className:
-        'bg-destructive ios:bg-destructive active:bg-destructive/90 web:hover:bg-destructive/90',
+        'bg-danger ios:bg-danger active:bg-danger/90 web:hover:bg-danger/90',
     },
     {
       tone: 'danger',
@@ -133,7 +133,7 @@ export function contentTextClass(
   return cn(
     textClasses({ variant: props.variant, destructive }),
     nativeLabelClass,
-    destructive && props.variant === 'default' && 'text-destructive-foreground',
+    destructive && props.variant === 'default' && 'text-danger-foreground',
   );
 }
 

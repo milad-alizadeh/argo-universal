@@ -85,7 +85,7 @@ function LoadingEarlierOverlay(): React.JSX.Element {
 
   return (
     <View
-      className="absolute top-4 self-center rounded-full bg-sidebar px-2 wide:top-6"
+      className="absolute top-4 self-center rounded-full bg-content px-2 wide:top-6"
       // Below a transparent header, which lies over the Feed's top.
       style={{ marginTop: headerCover }}
     >

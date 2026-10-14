@@ -10,7 +10,7 @@ export function PhoneShellCard({
   children,
 }: PhoneShellCardProps): React.JSX.Element {
   return (
-    <View testID="phone-shell-card" className="flex-1 bg-sidebar">
+    <View testID="phone-shell-card" className="flex-1 bg-content">
       <View className={cn(fadeTransition, drawerOpen && 'opacity-50')}>
         {children}
       </View>

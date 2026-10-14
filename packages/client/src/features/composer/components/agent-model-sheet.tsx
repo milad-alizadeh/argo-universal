@@ -23,7 +23,7 @@ export function AgentModelSheetSettings({
   if (!configuration) return null;
 
   return (
-    <View className="flex-1 bg-sidebar">
+    <View className="flex-1 bg-content">
       <AgentModelMenu configuration={configuration} onOpenPage={onOpenPage} />
     </View>
   );
@@ -44,7 +44,7 @@ export function AgentModelSheetChoices(
   if (!configuration) return null;
 
   return (
-    <View className="flex-1 bg-sidebar">
+    <View className="flex-1 bg-content">
       <PageChoices {...props} configuration={configuration} />
     </View>
   );

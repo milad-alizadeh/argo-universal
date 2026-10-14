@@ -3,7 +3,7 @@ import { useNativeTheme } from '../../../native-theme';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
 import { nativeButtonVariant } from './button-state';
 
-const destructiveClass = 'text-destructive';
+const destructiveClass = 'text-danger';
 
 const primaryClass = 'text-primary';
 
@@ -11,7 +11,7 @@ const foregroundClass = 'text-foreground';
 
 const transparentClass = 'text-transparent';
 
-const mutedFillClass = 'text-secondary';
+const mutedFillClass = 'text-muted';
 
 const buttonColorClasses: Record<
   ButtonVariant,
@@ -20,7 +20,7 @@ const buttonColorClasses: Record<
   default: { container: primaryClass, content: 'text-primary-foreground' },
   secondary: {
     container: mutedFillClass,
-    content: 'text-secondary-foreground',
+    content: 'text-foreground',
   },
   outline: { container: transparentClass, content: foregroundClass },
   ghost: { container: transparentClass, content: primaryClass },
@@ -47,7 +47,7 @@ export function useNativeButtonTheme(props: ThemeProps): ButtonTheme {
   const classes = nativeColorClasses(props);
 
   return {
-    primary: colors.tint,
+    primary: colors.accent,
     mutedFill: usePrimitiveColor(mutedFillClass),
     contentClass: classes.content,
     colors: useNativeButtonColors(classes),
@@ -87,9 +87,9 @@ const destructiveColors: Record<
 > = {
   default: {
     container: destructiveClass,
-    content: 'text-destructive-foreground',
+    content: 'text-danger-foreground',
   },
-  secondary: { container: 'text-destructive/10', content: destructiveClass },
+  secondary: { container: 'text-danger/10', content: destructiveClass },
   outline: { container: transparentClass, content: destructiveClass },
   ghost: { container: transparentClass, content: destructiveClass },
   link: { container: transparentClass, content: destructiveClass },

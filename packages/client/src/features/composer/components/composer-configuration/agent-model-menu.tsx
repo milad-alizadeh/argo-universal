@@ -57,7 +57,7 @@ function isDesktopMenu(wide: boolean): boolean {
 
 function ConfigurationContents(props: ContentsProps): React.JSX.Element {
   return (
-    <View className="native:flex-1 wide:p-3 bg-sidebar">
+    <View className="native:flex-1 wide:p-3 bg-content">
       <ConfigurationFields {...props} />
     </View>
   );

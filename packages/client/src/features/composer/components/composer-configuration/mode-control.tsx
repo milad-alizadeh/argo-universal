@@ -22,7 +22,7 @@ interface ModeControlProps {
   disabled: boolean;
 }
 
-const destructiveTextClassName = 'text-destructive';
+const destructiveTextClassName = 'text-danger';
 
 export function ComposerModeControl(
   props: ModeControlProps,

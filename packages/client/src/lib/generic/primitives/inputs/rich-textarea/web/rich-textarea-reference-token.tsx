@@ -13,7 +13,7 @@ export function ReferenceGlyph({
   return state === 'open' ? (
     <Icon name="issue-open" role="body" className="text-success" />
   ) : (
-    <Icon name="passed" role="body" className="text-merged" />
+    <Icon name="passed" role="body" className="text-done" />
   );
 }
 

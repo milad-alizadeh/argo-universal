@@ -89,7 +89,7 @@ function CheckboxMark(): React.JSX.Element {
   const { colors } = useNativeTheme();
 
   return (
-    <Group modifiers={[foregroundStyle(colors.tint ?? 'primary')]}>
+    <Group modifiers={[foregroundStyle(colors.accent ?? 'primary')]}>
       <NativeSymbol name="check" role="mark" />
     </Group>
   );

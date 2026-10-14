@@ -73,7 +73,7 @@ function sheetClass(
   anchored: boolean,
 ): string {
   return cn(
-    'bottom-sheet max-h-[85dvh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
+    'bottom-sheet max-h-[85dvh] rounded-t-surface bg-card pb-8.5 shadow-card dark:border dark:border-border outline-none',
     formClass(variant),
     anchored && 'bottom-sheet-anchored',
     expanded && 'h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)]',

@@ -98,7 +98,7 @@ function useRadioColors(): React.ComponentProps<typeof RadioButton>['colors'] {
   const { colors } = useNativeTheme();
 
   return {
-    selectedColor: colors.tint,
+    selectedColor: colors.accent,
     unselectedColor: colors.mutedForeground,
     disabledSelectedColor: colors.disabledContent,
     disabledUnselectedColor: colors.disabledContent,

@@ -21,7 +21,7 @@ export type FormInputProps = {
   className?: string;
 };
 
-// A section's footer: an error in the destructive tone in place of the hint.
+// A section's footer: an error in the danger tone in place of the hint.
 export const sectionFooter = (
   error: string | undefined,
   hint?: string,
@@ -69,7 +69,7 @@ export function FieldMessage({
   if (!error) return null;
 
   return (
-    <Text role="secondary" className="text-destructive" semanticRole="alert">
+    <Text role="secondary" className="text-danger" semanticRole="alert">
       {error}
     </Text>
   );

@@ -39,8 +39,8 @@ function alertColors(
   colors: NativeColors,
 ): React.ComponentProps<typeof AlertDialog>['colors'] {
   return {
-    containerColor: colors.popover,
-    titleContentColor: colors.popoverForeground,
+    containerColor: colors.card,
+    titleContentColor: colors.cardForeground,
     textContentColor: colors.mutedForeground,
   };
 }
@@ -99,7 +99,7 @@ function AlertButton(
   const { colors } = useNativeTheme();
 
   const color =
-    props.action.tone === 'danger' ? colors.destructive : colors.primary;
+    props.action.tone === 'danger' ? colors.danger : colors.primary;
 
   return (
     <TextButton

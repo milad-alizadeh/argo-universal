@@ -106,7 +106,7 @@ function SessionsLayout(props: SessionsViewProps): React.JSX.Element {
   return (
     <Screen
       edges={['bottom']}
-      className="relative flex-1 bg-sidebar wide:bg-transparent"
+      className="relative flex-1 bg-content wide:bg-transparent"
       style={{ minHeight: 0 }}
     >
       <SessionsContent {...props} />

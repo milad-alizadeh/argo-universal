@@ -31,9 +31,7 @@ export function GroupedListItem(
   if (wide) return <WebGroupedListItem {...props} />;
   const modifiers = rowModifiers(props, colors, sidebar);
 
-  return (
-    <NativeRow key={colors.separator} item={props} modifiers={modifiers} />
-  );
+  return <NativeRow key={colors.border} item={props} modifiers={modifiers} />;
 }
 
 interface NativeRowProps {
@@ -90,7 +88,7 @@ function pressModifiers(modifiers: RowModifiers): RowModifiers {
   ];
 }
 
-type RowColors = Pick<NativeColors, 'separator'>;
+type RowColors = Pick<NativeColors, 'border'>;
 
 type RowModifiers = NonNullable<
   React.ComponentProps<typeof HStack>['modifiers']
@@ -110,11 +108,11 @@ function rowModifiers(
 }
 
 // A sidebar row sits flat on the screen; a grouped row keeps the system cell, which draws the press highlight.
-function rowSurface({ separator }: RowColors, sidebar: boolean): RowModifiers {
+function rowSurface({ border }: RowColors, sidebar: boolean): RowModifiers {
   if (sidebar)
     return [listRowBackground('transparent'), listRowSeparator('hidden')];
 
-  return [listRowSeparatorTint(separator)];
+  return [listRowSeparatorTint(border)];
 }
 
 GroupedListItem satisfies React.ComponentType<GroupedListItemProps>;

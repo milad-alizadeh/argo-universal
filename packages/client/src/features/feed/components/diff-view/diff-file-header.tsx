@@ -122,7 +122,7 @@ export function FileHeader(props: FileHeaderProps): React.JSX.Element {
       <ChangeCount count={file.added} className="text-success">
         +{file.added}
       </ChangeCount>
-      <ChangeCount count={file.removed} className="text-destructive">
+      <ChangeCount count={file.removed} className="text-danger">
         {`−${file.removed}`}
       </ChangeCount>
     </View>

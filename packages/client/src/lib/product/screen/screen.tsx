@@ -42,7 +42,7 @@ export function Screen(screenProps: ScreenProps): React.JSX.Element {
   return (
     <View
       {...props}
-      className={cn('flex-1 bg-sidebar', props.className)}
+      className={cn('flex-1 bg-content', props.className)}
       style={[{ minHeight: 0 }, padding, style]}
     >
       <View className="relative flex-1" style={{ minHeight: 0 }}>

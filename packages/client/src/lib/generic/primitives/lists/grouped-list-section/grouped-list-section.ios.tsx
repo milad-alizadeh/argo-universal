@@ -64,15 +64,15 @@ function SectionFooter({
   return text ? <Text modifiers={modifiers}>{text}</Text> : null;
 }
 
-// A failure, such as a field's error, reads in the destructive colour.
+// A failure, such as a field's error, reads in the danger colour.
 function useFooterModifiers(
   tone: GroupedListSectionProps['tone'],
 ): ReturnType<typeof useSwiftUITextModifiers> {
   const secondaryModifiers = useSwiftUITextModifiers('secondary');
-  const { destructive } = useNativeTheme().colors;
+  const { danger } = useNativeTheme().colors;
 
-  return tone === 'danger' && destructive
-    ? [...secondaryModifiers, foregroundStyle(destructive)]
+  return tone === 'danger' && danger
+    ? [...secondaryModifiers, foregroundStyle(danger)]
     : secondaryModifiers;
 }
 

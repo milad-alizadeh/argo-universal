@@ -31,14 +31,14 @@ function spokenName(
 }
 
 function useSliderColors(): NativeSliderProps['colors'] {
-  const { tint, muted, separator } = useNativeTheme().colors;
+  const { accent, muted, border } = useNativeTheme().colors;
 
   return {
-    thumbColor: tint,
-    activeTrackColor: tint,
-    inactiveTrackColor: separator,
+    thumbColor: accent,
+    activeTrackColor: accent,
+    inactiveTrackColor: border,
     activeTickColor: muted,
-    inactiveTickColor: tint,
+    inactiveTickColor: accent,
   };
 }
 
