@@ -1,7 +1,6 @@
 import {
   Alert as SwiftAlert,
   Button as SwiftButton,
-  ConfirmationDialog,
   Text,
 } from '@expo/ui/swift-ui';
 import { disabled } from '@expo/ui/swift-ui/modifiers';
@@ -11,27 +10,20 @@ import {
   alertActionPress,
   isAlertActionEnabled,
   isAlertBusy,
-  isDestructiveAlert,
   type AlertAction,
   type AlertProps,
 } from './alert-props';
 
-// A destructive question is a confirmation dialog, which iOS raises from the bottom with its own Cancel.
+// SwiftUI's own centred alert, for confirmations too: a danger answer is its destructive role.
 export function Alert(props: AlertProps): React.JSX.Element {
   return (
     <Host matchContents>
-      {isDestructiveAlert(props.actions) ? (
-        <Confirmation {...props} />
-      ) : (
-        <PlainAlert {...props} />
-      )}
+      <PlainAlert {...props} />
     </Host>
   );
 }
 
-type AlertActionsProps = Pick<AlertProps, 'actions' | 'onOpenChange'> & {
-  explicitCancel?: boolean;
-};
+type AlertActionsProps = Pick<AlertProps, 'actions' | 'onOpenChange'>;
 
 // The props SwiftUI's alert presents itself from.
 interface AlertPresentation {
@@ -75,41 +67,11 @@ function PlainAlertMessage(props: {
   );
 }
 
-function Confirmation(props: AlertProps): React.JSX.Element {
-  return (
-    <ConfirmationDialog {...alertPresentation(props)} titleVisibility="visible">
-      <ConfirmationDialog.Trigger>
-        <AnchorText />
-      </ConfirmationDialog.Trigger>
-      <ConfirmationDialog.Actions>
-        <AlertActions {...props} explicitCancel />
-      </ConfirmationDialog.Actions>
-      <ConfirmationMessage message={props.message} />
-    </ConfirmationDialog>
-  );
-}
-
-function ConfirmationMessage(props: {
-  message: AlertProps['message'];
-}): React.JSX.Element | null {
-  if (!props.message) return null;
-
-  return (
-    <ConfirmationDialog.Message>
-      <Text>{props.message}</Text>
-    </ConfirmationDialog.Message>
-  );
-}
-
 // SwiftUI presents an alert from a view; an empty text is the smallest view that still presents it.
 function AnchorText(): React.JSX.Element {
   return <Text>{''}</Text>;
 }
 
-/*
- * iOS 26 hides a confirmation dialog's cancel-role button when it anchors the dialog to its source,
- * so Paper's explicit Cancel is drawn as a plain button there; tapping outside still dismisses.
- */
 function AlertActions(props: AlertActionsProps): React.JSX.Element {
   return (
     <>
@@ -117,7 +79,7 @@ function AlertActions(props: AlertActionsProps): React.JSX.Element {
         <SwiftButton
           key={action.label}
           label={action.label}
-          role={actionRole(action, props.explicitCancel)}
+          role={actionRole(action)}
           onPress={alertActionPress(action, props.onOpenChange)}
           modifiers={[disabled(!isAlertActionEnabled(action, props.actions))]}
         />
@@ -126,13 +88,8 @@ function AlertActions(props: AlertActionsProps): React.JSX.Element {
   );
 }
 
-function actionRole(
-  action: AlertProps['actions'][number],
-  explicitCancel: boolean | undefined,
-): 'cancel' | 'destructive' | undefined {
-  if (action.cancel) return explicitCancel ? undefined : 'cancel';
-
-  return swiftRole(action.tone);
+function actionRole(action: AlertAction): 'cancel' | 'destructive' | undefined {
+  return action.cancel ? 'cancel' : swiftRole(action.tone);
 }
 
 // SwiftUI names the danger tone's role `destructive`.

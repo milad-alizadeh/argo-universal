@@ -13,7 +13,7 @@ const removalMessage =
 
 const removeAgent = 'Remove Agent';
 
-const remove = 'Remove';
+const removeLabel = 'Remove';
 
 type AlertContent = Omit<AlertProps, 'open' | 'onOpenChange'>;
 
@@ -25,7 +25,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       title: removalTitle,
       message: removalMessage,
       actions: [
-        { label: remove, tone: 'danger' },
+        { label: removeLabel, tone: 'danger' },
         { label: 'Cancel', cancel: true },
       ],
     },
@@ -37,7 +37,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       title: removalTitle,
       message: removalMessage,
       actions: [
-        { label: remove, tone: 'danger', disabled: true },
+        { label: removeLabel, tone: 'danger', disabled: true },
         { label: 'Cancel', cancel: true },
       ],
     },
@@ -113,7 +113,7 @@ function runningAlert(removing: boolean, remove: () => void): AlertContent {
     actions: [
       { label: 'Cancel', cancel: true },
       {
-        label: removing ? 'Removing…' : remove,
+        label: removing ? 'Removing…' : removeLabel,
         tone: 'danger',
         loading: removing,
         onPress: remove,

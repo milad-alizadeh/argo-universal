@@ -10,6 +10,7 @@ import {
 import type * as React from 'react';
 import { useWindowDimensions } from 'react-native';
 import { useSwiftUITextModifiers } from '#primitives/native/native-typography';
+import { badgeCountText } from '../../../badge-count';
 import { useIconPixels } from '../../../symbols/icon-role';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import type { GroupedListItemProps } from './grouped-list-item-props';
@@ -67,6 +68,7 @@ function RowTrailing(props: GroupedListItemProps): React.JSX.Element {
     >
       {props.valueLeading && <NativeRowImage image={props.valueLeading} />}
       {props.value !== undefined && <RowValueText value={props.value} />}
+      <RowBadgeText badge={props.badge} />
       <NativeRowStatus {...props} />
     </HStack>
   );
@@ -77,6 +79,18 @@ function RowValueText({ value }: { value: string }): React.JSX.Element {
   const color = useRowColor('secondary');
 
   return <Text modifiers={[...bodyModifiers, color]}>{value}</Text>;
+}
+
+/*
+ * The count as the system's list badge draws it, grey text in the trailing lane; drawn here rather than
+ * with .badge() so it sits before the row's chevron, as on a stock navigation row.
+ */
+function RowBadgeText(
+  props: Pick<GroupedListItemProps, 'badge'>,
+): React.JSX.Element | null {
+  const text = badgeCountText(props.badge);
+
+  return text === undefined ? null : <RowValueText value={text} />;
 }
 
 function DisclosureIndicator({
