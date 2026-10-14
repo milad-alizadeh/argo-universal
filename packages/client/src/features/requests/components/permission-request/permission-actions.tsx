@@ -2,13 +2,13 @@ import type { PermissionOption } from '@repo/contracts';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { RequestAction } from '../request-card/request-card';
-import type { PermissionChoices } from './permission-choices';
 import {
   SplitButton,
   type SplitButtonChoice,
-  type SplitButtonProps,
-} from './split-button';
+  type SplitMenuProps,
+} from '#primitives/buttons/split-button/split-button';
+import { RequestAction } from '../request-card/request-card';
+import type { PermissionChoices } from './permission-choices';
 
 export interface PermissionActionsProps {
   choices: PermissionChoices;
@@ -80,7 +80,7 @@ function OptionSplitButton(group: LedGroupProps): ReactNode {
   const wide = useContentWide();
 
   return (
-    <SplitButton {...splitChoices(group)}>
+    <SplitButton {...splitChoices(group)} narrow={!wide}>
       <OptionAction
         {...group}
         option={group.lead}
@@ -95,7 +95,7 @@ function splitChoices({
   options,
   lead,
   ...props
-}: LedGroupProps): Omit<SplitButtonProps<string>, 'children'> {
+}: LedGroupProps): SplitMenuProps<string> {
   return {
     choices: options.map(asChoice),
     value: lead.optionId,

@@ -1,39 +1,35 @@
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { IconSlot } from '#primitives/display/icon/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { Text } from '#primitives/display/text/text';
 import { BottomSheet } from '#primitives/overlays/bottom-sheet/bottom-sheet';
 import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
-import type { ChoiceProps, SplitButtonChoice } from './split-button';
-import { chevron, chevronSizes } from './split-button-chevron';
+import { chevron } from './split-button-chevron';
+import type { SplitMenuProps } from './split-button-props';
 
-type SheetProps<Value extends string> = ChoiceProps<Value> & {
+type SheetProps<Value extends string> = SplitMenuProps<Value> & {
   height?: number;
 };
 
-interface SheetChoicesProps<Value extends string> {
-  choices: readonly SplitButtonChoice<Value>[];
-  value: Value;
-  onChoose: (value: Value) => void;
+// One row of the Sheet: a choice, checked when chosen, or an action.
+interface SheetRow {
+  label: string;
+  selected?: boolean;
+  onSelect: () => void;
 }
 
-interface ChoiceSheetState<Value extends string> {
+interface ChoiceSheetState {
   open: boolean;
   setOpen: (open: boolean) => void;
-  choose: (value: Value) => void;
+  // Closes the Sheet, then runs what the row does.
+  run: (select: () => void) => void;
 }
 
 interface ChoiceLabelProps {
   label: string;
   selected: boolean;
 }
-
-type SheetChoiceProps<Value extends string> = Omit<
-  SheetChoicesProps<Value>,
-  'choices'
-> & { choice: SplitButtonChoice<Value> };
 
 const sheetChoiceProps = {
   role: 'button',
@@ -54,9 +50,9 @@ export function ChoiceSheet<Value extends string>(
       open={sheet.open}
       onOpenChange={sheet.setOpen}
       label={props.menuLabel}
-      trigger={chevron(props, cn(chevronSizes.phone, props.className))}
+      trigger={chevron({ ...props, narrow: true })}
     >
-      <SheetChoices {...props} onChoose={sheet.choose} />
+      <SheetChoices rows={sheetRows(props)} onRun={sheet.run} />
     </BottomSheet>
   );
 }
@@ -64,45 +60,60 @@ export function ChoiceSheet<Value extends string>(
 // The Sheet closes after a choice, and when its button turns disabled.
 function useChoiceSheet<Value extends string>({
   disabled,
-  onValueChange,
-}: SheetProps<Value>): ChoiceSheetState<Value> {
+}: SheetProps<Value>): ChoiceSheetState {
   const [open, setOpen] = useState(false);
 
   if (disabled && open) setOpen(false);
 
-  const choose = (value: Value): void => {
+  const run = (select: () => void): void => {
     setOpen(false);
-    onValueChange(value);
+    select();
   };
 
-  return { open, setOpen, choose };
+  return { open, setOpen, run };
 }
 
-function SheetChoices<Value extends string>(
-  props: SheetChoicesProps<Value>,
-): ReactNode {
+function sheetRows<Value extends string>(
+  props: SplitMenuProps<Value>,
+): SheetRow[] {
+  if (props.actions) return [...props.actions];
+
+  return props.choices.map((choice) => ({
+    label: choice.label,
+    selected: choice.value === props.value,
+    onSelect: () => props.onValueChange(choice.value),
+  }));
+}
+
+function SheetChoices(props: {
+  rows: SheetRow[];
+  onRun: SheetChoiceProps['onRun'];
+}): ReactNode {
   return (
     <View className="gap-0.5 p-1">
-      {props.choices.map((choice) => (
-        <SheetChoice key={choice.value} {...props} choice={choice} />
+      {props.rows.map((row) => (
+        <SheetChoice key={row.label} row={row} onRun={props.onRun} />
       ))}
     </View>
   );
 }
 
-function SheetChoice<Value extends string>(
-  props: SheetChoiceProps<Value>,
-): ReactNode {
-  const selected = props.choice.value === props.value;
+interface SheetChoiceProps {
+  row: SheetRow;
+  onRun: ChoiceSheetState['run'];
+}
+
+function SheetChoice({ row, onRun }: SheetChoiceProps): ReactNode {
+  const selected = row.selected === true;
 
   return (
     <Pressable
       {...sheetChoiceProps}
       accessibilityState={{ selected }}
       aria-pressed={selected}
-      onPress={() => props.onChoose(props.choice.value)}
+      onPress={() => onRun(row.onSelect)}
     >
-      <ChoiceLabel label={props.choice.label} selected={selected} />
+      <ChoiceLabel label={row.label} selected={selected} />
     </Pressable>
   );
 }
