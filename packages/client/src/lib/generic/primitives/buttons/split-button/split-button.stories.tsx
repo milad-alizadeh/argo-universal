@@ -69,7 +69,7 @@ function ChoicesExample(): React.JSX.Element {
 
 function NarrowExample(): React.JSX.Element {
   return (
-    <Variation label="Choices, narrow (Sheet)">
+    <Variation label="Choices, narrow">
       <View className="flex-row">
         <ScopeSplit narrow />
       </View>

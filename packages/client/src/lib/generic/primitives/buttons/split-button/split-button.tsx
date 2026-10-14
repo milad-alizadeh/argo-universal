@@ -15,7 +15,6 @@ import type {
   SplitMenuItems,
   SplitMenuProps,
 } from './split-button-props';
-import { ChoiceSheet } from './split-button-sheet';
 
 export type {
   SplitButtonOption,
@@ -30,7 +29,7 @@ type GroupLook = Pick<
 
 type ActingButton = SplitButtonProps['children'];
 
-// A button with a chevron that picks what it does or opens actions of its own; wide opens a menu, narrow a Sheet.
+// A button with a chevron that picks what it does or opens actions of its own, from Argo's menu; phones draw it natively.
 export function SplitButton<Value extends string>({
   children,
   ...props
@@ -93,14 +92,12 @@ function SplitMenu<Value extends string>({
   height,
   ...props
 }: SplitMenuProps<Value> & { height?: number }): ReactNode {
-  return props.narrow ? (
-    <ChoiceSheet {...props} height={height} />
-  ) : (
+  return (
     <Menu
       {...menuItems(props)}
       disabled={props.disabled}
       accessibilityLabel={props.menuLabel}
-      trigger={chevron(props)}
+      trigger={chevron({ ...props, height: props.narrow ? height : undefined })}
     />
   );
 }

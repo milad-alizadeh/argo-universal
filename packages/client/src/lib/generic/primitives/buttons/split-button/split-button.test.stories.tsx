@@ -69,93 +69,31 @@ export const PrimaryActionActsAlone: Story = {
   },
 };
 
-// Wide, the chevron opens a menu of the choices, never a sheet.
-export const WideOpensMenu: Story = {
-  play: async ({ canvas, canvasElement, userEvent, args }) => {
-    await settleViewport(layoutWidths.wide);
-    const page = within(canvasElement.ownerDocument.body);
-    await userEvent.click(canvas.getByRole('button', { name: menuLabel }));
+// On the web, wide or narrow, the chevron opens Argo's menu of the choices, never a sheet.
+function opensMenu(narrow: boolean, width: number): Story {
+  return {
+    args: { narrow },
+    play: async ({ canvas, canvasElement, userEvent, args }) => {
+      await settleViewport(width);
+      const page = within(canvasElement.ownerDocument.body);
+      await userEvent.click(canvas.getByRole('button', { name: menuLabel }));
 
-    await expect(
-      await page.findByRole('menuitemradio', { name: allowOnce }),
-    ).toHaveAttribute('aria-checked', 'true');
-    await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
-    await userEvent.click(
-      page.getByRole('menuitemradio', { name: alwaysAllow }),
-    );
-    await expect(args.onValueChange).toHaveBeenCalledWith('always');
-    await waitFor(() =>
-      expect(page.queryByRole('menu')).not.toBeInTheDocument(),
-    );
-    await expect(args.onAllow).not.toHaveBeenCalled();
-  },
-};
-
-// Narrow, the chevron opens a sheet named for the menu, its rows the choices; choosing closes it.
-export const NarrowOpensSheet: Story = {
-  args: { narrow: true },
-  play: async ({ canvas, canvasElement, userEvent, args }) => {
-    await settleViewport(layoutWidths.phone);
-    const page = within(canvasElement.ownerDocument.body);
-    await userEvent.click(canvas.getByRole('button', { name: menuLabel }));
-
-    const sheet = within(await page.findByRole('dialog', { name: menuLabel }));
-    await expect(page.queryByRole('menu')).not.toBeInTheDocument();
-    await expect(
-      sheet.getByRole('button', { name: allowOnce }),
-    ).toHaveAttribute('aria-pressed', 'true');
-    await expect(
-      sheet.getByRole('button', { name: alwaysAllow }),
-    ).toHaveAttribute('aria-pressed', 'false');
-    await userEvent.click(sheet.getByRole('button', { name: alwaysAllow }));
-    await expect(args.onValueChange).toHaveBeenCalledWith('always');
-    await waitFor(() =>
-      expect(page.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
-    await expect(args.onAllow).not.toHaveBeenCalled();
-  },
-};
-
-const squash = fn();
-
-// A split whose chevron opens actions of its own.
-function MergeSplit(props: { narrow: boolean }): React.JSX.Element {
-  return (
-    <SplitButton
-      primary
-      narrow={props.narrow}
-      menuLabel="Merge options"
-      actions={[
-        { label: 'Squash and merge', onPress: squash },
-        { label: 'Rebase and merge', onPress: fn() },
-      ]}
-    >
-      <Button custom label="Merge PR" />
-    </SplitButton>
-  );
+      await expect(
+        await page.findByRole('menuitemradio', { name: allowOnce }),
+      ).toHaveAttribute('aria-checked', 'true');
+      await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
+      await userEvent.click(
+        page.getByRole('menuitemradio', { name: alwaysAllow }),
+      );
+      await expect(args.onValueChange).toHaveBeenCalledWith('always');
+      await waitFor(() =>
+        expect(page.queryByRole('menu')).not.toBeInTheDocument(),
+      );
+      await expect(args.onAllow).not.toHaveBeenCalled();
+    },
+  };
 }
 
-// Narrow actions sit in the same sheet; pressing one runs it and closes the sheet.
-export const NarrowActionsInSheet: StoryObj<typeof MergeSplit> = {
-  render: () => <MergeSplit narrow />,
-  play: async ({ canvas, canvasElement, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
-    squash.mockClear();
-    const page = within(canvasElement.ownerDocument.body);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Merge options' }),
-    );
+export const WideOpensMenu = opensMenu(false, layoutWidths.wide);
 
-    const sheet = within(
-      await page.findByRole('dialog', { name: 'Merge options' }),
-    );
-
-    await userEvent.click(
-      sheet.getByRole('button', { name: 'Squash and merge' }),
-    );
-    await expect(squash).toHaveBeenCalledTimes(1);
-    await waitFor(() =>
-      expect(page.queryByRole('dialog')).not.toBeInTheDocument(),
-    );
-  },
-};
+export const NarrowOpensMenu = opensMenu(true, layoutWidths.phone);
