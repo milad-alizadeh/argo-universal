@@ -81,7 +81,6 @@ it.each([
     await expect
       .poll(() => listedAgent(host.caller, host.agentId), { timeout: 10_000 })
       .toMatchObject({
-        owner: 'unknown',
         availableVersion: catalogVersion,
         ...listed,
       });

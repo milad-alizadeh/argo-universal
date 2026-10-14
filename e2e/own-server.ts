@@ -89,7 +89,6 @@ export async function startOwnServer(
           ARGO_E2E_AGENTS: JSON.stringify(agents),
           ARGO_E2E_REGISTRY_PATH: registryPath,
           ARGO_E2E_INSTALLATION_PATH: installationPath,
-          ARGO_E2E_TOOLS_PATH: toolsPath,
           ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
           ARGO_E2E_HELD_CHECK_RELEASE: heldCheckRelease,
           PATH: [machinePath, toolsPath, '/usr/bin', '/bin'].join(

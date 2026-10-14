@@ -13,7 +13,6 @@ import {
   AgentEnablement,
   AgentManagementFailure,
 } from '../agent-management/agent-management';
-import { useToolToast } from '../agent-missing-tool/tool-toast';
 import {
   AgentStatusChip,
   hasStatusChip,
@@ -30,7 +29,6 @@ export function AgentDetailView(
   props: AgentDetailViewProps,
 ): React.JSX.Element {
   useInstallToast(props.agent.name, props.installation);
-  useToolToast(props.agent.name, props.tool);
 
   return (
     <View className="flex-1 bg-sidebar wide:bg-transparent">

@@ -9,7 +9,7 @@ import type {
 import { useAgentInstallation } from './use-agent-installation';
 import { useAgentManagement } from './use-agent-management';
 import { useAgents, useRecheck } from './use-agents';
-import { useMachineTools, useToolInstallation } from './use-tool-installation';
+import { type MachineToolsLookup, useMachineTools } from './use-machine-tools';
 
 type AgentPageProps = {
   agent: string;
@@ -19,14 +19,16 @@ type AgentPageProps = {
 
 type AgentPageView = AgentDetailViewProps | undefined;
 
-function useAgentDetail(agent: string): AgentDetail | undefined {
-  const tools = useMachineTools();
+function useAgentDetail(
+  agent: string,
+  tools: MachineToolsLookup,
+): AgentDetail | undefined {
   const agents = useAgents();
   const catalog = useQuery(useTRPC().agents.catalog.queryOptions());
   const info = agents.data?.find((entry) => entry.agent === agent);
   const registry = catalog.data?.agents.find(({ id }) => id === agent);
 
-  return agentDetail(info, registry, tools);
+  return agentDetail(info, registry, tools.tools);
 }
 
 // Repair installs the release again through the same confirmation as Install.
@@ -39,9 +41,10 @@ const repairOf = (
     : undefined;
 
 export function useAgentPageView(props: AgentPageProps): AgentPageView {
-  const detail = useAgentDetail(props.agent);
+  const tools = useMachineTools();
+  const detail = useAgentDetail(props.agent, tools);
   const recheck = useRecheck(props.agent);
-  const { installation, tool } = useDetailInstallations(props.agent, detail);
+  const installation = useDetailInstallation(props.agent, detail);
   const management = useAgentManagement(props.agent, props.onBack);
 
   if (!detail) return undefined;
@@ -50,33 +53,36 @@ export function useAgentPageView(props: AgentPageProps): AgentPageView {
     ...props,
     agent: installedDetail(detail, installation),
     installation,
-    tool,
-    ...repairActions(detail, installation, recheck),
+    ...repairActions(detail, installation, rechecker(detail, recheck, tools)),
     ...managementCallbacks(management),
   };
 }
 
+type Recheck = { pending: boolean; run: () => void };
+
+const missingToolStatuses: ReadonlySet<AgentDetail['status']> = new Set([
+  'needs-node',
+  'needs-uv',
+]);
+
+// Needs Node.js and Needs uv recheck by looking for the tool again; every other status checks the Agent's Readiness.
+const rechecker = (
+  detail: AgentDetail,
+  recheck: Recheck,
+  tools: MachineToolsLookup,
+): Recheck =>
+  missingToolStatuses.has(detail.status)
+    ? { pending: tools.rechecking, run: tools.onRecheck }
+    : recheck;
+
 const repairActions = (
   detail: AgentDetail,
   installation: ReturnType<typeof useAgentInstallation>,
-  recheck: ReturnType<typeof useRecheck>,
+  recheck: Recheck,
 ): Pick<AgentDetailViewProps, 'onRecheck' | 'onRepair'> => ({
   onRecheck: recheck.pending ? undefined : recheck.run,
   onRepair: repairOf(detail, installation),
 });
-
-// Install, or the tool Install needs first.
-function useDetailInstallations(
-  agent: string,
-  detail?: AgentDetail,
-): Pick<AgentDetailViewProps, 'installation' | 'tool'> & {
-  installation: ReturnType<typeof useAgentInstallation>;
-} {
-  const installation = useDetailInstallation(agent, detail);
-  const tool = useToolInstallation(detail?.status, installation.server);
-
-  return { installation, tool };
-}
 
 function useDetailInstallation(
   agent: string,

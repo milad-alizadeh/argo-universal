@@ -60,6 +60,17 @@ const copies: Partial<Record<AgentStatus, CopyWriter>> = {
     action: 'recheck',
     footer: `The check did not finish. ${name} may still work.`,
   }),
+  // Argo never installs the tool; the user installs it, then Recheck looks again.
+  'needs-node': ({ reason }) => ({
+    headline: 'Node.js not found',
+    action: 'recheck',
+    footer: reason,
+  }),
+  'needs-uv': ({ reason }) => ({
+    headline: 'uv not found',
+    action: 'recheck',
+    footer: reason,
+  }),
   'not-found': ({ reason }) => ({
     headline: 'Program missing',
     action: 'repair',

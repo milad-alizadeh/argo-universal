@@ -2,6 +2,7 @@ import { InstallationOwner } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 
 // What the Resolver last saved for an Agent; `observed` is false until it has looked once.
 export type InstallationObservation =
@@ -11,6 +12,8 @@ export type InstallationObservation =
       observed: true;
       found: true;
       owner: InstallationOwner;
+      // The launch file it found.
+      executable: string;
       version?: string;
     };
 
@@ -27,8 +30,20 @@ const parseRow = (row: Row): InstallationObservation => {
 
   if (row.launch === null) return { observed: true, found: false };
   const owner = InstallationOwner.catch('unknown').parse(row.owner);
+  const executable = launchExecutable(row.launch);
 
-  return { observed: true, found: true, owner, ...versionOf(row) };
+  return { observed: true, found: true, owner, executable, ...versionOf(row) };
+};
+
+const SavedLaunch = z.object({ executable: z.string() });
+
+// A saved launch that cannot be read names no file.
+const launchExecutable = (text: string): string => {
+  try {
+    return SavedLaunch.parse(JSON.parse(text)).executable;
+  } catch {
+    return '';
+  }
 };
 
 const versionOf = ({ version }: Row): { version?: string } =>

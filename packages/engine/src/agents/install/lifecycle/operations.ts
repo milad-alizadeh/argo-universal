@@ -18,7 +18,6 @@ import type { InstallBindings, OwnedInstall } from './operation-types';
 import { createInstallationReadiness } from './readiness';
 import { removeAgentInstallation } from './removal';
 import { settleAgentInstallation } from './settlement';
-import { ToolInstallations } from './tool-installation';
 
 const inUse = 'Agent is in use. Close its Sessions and finish setup first.';
 
@@ -28,13 +27,10 @@ export class AgentInstallations {
   private readonly completed = new Map<string, AgentInstallOperation>();
   private stopped = false;
   private readonly configuration = new ConfigurationReservations();
-  public readonly tools: ToolInstallations;
   public constructor(
     private readonly home: string,
     private readonly ports: InstallPorts = defaultInstallPorts,
-  ) {
-    this.tools = new ToolInstallations(home, ports);
-  }
+  ) {}
   public bind(bindings: InstallBindings): void {
     this.bindings = bindings;
   }

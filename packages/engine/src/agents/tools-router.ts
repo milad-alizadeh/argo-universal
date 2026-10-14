@@ -1,25 +1,8 @@
-import { MachineTools, ToolInstallInput } from '@repo/contracts';
-import { publicProcedure, router, routerFactory } from '../rpc';
-import type { AgentInstallations } from './install/lifecycle/operations';
+import { MachineTools } from '@repo/contracts';
+import { publicProcedure, router } from '../rpc';
 import { lookForTools } from './resolver/machine-tools';
 
-type ToolsDeps = {
-  installations: AgentInstallations;
-  sessionCommandSignal?: AbortSignal;
-};
-
-// Which install tools are on this machine, and Homebrew installing a missing one.
-export const createToolsRouter = routerFactory((deps: ToolsDeps) =>
-  router({
-    tools: publicProcedure.output(MachineTools).query(() => lookForTools()),
-    installTool: publicProcedure
-      .input(ToolInstallInput)
-      .output(MachineTools)
-      .mutation(async ({ input }) => {
-        deps.sessionCommandSignal?.throwIfAborted();
-        await deps.installations.tools.install(input.tool);
-
-        return lookForTools();
-      }),
-  }),
-);
+// Which install tools are on this machine; Argo never installs them.
+export const toolsRouter = router({
+  tools: publicProcedure.output(MachineTools).query(() => lookForTools()),
+});

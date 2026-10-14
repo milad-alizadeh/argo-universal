@@ -68,7 +68,9 @@ const isNewOutsideCopy = (
   candidate: Candidate,
   found: Installation | undefined,
 ): boolean =>
-  found?.owner === 'unknown' && candidate.saved.installationLaunch === null;
+  !!found &&
+  found.owner !== 'argo' &&
+  candidate.saved.installationLaunch === null;
 
 // Registering, installing or editing an Agent checks it already; only a copy found outside Argo needs a first check here.
 const needsFirstCheck = (

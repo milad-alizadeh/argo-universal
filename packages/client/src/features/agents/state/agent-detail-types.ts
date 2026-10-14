@@ -1,7 +1,7 @@
+import type { InstallationOwner } from '@repo/contracts';
 import type { AgentInstallPresentation } from './agent-install-types';
 import type { AgentManagement } from './agent-management-types';
 import type { AgentRowEntry } from './agent-status';
-import type { ToolInstallPresentation } from './missing-tool';
 
 interface AgentLink {
   label: string;
@@ -17,8 +17,18 @@ export type AgentDetail = AgentRowEntry & {
   availableVersion?: string;
   // How the Server installs it, such as "npm · needs Node.js", or why this Server cannot.
   distribution?: string;
-  // Where the Resolver found an installed Agent: in Argo's folder or elsewhere on this Mac.
-  source?: 'Found on this Mac' | 'Installed by Argo';
+  // Where the Resolver found an installed Agent: in Argo's folder, from Homebrew or npm, or elsewhere on this Mac.
+  source?:
+    | 'Installed by Argo'
+    | 'Installed with Homebrew'
+    | 'Installed with npm'
+    | 'Found on this Mac';
+  // Who owns the found copy; Argo updates and removes only its own.
+  owner?: InstallationOwner;
+  // Where a copy Argo did not install is.
+  path?: string;
+  // The command its owner updates an outdated copy with, which the user runs.
+  updateCommand?: string;
   links?: readonly AgentLink[];
 };
 
@@ -28,12 +38,10 @@ export interface AgentDetailViewProps {
   // Each action shows disabled until the Server can do it.
   onInstall?: () => void;
   installation?: AgentInstallPresentation;
-  // Installing the tool a Needs Node.js or Needs uv Agent is missing.
-  tool?: ToolInstallPresentation;
   onUpdate?: () => void;
   onRemove?: () => void;
   management?: AgentManagement;
-  // Checks the Agent's Readiness again, such as after signing in with the CLI.
+  // Checks the Agent's Readiness again, such as after signing in with the CLI, or looks for a missing tool again.
   onRecheck?: () => void;
   onSignIn?: () => void;
   // Installs the same release again when its files are missing.
