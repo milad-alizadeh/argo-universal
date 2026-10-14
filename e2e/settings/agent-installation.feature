@@ -6,6 +6,7 @@ Feature: Registry Agent installation
     Then the Install button shows the installation in progress
     When the external Agent installer completes
     Then Example Agent installation completes with readiness checked separately
+    And Example Agent is Ready on its page and in the Agents list
 
     Examples:
       | layout |

@@ -1,14 +1,16 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
+import { awaitEmptySessionClosed, openedEmptySession } from './empty-session';
 import { Given, When, Then, test } from './fixtures';
 import { mutate } from './server-query';
 import { agentWork } from './timeouts';
 
 Given(
   'a saved protocol sign-in Agent {string}',
-  async ({ page, server }, name: string): Promise<void> => {
+  async ({ page, server, app }, name: string): Promise<void> => {
+    const opened = await openedEmptySession(page);
     await mutate({
       page,
       httpUrl: server.httpUrl,
@@ -18,6 +20,8 @@ Given(
     await browseAgents(page);
     await page.getByRole('link', { name: new RegExp(`^${name},`) }).click();
     await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();
+    // Sign-in is refused while a live Session shares the account.
+    if (opened) await awaitEmptySessionClosed(app.requestLogPath);
   },
 );
 When(
@@ -77,25 +81,11 @@ export async function openProtocolSignIn(page: Page): Promise<void> {
   await expect(
     page.getByRole('group', { name: 'Answered ACP initialize', exact: true }),
   ).toBeVisible();
-  // A New Session closed on the way here keeps the shared account until its program exits, so sign-in may ask again.
-  await expect(() => trySignIn(page)).toPass(agentWork);
-}
-
-async function trySignIn(page: Page): Promise<void> {
-  await dismissInUse(page);
   await page.getByRole('link', { name: 'Sign in', exact: true }).click();
-  const settled = page
-    .getByRole('dialog')
-    .filter({ hasNotText: /Starting sign-in/ });
-  await expect(settled).toBeVisible({ timeout: 5000 });
-  await expect(inUseDialog(page)).toHaveCount(0);
-}
-
-const inUseDialog = (page: Page): Locator =>
-  page.getByRole('dialog', { name: 'Agent is in use' });
-
-async function dismissInUse(page: Page): Promise<void> {
-  const inUse = inUseDialog(page);
-  if (await inUse.isVisible())
-    await inUse.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(
+    page.getByRole('dialog').filter({ hasNotText: /Starting sign-in/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('dialog', { name: 'Agent is in use' }),
+  ).toHaveCount(0);
 }

@@ -12,6 +12,7 @@ import {
   loginMethodId,
   loginRequestId,
 } from '#mocks/agent-login';
+import { awaitSettledReadiness } from '#mocks/engine';
 
 it('keeps exact browser ownership after the initiating App disconnects, then opens a normal authenticated Session', async () => {
   const host = await startAcpEngine(loginScenario([loginBrowserStep]));
@@ -98,6 +99,7 @@ it('keeps exact browser ownership after the initiating App disconnects, then ope
     .poll(async () => (await host.caller.agents.login(operation)).status)
     .toBe('ready');
   expect(host.agent.processes[0]?.terminations).toBe(1);
+  await awaitSettledReadiness(host.caller, host.agent);
   await verifySessionAdmission(host, operation);
 });
 
@@ -121,6 +123,6 @@ const verifySessionAdmission = async (
         ).status,
     )
     .toBe('in-use');
-  expect(host.agent.processes[1]?.terminations).toBe(0);
+  expect(host.agent.processes.at(-1)?.terminations).toBe(0);
   await host.caller.session.close({ sessionId });
 };

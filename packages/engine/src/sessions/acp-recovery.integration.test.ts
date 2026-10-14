@@ -263,12 +263,14 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         },
       });
       let launches = 0;
-      const peers = [initial, replacement, ready];
+      // Server start's Readiness check launches first.
+      const startupCheck = createScriptedAgentProcess({ steps: [] });
+      const peers = [startupCheck, initial, replacement, ready];
       const host = await startAcpEngine(
         {
           steps: [],
           launchProcess: (launch) => {
-            const peer = peers[Math.min(launches++, 2)];
+            const peer = peers[Math.min(launches++, peers.length - 1)];
             if (!peer) throw new Error('No scripted recovery Agent');
             return peer.launchProcess(launch);
           },

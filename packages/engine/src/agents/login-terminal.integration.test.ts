@@ -7,6 +7,7 @@ import {
   loginOwner,
   otherLoginOwner,
 } from '#mocks/agent-login';
+import { awaitSettledReadiness } from '#mocks/engine';
 import { createLoginTerminalMock } from '#mocks/login-terminal';
 const terminalScenario = (): ReturnType<typeof loginScenario> => ({
   ...loginScenario(),
@@ -116,5 +117,6 @@ it('fails nonzero terminal exit without treating it as account readiness', async
   await expect
     .poll(async () => (await host.caller.agents.login(identity)).status)
     .toBe('failed');
-  expect(host.agent.processes).toHaveLength(1);
+  await awaitSettledReadiness(host.caller, host.agent);
+  expect((await host.caller.agents.login(identity)).status).toBe('failed');
 });

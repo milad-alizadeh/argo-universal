@@ -24,7 +24,6 @@ it('a newly installed Agent is listed Checking… until its readiness check answ
     installEntry('npx'),
     installationPorts,
     {
-      automaticReadiness: true,
       fixtureAgents: [],
       acp: {
         launchProcess: async (launch) => {

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 import { openDatabase } from '@repo/db';
 import type { Database } from '@repo/db';
 import type { AgentIdentity } from '@repo/mocks/agent';
@@ -15,16 +16,24 @@ import { openSessionsId, openSessionsMachine } from '../src/sessions';
 import { databaseWriterId, writerMachine } from '../src/storage';
 import { seedAgentFixtures } from './agent-fixtures';
 import { openTestDatabase } from './database';
+import { type ScriptedProcess } from './scripted-agent';
 import { scriptedEngineInput } from './scripted-engine';
+
+const readinessSettleMs = 15_000;
+const settlePollMs = 10;
 
 // A module's test drives the Engine through here: modules never import engine/.
 export { engineMachine } from '../src/engine/machine';
 export type { EngineMessage } from '../src/engine/ipc';
 
+type ScriptedLaunches = { processes?: ScriptedProcess[] } | undefined;
 type EngineTestOptions = Partial<EngineInput> & {
   fixtureAgents?: readonly AgentIdentity[];
   database?: Database;
   runtimeDirectory?: string;
+  // A test about Server start reads the launches its Readiness checks made.
+  keepStartupLaunches?: boolean;
+  acp?: EngineInput['acp'] & ScriptedLaunches;
 };
 
 type EngineConnections = {
@@ -42,10 +51,10 @@ type EngineTestHost = EngineConnections & {
   stop: () => Promise<void>;
 };
 
-// A supplied database seeds the same file; Engine owns and closes its own connection.
-export async function startEngineTestHost(
-  options: EngineTestOptions = {},
-): Promise<EngineTestHost> {
+function resolveTestStorage(options: EngineTestOptions): {
+  storage: ReturnType<typeof openTestDatabase> | undefined;
+  home: string;
+} {
   const storage =
     options.database || options.home || options.runtimeDirectory
       ? undefined
@@ -56,6 +65,14 @@ export async function startEngineTestHost(
       ? dirname(options.database.$client.location() ?? '')
       : (options.runtimeDirectory ?? storage?.directory));
   if (!home) throw new Error('Engine test storage is missing');
+  return { storage, home };
+}
+
+// A supplied database seeds the same file; Engine owns and closes its own connection.
+export async function startEngineTestHost(
+  options: EngineTestOptions = {},
+): Promise<EngineTestHost> {
+  const { storage, home } = resolveTestStorage(options);
   const port = options.port ?? (await findFreePort());
   seedTestCommands(options, home, storage);
   const engine = composeEngine({
@@ -65,16 +82,16 @@ export async function startEngineTestHost(
     createId: randomUUID,
     ...scriptedEngineInput(),
     fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
-    // Tests that count Agent processes stay exact; readiness journeys turn checks on.
-    automaticReadiness: false,
     ...options,
     home,
     port,
   }).start();
   const stop = registerEngineCleanup(engine, storage);
   await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
+  const connections = readEngineTestHost(engine);
+  await settleStartupReadiness(connections.caller, options);
   return {
-    ...readEngineTestHost(engine),
+    ...connections,
     home,
     blobsFolder: join(home, 'blobs'),
     url: `http://127.0.0.1:${port}`,
@@ -105,6 +122,42 @@ function readEngineTestHost(engine: EngineActor): EngineConnections {
     caller: server.createCaller(),
   };
 }
+
+// A scripted program that only exits when told still exits once its startup check stops it.
+const exitStoppedChecks = (launched: ScriptedLaunches): void => {
+  for (const process of launched?.processes ?? [])
+    if (process.terminations) process.exited.resolve();
+};
+
+// Waits through the public list until no Agent is Checking…, as an App would see it.
+export async function awaitSettledReadiness(
+  caller: EngineConnections['caller'],
+  launched?: ScriptedLaunches,
+): Promise<void> {
+  const deadline = performance.now() + readinessSettleMs;
+  while (await isChecking(caller)) {
+    if (performance.now() > deadline)
+      throw new Error('Agent Readiness did not settle');
+    exitStoppedChecks(launched);
+    // Real time: a test's fake clock must not move while the Engine checks.
+    await delay(settlePollMs);
+  }
+}
+
+// Server start checks every Agent; a test begins once that settles, with only its own launches recorded.
+async function settleStartupReadiness(
+  caller: EngineConnections['caller'],
+  options: EngineTestOptions,
+): Promise<void> {
+  const launched = options.acp;
+  await awaitSettledReadiness(caller, launched);
+  if (!options.keepStartupLaunches) launched?.processes?.splice(0);
+}
+
+const isChecking = async (
+  caller: EngineConnections['caller'],
+): Promise<boolean> =>
+  (await caller.agents.list()).some(({ status }) => status === 'checking');
 
 function registerEngineCleanup(
   engine: EngineActor,

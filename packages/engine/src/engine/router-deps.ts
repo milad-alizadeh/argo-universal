@@ -67,7 +67,6 @@ export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
   Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>> & {
     acp?: AcpResourceInput;
-    automaticReadiness?: boolean;
   };
 
 export function createAppRouterDeps(

@@ -5,7 +5,7 @@ import type {
 import { session } from '@repo/db/schema';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
-import { startAcpEngine } from '#mocks/acp-engine';
+import { startAcpEngine, startupCheckAnswer } from '#mocks/acp-engine';
 
 const identities = fixtureAgents.map(({ agent }) => agent);
 const prompt = [{ type: 'text', text: 'Continue' }] as const;
@@ -19,6 +19,7 @@ it.each(identities)(
         steps: [],
         responses: {
           initialize: [
+            startupCheckAnswer,
             { requests: initialization, error: 'Agent startup failed' },
           ],
         },
@@ -50,7 +51,10 @@ it.each(identities)(
       {
         steps: [{ type: 'wait-for-cancel' }],
         responses: {
-          initialize: [{ received: began, waitFor: startup.promise }],
+          initialize: [
+            startupCheckAnswer,
+            { received: began, waitFor: startup.promise },
+          ],
           'session/prompt': [{ requests }],
         },
       },
@@ -100,7 +104,10 @@ it.each(identities)(
       {
         steps: [],
         responses: {
-          initialize: [{ received: began, waitFor: startup.promise }],
+          initialize: [
+            startupCheckAnswer,
+            { received: began, waitFor: startup.promise },
+          ],
           'session/prompt': [{ requests }],
         },
       },

@@ -7,8 +7,10 @@ import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { newSession } from '#mocks/session-journey';
 import {
+  authRequiredCode,
   type FailedJourney,
   failingAgent,
+  internalErrorCode,
   signInFailure,
   startFailedSessionJourney,
 } from '#mocks/session-start-failure';
@@ -48,35 +50,50 @@ const blockWorktrees = ({ git }: FailedJourney): void => {
   writeFileSync(join(git('rev-parse', '--absolute-git-dir'), 'worktrees'), '');
 };
 
+const noPreparation = (): void => {};
+
 it.each([
   {
     failure: 'the Agent refuses the Session',
+    code: internalErrorCode,
     checkout: { type: 'main' },
-    prepare: (): void => {},
+    prepare: noPreparation,
     saved: {
       status: 'cant-start',
       reason: expect.stringContaining(signInFailure),
     },
   },
   {
+    failure: 'the Agent answers auth_required',
+    code: authRequiredCode,
+    checkout: { type: 'main' },
+    prepare: noPreparation,
+    saved: { status: 'sign-in-needed' },
+  },
+  {
     failure: 'its Checkout cannot be created',
+    code: internalErrorCode,
     checkout: { type: 'worktree', baseBranch: 'main' },
     prepare: blockWorktrees,
     saved: { status: 'ready' },
   },
 ] as const)(
-  'saves what a Ready Agent observed only when $failure, so only an Agent failure leaves the picker',
-  async ({ checkout, prepare, saved }): Promise<void> => {
-    const journey = await startFailedSessionJourney();
+  'saves what a Ready Agent observed when $failure, so only an Agent failure leaves the picker',
+  async ({ code, checkout, prepare, saved }): Promise<void> => {
+    const journey = await startFailedSessionJourney(code);
     const { caller } = journey;
     await caller.agents.recheck({ agentId: failingAgent });
     prepare(journey);
     await expect(
       caller.session.new({ ...newSession, agent: failingAgent, checkout }),
     ).rejects.toMatchObject({ name: 'TRPCError' });
-    expect(
-      (await caller.agents.list()).find(({ agent }) => agent === failingAgent),
-    ).toMatchObject(saved);
+    await expect
+      .poll(async () =>
+        (await caller.agents.list()).find(
+          ({ agent }) => agent === failingAgent,
+        ),
+      )
+      .toMatchObject(saved);
   },
 );
 

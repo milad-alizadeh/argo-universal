@@ -45,7 +45,9 @@ export const loginScenario = (
     authMethods: [{ id: loginMethodId, name: 'Subscription sign-in' }],
   },
   responses: {
+    // Server start's Readiness check, then the sign-in, then every later check.
     initialize: [
+      { steps: [loginStatusStep(signedOutStatus)] },
       { steps: [loginStatusStep(signedOutStatus)] },
       { steps: [loginStatusStep(accountStatus)] },
     ],

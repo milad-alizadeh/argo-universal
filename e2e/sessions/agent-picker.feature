@@ -41,11 +41,12 @@ Feature: New Session Agent picker
       | sign-in needed |
       | can't start    |
 
-  Scenario: A Ready Agent can be picked while another Agent's check never answers
+  Scenario: An Agent still being checked shows Checking… with no action while a Ready Agent can be picked
     Given a phone Frame
     And Agent 2's readiness check never answers
     When I open a New Session
-    Then I can pick Agent 1
+    Then the Agent picker shows Agent 2 Checking… with no action
+    And I can pick Agent 1
 
   Scenario Outline: A stale Ready Agent that refuses a Session says why and leaves the picker in a <layout> Frame
     Given a <layout> Frame

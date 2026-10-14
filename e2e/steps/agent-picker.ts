@@ -96,23 +96,48 @@ Then(
   },
 );
 
-// The fixture holds the Agent's readiness check; the picker's spinner for it is proven by the PendingAgent view stories.
+// Read as saved now: waiting for every check to finish would wait out the held one.
+async function savedLabel(
+  page: Page,
+  httpUrl: string,
+  ordinal: number,
+): Promise<string> {
+  const id = agentId(ordinal);
+  const listed = await listAgents(page, httpUrl);
+  return listed.find(({ agent }) => agent === id)?.label ?? id;
+}
+
+// The fixture holds the check from Server start until the Server's 15 s check timeout; the Agent is Checking… until then.
 Given(
   "Agent {int}'s readiness check never answers",
   async ({ page, server }, ordinal: number): Promise<void> => {
     const listed = await listAgents(page, server.httpUrl);
-    expect(listed.map(({ agent }) => agent)).toContain(agentId(ordinal));
+    expect(listed.find(({ agent }) => agent === agentId(ordinal))?.status).toBe(
+      'checking',
+    );
   },
 );
 
-// Read as saved now: waiting for every check to finish would wait out the held one.
+// Checking… has a spinner and no action: the row can't be picked and holds no button of its own.
+Then(
+  'the Agent picker shows Agent {int} Checking… with no action',
+  async ({ page, server }, ordinal: number): Promise<void> => {
+    const label = await savedLabel(page, server.httpUrl, ordinal);
+    await openAgentChoices(page);
+    const row = page.getByRole('button', { name: `Select ${label}` });
+    await expect(
+      row.getByRole('progressbar', { name: 'Checking…' }),
+    ).toBeVisible();
+    await expect(row).toBeDisabled();
+    await expect(row.getByRole('button')).toHaveCount(0);
+    await closeAgentMenus(page, agentModelLabel);
+  },
+);
+
 Then(
   'I can pick Agent {int}',
   async ({ page, server }, ordinal: number): Promise<void> => {
-    const listed = await listAgents(page, server.httpUrl);
-    const id = agentId(ordinal);
-    const label = listed.find(({ agent }) => agent === id)?.label ?? id;
-    await chooseAgent(page, label);
+    await chooseAgent(page, await savedLabel(page, server.httpUrl, ordinal));
   },
 );
 

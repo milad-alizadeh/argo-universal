@@ -1,5 +1,6 @@
 import type {
   ClientConnection,
+  ClientContext,
   InitializeResponse,
 } from '@agentclientprotocol/sdk';
 import { createRejectionCounter } from '@repo/machine-log';
@@ -19,10 +20,12 @@ import { createResourceResponders } from './responders';
 import { createAcpResponseReaders } from './response-readers';
 import { AcpResponseWrites } from './response-writes';
 import type { AcpRouting } from './routing';
+import { observeSignInRequired } from './sign-in-required';
 import { reportsAuthStatus } from './subscription-status';
 
 type Ready = {
   connection: ClientConnection;
+  agent: ClientContext;
   initialization: InitializeResponse;
 };
 export class AcpResourceConnection {
@@ -39,7 +42,7 @@ export class AcpResourceConnection {
   private connection: ClientConnection | undefined;
   private termination: Promise<void> | undefined;
   public constructor(
-    input: AcpResourceInput,
+    private readonly input: AcpResourceInput,
     private readonly routing: AcpRouting,
     launch: AgentLaunch,
   ) {
@@ -56,9 +59,16 @@ export class AcpResourceConnection {
       rejectAuthStatus: () => this.status.invalidate(),
       ...createResourceResponders(this.routing, this.writes),
     });
+    return this.ready(this.connection);
+  }
+  private async ready(connection: ClientConnection): Promise<Ready> {
+    const agent = observeSignInRequired(connection.agent, () =>
+      this.input.onSignInRequired?.(),
+    );
     return {
-      connection: this.connection,
-      initialization: await this.negotiate(this.connection),
+      connection,
+      agent,
+      initialization: await this.negotiate(connection),
     };
   }
   private negotiate(connection: ClientConnection): Promise<InitializeResponse> {
@@ -94,16 +104,14 @@ export class AcpResourceConnection {
     opening: AcpSessionOpening,
     beforeDispatch: () => void,
   ): Promise<Omit<AcpSessionLease, 'close' | 'released'>> {
-    const { connection, initialization } = await this.startup;
+    const ready = await this.startup;
+    const { agent, initialization } = ready;
     await this.status.requireReady(initialization);
     beforeDispatch();
-    const opened = await this.openSession(
-      { connection, initialization },
-      opening,
-    );
+    const opened = await this.openSession(ready, opening);
     await this.status.requireReady(initialization);
     this.activateSubscription(initialization);
-    return { agent: connection.agent, initialization, ...opened };
+    return { agent, initialization, ...opened };
   }
   private activateSubscription(initialization: InitializeResponse): void {
     if (reportsAuthStatus(initialization))
@@ -116,7 +124,7 @@ export class AcpResourceConnection {
     opening: AcpSessionOpening,
   ): ReturnType<typeof openProtocolSession> {
     return openProtocolSession({
-      agent: ready.connection.agent,
+      agent: ready.agent,
       initialization: ready.initialization,
       opening,
       readers: this.readers,

@@ -3,6 +3,7 @@ import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
 import { readAgent } from './agents';
 import { Then, When, test } from './fixtures';
+import type { SetupState } from './scenario-agents';
 import { agentWork } from './timeouts';
 
 // Evidence for the PR: each Readiness status as the user sees it.
@@ -55,10 +56,20 @@ Then(
   },
 );
 
+// The reason each fixture state's check reports; a credential in it never reaches the App.
+const fixtureReasons = {
+  'sign-in needed': /^The Agent requires sign-in\.$/,
+  "can't start": /failed ACP initialize/,
+} satisfies Partial<Record<SetupState, RegExp>>;
 Then(
-  "no credential appears in Agent {int}'s reason",
-  async ({ page, server }, ordinal: number): Promise<void> => {
+  'Agent {int} shows its {string} reason without any credential',
+  async (
+    { page, server },
+    ordinal: number,
+    state: keyof typeof fixtureReasons,
+  ): Promise<void> => {
     const { reason = '' } = await readAgent(page, server.httpUrl, ordinal);
+    expect(reason).toMatch(fixtureReasons[state]);
     await expect(shown(page, reason)).toBeVisible();
     for (const secret of ['sk-fixture-secret', 'Bearer'])
       await expect(page.getByText(secret)).toHaveCount(0);

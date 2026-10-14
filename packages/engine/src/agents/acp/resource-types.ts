@@ -48,11 +48,17 @@ export type AcpResourceInput = {
   launchLoginTerminal?: LaunchLoginTerminal;
   launchProcess?: (launch: AgentLaunch) => Promise<AcpProcess>;
   closeTimeoutMs?: number;
+  // How long a Readiness check waits for ACP initialize.
+  checkTimeoutMs?: number;
   releaseTimeoutMs?: number;
+  // Called when the Agent answers a request with auth_required.
+  onSignInRequired?: () => void;
 };
 export type AcpResources = {
   isAgentInUse: (agentId: string) => boolean;
   open: (input: AcpOpenInput) => Promise<AcpSessionLease>;
   reserveAuthentication: (launch: AgentLaunch) => () => void;
+  settleAuthentication: (launch: AgentLaunch) => Promise<void>;
+  observeSignInRequired: (listener: (agentId: string) => void) => void;
   shutdown: () => Promise<void>;
 };

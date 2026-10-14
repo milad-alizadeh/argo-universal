@@ -7,7 +7,7 @@ import type {
   AcpSessionDestination,
   AcpSessionLease,
 } from '../../agents';
-import type { ResolveAgentLaunch } from '../../agents';
+import { isAuthRequired, type ResolveAgentLaunch } from '../../agents';
 import type { SessionData } from '../session-data';
 import { selectSessionOpening } from './acp-session-opening';
 import {
@@ -74,8 +74,11 @@ export class AcpSessionLifetime {
   }
   public open(session: SessionData): Promise<AcpSessionLease> {
     this.opening ??= this.openOwned(session).catch((error: unknown) => {
-      // Closing the Session withdraws its open, and whatever the Agent then reports is not its failure.
-      this.agentFailed = !isWithdrawn(error) && !this.controller.signal.aborted;
+      // Closing the Session withdraws its open, and whatever the Agent then reports is not its failure; auth_required is saved as Sign-in needed where it is observed.
+      this.agentFailed =
+        !isWithdrawn(error) &&
+        !this.controller.signal.aborted &&
+        !isAuthRequired(error);
       throw error;
     });
     return this.opening;
