@@ -1,15 +1,15 @@
 import { hasLiquidGlass } from '#lib/generic/native-header';
+import type {
+  PerEdge,
+  ScrollFadeEdge,
+  ScrollFadeOptions,
+} from '#lib/generic/scroll-fade/scroll-fade-options';
 import { useWide } from '../generic/use-wide/use-wide';
 import {
   composerFadeDepth,
   composerOverlap,
   useGlassComposer,
 } from './composer-cover';
-import type {
-  PerEdge,
-  ScrollFadeEdge,
-  ScrollFadeOptions,
-} from '#lib/generic/scroll-fade/scroll-fade-options';
 import { sessionSurface } from './session-column';
 
 // How far the Feed fades out under the header: Paper's mask over the Feed column.

@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, View, type ViewStyle } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { ScrollFadeList } from '#lib/generic/scroll-fade/index';
 import type { DockedSearchQuery } from '#primitives/inputs/search-field';
 import {
   groupedListGap,
@@ -10,7 +11,6 @@ import {
 } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { listTestIdProps } from '../../generic/list-test-id';
-import { ScrollFadeList } from '#lib/generic/scroll-fade/index';
 import { CardRow } from './card-row';
 import {
   type FieldListEntry,

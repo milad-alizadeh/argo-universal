@@ -38,13 +38,7 @@ function PickerRow(props: PickerRowProps): React.JSX.Element {
   return (
     <GroupedListItem
       label={props.label}
-      accessory={
-        <Picker
-          {...props}
-          onValueChange={ignoreChoice}
-          disabled
-        />
-      }
+      accessory={<Picker {...props} onValueChange={ignoreChoice} disabled />}
     />
   );
 }
