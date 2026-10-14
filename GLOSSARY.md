@@ -114,6 +114,14 @@ _Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), ca
 Whether an installed Agent can start a Session now, found by launching its saved launch and answering ACP initialize without creating an Agent session. Its status is one of Checking…, Ready, Sign-in needed, Account not supported, Not compatible, Can't start, Couldn't check or Not found, with a reason that never carries credentials. An Agent that does not report its account is Ready until it asks for sign-in when a Session opens or a prompt runs, which makes it Sign-in needed; Account not supported means the Agent reported an account that is not a subscription.
 _Avoid_: Availability, Unavailable, health, probe result
 
+**Resolver**:
+The Engine part that looks for each catalog Agent and custom Agent on this Mac: first in Argo's own folder, then on `PATH`. It runs at Server start, after the first catalog sync, when the Agents page opens with a stale look, after an install, update, removal or Repair, on Check again, and again whenever a Session opens.
+_Avoid_: Detector, scanner, discovery
+
+**Installation observation**:
+What the Resolver last saw for one Agent: the launch it found, whether Argo owns that copy (Installed by Argo) or not (Found on this Mac), and when it looked; or that it found nothing, which shows Not found. Ownership is read from where the file is, never stored as a choice.
+_Avoid_: Install record, detection result
+
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, or `error`.
 _Avoid_: Exit status, finish reason

@@ -52,14 +52,24 @@ export function agentDetail(
   return withProbe(info, fromRegistry);
 }
 
+const sourceLabels = {
+  argo: 'Installed by Argo',
+  unknown: 'Found on this Mac',
+} as const;
+
 function withProbe(
   info: AgentInfo,
   fromRegistry: AgentDetail | undefined,
 ): AgentDetail {
   const probed = probedRow(info);
+  const found = info.owner && {
+    source: sourceLabels[info.owner],
+    distribution: undefined,
+  };
   return {
     ...fromRegistry,
     ...probed,
+    ...found,
     icon: probed.icon ?? fromRegistry?.icon,
     version: selectedVersion(info, fromRegistry),
     availableVersion: info.availableVersion,

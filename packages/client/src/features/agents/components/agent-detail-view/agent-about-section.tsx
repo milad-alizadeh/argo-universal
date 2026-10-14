@@ -11,13 +11,15 @@ import { AgentAction } from './agent-detail-actions';
 import { AgentLinks } from './agent-links';
 type AgentProps = { agent: AgentDetail };
 const hasAbout = ({ agent }: AgentProps): boolean =>
-  [agent.version, agent.distribution, agent.links?.length].some(Boolean);
+  [agent.version, agent.distribution, agent.source, agent.links?.length].some(
+    Boolean,
+  );
 
 // A registry Agent not yet installed names where the page found it.
 const registrySource = (agent: AgentDetail): string | undefined =>
   agent.status === 'not-installed' ? 'ACP Registry' : undefined;
 
-// Where the Agent comes from: its registry version, how the Server installs it, and its links.
+// Where the Agent comes from: its registry version, where it was found or how the Server installs it, and its links.
 export function AboutSection(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
@@ -27,6 +29,7 @@ export function AboutSection(
     <FieldSection title="About">
       <AboutRow title="Source" value={registrySource(agent)} />
       <VersionRow {...props} />
+      {agent.source ? <ListItem title={agent.source} /> : null}
       <AboutRow title="Distribution" value={agent.distribution} />
       <AgentLinks links={agent.links} />
     </FieldSection>

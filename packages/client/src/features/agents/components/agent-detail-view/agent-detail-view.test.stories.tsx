@@ -34,6 +34,18 @@ export const ShowsTheVersionAndDistribution: Story = {
   },
 };
 
+export const ShowsAnAgentFoundOnThisMac: Story = {
+  args: {
+    agent: { ...readyAgent, source: 'Found on this Mac', distribution: undefined },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Found on this Mac')).toBeVisible();
+    await expect(
+      canvas.queryByRole('group', { name: /^Distribution/ }),
+    ).not.toBeInTheDocument();
+  },
+};
+
 export const ShowsTheReadyStatusOnAPhone: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
   play: async ({ canvas }) => {

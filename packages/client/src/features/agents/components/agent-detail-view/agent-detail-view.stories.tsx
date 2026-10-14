@@ -19,6 +19,18 @@ type Story = StoryObj<typeof meta>;
 
 export const Ready: Story = {};
 
+export const FoundOnThisMac: Story = {
+  args: {
+    agent: { ...readyAgent, source: 'Found on this Mac', distribution: undefined },
+  },
+};
+
+export const InstalledByArgo: Story = {
+  args: {
+    agent: { ...readyAgent, source: 'Installed by Argo', distribution: undefined },
+  },
+};
+
 export const Checking: Story = {
   args: { agent: { ...readyAgent, status: 'checking' } },
 };
