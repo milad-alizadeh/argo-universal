@@ -24,7 +24,7 @@ export function FieldGroup(props: FieldGroupProps): React.JSX.Element {
   );
 }
 
-// A navigation list is a plain List, flat like the sidebar; any other is a grouped Form.
+// A navigation list is a plain List, flat like the sidebar; any other is a grouped Form on the system grouped background.
 function PhoneFields({
   variant,
   children,
@@ -36,7 +36,5 @@ function PhoneFields({
       </List>
     );
 
-  return (
-    <Form modifiers={[scrollContentBackground('hidden')]}>{children}</Form>
-  );
+  return <Form>{children}</Form>;
 }

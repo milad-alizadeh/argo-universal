@@ -1,20 +1,26 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import type { RowHover } from '../../generic/primitives/fields/field-layout';
 
-// Which entry of a list is hovered, read by the row above it alone, so a hover redraws two rows.
+type Shade = 'hovered' | 'pressed';
+
+// Which entries of a list are hovered and pressed, read by the row above each alone, so a change redraws two rows.
 export interface HoverStore {
-  get: () => number | null;
-  set: (index: number | null) => void;
+  get: (shade: Shade) => number | null;
+  // Shades an entry, or clears the shade when that entry still holds it.
+  shade: (shade: Shade, index: number, on: boolean) => void;
   subscribe: (listener: () => void) => () => void;
 }
 
 export function createHoverStore(): HoverStore {
-  let hovered: number | null = null;
+  const shaded: Record<Shade, number | null> = { hovered: null, pressed: null };
   const listeners = new Set<() => void>();
 
-  const set = (index: number | null): void => {
-    if (hovered === index) return;
-    hovered = index;
+  const shade = (kind: Shade, index: number, on: boolean): void => {
+    const next = nextShaded(shaded[kind], index, on);
+
+    if (shaded[kind] === next) return;
+
+    shaded[kind] = next;
 
     for (const listener of listeners) listener();
   };
@@ -25,22 +31,39 @@ export function createHoverStore(): HoverStore {
     return () => listeners.delete(listener);
   };
 
-  return { get: () => hovered, set, subscribe };
+  return { get: (kind) => shaded[kind], shade, subscribe };
+}
+
+// An entry turning on takes the shade; one turning off clears it only while it still holds it.
+function nextShaded(
+  current: number | null,
+  index: number,
+  on: boolean,
+): number | null {
+  if (on) return index;
+
+  return current === index ? null : current;
 }
 
 export function useRowHover(store: HoverStore, index: number): RowHover {
-  const below = useSyncExternalStore(
-    store.subscribe,
-    () => store.get() === index + 1,
+  const below = useSyncExternalStore(store.subscribe, () =>
+    [store.get('hovered'), store.get('pressed')].includes(index + 1),
   );
 
-  const onHover = useCallback(
-    (hovering: boolean) => {
-      if (hovering) store.set(index);
-      else if (store.get() === index) store.set(null);
-    },
-    [store, index],
-  );
+  return {
+    separatorHidden: below,
+    onHover: useShade(store, 'hovered', index),
+    onPressing: useShade(store, 'pressed', index),
+  };
+}
 
-  return { separatorHidden: below, onHover };
+function useShade(
+  store: HoverStore,
+  kind: Shade,
+  index: number,
+): (on: boolean) => void {
+  return useCallback(
+    (on: boolean) => store.shade(kind, index, on),
+    [store, kind, index],
+  );
 }

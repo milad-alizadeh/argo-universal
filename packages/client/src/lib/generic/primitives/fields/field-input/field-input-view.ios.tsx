@@ -10,7 +10,6 @@ import {
   disabled,
   foregroundStyle,
   frame,
-  listRowBackground,
   listRowInsets,
   listRowSeparatorTint,
   multilineTextAlignment,
@@ -48,10 +47,9 @@ function FormRow(props: FieldInputProps): React.JSX.Element {
 function useRowModifiers(): React.ComponentProps<
   typeof LabeledContent
 >['modifiers'] {
-  const { muted, separator } = useNativeTheme().colors;
+  const { separator } = useNativeTheme().colors;
 
   return [
-    listRowBackground(muted ?? 'transparent'),
     listRowSeparatorTint(separator),
     listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
     frame({ minHeight: rowHeight }),

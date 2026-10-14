@@ -30,12 +30,13 @@ export const FieldRowCorners = createContext<
 >(undefined);
 
 /*
- * A virtualised list's hover link between neighbours: the row above a hovered row hides its
- * separator, as CSS cannot reach a previous row held in a container of its own.
+ * A virtualised list's hover link between neighbours: the row above a hovered or pressed row hides
+ * its separator, as CSS cannot reach a previous row held in a container of its own.
  */
 export interface RowHover {
   separatorHidden: boolean;
   onHover: (hovering: boolean) => void;
+  onPressing: (pressing: boolean) => void;
 }
 
 export const FieldRowHover = createContext<RowHover | undefined>(undefined);
