@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '../../../../lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text/text';
 import { HeaderButton } from '../../../../lib/product/header-button';
 import { ScreenHeader } from '../../../../lib/product/navigation/screen-header';
 import { PhoneMenuButton } from '../phone-menu-button';

@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { Linking, Pressable, View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
+import { Text } from '#primitives/display/text/text';
+import { ListItem } from '#primitives/lists/list-item/list-item';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import type { AgentDetail } from '../../state/agent-detail-types';
 

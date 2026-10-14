@@ -3,11 +3,8 @@ import { View } from 'react-native';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
-import type { IconButtonProps } from '../generic/primitives/buttons/icon-button/icon-button';
-import {
-  Pressable,
-  contentActionClass,
-} from '../generic/primitives/pressable/pressable';
+import type { IconButtonProps } from '#primitives/buttons/icon-button/icon-button';
+import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
 import { Icon } from '../generic/symbols/icon';
 import { narrowPairs } from './header-button-pairing';
 

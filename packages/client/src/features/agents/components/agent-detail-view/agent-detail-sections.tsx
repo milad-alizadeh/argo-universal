@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
 import { CopyButton } from '#lib/product/markdown/copy-button';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { ListItem } from '#primitives/lists/list-item/list-item';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { agentStatusLabels, statusTone } from '../../state/agent-status';
 import { CheckAgainRow } from '../check-again-row';

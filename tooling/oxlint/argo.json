@@ -212,6 +212,27 @@
       "rules": { "vitest/no-conditional-expect": "off" }
     },
     {
+      // Client code reaches a primitive only through #primitives/*, which stays extensionless so Metro picks the platform file (ADR-0020). Later client blocks repeat these patterns.
+      "files": ["packages/client/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // Features import each other only through index.ts (ADR-0016 item 9). Only the last matching override's options apply, so later client blocks repeat these patterns.
       "files": ["packages/client/src/features/**"],
       "rules": {
@@ -219,6 +240,14 @@
           "error",
           {
             "patterns": [
+              {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
               {
                 "regex": "^#features/[^/]+/",
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
@@ -244,6 +273,14 @@
           "error",
           {
             "patterns": [
+              {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
               {
                 "regex": "^#features/[^/]+/",
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
@@ -285,6 +322,14 @@
             ],
             "patterns": [
               {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
                 "regex": "^#features/[^/]+/",
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
@@ -324,6 +369,14 @@
               }
             ],
             "patterns": [
+              {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
               {
                 "regex": "^#features/[^/]+/",
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
@@ -439,6 +492,14 @@
             ],
             "patterns": [
               {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
                 "regex": "(^|/)use-[^/]*-query$",
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
@@ -553,6 +614,14 @@
             ],
             "patterns": [
               {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
                 "regex": "(^|/)use-[^/]*-query$",
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
@@ -587,6 +656,14 @@
           {
             "patterns": [
               {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
                 "regex": "^\\.\\./(components|screens)(/|$)",
                 "message": "The Connection, its tRPC client and the Feed view never import components or screens (A2)."
               },
@@ -617,6 +694,14 @@
           {
             "patterns": [
               {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
                 "regex": "^#(features|lib/product)/",
                 "message": "Generic code imports neither product nor local code (A2)."
               },
@@ -642,6 +727,14 @@
           "error",
           {
             "patterns": [
+              {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
               {
                 "regex": "^#features/",
                 "message": "lib/product imports lib/generic, never a feature (A2)."

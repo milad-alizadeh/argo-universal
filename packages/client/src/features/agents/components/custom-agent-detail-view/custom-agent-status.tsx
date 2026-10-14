@@ -1,12 +1,9 @@
 import type { AgentCheck } from '@repo/contracts';
 import type * as React from 'react';
-import {
-  Badge,
-  type BadgeTone,
-} from '#lib/generic/primitives/display/badge/badge';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
+import { Badge, type BadgeTone } from '#primitives/display/badge/badge';
+import { Text } from '#primitives/display/text/text';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { ListItem } from '#primitives/lists/list-item/list-item';
 import { CheckAgainRow } from '../check-again-row';
 import { sectionFooter } from '../form-field';
 

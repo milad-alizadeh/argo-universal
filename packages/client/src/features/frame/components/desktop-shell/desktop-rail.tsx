@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { IconButton } from '../../../../lib/generic/primitives/buttons/icon-button/icon-button';
+import { IconButton } from '#primitives/buttons/icon-button/icon-button';
 import { sectionAttentionCount } from '../../state/attention-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
 import { type Section, sectionOrder, shellSections } from '../shell-sections';

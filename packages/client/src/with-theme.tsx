@@ -7,11 +7,8 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Uniwind } from 'uniwind';
 import { PortalHost } from '#primitives/overlays/portal/portal';
+import { dismissToasts, Toaster } from '#primitives/overlays/toast/toast';
 import { BlobUrlContext } from './features/connection/trpc/blob-url';
-import {
-  dismissToasts,
-  Toaster,
-} from './lib/generic/primitives/overlays/toast/toast';
 import { cn } from './lib/generic/utils';
 import { recordedImageUrl } from './lib/product/feed-message.mocks';
 

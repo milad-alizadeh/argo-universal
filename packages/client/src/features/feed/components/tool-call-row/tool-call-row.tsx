@@ -1,7 +1,7 @@
 import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text/text';
 import {
   ToolCallDisclosure,
   toolCallDisclosureProps,

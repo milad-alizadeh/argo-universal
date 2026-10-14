@@ -12,7 +12,7 @@
   "aliases": {
     "components": "#lib/product",
     "utils": "#lib/generic/utils",
-    "ui": "#lib/generic/primitives",
+    "ui": "#primitives",
     "lib": "#lib/generic",
     "hooks": "#lib/generic/hooks"
   }

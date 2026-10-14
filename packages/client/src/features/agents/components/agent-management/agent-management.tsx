@@ -1,8 +1,8 @@
 import type * as React from 'react';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
-import { Switch } from '#lib/generic/primitives/inputs/switch/switch';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
-import { Alert } from '../../../../lib/generic/primitives/overlays/alert/alert';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { Switch } from '#primitives/inputs/switch/switch';
+import { ListItem } from '#primitives/lists/list-item/list-item';
+import { Alert } from '#primitives/overlays/alert/alert';
 import type { AgentManagement } from '../../state/agent-management-types';
 
 type ManagementProps = { management?: AgentManagement };

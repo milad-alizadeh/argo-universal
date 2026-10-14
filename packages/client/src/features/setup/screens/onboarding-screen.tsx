@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { runsSessions, useAgents, useInstalledAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
+import { useNavigate } from '#lib/product/navigation/context';
 import {
   type ErrorToast,
   useErrorToast,
-} from '#lib/generic/primitives/overlays/toast/toast';
-import { useNavigate } from '#lib/product/navigation/context';
+} from '#primitives/overlays/toast/toast';
 import { OnboardingView } from '../components/onboarding-view/onboarding-view';
 import { type AgentStep, agentStep } from '../state/onboarding';
 

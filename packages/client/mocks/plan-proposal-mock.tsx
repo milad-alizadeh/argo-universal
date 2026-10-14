@@ -1,12 +1,12 @@
 import { recordedRequestMocks } from '@repo/mocks/app';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { Text } from '#primitives/display/text/text';
 import {
   PlanProposalCard,
   type PlanProposalCardProps,
 } from '../src/features/requests/components/plan-proposal-card/plan-proposal-card';
 import { PlanProposalRegion } from '../src/features/requests/components/plan-proposal-region';
-import { Text } from '../src/lib/generic/primitives/display/text/text';
 import { RequestComposerPreview } from './request-composer';
 
 export const planProposalMocks = recordedRequestMocks.flatMap((mock) =>

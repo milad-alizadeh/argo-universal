@@ -10,7 +10,7 @@ import {
 } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useTRPC, type ClientError } from '#features/connection';
-import { useErrorToast } from '#lib/generic/primitives/overlays/toast/toast';
+import { useErrorToast } from '#primitives/overlays/toast/toast';
 import type { AgentManagement } from '../state/agent-management-types';
 import { useConfiguredAgents } from './use-configured-agents';
 

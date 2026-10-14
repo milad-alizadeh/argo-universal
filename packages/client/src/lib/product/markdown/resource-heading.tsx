@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
+import { Text } from '#primitives/display/text/text';
 import { Icon } from '../../generic/symbols/icon';
 import { resourceIcon } from './resource-name';
 

@@ -1,8 +1,8 @@
 import type * as React from 'react';
-import { Badge } from '../src/lib/generic/primitives/display/badge/badge';
-import { Text } from '../src/lib/generic/primitives/display/text/text';
-import { FieldSection } from '../src/lib/generic/primitives/fields/field-section/field-section';
-import { ListItem } from '../src/lib/generic/primitives/lists/list-item/list-item';
+import { Badge } from '#primitives/display/badge/badge';
+import { Text } from '#primitives/display/text/text';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { ListItem } from '#primitives/lists/list-item/list-item';
 import { Icon } from '../src/lib/generic/symbols/icon';
 import { onPress } from './list-item-press-mock';
 

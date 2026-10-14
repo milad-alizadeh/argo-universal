@@ -1,5 +1,5 @@
 import type { SettingsPageSearch } from '#lib/product/settings-page';
-import type { ListSearchBarProps } from '../../../../lib/generic/primitives/inputs/list-search-bar/list-search-bar';
+import type { ListSearchBarProps } from '#primitives/inputs/list-search-bar/list-search-bar';
 import type { SearchedProps } from './project-list-props';
 
 export const searchLabel = 'Search Projects';

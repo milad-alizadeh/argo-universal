@@ -20,10 +20,10 @@ import {
   millisecondsPerSecond,
 } from '#lib/generic/format-elapsed';
 import { fullTurnDegrees } from '#lib/generic/motion';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { useClock } from '#lib/generic/use-clock';
 import { StatusIndicator } from '#lib/product/status-indicator/status-indicator';
+import { Text } from '#primitives/display/text/text';
 import { Icon, IconSlot } from '../../../../lib/generic/symbols/icon';
 import { ShimmerText } from '../shimmer-text';
 import { toolCallIcon } from '../tool-call-icon';

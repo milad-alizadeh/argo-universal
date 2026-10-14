@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { FieldSection } from '#lib/generic/primitives/fields/field-section/field-section';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { ListItem } from '#primitives/lists/list-item/list-item';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type {
   AgentDetail,

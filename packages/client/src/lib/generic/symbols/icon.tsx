@@ -8,8 +8,8 @@ import {
   type ViewProps,
 } from 'react-native';
 import { withUniwind } from 'uniwind';
-import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
+import { TextClassContext } from '#primitives/display/text/text';
 import { appleSymbol } from './apple-symbol';
 import { type IconName, iconSymbols } from './icon-names';
 import { type IconRole, useIconBox, useIconPixels } from './icon-role';

@@ -1,8 +1,5 @@
 import { View } from 'react-native';
-import {
-  Text,
-  TextClassContext,
-} from '#lib/generic/primitives/display/text/text';
+import { Text, TextClassContext } from '#primitives/display/text/text';
 import { Icon } from '../../../symbols/icon';
 import { iconNames, iconSymbols } from '../../../symbols/icon-names';
 import { SymbolImagesProvider } from '../../../symbols/symbol-images';

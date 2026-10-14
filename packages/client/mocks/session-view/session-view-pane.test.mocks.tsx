@@ -2,13 +2,13 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { Button } from '#primitives/buttons/button/button';
 import {
   SessionView,
   type SessionViewProps,
 } from '../../src/features/sessions/components/session-view/session-view';
 import { idleSession } from '../../src/features/sessions/components/session-view/session-view.mocks';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { Button } from '../../src/lib/generic/primitives/buttons/button/button';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { feedScrollTestId, type Story } from './session-view-story.test.mocks';
 

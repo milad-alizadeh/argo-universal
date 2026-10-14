@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { IconButton } from '../src/lib/generic/primitives/buttons/icon-button/icon-button';
-import { Text } from '../src/lib/generic/primitives/display/text/text';
-import { SearchField } from '../src/lib/generic/primitives/inputs/search-field/search-field';
+import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+import { Text } from '#primitives/display/text/text';
+import { SearchField } from '#primitives/inputs/search-field/search-field';
 
 // A page title row with one other action, as Agents draws it, for SearchField stories.
 export function SearchFieldExample({

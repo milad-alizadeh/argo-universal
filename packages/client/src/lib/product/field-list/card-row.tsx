@@ -3,7 +3,7 @@ import {
   FieldRowCorners,
   FieldRowEnd,
   FieldRowHover,
-} from '../../generic/primitives/fields/field-layout';
+} from '#primitives/fields/field-layout';
 import type { FieldListEntry } from './field-list-entries';
 import { type HoverStore, useRowHover } from './field-row-hover-store';
 

@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View, ScrollView } from 'react-native';
-import { LiquidGlass } from '#lib/generic/primitives/display/liquid-glass/liquid-glass';
+import { LiquidGlass } from '#primitives/display/liquid-glass/liquid-glass';
 import { RichTextarea } from '#primitives/inputs/rich-textarea/rich-textarea';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {

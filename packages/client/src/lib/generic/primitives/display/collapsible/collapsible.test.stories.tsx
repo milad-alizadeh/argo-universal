@@ -5,8 +5,8 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '#lib/generic/primitives/display/collapsible/collapsible';
-import { Text } from '#lib/generic/primitives/display/text/text';
+} from '#primitives/display/collapsible/collapsible';
+import { Text } from '#primitives/display/text/text';
 import { sampleEachFrame } from '../../../../../../mocks/sample-each-frame';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';

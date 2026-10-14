@@ -2,9 +2,9 @@ import * as PopoverPrimitive from '@rn-primitives/popover';
 import * as React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
-import { TextClassContext } from '#lib/generic/primitives/display/text/text';
-import { NativeOnlyAnimatedView } from '#lib/generic/primitives/native/native-only-animated-view/native-only-animated-view';
 import { cn } from '#lib/generic/utils';
+import { TextClassContext } from '#primitives/display/text/text';
+import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view/native-only-animated-view';
 import { usePopoverDismissal } from './popover-dismissal';
 import { ControlledPopoverState, Popover } from './popover-root';
 

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { Input } from '#lib/generic/primitives/inputs/input/input';
+import { Text } from '#primitives/display/text/text';
+import { Input } from '#primitives/inputs/input/input';
 import {
   Dialog,
   DialogCancel,
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '#lib/generic/primitives/overlays/dialog/dialog';
+} from '#primitives/overlays/dialog/dialog';
 import { Button } from '../../buttons/button/button';
 import { Pressable, contentActionClass } from '../../pressable/pressable';
 

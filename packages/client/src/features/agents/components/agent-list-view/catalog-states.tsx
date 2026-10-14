@@ -1,10 +1,10 @@
 import type { AgentsCatalogOutput } from '@repo/contracts';
-import { ListItem } from '#lib/generic/primitives/lists/list-item/list-item';
+import type { FieldListSection } from '#lib/product/field-list/field-list';
+import { ListItem } from '#primitives/lists/list-item/list-item';
 import {
   type ErrorToast,
   useErrorToast,
-} from '#lib/generic/primitives/overlays/toast/toast';
-import type { FieldListSection } from '#lib/product/field-list/field-list';
+} from '#primitives/overlays/toast/toast';
 import type { AgentRowEntry } from '../../state/agent-status';
 import type { CatalogLoad } from '../../state/catalog-sync';
 import { agentRows } from '../agent-list-item/agent-list-item';

@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '#primitives/display/text/text';
+import { FieldRowEnd } from '#primitives/fields/field-layout';
 import { ListItem } from '#primitives/lists/list-item/list-item';
 import {
   Popover,
@@ -8,7 +9,6 @@ import {
   PopoverTrigger,
   usePopoverClose,
 } from '#primitives/overlays/popover/popover';
-import { FieldRowEnd } from '../../../../lib/generic/primitives/fields/field-layout';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentChoices } from './agent-choices';
 import { AgentIcon } from './agent-icon';

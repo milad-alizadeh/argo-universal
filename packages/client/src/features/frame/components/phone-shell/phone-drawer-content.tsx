@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
-import { NavigationItem } from '../../../../lib/generic/primitives/lists/navigation-item/navigation-item';
+import { Text } from '#primitives/display/text/text';
+import { NavigationItem } from '#primitives/lists/navigation-item/navigation-item';
 import { sectionAttentionCount } from '../../state/attention-badge';
 import { drawerAttentionBadge } from '../attention-badge/attention-badge';
 import { type Section, sectionOrder, shellSections } from '../shell-sections';

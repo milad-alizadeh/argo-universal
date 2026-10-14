@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { useKeyboardState } from 'react-native-keyboard-controller';
-import { liquidGlassAvailable } from '#lib/generic/primitives/display/liquid-glass/liquid-glass';
+import { liquidGlassAvailable } from '#primitives/display/liquid-glass/liquid-glass';
 import { useContentWide } from './content-layout';
 
 // How far the Composer reaches up over the end of the Feed; the Feed's rows are hidden under it, so none shows through its glass.

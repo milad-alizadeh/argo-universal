@@ -45,9 +45,9 @@ export { iconSymbols } from './lib/generic/symbols/icon-names';
 
 export { useWide } from './lib/generic/use-wide/use-wide';
 
-export { Text, useTextStyle } from './lib/generic/primitives/display/text/text';
+export { Text, useTextStyle } from '#primitives/display/text/text';
 
-export { Toaster } from './lib/generic/primitives/overlays/toast/toast';
+export { Toaster } from '#primitives/overlays/toast/toast';
 
 export {
   type LeaveGuard,
@@ -75,11 +75,11 @@ export {
   FormSheetProvider,
   useFormSheetCommands,
   useFormSheetState,
-} from './lib/generic/primitives/overlays/form-sheet/form-sheet-context';
+} from '#primitives/overlays/form-sheet/form-sheet-context';
 
 export {
   FormSheetRoot,
   FormSheetChoices,
-} from './lib/generic/primitives/overlays/form-sheet/form-sheet-page';
+} from '#primitives/overlays/form-sheet/form-sheet-page';
 
-export type { FormSheetRoutes } from './lib/generic/primitives/overlays/form-sheet/form-sheet-types';
+export type { FormSheetRoutes } from '#primitives/overlays/form-sheet/form-sheet-types';

@@ -1,4 +1,4 @@
-import type { ListItemProps } from '../../../../lib/generic/primitives/fields/field-props';
+import type { ListItemProps } from '#primitives/fields/field-props';
 import {
   connectionValue,
   countValue,

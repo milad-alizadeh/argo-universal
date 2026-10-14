@@ -11,12 +11,14 @@
   },
   "imports": {
     "#primitives/*": {
-      "types": "./src/lib/generic/primitives/*.tsx",
+      "types": [
+        "./src/lib/generic/primitives/*.tsx",
+        "./src/lib/generic/primitives/*.ts"
+      ],
       "default": "./src/lib/generic/primitives/*"
     },
     "#features/*": "./src/features/*/index.ts",
     "#lib/generic/*": "./src/lib/generic/*.ts",
-    "#lib/generic/primitives/*": "./src/lib/generic/primitives/*.tsx",
     "#lib/product/*": "./src/lib/product/*.tsx"
   },
   "scripts": {

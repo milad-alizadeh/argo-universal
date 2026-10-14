@@ -2,8 +2,8 @@ import { Slot } from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { TextClassContext } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
+import { TextClassContext } from '#primitives/display/text/text';
 
 const toneBox = 'h-5 border-transparent py-0';
 

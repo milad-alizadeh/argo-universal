@@ -6,12 +6,12 @@ import {
   ElicitationSheet,
   type ElicitationFormProps,
 } from '#features/requests';
+import { Screen } from '#lib/product/screen/screen';
+import { SessionLayout } from '#lib/product/session-layout';
 import {
   type ErrorToast,
   useErrorToast,
-} from '#lib/generic/primitives/overlays/toast/toast';
-import { Screen } from '#lib/product/screen/screen';
-import { SessionLayout } from '#lib/product/session-layout';
+} from '#primitives/overlays/toast/toast';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import {
   serverSilentMessage,

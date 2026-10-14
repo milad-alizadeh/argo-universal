@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Badge } from '#lib/generic/primitives/display/badge/badge';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { FieldGroup } from '#lib/generic/primitives/fields/field-group/field-group';
-import { FieldRow } from '#lib/generic/primitives/fields/field-row/field-row';
 import { SettingsPage } from '#lib/product/settings-page';
+import { Badge } from '#primitives/display/badge/badge';
+import { Text } from '#primitives/display/text/text';
+import { FieldGroup } from '#primitives/fields/field-group/field-group';
+import { FieldRow } from '#primitives/fields/field-row/field-row';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';

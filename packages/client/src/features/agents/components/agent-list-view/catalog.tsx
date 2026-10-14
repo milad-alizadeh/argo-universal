@@ -4,7 +4,7 @@ import {
   FieldList,
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
-import type { ListSearchBarProps } from '../../../../lib/generic/primitives/inputs/list-search-bar/list-search-bar';
+import type { ListSearchBarProps } from '#primitives/inputs/list-search-bar/list-search-bar';
 import {
   offeredAgents,
   platformName,

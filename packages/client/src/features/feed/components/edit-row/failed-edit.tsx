@@ -1,7 +1,7 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text/text';
 import { Icon } from '../../../../lib/generic/symbols/icon';
 import type { FileDiff } from '../../view/file-diff';
 import { firstLocationPath } from '../tool-call-meta';

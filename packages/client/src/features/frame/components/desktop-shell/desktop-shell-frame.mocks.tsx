@@ -4,14 +4,14 @@ import { View } from 'react-native';
 import {
   IconButton,
   type IconButtonProps,
-} from '../../../../lib/generic/primitives/buttons/icon-button/icon-button';
-import { Text } from '../../../../lib/generic/primitives/display/text/text';
+} from '#primitives/buttons/icon-button/icon-button';
+import { Text } from '#primitives/display/text/text';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../../../../lib/generic/primitives/overlays/dropdown-menu/dropdown-menu';
+} from '#primitives/overlays/dropdown-menu/dropdown-menu';
 import { ListTitle } from '../../../../lib/product/list-title';
 import type { Section } from '../../../../lib/product/navigation/sections';
 import { PageHeader } from '../../../../lib/product/page-header';

@@ -3,7 +3,7 @@ import type * as React from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { DesktopShell } from '#features/frame';
-import { Text } from '../../../../lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text/text';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { PageHeader } from '../../../../lib/product/page-header';
 import { EditRow } from './edit-row';

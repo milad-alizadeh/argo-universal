@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react';
-import type { RowHover } from '../../generic/primitives/fields/field-layout';
+import type { RowHover } from '#primitives/fields/field-layout';
 
 type Shade = 'hovered' | 'pressed';
 

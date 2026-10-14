@@ -2,10 +2,10 @@ import * as DropdownMenuPrimitive from '@rn-primitives/dropdown-menu';
 import * as React from 'react';
 import { Platform } from 'react-native';
 import { FadeIn, ReduceMotion } from 'react-native-reanimated';
-import { TextClassContext } from '#lib/generic/primitives/display/text/text';
-import { NativeOnlyAnimatedView } from '#lib/generic/primitives/native/native-only-animated-view/native-only-animated-view';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
+import { TextClassContext } from '#primitives/display/text/text';
+import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view/native-only-animated-view';
 import { Icon } from '../../../symbols/icon';
 import {
   dropdownSubContentClassName,

@@ -1,17 +1,14 @@
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
-import {
-  Collapsible,
-  CollapsibleContent,
-} from '#lib/generic/primitives/display/collapsible/collapsible';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
 import { CodeBlockHeader } from '#lib/product/markdown/code-block-header';
 import { codeBlockGroup } from '#lib/product/markdown/copy-button';
 import {
-  Pressable,
-  contentActionClass,
-} from '../../../../lib/generic/primitives/pressable/pressable';
+  Collapsible,
+  CollapsibleContent,
+} from '#primitives/display/collapsible/collapsible';
+import { Text } from '#primitives/display/text/text';
+import { Pressable, contentActionClass } from '#primitives/pressable/pressable';
 import type { FileDiff } from '../../view/file-diff';
 import { FileHeader, type FileHeaderProps } from './diff-file-header';
 import { DiffScroll } from './diff-hunks';

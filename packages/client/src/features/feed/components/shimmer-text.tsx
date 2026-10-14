@@ -11,7 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Text } from '#lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text/text';
 
 // How many characters the bright band spans on each side of its centre.
 const bandHalfWidth = 8;

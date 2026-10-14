@@ -1,13 +1,13 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { Input } from '#lib/generic/primitives/inputs/input/input';
 import { cn } from '#lib/generic/utils';
+import { Text } from '#primitives/display/text/text';
 import {
   type FieldErrors,
   errorMessage,
-} from '../../../lib/generic/primitives/fields/field-errors';
-import type { FieldSectionProps } from '../../../lib/generic/primitives/fields/field-props';
+} from '#primitives/fields/field-errors';
+import type { FieldSectionProps } from '#primitives/fields/field-props';
+import { Input } from '#primitives/inputs/input/input';
 
 export type FormInputProps = {
   label: string;

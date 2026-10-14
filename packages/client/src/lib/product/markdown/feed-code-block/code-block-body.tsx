@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { ScrollView } from 'react-native';
 import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
-import { Text } from '#lib/generic/primitives/display/text/text';
 import { cn } from '#lib/generic/utils';
+import { Text } from '#primitives/display/text/text';
 
 interface CodeBlockBodyProps {
   code?: string;

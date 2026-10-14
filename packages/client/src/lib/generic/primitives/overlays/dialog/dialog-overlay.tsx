@@ -4,8 +4,8 @@ import { type GestureResponderEvent, Platform } from 'react-native';
 import { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
 import { motionDuration } from '#lib/generic/motion';
-import { NativeOnlyAnimatedView } from '#lib/generic/primitives/native/native-only-animated-view/native-only-animated-view';
 import { cn } from '#lib/generic/utils';
+import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view/native-only-animated-view';
 
 type OverlayProps = Omit<
   React.ComponentProps<typeof DialogPrimitive.Overlay>,

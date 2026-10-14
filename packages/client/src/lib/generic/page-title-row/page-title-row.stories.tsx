@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { IconButton } from '../primitives/buttons/icon-button/icon-button';
-import { Badge } from '../primitives/display/badge/badge';
-import { Text } from '../primitives/display/text/text';
+import { IconButton } from '#primitives/buttons/icon-button/icon-button';
+import { Badge } from '#primitives/display/badge/badge';
+import { Text } from '#primitives/display/text/text';
 import { Icon } from '../symbols/icon';
 import { Variation, Variations as VariationList } from '../variations';
 import { PageTitleRow } from './page-title-row';

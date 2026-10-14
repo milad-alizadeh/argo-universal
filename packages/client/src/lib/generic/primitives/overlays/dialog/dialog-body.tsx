@@ -1,8 +1,8 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import * as React from 'react';
 import { Text } from 'react-native';
-import { Icon } from '#lib/generic/primitives/display/icon/icon';
 import { cn } from '#lib/generic/utils';
+import { Icon } from '#primitives/display/icon/icon';
 import { keepOpen } from '../keep-open';
 
 // Only what both the centred dialog and the narrow window's sheet honour.

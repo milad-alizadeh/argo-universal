@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/display/text/text';
+import { Text } from '#primitives/display/text/text';
 import { Icon } from '../../../symbols/icon';
 import { iconNames } from '../../../symbols/icon-names';
 import { type IconRole, useIconPixels } from '../../../symbols/icon-role';

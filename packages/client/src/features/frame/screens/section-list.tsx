@@ -9,14 +9,14 @@ import {
   useSessionsFilter,
 } from '#features/sessions';
 import { SettingsNavigationList } from '#features/settings';
-import { Text } from '#lib/generic/primitives/display/text/text';
-import { SearchField } from '#lib/generic/primitives/inputs/search-field/search-field';
 import { ListTitle } from '#lib/product/list-title';
 import {
   type NavigationDestination,
   useNavigate,
 } from '#lib/product/navigation/context';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
+import { Text } from '#primitives/display/text/text';
+import { SearchField } from '#primitives/inputs/search-field/search-field';
 import type { Section } from '../../../lib/product/navigation/sections';
 import { shellSections } from '../components/shell-sections';
 
