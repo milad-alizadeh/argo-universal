@@ -22,7 +22,7 @@ const placementProps = {
       'absolute right-0.5 top-0.5 min-w-4 border-0 bg-warning px-1 py-0',
   },
   drawer: {
-    className: 'h-[22px] min-w-[22px] border-0 bg-warning px-1.5',
+    className: 'h-5.5 min-w-5.5 border-0 bg-warning px-1.5',
   },
 } as const satisfies Record<Placement, ViewProps>;
 

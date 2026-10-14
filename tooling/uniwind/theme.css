@@ -136,6 +136,12 @@
       --color-content: #f2f2f2;
       /* Glass: the sidebar panel. */
       --color-glass: #ffffff80;
+      /* Tray: the inset envelope under a card on glass (the Composer trays). */
+      --color-tray: #e5e5e5b3;
+      /* The sidebar backdrop glows, in sRGB so React Native SVG can read them. */
+      --color-glow-warm: #c4aa8c;
+      --color-glow-graphite: #8c8c8c;
+      --color-glow-sand: #d6bea5;
       /* A selected row or rail tile: a flat tint, no border or shadow. */
       --color-selected: #0000000a;
       --shadow-glass:
@@ -166,6 +172,10 @@
       /* Neutral match of the iOS Settings grouped background. */
       --color-content: #000000;
       --color-glass: #17171780;
+      --color-tray: #262626b3;
+      --color-glow-warm: #605343;
+      --color-glow-graphite: #484848;
+      --color-glow-sand: #6d6154;
       --color-selected: #ffffff0f;
       --shadow-glass:
         inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff14, 0 12px 32px #00000066;

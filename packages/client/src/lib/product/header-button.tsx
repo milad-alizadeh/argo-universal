@@ -66,7 +66,7 @@ function headerButtonFit(paired: boolean): HeaderButtonFit {
 
 // The header fit replaces IconButton's touch minimum, border and focus outline with the header's own.
 const headerChrome =
-  'rounded-full p-0 border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 web:transition-all dark:active:bg-muted/50 web:dark:hover:bg-muted/50 web:focus-visible:outline-none web:focus-visible:ring-[3px] web:focus-visible:ring-focus/50';
+  'rounded-full p-0 border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 web:transition-all dark:active:bg-muted/50 web:dark:hover:bg-muted/50 web:focus-visible:outline-none web:focus-visible:ring-3 web:focus-visible:ring-focus/50';
 
 // A plain icon button for a native header; the platform draws any chrome around it.
 export function HeaderButton(props: HeaderButtonProps): React.JSX.Element {
@@ -103,7 +103,7 @@ function HeaderButtonDot(props: {
     <View
       testID="header-button-dot"
       className={cn(
-        'absolute size-[7px] rounded-full border-[1.5px] border-card',
+        'absolute size-1.75 rounded-full border-[1.5px] border-card',
         props.color,
         props.place,
       )}

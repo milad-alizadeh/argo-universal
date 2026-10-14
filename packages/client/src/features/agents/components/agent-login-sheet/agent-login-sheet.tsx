@@ -47,8 +47,8 @@ const contentProps = (
   accessibilityLabel: sheetCopy(props).title,
   dismissible: false,
   className: isTerminalLogin(props)
-    ? 'gap-3 p-6 wide:w-[620px] wide:max-w-none wide:rounded-sheet'
-    : 'gap-3 p-6 wide:w-[380px] wide:rounded-sheet',
+    ? 'gap-3 p-6 wide:w-155 wide:max-w-none wide:rounded-sheet'
+    : 'gap-3 p-6 wide:w-95 wide:rounded-sheet',
 });
 
 const terminalHasCopy = (props: AgentLoginSheetProps): boolean =>

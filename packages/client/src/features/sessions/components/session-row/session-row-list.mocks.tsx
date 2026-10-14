@@ -16,7 +16,7 @@ interface SessionRowListMockProps {
 }
 
 const listClassName =
-  'w-[390px] max-w-full bg-content wide:w-[332px] wide:gap-1 wide:px-2 wide:py-4';
+  'w-full bg-content wide:w-shell-list wide:gap-1 wide:px-2 wide:py-4';
 
 function agentLogo(agent: string): string {
   return agentsList.find((entry) => entry.agent === agent)?.logo ?? '';

@@ -183,6 +183,16 @@
       "rules": { "argo/kit-styling": "off" }
     },
     {
+      // Styles come from tokens in tooling/uniwind/theme.css: no arbitrary Tailwind values and no raw colours, native colour props included. raw-values-allowlist.json holds the files not yet tokenised.
+      "files": ["packages/**/*.{ts,tsx}", "apps/**/*.{ts,tsx}"],
+      "rules": { "argo/style-tokens": "error" }
+    },
+    {
+      // Clipboard HTML as browsers and VS Code write it: pasted data, not Argo's styles.
+      "files": ["packages/client/mocks/rich-textarea-paste-mock.ts"],
+      "rules": { "argo/style-tokens": "off" }
+    },
+    {
       // Vendor names and vendor types belong in the adapter folders (ADR-0015).
       "files": ["packages/engine/src/agents/assets/**"],
       "rules": { "argo/vendor-name": "off", "argo/json-parse-cast": "off" }

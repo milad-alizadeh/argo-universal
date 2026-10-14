@@ -1,4 +1,4 @@
-import { useUniwind } from 'uniwind';
+import { useCSSVariable } from 'uniwind';
 
 // Paper's "SidebarBackdrop / Warm frost (contained)": three faint glows behind the glass, faded into the window surface at the right.
 export type GlowColour = 'warm' | 'graphite' | 'sand';
@@ -112,16 +112,13 @@ export function sidebarGlows(
   };
 }
 
-// Paper's oklch glow colours in sRGB, as React Native SVG and CSS both read them.
-const glowColours: Readonly<
-  Record<'light' | 'dark', Readonly<Record<GlowColour, string>>>
-> = {
-  light: { warm: '#c4aa8c', graphite: '#8c8c8c', sand: '#d6bea5' },
-  dark: { warm: '#605343', graphite: '#484848', sand: '#6d6154' },
-};
-
+// The glow colours are theme tokens (--color-glow-*), read for React Native SVG and CSS gradients alike.
 export function useGlowColours(): Readonly<Record<GlowColour, string>> {
-  const { theme } = useUniwind();
+  const [warm, graphite, sand] = useCSSVariable([
+    '--color-glow-warm',
+    '--color-glow-graphite',
+    '--color-glow-sand',
+  ]);
 
-  return glowColours[theme === 'dark' ? 'dark' : 'light'];
+  return { warm: String(warm), graphite: String(graphite), sand: String(sand) };
 }
