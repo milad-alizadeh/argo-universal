@@ -2,7 +2,7 @@ import type { FieldErrors } from '#primitives/fields/field-errors';
 
 export interface CheckboxProps {
   label: string;
-  appearance?: 'option';
+  variant?: 'option';
   selection?: 'single' | 'multiple';
   value: boolean;
   onValueChange: (value: boolean) => void;
@@ -15,5 +15,5 @@ export interface CheckboxProps {
 
 export type CheckboxIndicatorProps = Pick<
   CheckboxProps,
-  'value' | 'invalid' | 'disabled' | 'selection' | 'appearance'
+  'value' | 'invalid' | 'disabled' | 'selection' | 'variant'
 >;

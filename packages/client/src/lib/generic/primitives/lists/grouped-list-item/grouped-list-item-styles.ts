@@ -1,3 +1,4 @@
+import { toneClass } from '#primitives/display/text';
 import { cn } from '../../../utils';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 
@@ -63,14 +64,13 @@ function controlClasses(
 
 // A large row pads 16 all round at every width.
 const sizeClasses = ({ size }: GroupedListItemProps): string | undefined =>
-  size === 'large' ? 'py-4 wide:py-4' : undefined;
+  size === 'lg' ? 'py-4 wide:py-4' : undefined;
 
 // A wide window draws its rows' parts 8 apart, but a sidebar's and a large row's keep 12.
 export const contentGap = (
   sidebar: boolean,
   size: GroupedListItemProps['size'],
-): string | undefined =>
-  sidebar || size === 'large' ? undefined : 'wide:gap-2';
+): string | undefined => (sidebar || size === 'lg' ? undefined : 'wide:gap-2');
 
 // A loading row pads to Paper's 56, its spinner in a 20 slot; a pressable row shades on hover.
 function stateClasses(props: GroupedListItemProps, sidebar: boolean): string {
@@ -78,7 +78,7 @@ function stateClasses(props: GroupedListItemProps, sidebar: boolean): string {
 }
 
 const focusClasses =
-  'web:focus-visible:outline-2 web:focus-visible:outline-ring web:focus-visible:-outline-offset-2';
+  'web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2';
 
 // A sidebar row has no separators to hide and keeps its own hover tint (none when selected), so it only takes the focus ring.
 const pressClasses = (sidebar: boolean): string =>
@@ -86,7 +86,7 @@ const pressClasses = (sidebar: boolean): string =>
 
 // The hover shade's own line is out of flow, or it would add a gap's width to the row.
 const hoverClasses =
-  'web:hover:bg-[var(--color-separator)] web:active:bg-[var(--color-separator)] web:hover:after:absolute web:active:after:absolute web:hover:after:bg-inherit web:active:after:bg-inherit';
+  'web:hover:bg-border web:active:bg-border web:hover:after:absolute web:active:after:absolute web:hover:after:bg-inherit web:active:after:bg-inherit';
 
 function sidebarClasses(props: GroupedListItemProps): string {
   return cn(
@@ -102,7 +102,9 @@ export function rowEmphasis(
   props: GroupedListItemProps,
   sidebar: boolean,
 ): string {
-  return props.tone === 'accent' ? 'text-tint' : plainEmphasis(props, sidebar);
+  return props.tone === 'accent'
+    ? 'text-accent'
+    : plainEmphasis(props, sidebar);
 }
 
 function plainEmphasis(props: GroupedListItemProps, sidebar: boolean): string {
@@ -134,7 +136,7 @@ function separatorClasses(
   place: RowPlace,
 ): string {
   return cn(
-    'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-[var(--color-separator)]',
+    'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border',
     hiddenSeparator(place),
     // Inset to the text: the 16 gutter, the icon slot (24 phone, 20 wide) and the 12 gap.
     hasLeadingSlot(props) && 'web:after:left-13 wide:web:after:left-12',
@@ -155,15 +157,5 @@ export function hasLeadingSlot(
 export function titleClasses(
   props: Pick<GroupedListItemProps, 'tone' | 'code'>,
 ): string {
-  return cn(
-    'min-w-0 flex-1',
-    props.code && 'type-code',
-    props.tone && toneText[props.tone],
-  );
+  return cn('min-w-0 flex-1', props.code && 'type-code', toneClass(props.tone));
 }
-
-const toneText = {
-  destructive: 'text-destructive',
-  accent: 'text-tint',
-  muted: 'text-muted-foreground',
-};

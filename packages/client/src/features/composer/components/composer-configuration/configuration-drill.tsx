@@ -44,7 +44,7 @@ function configurationDrillRow(
   return (
     <GroupedListItem
       {...drillRowContent(props)}
-      role="button"
+      accessibilityRole="button"
       onPress={() => props.onOpenPage(props.page)}
     />
   );
@@ -56,7 +56,7 @@ function drillRowContent(
   if (props.page === 'agent') return agentDrillContent(props);
 
   return {
-    title: 'Model',
+    label: 'Model',
     value: modelName(selectedChoice(props.configuration, 'model')),
   };
 }
@@ -69,7 +69,7 @@ function agentDrillContent(
   );
 
   return {
-    title: 'Agent',
+    label: 'Agent',
     value: agent?.label,
     valueLeading: (
       <AgentIcon agent={agent} role={props.wide ? 'control' : 'row'} />
@@ -99,7 +99,7 @@ const drillPopoverPlacement = {
   alignOffset: -4,
   style: { width: 284 },
   className:
-    'bg-sidebar border-0 dark:border dark:border-border rounded-surface p-3 shadow-card',
+    'bg-content border-0 dark:border dark:border-border rounded-surface p-3 shadow-card',
 } as const;
 
 function ConfigurationDrillContent(props: PickerProps): React.JSX.Element {

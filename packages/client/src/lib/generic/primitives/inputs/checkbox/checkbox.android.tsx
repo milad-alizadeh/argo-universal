@@ -47,7 +47,7 @@ function CheckboxRow(props: RowProps): React.JSX.Element {
     {
       verticalAlignment: 'center',
       horizontalArrangement: {
-        spacedBy: props.appearance === 'option' ? optionGap : rowGap,
+        spacedBy: props.variant === 'option' ? optionGap : rowGap,
       },
       modifiers: useRowModifiers(props),
     },
@@ -70,14 +70,14 @@ const optionInset = 12;
 
 function useRowModifiers(props: RowProps): ReturnType<typeof semantics>[] {
   const { muted } = useNativeTheme().colors;
-  const inset = props.appearance === 'option' ? optionInset : rowInset;
+  const inset = props.variant === 'option' ? optionInset : rowInset;
 
   return [
     roundedClip(rowRadius),
     background(rowBackground(props, muted)),
     fillMaxWidth(),
     defaultMinSize({
-      minHeight: props.appearance === 'option' ? optionHeight : rowHeight,
+      minHeight: props.variant === 'option' ? optionHeight : rowHeight,
     }),
     padding(inset, rowPadding, inset, rowPadding),
     ...rowToggle(props),
@@ -85,9 +85,7 @@ function useRowModifiers(props: RowProps): ReturnType<typeof semantics>[] {
 }
 
 function rowBackground(props: RowProps, muted?: string): string {
-  return props.appearance === 'option'
-    ? 'transparent'
-    : (muted ?? 'transparent');
+  return props.variant === 'option' ? 'transparent' : (muted ?? 'transparent');
 }
 
 function rowToggle(props: RowProps): ReturnType<typeof toggleable>[] {

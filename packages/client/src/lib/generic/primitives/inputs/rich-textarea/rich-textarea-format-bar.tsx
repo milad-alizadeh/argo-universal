@@ -46,7 +46,7 @@ type ToggleProps = GroupProps & { button: FormatButton };
 const isPressed = ({ button, applied }: ToggleProps): boolean | undefined =>
   button.format === 'link' ? undefined : applied.includes(button.format);
 
-const toggleLook = { variant: 'ghost', size: 'sm' } as const;
+const toggleLook = { variant: 'ghost', size: 'xs' } as const;
 
 function FormatToggle(props: ToggleProps): React.JSX.Element {
   const pressed = isPressed(props);
@@ -56,7 +56,7 @@ function FormatToggle(props: ToggleProps): React.JSX.Element {
       {...toggleLook}
       icon={props.button.icon}
       accessibilityLabel={props.button.label}
-      aria-pressed={pressed}
+      selected={pressed}
       onPress={() => props.onFormat(props.button.format)}
     />
   );

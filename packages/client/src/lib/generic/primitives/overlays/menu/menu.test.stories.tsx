@@ -34,7 +34,7 @@ function Permissions({
   return (
     <Menu
       accessibilityLabel="Permissions"
-      choices={choices}
+      options={choices}
       value={value}
       disabled={disabled}
       onValueChange={(next) => {

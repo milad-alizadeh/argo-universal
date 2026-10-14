@@ -4,7 +4,7 @@ import { useContentWide } from '#lib/product/content-layout';
 import { Button, type ButtonProps } from '#primitives/buttons/button';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 
-type ActionProps = Extract<ButtonProps, { appearance: 'content' }>;
+type ActionProps = Extract<ButtonProps, { custom: true }>;
 
 export function QuestionActions({
   model,
@@ -34,8 +34,8 @@ function actionOrder(
 
 function actionProps(
   wide: boolean,
-): Pick<ActionProps, 'appearance' | 'size' | 'fullWidth'> {
-  return { appearance: 'content', size: 'sm', fullWidth: !wide };
+): Pick<ActionProps, 'custom' | 'size' | 'fullWidth'> {
+  return { custom: true, size: 'sm', fullWidth: !wide };
 }
 
 function submitProps(model: QuestionModel, wide: boolean): ActionProps {

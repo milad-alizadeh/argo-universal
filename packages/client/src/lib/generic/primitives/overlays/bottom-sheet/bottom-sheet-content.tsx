@@ -81,7 +81,7 @@ function sheetAccessibility(
 
 function sheetClass(props: SheetContentProps): string {
   return cn(
-    props.surface === 'sidebar' ? 'bg-sidebar' : 'bg-popover',
+    props.surface === 'sidebar' ? 'bg-content' : 'bg-card',
     'ios:pt-8 ios:pb-0 min-h-0',
     fitSheetPadding(props.fit),
     {

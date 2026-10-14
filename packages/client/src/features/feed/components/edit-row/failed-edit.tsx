@@ -47,8 +47,8 @@ function FailedError({ error }: { error: string }): React.JSX.Element | null {
 export function FailedEdit(props: FailedEditProps): React.JSX.Element {
   return (
     <View className="min-h-5 flex-row items-center gap-1.5">
-      <Icon name="edit" role="body" className="shrink-0 text-destructive" />
-      <Text role="body" className="text-destructive">
+      <Icon name="edit" role="body" className="shrink-0 text-danger" />
+      <Text role="body" className="text-danger">
         Couldn't edit
       </Text>
       <FailedPath path={failedPath(props)} />

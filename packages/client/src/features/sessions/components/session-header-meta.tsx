@@ -125,7 +125,7 @@ function TitleLine({ title }: { title: string }): React.JSX.Element {
     // A long title stops at two thirds of the row, well clear of the actions.
     <View className="max-w-[66%]">
       <Text
-        semanticRole="heading"
+        accessibilityRole="heading"
         aria-level={2}
         numberOfLines={1}
         role={'heading'}

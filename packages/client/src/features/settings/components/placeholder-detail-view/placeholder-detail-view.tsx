@@ -21,7 +21,7 @@ export function PlaceholderDetailView({
   description,
 }: PlaceholderDetailViewProps): React.JSX.Element {
   return (
-    <View className="flex-1 bg-sidebar wide:bg-transparent">
+    <View className="flex-1 bg-content wide:bg-transparent">
       <SettingsPage title={title} caption={caption}>
         <PlaceholderNote description={description} />
       </SettingsPage>
@@ -42,7 +42,7 @@ function RowNote({ description }: NoteProps): React.JSX.Element {
   return (
     <GroupedList>
       <GroupedListSection>
-        <GroupedListItem title={description} />
+        <GroupedListItem label={description} />
       </GroupedListSection>
     </GroupedList>
   );

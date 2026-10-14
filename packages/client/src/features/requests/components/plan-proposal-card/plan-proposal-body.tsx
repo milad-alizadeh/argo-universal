@@ -63,7 +63,7 @@ function ExpansionToggle({ interaction }: InteractionProps): ReactNode {
       onPress={() => interaction.setExpanded(!interaction.expanded)}
       icon={interaction.expanded ? 'collapse' : 'expand'}
       iconClassName="text-muted-foreground"
-      size="md"
+      size="sm"
     />
   );
 }
@@ -123,7 +123,7 @@ function SheetDocument({ proposal, interaction }: BodyProps): ReactNode {
 
 function SheetCard({ content }: { content: string }): ReactNode {
   return (
-    <View className="rounded-xl android:rounded-2xl bg-secondary px-4 py-3.5">
+    <View className="rounded-xl android:rounded-2xl bg-muted px-4 py-3.5">
       <PlanDocument content={content} layout="request-sheet" />
     </View>
   );

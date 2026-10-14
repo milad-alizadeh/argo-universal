@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import { Menu, type MenuAction } from '#primitives/overlays/menu';
@@ -30,7 +29,8 @@ function PullRequestIcon({
     <Icon
       name={appearance.icon}
       role="secondary"
-      className={cn('shrink-0', appearance.className)}
+      tone={appearance.tone}
+      className="shrink-0"
     />
   );
 }

@@ -14,7 +14,7 @@ interface PickerProps {
 
 export function ConfigurationPage(props: PickerProps): React.JSX.Element {
   return (
-    <View className="min-h-80 bg-sidebar">
+    <View className="min-h-80 bg-content">
       <ConfigurationPageHeader {...props} />
       <ConfigurationPageChoices {...props} />
     </View>

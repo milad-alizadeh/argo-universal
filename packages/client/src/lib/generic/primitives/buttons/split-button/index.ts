@@ -1,7 +1,7 @@
 export { SplitButton } from './split-button';
 
 export {
-  type SplitButtonChoice,
+  type SplitButtonOption,
   type SplitButtonProps,
   type SplitMenuProps,
 } from './split-button-props';

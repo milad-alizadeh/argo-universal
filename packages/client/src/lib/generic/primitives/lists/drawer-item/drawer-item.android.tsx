@@ -70,12 +70,12 @@ function usePillModifiers(selected: boolean): ModifierConfig[] {
 }
 
 function tabModifiers({
-  title,
+  label,
   selected,
   badge,
   onPress,
 }: DrawerItemProps): ModifierConfig[] {
-  const description = [title, badge?.label].filter(Boolean).join(', ');
+  const description = [label, badge?.label].filter(Boolean).join(', ');
 
   return [
     selectable(selected, onPress, 'tab'),
@@ -116,7 +116,7 @@ function IconLayer({ icon, filled, shown }: IconLayerProps): React.JSX.Element {
 }
 
 function DrawerItemLabel({
-  title,
+  label,
   selected,
 }: DrawerItemProps): React.JSX.Element {
   const colors = useMaterialColors();
@@ -125,7 +125,7 @@ function DrawerItemLabel({
 
   return (
     <Text color={color} style={style} maxLines={1} modifiers={[weight(1)]}>
-      {title}
+      {label}
     </Text>
   );
 }

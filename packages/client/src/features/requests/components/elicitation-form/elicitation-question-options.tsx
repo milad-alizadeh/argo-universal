@@ -52,7 +52,7 @@ function optionsClassName(wide: boolean): string {
 function QuestionOption({ model, option }: OptionProps): ReactElement {
   return (
     <Checkbox
-      appearance="option"
+      variant="option"
       selection={model.question.multiple ? 'multiple' : 'single'}
       label={option.title}
       value={selectedAnswers(model).includes(option.const)}

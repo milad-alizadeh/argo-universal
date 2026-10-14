@@ -28,9 +28,9 @@ function Switch(props: SwitchProps): React.JSX.Element {
 function enabledColors(colors: NativeColors): SwitchColors {
   return {
     checkedThumbColor: colors.background,
-    checkedTrackColor: colors.tint,
-    checkedBorderColor: colors.tint,
-    checkedIconColor: colors.tint,
+    checkedTrackColor: colors.accent,
+    checkedBorderColor: colors.accent,
+    checkedIconColor: colors.accent,
     uncheckedThumbColor: colors.mutedForeground,
     uncheckedTrackColor: colors.muted,
     uncheckedBorderColor: colors.mutedForeground,

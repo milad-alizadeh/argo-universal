@@ -34,7 +34,7 @@ function ExpandButton(props: InspectorControlsProps): React.JSX.Element {
       onPress={() => onStateChange(expanded ? 'open' : 'expanded')}
       icon={expanded ? 'collapse' : 'expand'}
       iconClassName={controlIconClass}
-      size="md"
+      size="sm"
     />
   );
 }
@@ -50,7 +50,7 @@ function CloseButton({
       onPress={() => onStateChange('closed')}
       icon="close"
       iconClassName={controlIconClass}
-      size="md"
+      size="sm"
     />
   );
 }
@@ -59,7 +59,7 @@ function InspectorTitle({ title }: { title: string }): React.JSX.Element {
   return (
     <Text
       role="body"
-      semanticRole="heading"
+      accessibilityRole="heading"
       aria-level={2}
       numberOfLines={1}
       className="min-w-0 flex-1 font-medium"

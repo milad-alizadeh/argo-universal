@@ -6,10 +6,10 @@ export const iconButtonClasses = cva(
     variants: {
       variant: {
         default:
-          'bg-muted active:border-ring active:bg-border web:hover:bg-border web:active:bg-border',
-        ghost: 'bg-transparent active:bg-accent web:hover:bg-accent',
+          'bg-muted active:border-focus active:bg-border web:hover:bg-border web:active:bg-border',
+        ghost: 'bg-transparent active:bg-hover web:hover:bg-hover',
         outline:
-          'border-border bg-background active:bg-accent web:hover:bg-accent',
+          'border-border bg-background active:bg-hover web:hover:bg-hover',
         // Reacts as the filled Button does, so both halves of a split button match.
         filled:
           'bg-primary active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
@@ -18,13 +18,13 @@ export const iconButtonClasses = cva(
       // A toggle that is on, such as Bold in the format bar.
       pressed: { true: 'bg-muted' },
       size: {
-        sm: 'size-11 sm:size-7',
-        md: 'size-11 sm:size-8',
-        lg: 'size-11 sm:size-10',
-        xl: 'size-11 sm:size-11',
-        '2xl': 'size-12 sm:size-12',
+        xs: 'size-11 sm:size-7',
+        sm: 'size-11 sm:size-8',
+        md: 'size-11 sm:size-10',
+        lg: 'size-11 sm:size-11',
+        xl: 'size-12 sm:size-12',
       },
     },
-    defaultVariants: { size: 'md', variant: 'default' },
+    defaultVariants: { size: 'sm', variant: 'default' },
   },
 );

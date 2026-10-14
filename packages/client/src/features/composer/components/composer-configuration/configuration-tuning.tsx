@@ -26,7 +26,7 @@ export function EffortControl(props: TuningProps): React.JSX.Element | null {
 
   return (
     <GroupedListItem
-      title="Effort"
+      label="Effort"
       value={effort.selected.name}
       detail={<EffortSlider {...props} effort={effort} />}
     />
@@ -83,7 +83,7 @@ function ConfigurationSwitch(props: SwitchProps): React.JSX.Element {
 function NativeConfigurationSwitch(props: SwitchProps): React.JSX.Element {
   return (
     <GroupedListItem
-      title={props.option.name}
+      label={props.option.name}
       control={<NativeSwitchControl {...props} />}
     />
   );
@@ -118,8 +118,8 @@ function webSwitchRowProps({
   option,
 }: SwitchProps): React.ComponentProps<typeof GroupedListItem> {
   return {
-    title: option.name,
-    role: 'switch',
+    label: option.name,
+    accessibilityRole: 'switch',
     checked: option.currentValue,
     disclosure: false,
     onPress: () =>

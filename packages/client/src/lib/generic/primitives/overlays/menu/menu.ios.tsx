@@ -57,13 +57,13 @@ function MenuItems<Value extends string>(
 function useMenuModifiers<Value extends string>(
   props: MenuProps<Value>,
 ): ModifierConfig[] {
-  const { tint } = useNativeTheme().colors;
+  const { accent } = useNativeTheme().colors;
 
   return [
     accessibilityLabel(props.accessibilityLabel),
     ...menuValue(props),
     disabled(Boolean(props.disabled)),
-    ...optionalTint(tint),
+    ...optionalTint(accent),
   ];
 }
 
@@ -122,7 +122,7 @@ function MenuPicker<Value extends string>(
       onSelectionChange={props.onValueChange}
       modifiers={[pickerStyle('inline')]}
     >
-      {props.choices.map((choice) => (
+      {props.options.map((choice) => (
         <PickerOption key={choice.value} {...choice} />
       ))}
     </Picker>

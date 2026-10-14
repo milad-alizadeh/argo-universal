@@ -69,7 +69,7 @@ function DimensionField({
   return (
     <View className="flex-row items-center gap-4">
       <Text className="web:block w-24">{label}</Text>
-      <TextInput appearance="bare" {...inputProps} className="flex-1 sm:h-8" />
+      <TextInput variant="bare" {...inputProps} className="flex-1 sm:h-8" />
     </View>
   );
 }

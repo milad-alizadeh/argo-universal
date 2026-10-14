@@ -55,11 +55,9 @@ function contentPressableProps(
 }
 
 function contentLayoutProps(
-  props: Pick<ContentButtonProps, 'ref' | 'style'> & {
-    appearance?: 'system' | 'content';
-  },
+  props: Pick<ContentButtonProps, 'ref' | 'style'> & { custom?: boolean },
 ): Pick<ComponentProps<typeof Pressable>, 'ref' | 'style'> {
-  if (props.appearance !== 'content') return {};
+  if (!props.custom) return {};
 
   return { ref: props.ref, style: props.style };
 }
@@ -71,7 +69,7 @@ function ContentAdornment({
   button: ButtonProps;
   side: 'leading' | 'trailing';
 }): ReactElement | undefined {
-  return button.appearance === 'content' ? button[side] : undefined;
+  return button.custom ? button[side] : undefined;
 }
 
 type ContentPopupProps = Pick<
@@ -91,7 +89,7 @@ function contentTriggerProps(
   props: ButtonProps,
 ): Pick<ContentButtonProps, 'id' | 'onHoverIn' | 'onHoverOut'> &
   ContentPopupProps {
-  if (props.appearance !== 'content') return {};
+  if (!props.custom) return {};
 
   return {
     id: props.id,

@@ -25,7 +25,7 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
   const found = props.projects.filter((project) => matches(project, query));
 
   return (
-    <View className="native:flex-1 px-4 pt-4 wide:p-3 bg-sidebar">
+    <View className="native:flex-1 px-4 pt-4 wide:p-3 bg-content">
       <ProjectSearch query={query} onChange={setQuery} />
       <ProjectResults {...props} projects={found} />
     </View>
@@ -81,7 +81,7 @@ function projectListProps(props: ProjectPickerProps): ProjectListProps {
   };
 }
 
-const noMatch = <GroupedListItem title="No Project matches." tone="muted" />;
+const noMatch = <GroupedListItem label="No Project matches." tone="muted" />;
 
 type ProjectChoiceProps = ProjectPickerProps & { project: ProjectInfo };
 
@@ -96,7 +96,7 @@ function projectChoiceProps(
   const selected = project.id === projectId;
 
   return {
-    title: project.name,
+    label: project.name,
     accessibilityLabel: project.name,
     subtitle: { text: project.path, code: true },
     ...projectChoiceAppearance,
@@ -137,7 +137,7 @@ function ProjectSearch({ query, onChange }: ProjectSearchProps): JSX.Element {
 }
 
 const projectListAppearance = {
-  surfaceClassName: 'bg-sidebar',
+  surfaceClassName: 'bg-content',
   maxHeight: listMaximumHeight,
   contentContainerStyle: {},
   estimatedItemSize: rowEstimate,
@@ -145,6 +145,6 @@ const projectListAppearance = {
 
 const projectChoiceAppearance = {
   icon: 'folder',
-  role: 'button',
+  accessibilityRole: 'button',
   disclosure: false,
 } as const;

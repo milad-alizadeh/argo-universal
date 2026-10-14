@@ -14,7 +14,7 @@ export function GroupedListSection(
   props: GroupedListSectionProps,
 ): React.JSX.Element {
   const footerId = useId();
-  const footer = { id: footerId, text: props.footer, tone: props.footerTone };
+  const footer = { id: footerId, text: props.footer, tone: props.tone };
 
   return (
     <View className="gap-2 wide:gap-3">
@@ -50,30 +50,28 @@ const footerOf = (
   props: GroupedListSectionProps,
   id: string,
 ): SectionFooter | undefined =>
-  props.footer
-    ? { id, failure: props.footerTone === 'destructive' }
-    : undefined;
+  props.footer ? { id, failure: props.tone === 'danger' } : undefined;
 
 type FooterProps = {
   id: string;
   text?: string;
-  tone?: GroupedListSectionProps['footerTone'];
+  tone?: GroupedListSectionProps['tone'];
 };
 
 function SectionFooter(props: FooterProps): React.JSX.Element | null {
   return props.text ? <FooterText {...props} text={props.text} /> : null;
 }
 
-// A failure, such as a field's error, reads in the destructive colour and is announced.
+// A failure, such as a field's error, reads in the danger colour and is announced.
 function FooterText(props: FooterProps & { text: string }): React.JSX.Element {
-  const failure = props.tone === 'destructive';
+  const failure = props.tone === 'danger';
 
   return (
     <Text
       id={props.id}
       role="secondary"
-      semanticRole={failure ? 'alert' : undefined}
-      className={cn('px-4', failure && 'text-destructive')}
+      accessibilityRole={failure ? 'alert' : undefined}
+      className={cn('px-4', failure && 'text-danger')}
     >
       {props.text}
     </Text>
@@ -86,7 +84,7 @@ function SectionTitle({ title }: { title?: string }): React.JSX.Element | null {
   return (
     <View className="justify-center px-4">
       <Text
-        semanticRole="heading"
+        accessibilityRole="heading"
         aria-level={2}
         role="heading"
         className="text-muted-foreground wide:font-medium wide:text-foreground"

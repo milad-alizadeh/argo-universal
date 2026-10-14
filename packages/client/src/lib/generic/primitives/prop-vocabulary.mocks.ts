@@ -1,0 +1,108 @@
+import type * as ButtonKit from '#primitives/buttons/button';
+import type * as ButtonGroupKit from '#primitives/buttons/button-group';
+import type * as FilterPillKit from '#primitives/buttons/filter-pill';
+import type * as IconButtonKit from '#primitives/buttons/icon-button';
+import type * as SplitButtonKit from '#primitives/buttons/split-button';
+import type * as BadgeKit from '#primitives/display/badge';
+import type * as CollapsibleKit from '#primitives/display/collapsible';
+import type * as DisclosureChevronKit from '#primitives/display/disclosure-chevron';
+import type * as IconKit from '#primitives/display/icon';
+import type * as LiquidGlassKit from '#primitives/display/liquid-glass';
+import type * as SelectedCheckKit from '#primitives/display/selected-check';
+import type * as SpinnerKit from '#primitives/display/spinner';
+import type * as TextKit from '#primitives/display/text';
+import type * as FieldKit from '#primitives/fields/field';
+import type * as FieldDescriptionKit from '#primitives/fields/field-description';
+import type * as FieldErrorsKit from '#primitives/fields/field-errors';
+import type * as CheckboxKit from '#primitives/inputs/checkbox';
+import type * as ComboboxSearchKit from '#primitives/inputs/combobox-search';
+import type * as PickerKit from '#primitives/inputs/picker';
+import type * as RichTextareaKit from '#primitives/inputs/rich-textarea';
+import type * as SearchFieldKit from '#primitives/inputs/search-field';
+import type * as SliderKit from '#primitives/inputs/slider';
+import type * as SwitchKit from '#primitives/inputs/switch';
+import type * as TextInputKit from '#primitives/inputs/text-input';
+import type * as TextareaKit from '#primitives/inputs/textarea';
+import type * as DrawerItemKit from '#primitives/lists/drawer-item';
+import type * as GroupedListKit from '#primitives/lists/grouped-list';
+import type * as GroupedListContentKit from '#primitives/lists/grouped-list-content';
+import type * as GroupedListItemKit from '#primitives/lists/grouped-list-item';
+import type * as GroupedListSectionKit from '#primitives/lists/grouped-list-section';
+import type * as HostKit from '#primitives/native/host';
+import type * as AlertKit from '#primitives/overlays/alert';
+import type * as BottomSheetKit from '#primitives/overlays/bottom-sheet';
+import type * as DialogKit from '#primitives/overlays/dialog';
+import type * as MenuKit from '#primitives/overlays/menu';
+import type * as PopoverKit from '#primitives/overlays/popover';
+import type * as ToastKit from '#primitives/overlays/toast';
+
+/*
+ * Every type the primitives' index files export, keyed by its exported name. A props-shaped type goes in
+ * `Primitives`, a plain alias in `Aliases`. prop-vocabulary.integration.test.ts fails when an export is in
+ * neither, so a new primitive cannot skip the checks in prop-vocabulary.test-d.ts.
+ */
+export type Primitives = {
+  AlertAction: AlertKit.AlertAction;
+  AlertProps: AlertKit.AlertProps;
+  BadgeProps: BadgeKit.BadgeProps;
+  BottomSheetProps: BottomSheetKit.BottomSheetProps;
+  ButtonDataProps: ButtonKit.ButtonDataProps;
+  ButtonGroupProps: ButtonGroupKit.ButtonGroupProps;
+  ButtonProps: ButtonKit.ButtonProps;
+  CheckboxIndicatorProps: CheckboxKit.CheckboxIndicatorProps;
+  CheckboxProps: CheckboxKit.CheckboxProps;
+  CollapsibleContentProps: CollapsibleKit.CollapsibleContentProps;
+  CollapsibleProps: CollapsibleKit.CollapsibleProps;
+  ComboboxSearchProps: ComboboxSearchKit.ComboboxSearchProps;
+  DialogContentProps: DialogKit.DialogContentProps;
+  DialogRegionProps: DialogKit.DialogRegionProps;
+  DisclosureChevronProps: DisclosureChevronKit.DisclosureChevronProps;
+  DockedSearchQuery: SearchFieldKit.DockedSearchQuery;
+  DrawerItemProps: DrawerItemKit.DrawerItemProps;
+  ErrorToast: ToastKit.ErrorToast;
+  FieldDescription: FieldDescriptionKit.FieldDescription;
+  FieldProps: FieldKit.FieldProps;
+  FilterPillProps: FilterPillKit.FilterPillProps;
+  FormSheetProps: BottomSheetKit.FormSheetProps;
+  FormSheetRoutes: BottomSheetKit.FormSheetRoutes;
+  GroupedListContentProps: GroupedListContentKit.GroupedListContentProps;
+  GroupedListItemProps: GroupedListItemKit.GroupedListItemProps;
+  GroupedListProps: GroupedListKit.GroupedListProps;
+  GroupedListSectionProps: GroupedListSectionKit.GroupedListSectionProps;
+  HostProps: HostKit.HostProps;
+  IconButtonProps: IconButtonKit.IconButtonProps;
+  IconProps: IconKit.IconProps;
+  IconSlotProps: IconKit.IconSlotProps;
+  IconSpinnerProps: IconKit.IconSpinnerProps;
+  LiquidGlassProps: LiquidGlassKit.LiquidGlassProps;
+  MenuAction: MenuKit.MenuAction;
+  MenuProps: MenuKit.MenuProps;
+  PickerProps: PickerKit.PickerProps<string>;
+  PopoverContentProps: PopoverKit.PopoverContentProps;
+  PopoverProps: PopoverKit.PopoverProps;
+  PopoverTriggerProps: PopoverKit.PopoverTriggerProps;
+  RichTextareaProps: RichTextareaKit.RichTextareaProps;
+  RowHover: GroupedListItemKit.RowHover;
+  SearchFieldProps: SearchFieldKit.SearchFieldProps;
+  SectionFooter: FieldDescriptionKit.SectionFooter;
+  SelectedCheckProps: SelectedCheckKit.SelectedCheckProps;
+  SliderProps: SliderKit.SliderProps;
+  SpinnerProps: SpinnerKit.SpinnerProps;
+  SplitButtonOption: SplitButtonKit.SplitButtonOption<string>;
+  SplitButtonProps: SplitButtonKit.SplitButtonProps;
+  SplitMenuProps: SplitButtonKit.SplitMenuProps;
+  StandaloneTextInputProps: TextInputKit.StandaloneTextInputProps;
+  SwitchProps: SwitchKit.SwitchProps;
+  TextInputProps: TextInputKit.TextInputProps;
+  TextProps: TextKit.TextProps;
+  TextareaProps: TextareaKit.TextareaProps;
+  Toast: ToastKit.Toast;
+};
+
+export type Aliases = {
+  BadgeTone: BadgeKit.BadgeTone;
+  ButtonSize: ButtonKit.ButtonSize;
+  FieldErrors: FieldErrorsKit.FieldErrors;
+  TextRole: TextKit.TextRole;
+  Tone: TextKit.Tone;
+};

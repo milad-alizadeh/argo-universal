@@ -36,11 +36,6 @@ function SecondaryButtonsExample(): React.JSX.Element {
 // ButtonGroup joins the corners of its direct children, so these stay Buttons, not a wrapper.
 function secondaryButtons(labels: string[]): React.JSX.Element[] {
   return labels.map((label) => (
-    <Button
-      key={label}
-      variant="secondary"
-      label={label}
-      appearance="content"
-    />
+    <Button key={label} variant="secondary" label={label} custom />
   ));
 }

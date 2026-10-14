@@ -19,7 +19,8 @@ export interface ButtonDataProps {
   style?: never;
   icon?: IconName;
   variant?: ButtonVariant;
-  role?: 'destructive';
+  // The danger tone draws the button in red.
+  tone?: 'danger';
   size?: ButtonSize;
   // "narrow" fills a narrow window and stays compact on a wide one.
   fullWidth?: boolean | 'narrow';
@@ -30,14 +31,16 @@ export interface ButtonDataProps {
   testID?: string;
 }
 
-export type SystemButtonProps = ButtonDataProps & { appearance?: 'system' };
+// The system button on phones; Argo draws it on the web.
+export type SystemButtonProps = ButtonDataProps & { custom?: false };
 
 export type ContentButtonProps = Omit<ButtonDataProps, 'className' | 'style'> &
   Pick<
     ComponentProps<typeof Pressable>,
     'className' | 'style' | 'ref' | 'onHoverIn' | 'onHoverOut'
   > & {
-    appearance: 'content';
+    // Argo draws it on every platform, so the caller can lay it out and add leading and trailing content.
+    custom: true;
     labelClassName?: string;
     labelNumberOfLines?: number;
     leading?: ReactElement;

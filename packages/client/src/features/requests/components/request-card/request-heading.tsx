@@ -43,7 +43,7 @@ function HeadingText({ title }: Pick<RequestHeadingProps, 'title'>): ReactNode {
   return (
     <Text
       role="heading"
-      semanticRole="heading"
+      accessibilityRole="heading"
       aria-level={2}
       className="min-w-0 flex-1 ios:type-nav-title"
     >

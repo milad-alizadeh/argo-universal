@@ -12,7 +12,7 @@ export function BackButton({ onBack }: BackButtonProps): React.JSX.Element {
       icon="chevron-left"
       iconRole="title"
       iconClassName="text-foreground"
-      size="sm"
+      size="xs"
       variant="ghost"
       accessibilityLabel="Back"
       onPress={onBack}

@@ -60,7 +60,7 @@ function accentRoles(
     primary: role(colors.primary, seeded.primary),
     onPrimary: role(colors.primaryForeground, seeded.onPrimary),
     outline: role(colors.border, seeded.outline),
-    error: role(colors.destructive, seeded.error),
+    error: role(colors.danger, seeded.error),
   };
 }
 
@@ -78,7 +78,7 @@ function surfaceRoles(
   return {
     surface: role(colors.background, seeded.surface),
     surfaceContainer: role(colors.muted, seeded.surfaceContainer),
-    surfaceContainerHigh: role(colors.popover, seeded.surfaceContainerHigh),
+    surfaceContainerHigh: role(colors.card, seeded.surfaceContainerHigh),
     onSurface: role(colors.foreground, seeded.onSurface),
     onSurfaceVariant: role(colors.mutedForeground, seeded.onSurfaceVariant),
   };

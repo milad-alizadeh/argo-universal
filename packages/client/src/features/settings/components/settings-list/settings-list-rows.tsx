@@ -16,7 +16,7 @@ export function SettingsRows({
   return (
     <>
       {rows.map((row) => (
-        <SettingsRowItem key={row.title} row={row} {...selection} />
+        <SettingsRowItem key={row.label} row={row} {...selection} />
       ))}
     </>
   );

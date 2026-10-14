@@ -79,7 +79,7 @@ function sheetRows<Value extends string>(
 ): SheetRow[] {
   if (props.actions) return [...props.actions];
 
-  return props.choices.map((choice) => ({
+  return props.options.map((choice) => ({
     label: choice.label,
     selected: choice.value === props.value,
     onPress: () => props.onValueChange(choice.value),

@@ -18,10 +18,10 @@ interface LinkFieldProps {
 }
 
 const urlInput = {
-  appearance: 'bare',
+  variant: 'bare',
   autoCapitalize: 'none',
   autoCorrect: false,
-  variant: 'muted',
+  tone: 'muted',
 } as const;
 
 function LinkField({ label, ...input }: LinkFieldProps): React.JSX.Element {

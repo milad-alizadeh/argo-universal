@@ -16,7 +16,7 @@ export interface SessionsHeaderProps extends SessionsFilter {
 
 const newSessionAppearance = {
   variant: 'ghost',
-  size: 'md',
+  size: 'sm',
   className: 'size-7 sm:size-7',
   icon: 'new-session',
   iconRole: 'action',

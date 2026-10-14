@@ -29,7 +29,7 @@ const destinations: { title: string; icon: IconName }[] = [
 const attention = {
   label: '2 need attention',
   element: (
-    <Badge tone="destructive">
+    <Badge tone="danger">
       <Text>2</Text>
     </Badge>
   ),
@@ -63,7 +63,7 @@ function Destination(props: DestinationProps): React.JSX.Element {
 
   return (
     <DrawerItem
-      title={title}
+      label={title}
       icon={props.icon}
       selected={current === title}
       badge={title === 'Issues' ? attention : undefined}

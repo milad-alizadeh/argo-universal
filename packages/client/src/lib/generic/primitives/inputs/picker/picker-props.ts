@@ -22,6 +22,6 @@ export type PickerProps<Value extends string> = {
   loading?: boolean;
   /** Why the options failed to load; shown in place of the option list. */
   loadError?: string;
-  appearance?: 'row' | 'field';
+  variant?: 'row' | 'field';
   onBlur?: () => void;
 };

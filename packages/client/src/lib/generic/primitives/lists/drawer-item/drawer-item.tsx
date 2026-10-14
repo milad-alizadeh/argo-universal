@@ -8,11 +8,11 @@ import type { DrawerItemProps } from './drawer-item-props';
 
 // A destination in a navigation drawer: an icon and a label, tinted and filled when it is the current one.
 export function DrawerItem(props: DrawerItemProps): React.JSX.Element {
-  const { title, selected, onPress } = props;
+  const { label, selected, onPress } = props;
 
   return (
     <Pressable
-      accessibilityLabel={title}
+      accessibilityLabel={label}
       accessibilityState={{ selected }}
       aria-pressed={selected}
       onPress={onPress}
@@ -34,15 +34,15 @@ const drawerItemClass = (selected: boolean): string =>
   });
 
 function DrawerItemContent(props: DrawerItemProps): React.JSX.Element {
-  const { title, icon, selected, badge } = props;
+  const { label, icon, selected, badge } = props;
   const muted = cn(!selected && 'text-muted-foreground');
-  const label = cn('flex-1', selected && 'font-semibold');
+  const labelClass = cn('flex-1', selected && 'font-semibold');
 
   return (
     <>
       <Icon name={icon} role="nav" filled={selected} className={muted} />
-      <Text role="body" className={label}>
-        {title}
+      <Text role="body" className={labelClass}>
+        {label}
       </Text>
       <OptionalBadge badge={badge} />
     </>

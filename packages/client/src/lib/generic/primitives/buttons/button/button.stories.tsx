@@ -17,7 +17,7 @@ const buttons: { state: string; props: ButtonProps }[] = [
   { state: 'Link', props: { label: 'Learn more', variant: 'link' } },
   {
     state: 'Destructive',
-    props: { label: 'Remove Agent', role: 'destructive', fullWidth: true },
+    props: { label: 'Remove Agent', tone: 'danger', fullWidth: true },
   },
   {
     state: 'Extra small (a phone draws Default)',
@@ -43,7 +43,7 @@ const buttons: { state: string; props: ButtonProps }[] = [
   { state: 'Leading icon', props: { label: 'Add Agent', icon: 'agent' } },
   {
     state: 'Argo content',
-    props: { label: 'Continue', appearance: 'content', icon: 'arrow-right' },
+    props: { label: 'Continue', custom: true, icon: 'arrow-right' },
   },
 ];
 
@@ -55,7 +55,7 @@ const pairs: { state: string; props: ButtonProps }[] = [
   { state: 'Text', props: { label: 'Save', variant: 'ghost' } },
   {
     state: 'Destructive',
-    props: { label: 'Remove', role: 'destructive', variant: 'default' },
+    props: { label: 'Remove', tone: 'danger', variant: 'default' },
   },
   { state: 'Disabled', props: { label: 'Save', disabled: true } },
   { state: 'Loading', props: { label: 'Save', loading: true } },
@@ -100,7 +100,7 @@ function PairExample(options: ExampleOptions): React.JSX.Element {
     <Variation label={`${options.state}: system, then Argo content`}>
       <View className="flex-row items-center gap-3">
         <Button {...options.props} />
-        <Button {...options.props} appearance="content" />
+        <Button {...options.props} custom />
       </View>
     </Variation>
   );

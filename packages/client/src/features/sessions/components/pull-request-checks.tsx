@@ -31,7 +31,7 @@ const ringCircle = {
 const arcGap = 1.2;
 
 const stateTone = {
-  failing: { text: 'text-destructive', stroke: 'bg-destructive' },
+  failing: { text: 'text-danger', stroke: 'bg-danger' },
   running: { text: 'text-warning', stroke: 'bg-warning' },
   passed: { text: 'text-success', stroke: 'bg-success' },
 } satisfies Record<ChecksState, { text: string; stroke: string }>;

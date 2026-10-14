@@ -77,7 +77,7 @@ function contentsProps(
 }
 
 const optionsButtonAppearance = {
-  appearance: 'content',
+  custom: true,
   size: 'xs',
   variant: 'ghost',
 } as const;

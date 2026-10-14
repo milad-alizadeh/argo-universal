@@ -5,10 +5,10 @@ import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 
 const fileNameClassName =
-  'select-none min-w-0 shrink web:underline web:decoration-ring web:underline-offset-2';
+  'select-none min-w-0 shrink web:underline web:decoration-focus web:underline-offset-2';
 
 function useNativeUnderline(): TextStyle | undefined {
-  const underlineColor = useCSSVariable('--color-ring');
+  const underlineColor = useCSSVariable('--color-focus');
 
   return Platform.select({
     native: {

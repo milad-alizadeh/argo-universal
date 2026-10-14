@@ -114,7 +114,7 @@ function SetupStepAlert({
   if (setupStep === undefined) return null;
 
   return (
-    <Text semanticRole="alert" className="w-full px-4 pb-2 text-destructive">
+    <Text accessibilityRole="alert" className="w-full px-4 pb-2 text-danger">
       {setupStep}
     </Text>
   );

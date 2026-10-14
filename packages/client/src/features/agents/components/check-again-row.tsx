@@ -11,7 +11,7 @@ export function CheckAgainRow({
     <GroupedListItem
       icon="retry"
       tone="accent"
-      title="Check again"
+      label="Check again"
       onPress={onPress}
       disabled={!onPress}
     />

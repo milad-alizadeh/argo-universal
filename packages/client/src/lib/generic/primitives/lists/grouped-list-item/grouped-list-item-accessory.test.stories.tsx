@@ -24,7 +24,7 @@ function EffortRow(): React.JSX.Element {
     <GroupedList>
       <GroupedListSection title="Preferences">
         <GroupedListItem
-          title="Effort"
+          label="Effort"
           accessory={
             <Picker
               label="Effort"

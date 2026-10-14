@@ -32,7 +32,7 @@ const mergeSplit = {
 
 const mergeButton = (
   <Button
-    appearance="content"
+    custom
     size="xs"
     icon="merged"
     label="Merge PR"
@@ -48,11 +48,11 @@ function ScopeSplit(props: { narrow?: boolean }): React.JSX.Element {
       primary
       narrow={props.narrow}
       menuLabel="Allow options"
-      choices={scopes}
+      options={scopes}
       value={scope}
       onValueChange={setScope}
     >
-      <Button appearance="content" label="Allow" />
+      <Button custom label="Allow" />
     </SplitButton>
   );
 }

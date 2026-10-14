@@ -84,7 +84,7 @@ function PreviewLayout({
 
 function ScreenLayout({ Story }: LayoutProps): React.JSX.Element {
   return (
-    <View className="flex-1 w-full min-h-0 bg-sidebar web:h-screen web:flex-none">
+    <View className="flex-1 w-full min-h-0 bg-content web:h-screen web:flex-none">
       <Story />
     </View>
   );
@@ -94,7 +94,7 @@ function WebCentredLayout({ Story, padding }: LayoutProps): React.JSX.Element {
   return (
     <View
       className={cn(
-        'min-h-full w-full items-center justify-center bg-sidebar',
+        'min-h-full w-full items-center justify-center bg-content',
         padding && 'p-6',
       )}
     >
@@ -106,7 +106,7 @@ function WebCentredLayout({ Story, padding }: LayoutProps): React.JSX.Element {
 function NativeCentredLayout(props: LayoutProps): React.JSX.Element {
   return (
     <ScrollView
-      className="flex-1 bg-sidebar"
+      className="flex-1 bg-content"
       contentContainerClassName={cn(
         'grow items-center justify-center',
         props.padding && 'p-6',

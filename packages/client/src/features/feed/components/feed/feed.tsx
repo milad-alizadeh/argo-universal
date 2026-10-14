@@ -31,7 +31,7 @@ export interface FeedProps {
 function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
   return (
     <View className="flex-1 items-center justify-center gap-1.5 p-6">
-      <Text semanticRole="heading" aria-level={2}>
+      <Text accessibilityRole="heading" aria-level={2}>
         What should we build?
       </Text>
       {!!branch && (

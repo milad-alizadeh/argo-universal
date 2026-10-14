@@ -93,7 +93,7 @@ function RepositoriesTrigger(): React.JSX.Element {
         variant="ghost"
         accessibilityLabel="Toggle repositories"
         icon={'chevron-up-down'}
-        size="md"
+        size="sm"
       />
     </CollapsibleTrigger>
   );

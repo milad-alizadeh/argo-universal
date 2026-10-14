@@ -13,7 +13,7 @@ export type SurfaceProps = {
   initialSize?: BottomSheetProps['initialSize'];
   footer?: React.ReactNode;
   label?: string;
-  size?: 'form';
+  variant?: 'form';
   // A hidden title for a sheet whose content has none of its own.
   title?: React.ReactNode;
   /*
@@ -37,7 +37,7 @@ export function overlayProps(open: boolean): React.ComponentProps<
 
 type ContentSource = Pick<
   SurfaceProps,
-  'open' | 'onClosed' | 'dismissible' | 'onCloseAutoFocus' | 'size'
+  'open' | 'onClosed' | 'dismissible' | 'onCloseAutoFocus' | 'variant'
 >;
 
 type ContentProps = React.ComponentProps<typeof DialogPrimitive.Content> & {
@@ -56,7 +56,7 @@ export function sheetContentProps(
     onCloseAutoFocus: closeAutoFocus(props),
     onEscapeKeyDown: keepOpen(props.dismissible),
     onInteractOutside: keepOpen(props.dismissible),
-    className: sheetClass(props.size, expanded, anchored),
+    className: sheetClass(props.variant, expanded, anchored),
   };
 }
 
@@ -68,18 +68,18 @@ function closeAutoFocus(props: ContentSource): (event: Event) => void {
 }
 
 function sheetClass(
-  size: SurfaceProps['size'],
+  variant: SurfaceProps['variant'],
   expanded: boolean,
   anchored: boolean,
 ): string {
   return cn(
-    'bottom-sheet max-h-[85dvh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
-    formClass(size),
+    'bottom-sheet max-h-[85dvh] rounded-t-surface bg-card pb-8.5 shadow-card dark:border dark:border-border outline-none',
+    formClass(variant),
     anchored && 'bottom-sheet-anchored',
     expanded && 'h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)]',
   );
 }
 
-function formClass(size: SurfaceProps['size']): string | undefined {
-  return size === 'form' ? 'bottom-sheet-form w-full touch-none' : undefined;
+function formClass(variant: SurfaceProps['variant']): string | undefined {
+  return variant === 'form' ? 'bottom-sheet-form w-full touch-none' : undefined;
 }

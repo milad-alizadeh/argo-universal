@@ -43,7 +43,7 @@ const ReadyChip = (): React.JSX.Element => (
 );
 
 const FailedChip = (): React.JSX.Element => (
-  <Chip label="Check failed" tone="destructive" />
+  <Chip label="Check failed" tone="danger" />
 );
 
 const failureOf = (check: CustomAgentCheck): string | undefined =>
@@ -58,7 +58,7 @@ export function ReadinessSection(props: StatusProps): React.JSX.Element {
     <GroupedListSection title="Status" {...sectionFooter(failure)}>
       <StatusRow check={check} />
       {onSignIn && (
-        <GroupedListItem title="Sign in" tone="accent" onPress={onSignIn} />
+        <GroupedListItem label="Sign in" tone="accent" onPress={onSignIn} />
       )}
       {failure !== undefined && <CheckAgainRow onPress={onCheck} />}
     </GroupedListSection>
@@ -67,15 +67,15 @@ export function ReadinessSection(props: StatusProps): React.JSX.Element {
 
 function StatusRow({ check }: { check: CustomAgentCheck }): React.JSX.Element {
   if (!check)
-    return <GroupedListItem title="Running ACP initialize…" loading />;
+    return <GroupedListItem label="Running ACP initialize…" loading />;
 
   if (check.status === 'ready') return <CheckedRow check={check} />;
 
   return (
     <GroupedListItem
       icon="warning"
-      tone="destructive"
-      title="Did not answer ACP initialize"
+      tone="danger"
+      label="Did not answer ACP initialize"
     />
   );
 }
@@ -97,12 +97,12 @@ function CheckedChip({ check }: { check: Checked }): React.JSX.Element {
 
 function CheckedRow({ check }: { check: Checked }): React.JSX.Element {
   if (!check.authentication)
-    return <GroupedListItem icon="check" title="Answered ACP initialize" />;
+    return <GroupedListItem icon="check" label="Answered ACP initialize" />;
 
   return (
     <GroupedListItem
       icon="warning"
-      title={authenticationLabels[check.authentication]}
+      label={authenticationLabels[check.authentication]}
       status={{ tone: 'warning', label: '' }}
     />
   );

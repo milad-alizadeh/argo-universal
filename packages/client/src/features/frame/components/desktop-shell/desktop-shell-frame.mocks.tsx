@@ -34,7 +34,7 @@ const moreActionsButton: IconButtonProps = {
   accessibilityLabel: 'More actions',
   icon: 'more',
   iconClassName: 'text-muted-foreground',
-  size: 'md',
+  size: 'sm',
 };
 
 function sectionTitle(section: Section): string {

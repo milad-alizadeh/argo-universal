@@ -29,7 +29,7 @@ function ArgumentsSection(props: FieldProps): React.JSX.Element {
     <GroupedListSection title="Arguments" footer={argumentHint}>
       <ArgumentRows {...props} />
       <AddEntryRow
-        title="Add argument"
+        label="Add argument"
         disabled={props.disabled}
         onPress={() => props.onEdit(newArgument)}
       />
@@ -42,7 +42,7 @@ function ArgumentRows(props: FieldProps): React.JSX.Element[] {
     <GroupedListItem
       key={key}
       code
-      title={value}
+      label={value}
       disabled={props.disabled}
       onPress={() => props.onEdit({ index, value })}
     />

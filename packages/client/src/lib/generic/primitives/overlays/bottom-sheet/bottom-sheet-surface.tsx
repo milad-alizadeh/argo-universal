@@ -44,7 +44,7 @@ type SheetSurface = {
 
 function useSheetSurface(props: SurfaceProps): SheetSurface {
   const [expanded, setExpanded] = useState(props.initialSize === 'expanded');
-  const { anchor, card, ref } = useSheetAnchor(props.size);
+  const { anchor, card, ref } = useSheetAnchor(props.variant);
   useHiddenWhileClosing(card, isAccessible(props));
   const close = useCloseSheet(props.dismissible);
   const resize = props.expandable ? setExpanded : undefined;

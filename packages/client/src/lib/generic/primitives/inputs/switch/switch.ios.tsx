@@ -29,14 +29,14 @@ function Switch(props: SwitchProps): React.JSX.Element {
 function useSwitchModifiers(
   props: SwitchProps,
 ): React.ComponentProps<typeof Toggle>['modifiers'] {
-  const { tint } = useNativeTheme().colors;
+  const { accent } = useNativeTheme().colors;
 
   return [
     toggleStyle('switch'),
     labelsHidden(),
     disabled(!!props.disabled),
     ...switchLabel(props.accessibilityLabel),
-    ...optionalTint(tint),
+    ...optionalTint(accent),
   ];
 }
 

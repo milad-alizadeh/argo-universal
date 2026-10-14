@@ -12,7 +12,7 @@ export function ScreenHeaderMock({
   search,
 }: ScreenHeaderProps): React.JSX.Element {
   return (
-    <View className="h-11 flex-row items-center bg-sidebar px-1">
+    <View className="h-11 flex-row items-center bg-content px-1">
       <View className="w-23 flex-row">{left}</View>
       <HeaderContent title={title} right={right} search={search} />
     </View>
@@ -36,7 +36,7 @@ function TitleText({
 }: Pick<ScreenHeaderProps, 'title'>): React.JSX.Element {
   return (
     <Text
-      semanticRole="heading"
+      accessibilityRole="heading"
       role="nav-title"
       aria-level={1}
       numberOfLines={1}

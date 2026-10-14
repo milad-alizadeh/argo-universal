@@ -106,7 +106,7 @@ function IdleStepIndicator({ completed }: { completed: boolean }): JSX.Element {
     <Icon
       role="control"
       name="pending"
-      className="text-ring wide:text-muted-foreground"
+      className="text-focus wide:text-muted-foreground"
     />
   );
 }

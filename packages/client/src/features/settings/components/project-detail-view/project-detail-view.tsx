@@ -40,7 +40,7 @@ export function ProjectDetailView(
   props: ProjectDetailViewProps,
 ): React.JSX.Element {
   return (
-    <View className="flex-1 bg-sidebar wide:bg-transparent">
+    <View className="flex-1 bg-content wide:bg-transparent">
       <PhoneTitle title={props.name} />
       <ProjectPage {...props} />
     </View>
@@ -92,9 +92,9 @@ function UnloadedProject(props: UnloadedProps): React.JSX.Element {
 
 function UnloadedRow({ status, name }: UnloadedProps): React.JSX.Element {
   if (status === 'loading')
-    return <GroupedListItem title="Loading the Project…" loading />;
+    return <GroupedListItem label="Loading the Project…" loading />;
 
-  return <GroupedListItem title={`The Server has no Project named ${name}.`} />;
+  return <GroupedListItem label={`The Server has no Project named ${name}.`} />;
 }
 
 function ProjectSections({
@@ -105,7 +105,7 @@ function ProjectSections({
     <GroupedList>
       <GroupedListSection title="Folder">
         {deviceRow(otherDevice)}
-        <GroupedListItem icon="folder" title={homePath(project.path)} />
+        <GroupedListItem icon="folder" label={homePath(project.path)} />
       </GroupedListSection>
       <NewSessionsSection project={project} />
       <RemoveProject />
@@ -114,4 +114,4 @@ function ProjectSections({
 }
 
 const deviceRow = (device?: string): React.JSX.Element | null =>
-  device ? <GroupedListItem title="Device" value={device} /> : null;
+  device ? <GroupedListItem label="Device" value={device} /> : null;

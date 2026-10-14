@@ -46,7 +46,7 @@ function DockedExample({ initial }: { initial: string }): React.JSX.Element {
 
   return (
     <SearchField
-      appearance="docked"
+      variant="docked"
       label="Search Sessions"
       leading="menu"
       value={value}

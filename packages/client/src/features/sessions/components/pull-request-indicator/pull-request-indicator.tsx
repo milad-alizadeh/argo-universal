@@ -1,17 +1,16 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 
 const pullRequest = 'pull-request';
 
 export const pullRequestAppearance = {
-  open: { icon: pullRequest, className: 'text-success' },
-  draft: { icon: pullRequest, className: 'text-muted-foreground' },
-  merged: { icon: 'merged', className: 'text-merged' },
-  conflict: { icon: pullRequest, className: 'text-warning' },
-  closed: { icon: pullRequest, className: 'text-destructive' },
+  open: { icon: pullRequest, tone: 'success' },
+  draft: { icon: pullRequest, tone: 'muted' },
+  merged: { icon: 'merged', tone: 'done' },
+  conflict: { icon: pullRequest, tone: 'warning' },
+  closed: { icon: pullRequest, tone: 'danger' },
 } as const;
 
 export const pullRequestStatusLabels = {
@@ -35,11 +34,7 @@ function PullRequestIcon({
   const appearance = pullRequestAppearance[status];
 
   return (
-    <Icon
-      role="secondary"
-      name={appearance.icon}
-      className={cn('shrink-0', appearance.className)}
-    />
+    <Icon role="secondary" name={appearance.icon} tone={appearance.tone} />
   );
 }
 
@@ -48,10 +43,7 @@ function PullRequestNumber({
   status,
 }: PullRequestIndicatorProps): React.JSX.Element {
   return (
-    <Text
-      role="secondary"
-      className={cn(pullRequestAppearance[status].className)}
-    >
+    <Text role="secondary" tone={pullRequestAppearance[status].tone}>
       #{number}
     </Text>
   );

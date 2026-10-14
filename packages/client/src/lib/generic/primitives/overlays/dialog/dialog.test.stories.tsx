@@ -19,7 +19,7 @@ const meta = {
     <Dialog>
       {/* A content button forwards its ref, which the dialog needs to hand focus back. */}
       <DialogTrigger asChild>
-        <Button appearance="content" label="Rename" />
+        <Button custom label="Rename" />
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>Rename the Project</DialogTitle>

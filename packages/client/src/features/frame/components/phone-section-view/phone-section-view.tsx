@@ -35,7 +35,7 @@ export function PhoneSectionView({
   ...header
 }: PhoneSectionViewProps): React.JSX.Element {
   return (
-    <View className="flex-1 bg-sidebar">
+    <View className="flex-1 bg-content">
       <PhoneSectionHeader {...header} />
       {list}
     </View>

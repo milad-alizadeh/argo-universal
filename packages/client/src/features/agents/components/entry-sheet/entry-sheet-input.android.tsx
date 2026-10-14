@@ -15,7 +15,7 @@ export function EntrySheetInput({
 
   return (
     <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-      <TextInput appearance="row" mono {...field} />
+      <TextInput variant="row" mono {...field} />
     </Host>
   );
 }

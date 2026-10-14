@@ -20,7 +20,7 @@ export function AgentListItem({
 }: AgentListItemProps): React.JSX.Element {
   return (
     <GroupedListItem
-      title={agent.name}
+      label={agent.name}
       subtitle={agent.description ? { text: agent.description } : undefined}
       leading={<AgentGlyph agent={agent} />}
       {...statusProps(agent)}

@@ -21,7 +21,7 @@ export function Picker<Value extends string>(
 ): React.JSX.Element {
   const field = useFieldDescription(props);
   const inGroupedListItem = useInGroupedListItem();
-  const row = props.appearance === 'row' || inGroupedListItem;
+  const row = props.variant === 'row' || inGroupedListItem;
 
   return <PickerFrame {...props} {...field} row={row} />;
 }

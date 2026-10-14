@@ -50,9 +50,7 @@ const extensionOf = (name: string): string => {
 };
 
 const cardBorder = (attachment: ComposerAttachment): string =>
-  attachment.bytes > maxBlobUploadBytes
-    ? 'border-destructive'
-    : 'border-border';
+  attachment.bytes > maxBlobUploadBytes ? 'border-danger' : 'border-border';
 
 // An attached image, or a file with its first lines or its kind, and a Remove button.
 export function ComposerAttachmentCard(

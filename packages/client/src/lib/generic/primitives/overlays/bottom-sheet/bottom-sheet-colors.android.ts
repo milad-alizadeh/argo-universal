@@ -10,12 +10,12 @@ export function useSheetColors(
   ComponentProps<typeof ModalBottomSheet>,
   'containerColor' | 'contentColor' | 'scrimColor'
 > {
-  const { popover, popoverForeground, sidebar } = useNativeTheme().colors;
+  const { card, cardForeground, content } = useNativeTheme().colors;
   const scrim = useResolveClassNames('bg-black/32');
 
   return {
-    containerColor: surface === 'sidebar' ? sidebar : popover,
-    contentColor: popoverForeground,
+    containerColor: surface === 'sidebar' ? content : card,
+    contentColor: cardForeground,
     scrimColor: scrim.backgroundColor,
   };
 }

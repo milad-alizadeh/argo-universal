@@ -58,7 +58,7 @@ const listBehaviour = {
 };
 
 // The page's colour, which a native list fades into; the web fades the rows themselves over the glass.
-const fadeSurface = 'bg-sidebar';
+const fadeSurface = 'bg-content';
 
 // The top fades once content scrolls under the header, unless iOS's glass header shades it; the last rows always sink into the bottom edge.
 const sessionsFade = {
@@ -68,7 +68,7 @@ const sessionsFade = {
 
 function surfaceClassName(scrolling: boolean): string {
   return cn(
-    'relative flex-1 overflow-hidden bg-sidebar wide:bg-transparent web:select-none web:[&_*]:select-none!',
+    'relative flex-1 overflow-hidden bg-content wide:bg-transparent web:select-none web:[&_*]:select-none!',
     // Rows glide to their measured places at rest; while scrolling they snap, so reused rows never slide across the list.
     !scrolling &&
       'web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200',

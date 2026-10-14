@@ -26,7 +26,7 @@ const failedToast = (
   action: InstallAction,
   failure: string,
 ): Toast => ({
-  tone: 'error',
+  tone: 'danger',
   title: `Could not ${action.toLowerCase()} ${name}`,
   message: failure,
 });

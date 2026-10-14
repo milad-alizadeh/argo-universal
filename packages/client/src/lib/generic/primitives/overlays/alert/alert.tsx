@@ -10,7 +10,7 @@ import {
 } from './alert-props';
 
 const contentClassName =
-  'bg-popover z-50 mx-auto flex w-full min-w-80 max-w-sm flex-col gap-4 rounded-2xl p-6 web:w-96 web:rounded-surface web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200';
+  'bg-card z-50 mx-auto flex w-full min-w-80 max-w-sm flex-col gap-4 rounded-2xl p-6 web:w-96 web:rounded-surface web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200';
 
 // The web draws an alert as a centred dialog at every width, never as a sheet.
 export function Alert(props: AlertProps): React.JSX.Element {
@@ -59,9 +59,7 @@ function AlertButtons(
 
 // The web reads left to right, so Cancel comes first and the answer sits at the trailing edge.
 function cancelFirst(actions: readonly AlertAction[]): AlertAction[] {
-  return [...actions].sort(
-    (a, b) => Number(b.role === 'cancel') - Number(a.role === 'cancel'),
-  );
+  return [...actions].sort((a, b) => Number(!!b.cancel) - Number(!!a.cancel));
 }
 
 function AlertButton(
@@ -72,8 +70,8 @@ function AlertButton(
   return (
     <Button
       label={action.label}
-      variant={action.role === 'cancel' ? 'outline' : 'default'}
-      role={action.role === 'destructive' ? 'destructive' : undefined}
+      variant={action.cancel ? 'outline' : 'default'}
+      tone={action.tone}
       onPress={alertActionPress(action, props.onOpenChange)}
     />
   );

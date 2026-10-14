@@ -23,7 +23,7 @@ export function SettingsList(props: SettingsListProps): React.JSX.Element {
 function MatchingRows(props: SettingsListProps): React.JSX.Element {
   const rows = settingsRows(props, useWide());
 
-  if (rows.length === 0) return <GroupedListItem title="No settings match." />;
+  if (rows.length === 0) return <GroupedListItem label="No settings match." />;
 
   return (
     <SettingsRows

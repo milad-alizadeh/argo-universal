@@ -5,7 +5,7 @@ export type SwitchProps = {
   accessibilityLabel?: string;
   disabled?: boolean;
   /** Web only: phones draw the system switch, which has one size. */
-  size?: 'default' | 'small';
+  size?: 'sm' | 'md';
   /**
    * The switch only shows a state; the row around it owns the press and the spoken name, so it
    * leaves the tab order. Web only: phones never draw a decorative copy, their rows hold the

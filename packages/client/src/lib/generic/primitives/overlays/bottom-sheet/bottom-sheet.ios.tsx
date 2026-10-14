@@ -26,7 +26,7 @@ import { useFormSheetCommands } from './form-sheet-context';
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const commands = useFormSheetCommands();
 
-  if (commands && props.size === 'form')
+  if (commands && props.variant === 'form')
     return <RoutedFormSheet {...props} commands={commands} />;
 
   return (
@@ -88,7 +88,7 @@ function useSheetModifiers(props: SheetContentProps): ModifierConfig[] {
     ...useSheetDetents(props),
     presentationDragIndicator('visible'),
     interactiveDismissDisabled(props.dismissible === false),
-    ...sheetFill(props.surface === 'sidebar' ? colors.sidebar : colors.popover),
+    ...sheetFill(props.surface === 'sidebar' ? colors.content : colors.card),
   ];
 }
 

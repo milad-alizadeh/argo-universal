@@ -73,7 +73,7 @@ function WideContent(props: OverlayProps): React.JSX.Element {
       accessibilityLabel={props.label}
       onClosed={props.closed}
       style={{ width: popoverWidth(props) }}
-      className="composer-popover bg-sidebar rounded-surface border-0 dark:border dark:border-border p-0 overflow-hidden"
+      className="composer-popover bg-content rounded-surface border-0 dark:border dark:border-border p-0 overflow-hidden"
     >
       <PopoverPanel {...panelProps(props)} />
     </PopoverContent>
@@ -159,6 +159,6 @@ function sheetProps(
 
 function compactClassName(props: ComposerPopoverProps): string {
   return props.listContent && Platform.OS !== 'web'
-    ? 'flex-1 bg-sidebar'
-    : 'bg-sidebar';
+    ? 'flex-1 bg-content'
+    : 'bg-content';
 }

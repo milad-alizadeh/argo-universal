@@ -13,7 +13,7 @@ function PreviewOutput({ lines }: { lines: string[] }): React.JSX.Element {
   return (
     <ScrollFadeView
       testID="scroll-fade-scroll"
-      surfaceClassName="bg-sidebar"
+      surfaceClassName="bg-content"
       contentContainerClassName="px-4 pb-3"
     >
       {lines.map((line) => (
@@ -43,7 +43,7 @@ export function ScrollFadePreview({
 }): React.JSX.Element {
   return (
     <View
-      className="w-full max-w-sm overflow-hidden rounded-xl bg-sidebar"
+      className="w-full max-w-sm overflow-hidden rounded-xl bg-content"
       style={panelHeight}
     >
       <PreviewHeader />

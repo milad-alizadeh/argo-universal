@@ -23,11 +23,11 @@ export interface TextFieldProps {
 }
 
 // A row inside a GroupedListSection: the label leading, the field taking the rest of the row.
-export type RowTextInputProps = TextFieldProps & { appearance: 'row' };
+export type RowTextInputProps = TextFieldProps & { variant: 'row' };
 
 // A field on its own, outside a GroupedListSection, with its label above it and its footer under it.
 export type StandaloneTextInputProps = TextFieldProps & {
-  appearance?: 'standalone';
+  variant?: 'standalone';
   required?: boolean;
   numeric?: boolean;
 };
@@ -35,9 +35,9 @@ export type StandaloneTextInputProps = TextFieldProps & {
 // The bare box with no label or footer, for a caller that lays out its own label.
 export type BareTextInputProps = NativeTextInputProps &
   RefAttributes<NativeTextInput> & {
-    appearance: 'bare';
+    variant: 'bare';
     // `muted` is the compact borderless box inside a popover, such as the link editor's.
-    variant?: 'default' | 'muted';
+    tone?: 'neutral' | 'muted';
   };
 
 export type TextInputProps =

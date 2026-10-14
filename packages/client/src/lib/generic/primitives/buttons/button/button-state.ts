@@ -2,9 +2,9 @@ import type { AccessibilityState, PressableProps } from 'react-native';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
 
 export function nativeButtonVariant(
-  props: Pick<ButtonDataProps, 'variant' | 'role'>,
+  props: Pick<ButtonDataProps, 'variant' | 'tone'>,
 ): ButtonVariant {
-  return props.variant ?? (props.role === 'destructive' ? 'ghost' : 'default');
+  return props.variant ?? (props.tone === 'danger' ? 'ghost' : 'default');
 }
 
 export function isButtonDisabled(

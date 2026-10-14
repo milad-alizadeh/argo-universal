@@ -24,7 +24,7 @@ export const Overview: Story = {
       {screenVariations.map(({ label, props }) => (
         <Variation key={label} label={label}>
           <ScreenPreview>
-            <Screen {...args} {...props} className="bg-sidebar">
+            <Screen {...args} {...props} className="bg-content">
               <ScreenPreviewContent />
             </Screen>
           </ScreenPreview>

@@ -9,6 +9,7 @@ import { Host } from '#primitives/native/host';
 import {
   alertActionPress,
   isDestructiveAlert,
+  type AlertAction,
   type AlertProps,
 } from './alert-props';
 
@@ -123,8 +124,15 @@ function AlertActions(props: AlertActionsProps): React.JSX.Element {
 function actionRole(
   action: AlertProps['actions'][number],
   explicitCancel: boolean | undefined,
-): AlertProps['actions'][number]['role'] {
-  return explicitCancel && action.role === 'cancel' ? undefined : action.role;
+): 'cancel' | 'destructive' | undefined {
+  if (action.cancel) return explicitCancel ? undefined : 'cancel';
+
+  return swiftRole(action.tone);
+}
+
+// SwiftUI names the danger tone's role `destructive`.
+function swiftRole(tone: AlertAction['tone']): 'destructive' | undefined {
+  return tone === 'danger' ? 'destructive' : undefined;
 }
 
 Alert satisfies React.ComponentType<AlertProps>;

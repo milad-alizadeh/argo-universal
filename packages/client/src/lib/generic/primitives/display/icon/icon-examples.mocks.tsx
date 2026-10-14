@@ -30,7 +30,7 @@ const colorClasses = [
   'text-foreground',
   'text-muted-foreground',
   'text-primary',
-  'text-destructive',
+  'text-danger',
 ];
 
 function RoleSample({ role }: { role: IconRole }): React.JSX.Element {
@@ -72,7 +72,7 @@ function FilledIconButton(props: {
       aria-label={props.label}
       icon={props.icon}
       accessibilityLabel={props.label}
-      size="md"
+      size="sm"
       variant="filled"
     />
   );

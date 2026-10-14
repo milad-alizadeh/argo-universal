@@ -3,7 +3,7 @@ import type { Pressable } from 'react-native';
 import type { IconName } from '../../../symbols/icon-names';
 
 export interface GroupedListItemProps {
-  title: string;
+  label: string;
   value?: string;
   // A second line under the title, such as a folder's path; code draws it in the mono face.
   subtitle?: { text: string; code?: boolean };
@@ -25,7 +25,7 @@ export interface GroupedListItemProps {
    * Web only: the whole row acts as the button or switch, with `checked` its state. Phones put a
    * native Switch in `control` instead, so the system control carries the state.
    */
-  role?: 'button' | 'switch';
+  accessibilityRole?: 'button' | 'switch';
   checked?: boolean;
   disclosure?: boolean;
   accessibilityLabel?: string;
@@ -43,7 +43,7 @@ export interface GroupedListItemProps {
   selected?: boolean;
   needsAttention?: boolean;
   // A dot after the value. When the value already says the status, such as "Ready", the name says it once.
-  status?: { tone: 'success' | 'warning' | 'destructive'; label: string };
+  status?: { tone: 'success' | 'warning' | 'danger'; label: string };
   // A spinner takes the icon's place while the row's subject is on its way.
   loading?: boolean;
   // The title is code, such as a command, and draws in the mono face.
@@ -53,9 +53,9 @@ export interface GroupedListItemProps {
    * as an action, such as "Add argument", drawn in the tint without a disclosure chevron,
    * or as a description standing in for a name, such as an Agent's beside its logo, drawn muted.
    */
-  tone?: 'destructive' | 'accent' | 'muted';
+  tone?: 'danger' | 'accent' | 'muted';
   // A row that stands alone as a card, such as an Agent's identity: a 40 tile leads it and it pads 16 all round.
-  size?: 'large';
+  size?: 'lg';
 }
 
 // The status's label, unless the value already says it.
@@ -68,7 +68,7 @@ function distinctStatus(props: GroupedListItemProps): string | undefined {
 export function groupedListItemName(props: GroupedListItemProps): string {
   if (props.accessibilityLabel) return props.accessibilityLabel;
 
-  return [props.title, props.subtitle?.text, props.value, distinctStatus(props)]
+  return [props.label, props.subtitle?.text, props.value, distinctStatus(props)]
     .filter(Boolean)
     .join(', ');
 }

@@ -47,7 +47,7 @@ function BooleanSetting(props: BooleanProps): React.JSX.Element {
 function NativeBoolean(props: BooleanProps): React.JSX.Element {
   return (
     <GroupedListItem
-      title={props.option.name}
+      label={props.option.name}
       disclosure={false}
       control={<BooleanToggle {...props} />}
     />
@@ -66,8 +66,8 @@ function WebBoolean(props: BooleanProps): React.JSX.Element {
 // GroupedListItem reports `checked` as the switch's aria-checked on the web.
 function webSwitchRow(props: BooleanProps): GroupedListItemProps {
   return {
-    title: props.option.name,
-    role: 'switch',
+    label: props.option.name,
+    accessibilityRole: 'switch',
     checked: props.option.currentValue,
     disclosure: false,
     onPress: () =>
@@ -131,7 +131,7 @@ function SelectSetting({
 
   return (
     <GroupedListItem
-      title={choice.name}
+      label={choice.name}
       accessibilityLabel={`${option.name}: ${choice.name}`}
       {...choiceInteractionProps(selected)}
       {...choiceActionProps({ option, choice, onChange }, selected)}
@@ -143,9 +143,9 @@ function choiceInteractionProps(
   selected: boolean,
 ): Pick<
   React.ComponentProps<typeof GroupedListItem>,
-  'role' | 'disclosure' | 'selected'
+  'accessibilityRole' | 'disclosure' | 'selected'
 > {
-  return { role: 'button', disclosure: false, selected };
+  return { accessibilityRole: 'button', disclosure: false, selected };
 }
 
 function choiceActionProps(

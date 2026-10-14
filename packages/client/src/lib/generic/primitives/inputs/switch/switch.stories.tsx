@@ -6,7 +6,7 @@ import { Switch } from './switch';
 type CheckedExampleProps = {
   initialChecked?: boolean;
   disabled?: boolean;
-  size?: 'default' | 'small';
+  size?: 'sm' | 'md';
 };
 
 function CheckedExample({
@@ -28,8 +28,8 @@ const examples: {
 }[] = [
   { label: 'Off', props: {} },
   { label: 'On', props: { initialChecked: true } },
-  { label: 'Small off', props: { size: 'small' } },
-  { label: 'Small on', props: { size: 'small', initialChecked: true } },
+  { label: 'Small off', props: { size: 'sm' } },
+  { label: 'Small on', props: { size: 'sm', initialChecked: true } },
   { label: 'Disabled', props: { disabled: true } },
 ];
 

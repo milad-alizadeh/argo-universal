@@ -115,9 +115,9 @@ function RequestError({ error }: Pick<RequestCardProps, 'error'>): ReactNode {
   return (
     error && (
       <Text
-        semanticRole="alert"
+        accessibilityRole="alert"
         role="secondary"
-        className="px-4 pt-3 text-destructive"
+        className="px-4 pt-3 text-danger"
       >
         {error}
       </Text>

@@ -15,7 +15,7 @@ interface CodeBlockHeaderProps {
 
 function headerClassName(isResource: boolean, hasBody: boolean): string {
   return cn(
-    'shrink-0 flex-row bg-sidebar pr-1.5 pl-3',
+    'shrink-0 flex-row bg-content pr-1.5 pl-3',
     isResource ? 'items-start gap-2 py-2' : 'h-8 items-center justify-between',
     hasBody && 'border-b border-border',
   );

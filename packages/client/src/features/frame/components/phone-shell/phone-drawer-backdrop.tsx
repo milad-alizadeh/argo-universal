@@ -27,7 +27,7 @@ function useGlowColours(): GlowColours {
     '--color-glow-warm',
     '--color-glow-graphite',
     '--color-glow-sand',
-    '--color-sidebar',
+    '--color-content',
   ]);
 
   return { colours: { warm, graphite, sand }, surface };

@@ -60,7 +60,7 @@ function AgentsFilterMenu(props: AgentsFilterProps): React.JSX.Element {
     <Menu
       accessibilityLabel="Filter Agents"
       value={props.filter}
-      choices={agentsFilterChoices}
+      options={agentsFilterChoices}
       onValueChange={props.onFilter}
       trigger={filterTrigger(props.filter)}
     />

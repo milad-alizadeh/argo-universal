@@ -19,7 +19,7 @@ export function linkProps(
   props: GroupedListItemProps,
 ): React.ComponentProps<typeof Pressable> & { href?: string } {
   return {
-    role: props.role ?? 'link',
+    role: props.accessibilityRole ?? 'link',
     href: rowHref(props),
     onPress: rowPress(props.onPress),
   };
@@ -44,13 +44,14 @@ export function selectionProps(
   return {
     accessibilityState: { disabled: !!props.disabled, checked: props.checked },
     'aria-current': currentPage(props),
-    'aria-pressed': props.role === 'button' ? props.selected : undefined,
+    'aria-pressed':
+      props.accessibilityRole === 'button' ? props.selected : undefined,
     'aria-checked': props.checked,
   };
 }
 
 function currentPage(props: GroupedListItemProps): 'page' | undefined {
-  return !props.role && props.selected ? 'page' : undefined;
+  return !props.accessibilityRole && props.selected ? 'page' : undefined;
 }
 
 function triggerProps(props: GroupedListItemProps): React.ComponentProps<
@@ -76,7 +77,7 @@ function hoverProps(
 }
 
 function rowHref(props: GroupedListItemProps): string | undefined {
-  return props.role ? undefined : (props.href ?? '#');
+  return props.accessibilityRole ? undefined : (props.href ?? '#');
 }
 
 interface SwitchKeyboardProps {
@@ -89,7 +90,7 @@ function switchKeyboardProps(
   props: GroupedListItemProps,
   press: () => void,
 ): SwitchKeyboardProps {
-  if (props.role !== 'switch') return {};
+  if (props.accessibilityRole !== 'switch') return {};
 
   return {
     tabIndex: props.disabled ? -1 : 0,

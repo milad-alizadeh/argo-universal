@@ -36,11 +36,11 @@ const verticalInset = 8;
 function rowModifiers(props: CheckboxProps): ReturnType<typeof frame>[] {
   return [
     frame({
-      minHeight: props.appearance === 'option' ? optionHeight : rowHeight,
+      minHeight: props.variant === 'option' ? optionHeight : rowHeight,
       maxWidth: Infinity,
     }),
     padding({
-      horizontal: props.appearance === 'option' ? optionInset : horizontalInset,
+      horizontal: props.variant === 'option' ? optionInset : horizontalInset,
       vertical: verticalInset,
     }),
     rectangularHitArea(),
@@ -89,7 +89,7 @@ function CheckboxMark(): React.JSX.Element {
   const { colors } = useNativeTheme();
 
   return (
-    <Group modifiers={[foregroundStyle(colors.tint ?? 'primary')]}>
+    <Group modifiers={[foregroundStyle(colors.accent ?? 'primary')]}>
       <NativeSymbol name="check" role="mark" />
     </Group>
   );
@@ -99,7 +99,7 @@ function useOptionTextModifiers(
   props: CheckboxProps,
 ): ReturnType<typeof frame>[] {
   return useSwiftUITextModifiers(
-    props.appearance === 'option' ? 'nav-action' : 'body',
+    props.variant === 'option' ? 'nav-action' : 'body',
     'row',
   );
 }

@@ -25,7 +25,7 @@ function RemoveButton(): React.JSX.Element {
       size="sm"
       fullWidth="narrow"
       variant="outline"
-      role="destructive"
+      tone="danger"
       label="Remove Project"
       disabled
     />

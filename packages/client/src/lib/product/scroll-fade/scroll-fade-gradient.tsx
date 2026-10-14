@@ -128,7 +128,7 @@ export function ScrollFadeGradient(
   props: ScrollFadeGradientProps,
 ): React.JSX.Element {
   const { edge, className, style } = props;
-  const { backgroundColor } = useResolveClassNames(className ?? 'bg-sidebar');
+  const { backgroundColor } = useResolveClassNames(className ?? 'bg-content');
   const size = fadeSize(props);
 
   return (

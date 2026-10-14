@@ -24,7 +24,7 @@ export interface SettingsListProps {
 }
 
 export interface SettingsRow {
-  title: string;
+  label: string;
   icon: IconName;
   destination: NavigationDestination;
   value?: string;

@@ -12,7 +12,7 @@ export function createNativeButton(
   NativeButton: ComponentType<NativeDrawingProps>,
 ): ComponentType<ButtonProps> {
   return withNarrowLayout(function Button(props: ButtonProps): ReactElement {
-    if (props.appearance === 'content') return <ContentButton {...props} />;
+    if (props.custom) return <ContentButton {...props} />;
 
     return <NativeButtonHost {...props} Drawing={NativeButton} />;
   });

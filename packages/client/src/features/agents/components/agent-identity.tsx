@@ -27,9 +27,9 @@ export function AgentIdentity(
 function IdentityRow(props: AgentIdentityProps): React.JSX.Element {
   return (
     <GroupedListItem
-      size="large"
+      size="lg"
       tone="muted"
-      title={props.description}
+      label={props.description}
       leading={props.logo}
       accessory={props.trailing}
     />

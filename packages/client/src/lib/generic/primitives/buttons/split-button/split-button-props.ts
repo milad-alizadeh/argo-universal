@@ -1,14 +1,14 @@
 import type { ReactElement } from 'react';
 import type { MenuAction } from '#primitives/overlays/menu';
 
-export interface SplitButtonChoice<Value extends string> {
+export interface SplitButtonOption<Value extends string> {
   value: Value;
   label: string;
 }
 
-// The chevron picks what the button does, from choices with one chosen.
-interface SplitButtonChoices<Value extends string> {
-  choices: readonly SplitButtonChoice<Value>[];
+// The chevron picks what the button does, from options with one chosen.
+interface SplitButtonOptions<Value extends string> {
+  options: readonly SplitButtonOption<Value>[];
   value: Value;
   onValueChange: (value: Value) => void;
   actions?: never;
@@ -17,14 +17,14 @@ interface SplitButtonChoices<Value extends string> {
 // The chevron opens actions of its own, beside the button's.
 interface SplitButtonActions {
   actions: readonly MenuAction[];
-  choices?: never;
+  options?: never;
   value?: never;
   onValueChange?: never;
 }
 
-// What the chevron offers: choices with one chosen, or actions.
+// What the chevron offers: options with one chosen, or actions.
 export type SplitMenuItems<Value extends string = string> =
-  | SplitButtonChoices<Value>
+  | SplitButtonOptions<Value>
   | SplitButtonActions;
 
 // What SplitButton passes to its chevron's menu or Sheet; ButtonGroup sets className on it.

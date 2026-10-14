@@ -62,7 +62,7 @@ export function PlanProposalPreview(
 
 function PreviewSessions(): React.JSX.Element {
   return (
-    <View className="hidden wide:flex w-56 bg-sidebar border-r border-border p-4">
+    <View className="hidden wide:flex w-56 bg-content border-r border-border p-4">
       <Text className="text-sm font-semibold">Sessions</Text>
     </View>
   );
@@ -70,7 +70,7 @@ function PreviewSessions(): React.JSX.Element {
 
 function PreviewInspector(): React.JSX.Element {
   return (
-    <View className="hidden wide:flex w-64 bg-sidebar border-l border-border p-4">
+    <View className="hidden wide:flex w-64 bg-content border-l border-border p-4">
       <Text className="text-sm font-semibold">Inspector</Text>
     </View>
   );
@@ -82,7 +82,7 @@ function PreviewProposal(
   return (
     <PlanProposalRegion
       testID="plan-proposal-main-content"
-      className="relative flex-1 min-h-0 w-full bg-sidebar"
+      className="relative flex-1 min-h-0 w-full bg-content"
     >
       <View className="flex-1 min-h-0" />
       <View className="items-center px-4 pb-4 wide:px-6">

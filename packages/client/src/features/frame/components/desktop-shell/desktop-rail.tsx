@@ -49,8 +49,8 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
     <IconButton
       icon={icon}
       iconRole="nav"
-      filled={props.selected}
-      size="2xl"
+      iconFilled={props.selected}
+      size="xl"
       variant="ghost"
       accessibilityLabel={title}
       onPress={() => props.onSectionChange(props.section)}
@@ -92,7 +92,7 @@ function SidebarToggle(props: DesktopRailProps): React.JSX.Element {
       icon="sidebar"
       iconRole="nav"
       iconClassName="text-muted-foreground"
-      size="xl"
+      size="lg"
       variant="ghost"
       accessibilityLabel={sidebarShown ? 'Hide sidebar' : 'Show sidebar'}
       onPress={() => onSidebarShownChange(!sidebarShown)}

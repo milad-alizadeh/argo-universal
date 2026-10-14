@@ -16,7 +16,7 @@ export function OnboardingShell({
   children,
 }: OnboardingShellProps): React.JSX.Element {
   return (
-    <View testID="desktop-shell" className="flex-1 overflow-hidden bg-sidebar">
+    <View testID="desktop-shell" className="flex-1 overflow-hidden bg-content">
       <WindowDragStrip />
       <View testID="desktop-detail" className="flex-1">
         <ContentLayout className="overflow-hidden">{children}</ContentLayout>

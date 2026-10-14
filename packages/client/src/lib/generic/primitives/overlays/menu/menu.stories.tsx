@@ -26,7 +26,7 @@ function PermissionsMenu({
     <Menu
       accessibilityLabel="Permissions"
       value={value}
-      choices={choices}
+      options={choices}
       onValueChange={setValue}
       disabled={disabled}
       trigger={renderPermissionsTrigger(disabled, labelOf(value))}

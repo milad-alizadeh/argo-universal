@@ -25,7 +25,7 @@ interface ChoiceProps extends ContentsProps {
 
 export function CheckoutContents(props: ContentsProps): React.JSX.Element {
   return (
-    <View className="native:flex-1 wide:p-3 bg-sidebar">
+    <View className="native:flex-1 wide:p-3 bg-content">
       <GroupedList fit>
         <CheckoutChoices {...props} />
       </GroupedList>
@@ -129,7 +129,7 @@ function checkoutTrigger(props: CheckoutProps): React.JSX.Element {
 
 type CheckoutButtonProps = Extract<
   React.ComponentProps<typeof Button>,
-  { appearance?: 'content' }
+  { custom: true }
 >;
 
 function checkoutButtonProps({
@@ -137,7 +137,7 @@ function checkoutButtonProps({
   disabled,
 }: CheckoutProps): CheckoutButtonProps {
   return {
-    appearance: 'content',
+    custom: true,
     variant: 'ghost',
     disabled,
     accessibilityLabel: 'Checkout',

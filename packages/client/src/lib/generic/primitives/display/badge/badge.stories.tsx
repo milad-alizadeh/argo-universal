@@ -1,6 +1,6 @@
 const variants = ['default', 'secondary'] as const;
 
-const tones = ['muted', 'info', 'success', 'warning', 'destructive'] as const;
+const tones = ['muted', 'info', 'success', 'warning', 'danger'] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';

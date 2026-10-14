@@ -37,7 +37,7 @@ function customRowClassName(wide: boolean, custom: string): string {
 }
 
 const customInputLook = {
-  appearance: 'bare',
+  variant: 'bare',
   placeholderTextColorClassName:
     'accent-muted-foreground ios:accent-[#8e8e93] android:accent-[#79747e] dark:ios:accent-muted-foreground dark:android:accent-muted-foreground',
   className:
@@ -68,7 +68,7 @@ function CustomMark({ selected, multiple }: MarkProps): ReactElement {
     >
       <CheckboxIndicator
         value={selected}
-        appearance="option"
+        variant="option"
         selection={multiple ? 'multiple' : 'single'}
       />
     </View>

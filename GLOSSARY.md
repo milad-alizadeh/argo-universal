@@ -197,3 +197,25 @@ _Avoid_: Status line, spinner text
 **Notice**:
 A short message about the Session that is not from the Agent's conversation, such as a retry or a hook result.
 _Avoid_: Notification, system message
+
+## UI
+
+**UI kit**:
+Argo's small set of components, tokens and prop names that every screen, and later every plugin, is built from. Its components are the primitives of ADR-0020.
+_Avoid_: Design system (for the code), component library
+
+**Scaffold**:
+A kit component that arranges a screen's panes for its Size class, such as list and detail side by side on wide windows and drill-in on phones. Content is written once; the Scaffold places it.
+_Avoid_: Layout (for a whole screen), template
+
+**Surface**:
+A named background a kit component draws on, such as `card`, `tray`, `glass` or `overlay`, with its fill, radius and depth.
+_Avoid_: Panel, background, layer
+
+**Slot**:
+A named place in a kit component that takes another component, such as a row's `leading` or `trailing`. Each Slot names the components it accepts.
+_Avoid_: Render prop, child (for a named place)
+
+**Size class**:
+The width class an App lays itself out for: `compact` (below 600, and every phone), `medium` (600 to 1099) or `wide` (1100 and up).
+_Avoid_: Breakpoint, wide mode

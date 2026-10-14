@@ -146,11 +146,8 @@ function CheckFailure({
 
 function FailureBox({ failure }: { failure: string }): React.JSX.Element {
   return (
-    <View
-      role="alert"
-      className="flex-row gap-2 rounded-md bg-destructive/8 p-3"
-    >
-      <Icon role="control" name="warning" className="text-destructive" />
+    <View role="alert" className="flex-row gap-2 rounded-md bg-danger/8 p-3">
+      <Icon role="control" name="warning" className="text-danger" />
       <FailureMessage failure={failure} />
     </View>
   );
@@ -159,7 +156,7 @@ function FailureBox({ failure }: { failure: string }): React.JSX.Element {
 function FailureMessage({ failure }: { failure: string }): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 gap-1">
-      <Text role={'heading'} className="text-destructive">
+      <Text role={'heading'} className="text-danger">
         Check failed
       </Text>
       <Text role="code">{failure}</Text>

@@ -10,7 +10,7 @@ type Story = StoryObj<typeof meta>;
 
 export const TypographyPreservesHeadingSemantics: Story = {
   render: () => (
-    <Text role="title" semanticRole="heading" aria-level={2}>
+    <Text role="title" accessibilityRole="heading" aria-level={2}>
       Typography heading
     </Text>
   ),

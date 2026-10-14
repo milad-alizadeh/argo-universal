@@ -31,7 +31,7 @@ export interface FieldListProps {
 }
 
 // The Settings page's surface: the phone's page, or the shell behind a wide window's page.
-const fadeSurface = 'bg-sidebar';
+const fadeSurface = 'bg-content';
 
 const rowHeightEstimate = 52;
 

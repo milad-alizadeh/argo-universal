@@ -10,6 +10,8 @@
   --spacing-gutter: 20px;
   /* A list's inset, as its rows pad their content 10px more for the highlight. */
   --spacing-gutter-list: 10px;
+  /* Size classes: compact below medium, medium below wide (useSizeClass). */
+  --breakpoint-medium: 600px;
   --breakpoint-wide: 1100px;
   /* A content column this wide or wider draws the desktop Composer and cards. */
   --container-content-wide: 480px;
@@ -154,36 +156,26 @@
       --color-foreground: var(--color-neutral-950);
       --color-card: var(--color-white);
       --color-card-foreground: var(--color-neutral-950);
-      --color-popover: var(--color-white);
-      --color-popover-foreground: var(--color-neutral-950);
       --color-primary: var(--color-neutral-900);
       --color-primary-foreground: var(--color-neutral-50);
       /* Native controls: switch track, slider, checkmark and picker value. */
-      --color-tint: var(--color-neutral-900);
-      --color-secondary: var(--color-neutral-100);
-      --color-secondary-foreground: var(--color-neutral-900);
+      --color-accent: var(--color-neutral-900);
       --color-muted: var(--color-neutral-100);
       --color-muted-foreground: var(--color-neutral-500);
-      --color-accent: var(--color-neutral-100);
-      --color-accent-foreground: var(--color-neutral-900);
-      --color-destructive: var(--color-red-500);
-      --color-destructive-foreground: var(--color-white);
+      /* A hovered or pressed row, item or button. */
+      --color-hover: var(--color-neutral-100);
+      --color-hover-foreground: var(--color-neutral-900);
+      --color-danger: var(--color-red-500);
+      --color-danger-foreground: var(--color-white);
       --color-border: var(--color-neutral-200);
-      --color-separator: var(--color-neutral-200);
-      --color-input: var(--color-neutral-200);
-      --color-ring: var(--color-neutral-400);
-      --color-chart-1: hsl(12 76% 61%);
-      --color-chart-2: hsl(173 58% 39%);
-      --color-chart-3: hsl(197 37% 24%);
-      --color-chart-4: hsl(43 74% 66%);
-      --color-chart-5: hsl(27 87% 67%);
-      --color-sidebar-accent: var(--color-neutral-100);
-      --color-merged: var(--color-violet-600);
+      --color-focus: var(--color-neutral-400);
+      /* Finished work: a merged pull request, a completed issue. */
+      --color-done: var(--color-violet-600);
       --color-success: var(--color-green-600);
       --color-info: var(--color-blue-600);
       --color-warning: var(--color-amber-600);
       --color-warning-foreground: var(--color-white);
-      --color-sidebar: var(--color-neutral-50);
+      --color-content: var(--color-neutral-50);
       /* Glass: the sidebar panel, its darker tray, and a card on glass. */
       --color-glass: #ffffff80;
       --color-glass-muted: #e5e5e5b3;
@@ -210,40 +202,28 @@
       --shadow-sheet: 0 -8px 32px -8px #00000014;
     }
     @variant dark {
-      --color-sidebar-accent: hsl(0 0% 14.9%);
       /* A step above the shell chrome, so content sits lighter than the drawer, as in light. */
       --color-background: var(--color-neutral-900);
       --color-foreground: hsl(0 0% 98%);
       --color-card: var(--color-neutral-900);
       --color-card-foreground: hsl(0 0% 98%);
-      --color-popover: var(--color-neutral-900);
-      --color-popover-foreground: hsl(0 0% 98%);
       --color-primary: hsl(0 0% 98%);
       --color-primary-foreground: hsl(0 0% 9%);
-      --color-tint: var(--color-neutral-400);
-      --color-secondary: hsl(0 0% 14.9%);
-      --color-secondary-foreground: hsl(0 0% 98%);
+      --color-accent: var(--color-neutral-400);
       --color-muted: hsl(0 0% 14.9%);
       --color-muted-foreground: hsl(0 0% 63.9%);
-      --color-accent: hsl(0 0% 14.9%);
-      --color-accent-foreground: hsl(0 0% 98%);
-      --color-destructive: var(--color-red-500);
-      --color-destructive-foreground: var(--color-white);
+      --color-hover: hsl(0 0% 14.9%);
+      --color-hover-foreground: hsl(0 0% 98%);
+      --color-danger: var(--color-red-500);
+      --color-danger-foreground: var(--color-white);
       --color-border: hsl(0 0% 14.9%);
-      --color-separator: var(--color-neutral-700);
-      --color-input: hsl(0 0% 14.9%);
-      --color-ring: hsl(300 0% 45%);
-      --color-chart-1: hsl(220 70% 50%);
-      --color-chart-2: hsl(160 60% 45%);
-      --color-chart-3: hsl(30 80% 55%);
-      --color-chart-4: hsl(280 65% 60%);
-      --color-chart-5: hsl(340 75% 55%);
-      --color-merged: oklch(70.2% 0.183 293.541);
+      --color-focus: hsl(300 0% 45%);
+      --color-done: oklch(70.2% 0.183 293.541);
       --color-success: oklch(72.3% 0.219 149.579);
       --color-info: oklch(70.7% 0.165 254.624);
       --color-warning: oklch(76.9% 0.188 70.08);
       --color-warning-foreground: hsl(0 0% 3.9%);
-      --color-sidebar: oklch(20.5% 0 0);
+      --color-content: oklch(20.5% 0 0);
       --color-glass: #17171780;
       --color-glass-muted: #262626b3;
       --color-glass-card: #171717e6;

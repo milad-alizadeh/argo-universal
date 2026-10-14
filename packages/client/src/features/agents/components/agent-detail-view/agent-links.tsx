@@ -14,7 +14,7 @@ export function AgentLinks({
   if (!links?.length) return null;
 
   return (
-    <GroupedListItem title="Links" accessory={<LinkList links={links} />} />
+    <GroupedListItem label="Links" accessory={<LinkList links={links} />} />
   );
 }
 

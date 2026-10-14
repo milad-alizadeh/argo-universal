@@ -46,7 +46,7 @@ function NoProjects({ searching }: { searching: boolean }): React.JSX.Element {
   return (
     <GroupedListSection>
       <GroupedListItem
-        title={searching ? 'No Project matches.' : 'No Projects yet.'}
+        label={searching ? 'No Project matches.' : 'No Projects yet.'}
       />
     </GroupedListSection>
   );
@@ -94,7 +94,7 @@ function ProjectRow(props: {
   return (
     <GroupedListItem
       icon="folder"
-      title={props.project.name}
+      label={props.project.name}
       {...projectDetail(props.project, useWide())}
       onPress={() => props.onOpen(props.project.name)}
     />

@@ -80,7 +80,7 @@ type SheetProps = Pick<
   | 'footer'
   | 'initialSize'
   | 'fit'
-  | 'size'
+  | 'variant'
   | 'contentScrolls'
   | 'surface'
 > & { sheetRef: SheetRef };
@@ -125,9 +125,9 @@ function dismissOrCollapse(
 }
 
 function startsExpanded(
-  props: Pick<BottomSheetProps, 'size' | 'initialSize'>,
+  props: Pick<BottomSheetProps, 'variant' | 'initialSize'>,
 ): boolean {
-  return props.size === 'form' || props.initialSize === 'expanded';
+  return props.variant === 'form' || props.initialSize === 'expanded';
 }
 
 /*

@@ -78,9 +78,9 @@ function agentRowContent(
   agent: AgentInfo,
 ): React.ComponentProps<typeof GroupedListItem> {
   return {
-    title: agent.label,
+    label: agent.label,
     accessibilityLabel: `Select ${agent.label}`,
-    role: 'button',
+    accessibilityRole: 'button',
     disclosure: false,
     subtitle: agentSubtitle(agent),
   };
@@ -97,7 +97,7 @@ function AgentAvailabilityAction(
   return (
     <GroupedListItem
       {...agentActionContent(props.agent)}
-      role="button"
+      accessibilityRole="button"
       tone="accent"
       onPress={action}
     />
@@ -107,11 +107,11 @@ function AgentAvailabilityAction(
 function agentActionContent(
   agent: AgentInfo,
 ): React.ComponentProps<typeof GroupedListItem> {
-  if (agent.availability === 'available') return { title: agent.label };
+  if (agent.availability === 'available') return { label: agent.label };
   const unavailable = agentAvailability[agent.availability];
 
   return {
-    title: unavailable.button,
+    label: unavailable.button,
     accessibilityLabel: `${unavailable.action === 'retry' ? 'Retry' : 'Set up'} ${agent.label}`,
   };
 }

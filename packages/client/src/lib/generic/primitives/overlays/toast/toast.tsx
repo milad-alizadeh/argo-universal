@@ -9,16 +9,16 @@ export interface ErrorToast {
   key?: string;
 }
 
-// A finished action reads as success; a failed load or action as error.
+// A finished action reads as success; a failed load or action as danger.
 export type Toast = ErrorToast & {
-  tone: 'success' | 'error';
+  tone: 'success' | 'danger';
 };
 
 type ToastOptions = Parameters<typeof Burnt.toast>[0];
 
 const tonePresets = {
   success: { preset: 'done', haptic: 'success' },
-  error: { preset: 'error', haptic: 'error', from: 'top' },
+  danger: { preset: 'error', haptic: 'error', from: 'top' },
 } as const;
 
 // iOS and Android draw a native toast; web draws it in the Toaster.
@@ -57,7 +57,7 @@ export function useToast(toast: Toast | undefined): void {
 
 // Shows the toast once each time a failure starts, not on every render.
 export function useErrorToast(toast: ErrorToast | undefined): void {
-  useToast(toast && { ...toast, tone: 'error' });
+  useToast(toast && { ...toast, tone: 'danger' });
 }
 
 export { Toaster } from './toaster';

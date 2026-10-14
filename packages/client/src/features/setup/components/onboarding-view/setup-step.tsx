@@ -65,7 +65,7 @@ export interface SetupStepProps {
 function StepTitle(props: SetupStepProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-2">
-      <Text semanticRole="heading" aria-level={2}>
+      <Text accessibilityRole="heading" aria-level={2}>
         {props.title}
       </Text>
       {props.chip}

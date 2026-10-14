@@ -43,7 +43,7 @@ function PickerRowContent<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
   const inGroupedListItem = useInGroupedListItem();
-  const row = inGroupedListItem || props.appearance === 'row';
+  const row = inGroupedListItem || props.variant === 'row';
 
   return createElement(
     Row,
@@ -132,7 +132,7 @@ function rowValueColor(
 ): string | undefined {
   if (props.disabled) return colors.disabledContent;
 
-  return props.invalid ? colors.destructive : colors.mutedForeground;
+  return props.invalid ? colors.danger : colors.mutedForeground;
 }
 
 function useSurfaceProps<Value extends string>(

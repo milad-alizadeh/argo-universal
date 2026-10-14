@@ -82,7 +82,7 @@ const compactButtonProps = {
     'web:sm:min-h-0 h-7 sm:h-7 py-0 rounded-md gap-1.5 px-2.5 has-[>[data-icon]]:px-2.5',
   label: 'Compact',
   icon: 'compaction',
-  appearance: 'content',
+  custom: true,
   labelClassName: 'select-none type-control',
 } as const;
 

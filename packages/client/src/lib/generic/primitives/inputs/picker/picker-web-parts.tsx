@@ -46,7 +46,7 @@ function triggerClassName(props: { row: boolean; invalid: boolean }): string {
   return cn(
     !props.row &&
       'h-9 sm:h-9 w-full! rounded-lg bg-background dark:bg-background',
-    props.invalid && 'border-destructive',
+    props.invalid && 'border-danger',
   );
 }
 
@@ -73,7 +73,7 @@ function OptionsMessage(props: {
   return (
     <Text
       role="secondary"
-      semanticRole={props.failure ? 'alert' : 'status'}
+      accessibilityRole={props.failure ? 'alert' : 'status'}
       className="p-3"
     >
       {props.message}

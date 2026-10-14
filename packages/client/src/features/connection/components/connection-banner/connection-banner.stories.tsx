@@ -26,7 +26,7 @@ export const Overview: Story = {
         ] as const
       ).map(([label, state]) => (
         <Variation key={state} label={label}>
-          <View className="w-full bg-sidebar py-3">
+          <View className="w-full bg-content py-3">
             <ConnectionBanner
               state={state}
               serverName="Milad's Mac mini"

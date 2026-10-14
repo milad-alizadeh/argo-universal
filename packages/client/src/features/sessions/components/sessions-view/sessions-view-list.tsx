@@ -7,7 +7,7 @@ import { SessionsLoading } from '../sessions-loading/sessions-loading';
 import type { SessionsViewProps } from './sessions-view';
 
 const phoneSearchAppearance = {
-  appearance: 'docked',
+  variant: 'docked',
   label: 'Search Sessions',
   leading: 'menu',
   className: 'px-4 pt-2 pb-2',

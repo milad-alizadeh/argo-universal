@@ -21,7 +21,7 @@ function useConfigureOptions(): React.ComponentProps<
   typeof Stack
 >['screenOptions'] {
   const options = useSheetHeaderOptions();
-  const surface = useResolveClassNames('bg-sidebar');
+  const surface = useResolveClassNames('bg-content');
 
   return {
     ...options,

@@ -60,7 +60,9 @@ export const ReturnChoosesTheHighlightedReference: Story = {
       expect(args.onChangeText).toHaveBeenLastCalledWith('Follow-up to #443 '),
     );
     await expect(args.onSubmit).not.toHaveBeenCalled();
-    await expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument(),
+    );
   },
 };
 
@@ -82,7 +84,9 @@ export const HashAndASpaceStaysText: Story = {
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('# Notes'),
     );
-    await expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument(),
+    );
   },
 };
 

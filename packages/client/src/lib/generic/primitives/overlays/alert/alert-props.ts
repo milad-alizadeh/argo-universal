@@ -1,9 +1,21 @@
-export interface AlertAction {
+interface AlertActionBase {
   label: string;
-  // A cancel action dismisses; a destructive one is drawn in red.
-  role?: 'cancel' | 'destructive';
   onPress?: () => void;
 }
+
+// A cancel action dismisses. iOS drops the red of a cancel action, so cancel and danger never meet.
+interface CancelAlertAction extends AlertActionBase {
+  cancel: true;
+  tone?: never;
+}
+
+interface AnswerAlertAction extends AlertActionBase {
+  cancel?: false;
+  // The danger tone draws the action in red.
+  tone?: 'danger';
+}
+
+export type AlertAction = CancelAlertAction | AnswerAlertAction;
 
 /*
  * A short question with a few answers, drawn by the system: a SwiftUI alert or confirmation dialog on iOS,
@@ -29,5 +41,5 @@ export function alertActionPress(
 }
 
 export function isDestructiveAlert(actions: readonly AlertAction[]): boolean {
-  return actions.some((action) => action.role === 'destructive');
+  return actions.some((action) => action.tone === 'danger');
 }

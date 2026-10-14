@@ -4,7 +4,7 @@ import { cn } from '#lib/generic/utils';
 import { BottomSheetAnchor } from '#primitives/overlays/bottom-sheet';
 
 // The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.
-export const sessionSurface = 'bg-sidebar';
+export const sessionSurface = 'bg-content';
 
 // The Session's one column: as wide as the Composer at most, centred in the pane with the pane's side padding. CSS centres it on every width change, so nothing in it depends on a width measured earlier.
 export function SessionColumn(props: ViewProps): React.JSX.Element {

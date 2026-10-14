@@ -81,7 +81,7 @@ function SearchTrigger({ trigger, ...props }: TriggerProps): React.JSX.Element {
       role="button"
       onPress={props.onOpen}
       onLayout={props.onTriggerLayout}
-      className={iconButtonClasses({ variant: 'ghost', size: 'sm' })}
+      className={iconButtonClasses({ variant: 'ghost', size: 'xs' })}
     />
   );
 }

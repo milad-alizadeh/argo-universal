@@ -36,7 +36,7 @@ type Story = StoryObj<typeof meta>;
 function SettingsHeading(): React.JSX.Element {
   return (
     <View className="hidden h-14 flex-row items-center px-4 wide:flex">
-      <Text semanticRole="heading" aria-level={1} role={'heading'}>
+      <Text accessibilityRole="heading" aria-level={1} role={'heading'}>
         Settings
       </Text>
     </View>
@@ -63,7 +63,7 @@ function SettingsPreview(args: SettingsListProps): React.JSX.Element {
   const selection = useSelectedPage(args);
 
   return (
-    <View className="w-full bg-sidebar wide:w-shell-list" style={{ flex: 1 }}>
+    <View className="w-full bg-content wide:w-shell-list" style={{ flex: 1 }}>
       <SettingsHeading />
       <SettingsList {...args} {...selection} />
     </View>

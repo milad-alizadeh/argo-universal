@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
-import { TextClassContext } from '#primitives/display/text';
+import { TextClassContext, toneClass } from '#primitives/display/text';
 import { appleSymbol } from '../../../symbols/apple-symbol';
 import { type IconName, iconSymbols } from '../../../symbols/icon-names';
 import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
@@ -44,12 +44,17 @@ function symbolGlyph(
   };
 }
 
-function useIconColor(className: string | undefined): string {
-  return cn('text-foreground', useContext(TextClassContext), className);
+function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
+  return cn(
+    'text-foreground',
+    useContext(TextClassContext),
+    toneClass(props.tone),
+    props.className,
+  );
 }
 
 export function Icon(props: IconProps): React.JSX.Element {
-  const colorClassName = useIconColor(props.className);
+  const colorClassName = useIconColor(props);
 
   return (
     <TintedSymbol

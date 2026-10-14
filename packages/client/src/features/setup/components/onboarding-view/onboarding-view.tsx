@@ -28,7 +28,7 @@ function OnboardingHeader({
   return (
     <View className="gap-2">
       {serverName !== undefined && <ServerRunning name={serverName} />}
-      <Text role="title" semanticRole="heading" aria-level={1}>
+      <Text role="title" accessibilityRole="heading" aria-level={1}>
         Set up Argo
       </Text>
       <Text role="secondary" className="text-muted-foreground">
@@ -54,8 +54,8 @@ function OnboardingSteps(props: OnboardingViewProps): React.JSX.Element {
 export function OnboardingView(props: OnboardingViewProps): React.JSX.Element {
   return (
     <ScrollFadeView
-      className="bg-sidebar"
-      surfaceClassName="bg-sidebar"
+      className="bg-content"
+      surfaceClassName="bg-content"
       contentContainerClassName="grow items-center justify-center px-gutter py-12"
     >
       <View className="w-full max-w-130 gap-6">

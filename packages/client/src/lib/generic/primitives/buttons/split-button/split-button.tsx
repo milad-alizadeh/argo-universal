@@ -18,7 +18,7 @@ import type {
 import { ChoiceSheet } from './split-button-sheet';
 
 export type {
-  SplitButtonChoice,
+  SplitButtonOption,
   SplitButtonProps,
   SplitMenuProps,
 } from './split-button-props';
@@ -109,7 +109,7 @@ function menuItems<Value extends string>(
   props: SplitMenuItems<Value>,
 ): SplitMenuItems<Value> {
   if (props.actions) return { actions: props.actions };
-  const { choices, value, onValueChange } = props;
+  const { options, value, onValueChange } = props;
 
-  return { choices, value, onValueChange };
+  return { options, value, onValueChange };
 }

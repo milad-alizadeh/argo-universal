@@ -72,7 +72,7 @@ function GroupedListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
 function GroupedListItemTitle(props: GroupedListItemProps): React.JSX.Element {
   const title = (
     <Text aria-hidden role="body" className={titleClasses(props)}>
-      {props.title}
+      {props.label}
     </Text>
   );
 

@@ -33,7 +33,7 @@ function StatusRow({ agent }: AgentProps): React.JSX.Element {
   return (
     <GroupedListSection title="Status" footer={statusFooters[agent.status]}>
       <GroupedListItem
-        title="Status"
+        label="Status"
         value={agentStatusLabels[agent.status]}
         status={tone ? { tone, label: '' } : undefined}
       />
@@ -53,7 +53,7 @@ function SignInSection(props: AgentDetailViewProps): React.JSX.Element {
       footer={props.onSignIn ? undefined : signInFooter}
     >
       <GroupedListItem
-        title="Not signed in"
+        label="Not signed in"
         status={{ tone: 'warning', label: '' }}
       />
       <SignInAction {...props} />
@@ -71,7 +71,7 @@ function SignInCommand({
 
   return (
     <GroupedListItem
-      title={command}
+      label={command}
       accessory={
         <CopyButton value={command} label="Copy command" className="size-7" />
       }
@@ -82,7 +82,7 @@ function SignInCommand({
 function SignInAction(props: AgentDetailViewProps): React.JSX.Element | null {
   if (props.onSignIn)
     return (
-      <GroupedListItem title="Sign in" tone="accent" onPress={props.onSignIn} />
+      <GroupedListItem label="Sign in" tone="accent" onPress={props.onSignIn} />
     );
 
   return <SignInCommand command={props.agent.signInCommand} />;

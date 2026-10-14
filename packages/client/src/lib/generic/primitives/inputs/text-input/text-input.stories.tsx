@@ -69,14 +69,14 @@ function InvalidSection(): React.JSX.Element {
       textFields
       title="Row invalid"
       footer={spaceError}
-      footerTone="destructive"
+      tone="danger"
     >
       <TypedRow {...invalidRow} />
     </GroupedListSection>
   );
 }
 
-type Typed<Props> = Omit<Props, 'value' | 'onChangeText' | 'appearance'> & {
+type Typed<Props> = Omit<Props, 'value' | 'onChangeText' | 'variant'> & {
   initial: string;
 };
 
@@ -96,7 +96,7 @@ const standaloneExamples: (Typed<StandaloneTextInputProps> & {
 
 const bareExamples: {
   label: string;
-  props: Omit<BareTextInputProps, 'appearance'> & { 'aria-invalid'?: boolean };
+  props: Omit<BareTextInputProps, 'variant'> & { 'aria-invalid'?: boolean };
 }[] = [
   { label: 'Bare empty', props: { placeholder: 'Email' } },
   {
@@ -108,7 +108,7 @@ const bareExamples: {
     label: 'Bare invalid',
     props: { 'aria-invalid': true, placeholder: 'Email' },
   },
-  { label: 'Bare muted', props: { variant: 'muted', placeholder: 'https://' } },
+  { label: 'Bare muted', props: { tone: 'muted', placeholder: 'https://' } },
   {
     label: 'Bare secure',
     props: { secureTextEntry: true, defaultValue: 'password' },
@@ -134,7 +134,7 @@ function BareVariations(): React.JSX.Element {
     <>
       {bareExamples.map(({ label, props }) => (
         <Variation key={label} label={label}>
-          <TextInput appearance="bare" accessibilityLabel={label} {...props} />
+          <TextInput variant="bare" accessibilityLabel={label} {...props} />
         </Variation>
       ))}
     </>
@@ -148,12 +148,7 @@ function TypedRow({
   const [value, setValue] = useState(initial);
 
   return (
-    <TextInput
-      {...props}
-      appearance="row"
-      value={value}
-      onChangeText={setValue}
-    />
+    <TextInput {...props} variant="row" value={value} onChangeText={setValue} />
   );
 }
 

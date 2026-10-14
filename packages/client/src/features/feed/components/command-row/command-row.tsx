@@ -35,7 +35,7 @@ type CommandDisclosureProps = CommandRowProps & {
   duration: string | undefined;
 };
 
-const destructiveClassName = 'text-destructive';
+const destructiveClassName = 'text-danger';
 
 const nonTerminalContent = (row: ToolCallUpdate): ToolCallContent[] =>
   row.content.filter((block) => block.type !== 'terminal');

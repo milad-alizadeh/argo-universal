@@ -21,14 +21,12 @@ export type FormInputProps = {
   className?: string;
 };
 
-// A section's footer: an error in the destructive tone in place of the hint.
+// A section's footer: an error in the danger tone in place of the hint.
 export const sectionFooter = (
   error: string | undefined,
   hint?: string,
-): Pick<GroupedListSectionProps, 'footer' | 'footerTone'> =>
-  error === undefined
-    ? { footer: hint }
-    : { footer: error, footerTone: 'destructive' };
+): Pick<GroupedListSectionProps, 'footer' | 'tone'> =>
+  error === undefined ? { footer: hint } : { footer: error, tone: 'danger' };
 
 const hasErrors = (errors: FieldErrors = []): boolean => errors.length > 0;
 
@@ -37,7 +35,7 @@ const inputClass = ({ mono, className }: FormInputProps): string =>
 
 // The bare box; names, paths and values are typed exactly as the Agent reads them.
 const verbatimEntry = {
-  appearance: 'bare',
+  variant: 'bare',
   autoCapitalize: 'none',
   autoCorrect: false,
 } as const;
@@ -69,7 +67,7 @@ export function FieldMessage({
   if (!error) return null;
 
   return (
-    <Text role="secondary" className="text-destructive" semanticRole="alert">
+    <Text role="secondary" className="text-danger" accessibilityRole="alert">
       {error}
     </Text>
   );
