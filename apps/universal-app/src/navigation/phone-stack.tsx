@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import type { ComponentProps, PropsWithChildren } from 'react';
+import { headerSearchLayout } from './header-search-layout';
 import { useHeaderTitleOptions } from './header-title';
 import { NativeScreenHeader } from './native-screen-header';
 
@@ -20,16 +21,21 @@ function useGlassHeaderCover(): number {
   return hasLiquidGlass ? height : 0;
 }
 
+function useScreenOptions(): ComponentProps<typeof Stack>['screenOptions'] {
+  return { ...screenOptions, ...useHeaderTitleOptions() };
+}
+
 // A phone section's native stack; its screens set their header through ScreenHeader.
 export function PhoneStack({ children }: PropsWithChildren): React.JSX.Element {
-  const titleOptions = useHeaderTitleOptions();
-
   return (
     <ScreenHeaderProvider
       header={NativeScreenHeader}
       useHeaderCover={useGlassHeaderCover}
     >
-      <Stack screenOptions={{ ...screenOptions, ...titleOptions }}>
+      <Stack
+        screenOptions={useScreenOptions()}
+        screenLayout={headerSearchLayout}
+      >
         {children}
       </Stack>
     </ScreenHeaderProvider>

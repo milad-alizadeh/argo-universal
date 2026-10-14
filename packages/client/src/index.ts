@@ -63,6 +63,11 @@ export {
 
 export { HeaderButton } from '#lib/product/header-button';
 
+export {
+  HeaderSearchSlotProvider,
+  type ShowHeaderSearch,
+} from '#primitives/inputs/search-field';
+
 export type { Section } from './lib/product/navigation/sections';
 
 export { HeaderSearchRow } from './lib/product/navigation/header-search';

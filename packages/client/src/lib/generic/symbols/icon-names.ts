@@ -15,6 +15,7 @@ export const iconSymbols = {
   appearance: { sf: 'circle.lefthalf.filled', material: 'contrast' },
   archive: { sf: 'tray.and.arrow.down', material: 'archive' },
   'arrow-down': { sf: 'arrow.down', material: 'arrow_downward' },
+  'arrow-left': { sf: 'arrow.left', material: 'arrow_back' },
   'arrow-right': { sf: 'arrow.right', material: 'arrow_forward' },
   'arrow-up': { sf: 'arrow.up', material: 'arrow_upward' },
   atlas: {
