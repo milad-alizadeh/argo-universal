@@ -1,4 +1,4 @@
-import { chmod, writeFile } from 'node:fs/promises';
+import { chmod, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
@@ -36,19 +36,26 @@ const launcher = (): string => {
   return `#!/bin/sh\nexec ${quoted} "$@"\n`;
 };
 
+// Replaced in one rename, so a sync running now never reads half a file.
+const publishPathAgent = async (registryPath: string): Promise<void> => {
+  const next = `${registryPath}.next`;
+  await writeFile(
+    next,
+    JSON.stringify({
+      ...publishedRegistry,
+      agents: [...publishedRegistry.agents, pathAgent],
+    }),
+  );
+  await rename(next, registryPath);
+};
+
 Given(
   'Path Agent is installed on this Mac outside Argo',
   async ({ app }): Promise<void> => {
     const file = path.join(app.machinePath, entrypoint);
     await writeFile(file, launcher());
     await chmod(file, 0o755);
-    await writeFile(
-      app.registryPath,
-      JSON.stringify({
-        ...publishedRegistry,
-        agents: [...publishedRegistry.agents, pathAgent],
-      }),
-    );
+    await publishPathAgent(app.registryPath);
   },
 );
 
