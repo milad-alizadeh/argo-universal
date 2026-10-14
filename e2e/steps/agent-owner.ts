@@ -66,15 +66,30 @@ When('I ask to update Path Agent', async ({ page }): Promise<void> => {
 // Read in the page; the e2e project has no DOM lib.
 const clipboardText = 'navigator.clipboard.readText()';
 
-// Chromium reads the clipboard only once allowed; Electron allows it already.
-const readClipboard = async (
+// Electron's page writes to the real macOS clipboard, so it gets one that lives only in the page.
+const pageOnlyClipboard = `(() => {
+  let text = '';
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    value: {
+      writeText: async (value) => { text = value; },
+      readText: async () => text,
+    },
+  });
+})()`;
+
+// Headless Chromium keeps its clipboard inside the browser and reads it only once allowed.
+const isolateClipboard = async (
   page: Page,
   appTarget: AppOptions['appTarget'],
-): Promise<string> => {
-  if (appTarget === 'web')
+): Promise<void> => {
+  if (appTarget === 'web') {
     await page.context().grantPermissions(['clipboard-read']);
 
-  return page.evaluate<string>(clipboardText);
+    return;
+  }
+
+  await page.evaluate(pageOnlyClipboard);
 };
 
 // The story proves no install or update starts; this proves the user gets the command.
@@ -86,10 +101,11 @@ Then(
       alert.getByText(`brew upgrade ${entrypoint}`, { exact: true }),
     ).toBeVisible();
     await capture(page, 'update-it-yourself');
+    await isolateClipboard(page, appTarget);
     await alert.getByRole('button', { name: 'Copy command' }).click();
     await expect(alert).toHaveCount(0);
     await expect
-      .poll(() => readClipboard(page, appTarget))
+      .poll(() => page.evaluate<string>(clipboardText))
       .toBe(`brew upgrade ${entrypoint}`);
   },
 );

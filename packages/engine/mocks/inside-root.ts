@@ -31,8 +31,12 @@ const landing = async (path: string, depth = 0): Promise<string> => {
   return entry ? realpath(path) : underParent(path, depth);
 };
 
+// A relative link counts from the folder it really sits in, as the kernel reads it.
 const followLink = async (path: string, depth: number): Promise<string> =>
-  landing(resolve(dirname(path), await readlink(path)), depth + 1);
+  landing(
+    resolve(await landing(dirname(path), depth), await readlink(path)),
+    depth + 1,
+  );
 
 const underParent = async (path: string, depth: number): Promise<string> =>
   join(await landing(dirname(path), depth), basename(path));
