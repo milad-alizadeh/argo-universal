@@ -48,6 +48,7 @@ export const Disabled: Story = {
     const control = canvas.getByRole('switch', { name: accessibilityLabel });
     control.click();
     await expect(control).not.toBeChecked();
+    await expect(control).toHaveAttribute('aria-disabled', 'true');
     await expect(args.onValueChange).not.toHaveBeenCalled();
   },
 };

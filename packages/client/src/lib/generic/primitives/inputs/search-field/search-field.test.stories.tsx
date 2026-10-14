@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, waitFor } from 'storybook/test';
+import { View } from 'react-native';
+import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { SearchField } from './search-field';
@@ -78,13 +79,15 @@ export const EscapeCloses: Story = {
 export const DockedDrawsNothingOnTheWeb: Story = {
   render: () => (
     <>
-      <SearchField
-        appearance="docked"
-        label={label}
-        value="review"
-        onChangeText={() => {}}
-        leading="back"
-      />
+      <View role="group" aria-label="Docked search">
+        <SearchField
+          appearance="docked"
+          label={label}
+          value="review"
+          onChangeText={() => {}}
+          leading="back"
+        />
+      </View>
       <SearchField
         title="Projects"
         label="Search Projects"
@@ -94,11 +97,14 @@ export const DockedDrawsNothingOnTheWeb: Story = {
     </>
   ),
   play: async ({ canvas }) => {
-    await expect(
+    const docked = within(canvas.getByRole('group', { name: 'Docked search' }));
+    await expect(docked.queryByRole('textbox')).toBeNull();
+    await expect(docked.queryByRole('button')).toBeNull();
+    // Only the title-row field draws anything: its search button.
+    await expect(canvas.getAllByRole('button')).toEqual([
       canvas.getByRole('button', { name: 'Search Projects' }),
-    ).toBeVisible();
+    ]);
     await expect(canvas.queryByRole('textbox')).toBeNull();
-    await expect(canvas.queryByRole('button', { name: label })).toBeNull();
   },
 };
 
