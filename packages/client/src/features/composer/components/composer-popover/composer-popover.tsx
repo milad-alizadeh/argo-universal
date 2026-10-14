@@ -11,7 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
   usePopoverClose,
-} from '#primitives/overlays/popover/popover-view';
+} from '#primitives/overlays/popover/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useAfterClose } from '../../hooks/use-after-close';
 import type { ComposerPopoverProps } from './popover-types';

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Text } from '../../display/text/text';
 import { Input } from '../../inputs/input/input';
 import { useFooterDescription } from '../field-footer';
-import { isInvalid } from './field-input-view';
+import { isInvalid } from './field-input';
 import { StandaloneField } from './standalone-field';
 import type { StandaloneFieldInputProps } from './standalone-field-input-props';
 

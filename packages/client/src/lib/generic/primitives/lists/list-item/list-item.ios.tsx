@@ -15,7 +15,7 @@ import { useNavigationFields } from '../../fields/field-layout';
 import type { ListItemProps } from '../../fields/field-props';
 import { rowAccessibilityModifiers } from './list-item-accessibility';
 import { RowContent } from './list-item-row.ios';
-import { ListItem as WebListItem } from './list-item-view.tsx';
+import { ListItem as WebListItem } from './list-item.tsx';
 import { NativeRowDetail } from './native-row';
 
 const inset = 16;

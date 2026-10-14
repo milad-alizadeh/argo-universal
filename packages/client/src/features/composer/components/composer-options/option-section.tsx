@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { configurationChoices } from '#lib/product/session-configuration';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { FieldSection } from '#primitives/fields/field-section/field-section-view';
-import { Switch } from '#primitives/inputs/switch/switch-view';
-import { ListItem } from '#primitives/lists/list-item/list-item-view';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { Switch } from '#primitives/inputs/switch/switch';
+import { ListItem } from '#primitives/lists/list-item/list-item';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 
 type Option = SessionConfigOption;

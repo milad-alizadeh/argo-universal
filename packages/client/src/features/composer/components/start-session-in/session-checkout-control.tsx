@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import { CheckoutContents } from '../composer-configuration/composer-configuration';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { SessionControlDisclosure } from './session-control-disclosure';

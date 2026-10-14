@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Icon } from '#primitives/display/icon/icon';
-import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
+import { FieldGroup } from '#primitives/fields/field-group/field-group';
 import type { SubmitCustomAgent } from '../../hooks/use-custom-agent-form';
 import { customAgentDescription } from '../../state/agent-list';
 import type { AgentManagement } from '../../state/agent-management-types';

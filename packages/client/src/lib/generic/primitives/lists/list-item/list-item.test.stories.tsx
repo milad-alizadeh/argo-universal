@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn } from 'storybook/test';
-import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
-import { FieldSection } from '#primitives/fields/field-section/field-section-view';
-import { ListItem } from './list-item-view';
+import { FieldGroup } from '#primitives/fields/field-group/field-group';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { ListItem } from './list-item';
 
 const onPress = fn<() => void>();
 

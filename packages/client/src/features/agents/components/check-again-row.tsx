@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { ListItem } from '#primitives/lists/list-item/list-item-view';
+import { ListItem } from '#primitives/lists/list-item/list-item';
 
 // Asks the Server to check the Agent once more; drawn disabled while the page cannot.
 export function CheckAgainRow({

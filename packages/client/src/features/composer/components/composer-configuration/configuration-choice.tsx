@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { ListItem } from '#primitives/lists/list-item/list-item-view';
+import { ListItem } from '#primitives/lists/list-item/list-item';
 
 interface ChoiceProps {
   selected: boolean;

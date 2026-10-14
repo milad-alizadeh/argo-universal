@@ -8,7 +8,7 @@ import type { ComponentProps, ReactElement } from 'react';
 import { useMemo } from 'react';
 import { useComposeTextStyle } from '../../native/native-typography';
 import { useFollowedText } from './field-input-text';
-import { isInvalid } from './field-input-view.tsx';
+import { isInvalid } from './field-input.tsx';
 import { blurOnFocusLoss } from './focus-loss';
 import type { StandaloneFieldInputProps } from './standalone-field-input-props';
 import { StandaloneNativeField } from './standalone-native-field';

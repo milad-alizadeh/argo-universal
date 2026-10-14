@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useId, useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import { Variation, Variations } from '../../../variations';
 import { Text } from '../../display/text/text';
 import { Portal, PortalHost } from './portal';

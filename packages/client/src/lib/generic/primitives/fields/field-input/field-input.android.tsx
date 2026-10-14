@@ -8,10 +8,7 @@ import { useComposeTextStyle } from '../../native/native-typography';
 import { errorMessage } from '../field-errors';
 import type { FieldInputProps } from '../field-props';
 import { useFollowedText } from './field-input-text';
-import {
-  FieldInput as WideFieldInput,
-  isInvalid,
-} from './field-input-view.tsx';
+import { FieldInput as WideFieldInput, isInvalid } from './field-input.tsx';
 import { blurOnFocusLoss } from './focus-loss';
 
 export function FieldInput(props: FieldInputProps): React.JSX.Element {

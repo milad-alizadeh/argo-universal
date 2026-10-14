@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { Slider, type SliderProps } from './slider-view';
+import { Slider, type SliderProps } from './slider';
 
 type ExampleProps = Pick<
   SliderProps,

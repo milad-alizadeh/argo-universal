@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { SheetBody } from './bottom-sheet-body.web';
-import type { SurfaceProps } from './bottom-sheet-surface-props.web';
+import { SheetBody } from './bottom-sheet-body';
+import type { SurfaceProps } from './bottom-sheet-surface-props';
 
 export type SheetResize = ((expanded: boolean) => void) | undefined;
 

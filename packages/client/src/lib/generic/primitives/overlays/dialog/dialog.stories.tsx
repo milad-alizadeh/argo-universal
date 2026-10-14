@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import { Text } from '#primitives/display/text/text';
 import { Input } from '#primitives/inputs/input/input';
 import {

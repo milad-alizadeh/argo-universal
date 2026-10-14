@@ -21,7 +21,7 @@ import { useWide } from '../../../use-wide/use-wide';
 import { useSwiftUITextModifiers } from '../../native/native-typography';
 import type { FieldInputProps } from '../field-props';
 import { useFollowedText } from './field-input-text';
-import { FieldInput as WebFieldInput, isInvalid } from './field-input-view.tsx';
+import { FieldInput as WebFieldInput, isInvalid } from './field-input.tsx';
 
 const rowHeight = 52;
 

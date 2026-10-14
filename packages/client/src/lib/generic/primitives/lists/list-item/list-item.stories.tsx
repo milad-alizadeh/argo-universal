@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { GroupedRows } from '../../../../../../mocks/list-item-grouped-rows-mock';
 import { SidebarRows } from '../../../../../../mocks/list-item-mock';
-import { ListItem } from './list-item-view';
+import { ListItem } from './list-item';
 
 const meta = {
   title: 'Design System/Primitives/ListItem',

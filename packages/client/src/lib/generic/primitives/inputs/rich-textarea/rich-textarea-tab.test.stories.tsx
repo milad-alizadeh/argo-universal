@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import {
   exampleLabel as label,
   RichTextareaExample,

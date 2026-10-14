@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { ButtonGroup } from '#primitives/buttons/button-group/button-group';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import { IconButton } from '#primitives/buttons/icon-button/icon-button';
 import { Text } from '#primitives/display/text/text';
 import {

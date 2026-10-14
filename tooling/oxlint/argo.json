@@ -103,7 +103,7 @@
       "files": [
         "packages/client/src/lib/generic/primitives/inputs/picker/picker-dialog.android.tsx",
         "packages/client/src/lib/generic/primitives/inputs/picker/picker-row.android.tsx",
-        "packages/client/src/lib/generic/primitives/lists/list-item/list-item-view.android.tsx"
+        "packages/client/src/lib/generic/primitives/lists/list-item/list-item.android.tsx"
       ],
       "rules": { "anti-slop/no-shape-in-symbol-names": "off" }
     },
@@ -1852,7 +1852,7 @@
       // ADR-0023: Lexical stays in the RichTextarea web drawing: its view, the web/ folder and their tests, with the tests' headless editor.
       "files": ["apps/**", "packages/**", "tooling/**", "e2e/**", "mocks/**"],
       "excludeFiles": [
-        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea-view.tsx",
+        "packages/client/src/lib/generic/primitives/inputs/rich-textarea/rich-textarea.tsx",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/web/**",
         "packages/client/src/lib/generic/primitives/inputs/rich-textarea/*.test.*",
         "packages/client/mocks/rich-textarea-headless.ts"

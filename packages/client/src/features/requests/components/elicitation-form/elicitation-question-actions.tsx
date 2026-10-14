@@ -1,10 +1,7 @@
 import type { ReactElement } from 'react';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import {
-  Button,
-  type ButtonProps,
-} from '#primitives/buttons/button/button-view';
+import { Button, type ButtonProps } from '#primitives/buttons/button/button';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 
 type ActionProps = Extract<ButtonProps, { appearance: 'content' }>;

@@ -5,14 +5,14 @@ import { View } from 'react-native';
 import {
   SurfaceContent,
   type SheetResize,
-} from './bottom-sheet-surface-content.web';
+} from './bottom-sheet-surface-content';
 import {
   overlayProps,
   sheetContentProps,
   type SurfaceProps,
-} from './bottom-sheet-surface-props.web';
-import { useSwipeToClose } from './bottom-sheet-swipe.web';
-import { sheetDialog, useSheetAnchor } from './use-sheet-anchor.web';
+} from './bottom-sheet-surface-props';
+import { useSwipeToClose } from './bottom-sheet-swipe';
+import { sheetDialog, useSheetAnchor } from './use-sheet-anchor';
 
 /*
  * The web sheet inside a dialog root: the dimmed backdrop, then the card rising from the bottom edge.

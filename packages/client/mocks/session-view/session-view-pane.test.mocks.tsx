@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import {
   SessionView,
   type SessionViewProps,

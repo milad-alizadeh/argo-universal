@@ -7,7 +7,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '../../../native-theme';
-import { FieldInput } from './field-input-view.ios';
+import { FieldInput } from './field-input.ios';
 import type { StandaloneFieldInputProps } from './standalone-field-input-props';
 import { StandaloneNativeField } from './standalone-native-field';
 

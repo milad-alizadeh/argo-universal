@@ -3,10 +3,7 @@ import { listRowBackground, listRowInsets } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useWide } from '../../../use-wide/use-wide';
 import { HostedRow } from '../field-group/field-group-row';
-import {
-  FieldRow as WebFieldRow,
-  type FieldRowProps,
-} from './field-row-view.tsx';
+import { FieldRow as WebFieldRow, type FieldRowProps } from './field-row.tsx';
 
 /*
  * A SwiftUI Form sizes a plain React Native view as it likes, so the row hosts it and takes its height.

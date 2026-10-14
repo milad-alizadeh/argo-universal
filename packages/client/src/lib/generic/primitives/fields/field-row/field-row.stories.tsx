@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import { Button } from '#primitives/buttons/button/button-view';
-import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
-import { FieldSection } from '#primitives/fields/field-section/field-section-view';
-import { ListItem } from '#primitives/lists/list-item/list-item-view';
-import { FieldRow } from './field-row-view';
+import { Button } from '#primitives/buttons/button/button';
+import { FieldGroup } from '#primitives/fields/field-group/field-group';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { ListItem } from '#primitives/lists/list-item/list-item';
+import { FieldRow } from './field-row';
 
 const meta = {
   title: 'Design System/Primitives/FieldRow',

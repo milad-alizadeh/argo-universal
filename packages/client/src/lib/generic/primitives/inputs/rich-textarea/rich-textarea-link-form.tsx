@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import { Text } from '../../display/text/text';
 import { Input } from '../input/input';
 

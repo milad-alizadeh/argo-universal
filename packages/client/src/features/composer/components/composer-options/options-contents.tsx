@@ -4,7 +4,7 @@ import type * as React from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { configurationChoices } from '#lib/product/session-configuration';
-import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
+import { FieldGroup } from '#primitives/fields/field-group/field-group';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 
 type Option = SessionConfigOption;

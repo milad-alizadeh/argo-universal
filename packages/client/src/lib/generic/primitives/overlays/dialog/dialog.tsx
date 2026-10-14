@@ -2,7 +2,7 @@ import * as DialogPrimitive from '@rn-primitives/dialog';
 import * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import { useWide } from '../../../use-wide/use-wide';
 import type { ButtonDataProps } from '../../buttons/button/button-props';
 import { type ContentProps, DialogBody } from './dialog-body';

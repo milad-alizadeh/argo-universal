@@ -1,6 +1,6 @@
 import type { SessionConfigOption } from '@repo/contracts';
 import type * as React from 'react';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 

@@ -1,26 +1,18 @@
-import {
-  createContext,
-  useContext,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
-import { View } from 'react-native';
+import * as DialogPrimitive from '@rn-primitives/dialog';
+import type * as React from 'react';
 import type { BottomSheetProps } from './bottom-sheet.types';
 
-const SheetContext = createContext<(open: boolean) => void>(() => {});
-
-export function BottomSheetRoot(
-  props: Pick<BottomSheetProps, 'style' | 'open' | 'onOpenChange'> & {
-    children: ReactNode;
-  },
-): ReactElement {
+export function BottomSheetRoot({
+  style,
+  open,
+  onOpenChange,
+  children,
+}: Pick<BottomSheetProps, 'style' | 'open' | 'onOpenChange'> & {
+  children: React.ReactNode;
+}): React.JSX.Element {
   return (
-    <SheetContext.Provider value={props.onOpenChange}>
-      <View style={props.style}>{props.children}</View>
-    </SheetContext.Provider>
+    <DialogPrimitive.Root style={style} open={open} onOpenChange={onOpenChange}>
+      {children}
+    </DialogPrimitive.Root>
   );
-}
-
-export function useSheetOpenChange(): (open: boolean) => void {
-  return useContext(SheetContext);
 }

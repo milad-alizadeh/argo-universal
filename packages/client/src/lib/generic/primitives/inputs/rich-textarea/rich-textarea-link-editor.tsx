@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { PopoverContent } from '#primitives/overlays/popover/popover-view';
+import { PopoverContent } from '#primitives/overlays/popover/popover';
 import { type LinkFields, LinkForm } from './rich-textarea-link-form';
 import { SelectionPopover } from './rich-textarea-selection-popover';
 import type { FieldPlacement } from './web/rich-textarea-placement';

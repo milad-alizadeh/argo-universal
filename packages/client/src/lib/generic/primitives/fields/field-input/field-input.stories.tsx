@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { action } from 'storybook/actions';
-import { FieldGroup } from '#primitives/fields/field-group/field-group-view';
-import { FieldSection } from '#primitives/fields/field-section/field-section-view';
-import { FieldInput } from './field-input-view';
+import { FieldGroup } from '#primitives/fields/field-group/field-group';
+import { FieldSection } from '#primitives/fields/field-section/field-section';
+import { FieldInput } from './field-input';
 
 const meta = {
   title: 'Design System/Primitives/FieldInput',

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { Variation, Variations as VariationList } from '../../../variations';
+import { Button } from './button';
 import type { ButtonProps } from './button-props';
-import { Button } from './button-view';
 
 const saveLabel = 'Save changes';
 

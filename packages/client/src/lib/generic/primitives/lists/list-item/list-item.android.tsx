@@ -7,7 +7,7 @@ import { useNavigationFields } from '../../fields/field-layout';
 import { type ListItemProps, listItemName } from '../../fields/field-props';
 import { roundedOutline } from '../../native/compose-corners';
 import { RowContent } from './list-item-android-row';
-import * as Web from './list-item-view.tsx';
+import * as Web from './list-item.tsx';
 import { NativeRowDetail } from './native-row';
 
 const tileRadius = 4;

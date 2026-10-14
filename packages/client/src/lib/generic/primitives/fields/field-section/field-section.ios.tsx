@@ -9,7 +9,7 @@ import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
 import { useSwiftUITextModifiers } from '../../native/native-typography';
 import type { FieldSectionProps } from '../field-props';
-import { FieldSection as WebFieldSection } from './field-section-view.tsx';
+import { FieldSection as WebFieldSection } from './field-section.tsx';
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {
   if (useWide()) return <WebFieldSection {...props} />;

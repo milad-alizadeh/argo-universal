@@ -1,6 +1,6 @@
 import type * as React from 'react';
+import { Button } from '#primitives/buttons/button/button';
 import type { ButtonProps } from '#primitives/buttons/button/button-props';
-import { Button } from '#primitives/buttons/button/button-view';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';
 import type { AgentStatus } from '../../state/agent-status';

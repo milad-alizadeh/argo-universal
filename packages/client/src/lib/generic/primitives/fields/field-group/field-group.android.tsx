@@ -9,7 +9,7 @@ import { ListSearchField } from '../../inputs/list-search-bar/list-search-bar';
 import { Host } from '../../native/host';
 import { FieldLayout } from '../field-layout';
 import type { FieldGroupProps } from '../field-props';
-import { FieldGroup as WebFieldGroup } from './field-group-view.tsx';
+import { FieldGroup as WebFieldGroup } from './field-group.tsx';
 
 const gutter = 16;
 

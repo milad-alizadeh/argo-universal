@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { Switch } from './switch-view';
+import { Switch } from './switch';
 
 type CheckedExampleProps = {
   initialChecked?: boolean;

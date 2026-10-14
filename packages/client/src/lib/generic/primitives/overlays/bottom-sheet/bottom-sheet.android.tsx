@@ -11,8 +11,8 @@ import {
   HostedSheetContent as FittedSheetContent,
   SheetDragHandle,
 } from './bottom-sheet-hosted-content.android';
-import { BottomSheetRoot } from './bottom-sheet-root';
-import { BottomSheetTrigger } from './bottom-sheet-trigger';
+import { BottomSheetRoot } from './bottom-sheet-root.native';
+import { BottomSheetTrigger } from './bottom-sheet-trigger.native';
 import { SheetViewport } from './bottom-sheet-viewport.android';
 import type { BottomSheetProps } from './bottom-sheet.types';
 

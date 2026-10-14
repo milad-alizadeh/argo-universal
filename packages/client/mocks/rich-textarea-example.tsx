@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { useState } from 'react';
+import { RichTextarea } from '#primitives/inputs/rich-textarea/rich-textarea';
 import type { ReferenceOption } from '#primitives/inputs/rich-textarea/rich-textarea-references';
-import { RichTextarea } from '#primitives/inputs/rich-textarea/rich-textarea-view';
 
 interface ExampleProps {
   initialValue?: string;

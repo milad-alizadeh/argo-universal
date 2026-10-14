@@ -1,7 +1,7 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import { DialogOverlay } from '../dialog/dialog-overlay';
 import {
   alertActionPress,

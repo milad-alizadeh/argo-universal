@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
-import { Button } from '#primitives/buttons/button/button-view';
+import { Button } from '#primitives/buttons/button/button';
 import {
   exampleLabel as label,
   examplePlaceholder,
@@ -11,7 +11,7 @@ import {
 } from '../../../../../../mocks/rich-textarea-example';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
-import { RichTextarea } from './rich-textarea-view';
+import { RichTextarea } from './rich-textarea';
 
 // A value from outside replaces the field's text, and the next edit is still sent, starting with its first key.
 
