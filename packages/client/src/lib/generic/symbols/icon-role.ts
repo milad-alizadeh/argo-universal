@@ -11,8 +11,8 @@ const iconRoles = {
   secondary: { wide: 12, phone: 16 },
   // Inside a control.
   control: { wide: 16, phone: 16 },
-  // A disclosure chevron after a label: small and the same on every screen.
-  chevron: { wide: 12, phone: 12 },
+  // A disclosure chevron after a label: steps up with the text beside it.
+  chevron: { wide: 12, phone: 14 },
   // A shape that fills its whole box, one step inside a control's slot.
   mark: { wide: 14, phone: 14 },
   // A list row's leading icon.
