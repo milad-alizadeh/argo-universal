@@ -8,6 +8,7 @@ export interface CatalogSyncInput {
   fetchAgents: FetchAgents;
   reader: RegistryReader;
   now(): number;
+  createId(): string;
   source: string;
   scope: string;
   rejectedValues: number;
@@ -27,7 +28,7 @@ function catalogReplacement(
   return new AgentCatalogReplaceJob({
     source: input.source,
     scope: input.scope,
-    rows: prepareAgentCatalogRows(registry, syncedAt),
+    rows: prepareAgentCatalogRows(registry, syncedAt, input.createId),
     syncedAt,
     rejectedValues: input.rejectedValues,
   });
