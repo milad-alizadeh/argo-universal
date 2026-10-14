@@ -7,11 +7,9 @@ import { useWide } from '../../../lib/generic/use-wide/use-wide';
 export interface AgentIdentityProps {
   logo: ReactElement;
   description: string;
-  // The status chip, or Install for a registry Agent.
-  trailing: ReactElement;
 }
 
-// A wide window's first card on an Agent page, under a header that names the Agent alone; a phone opens on its centred summary instead.
+// A wide window's first card on an Agent page, under a header that names the Agent alone; a phone opens on its centred summary instead. The status lives only in the Status section below it.
 export function AgentIdentity(
   props: AgentIdentityProps,
 ): React.JSX.Element | null {
@@ -31,7 +29,6 @@ function IdentityRow(props: AgentIdentityProps): React.JSX.Element {
       tone="muted"
       title={props.description}
       leading={props.logo}
-      accessory={props.trailing}
     />
   );
 }

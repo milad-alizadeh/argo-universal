@@ -51,7 +51,7 @@ export const ShowsWhyItCantStart: Story = {
 export const RechecksAfterItCantStart: Story = {
   args: { readiness: { status: 'cant-start', reason: customAgentFailure } },
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByText('Recheck'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Recheck' }));
     await expect(args.onRecheck).toHaveBeenCalledOnce();
   },
 };

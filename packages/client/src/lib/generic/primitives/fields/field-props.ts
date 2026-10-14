@@ -103,6 +103,18 @@ function distinctStatus(props: ListItemProps): string | undefined {
   return status === props.value ? undefined : status;
 }
 
+// The value only says the row's status, such as an Agent's "Can’t start": a phone shows the dot alone, and the name still says it.
+export function valueIsStatus(
+  props: Pick<ListItemProps, 'value' | 'status'>,
+): boolean {
+  return props.value !== undefined && props.value === props.status?.label;
+}
+
+// The value a phone row shows: none when it only says the status.
+export const phoneValue = (
+  props: Pick<ListItemProps, 'value' | 'status'>,
+): string | undefined => (valueIsStatus(props) ? undefined : props.value);
+
 export function listItemName(props: ListItemProps): string {
   if (props.accessibilityLabel) return props.accessibilityLabel;
 

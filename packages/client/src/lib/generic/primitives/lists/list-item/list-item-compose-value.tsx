@@ -2,21 +2,24 @@ import { Row, Text } from '@expo/ui/jetpack-compose';
 import { clearSemantics, weight } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '../../../native-theme';
-import type { ListItemProps } from '../../fields/field-props';
+import { type ListItemProps, phoneValue } from '../../fields/field-props';
 import { useComposeTextStyle } from '../../native/native-typography';
 import { hasDisclosure } from './list-item-styles';
 import { NativeRowGlyph, NativeRowIcon, NativeRowStatus } from './native-row';
 
 const gutter = 16;
 
+// A phone row shows a status value as its dot alone.
 export function RowTrailing(props: ListItemProps): React.JSX.Element {
+  const value = phoneValue(props);
+
   return (
     <Row
       horizontalArrangement={{ spacedBy: gutter }}
       verticalAlignment="center"
-      modifiers={valueWidth(props.value)}
+      modifiers={valueWidth(value)}
     >
-      <RowValueGroup {...props} />
+      <RowValueGroup {...props} value={value} />
       <NativeRowStatus {...props} />
       <RowDisclosure visible={hasDisclosure(props)} />
     </Row>

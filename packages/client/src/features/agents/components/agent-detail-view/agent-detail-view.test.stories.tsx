@@ -34,7 +34,6 @@ export const ShowsTheVersionAndDistribution: Story = {
     ).toBeVisible();
     await expect(canvas.getByRole('link', { name: 'GitHub' })).toBeVisible();
     await expect(canvas.getByRole('link', { name: 'Licence' })).toBeVisible();
-    await expect(canvas.getByText('Ready')).toBeVisible();
   },
 };
 
@@ -54,24 +53,13 @@ export const ShowsAnAgentFoundOnThisMac: Story = {
   },
 };
 
-export const ShowsTheReadyStatusOnAPhone: Story = {
-  beforeEach: (): Promise<void> => settleViewport(layoutWidths.phone),
-  play: async ({ canvas }) => {
-    await expect(canvas.getAllByText('Ready')[0]).toBeVisible();
-  },
-};
-
-export const InstallsARegistryAgent: Story = {
+// Install itself is proven by the readiness stories; a registry Agent names its source and has nothing to remove.
+export const ShowsARegistryAgentsSourceWithoutRemove: Story = {
   args: { agent: { ...readyAgent, status: 'not-installed' } },
-  play: async ({ args, canvas, userEvent }) => {
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('group', { name: 'Source, ACP Registry' }),
     ).toBeVisible();
-    await expect(
-      canvas.queryByRole('heading', { name: 'Status' }),
-    ).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: 'Install' }));
-    await expect(args.onInstall).toHaveBeenCalledOnce();
     await expect(
       canvas.queryByRole('button', { name: removeLabel }),
     ).not.toBeInTheDocument();
@@ -87,6 +75,7 @@ export const UpdatesTheAgentOnAPhone: Story = {
   },
 };
 
+// The identity card says what the Agent is; its status lives in the Status section alone.
 export const OpensOnTheAgentsIdentityCard: Story = {
   args: { agent: { ...readyAgent, status: 'update-available' } },
   play: async ({ canvas }) => {
@@ -94,8 +83,10 @@ export const OpensOnTheAgentsIdentityCard: Story = {
       name: new RegExp(`^${readyAgent.description}`),
     });
 
-    await expect(within(card).getByText('Update available')).toBeVisible();
-    await expect(canvas.getByRole('button', { name: 'Update' })).toBeVisible();
+    await expect(card).toBeVisible();
+    await expect(
+      within(card).queryByText('Update available'),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -105,9 +96,6 @@ export const ShowsADisabledAgentThatWasNeverCheckedAsDisabled: Story = {
     await expect(canvas.getByText('Disabled')).toBeVisible();
     await expect(canvas.queryByText('Checking…')).not.toBeInTheDocument();
     await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
-    await expect(
-      canvas.queryByRole('heading', { name: 'Status' }),
-    ).not.toBeInTheDocument();
   },
 };
 

@@ -48,7 +48,6 @@ function DisableButton({ agent, management }: DisableProps): React.JSX.Element {
       label={`Disable ${agent.name}`}
       size="sm"
       fullWidth="narrow"
-      variant="outline"
       onPress={() => management?.onEnabledChange(false)}
       disabled={disabling(management)}
     />

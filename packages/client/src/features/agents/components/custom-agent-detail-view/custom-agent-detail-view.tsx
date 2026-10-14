@@ -15,7 +15,6 @@ import {
 } from '../agent-management/agent-management';
 import { AgentRemoval } from '../agent-management/agent-removal';
 import { AgentPlaceholder } from '../agent-placeholder';
-import { AgentStatusChip } from '../agent-readiness/agent-readiness';
 import { CustomAgentForm } from '../custom-agent-form/custom-agent-form';
 import { LaunchSections } from '../custom-agent-launch';
 import { PhoneTitle } from '../phone-title';
@@ -73,14 +72,11 @@ function CustomAgentSettings(props: SettingsProps): React.JSX.Element {
 }
 
 // The generic Agent glyph stands in for the logo a custom Agent lacks.
-function CustomAgentIdentity({
-  readiness,
-}: Pick<SettingsProps, 'readiness'>): React.JSX.Element {
+function CustomAgentIdentity(): React.JSX.Element {
   return (
     <AgentIdentity
       logo={<Icon name="agent" role="title" className="text-foreground" />}
       description={customAgentDescription}
-      trailing={<AgentStatusChip status={readiness.status} />}
     />
   );
 }
@@ -91,7 +87,7 @@ function CustomAgentContent(props: SettingsProps): React.JSX.Element {
 
   // A list rather than a fragment, so a native group still sees each section.
   const status = [
-    <CustomAgentIdentity key="identity" readiness={props.readiness} />,
+    <CustomAgentIdentity key="identity" />,
     <CustomReadinessSection
       key="status"
       name={props.definition.name}

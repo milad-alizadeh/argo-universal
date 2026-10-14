@@ -16,8 +16,8 @@ const capture = async (page: Page, name: string): Promise<void> => {
 
 const exact = { exact: true };
 
-// The phone keeps the Agents list mounted under the Agent page, so only shown text counts.
-const shown = (page: Page, text: string): Locator =>
+// The Agents list stays mounted beside (wide) or under (phone) the Agent page with the same words, so only shown text counts.
+export const shown = (page: Page, text: string): Locator =>
   page.getByText(text, exact).filter({ visible: true }).first();
 
 Then(
