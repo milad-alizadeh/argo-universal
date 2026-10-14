@@ -1,5 +1,4 @@
-import { readFile, symlink, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { setTimeout } from 'node:timers/promises';
 import { z } from 'zod';
 import {
@@ -28,8 +27,6 @@ type InstallationMockOptions = {
   packageName?: string;
   scenarioPath?: string;
   version?: string;
-  // Where `brew install node|uv` puts the tool, on the Server's PATH.
-  toolsPath?: string;
 };
 
 const pollMilliseconds = 50;
@@ -62,53 +59,11 @@ const requireRuntime = async (path?: string): Promise<void> => {
     throw new Error('Node.js is required on the Server');
 };
 
-const toolStub = '#!/bin/sh\nexit 0\n';
-
-const placeStub = (target: string): Promise<void> =>
-  writeFile(target, toolStub, { mode: 0o755 });
-
-type Bottle = (toolsPath: string) => Promise<void>;
-
-// What `brew install` leaves on PATH: Node.js (the test's own) with npm, or uv.
-const bottles = {
-  node: async (toolsPath: string): Promise<void> => {
-    await symlink(process.execPath, join(toolsPath, 'node'));
-    await placeStub(join(toolsPath, 'npm'));
-  },
-  uv: (toolsPath: string): Promise<void> => placeStub(join(toolsPath, 'uv')),
-} satisfies Record<string, Bottle>;
-
-const isBottled = (tool: string): tool is keyof typeof bottles =>
-  Object.hasOwn(bottles, tool);
-
-const bottleFor = (tool = ''): Bottle => {
-  if (!isBottled(tool)) throw new Error(`No bottle for ${tool}`);
-
-  return bottles[tool];
-};
-
-// Homebrew follows the same held/failed scenario as the Agent installer, then leaves the tool on PATH.
-async function brewInstall(
-  input: ToolInput,
-  options: InstallationMockOptions,
-): Promise<string> {
-  const bottle = bottleFor(input.args[1]);
-  const { toolsPath } = options;
-
-  if (!toolsPath) throw new Error('brew needs the toolsPath option');
-  await awaitInstallerRelease(input, options.scenarioPath);
-  await bottle(toolsPath);
-
-  return '';
-}
-
 async function runTool(
   input: ToolInput,
   options: InstallationMockOptions,
 ): Promise<string> {
   input.signal.throwIfAborted();
-
-  if (input.executable === 'brew') return brewInstall(input, options);
   await requireRuntime(options.scenarioPath);
   await prepareEnvironment(input);
 

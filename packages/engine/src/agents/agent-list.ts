@@ -68,10 +68,19 @@ const notInstalled = (agent: ConfiguredAgent): AgentInfo => ({
   reason: 'Install this Agent from Agents.',
 });
 
+type Found = Extract<InstallationObservation, { found: true }>;
+
+// A copy Argo did not install also names where it is, for the user to update it there.
+const foundCopy = ({
+  owner,
+  executable,
+}: Found): Pick<AgentInfo, 'owner' | 'path'> =>
+  owner === 'argo' ? { owner } : { owner, path: executable };
+
 const ownerOf = (
   observation: InstallationObservation,
-): Pick<AgentInfo, 'owner'> =>
-  observation.observed && observation.found ? { owner: observation.owner } : {};
+): Pick<AgentInfo, 'owner' | 'path'> =>
+  observation.observed && observation.found ? foundCopy(observation) : {};
 
 // Before the Resolver has looked once, only an Argo installation counts as installed.
 const isInstalled = (

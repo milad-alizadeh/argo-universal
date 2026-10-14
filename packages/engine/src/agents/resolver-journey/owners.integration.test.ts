@@ -44,10 +44,10 @@ const owned = [
 ];
 
 it.each(owned)(
-  'the owner of $copy is $owner, read from where the file really is',
+  'the owner of $copy is $owner, read from where the file really is, beside the path the user updates it at',
   async ({ owner, entry, place }) => {
     const machine = await createMachinePath();
-    await place(machine);
+    const path = await place(machine);
 
     const host = await startInstallEngine(entry, undefined, {
       fixtureAgents: [],
@@ -56,7 +56,7 @@ it.each(owned)(
 
     await expect
       .poll(() => listedAgent(host.caller, host.agentId))
-      .toMatchObject({ status: 'ready', owner });
+      .toMatchObject({ status: 'ready', owner, path });
   },
   30_000,
 );

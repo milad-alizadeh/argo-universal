@@ -102,7 +102,6 @@ const ports: EnginePorts = {
   installationPorts: createInstallationPorts({
     packageName: 'example-agent',
     scenarioPath: z.string().parse(process.env.ARGO_E2E_INSTALLATION_PATH),
-    toolsPath: process.env.ARGO_E2E_TOOLS_PATH,
   }),
   fetchAgents: createFileAgentsFetcher(
     z.string().parse(process.env.ARGO_E2E_REGISTRY_PATH),

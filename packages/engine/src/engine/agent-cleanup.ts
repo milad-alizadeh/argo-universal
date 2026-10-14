@@ -7,7 +7,7 @@ import type { HttpServer } from './http-server';
 export type CloseAcpResourcesInput = {
   resources: Pick<AcpResources, 'shutdown'>;
   server?: Pick<HttpServer, 'closeSetup'> | null;
-  installations: Pick<AgentInstallations, 'shutdown' | 'tools'>;
+  installations: Pick<AgentInstallations, 'shutdown'>;
   sessions: OpenSessionsActorRef | undefined;
 };
 
@@ -17,8 +17,6 @@ export async function closeAgentResources(
   await Promise.all([
     input.server?.closeSetup(),
     input.installations.shutdown(),
-    // Homebrew installing a missing tool stops with the Agent installs.
-    input.installations.tools.shutdown(),
   ]);
   await input.resources.shutdown();
 

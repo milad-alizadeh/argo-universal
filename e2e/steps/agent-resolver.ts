@@ -7,9 +7,9 @@ import { expect } from '../fixtures';
 import { Given, Then, test } from './fixtures';
 import { agentWork } from './timeouts';
 
-const pathAgentName = 'Path Agent';
+export const pathAgentName = 'Path Agent';
 
-const entrypoint = 'path-agent';
+export const entrypoint = 'path-agent';
 
 const [template] = publishedRegistry.agents;
 
@@ -41,7 +41,7 @@ const launcher = (): string => {
 };
 
 // Replaced in one rename, so a sync running now never reads half a file.
-const publishPathAgent = async (registryPath: string): Promise<void> => {
+export const publishPathAgent = async (registryPath: string): Promise<void> => {
   const next = `${registryPath}.next`;
   await writeFile(
     next,
@@ -53,12 +53,16 @@ const publishPathAgent = async (registryPath: string): Promise<void> => {
   await rename(next, registryPath);
 };
 
+// Writes the launcher into a folder the test's own Server directory holds.
+export const writePathAgent = async (file: string): Promise<void> => {
+  await writeFile(file, launcher(), { flag: 'wx' });
+  await chmod(file, 0o755);
+};
+
 Given(
   'Path Agent is installed on this Mac outside Argo',
   async ({ app }): Promise<void> => {
-    const file = path.join(app.machinePath, entrypoint);
-    await writeFile(file, launcher());
-    await chmod(file, 0o755);
+    await writePathAgent(path.join(app.machinePath, entrypoint));
     await publishPathAgent(app.registryPath);
   },
 );

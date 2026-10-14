@@ -101,6 +101,8 @@ describe('agentDetail', () => {
   it.each([
     ['unknown', 'Found on this Mac'],
     ['argo', 'Installed by Argo'],
+    ['homebrew', 'Installed with Homebrew'],
+    ['npm', 'Installed with npm'],
   ] as const)(
     'names where an installed Agent owned by %s was found instead of how the Server installs it',
     (owner, source) => {
@@ -109,6 +111,23 @@ describe('agentDetail', () => {
       );
     },
   );
+
+  it('keeps where an outside copy is and the command its owner updates it with', () => {
+    const outside = {
+      ...probed,
+      owner: 'homebrew',
+      path: '/opt/homebrew/bin/agent',
+      updateCommand: 'brew upgrade agent',
+    } as const;
+
+    expect(agentDetail(outside, iconAgent)).toEqual(
+      expect.objectContaining({
+        owner: 'homebrew',
+        path: outside.path,
+        updateCommand: outside.updateCommand,
+      }),
+    );
+  });
 
   it('knows nothing about an Agent neither lists', () => {
     expect(agentDetail()).toBeUndefined();

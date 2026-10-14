@@ -60,6 +60,8 @@ export const AgentInfo = z.strictObject({
   reason: z.string().optional(),
   // Set while the Resolver last found a copy on this machine.
   owner: InstallationOwner.optional(),
+  // Where a copy Argo did not install is, for the user to update it there.
+  path: z.string().optional(),
   // For Update available on a copy Homebrew or npm owns: the command the user runs to update it. Argo never runs it.
   updateCommand: z.string().optional(),
 });

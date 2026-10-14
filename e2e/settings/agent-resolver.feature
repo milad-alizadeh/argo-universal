@@ -9,3 +9,16 @@ Feature: Agents already on this Mac
       | layout |
       | wide   |
       | phone  |
+
+  Scenario Outline: An Agent Homebrew installed is updated and removed by Homebrew, not Argo
+    Given a <layout> Frame
+    And Path Agent 1.0.0 was installed with Homebrew
+    When I open Path Agent
+    Then Path Agent is installed with Homebrew and offers Disable instead of Remove
+    When I ask to update Path Agent
+    Then Argo shows the Homebrew command to run myself and runs nothing
+
+    Examples:
+      | layout |
+      | wide   |
+      | phone  |
