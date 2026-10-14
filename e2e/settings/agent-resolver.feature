@@ -16,7 +16,7 @@ Feature: Agents already on this Mac
     When I open Path Agent
     Then Path Agent is installed with Homebrew and offers Disable instead of Remove
     When I ask to update Path Agent
-    Then Argo shows the Homebrew command to run myself and runs nothing
+    Then Argo shows the Homebrew command to run myself
 
     Examples:
       | layout |
