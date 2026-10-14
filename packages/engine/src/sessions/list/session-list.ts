@@ -9,6 +9,7 @@ import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
 import { type Actor, type ActorRefFrom, createActor } from 'xstate';
 import { z } from 'zod';
+import { jsonCodec } from '../../lib/json-codec';
 import { findMachineActor } from '../../lib/machine-actor';
 import {
   databaseWriterId,
@@ -23,10 +24,12 @@ import {
 } from './session-list-machine';
 import { createSessionListReader } from './session-list-reader';
 
-const cursorSchema = z.strictObject({
-  activityAt: z.int(),
-  sessionId: z.string(),
-});
+const cursorSchema = jsonCodec(
+  z.strictObject({
+    activityAt: z.int(),
+    sessionId: z.string(),
+  }),
+);
 
 const pageSize = 50;
 
@@ -83,7 +86,7 @@ export function createSessionList(options: {
     if (input.cursor !== undefined) {
       try {
         cursor = cursorSchema.parse(
-          JSON.parse(Buffer.from(input.cursor, 'base64url').toString('utf8')),
+          Buffer.from(input.cursor, 'base64url').toString('utf8'),
         );
       } catch {
         throw new TRPCError({
@@ -129,7 +132,7 @@ export function createSessionList(options: {
       nextCursor:
         rows.length > pageSize && last
           ? Buffer.from(
-              JSON.stringify({
+              z.encode(cursorSchema, {
                 activityAt: last.activityAt,
                 sessionId: last.sessionId,
               }),

@@ -1,10 +1,13 @@
 import type { Socket } from 'node:net';
 import { createRejectionCounter } from '@repo/machine-log';
+import { jsonCodec } from '../../lib/json-codec';
 import { TerminalControlMessage } from './terminal-control-message';
 
 const controlFrameLimit = 4096;
 
 const rejections = createRejectionCounter('Terminal control');
+
+const ControlFrame = jsonCodec(TerminalControlMessage);
 
 export const rejectTerminalControl = (socket: Socket): void => {
   rejections.report('Rejected terminal control frame');
@@ -17,7 +20,7 @@ const acceptFrame = (
   accept: (message: TerminalControlMessage) => void,
 ): void => {
   try {
-    accept(TerminalControlMessage.parse(JSON.parse(frame)));
+    accept(ControlFrame.parse(frame));
   } catch {
     rejectTerminalControl(socket);
   }
