@@ -74,7 +74,8 @@ export class AcpSessionLifetime {
   }
   public open(session: SessionData): Promise<AcpSessionLease> {
     this.opening ??= this.openOwned(session).catch((error: unknown) => {
-      this.agentFailed = !isWithdrawn(error);
+      // Closing the Session withdraws its open, and whatever the Agent then reports is not its failure.
+      this.agentFailed = !isWithdrawn(error) && !this.controller.signal.aborted;
       throw error;
     });
     return this.opening;

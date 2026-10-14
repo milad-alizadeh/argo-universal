@@ -1,7 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { NewSessionRequest } from '@agentclientprotocol/sdk';
 import { session } from '@repo/db/schema';
 import { expect, it } from 'vitest';
+import { startAcpEngine } from '#mocks/acp-engine';
 import { newSession } from '#mocks/session-journey';
 import {
   type FailedJourney,
@@ -76,3 +79,38 @@ it.each([
     ).toMatchObject(saved);
   },
 );
+
+// Closing a Session withdraws its open; that is not the Agent failing.
+it('keeps a Ready Agent Ready when its Session is closed while it opens', async (): Promise<void> => {
+  const issued: string[] = [];
+  const createId = (): string => {
+    const id = randomUUID();
+    issued.push(id);
+    return id;
+  };
+  const began = Promise.withResolvers<NewSessionRequest>();
+  const { caller } = await startAcpEngine(
+    {
+      steps: [],
+      responses: {
+        'session/new': [{ received: began, waitFor: new Promise(() => {}) }],
+      },
+    },
+    createId,
+  );
+  await caller.agents.recheck({ agentId: newSession.agent });
+  const sessionIdAt = issued.length;
+  const opening = caller.session.new(newSession);
+  void opening.catch(() => {});
+  await began.promise;
+  const closing = caller.session.close({
+    sessionId: issued[sessionIdAt] ?? '',
+  });
+  const [opened] = await Promise.allSettled([opening, closing]);
+  expect(opened.status).toBe('rejected');
+  expect(
+    (await caller.agents.list()).find(
+      ({ agent }) => agent === newSession.agent,
+    ),
+  ).toMatchObject({ status: 'ready' });
+});
