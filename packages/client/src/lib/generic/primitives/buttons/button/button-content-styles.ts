@@ -87,7 +87,7 @@ export function contentButtonClass(props: ButtonClassProps): string {
   return cn(
     buttonClasses({ ...variants, fullWidth: fullWidth === true }),
     nativeClasses({ variant: props.variant, disabled: props.disabled }),
-    destructiveButtonClass(props),
+    destructiveClasses({ role: props.role, variant: props.variant }),
     className,
   );
 }
@@ -98,35 +98,42 @@ const destructiveOutline =
 const destructiveText =
   'bg-transparent active:bg-destructive/10 web:hover:bg-destructive/10';
 
-const destructiveClasses = {
-  default:
-    'bg-destructive ios:bg-destructive active:bg-destructive/90 web:hover:bg-destructive/90',
-  outline: destructiveOutline,
-  secondary: destructiveOutline,
-  ghost: destructiveText,
-  link: destructiveText,
-};
-
-function destructiveButtonClass(
-  props: Pick<ButtonProps, 'role' | 'variant'>,
-): string | undefined {
-  if (props.role !== 'destructive') return undefined;
-
-  return destructiveClasses[props.variant ?? 'outline'];
-}
+// A destructive button without a variant draws as an outline.
+const destructiveClasses = cva('', {
+  variants: {
+    variant: { default: '', outline: '', secondary: '', ghost: '', link: '' },
+    role: { destructive: '' },
+  },
+  compoundVariants: [
+    {
+      role: 'destructive',
+      variant: 'default',
+      className:
+        'bg-destructive ios:bg-destructive active:bg-destructive/90 web:hover:bg-destructive/90',
+    },
+    {
+      role: 'destructive',
+      variant: ['outline', 'secondary'],
+      className: destructiveOutline,
+    },
+    {
+      role: 'destructive',
+      variant: ['ghost', 'link'],
+      className: destructiveText,
+    },
+  ],
+  defaultVariants: { variant: 'outline' },
+});
 
 export function contentTextClass(
   props: Pick<ButtonProps, 'role' | 'variant'>,
 ): string {
-  const filledDestructive = isFilledDestructive(props);
+  const destructive = props.role === 'destructive';
 
   return cn(
-    textClasses({
-      variant: props.variant,
-      destructive: props.role === 'destructive',
-    }),
+    textClasses({ variant: props.variant, destructive }),
     nativeLabelClass,
-    filledDestructive && 'text-destructive-foreground',
+    destructive && props.variant === 'default' && 'text-destructive-foreground',
   );
 }
 
@@ -144,14 +151,4 @@ export function contentActionClass(
     native && nativeClasses(variants),
     className,
   );
-}
-
-function isFilledVariant(variant: ButtonProps['variant']): boolean {
-  return variant === 'default';
-}
-
-function isFilledDestructive(
-  props: Pick<ButtonProps, 'role' | 'variant'>,
-): boolean {
-  return props.role === 'destructive' && isFilledVariant(props.variant);
 }

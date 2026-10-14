@@ -1,4 +1,4 @@
-const variants = ['default', 'secondary', 'destructive', 'outline'] as const;
+const variants = ['default', 'secondary'] as const;
 
 const tones = ['muted', 'info', 'success', 'warning', 'destructive'] as const;
 
