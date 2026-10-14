@@ -2,10 +2,7 @@ import type {
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
-import {
-  configurationChoices,
-  configurationEffortChoices,
-} from './configuration-choices';
+import { configurationChoices, configurationEffortChoices } from './choices';
 
 export const categories = ['model', 'thought_level', 'mode'] as const;
 

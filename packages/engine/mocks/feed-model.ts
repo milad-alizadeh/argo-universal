@@ -5,6 +5,8 @@ import {
   feedMachine,
   turnEndingEvent,
   permissionsCancelledEvent,
+  permissionSelectedEvent,
+  messageRejectedEvent,
 } from '../src/feed';
 
 export const acpUpdateEventType = 'feed.acpUpdate';
@@ -12,6 +14,8 @@ export const acpUpdateEventType = 'feed.acpUpdate';
 export const modelAcpSessionId = 'model-session';
 
 export const firstMessageRowId = 'message-1#0';
+
+const modelToolCallId = 'model-tool';
 
 /*
  * Symbolic graph traversal proves transition coverage only. Engine integration
@@ -23,6 +27,7 @@ export type FeedSnapshot = SnapshotFrom<typeof machine>;
 
 export const modelInput = {
   now: (): number => 1000,
+  createId: (): string => 'model-id',
   sessionId: 'session-1',
   epoch: 2,
   maxRevision: 0,
@@ -90,7 +95,7 @@ export const events = [
     turnId: 'turn-1',
     update: {
       sessionUpdate: 'tool_call_update',
-      toolCallId: 'model-tool',
+      toolCallId: modelToolCallId,
       status: 'completed',
     },
   },
@@ -130,7 +135,19 @@ export const events = [
     type: permissionsCancelledEvent,
     turnId: 'turn-1',
     acpSessionId: modelAcpSessionId,
-    toolCallIds: ['model-tool'],
+    toolCallIds: [modelToolCallId],
+  },
+  {
+    type: permissionSelectedEvent,
+    turnId: 'turn-1',
+    acpSessionId: modelAcpSessionId,
+    toolCallId: modelToolCallId,
+    option: { optionId: 'allow', name: 'Allow', kind: 'allow_once' },
+  },
+  {
+    type: messageRejectedEvent,
+    turnId: 'turn-1',
+    reason: 'model reason',
   },
   { type: 'feed.flush' },
   { type: streamBatchDelayEvent },

@@ -1,12 +1,12 @@
-import { useEffect, useEffectEvent, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { type ComposerDraft, useAttachmentDraft } from '#features/composer';
+import { toNewSessionInput } from '../../state/open-session';
+import { type StartingFeed, startingFeed } from '../../state/starting-feed';
 import {
   type EmptySession,
   type EmptySessionActor,
   useEmptySession,
-} from '../hooks/use-empty-session';
-import { toNewSessionInput } from '../state/open-session';
-import { type StartingFeed, startingFeed } from '../state/starting-feed';
+} from './use-empty-session';
 import type { NewSessionData } from './use-new-session-data';
 
 export type AttachmentDraft = ReturnType<typeof useAttachmentDraft>;
@@ -48,30 +48,13 @@ function useSentFirstPrompt(sending: boolean): SentFirstPrompt {
   };
 }
 
-// The first prompt now belongs to the Session, so the Project's kept draft goes. The page unmounts in the hand-off's own update, so this listens to the actor, not a render.
-function useClearDraftOnHandOff(
-  actor: EmptySessionActor,
-  clearDraft: () => void,
-): void {
-  const clear = useEffectEvent(clearDraft);
-  useEffect(() => {
-    const subscription = actor.subscribe((snapshot) => {
-      if (snapshot.status === 'done') clear();
-    });
-
-    return (): void => subscription.unsubscribe();
-  }, [actor]);
-}
-
 const isSending = (
   attachmentDraft: AttachmentDraft,
   session: EmptySession,
 ): boolean =>
-  [
-    attachmentDraft.uploading,
-    session.context.pendingPrompt !== undefined,
-    session.handedOff,
-  ].some(Boolean);
+  [attachmentDraft.uploading, session.pendingPrompt, session.handedOff].some(
+    Boolean,
+  );
 
 // Uploads the draft's images, then queues the draft as the first prompt until the Session is ready.
 async function sendFirstPrompt(
@@ -106,8 +89,11 @@ export function useSessionOpening(
   data: NewSessionData,
   connected: boolean,
 ): SessionOpening {
-  const session = useEmptySession(toNewSessionInput(data.choices), connected);
-  useClearDraftOnHandOff(session.actor, attachmentDraft.clearDraft);
+  const session = useEmptySession(
+    toNewSessionInput(data.choices),
+    connected,
+    attachmentDraft.clearDraft,
+  );
 
   return { session, ...useFirstPrompt(attachmentDraft, session) };
 }

@@ -11,14 +11,11 @@ import {
   type EmptySessionSnapshot,
   failed,
   failure,
-  first,
   graphOptions,
   isPublicEvent,
   key,
-  nextChange,
   options,
   paths,
-  prompt,
   promptShowTimedOut,
 } from '../../../../mocks/empty-session-model';
 import {
@@ -43,8 +40,6 @@ type Calls = { [Id in ActorId]?: PromiseWithResolvers<PortOutputs[Id]> };
 
 let calls: Calls;
 
-let handedOff: string[];
-
 const track = <Id extends ActorId>(
   id: Id,
   call: NonNullable<Calls[Id]>,
@@ -59,14 +54,13 @@ const ports = (): EmptySessionPorts => ({
   close: () => track('close', Promise.withResolvers()),
   setConfigOption: () => track('setConfigOption', Promise.withResolvers()),
   prompt: () => track('prompt', Promise.withResolvers()),
-  handOff: (sessionId) => handedOff.push(sessionId),
-  nextChange,
+  handOff: () => {},
+  clearDraft: () => {},
 });
 
 beforeEach(() => {
   vi.useFakeTimers();
   calls = {};
-  handedOff = [];
 });
 
 afterEach(() => {
@@ -154,22 +148,4 @@ it('empty Session paths cover every transition', () => {
       eventKey: (event) => event.type,
     }),
   ).toEqual([]);
-});
-
-it('hands the prompted Session to the Session page once its Feed shows the prompt', async () => {
-  const actor = createActor(emptySessionMachine, { input: ports() }).start();
-
-  const sent: EmptySessionGraphEvent[] = [
-    { type: 'choices.changed', input: first, connected: true },
-    { type: 'send', prompt },
-    { type: delayDone },
-    { type: done('open'), actorId: 'open', output: portOutputs.open },
-    { type: 'options.loaded', configOptions: options, saved: {} },
-    { type: done('prompt'), actorId: 'prompt', output: undefined },
-  ];
-
-  for (const event of sent) await deliver(actor, event);
-  const beforeFeed = [...handedOff];
-  await deliver(actor, { type: 'feed.showsPrompt' });
-  expect([beforeFeed, handedOff]).toEqual([[], ['session-1']]);
 });

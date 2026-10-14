@@ -3,7 +3,11 @@ import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { createRejectionCounter } from '@repo/machine-log';
 import { and, eq, or, sql, type SQL } from 'drizzle-orm';
-import { recoverStoredFeedRow, storedFeedColumns } from '../feed';
+import {
+  advanceRecoveredSession,
+  recoverStoredFeedRow,
+  storedFeedColumns,
+} from '../feed';
 
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
 export function recoverAfterRestart(database: Database): void {
@@ -56,5 +60,8 @@ export function recoverAfterRestart(database: Database): void {
         }),
       );
     }
+
+    for (const [sessionId, maxRevision] of revisions)
+      advanceRecoveredSession(transaction, sessionId, maxRevision);
   });
 }

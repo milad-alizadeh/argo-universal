@@ -11,7 +11,43 @@ import {
   folderRefusedMessage,
 } from './attachment-draft';
 
+const firstAttempt = 'first-attempt';
+
 describe('attachmentDraftReducer', () => {
+  it.each([
+    { type: 'pickFailed', message: attachmentSelectionFailureMessage },
+    { type: 'folderDropped', message: folderRefusedMessage },
+  ] as const)(
+    'identifies each repeated $type without treating draft edits as failures',
+    ({ type, message }) => {
+      const first = attachmentDraftReducer(withText, {
+        type,
+        key: firstAttempt,
+      });
+
+      const edited = attachmentDraftReducer(first, {
+        type: 'changed',
+        draft: { ...first.draft, text: 'Keep editing.' },
+      });
+
+      const second = attachmentDraftReducer(edited, {
+        type,
+        key: 'second-attempt',
+      });
+
+      expect(first).toMatchObject({
+        selectionError: message,
+        selectionErrorKey: firstAttempt,
+      });
+      expect(edited.selectionErrorKey).toBe(firstAttempt);
+      expect(second).toMatchObject({
+        selectionError: message,
+        selectionErrorKey: 'second-attempt',
+        draft: edited.draft,
+      });
+    },
+  );
+
   it('appends picked attachments to the draft', () => {
     const next = attachmentDraftReducer(withText, {
       type: 'picked',
@@ -25,7 +61,11 @@ describe('attachmentDraftReducer', () => {
   });
 
   it('keeps the draft and shows the selection error when a pick fails', () => {
-    const next = attachmentDraftReducer(withText, { type: 'pickFailed' });
+    const next = attachmentDraftReducer(withText, {
+      type: 'pickFailed',
+      key: 'pick-attempt',
+    });
+
     expect(next).toMatchObject({
       draft: withText.draft,
       selectionError: attachmentSelectionFailureMessage,
@@ -33,7 +73,11 @@ describe('attachmentDraftReducer', () => {
   });
 
   it('refuses a dropped folder with a message and keeps the draft', () => {
-    const next = attachmentDraftReducer(withText, { type: 'folderDropped' });
+    const next = attachmentDraftReducer(withText, {
+      type: 'folderDropped',
+      key: 'drop-attempt',
+    });
+
     expect(next).toMatchObject({
       draft: withText.draft,
       selectionError: folderRefusedMessage,
@@ -41,7 +85,10 @@ describe('attachmentDraftReducer', () => {
   });
 
   it('clears the selection error when a later pick succeeds', () => {
-    const failed = attachmentDraftReducer(withText, { type: 'pickFailed' });
+    const failed = attachmentDraftReducer(withText, {
+      type: 'pickFailed',
+      key: 'pick-attempt',
+    });
 
     const next = attachmentDraftReducer(failed, {
       type: 'picked',
@@ -49,6 +96,7 @@ describe('attachmentDraftReducer', () => {
     });
 
     expect(next.selectionError).toBeUndefined();
+    expect(next.selectionErrorKey).toBeUndefined();
   });
 
   it('forgets the file of an attachment removed from the draft', () => {

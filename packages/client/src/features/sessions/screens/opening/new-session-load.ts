@@ -1,5 +1,5 @@
 import type { AgentInfo, ProjectInfo, SystemInfo } from '@repo/contracts';
-import { offeredAgents } from '../state/session-choices';
+import { offeredAgents } from '../../state/session-choices';
 
 interface Query<Data> {
   data?: Data;

@@ -14,21 +14,22 @@ export interface AttachmentDraftState {
   // The file behind each attachment, by its id in the draft.
   files: ReadonlyMap<string, Blob>;
   selectionError?: string;
+  selectionErrorKey?: string;
   // The owner whose kept text may still replace the empty draft; gone once the person edits it.
   awaitedKey?: DraftKey;
 }
 
 export type AttachmentDraftEvent =
   | { type: 'picked'; picked: readonly PickedAttachment[] }
-  | { type: 'pickFailed' }
-  | { type: 'folderDropped' }
+  | { type: 'pickFailed'; key: string }
+  | { type: 'folderDropped'; key: string }
   | { type: 'changed'; draft: ComposerDraft }
   | { type: 'ownerChanged'; key: DraftKey }
   | { type: 'restored'; key: DraftKey; text: string }
   | { type: 'cleared' };
 
 export type AttachmentError =
-  | { kind: 'selection' | 'upload'; message: string }
+  | { kind: 'selection' | 'upload'; message: string; key?: string }
   | undefined;
 
 export const attachmentSelectionFailureMessage =
@@ -37,7 +38,13 @@ export const attachmentSelectionFailureMessage =
 export const folderRefusedMessage =
   "Folders can't be attached. Attach the files inside instead.";
 
+const clearedSelectionError = {
+  selectionError: undefined,
+  selectionErrorKey: undefined,
+};
+
 export const emptyAttachmentDraft: AttachmentDraftState = {
+  ...clearedSelectionError,
   draft: { text: '', attachments: [] },
   files: new Map(),
 };
@@ -75,7 +82,7 @@ function attach(
     ...state,
     draft: { ...state.draft, attachments },
     files: attachedFiles(state.files, picked),
-    selectionError: undefined,
+    ...clearedSelectionError,
   };
 }
 
@@ -101,13 +108,15 @@ const draftTransitions: Record<AttachmentDraftEvent['type'], DraftTransition> =
   {
     picked: (state, event) =>
       event.type === 'picked' ? attach(state, event.picked) : state,
-    pickFailed: (state) => ({
+    pickFailed: (state, event) => ({
       ...state,
       selectionError: attachmentSelectionFailureMessage,
+      selectionErrorKey: 'key' in event ? event.key : undefined,
     }),
-    folderDropped: (state) => ({
+    folderDropped: (state, event) => ({
       ...state,
       selectionError: folderRefusedMessage,
+      selectionErrorKey: 'key' in event ? event.key : undefined,
     }),
     changed: (state, event) =>
       event.type === 'changed' ? changeDraft(state, event.draft) : state,
@@ -152,8 +161,9 @@ export function toUploadForms(
 export function toAttachmentError(
   selection: string | undefined,
   upload: Error | null,
+  key?: string,
 ): AttachmentError {
-  if (selection) return { kind: 'selection', message: selection };
+  if (selection) return { kind: 'selection', message: selection, key };
 
   if (upload)
     return {

@@ -9,14 +9,7 @@ export type TextLayout = Pick<ComposerLayout, 'inactive' | 'send'> & {
   props: Pick<ComposerProps, 'draft' | 'onDraftChange' | 'placeholder'>;
 };
 
-export type WarningLayout = Pick<ComposerLayout, 'oversized'> & {
-  props: Pick<ComposerProps, 'error'>;
-};
-
-export type CardLayout = ToolbarLayout &
-  AttachmentLayout &
-  TextLayout &
-  WarningLayout;
+export type CardLayout = ToolbarLayout & AttachmentLayout & TextLayout;
 
 export type ControlsLayout = CardLayout &
   Pick<ComposerLayout, 'setControlsHeight'>;

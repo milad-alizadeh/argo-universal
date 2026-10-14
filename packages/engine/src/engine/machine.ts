@@ -8,6 +8,7 @@ import type { OpenDatabaseInput } from './engine-database';
 import { type HttpServer } from './http-server';
 import type { EngineMessage } from './ipc';
 import {
+  discoveryInvocation,
   recoveryInput,
   writerInput,
   syncInput,
@@ -98,6 +99,7 @@ export const engineMachine = engineSetup.createMachine({
           src: 'syncSupervisor',
           input: syncInput,
         },
+        discoveryInvocation,
         {
           id: 'sessions',
           systemId: openSessionsId,
@@ -162,7 +164,7 @@ export const engineMachine = engineSetup.createMachine({
           },
         },
         stopping: {
-          entry: ['closeCommandAdmission', 'stopSync'],
+          entry: ['closeCommandAdmission', 'stopSync', 'stopDiscovery'],
           initial: 'closingHttp',
           on: { 'engine.stop': {} },
           states: {

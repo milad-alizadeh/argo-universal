@@ -58,6 +58,14 @@ interface DraftActions {
   key: DraftKey | undefined;
 }
 
+let selectionFailures = 0;
+
+function selectionFailureKey(): string {
+  selectionFailures += 1;
+
+  return `attachment-selection:${selectionFailures}`;
+}
+
 export function useAttachmentDraft(
   owner: DraftOwner | undefined,
 ): AttachmentDraft {
@@ -83,6 +91,7 @@ function attachmentDraftActions(actions: DraftActions): AttachmentDraft {
     attachmentError: toAttachmentError(
       actions.state.selectionError,
       actions.upload.error,
+      actions.state.selectionErrorKey,
     ),
   };
 }
@@ -126,7 +135,7 @@ async function attach(
   try {
     dispatch({ type: 'picked', picked: await pick() });
   } catch {
-    dispatch({ type: 'pickFailed' });
+    dispatch({ type: 'pickFailed', key: selectionFailureKey() });
   }
 }
 
@@ -136,7 +145,8 @@ async function attachDropped(
 ): Promise<void> {
   if (files.length > 0) await attach(() => droppedFiles(files), dispatch);
 
-  if (folders > 0) dispatch({ type: 'folderDropped' });
+  if (folders > 0)
+    dispatch({ type: 'folderDropped', key: selectionFailureKey() });
 }
 
 async function uploadDraftAsPrompt(
