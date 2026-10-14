@@ -11,7 +11,7 @@ import type * as React from 'react';
 import { useWindowDimensions } from 'react-native';
 import { useIconPixels } from '../../../symbols/icon-role';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import type { ListItemProps } from '../../fields/field-props';
+import { type ListItemProps, phoneValue } from '../../fields/field-props';
 import { useSwiftUITextModifiers } from '../../native/native-typography';
 import { hasDisclosure, hasLeadingSlot } from './list-item-styles';
 import { RowLabel, RowLeading, useRowColor } from './list-item-swift-ui';
@@ -55,22 +55,31 @@ function contentModifiers(
   ];
 }
 
+// A phone row shows a status value as its dot alone.
 function RowTrailing(props: ListItemProps): React.JSX.Element {
+  const value = phoneValue(props);
+
   return (
     <HStack
       spacing={8}
       modifiers={[fixedSize({ horizontal: false, vertical: true })]}
     >
       {props.valueLeading && <NativeRowImage image={props.valueLeading} />}
-      {props.value !== undefined && <RowValueText value={props.value} />}
+      <RowValueText value={value} />
       <NativeRowStatus {...props} />
     </HStack>
   );
 }
 
-function RowValueText({ value }: { value: string }): React.JSX.Element {
+function RowValueText({
+  value,
+}: {
+  value: string | undefined;
+}): React.JSX.Element | null {
   const bodyModifiers = useSwiftUITextModifiers('body', 'row');
   const color = useRowColor('secondary');
+
+  if (value === undefined) return null;
 
   return <Text modifiers={[...bodyModifiers, color]}>{value}</Text>;
 }
@@ -93,7 +102,8 @@ function RowFields(props: ListItemProps): React.JSX.Element {
   const { fontScale } = useWindowDimensions();
   const fields = <RowFieldItems {...props} />;
 
-  if (fontScale < reflowFontScale || props.value === undefined) return fields;
+  if (fontScale < reflowFontScale || phoneValue(props) === undefined)
+    return fields;
 
   return <ReflowedFields>{fields}</ReflowedFields>;
 }

@@ -3,7 +3,11 @@ import { View } from 'react-native';
 import { cn } from '../../../utils';
 import { Text } from '../../display/text/text';
 import { useSidebarFields } from '../../fields/field-layout';
-import { type ListItemProps, listItemStatus } from '../../fields/field-props';
+import {
+  type ListItemProps,
+  listItemStatus,
+  valueIsStatus,
+} from '../../fields/field-props';
 import { ListItemAccessory } from './list-item-accessory';
 import { Disclosure } from './list-item-disclosure';
 import { ListItemLeading } from './list-item-leading';
@@ -97,12 +101,11 @@ type TrailingProps = ListItemProps & { emphasis: string };
 
 function ListItemTrailing(props: TrailingProps): React.JSX.Element {
   const sidebar = useSidebarFields();
-  const valueColor = sidebar ? props.emphasis : 'text-muted-foreground';
 
   return (
     <View className="max-w-[55%] flex-row items-center gap-2 wide:gap-3">
       {props.valueLeading}
-      <RowValue value={props.value} className={valueColor} />
+      <RowValue value={props.value} className={valueClasses(props, sidebar)} />
       <StatusDot status={listItemStatus(props)} />
       <ListItemAccessory>{props.accessory}</ListItemAccessory>
       {props.control}
@@ -110,6 +113,13 @@ function ListItemTrailing(props: TrailingProps): React.JSX.Element {
     </View>
   );
 }
+
+// A phone row shows a status value as its dot alone.
+const valueClasses = (props: TrailingProps, sidebar: boolean): string =>
+  cn(
+    sidebar ? props.emphasis : 'text-muted-foreground',
+    valueIsStatus(props) && 'hidden wide:flex',
+  );
 
 function RowValue({
   value,
