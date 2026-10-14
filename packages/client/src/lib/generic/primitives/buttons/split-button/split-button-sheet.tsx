@@ -1,11 +1,10 @@
+import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
-import { View } from 'react-native';
-import { contentActionClass } from '#primitives/buttons/button';
-import { IconSlot } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { Text } from '#primitives/display/text';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { BottomSheet } from '#primitives/overlays/bottom-sheet';
-import { Pressable } from '#primitives/pressable';
 import { chevron } from './split-button-chevron';
 import type { SplitMenuProps } from './split-button-props';
 
@@ -20,58 +19,37 @@ interface SheetRow {
   onPress: () => void;
 }
 
-interface ChoiceSheetState {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  // Closes the Sheet, then runs what the row does.
-  run: (select: () => void) => void;
-}
-
-interface ChoiceLabelProps {
-  label: string;
-  selected: boolean;
-}
-
-const sheetChoiceProps = {
-  role: 'button',
-  className: contentActionClass({
-    variant: 'ghost',
-    className:
-      'h-auto min-h-11 justify-between rounded-sm px-2 py-1.5 sm:h-auto',
-  }),
-} as const;
-
+// The kit sheet holding the chevron's choices or actions as grouped list rows.
 export function ChoiceSheet<Value extends string>(
   props: SheetProps<Value>,
 ): ReactNode {
-  const sheet = useChoiceSheet(props);
+  const [open, setOpen] = useState(false);
+
+  // The Sheet closes when its button turns disabled.
+  if (props.disabled && open) setOpen(false);
+
+  const run = (row: SheetRow): void => {
+    setOpen(false);
+    row.onPress();
+  };
 
   return (
     <BottomSheet
-      open={sheet.open}
-      onOpenChange={sheet.setOpen}
+      contentScrolls
+      open={open}
+      onOpenChange={setOpen}
       label={props.menuLabel}
       trigger={chevron({ ...props, narrow: true })}
     >
-      <SheetChoices rows={sheetRows(props)} onRun={sheet.run} />
+      <GroupedList fit>
+        <GroupedListSection>
+          {sheetRows(props).map((row) => (
+            <GroupedListItem key={row.label} {...rowProps(row, run)} />
+          ))}
+        </GroupedListSection>
+      </GroupedList>
     </BottomSheet>
   );
-}
-
-// The Sheet closes after a choice, and when its button turns disabled.
-function useChoiceSheet<Value extends string>({
-  disabled,
-}: SheetProps<Value>): ChoiceSheetState {
-  const [open, setOpen] = useState(false);
-
-  if (disabled && open) setOpen(false);
-
-  const run = (select: () => void): void => {
-    setOpen(false);
-    select();
-  };
-
-  return { open, setOpen, run };
 }
 
 function sheetRows<Value extends string>(
@@ -86,46 +64,18 @@ function sheetRows<Value extends string>(
   }));
 }
 
-function SheetChoices(props: {
-  rows: SheetRow[];
-  onRun: SheetChoiceProps['onRun'];
-}): ReactNode {
-  return (
-    <View className="gap-0.5 p-1">
-      {props.rows.map((row) => (
-        <SheetChoice key={row.label} row={row} onRun={props.onRun} />
-      ))}
-    </View>
-  );
-}
-
-interface SheetChoiceProps {
-  row: SheetRow;
-  onRun: ChoiceSheetState['run'];
-}
-
-function SheetChoice({ row, onRun }: SheetChoiceProps): ReactNode {
+function rowProps(
+  row: SheetRow,
+  run: (row: SheetRow) => void,
+): React.ComponentProps<typeof GroupedListItem> {
   const selected = row.selected === true;
 
-  return (
-    <Pressable
-      {...sheetChoiceProps}
-      accessibilityState={{ selected }}
-      aria-pressed={selected}
-      onPress={() => onRun(row.onPress)}
-    >
-      <ChoiceLabel label={row.label} selected={selected} />
-    </Pressable>
-  );
-}
-
-function ChoiceLabel({ label, selected }: ChoiceLabelProps): ReactNode {
-  return (
-    <>
-      <Text role="body">{label}</Text>
-      <IconSlot role="control">
-        {selected && <SelectedCheck className="text-foreground" />}
-      </IconSlot>
-    </>
-  );
+  return {
+    label: row.label,
+    accessibilityRole: 'button',
+    selected,
+    disclosure: false,
+    accessory: selected ? <SelectedCheck /> : undefined,
+    onPress: () => run(row),
+  };
 }
