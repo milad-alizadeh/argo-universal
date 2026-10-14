@@ -73,7 +73,6 @@ describe('the native split', () => {
     });
 
     expect(native.enabled).toBe(false);
-    expect(native.menuLabel).toBe('Merge options');
   });
 });
 

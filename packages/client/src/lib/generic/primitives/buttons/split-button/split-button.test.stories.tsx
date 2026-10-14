@@ -57,17 +57,24 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // The acting button acts on its own; the chevron beside it opens the choices without acting.
-export const PrimaryActionActsAlone: Story = {
-  play: async ({ canvas, userEvent, args }) => {
-    await settleViewport(layoutWidths.wide);
-    await userEvent.click(canvas.getByRole('button', { name: 'Allow' }));
-    await expect(args.onAllow).toHaveBeenCalledTimes(1);
-    await expect(
-      canvas.getByRole('button', { name: menuLabel }),
-    ).toBeInTheDocument();
-    await expect(args.onValueChange).not.toHaveBeenCalled();
-  },
-};
+function actsAlone(narrow: boolean, width: number): Story {
+  return {
+    args: { narrow },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
+      await userEvent.click(canvas.getByRole('button', { name: 'Allow' }));
+      await expect(args.onAllow).toHaveBeenCalledTimes(1);
+      await expect(
+        canvas.getByRole('button', { name: menuLabel }),
+      ).toBeInTheDocument();
+      await expect(args.onValueChange).not.toHaveBeenCalled();
+    },
+  };
+}
+
+export const WideActsAlone = actsAlone(false, layoutWidths.wide);
+
+export const NarrowActsAlone = actsAlone(true, layoutWidths.phone);
 
 // On the web, wide or narrow, the chevron opens Argo's menu of the choices, never a sheet.
 function opensMenu(narrow: boolean, width: number): Story {
