@@ -1,6 +1,5 @@
 import type { BlobRef, SessionNewInput } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
-import { randomUUID } from 'expo-crypto';
 import { type Dispatch, useReducer } from 'react';
 import { useTRPC } from '#features/connection';
 import type { ComposerDraft } from '../components/composer/composer';
@@ -57,6 +56,14 @@ interface DraftActions {
   dispatch: Dispatch<AttachmentDraftEvent>;
   upload: Upload;
   key: DraftKey | undefined;
+}
+
+let selectionFailures = 0;
+
+function selectionFailureKey(): string {
+  selectionFailures += 1;
+
+  return `attachment-selection:${selectionFailures}`;
 }
 
 export function useAttachmentDraft(
@@ -128,7 +135,7 @@ async function attach(
   try {
     dispatch({ type: 'picked', picked: await pick() });
   } catch {
-    dispatch({ type: 'pickFailed', key: randomUUID() });
+    dispatch({ type: 'pickFailed', key: selectionFailureKey() });
   }
 }
 
@@ -138,7 +145,8 @@ async function attachDropped(
 ): Promise<void> {
   if (files.length > 0) await attach(() => droppedFiles(files), dispatch);
 
-  if (folders > 0) dispatch({ type: 'folderDropped', key: randomUUID() });
+  if (folders > 0)
+    dispatch({ type: 'folderDropped', key: selectionFailureKey() });
 }
 
 async function uploadDraftAsPrompt(
