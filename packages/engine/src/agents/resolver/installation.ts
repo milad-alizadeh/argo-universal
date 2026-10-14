@@ -5,62 +5,22 @@ import type {
   CustomAgentDefinition,
   InstallationOwner,
 } from '@repo/contracts';
-import type { Database } from '@repo/db';
-import { agents } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
 import {
   checkSelectedFiles,
-  readInstallSelection,
   selectedLaunchDefinition,
   type InstallSelection,
 } from '../install/selection/selection';
 import { resolveRegistryServerPlatform } from '../records';
-import { createRegistryReader } from '../registry/registry-reader';
-import { findOnPath } from './path-lookup';
+import { findFirstOnPath } from './path-lookup';
+import type { RegistrySource } from './registry-source';
+
+export { readRegistrySource, type RegistrySource } from './registry-source';
 
 // What the Resolver found for one Agent: the launch a Session would use, who owns it, and its version when known.
 export type Installation = {
   definition: CustomAgentDefinition;
   owner: InstallationOwner;
   version?: string;
-};
-
-export type RegistrySource = { entry: ACPAgent; selection?: InstallSelection };
-
-const reader = createRegistryReader();
-
-const parseEntry = (metadata: string): ACPAgent | undefined => {
-  try {
-    return reader.parseAgent(metadata);
-  } catch {
-    return undefined;
-  }
-};
-
-const catalogEntry = (
-  database: Database,
-  agentId: string,
-): ACPAgent | undefined => {
-  const row = database
-    .select({ metadata: agents.registryMetadata })
-    .from(agents)
-    .where(eq(agents.id, agentId))
-    .get();
-
-  return row?.metadata ? parseEntry(row.metadata) : undefined;
-};
-
-// The Registry entry behind an Agent: its Argo installation's saved entry first, else its catalog row.
-export const readRegistrySource = (
-  database: Database,
-  agentId: string,
-): RegistrySource | undefined => {
-  const selection = readInstallSelection(database, agentId);
-
-  if (selection) return { entry: selection.entry, selection };
-  const entry = catalogEntry(database, agentId);
-
-  return entry && { entry };
 };
 
 const realOrSame = (path: string): Promise<string> =>
@@ -125,7 +85,7 @@ const platformTarget = (entry: ACPAgent): BinaryTarget | undefined =>
 
 const targetDefinition = (
   entry: ACPAgent,
-  target: BinaryTarget,
+  target: LaunchTarget,
   executable: string,
 ): CustomAgentDefinition => ({
   name: entry.name,
@@ -137,24 +97,47 @@ const targetDefinition = (
   })),
 });
 
+type LaunchTarget = Pick<BinaryTarget, 'args' | 'env'>;
+
+type Searched = { target: LaunchTarget; names: readonly string[] };
+
+const binarySearch = (entry: ACPAgent): Searched | undefined => {
+  const binary = pathTarget(entry);
+
+  return binary && { target: binary.target, names: [binary.name] };
+};
+
+// What PATH is searched for: a binary entrypoint name, else any of an npx entry's command names.
+const searchedTarget = (source: RegistrySource): Searched | undefined =>
+  binarySearch(source.entry) ?? npxTarget(source);
+
+const npxTarget = ({
+  entry,
+  commandNames,
+}: RegistrySource): Searched | undefined => {
+  const npx = entry.distribution.npx;
+
+  return npx && commandNames ? { target: npx, names: commandNames } : undefined;
+};
+
 const pathInstallation = async (
   home: string,
-  entry: ACPAgent,
+  source: RegistrySource,
 ): Promise<Installation | undefined> => {
-  const searched = pathTarget(entry);
+  const searched = searchedTarget(source);
 
   if (!searched) return undefined;
-  const file = await findOnPath(searched.name);
+  const file = await findFirstOnPath(searched.names);
 
   return file
-    ? foundOnPath(home, entry, { target: searched.target, file })
+    ? foundOnPath(home, source.entry, { target: searched.target, file })
     : undefined;
 };
 
 const foundOnPath = async (
   home: string,
   entry: ACPAgent,
-  { target, file }: { target: BinaryTarget; file: string },
+  { target, file }: { target: LaunchTarget; file: string },
 ): Promise<Installation> => ({
   definition: targetDefinition(entry, target, file),
   owner: await ownerOf(home, file),
@@ -168,4 +151,4 @@ export const resolveRegistryInstallation = async (
 ): Promise<Installation | undefined> =>
   (source.selection &&
     (await argoInstallation(home, agentId, source.selection))) ||
-  pathInstallation(home, source.entry);
+  pathInstallation(home, source);
