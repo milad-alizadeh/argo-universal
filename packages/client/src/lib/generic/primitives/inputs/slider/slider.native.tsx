@@ -35,14 +35,15 @@ function sliderRange(
   };
 }
 
-// @expo/ui's Compose semantics take no state description, so TalkBack hears the value label inside the name.
+// TalkBack names seek controls from semantic text, separately from their value.
 function sliderModifiers(
   props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
 ): UniversalSliderProps['modifiers'] {
   if (Platform.OS === 'android')
     return [
       semantics({
-        contentDescription: `${props.accessibilityLabel}, ${props.valueLabel}`,
+        text: props.accessibilityLabel,
+        stateDescription: props.valueLabel,
       }),
     ];
 

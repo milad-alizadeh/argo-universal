@@ -32,4 +32,6 @@ Remove this patch when the pinned `node-pty` release ships `spawn-helper` as exe
 
 `@expo__ui@57.0.22.patch` exposes Compose's `clearAndSetSemantics {}` as the `clearSemantics()` modifier. GroupedListItem uses it to suppress duplicate text without hiding sibling controls.
 
-Rebuild the Android development client after applying this patch. Remove the patch when Expo UI exposes this Compose API.
+It also exposes semantic `text` and `stateDescription`. TalkBack uses these to announce a Slider's name and human-readable value while the stock control supplies its range and actions.
+
+The App builds `expo-ui` from source on Android so Expo's precompiled module does not bypass the patch. Rebuild the Android development client after applying it. Remove the patch and the source-build override when Expo UI exposes this Compose API.

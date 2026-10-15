@@ -48,7 +48,7 @@ function rowLabel(props: GroupedListItemProps): Modifiers {
   return [accessibilityLabel(groupedListItemName(props))];
 }
 
-// Compose's installed semantics API has no selected/disabled state description for a Column.
+// Compose's Column does not supply selected/disabled row state.
 function androidAccessibility(props: GroupedListItemProps): Modifiers {
   const name = hasRowControls(props)
     ? props.accessibilityLabel
