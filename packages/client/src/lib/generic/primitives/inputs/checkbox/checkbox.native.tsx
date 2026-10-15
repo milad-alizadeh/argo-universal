@@ -68,15 +68,10 @@ function checkboxModifiers(
   props: CheckboxRowProps,
 ): ComponentProps<typeof UniversalCheckbox>['modifiers'] {
   const description = props.state.description;
+  const name = [props.label, description].filter(Boolean).join('. ');
 
   if (Platform.OS === 'android')
-    return [
-      semantics({
-        contentDescription: [props.label, description]
-          .filter(Boolean)
-          .join('. '),
-      }),
-    ];
+    return [semantics({ contentDescription: name })];
 
   return [
     onTapGesture(props.state.toggle),
