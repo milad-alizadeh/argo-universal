@@ -31,8 +31,16 @@ describe('a story title', (): void => {
       'Screens/Settings/Placeholder',
     ],
     [
-      `${src}/features/frame/screens/placeholder-screens.stories.tsx`,
-      'Screens/PlaceholderScreens',
+      `${src}/screens/issues/issues-screen.stories.tsx`,
+      'Screens/Issues/Issues',
+    ],
+    [
+      `${src}/screens/onboarding/github-step.stories.tsx`,
+      'Screens/Onboarding/GitHub step',
+    ],
+    [
+      `${src}/screens/settings/agents/agents-list.test.stories.tsx`,
+      'Tests/AgentsList',
     ],
     [
       `${src}/features/agents/components/custom-agent-form/custom-agent-form.stories.tsx`,
@@ -73,6 +81,11 @@ describe('a story title', (): void => {
       /'Shell\/'/,
     ],
     [`${src}/lib/product/screen/screen.stories.tsx`, 'Screen', /'Shared\/'/],
+    [
+      `${src}/screens/sessions/sessions-view.stories.tsx`,
+      'Sessions/Sessions',
+      /must start with 'Screens\/'$/,
+    ],
     [
       `${src}/features/feed/components/feed/feed.test.stories.tsx`,
       'Feed/Feed',

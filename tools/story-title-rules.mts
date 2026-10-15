@@ -54,6 +54,8 @@ const rules: readonly {
     groups: () => ['Shared/'],
   },
   { test: (path) => feature.test(path), groups: featureGroup },
+  // A route's own folder in screens/ draws that page (#761).
+  { test: (path) => path.startsWith('screens/'), groups: () => ['Screens/'] },
 ];
 
 // A story outside every rule's folder would start a new top-level group, so it has none.

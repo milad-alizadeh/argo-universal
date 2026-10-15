@@ -17,10 +17,10 @@ const reportSchema = z.object({
 const git = (args: string[]): string =>
   execFileSync('git', args, { cwd: root, encoding: 'utf8' });
 
+const base = git(['merge-base', 'HEAD', 'origin/main']).trim();
+
 // The list at the merge base with main, or undefined before it lands there.
 function baseline(): string[] | undefined {
-  const base = git(['merge-base', 'HEAD', 'origin/main']).trim();
-
   // ls-tree prints nothing for a path the commit lacks; any other git failure throws.
   const onBase = git(['ls-tree', '--name-only', base, '--', allowlistPath]);
 
@@ -28,6 +28,21 @@ function baseline(): string[] | undefined {
     ? undefined
     : readAllowlist(git(['show', `${base}:${allowlistPath}`]));
 }
+
+const movedPair = (line: string): [string, string] => {
+  const [, from = '', to = ''] = line.split('\t');
+
+  return [to, from];
+};
+
+// Files git sees as moved since the merge base, new path to old.
+const movedFiles = (): Map<string, string> =>
+  new Map(
+    git(['diff', '--find-renames', '--name-status', base])
+      .split('\n')
+      .filter((line): boolean => line.startsWith('R'))
+      .map(movedPair),
+  );
 
 function flaggedFiles(): Set<string> {
   const report = reportSchema.parse(
@@ -47,6 +62,7 @@ const problems = allowlistProblems({
   current,
   baseline: baseline(),
   flagged: flaggedFiles(),
+  moved: movedFiles(),
 });
 
 for (const problem of problems) console.error(problem);

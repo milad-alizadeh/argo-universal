@@ -55,6 +55,17 @@ describe('the kit-styling allowlist', (): void => {
     ).toEqual([`${card}: added; the allowlist only shrinks.`]);
   });
 
+  it('keeps the waiver of a file git moved', (): void => {
+    expect(
+      allowlistProblems({
+        current: [card],
+        baseline: [row],
+        flagged: new Set([card]),
+        moved: new Map([[card, row]]),
+      }),
+    ).toEqual([]);
+  });
+
   it('rejects a file that no longer styles a kit component', (): void => {
     expect(
       allowlistProblems({
