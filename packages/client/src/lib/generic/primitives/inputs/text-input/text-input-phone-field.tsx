@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { codeFace, NativeText } from '#primitives/display/native-text';
 import { Field } from '#primitives/fields/field';
 import { useFieldText } from './text-input-field-text';
+import { FieldProgress } from './text-input-progress';
 import {
   isInvalid,
   type PhoneFieldProps,
@@ -23,6 +24,7 @@ export function PhoneField(props: PhoneFieldProps): React.JSX.Element {
         {label}
       </NativeText>
       <NativeTextField {...props} label={label} />
+      <FieldProgress label={props.label} loading={props.loading} />
     </Row>
   );
 }

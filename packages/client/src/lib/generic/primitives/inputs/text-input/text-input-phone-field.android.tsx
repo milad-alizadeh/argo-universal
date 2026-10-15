@@ -12,6 +12,7 @@ import { codeFace } from '#primitives/display/native-text';
 import type { FieldProps } from '#primitives/fields/field';
 import { errorMessage } from '#primitives/fields/field-errors';
 import { useFieldText } from './text-input-field-text';
+import { FieldProgress } from './text-input-progress';
 import {
   isInvalid,
   type PhoneFieldProps,
@@ -51,6 +52,7 @@ function FieldSlots(props: PhoneFieldProps): React.JSX.Element {
       </OutlinedTextField.Label>
       <Placeholder text={props.placeholder} />
       <SupportingText text={supportingLine(props)} />
+      <Progress {...props} />
     </>
   );
 }
@@ -81,6 +83,17 @@ function Placeholder(props: { text?: string }): React.JSX.Element | null {
     <OutlinedTextField.Placeholder>
       <Text>{props.text}</Text>
     </OutlinedTextField.Placeholder>
+  );
+}
+
+// While the value is checked, Material's spinner ends the field in its trailing icon slot.
+function Progress(props: PhoneFieldProps): React.JSX.Element | null {
+  if (!props.loading) return null;
+
+  return (
+    <OutlinedTextField.TrailingIcon>
+      <FieldProgress label={props.label} loading />
+    </OutlinedTextField.TrailingIcon>
   );
 }
 

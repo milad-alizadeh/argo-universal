@@ -1,10 +1,11 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 import { useScrollColumnStyle } from '#lib/generic/scroll-column';
 import type { ScrollFadeFrameProps } from './scroll-fade-frame-view';
-import type {
-  ScrollFadeOptions,
-  ScrollFadeTracking,
-  SizeChange,
+import {
+  type ScrollFadeOptions,
+  type ScrollFadeTracking,
+  type SizeChange,
+  useFadeDepth,
 } from './scroll-fade-options';
 import { useScrollFadeTracking } from './scroll-fade-tracking';
 
@@ -62,19 +63,40 @@ function useScrollProps<P extends ScrollableProps>(
   };
 }
 
-// Splits any scroll view's props into its frame's and its own, and wires the two together so the fade follows the scroll.
-export function useScrollFade<P extends ScrollFadeOptions & ScrollableProps>({
+interface SplitProps<P> {
+  options: ScrollFadeOptions;
+  rest: Omit<P, keyof ScrollFadeOptions>;
+}
+
+// The fade's options apart from the scroll view's own props.
+function splitOptions<P extends ScrollFadeOptions>({
   edges,
   depth,
   inset,
   surfaceClassName,
-  ...props
-}: P): ScrollFade<P> {
+  ...rest
+}: P): SplitProps<P> {
+  return { options: { edges, depth, inset, surfaceClassName }, rest };
+}
+
+// The frame's props, each edge's depth filled in.
+function useFrame(
+  { depth, ...options }: ScrollFadeOptions,
+  tracking: ScrollFadeTracking,
+): ScrollFade<object>['frame'] {
+  return { ...options, depth: useFadeDepth(depth), tracking };
+}
+
+// Splits any scroll view's props into its frame's and its own, and wires the two together so the fade follows the scroll.
+export function useScrollFade<P extends ScrollFadeOptions & ScrollableProps>(
+  props: P,
+): ScrollFade<P> {
+  const { options, rest } = splitOptions(props);
   const tracking = useScrollFadeTracking();
-  const scroll = useScrollProps(props, tracking);
+  const scroll = useScrollProps(rest, tracking);
 
   return {
-    frame: { edges, depth, inset, surfaceClassName, tracking },
+    frame: useFrame(options, tracking),
     scroll: { scrollEventThrottle: 16, ...scroll },
     attachScrollView: tracking.attachScrollView,
   };

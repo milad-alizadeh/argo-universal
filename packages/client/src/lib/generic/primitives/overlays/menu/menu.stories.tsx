@@ -15,20 +15,30 @@ const choices = [
 
 type Permission = (typeof choices)[number]['value'];
 
-type PermissionsMenuProps = { disabled?: boolean };
+// Full access is shown but cannot be chosen, as when the Project does not allow it.
+const limitedChoices = choices.map((choice) => ({
+  ...choice,
+  disabled: choice.value === 'full',
+}));
 
-function PermissionsMenu({
-  disabled = false,
-}: PermissionsMenuProps): React.JSX.Element {
+type PermissionsMenuProps = {
+  disabled?: boolean;
+  loading?: boolean;
+  options?: typeof limitedChoices;
+};
+
+function PermissionsMenu(props: PermissionsMenuProps): React.JSX.Element {
   const [value, setValue] = useState<Permission>('default');
+  const disabled = props.disabled ?? false;
 
   return (
     <Menu
       accessibilityLabel="Permissions"
       value={value}
-      options={choices}
+      options={props.options ?? choices}
       onValueChange={setValue}
       disabled={disabled}
+      loading={props.loading}
       trigger={renderPermissionsTrigger(disabled, labelOf(value))}
     />
   );
@@ -94,16 +104,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const permissionStates: { label: string; props: PermissionsMenuProps }[] = [
+  { label: 'Permissions', props: {} },
+  { label: 'Disabled', props: { disabled: true } },
+  { label: 'Disabled option', props: { options: limitedChoices } },
+  { label: 'Loading', props: { loading: true } },
+];
+
 export const Variations: Story = {
   name: 'Menu',
   render: () => (
     <VariationList>
-      <Variation label="Permissions">
-        <PermissionsMenu />
-      </Variation>
-      <Variation label="Disabled">
-        <PermissionsMenu disabled />
-      </Variation>
+      {permissionStates.map(({ label, props }) => (
+        <Variation key={label} label={label}>
+          <PermissionsMenu {...props} />
+        </Variation>
+      ))}
       <Variation label="Actions on a text trigger">
         <RangeMenu />
       </Variation>

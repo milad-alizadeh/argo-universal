@@ -1,5 +1,6 @@
 // Android only: its drawer item is Material's pill, while iOS draws the drawer row in React Native as the web does.
 import { RNHostView, Row } from '@expo/ui';
+import { Badge, Text } from '@expo/ui/jetpack-compose';
 import {
   type ModifierConfig,
   fillMaxWidth,
@@ -11,6 +12,7 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { countBadge } from '#lib/generic/badge-count';
 import { Icon, IconSlot } from '#primitives/display/icon';
 import { NativeText } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
@@ -46,7 +48,7 @@ function DrawerItemRow(props: DrawerItemProps): React.JSX.Element {
     >
       <DrawerItemIcon {...props} />
       <DrawerItemLabel {...props} />
-      <NativeBadge badge={props.badge} />
+      <NativeBadge {...props} />
     </Row>
   );
 }
@@ -65,12 +67,9 @@ function usePillStyle(
 }
 
 // The press ripple fills the pill, so the padding comes after the selectable.
-function tabModifiers({
-  label,
-  selected,
-  badge,
-  onPress,
-}: DrawerItemProps): ModifierConfig[] {
+function tabModifiers(props: DrawerItemProps): ModifierConfig[] {
+  const { label, selected, onPress } = props;
+  const badge = countBadge(props.badge, props.badgeLabel);
   const description = [label, badge?.label].filter(Boolean).join(', ');
 
   return [
@@ -120,12 +119,21 @@ function DrawerItemLabel({ label }: DrawerItemProps): React.JSX.Element {
   );
 }
 
-function NativeBadge({
-  badge,
-}: Pick<DrawerItemProps, 'badge'>): React.JSX.Element | null {
+// Material's own Badge with its count, coloured with Argo's danger red through its containerColor and contentColor props; TalkBack reads it with the row.
+function NativeBadge(
+  props: Pick<DrawerItemProps, 'badge' | 'badgeLabel'>,
+): React.JSX.Element | null {
+  const container = String(useCSSVariable('--color-danger'));
+  const content = String(useCSSVariable('--color-primary-foreground'));
+  const badge = countBadge(props.badge, props.badgeLabel);
+
   if (!badge) return null;
 
-  return <RNHostView matchContents>{badge.element}</RNHostView>;
+  return (
+    <Badge containerColor={container} contentColor={content}>
+      <Text>{badge.text}</Text>
+    </Badge>
+  );
 }
 
 DrawerItem satisfies React.ComponentType<DrawerItemProps>;

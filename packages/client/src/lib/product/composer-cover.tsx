@@ -16,7 +16,7 @@ const feedEndGap = 24;
 // How far the Composer covers the Feed's end: its overlap, or under iOS 26's glass Composer, the whole Composer area.
 export const ComposerCover = createContext(composerOverlap);
 
-// Where the system draws Liquid Glass, the phone Composer is glass, and the Feed scrolls under it.
+// Where the system draws Liquid Glass, the phone Composer is glass, laid over the Feed's end; the Feed fades out above it.
 export function useGlassComposer(): boolean {
   const contentWide = useContentWide();
 
