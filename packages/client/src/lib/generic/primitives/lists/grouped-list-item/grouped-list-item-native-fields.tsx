@@ -5,7 +5,7 @@ import type * as React from 'react';
 import { Platform } from 'react-native';
 import { rowLabelAccessibility } from './grouped-list-item-accessibility';
 import type { GroupedListItemProps } from './grouped-list-item-props';
-import { subtitleRole, titleRole, useRowText } from './grouped-list-item-text';
+import { useRowText } from './grouped-list-item-text';
 import { NativeRowImage, NativeRowStatus } from './native-row';
 
 type Modifiers = NonNullable<RowProps['modifiers']>;
@@ -38,7 +38,7 @@ function labelModifiers(
 }
 
 function RowTitle(props: GroupedListItemProps): React.JSX.Element {
-  const text = useRowText(titleRole(props.code), props.tone ?? 'primary');
+  const text = useRowText(props.code, props.tone ?? 'primary');
 
   return <Text {...text}>{props.label}</Text>;
 }
@@ -47,7 +47,7 @@ function RowTitle(props: GroupedListItemProps): React.JSX.Element {
 function RowSubtitle({
   subtitle,
 }: Pick<GroupedListItemProps, 'subtitle'>): React.JSX.Element | null {
-  const text = useRowText(subtitleRole(subtitle), 'secondary');
+  const text = useRowText(subtitle?.code, 'secondary');
 
   return subtitle ? <Text {...text}>{subtitle.text}</Text> : null;
 }
@@ -82,7 +82,7 @@ function RowValue(
 
 // Android aligns the value at the row's end and lets it wrap.
 function RowValueText({ value }: { value: string }): React.JSX.Element {
-  const text = useRowText('body', 'secondary');
+  const text = useRowText(false, 'secondary');
 
   if (ios) return <Text {...text}>{value}</Text>;
 

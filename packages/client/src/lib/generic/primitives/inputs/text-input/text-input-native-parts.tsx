@@ -7,12 +7,12 @@ import {
   useNativeState,
 } from '@expo/ui';
 import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
-import { accessibilityLabel, font } from '@expo/ui/swift-ui/modifiers';
+import { accessibilityLabel } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
 import { Platform } from 'react-native';
 import { useFollowedText } from '#primitives/native/followed-text';
-import { useNativeTheme } from '../../../native-theme';
+import { useNativeTextExceptions } from '#primitives/native/native-typography';
 import { blurOnFocusLoss } from './focus-loss';
 import { isInvalid, type TextFieldProps } from './text-input-props';
 
@@ -30,13 +30,9 @@ function FieldText(props: {
   danger?: boolean;
   children: string;
 }): React.JSX.Element {
-  const { danger } = useNativeTheme().colors;
+  const appearance = useNativeTextExceptions({ danger: props.danger });
 
-  return (
-    <Text textStyle={props.danger ? { color: danger } : undefined}>
-      {props.children}
-    </Text>
-  );
+  return <Text {...appearance}>{props.children}</Text>;
 }
 
 // iOS: the label leading, the field taking the rest of the row with its text trailing.
@@ -74,11 +70,14 @@ function SupportingLine(props: {
 
 // The universal text field, following the form's value and blurring only once the person has left it.
 function NativeTextField(props: NativeFieldProps): React.JSX.Element {
+  const text = useNativeTextExceptions({ code: props.mono });
+
   return (
     <TextInput
       {...useFieldValue(props)}
       {...fieldBehaviour(props)}
-      textStyle={androidCodeStyle(props.mono)}
+      textStyle={text.textStyle}
+      modifiers={[...fieldModifiers(props), ...(text.modifiers ?? [])]}
     />
   );
 }
@@ -109,30 +108,14 @@ function fieldBehaviour(props: NativeFieldProps): UniversalTextInputProps {
     autoCorrect: false,
     keyboardType: props.keyboardType,
     textAlign: props.textAlign,
-    modifiers: fieldModifiers(props),
   };
 }
 
 // Universal TextInput has no label prop, so name its actual editable control on both phones.
 function fieldModifiers(props: NativeFieldProps): Modifiers {
-  const modifiers = [...(props.modifiers ?? []), ...swiftCodeFont(props.mono)];
+  const modifiers = props.modifiers ?? [];
 
   return Platform.OS === 'android'
     ? [...modifiers, semantics({ contentDescription: props.label })]
     : [...modifiers, accessibilityLabel(props.label)];
-}
-
-function swiftCodeFont(mono: boolean | undefined): Modifiers {
-  return mono && Platform.OS === 'ios'
-    ? [font({ textStyle: 'body', design: 'monospaced' })]
-    : [];
-}
-
-// Code requests only the platform mono face; normal fields inherit native typography.
-function androidCodeStyle(
-  mono: boolean | undefined,
-): UniversalTextInputProps['textStyle'] {
-  return mono && Platform.OS === 'android'
-    ? { fontFamily: 'monospace' }
-    : undefined;
 }
