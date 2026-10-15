@@ -21,7 +21,7 @@ const optionInset = 12;
 const verticalInset = 8;
 
 // Apple's checklist row: the label leads and a check trails the chosen row.
-export function AppleCheckboxRow(props: CheckboxRowProps): React.JSX.Element {
+export function AppleRadioRow(props: CheckboxRowProps): React.JSX.Element {
   return (
     <Button
       variant="text"
@@ -84,9 +84,6 @@ function rowSemantics(props: CheckboxRowProps): Modifiers {
 function rowTraits(
   props: CheckboxProps,
 ): ReturnType<typeof Swift.accessibilityAddTraits> {
-  if (props.selection !== 'single')
-    return Swift.accessibilityAddTraits(['isToggle']);
-
   return Swift.accessibilityAddTraits(
     props.value ? ['isButton', 'isSelected'] : ['isButton'],
   );

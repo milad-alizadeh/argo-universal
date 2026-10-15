@@ -1,28 +1,53 @@
-import type { ComponentType } from 'react';
+import { Checkbox as UniversalCheckbox } from '@expo/ui';
+import { semantics } from '@expo/ui/jetpack-compose/modifiers';
+import { accessibilityHint } from '@expo/ui/swift-ui/modifiers';
+import type { ComponentProps, ComponentType } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Host } from '#primitives/native/host';
-import { AppleCheckboxRow, CheckMark } from './checkbox-apple-row';
-import { MaterialCheckboxRow, MaterialMark } from './checkbox-material-row';
+import { AppleRadioRow, type CheckboxRowProps } from './checkbox-apple-row';
+import { CheckboxMark } from './checkbox-mark';
+import { MaterialRadioRow } from './checkbox-material-row';
 import type { CheckboxIndicatorProps, CheckboxProps } from './checkbox-props';
 import { CheckboxFooter, useCheckboxState } from './checkbox-state';
 
 export type { CheckboxProps } from './checkbox-props';
 
-const CheckboxRow =
-  Platform.OS === 'ios' ? AppleCheckboxRow : MaterialCheckboxRow;
+const RadioRow = Platform.OS === 'ios' ? AppleRadioRow : MaterialRadioRow;
 
 export function Checkbox(props: CheckboxProps): React.JSX.Element {
   const state = useCheckboxState(props);
 
   return (
     <View className="gap-2">
-      <View className={surfaceClass(props)}>
-        <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-          <CheckboxRow {...props} state={state} />
-        </Host>
-      </View>
+      <CheckboxControl {...props} state={state} />
       <CheckboxFooter {...state} />
+    </View>
+  );
+}
+
+function CheckboxControl(props: CheckboxRowProps): React.JSX.Element {
+  if (props.selection === 'single') return <RadioControl {...props} />;
+
+  return (
+    <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
+      <UniversalCheckbox
+        label={props.label}
+        value={props.value}
+        disabled={props.disabled}
+        onValueChange={props.state.toggle}
+        modifiers={descriptionModifiers(props.label, props.state.description)}
+      />
+    </Host>
+  );
+}
+
+function RadioControl(props: CheckboxRowProps): React.JSX.Element {
+  return (
+    <View className={surfaceClass(props)}>
+      <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
+        <RadioRow {...props} />
+      </Host>
     </View>
   );
 }
@@ -38,21 +63,35 @@ function surfaceClass(props: CheckboxProps): string {
   );
 }
 
+// Expo's Android label is a sibling of the native checkbox, so its mark also needs the field name.
+function descriptionModifiers(
+  label: string,
+  description?: string,
+): ComponentProps<typeof UniversalCheckbox>['modifiers'] {
+  if (Platform.OS === 'android')
+    return [
+      semantics({
+        contentDescription: [label, description].filter(Boolean).join('. '),
+      }),
+    ];
+
+  return description ? [accessibilityHint(description)] : [];
+}
+
 export function CheckboxIndicator(
   props: CheckboxIndicatorProps,
-): React.JSX.Element | null {
-  if (Platform.OS !== 'ios')
-    return (
+): React.JSX.Element {
+  return (
+    <View
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       <Host matchContents>
-        <MaterialMark {...props} />
+        <CheckboxMark {...props} />
       </Host>
-    );
-
-  return props.value ? (
-    <Host matchContents>
-      <CheckMark />
-    </Host>
-  ) : null;
+    </View>
+  );
 }
 
 Checkbox satisfies ComponentType<CheckboxProps>;
