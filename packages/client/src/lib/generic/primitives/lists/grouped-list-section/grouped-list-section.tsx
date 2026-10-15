@@ -6,7 +6,10 @@ import {
   FooterProvider,
   type SectionFooter,
 } from '#primitives/fields/field-description';
-import { useSidebarList } from '#primitives/fields/field-layout';
+import {
+  useOverlayFields,
+  useSidebarList,
+} from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
 
@@ -29,9 +32,10 @@ function SectionRows(
   props: GroupedListSectionProps & { footerId: string },
 ): React.JSX.Element {
   const sidebar = useSidebarList();
+  const overlay = useOverlayFields();
 
   return (
-    <View className={rowsClasses(sidebar)}>
+    <View className={overlay ? 'gap-0' : rowsClasses(sidebar)}>
       <FooterProvider value={footerOf(props, props.footerId)}>
         {props.children}
       </FooterProvider>

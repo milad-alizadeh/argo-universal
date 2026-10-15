@@ -9,6 +9,7 @@ interface Corners {
 
 // A virtualised list says whether the row ends its section, and a card's row where it sits in its card; elsewhere the last child ends it.
 export interface RowPlace {
+  overlay?: boolean;
   endsSection?: boolean;
   corners?: Corners;
   // The row below is hovered or pressed, and its shade meets the line between them.
@@ -24,9 +25,8 @@ export function rowClasses(
     'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted wide:min-h-11 web:select-none web:[&_*]:select-none',
     controlClasses(props),
     sizeClasses(props),
-    stateClasses(props, sidebar),
-    cornerClasses(place.corners),
-    edgeClasses(props, sidebar, place),
+    interactionClasses(props, sidebar, place),
+    placeClasses(props, sidebar, place),
   );
 }
 
@@ -158,4 +158,31 @@ export function titleClasses(
   props: Pick<GroupedListItemProps, 'tone' | 'code'>,
 ): string {
   return cn('min-w-0 flex-1', props.code && 'type-code', toneClass(props.tone));
+}
+
+// Overlay rows share the popover surface; only the inset interaction fill has corners.
+function overlayClasses(props: GroupedListItemProps): string {
+  return cn(
+    'bg-transparent after:hidden mx-1 rounded-xl',
+    props.selected && 'bg-muted',
+    props.onPress && 'web:hover:bg-muted web:active:bg-border',
+  );
+}
+
+function interactionClasses(
+  props: GroupedListItemProps,
+  sidebar: boolean,
+  place: RowPlace,
+): string {
+  return stateClasses(props, sidebar || !!place.overlay);
+}
+
+function placeClasses(
+  props: GroupedListItemProps,
+  sidebar: boolean,
+  place: RowPlace,
+): string {
+  return place.overlay
+    ? overlayClasses(props)
+    : cn(cornerClasses(place.corners), edgeClasses(props, sidebar, place));
 }

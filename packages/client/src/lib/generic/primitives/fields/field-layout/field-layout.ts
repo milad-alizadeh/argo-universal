@@ -15,3 +15,12 @@ export function useWideSidebarList(): boolean {
 
   return useWide() && sidebar;
 }
+
+// Popovers supply the surface; their wide grouped rows use inset state fills.
+export const OverlayFields = createContext(false);
+
+export function useOverlayFields(): boolean {
+  const overlay = useContext(OverlayFields);
+
+  return useWide() && overlay;
+}

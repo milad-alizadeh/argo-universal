@@ -107,8 +107,6 @@ function NativeRowSpinner(): React.JSX.Element {
   );
 }
 
-const detailBottom = 12;
-
 // The row's detail control under it, such as an effort slider.
 export function NativeRowDetail({
   detail,
@@ -116,10 +114,7 @@ export function NativeRowDetail({
   if (!detail) return null;
 
   return (
-    <Column
-      style={{ paddingBottom: detailBottom }}
-      modifiers={Platform.OS === 'ios' ? undefined : [fillMaxWidth()]}
-    >
+    <Column modifiers={Platform.OS === 'ios' ? undefined : [fillMaxWidth()]}>
       <NativeControl>{detail}</NativeControl>
     </Column>
   );

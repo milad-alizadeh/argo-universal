@@ -1,11 +1,7 @@
 import type { TextProps } from '@expo/ui';
-import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
+import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
 import type { TextRole } from '#primitives/display/text';
-import {
-  useSwiftUITextModifiers,
-  useUniversalTextStyle,
-} from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 
@@ -48,18 +44,24 @@ export function useDangerColor(tone: string | undefined): string | undefined {
   return tone === 'danger' ? danger : undefined;
 }
 
-// A native row's text in its role: SwiftUI's font scales with the system text size, Compose's comes from the universal style.
+// Inherit native text metrics; code and semantic tones are the only exceptions.
 export function useRowText(
   role: TextRole,
   tone: RowTone,
-  alignment: 'line' | 'row' = 'row',
 ): Pick<TextProps, 'textStyle' | 'modifiers'> {
-  const swiftModifiers = useSwiftUITextModifiers(role, alignment);
-  const textStyle = useUniversalTextStyle(role);
   const danger = useDangerColor(tone);
 
   if (Platform.OS !== 'ios')
-    return { textStyle: { ...textStyle, color: danger } };
+    return {
+      textStyle: {
+        fontFamily: role === 'code' ? 'monospace' : undefined,
+        color: danger,
+      },
+    };
 
-  return { modifiers: [...swiftModifiers, ...swiftColor(tone, danger)] };
+  return { modifiers: [...swiftCodeFont(role), ...swiftColor(tone, danger)] };
+}
+
+function swiftCodeFont(role: TextRole): ReturnType<typeof font>[] {
+  return role === 'code' ? [font({ design: 'monospaced' })] : [];
 }
