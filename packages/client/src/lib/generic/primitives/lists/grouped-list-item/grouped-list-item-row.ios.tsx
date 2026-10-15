@@ -26,6 +26,9 @@ const rowHeight = 44;
 
 const rowSpacing = 12;
 
+// A little room above and below for wrapped rows; a single line sits at the system's 44pt row height.
+const rowPadding = 6;
+
 const disabledOpacity = 0.5;
 
 const reflowFontScale = 1.5;
@@ -49,7 +52,7 @@ function contentModifiers(
   iconSize: number,
 ): NonNullable<React.ComponentProps<typeof HStack>['modifiers']> {
   return [
-    padding({ vertical: 12 }),
+    padding({ vertical: rowPadding }),
     accessibilityHidden(!!props.detail),
     frame({ minHeight: rowHeight }),
     rowOpacity(props.disabled),

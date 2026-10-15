@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import type { IconName } from '../../../symbols/icon-names';
 import { DrawerItem } from './drawer-item';
 
@@ -18,14 +18,21 @@ export const Variations: Story = {
   render: () => <Drawer />,
 };
 
+// As Paper draws each drawer: iOS counts one Session, Android three Issues under the inbox.
+const ios = Platform.OS === 'ios';
+
+const counted = ios ? 'Sessions' : 'Issues';
+
+const count = ios ? 1 : 3;
+
 const destinations: { title: string; icon: IconName }[] = [
   { title: 'Sessions', icon: 'sessions' },
-  { title: 'Issues', icon: 'triage' },
+  { title: 'Issues', icon: ios ? 'issue' : 'triage' },
   { title: 'Atlas', icon: 'atlas' },
   { title: 'Settings', icon: 'settings' },
 ];
 
-// A drawer's destinations: pressing one makes it the current one; Issues carries a count.
+// A drawer's destinations: pressing one makes it the current one; one carries a count.
 function Drawer(): React.JSX.Element {
   const [current, setCurrent] = useState('Sessions');
 
@@ -48,9 +55,13 @@ type DestinationProps = (typeof destinations)[number] & {
   onSelect: (title: string) => void;
 };
 
-// Only Issues has something waiting.
-const issuesBadge = (title: string): { badge?: number; badgeLabel?: string } =>
-  title === 'Issues' ? { badge: 3, badgeLabel: '3 need attention' } : {};
+// Only one destination has something waiting.
+const destinationBadge = (
+  title: string,
+): { badge?: number; badgeLabel?: string } =>
+  title === counted
+    ? { badge: count, badgeLabel: `${count} need attention` }
+    : {};
 
 function Destination(props: DestinationProps): React.JSX.Element {
   const { title, current, onSelect } = props;
@@ -60,7 +71,7 @@ function Destination(props: DestinationProps): React.JSX.Element {
       label={title}
       icon={props.icon}
       selected={current === title}
-      {...issuesBadge(title)}
+      {...destinationBadge(title)}
       onPress={() => onSelect(title)}
     />
   );

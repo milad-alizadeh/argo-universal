@@ -42,7 +42,8 @@ function useRowModifiers(): NonNullable<
   const { muted } = useNativeTheme().colors;
 
   return [
-    padding({ horizontal: 16, vertical: 12 }),
+    // The row inside already stands 52pt tall, so the capsule adds no vertical padding of its own.
+    padding({ horizontal: 16 }),
     frame({ minHeight: 52, maxWidth: Infinity }),
     background(muted ?? 'transparent'),
     cornerRadius(rowRadius),

@@ -60,15 +60,20 @@ function RowValueText(props: { value: string }): React.JSX.Element {
   );
 }
 
+// Material's Badge in Argo's danger colours, not Material's error default.
 function RowBadge({
   badge,
 }: Pick<GroupedListItemProps, 'badge'>): React.JSX.Element | null {
+  const { colors } = useNativeTheme();
   const text = badgeCountText(badge);
 
   if (text === undefined) return null;
 
   return (
-    <Badge>
+    <Badge
+      containerColor={colors.danger}
+      contentColor={colors.dangerForeground}
+    >
       <Text>{text}</Text>
     </Badge>
   );
