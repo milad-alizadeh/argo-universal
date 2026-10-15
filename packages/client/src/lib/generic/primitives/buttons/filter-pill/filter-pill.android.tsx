@@ -4,17 +4,10 @@ import type * as React from 'react';
 import { useCSSVariable } from 'uniwind';
 import { ControlHost } from '#primitives/native/native-control';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { useWide } from '../../../use-wide/use-wide';
+import { filterPillFor } from './filter-pill-phone';
 import { type FilterPillProps, filterPillText } from './filter-pill-props';
-import { FilterPill as WideFilterPill } from './filter-pill.tsx';
 
 // A phone's filter is Material 3's own FilterChip, its container, label and outline set to Argo's tokens through the colors and border props, leading with the check mark while on.
-export function FilterPill(props: FilterPillProps): React.JSX.Element {
-  if (useWide()) return <WideFilterPill {...props} />;
-
-  return <PhoneChip {...props} />;
-}
-
 function PhoneChip(props: FilterPillProps): React.JSX.Element {
   return (
     <ControlHost matchContents>
@@ -80,5 +73,7 @@ function SelectedCheck({
     </FilterChip.LeadingIcon>
   );
 }
+
+export const FilterPill = filterPillFor(PhoneChip);
 
 FilterPill satisfies React.ComponentType<FilterPillProps>;
