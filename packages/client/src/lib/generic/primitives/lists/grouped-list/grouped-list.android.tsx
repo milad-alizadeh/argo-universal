@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FieldLayout } from '#primitives/fields/field-layout';
-import { DockedSearchFieldContent } from '#primitives/inputs/search-field';
 import { Host } from '#primitives/native/host';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListProps } from './grouped-list-props';
@@ -64,17 +63,12 @@ function useOverflowScroll(
   };
 }
 
-/*
- * The sections in one column, the search first when there is one. FieldGroup's own lazy column
- * cannot be measured inside a scroll view, and it wraps any child that is not literally its
- * Section, such as a caller's section component, in a card of its own.
- */
+// FieldGroup's lazy column cannot measure inside a React Native scroll view.
 function SectionsColumn(props: GroupedListProps): React.JSX.Element {
   const style = useColumnPadding(props.variant);
 
   return (
     <Column spacing={sectionGap} style={style} modifiers={[fillMaxWidth()]}>
-      {props.search && <DockedSearchFieldContent {...props.search} />}
       {props.children}
     </Column>
   );

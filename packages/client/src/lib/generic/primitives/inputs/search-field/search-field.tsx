@@ -6,31 +6,20 @@ import {
   type LayoutHandler,
   SearchControls,
 } from './search-field-controls';
-import { DockedSearchField } from './search-field-docked';
 import {
   type SearchFieldGeometry,
   useSearchProgress,
 } from './search-field-motion';
 import { RestRow } from './search-field-parts';
-import type {
-  MorphSearchFieldProps,
-  SearchFieldProps,
-} from './search-field-props';
+import type { SearchFieldProps } from './search-field-props';
 
 const searchRowHeight = 40;
 
 /*
- * Header and list search. By default a search button, last in its row, that morphs into a field over
- * the whole row; closing clears the query. Docked, a phone list's search bar at the top of the list,
- * which only Android draws. Pickers and sheets draw their own search, never this one.
+ * Header and list search: a search button, last in its row, that morphs into a field over the whole row;
+ * closing clears the query. Pickers and sheets draw their own search, never this one.
  */
-export function SearchField(props: SearchFieldProps): React.JSX.Element | null {
-  if (props.variant === 'docked') return <DockedSearchField {...props} />;
-
-  return <MorphSearchField {...props} />;
-}
-
-function MorphSearchField(props: MorphSearchFieldProps): React.JSX.Element {
+export function SearchField(props: SearchFieldProps): React.JSX.Element {
   const [geometry, measureRow, measureTrigger] = useGeometry();
   // A query left over from before, such as a restored screen, keeps the field open.
   const [open, setOpen] = useState(props.value !== '');
@@ -48,7 +37,7 @@ function MorphSearchField(props: MorphSearchFieldProps): React.JSX.Element {
 }
 
 type RowProps = ControlsProps &
-  Pick<MorphSearchFieldProps, 'title' | 'actions'> & {
+  Pick<SearchFieldProps, 'title' | 'actions'> & {
     onRowLayout: LayoutHandler;
   };
 
@@ -86,8 +75,4 @@ function useGeometry(): [SearchFieldGeometry, LayoutHandler, LayoutHandler] {
   ];
 }
 
-export type {
-  DockedSearchQuery,
-  SearchFieldProps,
-  SearchQueryProps,
-} from './search-field-props';
+export type { SearchFieldProps, SearchQueryProps } from './search-field-props';

@@ -15,7 +15,6 @@ import {
   AgentEnablement,
   AgentManagementFailure,
 } from '../agent-management/agent-management';
-import { PhoneTitle } from '../phone-title';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
 import {
@@ -34,7 +33,6 @@ export function AgentDetailView(
 
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <PhoneTitle title={props.agent.name} />
       <SettingsPage title={props.agent.name} onBack={props.onBack}>
         <AgentSections {...props} />
       </SettingsPage>

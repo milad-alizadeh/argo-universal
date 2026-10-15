@@ -7,7 +7,6 @@ import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { LoadedProps } from './project-list-props';
-import { listSearch } from './project-list-search';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
   found: ProjectInfo[];
@@ -25,7 +24,7 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
 
   return (
     <View className="flex-1 pt-2 wide:pt-0">
-      <GroupedList search={listSearch(props)}>
+      <GroupedList>
         <ProjectRows {...props} found={found} searching={query !== ''} />
       </GroupedList>
     </View>

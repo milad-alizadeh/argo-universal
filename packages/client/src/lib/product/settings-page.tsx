@@ -2,6 +2,7 @@ import type * as React from 'react';
 import { type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { Text } from '#primitives/display/text';
 import {
   PageTitleRow,
@@ -46,10 +47,16 @@ function useSettingsColumn(): SettingsColumn {
 /*
  * One Settings page on a wide window: a centred column under its own title and caption.
  * The content's scroll view spans the pane, so its scrollbar sits at the pane's edge, and keeps its content to the column.
- * A phone's native header already shows the title, so there the page is its content alone.
+ * A phone's native header shows the title, so there the page is its content alone.
  */
 export function SettingsPage(props: SettingsPageProps): ReactNode {
-  if (!useWide()) return props.children;
+  if (!useWide())
+    return (
+      <>
+        <PhoneTitle title={props.title} />
+        {props.children}
+      </>
+    );
 
   return <WideSettingsPage {...props} />;
 }

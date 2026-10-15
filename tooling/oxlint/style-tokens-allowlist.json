@@ -115,7 +115,7 @@
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/overlays/alert/alert.tsx",
         // 3 arbitrary, 1 palette
-        "packages/client/src/lib/generic/primitives/overlays/bottom-sheet/bottom-sheet-surface-props.ts",
+        "packages/client/src/lib/generic/primitives/overlays/sheet/sheet.tsx",
         // 2 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/overlays/dialog/dialog-body.tsx",
         // 1 arbitrary, 1 palette

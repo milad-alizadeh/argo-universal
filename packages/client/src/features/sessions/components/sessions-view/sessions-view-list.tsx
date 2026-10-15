@@ -1,32 +1,9 @@
 import type * as React from 'react';
-import { View } from 'react-native';
-import { SearchField } from '#primitives/inputs/search-field';
+import { Platform, View } from 'react-native';
 import { SessionsList } from '../sessions-list/sessions-list';
 import type { SessionsListProps } from '../sessions-list/sessions-list-props';
 import { SessionsLoading } from '../sessions-loading/sessions-loading';
 import type { SessionsViewProps } from './sessions-view';
-
-const phoneSearchAppearance = {
-  variant: 'docked',
-  label: 'Search Sessions',
-  leading: 'menu',
-  className: 'px-4 pt-2 pb-2',
-} as const;
-
-function PhoneSessionsSearch({
-  query,
-  onQueryChange,
-}: Pick<SessionsViewProps, 'query' | 'onQueryChange'>): React.JSX.Element {
-  return (
-    <View className="-mx-2 -mt-5">
-      <SearchField
-        {...phoneSearchAppearance}
-        value={query}
-        onChangeText={onQueryChange}
-      />
-    </View>
-  );
-}
 
 type ListData = Pick<
   SessionsListProps,
@@ -35,8 +12,12 @@ type ListData = Pick<
   | 'sessions'
   | 'query'
   | 'archived'
+  | 'flat'
   | 'selectedSessionId'
 >;
+
+// Android's full-screen search lists its results flat, as Paper's search does; elsewhere they stay under their Projects.
+const searchListsFlat = Platform.OS === 'android';
 
 function listData(props: SessionsViewProps): ListData {
   return {
@@ -45,6 +26,7 @@ function listData(props: SessionsViewProps): ListData {
     sessions: props.sessions,
     query: props.query,
     archived: props.archived,
+    flat: searchListsFlat && props.query !== '',
     selectedSessionId: props.selectedSessionId,
   };
 }
@@ -82,8 +64,6 @@ export function SessionsListContent(
     <SessionsList
       {...listData(props)}
       {...listActions(props)}
-      // On a phone the rows scroll under the header, so what sits above them scrolls too.
-      header={props.wide ? undefined : <PhoneSessionsSearch {...props} />}
       placeholder={props.loading ? insetLoading : undefined}
     />
   );

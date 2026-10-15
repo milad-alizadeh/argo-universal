@@ -10,14 +10,14 @@ export interface SessionsListProps {
   agents: AgentsListOutput;
   sessions: SessionInfo[];
   query: string;
+  // Results as one list with no Project headings, each row showing how long ago it was active.
+  flat?: boolean;
   archived: boolean;
   selectedSessionId?: string;
   onSelect: (id: string) => void;
   onEndReached: () => void;
   onNewSession?: (projectId: string) => void;
   onProjectSettings?: (projectName: string) => void;
-  // Scrolls with the rows, above the first Project.
-  header?: ReactElement;
   // Shown instead of the rows while Sessions load or fail to load.
   placeholder?: ReactElement;
 }

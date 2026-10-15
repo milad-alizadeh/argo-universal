@@ -4,8 +4,10 @@ import { FirstSessionScreen } from '#features/sessions';
 import { AccountsScreen } from '#features/settings';
 import type { Section } from '../../../lib/product/navigation/sections';
 import { SectionRootView } from '../components/section-root-view/section-root-view';
-import { PhoneSectionScreen } from './phone-section-screen';
+import { PlaceholderPhoneScreen } from './placeholder-phone-screen';
 import { AtlasScreen, IssuesScreen } from './placeholder-screens';
+import { SessionsPhoneScreen } from './sessions-phone-screen';
+import { SettingsPhoneScreen } from './settings-phone-screen';
 
 // The page a wide window opens beside each section's list.
 const rootPages = {
@@ -14,6 +16,15 @@ const rootPages = {
   atlas: AtlasScreen,
   settings: AccountsScreen,
 } satisfies Record<Section, ComponentType>;
+
+// What a phone shows: the section's own screen, which sets its native header.
+function phoneScreen(section: Section): React.JSX.Element {
+  if (section === 'sessions') return <SessionsPhoneScreen />;
+
+  if (section === 'settings') return <SettingsPhoneScreen />;
+
+  return <PlaceholderPhoneScreen section={section} />;
+}
 
 export interface SectionRootScreenProps {
   section: Section;
@@ -25,10 +36,5 @@ export function SectionRootScreen({
 }: SectionRootScreenProps): React.JSX.Element {
   const RootPage = rootPages[section];
 
-  return (
-    <SectionRootView
-      phone={<PhoneSectionScreen section={section} />}
-      page={<RootPage />}
-    />
-  );
+  return <SectionRootView phone={phoneScreen(section)} page={<RootPage />} />;
 }

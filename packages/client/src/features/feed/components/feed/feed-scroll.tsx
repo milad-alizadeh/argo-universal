@@ -13,6 +13,7 @@ import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type FeedEntry, entryKey, entryType } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
+import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
 
 // Stable objects, since Legend List lays out again whenever its content style changes. Rows hold the side padding, which Legend List drops on web.
@@ -101,6 +102,8 @@ export interface FeedScrollProps extends EntryDrawing {
   entries: FeedEntry[];
   initialIndex: number;
   onStartReached: () => void;
+  // Older rows are paging in above.
+  loadingOlder: boolean;
   // Whether the reader is at the Feed's end, where its bottom fade is shallower.
   atEnd: boolean;
 }
@@ -113,6 +116,7 @@ type FeedListProps = Pick<
   | 'initialScrollIndex'
   | 'maintainScrollAtEnd'
   | 'onStartReached'
+  | 'ListHeaderComponent'
 >;
 
 function useFeedListProps(
@@ -129,6 +133,7 @@ function useFeedListProps(
     // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
     maintainScrollAtEnd,
     onStartReached: props.onStartReached,
+    ListHeaderComponent: <LoadingEarlier loading={props.loadingOlder} />,
   };
 }
 

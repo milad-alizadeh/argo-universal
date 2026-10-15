@@ -6,13 +6,6 @@ export {
   CustomAgentNewScreen,
 } from '#features/agents';
 
-export {
-  AgentModelSheetChoices,
-  AgentModelSheetSettings,
-  type NativeSheets,
-  NativeSheetsProvider,
-} from '#features/composer';
-
 export { ConnectionDetailScreen, useConnection } from '#features/connection';
 
 export {
@@ -45,7 +38,7 @@ export { iconSymbols } from './lib/generic/symbols/icon-names';
 
 export { useWide } from './lib/generic/use-wide/use-wide';
 
-export { Text, useTextStyle } from '#primitives/display/text';
+export { Text } from '#primitives/display/text';
 
 export { Toaster } from '#primitives/overlays/toast';
 
@@ -70,12 +63,3 @@ export { HeaderSearchRow } from './lib/product/navigation/header-search';
 export { AppProviders } from './app-providers';
 
 export { PortalHost } from '#primitives/overlays/portal';
-
-export {
-  FormSheetProvider,
-  useFormSheetCommands,
-  useFormSheetState,
-  FormSheetRoot,
-  FormSheetChoices,
-  type FormSheetRoutes,
-} from '#primitives/overlays/bottom-sheet';

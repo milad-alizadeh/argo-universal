@@ -6,6 +6,7 @@ import {
   ElicitationSheet,
   type ElicitationFormProps,
 } from '#features/requests';
+import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
@@ -45,7 +46,11 @@ export function SessionView(props: SessionViewProps): React.JSX.Element {
 
   if (props.state === 'open') return <OpenSessionView {...props} />;
 
-  return <Screen edges={['bottom']} />;
+  return (
+    <Screen edges={['bottom']}>
+      <PhoneTitle title="Session" />
+    </Screen>
+  );
 }
 
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {

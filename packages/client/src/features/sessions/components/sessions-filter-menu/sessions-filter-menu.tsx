@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { HeaderButton } from '#lib/product/header-button';
+import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Menu } from '#primitives/overlays/menu';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
@@ -29,7 +29,7 @@ const wideFilterTrigger = (
 function phoneFilterTrigger(archived: boolean): React.JSX.Element {
   return (
     <HeaderButton
-      icon="filters"
+      icon={headerFilterIcon}
       paired
       dot={archived ? 'filter' : undefined}
       accessibilityLabel="Filter Sessions"

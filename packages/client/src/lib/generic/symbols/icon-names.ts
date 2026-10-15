@@ -15,6 +15,7 @@ export const iconSymbols = {
   appearance: { sf: 'circle.lefthalf.filled', material: 'contrast' },
   archive: { sf: 'tray.and.arrow.down', material: 'archive' },
   'arrow-down': { sf: 'arrow.down', material: 'arrow_downward' },
+  'arrow-left': { sf: 'arrow.left', material: 'arrow_back' },
   'arrow-right': { sf: 'arrow.right', material: 'arrow_forward' },
   'arrow-up': { sf: 'arrow.up', material: 'arrow_upward' },
   atlas: {
@@ -62,6 +63,7 @@ export const iconSymbols = {
   explore: { sf: 'safari', material: 'explore' },
   'external-link': { sf: 'arrow.up.right.square', material: 'open_in_new' },
   'fast-mode': { sf: 'bolt', sfFilled: 'bolt.fill', material: 'bolt' },
+  'filter-list': { sf: 'line.3.horizontal.decrease', material: 'filter_list' },
   filters: { sf: 'slider.horizontal.3', material: 'tune' },
   fit: { sf: 'viewfinder', material: 'fit_screen' },
   flag: { sf: 'flag', material: 'flag' },

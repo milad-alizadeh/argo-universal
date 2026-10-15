@@ -17,7 +17,6 @@ import { AgentRemoval } from '../agent-management/agent-removal';
 import { AgentPlaceholder } from '../agent-placeholder';
 import { CustomAgentForm } from '../custom-agent-form/custom-agent-form';
 import { LaunchSections } from '../custom-agent-launch';
-import { PhoneTitle } from '../phone-title';
 import type { CustomAgentCheck } from './custom-agent-status';
 import { ReadinessChip, ReadinessSection } from './custom-agent-status';
 
@@ -60,7 +59,6 @@ export function CustomAgentDetailView({
 function CustomAgentSettings(props: SettingsProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <PhoneTitle title={props.definition.name} />
       <SettingsPage title={props.definition.name} onBack={props.onBack}>
         <CustomAgentContent {...props} />
       </SettingsPage>
