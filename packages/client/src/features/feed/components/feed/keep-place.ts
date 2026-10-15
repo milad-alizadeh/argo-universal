@@ -1,88 +1,88 @@
-import type { LegendListRef } from '@legendapp/list/react-native';
+import type {
+  LegendListRef,
+  LegendListState,
+} from '@legendapp/list/react-native';
 import type { RefObject } from 'react';
 
-type ListRef = RefObject<LegendListRef | null>;
+export type ListRef = RefObject<LegendListRef | null>;
 
-type ListState = ReturnType<LegendListRef['getState']>;
+export type ListState = LegendListState;
 
-// While rows measure after a row grows, the Feed holds the reader's place: within this many pixels, for this many still frames, at most this long in milliseconds after the row last grew.
 const placeTolerance = 0.5;
 
 const settledFrames = 10;
 
 const keepPlaceDuration = 500;
 
-interface Place {
+export interface Place {
   key: string;
-  // How much the row grew above the content held in place; zero when it grows below.
-  height: number;
-  // Where the row's top sat in the view before it grew.
+  grownAbove: number;
   topInView: number;
 }
 
-// Where a row's top sits in the view, or undefined once it has left the list.
-function topInViewOf(state: ListState, key: string): number | undefined {
-  const top = state.positionByKey(key);
-
-  return top === undefined ? undefined : top - state.scroll;
+interface Span {
+  top: number;
+  bottom: number;
 }
 
-// How far the held content sits from where it was, or undefined once the row has left the list.
-function driftOf(state: ListState, place: Place): number | undefined {
-  const topInView = topInViewOf(state, place.key);
+function spanInView(state: ListState, key: string): Span | undefined {
+  const position = state.positionByKey(key);
+  const size = state.sizes.get(key);
 
-  return topInView === undefined
-    ? undefined
-    : topInView + place.height - place.topInView;
+  if (position === undefined || size === undefined) return;
+  const top = position - state.scroll;
+
+  return { top, bottom: top + size };
 }
 
-// Puts the held content back where it was; returns the still frames so far, or all of them once the row has left the list.
-function placeFrame(
-  ref: LegendListRef,
-  place: Place,
-  stillFrames: number,
-): number {
-  const drift = driftOf(ref.getState(), place);
+const stateOf = (list: ListRef): ListState | undefined =>
+  list.current?.getState();
 
-  if (drift === undefined) return settledFrames;
+function spanOf(list: ListRef, key: string): Span | undefined {
+  const state = stateOf(list);
 
-  if (Math.abs(drift) > placeTolerance) {
-    // Legend List's public anchor offset: "Sets or adds to the offset of the visible content anchor."
-    ref.setVisibleContentAnchorOffset((offset) => offset + drift);
-
-    return 0;
-  }
-
-  return stillFrames + 1;
+  return state && spanInView(state, key);
 }
 
 interface Hold {
   list: ListRef;
   place: Place;
+  opening: boolean;
+  // Older rows joined the row while it opened, so its top stays held until they have measured.
+  joined: boolean;
   startedAt: number;
   stillFrames: number;
 }
 
-const keepsGoing = (hold: Hold): boolean =>
+function driftOf({ list, place }: Hold): number | undefined {
+  const span = spanOf(list, place.key);
+
+  return span && span.top + place.grownAbove - place.topInView;
+}
+
+function steer(hold: Hold, drift: number): void {
+  if (Math.abs(drift) > placeTolerance) {
+    hold.list.current?.setVisibleContentAnchorOffset(
+      (offset) => offset + drift,
+    );
+    hold.stillFrames = 0;
+  } else hold.stillFrames += 1;
+}
+
+const settling = (hold: Hold): boolean =>
   hold.stillFrames < settledFrames &&
   performance.now() - hold.startedAt < keepPlaceDuration;
 
-// Holds the place each frame while rows measure; true once it stops.
-function holdFrame(hold: Hold): boolean {
-  hold.stillFrames = hold.list.current
-    ? placeFrame(hold.list.current, hold.place, hold.stillFrames)
-    : settledFrames;
+function keepsHolding(hold: Hold): boolean {
+  const drift = driftOf(hold);
 
-  return !keepsGoing(hold);
+  if (drift === undefined) return false;
+  steer(hold, drift);
+
+  return hold.opening || settling(hold);
 }
 
-// Starts holding again, as long again as after the row first grew.
-function renewHold(hold: Hold): void {
-  hold.startedAt = performance.now();
-  hold.stillFrames = 0;
-}
-
-// One hold per row of each list, so a later place for a row replaces the one before instead of pulling against it.
+// One hold per row of each list: a later place for a row replaces the one before instead of pulling against it.
 const holdsByList = new WeakMap<ListRef, Map<string, Hold>>();
 
 function holdsOf(list: ListRef): Map<string, Hold> {
@@ -92,53 +92,95 @@ function holdsOf(list: ListRef): Map<string, Hold> {
   return holds;
 }
 
-function startHold(list: ListRef, place: Place): void {
-  const holds = holdsOf(list);
-  const hold = { list, place, startedAt: performance.now(), stillFrames: 0 };
-  holds.set(place.key, hold);
-
+function runHold(holds: Map<string, Hold>, hold: Hold): void {
   const frame = (): void => {
-    if (holds.get(place.key) !== hold) return;
+    if (holds.get(hold.place.key) !== hold) return;
 
-    if (holdFrame(hold)) holds.delete(place.key);
-    else requestAnimationFrame(frame);
+    if (keepsHolding(hold)) requestAnimationFrame(frame);
+    else holds.delete(hold.place.key);
   };
 
   frame();
 }
 
-// Until rows stop measuring, the row's held content stays where it was, whichever row Legend anchors.
-export function keepPlace(list: ListRef, place: Place): void {
-  const hold = holdsOf(list).get(place.key);
-
-  if (!hold) return startHold(list, place);
-  hold.place = place;
-  renewHold(hold);
+function startHold(holds: Map<string, Hold>, hold: Hold): void {
+  holds.set(hold.place.key, hold);
+  runHold(holds, hold);
 }
 
-// Where a row's top and bottom sit in the view; NaN for a row not in the list, which compares as never in view.
-function spanInView(state: ListState, key: string): [number, number] {
-  const top = (state.positionByKey(key) ?? Number.NaN) - state.scroll;
+function placeHold(list: ListRef, place: Place, opening: boolean): void {
+  const holds = holdsOf(list);
+  const hold = holds.get(place.key);
 
-  return [top, top + (state.sizes.get(key) ?? Number.NaN)];
+  const renewed = {
+    place,
+    opening,
+    joined: false,
+    startedAt: performance.now(),
+  };
+
+  if (hold) Object.assign(hold, renewed, { stillFrames: 0 });
+  else startHold(holds, { list, ...renewed, stillFrames: 0 });
 }
 
-const reachesIntoView = (
-  [top, bottom]: [number, number],
-  scrollLength: number,
-): boolean => top < scrollLength && bottom > 0;
+const isOpening = (list: ListRef, key: string): boolean =>
+  holdsOf(list).get(key)?.opening ?? false;
 
-function startRowTopHold(list: ListRef, state: ListState, key: string): void {
-  const span = spanInView(state, key);
-
-  if (reachesIntoView(span, state.scrollLength))
-    startHold(list, { key, height: 0, topInView: span[0] });
-}
-
-// A row in view that grows below keeps its top where it was, whichever row Legend anchors: Legend can still count rows from before a fast scroll as the ones in view, and anchoring one below the row would push the row up by all it grows. A row already held keeps the place it holds.
-export function holdRowTop(list: ListRef, state: ListState, key: string): void {
+// Older rows join a row while it opens: they keep the place it holds, its top, which stays held until they have measured, even once it has opened.
+export function joinOpeningRow(list: ListRef, key: string): Place | undefined {
   const hold = holdsOf(list).get(key);
 
-  if (hold) renewHold(hold);
-  else startRowTopHold(list, state, key);
+  if (!hold?.opening) return;
+  hold.joined = true;
+
+  return hold.place;
+}
+
+export function keepPlace(list: ListRef, place: Place): void {
+  if (!isOpening(list, place.key)) placeHold(list, place, false);
+}
+
+const reachesIntoView = (span: Span, scrollLength: number): boolean =>
+  span.top < scrollLength && span.bottom > 0;
+
+const opensInView = (state: ListState, span: Span): boolean =>
+  reachesIntoView(span, state.scrollLength) &&
+  !state.isWithinMaintainScrollAtEndThreshold;
+
+function openingSpan(state: ListState, key: string): Span | undefined {
+  const span = spanInView(state, key);
+
+  return span && opensInView(state, span) ? span : undefined;
+}
+
+function startRowTopHold(list: ListRef, key: string): void {
+  const state = stateOf(list);
+  const span = state && openingSpan(state, key);
+
+  if (span) placeHold(list, { key, grownAbove: 0, topInView: span.top }, true);
+}
+
+/*
+ * Legend can still count rows from before a fast scroll as the ones in view, and anchoring one below an
+ * opening row would push the row up by all it grows, so the row's top stays where it was until it has
+ * opened. The reader reads the row they opened, so its top replaces a place held for older rows, and
+ * older rows that join it while it opens draw below its top, which stays held until they have measured.
+ * At the end, where the Feed follows new rows, and once the row has opened, when the Feed follows them
+ * again, the row is left to Legend, so the hold never pulls against following the end.
+ */
+export function holdRowTop(list: ListRef, key: string): void {
+  if (!isOpening(list, key)) startRowTopHold(list, key);
+}
+
+// An opening hold ends with the open, unless older rows joined it: then it settles as any kept place does.
+function endOpeningHold(holds: Map<string, Hold>, hold: Hold): void {
+  if (hold.joined) placeHold(hold.list, hold.place, false);
+  else holds.delete(hold.place.key);
+}
+
+export function releaseRowTop(list: ListRef, key: string): void {
+  const holds = holdsOf(list);
+  const hold = holds.get(key);
+
+  if (hold?.opening) endOpeningHold(holds, hold);
 }

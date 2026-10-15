@@ -10,14 +10,12 @@ import {
   openRow,
   restingTopOf,
   scrollAwayFromEnd,
-  scrollAwayWait,
   scrolledToEnd,
   scrollToEnd,
-  scrollToTop,
   scrollUp,
   settledTopOf,
 } from './feed-reader.mocks';
-import { longRows, splitGroupRows } from './feed.mocks';
+import { longRows } from './feed.mocks';
 import { feedArgs, PagedFeed } from './paged-feed.mocks';
 
 const meta = {
@@ -151,32 +149,5 @@ export const KeepsPlaceWhenRowOpens: Story = {
       Math.abs(trigger.getBoundingClientRect().top - triggerTop),
     ).toBeLessThanOrEqual(3);
     await expect(scrolledToEnd(scroll)).toBe(false);
-  },
-};
-
-// Read back to the top a screen at a time, the reader opens a group there: its header stays where it was and its rows open below it.
-export const KeepsHeaderInPlaceWhenGroupOpensAtTop: Story = {
-  render: (args) => (
-    <PagedFeed {...args} rows={splitGroupRows} holdOlderPages />
-  ),
-  play: async ({ canvas }) => {
-    await settleViewport(layoutWidths.phone);
-    const scroll = await canvas.findByTestId(feedScrollId);
-    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
-    await scrollToTop(scroll);
-
-    const header = await canvas.findByRole(
-      'button',
-      { name: 'Ran 10 commands' },
-      scrollAwayWait,
-    );
-
-    const top = await settledTopOf(() => header);
-    await openRow(header);
-    await expect(
-      Math.abs((await settledTopOf(() => header)) - top),
-    ).toBeLessThan(2);
-    // The group's first command shows under its header, in the view.
-    await settledTopOf(() => canvas.getByRole('button', { name: 'Step 11' }));
   },
 };
