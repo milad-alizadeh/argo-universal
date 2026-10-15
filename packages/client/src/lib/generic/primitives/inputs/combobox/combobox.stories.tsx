@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Combobox } from './combobox';
 
@@ -45,15 +47,21 @@ const states = [
   { label: 'Could not load', loadError: 'Projects could not be loaded.' },
 ];
 
+const examples = [
+  { label: 'Searchable choice', example: <ProjectChoice /> },
+  { label: 'Row', example: <ProjectRow /> },
+  ...states.map(({ label, ...state }) => ({
+    label,
+    example: <StatusExample {...state} />,
+  })),
+];
+
 function ComboboxExamples(): ReactElement {
   return (
     <VariationList>
-      <Variation label="Searchable choice">
-        <ProjectChoice />
-      </Variation>
-      {states.map(({ label, ...state }) => (
+      {examples.map(({ label, example }) => (
         <Variation key={label} label={label}>
-          <StatusExample {...state} />
+          {example}
         </Variation>
       ))}
     </VariationList>
@@ -89,3 +97,24 @@ function ProjectChoice(): ReactElement {
     />
   );
 }
+
+// The row variant: a drill row in a grouped list, opening beside it on a desktop and as a pushed page on a phone.
+function ProjectRow(): ReactElement {
+  const [value, setValue] = useState('argo');
+
+  return (
+    <GroupedList fit>
+      <GroupedListSection>
+        <Combobox {...rowPresentation} value={value} onValueChange={setValue} />
+      </GroupedListSection>
+    </GroupedList>
+  );
+}
+
+const rowPresentation = {
+  variant: 'row',
+  label: 'Project',
+  title: 'Select Project',
+  options,
+  searchPlaceholder: 'Find a Project…',
+} as const;
