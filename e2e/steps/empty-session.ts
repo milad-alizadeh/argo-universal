@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { expect } from '../fixtures';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
+import { reloadApp } from './frame';
 import {
   agentModelLabel,
   chooseAgent,
@@ -91,7 +92,7 @@ Given(
       route.connectToServer();
       connections.get(page)?.push(route);
     });
-    await page.reload();
+    await reloadApp(page);
   },
 );
 

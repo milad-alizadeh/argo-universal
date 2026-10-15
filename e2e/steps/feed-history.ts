@@ -8,6 +8,7 @@ import {
   scrollToOldestHistoryMessage,
 } from './feed-history-scroll';
 import { Given, When, Then } from './fixtures';
+import { reloadApp } from './frame';
 import { query } from './server-query';
 import { agentWork } from './timeouts';
 
@@ -81,7 +82,7 @@ When('I reopen the stored long Feed', async ({ page, server }) => {
   await expect
     .poll(() => historyIsStored(page, server.httpUrl), agentWork)
     .toBe(true);
-  await page.goto(new URL('/', page.url()).href);
+  await reloadApp(page);
   await page.getByRole('button', { name: /^Build a long history,/ }).click();
 });
 

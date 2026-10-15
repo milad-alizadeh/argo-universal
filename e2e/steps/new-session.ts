@@ -3,7 +3,7 @@ import { expect } from '../fixtures';
 import { closeAgentMenus } from './agent-menus';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
-import { phone } from './frame';
+import { onPhone, reloadApp } from './frame';
 
 export const agentModelLabel = 'Agent and model';
 
@@ -90,9 +90,6 @@ When(
 // A phone's Sessions list is its own page at /sessions.
 const sessionsListUrl = /\/sessions$/;
 
-const onPhone = (page: Page): boolean =>
-  (page.viewportSize()?.width ?? 0) <= phone.width;
-
 When('I return to the Sessions list', async ({ page }): Promise<void> => {
   await page.goBack();
   await expect(page).toHaveURL(sessionsListUrl);
@@ -101,7 +98,7 @@ When('I return to the Sessions list', async ({ page }): Promise<void> => {
 When(
   'I reload the App and open New Session with Agent {int}',
   async ({ page, server }, ordinal: number): Promise<void> => {
-    await page.goto(new URL('/', page.url()).href);
+    await reloadApp(page);
     await startWithAgent(page, server.httpUrl, ordinal);
   },
 );
@@ -121,11 +118,16 @@ When(
   },
 );
 
+// A phone goes back from the Session to its list; a wide Frame swapped New Session for the Session beside the list, so the Session stays and the list shows it.
+async function backToSessions(page: Page): Promise<void> {
+  if (onPhone(page)) {
+    await page.goBack();
+    await expect(page).toHaveURL(sessionsListUrl);
+  } else await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/);
+}
+
 Then('Back returns to the Sessions list', async ({ page }): Promise<void> => {
-  const sessionUrl = page.url();
-  await page.goBack();
-  // A wide Frame's /sessions shows its first page, here the only Session, beside the list.
-  await expect(page).toHaveURL(onPhone(page) ? sessionsListUrl : sessionUrl);
+  await backToSessions(page);
   await expect(
     // A phone shows the list as the page, a wide Frame in its sidebar.
     page.getByRole('heading', { name: 'Sessions', exact: true }),

@@ -2,6 +2,7 @@ import { rename, writeFile } from 'node:fs/promises';
 import type { Page, Locator } from '@playwright/test';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
+import { reopenAgentsFromAgent } from './agent-catalog';
 import { When, Then, test } from './fixtures';
 import { toast } from './toasts';
 
@@ -31,9 +32,7 @@ When(
       JSON.stringify(updatedRegistry),
     );
     await rename(`${app.registryPath}.next`, app.registryPath);
-    await page.goBack();
-    await page.goBack();
-    await page.getByRole('link', { name: /^Agents(?:,|$)/ }).click();
+    await reopenAgentsFromAgent(page);
     await page.getByRole('link', { name: /^Example Agent,/ }).click();
     await expect(
       page.getByRole('button', { name: 'Update', exact: true }),

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
-import { phone, wide } from './frame';
+import { openConnection, phone, wide } from './frame';
 
 export async function expectSettingsList(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/settings$/);
@@ -51,12 +51,24 @@ Then(
 Then(
   'the wide Frame shows Accounts beside the Settings list',
   async ({ page }): Promise<void> => {
-    await expect(page).toHaveURL(/\/settings$/);
+    // A wide Frame opens the list's first page, and the URL names it.
+    await expect(page).toHaveURL(/\/settings\/accounts$/);
+    await expect(
+      page.getByRole('link', { name: /^Accounts(?:,|$)/ }),
+    ).toBeVisible();
     await expect(page.getByText('Accounts will appear here.')).toBeVisible();
   },
 );
 
+When(
+  'I view the Connection from the drawer',
+  async ({ page }): Promise<void> => {
+    await page.getByRole('button', { name: 'Show navigation menu' }).click();
+    await openConnection(page);
+  },
+);
+
 When('I return to Sessions', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: 'Open navigation' }).click();
+  await page.getByRole('button', { name: 'Show navigation menu' }).click();
   await page.getByRole('button', { name: 'Sessions', exact: true }).click();
 });

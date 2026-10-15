@@ -1,6 +1,6 @@
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
-import { phone } from './frame';
+import { phone, reloadApp } from './frame';
 import { expectSettingsList } from './navigation';
 
 Given(
@@ -8,9 +8,9 @@ Given(
   async ({ page }): Promise<void> => {
     await page.setViewportSize(phone);
     await page.addInitScript(
-      "if (['/', '/sessions'].includes(location.pathname)) history.replaceState(null, '', '/settings/connection')",
+      "if (location.pathname === '/') history.replaceState(null, '', '/settings/connection')",
     );
-    await page.reload();
+    await reloadApp(page);
     await expect(page.getByText('Version', { exact: true })).toBeVisible();
   },
 );
