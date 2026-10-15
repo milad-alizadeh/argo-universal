@@ -119,16 +119,18 @@ function DrawerItemLabel({ label }: DrawerItemProps): React.JSX.Element {
   );
 }
 
-// Material's own Badge with its count, in its default error colours; TalkBack reads it with the row.
+// Material's own Badge with its count, coloured with Argo's danger red through its containerColor and contentColor props; TalkBack reads it with the row.
 function NativeBadge(
   props: Pick<DrawerItemProps, 'badge' | 'badgeLabel'>,
 ): React.JSX.Element | null {
+  const container = String(useCSSVariable('--color-danger'));
+  const content = String(useCSSVariable('--color-primary-foreground'));
   const badge = countBadge(props.badge, props.badgeLabel);
 
   if (!badge) return null;
 
   return (
-    <Badge>
+    <Badge containerColor={container} contentColor={content}>
       <Text>{badge.text}</Text>
     </Badge>
   );

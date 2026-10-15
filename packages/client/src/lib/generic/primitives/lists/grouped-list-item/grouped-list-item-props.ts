@@ -1,6 +1,5 @@
 import type { ComponentProps, ReactElement } from 'react';
 import type { Pressable } from 'react-native';
-import { countBadge } from '#lib/generic/badge-count';
 import type { IconName } from '../../../symbols/icon-names';
 
 export interface GroupedListItemProps {
@@ -46,10 +45,6 @@ export interface GroupedListItemProps {
   disabled?: boolean;
   selected?: boolean;
   needsAttention?: boolean;
-  // A trailing count, such as unread items: none at zero, and over 99 it shows 99+.
-  badge?: number;
-  // What a screen reader says for the badge, such as "3 unread"; the count when absent.
-  badgeLabel?: string;
   // A trailing dot beside the chevron. Its label is spoken with the row, never drawn.
   status?: { tone: 'success' | 'warning' | 'danger'; label: string };
   // A spinner takes the icon's place while the row's subject is on its way.
@@ -76,19 +71,10 @@ function distinctStatus(props: GroupedListItemProps): string | undefined {
 export function groupedListItemName(props: GroupedListItemProps): string {
   if (props.accessibilityLabel) return props.accessibilityLabel;
 
-  return [
-    props.label,
-    props.subtitle?.text,
-    props.value,
-    distinctStatus(props),
-    badgeName(props),
-  ]
+  return [props.label, props.subtitle?.text, props.value, distinctStatus(props)]
     .filter(Boolean)
     .join(', ');
 }
-
-const badgeName = (props: GroupedListItemProps): string | undefined =>
-  countBadge(props.badge, props.badgeLabel)?.label;
 
 export function groupedListItemStatus(
   props: Pick<GroupedListItemProps, 'status' | 'needsAttention'>,

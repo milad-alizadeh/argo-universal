@@ -15,7 +15,6 @@ import { RowHeadline } from './grouped-list-item-native-headline';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { hasDisclosure } from './grouped-list-item-styles';
 import { NativeRowStatus } from './native-row';
-import { NativeRowBadge } from './native-row-badge';
 
 type Modifiers = NonNullable<RowProps['modifiers']>;
 
@@ -53,12 +52,11 @@ export function RowContent(props: GroupedListItemProps): React.JSX.Element {
   );
 }
 
-// Status, count and chevron, in that order at the row's end.
+// Status and chevron, in that order at the row's end.
 function RowEnd(props: GroupedListItemProps): React.JSX.Element {
   return (
     <>
       <NativeRowStatus {...props} />
-      <NativeRowBadge {...props} />
       <Disclosure visible={hasDisclosure(props)} />
     </>
   );

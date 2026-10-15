@@ -7,7 +7,6 @@ import {
 } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
-import { RowBadge } from './grouped-list-item-badge';
 import { Disclosure } from './grouped-list-item-disclosure';
 import { GroupedListItemLeading } from './grouped-list-item-leading';
 import {
@@ -125,7 +124,6 @@ function GroupedListItemTrailing(props: TrailingProps): React.JSX.Element {
     <View className="max-w-[55%] flex-row items-center gap-2 wide:gap-3">
       <RowSelection {...props} />
       <StatusDot status={groupedListItemStatus(props)} />
-      <RowBadge badge={props.badge} />
       <GroupedListItemAccessory>{props.accessory}</GroupedListItemAccessory>
       {props.control}
       <Disclosure visible={hasDisclosure(props) && !sidebar} />

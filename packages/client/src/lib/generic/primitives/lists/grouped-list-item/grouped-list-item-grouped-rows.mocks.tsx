@@ -52,7 +52,7 @@ function ProjectsRow(): React.JSX.Element {
 
 function InboxRow(): React.JSX.Element {
   return (
-    <GroupedListItem label="Inbox" icon="triage" badge={3} onPress={onPress} />
+    <GroupedListItem label="Inbox" icon="triage" value="3" onPress={onPress} />
   );
 }
 

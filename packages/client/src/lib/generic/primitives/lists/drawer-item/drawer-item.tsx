@@ -51,7 +51,7 @@ function DrawerItemContent(props: DrawerItemProps): React.JSX.Element {
   );
 }
 
-// Apple has no drawer, so iOS draws Argo's row, its count in the attention capsule as on the web.
+// Apple has no drawer, so iOS draws Argo's row, its count in the danger-red capsule as on the web.
 function CountBadge(
   props: Pick<DrawerItemProps, 'badge' | 'badgeLabel'>,
 ): React.ReactElement | null {
@@ -68,6 +68,6 @@ function CountBadge(
   );
 }
 
-const countBadgeClass = 'h-5.5 min-w-5.5 border-0 bg-warning px-1.5';
+const countBadgeClass = 'h-5.5 min-w-5.5 border-0 bg-danger px-1.5';
 
 DrawerItem satisfies React.ComponentType<DrawerItemProps>;
