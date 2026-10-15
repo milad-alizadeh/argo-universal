@@ -4,7 +4,7 @@ import { contentActionClass } from '#primitives/buttons/button';
 import { IconSlot } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { Text } from '#primitives/display/text';
-import { BottomSheet } from '#primitives/overlays/bottom-sheet';
+import { Sheet } from '#primitives/overlays/sheet';
 import { Pressable } from '#primitives/pressable';
 import { chevron } from './split-button-chevron';
 import type { SplitMenuProps } from './split-button-props';
@@ -47,14 +47,14 @@ export function ChoiceSheet<Value extends string>(
   const sheet = useChoiceSheet(props);
 
   return (
-    <BottomSheet
+    <Sheet
       open={sheet.open}
       onOpenChange={sheet.setOpen}
       label={props.menuLabel}
       trigger={chevron({ ...props, narrow: true })}
     >
       <SheetChoices rows={sheetRows(props)} onRun={sheet.run} />
-    </BottomSheet>
+    </Sheet>
   );
 }
 

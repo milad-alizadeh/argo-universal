@@ -30,10 +30,10 @@ import type * as GroupedListItemKit from '#primitives/lists/grouped-list-item';
 import type * as GroupedListSectionKit from '#primitives/lists/grouped-list-section';
 import type * as HostKit from '#primitives/native/host';
 import type * as AlertKit from '#primitives/overlays/alert';
-import type * as BottomSheetKit from '#primitives/overlays/bottom-sheet';
 import type * as DialogKit from '#primitives/overlays/dialog';
 import type * as MenuKit from '#primitives/overlays/menu';
 import type * as PopoverKit from '#primitives/overlays/popover';
+import type * as SheetKit from '#primitives/overlays/sheet';
 import type * as ToastKit from '#primitives/overlays/toast';
 
 /*
@@ -45,7 +45,6 @@ export type Primitives = {
   AlertAction: AlertKit.AlertAction;
   AlertProps: AlertKit.AlertProps;
   BadgeProps: BadgeKit.BadgeProps;
-  BottomSheetProps: BottomSheetKit.BottomSheetProps;
   ButtonDataProps: ButtonKit.ButtonDataProps;
   ButtonGroupProps: ButtonGroupKit.ButtonGroupProps;
   ButtonProps: ButtonKit.ButtonProps;
@@ -62,8 +61,6 @@ export type Primitives = {
   FieldDescription: FieldDescriptionKit.FieldDescription;
   FieldProps: FieldKit.FieldProps;
   FilterPillProps: FilterPillKit.FilterPillProps;
-  FormSheetProps: BottomSheetKit.FormSheetProps;
-  FormSheetRoutes: BottomSheetKit.FormSheetRoutes;
   GroupedListContentProps: GroupedListContentKit.GroupedListContentProps;
   GroupedListItemProps: GroupedListItemKit.GroupedListItemProps;
   GroupedListProps: GroupedListKit.GroupedListProps;
@@ -85,6 +82,10 @@ export type Primitives = {
   SearchFieldProps: SearchFieldKit.SearchFieldProps;
   SectionFooter: FieldDescriptionKit.SectionFooter;
   SelectedCheckProps: SelectedCheckKit.SelectedCheckProps;
+  SheetLinkProps: SheetKit.SheetLinkProps;
+  SheetNavigation: SheetKit.SheetNavigation;
+  SheetPageProps: SheetKit.SheetPageProps;
+  SheetProps: SheetKit.SheetProps;
   SliderProps: SliderKit.SliderProps;
   SpinnerProps: SpinnerKit.SpinnerProps;
   SplitButtonOption: SplitButtonKit.SplitButtonOption<string>;
@@ -102,6 +103,7 @@ export type Aliases = {
   BadgeTone: BadgeKit.BadgeTone;
   ButtonSize: ButtonKit.ButtonSize;
   FieldErrors: FieldErrorsKit.FieldErrors;
+  SheetDetent: SheetKit.SheetDetent;
   TextRole: TextKit.TextRole;
   Tone: TextKit.Tone;
 };

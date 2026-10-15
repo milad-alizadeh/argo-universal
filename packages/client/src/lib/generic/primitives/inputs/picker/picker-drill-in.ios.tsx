@@ -1,21 +1,5 @@
-import {
-  BottomSheet,
-  Group,
-  NavigationDestination,
-  NavigationStack,
-  RNHostView,
-  Text,
-} from '@expo/ui/swift-ui';
-import {
-  navigationBarTitleDisplayMode,
-  navigationTitle,
-  presentationBackground,
-  presentationDetents,
-} from '@expo/ui/swift-ui/modifiers';
-import { useState } from 'react';
-import { RoutedFormSheet } from '#primitives/overlays/bottom-sheet';
-import { useFormSheetCommands } from '#primitives/overlays/bottom-sheet';
-import { useNativeTheme } from '../../../native-theme';
+import { RNHostView } from '@expo/ui/swift-ui';
+import { Sheet } from '#primitives/overlays/sheet';
 import type { PickerProps } from './picker-props';
 import { PickerSearchList } from './picker-search-list';
 
@@ -24,127 +8,30 @@ type DrillProps<Value extends string> = PickerProps<Value> & {
   onClose: () => void;
 };
 
-const destination = 'picker-options';
-
+/*
+ * A long list of options opens in its own sheet, titled with the field's label, over any sheet the
+ * field sits in. The picker's row lives in a SwiftUI tree, so the sheet's React Native root is hosted.
+ */
 export function PickerDrillIn<Value extends string>(
   props: DrillProps<Value>,
 ): React.JSX.Element {
-  const commands = useFormSheetCommands();
-
-  if (commands)
-    return (
-      <RoutedFormSheet {...routedProps(props)} commands={commands}>
-        <PickerSearchList {...props} />
-      </RoutedFormSheet>
-    );
-
-  return <StandalonePickerSheet {...props} />;
-}
-
-function StandalonePickerSheet<Value extends string>(
-  props: DrillProps<Value>,
-): React.JSX.Element {
   return (
-    <BottomSheet {...sheetProps(props)}>
-      <PickerPage {...props} />
-    </BottomSheet>
+    <RNHostView matchContents>
+      <Sheet {...sheetProps(props)} detents={['large']} contentScrolls>
+        <Sheet.Page name="options" title={props.label}>
+          <PickerSearchList {...props} />
+        </Sheet.Page>
+      </Sheet>
+    </RNHostView>
   );
 }
 
-function sheetProps(props: {
-  open: boolean;
-  onClose: () => void;
-}): Omit<React.ComponentProps<typeof BottomSheet>, 'children'> {
-  return {
-    isPresented: props.open,
-    onIsPresentedChange: (open) => {
-      if (!open) props.onClose();
-    },
-  };
-}
-
-function PickerPage<Value extends string>(
-  props: DrillProps<Value>,
-): React.JSX.Element {
-  return (
-    <Group modifiers={usePageModifiers()}>
-      {props.open && <PickerNavigation {...props} />}
-    </Group>
-  );
-}
-
-function usePageModifiers(): ReturnType<typeof presentationDetents>[] {
-  const { card } = useNativeTheme().colors;
-
-  return [
-    presentationDetents(['large']),
-    presentationBackground(card ?? 'clear'),
-  ];
-}
-
-function PickerNavigation<Value extends string>(
-  props: DrillProps<Value>,
-): React.JSX.Element {
-  return (
-    <NavigationStack {...usePickerPath(props.onClose)}>
-      <PickerRoutes {...props} />
-    </NavigationStack>
-  );
-}
-
-function usePickerPath(
-  close: () => void,
-): Omit<React.ComponentProps<typeof NavigationStack>, 'children'> {
-  const [path, setPath] = useState([destination]);
-
-  return {
-    path,
-    onPathChange: (next) => {
-      setPath(next);
-
-      if (next.length === 0) close();
-    },
-  };
-}
-
-function PickerRoutes<Value extends string>(
-  props: DrillProps<Value>,
-): React.JSX.Element {
-  return (
-    <>
-      <Text modifiers={[navigationTitle('Back')]}>{props.label}</Text>
-      <NavigationDestination value={destination}>
-        <PickerDestination {...props} />
-      </NavigationDestination>
-    </>
-  );
-}
-
-function PickerDestination<Value extends string>(
-  props: DrillProps<Value>,
-): React.JSX.Element {
-  return (
-    <Group modifiers={destinationModifiers(props.label)}>
-      <RNHostView>
-        <PickerSearchList {...props} />
-      </RNHostView>
-    </Group>
-  );
-}
-
-function destinationModifiers(
-  label: string,
-): ReturnType<typeof navigationTitle>[] {
-  return [navigationTitle(label), navigationBarTitleDisplayMode('inline')];
-}
-
-function routedProps<Value extends string>(
-  props: DrillProps<Value>,
-): Omit<React.ComponentProps<typeof RoutedFormSheet>, 'commands' | 'children'> {
+function sheetProps(
+  props: Pick<DrillProps<string>, 'open' | 'onClose' | 'label'>,
+): Pick<React.ComponentProps<typeof Sheet>, 'open' | 'onOpenChange' | 'label'> {
   return {
     open: props.open,
     label: props.label,
-    headerTitle: props.label,
     onOpenChange: (open): void => {
       if (!open) props.onClose();
     },

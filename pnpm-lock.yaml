@@ -530,6 +530,9 @@ catalogs:
     uniwind:
       specifier: 1.12.1
       version: 1.12.1
+    vaul:
+      specifier: 1.1.2
+      version: 1.1.2
     vite:
       specifier: 8.3.2
       version: 8.3.2
@@ -1149,6 +1152,9 @@ importers:
       uniwind:
         specifier: 'catalog:'
         version: 1.12.1(@expo/metro-config@57.0.12(expo@57.0.26)(supports-color@8.1.1)(typescript@7.0.2))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(tailwindcss@4.3.3)
+      vaul:
+        specifier: 'catalog:'
+        version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       xstate:
         specifier: 'catalog:'
         version: 5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759)

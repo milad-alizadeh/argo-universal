@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { useState } from 'react';
 import { Platform, View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
@@ -7,51 +6,24 @@ import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ConfigurationDrill } from './configuration-drill';
-import { ConfigurationPage } from './configuration-page';
 import { EffortControl, SwitchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
 
 interface MenuProps {
   configuration: ComposerConfigurationProps;
-  onOpenPage?: (page: 'agent' | 'model') => void;
 }
 
 interface ContentsProps extends MenuProps {
   wide: boolean;
-  openPage: (page: 'agent' | 'model') => void;
 }
 
+// Configure's settings: on a desktop the Agent and Model rows open popovers beside the menu; elsewhere they push the sheet's pages.
 export function AgentModelMenu(props: MenuProps): React.JSX.Element {
-  const wide = isDesktopMenu(useWide());
-  const [page, setPage] = useState<'settings' | 'agent' | 'model'>('settings');
-  const close = (): void => setPage('settings');
-  const openPage = props.onOpenPage ?? setPage;
-
-  return (
-    <ConfigurationMenuPage
-      {...props}
-      wide={wide}
-      page={page}
-      close={close}
-      openPage={openPage}
-    />
-  );
+  return <ConfigurationContents {...props} wide={isDesktopMenu(useWide())} />;
 }
 
-function ConfigurationMenuPage(
-  props: ContentsProps & {
-    page: 'settings' | 'agent' | 'model';
-    close: () => void;
-  },
-): React.JSX.Element {
-  if (props.page !== 'settings' && !props.wide)
-    return <ConfigurationPage {...props} page={props.page} />;
-
-  return <ConfigurationContents {...props} />;
-}
-
-function isDesktopMenu(wide: boolean): boolean {
+export function isDesktopMenu(wide: boolean): boolean {
   return wide && Platform.OS === 'web';
 }
 
@@ -107,10 +79,7 @@ function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
 }
 
 function ConfigurationDrillRows(props: ContentsProps): React.JSX.Element {
-  const drillProps = {
-    configuration: props.configuration,
-    onOpenPage: props.openPage,
-  };
+  const drillProps = { configuration: props.configuration, wide: props.wide };
 
   return (
     <>

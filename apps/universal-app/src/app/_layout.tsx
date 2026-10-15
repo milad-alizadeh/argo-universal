@@ -1,7 +1,6 @@
 import {
   AppProviders,
   PortalHost,
-  FormSheetProvider,
   type LeaveGuard,
   type Navigate,
   NavigationProvider,
@@ -13,7 +12,7 @@ import {
 import '../../global.css';
 import { registerDevMenuItems } from 'expo-dev-client';
 import { router, Stack, useNavigation } from 'expo-router';
-import { ThemeProvider } from 'expo-router/react-navigation';
+import { ThemeProvider, usePreventRemove } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
 import type * as React from 'react';
 import { useEffect } from 'react';
@@ -22,7 +21,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
-import { formSheetRoutes } from '@/navigation/form-sheet';
 import { hrefFor, paramsOf } from '@/navigation/routes';
 
 export {
@@ -61,29 +59,11 @@ const serverUrl =
 
 const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 
-// iOS opens this tall until its first page has measured itself.
-const sheetStartHeight = 0.4;
-
-const sheetOptions = {
-  presentation: 'formSheet' as const,
-  sheetAllowedDetents:
-    Platform.OS === 'android'
-      ? ('fitToContents' as const)
-      : [sheetStartHeight, 1],
-  sheetGrabberVisible: true,
-};
-
-// The page asks to hold its own removal; the router's beforeRemove lets it, and carries on when told to.
+// The page asks to hold its own removal; the router keeps it while asked, and carries on when told to.
 const useLeaveGuard: LeaveGuard = (active, onBlocked) => {
   const navigation = useNavigation();
-  useEffect(
-    () =>
-      navigation.addListener('beforeRemove', (event) => {
-        if (!active) return;
-        event.preventDefault();
-        onBlocked(() => navigation.dispatch(event.data.action));
-      }),
-    [navigation, active, onBlocked],
+  usePreventRemove(active, ({ data }) =>
+    onBlocked(() => navigation.dispatch(data.action)),
   );
 };
 
@@ -129,9 +109,7 @@ function ThemedApp(): React.JSX.Element {
 function RootNavigator(): React.JSX.Element {
   return (
     <NavigationProvider navigate={navigate} leaveGuard={useLeaveGuard}>
-      <FormSheetProvider routes={formSheetRoutes}>
-        <RootStack />
-      </FormSheetProvider>
+      <RootStack />
     </NavigationProvider>
   );
 }
@@ -141,8 +119,6 @@ function RootStack(): React.JSX.Element {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(shell)" />
-      <Stack.Screen name="agent-model" options={sheetOptions} />
-      <Stack.Screen name="form-sheet" options={sheetOptions} />
       <Stack.Screen name="(dev)/storybook" />
     </Stack>
   );

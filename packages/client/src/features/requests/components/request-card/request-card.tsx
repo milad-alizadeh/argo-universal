@@ -6,7 +6,7 @@ import {
   useContentWide,
 } from '#lib/product/content-layout';
 import { Text } from '#primitives/display/text';
-import { BottomSheet } from '#primitives/overlays/bottom-sheet';
+import { Sheet } from '#primitives/overlays/sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
 import { RequestFooter } from './request-footer';
@@ -127,17 +127,16 @@ function RequestError({ error }: Pick<RequestCardProps, 'error'>): ReactNode {
 
 function RequestSheet(props: RequestCardProps): ReactNode {
   return (
-    <BottomSheet
+    <Sheet
       open
       onOpenChange={() => {}}
       dismissible={false}
-      expandable
-      initialSize={props.surface === 'tray' ? 'medium' : undefined}
+      detents={['medium', 'large']}
       label={props.sheetLabel}
       footer={<SheetFooter {...props} />}
     >
       <SheetContents {...props} />
-    </BottomSheet>
+    </Sheet>
   );
 }
 

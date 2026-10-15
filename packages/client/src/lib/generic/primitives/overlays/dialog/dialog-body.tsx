@@ -3,7 +3,6 @@ import * as React from 'react';
 import { Text } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/display/icon';
-import { keepOpen } from '#primitives/overlays/bottom-sheet';
 import type { DialogContentProps as ContentProps } from './dialog-props';
 
 const contentClassName =
@@ -45,5 +44,12 @@ function contentProps({
     onCloseAutoFocus,
     className: cn(contentClassName, className),
     onEscapeKeyDown: keepOpen(dismissible),
+  };
+}
+
+// Radix closes a dialog on Escape unless the event is cancelled.
+function keepOpen(dismissible: boolean | undefined): (event: Event) => void {
+  return (event) => {
+    if (dismissible === false) event.preventDefault();
   };
 }
