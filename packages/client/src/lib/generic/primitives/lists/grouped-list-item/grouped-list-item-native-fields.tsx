@@ -1,12 +1,9 @@
 import { Column, type RowProps, Row, Text } from '@expo/ui';
 import { weight } from '@expo/ui/jetpack-compose/modifiers';
-import {
-  accessibilityHidden,
-  fixedSize,
-  frame,
-} from '@expo/ui/swift-ui/modifiers';
+import { fixedSize, frame } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
+import { rowLabelAccessibility } from './grouped-list-item-accessibility';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { subtitleRole, titleRole, useRowText } from './grouped-list-item-text';
 import { NativeRowImage, NativeRowStatus } from './native-row';
@@ -36,7 +33,7 @@ function labelModifiers(
 
   return [
     frame({ maxWidth: Infinity, alignment: 'leading' }),
-    accessibilityHidden(!!props.control),
+    ...rowLabelAccessibility(props),
   ];
 }
 

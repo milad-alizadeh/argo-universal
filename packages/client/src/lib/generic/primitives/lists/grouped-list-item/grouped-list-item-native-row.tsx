@@ -1,9 +1,10 @@
 import { Column, type RowProps, Row } from '@expo/ui';
 import { fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modifiers';
-import { accessibilityHidden, frame } from '@expo/ui/swift-ui/modifiers';
+import { frame } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { NativeSymbol } from '../../../symbols/native-symbol';
+import { rowContentAccessibility } from './grouped-list-item-accessibility';
 import { RowLabel, RowTrailing } from './grouped-list-item-native-fields';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { hasDisclosure } from './grouped-list-item-styles';
@@ -42,7 +43,7 @@ function Disclosure({ visible }: { visible: boolean }): React.ReactNode {
 }
 
 function useContentModifiers(props: GroupedListItemProps): Modifiers {
-  return ios ? [accessibilityHidden(!!props.detail)] : [fillMaxWidth()];
+  return [...rowContentAccessibility(props), ...(ios ? [] : [fillMaxWidth()])];
 }
 
 // Android values and large iOS text stack so neither can consume the label's width.
