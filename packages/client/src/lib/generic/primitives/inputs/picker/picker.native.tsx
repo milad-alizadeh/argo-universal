@@ -8,9 +8,9 @@ import {
   FieldDescriptionFooter,
   useFieldDescription,
 } from '#primitives/fields/field-description';
+import { ChoiceField, ChoiceHost } from '#primitives/native/choice-field';
 import { PickerDrillIn, drillInLimit } from './picker-drill-in';
 import { menuTag, messageTag, placeholderTag } from './picker-menu-tags';
-import { PickerNativeField, PickerNativeHost } from './picker-native-field';
 import type { PickerProps } from './picker-props';
 import {
   choosePickerOption,
@@ -32,6 +32,8 @@ export function Picker<Value extends string>(
 ): React.JSX.Element {
   const field = useFieldDescription(props);
 
+  if (props.options.length > drillInLimit) return <PickerDrillIn {...props} />;
+
   return createElement(
     View,
     { className: 'gap-2' },
@@ -43,14 +45,12 @@ export function Picker<Value extends string>(
 function PickerControl<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
-  if (props.options.length > drillInLimit) return <PickerDrillIn {...props} />;
-
   return (
-    <PickerNativeHost>
-      <PickerNativeField {...props}>
+    <ChoiceHost>
+      <ChoiceField {...props}>
         <PickerMenu {...props} />
-      </PickerNativeField>
-    </PickerNativeHost>
+      </ChoiceField>
+    </ChoiceHost>
   );
 }
 

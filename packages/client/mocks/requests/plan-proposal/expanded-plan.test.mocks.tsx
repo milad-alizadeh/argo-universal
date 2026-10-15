@@ -9,7 +9,6 @@ import {
   expandPlanLabel,
   type Story,
 } from './plan-proposal-story-context.test.mocks';
-import { checkExpandedSheet } from './sheet-gestures.test.mocks';
 
 export function expanded(width: number): Story {
   return {
@@ -17,12 +16,6 @@ export function expanded(width: number): Story {
     play: async ({ userEvent }) => {
       const canvas = within(document.body);
       await settleViewport(width);
-
-      if (width === layoutWidths.phone) {
-        await checkExpandedSheet(canvas, userEvent);
-
-        return;
-      }
 
       const collapsedHeight = canvas
         .getByRole('region', { name: documentLabel })

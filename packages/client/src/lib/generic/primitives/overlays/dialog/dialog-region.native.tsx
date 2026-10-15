@@ -1,13 +1,13 @@
 import type { ComponentType, ReactElement } from 'react';
-import { BottomSheet } from '#primitives/overlays/bottom-sheet';
+import { Sheet } from '#primitives/overlays/sheet';
 import type { DialogRegionProps } from './dialog-props';
 
-// The region opens tall and its content owns scrolling, so actions at its foot stay in view.
+// The region rests at the full height and its content owns scrolling, so actions at its foot stay in view.
 export function DialogRegion(props: DialogRegionProps): ReactElement {
   return (
-    <BottomSheet
+    <Sheet
       open
-      initialSize="expanded"
+      detents={['large']}
       contentScrolls
       label={props.label}
       onOpenChange={(open) => {
@@ -15,7 +15,7 @@ export function DialogRegion(props: DialogRegionProps): ReactElement {
       }}
     >
       {props.children}
-    </BottomSheet>
+    </Sheet>
   );
 }
 

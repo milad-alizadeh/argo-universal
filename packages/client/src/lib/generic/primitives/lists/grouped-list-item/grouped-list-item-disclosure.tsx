@@ -7,5 +7,7 @@ export function Disclosure({
 }: {
   visible: boolean;
 }): React.JSX.Element | null {
-  return visible ? <DisclosureChevron className="shrink-0" /> : null;
+  return visible ? (
+    <DisclosureChevron role="chevron" className="shrink-0" />
+  ) : null;
 }

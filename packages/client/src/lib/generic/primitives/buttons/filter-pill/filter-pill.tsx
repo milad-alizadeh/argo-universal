@@ -26,7 +26,7 @@ export function FilterPill(props: FilterPillProps): React.JSX.Element {
 
 const pillClass = (selected: boolean): string =>
   cn(
-    'h-7 flex-row items-center gap-1.5 rounded-full px-3 active:bg-pressed web:hover:bg-hover',
+    'h-7 flex-row items-center gap-1.5 rounded-full px-3 web:hover:bg-hover active:bg-pressed',
     selected && 'bg-selected',
   );
 

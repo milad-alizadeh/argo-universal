@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { BottomSheet } from '#primitives/overlays/bottom-sheet';
+import { Sheet } from '#primitives/overlays/sheet';
 import { resourceName } from '../../../../lib/product/markdown/resource-name';
 import { useWrittenPlanEscape } from '../../hooks/use-written-plan-escape';
 import { WrittenPlanContent } from './written-plan-content';
@@ -58,13 +58,13 @@ function PlanTray(props: PlanPresentation): React.JSX.Element {
 
 function PlanSheet(props: PlanPresentation): React.JSX.Element {
   return (
-    <BottomSheet {...planSheetProps(props)}>
+    <Sheet {...planSheetProps(props)}>
       <WrittenPlanContent
         plan={props.plan}
         title={props.title}
         layout="sheet"
       />
-    </BottomSheet>
+    </Sheet>
   );
 }
 
@@ -79,15 +79,15 @@ function markdownTitle(content: string): string {
 function planSheetProps(
   props: PlanPresentation,
 ): Pick<
-  React.ComponentProps<typeof BottomSheet>,
-  'open' | 'onOpenChange' | 'trigger' | 'label' | 'initialSize' | 'fit'
+  React.ComponentProps<typeof Sheet>,
+  'open' | 'onOpenChange' | 'trigger' | 'label' | 'detents'
 > {
   return {
     open: props.open,
     onOpenChange: props.setOpen,
     trigger: WrittenPlanTrigger(props),
     label: props.title,
-    initialSize: props.plan.type === 'markdown' ? 'expanded' : 'compact',
-    fit: props.plan.type === 'file',
+    // A written plan reads at the full height; a plan file's card is as tall as itself.
+    detents: props.plan.type === 'markdown' ? ['large'] : undefined,
   };
 }

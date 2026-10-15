@@ -10,7 +10,7 @@ export type HostProps = Omit<
   ignoreSafeArea?: 'all';
 };
 
-// A native Host in Argo's Appearance. The accent token is the only colour native controls get: Android builds its Material palette from it, iOS tints with it.
+// The Host supplies Appearance and the accent; primitives map colours through public component APIs.
 export function Host({ children, ...props }: HostProps): React.JSX.Element {
   const theme = useNativeTheme();
 

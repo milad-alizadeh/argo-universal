@@ -95,7 +95,7 @@ When(
   async ({ page }, model: string, effort: string): Promise<void> => {
     await page.getByRole('button', { name: agentModelLabel }).click();
     await page.getByRole('button', { name: chooseModelLabel }).click();
-    await page.getByRole('button', { name: model, exact: true }).click();
+    await page.getByRole('radio', { name: model, exact: true }).click();
     await reopenConfiguration(page);
     await expectModel(page, model);
     await chooseEffort(page, effort);

@@ -10,10 +10,11 @@ const buttonClasses = cva(
         default:
           'bg-primary web:shadow-control active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
         outline:
-          'border border-border bg-background active:bg-pressed web:hover:bg-hover web:active:bg-pressed dark:bg-border/30',
+          'border border-border bg-background active:bg-pressed web:hover:bg-hover dark:bg-border/30 dark:active:bg-pressed web:dark:hover:bg-hover',
         secondary:
-          'border border-border bg-background active:bg-pressed web:hover:bg-hover web:active:bg-pressed dark:bg-border/30',
-        ghost: 'active:bg-pressed web:hover:bg-hover web:active:bg-pressed',
+          'border border-border bg-background active:bg-pressed web:hover:bg-hover dark:bg-border/30 dark:active:bg-pressed web:dark:hover:bg-hover',
+        ghost:
+          'active:bg-pressed dark:active:bg-pressed web:hover:bg-hover web:dark:hover:bg-hover',
         link: '',
       },
       size: {
@@ -62,11 +63,10 @@ const textClasses = cva(
       variant: {
         default: 'text-primary-foreground',
         outline:
-          'text-foreground group-active:text-hover-foreground web:group-hover:text-hover-foreground',
+          'text-foreground group-active:text-foreground web:group-hover:text-foreground',
         secondary:
-          'text-foreground group-active:text-hover-foreground web:group-hover:text-hover-foreground',
-        ghost:
-          'text-foreground group-active:text-hover-foreground ios:font-normal',
+          'text-foreground group-active:text-foreground web:group-hover:text-foreground',
+        ghost: 'text-foreground group-active:text-foreground ios:font-normal',
         link: 'text-primary web:underline-offset-4 group-active:underline web:group-hover:underline ios:font-normal',
       },
       destructive: { true: 'text-danger' },

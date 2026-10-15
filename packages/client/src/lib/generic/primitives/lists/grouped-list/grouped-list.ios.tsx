@@ -8,6 +8,7 @@ import {
 import type * as React from 'react';
 import { FieldLayout } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
+import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListProps } from './grouped-list-props';
 import { GroupedList as WebGroupedList } from './grouped-list.tsx';
@@ -34,14 +35,36 @@ function PhoneFields({
   variant,
   children,
 }: GroupedListProps): React.JSX.Element {
-  if (variant === 'sidebar')
-    return (
-      <List modifiers={[listStyle('plain'), scrollContentBackground('hidden')]}>
-        {children}
-      </List>
-    );
+  return variant === 'sidebar' ? (
+    <SidebarFields>{children}</SidebarFields>
+  ) : (
+    <GroupedFields>{children}</GroupedFields>
+  );
+}
 
-  return <FieldGroup>{children}</FieldGroup>;
+function SidebarFields({
+  children,
+}: Pick<GroupedListProps, 'children'>): React.JSX.Element {
+  return (
+    <List modifiers={[listStyle('plain'), scrollContentBackground('hidden')]}>
+      {children}
+    </List>
+  );
+}
+
+function GroupedFields({
+  children,
+}: Pick<GroupedListProps, 'children'>): React.JSX.Element {
+  const { content } = useNativeTheme().colors;
+
+  return (
+    <FieldGroup
+      style={{ backgroundColor: content }}
+      modifiers={[scrollContentBackground('hidden')]}
+    >
+      {children}
+    </FieldGroup>
+  );
 }
 
 GroupedList satisfies React.ComponentType<GroupedListProps>;

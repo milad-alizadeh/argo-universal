@@ -4,16 +4,16 @@ import {
   fillMaxWidth,
   padding,
 } from '@expo/ui/jetpack-compose/modifiers';
-import { frame } from '@expo/ui/swift-ui/modifiers';
+import { accessibilityHidden, frame } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { useSidebarList } from '#primitives/fields/field-layout';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { rowDisclosureAccessibility } from './grouped-list-item-accessibility';
 import { RowTrailing } from './grouped-list-item-native-fields';
 import { RowHeadline } from './grouped-list-item-native-headline';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { hasDisclosure } from './grouped-list-item-styles';
+import { NativeRowStatus } from './native-row';
 
 type Modifiers = NonNullable<RowProps['modifiers']>;
 
@@ -34,9 +34,9 @@ const reflowFontScale = 1.5;
 
 const reflowSpacing = 8;
 
-// A native row's icon, title and subtitle, value and status, and disclosure chevron.
+// Status and controls stay beside the chevron even when the label and value reflow.
 export function RowContent(props: GroupedListItemProps): React.JSX.Element {
-  const modifiers = useContentModifiers();
+  const modifiers = useContentModifiers(props);
 
   return (
     <Row
@@ -46,6 +46,7 @@ export function RowContent(props: GroupedListItemProps): React.JSX.Element {
       modifiers={modifiers}
     >
       <RowFields {...props} />
+      <NativeRowStatus {...props} />
       <Disclosure visible={hasDisclosure(props)} />
     </Row>
   );
@@ -55,19 +56,17 @@ function Disclosure({ visible }: { visible: boolean }): React.ReactNode {
   if (!visible) return null;
 
   return (
-    <Row modifiers={rowDisclosureAccessibility()}>
-      <NativeSymbol name="chevron-right" role={ios ? 'body' : 'row'} muted />
-    </Row>
+    <NativeSymbol name="chevron-right" role={ios ? 'body' : 'row'} muted />
   );
 }
 
 // The Form sizes and pads an iOS row, and starts its separator under the Label's title.
-function useContentModifiers(): Modifiers {
+function useContentModifiers(props: GroupedListItemProps): Modifiers {
   const sidebar = useSidebarList();
 
   if (!ios) return [fillMaxWidth(), ...flatRowModifiers(sidebar)];
 
-  return [];
+  return [accessibilityHidden(!!props.detail)];
 }
 
 // Android's Section pads its rows on Material's tile; a flat sidebar row pads itself.

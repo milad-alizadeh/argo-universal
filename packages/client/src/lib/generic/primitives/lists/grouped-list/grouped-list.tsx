@@ -15,7 +15,7 @@ export function GroupedList({
   fit,
 }: GroupedListProps): React.JSX.Element {
   return (
-    <FieldLayout value={variant}>
+    <FieldLayout value={listLayout(fit, variant)}>
       <GroupScroll fit={fit} variant={variant}>
         {children}
       </GroupScroll>
@@ -49,7 +49,16 @@ function groupClasses(
 }
 
 function groupSpacing(fit: boolean | undefined): string {
-  return fit ? 'gap-4 p-4 wide:p-0' : cn(groupedListGap, groupedListPadding);
+  return fit
+    ? 'gap-4 p-4 wide:gap-2 wide:p-1'
+    : cn(groupedListGap, groupedListPadding);
 }
 
 GroupedList satisfies React.ComponentType<GroupedListProps>;
+
+function listLayout(
+  fit: GroupedListProps['fit'],
+  variant: GroupedListProps['variant'],
+): React.ContextType<typeof FieldLayout> {
+  return fit && variant === 'grouped' ? 'overlay' : variant;
+}

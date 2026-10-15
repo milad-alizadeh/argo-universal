@@ -33,6 +33,8 @@ catalog:
   "@electron-forge/shared-types": 8.0.1
   "@electron/fuses": 2.1.3
   "@expo/ui": 57.0.22
+  # The drawer @expo/ui's universal BottomSheet draws on the web; the web Sheet uses it directly for what that wrapper leaves out.
+  vaul: 1.1.2
   # Native toasts; Expo SDK 57 lists no version for it, so this is its newest release.
   burnt: 0.13.0
   "@playwright/test": 1.63.0
@@ -167,7 +169,6 @@ hoistPattern:
   - "*"
 
 patchedDependencies:
-  "@expo/ui@57.0.22": patches/@expo__ui@57.0.22.patch
   expo-symbols@57.0.3: patches/expo-symbols@57.0.3.patch
   node-pty@1.1.0: patches/node-pty@1.1.0.patch
   react-native@0.86.3: patches/react-native@0.86.3.patch

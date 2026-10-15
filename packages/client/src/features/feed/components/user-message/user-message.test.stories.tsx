@@ -95,7 +95,9 @@ function opensImage(agent: MockAgent, width: number): Story {
         thumbnailWidth,
       );
       await userEvent.keyboard('{Escape}');
-      await expect(within(document.body).queryByRole('dialog')).toBeNull();
+      await waitFor(() =>
+        expect(within(document.body).queryByRole('dialog')).toBeNull(),
+      );
     },
   };
 }

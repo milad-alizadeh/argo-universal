@@ -146,6 +146,6 @@ async function selectNarrowerModel(
   const overlay = within(document.body);
   await userEvent.click(overlay.getByRole('button', { name: /^Model,/ }));
   await userEvent.click(
-    await overlay.findByRole('button', { name: recorded.narrower.name }),
+    await overlay.findByRole('radio', { name: recorded.narrower.name }),
   );
 }

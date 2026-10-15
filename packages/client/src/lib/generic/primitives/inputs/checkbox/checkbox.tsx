@@ -103,7 +103,7 @@ function controlClass(props: CheckboxProps): string {
 function optionClass(props: CheckboxProps): string {
   return cn(
     'min-h-9 rounded-lg bg-transparent px-2.5 py-2',
-    props.value && 'bg-foreground/4',
+    props.value && 'bg-selected',
   );
 }
 
