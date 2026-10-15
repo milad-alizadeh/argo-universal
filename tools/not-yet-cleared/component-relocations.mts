@@ -101,7 +101,7 @@ const componentFolders: [string, string[]][] = [
       'lists/grouped-list-item',
       'lists/grouped-list-section',
       'overlays/alert',
-      'overlays/bottom-sheet',
+      'overlays/sheet',
       'overlays/menu',
     ],
   ],

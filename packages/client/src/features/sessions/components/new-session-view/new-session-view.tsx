@@ -8,6 +8,7 @@ import {
   type ComposerDraft,
   StartSessionIn,
 } from '#features/composer';
+import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
@@ -67,7 +68,12 @@ const openFailed = (message: string): ErrorToast => ({
 });
 
 // The header stays empty until the first prompt starts the Session and gives it a title.
-const newSessionTitle = null;
+const newSessionHeader = (
+  <>
+    <PhoneTitle title="" />
+    <PageHeader title={null} />
+  </>
+);
 
 // The Composer of a Session not yet opened: its first prompt opens it with the chosen Agent, model and effort.
 export function NewSessionView(props: NewSessionViewProps): React.JSX.Element {
@@ -75,11 +81,7 @@ export function NewSessionView(props: NewSessionViewProps): React.JSX.Element {
   useErrorToast(props.state === 'load-failed' ? loadFailed : undefined);
 
   if (props.state !== 'ready')
-    return (
-      <Screen edges={['bottom']}>
-        <PageHeader title={newSessionTitle} />
-      </Screen>
-    );
+    return <Screen edges={['bottom']}>{newSessionHeader}</Screen>;
 
   return <ReadyNewSessionView {...props} />;
 }
@@ -159,7 +161,7 @@ function ReadyNewSessionView(
 
   return (
     <SessionLayout
-      header={<PageHeader title={newSessionTitle} />}
+      header={newSessionHeader}
       feed={<NewSessionFeed starting={props.starting} />}
       composer={<NewSessionComposer {...props} />}
     />

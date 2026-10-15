@@ -4,8 +4,6 @@ import { ScrollView } from 'react-native';
 import {
   SessionsHeader,
   SessionsScreen,
-  sessionsHeaderItems,
-  sessionsHeaderSearch,
   useSessionsFilter,
 } from '#features/sessions';
 import { SettingsNavigationList } from '#features/settings';
@@ -14,7 +12,6 @@ import {
   type NavigationDestination,
   useNavigate,
 } from '#lib/product/navigation/context';
-import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
 import { Text } from '#primitives/display/text';
 import { SearchField } from '#primitives/inputs/search-field';
 import type { Section } from '../../../lib/product/navigation/sections';
@@ -23,8 +20,6 @@ import { shellSections } from '../components/shell-sections';
 export interface SectionList {
   // The list's own part of the wide window's header row, when it has one.
   header?: ReactNode;
-  // The list's trailing items and search in a phone's native header.
-  phoneHeader?: Pick<ScreenHeaderProps, 'right' | 'search'>;
   list: ReactNode;
 }
 
@@ -67,10 +62,6 @@ function sessionsList({
 
   return {
     header: <SessionsHeader {...sessionsFilter} onNewSession={newSession} />,
-    phoneHeader: {
-      right: sessionsHeaderItems(sessionsFilter),
-      search: sessionsHeaderSearch(sessionsFilter, newSession),
-    },
     list: sessionsScreen(sessionsFilter, selectedDestination),
   };
 }
@@ -104,21 +95,22 @@ function settingsList(
   };
 }
 
-// Placeholders until each section's list screen is built.
-function placeholderList(section: Section): SectionList {
-  return {
-    list: (
-      // Insets itself below a transparent header.
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="px-gutter py-6"
-      >
-        <Text role="secondary">
-          {shellSections[section].title} list will appear here.
-        </Text>
-      </ScrollView>
-    ),
-  };
+// A placeholder until the section's list screen is built; insets itself below a transparent header.
+export function PlaceholderList({
+  section,
+}: {
+  section: Section;
+}): React.JSX.Element {
+  const { title } = shellSections[section];
+
+  return (
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="px-gutter py-6"
+    >
+      <Text role="secondary">{title} list will appear here.</Text>
+    </ScrollView>
+  );
 }
 
 // A section's list and its header row: full screen on a phone, and in the sidebar on a wide window.
@@ -136,5 +128,5 @@ export function useSectionList(
   if (section === 'settings')
     return settingsList(settingsSearch, selectedDestination);
 
-  return placeholderList(section);
+  return { list: <PlaceholderList section={section} /> };
 }

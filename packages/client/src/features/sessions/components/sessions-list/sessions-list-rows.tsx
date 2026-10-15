@@ -62,8 +62,13 @@ export function EmptySessionsList(
   );
 }
 
+type SessionListRowProps = Pick<
+  SessionRowProps,
+  'session' | 'logo' | 'selected' | 'trailing' | 'onSelect'
+>;
+
 export const SessionListRow = memo(function SessionListRow(
-  props: Pick<SessionRowProps, 'session' | 'logo' | 'selected' | 'onSelect'>,
+  props: SessionListRowProps,
 ) {
   return (
     <View

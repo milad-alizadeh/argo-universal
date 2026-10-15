@@ -1,12 +1,10 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { homePath } from '../../state/home-path';
 import { NewSessionsSection } from './project-detail-new-sessions';
 import { RemoveProject } from './project-detail-remove';
@@ -41,16 +39,9 @@ export function ProjectDetailView(
 ): React.JSX.Element {
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <PhoneTitle title={props.name} />
       <ProjectPage {...props} />
     </View>
   );
-}
-
-function PhoneTitle({ title }: { title: string }): React.JSX.Element | null {
-  if (useWide()) return null;
-
-  return <ScreenHeader title={title} />;
 }
 
 function ProjectPage(props: ProjectDetailViewProps): React.JSX.Element {

@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { HeaderButton } from '#lib/product/header-button';
+import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
 import {
   ScreenHeader,
   type ScreenHeaderProps,
@@ -71,7 +71,7 @@ function AgentsFilterMenu(props: AgentsFilterProps): React.JSX.Element {
 function filterTrigger(filter: AgentsFilter): React.JSX.Element {
   return (
     <HeaderButton
-      icon="filters"
+      icon={headerFilterIcon}
       paired
       dot={filter === 'all' ? undefined : 'filter'}
       accessibilityLabel="Filter Agents"

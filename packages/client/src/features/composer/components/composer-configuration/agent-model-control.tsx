@@ -1,18 +1,20 @@
 import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
 import type * as React from 'react';
+import { useState } from 'react';
 import { useContentWide } from '#lib/product/content-layout';
 import { Button } from '#primitives/buttons/button';
 import { Spinner } from '#primitives/display/spinner';
+import { Sheet, useSheet } from '#primitives/overlays/sheet';
+import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ComposerPopover } from '../composer-popover/composer-popover';
+import { AgentChoices } from './agent-choices';
 import { AgentIcon } from './agent-icon';
-import { AgentModelMenu } from './agent-model-menu';
+import { AgentModelMenu, isDesktopMenu } from './agent-model-menu';
 import { AgentModelTrailing } from './agent-model-trailing';
-import {
-  useAgentModelSheet,
-  useCommitEffortFallback,
-} from './configuration-effects';
+import { useCommitEffortFallback } from './configuration-effects';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { selectedChoice, selection, modelName } from './configuration-values';
+import { ModelChoices } from './model-choices';
 
 interface ControlProps {
   configuration: ComposerConfigurationProps;
@@ -30,14 +32,20 @@ export function ComposerAgentModelControl(
   props: ControlProps,
 ): React.JSX.Element | null {
   const agent = selectedAgent(props.configuration);
-  const presentSheet = useAgentModelSheet(props.configuration);
   const wide = useContentWide();
+
   useCommitEffortFallback(props.configuration);
 
   if (!selection(props.configuration, 'model') && !agent) return null;
-  const popoverProps = { ...props, agent, wide, onPresent: presentSheet };
 
-  return <AgentModelPopover {...popoverProps} />;
+  return <AgentModelOverlay {...props} agent={agent} wide={wide} />;
+}
+
+// Desktop opens the menu as a popover; everything else opens the Sheet.
+function AgentModelOverlay(props: TriggerProps): React.JSX.Element {
+  if (isDesktopMenu(useWide())) return <AgentModelPopover {...props} />;
+
+  return <AgentModelSheet {...props} />;
 }
 
 const agentModelPopoverLayout = {
@@ -45,20 +53,65 @@ const agentModelPopoverLayout = {
   className: 'shrink min-w-0',
 };
 
-function AgentModelPopover(
-  props: TriggerProps & { onPresent?: () => void },
-): React.JSX.Element {
+// A desktop window keeps Configure in a popover, its Agent and Model choices in popovers beside it.
+function AgentModelPopover(props: TriggerProps): React.JSX.Element {
   return (
     <ComposerPopover
       listContent
       label="Agent and model"
       {...agentModelPopoverLayout}
-      onPresent={props.onPresent}
       trigger={agentModelTrigger(props)}
     >
       {() => <AgentModelMenu configuration={props.configuration} />}
     </ComposerPopover>
   );
+}
+
+// Elsewhere Configure is a sheet whose Agent and Model rows push their choices as pages.
+function AgentModelSheet(props: TriggerProps): React.JSX.Element {
+  const [open, setOpen] = useState(false);
+
+  if (props.disabled && open) setOpen(false);
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={setOpen}
+      label="Agent and model"
+      trigger={agentModelTrigger(props)}
+      contentScrolls
+    >
+      {configurationPages(props.configuration)}
+    </Sheet>
+  );
+}
+
+// The sheet reads its pages from its children, so they are elements, not a component of their own.
+function configurationPages(
+  configuration: ComposerConfigurationProps,
+): React.JSX.Element[] {
+  return [
+    <Sheet.Page key="configure" name="configure" title="Configure">
+      <AgentModelMenu configuration={configuration} />
+    </Sheet.Page>,
+    <Sheet.Page key="agent" name="agent" title="Select Agent">
+      <ConfigurationChoices configuration={configuration} page="agent" />
+    </Sheet.Page>,
+    <Sheet.Page key="model" name="model" title="Select Model">
+      <ConfigurationChoices configuration={configuration} page="model" />
+    </Sheet.Page>,
+  ];
+}
+
+// A choice is made, so the sheet goes back to Configure.
+function ConfigurationChoices(props: {
+  configuration: ComposerConfigurationProps;
+  page: 'agent' | 'model';
+}): React.JSX.Element {
+  const sheet = useSheet();
+  const Choices = props.page === 'agent' ? AgentChoices : ModelChoices;
+
+  return <Choices configuration={props.configuration} onSelect={sheet.back} />;
 }
 
 function agentModelTrigger(props: TriggerProps): React.JSX.Element {

@@ -5,11 +5,8 @@ import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { motionDuration } from '#lib/generic/motion';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
-import { useHeaderCover } from '#lib/product/navigation/screen-header';
 import { SessionColumn } from '#lib/product/session-column';
 import { Icon } from '#primitives/display/icon';
-import { ShimmerText } from '../shimmer-text';
-import { WorkingMark } from '../working-mark';
 
 // How far Jump to latest sits above the Composer's top, on every device.
 const jumpToLatestGap = 12;
@@ -66,34 +63,6 @@ function JumpToLatestButton(props: JumpToLatestProps): React.JSX.Element {
   );
 }
 
-function LoadingEarlier(): React.JSX.Element {
-  return (
-    <View
-      role="progressbar"
-      accessibilityLabel="Loading earlier"
-      className="min-h-5 flex-row items-center justify-center gap-1.5"
-    >
-      <WorkingMark />
-      <ShimmerText text="Loading earlier" className="type-body" />
-    </View>
-  );
-}
-
-// Over the list, so keeping the reading position never scrolls it out of view.
-function LoadingEarlierOverlay(): React.JSX.Element {
-  const headerCover = useHeaderCover();
-
-  return (
-    <View
-      className="absolute top-4 self-center rounded-full bg-content px-2 wide:top-6"
-      // Below a transparent header, which lies over the Feed's top.
-      style={{ marginTop: headerCover }}
-    >
-      <LoadingEarlier />
-    </View>
-  );
-}
-
 interface JumpToLatestWhenAwayProps {
   list: RefObject<LegendListRef | null>;
   newestKey: string;
@@ -101,7 +70,7 @@ interface JumpToLatestWhenAwayProps {
   newestKeyWhenLeftEnd: string | null;
 }
 
-function JumpToLatestWhenAway({
+export function JumpToLatestWhenAway({
   list,
   newestKey,
   newestKeyWhenLeftEnd,
@@ -113,21 +82,5 @@ function JumpToLatestWhenAway({
       hasNewRows={newestKeyWhenLeftEnd !== newestKey}
       onPress={() => void list.current?.scrollToEnd({ animated: true })}
     />
-  );
-}
-
-export interface FeedOverlaysProps extends JumpToLatestWhenAwayProps {
-  loadingOlder: boolean;
-}
-
-export function FeedOverlays({
-  loadingOlder,
-  ...jump
-}: FeedOverlaysProps): React.JSX.Element {
-  return (
-    <>
-      <JumpToLatestWhenAway {...jump} />
-      {loadingOlder && <LoadingEarlierOverlay />}
-    </>
   );
 }

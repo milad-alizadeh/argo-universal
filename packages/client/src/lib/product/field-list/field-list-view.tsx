@@ -3,7 +3,6 @@ import type * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, View, type ViewStyle } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import type { DockedSearchQuery } from '#primitives/inputs/search-field';
 import {
   groupedListGap,
   groupedListPadding,
@@ -25,8 +24,6 @@ export type { FieldListSection } from './field-list-entries';
 
 export interface FieldListProps {
   sections: readonly FieldListSection[];
-  // A phone's search above the sections; the native GroupedList draws it, as a wide window searches from its title row.
-  search?: DockedSearchQuery;
   testID?: string;
 }
 

@@ -1,17 +1,16 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { PhoneHeader } from './project-list-phone-header';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
 import { LoadedProjects } from './project-list-rows';
-import { listSearch, pageSearch, searchLabel } from './project-list-search';
+import { pageSearch } from './project-list-search';
 
 // The Server's Projects, found by name or folder; each opens its own page.
 export function ProjectListView(
@@ -24,19 +23,6 @@ export function ProjectListView(
       <PhoneHeader onSearch={setSearch} />
       <ProjectsPage {...props} search={search} onSearch={setSearch} />
     </View>
-  );
-}
-
-function PhoneHeader({
-  onSearch,
-}: Pick<SearchedProps, 'onSearch'>): React.JSX.Element | null {
-  if (useWide()) return null;
-
-  return (
-    <ScreenHeader
-      title="Projects"
-      search={{ placeholder: searchLabel, onChangeText: onSearch }}
-    />
   );
 }
 
@@ -80,7 +66,7 @@ function ProjectsBody(props: SearchedProps): React.JSX.Element {
 
   if (projects.status !== 'loaded')
     return (
-      <GroupedList search={listSearch(props)}>
+      <GroupedList>
         <GroupedListSection>
           <GroupedListItem label="Loading Projects…" loading />
         </GroupedListSection>

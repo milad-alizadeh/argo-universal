@@ -14,6 +14,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@expo/material-symbols": "catalog:",
     "@expo/ui": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@react-native-community/datetimepicker": "catalog:",

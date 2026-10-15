@@ -1,21 +1,13 @@
-import { Text, useTextStyle } from '@repo/client';
+import { Text } from '@repo/client';
 import type { NativeStackNavigationOptions } from 'expo-router';
 import type { JSX } from 'react';
 import { Platform } from 'react-native';
 
-type HeaderTitleOptions = Pick<
-  NativeStackNavigationOptions,
-  'headerTitle' | 'headerTitleStyle'
->;
+type HeaderTitleOptions = Pick<NativeStackNavigationOptions, 'headerTitle'>;
 
-export function useHeaderTitleOptions(): HeaderTitleOptions {
-  const headerTitleStyle = useTextStyle('nav-title');
-
-  // CSS loads after the web style resolver's first snapshot; draw the role directly.
-  return Platform.OS === 'web'
-    ? { headerTitle: HeaderTitle }
-    : { headerTitleStyle };
-}
+// Native headers keep the stock title; CSS loads after the web style resolver's first snapshot, so the web draws the role directly.
+export const headerTitleOptions: HeaderTitleOptions =
+  Platform.OS === 'web' ? { headerTitle: HeaderTitle } : {};
 
 function HeaderTitle({ children }: { children: string }): JSX.Element {
   return (

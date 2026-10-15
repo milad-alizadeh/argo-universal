@@ -49,8 +49,6 @@
         // 1 arbitrary
         "packages/client/src/features/frame/components/onboarding-shell/onboarding-shell.test.stories.tsx",
         // 1 arbitrary
-        "packages/client/src/features/frame/components/phone-section-view/phone-section-view.stories.tsx",
-        // 1 arbitrary
         "packages/client/src/features/frame/components/phone-shell-card/phone-shell-card.web.tsx",
         // 2 colour
         "packages/client/src/features/frame/components/phone-shell/phone-drawer-content.tsx",
@@ -114,8 +112,6 @@
         "packages/client/src/lib/generic/primitives/lists/grouped-list-item/grouped-list-item-styles.ts",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/overlays/alert/alert.tsx",
-        // 3 arbitrary, 1 palette
-        "packages/client/src/lib/generic/primitives/overlays/bottom-sheet/bottom-sheet-surface-props.ts",
         // 2 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/overlays/dialog/dialog-body.tsx",
         // 1 arbitrary, 1 palette

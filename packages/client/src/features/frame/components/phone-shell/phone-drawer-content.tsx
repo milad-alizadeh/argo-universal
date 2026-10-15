@@ -60,7 +60,7 @@ function SectionButton({
   );
 }
 
-// The header bar's own height, so the title sits level with ☰ and the page's title; on Android the first row then sits level with the docked search.
+// The header bar's own height, so the title sits level with ☰ and the page's title.
 function DrawerTitle(): React.JSX.Element {
   return (
     <View className="justify-center px-3" style={{ height: headerBarHeight }}>
