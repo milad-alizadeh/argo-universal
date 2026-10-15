@@ -48,7 +48,7 @@ export function ConnectionBanner({
       <LiquidGlass
         corners="capsule"
         className="h-9 self-center wide:h-8"
-        fallbackClassName="rounded-full bg-card shadow-card dark:border dark:border-border"
+        fallbackClassName="rounded-full bg-card shadow-raised wide:shadow-card dark:border dark:border-border"
       >
         <View
           role="status"
