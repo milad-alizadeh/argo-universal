@@ -4,8 +4,6 @@ import {
   FormSheetProvider,
   type LeaveGuard,
   type Navigate,
-  type NativeSheets,
-  NativeSheetsProvider,
   NavigationProvider,
   type RenderSymbolImage,
   SymbolImagesProvider,
@@ -62,14 +60,6 @@ const serverUrl =
   'ws://127.0.0.1:7337';
 
 const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
-
-// Phones present Composer menus as native sheets; the Agent and model one has its own stack.
-const nativeSheets: NativeSheets | undefined =
-  Platform.OS === 'web'
-    ? undefined
-    : {
-        agentModel: () => router.push('/agent-model'),
-      };
 
 // iOS opens this tall until its first page has measured itself.
 const sheetStartHeight = 0.4;
@@ -139,11 +129,9 @@ function ThemedApp(): React.JSX.Element {
 function RootNavigator(): React.JSX.Element {
   return (
     <NavigationProvider navigate={navigate} leaveGuard={useLeaveGuard}>
-      <NativeSheetsProvider value={nativeSheets}>
-        <FormSheetProvider routes={formSheetRoutes}>
-          <RootStack />
-        </FormSheetProvider>
-      </NativeSheetsProvider>
+      <FormSheetProvider routes={formSheetRoutes}>
+        <RootStack />
+      </FormSheetProvider>
     </NavigationProvider>
   );
 }

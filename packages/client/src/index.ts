@@ -9,8 +9,6 @@ export {
 export {
   AgentModelSheetChoices,
   AgentModelSheetSettings,
-  type NativeSheets,
-  NativeSheetsProvider,
 } from '#features/composer';
 
 export { ConnectionDetailScreen, useConnection } from '#features/connection';
