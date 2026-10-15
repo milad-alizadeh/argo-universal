@@ -37,16 +37,15 @@ const componentFolders: [string, string[]][] = [
   [
     'features/frame/components',
     [
-      'desktop-layout-view',
-      'desktop-shell',
+      'frame-backdrop',
+      'frame-pane',
+      'frame-rail',
       'glass-surface',
       'panel-resize-handle',
       'phone-drawer',
       'phone-section-view',
-      'phone-shell',
+      'compact-frame',
       'phone-shell-card',
-      'shell-backdrop',
-      'shell-pane',
     ],
   ],
   [
@@ -82,7 +81,7 @@ const componentFolders: [string, string[]][] = [
       'settings-list',
     ],
   ],
-  ['lib/generic', ['page-title-row', 'scroll-fade', 'use-wide']],
+  ['lib/generic', ['page-title-row', 'use-wide']],
   [
     'lib/generic/primitives',
     [
@@ -93,6 +92,7 @@ const componentFolders: [string, string[]][] = [
       'display/badge',
       'display/collapsible',
       'display/icon',
+      'inputs/combobox-search',
       'inputs/search-field',
       'inputs/slider',
       'inputs/text-input',
@@ -100,12 +100,12 @@ const componentFolders: [string, string[]][] = [
       'lists/grouped-list-item',
       'lists/grouped-list-section',
       'overlays/alert',
-      'overlays/bottom-sheet',
+      'overlays/sheet',
       'overlays/menu',
     ],
   ],
   ['lib/generic/symbols', ['symbol-glyph']],
-  ['lib/product', ['field-list', 'screen', 'status-indicator']],
+  ['lib/product', ['field-list', 'screen', 'scroll-fade', 'status-indicator']],
   ['lib/product/markdown', ['code-block-title', 'feed-code-block']],
 ];
 

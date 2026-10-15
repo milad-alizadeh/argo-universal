@@ -31,7 +31,7 @@ function MenuTextTrigger({
       accessibilityRole="button"
       accessibilityLabel={label}
       {...props}
-      className="h-5 flex-row items-center gap-1 rounded-sm px-1 web:outline-none web:hover:bg-selected web:focus-visible:bg-selected"
+      className="h-5 flex-row items-center gap-1 rounded-sm px-1 web:outline-none web:hover:bg-hover web:focus-visible:bg-hover"
     >
       <MenuTextTriggerContent label={label} />
     </Pressable>

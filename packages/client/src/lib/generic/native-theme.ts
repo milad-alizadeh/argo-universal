@@ -4,13 +4,11 @@ import { usePrimitiveColor } from '#primitives/native/primitive-color';
 
 const colorTokens = [
   ['accent', '--color-accent'],
-  ['background', '--color-background'],
   ['foreground', '--color-foreground'],
   ['muted', '--color-muted'],
   ['mutedForeground', '--color-muted-foreground'],
   ['card', '--color-card'],
   ['content', '--color-content'],
-  ['cardForeground', '--color-card-foreground'],
   ['primary', '--color-primary'],
   ['primaryForeground', '--color-primary-foreground'],
   ['border', '--color-border'],
@@ -25,7 +23,7 @@ type TokenRole = (typeof colorTokens)[number][0];
 type DisabledRole = 'disabledContent' | 'disabledContainer';
 
 // A colour is missing only while Uniwind has not resolved its token.
-export type NativeColors = Partial<Record<TokenRole | DisabledRole, string>>;
+type NativeColors = Partial<Record<TokenRole | DisabledRole, string>>;
 
 export interface NativeTheme {
   colorScheme: 'light' | 'dark';

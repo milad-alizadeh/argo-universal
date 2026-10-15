@@ -10,12 +10,8 @@ import { cn } from '#lib/generic/utils';
 import { ButtonGroup } from '#primitives/buttons/button-group';
 import { Menu } from '#primitives/overlays/menu';
 import { chevron } from './split-button-chevron';
-import type {
-  SplitButtonProps,
-  SplitMenuItems,
-  SplitMenuProps,
-} from './split-button-props';
-import { ChoiceSheet } from './split-button-sheet';
+import { menuRows } from './split-button-items';
+import type { SplitButtonProps, SplitMenuProps } from './split-button-props';
 
 export type {
   SplitButtonOption,
@@ -30,7 +26,7 @@ type GroupLook = Pick<
 
 type ActingButton = SplitButtonProps['children'];
 
-// A button with a chevron that picks what it does or opens actions of its own; wide opens a menu, narrow a Sheet.
+// A button with a chevron that picks what it does or opens actions of its own, from Argo's menu; phones draw it natively.
 export function SplitButton<Value extends string>({
   children,
   ...props
@@ -50,7 +46,7 @@ function groupClassName(props: GroupLook): string | undefined {
   if (props.size !== 'xs') return props.className;
 
   return cn(
-    'rounded-md web:shadow-xs',
+    'rounded-md web:rounded-control web:shadow-control',
     props.disabled && 'opacity-35',
     props.className,
   );
@@ -73,8 +69,9 @@ function undimmed(button: ActingButton): ReactElement {
   });
 }
 
+// Spans the group's height, which grows to the touch size on phones, with its line centred.
 const divider = (
-  <View key="divider" className="h-7 w-px justify-center bg-primary">
+  <View key="divider" className="w-px self-stretch justify-center bg-primary">
     <View className="h-3.5 bg-primary-foreground/25" />
   </View>
 );
@@ -93,23 +90,12 @@ function SplitMenu<Value extends string>({
   height,
   ...props
 }: SplitMenuProps<Value> & { height?: number }): ReactNode {
-  return props.narrow ? (
-    <ChoiceSheet {...props} height={height} />
-  ) : (
+  return (
     <Menu
-      {...menuItems(props)}
+      {...menuRows(props)}
       disabled={props.disabled}
       accessibilityLabel={props.menuLabel}
-      trigger={chevron(props)}
+      trigger={chevron({ ...props, height: props.narrow ? height : undefined })}
     />
   );
-}
-
-function menuItems<Value extends string>(
-  props: SplitMenuItems<Value>,
-): SplitMenuItems<Value> {
-  if (props.actions) return { actions: props.actions };
-  const { options, value, onValueChange } = props;
-
-  return { options, value, onValueChange };
 }

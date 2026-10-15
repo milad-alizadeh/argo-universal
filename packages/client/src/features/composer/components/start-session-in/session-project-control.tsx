@@ -1,53 +1,33 @@
-import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/buttons/button';
-import {
-  Combobox,
-  type ComboboxProps,
-  type PickerOption,
-} from '#primitives/inputs/picker';
+import { ComposerPopover } from '../composer-popover/composer-popover';
+import { ProjectPicker } from './project-picker';
 import { SessionControlDisclosure } from './session-control-disclosure';
 import type { StartSessionLayout } from './start-session-types';
 
 export function SessionProjectControl(
   layout: StartSessionLayout,
 ): React.JSX.Element {
-  return <Combobox {...projectComboboxProps(layout)} />;
+  return (
+    <ComposerPopover
+      listContent
+      label="Project"
+      trigger={projectTrigger(layout)}
+    >
+      {(close) => projectContents(layout, close)}
+    </ComposerPopover>
+  );
 }
 
-const projectSearch = {
-  label: 'Project',
-  searchPlaceholder: 'Find a Project…',
-  emptyLabel: 'No Project matches.',
-  loadingLabel: 'Loading Projects…',
-};
+function selectProject(
+  { props }: StartSessionLayout,
+  close: () => void,
+  id: string,
+): void {
+  close();
 
-function projectComboboxProps(
-  layout: StartSessionLayout,
-): ComboboxProps<string> {
-  const { props } = layout;
-
-  return {
-    ...projectSearch,
-    value: props.projectId,
-    options: props.projects.map(projectOption),
-    onValueChange: (id) => {
-      if (id !== props.projectId) props.onProjectChange(id);
-    },
-    disabled: props.disabled,
-    trigger: projectTrigger(layout),
-  };
-}
-
-function projectOption(project: ProjectInfo): PickerOption<string> {
-  return {
-    value: project.id,
-    label: project.name,
-    supporting: project.path,
-    supportingCode: true,
-    icon: 'folder',
-  };
+  if (id !== props.projectId) props.onProjectChange(id);
 }
 
 function projectTrigger(layout: StartSessionLayout): React.JSX.Element {
@@ -92,4 +72,17 @@ function projectButtonLabels(
     accessibilityLabel: `Project: ${project.name}`,
     label: project.name,
   };
+}
+
+function projectContents(
+  layout: StartSessionLayout,
+  close: () => void,
+): React.JSX.Element {
+  return (
+    <ProjectPicker
+      projects={layout.props.projects}
+      projectId={layout.props.projectId}
+      onSelect={(id) => selectProject(layout, close, id)}
+    />
+  );
 }

@@ -1,4 +1,3 @@
-import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
 import {
   useContext,
   useDeferredValue,
@@ -16,6 +15,7 @@ import {
 import { useLayoutMotion } from './collapsible-layout-motion';
 import { useContentMeasurement } from './collapsible-measurement';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
+import { CollapsibleRegion } from './collapsible-region';
 
 type LayoutContentProps = ContentProps & { layoutSync: CollapsibleLayoutSync };
 
@@ -104,11 +104,11 @@ function ContentHeight(options: ContentHeightProps): ReactElement {
   const style = contentHeightStyle(state);
 
   return (
-    <CollapsiblePrimitive.Content {...contentProps} forceMount asChild>
+    <CollapsibleRegion contentProps={contentProps}>
       <View style={style} {...contentAccessibility(state.open)}>
         {children}
       </View>
-    </CollapsiblePrimitive.Content>
+    </CollapsibleRegion>
   );
 }
 

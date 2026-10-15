@@ -38,7 +38,7 @@ export function PageHeader(props: PageHeaderProps): React.JSX.Element | null {
 
 function pageHeaderClass(dragRegion = true): string {
   return cn(
-    'mt-shell-inset h-shell-bar shrink-0',
+    'mt-frame-inset h-frame-bar shrink-0',
     dragRegion && 'web:[app-region:drag]',
   );
 }

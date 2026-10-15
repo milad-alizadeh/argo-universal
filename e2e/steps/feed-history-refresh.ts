@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { expect } from '../fixtures';
 import { scrollToOldestHistoryMessage } from './feed-history-scroll';
 import { Given, When, Then } from './fixtures';
+import { reloadApp } from './frame';
 
 interface HeldRefresh {
   routes: WebSocketRoute[];
@@ -113,7 +114,7 @@ Given('the Feed history refresh can be delayed', async ({ page }) => {
 
   refreshes.set(page, refresh);
   await page.routeWebSocket(/ws:\/\//, (route) => connect(route, refresh));
-  await page.reload();
+  await reloadApp(page);
 });
 
 When(

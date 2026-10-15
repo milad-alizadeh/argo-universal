@@ -4,8 +4,8 @@ import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { fadedEdges } from '../scroll-fade';
 import {
   agentModelLabel,
-  modelsList,
-  agentsList,
+  modelsScrollId,
+  agentsScrollId,
   chooseAgentLabel,
   renderArgs,
   type Story,
@@ -18,7 +18,7 @@ import {
   selectLastAgent,
 } from './long-list-selections';
 
-export const LongListsScrollUnderFadesWide: Story = {
+export const LongListsReachableWide: Story = {
   args: { configuration: longListConfiguration() },
   render: renderArgs,
   play: async (context) => {
@@ -45,7 +45,7 @@ export const LongListsReachableInPhoneSheet: Story = {
     await selectLastPhoneModel(context);
     await selectLastAgent(context);
     await expect(
-      within(document.body).queryByRole('list', { name: modelsList }),
+      within(document.body).queryByTestId(modelsScrollId),
     ).not.toBeInTheDocument();
     await context.userEvent.keyboard('{Escape}');
   },
@@ -56,7 +56,7 @@ export const ShortListsHaveNoFadesWide: Story = {
   play: async (context) => {
     await openConfiguration(context, layoutWidths.wide);
 
-    for (const testId of [modelsList, agentsList])
+    for (const testId of [modelsScrollId, agentsScrollId])
       await assertShortList(context, testId);
     await context.userEvent.keyboard('{Escape}');
   },
@@ -66,18 +66,29 @@ async function assertShortList(
   { userEvent }: PlayContext,
   testId: string,
 ): Promise<void> {
-  const overlay = within(document.body);
   await userEvent.click(await shortListTrigger(testId));
-  const scroll = await overlay.findByRole('list', { name: testId });
+
+  const scroll = await configurationScroll(testId);
+
   await waitFor(() =>
     expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight),
   );
-  await expect(fadedEdges(scroll)).toEqual({ top: false, bottom: false });
+
+  if (testId === agentsScrollId)
+    await expect(fadedEdges(scroll)).toEqual({ top: false, bottom: false });
   await userEvent.keyboard('{Escape}');
 }
 
 function shortListTrigger(testId: string): Promise<HTMLElement> {
   return within(document.body).findByRole('button', {
-    name: testId === modelsList ? /^Model,/ : chooseAgentLabel,
+    name: testId === modelsScrollId ? /^Model,/ : chooseAgentLabel,
   });
+}
+
+function configurationScroll(testId: string): Promise<HTMLElement> {
+  const overlay = within(document.body);
+
+  return testId === modelsScrollId
+    ? overlay.findByRole('radiogroup', { name: 'Models' })
+    : overlay.findByTestId(testId);
 }

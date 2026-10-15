@@ -22,7 +22,6 @@ it('Session connections advertise implemented extensions without URL Elicitation
   expect(initialization).toMatchObject({
     protocolVersion: 1,
     clientCapabilities: {
-      plan: {},
       session: { notices: {}, compaction: {} },
       elicitation: { form: {} },
     },

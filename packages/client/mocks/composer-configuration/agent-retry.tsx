@@ -8,7 +8,7 @@ import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   agentModelLabel,
-  agentsList,
+  agentsScrollId,
   chooseAgentLabel,
   type Story,
   type Configuration,
@@ -82,7 +82,7 @@ async function assertRetryRowsReachable(width: number): Promise<void> {
   if (width !== layoutWidths.wide) return;
   await waitFor(async () => {
     const menu = within(document.body)
-      .getByRole('list', { name: agentsList })
+      .getByTestId(agentsScrollId)
       .getBoundingClientRect();
 
     for (const unavailable of newSessionCatalogs.bothUnavailable)

@@ -27,22 +27,31 @@ export type SplitMenuItems<Value extends string = string> =
   | SplitButtonOptions<Value>
   | SplitButtonActions;
 
-// What SplitButton passes to its chevron's menu or Sheet; ButtonGroup sets className on it.
+// What SplitButton passes to its chevron's menu; ButtonGroup sets className on it.
 export type SplitMenuProps<Value extends string = string> =
   SplitMenuItems<Value> & {
     menuLabel: string;
     // A filled chevron beside a filled button; otherwise a ghost one.
     primary?: boolean;
     disabled?: boolean;
-    // A narrow layout picks from a Sheet instead of a menu.
+    // Web only: a narrow layout's chevron matches its full-width button. Phones draw a native menu.
     narrow?: boolean;
     // `xs` is the compact header split: a divider between filled halves, and the group dims as one.
     size?: 'sm' | 'xs';
     className?: string;
   };
 
+// The acting button's props SplitButton reads. Phones draw it natively from its label (or text children) and press.
+export interface SplitActionProps {
+  className?: string;
+  label?: string;
+  children?: unknown;
+  onPress?: () => void;
+  disabled?: boolean;
+}
+
 export type SplitButtonProps<Value extends string = string> =
   SplitMenuProps<Value> & {
     // The button that acts; it passes className on to its Button.
-    children: ReactElement<{ className?: string }>;
+    children: ReactElement<SplitActionProps>;
   };

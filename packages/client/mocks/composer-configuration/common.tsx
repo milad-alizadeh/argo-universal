@@ -11,10 +11,9 @@ export type Configuration = React.ComponentProps<
 
 export const agentModelLabel = 'Agent and model';
 
-// The option lists, by the name their list role carries.
-export const modelsList = 'Model';
+export const modelsScrollId = 'composer-models-scroll';
 
-export const agentsList = 'Agent';
+export const agentsScrollId = 'composer-agents-scroll';
 
 export const effortValue = 'aria-valuetext';
 

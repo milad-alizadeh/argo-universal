@@ -4,6 +4,9 @@ import {
   centreOf,
   topmostAt,
 } from '../../../../../mocks/point-hit';
+import { layoutWidths } from '../../../../lib/generic/each-layout';
+import { settleViewport } from '../../../../lib/generic/settle-viewport';
+import { splitGroupHeader } from './feed.mocks';
 
 export const feedScrollId = 'feed-scroll';
 
@@ -14,7 +17,7 @@ export const expandedAttribute = 'aria-expanded';
 // A loaded runner can take a few frames per scroll before the Feed answers.
 export const scrollAwayWait = { timeout: 15000, interval: 100 };
 
-const settleWait = { timeout: 5000 };
+export const settleWait = { timeout: 5000 };
 
 export const scrolledToEnd = (feedScroll: HTMLElement): boolean =>
   feedScroll.scrollHeight - feedScroll.scrollTop - feedScroll.clientHeight < 2;
@@ -30,6 +33,7 @@ export function scrollUp(feedScroll: HTMLElement, distance: number): void {
 export const scrollToTop = (feedScroll: HTMLElement): Promise<void> =>
   waitFor(async () => {
     scrollUp(feedScroll, feedScroll.clientHeight);
+    await afterTwoFrames();
     await expect(feedScroll.scrollTop).toBe(0);
   }, scrollAwayWait);
 
@@ -117,20 +121,42 @@ export function settledTopOf(findElement: () => HTMLElement): Promise<number> {
   }, settleWait);
 }
 
-// Waits until an element, in view or not, holds still for two frames, as it does once the rows around it stop moving.
-export function restingTopOf(element: HTMLElement): Promise<number> {
-  let lastTop: number | undefined;
+// Waits until a reading of an element holds for two frames.
+function restingOf(read: () => number): Promise<number> {
+  let last: number | undefined;
 
   return waitFor(async () => {
     await afterTwoFrames();
-    const { top } = element.getBoundingClientRect();
-    const resting = top === lastTop;
-    lastTop = top;
+    const value = read();
+    const resting = value === last;
+    last = value;
 
     if (!resting) throw new Error('The element is still moving');
 
-    return top;
+    return value;
   }, settleWait);
+}
+
+// Waits until an element, in view or not, holds still for two frames, as it does once the rows around it stop moving.
+export const restingTopOf = (element: HTMLElement): Promise<number> =>
+  restingOf(() => element.getBoundingClientRect().top);
+
+const bottomOf = (element: HTMLElement): number =>
+  element.getBoundingClientRect().bottom;
+
+// Waits until a row has opened down to its last item and stopped growing: its items sit in place while it opens, so only the row's own bottom shows the motion.
+export async function openedRow(
+  header: HTMLElement,
+  lastItem: () => HTMLElement,
+): Promise<void> {
+  const row = header.parentElement;
+
+  if (!row) throw new Error('No collapsible around the row header');
+  await waitFor(
+    () => expect(bottomOf(lastItem())).toBeLessThanOrEqual(bottomOf(row)),
+    settleWait,
+  );
+  await restingOf(() => bottomOf(row));
 }
 
 // Opens a closed row and waits until it reads as open.
@@ -147,3 +173,26 @@ export const scrollToEnd = (feedScroll: HTMLElement): Promise<void> =>
     await afterTwoFrames();
     await expect(scrolledToEnd(feedScroll)).toBe(true);
   }, settleWait);
+
+interface SplitGroupAtTop {
+  scroll: HTMLElement;
+  header: HTMLElement;
+}
+
+// On a phone, the reader reads back from the end to the top, where the split group starts, its older rows still on their way.
+export async function readBackToSplitGroup(
+  canvas: ReturnType<typeof within>,
+): Promise<SplitGroupAtTop> {
+  await settleViewport(layoutWidths.phone);
+  const scroll = await canvas.findByTestId(feedScrollId);
+  await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+  await scrollToTop(scroll);
+
+  const header = await canvas.findByRole(
+    'button',
+    { name: splitGroupHeader },
+    scrollAwayWait,
+  );
+
+  return { scroll, header };
+}

@@ -5,8 +5,11 @@ import type { IconName } from '../../../symbols/icon-names';
 export interface GroupedListItemProps {
   label: string;
   value?: string;
-  // A second line under the title, such as a folder's path; code draws it in the mono face.
-  subtitle?: { text: string; code?: boolean };
+  /*
+   * A second line under the title, such as a folder's path; code draws it in the mono face.
+   * numberOfLines caps it, ending in an ellipsis, such as an Agent's description in a list.
+   */
+  subtitle?: { text: string; code?: boolean; numberOfLines?: number };
   icon?: IconName;
   // An image in the icon's slot, such as an Agent's logo; it stands in for icon.
   leading?: ReactElement;
@@ -41,13 +44,8 @@ export interface GroupedListItemProps {
   href?: string;
   disabled?: boolean;
   selected?: boolean;
-  /*
-   * Phones only: the row is one choice of several, and the platform marks it, `selected` saying
-   * which: iOS a system checkmark on the chosen row, Android a Material RadioButton on every row.
-   */
-  choice?: boolean;
   needsAttention?: boolean;
-  // A dot after the value. When the value already says the status, such as "Ready", the name says it once.
+  // A trailing dot beside the chevron. Its label is spoken with the row, never drawn.
   status?: { tone: 'success' | 'warning' | 'danger'; label: string };
   // A spinner takes the icon's place while the row's subject is on its way.
   loading?: boolean;

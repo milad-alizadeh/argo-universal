@@ -103,7 +103,7 @@ function SelectItem({ className, ...props }: ItemProps): React.JSX.Element {
       {...props}
     >
       <ItemIndicator />
-      <SelectPrimitive.ItemText className="type-body group-active:text-hover-foreground select-none" />
+      <SelectPrimitive.ItemText className="type-body select-none" />
     </SelectPrimitive.Item>
   );
 }

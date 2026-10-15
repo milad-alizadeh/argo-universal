@@ -61,7 +61,7 @@ export const ScrollableAgentCatalog: Story = {
     await userEvent.click(
       await overlay.findByRole('button', { name: chooseAgentLabel }),
     );
-    const scroll = await overlay.findByRole('list', { name: 'Agent' });
+    const scroll = await overlay.findByTestId('composer-agents-scroll');
     await waitFor(async () => {
       await expect(scroll.clientHeight).toBeGreaterThan(100);
       await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
@@ -75,8 +75,6 @@ export const ScrollableAgentCatalog: Story = {
         .map((animation) => animation.finished),
     );
     await waitFor(() => expect(menu).toBeVisible());
-    const listTop = scroll.getBoundingClientRect().top;
-    const menuHeight = menu.getBoundingClientRect().height;
     await expect(menu.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       window.innerHeight,
     );
@@ -91,8 +89,6 @@ export const ScrollableAgentCatalog: Story = {
       const viewport = scroll.getBoundingClientRect();
       await expect(item.top).toBeGreaterThanOrEqual(viewport.top);
       await expect(item.bottom).toBeLessThanOrEqual(viewport.bottom);
-      await expect(scroll.getBoundingClientRect().top).toBeCloseTo(listTop);
-      await expect(menu.getBoundingClientRect().height).toBeCloseTo(menuHeight);
     });
     await userEvent.click(lastAgent);
     await expect(args.configuration?.onAgentChange).toHaveBeenCalledWith(

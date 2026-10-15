@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
+import { reloadApp } from './frame';
 import { expectMessage, messageLabel, openNewSession } from './new-session';
 import { openSession } from './session-switching';
 
@@ -31,11 +32,6 @@ Then(
     await expect(page.getByText(/^Couldn't send\./)).toBeVisible();
   },
 );
-
-// The web export serves only its root, so a reload starts there and opens the page again.
-async function reloadApp(page: Page): Promise<void> {
-  await page.goto(new URL('/', page.url()).href);
-}
 
 When(
   'I reload the App and open the Session {string}',

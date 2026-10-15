@@ -1,10 +1,19 @@
-import { mkdtemp, readdir, readFile, stat, rm } from 'node:fs/promises';
+import {
+  chmod,
+  mkdtemp,
+  readdir,
+  readFile,
+  stat,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, it, onTestFinished, beforeEach, vi } from 'vitest';
 import { z } from 'zod';
 import { resourceLaunch } from '#mocks/acp-resource';
+import { loginProject } from '#mocks/acp-shell';
 import { launchLoginTerminal } from './terminal-process';
 
 const terminalStartupTimeout = 15_000;
@@ -109,4 +118,28 @@ it(
     await expect(stat(controlFolder)).rejects.toMatchObject({ code: 'ENOENT' });
   },
   terminalStartupTimeout,
+);
+
+it(
+  'finds a bare sign-in executable on the Project login-shell PATH',
+  { timeout: terminalStartupTimeout },
+  async () => {
+    const { directory, bin } = loginProject();
+    const probe = join(bin, 'argo-login-probe');
+    await writeFile(probe, '#!/bin/sh\necho "login-path:$ARGO_LOGIN_VALUE"\n');
+    await chmod(probe, permissionBits);
+    let output = '';
+
+    const child = await launchLoginTerminal(
+      { ...launch, executable: 'argo-login-probe', args: [], cwd: directory },
+      (text) => {
+        output += text;
+      },
+    );
+
+    onTestFinished(() => child.close());
+    await expect
+      .poll(() => output, { timeout: terminalStartupTimeout })
+      .toContain('login-path:login');
+  },
 );

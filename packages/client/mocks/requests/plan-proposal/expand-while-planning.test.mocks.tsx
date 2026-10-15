@@ -9,7 +9,7 @@ import {
   keepPlanningLabel,
   type Story,
 } from './plan-proposal-story-context.test.mocks';
-import { expandSheet } from './sheet-gestures.test.mocks';
+import { checkProtectedSheet } from './sheet-gestures.test.mocks';
 
 export function expandWhilePlanning(width: number): Story {
   return {
@@ -22,7 +22,7 @@ export function expandWhilePlanning(width: number): Story {
       await userEvent.type(canvas.getByRole('textbox'), feedbackDraft);
 
       if (width === layoutWidths.phone) {
-        await expandSheet(canvas, userEvent);
+        await checkProtectedSheet(canvas, userEvent);
         await expect(canvas.getByRole('textbox')).toHaveValue(feedbackDraft);
 
         return;

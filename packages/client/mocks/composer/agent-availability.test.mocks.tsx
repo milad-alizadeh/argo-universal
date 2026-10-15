@@ -43,15 +43,6 @@ export function unavailableAgents(width: number): Story {
         await expect(
           await overlay.findByRole('button', { name: `Select ${agent.label}` }),
         ).toBeDisabled();
-
-        // Installing is not a choice in the list: an Agent that is not installed offers no step.
-        if (agent.availability === 'not_installed') {
-          await expect(
-            overlay.queryByRole('button', { name: `Set up ${agent.label}` }),
-          ).not.toBeInTheDocument();
-          continue;
-        }
-
         await userEvent.click(
           await overlay.findByRole('button', { name: `Set up ${agent.label}` }),
         );

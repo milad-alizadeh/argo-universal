@@ -87,7 +87,7 @@ export function SessionsLoading(): React.JSX.Element {
       role="status"
       accessibilityLabel="Loading Sessions"
       // Matches the list's content padding so the rows don't shift when Sessions load.
-      className="px-gutter-list pt-5 wide:gap-0.5 wide:px-2"
+      className="px-2.5 pt-5 wide:gap-0.5 wide:px-2"
     >
       <SkeletonProjectHeading />
       {skeletonRowWidths.map((widths, index) => (

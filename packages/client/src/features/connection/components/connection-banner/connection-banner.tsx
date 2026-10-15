@@ -30,7 +30,7 @@ const exiting = new Keyframe({
   100: { opacity: 0, transform: [{ translateY: -slide }] },
 }).duration(motionDuration.exit);
 
-// A capsule that says the Connection is down; Server data on screen may be stale until it reopens. The shell places it over the page, so the page under it never moves.
+// A capsule that says the Connection is down; Server data on screen may be stale until it reopens. The Frame places it over the page, so the page under it never moves.
 export function ConnectionBanner({
   state,
   serverName,
@@ -48,7 +48,7 @@ export function ConnectionBanner({
       <LiquidGlass
         corners="capsule"
         className="h-9 self-center wide:h-8"
-        fallbackClassName="rounded-full bg-card shadow-card dark:border dark:border-border"
+        fallbackClassName="rounded-full bg-card shadow-raised wide:shadow-card dark:border dark:border-border"
       >
         <View
           role="status"

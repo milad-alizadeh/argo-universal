@@ -1,14 +1,14 @@
-import { Form, List } from '@expo/ui/swift-ui';
+// Split from Android: SwiftUI's Form scrolls the sections here, while Android scrolls them in React Native for its sheets.
+import { FieldGroup } from '@expo/ui';
+import { List } from '@expo/ui/swift-ui';
 import {
-  type ModifierConfig,
   listStyle,
   scrollContentBackground,
-  useScrollGeometryChange,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { FieldLayout } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
-import { useSheetList } from '#primitives/overlays/bottom-sheet';
+import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListProps } from './grouped-list-props';
 import { GroupedList as WebGroupedList } from './grouped-list.tsx';
@@ -27,45 +27,44 @@ export function GroupedList(props: GroupedListProps): React.JSX.Element {
   );
 }
 
-// A sidebar list is a plain List, flat like the sidebar; any other is a grouped Form on the system grouped background.
+/*
+ * A sidebar list is a plain List, flat like the sidebar; any other is a grouped FieldGroup.
+ * The universal List takes no modifiers, so the plain, backgroundless sidebar List stays SwiftUI's.
+ */
 function PhoneFields({
   variant,
   children,
 }: GroupedListProps): React.JSX.Element {
-  const sheetModifiers = useSheetModifiers();
-
-  if (variant === 'sidebar')
-    return (
-      <List modifiers={[listStyle('plain'), scrollContentBackground('hidden')]}>
-        {children}
-      </List>
-    );
-
-  return <Form modifiers={sheetModifiers}>{children}</Form>;
+  return variant === 'sidebar' ? (
+    <SidebarFields>{children}</SidebarFields>
+  ) : (
+    <GroupedFields>{children}</GroupedFields>
+  );
 }
 
-/*
- * In a sheet the Form drops its grouped background, so the sheet's own surface shows behind the
- * groups, and tells the sheet how tall its rows are.
- */
-function useSheetModifiers(): ModifierConfig[] {
-  const sheet = useSheetList();
-  const geometry = useScrollGeometryChange(geometryListener(sheet));
-
-  if (!sheet) return [];
-
-  return [scrollContentBackground('hidden'), ...(geometry ? [geometry] : [])];
+function SidebarFields({
+  children,
+}: Pick<GroupedListProps, 'children'>): React.JSX.Element {
+  return (
+    <List modifiers={[listStyle('plain'), scrollContentBackground('hidden')]}>
+      {children}
+    </List>
+  );
 }
 
-function geometryListener(
-  sheet: ReturnType<typeof useSheetList>,
-): Parameters<typeof useScrollGeometryChange>[0] {
-  const onGeometry = sheet?.onGeometry;
+function GroupedFields({
+  children,
+}: Pick<GroupedListProps, 'children'>): React.JSX.Element {
+  const { content } = useNativeTheme().colors;
 
-  if (!onGeometry) return undefined;
-
-  return ({ containerHeight, contentHeight }) =>
-    onGeometry({ containerHeight, contentHeight });
+  return (
+    <FieldGroup
+      style={{ backgroundColor: content }}
+      modifiers={[scrollContentBackground('hidden')]}
+    >
+      {children}
+    </FieldGroup>
+  );
 }
 
 GroupedList satisfies React.ComponentType<GroupedListProps>;

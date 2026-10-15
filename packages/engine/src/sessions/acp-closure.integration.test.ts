@@ -13,13 +13,12 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   const sessionInput = { ...emptySessionInput, agent: agentId };
   const prompt = [{ type: 'text' as const, text: 'Start' }];
 
-  it('a prompted Session whose close timed out keeps its Checkout and refuses work until its shared process exit is observed', async () => {
+  it('a close timeout releases the Session, keeps its Checkout, and lets its sibling and next Send use the connection', async () => {
     const openings: NewSessionRequest[] = [];
 
     const host = await startAcpEngine(
       {
         steps: [],
-        autoExit: false,
         closeTimeoutMs: 50,
         responses: {
           'session/new': [{ requests: openings }],
@@ -33,45 +32,22 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       agentId,
     );
 
-    const stuck = await host.caller.session.new({
+    const closed = await host.caller.session.new({
       ...sessionInput,
       checkout: { type: 'worktree', baseBranch: 'main' },
     });
 
     const sibling = await host.caller.session.new(sessionInput);
-    await host.caller.session.prompt({ ...stuck, prompt });
-    await waitForAcpSessionIdle(host, stuck.sessionId);
-    await expect(host.caller.session.close(stuck)).rejects.toThrow(
-      'ACP session close timed out; cleanup retained',
-    );
+    await host.caller.session.prompt({ ...closed, prompt });
+    await waitForAcpSessionIdle(host, closed.sessionId);
+    await expect(host.caller.session.close(closed)).resolves.toEqual({});
+    expect(existsSync(openings[0]?.cwd ?? '')).toBe(true);
     await host.caller.session.prompt({ ...sibling, prompt });
     await waitForAcpSessionIdle(host, sibling.sessionId);
-    const process = requireScriptedProcessAt(host.agent.processes);
-
-    const retained = {
-      checkout: existsSync(openings[0]?.cwd ?? ''),
-      terminations: process.terminations,
-    };
-
-    const siblingClosing = host.caller.session.close(sibling);
-    await expect.poll(() => process.terminations).toBe(1);
-    await expect(
-      host.caller.session.prompt({ ...stuck, prompt }),
-    ).rejects.toThrow('cannot accept session.prompt');
-    process.exited.resolve();
-    await siblingClosing;
-    await expect
-      .poll(async () => {
-        try {
-          await host.caller.session.prompt({ ...stuck, prompt });
-
-          return 'accepted';
-        } catch (error) {
-          return String(error);
-        }
-      })
-      .toBe('accepted');
-    expect(retained).toEqual({ checkout: true, terminations: 0 });
+    await host.caller.session.prompt({ ...closed, prompt });
+    await waitForAcpSessionIdle(host, closed.sessionId);
+    expect(host.agent.processes).toHaveLength(1);
+    expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(0);
   });
 
   it('Engine shutdown during a running Turn terminates its ACP process once and waits for its observed exit', async () => {

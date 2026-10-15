@@ -67,7 +67,7 @@ export async function browseResponsiveMenu({
     await expectHeldAgentList();
     await userEvent.click(
       await within(document.body).findByRole('button', {
-        name: 'Back',
+        name: 'Back to Configure',
       }),
     );
     await userEvent.click(
@@ -77,7 +77,7 @@ export async function browseResponsiveMenu({
     );
     await userEvent.click(
       await within(document.body).findByRole('button', {
-        name: 'Back',
+        name: 'Back to Configure',
       }),
     );
     await expect(

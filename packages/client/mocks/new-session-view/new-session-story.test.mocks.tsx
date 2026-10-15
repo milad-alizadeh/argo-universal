@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import {
-  NewSessionView,
-  type NewSessionViewProps,
-} from '../../src/features/sessions/components/new-session-view/new-session-view';
-import { readyNewSession } from '../../src/features/sessions/components/new-session-view/new-session-view.mocks';
+  SessionNewView,
+  type SessionNewViewProps,
+} from '../../src/screens/sessions/$id/session-new-view';
+import { readyNewSession } from '../../src/screens/sessions/$id/session-new-view.mocks';
 
 export const meta = {
-  title: 'Tests/NewSessionView',
+  title: 'Tests/SessionNewView',
   parameters: { screenPreview: true },
   args: { view: { state: 'ready', ...readyNewSession } },
-  render: ({ view }): React.JSX.Element => <NewSessionView {...view} />,
-} satisfies Meta<{ view: NewSessionViewProps }>;
+  render: ({ view }): React.JSX.Element => <SessionNewView {...view} />,
+} satisfies Meta<{ view: SessionNewViewProps }>;
 
 export type Story = StoryObj<typeof meta>;

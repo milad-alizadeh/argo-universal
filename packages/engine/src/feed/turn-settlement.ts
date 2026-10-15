@@ -34,7 +34,7 @@ const readUnfinishedTurnRows = (
 
 export type FeedTurnEnding = (
   | { kind: 'completion' | 'cancel' | 'engine_restart' }
-  | Extract<TurnEndingNotice, { kind: 'agent_crash' | 'cancel_timeout' }>
+  | Extract<TurnEndingNotice, { kind: 'agent_crash' }>
 ) & {
   waitingPermissions?: { acpSessionId: string; toolCallIds: readonly string[] };
 };
@@ -42,7 +42,7 @@ export type FeedTurnEnding = (
 const endingNotices = (ending: FeedTurnEnding): TurnEndingNotice[] => {
   if (ending.kind === 'agent_crash') return [ending, { kind: 'interruption' }];
 
-  return ending.kind === 'cancel_timeout' ? [ending] : [];
+  return [];
 };
 
 const permissionChanges = (

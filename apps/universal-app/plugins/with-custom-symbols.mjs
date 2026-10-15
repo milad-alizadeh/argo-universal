@@ -4,10 +4,20 @@ import symbols from '@repo/client/custom-symbol-paths.json' with { type: 'json' 
 import configPlugins from 'expo/config-plugins.js';
 
 /*
- * Guides from Apple's SF Symbols template v3.0. The glyph is the Regular-M variant, which Xcode scales to every
- * weight and size (ADR-0019).
+ * Guides from Apple's SF Symbols template v3.0. The glyph is drawn Regular at every scale: Xcode finds no variant
+ * for a scale the template leaves out, and a List's Label draws its icon at the large scale (ADR-0019).
  */
 const baselines = { S: 696, M: 1126, L: 1556 };
+
+// The system `circle` symbol's width at 100 points in each scale, which sizes each scale against the medium one.
+const circleWidths = { S: 93, M: 117, L: 151 };
+
+const scales = Object.fromEntries(
+  Object.entries(circleWidths).map(([size, width]) => [
+    size,
+    width / circleWidths.M,
+  ]),
+);
 
 const capHeight = 70.459;
 
@@ -23,11 +33,20 @@ function horizontalGuide(id, y) {
   return `  <line id="${id}" style="${guideStyle}" x1="263.75" x2="3036.25" y1="${y}" y2="${y}"/>`;
 }
 
-function marginGuide(id, x) {
-  const top = baselines.M - marginAbove;
-  const bottom = baselines.M + marginBelow;
+function marginGuide(id, x, size) {
+  const top = baselines[size] - marginAbove;
+  const bottom = baselines[size] + marginBelow;
 
   return `  <line id="${id}" style="${guideStyle}" x1="${x}" x2="${x}" y1="${top}" y2="${bottom}"/>`;
+}
+
+function marginGuides(half, size) {
+  const scaled = half * scales[size];
+
+  return [
+    marginGuide(`left-margin-Regular-${size}`, glyphCentre - scaled, size),
+    marginGuide(`right-margin-Regular-${size}`, glyphCentre + scaled, size),
+  ];
 }
 
 function guides(viewBox) {
@@ -38,14 +57,20 @@ function guides(viewBox) {
       horizontalGuide(`Baseline-${size}`, y),
       horizontalGuide(`Capline-${size}`, y - capHeight),
     ]),
-    marginGuide('left-margin-Regular-M', glyphCentre - half),
-    marginGuide('right-margin-Regular-M', glyphCentre + half),
+    ...Object.keys(scales).flatMap((size) => marginGuides(half, size)),
   ];
+}
+
+function glyph(size, d) {
+  const scale = scales[size];
+  const transform = `matrix(${scale} 0 0 ${scale} ${glyphCentre} ${baselines[size]})`;
+
+  return `<g id="Regular-${size}" transform="${transform}"><path d="${d}"/></g>`;
 }
 
 function template({ viewBox, d }) {
   const version = 'Template v.3.0';
-  const glyph = `matrix(1 0 0 1 ${glyphCentre} ${baselines.M})`;
+  const glyphs = Object.keys(scales).map((size) => glyph(size, d));
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -54,7 +79,7 @@ function template({ viewBox, d }) {
     ' <g id="Guides">',
     ...guides(viewBox),
     ' </g>',
-    ` <g id="Symbols"><g id="Regular-M" transform="${glyph}"><path d="${d}"/></g></g>`,
+    ` <g id="Symbols">${glyphs.join('')}</g>`,
     '</svg>',
     '',
   ].join('\n');

@@ -1,27 +1,11 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
-import type { ComponentProps, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
-import { DesktopShell } from '#features/frame';
-import { Text } from '#primitives/display/text';
+import { ScaffoldMock } from '../../../../../mocks/scaffold';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { PageHeader } from '../../../../lib/product/page-header';
 import { EditRow } from './edit-row';
-
-const ignore = (): void => {};
-
-const shellProps = {
-  selectedSection: 'sessions',
-  attentionCount: 0,
-  sidebarShown: true,
-  onSidebarShownChange: ignore,
-  onSectionChange: ignore,
-  listHeader: <Text role={'heading'}>Sessions</Text>,
-  list: null,
-  inspector: (): null => null,
-  inspectorState: 'closed',
-  onInspectorStateChange: ignore,
-} satisfies Omit<ComponentProps<typeof DesktopShell>, 'children'>;
 
 function EditFeed({ row }: { row: ToolCallUpdate }): React.JSX.Element {
   return (
@@ -38,12 +22,12 @@ function EditFeed({ row }: { row: ToolCallUpdate }): React.JSX.Element {
 
 function WidePreview({ children }: { children: ReactNode }): React.JSX.Element {
   return (
-    <DesktopShell {...shellProps}>
+    <ScaffoldMock attentionCount={0}>
       <View className="flex-1">
         <PageHeader title="Recorded edits" />
         {children}
       </View>
-    </DesktopShell>
+    </ScaffoldMock>
   );
 }
 

@@ -16,6 +16,7 @@ type ExampleProps = {
   onChangeText: (value: string) => void;
   errors?: string[];
   disabled?: boolean;
+  loading?: boolean;
 };
 
 function Example(props: ExampleProps): React.JSX.Element {
@@ -118,6 +119,27 @@ function lockedIn(variant: Variant): Story {
 export const StandaloneDisabled = lockedIn('standalone');
 
 export const RowDisabled = lockedIn('row');
+
+// While the value is checked, a spinner says so and the field still takes typing.
+function checkingIn(variant: Variant): Story {
+  return {
+    args: { variant, loading: true },
+    play: async ({ canvas, userEvent }) => {
+      await expect(
+        canvas.getByRole('progressbar', { name: `Checking ${label}` }),
+      ).toBeInTheDocument();
+
+      const field = canvas.getByRole('textbox', { name: label });
+
+      await userEvent.type(field, 'acp');
+      await expect(field).toHaveValue('acp');
+    },
+  };
+}
+
+export const StandaloneChecking = checkingIn('standalone');
+
+export const RowChecking = checkingIn('row');
 
 export const BareTypes: Story = {
   render: function Bare(props): React.JSX.Element {

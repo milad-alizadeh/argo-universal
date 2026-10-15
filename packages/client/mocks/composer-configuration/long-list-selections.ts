@@ -1,26 +1,38 @@
 import { expect, waitFor, within } from 'storybook/test';
-import {
-  modelsList,
-  agentsList,
-  chooseAgentLabel,
-  type PlayContext,
-} from './common';
+import { agentsScrollId, chooseAgentLabel, type PlayContext } from './common';
 import { lastLongModel, lastLongAgent } from './long-list-cases';
-import { expectScrollsUnderFades } from './scroll-reachability';
+import {
+  expectScrollsUnderFades,
+  lastVisible,
+  expectRowInsideScroll,
+} from './scroll-reachability';
 
 export async function selectLastDesktopModel(
   context: PlayContext,
 ): Promise<void> {
-  const overlay = within(document.body);
   await openModelChoices(context);
-  const models = await overlay.findByRole('list', { name: modelsList });
+
+  const models = await within(document.body).findByRole('radiogroup', {
+    name: 'Models',
+  });
+
   await assertModelMenuInsideWindow();
-  await expectScrollsUnderFades(models, findLastModel);
+  await assertLastModelReachable(models);
   await selectLongModel(context, findLastModel);
 }
 
+async function assertLastModelReachable(models: HTMLElement): Promise<void> {
+  await waitFor(() =>
+    expect(models.scrollHeight).toBeGreaterThan(models.clientHeight),
+  );
+  models.scrollTop = models.scrollHeight;
+  await waitFor(async () =>
+    expectRowInsideScroll(models, await findLastModel()),
+  );
+}
+
 function findLastModel(): Promise<HTMLElement> {
-  return within(document.body).findByRole('button', {
+  return within(document.body).findByRole('radio', {
     name: lastLongModel.name,
   });
 }
@@ -92,7 +104,7 @@ async function openAgentChoices(
     await overlay.findByRole('button', { name: chooseAgentLabel }),
   );
 
-  return overlay.findByRole('list', { name: agentsList });
+  return overlay.findByTestId(agentsScrollId);
 }
 
 function findLastAgent(): Promise<HTMLElement> {
@@ -105,9 +117,5 @@ export async function selectLastPhoneModel(
   context: PlayContext,
 ): Promise<void> {
   await openModelChoices(context);
-  await expectScrollsUnderFades(
-    await within(document.body).findByRole('list', { name: modelsList }),
-    findLastModel,
-  );
-  await selectLongModel(context, findLastModel);
+  await selectLongModel(context, () => lastVisible(lastLongModel.name));
 }

@@ -16,7 +16,7 @@ export async function chooseModel({
   await userEvent.click(
     await overlay.findByRole('button', { name: chooseModelLabel }),
   );
-  await userEvent.click(await overlay.findByRole('button', { name }));
+  await userEvent.click(await overlay.findByRole('radio', { name }));
   await waitFor(() =>
     expect(
       overlay.queryByRole('dialog', { name: 'Select Model' }),

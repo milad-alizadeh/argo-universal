@@ -22,7 +22,7 @@ function Switch(props: SwitchProps): React.JSX.Element {
 
 function switchClass(props: SwitchProps): string {
   return cn(
-    'flex shrink-0 flex-row items-center rounded-full border border-transparent shadow-sm shadow-black/5',
+    'flex shrink-0 flex-row items-center rounded-full border border-transparent shadow-control',
     props.size === 'sm'
       ? 'h-4 w-6.5 p-0.5 border-0'
       : 'h-5.5 w-9 p-0.5 border-0',
@@ -42,8 +42,8 @@ function switchStateClass(
 
 function thumbClass(props: Pick<SwitchProps, 'value' | 'size'>): string {
   return cn(
-    'bg-background rounded-full transition-transform',
-    props.size === 'sm' ? 'size-3' : 'size-4.5 shadow-[0_1px_2px_#00000026]',
+    'bg-card rounded-full transition-transform',
+    props.size === 'sm' ? 'size-3' : 'size-4.5 shadow-control',
     'web:pointer-events-none web:block web:ring-0',
     thumbPosition(props),
   );

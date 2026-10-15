@@ -103,6 +103,8 @@ export const executeAgentInstall = async (
   try {
     input.signal.throwIfAborted();
     await saveSelection(input, selection);
+    // A reinstall can keep its version, so the old process must not be reused.
+    input.deps.invalidateAgent?.(input.operation.agentId);
   } catch (error) {
     await discardSelection(input, selection);
     throw error;

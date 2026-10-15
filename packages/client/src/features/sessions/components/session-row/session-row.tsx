@@ -26,6 +26,8 @@ export interface SessionRowProps {
   subagentsFailed?: boolean;
   issue?: IssueIndicatorProps;
   pullRequest?: PullRequestIndicatorProps;
+  // Short text at the end of the title line, such as how long ago a search result was active.
+  trailing?: string;
   onSelect: (sessionId: string) => void;
 }
 
@@ -33,8 +35,8 @@ function sessionRowClass(selected: boolean): string {
   return contentActionClass({
     variant: 'ghost',
     className: cn(
-      'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:gap-3 wide:px-4 wide:py-2 wide:rounded-selection bg-content wide:bg-transparent dark:active:bg-hover web:dark:hover:bg-hover',
-      selected && 'bg-hover wide:bg-selected',
+      'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:gap-3 wide:px-4 wide:py-2 wide:rounded-xl bg-content wide:bg-transparent',
+      selected && 'bg-muted wide:bg-selected',
     ),
   });
 }
@@ -75,12 +77,39 @@ function SessionMark(props: SessionMarkProps): React.JSX.Element {
   );
 }
 
-function SessionRowContent(props: SessionRowMetadataProps): React.JSX.Element {
+function SessionRowTrailing({ text }: { text?: string }): React.ReactNode {
+  if (text === undefined) return null;
+
+  return (
+    <View className="shrink-0">
+      <Text role="secondary">{text}</Text>
+    </View>
+  );
+}
+
+// The title, and any trailing text at the line's end.
+function SessionRowTitle(props: {
+  title: string;
+  trailing?: string;
+}): React.JSX.Element {
+  return (
+    <View className="flex-row items-center gap-2">
+      <View className="min-w-0 flex-1">
+        <Text numberOfLines={1} role="body">
+          {props.title}
+        </Text>
+      </View>
+      <SessionRowTrailing text={props.trailing} />
+    </View>
+  );
+}
+
+function SessionRowContent(
+  props: SessionRowMetadataProps & Pick<SessionRowProps, 'trailing'>,
+): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
-      <Text numberOfLines={1} role="body">
-        {props.session.title}
-      </Text>
+      <SessionRowTitle title={props.session.title} trailing={props.trailing} />
       <Text numberOfLines={1} role="secondary">
         {props.session.activity}
       </Text>

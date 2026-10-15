@@ -18,10 +18,7 @@ describe('a story title', (): void => {
       `${src}/features/feed/components/edit-row/edit-row.stories.tsx`,
       'Feed/EditRow',
     ],
-    [
-      `${src}/features/frame/components/desktop-shell/desktop-shell.stories.tsx`,
-      'Shell/DesktopShell',
-    ],
+    [`${src}/features/frame/scaffold/scaffold.stories.tsx`, 'Frame/Scaffold'],
     [
       `${src}/features/agents/components/agent-list-view/agent-list-view.stories.tsx`,
       'Screens/Settings/Agents',
@@ -31,8 +28,16 @@ describe('a story title', (): void => {
       'Screens/Settings/Placeholder',
     ],
     [
-      `${src}/features/frame/screens/placeholder-screens.stories.tsx`,
-      'Screens/PlaceholderScreens',
+      `${src}/screens/issues/issues-screen.stories.tsx`,
+      'Screens/Issues/Issues',
+    ],
+    [
+      `${src}/screens/onboarding/github-step.stories.tsx`,
+      'Screens/Onboarding/GitHub step',
+    ],
+    [
+      `${src}/screens/settings/agents/agents-list.test.stories.tsx`,
+      'Tests/AgentsList',
     ],
     [
       `${src}/features/agents/components/custom-agent-form/custom-agent-form.stories.tsx`,
@@ -68,11 +73,16 @@ describe('a story title', (): void => {
       /must start with 'Agents\/'$/,
     ],
     [
-      `${src}/features/frame/components/desktop-shell/desktop-shell.stories.tsx`,
-      'Frame/DesktopShell',
-      /'Shell\/'/,
+      `${src}/features/frame/scaffold/scaffold.stories.tsx`,
+      'Shell/Scaffold',
+      /'Frame\/'/,
     ],
     [`${src}/lib/product/screen/screen.stories.tsx`, 'Screen', /'Shared\/'/],
+    [
+      `${src}/screens/sessions/sessions-view.stories.tsx`,
+      'Sessions/Sessions',
+      /must start with 'Screens\/'$/,
+    ],
     [
       `${src}/features/feed/components/feed/feed.test.stories.tsx`,
       'Feed/Feed',

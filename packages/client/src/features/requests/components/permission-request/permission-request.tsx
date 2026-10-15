@@ -84,7 +84,7 @@ function PermissionBody({ answers, ...props }: BodyProps): ReactNode {
 
 function PermissionInput({ input }: { input: string }): ReactNode {
   return (
-    <View className="min-h-13 rounded-xl android:rounded-2xl bg-muted px-4 py-3.5 wide:min-h-11 wide:bg-card wide:px-3.5 wide:py-2 wide:shadow-xs">
+    <View className="min-h-13 rounded-xl android:rounded-2xl bg-muted px-4 py-3.5 wide:min-h-11 wide:bg-card wide:px-3.5 wide:py-2 wide:shadow-control">
       <Text role="code" className="ios:text-[15px]">
         {input}
       </Text>

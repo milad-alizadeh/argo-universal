@@ -1,13 +1,11 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import {
   type Dispatch,
-  type RefObject,
   type SetStateAction,
   useCallback,
   useState,
 } from 'react';
-
-type ListRef = RefObject<LegendListRef | null>;
+import { holdRowTop, type ListRef, releaseRowTop } from './keep-place';
 
 /*
  * Streaming rows grow at the end, so the Feed follows rows as they measure. The end clearance is the
@@ -27,23 +25,25 @@ const oneFewer = (count: number): number => count - 1;
 // A frame later, once the list has the final size: Legend checks the end only on scroll, so check it first, or the stale answer follows to the end.
 const settleNextFrame = (
   list: ListRef,
+  itemKey: string,
   setMoving: Dispatch<SetStateAction<number>>,
 ): number =>
   requestAnimationFrame(() => {
     list.current?.reportContentInset();
+    releaseRowTop(list, itemKey);
     setMoving(oneFewer);
   });
 
 // While any collapsible is opening or closing, the Feed holds still.
 function useMovingCollapsibles(
   list: ListRef,
-): [number, (started: boolean) => void] {
+): [number, CollapsibleMotion['onMotionChange']] {
   const [moving, setMoving] = useState(0);
 
   const onMotionChange = useCallback(
-    (started: boolean) => {
+    (itemKey: string, started: boolean) => {
       if (started) setMoving(oneMore);
-      else settleNextFrame(list, setMoving);
+      else settleNextFrame(list, itemKey, setMoving);
     },
     [list],
   );
@@ -51,21 +51,27 @@ function useMovingCollapsibles(
   return [moving, onMotionChange];
 }
 
-function growItem(
-  ref: LegendListRef | null,
+function setGrownSize(
+  ref: LegendListRef,
   itemKey: string,
   height: number,
 ): void {
-  if (!ref) return;
   const size = ref.getState().sizes.get(itemKey);
 
   if (size === undefined) return;
   ref.setItemSize(itemKey, { height: size + height, width: 0 });
 }
 
+// An opening row keeps its header where it was while it grows below.
+function growItem(list: ListRef, itemKey: string, height: number): void {
+  if (height > 0) holdRowTop(list, itemKey);
+
+  if (list.current) setGrownSize(list.current, itemKey, height);
+}
+
 export interface CollapsibleMotion {
   maintainScrollAtEnd: typeof followEnd | typeof holdEnd;
-  onMotionChange: (moving: boolean) => void;
+  onMotionChange: (itemKey: string, moving: boolean) => void;
   onGrow: (itemKey: string, height: number) => void;
 }
 
@@ -74,8 +80,7 @@ export function useCollapsibleMotion(list: ListRef): CollapsibleMotion {
 
   // Called in the same frame as the collapsible's own height, so React commits the row and the rows below together; Legend's measure lands a frame late on native.
   const onGrow = useCallback(
-    (itemKey: string, height: number) =>
-      growItem(list.current, itemKey, height),
+    (itemKey: string, height: number) => growItem(list, itemKey, height),
     [list],
   );
 

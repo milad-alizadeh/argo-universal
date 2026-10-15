@@ -173,7 +173,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     ).toEqual({ status: 'ended', stop_reason: 'cancelled' });
   });
 
-  it('failed close keeps the Turn until observed process release, then publishes its accepted text', async () => {
+  it('failed close releases at once and publishes text accepted before the error', async () => {
     const received = Promise.withResolvers<PromptRequest>();
 
     const host = await startAcpEngine(
@@ -211,21 +211,11 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       prompt: [{ type: 'text', text: 'Start' }],
     });
     await received.promise;
-    await expect(host.caller.session.close(created)).rejects.toThrow(
-      'Internal error',
-    );
+    await expect(host.caller.session.close(created)).resolves.toEqual({});
     const process = host.agent.processes[0];
 
     if (!process) throw new Error('Owned lifetime is missing');
-    expect(
-      host.database.$client.prepare('SELECT status FROM turn').get(),
-    ).toEqual({ status: 'running' });
-    process.exited.resolve();
-    await expect
-      .poll(() =>
-        host.database.$client.prepare('SELECT status FROM turn').get(),
-      )
-      .toEqual({ status: 'ended' });
+    expect(process.terminations).toBe(0);
     const page = await host.caller.feed.page({ ...created, direction: 'tail' });
     expect(page.rows[1]).toMatchObject({
       state: 'settled',

@@ -1,15 +1,13 @@
 @theme static {
-  --container-composer: 800px;
+  /* A modal backdrop in both themes; the overlay sets its opacity. */
+  --color-scrim: var(--color-black);
+  /* The centred content column: Feed, Composer and request cards. */
+  --container-column: 800px;
   --spacing-plan-proposal: 280px;
-  --blur-composer: 3px;
-  --shadow-composer:
-    0 1px 2px #0000000f, 0 0 32px -8px #0000001a, 0 12px 24px -12px #0000000f;
-  --shadow-sheet: 0 -8px 32px -8px #00000014;
   --spacing-session-name: 34px;
   /* A phone screen's side padding, the same on every screen and platform. */
   --spacing-gutter: 20px;
   /* A list's inset, as its rows pad their content 10px more for the highlight. */
-  --spacing-gutter-list: 10px;
   /* Size classes: compact below medium, medium below wide (useSizeClass). */
   --breakpoint-medium: 600px;
   --breakpoint-wide: 1100px;
@@ -18,8 +16,6 @@
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:
     "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --font-display: var(--font-sans);
-  --font-text: var(--font-sans);
   --spacing-0_5: 2px;
   --spacing-1: 4px;
   --spacing-1_5: 6px;
@@ -36,21 +32,14 @@
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
-  --font-weight-bold: 700;
   --text-xs: 12px;
   --text-sm: 14px;
   --text-base: 16px;
-  --text-lg: 18px;
   --text-xl: 20px;
-  --text-2xl: 24px;
-  --text-3xl: 30px;
   --leading-4: 16px;
-  --leading-4_5: 18px;
   --leading-5: 20px;
   --leading-5_5: 22px;
   --leading-6: 24px;
-  --leading-8: 32px;
-  --leading-9: 36px;
   /* Text roles, the same tokens as Paper. "-wide" is the desktop step. */
   --text-title: var(--text-xl);
   --leading-title: var(--leading-6);
@@ -96,154 +85,145 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  /* Buttons, inputs, the Picker trigger and SearchField on a wide window. Menu and popover rows take xl. */
+  --radius-control: var(--radius-lg);
   /* The glass sidebar, the Composer and every card, popover and menu. */
   --radius-2xl: calc(var(--radius) + 8px);
   --blur-glass: 28px;
-  /* A selected sidebar row or rail tile. */
-  --radius-selection: 12px;
-  --radius-surface: 28px;
-  --radius-search: 8px;
-  --spacing-hairline: hairlineWidth();
-  --spacing-phone-drawer: 300px;
-  --spacing-phone-drawer-peek: 64px;
-  --spacing-phone-shell-badge: 22px;
-  --spacing-shell-bar: 64px;
+  /* Sheets, dialogs and alerts on a wide window. */
+  --radius-sheet: 28px;
+  --spacing-frame-bar: 64px;
   /* The rail, the sidebar control bar and the Inspector bar on a wide window. */
-  --spacing-shell-rail: 72px;
-  --spacing-shell-control: 44px;
-  --spacing-shell-list: 312px;
-  --spacing-shell-inspector: 352px;
-  --spacing-shell-inset: 8px;
+  --spacing-frame-rail: 72px;
+  --spacing-frame-control: 44px;
+  --spacing-frame-list: 312px;
+  --spacing-frame-inspector: 352px;
+  --spacing-frame-inset: 8px;
   --spacing-session-plan: 40px;
-  --spacing-session-phone: 390px;
-  --spacing-session-desktop: 332px;
-  --spacing-session-issue: 48px;
-  --spacing-session-pull-request: 44px;
-  --shadow-card:
-    0 1px 2px #0000000f, 0 0 40px -8px #00000024, 0 16px 32px -16px #00000014;
-  --shadow-glass:
-    inset 0 1px 0 #fffffff2, inset 0 0 0 1px #ffffff99, 0 0 0 1px #0000000d,
-    0 12px 32px #0000000f;
-  --shadow-glass-tray: 0 0 0 1px #0000000d, 0 12px 32px #0000000f;
-  --shadow-glass-card:
-    inset 0 1px 0 #ffffff, 0 0 0 1px #0000000f, 0 1px 2px #0000000a,
-    0 8px 24px -8px #00000014;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md:
-    0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-  --shadow-lg:
-    0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-  --shadow-xl:
-    0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.05);
+  /* Shadow colours (6%, 8% and 14% black) for every light drop shadow; the
+     glass highlights and dark-mode edges keep their own. Hex, because
+     Uniwind's native box-shadow parser adds px to the bare numbers in
+     color-mix(). */
+  --color-shadow-subtle: #0000000f;
+  --color-shadow: #00000014;
+  --color-shadow-strong: #00000024;
 }
 
 @layer theme {
   :root {
     @variant ios {
-      --radius-search: 6px;
       --font-sans: System;
       /* React Native resolves ui-monospace to SF Mono on iOS. */
       --font-mono: ui-monospace;
     }
     @variant android {
-      --radius-search: 6px;
       --font-sans: sans-serif;
       --font-mono: monospace;
     }
     @variant light {
-      --color-background: var(--color-white);
+      /* Every colour is a Tailwind palette shade: the nearest one, measured in OKLab. */
       --color-foreground: var(--color-neutral-950);
+      /* The iOS Settings grouped row (#ffffff). */
       --color-card: var(--color-white);
-      --color-card-foreground: var(--color-neutral-950);
       --color-primary: var(--color-neutral-900);
       --color-primary-foreground: var(--color-neutral-50);
       /* Native controls: switch track, slider, checkmark and picker value. */
       --color-accent: var(--color-neutral-900);
-      --color-muted: var(--color-neutral-100);
+      /* Quiet fields and secondary surfaces; interaction states have their own
+         tints. The Tailwind shade nearest a step lighter than neutral-200. */
+      --color-muted: var(--color-taupe-100);
       --color-muted-foreground: var(--color-neutral-500);
-      /* A hovered or pressed row, item or button. */
-      --color-hover: var(--color-neutral-100);
-      --color-hover-foreground: var(--color-neutral-900);
       --color-danger: var(--color-red-500);
-      --color-danger-foreground: var(--color-white);
-      --color-border: var(--color-neutral-200);
+      /* One step darker than muted, so a border shows on a muted fill. */
+      --color-border: var(--color-neutral-300);
       --color-focus: var(--color-neutral-400);
       /* Finished work: a merged pull request, a completed issue. */
       --color-done: var(--color-violet-600);
       --color-success: var(--color-green-600);
       --color-info: var(--color-blue-600);
       --color-warning: var(--color-amber-600);
-      --color-warning-foreground: var(--color-white);
-      --color-content: var(--color-neutral-50);
-      /* Glass: the sidebar panel, its darker tray, and a card on glass. */
-      --color-glass: #ffffff80;
-      --color-glass-muted: #e5e5e5b3;
-      --color-glass-card: #ffffffe6;
-      /* A selected row or rail tile: a flat tint, no border or shadow. */
-      --color-selected: #0000000a;
-      /* The sidebar backdrop glow, faded to transparent in its gradients. */
-      --color-glow-warm: oklch(75.3% 0.051 70.5);
-      --color-glow-sand: oklch(81.5% 0.044 68.7);
-      --color-glow-graphite: oklch(64% 0 0);
-      --shadow-glass:
-        inset 0 1px 0 #fffffff2, inset 0 0 0 1px #ffffff99, 0 0 0 1px #0000000d,
-        0 12px 32px #0000000f;
-      --shadow-glass-tray: 0 0 0 1px #0000000d, 0 12px 32px #0000000f;
-      --shadow-glass-card:
-        inset 0 1px 0 #ffffff, 0 0 0 1px #0000000f, 0 1px 2px #0000000a,
-        0 8px 24px -8px #00000014;
+      /* The iOS Settings grouped background (#f2f2f2). */
+      --color-content: var(--color-neutral-100);
+      /* Glass: the sidebar panel. */
+      --color-glass: color-mix(in oklab, var(--color-white) 50%, transparent);
+      /* Tray: the inset envelope under a card on glass (the Composer trays). */
+      --color-tray: color-mix(
+        in oklab,
+        var(--color-neutral-200) 70%,
+        transparent
+      );
+      /* The sidebar backdrop glows; Uniwind hands React Native SVG sRGB hex. */
+      --color-glow-warm: var(--color-olive-400);
+      --color-glow-graphite: var(--color-neutral-400);
+      --color-glow-sand: var(--color-taupe-300);
+      /* Interaction states on a row, item or button with no fill of its own:
+         hover lighter than selected, pressed darker. A flat tint, no border or shadow. */
+      --color-hover: color-mix(in oklab, var(--color-black) 2%, transparent);
+      --color-selected: color-mix(in oklab, var(--color-black) 3%, transparent);
+      --color-pressed: color-mix(in oklab, var(--color-black) 4%, transparent);
+      /* The shadow scale. Control: buttons, fields and small cards on a
+         surface. Card: desktop popovers, menus and toasts. Raised: phone
+         popovers, menus and floating buttons. */
+      --shadow-control: 0 1px 2px var(--color-shadow-subtle);
       --shadow-card:
-        0 1px 2px #0000000f, 0 0 40px -8px #00000024,
-        0 16px 32px -16px #00000014;
-      --shadow-composer:
-        0 1px 2px #0000000f, 0 0 32px -8px #0000001a,
-        0 12px 24px -12px #0000000f;
-      --shadow-sheet: 0 -8px 32px -8px #00000014;
+        0 1px 2px var(--color-shadow-subtle),
+        0 0 40px -8px var(--color-shadow-strong),
+        0 16px 32px -16px var(--color-shadow);
+      --shadow-raised:
+        0 0 0 1px var(--color-shadow-subtle), 0 4px 16px var(--color-shadow);
+      --shadow-glass:
+        inset 0 1px 0 #fffffff2, inset 0 0 0 1px #ffffff99,
+        0 0 0 1px var(--color-shadow-subtle),
+        0 12px 32px var(--color-shadow-subtle);
+      --shadow-tray:
+        0 0 0 1px var(--color-shadow-subtle),
+        0 12px 32px var(--color-shadow-subtle);
     }
     @variant dark {
-      /* A step above the shell chrome, so content sits lighter than the drawer, as in light. */
-      --color-background: var(--color-neutral-900);
-      --color-foreground: hsl(0 0% 98%);
+      --color-foreground: var(--color-neutral-50);
+      /* The iOS Settings grouped row (#1c1c1c). */
       --color-card: var(--color-neutral-900);
-      --color-card-foreground: hsl(0 0% 98%);
-      --color-primary: hsl(0 0% 98%);
-      --color-primary-foreground: hsl(0 0% 9%);
+      --color-primary: var(--color-neutral-50);
+      --color-primary-foreground: var(--color-neutral-900);
       --color-accent: var(--color-neutral-400);
-      --color-muted: hsl(0 0% 14.9%);
-      --color-muted-foreground: hsl(0 0% 63.9%);
-      --color-hover: hsl(0 0% 14.9%);
-      --color-hover-foreground: hsl(0 0% 98%);
+      --color-muted: var(--color-neutral-800);
+      --color-muted-foreground: var(--color-neutral-400);
       --color-danger: var(--color-red-500);
-      --color-danger-foreground: var(--color-white);
-      --color-border: hsl(0 0% 14.9%);
-      --color-focus: hsl(300 0% 45%);
-      --color-done: oklch(70.2% 0.183 293.541);
-      --color-success: oklch(72.3% 0.219 149.579);
-      --color-info: oklch(70.7% 0.165 254.624);
-      --color-warning: oklch(76.9% 0.188 70.08);
-      --color-warning-foreground: hsl(0 0% 3.9%);
-      --color-content: oklch(20.5% 0 0);
-      --color-glass: #17171780;
-      --color-glass-muted: #262626b3;
-      --color-glass-card: #171717e6;
-      --color-selected: #ffffff0f;
-      --color-glow-warm: oklch(45% 0.03 70.5);
-      --color-glow-sand: oklch(50% 0.026 68.7);
-      --color-glow-graphite: oklch(40% 0 0);
-      --shadow-glass:
-        inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
-      --shadow-glass-tray: 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
-      --shadow-glass-card:
-        inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff1f, 0 8px 24px -8px #00000066;
+      /* One step lighter than muted, so a border shows on a muted fill. */
+      --color-border: var(--color-neutral-700);
+      --color-focus: var(--color-neutral-500);
+      --color-done: var(--color-violet-400);
+      --color-success: var(--color-green-500);
+      --color-info: var(--color-blue-400);
+      --color-warning: var(--color-amber-500);
+      /* The iOS Settings grouped background (#000000). */
+      --color-content: var(--color-black);
+      --color-glass: color-mix(
+        in oklab,
+        var(--color-neutral-900) 50%,
+        transparent
+      );
+      --color-tray: color-mix(
+        in oklab,
+        var(--color-neutral-800) 70%,
+        transparent
+      );
+      --color-glow-warm: var(--color-stone-600);
+      --color-glow-graphite: var(--color-neutral-700);
+      --color-glow-sand: var(--color-olive-600);
+      --color-hover: color-mix(in oklab, var(--color-white) 4%, transparent);
+      --color-selected: color-mix(in oklab, var(--color-white) 6%, transparent);
+      --color-pressed: color-mix(in oklab, var(--color-white) 8%, transparent);
+      --shadow-control: 0 1px 2px var(--color-shadow-subtle);
       /* Light's shadows, plus a 1px bezel: a dark shadow on a dark ground cannot show the edge. */
       --shadow-card:
-        0 0 0 1px #ffffff14, 0 1px 2px #0000000f, 0 0 40px -8px #00000024,
-        0 16px 32px -16px #00000014;
-      --shadow-composer:
-        0 0 0 1px #ffffff14, 0 1px 2px #0000000f, 0 0 32px -8px #0000001a,
-        0 12px 24px -12px #0000000f;
-      --shadow-sheet: 0 0 0 1px #ffffff14, 0 -8px 32px -8px #00000014;
+        0 0 0 1px #ffffff14, 0 1px 2px var(--color-shadow-subtle),
+        0 0 40px -8px var(--color-shadow-strong),
+        0 16px 32px -16px var(--color-shadow);
+      --shadow-raised: 0 0 0 1px #ffffff14, 0 4px 16px #00000066;
+      --shadow-glass:
+        inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
+      --shadow-tray: 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
     }
   }
 }
@@ -325,51 +305,25 @@
   font-weight: var(--font-weight-nav-action);
 }
 
+/* Shadows that change between light and dark. Tailwind's own shadow-* utility
+   inlines the value at build time, so Uniwind could not switch it; these read
+   the variable each theme sets. */
+@utility shadow-control {
+  box-shadow: var(--shadow-control);
+}
+
 @utility shadow-card {
   box-shadow: var(--shadow-card);
 }
 
-@layer utilities {
-  .shadow-composer {
-    box-shadow: var(--shadow-composer);
-  }
-  .shadow-glass {
-    box-shadow: var(--shadow-glass);
-  }
-  .shadow-glass-tray {
-    box-shadow: var(--shadow-glass-tray);
-  }
-  .shadow-glass-card {
-    box-shadow: var(--shadow-glass-card);
-  }
-  .shadow-sm {
-    box-shadow:
-      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
-      var(--shadow-sm);
-  }
-  .shadow-md {
-    box-shadow:
-      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
-      var(--shadow-md);
-  }
-  .shadow-lg {
-    box-shadow:
-      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
-      var(--shadow-lg);
-  }
-  .shadow-xl {
-    box-shadow:
-      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
-      var(--shadow-xl);
-  }
-  .shadow-2xl {
-    box-shadow:
-      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
-      var(--shadow-2xl);
-  }
+@utility shadow-raised {
+  box-shadow: var(--shadow-raised);
+}
+
+@utility shadow-glass {
+  box-shadow: var(--shadow-glass);
+}
+
+@utility shadow-tray {
+  box-shadow: var(--shadow-tray);
 }

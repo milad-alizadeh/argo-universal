@@ -6,7 +6,9 @@ import { cn } from '#lib/generic/utils';
 import { IconSlot } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { Text } from '#primitives/display/text';
-import type { ChoiceMenuProps } from './menu-props';
+import { MenuLoadingRow } from './menu-loading';
+import type { ChoiceMenuProps, MenuOption } from './menu-props';
+import { actionItemTextClassName, choiceRowClassName } from './menu-styles';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
@@ -34,9 +36,9 @@ export function MenuChoiceContent<Value extends string>(
       align={props.align ?? 'end'}
       onKeyDown={() => props.focus.onKeyboardFocusChange(true)}
       onPointerMove={() => props.focus.onKeyboardFocusChange(false)}
-      className="w-65 overflow-hidden bg-card rounded-2xl py-2 shadow-card dark:border dark:border-border"
+      className="w-65 overflow-hidden bg-card rounded-2xl p-1 shadow-card dark:border dark:border-border"
     >
-      <MenuChoices {...props} />
+      {props.loading ? <MenuLoadingRow /> : <MenuChoices {...props} />}
     </MenuPrimitive.Content>
   );
 }
@@ -68,7 +70,7 @@ function selectChoice<Value extends string>(
 }
 
 type MenuRadioItemProps = {
-  choice: { value: string; label: string };
+  choice: MenuOption<string>;
   focus: KeyboardFocus;
 };
 
@@ -79,6 +81,7 @@ function MenuRadioItem(props: MenuRadioItemProps): React.JSX.Element {
     <MenuPrimitive.RadioItem
       value={choice.value}
       textValue={choice.label}
+      disabled={choice.disabled}
       onPointerMove={() => focus.onKeyboardFocusChange(false)}
       onKeyDown={radioKeyDown(focus.onKeyboardFocusChange)}
       className={radioItemClassName(focus.keyboardFocus)}
@@ -101,7 +104,8 @@ function radioKeyDown(
 
 function radioItemClassName(keyboardFocus: boolean): string {
   return cn(
-    'min-h-9 flex-row items-center gap-3 cursor-default rounded-none outline-0 px-4 py-1.5 hover:bg-muted focus:bg-muted active:bg-border',
+    choiceRowClassName,
+    'cursor-default rounded-xl outline-0 hover:bg-hover focus:bg-hover active:bg-pressed web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
     keyboardFocus &&
       'focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2',
   );
@@ -119,7 +123,7 @@ function MenuRadioContent(props: { label: string }): React.JSX.Element {
 function RadioLabel(props: { label: string }): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1">
-      <Text role="body" className="select-none text-card-foreground">
+      <Text role="body" className={actionItemTextClassName}>
         {props.label}
       </Text>
     </View>
@@ -130,7 +134,7 @@ function RadioIndicator(): React.JSX.Element {
   return (
     <IconSlot role="control">
       <MenuPrimitive.ItemIndicator>
-        <SelectedCheck className="text-card-foreground" />
+        <SelectedCheck className="text-foreground" />
       </MenuPrimitive.ItemIndicator>
     </IconSlot>
   );

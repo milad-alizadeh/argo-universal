@@ -1,6 +1,10 @@
 import { projectsList, sessionRows } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
-import { listEntries, type ListEntriesInput } from './sessions-list-entries';
+import {
+  flatEntries,
+  listEntries,
+  type ListEntriesInput,
+} from './sessions-list-entries';
 
 const firstProjectEntryId = 'project:project-1';
 
@@ -74,5 +78,29 @@ describe('listEntries', () => {
         hideEmptyProjects: false,
       }),
     ).toEqual([secondProjectEntryId, newer.sessionId]);
+  });
+});
+
+describe('flatEntries', () => {
+  it('lists Sessions across Projects with no headings, newest activity first, ties by id', () => {
+    expect(
+      flatEntries({
+        projects,
+        sessions: [
+          older,
+          { ...newer, projectId: otherProject.id },
+          tiedEarlierId,
+        ],
+      }).map((entry) => entry.id),
+    ).toEqual([tiedEarlierId.sessionId, newer.sessionId, older.sessionId]);
+  });
+
+  it('leaves out Sessions of a Project it does not list', () => {
+    expect(
+      flatEntries({
+        projects: [otherProject],
+        sessions: [older, { ...newer, projectId: otherProject.id }],
+      }).map((entry) => entry.id),
+    ).toEqual([newer.sessionId]);
   });
 });

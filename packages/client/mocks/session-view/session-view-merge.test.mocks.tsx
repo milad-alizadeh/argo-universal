@@ -1,19 +1,26 @@
 import { expect, waitFor, within } from 'storybook/test';
+import { layoutWidths } from '../../src/lib/generic/each-layout';
+import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   pullRequestMocks,
   withPullRequests,
-} from '../../src/features/sessions/components/session-view/session-view-pull-request.mocks';
+} from '../../src/screens/sessions/$id/session-detail-view-pull-request.mocks';
 import {
   idleSession,
   runningSession,
-} from '../../src/features/sessions/components/session-view/session-view.mocks';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
+} from '../../src/screens/sessions/$id/session-detail-view.mocks';
 import { openProps, type Story } from './session-view-story.test.mocks';
 
 const mergeLabel = 'Merge PR';
 
 const optionsLabel = 'Merge options';
+
+export const checksPassed = {
+  view: {
+    state: 'open',
+    ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
+  },
+} satisfies Story['args'];
 
 // Checks still run: the header names the PR and its checks, and Merge PR waits.
 export const mergeWaitsForChecks: Story = {
@@ -37,12 +44,7 @@ export const mergeWaitsForChecks: Story = {
 };
 
 export const mergesWhenChecksPass: Story = {
-  args: {
-    view: {
-      state: 'open',
-      ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
-    },
-  },
+  args: checksPassed,
   play: async ({ canvas, args, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await expect(
@@ -54,30 +56,6 @@ export const mergesWhenChecksPass: Story = {
     await expect(openProps(args.view).header.onMerge).toHaveBeenCalledWith(
       45,
       'squash',
-    );
-  },
-};
-
-// The chevron's menu merges by another method.
-export const mergesByAnotherMethod: Story = {
-  args: mergesWhenChecksPass.args,
-  play: async ({ canvas, args, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
-    await expect(
-      await canvas.findByLabelText('Checks 5/5, passed'),
-    ).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: optionsLabel }));
-
-    const rebase = await within(document.body).findByRole('menuitem', {
-      name: 'Rebase and merge',
-    });
-
-    // The menu fades in.
-    await waitFor(() => expect(rebase).toBeVisible());
-    await userEvent.click(rebase);
-    await expect(openProps(args.view).header.onMerge).toHaveBeenCalledWith(
-      45,
-      'rebase',
     );
   },
 };

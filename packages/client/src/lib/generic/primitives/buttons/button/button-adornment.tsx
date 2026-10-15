@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Icon, IconSpinner } from '#primitives/display/icon';
 import type { IconProps } from '#primitives/display/icon';
-import { usePrimitiveColor } from '#primitives/native/primitive-color';
 import type { IconName } from '../../../symbols/icon-names';
 import type { IconRole } from '../../../symbols/icon-role';
 
@@ -16,15 +15,16 @@ interface AdornmentProps {
 }
 
 export function ButtonAdornment(props: AdornmentProps): ReactElement | null {
-  const color = usePrimitiveColor(props.textClass);
-
   if (!props.loading && !props.icon) return null;
 
-  return <HiddenAdornment>{adornment(props, color)}</HiddenAdornment>;
+  return <HiddenAdornment>{adornment(props)}</HiddenAdornment>;
 }
 
-function adornment(props: AdornmentProps, color?: string): ReactElement {
-  if (props.loading) return <IconSpinner color={color} iconRole={props.role} />;
+function adornment(props: AdornmentProps): ReactElement {
+  if (props.loading)
+    return (
+      <IconSpinner colorClassName={props.textClass} iconRole={props.role} />
+    );
 
   return (
     <Icon

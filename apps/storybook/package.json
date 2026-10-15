@@ -7,7 +7,7 @@
     "build-storybook": "storybook build",
     "check-types": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
-    "test": "vitest run"
+    "test:stories": "vitest run"
   },
   "dependencies": {
     "@repo/client": "workspace:*",

@@ -1,18 +1,16 @@
 import type {
   ClientContext,
   InitializeResponse,
-  LoadSessionRequest,
+  NewSessionResponse,
   ResumeSessionRequest,
   SessionCapabilities,
 } from '@agentclientprotocol/sdk';
 import type { AcpSessionOpening, AcpSessionLease } from './resource-types';
-import type { createAcpResponseReaders } from './response-readers';
 
 type OpeningInput = {
   agent: ClientContext;
   initialization: InitializeResponse;
   opening: AcpSessionOpening;
-  readers: ReturnType<typeof createAcpResponseReaders>;
 };
 
 type Opened = Pick<AcpSessionLease, 'response' | 'sessionId'>;
@@ -31,9 +29,6 @@ export const openProtocolSession = async (
 };
 
 const openExisting = (input: OpeningInput): Promise<Opened> => {
-  if (input.opening.method === 'session/load')
-    return loadSession(input, input.opening.params);
-
   if (input.opening.method === 'session/resume')
     return resumeSession(input, input.opening.params);
   throw new Error('Expected a known ACP session');
@@ -42,32 +37,17 @@ const openExisting = (input: OpeningInput): Promise<Opened> => {
 const newSession = async ({
   agent,
   opening,
-  readers,
 }: OpeningInput): Promise<Opened> => {
-  const response = readers['session/new'].parse(
-    await agent.request<unknown>('session/new', opening.params),
+  const response = await agent.request<NewSessionResponse>(
+    'session/new',
+    opening.params,
   );
 
   return { response, sessionId: response.sessionId };
 };
 
-const loadSession = async (
-  { agent, initialization, readers }: OpeningInput,
-  params: LoadSessionRequest,
-): Promise<Opened> => {
-  if (!initialization.agentCapabilities?.loadSession)
-    throw new Error('Agent does not support session/load');
-
-  return {
-    response: readers['session/load'].parse(
-      await agent.request<unknown>('session/load', params),
-    ),
-    sessionId: params.sessionId,
-  };
-};
-
 const resumeSession = async (
-  { agent, initialization, readers }: OpeningInput,
+  { agent, initialization }: OpeningInput,
   params: ResumeSessionRequest,
 ): Promise<Opened> => {
   const capabilities = sessionCapabilities(initialization);
@@ -76,9 +56,7 @@ const resumeSession = async (
     throw new Error('Agent does not support session/resume');
 
   return {
-    response: readers['session/resume'].parse(
-      await agent.request<unknown>('session/resume', params),
-    ),
+    response: await agent.request('session/resume', params),
     sessionId: params.sessionId,
   };
 };

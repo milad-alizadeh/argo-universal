@@ -9,7 +9,7 @@ import { LiveHeader } from '../live-header/live-header';
 import { type FeedEntry, entryKey, spaceBelowEntry } from './feed-entry';
 
 export interface RowMotion {
-  onMotionChange: (moving: boolean) => void;
+  onMotionChange: (itemKey: string, moving: boolean) => void;
   onGrow: (itemKey: string, height: number) => void;
 }
 
@@ -37,7 +37,7 @@ function useLayoutSync(
   return useMemo(
     (): LayoutSync => ({
       syncLayout,
-      onMotionChange,
+      onMotionChange: (moving: boolean) => onMotionChange(itemKey, moving),
       grow: (height: number) => onGrow(itemKey, height),
     }),
     [syncLayout, onMotionChange, onGrow, itemKey],

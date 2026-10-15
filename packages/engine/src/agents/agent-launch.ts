@@ -8,6 +8,7 @@ import type {
 export type AgentLaunch = {
   projectId: string;
   agentId: string;
+  registryId?: string;
   executable: string;
   version: string;
   args: readonly string[];
