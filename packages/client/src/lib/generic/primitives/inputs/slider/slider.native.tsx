@@ -1,24 +1,24 @@
 import { Slider as UniversalSlider } from '@expo/ui';
+import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import {
   accessibilityLabel,
   accessibilityValue,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
+import { Platform } from 'react-native';
 import { ControlHost } from '#primitives/native/native-control';
-import { optionalTint } from '#primitives/native/native-modifiers';
 import type { SliderProps } from './slider-props';
 
-export function Slider(props: SliderProps): React.JSX.Element {
-  const modifiers = useSliderModifiers(props);
+type UniversalSliderProps = React.ComponentProps<typeof UniversalSlider>;
 
+export function Slider(props: SliderProps): React.JSX.Element {
   return (
     <ControlHost matchContents={{ vertical: true }} style={{ width: '100%' }}>
       <UniversalSlider
         {...sliderRange(props)}
         disabled={props.disabled}
         onValueChange={props.onValueChange}
-        modifiers={modifiers}
+        modifiers={sliderModifiers(props)}
       />
     </ControlHost>
   );
@@ -26,10 +26,7 @@ export function Slider(props: SliderProps): React.JSX.Element {
 
 function sliderRange(
   props: SliderProps,
-): Pick<
-  React.ComponentProps<typeof UniversalSlider>,
-  'value' | 'min' | 'max' | 'step'
-> {
+): Pick<UniversalSliderProps, 'value' | 'min' | 'max' | 'step'> {
   return {
     value: props.value ?? props.minimumValue,
     min: props.minimumValue,
@@ -38,15 +35,20 @@ function sliderRange(
   };
 }
 
-function useSliderModifiers(
+// @expo/ui's Compose semantics take no state description, so TalkBack hears the value label inside the name.
+function sliderModifiers(
   props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
-): React.ComponentProps<typeof UniversalSlider>['modifiers'] {
-  const { accent } = useNativeTheme().colors;
+): UniversalSliderProps['modifiers'] {
+  if (Platform.OS === 'android')
+    return [
+      semantics({
+        contentDescription: `${props.accessibilityLabel}, ${props.valueLabel}`,
+      }),
+    ];
 
   return [
     accessibilityLabel(props.accessibilityLabel),
     accessibilityValue(props.valueLabel),
-    ...optionalTint(accent),
   ];
 }
 

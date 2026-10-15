@@ -1,6 +1,7 @@
+// Stock Compose AlertDialog: Expo UI has no universal alert; iOS uses SwiftUI's alert.
 import { AlertDialog, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
+import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
 import {
   alertActionPress,
@@ -20,29 +21,14 @@ export function Alert(props: AlertProps): React.JSX.Element | null {
 }
 
 function OpenAlert(props: AlertProps): React.JSX.Element {
-  const { colors } = useNativeTheme();
-
   return (
-    <AlertDialog
-      onDismissRequest={() => props.onOpenChange(false)}
-      colors={alertColors(colors)}
-    >
+    <AlertDialog onDismissRequest={() => props.onOpenChange(false)}>
       <AlertTitle title={props.title} />
       <AlertMessage message={props.message} />
       <AlertAnswers {...props} />
       <AlertCancel actions={props.actions} onOpenChange={props.onOpenChange} />
     </AlertDialog>
   );
-}
-
-function alertColors(
-  colors: NativeColors,
-): React.ComponentProps<typeof AlertDialog>['colors'] {
-  return {
-    containerColor: colors.card,
-    titleContentColor: colors.cardForeground,
-    textContentColor: colors.mutedForeground,
-  };
 }
 
 function AlertTitle(props: Pick<AlertProps, 'title'>): React.JSX.Element {
@@ -96,18 +82,24 @@ function AlertCancel(
 function AlertButton(
   props: Pick<AlertProps, 'onOpenChange'> & { action: AlertAction },
 ): React.JSX.Element {
-  const { colors } = useNativeTheme();
-
-  const color = props.action.tone === 'danger' ? colors.danger : colors.primary;
+  const { danger } = useNativeTheme().colors;
 
   return (
     <TextButton
       onClick={alertActionPress(props.action, props.onOpenChange)}
-      colors={{ contentColor: color }}
+      colors={dangerColors(props.action, danger)}
     >
       <Text style={{ typography: 'labelLarge' }}>{props.action.label}</Text>
     </TextButton>
   );
+}
+
+// Danger red is the one colour kept over the Host seed, so a destructive answer stands out.
+function dangerColors(
+  action: AlertAction,
+  danger: string | undefined,
+): React.ComponentProps<typeof TextButton>['colors'] {
+  return action.tone === 'danger' ? { contentColor: danger } : undefined;
 }
 
 Alert satisfies React.ComponentType<AlertProps>;
