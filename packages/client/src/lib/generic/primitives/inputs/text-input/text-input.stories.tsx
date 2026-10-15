@@ -96,7 +96,7 @@ const standaloneExamples: (Typed<StandaloneTextInputProps> & {
 
 const bareExamples: {
   label: string;
-  props: Omit<BareTextInputProps, 'variant'> & { 'aria-invalid'?: boolean };
+  props: Omit<BareTextInputProps, 'variant'>;
 }[] = [
   { label: 'Bare empty', props: { placeholder: 'Email' } },
   {

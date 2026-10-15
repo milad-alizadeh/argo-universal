@@ -1,13 +1,15 @@
 /*
  * Compose reports a field's focus once when it first draws, unfocused. Only leaving
- * a field the person entered is a blur, so the form marks it touched no earlier.
+ * a field the person entered is a blur, so the form marks it touched no earlier. The
+ * visit outlives rerenders: the blur goes to whichever callback the form has now.
  */
-export function blurOnFocusLoss(
-  onBlur: () => void = () => {},
-): (focused: boolean) => void {
+export function blurOnFocusLoss(): (
+  focused: boolean,
+  onBlur: () => void,
+) => void {
   let entered = false;
 
-  return (focused) => {
+  return (focused, onBlur) => {
     const left = entered && !focused;
     entered = focused;
 

@@ -38,6 +38,8 @@ export type BareTextInputProps = NativeTextInputProps &
     variant: 'bare';
     // `muted` is the compact borderless box inside a popover, such as the link editor's.
     tone?: 'neutral' | 'muted';
+    // React Native has no invalid state of its own, so the box draws it from this on every platform.
+    'aria-invalid'?: boolean;
   };
 
 export type TextInputProps =
