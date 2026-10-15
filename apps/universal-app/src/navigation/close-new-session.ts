@@ -1,0 +1,43 @@
+import { useWide, withoutNewSession } from '@repo/client';
+import type { Stack } from 'expo-router';
+import {
+  CommonActions,
+  type NavigationProp,
+  type ParamListBase,
+} from 'expo-router/react-navigation';
+import type { ComponentProps } from 'react';
+
+type PageListeners = NonNullable<
+  ComponentProps<typeof Stack.Screen>['listeners']
+>;
+
+const noListeners: PageListeners = {};
+
+// Drops New Session from the section's stack, which closes its empty Session.
+function closeNewSession(navigation: NavigationProp<ParamListBase>): void {
+  const pages = navigation.getState();
+  const next = withoutNewSession(pages);
+
+  if (next)
+    navigation.dispatch({
+      ...CommonActions.reset({ ...pages, ...next }),
+      target: pages.key,
+    });
+}
+
+/*
+ * On a wide window, hiding Sessions closes New Session's empty Session, as leaving the
+ * section did before sections stayed mounted: the page leaves the section's stack, and the
+ * list opens New Session again when Sessions shows. A page swapped out within the shown
+ * section is gone already. A narrow window keeps New Session open.
+ */
+const closeWhenSectionHidden: PageListeners = ({ navigation }) => ({
+  blur: (): void => {
+    if (navigation.getParent()?.isFocused() === false)
+      closeNewSession(navigation);
+  },
+});
+
+// The listeners for a Session's page at this width.
+export const useNewSessionListeners = (): PageListeners =>
+  useWide() ? closeWhenSectionHidden : noListeners;

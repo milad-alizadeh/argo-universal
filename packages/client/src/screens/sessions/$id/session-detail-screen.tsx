@@ -7,8 +7,9 @@ import {
 } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
 import { useSessionElicitation } from '#features/sessions';
-import { newSessionId, useNavigate } from '#lib/product/navigation/navigation';
+import { useNavigate } from '#lib/product/navigation/navigation';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
+import { newSessionId } from '../../../lib/product/navigation/new-session';
 import {
   SessionDetailView,
   type SessionDetailViewProps,

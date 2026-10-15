@@ -15,10 +15,8 @@ import {
   useEffect,
 } from 'react';
 import { useWide } from '#lib/generic/use-wide/use-wide';
+import { newSessionId } from './new-session';
 import { isPage, sectionOf } from './sections';
-
-// The Session id New Session's URL carries; Session ids are UUIDs, so none is ever this.
-export const newSessionId = 'new';
 
 // New Session, in the Project it was opened from when there is one: one route draws it and the Session it becomes.
 export const newSessionHref = (projectId?: string): Href => ({

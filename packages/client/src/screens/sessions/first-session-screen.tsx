@@ -6,10 +6,8 @@ import {
   chooseFirstSession,
   type FirstSessionChoice,
 } from '#features/sessions';
-import {
-  newSessionId,
-  OpenFirstPage,
-} from '#lib/product/navigation/navigation';
+import { OpenFirstPage } from '#lib/product/navigation/navigation';
+import { newSessionId } from '../../lib/product/navigation/new-session';
 import { FirstSessionView } from './first-session-view';
 
 function useListedSessionIds(): string[] | undefined {

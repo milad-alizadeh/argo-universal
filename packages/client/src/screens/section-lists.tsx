@@ -13,12 +13,12 @@ import {
 import { ListTitle } from '#lib/product/list-title';
 import {
   newSessionHref,
-  newSessionId,
   OpenFirstPage,
   useNavigate,
 } from '#lib/product/navigation/navigation';
 import { Text } from '#primitives/display/text';
 import { SearchField } from '#primitives/inputs/search-field';
+import { newSessionId } from '../lib/product/navigation/new-session';
 import { type Section, sections } from '../lib/product/navigation/sections';
 import { FirstSessionScreen } from './sessions/first-session-screen';
 import { LiveSessionList } from './sessions/live-session-list';

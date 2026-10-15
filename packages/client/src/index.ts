@@ -85,6 +85,8 @@ export {
   sectionOrder,
 } from './lib/product/navigation/sections';
 
+export { withoutNewSession } from './lib/product/navigation/new-session';
+
 export { AppProviders } from './app-providers';
 
 export { PortalHost } from '#primitives/overlays/portal';
