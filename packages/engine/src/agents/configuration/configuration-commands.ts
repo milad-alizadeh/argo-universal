@@ -20,6 +20,7 @@ import { type CustomCheck, checkCustomDefinition } from './custom-check';
 export { checkConfiguredAgent } from './custom-check';
 
 export interface ConfigurationDeps {
+  invalidateAgent?: (agentId: string) => void;
   database: Database;
   databaseWriter: WriterActorRef;
   createId: () => string;
@@ -47,11 +48,11 @@ const serializeConfiguration = ({
 }: SavedAgent): string | null =>
   configuration === null ? null : JSON.stringify(configuration);
 
-const saveConfiguration = (
+const saveConfiguration = async (
   deps: ConfigurationDeps,
   agent: SavedAgent,
-): Promise<void> =>
-  writeDatabaseJobAndWaitForCommit(
+): Promise<void> => {
+  await writeDatabaseJobAndWaitForCommit(
     deps.databaseWriter,
     new AgentConfigurationSaveJob({
       ...agent,
@@ -59,6 +60,7 @@ const saveConfiguration = (
     }),
     true,
   );
+};
 
 const withSetup = <Result>(
   deps: ConfigurationDeps,
@@ -94,6 +96,7 @@ const saveCheckedCustomAgent = async (
   };
 
   await saveConfiguration(deps, { id, enabled, configuration });
+  deps.invalidateAgent?.(id);
 
   return { status: 'ready', agentId: id };
 };

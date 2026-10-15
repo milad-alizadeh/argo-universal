@@ -2,8 +2,6 @@ import type {
   ClientContext,
   ClientRequestHandlersByMethod,
   InitializeResponse,
-  LoadSessionRequest,
-  LoadSessionResponse,
   NewSessionRequest,
   NewSessionResponse,
   ResumeSessionRequest,
@@ -17,10 +15,10 @@ import type { LaunchLoginTerminal } from '..';
 
 export type AcpSessionOpening =
   | { method: 'session/new'; params: NewSessionRequest }
-  | { method: 'session/load'; params: LoadSessionRequest }
   | { method: 'session/resume'; params: ResumeSessionRequest };
 
 export type AcpSessionDestination = {
+  registrationFinished?: Promise<void>;
   update: (notification: SessionNotification) => undefined;
   failed: (cause: unknown) => void;
   requestPermission: ClientRequestHandlersByMethod['session/request_permission'];
@@ -31,9 +29,8 @@ export type AcpSessionLease = {
   agent: ClientContext;
   sessionId: SessionId;
   initialization: InitializeResponse;
-  response: NewSessionResponse | LoadSessionResponse | ResumeSessionResponse;
+  response: NewSessionResponse | ResumeSessionResponse;
   close: () => Promise<void>;
-  replace: (input: Omit<AcpOpenInput, 'launch'>) => Promise<AcpSessionLease>;
   readonly released: Promise<void>;
 };
 
@@ -47,6 +44,7 @@ export type AcpOpenInput = {
 export type AcpProcess = {
   stream: Stream;
   exited: Promise<void>;
+  exitError?: () => Error;
   terminate: () => Promise<void>;
 };
 
@@ -54,10 +52,10 @@ export type AcpResourceInput = {
   launchLoginTerminal?: LaunchLoginTerminal;
   launchProcess?: (launch: AgentLaunch) => Promise<AcpProcess>;
   closeTimeoutMs?: number;
-  releaseTimeoutMs?: number;
 };
 
 export type AcpResources = {
+  invalidateAgent: (agentId: string) => void;
   isAgentInUse: (agentId: string) => boolean;
   open: (input: AcpOpenInput) => Promise<AcpSessionLease>;
   reserveAuthentication: (launch: AgentLaunch) => () => void;

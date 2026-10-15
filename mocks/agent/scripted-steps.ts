@@ -86,7 +86,7 @@ const runWireStep = (
   if (step.type === 'raw')
     return turn.writeRaw(step.frame.replaceAll('$sessionId', turn.sessionId));
 
-  return turn.closed;
+  return runExitStep(step, turn);
 };
 
 const runGate = (
@@ -102,3 +102,9 @@ const waitForCancel = (
   turn: ScriptedTurn,
 ): Promise<void> =>
   step.until ? Promise.race([turn.cancelled, step.until]) : turn.cancelled;
+
+const runExitStep = (
+  step: Extract<ScriptedStep, { type: 'exit' | 'hold' }>,
+  turn: ScriptedTurn,
+): Promise<void> =>
+  step.type === 'exit' ? turn.exit(step.code, step.stderr) : turn.closed;

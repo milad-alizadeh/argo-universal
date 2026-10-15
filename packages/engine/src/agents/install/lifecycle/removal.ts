@@ -41,7 +41,13 @@ export const removeAgentInstallation = async (input: {
   if (agent.configuration.source === 'registry')
     await removeManagedFiles(input.home, input.agentId);
   await saveRemoval(input.deps, agent);
+  invalidateRemovedAgent(input);
 };
+
+const invalidateRemovedAgent = (input: {
+  deps: ConfigurationDeps;
+  agentId: string;
+}): void => input.deps.invalidateAgent?.(input.agentId);
 
 const saveRemoval = (
   deps: ConfigurationDeps,

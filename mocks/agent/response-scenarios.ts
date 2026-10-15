@@ -25,11 +25,6 @@ export const acpResponses = {
     params: { cwd: '/checkout', mcpServers: [] },
     response: { sessionId: 'one', _meta: { opaque: { preserve: true } } },
   } satisfies ResponseExample<'session/new'>,
-  loadSession: {
-    method: 'session/load',
-    params: { cwd: '/checkout', mcpServers: [], sessionId: 'one' },
-    response: {},
-  } satisfies ResponseExample<'session/load'>,
   resumeSession: {
     method: 'session/resume',
     params: { cwd: '/checkout', mcpServers: [], sessionId: 'one' },
@@ -40,11 +35,6 @@ export const acpResponses = {
     params: { sessionId: 'one' },
     response: {},
   } satisfies ResponseExample<'session/close'>,
-  setSessionMode: {
-    method: 'session/set_mode',
-    params: { sessionId: 'one', modeId: 'plan' },
-    response: {},
-  } satisfies ResponseExample<'session/set_mode'>,
   setSessionConfigOption: {
     method: 'session/set_config_option',
     params: { sessionId: 'one', configId: 'fast', value: 'on' },

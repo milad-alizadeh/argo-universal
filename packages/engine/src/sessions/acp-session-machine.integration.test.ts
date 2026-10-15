@@ -30,26 +30,12 @@ const expectAcpState = (
     expect(snapshot.context.vendorSessionId).toBe(lease.sessionId);
     expect(snapshot.context.stored).toBe(true);
   }
-
-  if (snapshot.matches({ open: { acp: 'retainingCleanup' } }))
-    expect(
-      snapshot.context.failure !== null ||
-        snapshot.context.agentCrashes.length > 0,
-    ).toBe(true);
-
-  if (snapshot.matches({ open: { acp: 'replacing' } })) {
-    expect(snapshot.context.activeTurnId).toBeNull();
-    expect(snapshot.context.turnEnding.kind).toBe('cancel_timeout');
-    expect(snapshot.context.acpTurnOutcome).toEqual({
-      stopReason: 'cancelled',
-    });
-  }
 };
 
 describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   const sessionInput = { ...emptySessionInput, agent: agentId };
   it.each(['new', 'existing', 'opened'] as const)(
-    'the ACP structural graph from %s walks every creation, opening, recovery and cleanup transition',
+    'the ACP structural graph from %s walks every creation, opening, cancellation and cleanup transition',
     async (entry) => {
       const host = await startAcpEngine({ steps: [] }, undefined, agentId);
       const created = await host.caller.session.new(sessionInput);
@@ -78,7 +64,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
                 open: { acp: { activeTurn: 'cancelling' } },
               }),
             ).toBe(true);
-            expect(step.state.context.storageFailedTurn).toBe(true);
+            expect(step.state.context.activeTurnId).toBeNull();
           }
 
           if (

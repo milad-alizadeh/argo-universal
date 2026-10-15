@@ -66,7 +66,6 @@ it('retains login ownership when fresh ACP initialization cannot observe cleanup
     operationId: started.operationId,
     status: 'cleanup-failed',
   });
-  await expect(host.caller.session.new(emptySessionInput)).rejects.toThrow(
-    /login|sign-in|in use/i,
-  );
+  const opened = await host.caller.session.new(emptySessionInput);
+  await host.caller.session.close(opened);
 });

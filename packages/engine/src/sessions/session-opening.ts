@@ -55,10 +55,7 @@ function isInitialSessionStartup(
     { open: { acp: 'opening' } },
   ] as const;
 
-  return (
-    snapshot.context.agentCrashes.length === 0 &&
-    initialStates.some((state): boolean => snapshot.matches(state))
-  );
+  return initialStates.some((state): boolean => snapshot.matches(state));
 }
 
 async function waitForSessionReady(
@@ -71,7 +68,10 @@ async function waitForSessionReady(
       sessionSnapshot.status !== 'active' ||
       (!isInitialSessionStartup(sessionSnapshot) &&
         (commandType !== 'session.prompt' ||
-          !sessionSnapshot.matches({ open: { acp: 'configuring' } }))),
+          (!sessionSnapshot.matches({ open: { acp: 'configuring' } }) &&
+            !sessionSnapshot.matches({
+              open: { acp: { activeTurn: 'cancelling' } },
+            })))),
     { timeout: Infinity },
   );
 

@@ -125,7 +125,7 @@ const verifySessionAdmission = async (
           })
         ).status,
     )
-    .toBe('in-use');
+    .toBe('choose-method');
   expect(host.agent.processes[1]?.terminations).toBe(0);
   await host.caller.session.close({ sessionId });
 };

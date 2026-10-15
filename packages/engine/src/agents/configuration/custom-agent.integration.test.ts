@@ -34,7 +34,7 @@ it('a missing executable is refused with a precise failure and nothing is saved'
     }),
   ).resolves.toEqual({
     status: 'failed',
-    failure: `${executable} was not found.`,
+    failure: 'Fixture ACP exited before answering ACP initialize.',
   });
   const configured = await host.caller.agents.configured();
   expect(configured.map(({ configuration }) => configuration.source)).toEqual([

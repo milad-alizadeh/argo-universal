@@ -45,6 +45,8 @@ const selectedCatalogEntry = (
 const prepareMaterialization = (
   input: InstallExecutionInput,
 ): MaterializationInput => {
+  input.deps.invalidateAgent?.(input.operation.agentId);
+
   const catalog = selectedCatalogEntry(input),
     { agentId, operationId } = input.operation;
 

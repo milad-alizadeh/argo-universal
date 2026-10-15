@@ -56,6 +56,7 @@ export type ScriptedStep =
   | { type: 'gate'; waitFor: Promise<void>; entered?: { resolve: () => void } }
   | { type: 'yield' }
   | { type: 'parallel'; steps: readonly ScriptedStep[] }
+  | { type: 'exit'; code: number; stderr: string }
   | { type: 'hold' }
   | { type: 'fail'; message: string }
   | { type: 'raw'; frame: string };
@@ -64,6 +65,7 @@ export type ScriptedScenario = {
   initialize?: InitializeResponse;
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];
+  resumedSteps?: readonly ScriptedStep[];
   responses?: ScriptedResponses;
   notifications?: ScriptedNotifications;
   sessionIds?: readonly string[];
@@ -76,5 +78,6 @@ export type ScriptedTurn = {
   isCancelled: () => boolean;
   writeRaw: (frame: string) => Promise<void>;
   closed: Promise<void>;
+  exit: (code: number, stderr: string) => Promise<void>;
   requestId?: JsonRpcId;
 };

@@ -77,24 +77,20 @@ it('a withdrawn opening closes its late identity exactly once while its sibling 
   ]);
 });
 
-it('different Projects and effective launch values never share initialization', async () => {
+it('different Projects never share initialization', async () => {
   const peer = createScriptedAgentProcess({ steps: [] });
   const resources = createAcpResources(peer);
   const base = createResourceOpening();
   await Promise.all([
     resources.open(base),
     resources.open({ ...base, launch: { ...base.launch, projectId: 'other' } }),
-    resources.open({
-      ...base,
-      launch: { ...base.launch, env: { AUTH: 'other' } },
-    }),
   ]);
-  expect(peer.processes).toHaveLength(3);
+  expect(peer.processes).toHaveLength(2);
   await resources.shutdown();
 });
 
-it.each(['session/load', 'session/resume'] as const)(
-  'known %s identity routes notifications before opening completes',
+it.each(['session/resume'] as const)(
+  'an update before the %s response is dropped as unknown',
   async (method) => {
     const result = Promise.withResolvers<ResumeSessionResponse>();
 
@@ -122,7 +118,7 @@ it.each(['session/load', 'session/resume'] as const)(
     result.resolve({});
     const lease = await opening;
     expect(lease.sessionId).toBe('known');
-    expect(updates).toEqual([createResourceUpdate('known')]);
+    expect(updates).toEqual([]);
     await lease.close();
   },
 );

@@ -86,9 +86,7 @@ export class AcpAuthenticationStatus {
       clearTimeout(timeout);
     }
   }
-  public async requireReady(initialization: InitializeResponse): Promise<void> {
-    const result = await this.check(initialization);
-
-    if (result.status !== 'ready') throw new Error(result.failure);
+  public requireReady(): Promise<void> {
+    return Promise.resolve();
   }
 }

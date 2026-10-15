@@ -69,7 +69,9 @@ const serveResume = (
   const resume = player.respond('session/resume');
 
   return app.onRequest('session/resume', (context) =>
-    resume(context, { configOptions: sessions.open(context.params.sessionId) }),
+    resume(context, {
+      configOptions: sessions.resume(context.params.sessionId),
+    }),
   );
 };
 

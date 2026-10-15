@@ -1,27 +1,41 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { Readable, Writable } from 'node:stream';
-import { ndJsonStream, type Stream } from '@agentclientprotocol/sdk';
+import {
+  ndJsonStream,
+  type AnyMessage,
+  type Stream,
+} from '@agentclientprotocol/sdk';
 import type { AgentLaunch } from '..';
+import { shellEnvironment } from '../launch/shell-env';
+import { vendorEnvironment } from '../vendor';
 import type { AcpProcess } from './resource-types';
 
-const createCapturedEnvironment = (launch: AgentLaunch): NodeJS.ProcessEnv => {
-  const environment = { ...process.env, ...launch.env };
+const exitDrainMs = 250;
 
-  for (const key of Object.keys(environment))
-    if (!Object.hasOwn(launch.env, key)) delete environment[key];
+export class AgentProcessExitError extends Error {
+  public constructor(
+    code: number | null,
+    signal: NodeJS.Signals | null,
+    public readonly stderr: string,
+  ) {
+    super(
+      signal
+        ? `Agent exited by signal ${signal}`
+        : `Agent exited with status ${code}`,
+    );
+  }
+}
 
-  return environment;
-};
+const quote = (argument: string): string =>
+  `'${argument.replaceAll("'", "'\\''")}'`;
 
-const createProcessOutputStream = (
+const processOutputStream = (
   child: ChildProcessWithoutNullStreams,
 ): ReadableStream<Uint8Array> => {
-  const bridge = new TransformStream<Uint8Array, Uint8Array>({
-    start: (controller): void => {
-      child.once('error', (error) => controller.error(error));
-    },
+  const bridge = new TransformStream<Uint8Array, Uint8Array>();
+  child.once('error', (error) => {
+    void bridge.writable.abort(error).catch(() => {});
   });
-
   void Readable.toWeb(child.stdout)
     .pipeTo(bridge.writable)
     .catch(() => {});
@@ -29,74 +43,100 @@ const createProcessOutputStream = (
   return bridge.readable;
 };
 
-const observeChildClose = (
-  child: ChildProcessWithoutNullStreams,
-): Promise<void> =>
-  new Promise((resolve) => {
-    child.once('close', () => resolve());
-  });
+class ProcessOutput {
+  private stderr = '';
+  private failure: Error = new Error('Agent connection closed');
+  private readonly closed = Promise.withResolvers<void>();
+  public constructor(private readonly child: ChildProcessWithoutNullStreams) {
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (chunk: string) => {
+      this.stderr += chunk;
+    });
+    child.once('close', () => this.closed.resolve());
+  }
+  public observeExit(): Promise<void> {
+    const exited = Promise.withResolvers<void>();
+    this.child.once('error', (error) => {
+      this.failure = error;
+      exited.resolve();
+    });
+    this.child.once('exit', (code, signal) => {
+      void this.finishExit(code, signal).then(exited.resolve);
+    });
 
-const observeChildSpawn = (
-  child: ChildProcessWithoutNullStreams,
-): Promise<void> =>
-  new Promise((resolve, reject) => {
-    child.once('spawn', resolve);
-    child.once('error', reject);
-  });
+    return exited.promise;
+  }
+  private async finishExit(
+    code: number | null,
+    signal: NodeJS.Signals | null,
+  ): Promise<void> {
+    await this.drain();
+    this.failure = new AgentProcessExitError(code, signal, this.stderr.trim());
+  }
+  private async drain(): Promise<void> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
-// One Agent frame may hold at most 32 MiB; a larger one fails the connection with the SDK's MessageTooLargeError.
-const agentFrameLimit = 33_554_432;
+    const deadline = new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, exitDrainMs);
+    });
 
-const createAcpProtocolStream = (
-  child: ChildProcessWithoutNullStreams,
-): Stream =>
-  ndJsonStream(Writable.toWeb(child.stdin), createProcessOutputStream(child), {
-    maxMessageBytes: agentFrameLimit,
-  });
+    await Promise.race([this.closed.promise, deadline]);
+    clearTimeout(timer);
+  }
+  private readonly observeMessage = (
+    message: AnyMessage,
+    controller: TransformStreamDefaultController<AnyMessage>,
+  ): void => {
+    this.stderr = '';
+    controller.enqueue(message);
+  };
+  public stream(): Stream {
+    const protocol = ndJsonStream(
+      Writable.toWeb(this.child.stdin),
+      processOutputStream(this.child),
+    );
 
-const isOwnedPid = (pid: number | undefined): boolean =>
-  typeof pid === 'number' && Number.isInteger(pid) && pid > 0;
+    return {
+      ...protocol,
+      readable: protocol.readable.pipeThrough(
+        new TransformStream({ transform: this.observeMessage }),
+      ),
+    };
+  }
+  public exitError = (): Error => this.failure;
+}
 
-const signalOwnedProcess = (child: ChildProcessWithoutNullStreams): void => {
-  if (!isOwnedPid(child.pid))
-    throw new Error('ACP child process has no valid owned process identity');
-  child.kill('SIGTERM');
-};
-
-const terminateChild = async (
-  child: ChildProcessWithoutNullStreams,
-  spawned: Promise<void>,
-  closed: Promise<void>,
-): Promise<void> => {
-  await spawned.then(
-    () => signalOwnedProcess(child),
-    () => {},
-  );
-  await closed;
-};
-
-const ownAcpChildProcess = (
-  child: ChildProcessWithoutNullStreams,
-): AcpProcess => {
-  child.stderr.resume();
-  const closed = observeChildClose(child);
-  const spawned = observeChildSpawn(child);
-  void spawned.catch(() => {});
+const ownProcess = (child: ChildProcessWithoutNullStreams): AcpProcess => {
+  const output = new ProcessOutput(child);
+  const exited = output.observeExit();
 
   return {
-    stream: createAcpProtocolStream(child),
-    exited: closed,
-    terminate: () => terminateChild(child, spawned, closed),
+    stream: output.stream(),
+    exited,
+    exitError: output.exitError,
+    terminate: async () => {
+      child.kill('SIGTERM');
+      await exited;
+    },
   };
 };
+
+const spawnAgent = (
+  launch: AgentLaunch,
+  environment: NodeJS.ProcessEnv,
+): ChildProcessWithoutNullStreams =>
+  spawn(
+    process.env.SHELL ?? '/bin/sh',
+    ['-c', `exec ${[launch.executable, ...launch.args].map(quote).join(' ')}`],
+    {
+      cwd: launch.cwd,
+      env: { ...environment, ...launch.env, ...vendorEnvironment(launch) },
+      detached: false,
+      stdio: 'pipe',
+    },
+  );
 
 export const launchAcpProcess = async (
   launch: AgentLaunch,
 ): Promise<AcpProcess> =>
-  ownAcpChildProcess(
-    spawn(launch.executable, [...launch.args], {
-      cwd: launch.cwd,
-      env: createCapturedEnvironment(launch),
-      stdio: 'pipe',
-    }),
-  );
+  ownProcess(spawnAgent(launch, await shellEnvironment(launch.cwd)));

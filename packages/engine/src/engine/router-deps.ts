@@ -18,7 +18,6 @@ import {
   sessionActorId,
   sessionMachine,
 } from '../sessions';
-import { discoveryCacheId, discoveryCacheMachine } from '../sessions';
 import { databaseWriterId, writerMachine } from '../storage';
 import type { SystemDeps } from '../system';
 import { createEngineAgentLogins } from './agent-logins';
@@ -65,8 +64,7 @@ type EngineSupplied =
   | 'createId'
   | 'checkAgentLaunch'
   | 'agentLogins'
-  | 'installations'
-  | 'discovery';
+  | 'installations';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
@@ -99,6 +97,8 @@ function bindInstallations(
     ...input,
     createId: input.createId ?? randomUUID,
     checkAgentLaunch,
+    invalidateAgent:
+      input.sessions.getSnapshot().context.acpResources.invalidateAgent,
     isInUse: (agentId) =>
       input.agentLogins.isBusy(agentId) ||
       sessionsUseAgent(input.sessions, agentId),
@@ -109,13 +109,14 @@ function createAgentSetup(
   input: AppRouterInput,
 ): Pick<
   AppRouterDeps,
-  'installations' | 'agentLogins' | 'createId' | 'discovery'
+  'installations' | 'agentLogins' | 'createId' | 'invalidateAgent'
 > {
   const installations = input.installations ?? createInstallations(input.home);
 
   return {
     installations,
-    discovery: requireDiscovery(input.sessions),
+    invalidateAgent:
+      input.sessions.getSnapshot().context.acpResources.invalidateAgent,
     agentLogins: resolveAgentLogins(input, installations),
     createId: input.createId ?? randomUUID,
   };
@@ -153,18 +154,4 @@ function sessionsUseAgent(
 
 function createInstallations(home: string | undefined): AgentInstallations {
   return new AgentInstallations(home ?? '');
-}
-
-function requireDiscovery(
-  sessions: OpenSessionsActorRef,
-): AppRouterDeps['discovery'] {
-  const discovery = findMachineActor(
-    sessions.system,
-    discoveryCacheId,
-    discoveryCacheMachine,
-  );
-
-  if (!discovery) throw new Error('Discovery is unavailable');
-
-  return discovery;
 }

@@ -1,50 +1,22 @@
+import { execFileSync } from 'node:child_process';
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { expect, it, onTestFinished, vi } from 'vitest';
+import { z } from 'zod';
 import {
   createResourceDestination,
   createResourceOpening,
 } from '#mocks/acp-resource';
+import { openLoginShellAgent } from '#mocks/acp-shell';
 import { createAcpResources } from './index';
 
 const readProcessId = (sessionId: string): number =>
   Number(sessionId.split(':')[0]);
 
-it('a missing executable rejects opening and releases the production resource after child closure', async () => {
-  const resources = createAcpResources();
-  const failures: unknown[] = [];
-
-  const base = createResourceOpening({
-    ...createResourceDestination(),
-    failed: (error) => {
-      failures.push(error);
-    },
-  });
-
-  const executable = `/missing-argo-agent-${crypto.randomUUID()}`;
-
-  const input = {
-    ...base,
-    launch: { ...base.launch, executable, cwd: process.cwd() },
-  };
-
-  const opening = resources.open(input);
-  void opening.catch(() => {});
-  await vi.waitFor(() =>
-    expect(failures).toContainEqual(
-      expect.objectContaining({ code: 'ENOENT' }),
-    ),
-  );
-  await expect(opening).rejects.toMatchObject({
-    code: 'ENOENT',
-    path: executable,
-  });
-  await expect(resources.open(input)).rejects.toMatchObject({
-    code: 'ENOENT',
-    path: executable,
-  });
-  await expect(resources.shutdown()).resolves.toBeUndefined();
-});
+const group = (pid: number): string =>
+  execFileSync('/bin/ps', ['-o', 'pgid=', '-p', String(pid)], {
+    encoding: 'utf8',
+  }).trim();
 
 it('the production launch port owns a real stdio process and observes its final exit', async () => {
   const base = createResourceOpening();
@@ -64,21 +36,20 @@ it('the production launch port owns a real stdio process and observes its final 
   });
 
   expect(lease.initialization.protocolVersion).toBe(1);
-  // The OS may add its own variables; the Engine's own must not leak through.
   const environment = lease.initialization._meta?.['environment'];
   expect(environment).toMatchObject({ ARGO_LAUNCH_VALUE: 'captured' });
-  expect(environment).not.toHaveProperty('ARGO_AMBIENT_VALUE');
-  expect(environment).not.toHaveProperty('NODE_ENV');
   expect(process.kill(readProcessId(lease.sessionId), 0)).toBe(true);
   await lease.close();
   await lease.released;
+  expect(process.kill(readProcessId(lease.sessionId), 0)).toBe(true);
+  await resources.shutdown();
   expect(() => process.kill(readProcessId(lease.sessionId), 0)).toThrow(
     'ESRCH',
   );
 });
 
 it.each([1, 4, 8])(
-  '%i concurrent Sessions share one real Agent process, each receives only its own updates, and the last close ends it',
+  '%i concurrent Sessions share one real Agent process, each receives only its own updates, and the last close keeps it alive',
   async (count) => {
     const resources = createAcpResources();
     onTestFinished(() => resources.shutdown());
@@ -132,6 +103,63 @@ it.each([1, 4, 8])(
       updates: leases.map((lease) => [lease.sessionId]),
       aliveWithOneSession: true,
     });
+    expect(process.kill(agentProcess, 0)).toBe(true);
+    await resources.shutdown();
     expect(() => process.kill(agentProcess, 0)).toThrow('ESRCH');
   },
 );
+
+it('the Agent inherits its Project login-shell PATH, stays in the Engine process group, and clears the Registry vendor API key', async () => {
+  const { lease, bin } = await openLoginShellAgent();
+
+  const environment = z
+    .object({
+      PATH: z.string(),
+      ARGO_LOGIN_VALUE: z.string(),
+      ANTHROPIC_API_KEY: z.string(),
+    })
+    .parse(lease.initialization._meta?.['environment']);
+
+  expect(environment.PATH.split(':')[0]).toBe(bin);
+  expect(environment.ARGO_LOGIN_VALUE).toBe('login');
+  expect(environment.ANTHROPIC_API_KEY).toBe('');
+
+  const engineGroup = group(process.pid);
+  const agentGroup = group(readProcessId(lease.sessionId));
+  console.info(
+    `Agent process group ${agentGroup}; Engine process group ${engineGroup}`,
+  );
+  expect(agentGroup).toBe(engineGroup);
+});
+
+it('a real Agent exit reports its status and final stderr block', async () => {
+  const resources = createAcpResources();
+  onTestFinished(() => resources.shutdown());
+  const failure = Promise.withResolvers<unknown>();
+
+  const base = createResourceOpening({
+    ...createResourceDestination(),
+    failed: failure.resolve,
+  });
+
+  const lease = await resources.open({
+    ...base,
+    launch: {
+      ...base.launch,
+      ...scriptedAgentCommand('exit-with-stderr'),
+      cwd: process.cwd(),
+    },
+  });
+
+  const prompt = lease.agent.request('session/prompt', {
+    sessionId: lease.sessionId,
+    prompt: [{ type: 'text', text: 'Exit' }],
+  });
+
+  void prompt.catch(() => {});
+  await expect(failure.promise).resolves.toMatchObject({
+    message: 'Agent exited with status 17',
+    stderr: 'Agent fixture failed',
+  });
+  await expect(prompt).rejects.toThrow(/closed|exit|stream/i);
+});

@@ -3,7 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { type Database, migrationsFolder, openDatabase } from '@repo/db';
 import { agents, project } from '@repo/db/schema';
-import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
+import {
+  fixtureAgents,
+  fixtureRegistryIds,
+} from '@repo/mocks/agent/app-fixtures';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { insertSession } from '#mocks/database';
 import { readConfiguredAgents } from './configuration-sql';
@@ -58,8 +61,8 @@ it('bootstraps the required Agent configurations, adopting their catalog rows, w
       .from(agents)
       .all(),
   ).toEqual([
-    { id: claudeId, registryId: 'claude-acp' },
-    { id: codexId, registryId: 'codex-acp' },
+    { id: claudeId, registryId: fixtureRegistryIds[0] },
+    { id: codexId, registryId: fixtureRegistryIds[1] },
   ]);
   expect(readConfiguredAgents(database)).toEqual([
     { id: claudeId, enabled: true, configuration: registryConfiguration },

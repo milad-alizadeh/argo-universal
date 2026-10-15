@@ -30,3 +30,18 @@ export const createAgentClient = (input: AgentClientInput): ClientConnection =>
       ({ params }) => input.acceptAuthStatus?.(params),
     )
     .connect(input.stream);
+
+export const awaitAcpOpening = async <Result>(
+  work: Promise<Result>,
+  signal?: AbortSignal,
+): Promise<Result> => {
+  const aborted = Promise.withResolvers<never>();
+  const abort = (): void => aborted.reject(signal?.reason);
+  signal?.addEventListener('abort', abort, { once: true });
+
+  try {
+    return await Promise.race([work, aborted.promise]);
+  } finally {
+    signal?.removeEventListener('abort', abort);
+  }
+};

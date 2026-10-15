@@ -1,0 +1,52 @@
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fixtureRegistryIds } from '@repo/mocks/agent/app-fixtures';
+import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
+import { onTestFinished, vi } from 'vitest';
+import { createAcpResources, type AcpSessionLease } from '../src/agents';
+import { createResourceOpening } from './acp-resource';
+
+export const openLoginShellAgent = async (): Promise<{
+  lease: AcpSessionLease;
+  bin: string;
+}> => {
+  const { directory, bin } = loginProject();
+  const resources = createAcpResources();
+  onTestFinished(() => resources.shutdown());
+  const base = createResourceOpening();
+
+  const lease = await resources.open({
+    ...base,
+    launch: {
+      ...base.launch,
+      registryId: fixtureRegistryIds[0],
+      ...scriptedAgentCommand('reply'),
+      cwd: directory,
+    },
+  });
+
+  return { lease, bin };
+};
+
+const loginEnvironment = (directory: string): void => {
+  vi.stubEnv('SHELL', '/bin/zsh');
+  vi.stubEnv('ZDOTDIR', directory);
+  vi.stubEnv('ANTHROPIC_API_KEY', 'fixture-key-that-must-be-cleared');
+};
+
+type LoginProject = { directory: string; bin: string };
+
+const loginProject = (): LoginProject => {
+  const directory = mkdtempSync(join(tmpdir(), 'argo-shell-env-'));
+  onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
+  const bin = join(directory, 'bin');
+  mkdirSync(bin);
+  writeFileSync(
+    join(directory, '.zprofile'),
+    `export PATH="${bin}:$PATH"\nexport ARGO_LOGIN_VALUE=login\n`,
+  );
+  loginEnvironment(directory);
+
+  return { directory, bin };
+};

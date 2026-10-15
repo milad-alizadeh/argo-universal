@@ -21,10 +21,16 @@ type ConnectedScript = { connection: AgentConnection; wire: ScriptedWire };
 class ScriptedAgent {
   private readonly scenario: ScriptedScenario;
   private readonly nextSessionId: () => string;
+  private readonly exit: ScriptedWire['exit'];
   private connected: ConnectedScript | undefined;
   private opened = 0;
-  public constructor(scenario: ScriptedScenario, nextSessionId: () => string) {
+  public constructor(
+    scenario: ScriptedScenario,
+    nextSessionId: () => string,
+    exit: ScriptedWire['exit'],
+  ) {
     this.scenario = scenario;
+    this.exit = exit;
     this.nextSessionId = nextSessionId;
   }
   private nextId(): string {
@@ -50,7 +56,7 @@ class ScriptedAgent {
   ): AgentConnection {
     const shared = shareScriptedOutput(output);
     const closed = Promise.withResolvers<void>();
-    const wire = { writeRaw: shared.writeRaw, closed: closed.promise };
+    const wire = this.createWire(shared.writeRaw, closed.promise);
 
     const connection = serveScript(agent(), this.createScript(wire)).connect(
       ndJsonStream(shared.stream, input),
@@ -60,6 +66,12 @@ class ScriptedAgent {
     this.connected = { connection, wire };
 
     return connection;
+  }
+  private createWire(
+    writeRaw: ScriptedWire['writeRaw'],
+    closed: Promise<void>,
+  ): ScriptedWire {
+    return { writeRaw, closed, exit: this.exit };
   }
   private requireConnection(): ConnectedScript {
     if (!this.connected) throw new Error('Scripted Agent is not connected');
@@ -87,8 +99,12 @@ class ScriptedAgent {
 export const createScriptedAgent = (
   scenario: ScriptedScenario,
   nextSessionId = (): string => `${process.pid}:${crypto.randomUUID()}`,
+  exit: ScriptedWire['exit'] = (code, stderr) =>
+    new Promise(() => {
+      process.stderr.write(stderr, () => process.exit(code));
+    }),
 ): Pick<ScriptedAgent, 'connect' | 'play' | 'sendRaw'> => {
-  const scripted = new ScriptedAgent(scenario, nextSessionId);
+  const scripted = new ScriptedAgent(scenario, nextSessionId, exit);
 
   return {
     connect: (output, input) => scripted.connect(output, input),
