@@ -4,7 +4,7 @@ import { Text } from '#primitives/display/text';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';
 import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';
 
-// Stands in for the native stack's header in stories: one line of left item, title and right items.
+// Stands in for the stack's header in stories, laid out as the web's JS header draws it (getDefaultHeaderHeight, headerTitleAlign 'left'): one 64pt line of left item, left-aligned title and right items.
 export function ScreenHeaderMock({
   title,
   left,
@@ -12,8 +12,8 @@ export function ScreenHeaderMock({
   search,
 }: ScreenHeaderProps): React.JSX.Element {
   return (
-    <View className="h-11 flex-row items-center bg-content px-1">
-      <View className="w-23 flex-row">{left}</View>
+    <View className="h-16 flex-row items-center gap-4 bg-content px-4">
+      {left ? <View className="flex-row">{left}</View> : null}
       <HeaderContent title={title} right={right} search={search} />
     </View>
   );
@@ -26,7 +26,7 @@ function HeaderTitle({
   return (
     <>
       <TitleText title={title} />
-      <View className="w-23 flex-row justify-end gap-1">{right}</View>
+      <View className="flex-row gap-1">{right}</View>
     </>
   );
 }
@@ -40,7 +40,7 @@ function TitleText({
       role="nav-title"
       aria-level={1}
       numberOfLines={1}
-      className="min-w-0 flex-1 text-center"
+      className="min-w-0 flex-1"
     >
       {title}
     </Text>

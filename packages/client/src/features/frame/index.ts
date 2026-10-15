@@ -1,15 +1,8 @@
-export {
-  OnboardingLayout,
-  useOnboardingShown,
-} from './screens/onboarding-layout';
-
-export { SectionDrawer } from './screens/section-drawer';
+export { SectionDrawer } from './shell/section-drawer';
 
 export { usePhoneDrawerWidth } from './components/phone-drawer-content/use-phone-drawer-width';
 
-export { SectionRootScreen } from './screens/section-root-screen';
-
-export { ShellFrame } from './screens/shell-frame';
+export { ShellFrame } from './shell/shell-frame';
 
 export {
   DesktopShellDetail,
@@ -18,3 +11,15 @@ export {
 } from './components/desktop-shell/desktop-shell-frame';
 
 export { DesktopShell } from './components/desktop-shell/desktop-shell';
+
+export { SectionRootView } from './components/section-root-view/section-root-view';
+
+export { PlaceholderPhoneScreen } from './shell/placeholder-phone-screen';
+
+export { OnboardingShell } from './components/onboarding-shell/onboarding-shell';
+
+export { shellSections } from './components/shell-sections';
+
+export { PhoneMenuButton } from './shell/phone-menu-button';
+
+export { LiveConnectionBanner } from './shell/live-connection-banner';

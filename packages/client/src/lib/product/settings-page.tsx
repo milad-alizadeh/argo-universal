@@ -11,7 +11,6 @@ import {
 import { ScrollColumnContext } from '../generic/scroll-column';
 import { useWide } from '../generic/use-wide/use-wide';
 import { cn } from '../generic/utils';
-import { PhoneTitle } from './navigation/phone-title';
 
 export type SettingsPageSearch = PageTitleSearch;
 
@@ -47,16 +46,10 @@ function useSettingsColumn(): SettingsColumn {
 /*
  * One Settings page on a wide window: a centred column under its own title and caption.
  * The content's scroll view spans the pane, so its scrollbar sits at the pane's edge, and keeps its content to the column.
- * A phone's native header shows the title, so there the page is its content alone.
+ * A phone's native header shows the title, set by the Settings stack or by the page's PhoneTitle, so there the page is its content alone.
  */
 export function SettingsPage(props: SettingsPageProps): ReactNode {
-  if (!useWide())
-    return (
-      <>
-        <PhoneTitle title={props.title} />
-        {props.children}
-      </>
-    );
+  if (!useWide()) return props.children;
 
   return <WideSettingsPage {...props} />;
 }

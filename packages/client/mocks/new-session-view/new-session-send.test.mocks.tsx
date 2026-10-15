@@ -1,12 +1,12 @@
 import { expect } from 'storybook/test';
-import type { ReadyNewSessionViewProps } from '../../src/features/sessions/components/new-session-view/new-session-view';
+import { eachLayout, layoutWidths } from '../../src/lib/generic/each-layout';
+import { settleViewport } from '../../src/lib/generic/settle-viewport';
+import type { ReadyNewSessionViewProps } from '../../src/screens/sessions/$id/new-session-view';
 import {
   openingNewSession,
   readyNewSession,
   typedDraft,
-} from '../../src/features/sessions/components/new-session-view/new-session-view.mocks';
-import { eachLayout, layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
+} from '../../src/screens/sessions/$id/new-session-view.mocks';
 import type { Story } from './new-session-story.test.mocks';
 
 const sendLabel = 'Send';

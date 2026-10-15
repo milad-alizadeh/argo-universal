@@ -3,8 +3,8 @@ import type * as React from 'react';
 import {
   NewSessionView,
   type NewSessionViewProps,
-} from '../../src/features/sessions/components/new-session-view/new-session-view';
-import { readyNewSession } from '../../src/features/sessions/components/new-session-view/new-session-view.mocks';
+} from '../../src/screens/sessions/$id/new-session-view';
+import { readyNewSession } from '../../src/screens/sessions/$id/new-session-view.mocks';
 
 export const meta = {
   title: 'Tests/NewSessionView',

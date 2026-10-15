@@ -3,13 +3,13 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { Button } from '#primitives/buttons/button';
+import { layoutWidths } from '../../src/lib/generic/each-layout';
+import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   SessionView,
   type SessionViewProps,
-} from '../../src/features/sessions/components/session-view/session-view';
-import { idleSession } from '../../src/features/sessions/components/session-view/session-view.mocks';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
+} from '../../src/screens/sessions/$id/session-view';
+import { idleSession } from '../../src/screens/sessions/$id/session-view.mocks';
 import { feedScrollTestId, type Story } from './session-view-story.test.mocks';
 
 // Collapsed, the pane is a few pixels wide, as while an expanded Inspector takes it over.

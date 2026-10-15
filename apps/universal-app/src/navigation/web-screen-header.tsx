@@ -1,13 +1,11 @@
-import { HeaderSearchRow, type ScreenHeaderProps } from '@repo/client';
+import {
+  HeaderSearchRow,
+  headerSearchRowLayout,
+  type ScreenHeaderProps,
+} from '@repo/client';
 import { Stack, type NativeStackNavigationOptions } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
-
-// The web's JS header takes these through, though native-stack's types leave them out.
-const searchRowLayout = {
-  headerTitleContainerStyle: { flexGrow: 1, flexShrink: 1, marginEnd: 8 },
-  headerRightContainerStyle: { flexGrow: 0 },
-};
 
 // A stack page's header row, on a narrow web window and on a phone's pushed pages. With search, the title row is the search row: Search, last, morphs into a field over the whole row.
 export function WebScreenHeader(header: ScreenHeaderProps): React.JSX.Element {
@@ -36,7 +34,7 @@ function titleRow({
     headerTitle: (): React.JSX.Element => (
       <HeaderSearchRow title={title} right={right} search={search} />
     ),
-    ...searchRowLayout,
+    ...headerSearchRowLayout,
   };
 }
 

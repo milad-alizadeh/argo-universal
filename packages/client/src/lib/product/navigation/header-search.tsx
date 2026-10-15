@@ -1,3 +1,4 @@
+import type { HeaderOptions } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -7,6 +8,15 @@ import {
   type SearchFieldProps,
 } from '#primitives/inputs/search-field';
 import type { ScreenHeaderProps } from './screen-header';
+
+// The web's JS header lays out its title and right containers by these; native-stack's options type leaves them out, so the header takes them through untyped. The title container grows so the search row fills it.
+export const headerSearchRowLayout = {
+  headerTitleContainerStyle: { flexGrow: 1, flexShrink: 1, marginEnd: 8 },
+  headerRightContainerStyle: { flexGrow: 0 },
+} satisfies Pick<
+  HeaderOptions,
+  'headerTitleContainerStyle' | 'headerRightContainerStyle'
+>;
 
 type Search = NonNullable<ScreenHeaderProps['search']>;
 

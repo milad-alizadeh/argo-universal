@@ -4,7 +4,7 @@ import { SessionsHeader } from '../src/features/sessions/components/sessions-hea
 import {
   SessionsView,
   type SessionsViewProps,
-} from '../src/features/sessions/components/sessions-view/sessions-view';
+} from '../src/screens/sessions/sessions-view';
 
 export function SessionsPreviewMock(args: SessionsViewProps): ReactElement {
   const props = usePreviewSessions(args);

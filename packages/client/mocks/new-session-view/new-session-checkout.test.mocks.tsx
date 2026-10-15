@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
-import { NewSessionView } from '../../src/features/sessions/components/new-session-view/new-session-view';
-import { readyNewSession } from '../../src/features/sessions/components/new-session-view/new-session-view.mocks';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
+import { NewSessionView } from '../../src/screens/sessions/$id/new-session-view';
+import { readyNewSession } from '../../src/screens/sessions/$id/new-session-view.mocks';
 import type { Story } from './new-session-story.test.mocks';
 
 const pressedAttribute = 'aria-pressed';

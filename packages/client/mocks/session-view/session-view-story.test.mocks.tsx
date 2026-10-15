@@ -4,11 +4,11 @@ import {
   type OpenSessionViewProps,
   SessionView,
   type SessionViewProps,
-} from '../../src/features/sessions/components/session-view/session-view';
+} from '../../src/screens/sessions/$id/session-view';
 import {
   idleSession,
   runningSession,
-} from '../../src/features/sessions/components/session-view/session-view.mocks';
+} from '../../src/screens/sessions/$id/session-view.mocks';
 
 export const feedScrollTestId = 'feed-scroll';
 

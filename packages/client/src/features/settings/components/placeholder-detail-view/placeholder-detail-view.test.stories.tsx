@@ -23,7 +23,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A wide window draws the page's own title and caption; on a phone only the header names it.
+// A wide window draws the page's own title and caption; on a phone the Settings stack's header names it, so the page draws no title.
 export const TitlesTheWidePageOnly: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);
@@ -36,8 +36,8 @@ export const TitlesTheWidePageOnly: Story = {
     ).toBeVisible();
     await settleViewport(layoutWidths.phone);
     await expect(
-      canvas.getAllByRole('heading', { name: 'Accounts' }),
-    ).toHaveLength(1);
+      canvas.queryByRole('heading', { name: 'Accounts' }),
+    ).not.toBeInTheDocument();
     await expect(canvas.queryByText(caption)).not.toBeInTheDocument();
     await expect(canvas.getByText(description)).toBeVisible();
   },

@@ -1,40 +1,57 @@
 import type {} from './lib/generic/reusables-compatibility';
 
 export {
-  AgentDetailScreen,
-  AgentListScreen,
-  CustomAgentNewScreen,
-} from '#features/agents';
-
-export {
   AgentModelSheetChoices,
   AgentModelSheetSettings,
 } from '#features/composer';
 
-export { ConnectionDetailScreen, useConnection } from '#features/connection';
+export { useConnection } from '#features/connection';
 
 export {
   DesktopShellDetail,
   DesktopShellSidebar,
-  OnboardingLayout,
   SectionDrawer,
-  SectionRootScreen,
   ShellFrame,
   useDesktopSidebarWidth,
-  useOnboardingShown,
   usePhoneDrawerWidth,
 } from '#features/frame';
 
-export {
-  AccountsScreen,
-  AppearanceScreen,
-  DevicesScreen,
-  NotificationsScreen,
-  ProjectDetailScreen,
-  ProjectListScreen,
-} from '#features/settings';
+export { AtlasRootScreen } from './screens/atlas/atlas-root-screen';
 
-export { NewSessionScreen, SessionScreen } from '#features/sessions';
+export { IssuesRootScreen } from './screens/issues/issues-root-screen';
+
+export {
+  OnboardingLayout,
+  useOnboardingShown,
+} from './screens/onboarding/onboarding-layout';
+
+export { SessionsRootScreen } from './screens/sessions/sessions-root-screen';
+
+export { NewSessionScreen } from './screens/sessions/$id/new-session-screen';
+
+export { SessionScreen } from './screens/sessions/$id/session-screen';
+
+export { SettingsPhoneScreen } from './screens/settings/settings-phone-screen';
+
+export { AccountsScreen } from './screens/settings/accounts/accounts-screen';
+
+export { AgentListScreen } from './screens/settings/agents/agent-list-screen';
+
+export { AgentDetailScreen } from './screens/settings/agents/$agent/agent-detail-screen';
+
+export { CustomAgentNewScreen } from './screens/settings/agents/new/custom-agent-new-screen';
+
+export { AppearanceScreen } from './screens/settings/appearance/appearance-screen';
+
+export { ConnectionDetailScreen } from './screens/settings/connection/connection-detail-screen';
+
+export { DevicesScreen } from './screens/settings/devices/devices-screen';
+
+export { NotificationsScreen } from './screens/settings/notifications/notifications-screen';
+
+export { ProjectListScreen } from './screens/settings/projects/project-list-screen';
+
+export { ProjectDetailScreen } from './screens/settings/projects/$name/project-detail-screen';
 
 export { hasLiquidGlass } from '#lib/generic/native-header';
 
@@ -71,7 +88,12 @@ export {
   sectionOf,
 } from './lib/product/navigation/sections';
 
-export { HeaderSearchRow } from './lib/product/navigation/header-search';
+export { settingsTitles } from './lib/product/navigation/settings-titles';
+
+export {
+  HeaderSearchRow,
+  headerSearchRowLayout,
+} from './lib/product/navigation/header-search';
 
 export { AppProviders } from './app-providers';
 

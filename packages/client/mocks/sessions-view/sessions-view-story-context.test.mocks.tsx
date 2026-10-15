@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { fn } from 'storybook/test';
 import { SessionsHeader } from '../../src/features/sessions/components/sessions-header';
-import { SessionsView } from '../../src/features/sessions/components/sessions-view/sessions-view';
-import { loadedSessionsView } from '../../src/features/sessions/components/sessions-view/sessions-view.mocks';
 import { useSessionsFilter } from '../../src/features/sessions/state/sessions-filter';
 import { useWide } from '../../src/lib/generic/use-wide/use-wide';
+import { SessionsView } from '../../src/screens/sessions/sessions-view';
+import { loadedSessionsView } from '../../src/screens/sessions/sessions-view.mocks';
 
 export const exampleProjectName = 'Example Project';
 
