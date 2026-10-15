@@ -5,7 +5,11 @@ import {
   CollapsibleLayoutSyncContext,
   OpenContext,
 } from './collapsible-context';
-import type { CollapsibleProps } from './collapsible-props';
+import { Header } from './collapsible-header';
+import type {
+  CollapsibleHeaderProps,
+  CollapsibleProps,
+} from './collapsible-props';
 
 interface OpenState {
   open: boolean;
@@ -50,11 +54,15 @@ function Collapsible(options: CollapsibleProps): ReactElement {
 
 const CollapsibleTrigger = CollapsiblePrimitive.Trigger;
 
-export { CollapsibleHeader, useCollapsibleHovered } from './collapsible-header';
-
 export {
   Collapsible,
   CollapsibleContent,
   CollapsibleLayoutSyncContext,
   CollapsibleTrigger,
 };
+
+export { useCollapsibleHovered } from './collapsible-header';
+
+export function CollapsibleHeader(props: CollapsibleHeaderProps): ReactElement {
+  return <Header {...props} trigger={CollapsibleTrigger} />;
+}
