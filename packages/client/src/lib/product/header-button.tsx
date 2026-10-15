@@ -54,7 +54,7 @@ function headerButtonFit(paired: boolean): HeaderButtonFit {
 
 // The header fit replaces IconButton's touch minimum, border and focus outline with the header's own.
 const headerChrome =
-  'rounded-full p-0 border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 web:transition-all dark:active:bg-muted/50 web:dark:hover:bg-muted/50 web:focus-visible:outline-none web:focus-visible:ring-3 web:focus-visible:ring-focus/50';
+  'rounded-full p-0 border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 web:transition-all web:focus-visible:outline-none web:focus-visible:ring-3 web:focus-visible:ring-focus/50';
 
 // A list's filter in a phone header: Android's top app bar draws Material's filter list, as Paper does; iOS and the web keep the sliders.
 export const headerFilterIcon: Extract<IconName, 'filter-list' | 'filters'> =

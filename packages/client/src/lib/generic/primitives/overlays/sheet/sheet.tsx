@@ -103,7 +103,7 @@ function drawerProps(props: PresentationProps): DrawerProps {
 // A sheet that rests only at its full height fills the window; any other is as tall as its content.
 function drawerClass(props: PresentationProps): string {
   return cn(
-    'sheet overflow-hidden fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-sheet bg-card pb-6 shadow-card outline-none dark:border dark:border-border',
+    'sheet overflow-hidden fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-sheet bg-content pb-6 shadow-card outline-none dark:border dark:border-border',
     props.stack.pages.length > 0 && 'sheet-paged',
     fullHeight(props.detents) && 'sheet-full',
   );

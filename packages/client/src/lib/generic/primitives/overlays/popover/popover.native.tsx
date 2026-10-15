@@ -170,7 +170,7 @@ const overlayProps = {
 } satisfies React.ComponentProps<typeof PopoverPrimitive.Overlay>;
 
 const surfaceClass =
-  'bg-card border-border z-50 w-72 rounded-2xl border p-4 shadow-overlay shadow-black/5';
+  'bg-card border-border z-50 w-72 rounded-2xl border p-4 shadow-raised';
 
 Popover satisfies React.ComponentType<PopoverProps>;
 

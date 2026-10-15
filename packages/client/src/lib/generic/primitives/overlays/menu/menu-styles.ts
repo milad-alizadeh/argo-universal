@@ -2,7 +2,7 @@ import { cn } from '#lib/generic/utils';
 
 // An action menu's web drawing, as the Session header's menus drew it before Menu took actions.
 export const actionContentClassName = cn(
-  'bg-card border-border min-w-32 overflow-hidden rounded-2xl web:shadow-card border p-1 shadow-overlay shadow-black/5',
+  'bg-card border-border min-w-32 overflow-hidden rounded-2xl web:shadow-card border p-1 shadow-raised',
   'web:animate-in web:fade-in-0 web:zoom-in-95 web:max-h-(--radix-dropdown-menu-content-available-height) web:overflow-y-auto web:origin-(--radix-dropdown-menu-content-transform-origin) web:z-50 web:cursor-default',
 );
 

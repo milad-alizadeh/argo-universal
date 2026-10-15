@@ -33,21 +33,8 @@ type StackProps = ComponentProps<typeof Stack>;
 
 type ScreenLayout = NonNullable<StackProps['screenLayout']>;
 
-/*
- * Before Liquid Glass, an opaque iOS header takes the theme's card colour, a band over a grouped page. The stock bar
- * instead: clear at the scroll edge, so the page shows through, and the system material once content scrolls under.
- */
-const stockBarBeforeGlass = {
-  headerTransparent: true,
-  headerBlurEffect: 'systemChromeMaterial',
-  headerLargeStyle: { backgroundColor: 'transparent' },
-} satisfies StackProps['screenOptions'];
-
-// iOS draws its header over the page; the web's JS header sits above it.
-const headerOverPage =
-  Platform.OS === 'ios' && !hasLiquidGlass
-    ? stockBarBeforeGlass
-    : { headerTransparent: hasLiquidGlass };
+// With Liquid Glass, content scrolls under a clear header; before it, the opaque header takes the theme's content colour.
+const headerOverPage = { headerTransparent: hasLiquidGlass };
 
 // Native header options every narrow stack shares: one line, no hairline border.
 const narrowOptions = {
