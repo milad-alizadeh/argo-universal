@@ -2,7 +2,7 @@ import { Column } from '@expo/ui';
 import { weight } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { NativeText } from '#primitives/native/native-text';
+import { NativeText } from '#primitives/display/native-text';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { RowSubtitle } from './grouped-list-item-subtitle';
 import { rowColor } from './grouped-list-item-text';

@@ -1,6 +1,6 @@
 import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
-import type { NativeTextProps } from '#primitives/native/native-text';
+import type { NativeTextProps } from '#primitives/display/native-text';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 
 type Modifiers = NonNullable<NativeTextProps['modifiers']>;

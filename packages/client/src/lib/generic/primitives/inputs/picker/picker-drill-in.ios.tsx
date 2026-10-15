@@ -6,8 +6,8 @@ import {
   accessibilityValue,
 } from '@expo/ui/swift-ui/modifiers';
 import { createElement, useState } from 'react';
+import { NativeText } from '#primitives/display/native-text';
 import { errorMessage } from '#primitives/fields/field-errors';
-import { NativeText } from '#primitives/native/native-text';
 import { useSheetNavigation } from '#primitives/overlays/bottom-sheet';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { PickerDrillInSheet } from './picker-drill-in-sheet.ios';
