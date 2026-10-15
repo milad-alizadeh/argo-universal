@@ -1,3 +1,4 @@
+import { RegistryCacheRecord } from '@repo/contracts';
 import type {
   ACPAgentRegistry,
   BinaryTarget,
@@ -19,7 +20,7 @@ export const readRegistryCache = (
     .where(eq(registryCache.id, 1))
     .get();
 
-  return row?.json ? createRegistryReader().parse(row.json) : null;
+  return row ? hydrateCache(row) : null;
 };
 
 export const registrySupport = (
@@ -76,3 +77,18 @@ const binaryTarget = (
 const cachedAgents = (
   cached: ACPAgentRegistry | null,
 ): ACPAgentRegistry['agents'] => cached?.agents ?? [];
+
+const hydrateCache = (
+  row: typeof registryCache.$inferSelect,
+): ACPAgentRegistry | null => {
+  const reader = createRegistryReader();
+  const parsed = RegistryCacheRecord.safeParse(row);
+
+  if (!parsed.success)
+    return reader.reject(
+      'Stored Registry cache row is malformed',
+      parsed.error,
+    );
+
+  return parsed.data.json ? reader.parse(parsed.data.json) : null;
+};

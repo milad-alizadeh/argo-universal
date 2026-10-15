@@ -1,5 +1,6 @@
 import {
   AgentServerEnvironment,
+  AgentServerRecord,
   type AgentServer,
   type ACPAgent,
 } from '@repo/contracts';
@@ -8,6 +9,7 @@ import { agentServers } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
 import { readRegistryCache, registrySupport } from '../registry/registry-cache';
+import { createRegistryReader } from '../registry/registry-reader';
 
 export const readAgentServers = (database: Database): AgentServer[] => {
   const entries = readRegistryCache(database)?.agents ?? [];
@@ -16,7 +18,7 @@ export const readAgentServers = (database: Database): AgentServer[] => {
     .select()
     .from(agentServers)
     .all()
-    .flatMap((row) => hydrateServer(row, entries));
+    .flatMap((row) => hydrateServer(parseServerRow(row), entries));
 };
 
 export const readAgentServerEnv = (
@@ -29,7 +31,9 @@ export const readAgentServerEnv = (
     .where(eq(agentServers.id, id))
     .get();
 
-  return row ? AgentServerEnvironment.parse(JSON.parse(row.env)) : {};
+  return row
+    ? AgentServerEnvironment.parse(JSON.parse(parseServerRow(row).env))
+    : {};
 };
 
 export class AgentServerChangeJob implements WriterJob {
@@ -79,3 +83,17 @@ const serverView = (
   version: entry.version,
   env: AgentServerEnvironment.parse(JSON.parse(row.env)),
 });
+
+const parseServerRow = (
+  row: typeof agentServers.$inferSelect,
+): typeof agentServers.$inferSelect => {
+  const parsed = AgentServerRecord.safeParse(row);
+
+  if (!parsed.success)
+    return createRegistryReader().reject(
+      'Stored saved Agent row is malformed',
+      parsed.error,
+    );
+
+  return parsed.data;
+};

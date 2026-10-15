@@ -74,6 +74,19 @@ const canApply = (snapshot: RegistrySnapshot, event: GraphEvent): boolean => {
 const filterEvents = (snapshot: RegistrySnapshot, event: GraphEvent): boolean =>
   snapshot.status === 'active' && canApply(snapshot, event);
 
+const isPublic = (
+  event: GraphEvent,
+): event is Extract<GraphEvent, { type: 'REFRESH' | 'STALE' | 'STOP' }> =>
+  ['REFRESH', 'STALE', 'STOP'].includes(event.type);
+
+const isFetchEvent = (event: GraphEvent): boolean =>
+  event.type.endsWith('fetchRegistry') || event.type.includes('fetchLimit');
+
+const publicEventAllowed = (
+  snapshot: RegistrySnapshot,
+  event: GraphEvent,
+): boolean => isPublic(event) && snapshot.can(event);
+
 type Model = {
   paths: StatePath<RegistrySnapshot, GraphEvent>[];
   getAdjacencyMap: () => AdjacencyMap<RegistrySnapshot, GraphEvent>;
@@ -118,16 +131,3 @@ it('structurally walks Registry fetch, save, failure, timeout, throttle and STOP
     }),
   ).toEqual([]);
 });
-
-const isPublic = (
-  event: GraphEvent,
-): event is Extract<GraphEvent, { type: 'REFRESH' | 'STALE' | 'STOP' }> =>
-  ['REFRESH', 'STALE', 'STOP'].includes(event.type);
-
-const isFetchEvent = (event: GraphEvent): boolean =>
-  event.type.endsWith('fetchRegistry') || event.type.includes('fetchLimit');
-
-const publicEventAllowed = (
-  snapshot: RegistrySnapshot,
-  event: GraphEvent,
-): boolean => isPublic(event) && snapshot.can(event);

@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { gunzipSync, unzipSync } from 'fflate';
+import { gunzipSync } from 'node:zlib';
+import { unzipSync } from 'fflate';
 import { extract, list } from 'tar';
 import type { InstallPorts } from '../ports';
 import {
@@ -154,5 +155,9 @@ export const materializeBinary = async (
 
 const extractFile = (input: BinaryInput, extension: string): Promise<void> =>
   extension.endsWith('.gz')
-    ? writeEntry(input.directory, input.recipe.cmd, gunzipSync(input.bytes))
+    ? writeEntry(
+        input.directory,
+        input.recipe.cmd,
+        gunzipSync(input.bytes, { maxOutputLength: extractedLimit }),
+      )
     : extractRaw(input, extension);

@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import type { ACPAgent } from '@repo/contracts';
 import { checkInstallationFile } from '../install/materialization/files';
+import { requireExactPackageVersion } from '../install/materialization/package-version';
 import { readNpmExecutable } from '../install/materialization/packages';
 import type { InstallPorts, InstallToolInput } from '../install/ports';
 import { resolveNode, type NodeRuntime } from './node';
@@ -24,9 +25,8 @@ const npmPackage = (input: NpmInput): NpmPackage => {
 
   if (!pkg) throw new Error('Registry npm distribution is missing');
   const name = pkg.replace(/@[^@/]+$/, '');
-  const ceiling = pkg.slice(name.length + 1) || input.entry.version;
 
-  return { name, specification: `${name}@0.0.0 - ${ceiling}` };
+  return { name, specification: boundedSpecification(name, pkg) };
 };
 
 export const npmCommand = async (input: NpmInput): Promise<RegistryCommand> => {
@@ -97,3 +97,16 @@ const distribution = (
 
 const distributionArgs = (input: NpmInput): string[] =>
   distribution(input).args ?? [];
+
+const boundedSpecification = (name: string, pkg: string): string => {
+  try {
+    const version = requireExactPackageVersion(
+      pkg.slice(name.length + 1),
+      'npx',
+    );
+
+    return `${name}@0.0.0 - ${version}`;
+  } catch {
+    return pkg;
+  }
+};

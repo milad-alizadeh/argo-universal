@@ -1,6 +1,6 @@
 import type {
   ConfiguredAgent,
-  AgentId,
+  AgentRemovalInput,
   AgentEnablementInput,
 } from '@repo/contracts';
 import {
@@ -15,7 +15,7 @@ import type { AgentManagement } from '../state/agent-management-types';
 import { useConfiguredAgents } from './use-configured-agents';
 
 type Commands = {
-  remove: UseMutationResult<void, ClientError, AgentId>;
+  remove: UseMutationResult<void, ClientError, AgentRemovalInput>;
   enable: UseMutationResult<void, ClientError, AgentEnablementInput>;
 };
 

@@ -1,3 +1,4 @@
+import { registryCacheColumns } from '../columns';
 import type { ACPAgent } from './upstream/registry.gen';
 
 export interface AgentsRegistryOutput {
@@ -6,3 +7,5 @@ export interface AgentsRegistryOutput {
 }
 
 export type { BinaryTarget } from './upstream/registry.gen';
+
+export const RegistryCacheRecord = registryCacheColumns;

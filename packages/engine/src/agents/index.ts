@@ -60,3 +60,7 @@ export {
   type RegistryActor,
   type RegistryInput,
 } from './registry/registry-machine';
+
+export { getCommand } from './launch/get-command';
+
+export type { CommandInput, RegistryCommand } from './launch/types';

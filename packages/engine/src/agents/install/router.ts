@@ -1,12 +1,11 @@
 import {
   AgentId,
-  RegistryAgentId,
+  AgentRemovalInput,
   AgentInstallInput,
   AgentInstallCancelInput,
   AgentInstallOperation,
   AgentInstallStatus,
 } from '@repo/contracts';
-import { z } from 'zod';
 import {
   publicProcedure,
   router,
@@ -59,7 +58,7 @@ const managementRouter = routerFactory(
   }) =>
     router({
       remove: publicProcedure
-        .input(z.union([AgentId, RegistryAgentId]))
+        .input(AgentRemovalInput)
         .mutation(({ input }) =>
           removeAgent({ input, installations, registry }),
         ),
@@ -71,7 +70,7 @@ const removeAgent = ({
   installations,
   registry,
 }: {
-  input: { id: string } | { agentId: string };
+  input: AgentRemovalInput;
   installations: AgentInstallations;
   registry: RegistryDeps;
 }): Promise<void> =>
