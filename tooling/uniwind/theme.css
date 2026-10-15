@@ -160,14 +160,14 @@
       --color-primary-foreground: var(--color-neutral-50);
       /* Native controls: switch track, slider, checkmark and picker value. */
       --color-accent: var(--color-neutral-900);
-      --color-muted: var(--color-neutral-100);
+      --color-muted: var(--color-neutral-200);
       --color-muted-foreground: var(--color-neutral-500);
       /* A hovered or pressed row, item or button. */
       --color-hover: var(--color-neutral-100);
       --color-hover-foreground: var(--color-neutral-900);
       --color-danger: var(--color-red-500);
       --color-danger-foreground: var(--color-white);
-      --color-border: var(--color-neutral-200);
+      --color-border: var(--color-neutral-300);
       --color-focus: var(--color-neutral-400);
       /* Finished work: a merged pull request, a completed issue. */
       --color-done: var(--color-violet-600);
@@ -210,13 +210,13 @@
       --color-primary: hsl(0 0% 98%);
       --color-primary-foreground: hsl(0 0% 9%);
       --color-accent: var(--color-neutral-400);
-      --color-muted: hsl(0 0% 14.9%);
+      --color-muted: var(--color-neutral-700);
       --color-muted-foreground: hsl(0 0% 63.9%);
       --color-hover: hsl(0 0% 14.9%);
       --color-hover-foreground: hsl(0 0% 98%);
       --color-danger: var(--color-red-500);
       --color-danger-foreground: var(--color-white);
-      --color-border: hsl(0 0% 14.9%);
+      --color-border: var(--color-neutral-700);
       --color-focus: hsl(300 0% 45%);
       --color-done: oklch(70.2% 0.183 293.541);
       --color-success: oklch(72.3% 0.219 149.579);
