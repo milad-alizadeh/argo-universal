@@ -1,4 +1,3 @@
-import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
 import { type ComponentType, type ReactElement, useContext } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -11,6 +10,7 @@ import {
 import { LayoutSyncedContent } from './collapsible-layout-content';
 import { useNativeContentMotion } from './collapsible-native-motion';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
+import { CollapsibleRegion } from './collapsible-region';
 
 type NativeMotion = ReturnType<typeof useNativeContentMotion>;
 
@@ -26,11 +26,11 @@ function NativeHeight(props: NativeHeightProps): ReactElement {
   const style = useNativeHeightStyle(motion);
 
   return (
-    <CollapsiblePrimitive.Content {...props.contentProps} forceMount asChild>
+    <CollapsibleRegion contentProps={props.contentProps}>
       <Animated.View style={style} {...contentAccessibility(open)}>
         {children}
       </Animated.View>
-    </CollapsiblePrimitive.Content>
+    </CollapsibleRegion>
   );
 }
 
